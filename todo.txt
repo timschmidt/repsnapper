@@ -1,0 +1,14 @@
+License Regularization:
+
+ - XML Lib - needs to be replaced - only used for settings saving.  Perhaps replace with key/value pair unix-style conf file
+ - ArcBall.c ArcBall.h - copyrighted, but no license information.  emailed author (tjgrant@tatewake.com) for clarification
+ - FLTK stuffs - acquire copy of the license here: http://www.fltk.org/COPYING.php and check it into the tree
+ - GCode.cpp states GPLv2 or later
+ - glutils.cpp - // This class was snagged from the opengl tutorial at http://www.gamedev.net/reference/articles/article1172.asp - someone should email the author at mailto:microwerx@yahoo.com
+
+Libraries to be moved to /lib:
+
+ - ivcon.c
+ - AsyncSerial
+ - FLTK stuff
+ - 
