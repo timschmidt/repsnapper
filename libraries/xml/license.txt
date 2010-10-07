@@ -1,0 +1,14 @@
+XML LIBRARY LICENSE AGREEMENT
+=============================
+
+
+You are free to use my code for any project, freeware or shareware, public domain or commercial, as long as you:
+
+ a) Credit me in your application's documentation and/or the about box
+ b) Register at my forum (http://www.turboirc.com/forum) so you receive updates and news about the library.
+ c) Drop me a note via the forum for the name of the application so I can link to you.
+
+GOOD LUCK!
+
+Michael
+

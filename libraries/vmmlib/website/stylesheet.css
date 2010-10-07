@@ -1,0 +1,112 @@
+/*
+ * Copyright (c) 2005 Stefan Eilemann. All rights reserved.
+ */
+
+body {
+    font-family: Georgia, Garamond, Palatino, Times, serif;
+    background-color: #ffffff;
+}
+
+pre, code {
+    font-family: Lucida Sans Typewriter, Courier New, Courier, monospace;
+}
+
+h1 { 
+    text-align: center;
+}
+
+h2 {
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-top: 0.5em;
+    padding-top: 0.5em;
+    padding-bottom: 0.2em;
+}
+
+p, li, dd
+{ 
+    text-align: justify;
+}
+
+dt
+{ 
+  margin-left: 0.5em;
+  font-weight: bold;
+}
+
+table 
+{
+    margin: 2ex auto 2ex auto;
+    text-align: justify;
+}
+
+img
+{ 
+    background-color: #e0e0d0;
+    margin: 0px 10px 0px 10px;
+    border: 0px;
+}
+
+a
+{ 
+  color: black;
+}
+
+div.image {
+    background-color: transparent;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: center;
+    border: 0px;
+    padding: 0px;
+    margin: 0px;
+    border-collapse: collapse;
+    color: black;
+}
+
+div.navigation { 
+    background-color: #aaaaaa;
+    padding: 6px 3px 6px 3px;
+}
+
+div.subnavigation { 
+    background-color: #bbbbbb;
+    padding: 6px 3px 6px 3px;
+}
+
+div.navigation a, div.subnavigation a 
+{ 
+    text-decoration: none;
+    font-weight: normal;
+    font-size: 12pt;
+    padding: 2px;
+    border: 1px solid black;
+    color: black;
+}
+
+div.navigation a.used { 
+    background-color: #6699cc;
+}
+div.subnavigation a.used { 
+    background-color: #99ccff;
+}
+
+div.subnavigation a 
+{ 
+    font-size: 10pt;
+}
+
+div.footnote 
+{ 
+    background-image: url("images/footnote.png");
+    background-repeat: no-repeat;
+    padding-top: 10px;
+    font-size: x-small;
+}
+div.footer table {
+    background-color: #999999;
+    padding: 3px;
+}
+div.footer a { 
+    text-decoration: none;
+}
