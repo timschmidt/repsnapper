@@ -8,6 +8,6 @@
 #endif
 
 // turn on the license restricted gpc library for Shrink Nice
-#define ENABLE_GPC 1
+#define ENABLE_GPC 0
 
 #endif

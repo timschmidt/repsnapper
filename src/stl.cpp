@@ -22,7 +22,11 @@
 
 #ifdef WIN32
 #  include <GL/glut.h>	// Header GLUT Library
+
+#if defined(ENABLE_GPC) && ENABLE_GPC
 #  include "gpc.h"
+#endif
+
 #  pragma warning( disable : 4018 4267)
 #endif
 
