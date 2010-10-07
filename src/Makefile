@@ -69,15 +69,13 @@ SHARED_SOURCES=AsyncSerial.cpp stl.cpp RepRapSerial.cpp \
 	glutils.cpp GCode.cpp ArcBall.cpp stdafx.cpp UI.cxx \
 	RFO.cpp Flu_DND.cpp flu_pixmaps.cpp FluSimpleString.cpp \
 	Flu_Tree_Browser.cpp ivcon.cpp File.cpp platform.cpp \
-	$(LIB_DIR)/xml/xml.cpp \
-	gpc.c
+	$(LIB_DIR)/xml/xml.cpp
 
 HEADERS=ArcBall.h AsyncSerial.h Convert.h Flu_DND.h Flu_Enumerations.h \
 	flu_export.h flu_pixmaps.h FluSimpleString.h Flu_Tree_Browser.h \
 	gcode.h glutils.h ivcon.h miniball.h ModelViewController.h \
 	Printer.h ProcessController.h RepRapSerial.h RFO.h \
-	stdafx.h stl.h triangle.h UI.h platform.h \
-	gpc.h
+	stdafx.h stl.h triangle.h UI.h platform.h
 
 SHARED_OBJECTS=$(subst .c,.o,$(subst .cxx,.o,$(subst .cpp,.o,$(SHARED_SOURCES))))
 MAIN_OBJECTS=$(subst .c,.o,$(subst .cxx,.o,$(subst .cpp,.o,$(MAIN_SOURCES)))) $(SHARED_OBJECTS)
