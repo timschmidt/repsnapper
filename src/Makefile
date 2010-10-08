@@ -68,7 +68,7 @@ SHARED_SOURCES=asyncserial.cpp stl.cpp RepRapSerial.cpp \
 	ProcessController.cpp Printer.cpp ModelViewController.cpp \
 	glutils.cpp GCode.cpp arcball.cpp stdafx.cpp UI.cxx \
 	RFO.cpp Flu_DND.cpp flu_pixmaps.cpp FluSimpleString.cpp \
-	Flu_Tree_Browser.cpp ivcon.cpp File.cpp platform.cpp \
+	Flu_Tree_Browser.cpp ivcon.cpp file.cpp platform.cpp \
 	$(LIB_DIR)/xml/xml.cpp
 
 HEADERS=arcball.h asyncserial.h convert.h Flu_DND.h Flu_Enumerations.h \
