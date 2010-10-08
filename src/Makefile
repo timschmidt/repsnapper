@@ -32,7 +32,7 @@ ifeq ($(UNAME),Linux)
     GTK_CFLAGS=`pkg-config --cflags gtk+-2.0 gthread-2.0` -DHAVE_GTK
     INC=$(GTK_CFLAGS) -I/usr/include -I$(LIB_DIR) -I$(LIB_DIR)/vmmlib/include -I/usr/include/boost -I/usr/include/lua5.1
     INC+=-I$(LIB_DIR)/polylib
-    LDFLAGS=$(GTK_LIBS) -L/usr/lib -lGLU -lfltk -lfltk_gl -lfltk_forms -lglut -lboost_thread-mt -lboost_system-mt 
+    LDFLAGS=$(GTK_LIBS) -L/usr/lib -lGLU -lGL -lfltk -lfltk_gl -lfltk_forms -lglut -lboost_thread-mt -lboost_system-mt 
     LDFLAGS+=-L$(LIB_DIR)/polylib -lpolylib
     TEST_LDFLAGS=-lboost_unit_test_framework
 endif
@@ -60,13 +60,13 @@ ifeq ($(UNAME),Darwin)
     TEST_LDFLAGS=-lboost_unit_test_framework
 endif
 
-GENERATED=UI.cxx ui.h
+GENERATED=ui.cxx ui.h
 
 MAIN_SOURCES=RepSnapper.cpp
 TEST_SOURCES=unittest.cpp
 SHARED_SOURCES=asyncserial.cpp stl.cpp RepRapSerial.cpp \
 	ProcessController.cpp Printer.cpp modelviewcontroller.cpp \
-	glutils.cpp gcode.cpp arcball.cpp stdafx.cpp UI.cxx \
+	glutils.cpp gcode.cpp arcball.cpp stdafx.cpp ui.cxx \
 	RFO.cpp flu_dnd.cpp flu_pixmaps.cpp flu_simplestring.cpp \
 	flu_tree_browser.cpp ivcon.cpp file.cpp platform.cpp \
 	$(LIB_DIR)/xml/xml.cpp
