@@ -164,7 +164,7 @@ namespace {
 
 /*
  * Split out code that, otherwise would be busy cluttering
- * UI.fl in multiple places.
+ * ui.fl in multiple places.
  */
 void FileChooser::ioDialog (ModelViewController *mvc, Op o, Type t, bool dropRFO)
 {
