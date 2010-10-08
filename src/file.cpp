@@ -4,7 +4,7 @@
  */
 #include "stdafx.h"
 #include <string>
-#include "File.h"
+#include "file.h"
 
 #ifdef HAVE_GTK
 #include <glib/gthread.h>
