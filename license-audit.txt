@@ -4,7 +4,7 @@ The licensing information listed in this file reflects the copyright and license
 |-- doc
 |   `-- gcode generation.txt
 |-- libraries
-|   |-- polylib
+|   |-- polylib .......................................... unknown
 |   |   |-- GeometryBase.cpp
 |   |   |-- GeometryBase.h
 |   |   |-- Makefile
@@ -12,7 +12,7 @@ The licensing information listed in this file reflects the copyright and license
 |   |   |-- Polygon2f.cpp
 |   |   `-- Polygon2f.h
 |   |-- vmmlib ........................................... Revised (3 clause) BSD license
-|   `-- xml .............................................. no license, must be replaced
+|   `-- xml .............................................. no license, must be replaced or (re)licensed
 |       |-- license.txt
 |       |-- Makefile
 |       |-- mime.h
