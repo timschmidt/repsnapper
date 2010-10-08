@@ -35,7 +35,7 @@
 #include "Flu_Enumerations.h"
 #include "FluSimpleString.h"
 #ifdef USE_FLU_DND
-#include "Flu_DND.h"
+#include "flu_dnd.h"
 #else
 typedef struct { bool dummy; } Flu_DND_Event;  // for compatibilty when not compiling DND support
 #endif
