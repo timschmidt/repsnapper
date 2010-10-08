@@ -64,7 +64,7 @@ GENERATED=UI.cxx UI.h
 
 MAIN_SOURCES=RepSnapper.cpp
 TEST_SOURCES=unittest.cpp
-SHARED_SOURCES=AsyncSerial.cpp stl.cpp RepRapSerial.cpp \
+SHARED_SOURCES=asyncserial.cpp stl.cpp RepRapSerial.cpp \
 	ProcessController.cpp Printer.cpp ModelViewController.cpp \
 	glutils.cpp GCode.cpp arcball.cpp stdafx.cpp UI.cxx \
 	RFO.cpp Flu_DND.cpp flu_pixmaps.cpp FluSimpleString.cpp \
