@@ -1,4 +1,4 @@
-// $Id: Flu_DND.cpp,v 1.21 2004/08/18 11:06:38 jbryan Exp $
+// $Id: flu_dnd.cpp,v 1.21 2004/08/18 11:06:38 jbryan Exp $
 
 /***************************************************************
  *                FLU - FLTK Utility Widgets 

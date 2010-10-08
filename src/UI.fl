@@ -23,7 +23,7 @@ class GUI {open
         xywh {10 25 700 805} box UP_BOX align 16
         code0 {\#include "config.h"
 \#include "stdafx.h"
-\#include "File.h"}
+\#include "file.h"}
         code1 {\#ifndef M_PI
 \#define M_PI 3.14159265358979323846
 \#endif}
