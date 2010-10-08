@@ -19,7 +19,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "UI.h"
+#include "ui.h"
 
 using namespace std;
 

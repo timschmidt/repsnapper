@@ -16,7 +16,7 @@
 // View related
 #include <FL/Fl_Gl_Window.H>
 #include <FL/gl.h>
-#include "UI.h"
+#include "ui.h"
 #include <math.h>
 #include "arcball.h"
 

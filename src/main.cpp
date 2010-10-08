@@ -5,7 +5,7 @@
 //#include <windows.h>													// Header File For The Windows Library
 
 #include "gcode.h"
-#include "UI.h"
+#include "ui.h"
 
 CubeViewUI *cvui;
 

@@ -15,7 +15,7 @@
 #include "modelviewcontroller.h"
 
 #include "gcode.h"
-#include "UI.h"
+#include "ui.h"
 
 GUI *gui;
 

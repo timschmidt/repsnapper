@@ -1,6 +1,6 @@
 
 #include "stdafx.h"
-#include "UI.h"
+#include "ui.h"
 #include "RFO.h"
 #include "flu_pixmaps.h"
 #include <exception>

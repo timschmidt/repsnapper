@@ -24,7 +24,7 @@ Logick: Add more Unittest :)
 #include "stdafx.h"
 #include "modelviewcontroller.h"
 #include "gcode.h"
-#include "UI.h"
+#include "ui.h"
 
 #if !defined(WIN32) || defined (UNITTEST)
 

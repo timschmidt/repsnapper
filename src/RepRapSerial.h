@@ -85,7 +85,7 @@ PWM (D 14) PD6 20|        |21  PD7 (D 15) PWM
 #include "Serial/SerialEx.h"
 #endif
 
-#include "UI.h"
+#include "ui.h"
 #include "asyncserial.h"
 
 class RepRapSerial

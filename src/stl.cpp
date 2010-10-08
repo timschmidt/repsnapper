@@ -16,7 +16,7 @@
 
 #include "stl.h"
 #include "gcode.h"
-#include "UI.h"
+#include "ui.h"
 #include "math.h"
 #include <boost/numeric/conversion/bounds.hpp> 
 
