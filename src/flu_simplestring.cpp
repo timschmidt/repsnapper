@@ -1,4 +1,4 @@
-// $Id: FluSimpleString.cpp,v 1.8 2003/11/27 01:09:05 jbryan Exp $
+// $Id: flu_simplestring.cpp,v 1.8 2003/11/27 01:09:05 jbryan Exp $
 
 /***************************************************************
  *                FLU - FLTK Utility Widgets 
