@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "RepRapSerial.h"
-#include "Convert.h"
+#include "convert.h"
 
 
 RepRapSerial::RepRapSerial()

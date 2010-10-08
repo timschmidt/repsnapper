@@ -71,7 +71,7 @@ SHARED_SOURCES=asyncserial.cpp stl.cpp RepRapSerial.cpp \
 	Flu_Tree_Browser.cpp ivcon.cpp File.cpp platform.cpp \
 	$(LIB_DIR)/xml/xml.cpp
 
-HEADERS=arcball.h asyncserial.h Convert.h Flu_DND.h Flu_Enumerations.h \
+HEADERS=arcball.h asyncserial.h convert.h Flu_DND.h Flu_Enumerations.h \
 	flu_export.h flu_pixmaps.h FluSimpleString.h Flu_Tree_Browser.h \
 	gcode.h glutils.h ivcon.h miniball.h ModelViewController.h \
 	Printer.h ProcessController.h RepRapSerial.h RFO.h \
@@ -139,7 +139,7 @@ RepRapSerial.o: stdafx.h config.h platform.h arcball.h ivcon.h RepRapSerial.h
 RepRapSerial.o: UI.h File.h ModelViewController.h gcode.h stl.h
 RepRapSerial.o: ProcessController.h Printer.h RFO.h Flu_Tree_Browser.h
 RepRapSerial.o: Flu_Enumerations.h flu_export.h FluSimpleString.h glutils.h
-RepRapSerial.o: asyncserial.h Convert.h
+RepRapSerial.o: asyncserial.h convert.h
 ProcessController.o: stdafx.h config.h platform.h arcball.h ivcon.h
 ProcessController.o: ModelViewController.h UI.h File.h Flu_Tree_Browser.h
 ProcessController.o: Flu_Enumerations.h flu_export.h FluSimpleString.h
