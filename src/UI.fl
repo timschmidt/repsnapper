@@ -242,7 +242,7 @@ MVC->redraw();}
             label {RFO file}
             callback {MVC->redraw();}
             xywh {725 125 355 440} box UP_BOX align 16 when 1 resizable
-            code0 {\#include "Flu_Tree_Browser.h"}
+            code0 {\#include "flu_tree_browser.h"}
             class Flu_Tree_Browser
           }
           Fl_Group {} {

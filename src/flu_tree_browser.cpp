@@ -18,7 +18,7 @@
 #include <FL/math.h>
 #include <stdlib.h>
 
-#include "Flu_Tree_Browser.h"
+#include "flu_tree_browser.h"
 #include "flu_pixmaps.h"
 
 #define MAX( x, y ) ( (x)>(y) ? (x) : (y) )
