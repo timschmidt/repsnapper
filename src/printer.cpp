@@ -11,7 +11,7 @@
 * ------------------------------------------------------------------------- */
 #include "stdafx.h"
 #include "ProcessController.h"
-#include "Printer.h"
+#include "printer.h"
 
 // Draw grid
 void Printer::Draw(const ProcessController &PC)

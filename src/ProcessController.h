@@ -12,7 +12,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include "Printer.h"
+#include "printer.h"
 #include <vmmlib/vmmlib.h>
 #include "gcode.h"
 #include "RFO.h"

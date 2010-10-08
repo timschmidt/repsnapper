@@ -1,6 +1,6 @@
 /* -------------------------------------------------------- *
 *
-* Printer.h
+* printer.h
 *
 * Copyright 2009+ Michael Holm - www.kulitorum.com
 *
