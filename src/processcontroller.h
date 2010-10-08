@@ -1,6 +1,6 @@
 /* -------------------------------------------------------- *
 *
-* ProcessController.h
+* processcontroller.h
 *
 * Copyright 2009+ Michael Holm - www.kulitorum.com
 *

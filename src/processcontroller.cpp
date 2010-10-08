@@ -12,7 +12,7 @@
 #include "stdafx.h"
 #include "xml/xml.h"
 #include "modelviewcontroller.h"
-#include "ProcessController.h"
+#include "processcontroller.h"
 #include <boost/algorithm/string.hpp>
 
 void ProcessController::ConvertToGCode(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd)

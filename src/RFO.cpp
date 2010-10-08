@@ -5,7 +5,7 @@
 #include "flu_pixmaps.h"
 #include <exception>
 #include <stdexcept>
-#include "ProcessController.h"
+#include "processcontroller.h"
 
 Fl_Pixmap plus((char * const*)plus_xpm),
 minus((char * const*)minus_xpm),

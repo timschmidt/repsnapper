@@ -23,7 +23,7 @@
 // Model related
 #include "gcode.h"
 #include "stl.h"
-#include "ProcessController.h"
+#include "processcontroller.h"
 #include "glutils.h"
 #include "RepRapSerial.h"
 

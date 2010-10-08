@@ -74,7 +74,7 @@ SHARED_SOURCES=asyncserial.cpp stl.cpp RepRapSerial.cpp \
 HEADERS=arcball.h asyncserial.h convert.h flu_dnd.h flu_enumerations.h \
 	flu_export.h flu_pixmaps.h flu_simplestring.h flu_tree_browser.h \
 	gcode.h glutils.h ivcon.h miniball.h modelviewcontroller.h \
-	printer.h ProcessController.h RepRapSerial.h RFO.h \
+	printer.h processcontroller.h RepRapSerial.h RFO.h \
 	stdafx.h stl.h triangle.h ui.h platform.h
 
 SHARED_OBJECTS=$(subst .c,.o,$(subst .cxx,.o,$(subst .cpp,.o,$(SHARED_SOURCES))))
@@ -129,43 +129,43 @@ asyncserial.o: stdafx.h config.h platform.h arcball.h ivcon.h asyncserial.h
 RepSnapper.o: stdafx.h config.h platform.h arcball.h ivcon.h
 RepSnapper.o: modelviewcontroller.h ui.h file.h flu_tree_browser.h
 RepSnapper.o: flu_enumerations.h flu_export.h flu_simplestring.h gcode.h stl.h
-RepSnapper.o: ProcessController.h printer.h RFO.h glutils.h RepRapSerial.h
+RepSnapper.o: processcontroller.h printer.h RFO.h glutils.h RepRapSerial.h
 RepSnapper.o: asyncserial.h
 stl.o: stdafx.h config.h platform.h arcball.h ivcon.h stl.h gcode.h ui.h
-stl.o: file.h modelviewcontroller.h ProcessController.h printer.h RFO.h
+stl.o: file.h modelviewcontroller.h processcontroller.h printer.h RFO.h
 stl.o: flu_tree_browser.h flu_enumerations.h flu_export.h flu_simplestring.h
 stl.o: glutils.h RepRapSerial.h asyncserial.h
 RepRapSerial.o: stdafx.h config.h platform.h arcball.h ivcon.h RepRapSerial.h
 RepRapSerial.o: ui.h file.h modelviewcontroller.h gcode.h stl.h
-RepRapSerial.o: ProcessController.h printer.h RFO.h flu_tree_browser.h
+RepRapSerial.o: processcontroller.h printer.h RFO.h flu_tree_browser.h
 RepRapSerial.o: flu_enumerations.h flu_export.h flu_simplestring.h glutils.h
 RepRapSerial.o: asyncserial.h convert.h
 processcontroller.o: stdafx.h config.h platform.h arcball.h ivcon.h
 processcontroller.o: modelviewcontroller.h ui.h file.h flu_tree_browser.h
 processcontroller.o: flu_enumerations.h flu_export.h flu_simplestring.h
-processcontroller.o: gcode.h stl.h ProcessController.h printer.h RFO.h
+processcontroller.o: gcode.h stl.h processcontroller.h printer.h RFO.h
 processcontroller.o: glutils.h RepRapSerial.h asyncserial.h
-printer.o: stdafx.h config.h platform.h arcball.h ivcon.h ProcessController.h
+printer.o: stdafx.h config.h platform.h arcball.h ivcon.h processcontroller.h
 printer.o: printer.h gcode.h RFO.h flu_tree_browser.h flu_enumerations.h
 printer.o: flu_export.h flu_simplestring.h stl.h
 modelviewcontroller.o: stdafx.h config.h platform.h arcball.h ivcon.h
 modelviewcontroller.o: modelviewcontroller.h ui.h file.h flu_tree_browser.h
 modelviewcontroller.o: flu_enumerations.h flu_export.h flu_simplestring.h
-modelviewcontroller.o: gcode.h stl.h ProcessController.h printer.h RFO.h
+modelviewcontroller.o: gcode.h stl.h processcontroller.h printer.h RFO.h
 modelviewcontroller.o: glutils.h RepRapSerial.h asyncserial.h
 glutils.o: stdafx.h config.h platform.h arcball.h ivcon.h glutils.h
 gcode.o: stdafx.h config.h platform.h arcball.h ivcon.h gcode.h ui.h file.h
-gcode.o: modelviewcontroller.h stl.h ProcessController.h printer.h RFO.h
+gcode.o: modelviewcontroller.h stl.h processcontroller.h printer.h RFO.h
 gcode.o: flu_tree_browser.h flu_enumerations.h flu_export.h flu_simplestring.h
 gcode.o: glutils.h RepRapSerial.h asyncserial.h
 arcball.o: stdafx.h config.h platform.h arcball.h ivcon.h
 stdafx.o: stdafx.h config.h platform.h arcball.h ivcon.h stl.h
 ui.o: ui.h config.h stdafx.h platform.h arcball.h ivcon.h file.h
-ui.o: modelviewcontroller.h gcode.h stl.h ProcessController.h printer.h RFO.h
+ui.o: modelviewcontroller.h gcode.h stl.h processcontroller.h printer.h RFO.h
 ui.o: flu_tree_browser.h flu_enumerations.h flu_export.h flu_simplestring.h
 ui.o: glutils.h RepRapSerial.h asyncserial.h
 RFO.o: stdafx.h config.h platform.h arcball.h ivcon.h ui.h file.h
-RFO.o: modelviewcontroller.h gcode.h stl.h ProcessController.h printer.h
+RFO.o: modelviewcontroller.h gcode.h stl.h processcontroller.h printer.h
 RFO.o: RFO.h flu_tree_browser.h flu_enumerations.h flu_export.h
 RFO.o: flu_simplestring.h glutils.h RepRapSerial.h asyncserial.h flu_pixmaps.h
 flu_dnd.o: flu_dnd.h flu_enumerations.h flu_export.h
@@ -176,6 +176,6 @@ flu_tree_browser.o: flu_simplestring.h flu_pixmaps.h
 ivcon.o: ivcon.h
 file.o: stdafx.h config.h platform.h arcball.h ivcon.h file.h
 file.o: modelviewcontroller.h ui.h flu_tree_browser.h flu_enumerations.h
-file.o: flu_export.h flu_simplestring.h gcode.h stl.h ProcessController.h
+file.o: flu_export.h flu_simplestring.h gcode.h stl.h processcontroller.h
 file.o: printer.h RFO.h glutils.h RepRapSerial.h asyncserial.h
 ../libraries/xml/xml.o: ../libraries/xml/xml.h

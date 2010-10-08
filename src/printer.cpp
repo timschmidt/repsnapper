@@ -10,7 +10,7 @@
 *
 * ------------------------------------------------------------------------- */
 #include "stdafx.h"
-#include "ProcessController.h"
+#include "processcontroller.h"
 #include "printer.h"
 
 // Draw grid
