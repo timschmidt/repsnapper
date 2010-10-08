@@ -5,7 +5,7 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include "ModelViewController.h"
+#include "modelviewcontroller.h"
 
 namespace FileChooser {
   enum Type {

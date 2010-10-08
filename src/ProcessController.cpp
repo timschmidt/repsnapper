@@ -11,7 +11,7 @@
 * ------------------------------------------------------------------------- */
 #include "stdafx.h"
 #include "xml/xml.h"
-#include "ModelViewController.h"
+#include "modelviewcontroller.h"
 #include "ProcessController.h"
 #include <boost/algorithm/string.hpp>
 

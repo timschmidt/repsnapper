@@ -12,7 +12,7 @@
 #include "stdafx.h"
 #include <vector>
 #include <string>
-#include "ModelViewController.h"
+#include "modelviewcontroller.h"
 #include "RFO.h"
 
 #ifndef WIN32

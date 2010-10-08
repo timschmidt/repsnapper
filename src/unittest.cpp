@@ -22,7 +22,7 @@ Logick: Add more Unittest :)
 *************************************************************************/
 
 #include "stdafx.h"
-#include "ModelViewController.h"
+#include "modelviewcontroller.h"
 #include "gcode.h"
 #include "UI.h"
 
