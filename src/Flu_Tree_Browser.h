@@ -33,7 +33,7 @@
 
 /* flu includes */
 #include "flu_enumerations.h"
-#include "FluSimpleString.h"
+#include "flu_simplestring.h"
 #ifdef USE_FLU_DND
 #include "flu_dnd.h"
 #else
