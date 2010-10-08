@@ -32,7 +32,7 @@
 #include <FL/Fl_Menu_Button.H>
 
 /* flu includes */
-#include "Flu_Enumerations.h"
+#include "flu_enumerations.h"
 #include "FluSimpleString.h"
 #ifdef USE_FLU_DND
 #include "flu_dnd.h"

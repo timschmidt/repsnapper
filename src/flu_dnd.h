@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "Flu_Enumerations.h"
+#include "flu_enumerations.h"
 
 #define FLU_DND_MAX_TYPES 32
 

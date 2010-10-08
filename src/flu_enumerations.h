@@ -1,4 +1,4 @@
-// $Id: Flu_Enumerations.h,v 1.16 2004/04/03 17:35:41 jbryan Exp $
+// $Id: flu_enumerations.h,v 1.16 2004/04/03 17:35:41 jbryan Exp $
 
 /***************************************************************
  *                FLU - FLTK Utility Widgets 

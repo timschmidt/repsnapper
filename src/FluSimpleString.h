@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "Flu_Enumerations.h"
+#include "flu_enumerations.h"
 
 //! A simple string object that works a lot like the STL string object
 class FLU_EXPORT FluSimpleString
