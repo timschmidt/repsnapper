@@ -67,7 +67,7 @@ TEST_SOURCES=unittest.cpp
 SHARED_SOURCES=asyncserial.cpp stl.cpp reprapserial.cpp \
 	processcontroller.cpp printer.cpp modelviewcontroller.cpp \
 	glutils.cpp gcode.cpp arcball.cpp stdafx.cpp ui.cxx \
-	RFO.cpp flu_dnd.cpp flu_pixmaps.cpp flu_simplestring.cpp \
+	rfo.cpp flu_dnd.cpp flu_pixmaps.cpp flu_simplestring.cpp \
 	flu_tree_browser.cpp ivcon.cpp file.cpp platform.cpp \
 	$(LIB_DIR)/xml/xml.cpp
 
@@ -164,10 +164,10 @@ ui.o: ui.h config.h stdafx.h platform.h arcball.h ivcon.h file.h
 ui.o: modelviewcontroller.h gcode.h stl.h processcontroller.h printer.h RFO.h
 ui.o: flu_tree_browser.h flu_enumerations.h flu_export.h flu_simplestring.h
 ui.o: glutils.h reprapserial.h asyncserial.h
-RFO.o: stdafx.h config.h platform.h arcball.h ivcon.h ui.h file.h
-RFO.o: modelviewcontroller.h gcode.h stl.h processcontroller.h printer.h
-RFO.o: RFO.h flu_tree_browser.h flu_enumerations.h flu_export.h
-RFO.o: flu_simplestring.h glutils.h reprapserial.h asyncserial.h flu_pixmaps.h
+rfo.o: stdafx.h config.h platform.h arcball.h ivcon.h ui.h file.h
+rfo.o: modelviewcontroller.h gcode.h stl.h processcontroller.h printer.h
+rfo.o: RFO.h flu_tree_browser.h flu_enumerations.h flu_export.h
+rfo.o: flu_simplestring.h glutils.h reprapserial.h asyncserial.h flu_pixmaps.h
 flu_dnd.o: flu_dnd.h flu_enumerations.h flu_export.h
 flu_pixmaps.o: flu_pixmaps.h flu_export.h
 flu_simplestring.o: flu_simplestring.h flu_enumerations.h flu_export.h
