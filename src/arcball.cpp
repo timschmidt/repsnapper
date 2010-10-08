@@ -1,6 +1,6 @@
 /** KempoApi: The Turloc Toolkit *****************************/
 /** *    *                                                  **/
-/** **  **  Filename: ArcBall.cpp                           **/
+/** **  **  Filename: arcball.cpp                           **/
 /**   **    Version:  Common                                **/
 /**   **                                                    **/
 /**                                                         **/
