@@ -49,7 +49,7 @@ The licensing information listed in this file reflects the copyright and license
 |   |-- ivcon.cpp ........................................ LGPL
 |   |-- ivcon.h .......................................... unknown
 |   |-- main.cpp ......................................... unknown
-|   |-- Makefile ......................................... unknown
+|   |-- Makefile ......................................... GPLv2 or later
 |   |-- miniball.h ....................................... GPLv2 or later
 |   |-- modelviewcontroller.cpp .......................... GPLv2 or later
 |   |-- modelviewcontroller.h ............................ GPLv2 or later
