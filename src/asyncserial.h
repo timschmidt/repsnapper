@@ -1,5 +1,5 @@
 /*
- * File:   AsyncSerial.h
+ * File:   asyncserial.h
  * Author: Terraneo Federico
  * Distributed under the Boost Software License, Version 1.0.
  * Created on September 7, 2009, 10:46 AM

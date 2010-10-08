@@ -5,7 +5,7 @@
  * Created on September 7, 2009, 10:46 AM
  */
 #include "stdafx.h"
-#include "AsyncSerial.h"
+#include "asyncserial.h"
 
 #include <string>
 #include <algorithm>
