@@ -18,7 +18,7 @@
 #include <FL/gl.h>
 #include "UI.h"
 #include <math.h>
-#include "ArcBall.h"
+#include "arcball.h"
 
 // Model related
 #include "gcode.h"

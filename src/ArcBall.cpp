@@ -21,7 +21,7 @@
 
 #include "math.h"                                               // Needed for sqrtf
 
-#include "ArcBall.h"                                            // ArcBall header
+#include "arcball.h"                                            // ArcBall header
 
 //Arcball sphere constants:
 //Diameter is       2.0f

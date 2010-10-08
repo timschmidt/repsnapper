@@ -44,7 +44,7 @@ typedef unsigned int        UINT;
 #  include <alloca.h>
 #endif
 #include "math.h"                                               // Needed for sqrtf
-#include "ArcBall.h"
+#include "arcball.h"
 
 // Unpleasant needs un-winding ...
 using namespace std;
