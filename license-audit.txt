@@ -1,0 +1,177 @@
+The licensing information listed in this file reflects the copyright and license information listed in the file itself.  Parts of the file may be modified under another license without the declaration at the beginning of the file being modified.  Someone should really look through old SVN to verify this.
+
+.
+|-- doc
+|   `-- gcode generation.txt
+|-- libraries
+|   |-- polylib
+|   |   |-- GeometryBase.cpp
+|   |   |-- GeometryBase.h
+|   |   |-- Makefile
+|   |   |-- platform.h
+|   |   |-- Polygon2f.cpp
+|   |   `-- Polygon2f.h
+|   |-- vmmlib
+|   |   |-- English.lproj
+|   |   |   `-- InfoPlist.strings
+|   |   |-- include
+|   |   |   `-- vmmlib
+|   |   |       |-- axisAlignedBoundingBox.h
+|   |   |       |-- details.hpp
+|   |   |       |-- exception.hpp
+|   |   |       |-- frustumCuller.h
+|   |   |       |-- frustumCuller.hpp
+|   |   |       |-- frustum.h
+|   |   |       |-- frustum.hpp
+|   |   |       |-- helperFunctions.h
+|   |   |       |-- jacobiSolver.h
+|   |   |       |-- jacobiSolver.hpp
+|   |   |       |-- lapack.hpp
+|   |   |       |-- lapack_includes.hpp
+|   |   |       |-- lapack_linear_least_squares.hpp
+|   |   |       |-- lapack_svd.hpp
+|   |   |       |-- lapack_types.hpp
+|   |   |       |-- LICENSE
+|   |   |       |-- linear_least_squares.hpp
+|   |   |       |-- matrix3.h
+|   |   |       |-- matrix4.h
+|   |   |       |-- matrix_functors.hpp
+|   |   |       |-- matrix.hpp
+|   |   |       |-- qr_decomposition.hpp
+|   |   |       |-- quaternion.h
+|   |   |       |-- quaternion.hpp
+|   |   |       |-- stringUtils.h
+|   |   |       |-- stringUtils.hpp
+|   |   |       |-- svd.h
+|   |   |       |-- svd.hpp
+|   |   |       |-- vector2.h
+|   |   |       |-- vector3.h
+|   |   |       |-- vector4.h
+|   |   |       |-- vector.hpp
+|   |   |       |-- visibility.h
+|   |   |       |-- visibility.hpp
+|   |   |       |-- vmmlib_config.hpp
+|   |   |       |-- vmmlib.h
+|   |   |       `-- vmmlib.hpp
+|   |   |-- Info.plist
+|   |   |-- LICENSE
+|   |   |-- README
+|   |   |-- tests
+|   |   |   |-- JacobiSolverTest.cpp
+|   |   |   |-- JacobiSolverTest.h
+|   |   |   |-- lapack_linear_least_squares_test.cpp
+|   |   |   |-- lapack_linear_least_squares_test.hpp
+|   |   |   |-- lapack_svd_test.cpp
+|   |   |   |-- lapack_svd_test.hpp
+|   |   |   |-- main_test.cpp
+|   |   |   |-- Makefile
+|   |   |   |-- make_stringtests.sh
+|   |   |   |-- Matrix3Test.cpp
+|   |   |   |-- Matrix3Test.h
+|   |   |   |-- Matrix4Test.cpp
+|   |   |   |-- Matrix4Test.h
+|   |   |   |-- matrix_compare_perf_test.cpp
+|   |   |   |-- matrix_compare_perf_test.hpp
+|   |   |   |-- matrix_test.cpp
+|   |   |   |-- matrix_test.hpp
+|   |   |   |-- performance_test.cpp
+|   |   |   |-- performance_test.hpp
+|   |   |   |-- perf_test.cpp
+|   |   |   |-- qr_decomposition_test.cpp
+|   |   |   |-- qr_decomposition_test.hpp
+|   |   |   |-- quaternion_test.cpp
+|   |   |   |-- QuaternionTest.cpp
+|   |   |   |-- QuaternionTest.h
+|   |   |   |-- quaternion_test.hpp
+|   |   |   |-- stringtests.cpp
+|   |   |   |-- svd_lapack_vs_old.cpp
+|   |   |   |-- svd_lapack_vs_old.hpp
+|   |   |   |-- svd_test.cpp
+|   |   |   |-- SVDTest.cpp
+|   |   |   |-- SVDTest.h
+|   |   |   |-- svd_test.hpp
+|   |   |   |-- Test.h
+|   |   |   |-- timer.cpp
+|   |   |   |-- timer.hpp
+|   |   |   |-- unit_test.cpp
+|   |   |   |-- unit_test.hpp
+|   |   |   |-- Vector2Test.cpp
+|   |   |   |-- Vector2Test.h
+|   |   |   |-- Vector3Test.cpp
+|   |   |   |-- Vector3Test.h
+|   |   |   |-- Vector4Test.cpp
+|   |   |   |-- Vector4Test.h
+|   |   |   |-- vector_test.cpp
+|   |   |   |-- vector_test.hpp
+|   |   |   |-- vmmlib_lapack_main.cpp
+|   |   |   |-- vmmlib_performance_tests_main.cpp
+|   |   |   `-- vmmlib_unit_tests_main.cpp
+|   |   |-- VMMLib-Info.plist
+|   |   |-- VMMLib.xcodeproj
+|   |   |   `-- project.pbxproj
+|   |   `-- website
+|   |       |-- index.html
+|   |       |-- README_upload
+|   |       |-- stylesheet.css
+|   |       `-- vmml_logo.png
+|   `-- xml .............................................. no license, must be replaced
+|       |-- license.txt
+|       |-- Makefile
+|       |-- mime.h
+|       |-- XML.CHM
+|       |-- xml.cpp
+|       `-- xml.h
+|-- license-audit.txt
+|-- readme.linux.txt
+|-- readme.macosx.txt
+|-- src
+|   |-- arcball.cpp ...................................... MIT
+|   |-- arcball.h ........................................ MIT
+|   |-- asyncserial.cpp .................................. Boost Software License, Version 1.0
+|   |-- asyncserial.h .................................... Boost Software License, Version 1.0
+|   |-- config.h ......................................... unknown
+|   |-- convert.h ........................................ unknown
+|   |-- file.cpp ......................................... unknown
+|   |-- file.h ........................................... unknown
+|   |-- fillet.cpp ....................................... unknown
+|   |-- flu_dnd.cpp ...................................... LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- flu_dnd.h ........................................ LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- flu_enumerations.h ............................... LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- flu_export.h ..................................... LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- flu_pixmaps.cpp .................................. LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- flu_pixmaps.h .................................... LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- flu_simplestring.cpp ............................. LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- flu_simplestring.h ............................... LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- flu_tree_browser.cpp ............................. LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- flu_tree_browser.h ............................... LGPL + exceptions: http://www.fltk.org/COPYING.php
+|   |-- gcode.cpp ........................................ GPLv2 or later
+|   |-- gcode.h .......................................... GPLv2 or later
+|   |-- glutils.cpp ...................................... license unknown, from http://www.gamedev.net/reference/articles/article1172.asp email: microwerx@yahoo.com
+|   |-- glutils.h ........................................ license unknown, from http://www.gamedev.net/reference/articles/article1172.asp email: microwerx@yahoo.com
+|   |-- ivcon.cpp ........................................ LGPL
+|   |-- ivcon.h .......................................... unknown
+|   |-- main.cpp ......................................... unknown
+|   |-- Makefile ......................................... unknown
+|   |-- miniball.h ....................................... GPLv2 or later
+|   |-- modelviewcontroller.cpp .......................... GPLv2 or later
+|   |-- modelviewcontroller.h ............................ GPLv2 or later
+|   |-- platform.cpp ..................................... unknown
+|   |-- platform.h ....................................... unknown
+|   |-- printer.cpp ...................................... GPLv2 or later
+|   |-- printer.h ........................................ GPLv2 or later
+|   |-- processcontroller.cpp ............................ GPLv2 or later
+|   |-- processcontroller.h .............................. GPLv2 or later
+|   |-- reprapserial.cpp ................................. unknown
+|   |-- reprapserial.h ................................... unknown
+|   |-- repsnapper.cpp ................................... GPLv2 or later
+|   |-- rfo.cpp .......................................... unknown
+|   |-- rfo.h ............................................ unknown
+|   |-- stdafx.cpp ....................................... GPLv2 or later
+|   |-- stdafx.h ......................................... GPLv2 or later
+|   |-- stl.cpp .......................................... GPLv2 or later
+|   |-- stl.h ............................................ GPLv2 or later
+|   |-- ui.fl ............................................ unknown
+|   `-- unittest.cpp ..................................... GPLv2 or later
+`-- todo.txt
+
+12 directories, 160 files
