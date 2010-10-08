@@ -1,6 +1,6 @@
 /* -------------------------------------------------------- *
 *
-* Printer.cpp
+* printer.cpp
 *
 * Copyright 2009+ Michael Holm - www.kulitorum.com
 *

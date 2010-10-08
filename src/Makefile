@@ -65,7 +65,7 @@ GENERATED=ui.cxx ui.h
 MAIN_SOURCES=RepSnapper.cpp
 TEST_SOURCES=unittest.cpp
 SHARED_SOURCES=asyncserial.cpp stl.cpp RepRapSerial.cpp \
-	ProcessController.cpp Printer.cpp modelviewcontroller.cpp \
+	ProcessController.cpp printer.cpp modelviewcontroller.cpp \
 	glutils.cpp gcode.cpp arcball.cpp stdafx.cpp ui.cxx \
 	RFO.cpp flu_dnd.cpp flu_pixmaps.cpp flu_simplestring.cpp \
 	flu_tree_browser.cpp ivcon.cpp file.cpp platform.cpp \
@@ -145,9 +145,9 @@ ProcessController.o: modelviewcontroller.h ui.h file.h flu_tree_browser.h
 ProcessController.o: flu_enumerations.h flu_export.h flu_simplestring.h
 ProcessController.o: gcode.h stl.h ProcessController.h Printer.h RFO.h
 ProcessController.o: glutils.h RepRapSerial.h asyncserial.h
-Printer.o: stdafx.h config.h platform.h arcball.h ivcon.h ProcessController.h
-Printer.o: Printer.h gcode.h RFO.h flu_tree_browser.h flu_enumerations.h
-Printer.o: flu_export.h flu_simplestring.h stl.h
+printer.o: stdafx.h config.h platform.h arcball.h ivcon.h ProcessController.h
+printer.o: Printer.h gcode.h RFO.h flu_tree_browser.h flu_enumerations.h
+printer.o: flu_export.h flu_simplestring.h stl.h
 modelviewcontroller.o: stdafx.h config.h platform.h arcball.h ivcon.h
 modelviewcontroller.o: modelviewcontroller.h ui.h file.h flu_tree_browser.h
 modelviewcontroller.o: flu_enumerations.h flu_export.h flu_simplestring.h
