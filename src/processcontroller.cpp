@@ -1,6 +1,6 @@
 /* -------------------------------------------------------- *
 *
-* ProcessController.cpp
+* processcontroller.cpp
 *
 * Copyright 2009+ Michael Holm - www.kulitorum.com
 *
