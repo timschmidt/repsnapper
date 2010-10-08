@@ -1,6 +1,6 @@
 /* -------------------------------------------------------- *
 *
-* GCode.cpp
+* gcode.cpp
 *
 * Copyright 2009+ Michael Holm - www.kulitorum.com
 *
