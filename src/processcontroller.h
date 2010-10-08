@@ -15,7 +15,7 @@
 #include "printer.h"
 #include <vmmlib/vmmlib.h>
 #include "gcode.h"
-#include "RFO.h"
+#include "rfo.h"
 
 // struct lua_State;
 using namespace std;

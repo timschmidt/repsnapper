@@ -1,7 +1,7 @@
 
 #include "stdafx.h"
 #include "ui.h"
-#include "RFO.h"
+#include "rfo.h"
 #include "flu_pixmaps.h"
 #include <exception>
 #include <stdexcept>
@@ -143,7 +143,7 @@ Matrix4f &RFO::SelectedNodeMatrix(Flu_Tree_Browser::Node *node)
 }
 
 #include "stdafx.h"
-#include "RFO.h"
+#include "rfo.h"
 
 void RFO_Transform3D::SaveXML(XMLElement* x)
 {
@@ -286,6 +286,7 @@ void RFO_Object::Read(XMLElement* e)
 	fprintf(stdout,"Root element has %u children.\r\n",nC);
 	for(int i = 0 ; i < nC ; i++)
 	{
+
 		XMLElement* ch = e->GetChildren()[i];	// Get child i, one of "object" or "transform3D"
 		int nV = ch->GetVariableNum();
 		int nMaxElName = ch->GetElementName(0);

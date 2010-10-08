@@ -13,7 +13,7 @@
 #include <vector>
 #include <string>
 #include "modelviewcontroller.h"
-#include "RFO.h"
+#include "rfo.h"
 
 #ifndef WIN32
 
