@@ -62,7 +62,7 @@ endif
 
 GENERATED=ui.cxx ui.h
 
-MAIN_SOURCES=RepSnapper.cpp
+MAIN_SOURCES=repsnapper.cpp
 TEST_SOURCES=unittest.cpp
 SHARED_SOURCES=asyncserial.cpp stl.cpp reprapserial.cpp \
 	processcontroller.cpp printer.cpp modelviewcontroller.cpp \
