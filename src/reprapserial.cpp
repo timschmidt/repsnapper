@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "RepRapSerial.h"
+#include "reprapserial.h"
 #include "convert.h"
 
 

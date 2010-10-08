@@ -25,7 +25,7 @@
 #include "stl.h"
 #include "processcontroller.h"
 #include "glutils.h"
-#include "RepRapSerial.h"
+#include "reprapserial.h"
 
 enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_NICE, SHRINK_LOGICK };
 enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
