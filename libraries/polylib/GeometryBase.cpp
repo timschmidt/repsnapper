@@ -33,7 +33,14 @@ namespace PolyLib
 		return result;
 	}
 
-
+	// Following function licensed as:
+	// Copyright 2001, softSurfer (www.softsurfer.com)
+	// This code may be freely used and modified for any purpose
+	// providing that this copyright notice is included with it.
+	// SoftSurfer makes no warranty for this code, and cannot be held
+	// liable for any real or imagined damage resulting from its use.
+	// Users of this code must verify correctness for their application.
+	//
 	// inSegment(): determine if a point is inside a segment
 	//    Input:  a point P, and a collinear segment S
 	//    Return: 1 = P is inside S
@@ -55,8 +62,14 @@ namespace PolyLib
 		return 0;
 	}
 
-
-
+	// Following function licensed as:
+	// Copyright 2001, softSurfer (www.softsurfer.com)
+	// This code may be freely used and modified for any purpose
+	// providing that this copyright notice is included with it.
+	// SoftSurfer makes no warranty for this code, and cannot be held
+	// liable for any real or imagined damage resulting from its use.
+	// Users of this code must verify correctness for their application.
+	//
 	// intersect2D_2Segments(): the intersection of 2 finite 2D segments
 	//    Input:  two finite segments S1 and S2
 	//    Output: *I0 = intersect point (when it exists)
