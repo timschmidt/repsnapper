@@ -12,7 +12,7 @@ The licensing information listed in this file reflects the copyright and license
 |   |   |-- Polygon2f.cpp ................................ suspected to be original work by Kulitorm and hence GPLv2
 |   |   `-- Polygon2f.h .................................. suspected to be original work by Kulitorm and hence GPLv2
 |   |-- vmmlib ........................................... Revised (3 clause) BSD license
-|   `-- xml .............................................. no license, must be replaced or (re)licensed
+|   `-- xml .............................................. note [1]
 |       |-- license.txt
 |       |-- Makefile
 |       |-- mime.h
@@ -72,3 +72,5 @@ The licensing information listed in this file reflects the copyright and license
 `-- todo.txt
 
 12 directories, 160 files
+[1]: as found in XML.CHM: "This library is free for personal, experimental and commercial use, as long as you give me credit in your 'about box' and/or your help files.
+Absolutely no warranties for any misuse of all or parts of the supplied code; The code is provided 'as is'." "By Chourdakis Michael. (C) 2007
