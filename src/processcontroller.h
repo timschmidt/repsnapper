@@ -20,8 +20,6 @@
 // struct lua_State;
 using namespace std;
 
-class XML_Element;
-
 class ProcessController
 {
 public:
@@ -145,12 +143,10 @@ public:
 	void SetVolume(float x, float y, float z) { m_fVolume = Vector3f(x,y,z);}
 
 	// Load and save settings
-	void LoadXML();
-	void LoadXML(string filename);
-	void SaveXML();
-	void SaveXML(string filename);
-	void LoadXML(XMLElement *e);
-	void SaveXML(XMLElement *e);
+	void SaveConfig(string path);
+	void SaveConfig();
+	void LoadConfig();
+	void LoadConfig(string filename);
 
 	// LUA
 //	void BindLua(lua_State *myLuaState);

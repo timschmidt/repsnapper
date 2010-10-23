@@ -351,7 +351,7 @@ MVC->redraw();}
           }
           Fl_Button {} {
             label {Save Settings As...}
-            callback {Fl_File_Chooser chooser(MVC->ProcessControl.SettingsPath.c_str(), "*.xml", Fl_File_Chooser::SINGLE|Fl_File_Chooser::CREATE, "Save Settings As...");
+            callback {Fl_File_Chooser chooser(MVC->ProcessControl.SettingsPath.c_str(), "*.conf", Fl_File_Chooser::SINGLE|Fl_File_Chooser::CREATE, "Save Settings As...");
 chooser.show();
 while (chooser.shown())
 Fl::wait();
@@ -369,7 +369,7 @@ MVC->ProcessControl.SaveSettingsAs(dir);
           }
           Fl_Button {} {
             label {Load Settings...}
-            callback {Fl_File_Chooser chooser(MVC->ProcessControl.SettingsPath.c_str(), "*.xml", Fl_File_Chooser::SINGLE, "Load settings as...");
+            callback {Fl_File_Chooser chooser(MVC->ProcessControl.SettingsPath.c_str(), "*.conf", Fl_File_Chooser::SINGLE, "Load settings as...");
 chooser.show();
 while (chooser.shown())
 Fl::wait();
@@ -381,7 +381,7 @@ std::string dir(chooser.value());
 if(dir.length())
 {
 MVC->ProcessControl.SettingsPath = dir;
-MVC->ProcessControl.LoadXML(dir);
+MVC->ProcessControl.LoadConfig(dir);
 MVC->CopySettingsToGUI();
 };}
             xywh {995 65 135 25}

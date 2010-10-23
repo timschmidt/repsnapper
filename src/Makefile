@@ -38,7 +38,7 @@ ifeq ($(UNAME),Linux)
     GTK_CFLAGS=`pkg-config --cflags gtk+-2.0 gthread-2.0` -DHAVE_GTK
     INC=$(GTK_CFLAGS) -I/usr/include -I$(LIB_DIR) -I$(LIB_DIR)/vmmlib/include -I/usr/include/boost -I/usr/include/lua5.1
     INC+=-I$(LIB_DIR)/polylib
-    LDFLAGS=$(GTK_LIBS) -L/usr/lib -lGLU -lGL -lfltk -lfltk_gl -lfltk_forms -lglut -lboost_thread-mt -lboost_system-mt 
+    LDFLAGS=$(GTK_LIBS) -L/usr/lib -lGLU -lGL -lfltk -lfltk_gl -lfltk_forms -lglut -lboost_thread-mt -lboost_system-mt -lconfig++ 
     LDFLAGS+=-L$(LIB_DIR)/polylib -lpolylib
     TEST_LDFLAGS=-lboost_unit_test_framework
 endif
@@ -60,7 +60,7 @@ ifeq ($(UNAME),Darwin)
 	INC=$(BOOST_INC) -I$(MACPORTS_DIR)/include -I$(LIB_DIR)/vmmlib/include -I$(LIB_DIR)
 	INC+=-I$(LIB_DIR)/polylib
 	INC+=-pthread
-	LDFLAGS=$(BOOST_LIB) -L$(MACPORTS_DIR)/lib -pthread -lfltk -lfltk_forms -lfltk_gl
+	LDFLAGS=$(BOOST_LIB) -L$(MACPORTS_DIR)/lib -pthread -lfltk -lfltk_forms -lfltk_gl -lconfig++ 
 	LDFLAGS+=-L$(LIB_DIR)/polylib -lpolylib
     LDFLAGS+=-framework Carbon -framework OpenGL -framework GLUT -framework AGL
     TEST_LDFLAGS=-lboost_unit_test_framework

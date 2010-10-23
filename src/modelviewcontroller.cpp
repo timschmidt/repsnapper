@@ -166,7 +166,7 @@ void ModelViewController::Init(GUI *_gui)
 {
 	gui = _gui;
 	DetectComPorts (true);
-	ProcessControl.LoadXML();
+	ProcessControl.LoadConfig();
 	serial->SetReceivingBufferSize(ProcessControl.ReceivingBufferSize);
 	serial->SetValidateConnection(ProcessControl.m_bValidateConnection);
 	CopySettingsToGUI();

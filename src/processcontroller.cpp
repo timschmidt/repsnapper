@@ -14,6 +14,9 @@
 #include "modelviewcontroller.h"
 #include "processcontroller.h"
 #include <boost/algorithm/string.hpp>
+#include <libconfig.h++>
+using namespace libconfig;
+using namespace std;
 
 void ProcessController::ConvertToGCode(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd)
 {
@@ -399,514 +402,293 @@ void ProcessController::WriteGCode(string &GcodeTxt, const string &GcodeStart, c
 	fprintf (stderr, "Unimplemented\n");
 }
 
-void ProcessController::SaveXML(string filename)
+void ProcessController::LoadConfig()
 {
-	XML* xml = new XML(filename.c_str());
-	XMLElement* e = xml->GetRootElement();
-	SaveXML(e);
-	if (xml->IntegrityTest())
-		xml->Save(); // Saves back to file
-	delete xml;
+	LoadConfig(m_Filename + ".conf");
 }
 
-namespace {
-	void setXMLString (XMLElement *x, const char *name, const char *value)
-	{
-		x->FindVariableZ ((char *)name, true, (char *)"")->SetValue ((char *)value);
-	}
-
-	void setXMLString (XMLElement *x, const std::ostringstream &name, const char *value)
-	{
-		std::string s = name.str();
-		setXMLString (x, s.c_str(), value);
-	}
-
-	// Calm our warning problem down ...
-	XMLVariable *setVariable (XMLElement *x, const char *variable)
-	{
-		return x->FindVariableZ ((char *)variable, true, (char *)"");
-	}
-
-};
-
-void ProcessController::SaveXML(XMLElement *e)
+void ProcessController::LoadConfig(string filename)
 {
-	XMLElement *x = e->FindElementZ("ProcessController", true);
-
-	// Raft parameters
-	setVariable (x, "RaftSize")->SetValueFloat(RaftSize);
-	setVariable (x, "RaftBaseLayerCount")->SetValueInt(RaftBaseLayerCount);
-	setVariable (x, "RaftMaterialPrDistanceRatio")->SetValueFloat(RaftMaterialPrDistanceRatio);
-	setVariable (x, "RaftRotation")->SetValueFloat(RaftRotation);
-	setVariable (x, "RaftBaseDistance")->SetValueFloat(RaftBaseDistance);
-	setVariable (x, "RaftBaseThickness")->SetValueFloat(RaftBaseThickness);
-	setVariable (x, "RaftBaseTemperature")->SetValueFloat(RaftBaseTemperature);
-	setVariable (x, "RaftInterfaceLayerCount")->SetValueInt(RaftInterfaceLayerCount);
-	setVariable (x, "RaftInterfaceMaterialPrDistanceRatio")->SetValueFloat(RaftInterfaceMaterialPrDistanceRatio);
-	setVariable (x, "RaftRotationPrLayer")->SetValueFloat(RaftRotationPrLayer);
-	setVariable (x, "RaftInterfaceDistance")->SetValueFloat(RaftInterfaceDistance);
-	setVariable (x, "RaftInterfaceThickness")->SetValueFloat(RaftInterfaceThickness);
-	setVariable (x, "RaftInterfaceTemperature")->SetValueFloat(RaftInterfaceTemperature);
-
-	// GCode parameters
-	setVariable (x, "GCodeStartText")->SetValue(GCodeStartText.c_str());
-	setVariable (x, "GCodeLayerText")->SetValue(GCodeLayerText.c_str());
-	setVariable (x, "GCodeEndText")->SetValue(GCodeEndText.c_str());
-        //setVariable (x, "Notes", true,"[Empty]")->SetValue(Notes.c_str()); // overwriting GCodeEndText
-	setVariable (x, "m_sPortName")->SetValue(m_sPortName.c_str());
-	setVariable (x, "ValidateConnection")->SetValueInt((int)m_bValidateConnection);
-
-	for (int i = 0; i < 20; i++) {
-		std::ostringstream os, name;
-
-		os << "CustomButton" << i + 1 << "Text";
-		setXMLString (x, os, CustomButtonGcode[i].c_str());
-
-		name << "CustomButton" << i + 1 << "Label";
-		setXMLString (x, name, CustomButtonLabel[i].c_str());
-	}
-
-	setVariable (x, "m_iSerialSpeed")->SetValueInt(m_iSerialSpeed);
-
-	setVariable (x, "GCodeDrawStart")->SetValueFloat(GCodeDrawStart);
-	setVariable (x, "GCodeDrawEnd")->SetValueFloat(GCodeDrawEnd);
-	setVariable (x, "ShellOnly")->SetValueInt((int)ShellOnly);
-	setVariable (x, "ShellCount")->SetValueInt(ShellCount);
-
-	// Printer parameters
-	setVariable (x, "MinPrintSpeedXY")->SetValueFloat(MinPrintSpeedXY);
-	setVariable (x, "MaxPrintSpeedXY")->SetValueFloat(MaxPrintSpeedXY);
-	setVariable (x, "MinPrintSpeedZ")->SetValueFloat(MinPrintSpeedZ);
-	setVariable (x, "MaxPrintSpeedZ")->SetValueFloat(MaxPrintSpeedZ);
-//	setVariable (x, "accelerationSteps")->SetValueInt(accelerationSteps);
-	setVariable (x, "DistanceToReachFullSpeed")->SetValueFloat(DistanceToReachFullSpeed);
-//	setVariable (x, "UseFirmwareAcceleration")->SetValueInt(UseFirmwareAcceleration);
-	setVariable (x, "extrusionFactor")->SetValueFloat(extrusionFactor);
-	setVariable (x, "EnableAcceleration")->SetValueInt((int)EnableAcceleration);
-	setVariable (x, "UseIncrementalEcode")->SetValueInt((int)UseIncrementalEcode);
-	setVariable (x, "Use3DGcode")->SetValueInt((int)Use3DGcode);
-	setVariable (x, "EnableAntiooze")->SetValueInt((int)EnableAntiooze);
-	setVariable (x, "AntioozeDistance")->SetValueFloat(AntioozeDistance);
-	setVariable (x, "AntioozeSpeed")->SetValueFloat(AntioozeSpeed);
-
-	setVariable (x, "FileLogginEnabled")->SetValueInt((int)FileLogginEnabled);
-	setVariable (x, "TempReadingEnabled")->SetValueInt((int)TempReadingEnabled);
-	setVariable (x, "ClearLogfilesWhenPrintStarts")->SetValueInt((int)ClearLogfilesWhenPrintStarts);
-
-	setVariable (x, "m_fVolume.x")->SetValueFloat(m_fVolume.x);
-	setVariable (x, "m_fVolume.y")->SetValueFloat(m_fVolume.y);
-	setVariable (x, "m_fVolume.z")->SetValueFloat(m_fVolume.z);
-	setVariable (x, "PrintMargin.x")->SetValueFloat(PrintMargin.x);
-	setVariable (x, "PrintMargin.y")->SetValueFloat(PrintMargin.y);
-	setVariable (x, "PrintMargin.z")->SetValueFloat(PrintMargin.z);
-	setVariable (x, "extrusionFactor")->SetValueFloat(extrusionFactor);
-	setVariable (x, "ExtrudedMaterialWidth")->SetValueFloat(ExtrudedMaterialWidth);
-	setVariable (x, "LayerThickness")->SetValueFloat(LayerThickness);
-
-	// CuttingPlane parameters
-	setVariable (x, "InfillDistance")->SetValueFloat(InfillDistance);
-	setVariable (x, "InfillRotation")->SetValueFloat(InfillRotation);
-	setVariable (x, "InfillRotationPrLayer")->SetValueFloat(InfillRotationPrLayer);
-	setVariable (x, "AltInfillDistance")->SetValueFloat(AltInfillDistance);
-	setVariable (x, "AltInfillLayers")->SetValue(AltInfillLayersText.c_str());
-	setVariable (x, "PolygonOpasity")->SetValueFloat(PolygonOpasity);
-
-
-	// GUI parameters
-	setVariable (x, "CuttingPlaneValue")->SetValueFloat(CuttingPlaneValue);
-	setVariable (x, "Examine")->SetValueFloat(Examine);
-
-	setVariable (x, "DisplayEndpoints")->SetValueInt((int)DisplayEndpoints);
-	setVariable (x, "DisplayNormals")->SetValueInt((int)DisplayNormals);
-	setVariable (x, "DisplayWireframe")->SetValueInt((int)DisplayWireframe);
-	setVariable (x, "DisplayWireframeShaded")->SetValueInt((int)DisplayWireframeShaded);
-
-	setVariable (x, "DisplayPolygons")->SetValueInt((int)DisplayPolygons);
-	setVariable (x, "DisplayAllLayers")->SetValueInt((int)DisplayAllLayers);
-	setVariable (x, "DisplayinFill")->SetValueInt((int)DisplayinFill);
-	setVariable (x, "DisplayDebuginFill")->SetValueInt((int)DisplayDebuginFill);
-	setVariable (x, "DisplayDebug")->SetValueInt((int)DisplayDebug);
-	setVariable (x, "DisplayCuttingPlane")->SetValueInt((int)DisplayCuttingPlane);
-	setVariable (x, "DrawVertexNumbers")->SetValueInt((int)DrawVertexNumbers);
-	setVariable (x, "DrawLineNumbers")->SetValueInt((int)DrawLineNumbers);
-
-	setVariable (x, "PolygonVal")->SetValueFloat(PolygonVal);
-	setVariable (x, "PolygonSat")->SetValueFloat(PolygonSat);
-	setVariable (x, "PolygonHue")->SetValueFloat(PolygonHue);
-	setVariable (x, "WireframeVal")->SetValueFloat(WireframeVal);
-	setVariable (x, "WireframeSat")->SetValueFloat(WireframeSat);
-	setVariable (x, "WireframeHue")->SetValueFloat(WireframeHue);
-	setVariable (x, "NormalsSat")->SetValueFloat(NormalsSat);
-	setVariable (x, "NormalsVal")->SetValueFloat(NormalsVal);
-	setVariable (x, "NormalsHue")->SetValueFloat(NormalsHue);
-	setVariable (x, "EndpointsSat")->SetValueFloat(EndpointsSat);
-	setVariable (x, "EndpointsVal")->SetValueFloat(EndpointsVal);
-	setVariable (x, "EndpointsHue")->SetValueFloat(EndpointsHue);
-	setVariable (x, "GCodeExtrudeHue")->SetValueFloat(GCodeExtrudeHue);
-	setVariable (x, "GCodeExtrudeSat")->SetValueFloat(GCodeExtrudeSat);
-	setVariable (x, "GCodeExtrudeVal")->SetValueFloat(GCodeExtrudeVal);
-	setVariable (x, "GCodeMoveHue")->SetValueFloat(GCodeMoveHue);
-	setVariable (x, "GCodeMoveSat")->SetValueFloat(GCodeMoveSat);
-	setVariable (x, "GCodeMoveVal")->SetValueFloat(GCodeMoveVal);
-	setVariable (x, "Highlight")->SetValueFloat(Highlight);
-	setVariable (x, "NormalsLength")->SetValueFloat(NormalsLength);
-	setVariable (x, "EndPointSize")->SetValueFloat(EndPointSize);
-	setVariable (x, "TempUpdateSpeed")->SetValueFloat(TempUpdateSpeed);
-
-	setVariable (x, "DisplayGCode")->SetValueFloat(DisplayGCode);
-	setVariable (x, "LuminanceShowsSpeed")->SetValueFloat(LuminanceShowsSpeed);
-
-	setVariable (x, "RaftEnable")->SetValueFloat(RaftEnable);
-	setVariable (x, "ApronEnable")->SetValueFloat(ApronEnable);
-	setVariable (x, "ApronPreview")->SetValueFloat(ApronPreview);
-	setVariable (x, "ApronSize")->SetValueFloat(ApronSize);
-	setVariable (x, "ApronHeight")->SetValueFloat(ApronHeight);
-	setVariable (x, "ApronCoverageX")->SetValueFloat(ApronCoverageX);
-	setVariable (x, "ApronCoverageY")->SetValueFloat(ApronCoverageY);
-	setVariable (x, "ApronDistanceToObject")->SetValueFloat(ApronDistanceToObject);
-	setVariable (x, "ApronInfillDistance")->SetValueFloat(ApronInfillDistance);
-
-	setVariable (x, "ShrinkFast")->SetValueInt(m_ShrinkQuality == SHRINK_FAST);
-	setVariable (x, "ShrinkNice")->SetValueInt(m_ShrinkQuality == SHRINK_NICE);
-	setVariable (x, "ShrinkLogick")->SetValueInt(m_ShrinkQuality == SHRINK_LOGICK);
-	setVariable (x, "Optimization")->SetValueFloat(Optimization);
-	setVariable (x, "ReceivingBufferSize")->SetValueInt(ReceivingBufferSize);
-
-	setVariable (x, "ApronInfillDistance")->SetValueFloat(ApronInfillDistance);
-
-	setVariable (x, "STLPath")->SetValue(STLPath.c_str());
-	setVariable (x, "RFOPath")->SetValue(RFOPath.c_str());
-	setVariable (x, "GCodePath")->SetValue(GCodePath.c_str());
-	setVariable (x, "SettingsPath")->SetValue(SettingsPath.c_str());
-}
-
-namespace {
-	std::string getXMLString (XMLElement *x, const char *name, const char *default_value)
-	{
-		XMLVariable *v = x->FindVariableZ ((char *)name, true, (char *)default_value);
-		if (v) {
-			int size = v->MemoryUsage() + 1024;
-			char *buffer = new char[size];
-			buffer[0] = '\0';
-			v->GetValue (buffer);
-			std::string retval(buffer);
-			delete[] buffer;
-			return retval;
-		} else
-			return std::string();
-	}
-
-	std::string getXMLString (XMLElement *x, const std::ostringstream &name,
-				  const std::ostringstream &default_value)
-	{
-		std::string s = name.str();
-		std::string d = default_value.str();
-		return getXMLString (x, s.c_str(), d.c_str());
-	}
-
-	// Calm our warning problem down ...
-	XMLVariable *getVariable (XMLElement *x, const char *variable, const char *default_value)
-	{
-		return x->FindVariableZ ((char *)variable, true, (char *)default_value);
-	}
-};
-
-void ProcessController::LoadXML(XMLElement *e)
-{
-	XMLElement *x = e->FindElementZ("ProcessController", true);
-
-	XMLVariable* y;
-
-	y = getVariable (x, "RaftSize", "1.33");
-	if(y)	RaftSize = y->GetValueFloat();
-	y = getVariable (x, "RaftBaseLayerCount", "1");
-	if(y)	RaftBaseLayerCount = y->GetValueInt();
-	y = getVariable (x, "RaftMaterialPrDistanceRatio", "1.7");
-	if(y)	RaftMaterialPrDistanceRatio = y->GetValueFloat();
-	y = getVariable (x, "RaftRotation", "90");
-	if(y)	RaftRotation = y->GetValueFloat();
-	y = getVariable (x, "RaftBaseDistance", "2.5");
-	if(y)	RaftBaseDistance = y->GetValueFloat();
-	y = getVariable (x, "RaftBaseThickness", "1");
-	if(y)	RaftBaseThickness = y->GetValueFloat();
-	y = getVariable (x, "RaftBaseTemperature", "190");
-	if(y)	RaftBaseTemperature = y->GetValueFloat();
-	y = getVariable (x, "RaftInterfaceLayerCount", "2");
-	if(y)	RaftInterfaceLayerCount = y->GetValueInt();
-	y = getVariable (x, "RaftInterfaceMaterialPrDistanceRatio", "1");
-	if(y)	RaftInterfaceMaterialPrDistanceRatio = y->GetValueFloat();
-	y = getVariable (x, "RaftRotationPrLayer", "90");
-	if(y)	RaftRotationPrLayer = y->GetValueFloat();
-	y = getVariable (x, "RaftInterfaceDistance", "2");
-	if(y)	RaftInterfaceDistance = y->GetValueFloat();
-	y = getVariable (x, "RaftInterfaceThickness", "1");
-	if(y)	RaftInterfaceThickness = y->GetValueFloat();
-	y = getVariable (x, "RaftInterfaceTemperature", "190");
-	if(y)	RaftInterfaceTemperature = y->GetValueFloat();
+	Config cfg;
+	cfg.readFile(filename.c_str());
+	
+	if (not cfg.lookupValue("RaftSize",RaftSize))
+		RaftSize = 1.33f;
+	if (not cfg.lookupValue("RaftBaseLayerCount",RaftBaseLayerCount))
+		RaftBaseLayerCount = 1;
+	if (not cfg.lookupValue("RaftMaterialPrDistanceRatio",RaftMaterialPrDistanceRatio))
+		RaftMaterialPrDistanceRatio = 1.7f;
+	if (not cfg.lookupValue("RaftRotation",RaftRotation))
+		RaftRotation = 90;
+	if (not cfg.lookupValue("RaftBaseDistance",RaftBaseDistance))
+		RaftBaseDistance = 2.5;
+	if (not cfg.lookupValue("RaftBaseThickness",RaftBaseThickness))
+		RaftBaseThickness = 1;
+	if (not cfg.lookupValue("RaftBaseTemperature",RaftBaseTemperature))
+		RaftBaseThickness = 190;
+	if (not cfg.lookupValue("RaftInterfaceLayerCount",RaftInterfaceLayerCount))
+		RaftInterfaceLayerCount = 2;
+	if (not cfg.lookupValue("RaftInterfaceMaterialPrDistanceRatio",RaftInterfaceMaterialPrDistanceRatio))
+		RaftInterfaceMaterialPrDistanceRatio = 1;
+	if (not cfg.lookupValue("RaftRotationPrLayer",RaftRotationPrLayer))
+		RaftRotationPrLayer = 90;
+	if (not cfg.lookupValue("RaftInterfaceDistance",RaftInterfaceDistance))
+		RaftInterfaceDistance = 2;
+	if (not cfg.lookupValue("RaftInterfaceThickness",RaftInterfaceThickness))
+		RaftInterfaceThickness = 1;
+	if (not cfg.lookupValue("RaftInterfaceTemperature",RaftInterfaceTemperature))
+		RaftInterfaceTemperature = 1;
 
 	// GCode parameters
 
-	GCodeStartText = getXMLString (x, "GCodeStartText",
-				       "; GCode generated by RepSnapper by Kulitorum\n"
+	if (not cfg.lookupValue("GCodeStartText",GCodeStartText))
+		GCodeStartText = "; GCode generated by RepSnapper by Kulitorum\n"
 				       "G21                              ;metric is good!\n"
 				       "G90                              ;absolute positioning\n"
 				       "T0                                 ;select new extruder\n"
 				       "G28                               ;go home\n"
 				       "G92 E0                          ;set extruder home\n"
 				       "M104 S73.0                   ;set temperature\n"
-				       "G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer\n"
-				       "\n");
-
+				       "G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer\n\n";
 	for (int i = 0; i < 20; i++) {
-		std::ostringstream os, empty, name, label;
+		std::ostringstream cbg, cbl, cbld;
 
-		os << "CustomButton" << i + 1 << "Text";
-		CustomButtonGcode[i] = getXMLString (x, os, empty);
-
-		name << "CustomButton" << i + 1 << "Label";
-		label << "Custom button" << i + 1;
-		CustomButtonLabel[i] = getXMLString (x, name, label);
+		cbg << "CustomButtonGcode[" << i << "]";
+		if (not cfg.lookupValue(cbg.str(),CustomButtonGcode[i]))
+			CustomButtonGcode[i] = "";
+			
+		cbl << "CustomButtonLabel[" << i << "]";
+		if (not cfg.lookupValue(cbg.str(),CustomButtonLabel[i]))
+		{
+			cbld << "Custom button" << (i + 1);
+			CustomButtonLabel[i] = cbld.str();
+		}
 	}
 
-	if (gui && gui->MVC )
+	if (gui && gui->MVC)
 		gui->MVC->RefreshCustomButtonLabels();
 
-	GCodeLayerText = getXMLString (x, "GCodeLayerText", "");
-	GCodeEndText = getXMLString (x, "GCodeEndText",
-				     "G1 X0 Y0 F2000.0       ;feed for start of next move\n"
-				     "M104 S0.0              ;Heater off\n");
+	if (not cfg.lookupValue("GCodeLayerText",GCodeLayerText))
+		GCodeLayerText = "";
 
-	m_sPortName = getXMLString (x, "m_sPortName", "");
-	if ( gui && gui->MVC )
-		  m_sPortName = gui->MVC->ValidateComPort( m_sPortName );
+	if (not cfg.lookupValue("GCodeEndText",GCodeEndText))
+		GCodeEndText = "G1 X0 Y0 F2000.0       ;feed for start of next move\n"
+                       "M104 S0.0              ;Heater off\n";
 
-	y = getVariable (x, "ValidateConnection", "1");
-	if(y)	m_bValidateConnection = (bool)y->GetValueInt();
+	if (not cfg.lookupValue("msPortName",m_sPortName))
+		m_sPortName = "";
+	if (gui && gui->MVC)
+		  m_sPortName = gui->MVC->ValidateComPort(m_sPortName);
+
+	if (not cfg.lookupValue("ValidateConnection",m_bValidateConnection))
+		m_bValidateConnection = true;
 
 
-	STLPath = getXMLString (x, "STLPath", "");
-	RFOPath = getXMLString (x, "RFOPath", "");
-	GCodePath = getXMLString (x, "GCodePath", "");
-	SettingsPath = getXMLString (x, "SettingsPath", "");
+	if (not cfg.lookupValue("STLPath",STLPath))
+		STLPath = "";
+	if (not cfg.lookupValue("RFOPath",RFOPath))
+		RFOPath = "";
+	if (not cfg.lookupValue("GCodePath",GCodePath))
+		GCodePath = "";
+	if (not cfg.lookupValue("SettingsPath",SettingsPath))
+		SettingsPath = "";
 
-	y = getVariable (x, "m_iSerialSpeed", "19200");
-	if(y)	m_iSerialSpeed = y->GetValueInt();
+	if (not cfg.lookupValue("miSerialSpeed",m_iSerialSpeed))
+		m_iSerialSpeed = 19200;
 
-	y = getVariable (x, "GCodeDrawStart", "0");
-	if(y)	GCodeDrawStart = y->GetValueFloat();
-	y = getVariable (x, "GCodeDrawEnd", "1");
-	if(y)	GCodeDrawEnd = y->GetValueFloat();
-	y = getVariable (x, "MinPrintSpeedXY", "2300");
-	if(y)	MinPrintSpeedXY = y->GetValueFloat();
-	y = getVariable (x, "MaxPrintSpeedXY", "2300");
-	if(y)	MaxPrintSpeedXY = y->GetValueFloat();
-	y = getVariable (x, "MinPrintSpeedZ", "70");
-	if(y)	MinPrintSpeedZ = y->GetValueFloat();
-	y = getVariable (x, "MaxPrintSpeedZ", "70");
-	if(y)	MaxPrintSpeedZ = y->GetValueFloat();
-	
-	y = getVariable (x, "EnableAntiooze", "0");
-	if(y)	EnableAntiooze = (bool)y->GetValueInt();
-	y = getVariable (x, "AntioozeDistance", "4.5");
-	if(y)	AntioozeDistance = y->GetValueFloat();
-	y = getVariable (x, "AntioozeSpeed", "1000");
-	if(y)	AntioozeSpeed = y->GetValueFloat();
+	if (not cfg.lookupValue("GCodeDrawStart",GCodeDrawStart))
+		GCodeDrawStart = 0;
+	if (not cfg.lookupValue("GCodeDrawEnd",GCodeDrawEnd))
+		GCodeDrawEnd = 1;
+	if (not cfg.lookupValue("MinPrintSpeedXY",MinPrintSpeedXY))
+		MinPrintSpeedXY = 2300;
+	if (not cfg.lookupValue("MaxPrintSpeedXY",MaxPrintSpeedXY))
+		MaxPrintSpeedXY = 2300;
+	if (not cfg.lookupValue("MinPrintSpeedZ",MinPrintSpeedZ))
+		MinPrintSpeedZ = 70;
+	if (not cfg.lookupValue("MaxPrintSpeedZ",MaxPrintSpeedZ))
+		MaxPrintSpeedZ = 70;
+	if (not cfg.lookupValue("EnableAntiooze",EnableAntiooze))
+		EnableAntiooze = false;
+	if (not cfg.lookupValue("AntioozeDistance",AntioozeDistance))
+		AntioozeDistance = 4.5;
+	if (not cfg.lookupValue("AntioozeSpeed",AntioozeSpeed))
+		AntioozeSpeed = 1000;
 
-	y = getVariable (x, "DistanceToReachFullSpeed", "3");
-	if(y)	DistanceToReachFullSpeed = y->GetValueFloat();
-	y = getVariable (x, "extrusionFactor", "1");
-	if(y)	extrusionFactor = y->GetValueFloat();
+	if (not cfg.lookupValue("DistanceToReachFullSpeed",DistanceToReachFullSpeed))
+		DistanceToReachFullSpeed = 3;
+	if (not cfg.lookupValue("extrusionFactor",extrusionFactor))
+		extrusionFactor = 1;
 
 	// Printer parameters
-	y = getVariable (x, "m_fVolume.x", "200");
-	if(y)	m_fVolume.x = y->GetValueFloat();
-	y = getVariable (x, "m_fVolume.y", "200");
-	if(y)	m_fVolume.y = y->GetValueFloat();
-	y = getVariable (x, "m_fVolume.z", "140");
-	if(y)	m_fVolume.z = y->GetValueFloat();
-	y = getVariable (x, "PrintMargin.x", "10");
-	if(y)	PrintMargin.x = y->GetValueFloat();
-	y = getVariable (x, "PrintMargin.y", "10");
-	if(y)	PrintMargin.y = y->GetValueFloat();
-	y = getVariable (x, "PrintMargin.z", "0");
-	if(y)	PrintMargin.z = y->GetValueFloat();
-	y = getVariable (x, "ExtrudedMaterialWidth", "0.7");
-	if(y)	ExtrudedMaterialWidth = y->GetValueFloat();
+	if (not cfg.lookupValue("mfVolumeX",m_fVolume.x))
+		m_fVolume.x = 200;
+	if (not cfg.lookupValue("mfVolumeY",m_fVolume.y))
+		m_fVolume.y = 200;
+	if (not cfg.lookupValue("mfVolumeZ",m_fVolume.z))
+		m_fVolume.z = 140;
+	if (not cfg.lookupValue("PrintMarginX",PrintMargin.x))
+		PrintMargin.x = 10;
+	if (not cfg.lookupValue("PrintMarginY",PrintMargin.y))
+		PrintMargin.y = 10;
+	if (not cfg.lookupValue("PrintMarginZ",PrintMargin.z))
+		PrintMargin.z = 0;
+	if (not cfg.lookupValue("ExtrudedMaterialWidth",ExtrudedMaterialWidth))
+		ExtrudedMaterialWidth = 0.7;
 
 
 	// STL parameters
-	y = getVariable (x, "LayerThickness", "0.4");
-	if(y)	LayerThickness = y->GetValueFloat();
-	y = getVariable (x, "CuttingPlaneValue", "0.5");
-	if(y)	CuttingPlaneValue = y->GetValueFloat();
+	if (not cfg.lookupValue("LayerThickness",LayerThickness))
+		LayerThickness = 0.4;
+	if (not cfg.lookupValue("CuttingPlaneValue",CuttingPlaneValue))
+		CuttingPlaneValue = 0.5;
 
 	// CuttingPlane
-	y = getVariable (x, "InfillDistance", "2");
-	if(y)	InfillDistance = y->GetValueFloat();
-	y = getVariable (x, "InfillRotation", "45");
-	if(y)	InfillRotation = y->GetValueFloat();
-	y = getVariable (x, "InfillRotationPrLayer", "90");
-	if(y)	InfillRotationPrLayer = y->GetValueFloat();
-	y = getVariable (x, "AltInfillDistance", "2");
-	if(y) AltInfillDistance = y->GetValueFloat();
+	if (not cfg.lookupValue("InfillDistance",InfillDistance))
+		InfillDistance = 2;
+	if (not cfg.lookupValue("InfillRotation",InfillRotation))
+		InfillRotation = 45;
+	if (not cfg.lookupValue("InfillRotationPrLayer",InfillRotationPrLayer))
+		InfillRotationPrLayer = 90;
+	if (not cfg.lookupValue("AltInfillDistance",AltInfillDistance))
+		AltInfillDistance = 2;
 
-	AltInfillLayersText = getXMLString (x, "AltInfillLayers", "");
+	if (not cfg.lookupValue("AltInfillLayersText",AltInfillLayersText))
+		AltInfillLayersText = "";
 
-	y = getVariable (x, "Optimization", "0.05");
-	if(y)	Optimization = y->GetValueFloat();
-	y = getVariable (x, "ReceivingBufferSize", "4");
-	if(y)	ReceivingBufferSize = y->GetValueInt();
-	y = getVariable (x, "ShellOnly", "0");
-	if(y)	ShellOnly = y->GetValueFloat();
-	y = getVariable (x, "ShellCount", "1");
-	if(y)	ShellCount = y->GetValueFloat();
-	y = getVariable (x, "EnableAcceleration", "0");
-	if(y)	EnableAcceleration = (bool)y->GetValueInt();
-	y = getVariable (x, "UseIncrementalEcode", "1");
-	if(y)	UseIncrementalEcode= (bool)y->GetValueInt();
-	y = getVariable (x, "Use3DGcode", "0");
-	if(y)	Use3DGcode= (bool)y->GetValueInt();
+	if (not cfg.lookupValue("Optimization",Optimization))
+		Optimization = 0.05;
+	if (not cfg.lookupValue("ReceivingBufferSize",ReceivingBufferSize))
+		Optimization = 4;
+	if (not cfg.lookupValue("ShellOnly",ShellOnly))
+		ShellOnly = 0;
+	if (not cfg.lookupValue("ShellCount",ShellCount))
+		ShellCount = 1;
+	if (not cfg.lookupValue("EnableAcceleration",EnableAcceleration))
+		ShellCount = false;
+	if (not cfg.lookupValue("UseIncrementalEcode",UseIncrementalEcode))
+		UseIncrementalEcode = true;
+	if (not cfg.lookupValue("Use3DGcode",Use3DGcode))
+		Use3DGcode = false;
 
-	y = getVariable (x, "FileLogginEnabled", "1");
-	if(y)	FileLogginEnabled= (bool)y->GetValueInt();
-	y = getVariable (x, "TempReadingEnabled", "1");
-	if(y)	TempReadingEnabled= (bool)y->GetValueInt();
-	y = getVariable (x, "ClearLogfilesWhenPrintStarts", "1");
-	if(y)	ClearLogfilesWhenPrintStarts= (bool)y->GetValueInt();
+	if (not cfg.lookupValue("FileLogginEnabled",FileLogginEnabled))
+		FileLogginEnabled = true;
+	if (not cfg.lookupValue("TempReadingEnabled",TempReadingEnabled))
+		TempReadingEnabled = true;
+	if (not cfg.lookupValue("ClearLogfilesWhenPrintStarts",ClearLogfilesWhenPrintStarts))
+		ClearLogfilesWhenPrintStarts = true;
 
-	y = getVariable (x, "ValidateConnection", "1");
-	if(y)	m_bValidateConnection = (bool)y->GetValueInt();
+	if (not cfg.lookupValue("ValidateConnection",m_bValidateConnection))
+		m_bValidateConnection = true;
 
 	// GUI... ?
-	y = getVariable (x, "DisplayEndpoints", "0");
-	if(y)	DisplayEndpoints = (bool)y->GetValueInt();
-	y = getVariable (x, "DisplayNormals", "0");
-	if(y)	DisplayNormals = (bool)y->GetValueInt();
-	y = getVariable (x, "DisplayWireframe", "0");
-	if(y)	DisplayWireframe = (bool)y->GetValueInt();
-	y = getVariable (x, "DisplayWireframeShaded", "1");
-	if(y)	DisplayWireframeShaded = (bool)y->GetValueInt();
-	y = getVariable (x, "DisplayPolygons", "1");
-	if(y)	DisplayPolygons = (bool)y->GetValueInt();
-	y = getVariable (x, "DisplayAllLayers", "0");
-	if(y)	DisplayAllLayers = (bool)y->GetValueInt();
-	y = getVariable (x, "DisplayinFill", "1");
-	if(y)	DisplayinFill = (bool)y->GetValueInt();
-	y = getVariable (x, "DisplayDebuginFill", "0");
-	if(y)	DisplayDebuginFill = (bool)y->GetValueInt();
-	y = getVariable (x, "DisplayDebug", "0");
-	if(y)	DisplayDebug = (bool)y->GetValueInt();
-	y = getVariable (x, "DisplayCuttingPlane", "0");
-	if(y)	DisplayCuttingPlane =(bool)y->GetValueInt();
-	y = getVariable (x, "DrawVertexNumbers", "0");
-	if(y)	DrawVertexNumbers = (bool)y->GetValueInt();
-	y = getVariable (x, "DrawLineNumbers", "0");
-	if(y)	DrawLineNumbers = (bool)y->GetValueInt();
+	if (not cfg.lookupValue("DisplayEndpoints",DisplayEndpoints))
+		DisplayEndpoints = false;
+	if (not cfg.lookupValue("DisplayNormals",DisplayNormals))
+		DisplayNormals = false;
+	if (not cfg.lookupValue("DisplayWireframe",DisplayWireframe))
+		DisplayWireframe = false;
+	if (not cfg.lookupValue("DisplayWireframeShaded",DisplayWireframeShaded))
+		DisplayWireframeShaded = true;
+	if (not cfg.lookupValue("DisplayPolygons",DisplayPolygons))
+		DisplayPolygons = true;
+	if (not cfg.lookupValue("DisplayAllLayers",DisplayAllLayers))
+		DisplayAllLayers = false;
+	if (not cfg.lookupValue("DisplayinFill",DisplayinFill))
+		DisplayinFill = true;
+	if (not cfg.lookupValue("DisplayDebuginFill",DisplayDebuginFill))
+		DisplayDebuginFill = false;
+	if (not cfg.lookupValue("DisplayDebug",DisplayDebug))
+		DisplayDebug = false;
+	if (not cfg.lookupValue("DisplayCuttingPlane",DisplayCuttingPlane))
+		DisplayCuttingPlane = false;
+	if (not cfg.lookupValue("DrawVertexNumbers",DrawVertexNumbers))
+		DrawVertexNumbers = false;
+	if (not cfg.lookupValue("DrawLineNumbers",DrawLineNumbers))
+		DrawLineNumbers = false;
 
-	y = getVariable (x, "PolygonVal", "0.5");
-	if(y)	PolygonVal = y->GetValueFloat();
-	y = getVariable (x, "PolygonSat", "1");
-	if(y)	PolygonSat = y->GetValueFloat();
-	y = getVariable (x, "PolygonHue", "0.54");
-	if(y)	PolygonHue = y->GetValueFloat();
-	y = getVariable (x, "WireframeVal", "1");
-	if(y)	WireframeVal = y->GetValueFloat();
-	y = getVariable (x, "WireframeSat", "1");
-	if(y)	WireframeSat = y->GetValueFloat();
-	y = getVariable (x, "WireframeHue", "0.08");
-	if(y)	WireframeHue = y->GetValueFloat();
-	y = getVariable (x, "NormalsSat", "1");
-	if(y)	NormalsSat = y->GetValueFloat();
-	y = getVariable (x, "NormalsVal", "1");
-	if(y)	NormalsVal = y->GetValueFloat();
-	y = getVariable (x, "NormalsHue", "0.23");
-	if(y)	NormalsHue = y->GetValueFloat();
-	y = getVariable (x, "EndpointsSat", "1");
-	if(y)	EndpointsSat = y->GetValueFloat();
-	y = getVariable (x, "EndpointsVal", "1");
-	if(y)	EndpointsVal = y->GetValueFloat();
-	y = getVariable (x, "EndpointsHue", "0.45");
-	if(y)	EndpointsHue = y->GetValueFloat();
-	y = getVariable (x, "GCodeExtrudeHue", "0.18");
-	if(y)	GCodeExtrudeHue = y->GetValueFloat();
-	y = getVariable (x, "GCodeExtrudeSat", "1");
-	if(y)	GCodeExtrudeSat = y->GetValueFloat();
-	y = getVariable (x, "GCodeExtrudeVal", "1");
-	if(y)	GCodeExtrudeVal = y->GetValueFloat();
-	y = getVariable (x, "GCodeMoveHue", "1");
-	if(y)	GCodeMoveHue = y->GetValueFloat();
-	y = getVariable (x, "GCodeMoveSat", "0.95");
-	if(y)	GCodeMoveSat = y->GetValueFloat();
-	y = getVariable (x, "GCodeMoveVal", "1");
-	if(y)	GCodeMoveVal = y->GetValueFloat();
-	y = getVariable (x, "Highlight", "0.7");
-	if(y)	Highlight = y->GetValueFloat();
-	y = getVariable (x, "NormalsLength", "10");
-	if(y)	NormalsLength = y->GetValueFloat();
-	y = getVariable (x, "EndPointSize", "8");
-	if(y)	EndPointSize = y->GetValueFloat();
+	if (not cfg.lookupValue("PolygonVal",PolygonVal))
+		PolygonVal = 0.5;
+	if (not cfg.lookupValue("PolygonSat",PolygonSat))
+		PolygonSat = 1;
+	if (not cfg.lookupValue("PolygonHue",PolygonHue))
+		PolygonHue = 0.54;
+	if (not cfg.lookupValue("WireframeVal",WireframeVal))
+		WireframeVal = 1;
+	if (not cfg.lookupValue("WireframeSat",WireframeSat))
+		WireframeSat = 1;
+	if (not cfg.lookupValue("WireframeHue",WireframeHue))
+		WireframeHue = 0.08;
+	if (not cfg.lookupValue("NormalsSat",NormalsSat))
+		NormalsSat = 1;
+	if (not cfg.lookupValue("NormalsVal",NormalsVal))
+		NormalsVal = 1;
+	if (not cfg.lookupValue("NormalsHue",NormalsHue))
+		NormalsHue = 0.23;
+	if (not cfg.lookupValue("EndpointsSat",EndpointsSat))
+		EndpointsSat = 1;
+	if (not cfg.lookupValue("EndpointsVal",EndpointsVal))
+		EndpointsVal = 1;
+	if (not cfg.lookupValue("EndpointsHue",EndpointsHue))
+		EndpointsHue = 0.45;
+	if (not cfg.lookupValue("GCodeExtrudeHue",GCodeExtrudeHue))
+		GCodeExtrudeHue = 0.18;
+	if (not cfg.lookupValue("GCodeExtrudeSat",GCodeExtrudeSat))
+		GCodeExtrudeSat = 1;
+	if (not cfg.lookupValue("GCodeExtrudeVal",GCodeExtrudeVal))
+		GCodeExtrudeVal = 1;
+	if (not cfg.lookupValue("GCodeMoveHue",GCodeMoveHue))
+		GCodeMoveHue = 1;
+	if (not cfg.lookupValue("GCodeMoveSat",GCodeMoveSat))
+		GCodeMoveSat = 0.95;
+	if (not cfg.lookupValue("GCodeMoveVal",GCodeMoveVal))
+		GCodeMoveVal = 1;
+	if (not cfg.lookupValue("Highlight",Highlight))
+		Highlight = 0.7;
+	if (not cfg.lookupValue("NormalsLength",NormalsLength))
+		NormalsLength = 10;
+	if (not cfg.lookupValue("EndPointSize",EndPointSize))
+		EndPointSize = 8;
 
-	y = getVariable (x, "TempUpdateSpeed", "3");
-	if(y)	TempUpdateSpeed = y->GetValueFloat();
+	if (not cfg.lookupValue("TempUpdateSpeed",TempUpdateSpeed))
+		TempUpdateSpeed = 3;
 
+	if (not cfg.lookupValue("DisplayGCode",DisplayGCode))
+		DisplayGCode = true;
+	if (not cfg.lookupValue("LuminanceShowsSpeed",LuminanceShowsSpeed))
+		LuminanceShowsSpeed = false;
 
-	y = getVariable (x, "DisplayGCode", "1");
-	if(y)	DisplayGCode = (bool)y->GetValueInt();
-	y = getVariable (x, "LuminanceShowsSpeed", "0");
-	if(y)	LuminanceShowsSpeed = (bool)y->GetValueInt();
+	if (not cfg.lookupValue("RaftEnable",RaftEnable))
+		RaftEnable = false;
+	if (not cfg.lookupValue("ApronEnable",ApronEnable))
+		ApronEnable = false;
+	if (not cfg.lookupValue("ApronPreview",ApronPreview))
+		ApronPreview = true;
+	if (not cfg.lookupValue("ApronSize",ApronSize))
+		ApronSize = 1.33;
+	if (not cfg.lookupValue("ApronHeight",ApronHeight))
+		ApronHeight = 7;
+	if (not cfg.lookupValue("ApronCoverageX",ApronCoverageX))
+		ApronCoverageX = 60;
+	if (not cfg.lookupValue("ApronCoverageY",ApronCoverageY))
+		ApronCoverageY = 60;
+	if (not cfg.lookupValue("ApronDistanceToObject",ApronDistanceToObject))
+		ApronDistanceToObject = 0.5;
+	if (not cfg.lookupValue("ApronInfillDistance",ApronInfillDistance))
+		ApronInfillDistance = 2;
 
-	y = getVariable (x, "RaftEnable", "0");
-	if(y)	RaftEnable = (bool)y->GetValueInt();
-	y = getVariable (x, "ApronEnable", "0");
-	if(y)	ApronEnable = (bool)y->GetValueInt();
-	y = getVariable (x, "ApronPreview", "1");
-	if(y)	ApronPreview = (bool)y->GetValueInt();
-	y = getVariable (x, "ApronSize", "1.33");
-	if(y)	ApronSize = (bool)y->GetValueFloat();
-	y = getVariable (x, "ApronHeight", "7");
-	if(y)	ApronHeight = (bool)y->GetValueFloat();
-	y = getVariable (x, "ApronCoverageX", "60");
-	if(y)	ApronCoverageX = (bool)y->GetValueFloat();
-	y = getVariable (x, "ApronCoverageY", "60");
-	if(y)	ApronCoverageY = (bool)y->GetValueFloat();
-	y = getVariable (x, "ApronDistanceToObject", "0.5");
-	if(y)	ApronDistanceToObject = (bool)y->GetValueFloat();
-	y = getVariable (x, "ApronInfillDistance", "2");
-	if(y)	ApronInfillDistance = (bool)y->GetValueFloat();
-
-	y = getVariable (x, "ShrinkFast", "1"); // "1" makes this the default, must be on top to allow the others to overwrite if set.
-	if(y && (bool)y->GetValueInt())	m_ShrinkQuality = SHRINK_FAST;
-	y = getVariable (x, "ShrinkNice", "0");
-	if(y && (bool)y->GetValueInt())	m_ShrinkQuality = SHRINK_NICE;
-	y = getVariable (x, "ShrinkLogick", "0");
-	if(y && (bool)y->GetValueInt())	m_ShrinkQuality = SHRINK_LOGICK;
-}
-
-void ProcessController::LoadXML(string filename)
-{
-	XML* xml = new XML (filename.c_str());
-	XMLElement* e = xml->GetRootElement ();
-	LoadXML (e);
-}
-
-void ProcessController::LoadXML()
-{
-	LoadXML (m_Filename + ".xml");
-}
-
-void ProcessController::SaveXML()
-{
-	string filename = m_Filename + ".xml";
-
-	XML* xml = new XML (filename.c_str());
-	if (xml) {
-		XMLElement* e = xml->GetRootElement();
-		SaveXML (e);
-		if (xml->IntegrityTest())
-			xml->Save(); // Saves back to file
-		delete xml;
+	if (not cfg.lookupValue("ShrinkLogick",m_ShrinkQuality))
+	{
+		if (not cfg.lookupValue("ShrinkNice",m_ShrinkQuality))
+		{
+			if (not cfg.lookupValue("ShrinkFast",m_ShrinkQuality))
+			{
+				m_ShrinkQuality = SHRINK_FAST;
+			}
+		}
 	}
 }
+
 /*
 void ProcessController::BindLua(lua_State *myLuaState)
 {
@@ -1092,11 +874,277 @@ void ProcessController::SaveBuffers()
 void ProcessController::SaveSettings()
 {
 	SaveBuffers();
-	SaveXML();
+	SaveConfig();
 }
 
 void ProcessController::SaveSettingsAs(string path)
 {
 	SaveBuffers();
-	SaveXML(path);
+	SaveConfig(path + ".conf");
+}
+
+void ProcessController::SaveConfig()
+{
+	string filename = m_Filename + ".conf";
+	SaveConfig(filename);
+}
+
+void ProcessController::SaveConfig(string path)
+{
+	// add error handling
+	Config cfg;
+	Setting &root = cfg.getRoot();
+
+	// Raft parameters
+	Setting &rs = root.add("RaftSize", Setting::TypeFloat);
+	rs = RaftSize;
+
+	Setting &rblc = root.add("RaftBaseLayerCount", Setting::TypeInt);
+	rblc = int(RaftBaseLayerCount);
+	Setting &rmpdr = root.add("RaftMaterialPrDistanceRatio", Setting::TypeFloat);
+	rmpdr = RaftMaterialPrDistanceRatio;
+	Setting &rafrot = root.add("RaftRotation", Setting::TypeFloat);
+	rafrot = RaftRotation;
+	Setting &rbd = root.add("RaftBaseDistance", Setting::TypeFloat);
+	rbd = RaftBaseDistance;
+	Setting &rbt = root.add("RaftBaseThickness", Setting::TypeFloat);
+	rbt = RaftBaseThickness;
+	Setting &rbT = root.add("RaftBaseTemperature", Setting::TypeFloat);
+	rbT = RaftBaseTemperature;
+	Setting &rilc = root.add("RaftInterfaceLayerCount", Setting::TypeInt);
+	rilc = int(RaftInterfaceLayerCount);
+	Setting &rimpdr = root.add("RaftInterfaceMaterialPrDistanceRatio", Setting::TypeFloat);
+	rimpdr = RaftInterfaceMaterialPrDistanceRatio;
+	Setting &rrpl = root.add("RaftRotationPrLayer", Setting::TypeFloat);
+	rrpl = RaftRotationPrLayer;
+	Setting &rid = root.add("RaftInterfaceDistance", Setting::TypeFloat);
+	rid = RaftInterfaceDistance;
+	Setting &rit = root.add("RaftInterfaceThickness", Setting::TypeFloat);
+	rit = RaftInterfaceDistance;
+	Setting &riT = root.add("RaftInterfaceTemperature", Setting::TypeFloat);
+	riT = RaftInterfaceTemperature;
+
+	// GCode parameters
+	Setting &gst = root.add("GCodeStartText", Setting::TypeString);
+	gst = GCodeStartText;
+	Setting &glt = root.add("GCodeLayerText", Setting::TypeString);
+	glt = GCodeLayerText;
+	Setting &get = root.add("GCodeEndText", Setting::TypeString);
+	get = GCodeEndText;
+	Setting &mspn = root.add("msPortName", Setting::TypeString);
+	mspn = m_sPortName;
+	Setting &vc = root.add("ValidateConnection", Setting::TypeInt);
+	vc = int(m_bValidateConnection);
+
+	Setting &cbg = root.add("CustomButtonGcode", Setting::TypeArray);	
+	Setting &cbl = root.add("CustomButtonLabel", Setting::TypeArray);
+	for (int i = 0; i < 20; i++) {
+		cbg.add(Setting::TypeString);
+		cbl.add(Setting::TypeString);
+		cbg[i] = CustomButtonGcode[i];
+		cbl[i] = CustomButtonLabel[i];
+	}
+
+	Setting &miss = root.add("miSerialSpeed", Setting::TypeInt);
+	miss = m_iSerialSpeed;
+	Setting &gds = root.add("GCodeDrawStart", Setting::TypeFloat);
+	gds = GCodeDrawStart;
+
+	Setting &gde = root.add("GCodeDrawEnd", Setting::TypeFloat);
+	gde = GCodeDrawEnd;
+	Setting &se = root.add("ShellOnly", Setting::TypeBoolean);
+	se = ShellOnly;
+	Setting &sc = root.add("ShellCount", Setting::TypeInt);
+	sc = int(ShellCount);
+
+	// Printer parameters
+	Setting &mpsxy = root.add("MinPrintSpeedXY", Setting::TypeFloat);
+	mpsxy = MinPrintSpeedXY;
+	Setting &Mpsxy = root.add("MaxPrintSpeedXY", Setting::TypeFloat);
+	Mpsxy = MaxPrintSpeedXY;
+	Setting &mpsz = root.add("MinPrintSpeedZ", Setting::TypeFloat);
+	mpsz = MinPrintSpeedZ;
+	Setting &Mpsz = root.add("MaxPrintSpeedZ", Setting::TypeFloat);
+	Mpsz = MaxPrintSpeedZ;
+	Setting &dtrfs = root.add("DistanceToReachFullSpeed", Setting::TypeFloat);
+	dtrfs = DistanceToReachFullSpeed;
+	Setting &ef = root.add("extrusionFactor", Setting::TypeFloat);
+	ef = extrusionFactor;
+	Setting &ea = root.add("EnableAcceleration", Setting::TypeBoolean);
+	ea = EnableAcceleration;
+	Setting &uie = root.add("UseIncrementalEcode", Setting::TypeBoolean);
+	uie = UseIncrementalEcode;
+	Setting &u3g = root.add("Use3DGcode", Setting::TypeBoolean);
+	u3g = Use3DGcode;
+	Setting &Ea = root.add("EnableAntiooze", Setting::TypeBoolean);
+	Ea = EnableAntiooze;
+	Setting &ad = root.add("AntioozeDistance", Setting::TypeFloat);
+	ad = AntioozeDistance;
+	Setting &as = root.add("AntioozeSpeed", Setting::TypeFloat);
+	as = AntioozeSpeed;
+
+	Setting &fle = root.add("FileLogginEnabled", Setting::TypeBoolean);
+	fle = FileLogginEnabled;
+	Setting &tre = root.add("TempReadingEnabled", Setting::TypeBoolean);
+	tre = TempReadingEnabled;
+	Setting &clwps = root.add("ClearLogfilesWhenPrintStarts", Setting::TypeBoolean);
+	clwps = ClearLogfilesWhenPrintStarts;
+
+	Setting &mfvx = root.add("mfVolumeX", Setting::TypeFloat);
+	mfvx = m_fVolume.x;
+	Setting &mfvy = root.add("mfVolumeY", Setting::TypeFloat);
+	mfvy = m_fVolume.y;
+	Setting &mfvz = root.add("mfVolumeZ", Setting::TypeFloat);
+	mfvz = m_fVolume.z;
+	Setting &pmx = root.add("PrintMarginX", Setting::TypeFloat);
+	pmx = PrintMargin.x;
+	Setting &pmy = root.add("PrintMarginY", Setting::TypeFloat);
+	pmy = PrintMargin.y;
+	Setting &prinmz = root.add("PrintMarginZ", Setting::TypeFloat);
+	prinmz = PrintMargin.z;
+
+	Setting &emw = root.add("ExtrudedMaterialWidth", Setting::TypeFloat);
+	emw = ExtrudedMaterialWidth;
+	Setting &lt = root.add("LayerThickness", Setting::TypeFloat);
+	lt = LayerThickness;
+
+	// CuttingPlane parameters
+	Setting &id = root.add("InfillDistance", Setting::TypeFloat);
+	id = InfillDistance;
+	Setting &ir = root.add("InfillRotation", Setting::TypeFloat);
+	ir = InfillRotation;
+	Setting &irpl = root.add("InfillRotationPrLayer", Setting::TypeFloat);
+	irpl = InfillRotationPrLayer;
+	Setting &aid = root.add("AltInfillDistance", Setting::TypeFloat);
+	aid = AltInfillDistance;
+	Setting &ail = root.add("AltInfillLayersText", Setting::TypeString);
+	ail = AltInfillLayersText;
+	Setting &po = root.add("PolygonOpasity", Setting::TypeFloat);
+	po = PolygonOpasity;
+
+	// GUI parameters
+	Setting &cpv = root.add("CuttingPlaneValue", Setting::TypeFloat);
+	cpv = CuttingPlaneValue;
+	Setting &exam = root.add("Examine", Setting::TypeFloat);
+	exam = Examine;
+
+	Setting &de = root.add("DisplayEndpoints", Setting::TypeBoolean);
+	de = DisplayEndpoints;
+	Setting &dn = root.add("DisplayNormals", Setting::TypeBoolean);
+	dn = DisplayNormals;
+	Setting &dw = root.add("DisplayWireframe", Setting::TypeBoolean);
+	dw = DisplayWireframe;
+	Setting &dws = root.add("DisplayWireframeShaded", Setting::TypeBoolean);
+	dws = DisplayWireframeShaded;
+	Setting &dp = root.add("DisplayPolygons", Setting::TypeBoolean);
+	dp = DisplayPolygons;
+	Setting &dal = root.add("DisplayAllLayers", Setting::TypeBoolean);
+	dal = DisplayAllLayers;
+	Setting &dif = root.add("DisplayinFill", Setting::TypeBoolean);
+	dif = DisplayinFill;
+	Setting &ddif = root.add("DisplayDebuginFill", Setting::TypeBoolean);
+	ddif = DisplayDebuginFill;
+	Setting &dd = root.add("DisplayDebug", Setting::TypeBoolean);
+	dd = DisplayDebug;
+	Setting &dcp = root.add("DisplayCuttingPlane", Setting::TypeBoolean);
+	dcp = DisplayCuttingPlane;
+	Setting &dvn = root.add("DrawVertexNumbers", Setting::TypeBoolean);
+	dvn = DrawVertexNumbers;
+	Setting &dln = root.add("DrawLineNumbers", Setting::TypeBoolean);
+	dln = DrawLineNumbers;
+	Setting &pv = root.add("PolygonVal", Setting::TypeFloat);
+	pv = PolygonVal;
+	Setting &ps = root.add("PolygonSat", Setting::TypeFloat);
+	ps = PolygonSat;
+	Setting &ph = root.add("PolygonHue", Setting::TypeFloat);
+	ph = PolygonHue;
+	Setting &wfv = root.add("WireframeVal", Setting::TypeFloat);
+	wfv = WireframeVal;
+	Setting &wfs = root.add("WireframeSat", Setting::TypeFloat);
+	wfs = WireframeSat;
+	Setting &wfh = root.add("WireframeHue", Setting::TypeFloat);
+	wfh = WireframeHue;
+	Setting &ns = root.add("NormalsSat", Setting::TypeFloat);
+	ns = NormalsSat;
+	Setting &nv = root.add("NormalsVal", Setting::TypeFloat);
+	nv = NormalsVal;
+	Setting &nh = root.add("NormalsHue", Setting::TypeFloat);
+	nh = NormalsHue;
+	Setting &es = root.add("EndpointsSat", Setting::TypeFloat);
+	es = EndpointsSat;
+	Setting &ev = root.add("EndpointsVal", Setting::TypeFloat);
+	ev = EndpointsVal;
+	Setting &eh = root.add("EndpointsHue", Setting::TypeFloat);
+	eh = EndpointsHue;
+	Setting &geh = root.add("GCodeExtrudeHue", Setting::TypeFloat);
+	geh = GCodeExtrudeHue;
+	Setting &ges = root.add("GCodeExtrudeSat", Setting::TypeFloat);
+	ges = GCodeExtrudeSat;
+	Setting &gev = root.add("GCodeExtrudeVal", Setting::TypeFloat);
+	gev = GCodeExtrudeVal;
+	Setting &gmh = root.add("GCodeMoveHue", Setting::TypeFloat);
+	gmh = GCodeMoveHue;
+	Setting &gms = root.add("GCodeMoveSat", Setting::TypeFloat);
+	gms = GCodeMoveSat;
+	Setting &gmv = root.add("GCodeMoveVal", Setting::TypeFloat);
+	gmv = GCodeMoveVal;
+	Setting &hil = root.add("Highlight", Setting::TypeFloat);
+	hil = Highlight;
+
+	Setting &nl = root.add("NormalsLength", Setting::TypeFloat);
+	nl = NormalsLength;
+	Setting &eps = root.add("EndPointSize", Setting::TypeFloat);
+	eps = EndPointSize;
+	Setting &tus = root.add("TempUpdateSpeed", Setting::TypeFloat);
+	tus = TempUpdateSpeed;
+
+	Setting &dgc = root.add("DisplayGCode", Setting::TypeBoolean);
+	dgc = DisplayGCode;
+
+	Setting &lss = root.add("LuminanceShowsSpeed", Setting::TypeBoolean);
+	lss = LuminanceShowsSpeed;
+
+	Setting &rafte = root.add("RaftEnable", Setting::TypeBoolean);
+	rafte = RaftEnable;
+
+	Setting &aproe = root.add("ApronEnable", Setting::TypeBoolean);
+	aproe = ApronEnable;
+
+	Setting &aprpre = root.add("ApronPreview", Setting::TypeBoolean);
+	aprpre = ApronPreview;
+	Setting &aprsiz = root.add("ApronSize", Setting::TypeFloat);
+	aprsiz = ApronSize;
+	
+	Setting &aprh = root.add("ApronHeight", Setting::TypeFloat);
+	aprh = ApronHeight;
+	Setting &acx = root.add("ApronCoverageX", Setting::TypeFloat);
+	acx = ApronCoverageX;
+	Setting &acy = root.add("ApronCoverageY", Setting::TypeFloat);
+	acy = ApronCoverageY;
+	Setting &adto = root.add("ApronDistanceToObject", Setting::TypeFloat);
+	adto = ApronDistanceToObject;
+	Setting &ainfd = root.add("ApronInfillDistance", Setting::TypeFloat);
+	ainfd = ApronInfillDistance;
+
+	Setting &shf = root.add("ShrinkFast", Setting::TypeBoolean);
+	shf = (m_ShrinkQuality == SHRINK_FAST);
+	Setting &shn = root.add("ShrinkNice", Setting::TypeBoolean);
+	shn = (m_ShrinkQuality == SHRINK_NICE);
+	Setting &shl = root.add("ShrinkLogick", Setting::TypeBoolean);
+	shl = (m_ShrinkQuality == SHRINK_LOGICK);
+	Setting &optim = root.add("Optimization", Setting::TypeFloat);
+	optim = Optimization;
+	Setting &rebs = root.add("ReceivingBufferSize", Setting::TypeInt);
+	rebs = ReceivingBufferSize;
+
+	Setting &stlp = root.add("STLPath", Setting::TypeString);
+	stlp = STLPath;
+	Setting &rfop = root.add("RFOPath", Setting::TypeString);
+	rfop = RFOPath;
+	Setting &gcop = root.add("GCodePath", Setting::TypeString);
+	gcop = GCodePath;
+	Setting &setp = root.add("SettingsPath", Setting::TypeString);
+	setp = SettingsPath;
+	
+	cfg.writeFile(path.c_str());
 }

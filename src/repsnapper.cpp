@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 			MVC->ReadStl(opts.stl_input_path);
 
 			if (opts.settings_path.size() > 0) {
-				MVC->ProcessControl.LoadXML(opts.settings_path);
+				MVC->ProcessControl.LoadConfig(opts.settings_path);
 				MVC->CopySettingsToGUI();
 			}
 
