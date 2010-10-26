@@ -1272,7 +1272,7 @@ void ModelViewController::RunLua(char* script)
 	refreshGraphicsView (this);
 #endif // ENABLE_LUA
 }
-void ModelViewController::ReadRFO(string filename)
+/*void ModelViewController::ReadRFO(string filename)
 {
 	ProcessControl.rfo.Open(filename, ProcessControl);
 	string path;
@@ -1287,7 +1287,7 @@ void ModelViewController::ReadRFO(string filename)
 
 	ProcessControl.rfo.Load(path, ProcessControl);
 	ProcessControl.CalcBoundingBoxAndZoom();
-}
+}*/
 
 void ModelViewController::GetSelectedRFO(RFO_Object **selectedObject, RFO_File **selectedFile)
 {

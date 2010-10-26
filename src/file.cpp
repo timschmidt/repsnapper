@@ -180,11 +180,6 @@ void FileChooser::ioDialog (ModelViewController *mvc, Op o, Type t, bool dropRFO
     title = "Choose GCODE filename";
     directory = mvc->ProcessControl.GCodePath.c_str();
     break;
-  case RFO:
-    filter = "*.xml";
-    title = "Choose RFO filename";
-    directory = mvc->ProcessControl.RFOPath.c_str();
-    break;
   case STL:
   default:
     filter = "*.stl";
@@ -210,21 +205,10 @@ void FileChooser::ioDialog (ModelViewController *mvc, Op o, Type t, bool dropRFO
   if (!file.length())
     return;
 
-  /* FIXME: we need to drop that RFO much more often here I suspect */
-  if (dropRFO)
-    mvc->ClearRFO();
-
   boost::filesystem::path path(file);
   std::string directory_path = path.branch_path().native_directory_string();
 
   switch (t) {
-  case RFO:
-    if (o == OPEN)
-      mvc->ReadRFO (file);
-    else
-      mvc->ProcessControl.rfo.Save(file, mvc->ProcessControl);
-    mvc->ProcessControl.RFOPath = directory_path;
-    break;
   case GCODE:
     if (o == OPEN)
       mvc->ReadGCode (file);

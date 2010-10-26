@@ -172,12 +172,12 @@ MVC->ConnectToPrinter(o->value());}
             }
           }
           Fl_Output VersionText {
-            label Version selected
+            label Version
             xywh {775 770 468 24}
           }
         }
         Fl_Group {} {
-          label {Input file}
+          label {Input file} open selected
           xywh {715 25 560 790} hide
         } {
           Fl_Button {} {
@@ -232,11 +232,6 @@ MVC->redraw();}
             label {Save settings}
             callback {MVC->ProcessControl.SaveSettings();}
             xywh {1130 35 135 25}
-          }
-          Fl_Button {} {
-            label {Load RFO}
-            callback {FileChooser::ioDialog (MVC, FileChooser::OPEN, FileChooser::RFO);}
-            xywh {725 65 130 25}
           }
           Fl_Box RFP_Browser {
             label {RFO file}
@@ -328,16 +323,6 @@ MVC->redraw();}
             label {Object name}
             callback {MVC->setObjectname(o->value());}
             xywh {1085 376 180 24} align 5
-          }
-          Fl_Button {} {
-            label {New RFO Object}
-            callback {MVC->newObject();}
-            xywh {855 65 135 25}
-          }
-          Fl_Button {} {
-            label {Save RFO}
-            callback {FileChooser::ioDialog (MVC, FileChooser::SAVE, FileChooser::RFO);}
-            xywh {1130 95 135 25}
           }
           Fl_Button {} {
             label Delete

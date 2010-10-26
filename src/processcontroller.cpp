@@ -10,7 +10,6 @@
 *
 * ------------------------------------------------------------------------- */
 #include "stdafx.h"
-#include "xml/xml.h"
 #include "modelviewcontroller.h"
 #include "processcontroller.h"
 #include <boost/algorithm/string.hpp>
