@@ -449,7 +449,7 @@ void ProcessController::LoadConfig(string filename)
 						   "T0                                 ;select new extruder\n"
 						   "G28                               ;go home\n"
 						   "G92 E0                          ;set extruder home\n"
-						   "M104 S73.0                   ;set temperature\n"
+						   "M104 S200.0                   ;set temperature\n"
 						   "G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer\n\n";
 		for (int i = 0; i < 20; i++) {
 			std::ostringstream cbg, cbl, cbld;
