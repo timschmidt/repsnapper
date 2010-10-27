@@ -160,7 +160,7 @@ public:
 	void SetRaftBaseDistance(float val){ProcessControl.RaftBaseDistance=val;}
 	void SetRaftBaseThickness(float val){ProcessControl.RaftBaseThickness=val;}
 	void SetRaftBaseTemperature(float val){ProcessControl.RaftBaseTemperature=val;}
-	void SeRaftInterfaceLayerCount(int val){ProcessControl.RaftInterfaceLayerCount=val;}
+	void SetRaftInterfaceLayerCount(int val){ProcessControl.RaftInterfaceLayerCount=val;}
 	void SetRaftInterfaceMaterialPrDistanceRatio(float val){ProcessControl.RaftInterfaceMaterialPrDistanceRatio=val;}
 	void SetRaftRotationPrLayer(float val){ProcessControl.RaftRotationPrLayer=val;}
 	void SetRaftInterfaceDistance(float val){ProcessControl.RaftInterfaceDistance=val;}

@@ -1705,7 +1705,7 @@ antioozeSpeedSlider->deactivate();
         }
         Fl_Value_Slider RaftInterfaceLayerCountSlider {
           label {Number of interface layers}
-          callback {MVC->SeRaftInterfaceLayerCount(o->value());}
+          callback {MVC->SetRaftInterfaceLayerCount(o->value());}
           xywh {15 425 515 20} type {Horz Knob} selection_color 2 align 5 maximum 5 step 1 value 2 textsize 14
         }
         Fl_Value_Slider RaftInterfaceTemperatureSlider {
