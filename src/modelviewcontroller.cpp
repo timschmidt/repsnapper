@@ -356,40 +356,20 @@ void ModelViewController::draw()
 		glEnable(GL_LIGHTING);
 		for(int i=0;i<4;i++)
 		{
-			lights[i].Init ( (GLenum)(GL_LIGHT0+i) );
-			//		lights[i].SetPosition ( 0, 0, 0, 0 );
-			lights[i].SetAmbientColor ( 0.2f, 0.2f, 0.2f, 1.0f );
-			lights[i].SetDiffuseColor ( 1.0f, 1.0f, 1.0f, 1.0f );
-			lights[i].SetSpecular ( 1.0f, 1.0f, 1.0f, 1.0f );
-			lights[i].SetValues ( );
-			lights[i].TurnOff ( );
+			lights[i].Init((GLenum)(GL_LIGHT0+i));
+			lights[i].SetAmbient(0.2f, 0.2f, 0.2f, 1.0f);
+			lights[i].SetDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
+			lights[i].SetSpecular(1.0f, 1.0f, 1.0f, 1.0f);
+			lights[i].Off();
 		}
 
-		lights[0].SetPosition ( -100, 100, 200, 0 );
-		lights[1].SetPosition ( 100, 100, 200, 0 );
-		lights[2].SetPosition ( 100, -100, 200, 0 );
-		lights[3].SetPosition ( 100, -100, 200, 0 );
+		lights[0].SetLocation(-100, 100, 200, 0);
+		lights[1].SetLocation(100, 100, 200, 0);
+		lights[2].SetLocation(100, -100, 200, 0);
+		lights[3].SetLocation(100, -100, 200, 0);
 
-		for(int i=0;i<4;i++)
-			lights[i].SetValues ( );
-
-		lights[0].TurnOn();
-		lights[3].TurnOn();
-
-/*
-		float params[4];
-
-		for(int i=0;i<8;i++)
-		{
-			GLenum lightNr = (GLenum)(GL_LIGHT0+i);
-			cout << " Light" << i << "\n";
-			glGetLightfv( (GLenum)lightNr, GL_DIFFUSE, &params[0] );
-			cout << "GL_DIFFUSE " << params[0] << " " << params[1] << " " << params[2];
-			glGetLightfv( (GLenum)lightNr, GL_POSITION, &params[0] );
-			cout << "GL_POSITION " << params[0] << " " << params[1] << " " << params[2];
-			cout << "\n";
-		}
-*/
+		lights[0].On();
+		lights[3].On();
 
 		// enable lighting
 		glDisable ( GL_LIGHTING);
@@ -428,7 +408,7 @@ void ModelViewController::draw()
 
 	/*--------------- Exit -----------------*/
 	glPopMatrix();													// NEW: Unapply Dynamic Transform
-	glFlush ();														// Flush The GL Rendering Pipeline
+	glFlush();														// Flush The GL Rendering Pipeline
 //	swap_buffers();
 }
 

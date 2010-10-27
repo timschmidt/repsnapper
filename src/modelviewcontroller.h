@@ -24,8 +24,8 @@
 #include "gcode.h"
 #include "stl.h"
 #include "processcontroller.h"
-#include "glutils.h"
 #include "reprapserial.h"
+#include "gllight.h"
 
 enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_NICE, SHRINK_LOGICK };
 enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
@@ -276,8 +276,8 @@ public:
 	/*--------------View-------------------*/
 
 	float zoom;
-	void SetEnableLight(int lightNr, bool on){ if(on) lights[lightNr].TurnOn(); else lights[lightNr].TurnOff(); redraw(); }
-	CGL_Light3D lights[4];
+	void SetEnableLight(int lightNr, bool on){ if(on) lights[lightNr].On(); else lights[lightNr].Off(); redraw(); }
+	gllight lights[4];
 
 	/*- Custom button interface -*/
 	void SendCustomButton(int nr);
