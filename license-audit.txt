@@ -11,14 +11,7 @@ The licensing information listed in this file reflects the copyright and license
 |   |   |-- platform.h ................................... suspected to be original work by Kulitorm and hence GPLv2
 |   |   |-- Polygon2f.cpp ................................ suspected to be original work by Kulitorm and hence GPLv2
 |   |   `-- Polygon2f.h .................................. suspected to be original work by Kulitorm and hence GPLv2
-|   |-- vmmlib ........................................... Revised (3 clause) BSD license
-|   `-- xml .............................................. note [1]
-|       |-- license.txt
-|       |-- Makefile
-|       |-- mime.h
-|       |-- XML.CHM
-|       |-- xml.cpp
-|       `-- xml.h
+|   `-- vmmlib ........................................... Revised (3 clause) BSD license
 |-- license-audit.txt
 |-- readme.linux.txt
 |-- readme.macosx.txt
@@ -43,8 +36,8 @@ The licensing information listed in this file reflects the copyright and license
 |   |-- flu_tree_browser.h ............................... LGPL + exceptions: http://www.fltk.org/COPYING.php
 |   |-- gcode.cpp ........................................ GPLv2 or later
 |   |-- gcode.h .......................................... GPLv2 or later
-|   |-- glutils.cpp ...................................... license unknown, from http://www.gamedev.net/reference/articles/article1172.asp email: microwerx@yahoo.com
-|   |-- glutils.h ........................................ license unknown, from http://www.gamedev.net/reference/articles/article1172.asp email: microwerx@yahoo.com
+|   |-- gllight.cpp ...................................... original work by Palomides under the GPLv2
+|   |-- gllight.h ........................................ original work by Palomides under the GPLv2
 |   |-- ivcon.cpp ........................................ LGPL
 |   |-- ivcon.h .......................................... suspected to be original work by Kulitorm and hence GPLv2
 |   |-- main.cpp ......................................... unknown
@@ -70,7 +63,3 @@ The licensing information listed in this file reflects the copyright and license
 |   |-- ui.fl ............................................ suspected to be original work by Kulitorm and hence GPLv2
 |   `-- unittest.cpp ..................................... GPLv2 or later
 `-- todo.txt
-
-12 directories, 160 files
-[1]: as found in XML.CHM: "This library is free for personal, experimental and commercial use, as long as you give me credit in your 'about box' and/or your help files.
-Absolutely no warranties for any misuse of all or parts of the supplied code; The code is provided 'as is'." "By Chourdakis Michael. (C) 2007
