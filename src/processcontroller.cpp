@@ -551,7 +551,7 @@ void ProcessController::LoadConfig(string filename)
 	if (not cfg.lookupValue("Optimization",Optimization))
 		Optimization = 0.05;
 	if (not cfg.lookupValue("ReceivingBufferSize",ReceivingBufferSize))
-		Optimization = 4;
+		ReceivingBufferSize = 4;
 	if (not cfg.lookupValue("ShellOnly",ShellOnly))
 		ShellOnly = 0;
 	if (not cfg.lookupValue("ShellCount",ShellCount))
