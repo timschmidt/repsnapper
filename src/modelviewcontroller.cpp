@@ -721,9 +721,6 @@ void ModelViewController::CopySettingsToGUI()
 	case SHRINK_FAST:
 		gui->shrinkAlgorithm->value(0);
 		break;
-	case SHRINK_NICE:
-		gui->shrinkAlgorithm->value(1);
-		break;
 	case SHRINK_LOGICK:
 		gui->shrinkAlgorithm->value(2);
 		break;
@@ -1501,10 +1498,8 @@ void ModelViewController::SetShrinkQuality(string quality)
 {
 	if(quality == "Fast")
 		ProcessControl.m_ShrinkQuality = SHRINK_FAST;
-	else if(quality == "Logick")
-		ProcessControl.m_ShrinkQuality = SHRINK_LOGICK;
 	else
-		ProcessControl.m_ShrinkQuality = SHRINK_NICE;
+		ProcessControl.m_ShrinkQuality = SHRINK_LOGICK;
 }
 void ModelViewController::SetReceivingBufferSize(float val)
 {

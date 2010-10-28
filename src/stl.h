@@ -106,7 +106,6 @@ public:
 	~CuttingPlane();
 	void ShrinkFast(float distance, float optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount);		// Contracts polygons
 	void ShrinkLogick(float distance, float optimization, bool DisplayCuttingPlane, int ShellCount);		// Contracts polygons
-	void ShrinkNice(float distance, float optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount);		// Contracts polygons
 	void selfIntersectAndDivide();
 	uint selfIntersectAndDivideRecursive(float z, uint startPolygon, uint startVertex, vector<outline> &outlines, const Vector2f endVertex, uint &level);
 

@@ -87,14 +87,6 @@ void ProcessController::ConvertToGCode(string &GcodeTxt, const string &GcodeStar
 					case SHRINK_FAST:
 						plane.ShrinkFast(ExtrudedMaterialWidth*0.5f, Optimization, DisplayCuttingPlane, false, ShellCount);
 						break;
-
-					case SHRINK_NICE:
-#if defined(ENABLE_GPC) && ENABLE_GPC
-						plane.ShrinkNice(ExtrudedMaterialWidth*0.5f, Optimization, DisplayCuttingPlane, false, ShellCount);
-#else
-						// "Warning: ShrinkNice is disabled without gpc code\n";
-#endif
-						break;
 					case SHRINK_LOGICK:
 						plane.ShrinkLogick(ExtrudedMaterialWidth, Optimization, DisplayCuttingPlane, ShellCount);
 						break;
@@ -679,11 +671,8 @@ void ProcessController::LoadConfig(string filename)
 
 	if (not cfg.lookupValue("ShrinkLogick",m_ShrinkQuality))
 	{
-		if (not cfg.lookupValue("ShrinkNice",m_ShrinkQuality))
-		{
-			if (not cfg.lookupValue("ShrinkFast",m_ShrinkQuality))
-				m_ShrinkQuality = SHRINK_FAST;
-		}
+		if (not cfg.lookupValue("ShrinkFast",m_ShrinkQuality))
+			m_ShrinkQuality = SHRINK_FAST;
 	}
 }
 
@@ -1126,8 +1115,6 @@ void ProcessController::SaveConfig(string path)
 
 	Setting &shf = root.add("ShrinkFast", Setting::TypeBoolean);
 	shf = (m_ShrinkQuality == SHRINK_FAST);
-	Setting &shn = root.add("ShrinkNice", Setting::TypeBoolean);
-	shn = (m_ShrinkQuality == SHRINK_NICE);
 	Setting &shl = root.add("ShrinkLogick", Setting::TypeBoolean);
 	shl = (m_ShrinkQuality == SHRINK_LOGICK);
 	Setting &optim = root.add("Optimization", Setting::TypeFloat);

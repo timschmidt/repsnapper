@@ -7,7 +7,4 @@
 #  define ENABLE_LUA    1
 #endif
 
-// turn on the license restricted gpc library for Shrink Nice
-#define ENABLE_GPC 0
-
 #endif

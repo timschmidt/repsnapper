@@ -23,10 +23,6 @@
 #ifdef WIN32
 #  include <GL/glut.h>	// Header GLUT Library
 
-#if defined(ENABLE_GPC) && ENABLE_GPC
-#  include "gpc.h"
-#endif
-
 #  pragma warning( disable : 4018 4267)
 #endif
 
@@ -35,16 +31,6 @@
 #include <algorithm>
 
 #include "ivcon.h"
-
-#if defined(ENABLE_GPC) && ENABLE_GPC
-#ifndef WIN32
-extern "C" {
-#include "gpc.h"
-#endif
-#ifndef WIN32
-}
-#endif
-#endif
 
 // for PointHash
 #ifdef __GNUC__
@@ -280,11 +266,6 @@ void STL::displayInfillOld(const ProcessController &PC, CuttingPlane &plane, uin
 				infillCuttingPlane.ClearShrink();
 				infillCuttingPlane.ShrinkFast(PC.ExtrudedMaterialWidth*0.5f, PC.Optimization, PC.DisplayCuttingPlane, false, PC.ShellCount);
 				break;
-#if  defined(ENABLE_GPC) && ENABLE_GPC
-			case SHRINK_NICE:
-				infillCuttingPlane.ShrinkNice(PC.ExtrudedMaterialWidth*0.5f, PC.Optimization, PC.DisplayCuttingPlane, false, PC.ShellCount);
-				break;
-#endif
 			case SHRINK_LOGICK:
 				break;
 			}
@@ -486,12 +467,6 @@ void STL::draw(const ProcessController &PC, float opasity)
 						plane.ShrinkFast(PC.ExtrudedMaterialWidth*0.5f, PC.Optimization, PC.DisplayCuttingPlane, false, PC.ShellCount);
 						displayInfillOld(PC, plane, LayerNr, altInfillLayers);
 						break;
-#if  defined(ENABLE_GPC) && ENABLE_GPC
-					case SHRINK_NICE:
-						plane.ShrinkNice(PC.ExtrudedMaterialWidth*0.5f, PC.Optimization, PC.DisplayCuttingPlane, false, PC.ShellCount);
-						displayInfillOld(PC, plane, LayerNr, altInfillLayers);
-						break;
-#endif
 					case SHRINK_LOGICK:
 						plane.ShrinkLogick(PC.ExtrudedMaterialWidth, PC.Optimization, PC.DisplayCuttingPlane, PC.ShellCount);
 						plane.Draw(PC.DrawVertexNumbers, PC.DrawLineNumbers, PC.DrawCPOutlineNumbers, PC.DrawCPLineNumbers, PC.DrawCPVertexNumbers);
@@ -2405,202 +2380,6 @@ void CuttingPlane::ShrinkFast(float distance, float optimization, bool DisplayCu
 	}
 //	CleanupOffsetPolygons(0.1f);
 //	selfIntersectAndDivide();		//make this work for z-tensioner_1off.stl rotated 45d on X axis
-}
-
-#if defined(ENABLE_GPC) && ENABLE_GPC
-#define RESOLUTION 4
-#define FREE(p)            {if (p) {free(p); (p)= NULL;}}
-#endif
-
-void CuttingPlane::ShrinkNice(float distance, float optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount)
-{
-#if defined(ENABLE_GPC) && ENABLE_GPC
-	offsetPolygons.clear();
-
-	distance *= ShellCount;
-
-	gpc_polygon solids;
-	solids.num_contours = 0;
-	gpc_polygon holes;
-	holes.num_contours = 0;
-
-	gpc_polygon all_holes;
-	gpc_polygon all_solids;
-
-	for(int p=0; p<polygons.size();p++)
-	{
-		polygons[p].calcHole(vertices);
-		Poly offsetPoly;
-		uint count = polygons[p].points.size();
-		for(int i=0; i<count;i++)
-		{
-			Vector2f Na = Vector2f(vertices[polygons[p].points[(i-1+count)%count]].x, vertices[polygons[p].points[(i-1+count)%count]].y);
-			Vector2f Nb = Vector2f(vertices[polygons[p].points[i%count]].x, vertices[polygons[p].points[i%count]].y);
-			Vector2f V1 = (Nb-Na);
-
-			Vector2f delta = V1.getNormalized();
-			Vector2f N1 = Vector2f(-delta.y, delta.x);
-
-			vector<Vector2f> LineOutline;
-
-			Vector2f P1 = Na+N1*distance;
-			Vector2f P3 = Nb-N1*distance;
-			Vector2f P4 = Nb+N1*distance;
-
-			float a = atan2( P1.y-Na.y , P1.x-Na.x );
-
-			float step = M_PI/RESOLUTION;
-			int steps=RESOLUTION+1;
-			Vector2f point;
-			while(steps--)
-			{
-				point.x = Na.x+cos(a)*distance;
-				point.y = Na.y+sin(a)*distance;
-
-				LineOutline.push_back(point);
-
-				a+=step;
-			}
-			LineOutline.push_back(P3);
-			LineOutline.push_back(P4);
-
-			gpc_vertex_list *outline = new gpc_vertex_list;
-			outline->vertex = new  gpc_vertex[LineOutline.size()];
-			if(polygons[p].hole == true)
-				for(int v=0;v<LineOutline.size();v++)
-				{
-					outline->vertex[LineOutline.size()-1-v].x = LineOutline[v].x;
-					outline->vertex[LineOutline.size()-1-v].y = LineOutline[v].y;
-				}
-			else
-				for(int v=0;v<LineOutline.size();v++)
-				{
-					outline->vertex[v].x = LineOutline[v].x;
-					outline->vertex[v].y = LineOutline[v].y;
-				}
-			outline->num_vertices = LineOutline.size();
-			LineOutline.clear();
-
-			// add this outline to the boolean solution
-			if(polygons[p].hole == true)
-			{
-				if(holes.num_contours == 0)
-				{
-					holes.num_contours = 1;
-					holes.hole = new int;
-					*holes.hole = 1;
-					holes.contour = outline;
-				}
-				else
-				{
-					gpc_polygon new_hole;
-					new_hole.num_contours = 1;
-					new_hole.hole = new int;
-					*new_hole.hole = 1;
-					new_hole.contour = outline;
-					gpc_polygon_clip(GPC_UNION, &holes, &new_hole, &all_holes);
-					holes=all_holes;
-					delete new_hole.hole;
-					delete new_hole.contour->vertex;
-					delete new_hole.contour;
-				}
-			}
-			else			// it's a solid
-			{
-				if(solids.num_contours == 0)
-				{
-					solids.num_contours = 1;
-					solids.hole = new int;
-					*solids.hole = 0;
-					solids.contour = outline;
-				}
-				else
-				{
-					gpc_add_contour(&solids, outline, 0);
-
-					gpc_polygon new_solid;
-					new_solid.num_contours = 1;
-					new_solid.hole = new int;
-					*new_solid.hole = 0;
-					new_solid.contour = outline;
-					gpc_polygon_clip(GPC_UNION, &solids, &new_solid, &all_solids);
-					solids=all_solids;
-					delete new_solid.hole;
-					delete new_solid.contour->vertex;
-					delete new_solid.contour;
-				}
-			}
-
-
-		}	// for all segments
-
-	}// for all polygons
-
-
-
-	// delete the largest of the solids outlines, and the smallest of the holes outlines
-	for(int p=0;p<solids.num_contours;p++)
-	{
-//		if(solids.hole[p] == 0)	// seeme we have to check everything
-		{
-		if(!VertexIsOutsideOriginalPolygon( Vector2f(solids.contour[p].vertex[0].x, solids.contour[p].vertex[0].y), Z))
-			{
-			FREE(solids.contour[p].vertex);
-			//			FREE(solids.hole);
-			//			FREE(solids.contour);
-			solids.num_contours--;
-			for(int c=p;c<solids.num_contours;c++)
-				{
-				solids.contour[c] =solids.contour[c+1];
-				solids.hole[c] = solids.hole[c+1];
-				}
-			p--;
-			}
-		}
-	}
-
-	// delete the largest of the solids outlines, and the smallest of the holes outlines
-	for(int p=0;p<holes.num_contours;p++)
-	{
-		if(holes.hole[p] == 1)
-		{
-			FREE(holes.contour[p].vertex);
-			//			FREE(solids.hole);
-			//			FREE(solids.contour);
-			holes.num_contours--;
-			for(int c=p;c<holes.num_contours;c++)
-			{
-				holes.contour[c] =holes.contour[c+1];
-				holes.hole[c] = holes.hole[c+1];
-			}
-			p--;
-		}
-	}
-
-	gpc_polygon poly_res;
-	gpc_polygon_clip(GPC_DIFF, &solids, &holes, &poly_res);
-
-	offsetPolygons.clear();
-	offsetVertices.clear();
-
-	glLineWidth(4);
-	for(int p=0;p<poly_res.num_contours;p++)
-	{
-		glBegin(GL_LINE_LOOP);
-		Poly pol;
-		for(int v=0;v<poly_res.contour[p].num_vertices;v++)
-		{
-			pol.points.push_back(offsetVertices.size());
-			offsetVertices.push_back(Vector2f(poly_res.contour[p].vertex[v].x, poly_res.contour[p].vertex[v].y));
-			glVertex3f(poly_res.contour[p].vertex[v].x, poly_res.contour[p].vertex[v].y, Z);
-		}
-		offsetPolygons.push_back(pol);
-		glEnd();
-	}
-	glLineWidth(1);
-
-	CleanupOffsetPolygons(0.1f);
-#endif
 }
 
 /*

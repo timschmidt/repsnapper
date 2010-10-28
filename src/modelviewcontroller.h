@@ -27,7 +27,7 @@
 #include "reprapserial.h"
 #include "gllight.h"
 
-enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_NICE, SHRINK_LOGICK };
+enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
 enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 
 #ifdef WIN32

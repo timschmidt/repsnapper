@@ -34,11 +34,11 @@ class GUI {open
         xywh {710 5 575 825} align 5 when 1
       } {
         Fl_Group {} {
-          label Simple open
+          label Simple
           xywh {715 25 555 770}
         } {
           Fl_Group {} {
-            label Model open
+            label Model
             xywh {720 157 530 139} box ENGRAVED_FRAME color 39
           } {
             Fl_Button {} {
@@ -145,7 +145,7 @@ MVC->ConnectToPrinter(o->value());}
             }
           }
           Fl_Group {} {
-            label Print open
+            label Print
             xywh {720 329 535 56} box ENGRAVED_FRAME color 39
           } {
             Fl_Text_Display {} {
@@ -159,7 +159,7 @@ MVC->ConnectToPrinter(o->value());}
             }
           }
           Fl_Group {} {
-            label Calibrate open
+            label Calibrate
             xywh {720 416 535 54} box ENGRAVED_FRAME color 39
           } {
             Fl_Text_Display {} {
@@ -177,7 +177,7 @@ MVC->ConnectToPrinter(o->value());}
           }
         }
         Fl_Group {} {
-          label {Input file} open selected
+          label {Input file}
           xywh {715 25 560 790} hide
         } {
           Fl_Button {} {
@@ -196,7 +196,7 @@ MVC->ConnectToPrinter(o->value());}
             xywh {855 35 135 25} deactivate
           }
           Fl_Group {} {
-            label {Object rotation} open
+            label {Object rotation}
             xywh {720 740 535 50} box FLAT_BOX color 39
           } {
             Fl_Button AutoRotateButton {
@@ -241,7 +241,7 @@ MVC->redraw();}
             class Flu_Tree_Browser
           }
           Fl_Group {} {
-            label Translate open
+            label Translate
             xywh {1085 165 180 40} box ENGRAVED_FRAME color 39
           } {
             Fl_Value_Input TranslateX {
@@ -261,7 +261,7 @@ MVC->redraw();}
             }
           }
           Fl_Group {} {
-            label Rotate open
+            label Rotate
             xywh {1085 230 180 40} box ENGRAVED_FRAME color 39
           } {
             Fl_Value_Input RotateX {
@@ -281,7 +281,7 @@ MVC->redraw();}
             }
           }
           Fl_Group {} {
-            label Scale open
+            label Scale
             xywh {1085 290 180 70} box ENGRAVED_FRAME color 39
           } {
             Fl_Value_Input ScaleX {
@@ -373,7 +373,7 @@ MVC->CopySettingsToGUI();
           }
         }
         Fl_Group {} {
-          label {Print options}
+          label {Print options} open
           xywh {710 25 555 755} hide
         } {
           Fl_Group {} {
@@ -411,7 +411,7 @@ MVC->CopySettingsToGUI();
             xywh {725 460 535 110} box ENGRAVED_FRAME color 2
           } {
             Fl_Choice shrinkAlgorithm {
-              label {Shrinking Algorithm:} open
+              label {Shrinking Algorithm:} open selected
               xywh {870 475 270 25} down_box BORDER_BOX
             } {
               MenuItem {} {
@@ -419,12 +419,6 @@ MVC->CopySettingsToGUI();
                 callback {MVC->SetShrinkQuality("Fast");
 MVC->redraw();}
                 xywh {5 5 30 20}
-              }
-              MenuItem {} {
-                label {Much slower, perfect, small details}
-                callback {MVC->SetShrinkQuality("Nice");
-MVC->redraw();}
-                xywh {15 15 30 20}
               }
               MenuItem {} {
                 label {Logick's Algorithm}
@@ -507,7 +501,7 @@ MVC->redraw();}
             callback {MVC->ConvertToGCode();}
             xywh {715 45 145 25}
           }
-          Fl_Tabs {} {open
+          Fl_Tabs {} {
             xywh {715 105 525 710} color 66 selection_color 31
           } {
             Fl_Text_Editor GCodeStart {
@@ -881,14 +875,14 @@ MVC->redraw();}
           label Print
           xywh {710 25 575 805} color 47 hide
         } {
-          Fl_Tabs {} {open
+          Fl_Tabs {} {
             xywh {710 230 575 600}
           } {
             Fl_Group {} {
-              label {Communication Logs} open
+              label {Communication Logs}
               xywh {710 255 575 575} hide
             } {
-              Fl_Tabs {} {open
+              Fl_Tabs {} {
                 xywh {710 260 570 470}
               } {
                 Fl_Group {} {
@@ -951,7 +945,7 @@ MVC->redraw();}
               }
             }
             Fl_Group {} {
-              label {Interactive control} open
+              label {Interactive control}
               xywh {725 260 535 570} selection_color 31
             } {
               Fl_Light_Button SwitchHeatOnButton {
@@ -1264,7 +1258,7 @@ MVC->redraw();}
               }
             }
             Fl_Group {} {
-              label {Custom buttons} open
+              label {Custom buttons}
               xywh {710 260 540 570} hide
             } {
               Fl_Text_Editor CustomButtonText {
@@ -1295,7 +1289,7 @@ MVC->redraw();}
             }
           }
           Fl_Group {} {
-            label Print open
+            label Print
             xywh {715 45 540 45} box ENGRAVED_FRAME color 39
           } {
             Fl_Light_Button ConnectToPrinterButton {
@@ -1346,7 +1340,7 @@ MVC->ConnectToPrinter(o->value());}
             }
           }
           Fl_Group {} {
-            label Fan open
+            label Fan
             xywh {720 105 540 35} box ENGRAVED_FRAME color 39
           } {
             Fl_Light_Button FanOnButton {
