@@ -1,4 +1,4 @@
-Repsnapper is copyright Kulitorum and others, and is licensed under the terms of the GPL version 2.0 (see the file licenses/GPL-2.0.txt)
+RepSnapper is copyright Kulitorum and others, and is licensed under the terms of the GPL version 2.0 (see the file licenses/GPL-2.0.txt)
 Segments of the code fall under other licenses, as detailed below.
 
 VMMLib is licensed under a revised 3-clause BSD license as detailed in the file licenses/vmmlib-license.txt
@@ -7,7 +7,7 @@ asyncserial.cpp and asyncserial.h are licensed under the Boost Software License,
 
 flu_dnd.cpp, flu_dnd.h, flu_enumerations.h, flu_export.h, flu_pixmaps.cpp, flu_pixmaps.h, flu_simplestring.cpp, flu_simplestring.h, flu_tree_browser.cpp, and flu_tree_browser.h are licensed under the LGPL version 2.0 as noted in file licenses/LGPL-2.0.txt with several exceptions as noted in file licenses/FLTK.txt
 
-ivcon.cpp is licensed under the LGPL version 2.0 as noted in the file licenses/LGPL-2.0.txt
+ivcon.cpp and convert.h are licensed under the LGPL version 2.0 as noted in the file licenses/LGPL-2.0.txt
 
 Arcball.cpp and Arcball.h are licensed as follows:
 	(C) 1999-2003 Tatewake.com

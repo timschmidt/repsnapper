@@ -21,7 +21,7 @@ The licensing information listed in this file reflects the copyright and license
 |   |-- asyncserial.cpp .................................. Boost Software License, Version 1.0
 |   |-- asyncserial.h .................................... Boost Software License, Version 1.0
 |   |-- config.h ......................................... suspected to be original work by Kulitorm and hence GPLv2
-|   |-- convert.h ........................................ unknown
+|   |-- convert.h ........................................ LGPL
 |   |-- file.cpp ......................................... unknown
 |   |-- file.h ........................................... unknown
 |   |-- flu_dnd.cpp ...................................... LGPL + exceptions: http://www.fltk.org/COPYING.php
@@ -36,8 +36,8 @@ The licensing information listed in this file reflects the copyright and license
 |   |-- flu_tree_browser.h ............................... LGPL + exceptions: http://www.fltk.org/COPYING.php
 |   |-- gcode.cpp ........................................ GPLv2 or later
 |   |-- gcode.h .......................................... GPLv2 or later
-|   |-- gllight.cpp ...................................... original work by Palomides under the GPLv2
-|   |-- gllight.h ........................................ original work by Palomides under the GPLv2
+|   |-- gllight.cpp ...................................... original work by Palomides under the GPLv2 or later
+|   |-- gllight.h ........................................ original work by Palomides under the GPLv2 or later
 |   |-- ivcon.cpp ........................................ LGPL
 |   |-- ivcon.h .......................................... suspected to be original work by Kulitorm and hence GPLv2
 |   |-- main.cpp ......................................... unknown

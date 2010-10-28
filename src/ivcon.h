@@ -1,3 +1,37 @@
+//
+//  Purpose:
+//
+//    IVCON converts various 3D graphics files.
+//
+//  Acknowledgements:
+//
+//    Coding, comments, and advice were supplied by a number of collaborators.
+//
+//    Jean-Cristophe Hoelt (hoeltj AT tcd.ie) pointed out that the program was
+//    not compiling under GNU C++, and I made the necessary corrections.
+//
+//    John F Flanagan made some corrections to the 3D Studio Max routines.
+//
+//    Zik Saleeba (zik AT zikzak.net) enhanced the DXF routines, and added the 
+//    Golgotha GMOD routines.
+//
+//    Thanks to Susan M. Fisher, University of North Carolina,
+//    Department of Computer Science, for pointing out a coding error
+//    in FACE_NULL_DELETE that was overwriting all the data!
+//
+//  Licensing:
+//
+//    This code is distributed under the GNU LGPL license. 
+//
+//  Modified:
+//
+//    19 January 2004
+//
+//  Author:
+//
+//    John Burkardt
+//
+
 #pragma once
 
 /*

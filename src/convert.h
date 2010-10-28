@@ -1,5 +1,30 @@
+/******* COPYRIGHT ************************************************
+ *                                                                 *
+ *                             FlowVR                              *
+ *                     Application Library                         *
+ *                                                                 *
+ *-----------------------------------------------------------------*
+ * COPYRIGHT (C) 2007/2008 by                                      *
+ * INRIA                                                           *
+ * ALL RIGHTS RESERVED.	                                          *
+ *                                                                 *
+ * This source is covered by the GNU LGPL, please refer to the     *
+ * COPYING file for further information.                           *
+ *                                                                 *
+ *-----------------------------------------------------------------*
+ *                                                                 *
+ *  Original Contributors:                                         *
+ *    Jeremie Allard,                                              *
+ *    Thomas Arcila,                                               *
+ *    Jean-Denis Lesage.                                           *
+ *    Clement Menier,                                              *
+ *    Bruno Raffin                                                 *
+ *                                                                 *
+ ******************************************************************/
+
+/* Modified by Kulitorum 2010 */
+
 #pragma once
-// File: convert.h
 #include <iostream>
 #include <sstream>
 #include <string>
