@@ -4,7 +4,7 @@
     Provide some simple platform abstraction, and
     the right headers for GL stuff depending on OS.
 
-    Copyright (C) 2010  Kulitorum
+    Copyright (C) 2010 Logick
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
