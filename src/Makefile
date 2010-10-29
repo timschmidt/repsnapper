@@ -45,23 +45,13 @@ endif
 
 # Mac
 ifeq ($(UNAME),Darwin)
-    # assumes you have installed MacPorts from http://www.macports.org and run:
-    # sudo port install boost fltk lua
-    # assumes you have built boost as in the Readme.MacOsx.txt
-
-    BOOST_HOME=../libraries/boost-darwin
-    BOOST_INC=-I$(BOOST_HOME)/include/boost-1_43
-	ifeq ($(TARGET),RELEASE)
-		BOOST_LIB=$(BOOST_HOME)/lib/libboost_thread-xgcc40-mt.a $(BOOST_HOME)/lib/libboost_system-xgcc40-mt.a
-	else
-		BOOST_LIB=$(BOOST_HOME)/lib/libboost_thread-xgcc40-mt-d.a $(BOOST_HOME)/lib/libboost_system-xgcc40-mt-d.a
-	endif
+    # see notes in readme.macosx.txt
     MACPORTS_DIR=/opt/local
-	INC=$(BOOST_INC) -I$(MACPORTS_DIR)/include -I$(LIB_DIR)/vmmlib/include -I$(LIB_DIR)
-	INC+=-I$(LIB_DIR)/polylib
-	INC+=-pthread
-	LDFLAGS=$(BOOST_LIB) -L$(MACPORTS_DIR)/lib -pthread -lfltk -lfltk_forms -lfltk_gl -lconfig++ 
-	LDFLAGS+=-L$(LIB_DIR)/polylib -lpolylib
+    INC=-I$(MACPORTS_DIR)/include -I$(LIB_DIR)/vmmlib/include -I$(LIB_DIR)
+    INC+=-I$(LIB_DIR)/polylib
+    INC+=-pthread
+    LDFLAGS=-L$(MACPORTS_DIR)/lib -pthread -lfltk -lfltk_forms -lfltk_gl -lconfig++ -lboost_thread-mt -lboost_system-mt
+    LDFLAGS+=-L$(LIB_DIR)/polylib -lpolylib
     LDFLAGS+=-framework Carbon -framework OpenGL -framework GLUT -framework AGL
     TEST_LDFLAGS=-lboost_unit_test_framework
 endif
