@@ -22,7 +22,7 @@ The licensing information listed in this file reflects the copyright and license
 |   |-- asyncserial.h .................................... Boost Software License, Version 1.0
 |   |-- config.h ......................................... suspected to be original work by Kulitorm and hence GPLv2
 |   |-- convert.h ........................................ LGPL
-|   |-- file.cpp ......................................... unknown
+|   |-- file.cpp ......................................... LGPL
 |   |-- file.h ........................................... unknown
 |   |-- flu_dnd.cpp ...................................... LGPL + exceptions: http://www.fltk.org/COPYING.php
 |   |-- flu_dnd.h ........................................ LGPL + exceptions: http://www.fltk.org/COPYING.php
