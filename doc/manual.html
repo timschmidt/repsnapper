@@ -1,0 +1,1010 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.4.5" />
+<title>Repsnapper Users Manual</title>
+<style type="text/css">
+/* Debug borders */
+p, li, dt, dd, div, pre, h1, h2, h3, h4, h5, h6 {
+/*
+  border: 1px solid red;
+*/
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+tt {
+  color: navy;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  font-family: sans-serif;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+
+div.sectionbody {
+  font-family: serif;
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+
+pre {
+  padding: 0;
+  margin: 0;
+}
+
+span#author {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+span#email {
+}
+span#revnumber, span#revdate, span#revremark {
+  font-family: sans-serif;
+}
+
+div#footer {
+  font-family: sans-serif;
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+div#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+div#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+div#preamble {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.tableblock, div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.5em;
+  margin-bottom: 2.5em;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid silver;
+  padding: 0.5em;
+}
+
+div.listingblock > div.content {
+  border: 1px solid silver;
+  background: #f4f4f4;
+  padding: 0.5em;
+}
+
+div.quoteblock {
+  padding-left: 2.0em;
+  margin-right: 10%;
+}
+div.quoteblock > div.attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock {
+  padding-left: 2.0em;
+  margin-right: 10%;
+}
+div.verseblock > div.content {
+  white-space: pre;
+}
+div.verseblock > div.attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+/* DEPRECATED: Pre version 8.2.7 verse style literal block. */
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 2px solid silver;
+}
+
+div.exampleblock > div.content {
+  border-left: 2px solid silver;
+  padding: 0.5em;
+}
+
+div.imageblock div.content { padding-left: 0; }
+span.image img { border-style: none; }
+a.image:visited { color: white; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+  color: navy;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+ol.arabic {
+  list-style-type: decimal;
+}
+ol.loweralpha {
+  list-style-type: lower-alpha;
+}
+ol.upperalpha {
+  list-style-type: upper-alpha;
+}
+ol.lowerroman {
+  list-style-type: lower-roman;
+}
+ol.upperroman {
+  list-style-type: upper-roman;
+}
+
+div.compact ul, div.compact ol,
+div.compact p, div.compact p,
+div.compact div, div.compact div {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+}
+
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead {
+  font-family: sans-serif;
+  font-weight: bold;
+}
+tfoot {
+  font-weight: bold;
+}
+td > div.verse {
+  white-space: pre;
+}
+p.table {
+  margin-top: 0;
+}
+/* Because the table frame attribute is overriden by CSS in most browsers. */
+div.tableblock > table[frame="void"] {
+  border-style: none;
+}
+div.tableblock > table[frame="hsides"] {
+  border-left-style: none;
+  border-right-style: none;
+}
+div.tableblock > table[frame="vsides"] {
+  border-top-style: none;
+  border-bottom-style: none;
+}
+
+
+div.hdlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hdlist tr {
+  padding-bottom: 15px;
+}
+dt.hdlist1.strong, td.hdlist1.strong {
+  font-weight: bold;
+}
+td.hdlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+  color: navy;
+}
+td.hdlist2 {
+  vertical-align: top;
+}
+div.hdlist.compact tr {
+  margin: 0;
+  padding-bottom: 0;
+}
+
+.comment {
+  background: yellow;
+}
+
+@media print {
+  div#footer-badges { display: none; }
+}
+
+div#toctitle {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+/* Workarounds for IE6's broken and incomplete CSS2. */
+
+div.sidebar-content {
+  background: #ffffee;
+  border: 1px solid silver;
+  padding: 0.5em;
+}
+div.sidebar-title, div.image-title {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-weight: bold;
+  margin-top: 0.0em;
+  margin-bottom: 0.5em;
+}
+
+div.listingblock div.content {
+  border: 1px solid silver;
+  background: #f4f4f4;
+  padding: 0.5em;
+}
+
+div.quoteblock-attribution {
+  padding-top: 0.5em;
+  text-align: right;
+}
+
+div.verseblock-content {
+  white-space: pre;
+}
+div.verseblock-attribution {
+  padding-top: 0.75em;
+  text-align: left;
+}
+
+div.exampleblock-content {
+  border-left: 2px solid silver;
+  padding-left: 0.5em;
+}
+
+/* IE6 sets dynamically generated links as visited. */
+div#toc a:visited { color: blue; }
+</style>
+</head>
+<body>
+<div id="header">
+<h1>Repsnapper Users Manual</h1>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph"><p>Welcome to the RepSnapper Manual, although currently a work in progress this guide aims to help you install and use your RepSnapper software.</p></div>
+<div class="paragraph"><p>Contact Info</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Irc channel: #repsnapper at <a href="irc://chat.freenode.net">irc://chat.freenode.net</a>
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Timothy Schmidt Version</p></div>
+<div class="paragraph"><p>Current development of Repsnapper is happening in Timothy Schmidt&#8217;s repository at the following URLs.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Code: <a href="https://github.com/timschmidt/repsnapper">https://github.com/timschmidt/repsnapper</a>
+</p>
+</li>
+<li>
+<p>
+Bug tracker: <a href="https://github.com/timschmidt/repsnapper/issues">https://github.com/timschmidt/repsnapper/issues</a>
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Kulitorum version</p></div>
+<div class="paragraph"><p>For historical reasons we leave here the links to the old svn version that developed by Kulitorum, this version is now unmaintained and commits go into the Timothy Schmidt version (as of ~ October 5th, 2010)</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Code: <a href="http://svn.kulitorum.com/RepSnapper">http://svn.kulitorum.com/RepSnapper</a>
+</p>
+</li>
+<li>
+<p>
+SVN history: <a href="http://cia.vc/stats/project/RepSnapper">http://cia.vc/stats/project/RepSnapper</a>
+</p>
+</li>
+<li>
+<p>
+Bug tracker: <a href="http://bugs.kulitorum.com">http://bugs.kulitorum.com</a>
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<h2 id="_installation_from_binaries">1. Installation from binaries</h2>
+<div class="sectionbody">
+<h3 id="_linux">1.1. Linux</h3><div style="clear:left"></div>
+<div class="paragraph"><p>There are currently no Repsnapper binaries pre-built for Linux.  However, building from source is relatively simple.  If you&#8217;d like to package Repsnapper for your Linux distribution, please let us know!</p></div>
+<h3 id="_windows">1.2. Windows</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Download the latest version of Repsnapper for Windows <a href="http://svn.kulitorum.com/RepSnapper/MSVC/Release/RepSnapper.exe">here</a>.</p></div>
+<h3 id="_os_x">1.3. OS X</h3><div style="clear:left"></div>
+<div class="paragraph"><p>David Buzz has posted binaries for OS X <a href="https://sites.google.com/site/davidbuzz/repsnapper-for-osx-binaries">here</a>.</p></div>
+</div>
+<h2 id="_installation_from_source">2. Installation from source</h2>
+<div class="sectionbody">
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="paragraph"><p>Although RepSnapper is not generally tested outside of window/linux/mac you may be able to get it running on other OS&#8217;s. To do so you will need the following:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+gcc and related tools
+</p>
+</li>
+<li>
+<p>
+OpenGL
+</p>
+</li>
+<li>
+<p>
+git
+</p>
+</li>
+<li>
+<p>
+libfltk1.1-dev
+</p>
+</li>
+<li>
+<p>
+libglut3-dev
+</p>
+</li>
+<li>
+<p>
+libboost1.37-dev (or higher version)
+</p>
+</li>
+<li>
+<p>
+libconfig-dev
+</p>
+</li>
+</ul></div>
+</td>
+</tr></table>
+</div>
+<h3 id="_linux_2">2.1. Linux</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Install dependencies:</p></div>
+<h4 id="_ubuntu_10_04">2.1.1. Ubuntu 10.04</h4>
+<div class="listingblock">
+<div class="content">
+<pre><tt>sudo apt-get install build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost1.40-dev libboost-thread-dev libboost-system-dev</tt></pre>
+</div></div>
+<h4 id="_fedora_14">2.1.2. Fedora 14</h4>
+<div class="listingblock">
+<div class="content">
+<pre><tt>su
+yum install
+exit</tt></pre>
+</div></div>
+<div class="paragraph"><p>Acquire source and compile:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>git clone git://github.com/timschmidt/repsnapper.git
+cd repsnapper/src
+make</tt></pre>
+</div></div>
+<h3 id="_windows_2">2.2. Windows</h3><div style="clear:left"></div>
+<h3 id="_os_x_2">2.3. OS X</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Acquire source:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>git clone git://github.com/timschmidt/repsnapper.git</tt></pre>
+</div></div>
+<h3 id="_eclipse_project">2.4. Eclipse Project</h3><div style="clear:left"></div>
+<div class="paragraph"><p>As a new feature RepSnapper now comes with an Eclipse Galileo(3.5) project.</p></div>
+<div class="paragraph"><p>Grab a svn client like kdesvn and start the download.</p></div>
+<div class="paragraph"><p>Grab the Eclipse IDE for C/C++ Developers from the download page <a href="http://www.eclipse.org/downloads/">http://www.eclipse.org/downloads/</a></p></div>
+<div class="paragraph"><p>Throw in an additional SVN plugin - Help | Install New Software&#8230;</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Subclipse - <a href="http://subclipse.tigris.org/update_1.6.x">http://subclipse.tigris.org/update_1.6.x</a>
+          o Just take them all
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Eclipse is Java and that means a svn wrapper. So shut down Eclipse and get it.</p></div>
+<div class="paragraph"><p>sudo  apt-get install libsvn-java</p></div>
+<div class="paragraph"><p>Ubuntu users may wish to open the System|Administration|Synaptic Package Manager and do a quick search for libsvn instead as that will ensure Eclipse can find it.</p></div>
+<div class="paragraph"><p>When the donwload is complete enter the Eclipse folder in the repository and read the Readme.txt for last minute instructions.</p></div>
+<div class="paragraph"><p>At some point you&#8217;ll need to reboot, so if you haven&#8217;t done it before do it now.</p></div>
+<div class="paragraph"><p>Notice that while you downloaded the code with kdesvn you can now use svn directly from eclipse.</p></div>
+</div>
+<h2 id="_configuration">3. Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Simple tab</p></div>
+<div class="paragraph"><p>Connect to printer
+    Establishes communications between the PC and the main board.
+Port
+    Manually selects the serial communication port that you want to talk across.
+Speed
+    The serial communications baud rate. Typically 19200 - must however match the setting in your firmware. For example in the latest svn firmware the baud is 57600 by default in configuration.h the value in repsnapper must match this value.
+Load STL
+    Loads an STL file
+Convert to GCode
+    Converts the STL to GCode
+Load GCode
+    Loads previously generated GCode file
+Print
+    Starts printing
+Calibrate
+    Does something clever
+    TIP: This feature is currently not implemented</p></div>
+<div class="paragraph"><p>Input File tab</p></div>
+<div class="paragraph"><p>Load RFO
+    This will load multiple STL&#8217;s zip format as is supported by the official Java Reprap Host software for printing whole beds of parts at a time.
+New RFO
+    This will create a new multiple STL zip file.
+Save RFO
+    This will save multiple STL zip file based on the currently loaded STL&#8217;s</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>TIP: RFO stands for Reprap Object Format However RFO support is currently not working in repsnapper with any known revision.</tt></pre>
+</div></div>
+<div class="paragraph"><p>Duplicate
+    Creates a copy of the STL file. Useful for printing several items of the same object, ie. 10 clamps.</p></div>
+<div class="paragraph"><p>Translate, Rotate and Scale
+    If an STL object is first selected in the browser, this will alter the part for creating gcode.
+Object Name, File location, File type and file material
+    Name a file system and document the contents.</p></div>
+<div class="paragraph"><p>Object rotation
+    Selects the plane to rotate the object about. GCode generation is affected by final object placement. Also useful when loading several STL files.</p></div>
+<div class="paragraph"><p>Save Settings
+    Saves all configuration settings. The configuration settings are stored in a file called Repsnapper.xml</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>TIP: Repsnapper currently stores the setttings file the current working directory (So If you start repsnapper in a different working directory don't be surprised that you now have all your settings back to defaults) This will hopefully be rectified soon.</tt></pre>
+</div></div>
+<div class="paragraph"><p>Load Gcode
+    Loads a previously generated Gcode file.</p></div>
+<div class="paragraph"><p>Fix STL errors
+    Presumably makes the structure water tight and aligns all surface normals.</p></div>
+<div class="paragraph"><p>Print Options tab
+Printer Settings</p></div>
+<div class="paragraph"><p>Extrusion multiplier
+    Allows calibration of the extruder without having to adjust E_STEPS_PER_MM in the firmware.</p></div>
+<div class="paragraph"><p>GCode tab
+Start
+Next Layer
+End Code
+Result
+Display Options tab
+Print tab
+Initial printer Setup Notes</p></div>
+<div class="paragraph"><p>Below the author describes the things he had to do to get repsnapper (V333, dated 14-08-2010) working to the point where he could finish a print of a test block. Firmware used was Tonokip&#8217;s firmware running on an Arduino Mega with Pololu stepper drivers.
+Firmware</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Make sure your Arduino config file is accurate. Test movement lengths with a ruler to be sure.
+</p>
+</li>
+<li>
+<p>
+you can do this from repsnapper. (See appendix A to see how to manually control your bot from repsnapper)
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Printer definition</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Make sure <em>extruded material width</em> matches the extruded filament diameter.
+</p>
+</li>
+<li>
+<p>
+Extrusion multiplyer determines how fast your extruder goes at a given print speed&#8230; This parameter is the one to fiddle, to set your stretch.
+</p>
+</li>
+<li>
+<p>
+Max printspeed is the speed that repsnapper will command the axes to move. Too fast and you will strip your filament or stall your extruder.
+</p>
+</li>
+<li>
+<p>
+Turn acceleration off. Make sure Use Incremental ecode is on
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Print options</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+infill Distance was set quite small, I changed it up to 1.8mm
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Raft</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Turned off Raft for the test blocks.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Gcode</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Start tab
+</p>
+</li>
+<li>
+<p>
+Removed the M83 line in the start code. (important to replace it with an M82 command, or reboot the Arduino)
+</p>
+<div class="qlist"><ol>
+<li>
+<p><em>
+M83 has the effect of causing the extruder to start very slow, and extrude faster as the print progresses..
+</em></p>
+</li>
+</ol></div>
+</li>
+<li>
+<p>
+Cleared the text out of the other tabs, knowing that the steppers are skipping steps is a good thing at the beginning.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Appendix A.</p></div>
+<div class="paragraph"><p>Everything happens from the Print tab when you want to manually control your bot.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+To get working for the first time, you must make a connection.. make sure the USB is plugged into the arduino, and that the arduino software is not using the virtual serial port.
+</p>
+</li>
+<li>
+<p>
+make sure you have the correct serial port selected in the Printer Definition tab, and the speeds set to a reasonable number.
+</p>
+</li>
+<li>
+<p>
+Select <em>Connect to printer</em> (should be lit)
+</p>
+</li>
+<li>
+<p>
+You can check your connection by selecting the communication log tab on the <em>Print</em> page. From <em>Communication Log</em>, select 'Communication Log, again and see that commands are being acknowledged&#8230;
+</p>
+</li>
+<li>
+<p>
+you can eventually skip this step by making sure that your temperature is being updated.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Go back to the <em>interactive control</em> tab.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+You can execute a line of gcode by putting the cursor into the <em>GCode</em> box and pressing enter, or the <em>send</em> button.
+</p>
+</li>
+<li>
+<p>
+You can jog all three of your axes by hitting one of the numbered buttons.. -100 on the top line will move the X axis 100 mm (or inches! if you are set up for inches) in the home direction&#8230;
+</p>
+</li>
+<li>
+<p>
+(you may want to re-visit your arduino config file and reverse an axis or two if things move in the wrong direction).
+</p>
+</li>
+<li>
+<p>
+middle line is Y axis, Bottom line is Z axis&#8230;
+</p>
+</li>
+<li>
+<p>
+Pressing home will cause that axis to run in the minus direction until it reaches an endstop.
+</p>
+<div class="literalblock">
+<div class="content">
+<pre><tt>'Home All' is not supported in Tonokip's firmware.</tt></pre>
+</div></div>
+</li>
+<li>
+<p>
+Clicking <em>Switch Heat On</em> will cause your extruder to start to heat up. It will try to get to the set <em>Target temp</em>.
+</p>
+<div class="literalblock">
+<div class="content">
+<pre><tt>If  you change the target temp, you must deselect switch heat off, then on again for it to register.</tt></pre>
+</div></div>
+</li>
+<li>
+<p>
+To run the extruder, once at temperature, set the speed slider (in mm/minute ?), the length (in mm ?) and click the <em>Run extruder</em> button. It will run for the distance specified in <em>Length</em>.
+</p>
+<div class="literalblock">
+<div class="content">
+<pre><tt>to run it again, you click 'Run Extruder' again, it will de-select, but the motor will run anyways.</tt></pre>
+</div></div>
+</li>
+</ul></div>
+<div class="paragraph"><p>Still trying to figure out:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+what the <em>Downstream Multipliers</em> do.
+</p>
+</li>
+<li>
+<p>
+what the <em>lua</em> thing is about.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>==Setting GCode Options==</p></div>
+<div class="paragraph"><p>You can generate quite useful and very printable GCode using the default settings of RepSnapper.</p></div>
+<div class="paragraph"><p>There are however also a host of user changeable settings that will alter/adjust the generation of GCode. On this page you should get introduced to some of these options.</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>TIP: For a technical overview of the GCode generation read this</tt></pre>
+</div></div>
+<div class="paragraph"><p>Contents</p></div>
+<div class="ulist hide"><ul>
+<li>
+<p>
+1 GCode tab
+          o 1.1 Start tab
+          o 1.2 Next layer tab
+          o 1.3 End code tab
+          o 1.4 Result tab
+</p>
+</li>
+<li>
+<p>
+2 Print Options tab
+</p>
+</li>
+<li>
+<p>
+3 Printer settings Button
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>GCode tab</p></div>
+<div class="paragraph"><p>Here you can create, save, load and/or edit the GCode.</p></div>
+<div class="paragraph"><p>Using the tabs, you can manually enter some GCode, that will be "injected" into the resulting GCode, when you press the Convert to GCode button.</p></div>
+<div class="paragraph"><p>The tabs are:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Start tab - code options to set at the beginning of the print process, like 0-position, default print temperature and more
+</p>
+</li>
+<li>
+<p>
+Next layer tab - something to do in between printing the next layer
+</p>
+</li>
+<li>
+<p>
+End code tab - something to do at the end of a print, like turning the heater off
+</p>
+</li>
+<li>
+<p>
+Result tab - shows you the final complete GCode generated.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Start tab</p></div>
+<div class="paragraph"><p>(give examples and notes about why and why not)</p></div>
+<div class="paragraph"><p>You will almost certainly want to change the value on the line that sets temperature, or remove it if you set the temperature before starting your print.</p></div>
+<div class="paragraph"><p>When you first open RepSnapper this is what is in the tab:</p></div>
+<div class="paragraph"><p>; GCode generated by RepSnapper by Kulitorum
+G21                        ;metric is good!
+G90                        ;absolute positioning
+T0                         ;select new extruder
+G28                        ;go home
+G92 E0                     ;set extruder home
+M104 S73.0                 ;set temperature
+G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer</p></div>
+<div class="paragraph"><p>In Labitat.dk the Workhorse Mendel uses this in the Start tab</p></div>
+<div class="paragraph"><p>; GCode generated by RepSnapper by Kulitorum
+G21                        ;metric is good!
+G90                        ;absolute positioning
+T0                         ;select new extruder
+;G28                       ;go home - does not work with current version of Tonokip Firmware (oct 2010)
+G92 X0 Y0 Z0 E0            ;set home to current location of the nozzle
+M104 S215                  ;set temperature (heating units - NOT actual degree centigrade)
+G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer</p></div>
+<div class="paragraph"><p>Next layer tab</p></div>
+<div class="paragraph"><p>(give examples and notes about why and why not)
+End code tab</p></div>
+<div class="paragraph"><p>(give examples and notes about why and why not)</p></div>
+<div class="paragraph"><p>G91                        ;relative positioning
+G1 F50                     ;set move speed to suit Z-axes
+G1 Z1 F50                  ;move up a bit from the finished object
+G90                        ;absolute positioning
+G1 F2300                   ;set move speed to suit XY-axes
+G1 X0 Y0 F2300             ;goto zero position (from where you started printing)</p></div>
+<div class="paragraph"><p>Result tab</p></div>
+<div class="paragraph"><p>(give examples of what to check for)</p></div>
+<div class="paragraph"><p>If you like you can remove the homing and shield code from the next layer tab. This will save time between layers during prints, but should only be done if your machine is reliable and your steppers don&#8217;t skip steps. Converts the STL model into GCode (machine language)
+Print Options tab</p></div>
+<div class="paragraph"><p>(elaborate)
+Printer settings Button</p></div>
+<div class="paragraph"><p>(elaborate)</p></div>
+</div>
+<h2 id="_use">4. Use</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>Basic Usage
+Launching
+Repsnapper main window</p></div>
+<div class="paragraph"><p>To run repsnapper on</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+windows: double click the repsnapper.exe file within the repsnapper/Src directory
+</p>
+</li>
+<li>
+<p>
+linux: type repsnapper/Src/repsnapper into the console window.
+</p>
+</li>
+<li>
+<p>
+OSX:
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>After launching the repsnapper application you are presented with the main window of the application</p></div>
+<div class="paragraph"><p>On the left is the 3D view and on the right is the configuration and control panel.
+Loading an STL</p></div>
+<div class="paragraph"><p>To load an STL into the 3D view</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+click on the tab labeled Input file and
+</p>
+</li>
+<li>
+<p>
+press the Load STL button. In revision prior to ??? you are presented with a Fluid file browsing dialog. In later versions you will be presented with your standard operating systems file browse dialog. Choose the STL that you wish to load and click OK.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>The 3D view should now display your STL. Use this button to pull in a facet file to process into Gcode.</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>TIP: If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using ./ivcon file.stl file.stlb and loading the binary version into repsnapper instead. you can get ivcon here. Compile using gcc -lm ivcon.c -o ivcon</tt></pre>
+</div></div>
+<div class="paragraph"><p>Viewing the STL
+Viewing STL in repsnapper</p></div>
+<div class="paragraph"><p>Once an STL is loaded you can rotate, translate and/or scale the view in the 3D viewer so as to see what the object looks like, doing so will not effect the print its mearly for viewing purposes.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+To rotate the view of the STL hold down the left mouse button and drag.
+</p>
+</li>
+<li>
+<p>
+To translate the view the STL hold down the left and right mouse button and drag.
+</p>
+</li>
+<li>
+<p>
+To scale the view the STL hold down the right mouse button and drag, or turn the wheel on your mouse.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Note: the grid shows your build platform / printing area
+Working with STL</p></div>
+<div class="paragraph"><p>Once an STL is loaded, you can move it to further onto the build platform, rotate it and scale it. You can also duplicate it and load additional STL files onto the build platform.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+To move the STL, first select it on the browser, then tab to the translate box and enter absolute values into the X and Y fields. You can also drag the object by left-click-hold in the X or Y box then dragging it with the mouse. Apparently changing the Z value is not recommended.
+</p>
+</li>
+<li>
+<p>
+Duplicate adds another copy of the STL beside the first.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Convert to GCode
+Repsnapper displaying GCode</p></div>
+<div class="paragraph"><p>Converting to GCode is a simple process,</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+click the GCode tab and
+</p>
+</li>
+<li>
+<p>
+press the Convert to GCode button.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>You can generate quite useful and very printable GCode using the default settings of RepSnapper. There are however also a host of user changeable settings that will alter/adjust the generation of GCode, see RepSnapper Manual: Setting GCode options for details.
+Print</p></div>
+<div class="paragraph"><p>To send the GCode to a FiveD GCode compatible printer:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+open the Print tab, and
+</p>
+</li>
+<li>
+<p>
+click the Connect to printer button. (you set com-port and speed in "Simple tab")
+</p>
+</li>
+<li>
+<p>
+Check the Communication Log tab to make sure the printer has connected and is receiving temperature signals from the Extruder Controller.
+</p>
+</li>
+<li>
+<p>
+Set the extruder target temperature, by editing the "Target Temp" field, and
+</p>
+</li>
+<li>
+<p>
+click "Switch Heat on" to turn on the extruder heater.
+</p>
+</li>
+<li>
+<p>
+once the target temp has been met, you may want to try to extrude a bit, to make sure the extruder is fully loaded and ready to print.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>To start printing</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+click the Print button. This starts sending commands to the printer for execution.
+</p>
+</li>
+</ul></div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2010-11-03 04:36:20 EDT
+</div>
+</div>
+</body>
+</html>

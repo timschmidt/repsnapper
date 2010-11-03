@@ -1,100 +1,109 @@
-==Introduction==
-Welcome to the RepSnapper Manual, although currently a work in progress this guide aims to help you install and use your RepSnapper software. 
+= Repsnapper Users Manual =
+
+Welcome to the RepSnapper Manual, although currently a work in progress this guide aims to help you install and use your RepSnapper software.
 
 Contact Info
 
-    * Irc channel: #repsnapper@freenode 
+    * Irc channel: #repsnapper at irc://chat.freenode.net
 
 Timothy Schmidt Version
 
 Current development of Repsnapper is happening in Timothy Schmidt's repository at the following URLs.
 
-    * Code: github.com/timschmidt/repsnapper
-    * Bug tracker: github.com/timschmidt/repsnapper/issues
+    * Code: https://github.com/timschmidt/repsnapper
+    * Bug tracker: https://github.com/timschmidt/repsnapper/issues
 
 Kulitorum version
 
 For historical reasons we leave here the links to the old svn version that developed by Kulitorum, this version is now unmaintained and commits go into the Timothy Schmidt version (as of ~ October 5th, 2010)
 
-    * Code: svn.kulitorum.com/RepSnapper
-    * SVN history: cia.vc/stats/project/RepSnapper
-    * Bug tracker: bugs.kulitorum.com 
+    * Code: http://svn.kulitorum.com/RepSnapper
+    * SVN history: http://cia.vc/stats/project/RepSnapper
+    * Bug tracker: http://bugs.kulitorum.com
 
-==Usage==
+== Installation from binaries ==
 
-Basic Usage
-Launching
-Repsnapper main window
+=== Linux ===
 
-To run repsnapper on
+There are currently no Repsnapper binaries pre-built for Linux.  However, building from source is relatively simple.  If you'd like to package Repsnapper for your Linux distribution, please let us know!
 
-    * windows: double click the repsnapper.exe file within the repsnapper/Src directory 
+=== Windows ===
 
-    * linux: type repsnapper/Src/repsnapper into the console window. 
+Download the latest version of Repsnapper for Windows http://svn.kulitorum.com/RepSnapper/MSVC/Release/RepSnapper.exe[here].
 
-    * OSX: 
+=== OS X ===
 
-After launching the repsnapper application you are presented with the main window of the application
+David Buzz has posted binaries for OS X https://sites.google.com/site/davidbuzz/repsnapper-for-osx-binaries[here].
 
-On the left is the 3D view and on the right is the configuration and control panel.
-Loading an STL
+== Installation from source ==
+[NOTE]
+=====
+Although RepSnapper is not generally tested outside of window/linux/mac you may be able to get it running on other OS's. To do so you will need the following:
 
-To load an STL into the 3D view
+    * gcc and related tools
+    * OpenGL
+    * git
+    * libfltk1.1-dev
+    * libglut3-dev
+    * libboost1.37-dev (or higher version)
+    * libconfig-dev
+=====
 
-    * click on the tab labeled Input file and
-    * press the Load STL button. In revision prior to ??? you are presented with a Fluid file browsing dialog. In later versions you will be presented with your standard operating systems file browse dialog. Choose the STL that you wish to load and click OK. 
+=== Linux ===
+Install dependencies:
 
-The 3D view should now display your STL. Use this button to pull in a facet file to process into Gcode.
+==== Ubuntu 10.04 ====
+----
+sudo apt-get install build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost1.40-dev libboost-thread-dev libboost-system-dev
+----
 
-    TIP: If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using ./ivcon file.stl file.stlb and loading the binary version into repsnapper instead. you can get ivcon here. Compile using gcc -lm ivcon.c -o ivcon 
+==== Fedora 14 ====
+----
+su
+yum install
+exit 
+----
 
-Viewing the STL
-Viewing STL in repsnapper
+Acquire source and compile:
+----
+git clone git://github.com/timschmidt/repsnapper.git
+cd repsnapper/src
+make
+----
 
-Once an STL is loaded you can rotate, translate and/or scale the view in the 3D viewer so as to see what the object looks like, doing so will not effect the print its mearly for viewing purposes.
+=== Windows ===
 
-    * To rotate the view of the STL hold down the left mouse button and drag.
-    * To translate the view the STL hold down the left and right mouse button and drag.
-    * To scale the view the STL hold down the right mouse button and drag, or turn the wheel on your mouse. 
+=== OS X ===
+Acquire source:
+----
+git clone git://github.com/timschmidt/repsnapper.git
+----
 
-Note: the grid shows your build platform / printing area
-Working with STL
+=== Eclipse Project ===
+As a new feature RepSnapper now comes with an Eclipse Galileo(3.5) project.
 
-Once an STL is loaded, you can move it to further onto the build platform, rotate it and scale it. You can also duplicate it and load additional STL files onto the build platform.
+Grab a svn client like kdesvn and start the download.
 
-    * To move the STL, first select it on the browser, then tab to the translate box and enter absolute values into the X and Y fields. You can also drag the object by left-click-hold in the X or Y box then dragging it with the mouse. Apparently changing the Z value is not recommended.
-    * Duplicate adds another copy of the STL beside the first. 
+Grab the Eclipse IDE for C/C++ Developers from the download page http://www.eclipse.org/downloads/
 
-Convert to GCode
-Repsnapper displaying GCode
+Throw in an additional SVN plugin - Help | Install New Software...
 
-Converting to GCode is a simple process,
+    * Subclipse - http://subclipse.tigris.org/update_1.6.x
+          o Just take them all 
 
-    * click the GCode tab and
-    * press the Convert to GCode button. 
+Eclipse is Java and that means a svn wrapper. So shut down Eclipse and get it.
 
-You can generate quite useful and very printable GCode using the default settings of RepSnapper. There are however also a host of user changeable settings that will alter/adjust the generation of GCode, see RepSnapper Manual: Setting GCode options for details.
-Print
+sudo  apt-get install libsvn-java
 
-To send the GCode to a FiveD GCode compatible printer:
+Ubuntu users may wish to open the System|Administration|Synaptic Package Manager and do a quick search for libsvn instead as that will ensure Eclipse can find it.
 
-    * open the Print tab, and
-    * click the Connect to printer button. (you set com-port and speed in "Simple tab")
-    * Check the Communication Log tab to make sure the printer has connected and is receiving temperature signals from the Extruder Controller. 
+When the donwload is complete enter the Eclipse folder in the repository and read the Readme.txt for last minute instructions.
 
+At some point you'll need to reboot, so if you haven't done it before do it now.
 
-    * Set the extruder target temperature, by editing the "Target Temp" field, and
-    * click "Switch Heat on" to turn on the extruder heater.
-    * once the target temp has been met, you may want to try to extrude a bit, to make sure the extruder is fully loaded and ready to print. 
+Notice that while you downloaded the code with kdesvn you can now use svn directly from eclipse.
 
-
-To start printing
-
-    * click the Print button. This starts sending commands to the printer for execution. 
-
-==Configuration==
-
-Configuring Printer Settings
+== Configuration ==
 Simple tab
 
 Connect to printer
@@ -322,3 +331,74 @@ Printer settings Button
 
 (elaborate) 
 
+== Use ==
+
+Basic Usage
+Launching
+Repsnapper main window
+
+To run repsnapper on
+
+    * windows: double click the repsnapper.exe file within the repsnapper/Src directory 
+
+    * linux: type repsnapper/Src/repsnapper into the console window. 
+
+    * OSX: 
+
+After launching the repsnapper application you are presented with the main window of the application
+
+On the left is the 3D view and on the right is the configuration and control panel.
+Loading an STL
+
+To load an STL into the 3D view
+
+    * click on the tab labeled Input file and
+    * press the Load STL button. In revision prior to ??? you are presented with a Fluid file browsing dialog. In later versions you will be presented with your standard operating systems file browse dialog. Choose the STL that you wish to load and click OK. 
+
+The 3D view should now display your STL. Use this button to pull in a facet file to process into Gcode.
+
+    TIP: If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using ./ivcon file.stl file.stlb and loading the binary version into repsnapper instead. you can get ivcon here. Compile using gcc -lm ivcon.c -o ivcon 
+
+Viewing the STL
+Viewing STL in repsnapper
+
+Once an STL is loaded you can rotate, translate and/or scale the view in the 3D viewer so as to see what the object looks like, doing so will not effect the print its mearly for viewing purposes.
+
+    * To rotate the view of the STL hold down the left mouse button and drag.
+    * To translate the view the STL hold down the left and right mouse button and drag.
+    * To scale the view the STL hold down the right mouse button and drag, or turn the wheel on your mouse. 
+
+Note: the grid shows your build platform / printing area
+Working with STL
+
+Once an STL is loaded, you can move it to further onto the build platform, rotate it and scale it. You can also duplicate it and load additional STL files onto the build platform.
+
+    * To move the STL, first select it on the browser, then tab to the translate box and enter absolute values into the X and Y fields. You can also drag the object by left-click-hold in the X or Y box then dragging it with the mouse. Apparently changing the Z value is not recommended.
+    * Duplicate adds another copy of the STL beside the first. 
+
+Convert to GCode
+Repsnapper displaying GCode
+
+Converting to GCode is a simple process,
+
+    * click the GCode tab and
+    * press the Convert to GCode button. 
+
+You can generate quite useful and very printable GCode using the default settings of RepSnapper. There are however also a host of user changeable settings that will alter/adjust the generation of GCode, see RepSnapper Manual: Setting GCode options for details.
+Print
+
+To send the GCode to a FiveD GCode compatible printer:
+
+    * open the Print tab, and
+    * click the Connect to printer button. (you set com-port and speed in "Simple tab")
+    * Check the Communication Log tab to make sure the printer has connected and is receiving temperature signals from the Extruder Controller. 
+
+
+    * Set the extruder target temperature, by editing the "Target Temp" field, and
+    * click "Switch Heat on" to turn on the extruder heater.
+    * once the target temp has been met, you may want to try to extrude a bit, to make sure the extruder is fully loaded and ready to print. 
+
+
+To start printing
+
+    * click the Print button. This starts sending commands to the printer for execution. 
