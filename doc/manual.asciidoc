@@ -22,10 +22,9 @@ For historical reasons we leave here the links to the old svn version that devel
     * Bug tracker: http://bugs.kulitorum.com
 
 == Installation from binaries ==
-
 === Linux ===
 
-There are currently no Repsnapper binaries pre-built for Linux.  However, building from source is relatively simple.  If you'd like to package Repsnapper for your Linux distribution, please let us know!
+There are currently no Repsnapper binaries pre-built for Linux.  However, installation from source is relatively simple.  If you'd like to package Repsnapper for your Linux distribution, please let us know!
 
 === Windows ===
 
@@ -104,73 +103,73 @@ At some point you'll need to reboot, so if you haven't done it before do it now.
 Notice that while you downloaded the code with kdesvn you can now use svn directly from eclipse.
 
 == Configuration ==
-Simple tab
+=== Simple tab ===
 
-Connect to printer
-    Establishes communications between the PC and the main board. 
-Port
-    Manually selects the serial communication port that you want to talk across. 
-Speed
-    The serial communications baud rate. Typically 19200 - must however match the setting in your firmware. For example in the latest svn firmware the baud is 57600 by default in configuration.h the value in repsnapper must match this value. 
-Load STL
-    Loads an STL file 
-Convert to GCode
-    Converts the STL to GCode 
-Load GCode
-    Loads previously generated GCode file 
-Print
-    Starts printing 
-Calibrate
-    Does something clever 
-    TIP: This feature is currently not implemented 
+Connect to printer::
+    Establishes communications between the PC and the main board.
 
-Input File tab
+Port::
+    Manually selects the serial communication port that you want to talk across.
 
-Load RFO
-    This will load multiple STL's zip format as is supported by the official Java Reprap Host software for printing whole beds of parts at a time. 
-New RFO
-    This will create a new multiple STL zip file. 
-Save RFO
-    This will save multiple STL zip file based on the currently loaded STL's 
+Speed::
+    The serial communications baud rate. Typically 19200 - must however match the setting in your firmware. For example in the latest svn firmware the baud is 57600 by default in configuration.h the value in repsnapper must match this value.
 
-    TIP: RFO stands for Reprap Object Format However RFO support is currently not working in repsnapper with any known revision. 
+Load STL::
+    Loads an STL file
 
-Duplicate
-    Creates a copy of the STL file. Useful for printing several items of the same object, ie. 10 clamps. 
+Convert to GCode::
+    Converts the STL to GCode
 
-Translate, Rotate and Scale
+Load GCode::
+    Loads previously generated GCode file
+
+Print::
+    Starts printing
+
+Calibrate::
+    Not yet implemented
+
+=== Input File tab ===
+
+Load RFO::
+    This will load multiple STL's zip format as is supported by the official Java Reprap Host software for printing whole beds of parts at a time.
+
+New RFO::
+    This will create a new multiple STL zip file.
+
+Save RFO::
+    This will save multiple STL zip file based on the currently loaded STL's
+[TIP]
+RFO stands for Reprap Object Format However RFO support is currently not working in repsnapper with any known revision. 
+
+Duplicate::
+    Creates a copy of the STL file. Useful for printing several items of the same object, ie. 10 clamps.
+
+Translate, Rotate and Scale::
     If an STL object is first selected in the browser, this will alter the part for creating gcode. 
 Object Name, File location, File type and file material
     Name a file system and document the contents. 
 
-Object rotation
+Object rotation::
     Selects the plane to rotate the object about. GCode generation is affected by final object placement. Also useful when loading several STL files. 
 
-Save Settings
+Save Settings::
     Saves all configuration settings. The configuration settings are stored in a file called Repsnapper.xml 
 
-    TIP: Repsnapper currently stores the setttings file the current working directory (So If you start repsnapper in a different working directory don't be surprised that you now have all your settings back to defaults) This will hopefully be rectified soon. 
+[TIP]
+Repsnapper currently stores the setttings file the current working directory (So If you start repsnapper in a different working directory don't be surprised that you now have all your settings back to defaults) This will hopefully be rectified soon. 
 
-Load Gcode
+Load Gcode::
     Loads a previously generated Gcode file. 
 
-Fix STL errors
+Fix STL errors::
     Presumably makes the structure water tight and aligns all surface normals. 
 
-Print Options tab
-Printer Settings
+=== Print Options tab ===
 
-Extrusion multiplier
+==== Printer Settings Window ====
+Extrusion multiplier::
     Allows calibration of the extruder without having to adjust E_STEPS_PER_MM in the firmware. 
-
-GCode tab
-Start
-Next Layer
-End Code
-Result
-Display Options tab
-Print tab
-Initial printer Setup Notes
 
 Below the author describes the things he had to do to get repsnapper (V333, dated 14-08-2010) working to the point where he could finish a print of a test block. Firmware used was Tonokip's firmware running on an Arduino Mega with Pololu stepper drivers.
 Firmware
@@ -243,7 +242,7 @@ Still trying to figure out:
     * what the 'Downstream Multipliers' do.
     * what the 'lua' thing is about. 
 
-==Setting GCode Options==
+==== Setting GCode Options ====
 
 You can generate quite useful and very printable GCode using the default settings of RepSnapper.
 
@@ -332,16 +331,13 @@ Printer settings Button
 (elaborate) 
 
 == Use ==
-
-Basic Usage
-Launching
-Repsnapper main window
+=== Launching ===
 
 To run repsnapper on
 
-    * windows: double click the repsnapper.exe file within the repsnapper/Src directory 
+    * windows: double click the repsnapper.exe file within the repsnapper/src directory 
 
-    * linux: type repsnapper/Src/repsnapper into the console window. 
+    * linux: type repsnapper/src/repsnapper into the console window. 
 
     * OSX: 
 
