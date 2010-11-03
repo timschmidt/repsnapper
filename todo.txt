@@ -1,10 +1,7 @@
-License Regularization:
-
- - FLTK stuffs - acquire copy of the license here: http://www.fltk.org/COPYING.php and check it into the tree
+Write an 'install' target in our makefile
 
 Libraries to be moved to /lib:
 
  - ivcon.c
  - AsyncSerial
  - FLTK stuff
- - 
