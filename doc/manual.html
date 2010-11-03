@@ -435,7 +435,7 @@ Bug tracker: <a href="http://bugs.kulitorum.com">http://bugs.kulitorum.com</a>
 <h2 id="_installation_from_binaries">1. Installation from binaries</h2>
 <div class="sectionbody">
 <h3 id="_linux">1.1. Linux</h3><div style="clear:left"></div>
-<div class="paragraph"><p>There are currently no Repsnapper binaries pre-built for Linux.  However, installation from source is relatively simple.  If you&#8217;d like to package Repsnapper for your Linux distribution, please let us know!</p></div>
+<div class="paragraph"><p>There are currently no Repsnapper binaries pre-built for Linux.  However, building from source is relatively simple.  If you&#8217;d like to package Repsnapper for your Linux distribution, please let us know!</p></div>
 <h3 id="_windows">1.2. Windows</h3><div style="clear:left"></div>
 <div class="paragraph"><p>Download the latest version of Repsnapper for Windows <a href="http://svn.kulitorum.com/RepSnapper/MSVC/Release/RepSnapper.exe">here</a>.</p></div>
 <h3 id="_os_x">1.3. OS X</h3><div style="clear:left"></div>
@@ -540,182 +540,65 @@ Subclipse - <a href="http://subclipse.tigris.org/update_1.6.x">http://subclipse.
 </div>
 <h2 id="_configuration">3. Configuration</h2>
 <div class="sectionbody">
-<h3 id="_simple_tab">3.1. Simple tab</h3><div style="clear:left"></div>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-Connect to printer
-</dt>
-<dd>
-<p>
+<div class="paragraph"><p>Simple tab</p></div>
+<div class="paragraph"><p>Connect to printer
     Establishes communications between the PC and the main board.
-</p>
-</dd>
-<dt class="hdlist1">
 Port
-</dt>
-<dd>
-<p>
     Manually selects the serial communication port that you want to talk across.
-</p>
-</dd>
-<dt class="hdlist1">
 Speed
-</dt>
-<dd>
-<p>
     The serial communications baud rate. Typically 19200 - must however match the setting in your firmware. For example in the latest svn firmware the baud is 57600 by default in configuration.h the value in repsnapper must match this value.
-</p>
-</dd>
-<dt class="hdlist1">
 Load STL
-</dt>
-<dd>
-<p>
     Loads an STL file
-</p>
-</dd>
-<dt class="hdlist1">
 Convert to GCode
-</dt>
-<dd>
-<p>
     Converts the STL to GCode
-</p>
-</dd>
-<dt class="hdlist1">
 Load GCode
-</dt>
-<dd>
-<p>
     Loads previously generated GCode file
-</p>
-</dd>
-<dt class="hdlist1">
 Print
-</dt>
-<dd>
-<p>
     Starts printing
-</p>
-</dd>
-<dt class="hdlist1">
 Calibrate
-</dt>
-<dd>
-<p>
-    Not yet implemented
-</p>
-</dd>
-</dl></div>
-<h3 id="_input_file_tab">3.2. Input File tab</h3><div style="clear:left"></div>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-Load RFO
-</dt>
-<dd>
-<p>
+    Does something clever
+    TIP: This feature is currently not implemented</p></div>
+<div class="paragraph"><p>Input File tab</p></div>
+<div class="paragraph"><p>Load RFO
     This will load multiple STL&#8217;s zip format as is supported by the official Java Reprap Host software for printing whole beds of parts at a time.
-</p>
-</dd>
-<dt class="hdlist1">
 New RFO
-</dt>
-<dd>
-<p>
     This will create a new multiple STL zip file.
-</p>
-</dd>
-<dt class="hdlist1">
 Save RFO
-</dt>
-<dd>
-<p>
-    This will save multiple STL zip file based on the currently loaded STL&#8217;s
-</p>
-</dd>
-</dl></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">RFO stands for Reprap Object Format However RFO support is currently not working in repsnapper with any known revision.</td>
-</tr></table>
-</div>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-Duplicate
-</dt>
-<dd>
-<p>
-    Creates a copy of the STL file. Useful for printing several items of the same object, ie. 10 clamps.
-</p>
-</dd>
-<dt class="hdlist1">
-Translate, Rotate and Scale
-</dt>
-<dd>
-<p>
+    This will save multiple STL zip file based on the currently loaded STL&#8217;s</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>TIP: RFO stands for Reprap Object Format However RFO support is currently not working in repsnapper with any known revision.</tt></pre>
+</div></div>
+<div class="paragraph"><p>Duplicate
+    Creates a copy of the STL file. Useful for printing several items of the same object, ie. 10 clamps.</p></div>
+<div class="paragraph"><p>Translate, Rotate and Scale
     If an STL object is first selected in the browser, this will alter the part for creating gcode.
 Object Name, File location, File type and file material
-    Name a file system and document the contents.
-</p>
-</dd>
-<dt class="hdlist1">
-Object rotation
-</dt>
-<dd>
-<p>
-    Selects the plane to rotate the object about. GCode generation is affected by final object placement. Also useful when loading several STL files.
-</p>
-</dd>
-<dt class="hdlist1">
-Save Settings
-</dt>
-<dd>
-<p>
-    Saves all configuration settings. The configuration settings are stored in a file called Repsnapper.xml
-</p>
-</dd>
-</dl></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">Repsnapper currently stores the setttings file the current working directory (So If you start repsnapper in a different working directory don&#8217;t be surprised that you now have all your settings back to defaults) This will hopefully be rectified soon.</td>
-</tr></table>
-</div>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-Load Gcode
-</dt>
-<dd>
-<p>
-    Loads a previously generated Gcode file.
-</p>
-</dd>
-<dt class="hdlist1">
-Fix STL errors
-</dt>
-<dd>
-<p>
-    Presumably makes the structure water tight and aligns all surface normals.
-</p>
-</dd>
-</dl></div>
-<h3 id="_print_options_tab">3.3. Print Options tab</h3><div style="clear:left"></div>
-<h4 id="_printer_settings_window">3.3.1. Printer Settings Window</h4>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-Extrusion multiplier
-</dt>
-<dd>
-<p>
-    Allows calibration of the extruder without having to adjust E_STEPS_PER_MM in the firmware.
-</p>
-</dd>
-</dl></div>
+    Name a file system and document the contents.</p></div>
+<div class="paragraph"><p>Object rotation
+    Selects the plane to rotate the object about. GCode generation is affected by final object placement. Also useful when loading several STL files.</p></div>
+<div class="paragraph"><p>Save Settings
+    Saves all configuration settings. The configuration settings are stored in a file called Repsnapper.xml</p></div>
+<div class="literalblock">
+<div class="content">
+<pre><tt>TIP: Repsnapper currently stores the setttings file the current working directory (So If you start repsnapper in a different working directory don't be surprised that you now have all your settings back to defaults) This will hopefully be rectified soon.</tt></pre>
+</div></div>
+<div class="paragraph"><p>Load Gcode
+    Loads a previously generated Gcode file.</p></div>
+<div class="paragraph"><p>Fix STL errors
+    Presumably makes the structure water tight and aligns all surface normals.</p></div>
+<div class="paragraph"><p>Print Options tab
+Printer Settings</p></div>
+<div class="paragraph"><p>Extrusion multiplier
+    Allows calibration of the extruder without having to adjust E_STEPS_PER_MM in the firmware.</p></div>
+<div class="paragraph"><p>GCode tab
+Start
+Next Layer
+End Code
+Result
+Display Options tab
+Print tab
+Initial printer Setup Notes</p></div>
 <div class="paragraph"><p>Below the author describes the things he had to do to get repsnapper (V333, dated 14-08-2010) working to the point where he could finish a print of a test block. Firmware used was Tonokip&#8217;s firmware running on an Arduino Mega with Pololu stepper drivers.
 Firmware</p></div>
 <div class="ulist"><ul>
@@ -886,7 +769,7 @@ what the <em>lua</em> thing is about.
 </p>
 </li>
 </ul></div>
-<h4 id="_setting_gcode_options">3.3.2. Setting GCode Options</h4>
+<div class="paragraph"><p>==Setting GCode Options==</p></div>
 <div class="paragraph"><p>You can generate quite useful and very printable GCode using the default settings of RepSnapper.</p></div>
 <div class="paragraph"><p>There are however also a host of user changeable settings that will alter/adjust the generation of GCode. On this page you should get introduced to some of these options.</p></div>
 <div class="literalblock">
@@ -982,17 +865,19 @@ Printer settings Button</p></div>
 </div>
 <h2 id="_use">4. Use</h2>
 <div class="sectionbody">
-<h3 id="_launching">4.1. Launching</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Basic Usage
+Launching
+Repsnapper main window</p></div>
 <div class="paragraph"><p>To run repsnapper on</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
-windows: double click the repsnapper.exe file within the repsnapper/src directory
+windows: double click the repsnapper.exe file within the repsnapper/Src directory
 </p>
 </li>
 <li>
 <p>
-linux: type repsnapper/src/repsnapper into the console window.
+linux: type repsnapper/Src/repsnapper into the console window.
 </p>
 </li>
 <li>
@@ -1118,7 +1003,7 @@ click the Print button. This starts sending commands to the printer for executio
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2010-11-03 05:31:37 EDT
+Last updated 2010-11-03 04:36:20 EDT
 </div>
 </div>
 </body>
