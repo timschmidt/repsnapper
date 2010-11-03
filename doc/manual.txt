@@ -20,112 +20,7 @@ For historical reasons we leave here the links to the old svn version that devel
     * SVN history: cia.vc/stats/project/RepSnapper
     * Bug tracker: bugs.kulitorum.com 
 
-Developers
-
-    * kulitorum - Michael Holm
-    * timschmidt - Timothy Schmidt
-    * Palomides - Evan Clinton
-    * fcrick - Francis Crick
-    * mmeeks - Micheal Meeks
-    * logick
-    * joaz 
-
-==Installing Repsnapper==
---Binaries--
-Windows
-
-   1. download RepSnapper.exe here: http://svn.kulitorum.com/RepSnapper/MSVC/Release/
-   2. run RepSnapper using RepSnapper.exe (you will need OpenGL) 
-
-OSX
-David Buzz made a binary distribution, you can get it here: https://sites.google.com/site/davidbuzz/repsnapper-for-osx-binaries (RepSnapper-01-09-2010.dmg at the bottom of the page)
-RepSnapper Installation
-
-Linux
-   (to be updated)
-
---Building From Source--
-
-Although RepSnapper is not generally tested outside of window/linux/mac you may be able to get it running on other OS's. To do so you will need the following:
-
-    * gcc and stuff
-    * OpenGL
-    * SVN
-    * libfltk1.1
-    * libfltk1.1-dev
-    * libglut3
-    * libglut3-dev
-    * libboost1.37 and -dev (or higher version) 
-
-Linux
-Debian/Ubuntu
-
-To install the dependencies listed above on Ubunutu or any debian-based linux run the following from prompt:
-
-sudo apt-get install build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost1.38-dev
-
-For my configuration (Jolicloud, an Ubuntu derivative):
-
-sudo apt-get install build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost1.37-dev libboost-thread1.37-dev libboost-system1.37-dev
-
-For Ubuntu 10.04 use:
-
-sudo apt-get install build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost1.40-dev libboost-thread-dev libboost-system-dev
-
-If you wan't to minimize dependencies, these are needed in addition to the ones above, but normally pulled in by being recommended by other packages:
-
-libboost-regex-dev libboost-filesystem-dev
-
-Fedora 14:
-
-cd Src
-make clean
-make
-
-(If you get a file/directory does not exist error (e.g. if using ubuntu 10.04) try this:)
-
-cd RepSnapper/Libraries/xml/
-make
-cd ../../Src/
-make
-
-OS-X
-You can download the RepSnapper source using svn here by running:
-
-git clone git://github.com/timschmidt/repsnapper.git
-
-Eclipse Project
-
-As a new feature RepSnapper now comes with an Eclipse Galileo(3.5) project.
-
-Grab a svn client like kdesvn and start the download.
-
-Grab the Eclipse IDE for C/C++ Developers from the download page http://www.eclipse.org/downloads/
-
-Throw in an additional SVN plugin - Help | Install New Software...
-
-    * Subclipse - http://subclipse.tigris.org/update_1.6.x
-          o Just take them all 
-
-Eclipse is Java and that means a svn wrapper. So shut down Eclipse and get it.
-
-sudo  apt-get install libsvn-java
-
-Ubuntu users may wish to open the System|Administration|Synaptic Package Manager and do a quick search for libsvn instead as that will ensure Eclipse can find it.
-
-When the donwload is complete enter the Eclipse folder in the repository and read the Readme.txt for last minute instructions.
-
-At some point you'll need to reboot, so if you haven't done it before do it now.
-
-Notice that while you downloaded the code with kdesvn you can now use svn directly from eclipse.
-
-The build all works and so does the run and debug functionality, enjoy. 
-
-    * The Other Rob
-    * Giles Bathgate
-    * MrAlvin 
-
-==RepSnapper Howto==
+==Usage==
 
 Basic Usage
 Launching
@@ -197,95 +92,7 @@ To start printing
 
     * click the Print button. This starts sending commands to the printer for execution. 
 
-==Setting GCode Options==
-
-You can generate quite useful and very printable GCode using the default settings of RepSnapper.
-
-There are however also a host of user changeable settings that will alter/adjust the generation of GCode. On this page you should get introduced to some of these options.
-
-    TIP: For a technical overview of the GCode generation read this 
-
-Contents
-[hide]
-
-    * 1 GCode tab
-          o 1.1 Start tab
-          o 1.2 Next layer tab
-          o 1.3 End code tab
-          o 1.4 Result tab
-    * 2 Print Options tab
-    * 3 Printer settings Button
-
-GCode tab
-
-Here you can create, save, load and/or edit the GCode.
-
-Using the tabs, you can manually enter some GCode, that will be "injected" into the resulting GCode, when you press the Convert to GCode button.
-
-The tabs are:
-
-    * Start tab - code options to set at the beginning of the print process, like 0-position, default print temperature and more
-    * Next layer tab - something to do in between printing the next layer
-    * End code tab - something to do at the end of a print, like turning the heater off
-    * Result tab - shows you the final complete GCode generated. 
-
-Start tab
-
-(give examples and notes about why and why not)
-
-You will almost certainly want to change the value on the line that sets temperature, or remove it if you set the temperature before starting your print.
-
-When you first open RepSnapper this is what is in the tab:
-
-; GCode generated by RepSnapper by Kulitorum
-G21                        ;metric is good!
-G90                        ;absolute positioning
-T0                         ;select new extruder
-G28                        ;go home
-G92 E0                     ;set extruder home
-M104 S73.0                 ;set temperature
-G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer
-
-
-In Labitat.dk the Workhorse Mendel uses this in the Start tab
-
-; GCode generated by RepSnapper by Kulitorum
-G21                        ;metric is good!
-G90                        ;absolute positioning
-T0                         ;select new extruder
-;G28                       ;go home - does not work with current version of Tonokip Firmware (oct 2010)
-G92 X0 Y0 Z0 E0            ;set home to current location of the nozzle
-M104 S215                  ;set temperature (heating units - NOT actual degree centigrade)
-G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer
-
-Next layer tab
-
-(give examples and notes about why and why not)
-End code tab
-
-(give examples and notes about why and why not)
-
-G91                        ;relative positioning
-G1 F50                     ;set move speed to suit Z-axes
-G1 Z1 F50                  ;move up a bit from the finished object
-G90                        ;absolute positioning
-G1 F2300                   ;set move speed to suit XY-axes
-G1 X0 Y0 F2300             ;goto zero position (from where you started printing)
-
-Result tab
-
-(give examples of what to check for)
-
-
-If you like you can remove the homing and shield code from the next layer tab. This will save time between layers during prints, but should only be done if your machine is reliable and your steppers don't skip steps. Converts the STL model into GCode (machine language)
-Print Options tab
-
-(elaborate)
-Printer settings Button
-
-(elaborate) 
-
-==Configuration Guide==
+==Configuration==
 
 Configuring Printer Settings
 Simple tab
@@ -426,3 +233,92 @@ Still trying to figure out:
 
     * what the 'Downstream Multipliers' do.
     * what the 'lua' thing is about. 
+
+==Setting GCode Options==
+
+You can generate quite useful and very printable GCode using the default settings of RepSnapper.
+
+There are however also a host of user changeable settings that will alter/adjust the generation of GCode. On this page you should get introduced to some of these options.
+
+    TIP: For a technical overview of the GCode generation read this 
+
+Contents
+[hide]
+
+    * 1 GCode tab
+          o 1.1 Start tab
+          o 1.2 Next layer tab
+          o 1.3 End code tab
+          o 1.4 Result tab
+    * 2 Print Options tab
+    * 3 Printer settings Button
+
+GCode tab
+
+Here you can create, save, load and/or edit the GCode.
+
+Using the tabs, you can manually enter some GCode, that will be "injected" into the resulting GCode, when you press the Convert to GCode button.
+
+The tabs are:
+
+    * Start tab - code options to set at the beginning of the print process, like 0-position, default print temperature and more
+    * Next layer tab - something to do in between printing the next layer
+    * End code tab - something to do at the end of a print, like turning the heater off
+    * Result tab - shows you the final complete GCode generated. 
+
+Start tab
+
+(give examples and notes about why and why not)
+
+You will almost certainly want to change the value on the line that sets temperature, or remove it if you set the temperature before starting your print.
+
+When you first open RepSnapper this is what is in the tab:
+
+; GCode generated by RepSnapper by Kulitorum
+G21                        ;metric is good!
+G90                        ;absolute positioning
+T0                         ;select new extruder
+G28                        ;go home
+G92 E0                     ;set extruder home
+M104 S73.0                 ;set temperature
+G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer
+
+
+In Labitat.dk the Workhorse Mendel uses this in the Start tab
+
+; GCode generated by RepSnapper by Kulitorum
+G21                        ;metric is good!
+G90                        ;absolute positioning
+T0                         ;select new extruder
+;G28                       ;go home - does not work with current version of Tonokip Firmware (oct 2010)
+G92 X0 Y0 Z0 E0            ;set home to current location of the nozzle
+M104 S215                  ;set temperature (heating units - NOT actual degree centigrade)
+G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer
+
+Next layer tab
+
+(give examples and notes about why and why not)
+End code tab
+
+(give examples and notes about why and why not)
+
+G91                        ;relative positioning
+G1 F50                     ;set move speed to suit Z-axes
+G1 Z1 F50                  ;move up a bit from the finished object
+G90                        ;absolute positioning
+G1 F2300                   ;set move speed to suit XY-axes
+G1 X0 Y0 F2300             ;goto zero position (from where you started printing)
+
+Result tab
+
+(give examples of what to check for)
+
+
+If you like you can remove the homing and shield code from the next layer tab. This will save time between layers during prints, but should only be done if your machine is reliable and your steppers don't skip steps. Converts the STL model into GCode (machine language)
+Print Options tab
+
+(elaborate)
+Printer settings Button
+
+(elaborate) 
+

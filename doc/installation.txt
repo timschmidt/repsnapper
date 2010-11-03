@@ -1,0 +1,91 @@
+==Installing Repsnapper==
+--Binaries--
+Windows
+
+   1. download RepSnapper.exe here: http://svn.kulitorum.com/RepSnapper/MSVC/Release/
+   2. run RepSnapper using RepSnapper.exe (you will need OpenGL) 
+
+OSX
+David Buzz made a binary distribution, you can get it here: https://sites.google.com/site/davidbuzz/repsnapper-for-osx-binaries (RepSnapper-01-09-2010.dmg at the bottom of the page)
+RepSnapper Installation
+
+Linux
+   (to be updated)
+
+--Building From Source--
+
+Although RepSnapper is not generally tested outside of window/linux/mac you may be able to get it running on other OS's. To do so you will need the following:
+
+    * gcc and stuff
+    * OpenGL
+    * SVN
+    * libfltk1.1
+    * libfltk1.1-dev
+    * libglut3
+    * libglut3-dev
+    * libboost1.37 and -dev (or higher version) 
+
+Linux
+Debian/Ubuntu
+
+To install the dependencies listed above on Ubunutu or any debian-based linux run the following from prompt:
+
+sudo apt-get install build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost1.38-dev
+
+For my configuration (Jolicloud, an Ubuntu derivative):
+
+sudo apt-get install build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost1.37-dev libboost-thread1.37-dev libboost-system1.37-dev
+
+For Ubuntu 10.04 use:
+
+sudo apt-get install build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost1.40-dev libboost-thread-dev libboost-system-dev
+
+If you wan't to minimize dependencies, these are needed in addition to the ones above, but normally pulled in by being recommended by other packages:
+
+libboost-regex-dev libboost-filesystem-dev
+
+Fedora 14:
+
+cd Src
+make clean
+make
+
+(If you get a file/directory does not exist error (e.g. if using ubuntu 10.04) try this:)
+
+cd RepSnapper/Libraries/xml/
+make
+cd ../../Src/
+make
+
+OS-X
+You can download the RepSnapper source using svn here by running:
+
+git clone git://github.com/timschmidt/repsnapper.git
+
+Eclipse Project
+
+As a new feature RepSnapper now comes with an Eclipse Galileo(3.5) project.
+
+Grab a svn client like kdesvn and start the download.
+
+Grab the Eclipse IDE for C/C++ Developers from the download page http://www.eclipse.org/downloads/
+
+Throw in an additional SVN plugin - Help | Install New Software...
+
+    * Subclipse - http://subclipse.tigris.org/update_1.6.x
+          o Just take them all 
+
+Eclipse is Java and that means a svn wrapper. So shut down Eclipse and get it.
+
+sudo  apt-get install libsvn-java
+
+Ubuntu users may wish to open the System|Administration|Synaptic Package Manager and do a quick search for libsvn instead as that will ensure Eclipse can find it.
+
+When the donwload is complete enter the Eclipse folder in the repository and read the Readme.txt for last minute instructions.
+
+At some point you'll need to reboot, so if you haven't done it before do it now.
+
+Notice that while you downloaded the code with kdesvn you can now use svn directly from eclipse.
+
+The build all works and so does the run and debug functionality, enjoy. 
+

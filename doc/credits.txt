@@ -1,0 +1,39 @@
+	This is at least a partial credits-file of people that have
+	contributed to repsnapper.  It is sorted by name, and
+	formatted in a format that allows for easy grepping and
+	beautification by scripts.  The fields are: name (N), email (E),
+	web-address (W), PGP key ID and fingerprint (P), description (D)
+	and snail-mail address (S). 
+	Thanks,
+
+			Tim
+----------
+
+N: Michael Holm
+D: kulitorum
+
+N: Timothy Schmidt
+E: timschmidt@gmail.com
+
+N: Evan Clinton
+E: nave.notnilc@gmail.com
+D: Palomides
+
+N: Francis Crick
+D: fcrick
+
+N: Micheal Meeks
+D: mmeeks
+
+N: logick
+
+N: joaz
+
+N: The Other Rob
+
+N: Giles Bathgate
+E: gilesbathgate@gmail.com
+W: http://www.gilesbathgate.com/
+
+N: MrAlvin
+W: http://reprap.org/wiki/User:MrAlvin
