@@ -637,7 +637,7 @@ Save Settings
 <td class="icon">
 <div class="title">Tip</div>
 </td>
-<td class="content">Repsnapper currently stores the setttings file the current working directory (So If you start repsnapper in a different working directory don&#8217;t be surprised that you now have all your settings back to defaults) This will hopefully be rectified soon.</td>
+<td class="content">Repsnapper stores the setttings file the current working directory (So If you start repsnapper in a different working directory don&#8217;t be surprised if all the settings are back to defaults) This will hopefully be rectified soon.</td>
 </tr></table>
 </div>
 <div class="dlist"><dl>
@@ -678,8 +678,86 @@ Object rotation
 </dd>
 </dl></div>
 <h3 id="_print_options_tab">3.3. Print Options tab</h3><div style="clear:left"></div>
-<h4 id="_printer_settings_window">3.3.1. Printer Settings Window</h4>
 <div class="dlist"><dl>
+<dt class="hdlist1">
+Shell Only - no infill
+</dt>
+<dt class="hdlist1">
+Shell Count
+</dt>
+<dt class="hdlist1">
+Rotation
+</dt>
+<dt class="hdlist1">
+Infill Rotation per Layer
+</dt>
+<dt class="hdlist1">
+Infill Distance
+</dt>
+<dt class="hdlist1">
+Alternate Infill Layers
+</dt>
+<dt class="hdlist1">
+Raft Enable
+</dt>
+<dt class="hdlist1">
+Shrinking Algorithm
+</dt>
+<dt class="hdlist1">
+Optimization
+</dt>
+<dd>
+<p>
+    unknown
+</p>
+</dd>
+</dl></div>
+<h4 id="_raft_settings_window">3.3.1. Raft Settings Window</h4>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Larger than objects
+</dt>
+<dt class="hdlist1">
+Number of base/interface layers
+</dt>
+<dt class="hdlist1">
+Material per distance ratio
+</dt>
+<dt class="hdlist1">
+Rotation
+</dt>
+<dt class="hdlist1">
+Distance between lines
+</dt>
+<dt class="hdlist1">
+Thickness Ratio
+</dt>
+<dt class="hdlist1">
+Temperature ratio
+</dt>
+<dd>
+<p>
+    The normal printing temperature is multiplied by this ratio to determine the temperature used while printing the raft.
+</p>
+</dd>
+</dl></div>
+<h4 id="_printer_settings_window">3.3.2. Printer Settings Window</h4>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Build volume
+</dt>
+<dt class="hdlist1">
+Print margin
+</dt>
+<dt class="hdlist1">
+Use incremental ecode
+</dt>
+<dt class="hdlist1">
+Use 3D Gcode
+</dt>
+<dt class="hdlist1">
+Extruded material width
+</dt>
 <dt class="hdlist1">
 Extrusion multiplier
 </dt>
@@ -688,7 +766,301 @@ Extrusion multiplier
     Allows calibration of the extruder without having to adjust E_STEPS_PER_MM in the firmware.
 </p>
 </dd>
+<dt class="hdlist1">
+Layer thickness
+</dt>
+<dt class="hdlist1">
+Min print speed XY
+</dt>
+<dt class="hdlist1">
+Max print speed XY
+</dt>
+<dt class="hdlist1">
+Min print speed Z
+</dt>
+<dt class="hdlist1">
+Max print speed Z
+</dt>
+<dt class="hdlist1">
+Enable antiooze retraction
+</dt>
+<dt class="hdlist1">
+Distance to retract filament
+</dt>
+<dt class="hdlist1">
+Speed to retract filament
+</dt>
+<dt class="hdlist1">
+Enable Acceleration
+</dt>
+<dt class="hdlist1">
+Distance used to read full speed
+</dt>
+<dt class="hdlist1">
+Buffer size on printer
+</dt>
+<dt class="hdlist1">
+Port
+</dt>
+<dt class="hdlist1">
+Speed
+</dt>
+<dt class="hdlist1">
+Validate connection
+</dt>
+<dd>
+<p>
+    unknown
+</p>
+</dd>
 </dl></div>
+<h3 id="_gcode_tab">3.4. GCode tab</h3><div style="clear:left"></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Convert to GCode
+</dt>
+<dt class="hdlist1">
+Load Gcode
+</dt>
+<dd>
+<p>
+    Loads a previously generated Gcode file.
+</p>
+</dd>
+<dt class="hdlist1">
+Save GCode
+</dt>
+<dd>
+<p>
+    Saves generated GCode to a file.
+</p>
+</dd>
+</dl></div>
+<div class="paragraph"><p>You can generate quite useful and very printable GCode using the default settings of RepSnapper.</p></div>
+<div class="paragraph"><p>There are however also a host of user changeable settings that will alter/adjust the generation of GCode. On this page you should get introduced to some of these options.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">For a technical overview of the GCode generation read this</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>GCode tab</p></div>
+<div class="paragraph"><p>Here you can create, save, load and/or edit the GCode.</p></div>
+<div class="paragraph"><p>Using the tabs, you can manually enter some GCode, that will be "injected" into the resulting GCode, when you press the Convert to GCode button.</p></div>
+<div class="paragraph"><p>The tabs are:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+Start tab - code options to set at the beginning of the print process, like 0-position, default print temperature and more
+</p>
+</li>
+<li>
+<p>
+Next layer tab - something to do in between printing the next layer
+</p>
+</li>
+<li>
+<p>
+End code tab - something to do at the end of a print, like turning the heater off
+</p>
+</li>
+<li>
+<p>
+Result tab - shows you the final complete GCode generated.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Start tab</p></div>
+<div class="paragraph"><p>(give examples and notes about why and why not)</p></div>
+<div class="paragraph"><p>You will almost certainly want to change the value on the line that sets temperature, or remove it if you set the temperature before starting your print.</p></div>
+<div class="paragraph"><p>When you first open RepSnapper this is what is in the tab:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>; GCode generated by RepSnapper by Kulitorum
+G21                        ;metric is good!
+G90                        ;absolute positioning
+T0                         ;select new extruder
+G28                        ;go home
+G92 E0                     ;set extruder home
+M104 S73.0                 ;set temperature
+G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer</tt></pre>
+</div></div>
+<div class="paragraph"><p>In Labitat.dk the Workhorse Mendel uses this in the Start tab</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>; GCode generated by RepSnapper by Kulitorum
+G21                        ;metric is good!
+G90                        ;absolute positioning
+T0                         ;select new extruder
+;G28                       ;go home - does not work with current version of Tonokip Firmware (oct 2010)
+G92 X0 Y0 Z0 E0            ;set home to current location of the nozzle
+M104 S215                  ;set temperature (heating units - NOT actual degree centigrade)
+G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer</tt></pre>
+</div></div>
+<div class="paragraph"><p>Next layer tab</p></div>
+<div class="paragraph"><p>(give examples and notes about why and why not)
+End code tab</p></div>
+<div class="paragraph"><p>(give examples and notes about why and why not)</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>G91                        ;relative positioning
+G1 F50                     ;set move speed to suit Z-axes
+G1 Z1 F50                  ;move up a bit from the finished object
+G90                        ;absolute positioning
+G1 F2300                   ;set move speed to suit XY-axes
+G1 X0 Y0 F2300             ;goto zero position (from where you started printing)</tt></pre>
+</div></div>
+<div class="paragraph"><p>Result tab</p></div>
+<div class="paragraph"><p>(give examples of what to check for)</p></div>
+<div class="paragraph"><p>If you like you can remove the homing and shield code from the next layer tab. This will save time between layers during prints, but should only be done if your machine is reliable and your steppers don&#8217;t skip steps. Converts the STL model into GCode (machine language)
+Print Options tab</p></div>
+<div class="paragraph"><p>(elaborate)
+Printer settings Button</p></div>
+<div class="paragraph"><p>(elaborate)</p></div>
+<h3 id="_display_options_tab">3.5. Display options tab</h3><div style="clear:left"></div>
+<h3 id="_print_tab">3.6. Print tab</h3><div style="clear:left"></div>
+</div>
+<h2 id="_use">4. Use</h2>
+<div class="sectionbody">
+<h3 id="_launching">4.1. Launching</h3><div style="clear:left"></div>
+<div class="paragraph"><p>To run repsnapper on</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+windows: double click the repsnapper.exe file within the repsnapper/src directory
+</p>
+</li>
+<li>
+<p>
+linux: type repsnapper/src/repsnapper into the console window.
+</p>
+</li>
+<li>
+<p>
+OSX:
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>After launching the repsnapper application you are presented with the main window of the application</p></div>
+<div class="paragraph"><p>On the left is the 3D view and on the right is the configuration and control panel.
+Loading an STL</p></div>
+<div class="paragraph"><p>To load an STL into the 3D view</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+click on the tab labeled Input file and
+</p>
+</li>
+<li>
+<p>
+press the Load STL button. In revision prior to ??? you are presented with a Fluid file browsing dialog. In later versions you will be presented with your standard operating systems file browse dialog. Choose the STL that you wish to load and click OK.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>The 3D view should now display your STL. Use this button to pull in a facet file to process into Gcode.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Tip</div>
+</td>
+<td class="content">If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using ./ivcon file.stl file.stlb and loading the binary version into repsnapper instead. you can get ivcon here. Compile using gcc -lm ivcon.c -o ivcon</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>Viewing the STL
+Viewing STL in repsnapper</p></div>
+<div class="paragraph"><p>Once an STL is loaded you can rotate, translate and/or scale the view in the 3D viewer so as to see what the object looks like, doing so will not effect the print its mearly for viewing purposes.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+To rotate the view of the STL hold down the left mouse button and drag.
+</p>
+</li>
+<li>
+<p>
+To translate the view the STL hold down the left and right mouse button and drag.
+</p>
+</li>
+<li>
+<p>
+To scale the view the STL hold down the right mouse button and drag, or turn the wheel on your mouse.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Note: the grid shows your build platform / printing area
+Working with STL</p></div>
+<div class="paragraph"><p>Once an STL is loaded, you can move it to further onto the build platform, rotate it and scale it. You can also duplicate it and load additional STL files onto the build platform.</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+To move the STL, first select it on the browser, then tab to the translate box and enter absolute values into the X and Y fields. You can also drag the object by left-click-hold in the X or Y box then dragging it with the mouse. Apparently changing the Z value is not recommended.
+</p>
+</li>
+<li>
+<p>
+Duplicate adds another copy of the STL beside the first.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>Convert to GCode
+Repsnapper displaying GCode</p></div>
+<div class="paragraph"><p>Converting to GCode is a simple process,</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+click the GCode tab and
+</p>
+</li>
+<li>
+<p>
+press the Convert to GCode button.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>You can generate quite useful and very printable GCode using the default settings of RepSnapper. There are however also a host of user changeable settings that will alter/adjust the generation of GCode, see RepSnapper Manual: Setting GCode options for details.
+Print</p></div>
+<div class="paragraph"><p>To send the GCode to a FiveD GCode compatible printer:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+open the Print tab, and
+</p>
+</li>
+<li>
+<p>
+click the Connect to printer button. (you set com-port and speed in "Simple tab")
+</p>
+</li>
+<li>
+<p>
+Check the Communication Log tab to make sure the printer has connected and is receiving temperature signals from the Extruder Controller.
+</p>
+</li>
+<li>
+<p>
+Set the extruder target temperature, by editing the "Target Temp" field, and
+</p>
+</li>
+<li>
+<p>
+click "Switch Heat on" to turn on the extruder heater.
+</p>
+</li>
+<li>
+<p>
+once the target temp has been met, you may want to try to extrude a bit, to make sure the extruder is fully loaded and ready to print.
+</p>
+</li>
+</ul></div>
+<div class="paragraph"><p>To start printing</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+click the Print button. This starts sending commands to the printer for execution.
+</p>
+</li>
+</ul></div>
 <div class="paragraph"><p>Below the author describes the things he had to do to get repsnapper (V333, dated 14-08-2010) working to the point where he could finish a print of a test block. Firmware used was Tonokip&#8217;s firmware running on an Arduino Mega with Pololu stepper drivers.
 Firmware</p></div>
 <div class="ulist"><ul>
@@ -859,254 +1231,10 @@ what the <em>lua</em> thing is about.
 </p>
 </li>
 </ul></div>
-<h3 id="_gcode_tab">3.4. GCode tab</h3><div style="clear:left"></div>
-<div class="dlist"><dl>
-<dt class="hdlist1">
-Convert to GCode
-</dt>
-<dt class="hdlist1">
-Load Gcode
-</dt>
-<dd>
-<p>
-    Loads a previously generated Gcode file.
-</p>
-</dd>
-<dt class="hdlist1">
-Save GCode
-</dt>
-<dd>
-<p>
-You can generate quite useful and very printable GCode using the default settings of RepSnapper.
-</p>
-</dd>
-</dl></div>
-<div class="paragraph"><p>There are however also a host of user changeable settings that will alter/adjust the generation of GCode. On this page you should get introduced to some of these options.</p></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">For a technical overview of the GCode generation read this</td>
-</tr></table>
-</div>
-<div class="paragraph"><p>GCode tab</p></div>
-<div class="paragraph"><p>Here you can create, save, load and/or edit the GCode.</p></div>
-<div class="paragraph"><p>Using the tabs, you can manually enter some GCode, that will be "injected" into the resulting GCode, when you press the Convert to GCode button.</p></div>
-<div class="paragraph"><p>The tabs are:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-Start tab - code options to set at the beginning of the print process, like 0-position, default print temperature and more
-</p>
-</li>
-<li>
-<p>
-Next layer tab - something to do in between printing the next layer
-</p>
-</li>
-<li>
-<p>
-End code tab - something to do at the end of a print, like turning the heater off
-</p>
-</li>
-<li>
-<p>
-Result tab - shows you the final complete GCode generated.
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Start tab</p></div>
-<div class="paragraph"><p>(give examples and notes about why and why not)</p></div>
-<div class="paragraph"><p>You will almost certainly want to change the value on the line that sets temperature, or remove it if you set the temperature before starting your print.</p></div>
-<div class="paragraph"><p>When you first open RepSnapper this is what is in the tab:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>; GCode generated by RepSnapper by Kulitorum
-G21                        ;metric is good!
-G90                        ;absolute positioning
-T0                         ;select new extruder
-G28                        ;go home
-G92 E0                     ;set extruder home
-M104 S73.0                 ;set temperature
-G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer</tt></pre>
-</div></div>
-<div class="paragraph"><p>In Labitat.dk the Workhorse Mendel uses this in the Start tab</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>; GCode generated by RepSnapper by Kulitorum
-G21                        ;metric is good!
-G90                        ;absolute positioning
-T0                         ;select new extruder
-;G28                       ;go home - does not work with current version of Tonokip Firmware (oct 2010)
-G92 X0 Y0 Z0 E0            ;set home to current location of the nozzle
-M104 S215                  ;set temperature (heating units - NOT actual degree centigrade)
-G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer</tt></pre>
-</div></div>
-<div class="paragraph"><p>Next layer tab</p></div>
-<div class="paragraph"><p>(give examples and notes about why and why not)
-End code tab</p></div>
-<div class="paragraph"><p>(give examples and notes about why and why not)</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>G91                        ;relative positioning
-G1 F50                     ;set move speed to suit Z-axes
-G1 Z1 F50                  ;move up a bit from the finished object
-G90                        ;absolute positioning
-G1 F2300                   ;set move speed to suit XY-axes
-G1 X0 Y0 F2300             ;goto zero position (from where you started printing)</tt></pre>
-</div></div>
-<div class="paragraph"><p>Result tab</p></div>
-<div class="paragraph"><p>(give examples of what to check for)</p></div>
-<div class="paragraph"><p>If you like you can remove the homing and shield code from the next layer tab. This will save time between layers during prints, but should only be done if your machine is reliable and your steppers don&#8217;t skip steps. Converts the STL model into GCode (machine language)
-Print Options tab</p></div>
-<div class="paragraph"><p>(elaborate)
-Printer settings Button</p></div>
-<div class="paragraph"><p>(elaborate)</p></div>
-</div>
-<h2 id="_use">4. Use</h2>
-<div class="sectionbody">
-<h3 id="_launching">4.1. Launching</h3><div style="clear:left"></div>
-<div class="paragraph"><p>To run repsnapper on</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-windows: double click the repsnapper.exe file within the repsnapper/src directory
-</p>
-</li>
-<li>
-<p>
-linux: type repsnapper/src/repsnapper into the console window.
-</p>
-</li>
-<li>
-<p>
-OSX:
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>After launching the repsnapper application you are presented with the main window of the application</p></div>
-<div class="paragraph"><p>On the left is the 3D view and on the right is the configuration and control panel.
-Loading an STL</p></div>
-<div class="paragraph"><p>To load an STL into the 3D view</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-click on the tab labeled Input file and
-</p>
-</li>
-<li>
-<p>
-press the Load STL button. In revision prior to ??? you are presented with a Fluid file browsing dialog. In later versions you will be presented with your standard operating systems file browse dialog. Choose the STL that you wish to load and click OK.
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>The 3D view should now display your STL. Use this button to pull in a facet file to process into Gcode.</p></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using ./ivcon file.stl file.stlb and loading the binary version into repsnapper instead. you can get ivcon here. Compile using gcc -lm ivcon.c -o ivcon</td>
-</tr></table>
-</div>
-<div class="paragraph"><p>Viewing the STL
-Viewing STL in repsnapper</p></div>
-<div class="paragraph"><p>Once an STL is loaded you can rotate, translate and/or scale the view in the 3D viewer so as to see what the object looks like, doing so will not effect the print its mearly for viewing purposes.</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-To rotate the view of the STL hold down the left mouse button and drag.
-</p>
-</li>
-<li>
-<p>
-To translate the view the STL hold down the left and right mouse button and drag.
-</p>
-</li>
-<li>
-<p>
-To scale the view the STL hold down the right mouse button and drag, or turn the wheel on your mouse.
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Note: the grid shows your build platform / printing area
-Working with STL</p></div>
-<div class="paragraph"><p>Once an STL is loaded, you can move it to further onto the build platform, rotate it and scale it. You can also duplicate it and load additional STL files onto the build platform.</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-To move the STL, first select it on the browser, then tab to the translate box and enter absolute values into the X and Y fields. You can also drag the object by left-click-hold in the X or Y box then dragging it with the mouse. Apparently changing the Z value is not recommended.
-</p>
-</li>
-<li>
-<p>
-Duplicate adds another copy of the STL beside the first.
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Convert to GCode
-Repsnapper displaying GCode</p></div>
-<div class="paragraph"><p>Converting to GCode is a simple process,</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-click the GCode tab and
-</p>
-</li>
-<li>
-<p>
-press the Convert to GCode button.
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>You can generate quite useful and very printable GCode using the default settings of RepSnapper. There are however also a host of user changeable settings that will alter/adjust the generation of GCode, see RepSnapper Manual: Setting GCode options for details.
-Print</p></div>
-<div class="paragraph"><p>To send the GCode to a FiveD GCode compatible printer:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-open the Print tab, and
-</p>
-</li>
-<li>
-<p>
-click the Connect to printer button. (you set com-port and speed in "Simple tab")
-</p>
-</li>
-<li>
-<p>
-Check the Communication Log tab to make sure the printer has connected and is receiving temperature signals from the Extruder Controller.
-</p>
-</li>
-<li>
-<p>
-Set the extruder target temperature, by editing the "Target Temp" field, and
-</p>
-</li>
-<li>
-<p>
-click "Switch Heat on" to turn on the extruder heater.
-</p>
-</li>
-<li>
-<p>
-once the target temp has been met, you may want to try to extrude a bit, to make sure the extruder is fully loaded and ready to print.
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>To start printing</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-click the Print button. This starts sending commands to the printer for execution.
-</p>
-</li>
-</ul></div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2010-11-03 05:46:07 EDT
+Last updated 2010-11-03 06:12:51 EDT
 </div>
 </div>
 </body>

@@ -142,7 +142,7 @@ Save Settings::
     Saves all configuration settings. The configuration settings are stored in a file called Repsnapper.xml
 
 [TIP]
-Repsnapper currently stores the setttings file the current working directory (So If you start repsnapper in a different working directory don't be surprised that you now have all your settings back to defaults) This will hopefully be rectified soon. 
+Repsnapper stores the setttings file the current working directory (So If you start repsnapper in a different working directory don't be surprised if all the settings are back to defaults) This will hopefully be rectified soon.
 
 Load Settings::
 
@@ -163,80 +163,85 @@ Object rotation::
 
 === Print Options tab ===
 
+Shell Only - no infill::
+
+Shell Count::
+
+Rotation::
+
+Infill Rotation per Layer::
+
+Infill Distance::
+
+Alternate Infill Layers::
+
+Raft Enable::
+
+Shrinking Algorithm::
+
+Optimization::
+    unknown
+
+==== Raft Settings Window ====
+
+Larger than objects::
+
+Number of base/interface layers::
+
+Material per distance ratio::
+
+Rotation::
+
+Distance between lines::
+
+Thickness Ratio::
+
+Temperature ratio::
+    The normal printing temperature is multiplied by this ratio to determine the temperature used while printing the raft.
+
 ==== Printer Settings Window ====
+
+Build volume::
+
+Print margin::
+
+Use incremental ecode::
+
+Use 3D Gcode::
+
+Extruded material width::
+
 Extrusion multiplier::
-    Allows calibration of the extruder without having to adjust E_STEPS_PER_MM in the firmware. 
+    Allows calibration of the extruder without having to adjust E_STEPS_PER_MM in the firmware.
 
-Below the author describes the things he had to do to get repsnapper (V333, dated 14-08-2010) working to the point where he could finish a print of a test block. Firmware used was Tonokip's firmware running on an Arduino Mega with Pololu stepper drivers.
-Firmware
+Layer thickness::
 
-    * Make sure your Arduino config file is accurate. Test movement lengths with a ruler to be sure.
-    * you can do this from repsnapper. (See appendix A to see how to manually control your bot from repsnapper) 
+Min print speed XY::
 
-Printer definition
+Max print speed XY::
 
-    * Make sure 'extruded material width' matches the extruded filament diameter.
-    * Extrusion multiplyer determines how fast your extruder goes at a given print speed... This parameter is the one to fiddle, to set your stretch.
-    * Max printspeed is the speed that repsnapper will command the axes to move. Too fast and you will strip your filament or stall your extruder.
-    * Turn acceleration off. Make sure Use Incremental ecode is on 
+Min print speed Z::
 
-Print options
+Max print speed Z::
 
-    * infill Distance was set quite small, I changed it up to 1.8mm 
+Enable antiooze retraction::
 
-Raft
+Distance to retract filament::
 
-    * Turned off Raft for the test blocks. 
+Speed to retract filament::
 
-Gcode
+Enable Acceleration::
 
-    * Start tab
-    * Removed the M83 line in the start code. (important to replace it with an M82 command, or reboot the Arduino) 
+Distance used to read full speed::
 
-  M83 has the effect of causing the extruder to start very slow, and extrude faster as the print progresses..??
+Buffer size on printer::
 
-    * Cleared the text out of the other tabs, knowing that the steppers are skipping steps is a good thing at the beginning. 
+Port::
 
-Appendix A.
+Speed::
 
-Everything happens from the Print tab when you want to manually control your bot.
-
-    * To get working for the first time, you must make a connection.. make sure the USB is plugged into the arduino, and that the arduino software is not using the virtual serial port. 
-
-    * make sure you have the correct serial port selected in the Printer Definition tab, and the speeds set to a reasonable number. 
-
-    * Select 'Connect to printer' (should be lit) 
-
-    * You can check your connection by selecting the communication log tab on the 'Print' page. From 'Communication Log', select 'Communication Log, again and see that commands are being acknowledged... 
-
-    * you can eventually skip this step by making sure that your temperature is being updated. 
-
-Go back to the 'interactive control' tab.
-
-    * You can execute a line of gcode by putting the cursor into the 'GCode' box and pressing enter, or the 'send' button. 
-
-    * You can jog all three of your axes by hitting one of the numbered buttons.. -100 on the top line will move the X axis 100 mm (or inches! if you are set up for inches) in the home direction... 
-
-    * (you may want to re-visit your arduino config file and reverse an axis or two if things move in the wrong direction). 
-
-    * middle line is Y axis, Bottom line is Z axis... 
-
-    * Pressing home will cause that axis to run in the minus direction until it reaches an endstop. 
-
- 'Home All' is not supported in Tonokip's firmware.
-
-    * Clicking 'Switch Heat On' will cause your extruder to start to heat up. It will try to get to the set 'Target temp'. 
-
-  If  you change the target temp, you must deselect switch heat off, then on again for it to register.
-
-    * To run the extruder, once at temperature, set the speed slider (in mm/minute ?), the length (in mm ?) and click the 'Run extruder' button. It will run for the distance specified in 'Length'. 
-
-  to run it again, you click 'Run Extruder' again, it will de-select, but the motor will run anyways.
-
-Still trying to figure out:
-
-    * what the 'Downstream Multipliers' do.
-    * what the 'lua' thing is about. 
+Validate connection::
+    unknown
 
 === GCode tab ===
 
@@ -246,7 +251,7 @@ Load Gcode::
     Loads a previously generated Gcode file.
 
 Save GCode::
-
+    Saves generated GCode to a file.
 
 You can generate quite useful and very printable GCode using the default settings of RepSnapper.
 
@@ -324,6 +329,10 @@ Printer settings Button
 
 (elaborate) 
 
+=== Display options tab ===
+
+=== Print tab ===
+
 == Use ==
 === Launching ===
 
@@ -393,3 +402,76 @@ To send the GCode to a FiveD GCode compatible printer:
 To start printing
 
     * click the Print button. This starts sending commands to the printer for execution. 
+
+
+Below the author describes the things he had to do to get repsnapper (V333, dated 14-08-2010) working to the point where he could finish a print of a test block. Firmware used was Tonokip's firmware running on an Arduino Mega with Pololu stepper drivers.
+Firmware
+
+    * Make sure your Arduino config file is accurate. Test movement lengths with a ruler to be sure.
+    * you can do this from repsnapper. (See appendix A to see how to manually control your bot from repsnapper) 
+
+Printer definition
+
+    * Make sure 'extruded material width' matches the extruded filament diameter.
+    * Extrusion multiplyer determines how fast your extruder goes at a given print speed... This parameter is the one to fiddle, to set your stretch.
+    * Max printspeed is the speed that repsnapper will command the axes to move. Too fast and you will strip your filament or stall your extruder.
+    * Turn acceleration off. Make sure Use Incremental ecode is on 
+
+Print options
+
+    * infill Distance was set quite small, I changed it up to 1.8mm 
+
+Raft
+
+    * Turned off Raft for the test blocks. 
+
+Gcode
+
+    * Start tab
+    * Removed the M83 line in the start code. (important to replace it with an M82 command, or reboot the Arduino) 
+
+  M83 has the effect of causing the extruder to start very slow, and extrude faster as the print progresses..??
+
+    * Cleared the text out of the other tabs, knowing that the steppers are skipping steps is a good thing at the beginning. 
+
+Appendix A.
+
+Everything happens from the Print tab when you want to manually control your bot.
+
+    * To get working for the first time, you must make a connection.. make sure the USB is plugged into the arduino, and that the arduino software is not using the virtual serial port. 
+
+    * make sure you have the correct serial port selected in the Printer Definition tab, and the speeds set to a reasonable number. 
+
+    * Select 'Connect to printer' (should be lit) 
+
+    * You can check your connection by selecting the communication log tab on the 'Print' page. From 'Communication Log', select 'Communication Log, again and see that commands are being acknowledged... 
+
+    * you can eventually skip this step by making sure that your temperature is being updated. 
+
+Go back to the 'interactive control' tab.
+
+    * You can execute a line of gcode by putting the cursor into the 'GCode' box and pressing enter, or the 'send' button. 
+
+    * You can jog all three of your axes by hitting one of the numbered buttons.. -100 on the top line will move the X axis 100 mm (or inches! if you are set up for inches) in the home direction... 
+
+    * (you may want to re-visit your arduino config file and reverse an axis or two if things move in the wrong direction). 
+
+    * middle line is Y axis, Bottom line is Z axis... 
+
+    * Pressing home will cause that axis to run in the minus direction until it reaches an endstop. 
+
+ 'Home All' is not supported in Tonokip's firmware.
+
+    * Clicking 'Switch Heat On' will cause your extruder to start to heat up. It will try to get to the set 'Target temp'. 
+
+  If  you change the target temp, you must deselect switch heat off, then on again for it to register.
+
+    * To run the extruder, once at temperature, set the speed slider (in mm/minute ?), the length (in mm ?) and click the 'Run extruder' button. It will run for the distance specified in 'Length'. 
+
+  to run it again, you click 'Run Extruder' again, it will de-select, but the motor will run anyways.
+
+Still trying to figure out:
+
+    * what the 'Downstream Multipliers' do.
+    * what the 'lua' thing is about. 
+
