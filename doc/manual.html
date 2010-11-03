@@ -612,9 +612,19 @@ Calibrate
 <dt class="hdlist1">
 Load STL
 </dt>
+<dd>
+<p>
+    Loads an STL file
+</p>
+</dd>
 <dt class="hdlist1">
 Save STL
 </dt>
+<dd>
+<p>
+    Not yet implemented
+</p>
+</dd>
 <dt class="hdlist1">
 Fix STL errors
 </dt>
@@ -628,7 +638,7 @@ Save Settings
 </dt>
 <dd>
 <p>
-    Saves all configuration settings. The configuration settings are stored in a file called Repsnapper.xml
+    Saves all configuration settings. The configuration settings are stored in a file called repsnapper.conf
 </p>
 </dd>
 </dl></div>
@@ -644,18 +654,33 @@ Save Settings
 <dt class="hdlist1">
 Load Settings
 </dt>
+<dd>
+<p>
+    Loads configuration settings from a file.
+</p>
+</dd>
 <dt class="hdlist1">
 Save Settings As
 </dt>
+<dd>
+<p>
+    Saves configuration settings in a file of your choice.
+</p>
+</dd>
 <dt class="hdlist1">
 Delete
 </dt>
+<dd>
+<p>
+    Deletes the selected STL from the current working area.
+</p>
+</dd>
 <dt class="hdlist1">
 Duplicate
 </dt>
 <dd>
 <p>
-    Creates a copy of the STL file. Useful for printing several items of the same object, ie. 10 clamps.
+    Creates a copy of the selected object. Useful for printing several items of the same object.
 </p>
 </dd>
 <dt class="hdlist1">
@@ -682,27 +707,62 @@ Object rotation
 <dt class="hdlist1">
 Shell Only - no infill
 </dt>
+<dd>
+<p>
+    Generates path information for only the outermost layer of an object.  When printed, the object will be hollow.
+</p>
+</dd>
 <dt class="hdlist1">
 Shell Count
 </dt>
+<dd>
+<p>
+    Number of passes around the perimeter of an object, before starting infill.
+</p>
+</dd>
 <dt class="hdlist1">
 Rotation
 </dt>
+<dd>
+<p>
+    Degrees to rotate the first infill layer.
+</p>
+</dd>
 <dt class="hdlist1">
 Infill Rotation per Layer
 </dt>
+<dd>
+<p>
+    Degrees to rotate each successive infill layer.
+</p>
+</dd>
 <dt class="hdlist1">
 Infill Distance
 </dt>
+<dd>
+<p>
+    Distance between each filament of infill - measured in extruded material widths.
+</p>
+</dd>
 <dt class="hdlist1">
 Alternate Infill Layers
 </dt>
 <dt class="hdlist1">
 Raft Enable
 </dt>
+<dd>
+<p>
+    Select this option to print a "raft" on the build surface before printing your desired object.  May help alleviate problems with uneven build surfaces.
+</p>
+</dd>
 <dt class="hdlist1">
 Shrinking Algorithm
 </dt>
+<dd>
+<p>
+    Algorithm used to slice objects and generate printing path.
+</p>
+</dd>
 <dt class="hdlist1">
 Optimization
 </dt>
@@ -1369,7 +1429,7 @@ To run the extruder, once at temperature, set the speed slider (in mm/minute ?),
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2010-11-03 06:27:17 EDT
+Last updated 2010-11-03 07:06:22 EDT
 </div>
 </div>
 </body>

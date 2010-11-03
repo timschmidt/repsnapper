@@ -132,26 +132,31 @@ Calibrate::
 === Input File tab ===
 
 Load STL::
+    Loads an STL file
 
 Save STL::
+    Not yet implemented
 
 Fix STL errors::
     Presumably makes the structure water tight and aligns all surface normals.
 
 Save Settings::
-    Saves all configuration settings. The configuration settings are stored in a file called Repsnapper.xml
+    Saves all configuration settings. The configuration settings are stored in a file called repsnapper.conf
 
 [TIP]
 Repsnapper stores the setttings file the current working directory (So If you start repsnapper in a different working directory don't be surprised if all the settings are back to defaults) This will hopefully be rectified soon.
 
 Load Settings::
+    Loads configuration settings from a file.
 
 Save Settings As::
+    Saves configuration settings in a file of your choice.
 
 Delete::
+    Deletes the selected STL from the current working area.
 
 Duplicate::
-    Creates a copy of the STL file. Useful for printing several items of the same object, ie. 10 clamps.
+    Creates a copy of the selected object. Useful for printing several items of the same object.
 
 Translate, Rotate and Scale::
     If an STL object is first selected in the browser, this will alter the part for creating gcode. 
@@ -164,20 +169,28 @@ Object rotation::
 === Print Options tab ===
 
 Shell Only - no infill::
+    Generates path information for only the outermost layer of an object.  When printed, the object will be hollow.
 
 Shell Count::
+    Number of passes around the perimeter of an object, before starting infill.
 
 Rotation::
+    Degrees to rotate the first infill layer.
 
 Infill Rotation per Layer::
+    Degrees to rotate each successive infill layer.
 
 Infill Distance::
+    Distance between each filament of infill - measured in extruded material widths.
 
 Alternate Infill Layers::
+    
 
 Raft Enable::
+    Select this option to print a "raft" on the build surface before printing your desired object.  May help alleviate problems with uneven build surfaces.
 
 Shrinking Algorithm::
+    Algorithm used to slice objects and generate printing path.
 
 Optimization::
     unknown
