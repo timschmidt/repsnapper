@@ -331,7 +331,90 @@ Printer settings Button
 
 === Display options tab ===
 
+
+
 === Print tab ===
+
+Connect to printer::
+
+Power on::
+
+Print::
+
+Pause::
+
+Kick::
+
+Fan on::
+
+Voltage::
+
+Errors::
+
+Info::
+
+Echo::
+
+GCode send::
+    Text entry field allowing user to manually send individual commands to the printer.
+
+==== Interactive control tab ====
+
+Jog pannel::
+
+Temperature update interval::
+
+Switch heat on::
+
+Current temp::
+
+Target temp::
+
+Run extruder::
+
+Reverse::
+
+Speed::
+
+Length::
+
+Downstream speed multiplier::
+
+Downstream extrusion multiplier::
+
+Custom buttons::
+    These buttons do nothing by default, but can be assigned custom strings of GCode to be sent to the printer when clicked.
+
+==== Communication logs tab ====
+
+Communication log::
+
+Errors / warnings::
+
+Echo::
+
+Auto scroll::
+
+Log Files::
+
+Clear logs when print starts::
+
+Clear logs now::
+    Clears the log window immediately
+
+==== Custom buttons tab ====
+
+Button to edit::
+    Select which button to edit.
+
+Button Label::
+    User-editable text label for the selected custom button.
+
+Save::
+    Assigns current GCode to the selected button.
+
+Test::
+    Sends the current GCode to the printer.
 
 == Use ==
 === Launching ===
@@ -469,9 +552,3 @@ Go back to the 'interactive control' tab.
     * To run the extruder, once at temperature, set the speed slider (in mm/minute ?), the length (in mm ?) and click the 'Run extruder' button. It will run for the distance specified in 'Length'. 
 
   to run it again, you click 'Run Extruder' again, it will de-select, but the motor will run anyways.
-
-Still trying to figure out:
-
-    * what the 'Downstream Multipliers' do.
-    * what the 'lua' thing is about. 
-
