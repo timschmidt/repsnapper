@@ -9,12 +9,6 @@
 			Tim
 ----------
 
-N: Michael Holm
-D: kulitorum
-
-N: Timothy Schmidt
-E: timschmidt@gmail.com
-
 N: Evan Clinton
 E: nave.notnilc@gmail.com
 D: Palomides
@@ -22,18 +16,24 @@ D: Palomides
 N: Francis Crick
 D: fcrick
 
-N: Micheal Meeks
-D: mmeeks
-
-N: logick
-
-N: joaz
-
-N: The Other Rob
-
 N: Giles Bathgate
 E: gilesbathgate@gmail.com
 W: http://www.gilesbathgate.com/
 
+N: joaz
+
+N: logick
+
+N: Michael Holm
+D: kulitorum
+
+N: Micheal Meeks
+D: mmeeks
+
 N: MrAlvin
 W: http://reprap.org/wiki/User:MrAlvin
+
+N: The Other Rob
+
+N: Timothy Schmidt
+E: timschmidt@gmail.com

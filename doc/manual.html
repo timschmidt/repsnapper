@@ -449,7 +449,7 @@ Bug tracker: <a href="http://bugs.kulitorum.com">http://bugs.kulitorum.com</a>
 <div class="title">Note</div>
 </td>
 <td class="content">
-<div class="paragraph"><p>Although RepSnapper is not generally tested outside of window/linux/mac you may be able to get it running on other OS&#8217;s. To do so you will need the following:</p></div>
+<div class="paragraph"><p>Although RepSnapper is not generally tested outside of windows/linux/mac you may be able to get it running on other OSs. To do so you will need the following:</p></div>
 <div class="ulist"><ul>
 <li>
 <p>
@@ -511,32 +511,24 @@ exit</tt></pre>
 cd repsnapper/src
 make</tt></pre>
 </div></div>
+<div class="paragraph"><p>Executable (repsnapper) will be left in the src folder. Currently there is no install rule.</p></div>
 <h3 id="_windows_2">2.2. Windows</h3><div style="clear:left"></div>
 <h3 id="_os_x_2">2.3. OS X</h3><div style="clear:left"></div>
-<div class="paragraph"><p>Acquire source:</p></div>
+<div class="paragraph"><p>Install <a href="http://developer.apple.com/technologies/xcode.html">XCode</a>.</p></div>
+<div class="paragraph"><p>Install <a href="http://www.macports.org/">MacPorts</a></p></div>
+<div class="paragraph"><p>Run from a terminal window:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>git clone git://github.com/timschmidt/repsnapper.git</tt></pre>
+<pre><tt>sudo port install fltk glut libconfig-hr boost</tt></pre>
 </div></div>
-<h3 id="_eclipse_project">2.4. Eclipse Project</h3><div style="clear:left"></div>
-<div class="paragraph"><p>As a new feature RepSnapper now comes with an Eclipse Galileo(3.5) project.</p></div>
-<div class="paragraph"><p>Grab a svn client like kdesvn and start the download.</p></div>
-<div class="paragraph"><p>Grab the Eclipse IDE for C/C++ Developers from the download page <a href="http://www.eclipse.org/downloads/">http://www.eclipse.org/downloads/</a></p></div>
-<div class="paragraph"><p>Throw in an additional SVN plugin - Help | Install New Software&#8230;</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-Subclipse - <a href="http://subclipse.tigris.org/update_1.6.x">http://subclipse.tigris.org/update_1.6.x</a>
-          o Just take them all
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Eclipse is Java and that means a svn wrapper. So shut down Eclipse and get it.</p></div>
-<div class="paragraph"><p>sudo  apt-get install libsvn-java</p></div>
-<div class="paragraph"><p>Ubuntu users may wish to open the System|Administration|Synaptic Package Manager and do a quick search for libsvn instead as that will ensure Eclipse can find it.</p></div>
-<div class="paragraph"><p>When the donwload is complete enter the Eclipse folder in the repository and read the Readme.txt for last minute instructions.</p></div>
-<div class="paragraph"><p>At some point you&#8217;ll need to reboot, so if you haven&#8217;t done it before do it now.</p></div>
-<div class="paragraph"><p>Notice that while you downloaded the code with kdesvn you can now use svn directly from eclipse.</p></div>
+<div class="paragraph"><p>Acquire source and compile:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>git clone git://github.com/timschmidt/repsnapper.git
+cd repsnapper/src
+make</tt></pre>
+</div></div>
+<div class="paragraph"><p>Executable (repsnapper) will be left in the src folder. Currently there is no install rule.</p></div>
 </div>
 <h2 id="_configuration">3. Configuration</h2>
 <div class="sectionbody">
@@ -777,21 +769,51 @@ Optimization
 <dt class="hdlist1">
 Larger than objects
 </dt>
+<dd>
+<p>
+    Number of millimeters by which the raft should be larger than the base of the printed object.
+</p>
+</dd>
 <dt class="hdlist1">
 Number of base/interface layers
 </dt>
+<dd>
+<p>
+    Base layers adhere to the build surface and reduce the effect of surface irregularities.  Interface layers come in contact with the printed object and should be easy to break off after printing.
+</p>
+</dd>
 <dt class="hdlist1">
 Material per distance ratio
 </dt>
+<dd>
+<p>
+    The amount of plastic to extrude for this layer is determined by multiplying the normal extrusion speed by this value.
+</p>
+</dd>
 <dt class="hdlist1">
 Rotation
 </dt>
+<dd>
+<p>
+    Rotation in degrees between layers.
+</p>
+</dd>
 <dt class="hdlist1">
 Distance between lines
 </dt>
+<dd>
+<p>
+    Distance, in extruded material widths, between lines.
+</p>
+</dd>
 <dt class="hdlist1">
 Thickness Ratio
 </dt>
+<dd>
+<p>
+    unknown
+</p>
+</dd>
 <dt class="hdlist1">
 Temperature ratio
 </dt>
@@ -806,18 +828,43 @@ Temperature ratio
 <dt class="hdlist1">
 Build volume
 </dt>
+<dd>
+<p>
+    Maximum build envelope of the printer.
+</p>
+</dd>
 <dt class="hdlist1">
 Print margin
 </dt>
+<dd>
+<p>
+    Offset to move from the printer&#8217;s starting position before beginning print.
+</p>
+</dd>
 <dt class="hdlist1">
 Use incremental ecode
 </dt>
+<dd>
+<p>
+    Enable this option when using "5D" firmware.
+</p>
+</dd>
 <dt class="hdlist1">
 Use 3D Gcode
 </dt>
+<dd>
+<p>
+    Enable this option when using Makerbot firmware.
+</p>
+</dd>
 <dt class="hdlist1">
 Extruded material width
 </dt>
+<dd>
+<p>
+    Width of the extrude material, in millimeters.
+</p>
+</dd>
 <dt class="hdlist1">
 Extrusion multiplier
 </dt>
@@ -829,42 +876,107 @@ Extrusion multiplier
 <dt class="hdlist1">
 Layer thickness
 </dt>
+<dd>
+<p>
+    Distance between printed layers, in millimeters.
+</p>
+</dd>
 <dt class="hdlist1">
 Min print speed XY
 </dt>
+<dd>
+<p>
+    Minimum print speed for the X and Y axes, in millimeters per minute.
+</p>
+</dd>
 <dt class="hdlist1">
 Max print speed XY
 </dt>
+<dd>
+<p>
+    Maximum print speed for the X and Y axes, in millimeters per minute.
+</p>
+</dd>
 <dt class="hdlist1">
 Min print speed Z
 </dt>
+<dd>
+<p>
+    Minimum print speed for the Z axis, in millimeters per minute.
+</p>
+</dd>
 <dt class="hdlist1">
 Max print speed Z
 </dt>
+<dd>
+<p>
+    Maximum print speed for the Z axis, in millimeters per minute.
+</p>
+</dd>
 <dt class="hdlist1">
 Enable antiooze retraction
 </dt>
+<dd>
+<p>
+    Enable this option to retract filament by a set amount before each move, reducing unwanted extrusion.
+</p>
+</dd>
 <dt class="hdlist1">
 Distance to retract filament
 </dt>
+<dd>
+<p>
+    Distance to retract filament&#8201;&#8212;&#8201;measured in millimeters of extrusion, not millimeters of filament.
+</p>
+</dd>
 <dt class="hdlist1">
 Speed to retract filament
 </dt>
+<dd>
+<p>
+    Speed to retract filament, measured in millimeters per minute.
+</p>
+</dd>
 <dt class="hdlist1">
 Enable Acceleration
 </dt>
+<dd>
+<p>
+    Enable this option to begin each movement at Min print speed XY, and slowly accellerate up to Max print speed XY.
+</p>
+</dd>
 <dt class="hdlist1">
 Distance used to read full speed
 </dt>
+<dd>
+<p>
+    Distance to accelerate over, measured in millimeters.
+</p>
+</dd>
 <dt class="hdlist1">
 Buffer size on printer
 </dt>
+<dd>
+<p>
+    Number of commands the printer is able to buffer in it&#8217;s memory.
+</p>
+</dd>
 <dt class="hdlist1">
 Port
 </dt>
+<dd>
+<p>
+    Manually selects the serial communication port that you want to talk across.
+</p>
+</dd>
 <dt class="hdlist1">
 Speed
 </dt>
+<dd>
+<p>
+    The serial communications baud rate. Typically 19200 - must however match the setting in your firmware. For example in the latest svn firmware the baud is 57600 by default in configuration.h the value in repsnapper must match this value.
+</p>
+</dd>
 <dt class="hdlist1">
 Validate connection
 </dt>
@@ -875,10 +987,17 @@ Validate connection
 </dd>
 </dl></div>
 <h3 id="_gcode_tab">3.4. GCode tab</h3><div style="clear:left"></div>
+<div class="paragraph"><p>Here you can create, save, load and/or edit the GCode.</p></div>
+<div class="paragraph"><p>Using the tabs, you can manually enter some GCode, that will be "injected" into the resulting GCode, when you press the Convert to GCode button.</p></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 Convert to GCode
 </dt>
+<dd>
+<p>
+    Slices the object(s) in the current working area, and generates the necessary GCode to print that object.
+</p>
+</dd>
 <dt class="hdlist1">
 Load Gcode
 </dt>
@@ -898,53 +1017,19 @@ Save GCode
 </dl></div>
 <div class="paragraph"><p>You can generate quite useful and very printable GCode using the default settings of RepSnapper.</p></div>
 <div class="paragraph"><p>There are however also a host of user changeable settings that will alter/adjust the generation of GCode. On this page you should get introduced to some of these options.</p></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">For a technical overview of the GCode generation read this</td>
-</tr></table>
-</div>
-<div class="paragraph"><p>GCode tab</p></div>
-<div class="paragraph"><p>Here you can create, save, load and/or edit the GCode.</p></div>
-<div class="paragraph"><p>Using the tabs, you can manually enter some GCode, that will be "injected" into the resulting GCode, when you press the Convert to GCode button.</p></div>
-<div class="paragraph"><p>The tabs are:</p></div>
-<div class="ulist"><ul>
-<li>
-<p>
-Start tab - code options to set at the beginning of the print process, like 0-position, default print temperature and more
-</p>
-</li>
-<li>
-<p>
-Next layer tab - something to do in between printing the next layer
-</p>
-</li>
-<li>
-<p>
-End code tab - something to do at the end of a print, like turning the heater off
-</p>
-</li>
-<li>
-<p>
-Result tab - shows you the final complete GCode generated.
-</p>
-</li>
-</ul></div>
-<div class="paragraph"><p>Start tab</p></div>
-<div class="paragraph"><p>(give examples and notes about why and why not)</p></div>
+<h4 id="_start_tab">3.4.1. Start tab</h4>
+<div class="paragraph"><p>code options to set at the beginning of the print process, like 0-position, default print temperature and more</p></div>
 <div class="paragraph"><p>You will almost certainly want to change the value on the line that sets temperature, or remove it if you set the temperature before starting your print.</p></div>
 <div class="paragraph"><p>When you first open RepSnapper this is what is in the tab:</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>; GCode generated by RepSnapper by Kulitorum
-G21                        ;metric is good!
-G90                        ;absolute positioning
-T0                         ;select new extruder
-G28                        ;go home
-G92 E0                     ;set extruder home
-M104 S73.0                 ;set temperature
+G21                              ;metric is good!
+G90                              ;absolute positioning
+T0                                 ;select new extruder
+G28                               ;go home
+G92 E0                          ;set extruder home
+M104 S200.0                   ;set temperature to 200.0
 G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer</tt></pre>
 </div></div>
 <div class="paragraph"><p>In Labitat.dk the Workhorse Mendel uses this in the Start tab</p></div>
@@ -959,59 +1044,96 @@ G92 X0 Y0 Z0 E0            ;set home to current location of the nozzle
 M104 S215                  ;set temperature (heating units - NOT actual degree centigrade)
 G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer</tt></pre>
 </div></div>
-<div class="paragraph"><p>Next layer tab</p></div>
-<div class="paragraph"><p>(give examples and notes about why and why not)
-End code tab</p></div>
-<div class="paragraph"><p>(give examples and notes about why and why not)</p></div>
+<h4 id="_next_layer_tab">3.4.2. Next layer tab</h4>
+<div class="paragraph"><p>something to do in between printing the next layer</p></div>
+<h4 id="_end_code_tab">3.4.3. End code tab</h4>
+<div class="paragraph"><p>something to do at the end of a print, like turning the heater off</p></div>
+<div class="paragraph"><p>When you first open RepSnapper this is what is in the tab:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>G91                        ;relative positioning
-G1 F50                     ;set move speed to suit Z-axes
-G1 Z1 F50                  ;move up a bit from the finished object
-G90                        ;absolute positioning
-G1 F2300                   ;set move speed to suit XY-axes
-G1 X0 Y0 F2300             ;goto zero position (from where you started printing)</tt></pre>
+<pre><tt>G1 X0 Y0 F2000.0       ;feed for start of next move
+M104 S0.0              ;Heater off</tt></pre>
 </div></div>
-<div class="paragraph"><p>Result tab</p></div>
-<div class="paragraph"><p>(give examples of what to check for)</p></div>
-<div class="paragraph"><p>If you like you can remove the homing and shield code from the next layer tab. This will save time between layers during prints, but should only be done if your machine is reliable and your steppers don&#8217;t skip steps. Converts the STL model into GCode (machine language)
-Print Options tab</p></div>
-<div class="paragraph"><p>(elaborate)
-Printer settings Button</p></div>
-<div class="paragraph"><p>(elaborate)</p></div>
+<h4 id="_result_tab">3.4.4. Result tab</h4>
+<div class="paragraph"><p>shows you the final complete GCode generated.</p></div>
 <h3 id="_display_options_tab">3.5. Display options tab</h3><div style="clear:left"></div>
 <h3 id="_print_tab">3.6. Print tab</h3><div style="clear:left"></div>
 <div class="dlist"><dl>
 <dt class="hdlist1">
 Connect to printer
 </dt>
+<dd>
+<p>
+    Initiates communication between Repsnapper and the printer.  If already connected, pressing this button will reset the printer.
+</p>
+</dd>
 <dt class="hdlist1">
 Power on
 </dt>
 <dt class="hdlist1">
 Print
 </dt>
+<dd>
+<p>
+    Starts sending the GCode from the "Result" tab under the "GCode" tab to the ptiner.
+</p>
+</dd>
 <dt class="hdlist1">
 Pause
 </dt>
+<dd>
+<p>
+    Pauses communication with the printer.
+</p>
+</dd>
 <dt class="hdlist1">
 Kick
 </dt>
+<dd>
+<p>
+    unknown
+</p>
+</dd>
 <dt class="hdlist1">
 Fan on
 </dt>
+<dd>
+<p>
+    Sends the M106 / M107 codes to the printer to toggle the fan on / off respectively.
+</p>
+</dd>
 <dt class="hdlist1">
 Voltage
 </dt>
+<dd>
+<p>
+    unknown
+</p>
+</dd>
 <dt class="hdlist1">
 Errors
 </dt>
+<dd>
+<p>
+    Toggles the logging of communications errors.
+</p>
+</dd>
 <dt class="hdlist1">
 Info
 </dt>
+<dd>
+<p>
+    unknown
+</p>
+</dd>
 <dt class="hdlist1">
 Echo
 </dt>
+<dd>
+<p>
+    Toggles echoing of all commands sent to the printer.
+</p>
+</dd>
 <dt class="hdlist1">
 GCode send
 </dt>
@@ -1026,36 +1148,91 @@ GCode send
 <dt class="hdlist1">
 Jog pannel
 </dt>
+<dd>
+<p>
+    A matrix of buttons allowing the user to manually jog the printer set distances along each of it&#8217;s axes.  The topmost row controls the X axis, followed by the Y axis, with the bottom most row controlling the Z axis.
+</p>
+</dd>
 <dt class="hdlist1">
 Temperature update interval
 </dt>
+<dd>
+<p>
+    Number of seconds between sending the M105 command to the printer to check the extruder temperature.
+</p>
+</dd>
 <dt class="hdlist1">
 Switch heat on
 </dt>
+<dd>
+<p>
+    Sends M104 command to the printer, with Target Temp as the argument.
+</p>
+</dd>
 <dt class="hdlist1">
 Current temp
 </dt>
+<dd>
+<p>
+    Current extruder temperature, as reported by the M105 command.
+</p>
+</dd>
 <dt class="hdlist1">
 Target temp
 </dt>
+<dd>
+<p>
+    Target extruder temperature, in degrees Celcius, sent to the printer when "Switch heat on" button is pressed.
+</p>
+</dd>
 <dt class="hdlist1">
 Run extruder
 </dt>
+<dd>
+<p>
+    Jogs extruder in the direction set by the Reverse toggle button, distance set by the Length slider, at the speed set by the Speed slider.
+</p>
+</dd>
 <dt class="hdlist1">
 Reverse
 </dt>
+<dd>
+<p>
+    Toggles extruder direction.
+</p>
+</dd>
 <dt class="hdlist1">
 Speed
 </dt>
+<dd>
+<p>
+    Speed to jog extruder, in millimeters / minute of extruded material.
+</p>
+</dd>
 <dt class="hdlist1">
 Length
 </dt>
+<dd>
+<p>
+    Length to jog extruder, in millimeters of extruded material
+</p>
+</dd>
 <dt class="hdlist1">
 Downstream speed multiplier
 </dt>
+<dd>
+<p>
+    unknown
+</p>
+</dd>
 <dt class="hdlist1">
 Downstream extrusion multiplier
 </dt>
+<dd>
+<p>
+    unknown
+</p>
+</dd>
 <dt class="hdlist1">
 Custom buttons
 </dt>
@@ -1134,23 +1311,32 @@ Test
 <div class="sectionbody">
 <h3 id="_launching">4.1. Launching</h3><div style="clear:left"></div>
 <div class="paragraph"><p>To run repsnapper on</p></div>
-<div class="ulist"><ul>
-<li>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+windows
+</dt>
+<dd>
 <p>
-windows: double click the repsnapper.exe file within the repsnapper/src directory
+    double click the repsnapper.exe file within the repsnapper/src directory
 </p>
-</li>
-<li>
+</dd>
+<dt class="hdlist1">
+linux
+</dt>
+<dd>
 <p>
-linux: type repsnapper/src/repsnapper into the console window.
+    type repsnapper/src/repsnapper into the console window.
 </p>
-</li>
-<li>
+</dd>
+<dt class="hdlist1">
+OSX
+</dt>
+<dd>
 <p>
-OSX:
+    type repsnapper/src/repsnapper into the console window.
 </p>
-</li>
-</ul></div>
+</dd>
+</dl></div>
 <div class="paragraph"><p>After launching the repsnapper application you are presented with the main window of the application</p></div>
 <div class="paragraph"><p>On the left is the 3D view and on the right is the configuration and control panel.
 Loading an STL</p></div>
@@ -1429,7 +1615,7 @@ To run the extruder, once at temperature, set the speed slider (in mm/minute ?),
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2010-11-03 07:06:22 EDT
+Last updated 2010-11-04 04:52:15 EDT
 </div>
 </div>
 </body>

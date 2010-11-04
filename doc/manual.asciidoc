@@ -37,7 +37,7 @@ David Buzz has posted binaries for OS X https://sites.google.com/site/davidbuzz/
 == Installation from source ==
 [NOTE]
 =====
-Although RepSnapper is not generally tested outside of window/linux/mac you may be able to get it running on other OS's. To do so you will need the following:
+Although RepSnapper is not generally tested outside of windows/linux/mac you may be able to get it running on other OSs. To do so you will need the following:
 
     * gcc and related tools
     * OpenGL
@@ -69,38 +69,29 @@ git clone git://github.com/timschmidt/repsnapper.git
 cd repsnapper/src
 make
 ----
+Executable (repsnapper) will be left in the src folder. Currently there is no install rule.
 
 === Windows ===
 
 === OS X ===
-Acquire source:
+
+Install http://developer.apple.com/technologies/xcode.html[XCode].
+
+Install http://www.macports.org/[MacPorts]
+
+Run from a terminal window:
+----
+sudo port install fltk glut libconfig-hr boost
+----
+
+Acquire source and compile:
 ----
 git clone git://github.com/timschmidt/repsnapper.git
+cd repsnapper/src
+make
 ----
 
-=== Eclipse Project ===
-As a new feature RepSnapper now comes with an Eclipse Galileo(3.5) project.
-
-Grab a svn client like kdesvn and start the download.
-
-Grab the Eclipse IDE for C/C++ Developers from the download page http://www.eclipse.org/downloads/
-
-Throw in an additional SVN plugin - Help | Install New Software...
-
-    * Subclipse - http://subclipse.tigris.org/update_1.6.x
-          o Just take them all 
-
-Eclipse is Java and that means a svn wrapper. So shut down Eclipse and get it.
-
-sudo  apt-get install libsvn-java
-
-Ubuntu users may wish to open the System|Administration|Synaptic Package Manager and do a quick search for libsvn instead as that will ensure Eclipse can find it.
-
-When the donwload is complete enter the Eclipse folder in the repository and read the Readme.txt for last minute instructions.
-
-At some point you'll need to reboot, so if you haven't done it before do it now.
-
-Notice that while you downloaded the code with kdesvn you can now use svn directly from eclipse.
+Executable (repsnapper) will be left in the src folder. Currently there is no install rule.
 
 == Configuration ==
 === Simple tab ===
@@ -198,16 +189,22 @@ Optimization::
 ==== Raft Settings Window ====
 
 Larger than objects::
+    Number of millimeters by which the raft should be larger than the base of the printed object.
 
 Number of base/interface layers::
+    Base layers adhere to the build surface and reduce the effect of surface irregularities.  Interface layers come in contact with the printed object and should be easy to break off after printing.
 
 Material per distance ratio::
+    The amount of plastic to extrude for this layer is determined by multiplying the normal extrusion speed by this value.
 
 Rotation::
+    Rotation in degrees between layers.
 
 Distance between lines::
+    Distance, in extruded material widths, between lines.
 
 Thickness Ratio::
+    unknown
 
 Temperature ratio::
     The normal printing temperature is multiplied by this ratio to determine the temperature used while printing the raft.
@@ -215,50 +212,73 @@ Temperature ratio::
 ==== Printer Settings Window ====
 
 Build volume::
+    Maximum build envelope of the printer.
 
 Print margin::
+    Offset to move from the printer's starting position before beginning print.
 
 Use incremental ecode::
+    Enable this option when using "5D" firmware.
 
 Use 3D Gcode::
+    Enable this option when using Makerbot firmware.
 
 Extruded material width::
+    Width of the extrude material, in millimeters.
 
 Extrusion multiplier::
     Allows calibration of the extruder without having to adjust E_STEPS_PER_MM in the firmware.
 
 Layer thickness::
+    Distance between printed layers, in millimeters.
 
 Min print speed XY::
+    Minimum print speed for the X and Y axes, in millimeters per minute.
 
 Max print speed XY::
+    Maximum print speed for the X and Y axes, in millimeters per minute.
 
 Min print speed Z::
+    Minimum print speed for the Z axis, in millimeters per minute.
 
 Max print speed Z::
+    Maximum print speed for the Z axis, in millimeters per minute.
 
 Enable antiooze retraction::
+    Enable this option to retract filament by a set amount before each move, reducing unwanted extrusion.
 
 Distance to retract filament::
+    Distance to retract filament -- measured in millimeters of extrusion, not millimeters of filament.
 
 Speed to retract filament::
+    Speed to retract filament, measured in millimeters per minute.
 
 Enable Acceleration::
+    Enable this option to begin each movement at Min print speed XY, and slowly accellerate up to Max print speed XY.
 
 Distance used to read full speed::
+    Distance to accelerate over, measured in millimeters.
 
 Buffer size on printer::
+    Number of commands the printer is able to buffer in it's memory.
 
 Port::
+    Manually selects the serial communication port that you want to talk across.
 
 Speed::
+    The serial communications baud rate. Typically 19200 - must however match the setting in your firmware. For example in the latest svn firmware the baud is 57600 by default in configuration.h the value in repsnapper must match this value.
 
 Validate connection::
     unknown
 
 === GCode tab ===
 
+Here you can create, save, load and/or edit the GCode.
+
+Using the tabs, you can manually enter some GCode, that will be "injected" into the resulting GCode, when you press the Convert to GCode button.
+
 Convert to GCode::
+    Slices the object(s) in the current working area, and generates the necessary GCode to print that object.
 
 Load Gcode::
     Loads a previously generated Gcode file.
@@ -270,37 +290,20 @@ You can generate quite useful and very printable GCode using the default setting
 
 There are however also a host of user changeable settings that will alter/adjust the generation of GCode. On this page you should get introduced to some of these options.
 
-[TIP]
-For a technical overview of the GCode generation read this 
-
-GCode tab
-
-Here you can create, save, load and/or edit the GCode.
-
-Using the tabs, you can manually enter some GCode, that will be "injected" into the resulting GCode, when you press the Convert to GCode button.
-
-The tabs are:
-
-    * Start tab - code options to set at the beginning of the print process, like 0-position, default print temperature and more
-    * Next layer tab - something to do in between printing the next layer
-    * End code tab - something to do at the end of a print, like turning the heater off
-    * Result tab - shows you the final complete GCode generated. 
-
-Start tab
-
-(give examples and notes about why and why not)
+==== Start tab ====
+code options to set at the beginning of the print process, like 0-position, default print temperature and more
 
 You will almost certainly want to change the value on the line that sets temperature, or remove it if you set the temperature before starting your print.
 
 When you first open RepSnapper this is what is in the tab:
 ----
 ; GCode generated by RepSnapper by Kulitorum
-G21                        ;metric is good!
-G90                        ;absolute positioning
-T0                         ;select new extruder
-G28                        ;go home
-G92 E0                     ;set extruder home
-M104 S73.0                 ;set temperature
+G21                              ;metric is good!
+G90                              ;absolute positioning
+T0                                 ;select new extruder
+G28                               ;go home
+G92 E0                          ;set extruder home
+M104 S200.0                   ;set temperature to 200.0
 G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer
 ----
 
@@ -315,58 +318,56 @@ G92 X0 Y0 Z0 E0            ;set home to current location of the nozzle
 M104 S215                  ;set temperature (heating units - NOT actual degree centigrade)
 G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer
 ----
-Next layer tab
 
-(give examples and notes about why and why not)
-End code tab
+==== Next layer tab ====
+something to do in between printing the next layer
 
-(give examples and notes about why and why not)
+==== End code tab ====
+something to do at the end of a print, like turning the heater off
+
+When you first open RepSnapper this is what is in the tab:
+
 ----
-G91                        ;relative positioning
-G1 F50                     ;set move speed to suit Z-axes
-G1 Z1 F50                  ;move up a bit from the finished object
-G90                        ;absolute positioning
-G1 F2300                   ;set move speed to suit XY-axes
-G1 X0 Y0 F2300             ;goto zero position (from where you started printing)
+G1 X0 Y0 F2000.0       ;feed for start of next move
+M104 S0.0              ;Heater off
 ----
-Result tab
 
-(give examples of what to check for)
-
-
-If you like you can remove the homing and shield code from the next layer tab. This will save time between layers during prints, but should only be done if your machine is reliable and your steppers don't skip steps. Converts the STL model into GCode (machine language)
-Print Options tab
-
-(elaborate)
-Printer settings Button
-
-(elaborate) 
+==== Result tab ====
+shows you the final complete GCode generated.
 
 === Display options tab ===
-
 
 
 === Print tab ===
 
 Connect to printer::
+    Initiates communication between Repsnapper and the printer.  If already connected, pressing this button will reset the printer.
 
 Power on::
 
 Print::
+    Starts sending the GCode from the "Result" tab under the "GCode" tab to the ptiner.
 
 Pause::
+    Pauses communication with the printer.
 
 Kick::
+    unknown
 
 Fan on::
+    Sends the M106 / M107 codes to the printer to toggle the fan on / off respectively.
 
 Voltage::
+    unknown
 
 Errors::
+    Toggles the logging of communications errors.
 
 Info::
+    unknown
 
 Echo::
+    Toggles echoing of all commands sent to the printer.
 
 GCode send::
     Text entry field allowing user to manually send individual commands to the printer.
@@ -374,26 +375,37 @@ GCode send::
 ==== Interactive control tab ====
 
 Jog pannel::
+    A matrix of buttons allowing the user to manually jog the printer set distances along each of it's axes.  The topmost row controls the X axis, followed by the Y axis, with the bottom most row controlling the Z axis.
 
 Temperature update interval::
+    Number of seconds between sending the M105 command to the printer to check the extruder temperature.
 
 Switch heat on::
+    Sends M104 command to the printer, with Target Temp as the argument.
 
 Current temp::
+    Current extruder temperature, as reported by the M105 command.
 
 Target temp::
+    Target extruder temperature, in degrees Celcius, sent to the printer when "Switch heat on" button is pressed.
 
 Run extruder::
+    Jogs extruder in the direction set by the Reverse toggle button, distance set by the Length slider, at the speed set by the Speed slider.
 
 Reverse::
+    Toggles extruder direction.
 
 Speed::
+    Speed to jog extruder, in millimeters / minute of extruded material.
 
 Length::
+    Length to jog extruder, in millimeters of extruded material
 
 Downstream speed multiplier::
+    unknown
 
 Downstream extrusion multiplier::
+    unknown
 
 Custom buttons::
     These buttons do nothing by default, but can be assigned custom strings of GCode to be sent to the printer when clicked.
@@ -434,11 +446,14 @@ Test::
 
 To run repsnapper on
 
-    * windows: double click the repsnapper.exe file within the repsnapper/src directory 
+windows::
+    double click the repsnapper.exe file within the repsnapper/src directory 
 
-    * linux: type repsnapper/src/repsnapper into the console window. 
+linux::
+    type repsnapper/src/repsnapper into the console window. 
 
-    * OSX: 
+OSX::
+    type repsnapper/src/repsnapper into the console window.
 
 After launching the repsnapper application you are presented with the main window of the application
 
