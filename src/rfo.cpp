@@ -188,7 +188,7 @@ void RFO::DeleteSelected(ModelViewController *MVC)
 	else
 	{
 		int toDelete = MVC->gui->RFP_Browser->num_selected();
-		Flu_Tree_Browser::Node *selecteds[toDelete];
+		Flu_Tree_Browser::Node **selecteds = new Flu_Tree_Browser::Node*[toDelete];
 		for (int t = 1; t <= toDelete; t++)
 		{
 			selecteds[t-1] = MVC->gui->RFP_Browser->get_selected(t);
@@ -213,6 +213,7 @@ void RFO::DeleteSelected(ModelViewController *MVC)
 		}
 		BuildBrowser(MVC->ProcessControl);
 		MVC->redraw();
+		delete selecteds;
 		return;
 	}
 }
