@@ -556,6 +556,17 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 			}
 			else if(command.substr(0,3) == "ok ") // search, there's a parameter string (debugstring)
 			{
+
+				temp_param=InBuffer.find_first_of("T:");
+				if (temp_param != string::npos && temp_param != 0) {
+					string parameter = command.substr(temp_param,temp_param+3);
+
+					// Reduce re-draws by only updating the GUI on a real change
+					const char *old_value = gui->CurrentTempText->value();
+					if (!old_value || strcmp (parameter.c_str(), old_value))
+						gui->CurrentTempText->value(parameter.c_str());
+				}
+
 				string parameter = command.substr(3,command.length()-3);
 				debugPrint( string("Received:") + command+ " with parameter " + parameter + "**************************************", true);
 				if(m_bPrinting)
