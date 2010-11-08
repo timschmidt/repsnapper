@@ -169,6 +169,7 @@ private:
 	ulong ConnectAttempt;
 	ulong startTime;
 	ulong lastUpdateTime;
+	uint temp_param;
 
 
 	GUI* gui;
