@@ -559,7 +559,7 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 
 				temp_param=InBuffer.find_first_of("T:");
 				if (temp_param != string::npos && temp_param != 0) {
-					string parameter = command.substr(temp_param,temp_param+3);
+					string parameter = command.substr(temp_param+2,temp_param+5);
 
 					// Reduce re-draws by only updating the GUI on a real change
 					const char *old_value = gui->CurrentTempText->value();
