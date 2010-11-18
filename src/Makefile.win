@@ -23,7 +23,7 @@ LDFLAGS+=-L$(LIB_DIR)/vmmlib
 LDFLAGS+=-L$(LIB_DIR)/CGAL_3.5/CGAL-3.5 
 LDFLAGS+=-L$(LIB_DIR)/glut-3.7.6 
 LDFLAGS+=-L$(LIB_DIR)/ann_1.1.1/include 
-LDFLAGS+=-L$(LIB_DIR)/libconfig-1.3.2 
+LDFLAGS+=-L$(LIB_DIR)/libconfig-1.3.2/lib 
 LDFLAGS+=-L"/usr/i586-mingw32msvc/lib" 
 
 LDFLAGS+=-lkernel32 -luser32 -lgdi32 -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 -loleaut32 -luuid -lodbc32 -lodbccp32 -lwsock32 -lcomctl32 -lws2_32 -limm32 -lwinmm -lopengl32 -lstdc++ -lgcc -lctl3d32 -lwsock32 -lopengl32 -lglu32 
@@ -94,8 +94,10 @@ boost_lib:
 
 libconfig_lib:
 	PATH=/usr/i586-mingw32msvc/bin:$(PATH)
-	cd $(LIB_DIR)/libconfig-1.3.2/ && ./configure --host=i586-mingw32msvc --prefix=/usr/i586-mingw32msvc
+	cd $(LIB_DIR)/libconfig-1.3.2/ && ./configure --host=i586-mingw32msvc --prefix=$(realpath $(LIB_DIR)/libconfig-1.3.2/)
 	make -C $(LIB_DIR)/libconfig-1.3.2/ all
+	make -C $(LIB_DIR)/libconfig-1.3.2/ install
+	
 
 check: unittest
 	./unittest
