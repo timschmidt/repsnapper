@@ -457,11 +457,11 @@ void ProcessController::LoadConfig(string filename)
 					   "G1 X20 Y20 F500            ;Move away from 0.0, so we use the same reset (in the layer code) for each layer\n\n";
 	for (int i = 0; i < 20; i++) {
 		std::ostringstream cbg, cbl, cbld;
-			cbg << "CustomButtonGcode[" << i << "]";
+			cbg << "CustomButtonGcode.[" << i << "]";
 		if (not cfg.lookupValue(cbg.str(),CustomButtonGcode[i]))
 			CustomButtonGcode[i] = "";
 			
-		cbl << "CustomButtonLabel[" << i << "]";
+		cbl << "CustomButtonLabel.[" << i << "]";
 		if (not cfg.lookupValue(cbg.str(),CustomButtonLabel[i]))
 		{
 			cbld << "Custom button" << (i + 1);
