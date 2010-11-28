@@ -48,6 +48,7 @@ public:
 	ModelViewController(int x,int y,int w,int h,const char *l);
 	~ModelViewController();
 	void Init(GUI *gui);
+	void SimpleAdvancedToggle();
 
 	// RFO Functions
 	void ReadRFO(string filename);

@@ -32,7 +32,7 @@ class ProcessController
 public:
 	ProcessController(){
 
-		m_iSerialSpeed = 19200;
+		m_iSerialSpeed = 57600;
 		// default parameters (are overwritten by the xml loading)
 		RaftSize = 1.33f;
 		RaftBaseLayerCount = 1;

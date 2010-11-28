@@ -411,6 +411,7 @@ void ProcessController::LoadConfig(string filename)
 	try
 	{
 		cfg.readFile(filename.c_str());
+		cout << "reading config file" << filename;
 	}
 	catch (exception &e)
 	{

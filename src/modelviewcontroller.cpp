@@ -180,6 +180,11 @@ void ModelViewController::Init(GUI *_gui)
 	Fl::add_timeout(0.25, Static_Timer_CB, (void*)this);
 }
 
+void ModelViewController::SimpleAdvancedToggle()
+{
+   cout << "not yet implemented\n";
+}
+
 void ModelViewController::Static_Timer_CB(void *userdata) {
     ModelViewController *o = (ModelViewController*)userdata;
     o->Timer_CB();
