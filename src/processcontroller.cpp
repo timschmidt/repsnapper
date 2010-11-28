@@ -463,7 +463,7 @@ void ProcessController::LoadConfig(string filename)
 			CustomButtonGcode[i] = "";
 			
 		cbl << "CustomButtonLabel.[" << i << "]";
-		if (not cfg.lookupValue(cbg.str(),CustomButtonLabel[i]))
+		if (not cfg.lookupValue(cbl.str(),CustomButtonLabel[i]))
 		{
 			cbld << "Custom button" << (i + 1);
 			CustomButtonLabel[i] = cbld.str();
