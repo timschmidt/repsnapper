@@ -167,6 +167,7 @@ ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) 
 	m_iExtruderSpeed = 3000;
 	m_iExtruderLength = 150;
 	m_fTargetTemp = 63.0f;
+	m_fBedTargetTemp = 63.0f;
 }
 
 void ModelViewController::Init(GUI *_gui)
@@ -922,9 +923,26 @@ void ModelViewController::SwitchHeat(bool on, float temp)
 	else
 		serial->SendNow("M104 S0");
 }
+void ModelViewController::SwitchBedHeat(bool on, float temp)
+{
+	std::stringstream oss;
+	oss << "M140 S" <<temp;
+
+	if(on)
+		serial->SendNow(oss.str());
+	else
+		serial->SendNow("M140 S0");
+
+	//serial->SendNow("M116");
+// see: http://reprap.org/wiki/RepRapGCodes for more details
+}
 void ModelViewController::SetTargetTemp(float temp)
 {
 	m_fTargetTemp = temp;
+}
+void ModelViewController::SetBedTargetTemp(float temp)
+{
+	m_fBedTargetTemp = temp;
 }
 void ModelViewController::SetExtruderSpeed(int speed)
 {

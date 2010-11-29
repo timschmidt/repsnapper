@@ -16,7 +16,7 @@ class GUI {open
   } {
     Fl_Window mainWindow {
       label {RepSnapper by Kulitorum www.kulitorum.com} open
-      xywh {27 52 1275 860} type Double box UP_BOX color 39 selection_color 39 labelsize 12 hide resizable
+      xywh {43 27 1275 860} type Double box UP_BOX color 39 selection_color 39 labelsize 12 hide resizable
     } {
       Fl_Menu_Bar MainMenuBar {open
         xywh {5 5 705 25} align 5
@@ -145,7 +145,7 @@ MVC->ProcessControl.SaveSettingsAs(dir);
       } {
         Fl_Group SimpleTab {
           label Simple open
-          xywh {715 21 545 824} hide
+          xywh {715 21 545 824}
         } {
           Fl_Group {} {
             label Setup open
@@ -492,11 +492,11 @@ MVC->redraw();}
         }
         Fl_Group Interactive {
           label Interactive open
-          xywh {710 19 565 833}
+          xywh {710 19 565 833} align 0 hide
         } {
           Fl_Group {} {
-            label Controls open
-            xywh {710 40 560 475}
+            label Controls
+            xywh {710 40 565 520}
           } {
             Fl_Button {} {
               label Home
@@ -657,238 +657,260 @@ MVC->redraw();}
             Fl_Button CustomButton1 {
               label {Custom button 1}
               callback {MVC->SendCustomButton(1);}
-              xywh {720 351 265 20}
+              xywh {720 414 265 20}
             }
             Fl_Button CustomButton3 {
               label {Custom button 3}
               callback {MVC->SendCustomButton(3);}
-              xywh {720 371 265 20}
+              xywh {720 434 265 20}
             }
             Fl_Button CustomButton2 {
               label {Custom button 2}
               callback {MVC->SendCustomButton(2);}
-              xywh {990 351 270 20}
+              xywh {990 414 270 20}
             }
             Fl_Button CustomButton4 {
               label {Custom button 4}
               callback {MVC->SendCustomButton(4);}
-              xywh {990 371 270 20}
+              xywh {990 434 270 20}
             }
             Fl_Button CustomButton5 {
               label {Custom button 5}
               callback {MVC->SendCustomButton(5);}
-              xywh {720 391 265 20}
+              xywh {720 454 265 20}
             }
             Fl_Button CustomButton7 {
               label {Custom button 7}
               callback {MVC->SendCustomButton(7);}
-              xywh {720 411 265 20}
+              xywh {720 474 265 20}
             }
             Fl_Button CustomButton6 {
               label {Custom button 6}
               callback {MVC->SendCustomButton(6);}
-              xywh {990 391 270 20}
+              xywh {990 454 270 20}
             }
             Fl_Button CustomButton8 {
               label {Custom button 8}
               callback {MVC->SendCustomButton(8);}
-              xywh {990 411 270 20}
+              xywh {990 474 270 20}
             }
             Fl_Button CustomButton9 {
               label {Custom button 9}
               callback {MVC->SendCustomButton(9);}
-              xywh {720 431 265 20}
+              xywh {720 494 265 20}
             }
             Fl_Button CustomButton10 {
               label {Custom button 10}
               callback {MVC->SendCustomButton(10);}
-              xywh {990 431 270 20}
+              xywh {990 494 270 20}
             }
             Fl_Button CustomButton11 {
               label {Custom button 11}
               callback {MVC->SendCustomButton(11);}
-              xywh {720 351 265 20} hide deactivate
+              xywh {720 414 265 20} hide deactivate
             }
             Fl_Button CustomButton13 {
               label {Custom button 13}
               callback {MVC->SendCustomButton(13);}
-              xywh {720 371 265 20} hide deactivate
+              xywh {720 434 265 20} hide deactivate
             }
             Fl_Button CustomButton12 {
               label {Custom button 12}
               callback {MVC->SendCustomButton(12);}
-              xywh {990 351 270 20} hide deactivate
+              xywh {990 414 270 20} hide deactivate
             }
             Fl_Button CustomButton14 {
               label {Custom button 14}
               callback {MVC->SendCustomButton(14);}
-              xywh {990 371 270 20} hide deactivate
+              xywh {990 434 270 20} hide deactivate
             }
             Fl_Button CustomButton15 {
               label {Custom button 15}
               callback {MVC->SendCustomButton(15);}
-              xywh {720 391 265 20} hide deactivate
+              xywh {720 454 265 20} hide deactivate
             }
             Fl_Button CustomButton17 {
               label {Custom button 17}
               callback {MVC->SendCustomButton(17);}
-              xywh {720 411 265 20} hide deactivate
+              xywh {720 474 265 20} hide deactivate
             }
             Fl_Button CustomButton16 {
               label {Custom button 16}
               callback {MVC->SendCustomButton(16);}
-              xywh {990 391 270 20} hide deactivate
+              xywh {990 454 270 20} hide deactivate
             }
             Fl_Button CustomButton18 {
               label {Custom button 18}
               callback {MVC->SendCustomButton(18);}
-              xywh {990 411 270 20} hide deactivate
+              xywh {990 474 270 20} hide deactivate
             }
             Fl_Button CustomButton19 {
               label {Custom button 19}
               callback {MVC->SendCustomButton(19);}
-              xywh {720 431 265 20} hide deactivate
+              xywh {720 494 265 20} hide deactivate
             }
             Fl_Button CustomButton20 {
               label {Custom button 20}
               callback {MVC->SendCustomButton(20);}
-              xywh {990 431 270 20} hide deactivate
+              xywh {990 494 270 20} hide deactivate
             }
             Fl_Group {} {
               label Feedback
-              xywh {795 455 420 40} box ENGRAVED_FRAME color 39 align 4
+              xywh {815 520 420 40} box ENGRAVED_FRAME color 39 align 4
             } {
               Fl_Light_Button {} {
                 label Errors
                 callback {MVC->serial->SetDebugMask(DEBUG_ERRORS, (bool)o->value());}
-                xywh {810 465 70 20} value 1 selection_color 2
+                xywh {830 530 70 20} value 1 selection_color 2
               }
               Fl_Light_Button {} {
                 label Info
                 callback {MVC->serial->SetDebugMask(DEBUG_INFO, (bool)o->value());}
-                xywh {975 465 65 20} value 1 selection_color 2
+                xywh {995 530 65 20} value 1 selection_color 2
               }
               Fl_Light_Button {} {
                 label Echo
                 callback {MVC->serial->SetDebugMask(DEBUG_ECHO, (bool)o->value());}
-                xywh {890 465 70 20} value 1 selection_color 2
+                xywh {910 530 70 20} value 1 selection_color 2
               }
             }
             Fl_Group {} {
-              label Fan
-              xywh {775 305 495 40} box ENGRAVED_FRAME color 39 align 4
+              label Fan open
+              xywh {775 368 495 40} box ENGRAVED_FRAME color 39 align 4
             } {
               Fl_Light_Button FanOnButton {
                 label {Fan on}
                 callback {MVC->SetFan(o->value() ? FanPowerSlider->value() : 0);}
-                xywh {810 313 85 25} selection_color 2
+                xywh {810 376 85 25} selection_color 2
               }
               Fl_Value_Slider FanPowerSlider {
                 label Voltage
                 callback {FanOnButton->value(true);
 MVC->SetFan(o->value()*(255.0f/12.0f));}
-                xywh {980 315 195 20} type {Horz Knob} align 4 when 4 maximum 12 value 5 textsize 14
-              }
-            }
-            Fl_Group {} {
-              label Nozzle
-              xywh {775 150 495 64} box ENGRAVED_FRAME align 4
-            } {
-              Fl_Light_Button SwitchHeatOnButton {
-                label {heat on}
-                callback {MVC->SwitchHeat(o->value(), TargetTempText->value());}
-                xywh {810 178 85 30}
-              }
-              Fl_Value_Input TargetTempText {
-                label {Target temp}
-                callback {MVC->SetTargetTemp(o->value());}
-                xywh {1175 184 90 24} maximum 300 value 200
-              }
-              Fl_Output CurrentTempText {
-                label {Current temp}
-                xywh {995 182 90 26}
-              }
-              Fl_Value_Slider TempUpdateSpeedSlider {
-                label {display update interval}
-                callback {MVC->SetTempUpdateSpeed(o->value());}
-                xywh {975 156 205 18} type {Horz Knob} align 4 minimum 0.1 maximum 10 step 0.1 value 3 textsize 14
-              }
-              Fl_Light_Button TempReadingEnabledButton {
-                label Enable
-                callback {MVC->EnableTempReading(o->value());}
-                xywh {1190 154 70 24} value 1 selection_color 2
+                xywh {980 378 195 20} type {Horz Knob} align 4 when 4 maximum 12 value 5 textsize 14
               }
             }
             Fl_Group Extruder {
               label Extruder open
-              xywh {775 219 495 81} box ENGRAVED_FRAME align 4
+              xywh {775 283 495 81} box ENGRAVED_FRAME align 4
             } {
               Fl_Light_Button RunExtruderButton {
                 label {Run extruder}
                 callback {MVC->RunExtruder();}
-                xywh {810 224 115 28}
+                xywh {810 288 115 28}
               }
               Fl_Light_Button SetExtruderDirectionButton {
                 label Reverse
                 callback {MVC->SetExtruderDirection(o->value());}
-                xywh {950 224 75 29}
+                xywh {950 288 75 29}
               }
               Fl_Value_Slider {} {
                 label Speed
                 callback {MVC->SetExtruderSpeed(o->value());}
-                xywh {830 276 200 15} type {Horz Knob} align 4 minimum 5 maximum 9999 step 1 value 3000 textsize 14
+                xywh {830 340 200 15} type {Horz Knob} align 4 minimum 5 maximum 9999 step 1 value 3000 textsize 14
               }
               Fl_Value_Slider {} {
                 label Length
                 callback {MVC->SetExtruderLength(o->value());}
-                xywh {830 256 200 15} type {Horz Knob} align 4 minimum 10 maximum 850 step 1 value 150 textsize 14
+                xywh {830 320 200 15} type {Horz Knob} align 4 minimum 10 maximum 850 step 1 value 150 textsize 14
               }
               Fl_Value_Slider DownstreamMultiplierSlider {
                 label {Downstream speed multiplier}
-                xywh {1030 276 235 15} type {Horz Knob} align 5 minimum 0.01 maximum 25 value 1 textsize 14
+                xywh {1030 340 235 15} type {Horz Knob} align 5 minimum 0.01 maximum 25 value 1 textsize 14
               }
               Fl_Value_Slider DownstreamExtrusionMultiplierSlider {
                 label {Downstream extrusion multiplier}
-                xywh {1030 241 235 15} type {Horz Knob} align 5 minimum 0.01 maximum 25 value 1 textsize 14
+                xywh {1030 305 235 15} type {Horz Knob} align 5 minimum 0.01 maximum 25 value 1 textsize 14
+              }
+            }
+            Fl_Group Temperatures {open
+              xywh {715 149 555 137}
+            } {
+              Fl_Value_Slider TempUpdateSpeedSlider {
+                label {Temperature display update interval}
+                callback {MVC->SetTempUpdateSpeed(o->value());}
+                xywh {990 167 205 18} type {Horz Knob} align 4 minimum 0.1 maximum 10 step 0.1 value 3 textsize 14
+              }
+              Fl_Light_Button TempReadingEnabledButton {
+                label Enable
+                callback {MVC->EnableTempReading(o->value());}
+                xywh {1200 163 70 24} value 1 selection_color 2
+              }
+              Fl_Group {} {
+                label Nozzle open
+                xywh {775 190 495 40} box ENGRAVED_FRAME align 4
+              } {
+                Fl_Light_Button SwitchHeatOnButton {
+                  label {heat on}
+                  callback {MVC->SwitchHeat(o->value(), TargetTempText->value());}
+                  xywh {805 194 85 30}
+                }
+                Fl_Value_Input TargetTempText {
+                  label Target
+                  callback {MVC->SetTargetTemp(o->value());}
+                  xywh {1175 200 90 24} maximum 300 value 200
+                }
+                Fl_Output CurrentTempText {
+                  label Current
+                  xywh {985 199 90 26}
+                }
+              }
+              Fl_Group {} {
+                label Bed open
+                xywh {775 235 495 41} box ENGRAVED_FRAME color 39 align 4
+              } {
+                Fl_Light_Button BedHeatOnButton {
+                  label {bed heat on}
+                  callback {MVC->SwitchBedHeat(o->value(), TargetBedTempText->value());}
+                  xywh {805 241 105 28} selection_color 2
+                }
+                Fl_Output CurrentBedTempText {
+                  label Current
+                  xywh {985 244 90 26}
+                }
+                Fl_Value_Input TargetBedTempText {
+                  label Target
+                  callback {MVC->SetBedTargetTemp(o->value());}
+                  xywh {1175 246 90 24} maximum 300 value 200
+                }
               }
             }
           }
-          Fl_Group {} {
-            label Logs
-            xywh {720 510 550 338}
+          Fl_Group {} {open
+            xywh {720 557 550 291}
           } {
             Fl_Tabs {} {open
-              xywh {720 518 540 235}
+              xywh {720 562 540 191}
             } {
               Fl_Group {} {
-                label {Communication Log} open
-                xywh {720 543 525 200}
+                label {Communication Log} open selected
+                xywh {720 585 530 158}
               } {
                 Fl_Browser CommunationLog {
                   label {Errors / warnings}
-                  xywh {740 543 505 200} selection_color 31 align 16
+                  xywh {740 585 510 158} selection_color 31 align 16
                   code0 {\#include <FL/Fl_Multi_Browser.H>}
                   class Fl_Multi_Browser
                 }
               }
               Fl_Group {} {
                 label {Errors / warnings} open
-                xywh {720 543 530 200} hide
+                xywh {720 585 530 158} hide
               } {
                 Fl_Browser ErrorLog {
                   label {Errors / warnings}
-                  xywh {740 543 505 200} selection_color 31 align 16
+                  xywh {740 585 505 158} selection_color 31 align 16
                   code0 {\#include <FL/Fl_Multi_Browser.H>}
                   class Fl_Multi_Browser
                 }
               }
               Fl_Group {} {
                 label Echo open
-                xywh {740 543 505 195} hide
+                xywh {740 580 510 158} hide
               } {
                 Fl_Browser Echo {
                   label Echo
-                  xywh {740 543 505 195} selection_color 31 align 16
+                  xywh {740 580 510 158} selection_color 31 align 16
                   code0 {\#include <FL/Fl_Multi_Browser.H>}
                   class Fl_Multi_Browser
                 }
@@ -1773,7 +1795,7 @@ MVC->redraw();}
           xywh {21 123 44 25} box NO_BOX labelsize 10 align 8
         }
         Fl_Button {} {
-          label {Calibration Print} selected
+          label {Calibration Print}
           xywh {105 167 154 38} box NO_BOX color 41 labelfont 2
         }
       }

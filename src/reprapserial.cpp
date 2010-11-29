@@ -508,7 +508,7 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 		if(InBuffer.size() == 0)
 			return;
 		size_t found;
-		found=InBuffer.find_first_of("\r");
+		found=InBuffer.find_first_of("\r\n");
 
 		while (found!=string::npos && found != 0)
 		{
@@ -521,6 +521,7 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 				oss << "Command:" << command;
 				debugPrint(oss.str(), true);
 			}
+
 			if (command == "ok")	// most common, first
 			{
 				if(m_bPrinting)
@@ -554,17 +555,52 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 				debugPrint( string("Received:") + command+ " with parameter " + parameter);
 				// Check parameter
 			}
+			// this is the common case for the modern 5D reprap firmware 
 			else if(command.substr(0,3) == "ok ") // search, there's a parameter string (debugstring)
 			{
 
-				temp_param=InBuffer.find_first_of("T:");
-				if (temp_param != string::npos && temp_param != 0) {
-					string parameter = command.substr(temp_param+2,temp_param+5);
+				//starting from the "ok", we'll parse the rest as "tokens"
+				string s = get_next_token(command.substr(0,command.length()));
+				uint l = s.length();
+				while ( s.length() > 0 ) {
+					string remainder = command.substr(l,command.length());
+					uint ws = count_leading_whitespace(remainder);
 
-					// Reduce re-draws by only updating the GUI on a real change
-					const char *old_value = gui->CurrentTempText->value();
-					if (!old_value || strcmp (parameter.c_str(), old_value))
-						gui->CurrentTempText->value(parameter.c_str());
+					// s = the current token , l = the offset of this token in command
+					//cout << "s:" << s << endl;
+					
+					// we already know this is how the line starts:
+				        if ( s == "ok" ) { 
+					// do nothing more
+
+					// temperature token:
+					} else if ( s.substr(0,2) == "T:" ) { 
+						temp_param = s.substr(2,s.length());
+				
+						// Reduce re-draws by only updating the GUI on a real change
+						const char *old_value = gui->CurrentTempText->value();
+						if (!old_value || strcmp (temp_param.c_str(), old_value))
+						gui->CurrentTempText->value(temp_param.c_str());
+
+
+					// bed temperature token:
+					} else if ( s.substr(0,2) == "B:" ) { 
+						bedtemp_param = s.substr(2,s.length());
+
+						// Reduce re-draws by only updating the GUI on a real change
+						const char *old_value = gui->CurrentBedTempText->value();
+						if (!old_value || strcmp (bedtemp_param.c_str(), old_value))
+						gui->CurrentBedTempText->value(bedtemp_param.c_str());
+
+					// a token we don't yet understand , dump to stdout for now
+					} else  {
+					
+						cout << "unknown token:" << s << endl;	
+
+					}
+
+					s = get_next_token(remainder);
+					l += s.length() + ws;
 				}
 
 				string parameter = command.substr(3,command.length()-3);
@@ -628,6 +664,35 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 			found = InBuffer.find_first_of("\r");
 		}
 	}
+}
+
+// given a string with "words" and "spaces", it returns the next word at the start of the string
+string RepRapSerial::get_next_token(string str){
+
+//	cout << "getting token from:" << str << endl; 
+
+	// remove all leading spaces:
+	while ( str[0] == ' ' || str[0] == '	' || str[0] == '\r' || str[0] == '\n' ) {
+		str = str.substr(1,str.length()-1); // drop first char if whitespace, repeatedly
+	}
+
+	 uint data=str.find_first_of("	 \r\n",0); // locate a space or  a tab as word separator
+         if ( data != string::npos ) {
+          str = str.substr(0,data); 
+         } 
+//	cout << "got token:" << str << endl; 
+	return str;
+
+}
+//count leading whitespaces only, return how many we would have stripped in the above functon
+uint RepRapSerial::count_leading_whitespace(string str) {
+	uint l = 0;
+	// remove all leading spaces:
+	while ( str[0] == ' ' || str[0] == '	' || str[0] == '\r' || str[0] == '\n' ) {
+		l++;
+		str = str.substr(1,str.length()-1); // drop first char if whitespace, repeatedly
+	}
+	return l;
 }
 
 void RepRapSerial::WaitForConnection(ulong timeoutMS)

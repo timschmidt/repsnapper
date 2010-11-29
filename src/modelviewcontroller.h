@@ -227,7 +227,9 @@ public:
 	void Restart();
 	void PrintDone();
 	void SwitchHeat(bool on, float temp);
+	void SwitchBedHeat(bool on, float temp);
 	void SetTargetTemp(float temp);
+	void SetBedTargetTemp(float temp);
 	void RunExtruder();
 	void SetExtruderSpeed(int speed);
 	void SetExtruderLength(int length);
@@ -269,6 +271,7 @@ public:
 	int  m_iExtruderSpeed;
 	int m_iExtruderLength;
 	float m_fTargetTemp;
+	float m_fBedTargetTemp;
 
 	/*--------------ArcBall-------------------*/
 

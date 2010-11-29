@@ -158,6 +158,8 @@ private:
 	void debugPrint(string s, bool selectLine = false);
 	void echo(string s);
 	void notifyConnection (bool connected);
+	string get_next_token(string);
+	uint count_leading_whitespace(string);
 
 	vector<string> buffer;
 	bool m_bConnected;
@@ -169,7 +171,10 @@ private:
 	ulong ConnectAttempt;
 	ulong startTime;
 	ulong lastUpdateTime;
-	uint temp_param;
+	string temp_param;
+	string bedtemp_param;
+	uint data;
+	uint data2;
 
 
 	GUI* gui;
