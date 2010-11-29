@@ -77,6 +77,13 @@ void GCode::Read(ModelViewController *MVC, string filename)
 		{
 			MVC->gui->GCodeResult->buffer()->append((s+"\n").c_str());
 		}
+		if(MVC->gui)
+                {
+                        MVC->gui->ProgressBar->value(int(LineNr/1000)); // assumes all files are 100k lines, bad!
+                        MVC->gui->ProgressBar->redraw();
+                        Fl::check();
+                }
+
 
 		if(buffer.find( ";", 0) != string::npos)	// COMMENT
 			continue;

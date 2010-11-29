@@ -71,7 +71,7 @@ public:
 	void setFileLocation(string location);
 
 	// GCode Functions
-	void ReadGCode(string filename) {ProcessControl.ReadGCode(filename);}
+	void ReadGCode(string filename);
 	void ConvertToGCode();
 	void init();
 	void SetUseIncrementalEcode(bool val) {ProcessControl.UseIncrementalEcode = val;}
@@ -272,6 +272,8 @@ public:
 	int m_iExtruderLength;
 	float m_fTargetTemp;
 	float m_fBedTargetTemp;
+
+	string read_pending;
 
 	/*--------------ArcBall-------------------*/
 

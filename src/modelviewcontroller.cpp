@@ -148,6 +148,7 @@ ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) 
 
 	gui = 0;
 	zoom = 100.0f;
+	read_pending = "";
 
 	ArcBall = new ArcBallT((GLfloat)w, (GLfloat)h);				                // NEW: ArcBall Instance
 
@@ -204,6 +205,10 @@ void ModelViewController::Timer_CB()
 	if( gui->Tabs->value() == gui->PrintTab )
 	{
 		gui->PrintTab->redraw();
+	}
+	if ( read_pending != "" ) {
+	        ProcessControl.ReadGCode(read_pending);
+		read_pending = "";
 	}
 }
 
@@ -535,6 +540,13 @@ void ModelViewController::DrawGridAndAxis()
 {
 	//Grid
 }
+// all we'll end up doing is dispatching to the ProcessControl to read the file in, but not from this callback
+void ModelViewController::ReadGCode(string filename) {
+	read_pending = filename; 
+//	   this triggers this function to be called :  ProcessControl.ReadGCode(filename);
+	
+}
+
 
 void ModelViewController::ConvertToGCode()
 {

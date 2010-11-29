@@ -392,7 +392,19 @@ void ProcessController::Draw(Flu_Tree_Browser::Node *selected_node)
 
 void ProcessController::ReadGCode(string filename)
 {
+	if(gui)
+        {
+                gui->ProgressBar->value(0);
+                gui->ProgressBar->label("Converting");
+                gui->ProgressBar->maximum(100);
+        }
+
 	gcode.Read (gui->MVC, filename);
+	if(gui)  {
+	gui->ProgressBar->label("          ");
+	gui->ProgressBar->label("Done");
+        gui->ProgressBar->value(100);
+	}
 }
 
 void ProcessController::WriteGCode(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, string filename)
