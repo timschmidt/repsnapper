@@ -1,34 +1,30 @@
 # Makefile
 
-# Palomides:
-#CC=i586-mingw32msvc-gcc
-#CXX=i586-mingw32msvc-g++
-#LD=i586-mingw32msvc-ld
-#AR=i586-mingw32msvc-ar
-#AS=i586-mingw32msvc-as
-#NM=i586-mingw32msvc-nm
-#STRIP=i586-mingw32msvc-strip
-#RANLIB=i586-mingw32msvc-ranlib
-#DLLTOOL=i586-mingw32msvc-dlltool
-#OBJDUMP=i586-mingw32msvc-objdump
-#RC=i586-mingw32msvc-windres
+# as found in ubuntu 10.04
+CC=i586-mingw32msvc-gcc
+CXX=i586-mingw32msvc-g++
+LD=i586-mingw32msvc-ld
+AR=i586-mingw32msvc-ar
+AS=i586-mingw32msvc-as
+NM=i586-mingw32msvc-nm
+STRIP=i586-mingw32msvc-strip
+RANLIB=i586-mingw32msvc-ranlib
+DLLTOOL=i586-mingw32msvc-dlltool
+OBJDUMP=i586-mingw32msvc-objdump
+RC=i586-mingw32msvc-windres
 
-# Fedora 13:
-CC=i686-pc-mingw32-gcc
-CXX=i686-pc-mingw32-g++
-LD=i686-pc-mingw32-ld
-AR=i686-pc-mingw32-ar
-AS=i686-pc-mingw32-as
-NM=i686-pc-mingw32-nm
-STRIP=i686-pc-mingw32-strip
-RANLIB=i686-pc-mingw32-ranlib
-DLLTOOL=i686-pc-mingw32-dlltool
-OBJDUMP=i686-pc-mingw32-objdump
-RC=i686-pc-mingw32-windres
+LIB_DIR=$(realpath ../libraries)
+LIBCONFIG_DIR=$(LIB_DIR)/libconfig-1.3.2
+BOOSTLIB_DIR=$(LIB_DIR)/Boost1.40
+FLTKLIB_DIR=$(LIB_DIR)/fltk-1.1.10
+VMMLIB_DIR=$(LIB_DIR)/vmmlib/include
+GLUTLIB_DIR=$(LIB_DIR)/glut-3.7.6/include
+ANNLIB_DIR=$(LIB_DIR)/ann_1.1.1/include
+POLYLIB_DIR=$(LIB_DIR)/polylib
 
-LIB_DIR=../libraries
+CFLAGS+=-DSIMULATOR -W -O0 -D_CRT_SECURE_NO_DEPRECATE -DWIN32 -D_DEBUG -D_WINDOWS -DWIN32_LEAN_AND_MEAN -DVC_EXTRA_LEAN -DWIN32_EXTRA_LEAN -g -I/usr/i586-mingw32msvc/include -I/usr/i586-mingw32msvc/lib 
 
-CFLAGS+=-DSIMULATOR -W -I$(LIB_DIR)/Boost1.40 -O0 -I../ -D_CRT_SECURE_NO_DEPRECATE -I$(LIB_DIR)/fltk-1.1.10 -I$(LIB_DIR)/vmmlib/include -I$(LIB_DIR)/glut-3.7.6/include -I$(LIB_DIR)/ann_1.1.1/include -DWIN32 -I$(LIB_DIR)/ -D_DEBUG -D_WINDOWS -DWIN32_LEAN_AND_MEAN -DVC_EXTRA_LEAN -I$(LIB_DIR)/polylib -DWIN32_EXTRA_LEAN -g -I/usr/i586-mingw32msvc/include -I/usr/i586-mingw32msvc/lib -I$(LIB_DIR)/libconfig-1.3.2 
+REPSNAPPER_CFLAGS=-I$(BOOSTLIB_DIR) -I$(FLTKLIB_DIR) -I$(VMMLIB_DIR) -I$(LIB_DIR) -I$(GLUTLIB_DIR) I$(LIBCONFIG_DIR) -I$(ANNLIB_DIR) -I$(POLYLIB_DIR) -I$(LIB_DIR)
 
 LDFLAGS+=-L$(LIB_DIR)/boost1.40 
 LDFLAGS+=-L$(LIB_DIR)/polylib 
@@ -39,31 +35,16 @@ LDFLAGS+=-L$(LIB_DIR)/glut-3.7.6
 LDFLAGS+=-L$(LIB_DIR)/ann_1.1.1/include 
 LDFLAGS+=-L$(LIB_DIR)/libconfig-1.3.2/lib 
 
-# Palomides:
-#LDFLAGS+=-L"/usr/i586-mingw32msvc/lib" 
+# as found in ubuntu 10.04
+LDFLAGS+=-L"/usr/i586-mingw32msvc/lib" 
 
-# Fedora 13:
-LDFLAGS+=-L"/usr/i686-pc-mingw32/lib"
 LDFLAGS+=-lkernel32 -luser32 -lgdi32 -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 -loleaut32 -luuid -lodbc32 -lodbccp32 -lwsock32 -lcomctl32 -lws2_32 -limm32 -lwinmm -lopengl32 -lstdc++ -lgcc -lctl3d32 -lwsock32 -lopengl32 -lglu32 
 
-LDFLAGS+=-lpolylib -lconfig++ -lGLU -lGL -lfltk -lfltk_gl -lfltk_forms -lglut -lboost_thread-mt -lboost_system-mt 
-
-ifeq ($(TARGET),)
-	TARGET=RELEASE
-endif
+REPSNAPPER_LDFLAGS=-lpolylib -lconfig++ -lGLU -lGL -lfltk -lfltk_gl -lfltk_forms -lglut -lboost_thread-mt -lboost_system-mt 
 
 WARNING_FLAGS = -Wall
 
 EXEC=RepSnapper.exe
-EXEC_DEBUG=RepSnapper_debug.exe
-
-ifeq ($(TARGET),RELEASE)
-	CFLAGS ?= -O2 $(WARNING_FLAGS)
-	EXECUTABLE=$(EXEC)
-else
-	CFLAGS ?= -g -O0 $(WARNING_FLAGS)
-	EXECUTABLE=$(EXEC_DEBUG)
-endif
 
 GENERATED=ui.cxx ui.h
 
@@ -88,7 +69,7 @@ TEST_OBJECTS=$(subst .c,.o,$(subst .cxx,.o,$(subst .cpp,.o,$(TEST_SOURCES)))) $(
 all: $(EXECUTABLE)
 
 $(EXECUTABLE): poly_lib $(MAIN_OBJECTS)
-	$(CXX) ${INC} $(MAIN_OBJECTS) $(LDFLAGS) -o $@
+	$(CXX) ${INC} $(MAIN_OBJECTS) $(LDFLAGS) $(REPSNAPPER_LDFLAGS) -o $@
 
 unittest : poly_lib $(TEST_OBJECTS)
 	$(CXX) ${INC} $(TEST_OBJECTS) $(LDFLAGS) $(TEST_LDFLAGS) -o $@
@@ -97,11 +78,11 @@ unittest : poly_lib $(TEST_OBJECTS)
 	rm -f $@ # fluid doesn't remove on failure.
 	fluid -c $<
 %.o:%.cxx
-	$(CXX) ${INC} -c $(CFLAGS) $< -o $@
+	$(CXX) ${INC} -c $(CFLAGS) $(REPSNAPPER_CFLAGS) $< -o $@
 %.o:%.cpp
-	$(CXX) ${INC} -c $(CFLAGS) $< -o $@
+	$(CXX) ${INC} -c $(CFLAGS) $(REPSNAPPER_CFLAGS) $< -o $@
 %.o:%.c
-	$(CC) ${INC} -c $(CFLAGS) $< -o $@
+	$(CC) ${INC} -c $(CFLAGS) $(REPSNAPPER_CFLAGS) $< -o $@
 
 poly_lib:
 	make -C $(LIB_DIR)/polylib/ all
@@ -112,10 +93,16 @@ boost_lib:
 
 libconfig_lib:
 	PATH=/usr/i586-mingw32msvc/bin:$(PATH)
-	cd $(LIB_DIR)/libconfig-1.3.2/ && ./configure --host=i586-mingw32msvc --prefix=$(realpath $(LIB_DIR)/libconfig-1.3.2/)
-	make -C $(LIB_DIR)/libconfig-1.3.2/ all
-	make -C $(LIB_DIR)/libconfig-1.3.2/ install
-	
+	export PATH CFLAGS
+	cd $(LIBCONFIG_DIR) && ./configure --host=i586-mingw32msvc --prefix=$(LIBCONFIG_DIR)
+	make -C $(LIBCONFIG_DIR) all
+	make -C $(LIBCONFIG_DIR) install
+
+fltk_lib:
+	PATH=/usr/i586-mingw32msvc/bin:$(PATH)
+	export CFLAGS LDFLAGS PATH
+	cd $(FLTKLIB_DIR) && ./configure --host=i586-mingw32msvc --prefix=$(FLTKLIB_DIR) --enable-threads --enable-xft --enable-localjpeg --enable-localpng --enable-gl CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
+	make -C $(FLTKLIB_DIR) all
 
 check: unittest
 	./unittest
@@ -123,8 +110,9 @@ check: unittest
 clean:
 	rm -f $(SHARED_OBJECTS) $(MAIN_OBJECTS) $(TEST_OBJECTS) \
 	      $(EXEC) $(EXEC_DEBUG) $(GENERATED) unittest
-	make -i -C $(LIB_DIR)/polylib/ clean
-	make -C $(LIB_DIR)/libconfig-1.3.2/ distclean
+	make -i -C $(POLYLIB_DIR) clean
+	make -i -C $(LIBCONFIG_DIR) distclean
+	make -i -C $(FLTKLIB_DIR) clean
 
 asyncserial.o: stdafx.h config.h platform.h arcball.h ivcon.h asyncserial.h
 repsnapper.o: stdafx.h config.h platform.h arcball.h ivcon.h
