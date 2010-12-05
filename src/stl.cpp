@@ -138,12 +138,7 @@ void STL::GetObjectsFromIvcon()
 		Tri.A = Vector3f(cor3[0][v1], cor3[1][v1], cor3[2][v1]);
 		Tri.B = Vector3f(cor3[0][v2], cor3[1][v2], cor3[2][v2]);
 		Tri.C = Vector3f(cor3[0][v3], cor3[1][v3], cor3[2][v3]);
-		Min.x = MIN(Min.x, Tri.A.x); Min.x = MIN(Min.x, Tri.B.x); Min.x = MIN(Min.x, Tri.C.x);
-		Min.y = MIN(Min.y, Tri.A.y); Min.y = MIN(Min.y, Tri.B.y); Min.y = MIN(Min.y, Tri.C.y);
-		Min.z = MIN(Min.z, Tri.A.z); Min.z = MIN(Min.z, Tri.B.z); Min.z = MIN(Min.z, Tri.C.z);
-		Max.x = MAX(Max.x, Tri.A.x); Max.x = MAX(Max.x, Tri.B.x); Max.x = MAX(Max.x, Tri.C.x);
-		Max.y = MAX(Max.y, Tri.A.y); Max.y = MAX(Max.y, Tri.B.y); Max.y = MAX(Max.y, Tri.C.y);
-		Max.z = MAX(Max.z, Tri.A.z); Max.z = MAX(Max.z, Tri.B.z); Max.z = MAX(Max.z, Tri.C.z);
+		Tri.AccumulateMinMax (Min, Max);
 		Tri.Normal= Vector3f(face_normal[0][i], face_normal[1][i], face_normal[2][i]);
 		triangles.push_back(Tri);
 	}
@@ -234,10 +229,7 @@ bool STL::Read(string filename, bool force_binary)
 				Triangle T(N,Ax,Bx,Cx);
 
 				triangles.push_back(T);
-
-				Min.x = MIN(Ax.x, Min.x);			Min.y = MIN(Ax.y, Min.y);			Min.z = MIN(Ax.z, Min.z);			Max.x = MAX(Ax.x, Max.x);			Max.y = MAX(Ax.y, Max.y);			Max.z = MAX(Ax.z, Max.z);			Min.x = MIN(Bx.x, Min.x);			Min.y = MIN(Bx.y, Min.y);
-				Min.z = MIN(Bx.z, Min.z);			Max.x = MAX(Bx.x, Max.x);			Max.y = MAX(Bx.y, Max.y);			Max.z = MAX(Bx.z, Max.z);			Min.x = MIN(Cx.x, Min.x);			Min.y = MIN(Cx.y, Min.y);			Min.z = MIN(Cx.z, Min.z);			Max.x = MAX(Cx.x, Max.x);
-				Max.y = MAX(Cx.y, Max.y);			Max.z = MAX(Cx.z, Max.z);
+				T.AccumulateMinMax (Min, Max);
 			}
 		}// binary
 	}
