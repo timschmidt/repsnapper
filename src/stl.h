@@ -62,6 +62,10 @@ public:
 
 	AXIS axis;			// Used for auto-rotation
 	Vector3f A,B,C,Normal;	// p1,p2,p3, Normal
+	Vector3f GetMax();
+	Vector3f GetMin();
+	void AccumulateMinMax(Vector3f &min, Vector3f &max);
+	void Translate(const Vector3f &vector);
 };
 
 

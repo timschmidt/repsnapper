@@ -2569,7 +2569,7 @@ void PointHash::InsertPoint (uint idx, const Vector2f &p)
 	uint hashes[4];
 	int c = Impl::GetHashes (hashes, p.x, p.y);
 
-	for (int i = 0; i < c; i++) 
+	for (int i = 0; i < c; i++)
 	{
 		Impl::IdxPointList &pts = impl->points[hashes[i]];
 		pts.push_back (pair<uint, Vector2f>( idx, p ));
@@ -2761,7 +2761,7 @@ void STL::OptimizeRotation()
 
 	for(size_t i=0;i<triangles.size();i++)
 	{
-		triangles[i].axis = NOT_ALIGNED;				
+		triangles[i].axis = NOT_ALIGNED;
 		for(size_t triangleAxis=0;triangleAxis<3;triangleAxis++)
 		{
 			if (triangles[i].Normal.cross(AXIS_VECTORS[triangleAxis]).length() < 0.1)
@@ -2814,36 +2814,60 @@ void STL::RotateObject(Vector3f axis, float angle)
 
 	for(size_t i=0; i<triangles.size() ; i++)
 	{
-	triangles[i].Normal = triangles[i].Normal.rotate(angle, axis.x, axis.y, axis.z);
-	triangles[i].A = triangles[i].A.rotate(angle, axis.x, axis.y, axis.z);
-	triangles[i].B = triangles[i].B.rotate(angle, axis.x, axis.y, axis.z);
-	triangles[i].C = triangles[i].C.rotate(angle, axis.x, axis.y, axis.z);
-	min.x = MIN(min.x, triangles[i].A.x);
-	min.y = MIN(min.y, triangles[i].A.y);
-	min.z = MIN(min.z, triangles[i].A.z);
-	max.x = MAX(max.x, triangles[i].A.x);
-	max.y = MAX(max.y, triangles[i].A.y);
-	max.z = MAX(max.z, triangles[i].A.z);
-	min.x = MIN(min.x, triangles[i].B.x);
-	min.y = MIN(min.y, triangles[i].B.y);
-	min.z = MIN(min.z, triangles[i].B.z);
-	max.x = MAX(max.x, triangles[i].B.x);
-	max.y = MAX(max.y, triangles[i].B.y);
-	max.z = MAX(max.z, triangles[i].B.z);
-	min.x = MIN(min.x, triangles[i].C.x);
-	min.y = MIN(min.y, triangles[i].C.y);
-	min.z = MIN(min.z, triangles[i].C.z);
-	max.x = MAX(max.x, triangles[i].C.x);
-	max.y = MAX(max.y, triangles[i].C.y);
-	max.z = MAX(max.z, triangles[i].C.z);
+		triangles[i].Normal = triangles[i].Normal.rotate(angle, axis.x, axis.y, axis.z);
+		triangles[i].A = triangles[i].A.rotate(angle, axis.x, axis.y, axis.z);
+		triangles[i].B = triangles[i].B.rotate(angle, axis.x, axis.y, axis.z);
+		triangles[i].C = triangles[i].C.rotate(angle, axis.x, axis.y, axis.z);
+
+		triangles[i].AccumulateMinMax (min, max);
 	}
 	Min = min;
 	Max = max;
+//	cout << "min " << Min << " max " << Max << "\n";
 }
 
 float Triangle::area()
 {
 	return ( ((C-A).cross(B-A)).length() );
+}
+
+Vector3f Triangle::GetMax()
+{
+	Vector3f max(-99999999.0f, -99999999.0f, -99999999.0f);
+	for (uint i = 0; i < 3; i++) {
+		max[i] = MAX(max[i], A[i]);
+		max[i] = MAX(max[i], B[i]);
+		max[i] = MAX(max[i], C[i]);
+	}
+	return max;
+}
+
+Vector3f Triangle::GetMin()
+{
+	Vector3f min(99999999.0f, 99999999.0f, 99999999.0f);
+	for (uint i = 0; i < 3; i++) {
+		min[i] = MIN(min[i], A[i]);
+		min[i] = MIN(min[i], B[i]);
+		min[i] = MIN(min[i], C[i]);
+	}
+	return min;
+}
+
+void Triangle::AccumulateMinMax(Vector3f &min, Vector3f &max)
+{
+	Vector3f tmin = GetMin();
+	Vector3f tmax = GetMax();
+	for (uint i = 0; i < 3; i++) {
+		min[i] = MIN(tmin[i], min[i]);
+		max[i] = MAX(tmax[i], max[i]);
+	}
+}
+
+void Triangle::Translate(const Vector3f &vector)
+{
+	A += vector;
+	B += vector;
+	C += vector;
 }
 
 void CuttingPlane::CleanupPolygons (float Optimization)
