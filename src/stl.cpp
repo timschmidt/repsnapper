@@ -2813,6 +2813,15 @@ void STL::RotateObject(Vector3f axis, float angle)
 
 		triangles[i].AccumulateMinMax (min, max);
 	}
+	// if we rotated under the bed, translate us up again
+	if (min.z < 0) {
+		Vector3f moveUp(0, 0, - min.z);
+//		cout << "vector moveup: " << moveUp << "\n";
+		for (uint i = 0; i < triangles.size(); i++)
+			triangles[i].Translate(moveUp);
+		max.z -= min.z;
+		min.z = 0;
+	}
 	Min = min;
 	Max = max;
 //	cout << "min " << Min << " max " << Max << "\n";
@@ -2927,6 +2936,7 @@ void STL::CenterAroundXY()
 
 	Max += displacement;
 	Min += displacement;
+//	cout << "Center Around XY min" << Min << " max " << Max << "\n";
 	CalcBoundingBoxAndZoom();
 }
 
