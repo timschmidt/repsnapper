@@ -122,15 +122,14 @@ osx-bundle: all
 	cp Info.plist repsnapper.app/Contents/
 	cp repsnapper repsnapper.app/Contents/
 	cp repsnapper-osx.sh repsnapper.app/Contents/
-	cp /opt/local/lib/libboost*.dylib repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libconfig*.dylib repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libz*.dylib repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libfltk*.dylib repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libpng*.dylib repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libexpat*.dylib repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libbz2*.dylib repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libjpeg*.dylib repsnapper.app/Contents/lib/
-	
+	cp /opt/local/lib/libboost* repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libconfig* repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libz* repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libfltk* repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libpng* repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libexpat* repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libbz2* repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libjpeg* repsnapper.app/Contents/lib/
 
 # not needed
 #	<Kulitorum> fillet.cpp
