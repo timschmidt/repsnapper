@@ -15,6 +15,6 @@
 	<key>CFBundleSignature</key>
 	<string>rpsn</string>
 	<key>CFBundleExecutable</key>
-	<string>repsnapper</string>
+	<string>repsnapper-osx.sh</string>
 </dict>
 </plist>

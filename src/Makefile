@@ -112,13 +112,25 @@ clean:
 update-depends:
 	makedepend -Y $(SHARED_SOURCES) $(MAIN_SOURCES) $(TEST_SOURCES)
 
-osx-bundle:
+# need to include: jpeg zlib fltk libpng glut libconfig-hr bzip2 expat
+osx-bundle: all
 	mkdir -p repsnapper.app/Contents/
 	mkdir repsnapper.app/Contents/MacOS/
 	mkdir repsnapper.app/Contents/Resources/
 	mkdir repsnapper.app/Contents/Frameworks/
+	mkdir repsnapper.app/Contents/lib/
 	cp Info.plist repsnapper.app/Contents/
 	cp repsnapper repsnapper.app/Contents/
+	cp repsnapper-osx.sh repsnapper.app/Contents/
+	cp /opt/local/lib/libboost*.dylib repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libconfig*.dylib repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libz*.dylib repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libfltk*.dylib repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libpng*.dylib repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libexpat*.dylib repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libbz2*.dylib repsnapper.app/Contents/lib/
+	cp /opt/local/lib/libjpeg*.dylib repsnapper.app/Contents/lib/
+	
 
 # not needed
 #	<Kulitorum> fillet.cpp
