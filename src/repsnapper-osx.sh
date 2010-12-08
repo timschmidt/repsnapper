@@ -9,7 +9,7 @@ APP_PATH=$script_dir_link
 fi
 
 # set place to load dylibs from
-DYLD_FALLBACK_LIBRARY_PATH=$APP_PATH/lib
+export DYLD_FALLBACK_LIBRARY_PATH=${DYLD_FALLBACK_LIBRARY_PATH}:$APP_PATH/lib
 
 # run the program itself
 $APP_PATH/repsnapper
