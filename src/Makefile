@@ -130,6 +130,7 @@ osx-bundle: all
 	cp /opt/local/lib/libexpat* repsnapper.app/Contents/lib/
 	cp /opt/local/lib/libbz2* repsnapper.app/Contents/lib/
 	cp /opt/local/lib/libjpeg* repsnapper.app/Contents/lib/
+	rm repsnapper.app/Contents/lib/libboost*.a
 
 # not needed
 #	<Kulitorum> fillet.cpp
