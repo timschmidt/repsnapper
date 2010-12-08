@@ -106,10 +106,19 @@ clean:
 	rm -f $(SHARED_OBJECTS) $(MAIN_OBJECTS) $(TEST_OBJECTS) \
 	      $(EXEC) $(EXEC_DEBUG) $(GENERATED) unittest
 	make -i -C ../libraries/polylib/ clean
+	rm -rf repsnapper.app
 
 # make update-deps will re-write the dependenciues below
 update-depends:
 	makedepend -Y $(SHARED_SOURCES) $(MAIN_SOURCES) $(TEST_SOURCES)
+
+osx-bundle:
+	mkdir -p repsnapper.app/Contents/
+	mkdir repsnapper.app/Contents/MacOS/
+	mkdir repsnapper.app/Contents/Resources/
+	mkdir repsnapper.app/Contents/Frameworks/
+	cp Info.plist repsnapper.app/Contents/
+	cp repsnapper repsnapper.app/Contents/
 
 # not needed
 #	<Kulitorum> fillet.cpp
