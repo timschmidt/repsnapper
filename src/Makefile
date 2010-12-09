@@ -116,10 +116,10 @@ update-depends:
 # need to include: jpeg zlib fltk libpng glut libconfig-hr bzip2 expat
 osx-bundle: all
 	mkdir -p repsnapper.app/Contents/
-	mkdir repsnapper.app/Contents/MacOS/
-	mkdir repsnapper.app/Contents/Resources/
-	mkdir repsnapper.app/Contents/Frameworks/
-	mkdir repsnapper.app/Contents/lib/
+	mkdir -p repsnapper.app/Contents/MacOS/
+	mkdir -p repsnapper.app/Contents/Resources/
+	mkdir -p repsnapper.app/Contents/Frameworks/
+	mkdir -p repsnapper.app/Contents/lib/
 	cp Info.plist repsnapper.app/Contents/
 	cp repsnapper repsnapper.app/Contents/
 	cp repsnapper-osx.sh repsnapper.app/Contents/
