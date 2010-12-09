@@ -125,13 +125,13 @@ osx-bundle: all
 	cp repsnapper-osx.sh repsnapper.app/Contents/
 	cp $(OSX_INC_LIB_DIR)/libboost* repsnapper.app/Contents/lib/
 	cp $(OSX_INC_LIB_DIR)/libconfig* repsnapper.app/Contents/lib/
-	cp $(OSX_INC_LIB_DIR)/libz* repsnapper.app/Contents/lib/
+#	cp $(OSX_INC_LIB_DIR)/libz* repsnapper.app/Contents/lib/
 	cp $(OSX_INC_LIB_DIR)/libfltk* repsnapper.app/Contents/lib/
 	cp $(OSX_INC_LIB_DIR)/libpng* repsnapper.app/Contents/lib/
-	cp $(OSX_INC_LIB_DIR)/libexpat* repsnapper.app/Contents/lib/
-	cp $(OSX_INC_LIB_DIR)/libbz2* repsnapper.app/Contents/lib/
+#	cp $(OSX_INC_LIB_DIR)/libexpat* repsnapper.app/Contents/lib/
+#	cp $(OSX_INC_LIB_DIR)/libbz2* repsnapper.app/Contents/lib/
 	cp $(OSX_INC_LIB_DIR)/libjpeg* repsnapper.app/Contents/lib/
-	rm repsnapper.app/Contents/lib/libboost*.a
+	yes | rm repsnapper.app/Contents/lib/libboost*.a
 
 # not needed
 #	<Kulitorum> fillet.cpp
