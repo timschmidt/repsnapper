@@ -11,6 +11,7 @@
 CC=gcc
 CXX=g++
 LIB_DIR=../libraries
+OSX_INC_LIB_DIR=/opt/local/lib/
 UNAME := $(shell uname)
 ifeq ($(TARGET),)
 	TARGET=RELEASE
@@ -122,14 +123,14 @@ osx-bundle: all
 	cp Info.plist repsnapper.app/Contents/
 	cp repsnapper repsnapper.app/Contents/
 	cp repsnapper-osx.sh repsnapper.app/Contents/
-	cp /opt/local/lib/libboost* repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libconfig* repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libz* repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libfltk* repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libpng* repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libexpat* repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libbz2* repsnapper.app/Contents/lib/
-	cp /opt/local/lib/libjpeg* repsnapper.app/Contents/lib/
+	cp $(OSX_INC_LIB_DIR)/libboost* repsnapper.app/Contents/lib/
+	cp $(OSX_INC_LIB_DIR)/libconfig* repsnapper.app/Contents/lib/
+	cp $(OSX_INC_LIB_DIR)/libz* repsnapper.app/Contents/lib/
+	cp $(OSX_INC_LIB_DIR)/libfltk* repsnapper.app/Contents/lib/
+	cp $(OSX_INC_LIB_DIR)/libpng* repsnapper.app/Contents/lib/
+	cp $(OSX_INC_LIB_DIR)/libexpat* repsnapper.app/Contents/lib/
+	cp $(OSX_INC_LIB_DIR)/libbz2* repsnapper.app/Contents/lib/
+	cp $(OSX_INC_LIB_DIR)/libjpeg* repsnapper.app/Contents/lib/
 	rm repsnapper.app/Contents/lib/libboost*.a
 
 # not needed
