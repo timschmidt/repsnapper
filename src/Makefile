@@ -136,7 +136,7 @@ osx-bundle: all
 
 osx-dmg: osx-bundle
 	mkdir -p repsnapper-temp
-	cp repsnapper.app repsnapper-temp
+	cp -r repsnapper.app repsnapper-temp
 	hdiutil create -fs HFS+ -srcfolder repsnapper-temp -volname "RepSnapper-$(VERSION)" repsnapper.$(VERSION).dmg
 	rm -rf repsnapper-temp
 
