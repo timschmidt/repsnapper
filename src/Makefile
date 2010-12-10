@@ -111,6 +111,7 @@ clean:
 	make -i -C ../libraries/polylib/ clean
 	rm -rf repsnapper.app
 	rm -f version.h Info.plist
+	rm -f repsnapper.dmg
 
 # make update-deps will re-write the dependenciues below
 update-depends:
@@ -132,6 +133,12 @@ osx-bundle: all
 	cp $(OSX_INC_LIB_DIR)/libpng* repsnapper.app/Contents/lib/
 	cp $(OSX_INC_LIB_DIR)/libjpeg* repsnapper.app/Contents/lib/
 	yes | rm -f repsnapper.app/Contents/lib/libboost*.a
+
+osx-dmg: osx-bundle
+	mkdir -p repsnapper-temp
+	cp repsnapper.app repsnapper-temp
+	hdiutil create -fs HFS+ -srcfolder repsnapper-temp -volname "RepSnapper-$(VERSION)" repsnapper.$(VERSION).dmg
+	rm -rf repsnapper-temp
 
 version:
 	echo '#define VERSION "$(VERSION)"' > version.h
