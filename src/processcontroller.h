@@ -33,7 +33,7 @@ public:
 	ProcessController(){
 
 		m_iSerialSpeed = 57600;
-		// default parameters (are overwritten by the xml loading)
+		// default parameters (are overwritten by the config loading)
 		RaftSize = 1.33f;
 		RaftBaseLayerCount = 1;
 		RaftMaterialPrDistanceRatio = 1.8f;
@@ -131,7 +131,7 @@ public:
 	void SetFilename(string filename) { m_Filename = filename;}
 
 	void Draw(Flu_Tree_Browser::Node *selected_node);
-	
+
 	// STL Functions
 	bool ReadStl(string filename, STL &newstl) { return newstl.Read(filename);};
 	void OptimizeRotation();
@@ -181,6 +181,7 @@ public:
 	RFO rfo;
 	GCode gcode;						// Gcode as binary data
 	string GcodeTxt;					// Final GCode as text
+	bool m_bCustomHomingRoutine;
 
 	float Optimization;
 	int ReceivingBufferSize;
@@ -223,7 +224,7 @@ public:
 	bool		UseIncrementalEcode;
 	bool		Use3DGcode;
 
-	// STL 
+	// STL
 	float LayerThickness;
 	float CuttingPlaneValue;
 	float PolygonOpasity;

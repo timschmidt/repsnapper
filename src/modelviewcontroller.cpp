@@ -61,7 +61,7 @@ void tree_callback( Fl_Widget* w, void *_gui )
 	Flu_Tree_Browser *t = (Flu_Tree_Browser*)w;
 	int reason = t->callback_reason();
 	GUI *gui = (GUI *)_gui;
-	
+
 	Flu_Tree_Browser::Node *n = t->callback_node();
 
 	Matrix4f &transform = gui->MVC->SelectedNodeMatrix();
@@ -325,7 +325,7 @@ string ModelViewController::ValidateComPort (const string &port)
 		if (port == comports[i])
 			return port;
 	}
-	       
+
 	if (comports.size())
 		return comports[0];
 	else
@@ -348,6 +348,12 @@ void ModelViewController::SetValidateConnection(bool validate)
 {
 	ProcessControl.m_bValidateConnection = validate;
 	serial->SetValidateConnection(ProcessControl.m_bValidateConnection);
+	CopySettingsToGUI();
+}
+
+void ModelViewController::SetCustomHomingRoutine(bool custom)
+{
+	ProcessControl.m_bCustomHomingRoutine = custom;
 	CopySettingsToGUI();
 }
 
@@ -542,9 +548,9 @@ void ModelViewController::DrawGridAndAxis()
 }
 // all we'll end up doing is dispatching to the ProcessControl to read the file in, but not from this callback
 void ModelViewController::ReadGCode(string filename) {
-	read_pending = filename; 
+	read_pending = filename;
 //	   this triggers this function to be called :  ProcessControl.ReadGCode(filename);
-	
+
 }
 
 
@@ -667,6 +673,15 @@ void ModelViewController::CopySettingsToGUI()
 	gui->antioozeDistanceSlider->value(ProcessControl.AntioozeDistance);
 	gui->EnableAntioozeButton->value(ProcessControl.EnableAntiooze);
 	gui->antioozeSpeedSlider->value(ProcessControl.AntioozeSpeed);
+
+	if(ProcessControl.m_bCustomHomingRoutine)
+	{
+		gui->HomingRoutineChoice->value(0);
+	}
+	else
+	{
+		gui->HomingRoutineChoice->value(1);
+	}
 
 	// Printer
 	gui->VolumeX->value(ProcessControl.m_fVolume.x);
@@ -1067,38 +1082,51 @@ void ModelViewController::Home(string axis)
 			oss << ProcessControl.MaxPrintSpeedXY;
 		buffer+= oss.str();
 		SendNow(buffer);
-		buffer="G1 ";
-		buffer += axis;
-		buffer+="-250 F";
-		buffer+= oss.str();
-		SendNow(buffer);
-		buffer="G92 ";
-		buffer += axis;
-		buffer+="0";
-		SendNow(buffer);	// Set this as home
-		oss.str("");
-		buffer="G1 ";
-		buffer += axis;
-		buffer+="1 F";
-		buffer+= oss.str();
-		SendNow(buffer);
-		if(axis == "Z")
-			oss << ProcessControl.MinPrintSpeedZ;
-		else
-			oss << ProcessControl.MinPrintSpeedXY;
-		buffer="G1 ";
-		buffer+="F";
-		buffer+= oss.str();
-		SendNow(buffer);	// set slow speed
-		buffer="G1 ";
-		buffer += axis;
-		buffer+="-10 F";
-		buffer+= oss.str();
-		SendNow(buffer);
-		buffer="G92 ";
-		buffer += axis;
-		buffer+="0";
-		SendNow(buffer);	// Set this as home
+		// Needed for older versions of FiveD firmware
+		if(ProcessControl.m_bCustomHomingRoutine)
+		{
+			buffer="G1 ";
+			buffer += axis;
+			buffer+="-250 F";
+			buffer+= oss.str();
+			SendNow(buffer);
+			buffer="G92 ";
+			buffer += axis;
+			buffer+="0";
+			SendNow(buffer);	// Set this as home
+			oss.str("");
+			buffer="G1 ";
+			buffer += axis;
+			buffer+="1 F";
+			buffer+= oss.str();
+			SendNow(buffer);
+			if(axis == "Z")
+				oss << ProcessControl.MinPrintSpeedZ;
+			else
+				oss << ProcessControl.MinPrintSpeedXY;
+			buffer="G1 ";
+			buffer+="F";
+			buffer+= oss.str();
+			SendNow(buffer);	// set slow speed
+			buffer="G1 ";
+			buffer += axis;
+			buffer+="-10 F";
+			buffer+= oss.str();
+			SendNow(buffer);
+			buffer="G92 ";
+			buffer += axis;
+			buffer+="0";
+			SendNow(buffer);	// Set this as home
+		}
+		else //For firmwares fully supporting single axis homing
+		{
+			buffer="G28 ";
+			buffer += axis;
+			buffer+="0 ";
+			buffer+="F";
+			buffer+= oss.str();
+			SendNow(buffer);
+		}
 	}
 	else if(axis == "ALL")
 	{

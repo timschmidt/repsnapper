@@ -473,7 +473,7 @@ void ProcessController::LoadConfig(string filename)
 			cbg << "CustomButtonGcode.[" << i << "]";
 		if (not cfg.lookupValue(cbg.str(),CustomButtonGcode[i]))
 			CustomButtonGcode[i] = "";
-			
+
 		cbl << "CustomButtonLabel.[" << i << "]";
 		if (not cfg.lookupValue(cbl.str(),CustomButtonLabel[i]))
 		{
@@ -484,6 +484,10 @@ void ProcessController::LoadConfig(string filename)
 
 	if (gui && gui->MVC)
 		gui->MVC->RefreshCustomButtonLabels();
+
+	if (not cfg.lookupValue("CustomHomingRoutine",m_bCustomHomingRoutine))
+		m_bCustomHomingRoutine = true;
+
 	if (not cfg.lookupValue("GCodeLayerText",GCodeLayerText))
 		GCodeLayerText = "";
 
@@ -943,7 +947,7 @@ void ProcessController::SaveConfig(string path)
 	Setting &vc = root.add("ValidateConnection", Setting::TypeInt);
 	vc = int(m_bValidateConnection);
 
-	Setting &cbg = root.add("CustomButtonGcode", Setting::TypeArray);	
+	Setting &cbg = root.add("CustomButtonGcode", Setting::TypeArray);
 	Setting &cbl = root.add("CustomButtonLabel", Setting::TypeArray);
 	for (int i = 0; i < 20; i++) {
 		cbg.add(Setting::TypeString);
@@ -951,6 +955,9 @@ void ProcessController::SaveConfig(string path)
 		cbg[i] = CustomButtonGcode[i];
 		cbl[i] = CustomButtonLabel[i];
 	}
+
+	Setting &chr = root.add("CustomHomingRoutine", Setting::TypeBoolean);
+	chr = m_bCustomHomingRoutine;
 
 	Setting &miss = root.add("miSerialSpeed", Setting::TypeInt);
 	miss = m_iSerialSpeed;
@@ -1121,7 +1128,7 @@ void ProcessController::SaveConfig(string path)
 	aprpre = ApronPreview;
 	Setting &aprsiz = root.add("ApronSize", Setting::TypeFloat);
 	aprsiz = ApronSize;
-	
+
 	Setting &aprh = root.add("ApronHeight", Setting::TypeFloat);
 	aprh = ApronHeight;
 	Setting &acx = root.add("ApronCoverageX", Setting::TypeFloat);
@@ -1150,6 +1157,6 @@ void ProcessController::SaveConfig(string path)
 	gcop = GCodePath;
 	Setting &setp = root.add("SettingsPath", Setting::TypeString);
 	setp = SettingsPath;
-	
+
 	cfg.writeFile(path.c_str());
 }
