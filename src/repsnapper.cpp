@@ -23,6 +23,7 @@
 
 #include "gcode.h"
 #include "ui.h"
+#include "version.h"
 
 GUI *gui;
 

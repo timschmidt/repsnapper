@@ -33,6 +33,8 @@ endif
 #VERSION := -D'VERSION="r$(shell svnversion -n .) $(shell uname) $(shell uname -m)"'
 #CFLAGS += $(VERSION)
 
+VERSION=$(shell date +%m.%d.%y)
+
 # Linux
 ifeq ($(UNAME),Linux)
     GTK_LIBS=`pkg-config --libs gtk+-2.0 gthread-2.0`
@@ -78,7 +80,7 @@ MAIN_OBJECTS=$(subst .c,.o,$(subst .cxx,.o,$(subst .cpp,.o,$(MAIN_SOURCES)))) $(
 TEST_OBJECTS=$(subst .c,.o,$(subst .cxx,.o,$(subst .cpp,.o,$(TEST_SOURCES)))) $(SHARED_OBJECTS)
 
 
-all: $(EXECUTABLE)
+all: version $(EXECUTABLE)
 
 $(EXECUTABLE): poly_lib $(MAIN_OBJECTS)
 	$(CXX) ${INC} $(MAIN_OBJECTS) $(LDFLAGS) -o $@
@@ -108,12 +110,13 @@ clean:
 	      $(EXEC) $(EXEC_DEBUG) $(GENERATED) unittest
 	make -i -C ../libraries/polylib/ clean
 	rm -rf repsnapper.app
+	rm -f version.h Info.plist
 
 # make update-deps will re-write the dependenciues below
 update-depends:
 	makedepend -Y $(SHARED_SOURCES) $(MAIN_SOURCES) $(TEST_SOURCES)
 
-# need to include: jpeg zlib fltk libpng glut libconfig-hr bzip2 expat
+# which libs are included could use tweaking
 osx-bundle: all
 	mkdir -p repsnapper.app/Contents/
 	mkdir -p repsnapper.app/Contents/MacOS/
@@ -125,13 +128,14 @@ osx-bundle: all
 	cp repsnapper-osx.sh repsnapper.app/Contents/
 	cp $(OSX_INC_LIB_DIR)/libboost* repsnapper.app/Contents/lib/
 	cp $(OSX_INC_LIB_DIR)/libconfig* repsnapper.app/Contents/lib/
-#	cp $(OSX_INC_LIB_DIR)/libz* repsnapper.app/Contents/lib/
 	cp $(OSX_INC_LIB_DIR)/libfltk* repsnapper.app/Contents/lib/
 	cp $(OSX_INC_LIB_DIR)/libpng* repsnapper.app/Contents/lib/
-#	cp $(OSX_INC_LIB_DIR)/libexpat* repsnapper.app/Contents/lib/
-#	cp $(OSX_INC_LIB_DIR)/libbz2* repsnapper.app/Contents/lib/
 	cp $(OSX_INC_LIB_DIR)/libjpeg* repsnapper.app/Contents/lib/
-	yes | rm repsnapper.app/Contents/lib/libboost*.a
+	yes | rm -f repsnapper.app/Contents/lib/libboost*.a
+
+version:
+	echo '#define VERSION "$(VERSION)"' > version.h
+	sed -e 's/<string>0.0.0<\/string>/<string>$(VERSION)<\/version>/g' Info.plist.default > Info.plist
 
 # not needed
 #	<Kulitorum> fillet.cpp

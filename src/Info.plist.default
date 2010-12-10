@@ -9,7 +9,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>org.reprap.repsnapper</string>
 	<key>CFBundleVersion</key>
-	<string>1.0.0</string>
+	<string>0.0.0</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
