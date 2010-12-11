@@ -41,7 +41,7 @@ ifeq ($(UNAME),Linux)
     GTK_CFLAGS=`pkg-config --cflags gtk+-2.0 gthread-2.0` -DHAVE_GTK
     INC=$(GTK_CFLAGS) -I/usr/include -I$(LIB_DIR) -I$(LIB_DIR)/vmmlib/include -I/usr/include/boost -I/usr/include/lua5.1
     INC+=-I$(LIB_DIR)/polylib
-    LDFLAGS=$(GTK_LIBS) -L/usr/lib -lGLU -lGL -lfltk -lfltk_gl -lfltk_forms -lglut -lboost_thread-mt -lboost_system-mt -lconfig++ 
+    LDFLAGS=$(GTK_LIBS) -L/usr/lib -L/usr/local/lib -lGLU -lGL -lfltk -lfltk_gl -lfltk_forms -lglut -lboost_thread-mt -lboost_system-mt -lconfig++ 
     LDFLAGS+=-L$(LIB_DIR)/polylib -lpolylib
     TEST_LDFLAGS=-lboost_unit_test_framework
 endif
