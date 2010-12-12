@@ -2804,7 +2804,7 @@ void STL::RotateObject(Vector3f axis, float angle)
 	min.x = min.y = min.z = 99999999.0f;
 	max.x = max.y = max.z = -99999999.0f;
 
-	for(size_t i=0; i<triangles.size() ; i++)
+	for (size_t i=0; i<triangles.size(); i++)
 	{
 		triangles[i].Normal = triangles[i].Normal.rotate(angle, axis.x, axis.y, axis.z);
 		triangles[i].A = triangles[i].A.rotate(angle, axis.x, axis.y, axis.z);

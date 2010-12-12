@@ -53,8 +53,10 @@ enum AXIS {NEGX, POSX, NEGY, POSY, NEGZ, POSZ, NOT_ALIGNED};
 class Triangle
 {
 public:
-	Triangle(const Vector3f &Norml, const Vector3f &Point1, const Vector3f &Point2, const Vector3f &Point3){ Normal = Norml ; A=Point1;B=Point2;C=Point3;}
-	Triangle(){};
+	Triangle(const Vector3f &Norml, const Vector3f &Point1,
+		 const Vector3f &Point2, const Vector3f &Point3) 
+		{ Normal = Norml ; A=Point1;B=Point2;C=Point3;}
+	Triangle() {};
 
 	void SetPoints(const Vector3f &P1, const Vector3f &P2, const Vector3f &P3) { A=P1;B=P2;C=P3; }
 	void SetNormal(const Vector3f &Norml) { Normal=Norml;}
@@ -69,13 +71,15 @@ public:
 };
 
 
-struct InFillHit{
-	Vector2f p;		// The intersection point
-	float d;		// Distance from the infill-line start point, used for sorting hits
-	float t;		// intersection point on first line
+struct InFillHit
+{
+	Vector2f p;  // The intersection point
+	float d;     // Distance from the infill-line start point, used for sorting hits
+	float t;     // intersection point on first line
 };
 
-class Poly{
+class Poly
+{
 public:
 	Poly(){};
 	void cleanup();				// Removed vertices that are on a straight line
@@ -146,8 +150,8 @@ public:
 
 	Vector2f Min, Max;  // Bounding box
 
-	void Clear() 
-	{ 	
+	void Clear()
+	{
 		lines.clear();
 		vertices.clear();
 		polygons.clear();
@@ -222,16 +226,16 @@ public:
 
 	bool Read(string filename, bool force_binary = false );
 	void GetObjectsFromIvcon();
-	void clear(){triangles.clear();}
+	void clear() { triangles.clear(); }
 	void displayInfillOld(const ProcessController &PC, CuttingPlane &plane, uint LayerNr, vector<int>& altInfillLayers);
 	void draw(const ProcessController &PC, float opasity = 1.0f);
 	void CenterAroundXY();
 	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);	// Extract a 2D polygonset from a 3D model
-	void OptimizeRotation();									// Auto-Rotate object to have the largest area surface down for printing
+	void OptimizeRotation();			// Auto-Rotate object to have the largest area surface down for printing
 	void CalcBoundingBoxAndZoom();
-	void RotateObject(Vector3f axis, float angle);				// Rotation for manual rotate and used by OptimizeRotation
+	void RotateObject(Vector3f axis, float angle);  // Rotation for manual rotate and used by OptimizeRotation
 
-	vector<Triangle> triangles;
+	vector<Triangle>  triangles;
 	Vector3f Min, Max, Center;
 };
 
