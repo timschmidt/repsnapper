@@ -916,7 +916,7 @@ void ModelViewController::Print()
 			pos = buffer->line_end(pos)+1;	// skip newline
 			continue;
 			}
-		serial->AddToBuffer(line);
+		AddLineToSerialBuffer(line);
 		pos = buffer->line_end(pos)+1;	// find end of line
 		}
 
@@ -925,6 +925,84 @@ void ModelViewController::Print()
 	gui->ProgressBar->value(0);
 	free(pText);
 	serial->StartPrint();
+}
+
+void ModelViewController::AddLineToSerialBuffer(string line)
+{
+	string s=line;
+	size_t found;
+
+	// Strip ';' comments
+	found=s.find_first_of(";");
+	if(found!=string::npos)
+		s=s.substr(0,found);
+
+	// Strip newline chars
+	found=s.find_first_of("\n");
+	if(found!=string::npos)
+		s=s.substr(0,found);
+	found=s.find_first_of("\r");
+	if(found!=string::npos)
+		s=s.substr(0,found);
+
+	// Strip spaces from the end
+	found=s.find_last_not_of(" ");
+	if(found!=string::npos)
+		s=s.substr(0,found+1);
+
+	// Strip weird chars
+	for(uint i=0;i<s.length();i++)
+		if((s[i] < '*' || s[i] > 'z') && s[i] != ' ')	// *-z (ascii 42-122)
+			s.erase(s.begin()+i--);
+
+	// Apply Downstream Multiplier
+	float DSMultiplier = 1.0f;
+	float ExtrusionMultiplier = 1.0f;
+
+	DSMultiplier = gui->DownstreamMultiplierSlider->value();
+	ExtrusionMultiplier = gui->DownstreamExtrusionMultiplierSlider->value();
+
+	if(DSMultiplier != 1.0f)
+	{
+		size_t pos = s.find( "F", 0);
+		if( pos != string::npos )	//string::npos means not defined
+		{
+			size_t end = s.find( " ", pos);
+			if(end == string::npos)
+				end = s.length()-1;
+			string number = s.substr(pos+1,end);
+			string start = s.substr(0,pos+1);
+			string after = s.substr(end+1,s.length()-1);
+			float old_speed = ToFloat(number);
+			s.clear();
+			std::stringstream oss;
+			oss << start << old_speed*DSMultiplier << " " <<after;
+			s=oss.str();
+		}
+	}
+
+	if(ExtrusionMultiplier != 1.0f)
+	{
+		size_t pos = s.find( "E", 0);
+		if( pos != string::npos )	//string::npos means not defined
+		{
+			size_t end = s.find( " ", pos);
+			if(end == string::npos)
+				end = s.length()-1;
+			string number = s.substr(pos+1,end);
+			string start = s.substr(0,pos+1);
+			string after = s.substr(end+1,s.length()-1);
+			float old_speed = ToFloat(number);
+			s.clear();
+			std::stringstream oss;
+			oss << start << old_speed*ExtrusionMultiplier << " " <<after;
+			s=oss.str();
+		}
+	}
+	if (s.length() > 1)
+	{
+		serial->AddToBuffer(s);
+	}
 }
 
 void ModelViewController::Pause()

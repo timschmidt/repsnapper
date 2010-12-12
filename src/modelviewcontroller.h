@@ -222,6 +222,7 @@ public:
 	void WaitForConnection(float seconds);
 
 	void Print();
+	void AddLineToSerialBuffer(string line);
 	void Pause();
 	void Continue();
 	void Restart();

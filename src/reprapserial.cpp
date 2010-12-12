@@ -162,7 +162,7 @@ void RepRapSerial::StartPrint()
 
 void RepRapSerial::SendNextLine()
 {
-	if ( com->errorStatus() ) 
+	if ( com->errorStatus() )
 	{
 		m_bConnecting = false;
 		m_bConnected = false;
@@ -252,7 +252,7 @@ void RepRapSerial::SendData(string s, const int lineNr)
 {
 	if( !m_bConnected ) return;
 
-	if( com->errorStatus() ) 
+	if( com->errorStatus() )
 	{
 		m_bConnecting = false;
 		m_bConnected = false;
@@ -264,79 +264,15 @@ void RepRapSerial::SendData(string s, const int lineNr)
 		return;
 	}
 
-	// Apply Downstream Multiplier
-
-	float DSMultiplier = 1.0f;
-	float ExtrusionMultiplier = 1.0f;
-	if(gui)
-	{
-		ToolkitLock guard;
-
-		DSMultiplier = gui->DownstreamMultiplierSlider->value();
-		ExtrusionMultiplier = gui->DownstreamExtrusionMultiplierSlider->value();
-	}
-
-	if(DSMultiplier != 1.0f)
-	{
-		size_t pos = s.find( "F", 0);
-		if( pos != string::npos )	//string::npos means not defined
-		{
-			size_t end = s.find( " ", pos);
-			if(end == string::npos)
-				end = s.length()-1;
-			string number = s.substr(pos+1,end);
-			string start = s.substr(0,pos+1);
-			string after = s.substr(end+1,s.length()-1);
-			float old_speed = ToFloat(number);
-			s.clear();
-			std::stringstream oss;
-			oss << start << old_speed*DSMultiplier << " " <<after;
-			s=oss.str();
-		}
-	}
-
-	if(ExtrusionMultiplier != 1.0f)
-	{
-		size_t pos = s.find( "E", 0);
-		if( pos != string::npos )	//string::npos means not defined
-		{
-			size_t end = s.find( " ", pos);
-			if(end == string::npos)
-				end = s.length()-1;
-			string number = s.substr(pos+1,end);
-			string start = s.substr(0,pos+1);
-			string after = s.substr(end+1,s.length()-1);
-			float old_speed = ToFloat(number);
-			s.clear();
-			std::stringstream oss;
-			oss << start << old_speed*ExtrusionMultiplier << " " <<after;
-			s=oss.str();
-		}
-	}
-
-
 	string buffer;
 	std::stringstream oss;
-	oss << " N" << lineNr << " ";//*";
+	oss << " N" << lineNr << " ";
 	buffer += oss.str();//	Hydra
-	// strip comments
-	
-	string tmp=s;
-	size_t found;
-	found=tmp.find_first_of(";");
-	if(found!=string::npos)
-		tmp=tmp.substr(0,found);
-	found=tmp.find_last_not_of(" ");
-	if(found!=string::npos)
-		tmp=tmp.substr(0,found+1);
 
-	for(uint i=0;i<tmp.length();i++)
-		if((tmp[i] < '*' || tmp[i] > 'z') && tmp[i] != ' ')	// *-z (ascii 42-122)
-			tmp.erase(tmp.begin()+i--);
-
-	buffer += tmp;
+	buffer += s;
 	buffer += " *";// Hydra
 	oss.str( "" );
+
 	// Calc checksum.
 	short checksum = 0;
 	unsigned char count=0;
@@ -395,7 +331,7 @@ void RepRapSerial::Connect(string port, int speed)
 	com = new RepRapBufferedAsyncSerial(this);
 	try{
 		com->open(port.c_str(), speed);
-	} catch (std::exception& e) 
+	} catch (std::exception& e)
 	{
 		error = true;
 		stringstream oss;
@@ -492,7 +428,7 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 
 	// Endchars = \r\n
 
-	//		debugPrint( string("Received:\"") + szBuffer +"\" (" + stringify(dwBytesRead));
+	//		debugPrint( string("Received:\"") + InBuffer +"\" (" + stringify(dwBytesRead));
 	{
 		// Check inbuffer for good stuff
 
@@ -555,7 +491,7 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 				debugPrint( string("Received:") + command+ " with parameter " + parameter);
 				// Check parameter
 			}
-			// this is the common case for the modern 5D reprap firmware 
+			// this is the common case for the modern 5D reprap firmware
 			else if(command.substr(0,3) == "ok ") // search, there's a parameter string (debugstring)
 			{
 
@@ -568,15 +504,15 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 
 					// s = the current token , l = the offset of this token in command
 					//cout << "s:" << s << endl;
-					
+
 					// we already know this is how the line starts:
-				        if ( s == "ok" ) { 
+				        if ( s == "ok" ) {
 					// do nothing more
 
 					// temperature token:
-					} else if ( s.substr(0,2) == "T:" ) { 
+					} else if ( s.substr(0,2) == "T:" ) {
 						temp_param = s.substr(2,s.length());
-				
+
 						// Reduce re-draws by only updating the GUI on a real change
 						const char *old_value = gui->CurrentTempText->value();
 						if (!old_value || strcmp (temp_param.c_str(), old_value))
@@ -584,7 +520,7 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 
 
 					// bed temperature token:
-					} else if ( s.substr(0,2) == "B:" ) { 
+					} else if ( s.substr(0,2) == "B:" ) {
 						bedtemp_param = s.substr(2,s.length());
 
 						// Reduce re-draws by only updating the GUI on a real change
@@ -594,8 +530,8 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 
 					// a token we don't yet understand , dump to stdout for now
 					} else  {
-					
-						cout << "unknown token:" << s << endl;	
+
+						cout << "unknown token:" << s << endl;
 
 					}
 
@@ -655,7 +591,7 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 				notifyConnection(true);
 				gui->MVC->serialConnected();
 			}
-			  
+
 			InBuffer = InBuffer.substr(found);	// 2 end-line characters, \n\r
 
 			// Empty eol control characters
@@ -669,7 +605,7 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 // given a string with "words" and "spaces", it returns the next word at the start of the string
 string RepRapSerial::get_next_token(string str){
 
-//	cout << "getting token from:" << str << endl; 
+//	cout << "getting token from:" << str << endl;
 
 	// remove all leading spaces:
 	while ( str[0] == ' ' || str[0] == '	' || str[0] == '\r' || str[0] == '\n' ) {
@@ -678,9 +614,9 @@ string RepRapSerial::get_next_token(string str){
 
 	 uint data=str.find_first_of("	 \r\n",0); // locate a space or  a tab as word separator
          if ( data != string::npos ) {
-          str = str.substr(0,data); 
-         } 
-//	cout << "got token:" << str << endl; 
+          str = str.substr(0,data);
+         }
+//	cout << "got token:" << str << endl;
 	return str;
 
 }
