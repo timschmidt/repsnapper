@@ -148,7 +148,7 @@ public:
 	void SetDrawCuttingPlanePolyNumbers(bool val){ProcessControl.DrawCPOutlineNumbers = val; redraw();}
 	void SetDrawCuttingPlaneLineNumbers(bool val){ProcessControl.DrawCPLineNumbers = val; redraw();}
 	void SetDrawCuttingPlaneVertexNumbers(bool val){ProcessControl.DrawCPVertexNumbers = val; redraw();}
-	
+
 
 	void SetShellOnly(bool val) {ProcessControl.ShellOnly = val; redraw();}
 	void SetShellCount(uint val) {ProcessControl.ShellCount = val; redraw();}
@@ -173,7 +173,7 @@ public:
 	void SetRaftInterfaceDistance(float val){ProcessControl.RaftInterfaceDistance=val;}
 	void SetRaftInterfaceThickness(float val){ProcessControl.RaftInterfaceThickness=val;}
 	void SetRaftInterfaceTemperature(float val){ProcessControl.RaftInterfaceTemperature=val;}
-	
+
 	// Apron
 	void SetApronEnable(bool val){ProcessControl.ApronEnable = val;}
 	void SetApronPreview(bool val){ProcessControl.ApronPreview = val;}
@@ -222,6 +222,7 @@ public:
 	void WaitForConnection(float seconds);
 
 	void Print();
+	void AddLineToSerialBuffer(string line);
 	void Pause();
 	void Continue();
 	void Restart();
@@ -238,6 +239,7 @@ public:
 	void setPort(string s);
 	void setSerialSpeed(int s );
 	void SetValidateConnection(bool validate);
+	void SetCustomHomingRoutine(bool custom);
 
 	void SetKeepLines(float val){ ProcessControl.KeepLines = (int)val;}
 

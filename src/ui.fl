@@ -883,7 +883,7 @@ MVC->SetFan(o->value()*(255.0f/12.0f));}
               xywh {720 562 540 191}
             } {
               Fl_Group {} {
-                label {Communication Log} open selected
+                label {Communication Log} open
                 xywh {720 585 530 158}
               } {
                 Fl_Browser CommunationLog {
@@ -1006,54 +1006,54 @@ MVC->ConnectToPrinter(o->value());}
       }
     }
     Fl_Window printerSettingsWindow {
-      label {Printer settings}
-      xywh {207 27 740 710} type Double hide resizable modal
+      label {Printer settings} open
+      xywh {442 170 740 760} type Double resizable modal visible
     } {
       Fl_Group {} {
         label {Build volume (mm)} open
-        xywh {145 25 230 40} box ENGRAVED_FRAME color 39
+        xywh {145 20 230 40} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Input VolumeX {
           label X
-          xywh {165 36 45 23} maximum 5000 step 1 value 200
+          xywh {165 31 45 23} maximum 5000 step 1 value 200
         }
         Fl_Value_Input VolumeY {
           label Y
-          xywh {240 36 45 23} maximum 5000 value 200
+          xywh {240 31 45 23} maximum 5000 value 200
         }
         Fl_Value_Input VolumeZ {
           label Z
-          xywh {315 36 45 23} maximum 5000 value 140
+          xywh {315 31 45 23} maximum 5000 value 140
         }
       }
       Fl_Group {} {
         label {Print margin  (mm)}
-        xywh {405 25 235 40} box ENGRAVED_FRAME color 39
+        xywh {405 20 235 40} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Input MarginX {
           label X
           callback {MVC->SetPrintMargin("X", o->value());}
-          xywh {430 36 45 23} maximum 100 step 1 value 10
+          xywh {430 31 45 23} maximum 100 step 1 value 10
         }
         Fl_Value_Input MarginY {
           label Y
           callback {MVC->SetPrintMargin("Y", o->value());}
-          xywh {505 36 45 23} maximum 100 step 1 value 10
+          xywh {505 31 45 23} maximum 100 step 1 value 10
         }
         Fl_Value_Input MarginZ {
           label Z
           callback {MVC->SetPrintMargin("Z", o->value());}
-          xywh {575 37 45 23} minimum -50 maximum 100 step 0.01
+          xywh {575 32 45 23} minimum -50 maximum 100 step 0.01
         }
       }
       Fl_Group {} {
         label Acceleration
-        xywh {415 425 315 75} box ENGRAVED_FRAME color 39
+        xywh {415 450 315 75} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Slider distanceToReachFullSpeedSlider {
           label {Distance used to read full speed(mm)}
           callback {MVC->SetDistanceToReachFullSpeed(o->value())}
-          xywh {425 475 295 15} type {Horz Knob} selection_color 2 align 5 maximum 10 value 0.1 textsize 14
+          xywh {425 500 295 15} type {Horz Knob} selection_color 2 align 5 maximum 10 value 0.1 textsize 14
         }
         Fl_Light_Button EnableAccelerationButton {
           label {Enable Acceleration}
@@ -1066,12 +1066,12 @@ else
 {
 distanceToReachFullSpeedSlider->deactivate();
 }}
-          xywh {480 435 170 20} selection_color 63
+          xywh {480 460 170 20} selection_color 63
         }
       }
       Fl_Group {} {
         label {Print speeds} open
-        xywh {15 295 390 90} box ENGRAVED_FRAME color 39
+        xywh {15 290 390 95} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Slider MaxPrintSpeedXYSlider {
           label {Max XY (mm/minute)}
@@ -1096,42 +1096,42 @@ distanceToReachFullSpeedSlider->deactivate();
       }
       Fl_Group {} {
         label Extruder open
-        xywh {15 85 390 190} box ENGRAVED_FRAME color 39
+        xywh {15 80 390 190} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Slider ExtrudedMaterialWidthSlider {
           label {Extruded material width}
           callback {MVC->SetExtrudedMaterialWidth(o->value());}
-          xywh {25 160 230 20} type {Horz Knob} selection_color 2 align 5 maximum 10 value 0.7 textsize 14
+          xywh {25 155 230 20} type {Horz Knob} selection_color 2 align 5 maximum 10 value 0.7 textsize 14
         }
         Fl_Value_Slider extrusionFactorSlider {
           label {Extrusion multiplier}
           callback {MVC->SetExtrusionFactor(o->value());}
-          xywh {25 200 230 20} type {Horz Knob} selection_color 2 align 5 maximum 2 value 1 textsize 14
+          xywh {25 195 230 20} type {Horz Knob} selection_color 2 align 5 maximum 2 value 1 textsize 14
         }
         Fl_Light_Button UseIncrementalEcodeButton {
           label {Incremental ecode (seperate controller)}
           callback {MVC->SetUseIncrementalEcode(o->value());}
-          xywh {25 95 305 20} selection_color 63
+          xywh {25 90 305 20} selection_color 63
         }
         Fl_Value_Slider LayerThicknessSlider {
           label {Layer Thickness}
           callback {MVC->SetLayerThickness(o->value());}
-          xywh {25 240 230 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 value 0.4 textsize 14
+          xywh {25 235 230 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 value 0.4 textsize 14
         }
         Fl_Light_Button Use3DGcodeButton {
           label {Use 3D Gcode (for DC extruders)}
           callback {MVC->SetUse3DGcode(o->value());}
-          xywh {25 120 255 20} selection_color 63
+          xywh {25 115 255 20} selection_color 63
         }
       }
       Fl_Group {} {
         label {Antiooze Retraction} open
-        xywh {415 525 315 125} box ENGRAVED_FRAME color 39
+        xywh {415 550 315 125} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Slider antioozeDistanceSlider {
           label {Distance to retract filament (mm)}
           callback {MVC->SetAntioozeDistance(o->value())}
-          tooltip {Not the actual distance the filament is moved but the equivalent extrudate} xywh {425 580 300 15} type {Horz Knob} selection_color 2 align 5 maximum 60 step 0.5 value 4.5 textsize 14
+          tooltip {Not the actual distance the filament is moved but the equivalent extrudate} xywh {425 605 300 15} type {Horz Knob} selection_color 2 align 5 maximum 60 step 0.5 value 4.5 textsize 14
         }
         Fl_Light_Button EnableAntioozeButton {
           label {Enable Antiooze Retraction}
@@ -1146,27 +1146,27 @@ else
 antioozeDistanceSlider->deactivate();
 antioozeSpeedSlider->deactivate();
 }}
-          xywh {470 535 215 20} selection_color 63
+          xywh {470 560 215 20} selection_color 63
         }
         Fl_Value_Slider antioozeSpeedSlider {
           label {Speed to retract filament}
           callback {MVC->SetAntioozeSpeed(o->value())}
-          xywh {425 616 300 18} type {Horz Knob} selection_color 2 align 5 maximum 16000 step 100 value 1000 textsize 14
+          xywh {425 641 300 18} type {Horz Knob} selection_color 2 align 5 maximum 16000 step 100 value 1000 textsize 14
         }
       }
       Fl_Group {} {
         label Port open
-        xywh {415 83 315 112} box ENGRAVED_FRAME color 39
+        xywh {415 78 315 104} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Input SerialSpeedInput {
           label {Speed:}
           callback {MVC->setSerialSpeed(o->value());}
-          xywh {475 125 70 22}
+          xywh {475 120 70 22}
         }
         Fl_Input_Choice portInput {
           label {Port:}
           callback {MVC->setPort(std::string(o->input()->value()));}
-          xywh {475 92 175 23} when 1
+          xywh {475 87 175 23} when 1
         } {
           MenuItem {} {
             label COM1
@@ -1217,26 +1217,26 @@ antioozeSpeedSlider->deactivate();
         Fl_Light_Button ValidateConnection {
           label {Validate connection}
           callback {MVC->SetValidateConnection(o->value());}
-          xywh {475 157 200 18} selection_color 63
+          xywh {475 152 200 18} selection_color 63
         }
       }
       Fl_Group {} {
         label {Receiving buffer size}
-        xywh {415 225 315 50} box ENGRAVED_FRAME color 39
+        xywh {415 205 315 50} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Slider ReceivingBufferSizeSlider {
           label {Buffer size on printer, in number of gcodes}
           callback {MVC->SetReceivingBufferSize(o->value())}
-          tooltip {Recommended value for FiveD is 4} xywh {420 250 305 20} type {Horz Knob} selection_color 2 align 5 minimum 1 maximum 100 step 1 value 4 textsize 14
+          tooltip {Recommended value for FiveD is 4} xywh {420 230 305 20} type {Horz Knob} selection_color 2 align 5 minimum 1 maximum 100 step 1 value 4 textsize 14
         }
       }
       Fl_Button {} {
         label Ok
         callback {printerSettingsWindow->hide();}
-        xywh {295 660 155 35}
+        xywh {295 685 155 35}
       }
       Fl_Group {} {
-        label Infill
+        label Infill open
         xywh {5 405 400 125} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Slider InfillRotationSlider {
@@ -1267,11 +1267,11 @@ antioozeSpeedSlider->deactivate();
       }
       Fl_Group {} {
         label {Shrinking quality} open
-        xywh {415 300 315 95} box ENGRAVED_FRAME color 2
+        xywh {415 280 315 95} box ENGRAVED_FRAME color 2
       } {
         Fl_Choice shrinkAlgorithm {
           label {Shrinking Algorithm:} open
-          xywh {570 315 125 20} down_box BORDER_BOX
+          xywh {570 295 125 20} down_box BORDER_BOX
         } {
           MenuItem {} {
             label {Fast, can have errors}
@@ -1289,30 +1289,51 @@ MVC->redraw();}
         Fl_Value_Slider OptimizationSlider {
           label Optimization
           callback {MVC->SetOptimization(o->value());}
-          xywh {425 360 280 20} type {Horz Knob} selection_color 2 align 5 minimum 0.001 step 0.001 value 0.05 textsize 14
+          xywh {425 340 280 20} type {Horz Knob} selection_color 2 align 5 minimum 0.001 step 0.001 value 0.05 textsize 14
         }
       }
       Fl_Group {} {
         label {Alternate Infill Layers} open
-        xywh {0 550 405 100} box ENGRAVED_FRAME color 39
+        xywh {0 555 405 100} box ENGRAVED_FRAME color 39
       } {
         Fl_Input AltInfillLayersInput {
           label Layers
           callback {MVC->SetAltInfillLayersText(o->value());}
-          xywh {55 620 105 15}
+          xywh {55 625 105 15}
         }
         Fl_Text_Display {} {
           label {Comma separated layer numbers, 0 is the lowest layer, -1 is the highest}
-          xywh {0 560 10 30} box NO_BOX labelsize 10 align 8
+          xywh {0 565 10 30} box NO_BOX labelsize 10 align 8
         }
         Fl_Text_Display {} {
           label {(eg. 0,1,-1,-2 means the top and bottom two layers)}
-          xywh {30 580 20 20} box NO_BOX labelsize 10 align 8
+          xywh {30 585 20 20} box NO_BOX labelsize 10 align 8
         }
         Fl_Value_Slider AltInfillDistanceSlider {
           label {Infill Distance}
           callback {MVC->SetAltInfillDistance(o->value());}
-          xywh {160 615 230 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 10 step 0.1 value 2 textsize 14
+          xywh {160 620 230 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 10 step 0.1 value 2 textsize 14
+        }
+      }
+      Fl_Group {} {
+        label {Homing routine} open
+        xywh {415 395 315 35} box ENGRAVED_BOX
+      } {
+        Fl_Choice HomingRoutineChoice {open
+          xywh {480 400 195 25} down_box BORDER_BOX
+        } {
+          MenuItem {} {
+            label {Custom routine}
+            callback {MVC->SetCustomHomingRoutine(true);
+MVC->redraw();} selected
+            xywh {10 10 100 20}
+          }
+          MenuItem {} {
+            label {Standard (G28)}
+            callback {MVC->SetCustomHomingRoutine(false);
+MVC->redraw();}
+            xywh {20 20 100 20}
+          }
         }
       }
     }

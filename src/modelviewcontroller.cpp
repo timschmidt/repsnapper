@@ -61,7 +61,7 @@ void tree_callback( Fl_Widget* w, void *_gui )
 	Flu_Tree_Browser *t = (Flu_Tree_Browser*)w;
 	int reason = t->callback_reason();
 	GUI *gui = (GUI *)_gui;
-	
+
 	Flu_Tree_Browser::Node *n = t->callback_node();
 
 	Matrix4f &transform = gui->MVC->SelectedNodeMatrix();
@@ -325,7 +325,7 @@ string ModelViewController::ValidateComPort (const string &port)
 		if (port == comports[i])
 			return port;
 	}
-	       
+
 	if (comports.size())
 		return comports[0];
 	else
@@ -348,6 +348,12 @@ void ModelViewController::SetValidateConnection(bool validate)
 {
 	ProcessControl.m_bValidateConnection = validate;
 	serial->SetValidateConnection(ProcessControl.m_bValidateConnection);
+	CopySettingsToGUI();
+}
+
+void ModelViewController::SetCustomHomingRoutine(bool custom)
+{
+	ProcessControl.m_bCustomHomingRoutine = custom;
 	CopySettingsToGUI();
 }
 
@@ -542,9 +548,9 @@ void ModelViewController::DrawGridAndAxis()
 }
 // all we'll end up doing is dispatching to the ProcessControl to read the file in, but not from this callback
 void ModelViewController::ReadGCode(string filename) {
-	read_pending = filename; 
+	read_pending = filename;
 //	   this triggers this function to be called :  ProcessControl.ReadGCode(filename);
-	
+
 }
 
 
@@ -667,6 +673,15 @@ void ModelViewController::CopySettingsToGUI()
 	gui->antioozeDistanceSlider->value(ProcessControl.AntioozeDistance);
 	gui->EnableAntioozeButton->value(ProcessControl.EnableAntiooze);
 	gui->antioozeSpeedSlider->value(ProcessControl.AntioozeSpeed);
+
+	if(ProcessControl.m_bCustomHomingRoutine)
+	{
+		gui->HomingRoutineChoice->value(0);
+	}
+	else
+	{
+		gui->HomingRoutineChoice->value(1);
+	}
 
 	// Printer
 	gui->VolumeX->value(ProcessControl.m_fVolume.x);
@@ -901,7 +916,7 @@ void ModelViewController::Print()
 			pos = buffer->line_end(pos)+1;	// skip newline
 			continue;
 			}
-		serial->AddToBuffer(line);
+		AddLineToSerialBuffer(line);
 		pos = buffer->line_end(pos)+1;	// find end of line
 		}
 
@@ -910,6 +925,84 @@ void ModelViewController::Print()
 	gui->ProgressBar->value(0);
 	free(pText);
 	serial->StartPrint();
+}
+
+void ModelViewController::AddLineToSerialBuffer(string line)
+{
+	string s=line;
+	size_t found;
+
+	// Strip ';' comments
+	found=s.find_first_of(";");
+	if(found!=string::npos)
+		s=s.substr(0,found);
+
+	// Strip newline chars
+	found=s.find_first_of("\n");
+	if(found!=string::npos)
+		s=s.substr(0,found);
+	found=s.find_first_of("\r");
+	if(found!=string::npos)
+		s=s.substr(0,found);
+
+	// Strip spaces from the end
+	found=s.find_last_not_of(" ");
+	if(found!=string::npos)
+		s=s.substr(0,found+1);
+
+	// Strip weird chars
+	for(uint i=0;i<s.length();i++)
+		if((s[i] < '*' || s[i] > 'z') && s[i] != ' ')	// *-z (ascii 42-122)
+			s.erase(s.begin()+i--);
+
+	// Apply Downstream Multiplier
+	float DSMultiplier = 1.0f;
+	float ExtrusionMultiplier = 1.0f;
+
+	DSMultiplier = gui->DownstreamMultiplierSlider->value();
+	ExtrusionMultiplier = gui->DownstreamExtrusionMultiplierSlider->value();
+
+	if(DSMultiplier != 1.0f)
+	{
+		size_t pos = s.find( "F", 0);
+		if( pos != string::npos )	//string::npos means not defined
+		{
+			size_t end = s.find( " ", pos);
+			if(end == string::npos)
+				end = s.length()-1;
+			string number = s.substr(pos+1,end);
+			string start = s.substr(0,pos+1);
+			string after = s.substr(end+1,s.length()-1);
+			float old_speed = ToFloat(number);
+			s.clear();
+			std::stringstream oss;
+			oss << start << old_speed*DSMultiplier << " " <<after;
+			s=oss.str();
+		}
+	}
+
+	if(ExtrusionMultiplier != 1.0f)
+	{
+		size_t pos = s.find( "E", 0);
+		if( pos != string::npos )	//string::npos means not defined
+		{
+			size_t end = s.find( " ", pos);
+			if(end == string::npos)
+				end = s.length()-1;
+			string number = s.substr(pos+1,end);
+			string start = s.substr(0,pos+1);
+			string after = s.substr(end+1,s.length()-1);
+			float old_speed = ToFloat(number);
+			s.clear();
+			std::stringstream oss;
+			oss << start << old_speed*ExtrusionMultiplier << " " <<after;
+			s=oss.str();
+		}
+	}
+	if (s.length() > 1)
+	{
+		serial->AddToBuffer(s);
+	}
 }
 
 void ModelViewController::Pause()
@@ -1067,38 +1160,51 @@ void ModelViewController::Home(string axis)
 			oss << ProcessControl.MaxPrintSpeedXY;
 		buffer+= oss.str();
 		SendNow(buffer);
-		buffer="G1 ";
-		buffer += axis;
-		buffer+="-250 F";
-		buffer+= oss.str();
-		SendNow(buffer);
-		buffer="G92 ";
-		buffer += axis;
-		buffer+="0";
-		SendNow(buffer);	// Set this as home
-		oss.str("");
-		buffer="G1 ";
-		buffer += axis;
-		buffer+="1 F";
-		buffer+= oss.str();
-		SendNow(buffer);
-		if(axis == "Z")
-			oss << ProcessControl.MinPrintSpeedZ;
-		else
-			oss << ProcessControl.MinPrintSpeedXY;
-		buffer="G1 ";
-		buffer+="F";
-		buffer+= oss.str();
-		SendNow(buffer);	// set slow speed
-		buffer="G1 ";
-		buffer += axis;
-		buffer+="-10 F";
-		buffer+= oss.str();
-		SendNow(buffer);
-		buffer="G92 ";
-		buffer += axis;
-		buffer+="0";
-		SendNow(buffer);	// Set this as home
+		// Needed for older versions of FiveD firmware
+		if(ProcessControl.m_bCustomHomingRoutine)
+		{
+			buffer="G1 ";
+			buffer += axis;
+			buffer+="-250 F";
+			buffer+= oss.str();
+			SendNow(buffer);
+			buffer="G92 ";
+			buffer += axis;
+			buffer+="0";
+			SendNow(buffer);	// Set this as home
+			oss.str("");
+			buffer="G1 ";
+			buffer += axis;
+			buffer+="1 F";
+			buffer+= oss.str();
+			SendNow(buffer);
+			if(axis == "Z")
+				oss << ProcessControl.MinPrintSpeedZ;
+			else
+				oss << ProcessControl.MinPrintSpeedXY;
+			buffer="G1 ";
+			buffer+="F";
+			buffer+= oss.str();
+			SendNow(buffer);	// set slow speed
+			buffer="G1 ";
+			buffer += axis;
+			buffer+="-10 F";
+			buffer+= oss.str();
+			SendNow(buffer);
+			buffer="G92 ";
+			buffer += axis;
+			buffer+="0";
+			SendNow(buffer);	// Set this as home
+		}
+		else //For firmwares fully supporting single axis homing
+		{
+			buffer="G28 ";
+			buffer += axis;
+			buffer+="0 ";
+			buffer+="F";
+			buffer+= oss.str();
+			SendNow(buffer);
+		}
 	}
 	else if(axis == "ALL")
 	{
