@@ -503,7 +503,6 @@ void ProcessController::LoadConfig(string filename)
 	if (not cfg.lookupValue("ValidateConnection",m_bValidateConnection))
 		m_bValidateConnection = true;
 
-
 	if (not cfg.lookupValue("STLPath",STLPath))
 		STLPath = "";
 	if (not cfg.lookupValue("RFOPath",RFOPath))
@@ -593,9 +592,6 @@ void ProcessController::LoadConfig(string filename)
 		TempReadingEnabled = true;
 	if (not cfg.lookupValue("ClearLogfilesWhenPrintStarts",ClearLogfilesWhenPrintStarts))
 		ClearLogfilesWhenPrintStarts = true;
-
-	if (not cfg.lookupValue("ValidateConnection",m_bValidateConnection))
-		m_bValidateConnection = true;
 
 		// GUI... ?
 	if (not cfg.lookupValue("DisplayEndpoints",DisplayEndpoints))
@@ -944,8 +940,8 @@ void ProcessController::SaveConfig(string path)
 	get = GCodeEndText;
 	Setting &mspn = root.add("msPortName", Setting::TypeString);
 	mspn = m_sPortName;
-	Setting &vc = root.add("ValidateConnection", Setting::TypeInt);
-	vc = int(m_bValidateConnection);
+	Setting &vc = root.add("ValidateConnection", Setting::TypeBoolean);
+	vc = m_bValidateConnection;
 
 	Setting &cbg = root.add("CustomButtonGcode", Setting::TypeArray);
 	Setting &cbl = root.add("CustomButtonLabel", Setting::TypeArray);
