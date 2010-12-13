@@ -60,7 +60,7 @@ sudo apt-get install build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-d
 ----
 su
 yum install
-exit 
+exit
 ----
 
 Acquire source and compile:
@@ -150,12 +150,12 @@ Duplicate::
     Creates a copy of the selected object. Useful for printing several items of the same object.
 
 Translate, Rotate and Scale::
-    If an STL object is first selected in the browser, this will alter the part for creating gcode. 
+    If an STL object is first selected in the browser, this will alter the part for creating gcode.
 Object Name, File location, File type and file material
-    Name a file system and document the contents. 
+    Name a file system and document the contents.
 
 Object rotation::
-    Selects the plane to rotate the object about. GCode generation is affected by final object placement. Also useful when loading several STL files. 
+    Selects the plane to rotate the object about. GCode generation is affected by final object placement. Also useful when loading several STL files.
 
 === Print Options tab ===
 
@@ -175,7 +175,7 @@ Infill Distance::
     Distance between each filament of infill - measured in extruded material widths.
 
 Alternate Infill Layers::
-    
+
 
 Raft Enable::
     Select this option to print a "raft" on the build surface before printing your desired object.  May help alleviate problems with uneven build surfaces.
@@ -447,10 +447,10 @@ Test::
 To run repsnapper on
 
 windows::
-    double click the repsnapper.exe file within the repsnapper/src directory 
+    double click the repsnapper.exe file within the repsnapper/src directory
 
 linux::
-    type repsnapper/src/repsnapper into the console window. 
+    type repsnapper/src/repsnapper into the console window.
 
 OSX::
     type repsnapper/src/repsnapper into the console window.
@@ -463,12 +463,12 @@ Loading an STL
 To load an STL into the 3D view
 
     * click on the tab labeled Input file and
-    * press the Load STL button. In revision prior to ??? you are presented with a Fluid file browsing dialog. In later versions you will be presented with your standard operating systems file browse dialog. Choose the STL that you wish to load and click OK. 
+    * press the Load STL button. In revision prior to ??? you are presented with a Fluid file browsing dialog. In later versions you will be presented with your standard operating systems file browse dialog. Choose the STL that you wish to load and click OK.
 
 The 3D view should now display your STL. Use this button to pull in a facet file to process into Gcode.
 
 [TIP]
-If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using ./ivcon file.stl file.stlb and loading the binary version into repsnapper instead. you can get ivcon here. Compile using gcc -lm ivcon.c -o ivcon 
+If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using ./ivcon file.stl file.stlb and loading the binary version into repsnapper instead. you can get ivcon here. Compile using gcc -lm ivcon.c -o ivcon
 
 Viewing the STL
 Viewing STL in repsnapper
@@ -477,7 +477,7 @@ Once an STL is loaded you can rotate, translate and/or scale the view in the 3D 
 
     * To rotate the view of the STL hold down the left mouse button and drag.
     * To translate the view the STL hold down the left and right mouse button and drag.
-    * To scale the view the STL hold down the right mouse button and drag, or turn the wheel on your mouse. 
+    * To scale the view the STL hold down the right mouse button and drag, or turn the wheel on your mouse.
 
 Note: the grid shows your build platform / printing area
 Working with STL
@@ -485,7 +485,7 @@ Working with STL
 Once an STL is loaded, you can move it to further onto the build platform, rotate it and scale it. You can also duplicate it and load additional STL files onto the build platform.
 
     * To move the STL, first select it on the browser, then tab to the translate box and enter absolute values into the X and Y fields. You can also drag the object by left-click-hold in the X or Y box then dragging it with the mouse. Apparently changing the Z value is not recommended.
-    * Duplicate adds another copy of the STL beside the first. 
+    * Duplicate adds another copy of the STL beside the first.
 
 Convert to GCode
 Repsnapper displaying GCode
@@ -493,7 +493,7 @@ Repsnapper displaying GCode
 Converting to GCode is a simple process,
 
     * click the GCode tab and
-    * press the Convert to GCode button. 
+    * press the Convert to GCode button.
 
 You can generate quite useful and very printable GCode using the default settings of RepSnapper. There are however also a host of user changeable settings that will alter/adjust the generation of GCode, see RepSnapper Manual: Setting GCode options for details.
 Print
@@ -502,77 +502,84 @@ To send the GCode to a FiveD GCode compatible printer:
 
     * open the Print tab, and
     * click the Connect to printer button. (you set com-port and speed in "Simple tab")
-    * Check the Communication Log tab to make sure the printer has connected and is receiving temperature signals from the Extruder Controller. 
+    * Check the Communication Log tab to make sure the printer has connected and is receiving temperature signals from the Extruder Controller.
 
 
     * Set the extruder target temperature, by editing the "Target Temp" field, and
     * click "Switch Heat on" to turn on the extruder heater.
-    * once the target temp has been met, you may want to try to extrude a bit, to make sure the extruder is fully loaded and ready to print. 
+    * once the target temp has been met, you may want to try to extrude a bit, to make sure the extruder is fully loaded and ready to print.
 
 
 To start printing
 
-    * click the Print button. This starts sending commands to the printer for execution. 
+    * click the Print button. This starts sending commands to the printer for execution.
 
 
 Below the author describes the things he had to do to get repsnapper (V333, dated 14-08-2010) working to the point where he could finish a print of a test block. Firmware used was Tonokip's firmware running on an Arduino Mega with Pololu stepper drivers.
 Firmware
 
     * Make sure your Arduino config file is accurate. Test movement lengths with a ruler to be sure.
-    * you can do this from repsnapper. (See appendix A to see how to manually control your bot from repsnapper) 
+    * you can do this from repsnapper. (See appendix A to see how to manually control your bot from repsnapper)
 
 Printer definition
 
     * Make sure 'extruded material width' matches the extruded filament diameter.
     * Extrusion multiplyer determines how fast your extruder goes at a given print speed... This parameter is the one to fiddle, to set your stretch.
     * Max printspeed is the speed that repsnapper will command the axes to move. Too fast and you will strip your filament or stall your extruder.
-    * Turn acceleration off. Make sure Use Incremental ecode is on 
+    * Turn acceleration off. Make sure Use Incremental ecode is on
 
 Print options
 
-    * infill Distance was set quite small, I changed it up to 1.8mm 
+    * infill Distance was set quite small, I changed it up to 1.8mm
 
 Raft
 
-    * Turned off Raft for the test blocks. 
+    * Turned off Raft for the test blocks.
 
 Gcode
 
     * Start tab
-    * Cleared the text out of the other tabs, knowing that the steppers are skipping steps is a good thing at the beginning. 
+    * Cleared the text out of the other tabs, knowing that the steppers are skipping steps is a good thing at the beginning.
 
 Appendix A.
 
 Everything happens from the Print tab when you want to manually control your bot.
 
-    * To get working for the first time, you must make a connection.. make sure the USB is plugged into the arduino, and that the arduino software is not using the virtual serial port. 
+    * To get working for the first time, you must make a connection.. make sure the USB is plugged into the arduino, and that the arduino software is not using the virtual serial port.
 
-    * make sure you have the correct serial port selected in the Printer Definition tab, and the speeds set to a reasonable number. 
+    * make sure you have the correct serial port selected in the Printer Definition tab, and the speeds set to a reasonable number.
 
-    * Select 'Connect to printer' (should be lit) 
+    * Select 'Connect to printer' (should be lit)
 
-    * You can check your connection by selecting the communication log tab on the 'Print' page. From 'Communication Log', select 'Communication Log, again and see that commands are being acknowledged... 
+    * You can check your connection by selecting the communication log tab on the 'Print' page. From 'Communication Log', select 'Communication Log, again and see that commands are being acknowledged...
 
-    * you can eventually skip this step by making sure that your temperature is being updated. 
+    * you can eventually skip this step by making sure that your temperature is being updated.
 
 Go back to the 'interactive control' tab.
 
-    * You can execute a line of gcode by putting the cursor into the 'GCode' box and pressing enter, or the 'send' button. 
+    * You can execute a line of gcode by putting the cursor into the 'GCode' box and pressing enter, or the 'send' button.
 
-    * You can jog all three of your axes by hitting one of the numbered buttons.. -100 on the top line will move the X axis 100 mm (or inches! if you are set up for inches) in the home direction... 
+    * You can jog all three of your axes by hitting one of the numbered buttons.. -100 on the top line will move the X axis 100 mm (or inches! if you are set up for inches) in the home direction...
 
-    * (you may want to re-visit your arduino config file and reverse an axis or two if things move in the wrong direction). 
+    * (you may want to re-visit your arduino config file and reverse an axis or two if things move in the wrong direction).
 
-    * middle line is Y axis, Bottom line is Z axis... 
+    * middle line is Y axis, Bottom line is Z axis...
 
-    * Pressing home will cause that axis to run in the minus direction until it reaches an endstop. 
+    * Pressing home will cause that axis to run in the minus direction until it reaches an endstop.
 
  'Home All' is not supported in Tonokip's firmware.
 
-    * Clicking 'Switch Heat On' will cause your extruder to start to heat up. It will try to get to the set 'Target temp'. 
+    * Clicking 'Switch Heat On' will cause your extruder to start to heat up. It will try to get to the set 'Target temp'.
 
   If  you change the target temp, you must deselect switch heat off, then on again for it to register.
 
-    * To run the extruder, once at temperature, set the speed slider (in mm/minute ?), the length (in mm ?) and click the 'Run extruder' button. It will run for the distance specified in 'Length'. 
+    * To run the extruder, once at temperature, set the speed slider (in mm/minute ?), the length (in mm ?) and click the 'Run extruder' button. It will run for the distance specified in 'Length'.
 
   to run it again, you click 'Run Extruder' again, it will de-select, but the motor will run anyways.
+
+== Development ==
+=== Comms debugging ===
+Even if you have a working machine, it can be usefult to emulate a serial connection to see what the firmware would see. Using socat (install from your distro repos as usual).
+For the simplest case, issue "socat -d -d pty,raw,echo=0 readline" in a terminal. It reports the address to to connect RepSnapper to, (something like /dev/pts/N). You should disable connection
+validation int the printer settings dialog. If you happen to have a working firmware in a simulator (please share if you do :), then you can use "socat -d -d pty,raw,echo=0 pty,raw,echo=0",
+which gives two addresses, so you can connect anything to RepSnapper. You could also use another serial terminal app this way.
