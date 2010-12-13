@@ -443,8 +443,21 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 		}
 		if(InBuffer.size() == 0)
 			return;
+
 		size_t found;
-		found=InBuffer.find_first_of("\r\n");
+		size_t found2;
+		found=InBuffer.find_first_of("\r");
+		found2=InBuffer.find_first_of("\n");
+		if (found!=string::npos)
+		{
+			if (found2!=string::npos)
+			{
+				found = found < found2 && found ? found : found2;
+			}
+		}
+		else
+			found = found2;
+
 
 		while (found!=string::npos && found != 0)
 		{
