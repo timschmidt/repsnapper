@@ -358,17 +358,17 @@ MVC->redraw();}
           } {
             Fl_Value_Input RotateX {
               label X
-              callback {MVC->RotateObject(1,0,0, o->value());}
+              callback {MVC->RotateObject(1,0,0, M_PI * o->value() / 180.0);}
               xywh {1095 237 45 23} minimum -360 maximum 360 step 1
             }
             Fl_Value_Input RotateY {
               label Y
-              callback {MVC->RotateObject(0,1,0, o->value());}
+              callback {MVC->RotateObject(0,1,0, M_PI * o->value() / 180.0);}
               xywh {1155 238 45 23} minimum -360 maximum 360 step 1
             }
             Fl_Value_Input RotateZ {
               label Z
-              callback {MVC->RotateObject(0,0,1, o->value());}
+              callback {MVC->RotateObject(0,0,1, M_PI * o->value() / 180.0);}
               xywh {1210 238 45 23} minimum -360 maximum 360 step 1
             }
           }
