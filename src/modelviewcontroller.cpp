@@ -928,6 +928,17 @@ void ModelViewController::AddLineToSerialBuffer(string line)
 	size_t found;
 	size_t found2;
 
+	// Ignore lines with M101 and M103 if they are not needed
+	if(!ProcessControl.Use3DGcode)
+	{
+		found=s.find("M101");
+		if(found!=string::npos)
+			return;
+		found=s.find("M103");
+		if(found!=string::npos)
+			return;
+	}
+
 	// Strip (***) comments (may contain anything, even other comment delimiters)
 	found=s.find_first_of("(");
 	found2=s.find_first_of(")");

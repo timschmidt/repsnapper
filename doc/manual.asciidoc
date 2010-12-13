@@ -221,7 +221,7 @@ Use incremental ecode::
     Enable this option when using "5D" firmware.
 
 Use 3D Gcode::
-    Enable this option when using Makerbot firmware.
+    Enable this option when using Makerbot firmware (or if you use the M101/M103 commands for tool control)
 
 Extruded material width::
     Width of the extrude material, in millimeters.
