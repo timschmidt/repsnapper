@@ -911,11 +911,6 @@ void ModelViewController::Print()
 	while(pos < length)
 		{
 		char* line = buffer->line_text(pos);
-		if(line[0] == ';')
-			{
-			pos = buffer->line_end(pos)+1;	// skip newline
-			continue;
-			}
 		AddLineToSerialBuffer(line);
 		pos = buffer->line_end(pos)+1;	// find end of line
 		}
@@ -931,6 +926,13 @@ void ModelViewController::AddLineToSerialBuffer(string line)
 {
 	string s=line;
 	size_t found;
+	size_t found2;
+
+	// Strip (***) comments (may contain anything, even other comment delimiters)
+	found=s.find_first_of("(");
+	found2=s.find_first_of(")");
+	if(found!=string::npos && found2!=string::npos)
+		s=s.substr(0, found)+s.substr(found2+1, s.length());
 
 	// Strip ';' comments
 	found=s.find_first_of(";");
