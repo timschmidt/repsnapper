@@ -17,13 +17,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+#include "config.h"
 #include "stdafx.h"
 
 #include "modelviewcontroller.h"
 
 #include "gcode.h"
 #include "ui.h"
-#include "version.h"
 
 GUI *gui;
 
