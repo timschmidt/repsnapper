@@ -172,12 +172,13 @@ void ProcessController::CalcBoundingBoxAndZoom()
 		if(Max.x - Min.x > L)	L = Max.x - Min.x;
 		if(Max.y - Min.y > L)	L = Max.y - Min.y;
 		if(Max.z - Min.z > L)	L = Max.z - Min.z;
-		if(gui->MVC)
-			gui->MVC->zoom= L;
+#warning mmeeks hacked
+//		if(gui->MVC)
+//			gui->MVC->zoom= L;
 	}
-	else
-		if(gui->MVC)
-			gui->MVC->zoom = 100.0f;
+//	else
+//		if(gui->MVC)
+//			gui->MVC->zoom = 100.0f;
 
 	Center = (Max-Min)*0.5f;
 }

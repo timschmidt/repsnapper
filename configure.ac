@@ -7,7 +7,6 @@ AC_CONFIG_MACRO_DIR([m4])
 dnl AC_CONFIG_AUX_DIR([config])
 
 AM_INIT_AUTOMAKE([1.10 dist-bzip2 no-dist-gzip foreign])
-AM_MAINTAINER_MODE
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
@@ -31,7 +30,7 @@ AM_GLIB_GNU_GETTEXT
 PKG_PROG_PKG_CONFIG([0.22])
 
 GLIB_GSETTINGS
-PKG_CHECK_MODULES(GTK, gtk+-2.0 gobject-2.0 glib-2.0)
+PKG_CHECK_MODULES(GTK, gtk+-2.0 gobject-2.0 glib-2.0 gthread-2.0 gtkglextmm-1.2 gdkglextmm-1.2)
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 

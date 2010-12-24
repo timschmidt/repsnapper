@@ -24,14 +24,12 @@
 #include <FL/gl.h>
 #include "ui.h"
 #include <math.h>
-#include "arcball.h"
 
 // Model related
 #include "gcode.h"
 #include "stl.h"
 #include "processcontroller.h"
 #include "reprapserial.h"
-#include "gllight.h"
 
 enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
 enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
@@ -42,7 +40,8 @@ enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 
 // Construct a model and a view, and link them together.
 
-class ModelViewController : public Fl_Gl_Window
+class View;
+class ModelViewController : public Gtk::Window
 {
 public:
 	ModelViewController(int x,int y,int w,int h,const char *l);
@@ -77,13 +76,10 @@ public:
 	void SetUseIncrementalEcode(bool val) {ProcessControl.UseIncrementalEcode = val;}
 	void SetUse3DGcode(bool val) {ProcessControl.Use3DGcode = val;}
 
-	// My own view functions
-	void draw();
-	void DrawGridAndAxis();
+	void draw() { queue_draw(); }
 	void WriteGCode(string filename);
 	void CopySettingsToGUI();
 
-	void CenterView();
 	int  handle(int);
 	void Translate(string axis, float distance);
 	void Scale(string axis, float distance);
@@ -275,21 +271,7 @@ public:
 
 	string read_pending;
 
-	/*--------------ArcBall-------------------*/
-
-	GLUquadricObj *quadratic;											// Used For Our Quadric
-
-	Matrix4fT   Transform;
-	Matrix3fT   LastRot;
-	Matrix3fT   ThisRot;
-	ArcBallT    *ArcBall;								                // NEW: ArcBall Instance
-	Vector2fT    MousePt;												// NEW: Current Mouse Point
-	Vector2f	downPoint;
 	/*--------------View-------------------*/
-
-	float zoom;
-	void SetEnableLight(int lightNr, bool on){ if(on) lights[lightNr].On(); else lights[lightNr].Off(); redraw(); }
-	gllight lights[4];
 
 	/*- Custom button interface -*/
 	void SendCustomButton(int nr);
@@ -307,6 +289,17 @@ public:
 
 	void serialConnected();
 	void serialConnectionLost();
+
+	// fltk compat foo ...
+        void redraw();
+	bool valid() { // horrible hack
+	  static bool valid = false;
+	  bool ret = valid;
+	  valid = true;
+	  return ret;
+	}
+	int w() { return get_width(); }
+	int h() { return get_height(); }
 };
 
 #endif // MODEL_VIEW_CONTROLLER_H

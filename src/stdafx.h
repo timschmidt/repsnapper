@@ -45,13 +45,16 @@ typedef unsigned int        UINT;
 #include "platform.h"
 #include <stdio.h>
 #include <FL/Fl.H>
+#include <gtkmm.h>
+#include <gtkglmm.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <vmmlib/vmmlib.h>
 #ifndef WIN32
 // whatever this is it doesn't exist in windows and doesn't appear to be needed
 #  include <alloca.h>
 #endif
 #include "math.h"                                               // Needed for sqrtf
-#include "arcball.h"
 
 // Unpleasant needs un-winding ...
 using namespace std;
@@ -76,6 +79,10 @@ class RFO;
 class RFO_File;
 class RFO_Object;
 class RFO_Transform3D;
+
+//utility macros
+//assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits
+# define Epsilon 1.0e-5
 
 struct InFillHit;
 

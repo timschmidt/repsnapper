@@ -52,13 +52,6 @@ namespace std
 using namespace stdext;
 #endif
 
-/*
-extern "C" {
-	#include "triangle.h"
-}
-*/
-#define MIN(A,B) ((A)<(B)? (A):(B))
-#define MAX(A,B) ((A)>(B)? (A):(B))
 #define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
 /* A number that speaks for itself, every kissable digit.                    */

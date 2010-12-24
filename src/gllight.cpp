@@ -16,6 +16,8 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+#include "config.h"
+#include "stdafx.h"
 #include "gllight.h"
 
 gllight::gllight()
@@ -32,14 +34,12 @@ void gllight::Init(int position)
 	offset = position;
 }
 
-void gllight::On()
+void gllight::Enable(bool on)
 {
-	glEnable(offset);
-}
-
-void gllight::Off()
-{
-	glDisable(offset);
+	if (on)
+		glEnable(offset);
+	else
+		glDisable(offset);
 }
 
 void gllight::SetAmbient(float r, float g, float b, float a)

@@ -1,40 +1,14 @@
-/*
-    This file is a part of the RepSnapper project.
-    Copyright (C) 2010  Kulitorum
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License along
-    with this program; if not, write to the Free Software Foundation, Inc.,
-    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*/
-
+/* LGPL code - from mmeeks */
 #include "config.h"
 #include "stdafx.h"
-
 #include "modelviewcontroller.h"
-
 #include "gcode.h"
 #include "ui.h"
-
-GUI *gui;
-
-
-#include <boost/thread.hpp>
-
-#ifndef VERSION
-#define VERSION "Unknown"
-#endif
+#include "view.h"
 
 using namespace std;
+
+GUI *gui;
 
 struct CommandLineOptions
 {
@@ -52,12 +26,12 @@ private:
 	}
 	void version ()
 	{
-		printf("Version: %s\n",VERSION);
+		printf("Version: %s\n", VERSION);
 		exit (1);
 	}
 	void usage ()
 	{
-		fprintf (stderr, "Version: %s\n",VERSION);
+		fprintf (stderr, "Version: %s\n", VERSION);
 		fprintf (stderr, "Usage: repsnapper [OPTION]... [FILE]...\n"
 			 "Start reprap control software and load [FILES]\n"
 			 "Options:\n"
@@ -104,20 +78,18 @@ public:
 
 int main(int argc, char **argv)
 {
-	//initialize threading support in FLTK
-	Fl::lock();
+	Gtk::Main tk(argc, argv);
+	Gtk::GL::init(argc, argv);
 
 	CommandLineOptions opts (argc, argv);
 
 	gui = new GUI();
 	ModelViewController *MVC = gui->MVC;
 
-	Fl::visual(FL_DOUBLE|FL_INDEX);
-	
 	MVC->ProcessControl.gui = gui;
 	MVC->Init(gui);
 	MVC->serial->setGUI(gui);
-	
+
 	if (!opts.use_gui) {
 		if (opts.stl_input_path.size() > 0) {
 			MVC->ReadStl(opts.stl_input_path);
@@ -136,120 +108,17 @@ int main(int argc, char **argv)
 		}
 		return 0;
 	}
-  
+
 	for (uint i = 0; i < opts.files.size(); i++)
 		MVC->ReadStl (opts.files[i].c_str());
 
-	char WindowTitle[100] = "GCodeView";
-	char* W = &WindowTitle[0];
-	gui->show (1, &W);
-	gui->VersionText->value(VERSION);
-	return Fl::run ();
+	Gtk::Window *win = MVC;
+	win->set_title ("Repsnapper");
+	Gtk::Widget *view = new View (MVC->ProcessControl);
+	win->add (*view);
+	win->show_all();
+
+	tk.run();
+
+	return 0;
 }
-
-#ifdef WIN32
-#ifndef UNITTEST
-
-CHAR wide_to_narrow(WCHAR w)
-{
-    // simple typecast
-    // works because UNICODE incorporates ASCII into itself
-    return CHAR(w);
-}
-class CmdLineArgs : public std::vector<char*>
-{
-public:
-    CmdLineArgs (LPWSTR args)
-    {
-
-        // Save local copy of the command line string, because
-        // ParseCmdLine() modifies this string while parsing it.
-        m_cmdline = new char [wcslen (args) + 1];
-        if (m_cmdline)
-        {
-			std::transform(args, args+wcslen (args) + 1, m_cmdline, wide_to_narrow);
-            ParseCmdLine(); 
-        }
-    }
-    ~CmdLineArgs()
-    {
-        delete m_cmdline;
-    }
-
-private:
-    PSZ m_cmdline; // the command line string
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Parse m_cmdline into individual tokens, which are delimited by spaces. If a
-    // token begins with a quote, then that token is terminated by the next quote
-    // followed immediately by a space or terminator.  This allows tokens to contain
-    // spaces.
-    // This input string:     This "is" a ""test"" "of the parsing" alg"o"rithm.
-    // Produces these tokens: This, is, a, "test", of the parsing, alg"o"rithm
-    ////////////////////////////////////////////////////////////////////////////////
-    void ParseCmdLine ()
-    {
-        enum { TERM  = '\0',
-               QUOTE = '\"' };
-
-        bool bInQuotes = false;
-        PSZ pargs = m_cmdline;
-
-        while (*pargs)
-        {
-            while (isspace (*pargs))        // skip leading whitespace
-                pargs++;
-
-            bInQuotes = (*pargs == QUOTE);  // see if this token is quoted
-
-            if (bInQuotes)                  // skip leading quote
-                pargs++; 
-
-            push_back (pargs);              // store position of current token
-
-            // Find next token.
-            // NOTE: Args are normally terminated by whitespace, unless the
-            // arg is quoted.  That's why we handle the two cases separately,
-            // even though they are very similar.
-            if (bInQuotes)
-            {
-                // find next quote followed by a space or terminator
-                while (*pargs && 
-                      !(*pargs == QUOTE && (isspace (pargs[1]) || pargs[1] == TERM)))
-                    pargs++;
-                if (*pargs)
-                {
-                    *pargs = TERM;  // terminate token
-                    if (pargs[1])   // if quoted token not followed by a terminator
-                        pargs += 2; // advance to next token
-                }
-            }
-            else
-            {
-                // skip to next non-whitespace character
-                while (*pargs && !isspace (*pargs)) 
-                    pargs++;
-                if (*pargs && isspace (*pargs)) // end of token
-                {
-                   *pargs = TERM;    // terminate token
-                    pargs++;         // advance to next token or terminator
-                }
-            }
-        } // while (*pargs)
-    } // ParseCmdLine()
-}; // class CmdLineArgs
-
-
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
-{
-	CmdLineArgs cmdArgs(lpCmdLine);
-	char** arg = (char**)malloc(cmdArgs.size()*sizeof(char*));
-	for(int i=0; i<cmdArgs.size(); i++)
-	{
-		arg[i] = cmdArgs[i];
-	}	 
-
-	return main(cmdArgs.size(), arg);
-}
-#endif // UNITTEST
-#endif // WIN32

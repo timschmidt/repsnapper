@@ -142,33 +142,25 @@ ModelViewController::~ModelViewController()
 	delete serial;
 }
 
-ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) : Fl_Gl_Window(x,y,w,h,l)
+ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) :
+  Gtk::Window()
 {
 	serial = new RepRapSerial();
 
 	gui = 0;
-	zoom = 100.0f;
 	read_pending = "";
-
-	ArcBall = new ArcBallT((GLfloat)w, (GLfloat)h);				                // NEW: ArcBall Instance
-
-	Transform.M[0] = 1.0f;	Transform.M[1] = 0.0f; Transform.M[2] = 0.0f;Transform.M[3] = 0.0f,				// NEW: Final Transform
-	Transform.M[4] = 0.0f;	Transform.M[5] = 1.0f; Transform.M[6] = 0.0f;Transform.M[7] = 0.0f,				// NEW: Final Transform
-	Transform.M[8] = 0.0f;	Transform.M[9] = 0.0f; Transform.M[10] = 1.0f;Transform.M[11] = 0.0f,				// NEW: Final Transform
-	Transform.M[12] = 0.0f;	Transform.M[13] = 0.0f; Transform.M[14] = 0.0f;Transform.M[15] = 1.0f,				// NEW: Final Transform
-
-	LastRot.M[0]=1.0f;LastRot.M[1]=0.0f;LastRot.M[2]=0.0f;					// NEW: Last Rotation
-	LastRot.M[3]=0.0f;LastRot.M[4]=1.0f;LastRot.M[5]=0.0f;					// NEW: Last Rotation
-	LastRot.M[6]=0.0f;LastRot.M[7]=0.0f;LastRot.M[8]=1.0f;					// NEW: Last Rotation
-	ThisRot.M[0]=1.0f;ThisRot.M[1]=0.0f;ThisRot.M[2]=0.0f;					// NEW: Last Rotation
-	ThisRot.M[3]=0.0f;ThisRot.M[4]=1.0f;ThisRot.M[5]=0.0f;					// NEW: Last Rotation
-	ThisRot.M[6]=0.0f;ThisRot.M[7]=0.0f;ThisRot.M[8]=1.0f;					// NEW: Last Rotation
 
 	m_bExtruderDirection = true;
 	m_iExtruderSpeed = 3000;
 	m_iExtruderLength = 150;
 	m_fTargetTemp = 63.0f;
 	m_fBedTargetTemp = 63.0f;
+}
+
+
+void ModelViewController::redraw()
+{
+   queue_draw();
 }
 
 void ModelViewController::Init(GUI *_gui)
@@ -214,7 +206,8 @@ void ModelViewController::Timer_CB()
 
 void ModelViewController::resize(int x,int y, int width, int height)					// Reshape The Window When It's Moved Or Resized
 {
-	Fl_Gl_Window::resize(x,y,width,height);
+  //	Fl_Gl_Window::resize(x,y,width,height);
+	  fprintf (stderr, "resize !\n");
 }
 
 void ModelViewController::DetectComPorts(bool init)
@@ -351,195 +344,8 @@ void ModelViewController::SetValidateConnection(bool validate)
 	CopySettingsToGUI();
 }
 
-void ModelViewController::CenterView()
-{
-	glTranslatef(-ProcessControl.Center.x-ProcessControl.printOffset.x, -ProcessControl.Center.y-ProcessControl.printOffset.y, -ProcessControl.Center.z);
-}
-
-void ModelViewController::draw()
-{
-    if (!valid())
-		{
-		gui->RFP_Browser->callback( &tree_callback, gui );
-		gui->RFP_Browser->redraw();
-
-		glLoadIdentity();
-		glViewport (0, 0, w(),h());											// Reset The Current Viewport
-		glMatrixMode (GL_PROJECTION);										// Select The Projection Matrix
-		glLoadIdentity ();													// Reset The Projection Matrix
-		gluPerspective (45.0f, (float)w()/(float)h(),1.0f, 1000000.0f);						// Calculate The Aspect Ratio Of The Window
-		glMatrixMode (GL_MODELVIEW);										// Select The Modelview Matrix
-		glLoadIdentity ();													// Reset The Modelview Matrix
-		ArcBall->setBounds((GLfloat)w(), (GLfloat)h());                 //*NEW* Update mouse bounds for arcball
-		glEnable(GL_LIGHTING);
-		for(int i=0;i<4;i++)
-		{
-			lights[i].Init((GLenum)(GL_LIGHT0+i));
-			lights[i].SetAmbient(0.2f, 0.2f, 0.2f, 1.0f);
-			lights[i].SetDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
-			lights[i].SetSpecular(1.0f, 1.0f, 1.0f, 1.0f);
-			lights[i].Off();
-		}
-
-		lights[0].SetLocation(-100, 100, 200, 0);
-		lights[1].SetLocation(100, 100, 200, 0);
-		lights[2].SetLocation(100, -100, 200, 0);
-		lights[3].SetLocation(100, -100, 200, 0);
-
-		lights[0].On();
-		lights[3].On();
-
-		// enable lighting
-		glDisable ( GL_LIGHTING);
-
-		glDepthFunc (GL_LEQUAL);										// The Type Of Depth Testing (Less Or Equal)
-		glEnable (GL_DEPTH_TEST);										// Enable Depth Testing
-		glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);				// Set Perspective Calculations To Most Accurate
-
-		quadratic=gluNewQuadric();										// Create A Pointer To The Quadric Object
-		gluQuadricNormals(quadratic, GLU_SMOOTH);						// Create Smooth Normals
-		gluQuadricTexture(quadratic, GL_TRUE);							// Create Texture Coords
-	}
-//    glEnable(GL_BLEND);
-//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);				// Clear Screen And Depth Buffer
-	glLoadIdentity();												// Reset The Current Modelview Matrix
-	glTranslatef(0.0f,0.0f,-zoom*2);								// Move Left 1.5 Units And Into The Screen 6.0
-
-	glMultMatrixf(Transform.M);										// NEW: Apply Dynamic Transform
-	CenterView();
-
-    glPushMatrix();													// NEW: Prepare Dynamic Transform
-	glColor3f(0.75f,0.75f,1.0f);
 
 
-	/*--------------- Draw Grid and Axis ---------------*/
-
-	DrawGridAndAxis();
-
-	/*--------------- Draw models ------------------*/
-
-	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
-
-	Flu_Tree_Browser::Node *node = gui->RFP_Browser->get_selected( 1 );
-	ProcessControl.Draw(node);
-
-	/*--------------- Exit -----------------*/
-	glPopMatrix();													// NEW: Unapply Dynamic Transform
-	glFlush();														// Flush The GL Rendering Pipeline
-//	swap_buffers();
-}
-
-int ModelViewController::handle(int event)
-{
-	Vector2f    Clickpoint;												// NEW: Current Mouse Point
-	static float Click_y;
-	static float old_zoom;
-
-	Clickpoint.x =  (GLfloat)Fl::event_x();;
-	Clickpoint.y =  (GLfloat)Fl::event_y();;
-
-	switch(event) {
-		case FL_PUSH:	//mouse down event position in Fl::event_x() and Fl::event_y()
-			{
-				switch(Fl::event_button())	{
-				case FL_LEFT_MOUSE:
-					MousePt.T[0] = (GLfloat)Clickpoint.x;
-					MousePt.T[1] = (GLfloat)Clickpoint.y;
-					ArcBall->click(&MousePt);								// Update Start Vector And Prepare For Dragging
-					break;
-				case FL_MIDDLE_MOUSE:
-					downPoint = Clickpoint;
-					/*
-					Matrix3fSetIdentity(&LastRot);								// Reset Rotation
-					Matrix3fSetIdentity(&ThisRot);								// Reset Rotation
-					Matrix4fSetRotationFromMatrix3f(&Transform, &ThisRot);		// Reset Rotation
-					*/
-					break;
-				case FL_RIGHT_MOUSE:
-					Click_y = Clickpoint.y;
-					old_zoom = zoom;
-					break;
-				}
-				LastRot = ThisRot;										// Set Last Static Rotation To Last Dynamic One
-				redraw();
-				return 1;
-			}
-		case FL_DRAG:	//mouse moved while down event ...
-			switch(Fl::event_button())
-				{
-				case FL_LEFT_MOUSE:
-					Quat4fT     ThisQuat;
-
-					MousePt.T[0] = Clickpoint.x;
-					MousePt.T[1] = Clickpoint.y;
-
-					ArcBall->drag(&MousePt, &ThisQuat);						// Update End Vector And Get Rotation As Quaternion
-					Matrix3fSetRotationFromQuat4f(&ThisRot, &ThisQuat);		// Convert Quaternion Into Matrix3fT
-					Matrix3fMulMatrix3f(&ThisRot, &LastRot);				// Accumulate Last Rotation Into This One
-					Matrix4fSetRotationFromMatrix3f(&Transform, &ThisRot);	// Set Our Final Transform's Rotation From This One
-					redraw();
-					break;
-				case FL_MIDDLE_MOUSE:
-					{
-					Vector2f    dragp = Clickpoint;
-					Vector2f delta = downPoint-dragp;
-					Matrix4f matrix;
-					memcpy(&matrix.m00, &Transform.M[0], sizeof(Matrix4f));
-					Vector3f X(delta.x,0,0);
-					X = matrix * X;
-					Vector3f Y(0,-delta.y,0);
-					Y = matrix * Y;
-					ProcessControl.Center += X*delta.length()*0.01f;
-					ProcessControl.Center += Y*delta.length()*0.01f;
-					redraw();
-					downPoint=Clickpoint;
-					}
-
-					break;
-				case FL_RIGHT_MOUSE:
-					float y = 	Click_y - Clickpoint.y;
-					zoom = old_zoom + y*0.1;
-					redraw();
-					break;
-				}
-			return 1;
-		case FL_RELEASE: //mouse up event ...
-			MousePt.T[0] = (GLfloat)Fl::event_x();
-			MousePt.T[1] = (GLfloat)Fl::event_y();
-			redraw();
-			return 1;
-		case FL_MOUSEWHEEL: { //mouse scroll event
-			int mwscrolled = Fl::event_dy();
-			zoom += mwscrolled*1;
-			redraw();
-			return 1;
-			}
-		case FL_FOCUS :
-		case FL_UNFOCUS : // Return 1 if you want keyboard events, 0 otherwise
-			return 0;
-		case FL_KEYBOARD: //keypress, key is in Fl::event_key(), ascii in Fl::event_text() .. Return 1 if you understand/use the keyboard event, 0 otherwise...
-			return 1;
-		case FL_SHORTCUT: // shortcut, key is in Fl::event_key(), ascii in Fl::event_text() ... Return 1 if you understand/use the shortcut event, 0 otherwise...
-			return 1;
-		case FL_CLOSE:
-			if (fl_choice("Save settings ?", "Exit", "Save then exit", NULL))
-			{
-//				int a=0;
-//				ProcessControl.SaveXML();
-			}
-			break;
-		default:
-			break;
-	}
-	// pass other events to the base class...
-	return Fl_Gl_Window::handle(event);
-}
-
-void ModelViewController::DrawGridAndAxis()
-{
-	//Grid
-}
 // all we'll end up doing is dispatching to the ProcessControl to read the file in, but not from this callback
 void ModelViewController::ReadGCode(string filename) {
 	read_pending = filename; 

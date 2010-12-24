@@ -26,10 +26,18 @@ using namespace vmml;
 namespace PolyLib
 {
 	#define PI 3.141592653589793238462643383279502884197169399375105820974944592308
+#ifndef sqr
 	#define sqr(x)				((x)*(x))
+#endif
+#ifndef MIN
 	#define MIN(A,B)			((A)<(B)? (A):(B))
+#endif
+#ifndef MAX
 	#define MAX(A,B)			((A)>(B)? (A):(B))
+#endif
+#ifndef ABS
 	#define ABS(a)				(((a) < 0) ? -(a) : (a))
+#endif
 
 	// dot product (2D) which allows vector operations in arguments
 	#define dot(u,v)   ((u).x * (v).x + (u).y * (v).y)

@@ -49,7 +49,7 @@ THE SOFTWARE.
 //Radius is         1.0f
 //Radius squared is 1.0f
 
-void ArcBall_t::_mapToSphere(const Point2fT* NewPt, Vector3fT* NewVec) const
+void ArcBall::_mapToSphere(const Point2fT* NewPt, Vector3fT* NewVec) const
 {
     Point2fT TempPt;
     GLfloat length;
@@ -87,7 +87,7 @@ void ArcBall_t::_mapToSphere(const Point2fT* NewPt, Vector3fT* NewVec) const
 }
 
 //Create/Destroy
-ArcBall_t::ArcBall_t(GLfloat NewWidth, GLfloat NewHeight)
+ArcBall::ArcBall(GLfloat NewWidth, GLfloat NewHeight)
 {
     //Clear initial values
     this->StVec.s.X     =
@@ -103,17 +103,24 @@ ArcBall_t::ArcBall_t(GLfloat NewWidth, GLfloat NewHeight)
 }
 
 //Mouse down
-void    ArcBall_t::click(const Point2fT* NewPt)
+void    ArcBall::click(GLfloat x, GLfloat y)
 {
+    Point2fT NewPt;
+    NewPt.T[0] = x;
+    NewPt.T[1] = y;
     //Map the point to the sphere
-    this->_mapToSphere(NewPt, &this->StVec);
+    this->_mapToSphere(&NewPt, &this->StVec);
 }
 
 //Mouse drag, calculate rotation
-void    ArcBall_t::drag(const Point2fT* NewPt, Quat4fT* NewRot)
+void    ArcBall::drag(GLfloat x, GLfloat y, Quat4fT* NewRot)
 {
+    Point2fT NewPt;
+    NewPt.T[0] = x;
+    NewPt.T[1] = y;
+
     //Map the point to the sphere
-    this->_mapToSphere(NewPt, &this->EnVec);
+    this->_mapToSphere(&NewPt, &this->EnVec);
 
     //Return the quaternion equivalent to the rotation
     if (NewRot)
@@ -144,3 +151,13 @@ void    ArcBall_t::drag(const Point2fT* NewPt, Quat4fT* NewRot)
     }
 }
 
+void ArcBall::dragAccumulate(GLfloat x, GLfloat y, Matrix4fT *transform)
+{
+    Quat4fT tmpQuat;
+    Matrix3fT tmpRot;
+
+    drag(x, y, &tmpQuat);
+
+    Matrix3fSetRotationFromQuat4f(&tmpRot, &tmpQuat);
+    Matrix4fSetRotationFromMatrix3f(transform, &tmpRot);
+}
