@@ -1,6 +1,4 @@
 ChangeLog
-src/ui.h
-src/ui.cxx
 src/repsnapper
 *.o
 *.lo
