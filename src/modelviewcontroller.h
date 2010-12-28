@@ -43,6 +43,7 @@ enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 class View;
 class ModelViewController : public Gtk::Window
 {
+	Glib::RefPtr<Gtk::Builder> m_refBuilder;
 public:
 	ModelViewController(int x,int y,int w,int h,const char *l);
 	~ModelViewController();

@@ -4,7 +4,6 @@
 #include "modelviewcontroller.h"
 #include "gcode.h"
 #include "ui.h"
-#include "view.h"
 
 using namespace std;
 
@@ -111,12 +110,6 @@ int main(int argc, char **argv)
 
 	for (uint i = 0; i < opts.files.size(); i++)
 		MVC->ReadStl (opts.files[i].c_str());
-
-	Gtk::Window *win = MVC;
-	win->set_title ("Repsnapper");
-	Gtk::Widget *view = new View (MVC->ProcessControl);
-	win->add (*view);
-	win->show_all();
 
 	tk.run();
 

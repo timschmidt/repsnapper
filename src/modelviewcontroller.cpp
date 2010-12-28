@@ -21,6 +21,7 @@
 #include <string>
 #include "modelviewcontroller.h"
 #include "rfo.h"
+#include "view.h"
 
 #ifndef WIN32
 
@@ -142,10 +143,11 @@ ModelViewController::~ModelViewController()
 	delete serial;
 }
 
+
 ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) :
   Gtk::Window()
 {
-	serial = new RepRapSerial();
+  serial = new RepRapSerial();
 
 	gui = 0;
 	read_pending = "";
@@ -155,8 +157,35 @@ ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) 
 	m_iExtruderLength = 150;
 	m_fTargetTemp = 63.0f;
 	m_fBedTargetTemp = 63.0f;
-}
 
+  try {    
+    m_refBuilder = Gtk::Builder::create_from_file("repsnapper.ui");
+  } 
+  catch(const Glib::FileError& ex)
+  {
+    std::cerr << "FileError: " << ex.what() << std::endl;
+    throw ex;
+  }
+  catch(const Gtk::BuilderError& ex)
+  {
+    std::cerr << "BuilderError: " << ex.what() << std::endl;
+    throw ex;
+  }
+
+  //Get the GtkBuilder-instantiated Dialog:
+  Gtk::Box *pBox = NULL;
+  m_refBuilder->get_widget("viewarea", pBox);
+  if (!pBox)
+    std::cerr << "missing box!";
+  else {
+    Gtk::Widget *view = new View (ProcessControl);
+    pBox->add (*view);
+    Gtk::Window *pWindow = NULL;
+    m_refBuilder->get_widget("main_window", pWindow);
+    if (pWindow)
+      pWindow->show_all();
+  }
+}
 
 void ModelViewController::redraw()
 {

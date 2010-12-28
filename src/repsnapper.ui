@@ -2,7 +2,9 @@
 <interface>
   <requires lib="gtk+" version="2.20"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkWindow" id="window1">
+  <object class="GtkWindow" id="main_window">
+    <property name="width_request">1000</property>
+    <property name="height_request">700</property>
     <child>
       <object class="GtkHBox" id="hbox1">
         <property name="visible">True</property>
@@ -140,6 +142,8 @@
                         <property name="label" translatable="yes">Progress</property>
                       </object>
                       <packing>
+                        <property name="expand">False</property>
+                        <property name="padding">4</property>
                         <property name="position">0</property>
                       </packing>
                     </child>
@@ -154,12 +158,19 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkDrawingArea" id="drawingarea1">
+                  <object class="GtkHBox" id="viewarea">
                     <property name="visible">True</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
                   </object>
                   <packing>
                     <property name="position">1</property>
@@ -190,6 +201,7 @@
                     <property name="label" translatable="yes">Printer Setup</property>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
@@ -228,6 +240,7 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">2</property>
                   </packing>
                 </child>
@@ -253,6 +266,7 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">3</property>
                   </packing>
                 </child>
@@ -263,6 +277,7 @@
                     <property name="label" translatable="yes">Model</property>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">4</property>
                   </packing>
                 </child>
@@ -361,6 +376,7 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">6</property>
                   </packing>
                 </child>
@@ -370,6 +386,7 @@
                     <property name="label" translatable="yes">Printing</property>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">7</property>
                   </packing>
                 </child>
@@ -408,6 +425,7 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">9</property>
                   </packing>
                 </child>
@@ -435,6 +453,7 @@
                     <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
@@ -478,6 +497,7 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
@@ -527,6 +547,7 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">3</property>
                   </packing>
                 </child>
@@ -725,6 +746,7 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
@@ -737,6 +759,7 @@
                     <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
@@ -749,6 +772,7 @@
                     <property name="use_action_appearance">False</property>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">2</property>
                   </packing>
                 </child>
@@ -796,6 +820,7 @@
             </child>
           </object>
           <packing>
+            <property name="expand">False</property>
             <property name="position">1</property>
           </packing>
         </child>
