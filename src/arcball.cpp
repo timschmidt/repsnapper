@@ -158,6 +158,7 @@ void ArcBall::dragAccumulate(GLfloat x, GLfloat y, Matrix4fT *transform)
 
     drag(x, y, &tmpQuat);
 
+    // FIXME: need to incorporate the existing rotation ...
     Matrix3fSetRotationFromQuat4f(&tmpRot, &tmpQuat);
     Matrix4fSetRotationFromMatrix3f(transform, &tmpRot);
 }

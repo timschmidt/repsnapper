@@ -126,7 +126,7 @@ bool View::on_button_press_event(GdkEventButton* event)
 {
   if (event->button == 1)
     arcBall->click(event->x, event->y);
-  else if (event->button == 2)
+  else if (event->button == 3)
     downPoint = Vector2f(event->x, event->y);
   else
     return Gtk::DrawingArea::on_button_press_event (event);
@@ -135,8 +135,11 @@ bool View::on_button_press_event(GdkEventButton* event)
 
 bool View::on_scroll_event(GdkEventScroll* event)
 {
-  fprintf (stderr, "scroll event %g %g\n", event->y, event->y_root);
-  zoom += event->y;
+  double factor = 110.0/100.0;
+  if (event->direction == GDK_SCROLL_UP)
+    zoom /= factor;
+  else
+    zoom *= factor;
   queue_draw();
   return true;
 }
@@ -148,8 +151,7 @@ bool View::on_motion_notify_event(GdkEventMotion* event)
     queue_draw();
     return true;
   }
-  else if (event->state & GDK_BUTTON2_MASK) {
-    fprintf (stderr, "Mouse b2 !\n");
+  else if (event->state & GDK_BUTTON3_MASK) {
     Vector2f dragp(event->x, event->y);
     Vector2f delta = downPoint - dragp;
     downPoint = dragp;
