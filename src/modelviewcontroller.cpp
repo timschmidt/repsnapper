@@ -1463,6 +1463,17 @@ RFO_File* ModelViewController::AddStl(STL stl, string filename)
 	//r.filetype = "";
 	//string material;
 	r.node = 0;	//???
+
+	if (parent->files.size())
+	{
+		RFO_File *selectedFile=0;
+		selectedFile = &parent->files[parent->files.size()-1];
+		Vector3f p = selectedFile->transform3D.transform.getTranslation();
+		Vector3f size = selectedFile->stl.Max - selectedFile->stl.Min;
+		p.x += size.x + 5.0f; // 5mm space
+		r.transform3D.transform.setTranslation(p);
+	}
+
 	parent->files.push_back(r);
 	ProcessControl.rfo.BuildBrowser(ProcessControl);
 	parent->files[parent->files.size()-1].node->select(true); // select the new stl file.
