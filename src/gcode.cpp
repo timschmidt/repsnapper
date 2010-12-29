@@ -26,6 +26,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "modelviewcontroller.h"
+#include "progress.h"
 #include "ui.h"
 
 using namespace std;
@@ -37,7 +39,7 @@ GCode::GCode()
 	Center.x = Center.y = Center.z = 0.0f;
 }
 
-void GCode::Read(ModelViewController *MVC, string filename)
+void GCode::Read(ModelViewController *MVC, Progress *progress, string filename)
 {
 	commands.clear();
 
@@ -77,13 +79,9 @@ void GCode::Read(ModelViewController *MVC, string filename)
 		{
 			MVC->gui->GCodeResult->buffer()->append((s+"\n").c_str());
 		}
-		if(MVC->gui)
-                {
-                        MVC->gui->ProgressBar->value(int(LineNr/1000)); // assumes all files are 100k lines, bad!
-                        MVC->gui->ProgressBar->redraw();
-                        Fl::check();
-                }
 
+		// FIXME: assumes all files are 100k lines, bad!
+		progress->update(int(LineNr/1000));
 
 		if(buffer.find( ";", 0) != string::npos)	// COMMENT
 			continue;

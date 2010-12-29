@@ -31,7 +31,6 @@ class ProcessController
 {
 public:
 	ProcessController(){
-
 		m_iSerialSpeed = 57600;
 		// default parameters (are overwritten by the xml loading)
 		RaftSize = 1.33f;
@@ -121,6 +120,8 @@ public:
 		Center.x = Center.y = 100.0f;
 		Center.z = 0.0f;
 
+		m_progress = NULL;
+
 		gui = 0;
 		CustomButtonGcode.resize(20);
 		CustomButtonLabel.resize(20);
@@ -128,6 +129,7 @@ public:
 
 //	ProcessController::~ProcessController();
 
+	void SetProgress(Progress *progress) { m_progress = progress; }
 	void SetFilename(string filename) { m_Filename = filename;}
 
 	void Draw(Flu_Tree_Browser::Node *selected_node);
@@ -318,6 +320,7 @@ public:
 	string GCodePath;
 	string SettingsPath;
 
+	Progress *m_progress;
 	// Maybe a pointer to the gui
 	GUI *gui;
 };

@@ -26,6 +26,7 @@
 #include "ui.h"
 #include "math.h"
 #include <boost/numeric/conversion/bounds.hpp> 
+#include "processcontroller.h"
 
 #ifdef WIN32
 #  include <GL/glut.h>	// Header GLUT Library

@@ -23,6 +23,7 @@
 #include <exception>
 #include <stdexcept>
 #include "processcontroller.h"
+#include "modelviewcontroller.h"
 
 Fl_Pixmap plus((char * const*)plus_xpm),
 minus((char * const*)minus_xpm),

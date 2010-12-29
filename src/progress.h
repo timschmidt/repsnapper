@@ -1,6 +1,6 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2010 Michale Meeks
+    Copyright (C) 2010 Michael Meeks
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -16,18 +16,24 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#ifndef FILE_H
-#define FILE_H
+#ifndef PROGRESS_H
+#define PROGRESS_H
 
-class ModelViewController;
-namespace FileChooser {
-  enum Type {
-    STL, RFO, GCODE
-  };
-  enum Op {
-    OPEN, SAVE
-  };
-  void ioDialog (ModelViewController *mvc, Op o, Type t, bool dropRFO = false);
+#include <string>
+
+class Progress {
+  Gtk::ProgressBar *m_bar;
+  Gtk::Label *m_label;
+  double m_bar_max;
+  double m_bar_cur;
+ public:
+  Progress(Gtk::ProgressBar *bar, Gtk::Label *label);
+  void start (const char *label, double max);
+  void stop (const char *label);
+  void update (double value);
+  void set_label (std::string label);
+  double maximum() { return m_bar_max; }
+  double value() { return m_bar_cur; }
 };
 
-#endif
+#endif // PROGRESS_H

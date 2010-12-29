@@ -103,14 +103,16 @@ PWM (D 14) PD6 20|        |21  PD7 (D 15) PWM
 #include "Serial/SerialEx.h"
 #endif
 
-#include "ui.h"
 #include "asyncserial.h"
+
+class Progress;
 
 class RepRapSerial
 {
 private:
 	boost::mutex m;
 	boost::condition_variable c;
+	Progress *progress;
 
 	typedef boost::unique_lock<boost::mutex> Guard;
   
@@ -125,7 +127,7 @@ private:
 public:
 
 	RepRapBufferedAsyncSerial* com;
-	RepRapSerial();
+	RepRapSerial(Progress *progress);
 	
 	// Event handler
 

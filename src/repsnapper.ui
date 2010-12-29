@@ -137,7 +137,7 @@
                   <object class="GtkHBox" id="hbox2">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkLabel" id="label1">
+                      <object class="GtkLabel" id="progress_label">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Progress</property>
                       </object>
@@ -148,7 +148,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkProgressBar" id="progressbar1">
+                      <object class="GtkProgressBar" id="progress_bar">
                         <property name="visible">True</property>
                         <property name="fraction">0.20000000000000001</property>
                       </object>
@@ -218,7 +218,7 @@
                   <object class="GtkHBox" id="hbox3">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkButton" id="button1">
+                      <object class="GtkButton" id="s_connect">
                         <property name="label" translatable="yes">Connect</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -257,7 +257,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBoxEntry" id="comboboxentry1">
+                      <object class="GtkComboBoxEntry" id="s_port_entry">
                         <property name="visible">True</property>
                       </object>
                       <packing>
@@ -296,7 +296,7 @@
                     <property name="n_rows">4</property>
                     <property name="n_columns">2</property>
                     <child>
-                      <object class="GtkButton" id="button2">
+                      <object class="GtkButton" id="s_load_stl">
                         <property name="label" translatable="yes">Load STL</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -305,7 +305,7 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkButton" id="button3">
+                      <object class="GtkButton" id="s_convert_gcode">
                         <property name="label" translatable="yes">Convert to GCode</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -350,7 +350,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="button4">
+                      <object class="GtkButton" id="s_load_gcode">
                         <property name="label" translatable="yes">Load GCode</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -403,7 +403,7 @@
                   <object class="GtkHBox" id="hbox5">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkButton" id="button5">
+                      <object class="GtkButton" id="s_print">
                         <property name="label" translatable="yes">Print</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>

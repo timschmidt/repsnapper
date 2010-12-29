@@ -553,7 +553,6 @@ private:
   void cb_RunLuaButton_i(Fl_Button*, void*);
   static void cb_RunLuaButton(Fl_Button*, void*);
 public:
-  Fl_Progress *ProgressBar;
   Fl_Double_Window *printerSettingsWindow;
   Fl_Value_Input *VolumeX;
   Fl_Value_Input *VolumeY;

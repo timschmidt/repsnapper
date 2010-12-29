@@ -48,6 +48,7 @@ using namespace PolyLib;
 
 typedef vector<Vector2f> outline;
 
+enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
 enum AXIS {NEGX, POSX, NEGY, POSY, NEGZ, POSZ, NOT_ALIGNED};
 
 class Triangle

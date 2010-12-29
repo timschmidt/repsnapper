@@ -31,7 +31,6 @@
 #include "processcontroller.h"
 #include "reprapserial.h"
 
-enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
 enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 
 #ifdef WIN32
@@ -44,7 +43,16 @@ class View;
 class ModelViewController : public Gtk::Window
 {
 	Glib::RefPtr<Gtk::Builder> m_refBuilder;
+	Progress *m_progress;
+
+	void connect_button(const char *name, const sigc::slot<void> &slot);
+
+	void load_gcode();
+	void load_stl();
 public:
+	void progess_bar_start (const char *label, double max);
+
+
 	ModelViewController(int x,int y,int w,int h,const char *l);
 	~ModelViewController();
 	void Init(GUI *gui);

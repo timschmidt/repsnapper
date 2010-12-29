@@ -19,9 +19,11 @@
 #include "stdafx.h"
 #include "reprapserial.h"
 #include "convert.h"
+#include "progress.h"
+#include "modelviewcontroller.h"
 
 
-RepRapSerial::RepRapSerial()
+RepRapSerial::RepRapSerial(Progress *_progress)
 {
 	m_bConnecting = false;
 	m_bConnected = false;
@@ -33,6 +35,7 @@ RepRapSerial::RepRapSerial()
 	gui = 0;
 	debugMask = DEBUG_ECHO | DEBUG_INFO | DEBUG_ERRORS;
 	logFile = 0;
+	progress = _progress;
 }
 
 void RepRapSerial::debugPrint(string s, bool selectLine)
@@ -182,12 +185,12 @@ void RepRapSerial::SendNextLine()
 	}
 	else	// we are done
 	{
-		ToolkitLock guard;
-
+		GDK_THREADS_ENTER();
 		m_bPrinting = false;
 		buffer.clear();
-		gui->ProgressBar->label("Print done");
+		progress->stop("Print done");
 		gui->MVC->PrintDone();
+		GDK_THREADS_LEAVE();
 		return;
 	}
 	if (gui) {
@@ -196,21 +199,16 @@ void RepRapSerial::SendNextLine()
 			startTime = time;
 		// it is just wasteful to update the GUI > once per sec.
 		if (time - lastUpdateTime > 1000) {
-			ToolkitLock guard;
+			GDK_THREADS_ENTER();
 
 			double elapsed = (time - startTime) / 1000.0;
-			double max = gui->ProgressBar->maximum();
+			double max = progress->maximum();
 			double lines_per_sec = elapsed > 1 ? (double)m_iLineNr / elapsed : 1.0;
 			double remaining = (double)(max - m_iLineNr) / lines_per_sec;
 
-			/*
-			 * Fltk has no way of knowing if this is a meaningful
-			 * change, and has a habit of doing expensive re-draws.
-			 * Detect whether there will be any visible change and
-			 * if not, don't update.
-			 */
-			if (fabs (((double)m_iLineNr - gui->ProgressBar->value()) / max) > 1.0/1000.0)
-				gui->ProgressBar->value ((float)m_iLineNr);
+			// elide small changes ...
+			if (fabs (((double)m_iLineNr - progress->value()) / max) > 1.0/1000.0)
+			  progress->update ((double)m_iLineNr);
 
 			int remaining_seconds = (int)fmod (remaining, 60.0);
 			int remaining_minutes = ((int)fmod (remaining, 3600.0) - remaining_seconds) / 60;
@@ -230,10 +228,9 @@ void RepRapSerial::SendNextLine()
 			else
 				oss << "Progress";
 
-			std::string s = oss.str();
-			const char *old_label = gui->ProgressBar->label();
-			if (!old_label || strcmp (old_label, s.c_str()))
-				gui->ProgressBar->copy_label(s.c_str());
+			progress->set_label (oss.str());
+
+			GDK_THREADS_LEAVE();
 		}
 
 	}

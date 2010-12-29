@@ -20,8 +20,10 @@
 #include <vector>
 #include <string>
 #include "modelviewcontroller.h"
+#include <functional>
 #include "rfo.h"
 #include "view.h"
+#include "progress.h"
 
 #ifndef WIN32
 
@@ -140,15 +142,37 @@ void tree_callback( Fl_Widget* w, void *_gui )
 
 ModelViewController::~ModelViewController()
 {
+	delete m_progress;
 	delete serial;
 }
 
 
+void ModelViewController::connect_button(const char *name, const sigc::slot<void> &slot)
+{
+  Gtk::Widget *widget = NULL;
+  m_refBuilder->get_widget(name, widget);
+
+  Gtk::Button *button;
+  if ((button = dynamic_cast<Gtk::Button *>(widget)))
+    button->signal_clicked().connect( slot );
+  else {
+    std::cerr << "missing button " << name << "\n";
+  }
+}
+
+void ModelViewController::load_gcode ()
+{
+  FileChooser::ioDialog (this, FileChooser::OPEN, FileChooser::GCODE);
+}
+
+void ModelViewController::load_stl ()
+{
+  FileChooser::ioDialog (this, FileChooser::OPEN, FileChooser::STL);
+}
+
 ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) :
   Gtk::Window()
 {
-  serial = new RepRapSerial();
-
 	gui = 0;
 	read_pending = "";
 
@@ -172,7 +196,7 @@ ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) 
     throw ex;
   }
 
-  //Get the GtkBuilder-instantiated Dialog:
+  // Get the GtkBuilder-instantiated Dialog:
   Gtk::Box *pBox = NULL;
   m_refBuilder->get_widget("viewarea", pBox);
   if (!pBox)
@@ -185,6 +209,24 @@ ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) 
     if (pWindow)
       pWindow->show_all();
   }
+
+  /* Need a printer connected button - that listens for a
+     signal from the serial foo ... */
+  //  button_connect ("s_connect", 
+  connect_button ("s_load_stl",      sigc::mem_fun(*this, &ModelViewController::load_stl) );
+  connect_button ("s_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
+  connect_button ("s_load_gcode",    sigc::mem_fun(*this, &ModelViewController::load_gcode) );
+  connect_button ("s_print",         sigc::mem_fun(*this, &ModelViewController::SimplePrint) );
+
+  Gtk::Label *label = NULL;
+  Gtk::ProgressBar *bar = NULL;
+
+  m_refBuilder->get_widget("progress_bar", bar);
+  m_refBuilder->get_widget("progress_label", label);
+  m_progress = new Progress (bar, label);
+  ProcessControl.SetProgress (m_progress);
+
+  serial = new RepRapSerial(m_progress);
 }
 
 void ModelViewController::redraw()
@@ -740,9 +782,7 @@ void ModelViewController::Print()
 		pos = buffer->line_end(pos)+1;	// find end of line
 		}
 
-	gui->ProgressBar->maximum(serial->Length());
-	gui->ProgressBar->label("Printing");
-	gui->ProgressBar->value(0);
+	m_progress->start ("Printing", serial->Length());
 	free(pText);
 	serial->StartPrint();
 }

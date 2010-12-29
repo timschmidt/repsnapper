@@ -21,17 +21,14 @@
 #include "processcontroller.h"
 #include <boost/algorithm/string.hpp>
 #include <libconfig.h++>
+#include "progress.h"
+
 using namespace libconfig;
 using namespace std;
 
 void ProcessController::ConvertToGCode(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd)
 {
-	if(gui)
-	{
-		gui->ProgressBar->value(0);
-		gui->ProgressBar->label("Converting");
-		gui->ProgressBar->maximum(Max.z);
-	}
+  m_progress->start ("Converting", Max.z);
 
 	// Make Layers
 	uint LayerNr = 0;
@@ -56,12 +53,7 @@ void ProcessController::ConvertToGCode(string &GcodeTxt, const string &GcodeStar
 	float E=0.0f;
 	while(z<Max.z)
 	{
-		if(gui)
-		{
-			gui->ProgressBar->value(z);
-			gui->ProgressBar->redraw();
-			Fl::check();
-		}
+	  m_progress->update(z);
 		for(uint o=0;o<rfo.Objects.size();o++)
 		{
 			for(uint f=0;f<rfo.Objects[o].files.size();f++)
@@ -122,7 +114,7 @@ void ProcessController::ConvertToGCode(string &GcodeTxt, const string &GcodeStar
 		AntioozeDistance = 0;
 	}
 	gcode.MakeText(GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd, UseIncrementalEcode, Use3DGcode, AntioozeDistance, AntioozeSpeed);
-	gui->ProgressBar->label("Done");
+	m_progress->stop("Done");
 }
 
 Matrix4f ProcessController::GetSTLTransformationMatrix(int object, int file) const
@@ -393,19 +385,9 @@ void ProcessController::Draw(Flu_Tree_Browser::Node *selected_node)
 
 void ProcessController::ReadGCode(string filename)
 {
-	if(gui)
-        {
-                gui->ProgressBar->value(0);
-                gui->ProgressBar->label("Converting");
-                gui->ProgressBar->maximum(100);
-        }
-
-	gcode.Read (gui->MVC, filename);
-	if(gui)  {
-	gui->ProgressBar->label("          ");
-	gui->ProgressBar->label("Done");
-        gui->ProgressBar->value(100);
-	}
+  m_progress->start ("Converting", 100.0);
+  gcode.Read (gui->MVC, m_progress, filename);
+  m_progress->stop ("Done");
 }
 
 void ProcessController::WriteGCode(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, string filename)
