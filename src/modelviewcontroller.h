@@ -49,6 +49,7 @@ class ModelViewController : public Gtk::Window
 	Gtk::Entry *m_gcode_entry;
 
 	void connect_button(const char *name, const sigc::slot<void> &slot);
+	virtual bool on_delete_event(GdkEventAny* event);
 
 	void load_gcode();
 	void save_gcode();
@@ -115,7 +116,7 @@ public:
 
 	void SetDisplayGCode(bool val){ProcessControl.DisplayGCode = val;}
 	void SetLuminanceShowsSpeed(bool val){ProcessControl.LuminanceShowsSpeed = val;}
-	void CalcBoundingBoxAndZoom(){ProcessControl.CalcBoundingBoxAndZoom();}
+	void CalcBoundingBoxAndCenter() { ProcessControl.CalcBoundingBoxAndCenter(); }
 
 	// GCode GUI Values
 	void SetGCodeDrawStart(float val){ProcessControl.GCodeDrawStart = val; redraw();}

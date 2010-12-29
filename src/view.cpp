@@ -53,23 +53,8 @@ void View::rfo_changed()
   if (!m_pc.rfo.Objects.size())
     return;
 
-  m_max = Vector3f(G_MINFLOAT, G_MINFLOAT, G_MINFLOAT);
-  m_min = Vector3f(G_MAXFLOAT, G_MAXFLOAT, G_MAXFLOAT);
-
-  for (uint i = 0 ; i < m_pc.rfo.Objects.size(); i++) {
-    for (uint j = 0; j < m_pc.rfo.Objects[i].files.size(); j++) {
-      Matrix4f M = m_pc.GetSTLTransformationMatrix (i, j);
-      Vector3f stlMin = M * m_pc.rfo.Objects[i].files[j].stl.Min;
-      Vector3f stlMax = M * m_pc.rfo.Objects[i].files[j].stl.Max;
-      for (uint k = 0; k < 3; k++) {
-	m_min.xyz[k] = MIN(stlMin.xyz[k], m_min.xyz[k]);
-	m_max.xyz[k] = MAX(stlMax.xyz[k], m_max.xyz[k]);
-      }
-    }
-  }
-
-  m_center = (m_max - m_min) / 2.0;
-  m_zoom = (m_max - m_min).getMaxComponent();
+  m_zoom = (m_pc.Max - m_pc.Min).getMaxComponent();
+  queue_draw();
 }
 
 bool View::on_configure_event(GdkEventConfigure* event)
@@ -188,8 +173,8 @@ bool View::on_motion_notify_event(GdkEventMotion* event)
     X = matrix * X;
     Vector3f Y(0,-delta.y,0);
     Y = matrix * Y;
-    m_center += X*delta.length()*0.01f;
-    m_center += Y*delta.length()*0.01f;
+    m_pc.Center += X*delta.length()*0.01f;
+    m_pc.Center += Y*delta.length()*0.01f;
     queue_draw();
     return true;
   }
@@ -205,7 +190,7 @@ void View::SetEnableLight(unsigned int i, bool on)
 
 void View::CenterView()
 {
-  glTranslatef (-m_center.x - m_pc.printOffset.x,
-		-m_center.y - m_pc.printOffset.y,
-		-m_center.z);
+  glTranslatef (-m_pc.Center.x - m_pc.printOffset.x,
+		-m_pc.Center.y - m_pc.printOffset.y,
+		-m_pc.Center.z);
 }

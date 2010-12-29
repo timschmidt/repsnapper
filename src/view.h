@@ -17,8 +17,6 @@ class View : public Gtk::GL::DrawingArea
   GLUquadricObj *m_quadratic;
   ProcessController &m_pc;
 
-  Vector3f m_center, m_min, m_max;
-
   float m_zoom;
   gllight *m_lights[4];
 

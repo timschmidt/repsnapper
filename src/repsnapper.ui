@@ -549,7 +549,7 @@
                                     <property name="hscrollbar_policy">automatic</property>
                                     <property name="vscrollbar_policy">automatic</property>
                                     <child>
-                                      <object class="GtkTextView" id="textview1">
+                                      <object class="GtkTextView" id="txt_gcode_start">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                       </object>
@@ -572,7 +572,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkTextView" id="textview2">
+                      <object class="GtkTextView" id="txt_gcode_end">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                       </object>
@@ -591,7 +591,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkTextView" id="textview3">
+                      <object class="GtkTextView" id="txt_gcode_next_layer">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                       </object>
@@ -600,7 +600,7 @@
                       </packing>
                     </child>
                     <child type="tab">
-                      <object class="GtkLabel" id="label21">
+                      <object class="GtkLabel" id="label">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">Next layer</property>
                       </object>

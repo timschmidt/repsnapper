@@ -141,6 +141,12 @@ void tree_callback( Fl_Widget* w, void *_gui )
 	gui->MVC->redraw();
 }
 
+bool ModelViewController::on_delete_event(GdkEventAny* event)
+{
+  Gtk::Main::quit();
+  return false;
+}
+
 void ModelViewController::connect_button(const char *name, const sigc::slot<void> &slot)
 {
   Gtk::Button *button = NULL;
@@ -233,6 +239,13 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   Gtk::TextView *textv = NULL;
   m_builder->get_widget ("txt_gcode_result", textv);
   textv->set_buffer (ProcessControl.gcode.buffer);
+  m_builder->get_widget ("txt_gcode_start", textv);
+  textv->set_buffer (ProcessControl.m_GCodeStartText);
+  m_builder->get_widget ("txt_gcode_end", textv);
+  textv->set_buffer (ProcessControl.m_GCodeEndText);
+  m_builder->get_widget ("txt_gcode_next_layer", textv);
+  textv->set_buffer (ProcessControl.m_GCodeLayerText);
+
   m_builder->get_widget ("m_gcode", m_gcode_entry);
   m_gcode_entry->set_activates_default();
   m_gcode_entry->signal_activate().connect (sigc::mem_fun(*this, &ModelViewController::send_gcode));;
@@ -460,69 +473,23 @@ void ModelViewController::ReadGCode(string filename)
 
 }
 
-
 void ModelViewController::ConvertToGCode()
 {
-	string GcodeTxt;
-
-	string pText;
-	string GCodeStart(pText);
-	string GCodeLayer(pText);
- 	string GCodeEnd(pText);
-
-#warning "Missing foo"
-#if 0
-	buffer = gui->GCodeStart->buffer();
-	char* pText = buffer->text();
-	buffer = gui->GCodeLayer->buffer();
-	free(pText);
-	pText = buffer->text();
-	buffer = gui->GCodeEnd->buffer();
-	free(pText);
-	pText = buffer->text();
-	free(pText);
-#endif
-
-	ProcessControl.ConvertToGCode(GcodeTxt, GCodeStart, GCodeLayer, GCodeEnd);
+  ProcessControl.ConvertToGCode();
 }
 
 void ModelViewController::init()
 {
-
-	Fl_Text_Buffer* buffer = gui->GCodeStart->buffer();
-	buffer->text(ProcessControl.GCodeStartText.c_str());
-	buffer = gui->GCodeLayer->buffer();
-	buffer->text(ProcessControl.GCodeLayerText.c_str());
-	buffer = gui->GCodeEnd->buffer();
-	buffer->text(ProcessControl.GCodeEndText.c_str());
-    //buffer->text(ProcessControl.Notes.c_str());
-
+#ifdef ENABLE_LUA
 	buffer = gui->LuaScriptEditor->buffer();
 	buffer->text("--Clear existing gcode\nbase:ClearGcode()\n-- Set start speed for acceleration firmware\nbase:AddText(\"G1 F2600\\n\")\n\n	 z=0.0\n	 e=0;\n	oldx = 0;\n	oldy=0;\n	while(z<47) do\n	angle=0\n		while (angle < math.pi*2) do\n	x=(50*math.cos(z/30)*math.sin(angle))+70\n		y=(50*math.cos(z/30)*math.cos(angle))+70\n\n		--how much to extrude\n\n		dx=oldx-x\n		dy=oldy-y\n		if not (angle==0) then\n			e = e+math.sqrt(dx*dx+dy*dy)\n			end\n\n			-- Make gcode string\n\n			s=string.format(\"G1 X%f Y%f Z%f F2600 E%f\\n\", x,y,z,e)\n			if(angle == 0) then\n				s=string.format(\"G1 X%f Y%f Z%f F2600 E%f\\n\", x,y,z,e)\n				end\n				-- Add gcode to gcode result\nbase:AddText(s)\n	 angle=angle+0.2\n	 oldx=x\n	 oldy=y\n	 end\n	 z=z+0.4\n	 end\n	 ");
-
-//	buffer = gui->CommunationsLogText->buffer();
-//	buffer->text("Dump");
+#endif
 }
-
 
 void ModelViewController::WriteGCode (string filename)
 {
-  Fl_Text_Buffer* buffer = gui->GCodeResult->buffer();
-  int result = buffer->savefile (filename.c_str());
-
-  switch (result)
-    {
-    case 0: // Succes
-      break;
-    case 1: // Open for write failed
-      alert ("Error saving GCode file, error creating file.");
-      break;
-    case 2: // Partially saved file
-      alert ("Error saving GCode file, while writing file, is the disk full?.");
-      break;
-    }
+  ProcessControl.gcode.Write (this, filename);
 }
-
 
 //Make the remaining buttons work
 //implement acceleration
@@ -531,13 +498,6 @@ void ModelViewController::CopySettingsToGUI()
 {
 	if(gui == 0)
 		return;
-	Fl_Text_Buffer* buffer = gui->GCodeStart->buffer();
-	buffer->text(ProcessControl.GCodeStartText.c_str());
-	buffer = gui->GCodeLayer->buffer();
-	buffer->text(ProcessControl.GCodeLayerText.c_str());
-	buffer = gui->GCodeEnd->buffer();
-	buffer->text(ProcessControl.GCodeEndText.c_str());
-    //buffer->text(ProcessControl.Notes.c_str());
 
 	gui->RaftEnableButton->value(ProcessControl.RaftEnable);
 	gui->RaftSizeSlider->value(ProcessControl.RaftSize);
@@ -788,25 +748,8 @@ void ModelViewController::Print()
 	serial->SetDebugMask();
 	serial->SetLineNr(-1);	// Reset LineNr Count
 	gui->CommunationLog->clear();
-	Fl_Text_Buffer* buffer = gui->GCodeResult->buffer();
-	char* pText = buffer->text();
-	uint length = buffer->length();
-
-	uint pos = 2;
-	while(pos < length)
-		{
-		char* line = buffer->line_text(pos);
-		if(line[0] == ';')
-			{
-			pos = buffer->line_end(pos)+1;	// skip newline
-			continue;
-			}
-		serial->AddToBuffer(line);
-		pos = buffer->line_end(pos)+1;	// find end of line
-		}
-
+	ProcessControl.gcode.queue_to_serial (serial);
 	m_progress->start ("Printing", serial->Length());
-	free(pText);
 	serial->StartPrint();
 }
 
@@ -1202,7 +1145,7 @@ void ModelViewController::RunLua(char* script)
 	path=filename.substr(0,found);
 
 	ProcessControl.rfo.Load(path, ProcessControl);
-	ProcessControl.CalcBoundingBoxAndZoom();
+	ProcessControl.CalcBoundingBoxAndCenter();
 }*/
 
 void ModelViewController::GetSelectedRFO(RFO_Object **selectedObject, RFO_File **selectedFile)
@@ -1322,8 +1265,7 @@ void ModelViewController::Translate(string axis, float distance)
 			Tr.z = distance;
 		pMatrices[i]->setTranslation(Tr);
 		}
-	ProcessControl.CalcBoundingBoxAndZoom();
-	redraw();
+	ProcessControl.CalcBoundingBoxAndCenter();
 }
 
 void ModelViewController::Scale(string axis, float distance)
@@ -1361,8 +1303,7 @@ RFO_File* ModelViewController::AddStl(STL stl, string filename)
 	parent->files.push_back(r);
 	ProcessControl.rfo.BuildBrowser(ProcessControl);
 	parent->files[parent->files.size()-1].node->select(true); // select the new stl file.
-	ProcessControl.CalcBoundingBoxAndZoom();
-	redraw();
+	ProcessControl.CalcBoundingBoxAndCenter();
 	return &parent->files.back();
 }
 
@@ -1384,8 +1325,7 @@ void ModelViewController::Duplicate()
 				p.x += size.x+5.0f;	// 5mm space
 				obj->transform3D.transform.setTranslation(p);
 				gui->RFP_Browser->set_hilighted(obj->node);
-				ProcessControl.CalcBoundingBoxAndZoom();
-				redraw();
+				ProcessControl.CalcBoundingBoxAndCenter();
 				return;
 			}
 		}

@@ -42,14 +42,7 @@ GCode::GCode()
 
 void GCode::Read(ModelViewController *MVC, Progress *progress, string filename)
 {
-	commands.clear();
-
-	if(MVC->gui)
-	{
-		Fl_Text_Buffer* buffer = MVC->gui->GCodeResult->buffer();
-		buffer->remove(0, buffer->length());
-	}
-
+	clear();
 
 	ifstream file;
 	file.open(filename.c_str());		//open a file
@@ -73,13 +66,8 @@ void GCode::Read(ModelViewController *MVC, Progress *progress, string filename)
 		istringstream line(s);
 		LineNr++;
 		string buffer;
-//		char charBuffer[1000];
 		line >> buffer;	// read something
-
-		if(MVC->gui)
-		{
-			MVC->gui->GCodeResult->buffer()->append((s+"\n").c_str());
-		}
+		append_text ((s+"\n").c_str());
 
 		// FIXME: assumes all files are 100k lines, bad!
 		progress->update(int(LineNr/1000));
@@ -316,8 +304,6 @@ void GCode::draw(const ProcessController &PC)
 	oss << "Length: "  << Distance/1000.0f << " - " << Distance/200000.0f << " Hour.";
 //	std::cout << oss.str();
 
-//	gui->GCodeLengthText->value(oss.str().c_str());	// todo: Fix
-
 
 	// Draw bbox
 	glColor3f(1,0,0);
@@ -514,4 +500,20 @@ std::string GCode::get_text () const
 void GCode::clear()
 {
   buffer->erase (buffer->begin(), buffer->end());
+  commands.clear();
+}
+
+void GCode::queue_to_serial (RepRapSerial *serial)
+{
+  // Horribly inefficient ...
+  int line_count = buffer->get_line_count();
+  int i;
+  Gtk::TextBuffer::iterator last = buffer->begin();
+  for (i = 1; i <= line_count; i++) {
+    Gtk::TextBuffer::iterator it = buffer->get_iter_at_line (i);
+    std::string line = buffer->get_text (last, it);
+    if (line.length() > 0 && line[0] != ';')
+      serial->AddToBuffer(line);
+    last = it;
+  }
 }

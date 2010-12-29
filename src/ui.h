@@ -246,11 +246,6 @@ public:
 private:
   void cb_Convert1_i(Fl_Button*, void*);
   static void cb_Convert1(Fl_Button*, void*);
-public:
-  Fl_Text_Editor *GCodeStart;
-  Fl_Text_Editor *GCodeLayer;
-  Fl_Text_Editor *GCodeEnd;
-  Fl_Text_Editor *GCodeResult;
 private:
   void cb_Save2_i(Fl_Button*, void*);
   static void cb_Save2(Fl_Button*, void*);

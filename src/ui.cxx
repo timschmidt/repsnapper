@@ -218,8 +218,7 @@ void GUI::cb_Save1(Fl_Button* o, void* v) {
 
 void GUI::cb_AutoRotateButton_i(Fl_Button*, void*) {
   MVC->OptimizeRotation();
-MVC->CalcBoundingBoxAndZoom();
-MVC->redraw();
+MVC->CalcBoundingBoxAndCenter();
 }
 void GUI::cb_AutoRotateButton(Fl_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_AutoRotateButton_i(o,v);
@@ -227,8 +226,7 @@ void GUI::cb_AutoRotateButton(Fl_Button* o, void* v) {
 
 void GUI::cb_RotateXButton_i(Fl_Button*, void*) {
   MVC->RotateObject(1,0,0, (float)(M_PI/4));
-MVC->CalcBoundingBoxAndZoom();
-MVC->redraw();
+MVC->CalcBoundingBoxAndCenter();
 }
 void GUI::cb_RotateXButton(Fl_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_RotateXButton_i(o,v);
@@ -236,7 +234,7 @@ void GUI::cb_RotateXButton(Fl_Button* o, void* v) {
 
 void GUI::cb_RotateYButton_i(Fl_Button*, void*) {
   MVC->RotateObject(0,1,0, (float)(M_PI/4));
-MVC->CalcBoundingBoxAndZoom();
+MVC->CalcBoundingBoxAndCenter();
 MVC->redraw();
 }
 void GUI::cb_RotateYButton(Fl_Button* o, void* v) {
@@ -245,7 +243,7 @@ void GUI::cb_RotateYButton(Fl_Button* o, void* v) {
 
 void GUI::cb_RotateZButton_i(Fl_Button*, void*) {
   MVC->RotateObject(0,0,1, (float)(M_PI/4));
-MVC->CalcBoundingBoxAndZoom();
+MVC->CalcBoundingBoxAndCenter();
 MVC->redraw();
 }
 void GUI::cb_RotateZButton(Fl_Button* o, void* v) {
@@ -1948,31 +1946,6 @@ GUI::GUI() {
           o->callback((Fl_Callback*)cb_Convert1);
         } // Fl_Button* o
         { Fl_Tabs* o = new Fl_Tabs(715, 175, 555, 664);
-          o->color((Fl_Color)66);
-          o->selection_color((Fl_Color)31);
-          { Fl_Text_Editor* o = GCodeStart = new Fl_Text_Editor(715, 193, 555, 646, "Start");
-            GCodeStart->selection_color((Fl_Color)31);
-            Fl_Text_Buffer *startbuff = new Fl_Text_Buffer();
-            o->buffer(startbuff);
-          } // Fl_Text_Editor* GCodeStart
-          { Fl_Text_Editor* o = GCodeLayer = new Fl_Text_Editor(715, 194, 555, 645, "Next layer");
-            GCodeLayer->selection_color((Fl_Color)31);
-            GCodeLayer->hide();
-            Fl_Text_Buffer *layerbuff = new Fl_Text_Buffer();
-            o->buffer(layerbuff);
-          } // Fl_Text_Editor* GCodeLayer
-          { Fl_Text_Editor* o = GCodeEnd = new Fl_Text_Editor(715, 195, 555, 644, "End code");
-            GCodeEnd->selection_color((Fl_Color)31);
-            GCodeEnd->hide();
-            Fl_Text_Buffer *endbuff = new Fl_Text_Buffer();
-            o->buffer(endbuff);
-          } // Fl_Text_Editor* GCodeEnd
-          { Fl_Text_Editor* o = GCodeResult = new Fl_Text_Editor(715, 195, 555, 644, "Result");
-            GCodeResult->selection_color((Fl_Color)31);
-            GCodeResult->hide();
-            Fl_Text_Buffer *resultbuff = new Fl_Text_Buffer();
-            o->buffer(resultbuff);
-          } // Fl_Text_Editor* GCodeResult
           o->end();
         } // Fl_Tabs* o
         { GCodeInput = new Fl_Input(825, 140, 325, 25, "Send a GCode");

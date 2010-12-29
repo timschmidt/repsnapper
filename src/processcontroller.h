@@ -134,7 +134,11 @@ public:
 		gui = 0;
 		CustomButtonGcode.resize(20);
 		CustomButtonLabel.resize(20);
-};
+
+		m_GCodeStartText = Gtk::TextBuffer::create();
+		m_GCodeLayerText = Gtk::TextBuffer::create();
+		m_GCodeEndText = Gtk::TextBuffer::create();
+	}
 
 	void SetProgress(Progress *progress) { m_progress = progress; }
 	void SetFilename(string filename) { m_Filename = filename;}
@@ -146,9 +150,9 @@ public:
 	void OptimizeRotation();
 	void RotateObject(Vector3f axis, float a);
 	Matrix4f GetSTLTransformationMatrix(int object=-1, int file=-1) const ;
-	void CalcBoundingBoxAndZoom();
+	void CalcBoundingBoxAndCenter();
 
-	void ConvertToGCode(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd);
+	void ConvertToGCode();
 
 	// GCode Functions
 	void ReadGCode(string filename);
@@ -176,13 +180,9 @@ public:
 	string m_Filename;
 
 	// Start, layer, end GCode
-	Gtk::TextBuffer *m_GCodeStartText;
-	Gtk::TextBuffer *m_GCodeLayerText;
-	Gtk::TextBuffer *m_GCodeEndText;
-#warning remove me !
-	std::string GCodeStartText;
-	std::string GCodeLayerText;
-	std::string GCodeEndText;
+	Glib::RefPtr<Gtk::TextBuffer> m_GCodeStartText;
+	Glib::RefPtr<Gtk::TextBuffer> m_GCodeLayerText;
+	Glib::RefPtr<Gtk::TextBuffer> m_GCodeEndText;
 
 	/*--------------Models-------------------*/
 	Printer printer;					// Printer settings and functions

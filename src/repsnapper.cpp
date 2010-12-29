@@ -101,10 +101,8 @@ int main(int argc, char **argv)
 
 			mvc->ConvertToGCode();
 
-			if (opts.gcode_output_path.size() > 0) {
-				Fl_Text_Buffer *buffer = gui->GCodeResult->buffer();
-				return buffer->savefile(opts.gcode_output_path.c_str());
-			}
+			if (opts.gcode_output_path.size() > 0)
+				mvc->WriteGCode (opts.gcode_output_path.c_str());
 		}
 		return 0;
 	}
