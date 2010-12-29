@@ -190,10 +190,8 @@ public:
 	int m_iSerialSpeed;
 	bool m_bValidateConnection;
 	int KeepLines;
-//	STL stl;							// A STL file
 	RFO rfo;
-	GCode gcode;						// Gcode as binary data
-	string GcodeTxt;					// Final GCode as text
+	GCode gcode;
 
 	float Optimization;
 	int ReceivingBufferSize;

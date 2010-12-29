@@ -401,6 +401,28 @@
               </packing>
             </child>
             <child>
+              <object class="GtkButton" id="button1">
+                <property name="label" translatable="yes">Model !</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child type="tab">
+              <object class="GtkLabel" id="label3">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Model</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+                <property name="tab_fill">False</property>
+              </packing>
+            </child>
+            <child>
               <object class="GtkVBox" id="vbox4">
                 <property name="visible">True</property>
                 <property name="orientation">vertical</property>
@@ -438,6 +460,7 @@
                         <property name="can_focus">True</property>
                         <property name="invisible_char">&#x25CF;</property>
                         <property name="text" translatable="yes">Text Output</property>
+                        <property name="invisible_char_set">True</property>
                       </object>
                       <packing>
                         <property name="position">1</property>
@@ -488,6 +511,7 @@
                         <property name="can_focus">True</property>
                         <property name="invisible_char">&#x25CF;</property>
                         <property name="text" translatable="yes">Enter a GCode</property>
+                        <property name="invisible_char_set">True</property>
                       </object>
                       <packing>
                         <property name="position">1</property>
@@ -531,33 +555,9 @@
                         <property name="hscrollbar_policy">automatic</property>
                         <property name="vscrollbar_policy">automatic</property>
                         <child>
-                          <object class="GtkScrolledWindow" id="scrolledwindow2">
+                          <object class="GtkTextView" id="txt_gcode_start">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="hscrollbar_policy">automatic</property>
-                            <property name="vscrollbar_policy">automatic</property>
-                            <child>
-                              <object class="GtkScrolledWindow" id="scrolledwindow3">
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="hscrollbar_policy">automatic</property>
-                                <property name="vscrollbar_policy">automatic</property>
-                                <child>
-                                  <object class="GtkScrolledWindow" id="scrolledwindow4">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="hscrollbar_policy">automatic</property>
-                                    <property name="vscrollbar_policy">automatic</property>
-                                    <child>
-                                      <object class="GtkTextView" id="txt_gcode_start">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                </child>
-                              </object>
-                            </child>
                           </object>
                         </child>
                       </object>
@@ -635,21 +635,8 @@
                 </child>
               </object>
               <packing>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
-            </child>
-            <child type="tab">
-              <object class="GtkLabel" id="label3">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Model</property>
-              </object>
-              <packing>
-                <property name="position">1</property>
-                <property name="tab_fill">False</property>
-              </packing>
-            </child>
-            <child>
-              <placeholder/>
             </child>
             <child type="tab">
               <object class="GtkLabel" id="label4">
@@ -752,7 +739,16 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkButton" id="button2">
+                <property name="label" translatable="yes">Interactive</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+              </object>
+              <packing>
+                <property name="position">4</property>
+              </packing>
             </child>
             <child type="tab">
               <object class="GtkLabel" id="label7">
@@ -765,12 +761,20 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkButton" id="button3">
+                <property name="label" translatable="yes">Lua ...</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
+              </object>
+              <packing>
+                <property name="position">5</property>
+              </packing>
             </child>
             <child type="tab">
               <object class="GtkLabel" id="label6">
                 <property name="visible">True</property>
-                <property name="sensitive">False</property>
                 <property name="label" translatable="yes">Lua</property>
               </object>
               <packing>

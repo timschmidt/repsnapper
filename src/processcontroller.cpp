@@ -137,8 +137,6 @@ Matrix4f ProcessController::GetSTLTransformationMatrix(int object, int file) con
 
 void ProcessController::CalcBoundingBoxAndCenter()
 {
-  cerr << "remove me !\n";
-
   Max = Vector3f(G_MINFLOAT, G_MINFLOAT, G_MINFLOAT);
   Min = Vector3f(G_MAXFLOAT, G_MAXFLOAT, G_MAXFLOAT);
 

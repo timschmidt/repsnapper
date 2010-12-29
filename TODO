@@ -10,12 +10,13 @@ add event foo to the MVC...
 	+ move ModelViewController DetectComPorts to RepRapSerial ...
 	  ditto ValidateComPort
 
-
-* hide 'std::vector<Command> commands' in gcode.h
-* remove the 'GcodeTxt' element in processcontroller.h
-* migrate start/end/layer etc. to use Gtk::TextBuffer 
-
 * rename processcontroller.h to 'settings' or 'config' globally ... ?
 	+ add a 'changed' signal ...
 
 * poke at CopySettingsToGUI
+
+* next tab to implement:
+	+ print - simple widgets ...
+	+ interactive control (?)
+
+* hide progress bar when not in use ...
