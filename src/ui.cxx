@@ -1742,16 +1742,8 @@ GUI::GUI() {
       MainMenuBar->align(FL_ALIGN_TOP_LEFT);
       MainMenuBar->menu(menu_MainMenuBar);
     } // Fl_Menu_Bar* MainMenuBar
-    { MVC = new ModelViewController(5, 55, 705, 795, "An instace of ModelViewController");
-/*      MVC->box(FL_UP_BOX); mmeeks !
-      MVC->color((Fl_Color)FL_BACKGROUND_COLOR);
-      MVC->selection_color((Fl_Color)FL_BACKGROUND_COLOR);
-      MVC->labeltype(FL_NORMAL_LABEL);
-      MVC->labelfont(0);
-      MVC->labelsize(14);
-      MVC->labelcolor((Fl_Color)FL_FOREGROUND_COLOR);
-      MVC->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
-      MVC->when(FL_WHEN_RELEASE); */
+    { 
+      MVC = NULL;
     } // ModelViewController* MVC
     { Tabs = new Fl_Tabs(710, 0, 565, 852);
       Tabs->callback((Fl_Callback*)cb_Tabs);
@@ -1796,8 +1788,6 @@ GUI::GUI() {
             o->box(FL_NO_BOX);
             o->align(FL_ALIGN_RIGHT);
           } // Fl_Text_Display* o
-          { Fl_Button* o = new Fl_Button(740, 296, 160, 25, "Load GCode");
-          } // Fl_Button* o
           { Fl_Text_Display* o = new Fl_Text_Display(855, 296, 45, 29, "Or just load previously generated GCODE directly");
             o->box(FL_NO_BOX);
             o->align(FL_ALIGN_RIGHT);
@@ -1814,8 +1804,6 @@ GUI::GUI() {
             o->box(FL_NO_BOX);
             o->align(FL_ALIGN_RIGHT);
           } // Fl_Text_Display* o
-          { Fl_Button* o = new Fl_Button(740, 378, 160, 25, "Print");
-          } // Fl_Button* o
           o->end();
         } // Fl_Group* o
         { VersionText = new Fl_Output(805, 819, 220, 26, "Version");
@@ -1824,8 +1812,6 @@ GUI::GUI() {
       } // Fl_Group* SimpleTab
       { InputTab = new Fl_Group(710, 19, 560, 832, "Input file");
         InputTab->hide();
-        { Fl_Button* o = new Fl_Button(815, 41, 325, 38, "Load STL");
-        } // Fl_Button* o
         { FixSTLerrorsButton = new Fl_Light_Button(910, 89, 135, 21, "Fix STL errors");
           FixSTLerrorsButton->value(1);
           FixSTLerrorsButton->selection_color((Fl_Color)FL_GREEN);

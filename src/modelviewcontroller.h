@@ -42,18 +42,19 @@ enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 class View;
 class ModelViewController : public Gtk::Window
 {
-	Glib::RefPtr<Gtk::Builder> m_refBuilder;
+	Glib::RefPtr<Gtk::Builder> m_builder;
 	Progress *m_progress;
 
 	void connect_button(const char *name, const sigc::slot<void> &slot);
 
 	void load_gcode();
 	void load_stl();
+
 public:
+	ModelViewController(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
 	void progess_bar_start (const char *label, double max);
 
-
-	ModelViewController(int x,int y,int w,int h,const char *l);
+	static ModelViewController *create();
 	~ModelViewController();
 	void Init(GUI *gui);
 	void SimpleAdvancedToggle();

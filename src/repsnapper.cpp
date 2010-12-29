@@ -83,22 +83,23 @@ int main(int argc, char **argv)
 	CommandLineOptions opts (argc, argv);
 
 	gui = new GUI();
-	ModelViewController *MVC = gui->MVC;
+	ModelViewController *mvc = ModelViewController::create();
+	gui->MVC = mvc;
 
-	MVC->ProcessControl.gui = gui;
-	MVC->Init(gui);
-	MVC->serial->setGUI(gui);
+	mvc->ProcessControl.gui = gui;
+	mvc->Init(gui);
+	mvc->serial->setGUI(gui);
 
 	if (!opts.use_gui) {
 		if (opts.stl_input_path.size() > 0) {
-			MVC->ReadStl(opts.stl_input_path);
+			mvc->ReadStl(opts.stl_input_path);
 
 			if (opts.settings_path.size() > 0) {
-				MVC->ProcessControl.LoadConfig(opts.settings_path);
-				MVC->CopySettingsToGUI();
+				mvc->ProcessControl.LoadConfig(opts.settings_path);
+				mvc->CopySettingsToGUI();
 			}
 
-			MVC->ConvertToGCode();
+			mvc->ConvertToGCode();
 
 			if (opts.gcode_output_path.size() > 0) {
 				Fl_Text_Buffer *buffer = gui->GCodeResult->buffer();
@@ -109,7 +110,7 @@ int main(int argc, char **argv)
 	}
 
 	for (uint i = 0; i < opts.files.size(); i++)
-		MVC->ReadStl (opts.files[i].c_str());
+		mvc->ReadStl (opts.files[i].c_str());
 
 	tk.run();
 

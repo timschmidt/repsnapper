@@ -140,17 +140,10 @@ void tree_callback( Fl_Widget* w, void *_gui )
 	gui->MVC->redraw();
 }
 
-ModelViewController::~ModelViewController()
-{
-	delete m_progress;
-	delete serial;
-}
-
-
 void ModelViewController::connect_button(const char *name, const sigc::slot<void> &slot)
 {
   Gtk::Widget *widget = NULL;
-  m_refBuilder->get_widget(name, widget);
+  m_builder->get_widget(name, widget);
 
   Gtk::Button *button;
   if ((button = dynamic_cast<Gtk::Button *>(widget)))
@@ -170,21 +163,12 @@ void ModelViewController::load_stl ()
   FileChooser::ioDialog (this, FileChooser::OPEN, FileChooser::STL);
 }
 
-ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) :
-  Gtk::Window()
+ModelViewController *ModelViewController::create()
 {
-	gui = 0;
-	read_pending = "";
-
-	m_bExtruderDirection = true;
-	m_iExtruderSpeed = 3000;
-	m_iExtruderLength = 150;
-	m_fTargetTemp = 63.0f;
-	m_fBedTargetTemp = 63.0f;
-
-  try {    
-    m_refBuilder = Gtk::Builder::create_from_file("repsnapper.ui");
-  } 
+  Glib::RefPtr<Gtk::Builder> builder;
+  try {
+    builder = Gtk::Builder::create_from_file("repsnapper.ui");
+  }
   catch(const Glib::FileError& ex)
   {
     std::cerr << "FileError: " << ex.what() << std::endl;
@@ -195,17 +179,35 @@ ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) 
     std::cerr << "BuilderError: " << ex.what() << std::endl;
     throw ex;
   }
+  ModelViewController *mvc = 0;
+  builder->get_widget_derived("main_window", mvc);
+
+  return mvc;
+}
+
+ModelViewController::ModelViewController(BaseObjectType* cobject,
+					 const Glib::RefPtr<Gtk::Builder>& builder)
+  : Gtk::Window(cobject), m_builder(builder)
+{
+	gui = 0;
+	read_pending = "";
+
+	m_bExtruderDirection = true;
+	m_iExtruderSpeed = 3000;
+	m_iExtruderLength = 150;
+	m_fTargetTemp = 63.0f;
+	m_fBedTargetTemp = 63.0f;
 
   // Get the GtkBuilder-instantiated Dialog:
   Gtk::Box *pBox = NULL;
-  m_refBuilder->get_widget("viewarea", pBox);
+  m_builder->get_widget("viewarea", pBox);
   if (!pBox)
     std::cerr << "missing box!";
   else {
     Gtk::Widget *view = new View (ProcessControl);
     pBox->add (*view);
     Gtk::Window *pWindow = NULL;
-    m_refBuilder->get_widget("main_window", pWindow);
+    m_builder->get_widget("main_window", pWindow);
     if (pWindow)
       pWindow->show_all();
   }
@@ -221,12 +223,18 @@ ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) 
   Gtk::Label *label = NULL;
   Gtk::ProgressBar *bar = NULL;
 
-  m_refBuilder->get_widget("progress_bar", bar);
-  m_refBuilder->get_widget("progress_label", label);
+  m_builder->get_widget("progress_bar", bar);
+  m_builder->get_widget("progress_label", label);
   m_progress = new Progress (bar, label);
   ProcessControl.SetProgress (m_progress);
 
   serial = new RepRapSerial(m_progress);
+}
+
+ModelViewController::~ModelViewController()
+{
+	delete m_progress;
+	delete serial;
 }
 
 void ModelViewController::redraw()
