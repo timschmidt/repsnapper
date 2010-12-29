@@ -1409,6 +1409,87 @@ void ModelViewController::SelectedNodeMatrices(vector<Matrix4f *> &result )
 	}
 }
 
+
+void ModelViewController::FindEmptyLocation(Vector3f &result, STL *stl)
+{
+	UINT i=1;
+	Flu_Tree_Browser::Node *node;
+	node=gui->RFP_Browser->get_selected( i++ );
+
+	    vector<Vector3f> maxpos;
+	    vector<Vector3f> minpos;
+
+	while(node)
+	{
+		for(UINT o=0;o<ProcessControl.rfo.Objects.size();o++)
+		{
+			for(UINT f=0;f<ProcessControl.rfo.Objects[o].files.size();f++)
+			{
+			    RFO_File *selectedFile = &ProcessControl.rfo.Objects[o].files[f];
+			    Vector3f p = selectedFile->transform3D.transform.getTranslation();
+			    Vector3f size = selectedFile->stl.Max - selectedFile->stl.Min;
+			    minpos.push_back(Vector3f(p.x, p.y, p.z));
+			    maxpos.push_back(Vector3f(p.x+size.x, p.y+size.y, p.z));
+			}
+		}
+		node=gui->RFP_Browser->get_selected( i++ );	// next selected
+	}
+
+	    float d = 5.0f; // 5mm spacing between objects
+	    Vector3f StlDelta = (stl->Max-stl->Min);
+
+	    for (UINT j=0; j<maxpos.size(); j++)
+		{
+		    vector<Vector3f> candidates;
+		    candidates.push_back(Vector3f(maxpos[j].x+d, minpos[j].y, maxpos[j].z));
+		    candidates.push_back(Vector3f(minpos[j].x, maxpos[j].y+d, maxpos[j].z));
+
+		    candidates.push_back(Vector3f(maxpos[j].x+d, maxpos[j].y, maxpos[j].z));
+		    candidates.push_back(Vector3f(maxpos[j].x, maxpos[j].y+d, maxpos[j].z));
+
+		    candidates.push_back(Vector3f(maxpos[j].x+d, maxpos[j].y+d, maxpos[j].z));
+		    
+		    for (UINT c=0; c<candidates.size(); c++)
+			{
+			    bool ok = true;
+			    
+			    for (UINT k=0; k<maxpos.size(); k++)
+				{
+				    if (
+					// check x 
+					((minpos[k].x <= candidates[c].x && candidates[c].x <= maxpos[k].x) ||
+					 (candidates[c].x <= minpos[k].x && maxpos[k].x <=  candidates[c].x+StlDelta.x) ||
+					 (minpos[k].x <= candidates[c].x+StlDelta.x && candidates[c].x+StlDelta.x <= maxpos[k].x))
+					&&
+					// check y
+					((minpos[k].y <= candidates[c].y && candidates[c].y <= maxpos[k].y) ||
+					 (candidates[c].y <= minpos[k].y && maxpos[k].y <=  candidates[c].y+StlDelta.y) ||
+					 (minpos[k].y <= candidates[c].y+StlDelta.y && candidates[c].y+StlDelta.y <= maxpos[k].y))
+					)
+					{
+					    ok = false;
+					    break;
+					}
+
+				    // volume boundary
+				    if (candidates[c].x+StlDelta.x > ProcessControl.m_fVolume.x ||
+					candidates[c].y+StlDelta.y > ProcessControl.m_fVolume.y)
+					{
+					    ok = false;
+					    break;
+					}
+				}
+			    if (ok)
+				{
+				    result.x = candidates[c].x;
+				    result.y = candidates[c].y;
+				    result.z = candidates[c].z;
+				    return;
+				}
+		}
+		}
+}
+
 void ModelViewController::Translate(string axis, float distance)
 {
 	vector<Matrix4f *> pMatrices;
@@ -1464,15 +1545,9 @@ RFO_File* ModelViewController::AddStl(STL stl, string filename)
 	//string material;
 	r.node = 0;	//???
 
-	if (parent->files.size())
-	{
-		RFO_File *selectedFile=0;
-		selectedFile = &parent->files[parent->files.size()-1];
-		Vector3f p = selectedFile->transform3D.transform.getTranslation();
-		Vector3f size = selectedFile->stl.Max - selectedFile->stl.Min;
-		p.x += size.x + 5.0f; // 5mm space
-		r.transform3D.transform.setTranslation(p);
-	}
+	Vector3f trans;
+	FindEmptyLocation(trans, &stl);
+	r.transform3D.transform.setTranslation(trans);
 
 	parent->files.push_back(r);
 	ProcessControl.rfo.BuildBrowser(ProcessControl);
@@ -1494,14 +1569,7 @@ void ModelViewController::Duplicate()
 			if(ProcessControl.rfo.Objects[o].files[f].node == node)
 			{
 				// Move it, so there's room for it.
-				RFO_File* obj = AddStl(ProcessControl.rfo.Objects[o].files[f].stl, ProcessControl.rfo.Objects[o].files[f].location);
-				Vector3f p = ProcessControl.rfo.Objects[o].files[f].transform3D.transform.getTranslation();
-				Vector3f size = ProcessControl.rfo.Objects[o].files[f].stl.Max - ProcessControl.rfo.Objects[o].files[f].stl.Min;
-				p.x += size.x+5.0f;	// 5mm space
-				obj->transform3D.transform.setTranslation(p);
-				gui->RFP_Browser->set_hilighted(obj->node);
-				ProcessControl.CalcBoundingBoxAndZoom();
-				redraw();
+				AddStl(ProcessControl.rfo.Objects[o].files[f].stl, ProcessControl.rfo.Objects[o].files[f].location);
 				return;
 			}
 		}
