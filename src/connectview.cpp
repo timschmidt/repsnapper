@@ -22,25 +22,35 @@
 #include "reprapserial.h"
 #include "processcontroller.h"
 
+void ConnectView::set_state(bool connected)
+{
+  const Gtk::BuiltinStockID id = connected ? Gtk::Stock::YES : Gtk::Stock::NO;
+  const char *label = connected ? "Disconnect" : "Connect";
+  m_image.set (id, Gtk::ICON_SIZE_BUTTON);
+  m_connect.set_label (label);
+}
+
 void ConnectView::connect_toggled()
 {
-  fprintf (stderr, "toggled!\n");
+  set_state (m_connect.get_active ());
 }
 
 ConnectView::ConnectView(RepRapSerial *_serial, ProcessController *_ctrl,
 			 bool show_connect)
-  : Gtk::VBox(), m_connect("Connect"), m_port_label("Port:"),
+  : Gtk::VBox(), m_connect(), m_port_label("Port:"),
     serial (_serial), ctrl (_ctrl)
 {
-  add (m_connect);
   add (m_hbox);
+  m_hbox.add (m_image);
+  m_hbox.add (m_connect);
   m_hbox.add (m_port_label);
   m_hbox.add (m_combo);
 
-  m_connect.signal_toggled().connect(sigc::mem_fun(*this, &ConnectView::connect_toggled));
-  show_all();
+  m_connect.signal_toggled().connect (sigc::mem_fun (*this, &ConnectView::connect_toggled));
+  show_all ();
   if (!show_connect)
-    m_connect.hide();
+    m_connect.hide ();
+  set_state (false);
 }
 
 // Use these guys as stock icons on the connect button ...
