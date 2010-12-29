@@ -60,4 +60,3 @@ ConnectView::ConnectView(RepRapSerial *_serial, ProcessController *_ctrl,
     m_connect.hide ();
   set_state (false);
 }
-

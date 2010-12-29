@@ -26,6 +26,7 @@
 #include "ui.h"
 #include "math.h"
 #include <boost/numeric/conversion/bounds.hpp> 
+#include "modelviewcontroller.h"
 #include "processcontroller.h"
 
 #ifdef WIN32
@@ -173,7 +174,7 @@ bool STL::Read(string filename, bool force_binary)
 				// if this fails, forced binary reading failed too, error
 				stringstream error;
 				error << "Error reading file: " << filename;
-				fl_alert(error.str().c_str());
+				ModelViewController::alert(NULL, error.str().c_str());
 				return false;
 			}
 			fclose(file);

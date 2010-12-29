@@ -55,6 +55,8 @@ class ModelViewController : public Gtk::Window
 public:
 	ModelViewController(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
 	void progess_bar_start (const char *label, double max);
+	void alert (const char *message);
+	static void alert (Gtk::Window *toplevel, const char *message);
 
 	static ModelViewController *create();
 	~ModelViewController();

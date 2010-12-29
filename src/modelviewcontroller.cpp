@@ -493,10 +493,10 @@ void ModelViewController::WriteGCode (string filename)
     case 0: // Succes
       break;
     case 1: // Open for write failed
-      fl_alert ("Error saving GCode file, error creating file.");
+      alert ("Error saving GCode file, error creating file.");
       break;
     case 2: // Partially saved file
-      fl_alert ("Error saving GCode file, while writing file, is the disk full?.");
+      alert ("Error saving GCode file, while writing file, is the disk full?.");
       break;
     }
 }
@@ -711,9 +711,7 @@ bool ModelViewController::IsConnected()
 void ModelViewController::SimplePrint()
 {
 	if( serial->isPrinting() )
-	{
-		fl_alert ("Already printing.\nCannot start printing");
-	}
+		alert ("Already printing.\nCannot start printing");
 
 	if( !serial->isConnected() )
 	{
@@ -743,9 +741,8 @@ void ModelViewController::serialConnectionLost()
 
 void ModelViewController::Print()
 {
-	if( !serial->isConnected() )
-	{
-		fl_alert ("Not connected to printer.\nCannot start printing");
+	if( !serial->isConnected() ) {
+		alert ("Not connected to printer.\nCannot start printing");
 		return;
 	}
 
@@ -933,7 +930,7 @@ void ModelViewController::Home(string axis)
 {
 	if(serial->isPrinting())
 	{
-		fl_alert("Can't go home while printing");
+		alert("Can't go home while printing");
 		return;
 	}
 	if(axis == "X" || axis == "Y" || axis == "Z")
@@ -984,14 +981,14 @@ void ModelViewController::Home(string axis)
 		SendNow("G28");
 	}
 	else
-		fl_alert("Home called with unknown axis");
+		alert("Home called with unknown axis");
 }
 
 void ModelViewController::Move(string axis, float distance)
 {
 	if(serial->isPrinting())
 	{
-		fl_alert("Can't move manually while printing");
+		alert("Can't move manually while printing");
 		return;
 	}
 	if(axis == "X" || axis == "Y" || axis == "Z")
@@ -1020,13 +1017,13 @@ void ModelViewController::Move(string axis, float distance)
 		SendNow("G90");	// absolute positioning
 	}
 	else
-		fl_alert("Move called with unknown axis");
+		alert("Move called with unknown axis");
 }
 void ModelViewController::Goto(string axis, float position)
 {
 	if(serial->isPrinting())
 	{
-		fl_alert("Can't move manually while printing");
+		alert("Can't move manually while printing");
 		return;
 	}
 	if(axis == "X" || axis == "Y" || axis == "Z")
@@ -1047,7 +1044,7 @@ void ModelViewController::Goto(string axis, float position)
 		SendNow(buffer);
 	}
 	else
-		fl_alert("Goto called with unknown axis");
+		alert("Goto called with unknown axis");
 }
 void ModelViewController::STOP()
 {
@@ -1117,12 +1114,11 @@ void refreshGraphicsView(ModelViewController *MVC)
 	code->Read(MVC,"./tmp.gcode");
 }
 
-void ReportErrors(lua_State * L)
+void ReportErrors(ModelViewController *mvc, lua_State * L)
 {
-	fl_beep(FL_BEEP_ERROR);
 	std::stringstream oss;
 	oss << "Error: " << lua_tostring(L,-1);
-	fl_alert(oss.str().c_str());
+	mvc->alert(oss.str().c_str());
 	lua_pop(L, 1);
 }
 #endif // ENABLE_LUA
@@ -1157,7 +1153,7 @@ void ModelViewController::RunLua(char* script)
 
 		// Now call our function in a lua script, such as "print_hello(5)"
 		if luaL_dostring( myLuaState, script)
-			ReportErrors(myLuaState);
+			ReportErrors(this, myLuaState);
 
 		lua_close(myLuaState);
 
@@ -1515,3 +1511,15 @@ string ModelViewController::GetText()
 	return gui->GCodeResult->buffer()->text();
 }
 
+
+void ModelViewController::alert (Gtk::Window *toplevel, const char *message)
+{
+  Gtk::MessageDialog aDlg (*toplevel, message, false /* markup */,
+			   Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK, true);
+  aDlg.run();
+}
+
+void ModelViewController::alert (const char *message)
+{
+  alert (this, message);
+}

@@ -485,9 +485,9 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 }
 
 
-void GCode::Write (ModelViewController *MVC, string filename)
+void GCode::Write (ModelViewController *mvc, string filename)
 {
-	Fl_Text_Buffer *buffer = MVC->gui->GCodeResult->buffer();
+	Fl_Text_Buffer *buffer = mvc->gui->GCodeResult->buffer();
 
 	int result = buffer->savefile(filename.c_str());
 
@@ -496,12 +496,12 @@ void GCode::Write (ModelViewController *MVC, string filename)
 	case 0:	// Success
 		break;
 	case 1:	// Open for write failed
-		fl_alert("Error saving GCode file, error creating file.");
+		mvc->alert("Error saving GCode file, error creating file.");
 		break;
 	case 2: // Partially saved file
-		fl_alert("Error saving GCode file, while writing file, is the disk full?.");
+		mvc->alert("Error saving GCode file, while writing file, is the disk full?.");
 		break;
 	}
 
-	MVC->redraw();
+	mvc->redraw();
 }
