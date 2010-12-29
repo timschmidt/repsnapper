@@ -701,14 +701,7 @@ void ModelViewController::PrintDone()
 
 void ModelViewController::ConnectToPrinter(char on)
 {
-	if(on)
-	{
-		serial->Connect(ProcessControl.m_sPortName, ProcessControl.m_iSerialSpeed);
-	}
-	else
-	{
-		serial->DisConnect();
-	}
+  // FIXME: remove me !
 }
 bool ModelViewController::IsConnected()
 {

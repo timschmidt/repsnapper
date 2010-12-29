@@ -32,7 +32,15 @@ void ConnectView::set_state(bool connected)
 
 void ConnectView::connect_toggled()
 {
-  set_state (m_connect.get_active ());
+  bool connected = m_connect.get_active ();
+  set_state (connected);
+  // FIXME: we really need to listen to signals from the connection
+  // itself and store the state there ... - though they come from
+  // another thread potentially.
+  if (connected)
+    serial->Connect(ctrl->m_sPortName, ctrl->m_iSerialSpeed);
+  else
+    serial->DisConnect();
 }
 
 ConnectView::ConnectView(RepRapSerial *_serial, ProcessController *_ctrl,
@@ -52,8 +60,4 @@ ConnectView::ConnectView(RepRapSerial *_serial, ProcessController *_ctrl,
     m_connect.hide ();
   set_state (false);
 }
-
-// Use these guys as stock icons on the connect button ...
-//  GTK_STOCK_NO;
-//  GTK_STOCK_YES;
 
