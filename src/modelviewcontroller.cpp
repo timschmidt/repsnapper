@@ -1458,13 +1458,13 @@ void ModelViewController::FindEmptyLocation(Vector3f &result, STL *stl)
 				    if (
 					// check x 
 					((minpos[k].x <= candidates[c].x && candidates[c].x <= maxpos[k].x) ||
-					 (candidates[c].x <= minpos[k].x && maxpos[k].x <=  candidates[c].x+StlDelta.x) ||
-					 (minpos[k].x <= candidates[c].x+StlDelta.x && candidates[c].x+StlDelta.x <= maxpos[k].x))
+					 (candidates[c].x <= minpos[k].x && maxpos[k].x <=  candidates[c].x+StlDelta.x+d) ||
+					 (minpos[k].x <= candidates[c].x+StlDelta.x+d && candidates[c].x+StlDelta.x+d <= maxpos[k].x))
 					&&
 					// check y
 					((minpos[k].y <= candidates[c].y && candidates[c].y <= maxpos[k].y) ||
-					 (candidates[c].y <= minpos[k].y && maxpos[k].y <=  candidates[c].y+StlDelta.y) ||
-					 (minpos[k].y <= candidates[c].y+StlDelta.y && candidates[c].y+StlDelta.y <= maxpos[k].y))
+					 (candidates[c].y <= minpos[k].y && maxpos[k].y <=  candidates[c].y+StlDelta.y+d) ||
+					 (minpos[k].y <= candidates[c].y+StlDelta.y+d && candidates[c].y+StlDelta.y+d <= maxpos[k].y))
 					)
 					{
 					    ok = false;
@@ -1472,8 +1472,8 @@ void ModelViewController::FindEmptyLocation(Vector3f &result, STL *stl)
 					}
 
 				    // volume boundary
-				    if (candidates[c].x+StlDelta.x > ProcessControl.m_fVolume.x ||
-					candidates[c].y+StlDelta.y > ProcessControl.m_fVolume.y)
+				    if (candidates[c].x+StlDelta.x > (ProcessControl.m_fVolume.x - ProcessControl.PrintMargin.x) ||
+					candidates[c].y+StlDelta.y > (ProcessControl.m_fVolume.y - ProcessControl.PrintMargin.y))
 					{
 					    ok = false;
 					    break;
