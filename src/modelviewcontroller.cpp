@@ -157,9 +157,19 @@ void ModelViewController::load_gcode ()
   FileChooser::ioDialog (this, FileChooser::OPEN, FileChooser::GCODE);
 }
 
+void ModelViewController::save_gcode ()
+{
+  FileChooser::ioDialog (this, FileChooser::SAVE, FileChooser::GCODE);
+}
+
 void ModelViewController::load_stl ()
 {
   FileChooser::ioDialog (this, FileChooser::OPEN, FileChooser::STL);
+}
+
+void ModelViewController::send_gcode ()
+{
+  SendNow (m_gcode_entry->get_text());
 }
 
 ModelViewController *ModelViewController::create()
@@ -211,14 +221,28 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
       pWindow->show_all();
   }
 
+  // Simple tab
   Gtk::Box *connect_box = NULL;
-  m_builder->get_widget("connect_button_box", connect_box);
-
+  m_builder->get_widget ("connect_button_box", connect_box);
   connect_button ("s_load_stl",      sigc::mem_fun(*this, &ModelViewController::load_stl) );
   connect_button ("s_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
   connect_button ("s_load_gcode",    sigc::mem_fun(*this, &ModelViewController::load_gcode) );
   connect_button ("s_print",         sigc::mem_fun(*this, &ModelViewController::SimplePrint) );
 
+  // Model tab
+  Gtk::TextView *textv = NULL;
+  m_builder->get_widget ("txt_gcode_result", textv);
+  textv->set_buffer (ProcessControl.gcode.buffer);
+  m_builder->get_widget ("m_gcode", m_gcode_entry);
+  m_gcode_entry->set_activates_default();
+//  m_gcode_entry->signal_activate.connect (sigc::mem_fun(*this, &ModelViewController::send_gcode));
+
+  connect_button ("m_load_gcode",    sigc::mem_fun(*this, &ModelViewController::load_gcode) );
+  connect_button ("m_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
+  connect_button ("m_save_gcode", sigc::mem_fun(*this, &ModelViewController::save_gcode) );
+  connect_button ("m_send_gcode", sigc::mem_fun(*this, &ModelViewController::send_gcode) );
+
+  // Main view progress bar
   Gtk::Label *label = NULL;
   Gtk::ProgressBar *bar = NULL;
 
@@ -429,10 +453,11 @@ void ModelViewController::SetValidateConnection(bool validate)
 
 
 // all we'll end up doing is dispatching to the ProcessControl to read the file in, but not from this callback
-void ModelViewController::ReadGCode(string filename) {
-	read_pending = filename; 
+void ModelViewController::ReadGCode(string filename)
+{
+	read_pending = filename;
 //	   this triggers this function to be called :  ProcessControl.ReadGCode(filename);
-	
+
 }
 
 
@@ -440,28 +465,25 @@ void ModelViewController::ConvertToGCode()
 {
 	string GcodeTxt;
 
-	Fl_Text_Buffer* buffer = gui->GCodeResult->buffer();
-	buffer->remove(0, buffer->length());
+	string pText;
+	string GCodeStart(pText);
+	string GCodeLayer(pText);
+ 	string GCodeEnd(pText);
 
+#warning "Missing foo"
+#if 0
 	buffer = gui->GCodeStart->buffer();
 	char* pText = buffer->text();
-	string GCodeStart(pText);
 	buffer = gui->GCodeLayer->buffer();
 	free(pText);
 	pText = buffer->text();
-	string GCodeLayer(pText);
 	buffer = gui->GCodeEnd->buffer();
 	free(pText);
 	pText = buffer->text();
-	string GCodeEnd(pText);
 	free(pText);
+#endif
 
 	ProcessControl.ConvertToGCode(GcodeTxt, GCodeStart, GCodeLayer, GCodeEnd);
-	buffer = gui->GCodeResult->buffer();
-
-	GcodeTxt += "\0";
-	buffer->append( GcodeTxt.c_str() );
-	redraw();
 }
 
 void ModelViewController::init()
@@ -478,7 +500,7 @@ void ModelViewController::init()
 	buffer = gui->LuaScriptEditor->buffer();
 	buffer->text("--Clear existing gcode\nbase:ClearGcode()\n-- Set start speed for acceleration firmware\nbase:AddText(\"G1 F2600\\n\")\n\n	 z=0.0\n	 e=0;\n	oldx = 0;\n	oldy=0;\n	while(z<47) do\n	angle=0\n		while (angle < math.pi*2) do\n	x=(50*math.cos(z/30)*math.sin(angle))+70\n		y=(50*math.cos(z/30)*math.cos(angle))+70\n\n		--how much to extrude\n\n		dx=oldx-x\n		dy=oldy-y\n		if not (angle==0) then\n			e = e+math.sqrt(dx*dx+dy*dy)\n			end\n\n			-- Make gcode string\n\n			s=string.format(\"G1 X%f Y%f Z%f F2600 E%f\\n\", x,y,z,e)\n			if(angle == 0) then\n				s=string.format(\"G1 X%f Y%f Z%f F2600 E%f\\n\", x,y,z,e)\n				end\n				-- Add gcode to gcode result\nbase:AddText(s)\n	 angle=angle+0.2\n	 oldx=x\n	 oldy=y\n	 end\n	 z=z+0.4\n	 end\n	 ");
 
-	//	buffer = gui->CommunationsLogText->buffer();
+//	buffer = gui->CommunationsLogText->buffer();
 //	buffer->text("Dump");
 }
 

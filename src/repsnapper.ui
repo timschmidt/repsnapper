@@ -133,7 +133,6 @@
               <object class="GtkVBox" id="vbox2">
                 <property name="visible">True</property>
                 <property name="orientation">vertical</property>
-                <property name="spacing">3</property>
                 <child>
                   <object class="GtkHBox" id="hbox2">
                     <property name="visible">True</property>
@@ -406,7 +405,7 @@
                 <property name="visible">True</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkButton" id="button6">
+                  <object class="GtkButton" id="m_convert_gcode">
                     <property name="label" translatable="yes">Convert to GCode</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -422,7 +421,7 @@
                   <object class="GtkHBox" id="hbox6">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkButton" id="button7">
+                      <object class="GtkButton" id="m_load_gcode">
                         <property name="label" translatable="yes">Load GCode</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -445,7 +444,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="button8">
+                      <object class="GtkButton" id="m_save_gcode">
                         <property name="label" translatable="yes">Save GCode</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -475,16 +474,16 @@
                   <object class="GtkHBox" id="hbox7">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkLabel" id="label17">
+                      <object class="GtkLabel" id="label111">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Send a GCode</property>
+                        <property name="label" translatable="yes">send a gcode</property>
                       </object>
                       <packing>
                         <property name="position">0</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="entry2">
+                      <object class="GtkEntry" id="m_gcode">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">&#x25CF;</property>
@@ -495,7 +494,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="button9">
+                      <object class="GtkButton" id="m_send_gcode">
                         <property name="label" translatable="yes">Send</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -611,7 +610,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkTextView" id="textview4">
+                      <object class="GtkTextView" id="txt_gcode_result">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                       </object>

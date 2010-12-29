@@ -378,25 +378,11 @@ void GUI::cb_Convert1(Fl_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->user_data()))->cb_Convert1_i(o,v);
 }
 
-void GUI::cb_Save2_i(Fl_Button*, void*) {
-  FileChooser::ioDialog (MVC, FileChooser::SAVE, FileChooser::GCODE);
-}
-void GUI::cb_Save2(Fl_Button* o, void* v) {
-  ((GUI*)(o->parent()->parent()->parent()->user_data()))->cb_Save2_i(o,v);
-}
-
 void GUI::cb_GCodeInput_i(Fl_Input* o, void*) {
   MVC->SendNow(o->value());
 }
 void GUI::cb_GCodeInput(Fl_Input* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->user_data()))->cb_GCodeInput_i(o,v);
-}
-
-void GUI::cb_Send_i(Fl_Return_Button*, void*) {
-  MVC->SendNow(GCodeInput->value());
-}
-void GUI::cb_Send(Fl_Return_Button* o, void* v) {
-  ((GUI*)(o->parent()->parent()->parent()->user_data()))->cb_Send_i(o,v);
 }
 
 void GUI::cb_Home_i(Fl_Button*, void*) {
@@ -1989,16 +1975,10 @@ GUI::GUI() {
           } // Fl_Text_Editor* GCodeResult
           o->end();
         } // Fl_Tabs* o
-        { Fl_Button* o = new Fl_Button(980, 84, 210, 26, "Save Gcode");
-          o->callback((Fl_Callback*)cb_Save2);
-        } // Fl_Button* o
         { GCodeInput = new Fl_Input(825, 140, 325, 25, "Send a GCode");
           GCodeInput->callback((Fl_Callback*)cb_GCodeInput);
           GCodeInput->when(FL_WHEN_ENTER_KEY_ALWAYS);
         } // Fl_Input* GCodeInput
-        { Fl_Return_Button* o = new Fl_Return_Button(1155, 140, 70, 25, "Send");
-          o->callback((Fl_Callback*)cb_Send);
-        } // Fl_Return_Button* o
         o->end();
       } // Fl_Group* o
       { Interactive = new Fl_Group(710, 19, 565, 833, "Interactive");

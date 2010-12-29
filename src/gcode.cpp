@@ -37,6 +37,7 @@ GCode::GCode()
 	Min.x = Min.y = Min.z = 99999999.0f;
 	Max.x = Max.y = Max.z = -99999999.0f;
 	Center.x = Center.y = Center.z = 0.0f;
+	buffer = Gtk::TextBuffer::create();
 }
 
 void GCode::Read(ModelViewController *MVC, Progress *progress, string filename)
@@ -482,26 +483,20 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 	}
 
 	GcodeTxt += GcodeEnd + "\n";
-}
 
+	buffer->set_text (GcodeTxt);
+}
 
 void GCode::Write (ModelViewController *mvc, string filename)
 {
-	Fl_Text_Buffer *buffer = mvc->gui->GCodeResult->buffer();
+	FILE *file;
 
-	int result = buffer->savefile(filename.c_str());
-
-	switch(result)
-	{
-	case 0:	// Success
-		break;
-	case 1:	// Open for write failed
-		mvc->alert("Error saving GCode file, error creating file.");
-		break;
-	case 2: // Partially saved file
-		mvc->alert("Error saving GCode file, while writing file, is the disk full?.");
-		break;
+	file = fopen (filename.c_str(), "w+");
+	if (!file)
+	  mvc->alert ("failed to open file");
+	else {
+	  fprintf (file, "%s", buffer->get_text().c_str());
+	  fclose (file);
 	}
-
 	mvc->redraw();
 }

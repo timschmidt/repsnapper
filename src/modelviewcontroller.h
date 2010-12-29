@@ -46,11 +46,14 @@ class ModelViewController : public Gtk::Window
 	Glib::RefPtr<Gtk::Builder> m_builder;
 	Progress *m_progress;
 	ConnectView *m_view;
+	Gtk::Entry *m_gcode_entry;
 
 	void connect_button(const char *name, const sigc::slot<void> &slot);
 
 	void load_gcode();
+	void save_gcode();
 	void load_stl();
+	void send_gcode();
 
 public:
 	ModelViewController(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);

@@ -152,7 +152,7 @@ bool STL::Read(string filename, bool force_binary)
 		infile.open(filename.c_str(),  ios::in | ios::binary);
 		if(!infile.good())
 			return false;
-			
+
 		// Ascii or binary?
 		char header[STL_READ_HEADER_SIZE+1] = STL_READ_HEADER_TEXT; // +1 for the \0 on the c-style string
 		infile.read(reinterpret_cast < char * > (&header), STL_READ_HEADER_SIZE*sizeof(char));	// Header
