@@ -161,6 +161,10 @@ public:
   void draw(const ProcessController &PC);
   void MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, float AntioozeDistance, float AntioozeSpeed);
 
+  void append_text (const std::string &line);
+  std::string get_text() const;
+  void clear();
+
   std::vector<Command> commands;
   Vector3f Min, Max, Center;
 

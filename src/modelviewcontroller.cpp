@@ -235,7 +235,7 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   textv->set_buffer (ProcessControl.gcode.buffer);
   m_builder->get_widget ("m_gcode", m_gcode_entry);
   m_gcode_entry->set_activates_default();
-//  m_gcode_entry->signal_activate.connect (sigc::mem_fun(*this, &ModelViewController::send_gcode));
+  m_gcode_entry->signal_activate().connect (sigc::mem_fun(*this, &ModelViewController::send_gcode));;
 
   connect_button ("m_load_gcode",    sigc::mem_fun(*this, &ModelViewController::load_gcode) );
   connect_button ("m_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
@@ -1357,9 +1357,7 @@ RFO_File* ModelViewController::AddStl(STL stl, string filename)
 	size_t found;
 	found=filename.find_last_of("/\\");
 	r.location = filename.substr(found+1);
-	//r.filetype = "";
-	//string material;
-	r.node = 0;	//???
+	r.node = 0;
 	parent->files.push_back(r);
 	ProcessControl.rfo.BuildBrowser(ProcessControl);
 	parent->files[parent->files.size()-1].node->select(true); // select the new stl file.
@@ -1513,26 +1511,6 @@ void ModelViewController::RefreshCustomButtonLabels()
 }
 
 
-// LUA functions
-
-void ModelViewController::ClearGcode()
-{
-	Fl_Text_Buffer* buffer = gui->GCodeResult->buffer();
-	buffer->remove(0, buffer->length());
-}
-int ModelViewController::GCodeSize()
-{
-	return gui->GCodeResult->buffer()->length();
-}
-void ModelViewController::AddText(string line)
-{
-	gui->GCodeResult->buffer()->append(line.c_str());
-}
-string ModelViewController::GetText()
-{
-	return gui->GCodeResult->buffer()->text();
-}
-
 
 void ModelViewController::alert (Gtk::Window *toplevel, const char *message)
 {
@@ -1544,4 +1522,18 @@ void ModelViewController::alert (Gtk::Window *toplevel, const char *message)
 void ModelViewController::alert (const char *message)
 {
   alert (this, message);
+}
+
+// LUA functions
+void ModelViewController::ClearGcode()
+{
+  ProcessControl.gcode.clear();
+}
+void ModelViewController::AddText(string line)
+{
+  ProcessControl.gcode.append_text (line);
+}
+std::string ModelViewController::GetText()
+{
+  return ProcessControl.gcode.get_text();
 }

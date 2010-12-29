@@ -262,10 +262,8 @@ public:
 	void SetFan(int val);
 
 	// LUA stuff
-
-	void ClearGcode();
-	int GCodeSize();
 	void AddText(string line);
+	void ClearGcode();
 	string GetText();
 
 	void Home(string axis);

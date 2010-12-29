@@ -233,7 +233,7 @@ public:
 	void CenterAroundXY();
 	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);	// Extract a 2D polygonset from a 3D model
 	void OptimizeRotation();			// Auto-Rotate object to have the largest area surface down for printing
-	void CalcBoundingBoxAndZoom();
+	void CalcCenter();
 	void RotateObject(Vector3f axis, float angle);  // Rotation for manual rotate and used by OptimizeRotation
 
 	vector<Triangle>  triangles;

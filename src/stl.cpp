@@ -99,7 +99,7 @@ STL::STL()
 	Min.x = Min.y = Min.z = 0.0f;
 	Max.x = Max.y = Max.z = 200.0f;
 
-	CalcBoundingBoxAndZoom();
+	CalcCenter();
 }
 
 # define COR3_MAX 200000
@@ -235,11 +235,11 @@ bool STL::Read(string filename, bool force_binary)
 	}
 	
 	OptimizeRotation();
-	CalcBoundingBoxAndZoom();
+	CalcCenter();
 	return true;
 }
 
-void STL::CalcBoundingBoxAndZoom()
+void STL::CalcCenter()
 {
 	Center = (Max + Min )/2;
 }
@@ -2932,7 +2932,7 @@ void STL::CenterAroundXY()
 	Max += displacement;
 	Min += displacement;
 //	cout << "Center Around XY min" << Min << " max " << Max << "\n";
-	CalcBoundingBoxAndZoom();
+	CalcCenter();
 }
 
 

@@ -29,7 +29,16 @@ using namespace std;
 
 class ProcessController
 {
+	sigc::signal< void > m_signal_rfo_changed;
+	sigc::signal< void > m_signal_setting_changed;
 public:
+	// Something in the rfo changed
+	sigc::signal< void > signal_rfo_changed() { return m_signal_rfo_changed; }
+	// Some setting changed
+	sigc::signal< void > signal_setting_changed() { return m_signal_setting_changed; }
+	void emit_rfo_changed() { m_signal_rfo_changed.emit(); }
+	void emit_setting_changed() { m_signal_setting_changed.emit(); }
+
 	ProcessController(){
 		m_iSerialSpeed = 57600;
 		// default parameters (are overwritten by the xml loading)
@@ -127,8 +136,6 @@ public:
 		CustomButtonLabel.resize(20);
 };
 
-//	ProcessController::~ProcessController();
-
 	void SetProgress(Progress *progress) { m_progress = progress; }
 	void SetFilename(string filename) { m_Filename = filename;}
 
@@ -169,9 +176,13 @@ public:
 	string m_Filename;
 
 	// Start, layer, end GCode
-	string GCodeStartText;
-	string GCodeLayerText;
-	string GCodeEndText;
+	Gtk::TextBuffer *m_GCodeStartText;
+	Gtk::TextBuffer *m_GCodeLayerText;
+	Gtk::TextBuffer *m_GCodeEndText;
+#warning remove me !
+	std::string GCodeStartText;
+	std::string GCodeLayerText;
+	std::string GCodeEndText;
 
 	/*--------------Models-------------------*/
 	Printer printer;					// Printer settings and functions

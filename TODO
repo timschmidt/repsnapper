@@ -4,7 +4,22 @@ add event foo to the MVC...
 
 * init the arcball with the existing rotation correctly ...
 
++ get start/layer/end gcode foo sorted out ...
+
 * Connection foo
 	+ connect stuff
 	+ get settings imported
-	+ 
+	+ move ModelViewController DetectComPorts to RepRapSerial ...
+	  ditto ValidateComPort
+
+
+* hide 'std::vector<Command> commands' in gcode.h
+* remove the 'GcodeTxt' element in processcontroller.h
+* migrate start/end/layer etc. to use Gtk::TextBuffer 
+
+* rename processcontroller.h to 'settings' or 'config' globally ... ?
+	+ add a 'changed' signal ...
+	+ check whether 'Center' is really a 'process-controller' variable ?
+		+ who uses it ?
+
+* trap delete_event on main window & quit ...

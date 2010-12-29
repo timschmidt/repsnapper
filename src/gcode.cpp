@@ -500,3 +500,18 @@ void GCode::Write (ModelViewController *mvc, string filename)
 	}
 	mvc->redraw();
 }
+
+void GCode::append_text (const std::string &line)
+{
+  buffer->insert (buffer->end(), line);
+}
+
+std::string GCode::get_text () const
+{
+  return buffer->get_text();
+}
+
+void GCode::clear()
+{
+  buffer->erase (buffer->begin(), buffer->end());
+}

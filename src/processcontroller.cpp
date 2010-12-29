@@ -129,50 +129,11 @@ Matrix4f ProcessController::GetSTLTransformationMatrix(int object, int file) con
 		result *= rfo.Objects[object].files[file].transform3D.transform;
 	return result;
 }
-#ifndef MIN
-	#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
-#endif
-#ifndef MAX
-	#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
-#endif
 
 void ProcessController::CalcBoundingBoxAndZoom()
 {
-	Max = Vector3f(-500,-500,-500);
-	Min = Vector3f(500,500,500);
-
-	for(uint o=0;o<rfo.Objects.size();o++)
-	{
-		for(uint f=0;f<rfo.Objects[o].files.size();f++)
-		{
-			Matrix4f M = GetSTLTransformationMatrix(o,f);
-			Vector3f stlMin = M*rfo.Objects[o].files[f].stl.Min;
-			Vector3f stlMax = M*rfo.Objects[o].files[f].stl.Max;
-			Min.x = MIN(stlMin.x, Min.x);
-			Min.y = MIN(stlMin.y, Min.y);
-			Min.z = MIN(stlMin.z, Min.z);
-			Max.x = MAX(stlMax.x, Max.x);
-			Max.y = MAX(stlMax.y, Max.y);
-			Max.z = MAX(stlMax.z, Max.z);
-		}
-	}
-
-	if((Max-Min).length() > 0)
-	{
-		// Find zoom
-		float L=0;
-		if(Max.x - Min.x > L)	L = Max.x - Min.x;
-		if(Max.y - Min.y > L)	L = Max.y - Min.y;
-		if(Max.z - Min.z > L)	L = Max.z - Min.z;
-#warning mmeeks hacked
-//		if(gui->MVC)
-//			gui->MVC->zoom= L;
-	}
-//	else
-//		if(gui->MVC)
-//			gui->MVC->zoom = 100.0f;
-
-	Center = (Max-Min)*0.5f;
+  cerr << "remove me !\n";
+  emit_rfo_changed();
 }
 
 void ProcessController::MakeRaft(float &z)
@@ -213,8 +174,8 @@ void ProcessController::MakeRaft(float &z)
 		Vector2f P1, P2;
 		for(float x = -Length ; x < Length ; x+=step)
 		{
-			P1 = (InfillDirX * Length)+(InfillDirY*x)+ Center;
-			P2 = (InfillDirX * -Length)+(InfillDirY*x)+ Center;
+			P1 = (InfillDirX *  Length)+(InfillDirY*x) + Center;
+			P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
 
 			if(reverseLines)
 			{

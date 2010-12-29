@@ -11,17 +11,20 @@ class ProcessController;
 
 class View : public Gtk::GL::DrawingArea
 {
-  ArcBall  *arcBall;
-  Matrix4fT transform;
-  Vector2f  downPoint;
-  GLUquadricObj *quadratic;
-  ProcessController &pc;
+  ArcBall  *m_arcBall;
+  Matrix4fT m_transform;
+  Vector2f  m_downPoint;
+  GLUquadricObj *m_quadratic;
+  ProcessController &m_pc;
 
-  float zoom;
-  gllight *lights[4];
+  Vector3f m_center, m_min, m_max;
+
+  float m_zoom;
+  gllight *m_lights[4];
 
   void SetEnableLight(unsigned int lightNr, bool on);
   void CenterView();
+  void rfo_changed();
 
  public:
   View (ProcessController &pc);
