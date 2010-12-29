@@ -24,6 +24,7 @@
 #include "rfo.h"
 #include "view.h"
 #include "progress.h"
+#include "connectview.h"
 
 #ifndef WIN32
 
@@ -142,11 +143,9 @@ void tree_callback( Fl_Widget* w, void *_gui )
 
 void ModelViewController::connect_button(const char *name, const sigc::slot<void> &slot)
 {
-  Gtk::Widget *widget = NULL;
-  m_builder->get_widget(name, widget);
-
-  Gtk::Button *button;
-  if ((button = dynamic_cast<Gtk::Button *>(widget)))
+  Gtk::Button *button = NULL;
+  m_builder->get_widget(name, button);
+  if (button)
     button->signal_clicked().connect( slot );
   else {
     std::cerr << "missing button " << name << "\n";
@@ -212,9 +211,9 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
       pWindow->show_all();
   }
 
-  /* Need a printer connected button - that listens for a
-     signal from the serial foo ... */
-  //  button_connect ("s_connect", 
+  Gtk::Box *connect_box = NULL;
+  m_builder->get_widget("connect_button_box", connect_box);
+
   connect_button ("s_load_stl",      sigc::mem_fun(*this, &ModelViewController::load_stl) );
   connect_button ("s_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
   connect_button ("s_load_gcode",    sigc::mem_fun(*this, &ModelViewController::load_gcode) );
@@ -229,12 +228,16 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   ProcessControl.SetProgress (m_progress);
 
   serial = new RepRapSerial(m_progress);
+
+  m_view = new ConnectView(serial, &ProcessControl);
+  connect_box->add (*m_view);
 }
 
 ModelViewController::~ModelViewController()
 {
-	delete m_progress;
-	delete serial;
+  delete m_view;
+  delete m_progress;
+  delete serial;
 }
 
 void ModelViewController::redraw()

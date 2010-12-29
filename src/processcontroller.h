@@ -133,7 +133,7 @@ public:
 	void SetFilename(string filename) { m_Filename = filename;}
 
 	void Draw(Flu_Tree_Browser::Node *selected_node);
-	
+
 	// STL Functions
 	bool ReadStl(string filename, STL &newstl) { return newstl.Read(filename);};
 	void OptimizeRotation();

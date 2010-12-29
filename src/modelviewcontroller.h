@@ -40,10 +40,12 @@ enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 // Construct a model and a view, and link them together.
 
 class View;
+class ConnectView;
 class ModelViewController : public Gtk::Window
 {
 	Glib::RefPtr<Gtk::Builder> m_builder;
 	Progress *m_progress;
+	ConnectView *m_view;
 
 	void connect_button(const char *name, const sigc::slot<void> &slot);
 

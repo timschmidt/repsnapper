@@ -19,7 +19,9 @@
 #ifndef REPRAP_SERIAL_H
 #define REPRAP_SERIAL_H
 
-#include <boost/thread.hpp> 
+#include <string>
+#include <vector>
+#include <boost/thread.hpp>
 
 
 //Physical Pin Mappings for Direct Drive
@@ -105,6 +107,7 @@ PWM (D 14) PD6 20|        |21  PD7 (D 15) PWM
 
 #include "asyncserial.h"
 
+class GUI;
 class Progress;
 
 class RepRapSerial
@@ -133,8 +136,8 @@ public:
 
 	void OnEvent(char* data, size_t size);
 
-	void AddToBuffer(string s){buffer.push_back(s);}
-	void SendNow(string s);
+	void AddToBuffer(std::string s){buffer.push_back(s);}
+	void SendNow(std::string s);
 	void Clear() { m_bPrinting = false; m_iLineNr = 0; SetLineNr(-1); buffer.clear();}
 	uint Length() { return buffer.size();}
 	void StartPrint();
@@ -143,8 +146,8 @@ public:
 	void SetDebugMask();
 	void setGUI(GUI* g){ gui=g;}
 	void SendNextLine();
-	void SendData(string s, const int lineNr);
-	void Connect(string port, int speed);
+	void SendData(std::string s, const int lineNr);
+	void Connect(std::string port, int speed);
 	void DisConnect();
 	void DisConnect(const char* reason);
 	bool isPrinting(){return m_bPrinting;}
@@ -156,25 +159,25 @@ public:
 	void SetReceivingBufferSize(int val) { ReceivingBufferSize = val; }
 	void SetValidateConnection(bool val) { m_bValidateConnection = val; }
 private:
-	void internalWrite(string s, const int lineNr);
-	void debugPrint(string s, bool selectLine = false);
-	void echo(string s);
+	void internalWrite(std::string s, const int lineNr);
+	void debugPrint(std::string s, bool selectLine = false);
+	void echo(std::string s);
 	void notifyConnection (bool connected);
-	string get_next_token(string);
-	uint count_leading_whitespace(string);
+	std::string get_next_token(std::string);
+	uint count_leading_whitespace(std::string);
 
-	vector<string> buffer;
+	std::vector<std::string> buffer;
 	bool m_bConnected;
 	bool m_bConnecting;
 	bool m_bValidateConnection;
 	uint m_iLineNr;
-	string InBuffer;
+	std::string InBuffer;
 	short debugMask;
 	ulong ConnectAttempt;
 	ulong startTime;
 	ulong lastUpdateTime;
-	string temp_param;
-	string bedtemp_param;
+	std::string temp_param;
+	std::string bedtemp_param;
 	uint data;
 	uint data2;
 
