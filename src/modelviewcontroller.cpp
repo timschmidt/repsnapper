@@ -228,8 +228,6 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   }
 
   // Simple tab
-  Gtk::Box *connect_box = NULL;
-  m_builder->get_widget ("connect_button_box", connect_box);
   connect_button ("s_load_stl",      sigc::mem_fun(*this, &ModelViewController::load_stl) );
   connect_button ("s_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
   connect_button ("s_load_gcode",    sigc::mem_fun(*this, &ModelViewController::load_gcode) );
@@ -252,27 +250,43 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
 
   connect_button ("m_load_gcode",    sigc::mem_fun(*this, &ModelViewController::load_gcode) );
   connect_button ("m_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
-  connect_button ("m_save_gcode", sigc::mem_fun(*this, &ModelViewController::save_gcode) );
-  connect_button ("m_send_gcode", sigc::mem_fun(*this, &ModelViewController::send_gcode) );
+  connect_button ("m_save_gcode",    sigc::mem_fun(*this, &ModelViewController::save_gcode) );
+  connect_button ("m_send_gcode",    sigc::mem_fun(*this, &ModelViewController::send_gcode) );
+
+
+  // Print tab
+//  FIXME: ("p_power" - connect to toggled signal ! -> SwitchPower(get_active())
+  connect_button ("p_kick",          sigc::mem_fun(*this, &ModelViewController::Continue));
+// FIXME: fix continue/pause to do its worst ...
+  connect_button ("p_pause",         sigc::mem_fun(*this, &ModelViewController::ContinuePauseButton));
+  connect_button ("p_print",         sigc::mem_fun(*this, &ModelViewController::PrintButton));
 
   // Main view progress bar
+  Gtk::Box *box = NULL;
   Gtk::Label *label = NULL;
   Gtk::ProgressBar *bar = NULL;
 
+  m_builder->get_widget("progress_box", box);
   m_builder->get_widget("progress_bar", bar);
   m_builder->get_widget("progress_label", label);
-  m_progress = new Progress (bar, label);
+  m_progress = new Progress (box, bar, label);
   ProcessControl.SetProgress (m_progress);
 
   serial = new RepRapSerial(m_progress);
 
-  m_view = new ConnectView(serial, &ProcessControl);
-  connect_box->add (*m_view);
+  m_view[0] = new ConnectView(serial, &ProcessControl);
+  m_view[1] = new ConnectView(serial, &ProcessControl);
+  Gtk::Box *connect_box = NULL;
+  m_builder->get_widget ("s_connect_button_box", connect_box);
+  connect_box->add (*m_view[0]);
+  m_builder->get_widget ("p_connect_button_box", connect_box);
+  connect_box->add (*m_view[1]);
 }
 
 ModelViewController::~ModelViewController()
 {
-  delete m_view;
+  delete m_view[0];
+  delete m_view[1];
   delete m_progress;
   delete serial;
 }
@@ -634,6 +648,8 @@ void ModelViewController::Continue()
 	gui->PrintButton->value(1);
 	gui->PrintButton->label("Print");
 	gui->PrintButton->deactivate();
+
+#warning FIXME !?
 	serial->m_bPrinting = true;
 	serial->SendNextLine();
 }
@@ -685,6 +701,7 @@ void ModelViewController::ConnectToPrinter(char on)
 {
   // FIXME: remove me !
 }
+
 bool ModelViewController::IsConnected()
 {
 	return serial->isConnected();

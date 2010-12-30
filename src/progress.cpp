@@ -20,10 +20,11 @@
 #include <gtkmm.h>
 #include "progress.h"
 
-Progress::Progress(Gtk::ProgressBar *bar, Gtk::Label *label) :
-  m_bar(bar), m_label(label)
+Progress::Progress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
+  m_box (box), m_bar(bar), m_label(label)
 {
   m_bar_max = 0.0;
+  box->hide();
 }
 
 void Progress::start (const char *label, double max)
@@ -31,6 +32,7 @@ void Progress::start (const char *label, double max)
   if (!this)
     return;
 
+  m_box->show();
   m_bar_max = max;
   m_label->set_label (label);
   m_bar_cur = 0.0;
@@ -45,6 +47,7 @@ void Progress::stop (const char *label)
   m_label->set_label (label);
   m_bar_cur = m_bar_max;
   m_bar->set_fraction(1.0);
+  m_box->hide();
 }
 
 void Progress::update (double value)

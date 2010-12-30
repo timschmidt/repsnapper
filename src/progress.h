@@ -22,12 +22,13 @@
 #include <string>
 
 class Progress {
+  Gtk::Box *m_box;
   Gtk::ProgressBar *m_bar;
   Gtk::Label *m_label;
   double m_bar_max;
   double m_bar_cur;
  public:
-  Progress(Gtk::ProgressBar *bar, Gtk::Label *label);
+  Progress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label);
   void start (const char *label, double max);
   void stop (const char *label);
   void update (double value);
