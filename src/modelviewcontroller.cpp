@@ -1410,14 +1410,22 @@ void ModelViewController::SelectedNodeMatrices(vector<Matrix4f *> &result )
 }
 
 
-void ModelViewController::FindEmptyLocation(Vector3f &result, STL *stl)
+bool _ClosestToOrigin (Vector3f a, Vector3f b)
+{
+	return (a.x*a.x + a.y*a.y + a.z*a.z) < (b.x*b.x + b.y*b.y + b.z*b.z);
+}
+
+
+bool ModelViewController::FindEmptyLocation(Vector3f &result, STL *stl)
 {
 	UINT i=1;
-	Flu_Tree_Browser::Node *node;
-	node=gui->RFP_Browser->get_selected( i++ );
 
+	// Get all object positions
 	vector<Vector3f> maxpos;
 	vector<Vector3f> minpos;
+
+	Flu_Tree_Browser::Node *node;
+	node=gui->RFP_Browser->get_selected( i++ );
 
 	while(node)
 	{
@@ -1435,57 +1443,66 @@ void ModelViewController::FindEmptyLocation(Vector3f &result, STL *stl)
 		node=gui->RFP_Browser->get_selected( i++ );	// next selected
 	}
 
-	// TODO - sort minpos/maxpos according to distance to origin.
+	// Get all possible object positions
 
 	float d = 5.0f; // 5mm spacing between objects
 	Vector3f StlDelta = (stl->Max-stl->Min);
+	vector<Vector3f> candidates;
+
+	candidates.push_back(Vector3f(0.0f, 0.0f, 0.0f));
 
 	for (UINT j=0; j<maxpos.size(); j++)
 	{
-		vector<Vector3f> candidates;
 		candidates.push_back(Vector3f(maxpos[j].x+d, minpos[j].y, maxpos[j].z));
 		candidates.push_back(Vector3f(minpos[j].x, maxpos[j].y+d, maxpos[j].z));
 		candidates.push_back(Vector3f(maxpos[j].x+d, maxpos[j].y+d, maxpos[j].z));
-		    
-		for (UINT c=0; c<candidates.size(); c++)
-		{
-			bool ok = true;
-			    
-			for (UINT k=0; k<maxpos.size(); k++)
-			{
-				if (
-					// check x 
-					((minpos[k].x <= candidates[c].x && candidates[c].x <= maxpos[k].x) ||
-					 (candidates[c].x <= minpos[k].x && maxpos[k].x <=  candidates[c].x+StlDelta.x+d) ||
-					 (minpos[k].x <= candidates[c].x+StlDelta.x+d && candidates[c].x+StlDelta.x+d <= maxpos[k].x))
-					&&
-					// check y
-					((minpos[k].y <= candidates[c].y && candidates[c].y <= maxpos[k].y) ||
-					 (candidates[c].y <= minpos[k].y && maxpos[k].y <=  candidates[c].y+StlDelta.y+d) ||
-					 (minpos[k].y <= candidates[c].y+StlDelta.y+d && candidates[c].y+StlDelta.y+d <= maxpos[k].y))
-					)
-				{
-					ok = false;
-					break;
-				}
+	}
 
-				// volume boundary
-				if (candidates[c].x+StlDelta.x > (ProcessControl.m_fVolume.x - ProcessControl.PrintMargin.x) ||
-					candidates[c].y+StlDelta.y > (ProcessControl.m_fVolume.y - ProcessControl.PrintMargin.y))
-				{
-					ok = false;
-					break;
-				}
-			}
-			if (ok)
+	// Prefer positions closest to origin
+	sort(candidates.begin(), candidates.end(), _ClosestToOrigin);
+	
+	// Check all candidates for collisions with existing objects
+	for (UINT c=0; c<candidates.size(); c++)
+	{
+		bool ok = true;
+		
+		for (UINT k=0; k<maxpos.size(); k++)
+		{
+			if (
+				// check x 
+				((minpos[k].x <= candidates[c].x && candidates[c].x <= maxpos[k].x) ||
+				 (candidates[c].x <= minpos[k].x && maxpos[k].x <=  candidates[c].x+StlDelta.x+d) ||
+				 (minpos[k].x <= candidates[c].x+StlDelta.x+d && candidates[c].x+StlDelta.x+d <= maxpos[k].x))
+				&&
+				// check y
+				((minpos[k].y <= candidates[c].y && candidates[c].y <= maxpos[k].y) ||
+				 (candidates[c].y <= minpos[k].y && maxpos[k].y <=  candidates[c].y+StlDelta.y+d) ||
+				 (minpos[k].y <= candidates[c].y+StlDelta.y+d && candidates[c].y+StlDelta.y+d <= maxpos[k].y))
+				)
 			{
-				result.x = candidates[c].x;
-				result.y = candidates[c].y;
-				result.z = candidates[c].z;
-				return;
+				ok = false;
+				break;
+			}
+
+			// volume boundary
+			if (candidates[c].x+StlDelta.x > (ProcessControl.m_fVolume.x - 2*ProcessControl.PrintMargin.x) ||
+				candidates[c].y+StlDelta.y > (ProcessControl.m_fVolume.y - 2*ProcessControl.PrintMargin.y))
+			{
+				ok = false;
+				break;
 			}
 		}
+		if (ok)
+		{
+			result.x = candidates[c].x;
+			result.y = candidates[c].y;
+			result.z = candidates[c].z;
+			return true;
+		}
 	}
+
+	// no empty spots
+	return false;
 }
 
 void ModelViewController::Translate(string axis, float distance)
@@ -1544,8 +1561,10 @@ RFO_File* ModelViewController::AddStl(STL stl, string filename)
 	r.node = 0;	//???
 
 	Vector3f trans;
-	FindEmptyLocation(trans, &stl);
-	r.transform3D.transform.setTranslation(trans);
+	if (FindEmptyLocation(trans, &stl))
+	{
+		r.transform3D.transform.setTranslation(trans);
+	}
 
 	parent->files.push_back(r);
 	ProcessControl.rfo.BuildBrowser(ProcessControl);

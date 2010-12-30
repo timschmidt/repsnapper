@@ -60,7 +60,7 @@ public:
 	void Duplicate();
 	void OptimizeRotation() { ProcessControl.OptimizeRotation();}
 	void RotateObject(float x, float y, float z, float a) {ProcessControl.RotateObject(Vector3f(x,y,z),a);}
-	void FindEmptyLocation(Vector3f &result, STL *stl);
+	bool FindEmptyLocation(Vector3f &result, STL *stl);
 
 	void SetShrinkQuality(string quality);
 	void SetOptimization(float val) {ProcessControl.Optimization = val; redraw(); }
