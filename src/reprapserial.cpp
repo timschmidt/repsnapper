@@ -23,7 +23,7 @@
 #include "modelviewcontroller.h"
 
 
-RepRapSerial::RepRapSerial(Progress *_progress)
+RepRapSerial::RepRapSerial(Progress *progress, ProcessController *ctrl)
 {
 	m_bConnecting = false;
 	m_bConnected = false;
@@ -35,7 +35,8 @@ RepRapSerial::RepRapSerial(Progress *_progress)
 	gui = 0;
 	debugMask = DEBUG_ECHO | DEBUG_INFO | DEBUG_ERRORS;
 	logFile = 0;
-	progress = _progress;
+	m_ctrl = ctrl;
+	m_progress = progress;
 	m_signal_printing_changed.emit();
 }
 
@@ -75,23 +76,23 @@ void RepRapSerial::debugPrint(string s, bool selectLine)
 				gui->ErrorLog->bottomline(gui->ErrorLog->size());
 		}
 
-		while(gui->CommunationLog->size() > gui->MVC->ProcessControl.KeepLines)
+		while(gui->CommunationLog->size() > m_ctrl->KeepLines)
 			gui->CommunationLog->remove(1);
-		while(gui->ErrorLog->size() > gui->MVC->ProcessControl.KeepLines)
+		while(gui->ErrorLog->size() > m_ctrl->KeepLines)
 			gui->ErrorLog->remove(1);
-		while(gui->Echo->size() > gui->MVC->ProcessControl.KeepLines)
+		while(gui->Echo->size() > m_ctrl->KeepLines)
 			gui->Echo->remove(1);
 	}
 	else
 		printf("%s", s.c_str());
 
-	if(gui->MVC->ProcessControl.FileLogginEnabled)
+	if(m_ctrl->FileLogginEnabled)
 	{
 	// is the files open?
 	if(logFile == 0)
 		{
 		// Append or new?
-		if(gui->MVC->ProcessControl.ClearLogfilesWhenPrintStarts)
+		if(m_ctrl->ClearLogfilesWhenPrintStarts)
 			logFile = fopen("./RepSnapper.log", "w");
 		else
 			{
@@ -134,13 +135,13 @@ void RepRapSerial::echo(string s)
 	else
 		printf("%s", s.c_str());
 
-	if(gui->MVC->ProcessControl.FileLogginEnabled)
+	if(m_ctrl->FileLogginEnabled)
 	{
 	// is the files open?
 	if(logFile == 0)
 		{
 		// Append or new?
-		if(gui->MVC->ProcessControl.ClearLogfilesWhenPrintStarts)
+		if(m_ctrl->ClearLogfilesWhenPrintStarts)
 			logFile = fopen("./RepSnapper.log", "w");
 		else
 			{
@@ -188,7 +189,7 @@ void RepRapSerial::SendNextLine()
 		m_bPrinting = false;
 		buffer.clear();
 		GDK_THREADS_ENTER();
-		progress->stop("Print done");
+		m_progress->stop("Print done");
 		GDK_THREADS_LEAVE();
 		Clear();
 		m_signal_printing_changed.emit();
@@ -203,13 +204,13 @@ void RepRapSerial::SendNextLine()
 			GDK_THREADS_ENTER();
 
 			double elapsed = (time - startTime) / 1000.0;
-			double max = progress->maximum();
+			double max = m_progress->maximum();
 			double lines_per_sec = elapsed > 1 ? (double)m_iLineNr / elapsed : 1.0;
 			double remaining = (double)(max - m_iLineNr) / lines_per_sec;
 
 			// elide small changes ...
-			if (fabs (((double)m_iLineNr - progress->value()) / max) > 1.0/1000.0)
-			  progress->update ((double)m_iLineNr);
+			if (fabs (((double)m_iLineNr - m_progress->value()) / max) > 1.0/1000.0)
+			  m_progress->update ((double)m_iLineNr);
 
 			int remaining_seconds = (int)fmod (remaining, 60.0);
 			int remaining_minutes = ((int)fmod (remaining, 3600.0) - remaining_seconds) / 60;
@@ -229,7 +230,7 @@ void RepRapSerial::SendNextLine()
 			else
 				oss << "Progress";
 
-			progress->set_label (oss.str());
+			m_progress->set_label (oss.str());
 
 			GDK_THREADS_LEAVE();
 		}

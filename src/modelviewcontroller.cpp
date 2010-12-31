@@ -284,7 +284,7 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   m_progress = new Progress (box, bar, label);
   ProcessControl.SetProgress (m_progress);
 
-  serial = new RepRapSerial(m_progress);
+  serial = new RepRapSerial(m_progress, &ProcessControl);
   serial->signal_printing_changed().connect (sigc::mem_fun(*this, &ModelViewController::printing_changed));
 
   m_view[0] = new ConnectView(serial, &ProcessControl);

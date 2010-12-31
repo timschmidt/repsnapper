@@ -109,6 +109,7 @@ PWM (D 14) PD6 20|        |21  PD7 (D 15) PWM
 
 class GUI;
 class Progress;
+class ProcessController;
 
 class RepRapSerial
 {
@@ -116,7 +117,8 @@ private:
 	boost::mutex m;
 	boost::condition_variable c;
 	bool m_bPrinting;
-	Progress *progress;
+	Progress *m_progress;
+	ProcessController *m_ctrl;
 
 	typedef boost::unique_lock<boost::mutex> Guard;
   
@@ -135,7 +137,7 @@ public:
 	sigc::signal< void > signal_printing_changed() { return m_signal_printing_changed; }
 
 	RepRapBufferedAsyncSerial* com;
-	RepRapSerial(Progress *progress);
+	RepRapSerial(Progress *progress, ProcessController *ctrl);
 	
 	// Event handler
 
