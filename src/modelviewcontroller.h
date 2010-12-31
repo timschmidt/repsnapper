@@ -304,17 +304,8 @@ public:
 	GUI *gui;
 	ProcessController ProcessControl;
 
-	void serialConnected();
-	void serialConnectionLost();
-
 	// fltk compat foo ...
         void redraw();
-	bool valid() { // horrible hack
-	  static bool valid = false;
-	  bool ret = valid;
-	  valid = true;
-	  return ret;
-	}
 	int w() { return get_width(); }
 	int h() { return get_height(); }
 };

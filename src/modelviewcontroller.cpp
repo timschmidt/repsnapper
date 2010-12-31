@@ -712,18 +712,6 @@ void ModelViewController::WaitForConnection(float seconds)
 	serial->WaitForConnection(seconds*1000);
 }
 
-void ModelViewController::serialConnected()
-{
-	gui->ConnectToPrinterButton->set();
-	gui->ConnectToPrinterSimpleButton->set();
-}
-
-void ModelViewController::serialConnectionLost()
-{
-	gui->ConnectToPrinterButton->clear();
-	gui->ConnectToPrinterSimpleButton->clear();
-}
-
 void ModelViewController::Print()
 {
 	if( !serial->isConnected() ) {

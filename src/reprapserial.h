@@ -132,9 +132,15 @@ private:
 	};
 
 	sigc::signal< void > m_signal_printing_changed;
+	sigc::signal<void, int> m_signal_state_changed;
+
 public:
+	enum State { DISCONNECTED, CONNECTING, CONNECTED };
+
 	// Whether we are printing or not changed ...
 	sigc::signal< void > signal_printing_changed() { return m_signal_printing_changed; }
+	// When the connected state changes and the new value
+	sigc::signal< void, int> signal_state_changed() { return m_signal_state_changed; }
 
 	RepRapBufferedAsyncSerial* com;
 	RepRapSerial(Progress *progress, ProcessController *ctrl);
@@ -155,13 +161,14 @@ public:
 	void SendNextLine();
 	void SendData(std::string s, const int lineNr);
 	void Connect(std::string port, int speed);
-	void DisConnect();
-	void DisConnect(const char* reason);
+	void DisConnect(const char* debug_reason = NULL);
+	void change_to_state(State newState);
 	void pausePrint();
 	void continuePrint();
 	bool isPrinting(){return m_bPrinting;}
-	bool isConnected(){return m_bConnected;}
-	bool isConnecting(){return m_bConnecting;}
+	bool isConnected(){return m_bState == CONNECTED;}
+	bool isConnecting(){return m_bState == CONNECTING;}
+	State getState(){ return m_bState; }
 	ulong GetConnectAttempt() { return ConnectAttempt; }
 	void WaitForConnection(ulong timeoutMS);
 	void SetReceivingBufferSize(int val) { ReceivingBufferSize = val; }
@@ -170,13 +177,12 @@ private:
 	void internalWrite(std::string s, const int lineNr);
 	void debugPrint(std::string s, bool selectLine = false);
 	void echo(std::string s);
-	void notifyConnection (bool connected);
 	std::string get_next_token(std::string);
 	uint count_leading_whitespace(std::string);
 
 	std::vector<std::string> buffer;
-	bool m_bConnected;
-	bool m_bConnecting;
+	State m_bState;
+
 	bool m_bValidateConnection;
 	uint m_iLineNr;
 	std::string InBuffer;

@@ -26,6 +26,38 @@ add event foo to the MVC...
 * kill all reprapserial uses of 'mvc' 
 	+ use signals instead.
 	+ for 'serialConnectionLost' etc.
+	+ 'serialConnected' - should be this ...
+
+	bool m_bConnecting;
+	bool m_bConnected;
+
 
 * StartPrint should signal ...
+
+
+listener for state_changed:
+	+ if 'DISCONECCTED' ->
+	{
+		m_bConnecting = false;
+		m_bConnected = false;
+		m_bPrinting = false;
+		{
+			ToolkitLock guard;
+			gui->MVC->serialConnectionLost();
+		}
+		return;
+	}
+
+				ToolkitLock guard;
+
+				// Tell GUI we are ready to go.
+				notifyConnection(true);
+				gui->MVC->serialConnected();
+			}
+
+Fl::add_timeout ... !?
+
+* Audit all Fl::Lock()'s
+	+ Create a 'Guard' lock that doesn't take the GDK_THREADS
+	  lock if we already own the default mainloop ;-)
 

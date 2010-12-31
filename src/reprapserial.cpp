@@ -25,19 +25,17 @@
 
 RepRapSerial::RepRapSerial(Progress *progress, ProcessController *ctrl)
 {
-	m_bConnecting = false;
-	m_bConnected = false;
-	com = new RepRapBufferedAsyncSerial(this);
-	m_bPrinting = false;
-	startTime = 0;
-	lastUpdateTime = 0;
-	m_iLineNr = 0;
-	gui = 0;
-	debugMask = DEBUG_ECHO | DEBUG_INFO | DEBUG_ERRORS;
-	logFile = 0;
-	m_ctrl = ctrl;
-	m_progress = progress;
-	m_signal_printing_changed.emit();
+  m_bState = DISCONNECTED;
+  com = new RepRapBufferedAsyncSerial(this);
+  m_bPrinting = false;
+  startTime = 0;
+  lastUpdateTime = 0;
+  m_iLineNr = 0;
+  gui = 0;
+  debugMask = DEBUG_ECHO | DEBUG_INFO | DEBUG_ERRORS;
+  logFile = 0;
+  m_ctrl = ctrl;
+  m_progress = progress;
 }
 
 void RepRapSerial::debugPrint(string s, bool selectLine)
@@ -164,79 +162,78 @@ void RepRapSerial::StartPrint()
     SendNextLine();
 }
 
+void RepRapSerial::change_to_state(State newState)
+{
+  if (m_bState == newState)
+    return;
+
+  fprintf (stderr, "RepRapSerial::change_to_state %d\n", (int)newState);
+
+  if (newState != CONNECTED && m_bPrinting) {
+    m_bPrinting = false;
+    m_signal_printing_changed.emit();
+  }
+
+  m_bState = newState;
+  m_signal_state_changed.emit(m_bState);
+
+  c.notify_all();
+}
+
 void RepRapSerial::SendNextLine()
 {
-	if ( com->errorStatus() ) 
-	{
-		m_bConnecting = false;
-		m_bConnected = false;
-		m_bPrinting = false;
-		{
-			ToolkitLock guard;
-			gui->MVC->serialConnectionLost();
-		}
-		return;
-	}
-	if (m_bPrinting == false)
-		return;
-	if (m_iLineNr < buffer.size())
-	{
-		string a = buffer[m_iLineNr];
-		SendData(a.c_str(), m_iLineNr++);
-	}
-	else	// we are done
-	{
-		m_bPrinting = false;
-		buffer.clear();
-		GDK_THREADS_ENTER();
-		m_progress->stop("Print done");
-		GDK_THREADS_LEAVE();
-		Clear();
-		m_signal_printing_changed.emit();
-		return;
-	}
-	if (gui) {
-		unsigned long time = Platform::getTickCount();
-		if (startTime == 0)
-			startTime = time;
-		// it is just wasteful to update the GUI > once per sec.
-		if (time - lastUpdateTime > 1000) {
-			GDK_THREADS_ENTER();
+  if ( com->errorStatus() )
+    change_to_state(DISCONNECTED);
+  if (!m_bPrinting)
+    return;
+  if (m_iLineNr < buffer.size()) {
+    string a = buffer[m_iLineNr];
+    SendData(a.c_str(), m_iLineNr++);
+  } else { // we are done
+    m_bPrinting = false;
+    buffer.clear();
+    GDK_THREADS_ENTER();
+    m_progress->stop("Print done");
+    GDK_THREADS_LEAVE();
+    Clear();
+    m_signal_printing_changed.emit();
+    return;
+  }
+  unsigned long time = Platform::getTickCount();
+  if (startTime == 0)
+    startTime = time;
+  // it is just wasteful to update the GUI > once per sec.
+  if (time - lastUpdateTime > 1000) {
+    GDK_THREADS_ENTER();
 
-			double elapsed = (time - startTime) / 1000.0;
-			double max = m_progress->maximum();
-			double lines_per_sec = elapsed > 1 ? (double)m_iLineNr / elapsed : 1.0;
-			double remaining = (double)(max - m_iLineNr) / lines_per_sec;
+    double elapsed = (time - startTime) / 1000.0;
+      double max = m_progress->maximum();
+      double lines_per_sec = elapsed > 1 ? (double)m_iLineNr / elapsed : 1.0;
+      double remaining = (double)(max - m_iLineNr) / lines_per_sec;
 
-			// elide small changes ...
-			if (fabs (((double)m_iLineNr - m_progress->value()) / max) > 1.0/1000.0)
-			  m_progress->update ((double)m_iLineNr);
+      // elide small changes ...
+      if (fabs (((double)m_iLineNr - m_progress->value()) / max) > 1.0/1000.0)
+	m_progress->update ((double)m_iLineNr);
 
-			int remaining_seconds = (int)fmod (remaining, 60.0);
-			int remaining_minutes = ((int)fmod (remaining, 3600.0) - remaining_seconds) / 60;
-			int remaining_hours = (int)remaining / 3600;
+	int remaining_seconds = (int)fmod (remaining, 60.0);
+	int remaining_minutes = ((int)fmod (remaining, 3600.0) - remaining_seconds) / 60;
+	int remaining_hours = (int)remaining / 3600;
 
-			std::stringstream oss;
+	std::stringstream oss;
+	// Trade accuracy for reduced UI update frequency.
+	if (remaining_hours > 0)
+	  oss << setw(2) << remaining_hours << "h" << remaining_minutes << "m";
+	else if (remaining_minutes > 5)
+	  oss << setw(2) << remaining_minutes << "m";
+	else if (remaining_seconds > 0)
+	  oss << setw(2) << remaining_minutes << "m" << remaining_seconds << "s";
+	else
+	  oss << "Progress";
 
-			/*
-			 * Trade accuracy for reduced UI update frequency.
-			 */
-			if (remaining_hours > 0)
-				oss << setw(2) << remaining_hours << "h" << remaining_minutes << "m";
-			else if (remaining_minutes > 5)
-				oss << setw(2) << remaining_minutes << "m";
-			else if (remaining_seconds > 0)
-				oss << setw(2) << remaining_minutes << "m" << remaining_seconds << "s";
-			else
-				oss << "Progress";
+	m_progress->set_label (oss.str());
 
-			m_progress->set_label (oss.str());
-
-			GDK_THREADS_LEAVE();
-		}
-
-	}
-
+	GDK_THREADS_LEAVE();
+  }
 }
 
 void RepRapSerial::SendNow(string s)
@@ -249,21 +246,12 @@ void RepRapSerial::SendNow(string s)
 
 void RepRapSerial::SendData(string s, const int lineNr)
 {
-	if( !m_bConnected ) return;
+  if (!isConnected()) return;
 
-	if( com->errorStatus() ) 
-	{
-		m_bConnecting = false;
-		m_bConnected = false;
-		m_bPrinting = false;
-		{
-			ToolkitLock guard;
-			gui->MVC->serialConnectionLost();
-		}
-		return;
-	}
+  if( com->errorStatus() )
+    change_to_state (DISCONNECTED);
 
-	// Apply Downstream Multiplier
+  // Apply Downstream Multiplier
 
 	float DSMultiplier = 1.0f;
 	float ExtrusionMultiplier = 1.0f;
@@ -383,10 +371,9 @@ void ConnectionTimeOutMethod(void *data)
 void RepRapSerial::Connect(string port, int speed)
 {
 	bool error = false;
-	if( m_bConnecting ) return;
-	m_bConnected = false;
-	m_bConnecting = true;
-	c.notify_all();
+	if( isConnecting() ) return;
+	change_to_state (CONNECTING);
+
 	std::stringstream oss;
 	oss << "Connecting to port: " << port  << " at speed " << speed;
 	debugPrint( oss.str() );
@@ -402,12 +389,7 @@ void RepRapSerial::Connect(string port, int speed)
 		debugPrint(oss.str(), true);
 	}
 	if( error )
-	{
-		ToolkitLock guard;
-		m_bConnecting = false;
-		gui->MVC->serialConnectionLost();
-		return;
-	}
+	  change_to_state (DISCONNECTED);
 
 	if( m_bValidateConnection )
 	{
@@ -421,37 +403,22 @@ void RepRapSerial::Connect(string port, int speed)
 		SendNow("M105");
 	}
 	else
-	{
-		ToolkitLock guard;
-		notifyConnection(true);
-		gui->MVC->serialConnected();
-	}
+	  change_to_state (CONNECTED);
+
 	Fl::add_timeout(1.0f, &TempReadTimer);
 }
 
-void RepRapSerial::notifyConnection (bool connected)
+void RepRapSerial::DisConnect(const char* debug_reason)
 {
-	m_bConnecting = false;
-	m_bConnected = connected;
-	c.notify_all();
-}
+  if (debug_reason != NULL)
+    debugPrint (debug_reason);
 
-void RepRapSerial::DisConnect(const char* reason)
-{
-	debugPrint(reason);
-	DisConnect();
-}
+  if( isConnected() )
+    SendNow("M81");
 
-void RepRapSerial::DisConnect()
-{
-	if( m_bConnected )
-		SendNow("M81");
-	notifyConnection (false);
-	com->close();
-	Clear();
-
-	ToolkitLock guard;
-	gui->MVC->serialConnectionLost();
+  com->close();
+  Clear();
+  change_to_state (DISCONNECTED);
 }
 
 void RepRapSerial::SetLineNr(int nr)
@@ -646,15 +613,9 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 				knownCommand = false;
 			}
 
-			if (knownCommand && m_bConnecting)
-			{
-				ToolkitLock guard;
+			if (knownCommand && isConnecting())
+			  change_to_state (CONNECTED);
 
-				// Tell GUI we are ready to go.
-				notifyConnection(true);
-				gui->MVC->serialConnected();
-			}
-			  
 			InBuffer = InBuffer.substr(found);	// 2 end-line characters, \n\r
 
 			// Empty eol control characters
@@ -699,7 +660,7 @@ void RepRapSerial::WaitForConnection(ulong timeoutMS)
 	Guard a (m);
 	boost::system_time until;
 	until = boost::get_system_time() + boost::posix_time::milliseconds (timeoutMS);
-	while (m_bConnecting && c.timed_wait(a, until));
+	while (isConnecting() && c.timed_wait(a, until));
 }
 
 void RepRapSerial::continuePrint()

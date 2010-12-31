@@ -161,7 +161,6 @@ void GUI::cb_SerialSpeedInputSimple(Fl_Value_Input* o, void* v) {
 }
 
 void GUI::cb_ConnectToPrinterSimpleButton_i(Fl_Light_Button* o, void*) {
-  MVC->serialConnected();
 MVC->ConnectToPrinter(o->value());
 }
 void GUI::cb_ConnectToPrinterSimpleButton(Fl_Light_Button* o, void* v) {
@@ -875,7 +874,6 @@ void GUI::cb_Clear(Fl_Button* o, void* v) {
 }
 
 void GUI::cb_ConnectToPrinterButton_i(Fl_Light_Button* o, void*) {
-  MVC->serialConnected();
 MVC->ConnectToPrinter(o->value());
 }
 void GUI::cb_ConnectToPrinterButton(Fl_Light_Button* o, void* v) {

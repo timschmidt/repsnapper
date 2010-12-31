@@ -30,12 +30,14 @@ class ConnectView : public Gtk::VBox {
   Gtk::ToggleButton  m_connect;
   Gtk::Label         m_port_label;
   Gtk::ComboBoxEntry m_combo;
+  bool               m_setting_state;
 
-  RepRapSerial      *serial;
-  ProcessController *ctrl;
+  RepRapSerial      *m_serial;
+  ProcessController *m_ctrl;
 
   void connect_toggled();
-  void set_state(bool connected);
+  void try_set_state(bool connected);
+  void serial_state_changed(int state);
  public:
   ConnectView(RepRapSerial *serial, ProcessController *ctrl, bool show_connect = true);
 };

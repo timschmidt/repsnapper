@@ -22,32 +22,64 @@
 #include "reprapserial.h"
 #include "processcontroller.h"
 
-void ConnectView::set_state(bool connected)
+// we try to change the state of the connection
+void ConnectView::try_set_state(bool connect)
 {
-  const Gtk::BuiltinStockID id = connected ? Gtk::Stock::YES : Gtk::Stock::NO;
-  const char *label = connected ? "Disconnect" : "Connect";
+  if (connect)
+    m_serial->Connect(m_ctrl->m_sPortName, m_ctrl->m_iSerialSpeed);
+  else
+    m_serial->DisConnect();
+}
+
+void ConnectView::serial_state_changed(int state)
+{
+  bool sensitive;
+  const char *label;
+  Gtk::BuiltinStockID id;
+
+  switch (state) {
+  case RepRapSerial::DISCONNECTED:
+    id = Gtk::Stock::NO;
+    label = "Connect";
+    sensitive = true;
+    break;
+  case RepRapSerial::CONNECTING:
+    id = Gtk::Stock::NO;
+    label = "Connecting...";
+    sensitive = false;
+    break;
+  case RepRapSerial::CONNECTED:
+  default:
+    id = Gtk::Stock::YES;
+    label = "Disconnect";
+    sensitive = true;
+    break;
+  }
+
   m_image.set (id, Gtk::ICON_SIZE_BUTTON);
   m_connect.set_label (label);
+  m_connect.set_sensitive (sensitive);
+  if (sensitive) {
+    m_setting_state = true; // inhibit unhelpful recursion.
+    m_connect.set_active (state == RepRapSerial::CONNECTED);
+    m_setting_state = false;
+  }
 }
 
 void ConnectView::connect_toggled()
 {
-  bool connected = m_connect.get_active ();
-  set_state (connected);
-  // FIXME: we really need to listen to signals from the connection
-  // itself and store the state there ... - though they come from
-  // another thread potentially.
-  if (connected)
-    serial->Connect(ctrl->m_sPortName, ctrl->m_iSerialSpeed);
-  else
-    serial->DisConnect();
+  if (!m_setting_state)
+    try_set_state (m_connect.get_active ());
 }
 
-ConnectView::ConnectView(RepRapSerial *_serial, ProcessController *_ctrl,
-			 bool show_connect)
+ConnectView::ConnectView(RepRapSerial      *serial,
+			 ProcessController *ctrl,
+			 bool               show_connect)
   : Gtk::VBox(), m_connect(), m_port_label("Port:"),
-    serial (_serial), ctrl (_ctrl)
+    m_serial (serial), m_ctrl (ctrl)
 {
+  m_setting_state = false;
+
   add (m_hbox);
   m_hbox.add (m_image);
   m_hbox.add (m_connect);
@@ -55,8 +87,10 @@ ConnectView::ConnectView(RepRapSerial *_serial, ProcessController *_ctrl,
   m_hbox.add (m_combo);
 
   m_connect.signal_toggled().connect (sigc::mem_fun (*this, &ConnectView::connect_toggled));
+  m_serial->signal_state_changed().connect (sigc::mem_fun (*this, &ConnectView::serial_state_changed));
+
   show_all ();
   if (!show_connect)
     m_connect.hide ();
-  set_state (false);
+  serial_state_changed (RepRapSerial::DISCONNECTED);
 }
