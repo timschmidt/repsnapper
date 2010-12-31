@@ -54,3 +54,5 @@ Loggin -> Logging ...
 
 * rename RFO_File etc. to RFO::File etc.
 
+
+* remove empty mvc->Scale method

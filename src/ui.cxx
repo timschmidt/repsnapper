@@ -319,7 +319,6 @@ void GUI::cb_ObjectNameInput(Fl_Input* o, void* v) {
 }
 
 void GUI::cb_Delete_i(Fl_Button*, void*) {
-  MVC->ProcessControl.rfo.DeleteSelected(MVC);
 }
 void GUI::cb_Delete(Fl_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->user_data()))->cb_Delete_i(o,v);

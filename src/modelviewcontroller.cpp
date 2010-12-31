@@ -1429,8 +1429,13 @@ void ModelViewController::OptimizeRotation()
 
 void ModelViewController::delete_selected_stl()
 {
-  ProcessControl.rfo.DeleteSelected (this);
+  if (m_rfo_tree->get_selection()->count_selected_rows() <= 0)
+    return;
+
+  Gtk::TreeModel::iterator iter = m_rfo_tree->get_selection()->get_selected();
+  ProcessControl.rfo.DeleteSelected (iter);
   m_rfo_tree->expand_all();
+  queue_draw();
 }
 
 bool ModelViewController::get_selected_stl(RFO_Object *&object, RFO_File *&file)
@@ -1463,4 +1468,5 @@ void ModelViewController::duplicate_selected_stl()
   p.x += size.x + 5.0f;	// 5mm space
   obj->transform3D.transform.setTranslation (p);
   CalcBoundingBoxAndCenter();
+  queue_draw();
 }

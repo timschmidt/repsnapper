@@ -111,59 +111,16 @@ Matrix4f &RFO::SelectedNodeMatrix(Flu_Tree_Browser::Node *node)
 	return transform3D.transform;
 }
 
-void RFO::DeleteSelected(ModelViewController *MVC)
+void RFO::DeleteSelected(Gtk::TreeModel::iterator &iter)
 {
-	if (MVC->gui->RFP_Browser->num_selected() == 1)
-	{
-		Flu_Tree_Browser::Node *node = MVC->gui->RFP_Browser->get_selected(1);
-		for(UINT o=0;o<Objects.size();o++)
-		{
-			if(Objects[o].node == node)
-			{
-				Objects.erase(Objects.begin()+o);
-				update_model();
-				return;
-			}
-			for(UINT f=0;f<Objects[o].files.size();f++)
-			{
-				if(Objects[o].files[f].node == node)
-				{
-					Objects[o].files.erase(Objects[o].files.begin()+f);
-					update_model();
-					return;
-				}
-			}
-		}
-	}
-	else
-	{
-		int toDelete = MVC->gui->RFP_Browser->num_selected();
-		Flu_Tree_Browser::Node **selecteds = new Flu_Tree_Browser::Node*[toDelete];
-		for (int t = 1; t <= toDelete; t++)
-		{
-			selecteds[t-1] = MVC->gui->RFP_Browser->get_selected(t);
-		}
-		for (int t = 0; t <= (toDelete - 1); t++)
-		{
-			for(UINT o=0;o<Objects.size();o++)
-			{
-				if(Objects[o].node == selecteds[t])
-				{
-					Objects.erase(Objects.begin()+o);
-				}
-				for(UINT f=0;f<Objects[o].files.size();f++)
-				{
-					if(Objects[o].files[f].node == selecteds[t])
-					{
-						Objects[o].files.erase(Objects[o].files.begin()+f);
-					}
-				}
-			}
-		}
-		update_model();
-		delete selecteds;
-		return;
-	}
+  RFO_Object *object;
+  RFO_File *file;
+  get_selected_stl (iter, object, file);
+  if (file != NULL)
+    Objects[object->idx].files.erase (Objects[object->idx].files.begin() + file->idx);
+  else if (object != NULL)
+    Objects.erase (Objects.begin() + object->idx);
+  update_model();
 }
 
 void RFO::newObject()

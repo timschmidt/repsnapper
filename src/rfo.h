@@ -74,7 +74,7 @@ public:
 	void Draw(ProcessController &PC, float opasity = 1.0f, Flu_Tree_Browser::Node *selected_node=0);
 	void Load(string path, ProcessController &PC);
 	void clear(ProcessController &PC);
-	void DeleteSelected(ModelViewController *MVC);
+	void DeleteSelected(Gtk::TreeModel::iterator &iter);
 	bool Open(string filename, ProcessController &PC);
 	bool Save(string filename, ProcessController &PC);
 	void newObject();
