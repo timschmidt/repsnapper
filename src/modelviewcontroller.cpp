@@ -662,10 +662,10 @@ void ModelViewController::Restart()
 
 void ModelViewController::ContinuePauseButton()
 {
-  #warning this should have a thread save API ...
-  if (serial->isPrinting()) {
+  #warning this should have a thread safe API ...
+  if (serial->isPrinting())
     serial->pausePrint();
-  } else
+  else
     Continue();
 }
 

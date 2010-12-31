@@ -506,9 +506,9 @@ void STL::draw(const ProcessController &PC, float opasity)
 
 }
 
-uint findClosestUnused(std::vector<Vector3f> lines, Vector3f point, std::vector<bool> &used)
+int findClosestUnused(std::vector<Vector3f> lines, Vector3f point, std::vector<bool> &used)
 {
-	uint closest = -1;
+	int closest = -1;
 	float closestDist = boost::numeric::bounds<float>::highest();
 	
 	size_t count = lines.size();
@@ -784,7 +784,7 @@ void CuttingPlane::MakeGcode(const std::vector<Vector2f> &infill, GCode &code, f
 		used[i] = false;
 
 
-	uint thisPoint = findClosestUnused(lines, LastPosition, used);
+	int thisPoint = findClosestUnused(lines, LastPosition, used);
 	if(thisPoint == -1)	// No lines = no gcode
 		return;
 	used[thisPoint] = true;
@@ -1558,8 +1558,8 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 			continue; // already used 
 		used[current] = true;
 
-		uint startPoint = lines[current].start;
-		uint endPoint = lines[current].end;
+		int startPoint = lines[current].start;
+		int endPoint = lines[current].end;
 
 		Poly poly;
 		poly.points.push_back (endPoint);
@@ -1576,10 +1576,10 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 				cout.width (12);
 				cout << "\r\npolygon was cut at z " << z << " LinkSegments at vertex " << endPoint;
 				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\trefs\n";
-				for (uint i = 0; i < vertices.size(); i++)
+				for (int i = 0; i < (int)vertices.size(); i++)
 				{
 					int refs = 0, pol = 0;
-					for (uint j = 0; j < lines.size(); j++)
+					for (int j = 0; j < (int)lines.size(); j++)
 					{
 						if (lines[j].start == i) { refs++; pol++; }
 						if (lines[j].end == i) { refs++; pol--; }
@@ -1590,7 +1590,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 					cout << "\n";
 				}
 				cout << "\n " << lines.size() << " lines:\nline\tstart vtx\tend vtx\n";
-				for (uint i = 0; i < lines.size(); i++)
+				for (int i = 0; i < (int)lines.size(); i++)
 				{
 					if (i == endPoint)
 						cout << "problem line:\n";
@@ -1598,7 +1598,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 				}
 
 				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\tlinked to\n";
-				for (uint i = 0; i < planepoints.size(); i++)
+				for (int i = 0; i < (int)planepoints.size(); i++)
 				{
 					if (i == endPoint)
 						cout << "problem vertex:\n";
@@ -1613,7 +1613,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 						break;
 					default:
 						cout << "Unusual - multiple: \n";
-						for (j = 0; j < planepoints[i].size(); j++)
+						for (j = 0; j < (int)planepoints[i].size(); j++)
 							cout << planepoints[i][j] << " ";
 						cout << " ( " << j << " other vertices )";
 						break;
@@ -1634,7 +1634,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 			//       b) identify all 2+ nodes and if they share start/end
 			//          directions eliminate them to join the polygons.
 
-			int i;
+			uint i;
 			for (i = 0; i < pathsfromhere.size() && used[pathsfromhere[i]]; i++);
 			if (i >= pathsfromhere.size())
 			{
@@ -1935,18 +1935,18 @@ void CuttingPlane::recurseSelfIntersectAndDivide(float z, vector<locator> &EndPo
 		// search for the start point
 
 		outline result;
-		for(size_t p=start.p; p<offsetPolygons.size();p++)
+		for(int p = start.p; p < (int)offsetPolygons.size(); p++)
 		{
-			for(size_t v=start.v; v<offsetPolygons[p].points.size();v++)
+			for(int v = start.v; v < (int)offsetPolygons[p].points.size(); v++)
 			{
 				Vector2f P1 = offsetVertices[offsetPolygons[p].points[v]];
 				Vector2f P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
 
 				result.push_back(P1);	// store this point
-				for(size_t p2=0; p2<offsetPolygons.size();p2++)
+				for(int p2=0; p2 < (int)offsetPolygons.size(); p2++)
 				{
-					size_t count2 = offsetPolygons[p2].points.size();
-					for(size_t v2=0; v2<count2;v2++)
+					int count2 = offsetPolygons[p2].points.size();
+					for(int v2 = 0; v2 < count2; v2++)
 					{
 						if((p==p2) && (v == v2))	// Dont check a point against itself
 							continue;
@@ -2788,6 +2788,8 @@ void STL::OptimizeRotation()
 	case NEGY: RotateObject(Vector3f(1,0,0), M_PI/2.0f); break;
 	case POSY: RotateObject(Vector3f(-1,0,0), M_PI/2.0f); break;
 	case POSZ: RotateObject(Vector3f(1,0,0), M_PI); break;
+	default: // unhandled
+	  break;
 	}
 	CenterAroundXY();
 }
