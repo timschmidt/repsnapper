@@ -24,6 +24,7 @@
 #ifndef WIN32
 #  include <sys/time.h>
 #endif
+#include <gdkmm.h>
 
 unsigned long Platform::getTickCount()
 {
@@ -36,3 +37,25 @@ unsigned long Platform::getTickCount()
 #endif
 }
 
+/*
+ * The basic idea here, is that gtk+ does not have a recursive lock
+ * so - taking the GDK_THREADS_ENTER when we already own the lock is
+ * fatal. Of course, we get that lock when we enter from the mainloop
+ * so - check if we are already entering from that, and do not acquire
+ * the lock. Sadly no glibmm binding of this yet.
+ */
+ToolkitLock::ToolkitLock() :
+  m_locked(false)
+{
+  if (g_main_context_is_owner (NULL))
+    return;
+  GDK_THREADS_ENTER();
+  m_locked = true;
+}
+
+ToolkitLock::~ToolkitLock()
+{
+  if (m_locked) {
+    GDK_THREADS_LEAVE();
+  }
+}

@@ -17,11 +17,17 @@ add event foo to the MVC...
 	+ print - simple widgets ...
 	+ interactive control (?)
 
+* Add scroll-pane for TextViews to avoid expansion grief on ConvertToGCode ...
+	+ 
+
 * connection button
 	+ should require confirmation before going off-line
 	  during a print ... [ and/or 'pause printing' ]
 
 * fix arcball / rotation resetting ...
+
+
+* signal emissions should hold toolkit lock ?
 
 * kill all reprapserial uses of 'mvc'
 	+ incoming: temperature (2x) feedback
@@ -32,11 +38,6 @@ add event foo to the MVC...
 		+ [ better via ProcessController surely !? ]
 
 * StartPrint should signal ...
-
-* Audit all Fl::Lock()'s
-	+ Create a 'Guard' lock that doesn't take the GDK_THREADS
-	  lock if we already own the default mainloop ;-)
-
 
 * add a test serial connection ...
 	+ and better error reporting ?

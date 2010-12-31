@@ -1,4 +1,21 @@
-/* LGPL code - from mmeeks */
+/*
+    This file is a part of the RepSnapper project.
+    Copyright (C) 2010 Michael Meeks
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 #include "config.h"
 #include "stdafx.h"
 #include "modelviewcontroller.h"
@@ -77,40 +94,41 @@ public:
 
 int main(int argc, char **argv)
 {
-	Gtk::Main tk(argc, argv);
-	Gtk::GL::init(argc, argv);
+  Glib::thread_init();
+  Gtk::Main tk(argc, argv);
+  Gtk::GL::init(argc, argv);
 
-	CommandLineOptions opts (argc, argv);
+  CommandLineOptions opts (argc, argv);
 
-	gui = new GUI();
-	ModelViewController *mvc = ModelViewController::create();
-	gui->MVC = mvc;
+  gui = new GUI();
+  ModelViewController *mvc = ModelViewController::create();
+  gui->MVC = mvc;
 
-	mvc->ProcessControl.gui = gui;
-	mvc->Init(gui);
-	mvc->serial->setGUI(gui);
+  mvc->ProcessControl.gui = gui;
+  mvc->Init(gui);
+  mvc->serial->setGUI(gui);
 
-	if (!opts.use_gui) {
-		if (opts.stl_input_path.size() > 0) {
-			mvc->ReadStl(opts.stl_input_path);
+  if (!opts.use_gui) {
+    if (opts.stl_input_path.size() > 0) {
+      mvc->ReadStl(opts.stl_input_path);
 
-			if (opts.settings_path.size() > 0) {
-				mvc->ProcessControl.LoadConfig(opts.settings_path);
-				mvc->CopySettingsToGUI();
-			}
+      if (opts.settings_path.size() > 0) {
+	mvc->ProcessControl.LoadConfig(opts.settings_path);
+	mvc->CopySettingsToGUI();
+      }
 
-			mvc->ConvertToGCode();
+      mvc->ConvertToGCode();
 
-			if (opts.gcode_output_path.size() > 0)
-				mvc->WriteGCode (opts.gcode_output_path.c_str());
-		}
-		return 0;
-	}
+      if (opts.gcode_output_path.size() > 0)
+	mvc->WriteGCode (opts.gcode_output_path.c_str());
+    }
+    return 0;
+  }
 
-	for (uint i = 0; i < opts.files.size(); i++)
-		mvc->ReadStl (opts.files[i].c_str());
+  for (uint i = 0; i < opts.files.size(); i++)
+    mvc->ReadStl (opts.files[i].c_str());
 
-	tk.run();
+  tk.run();
 
-	return 0;
+  return 0;
 }

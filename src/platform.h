@@ -42,4 +42,12 @@ class Platform {
 	static unsigned long getTickCount();
 };
 
+// helper instance for easy locking
+class ToolkitLock {
+  bool m_locked;
+ public:
+  ToolkitLock();
+  ~ToolkitLock();
+};
+
 #endif // PLATFORM_H

@@ -48,7 +48,7 @@ RepRapSerial::~RepRapSerial()
 
 bool RepRapSerial::temp_poll_timeout()
 {
-  // FIXME: thread hazards abound here:
+  ToolkitLock guard;
   if (m_ctrl->TempReadingEnabled && m_state == CONNECTED)
     SendNow("M105");
   return true;
@@ -203,9 +203,10 @@ void RepRapSerial::SendNextLine()
   } else { // we are done
     m_bPrinting = false;
     buffer.clear();
-    GDK_THREADS_ENTER();
-    m_progress->stop("Print done");
-    GDK_THREADS_LEAVE();
+    {
+      ToolkitLock guard;
+      m_progress->stop("Print done");
+    }
     Clear();
     m_signal_printing_changed.emit();
     return;
@@ -215,7 +216,7 @@ void RepRapSerial::SendNextLine()
     startTime = time;
   // it is just wasteful to update the GUI > once per sec.
   if (time - lastUpdateTime > 1000) {
-    GDK_THREADS_ENTER();
+    ToolkitLock guard;
 
     double elapsed = (time - startTime) / 1000.0;
       double max = m_progress->maximum();
@@ -242,8 +243,6 @@ void RepRapSerial::SendNextLine()
 	  oss << "Progress";
 
 	m_progress->set_label (oss.str());
-
-	GDK_THREADS_LEAVE();
   }
 }
 
@@ -351,6 +350,8 @@ void RepRapSerial::SendData(string s, const int lineNr)
 
 bool RepRapSerial::connecting_poll(int *count)
 {
+  ToolkitLock guard;
+
   if ((*count)-- <= 0) {
     change_to_state (DISCONNECTED);
     delete count;
