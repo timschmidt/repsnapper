@@ -150,9 +150,9 @@ bool ModelViewController::on_delete_event(GdkEventAny* event)
 void ModelViewController::connect_button(const char *name, const sigc::slot<void> &slot)
 {
   Gtk::Button *button = NULL;
-  m_builder->get_widget(name, button);
+  m_builder->get_widget (name, button);
   if (button)
-    button->signal_clicked().connect( slot );
+    button->signal_clicked().connect (slot);
   else {
     std::cerr << "missing button " << name << "\n";
   }
@@ -245,6 +245,13 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   connect_button ("s_print",         sigc::mem_fun(*this, &ModelViewController::SimplePrint) );
 
   // Model tab
+  connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &ModelViewController::OptimizeRotation) );
+  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &ModelViewController::RotateObject), Vector4f(1,0,0, M_PI/4)));
+  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &ModelViewController::RotateObject), Vector4f(0,1,0, M_PI/4)));
+  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &ModelViewController::RotateObject), Vector4f(0,0,1, M_PI/4)));
+  // FIXME numeric value from input / 180.0 -> radians
+
+  // GCode tab
   Gtk::TextView *textv = NULL;
   m_builder->get_widget ("txt_gcode_result", textv);
   textv->set_buffer (ProcessControl.gcode.buffer);
@@ -331,6 +338,7 @@ void ModelViewController::SimpleAdvancedToggle()
 /* Called every 250ms (0.25 of a second) */
 bool ModelViewController::timer_function()
 {
+  ToolkitLock guard;
 #warning FIXME: busy polling for com ports is a disaster [!]
 #warning FIXME: we should auto-select one at 'connect' time / combo drop-down instead
   if( !serial->isConnected() && gui->printerSettingsWindow->visible() != 0 )
@@ -483,8 +491,6 @@ void ModelViewController::SetValidateConnection(bool validate)
 	serial->SetValidateConnection(ProcessControl.m_bValidateConnection);
 	CopySettingsToGUI();
 }
-
-
 
 // all we'll end up doing is dispatching to the ProcessControl to read the file in, but not from this callback
 void ModelViewController::ReadGCode(string filename)
@@ -656,7 +662,6 @@ void ModelViewController::Restart()
 
 void ModelViewController::ContinuePauseButton()
 {
-  #warning this should have a thread safe API ...
   if (serial->isPrinting())
     serial->pausePrint();
   else
@@ -1427,4 +1432,17 @@ void ModelViewController::AddText(string line)
 std::string ModelViewController::GetText()
 {
   return ProcessControl.gcode.get_text();
+}
+
+void ModelViewController::RotateObject(Vector4f rotate)
+{
+  Vector3f rot(rotate.x, rotate.y, rotate.z);
+  ProcessControl.RotateObject(rot, rotate.w);
+  CalcBoundingBoxAndCenter();
+}
+
+void ModelViewController::OptimizeRotation()
+{
+  ProcessControl.OptimizeRotation();
+  CalcBoundingBoxAndCenter();
 }

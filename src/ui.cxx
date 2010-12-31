@@ -223,32 +223,6 @@ void GUI::cb_AutoRotateButton(Fl_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_AutoRotateButton_i(o,v);
 }
 
-void GUI::cb_RotateXButton_i(Fl_Button*, void*) {
-  MVC->RotateObject(1,0,0, (float)(M_PI/4));
-MVC->CalcBoundingBoxAndCenter();
-}
-void GUI::cb_RotateXButton(Fl_Button* o, void* v) {
-  ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_RotateXButton_i(o,v);
-}
-
-void GUI::cb_RotateYButton_i(Fl_Button*, void*) {
-  MVC->RotateObject(0,1,0, (float)(M_PI/4));
-MVC->CalcBoundingBoxAndCenter();
-MVC->redraw();
-}
-void GUI::cb_RotateYButton(Fl_Button* o, void* v) {
-  ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_RotateYButton_i(o,v);
-}
-
-void GUI::cb_RotateZButton_i(Fl_Button*, void*) {
-  MVC->RotateObject(0,0,1, (float)(M_PI/4));
-MVC->CalcBoundingBoxAndCenter();
-MVC->redraw();
-}
-void GUI::cb_RotateZButton(Fl_Button* o, void* v) {
-  ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_RotateZButton_i(o,v);
-}
-
 void GUI::cb_RFP_Browser_i(Flu_Tree_Browser*, void*) {
   MVC->redraw();
 }
@@ -278,21 +252,18 @@ void GUI::cb_TranslateZ(Fl_Value_Input* o, void* v) {
 }
 
 void GUI::cb_RotateX_i(Fl_Value_Input* o, void*) {
-  MVC->RotateObject(1,0,0, M_PI * o->value() / 180.0);
 }
 void GUI::cb_RotateX(Fl_Value_Input* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_RotateX_i(o,v);
 }
 
 void GUI::cb_RotateY_i(Fl_Value_Input* o, void*) {
-  MVC->RotateObject(0,1,0, M_PI * o->value() / 180.0);
 }
 void GUI::cb_RotateY(Fl_Value_Input* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_RotateY_i(o,v);
 }
 
 void GUI::cb_RotateZ_i(Fl_Value_Input* o, void*) {
-  MVC->RotateObject(0,0,1, M_PI * o->value() / 180.0);
 }
 void GUI::cb_RotateZ(Fl_Value_Input* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_RotateZ_i(o,v);
@@ -1809,15 +1780,6 @@ GUI::GUI() {
           { AutoRotateButton = new Fl_Button(725, 720, 125, 25, "Auto rotate");
             AutoRotateButton->callback((Fl_Callback*)cb_AutoRotateButton);
           } // Fl_Button* AutoRotateButton
-          { RotateXButton = new Fl_Button(855, 720, 125, 25, "Rotate X");
-            RotateXButton->callback((Fl_Callback*)cb_RotateXButton);
-          } // Fl_Button* RotateXButton
-          { RotateYButton = new Fl_Button(985, 720, 125, 25, "Rotate Y");
-            RotateYButton->callback((Fl_Callback*)cb_RotateYButton);
-          } // Fl_Button* RotateYButton
-          { RotateZButton = new Fl_Button(1115, 720, 125, 25, "Rotate Z");
-            RotateZButton->callback((Fl_Callback*)cb_RotateZButton);
-          } // Fl_Button* RotateZButton
           o->end();
         } // Fl_Group* o
         { RFP_Browser = new Flu_Tree_Browser(720, 156, 355, 450, "RFO file");

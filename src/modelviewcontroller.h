@@ -78,8 +78,8 @@ public:
 	void ReadStl(string filename);
 	RFO_File *AddStl(STL stl, string filename);
 	void Duplicate();
-	void OptimizeRotation() { ProcessControl.OptimizeRotation();}
-	void RotateObject(float x, float y, float z, float a) {ProcessControl.RotateObject(Vector3f(x,y,z),a);}
+	void OptimizeRotation();
+	void RotateObject(Vector4f rotate);
 
 	void SetShrinkQuality(string quality);
 	void SetOptimization(float val) {ProcessControl.Optimization = val; redraw(); }
