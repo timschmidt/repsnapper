@@ -49,7 +49,7 @@ RepRapSerial::~RepRapSerial()
 bool RepRapSerial::temp_poll_timeout()
 {
   // FIXME: thread hazards abound here:
-  if (m_ctrl->TempReadingEnabled && m_state == CONNECTED) 
+  if (m_ctrl->TempReadingEnabled && m_state == CONNECTED)
     SendNow("M105");
   return true;
 }
@@ -349,32 +349,20 @@ void RepRapSerial::SendData(string s, const int lineNr)
 	com->write(buffer);
 }
 
-class ConnectionTimeOut
+bool RepRapSerial::connecting_poll(int *count)
 {
-public:
-	RepRapSerial* serial;
-	ulong ConnectAttempt;
-	int timer;
-};
+  if ((*count)-- <= 0) {
+    change_to_state (DISCONNECTED);
+    delete count;
+    return false;
+  }
+  if (!isConnecting())
+    return false;
 
-void ConnectionTimeOutMethod(void *data)
-{
-	ConnectionTimeOut* timeout = (ConnectionTimeOut*)data;
-	if( timeout->serial->isConnecting() && timeout->ConnectAttempt == timeout->serial->GetConnectAttempt() )
-	{
-		if( --timeout->timer == 0)
-		{
-			timeout->serial->DisConnect("Connection attempt timed out");
-		}
-		else
-		{
-			// poll temperature once to ensure we get a responce if the firmware doesn't greet.
-			timeout->serial->SendNow("M105");
-			Fl::add_timeout(1.0f, &ConnectionTimeOutMethod, timeout);
-			return;
-		}
-	}
-	delete timeout;
+  // provoke the device into responding by polling temp.
+  SendNow("M105");
+
+  return true;
 }
 
 void RepRapSerial::Connect(string port, int speed)
@@ -400,16 +388,12 @@ void RepRapSerial::Connect(string port, int speed)
 	if( error )
 	  change_to_state (DISCONNECTED);
 
-	if( m_bValidateConnection )
-	{
-		ConnectionTimeOut* timeout= new ConnectionTimeOut();
-		timeout->serial = this;
-		timeout->ConnectAttempt = ++ConnectAttempt;
-		timeout->timer = 5;
-
-		Fl::add_timeout(1.0f, &ConnectionTimeOutMethod, timeout);
-		// probe the device to see if it is a reprap
-		SendNow("M105");
+	if( m_bValidateConnection ) {
+	  int *count = new int;
+	  *count = 8;
+	  Glib::signal_timeout().connect
+	    (sigc::bind(sigc::mem_fun(*this, &RepRapSerial::connecting_poll), count),
+	     250 /* ms */);
 	}
 	else
 	  change_to_state (CONNECTED);

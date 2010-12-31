@@ -33,8 +33,6 @@ add event foo to the MVC...
 
 * StartPrint should signal ...
 
-Fl::add_timeout ... !?
-
 * Audit all Fl::Lock()'s
 	+ Create a 'Guard' lock that doesn't take the GDK_THREADS
 	  lock if we already own the default mainloop ;-)

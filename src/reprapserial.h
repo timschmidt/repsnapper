@@ -110,7 +110,6 @@ PWM (D 14) PD6 20|        |21  PD7 (D 15) PWM
 class GUI;
 class Progress;
 class ProcessController;
-
 class RepRapSerial
 {
 private:
@@ -122,6 +121,7 @@ private:
 
 	sigc::connection m_temp_poll_timeout;
 	bool temp_poll_timeout();
+	bool connecting_poll(int *count);
 
 	typedef boost::unique_lock<boost::mutex> Guard;
   
@@ -173,7 +173,6 @@ public:
 	bool isConnected(){return m_state == CONNECTED;}
 	bool isConnecting(){return m_state == CONNECTING;}
 	State getState(){ return m_state; }
-	ulong GetConnectAttempt() { return ConnectAttempt; }
 	void WaitForConnection(ulong timeoutMS);
 	void SetReceivingBufferSize(int val) { ReceivingBufferSize = val; }
 	void SetValidateConnection(bool val) { m_bValidateConnection = val; }
@@ -191,7 +190,6 @@ private:
 	uint m_iLineNr;
 	std::string InBuffer;
 	short debugMask;
-	ulong ConnectAttempt;
 	ulong startTime;
 	ulong lastUpdateTime;
 	std::string temp_param;

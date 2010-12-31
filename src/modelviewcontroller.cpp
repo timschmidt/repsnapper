@@ -332,7 +332,7 @@ void ModelViewController::SimpleAdvancedToggle()
 bool ModelViewController::timer_function()
 {
 #warning FIXME: busy polling for com ports is a disaster [!]
-#warning FIXME: we should auto-select one at 'connect' time / combo drop-down instead 
+#warning FIXME: we should auto-select one at 'connect' time / combo drop-down instead
   if( !serial->isConnected() && gui->printerSettingsWindow->visible() != 0 )
     {
       static uint count = 0;
