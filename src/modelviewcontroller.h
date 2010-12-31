@@ -59,9 +59,12 @@ class ModelViewController : public Gtk::Window
 	void save_stl();
 	void send_gcode();
 	void printing_changed();
-	// rfo foo
+
+	// rfo bits
+	Gtk::TreeView *m_rfo_tree;
 	void delete_selected_stl();
 	void duplicate_selected_stl();
+	bool get_selected_stl(RFO_Object *&object, RFO_File *&file);
 
 public:
 	ModelViewController(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);

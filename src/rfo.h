@@ -41,6 +41,7 @@ public:
 	string material;
 	STL stl;
 	Flu_Tree_Browser::Node* node;
+	int idx;
 };
 
 class RFO_Object
@@ -51,24 +52,40 @@ public:
 	RFO_Transform3D transform3D;
 	vector<RFO_File> files;
 	Flu_Tree_Browser::Node* node;
+	int idx;
 };
 
 
 class RFO
 {
+	void update_model();
 public:
-	RFO(){version=0.1f;}
+	class ModelColumns : public Gtk::TreeModelColumnRecord
+	{
+	public:
+		ModelColumns() { add (m_name); add (m_object); add (m_file); }
+
+		Gtk::TreeModelColumn<Glib::ustring> m_name;
+		Gtk::TreeModelColumn<int>           m_object;
+		Gtk::TreeModelColumn<int>           m_file;
+	};
+
+	RFO();
 	void Draw(ProcessController &PC, float opasity = 1.0f, Flu_Tree_Browser::Node *selected_node=0);
 	void Load(string path, ProcessController &PC);
-	void BuildBrowser(ProcessController &PC);
 	void clear(ProcessController &PC);
 	void DeleteSelected(ModelViewController *MVC);
 	bool Open(string filename, ProcessController &PC);
 	bool Save(string filename, ProcessController &PC);
+	void newObject();
+	Gtk::TreePath createFile(RFO_Object *parent, const STL &stl, std::string location);
+	void get_selected_stl(Gtk::TreeModel::iterator &iter, RFO_Object *&object, RFO_File *&file);
 	Matrix4f &SelectedNodeMatrix(Flu_Tree_Browser::Node *node);
 	vector<RFO_Object> Objects;
 	RFO_Transform3D transform3D;
 	float version;
 	string m_filename;
 	Flu_Tree_Browser::Node* node;
+	Glib::RefPtr<Gtk::TreeStore> m_model;
+	ModelColumns   *m_cols;
 };

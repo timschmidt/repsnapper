@@ -258,6 +258,10 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &ModelViewController::RotateObject), Vector4f(1,0,0, M_PI/4)));
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &ModelViewController::RotateObject), Vector4f(0,1,0, M_PI/4)));
   connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &ModelViewController::RotateObject), Vector4f(0,0,1, M_PI/4)));
+  m_builder->get_widget ("m_rfo_tree", m_rfo_tree);
+  m_rfo_tree->set_model (ProcessControl.rfo.m_model);
+  m_rfo_tree->append_column("Name", ProcessControl.rfo.m_cols->m_name);
+
   // FIXME numeric value from input / 180.0 -> radians
 
   // GCode tab
@@ -1248,33 +1252,26 @@ void ModelViewController::ReadStl(string filename)
 
 RFO_File* ModelViewController::AddStl(STL stl, string filename)
 {
-	RFO_Object *parent = SelectedParent();
-	if(parent == 0)
-	{
-		ProcessControl.rfo.Objects.push_back(RFO_Object());
-		ProcessControl.rfo.BuildBrowser(ProcessControl);
-		parent = SelectedParent();
-	}
-	assert(parent != 0);
+  RFO_Object *parent = SelectedParent();
+  if(parent == 0) {
+    ProcessControl.rfo.newObject();
+    parent = SelectedParent();
+  }
+  assert(parent != 0);
+  size_t found = filename.find_last_of("/\\");
+  Gtk::TreePath path = ProcessControl.rfo.createFile (parent, stl, filename.substr(found+1));
+  m_rfo_tree->get_selection()->unselect_all();
+  m_rfo_tree->get_selection()->select (path);
+  m_rfo_tree->expand_all();
 
-	RFO_File r;
-	r.stl = stl;
+  CalcBoundingBoxAndCenter();
 
-	size_t found;
-	found=filename.find_last_of("/\\");
-	r.location = filename.substr(found+1);
-	r.node = 0;
-	parent->files.push_back(r);
-	ProcessControl.rfo.BuildBrowser(ProcessControl);
-	parent->files[parent->files.size()-1].node->select(true); // select the new stl file.
-	ProcessControl.CalcBoundingBoxAndCenter();
-	return &parent->files.back();
+  return &parent->files.back();
 }
 
 void ModelViewController::newObject()
 {
-	ProcessControl.rfo.Objects.push_back(RFO_Object());
-	ProcessControl.rfo.BuildBrowser(ProcessControl);
+  ProcessControl.rfo.newObject();
 }
 
 void ModelViewController::setObjectname(string name)
@@ -1433,29 +1430,37 @@ void ModelViewController::OptimizeRotation()
 void ModelViewController::delete_selected_stl()
 {
   ProcessControl.rfo.DeleteSelected (this);
+  m_rfo_tree->expand_all();
+}
+
+bool ModelViewController::get_selected_stl(RFO_Object *&object, RFO_File *&file)
+{
+  object = NULL;
+  file = NULL;
+
+  if (m_rfo_tree->get_selection()->count_selected_rows() <= 0)
+    return false;
+
+  Gtk::TreeModel::iterator iter = m_rfo_tree->get_selection()->get_selected();
+  ProcessControl.rfo.get_selected_stl (iter, object, file);
+
+  return true;
 }
 
 void ModelViewController::duplicate_selected_stl()
 {
-#warning port me
-  Flu_Tree_Browser::Node *node = gui->RFP_Browser->get_selected( 1 );
-    // first check files
-    for(uint o=0;o<ProcessControl.rfo.Objects.size();o++)
-      {
-	for(uint f=0;f<ProcessControl.rfo.Objects[o].files.size();f++)
-	  {
-	    if(ProcessControl.rfo.Objects[o].files[f].node == node)
-			{
-				// Move it, so there's room for it.
-				RFO_File* obj = AddStl(ProcessControl.rfo.Objects[o].files[f].stl, ProcessControl.rfo.Objects[o].files[f].location);
-				Vector3f p = ProcessControl.rfo.Objects[o].files[f].transform3D.transform.getTranslation();
-				Vector3f size = ProcessControl.rfo.Objects[o].files[f].stl.Max - ProcessControl.rfo.Objects[o].files[f].stl.Min;
-				p.x += size.x+5.0f;	// 5mm space
-				obj->transform3D.transform.setTranslation(p);
-				gui->RFP_Browser->set_hilighted(obj->node);
-				CalcBoundingBoxAndCenter();
-				return;
-			}
-		}
-	}
+  RFO_Object *object;
+  RFO_File *file;
+  if (!get_selected_stl (object, file) || !file)
+    return;
+
+  // duplicate
+  RFO_File* obj = AddStl (file->stl, file->location);
+
+  // translate
+  Vector3f p = file->transform3D.transform.getTranslation();
+  Vector3f size = file->stl.Max - file->stl.Min;
+  p.x += size.x + 5.0f;	// 5mm space
+  obj->transform3D.transform.setTranslation (p);
+  CalcBoundingBoxAndCenter();
 }

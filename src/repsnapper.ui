@@ -489,6 +489,8 @@
                           <object class="GtkTreeView" id="m_rfo_tree">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="headers_visible">False</property>
+                            <property name="headers_clickable">False</property>
                           </object>
                         </child>
                       </object>
