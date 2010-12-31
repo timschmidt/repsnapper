@@ -107,12 +107,10 @@ public:
 	void Rotate(string axis, float distance);
 
 	// Callback functions
-	vector<string> comports;                           // list of available usb serial ports
-	void resize (int x,int y, int width, int height);		// Reshape The Window When It's Moved Or Resized
+	vector<string> comports; // list of available usb serial ports
+	bool timer_function();
 	void DetectComPorts(bool init = false);
 	string ValidateComPort (const string &port);
-	static void Static_Timer_CB(void *userdata);
-	void Timer_CB();
 
 	// LUA
 	void RunLua(char* buffer);

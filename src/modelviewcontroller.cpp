@@ -317,7 +317,10 @@ void ModelViewController::Init(GUI *_gui)
 	serial->SetReceivingBufferSize(ProcessControl.ReceivingBufferSize);
 	serial->SetValidateConnection(ProcessControl.m_bValidateConnection);
 	CopySettingsToGUI();
-	Fl::add_timeout(0.25, Static_Timer_CB, (void*)this);
+
+	Glib::signal_timeout().connect
+		(sigc::mem_fun(*this, &ModelViewController::timer_function),
+		 250 /* ms */);
 }
 
 void ModelViewController::SimpleAdvancedToggle()
@@ -325,35 +328,26 @@ void ModelViewController::SimpleAdvancedToggle()
    cout << "not yet implemented\n";
 }
 
-void ModelViewController::Static_Timer_CB(void *userdata) {
-    ModelViewController *o = (ModelViewController*)userdata;
-    o->Timer_CB();
-    Fl::repeat_timeout(0.25, Static_Timer_CB, userdata);
-}
-
 /* Called every 250ms (0.25 of a second) */
-void ModelViewController::Timer_CB()
+bool ModelViewController::timer_function()
 {
-	if( !serial->isConnected() && gui->printerSettingsWindow->visible() != 0 )
-	{
-	  static uint count = 0;
-	  if ((count++ % 4) == 0) /* every second */
-		DetectComPorts();
-	}
-	if( gui->Tabs->value() == gui->PrintTab )
-	{
-		gui->PrintTab->redraw();
-	}
-	if ( read_pending != "" ) {
-	        ProcessControl.ReadGCode(read_pending);
-		read_pending = "";
-	}
-}
-
-void ModelViewController::resize(int x,int y, int width, int height)					// Reshape The Window When It's Moved Or Resized
-{
-  //	Fl_Gl_Window::resize(x,y,width,height);
-	  fprintf (stderr, "resize !\n");
+#warning FIXME: busy polling for com ports is a disaster [!]
+#warning FIXME: we should auto-select one at 'connect' time / combo drop-down instead 
+  if( !serial->isConnected() && gui->printerSettingsWindow->visible() != 0 )
+    {
+      static uint count = 0;
+      if ((count++ % 4) == 0) /* every second */
+	DetectComPorts();
+    }
+  if( gui->Tabs->value() == gui->PrintTab )
+    {
+      gui->PrintTab->redraw();
+    }
+  if ( read_pending != "" ) {
+    ProcessControl.ReadGCode(read_pending);
+    read_pending = "";
+  }
+  return true;
 }
 
 void ModelViewController::DetectComPorts(bool init)
@@ -711,7 +705,6 @@ void ModelViewController::WaitForConnection(float seconds)
 {
 	serial->WaitForConnection(seconds*1000);
 }
-
 void ModelViewController::Print()
 {
 	if( !serial->isConnected() ) {
@@ -773,9 +766,6 @@ void ModelViewController::SetFileLogging(bool on)
 void ModelViewController::EnableTempReading(bool on)
 {
 	ProcessControl.TempReadingEnabled = on;
-	if(on)
-		Fl::add_timeout(1.0f, &TempReadTimer);
-
 }
 void ModelViewController::SetLogFileClear(bool on)
 {

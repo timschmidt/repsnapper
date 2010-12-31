@@ -120,6 +120,9 @@ private:
 	Progress *m_progress;
 	ProcessController *m_ctrl;
 
+	sigc::connection m_temp_poll_timeout;
+	bool temp_poll_timeout();
+
 	typedef boost::unique_lock<boost::mutex> Guard;
   
 	class RepRapBufferedAsyncSerial : public BufferedAsyncSerial
@@ -144,6 +147,7 @@ public:
 
 	RepRapBufferedAsyncSerial* com;
 	RepRapSerial(Progress *progress, ProcessController *ctrl);
+	~RepRapSerial();
 	
 	// Event handler
 
@@ -166,9 +170,9 @@ public:
 	void pausePrint();
 	void continuePrint();
 	bool isPrinting(){return m_bPrinting;}
-	bool isConnected(){return m_bState == CONNECTED;}
-	bool isConnecting(){return m_bState == CONNECTING;}
-	State getState(){ return m_bState; }
+	bool isConnected(){return m_state == CONNECTED;}
+	bool isConnecting(){return m_state == CONNECTING;}
+	State getState(){ return m_state; }
 	ulong GetConnectAttempt() { return ConnectAttempt; }
 	void WaitForConnection(ulong timeoutMS);
 	void SetReceivingBufferSize(int val) { ReceivingBufferSize = val; }
@@ -181,7 +185,7 @@ private:
 	uint count_leading_whitespace(std::string);
 
 	std::vector<std::string> buffer;
-	State m_bState;
+	State m_state;
 
 	bool m_bValidateConnection;
 	uint m_iLineNr;

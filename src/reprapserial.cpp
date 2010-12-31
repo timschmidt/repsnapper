@@ -25,7 +25,7 @@
 
 RepRapSerial::RepRapSerial(Progress *progress, ProcessController *ctrl)
 {
-  m_bState = DISCONNECTED;
+  m_state = DISCONNECTED;
   com = new RepRapBufferedAsyncSerial(this);
   m_bPrinting = false;
   startTime = 0;
@@ -36,6 +36,22 @@ RepRapSerial::RepRapSerial(Progress *progress, ProcessController *ctrl)
   logFile = 0;
   m_ctrl = ctrl;
   m_progress = progress;
+
+  m_temp_poll_timeout = Glib::signal_timeout().connect
+    (sigc::mem_fun(*this, &RepRapSerial::temp_poll_timeout), 1000 /* ms */);
+}
+
+RepRapSerial::~RepRapSerial()
+{
+  m_temp_poll_timeout.disconnect();
+}
+
+bool RepRapSerial::temp_poll_timeout()
+{
+  // FIXME: thread hazards abound here:
+  if (m_ctrl->TempReadingEnabled && m_state == CONNECTED) 
+    SendNow("M105");
+  return true;
 }
 
 void RepRapSerial::debugPrint(string s, bool selectLine)
@@ -57,11 +73,6 @@ void RepRapSerial::debugPrint(string s, bool selectLine)
 	if(gui)
 	{
 		ToolkitLock guard;
-
-/*			Fl_Text_Buffer* buffer = gui->CommunationLog->buffer();
-			buffer->append(s.c_str());
-			cout << s;
-			Fl::check();*/
 
 		gui->CommunationLog->add(s.c_str());
 		if(gui->AutoscrollButton->value())
@@ -164,7 +175,7 @@ void RepRapSerial::StartPrint()
 
 void RepRapSerial::change_to_state(State newState)
 {
-  if (m_bState == newState)
+  if (m_state == newState)
     return;
 
   fprintf (stderr, "RepRapSerial::change_to_state %d\n", (int)newState);
@@ -174,8 +185,8 @@ void RepRapSerial::change_to_state(State newState)
     m_signal_printing_changed.emit();
   }
 
-  m_bState = newState;
-  m_signal_state_changed.emit(m_bState);
+  m_state = newState;
+  m_signal_state_changed.emit(m_state);
 
   c.notify_all();
 }
@@ -338,8 +349,6 @@ void RepRapSerial::SendData(string s, const int lineNr)
 	com->write(buffer);
 }
 
-extern void TempReadTimer(void *);
-
 class ConnectionTimeOut
 {
 public:
@@ -404,8 +413,6 @@ void RepRapSerial::Connect(string port, int speed)
 	}
 	else
 	  change_to_state (CONNECTED);
-
-	Fl::add_timeout(1.0f, &TempReadTimer);
 }
 
 void RepRapSerial::DisConnect(const char* debug_reason)

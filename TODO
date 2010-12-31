@@ -23,41 +23,25 @@ add event foo to the MVC...
 
 * fix arcball / rotation resetting ...
 
-* kill all reprapserial uses of 'mvc' 
-	+ use signals instead.
-	+ for 'serialConnectionLost' etc.
-	+ 'serialConnected' - should be this ...
-
-	bool m_bConnecting;
-	bool m_bConnected;
-
+* kill all reprapserial uses of 'mvc'
+	+ incoming: temperature (2x) feedback
+		+ temp_changed signals ...
+	+ communication & error logs (and auto-scrolling)
+		+ direct GtkTextBuffer access...
+	+ access to 'DownstreamMultiplierSlider' / ExtrusionMultiplier
+		+ [ better via ProcessController surely !? ]
 
 * StartPrint should signal ...
-
-
-listener for state_changed:
-	+ if 'DISCONECCTED' ->
-	{
-		m_bConnecting = false;
-		m_bConnected = false;
-		m_bPrinting = false;
-		{
-			ToolkitLock guard;
-			gui->MVC->serialConnectionLost();
-		}
-		return;
-	}
-
-				ToolkitLock guard;
-
-				// Tell GUI we are ready to go.
-				notifyConnection(true);
-				gui->MVC->serialConnected();
-			}
 
 Fl::add_timeout ... !?
 
 * Audit all Fl::Lock()'s
 	+ Create a 'Guard' lock that doesn't take the GDK_THREADS
 	  lock if we already own the default mainloop ;-)
+
+
+* add a test serial connection ...
+	+ and better error reporting ?
+
+Loggin -> Logging ...
 
