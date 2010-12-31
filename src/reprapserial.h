@@ -115,6 +115,7 @@ class RepRapSerial
 private:
 	boost::mutex m;
 	boost::condition_variable c;
+	bool m_bPrinting;
 	Progress *progress;
 
 	typedef boost::unique_lock<boost::mutex> Guard;
@@ -154,11 +155,12 @@ public:
 	void Connect(std::string port, int speed);
 	void DisConnect();
 	void DisConnect(const char* reason);
+	void pausePrint();
+	void continuePrint();
 	bool isPrinting(){return m_bPrinting;}
 	bool isConnected(){return m_bConnected;}
 	bool isConnecting(){return m_bConnecting;}
 	ulong GetConnectAttempt() { return ConnectAttempt; }
-	bool m_bPrinting; // FIXME: make me private !
 	void WaitForConnection(ulong timeoutMS);
 	void SetReceivingBufferSize(int val) { ReceivingBufferSize = val; }
 	void SetValidateConnection(bool val) { m_bValidateConnection = val; }

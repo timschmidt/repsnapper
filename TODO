@@ -22,3 +22,9 @@ add event foo to the MVC...
 	  during a print ... [ and/or 'pause printing' ]
 
 * fix arcball / rotation resetting ...
+
+* kill all reprapserial uses of 'mvc' 
+	+ use signals instead.
+	+ for 'serialConnectionLost' etc.
+
+* StartPrint should signal ...

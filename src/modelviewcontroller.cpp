@@ -664,15 +664,14 @@ void ModelViewController::ContinuePauseButton()
 {
   #warning this should have a thread save API ...
   if (serial->isPrinting()) {
-    serial->m_bPrinting = false;
+    serial->pausePrint();
   } else
     Continue();
 }
 
 void ModelViewController::Continue()
 {
-    serial->m_bPrinting = true;
-    serial->SendNextLine();
+  serial->continuePrint();
 }
 
 void ModelViewController::PrintButton()
@@ -682,18 +681,6 @@ void ModelViewController::PrintButton()
   } else {
     Print();
   }
-}
-
-void ModelViewController::PrintDone()
-{
-	serial->Clear();	// resets line nr and buffer
-	serial->m_bPrinting = false;
-	gui->PrintButton->label("Print");
-	gui->PrintButton->value(0);
-	gui->PrintButton->activate();
-	gui->ContinueButton->value(0);
-	gui->ContinueButton->label("Pause");
-	gui->ContinueButton->deactivate();
 }
 
 void ModelViewController::ConnectToPrinter(char on)
@@ -744,25 +731,8 @@ void ModelViewController::Print()
 		return;
 	}
 
-	gui->ContinueButton->value(0);
-	gui->ContinueButton->activate();
-	gui->ContinueButton->label("Pause");
-	gui->PrintButton->value(1);
-	gui->PrintButton->label("Print");
-	gui->PrintButton->deactivate();
-
-	// Snack one line at a time from the Gcode view, and buffer it.
-/*
-	if(gui->PrintButton->value() == 0)	// Turned off print, cancel buffer and flush
-	{
-		m_bPrinting = false;
-		return;
-	}
-*/
-	serial->Clear();	// resets line nr and buffer
-	serial->m_bPrinting = false;
+	serial->Clear();
 	serial->SetDebugMask();
-	serial->SetLineNr(-1);	// Reset LineNr Count
 	gui->CommunationLog->clear();
 	ProcessControl.gcode.queue_to_serial (serial);
 	m_progress->start ("Printing", serial->Length());

@@ -241,7 +241,6 @@ public:
 	void Print();
 	void Continue();
 	void Restart();
-	void PrintDone();
 	void SwitchHeat(bool on, float temp);
 	void SwitchBedHeat(bool on, float temp);
 	void SetTargetTemp(float temp);

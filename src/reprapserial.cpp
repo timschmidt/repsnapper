@@ -36,6 +36,7 @@ RepRapSerial::RepRapSerial(Progress *_progress)
 	debugMask = DEBUG_ECHO | DEBUG_INFO | DEBUG_ERRORS;
 	logFile = 0;
 	progress = _progress;
+	m_signal_printing_changed.emit();
 }
 
 void RepRapSerial::debugPrint(string s, bool selectLine)
@@ -154,13 +155,12 @@ void RepRapSerial::echo(string s)
 
 void RepRapSerial::StartPrint()
 {
-	m_iLineNr = 0;
-	m_bPrinting = true;
+  m_iLineNr = 0;
+  m_bPrinting = true;
+  m_signal_printing_changed.emit();
 
-	for( int i = 0; i<ReceivingBufferSize; i++)
-	{
-		SendNextLine();
-	}
+  for (int i = 0; i < ReceivingBufferSize; i++)
+    SendNextLine();
 }
 
 void RepRapSerial::SendNextLine()
@@ -185,12 +185,13 @@ void RepRapSerial::SendNextLine()
 	}
 	else	// we are done
 	{
-		GDK_THREADS_ENTER();
 		m_bPrinting = false;
 		buffer.clear();
+		GDK_THREADS_ENTER();
 		progress->stop("Print done");
-		gui->MVC->PrintDone();
 		GDK_THREADS_LEAVE();
+		Clear();
+		m_signal_printing_changed.emit();
 		return;
 	}
 	if (gui) {
@@ -694,12 +695,21 @@ uint RepRapSerial::count_leading_whitespace(string str) {
 
 void RepRapSerial::WaitForConnection(ulong timeoutMS)
 {
-	Guard a(m);
+	Guard a (m);
 	boost::system_time until;
-
-	until = boost::get_system_time() + boost::posix_time::milliseconds(timeoutMS);
-
+	until = boost::get_system_time() + boost::posix_time::milliseconds (timeoutMS);
 	while (m_bConnecting && c.timed_wait(a, until));
-
 }
 
+void RepRapSerial::continuePrint()
+{
+  m_bPrinting = true;
+  SendNextLine();
+  m_signal_printing_changed.emit();
+}
+
+void RepRapSerial::pausePrint()
+{
+  m_bPrinting = false;
+  m_signal_printing_changed.emit();
+}
