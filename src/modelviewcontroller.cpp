@@ -200,6 +200,17 @@ ModelViewController *ModelViewController::create()
   return mvc;
 }
 
+void ModelViewController::printing_changed()
+{
+  if (serial->isPrinting()) {
+    m_print_button->set_label ("Restart");
+    m_continue_button->set_label ("Pause");
+  } else {
+    m_print_button->set_label ("Print");
+    m_continue_button->set_label ("Continue");
+  }
+}
+
 ModelViewController::ModelViewController(BaseObjectType* cobject,
 					 const Glib::RefPtr<Gtk::Builder>& builder)
   : Gtk::Window(cobject), m_builder(builder)
@@ -257,9 +268,10 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   // Print tab
 //  FIXME: ("p_power" - connect to toggled signal ! -> SwitchPower(get_active())
   connect_button ("p_kick",          sigc::mem_fun(*this, &ModelViewController::Continue));
-// FIXME: fix continue/pause to do its worst ...
-  connect_button ("p_pause",         sigc::mem_fun(*this, &ModelViewController::ContinuePauseButton));
-  connect_button ("p_print",         sigc::mem_fun(*this, &ModelViewController::PrintButton));
+  m_builder->get_widget ("p_print", m_print_button);
+  m_print_button->signal_clicked().connect (sigc::mem_fun(*this, &ModelViewController::PrintButton));
+  m_builder->get_widget ("p_pause", m_continue_button);
+  m_continue_button->signal_clicked().connect (sigc::mem_fun(*this, &ModelViewController::ContinuePauseButton));
 
   // Main view progress bar
   Gtk::Box *box = NULL;
@@ -273,6 +285,7 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   ProcessControl.SetProgress (m_progress);
 
   serial = new RepRapSerial(m_progress);
+  serial->signal_printing_changed().connect (sigc::mem_fun(*this, &ModelViewController::printing_changed));
 
   m_view[0] = new ConnectView(serial, &ProcessControl);
   m_view[1] = new ConnectView(serial, &ProcessControl);
@@ -641,19 +654,6 @@ void ModelViewController::CopySettingsToGUI()
 	GetCustomButtonText(0);
 }
 
-void ModelViewController::Continue()
-{
-	gui->ContinueButton->label("Pause");
-	gui->ContinueButton->value(0);
-	gui->PrintButton->value(1);
-	gui->PrintButton->label("Print");
-	gui->PrintButton->deactivate();
-
-#warning FIXME !?
-	serial->m_bPrinting = true;
-	serial->SendNextLine();
-}
-
 void ModelViewController::Restart()
 {
 	serial->Clear();	// resets line nr and clears buffer
@@ -662,27 +662,26 @@ void ModelViewController::Restart()
 
 void ModelViewController::ContinuePauseButton()
 {
-	if( !strcmp (gui->ContinueButton->label(), "Pause") )
-	{
-		Pause();
-	}
-	else
-	{
-		Continue();
-	}
+  #warning this should have a thread save API ...
+  if (serial->isPrinting()) {
+    serial->m_bPrinting = false;
+  } else
+    Continue();
 }
 
+void ModelViewController::Continue()
+{
+    serial->m_bPrinting = true;
+    serial->SendNextLine();
+}
 
 void ModelViewController::PrintButton()
 {
-	if( !strcmp (gui->PrintButton->label(), "Print") )
-	{
-		Print();
-	}
-	else
-	{
-		Restart();
-	}
+  if (serial->isPrinting()) {
+    Restart();
+  } else {
+    Print();
+  }
 }
 
 void ModelViewController::PrintDone()
@@ -768,19 +767,6 @@ void ModelViewController::Print()
 	ProcessControl.gcode.queue_to_serial (serial);
 	m_progress->start ("Printing", serial->Length());
 	serial->StartPrint();
-}
-
-void ModelViewController::Pause()
-{
-	if( serial->isPrinting() )
-	{
-		gui->ContinueButton->value(1);
-		gui->ContinueButton->label("Continue");
-		gui->PrintButton->value(0);
-		gui->PrintButton->activate();
-		gui->PrintButton->label("Restart");
-		serial->m_bPrinting = false;
-	}
 }
 
 void ModelViewController::SwitchHeat(bool on, float temp)

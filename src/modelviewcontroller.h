@@ -47,6 +47,8 @@ class ModelViewController : public Gtk::Window
 	Progress *m_progress;
 	ConnectView *m_view[2];
 	Gtk::Entry *m_gcode_entry;
+	Gtk::Button *m_print_button;
+	Gtk::Button *m_continue_button;
 
 	void connect_button(const char *name, const sigc::slot<void> &slot);
 	virtual bool on_delete_event(GdkEventAny* event);
@@ -55,6 +57,7 @@ class ModelViewController : public Gtk::Window
 	void save_gcode();
 	void load_stl();
 	void send_gcode();
+	void printing_changed();
 
 public:
 	ModelViewController(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
@@ -236,7 +239,6 @@ public:
 	void WaitForConnection(float seconds);
 
 	void Print();
-	void Pause();
 	void Continue();
 	void Restart();
 	void PrintDone();

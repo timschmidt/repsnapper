@@ -127,7 +127,11 @@ private:
 		void OnEvent(char* data, size_t size) { _owner->OnEvent(data,size); }
 		RepRapBufferedAsyncSerial(RepRapSerial* owner) : BufferedAsyncSerial() {_owner=owner;}
 	};
+
+	sigc::signal< void > m_signal_printing_changed;
 public:
+	// Whether we are printing or not changed ...
+	sigc::signal< void > signal_printing_changed() { return m_signal_printing_changed; }
 
 	RepRapBufferedAsyncSerial* com;
 	RepRapSerial(Progress *progress);
@@ -154,7 +158,7 @@ public:
 	bool isConnected(){return m_bConnected;}
 	bool isConnecting(){return m_bConnecting;}
 	ulong GetConnectAttempt() { return ConnectAttempt; }
-	bool m_bPrinting;
+	bool m_bPrinting; // FIXME: make me private !
 	void WaitForConnection(ulong timeoutMS);
 	void SetReceivingBufferSize(int val) { ReceivingBufferSize = val; }
 	void SetValidateConnection(bool val) { m_bValidateConnection = val; }
