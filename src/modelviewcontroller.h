@@ -56,8 +56,12 @@ class ModelViewController : public Gtk::Window
 	void load_gcode();
 	void save_gcode();
 	void load_stl();
+	void save_stl();
 	void send_gcode();
 	void printing_changed();
+	// rfo foo
+	void delete_selected_stl();
+	void duplicate_selected_stl();
 
 public:
 	ModelViewController(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
@@ -77,7 +81,6 @@ public:
 	// STL Functions
 	void ReadStl(string filename);
 	RFO_File *AddStl(STL stl, string filename);
-	void Duplicate();
 	void OptimizeRotation();
 	void RotateObject(Vector4f rotate);
 

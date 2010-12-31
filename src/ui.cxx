@@ -326,7 +326,6 @@ void GUI::cb_Delete(Fl_Button* o, void* v) {
 }
 
 void GUI::cb_Duplicate_i(Fl_Button*, void*) {
-  MVC->Duplicate();
 }
 void GUI::cb_Duplicate(Fl_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->user_data()))->cb_Duplicate_i(o,v);

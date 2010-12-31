@@ -173,6 +173,11 @@ void ModelViewController::load_stl ()
   FileChooser::ioDialog (this, FileChooser::OPEN, FileChooser::STL);
 }
 
+void ModelViewController::save_stl ()
+{
+  FileChooser::ioDialog (this, FileChooser::SAVE, FileChooser::STL);
+}
+
 void ModelViewController::send_gcode ()
 {
   SendNow (m_gcode_entry->get_text());
@@ -245,6 +250,10 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   connect_button ("s_print",         sigc::mem_fun(*this, &ModelViewController::SimplePrint) );
 
   // Model tab
+  connect_button ("m_load_stl",      sigc::mem_fun(*this, &ModelViewController::load_stl) );
+  connect_button ("m_save_stl",      sigc::mem_fun(*this, &ModelViewController::save_stl) );
+  connect_button ("m_delete",        sigc::mem_fun(*this, &ModelViewController::delete_selected_stl) );
+  connect_button ("m_duplicate",     sigc::mem_fun(*this, &ModelViewController::duplicate_selected_stl) );
   connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &ModelViewController::OptimizeRotation) );
   connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &ModelViewController::RotateObject), Vector4f(1,0,0, M_PI/4)));
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &ModelViewController::RotateObject), Vector4f(0,1,0, M_PI/4)));
@@ -262,15 +271,14 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   m_builder->get_widget ("txt_gcode_next_layer", textv);
   textv->set_buffer (ProcessControl.m_GCodeLayerText);
 
-  m_builder->get_widget ("m_gcode", m_gcode_entry);
+  m_builder->get_widget ("g_gcode", m_gcode_entry);
   m_gcode_entry->set_activates_default();
   m_gcode_entry->signal_activate().connect (sigc::mem_fun(*this, &ModelViewController::send_gcode));;
 
-  connect_button ("m_load_gcode",    sigc::mem_fun(*this, &ModelViewController::load_gcode) );
-  connect_button ("m_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
-  connect_button ("m_save_gcode",    sigc::mem_fun(*this, &ModelViewController::save_gcode) );
-  connect_button ("m_send_gcode",    sigc::mem_fun(*this, &ModelViewController::send_gcode) );
-
+  connect_button ("g_load_gcode",    sigc::mem_fun(*this, &ModelViewController::load_gcode) );
+  connect_button ("g_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
+  connect_button ("g_save_gcode",    sigc::mem_fun(*this, &ModelViewController::save_gcode) );
+  connect_button ("g_send_gcode",    sigc::mem_fun(*this, &ModelViewController::send_gcode) );
 
   // Print tab
 //  FIXME: ("p_power" - connect to toggled signal ! -> SwitchPower(get_active())
@@ -1263,31 +1271,6 @@ RFO_File* ModelViewController::AddStl(STL stl, string filename)
 	return &parent->files.back();
 }
 
-
-void ModelViewController::Duplicate()
-{
-	Flu_Tree_Browser::Node *node = gui->RFP_Browser->get_selected( 1 );
-	// first check files
-	for(uint o=0;o<ProcessControl.rfo.Objects.size();o++)
-	{
-		for(uint f=0;f<ProcessControl.rfo.Objects[o].files.size();f++)
-		{
-			if(ProcessControl.rfo.Objects[o].files[f].node == node)
-			{
-				// Move it, so there's room for it.
-				RFO_File* obj = AddStl(ProcessControl.rfo.Objects[o].files[f].stl, ProcessControl.rfo.Objects[o].files[f].location);
-				Vector3f p = ProcessControl.rfo.Objects[o].files[f].transform3D.transform.getTranslation();
-				Vector3f size = ProcessControl.rfo.Objects[o].files[f].stl.Max - ProcessControl.rfo.Objects[o].files[f].stl.Min;
-				p.x += size.x+5.0f;	// 5mm space
-				obj->transform3D.transform.setTranslation(p);
-				gui->RFP_Browser->set_hilighted(obj->node);
-				ProcessControl.CalcBoundingBoxAndCenter();
-				return;
-			}
-		}
-	}
-}
-
 void ModelViewController::newObject()
 {
 	ProcessControl.rfo.Objects.push_back(RFO_Object());
@@ -1445,4 +1428,34 @@ void ModelViewController::OptimizeRotation()
 {
   ProcessControl.OptimizeRotation();
   CalcBoundingBoxAndCenter();
+}
+
+void ModelViewController::delete_selected_stl()
+{
+  ProcessControl.rfo.DeleteSelected (this);
+}
+
+void ModelViewController::duplicate_selected_stl()
+{
+#warning port me
+  Flu_Tree_Browser::Node *node = gui->RFP_Browser->get_selected( 1 );
+    // first check files
+    for(uint o=0;o<ProcessControl.rfo.Objects.size();o++)
+      {
+	for(uint f=0;f<ProcessControl.rfo.Objects[o].files.size();f++)
+	  {
+	    if(ProcessControl.rfo.Objects[o].files[f].node == node)
+			{
+				// Move it, so there's room for it.
+				RFO_File* obj = AddStl(ProcessControl.rfo.Objects[o].files[f].stl, ProcessControl.rfo.Objects[o].files[f].location);
+				Vector3f p = ProcessControl.rfo.Objects[o].files[f].transform3D.transform.getTranslation();
+				Vector3f size = ProcessControl.rfo.Objects[o].files[f].stl.Max - ProcessControl.rfo.Objects[o].files[f].stl.Min;
+				p.x += size.x+5.0f;	// 5mm space
+				obj->transform3D.transform.setTranslation(p);
+				gui->RFP_Browser->set_hilighted(obj->node);
+				CalcBoundingBoxAndCenter();
+				return;
+			}
+		}
+	}
 }

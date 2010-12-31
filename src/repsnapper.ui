@@ -420,9 +420,9 @@
                 <child>
                   <object class="GtkCheckButton" id="m_correct_errors">
                     <property name="label" translatable="yes">correct errors in stl</property>
-                    <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="no_show_all">True</property>
                     <property name="use_action_appearance">False</property>
                     <property name="draw_indicator">True</property>
                   </object>
@@ -727,7 +727,7 @@
                 <property name="visible">True</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkButton" id="m_convert_gcode">
+                  <object class="GtkButton" id="g_convert_gcode">
                     <property name="label" translatable="yes">Convert to GCode</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -743,7 +743,7 @@
                   <object class="GtkHBox" id="hbox6">
                     <property name="visible">True</property>
                     <child>
-                      <object class="GtkButton" id="m_load_gcode">
+                      <object class="GtkButton" id="g_load_gcode">
                         <property name="label" translatable="yes">Load GCode</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -755,9 +755,9 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="entry1">
-                        <property name="visible">True</property>
+                      <object class="GtkEntry" id="g_text_output_entry">
                         <property name="can_focus">True</property>
+                        <property name="no_show_all">True</property>
                         <property name="invisible_char">&#x25CF;</property>
                         <property name="text" translatable="yes">Text Output</property>
                         <property name="invisible_char_set">True</property>
@@ -767,7 +767,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="m_save_gcode">
+                      <object class="GtkButton" id="g_save_gcode">
                         <property name="label" translatable="yes">Save GCode</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -806,7 +806,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkEntry" id="m_gcode">
+                      <object class="GtkEntry" id="g_gcode">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">&#x25CF;</property>
@@ -818,7 +818,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="m_send_gcode">
+                      <object class="GtkButton" id="g_send_gcode">
                         <property name="label" translatable="yes">Send</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -872,9 +872,17 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkTextView" id="txt_gcode_end">
+                      <object class="GtkScrolledWindow" id="scrolledwindow5">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="hscrollbar_policy">automatic</property>
+                        <property name="vscrollbar_policy">automatic</property>
+                        <child>
+                          <object class="GtkTextView" id="txt_gcode_end">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                          </object>
+                        </child>
                       </object>
                       <packing>
                         <property name="position">1</property>
@@ -891,18 +899,26 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkTextView" id="txt_gcode_next_layer">
+                      <object class="GtkScrolledWindow" id="scrolledwindow4">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="hscrollbar_policy">automatic</property>
+                        <property name="vscrollbar_policy">automatic</property>
+                        <child>
+                          <object class="GtkTextView" id="txt_gcode_next_layer">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                          </object>
+                        </child>
                       </object>
                       <packing>
                         <property name="position">2</property>
                       </packing>
                     </child>
                     <child type="tab">
-                      <object class="GtkLabel" id="label">
+                      <object class="GtkLabel" id="label20">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Next layer</property>
+                        <property name="label" translatable="yes">Result</property>
                       </object>
                       <packing>
                         <property name="position">3</property>
@@ -910,18 +926,26 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkTextView" id="txt_gcode_result">
+                      <object class="GtkScrolledWindow" id="scrolledwindow3">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="hscrollbar_policy">automatic</property>
+                        <property name="vscrollbar_policy">automatic</property>
+                        <child>
+                          <object class="GtkTextView" id="txt_gcode_result">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                          </object>
+                        </child>
                       </object>
                       <packing>
                         <property name="position">3</property>
                       </packing>
                     </child>
                     <child type="tab">
-                      <object class="GtkLabel" id="label20">
+                      <object class="GtkLabel" id="label">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Result</property>
+                        <property name="label" translatable="yes">Next layer</property>
                       </object>
                       <packing>
                         <property name="position">3</property>
