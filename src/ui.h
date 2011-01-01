@@ -25,7 +25,6 @@ class ModelViewController;
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Output.H>
-#include "flu_tree_browser.h"
 #include <FL/Fl_Input.H>
 #include <FL/Fl_File_Chooser.H>
 #include <FL/Fl_Text_Editor.H>
@@ -164,11 +163,6 @@ public:
 private:
   void cb_RotateZButton_i(Fl_Button*, void*);
   static void cb_RotateZButton(Fl_Button*, void*);
-public:
-  Flu_Tree_Browser *RFP_Browser;
-private:
-  void cb_RFP_Browser_i(Flu_Tree_Browser*, void*);
-  static void cb_RFP_Browser(Flu_Tree_Browser*, void*);
 public:
   Fl_Value_Input *TranslateX;
 private:

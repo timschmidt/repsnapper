@@ -25,12 +25,11 @@ AM_CPPFLAGS = \
 SHARED_SRC=asyncserial.cpp stl.cpp reprapserial.cpp \
 	processcontroller.cpp printer.cpp modelviewcontroller.cpp \
 	gllight.cpp gcode.cpp arcball.cpp stdafx.cpp \
-	rfo.cpp flu_dnd.cpp flu_pixmaps.cpp flu_simplestring.cpp \
-	flu_tree_browser.cpp ivcon.cpp file.cpp platform.cpp \
+	rfo.cpp \
+	ivcon.cpp file.cpp platform.cpp \
 	ui.cxx view.cxx progress.cxx connectview.cpp
 
-SHARED_INC=arcball.h asyncserial.h convert.h flu_dnd.h flu_enumerations.h \
-	flu_export.h flu_pixmaps.h flu_simplestring.h flu_tree_browser.h \
+SHARED_INC=arcball.h asyncserial.h convert.h \
 	gcode.h gllight.h ivcon.h miniball.h modelviewcontroller.h \
 	printer.h processcontroller.h reprapserial.h rfo.h \
 	stdafx.h stl.h triangle.h platform.h view.h progress.h \

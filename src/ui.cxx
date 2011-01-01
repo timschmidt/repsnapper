@@ -223,13 +223,6 @@ void GUI::cb_AutoRotateButton(Fl_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_AutoRotateButton_i(o,v);
 }
 
-void GUI::cb_RFP_Browser_i(Flu_Tree_Browser*, void*) {
-  MVC->redraw();
-}
-void GUI::cb_RFP_Browser(Flu_Tree_Browser* o, void* v) {
-  ((GUI*)(o->parent()->parent()->parent()->user_data()))->cb_RFP_Browser_i(o,v);
-}
-
 void GUI::cb_RotateX_i(Fl_Value_Input* o, void*) {
 }
 void GUI::cb_RotateX(Fl_Value_Input* o, void* v) {
@@ -1756,19 +1749,6 @@ GUI::GUI() {
           } // Fl_Button* AutoRotateButton
           o->end();
         } // Fl_Group* o
-        { RFP_Browser = new Flu_Tree_Browser(720, 156, 355, 450, "RFO file");
-          RFP_Browser->box(FL_UP_BOX);
-          RFP_Browser->color((Fl_Color)FL_BACKGROUND_COLOR);
-          RFP_Browser->selection_color((Fl_Color)FL_BACKGROUND_COLOR);
-          RFP_Browser->labeltype(FL_NORMAL_LABEL);
-          RFP_Browser->labelfont(0);
-          RFP_Browser->labelsize(14);
-          RFP_Browser->labelcolor((Fl_Color)FL_FOREGROUND_COLOR);
-          RFP_Browser->callback((Fl_Callback*)cb_RFP_Browser);
-          RFP_Browser->align(FL_ALIGN_CENTER|FL_ALIGN_INSIDE);
-          RFP_Browser->when(FL_WHEN_CHANGED);
-          Fl_Group::current()->resizable(RFP_Browser);
-        } // Flu_Tree_Browser* RFP_Browser
         { Fl_Group* o = new Fl_Group(1080, 226, 180, 40, "Rotate");
           o->box(FL_ENGRAVED_FRAME);
           o->color((Fl_Color)FL_DARK3);
