@@ -120,7 +120,7 @@ public:
 		DrawCPLineNumbers = false;
 		DrawCPOutlineNumbers = false;
 
-		FileLogginEnabled = true;
+		FileLoggingEnabled = true;
 		TempReadingEnabled = true;
 		ClearLogfilesWhenPrintStarts = true;
 
@@ -252,7 +252,7 @@ public:
 
 	bool EnableAcceleration;
 
-	bool FileLogginEnabled;
+	bool FileLoggingEnabled;
 	bool TempReadingEnabled;
 	bool ClearLogfilesWhenPrintStarts;
 

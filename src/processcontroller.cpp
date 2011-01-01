@@ -553,8 +553,8 @@ void ProcessController::LoadConfig(string filename)
 	if (not cfg.lookupValue("Use3DGcode",Use3DGcode))
 		Use3DGcode = false;
 
-	if (not cfg.lookupValue("FileLogginEnabled",FileLogginEnabled))
-		FileLogginEnabled = true;
+	if (not cfg.lookupValue("FileLoggingEnabled",FileLoggingEnabled))
+		FileLoggingEnabled = true;
 	if (not cfg.lookupValue("TempReadingEnabled",TempReadingEnabled))
 		TempReadingEnabled = true;
 	if (not cfg.lookupValue("ClearLogfilesWhenPrintStarts",ClearLogfilesWhenPrintStarts))
@@ -945,8 +945,8 @@ void ProcessController::SaveConfig(string path)
 	Setting &as = root.add("AntioozeSpeed", Setting::TypeFloat);
 	as = AntioozeSpeed;
 
-	Setting &fle = root.add("FileLogginEnabled", Setting::TypeBoolean);
-	fle = FileLogginEnabled;
+	Setting &fle = root.add("FileLoggingEnabled", Setting::TypeBoolean);
+	fle = FileLoggingEnabled;
 	Setting &tre = root.add("TempReadingEnabled", Setting::TypeBoolean);
 	tre = TempReadingEnabled;
 	Setting &clwps = root.add("ClearLogfilesWhenPrintStarts", Setting::TypeBoolean);

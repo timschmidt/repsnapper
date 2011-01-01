@@ -95,7 +95,7 @@ void RepRapSerial::debugPrint(string s, bool selectLine)
 	else
 		printf("%s", s.c_str());
 
-	if(m_ctrl->FileLogginEnabled)
+	if(m_ctrl->FileLoggingEnabled)
 	{
 	// is the files open?
 	if(logFile == 0)
@@ -144,7 +144,7 @@ void RepRapSerial::echo(string s)
 	else
 		printf("%s", s.c_str());
 
-	if(m_ctrl->FileLogginEnabled)
+	if(m_ctrl->FileLoggingEnabled)
 	{
 	// is the files open?
 	if(logFile == 0)
