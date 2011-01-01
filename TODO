@@ -54,5 +54,9 @@ Loggin -> Logging ...
 
 * rename RFO_File etc. to RFO::File etc.
 
+* fix rendering colour wrt. 'is selected' etc.
+	+ and click-to-select etc.
 
 * remove empty mvc->Scale method
+
+* add menu items ...

@@ -270,21 +270,18 @@ void GUI::cb_RotateZ(Fl_Value_Input* o, void* v) {
 }
 
 void GUI::cb_ScaleX_i(Fl_Value_Input* o, void*) {
-  MVC->Scale("X", o->value());
 }
 void GUI::cb_ScaleX(Fl_Value_Input* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_ScaleX_i(o,v);
 }
 
 void GUI::cb_ScaleY_i(Fl_Value_Input* o, void*) {
-  MVC->Scale("Y", o->value());
 }
 void GUI::cb_ScaleY(Fl_Value_Input* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_ScaleY_i(o,v);
 }
 
 void GUI::cb_ScaleZ_i(Fl_Value_Input* o, void*) {
-  MVC->Scale("Z", o->value());
 }
 void GUI::cb_ScaleZ(Fl_Value_Input* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_ScaleZ_i(o,v);

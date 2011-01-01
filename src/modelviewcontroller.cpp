@@ -216,6 +216,50 @@ void ModelViewController::printing_changed()
   }
 }
 
+enum SpinType { TRANSLATE, ROTATE, SCALE };
+class ModelViewController::SpinRow {
+
+public:
+  ModelViewController *m_mvc;
+  SpinType m_type;
+  Gtk::SpinButton *m_xyz[3];
+  Gtk::Box *m_box;
+
+  SpinRow(ModelViewController *mvc, const char *box_name, SpinType type) :
+    m_mvc(mvc), m_type (type)
+  {
+    mvc->m_builder->get_widget (box_name, m_box);
+    static const char *names[] = { "X", "Y", "Z" };
+
+    for (uint i = 0; i < 3; i++) {
+      m_box->add (*new Gtk::Label (names[i]));
+      m_xyz[i] = new Gtk::SpinButton();
+      m_xyz[i]->set_numeric();
+      switch (type) {
+      default:
+      case TRANSLATE:
+	m_xyz[i]->set_digits (1);
+	m_xyz[i]->set_increments (0.1, 10);
+	m_xyz[i]->set_value(0.0);
+	break;
+      case ROTATE:
+	m_xyz[i]->set_digits (0);
+	m_xyz[i]->set_increments (45.0, 90.0);
+	m_xyz[i]->set_value(0.0);
+	break;
+      case SCALE:
+	m_xyz[i]->set_digits (3);
+	m_xyz[i]->set_increments (45.0, 90.0);
+	m_xyz[i]->set_value(1.0);
+	break;
+      }
+      m_box->add (*m_xyz[i]);
+    }
+    m_box->show_all();
+  }
+  // FIXME numeric value from input / 180.0 -> radians
+};
+
 ModelViewController::ModelViewController(BaseObjectType* cobject,
 					 const Glib::RefPtr<Gtk::Builder>& builder)
   : Gtk::Window(cobject), m_builder(builder)
@@ -261,8 +305,16 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   m_builder->get_widget ("m_rfo_tree", m_rfo_tree);
   m_rfo_tree->set_model (ProcessControl.rfo.m_model);
   m_rfo_tree->append_column("Name", ProcessControl.rfo.m_cols->m_name);
-
-  // FIXME numeric value from input / 180.0 -> radians
+  static const struct {
+    const char *name;
+    SpinType type;
+  } spin_boxes[] = {
+    { "m_box_translate", TRANSLATE},
+    { "m_box_rotate", ROTATE },
+    { "m_box_scale", SCALE }
+  };
+  for (uint i = 0; i < 3; i++)
+    m_spin_rows[i] = new SpinRow (this, spin_boxes[i].name, spin_boxes[i].type);
 
   // GCode tab
   Gtk::TextView *textv = NULL;
@@ -1234,11 +1286,6 @@ void ModelViewController::Translate(string axis, float distance)
 		pMatrices[i]->setTranslation(Tr);
 		}
 	ProcessControl.CalcBoundingBoxAndCenter();
-}
-
-void ModelViewController::Scale(string axis, float distance)
-{
-
 }
 
 void ModelViewController::ReadStl(string filename)

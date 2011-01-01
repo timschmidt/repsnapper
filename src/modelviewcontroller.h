@@ -43,6 +43,8 @@ class View;
 class ConnectView;
 class ModelViewController : public Gtk::Window
 {
+	class SpinRow;
+
 	Glib::RefPtr<Gtk::Builder> m_builder;
 	Progress *m_progress;
 	ConnectView *m_view[2];
@@ -62,6 +64,7 @@ class ModelViewController : public Gtk::Window
 
 	// rfo bits
 	Gtk::TreeView *m_rfo_tree;
+	SpinRow *m_spin_rows[3];
 	void delete_selected_stl();
 	void duplicate_selected_stl();
 	bool get_selected_stl(RFO_Object *&object, RFO_File *&file);
@@ -107,7 +110,6 @@ public:
 	void WriteGCode(string filename);
 	void CopySettingsToGUI();
 
-	int  handle(int);
 	void Translate(string axis, float distance);
 	void Scale(string axis, float distance);
 	void Rotate(string axis, float distance);
