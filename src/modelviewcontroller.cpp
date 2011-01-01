@@ -111,7 +111,9 @@ class ModelViewController::SpinRow {
 
     if (m_inhibit_update)
       return;
-    if (!m_mvc->get_selected_stl(object, file) || (!object && !file))
+    if (!m_mvc->get_selected_stl(object, file))
+      return;
+    if (!object && !file)
       return;
 
     double val = m_xyz[axis]->get_value();
@@ -1359,7 +1361,7 @@ bool ModelViewController::get_selected_stl(RFO_Object *&object, RFO_File *&file)
 {
   Gtk::TreeModel::iterator iter = m_rfo_tree->get_selection()->get_selected();
   ProcessControl.rfo.get_selected_stl (iter, object, file);
-  return object == NULL && file == NULL;
+  return object != NULL || file != NULL;
 }
 
 void ModelViewController::duplicate_selected_stl()
