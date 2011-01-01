@@ -110,10 +110,6 @@ public:
 	void WriteGCode(string filename);
 	void CopySettingsToGUI();
 
-	void Translate(string axis, float distance);
-	void Scale(string axis, float distance);
-	void Rotate(string axis, float distance);
-
 	// Callback functions
 	vector<string> comports; // list of available usb serial ports
 	bool timer_function();

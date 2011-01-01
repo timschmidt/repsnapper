@@ -230,27 +230,6 @@ void GUI::cb_RFP_Browser(Flu_Tree_Browser* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->user_data()))->cb_RFP_Browser_i(o,v);
 }
 
-void GUI::cb_TranslateX_i(Fl_Value_Input* o, void*) {
-  MVC->Translate("X", o->value());
-}
-void GUI::cb_TranslateX(Fl_Value_Input* o, void* v) {
-  ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_TranslateX_i(o,v);
-}
-
-void GUI::cb_TranslateY_i(Fl_Value_Input* o, void*) {
-  MVC->Translate("Y", o->value());
-}
-void GUI::cb_TranslateY(Fl_Value_Input* o, void* v) {
-  ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_TranslateY_i(o,v);
-}
-
-void GUI::cb_TranslateZ_i(Fl_Value_Input* o, void*) {
-  MVC->Translate("Z", o->value());
-}
-void GUI::cb_TranslateZ(Fl_Value_Input* o, void* v) {
-  ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_TranslateZ_i(o,v);
-}
-
 void GUI::cb_RotateX_i(Fl_Value_Input* o, void*) {
 }
 void GUI::cb_RotateX(Fl_Value_Input* o, void* v) {
@@ -1790,29 +1769,6 @@ GUI::GUI() {
           RFP_Browser->when(FL_WHEN_CHANGED);
           Fl_Group::current()->resizable(RFP_Browser);
         } // Flu_Tree_Browser* RFP_Browser
-        { Fl_Group* o = new Fl_Group(1080, 163, 180, 40, "Translate");
-          o->box(FL_ENGRAVED_FRAME);
-          o->color((Fl_Color)FL_DARK3);
-          { TranslateX = new Fl_Value_Input(1095, 174, 45, 23, "X");
-            TranslateX->minimum(-300);
-            TranslateX->maximum(300);
-            TranslateX->step(0.1);
-            TranslateX->callback((Fl_Callback*)cb_TranslateX);
-          } // Fl_Value_Input* TranslateX
-          { TranslateY = new Fl_Value_Input(1155, 175, 45, 23, "Y");
-            TranslateY->minimum(-300);
-            TranslateY->maximum(300);
-            TranslateY->step(0.1);
-            TranslateY->callback((Fl_Callback*)cb_TranslateY);
-          } // Fl_Value_Input* TranslateY
-          { TranslateZ = new Fl_Value_Input(1210, 175, 45, 23, "Z");
-            TranslateZ->minimum(-300);
-            TranslateZ->maximum(300);
-            TranslateZ->step(0.01);
-            TranslateZ->callback((Fl_Callback*)cb_TranslateZ);
-          } // Fl_Value_Input* TranslateZ
-          o->end();
-        } // Fl_Group* o
         { Fl_Group* o = new Fl_Group(1080, 226, 180, 40, "Rotate");
           o->box(FL_ENGRAVED_FRAME);
           o->color((Fl_Color)FL_DARK3);

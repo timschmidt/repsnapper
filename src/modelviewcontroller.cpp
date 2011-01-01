@@ -218,15 +218,92 @@ void ModelViewController::printing_changed()
 
 enum SpinType { TRANSLATE, ROTATE, SCALE };
 class ModelViewController::SpinRow {
+  void spin_value_changed (int axis)
+  {
+    RFO_File *file;
+    RFO_Object *object;
 
+    if (m_inhibit_update)
+      return;
+    if (!m_mvc->get_selected_stl(object, file) || (!object && !file))
+      return;
+
+    double val = m_xyz[axis]->get_value();
+    switch (m_type) {
+    default:
+    case TRANSLATE: {
+      Matrix4f *mat;
+      if (!file)
+	mat = &object->transform3D.transform;
+      else
+	mat = &file->transform3D.transform;
+      Vector3f trans = mat->getTranslation();
+      trans.xyz[axis] = val;
+      mat->setTranslation (trans);
+      m_mvc->CalcBoundingBoxAndCenter();
+      break;
+    }
+    case ROTATE: {
+      Vector4f rot(0.0, 0.0, 0.0, 1.0);
+      rot.xyzw[axis] = (M_PI * val) / 180.0;
+      m_mvc->RotateObject(rot);
+      break;
+    }
+    case SCALE:
+      cerr << "Scale not yet implemented\n";
+      break;
+    }
+  }
 public:
+  bool m_inhibit_update;
   ModelViewController *m_mvc;
   SpinType m_type;
-  Gtk::SpinButton *m_xyz[3];
   Gtk::Box *m_box;
+  Gtk::SpinButton *m_xyz[3];
 
-  SpinRow(ModelViewController *mvc, const char *box_name, SpinType type) :
-    m_mvc(mvc), m_type (type)
+  void selection_changed ()
+  {
+    RFO_File *file;
+    RFO_Object *object;
+    if (!m_mvc->get_selected_stl(object, file) || (!object && !file))
+      return;
+
+    m_inhibit_update = true;
+    for (uint i = 0; i < 3; i++) {
+      switch (m_type) {
+      default:
+      case TRANSLATE: {
+	Matrix4f *mat;
+	if (!object) {
+	  for (uint i = 0; i < 3; i++)
+	    m_xyz[i]->set_value(0.0);
+	  break;
+	}
+	else if (!file)
+	  mat = &object->transform3D.transform;
+	else
+	  mat = &file->transform3D.transform;
+	Vector3f trans = mat->getTranslation();
+	for (uint i = 0; i < 3; i++)
+	  m_xyz[i]->set_value(trans.xyz[i]);
+	break;
+      }
+      case ROTATE:
+	for (uint i = 0; i < 3; i++)
+	  m_xyz[i]->set_value(0.0);
+	break;
+      case SCALE:
+	for (uint i = 0; i < 3; i++)
+	  m_xyz[i]->set_value(0.0);
+	break;
+      }
+    }
+    m_inhibit_update = false;
+  }
+
+  SpinRow(ModelViewController *mvc, Gtk::TreeView *rfo_tree,
+	  const char *box_name, SpinType type) :
+    m_inhibit_update(false), m_mvc(mvc), m_type (type)
   {
     mvc->m_builder->get_widget (box_name, m_box);
     static const char *names[] = { "X", "Y", "Z" };
@@ -235,29 +312,40 @@ public:
       m_box->add (*new Gtk::Label (names[i]));
       m_xyz[i] = new Gtk::SpinButton();
       m_xyz[i]->set_numeric();
-      switch (type) {
+      switch (m_type) {
       default:
       case TRANSLATE:
 	m_xyz[i]->set_digits (1);
-	m_xyz[i]->set_increments (0.1, 10);
-	m_xyz[i]->set_value(0.0);
+	m_xyz[i]->set_increments (0.5, 10);
+	m_xyz[i]->set_range(-500.0, +500.0);
 	break;
       case ROTATE:
 	m_xyz[i]->set_digits (0);
 	m_xyz[i]->set_increments (45.0, 90.0);
-	m_xyz[i]->set_value(0.0);
+	m_xyz[i]->set_range(-360.0, +360.0);
 	break;
       case SCALE:
 	m_xyz[i]->set_digits (3);
-	m_xyz[i]->set_increments (45.0, 90.0);
-	m_xyz[i]->set_value(1.0);
+	m_xyz[i]->set_increments (0.5, 1.0);
+	m_xyz[i]->set_range(0.001, +10.0);
 	break;
       }
       m_box->add (*m_xyz[i]);
+      m_xyz[i]->signal_value_changed().connect
+	(sigc::bind(sigc::mem_fun(*this, &SpinRow::spin_value_changed), (int)i));
     }
+    selection_changed();
     m_box->show_all();
+
+    rfo_tree->get_selection()->signal_changed().connect
+      (sigc::mem_fun(*this, &SpinRow::selection_changed));
   }
-  // FIXME numeric value from input / 180.0 -> radians
+
+  ~SpinRow()
+  {
+    for (uint i = 0; i < 3; i++)
+      delete m_xyz[i];
+  }
 };
 
 ModelViewController::ModelViewController(BaseObjectType* cobject,
@@ -314,7 +402,7 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
     { "m_box_scale", SCALE }
   };
   for (uint i = 0; i < 3; i++)
-    m_spin_rows[i] = new SpinRow (this, spin_boxes[i].name, spin_boxes[i].type);
+    m_spin_rows[i] = new SpinRow (this, m_rfo_tree, spin_boxes[i].name, spin_boxes[i].type);
 
   // GCode tab
   Gtk::TextView *textv = NULL;
@@ -369,6 +457,8 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
 
 ModelViewController::~ModelViewController()
 {
+  for (uint i = 0; i < 3; i++)
+    delete m_spin_rows[i];
   delete m_view[0];
   delete m_view[1];
   delete m_progress;
@@ -1267,25 +1357,6 @@ void ModelViewController::SelectedNodeMatrices(vector<Matrix4f *> &result )
 //		return ProcessControl.rfo.transform3D.transform;
 		node=gui->RFP_Browser->get_selected( i++ );	// next selected
 	}
-}
-
-void ModelViewController::Translate(string axis, float distance)
-{
-	vector<Matrix4f *> pMatrices;
-	SelectedNodeMatrices(pMatrices);
-
-	for(UINT i=0;i<pMatrices.size();i++)
-		{
-		Vector3f Tr = pMatrices[i]->getTranslation();
-		if(axis == "X")
-			Tr.x = distance;
-		if(axis == "Y")
-			Tr.y = distance;
-		if(axis == "Z")
-			Tr.z = distance;
-		pMatrices[i]->setTranslation(Tr);
-		}
-	ProcessControl.CalcBoundingBoxAndCenter();
 }
 
 void ModelViewController::ReadStl(string filename)
