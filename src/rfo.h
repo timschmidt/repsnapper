@@ -18,7 +18,6 @@
 */
 #pragma once
 
-#include "flu_tree_browser.h"
 #include "stl.h"
 
 class RFO_Transform3D
@@ -27,7 +26,6 @@ public:
 	RFO_Transform3D(){identity();}
 	void identity(){transform=Matrix4f::IDENTITY;}
 	Matrix4f transform;
-	Flu_Tree_Browser::Node* node;
 };
 
 class RFO_File
@@ -40,7 +38,6 @@ public:
 	string filetype;
 	string material;
 	STL stl;
-	Flu_Tree_Browser::Node* node;
 	int idx;
 };
 
@@ -51,7 +48,6 @@ public:
 	string name;
 	RFO_Transform3D transform3D;
 	vector<RFO_File> files;
-	Flu_Tree_Browser::Node* node;
 	int idx;
 };
 
@@ -71,21 +67,19 @@ public:
 	};
 
 	RFO();
-	void Draw(ProcessController &PC, float opasity = 1.0f, Flu_Tree_Browser::Node *selected_node=0);
 	void Load(string path, ProcessController &PC);
 	void clear(ProcessController &PC);
 	void DeleteSelected(Gtk::TreeModel::iterator &iter);
 	bool Open(string filename, ProcessController &PC);
 	bool Save(string filename, ProcessController &PC);
+	void draw(ProcessController &pc, float opacity, Gtk::TreeModel::iterator &iter);
 	void newObject();
 	Gtk::TreePath createFile(RFO_Object *parent, const STL &stl, std::string location);
 	void get_selected_stl(Gtk::TreeModel::iterator &iter, RFO_Object *&object, RFO_File *&file);
-	Matrix4f &SelectedNodeMatrix(Flu_Tree_Browser::Node *node);
 	vector<RFO_Object> Objects;
 	RFO_Transform3D transform3D;
 	float version;
 	string m_filename;
-	Flu_Tree_Browser::Node* node;
 	Glib::RefPtr<Gtk::TreeStore> m_model;
 	ModelColumns   *m_cols;
 };

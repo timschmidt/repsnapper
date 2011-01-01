@@ -32,6 +32,7 @@ class View : public Gtk::GL::DrawingArea
   Vector2f  m_downPoint;
   GLUquadricObj *m_quadratic;
   ProcessController &m_pc;
+  Glib::RefPtr<Gtk::TreeSelection> m_selection;
 
   float m_zoom;
   gllight *m_lights[4];
@@ -39,9 +40,10 @@ class View : public Gtk::GL::DrawingArea
   void SetEnableLight(unsigned int lightNr, bool on);
   void CenterView();
   void rfo_changed();
+  void selection_changed();
 
  public:
-  View (ProcessController &pc);
+  View (ProcessController &pc, Glib::RefPtr<Gtk::TreeSelection> selection);
   ~View();
 
   virtual bool on_configure_event(GdkEventConfigure* event);

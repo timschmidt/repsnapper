@@ -1392,7 +1392,7 @@ void GUI::cb_DisplayWireframeShadedButton(Fl_Light_Button* o, void* v) {
 }
 
 void GUI::cb_PolygonOpasitySlider_i(Fl_Value_Slider* o, void*) {
-  MVC->SetPolygonOpasity(o->value());
+  MVC->SetPolygonOpacity(o->value());
 MVC->redraw();
 }
 void GUI::cb_PolygonOpasitySlider(Fl_Value_Slider* o, void* v) {

@@ -26,120 +26,6 @@
 #include "progress.h"
 #include "connectview.h"
 
-#ifndef WIN32
-
-/**
- * C++ version 0.4 char* style "itoa":
- * Written by Lukás Chmela
- * Released under GPLv3.
- */
-char* itoa(int value, char* result, int base) {
-	// check that the base if valid
-	if (base < 2 || base > 36) { *result = '\0'; return result; }
-
-	char* ptr = result, *ptr1 = result, tmp_char;
-	int tmp_value;
-
-	do {
-		tmp_value = value;
-		value /= base;
-		*ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789abcdefghijklmnopqrstuvwxyz" [35 + (tmp_value - value * base)];
-	} while ( value );
-
-	// Apply negative sign
-	if (tmp_value < 0) *ptr++ = '-';
-	*ptr-- = '\0';
-	while(ptr1 < ptr) {
-		tmp_char = *ptr;
-		*ptr--= *ptr1;
-		*ptr1++ = tmp_char;
-	}
-	return result;
-}
-
-#endif
-
-
-void tree_callback( Fl_Widget* w, void *_gui )
-{
-	Flu_Tree_Browser *t = (Flu_Tree_Browser*)w;
-	int reason = t->callback_reason();
-	GUI *gui = (GUI *)_gui;
-	
-	Flu_Tree_Browser::Node *n = t->callback_node();
-
-	Matrix4f &transform = gui->MVC->SelectedNodeMatrix();
-	Vector3f translate = transform.getTranslation();
-	RFO_Object *selectedObject=0;
-	RFO_File *selectedFile=0;
-	gui->MVC->GetSelectedRFO(&selectedObject, &selectedFile);
-
-	switch( reason )
-	{
-	case FLU_HILIGHTED:
-		printf( "%s hilighted\n", n->label() );
-		break;
-
-	case FLU_UNHILIGHTED:
-		printf( "%s unhilighted\n", n->label() );
-		break;
-
-	case FLU_SELECTED:
-		gui->TranslateX->value(translate.x);
-		gui->TranslateY->value(translate.y);
-		gui->TranslateZ->value(translate.z);
-
-		if(selectedObject)
-			gui->ObjectNameInput->value(selectedObject->name.c_str());
-		else
-			gui->ObjectNameInput->value("no selection");
-		if(selectedFile)
-		{
-			gui->FileLocationInput->value(selectedFile->location.c_str());
-			gui->FileTypeInput->value(selectedFile->filetype.c_str());
-			gui->FileMaterialInput->value(selectedFile->material.c_str());
-		}
-		else
-		{
-			gui->FileLocationInput->value("no file selected");
-			gui->FileTypeInput->value("no file selected");
-			gui->FileMaterialInput->value("no file selected");
-		}
-
-		printf( "%s selected\n", n->label() );
-		//transform
-		break;
-
-	case FLU_UNSELECTED:
-		printf( "%s unselected\n", n->label() );
-		break;
-
-	case FLU_OPENED:
-		printf( "%s opened\n", n->label() );
-		break;
-
-	case FLU_CLOSED:
-		printf( "%s closed\n", n->label() );
-		break;
-
-	case FLU_DOUBLE_CLICK:
-		printf( "%s double-clicked\n", n->label() );
-		break;
-
-	case FLU_WIDGET_CALLBACK:
-		printf( "%s widget callback\n", n->label() );
-		break;
-
-	case FLU_MOVED_NODE:
-		printf( "%s moved\n", n->label() );
-		break;
-
-	case FLU_NEW_NODE:
-		printf( "node '%s' added to the tree\n", n->label() );
-		break;
-	}
-	gui->MVC->redraw();
-}
 
 bool ModelViewController::on_delete_event(GdkEventAny* event)
 {
@@ -361,20 +247,6 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
 	m_fTargetTemp = 63.0f;
 	m_fBedTargetTemp = 63.0f;
 
-  // Get the GtkBuilder-instantiated Dialog:
-  Gtk::Box *pBox = NULL;
-  m_builder->get_widget("viewarea", pBox);
-  if (!pBox)
-    std::cerr << "missing box!";
-  else {
-    Gtk::Widget *view = new View (ProcessControl);
-    pBox->add (*view);
-    Gtk::Window *pWindow = NULL;
-    m_builder->get_widget("main_window", pWindow);
-    if (pWindow)
-      pWindow->show_all();
-  }
-
   // Simple tab
   connect_button ("s_load_stl",      sigc::mem_fun(*this, &ModelViewController::load_stl) );
   connect_button ("s_convert_gcode", sigc::mem_fun(*this, &ModelViewController::ConvertToGCode) );
@@ -453,6 +325,20 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   connect_box->add (*m_view[0]);
   m_builder->get_widget ("p_connect_button_box", connect_box);
   connect_box->add (*m_view[1]);
+
+  // 3D preview of the bed
+  Gtk::Box *pBox = NULL;
+  m_builder->get_widget("viewarea", pBox);
+  if (!pBox)
+    std::cerr << "missing box!";
+  else {
+    Gtk::Widget *view = new View (ProcessControl, m_rfo_tree->get_selection());
+    pBox->add (*view);
+    Gtk::Window *pWindow = NULL;
+    m_builder->get_widget("main_window", pWindow);
+    if (pWindow)
+      pWindow->show_all();
+  }
 }
 
 ModelViewController::~ModelViewController()
@@ -651,7 +537,6 @@ void ModelViewController::ReadGCode(string filename)
 {
 	read_pending = filename;
 //	   this triggers this function to be called :  ProcessControl.ReadGCode(filename);
-
 }
 
 void ModelViewController::ConvertToGCode()
@@ -674,7 +559,6 @@ void ModelViewController::WriteGCode (string filename)
 
 //Make the remaining buttons work
 //implement acceleration
-
 void ModelViewController::CopySettingsToGUI()
 {
 	if(gui == 0)
@@ -732,7 +616,7 @@ void ModelViewController::CopySettingsToGUI()
 	// STL
 	gui->LayerThicknessSlider->value(ProcessControl.LayerThickness);
 	gui->CuttingPlaneValueSlider->value(ProcessControl.CuttingPlaneValue);
-	gui->PolygonOpasitySlider->value(ProcessControl.PolygonOpasity);
+	gui->PolygonOpasitySlider->value(ProcessControl.PolygonOpacity);
 	// CuttingPlane
 	gui->InfillDistanceSlider->value(ProcessControl.InfillDistance);
 	gui->InfillRotationSlider->value(ProcessControl.InfillRotation);
@@ -1258,107 +1142,6 @@ void ModelViewController::RunLua(char* script)
 	ProcessControl.CalcBoundingBoxAndCenter();
 }*/
 
-void ModelViewController::GetSelectedRFO(RFO_Object **selectedObject, RFO_File **selectedFile)
-{
-	Flu_Tree_Browser::Node *node=gui->RFP_Browser->get_selected( 1 );
-	if(node==0)
-		node = gui->RFP_Browser->get_root();
-	// Check for selected file (use the object)
-	for(UINT o=0;o<ProcessControl.rfo.Objects.size();o++)
-	{
-		for(UINT f=0;f<ProcessControl.rfo.Objects[o].files.size();f++)
-		{
-			if(ProcessControl.rfo.Objects[o].files[f].node == node)
-			{
-				*selectedObject = &ProcessControl.rfo.Objects[o];
-				*selectedFile = &ProcessControl.rfo.Objects[o].files[f];
-				return;
-			}
-		}
-	}
-	// Check for selected object
-	for(UINT o=0;o<ProcessControl.rfo.Objects.size();o++)
-	{
-		if(ProcessControl.rfo.Objects[o].node == node)
-		{
-			*selectedObject = &ProcessControl.rfo.Objects[o];
-//			*selectedFile = 0;
-			return;
-		}
-	}
-	if(ProcessControl.rfo.Objects.size())
-	{
-		*selectedObject = &ProcessControl.rfo.Objects[0];
-//		*selectedFile = 0;
-		return;
-	}
-//	*selectedObject = 0;
-//	*selectedFile = 0;
-}
-
-
-RFO_Object* ModelViewController::SelectedParent()
-{
-	Flu_Tree_Browser::Node *node=gui->RFP_Browser->get_selected( 1 );
-	if(node==0)
-		node = gui->RFP_Browser->get_root();
-	// Check for selected object
-	for(UINT o=0;o<ProcessControl.rfo.Objects.size();o++)
-	{
-		if(ProcessControl.rfo.Objects[o].node == node)
-			return &ProcessControl.rfo.Objects[o];
-	}
-	// Check for selected file (use the object)
-	for(UINT o=0;o<ProcessControl.rfo.Objects.size();o++)
-	{
-		for(UINT f=0;f<ProcessControl.rfo.Objects[o].files.size();f++)
-		{
-			if(ProcessControl.rfo.Objects[o].files[f].node == node)
-				return &ProcessControl.rfo.Objects[o];
-		}
-	}
-	if(ProcessControl.rfo.Objects.size())
-		return &ProcessControl.rfo.Objects[0];
-	return 0;
-}
-Matrix4f &ModelViewController::SelectedNodeMatrix(uint objectNr)
-{
-	Flu_Tree_Browser::Node *node=gui->RFP_Browser->get_selected( objectNr );
-	for(UINT o=0;o<ProcessControl.rfo.Objects.size();o++)
-	{
-		if(ProcessControl.rfo.Objects[o].node == node)
-			return ProcessControl.rfo.Objects[o].transform3D.transform;
-		for(UINT f=0;f<ProcessControl.rfo.Objects[o].files.size();f++)
-		{
-			if(ProcessControl.rfo.Objects[o].files[f].node == node)
-				return ProcessControl.rfo.Objects[o].files[f].transform3D.transform;
-		}
-	}
-	return ProcessControl.rfo.transform3D.transform;
-}
-void ModelViewController::SelectedNodeMatrices(vector<Matrix4f *> &result )
-{
-	result.clear();
-	UINT i=1;
-	Flu_Tree_Browser::Node *node;
-	node=gui->RFP_Browser->get_selected( i++ );
-	while(node)
-	{
-		for(UINT o=0;o<ProcessControl.rfo.Objects.size();o++)
-		{
-			if(ProcessControl.rfo.Objects[o].node == node)
-				result.push_back(&ProcessControl.rfo.Objects[o].transform3D.transform);
-			for(UINT f=0;f<ProcessControl.rfo.Objects[o].files.size();f++)
-			{
-				if(ProcessControl.rfo.Objects[o].files[f].node == node)
-					result.push_back(&ProcessControl.rfo.Objects[o].files[f].transform3D.transform);
-			}
-		}
-//		return ProcessControl.rfo.transform3D.transform;
-		node=gui->RFP_Browser->get_selected( i++ );	// next selected
-	}
-}
-
 void ModelViewController::ReadStl(string filename)
 {
 	STL stl;
@@ -1367,15 +1150,19 @@ void ModelViewController::ReadStl(string filename)
 		AddStl(stl, filename);
 }
 
-
 RFO_File* ModelViewController::AddStl(STL stl, string filename)
 {
-  RFO_Object *parent = SelectedParent();
-  if(parent == 0) {
-    ProcessControl.rfo.newObject();
-    parent = SelectedParent();
+  RFO_File *file;
+  RFO_Object *parent;
+  get_selected_stl (parent, file);
+
+  if (!parent) {
+    if (ProcessControl.rfo.Objects.size() <= 0)
+      ProcessControl.rfo.newObject();
+    parent = &ProcessControl.rfo.Objects.back();
   }
-  assert(parent != 0);
+  g_assert (parent != NULL);
+
   size_t found = filename.find_last_of("/\\");
   Gtk::TreePath path = ProcessControl.rfo.createFile (parent, stl, filename.substr(found+1));
   m_rfo_tree->get_selection()->unselect_all();
@@ -1394,35 +1181,38 @@ void ModelViewController::newObject()
 
 void ModelViewController::setObjectname(string name)
 {
-	RFO_Object *selectedObject=0;
-	RFO_File *selectedFile=0;
-	GetSelectedRFO(&selectedObject, &selectedFile);
-	if(selectedObject)
-		selectedObject->name = name;
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+  if (object)
+    object->name = name;
 }
+
 void ModelViewController::setFileMaterial(string material)
 {
-	RFO_Object *selectedObject=0;
-	RFO_File *selectedFile=0;
-	GetSelectedRFO(&selectedObject, &selectedFile);
-	if(selectedFile)
-		selectedFile->material = material;
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+  if (file)
+    file->material = material;
 }
+
 void ModelViewController::setFileType(string type)
 {
-	RFO_Object *selectedObject=0;
-	RFO_File *selectedFile=0;
-	GetSelectedRFO(&selectedObject, &selectedFile);
-	if(selectedFile)
-		selectedFile->filetype = type;
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+  if (file)
+    file->filetype = type;
 }
+
 void ModelViewController::setFileLocation(string location)
 {
-	RFO_Object *selectedObject=0;
-	RFO_File *selectedFile=0;
-	GetSelectedRFO(&selectedObject, &selectedFile);
-	if(selectedFile)
-		selectedFile->location = location;
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+  if (file)
+    file->location = location;
 }
 
 void ModelViewController::SetShrinkQuality(string quality)
@@ -1535,8 +1325,17 @@ std::string ModelViewController::GetText()
 void ModelViewController::RotateObject(Vector4f rotate)
 {
   Vector3f rot(rotate.x, rotate.y, rotate.z);
-  ProcessControl.RotateObject(rot, rotate.w);
+
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  if (!file)
+    return; // FIXME: rotate entire Objects ...
+
+  file->stl.RotateObject(rot, rotate.w);
   CalcBoundingBoxAndCenter();
+  queue_draw();
 }
 
 void ModelViewController::OptimizeRotation()
@@ -1558,16 +1357,9 @@ void ModelViewController::delete_selected_stl()
 
 bool ModelViewController::get_selected_stl(RFO_Object *&object, RFO_File *&file)
 {
-  object = NULL;
-  file = NULL;
-
-  if (m_rfo_tree->get_selection()->count_selected_rows() <= 0)
-    return false;
-
   Gtk::TreeModel::iterator iter = m_rfo_tree->get_selection()->get_selected();
   ProcessControl.rfo.get_selected_stl (iter, object, file);
-
-  return true;
+  return object == NULL && file == NULL;
 }
 
 void ModelViewController::duplicate_selected_stl()

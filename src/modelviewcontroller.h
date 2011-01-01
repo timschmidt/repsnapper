@@ -146,7 +146,7 @@ public:
 	void SetDisplayPolygons(bool val){ProcessControl.DisplayPolygons = val; redraw();}
 	void SetDisplayAllLayers(bool val){ProcessControl.DisplayAllLayers = val; redraw();}
 	void SetDisplayinFill(bool val){ProcessControl.DisplayinFill = val; redraw();}
-	void SetPolygonOpasity(float val){ProcessControl.PolygonOpasity = val; redraw();}
+	void SetPolygonOpacity(float val){ProcessControl.PolygonOpacity = val; redraw();}
 
 	// CuttingPlane GUI values
 	void SetInfillDistance(float val){ProcessControl.InfillDistance = val; redraw();}
@@ -277,8 +277,6 @@ public:
 
 	Matrix4f &SelectedNodeMatrix(uint objectNr = 1);
 	void SelectedNodeMatrices(vector<Matrix4f *> &result );
-	RFO_Object* SelectedParent();
-	void GetSelectedRFO(RFO_Object **selectedObject, RFO_File **selectedFile);
 	void newObject();
 
 	RepRapSerial *serial;

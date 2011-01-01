@@ -293,25 +293,7 @@ void ProcessController::OptimizeRotation()
 	cout << "Reimplementate ProcessController::OptimizeRotation";
 }
 
-void ProcessController::RotateObject(Vector3f axis, float a)
-{
-	Flu_Tree_Browser::Node *node=gui->RFP_Browser->get_selected( 1 );
-	// first check files
-	for(uint o=0;o<rfo.Objects.size();o++)
-	{
-		for(uint f=0;f<rfo.Objects[o].files.size();f++)
-		{
-			if(rfo.Objects[o].files[f].node == node)
-			{
-				rfo.Objects[o].files[f].stl.RotateObject(axis,a);
-				gui->MVC->redraw();
-				return;
-			}
-		}
-	}
-}
-
-void ProcessController::Draw(Flu_Tree_Browser::Node *selected_node)
+void ProcessController::Draw (Gtk::TreeModel::iterator &selected)
 {
 	printOffset = PrintMargin;
 	if(RaftEnable)
@@ -324,7 +306,7 @@ void ProcessController::Draw(Flu_Tree_Browser::Node *selected_node)
 	// Move objects
 	glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+PrintMargin.z);
 	glPolygonOffset (0.5f, 0.5f);
-	rfo.Draw(*this, 1.0f, selected_node);
+	rfo.draw(*this, 1.0, selected);
 
 	if (DisplayGCode)
 	{
@@ -333,7 +315,8 @@ void ProcessController::Draw(Flu_Tree_Browser::Node *selected_node)
 		glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+PrintMargin.z);
 	}
 	glPolygonOffset (-0.5f, -0.5f);
-	rfo.Draw(*this, PolygonOpasity);
+	Gtk::TreeModel::iterator iter;
+	rfo.draw (*this, PolygonOpacity, iter);
 
 	if(DisplayBBox)
 	{
@@ -362,8 +345,8 @@ void ProcessController::Draw(Flu_Tree_Browser::Node *selected_node)
 		glVertex3f(Max.x, Min.y, Max.z);
 		glEnd();
 	}
-
 }
+
 
 void ProcessController::ReadGCode(string filename)
 {
@@ -981,8 +964,8 @@ void ProcessController::SaveConfig(string path)
 	aid = AltInfillDistance;
 	Setting &ail = root.add("AltInfillLayersText", Setting::TypeString);
 	ail = AltInfillLayersText;
-	Setting &po = root.add("PolygonOpasity", Setting::TypeFloat);
-	po = PolygonOpasity;
+	Setting &po = root.add("PolygonOpacity", Setting::TypeFloat);
+	po = PolygonOpacity;
 
 	// GUI parameters
 	Setting &cpv = root.add("CuttingPlaneValue", Setting::TypeFloat);

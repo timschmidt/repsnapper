@@ -84,7 +84,7 @@ public:
 
 		LayerThickness = 0.4f;
 		CuttingPlaneValue = 0.5f;
-		PolygonOpasity = 0.5f;
+		PolygonOpacity = 0.5f;
 
 		DisplayEndpoints = false;
 		DisplayNormals = false;
@@ -143,12 +143,9 @@ public:
 	void SetProgress(Progress *progress) { m_progress = progress; }
 	void SetFilename(string filename) { m_Filename = filename;}
 
-	void Draw(Flu_Tree_Browser::Node *selected_node);
-
 	// STL Functions
 	bool ReadStl(string filename, STL &newstl) { return newstl.Read(filename);};
 	void OptimizeRotation();
-	void RotateObject(Vector3f axis, float a);
 	Matrix4f GetSTLTransformationMatrix(int object=-1, int file=-1) const ;
 	void CalcBoundingBoxAndCenter();
 
@@ -157,6 +154,7 @@ public:
 	// GCode Functions
 	void ReadGCode(string filename);
 	void WriteGCode(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, string filename);
+	void Draw (Gtk::TreeModel::iterator &selected);
 
 	void MakeRaft(float &z);
 	//Printer
@@ -237,7 +235,7 @@ public:
 	// STL 
 	float LayerThickness;
 	float CuttingPlaneValue;
-	float PolygonOpasity;
+	float PolygonOpacity;
 
 	// CuttingPlane
 	float InfillDistance;

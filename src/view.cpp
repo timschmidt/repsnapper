@@ -25,8 +25,8 @@
 
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
-View::View(ProcessController &pc) :
-  m_arcBall( new ArcBall() ), m_pc( pc )
+View::View(ProcessController &pc, Glib::RefPtr<Gtk::TreeSelection> selection) :
+  m_arcBall(new ArcBall()), m_pc(pc), m_selection(selection)
 {
   set_events (Gdk::POINTER_MOTION_MASK |
 	      Gdk::BUTTON_MOTION_MASK |
@@ -57,11 +57,17 @@ View::View(ProcessController &pc) :
     m_lights[i] = NULL;
 
   m_pc.signal_rfo_changed().connect (sigc::mem_fun(*this, &View::rfo_changed));
+  m_selection->signal_changed().connect (sigc::mem_fun(*this, &View::selection_changed));
 }
 
 View::~View()
 {
   delete m_arcBall;
+}
+
+void View::selection_changed()
+{
+  queue_draw();
 }
 
 void View::rfo_changed()
@@ -136,8 +142,8 @@ bool View::on_expose_event(GdkEventExpose* event)
   glColor3f(0.75f,0.75f,1.0f);
 
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
-  //  Flu_Tree_Browser::Node *node = gui->RFP_Browser->get_selected( 1 );
-  m_pc.Draw(NULL);
+  Gtk::TreeModel::iterator iter = m_selection->get_selected();
+  m_pc.Draw (iter);
 
   glPopMatrix();
 
