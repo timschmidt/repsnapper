@@ -51,6 +51,7 @@ class ModelViewController : public Gtk::Window
 	Gtk::Entry *m_gcode_entry;
 	Gtk::Button *m_print_button;
 	Gtk::Button *m_continue_button;
+	Gtk::ToggleButton *m_power_button;
 
 	void connect_button(const char *name, const sigc::slot<void> &slot);
 	virtual bool on_delete_event(GdkEventAny* event);
@@ -61,6 +62,11 @@ class ModelViewController : public Gtk::Window
 	void save_stl();
 	void send_gcode();
 	void printing_changed();
+	void power_toggled();
+
+	// interactive bits
+	void home_all();
+	void enable_logging_toggled(Gtk::ToggleButton *button);
 
 	// rfo bits
 	Gtk::TreeView *m_rfo_tree;
@@ -258,7 +264,6 @@ public:
 
 	void SetKeepLines(float val){ ProcessControl.KeepLines = (int)val;}
 
-	void SetFileLogging(bool on);
 	void EnableTempReading(bool on);
 	void SetLogFileClear(bool on);
 	void ClearLogs();

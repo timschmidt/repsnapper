@@ -1,32 +1,29 @@
-add event foo to the MVC...
-	+ split that goodness out into a separate View widget
-	  [ in a separate module ]
+--- the plan ---
+
+* finish "interactive" tab
+* add menu items
+* do settings work ...
+* win32 osc build fun ...
+* re-factor more ...
+
+--- misc stuff ---
 
 * Connection foo
 	+ connect stuff
+	* rename processcontroller.h to 'settings' or 'config' globally ... ?
+		+ add a 'changed' signal ...
+		* bin CopySettingsToGUI
+
 	+ get settings imported
 	+ move ModelViewController DetectComPorts to RepRapSerial ...
 	  ditto ValidateComPort
-
-* rename processcontroller.h to 'settings' or 'config' globally ... ?
-	+ add a 'changed' signal ...
-
-* poke at CopySettingsToGUI
-
-* next tab to implement:
-	+ print - simple widgets ...
-	+ interactive control (?)
-
-* Add scroll-pane for TextViews to avoid expansion grief on ConvertToGCode ...
-	+ 
 
 * connection button
 	+ should require confirmation before going off-line
 	  during a print ... [ and/or 'pause printing' ]
 
-* fix arcball / rotation resetting ...
-
 * signal emissions should hold toolkit lock !?
+	+ make toolkit lock recursive
 
 * kill all reprapserial uses of 'mvc'
 	+ incoming: temperature (2x) feedback
@@ -36,24 +33,25 @@ add event foo to the MVC...
 	+ access to 'DownstreamMultiplierSlider' / ExtrusionMultiplier
 		+ [ better via ProcessController surely !? ]
 
-* add a test serial connection ...
-	+ and better error reporting ?
+* serial connection
+	* add a test serial connection ...
+	* add better error reporting 
+	* add signals to sync. with interactive display
+	  eg. temp / bed on etc.
 
+* RFO re-work
+	+ class name fixing: RFO_File etc.
+	+ encapsulate the selection concept in a clean abstract object
+	+ re-work RFO storage to use pointers not vectors with instances
 
-* WOW - the RFO is not done with pointers, but instances [!] ...
-	+ grief !?
+* add click-to-select in the 3D view
 
-* split out / create an 'RFOView' widget to (sanely) manipulate that treeview ...
+* re-factor MVC
+	+ 
+	* rename view.cpp etc. to render.cpp
+		* include SpinRows in view.cpp ...
+	* split modelviewcontroller.cpp to view.cpp etc.
+		* split out / create an 'RFOView' widget to (sanely) manipulate that treeview ...
 
-* rename RFO_File etc. to RFO::File etc.
-
-* fix rendering colour wrt. 'is selected' etc.
-	+ and click-to-select etc.
-
-* add menu items ...
-
-* split out SpinRows to a new module ...
-
-* Expunge the horrible Fl_Tree_View ...
-
-* move more code to view.cpp etc. ?
+* bug fixing:
+	+ arcball / rotation resetting ...

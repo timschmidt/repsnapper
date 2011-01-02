@@ -102,6 +102,24 @@ void ModelViewController::printing_changed()
   }
 }
 
+void ModelViewController::power_toggled()
+{
+  if (m_power_button->get_active())
+    serial->SendNow("M80");
+  else
+    serial->SendNow("M81");
+}
+
+void ModelViewController::home_all()
+{
+  serial->SendNow("G28");
+}
+
+void ModelViewController::enable_logging_toggled(Gtk::ToggleButton *button)
+{
+  ProcessControl.FileLoggingEnabled = button->get_active();
+}
+
 enum SpinType { TRANSLATE, ROTATE, SCALE };
 class ModelViewController::SpinRow {
   void spin_value_changed (int axis)
@@ -299,12 +317,22 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   connect_button ("g_send_gcode",    sigc::mem_fun(*this, &ModelViewController::send_gcode) );
 
   // Print tab
-//  FIXME: ("p_power" - connect to toggled signal ! -> SwitchPower(get_active())
   connect_button ("p_kick",          sigc::mem_fun(*this, &ModelViewController::Continue));
+  m_builder->get_widget ("p_power", m_power_button);
+  m_power_button->signal_toggled().connect    (sigc::mem_fun(*this, &ModelViewController::power_toggled));
   m_builder->get_widget ("p_print", m_print_button);
-  m_print_button->signal_clicked().connect (sigc::mem_fun(*this, &ModelViewController::PrintButton));
+  m_print_button->signal_clicked().connect    (sigc::mem_fun(*this, &ModelViewController::PrintButton));
   m_builder->get_widget ("p_pause", m_continue_button);
   m_continue_button->signal_clicked().connect (sigc::mem_fun(*this, &ModelViewController::ContinuePauseButton));
+
+  // Interactive tab
+  Gtk::Box *axis_box;
+  m_builder->get_widget ("i_axis_controls", axis_box);
+  // FIXME: hook up some fun here !
+  connect_button ("i_home_all", sigc::mem_fun(*this, &ModelViewController::home_all));
+  Gtk::ToggleButton *tbutton;
+  m_builder->get_widget ("i_enable_logging", tbutton);
+  tbutton->signal_toggled().connect (sigc::bind(sigc::mem_fun(*this, &ModelViewController::enable_logging_toggled), tbutton));
 
   // Main view progress bar
   Gtk::Box *box = NULL;
@@ -804,10 +832,6 @@ void ModelViewController::SetExtruderLength(int length)
 {
 	m_iExtruderLength = length;
 }
-void ModelViewController::SetFileLogging(bool on)
-{
-	ProcessControl.FileLoggingEnabled = on;
-}
 void ModelViewController::EnableTempReading(bool on)
 {
 	ProcessControl.TempReadingEnabled = on;
@@ -824,14 +848,6 @@ void ModelViewController::ClearLogs()
 		gui->ErrorLog->clear();
 		gui->Echo->clear();
 	}
-}
-
-void ModelViewController::SwitchPower(bool on)
-{
-	if(on)
-		serial->SendNow("M80");
-	else
-		serial->SendNow("M81");
 }
 
 void ModelViewController::SetFan(int val)

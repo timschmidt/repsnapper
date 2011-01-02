@@ -791,7 +791,6 @@ void GUI::cb_LinesToKeepSlider(Fl_Value_Slider* o, void* v) {
 }
 
 void GUI::cb_FileLogginEnabledButton_i(Fl_Light_Button* o, void*) {
-  MVC->SetFileLogging(o->value());
 }
 void GUI::cb_FileLogginEnabledButton(Fl_Light_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_FileLogginEnabledButton_i(o,v);
@@ -826,7 +825,6 @@ void GUI::cb_PrintButton(Fl_Light_Button* o, void* v) {
 }
 
 void GUI::cb_Power_i(Fl_Light_Button* o, void*) {
-  MVC->SwitchPower(o->value());
 }
 void GUI::cb_Power(Fl_Light_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_Power_i(o,v);
