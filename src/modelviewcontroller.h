@@ -45,6 +45,7 @@ class ModelViewController : public Gtk::Window
 {
 	class SpinRow;
 	class TempRow;
+	class AxisRow;
 
 	Glib::RefPtr<Gtk::Builder> m_builder;
 	Progress *m_progress;
@@ -72,6 +73,7 @@ class ModelViewController : public Gtk::Window
 	Gtk::CheckButton *m_extruder_reverse;
 	Gtk::SpinButton *m_extruder_speed;
 	Gtk::SpinButton *m_extruder_length;
+	AxisRow *m_axis_rows[3];
 
 	// rfo bits
 	Gtk::TreeView *m_rfo_tree;

@@ -110,11 +110,6 @@ void ModelViewController::power_toggled()
     serial->SendNow("M81");
 }
 
-void ModelViewController::home_all()
-{
-  serial->SendNow("G28");
-}
-
 void ModelViewController::enable_logging_toggled(Gtk::ToggleButton *button)
 {
   ProcessControl.FileLoggingEnabled = button->get_active();
@@ -124,6 +119,8 @@ void ModelViewController::clear_logs()
 {
   serial->clear_logs();
 }
+
+static const char *axis_names[] = { "X", "Y", "Z" };
 
 enum SpinType { TRANSLATE, ROTATE, SCALE };
 class ModelViewController::SpinRow {
@@ -217,10 +214,9 @@ public:
     m_inhibit_update(false), m_mvc(mvc), m_type (type)
   {
     mvc->m_builder->get_widget (box_name, m_box);
-    static const char *names[] = { "X", "Y", "Z" };
 
     for (uint i = 0; i < 3; i++) {
-      m_box->add (*new Gtk::Label (names[i]));
+      m_box->add (*new Gtk::Label (axis_names[i]));
       m_xyz[i] = new Gtk::SpinButton();
       m_xyz[i]->set_numeric();
       switch (m_type) {
@@ -278,19 +274,17 @@ public:
 public:
   enum TempType { NOZZLE, BED };
 
-  bool m_inhibit_update;
   RepRapSerial *m_serial;
   TempType m_type;
   Gtk::Label *m_temp;
   Gtk::SpinButton *m_target;
 
   TempRow(RepRapSerial *serial, TempType type) :
-    m_inhibit_update(false), m_serial(serial), m_type(type)
+    m_serial(serial), m_type(type)
   {
     static const char *names[] = { "Nozzle", "Bed" };
 
-    Gtk::Label *pLabel = new Gtk::Label(names[type]);
-    add(*pLabel);
+    add(*(new Gtk::Label(names[type])));
     Gtk::ToggleButton *pOn = new Gtk::ToggleButton("heat on");
     pOn->signal_toggled().connect
       (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
@@ -321,6 +315,87 @@ public:
   }
 };
 
+class ModelViewController::AxisRow : public Gtk::HBox {
+public:
+  void home_clicked()
+  {
+    m_mvc->Home(std::string (axis_names[m_axis]));
+    m_target->set_value(0.0);
+  }
+  void spin_value_changed ()
+  {
+    if (m_inhibit_update)
+      return;
+    m_mvc->Goto (std::string (axis_names[m_axis]), m_target->get_value());
+  }
+  void nudge_clicked (double nudge)
+  {
+    m_inhibit_update = true;
+    m_target->set_value (MAX (m_target->get_value () + nudge, 0.0));
+    m_mvc->Move (std::string (axis_names[m_axis]), nudge);
+    m_inhibit_update = false;
+  }
+  void add_nudge_button (double nudge)
+  {
+    std::stringstream label;
+    if (nudge > 0)
+      label << "+";
+    label << nudge;
+    Gtk::Button *button = new Gtk::Button(label.str());
+    add(*button);
+    button->signal_clicked().connect
+      (sigc::bind(sigc::mem_fun (*this, &AxisRow::nudge_clicked), nudge));
+  }
+  bool m_inhibit_update;
+  ModelViewController *m_mvc;
+  Gtk::SpinButton *m_target;
+  int m_axis;
+
+public:
+  void notify_homed()
+  {
+    m_inhibit_update = true;
+    m_target->set_value(0.0);
+    m_inhibit_update = false;
+  }
+  AxisRow(ModelViewController *mvc, int axis) :
+    m_inhibit_update(false), m_mvc(mvc), m_axis(axis)
+  {
+    add(*(new Gtk::Label(axis_names[axis])));
+    Gtk::Button *home = new Gtk::Button("Home");
+    home->signal_clicked().connect
+      (sigc::mem_fun (*this, &AxisRow::home_clicked));
+    add (*home);
+
+    add_nudge_button (-10.0);
+    add_nudge_button (-1.0);
+    add_nudge_button (-0.1);
+    m_target = new Gtk::SpinButton();
+    m_target->set_digits (1);
+    m_target->set_increments (0.1, 1);
+    m_target->set_range(-200.0, +200.0);
+    m_target->set_value(0.0);
+    add (*m_target);
+    m_target->signal_value_changed().connect
+      (sigc::mem_fun(*this, &AxisRow::spin_value_changed));
+
+    add_nudge_button (+0.1);
+    add_nudge_button (+1.0);
+    add_nudge_button (+10.0);
+  }
+
+  ~AxisRow()
+  {
+    delete m_target;
+  }
+};
+
+void ModelViewController::home_all()
+{
+  serial->SendNow("G28");
+  for (uint i = 0; i < 3; i++)
+    m_axis_rows[i]->notify_homed();
+}
 
 ModelViewController::ModelViewController(BaseObjectType* cobject,
 					 const Glib::RefPtr<Gtk::Builder>& builder)
@@ -391,10 +466,6 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   m_continue_button->signal_clicked().connect (sigc::mem_fun(*this, &ModelViewController::ContinuePauseButton));
 
   // Interactive tab
-  Gtk::Box *axis_box;
-  m_builder->get_widget ("i_axis_controls", axis_box);
-  // FIXME: hook up some fun here !
-
   connect_button ("i_home_all",       sigc::mem_fun(*this, &ModelViewController::home_all));
   Gtk::ToggleButton *tbutton;
   m_builder->get_widget ("i_enable_logging", tbutton);
@@ -438,6 +509,13 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   temp_box->add (*(new TempRow (serial, TempRow::NOZZLE)));
   temp_box->add (*(new TempRow (serial, TempRow::BED)));
 
+  Gtk::Box *axis_box;
+  m_builder->get_widget ("i_axis_controls", axis_box);
+  for (uint i = 0; i < 3; i++) {
+    m_axis_rows[i] = new AxisRow (this, i);
+    axis_box->add (*m_axis_rows[i]);
+  }
+
   Gtk::TextView *log_view;
   m_builder->get_widget ("i_txt_comms", log_view);
   textv->set_buffer (serial->get_log(RepRapSerial::LOG_COMMS));
@@ -463,8 +541,10 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
 
 ModelViewController::~ModelViewController()
 {
-  for (uint i = 0; i < 3; i++)
+  for (uint i = 0; i < 3; i++) {
     delete m_spin_rows[i];
+    delete m_axis_rows[i];
+  }
   delete m_view[0];
   delete m_view[1];
   delete m_progress;

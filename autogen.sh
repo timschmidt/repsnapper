@@ -40,8 +40,8 @@ fi
 
 conf_args=$(requote "$@")
 
-aclocal $ACLOCAL_FLAGS || exit 1;
 autoreconf -i
+aclocal $ACLOCAL_FLAGS || exit 1;
 intltoolize --copy --force --automake
 if test "x$NOCONFIGURE" = "x"; then
     if test -n "$old_args" ; then

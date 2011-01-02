@@ -6,7 +6,7 @@ AC_CONFIG_SRCDIR([src/repsnapper.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 dnl AC_CONFIG_AUX_DIR([config])
 
-AM_INIT_AUTOMAKE([1.10 dist-bzip2 no-dist-gzip foreign])
+AM_INIT_AUTOMAKE([1.6 dist-bzip2 no-dist-gzip foreign])
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
