@@ -67,6 +67,10 @@ class ModelViewController : public Gtk::Window
 	// interactive bits
 	void home_all();
 	void enable_logging_toggled(Gtk::ToggleButton *button);
+	void clear_logs();
+	Gtk::CheckButton *m_extruder_reverse;
+	Gtk::SpinButton *m_extruder_speed;
+	Gtk::SpinButton *m_extruder_length;
 
 	// rfo bits
 	Gtk::TreeView *m_rfo_tree;
@@ -253,10 +257,8 @@ public:
 	void SwitchBedHeat(bool on, float temp);
 	void SetTargetTemp(float temp);
 	void SetBedTargetTemp(float temp);
+
 	void RunExtruder();
-	void SetExtruderSpeed(int speed);
-	void SetExtruderLength(int length);
-	void SetExtruderDirection(bool reverse);
 	void SendNow(string str);
 	void setPort(string s);
 	void setSerialSpeed(int s );
@@ -266,7 +268,6 @@ public:
 
 	void EnableTempReading(bool on);
 	void SetLogFileClear(bool on);
-	void ClearLogs();
 	void SwitchPower(bool on);
 	void SetFan(int val);
 
@@ -285,9 +286,6 @@ public:
 	void newObject();
 
 	RepRapSerial *serial;
-	bool m_bExtruderDirection; // True = forwards
-	int  m_iExtruderSpeed;
-	int m_iExtruderLength;
 	float m_fTargetTemp;
 	float m_fBedTargetTemp;
 

@@ -120,6 +120,11 @@ void ModelViewController::enable_logging_toggled(Gtk::ToggleButton *button)
   ProcessControl.FileLoggingEnabled = button->get_active();
 }
 
+void ModelViewController::clear_logs()
+{
+  serial->clear_logs();
+}
+
 enum SpinType { TRANSLATE, ROTATE, SCALE };
 class ModelViewController::SpinRow {
   void spin_value_changed (int axis)
@@ -261,9 +266,6 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
 	gui = 0;
 	read_pending = "";
 
-	m_bExtruderDirection = true;
-	m_iExtruderSpeed = 3000;
-	m_iExtruderLength = 150;
 	m_fTargetTemp = 63.0f;
 	m_fBedTargetTemp = 63.0f;
 
@@ -329,10 +331,19 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   Gtk::Box *axis_box;
   m_builder->get_widget ("i_axis_controls", axis_box);
   // FIXME: hook up some fun here !
-  connect_button ("i_home_all", sigc::mem_fun(*this, &ModelViewController::home_all));
+  connect_button ("i_home_all",       sigc::mem_fun(*this, &ModelViewController::home_all));
   Gtk::ToggleButton *tbutton;
   m_builder->get_widget ("i_enable_logging", tbutton);
-  tbutton->signal_toggled().connect (sigc::bind(sigc::mem_fun(*this, &ModelViewController::enable_logging_toggled), tbutton));
+  tbutton->signal_toggled().connect  (sigc::bind(sigc::mem_fun(*this, &ModelViewController::enable_logging_toggled), tbutton));
+  connect_button ("i_clear_logs",     sigc::mem_fun(*this, &ModelViewController::clear_logs) );
+  m_builder->get_widget ("i_reverse", m_extruder_reverse);
+  m_builder->get_widget ("i_ex_speed", m_extruder_speed);
+  m_extruder_speed->set_range(100.0, 10000.0);
+  m_extruder_speed->set_value (3000.0);
+  m_builder->get_widget ("i_ex_length", m_extruder_length);
+  m_extruder_length->set_range(0.0, 1000.0);
+  m_extruder_length->set_value (150.0);
+  connect_button ("i_extrude_length", sigc::mem_fun(*this, &ModelViewController::RunExtruder) );
 
   // Main view progress bar
   Gtk::Box *box = NULL;
@@ -355,6 +366,14 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   connect_box->add (*m_view[0]);
   m_builder->get_widget ("p_connect_button_box", connect_box);
   connect_box->add (*m_view[1]);
+
+  Gtk::TextView *log_view;
+  m_builder->get_widget ("i_txt_comms", log_view);
+  textv->set_buffer (serial->get_log(RepRapSerial::LOG_COMMS));
+  m_builder->get_widget ("i_txt_errs", log_view);
+  textv->set_buffer (serial->get_log(RepRapSerial::LOG_ERRORS));
+  m_builder->get_widget ("i_txt_echo", log_view);
+  textv->set_buffer (serial->get_log(RepRapSerial::LOG_ECHO));
 
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
@@ -787,7 +806,7 @@ void ModelViewController::Print()
 
 	serial->Clear();
 	serial->SetDebugMask();
-	gui->CommunationLog->clear();
+	serial->clear_logs();
 	ProcessControl.gcode.queue_to_serial (serial);
 	m_progress->start ("Printing", serial->Length());
 	serial->StartPrint();
@@ -824,14 +843,6 @@ void ModelViewController::SetBedTargetTemp(float temp)
 {
 	m_fBedTargetTemp = temp;
 }
-void ModelViewController::SetExtruderSpeed(int speed)
-{
-	m_iExtruderSpeed = speed;
-}
-void ModelViewController::SetExtruderLength(int length)
-{
-	m_iExtruderLength = length;
-}
 void ModelViewController::EnableTempReading(bool on)
 {
 	ProcessControl.TempReadingEnabled = on;
@@ -839,15 +850,6 @@ void ModelViewController::EnableTempReading(bool on)
 void ModelViewController::SetLogFileClear(bool on)
 {
 	ProcessControl.ClearLogfilesWhenPrintStarts = on;
-}
-void ModelViewController::ClearLogs()
-{
-	if( gui )
-	{
-		gui->CommunationLog->clear();
-		gui->ErrorLog->clear();
-		gui->Echo->clear();
-	}
 }
 
 void ModelViewController::SetFan(int val)
@@ -877,16 +879,16 @@ void ModelViewController::RunExtruder()
 
 	std::stringstream oss;
 	string command("G1 F");
-	oss << m_iExtruderSpeed;
+	oss << m_extruder_speed->get_value();
 	command += oss.str();
 	serial->SendNow(command);
 	oss.str("");
 
 	serial->SendNow("G92 E0");	// set extruder zero
-	oss << m_iExtruderLength;
+	oss << m_extruder_length->get_value();
 	string command2("G1 E");
 
-	if(!m_bExtruderDirection)	// Forwards
+	if (m_extruder_reverse->get_active())
 		command2+="-";
 	command2+=oss.str();
 	serial->SendNow(command2);
@@ -894,10 +896,7 @@ void ModelViewController::RunExtruder()
 
 	serial->SendNow("G92 E0");	// set extruder zero
 }
-void ModelViewController::SetExtruderDirection(bool reverse)
-{
-	m_bExtruderDirection = !reverse;
-}
+
 void ModelViewController::SendNow(string str)
 {
 	serial->SendNow(str);

@@ -721,21 +721,18 @@ void GUI::cb_RunExtruderButton(Fl_Light_Button* o, void* v) {
 }
 
 void GUI::cb_SetExtruderDirectionButton_i(Fl_Light_Button* o, void*) {
-  MVC->SetExtruderDirection(o->value());
 }
 void GUI::cb_SetExtruderDirectionButton(Fl_Light_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_SetExtruderDirectionButton_i(o,v);
 }
 
 void GUI::cb_Speed_i(Fl_Value_Slider* o, void*) {
-  MVC->SetExtruderSpeed(o->value());
 }
 void GUI::cb_Speed(Fl_Value_Slider* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_Speed_i(o,v);
 }
 
 void GUI::cb_Length_i(Fl_Value_Slider* o, void*) {
-  MVC->SetExtruderLength(o->value());
 }
 void GUI::cb_Length(Fl_Value_Slider* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_Length_i(o,v);
@@ -804,7 +801,6 @@ void GUI::cb_ClearLogfilesWhenPrintStartsButton(Fl_Light_Button* o, void* v) {
 }
 
 void GUI::cb_Clear_i(Fl_Button*, void*) {
-  MVC->ClearLogs();
 }
 void GUI::cb_Clear(Fl_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->user_data()))->cb_Clear_i(o,v);

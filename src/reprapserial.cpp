@@ -39,6 +39,9 @@ RepRapSerial::RepRapSerial(Progress *progress, ProcessController *ctrl)
 
   m_temp_poll_timeout = Glib::signal_timeout().connect
     (sigc::mem_fun(*this, &RepRapSerial::temp_poll_timeout), 1000 /* ms */);
+
+  for (uint i = 0; i < 3; i++)
+    m_logs[i] = Gtk::TextBuffer::create();
 }
 
 RepRapSerial::~RepRapSerial()
@@ -70,30 +73,14 @@ void RepRapSerial::debugPrint(string s, bool selectLine)
 	oss << setfill('0') << setw(2) << ptm->tm_hour << ":" << setfill('0') << setw(2) << ptm->tm_min << ":" << setfill('0') << setw(2) << ptm->tm_sec << " Send >>" << s.c_str() << "\n";
 	s=oss.str();
 
-	if(gui)
-	{
-		ToolkitLock guard;
+	ToolkitLock guard;
 
-		gui->CommunationLog->add(s.c_str());
-		if(gui->AutoscrollButton->value())
-			gui->CommunationLog->bottomline(gui->CommunationLog->size());
-		if(selectLine)
-		{
-			gui->CommunationLog->select(gui->CommunationLog->size());
-			gui->ErrorLog->add(s.c_str());
-			if(gui->AutoscrollButton->value())
-				gui->ErrorLog->bottomline(gui->ErrorLog->size());
-		}
-
-		while(gui->CommunationLog->size() > m_ctrl->KeepLines)
-			gui->CommunationLog->remove(1);
-		while(gui->ErrorLog->size() > m_ctrl->KeepLines)
-			gui->ErrorLog->remove(1);
-		while(gui->Echo->size() > m_ctrl->KeepLines)
-			gui->Echo->remove(1);
+	// FIXME: enforce log sizes ...
+	m_logs[LOG_COMMS]->insert (m_logs[LOG_COMMS]->end(), s);
+	if (selectLine) {
+	  // FIXME: add a highlight tag to errors in the comms buffer ...
+	  m_logs[LOG_ERRORS]->insert (m_logs[LOG_ERRORS]->end(), s);
 	}
-	else
-		printf("%s", s.c_str());
 
 	if(m_ctrl->FileLoggingEnabled)
 	{
@@ -130,19 +117,8 @@ void RepRapSerial::echo(string s)
 	oss << setfill('0') << setw(2) << ptm->tm_hour << ":" << setfill('0') << setw(2) << ptm->tm_min << ":" << setfill('0') << setw(2) << ptm->tm_sec << " Echo >>" << s.c_str() << "\n";
 	s=oss.str();
 
-	if(gui)
-	{
-		ToolkitLock guard;
-
-		gui->Echo->add(s.c_str());
-		if(gui->AutoscrollButton->value())
-		{
-			gui->Echo->bottomline(gui->Echo->size());
-			gui->Echo->redraw();
-		}
-	}
-	else
-		printf("%s", s.c_str());
+	 ToolkitLock guard;
+	 m_logs[LOG_ECHO]->insert (m_logs[LOG_ECHO]->end(), s);
 
 	if(m_ctrl->FileLoggingEnabled)
 	{
@@ -667,3 +643,15 @@ void RepRapSerial::pausePrint()
   m_bPrinting = false;
   m_signal_printing_changed.emit();
 }
+
+void RepRapSerial::clear_logs()
+{
+  for (uint i = 0; i < 3; i++)
+    m_logs[i]->erase(m_logs[i]->begin(), m_logs[i]->end());
+}
+
+Glib::RefPtr<Gtk::TextBuffer> RepRapSerial::get_log (LogType t)
+{
+  return m_logs[t];
+}
+

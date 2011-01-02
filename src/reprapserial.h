@@ -23,6 +23,9 @@
 #include <vector>
 #include <boost/thread.hpp>
 
+// with an abstract text buffer we could remove this include
+#include <gtkmm.h>
+
 
 //Physical Pin Mappings for Direct Drive
 
@@ -176,7 +179,7 @@ public:
 	void WaitForConnection(ulong timeoutMS);
 	void SetReceivingBufferSize(int val) { ReceivingBufferSize = val; }
 	void SetValidateConnection(bool val) { m_bValidateConnection = val; }
-private:
+  private:
 	void internalWrite(std::string s, const int lineNr);
 	void debugPrint(std::string s, bool selectLine = false);
 	void echo(std::string s);
@@ -185,6 +188,14 @@ private:
 
 	std::vector<std::string> buffer;
 	State m_state;
+
+  private:
+	Glib::RefPtr<Gtk::TextBuffer> m_logs[3];
+  public:
+	enum LogType { LOG_COMMS, LOG_ERRORS, LOG_ECHO };
+	void clear_logs();
+	Glib::RefPtr<Gtk::TextBuffer> get_log (LogType t);
+  private:
 
 	bool m_bValidateConnection;
 	uint m_iLineNr;

@@ -1318,10 +1318,11 @@
                     </child>
                     <child>
                       <object class="GtkCheckButton" id="i_reverse">
-                        <property name="label" translatable="yes">reverse extruder</property>
+                        <property name="label" translatable="yes">reverse extrude</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
+                        <property name="tooltip_text" translatable="yes">Change direction of next extrusion length</property>
                         <property name="use_action_appearance">False</property>
                         <property name="draw_indicator">True</property>
                       </object>
@@ -1358,7 +1359,7 @@
                     <child>
                       <object class="GtkLabel" id="label27">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Speed: mm/s</property>
+                        <property name="label" translatable="yes">Speed: mm/min</property>
                       </object>
                       <packing>
                         <property name="top_attach">1</property>
@@ -1390,7 +1391,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkSpinButton" id="i_ex_length_mm">
+                      <object class="GtkSpinButton" id="i_ex_length">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">&#x25CF;</property>
