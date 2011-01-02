@@ -259,6 +259,69 @@ public:
   }
 };
 
+class ModelViewController::TempRow : public Gtk::HBox {
+public:
+  // see: http://reprap.org/wiki/RepRapGCodes for more details
+  void heat_toggled (Gtk::ToggleButton *pOn)
+  {
+    static const char *mdetail[] = { "M104", "M140" };
+    std::stringstream oss;
+    oss << mdetail[m_type];
+    oss << " S";
+    if (pOn->get_active())
+      oss << m_target->get_value();
+    else
+      oss << "0";
+    m_serial->SendNow (oss.str());
+  }
+
+public:
+  enum TempType { NOZZLE, BED };
+
+  bool m_inhibit_update;
+  RepRapSerial *m_serial;
+  TempType m_type;
+  Gtk::Label *m_temp;
+  Gtk::SpinButton *m_target;
+
+  TempRow(RepRapSerial *serial, TempType type) :
+    m_inhibit_update(false), m_serial(serial), m_type(type)
+  {
+    static const char *names[] = { "Nozzle", "Bed" };
+
+    Gtk::Label *pLabel = new Gtk::Label(names[type]);
+    add(*pLabel);
+    Gtk::ToggleButton *pOn = new Gtk::ToggleButton("heat on");
+    pOn->signal_toggled().connect
+      (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
+    add(*pOn);
+    add(*(new Gtk::Label("temperature:")));
+    m_temp = new Gtk::Label();
+    add (*m_temp);
+    add(*(new Gtk::Label("target:")));
+    m_target = new Gtk::SpinButton();
+    m_target->set_increments (1, 5);
+    m_target->set_range(25.0, 256.0);
+    switch (type) {
+    case NOZZLE:
+    default:
+      m_target->set_value(200.0);
+      break;
+    case BED:
+      m_target->set_value(100.0);
+      break;
+    }
+    add (*m_target);
+  }
+
+  ~TempRow()
+  {
+    delete m_temp;
+    delete m_target;
+  }
+};
+
+
 ModelViewController::ModelViewController(BaseObjectType* cobject,
 					 const Glib::RefPtr<Gtk::Builder>& builder)
   : Gtk::Window(cobject), m_builder(builder)
@@ -331,6 +394,7 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   Gtk::Box *axis_box;
   m_builder->get_widget ("i_axis_controls", axis_box);
   // FIXME: hook up some fun here !
+
   connect_button ("i_home_all",       sigc::mem_fun(*this, &ModelViewController::home_all));
   Gtk::ToggleButton *tbutton;
   m_builder->get_widget ("i_enable_logging", tbutton);
@@ -339,9 +403,11 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   m_builder->get_widget ("i_reverse", m_extruder_reverse);
   m_builder->get_widget ("i_ex_speed", m_extruder_speed);
   m_extruder_speed->set_range(100.0, 10000.0);
+  m_extruder_speed->set_increments (100, 500);
   m_extruder_speed->set_value (3000.0);
   m_builder->get_widget ("i_ex_length", m_extruder_length);
   m_extruder_length->set_range(0.0, 1000.0);
+  m_extruder_length->set_increments (5, 20);
   m_extruder_length->set_value (150.0);
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &ModelViewController::RunExtruder) );
 
@@ -366,6 +432,11 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   connect_box->add (*m_view[0]);
   m_builder->get_widget ("p_connect_button_box", connect_box);
   connect_box->add (*m_view[1]);
+
+  Gtk::Box *temp_box;
+  m_builder->get_widget ("i_temp_box", temp_box);
+  temp_box->add (*(new TempRow (serial, TempRow::NOZZLE)));
+  temp_box->add (*(new TempRow (serial, TempRow::BED)));
 
   Gtk::TextView *log_view;
   m_builder->get_widget ("i_txt_comms", log_view);
@@ -812,37 +883,6 @@ void ModelViewController::Print()
 	serial->StartPrint();
 }
 
-void ModelViewController::SwitchHeat(bool on, float temp)
-{
-	std::stringstream oss;
-	oss << "M104 S" <<temp;
-
-	if(on)
-		serial->SendNow(oss.str());
-	else
-		serial->SendNow("M104 S0");
-}
-void ModelViewController::SwitchBedHeat(bool on, float temp)
-{
-	std::stringstream oss;
-	oss << "M140 S" <<temp;
-
-	if(on)
-		serial->SendNow(oss.str());
-	else
-		serial->SendNow("M140 S0");
-
-	//serial->SendNow("M116");
-// see: http://reprap.org/wiki/RepRapGCodes for more details
-}
-void ModelViewController::SetTargetTemp(float temp)
-{
-	m_fTargetTemp = temp;
-}
-void ModelViewController::SetBedTargetTemp(float temp)
-{
-	m_fBedTargetTemp = temp;
-}
 void ModelViewController::EnableTempReading(bool on)
 {
 	ProcessControl.TempReadingEnabled = on;

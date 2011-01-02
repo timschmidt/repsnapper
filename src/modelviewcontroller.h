@@ -44,6 +44,7 @@ class ConnectView;
 class ModelViewController : public Gtk::Window
 {
 	class SpinRow;
+	class TempRow;
 
 	Glib::RefPtr<Gtk::Builder> m_builder;
 	Progress *m_progress;
@@ -253,10 +254,6 @@ public:
 	void Print();
 	void Continue();
 	void Restart();
-	void SwitchHeat(bool on, float temp);
-	void SwitchBedHeat(bool on, float temp);
-	void SetTargetTemp(float temp);
-	void SetBedTargetTemp(float temp);
 
 	void RunExtruder();
 	void SendNow(string str);

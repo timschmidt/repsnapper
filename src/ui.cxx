@@ -753,28 +753,24 @@ void GUI::cb_TempReadingEnabledButton(Fl_Light_Button* o, void* v) {
 }
 
 void GUI::cb_SwitchHeatOnButton_i(Fl_Light_Button* o, void*) {
-  MVC->SwitchHeat(o->value(), TargetTempText->value());
 }
 void GUI::cb_SwitchHeatOnButton(Fl_Light_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_SwitchHeatOnButton_i(o,v);
 }
 
 void GUI::cb_TargetTempText_i(Fl_Value_Input* o, void*) {
-  MVC->SetTargetTemp(o->value());
 }
 void GUI::cb_TargetTempText(Fl_Value_Input* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_TargetTempText_i(o,v);
 }
 
 void GUI::cb_BedHeatOnButton_i(Fl_Light_Button* o, void*) {
-  MVC->SwitchBedHeat(o->value(), TargetBedTempText->value());
 }
 void GUI::cb_BedHeatOnButton(Fl_Light_Button* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_BedHeatOnButton_i(o,v);
 }
 
 void GUI::cb_TargetBedTempText_i(Fl_Value_Input* o, void*) {
-  MVC->SetBedTargetTemp(o->value());
 }
 void GUI::cb_TargetBedTempText(Fl_Value_Input* o, void* v) {
   ((GUI*)(o->parent()->parent()->parent()->parent()->parent()->parent()->user_data()))->cb_TargetBedTempText_i(o,v);
