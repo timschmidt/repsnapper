@@ -143,11 +143,9 @@ public:
 	void SetFilename(string filename) { m_Filename = filename;}
 
 	// STL Functions
-	bool ReadStl(string filename, STL &newstl) { return newstl.Read(filename);};
 	void OptimizeRotation();
 	Matrix4f GetSTLTransformationMatrix(int object=-1, int file=-1) const ;
 	void CalcBoundingBoxAndCenter();
-
 	void ConvertToGCode();
 
 	// GCode Functions
@@ -174,25 +172,35 @@ public:
 	void SaveSettings();
 	void SaveSettingsAs(string path);
 
+	// Truly the model
+	RFO rfo;
+	GCode gcode;
+
+	// Model derived: bounding box info
+	Vector3f Center;
+	Vector3f Min;
+	Vector3f Max;
+
+	Progress *m_progress;
+	// Maybe a pointer to the gui
+	GUI *gui;
+
 	// Process functions
 	string m_Filename;
+
+	// Pure settings
+	string m_sPortName;
+	int m_iSerialSpeed;
+	bool m_bValidateConnection;
+	int KeepLines;
+
+	float Optimization;
+	int ReceivingBufferSize;
 
 	// Start, layer, end GCode
 	Glib::RefPtr<Gtk::TextBuffer> m_GCodeStartText;
 	Glib::RefPtr<Gtk::TextBuffer> m_GCodeLayerText;
 	Glib::RefPtr<Gtk::TextBuffer> m_GCodeEndText;
-
-	/*--------------Models-------------------*/
-//	Printer printer;					// Printer settings and functions
-	string m_sPortName;
-	int m_iSerialSpeed;
-	bool m_bValidateConnection;
-	int KeepLines;
-	RFO rfo;
-	GCode gcode;
-
-	float Optimization;
-	int ReceivingBufferSize;
 
 	// Raft
 	float RaftSize;
@@ -232,7 +240,7 @@ public:
 	bool		UseIncrementalEcode;
 	bool		Use3DGcode;
 
-	// STL 
+	// STL
 	float LayerThickness;
 	float CuttingPlaneValue;
 	float PolygonOpacity;
@@ -254,7 +262,6 @@ public:
 	bool TempReadingEnabled;
 	bool ClearLogfilesWhenPrintStarts;
 
-
 	// GUI... ?
 	bool DisplayEndpoints;
 	bool DisplayNormals;
@@ -273,7 +280,6 @@ public:
 	bool DrawCPVertexNumbers;
 	bool DrawCPLineNumbers;
 	bool DrawCPOutlineNumbers;
-	//string Notes; // Thers is no ui element for this field, it was causing problems with GCodeEnd UI field
 
 	// Rendering
 	float PolygonVal;
@@ -314,11 +320,6 @@ public:
 
 	int m_ShrinkQuality;
 
-	// Bounding box info
-	Vector3f Center;
-	Vector3f Min;
-	Vector3f Max;
-
 	vector<string>CustomButtonGcode;
 	vector<string>CustomButtonLabel;
 
@@ -326,8 +327,4 @@ public:
 	string RFOPath;
 	string GCodePath;
 	string SettingsPath;
-
-	Progress *m_progress;
-	// Maybe a pointer to the gui
-	GUI *gui;
 };

@@ -1329,10 +1329,9 @@ void ModelViewController::RunLua(char* script)
 
 void ModelViewController::ReadStl(string filename)
 {
-	STL stl;
-	bool ok = ProcessControl.ReadStl(filename, stl);
-	if(ok)
-		AddStl(stl, filename);
+  STL stl;
+  if (stl.Read (filename))
+    AddStl(stl, filename);
 }
 
 RFO_File* ModelViewController::AddStl(STL stl, string filename)
