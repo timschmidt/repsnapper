@@ -72,37 +72,35 @@
                         <property name="visible">True</property>
                         <child>
                           <object class="GtkImageMenuItem" id="imagemenuitem6">
-                            <property name="label">gtk-cut</property>
                             <property name="visible">True</property>
-                            <property name="use_action_appearance">False</property>
-                            <property name="use_underline">True</property>
+                            <property name="related_action">PrinterSettings</property>
                             <property name="use_stock">True</property>
                           </object>
                         </child>
                         <child>
                           <object class="GtkImageMenuItem" id="imagemenuitem7">
-                            <property name="label">gtk-copy</property>
                             <property name="visible">True</property>
-                            <property name="use_action_appearance">False</property>
-                            <property name="use_underline">True</property>
+                            <property name="related_action">RaftSettings</property>
                             <property name="use_stock">True</property>
                           </object>
                         </child>
                         <child>
                           <object class="GtkImageMenuItem" id="imagemenuitem8">
-                            <property name="label">gtk-paste</property>
                             <property name="visible">True</property>
-                            <property name="use_action_appearance">False</property>
-                            <property name="use_underline">True</property>
+                            <property name="related_action">DisplaySettings</property>
                             <property name="use_stock">True</property>
                           </object>
                         </child>
                         <child>
-                          <object class="GtkImageMenuItem" id="imagemenuitem9">
-                            <property name="label">gtk-delete</property>
+                          <object class="GtkSeparatorMenuItem" id="menuitem3">
                             <property name="visible">True</property>
                             <property name="use_action_appearance">False</property>
-                            <property name="use_underline">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkImageMenuItem" id="imagemenuitem9">
+                            <property name="visible">True</property>
+                            <property name="related_action">Calibrate</property>
                             <property name="use_stock">True</property>
                           </object>
                         </child>
@@ -123,6 +121,7 @@
                           <object class="GtkImageMenuItem" id="imagemenuitem10">
                             <property name="label">gtk-about</property>
                             <property name="visible">True</property>
+                            <property name="related_action">About</property>
                             <property name="use_action_appearance">False</property>
                             <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
@@ -1630,7 +1629,7 @@
     <property name="stock">gtk-open</property>
   </object>
   <object class="GtkAction" id="OpenStl">
-    <property name="label" translatable="yes">open stl</property>
+    <property name="label" translatable="yes">oceepen stl</property>
     <property name="short_label" translatable="yes">open stl</property>
     <property name="tooltip" translatable="yes">open an stl file</property>
     <property name="stock_id">gtk-open</property>
@@ -1646,5 +1645,64 @@
     <property name="short_label" translatable="yes">quit</property>
     <property name="tooltip" translatable="yes">exit repsnapper</property>
     <property name="stock_id">gtk-exit</property>
+  </object>
+  <object class="GtkAboutDialog" id="about_dialog">
+    <property name="border_width">5</property>
+    <property name="type_hint">normal</property>
+    <property name="program_name">RepSnapper</property>
+    <property name="copyright" translatable="yes">(C) 2008-2010 its contributors </property>
+    <property name="website">http://reprap.org/wiki/RepSnapper_Manual:Introduction</property>
+    <property name="website_label" translatable="yes">Website</property>
+    <property name="license" translatable="yes">LGPLv2+, GPLv2+, and other licenses, see licenses.txt</property>
+    <property name="authors">Michael Meeks &lt;michael@gnome.org&gt;
+Kulitorum &lt;repsnapper@kulitorum.com&gt;
+Palomides &lt;nave.notnilc@gmail.com&gt;
+Joachim Glauche &lt;info@gli-concept.de&gt;
+Timothy Schmidt &lt;timschmidt@gmail.com&gt;
+Rick Kimball &lt;rick@kimballsoftware.com&gt;
+and others I forgot... (needs updating)</property>
+    <property name="wrap_license">True</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox1">
+        <property name="visible">True</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <placeholder/>
+        </child>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
+            <property name="visible">True</property>
+            <property name="layout_style">end</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkAction" id="About"/>
+  <object class="GtkAction" id="PrinterSettings">
+    <property name="label" translatable="yes">printer settings</property>
+    <property name="short_label" translatable="yes">printer</property>
+    <property name="tooltip" translatable="yes">update the printer settings</property>
+  </object>
+  <object class="GtkAction" id="RaftSettings">
+    <property name="label" translatable="yes">raft settings</property>
+    <property name="short_label" translatable="yes">raft</property>
+    <property name="tooltip" translatable="yes">tweak the raft printing settings</property>
+  </object>
+  <object class="GtkAction" id="DisplaySettings">
+    <property name="label" translatable="yes">display settings</property>
+    <property name="short_label" translatable="yes">display</property>
+    <property name="tooltip" translatable="yes">update the display settings</property>
+  </object>
+  <object class="GtkAction" id="Calibrate">
+    <property name="label" translatable="yes">calibrate</property>
+    <property name="short_label" translatable="yes">calibrate</property>
+    <property name="tooltip" translatable="yes">an interactive callibration routine</property>
   </object>
 </interface>

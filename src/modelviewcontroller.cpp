@@ -132,6 +132,21 @@ void ModelViewController::clear_logs()
   serial->clear_logs();
 }
 
+void ModelViewController::about_response(int)
+{
+  Gtk::Dialog *dialog;
+  m_builder->get_widget ("about_dialog", dialog);
+  dialog->hide();
+}
+
+void ModelViewController::about_dialog()
+{
+  Gtk::Dialog *dialog;
+  m_builder->get_widget ("about_dialog", dialog);
+  dialog->signal_response().connect (sigc::mem_fun(*this, &ModelViewController::about_response) );
+  dialog->show();
+}
+
 static const char *axis_names[] = { "X", "Y", "Z" };
 
 enum SpinType { TRANSLATE, ROTATE, SCALE };
@@ -420,7 +435,10 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
 	m_fBedTargetTemp = 63.0f;
 
   // Menus
-  connect_action ("OpenStl", sigc::mem_fun(*this, &ModelViewController::load_stl) );
+  connect_action ("OpenStl",         sigc::mem_fun(*this, &ModelViewController::load_stl) );
+  connect_action ("OpenGCode",       sigc::mem_fun(*this, &ModelViewController::load_gcode) );
+  connect_action ("Quit",            sigc::ptr_fun(&Gtk::Main::quit));
+  connect_action ("About",           sigc::mem_fun(*this, &ModelViewController::about_dialog) );
 
   // Simple tab
   connect_button ("s_load_stl",      sigc::mem_fun(*this, &ModelViewController::load_stl) );

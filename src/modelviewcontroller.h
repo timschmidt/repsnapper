@@ -66,6 +66,8 @@ class ModelViewController : public Gtk::Window
 	void send_gcode();
 	void printing_changed();
 	void power_toggled();
+	void about_response(int);
+	void about_dialog();
 
 	// interactive bits
 	void home_all();
