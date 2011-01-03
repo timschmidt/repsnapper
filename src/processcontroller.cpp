@@ -293,6 +293,27 @@ void ProcessController::OptimizeRotation()
 	cout << "Reimplementate ProcessController::OptimizeRotation";
 }
 
+void ProcessController::DrawGrid()
+{
+	glColor3f (0.5f, 0.5f, 0.5f);
+	glBegin(GL_LINES);
+	for (uint x = 0; x < m_fVolume.x; x += 10) {
+		glVertex3f (x, 0.0f, 0.0f);
+		glVertex3f (x, m_fVolume.y, 0.0f);
+	}
+	glVertex3f (m_fVolume.x, 0.0f, 0.0f);
+	glVertex3f (m_fVolume.x, m_fVolume.y, 0.0f);
+
+	for (uint y = 0;y < m_fVolume.y; y += 10) {
+		glVertex3f (0.0f, y, 0.0f);
+		glVertex3f (m_fVolume.x, y, 0.0f);
+	}
+	glVertex3f (0.0f, m_fVolume.y, 0.0f);
+	glVertex3f (m_fVolume.x, m_fVolume.y, 0.0f);
+
+	glEnd();
+}
+
 void ProcessController::Draw (Gtk::TreeModel::iterator &selected)
 {
 	printOffset = PrintMargin;
@@ -300,8 +321,7 @@ void ProcessController::Draw (Gtk::TreeModel::iterator &selected)
 		printOffset += Vector3f(RaftSize, RaftSize, 0);
 
 	Vector3f translation = rfo.transform3D.transform.getTranslation();
-
-	printer.Draw(*this);
+	DrawGrid();
 
 	// Move objects
 	glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+PrintMargin.z);

@@ -1,7 +1,9 @@
 --- the plan ---
 
-* add menu items
 * do settings work ...
+	+ should we split settings into buckets ?
+		+ hardware etc. ?
+
 * win32 osc build fun ...
 * re-factor more ...
 

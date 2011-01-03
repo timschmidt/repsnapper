@@ -19,7 +19,6 @@
 #pragma once
 
 #include "stdafx.h"
-#include "printer.h"
 #include <vmmlib/vmmlib.h>
 #include "gcode.h"
 #include "rfo.h"
@@ -155,6 +154,7 @@ public:
 	void ReadGCode(string filename);
 	void WriteGCode(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, string filename);
 	void Draw (Gtk::TreeModel::iterator &selected);
+	void DrawGrid ();
 
 	void MakeRaft(float &z);
 	//Printer
@@ -183,7 +183,7 @@ public:
 	Glib::RefPtr<Gtk::TextBuffer> m_GCodeEndText;
 
 	/*--------------Models-------------------*/
-	Printer printer;					// Printer settings and functions
+//	Printer printer;					// Printer settings and functions
 	string m_sPortName;
 	int m_iSerialSpeed;
 	bool m_bValidateConnection;
