@@ -44,6 +44,18 @@ void ModelViewController::connect_button(const char *name, const sigc::slot<void
   }
 }
 
+void ModelViewController::connect_action(const char *name, const sigc::slot<void> &slot)
+{
+  Glib::RefPtr<Glib::Object> object;
+  object = m_builder->get_object (name);
+  Glib::RefPtr<Gtk::Action> action = Glib::RefPtr<Gtk::Action>::cast_dynamic(object);
+  if (action)
+    action->signal_activate().connect (slot);
+  else {
+    std::cerr << "missing action " << name << "\n";
+  }
+}
+
 void ModelViewController::load_gcode ()
 {
   FileChooser::ioDialog (this, FileChooser::OPEN, FileChooser::GCODE);
@@ -406,6 +418,9 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
 
 	m_fTargetTemp = 63.0f;
 	m_fBedTargetTemp = 63.0f;
+
+  // Menus
+  connect_action ("OpenStl", sigc::mem_fun(*this, &ModelViewController::load_stl) );
 
   // Simple tab
   connect_button ("s_load_stl",      sigc::mem_fun(*this, &ModelViewController::load_stl) );

@@ -25,12 +25,20 @@
                       <object class="GtkMenu" id="menu1">
                         <property name="visible">True</property>
                         <child>
-                          <object class="GtkImageMenuItem" id="menu_open">
-                            <property name="label">gtk-open</property>
+                          <object class="GtkImageMenuItem" id="menu_open_stl">
                             <property name="visible">True</property>
-                            <property name="use_action_appearance">False</property>
-                            <property name="use_underline">True</property>
+                            <property name="related_action">OpenStl</property>
                             <property name="use_stock">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkImageMenuItem" id="menu_open_gcode">
+                            <property name="label">open gcode</property>
+                            <property name="visible">True</property>
+                            <property name="related_action">OpenGCode</property>
+                            <property name="use_action_appearance">False</property>
+                            <property name="image">image2</property>
+                            <property name="use_stock">False</property>
                           </object>
                         </child>
                         <child>
@@ -40,9 +48,10 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkImageMenuItem" id="imagemenuitem5">
+                          <object class="GtkImageMenuItem" id="menu_quit">
                             <property name="label">gtk-quit</property>
                             <property name="visible">True</property>
+                            <property name="related_action">Quit</property>
                             <property name="use_action_appearance">False</property>
                             <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
@@ -1615,5 +1624,27 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="stock">gtk-open</property>
+  </object>
+  <object class="GtkAction" id="OpenStl">
+    <property name="label" translatable="yes">open stl</property>
+    <property name="short_label" translatable="yes">open stl</property>
+    <property name="tooltip" translatable="yes">open an stl file</property>
+    <property name="stock_id">gtk-open</property>
+  </object>
+  <object class="GtkAction" id="OpenGCode">
+    <property name="label" translatable="yes">open gcode</property>
+    <property name="short_label" translatable="yes">open gcode</property>
+    <property name="tooltip" translatable="yes">open a file of control codes</property>
+    <property name="stock_id">gtk-open</property>
+  </object>
+  <object class="GtkAction" id="Quit">
+    <property name="label" translatable="yes">quit</property>
+    <property name="short_label" translatable="yes">quit</property>
+    <property name="tooltip" translatable="yes">exit repsnapper</property>
+    <property name="stock_id">gtk-exit</property>
   </object>
 </interface>

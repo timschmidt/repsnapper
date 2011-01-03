@@ -56,6 +56,7 @@ class ModelViewController : public Gtk::Window
 	Gtk::ToggleButton *m_power_button;
 
 	void connect_button(const char *name, const sigc::slot<void> &slot);
+	void connect_action(const char *name, const sigc::slot<void> &slot);
 	virtual bool on_delete_event(GdkEventAny* event);
 
 	void load_gcode();
