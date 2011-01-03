@@ -66,7 +66,8 @@ class ModelViewController : public Gtk::Window
 	void send_gcode();
 	void printing_changed();
 	void power_toggled();
-	void about_response(int);
+	void hide_on_response(int, Gtk::Dialog *dialog);
+	void show_dialog(const char *name);
 	void about_dialog();
 
 	// interactive bits

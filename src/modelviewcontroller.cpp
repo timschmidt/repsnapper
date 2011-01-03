@@ -132,19 +132,26 @@ void ModelViewController::clear_logs()
   serial->clear_logs();
 }
 
-void ModelViewController::about_response(int)
+void ModelViewController::hide_on_response(int, Gtk::Dialog *dialog)
+{
+  dialog->hide();
+}
+
+void ModelViewController::show_dialog(const char *name)
 {
   Gtk::Dialog *dialog;
-  m_builder->get_widget ("about_dialog", dialog);
-  dialog->hide();
+  m_builder->get_widget (name, dialog);
+  if (!dialog) {
+    cerr << "no such dialog " << name << "\n";
+    return;
+  }
+  dialog->signal_response().connect (sigc::bind(sigc::mem_fun(*this, &ModelViewController::hide_on_response), dialog));
+  dialog->show();
 }
 
 void ModelViewController::about_dialog()
 {
-  Gtk::Dialog *dialog;
-  m_builder->get_widget ("about_dialog", dialog);
-  dialog->signal_response().connect (sigc::mem_fun(*this, &ModelViewController::about_response) );
-  dialog->show();
+  show_dialog ("about_dialog");
 }
 
 static const char *axis_names[] = { "X", "Y", "Z" };
@@ -439,6 +446,14 @@ ModelViewController::ModelViewController(BaseObjectType* cobject,
   connect_action ("OpenGCode",       sigc::mem_fun(*this, &ModelViewController::load_gcode) );
   connect_action ("Quit",            sigc::ptr_fun(&Gtk::Main::quit));
   connect_action ("About",           sigc::mem_fun(*this, &ModelViewController::about_dialog) );
+  connect_action ("HardwareSettings",sigc::bind(sigc::mem_fun(*this, &ModelViewController::show_dialog),
+						"hardware_settings_dlg"));
+  connect_action ("SlicingSettings", sigc::bind(sigc::mem_fun(*this, &ModelViewController::show_dialog),
+						"slicing_settings_dlg"));
+  connect_action ("RaftSettings",    sigc::bind(sigc::mem_fun(*this, &ModelViewController::show_dialog),
+						"raft_settings_dlg"));
+  connect_action ("DisplaySettings", sigc::bind(sigc::mem_fun(*this, &ModelViewController::show_dialog),
+						"display_settings_dlg"));
 
   // Simple tab
   connect_button ("s_load_stl",      sigc::mem_fun(*this, &ModelViewController::load_stl) );
