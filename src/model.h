@@ -76,6 +76,9 @@ class Model : public Gtk::Window
 	Gtk::SpinButton *m_extruder_length;
 	AxisRow *m_axis_rows[3];
 
+	TempRow *m_temps[2];
+	void temp_changed();
+
 	// rfo bits
 	Gtk::TreeView *m_rfo_tree;
 	SpinRow *m_spin_rows[3];

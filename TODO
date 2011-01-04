@@ -3,42 +3,23 @@
 * Settings re-factor
 	+ stop Model being a widget ...
 
-	* Need to get PolygonHSV stuff etc. setup right [!]
-
-* Model:
-	+ needs the rfo_changed thing
-	+ Min/Max etc.
-
-* hook up to temp_changed signals, and update the
-  temperature UI using that ...
-
 * do settings work ...
 	* auto-connect settings to the UI
 	* re-factor the core to remove ProcessController ... [!]
 
 	* finish the settings we cannot do manually ...
-		+ customfoo
+		+ custom button foo ...
 
-	+ build a biig table of name / glade-name / type mappings
 	+ another biig table of spin-button / range details etc.
-	+ abandon 'Apron' stuff ...
-	float Examine;
-	int m_ShrinkQuality;
-
-
 
 * win32 osc build fun ...
-* re-factor more ...
 
 --- misc stuff ---
 
-* Connection foo
-	+ connect stuff
-	* rename processcontroller.h to 'settings' or 'config' globally ... ?
-		+ add a 'changed' signal ...
-		* bin CopySettingsToGUI
+* make toolkit lock sane and truly recursive
+	+ to avoid gdk threads deadlock[!]
 
-	+ get settings imported
+* serial
 	+ move ModelViewController DetectComPorts to RepRapSerial ...
 	  ditto ValidateComPort
 
@@ -46,20 +27,9 @@
 	+ should require confirmation before going off-line
 	  during a print ... [ and/or 'pause printing' ]
 
-* signal emissions should hold toolkit lock !?
-	+ make toolkit lock recursive
-
-* kill all reprapserial uses of 'mvc'
-	+ incoming: temperature (2x) feedback
-		+ temp_changed signals ...
-	+ communication & error logs (and auto-scrolling)
-		+ direct GtkTextBuffer access...
-	+ access to 'DownstreamMultiplierSlider' / ExtrusionMultiplier
-		+ [ better via ProcessController surely !? ]
-
 * serial connection
 	* add a test serial connection ...
-	* add better error reporting 
+	* add better error reporting
 	* add signals to sync. with interactive display
 	  eg. temp / bed on etc.
 
@@ -71,11 +41,10 @@
 * add click-to-select in the 3D view
 
 * re-factor MVC
-	+ 
 	* rename view.cpp etc. to render.cpp
 		* include SpinRows in view.cpp ...
 	* split modelviewcontroller.cpp to view.cpp etc.
-		* split out / create an 'RFOView' widget to (sanely) manipulate that treeview ...
+		* split out / create an 'RFOView' widget to (sanely) manipulate that treeview
 
 * bug fixing:
 	+ arcball / rotation resetting ...

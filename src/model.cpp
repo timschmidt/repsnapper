@@ -321,6 +321,11 @@ public:
   Gtk::Label *m_temp;
   Gtk::SpinButton *m_target;
 
+  void update_temp (double value)
+  {
+    m_target->set_value (value);
+  }
+
   TempRow(RepRapSerial *serial, TempType type) :
     m_serial(serial), m_type(type)
   {
@@ -439,6 +444,12 @@ void Model::home_all()
     m_axis_rows[i]->notify_homed();
 }
 
+void Model::temp_changed()
+{
+  m_temps[TempRow::NOZZLE]->update_temp (serial->getTempExtruder());
+  m_temps[TempRow::BED]->update_temp (serial->getTempBed());
+}
+
 Model::Model(BaseObjectType* cobject,
 					 const Glib::RefPtr<Gtk::Builder>& builder)
   : Gtk::Window(cobject), m_builder(builder)
@@ -540,6 +551,7 @@ Model::Model(BaseObjectType* cobject,
 
   serial = new RepRapSerial(m_progress, &settings);
   serial->signal_printing_changed().connect (sigc::mem_fun(*this, &Model::printing_changed));
+  serial->signal_temp_changed().connect (sigc::mem_fun(*this, &Model::temp_changed));
 
   m_view = new ConnectView(serial, &settings);
   Gtk::Box *connect_box = NULL;
@@ -548,8 +560,10 @@ Model::Model(BaseObjectType* cobject,
 
   Gtk::Box *temp_box;
   m_builder->get_widget ("i_temp_box", temp_box);
-  temp_box->add (*(new TempRow (serial, TempRow::NOZZLE)));
-  temp_box->add (*(new TempRow (serial, TempRow::BED)));
+  m_temps[TempRow::NOZZLE] = new TempRow (serial, TempRow::NOZZLE);
+  m_temps[TempRow::BED] = new TempRow (serial, TempRow::BED);
+  temp_box->add (*m_temps[TempRow::NOZZLE]);
+  temp_box->add (*m_temps[TempRow::BED]);
 
   Gtk::Box *axis_box;
   m_builder->get_widget ("i_axis_controls", axis_box);
@@ -590,6 +604,8 @@ Model::~Model()
     delete m_spin_rows[i];
     delete m_axis_rows[i];
   }
+  delete m_temps[TempRow::NOZZLE];
+  delete m_temps[TempRow::BED];
   delete m_view;
   delete m_progress;
   delete serial;
