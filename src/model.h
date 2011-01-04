@@ -46,7 +46,7 @@ class Model : public Gtk::Window
 
 	Glib::RefPtr<Gtk::Builder> m_builder;
 	Progress *m_progress;
-	ConnectView *m_view[2];
+	ConnectView *m_view;
 	Gtk::Entry *m_gcode_entry;
 	Gtk::Button *m_print_button;
 	Gtk::Button *m_continue_button;

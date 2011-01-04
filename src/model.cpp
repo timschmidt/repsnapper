@@ -457,11 +457,13 @@ Model::Model(BaseObjectType* cobject,
   connect_action ("DisplaySettings", sigc::bind(sigc::mem_fun(*this, &Model::show_dialog),
 						"display_settings_dlg"));
 
+#if 0
   // Simple tab
   connect_button ("s_load_stl",      sigc::mem_fun(*this, &Model::load_stl) );
   connect_button ("s_convert_gcode", sigc::mem_fun(*this, &Model::ConvertToGCode) );
   connect_button ("s_load_gcode",    sigc::mem_fun(*this, &Model::load_gcode) );
   connect_button ("s_print",         sigc::mem_fun(*this, &Model::SimplePrint) );
+#endif
 
   // Model tab
   connect_button ("m_load_stl",      sigc::mem_fun(*this, &Model::load_stl) );
@@ -539,13 +541,10 @@ Model::Model(BaseObjectType* cobject,
   serial = new RepRapSerial(m_progress, &settings);
   serial->signal_printing_changed().connect (sigc::mem_fun(*this, &Model::printing_changed));
 
-  m_view[0] = new ConnectView(serial, &settings);
-  m_view[1] = new ConnectView(serial, &settings);
+  m_view = new ConnectView(serial, &settings);
   Gtk::Box *connect_box = NULL;
-  m_builder->get_widget ("s_connect_button_box", connect_box);
-  connect_box->add (*m_view[0]);
   m_builder->get_widget ("p_connect_button_box", connect_box);
-  connect_box->add (*m_view[1]);
+  connect_box->add (*m_view);
 
   Gtk::Box *temp_box;
   m_builder->get_widget ("i_temp_box", temp_box);
@@ -591,8 +590,7 @@ Model::~Model()
     delete m_spin_rows[i];
     delete m_axis_rows[i];
   }
-  delete m_view[0];
-  delete m_view[1];
+  delete m_view;
   delete m_progress;
   delete serial;
 }
