@@ -142,6 +142,34 @@ static struct {
 
   // GCode - handled by GCodeImpl
   // Display - pending ...
+  BOOL_MEMBER (Display.DisplayGCode, "DisplayGCode", true),
+  FLOAT_MEMBER (Display.GCodeDrawStart, "GCodeDrawStart", 0.0),
+  FLOAT_MEMBER (Display.GCodeDrawEnd, "GCodeDrawEnd", 1.0),
+  BOOL_MEMBER (Display.DisplayEndpoints, "DisplayEndpoints", false),
+  BOOL_MEMBER (Display.DisplayNormals, "DisplayNormals", false),
+  BOOL_MEMBER (Display.DisplayBBox, "DisplayBBox", false),
+  BOOL_MEMBER (Display.DisplayWireframe, "DisplayWireframe", false),
+  BOOL_MEMBER (Display.DisplayWireframeShaded, "DisplayWireframeShaded", true),
+  BOOL_MEMBER (Display.DisplayPolygons, "DisplayPolygons", true),
+  BOOL_MEMBER (Display.DisplayAllLayers, "DisplayAllLayers", false),
+  BOOL_MEMBER (Display.DisplayinFill, "DisplayinFill", false),
+  BOOL_MEMBER (Display.DisplayDebug, "DisplayDebuginFill", false),
+  BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false),
+  BOOL_MEMBER (Display.DisplayCuttingPlane, "DisplayCuttingPlane", false),
+  BOOL_MEMBER (Display.DrawVertexNumbers, "DrawVertexNumbers", false),
+  BOOL_MEMBER (Display.DrawLineNumbers, "DrawLineNumbers", false),
+  BOOL_MEMBER (Display.DrawOutlineNumbers, "DrawOutlineNumbers", false),
+  BOOL_MEMBER (Display.DrawCPVertexNumbers, "DrawCPVertexNumbers", false),
+  BOOL_MEMBER (Display.DrawCPLineNumbers, "DrawCPLineNumbers", false),
+  BOOL_MEMBER (Display.DrawCPOutlineNumbers, "DrawCPOutlineNumbers", false),
+
+  FLOAT_MEMBER (Display.CuttingPlaneValue, "CuttingPlaneValue", 0),
+  FLOAT_MEMBER (Display.PolygonOpacity, "PolygonOpacity", 0.5),
+  BOOL_MEMBER  (Display.LuminanceShowsSpeed, "LuminanceShowsSpeed", false),
+  FLOAT_MEMBER (Display.Highlight, "Highlight", 0.7),
+  FLOAT_MEMBER (Display.NormalsLength, "NormalsLength", 10),
+  FLOAT_MEMBER (Display.EndPointSize, "EndPointSize", 8),
+  FLOAT_MEMBER (Display.TempUpdateSpeed, "TempUpdateSpeed", 3),
 };
 
 class Settings::GCodeImpl {
@@ -252,7 +280,14 @@ void Settings::set_defaults ()
     ("G1 X0 Y0 F2000.0 ; feed for start of next move\n"
      "M104 S0.0        ; heater off\n");
 
-  // FIXME: implement me !
+  Display.PolygonHSV = vmml::Vector3f (0.54, 1, 0.5);
+  Display.WireframeHSV = vmml::Vector3f (0.08, 1, 1);
+  Display.NormalsHSV = vmml::Vector3f (0.23, 1, 1);
+  Display.EndpointsHSV = vmml::Vector3f (0.45, 1, 1);
+  Display.GCodeExtrudeHSV = vmml::Vector3f (1, 1, 0.18);
+  Display.GCodeMoveHSV = vmml::Vector3f (1, 0.95, 1);
+
+  // FIXME: implement connecting me to the UI !
   Hardware.Volume = vmml::Vector3f (200,200,140);
   Hardware.PrintMargin = vmml::Vector3f (10,10,0);
 }
