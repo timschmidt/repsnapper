@@ -1,8 +1,12 @@
 --- the plan ---
 
 * do settings work ...
+
 	* auto-connect settings to the UI
 	* re-factor the core to remove ProcessController ... [!]
+
+	* finish the settings we cannot do manually ...
+		+ customfoo
 
 	+ build a biig table of name / glade-name / type mappings
 	+ another biig table of spin-button / range details etc.
