@@ -20,10 +20,9 @@
 #include "reprapserial.h"
 #include "convert.h"
 #include "progress.h"
-#include "modelviewcontroller.h"
+#include "settings.h"
 
-
-RepRapSerial::RepRapSerial(Progress *progress, ProcessController *ctrl)
+RepRapSerial::RepRapSerial(Progress *progress, Settings *settings)
 {
   m_state = DISCONNECTED;
   com = new RepRapBufferedAsyncSerial(this);
@@ -31,11 +30,10 @@ RepRapSerial::RepRapSerial(Progress *progress, ProcessController *ctrl)
   startTime = 0;
   lastUpdateTime = 0;
   m_iLineNr = 0;
-  gui = 0;
   debugMask = DEBUG_ECHO | DEBUG_INFO | DEBUG_ERRORS;
   logFile = 0;
-  m_ctrl = ctrl;
   m_progress = progress;
+  m_settings = settings;
 
   m_temp_poll_timeout = Glib::signal_timeout().connect
     (sigc::mem_fun(*this, &RepRapSerial::temp_poll_timeout), 1000 /* ms */);
@@ -52,7 +50,7 @@ RepRapSerial::~RepRapSerial()
 bool RepRapSerial::temp_poll_timeout()
 {
   ToolkitLock guard;
-  if (m_ctrl->TempReadingEnabled && m_state == CONNECTED)
+  if (m_settings->Misc.TempReadingEnabled && m_state == CONNECTED)
     SendNow("M105");
   return true;
 }
@@ -82,13 +80,13 @@ void RepRapSerial::debugPrint(string s, bool selectLine)
 	  m_logs[LOG_ERRORS]->insert (m_logs[LOG_ERRORS]->end(), s);
 	}
 
-	if(m_ctrl->FileLoggingEnabled)
+	if(m_settings->Misc.FileLoggingEnabled)
 	{
 	// is the files open?
 	if(logFile == 0)
 		{
 		// Append or new?
-		if(m_ctrl->ClearLogfilesWhenPrintStarts)
+		if(m_settings->Misc.ClearLogfilesWhenPrintStarts)
 			logFile = fopen("./RepSnapper.log", "w");
 		else
 			{
@@ -120,13 +118,13 @@ void RepRapSerial::echo(string s)
 	 ToolkitLock guard;
 	 m_logs[LOG_ECHO]->insert (m_logs[LOG_ECHO]->end(), s);
 
-	if(m_ctrl->FileLoggingEnabled)
+	if(m_settings->Misc.FileLoggingEnabled)
 	{
 	// is the files open?
 	if(logFile == 0)
 		{
 		// Append or new?
-		if(m_ctrl->ClearLogfilesWhenPrintStarts)
+		if(m_settings->Misc.ClearLogfilesWhenPrintStarts)
 			logFile = fopen("./RepSnapper.log", "w");
 		else
 			{
@@ -145,7 +143,7 @@ void RepRapSerial::StartPrint()
   m_bPrinting = true;
   m_signal_printing_changed.emit();
 
-  for (int i = 0; i < ReceivingBufferSize; i++)
+  for (int i = 0; i < m_settings->Hardware.ReceivingBufferSize; i++)
     SendNextLine();
 }
 
@@ -239,15 +237,8 @@ void RepRapSerial::SendData(string s, const int lineNr)
 
   // Apply Downstream Multiplier
 
-	float DSMultiplier = 1.0f;
-	float ExtrusionMultiplier = 1.0f;
-	if(gui)
-	{
-		ToolkitLock guard;
-
-		DSMultiplier = gui->DownstreamMultiplierSlider->value();
-		ExtrusionMultiplier = gui->DownstreamExtrusionMultiplierSlider->value();
-	}
+	float DSMultiplier = m_settings->Hardware.DownstreamMultiplier;
+	float ExtrusionMultiplier = m_settings->Hardware.DownstreamExtrusionMultiplier;
 
 	if(DSMultiplier != 1.0f)
 	{
@@ -260,7 +251,7 @@ void RepRapSerial::SendData(string s, const int lineNr)
 			string number = s.substr(pos+1,end);
 			string start = s.substr(0,pos+1);
 			string after = s.substr(end+1,s.length()-1);
-			float old_speed = ToFloat(number);
+			float old_speed = atof(number.c_str());
 			s.clear();
 			std::stringstream oss;
 			oss << start << old_speed*DSMultiplier << " " <<after;
@@ -279,7 +270,7 @@ void RepRapSerial::SendData(string s, const int lineNr)
 			string number = s.substr(pos+1,end);
 			string start = s.substr(0,pos+1);
 			string after = s.substr(end+1,s.length()-1);
-			float old_speed = ToFloat(number);
+			float old_speed = atof (number.c_str());
 			s.clear();
 			std::stringstream oss;
 			oss << start << old_speed*ExtrusionMultiplier << " " <<after;
@@ -349,7 +340,7 @@ void RepRapSerial::Connect(string port, int speed)
 	change_to_state (CONNECTING);
 
 	std::stringstream oss;
-	oss << "Connecting to port: " << port  << " at speed " << speed;
+	oss << "Connecting to port: " << port << " at speed " << speed;
 	debugPrint( oss.str() );
 	delete com;
 	com = new RepRapBufferedAsyncSerial(this);
@@ -362,17 +353,16 @@ void RepRapSerial::Connect(string port, int speed)
 		oss<<"Exception: " << e.what() << ":" << port.c_str() << endl;
 		debugPrint(oss.str(), true);
 	}
-	if( error )
+	if (error)
 	  change_to_state (DISCONNECTED);
 
-	if( m_bValidateConnection ) {
+	if (m_settings->Hardware.ValidateConnection) {
 	  int *count = new int;
 	  *count = 8;
 	  Glib::signal_timeout().connect
 	    (sigc::bind(sigc::mem_fun(*this, &RepRapSerial::connecting_poll), count),
 	     250 /* ms */);
-	}
-	else
+	} else
 	  change_to_state (CONNECTED);
 }
 
@@ -412,6 +402,17 @@ void RepRapSerial::SetDebugMask()
 	buffer += oss.str();
 	SendNow(buffer);
 }
+
+void RepRapSerial::updateTemperature (std::string temp_str, int *temp)
+{
+  int newTemp = atoi (temp_str.c_str());
+  if (newTemp != *temp) {
+    *temp = newTemp;
+    ToolkitLock guard;
+    m_temp_changed.emit();
+  }
+}
+
 
 /*
  * King sized, man-trap for the un-wary. This method is called
@@ -469,15 +470,9 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 			}
 			else if(command.substr(0,2) == "T:") // search, there's a parameter int (temperature)
 			{
-				string parameter = command.substr(2,command.length()-2);
-				debugPrint( string("Received:") + command+ " with parameter " + parameter);
-
-				ToolkitLock guard;
-
-				// Reduce re-draws by only updating the GUI on a real change
-				const char *old_value = gui->CurrentTempText->value();
-				if (!old_value || strcmp (parameter.c_str(), old_value))
-					gui->CurrentTempText->value(parameter.c_str());
+			  string parameter = command.substr (2,command.length()-2);
+			  debugPrint( string("Received:") + command+ " with parameter " + parameter);
+			  updateTemperature (parameter, &m_tempExtruder);
 			}
 			else if(command == "start")
 			{
@@ -502,35 +497,21 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 
 					// s = the current token , l = the offset of this token in command
 					//cout << "s:" << s << endl;
-					
 					// we already know this is how the line starts:
 				        if ( s == "ok" ) { 
 					// do nothing more
 
 					// temperature token:
-					} else if ( s.substr(0,2) == "T:" ) { 
-						temp_param = s.substr(2,s.length());
-				
-						// Reduce re-draws by only updating the GUI on a real change
-						const char *old_value = gui->CurrentTempText->value();
-						if (!old_value || strcmp (temp_param.c_str(), old_value))
-						gui->CurrentTempText->value(temp_param.c_str());
-
-
+					} else if ( s.substr(0,2) == "T:" ) {
+					  std::string temp_param = s.substr(2,s.length());
+					  updateTemperature (temp_param, &m_tempExtruder);
 					// bed temperature token:
-					} else if ( s.substr(0,2) == "B:" ) { 
-						bedtemp_param = s.substr(2,s.length());
-
-						// Reduce re-draws by only updating the GUI on a real change
-						const char *old_value = gui->CurrentBedTempText->value();
-						if (!old_value || strcmp (bedtemp_param.c_str(), old_value))
-						gui->CurrentBedTempText->value(bedtemp_param.c_str());
-
-					// a token we don't yet understand , dump to stdout for now
-					} else  {
-					
-						cout << "unknown token:" << s << endl;	
-
+					} else if ( s.substr(0,2) == "B:" ) {
+					  std::string bedtemp_param = s.substr(2,s.length());
+					  updateTemperature (bedtemp_param, &m_tempBed);
+					} else {
+					  // a token we don't yet understand , dump to stdout for now
+					  cout << "unknown token:" << s << endl;
 					}
 
 					s = get_next_token(remainder);

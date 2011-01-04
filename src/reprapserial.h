@@ -112,6 +112,7 @@ PWM (D 14) PD6 20|        |21  PD7 (D 15) PWM
 
 class GUI;
 class Progress;
+class Settings;
 class ProcessController;
 class RepRapSerial
 {
@@ -120,7 +121,7 @@ private:
 	boost::condition_variable c;
 	bool m_bPrinting;
 	Progress *m_progress;
-	ProcessController *m_ctrl;
+	Settings *m_settings;
 
 	sigc::connection m_temp_poll_timeout;
 	bool temp_poll_timeout();
@@ -139,6 +140,10 @@ private:
 
 	sigc::signal< void > m_signal_printing_changed;
 	sigc::signal<void, int> m_signal_state_changed;
+	sigc::signal<void> m_temp_changed;
+	int m_tempBed;
+	int m_tempExtruder;
+	void updateTemperature (std::string temp_str, int *temp);
 
 public:
 	enum State { DISCONNECTED, CONNECTING, CONNECTED };
@@ -148,8 +153,13 @@ public:
 	// When the connected state changes and the new value
 	sigc::signal< void, int> signal_state_changed() { return m_signal_state_changed; }
 
+	// When a temperature changes
+	sigc::signal< void > signal_temp_changed() { return m_temp_changed; }
+	int getTempBed() { return m_tempBed; }
+	int getTempExtruder() { return m_tempExtruder; }
+
 	RepRapBufferedAsyncSerial* com;
-	RepRapSerial(Progress *progress, ProcessController *ctrl);
+	RepRapSerial(Progress *progress, Settings *settings);
 	~RepRapSerial();
 	
 	// Event handler
@@ -164,7 +174,6 @@ public:
 	void SetLineNr(int nr);
 	void SetDebugMask(int mask, bool on);
 	void SetDebugMask();
-	void setGUI(GUI* g){ gui=g;}
 	void SendNextLine();
 	void SendData(std::string s, const int lineNr);
 	void Connect(std::string port, int speed);
@@ -177,8 +186,6 @@ public:
 	bool isConnecting(){return m_state == CONNECTING;}
 	State getState(){ return m_state; }
 	void WaitForConnection(ulong timeoutMS);
-	void SetReceivingBufferSize(int val) { ReceivingBufferSize = val; }
-	void SetValidateConnection(bool val) { m_bValidateConnection = val; }
   private:
 	void internalWrite(std::string s, const int lineNr);
 	void debugPrint(std::string s, bool selectLine = false);
@@ -196,37 +203,15 @@ public:
 	void clear_logs();
 	Glib::RefPtr<Gtk::TextBuffer> get_log (LogType t);
   private:
-
-	bool m_bValidateConnection;
 	uint m_iLineNr;
 	std::string InBuffer;
 	short debugMask;
 	ulong startTime;
 	ulong lastUpdateTime;
-	std::string temp_param;
-	std::string bedtemp_param;
 	uint data;
 	uint data2;
 
-
-	GUI* gui;
 	FILE* logFile;
-
-	int ReceivingBufferSize;
-/*
-	// Very private :P
-	FT_HANDLE fthandle;
-	FT_STATUS res;
-	LONG COMPORT;
-
-	char COMx[5];
-	int n;
-
-	DCB dcb;
-	HANDLE hCommPort;
-	BOOL fSuccess;	*/
-
-
 };
 
 #endif // REPRAP_SERIAL_H
