@@ -1,7 +1,18 @@
 --- the plan ---
 
-* do settings work ...
+* Settings re-factor
+	+ stop Model being a widget ...
 
+	* Need to get PolygonHSV stuff etc. setup right [!]
+
+* Model:
+	+ needs the rfo_changed thing
+	+ Min/Max etc.
+
+* hook up to temp_changed signals, and update the
+  temperature UI using that ...
+
+* do settings work ...
 	* auto-connect settings to the UI
 	* re-factor the core to remove ProcessController ... [!]
 
@@ -13,6 +24,7 @@
 	+ abandon 'Apron' stuff ...
 	float Examine;
 	int m_ShrinkQuality;
+
 
 
 * win32 osc build fun ...

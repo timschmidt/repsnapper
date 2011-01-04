@@ -20,7 +20,7 @@
 #include <string>
 #include "file.h"
 #include <boost/filesystem/path.hpp>
-#include "modelviewcontroller.h"
+#include "model.h"
 
 namespace {
   std::string openGtk (const char *directory, const char *filter_str,
@@ -85,7 +85,7 @@ namespace {
 
 // Shared file chooser logic
 // FIXME: impl. multi-selection cleanly
-void FileChooser::ioDialog (ModelViewController *mvc, Op o, Type t, bool dropRFO)
+void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
 {
   std::string file;
   const char *filter;
@@ -96,13 +96,13 @@ void FileChooser::ioDialog (ModelViewController *mvc, Op o, Type t, bool dropRFO
   case GCODE:
     filter = "*.gcode";
     title = "Choose GCODE filename";
-    directory = mvc->ProcessControl.GCodePath.c_str();
+    directory = model->settings.GCodePath.c_str();
     break;
   case STL:
   default:
     filter = "*.stl";
     title = "Choose STL filename";
-    directory = mvc->ProcessControl.STLPath.c_str();
+    directory = model->settings.STLPath.c_str();
     break;
   }
 
@@ -119,19 +119,19 @@ void FileChooser::ioDialog (ModelViewController *mvc, Op o, Type t, bool dropRFO
   switch (t) {
   case GCODE:
     if (o == OPEN)
-      mvc->ReadGCode (file);
+      model->ReadGCode (file);
     else
-      mvc->WriteGCode (file);
-    mvc->ProcessControl.GCodePath = directory_path;
+      model->WriteGCode (file);
+    model->settings.GCodePath = directory_path;
     break;
   default:
   case STL:
     if (o == OPEN)
-      mvc->ReadStl (file);
+      model->ReadStl (file);
     else
-      mvc->alert ("STL saving not yet implemented");
-    mvc->ProcessControl.STLPath = directory_path;
+      model->alert ("STL saving not yet implemented");
+    model->settings.STLPath = directory_path;
     break;
   }
-  mvc->redraw();
+  model->redraw();
 }

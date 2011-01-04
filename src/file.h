@@ -19,7 +19,7 @@
 #ifndef FILE_H
 #define FILE_H
 
-class ModelViewController;
+class Model;
 namespace FileChooser {
   enum Type {
     STL, RFO, GCODE
@@ -27,7 +27,7 @@ namespace FileChooser {
   enum Op {
     OPEN, SAVE
   };
-  void ioDialog (ModelViewController *mvc, Op o, Type t, bool dropRFO = false);
+  void ioDialog (Model *model, Op o, Type t, bool dropRFO = false);
 };
 
 #endif

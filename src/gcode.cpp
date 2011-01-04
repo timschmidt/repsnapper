@@ -26,9 +26,9 @@
 #include <iostream>
 #include <sstream>
 
-#include "modelviewcontroller.h"
+#include "model.h"
 #include "progress.h"
-#include "ui.h"
+#include "reprapserial.h"
 
 using namespace std;
 
@@ -40,7 +40,7 @@ GCode::GCode()
 	buffer = Gtk::TextBuffer::create();
 }
 
-void GCode::Read(ModelViewController *MVC, Progress *progress, string filename)
+void GCode::Read(Model *MVC, Progress *progress, string filename)
 {
 	clear();
 
@@ -198,7 +198,7 @@ void GCode::Read(ModelViewController *MVC, Progress *progress, string filename)
 
 }
 
-void GCode::draw(const ProcessController &PC)
+void GCode::draw(const Settings &settings)
 {
 	/*--------------- Drawing -----------------*/
 
@@ -207,13 +207,12 @@ void GCode::draw(const ProcessController &PC)
 	Vector3f Color = Vector3f(0.0f,0.0f,0.0f);
 	float	Distance = 0.0f;
 	Vector3f pos(0,0,0);
-	uint start = (uint)(PC.GCodeDrawStart*(float)(commands.size()));
-	uint end = (uint)(PC.GCodeDrawEnd*(float)(commands.size()));
+	uint start = (uint)(settings.Display.GCodeDrawStart*(float)(commands.size()));
+	uint end = (uint)(settings.Display.GCodeDrawEnd*(float)(commands.size()));
 
-	float Er,Eg,Eb;
-	HSVtoRGB(PC.GCodeExtrudeHue, PC.GCodeExtrudeSat, PC.GCodeExtrudeVal, Er,Eg,Eb);
-	float Mr,Mg,Mb;
-	HSVtoRGB(PC.GCodeMoveHue, PC.GCodeMoveSat, PC.GCodeMoveVal, Mr,Mg,Mb);
+	Vector3f ExtrudeColor, MoveColor;
+	HSVtoRGB(settings.Display.GCodeExtrudeHSV, ExtrudeColor);
+	HSVtoRGB(settings.Display.GCodeMoveHSV,    MoveColor);
 
 	float LastE=0.0f;
 	bool extruderon = false;
@@ -230,10 +229,10 @@ void GCode::draw(const ProcessController &PC)
 			extruderon = false;
 			break;
 		case COORDINATEDMOTION3D:
-			if(extruderon)
-				Color=Vector3f(Er,Eg,Eb);
+			if (extruderon)
+			  Color = ExtrudeColor;
 			else
-				Color=Vector3f(Mr,Mg,Mb);
+			  Color = MoveColor;
 			LastColor = Color;
 			Distance += (commands[i].where-pos).length();
 			glLineWidth(3);
@@ -252,21 +251,23 @@ void GCode::draw(const ProcessController &PC)
 				{
 				glLineWidth(3);
 				float speed = commands[i].f;
-				float luma = speed/PC.MaxPrintSpeedXY*0.5f;
-				if(PC.LuminanceShowsSpeed == false)
+				float luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
+				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
-				Color=Vector3f(luma*Mr,luma*Mg,luma*Mb);
+				Color = MoveColor;
+				Color *= luma;
 				}
 			else
 				{
 				glLineWidth(3);
 				float speed = commands[i].f;
-				float luma = speed/PC.MaxPrintSpeedXY;
-				if(PC.LuminanceShowsSpeed == false)
+				float luma = speed/settings.Hardware.MaxPrintSpeedXY;
+				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
-				Color=Vector3f(luma*Er,luma*Eg,luma*Eb);
+				Color = ExtrudeColor;
+				Color *= luma;
 				}
-			if(PC.LuminanceShowsSpeed == false)
+			if(settings.Display.LuminanceShowsSpeed == false)
 				LastColor = Color;
 			Distance += (commands[i].where-pos).length();
 			glBegin(GL_LINES);
@@ -473,7 +474,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 	buffer->set_text (GcodeTxt);
 }
 
-void GCode::Write (ModelViewController *mvc, string filename)
+void GCode::Write (Model *mvc, string filename)
 {
 	FILE *file;
 

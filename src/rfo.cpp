@@ -16,15 +16,28 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#include "stdafx.h"
-#include "ui.h"
-#include "rfo.h"
+#include "config.h"
 #include <exception>
 #include <stdexcept>
-#include "processcontroller.h"
-#include "modelviewcontroller.h"
+#include "stdafx.h"
+#include "rfo.h"
 
-void RFO::draw(ProcessController &pc, float opacity, Gtk::TreeModel::iterator &iter)
+#include "model.h"
+
+Matrix4f RFO::GetSTLTransformationMatrix(int object, int file) const
+{
+	Matrix4f result = transform3D.transform;
+//	Vector3f translation = result.getTranslation();
+//	result.setTranslation(translation+PrintMargin);
+
+	if(object >= 0)
+		result *= Objects[object].transform3D.transform;
+	if(file >= 0)
+		result *= Objects[object].files[file].transform3D.transform;
+	return result;
+}
+
+void RFO::draw (Settings &settings, float opacity, Gtk::TreeModel::iterator &iter)
 {
   RFO_File *sel_file;
   RFO_Object *sel_object;
@@ -43,13 +56,17 @@ void RFO::draw(ProcessController &pc, float opacity, Gtk::TreeModel::iterator &i
       glMultMatrixf (&file->transform3D.transform.array[0]);
       if (sel_file == file ||
 	  (!sel_file && sel_object == object)) {
-	pc.PolygonHue += 0.5f;
-	pc.WireframeHue += 0.5f;
-	file->stl.draw (pc, opacity);
-	pc.PolygonHue -= 0.5f;
-	pc.WireframeHue -= 0.5f;
+
+	// FIXME: hideous changing global state for this [!]
+	settings.Display.PolygonHSV.x += 0.5f;
+	settings.Display.WireframeHSV.x += 0.5f;
+
+	file->stl.draw (*this, settings, opacity);
+
+	settings.Display.PolygonHSV.x -= 0.5f;
+	settings.Display.WireframeHSV.x -= 0.5f;
       } else
-	file->stl.draw (pc, opacity);
+	file->stl.draw (*this, settings, opacity);
       glPopMatrix();
     }
     glPopMatrix();
@@ -57,7 +74,7 @@ void RFO::draw(ProcessController &pc, float opacity, Gtk::TreeModel::iterator &i
   glPopMatrix();
 }
 
-void RFO::clear(ProcessController &PC)
+void RFO::clear()
 {
   Objects.clear();
   version = 0.0f;

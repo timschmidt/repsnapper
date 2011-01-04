@@ -21,8 +21,8 @@
 
 #include <gtkmm.h>
 
+class Settings;
 class RepRapSerial;
-class ProcessController;
 
 class ConnectView : public Gtk::VBox {
   Gtk::HBox	     m_hbox;
@@ -33,13 +33,13 @@ class ConnectView : public Gtk::VBox {
   bool               m_setting_state;
 
   RepRapSerial      *m_serial;
-  ProcessController *m_ctrl;
+  Settings          *m_settings;
 
   void connect_toggled();
   void try_set_state(bool connected);
   void serial_state_changed(int state);
  public:
-  ConnectView(RepRapSerial *serial, ProcessController *ctrl, bool show_connect = true);
+  ConnectView(RepRapSerial *serial, Settings *settings, bool show_connect = true);
 };
 
 #endif // CONNECT_VIEW_H

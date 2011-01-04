@@ -67,15 +67,14 @@ public:
 	};
 
 	RFO();
-	void Load(string path, ProcessController &PC);
-	void clear(ProcessController &PC);
+	void clear();
 	void DeleteSelected(Gtk::TreeModel::iterator &iter);
-	bool Open(string filename, ProcessController &PC);
-	bool Save(string filename, ProcessController &PC);
-	void draw(ProcessController &pc, float opacity, Gtk::TreeModel::iterator &iter);
+	void draw(Settings &settings, float opacity, Gtk::TreeModel::iterator &iter);
 	void newObject();
 	Gtk::TreePath createFile(RFO_Object *parent, const STL &stl, std::string location);
 	void get_selected_stl(Gtk::TreeModel::iterator &iter, RFO_Object *&object, RFO_File *&file);
+	Matrix4f GetSTLTransformationMatrix(int object, int file) const;
+
 	vector<RFO_Object> Objects;
 	RFO_Transform3D transform3D;
 	float version;

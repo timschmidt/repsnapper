@@ -21,14 +21,13 @@
 #include "view.h"
 #include "arcball.h"
 #include "gllight.h"
-#include "processcontroller.h"
-
 #include "settings.h"
+#include "model.h"
 
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
-View::View(ProcessController &pc, Glib::RefPtr<Gtk::TreeSelection> selection) :
-  m_arcBall(new ArcBall()), m_pc(pc), m_selection(selection)
+View::View (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection) :
+  m_arcBall(new ArcBall()), m_model(model), m_selection(selection)
 {
   set_events (Gdk::POINTER_MOTION_MASK |
 	      Gdk::BUTTON_MOTION_MASK |
@@ -58,10 +57,8 @@ View::View(ProcessController &pc, Glib::RefPtr<Gtk::TreeSelection> selection) :
   for (uint i = 0; i < N_LIGHTS; i++)
     m_lights[i] = NULL;
 
-  m_pc.signal_rfo_changed().connect (sigc::mem_fun(*this, &View::rfo_changed));
+  model->signal_rfo_changed().connect (sigc::mem_fun(*this, &View::rfo_changed));
   m_selection->signal_changed().connect (sigc::mem_fun(*this, &View::selection_changed));
-
-  Settings *settings = new Settings(NULL);
 }
 
 View::~View()
@@ -76,10 +73,10 @@ void View::selection_changed()
 
 void View::rfo_changed()
 {
-  if (!m_pc.rfo.Objects.size())
+  if (!m_model->rfo.Objects.size())
     return;
 
-  m_zoom = (m_pc.Max - m_pc.Min).getMaxComponent();
+  m_zoom = (m_model->Max - m_model->Min).getMaxComponent();
   queue_draw();
 }
 
@@ -147,7 +144,9 @@ bool View::on_expose_event(GdkEventExpose* event)
 
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
   Gtk::TreeModel::iterator iter = m_selection->get_selected();
-  m_pc.Draw (iter);
+
+  // FIXME: Lovely MVC abstraction ;-)
+  m_model->Draw (iter);
 
   glPopMatrix();
 
@@ -199,8 +198,8 @@ bool View::on_motion_notify_event(GdkEventMotion* event)
     X = matrix * X;
     Vector3f Y(0,-delta.y,0);
     Y = matrix * Y;
-    m_pc.Center += X*delta.length()*0.01f;
-    m_pc.Center += Y*delta.length()*0.01f;
+    m_model->Center += X*delta.length()*0.01f;
+    m_model->Center += Y*delta.length()*0.01f;
     queue_draw();
     return true;
   }
@@ -216,7 +215,7 @@ void View::SetEnableLight(unsigned int i, bool on)
 
 void View::CenterView()
 {
-  glTranslatef (-m_pc.Center.x - m_pc.printOffset.x,
-		-m_pc.Center.y - m_pc.printOffset.y,
-		-m_pc.Center.z);
+  glTranslatef (-m_model->Center.x - m_model->printOffset.x,
+		-m_model->Center.y - m_model->printOffset.y,
+		-m_model->Center.z);
 }

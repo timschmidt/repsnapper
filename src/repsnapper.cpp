@@ -18,9 +18,8 @@
 */
 #include "config.h"
 #include "stdafx.h"
-#include "modelviewcontroller.h"
+#include "model.h"
 #include "gcode.h"
-#include "ui.h"
 
 using namespace std;
 
@@ -100,33 +99,26 @@ int main(int argc, char **argv)
 
   CommandLineOptions opts (argc, argv);
 
-  gui = new GUI();
-  ModelViewController *mvc = ModelViewController::create();
-  gui->MVC = mvc;
-
-  mvc->ProcessControl.gui = gui;
-  mvc->Init(gui);
-  mvc->serial->setGUI(gui);
+  Model *model = Model::create();
+  model->Init();
 
   if (!opts.use_gui) {
     if (opts.stl_input_path.size() > 0) {
-      mvc->ReadStl(opts.stl_input_path);
+      model->ReadStl(opts.stl_input_path);
 
-      if (opts.settings_path.size() > 0) {
-	mvc->ProcessControl.LoadConfig(opts.settings_path);
-	mvc->CopySettingsToGUI();
-      }
+      if (opts.settings_path.size() > 0)
+	model->LoadConfig (opts.settings_path);
 
-      mvc->ConvertToGCode();
+      model->ConvertToGCode();
 
       if (opts.gcode_output_path.size() > 0)
-	mvc->WriteGCode (opts.gcode_output_path.c_str());
+	model->WriteGCode (opts.gcode_output_path.c_str());
     }
     return 0;
   }
 
   for (uint i = 0; i < opts.files.size(); i++)
-    mvc->ReadStl (opts.files[i].c_str());
+    model->ReadStl (opts.files[i].c_str());
 
   tk.run();
 

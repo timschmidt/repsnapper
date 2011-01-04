@@ -18,15 +18,16 @@
 */
 #include "config.h"
 #include <stdio.h>
+#include "settings.h"
 #include "connectview.h"
 #include "reprapserial.h"
-#include "processcontroller.h"
 
 // we try to change the state of the connection
 void ConnectView::try_set_state(bool connect)
 {
   if (connect)
-    m_serial->Connect(m_ctrl->m_sPortName, m_ctrl->m_iSerialSpeed);
+    m_serial->Connect (m_settings->Hardware.PortName,
+		       m_settings->Hardware.SerialSpeed);
   else
     m_serial->DisConnect();
 }
@@ -72,11 +73,11 @@ void ConnectView::connect_toggled()
     try_set_state (m_connect.get_active ());
 }
 
-ConnectView::ConnectView(RepRapSerial      *serial,
-			 ProcessController *ctrl,
-			 bool               show_connect)
+ConnectView::ConnectView (RepRapSerial *serial,
+			  Settings *settings,
+			  bool show_connect)
   : Gtk::VBox(), m_connect(), m_port_label("Port:"),
-    m_serial (serial), m_ctrl (ctrl)
+    m_serial (serial), m_settings (settings)
 {
   m_setting_state = false;
 

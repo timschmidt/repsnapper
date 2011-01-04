@@ -23,15 +23,14 @@ AM_CPPFLAGS = \
 	-g -O0 $(WARNING_FLAGS)
 
 SHARED_SRC=asyncserial.cpp stl.cpp reprapserial.cpp \
-	processcontroller.cpp modelviewcontroller.cpp \
-	gllight.cpp gcode.cpp arcball.cpp stdafx.cpp \
-	rfo.cpp settings.cpp \
+	model.cpp gllight.cpp gcode.cpp arcball.cpp \
+	stdafx.cpp rfo.cpp settings.cpp \
 	ivcon.cpp file.cpp platform.cpp \
-	ui.cxx view.cxx progress.cxx connectview.cpp
+	view.cxx progress.cxx connectview.cpp
 
 SHARED_INC=arcball.h asyncserial.h convert.h \
-	gcode.h gllight.h ivcon.h miniball.h modelviewcontroller.h \
-	processcontroller.h reprapserial.h rfo.h \
+	gcode.h gllight.h ivcon.h miniball.h \
+	model.h reprapserial.h rfo.h \
 	stdafx.h stl.h triangle.h platform.h view.h progress.h \
 	connectview.h settings.h
 

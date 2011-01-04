@@ -1,7 +1,35 @@
+/*
+    This file is a part of the RepSnapper project.
+    Copyright (C) 2010 Michael Meeks
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 #include "config.h"
 #include <gtkmm.h>
 #include "settings.h"
 #include <libconfig.h++>
+#include <boost/algorithm/string.hpp>
+
+// Allow passing as a pointer to something to
+// avoid including glibmm in every header.
+class Builder : public Glib::RefPtr<Gtk::Builder>
+{
+public:
+  Builder();
+  ~Builder();
+};
 
 #ifdef WIN32
 #  define DEFAULT_COM_PORT "COM0"
@@ -47,7 +75,8 @@ static struct {
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_BASE].LayerCount), T_INT,
     "BaseLayerCount", "BaseLayerCount", 1, },
   FLOAT_PHASE_MEMBER(BASE, Base, MaterialDistanceRatio, 1.8),
-  FLOAT_PHASE_MEMBER(BASE, Base, Rotation, 90.0),
+  FLOAT_PHASE_MEMBER(BASE, Base, Rotation, 0.0),
+  FLOAT_PHASE_MEMBER(BASE, Base, RotationPrLayer, 90.0),
   FLOAT_PHASE_MEMBER(BASE, Base, Distance, 2.0),
   FLOAT_PHASE_MEMBER(BASE, Base, Thickness, 1.0),
   FLOAT_PHASE_MEMBER(BASE, Base, Temperature, 1.10),
@@ -57,6 +86,7 @@ static struct {
     "InterfaceLayerCount", "InterfaceLayerCount", 2, },
   FLOAT_PHASE_MEMBER(INTERFACE, Interface, MaterialDistanceRatio, 1.0),
   FLOAT_PHASE_MEMBER(INTERFACE, Interface, Rotation, 90.0),
+  FLOAT_PHASE_MEMBER(INTERFACE, Interface, RotationPrLayer, 90.0),
   FLOAT_PHASE_MEMBER(INTERFACE, Interface, Distance, 2.0),
   FLOAT_PHASE_MEMBER(INTERFACE, Interface, Thickness, 1.0),
   FLOAT_PHASE_MEMBER(INTERFACE, Interface, Temperature, 1.0),
@@ -72,6 +102,8 @@ static struct {
   FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5),
   FLOAT_MEMBER (Hardware.ExtrusionFactor, "ExtrusionFactor", 1.0),
   FLOAT_MEMBER (Hardware.LayerThickness, "LayerThickness", 0.4),
+  FLOAT_MEMBER (Hardware.DownstreamMultiplier, "DownstreamMultiplier", 1.0),
+  FLOAT_MEMBER (Hardware.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0),
 
   // FIXME: Volume, PrintMargin etc. - needs splitting up ...
   //  m_fVolume = Vector3f(200,200,140);
@@ -126,10 +158,39 @@ public:
   }
 };
 
-Settings::Settings (Gtk::Builder *builder)
+void Settings::SlicingSettings::GetAltInfillLayers(std::vector<int>& layers, uint layerCount) const
+{
+  std::vector<std::string> numstrs;
+  boost::algorithm::split(numstrs, AltInfillLayersText, boost::is_any_of(","));
+  std::vector<std::string>::iterator numstr_i;
+  for (numstr_i = numstrs.begin(); numstr_i != numstrs.end(); numstr_i++) {
+    int num;
+    int retval = sscanf ((*numstr_i).c_str(), "%d", &num);
+    if (retval == 1) {
+      if (num < 0)
+	num += layerCount;
+      layers.push_back (num);
+    }
+  }
+}
+
+Settings::Settings ()
 {
   GCode.m_impl = new GCodeImpl();
   set_defaults();
+}
+
+void Settings::connectToUI (Builder &builder)
+{
+  Gtk::TextView *textv = NULL;
+  builder->get_widget ("txt_gcode_start", textv);
+  textv->set_buffer (GCode.m_impl->m_GCodeStartText);
+  builder->get_widget ("txt_gcode_end", textv);
+  textv->set_buffer (GCode.m_impl->m_GCodeEndText);
+  builder->get_widget ("txt_gcode_next_layer", textv);
+  textv->set_buffer (GCode.m_impl->m_GCodeLayerText);
+
+#warning need to auto-connect all the above properties to the UI ...
 }
 
 std::string Settings::GCodeType::getStartText()
@@ -190,6 +251,10 @@ void Settings::set_defaults ()
   GCode.m_impl->m_GCodeEndText->set_text
     ("G1 X0 Y0 F2000.0 ; feed for start of next move\n"
      "M104 S0.0        ; heater off\n");
+
+  // FIXME: implement me !
+  Hardware.Volume = vmml::Vector3f (200,200,140);
+  Hardware.PrintMargin = vmml::Vector3f (10,10,0);
 }
 
 void Settings::load_settings (std::string filename)

@@ -24,8 +24,7 @@
 
 enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
 
-namespace Gtk { class Builder; };
-
+class Builder;
 class Settings {
  public:
 
@@ -38,6 +37,7 @@ class Settings {
       uint  LayerCount;
       float MaterialDistanceRatio;
       float Rotation;
+      float RotationPrLayer;
       float Distance;
       float Thickness;
       float Temperature;
@@ -60,7 +60,6 @@ class Settings {
 
     vmml::Vector3f	Volume;      // Print volume
     vmml::Vector3f	PrintMargin;
-    vmml::Vector3f	PrintOffset; // margin + raft
     float       ExtrudedMaterialWidth;
 
     std::string PortName;
@@ -69,6 +68,9 @@ class Settings {
     int KeepLines;
 
     int ReceivingBufferSize;
+
+    float DownstreamMultiplier;
+    float DownstreamExtrusionMultiplier;
   };
   HardwareSettings Hardware;
 
@@ -92,6 +94,8 @@ class Settings {
     int ShrinkQuality;
 
     float Optimization;
+
+    void GetAltInfillLayers(std::vector<int>& layers, uint layerCount) const;
   };
   SlicingSettings Slicing;
 
@@ -151,6 +155,7 @@ class Settings {
   };
   DisplaySettings Display;
 
+  // Paths we loaded / saved things to last time
   std::string STLPath;
   std::string RFOPath;
   std::string GCodePath;
@@ -160,10 +165,10 @@ class Settings {
   std::vector<std::string> CustomButtonLabel;
 
  public:
-  Settings (Gtk::Builder *builder);
+  Settings ();
   ~Settings();
+  void connectToUI (Builder &builder);
   void set_defaults ();
-  void load_settings () { load_settings ("repsnapper.conf"); }
   void load_settings (std::string filename);
   void save_settings (std::string filename);
 };

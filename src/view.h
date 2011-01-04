@@ -21,9 +21,10 @@
 
 #include "arcball.h"
 
+class Model;
 class gllight;
 class ArcBallT;
-class ProcessController;
+class Settings;
 
 class View : public Gtk::GL::DrawingArea
 {
@@ -31,7 +32,7 @@ class View : public Gtk::GL::DrawingArea
   Matrix4fT m_transform;
   Vector2f  m_downPoint;
   GLUquadricObj *m_quadratic;
-  ProcessController &m_pc;
+  Model *m_model;
   Glib::RefPtr<Gtk::TreeSelection> m_selection;
 
   float m_zoom;
@@ -43,7 +44,7 @@ class View : public Gtk::GL::DrawingArea
   void selection_changed();
 
  public:
-  View (ProcessController &pc, Glib::RefPtr<Gtk::TreeSelection> selection);
+  View (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection);
   ~View();
 
   virtual bool on_configure_event(GdkEventConfigure* event);
