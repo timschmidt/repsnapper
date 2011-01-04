@@ -23,6 +23,8 @@
 #include "gllight.h"
 #include "processcontroller.h"
 
+#include "settings.h"
+
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
 View::View(ProcessController &pc, Glib::RefPtr<Gtk::TreeSelection> selection) :
@@ -58,6 +60,8 @@ View::View(ProcessController &pc, Glib::RefPtr<Gtk::TreeSelection> selection) :
 
   m_pc.signal_rfo_changed().connect (sigc::mem_fun(*this, &View::rfo_changed));
   m_selection->signal_changed().connect (sigc::mem_fun(*this, &View::selection_changed));
+
+  Settings *settings = new Settings(NULL);
 }
 
 View::~View()

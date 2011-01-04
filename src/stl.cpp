@@ -28,6 +28,7 @@
 #include <boost/numeric/conversion/bounds.hpp> 
 #include "modelviewcontroller.h"
 #include "processcontroller.h"
+#include "settings.h"
 
 #ifdef WIN32
 #  include <GL/glut.h>	// Header GLUT Library

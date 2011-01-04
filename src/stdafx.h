@@ -68,6 +68,7 @@ class Command;
 class Point2f;
 class Printer;
 class Triangle;
+class Settings;
 class Segment2f;
 class AsyncSerial;
 class RepRapSerial;

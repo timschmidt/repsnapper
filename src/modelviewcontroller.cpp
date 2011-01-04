@@ -25,7 +25,7 @@
 #include "view.h"
 #include "progress.h"
 #include "connectview.h"
-
+#include "settings.h"
 
 bool ModelViewController::on_delete_event(GdkEventAny* event)
 {

@@ -1,8 +1,15 @@
 --- the plan ---
 
 * do settings work ...
-	+ should we split settings into buckets ?
-		+ hardware etc. ?
+	* auto-connect settings to the UI
+	* re-factor the core to remove ProcessController ... [!]
+
+	+ build a biig table of name / glade-name / type mappings
+	+ another biig table of spin-button / range details etc.
+	+ abandon 'Apron' stuff ...
+	float Examine;
+	int m_ShrinkQuality;
+
 
 * win32 osc build fun ...
 * re-factor more ...

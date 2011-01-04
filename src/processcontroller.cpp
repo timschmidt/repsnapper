@@ -22,6 +22,7 @@
 #include <boost/algorithm/string.hpp>
 #include <libconfig.h++>
 #include "progress.h"
+#include "settings.h"
 
 using namespace libconfig;
 using namespace std;
@@ -411,7 +412,7 @@ void ProcessController::LoadConfig(string filename)
 	if (not cfg.lookupValue("RaftBaseThickness",RaftBaseThickness))
 		RaftBaseThickness = 1;
 	if (not cfg.lookupValue("RaftBaseTemperature",RaftBaseTemperature))
-		RaftBaseThickness = 190;
+		RaftBaseTemperature = 190;
 	if (not cfg.lookupValue("RaftInterfaceLayerCount",RaftInterfaceLayerCount))
 		RaftInterfaceLayerCount = 2;
 	if (not cfg.lookupValue("RaftInterfaceMaterialPrDistanceRatio",RaftInterfaceMaterialPrDistanceRatio))

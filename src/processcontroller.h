@@ -176,7 +176,7 @@ public:
 	RFO rfo;
 	GCode gcode;
 
-	// Model derived: bounding box info
+	// Model derived: Bounding box info
 	Vector3f Center;
 	Vector3f Min;
 	Vector3f Max;
