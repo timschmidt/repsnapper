@@ -46,6 +46,33 @@
                           </object>
                         </child>
                         <child>
+                          <object class="GtkImageMenuItem" id="imagemenuitem1">
+                            <property name="visible">True</property>
+                            <property name="related_action">LoadSettings</property>
+                            <property name="use_stock">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkImageMenuItem" id="imagemenuitem2">
+                            <property name="visible">True</property>
+                            <property name="related_action">SaveSettings</property>
+                            <property name="use_stock">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkImageMenuItem" id="imagemenuitem3">
+                            <property name="visible">True</property>
+                            <property name="related_action">SaveSettingsAs</property>
+                            <property name="use_stock">True</property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkSeparatorMenuItem" id="separatormenuitem2">
+                            <property name="visible">True</property>
+                            <property name="use_action_appearance">False</property>
+                          </object>
+                        </child>
+                        <child>
                           <object class="GtkImageMenuItem" id="menu_quit">
                             <property name="label">gtk-quit</property>
                             <property name="visible">True</property>
@@ -125,6 +152,7 @@
                           <object class="GtkImageMenuItem" id="imagemenuitem10">
                             <property name="visible">True</property>
                             <property name="related_action">About</property>
+                            <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
                           </object>
                         </child>
@@ -2651,5 +2679,20 @@ and others I forgot... (needs updating)</property>
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkAction" id="LoadSettings">
+    <property name="label" translatable="yes">load settings</property>
+    <property name="short_label" translatable="yes">load settings</property>
+    <property name="tooltip" translatable="yes">Load application settings profile</property>
+  </object>
+  <object class="GtkAction" id="SaveSettings">
+    <property name="label" translatable="yes">save settings</property>
+    <property name="short_label" translatable="yes">save settings</property>
+    <property name="tooltip" translatable="yes">save application settings profile</property>
+  </object>
+  <object class="GtkAction" id="SaveSettingsAs">
+    <property name="label" translatable="yes">save settings as</property>
+    <property name="short_label" translatable="yes">save settings as</property>
+    <property name="tooltip" translatable="yes">save settings in a custom file</property>
   </object>
 </interface>

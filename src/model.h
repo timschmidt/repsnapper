@@ -20,8 +20,6 @@
 #define MODEL_VIEW_CONTROLLER_H
 
 #include <math.h>
-
-// Model related
 #include "stl.h"
 #include "rfo.h"
 #include "gcode.h"
@@ -31,8 +29,6 @@ enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 #ifdef WIN32
 #  pragma warning( disable : 4244 4267)
 #endif
-
-// Construct a model and a view, and link them together.
 
 class View;
 class ConnectView;
@@ -66,6 +62,9 @@ class Model : public Gtk::Window
 	void hide_on_response(int, Gtk::Dialog *dialog);
 	void show_dialog(const char *name);
 	void about_dialog();
+	void load_settings();
+	void save_settings();
+	void save_settings_as();
 
 	// interactive bits
 	void home_all();
@@ -102,7 +101,7 @@ public:
 	void Init();
 	void SimpleAdvancedToggle();
 
-	void SaveConfig(string path);
+	void SaveConfig(string filename);
 	void LoadConfig() { LoadConfig ("repsnapper.conf"); }
 	void LoadConfig(string filename);
 

@@ -93,6 +93,11 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
   const char *title;
 
   switch (t) {
+  case SETTINGS:
+    filter = "*.conf";
+    title = "Choose settings filename";
+    directory = model->settings.STLPath.c_str();
+    break;
   case GCODE:
     filter = "*.gcode";
     title = "Choose GCODE filename";
@@ -123,6 +128,12 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
     else
       model->WriteGCode (file);
     model->settings.GCodePath = directory_path;
+    break;
+  case SETTINGS:
+    if (o == OPEN)
+      model->LoadConfig (file);
+    else
+      model->SaveConfig (file);
     break;
   default:
   case STL:

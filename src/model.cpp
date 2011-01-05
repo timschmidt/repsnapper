@@ -450,6 +450,21 @@ void Model::temp_changed()
   m_temps[TempRow::BED]->update_temp (serial->getTempBed());
 }
 
+void Model::load_settings()
+{
+  FileChooser::ioDialog (this, FileChooser::OPEN, FileChooser::SETTINGS);
+}
+
+void Model::save_settings()
+{
+  SaveConfig ("repsnapper.conf");
+}
+
+void Model::save_settings_as()
+{
+  FileChooser::ioDialog (this, FileChooser::SAVE, FileChooser::SETTINGS);
+}
+
 Model::Model(BaseObjectType* cobject,
 					 const Glib::RefPtr<Gtk::Builder>& builder)
   : Gtk::Window(cobject), m_builder(builder)
@@ -467,6 +482,9 @@ Model::Model(BaseObjectType* cobject,
 						"raft_settings_dlg"));
   connect_action ("DisplaySettings", sigc::bind(sigc::mem_fun(*this, &Model::show_dialog),
 						"display_settings_dlg"));
+  connect_action ("LoadSettings",    sigc::mem_fun(*this, &Model::load_settings));
+  connect_action ("SaveSettings",    sigc::mem_fun(*this, &Model::save_settings));
+  connect_action ("SaveSettingsAs",  sigc::mem_fun(*this, &Model::save_settings_as));
 
 #if 0
   // Simple tab
@@ -626,9 +644,9 @@ void Model::Init()
 		 250 /* ms */);
 }
 
-void Model::SaveConfig(string path)
+void Model::SaveConfig(string filename)
 {
-  settings.save_settings (path);
+  settings.save_settings (filename);
 }
 
 void Model::LoadConfig(string filename)

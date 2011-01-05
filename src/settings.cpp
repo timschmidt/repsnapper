@@ -339,9 +339,6 @@ void Settings::load_settings (std::string filename)
     GCode.m_impl->m_GCodeLayerText->set_text (txt);
   if (cfg.lookupValue("GCodeEndText", txt))
     GCode.m_impl->m_GCodeEndText->set_text (txt);
-
-  // debug !
-  save_settings ("/dev/stdout");
 }
 
 void Settings::save_settings (std::string filename)
@@ -390,4 +387,14 @@ void Settings::save_settings (std::string filename)
       break;
     };
   }
+
+  // this is pretty unpleasant:
+  root.add ("ShrinkFast", libconfig::Setting::TypeBoolean) = (Slicing.ShrinkQuality == SHRINK_FAST);
+  root.add("ShrinkLogick", libconfig::Setting::TypeBoolean) = (Slicing.ShrinkQuality == SHRINK_LOGICK);
+
+  root.add("GCodeStartText", libconfig::Setting::TypeString) = GCode.getStartText();
+  root.add("GCodeLayerText", libconfig::Setting::TypeString) = GCode.getLayerText();
+  root.add("GCodeEndText", libconfig::Setting::TypeString) = GCode.getEndText();
+
+  cfg.writeFile (filename.c_str());
 }
