@@ -412,6 +412,13 @@ static struct {
   { "InterfaceRotation",        -360.0, 360.0, 45, 90 },
   { "BaseRotationPrLayer",      -360.0, 360.0, 45, 90 },
   { "InterfaceRotationPrLayer", -360.0, 360.0, 45, 90 },
+  { "BaseDistance",      0.1, 8.0, 0.1, 1 },
+  { "InterfaceDistance", 0.1, 8.0, 0.1, 1 },
+  { "BaseThickness",      0.1, 4.0, 0.1, 1 },
+  { "InterfaceThickness", 0.1, 4.0, 0.1, 1 },
+  { "BaseTemperature",      0.9, 1.2, 0.01, 0.1 },
+  { "InterfaceTemperature", 0.9, 1.2, 0.01, 0.1 },
+
   // Slicing
   { "Slicing.ShellCount", 0, 100, 1, 5 },
   { "Slicing.InfillRotation", -360, 360, 5, 45 },
@@ -419,6 +426,12 @@ static struct {
   { "Slicing.InfillDistance", 0, 10, 0.1, 1 },
   { "Slicing.AltInfillDistance", 0, 10, 0.1, 1 },
   { "Slicing.InfillDistance", 0, 10, 0.1, 1 },
+  { "Slicing.Optimization", 0.0, 1.0, 0.01, 0.1 },
+  { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
+  { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
+
+  // Hardware
+  { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
 };
 
 void Settings::set_to_gui (Builder &builder, int i)
@@ -475,7 +488,7 @@ void Settings::get_from_gui (Builder &builder, int i)
     Gtk::SpinButton *spin = NULL;
     builder->get_widget (glade_name, spin);
     if (!spin)
-      std::cerr << "Missing spin button config item " << glade_name << "\n";
+      std::cerr << "Missing, or different type button config item " << glade_name << "\n";
     else if (settings[i].type == T_INT)
       *PTR_INT(this, i) = spin->get_value();
     else

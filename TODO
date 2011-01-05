@@ -1,6 +1,7 @@
 --- the plan ---
 
-* Serial:
+* Serial
+	+ error dialogs - "failed to connect ?"
 	+ /dev/ttyUSB0 - EACCES
 		+ group / permissions problem.
 
@@ -30,9 +31,6 @@
 
 * serial connection
 	* add a test serial connection ...
-	* add better error reporting
-	* add signals to sync. with interactive display
-	  eg. temp / bed on etc.
 
 * RFO re-work
 	+ class name fixing: RFO_File etc.
@@ -44,8 +42,9 @@
 * re-factor MVC
 	* rename view.cpp etc. to render.cpp
 		* include SpinRows in view.cpp ...
-	* split modelviewcontroller.cpp to view.cpp etc.
-		* split out / create an 'RFOView' widget to (sanely) manipulate that treeview
+	* split chunks of model.cpp to view.cpp etc.
+		* split out / create an 'RFOView' widget to (sanely)
+		  manipulate that treeview
 
 * bug fixing:
 	+ arcball / rotation resetting ...
