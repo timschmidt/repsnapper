@@ -75,7 +75,8 @@ static struct {
 } settings[] = {
   // Raft:
 
-  FLOAT_MEMBER (Raft.Size, "RaftSize", 1.33),
+  BOOL_MEMBER  (RaftEnable, "RaftEnable", false),
+  FLOAT_MEMBER (Raft.Size,  "RaftSize",   1.33),
 #define FLOAT_PHASE_MEMBER(phase, phasestd, member, def_value) \
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_##phase].member), T_FLOAT, \
     #phasestd #member, #phasestd #member, def_value, }
@@ -104,9 +105,9 @@ static struct {
 
   // Hardware
   FLOAT_MEMBER (Hardware.MinPrintSpeedXY, "MinPrintSpeedXY", 1000),
-  FLOAT_MEMBER (Hardware.MinPrintSpeedXY, "MaxPrintSpeedXY", 4000),
+  FLOAT_MEMBER (Hardware.MaxPrintSpeedXY, "MaxPrintSpeedXY", 4000),
   FLOAT_MEMBER (Hardware.MinPrintSpeedZ,  "MinPrintSpeedZ",  50),
-  FLOAT_MEMBER (Hardware.MinPrintSpeedZ,  "MaxPrintSpeedZ",  150),
+  FLOAT_MEMBER (Hardware.MaxPrintSpeedZ,  "MaxPrintSpeedZ",  150),
 
   FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5),
   FLOAT_MEMBER (Hardware.ExtrusionFactor, "ExtrusionFactor", 1.0),
@@ -402,9 +403,11 @@ static struct {
   double inc, inc_page;
 } ranges[] = {
   { "Slicing.ShellCount", 0, 100, 1, 5 },
-  { "Slicing.Rotate", -360, 360, 5, 45 },
-  { "Slicing.InFillRotation", -360, 360, 5, 90 },
-  { "Slicing.InFillDistance", 0, 10, 0.1, 1 },
+  { "Slicing.InfillRotation", -360, 360, 5, 45 },
+  { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
+  { "Slicing.InfillDistance", 0, 10, 0.1, 1 },
+  { "Slicing.AltInfillDistance", 0, 10, 0.1, 1 },
+  { "Slicing.InfillDistance", 0, 10, 0.1, 1 },
 };
 
 void Settings::set_to_gui (Builder &builder, int i)

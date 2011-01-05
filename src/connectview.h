@@ -35,9 +35,10 @@ class ConnectView : public Gtk::VBox {
   RepRapSerial      *m_serial;
   Settings          *m_settings;
 
-  void connect_toggled();
-  void try_set_state(bool connected);
-  void serial_state_changed(int state);
+  void connect_toggled ();
+  void try_set_state (bool connected);
+  void serial_state_changed (int state);
+  void signal_entry_changed ();
  public:
   ConnectView(RepRapSerial *serial, Settings *settings, bool show_connect = true);
 };

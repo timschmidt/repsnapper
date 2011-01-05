@@ -73,6 +73,12 @@ void ConnectView::connect_toggled()
     try_set_state (m_connect.get_active ());
 }
 
+void ConnectView::signal_entry_changed()
+{
+  m_settings->Hardware.PortName = m_combo.get_active_text();
+  std::cerr << "combo " << m_combo.get_active_text() << "\n";
+}
+
 ConnectView::ConnectView (RepRapSerial *serial,
 			  Settings *settings,
 			  bool show_connect)
@@ -89,6 +95,8 @@ ConnectView::ConnectView (RepRapSerial *serial,
 
   m_connect.signal_toggled().connect (sigc::mem_fun (*this, &ConnectView::connect_toggled));
   m_serial->signal_state_changed().connect (sigc::mem_fun (*this, &ConnectView::serial_state_changed));
+  m_combo.get_entry()->set_text (settings->Hardware.PortName);
+  m_combo.get_entry()->signal_activate().connect (sigc::mem_fun (*this, &ConnectView::signal_entry_changed));
 
   show_all ();
   if (!show_connect)

@@ -49,6 +49,7 @@
                           <object class="GtkImageMenuItem" id="imagemenuitem1">
                             <property name="visible">True</property>
                             <property name="related_action">LoadSettings</property>
+                            <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
                           </object>
                         </child>
@@ -56,6 +57,7 @@
                           <object class="GtkImageMenuItem" id="imagemenuitem2">
                             <property name="visible">True</property>
                             <property name="related_action">SaveSettings</property>
+                            <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
                           </object>
                         </child>
@@ -63,6 +65,7 @@
                           <object class="GtkImageMenuItem" id="imagemenuitem3">
                             <property name="visible">True</property>
                             <property name="related_action">SaveSettingsAs</property>
+                            <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
                           </object>
                         </child>
@@ -1615,7 +1618,7 @@ and others I forgot... (needs updating)</property>
           <object class="GtkHBox" id="hbox15">
             <property name="visible">True</property>
             <child>
-              <object class="GtkCheckButton" id="checkbutton1">
+              <object class="GtkCheckButton" id="Slicing.UseIncrementalECode">
                 <property name="label" translatable="yes">Incremental ecode</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -1629,7 +1632,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkCheckButton" id="checkbutton2">
+              <object class="GtkCheckButton" id="Slicing.Use3DGcode">
                 <property name="label" translatable="yes">Use 3D GCode</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -1662,7 +1665,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton7">
+              <object class="GtkSpinButton" id="Hardware.ExtrudedMaterialWidth">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="tooltip_text" translatable="yes">Width of extruded filament, ie. slightly larger than the nozzle size</property>
@@ -1682,7 +1685,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton9">
+              <object class="GtkSpinButton" id="Hardware.LayerThickness">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -1709,7 +1712,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton8">
+              <object class="GtkSpinButton" id="Hardware.ExtrusionFactor">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="tooltip_text" translatable="yes">multiplier by which we create excess material as we extrude.</property>
@@ -1780,7 +1783,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton10">
+              <object class="GtkSpinButton" id="Hardware.MinPrintSpeedXY">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -1791,7 +1794,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton11">
+              <object class="GtkSpinButton" id="Hardware.MinPrintSpeedZ">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -1804,7 +1807,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton12">
+              <object class="GtkSpinButton" id="Hardware.MaxPrintSpeedXY">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -1815,7 +1818,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton13">
+              <object class="GtkSpinButton" id="Hardware.MaxPrintSpeedZ">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -1833,6 +1836,15 @@ and others I forgot... (needs updating)</property>
           </packing>
         </child>
         <child>
+          <object class="GtkLabel" id="label8">
+            <property name="visible">True</property>
+            <property name="label" translatable="yes">Serial Communications</property>
+          </object>
+          <packing>
+            <property name="position">9</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkHBox" id="hbox18">
             <property name="visible">True</property>
             <child>
@@ -1845,7 +1857,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton14">
+              <object class="GtkSpinButton" id="Hardware.ReceivingBufferSize">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -1859,20 +1871,59 @@ and others I forgot... (needs updating)</property>
             </child>
           </object>
           <packing>
-            <property name="position">9</property>
+            <property name="position">10</property>
           </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkHBox" id="hbox5">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkLabel" id="label7">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Serial link speed</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkComboBoxEntry" id="Hardware.SerialSpeed">
+                <property name="visible">True</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">11</property>
+          </packing>
         </child>
         <child>
-          <placeholder/>
+          <object class="GtkCheckButton" id="Hardware.ValidateConnection">
+            <property name="label" translatable="yes">Validate connection</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="use_action_appearance">False</property>
+            <property name="draw_indicator">True</property>
+          </object>
+          <packing>
+            <property name="position">12</property>
+          </packing>
         </child>
         <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
+          <object class="GtkCheckButton" id="Hardware.KeepLines">
+            <property name="label" translatable="yes">Keep lines</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="use_action_appearance">False</property>
+            <property name="draw_indicator">True</property>
+          </object>
+          <packing>
+            <property name="position">13</property>
+          </packing>
         </child>
         <child>
           <placeholder/>
@@ -1908,9 +1959,10 @@ and others I forgot... (needs updating)</property>
     <child internal-child="vbox">
       <object class="GtkVBox" id="dialog-vbox3">
         <property name="visible">True</property>
+        <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child>
-          <object class="GtkCheckButton" id="checkbutton3">
+          <object class="GtkCheckButton" id="RaftEnable">
             <property name="label" translatable="yes">raft enable</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -1943,7 +1995,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton17">
+              <object class="GtkSpinButton" id="Raft.Size">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2028,7 +2080,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton18">
+              <object class="GtkSpinButton" id="BaseLayerCount">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2039,7 +2091,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton21">
+              <object class="GtkSpinButton" id="BaseMaterialDistanceRatio">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2052,7 +2104,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton22">
+              <object class="GtkSpinButton" id="BaseRotation">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2065,7 +2117,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton23">
+              <object class="GtkSpinButton" id="BaseDistance">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2078,7 +2130,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton24">
+              <object class="GtkSpinButton" id="BaseThickness">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2091,7 +2143,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton25">
+              <object class="GtkSpinButton" id="BaseTemperature">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2179,7 +2231,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton26">
+              <object class="GtkSpinButton" id="InterfaceLayerCount">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2191,7 +2243,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton27">
+              <object class="GtkSpinButton" id="InterfaceMaterialDistanceRatio">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2205,7 +2257,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton28">
+              <object class="GtkSpinButton" id="InterfaceRotation">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2219,7 +2271,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton29">
+              <object class="GtkSpinButton" id="InterfaceDistance">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2233,7 +2285,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton30">
+              <object class="GtkSpinButton" id="InterfaceThickness">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2247,7 +2299,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton31">
+              <object class="GtkSpinButton" id="InterfaceTemperature">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2376,7 +2428,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="Slicing.InFillRotation">
+              <object class="GtkSpinButton" id="Slicing.InfillRotation">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2390,7 +2442,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="Slicing.InFillRotationPrLayer">
+              <object class="GtkSpinButton" id="Slicing.InfillRotationPrLayer">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2402,7 +2454,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="Slicing.InFillDistance">
+              <object class="GtkSpinButton" id="Slicing.InfillDistance">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2433,7 +2485,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkEntry" id="entry2">
+              <object class="GtkEntry" id="Slicing.AltInfillLayersText">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2453,7 +2505,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkComboBoxEntry" id="comboboxentry2">
+              <object class="GtkComboBoxEntry" id="Slicing.AltInfillDistance">
                 <property name="visible">True</property>
               </object>
               <packing>
@@ -2487,7 +2539,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkComboBoxEntry" id="comboboxentry3">
+              <object class="GtkComboBoxEntry" id="Slicing.ShrinkQuality">
                 <property name="visible">True</property>
               </object>
               <packing>
@@ -2512,7 +2564,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton19">
+              <object class="GtkSpinButton" id="Slicing.Optimization">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
