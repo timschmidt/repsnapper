@@ -417,7 +417,7 @@ static struct {
   { "Slicing.InfillRotation", -360, 360, 5, 45 },
   { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
   { "Slicing.InfillDistance", 0, 10, 0.1, 1 },
-  { "Slicing.AltInfillDistance", 0, 10, 0.1, 1 },
+  { "Slicing.AltInfillDistance", 0, 10, 0.1, 2 },
   { "Slicing.InfillDistance", 0, 10, 0.1, 1 },
 };
 

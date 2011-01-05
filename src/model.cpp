@@ -474,14 +474,8 @@ Model::Model(BaseObjectType* cobject,
   connect_action ("OpenGCode",       sigc::mem_fun(*this, &Model::load_gcode) );
   connect_action ("Quit",            sigc::ptr_fun(&Gtk::Main::quit));
   connect_action ("About",           sigc::mem_fun(*this, &Model::about_dialog) );
-  connect_action ("HardwareSettings",sigc::bind(sigc::mem_fun(*this, &Model::show_dialog),
-						"hardware_settings_dlg"));
-  connect_action ("SlicingSettings", sigc::bind(sigc::mem_fun(*this, &Model::show_dialog),
-						"slicing_settings_dlg"));
-  connect_action ("RaftSettings",    sigc::bind(sigc::mem_fun(*this, &Model::show_dialog),
-						"raft_settings_dlg"));
-  connect_action ("DisplaySettings", sigc::bind(sigc::mem_fun(*this, &Model::show_dialog),
-						"display_settings_dlg"));
+						
+  connect_action ("PreferencesDialog", sigc::bind(sigc::mem_fun(*this, &Model::show_dialog), "preferences_dlg"));						
   connect_action ("LoadSettings",    sigc::mem_fun(*this, &Model::load_settings));
   connect_action ("SaveSettings",    sigc::mem_fun(*this, &Model::save_settings));
   connect_action ("SaveSettingsAs",  sigc::mem_fun(*this, &Model::save_settings_as));
