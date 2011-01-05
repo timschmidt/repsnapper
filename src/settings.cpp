@@ -402,6 +402,17 @@ static struct {
   double min, max;
   double inc, inc_page;
 } ranges[] = {
+  // Raft
+  { "Raft.Size", 0, 50, 1, 3 },
+  { "BaseLayerCount",      0, 8, 1, 2 },
+  { "InterfaceLayerCount", 0, 8, 1, 2 },
+  { "BaseMaterialDistanceRatio",      0.1, 4.0, 0.1, 1 },
+  { "InterfaceMaterialDistanceRatio", 0.1, 4.0, 0.1, 1 },
+  { "BaseRotation",             -360.0, 360.0, 45, 90 },
+  { "InterfaceRotation",        -360.0, 360.0, 45, 90 },
+  { "BaseRotationPrLayer",      -360.0, 360.0, 45, 90 },
+  { "InterfaceRotationPrLayer", -360.0, 360.0, 45, 90 },
+  // Slicing
   { "Slicing.ShellCount", 0, 100, 1, 5 },
   { "Slicing.InfillRotation", -360, 360, 5, 45 },
   { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
