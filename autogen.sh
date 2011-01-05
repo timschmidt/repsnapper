@@ -42,7 +42,7 @@ conf_args=$(requote "$@")
 
 autoreconf -i
 aclocal $ACLOCAL_FLAGS || exit 1;
-intltoolize --copy --force --automake
+intltoolize --copy --force --automake || exit 1;
 if test "x$NOCONFIGURE" = "x"; then
     if test -n "$old_args" ; then
         eval `echo ./configure $old_args`
