@@ -3,7 +3,6 @@
 * Serial:
 	+ /dev/ttyUSB0 - EACCES
 		+ group / permissions problem.
-	+ work out why logging doesn't work ...
 
 * Settings re-factor
 	+ stop Model being a widget ...

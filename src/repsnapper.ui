@@ -1235,6 +1235,7 @@
                     </child>
                   </object>
                   <packing>
+                    <property name="expand">False</property>
                     <property name="position">13</property>
                   </packing>
                 </child>
@@ -1242,9 +1243,11 @@
                   <object class="GtkExpander" id="serial logging">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="expanded">True</property>
                     <child>
                       <object class="GtkVBox" id="vbox5">
                         <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
                         <child>
                           <object class="GtkNotebook" id="notebook3">
                             <property name="visible">True</property>
@@ -1259,6 +1262,7 @@
                                   <object class="GtkTextView" id="i_txt_comms">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="editable">False</property>
                                   </object>
                                 </child>
                               </object>
@@ -1293,6 +1297,7 @@
                               <object class="GtkLabel" id="label32">
                                 <property name="visible">True</property>
                                 <property name="label" translatable="yes">Errors / warnings</property>
+                                <property name="track_visited_links">False</property>
                               </object>
                               <packing>
                                 <property name="position">1</property>
@@ -1309,6 +1314,7 @@
                                   <object class="GtkTextView" id="i_txt_echo">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="editable">False</property>
                                   </object>
                                 </child>
                               </object>
@@ -1367,12 +1373,6 @@
                             <property name="position">1</property>
                           </packing>
                         </child>
-                        <child>
-                          <placeholder/>
-                        </child>
-                        <child>
-                          <placeholder/>
-                        </child>
                       </object>
                     </child>
                     <child type="label">
@@ -1385,12 +1385,6 @@
                   <packing>
                     <property name="position">14</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
               </object>
               <packing>

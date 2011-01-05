@@ -592,11 +592,11 @@ Model::Model(BaseObjectType* cobject,
 
   Gtk::TextView *log_view;
   m_builder->get_widget ("i_txt_comms", log_view);
-  textv->set_buffer (serial->get_log(RepRapSerial::LOG_COMMS));
+  log_view->set_buffer (serial->get_log (RepRapSerial::LOG_COMMS));
   m_builder->get_widget ("i_txt_errs", log_view);
-  textv->set_buffer (serial->get_log(RepRapSerial::LOG_ERRORS));
+  log_view->set_buffer (serial->get_log (RepRapSerial::LOG_ERRORS));
   m_builder->get_widget ("i_txt_echo", log_view);
-  textv->set_buffer (serial->get_log(RepRapSerial::LOG_ECHO));
+  log_view->set_buffer (serial->get_log (RepRapSerial::LOG_ECHO));
 
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
