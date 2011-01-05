@@ -39,7 +39,7 @@ SHARED_INC=arcball.h asyncserial.h convert.h \
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
 repsnapper_LDADD = $(GTK_LIBS) -L/usr/lib -lGLU -lGL -lfltk -lfltk_gl \
 		-lfltk_forms -lglut -lboost_thread-mt \
-		-lboost_system-mt -lconfig++ \
+		-lboost_system-mt \
 	       $(top_builddir)/libraries/polylib/libpolylib.a
 
 
