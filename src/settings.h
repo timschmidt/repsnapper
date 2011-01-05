@@ -164,6 +164,8 @@ class Settings {
   std::vector<std::string> CustomButtonGcode;
   std::vector<std::string> CustomButtonLabel;
 
+  void set_to_gui   (Builder &builder, int i);
+  void get_from_gui (Builder &builder, int i);
  public:
   Settings ();
   ~Settings();

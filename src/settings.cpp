@@ -22,13 +22,22 @@
 #include <libconfig.h++>
 #include <boost/algorithm/string.hpp>
 
+/*
+ * How settings are intended to work:
+ *
+ * The large table below provides pointers into a settings instance, and
+ * some simple (POD) type information for the common settings. It also
+ * provides the configuration name for each setting, and a Gtk::Builder
+ * XML widget name, with which the setting should be associated.
+ */
+
 // Allow passing as a pointer to something to
 // avoid including glibmm in every header.
 class Builder : public Glib::RefPtr<Gtk::Builder>
 {
 public:
-  Builder();
-  ~Builder();
+  Builder() {}
+  ~Builder() {}
 };
 
 #ifdef WIN32
@@ -172,6 +181,7 @@ static struct {
   FLOAT_MEMBER (Display.TempUpdateSpeed, "TempUpdateSpeed", 3),
 };
 
+
 class Settings::GCodeImpl {
 public:
   Glib::RefPtr<Gtk::TextBuffer> m_GCodeStartText;
@@ -206,19 +216,6 @@ Settings::Settings ()
 {
   GCode.m_impl = new GCodeImpl();
   set_defaults();
-}
-
-void Settings::connectToUI (Builder &builder)
-{
-  Gtk::TextView *textv = NULL;
-  builder->get_widget ("txt_gcode_start", textv);
-  textv->set_buffer (GCode.m_impl->m_GCodeStartText);
-  builder->get_widget ("txt_gcode_end", textv);
-  textv->set_buffer (GCode.m_impl->m_GCodeEndText);
-  builder->get_widget ("txt_gcode_next_layer", textv);
-  textv->set_buffer (GCode.m_impl->m_GCodeLayerText);
-
-#warning need to auto-connect all the above properties to the UI ...
 }
 
 std::string Settings::GCodeType::getStartText()
@@ -397,4 +394,139 @@ void Settings::save_settings (std::string filename)
   root.add("GCodeEndText", libconfig::Setting::TypeString) = GCode.getEndText();
 
   cfg.writeFile (filename.c_str());
+}
+
+static struct {
+  const char *widget;
+  double min, max;
+  double inc, inc_page;
+} ranges[] = {
+  { "Slicing.ShellCount", 0, 100, 1, 5 },
+  { "Slicing.Rotate", -360, 360, 5, 45 },
+  { "Slicing.InFillRotation", -360, 360, 5, 90 },
+  { "Slicing.InFillDistance", 0, 10, 0.1, 1 },
+};
+
+void Settings::set_to_gui (Builder &builder, int i)
+{
+  const char *glade_name = settings[i].glade_name;
+
+  switch (settings[i].type) {
+  case T_BOOL: {
+    Gtk::CheckButton *check = NULL;
+    builder->get_widget (glade_name, check);
+    if (!check)
+      std::cerr << "Missing boolean config item " << glade_name << "\n";
+    else
+      check->set_active (*PTR_BOOL(this, i));
+    break;
+  }
+  case T_INT:
+  case T_FLOAT: {
+    Gtk::SpinButton *spin = NULL;
+    builder->get_widget (glade_name, spin);
+    if (!spin)
+      std::cerr << "Missing spin button config item " << glade_name << "\n";
+    else if (settings[i].type == T_INT)
+      spin->set_value (*PTR_INT(this, i));
+    else
+      spin->set_value (*PTR_FLOAT(this, i));
+    break;
+  }
+  case T_STRING:
+    std::cerr << "string unimplemented " << glade_name << "\n";
+    break;
+  default:
+    std::cerr << "corrupt setting type\n";
+    break;
+  }
+}
+
+void Settings::get_from_gui (Builder &builder, int i)
+{
+  const char *glade_name = settings[i].glade_name;
+
+  switch (settings[i].type) {
+  case T_BOOL: {
+    Gtk::CheckButton *check = NULL;
+    builder->get_widget (glade_name, check);
+    if (!check)
+      std::cerr << "Missing boolean config item " << glade_name << "\n";
+    else
+      *PTR_BOOL(this, i) = check->get_active();
+    break;
+  }
+  case T_INT:
+  case T_FLOAT: {
+    Gtk::SpinButton *spin = NULL;
+    builder->get_widget (glade_name, spin);
+    if (!spin)
+      std::cerr << "Missing spin button config item " << glade_name << "\n";
+    else if (settings[i].type == T_INT)
+      *PTR_INT(this, i) = spin->get_value();
+    else
+      *PTR_FLOAT(this, i) = spin->get_value();
+    break;
+  }
+  case T_STRING:
+    std::cerr << "string get from gui unimplemented " << glade_name << "\n";
+    break;
+  default:
+    std::cerr << "corrupt setting type\n";
+    break;
+  }
+}
+
+void Settings::connectToUI (Builder &builder)
+{
+  Gtk::TextView *textv = NULL;
+  builder->get_widget ("txt_gcode_start", textv);
+  textv->set_buffer (GCode.m_impl->m_GCodeStartText);
+  builder->get_widget ("txt_gcode_end", textv);
+  textv->set_buffer (GCode.m_impl->m_GCodeEndText);
+  builder->get_widget ("txt_gcode_next_layer", textv);
+  textv->set_buffer (GCode.m_impl->m_GCodeLayerText);
+
+  // first setup ranges on spinbuttons ...
+  for (uint i = 0; i < G_N_ELEMENTS (ranges); i++) {
+    Gtk::SpinButton *spin = NULL;
+    builder->get_widget (ranges[i].widget, spin);
+    if (!spin)
+      std::cerr << "missing spin button of name '" << ranges[i].widget << "'\n";
+    else {
+      spin->set_range (ranges[i].min, ranges[i].max);
+      spin->set_increments (ranges[i].inc, ranges[i].inc_page);
+    }
+  }
+
+  // connect widget / values from our table
+  for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
+    const char *glade_name = settings[i].glade_name;
+
+    set_to_gui (builder, i);
+
+    switch (settings[i].type) {
+    case T_BOOL: {
+      Gtk::CheckButton *check = NULL;
+      builder->get_widget (glade_name, check);
+      if (check)
+	check->signal_toggled().connect
+	  (sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
+      break;
+    }
+    case T_INT:
+    case T_FLOAT: {
+      Gtk::SpinButton *spin = NULL;
+      builder->get_widget (glade_name, spin);
+      if (spin)
+	spin->signal_value_changed().connect
+	  (sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
+	break;
+    }
+    case T_STRING: // unimplemented
+      break;
+    default:
+      break;
+    }
+  }
 }

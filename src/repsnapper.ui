@@ -210,7 +210,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkButton" id="i_home_all1">
+                      <object class="GtkButton" id="i_home_all">
                         <property name="label" translatable="yes">Home All</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
@@ -2309,7 +2309,7 @@ and others I forgot... (needs updating)</property>
           </packing>
         </child>
         <child>
-          <object class="GtkCheckButton" id="checkbutton6">
+          <object class="GtkCheckButton" id="Slicing.ShellOnly">
             <property name="label" translatable="yes">Shell only - no infill</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -2364,7 +2364,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton33">
+              <object class="GtkSpinButton" id="Slicing.ShellCount">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2376,7 +2376,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton34">
+              <object class="GtkSpinButton" id="Slicing.InFillRotation">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2390,7 +2390,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton35">
+              <object class="GtkSpinButton" id="Slicing.InFillRotationPrLayer">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2402,7 +2402,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton36">
+              <object class="GtkSpinButton" id="Slicing.InFillDistance">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2545,7 +2545,7 @@ and others I forgot... (needs updating)</property>
               <placeholder/>
             </child>
             <child>
-              <object class="GtkCheckButton" id="checkbutton4">
+              <object class="GtkCheckButton" id="Slicing.EnableAcceleration">
                 <property name="label" translatable="yes">enable acceleration</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -2567,7 +2567,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton20">
+              <object class="GtkSpinButton" id="Hardware.DistanceToReachFullSpeed">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="tooltip_text" translatable="yes">The distance in mm required to reach full speed movement</property>
@@ -2592,7 +2592,7 @@ and others I forgot... (needs updating)</property>
           </packing>
         </child>
         <child>
-          <object class="GtkCheckButton" id="checkbutton5">
+          <object class="GtkCheckButton" id="Slicing.EnableAntiooze">
             <property name="label" translatable="yes">enable antiooze retraction</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
@@ -2616,7 +2616,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton15">
+              <object class="GtkSpinButton" id="Slicing.AntioozeDistance">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
@@ -2643,7 +2643,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child>
-              <object class="GtkSpinButton" id="spinbutton16">
+              <object class="GtkSpinButton" id="Slicing.AntioozeSpeed">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="invisible_char">&#x25CF;</property>
