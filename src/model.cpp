@@ -777,6 +777,9 @@ void Model::ConvertToGCode()
 	string GcodeStart = settings.GCode.getStartText();
 	string GcodeLayer = settings.GCode.getLayerText();
 	string GcodeEnd = settings.GCode.getEndText();
+
+	m_print_button->set_sensitive (false);
+	m_continue_button->set_sensitive (false);
 	m_progress->start ("Converting", Max.z);
 
 	// Make Layers
@@ -873,6 +876,8 @@ void Model::ConvertToGCode()
 			AntioozeDistance,
 			settings.Slicing.AntioozeSpeed);
 	m_progress->stop("Done");
+	m_continue_button->set_sensitive (true);
+	m_print_button->set_sensitive (true);
 }
 
 void Model::init()
