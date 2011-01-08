@@ -53,6 +53,7 @@ class Model : public Gtk::Window
 
 	void connect_button(const char *name, const sigc::slot<void> &slot);
 	void connect_action(const char *name, const sigc::slot<void> &slot);
+	void connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleButton *> &slot);
 	virtual bool on_delete_event(GdkEventAny* event);
 
 	void load_gcode();
@@ -71,13 +72,15 @@ class Model : public Gtk::Window
 
 	// interactive bits
 	void home_all();
-	void enable_logging_toggled(Gtk::ToggleButton *button);
+	void enable_logging_toggled (Gtk::ToggleButton *button);
+	void fan_enabled_toggled (Gtk::ToggleButton *button);
 	void clear_logs();
 	Gtk::CheckButton *m_extruder_reverse;
 	Gtk::SpinButton *m_extruder_speed;
 	Gtk::SpinButton *m_extruder_length;
 	Gtk::SpinButton *m_extruder_speed_mult;
 	Gtk::SpinButton *m_extruder_length_mult;
+	Gtk::SpinButton *m_fan_voltage;
 	AxisRow *m_axis_rows[3];
 
 	TempRow *m_temps[2];
@@ -161,7 +164,6 @@ public:
 	void EnableTempReading(bool on);
 	void SetLogFileClear(bool on);
 	void SwitchPower(bool on);
-	void SetFan(int val);
 
 	// LUA stuff
 	void AddText(string line);

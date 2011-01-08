@@ -81,6 +81,17 @@ void Model::connect_action(const char *name, const sigc::slot<void> &slot)
   }
 }
 
+void Model::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleButton *> &slot)
+{
+  Gtk::ToggleButton *button = NULL;
+  m_builder->get_widget (name, button);
+  if (button)
+    button->signal_toggled().connect (sigc::bind(slot, button));
+  else {
+    std::cerr << "missing toggle button " << name << "\n";
+  }
+}
+
 void Model::load_gcode ()
 {
   FileChooser::ioDialog (this, FileChooser::OPEN, FileChooser::GCODE);
@@ -147,9 +158,20 @@ void Model::power_toggled()
     serial->SendNow("M81");
 }
 
-void Model::enable_logging_toggled(Gtk::ToggleButton *button)
+void Model::enable_logging_toggled (Gtk::ToggleButton *button)
 {
   settings.Misc.FileLoggingEnabled = button->get_active();
+}
+
+void Model::fan_enabled_toggled (Gtk::ToggleButton *button)
+{
+  if (!button->get_active())
+    serial->SendNow("M107");
+  else {
+    std::stringstream oss;
+    oss << "M106 S" << (int)m_fan_voltage->get_value();
+    serial->SendNow (oss.str());
+  }
 }
 
 void Model::clear_logs()
@@ -553,11 +575,9 @@ Model::Model(BaseObjectType* cobject,
   m_continue_button->signal_clicked().connect (sigc::mem_fun(*this, &Model::ContinuePauseButton));
 
   // Interactive tab
-  connect_button ("i_home_all",       sigc::mem_fun(*this, &Model::home_all));
-  Gtk::ToggleButton *tbutton;
-  m_builder->get_widget ("i_enable_logging", tbutton);
-  tbutton->signal_toggled().connect  (sigc::bind(sigc::mem_fun(*this, &Model::enable_logging_toggled), tbutton));
-  connect_button ("i_clear_logs",     sigc::mem_fun(*this, &Model::clear_logs) );
+  connect_button ("i_home_all",        sigc::mem_fun(*this, &Model::home_all));
+  connect_toggled ("i_enable_logging", sigc::mem_fun(*this, &Model::enable_logging_toggled));
+  connect_button ("i_clear_logs",      sigc::mem_fun(*this, &Model::clear_logs) );
   m_builder->get_widget ("i_reverse", m_extruder_reverse);
   m_builder->get_widget ("i_ex_speed", m_extruder_speed);
   m_extruder_speed->set_range(100.0, 10000.0);
@@ -567,6 +587,12 @@ Model::Model(BaseObjectType* cobject,
   m_extruder_length->set_range(0.0, 1000.0);
   m_extruder_length->set_increments (5, 20);
   m_extruder_length->set_value (150.0);
+  // FIXME: connect i_update_interval (etc.)
+  connect_toggled ("i_fan_enabled", sigc::mem_fun(*this, &Model::fan_enabled_toggled));
+  m_builder->get_widget ("i_fan_voltage", m_fan_voltage);
+  m_fan_voltage->set_range(0.0, 25.0);
+  m_fan_voltage->set_increments (1, 2);
+  m_fan_voltage->set_value (5.0);
 
   // Should these guys really be hardware settings on that page:
   // DownstreamMultiplier etc. ?
@@ -579,7 +605,6 @@ Model::Model(BaseObjectType* cobject,
   m_extruder_length_mult->set_increments (0.1, 1);
   m_extruder_length_mult->set_value (1.0);
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &Model::RunExtruder) );
-  // FIXME: connect i_update_interval (etc.)
 
   // Main view progress bar
   Gtk::Box *box = NULL;
@@ -990,18 +1015,6 @@ void Model::Print()
 	gcode.queue_to_serial (serial);
 	m_progress->start ("Printing", serial->Length());
 	serial->StartPrint();
-}
-
-void Model::SetFan(int val)
-{
-	if(val != 0)
-	{
-		std::stringstream oss;
-		oss << "M106 S" << val;
-		serial->SendNow(oss.str());
-	}
-	else
-		serial->SendNow("M107");
 }
 
 void Model::RunExtruder()
