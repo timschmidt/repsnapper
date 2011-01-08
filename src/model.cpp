@@ -35,6 +35,23 @@
 #include "connectview.h"
 #include "reprapserial.h"
 
+// Exception safe guard to stop people printing
+// GCode while loading it / converting etc.
+struct PrintInhibitor {
+  Model *m_mvc;
+public:
+  PrintInhibitor(Model *mvc) : m_mvc (mvc)
+  {
+    m_mvc->m_continue_button->set_sensitive (false);
+    m_mvc->m_print_button->set_sensitive (false);
+  }
+  ~PrintInhibitor()
+  {
+    m_mvc->m_continue_button->set_sensitive (true);
+    m_mvc->m_print_button->set_sensitive (true);
+  }
+};
+
 bool Model::on_delete_event(GdkEventAny* event)
 {
   Gtk::Main::quit();
@@ -765,6 +782,7 @@ string Model::ValidateComPort (const string &port)
 
 void Model::ReadGCode(string filename)
 {
+  PrintInhibitor inhibitPrint(this);
   m_progress->start ("Converting", 100.0);
   gcode.Read (this, m_progress, filename);
   m_progress->stop ("Done");
@@ -778,8 +796,7 @@ void Model::ConvertToGCode()
 	string GcodeLayer = settings.GCode.getLayerText();
 	string GcodeEnd = settings.GCode.getEndText();
 
-	m_print_button->set_sensitive (false);
-	m_continue_button->set_sensitive (false);
+	PrintInhibitor inhibitPrint(this);
 	m_progress->start ("Converting", Max.z);
 
 	// Make Layers
@@ -876,8 +893,6 @@ void Model::ConvertToGCode()
 			AntioozeDistance,
 			settings.Slicing.AntioozeSpeed);
 	m_progress->stop("Done");
-	m_continue_button->set_sensitive (true);
-	m_print_button->set_sensitive (true);
 }
 
 void Model::init()

@@ -33,6 +33,7 @@ enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 class View;
 class ConnectView;
 class RepRapSerial;
+class PrintInhibitor;
 
 class Model : public Gtk::Window
 {
@@ -44,6 +45,8 @@ class Model : public Gtk::Window
 	Progress *m_progress;
 	ConnectView *m_view;
 	Gtk::Entry *m_gcode_entry;
+
+	friend class PrintInhibitor;
 	Gtk::Button *m_print_button;
 	Gtk::Button *m_continue_button;
 	Gtk::ToggleButton *m_power_button;
