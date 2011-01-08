@@ -126,7 +126,7 @@ static struct {
 
   FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidth, "ExtrudedMaterialWidth", 0.7),
   STRING_MEMBER (Hardware.PortName, "msPortName", DEFAULT_COM_PORT),
-  INT_MEMBER    (Hardware.SerialSpeed, "miSerialSpeed", 57600),
+  { OFFSET (Hardware.SerialSpeed), T_INT, "miSerialSpeed", NULL, 19200, }, /* 57600 ? */
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true),
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000),
   INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4),
@@ -307,6 +307,8 @@ void Settings::load_settings (std::string filename)
 
     for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
       const char *name = settings[i].config_name;
+      if (!name)
+	continue;
       switch (settings[i].type) {
       case T_BOOL:
 	cfg.lookupValue (name, *PTR_BOOL(this, i));
@@ -352,6 +354,9 @@ void Settings::save_settings (std::string filename)
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
     libconfig::Setting::Type t;
     const char *name = settings[i].config_name;
+
+    if (!name)
+      continue;
 
     switch (settings[i].type) {
     case T_BOOL: 
@@ -540,6 +545,9 @@ void Settings::connectToUI (Builder &builder)
   // connect widget / values from our table
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
     const char *glade_name = settings[i].glade_name;
+
+    if (!glade_name)
+      continue;
 
     set_to_gui (builder, i);
 
