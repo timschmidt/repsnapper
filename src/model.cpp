@@ -567,7 +567,19 @@ Model::Model(BaseObjectType* cobject,
   m_extruder_length->set_range(0.0, 1000.0);
   m_extruder_length->set_increments (5, 20);
   m_extruder_length->set_value (150.0);
+
+  // Should these guys really be hardware settings on that page:
+  // DownstreamMultiplier etc. ?
+  m_builder->get_widget ("i_ex_speed_mult", m_extruder_speed_mult);
+  m_extruder_speed_mult->set_range(0.1, 10.0);
+  m_extruder_speed_mult->set_increments (0.1, 1);
+  m_extruder_speed_mult->set_value (1.0);
+  m_builder->get_widget ("i_ex_length_mult", m_extruder_length_mult);
+  m_extruder_length_mult->set_range(0.1, 10.0);
+  m_extruder_length_mult->set_increments (0.1, 1);
+  m_extruder_length_mult->set_value (1.0);
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &Model::RunExtruder) );
+  // FIXME: connect i_update_interval (etc.)
 
   // Main view progress bar
   Gtk::Box *box = NULL;

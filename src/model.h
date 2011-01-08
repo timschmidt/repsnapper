@@ -76,6 +76,8 @@ class Model : public Gtk::Window
 	Gtk::CheckButton *m_extruder_reverse;
 	Gtk::SpinButton *m_extruder_speed;
 	Gtk::SpinButton *m_extruder_length;
+	Gtk::SpinButton *m_extruder_speed_mult;
+	Gtk::SpinButton *m_extruder_length_mult;
 	AxisRow *m_axis_rows[3];
 
 	TempRow *m_temps[2];
