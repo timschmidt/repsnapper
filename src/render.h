@@ -26,7 +26,7 @@ class gllight;
 class ArcBallT;
 class Settings;
 
-class View : public Gtk::GL::DrawingArea
+class Render : public Gtk::GL::DrawingArea
 {
   ArcBall  *m_arcBall;
   Matrix4fT m_transform;
@@ -44,8 +44,8 @@ class View : public Gtk::GL::DrawingArea
   void selection_changed();
 
  public:
-  View (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection);
-  ~View();
+  Render (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection);
+  ~Render();
 
   virtual bool on_configure_event(GdkEventConfigure* event);
   virtual bool on_expose_event(GdkEventExpose* event);

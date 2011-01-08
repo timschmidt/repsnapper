@@ -4,9 +4,15 @@
 	+ error dialogs - "failed to connect ?"
 	+ /dev/ttyUSB0 - EACCES
 		+ group / permissions problem.
+		+ you need to tweak permissions, or add yourself
+		  to XYZ group, and re-login ...
 
 * Settings re-factor
 	+ stop Model being a widget ...
+
+* Finish the 'Display' settings page
+* add Hardware Settings profiles:
+	+ "Mendel", "XYZ", "etc." ? :-)
 
 * do settings work ...
 	* auto-connect settings to the UI

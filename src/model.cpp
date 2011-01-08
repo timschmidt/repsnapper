@@ -28,8 +28,8 @@
 #include "stdafx.h"
 #include "model.h"
 #include "rfo.h"
-#include "view.h"
 #include "file.h"
+#include "render.h"
 #include "settings.h"
 #include "progress.h"
 #include "connectview.h"
@@ -491,8 +491,9 @@ Model::Model(BaseObjectType* cobject,
   connect_action ("OpenGCode",       sigc::mem_fun(*this, &Model::load_gcode) );
   connect_action ("Quit",            sigc::ptr_fun(&Gtk::Main::quit));
   connect_action ("About",           sigc::mem_fun(*this, &Model::about_dialog) );
-						
-  connect_action ("PreferencesDialog", sigc::bind(sigc::mem_fun(*this, &Model::show_dialog), "preferences_dlg"));						
+
+  connect_action ("PreferencesDialog", sigc::bind(sigc::mem_fun(*this, &Model::show_dialog),
+						  "preferences_dlg"));
   connect_action ("LoadSettings",    sigc::mem_fun(*this, &Model::load_settings));
   connect_action ("SaveSettings",    sigc::mem_fun(*this, &Model::save_settings));
   connect_action ("SaveSettingsAs",  sigc::mem_fun(*this, &Model::save_settings_as));
@@ -615,7 +616,7 @@ Model::Model(BaseObjectType* cobject,
   if (!pBox)
     std::cerr << "missing box!";
   else {
-    Gtk::Widget *view = new View (this, m_rfo_tree->get_selection());
+    Gtk::Widget *view = new Render (this, m_rfo_tree->get_selection());
     pBox->add (*view);
     Gtk::Window *pWindow = NULL;
     m_builder->get_widget("main_window", pWindow);

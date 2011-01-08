@@ -18,7 +18,7 @@
 */
 #include "config.h"
 #include "stdafx.h"
-#include "view.h"
+#include "render.h"
 #include "arcball.h"
 #include "gllight.h"
 #include "settings.h"
@@ -26,7 +26,7 @@
 
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
-View::View (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection) :
+Render::Render (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection) :
   m_arcBall(new ArcBall()), m_model(model), m_selection(selection)
 {
   set_events (Gdk::POINTER_MOTION_MASK |
@@ -57,21 +57,21 @@ View::View (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection) :
   for (uint i = 0; i < N_LIGHTS; i++)
     m_lights[i] = NULL;
 
-  model->signal_rfo_changed().connect (sigc::mem_fun(*this, &View::rfo_changed));
-  m_selection->signal_changed().connect (sigc::mem_fun(*this, &View::selection_changed));
+  model->signal_rfo_changed().connect (sigc::mem_fun(*this, &Render::rfo_changed));
+  m_selection->signal_changed().connect (sigc::mem_fun(*this, &Render::selection_changed));
 }
 
-View::~View()
+Render::~Render()
 {
   delete m_arcBall;
 }
 
-void View::selection_changed()
+void Render::selection_changed()
 {
   queue_draw();
 }
 
-void View::rfo_changed()
+void Render::rfo_changed()
 {
   if (!m_model->rfo.Objects.size())
     return;
@@ -80,7 +80,7 @@ void View::rfo_changed()
   queue_draw();
 }
 
-bool View::on_configure_event(GdkEventConfigure* event)
+bool Render::on_configure_event(GdkEventConfigure* event)
 {
   Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
   if (!gldrawable->gl_begin(get_gl_context()))
@@ -128,7 +128,7 @@ bool View::on_configure_event(GdkEventConfigure* event)
   return true;
 }
 
-bool View::on_expose_event(GdkEventExpose* event)
+bool Render::on_expose_event(GdkEventExpose* event)
 {
   Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
   if (!gldrawable->gl_begin(get_gl_context()))
@@ -158,7 +158,7 @@ bool View::on_expose_event(GdkEventExpose* event)
     return true;
 }
 
-bool View::on_button_press_event(GdkEventButton* event)
+bool Render::on_button_press_event(GdkEventButton* event)
 {
   if (event->button == 1)
     m_arcBall->click (event->x, event->y);
@@ -169,7 +169,7 @@ bool View::on_button_press_event(GdkEventButton* event)
   return true;
 }
 
-bool View::on_scroll_event(GdkEventScroll* event)
+bool Render::on_scroll_event(GdkEventScroll* event)
 {
   double factor = 110.0/100.0;
   if (event->direction == GDK_SCROLL_UP)
@@ -180,7 +180,7 @@ bool View::on_scroll_event(GdkEventScroll* event)
   return true;
 }
 
-bool View::on_motion_notify_event(GdkEventMotion* event)
+bool Render::on_motion_notify_event(GdkEventMotion* event)
 {
   if (event->state & GDK_BUTTON1_MASK) {
     m_arcBall->dragAccumulate(event->x, event->y, &m_transform);
@@ -206,14 +206,14 @@ bool View::on_motion_notify_event(GdkEventMotion* event)
   return Gtk::DrawingArea::on_motion_notify_event (event);
 }
 
-void View::SetEnableLight(unsigned int i, bool on)
+void Render::SetEnableLight(unsigned int i, bool on)
 {
   assert (i < N_LIGHTS);
   m_lights[i]->Enable(on);
   queue_draw();
 }
 
-void View::CenterView()
+void Render::CenterView()
 {
   glTranslatef (-m_model->Center.x - m_model->printOffset.x,
 		-m_model->Center.y - m_model->printOffset.y,

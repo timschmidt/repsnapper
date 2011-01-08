@@ -115,9 +115,14 @@ static struct {
   FLOAT_MEMBER (Hardware.DownstreamMultiplier, "DownstreamMultiplier", 1.0),
   FLOAT_MEMBER (Hardware.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0),
 
-  // FIXME: Volume, PrintMargin etc. - needs splitting up ...
-  //  m_fVolume = Vector3f(200,200,140);
-  //  PrintMargin = Vector3f(10,10,0);
+  // Volume
+  { OFFSET (Hardware.Volume.x), T_FLOAT, "mfVolumeX", "Hardware.Volume.X", 200 },
+  { OFFSET (Hardware.Volume.y), T_FLOAT, "mfVolumeY", "Hardware.Volume.Y", 200 },
+  { OFFSET (Hardware.Volume.z), T_FLOAT, "mfVolumeZ", "Hardware.Volume.Z", 140 },
+  // PrintMargin
+  { OFFSET (Hardware.PrintMargin.x), T_FLOAT, "PrintMarginX", "Hardware.PrintMargin.X", 10 },
+  { OFFSET (Hardware.PrintMargin.y), T_FLOAT, "PrintMarginY", "Hardware.PrintMargin.Y", 10 },
+  { OFFSET (Hardware.PrintMargin.z), T_FLOAT, "PrintMarginZ", "Hardware.PrintMargin.Z", 0 },
 
   FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidth, "ExtrudedMaterialWidth", 0.7),
   STRING_MEMBER (Hardware.PortName, "msPortName", DEFAULT_COM_PORT),
@@ -431,6 +436,12 @@ static struct {
   { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
 
   // Hardware
+  { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },
+  { "Hardware.Volume.Y", 0.0, 1000.0, 5.0, 25.0 },
+  { "Hardware.Volume.Z", 0.0, 1000.0, 5.0, 25.0 },
+  { "Hardware.PrintMargin.X", 0.0, 100.0, 1.0, 5.0 },
+  { "Hardware.PrintMargin.Y", 0.0, 100.0, 1.0, 5.0 },
+  { "Hardware.PrintMargin.Z", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
 };
 

@@ -30,7 +30,7 @@ enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 #  pragma warning( disable : 4244 4267)
 #endif
 
-class View;
+class Render;
 class ConnectView;
 class RepRapSerial;
 class PrintInhibitor;
