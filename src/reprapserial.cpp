@@ -556,7 +556,7 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 				// Check parameter
 			}
 			// this is the common case for the modern 5D reprap firmware 
-			else if(command.substr(0,3) == "ok ") // search, there's a parameter string (debugstring)
+			else if(command.substr(0,2) == "ok") // search, there's a parameter string (debugstring)
 			{
 
 				//starting from the "ok", we'll parse the rest as "tokens"
@@ -571,7 +571,13 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 					
 					// we already know this is how the line starts:
 				        if ( s == "ok" ) { 
-					// do nothing more
+						// do nothing more
+
+					// this test allows for a "ok" to NOT be followed by a space, 
+					// but also potehtially matches any work starting with "ok" like "okydokey" and "okzigen"
+					} else if ( s.substr(0,2) == "ok" ) { 
+						// do nothing more
+                                                cout << "bad OK found without whitespace!, continuing" << s  << endl;
 
 					// temperature token:
 					} else if ( s.substr(0,2) == "T:" ) { 
@@ -591,6 +597,16 @@ void RepRapSerial::OnEvent(char* data, size_t dwBytesRead)
 						const char *old_value = gui->CurrentBedTempText->value();
 						if (!old_value || strcmp (bedtemp_param.c_str(), old_value))
 						gui->CurrentBedTempText->value(bedtemp_param.c_str());
+
+					// echo token goes to end of line
+                                        } else if ( s.substr(0,5) == "Echo:" )  {
+                                                // for now we can just dump the echoed gcode to console, if we want
+                                                //cout << s << remainder << endl;
+
+                                                // and to prevent individual parsing of all the gcode tokens
+                                                // we'll short-circuit the loop with this hack
+                                                remainder = "";
+
 
 					// a token we don't yet understand , dump to stdout for now
 					} else  {
