@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/select.h>
 
 typedef enum {
   /* Standard gcode, 'ok' response */
@@ -13,17 +14,41 @@ typedef enum {
   RR_E_UNSUPPORTED_PROTO = -3,
 } rr_error;
 
+typedef enum {
+  RR_PRIO_NORMAL,
+  RR_PRIO_HIGH,
+  RR_PRIO_COUNT
+} rr_prio;
+
+typedef void (*rr_recvcb)(char *);
+
+typedef struct blocknode {
+  char *block;
+  struct blocknode *next;
+} rr_blocknode;
+
+#define RECVBUFSIZE 256
 typedef struct {
   rr_proto proto;
   int fd;
+  rr_blocknode *sendheads[RR_PRIO_COUNT];
+  rr_blocknode *sendtails[RR_PRIO_COUNT];
+  char **sent;
   unsigned long lineno;
+  char *recvbuf;
+  size_t recvlen, recvsize;
+  rr_recvcb recvcb;
 } rr_dev;
 
-/* All return -1 and set errno on failure */
-
+/* open/close return -1 and set errno on failure */
 /* Initializes device with supplied params */
-int rr_open(rr_dev *device, rr_proto proto, const char *port, long speed);
+int rr_open(rr_dev *device, rr_proto proto, rr_recvcb recvcallback, const char *port, long speed);
+/* Close port and deallocate buffers */
+int rr_close(rr_dev *device);
 
-int rr_sendblock(const rr_dev *device, const char *block, size_t nbytes);
+/* Return to initial state */
+void rr_reset(rr_dev *device);
 
-int rr_close(const rr_dev *device);
+void rr_enqueue(rr_dev *device, rr_prio priority, const char *block, size_t nbytes);
+
+int rr_poll(rr_dev *device, const struct timeval *timeout);
