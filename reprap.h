@@ -24,7 +24,7 @@ typedef void (*rr_callback)(char *);
 
 typedef struct blocknode {
   char *block;
-  struct blocknode *next;
+  struct blocknode *prev, *next;
 } rr_blocknode;
 
 #define RECVBUFSIZE 256
@@ -33,7 +33,9 @@ typedef struct {
   int fd;
   rr_blocknode *sendheads[RR_PRIO_COUNT];
   rr_blocknode *sendtails[RR_PRIO_COUNT];
-  char **sent;
+  rr_blocknode *senthead;
+  rr_blocknode *senttail;
+  unsigned sentcached, maxsentcached;
   unsigned long lineno;
   char *recvbuf;
   size_t recvlen, recvsize;
@@ -42,7 +44,7 @@ typedef struct {
 
 /* open/close return -1 and set errno on failure */
 /* Initializes device with supplied params */
-int rr_open(rr_dev *device, rr_proto proto, rr_callback sendcallback, rr_callback recvcallback, const char *port, long speed);
+int rr_open(rr_dev *device, rr_proto proto, rr_callback sendcallback, rr_callback recvcallback, const char *port, long speed, size_t resend_cache_size);
 /* Close port and deallocate buffers */
 int rr_close(rr_dev *device);
 

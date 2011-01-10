@@ -9,7 +9,7 @@
 #include "serial.h"
 #include "gcode.h"
 
-int rr_open(rr_dev *device, rr_proto proto, rr_callback sendcallback, rr_callback recvcallback, const char *port, long speed) {
+int rr_open(rr_dev *device, rr_proto proto, rr_callback sendcallback, rr_callback recvcallback, const char *port, long speed, size_t resend_cache_size) {
   device->fd = serial_open(port, speed);
   if(device->fd < 0) {
     return -1;
@@ -25,11 +25,15 @@ int rr_open(rr_dev *device, rr_proto proto, rr_callback sendcallback, rr_callbac
   device->sendheads[RR_PRIO_HIGH] = NULL;
   device->sendtails[RR_PRIO_NORMAL] = NULL;
   device->sendtails[RR_PRIO_HIGH] = NULL;
+  device->senthead = NULL;
+  device->senttail = NULL;
+  device->sentcached = 0;
+  device->maxsentcached = resend_cache_size;
   return 0;
 }
 
 int rr_close(rr_dev *device) {
-  /* Deallocate memory */
+  /* Deallocate buffers and lists */
   free(device->recvbuf);
   while(device->sendheads[RR_PRIO_HIGH]) {
     rr_blocknode *next = device->sendheads[RR_PRIO_HIGH]->next;
@@ -42,6 +46,12 @@ int rr_close(rr_dev *device) {
     free(device->sendheads[RR_PRIO_NORMAL]->block);
     free(device->sendheads[RR_PRIO_NORMAL]);
     device->sendheads[RR_PRIO_NORMAL] = next;
+  }
+  while(device->senttail) {
+    rr_blocknode *next = device->senttail->next;
+    free(device->senttail->block);
+    free(device->senttail);
+    device->senttail = next;
   }
   
   /* Close FD */
@@ -70,7 +80,7 @@ int _sendblock_simple(const rr_dev *device, const char *block) {
   return 0;
 }
 
-int _sendblock_fived(const rr_dev *device, const char *block) {
+int _sendblock_fived(rr_dev *device, const char *block) {
   int result;
   /* Send block */
   char buf[GCODE_BLOCKSIZE];
@@ -88,6 +98,7 @@ int _sendblock_fived(const rr_dev *device, const char *block) {
 
   result = write(device->fd, buf, result-1);
   device->sendcb(buf);
+  ++(device->lineno);
   
   if(result < 0) {
     return RR_E_WRITE_FAILED;
@@ -96,13 +107,30 @@ int _sendblock_fived(const rr_dev *device, const char *block) {
   return 0;
 }
 
-int _sendblock(const rr_dev *device, const char *block) {
+int _sendblock(rr_dev *device, rr_blocknode *node) {
+  node->prev = NULL;
+  node->next = device->senthead;
+  if(device->senthead) {
+    device->senthead->prev = node;
+  } else {
+    device->senttail = node;
+  }
+  device->senthead = node;
+  ++(device->sentcached);
+  
+  if(device->sentcached > device->maxsentcached) {
+    rr_blocknode *prev = device->senttail->prev;
+    free(device->senttail->block);
+    free(device->senttail);
+    device->senttail = prev;
+  }
+
   switch(device->proto) {
   case RR_PROTO_SIMPLE:
-    return _sendblock_simple(device, block);
+    return _sendblock_simple(device, node->block);
 
   case RR_PROTO_FIVED:
-    return _sendblock_fived(device, block);
+    return _sendblock_fived(device, node->block);
 
   default:
     return RR_E_UNSUPPORTED_PROTO;
@@ -173,11 +201,13 @@ void rr_enqueue(rr_dev *device, rr_prio priority, const char *block, size_t nbyt
   node->block = calloc(nbytes+1, sizeof(char));
   strncpy(node->block, block, nbytes);
   node->block[nbytes] = '\0';
+  node->prev = NULL;
   node->next = NULL;
   
   if(!device->sendheads[priority]) {
     device->sendheads[priority] = node;
   } else {
+    node->prev = device->sendtails[priority];
     device->sendtails[priority]->next = node;
   }
   device->sendtails[priority] = node;
@@ -255,17 +285,11 @@ int rr_poll(rr_dev *device, const struct timeval *timeout) {
     }
     if(FD_ISSET(device->fd, &writes)) {
       if(device->sendheads[RR_PRIO_HIGH]) {
-        _sendblock(device, device->sendheads[RR_PRIO_HIGH]->block);
-        rr_blocknode *next = device->sendheads[RR_PRIO_HIGH]->next;
-        free(device->sendheads[RR_PRIO_HIGH]->block);
-        free(device->sendheads[RR_PRIO_HIGH]);
-        device->sendheads[RR_PRIO_HIGH] = next;
+        _sendblock(device, device->sendheads[RR_PRIO_HIGH]);
+        device->sendheads[RR_PRIO_HIGH] = device->sendheads[RR_PRIO_HIGH]->next;
       } else if(device->sendheads[RR_PRIO_NORMAL]) {
-        _sendblock(device, device->sendheads[RR_PRIO_NORMAL]->block);
-        rr_blocknode *next = device->sendheads[RR_PRIO_NORMAL]->next;
-        free(device->sendheads[RR_PRIO_NORMAL]->block);
-        free(device->sendheads[RR_PRIO_NORMAL]);
-        device->sendheads[RR_PRIO_NORMAL] = next;
+        _sendblock(device, device->sendheads[RR_PRIO_NORMAL]);
+        device->sendheads[RR_PRIO_NORMAL] = device->sendheads[RR_PRIO_NORMAL]->next;
       }
     }
     if(FD_ISSET(device->fd, &errors)) {
