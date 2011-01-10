@@ -20,7 +20,7 @@ typedef enum {
   RR_PRIO_COUNT
 } rr_prio;
 
-typedef void (*rr_recvcb)(char *);
+typedef void (*rr_callback)(char *);
 
 typedef struct blocknode {
   char *block;
@@ -37,12 +37,12 @@ typedef struct {
   unsigned long lineno;
   char *recvbuf;
   size_t recvlen, recvsize;
-  rr_recvcb recvcb;
+  rr_callback sendcb, recvcb;
 } rr_dev;
 
 /* open/close return -1 and set errno on failure */
 /* Initializes device with supplied params */
-int rr_open(rr_dev *device, rr_proto proto, rr_recvcb recvcallback, const char *port, long speed);
+int rr_open(rr_dev *device, rr_proto proto, rr_callback sendcallback, rr_callback recvcallback, const char *port, long speed);
 /* Close port and deallocate buffers */
 int rr_close(rr_dev *device);
 

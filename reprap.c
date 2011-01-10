@@ -9,13 +9,14 @@
 #include "serial.h"
 #include "gcode.h"
 
-int rr_open(rr_dev *device, rr_proto proto, rr_recvcb recvcallback, const char *port, long speed) {
+int rr_open(rr_dev *device, rr_proto proto, rr_callback sendcallback, rr_callback recvcallback, const char *port, long speed) {
   device->fd = serial_open(port, speed);
   if(device->fd < 0) {
     return -1;
   }
   device->proto = proto;
   device->recvcb = recvcallback;
+  device->sendcb = sendcallback;
   device->lineno = 0;
   device->recvsize = RECVBUFSIZE;
   device->recvbuf = calloc(RECVBUFSIZE, sizeof(char));
@@ -52,15 +53,15 @@ void rr_reset(rr_dev *device) {
 }
 
 int _sendblock_simple(const rr_dev *device, const char *block) {
-  size_t nbytes = strlen(block);
-  if(nbytes >= GCODE_BLOCKSIZE) {
+  char buf[GCODE_BLOCKSIZE];
+  int result;
+  result = snprintf(buf, GCODE_BLOCKSIZE, "%s\r\n", block);
+  if(result >= GCODE_BLOCKSIZE) {
     return RR_E_BLOCK_TOO_LARGE;
   }
-  int result;
-  result = write(device->fd, block, nbytes);
-  if(result >= 0) {
-    result = write(device->fd, "\r\n", 2);
-  }
+
+  result = write(device->fd, buf, result-1);
+  device->sendcb(buf);
 
   if(result < 0) {
     return RR_E_WRITE_FAILED;
@@ -84,7 +85,9 @@ int _sendblock_fived(const rr_dev *device, const char *block) {
   if(result >= GCODE_BLOCKSIZE) {
     return RR_E_BLOCK_TOO_LARGE;
   }
-  result = write(device->fd, buf, result);
+
+  result = write(device->fd, buf, result-1);
+  device->sendcb(buf);
   
   if(result < 0) {
     return RR_E_WRITE_FAILED;
@@ -106,9 +109,62 @@ int _sendblock(const rr_dev *device, const char *block) {
   }
 }
 
-int _readreply(rr_dev *device) {
-  read(device->fd, device->recvbuf, device->recvsize);
+int _readreply_common(rr_dev *device, char **reply) {
+  int result = read(device->fd,
+                    device->recvbuf + device->recvlen,
+                    device->recvsize - device->recvlen);
+  if(result <= 0) {
+    return result;
+  }
+  size_t end = device->recvlen + result;
+  size_t i;
+  for(i = device->recvlen; i < end; ++i) {
+    if(device->recvbuf[i] == '\n') {
+      *reply = calloc(i, sizeof(char));
+      strncpy(*reply, device->recvbuf, i-1);
+      if((*reply)[i-1] == '\r') {
+        (*reply)[i-1] = '\0';
+      } else {
+        (*reply)[i] = '\0';
+      }
+      device->recvlen = end - i;
+      memmove(device->recvbuf, device->recvbuf + i, device->recvlen);
+      return 1;
+    }
+  }
+  device->recvlen = end;
+  if(end >= device->recvsize) {
+    device->recvbuf = realloc(device->recvbuf, 2*device->recvsize);
+  }
+  *reply = NULL;
+  return 0;
+}
+
+int _handlereply_fived(rr_dev *device, const char *reply) {
   /* TODO */
+  return 0;
+}
+
+int _readreply(rr_dev *device) {
+  char *reply;
+  int result = _readreply_common(device, &reply);
+
+  if(result <= 0) {
+    return result;
+  }
+
+  switch(device->proto) {
+  case RR_PROTO_FIVED:
+    _handlereply_fived(device, reply);
+    break;
+
+  default:
+    break;
+  }
+  
+  device->recvcb(reply);  
+  free(reply);
+  
   return 0;
 }
 
