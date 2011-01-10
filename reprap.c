@@ -80,31 +80,36 @@ int _sendblock_simple(const rr_dev *device, const char *block) {
   return 0;
 }
 
-int _sendblock_fived(rr_dev *device, const char *block) {
+int _sendblock_fived_line(rr_dev *device, unsigned long line, const char *block) {
   int result;
   /* Send block */
   char buf[GCODE_BLOCKSIZE];
   char checksum = 0;
-  result = snprintf(buf, GCODE_BLOCKSIZE, "N%ld %s", device->lineno, block);
+  result = snprintf(buf, GCODE_BLOCKSIZE, "N%ld %s", line, block);
   ssize_t i;
   for(i = 0; i < result; i++) {
     checksum ^= buf[i];
   }
   /* TODO: Is this whitespace needed? */
-  result = snprintf(buf, GCODE_BLOCKSIZE, "N%ld %s *%d\r\n", device->lineno, block, checksum);
+  result = snprintf(buf, GCODE_BLOCKSIZE, "N%ld %s *%d\r\n", line, block, checksum);
   if(result >= GCODE_BLOCKSIZE) {
     return RR_E_BLOCK_TOO_LARGE;
   }
 
   result = write(device->fd, buf, result-1);
   device->sendcb(buf);
-  ++(device->lineno);
   
   if(result < 0) {
     return RR_E_WRITE_FAILED;
   }
 
   return 0;
+}
+
+int _sendblock_fived(rr_dev *device, const char *block) {
+  int result = _sendblock_fived_line(device, device->lineno, block);
+  ++(device->lineno);
+  return result;
 }
 
 int _sendblock(rr_dev *device, rr_blocknode *node) {
@@ -169,7 +174,18 @@ int _readreply_common(rr_dev *device, char **reply) {
 }
 
 int _handlereply_fived(rr_dev *device, const char *reply) {
-  /* TODO */
+  if(strncmp(reply, "rs", 2) == 0) {
+    long long badline = atoll(reply+3);
+    unsigned long delta = device->lineno - badline - 1;
+    if(delta > device->maxsentcached) {
+      return -1;
+    }
+    rr_blocknode *line = device->senthead;
+    for(; delta > 0; --delta) {
+      line = line->next;
+    }
+    _sendblock_fived_line(device, badline, line->block);
+  }
   return 0;
 }
 
