@@ -71,7 +71,9 @@ int _sendblock_simple(const rr_dev *device, const char *block) {
   }
 
   result = write(device->fd, buf, result-1);
-  device->sendcb(buf);
+  if(device->sendcb) {
+    device->sendcb(buf);
+  }
 
   if(result < 0) {
     return RR_E_WRITE_FAILED;
@@ -97,7 +99,9 @@ int _sendblock_fived_line(rr_dev *device, unsigned long line, const char *block)
   }
 
   result = write(device->fd, buf, result-1);
-  device->sendcb(buf);
+  if(device->sendcb) {
+    device->sendcb(buf);
+  }
   
   if(result < 0) {
     return RR_E_WRITE_FAILED;
@@ -205,8 +209,10 @@ int _readreply(rr_dev *device) {
   default:
     break;
   }
-  
-  device->recvcb(reply);  
+
+  if(device->recvcb) {
+    device->recvcb(reply);
+  }
   free(reply);
   
   return 0;
