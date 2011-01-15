@@ -47,7 +47,7 @@ int rr_close(rr_dev device);
 /* nbytes MUST be < GCODE_BLOCKSIZE */
 void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes);
 
-void rr_notify_readable(rr_dev device);
+void rr_handle_readable(rr_dev device);
 /* Should only be called if want_writable callback has most recently
  * been passed a nonzero second argument */
-void rr_notify_writable(rr_dev device);
+void rr_handle_writable(rr_dev device);
