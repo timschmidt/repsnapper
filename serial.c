@@ -199,8 +199,7 @@ int serial_init(int fd, long speed) {
 
 /* Returns a prepared FD for the serial device specified, or some
  * value < 0 if an error occurred. */
-int serial_open(const char *path, long speed) 
-{
+int serial_open(const char *path, long speed) {
 	serial_errno = SERIAL_NO_ERROR;
 	int fd = open(path, O_RDWR | O_NOCTTY | O_NDELAY);
 	if(fd < 0) {
@@ -215,14 +214,19 @@ int serial_open(const char *path, long speed)
 		serial_errno = status;
 		return -1;
 	}
+  if(fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+    /* TODO: Don't lose errno info */
+    serial_errno = SERIAL_SETTING_FAILED;
+    close(fd);
+    return -1;
+  }
 	return fd;
 }
 
 
 /* Returns a human-readable interpretation of a failing serial_open
  * return value */
-const char* serial_strerror(int errno)
-{
+const char* serial_strerror(int errno) {
 	switch(errno) {
 	case SERIAL_NO_ERROR:
 		return "No error.";

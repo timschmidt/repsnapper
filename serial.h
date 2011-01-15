@@ -5,15 +5,15 @@
 
 typedef enum serial_error {
 	SERIAL_NO_ERROR = 0,
-	SERIAL_INVALID_SPEED = 1,
-	SERIAL_INVALID_FILEDESC = 2,
-	SERIAL_SETTING_FAILED = 3,
-	SERIAL_UNKNOWN_ERROR = 4
+	SERIAL_INVALID_SPEED,
+	SERIAL_INVALID_FILEDESC,
+	SERIAL_SETTING_FAILED,
+	SERIAL_UNKNOWN_ERROR
 } serial_error;
 
 extern int serial_errno;
 
-/* Opens serial port at path and speed if possible, or NULL on error. */
+/* Opens serial port at path and speed.  Returns -1 on error. */
 int serial_open(const char *path, long speed);
 
 /* Returns a human-readable interpretation of a failing serial_open
