@@ -9,25 +9,25 @@
 #include "serial.h"
 #include "gcode.h"
 
-typedef struct rr_blocknode {
-  struct rr_blocknode *next;
+typedef struct blocknode {
+  struct blocknode *next;
   void *cbdata;
   const char *block;
   size_t blocksize;
-} rr_blocknode;
+} blocknode;
 
 struct rr_dev_t {
   rr_proto proto;
   int fd;
   unsigned long lineno;
 
-  rr_blocknode *sendhead[RR_PRIO_COUNT];
-  rr_blocknode *sendtail[RR_PRIO_COUNT];
+  blocknode *sendhead[RR_PRIO_COUNT];
+  blocknode *sendtail[RR_PRIO_COUNT];
   size_t bytes_sent;
   
   char *recvbuf;
   
-  char **sentcache;
+  blocknode **sentcache;
   size_t sentcachesize;
   
   rr_sendcb onsend;
@@ -46,7 +46,7 @@ int rr_open(rr_dev *deviceptr,
   *deviceptr = malloc(sizeof(struct rr_dev_t));
   rr_dev device = *deviceptr;
 
-  device->sentcache = calloc(resend_cache_size, sizeof(char*));
+  device->sentcache = calloc(resend_cache_size, sizeof(blocknode*));
   device->sentcachesize = resend_cache_size;
   unsigned i;
   for(i = 0; i < resend_cache_size; ++i) {
@@ -78,9 +78,9 @@ int rr_close(rr_dev device) {
   /* Deallocate buffers */
   unsigned i;
   for(i = 0; i < RR_PRIO_COUNT; ++i) {
-    rr_blocknode *j = device->sendhead[i];
+    blocknode *j = device->sendhead[i];
     while(j != NULL) {
-      rr_blocknode *next = j->next;
+      blocknode *next = j->next;
       free(j);
       j = next;
     }
@@ -151,7 +151,7 @@ int fmtblock(rr_dev device, char *buf, const char *block) {
 }
 
 void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes) {
-  rr_blocknode *node = malloc(sizeof(rr_blocknode));
+  blocknode *node = malloc(sizeof(blocknode));
   node->next = NULL;
   node->cbdata = cbdata;
   node->block = block;
