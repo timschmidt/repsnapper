@@ -20,37 +20,33 @@ typedef enum {
   RR_PRIO_COUNT
 } rr_prio;
 
-typedef void (*rr_callback)(char *);
-
-typedef struct blocknode {
-  char *block;
-  struct blocknode *prev, *next;
-} rr_blocknode;
-
+#define SENDBUFSIZE 256
 #define RECVBUFSIZE 256
-typedef struct {
-  rr_proto proto;
-  int fd;
-  rr_blocknode *sendheads[RR_PRIO_COUNT];
-  rr_blocknode *sendtails[RR_PRIO_COUNT];
-  rr_blocknode *senthead;
-  rr_blocknode *senttail;
-  unsigned sentcached, maxsentcached;
-  unsigned long lineno;
-  char *recvbuf;
-  size_t recvlen, recvsize;
-  rr_callback sendcb, recvcb;
-} rr_dev;
+typedef struct rr_dev_t *rr_dev;
+
+/* Device, callback user data, gcode block user data, actual block sent */
+typedef void (*rr_sendcb)(rr_dev, void *, void *, char *);
+/* Device, callback user data, line received */
+typedef void (*rr_recvcb)(rr_dev, void *, char *);
+/* Device, callback user data, boolean */
+typedef void (*rr_boolcb)(rr_dev, void *, char);
 
 /* open/close return -1 and set errno on failure */
 /* Initializes device with supplied params */
-int rr_open(rr_dev *device, rr_proto proto, rr_callback sendcallback, rr_callback recvcallback, const char *port, long speed, size_t resend_cache_size);
+int rr_open(rr_dev *deviceptr,
+            rr_proto proto,
+            rr_sendcb onsend, void *onsend_data,
+            rr_recvcb onrecv, void *onrecv_data,
+            rr_boolcb want_writable, void *ww_data,
+            const char *port, long speed,
+            size_t resend_cache_size);
 /* Close port and deallocate buffers */
-int rr_close(rr_dev *device);
+int rr_close(rr_dev device);
 
-/* Return to initial state */
-void rr_reset(rr_dev *device);
+/* nbytes MUST be < GCODE_BLOCKSIZE */
+void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes);
 
-void rr_enqueue(rr_dev *device, rr_prio priority, const char *block, size_t nbytes);
-
-int rr_poll(rr_dev *device, const struct timeval *timeout);
+void rr_notify_readable(rr_dev device);
+/* Should only be called if want_writable callback has most recently
+ * been passed a nonzero second argument */
+void rr_notify_writable(rr_dev device);

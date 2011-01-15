@@ -3,7 +3,7 @@
 
 #include <math.h>
 
-#define GCODE_BLOCKSIZE (256 + 1)
+#define GCODE_BLOCKSIZE 256
 
 typedef struct {
   float x, y, z;
