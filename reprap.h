@@ -17,6 +17,7 @@ typedef enum {
 typedef enum {
   RR_PRIO_NORMAL,
   RR_PRIO_HIGH,
+  RR_PRIO_RESEND,
   RR_PRIO_COUNT
 } rr_prio;
 
