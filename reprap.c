@@ -251,6 +251,7 @@ int rr_handle_writable(rr_dev device) {
     /* We've sent the complete block. */
     device->onsend(device, device->onsend_data, node->cbdata, device->sendbuf, device->sendbuf_fill);
     device->sendhead[device->sending_prio] = node->next;
+    ++(device->lineno);
     free(node);
     /* Indicate that we're ready for the next. */
     device->bytes_sent = SENDBUFSIZE + 1;
