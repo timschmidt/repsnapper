@@ -51,6 +51,12 @@ rr_dev rr_open(rr_proto proto,
 /* Close port and deallocate buffers */
 int rr_close(rr_dev device);
 
+/* Accessors */
+/* File descriptor */
+int rr_dev_fd(rr_dev device);
+/* Number of lines that have been since open */
+unsigned long rr_dev_lineno(rr_dev device);
+
 /* nbytes MUST be < GCODE_BLOCKSIZE */
 void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes);
 

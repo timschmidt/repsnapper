@@ -43,6 +43,13 @@ struct rr_dev_t {
   void *onsend_data, *onrecv_data, *ww_data;
 };
 
+int rr_dev_fd(rr_dev device) {
+  return device->fd;
+}
+unsigned long rr_dev_lineno(rr_dev device) {
+  return device->lineno;
+}
+
 rr_dev rr_open(rr_proto proto,
                rr_sendcb onsend, void *onsend_data,
                rr_recvcb onrecv, void *onrecv_data,
