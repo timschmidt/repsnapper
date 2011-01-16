@@ -1,6 +1,11 @@
 #include <sys/types.h>
 #include <sys/select.h>
 
+#define BLOCK_TERMINATOR "\r\n"
+#define REPLY_TERMINATOR "\r\n"
+
+#define RECVBUFSIZE 256
+
 typedef enum {
   /* Standard gcode, 'ok' response */
   RR_PROTO_SIMPLE,
@@ -21,14 +26,12 @@ typedef enum {
   RR_PRIO_COUNT
 } rr_prio;
 
-#define SENDBUFSIZE 256
-#define RECVBUFSIZE 256
 typedef struct rr_dev_t *rr_dev;
 
 /* Device, callback user data, gcode block user data, actual block sent */
-typedef void (*rr_sendcb)(rr_dev, void *, void *, char *);
+typedef void (*rr_sendcb)(rr_dev, void *, void *, const char *);
 /* Device, callback user data, line received */
-typedef void (*rr_recvcb)(rr_dev, void *, char *);
+typedef void (*rr_recvcb)(rr_dev, void *, const char *);
 /* Device, callback user data, boolean */
 typedef void (*rr_boolcb)(rr_dev, void *, char);
 
@@ -47,7 +50,7 @@ int rr_close(rr_dev device);
 /* nbytes MUST be < GCODE_BLOCKSIZE */
 void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes);
 
-void rr_handle_readable(rr_dev device);
+int rr_handle_readable(rr_dev device);
 /* Should only be called if want_writable callback has most recently
  * been passed a nonzero second argument */
-void rr_handle_writable(rr_dev device);
+int rr_handle_writable(rr_dev device);

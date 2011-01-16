@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/time.h>
+#include <errno.h>
 
 #include "serial.h"
 #include "gcode.h"
@@ -23,9 +23,12 @@ struct rr_dev_t {
 
   blocknode *sendhead[RR_PRIO_COUNT];
   blocknode *sendtail[RR_PRIO_COUNT];
+  char sendbuf[GCODE_BLOCKSIZE];
   size_t bytes_sent;
   
   char *recvbuf;
+  size_t recvbufsize;
+  size_t buffer_fill;
   
   blocknode **sentcache;
   size_t sentcachesize;
@@ -57,6 +60,7 @@ int rr_open(rr_dev *deviceptr,
     device->sendtail[i] = NULL;
   }
   device->recvbuf = calloc(RECVBUFSIZE, sizeof(char));
+  device->recvbufsize = RECVBUFSIZE;
   
   device->fd = serial_open(port, speed);
   if(device->fd < 0) {
@@ -162,4 +166,38 @@ void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block
   } else {
     device->sendtail[priority]->next = node;
   }
+}
+
+int rr_handle_readable(rr_dev device) {
+  /* Grow receive buffer if it's full */
+  if(device->buffer_fill == device->recvbufsize) {
+    device->recvbuf = realloc(device->recvbuf, 2*device->recvbufsize);
+  }
+
+  ssize_t result;
+  size_t scan = device->buffer_fill;
+  size_t start = 0;
+  do {
+    errno = 0;
+    result = read(device->fd, device->recvbuf + device->buffer_fill, device->recvbufsize - device->buffer_fill);
+  } while(errno == EINTR);
+
+  if(result < 0) {
+    return result;
+  }
+
+  /* Scan for complete reply */
+  for(; scan < device->buffer_fill; ++scan) {
+    if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, strlen(REPLY_TERMINATOR))) {
+      /* We have a terminator */
+      handle_reply(device->recvbuf + start, scan);
+      scan += strlen(REPLY_TERMINATOR);
+      start = scan;
+    }
+  }
+
+  /* Move incomplete reply to beginning of buffer */
+  memmove(device->recvbuf, device->recvbuf+start, device->buffer_fill - start);
+
+  return 0;
 }
