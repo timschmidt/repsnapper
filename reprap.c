@@ -109,9 +109,11 @@ int rr_close(rr_dev device) {
     }
   }
   free(device->sentcache);
-  
+
+  int fd = device->fd;
+  free(device);
   /* Close FD */
-  return close(device->fd);
+  return close(fd);
 }
 
 ssize_t fmtblock_simple(char *buf, const char *block) {
