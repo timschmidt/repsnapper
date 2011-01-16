@@ -41,15 +41,13 @@ struct rr_dev_t {
   void *onsend_data, *onrecv_data, *ww_data;
 };
 
-int rr_open(rr_dev *deviceptr,
-            rr_proto proto,
-            rr_sendcb onsend, void *onsend_data,
-            rr_recvcb onrecv, void *onrecv_data,
-            rr_boolcb want_writable, void *ww_data,
-            const char *port, long speed,
-            size_t resend_cache_size) {
-  *deviceptr = malloc(sizeof(struct rr_dev_t));
-  rr_dev device = *deviceptr;
+rr_dev rr_open(rr_proto proto,
+               rr_sendcb onsend, void *onsend_data,
+               rr_recvcb onrecv, void *onrecv_data,
+               rr_boolcb want_writable, void *ww_data,
+               const char *port, long speed,
+               size_t resend_cache_size) {
+  rr_dev device = malloc(sizeof(struct rr_dev_t));
 
   device->sentcache = calloc(resend_cache_size, sizeof(blocknode*));
   device->sentcachesize = resend_cache_size;
@@ -61,12 +59,14 @@ int rr_open(rr_dev *deviceptr,
     device->sendhead[i] = NULL;
     device->sendtail[i] = NULL;
   }
+  device->sendbuf_fill = 0;
+  device->bytes_sent = 0;
   device->recvbuf = calloc(RECVBUFSIZE, sizeof(char));
   device->recvbufsize = RECVBUFSIZE;
   
   device->fd = serial_open(port, speed);
   if(device->fd < 0) {
-    return -1;
+    return NULL;
   }
   
   device->proto = proto;
@@ -77,7 +77,8 @@ int rr_open(rr_dev *deviceptr,
   device->want_writable = want_writable;
   device->ww_data = ww_data;
   device->lineno = 0;
-  return 0;
+  
+  return device;
 }
 
 int rr_close(rr_dev device) {
@@ -215,7 +216,7 @@ int rr_handle_readable(rr_dev device) {
 int rr_handle_writable(rr_dev device) {
   int prio;
   ssize_t result;
-  if(device->bytes_sent > SENDBUFSIZE) {
+  if(device->sendbuf_fill == 0) {
     /* Last block is gone; prepare to send a new block */
     for(prio = RR_PRIO_COUNT - 1; prio >= 0; --prio) {
       blocknode *node = device->sendhead[prio];
@@ -224,9 +225,6 @@ int rr_handle_writable(rr_dev device) {
         device->bytes_sent = 0;
         result = fmtblock(device, node->block, node->blocksize);
         if(result < 0) {
-          /* Make at least some attempt to leave device in a
-           * recoverable state */
-          device->sendbuf_fill = 0;
           return result;
         }
         device->sendbuf_fill = result;
@@ -247,14 +245,24 @@ int rr_handle_writable(rr_dev device) {
   device->bytes_sent += result;
 
   if(device->bytes_sent == device->sendbuf_fill) {
-    blocknode *node = device->sendhead[device->sending_prio];
     /* We've sent the complete block. */
+    blocknode *node = device->sendhead[device->sending_prio];
     device->onsend(device, device->onsend_data, node->cbdata, device->sendbuf, device->sendbuf_fill);
     device->sendhead[device->sending_prio] = node->next;
     ++(device->lineno);
-    free(node);
+
+    /* Update sent cache */
+    if(device->sentcache[device->sentcachesize - 1]) {
+      free(device->sentcache[device->sentcachesize - 1]);
+    }
+    ssize_t i;
+    for(i = device->sentcachesize - 1; i > 0 ; --i) {
+      device->sentcache[i] = device->sentcache[i-1];
+    }
+    device->sentcache[0] = node;
+
     /* Indicate that we're ready for the next. */
-    device->bytes_sent = SENDBUFSIZE + 1;
+    device->sendbuf_fill = 0;
   }
 
   return result;
