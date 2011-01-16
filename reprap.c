@@ -14,11 +14,13 @@ typedef struct blocknode {
   void *cbdata;
   const char *block;
   size_t blocksize;
+  long long line;
 } blocknode;
 
 struct rr_dev_t {
   rr_proto proto;
   int fd;
+  /* Line currently being sent */
   unsigned long lineno;
 
   blocknode *sendhead[RR_PRIO_COUNT];
@@ -142,10 +144,10 @@ ssize_t fmtblock_fived(char *buf, const char *block, unsigned long line) {
   return len;
 }
 
-ssize_t fmtblock(rr_dev device, const char *block, size_t nbytes) {
-  char *terminated = calloc(nbytes+1, sizeof(char));
-  strncpy(terminated, block, nbytes);
-  terminated[nbytes] = '\0';
+ssize_t fmtblock(rr_dev device, blocknode *node) {
+  char *terminated = calloc(node->blocksize + 1, sizeof(char));
+  strncpy(terminated, node->block, node->blocksize);
+  terminated[node->blocksize] = '\0';
 
   ssize_t result;
   switch(device->proto) {
@@ -154,7 +156,13 @@ ssize_t fmtblock(rr_dev device, const char *block, size_t nbytes) {
     break;
 
   case RR_PROTO_FIVED:
-    result = fmtblock_fived(device->sendbuf, terminated, device->lineno);
+    if(node->line >= 0) {
+      /* Block has an explicit line number; may be out of sequence
+       * (i.e. a resend) */
+      result = fmtblock_fived(device->sendbuf, terminated, node->line);
+    } else {
+      result = fmtblock_fived(device->sendbuf, terminated, device->lineno);
+    }
     break;
 
   default:
@@ -172,12 +180,28 @@ void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block
   node->cbdata = cbdata;
   node->block = block;
   node->blocksize = nbytes;
+  node->line = -1;
   
   if(!device->sendhead[priority]) {
     device->sendhead[priority] = node;
   } else {
     device->sendtail[priority]->next = node;
   }
+}
+
+void handle_reply(rr_dev device, const char *reply, size_t nbytes) {
+  if(device->proto == RR_PROTO_FIVED &&
+     0 == strncmp("rs", reply, 2)) {
+    /* Line number begins 3 bytes in */
+    unsigned long resend = atoll(reply + 3);
+    unsigned long delta = (device->lineno - 1) - resend;
+    if(delta < device->sentcachesize) {
+      blocknode *node = device->sentcache[delta];
+      rr_enqueue(device, RR_PRIO_RESEND, node->cbdata, node->block, node->blocksize);
+    } /* TODO: Indicate error and/or abort if we can't resend. */
+  }
+  
+  device->onrecv(device, device->onrecv_data, reply, nbytes);
 }
 
 int rr_handle_readable(rr_dev device) {
@@ -223,12 +247,13 @@ int rr_handle_writable(rr_dev device) {
       if(node) {
         /* We have a block to send! Get it ready. */
         device->bytes_sent = 0;
-        result = fmtblock(device, node->block, node->blocksize);
+        result = fmtblock(device, node);
         if(result < 0) {
           return result;
         }
         device->sendbuf_fill = result;
         device->sending_prio = prio;
+        break;
       }
     }
   }
@@ -249,6 +274,7 @@ int rr_handle_writable(rr_dev device) {
     blocknode *node = device->sendhead[device->sending_prio];
     device->onsend(device, device->onsend_data, node->cbdata, device->sendbuf, device->sendbuf_fill);
     device->sendhead[device->sending_prio] = node->next;
+    node->line = device->lineno;
     ++(device->lineno);
 
     /* Update sent cache */
