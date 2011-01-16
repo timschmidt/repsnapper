@@ -174,19 +174,23 @@ ssize_t fmtblock(rr_dev device, blocknode *node) {
   return result;
 }
 
-void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes) {
+void rr_enqueue_internal(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes, long long line) {
   blocknode *node = malloc(sizeof(blocknode));
   node->next = NULL;
   node->cbdata = cbdata;
   node->block = block;
   node->blocksize = nbytes;
-  node->line = -1;
+  node->line = line;
   
   if(!device->sendhead[priority]) {
     device->sendhead[priority] = node;
   } else {
     device->sendtail[priority]->next = node;
   }
+}
+
+void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes) {
+  rr_enqueue_internal(device, priority, cbdata, block, nbytes, -1);
 }
 
 void handle_reply(rr_dev device, const char *reply, size_t nbytes) {
@@ -197,11 +201,13 @@ void handle_reply(rr_dev device, const char *reply, size_t nbytes) {
     unsigned long delta = (device->lineno - 1) - resend;
     if(delta < device->sentcachesize) {
       blocknode *node = device->sentcache[delta];
-      rr_enqueue(device, RR_PRIO_RESEND, node->cbdata, node->block, node->blocksize);
+      rr_enqueue_internal(device, RR_PRIO_RESEND, node->cbdata, node->block, node->blocksize, resend);
     } /* TODO: Indicate error and/or abort if we can't resend. */
   }
-  
-  device->onrecv(device, device->onrecv_data, reply, nbytes);
+
+  if(device->onrecv) {
+    device->onrecv(device, device->onrecv_data, reply, nbytes);
+  }
 }
 
 int rr_handle_readable(rr_dev device) {
@@ -272,7 +278,9 @@ int rr_handle_writable(rr_dev device) {
   if(device->bytes_sent == device->sendbuf_fill) {
     /* We've sent the complete block. */
     blocknode *node = device->sendhead[device->sending_prio];
-    device->onsend(device, device->onsend_data, node->cbdata, device->sendbuf, device->sendbuf_fill);
+    if(device->onsend) {
+      device->onsend(device, device->onsend_data, node->cbdata, device->sendbuf, device->sendbuf_fill);
+    }
     device->sendhead[device->sending_prio] = node->next;
     node->line = device->lineno;
     ++(device->lineno);
