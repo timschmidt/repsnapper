@@ -2,9 +2,12 @@
 #include <sys/select.h>
 
 #define BLOCK_TERMINATOR "\r\n"
+#define BLOCK_TERMINATOR_LEN 2
 #define REPLY_TERMINATOR "\r\n"
 
 #define RECVBUFSIZE 256
+/* Do not change */
+#define SENDBUFSIZE (GCODE_BLOCKSIZE + BLOCK_TERMINATOR_LEN)
 
 typedef enum {
   /* Standard gcode, 'ok' response */
@@ -19,8 +22,9 @@ typedef enum {
   RR_E_UNSUPPORTED_PROTO = -3,
 } rr_error;
 
+/* Must be ordered ascending by priority */
 typedef enum {
-  RR_PRIO_NORMAL,
+  RR_PRIO_NORMAL = 0,
   RR_PRIO_HIGH,
   RR_PRIO_RESEND,
   RR_PRIO_COUNT
@@ -28,10 +32,11 @@ typedef enum {
 
 typedef struct rr_dev_t *rr_dev;
 
-/* Device, callback user data, gcode block user data, actual block sent */
-typedef void (*rr_sendcb)(rr_dev, void *, void *, const char *);
-/* Device, callback user data, line received */
-typedef void (*rr_recvcb)(rr_dev, void *, const char *);
+/* Device, callback user data, gcode block user data, actual block
+ * sent, length thereof */
+typedef void (*rr_sendcb)(rr_dev, void *, void *, const char *, size_t);
+/* Device, callback user data, line received, length thereof */
+typedef void (*rr_recvcb)(rr_dev, void *, const char *, size_t);
 /* Device, callback user data, boolean */
 typedef void (*rr_boolcb)(rr_dev, void *, char);
 

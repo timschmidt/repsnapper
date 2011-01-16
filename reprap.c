@@ -23,12 +23,14 @@ struct rr_dev_t {
 
   blocknode *sendhead[RR_PRIO_COUNT];
   blocknode *sendtail[RR_PRIO_COUNT];
-  char sendbuf[GCODE_BLOCKSIZE];
+  char sendbuf[SENDBUFSIZE];
+  rr_prio sending_prio;
+  size_t sendbuf_fill;
   size_t bytes_sent;
   
   char *recvbuf;
   size_t recvbufsize;
-  size_t buffer_fill;
+  size_t recvbuf_fill;
   
   blocknode **sentcache;
   size_t sentcachesize;
@@ -102,23 +104,21 @@ int rr_close(rr_dev device) {
   return close(device->fd);
 }
 
-int fmtblock_simple(char *buf, const char *block) {
-  /* \r\n\0 is 3 bytes */
-  char work[GCODE_BLOCKSIZE+3];
+ssize_t fmtblock_simple(char *buf, const char *block) {
+  char work[SENDBUFSIZE+1];
   int result;
-  result = snprintf(work, GCODE_BLOCKSIZE+3, "%s\r\n", block);
-  if(result >= GCODE_BLOCKSIZE+3) {
+  result = snprintf(work, SENDBUFSIZE+1, "%s\r\n", block);
+  if(result >= SENDBUFSIZE+1) {
     return RR_E_BLOCK_TOO_LARGE;
   }
-  int len = (result > GCODE_BLOCKSIZE+2) ? result - 1 : result;
+  size_t len = (result > SENDBUFSIZE) ? SENDBUFSIZE : result;
   strncpy(buf, work, len);
 
   return len;
 }
 
-int fmtblock_fived(char *buf, const char *block, unsigned long line) {
-  /* \r\n\0 is 3 bytes */
-  char work[GCODE_BLOCKSIZE+3];
+ssize_t fmtblock_fived(char *buf, const char *block, unsigned long line) {
+  char work[SENDBUFSIZE+1];
   int result;
   char checksum = 0;
   result = snprintf(work, GCODE_BLOCKSIZE+1, "N%ld %s", line, block);
@@ -130,28 +130,39 @@ int fmtblock_fived(char *buf, const char *block, unsigned long line) {
     checksum ^= work[i];
   }
   /* TODO: Is this whitespace needed? */
-  result = snprintf(work, GCODE_BLOCKSIZE+3, "N%ld %s *%d\r\n", line, block, checksum);
-  if(result >= GCODE_BLOCKSIZE+3) {
+  result = snprintf(work, SENDBUFSIZE+1, "N%ld %s *%d\r\n", line, block, checksum);
+  if(result >= SENDBUFSIZE+1) {
     return RR_E_BLOCK_TOO_LARGE;
   }
 
-  int len = (result > GCODE_BLOCKSIZE+2) ? result - 1 : result;
+  size_t len = (result > SENDBUFSIZE) ? SENDBUFSIZE : result;
   strncpy(buf, work, len);
 
   return len;
 }
 
-int fmtblock(rr_dev device, char *buf, const char *block) {
+ssize_t fmtblock(rr_dev device, const char *block, size_t nbytes) {
+  char *terminated = calloc(nbytes+1, sizeof(char));
+  strncpy(terminated, block, nbytes);
+  terminated[nbytes] = '\0';
+
+  ssize_t result;
   switch(device->proto) {
   case RR_PROTO_SIMPLE:
-    return fmtblock_simple(buf, block);
+    result = fmtblock_simple(device->sendbuf, terminated);
+    break;
 
   case RR_PROTO_FIVED:
-    return fmtblock_fived(buf, block, device->lineno);
+    result = fmtblock_fived(device->sendbuf, terminated, device->lineno);
+    break;
 
   default:
-    return RR_E_UNSUPPORTED_PROTO;
+    result = RR_E_UNSUPPORTED_PROTO;
+    break;
   }
+
+  free(terminated);
+  return result;
 }
 
 void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes) {
@@ -170,34 +181,80 @@ void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block
 
 int rr_handle_readable(rr_dev device) {
   /* Grow receive buffer if it's full */
-  if(device->buffer_fill == device->recvbufsize) {
+  if(device->recvbuf_fill == device->recvbufsize) {
     device->recvbuf = realloc(device->recvbuf, 2*device->recvbufsize);
   }
 
   ssize_t result;
-  size_t scan = device->buffer_fill;
+  size_t scan = device->recvbuf_fill;
   size_t start = 0;
   do {
-    errno = 0;
-    result = read(device->fd, device->recvbuf + device->buffer_fill, device->recvbufsize - device->buffer_fill);
-  } while(errno == EINTR);
+    result = read(device->fd, device->recvbuf + device->recvbuf_fill, device->recvbufsize - device->recvbuf_fill);
+  } while(result < 0 && errno == EINTR);
 
   if(result < 0) {
     return result;
   }
 
   /* Scan for complete reply */
-  for(; scan < device->buffer_fill; ++scan) {
+  for(; scan < device->recvbuf_fill; ++scan) {
     if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, strlen(REPLY_TERMINATOR))) {
       /* We have a terminator */
-      handle_reply(device->recvbuf + start, scan);
+      handle_reply(device, device->recvbuf + start, scan - start);
       scan += strlen(REPLY_TERMINATOR);
       start = scan;
     }
   }
 
   /* Move incomplete reply to beginning of buffer */
-  memmove(device->recvbuf, device->recvbuf+start, device->buffer_fill - start);
+  memmove(device->recvbuf, device->recvbuf+start, device->recvbuf_fill - start);
 
   return 0;
+}
+
+int rr_handle_writable(rr_dev device) {
+  int prio;
+  ssize_t result;
+  if(device->bytes_sent > SENDBUFSIZE) {
+    /* Last block is gone; prepare to send a new block */
+    for(prio = RR_PRIO_COUNT - 1; prio >= 0; --prio) {
+      blocknode *node = device->sendhead[prio];
+      if(node) {
+        /* We have a block to send! Get it ready. */
+        device->bytes_sent = 0;
+        result = fmtblock(device, node->block, node->blocksize);
+        if(result < 0) {
+          /* Make at least some attempt to leave device in a
+           * recoverable state */
+          device->sendbuf_fill = 0;
+          return result;
+        }
+        device->sendbuf_fill = result;
+        device->sending_prio = prio;
+      }
+    }
+  }
+
+  /* Perform write */
+  do {
+    result = write(device->fd, device->sendbuf + device->bytes_sent, device->sendbuf_fill - device->bytes_sent);
+  } while(result < 0 && errno == EINTR);
+  
+  if(result < 0) {
+    return result;
+  }
+
+  device->bytes_sent += result;
+
+  if(device->bytes_sent == device->sendbuf_fill) {
+    blocknode *node = device->sendhead[device->sending_prio];
+    /* We've sent the complete block. */
+    device->onsend(device, device->onsend_data, node->cbdata, device->sendbuf, device->sendbuf_fill);
+    device->sendhead[device->sending_prio] = node->next;
+    free(node);
+    /* Indicate that we're ready for the next. */
+    device->bytes_sent = SENDBUFSIZE + 1;
+  }
+
+  return result;
 }
