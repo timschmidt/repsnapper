@@ -41,6 +41,7 @@ typedef void (*rr_recvcb)(rr_dev, void *, const char *, size_t);
 typedef void (*rr_boolcb)(rr_dev, void *, char);
 
 /* Initializes device with supplied params */
+/* Note that want_writable may be called redundantly. */
 rr_dev rr_open(rr_proto proto,
                rr_sendcb onsend, void *onsend_data,
                rr_recvcb onrecv, void *onrecv_data,

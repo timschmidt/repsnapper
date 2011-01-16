@@ -184,6 +184,7 @@ void rr_enqueue_internal(rr_dev device, rr_prio priority, void *cbdata, const ch
   
   if(!device->sendhead[priority]) {
     device->sendhead[priority] = node;
+    device->want_writable(device, device->ww_data, 1);
   } else {
     device->sendtail[priority]->next = node;
   }
@@ -244,12 +245,13 @@ int rr_handle_readable(rr_dev device) {
 }
 
 int rr_handle_writable(rr_dev device) {
-  int prio;
   ssize_t result;
   if(device->sendbuf_fill == 0) {
     /* Last block is gone; prepare to send a new block */
+    int prio;
+    blocknode *node = NULL;
     for(prio = RR_PRIO_COUNT - 1; prio >= 0; --prio) {
-      blocknode *node = device->sendhead[prio];
+      node = device->sendhead[prio];
       if(node) {
         /* We have a block to send! Get it ready. */
         device->bytes_sent = 0;
@@ -261,6 +263,11 @@ int rr_handle_writable(rr_dev device) {
         device->sending_prio = prio;
         break;
       }
+    }
+    if(!node) {
+      /* No data to write */
+      device->want_writable(device, device->ww_data, 0);
+      return 0;
     }
   }
 
