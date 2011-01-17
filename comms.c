@@ -203,7 +203,11 @@ void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block
   rr_enqueue_internal(device, priority, cbdata, block, nbytes, -1);
 }
 
-void handle_reply(rr_dev device, const char *reply, size_t nbytes) {
+int handle_reply(rr_dev device, const char *reply, size_t nbytes) {
+  if(device->onrecv) {
+    device->onrecv(device, device->onrecv_data, reply, nbytes);
+  }
+
   if(device->proto == RR_PROTO_FIVED &&
      0 == strncmp("rs", reply, 2)) {
     /* Line number begins 3 bytes in */
@@ -212,12 +216,14 @@ void handle_reply(rr_dev device, const char *reply, size_t nbytes) {
     if(delta < device->sentcachesize) {
       blocknode *node = device->sentcache[delta];
       rr_enqueue_internal(device, RR_PRIO_RESEND, node->cbdata, node->block, node->blocksize, resend);
-    } /* TODO: Indicate error and/or abort if we can't resend. */
+    } else {
+      /* Line needed for resend was not cached */
+      /* TODO: Make it clearer what happened */
+      return -1;
+    }
   }
 
-  if(device->onrecv) {
-    device->onrecv(device, device->onrecv_data, reply, nbytes);
-  }
+  return 0;
 }
 
 int rr_handle_readable(rr_dev device) {
@@ -238,10 +244,13 @@ int rr_handle_readable(rr_dev device) {
   }
 
   /* Scan for complete reply */
+  char error = 0;
   for(; scan < device->recvbuf_fill; ++scan) {
     if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, strlen(REPLY_TERMINATOR))) {
       /* We have a terminator */
-      handle_reply(device, device->recvbuf + start, scan - start);
+      if(handle_reply(device, device->recvbuf + start, scan - start) < 0) {
+        error = 1;
+      }
       scan += strlen(REPLY_TERMINATOR);
       start = scan;
     }
@@ -250,6 +259,10 @@ int rr_handle_readable(rr_dev device) {
   /* Move incomplete reply to beginning of buffer */
   memmove(device->recvbuf, device->recvbuf+start, device->recvbuf_fill - start);
 
+  if(error) {
+    return -1;
+  }
+  
   return 0;
 }
 
