@@ -151,11 +151,19 @@ int serial_set_attrib(int fd, struct termios* attribp) {
 }
 
 int serial_init(int fd, long speed) {
+	int status;
 	struct termios attribs;
 	// Initialize attribs
 	if(tcgetattr(fd, &attribs) < 0) {
 		close(fd);
 		return SERIAL_INVALID_FILEDESC;
+	}
+
+  /* Handle software flow control bytes from machine */
+  attribs.c_iflag |= IXOFF;
+  serial_set_attrib(fd, &attribs);
+  if((status = serial_set_attrib(fd, &attribs)) < 0) {
+		return status;
 	}
 
 	/* Set speed */
@@ -172,7 +180,6 @@ int serial_init(int fd, long speed) {
 	}
 
 	/* Set non-canonical mode */
-	int status;
 	attribs.c_cc[VTIME] = 0;
 	if((status = serial_set_attrib(fd, &attribs)) < 0) {
 		return status;
