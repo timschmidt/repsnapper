@@ -1,0 +1,1 @@
+char *guess_device();

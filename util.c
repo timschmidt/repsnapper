@@ -16,11 +16,11 @@ char *guess_device() {
     return NULL;
   }
   
-  size_t i;
-  for(i = 0; DEV_PREFIXES[i]; ++i) {
-    char *prefix = DEV_PREFIXES[i];
-    struct dirent *file;
-    while((file = readdir(devdir))) {
+  struct dirent *file;
+  while((file = readdir(devdir))) {
+    size_t i;
+    for(i = 0; DEV_PREFIXES[i]; ++i) {
+      char *prefix = DEV_PREFIXES[i];
       if(!strncmp(file->d_name, prefix, strlen(prefix))) {
         /* TODO: Open connection and interrogate device */
         strcpy(name, file->d_name);
