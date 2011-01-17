@@ -1,3 +1,6 @@
+#ifndef _REPRAP_COMMS_H_
+#define _REPRAP_COMMS_H_
+
 #include <sys/types.h>
 #include <sys/select.h>
 
@@ -64,3 +67,5 @@ int rr_handle_readable(rr_dev device);
 /* Should only be called if want_writable callback has most recently
  * been passed a nonzero second argument */
 int rr_handle_writable(rr_dev device);
+
+#endif
