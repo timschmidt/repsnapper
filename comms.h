@@ -2,7 +2,6 @@
 #define _REPRAP_COMMS_H_
 
 #include <sys/types.h>
-#include <sys/select.h>
 
 #define BLOCK_TERMINATOR "\r\n"
 #define BLOCK_TERMINATOR_LEN 2
