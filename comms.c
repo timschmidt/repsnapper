@@ -130,7 +130,10 @@ void rr_reset(rr_dev device) {
 }
 
 int rr_close(rr_dev device) {
-  int result = close(device->fd);
+  int result;
+  do {
+    result = close(device->fd);
+  } while(result < 0 && errno == EINTR);
   device->fd = -1;
   rr_reset(device);
   return result;

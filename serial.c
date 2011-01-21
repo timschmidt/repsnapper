@@ -208,7 +208,10 @@ int serial_init(int fd, long speed) {
  * value < 0 if an error occurred. */
 int serial_open(const char *path, long speed) {
 	serial_errno = SERIAL_NO_ERROR;
-	int fd = open(path, O_RDWR | O_NOCTTY | O_NDELAY);
+	int fd;
+  do {
+    fd = open(path, O_RDWR | O_NOCTTY | O_NDELAY);
+  } while(fd < 0 && errno == EINTR);
 	if(fd < 0) {
 		/* An error ocurred */
 		serial_errno = SERIAL_INVALID_FILEDESC;
