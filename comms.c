@@ -344,14 +344,15 @@ int rr_handle_readable(rr_dev device) {
   do {
     result = read(device->fd, device->recvbuf + device->recvbuf_fill, device->recvbufsize - device->recvbuf_fill);
   } while(result < 0 && errno == EINTR);
-
   if(result < 0) {
     return result;
   }
+  device->recvbuf_fill += result;
 
   /* Scan for complete reply */
+  size_t end = device->recvbuf_fill + (1 - strlen(REPLY_TERMINATOR));
   result = 0;
-  for(; scan < device->recvbuf_fill; ++scan) {
+  for(; scan < end; ++scan) {
     if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, strlen(REPLY_TERMINATOR))) {
       /* We have a terminator */
       result = handle_reply(device, device->recvbuf + start, scan - start);
