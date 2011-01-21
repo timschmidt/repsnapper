@@ -100,6 +100,10 @@ int rr_open(rr_dev device, const char *port, long speed) {
 }
 
 int rr_close(rr_dev device) {
+  return close(device->fd);
+}
+
+void rr_free(rr_dev device) {
   /* Deallocate buffers */
   unsigned i;
   for(i = 0; i < RR_PRIO_COUNT; ++i) {
@@ -118,11 +122,7 @@ int rr_close(rr_dev device) {
     }
   }
   free(device->sentcache);
-
-  int fd = device->fd;
   free(device);
-  /* Close FD */
-  return close(fd);
 }
 
 ssize_t fmtblock_simple(char *buf, const char *block) {

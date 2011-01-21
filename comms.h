@@ -74,8 +74,10 @@ rr_dev rr_create(rr_proto proto,
                  rr_boolcb want_writable, void *ww_data,
                  size_t resend_cache_size);
 int rr_open(rr_dev device, const char *port, long speed);
-/* Close port and deallocate buffers */
 int rr_close(rr_dev device);
+/* Deallocate */
+void rr_free(rr_dev device);
+
 
 /* Accessors */
 /* File descriptor */
