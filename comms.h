@@ -44,12 +44,12 @@ typedef void (*rr_boolcb)(rr_dev, void *, char);
 
 /* Initializes device with supplied params */
 /* Note that want_writable may be called redundantly. */
-rr_dev rr_open(rr_proto proto,
-               rr_sendcb onsend, void *onsend_data,
-               rr_recvcb onrecv, void *onrecv_data,
-               rr_boolcb want_writable, void *ww_data,
-               const char *port, long speed,
-               size_t resend_cache_size);
+rr_dev rr_create(rr_proto proto,
+                 rr_sendcb onsend, void *onsend_data,
+                 rr_recvcb onrecv, void *onrecv_data,
+                 rr_boolcb want_writable, void *ww_data,
+                 size_t resend_cache_size);
+int rr_open(rr_dev device, const char *port, long speed);
 /* Close port and deallocate buffers */
 int rr_close(rr_dev device);
 

@@ -1,4 +1,4 @@
-#include "reprap.h"
+#include "comms.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,12 +50,11 @@ unsigned long rr_dev_lineno(rr_dev device) {
   return device->lineno;
 }
 
-rr_dev rr_open(rr_proto proto,
-               rr_sendcb onsend, void *onsend_data,
-               rr_recvcb onrecv, void *onrecv_data,
-               rr_boolcb want_writable, void *ww_data,
-               const char *port, long speed,
-               size_t resend_cache_size) {
+rr_dev rr_create(rr_proto proto,
+                 rr_sendcb onsend, void *onsend_data,
+                 rr_recvcb onrecv, void *onrecv_data,
+                 rr_boolcb want_writable, void *ww_data,
+                 size_t resend_cache_size) {
   rr_dev device = malloc(sizeof(struct rr_dev_t));
 
   device->sentcache = calloc(resend_cache_size, sizeof(blocknode*));
@@ -72,12 +71,6 @@ rr_dev rr_open(rr_proto proto,
   device->bytes_sent = 0;
   device->recvbuf = calloc(RECVBUFSIZE, sizeof(char));
   device->recvbufsize = RECVBUFSIZE;
-  
-  device->fd = serial_open(port, speed);
-  if(device->fd < 0) {
-    return NULL;
-  }
-  
   device->proto = proto;
   device->onsend = onsend;
   device->onsend_data = onsend_data;
@@ -88,6 +81,14 @@ rr_dev rr_open(rr_proto proto,
   device->lineno = 0;
   
   return device;
+}
+
+int rr_open(rr_dev device, const char *port, long speed) {
+  device->fd = serial_open(port, speed);
+  if(device->fd < 0) {
+    return -1;
+  }
+  return 0;
 }
 
 int rr_close(rr_dev device) {
