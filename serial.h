@@ -18,6 +18,6 @@ int serial_open(const char *path, long speed);
 
 /* Returns a human-readable interpretation of a failing serial_open
  * return value */
-const char* serial_strerror(int errno);
+const char* serial_strerror(int n);
 
 #endif

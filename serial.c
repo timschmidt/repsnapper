@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <errno.h>
 
 // Convert between the numeric speed and the termios representation
 // thereof.  Returns < 0 if argument is an unsupported speed.
@@ -224,7 +225,15 @@ int serial_open(const char *path, long speed) {
 		serial_errno = status;
 		return -1;
 	}
-  if(fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+  int flags;
+  if((flags = fcntl(fd, F_GETFL, 0)) < 0) {
+    /* TODO: Don't lose errno info */
+    serial_errno = SERIAL_SETTING_FAILED;
+    close(fd);
+    return -1;
+  }
+  
+  if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
     /* TODO: Don't lose errno info */
     serial_errno = SERIAL_SETTING_FAILED;
     close(fd);
@@ -236,8 +245,8 @@ int serial_open(const char *path, long speed) {
 
 /* Returns a human-readable interpretation of a failing serial_open
  * return value */
-const char* serial_strerror(int errno) {
-	switch(errno) {
+const char* serial_strerror(int n) {
+	switch(n) {
 	case SERIAL_NO_ERROR:
 		return "No error.";
 		
