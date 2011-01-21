@@ -334,14 +334,16 @@ int handle_reply(rr_dev device, const char *reply, size_t nbytes) {
 }
 
 int rr_handle_readable(rr_dev device) {
+  static const int termlen = strlen(REPLY_TERMINATOR);
   /* Grow receive buffer if it's full */
   if(device->recvbuf_fill == device->recvbufsize) {
     device->recvbuf = realloc(device->recvbuf, 2*device->recvbufsize);
   }
 
   ssize_t result;
-  size_t scan = device->recvbuf_fill;
-  size_t start = 0;
+  size_t scan = (device->recvbuf_fill > termlen) ?
+                 device->recvbuf_fill - termlen  :
+                 0;
   do {
     result = read(device->fd, device->recvbuf + device->recvbuf_fill, device->recvbufsize - device->recvbuf_fill);
   } while(result < 0 && errno == EINTR);
@@ -351,10 +353,11 @@ int rr_handle_readable(rr_dev device) {
   device->recvbuf_fill += result;
 
   /* Scan for complete reply */
-  size_t end = device->recvbuf_fill + (1 - strlen(REPLY_TERMINATOR));
+  size_t start = 0;
+  size_t end = device->recvbuf_fill - termlen;
   result = 0;
-  for(; scan < end; ++scan) {
-    if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, strlen(REPLY_TERMINATOR))) {
+  for(; scan <= end; ++scan) {
+    if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, termlen)) {
       /* We have a terminator */
       result = handle_reply(device, device->recvbuf + start, scan - start);
       scan += strlen(REPLY_TERMINATOR);
