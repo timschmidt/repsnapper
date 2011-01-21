@@ -83,6 +83,8 @@ void rr_free(rr_dev device);
 int rr_dev_fd(rr_dev device);
 /* Number of lines that have been since open */
 unsigned long rr_dev_lineno(rr_dev device);
+/* Returns nonzero if and only if there is data waiting to be written */
+int rr_dev_buffered(rr_dev device);
 
 /* nbytes MUST be < GCODE_BLOCKSIZE */
 void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes);
@@ -91,5 +93,8 @@ int rr_handle_readable(rr_dev device);
 /* Should only be called if want_writable callback has most recently
  * been passed a nonzero second argument */
 int rr_handle_writable(rr_dev device);
+
+/* Blocks until all buffered data has been written */
+int rr_flush(rr_dev device);
 
 #endif

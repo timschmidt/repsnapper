@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #include "serial.h"
 #include "gcode.h"
@@ -54,6 +55,16 @@ int rr_dev_fd(rr_dev device) {
 }
 unsigned long rr_dev_lineno(rr_dev device) {
   return device->lineno;
+}
+int rr_dev_buffered(rr_dev device) {
+  unsigned i;
+  for(i = 0; i < RR_PRIO_COUNT; ++i) {
+    if(device->sendhead[i]) {
+      return 1;
+    }
+  }
+  
+  return device->sendbuf_fill;
 }
 
 rr_dev rr_create(rr_proto proto,
@@ -417,5 +428,30 @@ int rr_handle_writable(rr_dev device) {
     device->sendbuf_fill = 0;
   }
 
+  return result;
+}
+
+int rr_flush(rr_dev device) {
+  /* Disable non-blocking mode */
+  int flags;
+  if((flags = fcntl(device->fd, F_GETFL, 0)) < 0) {
+    return flags;
+  }
+  if(fcntl(device->fd, F_SETFL, flags & ~O_NONBLOCK) == -1) {
+    return -1;
+  }
+
+  int result = 0;
+  while(rr_dev_buffered(device) && result >= 0) {
+    result = rr_handle_writable(device);
+  }
+
+  if(result >= 0) {
+    result = fcntl(device->fd, F_SETFL, flags);
+  } else {
+    fcntl(device->fd, F_SETFL, flags);
+  }
+
+  /* Restore original mode */
   return result;
 }
