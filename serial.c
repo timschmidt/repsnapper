@@ -138,7 +138,7 @@ speed_t ntocf(long l) {
 		return B4000000;
 #endif
 	default:
-		return SERIAL_INVALID_SPEED;
+		return -1;
 	}
 }
 
@@ -146,9 +146,9 @@ speed_t ntocf(long l) {
 // setting that failed to apply.  Returns < 0 on failure.
 int serial_set_attrib(int fd, struct termios* attribp) {
 	if(tcsetattr(fd, TCSANOW, attribp) < 0) {
-		return SERIAL_SETTING_FAILED;
+		return -1;
 	}
-	return SERIAL_NO_ERROR;
+	return 0;
 }
 
 int serial_init(int fd, long speed) {
@@ -156,14 +156,19 @@ int serial_init(int fd, long speed) {
 	struct termios attribs;
 	// Initialize attribs
 	if(tcgetattr(fd, &attribs) < 0) {
+    int tmp = errno;
 		close(fd);
-		return SERIAL_INVALID_FILEDESC;
+    errno = tmp;
+		return -1;
 	}
 
   /* Handle software flow control bytes from machine */
   attribs.c_iflag |= IXOFF;
   serial_set_attrib(fd, &attribs);
   if((status = serial_set_attrib(fd, &attribs)) < 0) {
+    int tmp = errno;
+		close(fd);
+    errno = tmp;
 		return status;
 	}
 
@@ -171,11 +176,17 @@ int serial_init(int fd, long speed) {
 	{
 		speed_t cfspeed = ntocf(speed);
 		if(cfsetispeed(&attribs, cfspeed) < 0) {
-			return SERIAL_INVALID_SPEED;
+      int tmp = errno;
+      close(fd);
+      errno = tmp;
+			return -1;
 		}
 		serial_set_attrib(fd, &attribs);
 		if(cfsetospeed(&attribs, cfspeed) < 0) {
-			return SERIAL_INVALID_SPEED;
+      int tmp = errno;
+      close(fd);
+      errno = tmp;
+			return -1;
 		}
 		serial_set_attrib(fd, &attribs);
 	}
@@ -183,14 +194,23 @@ int serial_init(int fd, long speed) {
 	/* Set non-canonical mode */
 	attribs.c_cc[VTIME] = 0;
 	if((status = serial_set_attrib(fd, &attribs)) < 0) {
+    int tmp = errno;
+		close(fd);
+    errno = tmp;
 		return status;
 	}
 	attribs.c_cc[VMIN] = 0;
 	if((status = serial_set_attrib(fd, &attribs)) < 0) {
+    int tmp = errno;
+		close(fd);
+    errno = tmp;
 		return status;
 	}
 	cfmakeraw(&attribs);
 	if((status = serial_set_attrib(fd, &attribs)) < 0) {
+    int tmp = errno;
+		close(fd);
+    errno = tmp;
 		return status;
 	}
 
@@ -198,71 +218,46 @@ int serial_init(int fd, long speed) {
 	 * an Arduino bootloader */
 	attribs.c_cflag &= ~HUPCL;
 	if((status = serial_set_attrib(fd, &attribs)) < 0) {
+    int tmp = errno;
+		close(fd);
+    errno = tmp;
 		return status;
 	}
 
-	return SERIAL_NO_ERROR;
+	return 0;
 }
 
 
 /* Returns a prepared FD for the serial device specified, or some
  * value < 0 if an error occurred. */
 int serial_open(const char *path, long speed) {
-	serial_errno = SERIAL_NO_ERROR;
 	int fd;
   do {
     fd = open(path, O_RDWR | O_NOCTTY | O_NDELAY);
   } while(fd < 0 && errno == EINTR);
 	if(fd < 0) {
-		/* An error ocurred */
-		serial_errno = SERIAL_INVALID_FILEDESC;
 		return -1;
 	}
 	int status;
-	if((status = serial_init(fd, speed)) !=
-	   SERIAL_NO_ERROR) {
-		/* An error occurred */
-		serial_errno = status;
-		return -1;
+	if((status = serial_init(fd, speed)) < 0) {
+    int tmp = errno;
+    close(fd);
+    errno = tmp;
+		return status;
 	}
   int flags;
   if((flags = fcntl(fd, F_GETFL, 0)) < 0) {
-    /* TODO: Don't lose errno info */
-    serial_errno = SERIAL_SETTING_FAILED;
+    int tmp = errno;
     close(fd);
-    return -1;
+    errno = tmp;
+    return flags;
   }
   
   if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-    /* TODO: Don't lose errno info */
-    serial_errno = SERIAL_SETTING_FAILED;
+    int tmp = errno;
     close(fd);
+    errno = tmp;
     return -1;
   }
 	return fd;
-}
-
-
-/* Returns a human-readable interpretation of a failing serial_open
- * return value */
-const char* serial_strerror(int n) {
-	switch(n) {
-	case SERIAL_NO_ERROR:
-		return "No error.";
-		
-	case SERIAL_INVALID_SPEED:
-		return "Unsupported serial linespeed.";
-
-	case SERIAL_INVALID_FILEDESC:
-		return "Invalid serial device.";
-
-	case SERIAL_SETTING_FAILED:
-		return "Unable to apply a necessary setting to the serial device.";
-
-	case SERIAL_UNKNOWN_ERROR:
-		return "An unknown error occurred.";
-
-	default:
-		return "Unexpected error.  This is an internal bug.";
-	}
 }
