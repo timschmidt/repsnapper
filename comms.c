@@ -17,10 +17,15 @@
 typedef struct blocknode {
   struct blocknode *next;
   void *cbdata;
-  const char *block;
+  char *block;
   size_t blocksize;
   long long line;
 } blocknode;
+
+void blocknode_free(blocknode* node) {
+  free(node->block);
+  free(node);
+}
 
 struct rr_dev_t {
   rr_proto proto;
@@ -129,7 +134,7 @@ void empty_buffers(rr_dev device) {
   }
   for(i = 0; i < device->sentcachesize; ++i) {
     if(device->sentcache[i]) {
-      free(device->sentcache[i]);
+      blocknode_free(device->sentcache[i]);
       device->sentcache[i] = NULL;
     }
   }
@@ -228,7 +233,8 @@ void rr_enqueue_internal(rr_dev device, rr_prio priority, void *cbdata, const ch
   blocknode *node = malloc(sizeof(blocknode));
   node->next = NULL;
   node->cbdata = cbdata;
-  node->block = block;
+  node->block = malloc(nbytes);
+  memcpy(node->block, block, nbytes);
   node->blocksize = nbytes;
   node->line = line;
   
@@ -334,7 +340,7 @@ int handle_reply(rr_dev device, const char *reply, size_t nbytes) {
 }
 
 int rr_handle_readable(rr_dev device) {
-  static const int termlen = strlen(REPLY_TERMINATOR);
+  const size_t termlen = strlen(REPLY_TERMINATOR);
   /* Grow receive buffer if it's full */
   if(device->recvbuf_fill == device->recvbufsize) {
     device->recvbuf = realloc(device->recvbuf, 2*device->recvbufsize);
@@ -360,7 +366,7 @@ int rr_handle_readable(rr_dev device) {
     if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, termlen)) {
       /* We have a terminator */
       result = handle_reply(device, device->recvbuf + start, scan - start);
-      scan += strlen(REPLY_TERMINATOR);
+      scan += termlen;
       start = scan;
     }
   }
@@ -421,7 +427,7 @@ int rr_handle_writable(rr_dev device) {
 
     /* Update sent cache */
     if(device->sentcache[device->sentcachesize - 1]) {
-      free(device->sentcache[device->sentcachesize - 1]);
+      blocknode_free(device->sentcache[device->sentcachesize - 1]);
     }
     ssize_t i;
     for(i = device->sentcachesize - 1; i > 0 ; --i) {
