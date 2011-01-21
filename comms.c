@@ -160,7 +160,7 @@ void rr_free(rr_dev device) {
 ssize_t fmtblock_simple(char *buf, const char *block) {
   char work[SENDBUFSIZE+1];
   int result;
-  result = snprintf(work, SENDBUFSIZE+1, "%s\r\n", block);
+  result = snprintf(work, SENDBUFSIZE+1, "%s" BLOCK_TERMINATOR, block);
   if(result >= SENDBUFSIZE+1) {
     return RR_E_BLOCK_TOO_LARGE;
   }
@@ -183,7 +183,7 @@ ssize_t fmtblock_fived(char *buf, const char *block, unsigned long line) {
     checksum ^= work[i];
   }
   /* TODO: Is this whitespace needed? */
-  result = snprintf(work, SENDBUFSIZE+1, "N%ld %s *%d\r\n", line, block, checksum);
+  result = snprintf(work, SENDBUFSIZE+1, "N%ld %s *%d" BLOCK_TERMINATOR, line, block, checksum);
   if(result >= SENDBUFSIZE+1) {
     return RR_E_BLOCK_TOO_LARGE;
   }
