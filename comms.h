@@ -34,6 +34,7 @@ typedef enum {
 } rr_prio;
 
 typedef enum {
+  RR_OK,
   RR_NOZZLE_TEMP,
   RR_BED_TEMP,
   RR_X_POS,

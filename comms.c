@@ -272,6 +272,7 @@ int handle_reply(rr_dev device, const char *reply, size_t nbytes) {
       return RR_E_HARDWARE_FAULT;
     } else if(!strncmp("ok", reply, 2)) {
       if(device->onreply) {
+        device->onreply(device, device->onreply_data, RR_OK, 0);
         /* Parse reply */
         char *i;
         for(i = (char*)reply; i < reply + nbytes; ++i) {
