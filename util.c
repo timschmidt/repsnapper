@@ -9,7 +9,7 @@
 #define DEV_PREFIXES ((char*[]){"ttyUSB", "ttyACM", NULL})
 #define GUESSES 8
 
-char *guess_device() {
+char *rr_guess_port() {
   char *name = malloc(NAME_MAX+1);
   DIR *devdir = opendir(DEV_PATH);
   if(!devdir) {

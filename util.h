@@ -1,6 +1,6 @@
 #ifndef _REPRAP_UTIL_H_
 #define _REPRAP_UTIL_H_
 
-char *guess_device();
+char *rr_guess_port();
 
 #endif
