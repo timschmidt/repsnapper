@@ -356,7 +356,7 @@ int rr_handle_readable(rr_dev device) {
   size_t start = 0;
   size_t end = device->recvbuf_fill - termlen;
   result = 0;
-  for(; scan <= end; ++scan) {
+  for(; scan < end; ++scan) {
     if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, termlen)) {
       /* We have a terminator */
       result = handle_reply(device, device->recvbuf + start, scan - start);
