@@ -9,6 +9,10 @@
 #include "serial.h"
 #include "gcode.h"
 
+/* Do not change */
+#define SENDBUFSIZE (GCODE_BLOCKSIZE + BLOCK_TERMINATOR_LEN)
+
+
 typedef struct blocknode {
   struct blocknode *next;
   void *cbdata;
@@ -87,6 +91,7 @@ rr_dev rr_create(rr_proto proto,
   device->want_writable = want_writable;
   device->ww_data = ww_data;
   device->lineno = 0;
+  device->fd = -1;
   
   return device;
 }
@@ -94,17 +99,12 @@ rr_dev rr_create(rr_proto proto,
 int rr_open(rr_dev device, const char *port, long speed) {
   device->fd = serial_open(port, speed);
   if(device->fd < 0) {
-    return -1;
+    return device->fd;
   }
   return 0;
 }
 
-int rr_close(rr_dev device) {
-  return close(device->fd);
-}
-
-void rr_free(rr_dev device) {
-  /* Deallocate buffers */
+void empty_buffers(rr_dev device) {
   unsigned i;
   for(i = 0; i < RR_PRIO_COUNT; ++i) {
     blocknode *j = device->sendhead[i];
@@ -114,14 +114,32 @@ void rr_free(rr_dev device) {
       j = next;
     }
     free(device->sendhead[i]);
+    device->sendhead[i] = NULL;
   }
-  free(device->recvbuf);
   for(i = 0; i < device->sentcachesize; ++i) {
     if(device->sentcache[i]) {
       free(device->sentcache[i]);
+      device->sentcache[i] = NULL;
     }
   }
+}
+
+void rr_reset(rr_dev device) {
+  empty_buffers(device);
+  device->lineno = 0;
+}
+
+int rr_close(rr_dev device) {
+  int result = close(device->fd);
+  device->fd = -1;
+  rr_reset(device);
+  return result;
+}
+
+void rr_free(rr_dev device) {
+  empty_buffers(device);
   free(device->sentcache);
+  free(device->recvbuf);
   free(device);
 }
 

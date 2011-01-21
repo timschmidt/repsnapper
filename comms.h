@@ -8,8 +8,6 @@
 #define REPLY_TERMINATOR "\r\n"
 
 #define RECVBUFSIZE 256
-/* Do not change */
-#define SENDBUFSIZE (GCODE_BLOCKSIZE + BLOCK_TERMINATOR_LEN)
 
 typedef enum {
   /* Standard gcode, 'ok' response */
@@ -74,13 +72,14 @@ rr_dev rr_create(rr_proto proto,
                  rr_boolcb want_writable, void *ww_data,
                  size_t resend_cache_size);
 int rr_open(rr_dev device, const char *port, long speed);
+void rr_reset(rr_dev device);
 int rr_close(rr_dev device);
 /* Deallocate */
 void rr_free(rr_dev device);
 
 
 /* Accessors */
-/* File descriptor */
+/* File descriptor; <0 if not connected */
 int rr_dev_fd(rr_dev device);
 /* Number of lines that have been since open */
 unsigned long rr_dev_lineno(rr_dev device);
