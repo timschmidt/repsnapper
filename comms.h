@@ -22,6 +22,9 @@ typedef enum {
   RR_E_BLOCK_TOO_LARGE = -1,
   RR_E_WRITE_FAILED = -2,
   RR_E_UNSUPPORTED_PROTO = -3,
+  RR_E_UNKNOWN_REPLY = -4,
+  RR_E_UNCACHED_RESEND = -5,
+  RR_E_HARDWARE_FAULT = -6,
 } rr_error;
 
 /* Must be ordered ascending by priority */
@@ -32,21 +35,42 @@ typedef enum {
   RR_PRIO_COUNT
 } rr_prio;
 
+typedef enum {
+  RR_NOZZLE_TEMP,
+  RR_BED_TEMP,
+  RR_X_POS,
+  RR_Y_POS,
+  RR_Z_POS,
+  RR_E_POS,
+} rr_reply;
+
 typedef struct rr_dev_t *rr_dev;
 
+/* Note that strings passed to callbacks may not be null terminated. */
+/* Invoked when a complete block has been sent */
 /* Device, callback user data, gcode block user data, actual block
  * sent, length thereof */
 typedef void (*rr_sendcb)(rr_dev, void *, void *, const char *, size_t);
+/* Invoked on each line received */
 /* Device, callback user data, line received, length thereof */
 typedef void (*rr_recvcb)(rr_dev, void *, const char *, size_t);
+/* Invoked when a known reply is received and parsed */
+/* Device, callback user data, reply code, reply value */
+typedef void (*rr_replycb)(rr_dev, void *, rr_reply, float);
 /* Device, callback user data, boolean */
 typedef void (*rr_boolcb)(rr_dev, void *, char);
+/* Invoked when a reply from the device indicates an error */
+/* Device, callback user data, error code, message responsible, length
+ * thereof */
+typedef void (*rr_errcb)(rr_dev, void *, int, const char*, size_t);
 
 /* Initializes device with supplied params */
 /* Note that want_writable may be called redundantly. */
 rr_dev rr_create(rr_proto proto,
                  rr_sendcb onsend, void *onsend_data,
                  rr_recvcb onrecv, void *onrecv_data,
+                 rr_replycb onreply, void *onreply_data,
+                 rr_errcb onerr, void *onerr_data,
                  rr_boolcb want_writable, void *ww_data,
                  size_t resend_cache_size);
 int rr_open(rr_dev device, const char *port, long speed);

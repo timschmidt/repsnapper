@@ -39,8 +39,10 @@ struct rr_dev_t {
   
   rr_sendcb onsend;
   rr_recvcb onrecv;
+  rr_replycb onreply;
+  rr_errcb onerr;
   rr_boolcb want_writable;
-  void *onsend_data, *onrecv_data, *ww_data;
+  void *onsend_data, *onrecv_data, *onreply_data, *onerr_data, *ww_data;
 };
 
 int rr_dev_fd(rr_dev device) {
@@ -53,6 +55,8 @@ unsigned long rr_dev_lineno(rr_dev device) {
 rr_dev rr_create(rr_proto proto,
                  rr_sendcb onsend, void *onsend_data,
                  rr_recvcb onrecv, void *onrecv_data,
+                 rr_replycb onreply, void *onreply_data,
+                 rr_errcb onerr, void *onerr_data,
                  rr_boolcb want_writable, void *ww_data,
                  size_t resend_cache_size) {
   rr_dev device = malloc(sizeof(struct rr_dev_t));
@@ -76,6 +80,10 @@ rr_dev rr_create(rr_proto proto,
   device->onsend_data = onsend_data;
   device->onrecv = onrecv;
   device->onrecv_data = onrecv_data;
+  device->onreply = onreply;
+  device->onreply_data = onreply_data;
+  device->onerr = onerr;
+  device->onerr_data = onerr_data;
   device->want_writable = want_writable;
   device->ww_data = ww_data;
   device->lineno = 0;
@@ -209,19 +217,84 @@ int handle_reply(rr_dev device, const char *reply, size_t nbytes) {
     device->onrecv(device, device->onrecv_data, reply, nbytes);
   }
 
-  if(device->proto == RR_PROTO_FIVED &&
-     0 == strncmp("rs", reply, 2)) {
-    /* Line number begins 3 bytes in */
-    unsigned long resend = atoll(reply + 3);
-    unsigned long delta = (device->lineno - 1) - resend;
-    if(delta < device->sentcachesize) {
-      blocknode *node = device->sentcache[delta];
-      rr_enqueue_internal(device, RR_PRIO_RESEND, node->cbdata, node->block, node->blocksize, resend);
+  switch(device->proto) {
+  case RR_PROTO_FIVED:
+    if(!strncmp("rs", reply, 2)) {
+      /* Line number begins 3 bytes in */
+      unsigned long resend = atoll(reply + 3);
+      unsigned long delta = (device->lineno - 1) - resend;
+      if(delta < device->sentcachesize) {
+        blocknode *node = device->sentcache[delta];
+        rr_enqueue_internal(device, RR_PRIO_RESEND, node->cbdata, node->block, node->blocksize, resend);
+      } else {
+        /* Line needed for resend was not cached */
+        if(device->onerr) {
+          device->onerr(device, device->onerr_data, RR_E_UNCACHED_RESEND, reply, nbytes);
+        }
+        return RR_E_UNCACHED_RESEND;
+      }
+    } else if(!strncmp("!!", reply, 2)) {
+      if(device->onerr) {
+        device->onerr(device, device->onerr_data, RR_E_HARDWARE_FAULT, reply, nbytes);
+      }
+      return RR_E_HARDWARE_FAULT;
+    } else if(!strncmp("ok", reply, 2)) {
+      if(device->onreply) {
+        /* Parse reply */
+        char *i;
+        for(i = (char*)reply; i < reply + nbytes; ++i) {
+          switch(*i) {
+          case 'T':
+            device->onreply(device, device->onreply_data, RR_NOZZLE_TEMP,
+                            strtof(i+2, &i));
+            break;
+
+          case 'B':
+            device->onreply(device, device->onreply_data, RR_BED_TEMP,
+                            strtof(i+2, &i));
+            break;
+
+          case 'C':
+            break;
+
+          case 'X':
+            device->onreply(device, device->onreply_data, RR_X_POS,
+                            strtof(i+2, &i));
+            break;
+
+          case 'Y':
+            device->onreply(device, device->onreply_data, RR_Y_POS,
+                            strtof(i+2, &i));
+            break;
+
+          case 'Z':
+            device->onreply(device, device->onreply_data, RR_Z_POS,
+                            strtof(i+2, &i));
+            break;
+
+          case 'E':
+            device->onreply(device, device->onreply_data, RR_E_POS,
+                            strtof(i+2, &i));
+            break;
+
+          default:
+            if(device->onerr) {
+              device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
+            }
+            break;
+          }
+        }
+      }
     } else {
-      /* Line needed for resend was not cached */
-      /* TODO: Make it clearer what happened */
-      return -1;
+      if(device->onerr) {
+        device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
+      }
+      return RR_E_UNKNOWN_REPLY;
     }
+    break;
+
+  default:
+    return RR_E_UNSUPPORTED_PROTO;
   }
 
   return 0;
@@ -245,13 +318,11 @@ int rr_handle_readable(rr_dev device) {
   }
 
   /* Scan for complete reply */
-  char error = 0;
+  result = 0;
   for(; scan < device->recvbuf_fill; ++scan) {
     if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, strlen(REPLY_TERMINATOR))) {
       /* We have a terminator */
-      if(handle_reply(device, device->recvbuf + start, scan - start) < 0) {
-        error = 1;
-      }
+      result = handle_reply(device, device->recvbuf + start, scan - start);
       scan += strlen(REPLY_TERMINATOR);
       start = scan;
     }
@@ -260,11 +331,7 @@ int rr_handle_readable(rr_dev device) {
   /* Move incomplete reply to beginning of buffer */
   memmove(device->recvbuf, device->recvbuf+start, device->recvbuf_fill - start);
 
-  if(error) {
-    return -1;
-  }
-  
-  return 0;
+  return result;
 }
 
 int rr_handle_writable(rr_dev device) {
