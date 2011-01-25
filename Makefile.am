@@ -2,7 +2,8 @@ SUBDIRS=libraries src
 CLEANFILES = repsnapper.desktop
 
 EXTRA_DIST = \
-	README HACKING NEWS MAINTAINERS AUTHORS \
+	README \
+	HACKING \
 	repsnapper.desktop.in
 
 Applicationsdir = $(datadir)/applications/

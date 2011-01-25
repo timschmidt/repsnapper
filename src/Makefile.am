@@ -26,12 +26,12 @@ SHARED_SRC=asyncserial.cpp stl.cpp reprapserial.cpp \
 	model.cpp gllight.cpp gcode.cpp arcball.cpp \
 	stdafx.cpp rfo.cpp settings.cpp \
 	ivcon.cpp file.cpp platform.cpp \
-	render.cxx progress.cxx connectview.cpp
+	render.cpp progress.cpp connectview.cpp
 
 SHARED_INC=arcball.h asyncserial.h convert.h \
 	gcode.h gllight.h ivcon.h miniball.h \
 	model.h reprapserial.h rfo.h \
-	stdafx.h stl.h triangle.h platform.h render.h \
+	stdafx.h stl.h platform.h render.h \
 	progress.h connectview.h settings.h
 
 # TEST_SOURCES=unittest.cpp

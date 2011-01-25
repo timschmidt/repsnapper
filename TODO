@@ -1,5 +1,7 @@
 --- the plan ---
 
+* Move most of 'model.cpp' into a new 'view.cpp'
+
 * Serial
 	+ error dialogs - "failed to connect ?"
 	+ /dev/ttyUSB0 - EACCES

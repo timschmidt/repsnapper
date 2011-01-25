@@ -1,5 +1,5 @@
 AC_PREREQ(2.63)
-AC_INIT([repsnapper],[1.1.0],[https://github.com/timschmidt/repsnapper])
+AC_INIT([repsnapper],[1.9.0],[https://github.com/timschmidt/repsnapper])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/repsnapper.cpp])
