@@ -6,4 +6,7 @@ libpolylib_a_CPPFLAGS = \
 
 libpolylib_a_SOURCES = \
 	GeometryBase.cpp \
-	Polygon2f.cpp
+	GeometryBase.h \
+	Polygon2f.cpp \
+	Polygon2f.h \
+	platform.h

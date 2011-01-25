@@ -39,5 +39,8 @@ AC_CONFIG_FILES([
   po/Makefile.in
   libraries/Makefile
   libraries/polylib/Makefile
+  libraries/vmmlib/Makefile
+  libraries/vmmlib/include/Makefile
+  libraries/vmmlib/include/vmmlib/Makefile
   src/Makefile])
 AC_OUTPUT

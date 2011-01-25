@@ -1,0 +1,3 @@
+SUBDIRS=include
+
+EXTRA_DIST = README

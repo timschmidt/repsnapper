@@ -1,4 +1,4 @@
-SUBDIRS=libraries src
+SUBDIRS=libraries src po
 CLEANFILES = repsnapper.desktop
 
 EXTRA_DIST = \

@@ -30,7 +30,7 @@ SHARED_SRC=asyncserial.cpp stl.cpp reprapserial.cpp \
 
 SHARED_INC=arcball.h asyncserial.h convert.h \
 	gcode.h gllight.h ivcon.h miniball.h \
-	model.h reprapserial.h rfo.h \
+	model.h reprapserial.h rfo.h file.h \
 	stdafx.h stl.h platform.h render.h \
 	progress.h connectview.h settings.h
 
