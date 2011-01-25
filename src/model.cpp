@@ -711,7 +711,7 @@ void Model::SimpleAdvancedToggle()
 /* Called every 250ms (0.25 of a second) */
 bool Model::timer_function()
 {
-  ToolkitLock guard;
+  ToolkitLock guard(true);
 #warning FIXME: busy polling for com ports is a disaster [!]
 #warning FIXME: we should auto-select one at 'connect' time / combo drop-down instead
   if (!serial->isConnected()) {

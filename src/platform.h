@@ -46,7 +46,7 @@ class Platform {
 class ToolkitLock {
   bool m_locked;
  public:
-  ToolkitLock();
+  ToolkitLock(bool force = false);
   ~ToolkitLock();
 };
 

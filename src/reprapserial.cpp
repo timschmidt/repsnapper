@@ -49,7 +49,7 @@ RepRapSerial::~RepRapSerial()
 
 bool RepRapSerial::temp_poll_timeout()
 {
-  ToolkitLock guard;
+  ToolkitLock guard(true);
   if (m_settings->Misc.TempReadingEnabled && m_state == CONNECTED)
     SendNow("M105");
   return true;
@@ -317,7 +317,7 @@ void RepRapSerial::SendData(string s, const int lineNr)
 
 bool RepRapSerial::connecting_poll(int *count)
 {
-  ToolkitLock guard;
+  ToolkitLock guard(true);
 
   if ((*count)-- <= 0) {
     change_to_state (DISCONNECTED);
