@@ -63,6 +63,11 @@ yum install git fltk-fluid gtk2-devel fltk-devel fltk freeglut freeglut-devel bo
 exit
 ----
 
+==== OpenSuse 11.2 / SLED 11 SP1 ====
+----
+sudo zypper install fltk-devel freeglut-devel boost-devel
+----
+
 Acquire source and compile:
 ----
 git clone git://github.com/timschmidt/repsnapper.git
