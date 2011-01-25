@@ -55,3 +55,7 @@
 * bug fixing:
 	+ arcball / rotation resetting ...
 	+ re-instate a non-gui mode ...
+
+* add log scrolling:
+	+ gtk_text_view_scroll_to_iter [etc.]
+	+ when the adjustments change etc.
