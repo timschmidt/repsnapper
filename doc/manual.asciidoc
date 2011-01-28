@@ -53,12 +53,12 @@ Install dependencies:
 
 ==== Ubuntu 11.04 ====
 ----
-sudo apt-get install git-core build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost-all-dev libconfig8++-dev libconfig8-dev 
+sudo apt-get install git-core build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost-thread-dev libboost-system-dev libconfig8++-dev libconfig8-dev 
 ----
 
 ==== Ubuntu 10.10 ====
 ----
-sudo apt-get install git-core build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost-all-dev libconfig8++-dev libconfig8-dev 
+sudo apt-get install git-core build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost-thread-dev libboost-system-dev libconfig8++-dev libconfig8-dev 
 ----
 
 ==== Ubuntu 10.04 ====
