@@ -44,7 +44,9 @@ Although RepSnapper is not generally tested outside of windows/linux/mac you may
     * git
     * libfltk1.1-dev
     * libglut3-dev
-    * libboost-dev (or higher version)
+    * libboost-dev
+    * libboost-thread-dev
+    * libboost-system-dev
     * libconfig-dev
 =====
 
