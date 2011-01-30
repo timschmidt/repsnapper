@@ -89,10 +89,12 @@ int rr_dev_buffered(rr_dev device);
 
 /* nbytes MUST be < GCODE_BLOCKSIZE */
 void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes);
+#define rr_enqueue_c(d, p, cb, b) rr_enqueue(d, p, cb, b, strlen(b))
 
 int rr_handle_readable(rr_dev device);
 /* Should only be called if want_writable callback has most recently
- * been passed a nonzero second argument */
+ * been passed a nonzero second argument; is guaranteed to be a noop
+ * otherwise */
 int rr_handle_writable(rr_dev device);
 
 /* Blocks until all buffered data has been written */
