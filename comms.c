@@ -71,7 +71,7 @@ rr_dev rr_create(rr_proto proto,
   device->onerr_data = onerr_data;
   device->want_writable = want_writable;
   device->ww_data = ww_data;
-  device->lineno = (proto == RR_PROTO_TONOKIP ? 1 : 0);
+  device->lineno = 1;
   device->fd = -1;
   
   return device;
@@ -107,7 +107,7 @@ void empty_buffers(rr_dev device) {
 
 void rr_reset(rr_dev device) {
   empty_buffers(device);
-  device->lineno = (device->proto == RR_PROTO_TONOKIP ? 1 : 0);
+  device->lineno = 1;
 }
 
 int rr_close(rr_dev device) {
