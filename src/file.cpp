@@ -18,8 +18,9 @@
 */
 #include "stdafx.h"
 #include <string>
+#include <giomm/file.h>
+
 #include "file.h"
-#include <boost/filesystem/path.hpp>
 #include "model.h"
 
 namespace {
@@ -118,8 +119,7 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
   if (!file.length())
     return;
 
-  boost::filesystem::path path(file);
-  std::string directory_path = path.branch_path().native_directory_string();
+  std::string directory_path = Gio::File::create_for_path(file)->get_parent()->get_path();
 
   switch (t) {
   case GCODE:

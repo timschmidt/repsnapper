@@ -16,6 +16,8 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+#include <limits>
+
 #include "config.h"
 #include "stdafx.h"
 #include "string.h"
@@ -23,7 +25,6 @@
 #include "stl.h"
 #include "gcode.h"
 #include "math.h"
-#include <boost/numeric/conversion/bounds.hpp> 
 #include "settings.h"
 #include "rfo.h"
 
@@ -517,7 +518,7 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 int findClosestUnused(std::vector<Vector3f> lines, Vector3f point, std::vector<bool> &used)
 {
 	int closest = -1;
-	float closestDist = boost::numeric::bounds<float>::highest();
+	float closestDist = numeric_limits<float>::max();
 
 	size_t count = lines.size();
 

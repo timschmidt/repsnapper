@@ -17,10 +17,10 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "config.h"
+#include <cstdlib>
 #include <gtkmm.h>
 #include "settings.h"
 #include <libconfig.h++>
-#include <boost/algorithm/string.hpp>
 
 /*
  * How settings are intended to work:
@@ -204,17 +204,16 @@ public:
 
 void Settings::SlicingSettings::GetAltInfillLayers(std::vector<int>& layers, uint layerCount) const
 {
-  std::vector<std::string> numstrs;
-  boost::algorithm::split(numstrs, AltInfillLayersText, boost::is_any_of(","));
-  std::vector<std::string>::iterator numstr_i;
-  for (numstr_i = numstrs.begin(); numstr_i != numstrs.end(); numstr_i++) {
-    int num;
-    int retval = sscanf ((*numstr_i).c_str(), "%d", &num);
-    if (retval == 1) {
-      if (num < 0)
-	num += layerCount;
-      layers.push_back (num);
+  size_t start = 0, end = AltInfillLayersText.find(',');
+  while(start != std::string::npos) {
+    int num = atoi(AltInfillLayersText.data() + start);
+    if(num < 0) {
+      num += layerCount;
     }
+    layers.push_back (num);
+    
+    start = end;
+    end = AltInfillLayersText.find(',', start+1);
   }
 }
 

@@ -18,7 +18,6 @@ AM_CPPFLAGS = \
 	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
-	-I/usr/include/boost \
 	-I$(LIB_DIR)/polylib \
 	-g -O0 $(WARNING_FLAGS)
 
@@ -35,7 +34,6 @@ SHARED_INC=arcball.h convert.h gcode.h gllight.h ivcon.h miniball.h	\
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
 
 repsnapper_LDADD = ${LIBS} -L/usr/lib -lGLU -lGL -lglut	\
-		-lboost_thread-mt -lboost_system-mt			\
 		$(top_builddir)/libraries/polylib/libpolylib.a
 
 repsnapperuidir = $(datadir)/@PACKAGE@
