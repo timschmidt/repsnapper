@@ -95,6 +95,7 @@ rr_dev rr_create(rr_proto proto,
   device->bytes_sent = 0;
   device->recvbuf = calloc(RECVBUFSIZE, sizeof(char));
   device->recvbufsize = RECVBUFSIZE;
+  device->recvbuf_fill = 0;
   device->proto = proto;
   device->onsend = onsend;
   device->onsend_data = onsend_data;
@@ -361,11 +362,10 @@ int rr_handle_readable(rr_dev device) {
   /* Scan for complete reply */
   size_t start = 0;
   size_t end = device->recvbuf_fill - termlen;
-  result = 0;
   for(; scan < end; ++scan) {
     if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, termlen)) {
       /* We have a terminator */
-      result = handle_reply(device, device->recvbuf + start, scan - start);
+      handle_reply(device, device->recvbuf + start, scan - start);
       scan += termlen;
       start = scan;
     }
@@ -374,7 +374,7 @@ int rr_handle_readable(rr_dev device) {
   /* Move incomplete reply to beginning of buffer */
   memmove(device->recvbuf, device->recvbuf+start, device->recvbuf_fill - start);
 
-  return result;
+  return 0;
 }
 
 int rr_handle_writable(rr_dev device) {
