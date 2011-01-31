@@ -36,5 +36,5 @@ repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
 repsnapper_LDADD = ${LIBS} -L/usr/lib -lGLU -lGL -lglut	\
 		$(top_builddir)/libraries/polylib/libpolylib.a
 
-repsnapperuidir = $(datadir)/@PACKAGE@
-repsnapperui_DATA = repsnapper.ui
+repsnappersharedir = $(datadir)/@PACKAGE@
+repsnappershare_DATA = repsnapper.ui repsnapper.conf

@@ -1,7 +1,6 @@
 ChangeLog
 src/repsnapper
 src/RepSnapper.log
-src/repsnapper.conf
 *.o
 *.lo
 *.la
