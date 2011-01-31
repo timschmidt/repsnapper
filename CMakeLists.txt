@@ -4,6 +4,7 @@ add_definitions(-Wall -Wextra)
 
 add_library(reprap SHARED
   serial.c
+  common.c
   fived.c
   tonokip.c
   comms.c
