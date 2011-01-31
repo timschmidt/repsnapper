@@ -36,18 +36,19 @@ class ConnectView : public Gtk::VBox {
   Gtk::Image         m_image;
   Gtk::ToggleButton  m_connect;
   Gtk::Label         m_port_label;
-  Gtk::ComboBoxEntry m_combo;
+  Gtk::ComboBoxEntryText m_combo;
   bool               m_setting_state;
 
   rr_dev            m_device;
   Settings          *m_settings;
 
-  void connect_toggled ();
-  void serial_state_changed (SerialState state);
-  void signal_entry_changed ();
+  void connect_toggled();
+  void serial_state_changed(SerialState state);
+  void signal_entry_changed();
+  void find_ports();
  public:
   ConnectView(rr_dev device, Settings *settings, bool show_connect = true);
-  void try_set_state (bool connected);
+  void try_set_state(bool connected);
 };
 
 #endif // CONNECT_VIEW_H

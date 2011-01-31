@@ -22,6 +22,8 @@
 #include <cerrno>
 #include <string>
 
+#include <reprap/util.h>
+
 #include "settings.h"
 #include "connectview.h"
 
@@ -108,7 +110,19 @@ void ConnectView::connect_toggled()
 void ConnectView::signal_entry_changed()
 {
   m_settings->Hardware.PortName = m_combo.get_active_text();
-  std::cerr << "combo " << m_combo.get_active_text() << "\n";
+}
+
+void ConnectView::find_ports() {
+  m_combo.clear();
+
+  m_combo.append_text(m_settings->Hardware.PortName);
+
+  char **ports = rr_enumerate_ports();
+  for(size_t i = 0; ports[i] != NULL; ++i) {
+    m_combo.append_text(ports[i]);
+  }
+  
+  free(ports);
 }
 
 ConnectView::ConnectView (rr_dev device,
@@ -125,12 +139,14 @@ ConnectView::ConnectView (rr_dev device,
   m_hbox.add (m_port_label);
   m_hbox.add (m_combo);
 
-  m_connect.signal_toggled().connect (sigc::mem_fun (*this, &ConnectView::connect_toggled));
-  m_combo.get_entry()->set_text (settings->Hardware.PortName);
-  m_combo.get_entry()->signal_activate().connect (sigc::mem_fun (*this, &ConnectView::signal_entry_changed));
+  m_connect.signal_toggled().connect(sigc::mem_fun (*this, &ConnectView::connect_toggled));
+  m_combo.signal_changed().connect(sigc::mem_fun (*this, &ConnectView::signal_entry_changed));
 
   show_all ();
   if (!show_connect)
     m_connect.hide ();
   serial_state_changed(DISCONNECTED);
+
+  find_ports();
+  m_combo.set_active(0);
 }
