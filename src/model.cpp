@@ -114,7 +114,8 @@ void Model::save_stl ()
 
 void Model::send_gcode ()
 {
-  SendNow (m_gcode_entry->get_text());
+  SendNow(m_gcode_entry->get_text());
+  m_gcode_entry->set_text("");
 }
 
 Model *Model::create()
@@ -509,12 +510,12 @@ void Model::handle_send(rr_dev device, void *cbdata, void *blkdata, const char *
   if(instance->m_printing) {
     instance->m_progress->update((unsigned long)(blkdata));
   }
-  instance->commlog->insert(instance->commlog->end() , string(block, len) + "\n");
+  instance->commlog->insert(instance->commlog->end(), string(block, len));
 }
 
 void Model::handle_recv(rr_dev device, void *data, const char *reply, size_t len) {
   Model *instance = static_cast<Model*>(data);
-  instance->commlog->insert(instance->commlog->end() , string(reply, len) + "\n");
+  instance->commlog->insert(instance->commlog->end(), string(reply, len) + "\n");
 }
 
 bool Model::handle_dev_fd(Glib::IOCondition cond) {
