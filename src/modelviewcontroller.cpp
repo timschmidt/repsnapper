@@ -264,10 +264,12 @@ void ModelViewController::DetectComPorts(bool init)
 	currentComports.push_back(string("COM"+highestCom));
 
 #elif defined(__APPLE__)
-	const char *ttyPattern = "tty.";
+   // We could club this in with the Linux case now -- any reason not to?
+   const char *ttyPattern[] = {"tty.", NULL};
 
 #else // Linux
-	const char *ttyPattern = "ttyUSB";
+   // Some boards show up as ttyACM now, so we must check for both
+   const char *ttyPattern[] = {"ttyUSB", "ttyACM", NULL};
 #endif
 
 #ifndef WIN32
@@ -276,9 +278,11 @@ void ModelViewController::DetectComPorts(bool init)
 		struct	dirent *e;
 		while ((e = readdir (d))) {
 			//fprintf (stderr, "name '%s'\n", e->d_name);
-			if (strstr(e->d_name,ttyPattern)) {
-				string device = string("/dev/") + e->d_name;
-				currentComports.push_back(device);
+           for (const char **ttyPidx = ttyPattern; *ttyPidx != NULL; ++ttyPidx) {
+               if (strstr(e->d_name,*ttyPidx)) {
+                   string device = string("/dev/") + e->d_name;
+                   currentComports.push_back(device);
+               }
 			}
 		}
 		closedir(d);
