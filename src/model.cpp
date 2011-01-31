@@ -757,11 +757,6 @@ void Model::redraw()
    queue_draw();
 }
 
-void Model::Init()
-{
-	LoadConfig();
-}
-
 void Model::SaveConfig(string filename)
 {
   settings.save_settings (filename);

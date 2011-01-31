@@ -119,7 +119,6 @@ public:
 
 	static Model *create();
 	~Model();
-	void Init();
 	void SimpleAdvancedToggle();
 
 	void SaveConfig(string filename);

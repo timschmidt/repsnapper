@@ -100,14 +100,14 @@ int main(int argc, char **argv)
   CommandLineOptions opts (argc, argv);
 
   Model *model = Model::create();
-  model->Init();
+  model->LoadConfig();
 
   if (!opts.use_gui) {
     if (opts.stl_input_path.size() > 0) {
       model->ReadStl(opts.stl_input_path);
 
       if (opts.settings_path.size() > 0)
-	model->LoadConfig (opts.settings_path);
+        model->LoadConfig (opts.settings_path);
 
       model->ConvertToGCode();
 
