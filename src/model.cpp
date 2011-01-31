@@ -1075,9 +1075,9 @@ void Model::RunExtruder()
 	static bool extruderIsRunning = false;
 	if (settings.Slicing.Use3DGcode) {
 		if (extruderIsRunning)
-      rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "M103");
+      SendNow("M103");
 		else
-      rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "M101");
+      SendNow("M101");
 		extruderIsRunning = !extruderIsRunning;
 		return;
 	}
@@ -1086,25 +1086,32 @@ void Model::RunExtruder()
 	string command("G1 F");
 	oss << m_extruder_speed->get_value();
 	command += oss.str();
-  rr_enqueue(device, RR_PRIO_HIGH, NULL, command.data(), command.size());
+  SendNow(command);
 	oss.str("");
 
   // set extruder zero
-	rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "G92 E0");
+	SendNow("G92 E0");
 	oss << m_extruder_length->get_value();
 	string command2("G1 E");
 
 	if (m_extruder_reverse->get_active())
 		command2+="-";
 	command2+=oss.str();
-  rr_enqueue(device, RR_PRIO_HIGH, NULL, command2.data(), command2.size());
-	rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "G1 F1500.0");
-  rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "G92 E0");	// set extruder zero
+  SendNow(command2);
+	SendNow("G1 F1500.0");
+  SendNow("G92 E0");	// set extruder zero
  }
 
 void Model::SendNow(string str)
 {
-  rr_enqueue(device, RR_PRIO_HIGH, NULL, str.data(), str.size());
+  if(rr_dev_fd(device) > 0) {
+    rr_enqueue(device, RR_PRIO_HIGH, NULL, str.data(), str.size());
+  } else {
+    Gtk::MessageDialog dialog("Can't send command", false,
+                              Gtk::MESSAGE_INFO, Gtk::BUTTONS_CLOSE);
+    dialog.set_secondary_text("You must first connect to a device!");
+    dialog.run();
+  }
 }
 
 void Model::Home(string axis)

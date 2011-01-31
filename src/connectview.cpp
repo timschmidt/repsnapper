@@ -35,10 +35,9 @@ void ConnectView::try_set_state(bool connect)
                      m_settings->Hardware.SerialSpeed);
     if(result < 0) {
       serial_state_changed(DISCONNECTED);
-      std::string message("Failed to connect to device: ");
-      message += strerror(errno);
-      Gtk::MessageDialog dialog(message, false,
+      Gtk::MessageDialog dialog("Failed to connect to device", false,
                                 Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.set_secondary_text(strerror(errno));
       dialog.run();
     } else {
       serial_state_changed(CONNECTED);
@@ -49,10 +48,10 @@ void ConnectView::try_set_state(bool connect)
     if(result < 0) {
       serial_state_changed(CONNECTED);
       // TODO: Error dialog
-      std::string message("Failed to disconnect from device: ");
-      message += strerror(errno);
-      Gtk::MessageDialog dialog(message, false,
+      std::string message();
+      Gtk::MessageDialog dialog("Failed to disconnect from device", false,
                                 Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.set_secondary_text(strerror(errno));
       dialog.run();
     } else {
       serial_state_changed(DISCONNECTED);
