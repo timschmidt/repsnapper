@@ -10,8 +10,9 @@
 
 #include "serial.h"
 #include "gcode.h"
-#include "fived.h"
 
+#include "fived.h"
+#include "tonokip.h"
 
 void blocknode_free(blocknode* node) {
   free(node->block);
@@ -70,7 +71,7 @@ rr_dev rr_create(rr_proto proto,
   device->onerr_data = onerr_data;
   device->want_writable = want_writable;
   device->ww_data = ww_data;
-  device->lineno = 0;
+  device->lineno = (proto == RR_PROTO_TONOKIP ? 1 : 0);
   device->fd = -1;
   
   return device;
@@ -106,7 +107,7 @@ void empty_buffers(rr_dev device) {
 
 void rr_reset(rr_dev device) {
   empty_buffers(device);
-  device->lineno = 0;
+  device->lineno = (device->proto == RR_PROTO_TONOKIP ? 1 : 0);
 }
 
 int rr_close(rr_dev device) {
@@ -220,62 +221,20 @@ int handle_reply(rr_dev device, const char *reply, size_t nbytes) {
     device->onrecv(device, device->onrecv_data, reply, nbytes);
   }
 
-  /* TODO: Fixed and generalized parsing */
-  /* All protos do this */
-  if(!strncmp("ok", reply, 2)) {
-    if(device->onreply) {
-      device->onreply(device, device->onreply_data, RR_OK, 0);
-      /* Parse reply */
-      char *i;
-      for(i = (char*)reply; i < reply + nbytes; ++i) {
-        switch(*i) {
-        case 'T':
-          device->onreply(device, device->onreply_data, RR_NOZZLE_TEMP,
-                          strtof(i+2, &i));
-          break;
-
-        case 'B':
-          device->onreply(device, device->onreply_data, RR_BED_TEMP,
-                          strtof(i+2, &i));
-          break;
-
-        case 'C':
-          break;
-
-        case 'X':
-          device->onreply(device, device->onreply_data, RR_X_POS,
-                          strtof(i+2, &i));
-          break;
-
-        case 'Y':
-          device->onreply(device, device->onreply_data, RR_Y_POS,
-                          strtof(i+2, &i));
-          break;
-
-        case 'Z':
-          device->onreply(device, device->onreply_data, RR_Z_POS,
-                          strtof(i+2, &i));
-          break;
-
-        case 'E':
-          device->onreply(device, device->onreply_data, RR_E_POS,
-                          strtof(i+2, &i));
-          break;
-
-        default:
-          if(device->onerr) {
-            device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
-          }
-          break;
-        }
-      }
-    }
-  }
-
   switch(device->proto) {
   case RR_PROTO_FIVED:
     return fived_handle_reply(device, reply, nbytes);
-    break;
+
+  case RR_PROTO_TONOKIP:
+    return tonokip_handle_reply(device, reply, nbytes);
+
+  case RR_PROTO_SIMPLE:
+    if(!strncmp("ok", reply, 2) && device->onreply) {
+      device->onreply(device, device->onreply_data, RR_OK, 0);
+    } else if(device->onerr) {
+      device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
+    } 
+    return 0;
 
   default:
     return RR_E_UNSUPPORTED_PROTO;
