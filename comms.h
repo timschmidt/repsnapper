@@ -3,6 +3,10 @@
 
 #include <sys/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define BLOCK_TERMINATOR "\r\n"
 #define BLOCK_TERMINATOR_LEN 2
 #define REPLY_TERMINATOR "\r\n"
@@ -99,5 +103,9 @@ int rr_handle_writable(rr_dev device);
 
 /* Blocks until all buffered data has been written */
 int rr_flush(rr_dev device);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
