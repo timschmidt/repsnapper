@@ -77,6 +77,7 @@ class Model : public Gtk::Window
   // Callbacks
   static void handle_reply(rr_dev device, void *data, rr_reply reply, float value);
   static void handle_send(rr_dev device, void *cbdata, void *blkdata, const char *block, size_t len);
+  static void handle_recv(rr_dev device, void *data, const char *reply, size_t len);
   bool handle_dev_fd(Glib::IOCondition cond);
   static void handle_want_writable(rr_dev device, void *data, char state);
 
@@ -95,6 +96,8 @@ class Model : public Gtk::Window
 
 	TempRow *m_temps[2];
 	void temp_changed();
+
+  Glib::RefPtr<Gtk::TextBuffer> commlog, errlog, echolog;
 
 	// rfo bits
 	Gtk::TreeView *m_rfo_tree;
@@ -146,11 +149,6 @@ public:
 
 	void draw() { queue_draw(); }
 
-	// Callback functions
-	vector<string> comports; // list of available usb serial ports
-	bool timer_function();
-	void DetectComPorts(bool init = false);
-	string ValidateComPort (const string &port);
 
 	// Communication
 	bool IsConnected();

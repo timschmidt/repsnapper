@@ -506,7 +506,15 @@ void Model::handle_reply(rr_dev device, void *data, rr_reply reply, float value)
 
 void Model::handle_send(rr_dev device, void *cbdata, void *blkdata, const char *block, size_t len) {
   Model *instance = static_cast<Model*>(cbdata);
-  instance->m_progress->update((unsigned long)(blkdata));
+  if(instance->m_printing) {
+    instance->m_progress->update((unsigned long)(blkdata));
+  }
+  instance->commlog->insert(instance->commlog->end() , string(block, len) + "\n");
+}
+
+void Model::handle_recv(rr_dev device, void *data, const char *reply, size_t len) {
+  Model *instance = static_cast<Model*>(data);
+  instance->commlog->insert(instance->commlog->end() , string(reply, len) + "\n");
 }
 
 bool Model::handle_dev_fd(Glib::IOCondition cond) {
@@ -561,7 +569,9 @@ void Model::save_settings_as()
 
 Model::Model(BaseObjectType* cobject,
 					 const Glib::RefPtr<Gtk::Builder>& builder)
-  : Gtk::Window(cobject), m_builder(builder), m_printing(false)
+  : Gtk::Window(cobject), m_builder(builder), m_printing(false),
+    commlog(Gtk::TextBuffer::create()), errlog(Gtk::TextBuffer::create()),
+    echolog(Gtk::TextBuffer::create())
 {
   // Menus
   connect_action ("OpenStl",         sigc::mem_fun(*this, &Model::load_stl) );
@@ -674,7 +684,7 @@ Model::Model(BaseObjectType* cobject,
   // TODO: Configurable protocol, cache size
   device = rr_create(RR_PROTO_FIVED,
                      &handle_send, static_cast<void*>(this),
-                     NULL, NULL,
+                     &handle_recv, static_cast<void*>(this),
                      &handle_reply, static_cast<void*>(this),
                      NULL, NULL,
                      &handle_want_writable, static_cast<void*>(this),
@@ -700,12 +710,12 @@ Model::Model(BaseObjectType* cobject,
   }
 
   Gtk::TextView *log_view;
-  m_builder->get_widget ("i_txt_comms", log_view);
-  //log_view->set_buffer (serial->get_log (RepRapSerial::LOG_COMMS));
-  m_builder->get_widget ("i_txt_errs", log_view);
-  //log_view->set_buffer (serial->get_log (RepRapSerial::LOG_ERRORS));
-  m_builder->get_widget ("i_txt_echo", log_view);
-  //log_view->set_buffer (serial->get_log (RepRapSerial::LOG_ECHO));
+  m_builder->get_widget("i_txt_comms", log_view);
+  log_view->set_buffer(commlog);
+  m_builder->get_widget("i_txt_errs", log_view);
+  log_view->set_buffer(errlog);
+  m_builder->get_widget("i_txt_echo", log_view);
+  log_view->set_buffer(echolog);
 
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
@@ -748,12 +758,7 @@ void Model::redraw()
 
 void Model::Init()
 {
-	DetectComPorts (true);
 	LoadConfig();
-
-	Glib::signal_timeout().connect
-		(sigc::mem_fun(*this, &Model::timer_function),
-		 250 /* ms */);
 }
 
 void Model::SaveConfig(string filename)
@@ -769,116 +774,6 @@ void Model::LoadConfig(string filename)
 void Model::SimpleAdvancedToggle()
 {
    cout << "not yet implemented\n";
-}
-
-/* Called every 250ms (0.25 of a second) */
-bool Model::timer_function()
-{
-  ToolkitLock guard(true);
-#warning FIXME: busy polling for com ports is a disaster [!]
-#warning FIXME: we should auto-select one at 'connect' time / combo drop-down instead
-  if (rr_dev_fd(device) < 0) {
-    static uint count = 0;
-    if ((count++ % 4) == 0) /* every second */
-      DetectComPorts();
-  }
-  return true;
-}
-
-void Model::DetectComPorts(bool init)
-{
-	bool bDirty = init;
-	vector<std::string> currentComports;
-
-#ifdef WIN32
-	int highestCom = 0;
-	for(int i = 1; i <=9 ; i++ )
-	{
-	        TCHAR strPort[32] = {0};
-	        _stprintf(strPort, _T("COM%d"), i);
-
-	        DWORD dwSize = 0;
-	        LPCOMMCONFIG lpCC = (LPCOMMCONFIG) new BYTE[1];
-	        GetDefaultCommConfig(strPort, lpCC, &dwSize);
-		int r = GetLastError();
-	        delete [] lpCC;
-
-	        lpCC = (LPCOMMCONFIG) new BYTE[dwSize];
-	        GetDefaultCommConfig(strPort, lpCC, &dwSize);
-	        delete [] lpCC;
-
-		if( r != 87 )
-		{
-			ToolkitLock guard;
-			highestCom = i;
-		}
-		else
-		{
-			ToolkitLock guard;
-		}
-	}
-	currentComports.push_back(string("COM"+highestCom));
-
-#elif defined(__APPLE__)
-	const char *ttyPattern = "tty.";
-
-#else // Linux
-	const char *ttyPattern = "ttyUSB";
-#endif
-
-#ifndef WIN32
-	DIR *d = opendir ("/dev");
-	if (d) { // failed
-		struct	dirent *e;
-		while ((e = readdir (d))) {
-			//fprintf (stderr, "name '%s'\n", e->d_name);
-			if (strstr(e->d_name,ttyPattern)) {
-				string device = string("/dev/") + e->d_name;
-				currentComports.push_back(device);
-			}
-		}
-		closedir(d);
-
-		if ( currentComports.size() != this->comports.size() )
-			bDirty = true;
-	}
-
-	if ( bDirty ) {
-		ToolkitLock guard;
-
-		bool bWasEmpty = !comports.size();
-
-		comports.clear();
-
-#warning we need to propagate the available com ports to the UI ...
-#if 0
-		for (size_t indx = 0; indx < currentComports.size(); ++indx) {
-			string menuLabel = string(currentComports[indx]);
-			comports.push_back(currentComports[indx]);
-		}
-#endif
-
-		// auto-select a new com-port
-		if (bWasEmpty && comports.size())
-		  settings.Hardware.PortName = ValidateComPort(comports[0]);
-	}
-#endif
-}
-
-string Model::ValidateComPort (const string &port)
-{
-	DetectComPorts();
-
-	// is it a valid port ?
-	for (uint i = 0; i < comports.size(); i++) {
-		if (port == comports[i])
-			return port;
-	}
-	       
-	if (comports.size())
-		return comports[0];
-	else
-		return "No ports found";
 }
 
 void Model::ReadGCode(string filename)

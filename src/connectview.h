@@ -45,7 +45,7 @@ class ConnectView : public Gtk::VBox {
   void connect_toggled();
   void serial_state_changed(SerialState state);
   void signal_entry_changed();
-  void find_ports();
+  bool find_ports();
  public:
   ConnectView(rr_dev device, Settings *settings, bool show_connect = true);
   void try_set_state(bool connected);

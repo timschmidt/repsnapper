@@ -112,7 +112,7 @@ void ConnectView::signal_entry_changed()
   m_settings->Hardware.PortName = m_combo.get_active_text();
 }
 
-void ConnectView::find_ports() {
+bool ConnectView::find_ports() {
   m_combo.clear();
 
   m_combo.append_text(m_settings->Hardware.PortName);
@@ -120,9 +120,12 @@ void ConnectView::find_ports() {
   char **ports = rr_enumerate_ports();
   for(size_t i = 0; ports[i] != NULL; ++i) {
     m_combo.append_text(ports[i]);
+    free(ports[i]);
   }
   
   free(ports);
+
+  return true;
 }
 
 ConnectView::ConnectView (rr_dev device,
@@ -139,14 +142,16 @@ ConnectView::ConnectView (rr_dev device,
   m_hbox.add (m_port_label);
   m_hbox.add (m_combo);
 
-  m_connect.signal_toggled().connect(sigc::mem_fun (*this, &ConnectView::connect_toggled));
-  m_combo.signal_changed().connect(sigc::mem_fun (*this, &ConnectView::signal_entry_changed));
+  m_connect.signal_toggled().connect(sigc::mem_fun(*this, &ConnectView::connect_toggled));
+  m_combo.signal_changed().connect(sigc::mem_fun(*this, &ConnectView::signal_entry_changed));
+  //m_combo.signal_popup_menu().connect(sigc::mem_fun(*this, &ConnectView::find_ports));
 
   show_all ();
   if (!show_connect)
     m_connect.hide ();
   serial_state_changed(DISCONNECTED);
 
+  // TODO: Execute find_ports every time the dropdown is displayed
   find_ports();
   m_combo.set_active(0);
 }
