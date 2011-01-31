@@ -373,6 +373,7 @@ int rr_handle_readable(rr_dev device) {
 
   /* Move incomplete reply to beginning of buffer */
   memmove(device->recvbuf, device->recvbuf+start, device->recvbuf_fill - start);
+  device->recvbuf_fill -= start;
 
   return 0;
 }
