@@ -18,6 +18,8 @@ typedef enum {
   RR_PROTO_SIMPLE,
   /* Simple + line numbers, checksums, mandatory feedrate */
   RR_PROTO_FIVED,
+  /* 5D with different syntax for some absurd reason */
+  RR_PROTO_TONOKIP,
 } rr_proto;
 
 typedef enum {

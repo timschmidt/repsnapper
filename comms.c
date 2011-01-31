@@ -1,4 +1,5 @@
 #include "comms.h"
+#include "comms_private.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,51 +10,13 @@
 
 #include "serial.h"
 #include "gcode.h"
+#include "fived.h"
 
-/* Do not change */
-#define SENDBUFSIZE (GCODE_BLOCKSIZE + BLOCK_TERMINATOR_LEN)
-
-
-typedef struct blocknode {
-  struct blocknode *next;
-  void *cbdata;
-  char *block;
-  size_t blocksize;
-  long long line;
-} blocknode;
 
 void blocknode_free(blocknode* node) {
   free(node->block);
   free(node);
 }
-
-struct rr_dev_t {
-  rr_proto proto;
-  int fd;
-  /* Line currently being sent */
-  unsigned long lineno;
-
-  blocknode *sendhead[RR_PRIO_COUNT];
-  blocknode *sendtail[RR_PRIO_COUNT];
-  char sendbuf[SENDBUFSIZE];
-  rr_prio sending_prio;
-  size_t sendbuf_fill;
-  size_t bytes_sent;
-  
-  char *recvbuf;
-  size_t recvbufsize;
-  size_t recvbuf_fill;
-  
-  blocknode **sentcache;
-  size_t sentcachesize;
-  
-  rr_sendcb onsend;
-  rr_recvcb onrecv;
-  rr_replycb onreply;
-  rr_errcb onerr;
-  rr_boolcb want_writable;
-  void *onsend_data, *onrecv_data, *onreply_data, *onerr_data, *ww_data;
-};
 
 int rr_dev_fd(rr_dev device) {
   return device->fd;
@@ -212,6 +175,7 @@ ssize_t fmtblock(rr_dev device, blocknode *node) {
     break;
 
   case RR_PROTO_FIVED:
+  case RR_PROTO_TONOKIP:
     if(node->line >= 0) {
       /* Block has an explicit line number; may be out of sequence
        * (i.e. a resend) */
@@ -256,81 +220,61 @@ int handle_reply(rr_dev device, const char *reply, size_t nbytes) {
     device->onrecv(device, device->onrecv_data, reply, nbytes);
   }
 
+  /* TODO: Fixed and generalized parsing */
+  /* All protos do this */
+  if(!strncmp("ok", reply, 2)) {
+    if(device->onreply) {
+      device->onreply(device, device->onreply_data, RR_OK, 0);
+      /* Parse reply */
+      char *i;
+      for(i = (char*)reply; i < reply + nbytes; ++i) {
+        switch(*i) {
+        case 'T':
+          device->onreply(device, device->onreply_data, RR_NOZZLE_TEMP,
+                          strtof(i+2, &i));
+          break;
+
+        case 'B':
+          device->onreply(device, device->onreply_data, RR_BED_TEMP,
+                          strtof(i+2, &i));
+          break;
+
+        case 'C':
+          break;
+
+        case 'X':
+          device->onreply(device, device->onreply_data, RR_X_POS,
+                          strtof(i+2, &i));
+          break;
+
+        case 'Y':
+          device->onreply(device, device->onreply_data, RR_Y_POS,
+                          strtof(i+2, &i));
+          break;
+
+        case 'Z':
+          device->onreply(device, device->onreply_data, RR_Z_POS,
+                          strtof(i+2, &i));
+          break;
+
+        case 'E':
+          device->onreply(device, device->onreply_data, RR_E_POS,
+                          strtof(i+2, &i));
+          break;
+
+        default:
+          if(device->onerr) {
+            device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
+          }
+          break;
+        }
+      }
+    }
+  }
+
   switch(device->proto) {
   case RR_PROTO_FIVED:
-    if(!strncmp("rs", reply, 2)) {
-      /* Line number begins 3 bytes in */
-      unsigned long resend = atoll(reply + 3);
-      unsigned long delta = (device->lineno - 1) - resend;
-      if(delta < device->sentcachesize) {
-        blocknode *node = device->sentcache[delta];
-        rr_enqueue_internal(device, RR_PRIO_RESEND, node->cbdata, node->block, node->blocksize, resend);
-      } else {
-        /* Line needed for resend was not cached */
-        if(device->onerr) {
-          device->onerr(device, device->onerr_data, RR_E_UNCACHED_RESEND, reply, nbytes);
-        }
-        return RR_E_UNCACHED_RESEND;
-      }
-    } else if(!strncmp("!!", reply, 2)) {
-      if(device->onerr) {
-        device->onerr(device, device->onerr_data, RR_E_HARDWARE_FAULT, reply, nbytes);
-      }
-      return RR_E_HARDWARE_FAULT;
-    } else if(!strncmp("ok", reply, 2)) {
-      if(device->onreply) {
-        device->onreply(device, device->onreply_data, RR_OK, 0);
-        /* Parse reply */
-        char *i;
-        for(i = (char*)reply; i < reply + nbytes; ++i) {
-          switch(*i) {
-          case 'T':
-            device->onreply(device, device->onreply_data, RR_NOZZLE_TEMP,
-                            strtof(i+2, &i));
-            break;
-
-          case 'B':
-            device->onreply(device, device->onreply_data, RR_BED_TEMP,
-                            strtof(i+2, &i));
-            break;
-
-          case 'C':
-            break;
-
-          case 'X':
-            device->onreply(device, device->onreply_data, RR_X_POS,
-                            strtof(i+2, &i));
-            break;
-
-          case 'Y':
-            device->onreply(device, device->onreply_data, RR_Y_POS,
-                            strtof(i+2, &i));
-            break;
-
-          case 'Z':
-            device->onreply(device, device->onreply_data, RR_Z_POS,
-                            strtof(i+2, &i));
-            break;
-
-          case 'E':
-            device->onreply(device, device->onreply_data, RR_E_POS,
-                            strtof(i+2, &i));
-            break;
-
-          default:
-            if(device->onerr) {
-              device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
-            }
-            break;
-          }
-        }
-      }
-    } else {
-      if(device->onerr) {
-        device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
-      }
-      return RR_E_UNKNOWN_REPLY;
-    }
+    return fived_handle_reply(device, reply, nbytes);
     break;
 
   default:
