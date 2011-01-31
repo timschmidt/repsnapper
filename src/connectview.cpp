@@ -17,7 +17,11 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "config.h"
-#include <stdio.h>
+
+#include <cstdio>
+#include <cerrno>
+#include <string>
+
 #include "settings.h"
 #include "connectview.h"
 
@@ -30,8 +34,12 @@ void ConnectView::try_set_state(bool connect)
     result = rr_open(m_device, m_settings->Hardware.PortName.c_str(),
                      m_settings->Hardware.SerialSpeed);
     if(result < 0) {
-      // TODO: Error dialog
-      perror("Failed to connect to device");
+      serial_state_changed(DISCONNECTED);
+      std::string message("Failed to connect to device: ");
+      message += strerror(errno);
+      Gtk::MessageDialog dialog(message, false,
+                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.run();
     } else {
       serial_state_changed(CONNECTED);
     }
@@ -39,8 +47,13 @@ void ConnectView::try_set_state(bool connect)
     serial_state_changed(DISCONNECTING);
     result = rr_close(m_device);
     if(result < 0) {
+      serial_state_changed(CONNECTED);
       // TODO: Error dialog
-      perror("Failed to disconnect from device");
+      std::string message("Failed to disconnect from device: ");
+      message += strerror(errno);
+      Gtk::MessageDialog dialog(message, false,
+                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.run();
     } else {
       serial_state_changed(DISCONNECTED);
     }
