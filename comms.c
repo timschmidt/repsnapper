@@ -152,7 +152,7 @@ ssize_t fmtblock_fived(char *buf, const char *block, unsigned long line) {
     checksum ^= work[i];
   }
   /* TODO: Is this whitespace needed? */
-  result = snprintf(work, SENDBUFSIZE+1, "N%ld %s *%d" BLOCK_TERMINATOR, line, block, checksum);
+  result = snprintf(work, SENDBUFSIZE+1, "N%ld %s*%d" BLOCK_TERMINATOR, line, block, checksum);
   if(result >= SENDBUFSIZE+1) {
     return RR_E_BLOCK_TOO_LARGE;
   }
