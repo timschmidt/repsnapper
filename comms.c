@@ -390,6 +390,7 @@ int rr_handle_writable(rr_dev device) {
         device->bytes_sent = 0;
         result = fmtblock(device, node);
         if(result < 0) {
+          /* FIXME: This will confuse code expecting errno to be set */
           return result;
         }
         device->sendbuf_fill = result;

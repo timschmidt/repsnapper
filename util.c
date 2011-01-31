@@ -9,8 +9,9 @@
 #define DEV_PREFIXES ((char*[]){"ttyUSB", "ttyACM", NULL})
 #define GUESSES 8
 
-char *rr_guess_port() {
-  char *name = malloc(NAME_MAX+1);
+char **rr_enumerate_ports() {
+  size_t size = 4, fill = 0;
+  char **ports = malloc(size * sizeof(char*));
   DIR *devdir = opendir(DEV_PATH);
   if(!devdir) {
     return NULL;
@@ -23,14 +24,23 @@ char *rr_guess_port() {
       char *prefix = DEV_PREFIXES[i];
       if(!strncmp(file->d_name, prefix, strlen(prefix))) {
         /* TODO: Open connection and interrogate device */
-        strcpy(name, file->d_name);
-        closedir(devdir);
-        return name;
+        if(fill >= size) {
+          size *= 2;
+          ports = realloc(ports, size * sizeof(char*));
+        }
+        ports[fill] = malloc(strlen(file->d_name)+1);
+        strcpy(ports[fill], file->d_name);
+        ++fill;
       }
     }
   }
-
   closedir(devdir);
+
+  if(fill >= size) {
+    ++size;
+    ports = realloc(ports, size * sizeof(char*));
+  }
+  ports[fill] = NULL;
   
-  return NULL;
+  return ports;
 }
