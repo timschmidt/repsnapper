@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <string.h>
+#include <stdio.h>
 
 #define DEV_PATH "/dev/"
 #define DEV_PREFIXES ((char*[]){"ttyUSB", "ttyACM", NULL})
@@ -28,8 +29,9 @@ char **rr_enumerate_ports() {
           size *= 2;
           ports = realloc(ports, size * sizeof(char*));
         }
-        ports[fill] = malloc(strlen(file->d_name)+1);
-        strcpy(ports[fill], file->d_name);
+        ports[fill] = malloc(strlen(file->d_name)+strlen(DEV_PATH)+1);
+        strcpy(ports[fill], DEV_PATH);
+        strcat(ports[fill], file->d_name);
         ++fill;
       }
     }
