@@ -14,32 +14,29 @@ LIB_DIR=$(top_srcdir)/libraries
 WARNING_FLAGS = -Wall
 
 AM_CPPFLAGS = \
-	-DHAVE_GTK $(GTK_CFLAGS) -I$(LIB_DIR) \
+	-DDATADIR=\"$(datadir)/@PACKAGE@/\" \
+	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
 	-I/usr/include/boost \
-	-I/usr/include/lua5.1 \
 	-I$(LIB_DIR)/polylib \
 	-g -O0 $(WARNING_FLAGS)
 
-SHARED_SRC=asyncserial.cpp stl.cpp reprapserial.cpp \
-	model.cpp gllight.cpp gcode.cpp arcball.cpp \
-	stdafx.cpp rfo.cpp settings.cpp \
-	ivcon.cpp file.cpp platform.cpp \
-	render.cpp progress.cpp connectview.cpp
+SHARED_SRC= stl.cpp model.cpp gllight.cpp gcode.cpp arcball.cpp	\
+	stdafx.cpp rfo.cpp settings.cpp ivcon.cpp file.cpp	\
+	platform.cpp render.cpp progress.cpp connectview.cpp
 
-SHARED_INC=arcball.h asyncserial.h convert.h \
-	gcode.h gllight.h ivcon.h miniball.h \
-	model.h reprapserial.h rfo.h file.h \
-	stdafx.h stl.h platform.h render.h \
+SHARED_INC=arcball.h convert.h gcode.h gllight.h ivcon.h miniball.h	\
+	model.h rfo.h file.h stdafx.h stl.h platform.h render.h		\
 	progress.h connectview.h settings.h
 
 # TEST_SOURCES=unittest.cpp
 
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
-repsnapper_LDADD = $(GTK_LIBS) -L/usr/lib -lGLU -lGL -lfltk -lfltk_gl \
-		-lfltk_forms -lglut -lboost_thread-mt \
-		-lboost_system-mt \
-	       $(top_builddir)/libraries/polylib/libpolylib.a
 
+repsnapper_LDADD = ${LIBS} -L/usr/lib -lGLU -lGL -lglut	\
+		-lboost_thread-mt -lboost_system-mt			\
+		$(top_builddir)/libraries/polylib/libpolylib.a
 
+repsnapperuidir = $(datadir)/@PACKAGE@
+repsnapperui_DATA = repsnapper.ui

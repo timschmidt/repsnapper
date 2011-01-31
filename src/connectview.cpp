@@ -20,36 +20,56 @@
 #include <stdio.h>
 #include "settings.h"
 #include "connectview.h"
-#include "reprapserial.h"
 
 // we try to change the state of the connection
 void ConnectView::try_set_state(bool connect)
 {
-  if (connect)
-    m_serial->Connect (m_settings->Hardware.PortName,
-		       m_settings->Hardware.SerialSpeed);
-  else
-    m_serial->DisConnect();
+  int result;
+  if(connect) {
+    serial_state_changed(CONNECTING);
+    result = rr_open(m_device, m_settings->Hardware.PortName.c_str(),
+                     m_settings->Hardware.SerialSpeed);
+    if(result < 0) {
+      // TODO: Error dialog
+      perror("Failed to connect to device");
+    } else {
+      serial_state_changed(CONNECTED);
+    }
+  } else {
+    serial_state_changed(DISCONNECTING);
+    result = rr_close(m_device);
+    if(result < 0) {
+      // TODO: Error dialog
+      perror("Failed to disconnect from device");
+    } else {
+      serial_state_changed(DISCONNECTED);
+    }
+  }
 }
 
-void ConnectView::serial_state_changed(int state)
+void ConnectView::serial_state_changed(SerialState state)
 {
   bool sensitive;
   const char *label;
   Gtk::BuiltinStockID id;
 
   switch (state) {
-  case RepRapSerial::DISCONNECTED:
+  case DISCONNECTING:
+    id = Gtk::Stock::NO;
+    label = "Disconnecting...";
+    sensitive = false;
+    break;
+  case DISCONNECTED:
     id = Gtk::Stock::NO;
     label = "Connect";
     sensitive = true;
     break;
-  case RepRapSerial::CONNECTING:
+  case CONNECTING:
     id = Gtk::Stock::NO;
     label = "Connecting...";
     sensitive = false;
     break;
-  case RepRapSerial::CONNECTED:
+  case CONNECTED:
   default:
     id = Gtk::Stock::YES;
     label = "Disconnect";
@@ -62,7 +82,7 @@ void ConnectView::serial_state_changed(int state)
   m_connect.set_sensitive (sensitive);
   if (sensitive) {
     m_setting_state = true; // inhibit unhelpful recursion.
-    m_connect.set_active (state == RepRapSerial::CONNECTED);
+    m_connect.set_active (state == CONNECTED);
     m_setting_state = false;
   }
 }
@@ -79,11 +99,11 @@ void ConnectView::signal_entry_changed()
   std::cerr << "combo " << m_combo.get_active_text() << "\n";
 }
 
-ConnectView::ConnectView (RepRapSerial *serial,
+ConnectView::ConnectView (rr_dev device,
 			  Settings *settings,
 			  bool show_connect)
   : Gtk::VBox(), m_connect(), m_port_label("Port:"),
-    m_serial (serial), m_settings (settings)
+    m_device(device), m_settings(settings)
 {
   m_setting_state = false;
 
@@ -94,12 +114,11 @@ ConnectView::ConnectView (RepRapSerial *serial,
   m_hbox.add (m_combo);
 
   m_connect.signal_toggled().connect (sigc::mem_fun (*this, &ConnectView::connect_toggled));
-  m_serial->signal_state_changed().connect (sigc::mem_fun (*this, &ConnectView::serial_state_changed));
   m_combo.get_entry()->set_text (settings->Hardware.PortName);
   m_combo.get_entry()->signal_activate().connect (sigc::mem_fun (*this, &ConnectView::signal_entry_changed));
 
   show_all ();
   if (!show_connect)
     m_connect.hide ();
-  serial_state_changed (RepRapSerial::DISCONNECTED);
+  serial_state_changed(DISCONNECTED);
 }

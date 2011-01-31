@@ -20,11 +20,18 @@
 #define CONNECT_VIEW_H
 
 #include <gtkmm.h>
+#include <reprap/comms.h>
 
 class Settings;
-class RepRapSerial;
 
 class ConnectView : public Gtk::VBox {
+  enum SerialState {
+    DISCONNECTED,
+    DISCONNECTING,
+    CONNECTED,
+    CONNECTING
+  };
+
   Gtk::HBox	     m_hbox;
   Gtk::Image         m_image;
   Gtk::ToggleButton  m_connect;
@@ -32,15 +39,15 @@ class ConnectView : public Gtk::VBox {
   Gtk::ComboBoxEntry m_combo;
   bool               m_setting_state;
 
-  RepRapSerial      *m_serial;
+  rr_dev            m_device;
   Settings          *m_settings;
 
   void connect_toggled ();
-  void try_set_state (bool connected);
-  void serial_state_changed (int state);
+  void serial_state_changed (SerialState state);
   void signal_entry_changed ();
  public:
-  ConnectView(RepRapSerial *serial, Settings *settings, bool show_connect = true);
+  ConnectView(rr_dev device, Settings *settings, bool show_connect = true);
+  void try_set_state (bool connected);
 };
 
 #endif // CONNECT_VIEW_H

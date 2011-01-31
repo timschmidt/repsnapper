@@ -20,6 +20,9 @@
 #define MODEL_VIEW_CONTROLLER_H
 
 #include <math.h>
+
+#include <reprap/comms.h>
+
 #include "stl.h"
 #include "rfo.h"
 #include "gcode.h"
@@ -32,7 +35,6 @@ enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 
 class Render;
 class ConnectView;
-class RepRapSerial;
 class PrintInhibitor;
 
 class Model : public Gtk::Window
@@ -45,6 +47,8 @@ class Model : public Gtk::Window
 	Progress *m_progress;
 	ConnectView *m_view;
 	Gtk::Entry *m_gcode_entry;
+  bool m_printing;
+  unsigned long m_unconfirmed_lines;
 
 	friend class PrintInhibitor;
 	Gtk::Button *m_print_button;
@@ -69,6 +73,12 @@ class Model : public Gtk::Window
 	void load_settings();
 	void save_settings();
 	void save_settings_as();
+
+  // Callbacks
+  static void handle_reply(rr_dev device, void *data, rr_reply reply, float value);
+  static void handle_send(rr_dev device, void *cbdata, void *blkdata, const char *block, size_t len);
+  bool handle_dev_fd(Glib::IOCondition cond);
+  static void handle_want_writable(rr_dev device, void *data, char state);
 
 	// interactive bits
 	void home_all();
@@ -142,14 +152,9 @@ public:
 	void DetectComPorts(bool init = false);
 	string ValidateComPort (const string &port);
 
-	// LUA
-	void RunLua(char* buffer);
-
 	// Communication
-	void ConnectToPrinter(char on);
 	bool IsConnected();
 	void SimplePrint();
-	void WaitForConnection(float seconds);
 
 	void Print();
 	void Continue();
@@ -179,7 +184,8 @@ public:
 	void SelectedNodeMatrices(vector<Matrix4f *> &result );
 	void newObject();
 
-	RepRapSerial *serial;
+	rr_dev device;
+  sigc::connection devconn;
 
 	/*- Custom button interface -*/
 	void SendCustomButton(int nr);

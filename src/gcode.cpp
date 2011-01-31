@@ -21,14 +21,12 @@
 #include "math.h"
 
 #include "gcode.h"
-#include "FL/Fl.H"
 
 #include <iostream>
 #include <sstream>
 
 #include "model.h"
 #include "progress.h"
-#include "reprapserial.h"
 
 using namespace std;
 
@@ -504,17 +502,17 @@ void GCode::clear()
   commands.clear();
 }
 
-void GCode::queue_to_serial (RepRapSerial *serial)
+void GCode::queue_to_serial(rr_dev device)
 {
   // Horribly inefficient ...
-  int line_count = buffer->get_line_count();
-  int i;
+  unsigned long line_count = buffer->get_line_count();
+  unsigned long i;
   Gtk::TextBuffer::iterator last = buffer->begin();
   for (i = 1; i <= line_count; i++) {
     Gtk::TextBuffer::iterator it = buffer->get_iter_at_line (i);
     std::string line = buffer->get_text (last, it);
     if (line.length() > 0 && line[0] != ';')
-      serial->AddToBuffer(line);
+      rr_enqueue(device, RR_PRIO_NORMAL, (void*)(i), line.data(), line.size());
     last = it;
   }
 }

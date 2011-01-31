@@ -19,6 +19,7 @@
 #include "config.h"
 #include <vector>
 #include <string>
+#include <cerrno>
 
 // should move to platform.h with com port fun.
 #include <sys/types.h>
@@ -33,7 +34,6 @@
 #include "settings.h"
 #include "progress.h"
 #include "connectview.h"
-#include "reprapserial.h"
 
 // Exception safe guard to stop people printing
 // GCode while loading it / converting etc.
@@ -121,7 +121,7 @@ Model *Model::create()
 {
   Glib::RefPtr<Gtk::Builder> builder;
   try {
-    builder = Gtk::Builder::create_from_file("repsnapper.ui");
+    builder = Gtk::Builder::create_from_file(DATADIR "repsnapper.ui");
   }
   catch(const Glib::FileError& ex)
   {
@@ -141,7 +141,7 @@ Model *Model::create()
 
 void Model::printing_changed()
 {
-  if (serial->isPrinting()) {
+  if (m_printing) {
     m_print_button->set_label ("Restart");
     m_continue_button->set_label ("Pause");
   } else {
@@ -153,9 +153,9 @@ void Model::printing_changed()
 void Model::power_toggled()
 {
   if (m_power_button->get_active())
-    serial->SendNow("M80");
+    SendNow("M80");
   else
-    serial->SendNow("M81");
+    SendNow("M81");
 }
 
 void Model::enable_logging_toggled (Gtk::ToggleButton *button)
@@ -166,17 +166,17 @@ void Model::enable_logging_toggled (Gtk::ToggleButton *button)
 void Model::fan_enabled_toggled (Gtk::ToggleButton *button)
 {
   if (!button->get_active())
-    serial->SendNow("M107");
+    SendNow("M107");
   else {
     std::stringstream oss;
     oss << "M106 S" << (int)m_fan_voltage->get_value();
-    serial->SendNow (oss.str());
+    SendNow(oss.str());
   }
 }
 
 void Model::clear_logs()
 {
-  serial->clear_logs();
+  //serial->clear_logs();
 }
 
 void Model::hide_on_response(int, Gtk::Dialog *dialog)
@@ -349,13 +349,13 @@ public:
       oss << m_target->get_value();
     else
       oss << "0";
-    m_serial->SendNow (oss.str());
+    rr_enqueue(m_device, RR_PRIO_HIGH, NULL, oss.str().data(), oss.str().size());
   }
 
 public:
   enum TempType { NOZZLE, BED };
 
-  RepRapSerial *m_serial;
+  rr_dev m_device;
   TempType m_type;
   Gtk::Label *m_temp;
   Gtk::SpinButton *m_target;
@@ -365,8 +365,8 @@ public:
     m_target->set_value (value);
   }
 
-  TempRow(RepRapSerial *serial, TempType type) :
-    m_serial(serial), m_type(type)
+  TempRow(rr_dev device, TempType type) :
+    m_device(device), m_type(type)
   {
     static const char *names[] = { "Nozzle", "Bed" };
 
@@ -478,15 +478,70 @@ public:
 
 void Model::home_all()
 {
-  serial->SendNow("G28");
+  SendNow("G28");
   for (uint i = 0; i < 3; i++)
     m_axis_rows[i]->notify_homed();
 }
 
-void Model::temp_changed()
+void Model::handle_reply(rr_dev device, void *data, rr_reply reply, float value)
 {
-  m_temps[TempRow::NOZZLE]->update_temp (serial->getTempExtruder());
-  m_temps[TempRow::BED]->update_temp (serial->getTempBed());
+  Model *instance = (Model*) data;
+  switch(reply) {
+  case RR_NOZZLE_TEMP:
+    instance->m_temps[TempRow::NOZZLE]->update_temp(value);
+    break;
+
+  case RR_BED_TEMP:
+    instance->m_temps[TempRow::BED]->update_temp(value);
+    break;
+
+  case RR_OK:
+    // TODO: Only enqueue a certain number of blocks at a time
+    break;
+
+  default:
+    break;
+  }
+}
+
+void Model::handle_send(rr_dev device, void *cbdata, void *blkdata, const char *block, size_t len) {
+  Model *instance = static_cast<Model*>(cbdata);
+  instance->m_progress->update((unsigned long)(blkdata));
+}
+
+bool Model::handle_dev_fd(Glib::IOCondition cond) {
+  int result;
+  // TODO: Display errors somewhere more visible
+  if(cond & Glib::IO_IN) {
+    result = rr_handle_readable(device);
+    if(result < 0) {
+      string message("Error reading from device: ");
+      message += strerror(errno);
+      Gtk::MessageDialog dialog(*this, message, false,
+                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+    }
+  }
+  if(cond & Glib::IO_OUT) {
+    result = rr_handle_writable(device);
+    if(result < 0) {
+      string message("Error writing to device: ");
+      message += strerror(errno);
+      Gtk::MessageDialog dialog(*this, message, false,
+                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+    }
+  }
+  return true;
+}
+
+void Model::handle_want_writable(rr_dev device, void *data, char state) {
+  Model *instance = static_cast<Model*>(data);
+  // TODO: Is there a way to merely change the flags to listen on?
+  instance->devconn.disconnect();
+  if(state) {
+    instance->devconn = Glib::signal_io().connect(sigc::mem_fun(*instance, &Model::handle_dev_fd), rr_dev_fd(device), Glib::IO_IN | Glib::IO_OUT);
+  } else {
+    instance->devconn = Glib::signal_io().connect(sigc::mem_fun(*instance, &Model::handle_dev_fd), rr_dev_fd(device), Glib::IO_IN);
+  }
 }
 
 void Model::load_settings()
@@ -506,7 +561,7 @@ void Model::save_settings_as()
 
 Model::Model(BaseObjectType* cobject,
 					 const Glib::RefPtr<Gtk::Builder>& builder)
-  : Gtk::Window(cobject), m_builder(builder)
+  : Gtk::Window(cobject), m_builder(builder), m_printing(false)
 {
   // Menus
   connect_action ("OpenStl",         sigc::mem_fun(*this, &Model::load_stl) );
@@ -616,19 +671,24 @@ Model::Model(BaseObjectType* cobject,
   m_builder->get_widget("progress_label", label);
   m_progress = new Progress (box, bar, label);
 
-  serial = new RepRapSerial(m_progress, &settings);
-  serial->signal_printing_changed().connect (sigc::mem_fun(*this, &Model::printing_changed));
-  serial->signal_temp_changed().connect (sigc::mem_fun(*this, &Model::temp_changed));
-
-  m_view = new ConnectView(serial, &settings);
+  // TODO: Configurable protocol, cache size
+  device = rr_create(RR_PROTO_FIVED,
+                     &handle_send, static_cast<void*>(this),
+                     NULL, NULL,
+                     &handle_reply, static_cast<void*>(this),
+                     NULL, NULL,
+                     &handle_want_writable, static_cast<void*>(this),
+                     64);
+  
+  m_view = new ConnectView(device, &settings);
   Gtk::Box *connect_box = NULL;
   m_builder->get_widget ("p_connect_button_box", connect_box);
   connect_box->add (*m_view);
 
   Gtk::Box *temp_box;
   m_builder->get_widget ("i_temp_box", temp_box);
-  m_temps[TempRow::NOZZLE] = new TempRow (serial, TempRow::NOZZLE);
-  m_temps[TempRow::BED] = new TempRow (serial, TempRow::BED);
+  m_temps[TempRow::NOZZLE] = new TempRow(device, TempRow::NOZZLE);
+  m_temps[TempRow::BED] = new TempRow(device, TempRow::BED);
   temp_box->add (*m_temps[TempRow::NOZZLE]);
   temp_box->add (*m_temps[TempRow::BED]);
 
@@ -641,11 +701,11 @@ Model::Model(BaseObjectType* cobject,
 
   Gtk::TextView *log_view;
   m_builder->get_widget ("i_txt_comms", log_view);
-  log_view->set_buffer (serial->get_log (RepRapSerial::LOG_COMMS));
+  //log_view->set_buffer (serial->get_log (RepRapSerial::LOG_COMMS));
   m_builder->get_widget ("i_txt_errs", log_view);
-  log_view->set_buffer (serial->get_log (RepRapSerial::LOG_ERRORS));
+  //log_view->set_buffer (serial->get_log (RepRapSerial::LOG_ERRORS));
   m_builder->get_widget ("i_txt_echo", log_view);
-  log_view->set_buffer (serial->get_log (RepRapSerial::LOG_ECHO));
+  //log_view->set_buffer (serial->get_log (RepRapSerial::LOG_ECHO));
 
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
@@ -667,6 +727,10 @@ Model::Model(BaseObjectType* cobject,
 
 Model::~Model()
 {
+  if(rr_dev_fd(device) >= 0) {
+    rr_close(device);
+  }
+  rr_free(device);
   for (uint i = 0; i < 3; i++) {
     delete m_spin_rows[i];
     delete m_axis_rows[i];
@@ -675,7 +739,6 @@ Model::~Model()
   delete m_temps[TempRow::BED];
   delete m_view;
   delete m_progress;
-  delete serial;
 }
 
 void Model::redraw()
@@ -714,7 +777,7 @@ bool Model::timer_function()
   ToolkitLock guard(true);
 #warning FIXME: busy polling for com ports is a disaster [!]
 #warning FIXME: we should auto-select one at 'connect' time / combo drop-down instead
-  if (!serial->isConnected()) {
+  if (rr_dev_fd(device) < 0) {
     static uint count = 0;
     if ((count++ % 4) == 0) /* every second */
       DetectComPorts();
@@ -948,73 +1011,63 @@ void Model::WriteGCode (string filename)
 
 void Model::Restart()
 {
-  serial->Clear();	// resets line nr and clears buffer
   Print();
 }
 
 void Model::ContinuePauseButton()
 {
-  if (serial->isPrinting())
-    serial->pausePrint();
-  else
+  if (m_printing) {
+    // TODO: Actually pause (stop enqueueing)
+    m_printing = false;
+  } else {
     Continue();
+  }
 }
 
 void Model::Continue()
 {
-  serial->continuePrint();
+  m_printing = true;
+  // TODO: Actually unpause (resume enqueueing)
 }
 
 void Model::PrintButton()
 {
-  if (serial->isPrinting()) {
+  if (m_printing) {
     Restart();
   } else {
     Print();
   }
 }
 
-void Model::ConnectToPrinter(char on)
-{
-  // FIXME: remove me !
-}
-
 bool Model::IsConnected()
 {
-	return serial->isConnected();
+	return rr_dev_fd(device) >= 0;
 }
 
 void Model::SimplePrint()
 {
-	if( serial->isPrinting() )
+	if( m_printing )
 		alert ("Already printing.\nCannot start printing");
 
-	if( !serial->isConnected() )
+	if(rr_dev_fd(device) < 0)
 	{
-		ConnectToPrinter(true);
-		WaitForConnection(5.0);
+		m_view->try_set_state(true);
 	}
 
 	Print();
 }
 
-void Model::WaitForConnection(float seconds)
-{
-	serial->WaitForConnection(seconds*1000);
-}
 void Model::Print()
 {
-	if( !serial->isConnected() ) {
+	if(rr_dev_fd(device) < 0) {
 		alert ("Not connected to printer.\nCannot start printing");
 		return;
 	}
 
-	serial->Clear();
-	serial->SetDebugMask();
-	serial->clear_logs();
-	gcode.queue_to_serial (serial);
-	m_progress->start ("Printing", serial->Length());
-	serial->StartPrint();
+	rr_reset(device);
+	gcode.queue_to_serial(device);
+	m_progress->start ("Printing", gcode.commands.size());
+	m_printing = true;
 }
 
 void Model::RunExtruder()
@@ -1022,9 +1075,9 @@ void Model::RunExtruder()
 	static bool extruderIsRunning = false;
 	if (settings.Slicing.Use3DGcode) {
 		if (extruderIsRunning)
-			serial->SendNow("M103");
+      rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "M103");
 		else
-			serial->SendNow("M101");
+      rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "M101");
 		extruderIsRunning = !extruderIsRunning;
 		return;
 	}
@@ -1033,30 +1086,30 @@ void Model::RunExtruder()
 	string command("G1 F");
 	oss << m_extruder_speed->get_value();
 	command += oss.str();
-	serial->SendNow(command);
+  rr_enqueue(device, RR_PRIO_HIGH, NULL, command.data(), command.size());
 	oss.str("");
 
-	serial->SendNow("G92 E0");	// set extruder zero
+  // set extruder zero
+	rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "G92 E0");
 	oss << m_extruder_length->get_value();
 	string command2("G1 E");
 
 	if (m_extruder_reverse->get_active())
 		command2+="-";
 	command2+=oss.str();
-	serial->SendNow(command2);
-	serial->SendNow("G1 F1500.0");
-
-	serial->SendNow("G92 E0");	// set extruder zero
-}
+  rr_enqueue(device, RR_PRIO_HIGH, NULL, command2.data(), command2.size());
+	rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "G1 F1500.0");
+  rr_enqueue_c(device, RR_PRIO_HIGH, NULL, "G92 E0");	// set extruder zero
+ }
 
 void Model::SendNow(string str)
 {
-	serial->SendNow(str);
+  rr_enqueue(device, RR_PRIO_HIGH, NULL, str.data(), str.size());
 }
 
 void Model::Home(string axis)
 {
-	if(serial->isPrinting())
+	if(m_printing)
 	{
 		alert("Can't go home while printing");
 		return;
@@ -1114,7 +1167,7 @@ void Model::Home(string axis)
 
 void Model::Move(string axis, float distance)
 {
-	if(serial->isPrinting())
+	if(m_printing)
 	{
 		alert("Can't move manually while printing");
 		return;
@@ -1149,7 +1202,7 @@ void Model::Move(string axis, float distance)
 }
 void Model::Goto(string axis, float position)
 {
-	if(serial->isPrinting())
+	if(m_printing)
 	{
 		alert("Can't move manually while printing");
 		return;
@@ -1177,74 +1230,7 @@ void Model::Goto(string axis, float position)
 void Model::STOP()
 {
 	SendNow("M112");
-	serial->Clear(); // reset buffer
-}
-
-#ifdef ENABLE_LUA
-
-void print_hello(int number)
-{
-	cout << "hello world " << number << endl;
-}
-
-void refreshGraphicsView(Model *MVC)
-{
-	// FIXME: wow ! Hack: save and load the gcode, to force redraw
-	gcode.Write (model, "./tmp.gcode");
-	gcode.Read (model,"./tmp.gcode");
-}
-
-void ReportErrors(Model *mvc, lua_State * L)
-{
-	std::stringstream oss;
-	oss << "Error: " << lua_tostring(L,-1);
-	mvc->alert(oss.str().c_str());
-	lua_pop(L, 1);
-}
-#endif // ENABLE_LUA
-
-void Model::RunLua(char* script)
-{
-#ifdef ENABLE_LUA
-	try{
-
-		lua_State *myLuaState = lua_open();				// Create a new lua state
-
-		luabind::open(myLuaState);						// Connect LuaBind to this lua state
-		luaL_openlibs(myLuaState);
-
-		// Add our function to the state's global scope
-		luabind::module(myLuaState) [
-			luabind::def("print_hello", print_hello)
-		];
-
-
-		luabind::module(myLuaState)
-			[
-			luabind::class_<Model>("Model")
-			.def("ReadStl", &Model::ReadStl)			// To use: base:ReadStl("c:/Vertex.stl")
-			.def("ConvertToGCode", &Model::ConvertToGCode)			// To use: base:ConvertToGCode()
-			.def("ClearGCode", &Model::ClearGcode)	// To use: base:ClearGcode()
-			.def("AddText", &Model::AddText)			// To use: base:AddText("text\n")
-			.def("Print", &Model::SimplePrint)			// To use: base:Print()
-			];
-
-		luabind::globals(myLuaState)["base"] = this;
-
-		// Now call our function in a lua script, such as "print_hello(5)"
-		if luaL_dostring( myLuaState, script)
-			ReportErrors(this, myLuaState);
-
-		lua_close(myLuaState);
-
-
-	}// try
-	catch(const std::exception &TheError)
-	{
-		cerr << TheError.what() << endl;
-	}
-	refreshGraphicsView (this);
-#endif // ENABLE_LUA
+  rr_reset(device);
 }
 
 void Model::ReadStl(string filename)

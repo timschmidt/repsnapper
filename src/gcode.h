@@ -28,6 +28,8 @@
 
 #include <vmmlib/vmmlib.h>
 
+#include <reprap/comms.h>
+
 using namespace std;
 using namespace vmml;
 
@@ -164,7 +166,7 @@ public:
   void draw  (const Settings &settings);
   void MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, float AntioozeDistance, float AntioozeSpeed);
 
-  void queue_to_serial(RepRapSerial *serial);
+  void queue_to_serial(rr_dev device);
   void append_text (const std::string &line);
   std::string get_text() const;
   void clear();
@@ -173,4 +175,7 @@ public:
   Vector3f Min, Max, Center;
 
   Glib::RefPtr<Gtk::TextBuffer> buffer;
+
+private:
+  unsigned long unconfirmed_blocks;
 };
