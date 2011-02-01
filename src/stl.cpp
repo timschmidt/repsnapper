@@ -25,7 +25,7 @@
 #include "stl.h"
 #include "gcode.h"
 #include "math.h"
-#include "settings.h"
+
 #include "rfo.h"
 
 #ifdef WIN32
@@ -248,40 +248,40 @@ void STL::CalcCenter()
 	Center = (Max + Min )/2;
 }
 
-void STL::displayInfillOld(const Settings &settings, CuttingPlane &plane,
+void STL::displayInfillOld(const Glib::KeyFile &settings, CuttingPlane &plane,
 			   uint LayerNr, vector<int>& altInfillLayers)
 {
-	if (settings.Display.DisplayinFill)
+	if (settings.get_boolean("Display", "Infill"))
 	{
 		// inFill
 		vector<Vector2f> infill;
 
 		CuttingPlane infillCuttingPlane = plane;
-		if (settings.Slicing.ShellOnly == false)
+		if(!settings.get_boolean("Slicing", "ShellOnly"))
 		{
-			switch (settings.Slicing.ShrinkQuality)
+			switch(settings.get_integer("Slicing", "ShrinkQuality"))
 			{
-			case SHRINK_FAST:
+			case 0:
 				infillCuttingPlane.ClearShrink();
-				infillCuttingPlane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth*0.5f,
-							      settings.Slicing.Optimization,
-							      settings.Display.DisplayCuttingPlane,
-							      false, settings.Slicing.ShellCount);
+				infillCuttingPlane.ShrinkFast(settings.get_double("Hardware", "ExtrudedMaterialWidth")*0.5f,
+							      settings.get_double("Slicing", "Optimization"),
+							      settings.get_boolean("Display", "CuttingPlane"),
+							      false, settings.get_integer("Slicing", "ShellCount"));
 				break;
-			case SHRINK_LOGICK:
+			case 1:
 				break;
 			}
 
 			// check if this if a layer we should use the alternate infill distance on
-			float infillDistance = settings.Slicing.InfillDistance;
+			float infillDistance = settings.get_double("Slicing", "InfillDistance");
 			if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end()) {
-			  infillDistance = settings.Slicing.AltInfillDistance;
+			  infillDistance = settings.get_double("Slicing", "AltInfillDistance");
 			}
 
 			infillCuttingPlane.CalcInFill(infill, LayerNr, infillDistance,
-						      settings.Slicing.InfillRotation,
-						      settings.Slicing.InfillRotationPrLayer,
-						      settings.Display.DisplayDebuginFill);
+						      settings.get_double("Slicing", "InfillRotation"),
+						      settings.get_double("Slicing", "InfillRotationPrLayer"),
+						      settings.get_boolean("Display", "DebuginFill"));
 		}
 		glColor4f(1,1,0,1);
 		glPointSize(5);
@@ -299,7 +299,7 @@ void STL::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 }
 
 // FIXME: why !? do we grub around with the rfo here ?
-void STL::draw(RFO &rfo, const Settings &settings, float opacity)
+void STL::draw(RFO &rfo, const Glib::KeyFile &settings, float opacity)
 {
 	// polygons
 	glEnable(GL_LIGHTING);
@@ -315,9 +315,9 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	float high_shininess = 100.0f;
 //	float mat_emission[] = {0.3f, 0.2f, 0.2f, 0.0f};
 
-	HSVtoRGB (settings.Display.PolygonHSV, mat_diffuse[0], mat_diffuse[1], mat_diffuse[2]);
+	HSVtoRGB (Vector3f(0.54, 1, 0.5), mat_diffuse[0], mat_diffuse[1], mat_diffuse[2]);
 
-	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.Display.Highlight;
+	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.get_double("Display", "Highlight");
 
 	/* draw sphere in first row, first column
 	* diffuse reflection only; no ambient or specular
@@ -330,7 +330,7 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 
 	glEnable (GL_POLYGON_OFFSET_FILL);
 
-	if(settings.Display.DisplayPolygons)
+	if(settings.get_double("Display", "DisplayPolygons"))
 	{
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
@@ -362,15 +362,15 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	glDisable(GL_BLEND);
 
 	// WireFrame
-	if(settings.Display.DisplayWireframe)
+	if(settings.get_boolean("Display", "Wireframe"))
 	{
-		if(!settings.Display.DisplayWireframeShaded)
+		if(!settings.get_boolean("Display", "WireframeShaded"))
 			glDisable(GL_LIGHTING);
 
 
 		float r,g,b;
-		HSVtoRGB(settings.Display.WireframeHSV, r,g,b);
-		HSVtoRGB(settings.Display.WireframeHSV, mat_diffuse[0], mat_diffuse[1], mat_diffuse[2]);
+		HSVtoRGB(vmml::Vector3f(0.08, 1, 1), r,g,b);
+		HSVtoRGB(vmml::Vector3f(0.08, 1, 1), mat_diffuse[0], mat_diffuse[1], mat_diffuse[2]);
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
 		glColor3f(r,g,b);
@@ -389,29 +389,29 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	glDisable(GL_LIGHTING);
 
 	// normals
-	if(settings.Display.DisplayNormals)
+	if(settings.get_boolean("Display", "Normals"))
 	{
 		float r,g,b;
-		HSVtoRGB(settings.Display.NormalsHSV, r,g,b);
+		HSVtoRGB(vmml::Vector3f(0.23, 1, 1), r,g,b);
 		glColor3f(r,g,b);
 		glBegin(GL_LINES);
 		for(size_t i=0;i<triangles.size();i++)
 		{
 			Vector3f center = (triangles[i].A+triangles[i].B+triangles[i].C)/3.0f;
 			glVertex3fv((GLfloat*)&center);
-			Vector3f N = center + (triangles[i].Normal*settings.Display.NormalsLength);
+			Vector3f N = center + (triangles[i].Normal*settings.get_double("Display", "NormalsLength"));
 			glVertex3fv((GLfloat*)&N);
 		}
 		glEnd();
 	}
 
 	// Endpoints
-	if(settings.Display.DisplayEndpoints)
+	if(settings.get_boolean("Display", "Endpoints"))
 	{
 		float r,g,b;
-		HSVtoRGB(settings.Display.EndpointsHSV, r,g,b);
+		HSVtoRGB(vmml::Vector3f(0.45, 1, 1), r,g,b);
 		glColor3f(r,g,b);
-		glPointSize(settings.Display.EndPointSize);
+		glPointSize(settings.get_double("Display", "EndPointSize"));
 		glEnable(GL_POINT_SMOOTH);
 		glBegin(GL_POINTS);
 		for(size_t i=0;i<triangles.size();i++)
@@ -425,22 +425,26 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	glDisable(GL_DEPTH_TEST);
 
 	// Make Layers
-	if(settings.Display.DisplayCuttingPlane)
+	if(settings.get_boolean("Display", "CuttingPlane"))
 	{
 		uint LayerNr = 0;
-		uint LayerCount = (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5f)/settings.Hardware.LayerThickness);
+		uint LayerCount = (uint)ceil((Max.z+settings.get_double("Hardware", "LayerThickness")*0.5f)/settings.get_double("Hardware", "LayerThickness"));
 
-		vector<int> altInfillLayers;
-		settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
+    vector<int> altInfillLayers = settings.get_integer_list("Slicing", "AltInfillLayers");
+    for(vector<int>::iterator i = altInfillLayers.begin(); i != altInfillLayers.end(); ++i) {
+      if(*i < 0) {
+        *i += LayerCount;
+      }
+    }
 
 		float zSize = (Max.z-Min.z);
-		float z=settings.Display.CuttingPlaneValue*zSize+Min.z;
+		float z=settings.get_double("Display", "CuttingPlaneValue")*zSize+Min.z;
 		float zStep = zSize;
 
-		if(settings.Display.DisplayAllLayers)
+		if(settings.get_boolean("Display", "AllLayers"))
 		{
 			z=Min.z;
-			zStep = settings.Hardware.LayerThickness;
+			zStep = settings.get_double("Hardware", "LayerThickness");
 		}
 		while(z<Max.z)
 		{
@@ -450,29 +454,29 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 				{
 					Matrix4f T = rfo.GetSTLTransformationMatrix(o,f);
 					Vector3f t = T.getTranslation();
-					t+= Vector3f(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
+					t+= Vector3f(settings.get_double("Slicing", "PrintMarginX")+settings.get_double("Slicing", "RaftSize")*(settings.get_boolean("Slicing", "RaftEnable") ? 1 : 0), settings.get_double("Slicing", "PrintMarginY")+settings.get_double("Slicing", "RaftSize")*(settings.get_boolean("Slicing", "RaftEnable") ? 1 : 0), 0);
 					T.setTranslation(t);
 					CuttingPlane plane;
 					T=Matrix4f::IDENTITY;
 					CalcCuttingPlane(z, plane, T);	// output is alot of un-connected line segments with individual vertices
 
 					float hackedZ = z;
-					while (plane.LinkSegments(hackedZ, settings.Slicing.Optimization) == false)	// If segment linking fails, re-calc a new layer close to this one, and use that.
+					while (plane.LinkSegments(hackedZ, settings.get_double("Slicing", "Optimization")) == false)	// If segment linking fails, re-calc a new layer close to this one, and use that.
 					{							         // This happens when there's triangles missing in the input STL
 						break;
 						hackedZ+= 0.1f;
 						CalcCuttingPlane(hackedZ, plane, T);	// output is alot of un-connected line segments with individual vertices
 					}
 
-					switch( settings.Slicing.ShrinkQuality )
+					switch( settings.get_integer("Slicing", "ShrinkQuality") )
 					{
-					case SHRINK_FAST:
-						plane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth*0.5f, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, false, settings.Slicing.ShellCount);
+					case 0:
+						plane.ShrinkFast(settings.get_double("Slicing", "ExtrudateDiameter")*0.5f, settings.get_double("Slicing", "Optimization"), settings.get_boolean("Display", "CuttingPlane"), false, settings.get_integer("Slicing", "ShellCount"));
 						displayInfillOld(settings, plane, LayerNr, altInfillLayers);
 						break;
-					case SHRINK_LOGICK:
-						plane.ShrinkLogick(settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, settings.Slicing.ShellCount);
-						plane.Draw(settings.Display.DrawVertexNumbers, settings.Display.DrawLineNumbers, settings.Display.DrawCPOutlineNumbers, settings.Display.DrawCPLineNumbers, settings.Display.DrawCPVertexNumbers);
+					case 1:
+            plane.ShrinkLogick(settings.get_double("Slicing", "ExtrudateDiameter")*0.5f, settings.get_double("Slicing", "Optimization"), settings.get_boolean("Display", "CuttingPlane"), settings.get_integer("Slicing", "ShellCount"));
+						plane.Draw(settings.get_double("Display", "DrawVertexNumbers"), settings.get_double("Display", "DrawLineNumbers"), settings.get_double("Display", "CPOutlineNumbers"), settings.get_double("Display", "CPLineNumbers"), settings.get_double("Display", "CPVertexNumbers"));
 						displayInfillOld(settings, plane, LayerNr, altInfillLayers);
 						break;
 					}
@@ -484,7 +488,7 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	}// If display cuttingplane
 
 
-	if(settings.Display.DisplayBBox)
+	if(settings.get_boolean("Display", "BBox"))
 	{
 		// Draw bbox
 		glColor3f(1,0,0);

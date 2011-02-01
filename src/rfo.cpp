@@ -37,7 +37,7 @@ Matrix4f RFO::GetSTLTransformationMatrix(int object, int file) const
 	return result;
 }
 
-void RFO::draw (Settings &settings, float opacity, Gtk::TreeModel::iterator &iter)
+void RFO::draw (Glib::KeyFile &settings, float opacity, Gtk::TreeModel::iterator &iter)
 {
   RFO_File *sel_file;
   RFO_Object *sel_object;
@@ -58,13 +58,13 @@ void RFO::draw (Settings &settings, float opacity, Gtk::TreeModel::iterator &ite
 	  (!sel_file && sel_object == object)) {
 
 	// FIXME: hideous changing global state for this [!]
-	settings.Display.PolygonHSV.x += 0.5f;
-	settings.Display.WireframeHSV.x += 0.5f;
+	// settings.Display.PolygonHSV.x += 0.5f;
+	// settings.Display.WireframeHSV.x += 0.5f;
 
 	file->stl.draw (*this, settings, opacity);
 
-	settings.Display.PolygonHSV.x -= 0.5f;
-	settings.Display.WireframeHSV.x -= 0.5f;
+	// settings.Display.PolygonHSV.x -= 0.5f;
+	// settings.Display.WireframeHSV.x -= 0.5f;
       } else
 	file->stl.draw (*this, settings, opacity);
       glPopMatrix();

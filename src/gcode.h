@@ -26,9 +26,11 @@
 #include <string>
 #include <sstream>
 
+#include <reprap/comms.h>
+#include <glibmm/keyfile.h>
+
 #include <vmmlib/vmmlib.h>
 
-#include <reprap/comms.h>
 
 using namespace std;
 using namespace vmml;
@@ -153,9 +155,6 @@ public:
 	string comment;
 };
 
-class GCodeImpl;
-class RepRapSerial;
-
 class GCode
 {
 public:
@@ -163,7 +162,7 @@ public:
 
   void Read  (Model *model, Progress *progress, string filename);
   void Write (Model *model, string filename);
-  void draw  (const Settings &settings);
+  void draw  (const Glib::KeyFile &settings);
   void MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, float AntioozeDistance, float AntioozeSpeed);
 
   void queue_to_serial(rr_dev device);

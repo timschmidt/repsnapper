@@ -23,6 +23,8 @@
 
 #include "math.h"                                               // Needed for sqrtf
 
+#include <glibmm/keyfile.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -227,8 +229,8 @@ public:
 	bool Read(string filename, bool force_binary = false );
 	void GetObjectsFromIvcon();
 	void clear() { triangles.clear(); }
-	void displayInfillOld(const Settings &settings, CuttingPlane &plane, uint LayerNr, vector<int>& altInfillLayers);
-	void draw (RFO &rfo, const Settings &settings, float opacity = 1.0f);
+	void displayInfillOld(const Glib::KeyFile &settings, CuttingPlane &plane, uint LayerNr, vector<int>& altInfillLayers);
+	void draw (RFO &rfo, const Glib::KeyFile &settings, float opacity = 1.0f);
 	void CenterAroundXY();
 	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);	// Extract a 2D polygonset from a 3D model
 	void OptimizeRotation();			// Auto-Rotate object to have the largest area surface down for printing

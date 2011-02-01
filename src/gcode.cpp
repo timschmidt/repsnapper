@@ -24,6 +24,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <glibmm/keyfile.h>
 
 #include "model.h"
 #include "progress.h"
@@ -196,7 +197,7 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 
 }
 
-void GCode::draw(const Settings &settings)
+void GCode::draw(const Glib::KeyFile &settings)
 {
 	/*--------------- Drawing -----------------*/
 
@@ -205,12 +206,12 @@ void GCode::draw(const Settings &settings)
 	Vector3f Color = Vector3f(0.0f,0.0f,0.0f);
 	float	Distance = 0.0f;
 	Vector3f pos(0,0,0);
-	uint start = (uint)(settings.Display.GCodeDrawStart*(float)(commands.size()));
-	uint end = (uint)(settings.Display.GCodeDrawEnd*(float)(commands.size()));
+    uint start = (uint)(settings.get_double("Display", "GCodeDrawStart")*(float)(commands.size()));
+      uint end = (uint)(settings.get_double("Display", "GCodeDrawEnd")*(float)(commands.size()));
 
 	Vector3f ExtrudeColor, MoveColor;
-	HSVtoRGB(settings.Display.GCodeExtrudeHSV, ExtrudeColor);
-	HSVtoRGB(settings.Display.GCodeMoveHSV,    MoveColor);
+	HSVtoRGB(vmml::Vector3f (1, 1, 0.18), ExtrudeColor);
+	HSVtoRGB(vmml::Vector3f (1, 0.95, 1),    MoveColor);
 
 	float LastE=0.0f;
 	bool extruderon = false;
@@ -249,8 +250,8 @@ void GCode::draw(const Settings &settings)
 				{
 				glLineWidth(3);
 				float speed = commands[i].f;
-				float luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
-				if(settings.Display.LuminanceShowsSpeed == false)
+          float luma = speed / settings.get_double("Hardware", "MaxPrintSpeedXY")*0.5f;
+            if(!settings.get_boolean("Display", "LuminanceShowsSpeed"))
 					luma = 1.0f;
 				Color = MoveColor;
 				Color *= luma;
@@ -259,13 +260,13 @@ void GCode::draw(const Settings &settings)
 				{
 				glLineWidth(3);
 				float speed = commands[i].f;
-				float luma = speed/settings.Hardware.MaxPrintSpeedXY;
-				if(settings.Display.LuminanceShowsSpeed == false)
+          float luma = speed/settings.get_double("Hardware", "MaxPrintSpeedXY");
+				if(!settings.get_boolean("Display", "LuminanceShowsSpeed"))
 					luma = 1.0f;
 				Color = ExtrudeColor;
 				Color *= luma;
 				}
-			if(settings.Display.LuminanceShowsSpeed == false)
+			if(!settings.get_boolean("Display", "LuminanceShowsSpeed"))
 				LastColor = Color;
 			Distance += (commands[i].where-pos).length();
 			glBegin(GL_LINES);

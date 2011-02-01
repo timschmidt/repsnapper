@@ -97,18 +97,18 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
   case SETTINGS:
     filter = "*.conf";
     title = "Choose settings filename";
-    directory = model->settings.STLPath.c_str();
+    directory = model->settings.get_string("DialogCaches", "SettingsBackupDir").c_str();
     break;
   case GCODE:
     filter = "*.gcode";
-    title = "Choose GCODE filename";
-    directory = model->settings.GCodePath.c_str();
+    title = "Choose GCode filename";
+    directory = model->settings.get_string("DialogCaches", "GCodeDir").c_str();
     break;
   case STL:
   default:
     filter = "*.stl";
     title = "Choose STL filename";
-    directory = model->settings.STLPath.c_str();
+    directory = model->settings.get_string("DialogCaches", "GeometryDir").c_str();
     break;
   }
 
@@ -124,24 +124,25 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
   switch (t) {
   case GCODE:
     if (o == OPEN)
-      model->ReadGCode (file);
+      model->ReadGCode(file);
     else
-      model->WriteGCode (file);
-    model->settings.GCodePath = directory_path;
+      model->WriteGCode(file);
+    model->settings.set_string("DialogCaches", "GCodeDir", directory_path);
     break;
   case SETTINGS:
     if (o == OPEN)
-      model->LoadConfig (file);
+      model->LoadConfig(Gio::File::create_for_path(file));
     else
-      model->SaveConfig (file);
+      model->SaveConfig(Gio::File::create_for_path(file));
+    model->settings.set_string("DialogCaches", "SettingsBackupDir", directory_path);
     break;
   default:
   case STL:
     if (o == OPEN)
-      model->ReadStl (file);
+      model->ReadStl(file);
     else
-      model->alert ("STL saving not yet implemented");
-    model->settings.STLPath = directory_path;
+      model->alert("STL saving not yet implemented");
+    model->settings.set_string("DialogCaches", "GeometryDir", directory_path);
     break;
   }
   model->redraw();

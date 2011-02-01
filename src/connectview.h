@@ -22,8 +22,6 @@
 #include <gtkmm.h>
 #include <reprap/comms.h>
 
-class Settings;
-
 class ConnectView : public Gtk::VBox {
   enum SerialState {
     DISCONNECTED,
@@ -39,16 +37,18 @@ class ConnectView : public Gtk::VBox {
   Gtk::ComboBoxEntryText m_combo;
   bool               m_setting_state;
 
+  Glib::RefPtr<Gio::FileMonitor> m_monitor;
+
   rr_dev            m_device;
-  Settings          *m_settings;
+  Glib::KeyFile          *m_settings;
 
   void connect_toggled();
   void serial_state_changed(SerialState state);
   void signal_entry_changed();
-  bool find_ports();
  public:
-  ConnectView(rr_dev device, Settings *settings, bool show_connect = true);
+  ConnectView(rr_dev device, Glib::KeyFile *settings, bool show_connect = true);
   void try_set_state(bool connected);
+  bool find_ports();
 };
 
 #endif // CONNECT_VIEW_H
