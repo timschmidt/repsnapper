@@ -752,6 +752,7 @@ Model::Model(BaseObjectType* cobject,
 
 Model::~Model()
 {
+  save_settings();
   if(rr_dev_fd(device) >= 0) {
     rr_close(device);
   }
