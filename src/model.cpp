@@ -191,7 +191,9 @@ void Model::fan_enabled_toggled (Gtk::ToggleButton *button)
 
 void Model::clear_logs()
 {
-  //serial->clear_logs();
+  commlog->set_text("");
+  errlog->set_text("");
+  echolog->set_text("");
 }
 
 void Model::hide_on_response(int, Gtk::Dialog *dialog)
