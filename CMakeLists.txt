@@ -1,8 +1,6 @@
 project(libreprap)
 cmake_minimum_required(VERSION 2.6)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-
 add_definitions(-Wall -Wextra)
 
 add_library(reprap SHARED
@@ -14,13 +12,14 @@ add_library(reprap SHARED
   util.c
   )
 
-find_package(USB)
+find_package(PkgConfig)
+pkg_check_modules(USB libusb-1.0)
 if(USB_FOUND)
   add_definitions(-DUSB)
   include_directories(${USB_INCLUDE_DIRS})
   message(STATUS "Building with USB support.")
 else(USB_FOUND)
-  message(STATUS "NOT buiding with USB support.")
+  message(STATUS "WARNING: NOT buiding with USB support.")
 endif(USB_FOUND)
 
 install(TARGETS reprap DESTINATION lib)
