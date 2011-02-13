@@ -30,6 +30,8 @@ There are currently no Repsnapper binaries pre-built for Linux.  However, instal
 
 Download the latest version of Repsnapper for Windows http://svn.kulitorum.com/RepSnapper/MSVC/Release/RepSnapper.exe[here].
 
+Older unofficial releases are available http://reprap.org/wiki/File:Repsnapper_Ver352.zip[here] and http://reprap.org/wiki/File:Repsnapper_Ver333.zip[here].
+
 === OS X ===
 
 David Buzz has posted binaries for OS X https://sites.google.com/site/davidbuzz/repsnapper-for-osx-binaries[here].
