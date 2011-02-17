@@ -21,6 +21,8 @@
 
 #include <math.h>
 
+#include <giomm/file.h>
+
 #include <reprap/comms.h>
 
 #include "stl.h"
@@ -121,15 +123,15 @@ public:
 	~Model();
 	void SimpleAdvancedToggle();
 
-	void SaveConfig(string filename);
-	void LoadConfig() { LoadConfig ("repsnapper.conf"); }
-	void LoadConfig(string filename);
+	void SaveConfig(Glib::RefPtr<Gio::File> file);
+	void LoadConfig() { LoadConfig(Gio::File::create_for_path("repsnapper.conf")); }
+	void LoadConfig(Glib::RefPtr<Gio::File> file);
 
 	// RFO Functions
-	void ReadRFO(string filename);
+	void ReadRFO(std::string filename);
 
 	// STL Functions
-	void ReadStl(string filename);
+	void ReadStl(Glib::RefPtr<Gio::File> file);
 	RFO_File *AddStl(STL stl, string filename);
 	void OptimizeRotation();
 	void RotateObject(Vector4f rotate);
@@ -141,10 +143,10 @@ public:
 
 	// GCode Functions
 	void init();
-	void ReadGCode(string filename);
+	void ReadGCode(Glib::RefPtr<Gio::File> file);
 	void ConvertToGCode();
 	void MakeRaft(float &z);
-	void WriteGCode(string filename);
+	void WriteGCode(Glib::RefPtr<Gio::File> file);
 
 	void draw() { queue_draw(); }
 

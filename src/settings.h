@@ -20,6 +20,7 @@
 #define SETTINGS_H
 
 #include <string>
+#include <giomm/file.h>
 #include <vmmlib/vector3.h>
 
 enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
@@ -171,8 +172,8 @@ class Settings {
   ~Settings();
   void connectToUI (Builder &builder);
   void set_defaults ();
-  void load_settings (std::string filename);
-  void save_settings (std::string filename);
+  void load_settings(Glib::RefPtr<Gio::File> file);
+  void save_settings(Glib::RefPtr<Gio::File> file);
 };
 
 #endif // SETTINGS_H

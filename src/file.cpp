@@ -24,10 +24,9 @@
 #include "model.h"
 
 namespace {
-  std::string openGtk (const char *directory, const char *filter_str,
-		       FileChooser::Op op, const char *title)
-  {
-    std::string result = "";
+  Glib::RefPtr<Gio::File> openGtk(const char *directory, const char *filter_str,
+                                  FileChooser::Op op, const char *title) {
+    Glib::RefPtr<Gio::File> result;
     gboolean multiple = FALSE;
     GtkFileChooserAction action;
     const char *button_text;
@@ -74,9 +73,10 @@ namespace {
     gtk_file_chooser_add_filter (chooser, allfiles);
 
     if (gtk_dialog_run (GTK_DIALOG (chooser)) == GTK_RESPONSE_ACCEPT) {
-      gchar *fname = gtk_file_chooser_get_filename (chooser);
-      result = std::string (fname ? fname : "");
-      g_free (fname);
+      GFile *cfile = gtk_file_chooser_get_file(chooser);
+      if(cfile) {
+        result = Glib::wrap(cfile);
+      }
     }
     gtk_widget_destroy (dialog);
 
@@ -88,7 +88,7 @@ namespace {
 // FIXME: impl. multi-selection cleanly
 void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
 {
-  std::string file;
+  Glib::RefPtr<Gio::File> file;
   const char *filter;
   const char *directory;
   const char *title;
@@ -116,10 +116,10 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
     directory = ".";
 
   file = openGtk (directory, filter, o, title);
-  if (!file.length())
+  if(!file)                     // TODO: Indicate error
     return;
 
-  std::string directory_path = Gio::File::create_for_path(file)->get_parent()->get_path();
+  std::string directory_path = file->get_parent()->get_path();
 
   switch (t) {
   case GCODE:

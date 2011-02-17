@@ -294,15 +294,15 @@ void Settings::set_defaults ()
   Hardware.PrintMargin = vmml::Vector3f (10,10,0);
 }
 
-void Settings::load_settings (std::string filename)
+void Settings::load_settings(Glib::RefPtr<Gio::File> file)
 {
   libconfig::Config cfg;
 
   set_defaults();
 
   try {
-    cfg.readFile (filename.c_str());
-    std::cout << "parsing config from '" << filename << "\n";
+    cfg.readFile(file->get_path().c_str());
+    std::cout << "parsing config from '" << file->get_path() << "\n";
 
     for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
       const char *name = settings[i].config_name;
@@ -327,7 +327,7 @@ void Settings::load_settings (std::string filename)
       }
     }
   } catch (std::exception &e) {
-    std::cout << "Failed to load settings from file '" << filename
+    std::cout << "Failed to load settings from file '" << file->get_path()
 	      << "' - error '" << e.what() << "\n";
   }
 
@@ -345,7 +345,7 @@ void Settings::load_settings (std::string filename)
     GCode.m_impl->m_GCodeEndText->set_text (txt);
 }
 
-void Settings::save_settings (std::string filename)
+void Settings::save_settings(Glib::RefPtr<Gio::File> file)
 {
   libconfig::Config   cfg;
   libconfig::Setting &root = cfg.getRoot();
@@ -403,7 +403,7 @@ void Settings::save_settings (std::string filename)
   root.add("GCodeLayerText", libconfig::Setting::TypeString) = GCode.getLayerText();
   root.add("GCodeEndText", libconfig::Setting::TypeString) = GCode.getEndText();
 
-  cfg.writeFile (filename.c_str());
+  cfg.writeFile(file->get_path().c_str());
 }
 
 static struct {

@@ -562,7 +562,7 @@ void Model::load_settings()
 
 void Model::save_settings()
 {
-  SaveConfig ("repsnapper.conf");
+  SaveConfig (Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper/repsnapper.conf"));
 }
 
 void Model::save_settings_as()
@@ -760,14 +760,14 @@ void Model::redraw()
    queue_draw();
 }
 
-void Model::SaveConfig(string filename)
+void Model::SaveConfig(Glib::RefPtr<Gio::File> file)
 {
-  settings.save_settings (filename);
+  settings.save_settings(file);
 }
 
-void Model::LoadConfig(string filename)
+void Model::LoadConfig(Glib::RefPtr<Gio::File> file)
 {
-  settings.load_settings (filename);
+  settings.load_settings(file);
 }
 
 void Model::SimpleAdvancedToggle()
@@ -775,11 +775,11 @@ void Model::SimpleAdvancedToggle()
    cout << "not yet implemented\n";
 }
 
-void Model::ReadGCode(string filename)
+void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
 {
   PrintInhibitor inhibitPrint(this);
   m_progress->start ("Converting", 100.0);
-  gcode.Read (this, m_progress, filename);
+  gcode.Read (this, m_progress, file->get_path());
   m_progress->stop ("Done");
 }
 
@@ -898,7 +898,7 @@ void Model::init()
 #endif
 }
 
-void Model::WriteGCode (string filename)
+void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
 {
   cerr << "Unimplemented\n";
 }
@@ -1134,11 +1134,11 @@ void Model::STOP()
   rr_reset(device);
 }
 
-void Model::ReadStl(string filename)
+void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 {
   STL stl;
-  if (stl.Read (filename))
-    AddStl(stl, filename);
+  if (stl.Read (file->get_path()))
+    AddStl(stl, file->get_path());
 }
 
 RFO_File* Model::AddStl(STL stl, string filename)
