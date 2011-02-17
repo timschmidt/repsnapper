@@ -18,13 +18,6 @@
 */
 #include "config.h"
 #include "stdafx.h"
-
-#include <string>
-#include <vector>
-
-#include <glib/gutils.h>
-#include <giomm/file.h>
-
 #include "model.h"
 #include "gcode.h"
 
@@ -98,18 +91,6 @@ public:
 	// add more options above
 };
 
-Glib::RefPtr<Gio::File> find_global_config() {
-  const gchar * const * dirs = g_get_system_config_dirs();
-  Glib::RefPtr<Gio::File> f;
-  for(size_t i = 0; dirs[i] != NULL; ++i) {
-    f = Gio::File::create_for_path(Glib::ustring(dirs[i]) + "/repsnapper/repsnapper.conf");
-    if(f->query_exists()) {
-      return f;
-    }
-  }
-  return Glib::RefPtr<Gio::File>();
-}
-
 int main(int argc, char **argv)
 {
   Glib::thread_init();
@@ -119,102 +100,14 @@ int main(int argc, char **argv)
   CommandLineOptions opts (argc, argv);
 
   Model *model = Model::create();
-  if(!model) {
-    return 1;
-  }
-
-  try {
-    Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper")->make_directory_with_parents();
-  } catch(Gio::Error e) {
-    switch(e.code()) {
-    case Gio::Error::EXISTS:
-      // Directory has already been created.  Normal.
-      break;
-
-    default:
-      Gtk::MessageDialog dialog("Couldn't create user config directory!", false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text(e.what());
-      dialog.run();
-      return 1;
-    }
-  }
-      
-  Glib::RefPtr<Gio::File> conf = Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper/repsnapper.conf");
-  try {
-    Glib::RefPtr<Gio::File> global = find_global_config();
-    if(!global) {
-      // Don't leave an empty config file behind
-      conf->remove();
-      Gtk::MessageDialog dialog("Couldn't find global configuration!", false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text("It is likely that repsnapper is not correctly installed.");
-      dialog.run();
-      return 1;
-    }
-    
-    global->copy(conf);
-  } catch(Gio::Error e) {
-    switch(e.code()) {
-    case Gio::Error::EXISTS:
-      // The user already has a config.  This is the normal case.
-      break;
-
-    case Gio::Error::PERMISSION_DENIED:
-    {
-      // Fall back to global config
-      Gtk::MessageDialog dialog("Unable to create user config", false,
-                                Gtk::MESSAGE_WARNING, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text(e.what() + "\nFalling back to global config. Settings will not be saved.");
-      dialog.run();
-      conf = find_global_config();
-      if(!conf) {
-        Gtk::MessageDialog dialog("Couldn't find global configuration!", false,
-                                  Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-        dialog.set_secondary_text("It is likely that repsnapper is not correctly installed.");
-        dialog.run();
-        return 1;
-      }
-      break;
-    }
-      
-    default:
-    {
-      Gtk::MessageDialog dialog("Failed to locate config", false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text(e.what());
-      dialog.run();
-      return 1;
-    }
-    }
-  }
-  bool result = false;
-  try {
-    result = model->LoadConfig(conf);
-
-    // TODO: Check this value against a known oldest-compatible version
-    model->settings.get_integer("Compatibility", "Version");
-  } catch(Glib::KeyFileError e) {
-    Gtk::MessageDialog dialog("Failed to read config", false,
-                              Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-    dialog.set_secondary_text(e.what() + "\nThe file may be corrupted or outdated.");
-    dialog.run();
-    return 1;
-  }
-  if(!result) {
-    Gtk::MessageDialog dialog("Failed to read config", false,
-                              Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-    dialog.set_secondary_text("The file may be corrupted or outdated.");
-    dialog.run();
-    return 1;
-  }
+  model->LoadConfig();
 
   if (!opts.use_gui) {
     if (opts.stl_input_path.size() > 0) {
       model->ReadStl(opts.stl_input_path);
 
       if (opts.settings_path.size() > 0)
-        model->LoadConfig(Gio::File::create_for_path(opts.settings_path));
+        model->LoadConfig (opts.settings_path);
 
       model->ConvertToGCode();
 

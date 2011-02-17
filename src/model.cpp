@@ -25,14 +25,13 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-#include <glib/gutils.h>
-
 #include <functional>
 #include "stdafx.h"
 #include "model.h"
 #include "rfo.h"
 #include "file.h"
 #include "render.h"
+#include "settings.h"
 #include "progress.h"
 #include "connectview.h"
 
@@ -123,20 +122,7 @@ Model *Model::create()
 {
   Glib::RefPtr<Gtk::Builder> builder;
   try {
-    const gchar * const * dirs = g_get_system_data_dirs();
-    Glib::RefPtr<Gio::File> f;
-    for(size_t i = 0; dirs[i] != NULL; ++i) {
-      f = Gio::File::create_for_path(Glib::ustring(dirs[i]) + "/repsnapper/repsnapper.ui");
-    }
-    if(f) {
-      builder = Gtk::Builder::create_from_file(f->get_path());
-    } else {
-      Gtk::MessageDialog dialog("Couldn't find UI definition file!", false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text("It is likely that repsnapper is not correctly installed.");
-      dialog.run();
-      return NULL;
-    }
+    builder = Gtk::Builder::create_from_file(DATADIR "repsnapper.ui");
   }
   catch(const Glib::FileError& ex)
   {
@@ -175,7 +161,7 @@ void Model::power_toggled()
 
 void Model::enable_logging_toggled (Gtk::ToggleButton *button)
 {
-  settings.set_boolean("Misc", "FileLogging", button->get_active());
+  settings.Misc.FileLoggingEnabled = button->get_active();
 }
 
 void Model::fan_enabled_toggled (Gtk::ToggleButton *button)
@@ -576,7 +562,7 @@ void Model::load_settings()
 
 void Model::save_settings()
 {
-  SaveConfig(Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper/repsnapper.conf"));
+  SaveConfig ("repsnapper.conf");
 }
 
 void Model::save_settings_as()
@@ -749,7 +735,7 @@ Model::Model(BaseObjectType* cobject,
   }
 
   // connect settings
-#warning TODO: Connect settings to UI?
+  settings.connectToUI (*((Builder *)&m_builder));
 }
 
 Model::~Model()
@@ -774,18 +760,14 @@ void Model::redraw()
    queue_draw();
 }
 
-void Model::SaveConfig(Glib::RefPtr<Gio::File> file)
+void Model::SaveConfig(string filename)
 {
-  Glib::RefPtr<Gio::FileIOStream> stream = file->open_readwrite(Glib::RefPtr<Gio::Cancellable>());
-  stream->get_output_stream()->write(settings.to_data());
-  stream->close();
+  settings.save_settings (filename);
 }
 
-bool Model::LoadConfig(Glib::RefPtr<Gio::File> file)
+void Model::LoadConfig(string filename)
 {
-  bool result = settings.load_from_file(file->get_path());
-  if(result) m_view->find_ports();
-  return result;
+  settings.load_settings (filename);
 }
 
 void Model::SimpleAdvancedToggle()
@@ -805,39 +787,31 @@ void Model::ConvertToGCode()
 {
 	string GcodeTxt;
 
-	string GcodeStart = settings.get_string("GCode", "Start");
-	string GcodeLayer = settings.get_string("GCode", "Layer");
-	string GcodeEnd = settings.get_string("GCode", "End");
+	string GcodeStart = settings.GCode.getStartText();
+	string GcodeLayer = settings.GCode.getLayerText();
+	string GcodeEnd = settings.GCode.getEndText();
 
 	PrintInhibitor inhibitPrint(this);
 	m_progress->start ("Converting", Max.z);
 
 	// Make Layers
 	uint LayerNr = 0;
-  double thickness = settings.get_double("Slicing", "LayerThickness");
-  uint LayerCount = (uint)ceil((Max.z+thickness*0.5f)/thickness);
-  
-  vector<int> altInfillLayers = settings.get_integer_list("Slicing", "AltInfillLayers");
-  for(vector<int>::iterator i = altInfillLayers.begin(); i != altInfillLayers.end(); ++i) {
-    if(*i < 0) {
-      *i += LayerCount;
-    }
-  }
-  
-  printOffset = Vector3f(settings.get_double("Slicing", "PrintMarginX"),
-                         settings.get_double("Slicing", "PrintMarginY"),
-                         settings.get_double("Slicing", "PrintMarginZ"));
+	uint LayerCount = (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5f)/settings.Hardware.LayerThickness);
 
-	float z = Min.z + thickness*0.5f;				// Offset it a bit in Z, z=0 gives a empty slice because no triangles crosses this Z value
+	vector<int> altInfillLayers;
+	settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
+
+	printOffset = settings.Hardware.PrintMargin;
+
+	float z = Min.z + settings.Hardware.LayerThickness*0.5f;				// Offset it a bit in Z, z=0 gives a empty slice because no triangles crosses this Z value
 
 	gcode.clear();
 
-	float printOffsetZ = printOffset.z;
+	float printOffsetZ = settings.Hardware.PrintMargin.z;
 
-    if(settings.get_boolean("Slicing", "RaftEnable"))
+	if(settings.RaftEnable)
 	{
-		printOffset += Vector3f(settings.get_double("Slicing", "RaftSize"),
-                            settings.get_double("Slicing", "RaftSize"), 0);
+		printOffset += Vector3f(settings.Raft.Size, settings.Raft.Size, 0);
 		MakeRaft(printOffsetZ);
 	}
 	float E=0.0f;
@@ -851,13 +825,13 @@ void Model::ConvertToGCode()
 				STL* stl = &rfo.Objects[o].files[f].stl;	// Get a pointer to the object
 				Matrix4f T = rfo.GetSTLTransformationMatrix(o,f);
 				Vector3f t = T.getTranslation();
-        t+= Vector3f(printOffset.x, printOffset.y, 0);
+				t+= Vector3f(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
 				T.setTranslation(t);
 				CuttingPlane plane;
 				stl->CalcCuttingPlane(z, plane, T);	// output is alot of un-connected line segments with individual vertices, describing the outline
 
 				float hackedZ = z;
-        while (plane.LinkSegments (hackedZ, settings.get_double("Slicing", "Optimization") == false))	// If segment linking fails, re-calc a new layer close to this one, and use that.
+				while (plane.LinkSegments (hackedZ, settings.Slicing.Optimization) == false)	// If segment linking fails, re-calc a new layer close to this one, and use that.
 				{ // This happens when there's triangles missing in the input STL
 					hackedZ+= 0.1f;
 					stl->CalcCuttingPlane (hackedZ, plane, T);	// output is alot of un-connected line segments with individual vertices
@@ -869,53 +843,50 @@ void Model::ConvertToGCode()
 
 //				CuttingPlane infillCuttingPlane;
 //				plane.MakeContainedPlane(infillCuttingPlane);
-          if(!settings.get_boolean("Slicing", "ShellOnly"))
+				if(settings.Slicing.ShellOnly == false)
 				{
-					switch( settings.get_integer("Slicing", "ShrinkQuality") )
+					switch( settings.Slicing.ShrinkQuality )
 					{
-					case 0:
-						plane.ShrinkFast(settings.get_double("Slicing", "ExtrudateDiameter")*0.5f, settings.get_double("Slicing", "Optimization"), settings.get_boolean("Display", "DisplayCuttingPlane"), false, settings.get_integer("Slicing", "ShellCount"));
+					case SHRINK_FAST:
+						plane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth*0.5f, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, false, settings.Slicing.ShellCount);
 						break;
-					case 1:
-            plane.ShrinkLogick(settings.get_double("Slicing", "ExtrudateDiameter")*0.5f, settings.get_double("Slicing", "Optimization"), settings.get_boolean("Display", "CuttingPlane"), settings.get_integer("Slicing", "ShellCount"));
+					case SHRINK_LOGICK:
+						plane.ShrinkLogick(settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, settings.Slicing.ShellCount);
 						break;
 					}
 
 					// check if this if a layer we should use the alternate infill distance on
-          float infillDistance = settings.get_double("Slicing", "InfillDistance");
+					float infillDistance = settings.Slicing.InfillDistance;
 					if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end())
 					{
-						infillDistance = settings.get_double("Slicing", "AltInfillDistance");
+						infillDistance = settings.Slicing.AltInfillDistance;
 					}
 
-            plane.CalcInFill(infill, LayerNr, infillDistance, settings.get_double("Slicing", "InfillRotation"), settings.get_double("Slicing", "InfillRotationPrLayer"), settings.get_boolean("Display", "DebugInfill"));
+					plane.CalcInFill(infill, LayerNr, infillDistance, settings.Slicing.InfillRotation, settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
 				}
 				// Make the GCode from the plane and the infill
-              plane.MakeGcode(infill, gcode, E, z+printOffsetZ,
-                              settings.get_double("Slicing", "MinSpeedXY"),
-                              settings.get_double("Slicing", "MaxSpeedXY"),
-                              settings.get_double("Slicing", "MinSpeedZ"),
-                              settings.get_double("Slicing", "MaxSpeedZ"),
-                              settings.get_double("Slicing", "DistanceToReachFullSpeed"),
-                              settings.get_double("Slicing", "ExtrusionFactor"),
-                              settings.get_boolean("Slicing", "IncrementalEcode"),
-                              settings.get_boolean("Slicing", "3DGcode"),
-                              settings.get_boolean("Slicing", "Acceleration"));
+				plane.MakeGcode(infill, gcode, E, z+printOffsetZ, settings.Hardware.MinPrintSpeedXY,
+						settings.Hardware.MaxPrintSpeedXY, settings.Hardware.MinPrintSpeedZ,
+						settings.Hardware.MaxPrintSpeedZ, settings.Hardware.DistanceToReachFullSpeed,
+						settings.Hardware.ExtrusionFactor,
+						settings.Slicing.UseIncrementalEcode,
+						settings.Slicing.Use3DGcode,
+						settings.Slicing.EnableAcceleration);
 			}
 		}
 		LayerNr++;
-    z+=settings.get_double("Slicing", "LayerThickness");
+		z+=settings.Hardware.LayerThickness;
 	}
 
-          float AntioozeDistance = settings.get_double("Slicing", "AntioozeDistance");
-        if (!settings.get_boolean("Slicing", "Antiooze"))
-          AntioozeDistance = 0;
+	float AntioozeDistance = settings.Slicing.AntioozeDistance;
+	if (!settings.Slicing.EnableAntiooze)
+	  AntioozeDistance = 0;
 
 	gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
-                  settings.get_boolean("Slicing", "IncrementalEcode"),
-                  settings.get_boolean("Slicing", "3DGcode"),
-                  AntioozeDistance,
-                  settings.get_double("Slicing", "AntioozeSpeed"));
+			settings.Slicing.UseIncrementalEcode,
+			settings.Slicing.Use3DGcode,
+			AntioozeDistance,
+			settings.Slicing.AntioozeSpeed);
 	m_progress->stop("Done");
 }
 
@@ -996,7 +967,7 @@ void Model::Print()
 void Model::RunExtruder()
 {
 	static bool extruderIsRunning = false;
-    if (settings.get_boolean("Slicing", "3DGcode")) {
+	if (settings.Slicing.Use3DGcode) {
 		if (extruderIsRunning)
       SendNow("M103");
 		else
@@ -1049,9 +1020,9 @@ void Model::Home(string axis)
 		string buffer="G1 F";
 		std::stringstream oss;
 		if(axis == "Z")
-			oss << settings.get_double("Slicing", "MaxSpeedZ");
+			oss << settings.Hardware.MaxPrintSpeedZ;
 		else
-			oss << settings.get_double("Slicing", "MaxSpeedXY");
+			oss << settings.Hardware.MaxPrintSpeedXY;
 		buffer+= oss.str();
 		SendNow(buffer);
 		buffer="G1 ";
@@ -1070,9 +1041,9 @@ void Model::Home(string axis)
 		buffer+= oss.str();
 		SendNow(buffer);
 		if(axis == "Z")
-			oss << settings.get_double("Slicing", "MinPrintSpeedZ");
+			oss << settings.Hardware.MinPrintSpeedZ;
 		else
-			oss << settings.get_double("Slicing", "MinPrintSpeedXY");
+			oss << settings.Hardware.MinPrintSpeedXY;
 		buffer="G1 ";
 		buffer+="F";
 		buffer+= oss.str();
@@ -1108,9 +1079,9 @@ void Model::Move(string axis, float distance)
 		string buffer="G1 F";
 		std::stringstream oss;
 		if(axis == "Z")
-			oss << settings.get_double("Slicing", "MaxSpeedZ");
+			oss << settings.Hardware.MaxPrintSpeedZ;
 		else
-			oss << settings.get_double("Slicing", "MaxSpeedXY");
+			oss << settings.Hardware.MaxPrintSpeedXY;
 		buffer+= oss.str();
 		SendNow(buffer);
 		buffer="G1 ";
@@ -1120,9 +1091,9 @@ void Model::Move(string axis, float distance)
 		buffer+= oss.str();
 		oss.str("");
 		if(axis == "Z")
-			oss << settings.get_double("Slicing", "MaxSpeedZ");
+			oss << settings.Hardware.MaxPrintSpeedZ;
 		else
-			oss << settings.get_double("Slicing", "MaxSpeedXY");
+			oss << settings.Hardware.MaxPrintSpeedXY;
 		buffer+=" F"+oss.str();
 		SendNow(buffer);
 		SendNow("G90");	// absolute positioning
@@ -1141,7 +1112,7 @@ void Model::Goto(string axis, float position)
 	{
 		string buffer="G1 F";
 		std::stringstream oss;
-      oss << settings.get_double("Slicing", "MaxSpeedXY");
+		oss << settings.Hardware.MaxPrintSpeedXY;
 		buffer+= oss.str();
 		SendNow(buffer);
 		buffer="G1 ";
@@ -1150,7 +1121,7 @@ void Model::Goto(string axis, float position)
 		oss << position;
 		buffer+= oss.str();
 		oss.str("");
-      oss << settings.get_double("Slicing", "MaxSpeedXY");
+		oss << settings.Hardware.MaxPrintSpeedXY;
 		buffer+=" F"+oss.str();
 		SendNow(buffer);
 	}
@@ -1324,51 +1295,48 @@ void Model::DrawGrid()
 {
 	glColor3f (0.5f, 0.5f, 0.5f);
 	glBegin(GL_LINES);
-	for (uint x = 0; x < settings.get_double("Hardware", "VolumeX"); x += 10) {
+	for (uint x = 0; x < settings.Hardware.Volume.x; x += 10) {
 		glVertex3f (x, 0.0f, 0.0f);
-		glVertex3f (x, settings.get_double("Hardware", "VolumeY"), 0.0f);
+		glVertex3f (x, settings.Hardware.Volume.y, 0.0f);
 	}
-	glVertex3f (settings.get_double("Hardware", "VolumeX"), 0.0f, 0.0f);
-	glVertex3f (settings.get_double("Hardware", "VolumeX"), settings.get_double("Hardware", "VolumeY"), 0.0f);
+	glVertex3f (settings.Hardware.Volume.x, 0.0f, 0.0f);
+	glVertex3f (settings.Hardware.Volume.x, settings.Hardware.Volume.y, 0.0f);
 
-	for (uint y = 0;y < settings.get_double("Hardware", "VolumeY"); y += 10) {
+	for (uint y = 0;y < settings.Hardware.Volume.y; y += 10) {
 		glVertex3f (0.0f, y, 0.0f);
-		glVertex3f (settings.get_double("Hardware", "VolumeX"), y, 0.0f);
+		glVertex3f (settings.Hardware.Volume.x, y, 0.0f);
 	}
-	glVertex3f (0.0f, settings.get_double("Hardware", "VolumeY"), 0.0f);
-	glVertex3f (settings.get_double("Hardware", "VolumeX"), settings.get_double("Hardware", "VolumeY"), 0.0f);
+	glVertex3f (0.0f, settings.Hardware.Volume.y, 0.0f);
+	glVertex3f (settings.Hardware.Volume.x, settings.Hardware.Volume.y, 0.0f);
 
 	glEnd();
 }
 
 void Model::Draw (Gtk::TreeModel::iterator &selected)
 {
-	printOffset = Vector3f(settings.get_double("Slicing", "PrintMarginX"),
-                         settings.get_double("Slicing", "PrintMarginY"),
-                         settings.get_double("Slicing", "PrintMarginZ"));
-	if(settings.get_boolean("Slicing", "RaftEnable"))
-    printOffset += Vector3f(settings.get_double("Slicing", "RaftSize"),
-                            settings.get_double("Slicing", "RaftSize"), 0);
+	printOffset = settings.Hardware.PrintMargin;
+	if(settings.RaftEnable)
+		printOffset += Vector3f(settings.Raft.Size, settings.Raft.Size, 0);
 
 	Vector3f translation = rfo.transform3D.transform.getTranslation();
 	DrawGrid();
 
 	// Move objects
-	glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+printOffset.z);
+	glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+settings.Hardware.PrintMargin.z);
 	glPolygonOffset (0.5f, 0.5f);
 	rfo.draw (settings, 1.0, selected);
 
-    if (settings.get_boolean("Display", "GCode"))
+	if (settings.Display.DisplayGCode)
 	{
-		glTranslatef(-(translation.x+printOffset.x), -(translation.y+printOffset.y), -(translation.z+printOffset.z));
+		glTranslatef(-(translation.x+printOffset.x), -(translation.y+printOffset.y), -(translation.z+settings.Hardware.PrintMargin.z));
 		gcode.draw(this->settings);
-		glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+printOffset.z);
+		glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+settings.Hardware.PrintMargin.z);
 	}
 	glPolygonOffset (-0.5f, -0.5f);
 	Gtk::TreeModel::iterator iter;
-	rfo.draw (this->settings, settings.get_boolean("Display", "PolygonOpacity"), iter);
+	rfo.draw (this->settings, settings.Display.PolygonOpacity, iter);
 
-    if(settings.get_boolean("Display", "BBox"))
+	if(settings.Display.DisplayBBox)
 	{
 		// Draw bbox
 		glColor3f(1,0,0);
@@ -1424,7 +1392,7 @@ void Model::MakeRaft(float &z)
 	vector<InFillHit> HitsBuffer;
 
 	uint LayerNr = 0;
-	float size = settings.get_double("Slicing", "RaftSize");
+	float size = settings.Raft.Size;
 
 	Vector2f raftMin =  Vector2f(Min.x - size + printOffset.x, Min.y - size + printOffset.y);
 	Vector2f raftMax =  Vector2f(Max.x + size + printOffset.x, Max.y + size + printOffset.y);
@@ -1436,23 +1404,12 @@ void Model::MakeRaft(float &z)
 	float E = 0.0f;
 	float rot;
 
-	while(LayerNr < (uint)settings.get_integer("Slicing", "RaftBaseLayerCount") + (uint)settings.get_integer("Slicing", "RaftInterfaceLayerCount"))
+	while(LayerNr < settings.Raft.Phase[0].LayerCount + settings.Raft.Phase[1].LayerCount)
 	{
-    double Rotation, RotationPrLayer, Distance, MaterialDistanceRatio, Thickness;
-    if(LayerNr < (uint)settings.get_integer("Slicing", "RaftBaseLayerCount")) {
-      Rotation = settings.get_double("Slicing", "RaftBaseRotation");
-      RotationPrLayer = settings.get_double("Slicing", "RaftBaseRotationPrLayer");
-      Distance = settings.get_double("Slicing", "RaftBaseDistance");
-      MaterialDistanceRatio = settings.get_double("Slicing", "RaftBaseMaterialDistanceRatio");
-      Thickness = settings.get_double("Slicing", "RaftBaseThickness");
-    } else {
-      Rotation = settings.get_double("Slicing", "RaftInterfaceRotation");
-      RotationPrLayer = settings.get_double("Slicing", "RaftInterfaceRotationPrLayer");
-      Distance = settings.get_double("Slicing", "RaftInterfaceDistance");
-      MaterialDistanceRatio = settings.get_double("Slicing", "RaftInterfaceMaterialDistanceRatio");
-      Thickness = settings.get_double("Slicing", "RaftInterfaceThickness");
-    }
-	  rot = (Rotation+(float)LayerNr * RotationPrLayer)/180.0f*M_PI;
+	  Settings::RaftSettings::PhasePropertiesType *props;
+	  props = LayerNr < settings.Raft.Phase[0].LayerCount ?
+	    &settings.Raft.Phase[0] : &settings.Raft.Phase[1];
+	  rot = (props->Rotation+(float)LayerNr * props->RotationPrLayer)/180.0f*M_PI;
 		Vector2f InfillDirX(cosf(rot), sinf(rot));
 		Vector2f InfillDirY(-InfillDirX.y, InfillDirX.x);
 
@@ -1460,7 +1417,7 @@ void Model::MakeRaft(float &z)
 		bool reverseLines = false;
 
 		Vector2f P1, P2;
-		for(float x = -Length ; x < Length ; x+=Distance)
+		for(float x = -Length ; x < Length ; x+=props->Distance)
 		{
 			P1 = (InfillDirX *  Length)+(InfillDirY*x) + Center;
 			P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
@@ -1514,31 +1471,31 @@ void Model::MakeRaft(float &z)
 			P2 = HitsBuffer[1].p;
 
 			MakeAcceleratedGCodeLine (Vector3f(P1.x,P1.y,z), Vector3f(P2.x,P2.y,z),
-						  settings.get_double("Hardware", "DistanceToReachFullSpeed"),
-						  MaterialDistanceRatio, gcode, z,
-						  settings.get_double("Hardware", "MinPrintSpeedXY"),
-						  settings.get_double("Hardware", "MaxPrintSpeedXY"),
-						  settings.get_double("Hardware", "MinPrintSpeedZ"),
-						  settings.get_double("Hardware", "MaxPrintSpeedZ"),
-						  settings.get_double("Slicing", "UseIncrementalEcode"),
-						  settings.get_double("Slicing", "Use3DGcode"),
-						  E, settings.get_double("Slicing", "EnableAcceleration"));
+						  settings.Hardware.DistanceToReachFullSpeed,
+						  props->MaterialDistanceRatio, gcode, z,
+						  settings.Hardware.MinPrintSpeedXY,
+						  settings.Hardware.MaxPrintSpeedXY,
+						  settings.Hardware.MinPrintSpeedZ,
+						  settings.Hardware.MaxPrintSpeedZ,
+						  settings.Slicing.UseIncrementalEcode,
+						  settings.Slicing.Use3DGcode,
+						  E, settings.Slicing.EnableAcceleration);
 			reverseLines = !reverseLines;
 		}
 		// Set startspeed for Z-move
 		Command g;
 		g.Code = SETSPEED;
 		g.where = Vector3f(P2.x, P2.y, z);
-    g.f=settings.get_double("Hardware", "MinPrintSpeedZ");
+		g.f=settings.Hardware.MinPrintSpeedZ;
 		g.comment = "Move Z";
 		g.e = E;
 		gcode.commands.push_back(g);
-    z += Thickness * settings.get_double("Slicing", "LayerThickness");
+		z += props->Thickness * settings.Hardware.LayerThickness;
 
 		// Move Z
 		g.Code = ZMOVE;
 		g.where = Vector3f(P2.x, P2.y, z);
-      g.f = settings.get_double("Slicing", "MinSpeedZ");
+		g.f = settings.Hardware.MinPrintSpeedZ;
 		g.comment = "Move Z";
 		g.e = E;
 		gcode.commands.push_back(g);

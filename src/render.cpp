@@ -21,6 +21,7 @@
 #include "render.h"
 #include "arcball.h"
 #include "gllight.h"
+#include "settings.h"
 #include "model.h"
 
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))

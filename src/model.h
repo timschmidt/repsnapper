@@ -22,11 +22,11 @@
 #include <math.h>
 
 #include <reprap/comms.h>
-#include <glibmm/keyfile.h>
 
 #include "stl.h"
 #include "rfo.h"
 #include "gcode.h"
+#include "settings.h"
 
 enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 #ifdef WIN32
@@ -121,8 +121,9 @@ public:
 	~Model();
 	void SimpleAdvancedToggle();
 
-	void SaveConfig(Glib::RefPtr<Gio::File> file);
-	bool LoadConfig(Glib::RefPtr<Gio::File> file);
+	void SaveConfig(string filename);
+	void LoadConfig() { LoadConfig ("repsnapper.conf"); }
+	void LoadConfig(string filename);
 
 	// RFO Functions
 	void ReadRFO(string filename);
@@ -193,7 +194,7 @@ public:
 	void PrintButton();
 	void ContinuePauseButton();
 
-	Glib::KeyFile settings;
+	Settings settings;
 
 	// Model derived: Bounding box info
 	Vector3f Center;

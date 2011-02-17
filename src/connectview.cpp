@@ -22,12 +22,9 @@
 #include <cerrno>
 #include <string>
 
-#include <giomm/file.h>
-#include <giomm/filemonitor.h>
-#include <glibmm/keyfile.h>
-
 #include <reprap/util.h>
 
+#include "settings.h"
 #include "connectview.h"
 
 // we try to change the state of the connection
@@ -36,8 +33,8 @@ void ConnectView::try_set_state(bool connect)
   int result;
   if(connect) {
     serial_state_changed(CONNECTING);
-    result = rr_open(m_device, m_settings->get_string("Hardware", "Port").c_str(),
-                     m_settings->get_integer("Hardware", "SerialSpeed"));
+    result = rr_open(m_device, m_settings->Hardware.PortName.c_str(),
+                     m_settings->Hardware.SerialSpeed);
     if(result < 0) {
       serial_state_changed(DISCONNECTED);
       Gtk::MessageDialog dialog("Failed to connect to device", false,
@@ -112,27 +109,18 @@ void ConnectView::connect_toggled()
 
 void ConnectView::signal_entry_changed()
 {
-  m_settings->set_string("Hardware", "Port", m_combo.get_active_text());
+  m_settings->Hardware.PortName = m_combo.get_active_text();
 }
 
 bool ConnectView::find_ports() {
   m_combo.clear();
 
-  Glib::ustring set_port = m_settings->get_string("Hardware", "Port");
+  m_combo.append_text(m_settings->Hardware.PortName);
 
   char **ports = rr_enumerate_ports();
-  size_t i;
-  for(i = 0; ports[i] != NULL; ++i) {
-    if(set_port == ports[i]) {
-      set_port = "";
-    }
+  for(size_t i = 0; ports[i] != NULL; ++i) {
     m_combo.append_text(ports[i]);
     free(ports[i]);
-  }
-
-  if(set_port.size()) {
-    m_combo.append_text(set_port);
-    m_combo.set_active(i);
   }
   
   free(ports);
@@ -140,9 +128,9 @@ bool ConnectView::find_ports() {
   return true;
 }
 
-ConnectView::ConnectView(rr_dev device,
-                         Glib::KeyFile *settings,
-                         bool show_connect)
+ConnectView::ConnectView (rr_dev device,
+			  Settings *settings,
+			  bool show_connect)
   : Gtk::VBox(), m_connect(), m_port_label("Port:"),
     m_device(device), m_settings(settings)
 {
@@ -164,4 +152,6 @@ ConnectView::ConnectView(rr_dev device,
   serial_state_changed(DISCONNECTED);
 
   // TODO: Execute find_ports every time the dropdown is displayed
+  find_ports();
+  m_combo.set_active(0);
 }

@@ -14,19 +14,20 @@ LIB_DIR=$(top_srcdir)/libraries
 WARNING_FLAGS = -Wall
 
 AM_CPPFLAGS = \
+	-DDATADIR=\"$(datadir)/@PACKAGE@/\" \
 	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
 	-I$(LIB_DIR)/polylib \
 	-g -O0 $(WARNING_FLAGS)
 
-SHARED_SRC= stl.cpp model.cpp gllight.cpp gcode.cpp arcball.cpp		\
-	stdafx.cpp rfo.cpp ivcon.cpp file.cpp platform.cpp render.cpp	\
-	progress.cpp connectview.cpp
+SHARED_SRC= stl.cpp model.cpp gllight.cpp gcode.cpp arcball.cpp	\
+	stdafx.cpp rfo.cpp settings.cpp ivcon.cpp file.cpp	\
+	platform.cpp render.cpp progress.cpp connectview.cpp
 
 SHARED_INC=arcball.h convert.h gcode.h gllight.h ivcon.h miniball.h	\
 	model.h rfo.h file.h stdafx.h stl.h platform.h render.h		\
-	progress.h connectview.h
+	progress.h connectview.h settings.h
 
 # TEST_SOURCES=unittest.cpp
 
@@ -35,8 +36,5 @@ repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
 repsnapper_LDADD = ${LIBS} -L/usr/lib -lGLU -lGL -lglut	\
 		$(top_builddir)/libraries/polylib/libpolylib.a
 
-repsnapperdatadir = $(datadir)/@PACKAGE@
-repsnapperdata_DATA = repsnapper.ui
-
-repsnapperconfdir = $(sysconfdir)/xdg/@PACKAGE@
-repsnapperconf_DATA = repsnapper.conf
+repsnappersharedir = $(datadir)/@PACKAGE@
+repsnappershare_DATA = repsnapper.ui repsnapper.conf

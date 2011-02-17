@@ -69,7 +69,7 @@ public:
 	RFO();
 	void clear();
 	void DeleteSelected(Gtk::TreeModel::iterator &iter);
-	void draw(Glib::KeyFile &settings, float opacity, Gtk::TreeModel::iterator &iter);
+	void draw(Settings &settings, float opacity, Gtk::TreeModel::iterator &iter);
 	void newObject();
 	Gtk::TreePath createFile(RFO_Object *parent, const STL &stl, std::string location);
 	void get_selected_stl(Gtk::TreeModel::iterator &iter, RFO_Object *&object, RFO_File *&file);
