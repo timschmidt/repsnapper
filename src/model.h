@@ -169,11 +169,6 @@ public:
 	void SetLogFileClear(bool on);
 	void SwitchPower(bool on);
 
-	// LUA stuff
-	void AddText(string line);
-	void ClearGcode();
-	string GetText();
-
 	void Home(string axis);
 	void Move(string axis, float distance);
 	void Goto(string axis, float position);
@@ -203,11 +198,6 @@ public:
 	Vector3f Min;
 	Vector3f Max;
 	void CalcBoundingBoxAndCenter();
-
-	// fltk compat foo ...
-        void redraw();
-	int w() { return get_width(); }
-	int h() { return get_height(); }
 
 	// Truly the model
 	RFO rfo;

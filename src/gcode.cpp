@@ -483,7 +483,7 @@ void GCode::Write (Model *mvc, string filename)
 	  fprintf (file, "%s", buffer->get_text().c_str());
 	  fclose (file);
 	}
-	mvc->redraw();
+	mvc->draw();
 }
 
 void GCode::append_text (const std::string &line)

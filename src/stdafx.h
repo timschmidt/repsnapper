@@ -101,15 +101,6 @@ extern void RGBTOHSL (float red, float green, float blue, float &hue, float &sat
 extern void RGBTOYUV (float r, float g, float b, float &y, float &u, float &v);
 extern void YUVTORGB (float y, float u, float v, float &r, float &g, float &b);
 
-#ifdef ENABLE_LUA
-
-extern "C" {
-  #include <lua.hpp>
-}
-#include <luabind/luabind.hpp>
-using namespace luabind;
-
-#endif // ENABLE_LUA
 
 // ivconv
 #include "ivcon.h"
