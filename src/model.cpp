@@ -131,11 +131,19 @@ Model *Model::create()
       gsize length;
       file->load_contents(ptr, length);
       ui = Glib::ustring(ptr, length);
-      cout << "Got UI beneath datadir " << datadirs[i] << endl;
       break;
     } catch(Gio::Error e) {
-      cout << "UI description wasn't in " << datadirs[i] << "..." << endl;
-      continue;
+      switch(e.code()) {
+      case Gio::Error::NOT_FOUND:
+        continue;
+        
+      default:
+        Gtk::MessageDialog dialog("Error reading UI description!!", false,
+                                  Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+        dialog.set_secondary_text(e.what());
+        dialog.run();
+        return NULL;
+      }
     }
   }
 
