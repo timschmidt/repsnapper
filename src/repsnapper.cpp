@@ -99,7 +99,7 @@ public:
 };
 
 Glib::RefPtr<Gio::File> find_global_config() {
-  const gchar * const * dirs = g_get_system_config_dirs();
+  const gchar * const *dirs = g_get_system_config_dirs();
   Glib::RefPtr<Gio::File> f;
   for(size_t i = 0; dirs[i] != NULL; ++i) {
     f = Gio::File::create_for_path(Glib::ustring(dirs[i]) + "/repsnapper/repsnapper.conf");

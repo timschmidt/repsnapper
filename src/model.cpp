@@ -20,12 +20,14 @@
 #include <vector>
 #include <string>
 #include <cerrno>
+#include <functional>
 
 // should move to platform.h with com port fun.
 #include <sys/types.h>
 #include <dirent.h>
 
-#include <functional>
+#include <glib/gutils.h>
+
 #include "stdafx.h"
 #include "model.h"
 #include "rfo.h"
@@ -120,18 +122,41 @@ void Model::send_gcode ()
 
 Model *Model::create()
 {
+  const gchar * const *datadirs = g_get_system_data_dirs();
+  Glib::ustring ui;
+  for(gsize i = 0; datadirs[i] != NULL; ++i) {
+    Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(Glib::ustring(datadirs[i]) + "/repsnapper/repsnapper.ui");
+    try {
+      char *ptr;
+      gsize length;
+      file->load_contents(ptr, length);
+      ui = Glib::ustring(ptr, length);
+      cout << "Got UI beneath datadir " << datadirs[i] << endl;
+      break;
+    } catch(Gio::Error e) {
+      cout << "UI description wasn't in " << datadirs[i] << "..." << endl;
+      continue;
+    }
+  }
+
+  if(ui.empty()) {
+    Gtk::MessageDialog dialog("Couldn't find UI description!", false,
+                              Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+    dialog.set_secondary_text("Check that repsnapper has been correctly installed.");
+    dialog.run();
+    return NULL;
+  }
+
   Glib::RefPtr<Gtk::Builder> builder;
   try {
-    builder = Gtk::Builder::create_from_file(DATADIR "repsnapper.ui");
-  }
-  catch(const Glib::FileError& ex)
-  {
-    std::cerr << "FileError: " << ex.what() << std::endl;
-    throw ex;
+    builder = Gtk::Builder::create_from_string(ui);
   }
   catch(const Gtk::BuilderError& ex)
   {
-    std::cerr << "BuilderError: " << ex.what() << std::endl;
+    Gtk::MessageDialog dialog("Error loading UI!", false,
+                              Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+    dialog.set_secondary_text(ex.what());
+    dialog.run();
     throw ex;
   }
   Model *mvc = 0;
@@ -522,23 +547,22 @@ void Model::handle_recv(rr_dev device, void *data, const char *reply, size_t len
 
 bool Model::handle_dev_fd(Glib::IOCondition cond) {
   int result;
-  // TODO: Display errors somewhere more visible
   if(cond & Glib::IO_IN) {
     result = rr_handle_readable(device);
     if(result < 0) {
-      string message("Error reading from device: ");
-      message += strerror(errno);
-      Gtk::MessageDialog dialog(*this, message, false,
+      Gtk::MessageDialog dialog(*this, "Error reading from device!", false,
                                 Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.set_secondary_text(strerror(errno));
+      dialog.run();
     }
   }
   if(cond & Glib::IO_OUT) {
     result = rr_handle_writable(device);
     if(result < 0) {
-      string message("Error writing to device: ");
-      message += strerror(errno);
-      Gtk::MessageDialog dialog(*this, message, false,
+      Gtk::MessageDialog dialog(*this, "Error writing to device!", false,
                                 Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.set_secondary_text(strerror(errno));
+      dialog.run();
     }
   }
   return true;
