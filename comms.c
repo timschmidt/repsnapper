@@ -206,6 +206,7 @@ void rr_enqueue_internal(rr_dev device, rr_prio priority, void *cbdata, const ch
   
   if(!device->sendhead[priority]) {
     device->sendhead[priority] = node;
+    device->sendtail[priority] = node;
     device->want_writable(device, device->ww_data, 1);
   } else {
     device->sendtail[priority]->next = node;
