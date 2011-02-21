@@ -245,16 +245,13 @@ int handle_reply(rr_dev device, const char *reply, size_t nbytes) {
 }
 
 int rr_handle_readable(rr_dev device) {
-  const size_t termlen = strlen(REPLY_TERMINATOR);
   /* Grow receive buffer if it's full */
   if(device->recvbuf_fill == device->recvbufsize) {
     device->recvbuf = realloc(device->recvbuf, 2*device->recvbufsize);
   }
 
   ssize_t result;
-  size_t scan = (device->recvbuf_fill > termlen) ?
-                 device->recvbuf_fill - termlen  :
-                 0;
+
   do {
     result = read(device->fd, device->recvbuf + device->recvbuf_fill, device->recvbufsize - device->recvbuf_fill);
   } while(result < 0 && errno == EINTR);
@@ -264,20 +261,35 @@ int rr_handle_readable(rr_dev device) {
   device->recvbuf_fill += result;
 
   /* Scan for complete reply */
+  size_t scan = 0;
+  size_t end = device->recvbuf_fill;
+  size_t reply_span = 0;
+  size_t term_span = 0;
   size_t start = 0;
-  size_t end = device->recvbuf_fill - termlen;
-  for(; scan < end; ++scan) {
-    if(0 == strncmp(device->recvbuf + scan, REPLY_TERMINATOR, termlen)) {
-      /* We have a terminator */
-      handle_reply(device, device->recvbuf + start, scan - start);
-      scan += termlen;
-      start = scan;
-    }
-  }
 
-  /* Move incomplete reply to beginning of buffer */
-  memmove(device->recvbuf, device->recvbuf+start, device->recvbuf_fill - start);
-  device->recvbuf_fill -= start;
+  do {
+    /* How many non terminator chars and how many terminator chars after them*/
+    reply_span = strcspn(device->recvbuf + scan, REPLY_TERMINATOR); 
+    term_span = strspn(device->recvbuf + scan + reply_span, REPLY_TERMINATOR);
+    start = scan;
+    
+    if(0 < term_span && 0 < reply_span && (start + reply_span + 1) < end) {
+      /* We have a terminator after non terminator chars */
+      handle_reply(device, device->recvbuf + start, reply_span);
+    }
+    scan += reply_span + term_span;
+
+  } while(scan < end);
+
+  size_t rest_size = end - start;
+
+  /* Move the rest of the buffer to the beginning */
+  if(rest_size > 0) {
+    device->recvbuf_fill = rest_size;
+    memmove(device->recvbuf, device->recvbuf + start, device->recvbuf_fill);
+  } else {
+    device->recvbuf_fill = 0;
+  }
 
   return 0;
 }
