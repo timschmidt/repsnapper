@@ -3,7 +3,7 @@ Libreprap is a library intended to abstract host <-> reprap communication, allow
 Code hosting: https://github.com/Ralith/libreprap
 Page on the reprap wiki: http://reprap.org/wiki/Libreprap
 
-Currently, the development branch of RepSnapper is using this lib, but once it matures, the intention is for every host software to start using it.
+Currently, gcdump (from reprap-tools) and the development branch of RepSnapper is using this lib, but once it matures, the intention is for every host software to start using it.
 
 == Development ==
 You can debug the serial code wihtout an actual firmware by suing socat:
