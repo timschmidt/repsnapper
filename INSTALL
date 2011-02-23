@@ -24,7 +24,7 @@ Building and installing:
 
 By default, the files are installed under /usr/local/, but some distros don't
 include it into the search path for dynamic libs (running a binary that links
-against libreprap might reports something like "Can't find libreprap.ld.so.1" or so).
+against libreprap might reports something like "Can't find libreprap.so" or so).
 There are two ways to fix that:
 * Change the install prefix to /usr/ instead of /usr/local, which is not recommended
 * Add /usr/local/bin to ld.conf by creating a file /etc/ld.so.conf.d/local.conf which includes only the line "/usr/local/lib"

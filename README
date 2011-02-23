@@ -12,4 +12,4 @@ You can debug the serial code wihtout an actual firmware by suing socat:
 * connect your client software to /dev/libreprap
 ** now send anything and see it appear on the socat terminal
 * for testing libreprap with minimal distractions, try gcdump from https://github.com/Ralith/reprap-utils
-** "gcdump -v -p 3D /dev/libreprap" eats from stdin and outputs to stdout. Use 5D instead of 3D for comms checksumming
+** "gcdump -v -p 3 /dev/libreprap" eats from stdin and outputs to stdout. Use "- p 5" instead for comms checksumming
