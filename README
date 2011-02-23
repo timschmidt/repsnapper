@@ -1,0 +1,15 @@
+Libreprap is a library intended to abstract host <-> reprap communication, allowing all reprap host software to share common code for this task.
+
+Code hosting: https://github.com/Ralith/libreprap
+Page on the reprap wiki: http://reprap.org/wiki/Libreprap
+
+Currently, the development branch of RepSnapper is using this lib, but once it matures, the intention is for every host software to start using it.
+
+== Development ==
+You can debug the serial code wihtout an actual firmware by suing socat:
+* sudo socat -d -d pty,link=/dev/libreprap,raw,echo=0 readline,raw,echo=0
+** This gives a simple serial terminal that you can use to talk to libreprap
+* connect your client software to /dev/libreprap
+** now send anything and see it appear on the socat terminal
+* for testing libreprap with minimal distractions, try gcdump from https://github.com/Ralith/reprap-utils
+** "gcdump -v -p 3D /dev/libreprap" eats from stdin and outputs to stdout. Use 5D instead of 3D for comms checksumming
