@@ -55,17 +55,25 @@ int fived_handle_reply(rr_dev device, const char *reply, size_t nbytes) {
         }
       }
     }
-  } else if(!strncmp("rs", reply, 2)) {
-    char* end;
-    long long lineno = strtoll(reply + 3, &end, 10);
-    if(end > (reply + 3) && lineno < device->lineno) {
-      /* Line number begins 3 bytes in */
-      return resend(device, lineno, reply, nbytes);
+  } else if(!strncmp("rs", reply, 2) || !strncmp("resend", reply, 6)) {
+    /* check where the line number starts */
+    size_t n_start = strcspn(reply, "123456789");
+    if(n_start) {
+      long long lineno = strtoll(reply + n_start, NULL, 10);
+      /* check if lineno is in the range of sent lines*/
+      if(lineno < device->lineno && strncmp("-", reply + n_start - 1, 1)) {
+        return resend(device, lineno, reply, nbytes);
+      } else {
+        if(device->onerr) {
+          device->onerr(device, device->onerr_data, RR_E_UNSENT_RESEND, reply, nbytes);
+        }
+        return RR_E_UNSENT_RESEND;
+      }
     } else {
       if(device->onerr) {
-        device->onerr(device, device->onerr_data, RR_E_PROTOCOL_ERROR, reply, nbytes);
+        device->onerr(device, device->onerr_data, RR_E_MALFORMED_RESEND_REQUEST, reply, nbytes);
       }
-      return RR_E_PROTOCOL_ERROR;
+    return RR_E_MALFORMED_RESEND_REQUEST;
     }
   } else if(!strncmp("!!", reply, 2)) {
     if(device->onerr) {
