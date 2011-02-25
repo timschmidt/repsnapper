@@ -7,7 +7,7 @@
 #include "common.h"
 
 int fived_handle_reply(rr_dev device, const char *reply, size_t nbytes) {
-  if(!strncmp("ok", reply, 2)) {
+  if(!strncasecmp("ok", reply, 2)) {
     if(device->onreply) {
       device->onreply(device, device->onreply_data, RR_OK, 0);
       /* Parse values */
@@ -55,7 +55,7 @@ int fived_handle_reply(rr_dev device, const char *reply, size_t nbytes) {
         }
       }
     }
-  } else if(!strncmp("rs", reply, 2) || !strncmp("resend", reply, 6)) {
+  } else if(!strncasecmp("rs", reply, 2) || !strncasecmp("resend", reply, 6)) {
     /* check where the line number starts */
     size_t n_start = strcspn(reply, "123456789");
     if(n_start) {
