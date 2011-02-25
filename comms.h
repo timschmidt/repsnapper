@@ -29,6 +29,7 @@ typedef enum {
   RR_E_UNKNOWN_REPLY = -4,
   RR_E_UNCACHED_RESEND = -5,
   RR_E_HARDWARE_FAULT = -6,
+  RR_E_PROTOCOL_ERROR = -7,
 } rr_error;
 
 /* Must be ordered ascending by priority */

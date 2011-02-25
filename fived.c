@@ -56,8 +56,17 @@ int fived_handle_reply(rr_dev device, const char *reply, size_t nbytes) {
       }
     }
   } else if(!strncmp("rs", reply, 2)) {
-    /* Line number begins 3 bytes in */
-    return resend(device, atoll(reply + 3), reply, nbytes);
+    char* end;
+    long long lineno = strtoll(reply + 3, &end, 10);
+    if(end > (reply + 3) && lineno < device->lineno) {
+      /* Line number begins 3 bytes in */
+      return resend(device, lineno, reply, nbytes);
+    } else {
+      if(device->onerr) {
+        device->onerr(device, device->onerr_data, RR_E_PROTOCOL_ERROR, reply, nbytes);
+      }
+      return RR_E_PROTOCOL_ERROR;
+    }
   } else if(!strncmp("!!", reply, 2)) {
     if(device->onerr) {
       device->onerr(device, device->onerr_data, RR_E_HARDWARE_FAULT, reply, nbytes);

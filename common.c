@@ -2,10 +2,13 @@
 
 #include "comms_private.h"
 
+#include <assert.h>
+
 int resend(rr_dev device, unsigned long lineno, const char *reply, size_t nbytes) {
   unsigned long delta = (device->lineno - 1) - lineno;
   if(delta < device->sentcachesize) {
     blocknode *node = device->sentcache[delta];
+    assert(node);
     rr_enqueue_internal(device, RR_PRIO_RESEND, node->cbdata, node->block, node->blocksize, lineno);
   } else {
     /* Line needed for resend was not cached */
