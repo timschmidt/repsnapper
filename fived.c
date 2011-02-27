@@ -13,7 +13,7 @@ int fived_handle_reply(rr_dev device, const char *reply, size_t nbytes) {
       /* Parse values */
       char *i;
       for(i = (char*)reply; i < reply + nbytes; ++i) {
-        switch(*i) {
+        switch(toupper(*i)) {
         case 'T':
           device->onreply(device, device->onreply_data, RR_NOZZLE_TEMP,
                           strtof(i+2, &i));
