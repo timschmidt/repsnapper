@@ -264,10 +264,10 @@ void ModelViewController::DetectComPorts(bool init)
 	currentComports.push_back(string("COM"+highestCom));
 
 #elif defined(__APPLE__)
-	const char *ttyPattern = "tty.";
+	const char *ttyPattern[] = {"tty.", NULL};
 
 #else // Linux
-	const char *ttyPattern = "ttyUSB";
+	const char *ttyPattern[] = {"ttyUSB", "ttyACM", NULL};
 #endif
 
 #ifndef WIN32
@@ -276,10 +276,12 @@ void ModelViewController::DetectComPorts(bool init)
 		struct	dirent *e;
 		while ((e = readdir (d))) {
 			//fprintf (stderr, "name '%s'\n", e->d_name);
-			if (strstr(e->d_name,ttyPattern)) {
-				string device = string("/dev/") + e->d_name;
-				currentComports.push_back(device);
-			}
+			for (const char **ttyPidx = ttyPattern; *ttyPidx != NULL; ++ttyPidx) {
+               			if (strstr(e->d_name,*ttyPidx)) {
+               				string device = string("/dev/") + e->d_name;
+					currentComports.push_back(device);
+				}
+ 			}
 		}
 		closedir(d);
 
