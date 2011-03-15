@@ -14,7 +14,7 @@ LIB_DIR=$(top_srcdir)/libraries
 WARNING_FLAGS = -Wall
 
 AM_CPPFLAGS = \
-	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) \
+	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) $(GTK_CFLAGS) \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
 	-I$(LIB_DIR)/polylib \
