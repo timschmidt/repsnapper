@@ -122,12 +122,7 @@ void Model::send_gcode ()
 
 Model *Model::create()
 {
-  const gchar * const *datadirs = g_get_system_data_dirs();
-  std::vector<std::string> dirs;
-  for(gsize i = 0; datadirs[i] != NULL; ++i) 
-	  dirs.push_back(std::string(datadirs[i]) + G_DIR_SEPARATOR + "repsnapper" + G_DIR_SEPARATOR);
-  dirs.push_back(std::string(".") + G_DIR_SEPARATOR);
-
+  std::vector<std::string> dirs = Platform::getConfigPaths();
   Glib::ustring ui;
   for (std::vector<std::string>::const_iterator i = dirs.begin();
        i != dirs.end(); ++i) {

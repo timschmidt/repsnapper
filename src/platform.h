@@ -22,6 +22,10 @@
 
 #ifndef PLATFORM_H
 #define PLATFORM_H
+
+#include <vector>
+#include <string>
+
 /**
  * OSX uses a different setup for opengl, we compile with carbon
  */
@@ -40,6 +44,7 @@
 class Platform {
   public:
 	static unsigned long getTickCount();
+	static std::vector<std::string> getConfigPaths();
 };
 
 // helper instance for easy locking

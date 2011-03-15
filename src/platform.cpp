@@ -37,6 +37,16 @@ unsigned long Platform::getTickCount()
 #endif
 }
 
+std::vector<std::string> Platform::getConfigPaths()
+{
+  const gchar * const *datadirs = g_get_system_data_dirs();
+  std::vector<std::string> dirs;
+  for(gsize i = 0; datadirs[i] != NULL; ++i)
+    dirs.push_back(std::string(datadirs[i]) + G_DIR_SEPARATOR + "repsnapper" + G_DIR_SEPARATOR);
+  dirs.push_back(std::string(".") + G_DIR_SEPARATOR);
+  return dirs;
+}
+
 /*
  * The basic idea here, is that gtk+ does not have a recursive lock
  * so - taking the GDK_THREADS_ENTER when we already own the lock is
