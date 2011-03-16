@@ -40,7 +40,8 @@ fi
 
 conf_args=$(requote "$@")
 
-autoreconf -i
+rm -f configure config.status config.h
+autoreconf -i -f
 aclocal $ACLOCAL_FLAGS || exit 1;
 intltoolize --copy --force --automake || exit 1;
 if test "x$NOCONFIGURE" = "x"; then

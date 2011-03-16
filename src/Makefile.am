@@ -32,7 +32,7 @@ SHARED_INC=arcball.h convert.h gcode.h gllight.h ivcon.h miniball.h	\
 
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
 
-repsnapper_LDADD = ${LIBS} -L/usr/lib -lGLU -lGL -lglut	\
+repsnapper_LDADD = $(GTK_LIBS) -L/usr/lib -lGLU -lGL -lglut	\
 		$(top_builddir)/libraries/polylib/libpolylib.a
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
