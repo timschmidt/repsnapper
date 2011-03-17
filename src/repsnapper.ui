@@ -27,15 +27,16 @@
                         <property name="ubuntu_local">True</property>
                         <child>
                           <object class="GtkImageMenuItem" id="menu_open_stl">
+                            <property name="label" translatable="yes">Load STL</property>
                             <property name="visible">True</property>
                             <property name="related_action">OpenStl</property>
-                            <property name="use_underline">True</property>
-                            <property name="use_stock">True</property>
+                            <property name="image">image1</property>
+                            <property name="use_stock">False</property>
                           </object>
                         </child>
                         <child>
                           <object class="GtkImageMenuItem" id="menu_open_gcode">
-                            <property name="label">open gcode</property>
+                            <property name="label">Open GCode</property>
                             <property name="visible">True</property>
                             <property name="related_action">OpenGCode</property>
                             <property name="image">image2</property>
@@ -1388,21 +1389,21 @@
     </child>
   </object>
   <object class="GtkAction" id="OpenStl">
-    <property name="label">open stl</property>
-    <property name="short_label">open stl</property>
-    <property name="tooltip">open an stl file</property>
+    <property name="label">Load STL</property>
+    <property name="short_label">Load STL</property>
+    <property name="tooltip">Load an STL file</property>
     <property name="stock_id">gtk-open</property>
   </object>
   <object class="GtkAction" id="OpenGCode">
-    <property name="label">open gcode</property>
-    <property name="short_label">open gcode</property>
-    <property name="tooltip">open a file of control codes</property>
+    <property name="label">Load GCode</property>
+    <property name="short_label">Load GCode</property>
+    <property name="tooltip">Load a file of control codes</property>
     <property name="stock_id">gtk-open</property>
   </object>
   <object class="GtkAction" id="Quit">
-    <property name="label">quit</property>
-    <property name="short_label">quit</property>
-    <property name="tooltip">exit repsnapper</property>
+    <property name="label">Quit</property>
+    <property name="short_label">Quit</property>
+    <property name="tooltip">Exit Repsnapper</property>
     <property name="stock_id">gtk-exit</property>
   </object>
   <object class="GtkAboutDialog" id="about_dialog">
@@ -1449,24 +1450,24 @@ and others I forgot... (needs updating)</property>
     <property name="stock_id">gtk-about</property>
   </object>
   <object class="GtkAction" id="Calibrate">
-    <property name="label">calibrate</property>
-    <property name="short_label">calibrate</property>
-    <property name="tooltip">an interactive callibration routine</property>
+    <property name="label">Calibrate</property>
+    <property name="short_label">Calibrate</property>
+    <property name="tooltip">An interactive calibration routine</property>
   </object>
   <object class="GtkAction" id="LoadSettings">
-    <property name="label">load settings</property>
-    <property name="short_label">load settings</property>
+    <property name="label">Load Settings</property>
+    <property name="short_label">Load Settings</property>
     <property name="tooltip">Load application settings profile</property>
   </object>
   <object class="GtkAction" id="SaveSettings">
-    <property name="label">save settings</property>
-    <property name="short_label">save settings</property>
-    <property name="tooltip">save application settings profile</property>
+    <property name="label">Save Settings</property>
+    <property name="short_label">Save Settings</property>
+    <property name="tooltip">Save application settings profile</property>
   </object>
   <object class="GtkAction" id="SaveSettingsAs">
-    <property name="label">save settings as</property>
-    <property name="short_label">save settings as</property>
-    <property name="tooltip">save settings in a custom file</property>
+    <property name="label">Save Settings As</property>
+    <property name="short_label">Save Settings As</property>
+    <property name="tooltip">Save settings in a custom file</property>
   </object>
   <object class="GtkDialog" id="preferences_dlg">
     <property name="border_width">5</property>
@@ -2943,5 +2944,9 @@ and others I forgot... (needs updating)</property>
   <object class="GtkImage" id="image2">
     <property name="visible">True</property>
     <property name="stock">gtk-open</property>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="stock">gtk-missing-image</property>
   </object>
 </interface>
