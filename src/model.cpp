@@ -131,7 +131,7 @@ Model *Model::create()
       char *ptr;
       gsize length;
       file->load_contents(ptr, length);
-      ui = Glib::ustring(ptr, length);
+      ui = Glib::ustring(ptr);
       break;
     } catch(Gio::Error e) {
       switch(e.code()) {
