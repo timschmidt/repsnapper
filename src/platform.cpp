@@ -41,9 +41,15 @@ std::vector<std::string> Platform::getConfigPaths()
 {
   const gchar * const *datadirs = g_get_system_data_dirs();
   std::vector<std::string> dirs;
+
+  /* Always prefer config files in the current directory */
+  dirs.push_back(std::string(".") + G_DIR_SEPARATOR);
+
+  dirs.push_back(std::string(G_STRINGIFY(DATADIR)) + G_DIR_SEPARATOR);
+  dirs.push_back(std::string(G_STRINGIFY(SYSCONFDIR)) + G_DIR_SEPARATOR);
   for(gsize i = 0; datadirs[i] != NULL; ++i)
     dirs.push_back(std::string(datadirs[i]) + G_DIR_SEPARATOR + "repsnapper" + G_DIR_SEPARATOR);
-  dirs.push_back(std::string(".") + G_DIR_SEPARATOR);
+
   return dirs;
 }
 

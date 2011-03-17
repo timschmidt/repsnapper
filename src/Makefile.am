@@ -18,6 +18,8 @@ AM_CPPFLAGS = \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
 	-I$(LIB_DIR)/polylib \
+        -DDATADIR='$(repsnapperdatadir)' \
+        -DSYSCONFDIR='$(repsnapperconfdir)' \
 	-g -O0 $(WARNING_FLAGS)
 
 SHARED_SRC= stl.cpp model.cpp gllight.cpp gcode.cpp arcball.cpp		\
