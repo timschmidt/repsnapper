@@ -447,6 +447,17 @@ static struct {
   { "Hardware.PrintMargin.Y", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.PrintMargin.Z", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
+  { "Hardware.ExtrudedMaterialWidth", 0.0, 10.0, 0.01, 0.1 },
+  { "Hardware.LayerThickness", 0.1, 3.0, 0.1, 0.2 },
+  { "Hardware.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
+
+  { "Hardware.MinPrintSpeedXY", 1.0, 8000.0, 10.0, 100.0 },
+  { "Hardware.MaxPrintSpeedXY", 1.0, 8000.0, 10.0, 100.0 },
+  { "Hardware.MinPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
+  { "Hardware.MaxPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
+
+  { "Hardware.ReceivingBufferSize", 1.0, 100.0, 1.0, 5.0 },
+  { "Hardware.KeepLines", 100.0, 100000.0, 1.0, 500.0 },
 };
 
 void Settings::set_to_gui (Builder &builder, int i)

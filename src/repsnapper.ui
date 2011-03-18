@@ -2173,6 +2173,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkSpinButton" id="Hardware.ReceivingBufferSize">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Recommended value for FiveD is 4</property>
                                     <property name="invisible_char">•</property>
                                   </object>
                                   <packing>
@@ -2208,6 +2209,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkSpinButton" id="Hardware.KeepLines">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Number of lines of output to retain for each scrollback buffer</property>
                                     <property name="invisible_char">•</property>
                                   </object>
                                   <packing>
