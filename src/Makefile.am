@@ -40,7 +40,7 @@ repsnapper_LDADD = $(GTK_LIBS) $(LIBREPRAP_LIBS) \
                 -L/usr/lib -lGLU -lGL -lglut
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
-repsnapperdata_DATA = repsnapper.ui
+dist_repsnapperdata_DATA = repsnapper.ui
 
 repsnapperconfdir = $(sysconfdir)/xdg/@PACKAGE@
-repsnapperconf_DATA = repsnapper.conf
+dist_repsnapperconf_DATA = repsnapper.conf

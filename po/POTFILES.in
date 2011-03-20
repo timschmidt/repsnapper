@@ -4,3 +4,5 @@
 #
 [encoding: UTF-8]
 repsnapper.desktop.in
+
+[type: gettext/glade]src/repsnapper.ui
