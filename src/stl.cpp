@@ -86,7 +86,7 @@ void renderBitmapString(Vector3f pos, void* font, string text)
 
 	checkGlutInit();
 
-	sprintf(asd,text.c_str());
+	sprintf(asd,"%s",text.c_str());
 	glRasterPos3f(pos.x, pos.y, pos.z);
 	for (uint c=0;c<text.size();c++)
 		glutBitmapCharacter(font, (int)*a++);
