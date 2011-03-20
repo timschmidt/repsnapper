@@ -15,6 +15,7 @@ WARNING_FLAGS = -Wall
 
 AM_CPPFLAGS = \
 	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) $(GTK_CFLAGS) \
+        $(LIBREPRAP_CFLAGS) \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
 	-I$(LIB_DIR)/polylib \
@@ -34,8 +35,9 @@ SHARED_INC=arcball.h convert.h gcode.h gllight.h ivcon.h miniball.h	\
 
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
 
-repsnapper_LDADD = $(GTK_LIBS) -L/usr/lib -lGLU -lGL -lglut	\
-		$(top_builddir)/libraries/polylib/libpolylib.a
+repsnapper_LDADD = $(GTK_LIBS) $(LIBREPRAP_LIBS) \
+		$(top_builddir)/libraries/polylib/libpolylib.a \
+                -L/usr/lib -lGLU -lGL -lglut
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
 repsnapperdata_DATA = repsnapper.ui

@@ -32,8 +32,24 @@ PKG_CHECK_MODULES(GTK, [gobject-2.0 glib-2.0 gtkmm-2.4 gtkglextmm-1.2 gdkglextmm
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 
-AC_CHECK_HEADER(reprap/comms.h,,AC_MSG_ERROR([cannot find headers for libreprap]))
-AC_CHECK_LIB(reprap, rr_create,,AC_MSG_ERROR([cannot find binary for libreprap]))
+dnl Look for libreprap, either in the system paths or in the path
+dnl provided (defaults to --prefix)
+AC_ARG_WITH(libreprap,
+    AS_HELP_STRING([--with-libreprap],
+       [Extra prefix in which to look for libreprap. (default is $prefix)]),
+    [ LIBREPRAP_PREFIX="$withval" ], [ LIBREPRAP_PREFIX="$prefix" ])
+
+OLD_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="-I$LIBREPRAP_PREFIX/include $CPPFLAGS"
+OLD_LIBS="$LIBS"; LIBS="-L$LIBREPRAP_PREFIX/lib $LIBS"
+AC_CHECK_HEADER(reprap/comms.h,
+    [LIBREPRAP_CFLAGS="-I${LIBREPRAP_PREFIX}/include"],
+    AC_MSG_ERROR([cannot find headers for libreprap]))
+AC_CHECK_LIB(reprap, rr_create,
+    [LIBREPRAP_LIBS="-L${LIBREPRAP_PREFIX}/lib -lreprap"],
+    AC_MSG_ERROR([cannot find binary for libreprap]))
+CPPFLAGS="$OLD_CPPFLAGS"; LIBS="$OLD_LIBS"
+AC_SUBST(LIBREPRAP_CFLAGS)
+AC_SUBST(LIBREPRAP_LIBS)
 
 AC_CONFIG_FILES([
   Makefile
