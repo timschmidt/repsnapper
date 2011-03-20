@@ -39,13 +39,20 @@ AC_ARG_WITH(libreprap,
        [Extra prefix in which to look for libreprap. (default is $prefix)]),
     [ LIBREPRAP_PREFIX="$withval" ], [ LIBREPRAP_PREFIX="$prefix" ])
 
-OLD_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="-I$LIBREPRAP_PREFIX/include $CPPFLAGS"
-OLD_LIBS="$LIBS"; LIBS="-L$LIBREPRAP_PREFIX/lib $LIBS"
+if test "x${LIBREPRAP_PREFIX}" != xNONE; then
+  xLIBREPRAP_CFLAGS="-I${LIBREPRAP_PREFIX}/include"
+  xLIBREPRAP_LIBS="-L${LIBREPRAP_PREFIX}/lib -lreprap"
+else
+  xLIBREPRAP_LIBS="-lreprap"
+fi
+
+OLD_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="${xLIBREPRAP_CFLAGS} $CPPFLAGS"
+OLD_LIBS="$LIBS"; LIBS="${xLIBREPRAP_LIBS} $LIBS"
 AC_CHECK_HEADER(reprap/comms.h,
-    [LIBREPRAP_CFLAGS="-I${LIBREPRAP_PREFIX}/include"],
+    [LIBREPRAP_CFLAGS="${xLIBREPRAP_CFLAGS}"],
     AC_MSG_ERROR([cannot find headers for libreprap]))
 AC_CHECK_LIB(reprap, rr_create,
-    [LIBREPRAP_LIBS="-L${LIBREPRAP_PREFIX}/lib -lreprap"],
+    [LIBREPRAP_LIBS="${xLIBREPRAP_LIBS}"],
     AC_MSG_ERROR([cannot find binary for libreprap]))
 CPPFLAGS="$OLD_CPPFLAGS"; LIBS="$OLD_LIBS"
 AC_SUBST(LIBREPRAP_CFLAGS)
