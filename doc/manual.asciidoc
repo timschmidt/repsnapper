@@ -28,8 +28,8 @@ There are currently no Repsnapper binaries pre-built for Linux.  However, instal
 
 === Windows ===
 
-Download the latest version of Repsnapper for Windows http://svn.kulitorum.com/RepSnapper/MSVC/Release/RepSnapper.exe[here].
-
+Download the latest version of Repsnapper for Windows http://www.kulitorum.com/RepSnapperBeta.rar (Kulitorums version of the code in git)
+This is older (svn r353), but should work with tonokip and FiveD: http://svn.kulitorum.com/RepSnapper/MSVC9/Release/RepSnapper.exe[here].
 Older unofficial releases are available http://reprap.org/wiki/File:Repsnapper_Ver352.zip[here] and http://reprap.org/wiki/File:Repsnapper_Ver333.zip[here].
 
 === OS X ===
