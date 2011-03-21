@@ -36,7 +36,7 @@ class GUI {open
             xywh {20 20 36 21}
           }
           Submenu Preferences {
-            label Preferences
+            label Preferences open
             xywh {5 5 70 21}
           } {
             MenuItem LoadFrom {
@@ -81,6 +81,11 @@ MVC->ProcessControl.SaveSettingsAs(dir);
 };}
               xywh {10 10 36 21}
             }
+          }
+          MenuItem Quit {
+            label Quit
+            callback {exit(0);} selected
+            xywh {0 0 31 20}
           }
         }
         Submenu EditMenu {
@@ -883,7 +888,7 @@ MVC->SetFan(o->value()*(255.0f/12.0f));}
               xywh {720 562 540 191}
             } {
               Fl_Group {} {
-                label {Communication Log} open selected
+                label {Communication Log} open
                 xywh {720 585 530 158}
               } {
                 Fl_Browser CommunationLog {
@@ -1007,7 +1012,7 @@ MVC->ConnectToPrinter(o->value());}
     }
     Fl_Window printerSettingsWindow {
       label {Printer settings}
-      xywh {207 27 740 710} type Double hide resizable modal
+      xywh {404 44 740 710} type Double hide resizable modal
     } {
       Fl_Group {} {
         label {Build volume (mm)} open
@@ -1318,7 +1323,7 @@ MVC->redraw();}
     }
     Fl_Window raftSettingsWindow {
       label {Raft Settings}
-      xywh {519 157 555 740} type Double hide modal
+      xywh {342 45 546 658} type Double hide resizable modal
     } {
       Fl_Light_Button RaftEnableButton {
         label {Raft Enable}
@@ -1328,27 +1333,27 @@ MVC->redraw();}
       }
       Fl_Group {} {
         label Base
-        xywh {5 125 535 270} box ENGRAVED_FRAME color 39
+        xywh {5 125 535 230} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Slider RaftMaterialPrDistanceRatioSlider {
           label {Material pr. distance ratio}
           callback {MVC->SetRaftMaterialPrDistanceRatio(o->value());}
-          xywh {15 190 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 step 0.1 value 1.75 textsize 14
+          xywh {15 185 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 step 0.1 value 1.75 textsize 14
         }
         Fl_Value_Slider RaftRotationSlider {
           label Rotation
           callback {MVC->SetRaftRotation(o->value());}
-          xywh {15 230 515 20} type {Horz Knob} selection_color 2 align 5 maximum 360 step 1 value 90 textsize 14
+          xywh {15 220 515 20} type {Horz Knob} selection_color 2 align 5 maximum 360 step 1 value 90 textsize 14
         }
         Fl_Value_Slider RaftBaseDistanceSlider {
           label {Distance between lines}
           callback {MVC->SetRaftBaseDistance(o->value());}
-          tooltip {Distance between the base layer's lines} xywh {15 275 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 10 step 0.1 value 2 textsize 14
+          tooltip {Distance between the base layer's lines} xywh {15 255 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 10 step 0.1 value 2 textsize 14
         }
         Fl_Value_Slider RaftBaseThicknessSlider {
-          label {Thinkness ratio}
+          label {Thickness ratio}
           callback {MVC->SetRaftBaseThickness(o->value());}
-          tooltip {How much thicker or thinner then a normal layer should the raft base be.} xywh {15 320 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 step 0.1 value 1 textsize 14
+          tooltip {How much thicker or thinner then a normal layer should the raft base be.} xywh {15 290 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 step 0.1 value 1 textsize 14
         }
         Fl_Value_Slider RaftBaseLayerCountSlider {
           label {Number of Base layers}
@@ -1358,7 +1363,7 @@ MVC->redraw();}
         Fl_Value_Slider RaftBaseTemperatureSlider {
           label {Temperature ratio}
           callback {MVC->SetRaftBaseTemperature(o->value());}
-          tooltip {To make the flow better, you may want to print the base layers hotter then the rest of the print.} xywh {15 365 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 value 1.1 textsize 14
+          tooltip {To make the flow better, you may want to print the base layers hotter then the rest of the print.} xywh {15 325 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 value 1.1 textsize 14
         }
       }
       Fl_Group {} {
@@ -1372,49 +1377,49 @@ MVC->redraw();}
         }
       }
       Fl_Group {} {
-        label Interface
-        tooltip {This is the layer(s) connecting to the print itself. Unlike the Base layer, they should be "nice" and with a normal extrusion ratio.} xywh {5 415 535 285} box ENGRAVED_FRAME color 39
+        label Interface open
+        tooltip {This is the layer(s) connecting to the print itself. Unlike the Base layer, they should be "nice" and with a normal extrusion ratio.} xywh {5 370 535 235} box ENGRAVED_FRAME color 39
       } {
         Fl_Value_Slider RaftInterfaceMaterialPrDistanceRatioSlider {
           label {Material pr. distance ratio}
           callback {MVC->SetRaftInterfaceMaterialPrDistanceRatio(o->value());}
-          xywh {15 490 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 step 0.1 value 1 textsize 14
+          xywh {15 435 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 step 0.1 value 1 textsize 14
         }
         Fl_Value_Slider RaftRotationPrLayerSlider {
           label {Rotation pr. layer}
           callback {MVC->SetRaftRotationPrLayer(o->value());}
-          xywh {15 535 515 20} type {Horz Knob} selection_color 2 align 5 maximum 360 step 1 value 90 textsize 14
+          xywh {15 470 515 20} type {Horz Knob} selection_color 2 align 5 maximum 360 step 1 value 90 textsize 14
         }
         Fl_Value_Slider RaftInterfaceDistanceSlider {
           label {Distance between lines}
           callback {MVC->SetRaftInterfaceDistance(o->value());}
-          tooltip {Distance between the base layer's lines} xywh {15 580 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 10 step 0.1 value 2 textsize 14
+          tooltip {Distance between the base layer's lines} xywh {15 505 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 10 step 0.1 value 2 textsize 14
         }
         Fl_Value_Slider RaftInterfaceThicknessSlider {
-          label {Thinkness ratio}
+          label {Thickness ratio}
           callback {MVC->SetRaftBaseThickness(o->value());}
-          tooltip {How much thicker or thinner then a normal layer should the raft base be.} xywh {15 625 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 step 0.1 value 1 textsize 14
+          tooltip {How much thicker or thinner then a normal layer should the raft base be.} xywh {15 540 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 step 0.1 value 1 textsize 14
         }
         Fl_Value_Slider RaftInterfaceLayerCountSlider {
           label {Number of interface layers}
           callback {MVC->SetRaftInterfaceLayerCount(o->value());}
-          xywh {15 445 515 20} type {Horz Knob} selection_color 2 align 5 maximum 5 step 1 value 2 textsize 14
+          xywh {15 400 515 20} type {Horz Knob} selection_color 2 align 5 maximum 5 step 1 value 2 textsize 14
         }
         Fl_Value_Slider RaftInterfaceTemperatureSlider {
           label {Temperature ratio}
           callback {MVC->SetRaftInterfaceTemperature(o->value());}
-          tooltip {To make the flow better, you may want to print the base layers hotter then the rest of the print.} xywh {15 670 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 value 1.1 textsize 14
+          tooltip {To make the flow better, you may want to print the base layers hotter then the rest of the print.} xywh {15 575 515 20} type {Horz Knob} selection_color 2 align 5 minimum 0.1 maximum 3 value 1.1 textsize 14
         }
       }
       Fl_Button {} {
         label Ok
         callback {raftSettingsWindow->hide();}
-        xywh {430 710 110 25}
+        xywh {210 610 110 25}
       }
     }
     Fl_Window DisplaySettingsWindow {
-      label {Display Settings} open
-      xywh {128 53 590 870} type Double hide modal
+      label {Display Settings}
+      xywh {122 50 590 870} type Double hide resizable modal
     } {
       Fl_Group {} {
         label {STL rendering}
