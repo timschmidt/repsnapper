@@ -137,12 +137,16 @@ ConnectView::ConnectView (rr_dev device,
   : Gtk::VBox(), m_connect(), m_port_label("Port:"),
     m_device(device), m_settings(settings)
 {
+  m_port_align.set_padding(0, 0, 6, 0);
+  m_port_align.add (m_port_label);
+
   m_setting_state = false;
 
   add (m_hbox);
+  m_hbox.set_spacing(2);
   m_hbox.add (m_image);
   m_hbox.add (m_connect);
-  m_hbox.add (m_port_label);
+  m_hbox.add (m_port_align);
   m_hbox.add (m_combo);
 
   m_connect.signal_toggled().connect(sigc::mem_fun(*this, &ConnectView::connect_toggled));
