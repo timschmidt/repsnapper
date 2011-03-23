@@ -54,7 +54,7 @@ void Progress::update (double value)
 {
   if (!this)
     return;
-  m_bar_cur = value;
+  m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->set_fraction(value / m_bar_max);
   Gtk::Main::iteration(false);
 }
