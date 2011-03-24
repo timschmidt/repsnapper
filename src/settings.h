@@ -167,12 +167,15 @@ class Settings {
 
   void set_to_gui   (Builder &builder, int i);
   void get_from_gui (Builder &builder, int i);
+  void set_shrink_to_gui   (Builder &builder);
+  void get_shrink_from_gui (Builder &builder);
+  void set_to_gui (Builder &builder);
  public:
   Settings ();
   ~Settings();
   void connectToUI (Builder &builder);
   void set_defaults ();
-  void load_settings(Glib::RefPtr<Gio::File> file);
+  void load_settings(Builder &builder, Glib::RefPtr<Gio::File> file);
   void save_settings(Glib::RefPtr<Gio::File> file);
 };
 

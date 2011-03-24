@@ -3247,7 +3247,7 @@ and others I forgot... (needs updating)</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBoxEntry" id="Slicing.ShrinkQuality">
+                  <object class="GtkComboBox" id="Slicing.ShrinkQuality">
                     <property name="visible">True</property>
                   </object>
                   <packing>

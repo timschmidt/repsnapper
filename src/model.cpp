@@ -795,7 +795,7 @@ void Model::SaveConfig(Glib::RefPtr<Gio::File> file)
 
 void Model::LoadConfig(Glib::RefPtr<Gio::File> file)
 {
-  settings.load_settings(file);
+  settings.load_settings(*((Builder *)&m_builder), file);
 }
 
 void Model::SimpleAdvancedToggle()

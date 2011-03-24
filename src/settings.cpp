@@ -294,7 +294,7 @@ void Settings::set_defaults ()
   Hardware.PrintMargin = vmml::Vector3f (10,10,0);
 }
 
-void Settings::load_settings(Glib::RefPtr<Gio::File> file)
+void Settings::load_settings(Builder &builder, Glib::RefPtr<Gio::File> file)
 {
   libconfig::Config cfg;
 
@@ -331,10 +331,10 @@ void Settings::load_settings(Glib::RefPtr<Gio::File> file)
 	      << "' - error '" << e.what() << "\n";
   }
 
-  if (not cfg.lookupValue("ShrinkLogick", Slicing.ShrinkQuality)) {
-    if (not cfg.lookupValue("ShrinkFast", Slicing.ShrinkQuality))
-      Slicing.ShrinkQuality = SHRINK_FAST;
-  }
+  if (cfg.lookupValue("ShrinkFast", Slicing.ShrinkQuality))
+    Slicing.ShrinkQuality = SHRINK_FAST;
+  else
+    Slicing.ShrinkQuality = SHRINK_LOGICK;
 
   std::string txt;
   if (cfg.lookupValue("GCodeStartText", txt))
@@ -343,6 +343,8 @@ void Settings::load_settings(Glib::RefPtr<Gio::File> file)
     GCode.m_impl->m_GCodeLayerText->set_text (txt);
   if (cfg.lookupValue("GCodeEndText", txt))
     GCode.m_impl->m_GCodeEndText->set_text (txt);
+
+  set_to_gui (builder);
 }
 
 void Settings::save_settings(Glib::RefPtr<Gio::File> file)
@@ -397,7 +399,6 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
 
   // this is pretty unpleasant:
   root.add ("ShrinkFast", libconfig::Setting::TypeBoolean) = (Slicing.ShrinkQuality == SHRINK_FAST);
-  root.add("ShrinkLogick", libconfig::Setting::TypeBoolean) = (Slicing.ShrinkQuality == SHRINK_LOGICK);
 
   root.add("GCodeStartText", libconfig::Setting::TypeString) = GCode.getStartText();
   root.add("GCodeLayerText", libconfig::Setting::TypeString) = GCode.getLayerText();
@@ -495,6 +496,15 @@ void Settings::set_to_gui (Builder &builder, int i)
   }
 }
 
+void Settings::set_shrink_to_gui (Builder &builder)
+{
+  // Slicing.ShrinkQuality
+  Gtk::ComboBox *combo = NULL;
+  builder->get_widget ("Slicing.ShrinkQuality", combo);
+  if (combo)
+    combo->set_active (Slicing.ShrinkQuality);
+}
+
 void Settings::get_from_gui (Builder &builder, int i)
 {
   const char *glade_name = settings[i].glade_name;
@@ -528,6 +538,28 @@ void Settings::get_from_gui (Builder &builder, int i)
     std::cerr << "corrupt setting type\n";
     break;
   }
+}
+
+void Settings::get_shrink_from_gui (Builder &builder)
+{
+  // Slicing.ShrinkQuality
+  Gtk::ComboBox *combo = NULL;
+  builder->get_widget ("Slicing.ShrinkQuality", combo);
+  if (combo)
+    Slicing.ShrinkQuality = combo->get_active_row_number ();
+}
+
+void Settings::set_to_gui (Builder &builder)
+{
+  for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
+    const char *glade_name = settings[i].glade_name;
+
+    if (!glade_name)
+      continue;
+
+    set_to_gui (builder, i);
+  }
+  set_shrink_to_gui (builder);
 }
 
 void Settings::connectToUI (Builder &builder)
@@ -567,7 +599,7 @@ void Settings::connectToUI (Builder &builder)
       builder->get_widget (glade_name, check);
       if (check)
 	check->signal_toggled().connect
-	  (sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
+	  (sigc::bind(sigc::mem_fun(*this, &Settings::get_shrink_from_gui), builder));
       break;
     }
     case T_INT:
@@ -576,7 +608,7 @@ void Settings::connectToUI (Builder &builder)
       builder->get_widget (glade_name, spin);
       if (spin)
 	spin->signal_value_changed().connect
-	  (sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
+	  (sigc::bind(sigc::mem_fun(*this, &Settings::get_shrink_from_gui), builder));
 	break;
     }
     case T_STRING: // unimplemented
@@ -584,5 +616,25 @@ void Settings::connectToUI (Builder &builder)
     default:
       break;
     }
+  }
+
+  // Slicing.ShrinkQuality
+  Gtk::ComboBox *combo = NULL;
+  builder->get_widget ("Slicing.ShrinkQuality", combo);
+  if (combo) {
+    Glib::RefPtr<Gtk::ListStore> model;
+    Gtk::TreeModelColumnRecord record;
+    Gtk::TreeModelColumn<Glib::ustring> column;
+    record.add (column);
+    model = Gtk::ListStore::create(record);
+    model->append()->set_value (0, Glib::ustring("Fast"));
+    model->append()->set_value (0, Glib::ustring("Logick"));
+    combo->set_model (model);
+    combo->pack_start (column);
+
+    set_shrink_to_gui (builder);
+
+    combo->signal_changed().connect
+      (sigc::bind(sigc::mem_fun(*this, &Settings::get_shrink_from_gui), builder));
   }
 }
