@@ -14,7 +14,7 @@ LIB_DIR=$(top_srcdir)/libraries
 WARNING_FLAGS = -Wall
 
 AM_CPPFLAGS = \
-	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) $(GTK_CFLAGS) \
+	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) $(GTKMM_CFLAGS) \
         $(LIBREPRAP_CFLAGS) \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
@@ -35,7 +35,7 @@ SHARED_INC=arcball.h convert.h gcode.h gllight.h ivcon.h miniball.h	\
 
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
 
-repsnapper_LDADD = $(GTK_LIBS) $(LIBREPRAP_LIBS) \
+repsnapper_LDADD = $(GTKMM_LIBS) $(LIBREPRAP_LIBS) \
 		$(top_builddir)/libraries/polylib/libpolylib.la \
                 -L/usr/lib -lGLU -lGL -lglut
 
