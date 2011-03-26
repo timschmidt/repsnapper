@@ -577,7 +577,7 @@ void ProcessController::LoadConfig(string filename)
 	if (not cfg.lookupValue("ShellCount",ShellCount))
 		ShellCount = 1;
 	if (not cfg.lookupValue("EnableAcceleration",EnableAcceleration))
-		ShellCount = false;
+        EnableAcceleration = true;
 	if (not cfg.lookupValue("UseIncrementalEcode",UseIncrementalEcode))
 		UseIncrementalEcode = true;
 	if (not cfg.lookupValue("Use3DGcode",Use3DGcode))
