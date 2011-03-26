@@ -599,7 +599,7 @@ void Settings::connectToUI (Builder &builder)
       builder->get_widget (glade_name, check);
       if (check)
 	check->signal_toggled().connect
-	  (sigc::bind(sigc::mem_fun(*this, &Settings::get_shrink_from_gui), builder));
+          (sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
       break;
     }
     case T_INT:
@@ -608,7 +608,7 @@ void Settings::connectToUI (Builder &builder)
       builder->get_widget (glade_name, spin);
       if (spin)
 	spin->signal_value_changed().connect
-	  (sigc::bind(sigc::mem_fun(*this, &Settings::get_shrink_from_gui), builder));
+          (sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
 	break;
     }
     case T_STRING: // unimplemented
