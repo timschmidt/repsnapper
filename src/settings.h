@@ -177,6 +177,8 @@ class Settings {
   void set_defaults ();
   void load_settings(Builder &builder, Glib::RefPtr<Gio::File> file);
   void save_settings(Glib::RefPtr<Gio::File> file);
+
+  sigc::signal< void > m_signal_visual_settings_changed;
 };
 
 #endif // SETTINGS_H

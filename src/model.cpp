@@ -725,11 +725,12 @@ Model::Model(BaseObjectType* cobject,
                      NULL, NULL,
                      &handle_want_writable, static_cast<void*>(this),
                      64);
-  
+
   m_view = new ConnectView(device, &settings);
   Gtk::Box *connect_box = NULL;
   m_builder->get_widget ("p_connect_button_box", connect_box);
   connect_box->add (*m_view);
+  settings.m_signal_visual_settings_changed.connect (sigc::mem_fun(*this, &Model::draw));
 
   Gtk::Box *temp_box;
   m_builder->get_widget ("i_temp_box", temp_box);
@@ -880,6 +881,9 @@ void Model::ConvertToGCode()
 						break;
 					case SHRINK_LOGICK:
 						plane.ShrinkLogick(settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, settings.Slicing.ShellCount);
+						break;
+					default:
+						g_warning ("unknown shrinking algorithm");
 						break;
 					}
 

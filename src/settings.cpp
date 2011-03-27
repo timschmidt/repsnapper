@@ -580,9 +580,8 @@ void Settings::get_from_gui (Builder &builder, int i)
     break;
   }
 
-  // FIXME: if settings[i].trigger_redraw, then trigger a redraw of the 3d view
-  std::cerr << "Setting " << settings[i].config_name <<
-      " should trigger a redraw, please implement\n";
+  if (settings[i].triggers_redraw)
+    m_signal_visual_settings_changed.emit();
 }
 
 void Settings::get_shrink_from_gui (Builder &builder)
