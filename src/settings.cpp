@@ -48,9 +48,9 @@ public:
 
 #define OFFSET(field) offsetof (class Settings, field)
 #define BOOL_MEMBER(field, config_name, def_value, redraw ) \
-  { OFFSET (field), T_BOOL, config_name, #field, def_value, redraw }
+  { OFFSET (field), T_BOOL, config_name, #field, def_value, NULL, redraw }
 #define INT_MEMBER(field, config_name, def_value, redraw) \
-  { OFFSET (field), T_INT, config_name, #field, def_value, redraw }
+  { OFFSET (field), T_INT, config_name, #field, def_value, NULL, redraw }
 #define FLOAT_MEMBER(field, config_name, def_value, redraw) \
   { OFFSET (field), T_FLOAT, config_name, #field, def_value, NULL, redraw }
 #define STRING_MEMBER(field, config_name, def_value, redraw) \
@@ -158,33 +158,33 @@ static struct {
 
   // GCode - handled by GCodeImpl
   // Display - pending ...
-  BOOL_MEMBER (Display.DisplayGCode, "DisplayGCode", true, false),
-  FLOAT_MEMBER (Display.GCodeDrawStart, "GCodeDrawStart", 0.0, false),
-  FLOAT_MEMBER (Display.GCodeDrawEnd, "GCodeDrawEnd", 1.0, false),
-  BOOL_MEMBER (Display.DisplayEndpoints, "DisplayEndpoints", false, false),
-  BOOL_MEMBER (Display.DisplayNormals, "DisplayNormals", false, false),
-  BOOL_MEMBER (Display.DisplayBBox, "DisplayBBox", false, false),
-  BOOL_MEMBER (Display.DisplayWireframe, "DisplayWireframe", false, false),
-  BOOL_MEMBER (Display.DisplayWireframeShaded, "DisplayWireframeShaded", true, false),
-  BOOL_MEMBER (Display.DisplayPolygons, "DisplayPolygons", true, false),
-  BOOL_MEMBER (Display.DisplayAllLayers, "DisplayAllLayers", false, false),
-  BOOL_MEMBER (Display.DisplayinFill, "DisplayinFill", false, false),
+  BOOL_MEMBER (Display.DisplayGCode, "DisplayGCode", true, true),
+  FLOAT_MEMBER (Display.GCodeDrawStart, "GCodeDrawStart", 0.0, true),
+  FLOAT_MEMBER (Display.GCodeDrawEnd, "GCodeDrawEnd", 1.0, true),
+  BOOL_MEMBER (Display.DisplayEndpoints, "DisplayEndpoints", false, true),
+  BOOL_MEMBER (Display.DisplayNormals, "DisplayNormals", false, true),
+  BOOL_MEMBER (Display.DisplayBBox, "DisplayBBox", false, true),
+  BOOL_MEMBER (Display.DisplayWireframe, "DisplayWireframe", false, true),
+  BOOL_MEMBER (Display.DisplayWireframeShaded, "DisplayWireframeShaded", true, true),
+  BOOL_MEMBER (Display.DisplayPolygons, "DisplayPolygons", true, true),
+  BOOL_MEMBER (Display.DisplayAllLayers, "DisplayAllLayers", false, true),
+  BOOL_MEMBER (Display.DisplayinFill, "DisplayinFill", false, true),
   BOOL_MEMBER (Display.DisplayDebug, "DisplayDebuginFill", false, false),
-  BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, false),
-  BOOL_MEMBER (Display.DisplayCuttingPlane, "DisplayCuttingPlane", false, false),
-  BOOL_MEMBER (Display.DrawVertexNumbers, "DrawVertexNumbers", false, false),
-  BOOL_MEMBER (Display.DrawLineNumbers, "DrawLineNumbers", false, false),
-  BOOL_MEMBER (Display.DrawOutlineNumbers, "DrawOutlineNumbers", false, false),
-  BOOL_MEMBER (Display.DrawCPVertexNumbers, "DrawCPVertexNumbers", false, false),
-  BOOL_MEMBER (Display.DrawCPLineNumbers, "DrawCPLineNumbers", false, false),
-  BOOL_MEMBER (Display.DrawCPOutlineNumbers, "DrawCPOutlineNumbers", false, false),
+  BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
+  BOOL_MEMBER (Display.DisplayCuttingPlane, "DisplayCuttingPlane", false, true),
+  BOOL_MEMBER (Display.DrawVertexNumbers, "DrawVertexNumbers", false, true),
+  BOOL_MEMBER (Display.DrawLineNumbers, "DrawLineNumbers", false, true),
+  BOOL_MEMBER (Display.DrawOutlineNumbers, "DrawOutlineNumbers", false, true),
+  BOOL_MEMBER (Display.DrawCPVertexNumbers, "DrawCPVertexNumbers", false, true),
+  BOOL_MEMBER (Display.DrawCPLineNumbers, "DrawCPLineNumbers", false, true),
+  BOOL_MEMBER (Display.DrawCPOutlineNumbers, "DrawCPOutlineNumbers", false, true),
 
-  FLOAT_MEMBER (Display.CuttingPlaneValue, "CuttingPlaneValue", 0, false),
-  FLOAT_MEMBER (Display.PolygonOpacity, "PolygonOpacity", 0.5, false),
-  BOOL_MEMBER  (Display.LuminanceShowsSpeed, "LuminanceShowsSpeed", false, false),
-  FLOAT_MEMBER (Display.Highlight, "Highlight", 0.7, false),
+  FLOAT_MEMBER (Display.CuttingPlaneValue, "CuttingPlaneValue", 0, true),
+  FLOAT_MEMBER (Display.PolygonOpacity, "PolygonOpacity", 0.5, true),
+  BOOL_MEMBER  (Display.LuminanceShowsSpeed, "LuminanceShowsSpeed", false, true),
+  FLOAT_MEMBER (Display.Highlight, "Highlight", 0.7, true),
   FLOAT_MEMBER (Display.NormalsLength, "NormalsLength", 10, true),
-  FLOAT_MEMBER (Display.EndPointSize, "EndPointSize", 8, false),
+  FLOAT_MEMBER (Display.EndPointSize, "EndPointSize", 8, true),
   FLOAT_MEMBER (Display.TempUpdateSpeed, "TempUpdateSpeed", 3, false),
 };
 
