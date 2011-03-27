@@ -385,6 +385,8 @@ namespace PolyLib
 		Line2f* last = &outline.back();
 		bool done = false;
 		int idx = 0;
+		if (outline.begin() == outline.end())
+		  return;
 		for(list<Line2f>::iterator pIt = outline.begin(); !done; )
 		{
 			Vector2f Va = last->vertices.back();
