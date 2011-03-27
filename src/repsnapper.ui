@@ -3148,6 +3148,7 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
+                        <property name="digits">1</property>
                       </object>
                       <packing>
                         <property name="left_attach">3</property>
@@ -3186,7 +3187,7 @@ and others I forgot... (needs updating)</property>
                 </child>
                 <child>
                   <object class="GtkCheckButton" id="Slicing.EnableAntiooze">
-                    <property name="label" translatable="yes">enable antiooze retraction</property>
+                    <property name="label" translatable="yes">Enable Antiooze Retraction</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -3210,6 +3211,7 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
+                    <property name="digits">2</property>
                   </object>
                   <packing>
                     <property name="position">6</property>
@@ -3243,6 +3245,7 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
+                    <property name="digits">2</property>
                   </object>
                   <packing>
                     <property name="position">9</property>
@@ -3295,6 +3298,7 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
+                    <property name="digits">1</property>
                   </object>
                   <packing>
                     <property name="position">13</property>
@@ -3340,6 +3344,7 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
+                    <property name="digits">2</property>
                   </object>
                   <packing>
                     <property name="position">17</property>
@@ -3439,6 +3444,7 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
+                    <property name="digits">1</property>
                   </object>
                   <packing>
                     <property name="position">26</property>
@@ -3943,10 +3949,10 @@ and others I forgot... (needs updating)</property>
   <object class="GtkSizeGroup" id="PreferencesGeometrySizeGroup"/>
   <object class="GtkSizeGroup" id="PreferencesPrintSpeedSizeGroup">
     <widgets>
-      <widget name="Hardware.MinPrintSpeedXY"/>
-      <widget name="Hardware.MaxPrintSpeedXY"/>
-      <widget name="Hardware.MaxPrintSpeedZ"/>
       <widget name="Hardware.MinPrintSpeedZ"/>
+      <widget name="Hardware.MaxPrintSpeedZ"/>
+      <widget name="Hardware.MaxPrintSpeedXY"/>
+      <widget name="Hardware.MinPrintSpeedXY"/>
     </widgets>
   </object>
   <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
@@ -3973,21 +3979,21 @@ and others I forgot... (needs updating)</property>
   </object>
   <object class="GtkSizeGroup" id="PreferencesDisplaySizeGroup">
     <widgets>
-      <widget name="hbox16"/>
-      <widget name="hbox15"/>
-      <widget name="hbox1"/>
-      <widget name="hbox14"/>
       <widget name="hbox8"/>
+      <widget name="hbox14"/>
+      <widget name="hbox1"/>
+      <widget name="hbox15"/>
+      <widget name="hbox16"/>
     </widgets>
   </object>
   <object class="GtkSizeGroup" id="PreferencesDisplayColourGroup">
     <widgets>
-      <widget name="label96"/>
-      <widget name="label97"/>
-      <widget name="label98"/>
-      <widget name="label99"/>
-      <widget name="label102"/>
       <widget name="label103"/>
+      <widget name="label102"/>
+      <widget name="label99"/>
+      <widget name="label98"/>
+      <widget name="label97"/>
+      <widget name="label96"/>
     </widgets>
   </object>
 </interface>
