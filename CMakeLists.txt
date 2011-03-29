@@ -1,6 +1,17 @@
 project(libreprap)
 cmake_minimum_required(VERSION 2.6)
 
+set(CPACK_PACKAGE_NAME "libreprap")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Common asynchronous communications library for reprap machines")
+set(CPACK_PACKAGE_VENDOR "libreprap project")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README")
+#set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "1")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_GENERATOR "TGZ")
+include(CPack)
+
 add_definitions(-Wall -Wextra)
 
 add_library(reprap SHARED
