@@ -29,9 +29,6 @@
 #include <sstream>
 #include <list>
 
-#include <FL/Fl_Gl_Window.H>
-#include <FL/gl.h>
-
 #include <vmmlib/vmmlib.h>
 #include <polylib/Polygon2f.h>
 

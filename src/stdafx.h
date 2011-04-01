@@ -44,7 +44,6 @@ typedef unsigned int        UINT;
 #include "config.h"
 #include "platform.h"
 #include <stdio.h>
-#include <FL/Fl.H>
 #include <gtkmm.h>
 #include <gtkglmm.h>
 #include <GL/gl.h>
