@@ -108,11 +108,18 @@ class Settings {
   MiscSettings Misc;
 
   class GCodeImpl;
+  enum GCodeTextType {
+    GCODE_TEXT_START,
+    GCODE_TEXT_LAYER,
+    GCODE_TEXT_END,
+    GCODE_TEXT_TYPE_COUNT
+  };
   struct GCodeType {
     GCodeImpl *m_impl;
-    std::string getStartText();
-    std::string getLayerText();
-    std::string getEndText();
+    std::string getText(GCodeTextType t);
+    std::string getStartText() { return getText (GCODE_TEXT_START); }
+    std::string getLayerText() { return getText (GCODE_TEXT_LAYER); }
+    std::string getEndText()   { return getText (GCODE_TEXT_END);   }
   };
   GCodeType GCode;
 
@@ -165,11 +172,13 @@ class Settings {
   std::vector<std::string> CustomButtonGcode;
   std::vector<std::string> CustomButtonLabel;
 
+ private:
   void set_to_gui   (Builder &builder, int i);
   void get_from_gui (Builder &builder, int i);
   void set_shrink_to_gui   (Builder &builder);
   void get_shrink_from_gui (Builder &builder);
   void set_to_gui (Builder &builder);
+  bool get_group_and_key (int i, Glib::ustring &group, Glib::ustring &key);
  public:
   Settings ();
   ~Settings();
