@@ -24,6 +24,7 @@
 
 #include <glib/gutils.h>
 #include <giomm/file.h>
+#include <gtk/gtkgl.h>
 
 #include "model.h"
 #include "gcode.h"
@@ -115,7 +116,12 @@ int main(int argc, char **argv)
 {
   Glib::thread_init();
   Gtk::Main tk(argc, argv);
-  Gtk::GL::init(argc, argv);
+
+  if (!gtk_gl_init_check (&argc, &argv) ||
+      !gdk_gl_init_check (&argc, &argv) ) {
+    std::cerr << "Failed to initialize GL\n";
+    return 1;
+  }
 
   CommandLineOptions opts (argc, argv);
 

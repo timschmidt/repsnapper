@@ -17,6 +17,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "config.h"
+#include <gtk/gtkgl.h>
 #include "stdafx.h"
 #include "render.h"
 #include "arcball.h"
@@ -25,6 +26,11 @@
 #include "model.h"
 
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
+
+inline GtkWidget *Render::get_widget()
+{
+  return GTK_WIDGET (gobj());
+}
 
 Render::Render (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection) :
   m_arcBall(new ArcBall()), m_model(model), m_selection(selection)
@@ -36,15 +42,19 @@ Render::Render (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection) :
 	      Gdk::BUTTON2_MOTION_MASK |
 	      Gdk::BUTTON3_MOTION_MASK);
 
-  Glib::RefPtr<Gdk::GL::Config> glconfig;
+  GdkGLConfig *glconfig;
 
-  glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB    |
-                                     Gdk::GL::MODE_DEPTH  |
-                                     Gdk::GL::MODE_DOUBLE);
+  glconfig = gdk_gl_config_new_by_mode
+		    ((GdkGLConfigMode) (GDK_GL_MODE_RGB |
+					GDK_GL_MODE_DEPTH |
+					GDK_GL_MODE_DOUBLE));
   if (!glconfig) // try single buffered
-    glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGB   |
-				       Gdk::GL::MODE_DEPTH);
-  set_gl_capability(glconfig);
+    glconfig = gdk_gl_config_new_by_mode
+		      ((GdkGLConfigMode) (GDK_GL_MODE_RGB |
+					  GDK_GL_MODE_DEPTH));
+  if (!gtk_widget_set_gl_capability (get_widget(), glconfig,
+				     NULL, TRUE, GDK_GL_RGBA_TYPE))
+    g_error ("failed to init gl area\n");
 
   memset (&m_transform.M, 0, sizeof (m_transform.M));
 
@@ -82,8 +92,10 @@ void Render::rfo_changed()
 
 bool Render::on_configure_event(GdkEventConfigure* event)
 {
-  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
-  if (!gldrawable->gl_begin(get_gl_context()))
+  GdkGLContext *glcontext = gtk_widget_get_gl_context (get_widget());
+  GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (get_widget());
+
+  if (!gldrawable || !gdk_gl_drawable_gl_begin (gldrawable, glcontext))
     return false;
 
   glLoadIdentity();
@@ -125,13 +137,17 @@ bool Render::on_configure_event(GdkEventConfigure* event)
   gluQuadricNormals(m_quadratic, GLU_SMOOTH);
   gluQuadricTexture(m_quadratic, GL_TRUE);
 
+  gdk_gl_drawable_gl_end (gldrawable);
+
   return true;
 }
 
 bool Render::on_expose_event(GdkEventExpose* event)
 {
-  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
-  if (!gldrawable->gl_begin(get_gl_context()))
+  GdkGLContext *glcontext = gtk_widget_get_gl_context (get_widget());
+  GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (get_widget());
+
+  if (!gldrawable || !gdk_gl_drawable_gl_begin (gldrawable, glcontext))
     return false;
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -150,12 +166,14 @@ bool Render::on_expose_event(GdkEventExpose* event)
 
   glPopMatrix();
 
-  if (gldrawable->is_double_buffered())
-    gldrawable->swap_buffers();
+  if (gdk_gl_drawable_is_double_buffered(gldrawable))
+    gdk_gl_drawable_swap_buffers (gldrawable);
   else
     glFlush();
 
-    return true;
+  gdk_gl_drawable_gl_end (gldrawable);
+
+  return true;
 }
 
 bool Render::on_button_press_event(GdkEventButton* event)

@@ -45,7 +45,7 @@ typedef unsigned int        UINT;
 #include "platform.h"
 #include <stdio.h>
 #include <gtkmm.h>
-#include <gtkglmm.h>
+// #include <gtkglmm.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <vmmlib/vmmlib.h>

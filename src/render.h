@@ -26,7 +26,7 @@ class gllight;
 class ArcBallT;
 class Settings;
 
-class Render : public Gtk::GL::DrawingArea
+class Render : public Gtk::DrawingArea
 {
   ArcBall  *m_arcBall;
   Matrix4fT m_transform;
@@ -42,6 +42,7 @@ class Render : public Gtk::GL::DrawingArea
   void CenterView();
   void rfo_changed();
   void selection_changed();
+  GtkWidget *get_widget();
 
  public:
   Render (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection);
