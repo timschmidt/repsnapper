@@ -1377,7 +1377,7 @@
               </object>
               <packing>
                 <property name="resize">True</property>
-                <property name="shrink">True</property>
+                <property name="shrink">False</property>
               </packing>
             </child>
           </object>
@@ -1862,7 +1862,7 @@ and others I forgot... (needs updating)</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkCheckButton" id="Slicing.UseIncrementalECode">
+                                  <object class="GtkCheckButton" id="Slicing.UseIncrementalEcode">
                                     <property name="label" translatable="yes">Incremental Ecode</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
