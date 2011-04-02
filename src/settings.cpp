@@ -241,6 +241,9 @@ static struct {
 
   { "Hardware.ReceivingBufferSize", 1.0, 100.0, 1.0, 5.0 },
   { "Hardware.KeepLines", 100.0, 100000.0, 1.0, 500.0 },
+
+  // Display pane
+  { "Display.TempUpdateSpeed", 0.1, 10.0, 0.0, 0.1 },
 };
 
 // Add any [HV]Ranges to this array:
@@ -251,6 +254,8 @@ static struct {
 } ranges[] = {
   // Display plane
   { "Display.CuttingPlaneValue", 0.0, 1.0, 0.0, 0.01 },
+  { "Display.GCodeDrawStart", 0.0, 1.0, 0.0, 0.1 },
+  { "Display.GCodeDrawEnd", 0.0, 1.0, 0.0, 0.1 },
 };
 
 static const char *GCodeNames[] = { "Start", "Layer", "End" };
