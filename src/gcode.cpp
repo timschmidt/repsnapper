@@ -21,12 +21,12 @@
 #include "math.h"
 
 #include "gcode.h"
-#include "FL/Fl.H"
 
 #include <iostream>
 #include <sstream>
 
-#include "ui.h"
+#include "model.h"
+#include "progress.h"
 
 using namespace std;
 
@@ -35,18 +35,12 @@ GCode::GCode()
 	Min.x = Min.y = Min.z = 99999999.0f;
 	Max.x = Max.y = Max.z = -99999999.0f;
 	Center.x = Center.y = Center.z = 0.0f;
+	buffer = Gtk::TextBuffer::create();
 }
 
-void GCode::Read(ModelViewController *MVC, string filename)
+void GCode::Read(Model *MVC, Progress *progress, string filename)
 {
-	commands.clear();
-
-	if(MVC->gui)
-	{
-		Fl_Text_Buffer* buffer = MVC->gui->GCodeResult->buffer();
-		buffer->remove(0, buffer->length());
-	}
-
+	clear();
 
 	ifstream file;
 	file.open(filename.c_str());		//open a file
@@ -70,20 +64,11 @@ void GCode::Read(ModelViewController *MVC, string filename)
 		istringstream line(s);
 		LineNr++;
 		string buffer;
-//		char charBuffer[1000];
 		line >> buffer;	// read something
+		append_text ((s+"\n").c_str());
 
-		if(MVC->gui)
-		{
-			MVC->gui->GCodeResult->buffer()->append((s+"\n").c_str());
-		}
-		if(MVC->gui)
-                {
-                        MVC->gui->ProgressBar->value(int(LineNr/1000)); // assumes all files are 100k lines, bad!
-                        MVC->gui->ProgressBar->redraw();
-                        Fl::check();
-                }
-
+		// FIXME: assumes all files are 100k lines, bad!
+		progress->update(int(LineNr/1000));
 
 		if(buffer.find( ";", 0) != string::npos)	// COMMENT
 			continue;
@@ -211,7 +196,7 @@ void GCode::Read(ModelViewController *MVC, string filename)
 
 }
 
-void GCode::draw(const ProcessController &PC)
+void GCode::draw(const Settings &settings)
 {
 	/*--------------- Drawing -----------------*/
 
@@ -220,13 +205,8 @@ void GCode::draw(const ProcessController &PC)
 	Vector3f Color = Vector3f(0.0f,0.0f,0.0f);
 	float	Distance = 0.0f;
 	Vector3f pos(0,0,0);
-	uint start = (uint)(PC.GCodeDrawStart*(float)(commands.size()));
-	uint end = (uint)(PC.GCodeDrawEnd*(float)(commands.size()));
-
-	float Er,Eg,Eb;
-	HSVtoRGB(PC.GCodeExtrudeHue, PC.GCodeExtrudeSat, PC.GCodeExtrudeVal, Er,Eg,Eb);
-	float Mr,Mg,Mb;
-	HSVtoRGB(PC.GCodeMoveHue, PC.GCodeMoveSat, PC.GCodeMoveVal, Mr,Mg,Mb);
+	uint start = (uint)(settings.Display.GCodeDrawStart*(float)(commands.size()));
+	uint end = (uint)(settings.Display.GCodeDrawEnd*(float)(commands.size()));
 
 	float LastE=0.0f;
 	bool extruderon = false;
@@ -243,10 +223,10 @@ void GCode::draw(const ProcessController &PC)
 			extruderon = false;
 			break;
 		case COORDINATEDMOTION3D:
-			if(extruderon)
-				Color=Vector3f(Er,Eg,Eb);
+			if (extruderon)
+			  Color = settings.Display.GCodeExtrudeRGB;
 			else
-				Color=Vector3f(Mr,Mg,Mb);
+			  Color = settings.Display.GCodeMoveRGB;
 			LastColor = Color;
 			Distance += (commands[i].where-pos).length();
 			glLineWidth(3);
@@ -265,21 +245,23 @@ void GCode::draw(const ProcessController &PC)
 				{
 				glLineWidth(3);
 				float speed = commands[i].f;
-				float luma = speed/PC.MaxPrintSpeedXY*0.5f;
-				if(PC.LuminanceShowsSpeed == false)
+				float luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
+				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
-				Color=Vector3f(luma*Mr,luma*Mg,luma*Mb);
+				Color = settings.Display.GCodeMoveRGB;
+				Color *= luma;
 				}
 			else
 				{
 				glLineWidth(3);
 				float speed = commands[i].f;
-				float luma = speed/PC.MaxPrintSpeedXY;
-				if(PC.LuminanceShowsSpeed == false)
+				float luma = speed/settings.Hardware.MaxPrintSpeedXY;
+				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
-				Color=Vector3f(luma*Er,luma*Eg,luma*Eb);
+			        Color = settings.Display.GCodeExtrudeRGB;
+				Color *= luma;
 				}
-			if(PC.LuminanceShowsSpeed == false)
+			if(settings.Display.LuminanceShowsSpeed == false)
 				LastColor = Color;
 			Distance += (commands[i].where-pos).length();
 			glBegin(GL_LINES);
@@ -316,8 +298,6 @@ void GCode::draw(const ProcessController &PC)
 
 	oss << "Length: "  << Distance/1000.0f << " - " << Distance/200000.0f << " Hour.";
 //	std::cout << oss.str();
-
-//	gui->GCodeLengthText->value(oss.str().c_str());	// todo: Fix
 
 
 	// Draw bbox
@@ -484,26 +464,51 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 	}
 
 	GcodeTxt += GcodeEnd + "\n";
+
+	buffer->set_text (GcodeTxt);
 }
 
-
-void GCode::Write (ModelViewController *MVC, string filename)
+void GCode::Write (Model *mvc, string filename)
 {
-	Fl_Text_Buffer *buffer = MVC->gui->GCodeResult->buffer();
+	FILE *file;
 
-	int result = buffer->savefile(filename.c_str());
-
-	switch(result)
-	{
-	case 0:	// Success
-		break;
-	case 1:	// Open for write failed
-		fl_alert("Error saving GCode file, error creating file.");
-		break;
-	case 2: // Partially saved file
-		fl_alert("Error saving GCode file, while writing file, is the disk full?.");
-		break;
+	file = fopen (filename.c_str(), "w+");
+	if (!file)
+	  mvc->alert ("failed to open file");
+	else {
+	  fprintf (file, "%s", buffer->get_text().c_str());
+	  fclose (file);
 	}
+	mvc->draw();
+}
 
-	MVC->redraw();
+void GCode::append_text (const std::string &line)
+{
+  buffer->insert (buffer->end(), line);
+}
+
+std::string GCode::get_text () const
+{
+  return buffer->get_text();
+}
+
+void GCode::clear()
+{
+  buffer->erase (buffer->begin(), buffer->end());
+  commands.clear();
+}
+
+void GCode::queue_to_serial(rr_dev device)
+{
+  // Horribly inefficient ...
+  unsigned long line_count = buffer->get_line_count();
+  unsigned long i;
+  Gtk::TextBuffer::iterator last = buffer->begin();
+  for (i = 1; i <= line_count; i++) {
+    Gtk::TextBuffer::iterator it = buffer->get_iter_at_line (i);
+    std::string line = buffer->get_text (last, it);
+    if (line.length() > 0 && line[0] != ';')
+      rr_enqueue(device, RR_PRIO_NORMAL, (void*)(i), line.data(), line.size());
+    last = it;
+  }
 }

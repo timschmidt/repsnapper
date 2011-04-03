@@ -16,204 +16,168 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#include "stdafx.h"
-#include "ui.h"
-#include "rfo.h"
-#include "flu_pixmaps.h"
+#include "config.h"
 #include <exception>
 #include <stdexcept>
-#include "processcontroller.h"
+#include "stdafx.h"
+#include "rfo.h"
 
-Fl_Pixmap plus((char * const*)plus_xpm),
-minus((char * const*)minus_xpm),
-folder_save((char * const*)folder_save_xpm),
-folder_load((char * const*)folder_load_xpm),
-reload((char * const*)reload_xpm),
-home((char * const*)home_xpm),
-trash((char * const*)trash_xpm),
-arrow_closed((char * const*)arrow_closed_xpm),
-arrow_open((char * const*)arrow_open_xpm),
-bluedot((char * const*)bluedot_xpm),
-book((char * const*)book_xpm),
-cd_drive((char * const*)cd_drive_xpm),
-computer((char * const*)computer_xpm),
-ram_drive((char * const*)ram_drive_xpm),
-network_drive((char * const*)network_drive_xpm),
-floppy_drive((char * const*)floppy_drive_xpm),
-removable_drive((char * const*)removable_drive_xpm),
-disk_drive((char * const*)disk_drive_xpm),
-filled_folder((char * const*)filled_folder_xpm),
-folder_up((char * const*)folder_up_xpm),
-folder_closed((char * const*)folder_closed_xpm),
-folder_open((char * const*)folder_open_xpm),
-greendot((char * const*)greendot_xpm),
-purpledot((char * const*)purpledot_xpm),
-question_book((char * const*)question_book_xpm),
-reddot((char * const*)reddot_xpm),
-tealdot((char * const*)tealdot_xpm),
-textdoc((char * const*)textdoc_xpm),
-yellowdot((char * const*)yellowdot_xpm),
-cdrom((char * const*)cdrom_xpm),
-big_folder_new((char * const*)big_folder_new_xpm),
-big_folder_up((char * const*)big_folder_up_xpm);
+#include "model.h"
 
-void RFO::Draw(ProcessController &PC, float opasity, Flu_Tree_Browser::Node *selected_node)
+Matrix4f RFO::GetSTLTransformationMatrix(int object, int file) const
+{
+	Matrix4f result = transform3D.transform;
+//	Vector3f translation = result.getTranslation();
+//	result.setTranslation(translation+PrintMargin);
+
+	if(object >= 0)
+		result *= Objects[object].transform3D.transform;
+	if(file >= 0)
+		result *= Objects[object].files[file].transform3D.transform;
+	return result;
+}
+
+void RFO::draw (Settings &settings, float opacity, Gtk::TreeModel::iterator &iter)
 {
-	glPushMatrix();
-	glMultMatrixf(&transform3D.transform.array[0]);
-	for(UINT o=0;o<Objects.size();o++)
-	{
-		glPushMatrix();
-		glMultMatrixf(&Objects[o].transform3D.transform.array[0]);
-		for(UINT f=0;f<Objects[o].files.size();f++)
-		{
-			glPushMatrix();
-			glMultMatrixf(&Objects[o].files[f].transform3D.transform.array[0]);
-			if(Objects[o].files[f].node == selected_node)
-			{
-				PC.PolygonHue+= 0.5f;
-				PC.WireframeHue+= 0.5f;
-				Objects[o].files[f].stl.draw(PC, opasity);
-				PC.PolygonHue-= 0.5f;
-				PC.WireframeHue-= 0.5f;
-			}
-			else 
-				Objects[o].files[f].stl.draw(PC, opasity);
-			glPopMatrix();
-		}
-		glPopMatrix();
-	}
-	glPopMatrix();
+  RFO_File *sel_file;
+  RFO_Object *sel_object;
+  get_selected_stl (iter, sel_object, sel_file);
+
+  glPushMatrix();
+  glMultMatrixf (&transform3D.transform.array[0]);
+
+  for (uint i = 0; i < Objects.size(); i++) {
+    RFO_Object *object = &Objects[i];
+    glPushMatrix();
+    glMultMatrixf (&object->transform3D.transform.array[0]);
+    for (uint j = 0; j < object->files.size(); j++) {
+      RFO_File *file = &object->files[j];
+      glPushMatrix();
+      glMultMatrixf (&file->transform3D.transform.array[0]);
+      if (sel_file == file ||
+	  (!sel_file && sel_object == object)) {
+
+	// FIXME: hideous changing global state for this [!]
+	settings.Display.PolygonRGB.r += 0.5f;
+	settings.Display.WireframeRGB.r += 0.5f;
+
+	file->stl.draw (*this, settings, opacity);
+
+	settings.Display.PolygonRGB.r -= 0.5f;
+	settings.Display.WireframeRGB.r -= 0.5f;
+      } else
+	file->stl.draw (*this, settings, opacity);
+      glPopMatrix();
+    }
+    glPopMatrix();
+  }
+  glPopMatrix();
 }
 
-void RFO::BuildBrowser(ProcessController &PC)
+void RFO::clear()
 {
-	vector<Flu_Tree_Browser::Node*>tree;
-	PC.gui->RFP_Browser->clear();
-	if(PC.gui)
-	{
-		if(m_filename.length() == 0)
-			m_filename = "Unsaved file";
-		size_t found=m_filename.find_last_of("/\\");
-		if(found != string::npos)
-			PC.gui->RFP_Browser->label( m_filename.substr(found+1).c_str() );
-		else
-			PC.gui->RFP_Browser->label( m_filename.c_str() );
-
-		Flu_Tree_Browser::Node* parent = PC.gui->RFP_Browser->get_root();
-		if( parent ) PC.gui->RFP_Browser->branch_icons( &folder_closed, &folder_open );
-		PC.gui->RFP_Browser->all_branches_always_open (true);
-		PC.gui->RFP_Browser->selection_drag_mode (FLU_DRAG_TO_SELECT);	//FLU_DRAG_TO_MOVE
-		PC.gui->RFP_Browser->selection_color(2);
-		tree.push_back(parent);
-		for(UINT o=0;o<Objects.size();o++)
-		{
-			string namex(Objects[o].name.c_str());
-			stringstream oss;
-			oss << o;
-			namex+=oss.str();
-			node = PC.gui->RFP_Browser->add_branch(tree.back(), namex.c_str());
-			Objects[o].node = node;
-			tree.push_back(node);
-			for(UINT f=0;f<Objects[o].files.size();f++)
-			{
-				node = PC.gui->RFP_Browser->add_leaf(tree.back(), Objects[o].files[f].location.c_str());
-				Objects[o].files[f].node = node;
-				if(Objects[o].files[f].stl.triangles.size() == 0)
-					node->leaf_icon(&reddot);
-				else
-					node->leaf_icon(&greendot);
-			}
-			tree.pop_back();
-		}
-		tree.pop_back();
-	}
-	assert(tree.size() == 0);
-	PC.gui->RFP_Browser->redraw();
-	PC.gui->RFP_Browser->redraw();
+  Objects.clear();
+  version = 0.0f;
+  m_filename = "";
+  transform3D.identity();
+  update_model();
 }
 
-
-void RFO::clear(ProcessController &PC)
+void RFO::DeleteSelected(Gtk::TreeModel::iterator &iter)
 {
-	if(PC.gui)
-		PC.gui->RFP_Browser->clear();
-	Objects.clear();
-	version=0.0f;
-	m_filename="";
-	transform3D.identity();
+  RFO_Object *object;
+  RFO_File *file;
+  get_selected_stl (iter, object, file);
+  if (file != NULL)
+    Objects[object->idx].files.erase (Objects[object->idx].files.begin() + file->idx);
+  else if (object != NULL)
+    Objects.erase (Objects.begin() + object->idx);
+  update_model();
 }
 
-Matrix4f &RFO::SelectedNodeMatrix(Flu_Tree_Browser::Node *node)
+void RFO::newObject()
 {
-	for(UINT o=0;o<Objects.size();o++)
-	{
-		if(Objects[o].node == node)
-			return Objects[o].transform3D.transform;
-		for(UINT f=0;f<Objects[o].files.size();f++)
-		{
-			if(Objects[o].files[f].node == node)
-				return Objects[o].files[f].transform3D.transform;
-		}
-	}
-	return transform3D.transform;
+  Objects.push_back(RFO_Object());
+  update_model();
 }
 
-void RFO::DeleteSelected(ModelViewController *MVC)
+Gtk::TreePath RFO::createFile(RFO_Object *parent, const STL &stl,
+			      std::string location)
 {
-	if (MVC->gui->RFP_Browser->num_selected() == 1)
-	{
-		Flu_Tree_Browser::Node *node = MVC->gui->RFP_Browser->get_selected(1);
-		for(UINT o=0;o<Objects.size();o++)
-		{
-			if(Objects[o].node == node)
-			{
-				Objects.erase(Objects.begin()+o);
-				BuildBrowser(MVC->ProcessControl);
-				MVC->redraw();
-				return;
-			}
-			for(UINT f=0;f<Objects[o].files.size();f++)
-			{
-				if(Objects[o].files[f].node == node)
-				{
-					Objects[o].files.erase(Objects[o].files.begin()+f);
-					BuildBrowser(MVC->ProcessControl);
-					MVC->redraw();
-					return;
-				}
-			}
-		}
-	}
-	else
-	{
-		int toDelete = MVC->gui->RFP_Browser->num_selected();
-		Flu_Tree_Browser::Node **selecteds = new Flu_Tree_Browser::Node*[toDelete];
-		for (int t = 1; t <= toDelete; t++)
-		{
-			selecteds[t-1] = MVC->gui->RFP_Browser->get_selected(t);
-		}
-		for (int t = 0; t <= (toDelete - 1); t++)
-		{
-			for(UINT o=0;o<Objects.size();o++)
-			{
-				if(Objects[o].node == selecteds[t])
-				{
-					Objects.erase(Objects.begin()+o);
-					
-				}
-				for(UINT f=0;f<Objects[o].files.size();f++)
-				{
-					if(Objects[o].files[f].node == selecteds[t])
-					{
-						Objects[o].files.erase(Objects[o].files.begin()+f);
-					}
-				}
-			}
-		}
-		BuildBrowser(MVC->ProcessControl);
-		MVC->redraw();
-		delete selecteds;
-		return;
-	}
+  RFO_File r;
+  r.stl = stl;
+  r.location = location;
+  parent->files.push_back(r);
+  update_model();
+  Gtk::TreePath path;
+  path.push_back (0); // root
+  path.push_back (parent->idx);
+  path.push_back (parent->files.size());
+
+  return path;
+}
+
+RFO::RFO()
+{
+  version=0.1f;
+  m_cols = new ModelColumns();
+  m_model = Gtk::TreeStore::create (*m_cols);
+  update_model();
+}
+
+void RFO::update_model()
+{
+  // re-build the model each time for ease ...
+  m_model->clear();
+
+  size_t psep;
+  std::string root_label = m_filename;
+  if (!root_label.length())
+    root_label = "Unsaved file";
+  else if ((psep = m_filename.find_last_of("/\\")) != string::npos)
+    root_label = m_filename.substr(psep + 1);
+
+  Gtk::TreeModel::iterator root;
+  root = m_model->append();
+  Gtk::TreeModel::Row row = *root;
+  row[m_cols->m_name] = root_label;
+  row[m_cols->m_object] = -1;
+  row[m_cols->m_file] = -1;
+
+  for (guint i = 0; i < Objects.size(); i++) {
+    Objects[i].idx = i;
+
+    Gtk::TreeModel::iterator obj = m_model->append(row.children());
+    Gtk::TreeModel::Row orow = *obj;
+    orow[m_cols->m_name] = Objects[i].name;
+    orow[m_cols->m_object] = i;
+    orow[m_cols->m_file] = -1;
+
+    for (guint j = 0; j < Objects[i].files.size(); j++) {
+      Objects[i].files[j].idx = i;
+      Gtk::TreeModel::iterator iter = m_model->append(orow.children());
+      row = *iter;
+      row[m_cols->m_name] = Objects[i].files[j].location;
+      row[m_cols->m_object] = i;
+      row[m_cols->m_file] = j;
+    }
+  }
+}
+
+void RFO::get_selected_stl(Gtk::TreeModel::iterator &iter,
+			   RFO_Object *&object,
+			   RFO_File *&file)
+{
+  object = NULL;
+  file = NULL;
+
+  if (!iter)
+    return;
+
+  int i = (*iter)[m_cols->m_object];
+  int j = (*iter)[m_cols->m_file];
+  if (i >= 0)
+    object = &Objects[i];
+  if (j >= 0)
+    file = &Objects[i].files[j];
 }

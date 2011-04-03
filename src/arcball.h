@@ -142,10 +142,6 @@ THE SOFTWARE.
 //Custom math, or speed overrides
 #define FuncSqrt    sqrtf
 
-//utility macros
-//assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits
-# define Epsilon 1.0e-5
-
 //Math functions
 
     /**
@@ -289,35 +285,6 @@ THE SOFTWARE.
         NewObj->s.XZ =         xz - wy;  NewObj->s.YZ =         yz + wx;  NewObj->s.ZZ = 1.0f - (xx + yy);
     }
 
-    /**
-     * Sets the value of this matrix to the result of multiplying itself
-     * with matrix m1. 
-     * @param m1 the other matrix 
-     */
-    inline
-    static void Matrix3fMulMatrix3f(Matrix3fT* NewObj, const Matrix3fT* m1)
-    {
-        Matrix3fT Result; //safe not to initialize
-
-        assert(NewObj && m1);
-
-        // alias-safe way.
-        Result.s.M00 = (NewObj->s.M00 * m1->s.M00) + (NewObj->s.M01 * m1->s.M10) + (NewObj->s.M02 * m1->s.M20);
-        Result.s.M01 = (NewObj->s.M00 * m1->s.M01) + (NewObj->s.M01 * m1->s.M11) + (NewObj->s.M02 * m1->s.M21);
-        Result.s.M02 = (NewObj->s.M00 * m1->s.M02) + (NewObj->s.M01 * m1->s.M12) + (NewObj->s.M02 * m1->s.M22);
-
-        Result.s.M10 = (NewObj->s.M10 * m1->s.M00) + (NewObj->s.M11 * m1->s.M10) + (NewObj->s.M12 * m1->s.M20);
-        Result.s.M11 = (NewObj->s.M10 * m1->s.M01) + (NewObj->s.M11 * m1->s.M11) + (NewObj->s.M12 * m1->s.M21);
-        Result.s.M12 = (NewObj->s.M10 * m1->s.M02) + (NewObj->s.M11 * m1->s.M12) + (NewObj->s.M12 * m1->s.M22);
-
-        Result.s.M20 = (NewObj->s.M20 * m1->s.M00) + (NewObj->s.M21 * m1->s.M10) + (NewObj->s.M22 * m1->s.M20);
-        Result.s.M21 = (NewObj->s.M20 * m1->s.M01) + (NewObj->s.M21 * m1->s.M11) + (NewObj->s.M22 * m1->s.M21);
-        Result.s.M22 = (NewObj->s.M20 * m1->s.M02) + (NewObj->s.M21 * m1->s.M12) + (NewObj->s.M22 * m1->s.M22);
-
-        //copy result back to this
-        *NewObj = Result;
-    }
-
     inline
     static void Matrix4fSetRotationScaleFromMatrix4f(Matrix4fT* NewObj, const Matrix4fT* m1)
     {
@@ -459,9 +426,33 @@ THE SOFTWARE.
         Matrix4fMulRotationScale(NewObj, scale);
     }
 
+    inline
+    static void Matrix3fMulMatrix3f(Matrix3fT* NewObj, const Matrix3fT* m1)
+    {
+        Matrix3fT Result; //safe not to initialize
+
+        assert(NewObj && m1);
+
+        // alias-safe way.
+        Result.s.M00 = (NewObj->s.M00 * m1->s.M00) + (NewObj->s.M01 * m1->s.M10) + (NewObj->s.M02 * m1->s.M20);
+        Result.s.M01 = (NewObj->s.M00 * m1->s.M01) + (NewObj->s.M01 * m1->s.M11) + (NewObj->s.M02 * m1->s.M21);
+        Result.s.M02 = (NewObj->s.M00 * m1->s.M02) + (NewObj->s.M01 * m1->s.M12) + (NewObj->s.M02 * m1->s.M22);
+
+        Result.s.M10 = (NewObj->s.M10 * m1->s.M00) + (NewObj->s.M11 * m1->s.M10) + (NewObj->s.M12 * m1->s.M20);
+        Result.s.M11 = (NewObj->s.M10 * m1->s.M01) + (NewObj->s.M11 * m1->s.M11) + (NewObj->s.M12 * m1->s.M21);
+        Result.s.M12 = (NewObj->s.M10 * m1->s.M02) + (NewObj->s.M11 * m1->s.M12) + (NewObj->s.M12 * m1->s.M22);
+
+        Result.s.M20 = (NewObj->s.M20 * m1->s.M00) + (NewObj->s.M21 * m1->s.M10) + (NewObj->s.M22 * m1->s.M20);
+        Result.s.M21 = (NewObj->s.M20 * m1->s.M01) + (NewObj->s.M21 * m1->s.M11) + (NewObj->s.M22 * m1->s.M21);
+        Result.s.M22 = (NewObj->s.M20 * m1->s.M02) + (NewObj->s.M21 * m1->s.M12) + (NewObj->s.M22 * m1->s.M22);
+
+        //copy result back to this
+        *NewObj = Result;
+    }
+
 // 8<--Snip here if you have your own math types/funcs-->8 
 
-    typedef class ArcBall_t
+    class ArcBall
     {
         protected:
             inline
@@ -469,8 +460,8 @@ THE SOFTWARE.
 
         public:
             //Create/Destroy
-                    ArcBall_t(GLfloat NewWidth, GLfloat NewHeight);
-                   ~ArcBall_t() { /* nothing to do */ };
+                    ArcBall(GLfloat NewWidth = 2.0, GLfloat NewHeight = 2.0);
+                   ~ArcBall() { /* nothing to do */ };
 
             //Set new bounds
             inline
@@ -484,10 +475,11 @@ THE SOFTWARE.
             }
 
             //Mouse down
-            void    click(const Point2fT* NewPt);
+            void    click(GLfloat x, GLfloat y);
 
             //Mouse drag, calculate rotation
-            void    drag(const Point2fT* NewPt, Quat4fT* NewRot);
+            void    drag(GLfloat x, GLfloat y, Quat4fT* NewRot);
+            void    dragAccumulate(GLfloat x, GLfloat y, Matrix4fT *transform);
 
         protected:
             Vector3fT   StVec;          //Saved click vector
@@ -495,7 +487,6 @@ THE SOFTWARE.
             GLfloat     AdjustWidth;    //Mouse bounds width
             GLfloat     AdjustHeight;   //Mouse bounds height
 
-    } ArcBallT;
-
+    };
 #endif
 

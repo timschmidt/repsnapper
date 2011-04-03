@@ -16,16 +16,17 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+#include <limits>
 
-
+#include "config.h"
 #include "stdafx.h"
 #include "string.h"
 
 #include "stl.h"
 #include "gcode.h"
-#include "ui.h"
 #include "math.h"
-#include <boost/numeric/conversion/bounds.hpp> 
+#include "settings.h"
+#include "rfo.h"
 
 #ifdef WIN32
 #  include <GL/glut.h>	// Header GLUT Library
@@ -52,13 +53,6 @@ namespace std
 using namespace stdext;
 #endif
 
-/*
-extern "C" {
-	#include "triangle.h"
-}
-*/
-#define MIN(A,B) ((A)<(B)? (A):(B))
-#define MAX(A,B) ((A)>(B)? (A):(B))
 #define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
 /* A number that speaks for itself, every kissable digit.                    */
@@ -92,7 +86,7 @@ void renderBitmapString(Vector3f pos, void* font, string text)
 
 	checkGlutInit();
 
-	sprintf(asd,text.c_str());
+	sprintf(asd,"%s",text.c_str());
 	glRasterPos3f(pos.x, pos.y, pos.z);
 	for (uint c=0;c<text.size();c++)
 		glutBitmapCharacter(font, (int)*a++);
@@ -104,7 +98,7 @@ STL::STL()
 	Min.x = Min.y = Min.z = 0.0f;
 	Max.x = Max.y = Max.z = 200.0f;
 
-	CalcBoundingBoxAndZoom();
+	CalcCenter();
 }
 
 # define COR3_MAX 200000
@@ -157,7 +151,7 @@ bool STL::Read(string filename, bool force_binary)
 		infile.open(filename.c_str(),  ios::in | ios::binary);
 		if(!infile.good())
 			return false;
-			
+
 		// Ascii or binary?
 		char header[STL_READ_HEADER_SIZE+1] = STL_READ_HEADER_TEXT; // +1 for the \0 on the c-style string
 		infile.read(reinterpret_cast < char * > (&header), STL_READ_HEADER_SIZE*sizeof(char));	// Header
@@ -178,8 +172,13 @@ bool STL::Read(string filename, bool force_binary)
 					return true;
 				// if this fails, forced binary reading failed too, error
 				stringstream error;
+				ToolkitLock guard;
 				error << "Error reading file: " << filename;
-				fl_alert(error.str().c_str());
+				Gtk::MessageDialog aDlg (error.str().c_str(),
+							 false /* markup */,
+							 Gtk::MESSAGE_INFO,
+							 Gtk::BUTTONS_OK, true);
+				aDlg.run();
 				return false;
 			}
 			fclose(file);
@@ -238,45 +237,51 @@ bool STL::Read(string filename, bool force_binary)
 		cout << "Exception opening/reading file";
 		string error = e.what();
 	}
-	
+
 	OptimizeRotation();
-	CalcBoundingBoxAndZoom();
+	CalcCenter();
 	return true;
 }
 
-void STL::CalcBoundingBoxAndZoom()
+void STL::CalcCenter()
 {
 	Center = (Max + Min )/2;
 }
 
-void STL::displayInfillOld(const ProcessController &PC, CuttingPlane &plane, uint LayerNr, vector<int>& altInfillLayers)
+void STL::displayInfillOld(const Settings &settings, CuttingPlane &plane,
+			   uint LayerNr, vector<int>& altInfillLayers)
 {
-	if(PC.DisplayinFill)
+	if (settings.Display.DisplayinFill)
 	{
 		// inFill
 		vector<Vector2f> infill;
 
 		CuttingPlane infillCuttingPlane = plane;
-		if(PC.ShellOnly == false)
+		if (settings.Slicing.ShellOnly == false)
 		{
-			switch( PC.m_ShrinkQuality )
+			switch (settings.Slicing.ShrinkQuality)
 			{
 			case SHRINK_FAST:
 				infillCuttingPlane.ClearShrink();
-				infillCuttingPlane.ShrinkFast(PC.ExtrudedMaterialWidth*0.5f, PC.Optimization, PC.DisplayCuttingPlane, false, PC.ShellCount);
+				infillCuttingPlane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth*0.5f,
+							      settings.Slicing.Optimization,
+							      settings.Display.DisplayCuttingPlane,
+							      false, settings.Slicing.ShellCount);
 				break;
 			case SHRINK_LOGICK:
 				break;
 			}
 
 			// check if this if a layer we should use the alternate infill distance on
-			float infillDistance = PC.InfillDistance;
-			if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end())
-			{
-				infillDistance = PC.AltInfillDistance;
+			float infillDistance = settings.Slicing.InfillDistance;
+			if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end()) {
+			  infillDistance = settings.Slicing.AltInfillDistance;
 			}
 
-			infillCuttingPlane.CalcInFill(infill, LayerNr, infillDistance, PC.InfillRotation, PC.InfillRotationPrLayer, PC.DisplayDebuginFill);
+			infillCuttingPlane.CalcInFill(infill, LayerNr, infillDistance,
+						      settings.Slicing.InfillRotation,
+						      settings.Slicing.InfillRotationPrLayer,
+						      settings.Display.DisplayDebuginFill);
 		}
 		glColor4f(1,1,0,1);
 		glPointSize(5);
@@ -293,9 +298,8 @@ void STL::displayInfillOld(const ProcessController &PC, CuttingPlane &plane, uin
 	}
 }
 
-
-
-void STL::draw(const ProcessController &PC, float opasity)
+// FIXME: why !? do we grub around with the rfo here ?
+void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 {
 	// polygons
 	glEnable(GL_LIGHTING);
@@ -304,16 +308,18 @@ void STL::draw(const ProcessController &PC, float opasity)
 	float no_mat[] = {0.0f, 0.0f, 0.0f, 1.0f};
 //	float mat_ambient[] = {0.7f, 0.7f, 0.7f, 1.0f};
 //	float mat_ambient_color[] = {0.8f, 0.8f, 0.2f, 1.0f};
-	float mat_diffuse[] = {0.1f, 0.5f, 0.8f, opasity};
+	float mat_diffuse[] = {0.1f, 0.5f, 0.8f, opacity};
 	float mat_specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
 //	float no_shininess = 0.0f;
 //	float low_shininess = 5.0f;
 	float high_shininess = 100.0f;
 //	float mat_emission[] = {0.3f, 0.2f, 0.2f, 0.0f};
+        int i;
 
-	HSVtoRGB(PC.PolygonHue, PC.PolygonSat, PC.PolygonVal, mat_diffuse[0], mat_diffuse[1], mat_diffuse[2]);
+        for (i = 0; i < 3; i++)
+            mat_diffuse[i] = settings.Display.PolygonRGB.rgb[i];
 
-	mat_specular[0] = mat_specular[1] = mat_specular[2] = PC.Highlight;
+	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.Display.Highlight;
 
 	/* draw sphere in first row, first column
 	* diffuse reflection only; no ambient or specular
@@ -326,7 +332,7 @@ void STL::draw(const ProcessController &PC, float opasity)
 
 	glEnable (GL_POLYGON_OFFSET_FILL);
 
-	if(PC.DisplayPolygons)
+	if(settings.Display.DisplayPolygons)
 	{
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
@@ -338,13 +344,13 @@ void STL::draw(const ProcessController &PC, float opasity)
 		{
 /*			switch(triangles[i].axis)
 				{
-				case NEGX:	glColor4f(1,0,0,PC.PolygonOpasity); break;
-				case POSX:	glColor4f(0.5f,0,0,PC.PolygonOpasity); break;
-				case NEGY:	glColor4f(0,1,0,PC.PolygonOpasity); break;
-				case POSY:	glColor4f(0,0.5f,0,PC.PolygonOpasity); break;
-				case NEGZ:	glColor4f(0,0,1,PC.PolygonOpasity); break;
-				case POSZ:	glColor4f(0,0,0.3f,PC.PolygonOpasity); break;
-				default: glColor4f(0.2f,0.2f,0.2f,PC.PolygonOpasity); break;
+				case NEGX:	glColor4f(1,0,0,opacity); break;
+				case POSX:	glColor4f(0.5f,0,0,opacity); break;
+				case NEGY:	glColor4f(0,1,0,opacity); break;
+				case POSY:	glColor4f(0,0.5f,0,opacity); break;
+				case NEGZ:	glColor4f(0,0,1,opacity); break;
+				case POSZ:	glColor4f(0,0,0.3f,opacity); break;
+				default: glColor4f(0.2f,0.2f,0.2f,opacity); break;
 				}*/
 			glNormal3fv((GLfloat*)&triangles[i].Normal);
 			glVertex3fv((GLfloat*)&triangles[i].A);
@@ -358,18 +364,17 @@ void STL::draw(const ProcessController &PC, float opasity)
 	glDisable(GL_BLEND);
 
 	// WireFrame
-	if(PC.DisplayWireframe)
+	if(settings.Display.DisplayWireframe)
 	{
-		if(!PC.DisplayWireframeShaded)
+		if(!settings.Display.DisplayWireframeShaded)
 			glDisable(GL_LIGHTING);
 
 
-		float r,g,b;
-		HSVtoRGB(PC.WireframeHue, PC.WireframeSat, PC.WireframeVal, r,g,b);
-		HSVtoRGB(PC.WireframeHue, PC.WireframeSat, PC.WireframeVal, mat_diffuse[0], mat_diffuse[1], mat_diffuse[2]);
+                for (i = 0; i < 3; i++)
+                        mat_diffuse[i] = settings.Display.WireframeRGB.rgb[i];
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
-		glColor3f(r,g,b);
+		glColor3fv(settings.Display.WireframeRGB.rgb);
 		for(size_t i=0;i<triangles.size();i++)
 		{
 			glBegin(GL_LINE_LOOP);
@@ -385,29 +390,25 @@ void STL::draw(const ProcessController &PC, float opasity)
 	glDisable(GL_LIGHTING);
 
 	// normals
-	if(PC.DisplayNormals)
+	if(settings.Display.DisplayNormals)
 	{
-		float r,g,b;
-		HSVtoRGB(PC.NormalsHue, PC.NormalsSat, PC.NormalsVal, r,g,b);
-		glColor3f(r,g,b);
+		glColor3fv(settings.Display.NormalsRGB.rgb);
 		glBegin(GL_LINES);
 		for(size_t i=0;i<triangles.size();i++)
 		{
 			Vector3f center = (triangles[i].A+triangles[i].B+triangles[i].C)/3.0f;
 			glVertex3fv((GLfloat*)&center);
-			Vector3f N = center + (triangles[i].Normal*PC.NormalsLength);
+			Vector3f N = center + (triangles[i].Normal*settings.Display.NormalsLength);
 			glVertex3fv((GLfloat*)&N);
 		}
 		glEnd();
 	}
 
 	// Endpoints
-	if(PC.DisplayEndpoints)
+	if(settings.Display.DisplayEndpoints)
 	{
-		float r,g,b;
-		HSVtoRGB(PC.EndpointsHue, PC.EndpointsSat, PC.EndpointsVal, r,g,b);
-		glColor3f(r,g,b);
-		glPointSize(PC.EndPointSize);
+		glColor3fv(settings.Display.EndpointsRGB.rgb);
+		glPointSize(settings.Display.EndPointSize);
 		glEnable(GL_POINT_SMOOTH);
 		glBegin(GL_POINTS);
 		for(size_t i=0;i<triangles.size();i++)
@@ -421,55 +422,55 @@ void STL::draw(const ProcessController &PC, float opasity)
 	glDisable(GL_DEPTH_TEST);
 
 	// Make Layers
-	if(PC.DisplayCuttingPlane)
+	if(settings.Display.DisplayCuttingPlane)
 	{
 		uint LayerNr = 0;
-		uint LayerCount = (uint)ceil((Max.z+PC.LayerThickness*0.5f)/PC.LayerThickness);
+		uint LayerCount = (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5f)/settings.Hardware.LayerThickness);
 
 		vector<int> altInfillLayers;
-		PC.GetAltInfillLayers(altInfillLayers, LayerCount);
+		settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
 
 		float zSize = (Max.z-Min.z);
-		float z=PC.CuttingPlaneValue*zSize+Min.z;
+		float z=settings.Display.CuttingPlaneValue*zSize+Min.z;
 		float zStep = zSize;
 
-		if(PC.DisplayAllLayers)
+		if(settings.Display.DisplayAllLayers)
 		{
 			z=Min.z;
-			zStep = PC.LayerThickness;
+			zStep = settings.Hardware.LayerThickness;
 		}
 		while(z<Max.z)
 		{
-			for(size_t o=0;o<PC.rfo.Objects.size();o++)
+			for(size_t o=0;o<rfo.Objects.size();o++)
 			{
-				for(size_t f=0;f<PC.rfo.Objects[o].files.size();f++)
+				for(size_t f=0;f<rfo.Objects[o].files.size();f++)
 				{
-					Matrix4f T = PC.GetSTLTransformationMatrix(o,f);
+					Matrix4f T = rfo.GetSTLTransformationMatrix(o,f);
 					Vector3f t = T.getTranslation();
-					t+= Vector3f(PC.PrintMargin.x+PC.RaftSize*PC.RaftEnable, PC.PrintMargin.y+PC.RaftSize*PC.RaftEnable, 0);
+					t+= Vector3f(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
 					T.setTranslation(t);
 					CuttingPlane plane;
 					T=Matrix4f::IDENTITY;
 					CalcCuttingPlane(z, plane, T);	// output is alot of un-connected line segments with individual vertices
 
 					float hackedZ = z;
-					while (plane.LinkSegments(hackedZ, PC.Optimization) == false)	// If segment linking fails, re-calc a new layer close to this one, and use that.
+					while (plane.LinkSegments(hackedZ, settings.Slicing.Optimization) == false)	// If segment linking fails, re-calc a new layer close to this one, and use that.
 					{							         // This happens when there's triangles missing in the input STL
 						break;
 						hackedZ+= 0.1f;
 						CalcCuttingPlane(hackedZ, plane, T);	// output is alot of un-connected line segments with individual vertices
 					}
 
-					switch( PC.m_ShrinkQuality )
+					switch( settings.Slicing.ShrinkQuality )
 					{
 					case SHRINK_FAST:
-						plane.ShrinkFast(PC.ExtrudedMaterialWidth*0.5f, PC.Optimization, PC.DisplayCuttingPlane, false, PC.ShellCount);
-						displayInfillOld(PC, plane, LayerNr, altInfillLayers);
+						plane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth*0.5f, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, false, settings.Slicing.ShellCount);
+						displayInfillOld(settings, plane, LayerNr, altInfillLayers);
 						break;
 					case SHRINK_LOGICK:
-						plane.ShrinkLogick(PC.ExtrudedMaterialWidth, PC.Optimization, PC.DisplayCuttingPlane, PC.ShellCount);
-						plane.Draw(PC.DrawVertexNumbers, PC.DrawLineNumbers, PC.DrawCPOutlineNumbers, PC.DrawCPLineNumbers, PC.DrawCPVertexNumbers);
-						displayInfillOld(PC, plane, LayerNr, altInfillLayers);
+						plane.ShrinkLogick(settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, settings.Slicing.ShellCount);
+						plane.Draw(settings.Display.DrawVertexNumbers, settings.Display.DrawLineNumbers, settings.Display.DrawCPOutlineNumbers, settings.Display.DrawCPLineNumbers, settings.Display.DrawCPVertexNumbers);
+						displayInfillOld(settings, plane, LayerNr, altInfillLayers);
 						break;
 					}
 					LayerNr++;
@@ -480,7 +481,7 @@ void STL::draw(const ProcessController &PC, float opasity)
 	}// If display cuttingplane
 
 
-	if(PC.DisplayBBox)
+	if(settings.Display.DisplayBBox)
 	{
 		// Draw bbox
 		glColor3f(1,0,0);
@@ -511,13 +512,13 @@ void STL::draw(const ProcessController &PC, float opasity)
 
 }
 
-uint findClosestUnused(std::vector<Vector3f> lines, Vector3f point, std::vector<bool> &used)
+int findClosestUnused(std::vector<Vector3f> lines, Vector3f point, std::vector<bool> &used)
 {
-	uint closest = -1;
-	float closestDist = boost::numeric::bounds<float>::highest();
-	
+	int closest = -1;
+	float closestDist = numeric_limits<float>::max();
+
 	size_t count = lines.size();
-	
+
 	for(uint i=0;i<count;i++)
 	{
 		if(used[i] == false)
@@ -530,7 +531,7 @@ uint findClosestUnused(std::vector<Vector3f> lines, Vector3f point, std::vector<
 			}
 		}
 	}
-	
+
 	return closest;
 }
 
@@ -789,7 +790,7 @@ void CuttingPlane::MakeGcode(const std::vector<Vector2f> &infill, GCode &code, f
 		used[i] = false;
 
 
-	uint thisPoint = findClosestUnused(lines, LastPosition, used);
+	int thisPoint = findClosestUnused(lines, LastPosition, used);
 	if(thisPoint == -1)	// No lines = no gcode
 		return;
 	used[thisPoint] = true;
@@ -921,7 +922,8 @@ void STL::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T)
 vector<InFillHit> HitsBuffer;
 
 
-void CuttingPlane::CalcInFill(vector<Vector2f> &infill, uint LayerNr, float InfillDistance, float InfillRotation, float InfillRotationPrLayer, bool DisplayDebuginFill)
+void CuttingPlane::CalcInFill(vector<Vector2f> &infill, uint LayerNr, float InfillDistance,
+			      float InfillRotation, float InfillRotationPrLayer, bool DisplayDebuginFill)
 {
 	int c=0;
 
@@ -1563,8 +1565,8 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 			continue; // already used 
 		used[current] = true;
 
-		uint startPoint = lines[current].start;
-		uint endPoint = lines[current].end;
+		int startPoint = lines[current].start;
+		int endPoint = lines[current].end;
 
 		Poly poly;
 		poly.points.push_back (endPoint);
@@ -1581,10 +1583,10 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 				cout.width (12);
 				cout << "\r\npolygon was cut at z " << z << " LinkSegments at vertex " << endPoint;
 				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\trefs\n";
-				for (uint i = 0; i < vertices.size(); i++)
+				for (int i = 0; i < (int)vertices.size(); i++)
 				{
 					int refs = 0, pol = 0;
-					for (uint j = 0; j < lines.size(); j++)
+					for (int j = 0; j < (int)lines.size(); j++)
 					{
 						if (lines[j].start == i) { refs++; pol++; }
 						if (lines[j].end == i) { refs++; pol--; }
@@ -1595,7 +1597,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 					cout << "\n";
 				}
 				cout << "\n " << lines.size() << " lines:\nline\tstart vtx\tend vtx\n";
-				for (uint i = 0; i < lines.size(); i++)
+				for (int i = 0; i < (int)lines.size(); i++)
 				{
 					if (i == endPoint)
 						cout << "problem line:\n";
@@ -1603,7 +1605,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 				}
 
 				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\tlinked to\n";
-				for (uint i = 0; i < planepoints.size(); i++)
+				for (int i = 0; i < (int)planepoints.size(); i++)
 				{
 					if (i == endPoint)
 						cout << "problem vertex:\n";
@@ -1618,7 +1620,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 						break;
 					default:
 						cout << "Unusual - multiple: \n";
-						for (j = 0; j < planepoints[i].size(); j++)
+						for (j = 0; j < (int)planepoints[i].size(); j++)
 							cout << planepoints[i][j] << " ";
 						cout << " ( " << j << " other vertices )";
 						break;
@@ -1639,7 +1641,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 			//       b) identify all 2+ nodes and if they share start/end
 			//          directions eliminate them to join the polygons.
 
-			int i;
+			uint i;
 			for (i = 0; i < pathsfromhere.size() && used[pathsfromhere[i]]; i++);
 			if (i >= pathsfromhere.size())
 			{
@@ -1940,18 +1942,18 @@ void CuttingPlane::recurseSelfIntersectAndDivide(float z, vector<locator> &EndPo
 		// search for the start point
 
 		outline result;
-		for(size_t p=start.p; p<offsetPolygons.size();p++)
+		for(int p = start.p; p < (int)offsetPolygons.size(); p++)
 		{
-			for(size_t v=start.v; v<offsetPolygons[p].points.size();v++)
+			for(int v = start.v; v < (int)offsetPolygons[p].points.size(); v++)
 			{
 				Vector2f P1 = offsetVertices[offsetPolygons[p].points[v]];
 				Vector2f P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
 
 				result.push_back(P1);	// store this point
-				for(size_t p2=0; p2<offsetPolygons.size();p2++)
+				for(int p2=0; p2 < (int)offsetPolygons.size(); p2++)
 				{
-					size_t count2 = offsetPolygons[p2].points.size();
-					for(size_t v2=0; v2<count2;v2++)
+					int count2 = offsetPolygons[p2].points.size();
+					for(int v2 = 0; v2 < count2; v2++)
 					{
 						if((p==p2) && (v == v2))	// Dont check a point against itself
 							continue;
@@ -2793,6 +2795,8 @@ void STL::OptimizeRotation()
 	case NEGY: RotateObject(Vector3f(1,0,0), M_PI/2.0f); break;
 	case POSY: RotateObject(Vector3f(-1,0,0), M_PI/2.0f); break;
 	case POSZ: RotateObject(Vector3f(1,0,0), M_PI); break;
+	default: // unhandled
+	  break;
 	}
 	CenterAroundXY();
 }
@@ -2937,7 +2941,7 @@ void STL::CenterAroundXY()
 	Max += displacement;
 	Min += displacement;
 //	cout << "Center Around XY min" << Min << " max " << Max << "\n";
-	CalcBoundingBoxAndZoom();
+	CalcCenter();
 }
 
 

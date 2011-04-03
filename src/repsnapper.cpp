@@ -1,40 +1,37 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2010  Kulitorum
+    Copyright (C) 2010 Michael Meeks
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
+    it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+    GNU Lesser General Public License for more details.
 
-    You should have received a copy of the GNU General Public License along
+    You should have received a copy of the GNU Lesser General Public License along
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-
+#include "config.h"
 #include "stdafx.h"
 
-#include "modelviewcontroller.h"
+#include <string>
+#include <vector>
 
+#include <glib/gutils.h>
+#include <giomm/file.h>
+#include <gtk/gtkgl.h>
+
+#include "model.h"
 #include "gcode.h"
-#include "ui.h"
-#include "version.h"
-
-GUI *gui;
-
-
-#include <boost/thread.hpp>
-
-#ifndef VERSION
-#define VERSION "Unknown"
-#endif
 
 using namespace std;
+
+GUI *gui;
 
 struct CommandLineOptions
 {
@@ -52,12 +49,12 @@ private:
 	}
 	void version ()
 	{
-		printf("Version: %s\n",VERSION);
+		printf("Version: %s\n", VERSION);
 		exit (1);
 	}
 	void usage ()
 	{
-		fprintf (stderr, "Version: %s\n",VERSION);
+		fprintf (stderr, "Version: %s\n", VERSION);
 		fprintf (stderr, "Usage: repsnapper [OPTION]... [FILE]...\n"
 			 "Start reprap control software and load [FILES]\n"
 			 "Options:\n"
@@ -102,154 +99,125 @@ public:
 	// add more options above
 };
 
+Glib::RefPtr<Gio::File> find_global_config() {
+  std::vector<std::string> dirs = Platform::getConfigPaths();
+  Glib::RefPtr<Gio::File> f;
+  for (std::vector<std::string>::const_iterator i = dirs.begin();
+       i != dirs.end(); ++i) {
+    f = Gio::File::create_for_path(*i + "repsnapper.conf");
+    if(f->query_exists()) {
+      return f;
+    }
+  }
+  return Glib::RefPtr<Gio::File>();
+}
+
 int main(int argc, char **argv)
 {
-	//initialize threading support in FLTK
-	Fl::lock();
+  Glib::thread_init();
+  Gtk::Main tk(argc, argv);
 
-	CommandLineOptions opts (argc, argv);
+  if (!gtk_gl_init_check (&argc, &argv) ||
+      !gdk_gl_init_check (&argc, &argv) ) {
+    std::cerr << "Failed to initialize GL\n";
+    return 1;
+  }
 
-	gui = new GUI();
-	ModelViewController *MVC = gui->MVC;
+  CommandLineOptions opts (argc, argv);
 
-	Fl::visual(FL_DOUBLE|FL_INDEX);
-	
-	MVC->ProcessControl.gui = gui;
-	MVC->Init(gui);
-	MVC->serial->setGUI(gui);
-	
-	if (!opts.use_gui) {
-		if (opts.stl_input_path.size() > 0) {
-			MVC->ReadStl(opts.stl_input_path);
+  Model *model = Model::create();
+  if(!model) {
+    return 1;
+  }
 
-			if (opts.settings_path.size() > 0) {
-				MVC->ProcessControl.LoadConfig(opts.settings_path);
-				MVC->CopySettingsToGUI();
-			}
+  try {
+    Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper")->make_directory_with_parents();
+  } catch(Gio::Error e) {
+    switch(e.code()) {
+    case Gio::Error::EXISTS:
+      // Directory has already been created.  Normal.
+      break;
 
-			MVC->ConvertToGCode();
-
-			if (opts.gcode_output_path.size() > 0) {
-				Fl_Text_Buffer *buffer = gui->GCodeResult->buffer();
-				return buffer->savefile(opts.gcode_output_path.c_str());
-			}
-		}
-		return 0;
-	}
-  
-	for (uint i = 0; i < opts.files.size(); i++)
-		MVC->ReadStl (opts.files[i].c_str());
-
-	char WindowTitle[100] = "GCodeView";
-	char* W = &WindowTitle[0];
-	gui->show (1, &W);
-	gui->VersionText->value(VERSION);
-	return Fl::run ();
-}
-
-#ifdef WIN32
-#ifndef UNITTEST
-
-CHAR wide_to_narrow(WCHAR w)
-{
-    // simple typecast
-    // works because UNICODE incorporates ASCII into itself
-    return CHAR(w);
-}
-class CmdLineArgs : public std::vector<char*>
-{
-public:
-    CmdLineArgs (LPWSTR args)
-    {
-
-        // Save local copy of the command line string, because
-        // ParseCmdLine() modifies this string while parsing it.
-        m_cmdline = new char [wcslen (args) + 1];
-        if (m_cmdline)
-        {
-			std::transform(args, args+wcslen (args) + 1, m_cmdline, wide_to_narrow);
-            ParseCmdLine(); 
-        }
+    default:
+      Gtk::MessageDialog dialog("Couldn't create user config directory!", false,
+                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.set_secondary_text(e.what());
+      dialog.run();
+      return 1;
     }
-    ~CmdLineArgs()
-    {
-        delete m_cmdline;
+  }
+      
+  Glib::RefPtr<Gio::File> conf = Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper/repsnapper.conf");
+  try {
+    Glib::RefPtr<Gio::File> global = find_global_config();
+    if(!global) {
+      // Don't leave an empty config file behind
+      conf->remove();
+      Gtk::MessageDialog dialog("Couldn't find global configuration!", false,
+                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.set_secondary_text("It is likely that repsnapper is not correctly installed.");
+      dialog.run();
+      return 1;
     }
+    
+    global->copy(conf);
+  } catch(Gio::Error e) {
+    switch(e.code()) {
+    case Gio::Error::EXISTS:
+      // The user already has a config.  This is the normal case.
+      break;
 
-private:
-    PSZ m_cmdline; // the command line string
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Parse m_cmdline into individual tokens, which are delimited by spaces. If a
-    // token begins with a quote, then that token is terminated by the next quote
-    // followed immediately by a space or terminator.  This allows tokens to contain
-    // spaces.
-    // This input string:     This "is" a ""test"" "of the parsing" alg"o"rithm.
-    // Produces these tokens: This, is, a, "test", of the parsing, alg"o"rithm
-    ////////////////////////////////////////////////////////////////////////////////
-    void ParseCmdLine ()
+    case Gio::Error::PERMISSION_DENIED:
     {
-        enum { TERM  = '\0',
-               QUOTE = '\"' };
+      // Fall back to global config
+      Gtk::MessageDialog dialog("Unable to create user config", false,
+                                Gtk::MESSAGE_WARNING, Gtk::BUTTONS_CLOSE);
+      dialog.set_secondary_text(e.what() + "\nFalling back to global config. Settings will not be saved.");
+      dialog.run();
+      conf = find_global_config();
+      if(!conf) {
+        Gtk::MessageDialog dialog("Couldn't find global configuration!", false,
+                                  Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+        dialog.set_secondary_text("It is likely that repsnapper is not correctly installed.");
+        dialog.run();
+        return 1;
+      }
+      break;
+    }
+      
+    default:
+    {
+      Gtk::MessageDialog dialog("Failed to locate config", false,
+                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.set_secondary_text(e.what());
+      dialog.run();
+      return 1;
+    }
+    }
+  }
 
-        bool bInQuotes = false;
-        PSZ pargs = m_cmdline;
+  // TODO: Error detection
+  model->LoadConfig(conf);
 
-        while (*pargs)
-        {
-            while (isspace (*pargs))        // skip leading whitespace
-                pargs++;
+  if (!opts.use_gui) {
+    if (opts.stl_input_path.size() > 0) {
+      model->ReadStl(Gio::File::create_for_path(opts.stl_input_path));
 
-            bInQuotes = (*pargs == QUOTE);  // see if this token is quoted
+      if (opts.settings_path.size() > 0)
+        model->LoadConfig(Gio::File::create_for_path(opts.settings_path));
 
-            if (bInQuotes)                  // skip leading quote
-                pargs++; 
+      model->ConvertToGCode();
 
-            push_back (pargs);              // store position of current token
+      if (opts.gcode_output_path.size() > 0)
+        model->WriteGCode(Gio::File::create_for_path(opts.gcode_output_path));
+    }
+    return 0;
+  }
 
-            // Find next token.
-            // NOTE: Args are normally terminated by whitespace, unless the
-            // arg is quoted.  That's why we handle the two cases separately,
-            // even though they are very similar.
-            if (bInQuotes)
-            {
-                // find next quote followed by a space or terminator
-                while (*pargs && 
-                      !(*pargs == QUOTE && (isspace (pargs[1]) || pargs[1] == TERM)))
-                    pargs++;
-                if (*pargs)
-                {
-                    *pargs = TERM;  // terminate token
-                    if (pargs[1])   // if quoted token not followed by a terminator
-                        pargs += 2; // advance to next token
-                }
-            }
-            else
-            {
-                // skip to next non-whitespace character
-                while (*pargs && !isspace (*pargs)) 
-                    pargs++;
-                if (*pargs && isspace (*pargs)) // end of token
-                {
-                   *pargs = TERM;    // terminate token
-                    pargs++;         // advance to next token or terminator
-                }
-            }
-        } // while (*pargs)
-    } // ParseCmdLine()
-}; // class CmdLineArgs
+  for (uint i = 0; i < opts.files.size(); i++)
+    model->ReadStl(Gio::File::create_for_path(opts.files[i]));
 
+  tk.run();
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
-{
-	CmdLineArgs cmdArgs(lpCmdLine);
-	char** arg = (char**)malloc(cmdArgs.size()*sizeof(char*));
-	for(int i=0; i<cmdArgs.size(); i++)
-	{
-		arg[i] = cmdArgs[i];
-	}	 
-
-	return main(cmdArgs.size(), arg);
+  return 0;
 }
-#endif // UNITTEST
-#endif // WIN32

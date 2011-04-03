@@ -48,6 +48,17 @@ float TeRound(float val)
 		return (int)(val-.5);
 }
 
+void HSVtoRGB (const Vector3f &hsv, float &r,float &g,float &b)
+{
+  HSVtoRGB (hsv.x, hsv.y, hsv.z, r, g, b);
+}
+
+void HSVtoRGB (const Vector3f &hsv, Vector3f &rgb)
+{
+  HSVtoRGB (hsv, rgb.r, rgb.g, rgb.b);
+}
+
+
 void HSVtoRGB 	(const float &h, const float &s, const float &v, float &r,float &g,float &b) 			
 {
 	int i;

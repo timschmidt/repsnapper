@@ -29,9 +29,6 @@
 #include <sstream>
 #include <list>
 
-#include <FL/Fl_Gl_Window.H>
-#include <FL/gl.h>
-
 #include <vmmlib/vmmlib.h>
 #include <polylib/Polygon2f.h>
 
@@ -227,12 +224,12 @@ public:
 	bool Read(string filename, bool force_binary = false );
 	void GetObjectsFromIvcon();
 	void clear() { triangles.clear(); }
-	void displayInfillOld(const ProcessController &PC, CuttingPlane &plane, uint LayerNr, vector<int>& altInfillLayers);
-	void draw(const ProcessController &PC, float opasity = 1.0f);
+	void displayInfillOld(const Settings &settings, CuttingPlane &plane, uint LayerNr, vector<int>& altInfillLayers);
+	void draw (RFO &rfo, const Settings &settings, float opacity = 1.0f);
 	void CenterAroundXY();
 	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);	// Extract a 2D polygonset from a 3D model
 	void OptimizeRotation();			// Auto-Rotate object to have the largest area surface down for printing
-	void CalcBoundingBoxAndZoom();
+	void CalcCenter();
 	void RotateObject(Vector3f axis, float angle);  // Rotation for manual rotate and used by OptimizeRotation
 
 	vector<Triangle>  triangles;

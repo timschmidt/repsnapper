@@ -16,18 +16,18 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#pragma once
-#include "stdafx.h"
+#ifndef GL_LIGHT_H
+#define GL_LIGHT_H
+
 class gllight
 {
 	public:
 		gllight();
 		~gllight();
-	
+
 		void Init (int position);
-		void On();
-		void Off();
-	
+		void Enable(bool on);
+
 		void SetAmbient(float r, float g, float b, float a);
 		void SetDiffuse(float r, float g, float b, float a);
 		void SetLocation(float x, float y, float z, float w);
@@ -36,3 +36,5 @@ class gllight
 	private:
 		int offset;
 };
+
+#endif // GL_LIGHT_H

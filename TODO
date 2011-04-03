@@ -1,0 +1,63 @@
+--- the plan ---
+
+* Move most of 'model.cpp' into a new 'view.cpp'
+
+* Serial
+	+ error dialogs - "failed to connect ?"
+	+ /dev/ttyUSB0 - EACCES
+		+ group / permissions problem.
+		+ you need to tweak permissions, or add yourself
+		  to XYZ group, and re-login ...
+
+* Settings re-factor
+	+ stop Model being a widget ...
+
+* Finish the 'Display' settings page
+* add Hardware Settings profiles:
+	+ "Mendel", "XYZ", "etc." ? :-)
+
+* do settings work ...
+	* auto-connect settings to the UI
+	* finish the settings we cannot do manually ...
+		+ custom button foo ...
+	+ another biig table of spin-button / range details etc.
+
+* win32 osc build fun ...
+
+--- misc stuff ---
+
+* make toolkit lock sane and truly recursive
+	+ to avoid gdk threads deadlock[!]
+
+* serial
+	+ move ModelViewController DetectComPorts to RepRapSerial ...
+	  ditto ValidateComPort
+
+* connection button
+	+ should require confirmation before going off-line
+	  during a print ... [ and/or 'pause printing' ]
+
+* serial connection
+	* add a test serial connection ...
+
+* RFO re-work
+	+ class name fixing: RFO_File etc.
+	+ encapsulate the selection concept in a clean abstract object
+	+ re-work RFO storage to use pointers not vectors with instances
+
+* add click-to-select in the 3D view
+
+* re-factor MVC
+	* rename view.cpp etc. to render.cpp
+		* include SpinRows in view.cpp ...
+	* split chunks of model.cpp to view.cpp etc.
+		* split out / create an 'RFOView' widget to (sanely)
+		  manipulate that treeview
+
+* bug fixing:
+	+ arcball / rotation resetting ...
+	+ re-instate a non-gui mode ...
+
+* add log scrolling:
+	+ gtk_text_view_scroll_to_iter [etc.]
+	+ when the adjustments change etc.

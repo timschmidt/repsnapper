@@ -28,6 +28,8 @@
 
 #include <vmmlib/vmmlib.h>
 
+#include <reprap/comms.h>
+
 using namespace std;
 using namespace vmml;
 
@@ -139,6 +141,8 @@ inline string FromFloat(const float i)
 
 enum GCodes{GOTO, DRAWTO, MILLIMETERSASUNITS, RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D,  EXTRUDERON, EXTRUDEROFF, ARCCLOCKWISE, ARCCOUNTERCLOCKWISE, DWELL, INCHESASUNITS, GOHOME, GOHOMEVIAINTERMEDIATEPOINT, ABSOLUTEPOSITIONING, INCREMENTALPOSITIONING, SETCURRENTASHOME, SELECTEXTRUDER, ZMOVE, SETSPEED};
 
+class Model;
+class Progress;
 class Command
 {
 public:
@@ -149,18 +153,29 @@ public:
 	string comment;
 };
 
+class GCodeImpl;
+class RepRapSerial;
+
 class GCode
 {
 public:
-    GCode();
+  GCode();
 
-	void Read(ModelViewController *MVC, string filename);
-	void Write(ModelViewController *MVC, string filename);
-	void draw(const ProcessController &PC);
-	void MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, float AntioozeDistance, float AntioozeSpeed);
+  void Read  (Model *model, Progress *progress, string filename);
+  void Write (Model *model, string filename);
+  void draw  (const Settings &settings);
+  void MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, float AntioozeDistance, float AntioozeSpeed);
 
+  void queue_to_serial(rr_dev device);
+  void append_text (const std::string &line);
+  std::string get_text() const;
+  void clear();
 
-	/*--------------GCode-------------------*/
-	std::vector<Command> commands;
-	Vector3f Min,Max,Center;			// Boundingbox
+  std::vector<Command> commands;
+  Vector3f Min, Max, Center;
+
+  Glib::RefPtr<Gtk::TextBuffer> buffer;
+
+private:
+  unsigned long unconfirmed_blocks;
 };

@@ -1,0 +1,12 @@
+* This is repsnapper *
+
+We are busy finshing the port to gtk2. You will need gtkmm and
+gtkglextmm development packages, along with libtool to get going.
+
+* to run me*
+
+./autogen.sh
+make
+cd src
+./repsnapper ...
+

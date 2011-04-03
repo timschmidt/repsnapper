@@ -44,14 +44,16 @@ typedef unsigned int        UINT;
 #include "config.h"
 #include "platform.h"
 #include <stdio.h>
-#include <FL/Fl.H>
+#include <gtkmm.h>
+// #include <gtkglmm.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #include <vmmlib/vmmlib.h>
 #ifndef WIN32
 // whatever this is it doesn't exist in windows and doesn't appear to be needed
 #  include <alloca.h>
 #endif
 #include "math.h"                                               // Needed for sqrtf
-#include "arcball.h"
 
 // Unpleasant needs un-winding ...
 using namespace std;
@@ -65,6 +67,7 @@ class Command;
 class Point2f;
 class Printer;
 class Triangle;
+class Settings;
 class Segment2f;
 class AsyncSerial;
 class RepRapSerial;
@@ -77,6 +80,10 @@ class RFO_File;
 class RFO_Object;
 class RFO_Transform3D;
 
+//utility macros
+//assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits
+# define Epsilon 1.0e-5
+
 struct InFillHit;
 
 typedef unsigned int uint;
@@ -85,33 +92,14 @@ void MakeAcceleratedGCodeLine(Vector3f start, Vector3f end, float DistanceToReac
 bool IntersectXY(const Vector2f &p1, const Vector2f &p2, const Vector2f &p3, const Vector2f &p4, InFillHit &hit);	// Utilityfunction for CalcInFill
 bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
 
-extern void HSVtoRGB 	(const float &h, const float &s, const float &v, float &r,float &g,float &b);			
-extern void RGBtoHSV 	(const float &r, const float &g, const float &b, float &h, float &s, float &v);
-extern void RGBTOHSL	(float red, float green, float blue, float &hue, float &sat, float &lightness);
-extern void	RGBTOYUV	(float r, float g, float b, float &y, float &u, float &v);
-extern void YUVTORGB	(float y, float u, float v, float &r, float &g, float &b);
+extern void HSVtoRGB (const float &h, const float &s, const float &v, float &r,float &g,float &b);
+extern void HSVtoRGB (const Vector3f &hsv, Vector3f &rgb);
+extern void HSVtoRGB (const Vector3f &hsv, float &r,float &g,float &b);
+extern void RGBtoHSV (const float &r, const float &g, const float &b, float &h, float &s, float &v);
+extern void RGBTOHSL (float red, float green, float blue, float &hue, float &sat, float &lightness);
+extern void RGBTOYUV (float r, float g, float b, float &y, float &u, float &v);
+extern void YUVTORGB (float y, float u, float v, float &r, float &g, float &b);
 
-
-// helper for easy locking
-class ToolkitLock {
- public:
-  ToolkitLock() { Fl::lock(); }
-  ~ToolkitLock() { Fl::unlock(); }
-};
-
-#ifdef ENABLE_LUA
-
-extern "C" {
-  #include <lua.hpp>
-}
-#include <luabind/luabind.hpp>
-using namespace luabind;
-
-#endif // ENABLE_LUA
-
-// extern ModelViewController *MVC;
-
-// TODO: reference additional headers your program requires here
 
 // ivconv
 #include "ivcon.h"
