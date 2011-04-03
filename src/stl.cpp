@@ -136,6 +136,9 @@ void STL::GetObjectsFromIvcon()
 		Tri.Normal= Vector3f(face_normal[0][i], face_normal[1][i], face_normal[2][i]);
 		triangles.push_back(Tri);
 	}
+
+	// urgh ! reset global variables - how unbelievably nasty !
+	face_num = 0;
 }
 
 bool STL::Read(string filename, bool force_binary)
