@@ -11,7 +11,7 @@
 bin_PROGRAMS = repsnapper
 
 LIB_DIR=$(top_srcdir)/libraries
-WARNING_FLAGS = -Wall
+WARNING_FLAGS = -Wall -Wno-invalid-offsetof
 
 AM_CPPFLAGS = \
 	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) $(GTKMM_CFLAGS) \
