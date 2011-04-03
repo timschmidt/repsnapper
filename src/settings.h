@@ -150,12 +150,12 @@ class Settings {
     bool LuminanceShowsSpeed;
 
     // Rendering
-    vmml::Vector3f PolygonHSV;
-    vmml::Vector3f WireframeHSV;
-    vmml::Vector3f NormalsHSV;
-    vmml::Vector3f EndpointsHSV;
-    vmml::Vector3f GCodeExtrudeHSV;
-    vmml::Vector3f GCodeMoveHSV;
+    vmml::Vector3f PolygonRGB;
+    vmml::Vector3f WireframeRGB;
+    vmml::Vector3f NormalsRGB;
+    vmml::Vector3f EndpointsRGB;
+    vmml::Vector3f GCodeExtrudeRGB;
+    vmml::Vector3f GCodeMoveRGB;
     float    Highlight;
     float    NormalsLength;
     float    EndPointSize;
@@ -177,9 +177,11 @@ class Settings {
   void get_from_gui (Builder &builder, int i);
   void set_shrink_to_gui   (Builder &builder);
   void get_shrink_from_gui (Builder &builder);
-  void set_to_gui (Builder &builder);
   bool get_group_and_key (int i, Glib::ustring &group, Glib::ustring &key);
+  void get_colour_from_gui (Builder &builder, int i);
  public:
+  void set_to_gui (Builder &builder);
+
   Settings ();
   ~Settings();
   void connectToUI (Builder &builder);

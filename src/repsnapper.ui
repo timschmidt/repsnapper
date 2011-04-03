@@ -2376,7 +2376,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.WireframeHSV">
+                                      <object class="GtkColorButton" id="Display.WireframeRGB">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -2416,7 +2416,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.NormalsHSV">
+                                      <object class="GtkColorButton" id="Display.NormalsRGB">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -2456,11 +2456,11 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.EndpointsHSV">
+                                      <object class="GtkColorButton" id="Display.EndpointsRGB">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
-                                        <property name="title" translatable="yes">Choose Wireframe Colour</property>
+                                        <property name="title" translatable="yes">Choose Endpoints Colour</property>
                                         <property name="color">#000000000000</property>
                                       </object>
                                       <packing>
@@ -2510,7 +2510,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.PolygonHSV">
+                                      <object class="GtkColorButton" id="Display.PolygonRGB">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -2784,11 +2784,11 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.GCodeExtrudeHSV">
+                                      <object class="GtkColorButton" id="Display.GCodeExtrudeRGB">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
-                                        <property name="title" translatable="yes">Choose Polygon Colour</property>
+                                        <property name="title" translatable="yes">Choose Extrusion Colour</property>
                                         <property name="color">#000000000000</property>
                                       </object>
                                       <packing>
@@ -2837,11 +2837,11 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.GCodeMoveHSV">
+                                      <object class="GtkColorButton" id="Display.GCodeMoveRGB">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
-                                        <property name="title" translatable="yes">Choose Polygon Colour</property>
+                                        <property name="title" translatable="yes">Choose Head Movement Colour</property>
                                         <property name="color">#000000000000</property>
                                       </object>
                                       <packing>
@@ -4295,10 +4295,10 @@ and others I forgot... (needs updating)</property>
   <object class="GtkSizeGroup" id="PreferencesGeometrySizeGroup"/>
   <object class="GtkSizeGroup" id="PreferencesPrintSpeedSizeGroup">
     <widgets>
-      <widget name="Hardware.MinPrintSpeedZ"/>
-      <widget name="Hardware.MaxPrintSpeedZ"/>
-      <widget name="Hardware.MaxPrintSpeedXY"/>
       <widget name="Hardware.MinPrintSpeedXY"/>
+      <widget name="Hardware.MaxPrintSpeedXY"/>
+      <widget name="Hardware.MaxPrintSpeedZ"/>
+      <widget name="Hardware.MinPrintSpeedZ"/>
     </widgets>
   </object>
   <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
@@ -4325,49 +4325,49 @@ and others I forgot... (needs updating)</property>
   </object>
   <object class="GtkSizeGroup" id="PreferencesDisplaySizeGroup">
     <widgets>
-      <widget name="hbox29"/>
-      <widget name="hbox28"/>
-      <widget name="hbox16"/>
-      <widget name="hbox15"/>
-      <widget name="Display.DisplayAllLayers"/>
       <widget name="Display.DisplayinFill"/>
+      <widget name="Display.DisplayAllLayers"/>
+      <widget name="hbox15"/>
+      <widget name="hbox16"/>
+      <widget name="hbox28"/>
+      <widget name="hbox29"/>
     </widgets>
   </object>
   <object class="GtkSizeGroup" id="PreferencesDisplayColourGroup">
     <widgets>
-      <widget name="label97"/>
-      <widget name="label98"/>
-      <widget name="label99"/>
-      <widget name="label96"/>
-      <widget name="label94"/>
-      <widget name="label100"/>
-      <widget name="label101"/>
-      <widget name="label102"/>
+      <widget name="label95"/>
+      <widget name="label95"/>
       <widget name="label103"/>
-      <widget name="label95"/>
-      <widget name="label95"/>
+      <widget name="label102"/>
+      <widget name="label101"/>
+      <widget name="label100"/>
+      <widget name="label94"/>
+      <widget name="label96"/>
+      <widget name="label99"/>
+      <widget name="label98"/>
+      <widget name="label97"/>
     </widgets>
   </object>
   <object class="GtkSizeGroup" id="PreferencesDisplayCol1">
     <widgets>
-      <widget name="alignment24"/>
-      <widget name="alignment21"/>
-      <widget name="Display.DisplayBBox"/>
-      <widget name="Display.DisplayEndpoints"/>
-      <widget name="label107"/>
-      <widget name="label113"/>
-      <widget name="Display.DisplayCuttingPlane"/>
-      <widget name="label116"/>
       <widget name="label118"/>
+      <widget name="label116"/>
+      <widget name="Display.DisplayCuttingPlane"/>
+      <widget name="label113"/>
+      <widget name="label107"/>
+      <widget name="Display.DisplayEndpoints"/>
+      <widget name="Display.DisplayBBox"/>
+      <widget name="alignment21"/>
+      <widget name="alignment24"/>
     </widgets>
   </object>
   <object class="GtkSizeGroup" id="PreferencesDisplaySpinGroup">
     <widgets>
-      <widget name="Display.TempUpdateSpeed"/>
-      <widget name="Display.PolygonOpacity"/>
-      <widget name="Display.Highlight"/>
-      <widget name="Display.NormalsLength"/>
       <widget name="Display.EndPointSize"/>
+      <widget name="Display.NormalsLength"/>
+      <widget name="Display.Highlight"/>
+      <widget name="Display.PolygonOpacity"/>
+      <widget name="Display.TempUpdateSpeed"/>
     </widgets>
   </object>
 </interface>

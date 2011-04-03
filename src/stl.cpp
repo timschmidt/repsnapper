@@ -314,8 +314,10 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 //	float low_shininess = 5.0f;
 	float high_shininess = 100.0f;
 //	float mat_emission[] = {0.3f, 0.2f, 0.2f, 0.0f};
+        int i;
 
-	HSVtoRGB (settings.Display.PolygonHSV, mat_diffuse[0], mat_diffuse[1], mat_diffuse[2]);
+        for (i = 0; i < 3; i++)
+            mat_diffuse[i] = settings.Display.PolygonRGB.rgb[i];
 
 	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.Display.Highlight;
 
@@ -368,12 +370,11 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 			glDisable(GL_LIGHTING);
 
 
-		float r,g,b;
-		HSVtoRGB(settings.Display.WireframeHSV, r,g,b);
-		HSVtoRGB(settings.Display.WireframeHSV, mat_diffuse[0], mat_diffuse[1], mat_diffuse[2]);
+                for (i = 0; i < 3; i++)
+                        mat_diffuse[i] = settings.Display.WireframeRGB.rgb[i];
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
-		glColor3f(r,g,b);
+		glColor3fv(settings.Display.WireframeRGB.rgb);
 		for(size_t i=0;i<triangles.size();i++)
 		{
 			glBegin(GL_LINE_LOOP);
@@ -391,9 +392,7 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	// normals
 	if(settings.Display.DisplayNormals)
 	{
-		float r,g,b;
-		HSVtoRGB(settings.Display.NormalsHSV, r,g,b);
-		glColor3f(r,g,b);
+		glColor3fv(settings.Display.NormalsRGB.rgb);
 		glBegin(GL_LINES);
 		for(size_t i=0;i<triangles.size();i++)
 		{
@@ -408,9 +407,7 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	// Endpoints
 	if(settings.Display.DisplayEndpoints)
 	{
-		float r,g,b;
-		HSVtoRGB(settings.Display.EndpointsHSV, r,g,b);
-		glColor3f(r,g,b);
+		glColor3fv(settings.Display.EndpointsRGB.rgb);
 		glPointSize(settings.Display.EndPointSize);
 		glEnable(GL_POINT_SMOOTH);
 		glBegin(GL_POINTS);

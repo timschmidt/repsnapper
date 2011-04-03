@@ -58,13 +58,13 @@ void RFO::draw (Settings &settings, float opacity, Gtk::TreeModel::iterator &ite
 	  (!sel_file && sel_object == object)) {
 
 	// FIXME: hideous changing global state for this [!]
-	settings.Display.PolygonHSV.x += 0.5f;
-	settings.Display.WireframeHSV.x += 0.5f;
+	settings.Display.PolygonRGB.r += 0.5f;
+	settings.Display.WireframeRGB.r += 0.5f;
 
 	file->stl.draw (*this, settings, opacity);
 
-	settings.Display.PolygonHSV.x -= 0.5f;
-	settings.Display.WireframeHSV.x -= 0.5f;
+	settings.Display.PolygonRGB.r -= 0.5f;
+	settings.Display.WireframeRGB.r -= 0.5f;
       } else
 	file->stl.draw (*this, settings, opacity);
       glPopMatrix();

@@ -208,10 +208,6 @@ void GCode::draw(const Settings &settings)
 	uint start = (uint)(settings.Display.GCodeDrawStart*(float)(commands.size()));
 	uint end = (uint)(settings.Display.GCodeDrawEnd*(float)(commands.size()));
 
-	Vector3f ExtrudeColor, MoveColor;
-	HSVtoRGB(settings.Display.GCodeExtrudeHSV, ExtrudeColor);
-	HSVtoRGB(settings.Display.GCodeMoveHSV,    MoveColor);
-
 	float LastE=0.0f;
 	bool extruderon = false;
 	for(uint i=start;i<commands.size() && i < end ;i++)
@@ -228,9 +224,9 @@ void GCode::draw(const Settings &settings)
 			break;
 		case COORDINATEDMOTION3D:
 			if (extruderon)
-			  Color = ExtrudeColor;
+			  Color = settings.Display.GCodeExtrudeRGB;
 			else
-			  Color = MoveColor;
+			  Color = settings.Display.GCodeMoveRGB;
 			LastColor = Color;
 			Distance += (commands[i].where-pos).length();
 			glLineWidth(3);
@@ -252,7 +248,7 @@ void GCode::draw(const Settings &settings)
 				float luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
 				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
-				Color = MoveColor;
+				Color = settings.Display.GCodeMoveRGB;
 				Color *= luma;
 				}
 			else
@@ -262,7 +258,7 @@ void GCode::draw(const Settings &settings)
 				float luma = speed/settings.Hardware.MaxPrintSpeedXY;
 				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
-				Color = ExtrudeColor;
+			        Color = settings.Display.GCodeExtrudeRGB;
 				Color *= luma;
 				}
 			if(settings.Display.LuminanceShowsSpeed == false)

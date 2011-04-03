@@ -21,6 +21,8 @@
 #include <gtkmm.h>
 #include "settings.h"
 
+#include <stdafx.h>
+
 /*
  * How settings are intended to work:
  *
@@ -55,6 +57,11 @@ public:
 #define STRING_MEMBER(field, config_name, def_value, redraw) \
   { OFFSET (field), T_STRING, config_name, #field, 0.0, def_value, redraw }
 
+#define COLOUR_MEMBER(field, config_name, def_valueR, def_valueG, def_valueB, redraw) \
+  { OFFSET (field.r), T_COLOUR_MEMBER, config_name "R", NULL, def_valueR, NULL, redraw }, \
+  { OFFSET (field.g), T_COLOUR_MEMBER, config_name "G", NULL, def_valueG, NULL, redraw }, \
+  { OFFSET (field.b), T_COLOUR_MEMBER, config_name "B", NULL, def_valueB, NULL, redraw }
+
 // converting our offsets into type pointers
 #define PTR_OFFSET(obj, offset)  (((guchar *)obj) + offset)
 #define PTR_BOOL(obj, idx)      ((bool *)PTR_OFFSET (obj, settings[idx].member_offset))
@@ -62,8 +69,9 @@ public:
 #define PTR_UINT(obj, idx)      ((uint *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_FLOAT(obj, idx)     ((float *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_STRING(obj, idx)    ((std::string *)PTR_OFFSET (obj, settings[idx].member_offset))
+#define PTR_COLOUR(obj, idx)    ((vmml::Vector3f *)PTR_OFFSET (obj, settings[idx].member_offset))
 
-enum SettingType { T_BOOL, T_INT, T_FLOAT, T_STRING };
+enum SettingType { T_BOOL, T_INT, T_FLOAT, T_STRING, T_COLOUR_MEMBER };
 static struct {
   uint  member_offset;
   SettingType type;
@@ -187,6 +195,20 @@ static struct {
   FLOAT_MEMBER (Display.NormalsLength, "NormalsLength", 10, true),
   FLOAT_MEMBER (Display.EndPointSize, "EndPointSize", 8, true),
   FLOAT_MEMBER (Display.TempUpdateSpeed, "TempUpdateSpeed", 3, false),
+
+  // Colour selectors settings
+  COLOUR_MEMBER(Display.PolygonRGB,
+      "Display.PolygonColour", 0, 0.38, 0.5, true),
+  COLOUR_MEMBER(Display.WireframeRGB,
+      "Display.WireframeColour", 1.0, 0.48, 0, true),
+  COLOUR_MEMBER(Display.NormalsRGB,
+      "Display.NormalsColour", 0.62, 1.0, 0, true),
+  COLOUR_MEMBER(Display.EndpointsRGB,
+      "Display.EndpointsColour", 0, 1.0, 0.7, true),
+  COLOUR_MEMBER(Display.GCodeExtrudeRGB,
+      "Display.GCodeExtrudeColour", 0.18, 0, 0.18, true),
+  COLOUR_MEMBER(Display.GCodeMoveRGB,
+      "Display.GCodeMoveColour", 1.0, 0.05, 1, true),
 };
 
 // Add any GtkSpinButtons to this array:
@@ -258,7 +280,21 @@ static struct {
   { "Display.GCodeDrawEnd", 0.0, 1.0, 0.0, 0.1 },
 };
 
+static struct {
+  uint  member_offset;
+  const char *glade_name;
+}
+colour_selectors[] = {
+  { OFFSET(Display.PolygonRGB), "Display.PolygonRGB" },
+  { OFFSET(Display.WireframeRGB), "Display.WireframeRGB" },
+  { OFFSET(Display.NormalsRGB), "Display.NormalsRGB" },
+  { OFFSET(Display.EndpointsRGB), "Display.EndpointsRGB" },
+  { OFFSET(Display.GCodeExtrudeRGB), "Display.GCodeExtrudeRGB" },
+  { OFFSET(Display.GCodeMoveRGB), "Display.GCodeMoveRGB" }
+};
+
 static const char *GCodeNames[] = { "Start", "Layer", "End" };
+
 class Settings::GCodeImpl {
 public:
   Glib::RefPtr<Gtk::TextBuffer> m_GCode[GCODE_TEXT_TYPE_COUNT];
@@ -352,6 +388,7 @@ void Settings::set_defaults ()
       *PTR_INT(this, i) = settings[i].def_double;
       break;
     case T_FLOAT:
+    case T_COLOUR_MEMBER:
       *PTR_FLOAT(this, i) = settings[i].def_double;
       break;
     case T_STRING:
@@ -366,13 +403,6 @@ void Settings::set_defaults ()
   Slicing.ShrinkQuality = SHRINK_FAST;
 
   GCode.m_impl->setDefaults();
-
-  Display.PolygonHSV = vmml::Vector3f (0.54, 1, 0.5);
-  Display.WireframeHSV = vmml::Vector3f (0.08, 1, 1);
-  Display.NormalsHSV = vmml::Vector3f (0.23, 1, 1);
-  Display.EndpointsHSV = vmml::Vector3f (0.45, 1, 1);
-  Display.GCodeExtrudeHSV = vmml::Vector3f (1, 1, 0.18);
-  Display.GCodeMoveHSV = vmml::Vector3f (1, 0.95, 1);
 
   // FIXME: implement connecting me to the UI !
   Hardware.Volume = vmml::Vector3f (200,200,140);
@@ -419,6 +449,7 @@ void Settings::load_settings(Builder &builder, Glib::RefPtr<Gio::File> file)
     std::cout << "Exception " << err.what() << " loading settings from file '" << file->get_path() << "\n";
     return;
   }
+
   std::cout << "parsing config from '" << file->get_path() << "\n";
 
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
@@ -439,6 +470,7 @@ void Settings::load_settings(Builder &builder, Glib::RefPtr<Gio::File> file)
       *PTR_INT(this, i) = cfg.get_integer (group, key);
       break;
     case T_FLOAT:
+    case T_COLOUR_MEMBER:
       *PTR_FLOAT(this, i) = cfg.get_double (group, key);
       break;
     case T_STRING:
@@ -473,6 +505,7 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
       cfg.set_integer (group, key, *PTR_INT(this, i));
       break;
     case T_FLOAT:
+    case T_COLOUR_MEMBER:
       cfg.set_double (group, key, *PTR_FLOAT(this, i));
       break;
     case T_STRING:
@@ -534,6 +567,8 @@ void Settings::set_to_gui (Builder &builder, int i)
   case T_STRING:
     std::cerr << "string unimplemented " << glade_name << "\n";
     break;
+  case T_COLOUR_MEMBER:
+    break; // Ignore, Colour members are special 
   default:
     std::cerr << "corrupt setting type\n";
     break;
@@ -593,6 +628,9 @@ void Settings::get_from_gui (Builder &builder, int i)
   case T_STRING:
     std::cerr << "string get from gui unimplemented " << glade_name << "\n";
     break;
+  case T_COLOUR_MEMBER:
+    // Ignore, colour members are special
+    break;
   default:
     std::cerr << "corrupt setting type\n";
     break;
@@ -611,6 +649,24 @@ void Settings::get_shrink_from_gui (Builder &builder)
     Slicing.ShrinkQuality = combo->get_active_row_number ();
 }
 
+void Settings::get_colour_from_gui (Builder &builder, int i)
+{
+  const char *glade_name = colour_selectors[i].glade_name;
+  vmml::Vector3f *dest =
+      (vmml::Vector3f *) PTR_OFFSET(this, colour_selectors[i].member_offset);
+  Gdk::Color c;
+  Gtk::ColorButton *w = NULL;
+  builder->get_widget (glade_name, w);
+  if (!w) return;
+
+  c = w->get_color();
+  dest->r = c.get_red_p();
+  dest->g = c.get_green_p();
+  dest->b = c.get_blue_p();
+
+  m_signal_visual_settings_changed.emit();
+}
+
 void Settings::set_to_gui (Builder &builder)
 {
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
@@ -622,6 +678,19 @@ void Settings::set_to_gui (Builder &builder)
     set_to_gui (builder, i);
   }
   set_shrink_to_gui (builder);
+
+  for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
+      const char *glade_name = colour_selectors[i].glade_name;
+      vmml::Vector3f *src =
+        (vmml::Vector3f *) PTR_OFFSET(this, colour_selectors[i].member_offset);
+      Gdk::Color c;
+      Gtk::ColorButton *w = NULL;
+      builder->get_widget (glade_name, w);
+      if (w) {
+        c.set_rgb_p(src->r, src->g, src->b);
+        w->set_color(c);
+      }
+  }
 }
 
 void Settings::connectToUI (Builder &builder)
@@ -658,8 +727,6 @@ void Settings::connectToUI (Builder &builder)
 
     if (!glade_name)
       continue;
-
-    set_to_gui (builder, i);
 
     switch (settings[i].type) {
     case T_BOOL: {
@@ -713,9 +780,27 @@ void Settings::connectToUI (Builder &builder)
     combo->set_model (model);
     combo->pack_start (column);
 
-    set_shrink_to_gui (builder);
-
     combo->signal_changed().connect
       (sigc::bind(sigc::mem_fun(*this, &Settings::get_shrink_from_gui), builder));
   }
+
+  // Colour selectors
+  for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
+    const char *glade_name = colour_selectors[i].glade_name;
+    Gdk::Color c;
+    Gtk::ColorButton *w = NULL;
+
+    if (!glade_name)
+      continue;
+
+    builder->get_widget (glade_name, w);
+    if (!w) continue;
+
+    w->signal_color_set().connect
+          (sigc::bind(sigc::bind(sigc::mem_fun(*this,
+            &Settings::get_colour_from_gui), i), builder));
+  }
+
+  /* Update UI with defaults */
+  set_to_gui (builder);
 }
