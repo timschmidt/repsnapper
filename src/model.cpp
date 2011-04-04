@@ -609,6 +609,10 @@ Model::Model(BaseObjectType* cobject,
     commlog(Gtk::TextBuffer::create()), errlog(Gtk::TextBuffer::create()),
     echolog(Gtk::TextBuffer::create())
 {
+  // Variable defaults
+  Center.x = Center.y = 100.0f;
+  Center.z = 0.0f;
+  
   // Menus
   connect_action ("OpenStl",         sigc::mem_fun(*this, &Model::load_stl) );
   connect_action ("OpenGCode",       sigc::mem_fun(*this, &Model::load_gcode) );
