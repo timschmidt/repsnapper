@@ -178,9 +178,9 @@ bool Render::on_expose_event(GdkEventExpose* event)
 
 bool Render::on_button_press_event(GdkEventButton* event)
 {
-  if (event->button == 1)
-    m_arcBall->click (event->x, event->y);
-  else if (event->button == 3)
+  if (event->button == 1) {
+    m_arcBall->click (event->x, event->y, &m_transform);
+  } else if (event->button == 3)
     m_downPoint = Vector2f (event->x, event->y);
   else
     return Gtk::DrawingArea::on_button_press_event (event);

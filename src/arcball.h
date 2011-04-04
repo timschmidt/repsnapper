@@ -450,6 +450,25 @@ THE SOFTWARE.
         *NewObj = Result;
     }
 
+    /* Apply the Matrix3f rotation to the existing values in NewObj */
+    inline
+    static void Matrix4fMulRotationFromMatrix3f(Matrix4fT* NewObj, const Matrix3fT* m1)
+    {
+        Matrix3fT tmp, tmp2;
+        GLfloat scale;
+
+        assert(NewObj && m1);
+
+        scale = Matrix4fSVD(NewObj, &tmp, NULL);
+
+        tmp2 = *m1;
+
+        Matrix3fMulMatrix3f(&tmp2, &tmp);
+        Matrix4fSetRotationScaleFromMatrix3f(NewObj, &tmp2);
+        Matrix4fMulRotationScale(NewObj, scale);
+    }
+
+
 // 8<--Snip here if you have your own math types/funcs-->8 
 
     class ArcBall
@@ -475,7 +494,7 @@ THE SOFTWARE.
             }
 
             //Mouse down
-            void    click(GLfloat x, GLfloat y);
+            void    click(GLfloat x, GLfloat y, Matrix4fT *startTransform);
 
             //Mouse drag, calculate rotation
             void    drag(GLfloat x, GLfloat y, Quat4fT* NewRot);
@@ -483,6 +502,7 @@ THE SOFTWARE.
 
         protected:
             Vector3fT   StVec;          //Saved click vector
+            Matrix4fT   StTransform;    //Reference start transform
             Vector3fT   EnVec;          //Saved drag vector
             GLfloat     AdjustWidth;    //Mouse bounds width
             GLfloat     AdjustHeight;   //Mouse bounds height

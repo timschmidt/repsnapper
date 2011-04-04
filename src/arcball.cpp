@@ -103,13 +103,14 @@ ArcBall::ArcBall(GLfloat NewWidth, GLfloat NewHeight)
 }
 
 //Mouse down
-void    ArcBall::click(GLfloat x, GLfloat y)
+void    ArcBall::click(GLfloat x, GLfloat y, Matrix4fT *stTrans)
 {
     Point2fT NewPt;
     NewPt.T[0] = x;
     NewPt.T[1] = y;
     //Map the point to the sphere
     this->_mapToSphere(&NewPt, &this->StVec);
+    Matrix4fSetRotationScaleFromMatrix4f(&this->StTransform, stTrans);
 }
 
 //Mouse drag, calculate rotation
@@ -158,7 +159,10 @@ void ArcBall::dragAccumulate(GLfloat x, GLfloat y, Matrix4fT *transform)
 
     drag(x, y, &tmpQuat);
 
-    // FIXME: need to incorporate the existing rotation ...
+    // Set output to the initial transform
+    Matrix4fSetRotationScaleFromMatrix4f(transform, &this->StTransform);
+    // get current rotation matrix
     Matrix3fSetRotationFromQuat4f(&tmpRot, &tmpQuat);
-    Matrix4fSetRotationFromMatrix3f(transform, &tmpRot);
+    // Apply to initial transform
+    Matrix4fMulRotationFromMatrix3f(transform, &tmpRot);
 }
