@@ -681,7 +681,7 @@ Model::Model(BaseObjectType* cobject,
 
   // Interactive tab
   connect_button ("i_home_all",        sigc::mem_fun(*this, &Model::home_all));
-  connect_toggled ("i_enable_logging", sigc::mem_fun(*this, &Model::enable_logging_toggled));
+  connect_toggled ("Misc.FileLoggingEnabled", sigc::mem_fun(*this, &Model::enable_logging_toggled));
   connect_button ("i_clear_logs",      sigc::mem_fun(*this, &Model::clear_logs) );
   m_builder->get_widget ("i_reverse", m_extruder_reverse);
   m_builder->get_widget ("i_ex_speed", m_extruder_speed);
@@ -699,16 +699,6 @@ Model::Model(BaseObjectType* cobject,
   m_fan_voltage->set_increments (1, 2);
   m_fan_voltage->set_value (5.0);
 
-  // Should these guys really be hardware settings on that page:
-  // DownstreamMultiplier etc. ?
-  m_builder->get_widget ("i_ex_speed_mult", m_extruder_speed_mult);
-  m_extruder_speed_mult->set_range(0.1, 10.0);
-  m_extruder_speed_mult->set_increments (0.1, 1);
-  m_extruder_speed_mult->set_value (1.0);
-  m_builder->get_widget ("i_ex_length_mult", m_extruder_length_mult);
-  m_extruder_length_mult->set_range(0.1, 10.0);
-  m_extruder_length_mult->set_increments (0.1, 1);
-  m_extruder_length_mult->set_value (1.0);
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &Model::RunExtruder) );
 
   // Main view progress bar

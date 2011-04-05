@@ -897,30 +897,20 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkHBox" id="hbox9">
+                      <object class="GtkTable" id="table13">
                         <property name="visible">True</property>
-                        <child>
-                          <object class="GtkCheckButton" id="Misc.TempReadingEnabled">
-                            <property name="label" translatable="yes">Temp display update</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="active">True</property>
-                            <property name="draw_indicator">True</property>
-                          </object>
-                          <packing>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
+                        <property name="n_rows">2</property>
+                        <property name="n_columns">3</property>
                         <child>
                           <object class="GtkLabel" id="label23">
                             <property name="visible">True</property>
                             <property name="xalign">1</property>
                             <property name="xpad">10</property>
-                            <property name="label" translatable="yes">update interval</property>
+                            <property name="label" translatable="yes">Update Interval</property>
                           </object>
                           <packing>
-                            <property name="position">1</property>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
                           </packing>
                         </child>
                         <child>
@@ -931,21 +921,20 @@
                             <property name="numeric">True</property>
                           </object>
                           <packing>
-                            <property name="position">2</property>
+                            <property name="left_attach">2</property>
+                            <property name="right_attach">3</property>
                           </packing>
                         </child>
                         <child>
-                          <placeholder/>
+                          <object class="GtkCheckButton" id="Misc.TempReadingEnabled">
+                            <property name="label" translatable="yes">Monitor Temperature</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="active">True</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
                         </child>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="position">7</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkHBox" id="hbox10">
-                        <property name="visible">True</property>
                         <child>
                           <object class="GtkCheckButton" id="i_fan_enabled">
                             <property name="label" translatable="yes">Fan enabled</property>
@@ -955,7 +944,8 @@
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
-                            <property name="position">0</property>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
                           </packing>
                         </child>
                         <child>
@@ -966,7 +956,10 @@
                             <property name="label" translatable="yes">Fan Voltage</property>
                           </object>
                           <packing>
-                            <property name="position">1</property>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
                           </packing>
                         </child>
                         <child>
@@ -974,19 +967,20 @@
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
+                            <property name="digits">1</property>
                             <property name="numeric">True</property>
                           </object>
                           <packing>
-                            <property name="position">2</property>
+                            <property name="left_attach">2</property>
+                            <property name="right_attach">3</property>
+                            <property name="top_attach">1</property>
+                            <property name="bottom_attach">2</property>
                           </packing>
-                        </child>
-                        <child>
-                          <placeholder/>
                         </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="position">8</property>
+                        <property name="position">7</property>
                       </packing>
                     </child>
                     <child>
@@ -996,7 +990,7 @@
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="position">9</property>
+                        <property name="position">8</property>
                       </packing>
                     </child>
                     <child>
@@ -1028,16 +1022,7 @@
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="position">10</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkHSeparator" id="hseparator12">
-                        <property name="visible">True</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="position">11</property>
+                        <property name="position">9</property>
                       </packing>
                     </child>
                     <child>
@@ -1110,10 +1095,11 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="i_ex_length_mult">
+                          <object class="GtkSpinButton" id="Hardware.DownstreamExtrusionMultiplier">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
+                            <property name="digits">2</property>
                           </object>
                           <packing>
                             <property name="left_attach">3</property>
@@ -1122,10 +1108,11 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="i_ex_speed_mult">
+                          <object class="GtkSpinButton" id="Hardware.DownstreamMultiplier">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
+                            <property name="digits">2</property>
                           </object>
                           <packing>
                             <property name="left_attach">3</property>
@@ -1138,7 +1125,16 @@
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="position">12</property>
+                        <property name="position">10</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkHSeparator" id="hseparator12">
+                        <property name="visible">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">11</property>
                       </packing>
                     </child>
                     <child>
@@ -1161,11 +1157,8 @@
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="position">13</property>
+                        <property name="position">12</property>
                       </packing>
-                    </child>
-                    <child>
-                      <placeholder/>
                     </child>
                   </object>
                   <packing>
@@ -1319,10 +1312,12 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkHBox" id="hbox13">
+                          <object class="GtkTable" id="table12">
                             <property name="visible">True</property>
+                            <property name="n_rows">2</property>
+                            <property name="n_columns">2</property>
                             <child>
-                              <object class="GtkCheckButton" id="i_enable_logging">
+                              <object class="GtkCheckButton" id="Misc.FileLoggingEnabled">
                                 <property name="label" translatable="yes">Enable Logging</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
@@ -1330,9 +1325,6 @@
                                 <property name="active">True</property>
                                 <property name="draw_indicator">True</property>
                               </object>
-                              <packing>
-                                <property name="position">0</property>
-                              </packing>
                             </child>
                             <child>
                               <object class="GtkButton" id="i_clear_logs">
@@ -1342,7 +1334,24 @@
                                 <property name="receives_default">True</property>
                               </object>
                               <packing>
-                                <property name="position">1</property>
+                                <property name="left_attach">1</property>
+                                <property name="right_attach">2</property>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkCheckButton" id="Misc.ClearLogfilesWhenPrintStarts">
+                                <property name="label" translatable="yes">Clear Logs when printing starts</property>
+                                <property name="visible">True</property>
+                                <property name="can_focus">True</property>
+                                <property name="receives_default">False</property>
+                                <property name="active">True</property>
+                                <property name="draw_indicator">True</property>
+                              </object>
+                              <packing>
+                                <property name="top_attach">1</property>
+                                <property name="bottom_attach">2</property>
                               </packing>
                             </child>
                             <child>
@@ -3547,6 +3556,7 @@ and others I forgot... (needs updating)</property>
                   <object class="GtkEntry" id="Slicing.AltInfillLayersText">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="tooltip_text" translatable="yes">A comma separated list of layer numbers that should use the alternate infill distance.</property>
                     <property name="invisible_char">●</property>
                     <property name="invisible_char_set">True</property>
                   </object>
@@ -3557,7 +3567,7 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkLabel" id="label73">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Alternate infill distance</property>
+                    <property name="label" translatable="yes">Alternate Infill Distance</property>
                   </object>
                   <packing>
                     <property name="position">25</property>

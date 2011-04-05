@@ -133,7 +133,7 @@ static struct {
   { OFFSET (Hardware.PrintMargin.z), T_FLOAT, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, false },
 
   FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidth, "ExtrudedMaterialWidth", 0.7, false),
-  STRING_MEMBER (Hardware.PortName, "msPortName", DEFAULT_COM_PORT, false),
+  { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
   { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 19200, false }, /* 57600 ? */
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
@@ -263,6 +263,9 @@ static struct {
 
   { "Hardware.ReceivingBufferSize", 1.0, 100.0, 1.0, 5.0 },
   { "Hardware.KeepLines", 100.0, 100000.0, 1.0, 500.0 },
+
+  { "Hardware.DownstreamMultiplier", 0.01, 25.0, 0.01, 0.1 },
+  { "Hardware.DownstreamExtrusionMultiplier", 0.01, 25.0, 0.01, 0.1 },
 
   // Display pane
   { "Display.TempUpdateSpeed", 0.1, 10.0, 0.0, 0.1 },
@@ -528,6 +531,9 @@ void Settings::set_to_gui (Builder &builder, int i)
 {
   const char *glade_name = settings[i].glade_name;
 
+  if (!glade_name)
+        return;
+
   switch (settings[i].type) {
   case T_BOOL: {
     Gtk::CheckButton *check = NULL;
@@ -564,9 +570,16 @@ void Settings::set_to_gui (Builder &builder, int i)
     }
     break;
   }
-  case T_STRING:
-    std::cerr << "string unimplemented " << glade_name << "\n";
+  case T_STRING: {
+    Gtk::Entry *e = NULL;
+    builder->get_widget (glade_name, e);
+    if (!e) {
+      std::cerr << "Missing user interface item " << glade_name << "\n";
+      break;
+    }
+    e->set_text(*PTR_STRING(this, i));
     break;
+  }
   case T_COLOUR_MEMBER:
     break; // Ignore, Colour members are special 
   default:
@@ -587,6 +600,9 @@ void Settings::set_shrink_to_gui (Builder &builder)
 void Settings::get_from_gui (Builder &builder, int i)
 {
   const char *glade_name = settings[i].glade_name;
+
+  if (glade_name == NULL)
+        return; /* Not an automatically connected setting */
 
   switch (settings[i].type) {
   case T_BOOL: {
@@ -625,9 +641,16 @@ void Settings::get_from_gui (Builder &builder, int i)
     }
     break;
   }
-  case T_STRING:
-    std::cerr << "string get from gui unimplemented " << glade_name << "\n";
+  case T_STRING: {
+    Gtk::Entry *e = NULL;
+    builder->get_widget (glade_name, e);
+    if (!e) {
+      std::cerr << "Missing user interface item " << glade_name << "\n";
+      break;
+    }
+    *PTR_STRING(this, i) = std::string(e->get_text());
     break;
+  }
   case T_COLOUR_MEMBER:
     // Ignore, colour members are special
     break;
