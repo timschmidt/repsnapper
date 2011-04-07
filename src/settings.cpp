@@ -323,7 +323,7 @@ public:
   void connectToUI(Builder &builder)
   {
     static const char *ui_names[] =
-      { "txt_gcode_start", "txt_gcode_end", "txt_gcode_next_layer" };
+      { "txt_gcode_start", "txt_gcode_next_layer", "txt_gcode_end" };
     for (guint i = 0; i < GCODE_TEXT_TYPE_COUNT; i++) {
       Gtk::TextView *textv = NULL;
       builder->get_widget (ui_names [i], textv);
