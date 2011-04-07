@@ -38,7 +38,6 @@
 #include <fstream>
 #include <algorithm>
 
-#include "ivcon.h"
 
 // for PointHash
 #ifdef __GNUC__
@@ -101,149 +100,221 @@ STL::STL()
 	CalcCenter();
 }
 
-# define COR3_MAX 200000
-# define FACE_MAX 200000
-# define ORDER_MAX 10
-#define STL_READ_HEADER_SIZE 4
-#define STL_READ_HEADER_TEXT "soli"
+/* Loads an binary STL file by filename
+ * Returns 0 on success and -1 on failure */
+int STL::loadBinaryFile(string filename) {
 
-extern float cor3[3][COR3_MAX];
-extern float  face_normal[3][FACE_MAX];
-extern int face[ORDER_MAX][FACE_MAX];
-extern int    face_num;
+    if(getFileType(filename) != BINARY_STL) {
+        return -1;
+    }
 
+    triangles.clear();
+	Min.x = Min.y = Min.z = numeric_limits<float>::infinity();
+	Max.x = Max.y = Max.z = -numeric_limits<float>::infinity();
 
-void STL::GetObjectsFromIvcon()
-{
-	//face_num = count
-	//face_normal[0][face nr]
-	//face_normal[1][face nr]
-	//face_normal[2][face nr]
-	//face[ivert][face_num] = icor3;
-	// Vertices in cor3[i][cor3_num] = temp[i];
+    ifstream file;
+    file.open(filename.c_str());
 
-	triangles.reserve(face_num);
-	for(int i=0;i<face_num;i++)
-	{
-		Triangle Tri;
-		uint v1 = face[0][i];
-		uint v2 = face[1][i];
-		uint v3 = face[2][i];
-		Tri.A = Vector3f(cor3[0][v1], cor3[1][v1], cor3[2][v1]);
-		Tri.B = Vector3f(cor3[0][v2], cor3[1][v2], cor3[2][v2]);
-		Tri.C = Vector3f(cor3[0][v3], cor3[1][v3], cor3[2][v3]);
-		Tri.AccumulateMinMax (Min, Max);
-		Tri.Normal= Vector3f(face_normal[0][i], face_normal[1][i], face_normal[2][i]);
-		triangles.push_back(Tri);
-	}
+    if(file.fail()) {
+        cerr << "Error: Unable to open stl file - " << filename << endl;
+        return -1;
+    }
 
-	// urgh ! reset global variables - how unbelievably nasty !
-	face_num = 0;
+    /* Binary STL files have a meaningless 80 byte header
+     * followed by the number of triangles */
+    file.seekg(80, ios_base::beg);
+    unsigned int num_triangles;
+    file.read(reinterpret_cast < char * > (&num_triangles), sizeof(unsigned int));	// N_Triangles
+    triangles.reserve(num_triangles);
+
+    for(uint i = 0; i < num_triangles; i++)
+    {
+        float a,b,c;
+        file.read(reinterpret_cast < char * > (&a), sizeof(float));
+        file.read(reinterpret_cast < char * > (&b), sizeof(float));
+        file.read(reinterpret_cast < char * > (&c), sizeof(float));
+        Vector3f N(a,b,c);
+        file.read(reinterpret_cast < char * > (&a), sizeof(float));
+        file.read(reinterpret_cast < char * > (&b), sizeof(float));
+        file.read(reinterpret_cast < char * > (&c), sizeof(float));
+        Vector3f Ax(a,b,c);
+        file.read(reinterpret_cast < char * > (&a), sizeof(float));
+        file.read(reinterpret_cast < char * > (&b), sizeof(float));
+        file.read(reinterpret_cast < char * > (&c), sizeof(float));
+        Vector3f Bx(a,b,c);
+        file.read(reinterpret_cast < char * > (&a), sizeof(float));
+        file.read(reinterpret_cast < char * > (&b), sizeof(float));
+        file.read(reinterpret_cast < char * > (&c), sizeof(float));
+        Vector3f Cx(a,b,c);
+
+        /* Recalculate normal vector - can't trust an STL file! */
+        Vector3f AA=Cx-Ax;
+        Vector3f BB=Cx-Bx;
+        N.x = AA.y * BB.z - BB.y * AA.z;
+        N.y = AA.z * BB.x - BB.z * AA.x;
+        N.z = AA.x * BB.y - BB.x * AA.y;
+        N.normalize();
+
+        /* attribute byte count - sometimes contains face color
+            information but is useless for our purposes */
+        unsigned short byte_count;
+        file.read(reinterpret_cast < char * > (&byte_count), sizeof(unsigned short));
+
+        Triangle T(N,Ax,Bx,Cx);
+
+        triangles.push_back(T);
+        T.AccumulateMinMax (Min, Max);
+    }
+    file.close();
+    return 0;
 }
 
-bool STL::Read(string filename, bool force_binary)
+/* Loads an ASCII STL file by filename
+ * Returns 0 on success and -1 on failure */
+int STL::loadASCIIFile(string filename) {
+
+    // Check filetype
+    if(getFileType(filename) != ASCII_STL) {
+        cerr << "None ASCII STL file passed to loadASCIIFile" << endl;
+        return -1;
+    }
+    triangles.clear();
+	Min.x = Min.y = Min.z = numeric_limits<float>::infinity();
+	Max.x = Max.y = Max.z = -numeric_limits<float>::infinity();
+
+    ifstream file;
+    file.open(filename.c_str());
+
+    if(file.fail()) {
+        cerr << "Error: Unable to open stl file - " << filename << endl;
+        return -1;
+    }
+
+    /* ASCII files start with "solid [Name_of_file]"
+     * so get rid of them to access the data */
+    string solid;
+    file >> solid;
+    char c_str_name[256];
+    file.getline(c_str_name, 256);
+    
+    while(!file.eof()) { // Loop around all triangles
+        string facet;
+        file >> facet;
+
+        // Parse possible end of file - "endsolid"
+        if(facet == "endsolid") {
+            break;
+        }
+
+        if(facet != "facet") {
+            cerr << "Error: Facet keyword not found in STL file!" << endl;
+            return -1;
+        }
+
+        // Parse Face Normal - "normal %f %f %f"
+        string normal;
+        Vector3f normal_vec;
+        file >> normal 
+             >> normal_vec.x
+             >> normal_vec.y
+             >> normal_vec.z;
+
+        if(normal != "normal") {
+            cerr << "Error: normal keyword not found in STL file!" << endl;
+            return -1;
+        }
+
+        // Parse "outer loop" line
+        string outer, loop;
+        file >> outer >> loop;
+        if(outer != "outer" || loop != "loop") {
+            cerr << "Error: Outer/Loop keywords not found!" << endl;
+            return -1;
+        }
+        
+        // Grab the 3 vertices - each one of the form "vertex %f %f %f"
+        Vector3f vertices[3];
+        for(int i=0; i<3; i++) {
+            string vertex;
+            file >> vertex
+                 >> vertices[i].x
+                 >> vertices[i].y
+                 >> vertices[i].z;
+
+            if(vertex != "vertex") {
+                cerr << "Error: Vertex keyword not found" << endl;
+                return -1;
+            }
+        }
+
+        // Parse end of vertices loop - "endloop endfacet"
+        string endloop, endfacet;
+        file >> endloop >> endfacet;
+        
+        if(endloop != "endloop" || endfacet != "endfacet") {
+            cerr << "Error: Vertex keyword not found" << endl;
+            return -1;
+        }
+
+        // Create triangle object and push onto the vector 
+        Triangle triangle(normal_vec,
+                            vertices[0],
+                            vertices[1],
+                            vertices[2]);
+
+        triangle.AccumulateMinMax(Min, Max);
+
+        triangles.push_back(triangle);
+    }
+    file.close();
+    return 0;
+} // STL::loadASCIIFile(string filename)
+
+/* Returns the STL filetype of the given file */
+filetype_t STL::getFileType(string filename) {
+
+    // Extract file extension (i.e. "stl")
+    string extension = filename.substr(filename.find_last_of(".")+1);
+
+    if(extension != "stl" && extension != "STL") {
+        return NONE_STL;
+    }
+
+    ifstream file;
+    file.open(filename.c_str());
+
+    if(file.fail()) {
+        cerr << "Error: Unable to open stl file - " << filename << endl;
+        return NONE_STL;
+    }
+
+    // ASCII files start with "solid [Name_of_file]"
+    string first_word;
+    file >> first_word;
+
+    file.close();
+
+    if(first_word == "solid") { // ASCII
+        return ASCII_STL;
+    } else {
+        return BINARY_STL;
+    }
+}
+
+/* Loads an stl file by filename 
+ * Returns -1 on error, and 0 on success 
+ * Error messages placed on stderr */
+int STL::loadFile(string filename)
 {
-	triangles.clear();
-	Min.x = Min.y = Min.z = 500.0f;
-	Max.x = Max.y = Max.z = -500.0f;
+    if(getFileType(filename) == ASCII_STL) {
+        loadASCIIFile(filename);
+    } else { // Binary
+        loadBinaryFile(filename);
+    }   
 
-	unsigned int count;
-	ifstream infile;
-	try
-	{
-		infile.open(filename.c_str(),  ios::in | ios::binary);
-		if(!infile.good())
-			return false;
-
-		// Ascii or binary?
-		char header[STL_READ_HEADER_SIZE+1] = STL_READ_HEADER_TEXT; // +1 for the \0 on the c-style string
-		infile.read(reinterpret_cast < char * > (&header), STL_READ_HEADER_SIZE*sizeof(char));	// Header
-
-		Min.x = Min.y = Min.z = 99999999.0f;
-		Max.x = Max.y = Max.z = -99999999.0f;
-
-		// Check if the header is valid for an ASCII STL
-		if (strcmp(header,STL_READ_HEADER_TEXT) == 0 && !force_binary)
-		{
-			infile.close();
-			FILE* file = fopen(filename.c_str(), "r");
-			int result = stla_read(file);
-			if(result)
-			{
-				// Maybe it *is* a binary file, although the header would make you think not
-				if(Read(filename, true) == true)
-					return true;
-				// if this fails, forced binary reading failed too, error
-				stringstream error;
-				ToolkitLock guard;
-				error << "Error reading file: " << filename;
-				Gtk::MessageDialog aDlg (error.str().c_str(),
-							 false /* markup */,
-							 Gtk::MESSAGE_INFO,
-							 Gtk::BUTTONS_OK, true);
-				aDlg.run();
-				return false;
-			}
-			fclose(file);
-			GetObjectsFromIvcon();
-			//		ReadAsciiFile();
-		}
-		else
-		{
-			infile.seekg(80, ios_base::beg);
-			infile.read(reinterpret_cast < char * > (&count), sizeof(unsigned int));	// N_Triangles
-			triangles.reserve(count);
-
-			for(uint i = 0; i < count; i++)
-			{
-				float a,b,c;
-				infile.read(reinterpret_cast < char * > (&a), sizeof(float));
-				infile.read(reinterpret_cast < char * > (&b), sizeof(float));
-				infile.read(reinterpret_cast < char * > (&c), sizeof(float));
-				Vector3f N(a,b,c);
-				infile.read(reinterpret_cast < char * > (&a), sizeof(float));
-				infile.read(reinterpret_cast < char * > (&b), sizeof(float));
-				infile.read(reinterpret_cast < char * > (&c), sizeof(float));
-				Vector3f Ax(a,b,c);
-				infile.read(reinterpret_cast < char * > (&a), sizeof(float));
-				infile.read(reinterpret_cast < char * > (&b), sizeof(float));
-				infile.read(reinterpret_cast < char * > (&c), sizeof(float));
-				Vector3f Bx(a,b,c);
-				infile.read(reinterpret_cast < char * > (&a), sizeof(float));
-				infile.read(reinterpret_cast < char * > (&b), sizeof(float));
-				infile.read(reinterpret_cast < char * > (&c), sizeof(float));
-				Vector3f Cx(a,b,c);
-
-	//			if(N.lengthSquared() != 1.0f)
-				{
-					Vector3f AA=Cx-Ax;
-					Vector3f BB=Cx-Bx;
-					N.x = AA.y * BB.z - BB.y * AA.z;
-					N.y = AA.z * BB.x - BB.z * AA.x;
-					N.z = AA.x * BB.y - BB.x * AA.y;
-					N.normalize();
-				}
-
-
-				unsigned short xxx;
-				infile.read(reinterpret_cast < char * > (&xxx), sizeof(unsigned short));
-
-				Triangle T(N,Ax,Bx,Cx);
-
-				triangles.push_back(T);
-				T.AccumulateMinMax (Min, Max);
-			}
-		}// binary
-	}
-	catch (ifstream::failure e)
-	{
-		cout << "Exception opening/reading file";
-		string error = e.what();
-	}
-
-	OptimizeRotation();
-	CalcCenter();
-	return true;
+    OptimizeRotation();
+    CalcCenter();
+    return 0;
 }
 
 void STL::CalcCenter()

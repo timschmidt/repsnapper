@@ -1157,7 +1157,7 @@ void Model::STOP()
 void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 {
   STL stl;
-  if (stl.Read (file->get_path()))
+  if (stl.loadFile (file->get_path()) == 0)
     AddStl(stl, file->get_path());
 }
 

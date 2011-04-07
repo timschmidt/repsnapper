@@ -24,10 +24,10 @@ AM_CPPFLAGS = \
 	-g -O0 $(WARNING_FLAGS)
 
 SHARED_SRC= stl.cpp model.cpp gllight.cpp gcode.cpp arcball.cpp		\
-	stdafx.cpp rfo.cpp ivcon.cpp file.cpp platform.cpp render.cpp	\
+	stdafx.cpp rfo.cpp file.cpp platform.cpp render.cpp	\
 	progress.cpp connectview.cpp settings.cpp
 
-SHARED_INC=arcball.h convert.h gcode.h gllight.h ivcon.h miniball.h	\
+SHARED_INC=arcball.h convert.h gcode.h gllight.h miniball.h	\
 	model.h rfo.h file.h stdafx.h stl.h platform.h render.h		\
 	progress.h connectview.h settings.h
 

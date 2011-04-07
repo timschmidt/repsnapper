@@ -47,6 +47,12 @@ typedef vector<Vector2f> outline;
 
 enum AXIS {NEGX, POSX, NEGY, POSY, NEGZ, POSZ, NOT_ALIGNED};
 
+enum filetype_t{
+    ASCII_STL,
+    BINARY_STL,
+    NONE_STL
+};
+
 class Triangle
 {
 public:
@@ -221,8 +227,8 @@ class STL
 public:
 	STL();
 
-	bool Read(string filename, bool force_binary = false );
-	void GetObjectsFromIvcon();
+    int loadFile(std::string filename);
+
 	void clear() { triangles.clear(); }
 	void displayInfillOld(const Settings &settings, CuttingPlane &plane, uint LayerNr, vector<int>& altInfillLayers);
 	void draw (RFO &rfo, const Settings &settings, float opacity = 1.0f);
@@ -234,5 +240,10 @@ public:
 
 	vector<Triangle>  triangles;
 	Vector3f Min, Max, Center;
+
+private:
+    int loadASCIIFile(std::string filename);
+    int loadBinaryFile(std::string filename);
+    filetype_t getFileType(std::string filename);
 };
 

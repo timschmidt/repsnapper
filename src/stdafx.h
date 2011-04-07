@@ -100,6 +100,3 @@ extern void RGBTOHSL (float red, float green, float blue, float &hue, float &sat
 extern void RGBTOYUV (float r, float g, float b, float &y, float &u, float &v);
 extern void YUVTORGB (float y, float u, float v, float &r, float &g, float &b);
 
-
-// ivconv
-#include "ivcon.h"
