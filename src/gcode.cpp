@@ -400,9 +400,10 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 				}
 			}
 			GcodeTxt += oss.str();
-			LastPos = commands[i].where;
-			if(commands[i].Code == ZMOVE)
+			if(commands[i].Code == ZMOVE && commands[i].where.z != LastPos.z)
 				GcodeTxt += GcodeLayer + "\n";
+
+			LastPos = commands[i].where;
 			if( commands[i].e >= 0.0f)
 				lastE = commands[i].e;
 			break;
