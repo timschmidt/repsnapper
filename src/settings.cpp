@@ -407,7 +407,7 @@ void Settings::set_defaults ()
 
   GCode.m_impl->setDefaults();
 
-  // FIXME: implement connecting me to the UI !
+  // The vectors map each to 3 spin boxes, one per dimension
   Hardware.Volume = vmml::Vector3f (200,200,140);
   Hardware.PrintMargin = vmml::Vector3f (10,10,0);
 }
@@ -672,6 +672,15 @@ void Settings::get_shrink_from_gui (Builder &builder)
     Slicing.ShrinkQuality = combo->get_active_row_number ();
 }
 
+void Settings::get_port_speed_from_gui (Builder &builder)
+{
+  // Hardware.SerialSpeed
+  Gtk::ComboBoxEntry *combo = NULL;
+  builder->get_widget ("Hardware.SerialSpeed", combo);
+  if (combo)
+    Hardware.SerialSpeed = atoi(combo->get_active_text().c_str());
+}
+
 void Settings::get_colour_from_gui (Builder &builder, int i)
 {
   const char *glade_name = colour_selectors[i].glade_name;
@@ -713,6 +722,16 @@ void Settings::set_to_gui (Builder &builder)
         c.set_rgb_p(src->r, src->g, src->b);
         w->set_color(c);
       }
+  }
+
+  // Set serial speed. Find the row that holds this value
+  Gtk::ComboBoxEntry *portspeed = NULL;
+  builder->get_widget ("Hardware.SerialSpeed", portspeed);
+  if (portspeed) {
+    std::ostringstream ostr;
+    ostr << Hardware.SerialSpeed;
+    Glib::ustring val(ostr.str());
+    portspeed->get_entry()->set_text(val);
   }
 }
 
@@ -824,6 +843,31 @@ void Settings::connectToUI (Builder &builder)
             &Settings::get_colour_from_gui), i), builder));
   }
 
+  // Serial port speed
+  Gtk::ComboBoxEntry *portspeed = NULL;
+  builder->get_widget ("Hardware.SerialSpeed", portspeed);
+  if (portspeed) {
+    const guint32 speeds[] = {
+        9600, 19200, 38400, 57600, 115200, 230400, 576000
+    };
+
+    Glib::RefPtr<Gtk::ListStore> model;
+    Gtk::TreeModelColumnRecord record;
+    Gtk::TreeModelColumn<Glib::ustring> column;
+    record.add (column);
+    model = Gtk::ListStore::create(record);
+    for (guint i = 0; i < G_N_ELEMENTS(speeds); i++) {
+      std::ostringstream val;
+      val << speeds[i];
+      model->append()->set_value (0, Glib::ustring(val.str()));
+    }
+    portspeed->set_model (model);
+    portspeed->set_text_column (0);
+
+    portspeed->signal_changed().connect
+      (sigc::bind(sigc::mem_fun(*this, &Settings::get_port_speed_from_gui), builder));
+  }
+  
   /* Update UI with defaults */
   set_to_gui (builder);
 }
