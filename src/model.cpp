@@ -920,7 +920,8 @@ void Model::init() {}
 
 void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
 {
-  cerr << "Unimplemented\n";
+  Glib::ustring contents = gcode.get_text();
+  Glib::file_set_contents (file->get_path(), contents);
 }
 
 void Model::Restart()
