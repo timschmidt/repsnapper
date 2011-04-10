@@ -891,13 +891,8 @@ void Model::ConvertToGCode()
 					plane.CalcInFill(infill, LayerNr, infillDistance, settings.Slicing.InfillRotation, settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
 				}
 				// Make the GCode from the plane and the infill
-				plane.MakeGcode(infill, gcode, E, z+printOffsetZ, settings.Hardware.MinPrintSpeedXY,
-						settings.Hardware.MaxPrintSpeedXY, settings.Hardware.MinPrintSpeedZ,
-						settings.Hardware.MaxPrintSpeedZ, settings.Hardware.DistanceToReachFullSpeed,
-						settings.Hardware.ExtrusionFactor,
-						settings.Slicing.UseIncrementalEcode,
-						settings.Slicing.Use3DGcode,
-						settings.Slicing.EnableAcceleration);
+				plane.MakeGcode (infill, gcode, E, z + printOffsetZ,
+						 settings.Slicing, settings.Hardware);
 			}
 		}
 		LayerNr++;
@@ -1490,15 +1485,8 @@ void Model::MakeRaft(float &z)
 			P2 = HitsBuffer[1].p;
 
 			MakeAcceleratedGCodeLine (Vector3f(P1.x,P1.y,z), Vector3f(P2.x,P2.y,z),
-						  settings.Hardware.DistanceToReachFullSpeed,
-						  props->MaterialDistanceRatio, gcode, z,
-						  settings.Hardware.MinPrintSpeedXY,
-						  settings.Hardware.MaxPrintSpeedXY,
-						  settings.Hardware.MinPrintSpeedZ,
-						  settings.Hardware.MaxPrintSpeedZ,
-						  settings.Slicing.UseIncrementalEcode,
-						  settings.Slicing.Use3DGcode,
-						  E, settings.Slicing.EnableAcceleration);
+						  props->MaterialDistanceRatio, gcode,
+						  E, z, settings.Slicing, settings.Hardware);
 			reverseLines = !reverseLines;
 		}
 		// Set startspeed for Z-move

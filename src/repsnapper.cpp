@@ -184,7 +184,7 @@ int main(int argc, char **argv)
       }
       break;
     }
-      
+
     default:
     {
       Gtk::MessageDialog dialog("Failed to locate config", false,

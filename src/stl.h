@@ -31,6 +31,7 @@
 
 #include <vmmlib/vmmlib.h>
 #include <polylib/Polygon2f.h>
+#include "settings.h"
 
 /*
 Vector3f position, normal;
@@ -148,7 +149,11 @@ public:
 	bool CleanupSharedSegments(float z);
 	void CleanupPolygons(float Optimization);			// remove redudant points
 	void CleanupOffsetPolygons(float Optimization);			// remove redudant points
-	void MakeGcode(const std::vector<Vector2f> &infill, GCode &code, float &E, float z, float MinPrintSpeedXY, float MaxPrintSpeedXY, float MinPrintSpeedZ, float MaxPrintSpeedZ, float DistanceToReachFullSpeed, float extrusionFactor, bool UseIncrementalEcode, bool Use3DGcode, bool EnableAcceleration);	// Convert Cuttingplane to GCode
+	void MakeGcode (const std::vector<Vector2f> &infill, GCode &code, float &E, float z, 
+			const Settings::SlicingSettings &slicing,
+			const Settings::HardwareSettings &hardware);
+
+	//float MinPrintSpeedXY, float MaxPrintSpeedXY, float MinPrintSpeedZ, float MaxPrintSpeedZ, float DistanceToReachFullSpeed, float extrusionFactor, bool UseIncrementalEcode, bool Use3DGcode, bool EnableAcceleration);	
 	bool VertexIsOutsideOriginalPolygon( Vector2f point, float z);
 
 	Vector2f Min, Max;  // Bounding box
@@ -247,3 +252,9 @@ private:
     filetype_t getFileType(std::string filename);
 };
 
+
+extern void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
+				      float extrusionFactor, GCode &code,
+				      float &E, float z,
+				      const Settings::SlicingSettings &slicing,
+				      const Settings::HardwareSettings &hardware);
