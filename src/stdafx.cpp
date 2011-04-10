@@ -21,13 +21,9 @@
 // RepSnapper.pch will be the pre-compiled header
 // stdafx.obj will contain the pre-compiled type information
 
+#include "config.h"
 #include "stdafx.h"
 #include "stl.h"
-
-// TODO: reference any additional headers you need in STDAFX.H
-// and not in this file
-
-ModelViewController *MVC;
 
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))

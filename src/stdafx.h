@@ -21,11 +21,12 @@
 // are changed infrequently
 //
 
-#pragma once
+#ifndef STDAFX_H
+#define STDAFX_H
 
-#ifndef _WIN32_WINNT		// Allow use of features specific to Windows XP or later.                   
+#ifndef _WIN32_WINNT		// Allow use of features specific to Windows XP or later.
 #define _WIN32_WINNT 0x0501	// Change this to the appropriate value to target other versions of Windows.
-#endif						
+#endif
 
 #ifdef WIN32
 #  pragma warning( disable : 4311 4312 4244 4267 4800)
@@ -40,20 +41,13 @@ typedef unsigned int        uint;
 	#include <tchar.h>
 typedef unsigned int        uint;
 #endif
-typedef unsigned int        UINT;
-#include "config.h"
 #include "platform.h"
 #include <stdio.h>
 #include <gtkmm.h>
-// #include <gtkglmm.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <vmmlib/vmmlib.h>
-#ifndef WIN32
-// whatever this is it doesn't exist in windows and doesn't appear to be needed
-#  include <alloca.h>
-#endif
-#include "math.h"                                               // Needed for sqrtf
+#include "math.h" // Needed for sqrtf
 
 // Unpleasant needs un-winding ...
 using namespace std;
@@ -73,7 +67,6 @@ class AsyncSerial;
 class RepRapSerial;
 class CuttingPlane;
 class ProcessController;
-class ModelViewController;
 
 class RFO;
 class RFO_File;
@@ -100,3 +93,4 @@ extern void RGBTOHSL (float red, float green, float blue, float &hue, float &sat
 extern void RGBTOYUV (float r, float g, float b, float &y, float &u, float &v);
 extern void YUVTORGB (float y, float u, float v, float &r, float &g, float &b);
 
+#endif // STDAFX_H
