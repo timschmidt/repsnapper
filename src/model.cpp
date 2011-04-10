@@ -231,6 +231,7 @@ void Model::show_dialog(const char *name)
   }
   dialog->signal_response().connect (sigc::bind(sigc::mem_fun(*this, &Model::hide_on_response), dialog));
   dialog->show();
+  dialog->set_transient_for (*this);
 }
 
 void Model::about_dialog()
