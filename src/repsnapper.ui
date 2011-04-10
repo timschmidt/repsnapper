@@ -318,7 +318,7 @@
                         <property name="visible">True</property>
                         <child>
                           <object class="GtkButton" id="m_save_stl">
-                            <property name="label" translatable="yes">save stl</property>
+                            <property name="label" translatable="yes">Save Stl</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -329,7 +329,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_delete">
-                            <property name="label" translatable="yes">delete</property>
+                            <property name="label" translatable="yes">Delete</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -340,7 +340,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_duplicate">
-                            <property name="label" translatable="yes">duplicate</property>
+                            <property name="label" translatable="yes">Duplicate</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -390,7 +390,7 @@
                     <child>
                       <object class="GtkLabel" id="label17">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Object rotation</property>
+                        <property name="label" translatable="yes">Object Rotation</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -402,7 +402,7 @@
                         <property name="visible">True</property>
                         <child>
                           <object class="GtkButton" id="m_auto_rotate">
-                            <property name="label" translatable="yes">auto rotate</property>
+                            <property name="label" translatable="yes">Auto Rotate</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -413,7 +413,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_rot_x">
-                            <property name="label" translatable="yes">rotate X</property>
+                            <property name="label" translatable="yes">Rotate X</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -424,7 +424,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_rot_y">
-                            <property name="label" translatable="yes">rotate Y</property>
+                            <property name="label" translatable="yes">Rotate Y</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -435,7 +435,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_rot_z">
-                            <property name="label" translatable="yes">rotate Z</property>
+                            <property name="label" translatable="yes">Rotate Z</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -560,7 +560,7 @@
                         </child>
                         <child>
                           <object class="GtkCheckButton" id="m_all_axis">
-                            <property name="label" translatable="yes">All axis</property>
+                            <property name="label" translatable="yes">All Axes</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
@@ -865,7 +865,7 @@
                     <child>
                       <object class="GtkLabel" id="label22">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Temperature settings</property>
+                        <property name="label" translatable="yes">Temperature Settings</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -937,7 +937,7 @@
                         </child>
                         <child>
                           <object class="GtkCheckButton" id="i_fan_enabled">
-                            <property name="label" translatable="yes">Fan enabled</property>
+                            <property name="label" translatable="yes">Fan Enabled</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
@@ -998,7 +998,7 @@
                         <property name="visible">True</property>
                         <child>
                           <object class="GtkButton" id="i_extrude_length">
-                            <property name="label" translatable="yes">Extrude a length</property>
+                              <property name="label" translatable="yes">Purge</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -1009,7 +1009,7 @@
                         </child>
                         <child>
                           <object class="GtkCheckButton" id="i_reverse">
-                            <property name="label" translatable="yes">reverse extrude</property>
+                            <property name="label" translatable="yes">Reverse Extrude</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
@@ -1033,13 +1033,13 @@
                         <child>
                           <object class="GtkLabel" id="label26">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Length: mm</property>
+                            <property name="label" translatable="yes">Length (mm)</property>
                           </object>
                         </child>
                         <child>
                           <object class="GtkLabel" id="label27">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Speed: mm/min</property>
+                            <property name="label" translatable="yes">Speed (mm/min)</property>
                           </object>
                           <packing>
                             <property name="top_attach">1</property>
@@ -1049,7 +1049,7 @@
                         <child>
                           <object class="GtkLabel" id="label28">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">multiplier</property>
+                            <property name="label" translatable="yes">Extrusion Multiplier</property>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -1059,7 +1059,7 @@
                         <child>
                           <object class="GtkLabel" id="label29">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">multiplier</property>
+                            <property name="label" translatable="yes">Print Speed Multiplier</property>
                           </object>
                           <packing>
                             <property name="left_attach">2</property>
@@ -1143,7 +1143,7 @@
                         <child>
                           <object class="GtkLabel" id="label_actions">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Custom actions</property>
+                            <property name="label" translatable="yes">Custom Actions</property>
                             <property name="selectable">True</property>
                           </object>
                           <packing>
@@ -1270,7 +1270,7 @@
                             <child type="tab">
                               <object class="GtkLabel" id="label32">
                                 <property name="visible">True</property>
-                                <property name="label" translatable="yes">Errors / warnings</property>
+                                <property name="label" translatable="yes">Errors/Warnings</property>
                                 <property name="track_visited_links">False</property>
                               </object>
                               <packing>
@@ -1342,7 +1342,7 @@
                             </child>
                             <child>
                               <object class="GtkCheckButton" id="Misc.ClearLogfilesWhenPrintStarts">
-                                <property name="label" translatable="yes">Clear Logs when printing starts</property>
+                                <property name="label" translatable="yes">Clear Logs on Print Start</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
@@ -1535,7 +1535,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label36">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Border:</property>
+                                    <property name="label" translatable="yes">Border</property>
                                     <property name="justify">right</property>
                                   </object>
                                   <packing>
@@ -1548,7 +1548,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label35">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Build Volume:</property>
+                                    <property name="label" translatable="yes">Build Volume</property>
                                   </object>
                                   <packing>
                                     <property name="x_options">GTK_FILL</property>
@@ -1782,7 +1782,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label41">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Extrusion multiplier:</property>
+                                    <property name="label" translatable="yes">Extrusion Multiplier</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">4</property>
@@ -1808,7 +1808,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label39">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Layer Thickness:</property>
+                                    <property name="label" translatable="yes">Layer Thickness</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">3</property>
@@ -1834,7 +1834,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label38">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Extruded material width:</property>
+                                    <property name="label" translatable="yes">Extruded Material Width</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">2</property>
@@ -1964,7 +1964,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label42">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">X/Y Axes:</property>
+                                    <property name="label" translatable="yes">X/Y Axes</property>
                                   </object>
                                   <packing>
                                     <property name="x_options">GTK_FILL</property>
@@ -1974,7 +1974,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label43">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Z Axis:</property>
+                                    <property name="label" translatable="yes">Z Axis</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -2193,7 +2193,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label46">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Printer buffer size (in gcodes):</property>
+                                    <property name="label" translatable="yes">Printer Buffer Size (Lines of GCode)</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">1</property>
@@ -2205,7 +2205,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label7">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Serial link speed:</property>
+                                    <property name="label" translatable="yes">Serial Link Speed</property>
                                   </object>
                                   <packing>
                                     <property name="x_options">GTK_FILL</property>
@@ -2229,7 +2229,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label84">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Scrollback:</property>
+                                    <property name="label" translatable="yes">Scrollback</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">2</property>
@@ -2253,7 +2253,7 @@ and others I forgot... (needs updating)</property>
                                 </child>
                                 <child>
                                   <object class="GtkCheckButton" id="Hardware.ValidateConnection">
-                                    <property name="label" translatable="yes">Validate connection</property>
+                                    <property name="label" translatable="yes">Validate Connection</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
@@ -2376,7 +2376,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label97">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Colour:</property>
+                                        <property name="label" translatable="yes">Colour</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2416,7 +2416,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label98">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Colour:</property>
+                                        <property name="label" translatable="yes">Colour</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2456,7 +2456,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label99">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Colour:</property>
+                                        <property name="label" translatable="yes">Colour</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2510,7 +2510,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label96">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Colour:</property>
+                                        <property name="label" translatable="yes">Colour</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2548,7 +2548,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label94">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Opacity:</property>
+                                        <property name="label" translatable="yes">Opacity</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2586,7 +2586,7 @@ and others I forgot... (needs updating)</property>
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
                                         <property name="yalign">0.49000000953674316</property>
-                                        <property name="label" translatable="yes">Length:</property>
+                                        <property name="label" translatable="yes">Length</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2626,7 +2626,7 @@ and others I forgot... (needs updating)</property>
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
                                         <property name="yalign">0.49000000953674316</property>
-                                        <property name="label" translatable="yes">Size:</property>
+                                        <property name="label" translatable="yes">Size</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2682,7 +2682,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label95">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Highlight Strength:</property>
+                                        <property name="label" translatable="yes">Highlight Strength</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2785,7 +2785,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label102">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Extrude Colour:</property>
+                                        <property name="label" translatable="yes">Extrude Colour</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2816,7 +2816,7 @@ and others I forgot... (needs updating)</property>
                                 </child>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.LuminanceShowsSpeed">
-                                    <property name="label" translatable="yes">Adjust Luminance to indicate speed</property>
+                                    <property name="label" translatable="yes">Adjust Luminance to Indicate Speed</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
@@ -2838,7 +2838,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label103">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Move Head Colour:</property>
+                                        <property name="label" translatable="yes">Move Head Colour</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2889,7 +2889,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label116">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Drawing Range Start:</property>
+                                    <property name="label" translatable="yes">Drawing Range Start</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">2</property>
@@ -2902,7 +2902,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label118">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Drawing Range End:</property>
+                                    <property name="label" translatable="yes">Drawing Range End</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">3</property>
@@ -3010,7 +3010,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label107">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Cutting Plane Height:</property>
+                                        <property name="label" translatable="yes">Cutting Plane Height</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -3086,7 +3086,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label113">
                                     <property name="visible">True</property>
                                     <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Enable Lights:</property>
+                                    <property name="label" translatable="yes">Enable Lights</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -3184,7 +3184,7 @@ and others I forgot... (needs updating)</property>
                 <property name="visible">True</property>
                 <child>
                   <object class="GtkCheckButton" id="Slicing.ShellOnly">
-                    <property name="label" translatable="yes">Shell only - no infill</property>
+                    <property name="label" translatable="yes">Enable Shell Only (No Infill)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -3202,13 +3202,13 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label68">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Shell count</property>
+                        <property name="label" translatable="yes">Shell Count</property>
                       </object>
                     </child>
                     <child>
                       <object class="GtkLabel" id="label69">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Infill per layer rotation</property>
+                        <property name="label" translatable="yes">Infill per Layer Rotation</property>
                       </object>
                       <packing>
                         <property name="left_attach">2</property>
@@ -3228,7 +3228,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label71">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Infill distance</property>
+                        <property name="label" translatable="yes">Infill Distance</property>
                       </object>
                       <packing>
                         <property name="left_attach">2</property>
@@ -3312,7 +3312,8 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkLabel" id="label58">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Antiooze Retraction</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Antiooze Retraction&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
                   </object>
                   <packing>
                     <property name="position">3</property>
@@ -3333,7 +3334,7 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkLabel" id="label48">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Speed to retract filament (mm/min)</property>
+                    <property name="label" translatable="yes">Filament Retraction Speed (mm/min)</property>
                   </object>
                   <packing>
                     <property name="position">5</property>
@@ -3367,7 +3368,7 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkLabel" id="label47">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Distance to retract filament (/mm)</property>
+                    <property name="label" translatable="yes">Filament Retraction Distance (mm)</property>
                   </object>
                   <packing>
                     <property name="position">8</property>
@@ -3406,7 +3407,7 @@ and others I forgot... (needs updating)</property>
                 </child>
                 <child>
                   <object class="GtkCheckButton" id="Slicing.EnableAcceleration">
-                    <property name="label" translatable="yes">enable acceleration</property>
+                    <property name="label" translatable="yes">Enable Acceleration</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -3414,16 +3415,16 @@ and others I forgot... (needs updating)</property>
                     <property name="draw_indicator">True</property>
                   </object>
                   <packing>
-                    <property name="position">11</property>
+                    <property name="position">12</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkLabel" id="label59">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Distance to full speed</property>
+                    <property name="label" translatable="yes">Acceleration Distance</property>
                   </object>
                   <packing>
-                    <property name="position">12</property>
+                    <property name="position">13</property>
                   </packing>
                 </child>
                 <child>
@@ -3434,16 +3435,17 @@ and others I forgot... (needs updating)</property>
                     <property name="digits">1</property>
                   </object>
                   <packing>
-                    <property name="position">13</property>
+                    <property name="position">14</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkLabel" id="label57">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Acceleration</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Acceleration&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
                   </object>
                   <packing>
-                    <property name="position">14</property>
+                    <property name="position">11</property>
                   </packing>
                 </child>
                 <child>
@@ -3469,7 +3471,7 @@ and others I forgot... (needs updating)</property>
                     <property name="label" translatable="yes">Optimization</property>
                   </object>
                   <packing>
-                    <property name="position">16</property>
+                    <property name="position">17</property>
                   </packing>
                 </child>
                 <child>
@@ -3480,7 +3482,7 @@ and others I forgot... (needs updating)</property>
                     <property name="digits">2</property>
                   </object>
                   <packing>
-                    <property name="position">17</property>
+                    <property name="position">18</property>
                   </packing>
                 </child>
                 <child>
@@ -3494,7 +3496,7 @@ and others I forgot... (needs updating)</property>
                     </child>
                   </object>
                   <packing>
-                    <property name="position">18</property>
+                    <property name="position">19</property>
                   </packing>
                 </child>
                 <child>
@@ -3503,7 +3505,7 @@ and others I forgot... (needs updating)</property>
                     <property name="label" translatable="yes">Algorithm</property>
                   </object>
                   <packing>
-                    <property name="position">19</property>
+                    <property name="position">20</property>
                   </packing>
                 </child>
                 <child>
@@ -3511,16 +3513,17 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                   </object>
                   <packing>
-                    <property name="position">20</property>
+                    <property name="position">21</property>
                   </packing>
                 </child>
                 <child>
                   <object class="GtkLabel" id="label54">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Shrinking Quality</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Shrinking Quality&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
                   </object>
                   <packing>
-                    <property name="position">21</property>
+                    <property name="position">16</property>
                   </packing>
                 </child>
                 <child>
@@ -3607,7 +3610,7 @@ and others I forgot... (needs updating)</property>
                 <property name="visible">True</property>
                 <child>
                   <object class="GtkCheckButton" id="RaftEnable">
-                    <property name="label" translatable="yes">raft enable</property>
+                    <property name="label" translatable="yes">Enable Raft</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
@@ -3620,7 +3623,8 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkLabel" id="label64">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Interface</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Interface&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
                   </object>
                   <packing>
                     <property name="position">1</property>
@@ -3733,7 +3737,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label63">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Temperature ratio</property>
+                        <property name="label" translatable="yes">Temperature Ratio</property>
                       </object>
                       <packing>
                         <property name="top_attach">6</property>
@@ -3743,7 +3747,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label62">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Thickness ratio</property>
+                        <property name="label" translatable="yes">Thickness Ratio</property>
                       </object>
                       <packing>
                         <property name="top_attach">5</property>
@@ -3753,7 +3757,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label61">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Distance between lines</property>
+                        <property name="label" translatable="yes">Distance Between Lines</property>
                       </object>
                       <packing>
                         <property name="top_attach">4</property>
@@ -3773,7 +3777,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label53">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Material pr. distance ratio</property>
+                        <property name="label" translatable="yes">Material/Distance Ratio</property>
                       </object>
                       <packing>
                         <property name="top_attach">1</property>
@@ -3783,7 +3787,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label52">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">number of base layers</property>
+                        <property name="label" translatable="yes">Number of Base Layers</property>
                       </object>
                     </child>
                   </object>
@@ -3794,7 +3798,8 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkLabel" id="label51">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Base</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Base&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
                   </object>
                   <packing>
                     <property name="position">3</property>
@@ -3817,7 +3822,7 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkLabel" id="label50">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">larger than object / mm</property>
+                    <property name="label" translatable="yes">Larger Than Object (mm)</property>
                   </object>
                   <packing>
                     <property name="position">5</property>
@@ -3836,7 +3841,8 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkLabel" id="label49">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Size</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Size&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
                   </object>
                   <packing>
                     <property name="position">7</property>
@@ -3955,7 +3961,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label77">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Temperature ratio</property>
+                        <property name="label" translatable="yes">Temperature Ratio</property>
                       </object>
                       <packing>
                         <property name="top_attach">6</property>
@@ -3965,7 +3971,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label76">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Thickness ratio</property>
+                        <property name="label" translatable="yes">Thickness Ratio</property>
                       </object>
                       <packing>
                         <property name="top_attach">5</property>
@@ -3975,7 +3981,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label75">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Distance between lines</property>
+                        <property name="label" translatable="yes">Distance Between Lines</property>
                       </object>
                       <packing>
                         <property name="top_attach">4</property>
@@ -3995,7 +4001,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label66">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Material pr. distance ratio</property>
+                        <property name="label" translatable="yes">Material/Distance Ratio</property>
                       </object>
                       <packing>
                         <property name="top_attach">1</property>
@@ -4005,7 +4011,7 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkLabel" id="label65">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Number of interface layers</property>
+                        <property name="label" translatable="yes">Number of Interface Layers</property>
                       </object>
                     </child>
                   </object>
