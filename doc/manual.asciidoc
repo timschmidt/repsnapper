@@ -38,17 +38,20 @@ David Buzz has posted binaries for OS X https://sites.google.com/site/davidbuzz/
 == Installation from source ==
 [NOTE]
 =====
+
+Since the switch to using gtk, only the docs for Ubuntu 11.04 are uptodate, and even those are untested.
+
 Although RepSnapper is not generally tested outside of windows/linux/mac you may be able to get it running on other OSs. To do so you will need the following:
 
-    * gcc and related tools
+    * gcc
+    * make
+    * autotools
+    * intltool
     * OpenGL
     * git
-    * libfltk1.1-dev
-    * libglut3-dev
-    * libboost-dev
-    * libboost-thread-dev
-    * libboost-system-dev
-    * libconfig-dev
+    * libgtkmm-2.4-dev
+    * libgktglext1-dev
+    * libreprap
 =====
 
 === Linux ===
@@ -56,7 +59,7 @@ Install dependencies:
 
 ==== Ubuntu 11.04 ====
 ----
-sudo apt-get install git-core build-essential fluid libgtk2.0-dev libfltk1.1 libfltk1.1-dev libglut3 libglut3-dev libboost-thread-dev libboost-system-dev libconfig8++-dev libconfig8-dev 
+sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev 
 ----
 
 ==== Ubuntu 10.10 ====
@@ -83,11 +86,13 @@ sudo zypper install fltk-devel freeglut-devel boost-devel
 
 Acquire source and compile:
 ----
+Install libreprap: https://github.com/Ralith/libreprap/blob/master/INSTALL
 git clone git://github.com/timschmidt/repsnapper.git
-cd repsnapper/src
+cd repsnapper
+./autogen.sh
 make
 ----
-Executable (repsnapper) will be left in the src folder. Currently there is no install rule.
+Executable (repsnapper) will be left in the src folder. Install with "sudo make install"
 
 === Windows ===
 
