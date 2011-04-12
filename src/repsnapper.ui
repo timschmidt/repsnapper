@@ -4,7 +4,7 @@
   <!-- interface-naming-policy project-wide -->
   <object class="GtkWindow" id="main_window">
     <property name="width_request">1000</property>
-    <property name="height_request">700</property>
+    <property name="height_request">500</property>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
