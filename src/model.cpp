@@ -1265,8 +1265,16 @@ void Model::RotateObject(Vector4f rotate)
 
 void Model::OptimizeRotation()
 {
-//	stl.OptimizeRotation();
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  if (!file)
+    return; // FIXME: rotate entire Objects ...
+
+  file->stl.OptimizeRotation();
   CalcBoundingBoxAndCenter();
+  queue_draw();
 }
 
 void Model::delete_selected_stl()
