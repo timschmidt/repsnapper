@@ -241,8 +241,7 @@ void Model::about_dialog()
 
 static const char *axis_names[] = { "X", "Y", "Z" };
 
-enum SpinType { TRANSLATE, ROTATE, SCALE };
-class Model::SpinRow {
+class Model::TranslationSpinRow {
   void spin_value_changed (int axis)
   {
     RFO_File *file;
@@ -256,39 +255,24 @@ class Model::SpinRow {
       return;
 
     double val = m_xyz[axis]->get_value();
-    switch (m_type) {
-    default:
-    case TRANSLATE: {
-      Matrix4f *mat;
-      if (!file)
-	mat = &object->transform3D.transform;
-      else
-	mat = &file->transform3D.transform;
-      Vector3f trans = mat->getTranslation();
-      trans.xyz[axis] = val;
-      mat->setTranslation (trans);
-      m_mvc->CalcBoundingBoxAndCenter();
-      break;
-    }
-    case ROTATE: {
-      Vector4f rot(0.0, 0.0, 0.0, 1.0);
-      rot.xyzw[axis] = (M_PI * val) / 180.0;
-      m_mvc->RotateObject(rot);
-      break;
-    }
-    case SCALE:
-      cerr << "Scale not yet implemented\n";
-      break;
-    }
+    Matrix4f *mat;
+    if (!file)
+        mat = &object->transform3D.transform;
+    else
+        mat = &file->transform3D.transform;
+    Vector3f trans = mat->getTranslation();
+    trans.xyz[axis] = val;
+    mat->setTranslation (trans);
+    m_mvc->CalcBoundingBoxAndCenter();
   }
 public:
   bool m_inhibit_update;
   Model *m_mvc;
-  SpinType m_type;
   Gtk::Box *m_box;
   Gtk::SpinButton *m_xyz[3];
 
-  void selection_changed ()
+  /* Changed STL Selection - must update translation values */
+  void selection_changed () 
   {
     RFO_File *file;
     RFO_Object *object;
@@ -297,77 +281,49 @@ public:
 
     m_inhibit_update = true;
     for (uint i = 0; i < 3; i++) {
-      switch (m_type) {
-      default:
-      case TRANSLATE: {
-	Matrix4f *mat;
-	if (!object) {
-	  for (uint i = 0; i < 3; i++)
-	    m_xyz[i]->set_value(0.0);
-	  break;
-	}
-	else if (!file)
-	  mat = &object->transform3D.transform;
-	else
-	  mat = &file->transform3D.transform;
-	Vector3f trans = mat->getTranslation();
-	for (uint i = 0; i < 3; i++)
-	  m_xyz[i]->set_value(trans.xyz[i]);
-	break;
-      }
-      case ROTATE:
-	for (uint i = 0; i < 3; i++)
-	  m_xyz[i]->set_value(0.0);
-	break;
-      case SCALE:
-	for (uint i = 0; i < 3; i++)
-	  m_xyz[i]->set_value(0.0);
-	break;
-      }
+        Matrix4f *mat;
+        if (!object) {
+            for (uint i = 0; i < 3; i++)
+                m_xyz[i]->set_value(0.0);
+            break;
+        }
+        else if (!file)
+            mat = &object->transform3D.transform;
+        else
+            mat = &file->transform3D.transform;
+        Vector3f trans = mat->getTranslation();
+        for (uint i = 0; i < 3; i++)
+            m_xyz[i]->set_value(trans.xyz[i]);
+        break;
     }
     m_inhibit_update = false;
   }
 
-  SpinRow(Model *mvc, Gtk::TreeView *rfo_tree,
-	  const char *box_name, SpinType type) :
-    m_inhibit_update(false), m_mvc(mvc), m_type (type)
+  TranslationSpinRow(Model *mvc, Gtk::TreeView *rfo_tree,
+	  const char *box_name) :
+    m_inhibit_update(false), m_mvc(mvc)
   {
     mvc->m_builder->get_widget (box_name, m_box);
 
     for (uint i = 0; i < 3; i++) {
-      m_box->add (*new Gtk::Label (axis_names[i]));
-      m_xyz[i] = new Gtk::SpinButton();
-      m_xyz[i]->set_numeric();
-      switch (m_type) {
-      default:
-      case TRANSLATE:
-	m_xyz[i]->set_digits (1);
-	m_xyz[i]->set_increments (0.5, 10);
-	m_xyz[i]->set_range(-500.0, +500.0);
-	break;
-      case ROTATE:
-	m_xyz[i]->set_digits (0);
-	m_xyz[i]->set_increments (45.0, 90.0);
-	m_xyz[i]->set_range(-360.0, +360.0);
-	break;
-      case SCALE:
-	m_xyz[i]->set_digits (3);
-	m_xyz[i]->set_increments (0.5, 1.0);
-	m_xyz[i]->set_range(0.001, +10.0);
-	break;
-      }
-      m_box->add (*m_xyz[i]);
-      m_xyz[i]->signal_value_changed().connect
-	(sigc::bind(sigc::mem_fun(*this, &SpinRow::spin_value_changed), (int)i));
+        m_box->add (*new Gtk::Label (axis_names[i]));
+        m_xyz[i] = new Gtk::SpinButton();
+        m_xyz[i]->set_numeric();
+        m_xyz[i]->set_digits (1);
+        m_xyz[i]->set_increments (0.5, 10);
+        m_xyz[i]->set_range(-500.0, +500.0);
+        m_box->add (*m_xyz[i]);
+        m_xyz[i]->signal_value_changed().connect
+            (sigc::bind(sigc::mem_fun(*this, &TranslationSpinRow::spin_value_changed), (int)i));
     }
     selection_changed();
     m_box->show_all();
 
     rfo_tree->get_selection()->signal_changed().connect
-      (sigc::mem_fun(*this, &SpinRow::selection_changed));
+        (sigc::mem_fun(*this, &TranslationSpinRow::selection_changed));
   }
 
-  ~SpinRow()
+  ~TranslationSpinRow()
   {
     for (uint i = 0; i < 3; i++)
       delete m_xyz[i];
@@ -640,22 +596,14 @@ Model::Model(BaseObjectType* cobject,
   connect_button ("m_delete",        sigc::mem_fun(*this, &Model::delete_selected_stl) );
   connect_button ("m_duplicate",     sigc::mem_fun(*this, &Model::duplicate_selected_stl) );
   connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &Model::OptimizeRotation) );
-  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &Model::RotateObject), Vector4f(1,0,0, M_PI/4)));
-  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &Model::RotateObject), Vector4f(0,1,0, M_PI/4)));
-  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &Model::RotateObject), Vector4f(0,0,1, M_PI/4)));
+  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &Model::RotateObject), Vector4f(1,0,0, M_PI/2)));
+  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &Model::RotateObject), Vector4f(0,1,0, M_PI/2)));
+  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &Model::RotateObject), Vector4f(0,0,1, M_PI/2)));
   m_builder->get_widget ("m_rfo_tree", m_rfo_tree);
   m_rfo_tree->set_model (rfo.m_model);
   m_rfo_tree->append_column("Name", rfo.m_cols->m_name);
-  static const struct {
-    const char *name;
-    SpinType type;
-  } spin_boxes[] = {
-    { "m_box_translate", TRANSLATE},
-    { "m_box_rotate", ROTATE },
-    { "m_box_scale", SCALE }
-  };
-  for (uint i = 0; i < 3; i++)
-    m_spin_rows[i] = new SpinRow (this, m_rfo_tree, spin_boxes[i].name, spin_boxes[i].type);
+
+  translation_row = new TranslationSpinRow (this, m_rfo_tree, "m_box_translate");
 
   // GCode tab
   Gtk::TextView *textv = NULL;
@@ -774,8 +722,8 @@ Model::~Model()
     rr_close(device);
   }
   rr_free(device);
+  delete translation_row;
   for (uint i = 0; i < 3; i++) {
-    delete m_spin_rows[i];
     delete m_axis_rows[i];
   }
   delete m_temps[TempRow::NOZZLE];
