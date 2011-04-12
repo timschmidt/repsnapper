@@ -313,6 +313,8 @@ int STL::loadFile(string filename)
 
     OptimizeRotation();
     CalcCenter();
+
+    scale_factor = 1.0;
     return 0;
 }
 
@@ -2883,6 +2885,35 @@ void STL::OptimizeRotation()
 	CenterAroundXY();
 }
 
+void STL::Scale(float in_scale_factor) 
+{
+    for(size_t i = 0; i < triangles.size(); i++) 
+    {
+        for(int j = 0; j < 3; j++) 
+        {
+            /* Translate to origin */
+            triangles[i][j] = triangles[i][j] - Center; 
+
+            triangles[i][j].scale(in_scale_factor/scale_factor);
+
+            triangles[i][j] = triangles[i][j] + Center;
+        }
+    }
+
+    Min = Min - Center;
+    Min.scale(in_scale_factor/scale_factor);
+    Min = Min + Center;
+
+    Max = Max - Center;
+    Max.scale(in_scale_factor/scale_factor);
+    Max = Max + Center;
+
+	CenterAroundXY();
+
+    /* Save current scale_factor */
+    scale_factor = in_scale_factor;
+}
+
 void STL::RotateObject(Vector3f axis, float angle)
 {
 	Vector3f min,max;
@@ -2911,6 +2942,16 @@ void STL::RotateObject(Vector3f axis, float angle)
 	Min = min;
 	Max = max;
 //	cout << "min " << Min << " max " << Max << "\n";
+}
+
+Vector3f &Triangle::operator[] (const int index) 
+{
+    switch(index) {
+        case 0: return A;
+        case 1: return B;
+        case 2: return C;
+    }
+    return A;
 }
 
 float Triangle::area()

@@ -604,6 +604,16 @@ Model::Model(BaseObjectType* cobject,
 
   translation_row = new TranslationSpinRow (this, m_rfo_tree, "m_box_translate");
 
+  Gtk::HScale *scale_slider;
+  m_builder->get_widget("m_scale_slider", scale_slider);
+  scale_slider->set_range(0.01, 5.0);
+  scale_slider->set_value(1.0);
+  m_rfo_tree->get_selection()->signal_changed().connect
+      (sigc::mem_fun(*this, &Model::UpdateScaleSlider));
+
+  scale_slider->signal_value_changed().connect
+      (sigc::mem_fun(*this, &Model::ScaleObject));
+
   // GCode tab
   Gtk::TextView *textv = NULL;
   m_builder->get_widget ("txt_gcode_result", textv);
@@ -1192,6 +1202,37 @@ void Model::alert (Gtk::Window *toplevel, const char *message)
 void Model::alert (const char *message)
 {
   alert (this, message);
+}
+
+void Model::UpdateScaleSlider() {
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  if (!file)
+    return; 
+
+  Gtk::HScale *scale_slider;
+  m_builder->get_widget("m_scale_slider", scale_slider);
+
+  scale_slider->set_value(file->stl.getScaleFactor());
+}
+
+void Model::ScaleObject()
+{
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  if (!file)
+    return; 
+
+  Gtk::HScale *scale_slider;
+  m_builder->get_widget("m_scale_slider", scale_slider);
+
+  file->stl.Scale(scale_slider->get_value());
+  CalcBoundingBoxAndCenter();
+  queue_draw();
 }
 
 void Model::RotateObject(Vector4f rotate)

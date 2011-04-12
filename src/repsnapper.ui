@@ -510,6 +510,36 @@
                         <property name="position">8</property>
                       </packing>
                     </child>
+                    <child>
+                      <object class="GtkLabel" id="l_scale_title">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Object Scaling</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">9</property>
+                      </packing>
+                    </child>
+                    <child>
+                        <object class="GtkHSeparator" id="m_scale_separator">
+                            <property name="visible">True</property>
+                        </object>
+                        <packing>
+                            <property name="expand">False</property>
+                            <property name="position">10</property>
+                        </packing>
+                    </child>
+                    <child>
+                      <object class="GtkHScale" id="m_scale_slider">
+                        <property name="visible">True</property>
+                        <property name="digits">2</property>
+                        <property name="draw-value">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">11</property>
+                      </packing>
+                    </child>
                   </object>
                 </child>
                 <child type="tab">

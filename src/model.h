@@ -135,6 +135,8 @@ public:
 	RFO_File *AddStl(STL stl, string filename);
 	void OptimizeRotation();
 	void RotateObject(Vector4f rotate);
+    void ScaleObject();
+    void UpdateScaleSlider();
 
 	void setObjectname(string name);
 	void setFileMaterial(string material);
