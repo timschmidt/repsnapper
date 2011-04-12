@@ -413,7 +413,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_rot_x">
-                            <property name="label" translatable="yes">Rotate X</property>
+                            <property name="label" translatable="yes">X</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -424,7 +424,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_rot_y">
-                            <property name="label" translatable="yes">Rotate Y</property>
+                            <property name="label" translatable="yes">Y</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -435,7 +435,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_rot_z">
-                            <property name="label" translatable="yes">Rotate Z</property>
+                            <property name="label" translatable="yes">Z</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -459,7 +459,7 @@
                         <child>
                           <object class="GtkLabel" id="label1">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Translate</property>
+                            <property name="label" translatable="yes">Object Translation</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -488,87 +488,6 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="position">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="label9">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Rotate</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHSeparator" id="hseparator8">
-                            <property name="visible">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHBox" id="m_box_rotate">
-                            <property name="visible">True</property>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="label10">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Scale</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">6</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHSeparator" id="hseparator9">
-                            <property name="visible">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">7</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHBox" id="m_box_scale">
-                            <property name="visible">True</property>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">8</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkCheckButton" id="m_all_axis">
-                            <property name="label" translatable="yes">All Axes</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="draw_indicator">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">9</property>
                           </packing>
                         </child>
                         <child>

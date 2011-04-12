@@ -41,7 +41,7 @@ class PrintInhibitor;
 
 class Model : public Gtk::Window
 {
-	class SpinRow;
+	class TranslationSpinRow;
 	class TempRow;
 	class AxisRow;
 
@@ -103,7 +103,7 @@ class Model : public Gtk::Window
 
 	// rfo bits
 	Gtk::TreeView *m_rfo_tree;
-	SpinRow *m_spin_rows[3];
+    TranslationSpinRow *translation_row;
 	void delete_selected_stl();
 	void duplicate_selected_stl();
 	bool get_selected_stl(RFO_Object *&object, RFO_File *&file);
