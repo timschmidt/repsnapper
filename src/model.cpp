@@ -369,10 +369,9 @@ public:
     pOn->signal_toggled().connect
       (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
     add(*pOn);
-    add(*(new Gtk::Label("temperature:")));
     m_temp = new Gtk::Label();
     add (*m_temp);
-    add(*(new Gtk::Label("target:")));
+    add(*(new Gtk::Label("Target Temperature:")));
     m_target = new Gtk::SpinButton();
     m_target->set_increments (1, 5);
     m_target->set_range(25.0, 256.0);
