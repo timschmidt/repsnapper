@@ -530,17 +530,22 @@
                         </packing>
                     </child>
                     <child>
-                      <object class="GtkHScale" id="m_scale_slider">
-                        <property name="visible">True</property>
-                        <property name="digits">2</property>
-                        <property name="draw-value">True</property>
-                      </object>
+                        <object class="GtkEventBox" id="m_scale_event_box">
+                            <child>
+                                <object class="GtkHScale" id="m_scale_slider">
+                                    <property name="tooltip_text" translatable="yes">Hello</property>
+                                    <property name="visible">True</property>
+                                    <property name="digits">2</property>
+                                    <property name="draw-value">True</property>
+                                </object>
+                            </child>
+                        </object>
                       <packing>
-                        <property name="expand">False</property>
-                        <property name="position">11</property>
+                          <property name="expand">False</property>
+                          <property name="position">11</property>
                       </packing>
-                    </child>
-                  </object>
+                  </child>
+              </object>
                 </child>
                 <child type="tab">
                   <object class="GtkLabel" id="label3">

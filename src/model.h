@@ -60,6 +60,8 @@ class Model : public Gtk::Window
 	void connect_button(const char *name, const sigc::slot<void> &slot);
 	void connect_action(const char *name, const sigc::slot<void> &slot);
 	void connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleButton *> &slot);
+    void add_statusbar_msg(const char *name, const char *message);
+    void add_statusbar_msg(Gtk::Widget *widget, const char *message);
 	virtual bool on_delete_event(GdkEventAny* event);
 
 	void load_gcode();
@@ -137,6 +139,7 @@ public:
 	void RotateObject(Vector4f rotate);
     void ScaleObject();
     void UpdateScaleSlider();
+    bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 
 	void setObjectname(string name);
 	void setFileMaterial(string material);

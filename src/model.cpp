@@ -315,6 +315,11 @@ public:
         m_box->add (*m_xyz[i]);
         m_xyz[i]->signal_value_changed().connect
             (sigc::bind(sigc::mem_fun(*this, &TranslationSpinRow::spin_value_changed), (int)i));
+
+        /* Add statusbar message */
+        stringstream oss;
+        oss << "Move object in " << axis_names[i] << "-direction (mm)";
+        m_mvc->add_statusbar_msg(m_xyz[i], oss.str().c_str());
     }
     selection_changed();
     m_box->show_all();
@@ -610,9 +615,10 @@ Model::Model(BaseObjectType* cobject,
   scale_slider->set_value(1.0);
   m_rfo_tree->get_selection()->signal_changed().connect
       (sigc::mem_fun(*this, &Model::UpdateScaleSlider));
-
   scale_slider->signal_value_changed().connect
       (sigc::mem_fun(*this, &Model::ScaleObject));
+
+  add_statusbar_msg("m_scale_event_box", "Scale the selected object");
 
   // GCode tab
   Gtk::TextView *textv = NULL;
@@ -1204,6 +1210,39 @@ void Model::alert (const char *message)
   alert (this, message);
 }
 
+/* Given a widget by label, adds a statusbar message on rollover */
+void Model::add_statusbar_msg(const char *name, const char *msg) {
+  Gtk::Widget *widget;
+  m_builder->get_widget("m_scale_event_box", widget);
+
+  add_statusbar_msg(widget, msg);
+}
+
+/* Given a widget by pointer reference, adds a statusbar message on rollover */
+void Model::add_statusbar_msg(Gtk::Widget *widget, const char *msg) {
+  widget->signal_enter_notify_event().connect
+      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &Model::updateStatusBar), msg));
+  widget->signal_leave_notify_event().connect
+      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &Model::updateStatusBar), ""));
+}
+
+/* Handler for widget rollover. Displays a message in the window status bar */
+bool Model::updateStatusBar(GdkEventCrossing *event, Glib::ustring message) {
+    Gtk::Statusbar *statusbar;
+    m_builder->get_widget("statusbar", statusbar);
+    if(event->type == GDK_ENTER_NOTIFY) {
+        statusbar->push(message);
+    } else { // event->type == GDK_LEAVE_NOTIFY
+        /* 2 pops because sometimes a previous leave event may have be missed
+         * leaving a message on the statusbar stack */
+        statusbar->pop();
+        statusbar->pop();
+    }
+    return false;
+}
+
+/* Updates the scale slider when a new STL is selected,
+ * giving it the new STL's current scale factor */
 void Model::UpdateScaleSlider() {
   RFO_File *file;
   RFO_Object *object;
@@ -1218,6 +1257,7 @@ void Model::UpdateScaleSlider() {
   scale_slider->set_value(file->stl.getScaleFactor());
 }
 
+/* Scales the object on changes of the scale slider */
 void Model::ScaleObject()
 {
   RFO_File *file;
