@@ -229,8 +229,7 @@ void View::about_dialog()
 
 static const char *axis_names[] = { "X", "Y", "Z" };
 
-enum SpinType { TRANSLATE, ROTATE, SCALE };
-class View::SpinRow {
+class View::TranslationSpinRow {
   void spin_value_changed (int axis)
   {
     RFO_File *file;
@@ -244,38 +243,23 @@ class View::SpinRow {
       return;
 
     double val = m_xyz[axis]->get_value();
-    switch (m_type) {
-    default:
-    case TRANSLATE: {
-      Matrix4f *mat;
-      if (!file)
-	mat = &object->transform3D.transform;
-      else
-	mat = &file->transform3D.transform;
-      Vector3f trans = mat->getTranslation();
-      trans.xyz[axis] = val;
-      mat->setTranslation (trans);
-      m_view->m_model->CalcBoundingBoxAndCenter();
-      break;
-    }
-    case ROTATE: {
-      Vector4f rot(0.0, 0.0, 0.0, 1.0);
-      rot.xyzw[axis] = (M_PI * val) / 180.0;
-      m_view->rotate_selection (rot);
-      break;
-    }
-    case SCALE:
-      cerr << "Scale not yet implemented\n";
-      break;
-    }
+    Matrix4f *mat;
+    if (!file)
+        mat = &object->transform3D.transform;
+    else
+        mat = &file->transform3D.transform;
+    Vector3f trans = mat->getTranslation();
+    trans.xyz[axis] = val;
+    mat->setTranslation (trans);
+    m_view->get_model()->CalcBoundingBoxAndCenter();
   }
 public:
   bool m_inhibit_update;
   View *m_view;
-  SpinType m_type;
   Gtk::Box *m_box;
   Gtk::SpinButton *m_xyz[3];
 
+  // Changed STL Selection - must update translation values
   void selection_changed ()
   {
     RFO_File *file;
@@ -285,77 +269,54 @@ public:
 
     m_inhibit_update = true;
     for (uint i = 0; i < 3; i++) {
-      switch (m_type) {
-      default:
-      case TRANSLATE: {
-	Matrix4f *mat;
-	if (!object) {
-	  for (uint i = 0; i < 3; i++)
-	    m_xyz[i]->set_value(0.0);
-	  break;
-	}
-	else if (!file)
-	  mat = &object->transform3D.transform;
-	else
-	  mat = &file->transform3D.transform;
-	Vector3f trans = mat->getTranslation();
-	for (uint i = 0; i < 3; i++)
-	  m_xyz[i]->set_value(trans.xyz[i]);
-	break;
-      }
-      case ROTATE:
-	for (uint i = 0; i < 3; i++)
-	  m_xyz[i]->set_value(0.0);
-	break;
-      case SCALE:
+      Matrix4f *mat;
+      if (!object) {
 	for (uint i = 0; i < 3; i++)
 	  m_xyz[i]->set_value(0.0);
 	break;
       }
+      else if (!file)
+	mat = &object->transform3D.transform;
+      else
+	mat = &file->transform3D.transform;
+      Vector3f trans = mat->getTranslation();
+      for (uint i = 0; i < 3; i++)
+	m_xyz[i]->set_value(trans.xyz[i]);
+      break;
     }
     m_inhibit_update = false;
   }
 
-  SpinRow(View *view, Gtk::TreeView *rfo_tree,
-	  const char *box_name, SpinType type) :
-    m_inhibit_update(false), m_view(view), m_type (type)
+  TranslationSpinRow(View *view, Gtk::TreeView *rfo_tree,
+	  const char *box_name) :
+    m_inhibit_update(false), m_view(view)
   {
     view->m_builder->get_widget (box_name, m_box);
 
     for (uint i = 0; i < 3; i++) {
-      m_box->add (*new Gtk::Label (axis_names[i]));
-      m_xyz[i] = new Gtk::SpinButton();
-      m_xyz[i]->set_numeric();
-      switch (m_type) {
-      default:
-      case TRANSLATE:
-	m_xyz[i]->set_digits (1);
-	m_xyz[i]->set_increments (0.5, 10);
-	m_xyz[i]->set_range(-500.0, +500.0);
-	break;
-      case ROTATE:
-	m_xyz[i]->set_digits (0);
-	m_xyz[i]->set_increments (45.0, 90.0);
-	m_xyz[i]->set_range(-360.0, +360.0);
-	break;
-      case SCALE:
-	m_xyz[i]->set_digits (3);
-	m_xyz[i]->set_increments (0.5, 1.0);
-	m_xyz[i]->set_range(0.001, +10.0);
-	break;
-      }
-      m_box->add (*m_xyz[i]);
-      m_xyz[i]->signal_value_changed().connect
-	(sigc::bind(sigc::mem_fun(*this, &SpinRow::spin_value_changed), (int)i));
+        m_box->add (*new Gtk::Label (axis_names[i]));
+        m_xyz[i] = new Gtk::SpinButton();
+        m_xyz[i]->set_numeric();
+        m_xyz[i]->set_digits (1);
+        m_xyz[i]->set_increments (0.5, 10);
+        m_xyz[i]->set_range(-500.0, +500.0);
+        m_box->add (*m_xyz[i]);
+        m_xyz[i]->signal_value_changed().connect
+            (sigc::bind(sigc::mem_fun(*this, &TranslationSpinRow::spin_value_changed), (int)i));
+
+        /* Add statusbar message */
+        stringstream oss;
+        oss << "Move object in " << axis_names[i] << "-direction (mm)";
+        m_view->add_statusbar_msg(m_xyz[i], oss.str().c_str());
     }
     selection_changed();
     m_box->show_all();
 
     rfo_tree->get_selection()->signal_changed().connect
-      (sigc::mem_fun(*this, &SpinRow::selection_changed));
+      (sigc::mem_fun(*this, &TranslationSpinRow::selection_changed));
   }
 
-  ~SpinRow()
+  ~TranslationSpinRow()
   {
     for (uint i = 0; i < 3; i++)
       delete m_xyz[i];
@@ -399,10 +360,9 @@ public:
     pOn->signal_toggled().connect
       (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
     add(*pOn);
-    add(*(new Gtk::Label("temperature:")));
     m_temp = new Gtk::Label();
     add (*m_temp);
-    add(*(new Gtk::Label("target:")));
+    add(*(new Gtk::Label("Target Temperature:")));
     m_target = new Gtk::SpinButton();
     m_target->set_increments (1, 5);
     m_target->set_range(25.0, 256.0);
@@ -621,21 +581,23 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_delete",        sigc::mem_fun(*this, &View::delete_selected_stl) );
   connect_button ("m_duplicate",     sigc::mem_fun(*this, &View::duplicate_selected_stl) );
   connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &View::auto_rotate) );
-  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(1,0,0, M_PI/4)));
-  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(0,1,0, M_PI/4)));
-  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(0,0,1, M_PI/4)));
+  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(1,0,0, M_PI/2)));
+  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(0,1,0, M_PI/2)));
+  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(0,0,1, M_PI/2)));
   m_builder->get_widget ("m_rfo_tree", m_rfo_tree);
 
-  static const struct {
-    const char *name;
-    SpinType type;
-  } spin_boxes[] = {
-    { "m_box_translate", TRANSLATE},
-    { "m_box_rotate", ROTATE },
-    { "m_box_scale", SCALE }
-  };
-  for (uint i = 0; i < 3; i++)
-    m_spin_rows[i] = new SpinRow (this, m_rfo_tree, spin_boxes[i].name, spin_boxes[i].type);
+  m_translation_row = new TranslationSpinRow (this, m_rfo_tree, "m_box_translate");
+
+  Gtk::HScale *scale_slider;
+  m_builder->get_widget("m_scale_slider", scale_slider);
+  scale_slider->set_range(0.01, 5.0);
+  scale_slider->set_value(1.0);
+  m_rfo_tree->get_selection()->signal_changed().connect
+      (sigc::mem_fun(*this, &View::update_scale_slider));
+  scale_slider->signal_value_changed().connect
+      (sigc::mem_fun(*this, &View::scale_object));
+
+  add_statusbar_msg("m_scale_event_box", "Scale the selected object");
 
   // GCode tab
   m_builder->get_widget ("g_gcode", m_gcode_entry);
@@ -696,8 +658,8 @@ View::View(BaseObjectType* cobject,
 View::~View()
 {
   save_settings();
+  delete m_translation_row;
   for (uint i = 0; i < 3; i++) {
-    delete m_spin_rows[i];
     delete m_axis_rows[i];
   }
   delete m_temps[TEMP_NOZZLE];
@@ -889,4 +851,64 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 		glVertex3f(Max.x, Min.y, Max.z);
 		glEnd();
 	}
+}
+
+/* Given a widget by label, adds a statusbar message on rollover */
+void View::add_statusbar_msg(const char *name, const char *msg) {
+  Gtk::Widget *widget;
+  m_builder->get_widget("m_scale_event_box", widget);
+
+  add_statusbar_msg(widget, msg);
+}
+
+/* Given a widget by pointer reference, adds a statusbar message on rollover */
+void View::add_statusbar_msg(Gtk::Widget *widget, const char *msg) {
+  widget->signal_enter_notify_event().connect
+      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), msg));
+  widget->signal_leave_notify_event().connect
+      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), ""));
+}
+
+/* Handler for widget rollover. Displays a message in the window status bar */
+bool View::updateStatusBar(GdkEventCrossing *event, Glib::ustring message)
+{
+    Gtk::Statusbar *statusbar;
+    m_builder->get_widget("statusbar", statusbar);
+    if(event->type == GDK_ENTER_NOTIFY) {
+        statusbar->push(message);
+    } else { // event->type == GDK_LEAVE_NOTIFY
+        /* 2 pops because sometimes a previous leave event may have be missed
+         * leaving a message on the statusbar stack */
+        statusbar->pop();
+        statusbar->pop();
+    }
+    return false;
+}
+
+void View::scale_object()
+{
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  Gtk::HScale *scale_slider;
+  m_builder->get_widget("m_scale_slider", scale_slider);
+
+  m_model->ScaleObject (file, object, scale_slider->get_value());
+}
+
+/* Updates the scale slider when a new STL is selected,
+ * giving it the new STL's current scale factor */
+void View::update_scale_slider() {
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  if (!file)
+    return; 
+
+  Gtk::HScale *scale_slider;
+  m_builder->get_widget("m_scale_slider", scale_slider);
+
+  scale_slider->set_value(file->stl.getScaleFactor());
 }

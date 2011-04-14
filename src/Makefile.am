@@ -29,7 +29,7 @@ SHARED_SRC= stl.cpp model.cpp view.cpp gllight.cpp gcode.cpp arcball.cpp \
 
 SHARED_INC=arcball.h convert.h gcode.h gllight.h miniball.h	\
 	model.h rfo.h file.h stdafx.h stl.h platform.h render.h		\
-	progress.h connectview.h settings.h
+	progress.h connectview.h settings.h view.h types.h
 
 # TEST_SOURCES=unittest.cpp
 

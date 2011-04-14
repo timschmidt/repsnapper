@@ -579,6 +579,16 @@ void Model::setFileLocation(string location)
     file->location = location;
 }
 
+/* Scales the object on changes of the scale slider */
+void Model::ScaleObject(RFO_File *file, RFO_Object *object, double scale)
+{
+  if (!file)
+    return;
+
+  file->stl.Scale(scale);
+  CalcBoundingBoxAndCenter();
+}
+
 void Model::RotateObject(RFO_File *file, RFO_Object *object, Vector4f rotate)
 {
   Vector3f rot(rotate.x, rotate.y, rotate.z);
@@ -592,7 +602,14 @@ void Model::RotateObject(RFO_File *file, RFO_Object *object, Vector4f rotate)
 
 void Model::OptimizeRotation()
 {
-//	stl.OptimizeRotation();
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  if (!file)
+    return; // FIXME: rotate entire Objects ...
+
+  file->stl.OptimizeRotation();
   CalcBoundingBoxAndCenter();
 }
 

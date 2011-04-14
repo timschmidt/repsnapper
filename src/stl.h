@@ -58,6 +58,9 @@ public:
 		{ Normal = Norml ; A=Point1;B=Point2;C=Point3;}
 	Triangle() {};
 
+    /* Represent the triangle as an array of length 3 {A, B, C} */
+    Vector3f &operator[](const int index);
+
 	void SetPoints(const Vector3f &P1, const Vector3f &P2, const Vector3f &P3) { A=P1;B=P2;C=P3; }
 	void SetNormal(const Vector3f &Norml) { Normal=Norml;}
 	float area();
@@ -238,11 +241,14 @@ public:
 	void OptimizeRotation();			// Auto-Rotate object to have the largest area surface down for printing
 	void CalcCenter();
 	void RotateObject(Vector3f axis, float angle);  // Rotation for manual rotate and used by OptimizeRotation
+    void Scale(float scale_factor);
+    float getScaleFactor(){ return scale_factor; };
 
 	vector<Triangle>  triangles;
 	Vector3f Min, Max, Center;
 
 private:
+    float scale_factor;
     int loadASCIIFile(std::string filename);
     int loadBinaryFile(std::string filename);
     filetype_t getFileType(std::string filename);

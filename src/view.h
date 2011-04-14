@@ -35,9 +35,9 @@ class PrintInhibitor;
 
 class View : public Gtk::Window
 {
-  class SpinRow;
   class TempRow;
   class AxisRow;
+  class TranslationSpinRow;
 
   friend class PrintInhibitor;
 
@@ -52,6 +52,10 @@ class View : public Gtk::Window
   void kick_clicked();
   void print_clicked();
   void continue_clicked();
+  void add_statusbar_msg(const char *name, const char *message);
+  void add_statusbar_msg(Gtk::Widget *widget, const char *message);
+  void update_scale_slider();
+  void scale_object();
 
   Glib::RefPtr<Gtk::Builder> m_builder;
   Model *m_model;
@@ -95,13 +99,15 @@ class View : public Gtk::Window
 
   // rfo bits
   Gtk::TreeView *m_rfo_tree;
-  SpinRow *m_spin_rows[3];
+  TranslationSpinRow *m_translation_row;
   void delete_selected_stl();
   void duplicate_selected_stl();
   void auto_rotate();
   void update_settings_gui();
 
   void setModel (Model *model);
+
+  bool updateStatusBar(GdkEventCrossing *event, Glib::ustring message);
 
  public:
   Model *get_model() { return m_model; }

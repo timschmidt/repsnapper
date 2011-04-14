@@ -4,7 +4,7 @@
   <!-- interface-naming-policy project-wide -->
   <object class="GtkWindow" id="main_window">
     <property name="width_request">1000</property>
-    <property name="height_request">700</property>
+    <property name="height_request">500</property>
     <child>
       <object class="GtkVBox" id="vbox1">
         <property name="visible">True</property>
@@ -413,7 +413,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_rot_x">
-                            <property name="label" translatable="yes">Rotate X</property>
+                            <property name="label" translatable="yes">X</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -424,7 +424,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_rot_y">
-                            <property name="label" translatable="yes">Rotate Y</property>
+                            <property name="label" translatable="yes">Y</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -435,7 +435,7 @@
                         </child>
                         <child>
                           <object class="GtkButton" id="m_rot_z">
-                            <property name="label" translatable="yes">Rotate Z</property>
+                            <property name="label" translatable="yes">Z</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
@@ -459,7 +459,7 @@
                         <child>
                           <object class="GtkLabel" id="label1">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">Translate</property>
+                            <property name="label" translatable="yes">Object Translation</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -491,87 +491,6 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel" id="label9">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Rotate</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHSeparator" id="hseparator8">
-                            <property name="visible">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHBox" id="m_box_rotate">
-                            <property name="visible">True</property>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="label10">
-                            <property name="visible">True</property>
-                            <property name="label" translatable="yes">Scale</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">6</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHSeparator" id="hseparator9">
-                            <property name="visible">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">7</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkHBox" id="m_box_scale">
-                            <property name="visible">True</property>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">8</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkCheckButton" id="m_all_axis">
-                            <property name="label" translatable="yes">All Axes</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">False</property>
-                            <property name="draw_indicator">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="position">9</property>
-                          </packing>
-                        </child>
-                        <child>
                           <object class="GtkHBox" id="hbox11">
                             <property name="visible">True</property>
                             <child>
@@ -591,7 +510,42 @@
                         <property name="position">8</property>
                       </packing>
                     </child>
-                  </object>
+                    <child>
+                      <object class="GtkLabel" id="l_scale_title">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Object Scaling</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">9</property>
+                      </packing>
+                    </child>
+                    <child>
+                        <object class="GtkHSeparator" id="m_scale_separator">
+                            <property name="visible">True</property>
+                        </object>
+                        <packing>
+                            <property name="expand">False</property>
+                            <property name="position">10</property>
+                        </packing>
+                    </child>
+                    <child>
+                        <object class="GtkEventBox" id="m_scale_event_box">
+                            <child>
+                                <object class="GtkHScale" id="m_scale_slider">
+                                    <property name="tooltip_text" translatable="yes">Hello</property>
+                                    <property name="visible">True</property>
+                                    <property name="digits">2</property>
+                                    <property name="draw-value">True</property>
+                                </object>
+                            </child>
+                        </object>
+                      <packing>
+                          <property name="expand">False</property>
+                          <property name="position">11</property>
+                      </packing>
+                  </child>
+              </object>
                 </child>
                 <child type="tab">
                   <object class="GtkLabel" id="label3">
@@ -1394,6 +1348,15 @@
             <property name="position">1</property>
           </packing>
         </child>
+        <child>
+            <object class="GtkStatusbar" id="statusbar">
+                <property name="visible">True</property>
+            </object>
+            <packing>
+                <property name="expand">False</property>
+                <property name="position">2</property>
+            </packing>
+        </child>
       </object>
     </child>
   </object>
@@ -1430,6 +1393,7 @@ Joachim Glauche &lt;info@gli-concept.de&gt;
 Timothy Schmidt &lt;timschmidt@gmail.com&gt;
 Rick Kimball &lt;rick@kimballsoftware.com&gt;
 Jan Schmidt &lt;thaytan@noraisin.net&gt;
+Harry Eakins &lt;harry.eakins@googlemail.com&gt;
 and others I forgot... (needs updating)</property>
     <property name="wrap_license">True</property>
     <child internal-child="vbox">

@@ -116,7 +116,9 @@ public:
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 
 	void OptimizeRotation();
+	void ScaleObject(RFO_File *file, RFO_Object *object, double scale);
 	void RotateObject(RFO_File *file, RFO_Object *object, Vector4f rotate);
+	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 
 	void setObjectname(string name);
 	void setFileMaterial(string material);
