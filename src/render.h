@@ -16,11 +16,12 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#ifndef VIEW_H
-#define VIEW_H
+#ifndef RENDER_H
+#define RENDER_H
 
 #include "arcball.h"
 
+class View;
 class Model;
 class gllight;
 class ArcBallT;
@@ -32,7 +33,8 @@ class Render : public Gtk::DrawingArea
   Matrix4fT m_transform;
   Vector2f  m_downPoint;
   GLUquadricObj *m_quadratic;
-  Model *m_model;
+  View *m_view;
+  Model *get_model();
   Glib::RefPtr<Gtk::TreeSelection> m_selection;
 
   float m_zoom;
@@ -45,9 +47,10 @@ class Render : public Gtk::DrawingArea
   GtkWidget *get_widget();
 
  public:
-  Render (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection);
+  Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection);
   ~Render();
 
+  void set_model (Model *model);
   virtual bool on_configure_event(GdkEventConfigure* event);
   virtual bool on_expose_event(GdkEventExpose* event);
   virtual bool on_motion_notify_event(GdkEventMotion* event);
@@ -55,4 +58,4 @@ class Render : public Gtk::DrawingArea
   virtual bool on_scroll_event(GdkEventScroll* event);
 };
 
-#endif // VIEW_H
+#endif // RENDER_H

@@ -23,6 +23,7 @@
 #include "arcball.h"
 #include "gllight.h"
 #include "settings.h"
+#include "view.h"
 #include "model.h"
 
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
@@ -32,8 +33,10 @@ inline GtkWidget *Render::get_widget()
   return GTK_WIDGET (gobj());
 }
 
-Render::Render (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection) :
-  m_arcBall(new ArcBall()), m_model(model), m_selection(selection)
+inline Model *Render::get_model() { return m_view->get_model(); }
+
+Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
+  m_arcBall(new ArcBall()), m_view (view), m_selection(selection)
 {
   set_events (Gdk::POINTER_MOTION_MASK |
 	      Gdk::BUTTON_MOTION_MASK |
@@ -67,13 +70,17 @@ Render::Render (Model *model, Glib::RefPtr<Gtk::TreeSelection> selection) :
   for (uint i = 0; i < N_LIGHTS; i++)
     m_lights[i] = NULL;
 
-  model->signal_rfo_changed().connect (sigc::mem_fun(*this, &Render::rfo_changed));
   m_selection->signal_changed().connect (sigc::mem_fun(*this, &Render::selection_changed));
 }
 
 Render::~Render()
 {
   delete m_arcBall;
+}
+
+void Render::set_model(Model *model)
+{
+  model->signal_rfo_changed().connect (sigc::mem_fun(*this, &Render::rfo_changed));
 }
 
 void Render::selection_changed()
@@ -83,10 +90,10 @@ void Render::selection_changed()
 
 void Render::rfo_changed()
 {
-  if (!m_model->rfo.Objects.size())
+  if (!get_model() || !get_model()->rfo.Objects.size())
     return;
 
-  m_zoom = (m_model->Max - m_model->Min).getMaxComponent();
+  m_zoom = (get_model()->Max - get_model()->Min).getMaxComponent();
   queue_draw();
 }
 
@@ -161,8 +168,7 @@ bool Render::on_expose_event(GdkEventExpose* event)
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
   Gtk::TreeModel::iterator iter = m_selection->get_selected();
 
-  // FIXME: Lovely MVC abstraction ;-)
-  m_model->Draw (iter);
+  m_view->Draw (iter);
 
   glPopMatrix();
 
@@ -216,8 +222,8 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     X = matrix * X;
     Vector3f Y(0,-delta.y,0);
     Y = matrix * Y;
-    m_model->Center += X*delta.length()*0.01f;
-    m_model->Center += Y*delta.length()*0.01f;
+    get_model()->Center += X*delta.length()*0.01f;
+    get_model()->Center += Y*delta.length()*0.01f;
     queue_draw();
     return true;
   }
@@ -233,7 +239,7 @@ void Render::SetEnableLight(unsigned int i, bool on)
 
 void Render::CenterView()
 {
-  glTranslatef (-m_model->Center.x - m_model->printOffset.x,
-		-m_model->Center.y - m_model->printOffset.y,
-		-m_model->Center.z);
+  glTranslatef (-get_model()->Center.x - get_model()->printOffset.x,
+		-get_model()->Center.y - get_model()->printOffset.y,
+		-get_model()->Center.z);
 }

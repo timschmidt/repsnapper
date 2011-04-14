@@ -33,16 +33,12 @@
 #include <polylib/Polygon2f.h>
 #include "settings.h"
 
-/*
-Vector3f position, normal;
-// fill vertices
-glNormal3fv( normal.xyz );
-glVertex3fv( position.xyz );
-*/
-
 using namespace std;
 using namespace vmml;
 using namespace PolyLib;
+
+class RFO;
+class GCode;
 
 typedef vector<Vector2f> outline;
 

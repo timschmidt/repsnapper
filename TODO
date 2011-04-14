@@ -1,6 +1,7 @@
 --- the plan ---
 
-* Move most of 'model.cpp' into a new 'view.cpp'
+* sort out stdafx.h includes - check whether it is
+  needed, and where ...
 
 * Serial
 	+ error dialogs - "failed to connect ?"

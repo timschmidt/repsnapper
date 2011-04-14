@@ -1,6 +1,6 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2010 Michael Meeks
+    Copyright (C) 2011 Michael Meeks
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -16,32 +16,40 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#ifndef CONNECT_VIEW_H
-#define CONNECT_VIEW_H
+#ifndef TYPES_H
+#define TYPES_H
 
-#include <gtkmm.h>
-#include <reprap/comms.h>
-#include "types.h"
+// avoid having to re-type forward definitions and enums a lot
+enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 
-class ConnectView : public Gtk::VBox {
-  Gtk::HBox	     m_hbox;
-  Gtk::Image         m_image;
-  Gtk::ToggleButton  m_connect;
-  Gtk::Label         m_port_label;
-  Gtk::Alignment     m_port_align;
-  Gtk::ComboBoxEntryText m_combo;
-  bool               m_setting_state;
+// try to avoid compile time explosion by reducing includes
+class GUI;
+class Poly;
+class View;
+class GCode;
+class Model;
+class Render;
+class Command;
+class Point2f;
+class Printer;
+class Settings;
+class Triangle;
+class Settings;
+class Segment2f;
+class AsyncSerial;
+class RepRapSerial;
+class CuttingPlane;
+class PrintInhibitor;
+class ProcessController;
 
-  Model             *m_model;
-  Settings          *m_settings;
+class RFO;
+class RFO_File;
+class RFO_Object;
+class RFO_Transform3D;
 
-  void connect_toggled();
-  void serial_state_changed (SerialState state);
-  void signal_entry_changed();
-  bool find_ports();
- public:
-  ConnectView (Model *model, Settings *settings, bool show_connect = true);
-  void try_set_state (bool connected);
-};
 
-#endif // CONNECT_VIEW_H
+enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
+enum SerialState { SERIAL_DISCONNECTED, SERIAL_DISCONNECTING,
+		   SERIAL_CONNECTED, SERIAL_CONNECTING };
+
+#endif // ENUMS_H

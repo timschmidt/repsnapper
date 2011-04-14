@@ -16,65 +16,51 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#ifndef MODEL_VIEW_CONTROLLER_H
-#define MODEL_VIEW_CONTROLLER_H
+#ifndef MODEL_H
+#define MODEL_H
 
 #include <math.h>
 
 #include <giomm/file.h>
 
-#include <reprap/comms.h>
-
 #include "stl.h"
 #include "rfo.h"
+#include "types.h"
 #include "gcode.h"
 #include "settings.h"
 
-enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 #ifdef WIN32
 #  pragma warning( disable : 4244 4267)
 #endif
 
-class Render;
-class ConnectView;
-class PrintInhibitor;
+class Progress {
+ public:
+  // Progress reporting
+  sigc::signal< void, const char *, double > m_signal_progress_start;
+  sigc::signal< void, double >               m_signal_progress_update;
+  sigc::signal< void, const char * >         m_signal_progress_stop;
 
-class Model : public Gtk::Window
+  // helpers
+  void start (const char *label, double max)
+  {
+    m_signal_progress_start.emit (label, max);
+  }
+  void stop (const char *label)
+  {
+    m_signal_progress_stop.emit (label);
+  }
+  void update (double value)
+  {
+    m_signal_progress_update.emit (value);
+  }
+};
+
+class Model
 {
-	class SpinRow;
-	class TempRow;
-	class AxisRow;
-
-	Glib::RefPtr<Gtk::Builder> m_builder;
-	Progress *m_progress;
-	ConnectView *m_view;
-	Gtk::Entry *m_gcode_entry;
-  bool m_printing;
-  unsigned long m_unconfirmed_lines;
-
 	friend class PrintInhibitor;
-	Gtk::Button *m_print_button;
-	Gtk::Button *m_continue_button;
-	Gtk::ToggleButton *m_power_button;
 
-	void connect_button(const char *name, const sigc::slot<void> &slot);
-	void connect_action(const char *name, const sigc::slot<void> &slot);
-	void connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleButton *> &slot);
-	virtual bool on_delete_event(GdkEventAny* event);
-
-	void load_gcode();
-	void save_gcode();
-	void load_stl();
-	void save_stl();
-	void send_gcode();
-	void printing_changed();
-	void power_toggled();
-	void hide_on_response(int, Gtk::Dialog *dialog);
-	void show_dialog(const char *name);
-	void about_dialog();
-	void load_settings();
-	void save_settings();
-	void save_settings_as();
+	bool m_printing;
+	unsigned long m_unconfirmed_lines;
 
   // Callbacks
   static void handle_reply(rr_dev device, void *data, rr_reply reply, float value);
@@ -83,46 +69,40 @@ class Model : public Gtk::Window
   bool handle_dev_fd(Glib::IOCondition cond);
   static void handle_want_writable(rr_dev device, void *data, char state);
 
-	// interactive bits
-	void home_all();
-	void enable_logging_toggled (Gtk::ToggleButton *button);
-	void fan_enabled_toggled (Gtk::ToggleButton *button);
-	void clear_logs();
-	Gtk::CheckButton *m_extruder_reverse;
-	Gtk::SpinButton *m_extruder_speed;
-	Gtk::SpinButton *m_extruder_length;
-	Gtk::SpinButton *m_extruder_speed_mult;
-	Gtk::SpinButton *m_extruder_length_mult;
-	Gtk::SpinButton *m_fan_voltage;
-	AxisRow *m_axis_rows[3];
-
-	TempRow *m_temps[2];
-	void temp_changed();
-
-  Glib::RefPtr<Gtk::TextBuffer> commlog, errlog, echolog;
-
-	// rfo bits
-	Gtk::TreeView *m_rfo_tree;
-	SpinRow *m_spin_rows[3];
-	void delete_selected_stl();
-	void duplicate_selected_stl();
-	bool get_selected_stl(RFO_Object *&object, RFO_File *&file);
-
 	sigc::signal< void > m_signal_rfo_changed;
 
+	bool m_inhibit_print;
+	sigc::signal< void > m_signal_inhibit_changed;
+
+	double m_temps[TEMP_LAST];
+
+	SerialState m_serial_state;
+
 public:
+	SerialState get_serial_state () { return m_serial_state; }
+	void serial_try_connect (bool connect);
+	sigc::signal< void, SerialState > m_signal_serial_state_changed;
+
+	double get_temp (TempType t) { return m_temps[(int)t]; }
+	sigc::signal< void > m_signal_temp_changed;
+
+	sigc::signal< void, const char * > m_signal_alert;
+	void alert (const char *message) { m_signal_alert.emit (message); }
+
+	Progress m_progress;
+
 	// Something in the rfo changed
 	sigc::signal< void > signal_rfo_changed() { return m_signal_rfo_changed; }
 
-	Model(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
-	void progess_bar_start (const char *label, double max);
-	void alert (const char *message);
-	static void alert (Gtk::Window *toplevel, const char *message);
+	sigc::signal< void > signal_inhibit_changed() { return m_signal_inhibit_changed; }
+	bool get_inhibit_print() { return m_inhibit_print; }
 
-	static Model *create();
+	Model();
 	~Model();
-	void SimpleAdvancedToggle();
+	void progess_bar_start (const char *label, double max);
 
+	bool IsPrinting() { return m_printing; }
+	void SimpleAdvancedToggle();
 	void SaveConfig(Glib::RefPtr<Gio::File> file);
 	void LoadConfig() { LoadConfig(Gio::File::create_for_path("repsnapper.conf")); }
 	void LoadConfig(Glib::RefPtr<Gio::File> file);
@@ -133,8 +113,10 @@ public:
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file);
 	RFO_File *AddStl(STL stl, string filename);
+	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
+
 	void OptimizeRotation();
-	void RotateObject(Vector4f rotate);
+	void RotateObject(RFO_File *file, RFO_Object *object, Vector4f rotate);
 
 	void setObjectname(string name);
 	void setFileMaterial(string material);
@@ -148,9 +130,6 @@ public:
 	void MakeRaft(float &z);
 	void WriteGCode(Glib::RefPtr<Gio::File> file);
 
-	void draw() { queue_draw(); }
-
-
 	// Communication
 	bool IsConnected();
 	void SimplePrint();
@@ -159,7 +138,7 @@ public:
 	void Continue();
 	void Restart();
 
-	void RunExtruder();
+	void RunExtruder(double extruder_speed, double extruder_length, bool reverse);
 	void SendNow(string str);
 	void setPort(string s);
 	void setSerialSpeed(int s );
@@ -178,8 +157,8 @@ public:
 	void SelectedNodeMatrices(vector<Matrix4f *> &result );
 	void newObject();
 
-	rr_dev device;
-  sigc::connection devconn;
+	rr_dev m_device;
+	sigc::connection m_devconn;
 
 	/*- Custom button interface -*/
 	void SendCustomButton(int nr);
@@ -190,6 +169,7 @@ public:
 
 	void PrintButton();
 	void ContinuePauseButton();
+	void ClearLogs();
 
 	Settings settings;
 
@@ -197,17 +177,21 @@ public:
 	Vector3f Center;
 	Vector3f Min;
 	Vector3f Max;
+	vmml::Vector3f printOffset; // margin + raft
+
 	void CalcBoundingBoxAndCenter();
+
+	// Nasties that bust our model/view split - get rid of these
+	View *m_view;
+	bool get_selected_stl(RFO_Object *&object, RFO_File *&file);
+
+	sigc::signal< void > m_model_changed;
+	void ModelChanged();
 
 	// Truly the model
 	RFO rfo;
 	GCode gcode;
-
-	// view nasties ...
-	vmml::Vector3f printOffset; // margin + raft
-	void Draw (Gtk::TreeModel::iterator &selected);
-	void DrawGrid ();
-
+	Glib::RefPtr<Gtk::TextBuffer> commlog, errlog, echolog;
 };
 
-#endif // MODEL_VIEW_CONTROLLER_H
+#endif // MODEL_H

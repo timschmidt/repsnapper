@@ -469,18 +469,17 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 	buffer->set_text (GcodeTxt);
 }
 
-void GCode::Write (Model *mvc, string filename)
+void GCode::Write (Model *model, string filename)
 {
-	FILE *file;
+  FILE *file;
 
-	file = fopen (filename.c_str(), "w+");
-	if (!file)
-	  mvc->alert ("failed to open file");
-	else {
-	  fprintf (file, "%s", buffer->get_text().c_str());
-	  fclose (file);
-	}
-	mvc->draw();
+  file = fopen (filename.c_str(), "w+");
+  if (!file)
+    model->alert ("failed to open file");
+  else {
+    fprintf (file, "%s", buffer->get_text().c_str());
+    fclose (file);
+  }
 }
 
 void GCode::append_text (const std::string &line)

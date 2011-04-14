@@ -26,6 +26,7 @@
 #include <giomm/file.h>
 #include <gtk/gtkgl.h>
 
+#include "view.h"
 #include "model.h"
 #include "gcode.h"
 
@@ -125,10 +126,7 @@ int main(int argc, char **argv)
 
   CommandLineOptions opts (argc, argv);
 
-  Model *model = Model::create();
-  if(!model) {
-    return 1;
-  }
+  Model *model = new Model();
 
   try {
     Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper")->make_directory_with_parents();
@@ -213,6 +211,8 @@ int main(int argc, char **argv)
     }
     return 0;
   }
+
+  View::create(model);
 
   for (uint i = 0; i < opts.files.size(); i++)
     model->ReadStl(Gio::File::create_for_path(opts.files[i]));

@@ -48,30 +48,11 @@ typedef unsigned int        uint;
 #include <GL/glu.h>
 #include <vmmlib/vmmlib.h>
 #include "math.h" // Needed for sqrtf
+#include "types.h"
 
 // Unpleasant needs un-winding ...
 using namespace std;
 using namespace vmml;
-
-// try to avoid compile time explosion by reducing includes
-class GUI;
-class Poly;
-class GCode;
-class Command;
-class Point2f;
-class Printer;
-class Triangle;
-class Settings;
-class Segment2f;
-class AsyncSerial;
-class RepRapSerial;
-class CuttingPlane;
-class ProcessController;
-
-class RFO;
-class RFO_File;
-class RFO_Object;
-class RFO_Transform3D;
 
 //utility macros
 //assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits

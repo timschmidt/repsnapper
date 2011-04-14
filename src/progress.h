@@ -20,18 +20,21 @@
 #define PROGRESS_H
 
 #include <string>
+#include <gtkmm.h>
 
-class Progress {
+class Progress;
+
+class ViewProgress {
   Gtk::Box *m_box;
   Gtk::ProgressBar *m_bar;
   Gtk::Label *m_label;
   double m_bar_max;
   double m_bar_cur;
- public:
-  Progress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label);
   void start (const char *label, double max);
   void stop (const char *label);
   void update (double value);
+ public:
+  ViewProgress(Progress *model, Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label);
   void set_label (std::string label);
   double maximum() { return m_bar_max; }
   double value() { return m_bar_cur; }

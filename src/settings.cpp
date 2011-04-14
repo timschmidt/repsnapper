@@ -178,7 +178,7 @@ static struct {
   BOOL_MEMBER (Display.DisplayPolygons, "DisplayPolygons", true, true),
   BOOL_MEMBER (Display.DisplayAllLayers, "DisplayAllLayers", false, true),
   BOOL_MEMBER (Display.DisplayinFill, "DisplayinFill", false, true),
-  BOOL_MEMBER (Display.DisplayDebug, "DisplayDebuginFill", false, false),
+  BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, false),
   BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
   BOOL_MEMBER (Display.DisplayCuttingPlane, "DisplayCuttingPlane", false, true),
   BOOL_MEMBER (Display.DrawVertexNumbers, "DrawVertexNumbers", false, true),
@@ -437,7 +437,7 @@ bool Settings::get_group_and_key (int i, Glib::ustring &group, Glib::ustring &ke
   return true;
 }
 
-void Settings::load_settings(Builder &builder, Glib::RefPtr<Gio::File> file)
+void Settings::load_settings (Glib::RefPtr<Gio::File> file)
 {
   Glib::KeyFile cfg;
 
@@ -487,7 +487,8 @@ void Settings::load_settings(Builder &builder, Glib::RefPtr<Gio::File> file)
 
   GCode.m_impl->loadSettings (cfg);
 
-  set_to_gui (builder);
+  m_signal_visual_settings_changed.emit();
+  m_signal_update_settings_gui.emit();
 }
 
 void Settings::save_settings(Glib::RefPtr<Gio::File> file)
@@ -735,7 +736,7 @@ void Settings::set_to_gui (Builder &builder)
   }
 }
 
-void Settings::connectToUI (Builder &builder)
+void Settings::connect_to_ui (Builder &builder)
 {
   // connect gcode configurable text sections
   GCode.m_impl->connectToUI (builder);
@@ -867,7 +868,7 @@ void Settings::connectToUI (Builder &builder)
     portspeed->signal_changed().connect
       (sigc::bind(sigc::mem_fun(*this, &Settings::get_port_speed_from_gui), builder));
   }
-  
+
   /* Update UI with defaults */
-  set_to_gui (builder);
+  m_signal_update_settings_gui.emit();
 }

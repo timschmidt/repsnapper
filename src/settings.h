@@ -173,24 +173,31 @@ class Settings {
   std::vector<std::string> CustomButtonLabel;
 
  private:
-  void set_to_gui   (Builder &builder, int i);
-  void get_from_gui (Builder &builder, int i);
-  void set_shrink_to_gui   (Builder &builder);
-  void get_shrink_from_gui (Builder &builder);
+  void set_to_gui              (Builder &builder, int i);
+  void get_from_gui            (Builder &builder, int i);
+  void set_shrink_to_gui       (Builder &builder);
+  void get_shrink_from_gui     (Builder &builder);
   void get_port_speed_from_gui (Builder &builder);
-  bool get_group_and_key (int i, Glib::ustring &group, Glib::ustring &key);
-  void get_colour_from_gui (Builder &builder, int i);
+  bool get_group_and_key       (int i, Glib::ustring &group, Glib::ustring &key);
+  void get_colour_from_gui     (Builder &builder, int i);
+
+  void set_defaults ();
  public:
-  void set_to_gui (Builder &builder);
 
   Settings ();
   ~Settings();
-  void connectToUI (Builder &builder);
-  void set_defaults ();
-  void load_settings(Builder &builder, Glib::RefPtr<Gio::File> file);
-  void save_settings(Glib::RefPtr<Gio::File> file);
+
+  // sync changed settings with the GUI eg. used post load
+  void set_to_gui (Builder &builder);
+
+  // connect settings to relevant GUI widgets
+  void connect_to_ui (Builder &builder);
+
+  void load_settings (Glib::RefPtr<Gio::File> file);
+  void save_settings (Glib::RefPtr<Gio::File> file);
 
   sigc::signal< void > m_signal_visual_settings_changed;
+  sigc::signal< void > m_signal_update_settings_gui;
 };
 
 #endif // SETTINGS_H

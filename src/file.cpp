@@ -145,5 +145,4 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
     model->settings.STLPath = directory_path;
     break;
   }
-  model->draw();
 }

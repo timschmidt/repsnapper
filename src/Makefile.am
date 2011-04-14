@@ -23,7 +23,7 @@ AM_CPPFLAGS = \
         -DSYSCONFDIR='$(repsnapperconfdir)' \
 	-g -O0 $(WARNING_FLAGS)
 
-SHARED_SRC= stl.cpp model.cpp gllight.cpp gcode.cpp arcball.cpp		\
+SHARED_SRC= stl.cpp model.cpp view.cpp gllight.cpp gcode.cpp arcball.cpp \
 	stdafx.cpp rfo.cpp file.cpp platform.cpp render.cpp	\
 	progress.cpp connectview.cpp settings.cpp
 
