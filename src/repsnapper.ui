@@ -4138,7 +4138,7 @@ and others I forgot... (needs updating)</property>
                               <object class="GtkVBox" id="vbox15">
                                 <property name="visible">True</property>
                                 <child>
-                                  <object class="GtkCheckButton" id="Display.DebuginFill ">
+                                  <object class="GtkCheckButton" id="Display.DisplayDebuginFill">
                                     <property name="label" translatable="yes">Debug Infill</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
