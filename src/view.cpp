@@ -356,13 +356,13 @@ public:
     static const char *names[] = { "Nozzle", "Bed" };
 
     add(*(new Gtk::Label(names[type])));
-    Gtk::ToggleButton *pOn = new Gtk::ToggleButton("heat on");
+    Gtk::ToggleButton *pOn = new Gtk::ToggleButton("Heat On");
     pOn->signal_toggled().connect
       (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
     add(*pOn);
     m_temp = new Gtk::Label();
     add (*m_temp);
-    add(*(new Gtk::Label("Target Temperature:")));
+    add(*(new Gtk::Label("Target Temperature (°C)")));
     m_target = new Gtk::SpinButton();
     m_target->set_increments (1, 5);
     m_target->set_range(25.0, 256.0);

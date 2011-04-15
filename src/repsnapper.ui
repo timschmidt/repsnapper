@@ -318,7 +318,7 @@
                         <property name="visible">True</property>
                         <child>
                           <object class="GtkButton" id="m_save_stl">
-                            <property name="label" translatable="yes">Save Stl</property>
+                            <property name="label" translatable="yes">Save STL</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
