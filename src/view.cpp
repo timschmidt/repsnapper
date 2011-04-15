@@ -648,11 +648,8 @@ View::View(BaseObjectType* cobject,
   else {
     m_renderer = new Render (this, m_rfo_tree->get_selection());
     pBox->add (*m_renderer);
-    Gtk::Window *pWindow = NULL;
-    m_builder->get_widget("main_window", pWindow);
-    if (pWindow)
-      pWindow->show_all();
   }
+  showAllWidgets();
 }
 
 View::~View()
@@ -666,6 +663,14 @@ View::~View()
   delete m_temps[TEMP_BED];
   delete m_cnx_view;
   delete m_progress;
+}
+
+/* Recursively sets all widgets in the window to visible */
+void View::showAllWidgets() {
+    Gtk::Window *pWindow = NULL;
+    m_builder->get_widget("main_window", pWindow);
+    if (pWindow)
+      pWindow->show_all();
 }
 
 void View::setModel(Model *model)
@@ -734,6 +739,8 @@ void View::setModel(Model *model)
 
   // connect settings
   m_model->settings.connect_to_ui (*((Builder *)&m_builder));
+
+  showAllWidgets();
 }
 
 void View::delete_selected_stl()

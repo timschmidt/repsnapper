@@ -106,6 +106,7 @@ class View : public Gtk::Window
   void update_settings_gui();
 
   void setModel (Model *model);
+  void showAllWidgets();
 
   bool updateStatusBar(GdkEventCrossing *event, Glib::ustring message);
 
