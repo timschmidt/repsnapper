@@ -65,7 +65,7 @@ sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev 
 
 ==== Ubuntu 10.10 ====
 ----
-sudo apt-get install git-core build-essential TODO 
+sudo apt-get install git-core build-essential automake intltool libtool libgtkmm-2.4-dev libgtkglext1-dev libglut3-dev
 ----
 
 ==== Ubuntu 10.04 ====
