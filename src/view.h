@@ -121,7 +121,8 @@ class View : public Gtk::Window
   void progess_bar_start (const char *label, double max);
 
   void inhibit_print_changed();
-  void alert (const char *message);
+  void alert (Gtk::MessageType t, const char *message,
+	      const char *secondary);
   void rotate_selection (vmml::Vector4f rotate);
   void stl_added (Gtk::TreePath &path);
 
@@ -133,5 +134,9 @@ class View : public Gtk::Window
   void Draw (Gtk::TreeModel::iterator &selected);
   void DrawGrid ();
 };
+
+#ifdef MODEL_IMPLEMENTATION
+#  error "The whole point is to avoid coupling the model to the view - think again"
+#endif
 
 #endif // VIEW_H

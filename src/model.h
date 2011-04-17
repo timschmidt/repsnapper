@@ -86,8 +86,9 @@ public:
 	double get_temp (TempType t) { return m_temps[(int)t]; }
 	sigc::signal< void > m_signal_temp_changed;
 
-	sigc::signal< void, const char * > m_signal_alert;
-	void alert (const char *message) { m_signal_alert.emit (message); }
+	sigc::signal< void, Gtk::MessageType, const char *, const char * > m_signal_alert;
+	void alert (const char *message);
+	void error (const char *message, const char *secondary);
 
 	Progress m_progress;
 
@@ -177,9 +178,6 @@ public:
 	vmml::Vector3f printOffset; // margin + raft
 
 	void CalcBoundingBoxAndCenter();
-
-	// Nasties that bust our model/view split - get rid of these
-	View *m_view;
 
 	sigc::signal< void > m_model_changed;
 	void ModelChanged();

@@ -17,6 +17,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "config.h"
+#define  MODEL_IMPLEMENTATION
 #include <vector>
 #include <string>
 #include <cerrno>
@@ -32,7 +33,6 @@
 #include "model.h"
 #include "rfo.h"
 #include "file.h"
-#include "view.h"
 #include "settings.h"
 #include "connectview.h"
 
@@ -694,28 +694,28 @@ void Model::handle_recv(rr_dev device, void *data, const char *reply, size_t len
   instance->commlog->insert (instance->commlog->end(), string (reply, len) + "\n");
 }
 
+void Model::alert (const char *message)
+{
+  m_signal_alert.emit (Gtk::MESSAGE_INFO, message, NULL);
+}
+
+void Model::error (const char *message, const char *secondary)
+{
+  m_signal_alert.emit (Gtk::MESSAGE_ERROR, message, secondary);
+}
+
 bool Model::handle_dev_fd(Glib::IOCondition cond)
 {
   int result;
   if (cond & Glib::IO_IN) {
     result = rr_handle_readable (m_device);
-    if (result < 0) {
-      // FIXME: upgrade alert ...
-      Gtk::MessageDialog dialog(*m_view, "Error reading from device!", false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text(strerror(errno));
-      dialog.run();
-    }
+    if (result < 0)
+      error ("Error reading from device!", strerror(errno));
   }
   if (cond & Glib::IO_OUT) {
     result = rr_handle_writable(m_device);
-    if (result < 0) {
-      // FIXME: upgrade 'alert' to be able to do this ...
-      Gtk::MessageDialog dialog (*m_view, "Error writing to device!", false,
-				 Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text(strerror(errno));
-      dialog.run();
-    }
+    if (result < 0)
+      error ("Error writing to device!", strerror(errno));
   }
   return true;
 }

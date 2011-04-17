@@ -151,9 +151,6 @@ View *View::create(Model *model)
   builder->get_widget_derived("main_window", view);
   view->setModel (model);
 
-  // FIXME: remove this.
-  model->m_view = view;
-
   return view;
 }
 
@@ -493,11 +490,14 @@ void View::inhibit_print_changed()
   }
 }
 
-void View::alert (const char *message)
+void View::alert (Gtk::MessageType t, const char *message,
+		  const char *secondary)
 {
-  Gtk::MessageDialog aDlg (*this, message, false /* markup */,
-			   Gtk::MESSAGE_INFO, Gtk::BUTTONS_OK, true);
-  aDlg.run();
+  Gtk::MessageDialog dialog (*this, message, false /* markup */,
+			     t, Gtk::BUTTONS_CLOSE, true);
+  if (secondary)
+    dialog.set_secondary_text (secondary);
+  dialog.run();
 }
 
 void View::rotate_selection (Vector4f rotate)
