@@ -520,7 +520,11 @@ void View::stl_added (Gtk::TreePath &path)
 
 void View::auto_rotate()
 {
-  m_model->OptimizeRotation();
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  m_model->OptimizeRotation(file, object);
 }
 
 void View::kick_clicked()
@@ -769,7 +773,7 @@ void View::duplicate_selected_stl()
     return;
 
   // duplicate
-  RFO_File* obj = m_model->AddStl (file->stl, file->location);
+  RFO_File* obj = m_model->AddStl (object, file->stl, file->location);
 
   // translate
   Vector3f p = file->transform3D.transform.getTranslation();

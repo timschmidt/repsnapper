@@ -487,7 +487,7 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 {
   STL stl;
   if (stl.loadFile (file->get_path()) == 0)
-    AddStl(stl, file->get_path());
+    AddStl(NULL, stl, file->get_path());
   ModelChanged();
 }
 
@@ -496,19 +496,9 @@ void Model::ModelChanged()
   m_model_changed.emit();
 }
 
-bool Model::get_selected_stl(RFO_Object *&object, RFO_File *&file)
-{
-  // FIXME: busts model/view separation
-  if (!m_view)
-    return false;
-  return m_view->get_selected_stl (object, file);
-}
-
-RFO_File* Model::AddStl(STL stl, string filename)
+RFO_File* Model::AddStl(RFO_Object *parent, STL stl, string filename)
 {
   RFO_File *file, *lastfile;
-  RFO_Object *parent;
-  get_selected_stl (parent, file);
 
   if (!parent) {
     if (rfo.Objects.size() <= 0)
@@ -543,42 +533,6 @@ void Model::newObject()
   rfo.newObject();
 }
 
-void Model::setObjectname(string name)
-{
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
-  if (object)
-    object->name = name;
-}
-
-void Model::setFileMaterial(string material)
-{
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
-  if (file)
-    file->material = material;
-}
-
-void Model::setFileType(string type)
-{
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
-  if (file)
-    file->filetype = type;
-}
-
-void Model::setFileLocation(string location)
-{
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
-  if (file)
-    file->location = location;
-}
-
 /* Scales the object on changes of the scale slider */
 void Model::ScaleObject(RFO_File *file, RFO_Object *object, double scale)
 {
@@ -600,12 +554,8 @@ void Model::RotateObject(RFO_File *file, RFO_Object *object, Vector4f rotate)
   CalcBoundingBoxAndCenter();
 }
 
-void Model::OptimizeRotation()
+void Model::OptimizeRotation(RFO_File *file, RFO_Object *object)
 {
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
-
   if (!file)
     return; // FIXME: rotate entire Objects ...
 

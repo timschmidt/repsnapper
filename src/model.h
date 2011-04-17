@@ -112,18 +112,13 @@ public:
 
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file);
-	RFO_File *AddStl(STL stl, string filename);
+	RFO_File *AddStl(RFO_Object *parent, STL stl, string filename);
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 
-	void OptimizeRotation();
+	void OptimizeRotation(RFO_File *file, RFO_Object *object);
 	void ScaleObject(RFO_File *file, RFO_Object *object, double scale);
 	void RotateObject(RFO_File *file, RFO_Object *object, Vector4f rotate);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
-
-	void setObjectname(string name);
-	void setFileMaterial(string material);
-	void setFileType(string type);
-	void setFileLocation(string location);
 
 	// GCode Functions
 	void init();
@@ -185,7 +180,6 @@ public:
 
 	// Nasties that bust our model/view split - get rid of these
 	View *m_view;
-	bool get_selected_stl(RFO_Object *&object, RFO_File *&file);
 
 	sigc::signal< void > m_model_changed;
 	void ModelChanged();
