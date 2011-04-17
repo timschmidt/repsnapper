@@ -1,4 +1,4 @@
-= Repsnapper Users Manual =
+= Repsnapper V1 Users Manual =
 
 Welcome to the RepSnapper Manual, although currently a work in progress this guide aims to help you install and use your RepSnapper software.
 
@@ -84,7 +84,7 @@ sudo zypper install fltk-devel freeglut-devel boost-devel
 
 Acquire source and compile:
 ----
-git clone git://github.com/timschmidt/repsnapper.git
+git clone git://github.com/timschmidt/repsnapper.git -b repsnapper-1.1.x
 cd repsnapper/src
 make
 ----
@@ -105,7 +105,7 @@ sudo port install fltk glut libconfig-hr boost
 
 Acquire source and compile:
 ----
-git clone git://github.com/timschmidt/repsnapper.git
+git clone git://github.com/timschmidt/repsnapper.git -b repsnapper-1.1.x
 cd repsnapper/src
 make
 ----
