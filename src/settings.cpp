@@ -62,6 +62,10 @@ public:
   { OFFSET (field.g), T_COLOUR_MEMBER, config_name "G", NULL, def_valueG, NULL, redraw }, \
   { OFFSET (field.b), T_COLOUR_MEMBER, config_name "B", NULL, def_valueB, NULL, redraw }
 
+#define FLOAT_PHASE_MEMBER(phase, phasestd, member, def_value, redraw) \
+  { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_##phase].member), T_FLOAT, \
+    #phasestd #member, #phasestd #member, def_value, NULL, redraw }
+
 // converting our offsets into type pointers
 #define PTR_OFFSET(obj, offset)  (((guchar *)obj) + offset)
 #define PTR_BOOL(obj, idx)      ((bool *)PTR_OFFSET (obj, settings[idx].member_offset))
@@ -85,13 +89,10 @@ static struct {
 
   BOOL_MEMBER  (RaftEnable, "RaftEnable", false, false),
   FLOAT_MEMBER (Raft.Size,  "RaftSize",   1.33, false),
-#define FLOAT_PHASE_MEMBER(phase, phasestd, member, def_value, redraw) \
-  { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_##phase].member), T_FLOAT, \
-    #phasestd #member, #phasestd #member, def_value, redraw }
 
   // Raft Base
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_BASE].LayerCount), T_INT,
-    "BaseLayerCount", "BaseLayerCount", 1, false },
+    "BaseLayerCount", "BaseLayerCount", 1, NULL, false},
   FLOAT_PHASE_MEMBER(BASE, Base, MaterialDistanceRatio, 1.8, false),
   FLOAT_PHASE_MEMBER(BASE, Base, Rotation, 0.0, false),
   FLOAT_PHASE_MEMBER(BASE, Base, RotationPrLayer, 90.0, false),
