@@ -788,6 +788,8 @@ void View::duplicate_selected_stl()
 
 void View::DrawGrid()
 {
+	glEnable (GL_DEPTH_TEST);
+	glDisable (GL_LIGHTING);
 	glColor3f (0.5f, 0.5f, 0.5f);
 	glBegin(GL_LINES);
 	for (uint x = 0; x < m_model->settings.Hardware.Volume.x; x += 10) {
