@@ -2280,7 +2280,7 @@ and others I forgot... (needs updating)</property>
                             <child>
                               <object class="GtkTable" id="table9">
                                 <property name="visible">True</property>
-                                <property name="n_rows">6</property>
+                                <property name="n_rows">5</property>
                                 <property name="n_columns">3</property>
                                 <property name="column_spacing">6</property>
                                 <property name="row_spacing">6</property>
@@ -2293,8 +2293,8 @@ and others I forgot... (needs updating)</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="top_attach">2</property>
-                                    <property name="bottom_attach">3</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
@@ -2308,8 +2308,8 @@ and others I forgot... (needs updating)</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="top_attach">3</property>
-                                    <property name="bottom_attach">4</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
@@ -2323,8 +2323,8 @@ and others I forgot... (needs updating)</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="top_attach">4</property>
-                                    <property name="bottom_attach">5</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
@@ -2363,8 +2363,8 @@ and others I forgot... (needs updating)</property>
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
-                                    <property name="top_attach">2</property>
-                                    <property name="bottom_attach">3</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
@@ -2403,8 +2403,8 @@ and others I forgot... (needs updating)</property>
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
-                                    <property name="top_attach">3</property>
-                                    <property name="bottom_attach">4</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
@@ -2443,8 +2443,8 @@ and others I forgot... (needs updating)</property>
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
-                                    <property name="top_attach">4</property>
-                                    <property name="bottom_attach">5</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
                                 </child>
@@ -2457,8 +2457,8 @@ and others I forgot... (needs updating)</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="top_attach">5</property>
-                                    <property name="bottom_attach">6</property>
+                                    <property name="top_attach">4</property>
+                                    <property name="bottom_attach">5</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
@@ -2506,10 +2506,10 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="spacing">6</property>
                                     <child>
-                                      <object class="GtkLabel" id="label94">
+                                      <object class="GtkLabel" id="label95">
                                         <property name="visible">True</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Opacity</property>
+                                        <property name="label" translatable="yes">Highlight Strength</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2517,11 +2517,11 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="Display.PolygonOpacity">
+                                      <object class="GtkSpinButton" id="Display.Highlight">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
-                                        <property name="invisible_char">•</property>
-                                        <property name="adjustment">Display.PolygonOpacityAdjustment</property>
+                                        <property name="invisible_char">●</property>
+                                        <property name="adjustment">Display.HighlightAdjustment</property>
                                         <property name="digits">2</property>
                                       </object>
                                       <packing>
@@ -2572,8 +2572,8 @@ and others I forgot... (needs updating)</property>
                                   <packing>
                                     <property name="left_attach">2</property>
                                     <property name="right_attach">3</property>
-                                    <property name="top_attach">3</property>
-                                    <property name="bottom_attach">4</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
@@ -2612,8 +2612,8 @@ and others I forgot... (needs updating)</property>
                                   <packing>
                                     <property name="left_attach">2</property>
                                     <property name="right_attach">3</property>
-                                    <property name="top_attach">4</property>
-                                    <property name="bottom_attach">5</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
@@ -2625,45 +2625,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="draw_indicator">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left_attach">2</property>
-                                    <property name="right_attach">3</property>
-                                    <property name="top_attach">2</property>
-                                    <property name="bottom_attach">3</property>
-                                    <property name="x_options">GTK_FILL</property>
-                                    <property name="y_options">GTK_FILL</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkHBox" id="hbox29">
-                                    <property name="visible">True</property>
-                                    <property name="spacing">6</property>
-                                    <child>
-                                      <object class="GtkLabel" id="label95">
-                                        <property name="visible">True</property>
-                                        <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Highlight Strength</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="position">0</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkSpinButton" id="Display.Highlight">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="invisible_char">•</property>
-                                        <property name="adjustment">Display.HighlightAdjustment</property>
-                                        <property name="digits">2</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">False</property>
-                                        <property name="position">1</property>
-                                      </packing>
-                                    </child>
                                   </object>
                                   <packing>
                                     <property name="left_attach">2</property>
@@ -2691,12 +2652,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="x_options">GTK_FILL</property>
                                     <property name="y_options">GTK_FILL</property>
                                   </packing>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -4272,10 +4227,10 @@ and others I forgot... (needs updating)</property>
   <object class="GtkSizeGroup" id="PreferencesGeometrySizeGroup"/>
   <object class="GtkSizeGroup" id="PreferencesPrintSpeedSizeGroup">
     <widgets>
-      <widget name="Hardware.MinPrintSpeedXY"/>
-      <widget name="Hardware.MaxPrintSpeedXY"/>
-      <widget name="Hardware.MaxPrintSpeedZ"/>
       <widget name="Hardware.MinPrintSpeedZ"/>
+      <widget name="Hardware.MaxPrintSpeedZ"/>
+      <widget name="Hardware.MaxPrintSpeedXY"/>
+      <widget name="Hardware.MinPrintSpeedXY"/>
     </widgets>
   </object>
   <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
@@ -4300,51 +4255,20 @@ and others I forgot... (needs updating)</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkSizeGroup" id="PreferencesDisplaySizeGroup">
-    <widgets>
-      <widget name="Display.DisplayinFill"/>
-      <widget name="Display.DisplayAllLayers"/>
-      <widget name="hbox15"/>
-      <widget name="hbox16"/>
-      <widget name="hbox28"/>
-      <widget name="hbox29"/>
-    </widgets>
-  </object>
-  <object class="GtkSizeGroup" id="PreferencesDisplayColourGroup">
-    <widgets>
-      <widget name="label95"/>
-      <widget name="label95"/>
-      <widget name="label103"/>
-      <widget name="label102"/>
-      <widget name="label101"/>
-      <widget name="label100"/>
-      <widget name="label94"/>
-      <widget name="label96"/>
-      <widget name="label99"/>
-      <widget name="label98"/>
-      <widget name="label97"/>
-    </widgets>
-  </object>
+  <object class="GtkSizeGroup" id="PreferencesDisplaySizeGroup"/>
+  <object class="GtkSizeGroup" id="PreferencesDisplayColourGroup"/>
   <object class="GtkSizeGroup" id="PreferencesDisplayCol1">
     <widgets>
-      <widget name="label118"/>
-      <widget name="label116"/>
-      <widget name="Display.DisplayCuttingPlane"/>
-      <widget name="label113"/>
-      <widget name="label107"/>
-      <widget name="Display.DisplayEndpoints"/>
-      <widget name="Display.DisplayBBox"/>
-      <widget name="alignment21"/>
       <widget name="alignment24"/>
+      <widget name="alignment21"/>
+      <widget name="Display.DisplayBBox"/>
+      <widget name="Display.DisplayEndpoints"/>
+      <widget name="label107"/>
+      <widget name="label113"/>
+      <widget name="Display.DisplayCuttingPlane"/>
+      <widget name="label116"/>
+      <widget name="label118"/>
     </widgets>
   </object>
-  <object class="GtkSizeGroup" id="PreferencesDisplaySpinGroup">
-    <widgets>
-      <widget name="Display.EndPointSize"/>
-      <widget name="Display.NormalsLength"/>
-      <widget name="Display.Highlight"/>
-      <widget name="Display.PolygonOpacity"/>
-      <widget name="Display.TempUpdateSpeed"/>
-    </widgets>
-  </object>
+  <object class="GtkSizeGroup" id="PreferencesDisplaySpinGroup"/>
 </interface>

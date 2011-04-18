@@ -201,8 +201,8 @@ void GCode::draw(const Settings &settings)
 	/*--------------- Drawing -----------------*/
 
 	Vector3f thisPos(0,0,0);
-	Vector3f LastColor = Vector3f(0.0f,0.0f,0.0f);
-	Vector3f Color = Vector3f(0.0f,0.0f,0.0f);
+	Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
+	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
 	float	Distance = 0.0f;
 	Vector3f pos(0,0,0);
 	uint start = (uint)(settings.Display.GCodeDrawStart*(float)(commands.size()));
@@ -210,6 +210,8 @@ void GCode::draw(const Settings &settings)
 
 	float LastE=0.0f;
 	bool extruderon = false;
+        glEnable(GL_BLEND);
+        glDisable(GL_CULL_FACE);
 	for(uint i=start;i<commands.size() && i < end ;i++)
 	{
 		switch(commands[i].Code)
@@ -224,16 +226,16 @@ void GCode::draw(const Settings &settings)
 			break;
 		case COORDINATEDMOTION3D:
 			if (extruderon)
-			  Color = settings.Display.GCodeExtrudeRGB;
+			  Color = settings.Display.GCodeExtrudeRGBA;
 			else
-			  Color = settings.Display.GCodeMoveRGB;
+			  Color = settings.Display.GCodeMoveRGBA;
 			LastColor = Color;
 			Distance += (commands[i].where-pos).length();
 			glLineWidth(3);
 			glBegin(GL_LINES);
-			glColor3fv(&Color[0]);
+			glColor4fv(&Color[0]);
 			if(i==end-1)
-				glColor3f(0,1,0);
+				glColor4f(0,1,0,Color.a);
 			glVertex3fv((GLfloat*)&pos);
 			glVertex3fv((GLfloat*)&commands[i].where);
 			glEnd();
@@ -248,7 +250,7 @@ void GCode::draw(const Settings &settings)
 				float luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
 				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
-				Color = settings.Display.GCodeMoveRGB;
+				Color = settings.Display.GCodeMoveRGBA;
 				Color *= luma;
 				}
 			else
@@ -258,18 +260,18 @@ void GCode::draw(const Settings &settings)
 				float luma = speed/settings.Hardware.MaxPrintSpeedXY;
 				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
-			        Color = settings.Display.GCodeExtrudeRGB;
+			        Color = settings.Display.GCodeExtrudeRGBA;
 				Color *= luma;
 				}
 			if(settings.Display.LuminanceShowsSpeed == false)
 				LastColor = Color;
 			Distance += (commands[i].where-pos).length();
 			glBegin(GL_LINES);
-			glColor3fv(&LastColor[0]);
+			glColor4fv(&LastColor[0]);
 			if(i==end-1)
 				glColor3f(1,0,0);
 			glVertex3fv((GLfloat*)&pos);
-			glColor3fv(&Color[0]);
+			glColor4fv(&Color[0]);
 			if(i==end-1)
 				glColor3f(1,0,0);
 			glVertex3fv((GLfloat*)&commands[i].where);

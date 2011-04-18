@@ -146,16 +146,15 @@ class Settings {
     bool DrawCPLineNumbers;
     bool DrawCPOutlineNumbers;
     float CuttingPlaneValue;
-    float PolygonOpacity;
     bool LuminanceShowsSpeed;
 
     // Rendering
-    vmml::Vector3f PolygonRGB;
-    vmml::Vector3f WireframeRGB;
-    vmml::Vector3f NormalsRGB;
-    vmml::Vector3f EndpointsRGB;
-    vmml::Vector3f GCodeExtrudeRGB;
-    vmml::Vector3f GCodeMoveRGB;
+    vmml::Vector4f PolygonRGBA;
+    vmml::Vector4f WireframeRGBA;
+    vmml::Vector4f NormalsRGBA;
+    vmml::Vector4f EndpointsRGBA;
+    vmml::Vector4f GCodeExtrudeRGBA;
+    vmml::Vector4f GCodeMoveRGBA;
     float    Highlight;
     float    NormalsLength;
     float    EndPointSize;

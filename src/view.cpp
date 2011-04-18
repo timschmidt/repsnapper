@@ -788,9 +788,12 @@ void View::duplicate_selected_stl()
 
 void View::DrawGrid()
 {
+	glEnable (GL_BLEND);
 	glEnable (GL_DEPTH_TEST);
 	glDisable (GL_LIGHTING);
-	glColor3f (0.5f, 0.5f, 0.5f);
+
+	glLineWidth (1.0);
+	glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
 	glBegin(GL_LINES);
 	for (uint x = 0; x < m_model->settings.Hardware.Volume.x; x += 10) {
 		glVertex3f (x, 0.0f, 0.0f);
@@ -823,7 +826,7 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 	// Move objects
 	glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+m_model->settings.Hardware.PrintMargin.z);
 	glPolygonOffset (0.5f, 0.5f);
-	m_model->rfo.draw (m_model->settings, 1.0, selected);
+	m_model->rfo.draw (m_model->settings, selected);
 
 	if (m_model->settings.Display.DisplayGCode)
 	{
@@ -833,7 +836,7 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 	}
 	glPolygonOffset (-0.5f, -0.5f);
 	Gtk::TreeModel::iterator iter;
-	m_model->rfo.draw (m_model->settings, m_model->settings.Display.PolygonOpacity, iter);
+	m_model->rfo.draw (m_model->settings, iter);
 
 	Vector3f Min = m_model->Min;
 	Vector3f Max = m_model->Max;

@@ -235,7 +235,7 @@ public:
 
 	void clear() { triangles.clear(); }
 	void displayInfillOld(const Settings &settings, CuttingPlane &plane, uint LayerNr, vector<int>& altInfillLayers);
-	void draw (RFO &rfo, const Settings &settings, float opacity = 1.0f);
+	void draw (RFO &rfo, const Settings &settings);
 	void CenterAroundXY();
 	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);	// Extract a 2D polygonset from a 3D model
 	void OptimizeRotation();			// Auto-Rotate object to have the largest area surface down for printing

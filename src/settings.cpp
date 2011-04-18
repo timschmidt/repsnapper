@@ -57,10 +57,11 @@ public:
 #define STRING_MEMBER(field, config_name, def_value, redraw) \
   { OFFSET (field), T_STRING, config_name, #field, 0.0, def_value, redraw }
 
-#define COLOUR_MEMBER(field, config_name, def_valueR, def_valueG, def_valueB, redraw) \
+#define COLOUR_MEMBER(field, config_name, def_valueR, def_valueG, def_valueB, def_valueA, redraw) \
   { OFFSET (field.r), T_COLOUR_MEMBER, config_name "R", NULL, def_valueR, NULL, redraw }, \
   { OFFSET (field.g), T_COLOUR_MEMBER, config_name "G", NULL, def_valueG, NULL, redraw }, \
-  { OFFSET (field.b), T_COLOUR_MEMBER, config_name "B", NULL, def_valueB, NULL, redraw }
+  { OFFSET (field.b), T_COLOUR_MEMBER, config_name "B", NULL, def_valueB, NULL, redraw }, \
+  { OFFSET (field.a), T_COLOUR_MEMBER, config_name "A", NULL, def_valueA, NULL, redraw }
 
 #define FLOAT_PHASE_MEMBER(phase, phasestd, member, def_value, redraw) \
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_##phase].member), T_FLOAT, \
@@ -73,7 +74,7 @@ public:
 #define PTR_UINT(obj, idx)      ((uint *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_FLOAT(obj, idx)     ((float *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_STRING(obj, idx)    ((std::string *)PTR_OFFSET (obj, settings[idx].member_offset))
-#define PTR_COLOUR(obj, idx)    ((vmml::Vector3f *)PTR_OFFSET (obj, settings[idx].member_offset))
+#define PTR_COLOUR(obj, idx)    ((vmml::Vector4f *)PTR_OFFSET (obj, settings[idx].member_offset))
 
 enum SettingType { T_BOOL, T_INT, T_FLOAT, T_STRING, T_COLOUR_MEMBER };
 static struct {
@@ -190,7 +191,6 @@ static struct {
   BOOL_MEMBER (Display.DrawCPOutlineNumbers, "DrawCPOutlineNumbers", false, true),
 
   FLOAT_MEMBER (Display.CuttingPlaneValue, "CuttingPlaneValue", 0, true),
-  FLOAT_MEMBER (Display.PolygonOpacity, "PolygonOpacity", 0.5, true),
   BOOL_MEMBER  (Display.LuminanceShowsSpeed, "LuminanceShowsSpeed", false, true),
   FLOAT_MEMBER (Display.Highlight, "Highlight", 0.7, true),
   FLOAT_MEMBER (Display.NormalsLength, "NormalsLength", 10, true),
@@ -198,18 +198,18 @@ static struct {
   FLOAT_MEMBER (Display.TempUpdateSpeed, "TempUpdateSpeed", 3, false),
 
   // Colour selectors settings
-  COLOUR_MEMBER(Display.PolygonRGB,
-      "Display.PolygonColour", 0, 0.38, 0.5, true),
-  COLOUR_MEMBER(Display.WireframeRGB,
-      "Display.WireframeColour", 1.0, 0.48, 0, true),
-  COLOUR_MEMBER(Display.NormalsRGB,
-      "Display.NormalsColour", 0.62, 1.0, 0, true),
-  COLOUR_MEMBER(Display.EndpointsRGB,
-      "Display.EndpointsColour", 0, 1.0, 0.7, true),
-  COLOUR_MEMBER(Display.GCodeExtrudeRGB,
-      "Display.GCodeExtrudeColour", 0.18, 0, 0.18, true),
-  COLOUR_MEMBER(Display.GCodeMoveRGB,
-      "Display.GCodeMoveColour", 1.0, 0.05, 1, true),
+  COLOUR_MEMBER(Display.PolygonRGBA,
+      "Display.PolygonColour", 0, 0.38, 0.5, 1.0, true),
+  COLOUR_MEMBER(Display.WireframeRGBA,
+      "Display.WireframeColour", 1.0, 0.48, 0, 0.5, true),
+  COLOUR_MEMBER(Display.NormalsRGBA,
+      "Display.NormalsColour", 0.62, 1.0, 0, 1.0, true),
+  COLOUR_MEMBER(Display.EndpointsRGBA,
+      "Display.EndpointsColour", 0, 1.0, 0.7, 1.0, true),
+  COLOUR_MEMBER(Display.GCodeExtrudeRGBA,
+      "Display.GCodeExtrudeColour", 0.18, 0, 0.18, 1.0, true),
+  COLOUR_MEMBER(Display.GCodeMoveRGBA,
+      "Display.GCodeMoveColour", 1.0, 0.05, 1, 0.5, true),
 };
 
 // Add any GtkSpinButtons to this array:
@@ -289,12 +289,12 @@ static struct {
   const char *glade_name;
 }
 colour_selectors[] = {
-  { OFFSET(Display.PolygonRGB), "Display.PolygonRGB" },
-  { OFFSET(Display.WireframeRGB), "Display.WireframeRGB" },
-  { OFFSET(Display.NormalsRGB), "Display.NormalsRGB" },
-  { OFFSET(Display.EndpointsRGB), "Display.EndpointsRGB" },
-  { OFFSET(Display.GCodeExtrudeRGB), "Display.GCodeExtrudeRGB" },
-  { OFFSET(Display.GCodeMoveRGB), "Display.GCodeMoveRGB" }
+  { OFFSET(Display.PolygonRGBA), "Display.PolygonRGB" },
+  { OFFSET(Display.WireframeRGBA), "Display.WireframeRGB" },
+  { OFFSET(Display.NormalsRGBA), "Display.NormalsRGB" },
+  { OFFSET(Display.EndpointsRGBA), "Display.EndpointsRGB" },
+  { OFFSET(Display.GCodeExtrudeRGBA), "Display.GCodeExtrudeRGB" },
+  { OFFSET(Display.GCodeMoveRGBA), "Display.GCodeMoveRGB" }
 };
 
 static const char *GCodeNames[] = { "Start", "Layer", "End" };
@@ -686,8 +686,8 @@ void Settings::get_port_speed_from_gui (Builder &builder)
 void Settings::get_colour_from_gui (Builder &builder, int i)
 {
   const char *glade_name = colour_selectors[i].glade_name;
-  vmml::Vector3f *dest =
-      (vmml::Vector3f *) PTR_OFFSET(this, colour_selectors[i].member_offset);
+  vmml::Vector4f *dest =
+      (vmml::Vector4f *)PTR_OFFSET(this, colour_selectors[i].member_offset);
   Gdk::Color c;
   Gtk::ColorButton *w = NULL;
   builder->get_widget (glade_name, w);
@@ -697,6 +697,7 @@ void Settings::get_colour_from_gui (Builder &builder, int i)
   dest->r = c.get_red_p();
   dest->g = c.get_green_p();
   dest->b = c.get_blue_p();
+  dest->a = (float) (w->get_alpha()) / 65535.0;
 
   m_signal_visual_settings_changed.emit();
 }
@@ -715,14 +716,16 @@ void Settings::set_to_gui (Builder &builder)
 
   for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
       const char *glade_name = colour_selectors[i].glade_name;
-      vmml::Vector3f *src =
-        (vmml::Vector3f *) PTR_OFFSET(this, colour_selectors[i].member_offset);
+      vmml::Vector4f *src =
+        (vmml::Vector4f *) PTR_OFFSET(this, colour_selectors[i].member_offset);
       Gdk::Color c;
       Gtk::ColorButton *w = NULL;
       builder->get_widget (glade_name, w);
       if (w) {
+        w->set_use_alpha(true);
         c.set_rgb_p(src->r, src->g, src->b);
         w->set_color(c);
+        w->set_alpha(src->a * 65535.0);
       }
   }
 

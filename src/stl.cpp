@@ -374,7 +374,7 @@ void STL::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 }
 
 // FIXME: why !? do we grub around with the rfo here ?
-void STL::draw(RFO &rfo, const Settings &settings, float opacity)
+void STL::draw(RFO &rfo, const Settings &settings)
 {
 	// polygons
 	glEnable(GL_LIGHTING);
@@ -383,7 +383,7 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	float no_mat[] = {0.0f, 0.0f, 0.0f, 1.0f};
 //	float mat_ambient[] = {0.7f, 0.7f, 0.7f, 1.0f};
 //	float mat_ambient_color[] = {0.8f, 0.8f, 0.2f, 1.0f};
-	float mat_diffuse[] = {0.1f, 0.5f, 0.8f, opacity};
+	float mat_diffuse[] = {0.1f, 0.5f, 0.8f, 1.0f};
 	float mat_specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
 //	float no_shininess = 0.0f;
 //	float low_shininess = 5.0f;
@@ -391,8 +391,8 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 //	float mat_emission[] = {0.3f, 0.2f, 0.2f, 0.0f};
         int i;
 
-        for (i = 0; i < 3; i++)
-            mat_diffuse[i] = settings.Display.PolygonRGB.rgb[i];
+        for (i = 0; i < 4; i++)
+            mat_diffuse[i] = settings.Display.PolygonRGBA.rgba[i];
 
 	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.Display.Highlight;
 
@@ -436,7 +436,6 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	}
 
 	glDisable (GL_POLYGON_OFFSET_FILL);
-	glDisable(GL_BLEND);
 
 	// WireFrame
 	if(settings.Display.DisplayWireframe)
@@ -445,11 +444,11 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 			glDisable(GL_LIGHTING);
 
 
-                for (i = 0; i < 3; i++)
-                        mat_diffuse[i] = settings.Display.WireframeRGB.rgb[i];
+                for (i = 0; i < 4; i++)
+                        mat_diffuse[i] = settings.Display.WireframeRGBA.rgba[i];
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
-		glColor3fv(settings.Display.WireframeRGB.rgb);
+		glColor4fv(settings.Display.WireframeRGBA.rgba);
 		for(size_t i=0;i<triangles.size();i++)
 		{
 			glBegin(GL_LINE_LOOP);
@@ -467,7 +466,7 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	// normals
 	if(settings.Display.DisplayNormals)
 	{
-		glColor3fv(settings.Display.NormalsRGB.rgb);
+		glColor4fv(settings.Display.NormalsRGBA.rgba);
 		glBegin(GL_LINES);
 		for(size_t i=0;i<triangles.size();i++)
 		{
@@ -482,7 +481,7 @@ void STL::draw(RFO &rfo, const Settings &settings, float opacity)
 	// Endpoints
 	if(settings.Display.DisplayEndpoints)
 	{
-		glColor3fv(settings.Display.EndpointsRGB.rgb);
+		glColor4fv(settings.Display.EndpointsRGBA.rgba);
 		glPointSize(settings.Display.EndPointSize);
 		glEnable(GL_POINT_SMOOTH);
 		glBegin(GL_POINTS);
