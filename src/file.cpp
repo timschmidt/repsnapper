@@ -25,10 +25,9 @@
 #include "model.h"
 
 namespace {
-  Glib::RefPtr<Gio::File> openGtk(const char *directory, const char *filter_str,
-                                  FileChooser::Op op, const char *title) {
-    Glib::RefPtr<Gio::File> result;
-    gboolean multiple = FALSE;
+  static GSList *openGtk(const char *directory, const char *filter_str,
+                                  FileChooser::Op op, const char *title, gboolean multiple) {
+    GSList *result = NULL;
     GtkFileChooserAction action;
     const char *button_text;
 
@@ -54,6 +53,7 @@ namespace {
     GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
     if (directory)
       gtk_file_chooser_set_current_folder (chooser, directory);
+
     gtk_file_chooser_set_select_multiple (chooser, multiple);
 
     // essentially case-insensitive file filter
@@ -74,10 +74,7 @@ namespace {
     gtk_file_chooser_add_filter (chooser, allfiles);
 
     if (gtk_dialog_run (GTK_DIALOG (chooser)) == GTK_RESPONSE_ACCEPT) {
-      GFile *cfile = gtk_file_chooser_get_file(chooser);
-      if(cfile) {
-        result = Glib::wrap(cfile);
-      }
+      result = gtk_file_chooser_get_files(chooser);
     }
     gtk_widget_destroy (dialog);
 
@@ -89,10 +86,12 @@ namespace {
 // FIXME: impl. multi-selection cleanly
 void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
 {
-  Glib::RefPtr<Gio::File> file;
+  GSList *files;
+  GSList *cur;
   const char *filter;
   const char *directory;
   const char *title;
+  gboolean multiple = FALSE;
 
   switch (t) {
   case SETTINGS:
@@ -104,45 +103,55 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
     filter = "*.gcode";
     title = _("Choose GCODE filename");
     directory = model->settings.GCodePath.c_str();
+    multiple = (o == FileChooser::OPEN);
     break;
   case STL:
   default:
     filter = "*.stl";
     title = _("Choose STL filename");
     directory = model->settings.STLPath.c_str();
+    multiple = (o == FileChooser::OPEN);
     break;
   }
 
   if (!directory || directory[0] == '\0')
     directory = ".";
 
-  file = openGtk (directory, filter, o, title);
-  if(!file)                     // TODO: Indicate error
+  files = openGtk (directory, filter, o, title, multiple);
+  if(!files) // TODO: Indicate error on errors. Nothing on cancellation
     return;
 
-  std::string directory_path = file->get_parent()->get_path();
+  for (cur = files; cur != NULL; cur = g_slist_next(cur)) {
+    Glib::RefPtr<Gio::File> file = Glib::wrap((GFile *)(cur->data)); // Takes ownership
 
-  switch (t) {
-  case GCODE:
-    if (o == OPEN)
-      model->ReadGCode (file);
-    else
-      model->WriteGCode (file);
-    model->settings.GCodePath = directory_path;
-    break;
-  case SETTINGS:
-    if (o == OPEN)
-      model->LoadConfig (file);
-    else
-      model->SaveConfig (file);
-    break;
-  default:
-  case STL:
-    if (o == OPEN)
-      model->ReadStl (file);
-    else
-      model->alert (_("STL saving not yet implemented"));
-    model->settings.STLPath = directory_path;
-    break;
+    if (!file) 
+      continue; // should never happen
+
+   std::string directory_path = file->get_parent()->get_path();
+
+    switch (t) {
+    case GCODE:
+      if (o == OPEN)
+        model->ReadGCode (file);
+      else
+        model->WriteGCode (file);
+      model->settings.GCodePath = directory_path;
+      break;
+    case SETTINGS:
+      if (o == OPEN)
+        model->LoadConfig (file);
+      else
+        model->SaveConfig (file);
+      break;
+    default:
+    case STL:
+      if (o == OPEN)
+        model->ReadStl (file);
+      else
+        model->alert (_("STL saving not yet implemented"));
+      model->settings.STLPath = directory_path;
+      break;
+    }
   }
+  g_slist_free(files);
 }
