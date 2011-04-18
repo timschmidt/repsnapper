@@ -199,7 +199,7 @@ static struct {
 
   // Colour selectors settings
   COLOUR_MEMBER(Display.PolygonRGBA,
-      "Display.PolygonColour", 0, 0.38, 0.5, 1.0, true),
+      "Display.PolygonColour", 0, 1.0, 1.0, 0.5, true),
   COLOUR_MEMBER(Display.WireframeRGBA,
       "Display.WireframeColour", 1.0, 0.48, 0, 0.5, true),
   COLOUR_MEMBER(Display.NormalsRGBA,
@@ -207,7 +207,7 @@ static struct {
   COLOUR_MEMBER(Display.EndpointsRGBA,
       "Display.EndpointsColour", 0, 1.0, 0.7, 1.0, true),
   COLOUR_MEMBER(Display.GCodeExtrudeRGBA,
-      "Display.GCodeExtrudeColour", 0.18, 0, 0.18, 1.0, true),
+      "Display.GCodeExtrudeColour", 1.0, 1.0, 0.0, 1.0, true),
   COLOUR_MEMBER(Display.GCodeMoveRGBA,
       "Display.GCodeMoveColour", 1.0, 0.05, 1, 0.5, true),
 };
