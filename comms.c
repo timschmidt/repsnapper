@@ -108,6 +108,7 @@ void empty_buffers(rr_dev device) {
 void rr_reset(rr_dev device) {
   empty_buffers(device);
   device->lineno = 0;
+  rr_enqueue_internal(device, RR_PRIO_HIGH, NULL, "M110", 4, -1);
 }
 
 int rr_close(rr_dev device) {
