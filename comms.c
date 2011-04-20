@@ -94,7 +94,6 @@ void empty_buffers(rr_dev device) {
       free(j);
       j = next;
     }
-    free(device->sendhead[i]);
     device->sendhead[i] = NULL;
   }
   for(i = 0; i < device->sentcachesize; ++i) {
