@@ -260,7 +260,7 @@ bool Model::IsConnected()
 void Model::serial_try_connect (bool connect)
 {
   int result;
-  if(connect) {
+  if (connect) {
     m_signal_serial_state_changed.emit (SERIAL_CONNECTING);
     result = rr_open (m_device, settings.Hardware.PortName.c_str(),
 		      settings.Hardware.SerialSpeed);
@@ -271,6 +271,7 @@ void Model::serial_try_connect (bool connect)
       dialog.set_secondary_text(strerror(errno));
       dialog.run();
     } else {
+      rr_reset (m_device);
       m_signal_serial_state_changed.emit (SERIAL_CONNECTED);
     }
   } else {
@@ -480,7 +481,7 @@ void Model::Goto(string axis, float position)
 void Model::STOP()
 {
 	SendNow("M112");
-  rr_reset(m_device);
+  	rr_reset(m_device);
 }
 
 void Model::ReadStl(Glib::RefPtr<Gio::File> file)
