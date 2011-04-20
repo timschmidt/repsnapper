@@ -81,6 +81,7 @@ rr_dev rr_create(rr_proto proto,
                  rr_boolcb want_writable, void *ww_data,
                  size_t resend_cache_size);
 int rr_open(rr_dev device, const char *port, long speed);
+void rr_reset_lineno(rr_dev device);
 void rr_reset(rr_dev device);
 int rr_close(rr_dev device);
 /* Deallocate */

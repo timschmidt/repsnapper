@@ -81,6 +81,8 @@ int fived_handle_reply(rr_dev device, const char *reply, size_t nbytes) {
       device->onerr(device, device->onerr_data, RR_E_HARDWARE_FAULT, reply, nbytes);
     }
     return RR_E_HARDWARE_FAULT;
+  } else if (!strncasecmp ("start", reply, 5)) {
+    rr_reset_lineno (device);
   } else {
     if(device->onerr) {
       device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
