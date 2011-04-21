@@ -82,6 +82,15 @@ int fived_handle_reply(rr_dev device, const char *reply, size_t nbytes) {
     }
     return RR_E_HARDWARE_FAULT;
   } else if (!strncasecmp ("start", reply, 5)) {
+    /*
+     * This is non-intuitive. If we reset the controller, when we next send
+     * a command sequence, on the first command we will get a 'start',
+     * meaning we should reset the line number. Problem is we then send
+     * the rest of the command sequence and get another 'start' in mid
+     * flow for some controllers, which gets us out of sync. Ergo we need
+     * to reset the line number with a command each time we hit one of
+     * these.
+     */
     rr_reset_lineno (device);
   } else {
     if(device->onerr) {
