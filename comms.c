@@ -200,13 +200,21 @@ ssize_t fmtblock(rr_dev device, blocknode *node) {
 }
 
 void rr_enqueue_internal(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes, long long line) {
+  /*
+   * We can only send one line at a time, and we need to generate
+   * our own newlines to get checksums on the same line.
+   */
+  while (block[nbytes - 1] == '\n' ||
+         block[nbytes - 1] == '\r')
+    nbytes--;
+
   blocknode *node = malloc(sizeof(blocknode));
   node->next = NULL;
   node->cbdata = cbdata;
   node->block = malloc(nbytes);
-  memcpy(node->block, block, nbytes);
   node->blocksize = nbytes;
   node->line = line;
+  memcpy(node->block, block, nbytes);
   
   if(!device->sendhead[priority]) {
     device->sendhead[priority] = node;
