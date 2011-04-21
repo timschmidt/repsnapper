@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 
@@ -200,12 +201,19 @@ ssize_t fmtblock(rr_dev device, blocknode *node) {
 }
 
 void rr_enqueue_internal(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes, long long line) {
+  char *comment;
   /*
-   * We can only send one line at a time, and we need to generate
-   * our own newlines to get checksums on the same line.
+   * comments are normal in gcode, preceeded by a ';'
+   * but we don't want to send those either
    */
-  while (block[nbytes - 1] == '\n' ||
-         block[nbytes - 1] == '\r')
+  if ((comment = strchr (block, ';')))
+    nbytes = comment - block;
+
+  /*
+   * Elide both newlines, and whitespace that gets in the way
+   * of checksums that are valid.
+   */
+  while (nbytes > 0 && isspace (block[nbytes - 1]))
     nbytes--;
 
   blocknode *node = malloc(sizeof(blocknode));
