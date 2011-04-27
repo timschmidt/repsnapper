@@ -9,16 +9,18 @@ Build deps:
 For debian derived distributions, you can issue
 this command to get the deps:
 * sudo apt-get install build-essential cmake
-** cmake guis: cmake-curses-gui and cmake-qt-gui
+** optional cmake guis: cmake-curses-gui and cmake-qt-gui
 
 Getting the sources:
-* cd
-* either 
+* "cd"
+* either:
 ** "git clone https://github.com/Ralith/libreprap.git"
 ** download an archive from https://github.com/Ralith/libreprap/archives/master and "tar -xf Ralith-libreprap*"
 
 Building and installing:
-* cmake .
+* "cd libreprap"
+* either:
+** "cmake ."
 ** or "ccmake ." or "qcmake ." for changing the install prefix or adding the debug flag
 * make && sudo make install
 
