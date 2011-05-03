@@ -56,36 +56,88 @@ Although RepSnapper is not generally tested outside of windows/linux/mac you may
 =====
 
 === Linux ===
-==== Install dependencies ====
 
-===== Ubuntu 11.04 =====
+==== Ubuntu ====
+=====  Install dependencies =====
+
+Ubuntu 11.04:
 ----
-sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev 
+sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev libglut3-dev 
 ----
 
-===== Ubuntu 10.10 =====
+Ubuntu 10.10:
 ----
 sudo apt-get install git-core build-essential automake intltool libtool libgtkmm-2.4-dev libgtkglext1-dev libglut3-dev
 ----
 
-===== Ubuntu 10.04 =====
+Ubuntu 10.04:
 ----
 sudo apt-get install git-core build-essential TODO 
 ----
 
-===== Fedora 14 =====
+===== Acquire source and compile =====
+Install libreprap: https://github.com/Ralith/libreprap/blob/master/INSTALL
 ----
-su
-yum install git gtk2-devel gcc-c++ gcc binutils make TODO
-exit
+git clone git://github.com/timschmidt/repsnapper.git
+cd repsnapper
+./autogen.sh
+make
+----
+Executable (repsnapper) will be left in the src folder. Install with "sudo make install"
+
+==== Fedora ====
+===== Installing from yum =====
+Repsnapper is currently packaged by jebba for Fedora 14 at this repository: http://repos.fedorapeople.org/repos/jebba/reprap/ Please see http://fedoraproject.org for instructions on installing via this method.
+
+===== Installing from sources =====
+Install dependencies: TODO only tested with Fedora 14
+----
+yum install git gtk2-devel gcc-c++ gcc binutils make cmake gtkglextmm gtkglextmm-devel gtkmm*
 ----
 
-===== OpenSuse 11.2 / SLED 11 SP1 =====
+Install libreprap (from https://github.com/Ralith/libreprap/blob/master/INSTALL):
+----
+git clone https://github.com/Ralith/libreprap.git
+cd libreprap
+cmake .
+make
+su
+make install
+cd ..
+----
+
+Install repsnapper:
+----
+git clone git://github.com/timschmidt/repsnapper.git
+cd repsnapper
+su
+echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
+ldconfig
+exit
+./autogen.sh
+make
+----
+
+Run the program:
+----
+cd src
+./repsnapper
+----
+
+Install and run:
+----
+su
+make install
+exit
+repsnapper
+----
+
+==== OpenSuse 11.2 / SLED 11 SP1 ====
 ----
 sudo zypper install TODO
 ----
 
-==== Acquire source and compile ====
+==== Generic installation instructions ====
 Install libreprap: https://github.com/Ralith/libreprap/blob/master/INSTALL
 ----
 git clone git://github.com/timschmidt/repsnapper.git
@@ -96,6 +148,7 @@ make
 Executable (repsnapper) will be left in the src folder. Install with "sudo make install"
 
 === Windows ===
+Currently black magic. Nightly builds coming...
 
 === OS X ===
 
