@@ -87,7 +87,14 @@ Executable (repsnapper) will be left in the src folder. Install with "sudo make 
 
 ==== Fedora ====
 ===== Installing from yum =====
-Repsnapper is currently packaged by jebba for Fedora 14 at this repository: http://repos.fedorapeople.org/repos/jebba/reprap/ Please see http://fedoraproject.org for instructions on installing via this method.
+Repsnapper is currently packaged by jebba for Fedora 14 at this repository: http://repos.fedorapeople.org/repos/jebba/reprap/
+----
+su
+wget -P /etc/yum.repos.d/ http://repos.fedorapeople.org/repos/jebba/reprap/fedora-reprap.repo
+yum install repsnapper-gtk2
+exit
+repsnapper
+----
 
 ===== Installing from sources =====
 Install dependencies: TODO only tested with Fedora 14
