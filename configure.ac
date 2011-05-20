@@ -60,6 +60,10 @@ AC_SUBST(LIBREPRAP_CFLAGS)
 AC_SUBST(LIBREPRAP_LIBS)
 AC_SUBST(DISTCHECK_LIBREPRAP_FLAGS)
 
+AC_CHECK_HEADER(GL/glut.h,
+    ,
+    AC_MSG_ERROR([cannot find headers for freeglut]))
+
 AC_CONFIG_FILES([
   Makefile
   po/Makefile.in
