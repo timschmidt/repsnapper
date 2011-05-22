@@ -53,61 +53,75 @@ typedef enum {
 
 typedef struct rr_dev_t *rr_dev;
 
-/* Note that strings passed to callbacks may not be null terminated. */
-/* Invoked when a complete block has been sent */
-/* Device, callback user data, gcode block user data, actual block
- * sent, length thereof */
-typedef void (*rr_sendcb)(rr_dev, void *, void *, const char *, size_t);
-/* Invoked on each line received */
-/* Device, callback user data, line received, length thereof */
-typedef void (*rr_recvcb)(rr_dev, void *, const char *, size_t);
-/* Invoked when a known reply is received and parsed */
-/* Device, callback user data, reply code, reply value */
-typedef void (*rr_replycb)(rr_dev, void *, rr_reply, float);
-/* Device, callback user data, boolean */
-typedef void (*rr_boolcb)(rr_dev, void *, char);
-/* Invoked when a reply from the device indicates an error */
-/* Device, callback user data, error code, message responsible, length
- * thereof */
-typedef void (*rr_errcb)(rr_dev, void *, int, const char*, size_t);
+/* Got a reply we can parse, of type 'type' and value 'value' */
+typedef void (*rr_reply_fn)   (rr_dev dev, rr_reply type, float value,
+			       void *expansion, void *closure);
+/* Called when we should write more to the device */
+typedef void (*rr_more_fn)    (rr_dev dev, void *closure);
+/* Called on error - with a suitable message etc. */
+typedef void (*rr_error_fn)   (rr_dev dev, int error_code, const char *msg, size_t len, void *closure);
+/* Called when we cannot write more, to wait for buffer space */
+typedef void (*rr_wait_wr_fn) (rr_dev dev, int wait, void *closure);
+/* We sent or recieved some data - tell the world so we can log it */
+typedef void (*rr_log_fn)     (rr_dev dev, const char *buffer, size_t len, void *closure);
 
 /* Initializes device with supplied params */
 /* Note that want_writable may be called redundantly. */
-rr_dev rr_create(rr_proto proto,
-                 rr_sendcb onsend, void *onsend_data,
-                 rr_recvcb onrecv, void *onrecv_data,
-                 rr_replycb onreply, void *onreply_data,
-                 rr_errcb onerr, void *onerr_data,
-                 rr_boolcb want_writable, void *ww_data,
-                 size_t resend_cache_size);
-int rr_open(rr_dev device, const char *port, long speed);
-void rr_reset_lineno(rr_dev device);
-void rr_reset(rr_dev device);
-int rr_close(rr_dev device);
-/* Deallocate */
-void rr_free(rr_dev device);
+rr_dev rr_dev_create (rr_proto   proto,
+		      /* how many commands can we push */
+		      size_t     dev_cmdqueue_size,
+		      /* callbacks cf. above */
+		      rr_reply_fn   reply_cb,   void *reply_cl,
+		      rr_more_fn    more_cb,    void *more_cl,
+		      rr_error_fn   error_cb,   void *error_cl,
+		      /* notify when socket is writeable */
+		      rr_wait_wr_fn wait_wr_cb, void *wait_wr_cl,
+		      /* optional (or NULL, NULL) */
+		      rr_log_fn     opt_log_cb, void *opt_log_cl);
+void rr_dev_free     (rr_dev dev);
 
+int  rr_dev_open  (rr_dev dev, const char *port, long speed);
+int  rr_dev_close (rr_dev dev);
+void rr_dev_reset_lineno (rr_dev dev);
+void rr_dev_reset (rr_dev dev);
 
 /* Accessors */
 /* File descriptor; <0 if not connected */
-int rr_dev_fd(rr_dev device);
+int           rr_dev_fd     (rr_dev dev);
+
 /* Number of lines that have been since open */
-unsigned long rr_dev_lineno(rr_dev device);
+unsigned long rr_dev_lineno (rr_dev dev);
+
 /* Returns nonzero if and only if there is data waiting to be written */
-int rr_dev_buffered(rr_dev device);
+int           rr_dev_buffered (rr_dev dev);
 
-/* nbytes MUST be < GCODE_BLOCKSIZE */
-void rr_enqueue(rr_dev device, rr_prio priority, void *cbdata, const char *block, size_t nbytes);
-#define rr_enqueue_c(d, p, cb, b) rr_enqueue(d, p, cb, b, strlen(b))
+/* Returns count of commands that are buffered & un-written */
+int           rr_dev_buffered_lines (rr_dev dev);
 
-int rr_handle_readable(rr_dev device);
-/* Should only be called if want_writable callback has most recently
- * been passed a nonzero second argument; is guaranteed to be a noop
- * otherwise */
-int rr_handle_writable(rr_dev device);
+/* Returns nonzero if dev can accept more data */
+int           rr_dev_write_more (rr_dev dev);
+
+/* Pause or resume a priority queue */
+void          rr_dev_set_paused (rr_dev dev, int priority, int paused);
+
+/* I/O abstraction for integration into
+   system mainloops in combination with
+   wait_wr_cb */
+
+/* Call when there is data to read */
+int rr_dev_handle_readable(rr_dev dev);
+/* Call when there is space to write */
+int rr_dev_handle_writable(rr_dev dev);
+
+/* use to check if it is sensible to enqueue more commands */
+int rr_dev_queue_size (rr_dev dev);
+
+/* nbytes MUST be < GCODE_BLOCKSIZE, or -1 to for strlen(block)  */
+/* returns non-zero on failure */
+int rr_dev_enqueue_cmd (rr_dev dev, rr_prio priority, const char *block, int opt_nbytes);
 
 /* Blocks until all buffered data has been written */
-int rr_flush(rr_dev device);
+int rr_flush (rr_dev dev);
 
 #ifdef __cplusplus
 }

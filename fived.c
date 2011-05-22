@@ -7,80 +7,65 @@
 #include "comms_private.h"
 #include "common.h"
 
-int fived_handle_reply(rr_dev device, const char *reply, size_t nbytes) {
-  if(!strncasecmp("ok", reply, 2)) {
-    if(device->onreply) {
-      device->onreply(device, device->onreply_data, RR_OK, 0);
-      /* Parse values */
-      char *i;
-      for(i = (char*)reply; i < reply + nbytes; ++i) {
-        switch(toupper(*i)) {
-        case 'T':
-          device->onreply(device, device->onreply_data, RR_NOZZLE_TEMP,
-                          strtof(i+2, &i));
-          break;
+static void
+float_reply (rr_dev dev, char **i, rr_reply type)
+{
+  if (dev->reply_cb)
+    dev->reply_cb (dev, type, strtof (*i + 2, i), NULL, dev->reply_cl);
+}
 
-        case 'B':
-          device->onreply(device, device->onreply_data, RR_BED_TEMP,
-                          strtof(i+2, &i));
-          break;
-
-        case 'C':
-          break;
-
-        case 'X':
-          device->onreply(device, device->onreply_data, RR_X_POS,
-                          strtof(i+2, &i));
-          break;
-
-        case 'Y':
-          device->onreply(device, device->onreply_data, RR_Y_POS,
-                          strtof(i+2, &i));
-          break;
-
-        case 'Z':
-          device->onreply(device, device->onreply_data, RR_Z_POS,
-                          strtof(i+2, &i));
-          break;
-
-        case 'E':
-          device->onreply(device, device->onreply_data, RR_E_POS,
-                          strtof(i+2, &i));
-          break;
-
-        default:
-          if(device->onerr) {
-            device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
-          }
-          break;
-        }
+int
+fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
+{
+  if (!strncasecmp ("ok", reply, 2)) {
+    /* Parse values */
+    char *i;
+    for (i = (char*)reply; i < reply + nbytes; ++i) {
+      switch (toupper (*i)) {
+      case 'T':
+	float_reply (dev, &i, RR_NOZZLE_TEMP);
+	break;
+      case 'B':
+	float_reply (dev, &i, RR_BED_TEMP);
+	break;
+      case 'C':
+	break;
+      case 'X':
+	float_reply (dev, &i, RR_X_POS);
+	break;
+      case 'Y':
+	float_reply (dev, &i, RR_Y_POS);
+	break;
+      case 'Z':
+	float_reply (dev, &i, RR_Z_POS);
+	break;
+      case 'E':
+	float_reply (dev, &i, RR_E_POS);
+	break;
+      default:
+	return rr_dev_emit_error (dev, RR_E_UNKNOWN_REPLY, reply, nbytes);
       }
     }
-  } else if(!strncasecmp("rs", reply, 2) || !strncasecmp("resend", reply, 6)) {
+    return 0;
+
+  } else if (!strncasecmp ("rs", reply, 2) ||
+	     !strncasecmp ("resend", reply, 6)) {
     /* check where the line number starts */
-    size_t n_start = strcspn(reply, "123456789");
-    if(n_start) {
-      long long lineno = strtoll(reply + n_start, NULL, 10);
+    size_t n_start = strcspn (reply, "123456789");
+    if (n_start) {
+      long long lineno = strtoll (reply + n_start, NULL, 10);
       /* check if lineno is in the range of sent lines*/
-      if(lineno < device->lineno && strncmp("-", reply + n_start - 1, 1)) {
-        return resend(device, lineno, reply, nbytes);
-      } else {
-        if(device->onerr) {
-          device->onerr(device, device->onerr_data, RR_E_UNSENT_RESEND, reply, nbytes);
-        }
-        return RR_E_UNSENT_RESEND;
-      }
-    } else {
-      if(device->onerr) {
-        device->onerr(device, device->onerr_data, RR_E_MALFORMED_RESEND_REQUEST, reply, nbytes);
-      }
-    return RR_E_MALFORMED_RESEND_REQUEST;
-    }
-  } else if(!strncmp("!!", reply, 2)) {
-    if(device->onerr) {
-      device->onerr(device, device->onerr_data, RR_E_HARDWARE_FAULT, reply, nbytes);
-    }
-    return RR_E_HARDWARE_FAULT;
+      if (lineno < dev->lineno &&
+	  strncmp ("-", reply + n_start - 1, 1))
+        return rr_dev_resend (dev, lineno, reply, nbytes);
+      else
+	return rr_dev_emit_error (dev, RR_E_UNSENT_RESEND, reply, nbytes);
+    } else
+      return rr_dev_emit_error (dev, RR_E_MALFORMED_RESEND_REQUEST, reply, nbytes);
+
+  } else if (!strncmp("!!", reply, 2)) {
+    return rr_dev_emit_error (dev, RR_E_HARDWARE_FAULT, reply, nbytes);
+
   } else if (!strncasecmp ("start", reply, 5)) {
     /*
      * This is non-intuitive. If we reset the controller, when we next send
@@ -91,13 +76,9 @@ int fived_handle_reply(rr_dev device, const char *reply, size_t nbytes) {
      * to reset the line number with a command each time we hit one of
      * these.
      */
-    rr_reset_lineno (device);
-  } else {
-    if(device->onerr) {
-      device->onerr(device, device->onerr_data, RR_E_UNKNOWN_REPLY, reply, nbytes);
-    }
-    return RR_E_UNKNOWN_REPLY;
-  }
+    rr_dev_reset_lineno (dev);
+    return 0;
 
-  return 0;
+  } else
+    return rr_dev_emit_error (dev, RR_E_UNKNOWN_REPLY, reply, nbytes);
 }
