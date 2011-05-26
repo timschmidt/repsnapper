@@ -34,10 +34,10 @@ struct rr_dev_t {
   blocknode *sendhead[RR_PRIO_COUNT];
   blocknode *sendtail[RR_PRIO_COUNT];
   int        paused[RR_PRIO_COUNT];
-  char sendbuf[SENDBUFSIZE];
-  rr_prio sending_prio;
-  size_t sendbuf_fill;
-  size_t bytes_sent;
+  char       sendbuf[SENDBUFSIZE];
+  rr_prio    sending_prio;
+  size_t     sendbuf_fill;
+  size_t     bytes_sent;
 
   char *recvbuf;
   size_t recvbufsize;

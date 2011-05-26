@@ -54,7 +54,7 @@ typedef enum {
 typedef struct rr_dev_t *rr_dev;
 
 /* Got a reply we can parse, of type 'type' and value 'value' */
-typedef void (*rr_reply_fn)   (rr_dev dev, rr_reply type, float value,
+typedef void (*rr_reply_fn)   (rr_dev dev, int type, float value,
 			       void *expansion, void *closure);
 /* Called when we should write more to the device */
 typedef void (*rr_more_fn)    (rr_dev dev, void *closure);

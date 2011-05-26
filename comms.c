@@ -95,7 +95,7 @@ rr_dev_create (rr_proto      proto,
   }
   dev->sendbuf_fill = 0;
   dev->bytes_sent = 0;
-  dev->recvbuf = calloc(RECVBUFSIZE, sizeof(char));
+  dev->recvbuf = calloc (RECVBUFSIZE, sizeof(char));
   dev->recvbufsize = RECVBUFSIZE;
   dev->recvbuf_fill = 0;
 
@@ -105,6 +105,7 @@ rr_dev_create (rr_proto      proto,
 void
 rr_dev_free (rr_dev dev)
 {
+  rr_dev_close (dev);
   empty_buffers (dev);
   free (dev->sentcache);
   free (dev->recvbuf);
@@ -112,7 +113,7 @@ rr_dev_free (rr_dev dev)
 }
 
 int
-rr_open (rr_dev dev, const char *port, long speed)
+rr_dev_open (rr_dev dev, const char *port, long speed)
 {
   dev->fd = serial_open (port, speed);
   if (dev->fd < 0)
@@ -122,12 +123,15 @@ rr_open (rr_dev dev, const char *port, long speed)
 }
 
 int
-rr_close (rr_dev dev)
+rr_dev_close (rr_dev dev)
 {
   int result;
-  do {
-    result = close (dev->fd);
-  } while (result < 0 && errno == EINTR);
+
+  if (dev->fd >= 0) {
+    do {
+      result = close (dev->fd);
+    } while (result < 0 && errno == EINTR);
+  }
   dev->fd = -1;
   rr_dev_reset (dev);
   return result;
@@ -234,6 +238,7 @@ rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
     dev->sendsize[priority] = 0;
     dev->sendhead[priority] = node;
     dev->sendtail[priority] = node;
+
     dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
   } else {
     dev->sendsize[priority]++;
@@ -260,16 +265,17 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
 }
 
 void
-rr_reset_lineno (rr_dev dev)
+rr_dev_reset_lineno (rr_dev dev)
 {
   dev->lineno = 0;
   rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, -1);
 }
 
-void rr_reset (rr_dev dev)
+void
+rr_dev_reset (rr_dev dev)
 {
   empty_buffers (dev);
-  rr_reset_lineno (dev);
+  rr_dev_reset_lineno (dev);
 }
 
 int
@@ -319,7 +325,7 @@ rr_dev_handle_readable (rr_dev dev)
 
   do {
     result = read (dev->fd, dev->recvbuf + dev->recvbuf_fill, dev->recvbufsize - dev->recvbuf_fill);
-  } while(result < 0 && errno == EINTR);
+  } while (result < 0 && errno == EINTR);
 
   if (result < 0)
     return result;
@@ -335,8 +341,8 @@ rr_dev_handle_readable (rr_dev dev)
 
   do {
     /* How many non terminator chars and how many terminator chars after them*/
-    reply_span = strcspn(dev->recvbuf + scan, REPLY_TERMINATOR);
-    term_span = strspn(dev->recvbuf + scan + reply_span, REPLY_TERMINATOR);
+    reply_span = strcspn (dev->recvbuf + scan, REPLY_TERMINATOR);
+    term_span = strspn (dev->recvbuf + scan + reply_span, REPLY_TERMINATOR);
     start = scan;
 
     if (0 < term_span && 0 < reply_span && (start + reply_span + 1) < end) {
@@ -369,8 +375,12 @@ rr_dev_handle_writable (rr_dev dev)
     int prio;
     blocknode *node = NULL;
     for (prio = RR_PRIO_COUNT - 1; prio >= 0; --prio) {
+
+      if (dev->paused[prio])
+	continue;
+
       node = dev->sendhead[prio];
-      if(node) {
+      if (node) {
         /* We have a block to send! Get it ready. */
         dev->bytes_sent = 0;
         result = fmtblock (dev, node);
@@ -416,13 +426,12 @@ rr_dev_handle_writable (rr_dev dev)
     ++(dev->lineno);
 
     /* Update sent cache */
-    if(dev->sentcache[dev->sentcachesize - 1]) {
-      blocknode_free(dev->sentcache[dev->sentcachesize - 1]);
-    }
+    if (dev->sentcache[dev->sentcachesize - 1])
+      blocknode_free (dev->sentcache[dev->sentcachesize - 1]);
+
     ssize_t i;
-    for(i = dev->sentcachesize - 1; i > 0 ; --i) {
+    for (i = dev->sentcachesize - 1; i > 0 ; --i)
       dev->sentcache[i] = dev->sentcache[i-1];
-    }
     dev->sentcache[0] = node;
 
     /* Indicate that we're ready for the next. */
@@ -439,16 +448,14 @@ int rr_flush (rr_dev dev)
   if ((flags = fcntl (dev->fd, F_GETFL, 0)) < 0)
     return flags;
 
-  if (fcntl (dev->fd, F_SETFL, flags & ~O_NONBLOCK) == -1) {
+  if (fcntl (dev->fd, F_SETFL, flags & ~O_NONBLOCK) == -1)
     return -1;
-  }
 
   int result = 0;
-  while (rr_dev_buffered (dev) && result >= 0) {
+  while (rr_dev_buffered (dev) && result >= 0)
     result = rr_dev_handle_writable (dev);
-  }
 
-  if(result >= 0)
+  if (result >= 0)
     result = fcntl (dev->fd, F_SETFL, flags);
   else
     fcntl (dev->fd, F_SETFL, flags);
@@ -498,6 +505,12 @@ void
 rr_dev_set_paused (rr_dev dev, int priority, int paused)
 {
   dev->paused[priority] = paused;
+
+  /* re-start client's writing */
+  if (!paused) {
+    dev->more_cb (dev, dev->more_cl);
+    dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
+  }
 }
 
 /* Helper for emitting and returning errors */
