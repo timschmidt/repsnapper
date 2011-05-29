@@ -10,6 +10,7 @@ int
 tonokip_handle_reply (rr_dev dev, const char *reply, size_t nbytes) {
 
   if (!strncasecmp ("ok", reply, 2)) {
+    rr_dev_account_ok (dev);
     if (dev->reply_cb)
       dev->reply_cb (dev, RR_OK, 0.0, NULL, dev->reply_cl);
     return 0;

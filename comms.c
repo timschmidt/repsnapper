@@ -6,11 +6,35 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include "comms_private.h"
 #include "serial.h"
 #include "fived.h"
 #include "tonokip.h"
+
+#define DEBUG
+
+#ifdef DEBUG
+#  define debug_log(a) rr_dev_log a
+#else
+#  define debug_log(a)
+#endif
+
+/* print to the log */
+void
+rr_dev_log (rr_dev dev, const char *format, ...)
+{
+  int len;
+  va_list args;
+  char buffer[4096];
+
+  va_start (args, format);
+  len = vsnprintf (buffer, 4095, format, args);
+  if (dev->opt_log_cb)
+    dev->opt_log_cb (dev, buffer, len, dev->opt_log_cl);
+  va_end (args);
+}
 
 static void
 blocknode_free (blocknode* node)
@@ -99,6 +123,8 @@ rr_dev_create (rr_proto      proto,
   dev->recvbufsize = RECVBUFSIZE;
   dev->recvbuf_fill = 0;
 
+  rr_dev_log (dev, "; Connecting with libreprap\n");
+
   return dev;
 }
 
@@ -157,14 +183,13 @@ ssize_t fmtblock_fived(char *buf, const char *block, unsigned long line)
   int result;
   char checksum = 0;
   result = snprintf(work, GCODE_BLOCKSIZE+1, "N%ld %s", line, block);
-  if(result >= GCODE_BLOCKSIZE+1)
+  if (result >= GCODE_BLOCKSIZE+1)
     return RR_E_BLOCK_TOO_LARGE;
   ssize_t i;
   for (i = 0; i < result; ++i)
     checksum ^= work[i];
 
-  /* TODO: Is this whitespace needed? */
-  result = snprintf(work, SENDBUFSIZE+1, "N%ld %s*%d" BLOCK_TERMINATOR, line, block, checksum);
+  result = snprintf(work, SENDBUFSIZE+1, "N%ld %s*%d\n", line, block, checksum);
   if (result >= SENDBUFSIZE+1)
     return RR_E_BLOCK_TOO_LARGE;
 
@@ -235,16 +260,16 @@ rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
   memcpy(node->block, block, nbytes);
 
   if (!dev->sendhead[priority]) {
-    dev->sendsize[priority] = 0;
+    dev->sendsize[priority] = 1;
     dev->sendhead[priority] = node;
     dev->sendtail[priority] = node;
-
-    dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
   } else {
     dev->sendsize[priority]++;
     dev->sendtail[priority]->next = node;
     dev->sendtail[priority] = node;
   }
+
+  dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
 
   return 0;
 }
@@ -275,7 +300,24 @@ void
 rr_dev_reset (rr_dev dev)
 {
   empty_buffers (dev);
+  dev->dev_size = 0;
+  debug_log ((dev, "; reset dev size to zero\n"));
   rr_dev_reset_lineno (dev);
+}
+
+static void
+debug_log_block (rr_dev dev, const char *block, int nbytes)
+{
+  char buffer[4096], *p;
+  int num = nbytes >= 4096 ? 4095 : nbytes;
+  strncpy (buffer, block, num);
+  buffer[num] = '\0';
+  if ((p = strchr (buffer, '\n')))
+    *p = '\0';
+  if ((p = strchr (buffer, '\r')))
+    *p = '\0';
+  rr_dev_log (dev, "; queue cmd '%s' dev: %d, queue %d\n",
+	      buffer, dev->dev_size, rr_dev_buffered_lines (dev));
 }
 
 int
@@ -284,14 +326,65 @@ rr_dev_enqueue_cmd (rr_dev dev, rr_prio priority,
 {
   if (opt_nbytes < 0)
     opt_nbytes = strlen (block);
+#ifdef DEBUG
+  debug_log_block (dev, block, opt_nbytes);
+#endif
   return rr_dev_enqueue_internal (dev, priority, block, opt_nbytes, -1);
 }
 
+void
+rr_dev_account_ok (rr_dev dev)
+{
+  dev->dev_size--;
+  debug_log ((dev, "; dec dev size on 'ok' to %d\n", dev->dev_size));
+  if (dev->dev_size < 0) {
+    fprintf (stderr, "ok accounting error\n");
+    dev->dev_size = 0;
+  }
+  if (dev->dev_size < dev->dev_cmdqueue_size) {
+    debug_log ((dev, "; request more %d < %d\n", dev->dev_size, dev->dev_cmdqueue_size));
+    dev->more_cb (dev, dev->more_cl);
+  }
+  dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
+#ifdef DEBUG
+  {
+    int i = 0;
+    for (i = 0; i < RR_PRIO_COUNT; ++i) {
+      blocknode *p;
+      int count = 0;
+      for (p = dev->sendhead[i]; p; p = p->next)
+	count++;
+      if (count != dev->sendsize[i])
+	debug_log ((dev, "; queue size mismatch: %d vs %d\n",
+		    count, dev->sendsize[i]));
+    }
+  }
+#endif
+}
+
+int
+rr_dev_handle_start (rr_dev dev)
+{
+  dev->dev_size = 0;
+  debug_log ((dev, "; start: dev size to %d\n", dev->dev_size));
+  /*
+   * This is non-intuitive. If we reset the controller, when we next send
+   * a command sequence, on the first command we will get a 'start',
+   * meaning we should reset the line number. Problem is we then send
+   * the rest of the command sequence and get another 'start' in mid
+   * flow for some controllers, which gets us out of sync. Ergo we need
+   * to reset the line number with a command each time we hit one of
+   * these.
+   */
+  rr_dev_reset_lineno (dev);
+  return 0;
+}
+
 static int
-handle_reply (rr_dev dev, const char *reply, size_t nbytes)
+handle_reply (rr_dev dev, const char *reply, size_t nbytes, size_t term_bytes)
 {
   if (dev->opt_log_cb)
-    dev->opt_log_cb (dev, reply, nbytes, dev->opt_log_cl);
+    dev->opt_log_cb (dev, reply, nbytes + term_bytes, dev->opt_log_cl);
 
   switch(dev->proto) {
   case RR_PROTO_FIVED:
@@ -301,9 +394,10 @@ handle_reply (rr_dev dev, const char *reply, size_t nbytes)
     return tonokip_handle_reply (dev, reply, nbytes);
 
   case RR_PROTO_SIMPLE:
-    if (!strncasecmp ("ok", reply, 2) && dev->reply_cb)
+    if (!strncasecmp ("ok", reply, 2) && dev->reply_cb) {
+      rr_dev_account_ok (dev);
       dev->reply_cb (dev, RR_OK, 0.0, NULL, dev->reply_cl);
-    else if (dev->error_cb)
+    } else if (dev->error_cb)
       dev->error_cb (dev, RR_E_UNKNOWN_REPLY, reply, nbytes, dev->error_cl);
     return 0;
 
@@ -347,18 +441,18 @@ rr_dev_handle_readable (rr_dev dev)
 
     if (0 < term_span && 0 < reply_span && (start + reply_span + 1) < end) {
       /* We have a terminator after non terminator chars */
-      handle_reply (dev, dev->recvbuf + start, reply_span);
+      handle_reply (dev, dev->recvbuf + start, reply_span, term_span);
     }
     scan += reply_span + term_span;
 
-  } while(scan < end);
+  } while (scan < end);
 
   size_t rest_size = end - start;
 
   /* Move the rest of the buffer to the beginning */
-  if(rest_size > 0) {
+  if (rest_size > 0) {
     dev->recvbuf_fill = rest_size;
-    memmove(dev->recvbuf, dev->recvbuf + start, dev->recvbuf_fill);
+    memmove (dev->recvbuf, dev->recvbuf + start, dev->recvbuf_fill);
   } else {
     dev->recvbuf_fill = 0;
   }
@@ -370,7 +464,17 @@ int
 rr_dev_handle_writable (rr_dev dev)
 {
   ssize_t result;
+
   if (dev->sendbuf_fill == 0) {
+
+    if (dev->dev_size >= dev->dev_cmdqueue_size) {
+      debug_log ((dev, "; writeable - wait dev size is %d, queue %d\n",
+		  dev->dev_size, dev->dev_cmdqueue_size));
+      /* wait until there is space in the device buffer */
+      dev->wait_wr_cb (dev, 0, dev->wait_wr_cl);
+      return 0;
+    }
+
     /* Last block is gone; prepare to send a new block */
     int prio;
     blocknode *node = NULL;
@@ -388,6 +492,8 @@ rr_dev_handle_writable (rr_dev dev)
           /* FIXME: This will confuse code expecting errno to be set */
           return result;
         }
+	dev->dev_size++;
+	debug_log ((dev, "; write cmd: inc dev size to %d\n", dev->dev_size));
         dev->sendbuf_fill = result;
         dev->sending_prio = prio;
         break;
@@ -482,6 +588,7 @@ rr_dev_buffered_lines (rr_dev dev)
   int i, size = 0;
   for (i = 0; i < RR_PRIO_COUNT; i++)
     size += dev->sendsize[i];
+  debug_log ((dev, "; buffered lines = %d\n", size));
   return size;
 }
 
@@ -498,7 +605,7 @@ int
 rr_dev_write_more (rr_dev dev)
 {
   /* arbitrarily keep a cmdqueue of the same size internally */
-  return rr_dev_buffered (dev) < dev->dev_cmdqueue_size;
+  return rr_dev_buffered_lines (dev) < dev->dev_cmdqueue_size;
 }
 
 void

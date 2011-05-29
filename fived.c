@@ -18,9 +18,13 @@ int
 fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
 {
   if (!strncasecmp ("ok", reply, 2)) {
+    rr_dev_account_ok (dev);
+
     /* Parse values */
     char *i;
-    for (i = (char*)reply; i < reply + nbytes; ++i) {
+    for (i = (char*)reply + 2; i < reply + nbytes; ++i) {
+      if (isspace (*i))
+	continue;
       switch (toupper (*i)) {
       case 'T':
 	float_reply (dev, &i, RR_NOZZLE_TEMP);
@@ -67,17 +71,7 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
     return rr_dev_emit_error (dev, RR_E_HARDWARE_FAULT, reply, nbytes);
 
   } else if (!strncasecmp ("start", reply, 5)) {
-    /*
-     * This is non-intuitive. If we reset the controller, when we next send
-     * a command sequence, on the first command we will get a 'start',
-     * meaning we should reset the line number. Problem is we then send
-     * the rest of the command sequence and get another 'start' in mid
-     * flow for some controllers, which gets us out of sync. Ergo we need
-     * to reset the line number with a command each time we hit one of
-     * these.
-     */
-    rr_dev_reset_lineno (dev);
-    return 0;
+    return rr_dev_handle_start (dev);
 
   } else
     return rr_dev_emit_error (dev, RR_E_UNKNOWN_REPLY, reply, nbytes);
