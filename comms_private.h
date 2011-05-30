@@ -30,8 +30,7 @@ struct rr_dev_t {
   /* Line currently being sent */
   unsigned long lineno;
 
-  /* Lines sent but not completed on device */
-  int        dev_size;
+  int        ok_count;
   int        sendsize[RR_PRIO_COUNT];
   blocknode *sendhead[RR_PRIO_COUNT];
   blocknode *sendtail[RR_PRIO_COUNT];
@@ -56,7 +55,7 @@ int rr_dev_resend (rr_dev device, unsigned long lineno, const char *reply, size_
 rr_error rr_dev_emit_error (rr_dev dev, rr_error err, const char *block, int nbytes);
 
 /* Get flow control right */
-void rr_dev_account_ok (rr_dev dev);
+void rr_dev_handle_ok (rr_dev dev);
 
 /* Handle start semantics */
 int  rr_dev_handle_start (rr_dev dev);

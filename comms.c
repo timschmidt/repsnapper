@@ -105,6 +105,7 @@ rr_dev_create (rr_proto      proto,
 
   dev->lineno = 0;
   dev->fd = -1;
+  dev->ok_count = 0;
 
   dev->sentcache = calloc (dev_cmdqueue_size, sizeof (blocknode*));
   dev->sentcachesize = dev_cmdqueue_size;
@@ -294,13 +295,13 @@ rr_dev_reset_lineno (rr_dev dev)
 {
   dev->lineno = 0;
   rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, -1);
+  dev->ok_count = 4;
 }
 
 void
 rr_dev_reset (rr_dev dev)
 {
   empty_buffers (dev);
-  dev->dev_size = 0;
   debug_log ((dev, "; reset dev size to zero\n"));
   rr_dev_reset_lineno (dev);
 }
@@ -316,8 +317,8 @@ debug_log_block (rr_dev dev, const char *block, int nbytes)
     *p = '\0';
   if ((p = strchr (buffer, '\r')))
     *p = '\0';
-  rr_dev_log (dev, "; queue cmd '%s' dev: %d, queue %d\n",
-	      buffer, dev->dev_size, rr_dev_buffered_lines (dev));
+  rr_dev_log (dev, "; queue cmd '%s' queue %d\n",
+	      buffer, rr_dev_buffered_lines (dev));
 }
 
 int
@@ -333,21 +334,21 @@ rr_dev_enqueue_cmd (rr_dev dev, rr_prio priority,
 }
 
 void
-rr_dev_account_ok (rr_dev dev)
+rr_dev_handle_ok (rr_dev dev)
 {
-  dev->dev_size--;
-  debug_log ((dev, "; dec dev size on 'ok' to %d\n", dev->dev_size));
-  if (dev->dev_size < 0) {
-    fprintf (stderr, "ok accounting error\n");
-    dev->dev_size = 0;
-  }
-  if (dev->dev_size < dev->dev_cmdqueue_size) {
-    debug_log ((dev, "; request more %d < %d\n", dev->dev_size, dev->dev_cmdqueue_size));
+  int buffered = rr_dev_buffered_lines (dev);
+
+  /* Send as many commands as we get ok's */
+  dev->ok_count++;
+
+  if (buffered < dev->dev_cmdqueue_size) {
+    debug_log ((dev, "; request more %d < %d\n", buffered, dev->dev_cmdqueue_size));
     dev->more_cb (dev, dev->more_cl);
   }
   dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
+
 #ifdef DEBUG
-  {
+  { /* Check the sendsize accounts add up */
     int i = 0;
     for (i = 0; i < RR_PRIO_COUNT; ++i) {
       blocknode *p;
@@ -365,8 +366,6 @@ rr_dev_account_ok (rr_dev dev)
 int
 rr_dev_handle_start (rr_dev dev)
 {
-  dev->dev_size = 0;
-  debug_log ((dev, "; start: dev size to %d\n", dev->dev_size));
   /*
    * This is non-intuitive. If we reset the controller, when we next send
    * a command sequence, on the first command we will get a 'start',
@@ -395,7 +394,7 @@ handle_reply (rr_dev dev, const char *reply, size_t nbytes, size_t term_bytes)
 
   case RR_PROTO_SIMPLE:
     if (!strncasecmp ("ok", reply, 2) && dev->reply_cb) {
-      rr_dev_account_ok (dev);
+      rr_dev_handle_ok (dev);
       dev->reply_cb (dev, RR_OK, 0.0, NULL, dev->reply_cl);
     } else if (dev->error_cb)
       dev->error_cb (dev, RR_E_UNKNOWN_REPLY, reply, nbytes, dev->error_cl);
@@ -466,10 +465,9 @@ rr_dev_handle_writable (rr_dev dev)
   ssize_t result;
 
   if (dev->sendbuf_fill == 0) {
-
-    if (dev->dev_size >= dev->dev_cmdqueue_size) {
-      debug_log ((dev, "; writeable - wait dev size is %d, queue %d\n",
-		  dev->dev_size, dev->dev_cmdqueue_size));
+    if (dev->ok_count <= 0) {
+      debug_log ((dev, "; writeable - wait ok count is %d, queue %d\n",
+		  dev->ok_count, dev->dev_cmdqueue_size));
       /* wait until there is space in the device buffer */
       dev->wait_wr_cb (dev, 0, dev->wait_wr_cl);
       return 0;
@@ -492,8 +490,7 @@ rr_dev_handle_writable (rr_dev dev)
           /* FIXME: This will confuse code expecting errno to be set */
           return result;
         }
-	dev->dev_size++;
-	debug_log ((dev, "; write cmd: inc dev size to %d\n", dev->dev_size));
+	dev->ok_count = dev->ok_count > 0 ? dev->ok_count - 1 : 0;
         dev->sendbuf_fill = result;
         dev->sending_prio = prio;
         break;
@@ -588,7 +585,7 @@ rr_dev_buffered_lines (rr_dev dev)
   int i, size = 0;
   for (i = 0; i < RR_PRIO_COUNT; i++)
     size += dev->sendsize[i];
-  debug_log ((dev, "; buffered lines = %d\n", size));
+/*  debug_log ((dev, "; buffered lines = %d\n", size)); */
   return size;
 }
 

@@ -18,7 +18,7 @@ int
 fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
 {
   if (!strncasecmp ("ok", reply, 2)) {
-    rr_dev_account_ok (dev);
+    rr_dev_handle_ok (dev);
 
     /* Parse values */
     char *i;
