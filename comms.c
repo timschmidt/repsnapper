@@ -107,8 +107,8 @@ rr_dev_create (rr_proto      proto,
   dev->fd = -1;
   dev->ok_count = 0;
 
-  dev->sentcache = calloc (dev_cmdqueue_size, sizeof (blocknode*));
-  dev->sentcachesize = dev_cmdqueue_size;
+  dev->sentcachesize = dev_cmdqueue_size * 4 + 64;
+  dev->sentcache = calloc (dev->sentcachesize, sizeof (blocknode*));
   for (i = 0; i < dev->sentcachesize; ++i)
     dev->sentcache[i] = NULL;
 
@@ -296,8 +296,12 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
     rr_dev_enqueue_internal (dev, RR_PRIO_RESEND, node->block, node->blocksize, lineno);
     return 0;
 
-  } else /* Line needed for resend was not cached */
+  } else { /* Line needed for resend was not cached */
+    rr_dev_log (dev, "; re-send request for unknown (too old) line %ld "
+		"a delta of %d into queue depth %d\n", lineno, delta,
+		dev->sentcachesize);
     return rr_dev_emit_error (dev, RR_E_UNCACHED_RESEND, reply, nbytes);
+  }
 }
 
 void
@@ -476,8 +480,8 @@ rr_dev_handle_writable (rr_dev dev)
 
   if (dev->sendbuf_fill == 0) {
     if (dev->ok_count <= 0 && dev->sendsize[RR_PRIO_RESEND] <= 0) {
-      debug_log ((dev, "; writeable - wait ok count is %d, queue %d\n",
-		  dev->ok_count, dev->dev_cmdqueue_size));
+      debug_log ((dev, "; writeable - wait ok count is %d, queue %d resend %d\n",
+		  dev->ok_count, dev->dev_cmdqueue_size, dev->sendsize[RR_PRIO_RESEND]));
       /* wait until there is space in the device buffer */
       dev->wait_wr_cb (dev, 0, dev->wait_wr_cl);
       return 0;
