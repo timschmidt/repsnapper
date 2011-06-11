@@ -333,11 +333,11 @@ public:
       oss << m_target->get_value();
     else
       oss << "0";
-    rr_enqueue(m_device, RR_PRIO_HIGH, NULL, oss.str().data(), oss.str().size());
+    m_model->SendNow (oss.str().data());
   }
 
 public:
-  rr_dev m_device;
+  Model *m_model;
   TempType m_type;
   Gtk::Label *m_temp;
   Gtk::SpinButton *m_target;
@@ -347,8 +347,8 @@ public:
     m_target->set_value (value);
   }
 
-  TempRow(rr_dev device, TempType type) :
-    m_device(device), m_type(type)
+  TempRow(Model *model, TempType type) :
+    m_model(model), m_type(type)
   {
     static const char *names[] = { "Nozzle", "Bed" };
 
@@ -715,8 +715,8 @@ void View::setModel(Model *model)
 
   Gtk::Box *temp_box;
   m_builder->get_widget ("i_temp_box", temp_box);
-  m_temps[TEMP_NOZZLE] = new TempRow(m_model->m_device, TEMP_NOZZLE);
-  m_temps[TEMP_BED] = new TempRow(m_model->m_device, TEMP_BED);
+  m_temps[TEMP_NOZZLE] = new TempRow(m_model, TEMP_NOZZLE);
+  m_temps[TEMP_BED] = new TempRow(m_model, TEMP_BED);
   temp_box->add (*m_temps[TEMP_NOZZLE]);
   temp_box->add (*m_temps[TEMP_BED]);
 

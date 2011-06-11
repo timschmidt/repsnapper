@@ -20,7 +20,6 @@
 #define CONNECT_VIEW_H
 
 #include <gtkmm.h>
-#include <reprap/comms.h>
 #include "types.h"
 
 class ConnectView : public Gtk::VBox {

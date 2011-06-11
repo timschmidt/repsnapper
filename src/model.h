@@ -33,6 +33,15 @@
 #  pragma warning( disable : 4244 4267)
 #endif
 
+// For libreprap callbacks
+#ifdef WIN32
+#  define RR_CALL __cdecl
+#else
+#  define RR_CALL
+#endif
+
+typedef struct rr_dev_t *rr_dev;
+
 class Progress {
  public:
   // Progress reporting
@@ -61,13 +70,6 @@ class Model
 
 	bool m_printing;
 	unsigned long m_unconfirmed_lines;
-
-  // Callbacks
-  static void handle_reply(rr_dev device, void *data, rr_reply reply, float value);
-  static void handle_send(rr_dev device, void *cbdata, void *blkdata, const char *block, size_t len);
-  static void handle_recv(rr_dev device, void *data, const char *reply, size_t len);
-  bool handle_dev_fd(Glib::IOCondition cond);
-  static void handle_want_writable(rr_dev device, void *data, char state);
 
 	sigc::signal< void > m_signal_rfo_changed;
 
@@ -133,6 +135,7 @@ public:
 	void SimplePrint();
 
 	void Print();
+	void Pause();
 	void Continue();
 	void Restart();
 
@@ -186,6 +189,21 @@ public:
 	RFO rfo;
 	GCode gcode;
 	Glib::RefPtr<Gtk::TextBuffer> commlog, errlog, echolog;
+
+ private:
+	bool handle_dev_fd (Glib::IOCondition cond);
+
+	// libreprap integration
+	static void RR_CALL rr_reply_fn   (rr_dev dev, int type, float value,
+					   void *expansion, void *closure);
+	static void RR_CALL rr_more_fn    (rr_dev dev, void *closure);
+	static void RR_CALL rr_error_fn   (rr_dev dev, int error_code,
+					   const char *msg, size_t len, void *closure);
+	static void RR_CALL rr_wait_wr_fn (rr_dev dev, int wait, void *closure);
+	static void RR_CALL rr_log_fn     (rr_dev dev, const char *buffer,
+					   size_t len, void *closure);
+
+	GCodeIter *m_iter;
 };
 
 #endif // MODEL_H

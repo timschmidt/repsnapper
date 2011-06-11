@@ -1,6 +1,7 @@
 /*
     This file is a part of the RepSnapper project.
     Copyright (C) 2010  Kulitorum
+    Copyright (C) 2011  Michael Meeks <michael.meeks@novell.com>
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@
 #include <dirent.h>
 
 #include <glib/gutils.h>
+#include <reprap/comms.h>
 
 #include "stdafx.h"
 #include "model.h"
@@ -54,33 +56,31 @@ public:
 };
 
 Model::Model() :
-  m_printing(false),
-  m_inhibit_print(false),
-  commlog(Gtk::TextBuffer::create()),
-  errlog(Gtk::TextBuffer::create()),
-  echolog(Gtk::TextBuffer::create())
+  m_printing (false),
+  m_inhibit_print (false),
+  commlog (Gtk::TextBuffer::create()),
+  errlog (Gtk::TextBuffer::create()),
+  echolog (Gtk::TextBuffer::create()),
+  m_iter (NULL)
 {
   // Variable defaults
   Center.x = Center.y = 100.0f;
   Center.z = 0.0f;
 
   // TODO: Configurable protocol, cache size
-  m_device = rr_create(RR_PROTO_FIVED,
-                     &handle_send, static_cast<void*>(this),
-                     &handle_recv, static_cast<void*>(this),
-                     &handle_reply, static_cast<void*>(this),
-                     NULL, NULL,
-                     &handle_want_writable, static_cast<void*>(this),
-                     64);
-
+  void *cl = static_cast<void *>(this);
+  m_device = rr_dev_create (RR_PROTO_FIVED,
+			    4,
+			    rr_reply_fn, cl,
+			    rr_more_fn, cl,
+			    rr_error_fn, cl,
+			    rr_wait_wr_fn, cl,
+			    rr_log_fn, cl);
 }
 
 Model::~Model()
 {
-  if(rr_dev_fd(m_device) >= 0) {
-    rr_close(m_device);
-  }
-  rr_free(m_device);
+  rr_dev_free (m_device);
 }
 
 void Model::SaveConfig(Glib::RefPtr<Gio::File> file)
@@ -209,7 +209,7 @@ void Model::ConvertToGCode()
 			settings.Slicing.Use3DGcode,
 			AntioozeDistance,
 			settings.Slicing.AntioozeSpeed);
-	m_progress.stop("Done");
+	m_progress.stop ("Done");
 }
 
 void Model::init() {}
@@ -227,34 +227,37 @@ void Model::Restart()
 
 void Model::ContinuePauseButton()
 {
-  if (m_printing) {
-    // TODO: Actually pause (stop enqueueing)
-    m_printing = false;
-  } else {
+  if (m_printing)
+    Pause();
+  else
     Continue();
-  }
+}
+
+void Model::Pause()
+{
+  // TODO: Actually pause (stop enqueueing)
+  m_printing = false;
+  rr_dev_set_paused (m_device, RR_PRIO_NORMAL, 1);
 }
 
 void Model::Continue()
 {
   m_printing = true;
-  // TODO: Actually unpause (resume enqueueing)
+  rr_dev_set_paused (m_device, RR_PRIO_NORMAL, 0);
 }
 
 void Model::PrintButton()
 {
-  if (m_printing) {
+  if (m_printing)
     Restart();
-  } else {
+  else
     Print();
-  }
 }
 
 bool Model::IsConnected()
 {
-	return rr_dev_fd(m_device) >= 0;
+  return rr_dev_fd (m_device) >= 0;
 }
-
 
 // we try to change the state of the connection
 void Model::serial_try_connect (bool connect)
@@ -262,8 +265,8 @@ void Model::serial_try_connect (bool connect)
   int result;
   if (connect) {
     m_signal_serial_state_changed.emit (SERIAL_CONNECTING);
-    result = rr_open (m_device, settings.Hardware.PortName.c_str(),
-		      settings.Hardware.SerialSpeed);
+    result = rr_dev_open (m_device, settings.Hardware.PortName.c_str(),
+			  settings.Hardware.SerialSpeed);
     if(result < 0) {
       m_signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
       Gtk::MessageDialog dialog("Failed to connect to device", false,
@@ -271,22 +274,19 @@ void Model::serial_try_connect (bool connect)
       dialog.set_secondary_text(strerror(errno));
       dialog.run();
     } else {
-      rr_reset (m_device);
+      rr_dev_reset (m_device);
       m_signal_serial_state_changed.emit (SERIAL_CONNECTED);
     }
   } else {
     m_signal_serial_state_changed.emit (SERIAL_DISCONNECTING);
-    result = rr_close(m_device);
-    if(result < 0) {
-      m_signal_serial_state_changed.emit (SERIAL_CONNECTED);
-      // TODO: Error dialog
-      std::string message();
-      Gtk::MessageDialog dialog("Failed to disconnect from device", false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text(strerror(errno));
-      dialog.run();
-    } else {
-      m_signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
+    m_devconn.disconnect();
+    rr_dev_close (m_device);
+    m_devconn.disconnect();
+    m_signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
+
+    if (m_printing) {
+      Pause();
+      g_warning ("FIXME: warn of dis-connect while printing !");
     }
   }
 }
@@ -296,22 +296,26 @@ void Model::SimplePrint()
   if (m_printing)
     alert ("Already printing.\nCannot start printing");
 
-  if (rr_dev_fd(m_device) < 0)
+  if (rr_dev_fd (m_device) < 0)
       serial_try_connect (true);
   Print();
 }
 
 void Model::Print()
 {
-	if(rr_dev_fd(m_device) < 0) {
-		alert ("Not connected to printer.\nCannot start printing");
-		return;
-	}
+  if (rr_dev_fd (m_device) < 0) {
+    alert ("Not connected to printer.\nCannot start printing");
+    return;
+  }
 
-	rr_reset(m_device);
-	gcode.queue_to_serial(m_device);
-	m_progress.start ("Printing", gcode.commands.size());
-	m_printing = true;
+  rr_dev_reset (m_device);
+
+  delete (m_iter);
+  m_iter = gcode.get_iter();
+
+  m_printing = true;
+  m_progress.start ("Printing", gcode.commands.size());
+  rr_dev_set_paused (m_device, RR_PRIO_NORMAL, 0);
 }
 
 void Model::RunExtruder (double extruder_speed, double extruder_length, bool reverse)
@@ -348,13 +352,14 @@ void Model::RunExtruder (double extruder_speed, double extruder_length, bool rev
 
 void Model::SendNow(string str)
 {
-  if(rr_dev_fd(m_device) > 0) {
-    rr_enqueue(m_device, RR_PRIO_HIGH, NULL, str.data(), str.size());
-  } else {
-    Gtk::MessageDialog dialog("Can't send command", false,
+  if (rr_dev_fd (m_device) > 0)
+    rr_dev_enqueue_cmd (m_device, RR_PRIO_HIGH, str.data(), str.size());
+
+  else {
+    Gtk::MessageDialog dialog ("Can't send command", false,
                               Gtk::MESSAGE_INFO, Gtk::BUTTONS_CLOSE);
-    dialog.set_secondary_text("You must first connect to a device!");
-    dialog.run();
+    dialog.set_secondary_text ("You must first connect to a device!");
+    dialog.run ();
   }
 }
 
@@ -480,8 +485,8 @@ void Model::Goto(string axis, float position)
 }
 void Model::STOP()
 {
-	SendNow("M112");
-  	rr_reset(m_device);
+  SendNow ("M112");
+  rr_dev_reset (m_device);
 }
 
 void Model::ReadStl(Glib::RefPtr<Gio::File> file)
@@ -681,20 +686,6 @@ void Model::MakeRaft(float &z)
 	gcode.commands.push_back(gotoE);
 }
 
-void Model::handle_send(rr_dev device, void *cbdata, void *blkdata, const char *block, size_t len)
-{
-  Model *instance = static_cast<Model*>(cbdata);
-  if (instance->m_printing)
-    instance->m_progress.update((unsigned long)(blkdata));
-  instance->commlog->insert(instance->commlog->end(), string(block, len));
-}
-
-void Model::handle_recv(rr_dev device, void *data, const char *reply, size_t len)
-{
-  Model *instance = static_cast<Model*>(data);
-  instance->commlog->insert (instance->commlog->end(), string (reply, len) + "\n");
-}
-
 void Model::alert (const char *message)
 {
   m_signal_alert.emit (Gtk::MESSAGE_INFO, message, NULL);
@@ -703,53 +694,6 @@ void Model::alert (const char *message)
 void Model::error (const char *message, const char *secondary)
 {
   m_signal_alert.emit (Gtk::MESSAGE_ERROR, message, secondary);
-}
-
-bool Model::handle_dev_fd(Glib::IOCondition cond)
-{
-  int result;
-  if (cond & Glib::IO_IN) {
-    result = rr_handle_readable (m_device);
-    if (result < 0)
-      error ("Error reading from device!", strerror(errno));
-  }
-  if (cond & Glib::IO_OUT) {
-    result = rr_handle_writable(m_device);
-    if (result < 0)
-      error ("Error writing to device!", strerror(errno));
-  }
-  return true;
-}
-
-void Model::handle_want_writable(rr_dev device, void *data, char state) {
-  Model *instance = static_cast<Model*>(data);
-  // TODO: Is there a way to merely change the flags to listen on?
-  instance->m_devconn.disconnect();
-  if (state) {
-    instance->m_devconn = Glib::signal_io().connect(sigc::mem_fun(*instance, &Model::handle_dev_fd), rr_dev_fd(device), Glib::IO_IN | Glib::IO_OUT);
-  } else {
-    instance->m_devconn = Glib::signal_io().connect(sigc::mem_fun(*instance, &Model::handle_dev_fd), rr_dev_fd(device), Glib::IO_IN);
-  }
-}
-
-void Model::handle_reply(rr_dev device, void *data, rr_reply reply, float value)
-{
-  Model *model = static_cast<Model *>(data);
-  switch(reply) {
-  case RR_NOZZLE_TEMP:
-    model->m_temps[TEMP_NOZZLE] = value;
-    model->m_signal_temp_changed.emit();
-    break;
-  case RR_BED_TEMP:
-    model->m_temps[TEMP_BED] = value;
-    model->m_signal_temp_changed.emit();
-    break;
-  case RR_OK:
-    // TODO: Only enqueue a certain number of blocks at a time
-    break;
-  default:
-    break;
-  }
 }
 
 void Model::ClearLogs()
@@ -780,3 +724,94 @@ void Model::CalcBoundingBoxAndCenter()
 
   m_signal_rfo_changed.emit();
 }
+
+// ------------------------------ libreprap integration ------------------------------
+
+bool Model::handle_dev_fd (Glib::IOCondition cond)
+{
+  int result;
+  if (cond & Glib::IO_IN) {
+    result = rr_dev_handle_readable (m_device);
+    if (result < 0)
+      error ("Error reading from device!", strerror (errno));
+  }
+  if (cond & Glib::IO_OUT) {
+    result = rr_dev_handle_writable (m_device);
+    if (result < 0)
+      error ("Error writing to device!", strerror (errno));
+  }
+  if (cond & (Glib::IO_ERR | Glib::IO_HUP))
+    serial_try_connect (false);
+
+  return true;
+}
+
+void RR_CALL Model::rr_reply_fn (rr_dev dev, int type, float value,
+				 void *expansion, void *closure)
+{
+  Model *model = static_cast<Model *>(closure);
+
+  switch (type) {
+  case RR_NOZZLE_TEMP:
+    model->m_temps[TEMP_NOZZLE] = value;
+    model->m_signal_temp_changed.emit();
+    break;
+  case RR_BED_TEMP:
+    model->m_temps[TEMP_BED] = value;
+    model->m_signal_temp_changed.emit();
+    break;
+  default:
+    break;
+  }
+}
+
+void RR_CALL Model::rr_more_fn (rr_dev dev, void *closure)
+{
+  Model *model = static_cast<Model*>(closure);
+
+  if (model->m_printing && model->m_iter) {
+    model->m_progress.update (model->m_iter->m_cur_line -
+			      rr_dev_buffered_lines (model->m_device));
+    while (rr_dev_write_more (model->m_device) && !model->m_iter->finished()) {
+      std::string line = model->m_iter->next_line();
+      if (line.length() > 0 && line[0] != ';')
+	rr_dev_enqueue_cmd (model->m_device, RR_PRIO_NORMAL, line.data(), line.size());
+    }
+
+    if (model->m_iter->finished())
+      model->m_progress.stop ("Printed");
+  }
+}
+
+void RR_CALL Model::rr_error_fn (rr_dev dev, int error_code,
+				 const char *msg, size_t len,
+				 void *closure)
+{
+  char *str = g_strndup (msg, len);
+  g_warning ("Error (%d) '%s' - user popup ?", error_code, str);
+  g_free (str);
+}
+
+void RR_CALL Model::rr_wait_wr_fn (rr_dev dev, int wait_write, void *closure)
+{
+  Model *model = static_cast<Model*>(closure);
+
+  Glib::IOCondition cond = (Glib::IO_ERR | Glib::IO_HUP |
+			    Glib::IO_PRI | Glib::IO_IN);
+  if (wait_write)
+    cond |= Glib::IO_OUT;
+
+  // FIXME: it'd be way nicer to change the existing poll record
+  model->m_devconn.disconnect();
+  model->m_devconn = Glib::signal_io().connect
+    (sigc::mem_fun (*model, &Model::handle_dev_fd), rr_dev_fd (dev), cond);
+}
+
+void RR_CALL Model::rr_log_fn (rr_dev dev, const char *buffer,
+			       size_t len, void *closure)
+{
+  Model *model = static_cast<Model*>(closure);
+  model->commlog->insert (model->commlog->end(), string (buffer, len));
+}
+
+// ------------------------------ libreprap integration above ------------------------------

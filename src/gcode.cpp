@@ -500,17 +500,29 @@ void GCode::clear()
   commands.clear();
 }
 
-void GCode::queue_to_serial(rr_dev device)
+
+GCodeIter::GCodeIter (Glib::RefPtr<Gtk::TextBuffer> buffer) :
+  m_buffer (buffer),
+  m_it (buffer->begin()),
+  m_line_count (buffer->get_line_count()),
+  m_cur_line (1)
 {
-  // Horribly inefficient ...
-  unsigned long line_count = buffer->get_line_count();
-  unsigned long i;
-  Gtk::TextBuffer::iterator last = buffer->begin();
-  for (i = 1; i <= line_count; i++) {
-    Gtk::TextBuffer::iterator it = buffer->get_iter_at_line (i);
-    std::string line = buffer->get_text (last, it);
-    if (line.length() > 0 && line[0] != ';')
-      rr_enqueue(device, RR_PRIO_NORMAL, (void*)(i), line.data(), line.size());
-    last = it;
-  }
 }
+
+std::string GCodeIter::next_line()
+{
+  Gtk::TextBuffer::iterator last = m_it;
+  m_it = m_buffer->get_iter_at_line (m_cur_line++);
+  return m_buffer->get_text (last, m_it);
+}
+
+bool GCodeIter::finished()
+{
+  return m_cur_line > m_line_count;
+}
+
+GCodeIter *GCode::get_iter ()
+{
+  return new GCodeIter (buffer);
+}
+
