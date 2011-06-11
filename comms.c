@@ -208,14 +208,14 @@ fmtblock (rr_dev dev, blocknode *node)
   terminated[node->blocksize] = '\0';
 
   ssize_t result;
-  switch(dev->proto) {
+  switch (dev->proto) {
   case RR_PROTO_SIMPLE:
     result = fmtblock_simple(dev->sendbuf, terminated);
     break;
 
   case RR_PROTO_FIVED:
   case RR_PROTO_TONOKIP:
-    if(node->line >= 0) {
+    if (node->line >= 0) {
       /* Block has an explicit line number; may be out of sequence
        * (i.e. a resend) */
       result = fmtblock_fived(dev->sendbuf, terminated, node->line);
@@ -229,7 +229,7 @@ fmtblock (rr_dev dev, blocknode *node)
     break;
   }
 
-  free(terminated);
+  free (terminated);
   return result;
 }
 
@@ -252,6 +252,9 @@ rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
    */
   while (nbytes > 0 && isspace (block[nbytes - 1]))
     nbytes--;
+
+  if (nbytes == 0)
+    return 0;
 
   blocknode *node = malloc(sizeof(blocknode));
   node->next = NULL;
@@ -465,7 +468,7 @@ rr_dev_handle_writable (rr_dev dev)
   ssize_t result;
 
   if (dev->sendbuf_fill == 0) {
-    if (dev->ok_count <= 0) {
+    if (dev->ok_count <= 0 && dev->sendsize[RR_PRIO_RESEND] <= 0) {
       debug_log ((dev, "; writeable - wait ok count is %d, queue %d\n",
 		  dev->ok_count, dev->dev_cmdqueue_size));
       /* wait until there is space in the device buffer */
@@ -490,6 +493,9 @@ rr_dev_handle_writable (rr_dev dev)
           /* FIXME: This will confuse code expecting errno to be set */
           return result;
         }
+	if (result == 0)
+	  debug_log ((dev, "; unusual error - nothing in block to write\n"));
+
 	dev->ok_count = dev->ok_count > 0 ? dev->ok_count - 1 : 0;
         dev->sendbuf_fill = result;
         dev->sending_prio = prio;
@@ -505,8 +511,8 @@ rr_dev_handle_writable (rr_dev dev)
 
   /* Perform write */
   do {
-    result = write(dev->fd, dev->sendbuf + dev->bytes_sent, dev->sendbuf_fill - dev->bytes_sent);
-  } while(result < 0 && errno == EINTR);
+    result = write (dev->fd, dev->sendbuf + dev->bytes_sent, dev->sendbuf_fill - dev->bytes_sent);
+  } while (result < 0 && errno == EINTR);
 
   if (result < 0)
     return result;
@@ -518,7 +524,7 @@ rr_dev_handle_writable (rr_dev dev)
 
   dev->bytes_sent += result;
 
-  if(dev->bytes_sent == dev->sendbuf_fill) {
+  if (dev->bytes_sent == dev->sendbuf_fill) {
     /* We've sent the complete block. */
     blocknode *node = dev->sendhead[dev->sending_prio];
     dev->sendhead[dev->sending_prio] = node->next;
