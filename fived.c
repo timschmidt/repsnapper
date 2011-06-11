@@ -68,7 +68,7 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
 	     had problems mid-flow, now we need to re-send the
 	     line-number reset as if it was this line-no it is asking
 	     for a re-send of, or there will be no peace */
-	  rr_dev_log (dev, "resetting confused firmware with synthetic resend of line %d\n",
+	  rr_dev_log (dev, "; resetting confused firmware with synthetic resend of line %d\n",
 		      dev->lineno);
 	  rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, lineno);
 	}

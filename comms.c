@@ -283,7 +283,14 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
 {
   unsigned long delta = (dev->lineno - 1) - lineno;
 
-  if (delta < dev->sentcachesize) {
+  if (lineno == 0) {
+    /* our line-number reset didn't make it through at the beginning, try again */
+    rr_dev_log (dev, "; initial firmware confusion - re-sending line-number reset as cmd 0\n");
+    rr_dev_enqueue_internal (dev, RR_PRIO_RESEND, "M110", 4, 0);
+    return 0;
+  }
+
+  else if (delta < dev->sentcachesize) {
     blocknode *node = dev->sentcache[delta];
     assert (node);
     rr_dev_enqueue_internal (dev, RR_PRIO_RESEND, node->block, node->blocksize, lineno);
