@@ -233,7 +233,7 @@ fmtblock (rr_dev dev, blocknode *node)
   return result;
 }
 
-static int
+int
 rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
 			 const char *block, size_t nbytes,
 			 long long line)

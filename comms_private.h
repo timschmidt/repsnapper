@@ -63,4 +63,9 @@ int  rr_dev_handle_start (rr_dev dev);
 /* print to the log */
 void rr_dev_log (rr_dev dev, const char *format, ...);
 
+/* internal queue command allowing explicit line no. */
+int rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
+			     const char *block, size_t nbytes,
+			     long long line);
+
 #endif

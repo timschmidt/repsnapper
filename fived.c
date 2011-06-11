@@ -62,8 +62,18 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
       if (lineno < dev->lineno &&
 	  strncmp ("-", reply + n_start - 1, 1))
         return rr_dev_resend (dev, lineno, reply, nbytes);
-      else
+      else {
+	if (dev->lineno <= 1) {
+	  /* oh dear - most likely we re-connected to a device that
+	     had problems mid-flow, now we need to re-send the
+	     line-number reset as if it was this line-no it is asking
+	     for a re-send of, or there will be no peace */
+	  rr_dev_log (dev, "resetting confused firmware with synthetic resend of line %d\n",
+		      dev->lineno);
+	  rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, lineno);
+	}
 	return rr_dev_emit_error (dev, RR_E_UNSENT_RESEND, reply, nbytes);
+      }
     } else
       return rr_dev_emit_error (dev, RR_E_MALFORMED_RESEND_REQUEST, reply, nbytes);
 
