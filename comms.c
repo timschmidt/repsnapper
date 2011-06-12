@@ -354,6 +354,8 @@ rr_dev_handle_ok (rr_dev dev)
 
   /* Send as many commands as we get ok's */
   dev->ok_count++;
+  if (dev->ok_count >= dev->dev_cmdqueue_size)
+    dev->ok_count = dev->dev_cmdqueue_size;
 
   if (buffered < dev->dev_cmdqueue_size) {
     debug_log ((dev, "; request more %d < %d\n", buffered, dev->dev_cmdqueue_size));

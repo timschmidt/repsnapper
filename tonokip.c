@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "comms_private.h"
-#include "common.h"
 
 int
 tonokip_handle_reply (rr_dev dev, const char *reply, size_t nbytes) {

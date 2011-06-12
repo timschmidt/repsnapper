@@ -5,7 +5,6 @@
 #include <ctype.h>
 
 #include "comms_private.h"
-#include "common.h"
 
 static void
 float_reply (rr_dev dev, char **i, rr_reply type)
@@ -59,8 +58,7 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
     if (n_start) {
       long long lineno = strtoll (reply + n_start, NULL, 10);
       /* check if lineno is in the range of sent lines*/
-      if (lineno < dev->lineno &&
-	  strncmp ("-", reply + n_start - 1, 1))
+      if (lineno < dev->lineno)
         return rr_dev_resend (dev, lineno, reply, nbytes);
       else {
 	if (dev->lineno <= 1) {
