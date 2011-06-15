@@ -55,7 +55,7 @@ AC_CHECK_HEADER(reprap/comms.h,
 dnl we require the 'meeks' branch of libreprap
 AC_CHECK_LIB(reprap, rr_dev_create,
     [LIBREPRAP_LIBS="${xLIBREPRAP_LIBS}"],
-    AC_MSG_ERROR([cannot find binary for libreprap - check meeks branch]))
+    AC_MSG_ERROR([cannot find binary for libreprap - check out the README]))
 CPPFLAGS="$OLD_CPPFLAGS"; LIBS="$OLD_LIBS"
 AC_SUBST(LIBREPRAP_CFLAGS)
 AC_SUBST(LIBREPRAP_LIBS)

@@ -1,5 +1,14 @@
 RepSnapper is an alternative host software for controlling the RepRap (http://reprap.org) open source 3D printer.
 
+= libreprap dependency =
+
+In order to compile repsnapper, you need to have libreprap installed; get this by doing:
+
+git clone git://github.com/Ralith/libreprap.git
+git checkout meeks
+
+and install this first.
+
 = Documentation =
 
 For latest documentation, see:
