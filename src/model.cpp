@@ -29,7 +29,7 @@
 #include <dirent.h>
 
 #include <glib/gutils.h>
-#include <reprap/comms.h>
+#include <libreprap/comms.h>
 
 #include "stdafx.h"
 #include "model.h"

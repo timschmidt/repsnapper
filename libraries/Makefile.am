@@ -1,1 +1,1 @@
-SUBDIRS=polylib vmmlib
+SUBDIRS=libreprap polylib vmmlib

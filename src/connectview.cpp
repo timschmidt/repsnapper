@@ -22,7 +22,7 @@
 #include <cerrno>
 #include <string>
 
-#include <reprap/util.h>
+#include <libreprap/util.h>
 
 #include "settings.h"
 #include "connectview.h"

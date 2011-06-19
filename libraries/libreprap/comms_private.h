@@ -5,9 +5,9 @@
 #include <stdlib.h>
 
 #include "comms.h"
-#include "gcode.h"
 
 /* Do not change */
+#define GCODE_BLOCKSIZE 256
 #define SENDBUFSIZE (GCODE_BLOCKSIZE + BLOCK_TERMINATOR_LEN)
 
 typedef struct blocknode {

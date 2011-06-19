@@ -19,6 +19,7 @@ AM_CPPFLAGS = \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
 	-I$(LIB_DIR)/polylib \
+	-I$(LIB_DIR) \
         -DDATADIR='$(repsnapperdatadir)' \
         -DSYSCONFDIR='$(repsnapperconfdir)' \
 	-g -O0 $(WARNING_FLAGS)
@@ -35,8 +36,9 @@ SHARED_INC=arcball.h convert.h gcode.h gllight.h miniball.h	\
 
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
 
-repsnapper_LDADD = $(GTKMM_LIBS) $(LIBREPRAP_LIBS) \
+repsnapper_LDADD = $(GTKMM_LIBS) \
 		$(top_builddir)/libraries/polylib/libpolylib.la \
+		$(top_builddir)/libraries/libreprap/libreprap.la \
                 -L/usr/lib -lGLU -lGL -lglut
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
