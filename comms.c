@@ -278,6 +278,27 @@ rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
   return 0;
 }
 
+/* rewind the sent queue to the send queue to re-send from here */
+static void
+rr_dev_rewind (rr_dev dev, unsigned long lineno)
+{
+  int i, delta = (dev->lineno - 1) - lineno;
+  int remainder = dev->sentcachesize - delta;
+
+  for (i = delta - 1; i >= 0; --i) {
+    blocknode *cur = dev->sentcache[i];
+    cur->next = dev->sendhead[RR_PRIO_NORMAL];
+    if (!cur->next)
+      dev->sendtail[RR_PRIO_NORMAL] = cur;
+    dev->sendhead[RR_PRIO_NORMAL] = cur;
+    dev->sendsize[RR_PRIO_NORMAL]++;
+  }
+
+  memmove (dev->sentcache, dev->sentcache + delta,
+	   sizeof (blocknode *) * remainder);
+  memset (dev->sentcache + remainder, 0, sizeof (blocknode *) * delta);
+}
+
 int
 rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbytes)
 {
@@ -294,6 +315,7 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
     blocknode *node = dev->sentcache[delta];
     assert (node);
     rr_dev_enqueue_internal (dev, RR_PRIO_RESEND, node->block, node->blocksize, lineno);
+    rr_dev_rewind (dev, lineno + 1);
     return 0;
 
   } else { /* Line needed for resend was not cached */
