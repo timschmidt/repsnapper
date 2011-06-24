@@ -101,7 +101,10 @@ Install dependencies: TODO only tested with Fedora 14
 ----
 yum install git gtk2-devel gcc-c++ gcc binutils make cmake gtkglextmm gtkglextmm-devel gtkmm*
 ----
-
+For Fedora 15 (tested on x86_64)
+----
+yum install git gtk2-devel gcc-c++ gcc binutils make cmake gtkglextmm gtkglextmm-devel freeglut-devel libusb1-devel intltool gtkmm*
+----
 Install libreprap (from https://github.com/Ralith/libreprap/blob/master/INSTALL):
 ----
 git clone https://github.com/Ralith/libreprap.git
