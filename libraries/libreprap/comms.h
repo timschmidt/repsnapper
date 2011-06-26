@@ -11,8 +11,6 @@ extern "C" {
 #define BLOCK_TERMINATOR_LEN 2
 #define REPLY_TERMINATOR "\r\n"
 
-#define RECVBUFSIZE 256
-
 typedef enum {
   /* Standard gcode, 'ok' response */
   RR_PROTO_SIMPLE,

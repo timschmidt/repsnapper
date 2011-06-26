@@ -9,6 +9,7 @@
 /* Do not change */
 #define GCODE_BLOCKSIZE 256
 #define SENDBUFSIZE (GCODE_BLOCKSIZE + BLOCK_TERMINATOR_LEN)
+#define INITIAL_RECVBUFSIZE 256
 
 typedef struct blocknode {
   struct blocknode *next;

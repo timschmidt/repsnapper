@@ -281,6 +281,7 @@ void Model::serial_try_connect (bool connect)
     m_signal_serial_state_changed.emit (SERIAL_DISCONNECTING);
     m_devconn.disconnect();
     rr_dev_close (m_device);
+    fprintf (stderr, "rr_dev closed ...\n");
     m_devconn.disconnect();
     m_signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
 

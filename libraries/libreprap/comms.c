@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include "comms_private.h"
 #include "serial.h"
@@ -150,8 +151,8 @@ rr_dev_create (rr_proto      proto,
   }
   dev->sendbuf_fill = 0;
   dev->bytes_sent = 0;
-  dev->recvbuf = calloc (RECVBUFSIZE, sizeof(char));
-  dev->recvbufsize = RECVBUFSIZE;
+  dev->recvbufsize = INITIAL_RECVBUFSIZE;
+  dev->recvbuf = calloc (dev->recvbufsize + 1, sizeof (char));
   dev->recvbuf_fill = 0;
 
   rr_dev_log (dev, "; Connecting with libreprap\n");
@@ -450,9 +451,13 @@ handle_reply (rr_dev dev, const char *reply, size_t nbytes, size_t term_bytes)
 int
 rr_dev_handle_readable (rr_dev dev)
 {
+  int i;
+
   /* Grow receive buffer if it's full */
-  if(dev->recvbuf_fill == dev->recvbufsize)
-    dev->recvbuf = realloc(dev->recvbuf, 2*dev->recvbufsize);
+  if (dev->recvbuf_fill >= dev->recvbufsize) {
+    dev->recvbufsize *= 2;
+    dev->recvbuf = realloc (dev->recvbuf, dev->recvbufsize + 1);
+  }
 
   ssize_t result;
 
@@ -465,7 +470,20 @@ rr_dev_handle_readable (rr_dev dev)
 
   dev->recvbuf_fill += result;
 
-  /* FIXME: validate the stream is ascii and bail out otherwise */
+  /* string terminate */
+  dev->recvbuf[dev->recvbuf_fill] = '\0';
+
+  /* validate the stream is ascii and of the correct length */
+  for (i = 0; i < dev->recvbuf_fill; i++) {
+    if (dev->recvbuf[i] == '\0' || !isascii (dev->recvbuf[i])) {
+      rr_dev_log (dev, "; invalid char in recvbuf at char %d (0x%2x) full "
+		  "msg: '%s', truncating here", i, dev->recvbuf[i],
+		  dev->recvbuf);
+      dev->recvbuf_fill = i;
+      dev->recvbuf[dev->recvbuf_fill] = '\0';
+      break;
+    }
+  }
 
   /* Scan for complete reply */
   size_t scan = 0;
@@ -476,9 +494,6 @@ rr_dev_handle_readable (rr_dev dev)
 
   do {
     /* How many non terminator chars and how many terminator chars after them*/
-
-    /* FIXME: this looks extremely bogus - wrt. string termination - why do we think it is terminated ? */
-
     reply_span = strcspn (dev->recvbuf + scan, REPLY_TERMINATOR);
     term_span = strspn (dev->recvbuf + scan + reply_span, REPLY_TERMINATOR);
     start = scan;
@@ -588,8 +603,11 @@ rr_dev_handle_writable (rr_dev dev)
   if (dev->bytes_sent == dev->sendbuf_fill) {
     /* We've sent the complete block. */
     blocknode *node = rr_dev_pop_from_queue (dev, dev->sending_prio);
-    node->line = dev->lineno;
-    ++(dev->lineno);
+
+    if (node->line < 0) {
+      node->line = dev->lineno;
+      ++(dev->lineno);
+    }
 
     /* Update sent cache */
     assert (node->block != NULL);
