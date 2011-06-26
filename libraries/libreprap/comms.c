@@ -44,25 +44,58 @@ blocknode_free (blocknode* node)
 }
 
 static void
+rr_dev_append_to_queue (rr_dev dev, rr_prio priority,
+			blocknode *node)
+{
+  if (!dev->sendhead[priority]) {
+    dev->sendsize[priority] = 1;
+    dev->sendhead[priority] = node;
+    dev->sendtail[priority] = node;
+  } else {
+    dev->sendsize[priority]++;
+    dev->sendtail[priority]->next = node;
+    dev->sendtail[priority] = node;
+  }
+}
+
+static void
+rr_dev_prepend_to_queue (rr_dev dev, rr_prio priority,
+			 blocknode *node)
+{
+  node->next = dev->sendhead[priority];
+  dev->sendhead[priority] = node;
+  if (!node->next) {
+    dev->sendtail[priority] = node;
+    dev->sendsize[priority] = 1;
+  }
+  dev->sendsize[priority]++;
+}
+
+static blocknode *
+rr_dev_pop_from_queue (rr_dev dev, rr_prio priority)
+{
+  blocknode *node = dev->sendhead[priority];
+
+  dev->sendhead[priority] = node->next;
+  if (!node->next)
+    dev->sendtail[priority] = NULL;
+  dev->sendsize[priority]--;
+
+  return node;
+}
+
+static void
 empty_buffers (rr_dev dev)
 {
   unsigned i;
-  for (i = 0; i < RR_PRIO_COUNT; ++i) {
-    blocknode *j = dev->sendhead[i];
-    while(j != NULL) {
-      blocknode *next = j->next;
-      free(j);
-      j = next;
+  for (i = 0; i < RR_PRIO_ALL_QUEUES; ++i) {
+    while (dev->sendhead[i]) {
+      blocknode *node = rr_dev_pop_from_queue (dev, i);
+      blocknode_free (node);
     }
-    dev->sendhead[i] = NULL;
-    dev->sendtail[i] = NULL;
+    assert (dev->sendhead[i] == NULL);
+    assert (dev->sendtail[i] == NULL);
     dev->sendsize[i] = 0;
-  }
-  for (i = 0; i < dev->sentcachesize; ++i) {
-    if (dev->sentcache[i]) {
-      blocknode_free (dev->sentcache[i]);
-      dev->sentcache[i] = NULL;
-    }
   }
 }
 
@@ -108,11 +141,8 @@ rr_dev_create (rr_proto      proto,
   dev->ok_count = 0;
 
   dev->sentcachesize = dev_cmdqueue_size * 4 + 64;
-  dev->sentcache = calloc (dev->sentcachesize, sizeof (blocknode*));
-  for (i = 0; i < dev->sentcachesize; ++i)
-    dev->sentcache[i] = NULL;
 
-  for (i = 0; i < RR_PRIO_COUNT; ++i) {
+  for (i = 0; i < RR_PRIO_ALL_QUEUES; ++i) {
     dev->sendsize[i] = 0;
     dev->sendhead[i] = NULL;
     dev->sendtail[i] = NULL;
@@ -134,7 +164,6 @@ rr_dev_free (rr_dev dev)
 {
   rr_dev_close (dev);
   empty_buffers (dev);
-  free (dev->sentcache);
   free (dev->recvbuf);
   free (dev);
 }
@@ -258,71 +287,43 @@ rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
 
   blocknode *node = malloc(sizeof(blocknode));
   node->next = NULL;
-  node->block = malloc(nbytes);
+  node->block = malloc (nbytes + 1);
   node->blocksize = nbytes;
   node->line = line;
   memcpy(node->block, block, nbytes);
+  node->block[nbytes] = '\0';
 
-  if (!dev->sendhead[priority]) {
-    dev->sendsize[priority] = 1;
-    dev->sendhead[priority] = node;
-    dev->sendtail[priority] = node;
-  } else {
-    dev->sendsize[priority]++;
-    dev->sendtail[priority]->next = node;
-    dev->sendtail[priority] = node;
-  }
+  rr_dev_append_to_queue (dev, priority, node);
 
   dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
 
   return 0;
 }
 
-/* rewind the sent queue to the send queue to re-send from here */
-static void
-rr_dev_rewind (rr_dev dev, unsigned long lineno)
-{
-  int i, delta = (dev->lineno - 1) - lineno;
-  int remainder = dev->sentcachesize - delta;
-
-  for (i = delta - 1; i >= 0; --i) {
-    blocknode *cur = dev->sentcache[i];
-    cur->next = dev->sendhead[RR_PRIO_NORMAL];
-    if (!cur->next)
-      dev->sendtail[RR_PRIO_NORMAL] = cur;
-    dev->sendhead[RR_PRIO_NORMAL] = cur;
-    dev->sendsize[RR_PRIO_NORMAL]++;
-  }
-
-  memmove (dev->sentcache, dev->sentcache + delta,
-	   sizeof (blocknode *) * remainder);
-  memset (dev->sentcache + remainder, 0, sizeof (blocknode *) * delta);
-}
-
 int
 rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbytes)
 {
-  unsigned long delta = (dev->lineno - 1) - lineno;
+  int resent = 0;
+  blocknode *node;
 
-  if (lineno == 0) {
-    /* our line-number reset didn't make it through at the beginning, try again */
-    rr_dev_log (dev, "; initial firmware confusion - re-sending line-number reset as cmd 0\n");
-    rr_dev_enqueue_internal (dev, RR_PRIO_RESEND, "M110", 4, 0);
-    return 0;
+  /* sent cache slot 0 is most recent */
+  while (1) {
+    node = rr_dev_pop_from_queue (dev, RR_PRIO_SENTCACHE);
+    rr_dev_log (dev, "; pop node line %d '%s' (%d bytes)\n", node->line, node->block, node->blocksize);
+    if (node->line >= lineno) {
+      rr_dev_prepend_to_queue (dev, RR_PRIO_RESEND, node);
+      resent++;
+    } else { /* put it back and exit */
+      rr_dev_prepend_to_queue (dev, RR_PRIO_SENTCACHE, node);
+      break;
+    }
   }
-
-  else if (delta < dev->sentcachesize) {
-    blocknode *node = dev->sentcache[delta];
-    assert (node);
-    rr_dev_enqueue_internal (dev, RR_PRIO_RESEND, node->block, node->blocksize, lineno);
-    rr_dev_rewind (dev, lineno + 1);
-    return 0;
-
-  } else { /* Line needed for resend was not cached */
-    rr_dev_log (dev, "; re-send request for unknown (too old) line %ld "
-		"a delta of %d into queue depth %d\n", lineno, delta,
-		dev->sentcachesize);
+  if (resent == 0) { /* Line needed for resend was not cached */
+    rr_dev_log (dev, "; re-send request for unknown (too old) line %ld from cache size %d",
+		lineno, dev->sendsize[RR_PRIO_SENTCACHE]);
     return rr_dev_emit_error (dev, RR_E_UNCACHED_RESEND, reply, nbytes);
+  } else {
+    dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
   }
 }
 
@@ -340,6 +341,7 @@ rr_dev_reset (rr_dev dev)
   empty_buffers (dev);
   debug_log ((dev, "; reset dev size to zero\n"));
   rr_dev_reset_lineno (dev);
+  dev->recvbuf_fill = 0;
 }
 
 static void
@@ -463,6 +465,8 @@ rr_dev_handle_readable (rr_dev dev)
 
   dev->recvbuf_fill += result;
 
+  /* FIXME: validate the stream is ascii and bail out otherwise */
+
   /* Scan for complete reply */
   size_t scan = 0;
   size_t end = dev->recvbuf_fill;
@@ -472,6 +476,9 @@ rr_dev_handle_readable (rr_dev dev)
 
   do {
     /* How many non terminator chars and how many terminator chars after them*/
+
+    /* FIXME: this looks extremely bogus - wrt. string termination - why do we think it is terminated ? */
+
     reply_span = strcspn (dev->recvbuf + scan, REPLY_TERMINATOR);
     term_span = strspn (dev->recvbuf + scan + reply_span, REPLY_TERMINATOR);
     start = scan;
@@ -495,6 +502,25 @@ rr_dev_handle_readable (rr_dev dev)
   }
 
   return 0;
+}
+
+/* free extra elements at the end of the sentcache */
+static void
+shrink_sentcache (rr_dev dev)
+{
+  int i;
+  blocknode *next, *l = dev->sendhead[RR_PRIO_SENTCACHE];
+  for (i = 0; i < dev->sentcachesize; i++)
+    l = l ? l->next : NULL;
+  if (!l)
+    return;
+  assert (0);
+  dev->sendtail[RR_PRIO_SENTCACHE] = l;
+  for (l = l->next; l; l = next) {
+    next = l->next;
+    blocknode_free (l);
+    dev->sendsize[RR_PRIO_SENTCACHE]--;
+  }
 }
 
 int
@@ -561,22 +587,15 @@ rr_dev_handle_writable (rr_dev dev)
 
   if (dev->bytes_sent == dev->sendbuf_fill) {
     /* We've sent the complete block. */
-    blocknode *node = dev->sendhead[dev->sending_prio];
-    dev->sendhead[dev->sending_prio] = node->next;
-    if (!node->next)
-      dev->sendtail[dev->sending_prio] = NULL;
-    dev->sendsize[dev->sending_prio]--;
+    blocknode *node = rr_dev_pop_from_queue (dev, dev->sending_prio);
     node->line = dev->lineno;
     ++(dev->lineno);
 
     /* Update sent cache */
-    if (dev->sentcache[dev->sentcachesize - 1])
-      blocknode_free (dev->sentcache[dev->sentcachesize - 1]);
-
-    ssize_t i;
-    for (i = dev->sentcachesize - 1; i > 0 ; --i)
-      dev->sentcache[i] = dev->sentcache[i-1];
-    dev->sentcache[0] = node;
+    assert (node->block != NULL);
+    rr_dev_prepend_to_queue (dev, RR_PRIO_SENTCACHE, node);
+    if (dev->sendsize[RR_PRIO_SENTCACHE] > (dev->sentcachesize * 3 / 2))
+      shrink_sentcache (dev);
 
     /* Indicate that we're ready for the next. */
     dev->sendbuf_fill = 0;

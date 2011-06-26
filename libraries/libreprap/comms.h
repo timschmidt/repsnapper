@@ -38,7 +38,9 @@ typedef enum {
   RR_PRIO_NORMAL = 0,
   RR_PRIO_HIGH,
   RR_PRIO_RESEND,
-  RR_PRIO_COUNT
+  RR_PRIO_COUNT,
+  RR_PRIO_SENTCACHE, // internal impl. detail
+  RR_PRIO_ALL_QUEUES
 } rr_prio;
 
 typedef enum {
