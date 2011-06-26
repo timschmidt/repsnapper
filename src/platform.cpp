@@ -30,12 +30,24 @@
 unsigned long Platform::getTickCount()
 {
 #ifdef WIN32
-	return GetTickCount();
+  return GetTickCount();
 #else
-	struct timeval now;
-	gettimeofday (&now, NULL);
-	return now.tv_sec * 1000 + now.tv_usec / 1000;
+  struct timeval now;
+  gettimeofday (&now, NULL);
+  return now.tv_sec * 1000 + now.tv_usec / 1000;
 #endif
+}
+
+static char *binary_path = NULL;
+
+void Platform::setBinaryPath (const char *apparg)
+{
+  const char *p;
+
+  if (!(p = strrchr (apparg, G_DIR_SEPARATOR)))
+    return;
+
+  binary_path = g_strndup (apparg, p - apparg);
 }
 
 std::vector<std::string> Platform::getConfigPaths()
@@ -45,6 +57,10 @@ std::vector<std::string> Platform::getConfigPaths()
 
   /* Always prefer config files in the current directory */
   dirs.push_back(std::string(".") + G_DIR_SEPARATOR);
+
+  /* Otherwise prefer the app's current directory */
+  if (binary_path)
+    dirs.push_back(std::string(binary_path) + G_DIR_SEPARATOR);
 
   dirs.push_back(std::string(G_STRINGIFY(DATADIR)) + G_DIR_SEPARATOR);
   dirs.push_back(std::string(G_STRINGIFY(SYSCONFDIR)) + G_DIR_SEPARATOR);

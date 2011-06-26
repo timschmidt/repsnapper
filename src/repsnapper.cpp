@@ -126,6 +126,8 @@ int main(int argc, char **argv)
 
   CommandLineOptions opts (argc, argv);
 
+  Platform::setBinaryPath (argv[0]);
+
   Model *model = new Model();
 
   try {
