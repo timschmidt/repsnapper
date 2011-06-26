@@ -84,6 +84,7 @@ int  rr_dev_open  (rr_dev dev, const char *port, long speed);
 int  rr_dev_close (rr_dev dev);
 void rr_dev_reset_lineno (rr_dev dev);
 void rr_dev_reset (rr_dev dev);
+void rr_dev_kick (rr_dev dev);
 
 /* Accessors */
 /* File descriptor; <0 if not connected */

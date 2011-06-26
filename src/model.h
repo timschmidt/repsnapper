@@ -137,6 +137,7 @@ public:
 	void Print();
 	void Pause();
 	void Continue();
+	void Kick();
 	void Restart();
 
 	void RunExtruder(double extruder_speed, double extruder_length, bool reverse);

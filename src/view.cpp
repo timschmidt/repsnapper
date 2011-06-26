@@ -529,7 +529,7 @@ void View::auto_rotate()
 
 void View::kick_clicked()
 {
-  m_model->Continue();
+  m_model->Kick();
   printing_changed();
 }
 void View::print_clicked()

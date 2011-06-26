@@ -310,7 +310,8 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
   /* sent cache slot 0 is most recent */
   while (1) {
     node = rr_dev_pop_from_queue (dev, RR_PRIO_SENTCACHE);
-    rr_dev_log (dev, "; pop node line %d '%s' (%d bytes)\n", node->line, node->block, node->blocksize);
+    rr_dev_log (dev, "; pop node line %d '%s' (%d bytes)\n",
+		(int)node->line, node->block, node->blocksize);
     if (node->line >= lineno) {
       rr_dev_prepend_to_queue (dev, RR_PRIO_RESEND, node);
       resent++;
@@ -324,6 +325,7 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
 		lineno, dev->sendsize[RR_PRIO_SENTCACHE]);
     return rr_dev_emit_error (dev, RR_E_UNCACHED_RESEND, reply, nbytes);
   } else {
+    dev->ok_count++; /* we should send something else */
     dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
   }
 }
@@ -333,7 +335,7 @@ rr_dev_reset_lineno (rr_dev dev)
 {
   dev->lineno = 0;
   rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, -1);
-  dev->ok_count = 4;
+  dev->ok_count = 3;
 }
 
 void
@@ -381,6 +383,8 @@ rr_dev_handle_ok (rr_dev dev)
   dev->ok_count++;
   if (dev->ok_count >= dev->dev_cmdqueue_size)
     dev->ok_count = dev->dev_cmdqueue_size;
+
+  debug_log ((dev, "; ok - ok count %d\n", dev->ok_count));
 
   if (buffered < dev->dev_cmdqueue_size) {
     debug_log ((dev, "; request more %d < %d\n", buffered, dev->dev_cmdqueue_size));
@@ -485,6 +489,14 @@ rr_dev_handle_readable (rr_dev dev)
     }
   }
 
+  /* spot control characters */
+  if (dev->recvbuf[0] == 1) {
+    rr_dev_log (dev, "unusual - control character 0x%2x 0x%2x\n",
+		dev->recvbuf[0], dev->recvbuf[1]);
+    memmove (dev->recvbuf, dev->recvbuf + 2, dev->recvbuf_fill - 2);
+    dev->recvbuf_fill -= 2;
+  }
+
   /* Scan for complete reply */
   size_t scan = 0;
   size_t end = dev->recvbuf_fill;
@@ -544,7 +556,7 @@ rr_dev_handle_writable (rr_dev dev)
   ssize_t result;
 
   if (dev->sendbuf_fill == 0) {
-    if (dev->ok_count <= 0 && dev->sendsize[RR_PRIO_RESEND] <= 0) {
+    if (dev->ok_count <= 0) {
       debug_log ((dev, "; writeable - wait ok count is %d, queue %d resend %d\n",
 		  dev->ok_count, dev->dev_cmdqueue_size, dev->sendsize[RR_PRIO_RESEND]));
       /* wait until there is space in the device buffer */
@@ -702,4 +714,13 @@ rr_dev_emit_error (rr_dev dev, rr_error err, const char *block, int nbytes)
   if (dev->error_cb)
     dev->error_cb (dev, err, block, nbytes, dev->error_cl);
   return err;
+}
+
+/* What an horrible method - the protocol is so bad flow control
+   wise we can jam up, and need to be coaxed back into life */
+void
+rr_dev_kick (rr_dev dev)
+{
+  dev->ok_count = 4;
+  dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
 }

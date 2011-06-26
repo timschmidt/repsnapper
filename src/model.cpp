@@ -246,6 +246,12 @@ void Model::Continue()
   rr_dev_set_paused (m_device, RR_PRIO_NORMAL, 0);
 }
 
+void Model::Kick()
+{
+  rr_dev_kick (m_device);
+  Continue();
+}
+
 void Model::PrintButton()
 {
   if (m_printing)
