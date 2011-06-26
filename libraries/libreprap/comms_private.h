@@ -31,7 +31,8 @@ struct rr_dev_t {
   /* Line currently being sent */
   unsigned long lineno;
 
-  int        ok_count;
+  int        init_send_count;
+  int        send_next;
   int        sendsize[RR_PRIO_ALL_QUEUES];
   blocknode *sendhead[RR_PRIO_ALL_QUEUES];
   blocknode *sendtail[RR_PRIO_ALL_QUEUES];

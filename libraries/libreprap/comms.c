@@ -68,14 +68,17 @@ rr_dev_prepend_to_queue (rr_dev dev, rr_prio priority,
   if (!node->next) {
     dev->sendtail[priority] = node;
     dev->sendsize[priority] = 1;
-  }
-  dev->sendsize[priority]++;
+  } else
+    dev->sendsize[priority]++;
 }
 
 static blocknode *
 rr_dev_pop_from_queue (rr_dev dev, rr_prio priority)
 {
   blocknode *node = dev->sendhead[priority];
+
+  if (!node)
+    return NULL;
 
   dev->sendhead[priority] = node->next;
   if (!node->next)
@@ -139,7 +142,8 @@ rr_dev_create (rr_proto      proto,
 
   dev->lineno = 0;
   dev->fd = -1;
-  dev->ok_count = 0;
+  dev->send_next = 0;
+  dev->init_send_count = dev->dev_cmdqueue_size;
 
   dev->sentcachesize = dev_cmdqueue_size * 4 + 64;
 
@@ -301,6 +305,13 @@ rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
   return 0;
 }
 
+/*
+ * FIXME - this needs to handle a jump-ahead use-case too ...
+ * we can get:
+ * rs 2 [and resend N2 ...] followed immediately by rs 6 ...
+ * and we need to do the converse - shift lines from the
+ * resend queue back onto the sentcache ...
+ */
 int
 rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbytes)
 {
@@ -309,9 +320,10 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
 
   /* sent cache slot 0 is most recent */
   while (1) {
-    node = rr_dev_pop_from_queue (dev, RR_PRIO_SENTCACHE);
-    rr_dev_log (dev, "; pop node line %d '%s' (%d bytes)\n",
-		(int)node->line, node->block, node->blocksize);
+    if (!(node = rr_dev_pop_from_queue (dev, RR_PRIO_SENTCACHE)))
+      break;
+    debug_log ((dev, "; pop node line %d '%s' (%d bytes)\n",
+		(int)node->line, node->block, node->blocksize));
     if (node->line >= lineno) {
       rr_dev_prepend_to_queue (dev, RR_PRIO_RESEND, node);
       resent++;
@@ -320,14 +332,17 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
       break;
     }
   }
+
   if (resent == 0) { /* Line needed for resend was not cached */
-    rr_dev_log (dev, "; re-send request for unknown (too old) line %ld from cache size %d",
+    rr_dev_log (dev, "; re-send request for unknown (too old) line %ld from cache size %d\n",
 		lineno, dev->sendsize[RR_PRIO_SENTCACHE]);
-    return rr_dev_emit_error (dev, RR_E_UNCACHED_RESEND, reply, nbytes);
-  } else {
-    dev->ok_count++; /* we should send something else */
-    dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
+    rr_dev_emit_error (dev, RR_E_UNCACHED_RESEND, reply, nbytes);
   }
+
+  dev->send_next = 1;
+  dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
+
+  return 0;
 }
 
 void
@@ -335,7 +350,7 @@ rr_dev_reset_lineno (rr_dev dev)
 {
   dev->lineno = 0;
   rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, -1);
-  dev->ok_count = 3;
+  dev->init_send_count = dev->dev_cmdqueue_size - 1;
 }
 
 void
@@ -358,7 +373,7 @@ debug_log_block (rr_dev dev, const char *block, int nbytes)
     *p = '\0';
   if ((p = strchr (buffer, '\r')))
     *p = '\0';
-  rr_dev_log (dev, "; queue cmd '%s' queue %d\n",
+  rr_dev_log (dev, "; queue cmd '%s' queue size %d\n",
 	      buffer, rr_dev_buffered_lines (dev));
 }
 
@@ -380,11 +395,9 @@ rr_dev_handle_ok (rr_dev dev)
   int buffered = rr_dev_buffered_lines (dev);
 
   /* Send as many commands as we get ok's */
-  dev->ok_count++;
-  if (dev->ok_count >= dev->dev_cmdqueue_size)
-    dev->ok_count = dev->dev_cmdqueue_size;
-
-  debug_log ((dev, "; ok - ok count %d\n", dev->ok_count));
+  if (dev->init_send_count > 0)
+    dev->init_send_count--;
+  dev->send_next = 1;
 
   if (buffered < dev->dev_cmdqueue_size) {
     debug_log ((dev, "; request more %d < %d\n", buffered, dev->dev_cmdqueue_size));
@@ -398,11 +411,15 @@ rr_dev_handle_ok (rr_dev dev)
     for (i = 0; i < RR_PRIO_COUNT; ++i) {
       blocknode *p;
       int count = 0;
-      for (p = dev->sendhead[i]; p; p = p->next)
+      for (p = dev->sendhead[i]; p; p = p->next) {
+	if (!p->next && dev->sendtail[i] != p)
+	  debug_log ((dev, "; Error: queue (%d) broken tail pointer %p vs %p\n",
+		      i, p, dev->sendtail[i]));
 	count++;
+      }
       if (count != dev->sendsize[i])
-	debug_log ((dev, "; queue size mismatch: %d vs %d\n",
-		    count, dev->sendsize[i]));
+	debug_log ((dev, "; Error: queue (%d) size mismatch: %d vs %d\n",
+		    i, count, dev->sendsize[i]));
     }
   }
 #endif
@@ -541,9 +558,11 @@ shrink_sentcache (rr_dev dev)
     l = l ? l->next : NULL;
   if (!l)
     return;
-  assert (0);
   dev->sendtail[RR_PRIO_SENTCACHE] = l;
-  for (l = l->next; l; l = next) {
+  next = l->next;
+  l->next = NULL;
+
+  for (l = next; l; l = next) {
     next = l->next;
     blocknode_free (l);
     dev->sendsize[RR_PRIO_SENTCACHE]--;
@@ -556,10 +575,11 @@ rr_dev_handle_writable (rr_dev dev)
   ssize_t result;
 
   if (dev->sendbuf_fill == 0) {
-    if (dev->ok_count <= 0) {
-      debug_log ((dev, "; writeable - wait ok count is %d, queue %d resend %d\n",
-		  dev->ok_count, dev->dev_cmdqueue_size, dev->sendsize[RR_PRIO_RESEND]));
-      /* wait until there is space in the device buffer */
+    if (dev->init_send_count == 0 && !dev->send_next) {
+      debug_log ((dev, "; writeable - init count is %d, no send_next queue %d resend %d\n",
+		  dev->init_send_count, dev->dev_cmdqueue_size,
+		  dev->sendsize[RR_PRIO_RESEND]));
+      /* wait until there is space in the device buffer and/or an ok */
       dev->wait_wr_cb (dev, 0, dev->wait_wr_cl);
       return 0;
     }
@@ -584,7 +604,7 @@ rr_dev_handle_writable (rr_dev dev)
 	if (result == 0)
 	  debug_log ((dev, "; unusual error - nothing in block to write\n"));
 
-	dev->ok_count = dev->ok_count > 0 ? dev->ok_count - 1 : 0;
+	dev->send_next = 0;
         dev->sendbuf_fill = result;
         dev->sending_prio = prio;
         break;
@@ -721,6 +741,7 @@ rr_dev_emit_error (rr_dev dev, rr_error err, const char *block, int nbytes)
 void
 rr_dev_kick (rr_dev dev)
 {
-  dev->ok_count = 4;
+  dev->send_next = 1;
+  dev->init_send_count = dev->dev_cmdqueue_size - 1;
   dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
 }
