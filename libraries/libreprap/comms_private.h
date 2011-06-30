@@ -6,6 +6,10 @@
 
 #include "comms.h"
 
+#define RR_DEBUG_ALWAYS 0
+#define RR_DEBUG_MEDIUM 1
+#define RR_DEBUG_HIGH   2
+
 /* Do not change */
 #define GCODE_BLOCKSIZE 256
 #define SENDBUFSIZE (GCODE_BLOCKSIZE + BLOCK_TERMINATOR_LEN)
@@ -47,6 +51,8 @@ struct rr_dev_t {
   size_t recvbuf_fill;
 
   size_t sentcachesize;
+
+  int    debug_output;
 };
 
 /* Re-send a line number */
@@ -62,11 +68,12 @@ void rr_dev_handle_ok (rr_dev dev);
 int  rr_dev_handle_start (rr_dev dev);
 
 /* print to the log */
-void rr_dev_log (rr_dev dev, const char *format, ...);
+void rr_dev_log (rr_dev dev, int level, const char *format, ...);
 
 /* internal queue command allowing explicit line no. */
 int rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
 			     const char *block, size_t nbytes,
 			     long long line);
+
 
 #endif

@@ -105,6 +105,9 @@ int           rr_dev_write_more (rr_dev dev);
 /* Pause or resume a priority queue */
 void          rr_dev_set_paused (rr_dev dev, int priority, int paused);
 
+/* Enable lots more comms debugging output */
+void          rr_dev_enable_debugging (rr_dev dev, int debug_output);
+
 /* I/O abstraction for integration into
    system mainloops in combination with
    wait_wr_cb */

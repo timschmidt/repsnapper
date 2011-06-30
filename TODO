@@ -3,6 +3,7 @@
 * libreprap:
 	+ don't write anything (particularly a re-send) while
 	  a partial read is underway [?]
+	+ add a 'comms_debug' boolean ...
 
 * sort out stdafx.h includes - check whether it is
   needed, and where ...
