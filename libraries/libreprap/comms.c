@@ -602,7 +602,7 @@ rr_dev_handle_writable (rr_dev dev)
   ssize_t result;
 
   if (dev->sendbuf_fill == 0) {
-    if (dev->init_send_count == 0 && !dev->send_next) {
+    if (dev->init_send_count <= 0 && !dev->send_next) {
       rr_dev_log (dev, RR_DEBUG_MEDIUM,
 		  "; writeable - init count is %d, no send_next queue %d resend %d\n",
 		  dev->init_send_count, dev->dev_cmdqueue_size,
