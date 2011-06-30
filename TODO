@@ -1,5 +1,9 @@
 --- the plan ---
 
+* libreprap:
+	+ don't write anything (particularly a re-send) while
+	  a partial read is underway [?]
+
 * sort out stdafx.h includes - check whether it is
   needed, and where ...
 
@@ -9,9 +13,6 @@
 		+ group / permissions problem.
 		+ you need to tweak permissions, or add yourself
 		  to XYZ group, and re-login ...
-
-* Settings re-factor
-	+ stop Model being a widget ...
 
 * Finish the 'Display' settings page
 * add Hardware Settings profiles:
@@ -25,14 +26,7 @@
 
 * win32 osc build fun ...
 
---- misc stuff ---
-
-* make toolkit lock sane and truly recursive
-	+ to avoid gdk threads deadlock[!]
-
-* serial
-	+ move ModelViewController DetectComPorts to RepRapSerial ...
-	  ditto ValidateComPort
+--- older stuff ---
 
 * connection button
 	+ should require confirmation before going off-line
@@ -47,13 +41,6 @@
 	+ re-work RFO storage to use pointers not vectors with instances
 
 * add click-to-select in the 3D view
-
-* re-factor MVC
-	* rename view.cpp etc. to render.cpp
-		* include SpinRows in view.cpp ...
-	* split chunks of model.cpp to view.cpp etc.
-		* split out / create an 'RFOView' widget to (sanely)
-		  manipulate that treeview
 
 * bug fixing:
 	+ arcball / rotation resetting ...

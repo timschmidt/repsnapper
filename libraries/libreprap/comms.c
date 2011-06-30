@@ -89,18 +89,23 @@ rr_dev_pop_from_queue (rr_dev dev, rr_prio priority)
 }
 
 static void
+empty_queue (rr_dev dev, int prio)
+{
+  while (dev->sendhead[prio]) {
+    blocknode *node = rr_dev_pop_from_queue (dev, prio);
+    blocknode_free (node);
+  }
+  assert (dev->sendhead[prio] == NULL);
+  assert (dev->sendtail[prio] == NULL);
+  dev->sendsize[prio] = 0;
+}
+
+static void
 empty_buffers (rr_dev dev)
 {
-  unsigned i;
-  for (i = 0; i < RR_PRIO_ALL_QUEUES; ++i) {
-    while (dev->sendhead[i]) {
-      blocknode *node = rr_dev_pop_from_queue (dev, i);
-      blocknode_free (node);
-    }
-    assert (dev->sendhead[i] == NULL);
-    assert (dev->sendtail[i] == NULL);
-    dev->sendsize[i] = 0;
-  }
+  unsigned int i;
+  for (i = 0; i < RR_PRIO_ALL_QUEUES; ++i)
+    empty_queue (dev, i);
 }
 
 rr_dev
@@ -305,13 +310,6 @@ rr_dev_enqueue_internal (rr_dev dev, rr_prio priority,
   return 0;
 }
 
-/*
- * FIXME - this needs to handle a jump-ahead use-case too ...
- * we can get:
- * rs 2 [and resend N2 ...] followed immediately by rs 6 ...
- * and we need to do the converse - shift lines from the
- * resend queue back onto the sentcache ...
- */
 int
 rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbytes)
 {
@@ -322,21 +320,43 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
   while (1) {
     if (!(node = rr_dev_pop_from_queue (dev, RR_PRIO_SENTCACHE)))
       break;
-    debug_log ((dev, "; pop node line %d '%s' (%d bytes)\n",
+    debug_log ((dev, "; pop sent node line %d '%s' (%d bytes)\n",
 		(int)node->line, node->block, node->blocksize));
     if (node->line >= lineno) {
       rr_dev_prepend_to_queue (dev, RR_PRIO_RESEND, node);
       resent++;
-    } else { /* put it back and exit */
+    } else { /* put it back and look elsewhere */
       rr_dev_prepend_to_queue (dev, RR_PRIO_SENTCACHE, node);
       break;
     }
   }
 
-  if (resent == 0) { /* Line needed for resend was not cached */
-    rr_dev_log (dev, "; re-send request for unknown (too old) line %ld from cache size %d\n",
-		lineno, dev->sendsize[RR_PRIO_SENTCACHE]);
-    rr_dev_emit_error (dev, RR_E_UNCACHED_RESEND, reply, nbytes);
+  if (resent == 0) {
+    /* Perhaps line is in the resend queue, and we got an:
+     *     rs: 3
+     *     rs: 6
+     * type sequence so try peel forward the resend queue.
+     */
+
+    while (1) {
+      if (!(node = rr_dev_pop_from_queue (dev, RR_PRIO_RESEND)))
+	break;
+      debug_log ((dev, "; pop resend node line %d '%s' (%d bytes)\n",
+		  (int)node->line, node->block, node->blocksize));
+      if (node->line < lineno) {
+	rr_dev_prepend_to_queue (dev, RR_PRIO_SENTCACHE, node);
+	resent++;
+      } else { /* put it back and give up */
+	rr_dev_prepend_to_queue (dev, RR_PRIO_RESEND, node);
+	break;
+      }
+    }
+
+    if (resent == 0) {
+      rr_dev_log (dev, "; re-send request for unknown (too old) line %ld from cache size %d\n",
+		  lineno, dev->sendsize[RR_PRIO_SENTCACHE]);
+      rr_dev_emit_error (dev, RR_E_UNCACHED_RESEND, reply, nbytes);
+    }
   }
 
   dev->send_next = 1;
@@ -349,6 +369,9 @@ void
 rr_dev_reset_lineno (rr_dev dev)
 {
   dev->lineno = 0;
+  /* we invalidate all these line numbers */
+  empty_queue (dev, RR_PRIO_RESEND);
+  empty_queue (dev, RR_PRIO_SENTCACHE);
   rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, -1);
   dev->init_send_count = dev->dev_cmdqueue_size - 1;
 }

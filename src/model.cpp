@@ -742,7 +742,8 @@ bool Model::handle_dev_fd (Glib::IOCondition cond)
     if (result < 0)
       error ("Error reading from device!", strerror (errno));
   }
-  if (cond & Glib::IO_OUT) {
+  // try to avoid reading and writing at exactly the same time
+  else if (cond & Glib::IO_OUT) {
     result = rr_dev_handle_writable (m_device);
     if (result < 0)
       error ("Error writing to device!", strerror (errno));

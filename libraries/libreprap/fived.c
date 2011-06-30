@@ -57,23 +57,22 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
     size_t n_start = strcspn (reply, "123456789");
     if (n_start) {
       long long lineno = strtoll (reply + n_start, NULL, 10);
-      /* check if lineno is in the range of sent lines*/
-      if (lineno < dev->lineno)
-        return rr_dev_resend (dev, lineno, reply, nbytes);
-      else {
-	if (dev->lineno <= 1) {
-	  /* oh dear - most likely we re-connected to a device that
-	     had problems mid-flow, now we need to re-send the
-	     line-number reset as if it was this line-no it is asking
-	     for a re-send of, or there will be no peace */
-	  rr_dev_log (dev, "; resetting confused firmware with synthetic resend of line %d\n",
-		      dev->lineno);
-	  rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, lineno);
-	  /* re-start the print */
-	  rr_dev_resend (dev, 0, "synthetic restart", 16);
-	}
+
+      if (dev->lineno <= 1) {
+	/*
+	 * oh dear - most likely we re-connected to a device that
+	 * had problems mid-flow, now we need to re-send the
+	 * line-number reset as if it was this line-no it is asking
+	 * for a re-send of, or there will be no peace
+	 */
+	rr_dev_log (dev, "; resetting confused firmware with synthetic resend of line %d\n",
+		    dev->lineno);
+	rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, lineno);
+	/* re-start the print */
+	rr_dev_resend (dev, 0, "synthetic restart", 16);
 	return rr_dev_emit_error (dev, RR_E_UNSENT_RESEND, reply, nbytes);
       }
+      return rr_dev_resend (dev, lineno, reply, nbytes);
     } else
       return rr_dev_emit_error (dev, RR_E_MALFORMED_RESEND_REQUEST, reply, nbytes);
 
