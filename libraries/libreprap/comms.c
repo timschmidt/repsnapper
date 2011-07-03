@@ -27,6 +27,7 @@ rr_dev_log (rr_dev dev, int debug_level, const char *format, ...)
 
   va_start (args, format);
   len = vsnprintf (buffer, 4095, format, args);
+  access (buffer, 0);
   if (dev->opt_log_cb)
     dev->opt_log_cb (dev, buffer, len, dev->opt_log_cl);
   va_end (args);
@@ -541,35 +542,25 @@ rr_dev_handle_readable (rr_dev dev)
     dev->recvbuf_fill -= 2;
   }
 
-  /* Scan for complete reply */
-  size_t scan = 0;
-  size_t end = dev->recvbuf_fill;
-  size_t reply_span = 0;
-  size_t term_span = 0;
-  size_t start = 0;
+  /* Scan the buffer and shift it down if we detect a full command */
+  size_t reply_span, term_span;
+  while (1) {
+    /* How many non terminator chars and how many terminator chars after them */
+    reply_span = strcspn (dev->recvbuf, REPLY_TERMINATOR);
+    term_span = strspn (dev->recvbuf + reply_span, REPLY_TERMINATOR);
 
-  do {
-    /* How many non terminator chars and how many terminator chars after them*/
-    reply_span = strcspn (dev->recvbuf + scan, REPLY_TERMINATOR);
-    term_span = strspn (dev->recvbuf + scan + reply_span, REPLY_TERMINATOR);
-    start = scan;
+    if (term_span > 0) {
+      if (reply_span > 0)
+	handle_reply (dev, dev->recvbuf, reply_span, term_span);
+      /* else - perhaps a prepended \n having sent in reaction to \r previously */
 
-    if (0 < term_span && 0 < reply_span && (start + reply_span + 1) < end) {
-      /* We have a terminator after non terminator chars */
-      handle_reply (dev, dev->recvbuf + start, reply_span, term_span);
+      size_t len = reply_span + term_span;
+      assert (dev->recvbuf_fill >= len);
+      dev->recvbuf_fill -= len;
+      memmove (dev->recvbuf, dev->recvbuf + len, dev->recvbuf_fill + 1);
+      continue;
     }
-    scan += reply_span + term_span;
-
-  } while (scan < end);
-
-  size_t rest_size = end - start;
-
-  /* Move the rest of the buffer to the beginning */
-  if (rest_size > 0) {
-    dev->recvbuf_fill = rest_size;
-    memmove (dev->recvbuf, dev->recvbuf + start, dev->recvbuf_fill);
-  } else {
-    dev->recvbuf_fill = 0;
+    break;
   }
 
   return 0;

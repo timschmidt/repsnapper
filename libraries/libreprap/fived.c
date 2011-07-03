@@ -58,7 +58,8 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
     if (n_start) {
       long long lineno = strtoll (reply + n_start, NULL, 10);
 
-      if (dev->lineno <= 1) {
+      if (dev->sendsize[RR_PRIO_SENTCACHE] +
+	  dev->sendsize[RR_PRIO_RESEND] <= 1) {
 	/*
 	 * oh dear - most likely we re-connected to a device that
 	 * had problems mid-flow, now we need to re-send the
@@ -67,7 +68,7 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
 	 */
 	rr_dev_log (dev, RR_DEBUG_ALWAYS,
 		    "; resetting confused firmware with synthetic resend of line %d\n",
-		    dev->lineno);
+		    lineno);
 	rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, lineno);
 	/* re-start the print */
 	rr_dev_resend (dev, 0, "synthetic restart", 16);
