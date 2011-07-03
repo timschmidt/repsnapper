@@ -815,11 +815,27 @@ void RR_CALL Model::rr_wait_wr_fn (rr_dev dev, int wait_write, void *closure)
     (sigc::mem_fun (*model, &Model::handle_dev_fd), rr_dev_fd (dev), cond);
 }
 
-void RR_CALL Model::rr_log_fn (rr_dev dev, const char *buffer,
+void RR_CALL Model::rr_log_fn (rr_dev dev, int type,
+			       const char *buffer,
 			       size_t len, void *closure)
 {
   Model *model = static_cast<Model*>(closure);
-  model->commlog->insert (model->commlog->end(), string (buffer, len));
+  string str;
+
+  switch (type) {
+  case RR_LOG_RECV:
+    str = "<-- ";
+    break;
+  case RR_LOG_SEND:
+    str = "--> ";
+    break;
+  case RR_LOG_MSG:
+  default:
+    str = "; ";
+    break;
+  }
+  str += string (buffer, len);
+  model->commlog->insert (model->commlog->end(), str);
 }
 
 // ------------------------------ libreprap integration above ------------------------------

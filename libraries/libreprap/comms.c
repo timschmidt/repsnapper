@@ -29,7 +29,7 @@ rr_dev_log (rr_dev dev, int debug_level, const char *format, ...)
   len = vsnprintf (buffer, 4095, format, args);
   access (buffer, 0);
   if (dev->opt_log_cb)
-    dev->opt_log_cb (dev, buffer, len, dev->opt_log_cl);
+    dev->opt_log_cb (dev, RR_LOG_MSG, buffer, len, dev->opt_log_cl);
   va_end (args);
 }
 
@@ -163,7 +163,7 @@ rr_dev_create (rr_proto      proto,
   dev->recvbuf = calloc (dev->recvbufsize + 1, sizeof (char));
   dev->recvbuf_fill = 0;
 
-  rr_dev_log (dev, RR_DEBUG_ALWAYS, "; Connecting with libreprap\n");
+  rr_dev_log (dev, RR_DEBUG_ALWAYS, "Connecting with libreprap\n");
 
   return dev;
 }
@@ -319,7 +319,7 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
   while (1) {
     if (!(node = rr_dev_pop_from_queue (dev, RR_PRIO_SENTCACHE)))
       break;
-    rr_dev_log (dev, RR_DEBUG_HIGH, "; pop sent node line %d '%s' (%d bytes)\n",
+    rr_dev_log (dev, RR_DEBUG_HIGH, "pop sent node line %d '%s' (%d bytes)\n",
 		(int)node->line, node->block, node->blocksize);
     if (node->line >= lineno) {
       rr_dev_prepend_to_queue (dev, RR_PRIO_RESEND, node);
@@ -340,8 +340,8 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
     while (1) {
       if (!(node = rr_dev_pop_from_queue (dev, RR_PRIO_RESEND)))
 	break;
-      rr_dev_log (dev, RR_DEBUG_HIGH, 
-		  "; pop resend node line %d '%s' (%d bytes)\n",
+      rr_dev_log (dev, RR_DEBUG_HIGH,
+		  "pop resend node line %d '%s' (%d bytes)\n",
 	  (int)node->line, node->block, node->blocksize);
       if (node->line < lineno) {
 	rr_dev_prepend_to_queue (dev, RR_PRIO_SENTCACHE, node);
@@ -353,8 +353,8 @@ rr_dev_resend (rr_dev dev, unsigned long lineno, const char *reply, size_t nbyte
     }
 
     if (resent == 0) {
-      rr_dev_log (dev, RR_DEBUG_ALWAYS, 
-		  "; re-send request for unknown (too old) line %ld from cache size %d\n",
+      rr_dev_log (dev, RR_DEBUG_ALWAYS,
+		  "re-send request for unknown (too old) line %ld from cache size %d\n",
 		  lineno, dev->sendsize[RR_PRIO_SENTCACHE]);
       rr_dev_emit_error (dev, RR_E_UNCACHED_RESEND, reply, nbytes);
     }
@@ -381,7 +381,7 @@ void
 rr_dev_reset (rr_dev dev)
 {
   empty_buffers (dev);
-  rr_dev_log (dev, RR_DEBUG_MEDIUM, "; reset dev size to zero\n");
+  rr_dev_log (dev, RR_DEBUG_MEDIUM, "reset dev size to zero\n");
   rr_dev_reset_lineno (dev);
   dev->recvbuf_fill = 0;
 }
@@ -397,7 +397,7 @@ debug_log_block (rr_dev dev, const char *block, int nbytes)
     *p = '\0';
   if ((p = strchr (buffer, '\r')))
     *p = '\0';
-  rr_dev_log (dev, RR_DEBUG_MEDIUM, "; API enqueue of '%s' queue size %d\n",
+  rr_dev_log (dev, RR_DEBUG_MEDIUM, "API enqueue of '%s' queue size %d\n",
 	      buffer, rr_dev_buffered_lines (dev));
 }
 
@@ -425,7 +425,7 @@ rr_dev_handle_ok (rr_dev dev)
 
   if (buffered < dev->dev_cmdqueue_size) {
     rr_dev_log (dev, RR_DEBUG_MEDIUM,
-		"; request more %d < %d\n", buffered, dev->dev_cmdqueue_size);
+		"request more %d < %d\n", buffered, dev->dev_cmdqueue_size);
     dev->more_cb (dev, dev->more_cl);
   }
   dev->wait_wr_cb (dev, 1, dev->wait_wr_cl);
@@ -439,13 +439,13 @@ rr_dev_handle_ok (rr_dev dev)
 	for (p = dev->sendhead[i]; p; p = p->next) {
 	  if (!p->next && dev->sendtail[i] != p)
 	    rr_dev_log (dev, RR_DEBUG_MEDIUM,
-			"; Error: queue (%d) broken tail pointer %p vs %p\n",
+			"Error: queue (%d) broken tail pointer %p vs %p\n",
 			i, p, dev->sendtail[i]);
 	  count++;
 	}
 	if (count != dev->sendsize[i])
 	  rr_dev_log (dev, RR_DEBUG_MEDIUM,
-		      "; Error: queue (%d) size mismatch: %d vs %d\n",
+		      "Error: queue (%d) size mismatch: %d vs %d\n",
 		      i, count, dev->sendsize[i]);
       }
     }
@@ -471,7 +471,7 @@ static int
 handle_reply (rr_dev dev, const char *reply, size_t nbytes, size_t term_bytes)
 {
   if (dev->opt_log_cb)
-    dev->opt_log_cb (dev, reply, nbytes + term_bytes, dev->opt_log_cl);
+    dev->opt_log_cb (dev, RR_LOG_RECV, reply, nbytes + term_bytes, dev->opt_log_cl);
 
   switch(dev->proto) {
   case RR_PROTO_FIVED:
@@ -524,7 +524,7 @@ rr_dev_handle_readable (rr_dev dev)
   for (i = 0; i < dev->recvbuf_fill; i++) {
     if (dev->recvbuf[i] == '\0' || !isascii (dev->recvbuf[i])) {
       rr_dev_log (dev, RR_DEBUG_ALWAYS,
-		  "; invalid char in recvbuf at char %d (0x%2x) full "
+		  "invalid char in recvbuf at char %d (0x%2x) full "
 		  "msg: '%s', truncating here", i, dev->recvbuf[i],
 		  dev->recvbuf);
       dev->recvbuf_fill = i;
@@ -595,7 +595,7 @@ rr_dev_handle_writable (rr_dev dev)
   if (dev->sendbuf_fill == 0) {
     if (dev->init_send_count <= 0 && !dev->send_next) {
       rr_dev_log (dev, RR_DEBUG_MEDIUM,
-		  "; writeable - init count is %d, no send_next queue %d resend %d\n",
+		  "writeable - init count is %d, no send_next queue %d resend %d\n",
 		  dev->init_send_count, dev->dev_cmdqueue_size,
 		  dev->sendsize[RR_PRIO_RESEND]);
       /* wait until there is space in the device buffer and/or an ok */
@@ -622,7 +622,7 @@ rr_dev_handle_writable (rr_dev dev)
         }
 	if (result == 0)
 	  rr_dev_log (dev, RR_DEBUG_ALWAYS,
-		      "; unusual error - nothing in block to write\n");
+		      "unusual error - nothing in block to write\n");
 
 	dev->send_next = 0;
         dev->sendbuf_fill = result;
@@ -646,7 +646,7 @@ rr_dev_handle_writable (rr_dev dev)
     return result;
 
   if (dev->opt_log_cb)
-    dev->opt_log_cb (dev, dev->sendbuf + dev->bytes_sent,
+    dev->opt_log_cb (dev, RR_LOG_SEND, dev->sendbuf + dev->bytes_sent,
 		     dev->sendbuf_fill - dev->bytes_sent,
 		     dev->opt_log_cl);
 

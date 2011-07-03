@@ -201,7 +201,7 @@ public:
 	static void RR_CALL rr_error_fn   (rr_dev dev, int error_code,
 					   const char *msg, size_t len, void *closure);
 	static void RR_CALL rr_wait_wr_fn (rr_dev dev, int wait, void *closure);
-	static void RR_CALL rr_log_fn     (rr_dev dev, const char *buffer,
+	static void RR_CALL rr_log_fn     (rr_dev dev, int type, const char *buffer,
 					   size_t len, void *closure);
 
 	GCodeIter *m_iter;

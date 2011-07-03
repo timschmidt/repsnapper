@@ -51,6 +51,12 @@ typedef enum {
   RR_E_POS,
 } rr_reply;
 
+typedef enum {
+  RR_LOG_RECV,
+  RR_LOG_SEND,
+  RR_LOG_MSG
+} rr_logtype;
+
 typedef struct rr_dev_t *rr_dev;
 
 /* Got a reply we can parse, of type 'type' and value 'value' */
@@ -63,7 +69,7 @@ typedef void (*rr_error_fn)   (rr_dev dev, int error_code, const char *msg, size
 /* Called when we cannot write more, to wait for buffer space */
 typedef void (*rr_wait_wr_fn) (rr_dev dev, int wait, void *closure);
 /* We sent or recieved some data - tell the world so we can log it */
-typedef void (*rr_log_fn)     (rr_dev dev, const char *buffer, size_t len, void *closure);
+typedef void (*rr_log_fn)     (rr_dev dev, int type, const char *buffer, size_t len, void *closure);
 
 /* Initializes device with supplied params */
 /* Note that want_writable may be called redundantly. */

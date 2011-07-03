@@ -67,7 +67,7 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
 	 * for a re-send of, or there will be no peace
 	 */
 	rr_dev_log (dev, RR_DEBUG_ALWAYS,
-		    "; resetting confused firmware with synthetic resend of line %d\n",
+		    "resetting confused firmware with synthetic resend of line %d\n",
 		    lineno);
 	rr_dev_enqueue_internal (dev, RR_PRIO_HIGH, "M110", 4, lineno);
 	/* re-start the print */
