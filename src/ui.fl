@@ -807,12 +807,12 @@ MVC->SetFan(o->value()*(255.0f/12.0f));}
               Fl_Value_Slider {} {
                 label Speed
                 callback {MVC->SetExtruderSpeed(o->value());}
-                xywh {830 340 200 15} type {Horz Knob} align 4 minimum 5 maximum 9999 step 1 value 3000 textsize 14
+                xywh {830 340 200 15} type {Horz Knob} align 4 minimum 5 maximum 999 step 1 value 100 textsize 14
               }
               Fl_Value_Slider {} {
                 label Length
                 callback {MVC->SetExtruderLength(o->value());}
-                xywh {830 320 200 15} type {Horz Knob} align 4 minimum 10 maximum 850 step 1 value 150 textsize 14
+                xywh {830 320 200 15} type {Horz Knob} align 4 minimum 1 maximum 500 step 1 value 10 textsize 14
               }
               Fl_Value_Slider DownstreamMultiplierSlider {
                 label {Downstream speed multiplier}

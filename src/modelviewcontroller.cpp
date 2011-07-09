@@ -165,8 +165,8 @@ ModelViewController::ModelViewController(int x,int y,int w,int h,const char *l) 
 	ThisRot.M[6]=0.0f;ThisRot.M[7]=0.0f;ThisRot.M[8]=1.0f;					// NEW: Last Rotation
 
 	m_bExtruderDirection = true;
-	m_iExtruderSpeed = 3000;
-	m_iExtruderLength = 150;
+	m_iExtruderSpeed = 100;
+	m_iExtruderLength = 10;
 	m_fTargetTemp = 63.0f;
 	m_fBedTargetTemp = 63.0f;
 }
