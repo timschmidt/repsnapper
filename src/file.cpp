@@ -224,7 +224,7 @@ void FileChooser::ioDialog (ModelViewController *mvc, Op o, Type t, bool dropRFO
     return;
 
   boost::filesystem::path path(file);
-  std::string directory_path = path.branch_path().native_directory_string();
+  std::string directory_path = path.branch_path().string();
 
 
   switch (t) {
