@@ -510,7 +510,7 @@ void ProcessController::LoadConfig(string filename)
 		SettingsPath = "";
 
 	if (not cfg.lookupValue("miSerialSpeed",m_iSerialSpeed))
-		m_iSerialSpeed = 19200;
+		m_iSerialSpeed = 115200;
 
 	if (not cfg.lookupValue("GCodeDrawStart",GCodeDrawStart))
 		GCodeDrawStart = 0;
