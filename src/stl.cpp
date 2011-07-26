@@ -2913,15 +2913,19 @@ void STL::Scale(float in_scale_factor)
     scale_factor = in_scale_factor;
 }
 
+// Rotate and adjust for the user - not a pure rotation by any means
 void STL::RotateObject(Vector3f axis, float angle)
 {
 	Vector3f min,max;
+	Vector3f oldmin,oldmax;
 
-	min.x = min.y = min.z = 99999999.0f;
-	max.x = max.y = max.z = -99999999.0f;
+	min.x = min.y = min.z = oldmin.x = oldmin.y = oldmin.z = 99999999.0f;
+	max.x = max.y = max.z = oldmax.x = oldmax.y = oldmax.z -99999999.0f;
 
 	for (size_t i=0; i<triangles.size(); i++)
 	{
+		triangles[i].AccumulateMinMax (oldmin, oldmax);
+
 		triangles[i].Normal = triangles[i].Normal.rotate(angle, axis.x, axis.y, axis.z);
 		triangles[i].A = triangles[i].A.rotate(angle, axis.x, axis.y, axis.z);
 		triangles[i].B = triangles[i].B.rotate(angle, axis.x, axis.y, axis.z);
@@ -2929,15 +2933,24 @@ void STL::RotateObject(Vector3f axis, float angle)
 
 		triangles[i].AccumulateMinMax (min, max);
 	}
+	Vector3f move(0, 0, 0);
 	// if we rotated under the bed, translate us up again
 	if (min.z < 0) {
-		Vector3f moveUp(0, 0, - min.z);
-//		cout << "vector moveup: " << moveUp << "\n";
-		for (uint i = 0; i < triangles.size(); i++)
-			triangles[i].Translate(moveUp);
-		max.z -= min.z;
-		min.z = 0;
+		move.z = - min.z;
+//		cout << "vector moveup: " << move << "\n";
 	}
+	// ensure our x/y bbox is at the same offset from the bottom/left
+	move.x = oldmin.x - min.x;
+	move.y = oldmin.y - min.y;
+	for (uint i = 0; i < triangles.size(); i++)
+		triangles[i].Translate(move);
+	max.x += move.x;
+	min.x += move.x;
+	max.y += move.y;
+	min.y += move.y;
+	max.z += move.z;
+	min.z += move.z;
+
 	Min = min;
 	Max = max;
 //	cout << "min " << Min << " max " << Max << "\n";

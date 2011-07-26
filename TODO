@@ -1,34 +1,12 @@
 --- the plan ---
 
-* most odd - we do a double re-send:
+* Interactive temperature reading / feedback ...
 
-21535 1309467603.884195 read(8, "\nr", 253) = 2
-21535 1309467603.884965 read(8, "s ", 255) = 2
-21535 1309467603.885626 write(8, "N10 G1 X84.15 E73.8 F4000*82\n", 29) = 29
-21535 1309467603.886355 read(8, "9 ", 253) = 2
-21535 1309467603.886966 read(8, "Se", 251) = 2
-... [ same error ] ...
-21535 1309467603.932624 read(8, ": N9", 165) = 4
-21535 1309467603.934741 read(8, "*124", 161) = 4
-21535 1309467603.936597 read(8, "\r\n", 157) = 2
-21535 1309467603.937062 write(8, "N9 G1 X11.85 E1.5 F4000*87\n", 27) = 27
-21535 1309467603.937740 read(8, "rs", 155) = 2
-21535 1309467603.938137 write(8, "N9 G1 X11.85 E1.5 F4000*87\n", 27) = 27
-21535 1309467603.938807 read(8, " 9", 254) = 2
-21535 1309467603.940142 read(8, " S", 252) = 2
-21535 1309467603.942942 read(8, "erial ", 250) = 6
+* Bin the two 'load' menu items - just one 'open' menu ...
+	+ with a gcode and stl filter drop-down ?
+* Add a preview widget to the file menu
 
-      + why !? is this the existing 'fmtblock'd output ?
-        is it a sequencing issue ? - should the re-send
-	de-queue a currently sending node ? if (node == sending_node)
-
-      + add 'access' syscalls to the debug method to queue strace output ...
-
-
-* libreprap:
-	+ don't write anything (particularly a re-send) while
-	  a partial read is underway [?]
-	+ add a 'comms_debug' boolean ...
+* add a GUI field for the 'comms_debug' boolean ...
 
 * sort out stdafx.h includes - check whether it is
   needed, and where ...
