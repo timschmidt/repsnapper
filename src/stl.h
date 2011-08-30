@@ -92,7 +92,8 @@ public:
 	Vector2f center;
 };
 
-struct locator{
+struct locator
+{
 	locator(int polygon, int vertex, float where){p=polygon; v=vertex; t=where;}
 	int p;
 	int v;
@@ -102,7 +103,8 @@ struct locator{
 class CuttingPlaneOptimizer;
 
 /* associates adjacent points with integers */
-class PointHash {
+class PointHash
+{
 	struct Impl;
 	Impl *impl;
  public:
@@ -118,7 +120,8 @@ class PointHash {
 };
 
 // A (set of) 2D polygon extracted from a 3D model
-class CuttingPlane{
+class CuttingPlane
+{
 public:
 	CuttingPlane();
 	~CuttingPlane();
