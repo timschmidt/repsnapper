@@ -857,7 +857,7 @@
                             <property name="visible">True</property>
                             <property name="xalign">1</property>
                             <property name="xpad">10</property>
-                            <property name="label" translatable="yes">Update Interval</property>
+                            <property name="label" translatable="yes">Update Interval (sec)</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>

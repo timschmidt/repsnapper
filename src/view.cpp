@@ -344,7 +344,8 @@ public:
 
   void update_temp (double value)
   {
-    m_target->set_value (value);
+    gchar *tmp = g_strdup_printf ("%3g", value);
+    m_temp->set_text(tmp);
   }
 
   TempRow(Model *model, TempType type) :
@@ -357,9 +358,11 @@ public:
     pOn->signal_toggled().connect
       (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
     add(*pOn);
-    m_temp = new Gtk::Label();
+    add(*(new Gtk::Label("Temp. (°C)")));
+    m_temp = new Gtk::Label("<unknown>");
     add (*m_temp);
-    add(*(new Gtk::Label("Target Temperature (°C)")));
+
+    add(*(new Gtk::Label("Target:")));
     m_target = new Gtk::SpinButton();
     m_target->set_increments (1, 5);
     m_target->set_range(25.0, 256.0);
