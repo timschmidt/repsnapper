@@ -784,6 +784,67 @@ void View::duplicate_selected_stl()
   queue_draw();
 }
 
+// Given a widget by label, adds a statusbar message on rollover
+void View::add_statusbar_msg(const char *name, const char *msg)
+{
+  Gtk::Widget *widget = NULL;
+  m_builder->get_widget (name, widget);
+  add_statusbar_msg (widget, msg);
+}
+
+// Given a widget by pointer reference, adds a statusbar message on rollover
+void View::add_statusbar_msg(Gtk::Widget *widget, const char *msg)
+{
+  widget->signal_enter_notify_event().connect
+      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), msg));
+  widget->signal_leave_notify_event().connect
+      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), ""));
+}
+
+/* Handler for widget rollover. Displays a message in the window status bar */
+bool View::updateStatusBar(GdkEventCrossing *event, Glib::ustring message)
+{
+    Gtk::Statusbar *statusbar;
+    m_builder->get_widget("statusbar", statusbar);
+    if(event->type == GDK_ENTER_NOTIFY) {
+        statusbar->push(message);
+    } else { // event->type == GDK_LEAVE_NOTIFY
+        /* 2 pops because sometimes a previous leave event may have be missed
+         * leaving a message on the statusbar stack */
+        statusbar->pop();
+        statusbar->pop();
+    }
+    return false;
+}
+
+void View::scale_object()
+{
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  Gtk::HScale *scale_slider;
+  m_builder->get_widget("m_scale_slider", scale_slider);
+
+  m_model->ScaleObject (file, object, scale_slider->get_value());
+}
+
+/* Updates the scale slider when a new STL is selected,
+ * giving it the new STL's current scale factor */
+void View::update_scale_slider() {
+  RFO_File *file;
+  RFO_Object *object;
+  get_selected_stl (object, file);
+
+  if (!file)
+    return; 
+
+  Gtk::HScale *scale_slider;
+  m_builder->get_widget("m_scale_slider", scale_slider);
+
+  scale_slider->set_value(file->stl.getScaleFactor());
+}
+
 // GPL bits below from model.cpp ...
 
 void View::DrawGrid()
@@ -814,8 +875,8 @@ void View::DrawGrid()
 
 void View::Draw (Gtk::TreeModel::iterator &selected)
 {
-  // FIXME: rationalize this printOffset madness
-  Vector3f printOffset = m_model->settings.Hardware.PrintMargin;
+	// FIXME: rationalize this printOffset madness
+	Vector3f printOffset = m_model->settings.Hardware.PrintMargin;
 
 	if(m_model->settings.RaftEnable)
 		printOffset += Vector3f(m_model->settings.Raft.Size, m_model->settings.Raft.Size, 0);
@@ -867,64 +928,4 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 		glVertex3f(Max.x, Min.y, Max.z);
 		glEnd();
 	}
-}
-
-/* Given a widget by label, adds a statusbar message on rollover */
-void View::add_statusbar_msg(const char *name, const char *msg) {
-  Gtk::Widget *widget;
-  m_builder->get_widget("m_scale_event_box", widget);
-
-  add_statusbar_msg(widget, msg);
-}
-
-/* Given a widget by pointer reference, adds a statusbar message on rollover */
-void View::add_statusbar_msg(Gtk::Widget *widget, const char *msg) {
-  widget->signal_enter_notify_event().connect
-      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), msg));
-  widget->signal_leave_notify_event().connect
-      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), ""));
-}
-
-/* Handler for widget rollover. Displays a message in the window status bar */
-bool View::updateStatusBar(GdkEventCrossing *event, Glib::ustring message)
-{
-    Gtk::Statusbar *statusbar;
-    m_builder->get_widget("statusbar", statusbar);
-    if(event->type == GDK_ENTER_NOTIFY) {
-        statusbar->push(message);
-    } else { // event->type == GDK_LEAVE_NOTIFY
-        /* 2 pops because sometimes a previous leave event may have be missed
-         * leaving a message on the statusbar stack */
-        statusbar->pop();
-        statusbar->pop();
-    }
-    return false;
-}
-
-void View::scale_object()
-{
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
-
-  Gtk::HScale *scale_slider;
-  m_builder->get_widget("m_scale_slider", scale_slider);
-
-  m_model->ScaleObject (file, object, scale_slider->get_value());
-}
-
-/* Updates the scale slider when a new STL is selected,
- * giving it the new STL's current scale factor */
-void View::update_scale_slider() {
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
-
-  if (!file)
-    return; 
-
-  Gtk::HScale *scale_slider;
-  m_builder->get_widget("m_scale_slider", scale_slider);
-
-  scale_slider->set_value(file->stl.getScaleFactor());
 }
