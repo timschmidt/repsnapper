@@ -37,6 +37,8 @@ dnl libreprap is (for now) built in from a copy in libraries/libreprap
 dnl thus avoiding cmake, and user confusion.
 dnl ------------------------------------------------------------------
 dnl
+dnl Empty flags to be substituted below.
+DISTCHECK_LIBREPRAP_FLAGS=
 dnl Look for libreprap, either in the system paths or in the path
 dnl provided (defaults to --prefix)
 dnl AC_ARG_WITH(libreprap,
@@ -64,7 +66,8 @@ dnl     AC_MSG_ERROR([cannot find binary for libreprap - check out the README]))
 dnl CPPFLAGS="$OLD_CPPFLAGS"; LIBS="$OLD_LIBS"
 dnl AC_SUBST(LIBREPRAP_CFLAGS)
 dnl AC_SUBST(LIBREPRAP_LIBS)
-dnl AC_SUBST(DISTCHECK_LIBREPRAP_FLAGS)
+
+AC_SUBST(DISTCHECK_LIBREPRAP_FLAGS)
 
 AC_CHECK_HEADER(GL/glut.h,
     ,
