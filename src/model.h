@@ -127,7 +127,7 @@ public:
 	void init();
 	void ReadGCode(Glib::RefPtr<Gio::File> file);
 	void ConvertToGCode();
-	void MakeRaft(float &z);
+	void MakeRaft(GCodeState &state, float &z);
 	void WriteGCode(Glib::RefPtr<Gio::File> file);
 
 	// Communication

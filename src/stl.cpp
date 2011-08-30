@@ -57,7 +57,7 @@ using namespace stdext;
 
 #define PI 3.141592653589793238462643383279502884197169399375105820974944592308
 
-#define CUTTING_PLANE_DEBUG 1
+#define CUTTING_PLANE_DEBUG 0
 
 using namespace std;
 
@@ -625,16 +625,82 @@ CuttingPlane::~CuttingPlane()
 {
 }
 
-void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
-			       float extrusionFactor, GCode &code,
-			       float &E, float z,
-			       const Settings::SlicingSettings &slicing,
-			       const Settings::HardwareSettings &hardware)
+struct GCodeStateImpl
 {
-	if((end-start).length() < 0.05)	// ignore micro moves
+  GCode &code;
+  Vector3f LastPosition;
+  Command lastCommand;
+  float lastLayerZ;
+
+  GCodeStateImpl(GCode &_code) :
+    code(_code),
+    LastPosition(0,0,0),
+    lastLayerZ(0)
+  {}
+};
+
+GCodeState::GCodeState(GCode &code)
+{
+  pImpl = new GCodeStateImpl(code);
+}
+GCodeState::~GCodeState()
+{
+  delete pImpl;
+}
+void GCodeState::SetZ(float z)
+{
+  pImpl->LastPosition.z = z;
+}
+const Vector3f &GCodeState::LastPosition()
+{
+  return pImpl->LastPosition;
+}
+void GCodeState::SetLastPosition(const Vector3f &v)
+{
+  pImpl->LastPosition = v;
+}
+void GCodeState::AppendCommand(Command &command)
+{
+  pImpl->lastCommand = command;
+  pImpl->code.commands.push_back(command);
+}
+
+float GCodeState::GetLastLayerZ(float curZ)
+{
+  if (pImpl->lastLayerZ <= 0)
+    pImpl->lastLayerZ = curZ;
+  return pImpl->lastLayerZ;
+}
+
+void GCodeState::SetLastLayerZ(float z)
+{
+  pImpl->lastLayerZ = z;
+}
+
+void GCodeState::ResetLastWhere(Vector3f to)
+{
+  pImpl->lastCommand.where = to;
+}
+
+float GCodeState::DistanceFromLastTo(Vector3f here)
+{
+  return (pImpl->lastCommand.where - here).length();
+}
+
+float GCodeState::LastCommandF()
+{
+  return pImpl->lastCommand.f;
+}
+
+void GCodeState::MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
+					   float extrusionFactor,
+					   float &E, float z,
+					   const Settings::SlicingSettings &slicing,
+					   const Settings::HardwareSettings &hardware)
+{
+	if ((end-start).length() < 0.05)	// ignore micro moves
 		return;
 
-	static Command lastCommand;
 	Command command;
 
 	if (slicing.EnableAcceleration)
@@ -642,7 +708,7 @@ void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
 		if(end != start) //If we are going to somewhere else
 		{
 			float len;
-			lastCommand.where = start;
+			ResetLastWhere (start);
 
 			Vector3f direction = end-start;
 			len = direction.length();	// total distance
@@ -656,15 +722,15 @@ void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
 			else
 				command.e = 0.0f;		// move or extrude?
 			command.f = hardware.MinPrintSpeedXY;
-			code.commands.push_back(command);
-			lastCommand = command;
+
+			AppendCommand(command);
 
 			if(len < hardware.DistanceToReachFullSpeed*2)
 			{
 				// TODO: First point of acceleration is the middle of the line segment
 				command.Code = COORDINATEDMOTION;
 				command.where = (start+end)*0.5f;
-				float extrudedMaterial = (lastCommand.where - command.where).length()*extrusionFactor;
+				float extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 				if(slicing.UseIncrementalEcode)
 					E += extrudedMaterial;
 				else
@@ -672,8 +738,7 @@ void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
 				command.e = E;		// move or extrude?
 				float lengthFactor = (len/2.0f)/hardware.DistanceToReachFullSpeed;
 				command.f = (hardware.MaxPrintSpeedXY-hardware.MinPrintSpeedXY)*lengthFactor+hardware.MinPrintSpeedXY;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 
 				// And then decelerate
 				command.Code = COORDINATEDMOTION;
@@ -684,49 +749,45 @@ void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
 					E = extrudedMaterial;
 				command.e = E;		// move or extrude?
 				command.f = hardware.MinPrintSpeedXY;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 			}// if we will never reach full speed
 			else
 			{
 				// Move to max speed
 				command.Code = COORDINATEDMOTION;
 				command.where = start+(direction*hardware.DistanceToReachFullSpeed);
-				float extrudedMaterial = (lastCommand.where - command.where).length()*extrusionFactor;
+				float extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 				if(slicing.UseIncrementalEcode)
 					E += extrudedMaterial;
 				else
 					E = extrudedMaterial;
 				command.e = E;		// move or extrude?
 				command.f = hardware.MaxPrintSpeedXY;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 
 				// Sustian speed till deacceleration starts
 				command.Code = COORDINATEDMOTION;
 				command.where = end-(direction*hardware.DistanceToReachFullSpeed);
-				extrudedMaterial = (lastCommand.where - command.where).length()*extrusionFactor;
+				extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 				if(slicing.UseIncrementalEcode)
 					E += extrudedMaterial;
 				else
 					E = extrudedMaterial;
 				command.e = E;		// move or extrude?
 				command.f = hardware.MaxPrintSpeedXY;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 
 				// deacceleration untill end
 				command.Code = COORDINATEDMOTION;
 				command.where = end;
-				extrudedMaterial = (lastCommand.where - command.where).length()*extrusionFactor;
+				extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 				if(slicing.UseIncrementalEcode)
 					E += extrudedMaterial;
 				else
 					E = extrudedMaterial;
 				command.e = E;		// move or extrude?
 				command.f = hardware.MinPrintSpeedXY;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 			} // if we will reach full speed
 		}// if we are going somewhere
 	} // Firmware acceleration
@@ -735,37 +796,32 @@ void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
 		// Make a accelerated line from lastCommand.where to lines[thisPoint]
 		if(end != start) //If we are going to somewhere else
 		{
-			lastCommand.where = start;
+			ResetLastWhere (start);
 			if (slicing.Use3DGcode)
 			{
 				{
 				command.Code = EXTRUDEROFF;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 				float speed = hardware.MinPrintSpeedXY;
 				command.Code = COORDINATEDMOTION3D;
 				command.where = start;
 				command.e = E;		// move or extrude?
 				command.f = speed;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 				}	// we need to move before extruding
 
 				command.Code = EXTRUDERON;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 
 				float speed = hardware.MinPrintSpeedXY;
 				command.Code = COORDINATEDMOTION3D;
 				command.where = end;
 				command.e = E;		// move or extrude?
 				command.f = speed;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 				// Done, switch extruder off
 				command.Code = EXTRUDEROFF;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 			}
 			else	// 5d gcode, no acceleration
 				{
@@ -773,61 +829,57 @@ void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
 				direction.normalize();
 
 				// set start speed to max
-				if(lastCommand.f != hardware.MaxPrintSpeedXY)
-					{
+				if(LastCommandF() != hardware.MaxPrintSpeedXY)
+				{
 					command.Code = SETSPEED;
 					command.where = Vector3f(start.x, start.y, z);
 					command.f=hardware.MaxPrintSpeedXY;
 					command.e = E;
-					code.commands.push_back(command);
-					lastCommand = command;
-					}
+					AppendCommand(command);
+				}
 
 				// store endPoint
 				command.Code = COORDINATEDMOTION;
 				command.where = end;
-				float extrudedMaterial = (lastCommand.where - command.where).length()*extrusionFactor;
+				float extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 				if(slicing.UseIncrementalEcode)
 					E += extrudedMaterial;
 				else
 					E = extrudedMaterial;
 				command.e = E;		// move or extrude?
 				command.f = hardware.MaxPrintSpeedXY;
-				code.commands.push_back(command);
-				lastCommand = command;
+				AppendCommand(command);
 			}	// 5D gcode
 		}// If we are going to somewhere else*/
 	}// If using firmware acceleration
 }
 
 // Convert Cuttingplane to GCode
-void CuttingPlane::MakeGcode(const std::vector<Vector2f> &infill, GCode &code, float &E, float z,
+void CuttingPlane::MakeGcode(GCodeState &state,
+			     const std::vector<Vector2f> &infill,
+			     float &E, float z,
 			     const Settings::SlicingSettings &slicing,
 			     const Settings::HardwareSettings &hardware)
 {
 	// Make an array with all lines, then link'em
-	static Vector3f LastPosition;//	= Vector3f(0,0,z);
-	LastPosition.z = z;
 
-	static float lastLayerZ = 0;
 	Command command;
 
-	if(lastLayerZ == 0)
-		lastLayerZ = z;
+	float lastLayerZ = state.GetLastLayerZ(z);
 
 	// Set speed for next move
 	command.Code = SETSPEED;
 	command.where = Vector3f(0,0,lastLayerZ);
 	command.e = E;					// move
 	command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
-	code.commands.push_back(command);
+	state.AppendCommand(command);
 	command.comment = "";
 	// Move Z axis
 	command.Code = ZMOVE;
 	command.where = Vector3f(0,0,z);
 	command.e = E;					// move
 	command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
-	code.commands.push_back(command);
+	state.AppendCommand(command);
 	command.comment = "";
 
 	std::vector<Vector3f> lines;
@@ -869,7 +921,7 @@ void CuttingPlane::MakeGcode(const std::vector<Vector2f> &infill, GCode &code, f
 	for(size_t i=0;i<used.size();i++)
 		used[i] = false;
 
-	int thisPoint = findClosestUnused(lines, LastPosition, used);
+	int thisPoint = findClosestUnused(lines, state.LastPosition(), used);
 	if(thisPoint == -1)	// No lines = no gcode
 		return;
 	used[thisPoint] = true;
@@ -878,14 +930,14 @@ void CuttingPlane::MakeGcode(const std::vector<Vector2f> &infill, GCode &code, f
 	{
 //		float len;
 		// Make a MOVE accelerated line from LastPosition to lines[thisPoint]
-		if(LastPosition != lines[thisPoint]) //If we are going to somewhere else
+		if(state.LastPosition() != lines[thisPoint]) //If we are going to somewhere else
 		{
-		  MakeAcceleratedGCodeLine (LastPosition, lines[thisPoint], 0.0f, code,
-					    E, z, slicing, hardware);
+		  state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
+						  0.0f, E, z, slicing, hardware);
 
 		} // If we are going to somewhere else
-			
-		LastPosition = lines[thisPoint];
+
+		state.SetLastPosition (lines[thisPoint]);
 		used[thisPoint] = true;
 		// Find other end of line
 		thisPoint = findOtherEnd(thisPoint);
@@ -894,9 +946,9 @@ void CuttingPlane::MakeGcode(const std::vector<Vector2f> &infill, GCode &code, f
 
 		// Make a PLOT accelerated line from LastPosition to lines[thisPoint]
 //		if(EnableAcceleration)
-		MakeAcceleratedGCodeLine (LastPosition, lines[thisPoint],
-					  hardware.ExtrusionFactor, code,
-					  E, z, slicing, hardware);
+		state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
+						hardware.ExtrusionFactor,
+						E, z, slicing, hardware);
 /*		else
 			{
 			command.Code = COORDINATEDMOTION;
@@ -908,16 +960,15 @@ void CuttingPlane::MakeGcode(const std::vector<Vector2f> &infill, GCode &code, f
 				E = len*extrusionFactor;
 			command.e = E;		// move or extrude?
 			command.f = MinPrintSpeedXY;
-			code.commands.push_back(command);
+			state.AppendCommand(command);
 			}*/
-		LastPosition = lines[thisPoint];
-		thisPoint = findClosestUnused(lines, LastPosition, used);
+		state.SetLastPosition(lines[thisPoint]);
+		thisPoint = findClosestUnused(lines, state.LastPosition(), used);
 		if(thisPoint != -1)
 			used[thisPoint] = true;
 		}
-	lastLayerZ = z;
+	state.SetLastLayerZ(z);
 }
-
 
 // intersect lines with plane
 void STL::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T)

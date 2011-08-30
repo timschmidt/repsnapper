@@ -119,6 +119,29 @@ class PointHash
         static const float float_epsilon;
 };
 
+class Command;
+struct GCodeStateImpl;
+class GCodeState {
+  GCodeStateImpl *pImpl;
+ public:
+  GCodeState(GCode &code);
+  ~GCodeState();
+  void SetZ (float z);
+  void AppendCommand(Command &command);
+  void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
+				 float extrusionFactor,
+				 float &E, float z,
+				 const Settings::SlicingSettings &slicing,
+				 const Settings::HardwareSettings &hardware);
+  float GetLastLayerZ(float curZ);
+  void  SetLastLayerZ(float z);
+  const Vector3f &LastPosition();
+  void  SetLastPosition(const Vector3f &v);
+  void  ResetLastWhere(Vector3f to);
+  float DistanceFromLastTo(Vector3f here);
+  float LastCommandF();
+};
+
 // A (set of) 2D polygon extracted from a 3D model
 class CuttingPlane
 {
@@ -151,7 +174,8 @@ public:
 	bool CleanupSharedSegments(float z);
 	void CleanupPolygons(float Optimization);			// remove redudant points
 	void CleanupOffsetPolygons(float Optimization);			// remove redudant points
-	void MakeGcode (const std::vector<Vector2f> &infill, GCode &code, float &E, float z, 
+	void MakeGcode (GCodeState &state,
+			const std::vector<Vector2f> &infill, float &E, float z, 
 			const Settings::SlicingSettings &slicing,
 			const Settings::HardwareSettings &hardware);
 
@@ -256,10 +280,3 @@ private:
     int loadBinaryFile(std::string filename);
     filetype_t getFileType(std::string filename);
 };
-
-
-extern void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
-				      float extrusionFactor, GCode &code,
-				      float &E, float z,
-				      const Settings::SlicingSettings &slicing,
-				      const Settings::HardwareSettings &hardware);

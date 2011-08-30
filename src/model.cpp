@@ -130,15 +130,16 @@ void Model::ConvertToGCode()
 	float z = Min.z + settings.Hardware.LayerThickness*0.5f;				// Offset it a bit in Z, z=0 gives a empty slice because no triangles crosses this Z value
 
 	gcode.clear();
+	float E=0.0f;
+	GCodeState state(gcode);
 
 	float printOffsetZ = settings.Hardware.PrintMargin.z;
 
-	if(settings.RaftEnable)
+	if (settings.RaftEnable)
 	{
 		printOffset += Vector3f(settings.Raft.Size, settings.Raft.Size, 0);
-		MakeRaft(printOffsetZ);
+		MakeRaft(state, printOffsetZ);
 	}
-	float E=0.0f;
 	while(z<Max.z)
 	{
 	  m_progress.update(z);
@@ -192,7 +193,7 @@ void Model::ConvertToGCode()
 					plane.CalcInFill(infill, LayerNr, infillDistance, settings.Slicing.InfillRotation, settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
 				}
 				// Make the GCode from the plane and the infill
-				plane.MakeGcode (infill, gcode, E, z + printOffsetZ,
+				plane.MakeGcode (state, infill, E, z + printOffsetZ,
 						 settings.Slicing, settings.Hardware);
 			}
 		}
@@ -576,7 +577,7 @@ void Model::OptimizeRotation(RFO_File *file, RFO_Object *object)
   CalcBoundingBoxAndCenter();
 }
 
-void Model::MakeRaft(float &z)
+void Model::MakeRaft(GCodeState &state, float &z)
 {
 	vector<InFillHit> HitsBuffer;
 
@@ -659,8 +660,8 @@ void Model::MakeRaft(float &z)
 			P1 = HitsBuffer[0].p;
 			P2 = HitsBuffer[1].p;
 
-			MakeAcceleratedGCodeLine (Vector3f(P1.x,P1.y,z), Vector3f(P2.x,P2.y,z),
-						  props->MaterialDistanceRatio, gcode,
+			state.MakeAcceleratedGCodeLine (Vector3f(P1.x,P1.y,z), Vector3f(P2.x,P2.y,z),
+						  props->MaterialDistanceRatio,
 						  E, z, settings.Slicing, settings.Hardware);
 			reverseLines = !reverseLines;
 		}
