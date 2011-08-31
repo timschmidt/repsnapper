@@ -16,7 +16,7 @@ float_reply (rr_dev dev, char **i, rr_reply type)
 int
 fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
 {
-  uint okoffset = 2;
+  int okoffset = 2;
   // a single T/B message (waiting for warm up (M109/M190)):
   if (!strncasecmp ("T:", reply, 2) ||
       !strncasecmp ("B:", reply, 2))  okoffset = 0;

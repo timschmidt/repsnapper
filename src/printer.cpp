@@ -162,7 +162,7 @@ void Printer::ResetButton()
 
 bool Printer::IsConnected()
 {
-  return rr_dev_fd (device) >= 0;
+  return rr_dev_is_connected(device);
 }
 
 // we try to change the state of the connection
@@ -230,7 +230,7 @@ void Printer::SimplePrint()
   if (printing)
     alert (_("Already printing.\nCannot start printing"));
 
-  if (rr_dev_fd (device) < 0)
+  if (!rr_dev_is_connected (device))
       serial_try_connect (true);
   Print();
 }
@@ -239,7 +239,7 @@ void Printer::Print()
 {
   assert(m_model != NULL);
 
-  if (rr_dev_fd (device) < 0) {
+  if (!rr_dev_is_connected (device)) {
     alert (_("Not connected to printer.\nCannot start printing"));
     return;
   }
@@ -293,7 +293,7 @@ Printer::RunExtruder (double extruder_speed, double extruder_length,
 void Printer::SendNow(string str)
 {
   std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-  if (rr_dev_fd (device) > 0)
+  if (rr_dev_is_connected (device))
     rr_dev_enqueue_cmd (device, RR_PRIO_HIGH, str.data(), str.size());
   else
     error (_("Can't send command"), _("You must first connect to a device!"));
@@ -304,7 +304,7 @@ void Printer::Stop()
   set_printing (false);
   assert(m_model != NULL);
   
-  if (rr_dev_fd (device) < 0) {
+  if (!rr_dev_is_connected (device)) {
     alert (_("Not connected to printer.\nCannot stop printing"));
     return;
   }
@@ -473,6 +473,7 @@ void RR_CALL Printer::rr_wait_wr_fn (rr_dev dev, int wait_write, void *closure)
 void
 Printer::handle_rr_wait_wr (rr_dev dev, int wait_write)
 {
+#ifndef WIN32
   Glib::IOCondition cond = (Glib::IO_ERR | Glib::IO_HUP |
 			    Glib::IO_PRI | Glib::IO_IN);
   if (wait_write)
@@ -482,6 +483,9 @@ Printer::handle_rr_wait_wr (rr_dev dev, int wait_write)
   devconn.disconnect();
   devconn = Glib::signal_io().connect
     (sigc::mem_fun (*this, &Printer::handle_dev_fd), rr_dev_fd (dev), cond);
+#else
+  /* FIXME: Handle the win32 case */
+#endif
 }
 
 void RR_CALL Printer::rr_log_fn (rr_dev dev, int type,

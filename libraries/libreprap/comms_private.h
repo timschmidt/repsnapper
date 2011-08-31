@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "comms.h"
+#include "serial.h"
 
 #define RR_DEBUG_ALWAYS 0
 #define RR_DEBUG_MEDIUM 1
@@ -31,7 +32,7 @@ struct rr_dev_t {
   rr_wait_wr_fn wait_wr_cb; void *wait_wr_cl;
   rr_log_fn     opt_log_cb; void *opt_log_cl;
 
-  int fd;
+  Serial fd;
   /* Line currently being sent */
   unsigned long lineno;
 

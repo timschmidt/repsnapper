@@ -93,8 +93,14 @@ void rr_dev_reset (rr_dev dev);
 void rr_dev_kick (rr_dev dev);
 
 /* Accessors */
+#ifndef WIN32
 /* File descriptor; <0 if not connected */
 int           rr_dev_fd     (rr_dev dev);
+#else
+/* FIXME: Win32 equivalent for rr_dev_fd()? */
+#endif
+/* Returns 1 if connected, 0 if not */
+int rr_dev_is_connected (rr_dev dev);
 
 /* Number of lines that have been since open */
 unsigned long rr_dev_lineno (rr_dev dev);

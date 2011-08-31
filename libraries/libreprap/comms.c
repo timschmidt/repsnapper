@@ -142,7 +142,7 @@ rr_dev_create (rr_proto      proto,
   dev->opt_log_cl = opt_log_cl;
 
   dev->lineno = 0;
-  dev->fd = -1;
+  dev->fd = SERIAL_INVALID_INIT;
   dev->send_next = 0;
   dev->init_send_count = dev->dev_cmdqueue_size;
   dev->debug_output = 0;
@@ -182,7 +182,7 @@ rr_dev_open (rr_dev dev, const char *port, long speed)
 {
   char *error = NULL;
   dev->fd = serial_open (port, speed, &error);
-  if (dev->fd < 0)
+  if (SERIAL_INVALID_CHECK(dev->fd) < 0)
   {
       rr_dev_log (dev, RR_DEBUG_ALWAYS, "Failed to open device %s", error ? error : "<no error>");
       fprintf (stderr, "%s\n", error ? error : "<null>");
@@ -195,14 +195,8 @@ rr_dev_open (rr_dev dev, const char *port, long speed)
 int
 rr_dev_close (rr_dev dev)
 {
-  int result;
-
-  if (dev->fd >= 0) {
-    do {
-      result = close (dev->fd);
-    } while (result < 0 && errno == EINTR);
-  }
-  dev->fd = -1;
+  int result = serial_close(dev->fd);
+  dev->fd = SERIAL_INVALID_INIT;
   rr_dev_reset (dev);
   return result;
 }
@@ -681,6 +675,7 @@ rr_dev_handle_writable (rr_dev dev)
 
 int rr_flush (rr_dev dev)
 {
+#ifndef WIN32
   /* Disable non-blocking mode */
   int flags;
   if ((flags = fcntl (dev->fd, F_GETFL, 0)) < 0)
@@ -688,24 +683,35 @@ int rr_flush (rr_dev dev)
 
   if (fcntl (dev->fd, F_SETFL, flags & ~O_NONBLOCK) == -1)
     return -1;
+#endif
 
   int result = 0;
   while (rr_dev_buffered (dev) && result >= 0)
     result = rr_dev_handle_writable (dev);
 
+#ifndef WIN32
+  /* Restore original mode */
   if (result >= 0)
     result = fcntl (dev->fd, F_SETFL, flags);
   else
     fcntl (dev->fd, F_SETFL, flags);
+#endif
 
-  /* Restore original mode */
   return result;
 }
 
+#ifndef WIN32
 int
 rr_dev_fd (rr_dev dev)
 {
   return dev->fd;
+}
+#endif
+
+int
+rr_dev_is_connected (rr_dev dev)
+{
+  return SERIAL_INVALID_CHECK(dev->fd) < 0 ? 0 : 1;
 }
 
 unsigned long

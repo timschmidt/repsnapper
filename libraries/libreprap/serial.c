@@ -1,5 +1,10 @@
 #include "serial.h"
 
+#ifdef WIN32
+/* Pull in win32 source file instead */
+#include "serialwin32.c"
+#else
+
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,7 +15,7 @@
 
 // Convert between the numeric speed and the termios representation
 // thereof.  Returns < 0 if argument is an unsupported speed.
-speed_t ntocf(long l) {
+static speed_t ntocf(long l) {
 	switch(l) {
 #ifdef B0
 	case 0:
@@ -143,20 +148,25 @@ speed_t ntocf(long l) {
 
 // Repeated many times to allow errors to be isolated to the specific
 // setting that failed to apply.  Returns < 0 on failure.
-static int serial_set_attrib(int fd, struct termios* attribp)
-{
-	if(tcsetattr(fd, TCSANOW, attribp) < 0)
+static int
+serial_set_attrib(int fd, struct termios* attribp) {
+	if(tcsetattr(fd, TCSANOW, attribp) < 0) {
 		return -1;
+        }
 	return 0;
 }
 
-static int serial_init(int fd, long speed, char **detail)
+static int
+serial_init(int fd, long speed, char **detail)
 {
   int status;
   struct termios attribs;
   // Initialize attribs
   if(tcgetattr(fd, &attribs) < 0) {
+    int tmp = errno;
     *detail = "not a serial device";
+    close(fd);
+    errno = tmp;
     return -1;
   }
 
@@ -213,7 +223,7 @@ static int serial_init(int fd, long speed, char **detail)
 
 /* Returns a prepared FD for the serial device specified, or some
  * value < 0 if an error occurred. */
-int serial_open(const char *path, long speed, char **error)
+Serial serial_open(const char *path, long speed, char **error)
 {
   int fd;
   int flags;
@@ -257,3 +267,18 @@ int serial_open(const char *path, long speed, char **error)
   close (fd);
   return -1;
 }
+
+int
+serial_close(Serial fd)
+{
+  int result;
+
+  if (SERIAL_INVALID_CHECK(fd) >= 0) {
+    do {
+      result = close (fd);
+    } while (result < 0 && errno == EINTR);
+  }
+
+  return result;
+}
+#endif
