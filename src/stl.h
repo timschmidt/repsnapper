@@ -87,7 +87,7 @@ public:
 	Poly(){};
 	void cleanup();				// Removed vertices that are on a straight line
 	void calcHole(vector<Vector2f> &offsetVertices);
-	vector<uint> points;			// points, indices into ..... a CuttingPlane or a GCode object
+	vector<guint> points;			// points, indices into ..... a CuttingPlane or a GCode object
 	bool hole;
 	Vector2f center;
 };
@@ -112,7 +112,7 @@ class PointHash
 	~PointHash();
 	PointHash(const PointHash &copy);
 	int  IndexOfPoint (const Vector2f &p);
-	void InsertPoint  (uint idx, const Vector2f &p);
+	void InsertPoint  (guint idx, const Vector2f &p);
 	void clear();
 
         static const float mult;
@@ -151,7 +151,7 @@ public:
 	void ShrinkFast(float distance, float optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount);		// Contracts polygons
 	void ShrinkLogick(float distance, float optimization, bool DisplayCuttingPlane, int ShellCount);		// Contracts polygons
 	void selfIntersectAndDivide();
-	uint selfIntersectAndDivideRecursive(float z, uint startPolygon, uint startVertex, vector<outline> &outlines, const Vector2f endVertex, uint &level);
+	guint selfIntersectAndDivideRecursive(float z, guint startPolygon, guint startVertex, vector<outline> &outlines, const Vector2f endVertex, guint &level);
 
 	void MakeContainedPlane(CuttingPlane& res)
 	{
@@ -167,7 +167,7 @@ public:
 		offsetVertices.clear();
 	}
 	void recurseSelfIntersectAndDivide(float z, vector<locator> &EndPointStack, vector<outline> &outlines, vector<locator> &visited);
-	void CalcInFill(vector<Vector2f> &infill, uint LayerNr, float InfillDistance, float InfillRotation, float InfillRotationPrLayer, bool DisplayDebuginFill);	// Collide a infill-line with the polygons
+	void CalcInFill(vector<Vector2f> &infill, guint LayerNr, float InfillDistance, float InfillRotation, float InfillRotationPrLayer, bool DisplayDebuginFill);	// Collide a infill-line with the polygons
 	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers, bool DrawCPLineNumbers, bool DrawCPVertexNumbers);
 	bool LinkSegments(float z, float Optimization);		        // Link Segments to form polygons
 	bool CleanupConnectSegments(float z);
@@ -202,7 +202,7 @@ public:
 	int RegisterPoint(const Vector2f &p);
 
 	struct Segment {
-		Segment(uint s, uint e) { start = s; end = e; }
+		Segment(guint s, guint e) { start = s; end = e; }
 		int start;		// Vertex index of start point
 		int end;		// Vertex index of end point
 		void Swap() {
@@ -261,7 +261,7 @@ public:
     int loadFile(std::string filename);
 
 	void clear() { triangles.clear(); }
-	void displayInfillOld(const Settings &settings, CuttingPlane &plane, uint LayerNr, vector<int>& altInfillLayers);
+	void displayInfillOld(const Settings &settings, CuttingPlane &plane, guint LayerNr, vector<int>& altInfillLayers);
 	void draw (RFO &rfo, const Settings &settings);
 	void CenterAroundXY();
 	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);	// Extract a 2D polygonset from a 3D model

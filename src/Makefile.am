@@ -14,13 +14,13 @@ LIB_DIR=$(top_srcdir)/libraries
 WARNING_FLAGS = -Wall -Wno-invalid-offsetof
 
 AM_CPPFLAGS = \
-	-DHAVE_GTK $(CFLAGS) -I$(LIB_DIR) $(GTKMM_CFLAGS) \
+	-DHAVE_GTK $(CFLAGS) $(EXTRA_CFLAGS) -I$(LIB_DIR) $(GTKMM_CFLAGS) \
         $(LIBREPRAP_CFLAGS) \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
 	-I$(LIB_DIR)/polylib \
 	-I$(LIB_DIR) \
-        -DDATADIR='$(repsnapperdatadir)' \
+        -DRSDATADIR='$(repsnapperdatadir)' \
         -DSYSCONFDIR='$(repsnapperconfdir)' \
 	-g -O0 $(WARNING_FLAGS)
 
@@ -39,7 +39,7 @@ repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) repsnapper.cpp
 repsnapper_LDADD = $(GTKMM_LIBS) \
 		$(top_builddir)/libraries/polylib/libpolylib.la \
 		$(top_builddir)/libraries/libreprap/libreprap.la \
-                -L/usr/lib -lGLU -lGL -lglut
+                $(GL_LIBS) $(EXTRA_LDFLAGS)
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
 dist_repsnapperdata_DATA = repsnapper.ui

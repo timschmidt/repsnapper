@@ -155,7 +155,7 @@ public:
 	void Goto(string axis, float position);
 	void STOP();
 
-	Matrix4f &SelectedNodeMatrix(uint objectNr = 1);
+	Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
 	void SelectedNodeMatrices(vector<Matrix4f *> &result );
 	void newObject();
 

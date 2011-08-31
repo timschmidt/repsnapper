@@ -105,7 +105,8 @@ Glib::RefPtr<Gio::File> find_global_config() {
   Glib::RefPtr<Gio::File> f;
   for (std::vector<std::string>::const_iterator i = dirs.begin();
        i != dirs.end(); ++i) {
-    f = Gio::File::create_for_path(*i + "repsnapper.conf");
+    std::string f_name = Glib::build_filename (*i, "repsnapper.conf");
+    f = Gio::File::create_for_path(f_name);
     if(f->query_exists()) {
       return f;
     }
@@ -131,7 +132,8 @@ int main(int argc, char **argv)
   Model *model = new Model();
 
   try {
-    Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper")->make_directory_with_parents();
+    std::string user_config_dir = Glib::build_filename (Glib::get_user_config_dir(), "repsnapper");
+    Gio::File::create_for_path(user_config_dir)->make_directory_with_parents();
   } catch(Gio::Error e) {
     switch(e.code()) {
     case Gio::Error::EXISTS:
@@ -146,8 +148,15 @@ int main(int argc, char **argv)
       return 1;
     }
   }
-      
-  Glib::RefPtr<Gio::File> conf = Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper/repsnapper.conf");
+
+  std::vector<std::string> user_config_bits(3);
+  user_config_bits[0] = Glib::get_user_config_dir();
+  user_config_bits[1] = "repsnapper";
+  user_config_bits[2] = "repsnapper.conf";
+
+  std::string user_config_file = Glib::build_filename (user_config_bits);
+  Glib::RefPtr<Gio::File> conf = Gio::File::create_for_path(user_config_file);
+
   try {
     Glib::RefPtr<Gio::File> global = find_global_config();
     if(!global) {

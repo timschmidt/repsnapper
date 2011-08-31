@@ -35,7 +35,7 @@ class Settings {
   struct RaftSettings {
     float Size;
     struct PhasePropertiesType {
-      uint  LayerCount;
+      guint  LayerCount;
       float MaterialDistanceRatio;
       float Rotation;
       float RotationPrLayer;
@@ -90,13 +90,13 @@ class Settings {
     std::string AltInfillLayersText;
 
     bool ShellOnly;
-    uint ShellCount;
+    guint ShellCount;
     bool EnableAcceleration;
     int ShrinkQuality;
 
     float Optimization;
 
-    void GetAltInfillLayers(std::vector<int>& layers, uint layerCount) const;
+    void GetAltInfillLayers(std::vector<int>& layers, guint layerCount) const;
   };
   SlicingSettings Slicing;
 

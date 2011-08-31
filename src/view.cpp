@@ -105,7 +105,8 @@ View *View::create(Model *model)
   Glib::ustring ui;
   for (std::vector<std::string>::const_iterator i = dirs.begin();
        i != dirs.end(); ++i) {
-    Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(*i + "repsnapper.ui");
+    std::string f_name = Glib::build_filename (*i, "repsnapper.ui");
+    Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(f_name);
     try {
       char *ptr;
       gsize length;

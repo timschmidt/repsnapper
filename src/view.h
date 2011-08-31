@@ -126,7 +126,7 @@ class View : public Gtk::Window
   void rotate_selection (vmml::Vector4f rotate);
   void stl_added (Gtk::TreePath &path);
 
-  vmml::Matrix4f &SelectedNodeMatrix(uint objectNr = 1);
+  vmml::Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
   void SelectedNodeMatrices(std::vector<vmml::Matrix4f *> &result );
   void newObject();
 

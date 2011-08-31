@@ -88,6 +88,10 @@ bool ConnectView::find_ports() {
   m_combo.append_text(m_settings->Hardware.PortName);
 
   char **ports = rr_enumerate_ports();
+  if (ports == NULL) {
+    return false;
+  }
+
   for(size_t i = 0; ports[i] != NULL; ++i) {
     m_combo.append_text(ports[i]);
     free(ports[i]);

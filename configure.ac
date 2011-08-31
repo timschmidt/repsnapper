@@ -73,6 +73,23 @@ AC_CHECK_HEADER(GL/glut.h,
     ,
     AC_MSG_ERROR([cannot find headers for freeglut]))
 
+case "$host_os" in
+mingw*)
+  GL_LIBS="-lopengl32 -lglu32 -lglut32"
+  EXTRA_LDFLAGS="-Wl,-subsystem,windows -shared-libgcc"
+  EXTRA_CFLAGS="-fexceptions -mthreads"
+  ;;
+*)
+  GL_LIBS="-L/usr/lib -lGLU -lGL -lglut"
+  EXTRA_LDFLAGS=
+  EXTRA_CFLAGS=
+  ;;
+esac
+
+AC_SUBST(GL_LIBS)
+AC_SUBST(EXTRA_LDFLAGS)
+AC_SUBST(EXTRA_CFLAGS)
+
 AC_CONFIG_FILES([
   Makefile
   po/Makefile.in

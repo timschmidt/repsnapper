@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES = libreprap.la
 
-libreprap_la_CPPFLAGS = -I$(srcdir)
+libreprap_la_CPPFLAGS = -I$(srcdir) $(EXTRA_CFLAGS)
 
 libreprap_la_SOURCES = \
 	comms.c \

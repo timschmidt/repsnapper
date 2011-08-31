@@ -62,7 +62,7 @@ std::vector<std::string> Platform::getConfigPaths()
   if (binary_path)
     dirs.push_back(std::string(binary_path) + G_DIR_SEPARATOR);
 
-  dirs.push_back(std::string(G_STRINGIFY(DATADIR)) + G_DIR_SEPARATOR);
+  dirs.push_back(std::string(G_STRINGIFY(RSDATADIR)) + G_DIR_SEPARATOR);
   dirs.push_back(std::string(G_STRINGIFY(SYSCONFDIR)) + G_DIR_SEPARATOR);
   for(gsize i = 0; datadirs[i] != NULL; ++i)
     dirs.push_back(std::string(datadirs[i]) + G_DIR_SEPARATOR + "repsnapper" + G_DIR_SEPARATOR);
