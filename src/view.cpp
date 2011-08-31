@@ -475,7 +475,15 @@ void View::load_settings()
 
 void View::save_settings()
 {
-  m_model->SaveConfig (Gio::File::create_for_path(Glib::get_user_config_dir() + "/repsnapper/repsnapper.conf"));
+  std::vector<std::string> user_config_bits(3);
+  user_config_bits[0] = Glib::get_user_config_dir();
+  user_config_bits[1] = "repsnapper";
+  user_config_bits[2] = "repsnapper.conf";
+
+  std::string user_config_file = Glib::build_filename (user_config_bits);
+  Glib::RefPtr<Gio::File> conf = Gio::File::create_for_path(user_config_file);
+
+  m_model->SaveConfig (conf);
 }
 
 void View::save_settings_as()
