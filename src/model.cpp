@@ -76,10 +76,12 @@ Model::Model() :
 			    rr_error_fn, cl,
 			    rr_wait_wr_fn, cl,
 			    rr_log_fn, cl);
+  update_temp_poll_interval ();
 }
 
 Model::~Model()
 {
+  m_temp_timeout.disconnect();
   rr_dev_free (m_device);
 }
 
@@ -219,6 +221,21 @@ void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
 {
   Glib::ustring contents = gcode.get_text();
   Glib::file_set_contents (file->get_path(), contents);
+}
+
+bool Model::temp_timeout_cb()
+{
+  if (IsConnected() && settings.Misc.TempReadingEnabled)
+    SendNow("M105");
+  update_temp_poll_interval();
+  return true;
+}
+
+void Model::update_temp_poll_interval()
+{
+//  cerr << "set poll interval ms: " << settings.Display.TempUpdateSpeed * 1000 << "\n";
+  m_temp_timeout.disconnect();
+  m_temp_timeout = Glib::signal_timeout().connect(sigc::mem_fun(*this, &Model::temp_timeout_cb), settings.Display.TempUpdateSpeed * 1000);
 }
 
 void Model::Restart()
@@ -507,6 +524,7 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 
 void Model::ModelChanged()
 {
+  update_temp_poll_interval();
   m_model_changed.emit();
 }
 

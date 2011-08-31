@@ -269,7 +269,7 @@ static struct {
   { "Hardware.DownstreamExtrusionMultiplier", 0.01, 25.0, 0.01, 0.1 },
 
   // Display pane
-  { "Display.TempUpdateSpeed", 0.1, 10.0, 0.0, 0.1 },
+  { "Display.TempUpdateSpeed", 0.1, 10.0, 0.5, 1.0 },
 };
 
 // Add any [HV]Ranges to this array:

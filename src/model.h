@@ -77,6 +77,8 @@ class Model
 	sigc::signal< void > m_signal_inhibit_changed;
 
 	double m_temps[TEMP_LAST];
+	sigc::connection m_temp_timeout;
+	bool temp_timeout_cb();
 
 	SerialState m_serial_state;
 
@@ -99,6 +101,7 @@ public:
 
 	sigc::signal< void > signal_inhibit_changed() { return m_signal_inhibit_changed; }
 	bool get_inhibit_print() { return m_inhibit_print; }
+	void update_temp_poll_interval();
 
 	Model();
 	~Model();
