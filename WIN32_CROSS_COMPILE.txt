@@ -1,0 +1,32 @@
+Ubuntu Natty instructions.
+
+Make sure wine, mingw32 and nsis packages are installed w/ apt.
+
+You need the right version of mingw32 (gcc-mingw32 in Ubuntu natty is built with 
+--disable-shared, which breaks C++ exception handling. See
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625778). I haven't tried OpenSuse's
+
+Create a build dir and
+
+export BUILDDIR=`pwd`/build/
+
+Get gtkmm win32 binaries (http://live.gnome.org/gtkmm/MSWindows)
+Gtk gtkglext win32 http://www.bonifazi.eu/appunti/gtkglext-win32-1.2.0.exe
+Install both into build dir.
+
+# Install GLUT for win32
+# http://www.opengl.org/wiki/MinGW
+# Get zip file, unpack. mkdir 
+
+# Build/install mingw32 version of libtool. FIXME: Not sure if libtool is needed.
+apt-get source libtool
+./configure --host=i586-mingw32msvc --prefix="$BUILDDIR" --enable-static --disable-shared
+make && make install
+
+# Build
+cd repsnapper
+
+PKG_CONFIG=$BUILDDIR/bin/pkg-config.exe CPPFLAGS=-I$BUILDDIR/include PKG_CONFIG_PATH=$BUILDDIR/lib/pkgconfig ./configure --host=i586-mingw32msvc --prefix="$BUILDDIR" --enable-doxygen=no
+make && make install
+
+TODO: Wrap it all up into installer with NSIS script.
