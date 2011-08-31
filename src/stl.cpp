@@ -586,26 +586,29 @@ void STL::draw(RFO &rfo, const Settings &settings)
 
 }
 
-int findClosestUnused(std::vector<Vector3f> lines, Vector3f point, std::vector<bool> &used)
+int findClosestUnused(const std::vector<Vector3f> &lines, Vector3f point,
+		      const std::vector<bool> &used)
 {
 	int closest = -1;
 	float closestDist = numeric_limits<float>::max();
 
 	size_t count = lines.size();
 
-	for(uint i=0;i<count;i++)
+	for (uint i = 0; i < count; i++)
 	{
-		if(used[i] == false)
+		if (used[i])
+		  continue;
+
+		float dist = (lines[i]-point).length();
+//		cerr << "dist for " << i << " is " << dist << " == " << lines[i] << " - " << point << " vs. " << closestDist << "\n";
+		if(dist >= 0.0 && dist < closestDist)
 		{
-			float dist = (lines[i]-point).length();
-			if(dist < closestDist)
-			{
-				closestDist = dist;
-				closest = i;
-			}
+		  closestDist = dist;
+		  closest = i;
 		}
 	}
 
+//	cerr << "findClosestUnused " << closest << " of " << used.size() << " of " << lines.size() << "\n";
 	return closest;
 }
 
@@ -657,7 +660,9 @@ const Vector3f &GCodeState::LastPosition()
 }
 void GCodeState::SetLastPosition(const Vector3f &v)
 {
-  pImpl->LastPosition = v;
+  // For some reason we get lots of -nan co-ordinates in lines[] - odd ...
+  if (!isnan(v.y) && !isnan(v.x)) // >= 0 && v.x >= 0)
+    pImpl->LastPosition = v;
 }
 void GCodeState::AppendCommand(Command &command)
 {
@@ -913,6 +918,7 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 			}
 		}
 	}
+//	cerr << "lines at z %g = " << z << " count " << lines.size() << "\n";
 
 	// Find closest point to last point
 
@@ -921,9 +927,15 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 	for(size_t i=0;i<used.size();i++)
 		used[i] = false;
 
-	int thisPoint = findClosestUnused(lines, state.LastPosition(), used);
-	if(thisPoint == -1)	// No lines = no gcode
+//	cerr << "last position " << state.LastPosition() << "\n";
+	int thisPoint = findClosestUnused (lines, state.LastPosition(), used);
+	if (thisPoint == -1)	// No lines = no gcode
+	{
+#if CUTTING_PLANE_DEBUG // this happens often for the last slice ...
+		cerr << "find closest, and hence slicing failed at z" << z << "\n";
+#endif
 		return;
+	}
 	used[thisPoint] = true;
 
 	while(thisPoint != -1)
@@ -935,9 +947,9 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 		  state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
 						  0.0f, E, z, slicing, hardware);
 
+		  state.SetLastPosition (lines[thisPoint]);
 		} // If we are going to somewhere else
 
-		state.SetLastPosition (lines[thisPoint]);
 		used[thisPoint] = true;
 		// Find other end of line
 		thisPoint = findOtherEnd(thisPoint);
@@ -945,25 +957,11 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 		// store thisPoint
 
 		// Make a PLOT accelerated line from LastPosition to lines[thisPoint]
-//		if(EnableAcceleration)
 		state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
 						hardware.ExtrusionFactor,
 						E, z, slicing, hardware);
-/*		else
-			{
-			command.Code = COORDINATEDMOTION;
-			command.where = lines[thisPoint];
-			len = (LastPosition - command.where).length();
-			if(UseIncrementalEcode)
-				E += len*extrusionFactor;
-			else
-				E = len*extrusionFactor;
-			command.e = E;		// move or extrude?
-			command.f = MinPrintSpeedXY;
-			state.AppendCommand(command);
-			}*/
 		state.SetLastPosition(lines[thisPoint]);
-		thisPoint = findClosestUnused(lines, state.LastPosition(), used);
+		thisPoint = findClosestUnused (lines, state.LastPosition(), used);
 		if(thisPoint != -1)
 			used[thisPoint] = true;
 		}
@@ -1074,8 +1072,8 @@ void CuttingPlane::CalcInFill(vector<Vector2f> &infill, uint LayerNr, float Infi
 	Vector2f Center = (Max+Min)/2.0f;
 
 	for(float x = -Length ; x < Length ; x+=step)
-		{
-		bool examineThis = false;
+	{
+		bool examineThis = true;
 
 		HitsBuffer.clear();
 
@@ -1170,7 +1168,7 @@ restart_check:
 					}
 					if(found)
 						continue;
-			}		
+			}
 
 
 			// Sort hits by distance and transfer to InFill Buffer
@@ -1211,8 +1209,8 @@ restart_check:
 		}
 }
 
-// calculates intersection and checks for parallel lines.  
-// also checks that the intersection point is actually on  
+// calculates intersection and checks for parallel lines.
+// also checks that the intersection point is actually on
 // the line segment p1-p2
 bool IntersectXY(const Vector2f &p1, const Vector2f &p2, const Vector2f &p3, const Vector2f &p4, InFillHit &hit)
 {

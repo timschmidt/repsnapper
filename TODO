@@ -1,7 +1,5 @@
 --- the plan ---
 
-* Interactive temperature reading / feedback ...
-
 * Bin the two 'load' menu items - just one 'open' menu ...
 	+ with a gcode and stl filter drop-down ?
 * Add a preview widget to the file menu

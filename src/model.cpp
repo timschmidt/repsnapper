@@ -161,7 +161,7 @@ void Model::ConvertToGCode()
 					hackedZ+= 0.1f;
 					stl->CalcCuttingPlane (hackedZ, plane, T);	// output is alot of un-connected line segments with individual vertices
 				}
-				plane.SetZ (z + printOffsetZ);
+ 				plane.SetZ (z + printOffsetZ);
 
 				// inFill
 				vector<Vector2f> infill;
