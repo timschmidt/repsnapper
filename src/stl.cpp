@@ -328,8 +328,7 @@ void STL::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 {
 	if (settings.Display.DisplayinFill)
 	{
-		// inFill
-		vector<Vector2f> infill;
+		vector<Vector2f> *infill = NULL;
 
 		CuttingPlane infillCuttingPlane = plane;
 		if (settings.Slicing.ShellOnly == false)
@@ -353,23 +352,24 @@ void STL::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 			  infillDistance = settings.Slicing.AltInfillDistance;
 			}
 
-			infillCuttingPlane.CalcInFill(infill, LayerNr, infillDistance,
-						      settings.Slicing.InfillRotation,
-						      settings.Slicing.InfillRotationPrLayer,
-						      settings.Display.DisplayDebuginFill);
+			infill = infillCuttingPlane.CalcInFill(LayerNr, infillDistance,
+							       settings.Slicing.InfillRotation,
+							       settings.Slicing.InfillRotationPrLayer,
+							       settings.Display.DisplayDebuginFill);
 		}
 		glColor4f(1,1,0,1);
 		glPointSize(5);
 		glBegin(GL_LINES);
-		for(size_t i=0;i<infill.size();i+=2)
+		for (size_t i = 0; i < infill->size(); i += 2)
 		{
-			if(infill.size() > i+1)
+			if (infill->size() > i+1)
 			{
-				glVertex3f(infill[i  ].x, infill[i  ].y, plane.getZ());
-				glVertex3f(infill[i+1].x, infill[i+1].y, plane.getZ());
+				glVertex3f ((*infill)[i  ].x, (*infill)[i  ].y, plane.getZ());
+				glVertex3f ((*infill)[i+1].x, (*infill)[i+1].y, plane.getZ());
 			}
 		}
 		glEnd();
+		delete infill;
 	}
 }
 
@@ -1054,12 +1054,15 @@ void STL::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T)
 vector<InFillHit> HitsBuffer;
 
 
-void CuttingPlane::CalcInFill(vector<Vector2f> &infill, uint LayerNr, float InfillDistance,
-			      float InfillRotation, float InfillRotationPrLayer, bool DisplayDebuginFill)
+vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
+					    float InfillRotation, float InfillRotationPrLayer,
+					    bool DisplayDebuginFill)
 {
 	int c=0;
 
 	float step = InfillDistance;
+
+	vector<Vector2f> *infill = new vector<Vector2f>();
 
 	bool examine = false;
 
@@ -1081,42 +1084,39 @@ void CuttingPlane::CalcInFill(vector<Vector2f> &infill, uint LayerNr, float Infi
 		Vector2f P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
 
 		if(DisplayDebuginFill)
-			{
+		{
 			glBegin(GL_LINES);
 			glColor3f(0,0.2f,0);
 			glVertex3f(P1.x, P1.y, Z);
 			glVertex3f(P2.x, P2.y, Z);
 			glEnd();
-			}
+		}
 		float Examine = 0.5f;
 
-		if(DisplayDebuginFill)
-			if(!examine && ((Examine-0.5f)*2 * Length <= x))
-			{
-				examineThis = examine = true;
-				glColor3f(1,1,1);				// Draw the line
-				glVertex3f(P1.x, P1.y, Z);
-				glVertex3f(P2.x, P2.y, Z);
-			}
+		if(DisplayDebuginFill && !examine && ((Examine-0.5f)*2 * Length <= x))
+		{
+			examineThis = examine = true;
+			glColor3f(1,1,1);  // Draw the line
+			glVertex3f(P1.x, P1.y, Z);
+			glVertex3f(P2.x, P2.y, Z);
+		}
 
-			if(offsetPolygons.size() != 0)
+		if(offsetPolygons.size() != 0)
+		{
+			for(size_t p=0;p<offsetPolygons.size();p++)
 			{
-				for(size_t p=0;p<offsetPolygons.size();p++)
+				for(size_t i=0;i<offsetPolygons[p].points.size();i++)
 				{
-					for(size_t i=0;i<offsetPolygons[p].points.size();i++)
-					{
-						Vector2f P3 = offsetVertices[offsetPolygons[p].points[i]];
-						Vector2f P4 = offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
+					Vector2f P3 = offsetVertices[offsetPolygons[p].points[i]];
+					Vector2f P4 = offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
 
-						Vector3f point;
-						InFillHit hit;
-						if(IntersectXY(P1,P2,P3,P4,hit))
-						{
-							HitsBuffer.push_back(hit);
-						}
-					}
+					Vector3f point;
+					InFillHit hit;
+					if (IntersectXY (P1,P2,P3,P4,hit))
+						HitsBuffer.push_back(hit);
 				}
 			}
+		}
 /*			else if(vertices.size() != 0)
 				{
 				// Fallback, collide with lines rather then polygons
@@ -1137,76 +1137,81 @@ void CuttingPlane::CalcInFill(vector<Vector2f> &infill, uint LayerNr, float Infi
 				}*/
 			// Sort hits
 			// Sort the vector using predicate and std::sort
-			std::sort(HitsBuffer.begin(), HitsBuffer.end(), InFillHitCompareFunc);
+		std::sort (HitsBuffer.begin(), HitsBuffer.end(), InFillHitCompareFunc);
 
-			if(examineThis)
-			{
-				glPointSize(4);
-				glBegin(GL_POINTS);
-				for(size_t i=0;i<HitsBuffer.size();i++)
-					glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
-				glEnd();
-				glPointSize(1);
-			}
+		if(examineThis)
+		{
+			glPointSize(4);
+			glBegin(GL_POINTS);
+			for (size_t i=0;i<HitsBuffer.size();i++)
+				glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
+			glEnd();
+			glPointSize(1);
+		}
 
 			// Verify hits intregrety
 			// Check if hit extists in table
 restart_check:
-			for(size_t i=0;i<HitsBuffer.size();i++)
+		for (size_t i=0;i<HitsBuffer.size();i++)
+		{
+			bool found = false;
+
+			for (size_t j=i+1;j<HitsBuffer.size();j++)
 			{
-				bool found = false;
-
-				for(size_t j=i+1;j<HitsBuffer.size();j++)
-					if( ABS(HitsBuffer[i].d - HitsBuffer[j].d) < 0.0001)
-					{
-						found = true;
-						// Delete both points, and continue
-						HitsBuffer.erase(HitsBuffer.begin()+j);
-						if(i != 0 && i != HitsBuffer.size()-1)	//If we are "Going IN" to solid material, and there's more points, keep one of the points
-							HitsBuffer.erase(HitsBuffer.begin()+i);
-						goto restart_check;
-					}
-					if(found)
-						continue;
-			}
-
-
-			// Sort hits by distance and transfer to InFill Buffer
-			if(HitsBuffer.size() != 0 && HitsBuffer.size() % 2)
-				continue;	// There's a uneven number of hits, skip this infill line (U'll live)
-			c=0;	// Color counter
-			while(HitsBuffer.size())
+				if( ABS(HitsBuffer[i].d - HitsBuffer[j].d) < 0.0001)
 				{
-				infill.push_back(HitsBuffer[0].p);
-				if(examineThis)
-					{
-					switch(c)
-						{
-						case 0: glColor3f(1,0,0); break;
-						case 1: glColor3f(0,1,0); break;
-						case 2: glColor3f(0,0,1); break;
-						case 3: glColor3f(1,1,0); break;
-						case 4: glColor3f(0,1,1); break;
-						case 5: glColor3f(1,0,1); break;
-						case 6: glColor3f(1,1,1); break;
-						case 7: glColor3f(1,0,0); break;
-						case 8: glColor3f(0,1,0); break;
-						case 9: glColor3f(0,0,1); break;
-						case 10: glColor3f(1,1,0); break;
-						case 11: glColor3f(0,1,1); break;
-						case 12: glColor3f(1,0,1); break;
-						case 13: glColor3f(1,1,1); break;
-						}
-					c++;
-					glPointSize(10);
-					glBegin(GL_POINTS);
-					glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
-					glEnd();
-					glPointSize(1);
-					}
-				HitsBuffer.erase(HitsBuffer.begin());
+					found = true;
+					// Delete both points, and continue
+					HitsBuffer.erase(HitsBuffer.begin()+j);
+					// If we are "Going IN" to solid material, and there's
+					// more points, keep one of the points
+					if (i != 0 && i != HitsBuffer.size()-1)
+						HitsBuffer.erase(HitsBuffer.begin()+i);
+					goto restart_check;
 				}
+			}
+			if (found)
+				continue;
 		}
+
+
+		// Sort hits by distance and transfer to InFill Buffer
+		if (HitsBuffer.size() != 0 && HitsBuffer.size() % 2)
+			continue;	// There's a uneven number of hits, skip this infill line (U'll live)
+		c = 0;	// Color counter
+		while (HitsBuffer.size())
+		{
+			infill->push_back(HitsBuffer[0].p);
+			if(examineThis)
+			{
+				switch(c)
+				{
+				case 0: glColor3f(1,0,0); break;
+				case 1: glColor3f(0,1,0); break;
+				case 2: glColor3f(0,0,1); break;
+				case 3: glColor3f(1,1,0); break;
+				case 4: glColor3f(0,1,1); break;
+				case 5: glColor3f(1,0,1); break;
+				case 6: glColor3f(1,1,1); break;
+				case 7: glColor3f(1,0,0); break;
+				case 8: glColor3f(0,1,0); break;
+				case 9: glColor3f(0,0,1); break;
+				case 10: glColor3f(1,1,0); break;
+				case 11: glColor3f(0,1,1); break;
+				case 12: glColor3f(1,0,1); break;
+				case 13: glColor3f(1,1,1); break;
+				}
+				c++;
+				glPointSize(10);
+				glBegin(GL_POINTS);
+				glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
+				glEnd();
+				glPointSize(1);
+			}
+			HitsBuffer.erase(HitsBuffer.begin());
+		}
+	}
+	return infill;
 }
 
 // calculates intersection and checks for parallel lines.
@@ -2253,7 +2258,7 @@ void CuttingPlane::ShrinkFast(float distance, float optimization, bool DisplayCu
 			Vector2f V2 = (Nc-Nb).getNormalized();
 
 			Vector2f biplane = (V2 - V1).getNormalized();
-			
+
 			float a = angleBetween(V1,V2);
 
 			bool convex = V1.cross(V2) < 0;

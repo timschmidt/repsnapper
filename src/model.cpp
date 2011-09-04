@@ -166,7 +166,7 @@ void Model::ConvertToGCode()
  				plane.SetZ (z + printOffsetZ);
 
 				// inFill
-				vector<Vector2f> infill;
+				vector<Vector2f> *infill = NULL;
 
 //				CuttingPlane infillCuttingPlane;
 //				plane.MakeContainedPlane(infillCuttingPlane);
@@ -192,11 +192,12 @@ void Model::ConvertToGCode()
 						infillDistance = settings.Slicing.AltInfillDistance;
 					}
 
-					plane.CalcInFill(infill, LayerNr, infillDistance, settings.Slicing.InfillRotation, settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
+					infill = plane.CalcInFill(LayerNr, infillDistance, settings.Slicing.InfillRotation, settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
 				}
 				// Make the GCode from the plane and the infill
-				plane.MakeGcode (state, infill, E, z + printOffsetZ,
+				plane.MakeGcode (state, *infill, E, z + printOffsetZ,
 						 settings.Slicing, settings.Hardware);
+				delete infill;
 			}
 		}
 		LayerNr++;

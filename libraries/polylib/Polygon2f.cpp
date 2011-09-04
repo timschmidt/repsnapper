@@ -146,7 +146,7 @@ namespace PolyLib
 				biplane.x = V1.y;
 				biplane.y = -V1.x;
 			}
-			
+
 			float a = CalcAngleBetween(V1,V2);
 
 			bool convex = V1.cross(V2) < 0;
@@ -220,19 +220,19 @@ namespace PolyLib
 
 		if( distance > 0 )
 		{
-			for(list<Polygon2f*>::iterator pIt =containedSolids.begin(); pIt!=containedSolids.end(); pIt++)
+			for(list<Polygon2f*>::iterator pIt = containedSolids.begin(); pIt!=containedSolids.end(); pIt++)
 			{
 				(*pIt)->Shrink(distance, rootPolygons, emptyPolygons);
 			}
 			assert(emptyPolygons.size() == 0);
 
-			for(list<Polygon2f*>::iterator pIt =containedHoles.begin(); pIt!=containedHoles.end(); pIt++)
+			for(list<Polygon2f*>::iterator pIt = containedHoles.begin(); pIt!=containedHoles.end(); pIt++)
 			{
 				(*pIt)->DoShrink(distance, rootPolygons, emptyPolygons);
 			}
 			assert(emptyPolygons.size() == 0);
 
-			for(list<Polygon2f*>::iterator pIt =rootPolygons.begin(); pIt!=rootPolygons.end(); )
+			for(list<Polygon2f*>::iterator pIt = rootPolygons.begin(); pIt!=rootPolygons.end(); )
 			{
 				if( (*pIt)->TryPlaceInList(parentPolygons) )
 				{
@@ -244,7 +244,7 @@ namespace PolyLib
 				}
 			}
 
-			for(list<Polygon2f*>::iterator pIt =rootPolygons.begin(); pIt!=rootPolygons.end(); pIt++)
+			for(list<Polygon2f*>::iterator pIt = rootPolygons.begin(); pIt!=rootPolygons.end(); pIt++)
 			{
 				polygons.push_back(*pIt);
 			}
@@ -278,7 +278,7 @@ namespace PolyLib
 			for(list<Polygon2f*>::iterator pIt =rootPolygons.begin(); pIt!=rootPolygons.end(); pIt++)
 			{
 				(*pIt)->PlaceInList(polygons);
-			}						
+			}
 		}
 	}
 
