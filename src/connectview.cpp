@@ -17,11 +17,11 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "config.h"
-
 #include <cstdio>
 #include <cerrno>
 #include <string>
 
+#include <glib/gi18n.h>
 #include <libreprap/util.h>
 
 #include "settings.h"
@@ -37,23 +37,23 @@ void ConnectView::serial_state_changed(SerialState state)
   switch (state) {
   case SERIAL_DISCONNECTING:
     id = Gtk::Stock::NO;
-    label = "Disconnecting...";
+    label = _("Disconnecting...");
     sensitive = false;
     break;
   case SERIAL_DISCONNECTED:
     id = Gtk::Stock::NO;
-    label = "Connect";
+    label = _("Connect");
     sensitive = true;
     break;
   case SERIAL_CONNECTING:
     id = Gtk::Stock::NO;
-    label = "Connecting...";
+    label = _("Connecting...");
     sensitive = false;
     break;
   case SERIAL_CONNECTED:
   default:
     id = Gtk::Stock::YES;
-    label = "Disconnect";
+    label = _("Disconnect");
     sensitive = true;
     break;
   }
@@ -105,7 +105,7 @@ bool ConnectView::find_ports() {
 ConnectView::ConnectView (Model *model,
 			  Settings *settings,
 			  bool show_connect)
-  : Gtk::VBox(), m_connect(), m_port_label("Port:"),
+  : Gtk::VBox(), m_connect(), m_port_label(_("Port:")),
     m_model(model), m_settings(settings)
 {
   m_port_align.set_padding(0, 0, 6, 0);

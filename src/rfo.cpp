@@ -133,7 +133,7 @@ void RFO::update_model()
   size_t psep;
   std::string root_label = m_filename;
   if (!root_label.length())
-    root_label = "Unsaved file";
+    root_label = _("Unsaved file");
   else if ((psep = m_filename.find_last_of("/\\")) != string::npos)
     root_label = m_filename.substr(psep + 1);
 

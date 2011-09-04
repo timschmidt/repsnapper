@@ -22,6 +22,7 @@ AM_CPPFLAGS = \
 	-I$(LIB_DIR) \
         -DRSDATADIR='$(repsnapperdatadir)' \
         -DSYSCONFDIR='$(repsnapperconfdir)' \
+	-DLOCALEDIR='"$(localedir)"' \
 	-g -O0 $(WARNING_FLAGS)
 
 SHARED_SRC= stl.cpp model.cpp view.cpp gllight.cpp gcode.cpp arcball.cpp \

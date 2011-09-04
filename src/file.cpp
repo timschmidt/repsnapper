@@ -70,7 +70,7 @@ namespace {
     // an option to open improperly named files
     GtkFileFilter *allfiles = gtk_file_filter_new();
     gtk_file_filter_add_pattern (allfiles, "*");
-    gtk_file_filter_set_name (allfiles, "All Files");
+    gtk_file_filter_set_name (allfiles, _("All Files"));
     gtk_file_chooser_add_filter (chooser, allfiles);
 
     if (gtk_dialog_run (GTK_DIALOG (chooser)) == GTK_RESPONSE_ACCEPT) {
@@ -97,18 +97,18 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
   switch (t) {
   case SETTINGS:
     filter = "*.conf";
-    title = "Choose settings filename";
+    title = _("Choose settings filename");
     directory = model->settings.STLPath.c_str();
     break;
   case GCODE:
     filter = "*.gcode";
-    title = "Choose GCODE filename";
+    title = _("Choose GCODE filename");
     directory = model->settings.GCodePath.c_str();
     break;
   case STL:
   default:
     filter = "*.stl";
-    title = "Choose STL filename";
+    title = _("Choose STL filename");
     directory = model->settings.STLPath.c_str();
     break;
   }
@@ -141,7 +141,7 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
     if (o == OPEN)
       model->ReadStl (file);
     else
-      model->alert ("STL saving not yet implemented");
+      model->alert (_("STL saving not yet implemented"));
     model->settings.STLPath = directory_path;
     break;
   }

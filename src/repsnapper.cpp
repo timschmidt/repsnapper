@@ -50,13 +50,13 @@ private:
 	}
 	void version ()
 	{
-		printf("Version: %s\n", VERSION);
+		printf(_("Version: %s\n"), VERSION);
 		exit (1);
 	}
 	void usage ()
 	{
-		fprintf (stderr, "Version: %s\n", VERSION);
-		fprintf (stderr, "Usage: repsnapper [OPTION]... [FILE]...\n"
+		fprintf (stderr, _("Version: %s\n"), VERSION);
+		fprintf (stderr, _("Usage: repsnapper [OPTION]... [FILE]...\n"
 			 "Start reprap control software and load [FILES]\n"
 			 "Options:\n"
 			 "  -t, --no-gui           act as a head-less renderer\n"
@@ -65,7 +65,7 @@ private:
 			 "  -s, --settings [file]  read render settings [file]\n"
 			 "  -h, --help             show this help\n"
 			 "\n"
-			 "Report bugs to #repsnapper, irc.freenode.net\n\n");
+			 "Report bugs to #repsnapper, irc.freenode.net\n\n"));
 		exit (1);
 	}
 public:
@@ -119,6 +119,19 @@ int main(int argc, char **argv)
   Glib::thread_init();
   Gtk::Main tk(argc, argv);
 
+  gchar *locale_dir;
+
+#ifdef G_OS_WIN32
+#warning "Windows port: Most likely needs its own locale dir here"
+  char *inst_dir;
+  inst_dir = g_win32_get_package_installation_directory_of_module (NULL);
+  locale_dir = g_build_filename (inst_dir, "share", "locale", NULL);
+#else
+  locale_dir = g_strdup (LOCALEDIR);
+#endif
+  bindtextdomain (GETTEXT_PACKAGE, locale_dir);
+  textdomain (GETTEXT_PACKAGE);
+
   if (!gtk_gl_init_check (&argc, &argv) ||
       !gdk_gl_init_check (&argc, &argv) ) {
     std::cerr << "Failed to initialize GL\n";
@@ -141,8 +154,8 @@ int main(int argc, char **argv)
       break;
 
     default:
-      Gtk::MessageDialog dialog("Couldn't create user config directory!", false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      Gtk::MessageDialog dialog (_("Couldn't create user config directory!"),
+				 false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
       dialog.set_secondary_text(e.what());
       dialog.run();
       return 1;
@@ -162,9 +175,9 @@ int main(int argc, char **argv)
     if(!global) {
       // Don't leave an empty config file behind
       conf->remove();
-      Gtk::MessageDialog dialog("Couldn't find global configuration!", false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text("It is likely that repsnapper is not correctly installed.");
+      Gtk::MessageDialog dialog (_("Couldn't find global configuration!"),
+				 false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.set_secondary_text (_("It is likely that repsnapper is not correctly installed."));
       dialog.run();
       return 1;
     }
@@ -179,15 +192,15 @@ int main(int argc, char **argv)
     case Gio::Error::PERMISSION_DENIED:
     {
       // Fall back to global config
-      Gtk::MessageDialog dialog("Unable to create user config", false,
+      Gtk::MessageDialog dialog (_("Unable to create user config"), false,
                                 Gtk::MESSAGE_WARNING, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text(e.what() + "\nFalling back to global config. Settings will not be saved.");
+      dialog.set_secondary_text(e.what() + _("\nFalling back to global config. Settings will not be saved."));
       dialog.run();
       conf = find_global_config();
       if(!conf) {
-        Gtk::MessageDialog dialog("Couldn't find global configuration!", false,
+        Gtk::MessageDialog dialog (_("Couldn't find global configuration!"), false,
                                   Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-        dialog.set_secondary_text("It is likely that repsnapper is not correctly installed.");
+        dialog.set_secondary_text (_("It is likely that repsnapper is not correctly installed."));
         dialog.run();
         return 1;
       }
@@ -196,8 +209,8 @@ int main(int argc, char **argv)
 
     default:
     {
-      Gtk::MessageDialog dialog("Failed to locate config", false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      Gtk::MessageDialog dialog (_("Failed to locate config"), false,
+				 Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
       dialog.set_secondary_text(e.what());
       dialog.run();
       return 1;

@@ -1,17 +1,20 @@
 --- the plan ---
 
+* fix multiple shells work
+	- so we can get gears printing nicely
+
+* fix Logick crashes when rendering ...
+
+* fix 'customize' stuff ...
+
 * Bin the two 'load' menu items - just one 'open' menu ...
 	+ with a gcode and stl filter drop-down ?
 * Add a preview widget to the file menu
 
 * add a GUI field for the 'comms_debug' boolean ...
 
-* Add translation [!]
-	+ add me into the gnome git repo
-		- and cross-sync translations (?)
-
-* update autogen.sh to libreoffice's latest version
-	- to add pkgconfig check...
+* add into the gnome git repo
+	- and cross-sync translations (?) [!?]
 
 * fix slicing bugs [ variously ]
 

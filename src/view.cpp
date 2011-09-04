@@ -119,7 +119,7 @@ View *View::create(Model *model)
         continue;
 
       default:
-        Gtk::MessageDialog dialog("Error reading UI description!!", false,
+        Gtk::MessageDialog dialog (_("Error reading UI description!!"), false,
                                   Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
         dialog.set_secondary_text(e.what());
         dialog.run();
@@ -129,9 +129,9 @@ View *View::create(Model *model)
   }
 
   if(ui.empty()) {
-    Gtk::MessageDialog dialog("Couldn't find UI description!", false,
+    Gtk::MessageDialog dialog (_("Couldn't find UI description!"), false,
                               Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-    dialog.set_secondary_text("Check that repsnapper has been correctly installed.");
+    dialog.set_secondary_text (_("Check that repsnapper has been correctly installed."));
     dialog.run();
     return NULL;
   }
@@ -142,7 +142,7 @@ View *View::create(Model *model)
   }
   catch(const Gtk::BuilderError& ex)
   {
-    Gtk::MessageDialog dialog("Error loading UI!", false,
+    Gtk::MessageDialog dialog (_("Error loading UI!"), false,
                               Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
     dialog.set_secondary_text(ex.what());
     dialog.run();
@@ -158,11 +158,11 @@ View *View::create(Model *model)
 void View::printing_changed()
 {
   if (m_model->IsPrinting()) {
-    m_print_button->set_label ("Restart");
-    m_continue_button->set_label ("Pause");
+    m_print_button->set_label (_("Restart"));
+    m_continue_button->set_label (_("Pause"));
   } else {
-    m_print_button->set_label ("Print");
-    m_continue_button->set_label ("Continue");
+    m_print_button->set_label (_("Print"));
+    m_continue_button->set_label (_("Continue"));
   }
 }
 
@@ -352,18 +352,18 @@ public:
   TempRow(Model *model, TempType type) :
     m_model(model), m_type(type)
   {
-    static const char *names[] = { "Nozzle", "Bed" };
+    static const char *names[] = { N_("Nozzle"), N_("Bed") };
 
-    add(*(new Gtk::Label(names[type])));
-    Gtk::ToggleButton *pOn = new Gtk::ToggleButton("Heat On");
+    add(*(new Gtk::Label(_(names[type]))));
+    Gtk::ToggleButton *pOn = new Gtk::ToggleButton(_("Heat On"));
     pOn->signal_toggled().connect
       (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
     add(*pOn);
-    add(*(new Gtk::Label("Temp. (°C)")));
-    m_temp = new Gtk::Label("<unknown>");
+    add(*(new Gtk::Label(_("Temp. (°C)"))));
+    m_temp = new Gtk::Label(_("<unknown>"));
     add (*m_temp);
 
-    add(*(new Gtk::Label("Target:")));
+    add(*(new Gtk::Label(_("Target:"))));
     m_target = new Gtk::SpinButton();
     m_target->set_increments (1, 5);
     m_target->set_range(25.0, 256.0);
@@ -433,7 +433,7 @@ public:
     m_inhibit_update(false), m_model(model), m_axis(axis)
   {
     add(*(new Gtk::Label(axis_names[axis])));
-    Gtk::Button *home = new Gtk::Button("Home");
+    Gtk::Button *home = new Gtk::Button(_("Home"));
     home->signal_clicked().connect
       (sigc::mem_fun (*this, &AxisRow::home_clicked));
     add (*home);
@@ -613,7 +613,7 @@ View::View(BaseObjectType* cobject,
   scale_slider->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object));
 
-  add_statusbar_msg("m_scale_event_box", "Scale the selected object");
+  add_statusbar_msg("m_scale_event_box", _("Scale the selected object"));
 
   // GCode tab
   m_builder->get_widget ("g_gcode", m_gcode_entry);

@@ -98,15 +98,15 @@ void Model::LoadConfig(Glib::RefPtr<Gio::File> file)
 
 void Model::SimpleAdvancedToggle()
 {
-   cout << "not yet implemented\n";
+  cout << _("not yet implemented\n");
 }
 
 void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
 {
   PrintInhibitor inhibitPrint(this);
-  m_progress.start ("Converting", 100.0);
+  m_progress.start (_("Converting"), 100.0);
   gcode.Read (this, &m_progress, file->get_path());
-  m_progress.stop ("Done");
+  m_progress.stop (_("Done"));
   ModelChanged();
 }
 
@@ -118,7 +118,7 @@ void Model::ConvertToGCode()
 	string GcodeEnd = settings.GCode.getEndText();
 
 	PrintInhibitor inhibitPrint(this);
-	m_progress.start ("Converting", Max.z);
+	m_progress.start (_("Converting"), Max.z);
 
 	// Make Layers
 	uint LayerNr = 0;
@@ -181,7 +181,7 @@ void Model::ConvertToGCode()
 						plane.ShrinkLogick(settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, settings.Slicing.ShellCount);
 						break;
 					default:
-						g_warning ("unknown shrinking algorithm");
+						g_warning (_("unknown shrinking algorithm"));
 						break;
 					}
 
@@ -212,7 +212,7 @@ void Model::ConvertToGCode()
 			settings.Slicing.Use3DGcode,
 			AntioozeDistance,
 			settings.Slicing.AntioozeSpeed);
-	m_progress.stop ("Done");
+	m_progress.stop (_("Done"));
 }
 
 void Model::init() {}
@@ -293,7 +293,7 @@ void Model::serial_try_connect (bool connect)
 			  settings.Hardware.SerialSpeed);
     if(result < 0) {
       m_signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
-      Gtk::MessageDialog dialog("Failed to connect to device", false,
+      Gtk::MessageDialog dialog(_("Failed to connect to device"), false,
                                 Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
       dialog.set_secondary_text(strerror(errno));
       dialog.run();
@@ -305,7 +305,6 @@ void Model::serial_try_connect (bool connect)
     m_signal_serial_state_changed.emit (SERIAL_DISCONNECTING);
     m_devconn.disconnect();
     rr_dev_close (m_device);
-    fprintf (stderr, "rr_dev closed ...\n");
     m_devconn.disconnect();
     m_signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
 
@@ -319,7 +318,7 @@ void Model::serial_try_connect (bool connect)
 void Model::SimplePrint()
 {
   if (m_printing)
-    alert ("Already printing.\nCannot start printing");
+    alert (_("Already printing.\nCannot start printing"));
 
   if (rr_dev_fd (m_device) < 0)
       serial_try_connect (true);
@@ -329,7 +328,7 @@ void Model::SimplePrint()
 void Model::Print()
 {
   if (rr_dev_fd (m_device) < 0) {
-    alert ("Not connected to printer.\nCannot start printing");
+    alert (_("Not connected to printer.\nCannot start printing"));
     return;
   }
 
@@ -339,7 +338,7 @@ void Model::Print()
   m_iter = gcode.get_iter();
 
   m_printing = true;
-  m_progress.start ("Printing", gcode.commands.size());
+  m_progress.start (_("Printing"), gcode.commands.size());
   rr_dev_set_paused (m_device, RR_PRIO_NORMAL, 0);
 }
 
@@ -381,9 +380,9 @@ void Model::SendNow(string str)
     rr_dev_enqueue_cmd (m_device, RR_PRIO_HIGH, str.data(), str.size());
 
   else {
-    Gtk::MessageDialog dialog ("Can't send command", false,
+    Gtk::MessageDialog dialog (_("Can't send command"), false,
                               Gtk::MESSAGE_INFO, Gtk::BUTTONS_CLOSE);
-    dialog.set_secondary_text ("You must first connect to a device!");
+    dialog.set_secondary_text (_("You must first connect to a device!"));
     dialog.run ();
   }
 }
@@ -392,7 +391,7 @@ void Model::Home(string axis)
 {
 	if(m_printing)
 	{
-		alert("Can't go home while printing");
+		alert(_("Can't go home while printing"));
 		return;
 	}
 	if(axis == "X" || axis == "Y" || axis == "Z")
@@ -443,17 +442,17 @@ void Model::Home(string axis)
 		SendNow("G28");
 	}
 	else
-		alert("Home called with unknown axis");
+		alert(_("Home called with unknown axis"));
 }
 
 void Model::Move(string axis, float distance)
 {
-	if(m_printing)
+	if (m_printing)
 	{
-		alert("Can't move manually while printing");
+		alert(_("Can't move manually while printing"));
 		return;
 	}
-	if(axis == "X" || axis == "Y" || axis == "Z")
+	if (axis == "X" || axis == "Y" || axis == "Z")
 	{
 		SendNow("G91");	// relative positioning
 		string buffer="G1 F";
@@ -479,13 +478,13 @@ void Model::Move(string axis, float distance)
 		SendNow("G90");	// absolute positioning
 	}
 	else
-		alert("Move called with unknown axis");
+		alert (_("Move called with unknown axis"));
 }
 void Model::Goto(string axis, float position)
 {
-	if(m_printing)
+	if (m_printing)
 	{
-		alert("Can't move manually while printing");
+		alert (_("Can't move manually while printing"));
 		return;
 	}
 	if(axis == "X" || axis == "Y" || axis == "Z")
@@ -506,7 +505,7 @@ void Model::Goto(string axis, float position)
 		SendNow(buffer);
 	}
 	else
-		alert("Goto called with unknown axis");
+		alert (_("Goto called with unknown axis"));
 }
 void Model::STOP()
 {
@@ -708,7 +707,7 @@ void Model::MakeRaft(GCodeState &state, float &z)
 	Command gotoE;
 	gotoE.Code = GOTO;
 	gotoE.e = 0;
-	gotoE.comment = "Reset E for the remaining print";
+	gotoE.comment = _("Reset E for the remaining print");
 	gcode.commands.push_back(gotoE);
 }
 
@@ -759,13 +758,13 @@ bool Model::handle_dev_fd (Glib::IOCondition cond)
   if (cond & Glib::IO_IN) {
     result = rr_dev_handle_readable (m_device);
     if (result < 0)
-      error ("Error reading from device!", strerror (errno));
+      error (_("Error reading from device!"), strerror (errno));
   }
   // try to avoid reading and writing at exactly the same time
   else if (cond & Glib::IO_OUT) {
     result = rr_dev_handle_writable (m_device);
     if (result < 0)
-      error ("Error writing to device!", strerror (errno));
+      error (_("Error writing to device!"), strerror (errno));
   }
   if (cond & (Glib::IO_ERR | Glib::IO_HUP))
     serial_try_connect (false);
@@ -806,7 +805,7 @@ void RR_CALL Model::rr_more_fn (rr_dev dev, void *closure)
     }
 
     if (model->m_iter->finished())
-      model->m_progress.stop ("Printed");
+      model->m_progress.stop (_("Printed"));
   }
 }
 
@@ -815,7 +814,7 @@ void RR_CALL Model::rr_error_fn (rr_dev dev, int error_code,
 				 void *closure)
 {
   char *str = g_strndup (msg, len);
-  g_warning ("Error (%d) '%s' - user popup ?", error_code, str);
+  g_warning (_("Error (%d) '%s' - user popup ?"), error_code, str);
   g_free (str);
 }
 

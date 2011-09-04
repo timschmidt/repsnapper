@@ -477,7 +477,7 @@ void GCode::Write (Model *model, string filename)
 
   file = fopen (filename.c_str(), "w+");
   if (!file)
-    model->alert ("failed to open file");
+    model->alert (_("failed to open file"));
   else {
     fprintf (file, "%s", buffer->get_text().c_str());
     fclose (file);

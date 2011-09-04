@@ -43,6 +43,7 @@ typedef unsigned int        uint;
 #endif
 #include "platform.h"
 #include <stdio.h>
+#include <glib/gi18n.h>
 #include <gtkmm.h>
 #include <GL/gl.h>
 #include <GL/glu.h>

@@ -57,7 +57,7 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
 					  GDK_GL_MODE_DEPTH));
   if (!gtk_widget_set_gl_capability (get_widget(), glconfig,
 				     NULL, TRUE, GDK_GL_RGBA_TYPE))
-    g_error ("failed to init gl area\n");
+    g_error (_("failed to init gl area\n"));
 
   memset (&m_transform.M, 0, sizeof (m_transform.M));
 

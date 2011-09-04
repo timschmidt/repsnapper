@@ -4,5 +4,14 @@
 #
 [encoding: UTF-8]
 repsnapper.desktop.in
+src/model.cpp
+src/connectview.cpp
+src/file.cpp
+src/gcode.cpp
+src/model.cpp
+src/render.cpp
+src/repsnapper.cpp
+src/rfo.cpp
+src/view.cpp
 
 [type: gettext/glade]src/repsnapper.ui
