@@ -59,6 +59,25 @@ using namespace stdext;
 
 #define CUTTING_PLANE_DEBUG 0
 
+// For Logick shrinker ...
+class CuttingPlaneOptimizer
+{
+public:
+	float Z;
+	CuttingPlaneOptimizer(float z) { Z = z; }
+	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z);
+	list<Polygon2f*> positivePolygons;
+	void Shrink(float distance, list<Polygon2f*> &resPolygons);
+	void Draw();
+	void Dispose();
+	void MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2f>& vectors);
+	void RetrieveLines(vector<Vector3f>& lines);
+private:
+	void PushPoly(Polygon2f* poly);
+	void DoMakeOffsetPolygons(Polygon2f* pPoly, vector<Poly>& polys, vector<Vector2f>& vectors);
+	void DoRetrieveLines(Polygon2f* pPoly, vector<Vector3f>& lines);
+};
+
 using namespace std;
 
 #ifndef M_PI
@@ -337,7 +356,7 @@ void STL::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 			{
 			case SHRINK_FAST:
 				infillCuttingPlane.ClearShrink();
-				infillCuttingPlane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth*0.5f,
+				infillCuttingPlane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth,
 							      settings.Slicing.Optimization,
 							      settings.Display.DisplayCuttingPlane,
 							      false, settings.Slicing.ShellCount);
@@ -538,7 +557,7 @@ void STL::draw(RFO &rfo, const Settings &settings)
 					switch( settings.Slicing.ShrinkQuality )
 					{
 					case SHRINK_FAST:
-						plane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth*0.5f, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, false, settings.Slicing.ShellCount);
+						plane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, false, settings.Slicing.ShellCount);
 						displayInfillOld(settings, plane, LayerNr, altInfillLayers);
 						break;
 					case SHRINK_LOGICK:
@@ -1848,7 +1867,7 @@ uint CuttingPlane::selfIntersectAndDivideRecursive(float z, uint startPolygon, u
 				}
 			}
 		}
-	}	
+	}
 	outlines.push_back(result);
 	level--;
 	return startVertex;
@@ -2237,9 +2256,9 @@ void CuttingPlane::ShrinkLogick(float extrudedWidth, float optimization, bool Di
 
 void CuttingPlane::ShrinkFast(float distance, float optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount)
 {
-	distance*=ShellCount;
+	distance = (ShellCount - 0.5) * distance;
 
-	glColor4f(1,1,1,1);
+	glColor4f (1,1,1,1);
 	for(size_t p=0; p<polygons.size();p++)
 	{
 		Poly offsetPoly;
@@ -2308,7 +2327,8 @@ void CuttingPlane::ShrinkFast(float distance, float optimization, bool DisplayCu
 		offsetPolygons.push_back(offsetPoly);
 	}
 //	CleanupOffsetPolygons(0.1f);
-//	selfIntersectAndDivide();		//make this work for z-tensioner_1off.stl rotated 45d on X axis
+	// make this work for z-tensioner_1off.stl rotated 45d on X axis
+//	selfIntersectAndDivide();
 }
 
 /*

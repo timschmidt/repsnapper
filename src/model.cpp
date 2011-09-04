@@ -129,22 +129,23 @@ void Model::ConvertToGCode()
 
 	printOffset = settings.Hardware.PrintMargin;
 
-	float z = Min.z + settings.Hardware.LayerThickness*0.5f;				// Offset it a bit in Z, z=0 gives a empty slice because no triangles crosses this Z value
+	// Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
+	float z = Min.z + settings.Hardware.LayerThickness*0.5f;
 
 	gcode.clear();
-	float E=0.0f;
+	float E = 0.0f;
 	GCodeState state(gcode);
 
 	float printOffsetZ = settings.Hardware.PrintMargin.z;
 
 	if (settings.RaftEnable)
 	{
-		printOffset += Vector3f(settings.Raft.Size, settings.Raft.Size, 0);
-		MakeRaft(state, printOffsetZ);
+		printOffset += Vector3f (settings.Raft.Size, settings.Raft.Size, 0);
+		MakeRaft (state, printOffsetZ);
 	}
 	while(z<Max.z)
 	{
-	  m_progress.update(z);
+		m_progress.update(z);
 		for(uint o=0;o<rfo.Objects.size();o++)
 		{
 			for(uint f=0;f<rfo.Objects[o].files.size();f++)
@@ -163,45 +164,52 @@ void Model::ConvertToGCode()
 					hackedZ+= 0.1f;
 					stl->CalcCuttingPlane (hackedZ, plane, T);	// output is alot of un-connected line segments with individual vertices
 				}
- 				plane.SetZ (z + printOffsetZ);
 
 				// inFill
 				vector<Vector2f> *infill = NULL;
 
-//				CuttingPlane infillCuttingPlane;
-//				plane.MakeContainedPlane(infillCuttingPlane);
-				if(settings.Slicing.ShellOnly == false)
+				for (guint shell = 1; shell <= settings.Slicing.ShellCount; shell++)
 				{
+					plane.ClearShrink();
+					plane.SetZ (z + printOffsetZ);
 					switch( settings.Slicing.ShrinkQuality )
 					{
 					case SHRINK_FAST:
-						plane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth*0.5f, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, false, settings.Slicing.ShellCount);
+						plane.ShrinkFast   (settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization,
+								    settings.Display.DisplayCuttingPlane, false, shell);
 						break;
 					case SHRINK_LOGICK:
-						plane.ShrinkLogick(settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, settings.Slicing.ShellCount);
+						plane.ShrinkLogick (settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization,
+								    settings.Display.DisplayCuttingPlane, shell);
 						break;
 					default:
-						g_warning (_("unknown shrinking algorithm"));
+						g_error (_("unknown shrinking algorithm"));
 						break;
 					}
 
-					// check if this if a layer we should use the alternate infill distance on
-					float infillDistance = settings.Slicing.InfillDistance;
-					if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end())
-					{
-						infillDistance = settings.Slicing.AltInfillDistance;
+					if (shell < settings.Slicing.ShellCount)
+				        { // no infill - just a shell ...
+						plane.MakeGcode (state, NULL /* infill */, E, z + printOffsetZ,
+								 settings.Slicing, settings.Hardware);
 					}
-
-					infill = plane.CalcInFill(LayerNr, infillDistance, settings.Slicing.InfillRotation, settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
+					else if (settings.Slicing.ShellOnly == false)
+					{ // last shell => calculate infill
+						// check if this if a layer we should use the alternate infill distance on
+						float infillDistance = settings.Slicing.InfillDistance;
+						if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end())
+							infillDistance = settings.Slicing.AltInfillDistance;
+						infill = plane.CalcInFill (LayerNr, infillDistance, settings.Slicing.InfillRotation,
+									   settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
+					}
 				}
-				// Make the GCode from the plane and the infill
+				// Make the last shell GCode from the plane and the infill
 				plane.MakeGcode (state, infill, E, z + printOffsetZ,
 						 settings.Slicing, settings.Hardware);
 				delete infill;
 			}
 		}
 		LayerNr++;
-		z+=settings.Hardware.LayerThickness;
+		z += settings.Hardware.LayerThickness;
 	}
 
 	float AntioozeDistance = settings.Slicing.AntioozeDistance;

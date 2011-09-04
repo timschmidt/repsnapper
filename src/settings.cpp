@@ -154,8 +154,8 @@ static struct {
   FLOAT_MEMBER  (Slicing.AltInfillDistance, "AltInfillDistance", 2.0, false),
   STRING_MEMBER (Slicing.AltInfillLayersText, "AltInfillLayersText", "", false),
 
-  BOOL_MEMBER   (Slicing.ShellOnly, "ShellOnly", false, false),
-  INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, false),
+  BOOL_MEMBER   (Slicing.ShellOnly, "ShellOnly", false, true),
+  INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),
   BOOL_MEMBER   (Slicing.EnableAcceleration, "EnableAcceleration", true, false),
 // ShrinkQuality is a special enumeration ...
   INT_MEMBER    (Slicing.ShrinkQuality, "ShrinkQuality", 0, true),

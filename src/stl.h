@@ -148,25 +148,24 @@ class CuttingPlane
 public:
 	CuttingPlane();
 	~CuttingPlane();
-	void ShrinkFast(float distance, float optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount);		// Contracts polygons
-	void ShrinkLogick(float distance, float optimization, bool DisplayCuttingPlane, int ShellCount);		// Contracts polygons
-	void selfIntersectAndDivide();
-	guint selfIntersectAndDivideRecursive(float z, guint startPolygon, guint startVertex, vector<outline> &outlines, const Vector2f endVertex, guint &level);
 
-	void MakeContainedPlane(CuttingPlane& res)
-	{
-		res = *this;
-		res.polygons = res.offsetPolygons;
-		res.vertices = res.offsetVertices;
-		res.offsetPolygons.clear();
-		res.offsetVertices.clear();
-	}
+	// Contract polygons:
+	void ShrinkFast(float distance, float optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount);
+	void ShrinkLogick(float distance, float optimization, bool DisplayCuttingPlane, int ShellCount);
+
+	void  selfIntersectAndDivide();
+	guint selfIntersectAndDivideRecursive(float z, guint startPolygon, guint startVertex,
+					      vector<outline> &outlines, const Vector2f endVertex,
+					      guint &level);
+	void  recurseSelfIntersectAndDivide  (float z, vector<locator> &EndPointStack,
+					      vector<outline> &outlines,
+					      vector<locator> &visited);
+
 	void ClearShrink()
 	{
 		offsetPolygons.clear();
 		offsetVertices.clear();
 	}
-	void recurseSelfIntersectAndDivide(float z, vector<locator> &EndPointStack, vector<outline> &outlines, vector<locator> &visited);
 	vector<Vector2f> * CalcInFill(guint LayerNr, float InfillDistance, float InfillRotation, float InfillRotationPrLayer, bool DisplayDebuginFill);	// Collide a infill-line with the polygons
 	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers, bool DrawCPLineNumbers, bool DrawCPVertexNumbers);
 	bool LinkSegments(float z, float Optimization);		        // Link Segments to form polygons
@@ -231,26 +230,6 @@ private:
 
 
 #define sqr(x) ((x)*(x))
-
-class CuttingPlaneOptimizer
-{
-public:
-	float Z;
-	CuttingPlaneOptimizer(float z) { Z = z; }
-	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z);
-	list<Polygon2f*> positivePolygons;
-	void Shrink(float distance, list<Polygon2f*> &resPolygons);
-	void Draw();
-	void Dispose();
-	void MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2f>& vectors);
-	void RetrieveLines(vector<Vector3f>& lines);
-private:
-	void PushPoly(Polygon2f* poly);
-	void DoMakeOffsetPolygons(Polygon2f* pPoly, vector<Poly>& polys, vector<Vector2f>& vectors);
-	void DoRetrieveLines(Polygon2f* pPoly, vector<Vector3f>& lines);
-};
-
-
 
 class STL
 {
