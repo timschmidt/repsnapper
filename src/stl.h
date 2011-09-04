@@ -175,11 +175,10 @@ public:
 	void CleanupPolygons(float Optimization);			// remove redudant points
 	void CleanupOffsetPolygons(float Optimization);			// remove redudant points
 	void MakeGcode (GCodeState &state,
-			const std::vector<Vector2f> &infill, float &E, float z, 
+			const std::vector<Vector2f> *opt_infill,
+			float &E, float z,
 			const Settings::SlicingSettings &slicing,
 			const Settings::HardwareSettings &hardware);
-
-	//float MinPrintSpeedXY, float MaxPrintSpeedXY, float MinPrintSpeedZ, float MaxPrintSpeedZ, float DistanceToReachFullSpeed, float extrusionFactor, bool UseIncrementalEcode, bool Use3DGcode, bool EnableAcceleration);	
 	bool VertexIsOutsideOriginalPolygon( Vector2f point, float z);
 
 	Vector2f Min, Max;  // Bounding box

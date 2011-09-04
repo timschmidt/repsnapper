@@ -195,7 +195,7 @@ void Model::ConvertToGCode()
 					infill = plane.CalcInFill(LayerNr, infillDistance, settings.Slicing.InfillRotation, settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
 				}
 				// Make the GCode from the plane and the infill
-				plane.MakeGcode (state, *infill, E, z + printOffsetZ,
+				plane.MakeGcode (state, infill, E, z + printOffsetZ,
 						 settings.Slicing, settings.Hardware);
 				delete infill;
 			}

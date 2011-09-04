@@ -861,7 +861,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
 
 // Convert Cuttingplane to GCode
 void CuttingPlane::MakeGcode(GCodeState &state,
-			     const std::vector<Vector2f> &infill,
+			     const std::vector<Vector2f> *infill,
 			     float &E, float z,
 			     const Settings::SlicingSettings &slicing,
 			     const Settings::HardwareSettings &hardware)
@@ -889,8 +889,9 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 
 	std::vector<Vector3f> lines;
 
-	for(size_t i=0;i<infill.size();i++)
-		lines.push_back(Vector3f(infill[i].x, infill[i].y, z));
+	if (infill != NULL)
+		for (size_t i = 0; i < infill->size(); i++)
+			lines.push_back (Vector3f ((*infill)[i].x, (*infill)[i].y, z));
 
 	if( optimizers.size() != 0 )
 	{
@@ -1051,15 +1052,12 @@ void STL::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T)
 	}
 }
 
-vector<InFillHit> HitsBuffer;
-
-
 vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
 					    float InfillRotation, float InfillRotationPrLayer,
 					    bool DisplayDebuginFill)
 {
 	int c=0;
-
+	vector<InFillHit> HitsBuffer;
 	float step = InfillDistance;
 
 	vector<Vector2f> *infill = new vector<Vector2f>();
