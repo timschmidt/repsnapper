@@ -72,20 +72,6 @@ sub read_args($)
     return @lst;
 }
 
-sub invalid_distro($$)
-{
-    my ($config, $distro) = @_;
-    print STDERR "Can't find distro option set: $config\nThis is not necessarily a problem.\n";
-    print STDERR "Distros with distro option sets are:\n";
-    my $dirh;
-    opendir ($dirh, "distro-configs");
-    while (($_ = readdir ($dirh))) {
-        /(.*)\.conf$/ || next;
-        print STDERR "\t$1\n";
-    }
-    closedir ($dirh);
-}
-
 my @cmdline_args = ();
 if (!@ARGV) {
     my $lastrun = "autogen.lastrun";
@@ -98,14 +84,7 @@ my @args;
 for my $arg (@cmdline_args) {
     if ($arg eq '--clean') {
         clean();
-    } elsif ($arg =~ m/--with-distro=(.*)$/) {
-        my $config = "distro-configs/$1.conf";
-        if (! -f $config) {
-            invalid_distro ($config, $1);
-            } else {
-                push @args, read_args ($config);
-            }
-        } else {
+    } else {
         push @args, $arg;
     }
 }
