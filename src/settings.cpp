@@ -359,13 +359,17 @@ std::string Settings::GCodeType::getText(GCodeTextType t)
 void Settings::SlicingSettings::GetAltInfillLayers(std::vector<int>& layers, uint layerCount) const
 {
   size_t start = 0, end = AltInfillLayersText.find(',');
+
+  if (AltInfillLayersText == "")
+    return;
+
   while(start != std::string::npos) {
     int num = atoi(AltInfillLayersText.data() + start);
     if(num < 0) {
       num += layerCount;
     }
     layers.push_back (num);
-    
+
     start = end;
     end = AltInfillLayersText.find(',', start+1);
   }
