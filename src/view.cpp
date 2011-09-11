@@ -606,7 +606,7 @@ View::View(BaseObjectType* cobject,
 
   Gtk::HScale *scale_slider;
   m_builder->get_widget("m_scale_slider", scale_slider);
-  scale_slider->set_range(0.01, 5.0);
+  scale_slider->set_range(0.01, 10.0);
   scale_slider->set_value(1.0);
   m_rfo_tree->get_selection()->signal_changed().connect
       (sigc::mem_fun(*this, &View::update_scale_slider));
