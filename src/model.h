@@ -81,6 +81,7 @@ class Model
 	bool temp_timeout_cb();
 
 	SerialState m_serial_state;
+	void set_printing (bool printing);
 
 public:
 	SerialState get_serial_state () { return m_serial_state; }
@@ -89,6 +90,8 @@ public:
 
 	double get_temp (TempType t) { return m_temps[(int)t]; }
 	sigc::signal< void > m_signal_temp_changed;
+
+	sigc::signal< void > m_printing_changed;
 
 	sigc::signal< void, Gtk::MessageType, const char *, const char * > m_signal_alert;
 	void alert (const char *message);

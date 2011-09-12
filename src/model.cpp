@@ -274,14 +274,13 @@ void Model::ContinuePauseButton()
 
 void Model::Pause()
 {
-  // TODO: Actually pause (stop enqueueing)
-  m_printing = false;
+  set_printing (false);
   rr_dev_set_paused (m_device, RR_PRIO_NORMAL, 1);
 }
 
 void Model::Continue()
 {
-  m_printing = true;
+  set_printing (true);
   rr_dev_set_paused (m_device, RR_PRIO_NORMAL, 0);
 }
 
@@ -355,7 +354,7 @@ void Model::Print()
   delete (m_iter);
   m_iter = gcode.get_iter();
 
-  m_printing = true;
+  set_printing (true);
   m_progress.start (_("Printing"), gcode.commands.size());
   rr_dev_set_paused (m_device, RR_PRIO_NORMAL, 0);
 }
@@ -818,8 +817,19 @@ void RR_CALL Model::rr_more_fn (rr_dev dev, void *closure)
     }
 
     if (model->m_iter->finished())
+    {
+      model->set_printing (false);
       model->m_progress.stop (_("Printed"));
+    }
   }
+}
+
+void Model::set_printing (bool printing)
+{
+  if (printing == m_printing)
+    return;
+  m_printing = printing;
+  m_printing_changed.emit();
 }
 
 void RR_CALL Model::rr_error_fn (rr_dev dev, int error_code,
