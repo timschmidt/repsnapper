@@ -104,6 +104,12 @@ void Model::SimpleAdvancedToggle()
 void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
 {
   PrintInhibitor inhibitPrint(this);
+  if (m_printing)
+  {
+    error (_("Complete print before reading"),
+	   _("Reading GCode while printing will abort the print"));
+    return;
+  }
   m_progress.start (_("Converting"), 100.0);
   gcode.Read (this, &m_progress, file->get_path());
   m_progress.stop (_("Done"));
@@ -119,6 +125,12 @@ void Model::ConvertToGCode()
 
 	PrintInhibitor inhibitPrint(this);
 	m_progress.start (_("Converting"), Max.z);
+	if (m_printing)
+        {
+          error (_("Complete print before converting"),
+		 _("Converting to GCode while printing will abort the print"));
+	  return;
+	}
 
 	// Make Layers
 	uint LayerNr = 0;
@@ -302,10 +314,7 @@ void Model::serial_try_connect (bool connect)
 			  settings.Hardware.SerialSpeed);
     if(result < 0) {
       m_signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
-      Gtk::MessageDialog dialog(_("Failed to connect to device"), false,
-                                Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
-      dialog.set_secondary_text(strerror(errno));
-      dialog.run();
+      error (_("Failed to connect to device"), _("an error occured while connecting"));
     } else {
       rr_dev_reset (m_device);
       m_signal_serial_state_changed.emit (SERIAL_CONNECTED);
@@ -387,13 +396,8 @@ void Model::SendNow(string str)
 {
   if (rr_dev_fd (m_device) > 0)
     rr_dev_enqueue_cmd (m_device, RR_PRIO_HIGH, str.data(), str.size());
-
-  else {
-    Gtk::MessageDialog dialog (_("Can't send command"), false,
-                              Gtk::MESSAGE_INFO, Gtk::BUTTONS_CLOSE);
-    dialog.set_secondary_text (_("You must first connect to a device!"));
-    dialog.run ();
-  }
+  else
+    error (_("Can't send command"), _("You must first connect to a device!"));
 }
 
 void Model::Home(string axis)
