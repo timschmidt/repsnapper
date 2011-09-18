@@ -117,12 +117,14 @@ public:
 	void LoadConfig(Glib::RefPtr<Gio::File> file);
 
 	// RFO Functions
-	void ReadRFO(std::string filename);
+	//	void ReadRFO(std::string filename);
 
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file);
 	RFO_File *AddStl(RFO_Object *parent, STL stl, string filename);
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
+
+	void Read(Glib::RefPtr<Gio::File> file);
 
 	void OptimizeRotation(RFO_File *file, RFO_Object *object);
 	void ScaleObject(RFO_File *file, RFO_Object *object, double scale);

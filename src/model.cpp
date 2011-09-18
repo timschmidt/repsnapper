@@ -533,6 +533,26 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
   ModelChanged();
 }
 
+void Model::Read(Glib::RefPtr<Gio::File> file)
+{
+  std::string basename = file->get_basename();
+  size_t pos = basename.rfind('.');
+  if (pos != std::string::npos) {
+    std::string extn = basename.substr(pos);
+    if (extn == ".gcode")
+    {
+      ReadGCode (file);
+      return;
+    }
+    else if (extn == ".rfo")
+   {
+     //      ReadRFO (file);
+     //      return;
+    }
+  }
+  ReadStl (file);
+}
+
 void Model::ModelChanged()
 {
   update_temp_poll_interval();

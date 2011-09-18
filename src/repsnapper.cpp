@@ -223,7 +223,7 @@ int main(int argc, char **argv)
 
   if (!opts.use_gui) {
     if (opts.stl_input_path.size() > 0) {
-      model->ReadStl(Gio::File::create_for_path(opts.stl_input_path));
+      model->Read(Gio::File::create_for_path(opts.stl_input_path));
 
       if (opts.settings_path.size() > 0)
         model->LoadConfig(Gio::File::create_for_path(opts.settings_path));
@@ -239,7 +239,7 @@ int main(int argc, char **argv)
   View::create(model);
 
   for (uint i = 0; i < opts.files.size(); i++)
-    model->ReadStl(Gio::File::create_for_path(opts.files[i]));
+    model->Read(Gio::File::create_for_path(opts.files[i]));
 
   tk.run();
 
