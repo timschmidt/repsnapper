@@ -114,6 +114,7 @@ static struct {
 #undef FLOAT_PHASE_MEMBER
 
   // Hardware
+  BOOL_MEMBER  (Hardware.CalibrateInput,  "CalibrateInput",  false, false),
   FLOAT_MEMBER (Hardware.MinPrintSpeedXY, "MinPrintSpeedXY", 1000, false),
   FLOAT_MEMBER (Hardware.MaxPrintSpeedXY, "MaxPrintSpeedXY", 4000, false),
   FLOAT_MEMBER (Hardware.MinPrintSpeedZ,  "MinPrintSpeedZ",  50, false),
@@ -121,6 +122,7 @@ static struct {
 
   FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5, false),
   FLOAT_MEMBER (Hardware.ExtrusionFactor, "ExtrusionFactor", 1.0, false),
+  FLOAT_MEMBER (Hardware.FilamentDiameter, "FilamentDiameter", 3.0, false),
   FLOAT_MEMBER (Hardware.LayerThickness, "LayerThickness", 0.4, false),
   FLOAT_MEMBER (Hardware.DownstreamMultiplier, "DownstreamMultiplier", 1.0, false),
   FLOAT_MEMBER (Hardware.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0, false),
@@ -256,6 +258,7 @@ static struct {
   { "Hardware.ExtrudedMaterialWidth", 0.0, 10.0, 0.01, 0.1 },
   { "Hardware.LayerThickness", 0.1, 3.0, 0.1, 0.2 },
   { "Hardware.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
+  { "Hardware.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
 
   { "Hardware.MinPrintSpeedXY", 1.0, 8000.0, 10.0, 100.0 },
   { "Hardware.MaxPrintSpeedXY", 1.0, 8000.0, 10.0, 100.0 },
@@ -879,4 +882,16 @@ void Settings::connect_to_ui (Builder &builder)
 
   /* Update UI with defaults */
   m_signal_update_settings_gui.emit();
+}
+
+// We do our internal measurement in terms of the length of extruded material
+float Settings::HardwareSettings::GetExtrudeFactor() const
+{
+  float f = 1.0;
+  if (CalibrateInput) {
+    // otherwise we just work back from the extruded diameter for now.
+    f = (ExtrudedMaterialWidth * ExtrudedMaterialWidth) / (FilamentDiameter * FilamentDiameter);
+  } // else: we work in terms of output anyway;
+
+  return f * ExtrusionFactor;
 }

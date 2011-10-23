@@ -978,7 +978,7 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 
 		// Make a PLOT accelerated line from LastPosition to lines[thisPoint]
 		state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
-						hardware.ExtrusionFactor,
+						hardware.GetExtrudeFactor(),
 						E, z, slicing, hardware);
 		state.SetLastPosition(lines[thisPoint]);
 		thisPoint = findClosestUnused (lines, state.LastPosition(), used);

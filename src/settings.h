@@ -54,14 +54,16 @@ class Settings {
     float MinPrintSpeedZ;
     float MaxPrintSpeedZ;
 
+    bool  CalibrateInput; // hardware treats 'mm' as cold input mm not of hot output.
     float DistanceToReachFullSpeed;
     float ExtrusionFactor;
+    float FilamentDiameter;
 
     float LayerThickness;
 
     vmml::Vector3f	Volume;      // Print volume
     vmml::Vector3f	PrintMargin;
-    float       ExtrudedMaterialWidth;
+    float ExtrudedMaterialWidth;
 
     std::string PortName;
     int SerialSpeed;
@@ -72,6 +74,7 @@ class Settings {
 
     float DownstreamMultiplier;
     float DownstreamExtrusionMultiplier;
+    float GetExtrudeFactor() const;
   };
   HardwareSettings Hardware;
 
