@@ -1,4 +1,4 @@
-EXTRA_DIST = \
-	LICENSE \
-	$(wildcard *.h) \
-	$(wildcard *.hpp)
+EXTRA_DIST += \
+	libraries/vmmlib/include/vmmlib/LICENSE \
+	$(wildcard libraries/vmmlib/include/vmmlib/*.h) \
+	$(wildcard libraries/vmmlib/include/vmmlib/*.hpp)

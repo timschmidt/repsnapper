@@ -1,3 +1,3 @@
-SUBDIRS=include
+EXTRA_DIST += libraries/vmmlib/README
 
-EXTRA_DIST = README
+include libraries/vmmlib/include/Makefile.am
