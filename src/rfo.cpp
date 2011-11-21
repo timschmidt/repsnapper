@@ -112,7 +112,7 @@ Gtk::TreePath RFO::createFile(RFO_Object *parent, const STL &stl,
   Gtk::TreePath path;
   path.push_back (0); // root
   path.push_back (parent->idx);
-  path.push_back (parent->files.size());
+  path.push_back (parent->files.size() - 1);
 
   return path;
 }
