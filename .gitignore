@@ -1,5 +1,4 @@
 ChangeLog
-src/repsnapper
 src/RepSnapper.log
 *.o
 *.lo
@@ -29,3 +28,8 @@ po/stamp-it
 po/.intltool-merge-cache
 m4
 stamp-h1
+.pc
+.dirstamp
+po/*.gmo
+repsnapper
+debian
