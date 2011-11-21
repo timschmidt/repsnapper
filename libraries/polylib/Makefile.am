@@ -1,4 +1,4 @@
-noinst_LTLIBRARIES = libpolylib.la
+noinst_LTLIBRARIES += libpolylib.la
 
 libpolylib_la_CPPFLAGS = \
 	-I$(srcdir) \
@@ -6,8 +6,8 @@ libpolylib_la_CPPFLAGS = \
         $(EXTRA_CFLAGS)
 
 libpolylib_la_SOURCES = \
-	GeometryBase.cpp \
-	GeometryBase.h \
-	Polygon2f.cpp \
-	Polygon2f.h \
-	platform.h
+	libraries/polylib/GeometryBase.cpp \
+	libraries/polylib/GeometryBase.h \
+	libraries/polylib/Polygon2f.cpp \
+	libraries/polylib/Polygon2f.h \
+	libraries/polylib/platform.h

@@ -6,7 +6,7 @@ AC_CONFIG_SRCDIR([src/repsnapper.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 dnl AC_CONFIG_AUX_DIR([config])
 
-AM_INIT_AUTOMAKE([1.6 dist-bzip2 foreign])
+AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
@@ -29,8 +29,6 @@ AM_GLIB_GNU_GETTEXT
 
 PKG_PROG_PKG_CONFIG([0.22])
 PKG_CHECK_MODULES(GTKMM, [gobject-2.0 glib-2.0 gtkmm-2.4 gtkglext-1.0 gtk+-2.0])
-AC_SUBST(GTKMM_CFLAGS)
-AC_SUBST(GTKMM_LIBS)
 
 dnl ------------------------------------------------------------------
 dnl libreprap is (for now) built in from a copy in libraries/libreprap
@@ -92,12 +90,5 @@ AC_SUBST(EXTRA_CFLAGS)
 
 AC_CONFIG_FILES([
   Makefile
-  po/Makefile.in
-  libraries/Makefile
-  libraries/libreprap/Makefile
-  libraries/polylib/Makefile
-  libraries/vmmlib/Makefile
-  libraries/vmmlib/include/Makefile
-  libraries/vmmlib/include/vmmlib/Makefile
-  src/Makefile])
+  po/Makefile.in])
 AC_OUTPUT
