@@ -95,7 +95,7 @@ void View::save_stl ()
 
 void View::send_gcode ()
 {
-  m_model->SendNow (m_gcode_entry->get_text());
+  m_model->SendNow (m_gcode_entry->get_text().uppercase());
   m_gcode_entry->set_text("");
 }
 
