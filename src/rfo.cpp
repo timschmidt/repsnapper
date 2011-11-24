@@ -92,7 +92,6 @@ void RFO::DeleteSelected(Gtk::TreeModel::iterator &iter)
     Objects[object->idx].files.erase (Objects[object->idx].files.begin() + file->idx);
   else if (object != NULL)
     Objects.erase (Objects.begin() + object->idx);
-  file->model_changed.emit();
   update_model();
 }
 
