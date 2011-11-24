@@ -4,7 +4,7 @@
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
+    three Software Foundation; either version 2 of the License, or
     (at your option) any later version.
 
     This program is distributed in the hope that it will be useful,
@@ -95,8 +95,8 @@ void View::save_stl ()
 
 void View::send_gcode ()
 {
-  m_model->SendNow (m_gcode_entry->get_text());
-  m_gcode_entry->set_text("");
+  m_model->SendNow (m_gcode_entry->get_text().uppercase());
+  //m_gcode_entry->set_text("");
 }
 
 View *View::create(Model *model)
@@ -370,10 +370,10 @@ public:
     switch (type) {
     case TEMP_NOZZLE:
     default:
-      m_target->set_value(200.0);
+      m_target->set_value(225.0);
       break;
     case TEMP_BED:
-      m_target->set_value(100.0);
+      m_target->set_value(60.0);
       break;
     }
     add (*m_target);
@@ -645,14 +645,14 @@ View::View(BaseObjectType* cobject,
   m_extruder_speed->set_value (3000.0);
   m_builder->get_widget ("i_ex_length", m_extruder_length);
   m_extruder_length->set_range(0.0, 1000.0);
-  m_extruder_length->set_increments (5, 20);
-  m_extruder_length->set_value (150.0);
+  m_extruder_length->set_increments (1, 20);
+  m_extruder_length->set_value (2.0);
   // FIXME: connect i_update_interval (etc.)
   connect_toggled ("i_fan_enabled", sigc::mem_fun(*this, &View::fan_enabled_toggled));
   m_builder->get_widget ("i_fan_voltage", m_fan_voltage);
-  m_fan_voltage->set_range(0.0, 25.0);
+  m_fan_voltage->set_range(0.0, 255.0);
   m_fan_voltage->set_increments (1, 2);
-  m_fan_voltage->set_value (5.0);
+  m_fan_voltage->set_value (180.0);
 
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &View::run_extruder) );
 

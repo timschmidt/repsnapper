@@ -290,6 +290,7 @@ void Model::Kick()
   Continue();
 }
 
+
 void Model::PrintButton()
 {
   if (m_printing)

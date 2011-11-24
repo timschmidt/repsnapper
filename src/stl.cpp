@@ -1452,71 +1452,71 @@ int PntOnLine(Vector2f p1, Vector2f p2, Vector2f t, float &where)
 		}
 }
 
-class OverlapLine{
-public:
-	OverlapLine(Vector2f start, Vector2f end){s=start;e=end;};
-	bool overlaps(Vector2f p1, Vector2f p2)
-	{
-	int res[2];
-	float t1,t2;
+// class OverlapLine{
+// public:
+// 	OverlapLine(Vector2f start, Vector2f end){s=start;e=end;};
+// 	bool overlaps(Vector2f p1, Vector2f p2)
+// 	{
+// 	int res[2];
+// 	float t1,t2;
 	
-	if(p1 == s || p2==s)
-		return 1;
-	if(p1 == e || p2==e)
-		return 3;
+// 	if(p1 == s || p2==s)
+// 		return 1;
+// 	if(p1 == e || p2==e)
+// 		return 3;
 	
-	res[0] = PntOnLine(s,e,p1, t1);	// Is p1 on my line?
-	if(res[0] == 0)
-		return false;
-	res[1] = PntOnLine(s,e,p2, t2);	// Is p2 on my line?
-	if(res[1] == 0)
-		return false;
+// 	res[0] = PntOnLine(s,e,p1, t1);	// Is p1 on my line?
+// 	if(res[0] == 0)
+// 		return false;
+// 	res[1] = PntOnLine(s,e,p2, t2);	// Is p2 on my line?
+// 	if(res[1] == 0)
+// 		return false;
 
-	glPointSize(2);
-	glBegin(GL_POINTS);
-	glColor3f(1,0,0);
-	glVertex2f(s.x, s.y);
-	glColor3f(0,1,0);
-	glVertex2f(e.x, e.y);
-	glEnd();
+// 	glPointSize(2);
+// 	glBegin(GL_POINTS);
+// 	glColor3f(1,0,0);
+// 	glVertex2f(s.x, s.y);
+// 	glColor3f(0,1,0);
+// 	glVertex2f(e.x, e.y);
+// 	glEnd();
 
 
-	if(res[0] != res[1])	// expanding both ends
-		{
-		Vector2f i1 = s+(e-s)*t1;
-		Vector2f i2 = s+(e-s)*t2;
+// 	if(res[0] != res[1])	// expanding both ends
+// 		{
+// 		Vector2f i1 = s+(e-s)*t1;
+// 		Vector2f i2 = s+(e-s)*t2;
 
-		if(t1 < 0 && t1 < t2)	// Move p1
-			s = p1;
-		else if(t2 < 0)	// Move p1
-			s = p2;
-		if(t1 > 1 && t1 > t2)
-			e = p1;
-		else if(t2 > 1)
-//			e = p2;
-/*
-			glPointSize(5);
-			glBegin(GL_POINTS);
-			glColor3f(1,0,0);
-			glVertex2f(s.x, s.y);
-			glColor3f(0,1,0);
-			glVertex2f(e.x, e.y);
-			glEnd();
-*/		
-			return true;
-		}
+// 		if(t1 < 0 && t1 < t2)	// Move p1
+// 			s = p1;
+// 		else if(t2 < 0)	// Move p1
+// 			s = p2;
+// 		if(t1 > 1 && t1 > t2)
+// 			e = p1;
+// 		else if(t2 > 1)
+// //			e = p2;
+// /*
+// 			glPointSize(5);
+// 			glBegin(GL_POINTS);
+// 			glColor3f(1,0,0);
+// 			glVertex2f(s.x, s.y);
+// 			glColor3f(0,1,0);
+// 			glVertex2f(e.x, e.y);
+// 			glEnd();
+// */		
+// 			return true;
+// 		}
 
-			glPointSize(1);
-			glBegin(GL_POINTS);
-			glColor3f(0.5,0.5,0.5);
-			glVertex2f(s.x, s.y);
-			glColor3f(0.5,0.5,0.5);
-			glVertex2f(e.x, e.y);
-			glEnd();
-	return false;
-	}
-	Vector2f s,e;
-};
+// 			glPointSize(1);
+// 			glBegin(GL_POINTS);
+// 			glColor3f(0.5,0.5,0.5);
+// 			glVertex2f(s.x, s.y);
+// 			glColor3f(0.5,0.5,0.5);
+// 			glVertex2f(e.x, e.y);
+// 			glEnd();
+// 	return false;
+// 	}
+// 	Vector2f s,e;
+// };
 
 /*
  * Unfortunately, finding connections via co-incident points detected by

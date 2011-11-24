@@ -37,7 +37,7 @@ Movement Codes
 
 G0 Rapid Motion Implemented - supports X, Y, and Z axes.
 G1 Coordinated Motion Implemented - supports X, Y, and Z axes.
-G2 Arc – Clockwise Not used by Skienforge
+G2 Arc - Clockwise Not used by Skienforge
 G3 Arc - Counter Clockwise Not used by Skienforge
 G4 Dwell Implemented.
 G20 Inches as units Implemented.
