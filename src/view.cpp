@@ -650,7 +650,7 @@ View::View(BaseObjectType* cobject,
   // FIXME: connect i_update_interval (etc.)
   connect_toggled ("i_fan_enabled", sigc::mem_fun(*this, &View::fan_enabled_toggled));
   m_builder->get_widget ("i_fan_voltage", m_fan_voltage);
-  m_fan_voltage->set_range(0.0, 25.0);
+  m_fan_voltage->set_range(0.0, 255.0);
   m_fan_voltage->set_increments (1, 2);
   m_fan_voltage->set_value (5.0);
 
