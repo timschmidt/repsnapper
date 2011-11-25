@@ -24,18 +24,18 @@
 
 #include "model.h"
 
-Matrix4f RFO::GetSTLTransformationMatrix(int object, int file) const
-{
-	Matrix4f result = transform3D.transform;
-//	Vector3f translation = result.getTranslation();
-//	result.setTranslation(translation+PrintMargin);
+Matrix4f RFO::GetSTLTransformationMatrix(int object, int file) const
+{
+	Matrix4f result = transform3D.transform;
+//	Vector3f translation = result.getTranslation();
+//	result.setTranslation(translation+PrintMargin);
 
-	if(object >= 0)
-		result *= Objects[object].transform3D.transform;
-	if(file >= 0)
-		result *= Objects[object].files[file].transform3D.transform;
-	return result;
-}
+	if(object >= 0)
+		result *= Objects[object].transform3D.transform;
+	if(file >= 0)
+		result *= Objects[object].files[file].transform3D.transform;
+	return result;
+}
 
 void RFO::draw (Settings &settings, Gtk::TreeModel::iterator &iter)
 {
@@ -85,13 +85,13 @@ void RFO::clear()
 
 void RFO::DeleteSelected(Gtk::TreeModel::iterator &iter)
 {
-  RFO_Object *object;
-  RFO_File *file;
-  get_selected_stl (iter, object, file);
-  if (file != NULL)
-    Objects[object->idx].files.erase (Objects[object->idx].files.begin() + file->idx);
-  else if (object != NULL)
-    Objects.erase (Objects.begin() + object->idx);
+  int i = (*iter)[m_cols->m_object];
+  int j = (*iter)[m_cols->m_file];
+
+  if (j >= 0)
+    Objects[i].files.erase (Objects[i].files.begin() + j);
+  else if (i >= 0)
+    Objects.erase (Objects.begin() + i);
   update_model();
 }
 
@@ -154,7 +154,7 @@ void RFO::update_model()
     orow[m_cols->m_file] = -1;
 
     for (guint j = 0; j < Objects[i].files.size(); j++) {
-      Objects[i].files[j].idx = i;
+      Objects[i].files[j].idx = j;
       Gtk::TreeModel::iterator iter = m_model->append(orow.children());
       row = *iter;
       row[m_cols->m_name] = Objects[i].files[j].location;
