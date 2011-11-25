@@ -126,6 +126,8 @@ public:
 
 	void Read(Glib::RefPtr<Gio::File> file);
 
+	void DeleteRFO(Gtk::TreeModel::iterator &iter);
+
 	void OptimizeRotation(RFO_File *file, RFO_Object *object);
 	void ScaleObject(RFO_File *file, RFO_Object *object, double scale);
 	void RotateObject(RFO_File *file, RFO_Object *object, Vector4f rotate);
@@ -137,6 +139,9 @@ public:
 	void ConvertToGCode();
 	void MakeRaft(GCodeState &state, float &z);
 	void WriteGCode(Glib::RefPtr<Gio::File> file);
+	void ClearGCode();
+	Glib::RefPtr<Gtk::TextBuffer> GetGCodeBuffer();
+	void GlDrawGCode(); // should be in the view
 
 	// Communication
 	bool IsConnected();
@@ -196,10 +201,10 @@ public:
 
 	// Truly the model
 	RFO rfo;
-	GCode gcode;
 	Glib::RefPtr<Gtk::TextBuffer> commlog, errlog, echolog;
 
  private:
+	GCode gcode;
 	bool handle_dev_fd (Glib::IOCondition cond);
 
 	// libreprap integration

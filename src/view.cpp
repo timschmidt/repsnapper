@@ -708,7 +708,7 @@ void View::setModel(Model *model)
 
   Gtk::TextView *textv = NULL;
   m_builder->get_widget ("txt_gcode_result", textv);
-  textv->set_buffer (m_model->gcode.buffer);
+  textv->set_buffer (m_model->GetGCodeBuffer());
 
   // Main view progress bar
   Gtk::Box *box = NULL;
@@ -765,9 +765,8 @@ void View::delete_selected_stl()
     return;
 
   Gtk::TreeModel::iterator iter = m_rfo_tree->get_selection()->get_selected();
-  m_model->rfo.DeleteSelected (iter);
+  m_model->DeleteRFO(iter);
   m_rfo_tree->expand_all();
-  queue_draw();
 }
 
 bool View::get_selected_stl(RFO_Object *&object, RFO_File *&file)
@@ -904,7 +903,7 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 	if (m_model->settings.Display.DisplayGCode)
 	{
 		glTranslatef(-(translation.x+printOffset.x), -(translation.y+printOffset.y), -(translation.z+m_model->settings.Hardware.PrintMargin.z));
-		m_model->gcode.draw (m_model->settings);
+		m_model->GlDrawGCode();
 		glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+m_model->settings.Hardware.PrintMargin.z);
 	}
 	glPolygonOffset (-0.5f, -0.5f);

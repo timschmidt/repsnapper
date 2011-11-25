@@ -17,6 +17,10 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+/*
+ * two stop tab indentation used to indicate new/re-written
+ * code under the LGPL license.
+ */
 #include "config.h"
 #define  MODEL_IMPLEMENTATION
 #include <vector>
@@ -114,6 +118,21 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
   gcode.Read (this, &m_progress, file->get_path());
   m_progress.stop (_("Done"));
   ModelChanged();
+}
+
+void Model::ClearGCode()
+{
+  gcode.clear();
+}
+
+Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
+{
+  return gcode.buffer;
+}
+
+void Model::GlDrawGCode()
+{
+  gcode.draw (settings);
 }
 
 void Model::ConvertToGCode()
@@ -623,6 +642,13 @@ void Model::OptimizeRotation(RFO_File *file, RFO_Object *object)
     return; // FIXME: rotate entire Objects ...
 
   file->stl.OptimizeRotation();
+  CalcBoundingBoxAndCenter();
+}
+
+void Model::DeleteRFO(Gtk::TreeModel::iterator &iter)
+{
+  rfo.DeleteSelected (iter);
+  ClearGCode();
   CalcBoundingBoxAndCenter();
 }
 
