@@ -392,6 +392,31 @@ void STL::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 	}
 }
 
+void STL::draw_geometry()
+{
+	glBegin(GL_TRIANGLES);
+	for(size_t i=0;i<triangles.size();i++)
+	{
+#if 0
+		switch(triangles[i].axis)
+			{
+			case NEGX:	glColor4f(1,0,0,opacity); break;
+			case POSX:	glColor4f(0.5f,0,0,opacity); break;
+			case NEGY:	glColor4f(0,1,0,opacity); break;
+			case POSY:	glColor4f(0,0.5f,0,opacity); break;
+			case NEGZ:	glColor4f(0,0,1,opacity); break;
+			case POSZ:	glColor4f(0,0,0.3f,opacity); break;
+			default: glColor4f(0.2f,0.2f,0.2f,opacity); break;
+			}
+#endif
+		glNormal3fv((GLfloat*)&triangles[i].Normal);
+		glVertex3fv((GLfloat*)&triangles[i].A);
+		glVertex3fv((GLfloat*)&triangles[i].B);
+		glVertex3fv((GLfloat*)&triangles[i].C);
+	}
+	glEnd();
+}
+
 // FIXME: why !? do we grub around with the rfo here ?
 void STL::draw(RFO &rfo, const Settings &settings)
 {
@@ -424,7 +449,7 @@ void STL::draw(RFO &rfo, const Settings &settings)
 	glMaterialf(GL_FRONT, GL_SHININESS, high_shininess);
 	glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
 
-	glEnable (GL_POLYGON_OFFSET_FILL);
+	// glEnable (GL_POLYGON_OFFSET_FILL);
 
 	if(settings.Display.DisplayPolygons)
 	{
@@ -433,25 +458,7 @@ void STL::draw(RFO &rfo, const Settings &settings)
 		glEnable(GL_BLEND);
 //		glDepthMask(GL_TRUE);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  //define blending factors
-		glBegin(GL_TRIANGLES);
-		for(size_t i=0;i<triangles.size();i++)
-		{
-/*			switch(triangles[i].axis)
-				{
-				case NEGX:	glColor4f(1,0,0,opacity); break;
-				case POSX:	glColor4f(0.5f,0,0,opacity); break;
-				case NEGY:	glColor4f(0,1,0,opacity); break;
-				case POSY:	glColor4f(0,0.5f,0,opacity); break;
-				case NEGZ:	glColor4f(0,0,1,opacity); break;
-				case POSZ:	glColor4f(0,0,0.3f,opacity); break;
-				default: glColor4f(0.2f,0.2f,0.2f,opacity); break;
-				}*/
-			glNormal3fv((GLfloat*)&triangles[i].Normal);
-			glVertex3fv((GLfloat*)&triangles[i].A);
-			glVertex3fv((GLfloat*)&triangles[i].B);
-			glVertex3fv((GLfloat*)&triangles[i].C);
-		}
-		glEnd();
+                draw_geometry();
 	}
 
 	glDisable (GL_POLYGON_OFFSET_FILL);

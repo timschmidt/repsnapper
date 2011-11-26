@@ -888,28 +888,34 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 {
 	// FIXME: rationalize this printOffset madness
 	Vector3f printOffset = m_model->settings.Hardware.PrintMargin;
-
 	if(m_model->settings.RaftEnable)
 		printOffset += Vector3f(m_model->settings.Raft.Size, m_model->settings.Raft.Size, 0);
-
 	Vector3f translation = m_model->rfo.transform3D.transform.getTranslation();
+
+	// Draw the grid, pushed back so it can be seen
+	// when viewed from below.
+	glEnable (GL_POLYGON_OFFSET_FILL);
+	glPolygonOffset (1.0f, 1.0f);
+
 	DrawGrid();
 
-	// Move objects
-	glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+m_model->settings.Hardware.PrintMargin.z);
-	glPolygonOffset (0.5f, 0.5f);
-	m_model->rfo.draw (m_model->settings, selected);
+	glPolygonOffset (-0.5f, -0.5f);
+	glDisable (GL_POLYGON_OFFSET_FILL);
 
+	// Draw GCode, which already incorporates any print offset
 	if (m_model->settings.Display.DisplayGCode)
 	{
-		glTranslatef(-(translation.x+printOffset.x), -(translation.y+printOffset.y), -(translation.z+m_model->settings.Hardware.PrintMargin.z));
 		m_model->GlDrawGCode();
-		glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y, translation.z+m_model->settings.Hardware.PrintMargin.z);
 	}
-	glPolygonOffset (-0.5f, -0.5f);
-	Gtk::TreeModel::iterator iter;
-	m_model->rfo.draw (m_model->settings, iter);
 
+	// Add the print offset to the drawing location of the STL objects.
+	glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y,
+		translation.z+m_model->settings.Hardware.PrintMargin.z);
+
+	// Draw all objects
+	m_model->rfo.draw (m_model->settings, selected);
+
+	// draw total bounding box
 	Vector3f Min = m_model->Min;
 	Vector3f Max = m_model->Max;
 	if(m_model->settings.Display.DisplayBBox)

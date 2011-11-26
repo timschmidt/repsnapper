@@ -157,7 +157,7 @@ bool Render::on_expose_event(GdkEventExpose* event)
   if (!gldrawable || !gdk_gl_drawable_gl_begin (gldrawable, glcontext))
     return false;
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
   glLoadIdentity();
   glTranslatef (0.0, 0.0, -2.0 * m_zoom);
   glMultMatrixf (m_transform.M);
