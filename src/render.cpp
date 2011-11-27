@@ -207,7 +207,11 @@ bool Render::on_scroll_event(GdkEventScroll* event)
 bool Render::on_motion_notify_event(GdkEventMotion* event)
 {
   if (event->state & GDK_BUTTON1_MASK) {
+    // Vector3f trans = m_transform.getTranslation();
+    // memcpy(&m_center, &get_model()->Center, sizeof(Vector3f));
+    // get_model()->Center -= trans;
     m_arcBall->dragAccumulate(event->x, event->y, &m_transform);
+    // get_model()->Center += trans;
     queue_draw();
     return true;
   }

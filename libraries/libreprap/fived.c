@@ -46,7 +46,8 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
 	float_reply (dev, &i, RR_E_POS);
 	break;
       default:
-	return rr_dev_emit_error (dev, RR_E_UNKNOWN_REPLY, reply, nbytes);
+	break;
+	  //return rr_dev_emit_error (dev, RR_E_UNKNOWN_REPLY, reply, nbytes);
       }
     }
     return 0;
