@@ -54,19 +54,42 @@ void RFO::draw (Settings &settings, Gtk::TreeModel::iterator &iter)
       RFO_File *file = &object->files[j];
       glPushMatrix();
       glMultMatrixf (&file->transform3D.transform.array[0]);
-      if (sel_file == file ||
-	  (!sel_file && sel_object == object)) {
 
-	// FIXME: hideous changing global state for this [!]
-	settings.Display.PolygonRGBA.r += 0.5f;
-	settings.Display.WireframeRGBA.r += 0.5f;
+      bool is_selected = (sel_file == file ||
+	  (!sel_file && sel_object == object));
 
-	file->stl.draw (*this, settings);
+      if (is_selected) {
+        // Enable stencil buffer when we draw the selected object.
+        glEnable(GL_STENCIL_TEST);
+        glStencilFunc(GL_ALWAYS, 1, 1);
+        glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 
-	settings.Display.PolygonRGBA.r -= 0.5f;
-	settings.Display.WireframeRGBA.r -= 0.5f;
-      } else
-	file->stl.draw (*this, settings);
+        file->stl.draw (*this, settings);
+
+        // draw highlight around selected object
+        glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+        glLineWidth(4.0);
+        glEnable(GL_LINE_SMOOTH);
+	glEnable (GL_POLYGON_OFFSET_LINE);
+
+        glDisable (GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+        glStencilFunc(GL_NOTEQUAL, 1, 1);
+	glEnable(GL_DEPTH_TEST);
+
+	file->stl.draw_geometry();
+
+        glEnable (GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glDisable(GL_STENCIL_TEST);
+        glDisable(GL_LINE_SMOOTH);
+	glDisable(GL_POLYGON_OFFSET_LINE);
+      }
+      else {
+        file->stl.draw (*this, settings);
+      }
+
       glPopMatrix();
     }
     glPopMatrix();

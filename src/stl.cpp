@@ -2982,4 +2982,3 @@ void Poly::calcHole(vector<Vector2f> &offsetVertices)
 	Vector2f Vb=V3-V1;
 	hole = Va.cross(Vb) > 0;
 }
-
