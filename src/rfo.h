@@ -59,11 +59,12 @@ public:
 	class ModelColumns : public Gtk::TreeModelColumnRecord
 	{
 	public:
-		ModelColumns() { add (m_name); add (m_object); add (m_file); }
+		ModelColumns() { add (m_name); add (m_object); add (m_file); add(m_pickindex); }
 
 		Gtk::TreeModelColumn<Glib::ustring> m_name;
 		Gtk::TreeModelColumn<int>           m_object;
 		Gtk::TreeModelColumn<int>           m_file;
+		Gtk::TreeModelColumn<int>           m_pickindex;
 	};
 
 	RFO();
@@ -73,6 +74,7 @@ public:
 	void newObject();
 	Gtk::TreePath createFile(RFO_Object *parent, const STL &stl, std::string location);
 	void get_selected_stl(Gtk::TreeModel::iterator &iter, RFO_Object *&object, RFO_File *&file);
+        Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
 	Matrix4f GetSTLTransformationMatrix(int object, int file) const;
 
 	vector<RFO_Object> Objects;
@@ -81,4 +83,6 @@ public:
 	string m_filename;
 	Glib::RefPtr<Gtk::TreeStore> m_model;
 	ModelColumns   *m_cols;
+private:
+        Gtk::TreeModel::iterator find_stl_in_children(Gtk::TreeModel::Children children, guint pickindex);
 };

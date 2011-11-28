@@ -214,7 +214,7 @@ int STL::loadASCIIFile(string filename) {
     file >> solid;
     char c_str_name[256];
     file.getline(c_str_name, 256);
-    
+
     while(!file.eof()) { // Loop around all triangles
         string facet;
         file >> facet;
@@ -232,7 +232,7 @@ int STL::loadASCIIFile(string filename) {
         // Parse Face Normal - "normal %f %f %f"
         string normal;
         Vector3f normal_vec;
-        file >> normal 
+	file >> normal
              >> normal_vec.x
              >> normal_vec.y
              >> normal_vec.z;
@@ -249,7 +249,7 @@ int STL::loadASCIIFile(string filename) {
             cerr << "Error: Outer/Loop keywords not found!" << endl;
             return -1;
         }
-        
+
         // Grab the 3 vertices - each one of the form "vertex %f %f %f"
         Vector3f vertices[3];
         for(int i=0; i<3; i++) {
@@ -268,13 +268,13 @@ int STL::loadASCIIFile(string filename) {
         // Parse end of vertices loop - "endloop endfacet"
         string endloop, endfacet;
         file >> endloop >> endfacet;
-        
+
         if(endloop != "endloop" || endfacet != "endfacet") {
             cerr << "Error: Vertex keyword not found" << endl;
             return -1;
         }
 
-        // Create triangle object and push onto the vector 
+        // Create triangle object and push onto the vector
         Triangle triangle(normal_vec,
                             vertices[0],
                             vertices[1],
@@ -319,8 +319,8 @@ filetype_t STL::getFileType(string filename) {
     }
 }
 
-/* Loads an stl file by filename 
- * Returns -1 on error, and 0 on success 
+/* Loads an stl file by filename
+ * Returns -1 on error, and 0 on success
  * Error messages placed on stderr */
 int STL::loadFile(string filename)
 {
@@ -328,7 +328,7 @@ int STL::loadFile(string filename)
         loadASCIIFile(filename);
     } else { // Binary
         loadBinaryFile(filename);
-    }   
+    }
 
     OptimizeRotation();
     CalcCenter();
@@ -1078,7 +1078,6 @@ void STL::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T)
 	}
 }
 
-
 vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
 					    float InfillRotation, float InfillRotationPrLayer,
 					    bool DisplayDebuginFill)
@@ -1388,7 +1387,6 @@ int PntOnLine(Vector2f p1, Vector2f p2, Vector2f t)
  * The tightest test is employed here for best discrimination
  * in merging collinear (to grid coordinates) vertex chains
  * into a larger, spanning vectors within the Lemming editor.
- 
 
     if ( ABS((p2.y-p1.y)*(t.x-p1.x)-(t.y-p1.y)*(p2.x-p1.x)) >= (MAX(ABS(p2.x-p1.x), ABS(p2.y-p1.y)))) return(0);
     if (((p2.x<=p1.x)&&(p1.x<=t.x)) || ((p2.y<=p1.y)&&(p1.y<=t.y))) return(1);
@@ -1466,12 +1464,12 @@ public:
 	{
 	int res[2];
 	float t1,t2;
-	
+
 	if(p1 == s || p2==s)
 		return 1;
 	if(p1 == e || p2==e)
 		return 3;
-	
+
 	res[0] = PntOnLine(s,e,p1, t1);	// Is p1 on my line?
 	if(res[0] == 0)
 		return false;
@@ -1710,7 +1708,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 
 	vector<vector<int> > planepoints;
 	planepoints.resize(vertices.size());
-	
+
 	for (uint i = 0; i < lines.size(); i++)
 		planepoints[lines[i].start].push_back(i);
 
@@ -1786,7 +1784,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 						cout << " ( " << j << " other vertices )";
 						break;
 					}
-						
+
 					cout << "\n";
 				}
 				// model failure - we will get called recursivelly
@@ -2193,7 +2191,7 @@ void CuttingPlaneOptimizer::DoRetrieveLines(Polygon2f* pPoly, vector<Vector3f>& 
 {
 	if( pPoly->vertices.size() == 0) return;
 	lines.reserve(lines.size()+pPoly->vertices.size()*2);
-	
+
 	{
 		vector<Vector2f>::iterator pIt = pPoly->vertices.begin();
 		lines.push_back(Vector3f(pIt->x, pIt->y, Z));
@@ -2415,7 +2413,6 @@ float Point2f::AngleTo(Point2f* point)
 /*********************************************************************************************/
 /*void CuttingPlane::Shrink(float distance, float z, bool DisplayCuttingPlane, bool useFillets)
 {
-	
 
 }*/
 
@@ -2566,7 +2563,7 @@ bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2f point, float z)
 	
 	Vector2f EndP(point.x+10000, point.y);
 	int intersectcount = 0;
-	
+
 	for(size_t p=0; p<polygons.size();p++)
 	{
 		size_t count = polygons[p].points.size();
@@ -2635,7 +2632,6 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawO
 		}
 	}
 	glEnd();
-	
 
 	if(DrawVertexNumbers)
 	{
@@ -2670,7 +2666,7 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawO
 			}
 		}
 	}
-	
+
 	if(DrawCPLineNumbers)
 	{
 		Vector3f loc;
@@ -2989,5 +2985,4 @@ void Poly::calcHole(vector<Vector2f> &offsetVertices)
 	Vector2f Vb=V3-V1;
 	hole = Va.cross(Vb) > 0;
 }
-
 

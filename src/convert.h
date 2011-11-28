@@ -44,7 +44,7 @@ template<typename T> inline std::string stringify(const T& x)
 	if (!(o << x))
 		throw BadConversion(std::string("stringify(") + typeid(x).name() + ")");
 	return o.str();
-} 
+}
 /*
 
 void myCode()
@@ -71,7 +71,7 @@ void myCode()
 	convert(s, x);
 	...
 		...code that uses x...
-} 
+}
 */
 template<typename T>
 inline T convertTo(const std::string& s, bool failIfLeftoverChars = true)

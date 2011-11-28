@@ -92,11 +92,11 @@ ArcBall::ArcBall(GLfloat NewWidth, GLfloat NewHeight)
 {
     //Clear initial values
     this->StVec.s.X     =
-    this->StVec.s.Y     = 
-    this->StVec.s.Z     = 
+    this->StVec.s.Y     =
+    this->StVec.s.Z     =
 
     this->EnVec.s.X     =
-    this->EnVec.s.Y     = 
+    this->EnVec.s.Y     =
     this->EnVec.s.Z     = 0.0f;
 
     //Set initial bounds
@@ -145,9 +145,9 @@ void    ArcBall::drag(GLfloat x, GLfloat y, Quat4fT* NewRot)
         else                                    //if its zero
         {
             //The begin and end vectors coincide, so return an identity transform
-            NewRot->s.X = 
-            NewRot->s.Y = 
-            NewRot->s.Z = 
+            NewRot->s.X =
+            NewRot->s.Y =
+            NewRot->s.Z =
             NewRot->s.W = 0.0f;
         }
     }

@@ -259,4 +259,3 @@ private:
     int loadBinaryFile(std::string filename);
     filetype_t getFileType(std::string filename);
 };
-

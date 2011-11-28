@@ -24,23 +24,24 @@
 
 #include "model.h"
 
-Matrix4f RFO::GetSTLTransformationMatrix(int object, int file) const
-{
-	Matrix4f result = transform3D.transform;
-//	Vector3f translation = result.getTranslation();
-//	result.setTranslation(translation+PrintMargin);
+Matrix4f RFO::GetSTLTransformationMatrix(int object, int file) const
+{
+	Matrix4f result = transform3D.transform;
+//	Vector3f translation = result.getTranslation();
+//	result.setTranslation(translation+PrintMargin);
 
-	if(object >= 0)
-		result *= Objects[object].transform3D.transform;
-	if(file >= 0)
-		result *= Objects[object].files[file].transform3D.transform;
-	return result;
-}
+	if(object >= 0)
+		result *= Objects[object].transform3D.transform;
+	if(file >= 0)
+		result *= Objects[object].files[file].transform3D.transform;
+	return result;
+}
 
 void RFO::draw (Settings &settings, Gtk::TreeModel::iterator &iter)
 {
   RFO_File *sel_file;
   RFO_Object *sel_object;
+  gint index = 1; // pick/select index. matches computation in update_model()
   get_selected_stl (iter, sel_object, sel_file);
 
   glPushMatrix();
@@ -48,10 +49,14 @@ void RFO::draw (Settings &settings, Gtk::TreeModel::iterator &iter)
 
   for (uint i = 0; i < Objects.size(); i++) {
     RFO_Object *object = &Objects[i];
+    index++;
+
     glPushMatrix();
     glMultMatrixf (&object->transform3D.transform.array[0]);
     for (uint j = 0; j < object->files.size(); j++) {
       RFO_File *file = &object->files[j];
+      glLoadName(index); // Load select/pick index
+      index++;
       glPushMatrix();
       glMultMatrixf (&file->transform3D.transform.array[0]);
 
@@ -166,6 +171,9 @@ void RFO::update_model()
   row[m_cols->m_name] = root_label;
   row[m_cols->m_object] = -1;
   row[m_cols->m_file] = -1;
+  row[m_cols->m_pickindex] = 0;
+
+  gint index = 1; // pick/select index. matches computation in draw()
 
   for (guint i = 0; i < Objects.size(); i++) {
     Objects[i].idx = i;
@@ -175,6 +183,7 @@ void RFO::update_model()
     orow[m_cols->m_name] = Objects[i].name;
     orow[m_cols->m_object] = i;
     orow[m_cols->m_file] = -1;
+    orow[m_cols->m_pickindex] = index++;
 
     for (guint j = 0; j < Objects[i].files.size(); j++) {
       Objects[i].files[j].idx = j;
@@ -183,6 +192,7 @@ void RFO::update_model()
       row[m_cols->m_name] = Objects[i].files[j].location;
       row[m_cols->m_object] = i;
       row[m_cols->m_file] = j;
+      row[m_cols->m_pickindex] = index++;
     }
   }
 }
@@ -203,4 +213,27 @@ void RFO::get_selected_stl(Gtk::TreeModel::iterator &iter,
     object = &Objects[i];
   if (j >= 0)
     file = &Objects[i].files[j];
+}
+
+Gtk::TreeModel::iterator RFO::find_stl_in_children(Gtk::TreeModel::Children children, guint pickindex)
+{
+  Gtk::TreeModel::iterator iter = children.begin();
+
+  for (;iter; iter++) {
+    guint curindex = (*iter)[m_cols->m_pickindex];
+    if (curindex == pickindex)
+      return iter;
+
+    Gtk::TreeModel::iterator child_iter = find_stl_in_children((*iter).children(), pickindex);
+    if (child_iter)
+      return child_iter;
+  }
+
+  Gtk::TreeModel::iterator invalid;
+  return invalid;
+}
+
+Gtk::TreeModel::iterator RFO::find_stl_by_index(guint pickindex)
+{
+  return find_stl_in_children(m_model->children(), pickindex);
 }
