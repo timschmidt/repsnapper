@@ -16,6 +16,7 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+
 #include "config.h"
 #include "view.h"
 #include "stdafx.h"
@@ -26,6 +27,7 @@
 #include "settings.h"
 #include "progress.h"
 #include "connectview.h"
+
 
 bool View::on_delete_event(GdkEventAny* event)
 {
@@ -571,6 +573,7 @@ View::View(BaseObjectType* cobject,
 	   const Glib::RefPtr<Gtk::Builder>& builder)
   : Gtk::Window(cobject), m_builder(builder)
 {
+
   // Menus
   connect_action ("OpenStl",         sigc::mem_fun(*this, &View::load_stl) );
   connect_action ("OpenGCode",       sigc::mem_fun(*this, &View::load_gcode) );

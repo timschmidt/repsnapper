@@ -174,7 +174,7 @@ int serial_init(int fd, long speed) {
 
 	/* Set speed */
 	{
-		speed_t cfspeed = ntocf(speed);
+	  speed_t cfspeed = speed;// ntocf(speed);
 		if(cfsetispeed(&attribs, cfspeed) < 0) {
       int tmp = errno;
       close(fd);

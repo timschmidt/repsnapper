@@ -241,6 +241,7 @@ public:
 	void clear() { triangles.clear(); }
 	void displayInfillOld(const Settings &settings, CuttingPlane &plane, guint LayerNr, vector<int>& altInfillLayers);
 	void draw (RFO &rfo, const Settings &settings);
+	void draw_geometry ();
 	void CenterAroundXY();
 	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);	// Extract a 2D polygonset from a 3D model
 	void OptimizeRotation();			// Auto-Rotate object to have the largest area surface down for printing
@@ -258,3 +259,4 @@ private:
     int loadBinaryFile(std::string filename);
     filetype_t getFileType(std::string filename);
 };
+
