@@ -45,7 +45,7 @@ THE SOFTWARE.
 #  pragma comment( lib, "glu32.lib" )									// Search For GLu32.lib While Linking
 #endif
 
-// 8<--Snip here if you have your own math types/funcs-->8 
+// 8<--Snip here if you have your own math types/funcs-->8
 
 //Only support assertions in debug builds
 #ifdef _DEBUG
@@ -103,7 +103,7 @@ THE SOFTWARE.
                 union { GLfloat M22; GLfloat ZZ; GLfloat SZ; };  //ZAxis.Z and Scale Z
             } s;
             GLfloat M[9];
-    } Matrix3fT;     //A single precision floating point 3 by 3 matrix. 
+    } Matrix3fT;     //A single precision floating point 3 by 3 matrix.
 
     typedef union Matrix4f_t
     {
@@ -128,7 +128,7 @@ THE SOFTWARE.
                 union { GLfloat M33; GLfloat TW; GLfloat SW; };  //Trans.W and Scale W
             } s;
             GLfloat M[16];
-    } Matrix4fT;     //A single precision floating point 4 by 4 matrix. 
+    } Matrix4fT;     //A single precision floating point 4 by 4 matrix.
 
 
 //"Inherited" types
@@ -236,8 +236,8 @@ THE SOFTWARE.
     inline
     static void Matrix3fSetZero(Matrix3fT* NewObj)
     {
-        NewObj->s.M00 = NewObj->s.M01 = NewObj->s.M02 = 
-        NewObj->s.M10 = NewObj->s.M11 = NewObj->s.M12 = 
+        NewObj->s.M00 = NewObj->s.M01 = NewObj->s.M02 =
+        NewObj->s.M10 = NewObj->s.M11 = NewObj->s.M12 =
         NewObj->s.M20 = NewObj->s.M21 = NewObj->s.M22 = 0.0f;
     }
 
@@ -250,15 +250,15 @@ THE SOFTWARE.
         Matrix3fSetZero(NewObj);
 
         //then set diagonal as 1
-        NewObj->s.M00 = 
-        NewObj->s.M11 = 
+        NewObj->s.M00 =
+        NewObj->s.M11 =
         NewObj->s.M22 = 1.0f;
     }
 
     /**
       * Sets the value of this matrix to the matrix conversion of the
-      * quaternion argument. 
-      * @param q1 the quaternion to be converted 
+      * quaternion argument.
+      * @param q1 the quaternion to be converted
       */
     //$hack this can be optimized some(if s == 0)
     inline
@@ -469,7 +469,7 @@ THE SOFTWARE.
     }
 
 
-// 8<--Snip here if you have your own math types/funcs-->8 
+// 8<--Snip here if you have your own math types/funcs-->8
 
     class ArcBall
     {

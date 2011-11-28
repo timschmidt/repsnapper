@@ -20,7 +20,7 @@
 //    Contact:
 //    --------
 //    Bernd Gaertner
-//    Institute of Theoretical Computer Science 
+//    Institute of Theoretical Computer Science
 //    ETH Zuerich
 //    CAB G32.2
 //    CH-8092 Zuerich, Switzerland
@@ -44,11 +44,11 @@ template <int d>
 class Miniball;
 
 // smallest ball with a set of n <= d+1 points *on the boundary*
-template <int d> 
+template <int d>
 class Miniball_b; 
 
 // point in dimension d
-template <int d> 
+template <int d>
 class Point;
 
 
@@ -101,9 +101,9 @@ public:
 	Cit         points_end () const;
 
 	// returns size of support point set; this set has the following properties:
-	// - there are at most d+1 support points, 
+	// - there are at most d+1 support points,
 	// - all support points are on the boundary of the computed ball, and
-	// - the smallest enclosing ball of the support point set equals the 
+	// - the smallest enclosing ball of the support point set equals the
 	//   smallest enclosing ball of the internal point set
 	int         nr_support_points () const;
 
@@ -112,14 +112,14 @@ public:
 	Cit         support_points_end () const;
 
 	// assesses the quality of the computed ball. The return value is the
-	// maximum squared distance of any support point or point outside the 
+	// maximum squared distance of any support point or point outside the
 	// ball to the boundary of the ball, divided by the squared radius of
 	// the ball. If everything went fine, this will be less than e-15 and
 	// says that the computed ball approximately contains all the internal
 	// points and has all the support points on the boundary.
-	// 
+	//
 	// The slack parameter that is set by the method says something about
-	// whether the computed ball is really the *smallest* enclosing ball 
+	// whether the computed ball is really the *smallest* enclosing ball
 	// of the support points; if everything went fine, this value will be 0; 
 	// a positive value may indicate that the ball is not smallest possible,
 	// with the deviation from optimality growing with the slack

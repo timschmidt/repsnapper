@@ -37,7 +37,7 @@ bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2)
 }
 
 float TeRound(float val)
-{       
+{
 	if (val>=0)
 		return (int)(val+.5);
 	else

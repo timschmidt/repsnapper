@@ -24,18 +24,18 @@
 
 #include "model.h"
 
-Matrix4f RFO::GetSTLTransformationMatrix(int object, int file) const
-{
-	Matrix4f result = transform3D.transform;
-//	Vector3f translation = result.getTranslation();
-//	result.setTranslation(translation+PrintMargin);
+Matrix4f RFO::GetSTLTransformationMatrix(int object, int file) const
+{
+	Matrix4f result = transform3D.transform;
+//	Vector3f translation = result.getTranslation();
+//	result.setTranslation(translation+PrintMargin);
 
-	if(object >= 0)
-		result *= Objects[object].transform3D.transform;
-	if(file >= 0)
-		result *= Objects[object].files[file].transform3D.transform;
-	return result;
-}
+	if(object >= 0)
+		result *= Objects[object].transform3D.transform;
+	if(file >= 0)
+		result *= Objects[object].files[file].transform3D.transform;
+	return result;
+}
 
 void RFO::draw (Settings &settings, Gtk::TreeModel::iterator &iter)
 {

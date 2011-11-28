@@ -214,7 +214,7 @@ int STL::loadASCIIFile(string filename) {
     file >> solid;
     char c_str_name[256];
     file.getline(c_str_name, 256);
-    
+
     while(!file.eof()) { // Loop around all triangles
         string facet;
         file >> facet;
@@ -232,7 +232,7 @@ int STL::loadASCIIFile(string filename) {
         // Parse Face Normal - "normal %f %f %f"
         string normal;
         Vector3f normal_vec;
-        file >> normal 
+        file >> normal
              >> normal_vec.x
              >> normal_vec.y
              >> normal_vec.z;
@@ -249,7 +249,7 @@ int STL::loadASCIIFile(string filename) {
             cerr << "Error: Outer/Loop keywords not found!" << endl;
             return -1;
         }
-        
+
         // Grab the 3 vertices - each one of the form "vertex %f %f %f"
         Vector3f vertices[3];
         for(int i=0; i<3; i++) {
@@ -268,13 +268,13 @@ int STL::loadASCIIFile(string filename) {
         // Parse end of vertices loop - "endloop endfacet"
         string endloop, endfacet;
         file >> endloop >> endfacet;
-        
+
         if(endloop != "endloop" || endfacet != "endfacet") {
             cerr << "Error: Vertex keyword not found" << endl;
             return -1;
         }
 
-        // Create triangle object and push onto the vector 
+        // Create triangle object and push onto the vector
         Triangle triangle(normal_vec,
                             vertices[0],
                             vertices[1],
@@ -319,8 +319,8 @@ filetype_t STL::getFileType(string filename) {
     }
 }
 
-/* Loads an stl file by filename 
- * Returns -1 on error, and 0 on success 
+/* Loads an stl file by filename
+ * Returns -1 on error, and 0 on success
  * Error messages placed on stderr */
 int STL::loadFile(string filename)
 {
@@ -328,7 +328,7 @@ int STL::loadFile(string filename)
         loadASCIIFile(filename);
     } else { // Binary
         loadBinaryFile(filename);
-    }   
+    }
 
     OptimizeRotation();
     CalcCenter();
@@ -1294,62 +1294,62 @@ bool IntersectXY(const Vector2f &p1, const Vector2f &p2, const Vector2f &p3, con
 	return false;
 /*
 
-  float xD1,yD1,xD2,yD2,xD3,yD3;  
-  float dot,deg,len1,len2;  
-  float segmentLen1,segmentLen2;  
-  float ua,ub,div;  
-  
-  // calculate differences  
-  xD1=p2.x-p1.x;  
-  xD2=p4.x-p3.x;  
-  yD1=p2.y-p1.y;  
-  yD2=p4.y-p3.y;  
-  xD3=p1.x-p3.x;  
-  yD3=p1.y-p3.y;    
-  
-  // calculate the lengths of the two lines  
-  len1=sqrt(xD1*xD1+yD1*yD1);  
-  len2=sqrt(xD2*xD2+yD2*yD2);  
-  
-  // calculate angle between the two lines.  
-  dot=(xD1*xD2+yD1*yD2); // dot product  
-  deg=dot/(len1*len2);  
-  
-  // if ABS(angle)==1 then the lines are parallell,  
-  // so no intersection is possible  
+  float xD1,yD1,xD2,yD2,xD3,yD3;
+  float dot,deg,len1,len2;
+  float segmentLen1,segmentLen2;
+  float ua,ub,div;
+
+  // calculate differences
+  xD1=p2.x-p1.x;
+  xD2=p4.x-p3.x;
+  yD1=p2.y-p1.y;
+  yD2=p4.y-p3.y;
+  xD3=p1.x-p3.x;
+  yD3=p1.y-p3.y;
+
+  // calculate the lengths of the two lines
+  len1=sqrt(xD1*xD1+yD1*yD1);
+  len2=sqrt(xD2*xD2+yD2*yD2);
+
+  // calculate angle between the two lines.
+  dot=(xD1*xD2+yD1*yD2); // dot product
+  deg=dot/(len1*len2);
+
+  // if ABS(angle)==1 then the lines are parallel,
+  // so no intersection is possible
   if(ABS(deg)==1)
 	  return false;
-  
-  // find intersection Pt between two lines  
+
+  // find intersection Pt between two lines
   hit.p=Vector2f (0,0);
-  div=yD2*xD1-xD2*yD1;  
-  ua=(xD2*yD3-yD2*xD3)/div;  
-  ub=(xD1*yD3-yD1*xD3)/div;  
-  hit.p.x=p1.x+ua*xD1;  
-  hit.p.y=p1.y+ua*yD1;  
-  
-  // calculate the combined length of the two segments  
-  // between Pt-p1 and Pt-p2  
-  xD1=hit.p.x-p1.x;  
-  xD2=hit.p.x-p2.x;  
-  yD1=hit.p.y-p1.y;  
-  yD2=hit.p.y-p2.y;  
-  segmentLen1=sqrt(xD1*xD1+yD1*yD1)+sqrt(xD2*xD2+yD2*yD2);  
-  
-  // calculate the combined length of the two segments  
-  // between Pt-p3 and Pt-p4  
-  xD1=hit.p.x-p3.x;  
-  xD2=hit.p.x-p4.x;  
-  yD1=hit.p.y-p3.y;  
-  yD2=hit.p.y-p4.y;  
-  segmentLen2=sqrt(xD1*xD1+yD1*yD1)+sqrt(xD2*xD2+yD2*yD2);  
-  
-  // if the lengths of both sets of segments are the same as  
-  // the lenghts of the two lines the point is actually  
-  // on the line segment.  
-  
-  // if the point isn't on the line, return null  
-  if(ABS(len1-segmentLen1)>0.00 || ABS(len2-segmentLen2)>0.00)  
+  div=yD2*xD1-xD2*yD1;
+  ua=(xD2*yD3-yD2*xD3)/div;
+  ub=(xD1*yD3-yD1*xD3)/div;
+  hit.p.x=p1.x+ua*xD1;
+  hit.p.y=p1.y+ua*yD1;
+
+  // calculate the combined length of the two segments
+  // between Pt-p1 and Pt-p2
+  xD1=hit.p.x-p1.x;
+  xD2=hit.p.x-p2.x;
+  yD1=hit.p.y-p1.y;
+  yD2=hit.p.y-p2.y;
+  segmentLen1=sqrt(xD1*xD1+yD1*yD1)+sqrt(xD2*xD2+yD2*yD2);
+
+  // calculate the combined length of the two segments
+  // between Pt-p3 and Pt-p4
+  xD1=hit.p.x-p3.x;
+  xD2=hit.p.x-p4.x;
+  yD1=hit.p.y-p3.y;
+  yD2=hit.p.y-p4.y;
+  segmentLen2=sqrt(xD1*xD1+yD1*yD1)+sqrt(xD2*xD2+yD2*yD2);
+
+  // if the lengths of both sets of segments are the same as
+  // the lenghts of the two lines the point is actually
+  // on the line segment.
+
+  // if the point isn't on the line, return null
+  if(ABS(len1-segmentLen1)>0.00 || ABS(len2-segmentLen2)>0.00)
     return false;
 
   hit.d = segmentLen1-segmentLen2;
@@ -1388,7 +1388,7 @@ int PntOnLine(Vector2f p1, Vector2f p2, Vector2f t)
  * The tightest test is employed here for best discrimination
  * in merging collinear (to grid coordinates) vertex chains
  * into a larger, spanning vectors within the Lemming editor.
- 
+
 
     if ( ABS((p2.y-p1.y)*(t.x-p1.x)-(t.y-p1.y)*(p2.x-p1.x)) >= (MAX(ABS(p2.x-p1.x), ABS(p2.y-p1.y)))) return(0);
     if (((p2.x<=p1.x)&&(p1.x<=t.x)) || ((p2.y<=p1.y)&&(p1.y<=t.y))) return(1);
@@ -1466,12 +1466,12 @@ public:
 	{
 	int res[2];
 	float t1,t2;
-	
+
 	if(p1 == s || p2==s)
 		return 1;
 	if(p1 == e || p2==e)
 		return 3;
-	
+
 	res[0] = PntOnLine(s,e,p1, t1);	// Is p1 on my line?
 	if(res[0] == 0)
 		return false;
@@ -1509,7 +1509,7 @@ public:
 			glColor3f(0,1,0);
 			glVertex2f(e.x, e.y);
 			glEnd();
-*/		
+*/
 			return true;
 		}
 
@@ -1710,7 +1710,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 
 	vector<vector<int> > planepoints;
 	planepoints.resize(vertices.size());
-	
+
 	for (uint i = 0; i < lines.size(); i++)
 		planepoints[lines[i].start].push_back(i);
 
@@ -1723,7 +1723,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 	for (uint current = 0; current < lines.size(); current++)
 	{
 		if (used[current])
-			continue; // already used 
+			continue; // already used
 		used[current] = true;
 
 		int startPoint = lines[current].start;
@@ -1786,7 +1786,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 						cout << " ( " << j << " other vertices )";
 						break;
 					}
-						
+
 					cout << "\n";
 				}
 				// model failure - we will get called recursivelly
@@ -1838,7 +1838,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 
 uint CuttingPlane::selfIntersectAndDivideRecursive(float z, uint startPolygon, uint startVertex, vector<outline> &outlines, const Vector2f endVertex, uint &level)
 {
-	level++;	
+	level++;
 	outline result;
 	for(size_t p=startPolygon; p<offsetPolygons.size();p++)
 	{
@@ -2096,8 +2096,8 @@ bool intersect(const float& x1, const float& y1,
 }
 
 CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z)
-{ 
-	Z = z; 
+{
+	Z = z;
 
 	vector<Poly>* planePolygons = &cuttingPlane->GetPolygons();
 	vector<Vector2f>* planeVertices = &cuttingPlane->GetVertices();
@@ -2193,7 +2193,7 @@ void CuttingPlaneOptimizer::DoRetrieveLines(Polygon2f* pPoly, vector<Vector3f>& 
 {
 	if( pPoly->vertices.size() == 0) return;
 	lines.reserve(lines.size()+pPoly->vertices.size()*2);
-	
+
 	{
 		vector<Vector2f>::iterator pIt = pPoly->vertices.begin();
 		lines.push_back(Vector3f(pIt->x, pIt->y, Z));
@@ -2376,8 +2376,8 @@ bool Point2f::FindNextPoint(Point2f* origin, Point2f* destination, bool expansio
 			if( expansion )
 			{
 				if( angle > 0 ) angle -= PI*2;
-				if( angle < minAngle ) 
-				{ 
+				if( angle < minAngle )
+				{
 					minAngle = angle;
 					destination = *it;
 				}
@@ -2385,8 +2385,8 @@ bool Point2f::FindNextPoint(Point2f* origin, Point2f* destination, bool expansio
 			else
 			{
 				if( angle < 0 ) angle += PI*2;
-				if( angle > maxAngle ) 
-				{ 
+				if( angle > maxAngle )
+				{
 					maxAngle = angle;
 					destination = *it;
 				}
@@ -2415,7 +2415,7 @@ float Point2f::AngleTo(Point2f* point)
 /*********************************************************************************************/
 /*void CuttingPlane::Shrink(float distance, float z, bool DisplayCuttingPlane, bool useFillets)
 {
-	
+
 
 }*/
 
@@ -2487,7 +2487,7 @@ int PointHash::IndexOfPoint(const Vector2f &p)
 	uint hashes[4];
 	uint c = Impl::GetHashes (hashes, p.x, p.y);
 
-	for (uint i = 0; i < c; i++) 
+	for (uint i = 0; i < c; i++)
 	{
 		Impl::const_iter iter = impl->points.find (hashes[i]);
 
@@ -2563,10 +2563,10 @@ bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2f point, float z)
 {
 	// Shoot a ray along +X and count the number of intersections.
 	// If n_intersections is euqal, return true, else return false
-	
+
 	Vector2f EndP(point.x+10000, point.y);
 	int intersectcount = 0;
-	
+
 	for(size_t p=0; p<polygons.size();p++)
 	{
 		size_t count = polygons[p].points.size();
@@ -2574,10 +2574,10 @@ bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2f point, float z)
 		{
 		Vector2f P1 = Vector2f( vertices[polygons[p].points[(i-1+count)%count]] );
 		Vector2f P2 = Vector2f( vertices[polygons[p].points[i]]);
-		
+
 		if(P1.y == P2.y)	// Skip hortisontal lines, we can't intersect with them, because the test line in horitsontal
 			continue;
-		
+
 		InFillHit hit;
 		if(IntersectXY(point,EndP,P1,P2,hit))
 			intersectcount++;
@@ -2635,7 +2635,7 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawO
 		}
 	}
 	glEnd();
-	
+
 
 	if(DrawVertexNumbers)
 	{
@@ -2670,7 +2670,7 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawO
 			}
 		}
 	}
-	
+
 	if(DrawCPLineNumbers)
 	{
 		Vector3f loc;
@@ -2756,14 +2756,14 @@ void STL::OptimizeRotation()
 	CenterAroundXY();
 }
 
-void STL::Scale(float in_scale_factor) 
+void STL::Scale(float in_scale_factor)
 {
-    for(size_t i = 0; i < triangles.size(); i++) 
+    for(size_t i = 0; i < triangles.size(); i++)
     {
-        for(int j = 0; j < 3; j++) 
+        for(int j = 0; j < 3; j++)
         {
             /* Translate to origin */
-            triangles[i][j] = triangles[i][j] - Center; 
+            triangles[i][j] = triangles[i][j] - Center;
 
             triangles[i][j].scale(in_scale_factor/scale_factor);
 
@@ -2828,7 +2828,7 @@ void STL::RotateObject(Vector3f axis, float angle)
 //	cout << "min " << Min << " max " << Max << "\n";
 }
 
-Vector3f &Triangle::operator[] (const int index) 
+Vector3f &Triangle::operator[] (const int index)
 {
     switch(index) {
         case 0: return A;
