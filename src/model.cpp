@@ -218,7 +218,7 @@ void Model::ConvertToGCode()
 						break;
 					}
 
-					if (shell < settings.Slicing.ShellCount)
+				  if (shell < settings.Slicing.ShellCount )
 				        { // no infill - just a shell ...
 						plane.MakeGcode (state, NULL /* infill */, E, z + printOffsetZ,
 								 settings.Slicing, settings.Hardware);
@@ -226,7 +226,16 @@ void Model::ConvertToGCode()
 					else if (settings.Slicing.ShellOnly == false)
 					{ // last shell => calculate infill
 						// check if this if a layer we should use the alternate infill distance on
-						float infillDistance = settings.Slicing.InfillDistance;
+				      float infillDistance;
+				      if (LayerNr < settings.Slicing.ShellCount ||
+					  z > Max.z - settings.Slicing.ShellCount * settings.Hardware.LayerThickness) 
+					{ 
+					  infillDistance = settings.Hardware.ExtrudedMaterialWidth*settings.Hardware.ExtrusionFactor;  // full fill for first layers (shell thickness)
+					} 
+				      else {
+					infillDistance = settings.Slicing.InfillDistance;
+				      }
+				      
 						if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end())
 							infillDistance = settings.Slicing.AltInfillDistance;
 						infill = plane.CalcInFill (LayerNr, infillDistance, settings.Slicing.InfillRotation,
