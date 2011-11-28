@@ -186,6 +186,13 @@ bool Render::on_button_press_event(GdkEventButton* event)
 {
   if (event->button == 1) {
     m_arcBall->click (event->x, event->y, &m_transform);
+    guint index = find_object_at(event->x, event->y);
+    if (index) {
+      Gtk::TreeModel::iterator iter = get_model()->rfo.find_stl_by_index(index);
+      if (iter) {
+        m_selection->select(iter);
+      }
+    }
   } else if (event->button == 3)
     m_downPoint = Vector2f (event->x, event->y);
   else
@@ -242,4 +249,79 @@ void Render::CenterView()
   glTranslatef (-get_model()->Center.x - get_model()->printOffset.x,
 		-get_model()->Center.y - get_model()->printOffset.y,
 		-get_model()->Center.z);
+}
+
+
+guint Render::find_object_at(gdouble x, gdouble y)
+{
+  // Render everything in selection mode
+  GdkGLContext *glcontext = gtk_widget_get_gl_context (get_widget());
+  GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (get_widget());
+
+  const GLsizei BUFSIZE = 256;
+  GLuint select_buffer[BUFSIZE];
+
+  if (!gldrawable || !gdk_gl_drawable_gl_begin (gldrawable, glcontext))
+    return 0;
+
+  glSelectBuffer(BUFSIZE, select_buffer);
+  (void)glRenderMode(GL_SELECT);
+
+  GLint viewport[4];
+
+  glMatrixMode (GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity ();
+  glGetIntegerv(GL_VIEWPORT,viewport);
+  gluPickMatrix(x,viewport[3]-y,2,2,viewport); // 2x2 pixels around the cursor
+  gluPerspective (45.0f, (float)get_width()/(float)get_height(),1.0f, 1000000.0f);
+  glMatrixMode (GL_MODELVIEW);
+  glInitNames();
+  glPushName(0);
+  glLoadIdentity ();
+
+  glTranslatef (0.0, 0.0, -2.0 * m_zoom);
+  glMultMatrixf (m_transform.M);
+  CenterView();
+  glPushMatrix();
+  glColor3f(0.75f,0.75f,1.0f);
+
+  glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
+
+  Gtk::TreeModel::iterator no_object;
+  m_view->Draw (no_object);
+
+  // restor projection and model matrices
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  // restore rendering mode
+  GLint hits = glRenderMode(GL_RENDER);
+
+  if (gdk_gl_drawable_is_double_buffered(gldrawable))
+    gdk_gl_drawable_swap_buffers (gldrawable);
+  else
+    glFlush();
+
+  gdk_gl_drawable_gl_end (gldrawable);
+
+  // Process the selection hits
+  GLuint *ptr = select_buffer;
+  GLuint name = 0;
+  GLuint minZ = G_MAXUINT;
+
+  for (GLint i = 0; i < hits; i++) { /*  for each hit  */
+     GLuint n = *ptr++; // number of hits in this record
+     GLuint z1 = *ptr++; // Minimum Z in the hit record
+     ptr++; // Skip Maximum Z coord
+     if (n > 0 && z1 < minZ) {
+       // Found an object further forward.
+       name = *ptr;
+       minZ = z1;
+     }
+     ptr += n; // Skip n name records;
+  }
+
+  return name;
 }

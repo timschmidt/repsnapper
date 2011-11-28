@@ -45,6 +45,7 @@ class Render : public Gtk::DrawingArea
   void rfo_changed();
   void selection_changed();
   GtkWidget *get_widget();
+  guint find_object_at(gdouble x, gdouble y);
 
  public:
   Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection);
