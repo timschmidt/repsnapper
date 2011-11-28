@@ -201,37 +201,46 @@ void Model::ConvertToGCode()
 
 				for (guint shell = 1; shell <= settings.Slicing.ShellCount; shell++)
 				{
-					plane.ClearShrink();
-					plane.SetZ (z + printOffsetZ);
-					switch( settings.Slicing.ShrinkQuality )
-					{
-					case SHRINK_FAST:
-						plane.ShrinkFast   (settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization,
-								    settings.Display.DisplayCuttingPlane, false, shell);
-						break;
-					case SHRINK_LOGICK:
-						plane.ShrinkLogick (settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization,
-								    settings.Display.DisplayCuttingPlane, shell);
-						break;
-					default:
-						g_error (_("unknown shrinking algorithm"));
-						break;
-					}
-
-					if (shell < settings.Slicing.ShellCount)
-				        { // no infill - just a shell ...
-						plane.MakeGcode (state, NULL /* infill */, E, z + printOffsetZ,
-								 settings.Slicing, settings.Hardware);
-					}
-					else if (settings.Slicing.ShellOnly == false)
-					{ // last shell => calculate infill
-						// check if this if a layer we should use the alternate infill distance on
-						float infillDistance = settings.Slicing.InfillDistance;
-						if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end())
-							infillDistance = settings.Slicing.AltInfillDistance;
-						infill = plane.CalcInFill (LayerNr, infillDistance, settings.Slicing.InfillRotation,
-									   settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
-					}
+				  plane.ClearShrink();
+				  plane.SetZ (z + printOffsetZ);
+				  switch( settings.Slicing.ShrinkQuality )
+				    {
+				    case SHRINK_FAST:
+				      plane.ShrinkFast   (settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization,
+							  settings.Display.DisplayCuttingPlane, false, shell);
+				      break;
+				    case SHRINK_LOGICK:
+				      plane.ShrinkLogick (settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization,
+							  settings.Display.DisplayCuttingPlane, shell);
+				      break;
+				    default:
+				      g_error (_("unknown shrinking algorithm"));
+				      break;
+				    }
+				  
+				  if (shell < settings.Slicing.ShellCount )
+				    { // no infill - just a shell ...
+				      plane.MakeGcode (state, NULL /* infill */, E, z + printOffsetZ,
+						       settings.Slicing, settings.Hardware);
+				    }
+				  else if (settings.Slicing.ShellOnly == false)
+				    { // last shell => calculate infill
+				      // check if this if a layer we should use the alternate infill distance on
+				      float infillDistance;
+				      if (LayerNr < settings.Slicing.ShellCount ||
+					  z > Max.z - settings.Slicing.ShellCount * settings.Hardware.LayerThickness) 
+					{ 
+					  infillDistance = settings.Hardware.ExtrudedMaterialWidth*settings.Hardware.ExtrusionFactor;  // full fill for first layers (shell thickness)
+					} 
+				      else {
+					infillDistance = settings.Slicing.InfillDistance;
+				      }
+				      
+				      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end())
+					infillDistance = settings.Slicing.AltInfillDistance;
+				      infill = plane.CalcInFill (LayerNr, infillDistance, settings.Slicing.InfillRotation,
+								 settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
+				    }
 				}
 				// Make the last shell GCode from the plane and the infill
 				plane.MakeGcode (state, infill, E, z + printOffsetZ,

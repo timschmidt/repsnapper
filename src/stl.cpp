@@ -1078,70 +1078,70 @@ void STL::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T)
 	}
 }
 
+
 vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
 					    float InfillRotation, float InfillRotationPrLayer,
 					    bool DisplayDebuginFill)
 {
-	int c=0;
-	vector<InFillHit> HitsBuffer;
-	float step = InfillDistance;
+    int c=0;
+    vector<InFillHit> HitsBuffer;
+    float step = InfillDistance;
+    
+    vector<Vector2f> *infill = new vector<Vector2f>();
+    bool examine = false;
 
-	vector<Vector2f> *infill = new vector<Vector2f>();
+    float Length = sqrtf(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0f;	// bbox of lines to intersect the poly with
 
-	bool examine = false;
+    float rot = InfillRotation/180.0f*M_PI;
+    rot += (float)LayerNr*InfillRotationPrLayer/180.0f*M_PI;
+    Vector2f InfillDirX(cosf(rot), sinf(rot));
+    Vector2f InfillDirY(-InfillDirX.y, InfillDirX.x);
+    Vector2f Center = (Max+Min)/2.0f;
+    
+    for(float x = -Length ; x < Length ; x+=step)
+      {
+	bool examineThis = true;
+	
+	HitsBuffer.clear();
 
-	float Length = sqrtf(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0f;	// bbox of lines to intersect the poly with
-
-	float rot = InfillRotation/180.0f*M_PI;
-	rot += (float)LayerNr*InfillRotationPrLayer/180.0f*M_PI;
-	Vector2f InfillDirX(cosf(rot), sinf(rot));
-	Vector2f InfillDirY(-InfillDirX.y, InfillDirX.x);
-	Vector2f Center = (Max+Min)/2.0f;
-
-	for(float x = -Length ; x < Length ; x+=step)
-	{
-		bool examineThis = true;
-
-		HitsBuffer.clear();
-
-		Vector2f P1 = (InfillDirX * Length)+(InfillDirY*x)+ Center;
-		Vector2f P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
-
-		if(DisplayDebuginFill)
-		{
-			glBegin(GL_LINES);
-			glColor3f(0,0.2f,0);
-			glVertex3f(P1.x, P1.y, Z);
-			glVertex3f(P2.x, P2.y, Z);
-			glEnd();
-		}
-		float Examine = 0.5f;
-
-		if(DisplayDebuginFill && !examine && ((Examine-0.5f)*2 * Length <= x))
-		{
-			examineThis = examine = true;
-			glColor3f(1,1,1);  // Draw the line
-			glVertex3f(P1.x, P1.y, Z);
-			glVertex3f(P2.x, P2.y, Z);
-		}
-
-		if(offsetPolygons.size() != 0)
-		{
-			for(size_t p=0;p<offsetPolygons.size();p++)
-			{
-				for(size_t i=0;i<offsetPolygons[p].points.size();i++)
-				{
-					Vector2f P3 = offsetVertices[offsetPolygons[p].points[i]];
-					Vector2f P4 = offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
-
-					Vector3f point;
-					InFillHit hit;
-					if (IntersectXY (P1,P2,P3,P4,hit))
-						HitsBuffer.push_back(hit);
-				}
-			}
-		}
-/*			else if(vertices.size() != 0)
+	Vector2f P1 = (InfillDirX * Length)+(InfillDirY*x)+ Center;
+	Vector2f P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
+	
+	if(DisplayDebuginFill)
+	  {
+	    glBegin(GL_LINES);
+	    glColor3f(0,0.2f,0);
+	    glVertex3f(P1.x, P1.y, Z);
+	    glVertex3f(P2.x, P2.y, Z);
+	    glEnd();
+	  }
+	float Examine = 0.5f;
+	
+	if(DisplayDebuginFill && !examine && ((Examine-0.5f)*2 * Length <= x))
+	  {
+	    examineThis = examine = true;
+	    glColor3f(1,1,1);  // Draw the line
+	    glVertex3f(P1.x, P1.y, Z);
+	    glVertex3f(P2.x, P2.y, Z);
+	  }
+	
+	if(offsetPolygons.size() != 0)
+	  {
+	    for(size_t p=0;p<offsetPolygons.size();p++)
+	      {
+		for(size_t i=0;i<offsetPolygons[p].points.size();i++)
+		  {
+		    Vector2f P3 = offsetVertices[offsetPolygons[p].points[i]];
+		    Vector2f P4 = offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
+		    
+		    Vector3f point;
+		    InFillHit hit;
+		    if (IntersectXY (P1,P2,P3,P4,hit))
+		      HitsBuffer.push_back(hit);
+		  }
+	      }
+	  }
+	/*			else if(vertices.size() != 0)
 				{
 				// Fallback, collide with lines rather then polygons
 				for(size_t i=0;i<lines.size();i++)
@@ -1161,81 +1161,81 @@ vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
 				}*/
 			// Sort hits
 			// Sort the vector using predicate and std::sort
-		std::sort (HitsBuffer.begin(), HitsBuffer.end(), InFillHitCompareFunc);
-
-		if(examineThis)
-		{
-			glPointSize(4);
-			glBegin(GL_POINTS);
-			for (size_t i=0;i<HitsBuffer.size();i++)
-				glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
-			glEnd();
-			glPointSize(1);
-		}
-
-			// Verify hits intregrety
-			// Check if hit extists in table
-restart_check:
-		for (size_t i=0;i<HitsBuffer.size();i++)
-		{
-			bool found = false;
-
-			for (size_t j=i+1;j<HitsBuffer.size();j++)
-			{
-				if( ABS(HitsBuffer[i].d - HitsBuffer[j].d) < 0.0001)
-				{
-					found = true;
-					// Delete both points, and continue
-					HitsBuffer.erase(HitsBuffer.begin()+j);
-					// If we are "Going IN" to solid material, and there's
-					// more points, keep one of the points
-					if (i != 0 && i != HitsBuffer.size()-1)
-						HitsBuffer.erase(HitsBuffer.begin()+i);
-					goto restart_check;
-				}
-			}
-			if (found)
-				continue;
-		}
-
-
-		// Sort hits by distance and transfer to InFill Buffer
-		if (HitsBuffer.size() != 0 && HitsBuffer.size() % 2)
-			continue;	// There's a uneven number of hits, skip this infill line (U'll live)
-		c = 0;	// Color counter
-		while (HitsBuffer.size())
-		{
-			infill->push_back(HitsBuffer[0].p);
-			if(examineThis)
-			{
-				switch(c)
-				{
-				case 0: glColor3f(1,0,0); break;
-				case 1: glColor3f(0,1,0); break;
-				case 2: glColor3f(0,0,1); break;
-				case 3: glColor3f(1,1,0); break;
-				case 4: glColor3f(0,1,1); break;
-				case 5: glColor3f(1,0,1); break;
-				case 6: glColor3f(1,1,1); break;
-				case 7: glColor3f(1,0,0); break;
-				case 8: glColor3f(0,1,0); break;
-				case 9: glColor3f(0,0,1); break;
-				case 10: glColor3f(1,1,0); break;
-				case 11: glColor3f(0,1,1); break;
-				case 12: glColor3f(1,0,1); break;
-				case 13: glColor3f(1,1,1); break;
-				}
-				c++;
-				glPointSize(10);
-				glBegin(GL_POINTS);
-				glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
-				glEnd();
-				glPointSize(1);
-			}
-			HitsBuffer.erase(HitsBuffer.begin());
-		}
-	}
-	return infill;
+	std::sort (HitsBuffer.begin(), HitsBuffer.end(), InFillHitCompareFunc);
+	
+	if(examineThis)
+	  {
+	    glPointSize(4);
+	    glBegin(GL_POINTS);
+	    for (size_t i=0;i<HitsBuffer.size();i++)
+	      glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
+	    glEnd();
+	    glPointSize(1);
+	  }
+	
+	// Verify hits intregrety
+	// Check if hit extists in table
+      restart_check:
+	for (size_t i=0;i<HitsBuffer.size();i++)
+	  {
+	    bool found = false;
+	    
+	    for (size_t j=i+1;j<HitsBuffer.size();j++)
+	      {
+		if( ABS(HitsBuffer[i].d - HitsBuffer[j].d) < 0.0001)
+		  {
+		    found = true;
+		    // Delete both points, and continue
+		    HitsBuffer.erase(HitsBuffer.begin()+j);
+		    // If we are "Going IN" to solid material, and there's
+		    // more points, keep one of the points
+		    if (i != 0 && i != HitsBuffer.size()-1)
+		      HitsBuffer.erase(HitsBuffer.begin()+i);
+		    goto restart_check;
+		  }
+	      }
+	    if (found)
+	      continue;
+	  }
+	
+	
+	// Sort hits by distance and transfer to InFill Buffer
+	if (HitsBuffer.size() != 0 && HitsBuffer.size() % 2)
+	  continue;	// There's a uneven number of hits, skip this infill line (U'll live)
+	c = 0;	// Color counter
+	while (HitsBuffer.size())
+	  {
+	    infill->push_back(HitsBuffer[0].p);
+	    if(examineThis)
+	      {
+		switch(c)
+		  {
+		  case 0: glColor3f(1,0,0); break;
+		  case 1: glColor3f(0,1,0); break;
+		  case 2: glColor3f(0,0,1); break;
+		  case 3: glColor3f(1,1,0); break;
+		  case 4: glColor3f(0,1,1); break;
+		  case 5: glColor3f(1,0,1); break;
+		  case 6: glColor3f(1,1,1); break;
+		  case 7: glColor3f(1,0,0); break;
+		  case 8: glColor3f(0,1,0); break;
+		  case 9: glColor3f(0,0,1); break;
+		  case 10: glColor3f(1,1,0); break;
+		  case 11: glColor3f(0,1,1); break;
+		  case 12: glColor3f(1,0,1); break;
+		  case 13: glColor3f(1,1,1); break;
+		  }
+		c++;
+		glPointSize(10);
+		glBegin(GL_POINTS);
+		glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
+		glEnd();
+		glPointSize(1);
+	      }
+	    HitsBuffer.erase(HitsBuffer.begin());
+	  }
+      }
+    return infill;
 }
 
 // calculates intersection and checks for parallel lines.
