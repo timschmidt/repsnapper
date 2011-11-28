@@ -227,8 +227,9 @@ void Model::ConvertToGCode()
 					{ // last shell => calculate infill
 						// check if this if a layer we should use the alternate infill distance on
 				      float infillDistance;
-				      if (LayerNr < settings.Slicing.ShellCount ||
-					  z > Max.z - settings.Slicing.ShellCount * settings.Hardware.LayerThickness) 
+				      if (settings.Slicing.SolidTopAndBottom &&
+				          (LayerNr < settings.Slicing.ShellCount ||
+					   z > Max.z - settings.Slicing.ShellCount * settings.Hardware.LayerThickness))
 					{ 
 					  infillDistance = settings.Hardware.ExtrudedMaterialWidth*settings.Hardware.ExtrusionFactor;  // full fill for first layers (shell thickness)
 					} 

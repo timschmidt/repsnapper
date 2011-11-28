@@ -155,6 +155,7 @@ static struct {
   FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, "InfillRotationPrLayer", 90.0, false),
   FLOAT_MEMBER  (Slicing.AltInfillDistance, "AltInfillDistance", 2.0, false),
   STRING_MEMBER (Slicing.AltInfillLayersText, "AltInfillLayersText", "", false),
+  BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, false),
 
   BOOL_MEMBER   (Slicing.ShellOnly, "ShellOnly", false, true),
   INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),

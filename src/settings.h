@@ -91,6 +91,7 @@ class Settings {
     float InfillRotationPrLayer;
     float AltInfillDistance;
     std::string AltInfillLayersText;
+    bool SolidTopAndBottom;
 
     bool ShellOnly;
     guint ShellCount;
