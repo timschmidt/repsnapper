@@ -643,13 +643,13 @@ View::View(BaseObjectType* cobject,
   connect_button ("i_clear_logs",      sigc::mem_fun(*this, &View::clear_logs) );
   m_builder->get_widget ("i_reverse", m_extruder_reverse);
   m_builder->get_widget ("i_ex_speed", m_extruder_speed);
-  m_extruder_speed->set_range(100.0, 10000.0);
-  m_extruder_speed->set_increments (100, 500);
-  m_extruder_speed->set_value (3000.0);
+  m_extruder_speed->set_range(10.0, 10000.0);
+  m_extruder_speed->set_increments (10, 100);
+  m_extruder_speed->set_value (300.0);
   m_builder->get_widget ("i_ex_length", m_extruder_length);
   m_extruder_length->set_range(0.0, 1000.0);
-  m_extruder_length->set_increments (1, 20);
-  m_extruder_length->set_value (2.0);
+  m_extruder_length->set_increments (1, 10);
+  m_extruder_length->set_value (10.0);
   // FIXME: connect i_update_interval (etc.)
   connect_toggled ("i_fan_enabled", sigc::mem_fun(*this, &View::fan_enabled_toggled));
   m_builder->get_widget ("i_fan_voltage", m_fan_voltage);

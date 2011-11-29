@@ -1,6 +1,23 @@
 --- the plan ---
 
+* Hack default pre-amble so it doesn't crash ...
+G92 E0
+G1 E3.0 F1200
+G1 E2.0 F1200
+G92 E0
+G1 Z1.0 F3000
+G92 E0
+G90
+G21
+G92 E0
+
+
+* Add low prio idle handler for error dialogs: can't connect to device eg.
+* show heat on in a better way ...
+
 * Add time-estimation back ...
+
+* save target temperature, extruder length etc. ...
 
 * fix multiple shells work
 	- so we can get gears printing nicely
