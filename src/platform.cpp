@@ -56,7 +56,7 @@ std::vector<std::string> Platform::getConfigPaths()
   std::vector<std::string> dirs;
 
   /* Always prefer config files in the current directory */
-  dirs.push_back(std::string(".") + G_DIR_SEPARATOR);
+  dirs.push_back(std::string("src") + G_DIR_SEPARATOR);
 
   /* Otherwise prefer the app's current directory */
   if (binary_path)
