@@ -71,6 +71,22 @@ void RFO::draw (Settings &settings, Gtk::TreeModel::iterator &iter)
 
         file->stl.draw (*this, settings);
 
+        if (!settings.Display.DisplayPolygons) {
+                // If not drawing polygons, need to draw the geometry
+                // manually, but invisible, to set up the stencil buffer
+                glEnable(GL_CULL_FACE);
+                glEnable(GL_DEPTH_TEST);
+                glEnable(GL_BLEND);
+                // Set to not draw anything, and not update depth buffer
+                glDepthMask(GL_FALSE);
+                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+                file->stl.draw_geometry();
+
+                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                glDepthMask(GL_TRUE);
+        }
+
         // draw highlight around selected object
         glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
         glLineWidth(4.0);

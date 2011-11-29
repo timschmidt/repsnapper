@@ -212,6 +212,7 @@ void GCode::draw(const Settings &settings)
 	bool extruderon = false;
         glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
+        glDisable(GL_LIGHTING);
 	for(uint i=start;i<commands.size() && i < end ;i++)
 	{
 		switch(commands[i].Code)
