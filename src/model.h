@@ -66,7 +66,22 @@ class Progress {
 
 class Model
 {
-	friend class PrintInhibitor;
+	// Exception safe guard to stop people printing
+	// GCode while loading it / converting etc.
+	struct PrintInhibitor {
+	  Model *m_model;
+	public:
+	  PrintInhibitor(Model *model) : m_model (model)
+	  {
+	    m_model->m_inhibit_print = true;
+	    m_model->m_signal_inhibit_changed.emit();
+	  }
+	  ~PrintInhibitor()
+	  {
+	    m_model->m_inhibit_print = false;
+	    m_model->m_signal_inhibit_changed.emit();
+	  }
+	};
 
 	bool m_printing;
 	unsigned long m_unconfirmed_lines;

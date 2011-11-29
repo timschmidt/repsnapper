@@ -29,6 +29,7 @@ repsnapper_CPPFLAGS = \
 
 SHARED_SRC= \
 	src/model.cpp \
+	src/model2.cpp \
 	src/view.cpp \
 	src/gllight.cpp \
 	src/gcode.cpp \
