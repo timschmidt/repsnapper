@@ -63,10 +63,16 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
 
   Matrix3fT identity;
   Matrix3fSetIdentity(&identity);
+
+  // set initial rotation 30 degrees around Y axis
+  identity.s.M11 = identity.s.M22 = 0.5253; // cos -45
+  identity.s.M12 = 0.851; // -sin -45
+  identity.s.M21 = -0.851; // sin -45
+
   Matrix4fSetRotationScaleFromMatrix3f(&m_transform, &identity);
   m_transform.s.SW = 1.0;
 
-  m_zoom = 100.0f;
+  m_zoom = 120.0f;
   for (uint i = 0; i < N_LIGHTS; i++)
     m_lights[i] = NULL;
 
