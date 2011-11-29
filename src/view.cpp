@@ -860,28 +860,97 @@ void View::update_scale_slider() {
 
 void View::DrawGrid()
 {
+	Vector3f volume = m_model->settings.Hardware.Volume;
+
 	glEnable (GL_BLEND);
 	glEnable (GL_DEPTH_TEST);
 	glDisable (GL_LIGHTING);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  //define blending factors
 
-	glLineWidth (1.0);
 	glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
-	glBegin(GL_LINES);
-	for (uint x = 0; x < m_model->settings.Hardware.Volume.x; x += 10) {
-		glVertex3f (x, 0.0f, 0.0f);
-		glVertex3f (x, m_model->settings.Hardware.Volume.y, 0.0f);
-	}
-	glVertex3f (m_model->settings.Hardware.Volume.x, 0.0f, 0.0f);
-	glVertex3f (m_model->settings.Hardware.Volume.x, m_model->settings.Hardware.Volume.y, 0.0f);
 
-	for (uint y = 0;y < m_model->settings.Hardware.Volume.y; y += 10) {
-		glVertex3f (0.0f, y, 0.0f);
-		glVertex3f (m_model->settings.Hardware.Volume.x, y, 0.0f);
+        // Draw outer border double width
+	glLineWidth (2.0);
+
+	glBegin(GL_LINES);
+        // left edge
+	glVertex3f (0.0f, 0.0f, 0.0f);
+	glVertex3f (0.0f, volume.y, 0.0f);
+        // right edge
+	glVertex3f (volume.x, 0.0f, 0.0f);
+	glVertex3f (volume.x, volume.y, 0.0f);
+        // near edge
+	glVertex3f (0.0f, 0.0f, 0.0f);
+	glVertex3f (volume.x, 0.0f, 0.0f);
+
+        // far edge
+	glVertex3f (0.0f, volume.y, 0.0f);
+	glVertex3f (volume.x, volume.y, 0.0f);
+	glEnd();
+
+        // Draw thin internal lines
+	glLineWidth (1.0);
+
+	glBegin(GL_LINES);
+	for (uint x = 10; x < volume.x; x += 10) {
+		glVertex3f (x, 0.0f, 0.0f);
+		glVertex3f (x, volume.y, 0.0f);
 	}
-	glVertex3f (0.0f, m_model->settings.Hardware.Volume.y, 0.0f);
-	glVertex3f (m_model->settings.Hardware.Volume.x, m_model->settings.Hardware.Volume.y, 0.0f);
+
+	for (uint y = 10; y < volume.y; y += 10) {
+		glVertex3f (0.0f, y, 0.0f);
+		glVertex3f (volume.x, y, 0.0f);
+	}
 
 	glEnd();
+
+	glEnable (GL_LIGHTING);
+        glEnable (GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        // Draw print margin in faint red
+	Vector3f pM = m_model->settings.Hardware.PrintMargin;
+
+        float no_mat[] = {0.0f, 0.0f, 0.0f, 0.5f};
+        float mat_diffuse[] = {1.0f, 0.1f, 0.1f, 0.2f};
+        float mat_specular[] = {0.025f, 0.025f, 0.025f, 0.3f};
+
+        glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
+        glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+        glMaterialf(GL_FRONT, GL_SHININESS, 0.5f);
+        glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
+
+        glBegin(GL_TRIANGLE_STRIP);
+        glNormal3f(0.0f, 0.0f, 1.0f);
+
+	glVertex3f (pM.x, pM.y, 0.0f);
+	glVertex3f (0.0f, 0.0f, 0.0f);
+	glVertex3f (volume.x - pM.x, pM.y, 0.0f);
+	glVertex3f (volume.x, 0.0f, 0.0f);
+
+	glVertex3f (volume.x - pM.x, volume.y - pM.y, 0.0f);
+	glVertex3f (volume.x, volume.y, 0.0f);
+
+	glVertex3f (pM.x, volume.y - pM.y, 0.0f);
+	glVertex3f (0.0f, volume.y, 0.0f);
+
+	glVertex3f (pM.x, pM.y, 0.0f);
+	glVertex3f (0.0f, 0.0f, 0.0f);
+        glEnd();
+
+        // Draw print surface
+        float mat_diffuse_white[] = {0.5f, 0.5f, 0.5f, 0.05f};
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_white);
+
+        glBegin(GL_QUADS);
+	glVertex3f (pM.x, pM.y, 0.0f);
+	glVertex3f (volume.x - pM.x, pM.y, 0.0f);
+	glVertex3f (volume.x - pM.x, volume.y - pM.y, 0.0f);
+	glVertex3f (pM.x, volume.y - pM.y, 0.0f);
+        glEnd();
+
+	glDisable (GL_LIGHTING);
 }
 
 void View::Draw (Gtk::TreeModel::iterator &selected)
@@ -910,7 +979,7 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 
 	// Add the print offset to the drawing location of the STL objects.
 	glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y,
-		translation.z+m_model->settings.Hardware.PrintMargin.z);
+		translation.z+printOffset.z);
 
 	// Draw all objects
 	m_model->rfo.draw (m_model->settings, selected);

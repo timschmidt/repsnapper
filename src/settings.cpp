@@ -88,8 +88,8 @@ static struct {
 } settings[] = {
   // Raft:
 
-  BOOL_MEMBER  (RaftEnable, "RaftEnable", false, false),
-  FLOAT_MEMBER (Raft.Size,  "RaftSize",   1.33, false),
+  BOOL_MEMBER  (RaftEnable, "RaftEnable", false, true),
+  FLOAT_MEMBER (Raft.Size,  "RaftSize",   1.33, true),
 
   // Raft Base
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_BASE].LayerCount), T_INT,
@@ -128,13 +128,13 @@ static struct {
   FLOAT_MEMBER (Hardware.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0, false),
 
   // Volume
-  { OFFSET (Hardware.Volume.x), T_FLOAT, "mfVolumeX", "Hardware.Volume.X", 200, false },
-  { OFFSET (Hardware.Volume.y), T_FLOAT, "mfVolumeY", "Hardware.Volume.Y", 200, false },
-  { OFFSET (Hardware.Volume.z), T_FLOAT, "mfVolumeZ", "Hardware.Volume.Z", 140, false },
+  { OFFSET (Hardware.Volume.x), T_FLOAT, "mfVolumeX", "Hardware.Volume.X", 200, NULL, true },
+  { OFFSET (Hardware.Volume.y), T_FLOAT, "mfVolumeY", "Hardware.Volume.Y", 200, NULL, true },
+  { OFFSET (Hardware.Volume.z), T_FLOAT, "mfVolumeZ", "Hardware.Volume.Z", 140, NULL, true },
   // PrintMargin
-  { OFFSET (Hardware.PrintMargin.x), T_FLOAT, "PrintMarginX", "Hardware.PrintMargin.X", 10, false },
-  { OFFSET (Hardware.PrintMargin.y), T_FLOAT, "PrintMarginY", "Hardware.PrintMargin.Y", 10, false },
-  { OFFSET (Hardware.PrintMargin.z), T_FLOAT, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, false },
+  { OFFSET (Hardware.PrintMargin.x), T_FLOAT, "PrintMarginX", "Hardware.PrintMargin.X", 10, NULL, true },
+  { OFFSET (Hardware.PrintMargin.y), T_FLOAT, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
+  { OFFSET (Hardware.PrintMargin.z), T_FLOAT, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
 
   FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidth, "ExtrudedMaterialWidth", 0.7, false),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
