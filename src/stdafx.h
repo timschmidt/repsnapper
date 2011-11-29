@@ -59,18 +59,6 @@ using namespace vmml;
 //assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits
 # define Epsilon 1.0e-5
 
-struct InFillHit;
-
 typedef unsigned int uint;
-bool IntersectXY(const Vector2f &p1, const Vector2f &p2, const Vector2f &p3, const Vector2f &p4, InFillHit &hit);	// Utilityfunction for CalcInFill
-bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
-
-extern void HSVtoRGB (const float &h, const float &s, const float &v, float &r,float &g,float &b);
-extern void HSVtoRGB (const Vector3f &hsv, Vector3f &rgb);
-extern void HSVtoRGB (const Vector3f &hsv, float &r,float &g,float &b);
-extern void RGBtoHSV (const float &r, const float &g, const float &b, float &h, float &s, float &v);
-extern void RGBTOHSL (float red, float green, float blue, float &hue, float &sat, float &lightness);
-extern void RGBTOYUV (float r, float g, float b, float &y, float &u, float &v);
-extern void YUVTORGB (float y, float u, float v, float &r, float &g, float &b);
 
 #endif // STDAFX_H

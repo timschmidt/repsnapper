@@ -117,6 +117,10 @@ struct InFillHit
 	float t;     // intersection point on first line
 };
 
+bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
+bool IntersectXY (const Vector2f &p1, const Vector2f &p2,
+		  const Vector2f &p3, const Vector2f &p4, InFillHit &hit);
+
 class Poly
 {
 public:

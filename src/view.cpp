@@ -69,7 +69,6 @@ void View::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleB
   }
 }
 
-
 void View::load_gcode ()
 {
   FileChooser::ioDialog (m_model, FileChooser::OPEN, FileChooser::GCODE);
@@ -851,7 +850,7 @@ void View::update_scale_slider() {
   get_selected_stl (object, file);
 
   if (!file)
-    return; 
+    return;
 
   Gtk::HScale *scale_slider;
   m_builder->get_widget("m_scale_slider", scale_slider);
@@ -868,7 +867,7 @@ void View::DrawGrid()
 	glEnable (GL_BLEND);
 	glEnable (GL_DEPTH_TEST);
 	glDisable (GL_LIGHTING);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  //define blending factors
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // define blending factors
 
 	glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
 

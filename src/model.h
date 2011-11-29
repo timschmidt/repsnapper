@@ -131,9 +131,6 @@ public:
 	void LoadConfig() { LoadConfig(Gio::File::create_for_path("repsnapper.conf")); }
 	void LoadConfig(Glib::RefPtr<Gio::File> file);
 
-	// RFO Functions
-	//	void ReadRFO(std::string filename);
-
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file);
 	RFO_File *AddStl(RFO_Object *parent, Slicer stl, string filename);
@@ -170,9 +167,6 @@ public:
 
 	void RunExtruder(double extruder_speed, double extruder_length, bool reverse);
 	void SendNow(string str);
-	void setPort(string s);
-	void setSerialSpeed(int s );
-	void SetValidateConnection(bool validate);
 
 	void EnableTempReading(bool on);
 	void SetLogFileClear(bool on);
@@ -189,13 +183,6 @@ public:
 
 	rr_dev m_device;
 	sigc::connection m_devconn;
-
-	/*- Custom button interface -*/
-	void SendCustomButton(int nr);
-	void SaveCustomButton();
-	void TestCustomButton();
-	void GetCustomButtonText(int nr);
-	void RefreshCustomButtonLabels();
 
 	void PrintButton();
 	void ContinuePauseButton();

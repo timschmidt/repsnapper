@@ -68,6 +68,7 @@ public:
 	};
 
 	RFO();
+
 	void clear();
 	void DeleteSelected(Gtk::TreeModel::iterator &iter);
 	void draw(Settings &settings, Gtk::TreeModel::iterator &iter);

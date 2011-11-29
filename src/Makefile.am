@@ -34,7 +34,6 @@ SHARED_SRC= \
 	src/gllight.cpp \
 	src/gcode.cpp \
 	src/arcball.cpp \
-	src/stdafx.cpp \
 	src/rfo.cpp \
 	src/file.cpp \
 	src/platform.cpp \
