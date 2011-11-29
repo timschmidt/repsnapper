@@ -181,7 +181,7 @@ void Model::ConvertToGCode()
 	{
 	  for(uint f=0;f<rfo.Objects[o].files.size();f++)
 	    {
-	      STL* stl = &rfo.Objects[o].files[f].stl;	// Get a pointer to the object
+				Slicer* stl = &rfo.Objects[o].files[f].stl;	// Get a pointer to the object
 	      Matrix4f T = rfo.GetSTLTransformationMatrix(o,f);
 	      Vector3f t = T.getTranslation();
 	      t+= Vector3f(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
@@ -556,8 +556,8 @@ void Model::STOP()
 
 void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 {
-  STL stl;
-  if (stl.loadFile (file->get_path()) == 0)
+  Slicer stl;
+  if (stl.load (file->get_path()) == 0)
     AddStl(NULL, stl, file->get_path());
   ModelChanged();
 }
@@ -588,7 +588,7 @@ void Model::ModelChanged()
   m_model_changed.emit();
 }
 
-RFO_File* Model::AddStl(RFO_Object *parent, STL stl, string filename)
+RFO_File* Model::AddStl(RFO_Object *parent, Slicer stl, string filename)
 {
   RFO_File *file, *lastfile;
 

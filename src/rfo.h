@@ -18,7 +18,7 @@
 */
 #pragma once
 
-#include "stl.h"
+#include "slicer.h"
 
 class RFO_Transform3D
 {
@@ -37,7 +37,7 @@ public:
 	string location;
 	string filetype;
 	string material;
-	STL stl;
+	Slicer stl;
 	int idx;
 };
 
@@ -72,7 +72,7 @@ public:
 	void DeleteSelected(Gtk::TreeModel::iterator &iter);
 	void draw(Settings &settings, Gtk::TreeModel::iterator &iter);
 	void newObject();
-	Gtk::TreePath createFile(RFO_Object *parent, const STL &stl, std::string location);
+	Gtk::TreePath createFile(RFO_Object *parent, const Slicer &stl, std::string location);
 	void get_selected_stl(Gtk::TreeModel::iterator &iter, RFO_Object *&object, RFO_File *&file);
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
 	Matrix4f GetSTLTransformationMatrix(int object, int file) const;

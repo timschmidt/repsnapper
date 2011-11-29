@@ -1,5 +1,7 @@
 --- the plan ---
 
+* add a git hook to forbid DOS line endings [!] ...
+
 * Hack default pre-amble so it doesn't crash ...
 G92 E0
 G1 E3.0 F1200
