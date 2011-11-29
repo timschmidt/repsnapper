@@ -17,7 +17,6 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "slicer.h"
-#include <ieee754.h>
 
 // Constructor
 Slicer::Slicer()
@@ -39,11 +38,13 @@ static float read_float(ifstream &file) {
 		} ieee;
 	} ieee;
 	file.read (ieee.buffer, 4);
-	ieee754_float ret;
-	ret.ieee.mantissa = ieee.ieee.mantissa;
-	ret.ieee.exponent = ieee.ieee.exponent;
-	ret.ieee.negative = ieee.ieee.negative;
-	return ret.f;
+
+	GFloatIEEE754 ret;
+	ret.mpn.mantissa = ieee.ieee.mantissa;
+	ret.mpn.biased_exponent = ieee.ieee.exponent;
+	ret.mpn.sign = ieee.ieee.negative;
+
+	return ret.v_float;
 }
 
 /* Loads an binary STL file by filename
