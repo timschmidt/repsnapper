@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: martin.dieringer@gmx.de\n"
 "POT-Creation-Date: 2011-09-04 20:05+0100\n"
-"PO-Revision-Date: 2011-11-29 20:06+0100\n"
+"PO-Revision-Date: 2011-11-30 00:26+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../repsnapper.desktop.in.h:1
 msgid "Controls your 3D plastic printer"
-msgstr ""
+msgstr "Bedienung des 3D-Druckers"
 
 #: ../repsnapper.desktop.in.h:2
 msgid "RepRap control software"
@@ -44,39 +44,43 @@ msgstr "Fertig"
 
 #: ../src/model.cpp:184
 msgid "unknown shrinking algorithm"
-msgstr ""
+msgstr "unbekannter Schrumpfalgorithmus"
 
 #: ../src/model.cpp:296
 msgid "Failed to connect to device"
-msgstr ""
+msgstr "Konnte nicht mit dem Gerät verbinden"
 
 #: ../src/model.cpp:321
 msgid ""
 "Already printing.\n"
 "Cannot start printing"
 msgstr ""
+"Es wird schon gedruckt.\n"
+"Druck kann nicht starten"
 
 #: ../src/model.cpp:331
 msgid ""
 "Not connected to printer.\n"
 "Cannot start printing"
 msgstr ""
+"Nicht verbunden.\n"
+"Kann nicht drucken"
 
 #: ../src/model.cpp:341
 msgid "Printing"
-msgstr ""
+msgstr "Druckt"
 
 #: ../src/model.cpp:383
 msgid "Can't send command"
-msgstr ""
+msgstr "Kann Befehl nicht senden"
 
 #: ../src/model.cpp:385
 msgid "You must first connect to a device!"
-msgstr ""
+msgstr "Zuerst muss verbunden werden!"
 
 #: ../src/model.cpp:394
 msgid "Can't go home while printing"
-msgstr ""
+msgstr "Kann nicht in Ausgangsposition, während gedruckt wird"
 
 #: ../src/model.cpp:445
 msgid "Home called with unknown axis"
@@ -84,40 +88,40 @@ msgstr ""
 
 #: ../src/model.cpp:452 ../src/model.cpp:487
 msgid "Can't move manually while printing"
-msgstr ""
+msgstr "Kann nicht bewegen, während gedruckt wird"
 
 #: ../src/model.cpp:481
 msgid "Move called with unknown axis"
-msgstr ""
+msgstr "Bewegung mit unbekannter Achse"
 
 #: ../src/model.cpp:508
 msgid "Goto called with unknown axis"
-msgstr ""
+msgstr "Ziel angegeben ohne Achse"
 
 #: ../src/model.cpp:710
 msgid "Reset E for the remaining print"
-msgstr ""
+msgstr "E zurücksetzen für verbleibenden Druck"
 
 #: ../src/model.cpp:761
 msgid "Error reading from device!"
-msgstr ""
+msgstr "Fehler beim Lesen vom Gerät!"
 
 #: ../src/model.cpp:767
 msgid "Error writing to device!"
-msgstr ""
+msgstr "Fehler beim Schreiben zum Gerät"
 
 #: ../src/model.cpp:808
 msgid "Printed"
-msgstr ""
+msgstr "Gedruckt"
 
 #: ../src/model.cpp:817
 #, c-format
 msgid "Error (%d) '%s' - user popup ?"
-msgstr ""
+msgstr "Fehler (%d) '%s' - Fenster?"
 
 #: ../src/connectview.cpp:40
 msgid "Disconnecting..."
-msgstr ""
+msgstr "Trenne ..."
 
 #: ../src/connectview.cpp:45
 msgid "Connect"
@@ -183,37 +187,48 @@ msgid ""
 "Report bugs to #repsnapper, irc.freenode.net\n"
 "\n"
 msgstr ""
+"\"Befehl: repsnapper [OPTION]... [DATEI]...\\n\"\n"
+"\"Starte Programm und lade [DATEI]en\\n\"\n"
+"\"Optionen:\\n\"\n"
+"\"  -t, --no-gui           Kommandozeile, ohne grafische Oberfläche\\n\"\n"
+"\"  -i, --input [datei]    von [datei] laden\\n\"\n"
+"\"  -o, --output [file]    GCode in [datei] ausgeben\\n\"\n"
+"\"  -s, --settings [file]  Einstellungen von [datei] laden\\n\"\n"
+"\"  -h, --help             Hilfe anzeigen\\n\"\n"
+"\"\\n\"\n"
+"\"Report bugs to #repsnapper, irc.freenode.net\\n\"\n"
+"\"\\n\"\n"
 
 #: ../src/repsnapper.cpp:157
 msgid "Couldn't create user config directory!"
-msgstr ""
+msgstr "Konnte Verzeichnis für Benutzer-Konfiguration nicht anlegen!"
 
 #: ../src/repsnapper.cpp:178 ../src/repsnapper.cpp:201
 msgid "Couldn't find global configuration!"
-msgstr ""
+msgstr "Konnte Grundeinstellung nicht finden!"
 
 #: ../src/repsnapper.cpp:180 ../src/repsnapper.cpp:203
 msgid "It is likely that repsnapper is not correctly installed."
-msgstr ""
+msgstr "Wahrscheinlich wurde repsnapper nicht korrekt installiert."
 
 #. Fall back to global config
 #: ../src/repsnapper.cpp:195
 msgid "Unable to create user config"
-msgstr ""
+msgstr "Kann keine Benutzer-Konfiguration erstellen"
 
 #: ../src/repsnapper.cpp:197
 msgid ""
 "\n"
 "Falling back to global config. Settings will not be saved."
-msgstr ""
+msgstr "Setze auf Grundeinstellung zurück. Einstellungen werden nicht gespeichert"
 
 #: ../src/repsnapper.cpp:212
 msgid "Failed to locate config"
-msgstr ""
+msgstr "Kann Konfiguration nicht finden"
 
 #: ../src/rfo.cpp:147
 msgid "Unsaved file"
-msgstr ""
+msgstr "Ungespeicherte Datei"
 
 #: ../src/view.cpp:122
 msgid "Error reading UI description!!"
@@ -265,7 +280,7 @@ msgstr ""
 
 #: ../src/view.cpp:363
 msgid "<unknown>"
-msgstr ""
+msgstr "<unbekannt>"
 
 #: ../src/view.cpp:366
 msgid "Target:"
@@ -273,7 +288,7 @@ msgstr "Sollwert:"
 
 #: ../src/view.cpp:436
 msgid "Home"
-msgstr ""
+msgstr "Startposition"
 
 #: ../src/view.cpp:616
 msgid "Scale the selected object"
@@ -321,19 +336,19 @@ msgstr ""
 
 #: ../src/repsnapper.ui.h:11
 msgid "<b>Extruder Settings</b>"
-msgstr ""
+msgstr "Extruder-Einstellungen"
 
 #: ../src/repsnapper.ui.h:12
 msgid "<b>GCode Rendering</b>"
-msgstr ""
+msgstr "<b>GCode-Erzeugung</b>"
 
 #: ../src/repsnapper.ui.h:13
 msgid "<b>Geometry</b>"
-msgstr ""
+msgstr "<b>Geometrie</b>"
 
 #: ../src/repsnapper.ui.h:14
 msgid "<b>Infill Debug</b>"
-msgstr ""
+msgstr "<b>Füllung Debuggen</b>"
 
 #: ../src/repsnapper.ui.h:15
 msgid "<b>Interface</b>"
@@ -341,7 +356,7 @@ msgstr ""
 
 #: ../src/repsnapper.ui.h:16
 msgid "<b>Layer Preview</b>"
-msgstr ""
+msgstr "<b>Schichten-Vorschau</b>"
 
 #: ../src/repsnapper.ui.h:17
 msgid "<b>Lighting</b>"
@@ -361,7 +376,7 @@ msgstr ""
 
 #: ../src/repsnapper.ui.h:21
 msgid "<b>Shrinking Quality</b>"
-msgstr ""
+msgstr "<b>Schrumpf-Qualität</b>"
 
 #: ../src/repsnapper.ui.h:22
 msgid "<b>Size</b>"
@@ -371,11 +386,11 @@ msgstr "<b>Größe</b>"
 msgid ""
 "A comma separated list of layer numbers that should use the alternate infill "
 "distance."
-msgstr ""
+msgstr "Liste mit Schichtnummern, die alternativ gefüllt werden sollen"
 
 #: ../src/repsnapper.ui.h:24
 msgid "Acceleration Distance"
-msgstr ""
+msgstr "Beschleunigung Abstand"
 
 #: ../src/repsnapper.ui.h:25
 msgid "Adjust Luminance to Indicate Speed"
@@ -383,27 +398,27 @@ msgstr ""
 
 #: ../src/repsnapper.ui.h:26
 msgid "Algorithm"
-msgstr ""
+msgstr "Algorithmus"
 
 #: ../src/repsnapper.ui.h:27
 msgid "Alternate Infill Distance"
-msgstr ""
+msgstr "Alternativer Füllabstand"
 
 #: ../src/repsnapper.ui.h:28
 msgid "Alternate Layers"
-msgstr ""
+msgstr "Alternative Schichten"
 
 #: ../src/repsnapper.ui.h:29
 msgid "Auto Rotate"
-msgstr ""
+msgstr "Automatisch Drehen"
 
 #: ../src/repsnapper.ui.h:30
 msgid "Axis Control"
-msgstr ""
+msgstr "Achsensteuerung"
 
 #: ../src/repsnapper.ui.h:31
 msgid "Border"
-msgstr ""
+msgstr "Rand"
 
 #: ../src/repsnapper.ui.h:32
 msgid "Build Volume"
@@ -467,11 +482,11 @@ msgstr ""
 
 #: ../src/repsnapper.ui.h:47
 msgid "Debug"
-msgstr ""
+msgstr "Debuggen"
 
 #: ../src/repsnapper.ui.h:48
 msgid "Debug Infill"
-msgstr ""
+msgstr "Füllung Debuggen"
 
 #: ../src/repsnapper.ui.h:49
 msgid "Delete"
@@ -487,7 +502,7 @@ msgstr "Abstand zwischen Linien"
 
 #: ../src/repsnapper.ui.h:52
 msgid "Draw All Layers"
-msgstr ""
+msgstr "Alle Schichten zeigen"
 
 #: ../src/repsnapper.ui.h:53
 msgid "Draw Bounding Boxes"
@@ -591,7 +606,7 @@ msgstr ""
 
 #: ../src/repsnapper.ui.h:78
 msgid "Extruded Material Width"
-msgstr ""
+msgstr "Dicke des extrudierten Materials"
 
 #: ../src/repsnapper.ui.h:79
 msgid "Extruder"

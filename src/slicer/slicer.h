@@ -190,12 +190,16 @@ public:
 	~CuttingPlane();
 
 	// Contract polygons:
-	void ShrinkFast(float distance, float optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount);
-	void ShrinkLogick(float distance, float optimization, bool DisplayCuttingPlane, int ShellCount);
+	void ShrinkFast(float distance, float optimization, bool DisplayCuttingPlane,
+			bool useFillets, int ShellCount);
+	void ShrinkLogick(float distance, float optimization, bool DisplayCuttingPlane,
+			  int ShellCount);
 
 	void  selfIntersectAndDivide();
-	guint selfIntersectAndDivideRecursive(float z, guint startPolygon, guint startVertex,
-					      vector<outline> &outlines, const Vector2f endVertex,
+	guint selfIntersectAndDivideRecursive(float z, guint startPolygon, 
+					      guint startVertex,
+					      vector<outline> &outlines, 
+					      const Vector2f endVertex,
 					      guint &level);
 	void  recurseSelfIntersectAndDivide  (float z, vector<locator> &EndPointStack,
 					      vector<outline> &outlines,
@@ -206,8 +210,11 @@ public:
 		offsetPolygons.clear();
 		offsetVertices.clear();
 	}
-	vector<Vector2f> * CalcInFill(guint LayerNr, float InfillDistance, float InfillRotation, float InfillRotationPrLayer, bool DisplayDebuginFill);	// Collide a infill-line with the polygons
-	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers, bool DrawCPLineNumbers, bool DrawCPVertexNumbers);
+	vector<Vector2f> * CalcInFill(guint LayerNr, float InfillDistance, 
+				      float InfillRotation, float InfillRotationPrLayer,
+				      bool DisplayDebuginFill);	// Collide an infill-line with the polygons
+	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers,
+		  bool DrawCPLineNumbers, bool DrawCPVertexNumbers);
 	bool LinkSegments(float z, float Optimization);		        // Link Segments to form polygons
 	bool CleanupConnectSegments(float z);
 	bool CleanupSharedSegments(float z);
@@ -279,14 +286,18 @@ public:
     int load(std::string filename);
 
 	void clear() { triangles.clear(); }
-	void displayInfillOld(const Settings &settings, CuttingPlane &plane, guint LayerNr, vector<int>& altInfillLayers);
+	void displayInfillOld(const Settings &settings, CuttingPlane &plane, 
+			      guint LayerNr, vector<int>& altInfillLayers);
 	void draw (RFO &rfo, const Settings &settings);
 	void draw_geometry ();
 	void CenterAroundXY();
-	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);	// Extract a 2D polygonset from a 3D model
-	void OptimizeRotation();			// Auto-Rotate object to have the largest area surface down for printing
+	// Extract a 2D polygonset from a 3D model:
+	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);
+	// Auto-Rotate object to have the largest area surface down for printing:
+	void OptimizeRotation(); 
 	void CalcCenter();
-	void RotateObject(Vector3f axis, float angle);  // Rotation for manual rotate and used by OptimizeRotation
+	// Rotation for manual rotate and used by OptimizeRotation:
+	void RotateObject(Vector3f axis, float angle);  
     void Scale(float scale_factor);
     float getScaleFactor(){ return scale_factor; };
 
@@ -315,7 +326,8 @@ public:
 	void RetrieveLines(vector<Vector3f>& lines);
 private:
 	void PushPoly(Polygon2f* poly);
-	void DoMakeOffsetPolygons(Polygon2f* pPoly, vector<Poly>& polys, vector<Vector2f>& vectors);
+	void DoMakeOffsetPolygons(Polygon2f* pPoly, vector<Poly>& polys,
+				  vector<Vector2f>& vectors);
 	void DoRetrieveLines(Polygon2f* pPoly, vector<Vector3f>& lines);
 };
 

@@ -201,7 +201,7 @@ void Model::ConvertToGCode()
 	{
 	  for(uint f=0;f<rfo.Objects[o].files.size();f++)
 	    {
-				Slicer* stl = &rfo.Objects[o].files[f].stl;	// Get a pointer to the object
+	      Slicer* stl = &rfo.Objects[o].files[f].stl;	// Get a pointer to the object
 	      Matrix4f T = rfo.GetSTLTransformationMatrix(o,f);
 	      Vector3f t = T.getTranslation();
 	      t+= Vector3f(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
