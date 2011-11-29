@@ -67,15 +67,18 @@ dnl AC_SUBST(LIBREPRAP_LIBS)
 
 AC_SUBST(DISTCHECK_LIBREPRAP_FLAGS)
 
-AC_CHECK_HEADER(GL/glut.h,
-    ,
-    AC_MSG_ERROR([cannot find headers for freeglut]))
-
 case "$host_os" in
 mingw*)
   GL_LIBS="-lopengl32 -lglu32 -lglut32"
   EXTRA_LDFLAGS="-Wl,-subsystem,windows -shared-libgcc"
   EXTRA_CFLAGS="-fexceptions -mthreads"
+  ;;
+freebsd*)
+  GL_LIBS="-L/usr/local/lib -lGLU -lGL -lglut"
+  EXTRA_LDFLAGS="-L/usr/local/lib"
+  CFLAGS="-I/usr/local/include"
+  CXXFLAGS="-I/usr/local/include"
+  CPPFLAGS="-I/usr/local/include"
   ;;
 *)
   GL_LIBS="-L/usr/lib -lGLU -lGL -lglut"
@@ -83,6 +86,11 @@ mingw*)
   EXTRA_CFLAGS=
   ;;
 esac
+
+AC_CHECK_HEADER(GL/glut.h,
+    ,
+    AC_MSG_ERROR([cannot find headers for freeglut]))
+
 
 AC_SUBST(GL_LIBS)
 AC_SUBST(EXTRA_LDFLAGS)
