@@ -19,6 +19,7 @@ repsnapper_CPPFLAGS = \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/src/slicer \
 	-I$(LIB_DIR)/polylib \
 	-I$(LIB_DIR) \
         -DRSDATADIR='$(repsnapperdatadir)' \
@@ -27,7 +28,6 @@ repsnapper_CPPFLAGS = \
 	-g -O0 $(WARNING_FLAGS)
 
 SHARED_SRC= \
-	src/stl.cpp \
 	src/model.cpp \
 	src/view.cpp \
 	src/gllight.cpp \
@@ -52,7 +52,6 @@ SHARED_INC= \
 	src/rfo.h \
 	src/file.h \
 	src/stdafx.h \
-	src/stl.h \
 	src/platform.h \
 	src/render.h \
 	src/progress.h \
@@ -60,6 +59,8 @@ SHARED_INC= \
 	src/settings.h \
 	src/view.h \
 	src/types.h
+
+include src/slicer/Makefile.am
 
 # TEST_SOURCES=unittest.cpp
 
