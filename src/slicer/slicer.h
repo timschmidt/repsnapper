@@ -16,6 +16,7 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+#include "config.h"
 #pragma once
 #include <vector>
 #include <list>
@@ -27,11 +28,46 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <list>
+#include <limits>
+#include <algorithm>
 
 #include <vmmlib/vmmlib.h>
 #include <polylib/Polygon2f.h>
+
+#include "stdafx.h"
+#include "string.h"
+
+#include "gcode.h"
+#include "math.h"
 #include "settings.h"
+
+// for PointHash
+#ifdef __GNUC__
+#  define _BACKWARD_BACKWARD_WARNING_H 1 // kill annoying warning
+#  include <ext/hash_map>
+namespace std
+{
+  using namespace __gnu_cxx;
+}
+#else
+#  include <hash_map>
+using namespace stdext;
+#endif
+
+#define ABS(a)	   (((a) < 0) ? -(a) : (a))
+
+/* A number that speaks for itself, every kissable digit.                    */
+
+#define PI 3.141592653589793238462643383279502884197169399375105820974944592308
+
+#define CUTTING_PLANE_DEBUG 0
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+#define RESOLUTION 4
+#define FREE(p)            {if (p) {free(p); (p)= NULL;}}
 
 using namespace std;
 using namespace vmml;
@@ -231,12 +267,12 @@ private:
 
 #define sqr(x) ((x)*(x))
 
-class STL
+class Slicer
 {
 public:
-	STL();
+	Slicer();
 
-    int loadFile(std::string filename);
+    int load(std::string filename);
 
 	void clear() { triangles.clear(); }
 	void displayInfillOld(const Settings &settings, CuttingPlane &plane, guint LayerNr, vector<int>& altInfillLayers);
@@ -255,7 +291,28 @@ public:
 
 private:
     float scale_factor;
-    int loadASCIIFile(std::string filename);
-    int loadBinaryFile(std::string filename);
+    int loadASCIISTL(std::string filename);
+    int loadBinarySTL(std::string filename);
     filetype_t getFileType(std::string filename);
 };
+
+// For Logick shrinker ...
+class CuttingPlaneOptimizer
+{
+public:
+	float Z;
+	CuttingPlaneOptimizer(float z) { Z = z; }
+	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z);
+	list<Polygon2f*> positivePolygons;
+	void Shrink(float distance, list<Polygon2f*> &resPolygons);
+	void Draw();
+	void Dispose();
+	void MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2f>& vectors);
+	void RetrieveLines(vector<Vector3f>& lines);
+private:
+	void PushPoly(Polygon2f* poly);
+	void DoMakeOffsetPolygons(Polygon2f* pPoly, vector<Poly>& polys, vector<Vector2f>& vectors);
+	void DoRetrieveLines(Polygon2f* pPoly, vector<Vector3f>& lines);
+};
+
+#include "rfo.h"

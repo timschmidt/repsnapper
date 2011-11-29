@@ -23,7 +23,7 @@
 
 #include <giomm/file.h>
 
-#include "stl.h"
+#include "slicer.h"
 #include "rfo.h"
 #include "types.h"
 #include "gcode.h"
@@ -121,7 +121,7 @@ public:
 
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file);
-	RFO_File *AddStl(RFO_Object *parent, STL stl, string filename);
+	RFO_File *AddStl(RFO_Object *parent, Slicer stl, string filename);
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 
 	void Read(Glib::RefPtr<Gio::File> file);
