@@ -568,11 +568,61 @@ void View::temp_changed()
     m_temps[i]->update_temp (m_model->get_temp((TempType) i));
 }
 
+bool View::moveSelected(float x, float y)
+{
+  return false;
+}
+
+bool View::key_pressed_event(GdkEventKey *event)
+{
+  if (m_rfo_tree->get_selection()->count_selected_rows() <= 0)
+    return false;
+  switch (event->keyval)
+    {
+    case GDK_KEY_Tab:
+      {
+      Glib::RefPtr<Gtk::TreeSelection> selection = m_rfo_tree->get_selection();
+      Glib::RefPtr<Gtk::TreeStore> model = m_model->rfo.m_model;
+      Gtk::TreeModel::iterator sel = selection->get_selected();
+      if (event->state & GDK_SHIFT_MASK)
+	sel--;
+      else
+	sel++;
+      if (sel)
+      {
+	selection->select (sel);
+	return true;
+      }
+      else
+	return false;
+      }
+    case GDK_KEY_Escape:
+      {
+	bool has_selected = m_rfo_tree->get_selection()->get_selected();
+	m_rfo_tree->get_selection()->unselect_all();
+	return has_selected;
+      }
+    case GDK_KEY_Delete:
+    case GDK_KEY_KP_Delete:
+      delete_selected_stl();
+      return true;
+    case GDK_KEY_Up: case GDK_KEY_KP_Up:
+      return moveSelected( 0.0,  1.0 );
+    case GDK_KEY_Down: case GDK_KEY_KP_Down:
+      return moveSelected( 0.0, -1.0 );
+    case GDK_KEY_Left: case GDK_KEY_KP_Left:
+      return moveSelected( -1.0, 0.0 );
+    case GDK_KEY_Right: case GDK_KEY_KP_Right:
+      return moveSelected(  1.0, 0.0 );
+    default:
+      return false;
+    }
+}
+
 View::View(BaseObjectType* cobject,
 	   const Glib::RefPtr<Gtk::Builder>& builder)
   : Gtk::Window(cobject), m_builder(builder)
 {
-
   // Menus
   connect_action ("OpenStl",         sigc::mem_fun(*this, &View::load_stl) );
   connect_action ("OpenGCode",       sigc::mem_fun(*this, &View::load_gcode) );
@@ -603,6 +653,10 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(0,1,0, M_PI/2)));
   connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(0,0,1, M_PI/2)));
   m_builder->get_widget ("m_rfo_tree", m_rfo_tree);
+
+  // Insert our keybindings all around the place
+  signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
+  m_rfo_tree->signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
 
   m_translation_row = new TranslationSpinRow (this, m_rfo_tree, "m_box_translate");
 
@@ -844,7 +898,8 @@ void View::scale_object()
 
 /* Updates the scale slider when a new STL is selected,
  * giving it the new STL's current scale factor */
-void View::update_scale_slider() {
+void View::update_scale_slider()
+{
   RFO_File *file;
   RFO_Object *object;
   get_selected_stl (object, file);
