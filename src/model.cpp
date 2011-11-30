@@ -420,7 +420,7 @@ void Model::CalcBoundingBoxAndCenter()
     }
   }
 
-  Center = Min + (Max - Min) / 2.0;
+  Center = (Max + Min) / 2.0;
 
   m_signal_rfo_changed.emit();
 }
