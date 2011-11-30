@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: martin.dieringer@gmx.de\n"
 "POT-Creation-Date: 2011-09-04 20:05+0100\n"
-"PO-Revision-Date: 2011-11-30 00:26+0100\n"
+"PO-Revision-Date: 2011-11-30 01:28+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -220,7 +220,7 @@ msgstr "Kann keine Benutzer-Konfiguration erstellen"
 msgid ""
 "\n"
 "Falling back to global config. Settings will not be saved."
-msgstr "Setze auf Grundeinstellung zurück. Einstellungen werden nicht gespeichert"
+msgstr "\n\nSetze auf Grundeinstellung zurück. Einstellungen werden nicht gespeichert"
 
 #: ../src/repsnapper.cpp:212
 msgid "Failed to locate config"
@@ -394,7 +394,7 @@ msgstr "Beschleunigung Abstand"
 
 #: ../src/repsnapper.ui.h:25
 msgid "Adjust Luminance to Indicate Speed"
-msgstr ""
+msgstr "Geschwindigkeit durch Luminanz darstellen"
 
 #: ../src/repsnapper.ui.h:26
 msgid "Algorithm"

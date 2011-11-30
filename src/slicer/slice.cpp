@@ -52,62 +52,29 @@ void Slicer::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &
 	Vector2f lineEnd;
 
 	bool foundOne = false;
+	int num_cutpoints;
 	for (size_t i = 0; i < triangles.size(); i++)
 	{
 		foundOne=false;
 		CuttingPlane::Segment line(-1,-1);
 
-		Vector3f P1 = T*triangles[i].A;
-		Vector3f P2 = T*triangles[i].B;
+		num_cutpoints = triangles[i].CutWithPlane(where, T, lineStart, lineEnd);
+		if (num_cutpoints>0)
+		  line.start = plane.RegisterPoint(lineStart);
+		if (num_cutpoints>1)
+		  line.end = plane.RegisterPoint(lineEnd);
 
-		// Are the points on opposite sides of the plane ?
-		if ((where <= P1.z) != (where <= P2.z))
-		{
-			float t = (where-P1.z)/(float)(P2.z-P1.z);
-			Vector3f p = P1+((Vector3f)(P2-P1)*t);
-			lineStart = Vector2f(p.x,p.y);
-			line.start = plane.RegisterPoint(lineStart);
-			foundOne = true;
-		}
-
-		P1 = T*triangles[i].B;
-		P2 = T*triangles[i].C;
-		if ((where <= P1.z) != (where <= P2.z))
-		{
-			float t = (where-P1.z)/(float)(P2.z-P1.z);
-			Vector3f p = P1+((Vector3f)(P2-P1)*t);
-			if(foundOne)
-			{
-				lineEnd = Vector2f(p.x,p.y);
-				line.end = plane.RegisterPoint(lineEnd);
-			}
-			else
-			{
-				lineStart = Vector2f(p.x,p.y);
-				line.start = plane.RegisterPoint(lineStart);
-			}
-		}
-		P1 = T*triangles[i].C;
-		P2 = T*triangles[i].A;
-		if ((where <= P1.z) != (where <= P2.z))
-		{
-			float t = (where-P1.z)/(float)(P2.z-P1.z);
-			Vector3f p = P1+((Vector3f)(P2-P1)*t);
-
-			lineEnd = Vector2f(p.x,p.y);
-			line.end = plane.RegisterPoint(lineEnd);
-
-			if( line.end == line.start ) continue;
-		}
 		// Check segment normal against triangle normal. Flip segment, as needed.
-		if (line.start != -1 && line.end != -1 && line.end != line.start)	// if we found a intersecting triangle
+		if (line.start != -1 && line.end != -1 && line.end != line.start)	
+		  // if we found a intersecting triangle
 		{
 			Vector3f Norm = triangles[i].Normal;
 			Vector2f triangleNormal = Vector2f(Norm.x, Norm.y);
 			Vector2f segmentNormal = (lineEnd - lineStart).normal();
 			triangleNormal.normalise();
 			segmentNormal.normalise();
-			if( (triangleNormal-segmentNormal).lengthSquared() > 0.2f)	// if normals does not align, flip the segment
+			if( (triangleNormal-segmentNormal).lengthSquared() > 0.2f)
+			  // if normals does not align, flip the segment
 				line.Swap();
 			plane.AddLine(line);
 		}

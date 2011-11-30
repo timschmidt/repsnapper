@@ -94,8 +94,8 @@ public:
 		{ Normal = Norml ; A=Point1;B=Point2;C=Point3;}
 	Triangle() {};
 
-    /* Represent the triangle as an array of length 3 {A, B, C} */
-    Vector3f &operator[](const int index);
+	/* Represent the triangle as an array of length 3 {A, B, C} */
+	Vector3f &operator[](const int index);
 
 	void SetPoints(const Vector3f &P1, const Vector3f &P2, const Vector3f &P3) { A=P1;B=P2;C=P3; }
 	void SetNormal(const Vector3f &Norml) { Normal=Norml;}
@@ -107,6 +107,8 @@ public:
 	Vector3f GetMin();
 	void AccumulateMinMax(Vector3f &min, Vector3f &max);
 	void Translate(const Vector3f &vector);
+	int CutWithPlane(float z, const Matrix4f &T, 
+			 Vector2f &lineStart, Vector2f &lineEnd);
 };
 
 

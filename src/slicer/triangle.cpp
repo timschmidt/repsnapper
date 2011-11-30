@@ -71,3 +71,58 @@ void Triangle::Translate(const Vector3f &vector)
 	B += vector;
 	C += vector;
 }
+
+
+int Triangle::CutWithPlane(float z, const Matrix4f &T, 
+			   Vector2f &lineStart,
+			   Vector2f &lineEnd)
+{
+
+	Vector3f p;
+	float t;
+
+	Vector3f P1 = T*this->A;
+	Vector3f P2 = T*this->B;
+
+	int num_cutpoints = 1;
+	bool foundOne = false;
+	// Are the points on opposite sides of the plane ?
+	if ((z <= P1.z) != (z <= P2.z))
+	  {
+	    t = (z-P1.z)/(float)(P2.z-P1.z);
+	    p = P1+((Vector3f)(P2-P1)*t);
+	    lineStart = Vector2f(p.x,p.y);
+	    foundOne = true;
+	    num_cutpoints = 1;
+	  }
+	
+	P1 = T*this->B;
+	P2 = T*this->C;
+	if ((z <= P1.z) != (z <= P2.z))
+	  {
+	    t = (z-P1.z)/(float)(P2.z-P1.z);
+	    p = P1+((Vector3f)(P2-P1)*t);
+	    if(foundOne)
+	      {
+		lineEnd = Vector2f(p.x,p.y);
+		num_cutpoints = 2;
+	      }
+	    else
+	      {
+		lineStart = Vector2f(p.x,p.y);
+		num_cutpoints = 1;
+	      }
+	  }
+	P1 = T*this->C;
+	P2 = T*this->A;
+	if ((z <= P1.z) != (z <= P2.z))
+	  {
+	    t = (z-P1.z)/(float)(P2.z-P1.z);
+	    p = P1+((Vector3f)(P2-P1)*t);
+	    
+	    lineEnd = Vector2f(p.x,p.y);
+	    if( lineEnd != lineStart ) num_cutpoints = 2;
+	  }
+	
+	return num_cutpoints;
+}
