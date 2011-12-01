@@ -85,7 +85,7 @@ int Triangle::CutWithPlane(float z, const Matrix4f &T,
 	Vector3f P2 = T*this->B;
 
 	int num_cutpoints = 0;
-	// Are the points on opposite sides of the plane ?
+	// Are the points on opposite sides of the plane?
 	if ((z <= P1.z) != (z <= P2.z))
 	  {
 	    t = (z-P1.z)/(float)(P2.z-P1.z);
@@ -116,8 +116,7 @@ int Triangle::CutWithPlane(float z, const Matrix4f &T,
 	if ((z <= P1.z) != (z <= P2.z))
 	  {
 	    t = (z-P1.z)/(float)(P2.z-P1.z);
-	    p = P1+((Vector3f)(P2-P1)*t);
-	    
+	    p = P1+((Vector3f)(P2-P1)*t);	    
 	    lineEnd = Vector2f(p.x,p.y);
 	    if( lineEnd != lineStart ) num_cutpoints = 2;
 	  }

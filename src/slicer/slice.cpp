@@ -51,11 +51,9 @@ void Slicer::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &
 	Vector2f lineStart;
 	Vector2f lineEnd;
 
-	bool foundOne = false;
 	int num_cutpoints;
 	for (size_t i = 0; i < triangles.size(); i++)
 	{
-		foundOne=false;
 		CuttingPlane::Segment line(-1,-1);
 
 		num_cutpoints = triangles[i].CutWithPlane(where, T, lineStart, lineEnd);
