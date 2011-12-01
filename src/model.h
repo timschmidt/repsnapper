@@ -197,6 +197,7 @@ public:
 	vmml::Vector3f printOffset; // margin + raft
 
 	void CalcBoundingBoxAndCenter();
+        bool FindEmptyLocation(Vector3f &result, Slicer *stl);
 
 	sigc::signal< void > m_model_changed;
 	void ModelChanged();

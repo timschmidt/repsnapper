@@ -840,14 +840,8 @@ void View::duplicate_selected_stl()
     return;
 
   // duplicate
-  RFO_File* obj = m_model->AddStl (object, file->stl, file->location);
+  m_model->AddStl (object, file->stl, file->location);
 
-  // translate
-  Vector3f p = file->transform3D.transform.getTranslation();
-  Vector3f size = file->stl.Max - file->stl.Min;
-  p.x += size.x + 5.0f;	// 5mm space
-  obj->transform3D.transform.setTranslation (p);
-  m_model->CalcBoundingBoxAndCenter();
   queue_draw();
 }
 

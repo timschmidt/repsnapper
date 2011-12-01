@@ -312,9 +312,95 @@ void Model::ModelChanged()
   m_model_changed.emit();
 }
 
+static bool ClosestToOrigin (Vector3f a, Vector3f b)
+{
+  return (a.x*a.x + a.y*a.y + a.z*a.z) < (b.x*b.x + b.y*b.y + b.z*b.z);
+}
+
+
+bool Model::FindEmptyLocation(Vector3f &result, Slicer *stl)
+{
+  // Get all object positions
+  vector<Vector3f> maxpos;
+  vector<Vector3f> minpos;
+
+  for(uint o=0;o<rfo.Objects.size();o++)
+  {
+    for(uint f=0;f<rfo.Objects[o].files.size();f++)
+    {
+      RFO_File *selectedFile = &rfo.Objects[o].files[f];
+      Vector3f p = selectedFile->transform3D.transform.getTranslation();
+      Vector3f size = selectedFile->stl.Max - selectedFile->stl.Min;
+      minpos.push_back(Vector3f(p.x, p.y, p.z));
+      maxpos.push_back(Vector3f(p.x+size.x, p.y+size.y, p.z));
+    }
+  }
+
+  // Get all possible object positions
+
+  float d = 5.0f; // 5mm spacing between objects
+  Vector3f StlDelta = (stl->Max-stl->Min);
+  vector<Vector3f> candidates;
+
+  candidates.push_back(Vector3f(0.0f, 0.0f, 0.0f));
+
+  for (uint j=0; j<maxpos.size(); j++)
+  {
+    candidates.push_back(Vector3f(maxpos[j].x+d, minpos[j].y, maxpos[j].z));
+    candidates.push_back(Vector3f(minpos[j].x, maxpos[j].y+d, maxpos[j].z));
+    candidates.push_back(Vector3f(maxpos[j].x+d, maxpos[j].y+d, maxpos[j].z));
+  }
+
+  // Prefer positions closest to origin
+  sort(candidates.begin(), candidates.end(), ClosestToOrigin);
+
+  // Check all candidates for collisions with existing objects
+  for (uint c=0; c<candidates.size(); c++)
+  {
+    bool ok = true;
+
+    for (uint k=0; k<maxpos.size(); k++)
+    {
+      if (
+          // check x
+          ((minpos[k].x <= candidates[c].x && candidates[c].x <= maxpos[k].x) ||
+          (candidates[c].x <= minpos[k].x && maxpos[k].x <= candidates[c].x+StlDelta.x+d) ||
+          (minpos[k].x <= candidates[c].x+StlDelta.x+d && candidates[c].x+StlDelta.x+d <= maxpos[k].x))
+          &&
+          // check y
+          ((minpos[k].y <= candidates[c].y && candidates[c].y <= maxpos[k].y) ||
+          (candidates[c].y <= minpos[k].y && maxpos[k].y <= candidates[c].y+StlDelta.y+d) ||
+          (minpos[k].y <= candidates[c].y+StlDelta.y+d && candidates[c].y+StlDelta.y+d <= maxpos[k].y))
+      )
+      {
+        ok = false;
+        break;
+      }
+
+      // volume boundary
+      if (candidates[c].x+StlDelta.x > (settings.Hardware.Volume.x - 2*settings.Hardware.PrintMargin.x) ||
+          candidates[c].y+StlDelta.y > (settings.Hardware.Volume.y - 2*settings.Hardware.PrintMargin.y))
+      {
+        ok = false;
+        break;
+      }
+    }
+    if (ok)
+    {
+      result.x = candidates[c].x;
+      result.y = candidates[c].y;
+      result.z = candidates[c].z;
+      return true;
+    }
+  }
+
+  // no empty spots
+  return false;
+}
+
 RFO_File* Model::AddStl(RFO_Object *parent, Slicer stl, string filename)
 {
-  RFO_File *file, *lastfile;
+  RFO_File *file;
 
   if (!parent) {
     if (rfo.Objects.size() <= 0)
@@ -324,19 +410,15 @@ RFO_File* Model::AddStl(RFO_Object *parent, Slicer stl, string filename)
   g_assert (parent != NULL);
 
   size_t found = filename.find_last_of("/\\");
-  lastfile = NULL;
-  if (parent->files.size() > 0)
-    lastfile = &parent->files.back();
 
   Gtk::TreePath path = rfo.createFile (parent, stl, filename.substr(found+1));
   m_signal_stl_added.emit (path);
 
+  Vector3f trans = Vector3f(0,0,0);
+
   file = &parent->files.back();
-  if (lastfile) {
-    Vector3f p = lastfile->transform3D.transform.getTranslation();
-    Vector3f size = lastfile->stl.Max - lastfile->stl.Min;
-    p.x += size.x + 5.0f; // 5mm space
-    file->transform3D.transform.setTranslation(p);
+  if (FindEmptyLocation(trans, &stl)) {
+    file->transform3D.transform.setTranslation(trans);
   }
 
   CalcBoundingBoxAndCenter();
@@ -405,8 +487,8 @@ void Model::ClearLogs()
 
 void Model::CalcBoundingBoxAndCenter()
 {
-  Max = Vector3f(G_MINFLOAT, G_MINFLOAT, G_MINFLOAT);
-  Min = Vector3f(G_MAXFLOAT, G_MAXFLOAT, G_MAXFLOAT);
+  Vector3f newMax = Vector3f(G_MINFLOAT, G_MINFLOAT, G_MINFLOAT);
+  Vector3f newMin = Vector3f(G_MAXFLOAT, G_MAXFLOAT, G_MAXFLOAT);
 
   for (uint i = 0 ; i < rfo.Objects.size(); i++) {
     for (uint j = 0; j < rfo.Objects[i].files.size(); j++) {
@@ -414,15 +496,19 @@ void Model::CalcBoundingBoxAndCenter()
       Vector3f stlMin = M * rfo.Objects[i].files[j].stl.Min;
       Vector3f stlMax = M * rfo.Objects[i].files[j].stl.Max;
       for (uint k = 0; k < 3; k++) {
-	Min.xyz[k] = MIN(stlMin.xyz[k], Min.xyz[k]);
-	Max.xyz[k] = MAX(stlMax.xyz[k], Max.xyz[k]);
+	newMin.xyz[k] = MIN(stlMin.xyz[k], newMin.xyz[k]);
+	newMax.xyz[k] = MAX(stlMax.xyz[k], newMax.xyz[k]);
       }
     }
   }
 
-  Center = (Max + Min) / 2.0;
-
-  m_signal_rfo_changed.emit();
+  // Leave the alone if there's no objects
+  if (newMin.x <= newMax.x) {
+    Max = newMax;
+    Min = newMin;
+    Center = (Max + Min) / 2.0;
+    m_signal_rfo_changed.emit();
+  }
 }
 
 // ------------------------------ libreprap integration ------------------------------
