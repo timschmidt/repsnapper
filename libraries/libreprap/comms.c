@@ -180,9 +180,14 @@ rr_dev_free (rr_dev dev)
 int
 rr_dev_open (rr_dev dev, const char *port, long speed)
 {
-  dev->fd = serial_open (port, speed);
+  char *error = NULL;
+  dev->fd = serial_open (port, speed, &error);
   if (dev->fd < 0)
-    return dev->fd;
+  {
+      rr_dev_log (dev, RR_DEBUG_ALWAYS, "Failed to open device %s", error ? error : "<no error>");
+      fprintf (stderr, "%s\n", error ? error : "<null>");
+      return -1;
+  }
   else
     return 0;
 }
