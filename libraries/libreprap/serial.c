@@ -170,7 +170,7 @@ static int serial_init(int fd, long speed, char **detail)
 
   /* Set speed */
   {
-    speed_t cfspeed = speed;// ntocf(speed);
+    speed_t cfspeed = ntocf(speed);
     if(cfsetispeed(&attribs, cfspeed) < 0) {
       *detail = "can't set input speed";
       return -1;
