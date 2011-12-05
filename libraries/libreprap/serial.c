@@ -1,7 +1,6 @@
 #include "serial.h"
 
 #include <string.h>
-
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -144,120 +143,117 @@ speed_t ntocf(long l) {
 
 // Repeated many times to allow errors to be isolated to the specific
 // setting that failed to apply.  Returns < 0 on failure.
-int serial_set_attrib(int fd, struct termios* attribp) {
-	if(tcsetattr(fd, TCSANOW, attribp) < 0) {
+static int serial_set_attrib(int fd, struct termios* attribp)
+{
+	if(tcsetattr(fd, TCSANOW, attribp) < 0)
 		return -1;
-	}
 	return 0;
 }
 
-int serial_init(int fd, long speed) {
-	int status;
-	struct termios attribs;
-	// Initialize attribs
-	if(tcgetattr(fd, &attribs) < 0) {
-    int tmp = errno;
-		close(fd);
-    errno = tmp;
-		return -1;
-	}
+static int serial_init(int fd, long speed, char **detail)
+{
+  int status;
+  struct termios attribs;
+  // Initialize attribs
+  if(tcgetattr(fd, &attribs) < 0) {
+    *detail = "not a serial device";
+    return -1;
+  }
 
   /* Handle software flow control bytes from machine */
   attribs.c_iflag |= IXOFF;
   serial_set_attrib(fd, &attribs);
   if((status = serial_set_attrib(fd, &attribs)) < 0) {
-    int tmp = errno;
-		close(fd);
-    errno = tmp;
-		return status;
-	}
+    *detail = "serial device has no flow control";
+    return status;
+  }
 
-	/* Set speed */
-	{
-	  speed_t cfspeed = speed;// ntocf(speed);
-		if(cfsetispeed(&attribs, cfspeed) < 0) {
-      int tmp = errno;
-      close(fd);
-      errno = tmp;
-			return -1;
-		}
-		serial_set_attrib(fd, &attribs);
-		if(cfsetospeed(&attribs, cfspeed) < 0) {
-      int tmp = errno;
-      close(fd);
-      errno = tmp;
-			return -1;
-		}
-		serial_set_attrib(fd, &attribs);
-	}
-
-	/* Set non-canonical mode */
-	attribs.c_cc[VTIME] = 0;
-	if((status = serial_set_attrib(fd, &attribs)) < 0) {
-    int tmp = errno;
-		close(fd);
-    errno = tmp;
-		return status;
-	}
-	attribs.c_cc[VMIN] = 0;
-	if((status = serial_set_attrib(fd, &attribs)) < 0) {
-    int tmp = errno;
-		close(fd);
-    errno = tmp;
-		return status;
-	}
-	cfmakeraw(&attribs);
-	if((status = serial_set_attrib(fd, &attribs)) < 0) {
-    int tmp = errno;
-		close(fd);
-    errno = tmp;
-		return status;
-	}
-
-	/* Prevents DTR from being dropped, resetting the MCU when using
-	 * an Arduino bootloader */
-	attribs.c_cflag &= ~HUPCL;
-	if((status = serial_set_attrib(fd, &attribs)) < 0) {
-    int tmp = errno;
-		close(fd);
-    errno = tmp;
-		return status;
-	}
-
-	return 0;
+  /* Set speed */
+  {
+    speed_t cfspeed = ntocf(speed);
+    if(cfsetispeed(&attribs, cfspeed) < 0) {
+      *detail = "can't set input speed";
+      return -1;
+    }
+    serial_set_attrib(fd, &attribs);
+    if(cfsetospeed(&attribs, cfspeed) < 0) {
+      *detail = "can't set ouput speed";
+      return -1;
+    }
+    serial_set_attrib(fd, &attribs);
+  }
+  
+  /* Set non-canonical mode */
+  attribs.c_cc[VTIME] = 0;
+  if((status = serial_set_attrib(fd, &attribs)) < 0) {
+    *detail = "can't set non-canonical mode (vtime)";
+    return status;
+  }
+  attribs.c_cc[VMIN] = 0;
+  if((status = serial_set_attrib(fd, &attribs)) < 0) {
+    *detail = "can't set non-canonical mode (vmin)";
+    return status;
+  }
+  cfmakeraw(&attribs);
+  if((status = serial_set_attrib(fd, &attribs)) < 0) {
+    *detail = "can't set raw mode";
+    return status;
+  }
+  
+  /* Prevents DTR from being dropped, resetting the MCU when using
+   * an Arduino bootloader */
+  attribs.c_cflag &= ~HUPCL;
+  if((status = serial_set_attrib(fd, &attribs)) < 0) {
+    *detail = "can't prevent DTR from being dropped";
+    return status;
+  }
+  
+  return 0;
 }
-
 
 /* Returns a prepared FD for the serial device specified, or some
  * value < 0 if an error occurred. */
-int serial_open(const char *path, long speed) {
-	int fd;
+int serial_open(const char *path, long speed, char **error)
+{
+  int fd;
+  int flags;
+  int status;
+  char *detail = NULL;
+
+  *error = NULL;
   do {
     fd = open(path, O_RDWR | O_NOCTTY | O_NDELAY);
   } while(fd < 0 && errno == EINTR);
-	if(fd < 0) {
-		return -1;
-	}
-	int status;
-	if((status = serial_init(fd, speed)) < 0) {
-    int tmp = errno;
-    close(fd);
-    errno = tmp;
-		return status;
-	}
-  int flags;
+  if(fd < 0)
+  {
+    detail = "failed to open socket path";
+    goto err_out;
+  }
+
+  if((status = serial_init(fd, speed, &detail)) < 0)
+    goto err_out;
+
   if((flags = fcntl(fd, F_GETFL, 0)) < 0) {
-    int tmp = errno;
-    close(fd);
-    errno = tmp;
-    return flags;
+    detail = "getting socket flags";
+    goto err_out;
   }
   
   if(fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-    int tmp = errno;
-    close(fd);
-    errno = tmp;
-    return -1;
+    detail = "setting non-blocking flag on socket";
+    goto err_out;
   }
-	return fd;
+  return fd;
+ err_out:
+  {
+    const char *errstr = strerror(errno);
+    *error = malloc(strlen(detail) + strlen (path) + strlen(errstr) + 64);
+    strcpy (*error, "Error opening port '");
+    strcat (*error, path);
+    strcat (*error, "' - ");
+    strcat (*error, detail);
+    strcat (*error, " : ");
+    strcat (*error, errstr);
+  }
+  close (fd);
+  return -1;
 }
