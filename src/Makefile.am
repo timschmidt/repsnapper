@@ -14,14 +14,14 @@ LIB_DIR=$(top_srcdir)/libraries
 WARNING_FLAGS = -Wall -Wno-invalid-offsetof
 
 repsnapper_CPPFLAGS = \
-	-DHAVE_GTK $(CFLAGS) $(EXTRA_CFLAGS) -I$(LIB_DIR) $(GTKMM_CFLAGS) \
-	$(LIBREPRAP_CFLAGS) \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/slicer \
 	-I$(LIB_DIR)/polylib \
 	-I$(LIB_DIR) \
+	-DHAVE_GTK $(CFLAGS) $(EXTRA_CFLAGS) -I$(LIB_DIR) $(GTKMM_CFLAGS) \
+	$(LIBREPRAP_CFLAGS) \
         -DRSDATADIR='$(repsnapperdatadir)' \
         -DSYSCONFDIR='$(repsnapperconfdir)' \
 	-DLOCALEDIR='"$(localedir)"' \
