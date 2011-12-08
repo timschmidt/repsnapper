@@ -13,12 +13,13 @@ src/RepSnapper.log
 *.orig
 TAGS
 .deps
-Makefile
+/Makefile
 Makefile.in
 config.*
 aclocal.m4
 autogen.lastrun
 autom4te.cache/
+m4/
 repsnapper.desktop
 compile
 configure
@@ -27,6 +28,7 @@ install-sh
 libtool
 ltmain.sh
 missing
+po/Makefile
 po/Makefile.in.in
 po/POTFILES
 po/stamp-it
