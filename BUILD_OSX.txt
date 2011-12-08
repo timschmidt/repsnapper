@@ -1,0 +1,66 @@
+THIS DOCUMENT IS A WORK IN PROGRESS - SEE also : https://github.com/timschmidt/repsnapper/issues/38
+
+get a few dependancies first:
+
+lf you don't already have homebrew installed from http://mxcl.github.com/homebrew/, do it:
+#EITHER:
+# this puts it in /usr/local
+ruby -e "$(curl -fsSL https://raw.github.com/gist/323731)"
+# OR:
+# this puts it in /opt/homebrew 
+cd /opt ; sudo mkdir homebrew && curl -L https://github.com/mxcl/homebrew/tarball/master | sudo tar xz --strip 1 -C homebrew
+
+make sure the 'brew' command is in your path, also put /usr/local  there too, for autoconf/libtool/make as per below:
+set PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
+
+# now we have brew, install as many of these as you can get to work, you may need to remove pkg-config and/or libiconv from this list if its broken when you try it?
+brew install gtkmm gtk+ gtkglext cmake glib glade pkg-config pcre pkg-config intltool gettext libiconv
+
+you'll also need to manually download , compile and install the latest versions of libtool, autoconf and make:
+
+these above tools are ( by default) installed into /usr/local, so you need to have /usr/local/bin in your PATH variable, before /usr/bin etc:
+( extract each of these to a folder, cd to it, type: ./configure ; make ; sudo make install )
+
+cd ~
+wget http://ftp.gnu.org/gnu/autoconf/autoconf-2.68.tar.gz
+tar -zxvpf autoconf-2.68.tar.gz
+cd autoconf-2.68
+./configure ; make 
+sudo make install
+cd ~
+wget http://ftp.gnu.org/gnu/libtool/libtool-2.4.tar.gz
+cd libtool-2.4
+./configure ; make 
+sudo make install
+cd ~
+wget http://ftp.gnu.org/gnu/make/make-3.82.tar.gz
+cd make-3.82
+./configure ; make
+sudo make install
+cd ~
+
+
+
+# if libiconv from brew is still broken when you try this,  then do this instead:
+cd ~
+wget http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz
+tar -zxvpg libiconv-1.14.tar.gz
+cd libiconv-1.14
+#( this builds both 32 and 64 bit archithecture , if you are building for just one architecture, remove one of the -arch XXX types ) 
+MACOSX_DEPLOYMENT_TARGET=10.6 \
+CFLAGS='-O3 -fno-common -arch i386 -arch x86_64' \
+LDFLAGS='-O3 -arch i386 -arch x86_64' \
+CXXFLAGS='-O3 -fno-common -arch i386 -arch x86_64' \
+./configure --prefix=/usr/local
+
+
+# make sure you have the latest repsnapper sources from GIT , as OSX features are recent
+cd ~
+git clone git@github.com:timschmidt/repsnapper.git
+cd repsnapper
+
+./autogen.sh
+make
+
+
+
