@@ -99,7 +99,16 @@ void Render::rfo_changed()
   if (!get_model() || !get_model()->rfo.Objects.size())
     return;
 
+  // reset the zoom to cover the entire model
   m_zoom = (get_model()->Max - get_model()->Min).getMaxComponent();
+  // reset the pan to center
+  Matrix4f matrix;
+  memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
+  Vector3f m_transl = matrix.getTranslation();
+  m_transl = Vector3f(0, 0, 0);
+  matrix.setTranslation(m_transl);
+  memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));
+
   queue_draw();
 }
 
