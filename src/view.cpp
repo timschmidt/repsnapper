@@ -18,6 +18,11 @@
 */
 
 #include "config.h"
+
+#if HAVE_GTK_NEW_KEYSMS
+#include <gdk/gdkkeysyms-compat.h>
+#endif
+
 #include "view.h"
 #include "stdafx.h"
 #include "model.h"
@@ -27,7 +32,6 @@
 #include "settings.h"
 #include "progress.h"
 #include "connectview.h"
-
 
 bool View::on_delete_event(GdkEventAny* event)
 {
@@ -579,7 +583,7 @@ bool View::key_pressed_event(GdkEventKey *event)
     return false;
   switch (event->keyval)
     {
-    case GDK_KEY_Tab:
+    case GDK_Tab:
       {
       Glib::RefPtr<Gtk::TreeSelection> selection = m_rfo_tree->get_selection();
       Glib::RefPtr<Gtk::TreeStore> model = m_model->rfo.m_model;
@@ -596,23 +600,23 @@ bool View::key_pressed_event(GdkEventKey *event)
       else
 	return false;
       }
-    case GDK_KEY_Escape:
+    case GDK_Escape:
       {
 	bool has_selected = m_rfo_tree->get_selection()->get_selected();
 	m_rfo_tree->get_selection()->unselect_all();
 	return has_selected;
       }
-    case GDK_KEY_Delete:
-    case GDK_KEY_KP_Delete:
+    case GDK_Delete:
+    case GDK_KP_Delete:
       delete_selected_stl();
       return true;
-    case GDK_KEY_Up: case GDK_KEY_KP_Up:
+    case GDK_Up: case GDK_KP_Up:
       return moveSelected( 0.0,  1.0 );
-    case GDK_KEY_Down: case GDK_KEY_KP_Down:
+    case GDK_Down: case GDK_KP_Down:
       return moveSelected( 0.0, -1.0 );
-    case GDK_KEY_Left: case GDK_KEY_KP_Left:
+    case GDK_Left: case GDK_KP_Left:
       return moveSelected( -1.0, 0.0 );
-    case GDK_KEY_Right: case GDK_KEY_KP_Right:
+    case GDK_Right: case GDK_KP_Right:
       return moveSelected(  1.0, 0.0 );
     default:
       return false;
