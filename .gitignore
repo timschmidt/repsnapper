@@ -19,6 +19,7 @@ config.*
 aclocal.m4
 autogen.lastrun
 autom4te.cache/
+m4/
 repsnapper.desktop
 compile
 configure
