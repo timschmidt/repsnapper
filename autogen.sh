@@ -104,7 +104,9 @@ sanity_checks ($system);# unless($system eq 'Darwin');
 
 my $aclocal_flags = $ENV{ACLOCAL_FLAGS};
 
-$aclocal_flags = "-I ./m4" if (($aclocal_flags eq "") && ($system eq 'Darwin'));
+$aclocal_flags = "-I ./m4 -I /opt/homebrew/share/aclocal -I /usr/local" if (($aclocal_flags eq "") && ($system eq 'Darwin'));
+
+print "aclocal_flags : $aclocal_flags \n";
 
 $ENV{AUTOMAKE_EXTRA_FLAGS} = '--warnings=no-portability' if (!($system eq 'Darwin'));
 

@@ -26,8 +26,9 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",[The prefix for our gette
 IT_PROG_INTLTOOL(0.26)
 AM_GLIB_GNU_GETTEXT
 
-dnl PKG_PROG_PKG_CONFIG([0.22])
-dnl PKG_CHECK_MODULES(GTKMM, [gobject-2.0 glib-2.0 gtkmm-2.4 gtkglext-1.0 gtk+-2.0])
+PKG_PROG_PKG_CONFIG([0.22])
+dnl If your script errors here on OSX, see this URL http://myitcorner.com/blog/?p=207
+PKG_CHECK_MODULES(GTKMM, [gobject-2.0 glib-2.0 gtkmm-2.4 gtkglext-1.0 gtk+-2.0])
 
 dnl ------------------------------------------------------------------
 dnl libreprap is (for now) built in from a copy in libraries/libreprap

@@ -31,7 +31,6 @@ po/Makefile.in.in
 po/POTFILES
 po/stamp-it
 po/.intltool-merge-cache
-m4
 stamp-h1
 .pc
 .dirstamp
