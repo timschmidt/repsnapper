@@ -59,6 +59,12 @@ cd ~
 git clone git@github.com:timschmidt/repsnapper.git
 cd repsnapper
 
+# make /usr/local/aclocal aware of the homebrew installed stuff:
+cat > /usr/local/share/aclocal/dirlist << EOF
+/opt/homebrew/share/aclocal/
+EOF
+
+
 ./autogen.sh
 make
 
