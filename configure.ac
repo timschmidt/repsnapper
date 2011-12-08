@@ -26,8 +26,8 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",[The prefix for our gette
 IT_PROG_INTLTOOL(0.26)
 AM_GLIB_GNU_GETTEXT
 
-PKG_PROG_PKG_CONFIG([0.22])
-PKG_CHECK_MODULES(GTKMM, [gobject-2.0 glib-2.0 gtkmm-2.4 gtkglext-1.0 gtk+-2.0])
+dnl PKG_PROG_PKG_CONFIG([0.22])
+dnl PKG_CHECK_MODULES(GTKMM, [gobject-2.0 glib-2.0 gtkmm-2.4 gtkglext-1.0 gtk+-2.0])
 
 dnl ------------------------------------------------------------------
 dnl libreprap is (for now) built in from a copy in libraries/libreprap
@@ -71,6 +71,7 @@ mingw*)
   GL_LIBS="-lopengl32 -lglu32 -lglut32"
   EXTRA_LDFLAGS="-Wl,-subsystem,windows -shared-libgcc"
   EXTRA_CFLAGS="-fexceptions -mthreads"
+AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 freebsd*)
   GL_LIBS="-L/usr/local/lib -lGLU -lGL -lglut"
@@ -78,6 +79,15 @@ freebsd*)
   CFLAGS="-I/usr/local/include"
   CXXFLAGS="-I/usr/local/include"
   CPPFLAGS="-I/usr/local/include"
+AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
+  ;;
+Darwin*)
+  GL_LIBS="-L/usr/local/lib -lGLU -lOpenGL -lGLUT -lglut"
+  EXTRA_LDFLAGS="-L/usr/local/lib -L/opt/homebrew/lib"
+  CFLAGS="-I/usr/local/include -I/opt/homebrew/include"
+  CXXFLAGS="-I/usr/local/include -I/opt/homebrew/include"
+  CPPFLAGS="-I/usr/local/include -I/opt/homebrew/include"
+AC_CHECK_HEADER(GLUT/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 *)
   GL_LIBS="-L/usr/lib -lGLU -lGL -lglut"
@@ -86,9 +96,6 @@ freebsd*)
   ;;
 esac
 
-AC_CHECK_HEADER(GL/glut.h,
-    ,
-    AC_MSG_ERROR([cannot find headers for freeglut]))
 
 
 AC_SUBST(GL_LIBS)
