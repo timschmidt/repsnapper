@@ -233,9 +233,11 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     }
     else if (event->state & GDK_BUTTON3_MASK) { // pan
       Matrix4f matrix;
+      float factor = 0.3;
       memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
       Vector3f m_transl = matrix.getTranslation();
-      m_transl += Vector3f(-delta.x*0.3, delta.y*0.3, 0);
+      Vector3f delta3f(-delta.x*factor, delta.y*factor, 0);
+      m_transl += delta3f;
       matrix.setTranslation(m_transl);
       memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));
     }
