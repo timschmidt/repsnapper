@@ -199,7 +199,7 @@ bool Render::on_button_press_event(GdkEventButton* event)
         m_selection->select(iter);
       }
     }
-  } else if (event->button == 3)
+  } else if (event->button == 3 || event->button == 2)
     m_downPoint = Vector2f (event->x, event->y);
   else
     return Gtk::DrawingArea::on_button_press_event (event);
@@ -219,16 +219,21 @@ bool Render::on_scroll_event(GdkEventScroll* event)
 
 bool Render::on_motion_notify_event(GdkEventMotion* event)
 {
-  if (event->state & GDK_BUTTON1_MASK) {
-    // Vector3f trans = m_transform.getTranslation();
-    // memcpy(&m_center, &get_model()->Center, sizeof(Vector3f));
-    // get_model()->Center -= trans;
+  if (event->state & GDK_BUTTON1_MASK) { // rotate
     m_arcBall->dragAccumulate(event->x, event->y, &m_transform);
-    // get_model()->Center += trans;
     queue_draw();
     return true;
   }
-  else if (event->state & GDK_BUTTON3_MASK) {
+  else if (event->state & GDK_BUTTON2_MASK) { // zoom
+    Vector2f dragp(event->x, event->y);
+    Vector2f delta = m_downPoint - dragp;
+    double factor = 1.0 + 0.01 * (delta.x - delta.y);
+    m_zoom *= factor;
+    m_downPoint = dragp;
+    queue_draw();
+    return true;
+  }
+  else if (event->state & GDK_BUTTON3_MASK) { // pan
     Vector2f dragp(event->x, event->y);
     Vector2f delta = m_downPoint - dragp;
     m_downPoint = dragp;
