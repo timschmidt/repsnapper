@@ -76,7 +76,8 @@ GCodeState::~GCodeState()
 }
 void GCodeState::SetZ(float z)
 {
-  pImpl->LastPosition.z = z;
+  if (!isnan(z))
+    pImpl->LastPosition.z = z;
 }
 const Vector3f &GCodeState::LastPosition()
 {
@@ -103,7 +104,8 @@ float GCodeState::GetLastLayerZ(float curZ)
 
 void GCodeState::SetLastLayerZ(float z)
 {
-  pImpl->lastLayerZ = z;
+  if (!isnan(z))
+    pImpl->lastLayerZ = z;
 }
 
 void GCodeState::ResetLastWhere(Vector3f to)
@@ -146,7 +148,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
 			// Set start feedrage
 			command.Code = SETSPEED;
 			command.where = start;
-			if (slicing.UseIncrementalEcode)
+			if (slicing.UseIncrementalEcode && !isnan(E))
 				command.e = E;		// move or extrude?
 			else
 				command.e = 0.0f;		// move or extrude?
@@ -160,11 +162,13 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
 				command.Code = COORDINATEDMOTION;
 				command.where = (start+end)*0.5f;
 				float extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
-				if(slicing.UseIncrementalEcode)
-					E += extrudedMaterial;
-				else
-					E = extrudedMaterial;
-				command.e = E;		// move or extrude?
+				if (!isnan(extrudedMaterial)) {
+				  if(slicing.UseIncrementalEcode)
+				    E += extrudedMaterial;
+				  else
+				    E = extrudedMaterial;
+				  command.e = E;		// move or extrude?
+				}
 				float lengthFactor = (len/2.0f)/hardware.DistanceToReachFullSpeed;
 				command.f = (hardware.MaxPrintSpeedXY-hardware.MinPrintSpeedXY)*lengthFactor+hardware.MinPrintSpeedXY;
 				AppendCommand(command);

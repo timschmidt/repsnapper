@@ -171,11 +171,11 @@ public:
   GCode();
 
   void Read  (Model *model, Progress *progress, string filename);
-  void Write (Model *model, string filename);
+  //void Write (Model *model, string filename);
   void draw  (const Settings &settings);
   void MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, float AntioozeDistance, float AntioozeSpeed);
 
-  void append_text (const std::string &line);
+  bool append_text (const std::string &line);
   std::string get_text() const;
   void clear();
 

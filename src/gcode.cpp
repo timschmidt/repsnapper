@@ -65,10 +65,12 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 		LineNr++;
 		string buffer;
 		line >> buffer;	// read something
-		append_text ((s+"\n").c_str());
 
 		// FIXME: assumes all files are 100k lines, bad!
 		progress->update(int(LineNr/1000));
+
+		if (!append_text ((s+"\n").c_str()))
+		  continue;
 
 		if(buffer.find( ";", 0) != string::npos)	// COMMENT
 			continue;
@@ -330,6 +332,18 @@ void GCode::draw(const Settings &settings)
 
 }
 
+bool add_text_filter_nan(string str, string &GcodeTxt)
+{
+  if (int(str.find("nan"))<0)
+    GcodeTxt += str;
+  else {
+    cerr << "not appending " << str << endl;
+    //cerr << "find: " << str.find("nan") << endl;
+    return false;
+  }
+  return true;  
+}
+
 void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, float AntioozeDistance, float AntioozeSpeed)
 {
 	float lastE = -10;
@@ -346,7 +360,8 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 		{
 		case SELECTEXTRUDER:
 			oss  << "T0\n";
-			GcodeTxt += oss.str();
+			add_text_filter_nan(oss.str(), GcodeTxt);
+			//GcodeTxt += oss.str();
 			break;
 		case SETSPEED:
 			commands[i].where.z = LastPos.z;
@@ -402,9 +417,11 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 					oss << "G1 E" << AntioozeDistance << "  F" << AntioozeSpeed << " ;antiooze return\n";
 				}
 			}
-			GcodeTxt += oss.str();
+			add_text_filter_nan(oss.str(), GcodeTxt);
+			//GcodeTxt += oss.str();
 			if(commands[i].Code == ZMOVE && commands[i].where.z != LastPos.z)
-				GcodeTxt += GcodeLayer + "\n";
+			  add_text_filter_nan(GcodeLayer + "\n", GcodeTxt);
+			  //GcodeTxt += GcodeLayer + "\n";
 
 			LastPos = commands[i].where;
 			if( commands[i].e >= 0.0f)
@@ -413,13 +430,15 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 		case EXTRUDERON:
 			if(i != 0 && commands[i-1].Code == EXTRUDEROFF) continue;	// Dont switch extruder on/off right after eachother
 			oss  << "M101\n";
-			GcodeTxt += oss.str();
+			add_text_filter_nan(oss.str(), GcodeTxt);
+			//GcodeTxt += oss.str();
 			break;
 		case EXTRUDEROFF:
 			if(i != 0 && (i+1) < commands.size() && commands[i+1].Code == EXTRUDERON) continue;	// Dont switch extruder on/off right after eachother
 			if(i != 0 && (i+1) < commands.size() && commands[i+1].Code == EXTRUDEROFF) continue;	// don't switch extruder off twize
 			oss  << "M103\n";
-			GcodeTxt += oss.str();
+			add_text_filter_nan(oss.str(), GcodeTxt);
+			//GcodeTxt += oss.str();
 			break;
 		case COORDINATEDMOTION3D:
 			oss  << "G1 X" << commands[i].where.x << " Y" << commands[i].where.y << " Z" << commands[i].where.z;
@@ -428,12 +447,14 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 				oss << " ;" << commands[i].comment << "\n";
 			else
 				oss <<  "\n";
-			GcodeTxt += oss.str();
+			add_text_filter_nan(oss.str(), GcodeTxt);
+			//GcodeTxt += oss.str();
 			LastPos = commands[i].where;
 			break;
 		case RAPIDMOTION:
 			oss  << "G0 X" << commands[i].where.x << " Y" << commands[i].where.y << " Z" << commands[i].where.z  << "\n";
-			GcodeTxt += oss.str();
+			add_text_filter_nan(oss.str(), GcodeTxt);
+			//GcodeTxt += oss.str();
 			LastPos = commands[i].where;
 			break;
 		case GOTO:
@@ -459,7 +480,8 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 				oss << " E" << commands[i].e;
 			}
 			oss <<  "\n";
-			GcodeTxt += oss.str();
+			add_text_filter_nan(oss.str(), GcodeTxt);
+			//GcodeTxt += oss.str();
 			break;
 		default:
 			break; // ignored CGCode
@@ -467,7 +489,8 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 		pos = commands[i].where;
 	}
 
-	GcodeTxt += GcodeEnd + "\n";
+	add_text_filter_nan(GcodeEnd + "\n", GcodeTxt);
+	//GcodeTxt += GcodeEnd + "\n";
 
 	buffer->set_text (GcodeTxt);
 }
@@ -481,13 +504,20 @@ void GCode::Write (Model *model, string filename)
     model->alert (_("failed to open file"));
   else {
     fprintf (file, "%s", buffer->get_text().c_str());
-    fclose (file);
+    fclose (file);    
   }
 }
 
-void GCode::append_text (const std::string &line)
+bool GCode::append_text (const std::string &line)
 {
-  buffer->insert (buffer->end(), line);
+  if (int(line.find("nan"))<0){
+    buffer->insert (buffer->end(), line);
+    return true;
+  }
+  else {
+    cerr << "not appending line \"" << line << "\"" << endl;
+    return false;
+  }
 }
 
 std::string GCode::get_text () const
