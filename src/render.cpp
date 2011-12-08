@@ -224,28 +224,22 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     queue_draw();
     return true;
   }
-  else if (event->state & GDK_BUTTON2_MASK) { // zoom
+  else {
     Vector2f dragp(event->x, event->y);
     Vector2f delta = m_downPoint - dragp;
-    double factor = 1.0 + 0.01 * (delta.x - delta.y);
-    m_zoom *= factor;
+    if (event->state & GDK_BUTTON2_MASK) { // zoom
+      double factor = 1.0 + 0.01 * (delta.x - delta.y);
+      m_zoom *= factor;
+    }
+    else if (event->state & GDK_BUTTON3_MASK) { // pan
+      Matrix4f matrix;
+      memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
+      Vector3f m_transl = matrix.getTranslation();
+      m_transl += Vector3f(-delta.x*0.3, delta.y*0.3, 0);
+      matrix.setTranslation(m_transl);
+      memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));
+    }
     m_downPoint = dragp;
-    queue_draw();
-    return true;
-  }
-  else if (event->state & GDK_BUTTON3_MASK) { // pan
-    Vector2f dragp(event->x, event->y);
-    Vector2f delta = m_downPoint - dragp;
-    m_downPoint = dragp;
-
-    Matrix4f matrix;
-    memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
-    Vector3f X(delta.x,0,0);
-    X = matrix * X;
-    Vector3f Y(0,-delta.y,0);
-    Y = matrix * Y;
-    get_model()->Center += X*delta.length()*0.01f;
-    get_model()->Center += Y*delta.length()*0.01f;
     queue_draw();
     return true;
   }
