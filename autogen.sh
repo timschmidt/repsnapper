@@ -100,11 +100,11 @@ $aclocal = $ENV{ACLOCAL} ? $ENV{ACLOCAL} : 'aclocal';
 my $system = `uname -s`;
 chomp $system;
 
-sanity_checks ($system) unless($system eq 'Darwin');
+sanity_checks ($system);# unless($system eq 'Darwin');
 
 my $aclocal_flags = $ENV{ACLOCAL_FLAGS};
 
-$aclocal_flags = "-I ./m4/mac" if (($aclocal_flags eq "") && ($system eq 'Darwin'));
+$aclocal_flags = "-I ./m4" if (($aclocal_flags eq "") && ($system eq 'Darwin'));
 
 $ENV{AUTOMAKE_EXTRA_FLAGS} = '--warnings=no-portability' if (!($system eq 'Darwin'));
 
