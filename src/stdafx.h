@@ -33,6 +33,7 @@
 #endif
 typedef unsigned int        uint;
 
+
 #define DEBUG_ECHO (1<<0)
 #define DEBUG_INFO (1<<1)
 #define DEBUG_ERRORS (1<<2)
@@ -41,12 +42,10 @@ typedef unsigned int        uint;
 	#include <tchar.h>
 typedef unsigned int        uint;
 #endif
-#include "platform.h"
+#include "platform.h"   // OpenGL, glu, glut in cross-platform way
 #include <stdio.h>
 #include <glib/gi18n.h>
 #include <gtkmm.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
 #include <vmmlib/vmmlib.h>
 #include "math.h" // Needed for sqrtf
 #include "types.h"
