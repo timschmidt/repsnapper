@@ -331,6 +331,7 @@ bool Model::FindEmptyLocation(Vector3f &result, Slicer *stl)
       RFO_File *selectedFile = &rfo.Objects[o].files[f];
       Vector3f p = selectedFile->transform3D.transform.getTranslation();
       Vector3f size = selectedFile->stl.Max - selectedFile->stl.Min;
+
       minpos.push_back(Vector3f(p.x, p.y, p.z));
       maxpos.push_back(Vector3f(p.x+size.x, p.y+size.y, p.z));
     }
@@ -401,6 +402,7 @@ bool Model::FindEmptyLocation(Vector3f &result, Slicer *stl)
 RFO_File* Model::AddStl(RFO_Object *parent, Slicer stl, string filename)
 {
   RFO_File *file;
+  bool found_location;
 
   if (!parent) {
     if (rfo.Objects.size() <= 0)
@@ -409,19 +411,24 @@ RFO_File* Model::AddStl(RFO_Object *parent, Slicer stl, string filename)
   }
   g_assert (parent != NULL);
 
-  size_t found = filename.find_last_of("/\\");
-
-  Gtk::TreePath path = rfo.createFile (parent, stl, filename.substr(found+1));
-  m_signal_stl_added.emit (path);
-
+  // Decide where it's going
   Vector3f trans = Vector3f(0,0,0);
+  found_location = FindEmptyLocation(trans, &stl);
 
+  // Add it to the set
+  size_t found = filename.find_last_of("/\\");
+  Gtk::TreePath path = rfo.createFile (parent, stl, filename.substr(found+1));
   file = &parent->files.back();
-  if (FindEmptyLocation(trans, &stl)) {
-    file->transform3D.transform.setTranslation(trans);
-  }
 
+  // Move it, if we found a suitable place
+  if (found_location)
+    file->transform3D.transform.setTranslation(trans);
+
+  // Update the view to include the new object
   CalcBoundingBoxAndCenter();
+
+  // Tell everyone
+  m_signal_stl_added.emit (path);
 
   return file;
 }
