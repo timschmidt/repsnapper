@@ -50,9 +50,9 @@ void Model::MakeRaft(GCodeState &state, float &z)
 
   Vector2d Center = (Vector2d(Max.x + size, Max.y + size)-Vector2d(Min.x + size, Min.y + size))/2+Vector2d(printOffset.x, printOffset.y);
 
-  double Length = sqrtf(2)*(   ((raftMax.x)>(raftMax.y)? (raftMax.x):(raftMax.y))  -  ((raftMin.x)<(raftMin.y)? (raftMin.x):(raftMin.y))  )/2.0f;	// bbox of object
+  double Length = sqrt(2)*(   ((raftMax.x)>(raftMax.y)? (raftMax.x):(raftMax.y))  -  ((raftMin.x)<(raftMin.y)? (raftMin.x):(raftMin.y))  )/2.0;	// bbox of object
 
-  double E = 0.0f;
+  double E = 0.0;
   double rot;
 
   while(LayerNr < settings.Raft.Phase[0].LayerCount + settings.Raft.Phase[1].LayerCount)
@@ -60,11 +60,11 @@ void Model::MakeRaft(GCodeState &state, float &z)
       Settings::RaftSettings::PhasePropertiesType *props;
       props = LayerNr < settings.Raft.Phase[0].LayerCount ?
 	&settings.Raft.Phase[0] : &settings.Raft.Phase[1];
-      rot = (props->Rotation+(double)LayerNr * props->RotationPrLayer)/180.0f*M_PI;
+      rot = (props->Rotation+(double)LayerNr * props->RotationPrLayer)/180.0*M_PI;
       Vector2d InfillDirX(cosf(rot), sinf(rot));
       Vector2d InfillDirY(-InfillDirX.y, InfillDirX.x);
 
-      Vector3f LastPosition;
+      Vector3d LastPosition;
       bool reverseLines = false;
 
       Vector2d P1, P2;
@@ -85,7 +85,7 @@ void Model::MakeRaft(GCodeState &state, float &z)
 	  //			glVertex2fv(&P2.x);
 
 	  // Crop lines to bbox*size
-	  Vector3f point;
+	  Vector3d point;
 	  InFillHit hit;
 	  HitsBuffer.clear();
 	  Vector2d P3(raftMin.x, raftMin.y);
@@ -121,7 +121,7 @@ void Model::MakeRaft(GCodeState &state, float &z)
 	  P1 = HitsBuffer[0].p;
 	  P2 = HitsBuffer[1].p;
 
-	  state.MakeAcceleratedGCodeLine (Vector3f(P1.x,P1.y,z), Vector3f(P2.x,P2.y,z),
+	  state.MakeAcceleratedGCodeLine (Vector3d(P1.x,P1.y,z), Vector3d(P2.x,P2.y,z),
 					  props->MaterialDistanceRatio,
 					  E, z, settings.Slicing, settings.Hardware);
 	  reverseLines = !reverseLines;
@@ -129,7 +129,7 @@ void Model::MakeRaft(GCodeState &state, float &z)
       // Set startspeed for Z-move
       Command g;
       g.Code = SETSPEED;
-      g.where = Vector3f(P2.x, P2.y, z);
+      g.where = Vector3d(P2.x, P2.y, z);
       g.f=settings.Hardware.MinPrintSpeedZ;
       g.comment = "Move Z";
       g.e = E;
@@ -138,7 +138,7 @@ void Model::MakeRaft(GCodeState &state, float &z)
 
       // Move Z
       g.Code = ZMOVE;
-      g.where = Vector3f(P2.x, P2.y, z);
+      g.where = Vector3d(P2.x, P2.y, z);
       g.f = settings.Hardware.MinPrintSpeedZ;
       g.comment = "Move Z";
       g.e = E;
@@ -173,7 +173,7 @@ void Model::ConvertToGCode()
 
   // Make Layers
   uint LayerNr = 0;
-  uint LayerCount = (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5f)/settings.Hardware.LayerThickness);
+  uint LayerCount = (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
 
   vector<int> altInfillLayers;
   settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
@@ -181,7 +181,7 @@ void Model::ConvertToGCode()
   printOffset = settings.Hardware.PrintMargin;
 
   // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
-  float z = Min.z + settings.Hardware.LayerThickness*0.5f;
+  float z = Min.z + settings.Hardware.LayerThickness*0.5;
 
   gcode.clear();
   double E = 0.0;
@@ -191,7 +191,7 @@ void Model::ConvertToGCode()
 
   if (settings.RaftEnable)
     {
-      printOffset += Vector3f (settings.Raft.Size, settings.Raft.Size, 0);
+      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
       MakeRaft (state, printOffsetZ);
     }
   while(z<Max.z)
@@ -202,9 +202,9 @@ void Model::ConvertToGCode()
 	  for(uint f=0;f<rfo.Objects[o].files.size();f++)
 	    {
 	      Slicer* stl = &rfo.Objects[o].files[f].stl;	// Get a pointer to the object
-	      Matrix4f T = rfo.GetSTLTransformationMatrix(o,f);
-	      Vector3f t = T.getTranslation();
-	      t+= Vector3f(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
+	      Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
+	      Vector3d t = T.getTranslation();
+	      t+= Vector3d(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
 	      T.setTranslation(t);
 	      CuttingPlane plane;
 	      stl->CalcCuttingPlane(z, plane, T);	// output is alot of un-connected line segments with individual vertices, describing the outline

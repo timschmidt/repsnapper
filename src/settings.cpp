@@ -417,8 +417,8 @@ void Settings::set_defaults ()
   GCode.m_impl->setDefaults();
 
   // The vectors map each to 3 spin boxes, one per dimension
-  Hardware.Volume = vmml::Vector3f (200,200,140);
-  Hardware.PrintMargin = vmml::Vector3f (10,10,0);
+  Hardware.Volume = vmml::Vector3d (200,200,140);
+  Hardware.PrintMargin = vmml::Vector3d (10,10,0);
 }
 
 bool Settings::get_group_and_key (int i, Glib::ustring &group, Glib::ustring &key)

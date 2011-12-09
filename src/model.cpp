@@ -42,8 +42,8 @@ Model::Model() :
   m_iter (NULL)
 {
   // Variable defaults
-  Center.x = Center.y = 100.0f;
-  Center.z = 0.0f;
+  Center.x = Center.y = 100.0;
+  Center.z = 0.0;
 
   // TODO: Configurable protocol, cache size
   void *cl = static_cast<void *>(this);
@@ -312,44 +312,44 @@ void Model::ModelChanged()
   m_model_changed.emit();
 }
 
-static bool ClosestToOrigin (Vector3f a, Vector3f b)
+static bool ClosestToOrigin (Vector3d a, Vector3d b)
 {
   return (a.x*a.x + a.y*a.y + a.z*a.z) < (b.x*b.x + b.y*b.y + b.z*b.z);
 }
 
 
-bool Model::FindEmptyLocation(Vector3f &result, Slicer *stl)
+bool Model::FindEmptyLocation(Vector3d &result, Slicer *stl)
 {
   // Get all object positions
-  vector<Vector3f> maxpos;
-  vector<Vector3f> minpos;
+  vector<Vector3d> maxpos;
+  vector<Vector3d> minpos;
 
   for(uint o=0;o<rfo.Objects.size();o++)
   {
     for(uint f=0;f<rfo.Objects[o].files.size();f++)
     {
       RFO_File *selectedFile = &rfo.Objects[o].files[f];
-      Vector3f p = selectedFile->transform3D.transform.getTranslation();
-      Vector3f size = selectedFile->stl.Max - selectedFile->stl.Min;
+      Vector3d p = selectedFile->transform3D.transform.getTranslation();
+      Vector3d size = selectedFile->stl.Max - selectedFile->stl.Min;
 
-      minpos.push_back(Vector3f(p.x, p.y, p.z));
-      maxpos.push_back(Vector3f(p.x+size.x, p.y+size.y, p.z));
+      minpos.push_back(Vector3d(p.x, p.y, p.z));
+      maxpos.push_back(Vector3d(p.x+size.x, p.y+size.y, p.z));
     }
   }
 
   // Get all possible object positions
 
-  float d = 5.0f; // 5mm spacing between objects
-  Vector3f StlDelta = (stl->Max-stl->Min);
-  vector<Vector3f> candidates;
+  double d = 5.0; // 5mm spacing between objects
+  Vector3d StlDelta = (stl->Max-stl->Min);
+  vector<Vector3d> candidates;
 
-  candidates.push_back(Vector3f(0.0f, 0.0f, 0.0f));
+  candidates.push_back(Vector3d(0.0, 0.0, 0.0));
 
   for (uint j=0; j<maxpos.size(); j++)
   {
-    candidates.push_back(Vector3f(maxpos[j].x+d, minpos[j].y, maxpos[j].z));
-    candidates.push_back(Vector3f(minpos[j].x, maxpos[j].y+d, maxpos[j].z));
-    candidates.push_back(Vector3f(maxpos[j].x+d, maxpos[j].y+d, maxpos[j].z));
+    candidates.push_back(Vector3d(maxpos[j].x+d, minpos[j].y, maxpos[j].z));
+    candidates.push_back(Vector3d(minpos[j].x, maxpos[j].y+d, maxpos[j].z));
+    candidates.push_back(Vector3d(maxpos[j].x+d, maxpos[j].y+d, maxpos[j].z));
   }
 
   // Prefer positions closest to origin
@@ -412,7 +412,7 @@ RFO_File* Model::AddStl(RFO_Object *parent, Slicer stl, string filename)
   g_assert (parent != NULL);
 
   // Decide where it's going
-  Vector3f trans = Vector3f(0,0,0);
+  Vector3d trans = Vector3d(0,0,0);
   found_location = FindEmptyLocation(trans, &stl);
 
   // Add it to the set
@@ -448,9 +448,9 @@ void Model::ScaleObject(RFO_File *file, RFO_Object *object, double scale)
   CalcBoundingBoxAndCenter();
 }
 
-void Model::RotateObject(RFO_File *file, RFO_Object *object, Vector4f rotate)
+void Model::RotateObject(RFO_File *file, RFO_Object *object, Vector4d rotate)
 {
-  Vector3f rot(rotate.x, rotate.y, rotate.z);
+  Vector3d rot(rotate.x, rotate.y, rotate.z);
 
   if (!file)
     return; // FIXME: rotate entire Objects ...
@@ -494,14 +494,14 @@ void Model::ClearLogs()
 
 void Model::CalcBoundingBoxAndCenter()
 {
-  Vector3f newMax = Vector3f(G_MINFLOAT, G_MINFLOAT, G_MINFLOAT);
-  Vector3f newMin = Vector3f(G_MAXFLOAT, G_MAXFLOAT, G_MAXFLOAT);
+  Vector3d newMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
+  Vector3d newMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
 
   for (uint i = 0 ; i < rfo.Objects.size(); i++) {
     for (uint j = 0; j < rfo.Objects[i].files.size(); j++) {
-      Matrix4f M = rfo.GetSTLTransformationMatrix (i, j);
-      Vector3f stlMin = M * rfo.Objects[i].files[j].stl.Min;
-      Vector3f stlMax = M * rfo.Objects[i].files[j].stl.Max;
+      Matrix4d M = rfo.GetSTLTransformationMatrix (i, j);
+      Vector3d stlMin = M * rfo.Objects[i].files[j].stl.Min;
+      Vector3d stlMax = M * rfo.Objects[i].files[j].stl.Max;
       for (uint k = 0; k < 3; k++) {
 	newMin.xyz[k] = MIN(stlMin.xyz[k], newMin.xyz[k]);
 	newMax.xyz[k] = MAX(stlMax.xyz[k], newMax.xyz[k]);

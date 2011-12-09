@@ -36,7 +36,7 @@ void checkGlutInit()
 	glutInit (&argc, argv);
 }
 
-void renderBitmapString(Vector3f pos, void* font, string text)
+void renderBitmapString(Vector3d pos, void* font, string text)
 {
 	char asd[100];
 	char *a = &asd[0];
@@ -44,7 +44,7 @@ void renderBitmapString(Vector3f pos, void* font, string text)
 	checkGlutInit();
 
 	sprintf(asd,"%s",text.c_str());
-	glRasterPos3f(pos.x, pos.y, pos.z);
+	glRasterPos3d(pos.x, pos.y, pos.z);
 	for (uint c=0;c<text.size();c++)
 		glutBitmapCharacter(font, (int)*a++);
 }
@@ -90,8 +90,8 @@ void Slicer::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 		{
 			if (infill->size() > i+1)
 			{
-				glVertex3f ((*infill)[i  ].x, (*infill)[i  ].y, plane.getZ());
-				glVertex3f ((*infill)[i+1].x, (*infill)[i+1].y, plane.getZ());
+				glVertex3d ((*infill)[i  ].x, (*infill)[i  ].y, plane.getZ());
+				glVertex3d ((*infill)[i+1].x, (*infill)[i+1].y, plane.getZ());
 			}
 		}
 		glEnd();
@@ -116,10 +116,10 @@ void Slicer::draw_geometry()
 			default: glColor4f(0.2f,0.2f,0.2f,opacity); break;
 			}
 #endif
-		glNormal3fv((GLfloat*)&triangles[i].Normal);
-		glVertex3fv((GLfloat*)&triangles[i].A);
-		glVertex3fv((GLfloat*)&triangles[i].B);
-		glVertex3fv((GLfloat*)&triangles[i].C);
+		glNormal3dv((GLdouble*)&triangles[i].Normal);
+		glVertex3dv((GLdouble*)&triangles[i].A);
+		glVertex3dv((GLdouble*)&triangles[i].B);
+		glVertex3dv((GLdouble*)&triangles[i].C);
 	}
 	glEnd();
 }
@@ -186,10 +186,10 @@ void Slicer::draw(RFO &rfo, const Settings &settings)
 		{
 			glBegin(GL_LINE_LOOP);
 			glLineWidth(1);
-			glNormal3fv((GLfloat*)&triangles[i].Normal);
-			glVertex3fv((GLfloat*)&triangles[i].A);
-			glVertex3fv((GLfloat*)&triangles[i].B);
-			glVertex3fv((GLfloat*)&triangles[i].C);
+			glNormal3dv((GLdouble*)&triangles[i].Normal);
+			glVertex3dv((GLdouble*)&triangles[i].A);
+			glVertex3dv((GLdouble*)&triangles[i].B);
+			glVertex3dv((GLdouble*)&triangles[i].C);
 			glEnd();
 		}
 	}
@@ -203,10 +203,10 @@ void Slicer::draw(RFO &rfo, const Settings &settings)
 		glBegin(GL_LINES);
 		for(size_t i=0;i<triangles.size();i++)
 		{
-			Vector3f center = (triangles[i].A+triangles[i].B+triangles[i].C)/3.0f;
-			glVertex3fv((GLfloat*)&center);
-			Vector3f N = center + (triangles[i].Normal*settings.Display.NormalsLength);
-			glVertex3fv((GLfloat*)&N);
+			Vector3d center = (triangles[i].A+triangles[i].B+triangles[i].C)/3.0f;
+			glVertex3dv((GLdouble*)&center);
+			Vector3d N = center + (triangles[i].Normal*settings.Display.NormalsLength);
+			glVertex3dv((GLdouble*)&N);
 		}
 		glEnd();
 	}

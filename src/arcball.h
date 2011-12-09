@@ -130,6 +130,31 @@ THE SOFTWARE.
             GLfloat M[16];
     } Matrix4fT;     //A single precision floating point 4 by 4 matrix.
 
+    typedef union Matrix4d_t
+    {
+            struct
+            {
+                //column major
+                union { GLdouble M00; GLdouble XX; GLdouble SX; };  //XAxis.X and Scale X
+                union { GLdouble M10; GLdouble XY;             };  //XAxis.Y
+                union { GLdouble M20; GLdouble XZ;             };  //XAxis.Z
+                union { GLdouble M30; GLdouble XW;             };  //XAxis.W
+                union { GLdouble M01; GLdouble YX;             };  //YAxis.X
+                union { GLdouble M11; GLdouble YY; GLdouble SY; };  //YAxis.Y and Scale Y
+                union { GLdouble M21; GLdouble YZ;             };  //YAxis.Z
+                union { GLdouble M31; GLdouble YW;             };  //YAxis.W
+                union { GLdouble M02; GLdouble ZX;             };  //ZAxis.X
+                union { GLdouble M12; GLdouble ZY;             };  //ZAxis.Y
+                union { GLdouble M22; GLdouble ZZ; GLdouble SZ; };  //ZAxis.Z and Scale Z
+                union { GLdouble M32; GLdouble ZW;             };  //ZAxis.W
+                union { GLdouble M03; GLdouble TX;             };  //Trans.X
+                union { GLdouble M13; GLdouble TY;             };  //Trans.Y
+                union { GLdouble M23; GLdouble TZ;             };  //Trans.Z
+                union { GLdouble M33; GLdouble TW; GLdouble SW; };  //Trans.W and Scale W
+            } s;
+            GLdouble M[16];
+    } Matrix4dT;     //A double precision floating point 4 by 4 matrix.
+
 
 //"Inherited" types
 #define Point2fT    Tuple2fT   //A 2 element point that is represented by single precision floating point x,y coordinates. 

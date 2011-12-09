@@ -24,7 +24,7 @@ class RFO_Transform3D
 {
 public:
 	RFO_Transform3D(){identity();}
-	void identity(){transform=Matrix4f::IDENTITY;}
+	void identity(){transform=Matrix4d::IDENTITY;}
 	Matrix4f transform;
 };
 
@@ -76,7 +76,7 @@ public:
 	Gtk::TreePath createFile(RFO_Object *parent, const Slicer &stl, std::string location);
 	void get_selected_stl(Gtk::TreeModel::iterator &iter, RFO_Object *&object, RFO_File *&file);
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
-	Matrix4f GetSTLTransformationMatrix(int object, int file) const;
+	Matrix4d GetSTLTransformationMatrix(int object, int file) const;
 
 	vector<RFO_Object> Objects;
 	RFO_Transform3D transform3D;

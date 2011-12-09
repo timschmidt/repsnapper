@@ -72,7 +72,7 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
   Matrix4fSetRotationScaleFromMatrix3f(&m_transform, &identity);
   m_transform.s.SW = 1.0;
 
-  m_zoom = 120.0f;
+  m_zoom = 120.0;
   for (uint i = 0; i < N_LIGHTS; i++)
     m_lights[i] = NULL;
 
@@ -209,7 +209,7 @@ bool Render::on_button_press_event(GdkEventButton* event)
       }
     }
   } else if (event->button == 3 || event->button == 2)
-    m_downPoint = Vector2f (event->x, event->y);
+    m_downPoint = Vector2d (event->x, event->y);
   else
     return Gtk::DrawingArea::on_button_press_event (event);
   return true;
@@ -242,7 +242,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     }
     else if (event->state & GDK_BUTTON3_MASK) { // pan
       Matrix4f matrix;
-      float factor = 0.3;
+      double factor = 0.3;
       memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
       Vector3f m_transl = matrix.getTranslation();
       Vector3f delta3f(-delta.x*factor, delta.y*factor, 0);

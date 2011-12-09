@@ -32,9 +32,9 @@ using namespace std;
 
 GCode::GCode()
 {
-	Min.x = Min.y = Min.z = 99999999.0f;
-	Max.x = Max.y = Max.z = -99999999.0f;
-	Center.x = Center.y = Center.z = 0.0f;
+	Min.x = Min.y = Min.z = 99999999.0;
+	Max.x = Max.y = Max.z = -99999999.0;
+	Center.x = Center.y = Center.z = 0.0;
 	buffer = Gtk::TextBuffer::create();
 }
 
@@ -56,8 +56,8 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 	string s;
 
 	Vector3d globalPos(0,0,0);
-	Min.x = Min.y = Min.z = 99999999.0f;
-	Max.x = Max.y = Max.z = -99999999.0f;
+	Min.x = Min.y = Min.z = 99999999.0;
+	Max.x = Max.y = Max.z = -99999999.0;
 
 	while(getline(file,s))
 	{
@@ -93,27 +93,27 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 				if( buffer.find( "X", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.x = ToFloat(number);
+					command.where.x = ToDouble(number);
 				}
 				if( buffer.find( "Y", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.y = ToFloat(number);
+					command.where.y = ToDouble(number);
 				}
 				if( buffer.find( "Z", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.z = ToFloat(number);
+					command.where.z = ToDouble(number);
 				}
 				if( buffer.find( "E", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.e = ToFloat(number);
+					command.e = ToDouble(number);
 				}
 				if( buffer.find( "F", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.f = ToFloat(number);
+					command.f = ToDouble(number);
 				}
 			}
 			if(command.where.x < -100)
@@ -145,27 +145,27 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 				if( buffer.find( "X", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.x = ToFloat(number);
+					command.where.x = ToDouble(number);
 				}
 				if( buffer.find( "Y", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.y = ToFloat(number);
+					command.where.y = ToDouble(number);
 				}
 				if( buffer.find( "Z", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.z = ToFloat(number);
+					command.where.z = ToDouble(number);
 				}
 				if( buffer.find( "E", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.e = ToFloat(number);
+					command.e = ToDouble(number);
 				}
 				if( buffer.find( "F", 0) != string::npos )	//string::npos means not defined
 				{
 					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.f = ToFloat(number);
+					command.f = ToDouble(number);
 				}
 			}
 			if(command.where.x < -100)
@@ -239,8 +239,8 @@ void GCode::draw(const Settings &settings)
 			glColor4fv(&Color[0]);
 			if(i==end-1)
 				glColor4f(0,1,0,Color.a);
-			glVertex3fv((GLfloat*)&pos);
-			glVertex3fv((GLfloat*)&commands[i].where);
+			glVertex3dv((GLdouble*)&pos);
+			glVertex3dv((GLdouble*)&commands[i].where);
 			glEnd();
 			LastColor = Color;
 			LastE=commands[i].e;
@@ -250,9 +250,9 @@ void GCode::draw(const Settings &settings)
 				{
 				glLineWidth(3);
 				double speed = commands[i].f;
-				float luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
+				double luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
 				if(settings.Display.LuminanceShowsSpeed == false)
-					luma = 1.0f;
+					luma = 1.0;
 				Color = settings.Display.GCodeMoveRGBA;
 				Color *= luma;
 				}
@@ -260,9 +260,9 @@ void GCode::draw(const Settings &settings)
 				{
 				glLineWidth(3);
 				double speed = commands[i].f;
-				float luma = speed/settings.Hardware.MaxPrintSpeedXY;
+				double luma = speed/settings.Hardware.MaxPrintSpeedXY;
 				if(settings.Display.LuminanceShowsSpeed == false)
-					luma = 1.0f;
+					luma = 1.0;
 			        Color = settings.Display.GCodeExtrudeRGBA;
 				Color *= luma;
 				}
@@ -273,11 +273,11 @@ void GCode::draw(const Settings &settings)
 			glColor4fv(&LastColor[0]);
 			if(i==end-1)
 				glColor3f(1,0,0);
-			glVertex3fv((GLfloat*)&pos);
+			glVertex3dv((GLdouble*)&pos);
 			glColor4fv(&Color[0]);
 			if(i==end-1)
 				glColor3f(1,0,0);
-			glVertex3fv((GLfloat*)&commands[i].where);
+			glVertex3dv((GLdouble*)&commands[i].where);
 			glEnd();
 			LastColor = Color;
 			LastE=commands[i].e;
@@ -287,8 +287,8 @@ void GCode::draw(const Settings &settings)
 			glBegin(GL_LINES);
 			glColor3f(0.75f,0.0f,0.0f);
 			Distance += (commands[i].where-pos).length();
-			glVertex3fv((GLfloat*)&pos);
-			glVertex3fv((GLfloat*)&commands[i].where);
+			glVertex3dv((GLdouble*)&pos);
+			glVertex3dv((GLdouble*)&commands[i].where);
 			glEnd();
 			break;
 		default:
@@ -301,7 +301,7 @@ void GCode::draw(const Settings &settings)
 	glLineWidth(1);
 	std::stringstream oss;
 
-	oss << "Length: "  << Distance/1000.0f << " - " << Distance/200000.0f << " Hour.";
+	oss << "Length: "  << Distance/1000.0 << " - " << Distance/200000.0 << " Hour.";
 //	std::cout << oss.str();
 
 
@@ -397,7 +397,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 					}
 				else
 					{
-					if(commands[i].e >= 0.0f)
+					if(commands[i].e >= 0.0)
 						oss << "E" << commands[i].e << " ";
 					}
 			}
@@ -424,7 +424,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 			  //GcodeTxt += GcodeLayer + "\n";
 
 			LastPos = commands[i].where;
-			if( commands[i].e >= 0.0f)
+			if( commands[i].e >= 0.0)
 				lastE = commands[i].e;
 			break;
 		case EXTRUDERON:
@@ -474,7 +474,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 				LastPos.z = commands[i].where.z;
 				oss << " Z" << commands[i].where.z;
 			}
-			if(commands[i].e != lastE && commands[i].e >= 0.0f)
+			if(commands[i].e != lastE && commands[i].e >= 0.0)
 			{
 				lastE = commands[i].e;
 				oss << " E" << commands[i].e;

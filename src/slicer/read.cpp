@@ -21,8 +21,8 @@
 // Constructor
 Slicer::Slicer()
 {
-	Min.x = Min.y = Min.z = 0.0f;
-	Max.x = Max.y = Max.z = 200.0f;
+	Min.x = Min.y = Min.z = 0.0;
+	Max.x = Max.y = Max.z = 200.0;
 
 	CalcCenter();
 }
@@ -47,6 +47,10 @@ static float read_float(ifstream &file) {
 	return ret.v_float;
 }
 
+static double read_double(ifstream &file) {
+  return double(read_float(file));
+}
+
 /* Loads an binary STL file by filename
  * Returns 0 on success and -1 on failure */
 int Slicer::loadBinarySTL(string filename) {
@@ -56,8 +60,8 @@ int Slicer::loadBinarySTL(string filename) {
     }
 
     triangles.clear();
-	Min.x = Min.y = Min.z = numeric_limits<float>::infinity();
-	Max.x = Max.y = Max.z = -numeric_limits<float>::infinity();
+    Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
+    Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
 
     ifstream file;
     file.open(filename.c_str());
@@ -79,31 +83,28 @@ int Slicer::loadBinarySTL(string filename) {
 
     for(uint i = 0; i < num_triangles; i++)
     {
-        float a,b,c;
-        a = read_float (file);
-        b = read_float (file);
-        c = read_float (file);
-        Vector3f N(a,b,c);
-        a = read_float (file);
-        b = read_float (file);
-        c = read_float (file);
-        Vector3f Ax(a,b,c);
-        a = read_float (file);
-        b = read_float (file);
-        c = read_float (file);
-        Vector3f Bx(a,b,c);
-        a = read_float (file);
-        b = read_float (file);
-        c = read_float (file);
-        Vector3f Cx(a,b,c);
+        double a,b,c;
+        a = read_double (file);
+        b = read_double (file);
+        c = read_double (file);
+        Vector3d N(a,b,c);
+        a = read_double (file);
+        b = read_double (file);
+        c = read_double (file);
+        Vector3d Ax(a,b,c);
+        a = read_double (file);
+        b = read_double (file);
+        c = read_double (file);
+        Vector3d Bx(a,b,c);
+        a = read_double (file);
+        b = read_double (file);
+        c = read_double (file);
+        Vector3d Cx(a,b,c);
 
         /* Recalculate normal vector - can't trust an STL file! */
-        Vector3f AA=Cx-Ax;
-        Vector3f BB=Cx-Bx;
-        N.x = AA.y * BB.z - BB.y * AA.z;
-        N.y = AA.z * BB.x - BB.z * AA.x;
-        N.z = AA.x * BB.y - BB.x * AA.y;
-        N.normalize();
+        Vector3d AA=Cx-Ax;
+        Vector3d BB=Cx-Bx;
+	N = AA.cross(BB).getNormalized();
 
         /* attribute byte count - sometimes contains face color
             information but is useless for our purposes */
@@ -114,6 +115,8 @@ int Slicer::loadBinarySTL(string filename) {
 	(void)&byte_count;
 
         Triangle T(N,Ax,Bx,Cx);
+
+	//cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
 
         triangles.push_back(T);
         T.AccumulateMinMax (Min, Max);
@@ -132,8 +135,8 @@ int Slicer::loadASCIISTL(string filename) {
         return -1;
     }
     triangles.clear();
-	Min.x = Min.y = Min.z = numeric_limits<float>::infinity();
-	Max.x = Max.y = Max.z = -numeric_limits<float>::infinity();
+	Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
+	Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
 
     ifstream file;
     file.open(filename.c_str());
@@ -164,7 +167,7 @@ int Slicer::loadASCIISTL(string filename) {
 
         // Parse Face Normal - "normal %f %f %f"
         string normal;
-        Vector3f normal_vec;
+        Vector3d normal_vec;
         file >> normal
              >> normal_vec.x
              >> normal_vec.y
@@ -184,7 +187,7 @@ int Slicer::loadASCIISTL(string filename) {
         }
 
         // Grab the 3 vertices - each one of the form "vertex %f %f %f"
-        Vector3f vertices[3];
+        Vector3d vertices[3];
         for(int i=0; i<3; i++) {
             string vertex;
             file >> vertex
@@ -208,21 +211,19 @@ int Slicer::loadASCIISTL(string filename) {
         }
 
         /* Recalculate normal vector - can't trust an STL file! */
-        Vector3f AA=vertices[2]-vertices[0];
-        Vector3f BB=vertices[2]-vertices[1];
-        normal_vec.x = AA.y * BB.z - BB.y * AA.z;
-        normal_vec.y = AA.z * BB.x - BB.z * AA.x;
-        normal_vec.z = AA.x * BB.y - BB.x * AA.y;
-        normal_vec.normalize();
+        Vector3d AA=vertices[2]-vertices[0];
+        Vector3d BB=vertices[2]-vertices[1];
+	normal_vec = AA.cross(BB).getNormalized();
+
 
         // Create triangle object and push onto the vector
         Triangle triangle(normal_vec,
-                            vertices[0],
-                            vertices[1],
-                            vertices[2]);
+			  vertices[0],
+			  vertices[1],
+			  vertices[2]);
 
         triangle.AccumulateMinMax(Min, Max);
-
+	//cout << "txt triangle "<< normal_vec << ":\n\t" << vertices[0] << "/\n\t"<<vertices[1] << "/\n\t"<<vertices[2] << endl;
         triangles.push_back(triangle);
     }
     file.close();

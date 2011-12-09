@@ -41,7 +41,7 @@ GUI *gui;
 
 using namespace std;
 
-#include <Polygon2f.h>
+#include <Polygon2d.h>
 
 #define BOOST_TEST_MODULE RepSnapperTest
 #define BOOST_TEST_MAIN 1
@@ -70,64 +70,64 @@ using namespace PolyLib;
 
 BOOST_AUTO_TEST_CASE( Logick_Basic_Shrink_Test )
 {
-	Polygon2f p;
+	Polygon2d p;
 
-	p.vertices.push_back(Vector2f(10,10));
-	p.vertices.push_back(Vector2f(10,110));
-	p.vertices.push_back(Vector2f(110,110));
-	p.vertices.push_back(Vector2f(110,10));
+	p.vertices.push_back(Vector2d(10,10));
+	p.vertices.push_back(Vector2d(10,110));
+	p.vertices.push_back(Vector2d(110,110));
+	p.vertices.push_back(Vector2d(110,10));
 
-	list<Polygon2f*> parent;
-	list<Polygon2f*> res;
+	list<Polygon2d*> parent;
+	list<Polygon2d*> res;
 
 	p.Shrink(1, parent, res);
 	BOOST_CHECK( p.vertices.size() == res.front()->vertices.size() );
-	BOOST_CHECK( res.front()->vertices.front() == Vector2f(11,11) );
-	BOOST_CHECK( res.front()->vertices.back() == Vector2f(109,11) );
+	BOOST_CHECK( res.front()->vertices.front() == Vector2d(11,11) );
+	BOOST_CHECK( res.front()->vertices.back() == Vector2d(109,11) );
 
 	delete res.front();
 }
 
 BOOST_AUTO_TEST_CASE( Logick_Advanced_Shrink_Test )
 {
-	Polygon2f p;
+	Polygon2d p;
 
-	p.vertices.push_back(Vector2f(10,10));
-	p.vertices.push_back(Vector2f(10,110));
-	p.vertices.push_back(Vector2f(110,110));
-	p.vertices.push_back(Vector2f(120,110));
-	p.vertices.push_back(Vector2f(110,109));
-	p.vertices.push_back(Vector2f(110,10));
+	p.vertices.push_back(Vector2d(10,10));
+	p.vertices.push_back(Vector2d(10,110));
+	p.vertices.push_back(Vector2d(110,110));
+	p.vertices.push_back(Vector2d(120,110));
+	p.vertices.push_back(Vector2d(110,109));
+	p.vertices.push_back(Vector2d(110,10));
 
-	list<Polygon2f*> parent;
-	list<Polygon2f*> res;
+	list<Polygon2d*> parent;
+	list<Polygon2d*> res;
 
 	p.Shrink(2, parent, res);
 	BOOST_CHECK( p.vertices.size()-2 == res.front()->vertices.size() );
-	BOOST_CHECK( res.front()->vertices.front() == Vector2f(12,12) );
-	BOOST_CHECK( res.front()->vertices.back() == Vector2f(108,12) );
+	BOOST_CHECK( res.front()->vertices.front() == Vector2d(12,12) );
+	BOOST_CHECK( res.front()->vertices.back() == Vector2d(108,12) );
 
 	delete res.front();
 }
 
 BOOST_AUTO_TEST_CASE( Logick_Advanced_Polygon_Split_Tests )
 {
-	Polygon2f p;
+	Polygon2d p;
 
-	p.vertices.push_back(Vector2f(10,10));
-	p.vertices.push_back(Vector2f(59,60));
-	p.vertices.push_back(Vector2f(10,110));
-	p.vertices.push_back(Vector2f(110,110));
-	p.vertices.push_back(Vector2f(61,60));
-	p.vertices.push_back(Vector2f(110,10));
+	p.vertices.push_back(Vector2d(10,10));
+	p.vertices.push_back(Vector2d(59,60));
+	p.vertices.push_back(Vector2d(10,110));
+	p.vertices.push_back(Vector2d(110,110));
+	p.vertices.push_back(Vector2d(61,60));
+	p.vertices.push_back(Vector2d(110,10));
 
-	list<Polygon2f*> parent;
-	list<Polygon2f*> res;
+	list<Polygon2d*> parent;
+	list<Polygon2d*> res;
 
 	p.Shrink(2, parent, res);
 	BOOST_CHECK( res.size() == 2 );
 
-	for(list<Polygon2f*>::iterator pIt = res.begin(); pIt != res.end(); pIt++)
+	for(list<Polygon2d*>::iterator pIt = res.begin(); pIt != res.end(); pIt++)
 		delete *pIt;
 }
 
@@ -137,30 +137,30 @@ BOOST_AUTO_TEST_CASE( Slicing_PointHash )
 	float x = 10.0, y = 7.0;
 	float d = PointHash::float_epsilon / 2;
 
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x, y)) < 0);
-	h.InsertPoint (0, Vector2f (x, y));
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x, y)) < 0);
+	h.InsertPoint (0, Vector2d (x, y));
 
 	// look around that point
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x, y)) == 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x + d, y)) == 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x - d, y)) == 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x, y + d)) == 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x, y - d)) == 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x + d, y + d)) == 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x - d, y - d)) == 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x + d, y - d)) == 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x - d, y + d)) == 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x, y)) == 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x + d, y)) == 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x - d, y)) == 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x, y + d)) == 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x, y - d)) == 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x + d, y + d)) == 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x - d, y - d)) == 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x + d, y - d)) == 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x - d, y + d)) == 0);
 
 	// look nearby but not there
 	float e = PointHash::float_epsilon * 3 / 2;
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x + e, y)) < 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x - e, y)) < 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x, y + e)) < 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x, y - e)) < 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x + e, y + e)) < 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x - e, y - e)) < 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x + e, y - e)) < 0);
-	BOOST_CHECK (h.IndexOfPoint (Vector2f(x - e, y + e)) < 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x + e, y)) < 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x - e, y)) < 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x, y + e)) < 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x, y - e)) < 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x + e, y + e)) < 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x - e, y - e)) < 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x + e, y - e)) < 0);
+	BOOST_CHECK (h.IndexOfPoint (Vector2d(x - e, y + e)) < 0);
 }
 
 
@@ -173,10 +173,10 @@ BOOST_AUTO_TEST_CASE( Slicing_Lines_Square_Simple )
 	// degenerate case
 	BOOST_CHECK (cp.LinkSegments (0.1, 0.001) == true);
 
-	int tl = cp.RegisterPoint (Vector2f (10, 20));
-	int tr = cp.RegisterPoint (Vector2f (20, 20));
-	int bl = cp.RegisterPoint (Vector2f (10, 10));
-	int br = cp.RegisterPoint (Vector2f (20, 10));
+	int tl = cp.RegisterPoint (Vector2d (10, 20));
+	int tr = cp.RegisterPoint (Vector2d (20, 20));
+	int bl = cp.RegisterPoint (Vector2d (10, 10));
+	int br = cp.RegisterPoint (Vector2d (20, 10));
 
 	cp.AddLine (CuttingPlane::Segment (tl, tr));
 	cp.AddLine (CuttingPlane::Segment (bl, tl));
@@ -193,14 +193,14 @@ BOOST_AUTO_TEST_CASE( Slicing_Lines_Square_Nastier )
 {
 	CuttingPlane cp;
 	float d = PointHash::float_epsilon / 2;
-	int tl  = cp.RegisterPoint (Vector2f (10, 20));
-	int tln = cp.RegisterPoint (Vector2f (10, 20 + 0.01));
-	int tr = cp.RegisterPoint (Vector2f (20, 20));
-	int trn = cp.RegisterPoint (Vector2f (20 + d, 20));
-	int bl = cp.RegisterPoint (Vector2f (10, 10));
-	int bln = cp.RegisterPoint (Vector2f (10 + 0.5, 10 + 0.5));
-	int br = cp.RegisterPoint (Vector2f (20, 10));
-	int brn = cp.RegisterPoint (Vector2f (20 + 0.5, 10 + d));
+	int tl  = cp.RegisterPoint (Vector2d (10, 20));
+	int tln = cp.RegisterPoint (Vector2d (10, 20 + 0.01));
+	int tr = cp.RegisterPoint (Vector2d (20, 20));
+	int trn = cp.RegisterPoint (Vector2d (20 + d, 20));
+	int bl = cp.RegisterPoint (Vector2d (10, 10));
+	int bln = cp.RegisterPoint (Vector2d (10 + 0.5, 10 + 0.5));
+	int br = cp.RegisterPoint (Vector2d (20, 10));
+	int brn = cp.RegisterPoint (Vector2d (20 + 0.5, 10 + d));
 
 	cp.AddLine (CuttingPlane::Segment (tl, trn));
 	cp.AddLine (CuttingPlane::Segment (bl, tln));
@@ -222,13 +222,13 @@ BOOST_AUTO_TEST_CASE( Slicing_Lines_Square_Nastier )
 BOOST_AUTO_TEST_CASE( Slicing_Lines_Single_Co_Incident )
 {
 	CuttingPlane cp;
-	int a = cp.RegisterPoint (Vector2f (10, 30));
-	int b = cp.RegisterPoint (Vector2f (20, 30));
-	int c = cp.RegisterPoint (Vector2f (10, 20));
-	int d = cp.RegisterPoint (Vector2f (20, 20));
-	int e = cp.RegisterPoint (Vector2f (30, 20));
-	int f = cp.RegisterPoint (Vector2f (20, 10));
-	int g = cp.RegisterPoint (Vector2f (30, 10));
+	int a = cp.RegisterPoint (Vector2d (10, 30));
+	int b = cp.RegisterPoint (Vector2d (20, 30));
+	int c = cp.RegisterPoint (Vector2d (10, 20));
+	int d = cp.RegisterPoint (Vector2d (20, 20));
+	int e = cp.RegisterPoint (Vector2d (30, 20));
+	int f = cp.RegisterPoint (Vector2d (20, 10));
+	int g = cp.RegisterPoint (Vector2d (30, 10));
 
 	cp.AddLine (CuttingPlane::Segment (a, b));
 	cp.AddLine (CuttingPlane::Segment (b, d));
@@ -252,12 +252,12 @@ BOOST_AUTO_TEST_CASE( Slicing_Lines_Single_Co_Incident )
 BOOST_AUTO_TEST_CASE( Slicing_Lines_Boundary_Co_Incident )
 {
 	CuttingPlane cp;
-	int a = cp.RegisterPoint (Vector2f (10, 30));
-	int b = cp.RegisterPoint (Vector2f (20, 30));
-	int c = cp.RegisterPoint (Vector2f (10, 20));
-	int d = cp.RegisterPoint (Vector2f (20, 20));
-	int e = cp.RegisterPoint (Vector2f (10, 10));
-	int f = cp.RegisterPoint (Vector2f (20, 10));
+	int a = cp.RegisterPoint (Vector2d (10, 30));
+	int b = cp.RegisterPoint (Vector2d (20, 30));
+	int c = cp.RegisterPoint (Vector2d (10, 20));
+	int d = cp.RegisterPoint (Vector2d (20, 20));
+	int e = cp.RegisterPoint (Vector2d (10, 10));
+	int f = cp.RegisterPoint (Vector2d (20, 10));
 
 	cp.AddLine (CuttingPlane::Segment (a, b));
 	cp.AddLine (CuttingPlane::Segment (b, d));

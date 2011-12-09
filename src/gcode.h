@@ -160,7 +160,7 @@ class Progress;
 class Command
 {
 public:
-	Command(){where.x=where.y=where.z=e=-1.0f;f=0.0f;};
+	Command(){where.x=where.y=where.z=e=-1.0;f=0.0;};
 	GCodes Code;
 	Vector3d where;
 	double f,e;	// Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)

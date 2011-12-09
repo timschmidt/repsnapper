@@ -125,11 +125,11 @@ class View : public Gtk::Window
   void inhibit_print_changed();
   void alert (Gtk::MessageType t, const char *message,
 	      const char *secondary);
-  void rotate_selection (vmml::Vector4f rotate);
+  void rotate_selection (vmml::Vector4d rotate);
   void stl_added (Gtk::TreePath &path);
 
-  vmml::Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
-  void SelectedNodeMatrices(std::vector<vmml::Matrix4f *> &result );
+  vmml::Matrix4d &SelectedNodeMatrix(guint objectNr = 1);
+  void SelectedNodeMatrices(std::vector<vmml::Matrix4d *> &result );
   void newObject();
 
   // view nasties ...

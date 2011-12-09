@@ -142,7 +142,7 @@ public:
 
 	void OptimizeRotation(RFO_File *file, RFO_Object *object);
 	void ScaleObject(RFO_File *file, RFO_Object *object, double scale);
-	void RotateObject(RFO_File *file, RFO_Object *object, Vector4f rotate);
+	void RotateObject(RFO_File *file, RFO_Object *object, Vector4d rotate);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 
 	// GCode Functions
@@ -178,7 +178,7 @@ public:
 	void STOP();
 
 	Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
-	void SelectedNodeMatrices(vector<Matrix4f *> &result );
+	void SelectedNodeMatrices(vector<Matrix4d *> &result );
 	void newObject();
 
 	rr_dev m_device;
@@ -191,13 +191,13 @@ public:
 	Settings settings;
 
 	// Model derived: Bounding box info
-	Vector3f Center;
-	Vector3f Min;
-	Vector3f Max;
-	vmml::Vector3f printOffset; // margin + raft
+	Vector3d Center;
+	Vector3d Min;
+	Vector3d Max;
+	vmml::Vector3d printOffset; // margin + raft
 
 	void CalcBoundingBoxAndCenter();
-        bool FindEmptyLocation(Vector3f &result, Slicer *stl);
+        bool FindEmptyLocation(Vector3d &result, Slicer *stl);
 
 	sigc::signal< void > m_model_changed;
 	void ModelChanged();

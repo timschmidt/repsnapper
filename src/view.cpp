@@ -251,7 +251,7 @@ class View::TranslationSpinRow {
         mat = &object->transform3D.transform;
     else
         mat = &file->transform3D.transform;
-    Vector3f trans = mat->getTranslation();
+    Vector3d trans = mat->getTranslation();
     trans.xyz[axis] = val;
     mat->setTranslation (trans);
     m_view->get_model()->CalcBoundingBoxAndCenter();
@@ -282,7 +282,7 @@ public:
 	mat = &object->transform3D.transform;
       else
 	mat = &file->transform3D.transform;
-      Vector3f trans = mat->getTranslation();
+      Vector3d trans = mat->getTranslation();
       for (uint i = 0; i < 3; i++)
 	m_xyz[i]->set_value(trans.xyz[i]);
       break;
@@ -517,7 +517,7 @@ void View::alert (Gtk::MessageType t, const char *message,
   dialog.run();
 }
 
-void View::rotate_selection (Vector4f rotate)
+void View::rotate_selection (Vector4d rotate)
 {
   RFO_File *file;
   RFO_Object *object;
@@ -653,9 +653,9 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_delete",        sigc::mem_fun(*this, &View::delete_selected_stl) );
   connect_button ("m_duplicate",     sigc::mem_fun(*this, &View::duplicate_selected_stl) );
   connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &View::auto_rotate) );
-  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(1,0,0, M_PI/2)));
-  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(0,1,0, M_PI/2)));
-  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4f(0,0,1, M_PI/2)));
+  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(1,0,0, M_PI/2)));
+  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/2)));
+  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/2)));
   m_builder->get_widget ("m_rfo_tree", m_rfo_tree);
 
   // Insert our keybindings all around the place
@@ -915,7 +915,7 @@ void View::update_scale_slider()
 
 void View::DrawGrid()
 {
-	Vector3f volume = m_model->settings.Hardware.Volume;
+	Vector3d volume = m_model->settings.Hardware.Volume;
 
 	glEnable (GL_BLEND);
 	glEnable (GL_DEPTH_TEST);
@@ -964,7 +964,7 @@ void View::DrawGrid()
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         // Draw print margin in faint red
-	Vector3f pM = m_model->settings.Hardware.PrintMargin;
+	Vector3d pM = m_model->settings.Hardware.PrintMargin;
 
         float no_mat[] = {0.0f, 0.0f, 0.0f, 0.5f};
         float mat_diffuse[] = {1.0f, 0.1f, 0.1f, 0.2f};
@@ -1011,10 +1011,10 @@ void View::DrawGrid()
 void View::Draw (Gtk::TreeModel::iterator &selected)
 {
 	// FIXME: rationalize this printOffset madness
-	Vector3f printOffset = m_model->settings.Hardware.PrintMargin;
+	Vector3d printOffset = m_model->settings.Hardware.PrintMargin;
 	if(m_model->settings.RaftEnable)
-		printOffset += Vector3f(m_model->settings.Raft.Size, m_model->settings.Raft.Size, 0);
-	Vector3f translation = m_model->rfo.transform3D.transform.getTranslation();
+		printOffset += Vector3d(m_model->settings.Raft.Size, m_model->settings.Raft.Size, 0);
+	Vector3d translation = m_model->rfo.transform3D.transform.getTranslation();
 
 	// Draw the grid, pushed back so it can be seen
 	// when viewed from below.
@@ -1040,8 +1040,8 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 	m_model->rfo.draw (m_model->settings, selected);
 
 	// draw total bounding box
-	Vector3f Min = m_model->Min;
-	Vector3f Max = m_model->Max;
+	Vector3d Min = m_model->Min;
+	Vector3d Max = m_model->Max;
 	if(m_model->settings.Display.DisplayBBox)
 	{
 		// Draw bbox
