@@ -886,9 +886,9 @@ void Settings::connect_to_ui (Builder &builder)
 }
 
 // We do our internal measurement in terms of the length of extruded material
-float Settings::HardwareSettings::GetExtrudeFactor() const
+double Settings::HardwareSettings::GetExtrudeFactor() const
 {
-  float f = 1.0;
+  double f = 1.0;
   if (CalibrateInput) {
     // otherwise we just work back from the extruded diameter for now.
     f = (ExtrudedMaterialWidth * ExtrudedMaterialWidth) / (FilamentDiameter * FilamentDiameter);

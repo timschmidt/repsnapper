@@ -25,7 +25,7 @@
 #endif
 #include <vmmlib/vmmlib.h>
 #include "platform.h"
-#include "GeometryBase.h"
+#include "GeometryBase_float.h"
 
 #ifdef __GNUC__
 #  define _BACKWARD_BACKWARD_WARNING_H 1 // kill annoying warning

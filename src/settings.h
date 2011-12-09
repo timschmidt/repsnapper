@@ -33,15 +33,15 @@ class Settings {
 
   bool   RaftEnable;
   struct RaftSettings {
-    float Size;
+    double Size;
     struct PhasePropertiesType {
       guint  LayerCount;
-      float MaterialDistanceRatio;
-      float Rotation;
-      float RotationPrLayer;
-      float Distance;
-      float Thickness;
-      float Temperature;
+      double MaterialDistanceRatio;
+      double Rotation;
+      double RotationPrLayer;
+      double Distance;
+      double Thickness;
+      double Temperature;
     };
     enum PhaseType { PHASE_BASE, PHASE_INTERFACE };
     PhasePropertiesType Phase[2];
@@ -49,21 +49,21 @@ class Settings {
   RaftSettings Raft;
 
   struct HardwareSettings {
-    float MinPrintSpeedXY;
-    float MaxPrintSpeedXY;
-    float MinPrintSpeedZ;
-    float MaxPrintSpeedZ;
+    double MinPrintSpeedXY;
+    double MaxPrintSpeedXY;
+    double MinPrintSpeedZ;
+    double MaxPrintSpeedZ;
 
     bool  CalibrateInput; // hardware treats 'mm' as cold input mm not of hot output.
-    float DistanceToReachFullSpeed;
-    float ExtrusionFactor;
-    float FilamentDiameter;
+    double DistanceToReachFullSpeed;
+    double ExtrusionFactor;
+    double FilamentDiameter;
 
     float LayerThickness;
 
-    vmml::Vector3f	Volume;      // Print volume
-    vmml::Vector3f	PrintMargin;
-    float ExtrudedMaterialWidth;
+    vmml::Vector3d	Volume;      // Print volume
+    vmml::Vector3d	PrintMargin;
+    double ExtrudedMaterialWidth;
 
     std::string PortName;
     int SerialSpeed;
@@ -72,9 +72,9 @@ class Settings {
 
     int ReceivingBufferSize;
 
-    float DownstreamMultiplier;
-    float DownstreamExtrusionMultiplier;
-    float GetExtrudeFactor() const;
+    double DownstreamMultiplier;
+    double DownstreamExtrusionMultiplier;
+    double GetExtrudeFactor() const;
   };
   HardwareSettings Hardware;
 
@@ -83,13 +83,13 @@ class Settings {
     bool  Use3DGcode;
 
     bool  EnableAntiooze;
-    float AntioozeDistance;
-    float AntioozeSpeed;
+    double AntioozeDistance;
+    double AntioozeSpeed;
 
-    float InfillDistance;
-    float InfillRotation;
-    float InfillRotationPrLayer;
-    float AltInfillDistance;
+    double InfillDistance;
+    double InfillRotation;
+    double InfillRotationPrLayer;
+    double AltInfillDistance;
     std::string AltInfillLayersText;
     bool SolidTopAndBottom;
 
@@ -98,7 +98,7 @@ class Settings {
     bool EnableAcceleration;
     int ShrinkQuality;
 
-    float Optimization;
+    double Optimization;
 
     void GetAltInfillLayers(std::vector<int>& layers, guint layerCount) const;
   };
@@ -129,8 +129,8 @@ class Settings {
 
   struct DisplaySettings {
     bool DisplayGCode;
-    float GCodeDrawStart;
-    float GCodeDrawEnd;
+    double GCodeDrawStart;
+    double GCodeDrawEnd;
 
     bool DisplayEndpoints;
     bool DisplayNormals;
@@ -149,7 +149,7 @@ class Settings {
     bool DrawCPVertexNumbers;
     bool DrawCPLineNumbers;
     bool DrawCPOutlineNumbers;
-    float CuttingPlaneValue;
+    double CuttingPlaneValue;
     bool LuminanceShowsSpeed;
 
     // Rendering

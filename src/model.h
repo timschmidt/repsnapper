@@ -173,8 +173,8 @@ public:
 	void SwitchPower(bool on);
 
 	void Home(string axis);
-	void Move(string axis, float distance);
-	void Goto(string axis, float position);
+	void Move(string axis, double distance);
+	void Goto(string axis, double position);
 	void STOP();
 
 	Matrix4f &SelectedNodeMatrix(guint objectNr = 1);

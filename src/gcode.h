@@ -122,6 +122,15 @@ inline float ToFloat(const std::string& s)
 	return x;
 }
 
+inline double ToDouble(const std::string& s)
+{
+	std::istringstream i(s);
+	double x;
+	if (!(i >> x))
+		return -1;
+	return x;
+}
+
 inline string FromInt(const int i)
 {
 	std::stringstream s;
@@ -130,6 +139,13 @@ inline string FromInt(const int i)
 }
 
 inline string FromFloat(const float i)
+{
+	std::stringstream s;
+	s << i;
+	return s.str();
+}
+
+inline string FromDouble(const double i)
 {
 	std::stringstream s;
 	s << i;
@@ -146,8 +162,8 @@ class Command
 public:
 	Command(){where.x=where.y=where.z=e=-1.0f;f=0.0f;};
 	GCodes Code;
-	Vector3f where;
-	float f,e;	// Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
+	Vector3d where;
+	double f,e;	// Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
 	string comment;
 };
 
@@ -173,14 +189,14 @@ public:
   void Read  (Model *model, Progress *progress, string filename);
   //void Write (Model *model, string filename);
   void draw  (const Settings &settings);
-  void MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, float AntioozeDistance, float AntioozeSpeed);
+  void MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, double AntioozeDistance, double AntioozeSpeed);
 
   bool append_text (const std::string &line);
   std::string get_text() const;
   void clear();
 
   std::vector<Command> commands;
-  Vector3f Min, Max, Center;
+  Vector3d Min, Max, Center;
 
   Glib::RefPtr<Gtk::TextBuffer> buffer;
   GCodeIter *get_iter ();

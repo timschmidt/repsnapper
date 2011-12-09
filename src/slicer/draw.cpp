@@ -50,11 +50,11 @@ void renderBitmapString(Vector3f pos, void* font, string text)
 }
 
 void Slicer::displayInfillOld(const Settings &settings, CuttingPlane &plane,
-			   uint LayerNr, vector<int>& altInfillLayers)
+			      uint LayerNr, vector<int>& altInfillLayers)
 {
 	if (settings.Display.DisplayinFill)
 	{
-		vector<Vector2f> *infill = NULL;
+		vector<Vector2d> *infill = NULL;
 
 		CuttingPlane infillCuttingPlane = plane;
 		if (settings.Slicing.ShellOnly == false)
@@ -73,7 +73,7 @@ void Slicer::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 			}
 
 			// check if this if a layer we should use the alternate infill distance on
-			float infillDistance = settings.Slicing.InfillDistance;
+			double infillDistance = settings.Slicing.InfillDistance;
 			if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end()) {
 			  infillDistance = settings.Slicing.AltInfillDistance;
 			}
@@ -381,7 +381,7 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawO
 		{
 			ostringstream oss;
 			oss << l;
-			Vector2f Center = (vertices[lines[l].start]+vertices[lines[l].end]) *0.5f;
+			Vector2d Center = (vertices[lines[l].start]+vertices[lines[l].end]) *0.5f;
 			glColor4f(1,0.5,0,1);
 			renderBitmapString(Vector3f (Center.x, Center.y, Z) , GLUT_BITMAP_8_BY_13 , oss.str());
 		}

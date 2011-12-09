@@ -46,8 +46,8 @@ namespace PolyLib
 	#define SMALL_NUM  0.00000001 // anything that avoids division overflow
 
 	bool IsAngleInBetween(double a12, double a32, double aP2);
-	float CalcAngleBetween(Vector2f V1, Vector2f V2);
-	int intersect2D_Segments( const Vector2f &p1, const Vector2f &p2, const Vector2f &p3, const Vector2f &p4, Vector2f &I0, Vector2f &I1, float &t0, float &t1 );
-    float linePointDist2D_Segments2(const Vector2f &l1, const Vector2f &l2, const Vector2f &p1);
+	double CalcAngleBetween(Vector2d V1, Vector2d V2);
+	int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, const Vector2d &p3, const Vector2d &p4, Vector2d &I0, Vector2d &I1, double &t0, double &t1 );
+	double linePointDist2D_Segments2(const Vector2d &l1, const Vector2d &l2, const Vector2d &p1);
 
 }

@@ -32,7 +32,7 @@
 #include <algorithm>
 
 #include <vmmlib/vmmlib.h>
-#include <polylib/Polygon2f.h>
+#include <polylib/Polygon2d.h>
 
 #include "stdafx.h"
 #include "string.h"
@@ -76,7 +76,7 @@ using namespace PolyLib;
 class RFO;
 class GCode;
 
-typedef vector<Vector2f> outline;
+typedef vector<Vector2d> outline;
 
 enum AXIS {NEGX, POSX, NEGY, POSY, NEGZ, POSZ, NOT_ALIGNED};
 
@@ -89,49 +89,49 @@ enum filetype_t{
 class Triangle
 {
 public:
-	Triangle(const Vector3f &Norml, const Vector3f &Point1,
-		 const Vector3f &Point2, const Vector3f &Point3) 
+	Triangle(const Vector3d &Norml, const Vector3d &Point1,
+		 const Vector3d &Point2, const Vector3d &Point3) 
 		{ Normal = Norml ; A=Point1;B=Point2;C=Point3;}
 	Triangle() {};
 
 	/* Represent the triangle as an array of length 3 {A, B, C} */
-	Vector3f &operator[](const int index);
+	Vector3d &operator[](const int index);
 
-	void SetPoints(const Vector3f &P1, const Vector3f &P2, const Vector3f &P3) { A=P1;B=P2;C=P3; }
-	void SetNormal(const Vector3f &Norml) { Normal=Norml;}
-	float area();
+	void SetPoints(const Vector3d &P1, const Vector3d &P2, const Vector3d &P3) { A=P1;B=P2;C=P3; }
+	void SetNormal(const Vector3d &Norml) { Normal=Norml;}
+	double area();
 
 	AXIS axis;			// Used for auto-rotation
-	Vector3f A,B,C,Normal;	// p1,p2,p3, Normal
-	Vector3f GetMax();
-	Vector3f GetMin();
-	void AccumulateMinMax(Vector3f &min, Vector3f &max);
-	void Translate(const Vector3f &vector);
-	int CutWithPlane(float z, const Matrix4f &T, 
-			 Vector2f &lineStart, Vector2f &lineEnd);
+	Vector3d A,B,C,Normal;	// p1,p2,p3, Normal
+	Vector3d GetMax();
+	Vector3d GetMin();
+	void AccumulateMinMax(Vector3d &min, Vector3d &max);
+	void Translate(const Vector3d &vector);
+	int CutWithPlane(float z, const Matrix4d &T, 
+			 Vector2d &lineStart, Vector2d &lineEnd);
 };
 
 
 struct InFillHit
 {
-	Vector2f p;  // The intersection point
-	float d;     // Distance from the infill-line start point, used for sorting hits
-	float t;     // intersection point on first line
+	Vector2d p;  // The intersection point
+	double d;     // Distance from the infill-line start point, used for sorting hits
+	double t;     // intersection point on first line
 };
 
 bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
-bool IntersectXY (const Vector2f &p1, const Vector2f &p2,
-		  const Vector2f &p3, const Vector2f &p4, InFillHit &hit);
+bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
+		  const Vector2d &p3, const Vector2d &p4, InFillHit &hit);
 
 class Poly
 {
 public:
 	Poly(){};
 	void cleanup();				// Removed vertices that are on a straight line
-	void calcHole(vector<Vector2f> &offsetVertices);
+	void calcHole(vector<Vector2d> &offsetVertices);
 	vector<guint> points;			// points, indices into ..... a CuttingPlane or a GCode object
 	bool hole;
-	Vector2f center;
+	Vector2d center;
 };
 
 struct locator
@@ -139,7 +139,7 @@ struct locator
 	locator(int polygon, int vertex, float where){p=polygon; v=vertex; t=where;}
 	int p;
 	int v;
-	float t;
+	double t;
 };
 
 class CuttingPlaneOptimizer;
@@ -153,12 +153,12 @@ class PointHash
 	PointHash();
 	~PointHash();
 	PointHash(const PointHash &copy);
-	int  IndexOfPoint (const Vector2f &p);
-	void InsertPoint  (guint idx, const Vector2f &p);
+	int  IndexOfPoint (const Vector2d &p);
+	void InsertPoint  (guint idx, const Vector2d &p);
 	void clear();
 
-        static const float mult;
-        static const float float_epsilon;
+        static const double mult;
+        static const double double_epsilon;
 };
 
 class Command;
@@ -170,18 +170,18 @@ class GCodeState {
   ~GCodeState();
   void SetZ (float z);
   void AppendCommand(Command &command);
-  void MakeAcceleratedGCodeLine (Vector3f start, Vector3f end,
-				 float extrusionFactor,
-				 float &E, float z,
+  void MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
+				 double extrusionFactor,
+				 double &E, float z,
 				 const Settings::SlicingSettings &slicing,
 				 const Settings::HardwareSettings &hardware);
   float GetLastLayerZ(float curZ);
   void  SetLastLayerZ(float z);
-  const Vector3f &LastPosition();
-  void  SetLastPosition(const Vector3f &v);
-  void  ResetLastWhere(Vector3f to);
-  float DistanceFromLastTo(Vector3f here);
-  float LastCommandF();
+  const Vector3d &LastPosition();
+  void  SetLastPosition(const Vector3d &v);
+  void  ResetLastWhere(Vector3d to);
+  double DistanceFromLastTo(Vector3d here);
+  double LastCommandF();
 };
 
 // A (set of) 2D polygon extracted from a 3D model
@@ -192,16 +192,16 @@ public:
 	~CuttingPlane();
 
 	// Contract polygons:
-	void ShrinkFast(float distance, float optimization, bool DisplayCuttingPlane,
+	void ShrinkFast(double distance, double optimization, bool DisplayCuttingPlane,
 			bool useFillets, int ShellCount);
-	void ShrinkLogick(float distance, float optimization, bool DisplayCuttingPlane,
+	void ShrinkLogick(double distance, double optimization, bool DisplayCuttingPlane,
 			  int ShellCount);
 
 	void  selfIntersectAndDivide();
 	guint selfIntersectAndDivideRecursive(float z, guint startPolygon, 
 					      guint startVertex,
 					      vector<outline> &outlines, 
-					      const Vector2f endVertex,
+					      const Vector2d endVertex,
 					      guint &level);
 	void  recurseSelfIntersectAndDivide  (float z, vector<locator> &EndPointStack,
 					      vector<outline> &outlines,
@@ -212,24 +212,24 @@ public:
 		offsetPolygons.clear();
 		offsetVertices.clear();
 	}
-	vector<Vector2f> * CalcInFill(guint LayerNr, float InfillDistance, 
-				      float InfillRotation, float InfillRotationPrLayer,
+	vector<Vector2d> * CalcInFill(guint LayerNr, double InfillDistance, 
+				      double InfillRotation, double InfillRotationPrLayer,
 				      bool DisplayDebuginFill);	// Collide an infill-line with the polygons
 	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers,
 		  bool DrawCPLineNumbers, bool DrawCPVertexNumbers);
-	bool LinkSegments(float z, float Optimization);		        // Link Segments to form polygons
+	bool LinkSegments(float z, double Optimization);		        // Link Segments to form polygons
 	bool CleanupConnectSegments(float z);
 	bool CleanupSharedSegments(float z);
-	void CleanupPolygons(float Optimization);			// remove redudant points
-	void CleanupOffsetPolygons(float Optimization);			// remove redudant points
+	void CleanupPolygons(double Optimization);			// remove redudant points
+	void CleanupOffsetPolygons(double Optimization);			// remove redudant points
 	void MakeGcode (GCodeState &state,
-			const std::vector<Vector2f> *opt_infill,
-			float &E, float z,
+			const std::vector<Vector2d> *opt_infill,
+			double &E, float z,
 			const Settings::SlicingSettings &slicing,
 			const Settings::HardwareSettings &hardware);
-	bool VertexIsOutsideOriginalPolygon( Vector2f point, float z);
+	bool VertexIsOutsideOriginalPolygon( Vector2d point, float z);
 
-	Vector2f Min, Max;  // Bounding box
+	Vector2d Min, Max;  // Bounding box
 
 	void Clear()
 	{
@@ -246,7 +246,7 @@ public:
 	}
 	float getZ() { return Z; }
 
-	int RegisterPoint(const Vector2f &p);
+	int RegisterPoint(const Vector2d &p);
 
 	struct Segment {
 		Segment(guint s, guint e) { start = s; end = e; }
@@ -261,7 +261,7 @@ public:
 	void AddLine(const Segment &line);
 
 	vector<Poly>& GetPolygons() { return polygons; }
-	vector<Vector2f>& GetVertices() { return vertices; }
+	vector<Vector2d>& GetVertices() { return vertices; }
 
 private:
 	PointHash points;
@@ -270,11 +270,11 @@ private:
 
 	vector<Segment> lines;		// Segments - 2 points pr. line-segment
 	vector<Poly> polygons;		// Closed loops
-	vector<Vector2f> vertices;	// points
+	vector<Vector2d> vertices;	// points
 	float Z;
 
 	vector<Poly> offsetPolygons;	// Shrinked closed loops
-	vector<Vector2f> offsetVertices;// points for shrinked closed loops
+	vector<Vector2d> offsetVertices;// points for shrinked closed loops
 };
 
 
@@ -294,20 +294,20 @@ public:
 	void draw_geometry ();
 	void CenterAroundXY();
 	// Extract a 2D polygonset from a 3D model:
-	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T);
+	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4d &T);
 	// Auto-Rotate object to have the largest area surface down for printing:
 	void OptimizeRotation(); 
 	void CalcCenter();
 	// Rotation for manual rotate and used by OptimizeRotation:
-	void RotateObject(Vector3f axis, float angle);  
-    void Scale(float scale_factor);
-    float getScaleFactor(){ return scale_factor; };
+	void RotateObject(Vector3d axis, double angle);  
+    void Scale(double scale_factor);
+    double getScaleFactor(){ return scale_factor; };
 
 	vector<Triangle>  triangles;
-	Vector3f Min, Max, Center;
+	Vector3d Min, Max, Center;
 
 private:
-    float scale_factor;
+    double scale_factor;
     int loadASCIISTL(std::string filename);
     int loadBinarySTL(std::string filename);
     filetype_t getFileType(std::string filename);
@@ -320,17 +320,17 @@ public:
 	float Z;
 	CuttingPlaneOptimizer(float z) { Z = z; }
 	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z);
-	list<Polygon2f*> positivePolygons;
-	void Shrink(float distance, list<Polygon2f*> &resPolygons);
+	list<Polygon2d*> positivePolygons;
+	void Shrink(double distance, list<Polygon2d*> &resPolygons);
 	void Draw();
 	void Dispose();
-	void MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2f>& vectors);
-	void RetrieveLines(vector<Vector3f>& lines);
+	void MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2d>& vectors);
+	void RetrieveLines(vector<Vector3d>& lines);
 private:
-	void PushPoly(Polygon2f* poly);
-	void DoMakeOffsetPolygons(Polygon2f* pPoly, vector<Poly>& polys,
-				  vector<Vector2f>& vectors);
-	void DoRetrieveLines(Polygon2f* pPoly, vector<Vector3f>& lines);
+	void PushPoly(Polygon2d* poly);
+	void DoMakeOffsetPolygons(Polygon2d* pPoly, vector<Poly>& polys,
+				  vector<Vector2d>& vectors);
+	void DoRetrieveLines(Polygon2d* pPoly, vector<Vector3d>& lines);
 };
 
 #include "rfo.h"

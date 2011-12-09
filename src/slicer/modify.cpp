@@ -18,7 +18,7 @@
 */
 #include "slicer.h"
 
-void Slicer::Scale(float in_scale_factor)
+void Slicer::Scale(double in_scale_factor)
 {
     for(size_t i = 0; i < triangles.size(); i++)
     {
@@ -59,12 +59,12 @@ void Slicer::OptimizeRotation()
 
 	// if dist center <|> 0.1 && Normal points towards, add area
 
-	Vector3f AXIS_VECTORS[3];
-	AXIS_VECTORS[0] = Vector3f(1,0,0);
-	AXIS_VECTORS[1] = Vector3f(0,1,0);
-	AXIS_VECTORS[2] = Vector3f(0,0,1);
+	Vector3d AXIS_VECTORS[3];
+	AXIS_VECTORS[0] = Vector3d(1,0,0);
+	AXIS_VECTORS[1] = Vector3d(0,1,0);
+	AXIS_VECTORS[2] = Vector3d(0,0,1);
 
-	float area[6];
+	double area[6];
 	for(uint i=0;i<6;i++)
 		area[i] = 0.0f;
 
@@ -93,7 +93,7 @@ void Slicer::OptimizeRotation()
 
 
 	AXIS down = NOT_ALIGNED;
-	float LargestArea = 0;
+	double LargestArea = 0;
 	for(uint i=0;i<6;i++)
 	{
 		if(area[i] > LargestArea)
@@ -105,11 +105,11 @@ void Slicer::OptimizeRotation()
 
 	switch(down)
 	{
-	case NEGX: RotateObject(Vector3f(0,-1,0), M_PI/2.0f); break;
-	case POSX: RotateObject(Vector3f(0,1,0), M_PI/2.0f); break;
-	case NEGY: RotateObject(Vector3f(1,0,0), M_PI/2.0f); break;
-	case POSY: RotateObject(Vector3f(-1,0,0), M_PI/2.0f); break;
-	case POSZ: RotateObject(Vector3f(1,0,0), M_PI); break;
+	case NEGX: RotateObject(Vector3d(0,-1,0), M_PI/2.0f); break;
+	case POSX: RotateObject(Vector3d(0,1,0), M_PI/2.0f); break;
+	case NEGY: RotateObject(Vector3d(1,0,0), M_PI/2.0f); break;
+	case POSY: RotateObject(Vector3d(-1,0,0), M_PI/2.0f); break;
+	case POSZ: RotateObject(Vector3d(1,0,0), M_PI); break;
 	default: // unhandled
 	  break;
 	}
@@ -117,10 +117,10 @@ void Slicer::OptimizeRotation()
 }
 
 // Rotate and adjust for the user - not a pure rotation by any means
-void Slicer::RotateObject(Vector3f axis, float angle)
+void Slicer::RotateObject(Vector3d axis, double angle)
 {
-	Vector3f min,max;
-	Vector3f oldmin,oldmax;
+	Vector3d min,max;
+	Vector3d oldmin,oldmax;
 
 	min.x = min.y = min.z = oldmin.x = oldmin.y = oldmin.z = 99999999.0f;
 	max.x = max.y = max.z = oldmax.x = oldmax.y = oldmax.z -99999999.0f;
@@ -136,7 +136,7 @@ void Slicer::RotateObject(Vector3f axis, float angle)
 
 		triangles[i].AccumulateMinMax (min, max);
 	}
-	Vector3f move(0, 0, 0);
+	Vector3d move(0, 0, 0);
 	// if we rotated under the bed, translate us up again
 	if (min.z < 0) {
 		move.z = - min.z;
@@ -161,7 +161,7 @@ void Slicer::RotateObject(Vector3f axis, float angle)
 
 void Slicer::CenterAroundXY()
 {
-	Vector3f displacement = -Min;
+	Vector3d displacement = -Min;
 
 	for(size_t i=0; i<triangles.size() ; i++)
 	{

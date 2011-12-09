@@ -32,7 +32,7 @@ CuttingPlane::~CuttingPlane()
 }
 
 // intersect lines with plane
-void Slicer::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &T)
+void Slicer::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4d &T)
 {
 #if CUTTING_PLANE_DEBUG
 	cout << "intersect with z " << where << "\n";
@@ -40,16 +40,16 @@ void Slicer::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &
 	plane.Clear();
 	plane.SetZ(where);
 
-	Vector3f min = T*Min;
-	Vector3f max = T*Max;
+	Vector3d min = T*Min;
+	Vector3d max = T*Max;
 
 	plane.Min.x = min.x;
 	plane.Min.y = min.y;
 	plane.Max.x = max.x;
 	plane.Max.y = max.y;
 
-	Vector2f lineStart;
-	Vector2f lineEnd;
+	Vector2d lineStart;
+	Vector2d lineEnd;
 
 	int num_cutpoints;
 	for (size_t i = 0; i < triangles.size(); i++)
@@ -61,17 +61,17 @@ void Slicer::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &
 		  line.start = plane.RegisterPoint(lineStart);
 		if (num_cutpoints>1)
 		  line.end = plane.RegisterPoint(lineEnd);
-
+		
 		// Check segment normal against triangle normal. Flip segment, as needed.
 		if (line.start != -1 && line.end != -1 && line.end != line.start)	
 		  // if we found a intersecting triangle
 		{
-			Vector3f Norm = triangles[i].Normal;
-			Vector2f triangleNormal = Vector2f(Norm.x, Norm.y);
-			Vector2f segmentNormal = (lineEnd - lineStart).normal();
+			Vector3d Norm = triangles[i].Normal;
+			Vector2d triangleNormal = Vector2d(Norm.x, Norm.y);
+			Vector2d segmentNormal = (lineEnd - lineStart).normal();
 			triangleNormal.normalise();
 			segmentNormal.normalise();
-			if( (triangleNormal-segmentNormal).lengthSquared() > 0.2f)
+			if( (triangleNormal-segmentNormal).lengthSquared() > 0.2)
 			  // if normals does not align, flip the segment
 				line.Swap();
 			plane.AddLine(line);
@@ -80,33 +80,33 @@ void Slicer::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4f &
 }
 
 
-vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
-					    float InfillRotation, float InfillRotationPrLayer,
+vector<Vector2d> *CuttingPlane::CalcInFill (uint LayerNr, double InfillDistance,
+					    double InfillRotation, double InfillRotationPrLayer,
 					    bool DisplayDebuginFill)
 {
     int c=0;
     vector<InFillHit> HitsBuffer;
-    float step = InfillDistance;
+    double step = InfillDistance;
     
-    vector<Vector2f> *infill = new vector<Vector2f>();
+    vector<Vector2d> *infill = new vector<Vector2d>();
     bool examine = false;
 
-    float Length = sqrtf(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0f;	// bbox of lines to intersect the poly with
+    double Length = sqrtf(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0f;	// bbox of lines to intersect the poly with
 
-    float rot = InfillRotation/180.0f*M_PI;
-    rot += (float)LayerNr*InfillRotationPrLayer/180.0f*M_PI;
-    Vector2f InfillDirX(cosf(rot), sinf(rot));
-    Vector2f InfillDirY(-InfillDirX.y, InfillDirX.x);
-    Vector2f Center = (Max+Min)/2.0f;
+    double rot = InfillRotation/180.0f*M_PI;
+    rot += (double)LayerNr*InfillRotationPrLayer/180.0f*M_PI;
+    Vector2d InfillDirX(cosf(rot), sinf(rot));
+    Vector2d InfillDirY(-InfillDirX.y, InfillDirX.x);
+    Vector2d Center = (Max+Min)/2.0f;
     
-    for(float x = -Length ; x < Length ; x+=step)
+    for(double x = -Length ; x < Length ; x+=step)
       {
 	bool examineThis = true;
 	
 	HitsBuffer.clear();
 
-	Vector2f P1 = (InfillDirX * Length)+(InfillDirY*x)+ Center;
-	Vector2f P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
+	Vector2d P1 = (InfillDirX * Length)+(InfillDirY*x)+ Center;
+	Vector2d P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
 	
 	if(DisplayDebuginFill)
 	  {
@@ -116,7 +116,7 @@ vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
 	    glVertex3f(P2.x, P2.y, Z);
 	    glEnd();
 	  }
-	float Examine = 0.5f;
+	double Examine = 0.5f;
 	
 	if(DisplayDebuginFill && !examine && ((Examine-0.5f)*2 * Length <= x))
 	  {
@@ -132,10 +132,10 @@ vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
 	      {
 		for(size_t i=0;i<offsetPolygons[p].points.size();i++)
 		  {
-		    Vector2f P3 = offsetVertices[offsetPolygons[p].points[i]];
-		    Vector2f P4 = offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
+		    Vector2d P3 = offsetVertices[offsetPolygons[p].points[i]];
+		    Vector2d P4 = offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
 		    
-		    Vector3f point;
+		    Vector3d point;
 		    InFillHit hit;
 		    if (IntersectXY (P1,P2,P3,P4,hit))
 		      HitsBuffer.push_back(hit);
@@ -147,8 +147,8 @@ vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
 				// Fallback, collide with lines rather then polygons
 				for(size_t i=0;i<lines.size();i++)
 					{
-					Vector2f P3 = vertices[lines[i].start];
-					Vector2f P4 = vertices[lines[i].end];
+					Vector2d P3 = vertices[lines[i].start];
+					Vector2d P4 = vertices[lines[i].end];
 
 					Vector3f point;
 					InFillHit hit;
@@ -242,7 +242,7 @@ vector<Vector2f> *CuttingPlane::CalcInFill (uint LayerNr, float InfillDistance,
 // calculates intersection and checks for parallel lines.
 // also checks that the intersection point is actually on
 // the line segment p1-p2
-bool IntersectXY(const Vector2f &p1, const Vector2f &p2, const Vector2f &p3, const Vector2f &p4, InFillHit &hit)
+bool IntersectXY(const Vector2d &p1, const Vector2d &p2, const Vector2d &p3, const Vector2d &p4, InFillHit &hit)
 {
 	// BBOX test
 	if(MIN(p1.x,p2.x) > MAX(p3.x,p4.x))
@@ -285,7 +285,7 @@ bool IntersectXY(const Vector2f &p1, const Vector2f &p2, const Vector2f &p3, con
 	}
 
 	InFillHit hit2;
-	float t0,t1;
+	double t0,t1;
 	if(intersect2D_Segments(p1,p2,p3,p4,hit.p, hit2.p, t0,t1) == 1)
 	{
 	hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
@@ -399,26 +399,26 @@ int PntOnLine(Vector2f p1, Vector2f p2, Vector2f t)
     return(2);
 }
 */
-float dist ( float x1, float y1, float x2, float y2)
+double dist ( double x1, double y1, double x2, double y2)
 {
 return sqrt( ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)) ) ;
 }
 
-int PntOnLine(Vector2f p1, Vector2f p2, Vector2f t, float &where)
+int PntOnLine(Vector2d p1, Vector2d p2, Vector2d t, double &where)
 {
 
-	float A = t.x - p1.x;
-	float B = t.y - p1.y;
-	float C = p2.x - p1.x;
-	float D = p2.y - p1.y;
+	double A = t.x - p1.x;
+	double B = t.y - p1.y;
+	double C = p2.x - p1.x;
+	double D = p2.y - p1.y;
 
 	where = ABS(A * D - C * B) / sqrt(C * C + D * D);
 
-	if(where > 0.01)
+	if(where > 0.01f)
 		return 0;
 
-	float dot = A * C + B * D;
-	float len_sq = C * C + D * D;
+	double dot = A * C + B * D;
+	double len_sq = C * C + D * D;
 	where = dot / len_sq;
 
 /*	float xx,yy;
@@ -462,11 +462,11 @@ int PntOnLine(Vector2f p1, Vector2f p2, Vector2f t, float &where)
 
 class OverlapLine{
 public:
-	OverlapLine(Vector2f start, Vector2f end){s=start;e=end;};
-	bool overlaps(Vector2f p1, Vector2f p2)
+	OverlapLine(Vector2d start, Vector2d end){s=start;e=end;};
+	bool overlaps(Vector2d p1, Vector2d p2)
 	{
 	int res[2];
-	float t1,t2;
+	double t1,t2;
 
 	if(p1 == s || p2==s)
 		return 1;
@@ -491,8 +491,8 @@ public:
 
 	if(res[0] != res[1])	// expanding both ends
 		{
-		Vector2f i1 = s+(e-s)*t1;
-		Vector2f i2 = s+(e-s)*t2;
+		Vector2d i1 = s+(e-s)*t1;
+		Vector2d i2 = s+(e-s)*t2;
 
 		if(t1 < 0 && t1 < t2)	// Move p1
 			s = p1;
@@ -523,7 +523,7 @@ public:
 			glEnd();
 	return false;
 	}
-	Vector2f s,e;
+	Vector2d s,e;
 };
 
 /*
@@ -573,13 +573,13 @@ bool CuttingPlane::CleanupConnectSegments(float z)
 	// pair them nicely to their matching type
 	for (uint i = 0; i < detached_points.size(); i++)
 	{
-		float nearest_dist_sq = (std::numeric_limits<float>::max)();
+		double nearest_dist_sq = (std::numeric_limits<double>::max)();
 		int   nearest = 0;
 		int   n = detached_points[i];
 		if (n < 0)
 			continue;
 
-		const Vector2f &p = vertices[n];
+		const Vector2d &p = vertices[n];
 		for (uint j = i + 1; j < detached_points.size(); j++)
 		{
 			int pt = detached_points[j];
@@ -590,8 +590,8 @@ bool CuttingPlane::CleanupConnectSegments(float z)
 			if (vertex_types[n] == vertex_types[pt])
 				continue;
 
-			const Vector2f &q = vertices[pt];
-			float dist_sq = pow (p.x - q.x, 2) + pow (p.y - q.y, 2);
+			const Vector2d &q = vertices[pt];
+			double dist_sq = pow (p.x - q.x, 2) + pow (p.y - q.y, 2);
 			if (dist_sq < nearest_dist_sq)
 			{
 				nearest_dist_sq = dist_sq;
@@ -698,7 +698,7 @@ bool CuttingPlane::CleanupSharedSegments(float z)
 /*
  * Attempt to link all the Segments in 'lines' together.
  */
-bool CuttingPlane::LinkSegments(float z, float Optimization)
+bool CuttingPlane::LinkSegments(float z, double Optimization)
 {
 	if (vertices.size() == 0)
 		return true;
@@ -837,7 +837,7 @@ bool CuttingPlane::LinkSegments(float z, float Optimization)
 	return true;
 }
 
-uint CuttingPlane::selfIntersectAndDivideRecursive(float z, uint startPolygon, uint startVertex, vector<outline> &outlines, const Vector2f endVertex, uint &level)
+uint CuttingPlane::selfIntersectAndDivideRecursive(float z, uint startPolygon, uint startVertex, vector<outline> &outlines, const Vector2d endVertex, uint &level)
 {
 	level++;
 	outline result;
@@ -853,10 +853,10 @@ uint CuttingPlane::selfIntersectAndDivideRecursive(float z, uint startPolygon, u
 				{
 					if((p==p2) && (v == v2))	// Dont check a point against itself
 						continue;
-					Vector2f P1 = offsetVertices[offsetPolygons[p].points[v]];
-					Vector2f P2 = offsetVertices[offsetPolygons[p].points[(v+1)%count]];
-					Vector2f P3 = offsetVertices[offsetPolygons[p2].points[v2]];
-					Vector2f P4 = offsetVertices[offsetPolygons[p2].points[(v2+1)%count2]];
+					Vector2d P1 = offsetVertices[offsetPolygons[p].points[v]];
+					Vector2d P2 = offsetVertices[offsetPolygons[p].points[(v+1)%count]];
+					Vector2d P3 = offsetVertices[offsetPolygons[p2].points[v2]];
+					Vector2d P4 = offsetVertices[offsetPolygons[p2].points[(v2+1)%count2]];
 					InFillHit hit;
 					result.push_back(P1);
 					if(P1 != P3 && P2 != P3 && P1 != P4 && P2 != P4)
@@ -901,8 +901,8 @@ void CuttingPlane::recurseSelfIntersectAndDivide(float z, vector<locator> &EndPo
 		{
 			for(int v = start.v; v < (int)offsetPolygons[p].points.size(); v++)
 			{
-				Vector2f P1 = offsetVertices[offsetPolygons[p].points[v]];
-				Vector2f P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
+				Vector2d P1 = offsetVertices[offsetPolygons[p].points[v]];
+				Vector2d P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
 
 				result.push_back(P1);	// store this point
 				for(int p2=0; p2 < (int)offsetPolygons.size(); p2++)
@@ -912,8 +912,8 @@ void CuttingPlane::recurseSelfIntersectAndDivide(float z, vector<locator> &EndPo
 					{
 						if((p==p2) && (v == v2))	// Dont check a point against itself
 							continue;
-						Vector2f P3 = offsetVertices[offsetPolygons[p2].points[v2]];
-						Vector2f P4 = offsetVertices[offsetPolygons[p2].points[(v2+1)%offsetPolygons[p2].points.size()]];
+						Vector2d P3 = offsetVertices[offsetPolygons[p2].points[v2]];
+						Vector2d P4 = offsetVertices[offsetPolygons[p2].points[(v2+1)%offsetPolygons[p2].points.size()]];
 						InFillHit hit;
 
 						if(P1 != P3 && P2 != P3 && P1 != P4 && P2 != P4)
@@ -935,8 +935,8 @@ void CuttingPlane::recurseSelfIntersectAndDivide(float z, vector<locator> &EndPo
 								{
 									EndPointStack.push_back(locator(p,v+1,hit.t));	// continue from here later on
 									p=p2;v=v2;	// continue along the intersection line
-									Vector2f P1 = offsetVertices[offsetPolygons[p].points[v]];
-									Vector2f P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
+									Vector2d P1 = offsetVertices[offsetPolygons[p].points[v]];
+									Vector2d P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
 								}
 
 
@@ -963,33 +963,33 @@ void CuttingPlane::recurseSelfIntersectAndDivide(float z, vector<locator> &EndPo
 	}
 }
 
-bool not_equal(const float& val1, const float& val2)
+bool not_equal(const double& val1, const double& val2)
 {
-  float diff = val1 - val2;
+  double diff = val1 - val2;
   return ((-Epsilon > diff) || (diff > Epsilon));
 }
 
-bool is_equal(const float& val1, const float& val2)
+bool is_equal(const double& val1, const double& val2)
 	{
-  float diff = val1 - val2;
+  double diff = val1 - val2;
   return ((-Epsilon <= diff) && (diff <= Epsilon));
 }
 
-bool intersect(const float& x1, const float& y1,
-			   const float& x2, const float& y2,
-			   const float& x3, const float& y3,
-			   const float& x4, const float& y4,
-					 float& ix,       float& iy)
+bool intersect(const double& x1, const double& y1,
+			   const double& x2, const double& y2,
+			   const double& x3, const double& y3,
+			   const double& x4, const double& y4,
+					 double& ix,       double& iy)
 {
-  float ax = x2 - x1;
-  float bx = x3 - x4;
+  double ax = x2 - x1;
+  double bx = x3 - x4;
 
-  float lowerx;
-  float upperx;
-  float uppery;
-  float lowery;
+  double lowerx;
+  double upperx;
+  double uppery;
+  double lowery;
 
-  if (ax < float(0.0))
+  if (ax < double(0.0))
   {
      lowerx = x2;
      upperx = x1;
@@ -1000,7 +1000,7 @@ bool intersect(const float& x1, const float& y1,
      lowerx = x1;
   }
 
-  if (bx > float(0.0))
+  if (bx > double(0.0))
   {
      if ((upperx < x4) || (x3 < lowerx))
      return false;
@@ -1008,10 +1008,10 @@ bool intersect(const float& x1, const float& y1,
   else if ((upperx < x3) || (x4 < lowerx))
      return false;
 
-  float ay = y2 - y1;
-  float by = y3 - y4;
+  double ay = y2 - y1;
+  double by = y3 - y4;
 
-  if (ay < float(0.0))
+  if (ay < double(0.0))
   {
      lowery = y2;
      uppery = y1;
@@ -1022,7 +1022,7 @@ bool intersect(const float& x1, const float& y1,
      lowery = y1;
   }
 
-  if (by > float(0.0))
+  if (by > double(0.0))
   {
      if ((uppery < y4) || (y3 < lowery))
         return false;
@@ -1030,32 +1030,32 @@ bool intersect(const float& x1, const float& y1,
   else if ((uppery < y3) || (y4 < lowery))
      return false;
 
-  float cx = x1 - x3;
-  float cy = y1 - y3;
-  float d  = (by * cx) - (bx * cy);
-  float f  = (ay * bx) - (ax * by);
+  double cx = x1 - x3;
+  double cy = y1 - y3;
+  double d  = (by * cx) - (bx * cy);
+  double f  = (ay * bx) - (ax * by);
 
-  if (f > float(0.0))
+  if (f > double(0.0))
   {
-     if ((d < float(0.0)) || (d > f))
+     if ((d < double(0.0)) || (d > f))
         return false;
   }
-  else if ((d > float(0.0)) || (d < f))
+  else if ((d > double(0.0)) || (d < f))
      return false;
 
-  float e = (ax * cy) - (ay * cx);
+  double e = (ax * cy) - (ay * cx);
 
-  if (f > float(0.0))
+  if (f > double(0.0))
   {
-     if ((e < float(0.0)) || (e > f))
+     if ((e < double(0.0)) || (e > f))
         return false;
   }
-  else if ((e > float(0.0)) || (e < f))
+  else if ((e > double(0.0)) || (e < f))
      return false;
 
-  float ratio = (ax * -by) - (ay * -bx);
+  double ratio = (ax * -by) - (ay * -bx);
 
-  if (not_equal(ratio,float(0.0)))
+  if (not_equal(ratio,double(0.0)))
   {
      ratio = ((cy * -bx) - (cx * -by)) / ratio;
      ix    = x1 + (ratio * ax);
@@ -1080,27 +1080,27 @@ bool intersect(const float& x1, const float& y1,
 
  /*
   * We bucket space up into a grid of size 1/mult and generate hash values
-  * from this. We use a margin of 2 * float_epsilon to detect values near
+  * from this. We use a margin of 2 * double_epsilon to detect values near
   * the bottom or right hand edge of the bucket, and check the adjacent
-  * grid entries for similar values within float_epsilon of us.
+  * grid entries for similar values within double_epsilon of us.
   */
 struct PointHash::Impl {
-	typedef std::vector< std::pair< uint, Vector2f > > IdxPointList;
+	typedef std::vector< std::pair< uint, Vector2d > > IdxPointList;
 
 	hash_map<uint, IdxPointList> points;
 	typedef hash_map<uint, IdxPointList>::iterator iter;
 	typedef hash_map<uint, IdxPointList>::const_iterator const_iter;
 
-	static uint GetHashes (uint *hashes, float x, float y)
+	static uint GetHashes (uint *hashes, double x, double y)
 	{
 		uint xh = x * mult;
 		uint yh = y * mult;
 		int xt, yt;
 		uint c = 0;
 		hashes[c++] = xh + yh * 1000000;
-		if ((xt = (uint)((x + 2*PointHash::float_epsilon) * PointHash::mult) - xh))
+		if ((xt = (uint)((x + 2*PointHash::double_epsilon) * PointHash::mult) - xh))
 			hashes[c++] = xh + xt + yh * 1000000;
-		if ((yt = (uint)((y + 2*PointHash::float_epsilon) * PointHash::mult) - yh))
+		if ((yt = (uint)((y + 2*PointHash::double_epsilon) * PointHash::mult) - yh))
 			hashes[c++] = xh + (yt + yh) * 1000000;
 		if (xt && yt)
 			hashes[c++] = xh + xt + (yt + yh) * 1000000;
@@ -1114,8 +1114,8 @@ struct PointHash::Impl {
 	}
 };
 
-const float PointHash::mult = 100;
-const float PointHash::float_epsilon = 0.001;
+const double PointHash::mult = 100;
+const double PointHash::double_epsilon = 0.001;
 
 PointHash::PointHash()
 {
@@ -1141,7 +1141,7 @@ void PointHash::clear()
 	impl->points.clear();
 }
 
-int PointHash::IndexOfPoint(const Vector2f &p)
+int PointHash::IndexOfPoint(const Vector2d &p)
 {
 	uint hashes[4];
 	uint c = Impl::GetHashes (hashes, p.x, p.y);
@@ -1155,9 +1155,9 @@ int PointHash::IndexOfPoint(const Vector2f &p)
 		const Impl::IdxPointList &pts = iter->second;
 		for (uint j = 0; j < pts.size(); j++)
 		{
-			const Vector2f &v = pts[j].second;
-			if( ABS(v.x - p.x) < float_epsilon &&
-			    ABS(v.y - p.y) < float_epsilon)
+			const Vector2d &v = pts[j].second;
+			if( ABS(v.x - p.x) < double_epsilon &&
+			    ABS(v.y - p.y) < double_epsilon)
 				return pts[j].first;
 #if CUTTING_PLANE_DEBUG > 1
 			else if( ABS(v.x-p.x) < 0.01 && ABS(v.y-p.y) < 0.01)
@@ -1172,7 +1172,7 @@ int PointHash::IndexOfPoint(const Vector2f &p)
 	return -1;
 }
 
-void PointHash::InsertPoint (uint idx, const Vector2f &p)
+void PointHash::InsertPoint (uint idx, const Vector2d &p)
 {
 	uint hashes[4];
 	int c = Impl::GetHashes (hashes, p.x, p.y);
@@ -1180,7 +1180,7 @@ void PointHash::InsertPoint (uint idx, const Vector2f &p)
 	for (int i = 0; i < c; i++)
 	{
 		Impl::IdxPointList &pts = impl->points[hashes[i]];
-		pts.push_back (pair<uint, Vector2f>( idx, p ));
+		pts.push_back (pair<uint, Vector2d>( idx, p ));
 #if CUTTING_PLANE_DEBUG > 1
 		cout << "insert " << hashes[i] << " idx " << idx
 		     << " vs. p " << p.x << ", " << p.y
@@ -1194,7 +1194,7 @@ void CuttingPlane::AddLine(const Segment &line)
 	lines.push_back(line);
 }
 
-int CuttingPlane::RegisterPoint(const Vector2f &p)
+int CuttingPlane::RegisterPoint(const Vector2d &p)
 {
 	int res;
 
@@ -1218,12 +1218,12 @@ int CuttingPlane::RegisterPoint(const Vector2f &p)
 }
 
 
-bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2f point, float z)
+bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2d point, float z)
 {
 	// Shoot a ray along +X and count the number of intersections.
 	// If n_intersections is euqal, return true, else return false
 
-	Vector2f EndP(point.x+10000, point.y);
+	Vector2d EndP(point.x+10000, point.y);
 	int intersectcount = 0;
 
 	for(size_t p=0; p<polygons.size();p++)
@@ -1231,8 +1231,8 @@ bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2f point, float z)
 		size_t count = polygons[p].points.size();
 		for(size_t i=0; i<count;i++)
 		{
-		Vector2f P1 = Vector2f( vertices[polygons[p].points[(i-1+count)%count]] );
-		Vector2f P2 = Vector2f( vertices[polygons[p].points[i]]);
+		Vector2d P1 = Vector2d( vertices[polygons[p].points[(i-1+count)%count]] );
+		Vector2d P2 = Vector2d( vertices[polygons[p].points[i]]);
 
 		if(P1.y == P2.y)	// Skip hortisontal lines, we can't intersect with them, because the test line in horitsontal
 			continue;
@@ -1245,19 +1245,19 @@ bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2f point, float z)
 	return intersectcount%2;
 }
 
-void CuttingPlane::CleanupPolygons (float Optimization)
+void CuttingPlane::CleanupPolygons (double Optimization)
 {
-	float allowedError = Optimization;
+	double allowedError = Optimization;
 	for (size_t p = 0; p < polygons.size(); p++)
 	{
 		for (size_t v = 0; v < polygons[p].points.size() + 1; )
 		{
-			Vector2f p1 = vertices[polygons[p].points[(v-1+polygons[p].points.size())%polygons[p].points.size()]];
-			Vector2f p2 = vertices[polygons[p].points[v%polygons[p].points.size()]];
-			Vector2f p3 = vertices[polygons[p].points[(v+1)%polygons[p].points.size()]];
+			Vector2d p1 = vertices[polygons[p].points[(v-1+polygons[p].points.size())%polygons[p].points.size()]];
+			Vector2d p2 = vertices[polygons[p].points[v%polygons[p].points.size()]];
+			Vector2d p3 = vertices[polygons[p].points[(v+1)%polygons[p].points.size()]];
 
-			Vector2f v1 = (p2-p1);
-			Vector2f v2 = (p3-p2);
+			Vector2d v1 = (p2-p1);
+			Vector2d v2 = (p3-p2);
 
 			v1.normalize();
 			v2.normalize();
@@ -1275,19 +1275,19 @@ void CuttingPlane::CleanupPolygons (float Optimization)
 	}
 }
 
-void CuttingPlane::CleanupOffsetPolygons(float Optimization)
+void CuttingPlane::CleanupOffsetPolygons(double Optimization)
 {
-	float allowedError = Optimization;
+	double allowedError = Optimization;
 	for(size_t p=0;p<offsetPolygons.size();p++)
 	{
 		for(size_t v=0;v<offsetPolygons[p].points.size();)
 		{
-			Vector2f p1 =offsetVertices[offsetPolygons[p].points[(v-1+offsetPolygons[p].points.size())%offsetPolygons[p].points.size()]];
-			Vector2f p2 =offsetVertices[offsetPolygons[p].points[v]];
-			Vector2f p3 =offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
+			Vector2d p1 =offsetVertices[offsetPolygons[p].points[(v-1+offsetPolygons[p].points.size())%offsetPolygons[p].points.size()]];
+			Vector2d p2 =offsetVertices[offsetPolygons[p].points[v]];
+			Vector2d p3 =offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
 
-			Vector2f v1 = (p2-p1);
-			Vector2f v2 = (p3-p2);
+			Vector2d v1 = (p2-p1);
+			Vector2d v2 = (p3-p2);
 
 			v1.normalize();
 			v2.normalize();

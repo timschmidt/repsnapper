@@ -43,39 +43,39 @@ void Model::MakeRaft(GCodeState &state, float &z)
   vector<InFillHit> HitsBuffer;
 
   uint LayerNr = 0;
-  float size = settings.Raft.Size;
+  double size = settings.Raft.Size;
 
-  Vector2f raftMin =  Vector2f(Min.x - size + printOffset.x, Min.y - size + printOffset.y);
-  Vector2f raftMax =  Vector2f(Max.x + size + printOffset.x, Max.y + size + printOffset.y);
+  Vector2d raftMin =  Vector2d(Min.x - size + printOffset.x, Min.y - size + printOffset.y);
+  Vector2d raftMax =  Vector2d(Max.x + size + printOffset.x, Max.y + size + printOffset.y);
 
-  Vector2f Center = (Vector2f(Max.x + size, Max.y + size)-Vector2f(Min.x + size, Min.y + size))/2+Vector2f(printOffset.x, printOffset.y);
+  Vector2d Center = (Vector2d(Max.x + size, Max.y + size)-Vector2d(Min.x + size, Min.y + size))/2+Vector2d(printOffset.x, printOffset.y);
 
-  float Length = sqrtf(2)*(   ((raftMax.x)>(raftMax.y)? (raftMax.x):(raftMax.y))  -  ((raftMin.x)<(raftMin.y)? (raftMin.x):(raftMin.y))  )/2.0f;	// bbox of object
+  double Length = sqrtf(2)*(   ((raftMax.x)>(raftMax.y)? (raftMax.x):(raftMax.y))  -  ((raftMin.x)<(raftMin.y)? (raftMin.x):(raftMin.y))  )/2.0f;	// bbox of object
 
-  float E = 0.0f;
-  float rot;
+  double E = 0.0f;
+  double rot;
 
   while(LayerNr < settings.Raft.Phase[0].LayerCount + settings.Raft.Phase[1].LayerCount)
     {
       Settings::RaftSettings::PhasePropertiesType *props;
       props = LayerNr < settings.Raft.Phase[0].LayerCount ?
 	&settings.Raft.Phase[0] : &settings.Raft.Phase[1];
-      rot = (props->Rotation+(float)LayerNr * props->RotationPrLayer)/180.0f*M_PI;
-      Vector2f InfillDirX(cosf(rot), sinf(rot));
-      Vector2f InfillDirY(-InfillDirX.y, InfillDirX.x);
+      rot = (props->Rotation+(double)LayerNr * props->RotationPrLayer)/180.0f*M_PI;
+      Vector2d InfillDirX(cosf(rot), sinf(rot));
+      Vector2d InfillDirY(-InfillDirX.y, InfillDirX.x);
 
       Vector3f LastPosition;
       bool reverseLines = false;
 
-      Vector2f P1, P2;
-      for(float x = -Length ; x < Length ; x+=props->Distance)
+      Vector2d P1, P2;
+      for(double x = -Length ; x < Length ; x+=props->Distance)
 	{
 	  P1 = (InfillDirX *  Length)+(InfillDirY*x) + Center;
 	  P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
 
 	  if(reverseLines)
 	    {
-	      Vector2f tmp = P1;
+	      Vector2d tmp = P1;
 	      P1 = P2;
 	      P2 = tmp;
 			}
@@ -88,23 +88,23 @@ void Model::MakeRaft(GCodeState &state, float &z)
 	  Vector3f point;
 	  InFillHit hit;
 	  HitsBuffer.clear();
-	  Vector2f P3(raftMin.x, raftMin.y);
-	  Vector2f P4(raftMin.x, raftMax.y);
+	  Vector2d P3(raftMin.x, raftMin.y);
+	  Vector2d P4(raftMin.x, raftMax.y);
 	  //			glVertex2fv(&P3.x);
 	  //			glVertex2fv(&P4.x);
 	  if(IntersectXY(P1,P2,P3,P4,hit))	//Intersect edges of bbox
 	    HitsBuffer.push_back(hit);
-	  P3 = Vector2f(raftMax.x,raftMax.y);
+	  P3 = Vector2d(raftMax.x,raftMax.y);
 	  //			glVertex2fv(&P3.x);
 	  //			glVertex2fv(&P4.x);
 	  if(IntersectXY(P1,P2,P3,P4,hit))
 	    HitsBuffer.push_back(hit);
-	  P4 = Vector2f(raftMax.x,raftMin.y);
+	  P4 = Vector2d(raftMax.x,raftMin.y);
 	  //			glVertex2fv(&P3.x);
 	  //			glVertex2fv(&P4.x);
 	  if(IntersectXY(P1,P2,P3,P4,hit))
 	    HitsBuffer.push_back(hit);
-	  P3 = Vector2f(raftMin.x,raftMin.y);
+	  P3 = Vector2d(raftMin.x,raftMin.y);
 	  //			glVertex2fv(&P3.x);
 	  //			glVertex2fv(&P4.x);
 	  if(IntersectXY(P1,P2,P3,P4,hit))
@@ -184,7 +184,7 @@ void Model::ConvertToGCode()
   float z = Min.z + settings.Hardware.LayerThickness*0.5f;
 
   gcode.clear();
-  float E = 0.0f;
+  double E = 0.0;
   GCodeState state(gcode);
 
   float printOffsetZ = settings.Hardware.PrintMargin.z;
@@ -217,7 +217,7 @@ void Model::ConvertToGCode()
 		}
 
 	      // inFill
-	      vector<Vector2f> *infill = NULL;
+	      vector<Vector2d> *infill = NULL;
 
 	      for (guint shell = 1; shell <= settings.Slicing.ShellCount; shell++)
 		{
@@ -246,7 +246,7 @@ void Model::ConvertToGCode()
 		  else if (settings.Slicing.ShellOnly == false)
 		    { // last shell => calculate infill
 		      // check if this if a layer we should use the alternate infill distance on
-		      float infillDistance;
+		      double infillDistance;
 		      if (settings.Slicing.SolidTopAndBottom &&
 			  ( LayerNr < settings.Slicing.ShellCount ||
 				      LayerNr > LayerCount-settings.Slicing.ShellCount-2 ))
@@ -273,7 +273,7 @@ void Model::ConvertToGCode()
       z += settings.Hardware.LayerThickness;
     }
 
-  float AntioozeDistance = settings.Slicing.AntioozeDistance;
+  double AntioozeDistance = settings.Slicing.AntioozeDistance;
   if (!settings.Slicing.EnableAntiooze)
     AntioozeDistance = 0;
 
@@ -343,7 +343,7 @@ void Model::Home(string axis)
     alert(_("Home called with unknown axis"));
 }
 
-void Model::Move(string axis, float distance)
+void Model::Move(string axis, double distance)
 {
   if (m_printing)
     {
@@ -379,7 +379,7 @@ void Model::Move(string axis, float distance)
     alert (_("Move called with unknown axis"));
 }
 
-void Model::Goto(string axis, float position)
+void Model::Goto(string axis, double position)
 {
   if (m_printing)
     {

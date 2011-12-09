@@ -17,11 +17,11 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "GeometryBase.h"
+#include "GeometryBase_float.h"
 
 namespace PolyLib
 {
-	bool IsAngleInBetween(double a12, double a32, double aP2)
+	bool IsAngleInBetween(float a12, float a32, float aP2)
 	{
 		if( aP2 < a12 )
 		{
@@ -35,9 +35,9 @@ namespace PolyLib
 		}
 	}
 
-	double CalcAngleBetween(Vector2d V1, Vector2d V2)
+	float CalcAngleBetween(Vector2f V1, Vector2f V2)
 	{
-		double dotproduct, lengtha, lengthb, result;
+		float dotproduct, lengtha, lengthb, result;
 
 		dotproduct = (V1.x * V2.x) + (V1.y * V2.y);
 		lengtha = sqrt(V1.x * V1.x + V1.y * V1.y);
@@ -64,7 +64,7 @@ namespace PolyLib
 	//    Input:  a point P, and a collinear segment S
 	//    Return: 1 = P is inside S
 	//            0 = P is not inside S
-	int inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
+	int inSegment( const Vector2f &P, const Vector2f &p1, const Vector2f &p2)
 	{
 		if (p1.x != p2.x) {    // S is not vertical
 			if (p1.x <= P.x && P.x <= p2.x)
@@ -96,12 +96,12 @@ namespace PolyLib
 	//    Return: 0=disjoint (no intersect)
 	//            1=intersect in unique point I0
 	//            2=overlap in segment from I0 to I1
-	int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, const Vector2d &p3, const Vector2d &p4, Vector2d &I0, Vector2d &I1, double &t0, double &t1 )
+	int intersect2D_Segments( const Vector2f &p1, const Vector2f &p2, const Vector2f &p3, const Vector2f &p4, Vector2f &I0, Vector2f &I1, float &t0, float &t1 )
 	{
-		Vector2d    u = p2 - p1;
-		Vector2d    v = p4 - p3;
-		Vector2d    w = p1 - p3;
-		double    D = perp(u,v);
+		Vector2f    u = p2 - p1;
+		Vector2f    v = p4 - p3;
+		Vector2f    w = p1 - p3;
+		float    D = perp(u,v);
 
 		// test if they are parallel (includes either being a point)
 		if (fabs(D) < SMALL_NUM) {          // S1 and S2 are parallel
@@ -110,8 +110,8 @@ namespace PolyLib
 			}
 			// they are collinear or degenerate
 			// check if they are degenerate points
-			double du = dot(u,u);
-			double dv = dot(v,v);
+			float du = dot(u,u);
+			float dv = dot(v,v);
 			if (du==0 && dv==0) {           // both segments are points
 				if (p1 != p3)         // they are distinct points
 					return 0;
@@ -131,8 +131,8 @@ namespace PolyLib
 				return 1;
 			}
 			// they are collinear segments - get overlap (or not)
-			//double t0, t1;                   // endpoints of S1 in eqn for S2
-			Vector2d w2 = p2 - p3;
+			//float t0, t1;                   // endpoints of S1 in eqn for S2
+			Vector2f w2 = p2 - p3;
 			if (v.x != 0) {
 				t0 = w.x / v.x;
 				t1 = w2.x / v.x;
@@ -142,7 +142,7 @@ namespace PolyLib
 				t1 = w2.y / v.y;
 			}
 			if (t0 > t1) {                  // must have t0 smaller than t1
-				double t=t0; t0=t1; t1=t;    // swap if not
+				float t=t0; t0=t1; t1=t;    // swap if not
 			}
 			if (t0 > 1 || t1 < 0) {
 				return 0;     // NO overlap
@@ -176,9 +176,9 @@ namespace PolyLib
 	}
 
     //Compute the distance from segment(l1, l2) to p1
-    double linePointDist2D_Segments2(const Vector2d &l1, const Vector2d &l2, const Vector2d &p1)
+    float linePointDist2D_Segments2(const Vector2f &l1, const Vector2f &l2, const Vector2f &p1)
 	{
-		double d = dot(l2-l1, p1-l2);
+		float d = dot(l2-l1, p1-l2);
 		if( d > 0) return (p1-l2).lengthSquared();
 
 		d = dot(l1-l2, p1-l1);

@@ -18,9 +18,9 @@
 */
 #include "slicer.h"
 
-float angleBetween(Vector2f V1, Vector2f V2)
+double angleBetween(Vector2d V1, Vector2d V2)
 {
-	float dotproduct, lengtha, lengthb, result;
+	double dotproduct, lengtha, lengthb, result;
 
 	dotproduct = (V1.x * V2.x) + (V1.y * V2.y);
 	lengtha = sqrt(V1.x * V1.x + V1.y * V1.y);
@@ -35,13 +35,13 @@ float angleBetween(Vector2f V1, Vector2f V2)
 	return result;
 }
 
-void Poly::calcHole(vector<Vector2f> &offsetVertices)
+void Poly::calcHole(vector<Vector2d> &offsetVertices)
 {
 	if(points.size() == 0)
 		return;	// hole is undefined
-	Vector2f p(-6000, -6000);
+	Vector2d p(-6000, -6000);
 	int v=0;
-	center = Vector2f(0,0);
+	center = Vector2d(0,0);
 	for(size_t vert=0;vert<points.size();vert++)
 	{
 		center += offsetVertices[points[vert]];
@@ -59,12 +59,12 @@ void Poly::calcHole(vector<Vector2f> &offsetVertices)
 	center /= points.size();
 
 	// we have the x-most vertex (with the highest y if there was a contest), v 
-	Vector2f V1 = offsetVertices[points[(v-1+points.size())%points.size()]];
-	Vector2f V2 = offsetVertices[points[v]];
-	Vector2f V3 = offsetVertices[points[(v+1)%points.size()]];
+	Vector2d V1 = offsetVertices[points[(v-1+points.size())%points.size()]];
+	Vector2d V2 = offsetVertices[points[v]];
+	Vector2d V3 = offsetVertices[points[(v+1)%points.size()]];
 
-	Vector2f Va=V2-V1;
-	Vector2f Vb=V3-V1;
+	Vector2d Va=V2-V1;
+	Vector2d Vb=V3-V1;
 	hole = Va.cross(Vb) > 0;
 }
 
@@ -73,8 +73,8 @@ CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z
 	Z = z;
 
 	vector<Poly>* planePolygons = &cuttingPlane->GetPolygons();
-	vector<Vector2f>* planeVertices = &cuttingPlane->GetVertices();
-	std::list<Polygon2f*> unsortedPolys;
+	vector<Vector2d>* planeVertices = &cuttingPlane->GetVertices();
+	std::list<Polygon2d*> unsortedPolys;
 
 	// first add solids. This builds the tree, placing the holes afterwards is easier/faster
 	for(uint p = 0; p < planePolygons->size(); p++)
@@ -84,7 +84,7 @@ CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z
 
 		if( !poly->hole )
 		{
-			Polygon2f* newPoly = new Polygon2f();
+			Polygon2d* newPoly = new Polygon2d();
 			newPoly->hole = poly->hole;
 			newPoly->index = p;
 
@@ -102,7 +102,7 @@ CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z
 		Poly* poly = &((*planePolygons)[p]);
 		if( poly->hole )
 		{
-			Polygon2f* newPoly = new Polygon2f();
+			Polygon2d* newPoly = new Polygon2d();
 			newPoly->hole = poly->hole;
 
 			size_t count = poly->points.size();
@@ -117,25 +117,25 @@ CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z
 
 void CuttingPlaneOptimizer::Dispose()
 {
-	for(list<Polygon2f*>::iterator pIt =positivePolygons.begin(); pIt!=positivePolygons.end(); pIt++)
+	for(list<Polygon2d*>::iterator pIt =positivePolygons.begin(); pIt!=positivePolygons.end(); pIt++)
 	{
 		delete (*pIt);
 		*pIt = NULL;
 	}
 }
 
-void CuttingPlaneOptimizer::MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2f>& vectors)
+void CuttingPlaneOptimizer::MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2d>& vectors)
 {
-	for(list<Polygon2f*>::iterator pIt=this->positivePolygons.begin(); pIt!=this->positivePolygons.end(); pIt++)
+	for(list<Polygon2d*>::iterator pIt=this->positivePolygons.begin(); pIt!=this->positivePolygons.end(); pIt++)
 	{
 		DoMakeOffsetPolygons(*pIt, polys, vectors);
 	}
 }
 
-void CuttingPlaneOptimizer::DoMakeOffsetPolygons(Polygon2f* pPoly, vector<Poly>& polys, vector<Vector2f>& vectors)
+void CuttingPlaneOptimizer::DoMakeOffsetPolygons(Polygon2d* pPoly, vector<Poly>& polys, vector<Vector2d>& vectors)
 {
 	Poly p;
-	for( vector<Vector2f>::iterator pIt = pPoly->vertices.begin(); pIt!=pPoly->vertices.end(); pIt++)
+	for( vector<Vector2d>::iterator pIt = pPoly->vertices.begin(); pIt!=pPoly->vertices.end(); pIt++)
 	{
 		p.points.push_back(vectors.size());
 		vectors.push_back(*pIt);
@@ -143,54 +143,54 @@ void CuttingPlaneOptimizer::DoMakeOffsetPolygons(Polygon2f* pPoly, vector<Poly>&
 	p.hole = pPoly->hole;
 	polys.push_back(p);
 
-	for( list<Polygon2f*>::iterator pIt = pPoly->containedSolids.begin(); pIt!=pPoly->containedSolids.end(); pIt++)
+	for( list<Polygon2d*>::iterator pIt = pPoly->containedSolids.begin(); pIt!=pPoly->containedSolids.end(); pIt++)
 	{
 		DoMakeOffsetPolygons(*pIt, polys, vectors);
 	}
-	for( list<Polygon2f*>::iterator pIt = pPoly->containedHoles.begin(); pIt!=pPoly->containedHoles.end(); pIt++)
+	for( list<Polygon2d*>::iterator pIt = pPoly->containedHoles.begin(); pIt!=pPoly->containedHoles.end(); pIt++)
 	{
 		DoMakeOffsetPolygons(*pIt, polys, vectors);
 	}
 }
 
 
-void CuttingPlaneOptimizer::RetrieveLines(vector<Vector3f>& lines)
+void CuttingPlaneOptimizer::RetrieveLines(vector<Vector3d>& lines)
 {
-	for(list<Polygon2f*>::iterator pIt=this->positivePolygons.begin(); pIt!=this->positivePolygons.end(); pIt++)
+	for(list<Polygon2d*>::iterator pIt=this->positivePolygons.begin(); pIt!=this->positivePolygons.end(); pIt++)
 	{
 		DoRetrieveLines(*pIt, lines);
 	}
 }
 
-void CuttingPlaneOptimizer::DoRetrieveLines(Polygon2f* pPoly, vector<Vector3f>& lines)
+void CuttingPlaneOptimizer::DoRetrieveLines(Polygon2d* pPoly, vector<Vector3d>& lines)
 {
 	if( pPoly->vertices.size() == 0) return;
 	lines.reserve(lines.size()+pPoly->vertices.size()*2);
 
 	{
-		vector<Vector2f>::iterator pIt = pPoly->vertices.begin();
-		lines.push_back(Vector3f(pIt->x, pIt->y, Z));
+		vector<Vector2d>::iterator pIt = pPoly->vertices.begin();
+		lines.push_back(Vector3d(pIt->x, pIt->y, Z));
 		pIt++;
 		for( ; pIt!=pPoly->vertices.end(); pIt++)
 		{
-			lines.push_back(Vector3f(pIt->x, pIt->y, Z));
-			lines.push_back(Vector3f(pIt->x, pIt->y, Z));
+			lines.push_back(Vector3d(pIt->x, pIt->y, Z));
+			lines.push_back(Vector3d(pIt->x, pIt->y, Z));
 		}
-		lines.push_back(Vector3f(pPoly->vertices.front().x, pPoly->vertices.front().y, Z));
+		lines.push_back(Vector3d(pPoly->vertices.front().x, pPoly->vertices.front().y, Z));
 	}
 
-	for( list<Polygon2f*>::iterator pIt = pPoly->containedSolids.begin(); pIt!=pPoly->containedSolids.end(); pIt++)
+	for( list<Polygon2d*>::iterator pIt = pPoly->containedSolids.begin(); pIt!=pPoly->containedSolids.end(); pIt++)
 	{
 		DoRetrieveLines(*pIt, lines);
 	}
-	for( list<Polygon2f*>::iterator pIt = pPoly->containedHoles.begin(); pIt!=pPoly->containedHoles.end(); pIt++)
+	for( list<Polygon2d*>::iterator pIt = pPoly->containedHoles.begin(); pIt!=pPoly->containedHoles.end(); pIt++)
 	{
 		DoRetrieveLines(*pIt, lines);
 	}
 }
 
 
-void CuttingPlaneOptimizer::PushPoly(Polygon2f* poly)
+void CuttingPlaneOptimizer::PushPoly(Polygon2d* poly)
 {
 	poly->PlaceInList(positivePolygons);
 }
@@ -198,24 +198,24 @@ void CuttingPlaneOptimizer::PushPoly(Polygon2f* poly)
 void CuttingPlaneOptimizer::Draw()
 {
 	float color = 1;
-	Polygon2f::DisplayPolygons(positivePolygons, Z, 0,color,0,1);
-	for(list<Polygon2f*>::iterator pIt =positivePolygons.begin(); pIt!=positivePolygons.end(); pIt++)
+	Polygon2d::DisplayPolygons(positivePolygons, Z, 0,color,0,1);
+	for(list<Polygon2d*>::iterator pIt =positivePolygons.begin(); pIt!=positivePolygons.end(); pIt++)
 	{
-		Polygon2f::DrawRecursive(*pIt, Z, color);
+		Polygon2d::DrawRecursive(*pIt, Z, color);
 	}
 }
 
-void CuttingPlaneOptimizer::Shrink(float distance, list<Polygon2f*> &resPolygons)
+void CuttingPlaneOptimizer::Shrink(double distance, list<Polygon2d*> &resPolygons)
 {
-	for(list<Polygon2f*>::iterator pIt =positivePolygons.begin(); pIt!=positivePolygons.end(); pIt++)
+	for(list<Polygon2d*>::iterator pIt =positivePolygons.begin(); pIt!=positivePolygons.end(); pIt++)
 	{
-		list<Polygon2f*> parentPolygons;
+		list<Polygon2d*> parentPolygons;
 		(*pIt)->Shrink(distance, parentPolygons, resPolygons);
 	}
 }
 
 
-void CuttingPlane::ShrinkLogick(float extrudedWidth, float optimization, bool DisplayCuttingPlane, int ShellCount)
+void CuttingPlane::ShrinkLogick(double extrudedWidth, double optimization, bool DisplayCuttingPlane, int ShellCount)
 {
 	CuttingPlaneOptimizer* cpo = new CuttingPlaneOptimizer(this, Z);
 	optimizers.push_back(cpo);
@@ -234,7 +234,7 @@ void CuttingPlane::ShrinkLogick(float extrudedWidth, float optimization, bool Di
 }
 
 
-void CuttingPlane::ShrinkFast(float distance, float optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount)
+void CuttingPlane::ShrinkFast(double distance, double optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount)
 {
 	distance = (ShellCount - 0.5) * distance;
 
@@ -247,19 +247,19 @@ void CuttingPlane::ShrinkFast(float distance, float optimization, bool DisplayCu
 		size_t count = polygons[p].points.size();
 		for(size_t i=0; i<count;i++)
 		{
-			Vector2f Na = Vector2f(vertices[polygons[p].points[(i-1+count)%count]].x, vertices[polygons[p].points[(i-1+count)%count]].y);
-			Vector2f Nb = Vector2f(vertices[polygons[p].points[i]].x, vertices[polygons[p].points[i]].y);
-			Vector2f Nc = Vector2f(vertices[polygons[p].points[(i+1)%count]].x, vertices[polygons[p].points[(i+1)%count]].y);
+			Vector2d Na = Vector2d(vertices[polygons[p].points[(i-1+count)%count]].x, vertices[polygons[p].points[(i-1+count)%count]].y);
+			Vector2d Nb = Vector2d(vertices[polygons[p].points[i]].x, vertices[polygons[p].points[i]].y);
+			Vector2d Nc = Vector2d(vertices[polygons[p].points[(i+1)%count]].x, vertices[polygons[p].points[(i+1)%count]].y);
 
-			Vector2f V1 = (Nb-Na).getNormalized();
-			Vector2f V2 = (Nc-Nb).getNormalized();
+			Vector2d V1 = (Nb-Na).getNormalized();
+			Vector2d V2 = (Nc-Nb).getNormalized();
 
-			Vector2f biplane = (V2 - V1).getNormalized();
+			Vector2d biplane = (V2 - V1).getNormalized();
 
-			float a = angleBetween(V1,V2);
+			double a = angleBetween(V1,V2);
 
 			bool convex = V1.cross(V2) < 0;
-			Vector2f p;
+			Vector2d p;
 			if(convex)
 				p = Nb+biplane*distance/(cos((M_PI-a)*0.5f));
 			else
@@ -284,18 +284,18 @@ void CuttingPlane::ShrinkFast(float distance, float optimization, bool DisplayCu
 /*
 
 
-			Vector2f N1 = Vector2f(-V1.y, V1.x);
-			Vector2f N2 = Vector2f(-V2.y, V2.x);
+			Vector2d N1 = Vector2d(-V1.y, V1.x);
+			Vector2d N2 = Vector2d(-V2.y, V2.x);
 
 			N1.normalise();
 			N2.normalise();
 
-			Vector2f Normal = N1+N2;
+			Vector2d Normal = N1+N2;
 			Normal.normalise();
 
 			int vertexNr = polygons[p].points[i];
 
-			Vector2f p = vertices[vertexNr] - (Normal * distance);*/
+			Vector2d p = vertices[vertexNr] - (Normal * distance);*/
 
 			offsetPoly.points.push_back(offsetVertices.size());
 			offsetVertices.push_back(p);
@@ -312,7 +312,7 @@ void CuttingPlane::ShrinkFast(float distance, float optimization, bool DisplayCu
 }
 
 /*
-bool Point2f::FindNextPoint(Point2f* origin, Point2f* destination, bool expansion)
+bool Point2d::FindNextPoint(Point2d* origin, Point2d* destination, bool expansion)
 {
 	assert(ConnectedPoints.size() >= 2 );
 
@@ -341,7 +341,7 @@ bool Point2f::FindNextPoint(Point2f* origin, Point2f* destination, bool expansio
 	float minAngle = PI*4;
 	float maxAngle = -PI*4;
 
-	for(list<Point2f*>::iterator it = ConnectedPoints.begin(); it != ConnectedPoints.end(); )
+	for(list<Point2d*>::iterator it = ConnectedPoints.begin(); it != ConnectedPoints.end(); )
 	{
 		if( *it != origin )
 		{
@@ -375,9 +375,9 @@ bool Point2f::FindNextPoint(Point2f* origin, Point2f* destination, bool expansio
 	return true;
 }
 
-float Point2f::AngleTo(Point2f* point)
+float Point2d::AngleTo(Point2d* point)
 {
-	return atan2f(Point.y-point->Point.y, Point.x-point->Point.x);
+	return atan2(Point.y-point->Point.y, Point.x-point->Point.x);
 }
 */
 

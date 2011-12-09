@@ -55,7 +55,7 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 
 	string s;
 
-	Vector3f globalPos(0,0,0);
+	Vector3d globalPos(0,0,0);
 	Min.x = Min.y = Min.z = 99999999.0f;
 	Max.x = Max.y = Max.z = -99999999.0f;
 
@@ -202,15 +202,15 @@ void GCode::draw(const Settings &settings)
 {
 	/*--------------- Drawing -----------------*/
 
-	Vector3f thisPos(0,0,0);
+	Vector3d thisPos(0,0,0);
 	Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
 	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
-	float	Distance = 0.0f;
-	Vector3f pos(0,0,0);
-	uint start = (uint)(settings.Display.GCodeDrawStart*(float)(commands.size()));
-	uint end = (uint)(settings.Display.GCodeDrawEnd*(float)(commands.size()));
+	double	Distance = 0.0;
+	Vector3d pos(0,0,0);
+	uint start = (uint)(settings.Display.GCodeDrawStart*(double)(commands.size()));
+	uint end = (uint)(settings.Display.GCodeDrawEnd*(double)(commands.size()));
 
-	float LastE=0.0f;
+	double LastE=0.0;
 	bool extruderon = false;
         glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
@@ -249,7 +249,7 @@ void GCode::draw(const Settings &settings)
 			if(commands[i].e == LastE)
 				{
 				glLineWidth(3);
-				float speed = commands[i].f;
+				double speed = commands[i].f;
 				float luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
 				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
@@ -259,7 +259,7 @@ void GCode::draw(const Settings &settings)
 			else
 				{
 				glLineWidth(3);
-				float speed = commands[i].f;
+				double speed = commands[i].f;
 				float luma = speed/settings.Hardware.MaxPrintSpeedXY;
 				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0f;
@@ -344,11 +344,11 @@ bool add_text_filter_nan(string str, string &GcodeTxt)
   return true;  
 }
 
-void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, float AntioozeDistance, float AntioozeSpeed)
+void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, double AntioozeDistance, double AntioozeSpeed)
 {
-	float lastE = -10;
-	Vector3f pos(0,0,0);
-	Vector3f LastPos(-10,-10,-10);
+	double lastE = -10;
+	Vector3d pos(0,0,0);
+	Vector3d LastPos(-10,-10,-10);
 	std::stringstream oss;
 
 	GcodeTxt += GcodeStart + "\n";
