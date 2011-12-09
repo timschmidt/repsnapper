@@ -107,7 +107,7 @@ public:
 	Vector3d GetMin();
 	void AccumulateMinMax(Vector3d &min, Vector3d &max);
 	void Translate(const Vector3d &vector);
-	int CutWithPlane(float z, const Matrix4d &T, 
+	int CutWithPlane(double z, const Matrix4d &T, 
 			 Vector2d &lineStart, Vector2d &lineEnd);
 };
 
@@ -136,7 +136,7 @@ public:
 
 struct locator
 {
-	locator(int polygon, int vertex, float where){p=polygon; v=vertex; t=where;}
+	locator(int polygon, int vertex, double where){p=polygon; v=vertex; t=where;}
 	int p;
 	int v;
 	double t;
@@ -168,15 +168,15 @@ class GCodeState {
  public:
   GCodeState(GCode &code);
   ~GCodeState();
-  void SetZ (float z);
+  void SetZ (double z);
   void AppendCommand(Command &command);
   void MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 				 double extrusionFactor,
-				 double &E, float z,
+				 double &E, double z,
 				 const Settings::SlicingSettings &slicing,
 				 const Settings::HardwareSettings &hardware);
-  float GetLastLayerZ(float curZ);
-  void  SetLastLayerZ(float z);
+  double GetLastLayerZ(double curZ);
+  void  SetLastLayerZ(double z);
   const Vector3d &LastPosition();
   void  SetLastPosition(const Vector3d &v);
   void  ResetLastWhere(Vector3d to);
@@ -198,12 +198,12 @@ public:
 			  int ShellCount);
 
 	void  selfIntersectAndDivide();
-	guint selfIntersectAndDivideRecursive(float z, guint startPolygon, 
+	guint selfIntersectAndDivideRecursive(double z, guint startPolygon, 
 					      guint startVertex,
 					      vector<outline> &outlines, 
 					      const Vector2d endVertex,
 					      guint &level);
-	void  recurseSelfIntersectAndDivide  (float z, vector<locator> &EndPointStack,
+	void  recurseSelfIntersectAndDivide  (double z, vector<locator> &EndPointStack,
 					      vector<outline> &outlines,
 					      vector<locator> &visited);
 
@@ -217,17 +217,17 @@ public:
 				      bool DisplayDebuginFill);	// Collide an infill-line with the polygons
 	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers,
 		  bool DrawCPLineNumbers, bool DrawCPVertexNumbers);
-	bool LinkSegments(float z, double Optimization);		        // Link Segments to form polygons
-	bool CleanupConnectSegments(float z);
-	bool CleanupSharedSegments(float z);
+	bool LinkSegments(double z, double Optimization);		        // Link Segments to form polygons
+	bool CleanupConnectSegments(double z);
+	bool CleanupSharedSegments(double z);
 	void CleanupPolygons(double Optimization);			// remove redudant points
 	void CleanupOffsetPolygons(double Optimization);			// remove redudant points
 	void MakeGcode (GCodeState &state,
 			const std::vector<Vector2d> *opt_infill,
-			double &E, float z,
+			double &E, double z,
 			const Settings::SlicingSettings &slicing,
 			const Settings::HardwareSettings &hardware);
-	bool VertexIsOutsideOriginalPolygon( Vector2d point, float z);
+	bool VertexIsOutsideOriginalPolygon( Vector2d point, double z);
 
 	Vector2d Min, Max;  // Bounding box
 
@@ -240,11 +240,11 @@ public:
 		offsetPolygons.clear();
 		offsetVertices.clear();
 	}
-	void SetZ(float value)
+	void SetZ(double value)
 	{
 		Z = value;
 	}
-	float getZ() { return Z; }
+	double getZ() { return Z; }
 
 	int RegisterPoint(const Vector2d &p);
 
@@ -271,7 +271,7 @@ private:
 	vector<Segment> lines;		// Segments - 2 points pr. line-segment
 	vector<Poly> polygons;		// Closed loops
 	vector<Vector2d> vertices;	// points
-	float Z;
+	double Z;
 
 	vector<Poly> offsetPolygons;	// Shrinked closed loops
 	vector<Vector2d> offsetVertices;// points for shrinked closed loops
@@ -294,7 +294,7 @@ public:
 	void draw_geometry ();
 	void CenterAroundXY();
 	// Extract a 2D polygonset from a 3D model:
-	void CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4d &T);
+	void CalcCuttingPlane(double where, CuttingPlane &plane, const Matrix4d &T);
 	// Auto-Rotate object to have the largest area surface down for printing:
 	void OptimizeRotation(); 
 	void CalcCenter();
@@ -317,9 +317,9 @@ private:
 class CuttingPlaneOptimizer
 {
 public:
-	float Z;
-	CuttingPlaneOptimizer(float z) { Z = z; }
-	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z);
+	double Z;
+	CuttingPlaneOptimizer(double z) { Z = z; }
+	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double z);
 	list<Polygon2d*> positivePolygons;
 	void Shrink(double distance, list<Polygon2d*> &resPolygons);
 	void Draw();

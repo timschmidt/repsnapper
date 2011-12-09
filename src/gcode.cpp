@@ -207,14 +207,14 @@ void GCode::draw(const Settings &settings)
 	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
 	double	Distance = 0.0;
 	Vector3d pos(0,0,0);
-	uint start = (uint)(settings.Display.GCodeDrawStart*(double)(commands.size()));
-	uint end = (uint)(settings.Display.GCodeDrawEnd*(double)(commands.size()));
-
+	uint start = (uint)(settings.Display.GCodeDrawStart*float((commands.size())));
+	uint end = (uint)(settings.Display.GCodeDrawEnd*float(commands.size()));
 	double LastE=0.0;
 	bool extruderon = false;
         glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
+	
 	for(uint i=start;i<commands.size() && i < end ;i++)
 	{
 		switch(commands[i].Code)

@@ -68,7 +68,7 @@ void Poly::calcHole(vector<Vector2d> &offsetVertices)
 	hole = Va.cross(Vb) > 0;
 }
 
-CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, float z)
+CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double z)
 {
 	Z = z;
 
@@ -337,15 +337,15 @@ bool Point2d::FindNextPoint(Point2d* origin, Point2d* destination, bool expansio
 		}
 	}
 
-	float originAngle = AngleTo(origin);
-	float minAngle = PI*4;
-	float maxAngle = -PI*4;
+	double originAngle = AngleTo(origin);
+	double minAngle = PI*4;
+	double maxAngle = -PI*4;
 
 	for(list<Point2d*>::iterator it = ConnectedPoints.begin(); it != ConnectedPoints.end(); )
 	{
 		if( *it != origin )
 		{
-			float angle = AngleTo(*it)-originAngle;
+			double angle = AngleTo(*it)-originAngle;
 			if( expansion )
 			{
 				if( angle > 0 ) angle -= PI*2;
@@ -375,7 +375,7 @@ bool Point2d::FindNextPoint(Point2d* origin, Point2d* destination, bool expansio
 	return true;
 }
 
-float Point2d::AngleTo(Point2d* point)
+double Point2d::AngleTo(Point2d* point)
 {
 	return atan2(Point.y-point->Point.y, Point.x-point->Point.x);
 }
@@ -386,7 +386,7 @@ float Point2d::AngleTo(Point2d* point)
 /***					Bisector/Fillet/Boolean version                                    ***/
 /***                                                                                       ***/
 /*********************************************************************************************/
-/*void CuttingPlane::Shrink(float distance, float z, bool DisplayCuttingPlane, bool useFillets)
+/*void CuttingPlane::Shrink(double distance, double z, bool DisplayCuttingPlane, bool useFillets)
 {
 
 

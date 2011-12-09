@@ -82,7 +82,7 @@ static struct {
   SettingType type;
   const char *config_name; // This is obsolete - we split and re-use the glade_name
   const char *glade_name;
-  double def_double;
+  float def_float;
   const char *def_string;
   gboolean triggers_redraw;
 } settings[] = {
@@ -218,8 +218,8 @@ static struct {
 // Add any GtkSpinButtons to this array:
 static struct {
   const char *widget;
-  double min, max;
-  double inc, inc_page;
+  float min, max;
+  float inc, inc_page;
 } spin_ranges[] = {
   // Raft
   { "Raft.Size", 0, 50, 1, 3 },
@@ -279,8 +279,8 @@ static struct {
 // Add any [HV]Ranges to this array:
 static struct {
   const char *widget;
-  double min, max;
-  double inc, inc_page;
+  float min, max;
+  float inc, inc_page;
 } ranges[] = {
   // Display plane
   { "Display.CuttingPlaneValue", 0.0, 1.0, 0.0, 0.01 },
@@ -394,14 +394,14 @@ void Settings::set_defaults ()
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
     switch (settings[i].type) {
     case T_BOOL:
-      *PTR_BOOL(this, i) = settings[i].def_double != 0.0;
+      *PTR_BOOL(this, i) = settings[i].def_float != 0.0;
       break;
     case T_INT:
-      *PTR_INT(this, i) = settings[i].def_double;
+      *PTR_INT(this, i) = settings[i].def_float;
       break;
     case T_FLOAT:
     case T_COLOUR_MEMBER:
-      *PTR_FLOAT(this, i) = settings[i].def_double;
+      *PTR_FLOAT(this, i) = settings[i].def_float;
       break;
     case T_STRING:
       *PTR_STRING(this, i) = std::string (settings[i].def_string);
@@ -886,9 +886,9 @@ void Settings::connect_to_ui (Builder &builder)
 }
 
 // We do our internal measurement in terms of the length of extruded material
-double Settings::HardwareSettings::GetExtrudeFactor() const
+float Settings::HardwareSettings::GetExtrudeFactor() const
 {
-  double f = 1.0;
+  float f = 1.0;
   if (CalibrateInput) {
     // otherwise we just work back from the extruded diameter for now.
     f = (ExtrudedMaterialWidth * ExtrudedMaterialWidth) / (FilamentDiameter * FilamentDiameter);

@@ -73,7 +73,7 @@ void Triangle::Translate(const Vector3d &vector)
 }
 
 
-int Triangle::CutWithPlane(float z, const Matrix4d &T, 
+int Triangle::CutWithPlane(double z, const Matrix4d &T, 
 			   Vector2d &lineStart,
 			   Vector2d &lineEnd)
 {

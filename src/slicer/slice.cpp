@@ -32,7 +32,7 @@ CuttingPlane::~CuttingPlane()
 }
 
 // intersect lines with plane
-void Slicer::CalcCuttingPlane(float where, CuttingPlane &plane, const Matrix4d &T)
+void Slicer::CalcCuttingPlane(double where, CuttingPlane &plane, const Matrix4d &T)
 {
 #if CUTTING_PLANE_DEBUG
 	cout << "intersect with z " << where << "\n";
@@ -91,13 +91,13 @@ vector<Vector2d> *CuttingPlane::CalcInFill (uint LayerNr, double InfillDistance,
     vector<Vector2d> *infill = new vector<Vector2d>();
     bool examine = false;
 
-    double Length = sqrtf(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0f;	// bbox of lines to intersect the poly with
+    double Length = sqrt(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0;	// bbox of lines to intersect the poly with
 
-    double rot = InfillRotation/180.0f*M_PI;
-    rot += (double)LayerNr*InfillRotationPrLayer/180.0f*M_PI;
+    double rot = InfillRotation/180.0*M_PI;
+    rot += (double)LayerNr*InfillRotationPrLayer/180.0*M_PI;
     Vector2d InfillDirX(cosf(rot), sinf(rot));
     Vector2d InfillDirY(-InfillDirX.y, InfillDirX.x);
-    Vector2d Center = (Max+Min)/2.0f;
+    Vector2d Center = (Max+Min)/2.0;
     
     for(double x = -Length ; x < Length ; x+=step)
       {
@@ -112,18 +112,18 @@ vector<Vector2d> *CuttingPlane::CalcInFill (uint LayerNr, double InfillDistance,
 	  {
 	    glBegin(GL_LINES);
 	    glColor3f(0,0.2f,0);
-	    glVertex3f(P1.x, P1.y, Z);
-	    glVertex3f(P2.x, P2.y, Z);
+	    glVertex3d(P1.x, P1.y, Z);
+	    glVertex3d(P2.x, P2.y, Z);
 	    glEnd();
 	  }
-	double Examine = 0.5f;
+	double Examine = 0.5;
 	
-	if(DisplayDebuginFill && !examine && ((Examine-0.5f)*2 * Length <= x))
+	if(DisplayDebuginFill && !examine && ((Examine-0.5)*2 * Length <= x))
 	  {
 	    examineThis = examine = true;
 	    glColor3f(1,1,1);  // Draw the line
-	    glVertex3f(P1.x, P1.y, Z);
-	    glVertex3f(P2.x, P2.y, Z);
+	    glVertex3d(P1.x, P1.y, Z);
+	    glVertex3d(P2.x, P2.y, Z);
 	  }
 	
 	if(offsetPolygons.size() != 0)
@@ -169,7 +169,7 @@ vector<Vector2d> *CuttingPlane::CalcInFill (uint LayerNr, double InfillDistance,
 	    glPointSize(4);
 	    glBegin(GL_POINTS);
 	    for (size_t i=0;i<HitsBuffer.size();i++)
-	      glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
+	      glVertex3d(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
 	    glEnd();
 	    glPointSize(1);
 	  }
@@ -229,7 +229,7 @@ vector<Vector2d> *CuttingPlane::CalcInFill (uint LayerNr, double InfillDistance,
 		c++;
 		glPointSize(10);
 		glBegin(GL_POINTS);
-		glVertex3f(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
+		glVertex3d(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
 		glEnd();
 		glPointSize(1);
 	      }
@@ -259,28 +259,28 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2, const Vector2d &p3, con
 	{
 		hit.p = p1;
 		hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
-		hit.t = 0.0f;
+		hit.t = 0.0;
 		return true;
 	}
 	if(ABS(p2.x-p3.x) < 0.01 && ABS(p2.y - p3.y) < 0.01)
 	{
 		hit.p = p2;
 		hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
-		hit.t = 1.0f;
+		hit.t = 1.0;
 		return true;
 	}
 	if(ABS(p1.x-p4.x) < 0.01 && ABS(p1.y - p4.y) < 0.01)
 	{
 		hit.p = p1;
 		hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
-		hit.t = 0.0f;
+		hit.t = 0.0;
 		return true;
 	}
 	if(ABS(p2.x-p4.x) < 0.01 && ABS(p2.y - p4.y) < 0.01)
 	{
 		hit.p = p2;
 		hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
-		hit.t = 1.0f;
+		hit.t = 1.0;
 		return true;
 	}
 
@@ -414,7 +414,7 @@ int PntOnLine(Vector2d p1, Vector2d p2, Vector2d t, double &where)
 
 	where = ABS(A * D - C * B) / sqrt(C * C + D * D);
 
-	if(where > 0.01f)
+	if(where > 0.01)
 		return 0;
 
 	double dot = A * C + B * D;
@@ -431,7 +431,7 @@ int PntOnLine(Vector2d p1, Vector2d p2, Vector2d t, double &where)
 	glVertex2f(xx, yy);
 	glEnd();
 */
-	if(where <= 0.0f)	// before p1
+	if(where <= 0.0)	// before p1
 		{
 //		where = param;
 		return 1;
@@ -440,7 +440,7 @@ int PntOnLine(Vector2d p1, Vector2d p2, Vector2d t, double &where)
 		where = dist(t.x, t.y, xx, yy);//your distance function
 		return 1;*/
 		}
-	else if(where >= 1.0f) // after p2
+	else if(where >= 1.0) // after p2
 		{
 //		where = param;
 		return 3;
@@ -483,9 +483,9 @@ public:
 	glPointSize(2);
 	glBegin(GL_POINTS);
 	glColor3f(1,0,0);
-	glVertex2f(s.x, s.y);
+	glVertex2d(s.x, s.y);
 	glColor3f(0,1,0);
-	glVertex2f(e.x, e.y);
+	glVertex2d(e.x, e.y);
 	glEnd();
 
 
@@ -517,9 +517,9 @@ public:
 			glPointSize(1);
 			glBegin(GL_POINTS);
 			glColor3f(0.5,0.5,0.5);
-			glVertex2f(s.x, s.y);
+			glVertex2d(s.x, s.y);
 			glColor3f(0.5,0.5,0.5);
-			glVertex2f(e.x, e.y);
+			glVertex2d(e.x, e.y);
 			glEnd();
 	return false;
 	}
@@ -533,7 +533,7 @@ public:
  * match from any detached points and joining them, with new synthetic
  * segments.
  */
-bool CuttingPlane::CleanupConnectSegments(float z)
+bool CuttingPlane::CleanupConnectSegments(double z)
 {
 	vector<int> vertex_types;
 	vector<int> vertex_counts;
@@ -625,7 +625,7 @@ bool CuttingPlane::CleanupConnectSegments(float z)
  * LinkSegments, so try to identify and join those polygons
  * now.
  */
-bool CuttingPlane::CleanupSharedSegments(float z)
+bool CuttingPlane::CleanupSharedSegments(double z)
 {
 	vector<int> vertex_counts;
 	vertex_counts.resize (vertices.size());
@@ -698,7 +698,7 @@ bool CuttingPlane::CleanupSharedSegments(float z)
 /*
  * Attempt to link all the Segments in 'lines' together.
  */
-bool CuttingPlane::LinkSegments(float z, double Optimization)
+bool CuttingPlane::LinkSegments(double z, double Optimization)
 {
 	if (vertices.size() == 0)
 		return true;
@@ -837,7 +837,7 @@ bool CuttingPlane::LinkSegments(float z, double Optimization)
 	return true;
 }
 
-uint CuttingPlane::selfIntersectAndDivideRecursive(float z, uint startPolygon, uint startVertex, vector<outline> &outlines, const Vector2d endVertex, uint &level)
+uint CuttingPlane::selfIntersectAndDivideRecursive(double z, uint startPolygon, uint startVertex, vector<outline> &outlines, const Vector2d endVertex, uint &level)
 {
 	level++;
 	outline result;
@@ -881,7 +881,7 @@ uint CuttingPlane::selfIntersectAndDivideRecursive(float z, uint startPolygon, u
 	return startVertex;
 }
 
-void CuttingPlane::recurseSelfIntersectAndDivide(float z, vector<locator> &EndPointStack, vector<outline> &outlines, vector<locator> &visited)
+void CuttingPlane::recurseSelfIntersectAndDivide(double z, vector<locator> &EndPointStack, vector<outline> &outlines, vector<locator> &visited)
 {
 	// pop an entry from the stack.
 	// Trace it till it hits itself
@@ -952,7 +952,7 @@ void CuttingPlane::recurseSelfIntersectAndDivide(float z, vector<locator> &EndPo
 								glPointSize(10);
 								glColor3f(1,1,1);
 								glBegin(GL_POINTS);
-								glVertex3f(hit.p.x, hit.p.y, z);
+								glVertex3d(hit.p.x, hit.p.y, z);
 								glEnd();
 							}
 						}
@@ -1218,7 +1218,7 @@ int CuttingPlane::RegisterPoint(const Vector2d &p)
 }
 
 
-bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2d point, float z)
+bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2d point, double z)
 {
 	// Shoot a ray along +X and count the number of intersections.
 	// If n_intersections is euqal, return true, else return false
