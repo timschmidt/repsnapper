@@ -1,4 +1,4 @@
-noinst_LTLIBRARIES = libpolylib.la
+noinst_LTLIBRARIES += libpolylib.la
 
 libpolylib_la_CPPFLAGS = \
 	-I$(srcdir) \
