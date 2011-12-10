@@ -154,14 +154,14 @@ namespace PolyLib
 
 	if(convex)
 	  {
-	    p = Nb+biplane*distance/(cos((PI-a)*0.5f));
+	    p = Nb+biplane*distance/(cos((PI-a)*0.5));
 	    l.vertices.push_back(p);
 	  }
 	else
 	  {
 	    if( a < PI*1.25 )
 	      {
-		p = Nb-biplane*distance/(sin(a*0.5f));
+		p = Nb-biplane*distance/(sin(a*0.5));
 		l.vertices.push_back(p);
 	      }
 	    else
