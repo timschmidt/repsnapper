@@ -44,6 +44,11 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 
 	ifstream file;
 	file.open(filename.c_str());		//open a file
+	file.seekg (0, ios::end);
+	double filesize = double(file.tellg());
+	file.seekg (0);
+
+	progress->start("Loading GCode", filesize);
 
 	if(!file.good())
 	{
@@ -66,8 +71,7 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 		string buffer;
 		line >> buffer;	// read something
 
-		// FIXME: assumes all files are 100k lines, bad!
-		progress->update(int(LineNr/1000));
+		progress->update(1.*file.tellg());
 
 		if (!append_text ((s+"\n").c_str()))
 		  continue;
