@@ -258,28 +258,28 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2, const Vector2d &p3, con
 	if(ABS(p1.x-p3.x) < 0.01 && ABS(p1.y - p3.y) < 0.01)
 	{
 		hit.p = p1;
-		hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
+		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
 		hit.t = 0.0;
 		return true;
 	}
 	if(ABS(p2.x-p3.x) < 0.01 && ABS(p2.y - p3.y) < 0.01)
 	{
 		hit.p = p2;
-		hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
+		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
 		hit.t = 1.0;
 		return true;
 	}
 	if(ABS(p1.x-p4.x) < 0.01 && ABS(p1.y - p4.y) < 0.01)
 	{
 		hit.p = p1;
-		hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
+		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
 		hit.t = 0.0;
 		return true;
 	}
 	if(ABS(p2.x-p4.x) < 0.01 && ABS(p2.y - p4.y) < 0.01)
 	{
 		hit.p = p2;
-		hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
+		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
 		hit.t = 1.0;
 		return true;
 	}
@@ -288,7 +288,7 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2, const Vector2d &p3, con
 	double t0,t1;
 	if(intersect2D_Segments(p1,p2,p3,p4,hit.p, hit2.p, t0,t1) == 1)
 	{
-	hit.d = sqrtf( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
+	hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
 	hit.t = t0;
 	return true;
 	}
