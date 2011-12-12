@@ -41,6 +41,7 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
   set_events (Gdk::POINTER_MOTION_MASK |
 	      Gdk::BUTTON_MOTION_MASK |
 	      Gdk::BUTTON_PRESS_MASK |
+	      Gdk::BUTTON_RELEASE_MASK |
 	      Gdk::BUTTON1_MOTION_MASK |
 	      Gdk::BUTTON2_MOTION_MASK |
 	      Gdk::BUTTON3_MOTION_MASK);
@@ -197,21 +198,34 @@ bool Render::on_expose_event(GdkEventExpose* event)
   return true;
 }
 
+
 bool Render::on_button_press_event(GdkEventButton* event)
 {
   if (event->button == 1) {
     m_arcBall->click (event->x, event->y, &m_transform);
-    guint index = find_object_at(event->x, event->y);
-    if (index) {
-      Gtk::TreeModel::iterator iter = get_model()->rfo.find_stl_by_index(index);
-      if (iter) {
-        m_selection->select(iter);
-      }
-    }
-  } else if (event->button == 3 || event->button == 2)
-    m_downPoint = Vector2d (event->x, event->y);
+  }
+  else if (event->button == 3 || event->button == 2)
+    m_downPoint = Vector2f (event->x, event->y);  
   else
     return Gtk::DrawingArea::on_button_press_event (event);
+  return true;
+}
+
+bool Render::on_button_release_event(GdkEventButton* event)
+{
+  if (event->button == 1) {
+    if (m_downPoint.x == event->x && m_downPoint.y == event->y){ // click only
+      guint index = find_object_at(event->x, event->y);
+      if (index) {
+  	Gtk::TreeModel::iterator iter = get_model()->rfo.find_stl_by_index(index);
+  	if (iter) {
+  	  m_selection->select(iter);
+  	}
+      }
+    }
+  }
+  else
+    return Gtk::DrawingArea::on_button_release_event (event);
   return true;
 }
 
@@ -243,9 +257,9 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     else if (event->state & GDK_BUTTON3_MASK) { // pan
       Matrix4f matrix;
       double factor = 0.3;
+      Vector3f delta3f(-delta.x*factor, delta.y*factor, 0);
       memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
       Vector3f m_transl = matrix.getTranslation();
-      Vector3f delta3f(-delta.x*factor, delta.y*factor, 0);
       m_transl += delta3f;
       matrix.setTranslation(m_transl);
       memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));
