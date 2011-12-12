@@ -64,6 +64,8 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 	Min.x = Min.y = Min.z = 99999999.0;
 	Max.x = Max.y = Max.z = -99999999.0;
 
+	std::vector<Command> loaded_commands;
+
 	while(getline(file,s))
 	{
 		istringstream line(s);
@@ -72,6 +74,7 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 		line >> buffer;	// read something
 
 		progress->update(1.*file.tellg());
+		if (LineNr % 1000 == 0) g_main_context_iteration(NULL,false);
 
 		if (!append_text ((s+"\n").c_str()))
 		  continue;
@@ -84,7 +87,7 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 		if( buffer.find( "G21", 0) != string::npos )	//Coordinated Motion
 		{
 			command.Code = MILLIMETERSASUNITS;
-			commands.push_back(command);
+			loaded_commands.push_back(command);
 		}
 
 
@@ -138,7 +141,7 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 				Max.y = command.where.y;
 			if(command.where.z > Max.z)
 				Max.z = command.where.z;
-			commands.push_back(command);
+			loaded_commands.push_back(command);
 		}
 		else if( buffer.find( "G0", 0) != string::npos )	//Rapid Motion
 		{
@@ -190,11 +193,11 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 				Max.y = command.where.y;
 			if(command.where.z > Max.z)
 				Max.z = command.where.z;
-			commands.push_back(command);
+			loaded_commands.push_back(command);
 		}
 	}
 
-
+	commands = loaded_commands;
 
 	Center.x = (Max.x + Min.x )/2;
 	Center.y = (Max.y + Min.y )/2;
