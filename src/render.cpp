@@ -255,7 +255,6 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
       m_zoom *= factor;
     }
     else if (event->state & GDK_BUTTON3_MASK) { // pan
-      Matrix4f matrix;
       double factor = 0.3;
       Vector3f delta3f(-delta.x*factor, delta.y*factor, 0);
       if (event->state & GDK_SHIFT_MASK) { // move object
@@ -265,16 +264,16 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  return true;
 	if (!object && !file)
 	  return true;
-	Matrix4f *mat;
+	RFO_Transform3D *transf;
 	if (!file)
-	  mat = &object->transform3D.transform;
+	  transf = &object->transform3D;
 	else
-	  mat = &file->transform3D.transform;
-	Vector3d trans = mat->getTranslation();
-	mat->setTranslation (trans+delta3f);
+	  transf = &file->transform3D;
+	transf->move(delta3f);
 	m_view->get_model()->CalcBoundingBoxAndCenter();
       }
       else {
+	Matrix4f matrix;
 	memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
 	Vector3f m_transl = matrix.getTranslation();
 	m_transl += delta3f;

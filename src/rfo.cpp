@@ -24,6 +24,15 @@
 
 #include "model.h"
 
+
+
+void RFO_Transform3D::move(Vector3d delta)
+{
+  Vector3d trans = transform.getTranslation();
+  transform.setTranslation(trans + delta);
+}
+
+
 Matrix4d RFO::GetSTLTransformationMatrix(int object, int file) const
 {
 	Matrix4d result = transform3D.transform;
@@ -45,20 +54,20 @@ void RFO::draw (Settings &settings, Gtk::TreeModel::iterator &iter)
   get_selected_stl (iter, sel_object, sel_file);
 
   glPushMatrix();
-  glMultMatrixf (&transform3D.transform.array[0]);
+  glMultMatrixd (&transform3D.transform.array[0]);
 
   for (uint i = 0; i < Objects.size(); i++) {
     RFO_Object *object = &Objects[i];
     index++;
 
     glPushMatrix();
-    glMultMatrixf (&object->transform3D.transform.array[0]);
+    glMultMatrixd (&object->transform3D.transform.array[0]);
     for (uint j = 0; j < object->files.size(); j++) {
       RFO_File *file = &object->files[j];
       glLoadName(index); // Load select/pick index
       index++;
       glPushMatrix();
-      glMultMatrixf (&file->transform3D.transform.array[0]);
+      glMultMatrixd (&file->transform3D.transform.array[0]);
 
       bool is_selected = (sel_file == file ||
 	  (!sel_file && sel_object == object));

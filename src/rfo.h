@@ -25,7 +25,8 @@ class RFO_Transform3D
 public:
 	RFO_Transform3D(){identity();}
 	void identity(){transform=Matrix4d::IDENTITY;}
-	Matrix4f transform;
+	Matrix4d transform;
+	void move(Vector3d delta);
 };
 
 class RFO_File

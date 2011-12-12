@@ -246,7 +246,7 @@ class View::TranslationSpinRow {
       return;
 
     double val = m_xyz[axis]->get_value();
-    Matrix4f *mat;
+    Matrix4d *mat;
     if (!file)
         mat = &object->transform3D.transform;
     else
@@ -272,7 +272,7 @@ public:
 
     m_inhibit_update = true;
     for (uint i = 0; i < 3; i++) {
-      Matrix4f *mat;
+      Matrix4d *mat;
       if (!object) {
 	for (uint i = 0; i < 3; i++)
 	  m_xyz[i]->set_value(0.0);
@@ -579,6 +579,8 @@ bool View::moveSelected(float x, float y)
 
 bool View::key_pressed_event(GdkEventKey *event)
 {
+  // FIXME: Cursor and TAB keys are stolen by UI
+  //  cerr << "key " << event->keyval << endl;
   if (m_rfo_tree->get_selection()->count_selected_rows() <= 0)
     return false;
   switch (event->keyval)
