@@ -258,11 +258,29 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
       Matrix4f matrix;
       double factor = 0.3;
       Vector3f delta3f(-delta.x*factor, delta.y*factor, 0);
-      memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
-      Vector3f m_transl = matrix.getTranslation();
-      m_transl += delta3f;
-      matrix.setTranslation(m_transl);
-      memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));
+      if (event->state & GDK_SHIFT_MASK) { // move object
+	RFO_File *file;
+	RFO_Object *object;
+	if (!m_view->get_selected_stl(object, file))
+	  return true;
+	if (!object && !file)
+	  return true;
+	Matrix4f *mat;
+	if (!file)
+	  mat = &object->transform3D.transform;
+	else
+	  mat = &file->transform3D.transform;
+	Vector3d trans = mat->getTranslation();
+	mat->setTranslation (trans+delta3f);
+	m_view->get_model()->CalcBoundingBoxAndCenter();
+      }
+      else {
+	memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
+	Vector3f m_transl = matrix.getTranslation();
+	m_transl += delta3f;
+	matrix.setTranslation(m_transl);
+	memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));
+      }
     }
     m_downPoint = dragp;
     queue_draw();
