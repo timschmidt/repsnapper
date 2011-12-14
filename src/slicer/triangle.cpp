@@ -46,7 +46,7 @@ Vector3d Triangle::GetMax()
 
 Vector3d Triangle::GetMin()
 {
-	Vector3d min(99999999.0f, 99999999.0f, 99999999.0f);
+	Vector3d min(99999999.0, 99999999.0, 99999999.0);
 	for (uint i = 0; i < 3; i++) {
 		min[i] = MIN(min[i], A[i]);
 		min[i] = MIN(min[i], B[i]);
@@ -88,7 +88,7 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 	// Are the points on opposite sides of the plane?
 	if ((z <= P1.z) != (z <= P2.z))
 	  {
-	    t = (z-P1.z)/(double)(P2.z-P1.z);
+	    t = (z-P1.z)/(P2.z-P1.z);
 	    p = P1+((Vector3d)(P2-P1)*t);
 	    lineStart = Vector2d(p.x,p.y);
 	    num_cutpoints = 1;
@@ -98,7 +98,7 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 	P2 = T*this->C;
 	if ((z <= P1.z) != (z <= P2.z))
 	  {
-	    t = (z-P1.z)/(double)(P2.z-P1.z);
+	    t = (z-P1.z)/(P2.z-P1.z);
 	    p = P1+((Vector3d)(P2-P1)*t);
 	    if(num_cutpoints > 0)
 	      {
@@ -115,7 +115,7 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 	P2 = T*this->A;
 	if ((z <= P1.z) != (z <= P2.z))
 	  {
-	    t = (z-P1.z)/(double)(P2.z-P1.z);
+	    t = (z-P1.z)/(P2.z-P1.z);
 	    p = P1+((Vector3d)(P2-P1)*t);	    
 	    lineEnd = Vector2d(p.x,p.y);
 	    if( lineEnd != lineStart ) num_cutpoints = 2;
