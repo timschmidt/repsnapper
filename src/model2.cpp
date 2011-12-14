@@ -38,7 +38,9 @@
 #include "settings.h"
 #include "connectview.h"
 
-void Model::MakeRaft(GCodeState &state, float &z)
+#include "slicer/cuttingplane.h"
+
+void Model::MakeRaft(GCodeState &state, double &z)
 {
   vector<InFillHit> HitsBuffer;
 
@@ -121,9 +123,11 @@ void Model::MakeRaft(GCodeState &state, float &z)
 	  P1 = HitsBuffer[0].p;
 	  P2 = HitsBuffer[1].p;
 
-	  state.MakeAcceleratedGCodeLine (Vector3d(P1.x,P1.y,z), Vector3d(P2.x,P2.y,z),
+	  state.MakeAcceleratedGCodeLine (Vector3d(P1.x,P1.y,z), 
+					  Vector3d(P2.x,P2.y,z),
 					  props->MaterialDistanceRatio,
-					  E, z, settings.Slicing, settings.Hardware);
+					  E, z, 
+					  settings.Slicing, settings.Hardware);
 	  reverseLines = !reverseLines;
 	}
       // Set startspeed for Z-move
@@ -155,6 +159,127 @@ void Model::MakeRaft(GCodeState &state, float &z)
   gcode.commands.push_back(gotoE);
 }
 
+void Model::Slice(GCodeState &state)
+{
+  // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
+  double z = Min.z + settings.Hardware.LayerThickness*0.5;
+  printOffset = settings.Hardware.PrintMargin;
+  uint LayerNr = 0;
+
+  double printOffsetZ = settings.Hardware.PrintMargin.z;
+
+  if (settings.RaftEnable)
+    {
+      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
+      MakeRaft (state, printOffsetZ);
+    }
+
+  cuttingplanes.clear();
+  CuttingPlane *plane = NULL;
+  while(z<Max.z)
+    {
+      m_progress.update(z/2.);
+      for(uint o=0;o<rfo.Objects.size();o++)
+	{
+	  for(uint f=0;f<rfo.Objects[o].files.size();f++)
+	    {
+	      Slicer* stl = &rfo.Objects[o].files[f].stl;	// Get a pointer to the object
+	      Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
+	      Vector3d t = T.getTranslation();
+	      t+= Vector3d(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
+	      T.setTranslation(t);
+	      CuttingPlane newplane;
+	      newplane.LayerNo = LayerNr;
+	      if (plane!=NULL) plane->next = &newplane;
+
+	      newplane.SetZ (z + printOffsetZ);
+	      stl->CalcCuttingPlane(z, newplane, T);	// output is alot of un-connected line segments with individual vertices, describing the outline
+
+	      double hackedZ = z;
+	      while (newplane.LinkSegments (hackedZ, settings.Slicing.Optimization) == false)	// If segment linking fails, re-calc a new layer close to this one, and use that.
+		{ // This happens when there's triangles missing in the input STL
+		  hackedZ+= 0.2 * settings.Hardware.LayerThickness;
+		  stl->CalcCuttingPlane (hackedZ, newplane, T);	// output is alot of un-connected line segments with individual vertices
+		}
+
+	      newplane.previous = plane;
+	      cuttingplanes.push_back(newplane);
+	      plane = &newplane;
+	    }
+	}
+      z += settings.Hardware.LayerThickness;
+      LayerNr++;
+    }
+}
+
+
+void Model::CalcInfill(GCodeState &state)
+{
+
+  uint LayerCount = cuttingplanes.size();
+    // (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
+
+  vector<int> altInfillLayers;
+  settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
+
+  double z;
+  double printOffsetZ = settings.Hardware.PrintMargin.z;
+  double E = 0.0;
+
+  
+  for (uint i=0; i <cuttingplanes.size(); i++) 
+    {
+      CuttingPlane plane = cuttingplanes[i];
+      z = plane.getZ();
+      m_progress.update(Max.z/2. + z/2.);
+      // inFill
+      vector<Vector2d> *infill = NULL;
+
+      for (guint shell = 1; shell <= settings.Slicing.ShellCount; shell++)
+	{
+	  plane.ClearShrink();
+	  plane.Shrink(settings.Slicing.ShrinkQuality,
+		       settings.Hardware.ExtrudedMaterialWidth,
+		       settings.Slicing.Optimization,
+		       settings.Display.DisplayCuttingPlane,
+		       false, shell);
+
+	  if (shell < settings.Slicing.ShellCount )
+	    { // no infill - just a shell ...
+	      plane.MakeGcode (state, NULL /* infill */, E, z + printOffsetZ,
+			       settings.Slicing, settings.Hardware);
+	    }
+	  else if (settings.Slicing.ShellOnly == false)
+	    { // last shell => calculate infill
+	      // check if this if a layer we should use the alternate infill distance on
+	      double infillDistance;
+	      if (settings.Slicing.SolidTopAndBottom &&
+		  ( i < settings.Slicing.ShellCount ||
+		    i > LayerCount-settings.Slicing.ShellCount-2 ))
+		{
+		  infillDistance = settings.Hardware.ExtrudedMaterialWidth*settings.Hardware.ExtrusionFactor;  // full fill for first layers (shell thickness)
+		}
+	      else {
+			infillDistance = settings.Slicing.InfillDistance;
+	      }
+	      
+	      if (std::find(altInfillLayers.begin(), 
+			    altInfillLayers.end(), 
+			    i) != altInfillLayers.end())
+		infillDistance = settings.Slicing.AltInfillDistance;
+	      infill = plane.CalcInFill (infillDistance,
+					 settings.Slicing.InfillRotation,
+					 settings.Slicing.InfillRotationPrLayer, 
+					 settings.Display.DisplayDebuginFill);
+	    }
+	}
+      // Make the last shell GCode from the plane and the infill
+      plane.MakeGcode (state, infill, E, z + printOffsetZ,
+		       settings.Slicing, settings.Hardware);
+      delete infill;
+    }
+}
+
 void Model::ConvertToGCode()
 {
   string GcodeTxt;
@@ -171,107 +296,15 @@ void Model::ConvertToGCode()
       return;
     }
 
-  // Make Layers
-  uint LayerNr = 0;
-  uint LayerCount = (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
-
-  vector<int> altInfillLayers;
-  settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
-
-  printOffset = settings.Hardware.PrintMargin;
-
-  // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
-  float z = Min.z + settings.Hardware.LayerThickness*0.5;
-
-  gcode.clear();
-  double E = 0.0;
   GCodeState state(gcode);
 
-  float printOffsetZ = settings.Hardware.PrintMargin.z;
+  gcode.clear();
 
-  if (settings.RaftEnable)
-    {
-      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
-      MakeRaft (state, printOffsetZ);
-    }
-  while(z<Max.z)
-    {
-      m_progress.update(z);
-      for(uint o=0;o<rfo.Objects.size();o++)
-	{
-	  for(uint f=0;f<rfo.Objects[o].files.size();f++)
-	    {
-	      Slicer* stl = &rfo.Objects[o].files[f].stl;	// Get a pointer to the object
-	      Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
-	      Vector3d t = T.getTranslation();
-	      t+= Vector3d(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
-	      T.setTranslation(t);
-	      CuttingPlane plane;
-	      stl->CalcCuttingPlane(z, plane, T);	// output is alot of un-connected line segments with individual vertices, describing the outline
+  // Make Layers
+  Slice(state);
 
-	      float hackedZ = z;
-	      while (plane.LinkSegments (hackedZ, settings.Slicing.Optimization) == false)	// If segment linking fails, re-calc a new layer close to this one, and use that.
-		{ // This happens when there's triangles missing in the input STL
-		  hackedZ+= 0.2 * settings.Hardware.LayerThickness;
-		  stl->CalcCuttingPlane (hackedZ, plane, T);	// output is alot of un-connected line segments with individual vertices
-		}
+  CalcInfill(state);
 
-	      // inFill
-	      vector<Vector2d> *infill = NULL;
-
-	      for (guint shell = 1; shell <= settings.Slicing.ShellCount; shell++)
-		{
-		  plane.ClearShrink();
-		  plane.SetZ (z + printOffsetZ);
-		  switch( settings.Slicing.ShrinkQuality )
-		    {
-		    case SHRINK_FAST:
-		      plane.ShrinkFast   (settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization,
-					  settings.Display.DisplayCuttingPlane, false, shell);
-		      break;
-		    case SHRINK_LOGICK:
-		      plane.ShrinkLogick (settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization,
-					  settings.Display.DisplayCuttingPlane, shell);
-		      break;
-		    default:
-		      g_error (_("unknown shrinking algorithm"));
-		      break;
-		    }
-
-		  if (shell < settings.Slicing.ShellCount )
-		    { // no infill - just a shell ...
-		      plane.MakeGcode (state, NULL /* infill */, E, z + printOffsetZ,
-				       settings.Slicing, settings.Hardware);
-		    }
-		  else if (settings.Slicing.ShellOnly == false)
-		    { // last shell => calculate infill
-		      // check if this if a layer we should use the alternate infill distance on
-		      double infillDistance;
-		      if (settings.Slicing.SolidTopAndBottom &&
-			  ( LayerNr < settings.Slicing.ShellCount ||
-				      LayerNr > LayerCount-settings.Slicing.ShellCount-2 ))
-			{
-			  infillDistance = settings.Hardware.ExtrudedMaterialWidth*settings.Hardware.ExtrusionFactor;  // full fill for first layers (shell thickness)
-			}
-		      else {
-			infillDistance = settings.Slicing.InfillDistance;
-		      }
-
-		      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end())
-			infillDistance = settings.Slicing.AltInfillDistance;
-		      infill = plane.CalcInFill (LayerNr, infillDistance, settings.Slicing.InfillRotation,
-						 settings.Slicing.InfillRotationPrLayer, settings.Display.DisplayDebuginFill);
-		    }
-		}
-	      // Make the last shell GCode from the plane and the infill
-	      plane.MakeGcode (state, infill, E, z + printOffsetZ,
-			       settings.Slicing, settings.Hardware);
-	      delete infill;
-	    }
-	}
-      LayerNr++;
-      z += settings.Hardware.LayerThickness;
-    }
 
   double AntioozeDistance = settings.Slicing.AntioozeDistance;
   if (!settings.Slicing.EnableAntiooze)
@@ -284,6 +317,8 @@ void Model::ConvertToGCode()
 		  settings.Slicing.AntioozeSpeed);
   m_progress.stop (_("Done"));
 }
+
+
 
 void Model::Home(string axis)
 {

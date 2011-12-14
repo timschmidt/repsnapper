@@ -16,7 +16,11 @@ SHARED_SRC += \
 	src/slicer/optimize.cpp \
 	src/slicer/read.cpp \
 	src/slicer/slice.cpp \
+	src/slicer/slicer.cpp \
+	src/slicer/cuttingplane.cpp \
 	src/slicer/triangle.cpp
 
 SHARED_INC += \
-	src/slicer/slicer.h
+	src/slicer/slicer.h \
+	src/slicer/gcode.h \
+	src/slicer/cuttingplane.h

@@ -16,41 +16,12 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+
 #include "slicer.h"
+#include "cuttingplane.h"
 
-int findClosestUnused(const std::vector<Vector3d> &lines, Vector3d point,
-		      const std::vector<bool> &used)
-{
-	int closest = -1;
-	double closestDist = numeric_limits<double>::max();
+#include "gcode.h"
 
-	size_t count = lines.size();
-
-	for (uint i = 0; i < count; i++)
-	{
-		if (used[i])
-		  continue;
-
-		double dist = (lines[i]-point).length();
-//		cerr << "dist for " << i << " is " << dist << " == " << lines[i] << " - " << point << " vs. " << closestDist << "\n";
-		if(dist >= 0.0 && dist < closestDist)
-		{
-		  closestDist = dist;
-		  closest = i;
-		}
-	}
-
-//	cerr << "findClosestUnused " << closest << " of " << used.size() << " of " << lines.size() << "\n";
-	return closest;
-}
-
-uint findOtherEnd(uint p)
-{
-	uint a = p%2;
-	if(a == 0)
-		return p+1;
-	return p-1;
-}
 
 struct GCodeStateImpl
 {
@@ -287,112 +258,3 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 	}// If using firmware acceleration
 }
 
-// Convert Cuttingplane to GCode
-void CuttingPlane::MakeGcode(GCodeState &state,
-			     const std::vector<Vector2d> *infill,
-			     double &E, double z,
-			     const Settings::SlicingSettings &slicing,
-			     const Settings::HardwareSettings &hardware)
-{
-	// Make an array with all lines, then link'em
-
-	Command command;
-
-	double lastLayerZ = state.GetLastLayerZ(z);
-
-	// Set speed for next move
-	command.Code = SETSPEED;
-	command.where = Vector3d(0,0,lastLayerZ);
-	command.e = E;					// move
-	command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
-	state.AppendCommand(command);
-	command.comment = "";
-	// Move Z axis
-	command.Code = ZMOVE;
-	command.where = Vector3d(0,0,z);
-	command.e = E;					// move
-	command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
-	state.AppendCommand(command);
-	command.comment = "";
-
-	std::vector<Vector3d> lines;
-
-	if (infill != NULL)
-		for (size_t i = 0; i < infill->size(); i++)
-			lines.push_back (Vector3d ((*infill)[i].x, (*infill)[i].y, z));
-
-	if( optimizers.size() != 0 )
-	{
-		// new method
-		for( uint i = 1; i < optimizers.size()-1; i++)
-		{
-			optimizers[i]->RetrieveLines(lines);
-		}
-	}
-	else
-	{
-		// old method
-		// Copy polygons
-		if(offsetPolygons.size() != 0)
-		{
-			for(size_t p=0;p<offsetPolygons.size();p++)
-			{
-				for(size_t i=0;i<offsetPolygons[p].points.size();i++)
-				{
-					Vector2d P3 = offsetVertices[offsetPolygons[p].points[i]];
-					Vector2d P4 = offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
-					lines.push_back(Vector3d(P3.x, P3.y, z));
-					lines.push_back(Vector3d(P4.x, P4.y, z));
-				}
-			}
-		}
-	}
-//	cerr << "lines at z %g = " << z << " count " << lines.size() << "\n";
-
-	// Find closest point to last point
-
-	std::vector<bool> used;
-	used.resize(lines.size());
-	for(size_t i=0;i<used.size();i++)
-		used[i] = false;
-
-//	cerr << "last position " << state.LastPosition() << "\n";
-	int thisPoint = findClosestUnused (lines, state.LastPosition(), used);
-	if (thisPoint == -1)	// No lines = no gcode
-	{
-#if CUTTING_PLANE_DEBUG // this happens often for the last slice ...
-		cerr << "find closest, and hence slicing failed at z" << z << "\n";
-#endif
-		return;
-	}
-	used[thisPoint] = true;
-
-	while(thisPoint != -1)
-	{
-//		double len;
-		// Make a MOVE accelerated line from LastPosition to lines[thisPoint]
-		if(state.LastPosition() != lines[thisPoint]) //If we are going to somewhere else
-		{
-		  state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
-						  0.0, E, z, slicing, hardware);
-
-		  state.SetLastPosition (lines[thisPoint]);
-		} // If we are going to somewhere else
-
-		used[thisPoint] = true;
-		// Find other end of line
-		thisPoint = findOtherEnd(thisPoint);
-		used[thisPoint] = true;
-		// store thisPoint
-
-		// Make a PLOT accelerated line from LastPosition to lines[thisPoint]
-		state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
-						hardware.GetExtrudeFactor(),
-						E, z, slicing, hardware);
-		state.SetLastPosition(lines[thisPoint]);
-		thisPoint = findClosestUnused (lines, state.LastPosition(), used);
-		if(thisPoint != -1)
-			used[thisPoint] = true;
-		}
-	state.SetLastLayerZ(z);
-}

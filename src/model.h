@@ -23,10 +23,11 @@
 
 #include <giomm/file.h>
 
-#include "slicer.h"
+//#include "slicer.h"
 #include "rfo.h"
 #include "types.h"
-#include "gcode.h"
+#include "slicer/gcode.h"
+#include "slicer/cuttingplane.h"
 #include "settings.h"
 
 #ifdef WIN32
@@ -146,11 +147,17 @@ public:
 	void RotateObject(RFO_File *file, RFO_Object *object, Vector4d rotate);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 
+	vector<CuttingPlane> cuttingplanes;
+
+	// Slicing
+	void Slice(GCodeState &state);
+	void CalcInfill(GCodeState &state);
+
 	// GCode Functions
 	void init();
 	void ReadGCode(Glib::RefPtr<Gio::File> file);
 	void ConvertToGCode();
-	void MakeRaft(GCodeState &state, float &z);
+	void MakeRaft(GCodeState &state, double &z);
 	void WriteGCode(Glib::RefPtr<Gio::File> file);
 	void ClearGCode();
 	Glib::RefPtr<Gtk::TextBuffer> GetGCodeBuffer();

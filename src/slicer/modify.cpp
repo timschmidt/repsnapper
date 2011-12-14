@@ -66,7 +66,7 @@ void Slicer::OptimizeRotation()
 
 	double area[6];
 	for(uint i=0;i<6;i++)
-		area[i] = 0.0f;
+		area[i] = 0.0;
 
 	for(size_t i=0;i<triangles.size();i++)
 	{
@@ -105,10 +105,10 @@ void Slicer::OptimizeRotation()
 
 	switch(down)
 	{
-	case NEGX: RotateObject(Vector3d(0,-1,0), M_PI/2.0f); break;
-	case POSX: RotateObject(Vector3d(0,1,0), M_PI/2.0f); break;
-	case NEGY: RotateObject(Vector3d(1,0,0), M_PI/2.0f); break;
-	case POSY: RotateObject(Vector3d(-1,0,0), M_PI/2.0f); break;
+	case NEGX: RotateObject(Vector3d(0,-1,0), M_PI/2.0); break;
+	case POSX: RotateObject(Vector3d(0,1,0), M_PI/2.0); break;
+	case NEGY: RotateObject(Vector3d(1,0,0), M_PI/2.0); break;
+	case POSY: RotateObject(Vector3d(-1,0,0), M_PI/2.0); break;
 	case POSZ: RotateObject(Vector3d(1,0,0), M_PI); break;
 	default: // unhandled
 	  break;
@@ -122,8 +122,8 @@ void Slicer::RotateObject(Vector3d axis, double angle)
 	Vector3d min,max;
 	Vector3d oldmin,oldmax;
 
-	min.x = min.y = min.z = oldmin.x = oldmin.y = oldmin.z = 99999999.0f;
-	max.x = max.y = max.z = oldmax.x = oldmax.y = oldmax.z -99999999.0f;
+	min.x = min.y = min.z = oldmin.x = oldmin.y = oldmin.z = 99999999.0;
+	max.x = max.y = max.z = oldmax.x = oldmax.y = oldmax.z -99999999.0;
 
 	for (size_t i=0; i<triangles.size(); i++)
 	{

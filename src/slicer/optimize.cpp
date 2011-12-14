@@ -17,23 +17,8 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "slicer.h"
+#include "cuttingplane.h"
 
-double angleBetween(Vector2d V1, Vector2d V2)
-{
-	double dotproduct, lengtha, lengthb, result;
-
-	dotproduct = (V1.x * V2.x) + (V1.y * V2.y);
-	lengtha = sqrt(V1.x * V1.x + V1.y * V1.y);
-	lengthb = sqrt(V2.x * V2.x + V2.y * V2.y);
-
-	result = acos( dotproduct / (lengtha * lengthb) );
-	if(result > 0)
-		result += M_PI;
-	else
-		result -= M_PI;
-
-	return result;
-}
 
 void Poly::calcHole(vector<Vector2d> &offsetVertices)
 {
@@ -215,101 +200,6 @@ void CuttingPlaneOptimizer::Shrink(double distance, list<Polygon2d*> &resPolygon
 }
 
 
-void CuttingPlane::ShrinkLogick(double extrudedWidth, double optimization, bool DisplayCuttingPlane, int ShellCount)
-{
-	CuttingPlaneOptimizer* cpo = new CuttingPlaneOptimizer(this, Z);
-	optimizers.push_back(cpo);
-
-	CuttingPlaneOptimizer* clippingPlane = new CuttingPlaneOptimizer(Z);
-	cpo->Shrink(extrudedWidth*0.5, clippingPlane->positivePolygons);
-	optimizers.push_back(clippingPlane);
-
-	for(int outline = 2; outline <= ShellCount+1; outline++)
-	{
-		CuttingPlaneOptimizer* newOutline = new CuttingPlaneOptimizer(Z);
-		optimizers.back()->Shrink(extrudedWidth, newOutline->positivePolygons);
-		optimizers.push_back(newOutline);
-	}
-	optimizers.back()->MakeOffsetPolygons(offsetPolygons, offsetVertices);
-}
-
-
-void CuttingPlane::ShrinkFast(double distance, double optimization, bool DisplayCuttingPlane, bool useFillets, int ShellCount)
-{
-	distance = (ShellCount - 0.5) * distance;
-
-	glColor4f (1,1,1,1);
-	for(size_t p=0; p<polygons.size();p++)
-	{
-		Poly offsetPoly;
-		if(DisplayCuttingPlane)
-			glBegin(GL_LINE_LOOP);
-		size_t count = polygons[p].points.size();
-		for(size_t i=0; i<count;i++)
-		{
-			Vector2d Na = Vector2d(vertices[polygons[p].points[(i-1+count)%count]].x, vertices[polygons[p].points[(i-1+count)%count]].y);
-			Vector2d Nb = Vector2d(vertices[polygons[p].points[i]].x, vertices[polygons[p].points[i]].y);
-			Vector2d Nc = Vector2d(vertices[polygons[p].points[(i+1)%count]].x, vertices[polygons[p].points[(i+1)%count]].y);
-
-			Vector2d V1 = (Nb-Na).getNormalized();
-			Vector2d V2 = (Nc-Nb).getNormalized();
-
-			Vector2d biplane = (V2 - V1).getNormalized();
-
-			double a = angleBetween(V1,V2);
-
-			bool convex = V1.cross(V2) < 0;
-			Vector2d p;
-			if(convex)
-				p = Nb+biplane*distance/(cos((M_PI-a)*0.5f));
-			else
-				p = Nb-biplane*distance/(sin(a*0.5f));
-
-/*			if(DisplayCuttingPlane)
-				glEnd();
-
-			if(convex)
-				glColor3f(1,0,0);
-			else
-				glColor3f(0,1,0);
-
-			ostringstream oss;
-			oss << a;
-			renderBitmapString(Vector3f (Nb.x, Nb.y, Z) , GLUT_BITMAP_8_BY_13 , oss.str());
-
-		if(DisplayCuttingPlane)
-				glBegin(GL_LINE_LOOP);
-			glColor3f(1,1,0);
-			*/
-/*
-
-
-			Vector2d N1 = Vector2d(-V1.y, V1.x);
-			Vector2d N2 = Vector2d(-V2.y, V2.x);
-
-			N1.normalise();
-			N2.normalise();
-
-			Vector2d Normal = N1+N2;
-			Normal.normalise();
-
-			int vertexNr = polygons[p].points[i];
-
-			Vector2d p = vertices[vertexNr] - (Normal * distance);*/
-
-			offsetPoly.points.push_back(offsetVertices.size());
-			offsetVertices.push_back(p);
-			if(DisplayCuttingPlane)
-				glVertex3f(p.x, p.y, Z);
-		}
-		if(DisplayCuttingPlane)
-			glEnd();
-		offsetPolygons.push_back(offsetPoly);
-	}
-//	CleanupOffsetPolygons(0.1f);
-	// make this work for z-tensioner_1off.stl rotated 45d on X axis
-//	selfIntersectAndDivide();
-}
 
 /*
 bool Point2d::FindNextPoint(Point2d* origin, Point2d* destination, bool expansion)

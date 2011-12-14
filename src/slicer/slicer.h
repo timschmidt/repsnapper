@@ -22,8 +22,6 @@
 #include <list>
 #include "platform.h"
 
-#include "math.h"                                               // Needed for sqrtf
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -37,30 +35,15 @@
 #include "stdafx.h"
 #include "string.h"
 
-#include "gcode.h"
+//#include "gcode.h"
 #include "math.h"
 #include "settings.h"
-
-// for PointHash
-#ifdef __GNUC__
-#  define _BACKWARD_BACKWARD_WARNING_H 1 // kill annoying warning
-#  include <ext/hash_map>
-namespace std
-{
-  using namespace __gnu_cxx;
-}
-#else
-#  include <hash_map>
-using namespace stdext;
-#endif
 
 #define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
 /* A number that speaks for itself, every kissable digit.                    */
 
 #define PI 3.141592653589793238462643383279502884197169399375105820974944592308
-
-#define CUTTING_PLANE_DEBUG 0
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -74,9 +57,7 @@ using namespace vmml;
 using namespace PolyLib;
 
 class RFO;
-class GCode;
 
-typedef vector<Vector2d> outline;
 
 enum AXIS {NEGX, POSX, NEGY, POSY, NEGZ, POSZ, NOT_ALIGNED};
 
@@ -85,6 +66,15 @@ enum filetype_t{
     BINARY_STL,
     NONE_STL
 };
+
+
+void renderBitmapString(Vector3d pos, void* font, string text);
+void checkGlutInit();
+
+
+
+
+
 
 class Triangle
 {
@@ -109,172 +99,6 @@ public:
 	void Translate(const Vector3d &vector);
 	int CutWithPlane(double z, const Matrix4d &T, 
 			 Vector2d &lineStart, Vector2d &lineEnd);
-};
-
-
-struct InFillHit
-{
-	Vector2d p;  // The intersection point
-	double d;     // Distance from the infill-line start point, used for sorting hits
-	double t;     // intersection point on first line
-};
-
-bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
-bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
-		  const Vector2d &p3, const Vector2d &p4, InFillHit &hit);
-
-class Poly
-{
-public:
-	Poly(){};
-	void cleanup();				// Removed vertices that are on a straight line
-	void calcHole(vector<Vector2d> &offsetVertices);
-	vector<guint> points;			// points, indices into ..... a CuttingPlane or a GCode object
-	bool hole;
-	Vector2d center;
-};
-
-struct locator
-{
-	locator(int polygon, int vertex, double where){p=polygon; v=vertex; t=where;}
-	int p;
-	int v;
-	double t;
-};
-
-class CuttingPlaneOptimizer;
-
-/* associates adjacent points with integers */
-class PointHash
-{
-	struct Impl;
-	Impl *impl;
- public:
-	PointHash();
-	~PointHash();
-	PointHash(const PointHash &copy);
-	int  IndexOfPoint (const Vector2d &p);
-	void InsertPoint  (guint idx, const Vector2d &p);
-	void clear();
-
-        static const double mult;
-        static const double double_epsilon;
-};
-
-class Command;
-struct GCodeStateImpl;
-class GCodeState {
-  GCodeStateImpl *pImpl;
- public:
-  GCodeState(GCode &code);
-  ~GCodeState();
-  void SetZ (double z);
-  void AppendCommand(Command &command);
-  void MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
-				 double extrusionFactor,
-				 double &E, double z,
-				 const Settings::SlicingSettings &slicing,
-				 const Settings::HardwareSettings &hardware);
-  double GetLastLayerZ(double curZ);
-  void  SetLastLayerZ(double z);
-  const Vector3d &LastPosition();
-  void  SetLastPosition(const Vector3d &v);
-  void  ResetLastWhere(Vector3d to);
-  double DistanceFromLastTo(Vector3d here);
-  double LastCommandF();
-};
-
-// A (set of) 2D polygon extracted from a 3D model
-class CuttingPlane
-{
-public:
-	CuttingPlane();
-	~CuttingPlane();
-
-	// Contract polygons:
-	void ShrinkFast(double distance, double optimization, bool DisplayCuttingPlane,
-			bool useFillets, int ShellCount);
-	void ShrinkLogick(double distance, double optimization, bool DisplayCuttingPlane,
-			  int ShellCount);
-
-	void  selfIntersectAndDivide();
-	guint selfIntersectAndDivideRecursive(double z, guint startPolygon, 
-					      guint startVertex,
-					      vector<outline> &outlines, 
-					      const Vector2d endVertex,
-					      guint &level);
-	void  recurseSelfIntersectAndDivide  (double z, vector<locator> &EndPointStack,
-					      vector<outline> &outlines,
-					      vector<locator> &visited);
-
-	void ClearShrink()
-	{
-		offsetPolygons.clear();
-		offsetVertices.clear();
-	}
-	vector<Vector2d> * CalcInFill(guint LayerNr, double InfillDistance, 
-				      double InfillRotation, double InfillRotationPrLayer,
-				      bool DisplayDebuginFill);	// Collide an infill-line with the polygons
-	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers,
-		  bool DrawCPLineNumbers, bool DrawCPVertexNumbers);
-	bool LinkSegments(double z, double Optimization);		        // Link Segments to form polygons
-	bool CleanupConnectSegments(double z);
-	bool CleanupSharedSegments(double z);
-	void CleanupPolygons(double Optimization);			// remove redudant points
-	void CleanupOffsetPolygons(double Optimization);			// remove redudant points
-	void MakeGcode (GCodeState &state,
-			const std::vector<Vector2d> *opt_infill,
-			double &E, double z,
-			const Settings::SlicingSettings &slicing,
-			const Settings::HardwareSettings &hardware);
-	bool VertexIsOutsideOriginalPolygon( Vector2d point, double z);
-
-	Vector2d Min, Max;  // Bounding box
-
-	void Clear()
-	{
-		lines.clear();
-		vertices.clear();
-		polygons.clear();
-		points.clear();
-		offsetPolygons.clear();
-		offsetVertices.clear();
-	}
-	void SetZ(double value)
-	{
-		Z = value;
-	}
-	double getZ() { return Z; }
-
-	int RegisterPoint(const Vector2d &p);
-
-	struct Segment {
-		Segment(guint s, guint e) { start = s; end = e; }
-		int start;		// Vertex index of start point
-		int end;		// Vertex index of end point
-		void Swap() {
-			int tmp = start;
-			start = end;
-			end = tmp;
-		}
-	};
-	void AddLine(const Segment &line);
-
-	vector<Poly>& GetPolygons() { return polygons; }
-	vector<Vector2d>& GetVertices() { return vertices; }
-
-private:
-	PointHash points;
-
-	vector<CuttingPlaneOptimizer*> optimizers;
-
-	vector<Segment> lines;		// Segments - 2 points pr. line-segment
-	vector<Poly> polygons;		// Closed loops
-	vector<Vector2d> vertices;	// points
-	double Z;
-
-	vector<Poly> offsetPolygons;	// Shrinked closed loops
-	vector<Vector2d> offsetVertices;// points for shrinked closed loops
 };
 
 
@@ -313,24 +137,5 @@ private:
     filetype_t getFileType(std::string filename);
 };
 
-// For Logick shrinker ...
-class CuttingPlaneOptimizer
-{
-public:
-	double Z;
-	CuttingPlaneOptimizer(double z) { Z = z; }
-	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double z);
-	list<Polygon2d*> positivePolygons;
-	void Shrink(double distance, list<Polygon2d*> &resPolygons);
-	void Draw();
-	void Dispose();
-	void MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2d>& vectors);
-	void RetrieveLines(vector<Vector3d>& lines);
-private:
-	void PushPoly(Polygon2d* poly);
-	void DoMakeOffsetPolygons(Polygon2d* pPoly, vector<Poly>& polys,
-				  vector<Vector2d>& vectors);
-	void DoRetrieveLines(Polygon2d* pPoly, vector<Vector3d>& lines);
-};
 
 #include "rfo.h"

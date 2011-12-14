@@ -16,46 +16,44 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+#include "config.h"
+#pragma once
 
+#include "settings.h"
 
-
-#include "platform.h"   // OpenGL, glu, glut in cross-platform way
 #include <vmmlib/vmmlib.h>
+#include <polylib/Polygon2d.h>
 
-#include "slicer.h"
+#include "../gcode.h"
 
 using namespace std;
 using namespace vmml;
 
+//using namespace PolyLib;
 
-#ifdef WIN32
-#  include <GL/glut.h>	// Header GLUT Library
+class GCode;
 
-#  pragma warning( disable : 4018 4267)
-#endif
 
-/* call me before glutting */
-void checkGlutInit()
-{
-	static bool inited = false;
-	if (inited)
-		return;
-	inited = true;
-	int argc;
-	char *argv[] = { (char *) "repsnapper" };
-	glutInit (&argc, argv);
-}
-
-void renderBitmapString(Vector3d pos, void* font, string text)
-{
-	char asd[100];
-	char *a = &asd[0];
-
-	checkGlutInit();
-
-	sprintf(asd,"%s",text.c_str());
-	glRasterPos3d(pos.x, pos.y, pos.z);
-	for (uint c=0;c<text.size();c++)
-		glutBitmapCharacter(font, (int)*a++);
-}
+class Command;
+struct GCodeStateImpl;
+class GCodeState {
+  GCodeStateImpl *pImpl;
+ public:
+  GCodeState(GCode &code);
+  ~GCodeState();
+  void SetZ (double z);
+  void AppendCommand(Command &command);
+  void MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
+				 double extrusionFactor,
+				 double &E, double z,
+				 const Settings::SlicingSettings &slicing,
+				 const Settings::HardwareSettings &hardware);
+  double GetLastLayerZ(double curZ);
+  void  SetLastLayerZ(double z);
+  const Vector3d &LastPosition();
+  void  SetLastPosition(const Vector3d &v);
+  void  ResetLastWhere(Vector3d to);
+  double DistanceFromLastTo(Vector3d here);
+  double LastCommandF();
+};
 
