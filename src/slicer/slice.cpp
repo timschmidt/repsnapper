@@ -399,10 +399,10 @@ int PntOnLine(Vector2f p1, Vector2f p2, Vector2f t)
     return(2);
 }
 */
-double dist ( double x1, double y1, double x2, double y2)
-{
-return sqrt( ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)) ) ;
-}
+// double dist ( double x1, double y1, double x2, double y2)
+// {
+// return sqrt( ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)) ) ;
+// }
 
 int PntOnLine(Vector2d p1, Vector2d p2, Vector2d t, double &where)
 {
@@ -963,120 +963,120 @@ void CuttingPlane::recurseSelfIntersectAndDivide(double z, vector<locator> &EndP
 	}
 }
 
-bool not_equal(const double& val1, const double& val2)
-{
-  double diff = val1 - val2;
-  return ((-Epsilon > diff) || (diff > Epsilon));
-}
+// bool not_equal(const double& val1, const double& val2)
+// {
+//   double diff = val1 - val2;
+//   return ((-Epsilon > diff) || (diff > Epsilon));
+// }
 
-bool is_equal(const double& val1, const double& val2)
-	{
-  double diff = val1 - val2;
-  return ((-Epsilon <= diff) && (diff <= Epsilon));
-}
+// bool is_equal(const double& val1, const double& val2)
+// 	{
+//   double diff = val1 - val2;
+//   return ((-Epsilon <= diff) && (diff <= Epsilon));
+// }
 
-bool intersect(const double& x1, const double& y1,
-			   const double& x2, const double& y2,
-			   const double& x3, const double& y3,
-			   const double& x4, const double& y4,
-					 double& ix,       double& iy)
-{
-  double ax = x2 - x1;
-  double bx = x3 - x4;
+// bool intersect(const double& x1, const double& y1,
+// 			   const double& x2, const double& y2,
+// 			   const double& x3, const double& y3,
+// 			   const double& x4, const double& y4,
+// 					 double& ix,       double& iy)
+// {
+//   double ax = x2 - x1;
+//   double bx = x3 - x4;
 
-  double lowerx;
-  double upperx;
-  double uppery;
-  double lowery;
+//   double lowerx;
+//   double upperx;
+//   double uppery;
+//   double lowery;
 
-  if (ax < double(0.0))
-  {
-     lowerx = x2;
-     upperx = x1;
-  }
-  else
-  {
-     upperx = x2;
-     lowerx = x1;
-  }
+//   if (ax < 0.0)
+//   {
+//      lowerx = x2;
+//      upperx = x1;
+//   }
+//   else
+//   {
+//      upperx = x2;
+//      lowerx = x1;
+//   }
 
-  if (bx > double(0.0))
-  {
-     if ((upperx < x4) || (x3 < lowerx))
-     return false;
-  }
-  else if ((upperx < x3) || (x4 < lowerx))
-     return false;
+//   if (bx > 0.0)
+//   {
+//      if ((upperx < x4) || (x3 < lowerx))
+//      return false;
+//   }
+//   else if ((upperx < x3) || (x4 < lowerx))
+//      return false;
 
-  double ay = y2 - y1;
-  double by = y3 - y4;
+//   double ay = y2 - y1;
+//   double by = y3 - y4;
 
-  if (ay < double(0.0))
-  {
-     lowery = y2;
-     uppery = y1;
-  }
-  else
-  {
-     uppery = y2;
-     lowery = y1;
-  }
+//   if (ay < 0.0)
+//   {
+//      lowery = y2;
+//      uppery = y1;
+//   }
+//   else
+//   {
+//      uppery = y2;
+//      lowery = y1;
+//   }
 
-  if (by > double(0.0))
-  {
-     if ((uppery < y4) || (y3 < lowery))
-        return false;
-  }
-  else if ((uppery < y3) || (y4 < lowery))
-     return false;
+//   if (by > 0.0)
+//   {
+//      if ((uppery < y4) || (y3 < lowery))
+//         return false;
+//   }
+//   else if ((uppery < y3) || (y4 < lowery))
+//      return false;
 
-  double cx = x1 - x3;
-  double cy = y1 - y3;
-  double d  = (by * cx) - (bx * cy);
-  double f  = (ay * bx) - (ax * by);
+//   double cx = x1 - x3;
+//   double cy = y1 - y3;
+//   double d  = (by * cx) - (bx * cy);
+//   double f  = (ay * bx) - (ax * by);
 
-  if (f > double(0.0))
-  {
-     if ((d < double(0.0)) || (d > f))
-        return false;
-  }
-  else if ((d > double(0.0)) || (d < f))
-     return false;
+//   if (f > 0.0)
+//   {
+//      if ( d < 0.0 || d > f )
+//         return false;
+//   }
+//   else if ( d > 0.0 || d < f )
+//      return false;
 
-  double e = (ax * cy) - (ay * cx);
+//   double e = (ax * cy) - (ay * cx);
 
-  if (f > double(0.0))
-  {
-     if ((e < double(0.0)) || (e > f))
-        return false;
-  }
-  else if ((e > double(0.0)) || (e < f))
-     return false;
+//   if (f > 0.0)
+//   {
+//      if ( e < 0.0 || e > f )
+//         return false;
+//   }
+//   else if ( e > 0.0 ) || e < f )
+//      return false;
 
-  double ratio = (ax * -by) - (ay * -bx);
+//   double ratio = (ax * -by) - (ay * -bx);
 
-  if (not_equal(ratio,double(0.0)))
-  {
-     ratio = ((cy * -bx) - (cx * -by)) / ratio;
-     ix    = x1 + (ratio * ax);
-     iy    = y1 + (ratio * ay);
-  }
-  else
-  {
-     if (is_equal((ax * -cy),(-cx * ay)))
-     {
-        ix = x3;
-        iy = y3;
-     }
-     else
-     {
-        ix = x4;
-        iy = y4;
-     }
-  }
+//   if (not_equal(ratio, 0.0))
+//   {
+//      ratio = ((cy * -bx) - (cx * -by)) / ratio;
+//      ix    = x1 + (ratio * ax);
+//      iy    = y1 + (ratio * ay);
+//   }
+//   else
+//   {
+//      if (is_equal((ax * -cy),(-cx * ay)))
+//      {
+//         ix = x3;
+//         iy = y3;
+//      }
+//      else
+//      {
+//         ix = x4;
+//         iy = y4;
+//      }
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
  /*
   * We bucket space up into a grid of size 1/mult and generate hash values
