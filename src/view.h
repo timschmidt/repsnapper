@@ -24,6 +24,7 @@
 #include <vmmlib/vmmlib.h>
 #include "types.h"
 #include "progress.h"
+#include "printer.h"
 
 class Model;
 class Render;
@@ -31,7 +32,7 @@ class Progress;
 class RFO_Object;
 class RFO_File;
 class ConnectView;
-class PrintInhibitor;
+//class PrintInhibitor;
 
 class View : public Gtk::Window
 {
@@ -56,6 +57,8 @@ class View : public Gtk::Window
   void add_statusbar_msg(Gtk::Widget *widget, const char *message);
   void update_scale_slider();
   void scale_object();
+
+  Printer *printer;
 
   Glib::RefPtr<Gtk::Builder> m_builder;
   Model *m_model;

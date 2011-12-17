@@ -22,7 +22,28 @@
 #include <string>
 #include <gtkmm.h>
 
-class Progress;
+class Progress {
+ public:
+  // Progress reporting
+  sigc::signal< void, const char *, double > m_signal_progress_start;
+  sigc::signal< void, double >               m_signal_progress_update;
+  sigc::signal< void, const char * >         m_signal_progress_stop;
+
+  // helpers
+  void start (const char *label, double max)
+  {
+    m_signal_progress_start.emit (label, max);
+  }
+  void stop (const char *label)
+  {
+    m_signal_progress_stop.emit (label);
+  }
+  void update (double value)
+  {
+    m_signal_progress_update.emit (value);
+  }
+};
+
 
 class ViewProgress {
   Gtk::Box *m_box;

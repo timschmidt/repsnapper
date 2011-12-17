@@ -22,6 +22,8 @@
 #include <gtkmm.h>
 #include "types.h"
 
+#include "printer.h"
+
 class ConnectView : public Gtk::VBox {
   Gtk::HBox	     m_hbox;
   Gtk::Image         m_image;
@@ -32,6 +34,7 @@ class ConnectView : public Gtk::VBox {
   bool               m_setting_state;
 
   Model             *m_model;
+  Printer  *printer;
   Settings          *m_settings;
 
   void connect_toggled();
@@ -39,7 +42,7 @@ class ConnectView : public Gtk::VBox {
   void signal_entry_changed();
   bool find_ports();
  public:
-  ConnectView (Model *model, Settings *settings, bool show_connect = true);
+  ConnectView (Model *model, Printer *printer, Settings *settings, bool show_connect = true);
   void try_set_state (bool connected);
 };
 

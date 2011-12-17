@@ -71,7 +71,7 @@ void ConnectView::serial_state_changed(SerialState state)
 void ConnectView::connect_toggled()
 {
   if (!m_setting_state)
-    m_model->serial_try_connect (m_connect.get_active ());
+    printer->serial_try_connect (m_connect.get_active ());
 }
 
 void ConnectView::signal_entry_changed()
@@ -103,10 +103,11 @@ bool ConnectView::find_ports() {
 }
 
 ConnectView::ConnectView (Model *model,
+			  Printer *printer,
 			  Settings *settings,
 			  bool show_connect)
   : Gtk::VBox(), m_connect(), m_port_label(_("Port:")),
-    m_model(model), m_settings(settings)
+    m_model(model), printer(printer), m_settings(settings)
 {
   m_port_align.set_padding(0, 0, 6, 0);
   m_port_align.add (m_port_label);
@@ -128,7 +129,7 @@ ConnectView::ConnectView (Model *model,
   if (!show_connect)
     m_connect.hide ();
   serial_state_changed (SERIAL_DISCONNECTED);
-  m_model->m_signal_serial_state_changed.connect
+  printer->signal_serial_state_changed.connect
     (sigc::mem_fun(*this, &ConnectView::serial_state_changed));
 
   // TODO: Execute find_ports every time the dropdown is displayed
