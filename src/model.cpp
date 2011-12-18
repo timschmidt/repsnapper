@@ -55,12 +55,19 @@ Model::Model() :
 			    rr_wait_wr_fn, cl,
 			    rr_log_fn, cl);
   update_temp_poll_interval ();
+  settings.m_signal_core_settings_changed.connect
+    (sigc::mem_fun(*this, &Model::update_core_settings));
 }
 
 Model::~Model()
 {
   m_temp_timeout.disconnect();
   rr_dev_free (m_device);
+}
+
+void Model::update_core_settings ()
+{
+  rr_dev_enable_debugging(m_device, settings.Display.CommsDebug);
 }
 
 void Model::SaveConfig(Glib::RefPtr<Gio::File> file)

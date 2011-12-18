@@ -170,8 +170,6 @@ static struct {
   BOOL_MEMBER (Misc.ClearLogfilesWhenPrintStarts, "ClearLogfilesWhenPrintStarts", true, false),
 
   // GCode - handled by GCodeImpl
-
-  // Display - pending ...
   BOOL_MEMBER (Display.DisplayGCode, "DisplayGCode", true, true),
   FLOAT_MEMBER (Display.GCodeDrawStart, "GCodeDrawStart", 0.0, true),
   FLOAT_MEMBER (Display.GCodeDrawEnd, "GCodeDrawEnd", 1.0, true),
@@ -185,6 +183,7 @@ static struct {
   BOOL_MEMBER (Display.DisplayinFill, "DisplayinFill", false, true),
   BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, false),
   BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
+  BOOL_MEMBER (Display.CommsDebug, "CommsDebug", false, true),
   BOOL_MEMBER (Display.DisplayCuttingPlane, "DisplayCuttingPlane", false, true),
   BOOL_MEMBER (Display.DrawVertexNumbers, "DrawVertexNumbers", false, true),
   BOOL_MEMBER (Display.DrawLineNumbers, "DrawLineNumbers", false, true),
@@ -668,6 +667,10 @@ void Settings::get_from_gui (Builder &builder, int i)
     std::cerr << "corrupt setting type\n";
     break;
   }
+
+  // bit of a hack ...
+  if (!strcmp (settings[i].config_name, "CommsDebug"))
+    m_signal_core_settings_changed.emit();
 
   if (settings[i].triggers_redraw)
     m_signal_visual_settings_changed.emit();

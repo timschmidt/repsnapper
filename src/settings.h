@@ -151,6 +151,7 @@ class Settings {
     bool DrawCPOutlineNumbers;
     float CuttingPlaneValue;
     bool LuminanceShowsSpeed;
+    bool CommsDebug;
 
     // Rendering
     vmml::Vector4f PolygonRGBA;
@@ -201,6 +202,7 @@ class Settings {
 
   sigc::signal< void > m_signal_visual_settings_changed;
   sigc::signal< void > m_signal_update_settings_gui;
+  sigc::signal< void > m_signal_core_settings_changed;
 };
 
 #endif // SETTINGS_H
