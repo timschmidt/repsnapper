@@ -97,6 +97,7 @@ class Model
 
 	SerialState m_serial_state;
 	void set_printing (bool printing);
+	void update_core_settings ();
 
 public:
 	SerialState get_serial_state () { return m_serial_state; }
