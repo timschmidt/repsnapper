@@ -1,0 +1,55 @@
+/*
+    This file is a part of the RepSnapper project.
+    Copyright (C) 2010  Kulitorum
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+#include "config.h"
+#pragma once
+
+#include "stdafx.h"
+#include "string.h"
+#include "math.h"
+#include <vmmlib/vmmlib.h>
+
+
+enum AXIS {NEGX, POSX, NEGY, POSY, NEGZ, POSZ, NOT_ALIGNED};
+
+
+class Triangle
+{
+public:
+	Triangle(const Vector3d &Norml, const Vector3d &Point1,
+		 const Vector3d &Point2, const Vector3d &Point3) 
+		{ Normal = Norml ; A=Point1;B=Point2;C=Point3;}
+	Triangle() {};
+
+	/* Represent the triangle as an array of length 3 {A, B, C} */
+	Vector3d &operator[](const int index);
+
+	void SetPoints(const Vector3d &P1, const Vector3d &P2, const Vector3d &P3) { A=P1;B=P2;C=P3; }
+	void SetNormal(const Vector3d &Norml) { Normal=Norml;}
+	double area();
+
+	AXIS axis;			// Used for auto-rotation
+	Vector3d A,B,C,Normal;	// p1,p2,p3, Normal
+	Vector3d GetMax();
+	Vector3d GetMin();
+	void AccumulateMinMax(Vector3d &min, Vector3d &max);
+	void Translate(const Vector3d &vector);
+	int CutWithPlane(double z, const Matrix4d &T, 
+			 Vector2d &lineStart, Vector2d &lineEnd);
+};
+

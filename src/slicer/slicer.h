@@ -38,6 +38,8 @@
 //#include "gcode.h"
 #include "math.h"
 #include "settings.h"
+#include "triangle.h"
+
 
 #define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
@@ -58,9 +60,6 @@ using namespace PolyLib;
 
 class RFO;
 
-
-enum AXIS {NEGX, POSX, NEGY, POSY, NEGZ, POSZ, NOT_ALIGNED};
-
 enum filetype_t{
     ASCII_STL,
     BINARY_STL,
@@ -70,36 +69,6 @@ enum filetype_t{
 
 void renderBitmapString(Vector3d pos, void* font, string text);
 void checkGlutInit();
-
-
-
-
-
-
-class Triangle
-{
-public:
-	Triangle(const Vector3d &Norml, const Vector3d &Point1,
-		 const Vector3d &Point2, const Vector3d &Point3) 
-		{ Normal = Norml ; A=Point1;B=Point2;C=Point3;}
-	Triangle() {};
-
-	/* Represent the triangle as an array of length 3 {A, B, C} */
-	Vector3d &operator[](const int index);
-
-	void SetPoints(const Vector3d &P1, const Vector3d &P2, const Vector3d &P3) { A=P1;B=P2;C=P3; }
-	void SetNormal(const Vector3d &Norml) { Normal=Norml;}
-	double area();
-
-	AXIS axis;			// Used for auto-rotation
-	Vector3d A,B,C,Normal;	// p1,p2,p3, Normal
-	Vector3d GetMax();
-	Vector3d GetMin();
-	void AccumulateMinMax(Vector3d &min, Vector3d &max);
-	void Translate(const Vector3d &vector);
-	int CutWithPlane(double z, const Matrix4d &T, 
-			 Vector2d &lineStart, Vector2d &lineEnd);
-};
 
 
 #define sqr(x) ((x)*(x))
