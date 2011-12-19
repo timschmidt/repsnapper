@@ -20,38 +20,6 @@
 #include "cuttingplane.h"
 
 
-void Poly::calcHole(vector<Vector2d> &offsetVertices)
-{
-	if(points.size() == 0)
-		return;	// hole is undefined
-	Vector2d p(-6000, -6000);
-	int v=0;
-	center = Vector2d(0,0);
-	for(size_t vert=0;vert<points.size();vert++)
-	{
-		center += offsetVertices[points[vert]];
-		if(offsetVertices[points[vert]].x > p.x)
-		{
-			p = offsetVertices[points[vert]];
-			v=vert;
-		}
-		else if(offsetVertices[points[vert]].x == p.x && offsetVertices[points[vert]].y > p.y)
-		{
-			p.y = offsetVertices[points[vert]].y;
-			v=vert;
-		}
-	}
-	center /= points.size();
-
-	// we have the x-most vertex (with the highest y if there was a contest), v 
-	Vector2d V1 = offsetVertices[points[(v-1+points.size())%points.size()]];
-	Vector2d V2 = offsetVertices[points[v]];
-	Vector2d V3 = offsetVertices[points[(v+1)%points.size()]];
-
-	Vector2d Va=V2-V1;
-	Vector2d Vb=V3-V1;
-	hole = Va.cross(Vb) > 0;
-}
 
 CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double z)
 {

@@ -17,6 +17,8 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #pragma once
+#include <gtkmm.h>
+
 #include <vector>
 #include "platform.h"
 #include "math.h"                                               // Needed for sqrtf

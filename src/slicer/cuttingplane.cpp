@@ -343,7 +343,7 @@ bool CuttingPlane::CleanupConnectSegments(double z)
 		vertex_counts[lines[i].end]++;
 	}
 
-	// the count should be zero for all connected lines,
+	// the vertex_types count should be zero for all connected lines,
 	// positive for those ending no-where, and negative for
 	// those starting no-where.
 	std::vector<int> detached_points;
@@ -354,7 +354,7 @@ bool CuttingPlane::CleanupConnectSegments(double z)
 #if CUTTING_PLANE_DEBUG
 			cout << "detached point " << i << "\t" << vertex_types[i] << " refs at " << vertices[i].x << "\t" << vertices[i].y << "\n";
 #endif
-			detached_points.push_back (i);
+			detached_points.push_back (i); // i = vertex index
 		}
 	}
 
@@ -368,43 +368,49 @@ bool CuttingPlane::CleanupConnectSegments(double z)
 	for (uint i = 0; i < detached_points.size(); i++)
 	{
 		double nearest_dist_sq = (std::numeric_limits<double>::max)();
-		int   nearest = 0;
-		int   n = detached_points[i];
-		if (n < 0)
-			continue;
+		uint   nearest = 0;
+		int   n = detached_points[i]; // vertex index of detached point i
+		if (n < 0) // handled already
+		  continue;
 
-		const Vector2d &p = vertices[n];
+		const Vector2d &p = vertices[n]; // the real detached point
+		// find nearest other detached point to the detached point n:
 		for (uint j = i + 1; j < detached_points.size(); j++)
 		{
-			int pt = detached_points[j];
-			if (pt < 0)
-				continue; // already connected
+		        int pt = detached_points[j];
+			if (pt < 0) // handled already
+			  continue; // already connected
 
-			// don't connect a start to a start
+			// don't connect a start to a start, or end to end
 			if (vertex_types[n] == vertex_types[pt])
-				continue;
+			        continue; 
 
-			const Vector2d &q = vertices[pt];
-			double dist_sq = pow (p.x - q.x, 2) + pow (p.y - q.y, 2);
+			const Vector2d &q = vertices[pt];  // the real other point
+			double dist_sq = (p-q).lengthSquared(); //pow (p.x - q.x, 2) + pow (p.y - q.y, 2);
 			if (dist_sq < nearest_dist_sq)
 			{
 				nearest_dist_sq = dist_sq;
 				nearest = j;
 			}
 		}
+		//if (nearest == 0) continue; 
 		assert (nearest != 0);
 
-		// allow points 1mm apart to be joined, not more
+		// allow points 10mm apart to be joined, not more
+		if (nearest_dist_sq > 100.0) {
+			cout << "oh dear - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - not connecting\n";
+			continue; //return false;
+		}
+		// warning above 1mm apart 
 		if (nearest_dist_sq > 1.0) {
-			cout << "oh dear - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - aborting\n";
-			return false;
+			cout << "warning - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - connecting anyway\n";
 		}
 
 #if CUTTING_PLANE_DEBUG
 		cout << "add join of length " << sqrt (nearest_dist_sq) << "\n" ;
 #endif
-		CuttingPlane::Segment seg(detached_points[nearest], detached_points[i]);
-		if (vertex_types[n] < 0) // start but no end at this point
+		CuttingPlane::Segment seg(n, detached_points[nearest]);
+		if (vertex_types[n] > 0) // already had start but no end at this point
 			seg.Swap();
 		AddLine (seg);
 		detached_points[nearest] = -1;
@@ -421,12 +427,12 @@ bool CuttingPlane::CleanupConnectSegments(double z)
  */
 bool CuttingPlane::CleanupSharedSegments(double z)
 {
-	vector<int> vertex_counts;
+	vector<int> vertex_counts; // how many lines have each point
 	vertex_counts.resize (vertices.size());
 
 	for (uint i = 0; i < lines.size(); i++)
 	{
-		vertex_counts[lines[i].start]++;
+	        vertex_counts[lines[i].start]++; 
 		vertex_counts[lines[i].end]++;
 	}
 
@@ -439,7 +445,7 @@ bool CuttingPlane::CleanupSharedSegments(double z)
 #if CUTTING_PLANE_DEBUG
 		cout << "vtx " << i << " count: " << vertex_counts[i] << "\n";
 #endif
-		if (vertex_counts[i] > 2)
+		if (vertex_counts[i] > 2) // no more than 2 lines should share a point
 			duplicate_points.push_back (i);
 	}
 
@@ -450,7 +456,7 @@ bool CuttingPlane::CleanupSharedSegments(double z)
 	{
 		std::vector<int> dup_lines;
 
-		// find all line segments with this point in use
+		// find all line segments with this point in use 
 		for (uint j = 0; j < lines.size(); j++)
 		{
 			if (lines[j].start == duplicate_points[i] ||
@@ -494,10 +500,10 @@ bool CuttingPlane::CleanupSharedSegments(double z)
  */
 bool CuttingPlane::LinkSegments(double z, double Optimization)
 {
-	if (vertices.size() == 0)
+        if (vertices.size() == 0) // no cutpoints in this plane
 		return true;
 
-	if (!CleanupSharedSegments (z))
+	if (!CleanupSharedSegments (z)) 
 		return false;
 
 	if (!CleanupConnectSegments (z))
@@ -506,8 +512,9 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 	vector<vector<int> > planepoints;
 	planepoints.resize(vertices.size());
 
+	// all line numbers starting from every point
 	for (uint i = 0; i < lines.size(); i++)
-		planepoints[lines[i].start].push_back(i);
+		planepoints[lines[i].start].push_back(i); 
 
 	// Build polygons
 	vector<bool> used;
@@ -528,7 +535,8 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 		poly.points.push_back (endPoint);
 		int count = lines.size()+100;
 		while (endPoint != startPoint && count != 0)	// While not closed
-		{
+		  {
+		        // lines starting at endPoint
 			const vector<int> &pathsfromhere = planepoints[endPoint];
 
 			// Find the next line.
@@ -587,7 +595,7 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 				// model failure - we will get called recursivelly
 				// for a different z and different cutting plane.
 				return false;
-			}
+			} // endif nowhere to go
 			if (pathsfromhere.size() != 1)
 				cout << "Risky co-incident node during shrinking\n";
 
@@ -598,7 +606,8 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 			//          directions eliminate them to join the polygons.
 
 			uint i;
-			for (i = 0; i < pathsfromhere.size() && used[pathsfromhere[i]]; i++);
+			// i = first unused path:
+			for (i = 0; i < pathsfromhere.size() && used[pathsfromhere[i]]; i++); 
 			if (i >= pathsfromhere.size())
 			{
 				cout << "no-where unused to go";
@@ -626,7 +635,7 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 	}
 
 	// Cleanup polygons
-	CleanupPolygons(Optimization);
+	CleanupPolygons(vertices, polygons,Optimization);
 
 	return true;
 }
@@ -788,9 +797,11 @@ bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2d point, double z)
 	return intersectcount%2;
 }
 
-void CuttingPlane::CleanupPolygons (double Optimization)
+void CuttingPlane::CleanupPolygons (vector<Vector2d> vertices, 
+				    vector<Poly> & polygons,
+				    double Optimization)
 {
-	double allowedError = Optimization;
+  double allowedError = pow(Optimization,2);
 	for (size_t p = 0; p < polygons.size(); p++)
 	{
 		for (size_t v = 0; v < polygons[p].points.size() + 1; )
@@ -811,33 +822,6 @@ void CuttingPlane::CleanupPolygons (double Optimization)
 #if CUTTING_PLANE_DEBUG
 				cout << "optimising out polygon " << p << "\n";
 #endif
-			}
-			else
-				v++;
-		}
-	}
-}
-
-void CuttingPlane::CleanupOffsetPolygons(double Optimization)
-{
-	double allowedError = Optimization;
-	for(size_t p=0;p<offsetPolygons.size();p++)
-	{
-		for(size_t v=0;v<offsetPolygons[p].points.size();)
-		{
-			Vector2d p1 =offsetVertices[offsetPolygons[p].points[(v-1+offsetPolygons[p].points.size())%offsetPolygons[p].points.size()]];
-			Vector2d p2 =offsetVertices[offsetPolygons[p].points[v]];
-			Vector2d p3 =offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
-
-			Vector2d v1 = (p2-p1);
-			Vector2d v2 = (p3-p2);
-
-			v1.normalize();
-			v2.normalize();
-
-			if((v1-v2).lengthSquared() < allowedError)
-			{
-				offsetPolygons[p].points.erase(offsetPolygons[p].points.begin()+v);
 			}
 			else
 				v++;
@@ -964,6 +948,7 @@ void CuttingPlane::AddLine(const Segment &line)
 	lines.push_back(line);
 }
 
+// return index of new (or known) point in vertices
 int CuttingPlane::RegisterPoint(const Vector2d &p)
 {
 	int res;
@@ -1179,101 +1164,31 @@ void CuttingPlane::ShrinkLogick(double extrudedWidth, double optimization,
 }
 
 
-double angleBetween(Vector2d V1, Vector2d V2)
-{
-	double dotproduct, lengtha, lengthb, result;
 
-	dotproduct = (V1.x * V2.x) + (V1.y * V2.y);
-	lengtha = sqrt(V1.x * V1.x + V1.y * V1.y);
-	lengthb = sqrt(V2.x * V2.x + V2.y * V2.y);
-
-	result = acos( dotproduct / (lengtha * lengthb) );
-	if(result > 0)
-		result += M_PI;
-	else
-		result -= M_PI;
-
-	return result;
-}
-
-
-void CuttingPlane::ShrinkFast(double distance, double optimization, 
+void CuttingPlane::ShrinkFast(double extrudedWidth, double optimization, 
 			      bool DisplayCuttingPlane, bool useFillets, 
 			      int ShellCount)
 {
-	distance = (ShellCount - 0.5) * distance;
+  double distance = (ShellCount - 0.5) * extrudedWidth;
 
 	glColor4f (1,1,1,1);
 	for(size_t p=0; p<polygons.size();p++)
 	{
-		Poly offsetPoly;
-		if(DisplayCuttingPlane)
-			glBegin(GL_LINE_LOOP);
-		size_t count = polygons[p].points.size();
-		for(size_t i=0; i<count;i++)
-		{
-			Vector2d Na = Vector2d(vertices[polygons[p].points[(i-1+count)%count]].x, vertices[polygons[p].points[(i-1+count)%count]].y);
-			Vector2d Nb = Vector2d(vertices[polygons[p].points[i]].x, vertices[polygons[p].points[i]].y);
-			Vector2d Nc = Vector2d(vertices[polygons[p].points[(i+1)%count]].x, vertices[polygons[p].points[(i+1)%count]].y);
-
-			Vector2d V1 = (Nb-Na).getNormalized();
-			Vector2d V2 = (Nc-Nb).getNormalized();
-
-			Vector2d biplane = (V2 - V1).getNormalized();
-
-			double a = angleBetween(V1,V2);
-
-			bool convex = V1.cross(V2) < 0;
-			Vector2d p;
-			if(convex)
-				p = Nb+biplane*distance/(cos((M_PI-a)*0.5f));
-			else
-				p = Nb-biplane*distance/(sin(a*0.5f));
-
-/*			if(DisplayCuttingPlane)
-				glEnd();
-
-			if(convex)
-				glColor3f(1,0,0);
-			else
-				glColor3f(0,1,0);
-
-			ostringstream oss;
-			oss << a;
-			renderBitmapString(Vector3f (Nb.x, Nb.y, Z) , GLUT_BITMAP_8_BY_13 , oss.str());
-
-		if(DisplayCuttingPlane)
-				glBegin(GL_LINE_LOOP);
-			glColor3f(1,1,0);
-			*/
-/*
-
-
-			Vector2d N1 = Vector2d(-V1.y, V1.x);
-			Vector2d N2 = Vector2d(-V2.y, V2.x);
-
-			N1.normalise();
-			N2.normalise();
-
-			Vector2d Normal = N1+N2;
-			Normal.normalise();
-
-			int vertexNr = polygons[p].points[i];
-
-			Vector2d p = vertices[vertexNr] - (Normal * distance);*/
-
-			offsetPoly.points.push_back(offsetVertices.size());
-			offsetVertices.push_back(p);
-			if(DisplayCuttingPlane)
-				glVertex3f(p.x, p.y, Z);
-		}
-		if(DisplayCuttingPlane)
-			glEnd();
-		offsetPolygons.push_back(offsetPoly);
+	  Poly offsetPoly = polygons[p].Shrinked(this, distance);
+	  // if(DisplayCuttingPlane) {
+	  //   glBegin(GL_LINE_LOOP);
+	  //   for (uint i=0;i<offsetPoly.points.size();i++){
+	  //          p = ?
+	  //    sth. like ... glVertex3f(p.x, p.y, Z);
+	  //   
+	  //   }
+	  // glEnd();
+	  //}
+	  offsetPolygons.push_back(offsetPoly);
 	}
-//	CleanupOffsetPolygons(0.1f);
+	//CleanupPolygons(offsetVertices, offsetPolygons,optimization);
 	// make this work for z-tensioner_1off.stl rotated 45d on X axis
-//	selfIntersectAndDivide();
+	//selfIntersectAndDivide();
 }
 
 

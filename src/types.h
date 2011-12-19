@@ -39,6 +39,7 @@ class Segment2f;
 class AsyncSerial;
 class RepRapSerial;
 class CuttingPlane;
+class Poly;
 class PrintInhibitor;
 class ProcessController;
 

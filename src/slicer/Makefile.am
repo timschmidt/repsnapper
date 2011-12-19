@@ -10,12 +10,13 @@
 # option, any later version, incorporated herein by reference.
 
 SHARED_SRC += \
+	src/slicer/poly.cpp \
+	src/slicer/cuttingplane.cpp \
 	src/slicer/slicer_draw.cpp \
 	src/slicer/slicer_modify.cpp \
 	src/slicer/slicer_optimize.cpp \
 	src/slicer/slicer_read.cpp \
 	src/slicer/slicer_slice.cpp \
-	src/slicer/cuttingplane.cpp \
 	src/slicer/gcode.cpp \
 	src/slicer/triangle.cpp
 
@@ -23,4 +24,5 @@ SHARED_INC += \
 	src/slicer/slicer.h \
 	src/slicer/gcode.h \
 	src/slicer/triangle.h \
-	src/slicer/cuttingplane.h
+	src/slicer/cuttingplane.h \
+	src/slicer/poly.h

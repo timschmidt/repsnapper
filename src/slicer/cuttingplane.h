@@ -16,7 +16,7 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#include "config.h"
+#include "types.h"
 #pragma once
 
 // for PointHash
@@ -46,6 +46,7 @@ using namespace stdext;
 
 #include "platform.h"
 #include "gcode.h"
+#include "poly.h"
 
 
 #define CUTTING_PLANE_DEBUG 0
@@ -79,22 +80,12 @@ struct locator
 	double t;
 };
 
-class Poly
-{
-public:
-	Poly(){};
-	void cleanup();				// Removed vertices that are on a straight line
-	void calcHole(vector<Vector2d> &offsetVertices);
-	vector<guint> points;			// points, indices into ..... a CuttingPlane or a GCode object
-	bool hole;
-	Vector2d center;
-};
-
 
 
 /* associates adjacent points with integers */
 class PointHash
 {
+
 	struct Impl;
 	Impl *impl;
  public:
@@ -111,13 +102,12 @@ class PointHash
 
 
 
-
 // For Logick shrinker ...
 class CuttingPlaneOptimizer
 {
 public:
 	double Z;
-	CuttingPlaneOptimizer(double z) { Z = z; }
+	CuttingPlaneOptimizer(double z) { Z = z; };
 	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double z);
 	list<Polygon2d*> positivePolygons;
 	void Shrink(double distance, list<Polygon2d*> &resPolygons);
@@ -134,9 +124,12 @@ private:
 
 
 
+
+
 // A (set of) 2D polygon extracted from a 3D model
 class CuttingPlane
 {
+  friend class Poly;
 public:
 	CuttingPlane();
 	~CuttingPlane();
@@ -179,8 +172,11 @@ public:
 	bool LinkSegments(double z, double Optimization);		        // Link Segments to form polygons
 	bool CleanupConnectSegments(double z);
 	bool CleanupSharedSegments(double z);
-	void CleanupPolygons(double Optimization);			// remove redudant points
-	void CleanupOffsetPolygons(double Optimization);			// remove redudant points
+	// remove redudant points in given polygons
+	void CleanupPolygons(vector<Vector2d> vertices,
+			     vector<Poly> & polygons,
+			     double Optimization);
+
 	void MakeGcode (GCodeState &state,
 			const std::vector<Vector2d> *opt_infill,
 			double &E, double z,
@@ -223,18 +219,20 @@ public:
 
 	vector<Poly>& GetPolygons() { return polygons; }
 	vector<Vector2d>& GetVertices() { return vertices; }
+	vector<Vector2d>& GetOffsetVertices() { return offsetVertices; }
 
 private:
 	PointHash points;
 
 	vector<CuttingPlaneOptimizer*> optimizers;
 
-	vector<Segment> lines;		// Segments - 2 points pr. line-segment
-	vector<Poly> polygons;		// Closed loops
-	vector<Vector2d> vertices;	// points
+	vector<Vector2d> vertices;	// cutpoints with desired z plane
+	vector<Segment> lines;		// cutlines, have 2 vertex indices 
+	vector<Poly> polygons;		// Closed loops, have indices of vertices
 	double Z;
 
 	vector<Poly> offsetPolygons;	// Shrinked closed loops
 	vector<Vector2d> offsetVertices;// points for shrinked closed loops
 };
+
 
