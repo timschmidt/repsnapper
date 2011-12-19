@@ -14,7 +14,7 @@ SHARED_SRC += \
 	src/slicer/slicer_modify.cpp \
 	src/slicer/slicer_optimize.cpp \
 	src/slicer/slicer_read.cpp \
-	src/slicer/slice.cpp \
+	src/slicer/slicer_slice.cpp \
 	src/slicer/cuttingplane.cpp \
 	src/slicer/gcode.cpp \
 	src/slicer/triangle.cpp
