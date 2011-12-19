@@ -66,6 +66,10 @@ void Printer::error (const char *message, const char *secondary)
   signal_alert.emit (Gtk::MESSAGE_ERROR, message, secondary);
 }
 
+void Printer::update_core_settings ()
+{
+  rr_dev_enable_debugging(device, settings.Display.CommsDebug);
+}
 
 bool Printer::temp_timeout_cb()
 {
@@ -287,7 +291,6 @@ void RR_CALL Printer::rr_more_fn (rr_dev dev, void *closure)
   Printer *printer = static_cast<Printer*>(closure);
  
   if (printer->printing && printer->gcode_iter) {
-    cerr << "line "<< printer->gcode_iter->m_cur_line << " - " << rr_dev_buffered_lines (printer->device) << " of " << printer->gcode.commands.size() << endl;
     printer->progress.update (printer->gcode_iter->m_cur_line -
 			      rr_dev_buffered_lines (printer->device));
     while (rr_dev_write_more (printer->device) && !printer->gcode_iter->finished()) {

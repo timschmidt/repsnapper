@@ -56,11 +56,6 @@ void Model::error (const char *message, const char *secondary)
   signal_alert.emit (Gtk::MESSAGE_ERROR, message, secondary);
 }
 
-void Model::update_core_settings ()
-{
-  rr_dev_enable_debugging(m_device, settings.Display.CommsDebug);
-}
-
 void Model::SaveConfig(Glib::RefPtr<Gio::File> file)
 {
   settings.save_settings(file);

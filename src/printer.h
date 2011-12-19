@@ -52,6 +52,7 @@ class Printer
 
 	SerialState serial_state;
 	void set_printing (bool printing);
+	void update_core_settings();
 
 	double temps[TEMP_LAST];
 	sigc::connection temp_timeout;
