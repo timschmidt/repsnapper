@@ -34,13 +34,20 @@ class Poly
   CuttingPlane *plane;
 public:
         Poly();
-	Poly(CuttingPlane *plane);
+	Poly(CuttingPlane *plane, vector<Vector2d> vertices);
 	Poly Shrinked(double distance);
-	Poly Shrinked(CuttingPlane *plane, double distance);
-	
-	void cleanup();				// Removed vertices that are on a straight line
+	Poly Shrinked(CuttingPlane *plane, vector<Vector2d> vertices, double distance);
+	// draw polygon from the given vertices
+	void draw();
+	void drawVertexNumbers();
+	void drawLineNumbers();
+
+	// Remove vertices that are on a straight line
+	void cleanup(double maxerror);
+
 	void calcHole(vector<Vector2d> &offsetVertices);
-	vector<guint> points;			// points, indices into ..... a CuttingPlane or a GCode object
+	vector<guint> points;			// points, indices into vertices
+	vector<Vector2d> vertices;
 	bool hole;
 	Vector2d center;
 };

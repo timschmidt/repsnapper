@@ -531,7 +531,7 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 		int startPoint = lines[current].start;
 		int endPoint = lines[current].end;
 
-		Poly poly;
+		Poly poly = Poly(this,vertices);
 		poly.points.push_back (endPoint);
 		int count = lines.size()+100;
 		while (endPoint != startPoint && count != 0)	// While not closed
@@ -640,7 +640,11 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 	return true;
 }
 
-uint CuttingPlane::selfIntersectAndDivideRecursive(double z, uint startPolygon, uint startVertex, vector<outline> &outlines, const Vector2d endVertex, uint &level)
+uint CuttingPlane::selfIntersectAndDivideRecursive(double z, 
+						   uint startPolygon, uint startVertex,
+						   vector<outline> &outlines, 
+						   const Vector2d endVertex, 
+						   uint &level)
 {
 	level++;
 	outline result;
@@ -797,6 +801,7 @@ bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2d point, double z)
 	return intersectcount%2;
 }
 
+
 void CuttingPlane::CleanupPolygons (vector<Vector2d> vertices, 
 				    vector<Poly> & polygons,
 				    double Optimization)
@@ -804,28 +809,10 @@ void CuttingPlane::CleanupPolygons (vector<Vector2d> vertices,
   double allowedError = pow(Optimization,2);
 	for (size_t p = 0; p < polygons.size(); p++)
 	{
-		for (size_t v = 0; v < polygons[p].points.size() + 1; )
-		{
-			Vector2d p1 = vertices[polygons[p].points[(v-1+polygons[p].points.size())%polygons[p].points.size()]];
-			Vector2d p2 = vertices[polygons[p].points[v%polygons[p].points.size()]];
-			Vector2d p3 = vertices[polygons[p].points[(v+1)%polygons[p].points.size()]];
-
-			Vector2d v1 = (p2-p1);
-			Vector2d v2 = (p3-p2);
-
-			v1.normalize();
-			v2.normalize();
-
-			if ((v1-v2).lengthSquared() < allowedError)
-			{
-				polygons[p].points.erase(polygons[p].points.begin()+(v%polygons[p].points.size()));
 #if CUTTING_PLANE_DEBUG
-				cout << "optimising out polygon " << p << "\n";
+	  cout << "optimising out polygon " << p << "\n";
 #endif
-			}
-			else
-				v++;
-		}
+	  polygons[p].cleanup(allowedError);
 	}
 }
 
@@ -1174,17 +1161,11 @@ void CuttingPlane::ShrinkFast(double extrudedWidth, double optimization,
 	glColor4f (1,1,1,1);
 	for(size_t p=0; p<polygons.size();p++)
 	{
-	  Poly offsetPoly = polygons[p].Shrinked(this, distance);
-	  // if(DisplayCuttingPlane) {
-	  //   glBegin(GL_LINE_LOOP);
-	  //   for (uint i=0;i<offsetPoly.points.size();i++){
-	  //          p = ?
-	  //    sth. like ... glVertex3f(p.x, p.y, Z);
-	  //   
-	  //   }
-	  // glEnd();
-	  //}
+	  Poly offsetPoly = polygons[p].Shrinked(this, vertices, distance);
+	  if(DisplayCuttingPlane) {
+	    offsetPoly.draw();
 	  offsetPolygons.push_back(offsetPoly);
+	  }
 	}
 	//CleanupPolygons(offsetVertices, offsetPolygons,optimization);
 	// make this work for z-tensioner_1off.stl rotated 45d on X axis
@@ -1309,30 +1290,28 @@ void CuttingPlane::ShrinkFast(double extrudedWidth, double optimization,
 
 
 
-void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers, bool DrawCPLineNumbers, bool DrawCPVertexNumbers)
+void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
+			bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
+			bool DrawCPVertexNumbers)
 {
 	// Draw the raw poly's in red
 	glColor3f(1,0,0);
+	glLineWidth(1);
 	for(size_t p=0; p<polygons.size();p++)
 	{
-		glLineWidth(1);
-		glBegin(GL_LINE_LOOP);
-		for(size_t v=0; v<polygons[p].points.size();v++)
-			glVertex3f(vertices[polygons[p].points[v]].x, vertices[polygons[p].points[v]].y, Z);
-		glEnd();
-
-		if(DrawOutlineNumbers)
-		{
+	  glBegin(GL_LINE_LOOP);	  
+	  polygons[p].draw();
+	  glEnd();
+	  if(DrawOutlineNumbers)
+	    {
 			ostringstream oss;
 			oss << p;
 			renderBitmapString(Vector3f(polygons[p].center.x, polygons[p].center.y, Z) , GLUT_BITMAP_8_BY_13 , oss.str());
-		}
+	    }
 	}
 
 	for(size_t o=1;o<optimizers.size()-1;o++)
-	{
 		optimizers[o]->Draw();
-	}
 
 	glPointSize(1);
 	glBegin(GL_POINTS);
@@ -1345,15 +1324,12 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawO
 
 	glColor4f(1,1,0,1);
 	glPointSize(3);
-	glBegin(GL_POINTS);
 	for(size_t p=0;p<polygons.size();p++)
 	{
-		for(size_t v=0;v<polygons[p].points.size();v++)
-		{
-			glVertex3f(vertices[polygons[p].points[v]].x, vertices[polygons[p].points[v]].y, Z);
-		}
+	  glBegin(GL_POINTS);
+	  polygons[p].draw();
+	  glEnd();
 	}
-	glEnd();
 
 
 	if(DrawVertexNumbers)
@@ -1378,34 +1354,13 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawO
 	}
 
 	if(DrawCPVertexNumbers)
-	{
-		for(size_t p=0; p<polygons.size();p++)
-		{
-			for(size_t v=0; v<polygons[p].points.size();v++)
-			{
-				ostringstream oss;
-				oss << v;
-				renderBitmapString(Vector3f(vertices[polygons[p].points[v]].x, vertices[polygons[p].points[v]].y, Z) , GLUT_BITMAP_8_BY_13 , oss.str());
-			}
-		}
-	}
-
+	  for(size_t p=0; p<polygons.size();p++)
+	    polygons[p].drawVertexNumbers();
+	
 	if(DrawCPLineNumbers)
-	{
-		Vector3f loc;
-		loc.z = Z;
-		for(size_t p=0; p<polygons.size();p++)
-		{
-			for(size_t v=0; v<polygons[p].points.size();v++)
-			{
-				loc.x = (vertices[polygons[p].points[v]].x + vertices[polygons[p].points[(v+1)%polygons[p].points.size()]].x) /2;
-				loc.y = (vertices[polygons[p].points[v]].y + vertices[polygons[p].points[(v+1)%polygons[p].points.size()]].y) /2;
-				ostringstream oss;
-				oss << v;
-				renderBitmapString(loc, GLUT_BITMAP_8_BY_13 , oss.str());
-			}
-		}
-	}
+	  for(size_t p=0; p<polygons.size();p++)
+	    polygons[p].drawLineNumbers();
+
 
 //	Pathfinder a(offsetPolygons, offsetVertices);
 

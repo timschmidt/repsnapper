@@ -18,7 +18,7 @@
 */
 #include "config.h"
 #include "poly.h"
-
+#include "slicer.h"
 
 
 double angleBetween(Vector2d V1, Vector2d V2)
@@ -44,25 +44,24 @@ Poly::Poly(){
   this->plane = NULL;
 }
 
-Poly::Poly(CuttingPlane *plane){
+Poly::Poly(CuttingPlane *plane, vector<Vector2d> vertices){
   this->plane = plane;
+  this->vertices = vertices;
 }
 
 
-Poly Poly::Shrinked(CuttingPlane *plane, double distance){
+Poly Poly::Shrinked(CuttingPlane *plane, vector<Vector2d> vertices, double distance){
   this->plane = plane;
+  this->vertices = vertices;
   return Shrinked(distance);
 }
 
-Poly Poly::Shrinked(double distance){
-  if (this->plane==NULL) {
-    cerr << "do not have cuttingplane to calc shrinked Poly" << endl;
-    return NULL;
-  }
 
+Poly Poly::Shrinked(double distance){
+  assert(plane!=NULL);
   size_t count = points.size();
-  vector<Vector2d> vertices = plane->GetVertices();
-  Poly offsetPoly = Poly(plane);
+  assert(vertices.size() >= count);
+  Poly offsetPoly = Poly(plane,vertices);
   for(size_t i=0; i<count;i++)
     {
       Vector2d Na = Vector2d(vertices[points[(i-1+count)%count]].x, 
@@ -129,6 +128,31 @@ Poly Poly::Shrinked(double distance){
 }
 
 
+// Remove vertices that are on a straight line
+void Poly::cleanup(double maxerror)
+{
+  assert(vertices.size() >= points.size());
+  for (size_t v = 0; v < points.size() + 1; )
+    {
+      Vector2d p1 = vertices[points[(v-1+points.size()) % points.size()]];
+      Vector2d p2 = vertices[points[v % points.size()]];
+      Vector2d p3 = vertices[points[(v+1) % points.size()]];
+
+      Vector2d v1 = (p2-p1);
+      Vector2d v2 = (p3-p2);
+
+      v1.normalize();
+      v2.normalize();
+
+      if ((v1-v2).lengthSquared() < maxerror)
+	{
+	  points.erase(points.begin()+(v % points.size()));
+	}
+      else
+	v++;
+    }
+}
+
 void Poly::calcHole(vector<Vector2d> &offsetVertices)
 {
 	if(points.size() == 0)
@@ -160,4 +184,35 @@ void Poly::calcHole(vector<Vector2d> &offsetVertices)
 	Vector2d Va=V2-V1;
 	Vector2d Vb=V3-V1;
 	hole = Va.cross(Vb) > 0;
+}
+
+
+void Poly::draw()
+{
+  for (uint i=0;i < points.size();i++){
+    glVertex3f(vertices[points[i]].x, vertices[points[i]].y, plane->Z);
+  }
+}
+
+void Poly::drawVertexNumbers()
+{
+  for (uint i=0;i < points.size();i++){
+    glVertex3f(vertices[points[i]].x, vertices[points[i]].y, plane->Z);
+    ostringstream oss;
+    oss << i;
+    renderBitmapString(Vector3f(vertices[points[i]].x, vertices[points[i]].y, plane->Z),
+		       GLUT_BITMAP_8_BY_13 , oss.str());
+  }
+}
+void Poly::drawLineNumbers()
+{
+  Vector3f loc;
+  loc.z = plane->Z;
+  for (uint i=0;i < points.size();i++){
+    loc.x = (vertices[points[i]].x + vertices[points[(i+1)%points.size()]].x) /2;
+    loc.y = (vertices[points[i]].y + vertices[points[(i+1)%points.size()]].y) /2;
+    ostringstream oss;
+    oss << i;
+    renderBitmapString(loc, GLUT_BITMAP_8_BY_13 , oss.str());
+  }
 }
