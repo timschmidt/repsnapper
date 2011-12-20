@@ -160,57 +160,68 @@ void Model::MakeRaft(GCodeState &state, double &z)
   gcode.commands.push_back(gotoE);
 }
 
-void Model::Slice(GCodeState &state)
+void Model::Slice(GCodeState &state, double printOffsetZ)
 {
+  int LayerNr = 0;
   // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
   double z = Min.z + settings.Hardware.LayerThickness*0.5;
-  printOffset = settings.Hardware.PrintMargin;
-  uint LayerNr = 0;
+  double optimization = settings.Slicing.Optimization;
 
-  double printOffsetZ = settings.Hardware.PrintMargin.z;
 
-  if (settings.RaftEnable)
-    {
-      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
-      MakeRaft (state, printOffsetZ);
-    }
-
+  //vector<CuttingPlane> planes;
   cuttingplanes.clear();
-  CuttingPlane *plane = NULL;
+
+  double hackedZ;
+  double hacked_layerthickness = optimization;
+  bool polys_ok;
   while(z<Max.z)
     {
+      CuttingPlane* plane = new CuttingPlane(LayerNr); // one plane per layer, with all objects
       m_progress.update(z/2.);
-      for(uint o=0;o<rfo.Objects.size();o++)
-	{
-	  for(uint f=0;f<rfo.Objects[o].files.size();f++)
-	    {
-	      Slicer* stl = &rfo.Objects[o].files[f].stl;	// Get a pointer to the object
-	      Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
-	      Vector3d t = T.getTranslation();
-	      t+= Vector3d(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
-	      T.setTranslation(t);
-	      CuttingPlane newplane;
-	      newplane.LayerNo = LayerNr;
-	      if (plane!=NULL) plane->next = &newplane;
-
-	      newplane.SetZ (z + printOffsetZ);
-	      stl->CalcCuttingPlane(z, newplane, T);	// output is alot of un-connected line segments with individual vertices, describing the outline
-
-	      double hackedZ = z;
-	      while (newplane.LinkSegments (hackedZ, settings.Slicing.Optimization) == false)	// If segment linking fails, re-calc a new layer close to this one, and use that.
-		{ // This happens when there's triangles missing in the input STL
-		  hackedZ+= 0.2 * settings.Hardware.LayerThickness;
-		  stl->CalcCuttingPlane (hackedZ, newplane, T);	// output is alot of un-connected line segments with individual vertices
-		}
-
-	      newplane.previous = plane;
-	      cuttingplanes.push_back(newplane);
-	      plane = &newplane;
-	    }
-	}
+      hackedZ = z;
+      polys_ok = false;
+      // try to slice all objects until polygons can be made, otherwise hack z
+      while (!polys_ok){
+	plane->setZ(hackedZ);
+	for(uint o=0;o<rfo.Objects.size();o++)
+	  {
+	    for(uint f=0;f<rfo.Objects[o].files.size();f++)
+	      {
+		// Get a pointer to the object:
+		Slicer* slicer = &rfo.Objects[o].files[f].stl;
+		Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
+		Vector3d t = T.getTranslation();
+		t+= Vector3d(settings.Hardware.PrintMargin.x
+			     +settings.Raft.Size*settings.RaftEnable, 
+			     settings.Hardware.PrintMargin.y
+			     +settings.Raft.Size*settings.RaftEnable, 0);
+		T.setTranslation(t);
+		// adding points and lines from object to plane:
+		slicer->CalcCuttingPlane(T, optimization, *plane);
+	      }
+	  }
+	polys_ok = plane->MakePolygons(optimization);
+	//cerr << layerno << " -- " << hackedZ << " - " << polys_ok << endl;
+	hackedZ += hacked_layerthickness;
+      }
+      
+      //      cerr << "model.Slice plane.Z="<< plane->getZ() << " vert:"<<plane->GetVertices().size() <<endl; 
+      plane->setZ(z+printOffsetZ); // set back to real z
+      cuttingplanes.push_back(*plane);
       z += settings.Hardware.LayerThickness;
       LayerNr++;
     }
+  
+  // for (uint i=0; i<planes.size();i++){
+  //   cerr << i << ". ";
+  //   planes[i].printinfo();
+  //   vector<Poly> polys = planes[i].GetPolygons();
+  //   for (uint j=0; j <polys.size(); j++){
+  //     cout << " -- poly " << j << ": ";
+  //     polys[j].printinfo();
+  //   }
+  // }
+  //return planes;
 }
 
 
@@ -231,6 +242,7 @@ void Model::CalcInfill(GCodeState &state)
   for (uint i=0; i <cuttingplanes.size(); i++) 
     {
       CuttingPlane plane = cuttingplanes[i];
+
       z = plane.getZ();
       m_progress.update(Max.z/2. + z/2.);
       // inFill
@@ -239,6 +251,7 @@ void Model::CalcInfill(GCodeState &state)
       for (guint shell = 1; shell <= settings.Slicing.ShellCount; shell++)
 	{
 	  plane.ClearShrink();
+
 	  plane.Shrink(settings.Slicing.ShrinkQuality,
 		       settings.Hardware.ExtrudedMaterialWidth,
 		       settings.Slicing.Optimization,
@@ -264,9 +277,8 @@ void Model::CalcInfill(GCodeState &state)
 			infillDistance = settings.Slicing.InfillDistance;
 	      }
 	      
-	      if (std::find(altInfillLayers.begin(), 
-			    altInfillLayers.end(), 
-			    i) != altInfillLayers.end())
+	      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), i) 
+		  != altInfillLayers.end())
 		infillDistance = settings.Slicing.AltInfillDistance;
 	      infill = plane.CalcInFill (infillDistance,
 					 settings.Slicing.InfillRotation,
@@ -295,9 +307,40 @@ void Model::ConvertToGCode()
 
   gcode.clear();
 
-  // Make Layers
-  Slice(state);
+  printOffset = settings.Hardware.PrintMargin;
+  double printOffsetZ = settings.Hardware.PrintMargin.z;
 
+  if (settings.RaftEnable)
+    {
+      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
+      MakeRaft (state, printOffsetZ);
+    }
+
+  // Make Layers
+  Slice(state, printOffsetZ);
+
+  // cout << "##### AFTER Slice 2nd plane polygons: ";  
+  // vector<Poly> polys = cuttingplanes[1].GetPolygons();
+  // for (uint j=0; j <polys.size(); j++){
+  //   cout << " -- poly " << j << ": ";
+  //   polys[j].printinfo();
+  // }
+  // cout << "###########################" << endl;
+
+
+  // cout <<"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << endl;
+  // for (uint i=0; i <cuttingplanes.size(); i++) 
+  //   {
+  //     CuttingPlane plane = cuttingplanes[i];
+  //     cout << i << ": ";
+  //     plane.printinfo();
+  //     vector <Poly> polys = plane.GetPolygons();
+  //     for (uint j=0; j <polys.size(); j++){
+  // 	cout << " -- poly " << j << ": ";
+  // 	polys[j].printinfo();
+  //     }
+  //   }
+  // cout <<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
   CalcInfill(state);
 
 

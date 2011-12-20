@@ -171,58 +171,58 @@ void Slicer::draw(RFO &rfo, const Settings &settings)
 	// Make Layers
 	if(settings.Display.DisplayCuttingPlane)
 	{
-	  //uint LayerNr = 0;
-		uint LayerCount = (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5f)/settings.Hardware.LayerThickness);
+	  uint LayerNr = 0;
+	  uint LayerCount = (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5f)/
+				       settings.Hardware.LayerThickness);
 
 		vector<int> altInfillLayers;
 		settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
 
-		float zSize = (Max.z-Min.z);
-		float z=settings.Display.CuttingPlaneValue*zSize+Min.z;
-		float zStep = zSize;
+		double zSize = (Max.z-Min.z);
+		double z=settings.Display.CuttingPlaneValue*zSize+Min.z;
+		double zStep = zSize; // only show on layer, next is outside
 
 		if(settings.Display.DisplayAllLayers)
 		{
 			z=Min.z;
 			zStep = settings.Hardware.LayerThickness;
 		}
+		CuttingPlane plane(LayerNr);
 		while(z<Max.z)
 		{
+		  plane.LayerNo = LayerNr;
+		  plane.setZ(z);
 			for(size_t o=0;o<rfo.Objects.size();o++)
 			{
 				for(size_t f=0;f<rfo.Objects[o].files.size();f++)
 				{
-					Matrix4f T = rfo.GetSTLTransformationMatrix(o,f);
-					Vector3f t = T.getTranslation();
-					t+= Vector3f(settings.Hardware.PrintMargin.x+settings.Raft.Size*settings.RaftEnable, settings.Hardware.PrintMargin.y+settings.Raft.Size*settings.RaftEnable, 0);
+					Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
+					Vector3d t = T.getTranslation();
+					t+= Vector3d(settings.Hardware.PrintMargin.x+
+						     settings.Raft.Size*settings.RaftEnable, 
+						     settings.Hardware.PrintMargin.y+
+						     settings.Raft.Size*settings.RaftEnable,
+						     0);
 					T.setTranslation(t);
-					CuttingPlane plane;
-					T=Matrix4f::IDENTITY;
-					CalcCuttingPlane(z, plane, T);	// output is alot of un-connected line segments with individual vertices
-
-					float hackedZ = z;
-					while (plane.LinkSegments(hackedZ, settings.Slicing.Optimization) == false)	// If segment linking fails, re-calc a new layer close to this one, and use that.
-					{							         // This happens when there's triangles missing in the input STL
-						break;
-						hackedZ+= 0.1f;
-						CalcCuttingPlane(hackedZ, plane, T);	// output is alot of un-connected line segments with individual vertices
-					}
-
-					switch( settings.Slicing.ShrinkQuality )
-					{
-					case SHRINK_FAST:
-						plane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, false, settings.Slicing.ShellCount);
-						displayInfillOld(settings, plane, plane.LayerNo, altInfillLayers);
-						break;
-					case SHRINK_LOGICK:
-						plane.ShrinkLogick(settings.Hardware.ExtrudedMaterialWidth, settings.Slicing.Optimization, settings.Display.DisplayCuttingPlane, settings.Slicing.ShellCount);
-						plane.Draw(settings.Display.DrawVertexNumbers, settings.Display.DrawLineNumbers, settings.Display.DrawCPOutlineNumbers, settings.Display.DrawCPLineNumbers, settings.Display.DrawCPVertexNumbers);
-						displayInfillOld(settings, plane, plane.LayerNo, altInfillLayers);
-						break;
-					}
-					//LayerNr++;
+					T=Matrix4d::IDENTITY;
+					CalcCuttingPlane(T, settings.Slicing.Optimization, plane);
+					plane.MakePolygons(settings.Slicing.Optimization);
+					
+					plane.Shrink(settings.Slicing.ShrinkQuality,
+						     settings.Hardware.ExtrudedMaterialWidth,
+						     settings.Slicing.Optimization,
+						     settings.Display.DisplayCuttingPlane,
+						     false, settings.Slicing.ShellCount);
+					
+					plane.Draw(settings.Display.DrawVertexNumbers,
+						   settings.Display.DrawLineNumbers,
+						   settings.Display.DrawCPOutlineNumbers,
+						   settings.Display.DrawCPLineNumbers, 
+						   settings.Display.DrawCPVertexNumbers);
+					// displayInfillOld(settings, plane, plane.LayerNo, altInfillLayers);
 				}
 			}
+			LayerNr++;
 			z+=zStep;
 		}
 	}// If display cuttingplane

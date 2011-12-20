@@ -30,15 +30,15 @@ class Progress {
   sigc::signal< void, const char * >         m_signal_progress_stop;
 
   // helpers
-  void start (const char *label, double max)
+  void start (const char *label, double max) const
   {
     m_signal_progress_start.emit (label, max);
   }
-  void stop (const char *label)
+  void stop (const char *label) const
   {
     m_signal_progress_stop.emit (label);
   }
-  void update (double value)
+  void update (double value) const
   {
     m_signal_progress_update.emit (value);
   }

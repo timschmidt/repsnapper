@@ -191,51 +191,53 @@ int PntOnLine(Vector2f p1, Vector2f p2, Vector2f t)
 
 
 
-// intersect lines with plane
-void Slicer::CalcCuttingPlane(double where, CuttingPlane &plane, const Matrix4d &T)
+// intersect lines with plane and link segments
+void Slicer::CalcCuttingPlane(const Matrix4d &T, 
+			      double optimization, CuttingPlane &plane) const
 {
+  double z = plane.getZ();
 #if CUTTING_PLANE_DEBUG
-	cout << "intersect with z " << where << "\n";
+	cout << "intersect with z " << z << "\n";
 #endif
-	plane.Clear();
-	plane.SetZ(where);
 
 	Vector3d min = T*Min;
 	Vector3d max = T*Max;
 
-	plane.Min.x = min.x;
-	plane.Min.y = min.y;
-	plane.Max.x = max.x;
-	plane.Max.y = max.y;
+ 	plane.Min.x = MIN(plane.Min.x,min.x);
+	plane.Min.y = MIN(plane.Min.y,min.y);
+	plane.Max.x = MAX(plane.Max.x,max.x);
+	plane.Max.y = MAX(plane.Max.y,max.y);
 
 	Vector2d lineStart;
 	Vector2d lineEnd;
 
 	int num_cutpoints;
 	for (size_t i = 0; i < triangles.size(); i++)
-	{
-		CuttingPlane::Segment line(-1,-1);
-
-		num_cutpoints = triangles[i].CutWithPlane(where, T, lineStart, lineEnd);
-		if (num_cutpoints>0)
-		  line.start = plane.RegisterPoint(lineStart);
-		if (num_cutpoints>1)
-		  line.end = plane.RegisterPoint(lineEnd);
-		
-		// Check segment normal against triangle normal. Flip segment, as needed.
-		if (line.start != -1 && line.end != -1 && line.end != line.start)	
-		  // if we found a intersecting triangle
-		{
-			Vector3d Norm = triangles[i].Normal;
-			Vector2d triangleNormal = Vector2d(Norm.x, Norm.y);
-			Vector2d segmentNormal = (lineEnd - lineStart).normal();
-			triangleNormal.normalise();
-			segmentNormal.normalise();
-			if( (triangleNormal-segmentNormal).lengthSquared() > 0.2)
-			  // if normals does not align, flip the segment
-				line.Swap();
-			plane.AddLine(line);
-		}
-	}
+	  {
+	    CuttingPlane::Segment line(-1,-1);
+	    num_cutpoints = triangles[i].CutWithPlane(z, T, lineStart, lineEnd);
+	    if (num_cutpoints>0)
+	      line.start = plane.RegisterPoint(lineStart);
+	    if (num_cutpoints>1)
+	      line.end = plane.RegisterPoint(lineEnd);
+	      
+	    // Check segment normal against triangle normal. Flip segment, as needed.
+	    if (line.start != -1 && line.end != -1 && line.end != line.start)	
+	      // if we found a intersecting triangle
+	      {
+		Vector3d Norm = triangles[i].Normal;
+		Vector2d triangleNormal = Vector2d(Norm.x, Norm.y);
+		Vector2d segmentNormal = (lineEnd - lineStart).normal();
+		triangleNormal.normalise();
+		segmentNormal.normalise();
+		if( (triangleNormal-segmentNormal).lengthSquared() > 0.2)
+		  // if normals does not align, flip the segment
+		  line.Swap();
+		// cerr << "line "<<line.start << "-"<<line.end << endl;
+		// cerr << " -> "<< plane.GetVertices()[line.start] << "-"<<plane.GetVertices()[line.end] << endl;
+		plane.AddSegment(line);
+	      }
+	  }
+	return ;
 }
 

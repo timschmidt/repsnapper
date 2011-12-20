@@ -87,7 +87,8 @@ public:
 	void draw_geometry ();
 	void CenterAroundXY();
 	// Extract a 2D polygonset from a 3D model:
-	void CalcCuttingPlane(double where, CuttingPlane &plane, const Matrix4d &T);
+	void CalcCuttingPlane(const Matrix4d &T,
+			      double optimization, CuttingPlane &plane) const;
 	// Auto-Rotate object to have the largest area surface down for printing:
 	void OptimizeRotation(); 
 	void CalcCenter();
