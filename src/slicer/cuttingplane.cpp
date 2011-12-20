@@ -33,7 +33,9 @@ bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2)
 // calculates intersection and checks for parallel lines.
 // also checks that the intersection point is actually on
 // the line segment p1-p2
-bool IntersectXY(const Vector2d &p1, const Vector2d &p2, const Vector2d &p3, const Vector2d &p4, InFillHit &hit)
+bool IntersectXY(const Vector2d &p1, const Vector2d &p2, 
+		 const Vector2d &p3, const Vector2d &p4, InFillHit &hit,
+		 double maxoffset)
 {
 	// BBOX test
 	if(MIN(p1.x,p2.x) > MAX(p3.x,p4.x))
@@ -46,28 +48,28 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2, const Vector2d &p3, con
 		return false;
 
 
-	if(ABS(p1.x-p3.x) < 0.01 && ABS(p1.y - p3.y) < 0.01)
+	if(ABS(p1.x-p3.x) < maxoffset && ABS(p1.y - p3.y) < maxoffset)
 	{
 		hit.p = p1;
 		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
 		hit.t = 0.0;
 		return true;
 	}
-	if(ABS(p2.x-p3.x) < 0.01 && ABS(p2.y - p3.y) < 0.01)
+	if(ABS(p2.x-p3.x) < maxoffset && ABS(p2.y - p3.y) < maxoffset)
 	{
 		hit.p = p2;
 		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
 		hit.t = 1.0;
 		return true;
 	}
-	if(ABS(p1.x-p4.x) < 0.01 && ABS(p1.y - p4.y) < 0.01)
+	if(ABS(p1.x-p4.x) < maxoffset && ABS(p1.y - p4.y) < maxoffset)
 	{
 		hit.p = p1;
 		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
 		hit.t = 0.0;
 		return true;
 	}
-	if(ABS(p2.x-p4.x) < 0.01 && ABS(p2.y - p4.y) < 0.01)
+	if(ABS(p2.x-p4.x) < maxoffset && ABS(p2.y - p4.y) < maxoffset)
 	{
 		hit.p = p2;
 		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
@@ -217,7 +219,7 @@ vector<Vector2d> *CuttingPlane::CalcInFill (double InfillDistance,
 		    
 		    Vector3d point;
 		    InFillHit hit;
-		    if (IntersectXY (P1,P2,P3,P4,hit))
+		    if (IntersectXY (P1,P2,P3,P4,hit, 0.1*InfillDistance))
 		      HitsBuffer.push_back(hit);
 		  }
 	      }
@@ -644,7 +646,7 @@ uint CuttingPlane::selfIntersectAndDivideRecursive(double z,
 						   uint startPolygon, uint startVertex,
 						   vector<outline> &outlines, 
 						   const Vector2d endVertex, 
-						   uint &level)
+						   uint &level, double maxoffset)
 {
 	level++;
 	outline result;
@@ -667,9 +669,9 @@ uint CuttingPlane::selfIntersectAndDivideRecursive(double z,
 					InFillHit hit;
 					result.push_back(P1);
 					if(P1 != P3 && P2 != P3 && P1 != P4 && P2 != P4)
-						if(IntersectXY(P1,P2,P3,P4,hit))
+					  if(IntersectXY(P1,P2,P3,P4,hit,maxoffset))
 							{
-							if( (hit.p-endVertex).length() < 0.01)
+							if( (hit.p-endVertex).length() < maxoffset)
 								{
 //								outlines.push_back(result);
 //								return (v+1)%count;
@@ -688,7 +690,11 @@ uint CuttingPlane::selfIntersectAndDivideRecursive(double z,
 	return startVertex;
 }
 
-void CuttingPlane::recurseSelfIntersectAndDivide(double z, vector<locator> &EndPointStack, vector<outline> &outlines, vector<locator> &visited)
+void CuttingPlane::recurseSelfIntersectAndDivide(double z, 
+						 vector<locator> &EndPointStack, 
+						 vector<outline> &outlines,
+						 vector<locator> &visited,
+						 double maxoffset)
 {
 	// pop an entry from the stack.
 	// Trace it till it hits itself
@@ -725,7 +731,7 @@ void CuttingPlane::recurseSelfIntersectAndDivide(double z, vector<locator> &EndP
 
 						if(P1 != P3 && P2 != P3 && P1 != P4 && P2 != P4)
 						{
-							if(IntersectXY(P1,P2,P3,P4,hit))
+						  if(IntersectXY(P1,P2,P3,P4,hit,maxoffset))
 							{
 								bool alreadyVisited=false;
 
@@ -753,7 +759,7 @@ void CuttingPlane::recurseSelfIntersectAndDivide(double z, vector<locator> &EndP
 								{
 									outlines.push_back(result);
 									result.clear();
-									recurseSelfIntersectAndDivide(z, EndPointStack, outlines, visited);
+									recurseSelfIntersectAndDivide(z, EndPointStack, outlines, visited,maxoffset);
 									return;
 								}
 								glPointSize(10);
@@ -774,7 +780,8 @@ void CuttingPlane::recurseSelfIntersectAndDivide(double z, vector<locator> &EndP
 
 
 
-bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2d point, double z)
+bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2d point, double z, 
+						   double maxoffset)
 {
 	// Shoot a ray along +X and count the number of intersections.
 	// If n_intersections is euqal, return true, else return false
@@ -794,7 +801,7 @@ bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2d point, double z)
 			continue;
 
 		InFillHit hit;
-		if(IntersectXY(point,EndP,P1,P2,hit))
+		if(IntersectXY(point,EndP,P1,P2,hit,maxoffset))
 			intersectcount++;
 		}
 	}
@@ -901,7 +908,7 @@ int PointHash::IndexOfPoint(const Vector2d &p)
 			    ABS(v.y - p.y) < double_epsilon)
 				return pts[j].first;
 #if CUTTING_PLANE_DEBUG > 1
-			else if( ABS(v.x-p.x) < 0.01 && ABS(v.y-p.y) < 0.01)
+			else if( ABS(v.x-p.x) < maxoffset && ABS(v.y-p.y) < maxoffset)
 				cout << "hash " << hashes[i] << " missed idx " << pts[j].first
 				     << " by " << (v.x - p.x) << ", " << (v.y - p.y)
 				     << " hash: " << v.x << ", " << v.y

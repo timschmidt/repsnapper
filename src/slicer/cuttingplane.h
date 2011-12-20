@@ -67,7 +67,8 @@ struct InFillHit
 
 bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
 bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
-		  const Vector2d &p3, const Vector2d &p4, InFillHit &hit);
+		  const Vector2d &p3, const Vector2d &p4, 
+		  InFillHit &hit, double maxoffset);
 
 
 struct locator
@@ -152,10 +153,12 @@ public:
 					      guint startVertex,
 					      vector<outline> &outlines, 
 					      const Vector2d endVertex,
-					      guint &level);
+					      guint &level,
+					      double maxoffset);
 	void  recurseSelfIntersectAndDivide  (double z, vector<locator> &EndPointStack,
 					      vector<outline> &outlines,
-					      vector<locator> &visited);
+					      vector<locator> &visited,
+					      double maxoffset);
 
 	void ClearShrink()
 	{
@@ -182,7 +185,7 @@ public:
 			double &E, double z,
 			const Settings::SlicingSettings &slicing,
 			const Settings::HardwareSettings &hardware);
-	bool VertexIsOutsideOriginalPolygon( Vector2d point, double z);
+	bool VertexIsOutsideOriginalPolygon( Vector2d point, double z, double maxoffset);
 
 	Vector2d Min, Max;  // Bounding box
 

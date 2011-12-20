@@ -70,6 +70,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
       bool reverseLines = false;
 
       Vector2d P1, P2;
+      double maxerr = 0.1*props->Distance;
       for(double x = -Length ; x < Length ; x+=props->Distance)
 	{
 	  P1 = (InfillDirX *  Length)+(InfillDirY*x) + Center;
@@ -94,22 +95,22 @@ void Model::MakeRaft(GCodeState &state, double &z)
 	  Vector2d P4(raftMin.x, raftMax.y);
 	  //			glVertex2fv(&P3.x);
 	  //			glVertex2fv(&P4.x);
-	  if(IntersectXY(P1,P2,P3,P4,hit))	//Intersect edges of bbox
+	  if(IntersectXY(P1,P2,P3,P4,hit,maxerr))	//Intersect edges of bbox
 	    HitsBuffer.push_back(hit);
 	  P3 = Vector2d(raftMax.x,raftMax.y);
 	  //			glVertex2fv(&P3.x);
 	  //			glVertex2fv(&P4.x);
-	  if(IntersectXY(P1,P2,P3,P4,hit))
+	  if(IntersectXY(P1,P2,P3,P4,hit,maxerr))
 	    HitsBuffer.push_back(hit);
 	  P4 = Vector2d(raftMax.x,raftMin.y);
 	  //			glVertex2fv(&P3.x);
 	  //			glVertex2fv(&P4.x);
-	  if(IntersectXY(P1,P2,P3,P4,hit))
+	  if(IntersectXY(P1,P2,P3,P4,hit,maxerr))
 	    HitsBuffer.push_back(hit);
 	  P3 = Vector2d(raftMin.x,raftMin.y);
 	  //			glVertex2fv(&P3.x);
 	  //			glVertex2fv(&P4.x);
-	  if(IntersectXY(P1,P2,P3,P4,hit))
+	  if(IntersectXY(P1,P2,P3,P4,hit,maxerr))
 	    HitsBuffer.push_back(hit);
 	  //			glEnd();
 
