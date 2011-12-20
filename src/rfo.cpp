@@ -98,7 +98,7 @@ void RFO::draw (Settings &settings, Gtk::TreeModel::iterator &iter)
 
         // draw highlight around selected object
         glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-        glLineWidth(4.0);
+        glLineWidth(1.0);
         glEnable(GL_LINE_SMOOTH);
 	glEnable (GL_POLYGON_OFFSET_LINE);
 
