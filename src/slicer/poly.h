@@ -28,27 +28,46 @@ using namespace std;
 using namespace vmml;
 using namespace PolyLib;
 
+class InFillHit;
+
 class Poly
 {
 
   CuttingPlane *plane;
-public:
         Poly();
-	Poly(CuttingPlane *plane, vector<Vector2d> vertices);
-	Poly Shrinked(double distance);
-	Poly Shrinked(CuttingPlane *plane, vector<Vector2d> vertices, double distance);
-	// draw polygon from the given vertices
-	void draw();
-	void drawVertexNumbers();
-	void drawLineNumbers();
+public:
+	Poly(CuttingPlane *plane, vector<Vector2d> *vertices);
+        ~Poly();
+	Poly Shrinked(double distance) const;
+	Poly Shrinked(vector<Vector2d> *vertices, double distance);
 
 	// Remove vertices that are on a straight line
 	void cleanup(double maxerror);
 
-	void calcHole(vector<Vector2d> &offsetVertices);
+	vector<Vector2d> intersect(Poly *other, int startVertex, 
+				   const Vector2d endVertex,
+				   double maxoffset) const;
+
+	bool vertexInside(Vector2d point, double maxoffset) const;
+
+	void calcHole(); // calc center and whether this is a hole 
+
+	vector<Vector2d> getMinMax() const;
+	vector<InFillHit>  calcInfill (double InfillDistance,
+				       double InfillRotation, 
+				       bool DisplayDebuginFill) const;
+
+	Vector2d getVertexCircular(int pointindex) const;  // 2d point at index 
+	Vector3d getVertexCircular3(int pointindex) const; // 3d point at index 
 	vector<guint> points;			// points, indices into vertices
-	vector<Vector2d> vertices;
-	bool hole;
+	vector<Vector2d> *vertices; // pointer to the vertices we have the indices for
+	bool hole; // this polygon is a hole
 	Vector2d center;
+
+	void draw(int gl_type) const; // GL_LINE_LOOP or GL_POINTS
+	void drawVertexNumbers() const; 
+	void drawLineNumbers() const;
+
+	void printinfo() const;
 };
 

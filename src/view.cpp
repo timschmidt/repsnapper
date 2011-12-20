@@ -550,8 +550,8 @@ void View::rotate_selection (Vector4d rotate)
 void View::stl_added (Gtk::TreePath &path)
 {
   m_rfo_tree->expand_all();
-  m_rfo_tree->get_selection()->unselect_all();
-  m_rfo_tree->get_selection()->select (path);
+  // m_rfo_tree->get_selection()->unselect_all();
+  // m_rfo_tree->get_selection()->select (path);
 }
 
 void View::auto_rotate()

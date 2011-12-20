@@ -25,15 +25,17 @@ CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double 
 {
 	Z = z;
 
-	vector<Poly>* planePolygons = &cuttingPlane->GetPolygons();
-	vector<Vector2d>* planeVertices = &cuttingPlane->GetVertices();
+	this->cuttingPlane = cuttingPlane;
+	vector<Poly> planePolygons = cuttingPlane->GetPolygons();
+	vector<Vector2d> planeVertices = cuttingPlane->GetVertices();
 	std::list<Polygon2d*> unsortedPolys;
+	positivePolygons.clear();
 
 	// first add solids. This builds the tree, placing the holes afterwards is easier/faster
-	for(uint p = 0; p < planePolygons->size(); p++)
+	for(uint p = 0; p < planePolygons.size(); p++)
 	{
-		Poly* poly = &((*planePolygons)[p]);
-		poly->calcHole(*planeVertices);
+	  Poly *poly = &planePolygons[p];
+		poly->calcHole();
 
 		if( !poly->hole )
 		{
@@ -44,15 +46,15 @@ CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double 
 			size_t count = poly->points.size();
 			for(size_t i=0; i<count;i++)
 			{
-				newPoly->vertices.push_back(((*planeVertices)[poly->points[i]]));
+				newPoly->vertices.push_back((planeVertices[poly->points[i]]));
 			}
 			PushPoly(newPoly);
 		}
 	}
 	// then add holes
-	for(uint p = 0; p < planePolygons->size(); p++)
+	for(uint p = 0; p < planePolygons.size(); p++)
 	{
-		Poly* poly = &((*planePolygons)[p]);
+		Poly* poly = &planePolygons[p];
 		if( poly->hole )
 		{
 			Polygon2d* newPoly = new Polygon2d();
@@ -61,7 +63,7 @@ CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double 
 			size_t count = poly->points.size();
 			for (size_t i = 0; i < count; i++)
 			{
-				newPoly->vertices.push_back(((*planeVertices)[poly->points[i]]));
+				newPoly->vertices.push_back((planeVertices[poly->points[i]]));
 			}
 			PushPoly(newPoly);
 		}
@@ -77,18 +79,23 @@ void CuttingPlaneOptimizer::Dispose()
 	}
 }
 
-void CuttingPlaneOptimizer::MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2d>& vectors)
+void CuttingPlaneOptimizer::MakeOffsetPolygons(vector<Poly>& polys,
+					       vector<Vector2d>& vectors)
 {
-	for(list<Polygon2d*>::iterator pIt=this->positivePolygons.begin(); pIt!=this->positivePolygons.end(); pIt++)
+	for(list<Polygon2d*>::iterator pIt=this->positivePolygons.begin(); 
+	    pIt!=this->positivePolygons.end(); pIt++)
 	{
-		DoMakeOffsetPolygons(*pIt, polys, vectors);
+	  DoMakeOffsetPolygons(*pIt, polys, vectors);
 	}
 }
 
-void CuttingPlaneOptimizer::DoMakeOffsetPolygons(Polygon2d* pPoly, vector<Poly>& polys, vector<Vector2d>& vectors)
+void CuttingPlaneOptimizer::DoMakeOffsetPolygons(Polygon2d* pPoly, 
+						 vector<Poly>& polys,
+						 vector<Vector2d>& vectors)
 {
-	Poly p;
-	for( vector<Vector2d>::iterator pIt = pPoly->vertices.begin(); pIt!=pPoly->vertices.end(); pIt++)
+  Poly p(this->cuttingPlane, &vectors);
+	for( vector<Vector2d>::iterator pIt = pPoly->vertices.begin(); 
+	     pIt!=pPoly->vertices.end(); pIt++)
 	{
 		p.points.push_back(vectors.size());
 		vectors.push_back(*pIt);
@@ -109,10 +116,10 @@ void CuttingPlaneOptimizer::DoMakeOffsetPolygons(Polygon2d* pPoly, vector<Poly>&
 
 void CuttingPlaneOptimizer::RetrieveLines(vector<Vector3d>& lines)
 {
-	for(list<Polygon2d*>::iterator pIt=this->positivePolygons.begin(); pIt!=this->positivePolygons.end(); pIt++)
-	{
-		DoRetrieveLines(*pIt, lines);
-	}
+  for(list<Polygon2d*>::iterator pIt=this->positivePolygons.begin(); pIt!=this->positivePolygons.end(); pIt++)
+    {
+      DoRetrieveLines(*pIt, lines);
+    }
 }
 
 void CuttingPlaneOptimizer::DoRetrieveLines(Polygon2d* pPoly, vector<Vector3d>& lines)
@@ -151,10 +158,12 @@ void CuttingPlaneOptimizer::PushPoly(Polygon2d* poly)
 void CuttingPlaneOptimizer::Draw()
 {
 	float color = 1;
-	Polygon2d::DisplayPolygons(positivePolygons, Z, 0,color,0,1);
-	for(list<Polygon2d*>::iterator pIt =positivePolygons.begin(); pIt!=positivePolygons.end(); pIt++)
-	{
-		Polygon2d::DrawRecursive(*pIt, Z, color);
+	if (positivePolygons.size()>0){
+	  Polygon2d::DisplayPolygons(positivePolygons, Z, 0,color,0,1);
+	  for(list<Polygon2d*>::iterator pIt =positivePolygons.begin(); pIt!=positivePolygons.end(); pIt++)
+	    {
+	      Polygon2d::DrawRecursive(*pIt, Z, color);
+	    }
 	}
 }
 

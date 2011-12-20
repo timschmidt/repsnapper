@@ -108,8 +108,9 @@ class CuttingPlaneOptimizer
 {
 public:
 	double Z;
-	CuttingPlaneOptimizer(double z) { Z = z; };
+	//CuttingPlaneOptimizer(double z) { Z = z; };
 	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double z);
+	CuttingPlane* cuttingPlane;
 	list<Polygon2d*> positivePolygons;
 	void Shrink(double distance, list<Polygon2d*> &resPolygons);
 	void Draw();
@@ -132,10 +133,11 @@ class CuttingPlane
 {
   friend class Poly;
 public:
-	CuttingPlane();
+  //CuttingPlane();
+	CuttingPlane(int layerno);
 	~CuttingPlane();
 
-	CuttingPlane *previous, *next;
+	// CuttingPlane *previous, *next;
 
 	// Contract polygons:
 	void Shrink(int quality, double extrudedWidth, 
@@ -148,17 +150,17 @@ public:
 	void ShrinkLogick(double distance, double optimization,
 			  bool DisplayCuttingPlane, int ShellCount);
 	
-	void  selfIntersectAndDivide();
-	guint selfIntersectAndDivideRecursive(double z, guint startPolygon, 
-					      guint startVertex,
-					      vector<outline> &outlines, 
-					      const Vector2d endVertex,
-					      guint &level,
-					      double maxoffset);
-	void  recurseSelfIntersectAndDivide  (double z, vector<locator> &EndPointStack,
-					      vector<outline> &outlines,
-					      vector<locator> &visited,
-					      double maxoffset);
+	// void  selfIntersectAndDivide();
+	/* guint selfIntersectAndDivideRecursive(double z, guint startPolygon,  */
+	/* 				      guint startVertex, */
+	/* 				      vector<outline> &outlines,  */
+	/* 				      const Vector2d endVertex, */
+	/* 				      guint &level, */
+	/* 				      double maxoffset); */
+	/* void  recurseSelfIntersectAndDivide  (double z, vector<locator> &EndPointStack, */
+	/* 				      vector<outline> &outlines, */
+	/* 				      vector<locator> &visited, */
+	/* 				      double maxoffset); */
 
 	void ClearShrink()
 	{
@@ -171,21 +173,21 @@ public:
 				      double InfillRotation, double InfillRotationPrLayer,
 				      bool DisplayDebuginFill);	// Collide an infill-line with the polygons
 	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers,
-		  bool DrawCPLineNumbers, bool DrawCPVertexNumbers);
-	bool LinkSegments(double z, double Optimization);		        // Link Segments to form polygons
-	bool CleanupConnectSegments(double z);
-	bool CleanupSharedSegments(double z);
-	// remove redudant points in given polygons
-	void CleanupPolygons(vector<Vector2d> vertices,
-			     vector<Poly> & polygons,
-			     double Optimization);
+		  bool DrawCPLineNumbers, bool DrawCPVertexNumbers) const ;
+	bool MakePolygons(double Optimization); // Link Segments to form polygons
+	bool CleanupConnectSegments();
+	bool CleanupSharedSegments();
+	// remove redudant points in given polygons -> done in poly.cpp
+	// void CleanupPolygons(vector<Vector2d> vertices,
+	// 		     vector<Poly> & polygons,
+	// 		     double Optimization);
 
 	void MakeGcode (GCodeState &state,
 			const std::vector<Vector2d> *opt_infill,
 			double &E, double z,
 			const Settings::SlicingSettings &slicing,
 			const Settings::HardwareSettings &hardware);
-	bool VertexIsOutsideOriginalPolygon( Vector2d point, double z, double maxoffset);
+	bool VertexIsOutsideOriginalPolygons( Vector2d point, double z, double maxoffset) const ;
 
 	Vector2d Min, Max;  // Bounding box
 
@@ -198,13 +200,13 @@ public:
 		offsetPolygons.clear();
 		offsetVertices.clear();
 	}
-	void SetZ(double value)
+	void setZ(double value)
 	{
 		Z = value;
 	}
-	double getZ() { return Z; }
+	double getZ() const { return Z; }
 
-	uint LayerNo;
+	int LayerNo;
 
 	int RegisterPoint(const Vector2d &p);
 
@@ -218,12 +220,14 @@ public:
 			end = tmp;
 		}
 	};
-	void AddLine(const Segment &line);
+	void AddSegment(const Segment line);
+  void AppendSegments(vector<Segment> segments);
 
-	vector<Poly>& GetPolygons() { return polygons; }
-	vector<Vector2d>& GetVertices() { return vertices; }
-	vector<Vector2d>& GetOffsetVertices() { return offsetVertices; }
+	vector<Poly> GetPolygons() const { return polygons; }
+	vector<Vector2d> GetVertices() const { return vertices; }
+	vector<Vector2d> GetOffsetVertices() const { return offsetVertices; }
 
+	void printinfo() const ;
 private:
 	PointHash points;
 

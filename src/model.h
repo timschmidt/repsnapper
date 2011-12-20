@@ -74,9 +74,9 @@ public:
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 
 	vector<CuttingPlane> cuttingplanes;
-
+	
 	// Slicing
-	void Slice(GCodeState &state);
+	void Slice(GCodeState &state, double printoffsetZ);
 	void CalcInfill(GCodeState &state);
 
 	// GCode Functions

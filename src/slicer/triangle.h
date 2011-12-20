@@ -50,6 +50,6 @@ public:
 	void AccumulateMinMax(Vector3d &min, Vector3d &max);
 	void Translate(const Vector3d &vector);
 	int CutWithPlane(double z, const Matrix4d &T, 
-			 Vector2d &lineStart, Vector2d &lineEnd);
+			 Vector2d &lineStart, Vector2d &lineEnd) const;
 };
 

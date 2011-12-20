@@ -152,171 +152,74 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 
 
 
-CuttingPlane::CuttingPlane()
+CuttingPlane::CuttingPlane(int layerno)
 {
+  //cerr <<"CuttingPlane" << layerno << endl;
+  LayerNo = layerno;
 }
-
+// CuttingPlane::CuttingPlane()
+// {
+//   CuttingPlane(-1);
+// }
 CuttingPlane::~CuttingPlane()
 {
 }
 
 
-vector<Vector2d> *CuttingPlane::CalcInFill (double InfillDistance,
-					    double InfillRotation, 
-					    double InfillRotationPrLayer,
-					    bool DisplayDebuginFill)
+vector<Vector2d> * CuttingPlane::CalcInFill (double InfillDistance,
+					     double InfillRotation, 
+					     double InfillRotationPrLayer,
+					     bool DisplayDebuginFill)
 {
     int c=0;
     vector<InFillHit> HitsBuffer;
-    double step = InfillDistance;
     
     vector<Vector2d> *infill = new vector<Vector2d>();
-    bool examine = false;
+    // bool examine = false;
+    bool examineThis = true;
 
-    double Length = sqrt(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0;	// bbox of lines to intersect the poly with
+    //double Length = sqrt(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0;	// bbox of lines to intersect the poly with
 
     double rot = InfillRotation/180.0*M_PI;
     rot += (double)LayerNo*InfillRotationPrLayer/180.0*M_PI;
-    Vector2d InfillDirX(cosf(rot), sinf(rot));
-    Vector2d InfillDirY(-InfillDirX.y, InfillDirX.x);
-    Vector2d Center = (Max+Min)/2.0;
     
-    for(double x = -Length ; x < Length ; x+=step)
+    vector<InFillHit> phits;
+    for(size_t p=0;p<offsetPolygons.size();p++)
       {
-	bool examineThis = true;
-	
-	HitsBuffer.clear();
-
-	Vector2d P1 = (InfillDirX * Length)+(InfillDirY*x)+ Center;
-	Vector2d P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
-	
-	if(DisplayDebuginFill)
-	  {
-	    glBegin(GL_LINES);
-	    glColor3f(0,0.2f,0);
-	    glVertex3d(P1.x, P1.y, Z);
-	    glVertex3d(P2.x, P2.y, Z);
-	    glEnd();
-	  }
-	double Examine = 0.5;
-	
-	if(DisplayDebuginFill && !examine && ((Examine-0.5)*2 * Length <= x))
-	  {
-	    examineThis = examine = true;
-	    glColor3f(1,1,1);  // Draw the line
-	    glVertex3d(P1.x, P1.y, Z);
-	    glVertex3d(P2.x, P2.y, Z);
-	  }
-	
-	if(offsetPolygons.size() != 0)
-	  {
-	    for(size_t p=0;p<offsetPolygons.size();p++)
-	      {
-		for(size_t i=0;i<offsetPolygons[p].points.size();i++)
-		  {
-		    Vector2d P3 = offsetVertices[offsetPolygons[p].points[i]];
-		    Vector2d P4 = offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
-		    
-		    Vector3d point;
-		    InFillHit hit;
-		    if (IntersectXY (P1,P2,P3,P4,hit, 0.1*InfillDistance))
-		      HitsBuffer.push_back(hit);
-		  }
-	      }
-	  }
-	/*			else if(vertices.size() != 0)
-				{
-				// Fallback, collide with lines rather then polygons
-				for(size_t i=0;i<lines.size();i++)
-					{
-					Vector2d P3 = vertices[lines[i].start];
-					Vector2d P4 = vertices[lines[i].end];
-
-					Vector3f point;
-					InFillHit hit;
-					if(IntersectXY(P1,P2,P3,P4,hit))
-						{
-						if(examineThis)
-							int a=0;
-						HitsBuffer.push_back(hit);
-						}
-					}
-				}*/
-	// Sort hits
-	// Sort the vector using predicate and std::sort
-	std::sort (HitsBuffer.begin(), HitsBuffer.end(), InFillHitCompareFunc);
-	
+	phits = offsetPolygons[p].calcInfill(InfillDistance, rot, DisplayDebuginFill);
+	HitsBuffer.insert(HitsBuffer.end(),phits.begin(),phits.end());
+      }
+    c = 0;	// Color counter
+    while (HitsBuffer.size())
+      {
+	infill->push_back(HitsBuffer[0].p);
 	if(examineThis)
 	  {
-	    glPointSize(4);
+	    switch(c)
+	      {
+	      case 0: glColor3f(1,0,0); break;
+	      case 1: glColor3f(0,1,0); break;
+	      case 2: glColor3f(0,0,1); break;
+	      case 3: glColor3f(1,1,0); break;
+	      case 4: glColor3f(0,1,1); break;
+	      case 5: glColor3f(1,0,1); break;
+	      case 6: glColor3f(1,1,1); break;
+	      case 7: glColor3f(1,0,0); break;
+	      case 8: glColor3f(0,1,0); break;
+	      case 9: glColor3f(0,0,1); break;
+	      case 10: glColor3f(1,1,0); break;
+	      case 11: glColor3f(0,1,1); break;
+	      case 12: glColor3f(1,0,1); break;
+	      case 13: glColor3f(1,1,1); break;
+	      }
+	    c++;
+	    glPointSize(10);
 	    glBegin(GL_POINTS);
-	    for (size_t i=0;i<HitsBuffer.size();i++)
-	      glVertex3d(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
+	    glVertex3d(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
 	    glEnd();
 	    glPointSize(1);
 	  }
-	
-	// Verify hits intregrety
-	// Check if hit extists in table
-      restart_check:
-	for (size_t i=0;i<HitsBuffer.size();i++)
-	  {
-	    bool found = false;
-	    
-	    for (size_t j=i+1;j<HitsBuffer.size();j++)
-	      {
-		if( ABS(HitsBuffer[i].d - HitsBuffer[j].d) < 0.0001)
-		  {
-		    found = true;
-		    // Delete both points, and continue
-		    HitsBuffer.erase(HitsBuffer.begin()+j);
-		    // If we are "Going IN" to solid material, and there's
-		    // more points, keep one of the points
-		    if (i != 0 && i != HitsBuffer.size()-1)
-		      HitsBuffer.erase(HitsBuffer.begin()+i);
-		    goto restart_check;
-		  }
-	      }
-	    if (found)
-	      continue;
-	  }
-	
-	
-	// Sort hits by distance and transfer to InFill Buffer
-	if (HitsBuffer.size() != 0 && HitsBuffer.size() % 2)
-	  continue;	// There's a uneven number of hits, skip this infill line (U'll live)
-	c = 0;	// Color counter
-	while (HitsBuffer.size())
-	  {
-	    infill->push_back(HitsBuffer[0].p);
-	    if(examineThis)
-	      {
-		switch(c)
-		  {
-		  case 0: glColor3f(1,0,0); break;
-		  case 1: glColor3f(0,1,0); break;
-		  case 2: glColor3f(0,0,1); break;
-		  case 3: glColor3f(1,1,0); break;
-		  case 4: glColor3f(0,1,1); break;
-		  case 5: glColor3f(1,0,1); break;
-		  case 6: glColor3f(1,1,1); break;
-		  case 7: glColor3f(1,0,0); break;
-		  case 8: glColor3f(0,1,0); break;
-		  case 9: glColor3f(0,0,1); break;
-		  case 10: glColor3f(1,1,0); break;
-		  case 11: glColor3f(0,1,1); break;
-		  case 12: glColor3f(1,0,1); break;
-		  case 13: glColor3f(1,1,1); break;
-		  }
-		c++;
-		glPointSize(10);
-		glBegin(GL_POINTS);
-		glVertex3d(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
-		glEnd();
-		glPointSize(1);
-	      }
-	    HitsBuffer.erase(HitsBuffer.begin());
-	  }
+	HitsBuffer.erase(HitsBuffer.begin());
       }
     return infill;
 }
@@ -329,7 +232,7 @@ vector<Vector2d> *CuttingPlane::CalcInFill (double InfillDistance,
  * match from any detached points and joining them, with new synthetic
  * segments.
  */
-bool CuttingPlane::CleanupConnectSegments(double z)
+bool CuttingPlane::CleanupConnectSegments()
 {
 	vector<int> vertex_types;
 	vector<int> vertex_counts;
@@ -380,7 +283,7 @@ bool CuttingPlane::CleanupConnectSegments(double z)
 		for (uint j = i + 1; j < detached_points.size(); j++)
 		{
 		        int pt = detached_points[j];
-			if (pt < 0) // handled already
+			if (pt < 0) 
 			  continue; // already connected
 
 			// don't connect a start to a start, or end to end
@@ -395,7 +298,6 @@ bool CuttingPlane::CleanupConnectSegments(double z)
 				nearest = j;
 			}
 		}
-		//if (nearest == 0) continue; 
 		assert (nearest != 0);
 
 		// allow points 10mm apart to be joined, not more
@@ -414,7 +316,7 @@ bool CuttingPlane::CleanupConnectSegments(double z)
 		CuttingPlane::Segment seg(n, detached_points[nearest]);
 		if (vertex_types[n] > 0) // already had start but no end at this point
 			seg.Swap();
-		AddLine (seg);
+		AddSegment (seg);
 		detached_points[nearest] = -1;
 	}
 
@@ -427,7 +329,9 @@ bool CuttingPlane::CleanupConnectSegments(double z)
  * LinkSegments, so try to identify and join those polygons
  * now.
  */
-bool CuttingPlane::CleanupSharedSegments(double z)
+// ??? as only coincident lines are removed, couldn't this be
+// done easier by just running through all lines and finding them?
+bool CuttingPlane::CleanupSharedSegments()
 {
 	vector<int> vertex_counts; // how many lines have each point
 	vertex_counts.resize (vertices.size());
@@ -500,18 +404,18 @@ bool CuttingPlane::CleanupSharedSegments(double z)
 /*
  * Attempt to link all the Segments in 'lines' together.
  */
-bool CuttingPlane::LinkSegments(double z, double Optimization)
+bool CuttingPlane::MakePolygons(double Optimization)
 {
         if (vertices.size() == 0) // no cutpoints in this plane
 		return true;
 
-	if (!CleanupSharedSegments (z)) 
+	if (!CleanupSharedSegments()) 
 		return false;
 
-	if (!CleanupConnectSegments (z))
+	if (!CleanupConnectSegments())
 		return false;
 
-	vector<vector<int> > planepoints;
+	vector< vector<int> > planepoints;
 	planepoints.resize(vertices.size());
 
 	// all line numbers starting from every point
@@ -523,9 +427,12 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 	used.resize(lines.size());
 	for (uint i=0;i>used.size();i++)
 		used[i] = false;
+	
+	polygons.clear();
 
 	for (uint current = 0; current < lines.size(); current++)
 	{
+	  //cerr << used[current]<<"linksegments " << current << " of " << lines.size()<< endl;
 		if (used[current])
 			continue; // already used
 		used[current] = true;
@@ -533,8 +440,9 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 		int startPoint = lines[current].start;
 		int endPoint = lines[current].end;
 
-		Poly poly = Poly(this,vertices);
+		Poly poly = Poly(this,&vertices);
 		poly.points.push_back (endPoint);
+		//poly.printinfo();
 		int count = lines.size()+100;
 		while (endPoint != startPoint && count != 0)	// While not closed
 		  {
@@ -547,7 +455,7 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 				// lets get to the bottom of this data set:
 				cout.precision (8);
 				cout.width (12);
-				cout << "\r\npolygon was cut at z " << z << " LinkSegments at vertex " << endPoint;
+				cout << "\r\npolygon was cut at z " << Z << " LinkSegments at vertex " << endPoint;
 				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\trefs\n";
 				for (int i = 0; i < (int)vertices.size(); i++)
 				{
@@ -626,202 +534,173 @@ bool CuttingPlane::LinkSegments(double z, double Optimization)
 		}
 
 		// Check if loop is complete
-		if (count != 0)
-			polygons.push_back (poly);		// This is good
-		else
-		{
-			// We will be called for a slightly different z
-			cout << "\r\nentered loop at LinkSegments " << z;
-			return false;
+		if (count != 0) {
+		  poly.cleanup(Optimization);
+		  // cout << "## POLY add ";
+		  // poly.printinfo();
+		  polygons.push_back(poly);		// This is good
+		} else {
+		  // We will be called for a slightly different z
+		  cout << "\r\nentered loop at LinkSegments " << Z;
+		  return false;
 		}
 	}
-
-	// Cleanup polygons
-	CleanupPolygons(vertices, polygons,Optimization);
-
+	// cout << "## LINKSEGMENTS polygons: ";
+	// for (uint j=0; j <polygons.size(); j++){
+	//   cout << " -- poly " << j << ": ";
+	//   polygons[j].printinfo();
+	// }
+	// cout << "###########################" << endl;
+	
 	return true;
 }
 
-uint CuttingPlane::selfIntersectAndDivideRecursive(double z, 
-						   uint startPolygon, uint startVertex,
-						   vector<outline> &outlines, 
-						   const Vector2d endVertex, 
-						   uint &level, double maxoffset)
+
+// NOT USED
+// uint CuttingPlane::selfIntersectAndDivideRecursive(double z, 
+// 						   uint startPolygon, uint startVertex,
+// 						   vector<outline> &outlines, 
+// 						   const Vector2d endVertex, 
+// 						   uint &level, double maxoffset)
+// {
+//   cerr << "selfIntersectAndDivideRecursive" << endl;
+// 	level++;
+// 	vector<Vector2d> result;
+// 	for(size_t p=startPolygon; p<offsetPolygons.size();p++)
+// 	  {
+// 	    for(size_t p2=0; p2<offsetPolygons.size();p2++)
+// 	      {
+// 		result = offsetPolygons[p].intersect(&offsetPolygons[p2], startVertex,
+// 		                                     endVertex, maxoffset);
+// 		//cerr << "intersections " << result.size()<< endl;
+// 		outlines.push_back(result);
+// 		//cerr << "outlines " << outlines.size()<< endl;
+// 	      }	    
+// 	  }
+// 	level--;
+// 	return startVertex;
+// }
+
+
+// NOT USED
+// void CuttingPlane::recurseSelfIntersectAndDivide(double z, 
+// 						 vector<locator> &EndPointStack, 
+// 						 vector<outline> &outlines,
+// 						 vector<locator> &visited,
+// 						 double maxoffset)
+// {
+//   cerr << "recurseSelfIntersectAndDivide" << endl;
+
+// 	// pop an entry from the stack.
+// 	// Trace it till it hits itself
+// 	//		store a outline
+// 	// When finds splits, store locator on stack and recurse
+
+// 	while(EndPointStack.size())
+// 	{
+// 		locator start(EndPointStack.back().p, EndPointStack.back().v, EndPointStack.back().t);
+// 		visited.push_back(start);	// add to visited list
+// 		EndPointStack.pop_back();	// remove from to-do stack
+
+// 		// search for the start point
+
+// 		outline result;
+// 		for(int p = start.p; p < (int)offsetPolygons.size(); p++)
+// 		{
+// 			for(int v = start.v; v < (int)offsetPolygons[p].points.size(); v++)
+// 			{
+// 				Vector2d P1 = offsetVertices[offsetPolygons[p].points[v]];
+// 				Vector2d P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
+
+// 				result.push_back(P1);	// store this point
+// 				for(int p2=0; p2 < (int)offsetPolygons.size(); p2++)
+// 				{
+// 					int count2 = offsetPolygons[p2].points.size();
+// 					for(int v2 = 0; v2 < count2; v2++)
+// 					{
+// 						if((p==p2) && (v == v2))	// Dont check a point against itself
+// 							continue;
+// 						Vector2d P3 = offsetVertices[offsetPolygons[p2].points[v2]];
+// 						Vector2d P4 = offsetVertices[offsetPolygons[p2].points[(v2+1)%offsetPolygons[p2].points.size()]];
+// 						InFillHit hit;
+
+// 						if(P1 != P3 && P2 != P3 && P1 != P4 && P2 != P4)
+// 						{
+// 						  if(IntersectXY(P1,P2,P3,P4,hit,maxoffset))
+// 							{
+// 								bool alreadyVisited=false;
+
+// 								size_t i;
+// 								for(i=0;i<visited.size();i++)
+// 								{
+// 									if(visited[i].p == p && visited[i].v == v)
+// 									{
+// 										alreadyVisited = true;
+// 										break;
+// 									}
+// 								}
+// 								if(alreadyVisited == false)
+// 								{
+// 									EndPointStack.push_back(locator(p,v+1,hit.t));	// continue from here later on
+// 									p=p2;v=v2;	// continue along the intersection line
+// 									Vector2d P1 = offsetVertices[offsetPolygons[p].points[v]];
+// 									Vector2d P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
+// 								}
+
+
+// 								result.push_back(hit.p);
+// 								// Did we hit the starting point?
+// 								if (start.p == p && start.v == v) // we have a loop
+// 								{
+// 									outlines.push_back(result);
+// 									result.clear();
+// 									recurseSelfIntersectAndDivide(z, EndPointStack, outlines, visited,maxoffset);
+// 									return;
+// 								}
+// 								glPointSize(10);
+// 								glColor3f(1,1,1);
+// 								glBegin(GL_POINTS);
+// 								glVertex3d(hit.p.x, hit.p.y, z);
+// 								glEnd();
+// 							}
+// 						}
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// }
+
+
+
+
+
+bool CuttingPlane::VertexIsOutsideOriginalPolygons( Vector2d point, double z, 
+						    double maxoffset) const 
 {
-	level++;
-	outline result;
-	for(size_t p=startPolygon; p<offsetPolygons.size();p++)
-	{
-		size_t count = offsetPolygons[p].points.size();
-		for(size_t v=startVertex; v<count;v++)
-		{
-			for(size_t p2=0; p2<offsetPolygons.size();p2++)
-			{
-				size_t count2 = offsetPolygons[p2].points.size();
-				for(size_t v2=0; v2<count2;v2++)
-				{
-					if((p==p2) && (v == v2))	// Dont check a point against itself
-						continue;
-					Vector2d P1 = offsetVertices[offsetPolygons[p].points[v]];
-					Vector2d P2 = offsetVertices[offsetPolygons[p].points[(v+1)%count]];
-					Vector2d P3 = offsetVertices[offsetPolygons[p2].points[v2]];
-					Vector2d P4 = offsetVertices[offsetPolygons[p2].points[(v2+1)%count2]];
-					InFillHit hit;
-					result.push_back(P1);
-					if(P1 != P3 && P2 != P3 && P1 != P4 && P2 != P4)
-					  if(IntersectXY(P1,P2,P3,P4,hit,maxoffset))
-							{
-							if( (hit.p-endVertex).length() < maxoffset)
-								{
-//								outlines.push_back(result);
-//								return (v+1)%count;
-								}
-							result.push_back(hit.p);
-//							v=selfIntersectAndDivideRecursive(z, p2, (v2+1)%count2, outlines, hit.p, level);
-//							outlines.push_back(result);
-//							return;
-							}
-				}
-			}
-		}
-	}
-	outlines.push_back(result);
-	level--;
-	return startVertex;
-}
-
-void CuttingPlane::recurseSelfIntersectAndDivide(double z, 
-						 vector<locator> &EndPointStack, 
-						 vector<outline> &outlines,
-						 vector<locator> &visited,
-						 double maxoffset)
-{
-	// pop an entry from the stack.
-	// Trace it till it hits itself
-	//		store a outline
-	// When finds splits, store locator on stack and recurse
-
-	while(EndPointStack.size())
-	{
-		locator start(EndPointStack.back().p, EndPointStack.back().v, EndPointStack.back().t);
-		visited.push_back(start);	// add to visited list
-		EndPointStack.pop_back();	// remove from to-do stack
-
-		// search for the start point
-
-		outline result;
-		for(int p = start.p; p < (int)offsetPolygons.size(); p++)
-		{
-			for(int v = start.v; v < (int)offsetPolygons[p].points.size(); v++)
-			{
-				Vector2d P1 = offsetVertices[offsetPolygons[p].points[v]];
-				Vector2d P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
-
-				result.push_back(P1);	// store this point
-				for(int p2=0; p2 < (int)offsetPolygons.size(); p2++)
-				{
-					int count2 = offsetPolygons[p2].points.size();
-					for(int v2 = 0; v2 < count2; v2++)
-					{
-						if((p==p2) && (v == v2))	// Dont check a point against itself
-							continue;
-						Vector2d P3 = offsetVertices[offsetPolygons[p2].points[v2]];
-						Vector2d P4 = offsetVertices[offsetPolygons[p2].points[(v2+1)%offsetPolygons[p2].points.size()]];
-						InFillHit hit;
-
-						if(P1 != P3 && P2 != P3 && P1 != P4 && P2 != P4)
-						{
-						  if(IntersectXY(P1,P2,P3,P4,hit,maxoffset))
-							{
-								bool alreadyVisited=false;
-
-								size_t i;
-								for(i=0;i<visited.size();i++)
-								{
-									if(visited[i].p == p && visited[i].v == v)
-									{
-										alreadyVisited = true;
-										break;
-									}
-								}
-								if(alreadyVisited == false)
-								{
-									EndPointStack.push_back(locator(p,v+1,hit.t));	// continue from here later on
-									p=p2;v=v2;	// continue along the intersection line
-									Vector2d P1 = offsetVertices[offsetPolygons[p].points[v]];
-									Vector2d P2 = offsetVertices[offsetPolygons[p].points[(v+1)%offsetPolygons[p].points.size()]];
-								}
-
-
-								result.push_back(hit.p);
-								// Did we hit the starting point?
-								if (start.p == p && start.v == v) // we have a loop
-								{
-									outlines.push_back(result);
-									result.clear();
-									recurseSelfIntersectAndDivide(z, EndPointStack, outlines, visited,maxoffset);
-									return;
-								}
-								glPointSize(10);
-								glColor3f(1,1,1);
-								glBegin(GL_POINTS);
-								glVertex3d(hit.p.x, hit.p.y, z);
-								glEnd();
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
-
-
-
-
-bool CuttingPlane::VertexIsOutsideOriginalPolygon( Vector2d point, double z, 
-						   double maxoffset)
-{
-	// Shoot a ray along +X and count the number of intersections.
-	// If n_intersections is euqal, return true, else return false
-
-	Vector2d EndP(point.x+10000, point.y);
-	int intersectcount = 0;
-
-	for(size_t p=0; p<polygons.size();p++)
-	{
-		size_t count = polygons[p].points.size();
-		for(size_t i=0; i<count;i++)
-		{
-		Vector2d P1 = Vector2d( vertices[polygons[p].points[(i-1+count)%count]] );
-		Vector2d P2 = Vector2d( vertices[polygons[p].points[i]]);
-
-		if(P1.y == P2.y)	// Skip hortisontal lines, we can't intersect with them, because the test line in horitsontal
-			continue;
-
-		InFillHit hit;
-		if(IntersectXY(point,EndP,P1,P2,hit,maxoffset))
-			intersectcount++;
-		}
-	}
-	return intersectcount%2;
+  int insidecount = 0;
+  for(size_t p=0; p<polygons.size();p++)
+    {
+      if (polygons[p].vertexInside(point, maxoffset)) 
+	insidecount++;
+    }
+  return insidecount==0;
 }
 
 
-void CuttingPlane::CleanupPolygons (vector<Vector2d> vertices, 
-				    vector<Poly> & polygons,
-				    double Optimization)
-{
-  double allowedError = pow(Optimization,2);
-	for (size_t p = 0; p < polygons.size(); p++)
-	{
-#if CUTTING_PLANE_DEBUG
-	  cout << "optimising out polygon " << p << "\n";
-#endif
-	  polygons[p].cleanup(allowedError);
-	}
-}
+// void CuttingPlane::CleanupPolygons (vector<Vector2d> vertices, 
+// 				    vector<Poly> & polygons,
+// 				    double Optimization)
+// {
+//   double allowedError = pow(Optimization,2);
+// 	for (size_t p = 0; p < polygons.size(); p++)
+// 	{
+// #if CUTTING_PLANE_DEBUG
+// 	  cout << "optimising out polygon " << p << "\n";
+// #endif
+// 	  polygons[p].cleanup(allowedError);
+// 	}
+// }
 
 
 
@@ -937,9 +816,14 @@ void PointHash::InsertPoint (uint idx, const Vector2d &p)
 	}
 }
 
-void CuttingPlane::AddLine(const Segment &line)
+void CuttingPlane::AddSegment(const Segment line)
 {
 	lines.push_back(line);
+}
+
+void CuttingPlane::AppendSegments(vector<Segment> segments)
+{
+  lines.insert(lines.end(),segments.begin(),segments.end());
 }
 
 // return index of new (or known) point in vertices
@@ -1037,15 +921,16 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 		for (size_t i = 0; i < infill->size(); i++)
 			lines.push_back (Vector3d ((*infill)[i].x, (*infill)[i].y, z));
 
-	if( optimizers.size() != 0 )
-	{
-		// new method
-		for( uint i = 1; i < optimizers.size()-1; i++)
-		{
-			optimizers[i]->RetrieveLines(lines);
-		}
-	}
-	else
+	// ??? used even with Fast Shrinker - where are the optimizers coming from?
+	// if( optimizers.size() > 1 )
+	// {
+	// 	// new method
+	// 	for( uint i = 1; i < optimizers.size()-1; i++)
+	// 	{
+	// 		optimizers[i]->RetrieveLines(lines);
+	// 	}
+	// }
+	// else
 	{
 		// old method
 		// Copy polygons
@@ -1055,8 +940,9 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 			{
 				for(size_t i=0;i<offsetPolygons[p].points.size();i++)
 				{
-					Vector2d P3 = offsetVertices[offsetPolygons[p].points[i]];
-					Vector2d P4 = offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
+				  // ??? use getVertexCircular3 and rely on Z stored in poly?
+				  Vector2d P3 = offsetPolygons[p].getVertexCircular(i);//offsetVertices[offsetPolygons[p].points[i]];
+				  Vector2d P4 = offsetPolygons[p].getVertexCircular(i+1);//offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
 					lines.push_back(Vector3d(P3.x, P3.y, z));
 					lines.push_back(Vector3d(P4.x, P4.y, z));
 				}
@@ -1144,13 +1030,13 @@ void CuttingPlane::ShrinkLogick(double extrudedWidth, double optimization,
 	CuttingPlaneOptimizer* cpo = new CuttingPlaneOptimizer(this, Z);
 	optimizers.push_back(cpo);
 
-	CuttingPlaneOptimizer* clippingPlane = new CuttingPlaneOptimizer(Z);
+	CuttingPlaneOptimizer* clippingPlane = new CuttingPlaneOptimizer(this, Z);
 	cpo->Shrink(extrudedWidth*0.5, clippingPlane->positivePolygons);
 	optimizers.push_back(clippingPlane);
 
 	for(int outline = 2; outline <= ShellCount+1; outline++)
 	{
-		CuttingPlaneOptimizer* newOutline = new CuttingPlaneOptimizer(Z);
+	  CuttingPlaneOptimizer* newOutline = new CuttingPlaneOptimizer(this, Z);
 		optimizers.back()->Shrink(extrudedWidth, newOutline->positivePolygons);
 		optimizers.push_back(newOutline);
 	}
@@ -1164,17 +1050,22 @@ void CuttingPlane::ShrinkFast(double extrudedWidth, double optimization,
 			      int ShellCount)
 {
   double distance = (ShellCount - 0.5) * extrudedWidth;
-
+  //cerr<< "---- plane shrink shell no" << ShellCount << " distance=" << distance << endl;
+  //printinfo();
 	glColor4f (1,1,1,1);
 	for(size_t p=0; p<polygons.size();p++)
 	{
-	  Poly offsetPoly = polygons[p].Shrinked(this, vertices, distance);
+	  // cerr << "polygon no "<<p<<endl;
+	  // polygons[p].printinfo();
+	  Poly offsetPoly = polygons[p].Shrinked(distance);
+	  offsetPoly.cleanup(optimization);
+	  // offsetPoly.printinfo();
 	  if(DisplayCuttingPlane) {
-	    offsetPoly.draw();
-	  offsetPolygons.push_back(offsetPoly);
+	    offsetPoly.draw(GL_LINE_LOOP);
+	    offsetPoly.draw(GL_POINTS);
 	  }
+	  offsetPolygons.push_back(offsetPoly);
 	}
-	//CleanupPolygons(offsetVertices, offsetPolygons,optimization);
 	// make this work for z-tensioner_1off.stl rotated 45d on X axis
 	//selfIntersectAndDivide();
 }
@@ -1299,26 +1190,25 @@ void CuttingPlane::ShrinkFast(double extrudedWidth, double optimization,
 
 void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 			bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
-			bool DrawCPVertexNumbers)
+			bool DrawCPVertexNumbers) const 
 {
 	// Draw the raw poly's in red
 	glColor3f(1,0,0);
 	glLineWidth(1);
 	for(size_t p=0; p<polygons.size();p++)
 	{
-	  glBegin(GL_LINE_LOOP);	  
-	  polygons[p].draw();
-	  glEnd();
+	  polygons[p].draw(GL_LINE_LOOP);
 	  if(DrawOutlineNumbers)
 	    {
-			ostringstream oss;
-			oss << p;
-			renderBitmapString(Vector3f(polygons[p].center.x, polygons[p].center.y, Z) , GLUT_BITMAP_8_BY_13 , oss.str());
+	      ostringstream oss;
+	      oss << p;
+	      renderBitmapString(Vector3f(polygons[p].center.x, polygons[p].center.y, Z) , GLUT_BITMAP_8_BY_13 , oss.str());
 	    }
 	}
 
-	for(size_t o=1;o<optimizers.size()-1;o++)
-		optimizers[o]->Draw();
+	if (optimizers.size()>1)
+	  for(size_t o=1;o<optimizers.size()-1;o++)
+	    optimizers[o]->Draw();
 
 	glPointSize(1);
 	glBegin(GL_POINTS);
@@ -1333,9 +1223,7 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	glPointSize(3);
 	for(size_t p=0;p<polygons.size();p++)
 	{
-	  glBegin(GL_POINTS);
-	  polygons[p].draw();
-	  glEnd();
+	  polygons[p].draw(GL_POINTS);
 	}
 
 
@@ -1371,4 +1259,19 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 
 //	Pathfinder a(offsetPolygons, offsetVertices);
 
+}
+
+
+
+
+void CuttingPlane::printinfo() const 
+{
+  cout <<"CuttingPlane at Z="<<Z<<" Lno="<<LayerNo 
+       <<", "<<vertices.size() <<" vertices" 
+       <<", "<<polygons.size() <<" polys";
+  // if (next)
+  //   cout <<", next: "<<next->LayerNo;
+  // if (previous)
+  // cout <<", previous: "<<previous->LayerNo;
+  cout << endl;
 }
