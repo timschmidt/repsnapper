@@ -1,0 +1,79 @@
+<html>
+
+<head>
+    
+  <script type="text/javascript" src="../../../../Scripts/jquery.js">
+  </script>
+    
+  <script type="text/javascript" src="../../../../Scripts/SyntaxHighlighter/scripts/shCore.js">
+  </script>
+    
+  <script type="text/javascript" src="../../../../Scripts/SyntaxHighlighter/scripts/shBrushDelphi.js">
+  </script>
+    
+  <link type="text/css" rel="stylesheet" href="../../../../Scripts/SyntaxHighlighter/styles/shCore.css">
+    
+  <link type="text/css" rel="stylesheet" href="../../../../Scripts/SyntaxHighlighter/styles/shThemeDefault.css">
+  
+
+  <title>OffsetPolygons</title>
+
+  <link rel="stylesheet" href="../../../../styles/Default.css" type="text/css">
+
+    
+  <script type="text/javascript" src="../../../../Scripts/bootstrap.js">
+  </script>
+  
+</head>
+
+<body bgcolor="#FFFFFF">
+    
+  <!-- THIS FILE HAS BEEN AUTOMATICALLY PROCESSED FROM A SOURCE COPY -->
+    
+  <!-- DO NOT EDIT MANUALLY !!! -->
+  
+  <table class="Banner" cellspacing="0" cellpadding="0" border="1" bordercolorlight="#303080" bordercolordark="#7070B0">
+    <tr>
+      <td class="Banner" nowrap=""><a href="../../../_Body.htm" class="Banner"><img src="../../../../Images/_Home.gif" align="absmiddle">Home</a>
+      </td>
+      <td class="Banner" nowrap=""><a href="../_Body.htm" class="Banner"><img src="../../../../Images/_Unit.gif" align="absmiddle">ClipperLib</a>
+      </td>
+      <td class="Banner" width="100%" align="right"><img src="../../../../Images/_Project_Logo.gif" align="absmiddle">
+      </td>
+    </tr>
+  </table>
+  <h1>OffsetPolygons</h1>
+
+
+  <p class="Decl"><span class="Comment">Del.&raquo;</span> <b>function</b> OffsetPolygons(<b>const</b> polys: TPolygons; <b>const</b> delta: double; JoinType: TJoinType = jtSquare; MiterLimit: double = 2.0): TPolygons;</p>
+
+  <p class="Decl2"><span class="Comment"> C++&raquo;</span> <b>void</b> OffsetPolygons(<b>const</b> Polygons &amp;in_polys, Polygons &amp;out_polys, <b>double</b> delta, JoinType jointype = jtSquare, <b>double</b> MiterLimit = 2.0);</p>
+
+  <p class="Decl3"><span class="Comment">C#&raquo;</span> <b>public static</b> Polygons OffsetPolygons(Polygons polys, <b>double</b> delta, JoinType jointype = JoinType.jtSquare, <b>double</b> MiterLimit = 2.0);</p>
+<br>
+
+
+  <p class="Body">This function offsets the 'polys' polygons parameter by the 'delta' amount. Positive delta values expand outer polygons and contract inner 'hole' polygons. Negative deltas do the reverse.</p>
+<br>
+
+
+  <p class="Body">Edge joins may be one of three <a href="../Types/JoinType.htm">jointypes</a> - jtMiter, jtSquare or jtRound. If the jointype is jtMiter, then the <b>MiterLimit</b> parameter will determine the maximum distance from the original vertex that the new offsetted vertex is allowed (in multiples of delta) before squaring is applied.</p>
+<br>
+
+
+  <p class="Body"><b>It's important that the polygons passed to this function are oriented such that outer polygons have a 'true' <a href="./Orientation.htm">Orientation</a></b> and inner 'hole' polygons have a 'false' <a href="./Orientation.htm">Orientation</a>. If the orientations of input polygons are incorrect, the function will return unexpected results.</p>
+<br>
+
+
+  <p class="Body"><img src="../../../../Images/jointypes.png" alt="" border="0"></p>
+<br>
+
+
+  <h2 id="auto">See Also</h2>
+  <p id="auto" class="Body"><a href="../Types/JoinType.htm">JoinType</a>, <a href="Orientation.htm">Orientation</a></p>
+    
+  <p class="Copyright" id="auto"> <br><br> Copyright &copy;2010-2011 Angus Johnson&nbsp; - &nbsp; Clipper version 4.6.3 &nbsp; - &nbsp; Help file built on 11-November-2011 <br><br> </p>
+  
+</body>
+
+</html>
