@@ -23,6 +23,7 @@
 #include <string>
 #include <cerrno>
 #include <functional>
+//#include <memory>
 
 // should move to platform.h with com port fun.
 #include <sys/types.h>
@@ -39,6 +40,7 @@
 #include "connectview.h"
 
 #include "slicer/cuttingplane.h"
+#include "slicer/infill.h"
 
 void Model::MakeRaft(GCodeState &state, double &z)
 {
@@ -168,7 +170,9 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
   double optimization = settings.Slicing.Optimization;
 
 
-  //vector<CuttingPlane> planes;
+  for (vector<CuttingPlane *>::iterator pIt = cuttingplanes.begin();
+       pIt != cuttingplanes. end(); pIt++)
+    delete *pIt;
   cuttingplanes.clear();
 
   double hackedZ;
@@ -176,7 +180,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
   bool polys_ok;
   while(z<Max.z)
     {
-      CuttingPlane* plane = new CuttingPlane(LayerNr); // one plane per layer, with all objects
+      CuttingPlane * plane = new CuttingPlane(LayerNr); // one plane per layer, with all objects
       m_progress.update(z/2.);
       hackedZ = z;
       polys_ok = false;
@@ -201,28 +205,44 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 	      }
 	  }
 	polys_ok = plane->MakePolygons(optimization);
-	//cerr << layerno << " -- " << hackedZ << " - " << polys_ok << endl;
 	hackedZ += hacked_layerthickness;
       }
       
-      //      cerr << "model.Slice plane.Z="<< plane->getZ() << " vert:"<<plane->GetVertices().size() <<endl; 
       plane->setZ(z+printOffsetZ); // set back to real z
-      cuttingplanes.push_back(*plane);
+      cuttingplanes.push_back(plane);
       z += settings.Hardware.LayerThickness;
       LayerNr++;
     }
-  
-  // for (uint i=0; i<planes.size();i++){
-  //   cerr << i << ". ";
-  //   planes[i].printinfo();
-  //   vector<Poly> polys = planes[i].GetPolygons();
-  //   for (uint j=0; j <polys.size(); j++){
-  //     cout << " -- poly " << j << ": ";
-  //     polys[j].printinfo();
-  //   }
-  // }
-  //return planes;
 }
+
+
+
+
+void Model::FindUncoveredPolygons()
+{
+  for (uint i=0; i <cuttingplanes.size()-1; i++) 
+    {
+      cerr << "DIff plane "<< i <<": ";
+      CuttingPlane * plane1 = cuttingplanes[i];
+      CuttingPlane * plane2 = cuttingplanes[i+1];
+      ClipperLib::Polygons polys1 = plane1->getClipperPolygons();
+      ClipperLib::Polygons polys2 = plane2->getClipperPolygons();
+      ClipperLib::Clipper clpr;
+      clpr.AddPolygons(polys1,ClipperLib::ptSubject);
+      clpr.AddPolygons(polys2,ClipperLib::ptClip);
+      ClipperLib::Polygons uncovered;
+      clpr.Execute(ClipperLib::ctDifference, uncovered,
+		   ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
+      cerr << uncovered.size()<<  " uncovered polys, ";
+      ClipperLib::Polygons covered;
+      clpr.Execute(ClipperLib::ctIntersection, covered, 
+		   ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
+      cerr << covered.size()<<  " covered polys "<< endl;
+      plane1->setFullFillPolygons(uncovered);
+      plane1->setNormalFillPolygons(covered);
+    }  
+}
+
 
 
 void Model::CalcInfill(GCodeState &state)
@@ -241,18 +261,17 @@ void Model::CalcInfill(GCodeState &state)
   
   for (uint i=0; i <cuttingplanes.size(); i++) 
     {
-      CuttingPlane plane = cuttingplanes[i];
-
-      z = plane.getZ();
+      CuttingPlane * plane = cuttingplanes[i];
+      //cout << i << ": ";
+      //plane->printinfo();
+      z = plane->getZ();
       m_progress.update(Max.z/2. + z/2.);
       // inFill
       vector<Vector2d> *infill = NULL;
-      cerr << "calcinfill z="<<z<< endl;
       for (guint shell = 1; shell <= settings.Slicing.ShellCount; shell++)
 	{
-	  plane.ClearShrink();
-
-	  plane.Shrink(settings.Slicing.ShrinkQuality,
+	  plane->ClearShrink();
+	  plane->Shrink(settings.Slicing.ShrinkQuality,
 		       settings.Hardware.ExtrudedMaterialWidth,
 		       settings.Slicing.Optimization,
 		       settings.Display.DisplayCuttingPlane,
@@ -260,7 +279,7 @@ void Model::CalcInfill(GCodeState &state)
 
 	  if (shell < settings.Slicing.ShellCount )
 	    { // no infill - just a shell ...
-	      plane.MakeGcode (state, NULL /* infill */, E, z + printOffsetZ,
+	      plane->MakeGcode (state, NULL /* infill */, E, z + printOffsetZ,
 			       settings.Slicing, settings.Hardware);
 	    }
 	  else if (settings.Slicing.ShellOnly == false)
@@ -280,14 +299,15 @@ void Model::CalcInfill(GCodeState &state)
 	      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), i) 
 		  != altInfillLayers.end())
 		infillDistance = settings.Slicing.AltInfillDistance;
-	      infill = plane.CalcInFill (infillDistance,
-					 settings.Slicing.InfillRotation,
-					 settings.Slicing.InfillRotationPrLayer, 
-					 settings.Display.DisplayDebuginFill);
+	      infill = plane->CalcInFillOld (infillDistance,
+				settings.Slicing.InfillRotation,
+				settings.Slicing.InfillRotationPrLayer, 
+				settings.Display.DisplayDebuginFill);
+	      //infill = plane->getInfillVertices();
 	    }
 	}
       // Make the last shell GCode from the plane and the infill
-      plane.MakeGcode (state, infill, E, z + printOffsetZ,
+      plane->MakeGcode (state, infill, E, z + printOffsetZ,
 		       settings.Slicing, settings.Hardware);
       delete infill;
     }
@@ -319,28 +339,8 @@ void Model::ConvertToGCode()
   // Make Layers
   Slice(state, printOffsetZ);
 
-  // cout << "##### AFTER Slice 2nd plane polygons: ";  
-  // vector<Poly> polys = cuttingplanes[1].GetPolygons();
-  // for (uint j=0; j <polys.size(); j++){
-  //   cout << " -- poly " << j << ": ";
-  //   polys[j].printinfo();
-  // }
-  // cout << "###########################" << endl;
+  FindUncoveredPolygons();
 
-
-  // cout <<"vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv" << endl;
-  // for (uint i=0; i <cuttingplanes.size(); i++) 
-  //   {
-  //     CuttingPlane plane = cuttingplanes[i];
-  //     cout << i << ": ";
-  //     plane.printinfo();
-  //     vector <Poly> polys = plane.GetPolygons();
-  //     for (uint j=0; j <polys.size(); j++){
-  // 	cout << " -- poly " << j << ": ";
-  // 	polys[j].printinfo();
-  //     }
-  //   }
-  // cout <<"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" << endl;
   CalcInfill(state);
 
 
@@ -355,6 +355,4 @@ void Model::ConvertToGCode()
 		  settings.Slicing.AntioozeSpeed);
   m_progress.stop (_("Done"));
 }
-
-
 

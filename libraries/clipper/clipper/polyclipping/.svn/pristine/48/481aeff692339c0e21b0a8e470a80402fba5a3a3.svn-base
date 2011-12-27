@@ -1,0 +1,79 @@
+============================================================
+Clipper Change Log
+============================================================
+
+2.03 - 3 August 2010
+* Bugfix: A couple of minor bugs fixed.
+
+2.02 - 2 August 2010
+* Bugfix: BuildResult() very occasionally caused an endless loop. 
+
+2.0 - 30 July 2010
+* Clipper now clips using both the Even-Odd (alternate) and 
+  Non-Zero (winding) polygon filling rules. (Previously Clipper 
+  assumed the Even-Odd rule for polygon filling.)
+  
+1.4s - 11 July 2010
+* Bugfix: Some code in BuildResult() in clipper.cpp was being 
+  executed out of order.
+
+1.4r - 10 July 2010
+* Bugfix: The returned orientation of polygons 
+  (clockwise vs counter-clockwise) was not always correct. 
+* Improvement: Removed occasional overlapping co-linear segments 
+  (empty spikes) from result polygons. 
+
+1.4m - 3 July 2010
+* Added DuplicatePointTolerance() to Clipper class
+* Very minor tweaks to clipping algorithm
+
+1.4i - 18 June 2010
+* Minor improvements to C++ code
+  
+1.4e - 17 June 2010
+* Bugfix: Clipper.pas & Clipper.cpp
+  
+1.4c - 16 June 2010
+* Added C++ support for AGG graphics library 
+  
+1.4  - 15 June 2010
+* Added Delphi support for AGG graphics library
+  
+1.3  - 9 June 2010
+* Added clipper.dll (& support files) to provide any Windows 
+  application with to access Clipper's functionality.
+* Code tidying. 
+  
+1.2u - 3 June 2010
+* Bugfix: In clipper.cpp, there was inadequate clean-up in
+  the Execute method.
+
+1.2s - 2 June 2010
+* Minor code tidy up.
+* Added C++ translation of clipper.pas
+
+1.2n - 30 May 2010
+* Minor bug in the 'uses' clause fixed.
+
+1.2m - 28 May 2010
+* Minor code tidy up.
+* Demo application updated.
+
+1.2i - 23 May 2010
+* Minor code tidy up.
+* Demo application updated.
+
+1.2e - 21 May 2010
+* Added ForceAlternateOrientation property to TClipper class.
+  This property is only useful when operating on 'simple' 
+  polygons. It ensures that the result of the TClipper
+  Execute method will be (simple) polygons with clockwise  
+  'outer' and counter-clockwise 'inner' (or 'hole') polygons. 
+  Note: there is no danger in enabling this property when 
+  operating on complex polygons. The only downside is a 
+  very minor penalty in execution speed. (Default = true)
+* Minor code tidy up.
+
+1.2c - 17 May 2010
+
+1.0 - 9 May 2010

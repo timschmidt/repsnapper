@@ -192,6 +192,7 @@ int PntOnLine(Vector2f p1, Vector2f p2, Vector2f t)
 
 
 // intersect lines with plane and link segments
+// add result to given CuttingPlane
 void Slicer::CalcCuttingPlane(const Matrix4d &T, 
 			      double optimization, CuttingPlane &plane) const
 {

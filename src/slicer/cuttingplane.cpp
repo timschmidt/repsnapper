@@ -23,6 +23,7 @@
 
 #include "slicer.h"
 #include "cuttingplane.h"
+#include "infill.h"
 
 
 bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2)
@@ -51,28 +52,28 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 	if(ABS(p1.x-p3.x) < maxoffset && ABS(p1.y - p3.y) < maxoffset)
 	{
 		hit.p = p1;
-		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
+		hit.d = (p1-hit.p).length();
 		hit.t = 0.0;
 		return true;
 	}
 	if(ABS(p2.x-p3.x) < maxoffset && ABS(p2.y - p3.y) < maxoffset)
 	{
 		hit.p = p2;
-		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
+		hit.d = (p1-hit.p).length();
 		hit.t = 1.0;
 		return true;
 	}
 	if(ABS(p1.x-p4.x) < maxoffset && ABS(p1.y - p4.y) < maxoffset)
 	{
 		hit.p = p1;
-		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
+		hit.d = (p1-hit.p).length();
 		hit.t = 0.0;
 		return true;
 	}
 	if(ABS(p2.x-p4.x) < maxoffset && ABS(p2.y - p4.y) < maxoffset)
 	{
 		hit.p = p2;
-		hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
+		hit.d = (p1-hit.p).length();
 		hit.t = 1.0;
 		return true;
 	}
@@ -81,9 +82,9 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 	double t0,t1;
 	if(intersect2D_Segments(p1,p2,p3,p4,hit.p, hit2.p, t0,t1) == 1)
 	{
-	hit.d = sqrt( (p1.x-hit.p.x) * (p1.x-hit.p.x) + (p1.y-hit.p.y) * (p1.y-hit.p.y));
-	hit.t = t0;
-	return true;
+	  hit.d = (p1-hit.p).length();
+	  hit.t = t0;
+	  return true;
 	}
 	return false;
 /*
@@ -166,62 +167,181 @@ CuttingPlane::~CuttingPlane()
 }
 
 
-vector<Vector2d> * CuttingPlane::CalcInFill (double InfillDistance,
-					     double InfillRotation, 
-					     double InfillRotationPrLayer,
-					     bool DisplayDebuginFill)
+vector<Vector2d> * CuttingPlane::getInfillVertices() const
+{
+  // should sort by nearest end to start
+  vector<Vector2d> *infill = new vector<Vector2d>;
+  //cerr << " get infill of " << offsetPolygons.size() << " polygons?"<< endl;
+  for(size_t p = 0; p < offsetPolygons.size(); p++) {
+    offsetPolygons[p].printinfo();
+    vector<Vector2d> infillv =  offsetPolygons[p].getInfillVertices();
+    //cerr << "poly "<< p << " with " << infillv.size() << " points" << endl;
+    // for(size_t vp = 0;vp < infill->size(); vp++) 
+    //   cerr << " - "<< vp << ": "<< *infill[vp] << endl;
+    for(size_t vp = 0;vp < infillv.size(); vp++) {
+      //      cerr << " - "<< vp << ": "<< infillv[vp] << endl;
+      infill->push_back(infillv[vp]);
+    }
+    //infill->insert(infill->end(), infillv.begin(), infillv.end());
+  }
+  return infill;
+}
+
+void CuttingPlane::CalcInFill (double InfillDistance,
+			       double InfillRotation, 
+			       double InfillRotationPrLayer,
+			       bool DisplayDebuginFill)
+{
+  double rot = InfillRotation/180.0*M_PI;
+  rot += (double)LayerNo*InfillRotationPrLayer/180.0*M_PI;
+  cerr << "CPlane infill of "<< offsetPolygons.size() << " offset polygons" << endl;
+  for(size_t p=0;p<offsetPolygons.size();p++)
+    {
+      cerr << p << " of " << offsetPolygons.size() << ": ";
+      offsetPolygons[p].calcInfill(InfillDistance,rot,DisplayDebuginFill);
+    }
+  cerr << "CPlane infill finished for "<< offsetPolygons.size() << " offset polygons" << endl;
+}
+
+
+vector<Vector2d> * CuttingPlane::CalcInFillOld (double InfillDistance,
+						double InfillRotation, 
+						double InfillRotationPrLayer,
+						bool DisplayDebuginFill)
 {
     int c=0;
     vector<InFillHit> HitsBuffer;
+    double step = InfillDistance;
     
     vector<Vector2d> *infill = new vector<Vector2d>();
-    // bool examine = false;
-    bool examineThis = true;
+    bool examine = false;
 
-    //double Length = sqrt(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0;	// bbox of lines to intersect the poly with
+    double Length = sqrt(2)*(   ((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  )/2.0;	// bbox of lines to intersect the polys with
 
     double rot = InfillRotation/180.0*M_PI;
     rot += (double)LayerNo*InfillRotationPrLayer/180.0*M_PI;
+    Vector2d InfillDirX(cos(rot), sin(rot));
+    Vector2d InfillDirY(-InfillDirX.y, InfillDirX.x);
+    Vector2d Center = (Max+Min)/2.0;
     
-    vector<InFillHit> phits;
-    for(size_t p=0;p<offsetPolygons.size();p++)
+    for(double x = -Length ; x < Length ; x+=step)
       {
-	phits = offsetPolygons[p].calcInfill(InfillDistance, rot, DisplayDebuginFill);
-	HitsBuffer.insert(HitsBuffer.end(),phits.begin(),phits.end());
-      }
-    c = 0;	// Color counter
-    while (HitsBuffer.size())
-      {
-	infill->push_back(HitsBuffer[0].p);
+	bool examineThis = true;
+	HitsBuffer.clear();
+	Vector2d P1 = (InfillDirX * Length)+(InfillDirY*x)+ Center;
+	Vector2d P2 = (InfillDirX * -Length)+(InfillDirY*x) + Center;
+	
+	if(DisplayDebuginFill)
+	  {
+	    glBegin(GL_LINES);
+	    glColor3f(0,0.2f,0);
+	    glVertex3d(P1.x, P1.y, Z);
+	    glVertex3d(P2.x, P2.y, Z);
+	    glEnd();
+	  }
+	double Examine = 0.5;
+	if(DisplayDebuginFill && !examine && ((Examine-0.5)*2 * Length <= x))
+	  {
+	    examineThis = examine = true;
+	    glColor3f(1,1,1);  // Draw the line
+	    glVertex3d(P1.x, P1.y, Z);
+	    glVertex3d(P2.x, P2.y, Z);
+	  }
+
+	// intersect with all polygons
+	for(size_t p=0;p<offsetPolygons.size();p++)
+	  {
+	    vector<InFillHit> polyhits = 
+	      offsetPolygons[p].lineIntersections(P1,P2,0.1*step);
+	    HitsBuffer.insert(HitsBuffer.end(),polyhits.begin(),polyhits.end());
+	  }
+
+	// Sort hits by distance from P1
+	// Sort the vector using predicate and std::sort
+	std::sort (HitsBuffer.begin(), HitsBuffer.end(), InFillHitCompareFunc);
+	
 	if(examineThis)
 	  {
-	    switch(c)
-	      {
-	      case 0: glColor3f(1,0,0); break;
-	      case 1: glColor3f(0,1,0); break;
-	      case 2: glColor3f(0,0,1); break;
-	      case 3: glColor3f(1,1,0); break;
-	      case 4: glColor3f(0,1,1); break;
-	      case 5: glColor3f(1,0,1); break;
-	      case 6: glColor3f(1,1,1); break;
-	      case 7: glColor3f(1,0,0); break;
-	      case 8: glColor3f(0,1,0); break;
-	      case 9: glColor3f(0,0,1); break;
-	      case 10: glColor3f(1,1,0); break;
-	      case 11: glColor3f(0,1,1); break;
-	      case 12: glColor3f(1,0,1); break;
-	      case 13: glColor3f(1,1,1); break;
-	      }
-	    c++;
-	    glPointSize(10);
+	    glPointSize(4);
 	    glBegin(GL_POINTS);
-	    glVertex3d(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
+	    for (size_t i=0;i<HitsBuffer.size();i++)
+	      glVertex3d(HitsBuffer[0].p.x, HitsBuffer[0].p.y, Z);
 	    glEnd();
 	    glPointSize(1);
 	  }
-	HitsBuffer.erase(HitsBuffer.begin());
+	
+	// Check for double hits
+      restart_check:
+	for (size_t i=0;i<HitsBuffer.size();i++)
+	  {
+	    bool found = false;
+	    
+	    for (size_t j=i+1;j<HitsBuffer.size();j++)
+	      {
+		if( /*ABS(*/HitsBuffer[i].d == HitsBuffer[j].d)// < 0.0001)
+		  {
+		    found = true;
+		    // Delete both points, and continue
+		    HitsBuffer.erase(HitsBuffer.begin()+j);
+		    // If we are "Going IN" to solid material, and there's
+		    // more points, keep one of the points
+		    //if (i != 0 && i != HitsBuffer.size()-1)
+		      HitsBuffer.erase(HitsBuffer.begin()+i);
+		    goto restart_check;
+		  }
+	      }
+	    if (found)
+	      continue;
+	  }
+	
+	
+	// Sort hits by distance and transfer to InFill Buffer
+	if (HitsBuffer.size() != 0 && HitsBuffer.size() % 2)
+	  continue;	// There's a uneven number of hits, skip this infill line (U'll live)
+	c = 0;	// Color counter
+	for (size_t i=0;i<HitsBuffer.size();i++)
+	  {
+	    infill->push_back(HitsBuffer[i].p);
+	    if(examineThis)
+	      {
+		switch(c)
+		  {
+		  case 0: glColor3f(1,0,0); break;
+		  case 1: glColor3f(0,1,0); break;
+		  case 2: glColor3f(0,0,1); break;
+		  case 3: glColor3f(1,1,0); break;
+		  case 4: glColor3f(0,1,1); break;
+		  case 5: glColor3f(1,0,1); break;
+		  case 6: glColor3f(1,1,1); break;
+		  case 7: glColor3f(1,0,0); break;
+		  case 8: glColor3f(0,1,0); break;
+		  case 9: glColor3f(0,0,1); break;
+		  case 10: glColor3f(1,1,0); break;
+		  case 11: glColor3f(0,1,1); break;
+		  case 12: glColor3f(1,0,1); break;
+		  case 13: glColor3f(1,1,1); break;
+		  }
+		c++;
+		glPointSize(10);
+		glBegin(GL_POINTS);
+		glVertex3d(HitsBuffer[i].p.x, HitsBuffer[i].p.y, Z);
+		glEnd();
+		glPointSize(1);
+	      }
+	  }
       }
     return infill;
+}
+
+
+ClipperLib::Polygons CuttingPlane::getClipperPolygons(bool reverse) const
+{
+  ClipperLib::Polygons cpolys;
+  for (uint i=0; i<polygons.size(); i++) 
+    {
+      cpolys.push_back(polygons[i].getClipperPolygon(reverse));
+    }
+  return cpolys;
 }
 
 
@@ -399,6 +519,27 @@ bool CuttingPlane::CleanupSharedSegments()
 		}
 	}
 	return true;
+}
+
+void CuttingPlane::setFullFillPolygons(const ClipperLib::Polygons cpolys)
+{
+  fullFillPolygons.clear();
+  fullFillVertices.clear();
+  for (uint i=0; i<cpolys.size(); i++)
+    {
+      Poly p(this, &fullFillVertices, cpolys[i]);
+      fullFillPolygons.push_back(p);
+    }
+}
+void CuttingPlane::setNormalFillPolygons(const ClipperLib::Polygons cpolys)
+{
+  offsetPolygons.clear();
+  offsetVertices.clear();
+  for (uint i=0; i<cpolys.size(); i++)
+    {
+      Poly p(this, &offsetVertices, cpolys[i]);
+      offsetPolygons.push_back(p);
+    }
 }
 
 /*
@@ -921,18 +1062,16 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 		for (size_t i = 0; i < infill->size(); i++)
 			lines.push_back (Vector3d ((*infill)[i].x, (*infill)[i].y, z));
 
-	// ??? used even with Fast Shrinker - where are the optimizers coming from?
-	// if( optimizers.size() > 1 )
-	// {
-	// 	// new method
-	// 	for( uint i = 1; i < optimizers.size()-1; i++)
-	// 	{
-	// 		optimizers[i]->RetrieveLines(lines);
-	// 	}
-	// }
-	// else
+	if( optimizers.size() > 1 )
 	{
-		// old method
+		// new method
+		for( uint i = 1; i < optimizers.size()-1; i++)
+		{
+			optimizers[i]->RetrieveLines(lines);
+		}
+	}
+	else
+	{
 		// Copy polygons
 		if(offsetPolygons.size() != 0)
 		{
@@ -941,8 +1080,8 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 				for(size_t i=0;i<offsetPolygons[p].points.size();i++)
 				{
 				  // ??? use getVertexCircular3 and rely on Z stored in poly?
-				  Vector2d P3 = offsetPolygons[p].getVertexCircular(i);//offsetVertices[offsetPolygons[p].points[i]];
-				  Vector2d P4 = offsetPolygons[p].getVertexCircular(i+1);//offsetVertices[offsetPolygons[p].points[(i+1)%offsetPolygons[p].points.size()]];
+				  Vector2d P3 = offsetPolygons[p].getVertexCircular(i);
+				  Vector2d P4 = offsetPolygons[p].getVertexCircular(i+1);
 					lines.push_back(Vector3d(P3.x, P3.y, z));
 					lines.push_back(Vector3d(P4.x, P4.y, z));
 				}
@@ -1050,24 +1189,32 @@ void CuttingPlane::ShrinkFast(double extrudedWidth, double optimization,
 			      int ShellCount)
 {
   double distance = (ShellCount - 0.5) * extrudedWidth;
-  //cerr<< "---- plane shrink shell no" << ShellCount << " distance=" << distance << endl;
-  //printinfo();
-	glColor4f (1,1,1,1);
-	for(size_t p=0; p<polygons.size();p++)
-	{
-	  // cerr << "polygon no "<<p<<endl;
-	  // polygons[p].printinfo();
-	  Poly offsetPoly = polygons[p].Shrinked(distance);
-	  offsetPoly.cleanup(optimization);
-	  // offsetPoly.printinfo();
-	  if(DisplayCuttingPlane) {
-	    offsetPoly.draw(GL_LINE_LOOP);
-	    offsetPoly.draw(GL_POINTS);
-	  }
-	  offsetPolygons.push_back(offsetPoly);
-	}
-	// make this work for z-tensioner_1off.stl rotated 45d on X axis
-	//selfIntersectAndDivide();
+  // 1. get polys from Clipper
+  offsetPolygons.clear();
+  bool reverse=true;
+  ClipperLib::Polygons opolys;
+  while (opolys.size()==0){ // try to reverse poly vertices if no result
+    ClipperLib::Polygons cpolys = getClipperPolygons(reverse);
+    ClipperLib::OffsetPolygons(cpolys, opolys, -1000.*distance,
+			       ClipperLib::jtSquare);//, 100.*distance);
+    reverse=!reverse;
+    if (reverse) break;
+  }
+
+  // 2. get vertices from Clipper polys
+  offsetVertices.clear();
+  for(size_t p=0; p<opolys.size();p++)
+    {
+      Poly offsetPoly = Poly(this, &offsetVertices, opolys[p], true);
+      // glColor4f (1,1,1,1);
+      //offsetPoly.printinfo();
+      //offsetPoly.cleanup(optimization); // not necessary with ClipperLib(?)
+      // if(DisplayCuttingPlane) {
+      // 	offsetPoly.draw(GL_LINE_LOOP);
+      // 	offsetPoly.draw(GL_POINTS);
+      // }
+      offsetPolygons.push_back(offsetPoly);
+    }
 }
 
 
@@ -1226,25 +1373,41 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	  polygons[p].draw(GL_POINTS);
 	}
 
+	glColor4f(1,1,1,1);
+	glPointSize(3);
+	for(size_t p=0;p<offsetPolygons.size();p++)
+	{
+	  offsetPolygons[p].draw(GL_LINE_LOOP);
+	}
+
+	glColor4f(.8,1,.8,1);
+	glPointSize(3);
+	for(size_t p=0;p<fullFillPolygons.size();p++)
+	{
+	  fullFillPolygons[p].draw(GL_LINE_LOOP);
+	}
+
 
 	if(DrawVertexNumbers)
 	{
-		for(size_t v=0;v<vertices.size();v++)
-		{
-			ostringstream oss;
-			oss << v;
-			renderBitmapString(Vector3f (vertices[v].x, vertices[v].y, Z) , GLUT_BITMAP_8_BY_13 , oss.str());
-		}
+	  for(size_t v=0;v<vertices.size();v++)
+	    {
+	      ostringstream oss;
+	      oss << v;
+	      renderBitmapString(Vector3f (vertices[v].x, vertices[v].y, Z) ,
+				 GLUT_BITMAP_8_BY_13 , oss.str());
+	    }
 	}
 	if(DrawLineNumbers)
 	{
-		for(size_t l=0;l<lines.size();l++)
-		{
-			ostringstream oss;
-			oss << l;
-			Vector2d Center = (vertices[lines[l].start]+vertices[lines[l].end]) *0.5f;
-			glColor4f(1,0.5,0,1);
-			renderBitmapString(Vector3f (Center.x, Center.y, Z) , GLUT_BITMAP_8_BY_13 , oss.str());
+	  for(size_t l=0;l<lines.size();l++)
+	    {
+	      ostringstream oss;
+	      oss << l;
+	      Vector2d Center = (vertices[lines[l].start]+vertices[lines[l].end]) *0.5f;
+	      glColor4f(1,0.5,0,1);
+	      renderBitmapString(Vector3f (Center.x, Center.y, Z) , 
+				 GLUT_BITMAP_8_BY_13 , oss.str());
 		}
 	}
 

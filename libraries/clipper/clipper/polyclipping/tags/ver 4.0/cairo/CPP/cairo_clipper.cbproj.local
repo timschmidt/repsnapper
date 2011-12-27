@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2010/11/04 04:28:10.632.cpp,C:\Users\Angus\Documents\RAD Studio\Projects\File1.cpp=C:\Users\Angus\Documents\RAD Studio\Projects\console\main.cpp</Transaction>
+    <Transaction>2010/11/04 04:28:18.519.cbproj,C:\Users\Angus\Documents\RAD Studio\Projects\Project2.cbproj=C:\Users\Angus\Documents\RAD Studio\Projects\console\Simple.cbproj</Transaction>
+    <Transaction>2010/11/04 07:03:25.554.cbproj,C:\Users\Angus\Documents\RAD Studio\Projects\console\Simple.cbproj=C:\Users\Angus\Documents\RAD Studio\Projects\console\cairo_clipper.cbproj</Transaction>
+  </Transactions>
+</BorlandProject>

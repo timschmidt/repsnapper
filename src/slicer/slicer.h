@@ -83,8 +83,8 @@ public:
 	void clear() { triangles.clear(); }
 	void displayInfillOld(const Settings &settings, CuttingPlane &plane, 
 			      guint LayerNr, vector<int>& altInfillLayers);
-	void draw (RFO &rfo, const Settings &settings);
-	void draw_geometry ();
+	void draw (const Model *model, const Settings &settings) const;
+	void draw_geometry () const;
 	void CenterAroundXY();
 	// Extract a 2D polygonset from a 3D model:
 	void CalcCuttingPlane(const Matrix4d &T,

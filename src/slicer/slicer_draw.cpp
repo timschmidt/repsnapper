@@ -22,6 +22,7 @@
 #include "platform.h"   // OpenGL, glu, glut in cross-platform way
 #include <vmmlib/vmmlib.h>
 
+#include "model.h"
 #include "slicer.h"
 #include "cuttingplane.h"
 
@@ -63,8 +64,8 @@ void renderBitmapString(Vector3d pos, void* font, string text)
 
 // FIXME: why !? do we grub around with the rfo here ?
 //  --> the model ist sliced here again in addition to model2.cpp???
-// for display of cutting planes, this has to be made in cuttinplane.cpp
-void Slicer::draw(RFO &rfo, const Settings &settings)
+// called from Model::draw
+void Slicer::draw(const Model *model, const Settings &settings) const 
 {
   //cerr << "Slicer::draw" <<  endl;
 	// polygons
@@ -143,7 +144,7 @@ void Slicer::draw(RFO &rfo, const Settings &settings)
 		glBegin(GL_LINES);
 		for(size_t i=0;i<triangles.size();i++)
 		{
-			Vector3d center = (triangles[i].A+triangles[i].B+triangles[i].C)/3.0f;
+			Vector3d center = (triangles[i].A+triangles[i].B+triangles[i].C)/3.0;
 			glVertex3dv((GLdouble*)&center);
 			Vector3d N = center + (triangles[i].Normal*settings.Display.NormalsLength);
 			glVertex3dv((GLdouble*)&N);
@@ -168,68 +169,9 @@ void Slicer::draw(RFO &rfo, const Settings &settings)
 	}
 	glDisable(GL_DEPTH_TEST);
 
-	// Make Layers
-	if(settings.Display.DisplayCuttingPlane)
-	{
-	  uint LayerNr = 0;
-	  uint LayerCount = (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5f)/
-				       settings.Hardware.LayerThickness);
-
-		vector<int> altInfillLayers;
-		settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
-
-		double zSize = (Max.z-Min.z);
-		double z=settings.Display.CuttingPlaneValue*zSize+Min.z;
-		double zStep = zSize; // only show on layer, next is outside
-
-		if(settings.Display.DisplayAllLayers)
-		{
-			z=Min.z;
-			zStep = settings.Hardware.LayerThickness;
-		}
-		CuttingPlane plane(LayerNr);
-		while(z<Max.z)
-		{
-		  plane.LayerNo = LayerNr;
-		  plane.setZ(z);
-			for(size_t o=0;o<rfo.Objects.size();o++)
-			{
-				for(size_t f=0;f<rfo.Objects[o].files.size();f++)
-				{
-					Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
-					Vector3d t = T.getTranslation();
-					t+= Vector3d(settings.Hardware.PrintMargin.x+
-						     settings.Raft.Size*settings.RaftEnable, 
-						     settings.Hardware.PrintMargin.y+
-						     settings.Raft.Size*settings.RaftEnable,
-						     0);
-					T.setTranslation(t);
-					T=Matrix4d::IDENTITY;
-					CalcCuttingPlane(T, settings.Slicing.Optimization, plane);
-					plane.MakePolygons(settings.Slicing.Optimization);
-					
-					plane.Shrink(settings.Slicing.ShrinkQuality,
-						     settings.Hardware.ExtrudedMaterialWidth,
-						     settings.Slicing.Optimization,
-						     settings.Display.DisplayCuttingPlane,
-						     false, settings.Slicing.ShellCount);
-					
-					plane.Draw(settings.Display.DrawVertexNumbers,
-						   settings.Display.DrawLineNumbers,
-						   settings.Display.DrawCPOutlineNumbers,
-						   settings.Display.DrawCPLineNumbers, 
-						   settings.Display.DrawCPVertexNumbers);
-					// displayInfillOld(settings, plane, plane.LayerNo, altInfillLayers);
-				}
-			}
-			LayerNr++;
-			z+=zStep;
-		}
-	}// If display cuttingplane
-
 
 	if(settings.Display.DisplayBBox)
-	{
+	  {
 		// Draw bbox
 		glColor3f(1,0,0);
 		glLineWidth(1);
@@ -290,10 +232,11 @@ void Slicer::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 			  infillDistance = settings.Slicing.AltInfillDistance;
 			}
 
-			infill = infillCuttingPlane.CalcInFill(infillDistance,
-							       settings.Slicing.InfillRotation,
-							       settings.Slicing.InfillRotationPrLayer,
-							       settings.Display.DisplayDebuginFill);
+			infill = infillCuttingPlane.CalcInFillOld(infillDistance,
+						      settings.Slicing.InfillRotation,
+						      settings.Slicing.InfillRotationPrLayer,
+						      settings.Display.DisplayDebuginFill);
+			//infill = infillCuttingPlane.getInfillVertices();
 		}
 		glColor4f(1,1,0,1);
 		glPointSize(5);
@@ -311,7 +254,7 @@ void Slicer::displayInfillOld(const Settings &settings, CuttingPlane &plane,
 	}
 }
 
-void Slicer::draw_geometry()
+void Slicer::draw_geometry() const
 {
 	glBegin(GL_TRIANGLES);
 	for(size_t i=0;i<triangles.size();i++)

@@ -288,7 +288,7 @@ public:
 
     m_inhibit_update = true;
     for (uint i = 0; i < 3; i++) {
-      Matrix4d *mat;
+      const Matrix4d *mat;
       if (!object) {
 	for (uint i = 0; i < 3; i++)
 	  m_xyz[i]->set_value(0.0);
@@ -943,7 +943,6 @@ void View::update_scale_slider()
 }
 
 // GPL bits below from model.cpp ...
-
 void View::DrawGrid()
 {
 	Vector3d volume = m_model->settings.Hardware.Volume;
@@ -1039,14 +1038,9 @@ void View::DrawGrid()
 	glDisable (GL_LIGHTING);
 }
 
+// called from Render::on_expose_event
 void View::Draw (Gtk::TreeModel::iterator &selected)
 {
-	// FIXME: rationalize this printOffset madness
-	Vector3d printOffset = m_model->settings.Hardware.PrintMargin;
-	if(m_model->settings.RaftEnable)
-		printOffset += Vector3d(m_model->settings.Raft.Size, m_model->settings.Raft.Size, 0);
-	Vector3d translation = m_model->rfo.transform3D.transform.getTranslation();
-
 	// Draw the grid, pushed back so it can be seen
 	// when viewed from below.
 	glEnable (GL_POLYGON_OFFSET_FILL);
@@ -1063,41 +1057,7 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 		m_model->GlDrawGCode();
 	}
 
-	// Add the print offset to the drawing location of the STL objects.
-	glTranslatef(translation.x+printOffset.x, translation.y+printOffset.y,
-		translation.z+printOffset.z);
-
 	// Draw all objects
-	m_model->rfo.draw (m_model->settings, selected);
+	m_model->draw(selected);
 
-	// draw total bounding box
-	Vector3d Min = m_model->Min;
-	Vector3d Max = m_model->Max;
-	if(m_model->settings.Display.DisplayBBox)
-	{
-		// Draw bbox
-		glColor3f(1,0,0);
-		glBegin(GL_LINE_LOOP);
-		glVertex3f(Min.x, Min.y, Min.z);
-		glVertex3f(Min.x, Max.y, Min.z);
-		glVertex3f(Max.x, Max.y, Min.z);
-		glVertex3f(Max.x, Min.y, Min.z);
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-		glVertex3f(Min.x, Min.y, Max.z);
-		glVertex3f(Min.x, Max.y, Max.z);
-		glVertex3f(Max.x, Max.y, Max.z);
-		glVertex3f(Max.x, Min.y, Max.z);
-		glEnd();
-		glBegin(GL_LINES);
-		glVertex3f(Min.x, Min.y, Min.z);
-		glVertex3f(Min.x, Min.y, Max.z);
-		glVertex3f(Min.x, Max.y, Min.z);
-		glVertex3f(Min.x, Max.y, Max.z);
-		glVertex3f(Max.x, Max.y, Min.z);
-		glVertex3f(Max.x, Max.y, Max.z);
-		glVertex3f(Max.x, Min.y, Min.z);
-		glVertex3f(Max.x, Min.y, Max.z);
-		glEnd();
-	}
 }

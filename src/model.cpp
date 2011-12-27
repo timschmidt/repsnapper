@@ -334,3 +334,214 @@ void Model::CalcBoundingBoxAndCenter()
   }
 }
 
+// called from View::Draw
+void Model::draw (Gtk::TreeModel::iterator &iter)
+{
+
+  RFO_File *sel_file;
+  RFO_Object *sel_object;
+  gint index = 1; // pick/select index. matches computation in update_model()
+  rfo.get_selected_stl (iter, sel_object, sel_file);
+
+  Vector3d printOffset = settings.Hardware.PrintMargin;
+  if(settings.RaftEnable)
+    printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
+  Vector3d translation = rfo.transform3D.transform.getTranslation();
+  Vector3d offset = printOffset + translation;
+  
+  // Add the print offset to the drawing location of the STL objects.
+  glTranslatef(offset.x, offset.y, offset.z);
+
+  glPushMatrix();
+  glMultMatrixd (&rfo.transform3D.transform.array[0]);
+
+  for (uint i = 0; i < rfo.Objects.size(); i++) {
+    RFO_Object *object = &rfo.Objects[i];
+    index++;
+
+    glPushMatrix();
+    glMultMatrixd (&object->transform3D.transform.array[0]);
+    for (uint j = 0; j < object->files.size(); j++) {
+      RFO_File *file = &object->files[j];
+      glLoadName(index); // Load select/pick index
+      index++;
+      glPushMatrix();
+      glMultMatrixd (&file->transform3D.transform.array[0]);
+
+      bool is_selected = (sel_file == file ||
+	  (!sel_file && sel_object == object));
+
+      if (is_selected) {
+        // Enable stencil buffer when we draw the selected object.
+        glEnable(GL_STENCIL_TEST);
+        glStencilFunc(GL_ALWAYS, 1, 1);
+        glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+
+        file->stl.draw (this, settings);
+
+        if (!settings.Display.DisplayPolygons) {
+                // If not drawing polygons, need to draw the geometry
+                // manually, but invisible, to set up the stencil buffer
+                glEnable(GL_CULL_FACE);
+                glEnable(GL_DEPTH_TEST);
+                glEnable(GL_BLEND);
+                // Set to not draw anything, and not update depth buffer
+                glDepthMask(GL_FALSE);
+                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+                file->stl.draw_geometry();
+
+                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+                glDepthMask(GL_TRUE);
+        }
+
+        // draw highlight around selected object
+        glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+        glLineWidth(1.0);
+        glEnable(GL_LINE_SMOOTH);
+	glEnable (GL_POLYGON_OFFSET_LINE);
+
+        glDisable (GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+        glStencilFunc(GL_NOTEQUAL, 1, 1);
+	glEnable(GL_DEPTH_TEST);
+
+	file->stl.draw_geometry();
+
+        glEnable (GL_CULL_FACE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glDisable(GL_STENCIL_TEST);
+        glDisable(GL_LINE_SMOOTH);
+	glDisable(GL_POLYGON_OFFSET_LINE);
+      }
+      else {
+        file->stl.draw (this, settings);
+      }
+
+      glPopMatrix();
+    }
+    glPopMatrix();
+  }
+  glPopMatrix();
+
+
+  // draw total bounding box
+  if(settings.Display.DisplayBBox)
+    {
+      // Draw bbox
+      glColor3f(1,0,0);
+      glBegin(GL_LINE_LOOP);
+      glVertex3f(Min.x, Min.y, Min.z);
+      glVertex3f(Min.x, Max.y, Min.z);
+      glVertex3f(Max.x, Max.y, Min.z);
+      glVertex3f(Max.x, Min.y, Min.z);
+      glEnd();
+      glBegin(GL_LINE_LOOP);
+      glVertex3f(Min.x, Min.y, Max.z);
+      glVertex3f(Min.x, Max.y, Max.z);
+      glVertex3f(Max.x, Max.y, Max.z);
+      glVertex3f(Max.x, Min.y, Max.z);
+      glEnd();
+      glBegin(GL_LINES);
+      glVertex3f(Min.x, Min.y, Min.z);
+      glVertex3f(Min.x, Min.y, Max.z);
+      glVertex3f(Min.x, Max.y, Min.z);
+      glVertex3f(Min.x, Max.y, Max.z);
+      glVertex3f(Max.x, Max.y, Min.z);
+      glVertex3f(Max.x, Max.y, Max.z);
+      glVertex3f(Max.x, Min.y, Min.z);
+      glVertex3f(Max.x, Min.y, Max.z);
+      glEnd();
+    }
+
+  if(settings.Display.DisplayCuttingPlane)
+    drawCuttingPlanes(offset);
+  
+}
+
+void Model::drawCuttingPlanes(Vector3d offset) const
+{
+  uint LayerNr;
+
+  bool have_planes = cuttingplanes.size() > 0; // have sliced already
+
+  double z;
+  double zStep = settings.Hardware.LayerThickness;
+  double zSize = (Max.z-Min.z);
+  uint LayerCount = (uint)ceil((zSize + zStep*0.5)/zStep);
+  double sel_Z = settings.Display.CuttingPlaneValue*zSize;
+  uint sel_Layer;
+  if (have_planes) 
+    {
+      sel_Layer = (uint)(settings.Display.CuttingPlaneValue*cuttingplanes.size());
+      if(settings.Display.DisplayAllLayers)  {
+	LayerNr = 0;
+	LayerCount = sel_Layer;
+      } else {
+	LayerNr = sel_Layer;
+	LayerCount = LayerNr+1;
+      }
+    }
+  else 
+    {
+      sel_Layer = (uint)(LayerCount*(sel_Z)/zSize);
+      if(settings.Display.DisplayAllLayers){
+	LayerNr = 0;
+	LayerCount = sel_Layer;
+	z=Min.z + 0.5*zStep;
+      } else {
+	LayerNr = sel_Layer;
+	LayerCount = LayerNr+1;
+	z=Min.z + sel_Z;
+      }
+    }
+  //cerr << zStep << ";"<<Max.z<<";"<<Min.z<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
+  
+  vector<int> altInfillLayers;
+  settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
+  
+  CuttingPlane* plane;
+  if (have_planes) 
+    glTranslatef(-offset.x, -offset.y, -offset.z);
+
+  while(LayerNr < LayerCount)
+    {
+      if (have_planes)
+	{
+	  plane = cuttingplanes[LayerNr];
+	  z = plane->getZ();
+	}
+      else
+	{
+	  plane = new CuttingPlane(LayerNr);
+	  plane->setZ(z);
+	  for(size_t o=0;o<rfo.Objects.size();o++)
+	    {
+	      for(size_t f=0;f<rfo.Objects[o].files.size();f++)
+		{
+		  Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
+		  Vector3d t = T.getTranslation();
+		  T.setTranslation(t);
+		  rfo.Objects[o].files[f].stl.CalcCuttingPlane(T, settings.Slicing.Optimization, *plane);
+		}
+	    }
+	  plane->MakePolygons(settings.Slicing.Optimization);
+	  plane->Shrink(settings.Slicing.ShrinkQuality,
+			settings.Hardware.ExtrudedMaterialWidth,
+			settings.Slicing.Optimization,
+			settings.Display.DisplayCuttingPlane,
+			false, settings.Slicing.ShellCount);
+	}
+      plane->Draw(settings.Display.DrawVertexNumbers,
+		  settings.Display.DrawLineNumbers,
+		  settings.Display.DrawCPOutlineNumbers,
+		  settings.Display.DrawCPLineNumbers, 
+		  settings.Display.DrawCPVertexNumbers);
+      // displayInfillOld(settings, plane, plane.LayerNo, altInfillLayers);
+      
+      LayerNr++; 
+      z+=zStep;
+    }// while
+}
+

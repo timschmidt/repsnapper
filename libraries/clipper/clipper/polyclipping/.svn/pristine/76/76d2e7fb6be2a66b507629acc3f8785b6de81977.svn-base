@@ -1,0 +1,44 @@
+============================================================
+Clipper Change Log
+============================================================
+
+v3.0 - 31 January 2011
+* Update: Major rewrite of the portion of code that calculates 
+  the output polygons' orientation.
+* Update: Help file significantly improved.
+* Change: Renamed ForceOrientation property to IgnoreOrientation. 
+  If the orientation of output polygons is not important, or can 
+  be managed separately, clipping routines can be sped up by about 
+  60% by setting IgnoreOrientation to true. Defaults to false.
+* Change: The OffsetPolygon and Area functions have been moved to 
+  the new unit - clipper_misc. 
+
+2.99 - 15 January 2011
+* Bugfix: Obscure bug in AddPolygon method could cause an endless loop. 
+
+2.8 - 20 November 2010
+* Updated: Output polygons which previously shared a common 
+  edge are now merged. 
+* Changed: The orientation of outer polygons is now clockwise 
+  when the display's Y axis is positive downwards (as is 
+  typical for most Windows applications). Inner polygons 
+  (holes) have the opposite orientation.
+* Added: Support module for Cairo Graphics Library (with demo). 
+* Updated: C# and C++ demos.
+
+2.522 - 15 October 2010
+* Added C# translation (thanks to Olivier Lejeune) and 
+  a link to Ruby bindings (thanks to Mike Owens).
+
+2.0 - 30 July 2010
+* Clipper now clips using both the Even-Odd (alternate) and 
+  Non-Zero (winding) polygon filling rules. (Previously Clipper 
+  assumed the Even-Odd rule for polygon filling.)
+  
+1.4c - 16 June 2010
+* Added C++ support for AGG graphics library 
+  
+1.2s - 2 June 2010
+* Added C++ translation of clipper.pas
+
+1.0 - 9 May 2010

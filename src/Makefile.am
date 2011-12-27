@@ -71,7 +71,7 @@ repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) src/repsnapper.cpp
 
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 
-repsnapper_LDADD = libpolylib.la libreprap.la $(GTKMM_LIBS) $(GL_LIBS) 
+repsnapper_LDADD = libpolylib.la libreprap.la libclipper.la $(GTKMM_LIBS) $(GL_LIBS) 
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
 dist_repsnapperdata_DATA = src/repsnapper.ui

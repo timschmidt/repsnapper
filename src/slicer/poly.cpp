@@ -17,8 +17,10 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "config.h"
-#include "poly.h"
+#include "cuttingplane.h"
 #include "slicer.h"
+#include "infill.h"
+#include "poly.h"
 
 long double angleBetween(Vector2d V1, Vector2d V2)
 {
@@ -67,6 +69,28 @@ Poly::Poly(CuttingPlane *plane, vector<Vector2d> *vertices){
   //plane->printinfo();
   //printinfo();
 }
+
+
+// construct a Poly from a ClipperLib::Poly on given CuttingPlane
+Poly::Poly(CuttingPlane *plane, vector<Vector2d> *vertices,
+	   const ClipperLib::Polygon cpoly, bool reverse){
+  this->plane = plane;
+  this->vertices = vertices;
+  uint count = cpoly.size();
+  for (uint i = 0 ; i<count;  i++) { 
+    Vector2d v;
+    if (reverse)
+      v = Vector2d(double(cpoly[count-1-i].X)/1000.-1000., 
+		   double(cpoly[count-1-i].Y)/1000.-1000.);
+    else
+      v = Vector2d(double(cpoly[i].X)/1000.-1000., double(cpoly[i].Y)/1000.-1000.);
+    //cerr << "Poly "<< i <<": "<< v <<  endl;
+    points.push_back(vertices->size());
+    vertices->push_back(v);
+  }
+  calcHole();
+}
+
 
 Poly::~Poly()
 {
@@ -119,6 +143,7 @@ Poly Poly::Shrinked(double distance) const{
       // add p to plane's offsetVertices == offsetPoly's vertices
       offsetPoly.vertices->push_back(p);
     }
+  offsetPoly.calcHole();
   return offsetPoly;
 }
 
@@ -183,36 +208,61 @@ void Poly::calcHole()
 	hole = Va.cross(Vb) > 0; 
 }
 
-
-bool Poly::vertexInside(Vector2d point, double maxoffset) const
+bool Poly::vertexInside(const Vector2d p, double maxoffset) const
 {
-  // Shoot a ray along +X and count the number of intersections.
-  // If n_intersections is even, return false, else return true
-  Vector2d EndP(point.x+10000, point.y);
-  int intersectcount = 1; // we want to test if uneven
-
-  for(size_t i=0; i<points.size();i++)
-    {
-      Vector2d P1 = getVertexCircular(i-1);
-      Vector2d P2 = getVertexCircular(i);
-		    
-      // Skip horizontal lines, we can't intersect with them, 
-      // because the test line is horizontal
-      if(P1.y == P2.y)	
-	continue;
-      
-      InFillHit hit;
-      if(IntersectXY(point,EndP,P1,P2,hit,maxoffset))
-	intersectcount++;
-    }
-  return intersectcount%2;
+  uint c = 0;
+  for (uint i = 0; i < points.size()-1;  i++) {
+    Vector2d Pi = getVertexCircular(i);
+    Vector2d Pj = getVertexCircular(i+1);
+    if ( ((Pi.y>p.y) != (Pj.y>p.y)) &&
+	 (p.x < (Pj.x-Pi.x) * (p.y-Pi.y) / (Pj.y-Pj.y) + Pi.x) )
+      c = !c;
+  }
+  return c;
 }
+
+bool Poly::polyInside(const Poly * poly, double maxoffset) const
+{
+  uint i, count=0;
+  for (i = 0; i < poly->points.size();  i++) {
+    Vector2d P = poly->getVertexCircular(i);
+    if (vertexInside(P,maxoffset))
+      count++;
+  }
+  return count == poly->points.size();
+}
+
+
+// bool Poly::vertexInsideOld(const Vector2d point, double maxoffset) const
+// {
+//   // Shoot a ray along +X and count the number of intersections.
+//   // If n_intersections is even, return false, else return true
+//   Vector2d EndP(point.x+10000, point.y);
+//   int intersectcount = 1; // we want to test if uneven
+
+//   for(size_t i=0; i<points.size();i++)
+//     {
+//       Vector2d P1 = getVertexCircular(i-1);
+//       Vector2d P2 = getVertexCircular(i);
+		    
+//       // Skip horizontal lines, we can't intersect with them, 
+//       // because the test line is horizontal
+//       if(P1.y == P2.y)	
+// 	continue;
+      
+//       InFillHit hit;
+//       if(IntersectXY(point,EndP,P1,P2,hit,maxoffset))
+// 	intersectcount++;
+//     }
+//   return intersectcount%2;
+// }
 
 
 Vector2d Poly::getVertexCircular(int pointindex) const
 {
   uint size = points.size();
   pointindex = (pointindex + size) % size;
+  //cerr << vertices->size() <<" >  "<< points[pointindex] << endl;
   assert (vertices->size() > points[pointindex]);
   return (*vertices)[points[pointindex]];
 }
@@ -221,6 +271,47 @@ Vector3d Poly::getVertexCircular3(int pointindex) const
 {
   Vector2d v = getVertexCircular(pointindex);
   return Vector3d(v.x,v.y,plane->Z);
+}
+
+
+// return intersection polys
+vector< vector<Vector2d> > Poly::intersect(Poly &poly1, Poly &poly2) const
+{
+  ClipperLib::Polygon cpoly1 = poly1.getClipperPolygon(),
+    cpoly2 =  poly2.getClipperPolygon();
+  ClipperLib::Clipper clppr;
+  ClipperLib::Polygons sol;
+  clppr.AddPolygon(cpoly1,ClipperLib::ptSubject);
+  clppr.AddPolygon(cpoly2,ClipperLib::ptClip);
+  clppr.Execute(ClipperLib::ctIntersection, sol, 
+		  ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
+
+  vector< vector<Vector2d> > result;
+  for(size_t i=0; i<sol.size();i++)
+    {
+      vector<Vector2d> polypoints;
+      ClipperLib::Polygon cpoly = sol[i];
+      for(size_t j=0; j<cpoly.size();j++){
+	polypoints.push_back(Vector2d(cpoly[j].X,cpoly[j].Y));
+      }
+      result.push_back(polypoints);
+    }
+    return result;
+}
+
+ClipperLib::Polygon Poly::getClipperPolygon(bool reverse) const 
+{
+  ClipperLib::Polygon cpoly;
+  for(size_t i=0; i<points.size();i++){
+    Vector2d P1;
+    if (reverse)
+      P1 = getVertexCircular(-i); // normally have to reverse, why?
+    else 
+      P1 = getVertexCircular(i); 
+    cpoly.push_back(ClipperLib::IntPoint(1000*(P1.x+1000.),
+					 1000*(P1.y+1000.)));
+  }
+  return cpoly;
 }
 
 
@@ -265,103 +356,44 @@ vector<Vector2d> Poly::intersect(Poly *other, int startVertex,
 }
 
 
-
-vector<InFillHit> Poly::calcInfill (double InfillDistance,
-				    double InfillRotation,  // radians!
-				    bool DisplayDebuginFill) const
+vector<InFillHit> Poly::lineIntersections(const Vector2d P1, const Vector2d P2,
+					  double maxerr) const
 {
-  assert(vertices!=NULL); 
   vector<InFillHit> HitsBuffer;
-  double rot = InfillRotation;
-  Vector2d InfillDirX(cos(rot), sin(rot));
-  Vector2d InfillDirY(-InfillDirX.y, InfillDirX.x);
-
-  vector<Vector2d> minmax = getMinMax();
-  Vector2d Min = minmax[0], Max = minmax[1];
-  
-  double Length = 2.*(((Max.x)>(Max.y)? (Max.x):(Max.y))  -  ((Min.x)<(Min.y)? (Min.x):(Min.y))  );	// bbox of lines to intersect the poly with
-
-  bool examine = false;
-  bool examineThis = true;
-
-
-  // cerr << "poly infill rot=" << rot  << " at layer z=" << plane->Z << " no " << plane->LayerNo << endl;
-  //  cerr << "MINMAx" << Min << "--" << Max << endl;
-
-  HitsBuffer.clear();
-  for(double x = -Length ; x < Length ; x+=InfillDistance)
-    {
-      //cerr <<"x="<<x<<" of " << Length<<endl;
-      Vector2d P1 = (InfillDirX * Length) + (InfillDirY*x) + center;
-      Vector2d P2 = (InfillDirX * -Length)+ (InfillDirY*x) + center;
-      if(DisplayDebuginFill)
-	{
-	  glBegin(GL_LINES);
-	  glColor3f(0,0.2f,0);
-	  glVertex3d(P1.x, P1.y, plane->Z);
-	  glVertex3d(P2.x, P2.y, plane->Z);
-	  glEnd();
-	}
-      double Examine = 0;
-      if(DisplayDebuginFill && !examine && ((Examine-0.5)*2 * Length <= x))
-	{
-	  examine = true;
-	  glBegin(GL_LINES);
-	  glColor3f(1,1,1);  // Draw the line
-	  glVertex3d(P1.x, P1.y, plane->Z);
-	  glVertex3d(P2.x, P2.y, plane->Z);
-	  glEnd();
-	}
-      for(size_t i=0;i<points.size();i++)
-	{
-	  Vector2d P3 = getVertexCircular(i);
-	  Vector2d P4 = getVertexCircular(i+1);
-	  InFillHit hit;
-	  if (IntersectXY (P1,P2,P3,P4,hit, 0.1*InfillDistance)) {
-	    HitsBuffer.push_back(hit);
-	  }
-	}
-	// Sort hits
-	// Sort the vector using predicate and std::sort
-      std::sort (HitsBuffer.begin(), HitsBuffer.end(), InFillHitCompareFunc);
-      
-      if(examineThis)
-	{
-	  glPointSize(4);
-	  glBegin(GL_POINTS);
-	  for (size_t i=0;i<HitsBuffer.size();i++)
-	    glVertex3d(HitsBuffer[0].p.x, HitsBuffer[0].p.y, plane->Z);
-	  glEnd();
-	  glPointSize(1);
-	}
-      // Verify hits intregrety
-      // Check if hit extists in table
-    restart_check:
-      for (size_t i=0;i<HitsBuffer.size();i++)
-	{
-	  bool found = false;
-	  for (size_t j=i+1;j<HitsBuffer.size();j++)
-	    {
-	      if( ABS(HitsBuffer[i].d - HitsBuffer[j].d) < 0.0001)
-		{
-		  found = true;
-		  // Delete both points, and continue
-		  HitsBuffer.erase(HitsBuffer.begin()+j);
-		  // If we are "Going IN" to solid material, and there's
-		  // more points, keep one of the points
-		  if (i != 0 && i != HitsBuffer.size()-1)
-		    HitsBuffer.erase(HitsBuffer.begin()+i);
-		  goto restart_check;
-		}
-	    }
-	  if (found)
-	    continue;
-	}
-      // Sort hits by distance and transfer to InFill Buffer
-      if (HitsBuffer.size() != 0 && HitsBuffer.size() % 2)
-	continue;  // There's a uneven number of hits, skip this infill line (U'll live)
+  Vector2d P3,P4;
+  for(size_t i = 0; i < points.size(); i++)
+    {  
+      P3 = getVertexCircular(i);
+      P4 = getVertexCircular(i+1);
+      InFillHit hit;
+      if (IntersectXY (P1,P2,P3,P4,hit,maxerr))
+	HitsBuffer.push_back(hit);
     }
   return HitsBuffer;
+}
+
+double Poly::getZ() const {return plane->getZ();} 
+double Poly::getLayerNo() const { return plane->LayerNo;}
+
+
+vector<Vector2d> Poly::getInfillVertices () const {
+  cerr << "get infill vertices"<<endl;
+  printinfo();
+  cerr << "get " << infill.infill.size() << " infill vertices "<< endl;
+  return infill.infill;
+};
+
+void Poly::calcInfill (double InfillDistance,
+		       double InfillRotation, // radians!
+		       bool DisplayDebuginFill)
+{
+  ParallelInfill infill;
+  cerr << " Poly parinfill: " << endl;
+  if (!hole)
+    infill.calcInfill(this,InfillRotation,InfillDistance); 
+  infill.printinfo();
+  this->infill = infill;
+  printinfo();
 }
 
 vector<Vector2d> Poly::getMinMax() const{
@@ -422,8 +454,9 @@ void Poly::drawLineNumbers() const
 
 void Poly::printinfo() const
 {
-  cout <<"Poly at Z="<<plane->getZ()<<" Lno="<<plane->LayerNo ;
-  cout <<", points: "<< points.size();
-  cout <<", vertices: "<< vertices->size();
+  cout <<"Poly at Z="<<plane->getZ()<<", layer "<<plane->LayerNo ;
+  cout <<", "<< points.size();
+  cout <<" points of "<< vertices->size();
+  cout <<"vertices, infill: "<< infill.getSize();
   cout << endl;
 }

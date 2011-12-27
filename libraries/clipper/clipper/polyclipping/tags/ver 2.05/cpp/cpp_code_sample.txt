@@ -1,0 +1,27 @@
+C++ code sample:
+
+	#include "clipper.hpp"
+
+	using namespace clipper;
+
+	Clipper c;
+	TPolygon subject, clip;
+	TPolyPolygon solution;
+
+  subject.reserve(3);
+	subject.push_back(FloatPoint(20,20));
+	subject.push_back(FloatPoint(220,20));
+	subject.push_back(FloatPoint(120,220));
+
+  clip.reserve(3);
+	clip.push_back(FloatPoint(120,20));
+	clip.push_back(FloatPoint(200,250));
+	clip.push_back(FloatPoint(40,250));
+
+	c.AddPolygon(subject, ptSubject);
+	c.AddPolygon(clip, ptClip);
+	c.Execute(ctIntersection, solution);
+
+	for (unsigned i = 0; i < solution.size(); i++) {
+		//do somthing with the solution[i]
+	}

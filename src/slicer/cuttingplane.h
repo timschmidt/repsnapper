@@ -49,6 +49,7 @@ using namespace stdext;
 #include "poly.h"
 
 
+
 #define CUTTING_PLANE_DEBUG 0
 
 using namespace std;
@@ -57,18 +58,6 @@ using namespace PolyLib;
 
 
 typedef vector<Vector2d> outline;
-
-struct InFillHit
-{
-	Vector2d p;  // The intersection point
-	double d;     // Distance from the infill-line start point, used for sorting hits
-	double t;     // intersection point on first line
-};
-
-bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
-bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
-		  const Vector2d &p3, const Vector2d &p4, 
-		  InFillHit &hit, double maxoffset);
 
 
 struct locator
@@ -166,12 +155,22 @@ public:
 	{
 		offsetPolygons.clear();
 		offsetVertices.clear();
+		fullFillPolygons.clear();
+		fullFillVertices.clear();
 	}
+	
+	ClipperLib::Polygons getClipperPolygons(bool reverse=true) const;
 
 
-	vector<Vector2d> * CalcInFill(double InfillDistance, 
-				      double InfillRotation, double InfillRotationPrLayer,
-				      bool DisplayDebuginFill);	// Collide an infill-line with the polygons
+	void CalcInFill(double InfillDistance, 
+			double InfillRotation, double InfillRotationPrLayer,
+			bool DisplayDebuginFill);	// Collide an infill-line with the polygons
+	vector<Vector2d> * getInfillVertices() const;
+
+	vector<Vector2d> * CalcInFillOld(double InfillDistance, 
+			   double InfillRotation, double InfillRotationPrLayer,
+			   bool DisplayDebuginFill);  
+
 	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers,
 		  bool DrawCPLineNumbers, bool DrawCPVertexNumbers) const ;
 	bool MakePolygons(double Optimization); // Link Segments to form polygons
@@ -199,6 +198,8 @@ public:
 		points.clear();
 		offsetPolygons.clear();
 		offsetVertices.clear();
+		fullFillPolygons.clear();
+		fullFillVertices.clear();
 	}
 	void setZ(double value)
 	{
@@ -226,6 +227,10 @@ public:
 	vector<Poly> GetPolygons() const { return polygons; }
 	vector<Vector2d> GetVertices() const { return vertices; }
 	vector<Vector2d> GetOffsetVertices() const { return offsetVertices; }
+	vector<Vector2d> GetFullFillVertices() const { return fullFillVertices; }
+
+	void setFullFillPolygons(const ClipperLib::Polygons cpolys);
+	void setNormalFillPolygons(const ClipperLib::Polygons cpolys);
 
 	void printinfo() const ;
 private:
@@ -239,7 +244,9 @@ private:
 	double Z;
 
 	vector<Poly> offsetPolygons;	// Shrinked closed loops
-	vector<Vector2d> offsetVertices;// points for shrinked closed loops
+	vector<Vector2d> offsetVertices; // points for shrinked closed loops
+	vector<Poly> fullFillPolygons;	 // fully filled polygons (uncovered)
+	vector<Vector2d> fullFillVertices; // points for fully filled polygons
 };
 
 

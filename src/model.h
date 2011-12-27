@@ -23,6 +23,8 @@
 
 #include <giomm/file.h>
 
+//#include "linked_ptr.h"
+
 //#include "slicer.h"
 #include "rfo.h"
 #include "types.h"
@@ -73,11 +75,12 @@ public:
 	void RotateObject(RFO_File *file, RFO_Object *object, Vector4d rotate);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 
-	vector<CuttingPlane> cuttingplanes;
+	vector<CuttingPlane*> cuttingplanes;
 	
 	// Slicing
 	void Slice(GCodeState &state, double printoffsetZ);
 	void CalcInfill(GCodeState &state);
+	void FindUncoveredPolygons();
 
 	// GCode Functions
 	void init();
@@ -112,6 +115,9 @@ public:
 	// Truly the model
 	RFO rfo;
 	Glib::RefPtr<Gtk::TextBuffer> errlog, echolog;
+
+	void draw(Gtk::TreeModel::iterator &selected);
+	void drawCuttingPlanes(Vector3d offset) const;
 
 	sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
 	void alert (const char *message);
