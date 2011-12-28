@@ -6,7 +6,7 @@ RepSnapper is an alternative host software for controlling the RepRap (http://re
 
    ./autogen.sh
    make
-   src/repsnapper
+   ./repsnapper
 
 
 = Documentation =
