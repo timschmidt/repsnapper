@@ -165,7 +165,7 @@ public:
 	Command(){where.x=where.y=where.z=e=-1.0;f=0.0;};
 	GCodes Code;
 	Vector3d where;
-	double f,e;	// Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
+	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
 	string comment;
 };
 
@@ -191,7 +191,10 @@ public:
   void Read  (Model *model, Progress *progress, string filename);
   //void Write (Model *model, string filename);
   void draw  (const Settings &settings);
-  void MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, double AntioozeDistance, double AntioozeSpeed);
+  void MakeText(string &GcodeTxt, const string &GcodeStart,
+		const string &GcodeLayer, const string &GcodeEnd,
+		bool UseIncrementalEcode, bool Use3DGcode,
+		double AntioozeDistance, double AntioozeSpeed);
 
   bool append_text (const std::string &line);
   std::string get_text() const;

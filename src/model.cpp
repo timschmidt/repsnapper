@@ -85,6 +85,13 @@ void Model::ClearGCode()
   gcode.clear();
 }
 
+void Model::ClearCuttingPlanes()
+{
+  for(uint i=0;i<cuttingplanes.size();i++)
+    cuttingplanes[i]->Clear();
+  cuttingplanes.clear();
+}
+
 Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
 {
   return gcode.buffer;
@@ -110,6 +117,7 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
   if (stl.load (file->get_path()) == 0)
     AddStl(NULL, stl, file->get_path());
   ModelChanged();
+  ClearCuttingPlanes();
 }
 
 void Model::Read(Glib::RefPtr<Gio::File> file)
@@ -298,6 +306,7 @@ void Model::DeleteRFO(Gtk::TreeModel::iterator &iter)
 {
   rfo.DeleteSelected (iter);
   ClearGCode();
+  ClearCuttingPlanes();
   CalcBoundingBoxAndCenter();
 }
 
@@ -473,31 +482,21 @@ void Model::drawCuttingPlanes(Vector3d offset) const
   double sel_Z = settings.Display.CuttingPlaneValue*zSize;
   uint sel_Layer;
   if (have_planes) 
-    {
-      sel_Layer = (uint)(settings.Display.CuttingPlaneValue*cuttingplanes.size());
-      if(settings.Display.DisplayAllLayers)  {
-	LayerNr = 0;
-	LayerCount = sel_Layer;
-      } else {
-	LayerNr = sel_Layer;
-	LayerCount = LayerNr+1;
-      }
-    }
+      sel_Layer = (uint)ceil(settings.Display.CuttingPlaneValue*(cuttingplanes.size()-1));
   else 
+      sel_Layer = (uint)ceil(LayerCount*(sel_Z)/zSize);
+  LayerCount = sel_Layer+1;
+  if(settings.Display.DisplayAllLayers)
     {
-      sel_Layer = (uint)(LayerCount*(sel_Z)/zSize);
-      if(settings.Display.DisplayAllLayers){
-	LayerNr = 0;
-	LayerCount = sel_Layer;
-	z=Min.z + 0.5*zStep;
-      } else {
-	LayerNr = sel_Layer;
-	LayerCount = LayerNr+1;
-	z=Min.z + sel_Z;
-      }
+      LayerNr = 0;
+      z=Min.z + 0.5*zStep;
+    } else 
+    {
+      LayerNr = sel_Layer;
+      z=Min.z + sel_Z;
     }
   //cerr << zStep << ";"<<Max.z<<";"<<Min.z<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
-  
+
   vector<int> altInfillLayers;
   settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
   
@@ -523,21 +522,37 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 		  Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
 		  Vector3d t = T.getTranslation();
 		  T.setTranslation(t);
-		  rfo.Objects[o].files[f].stl.CalcCuttingPlane(T, settings.Slicing.Optimization, *plane);
+		  rfo.Objects[o].files[f].stl.CalcCuttingPlane(T, settings.Slicing.Optimization, plane);
 		}
 	    }
 	  plane->MakePolygons(settings.Slicing.Optimization);
-	  plane->Shrink(settings.Slicing.ShrinkQuality,
-			settings.Hardware.ExtrudedMaterialWidth,
-			settings.Slicing.Optimization,
-			settings.Display.DisplayCuttingPlane,
-			false, settings.Slicing.ShellCount);
+	  plane->MakeShells(//settings.Slicing.ShrinkQuality,
+			    settings.Slicing.ShellCount,
+			    settings.Hardware.ExtrudedMaterialWidth,
+			    settings.Slicing.Optimization,
+			    false);
+	  if (settings.Display.DisplayinFill)
+	    {
+	      double fullInfillDistance = settings.Hardware.ExtrudedMaterialWidth
+		* settings.Hardware.ExtrusionFactor;  
+	      double infillDistance;
+	      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) 
+		  != altInfillLayers.end())
+		infillDistance = settings.Slicing.AltInfillDistance;
+	      else
+		infillDistance = settings.Slicing.InfillDistance;
+	      plane->CalcInfill(infillDistance, fullInfillDistance,
+				settings.Slicing.InfillRotation,
+				settings.Slicing.InfillRotationPrLayer, 
+				settings.Display.DisplayDebuginFill);
+	    }
 	}
       plane->Draw(settings.Display.DrawVertexNumbers,
 		  settings.Display.DrawLineNumbers,
 		  settings.Display.DrawCPOutlineNumbers,
 		  settings.Display.DrawCPLineNumbers, 
-		  settings.Display.DrawCPVertexNumbers);
+		  settings.Display.DrawCPVertexNumbers,
+		  settings.Display.DisplayinFill);
       // displayInfillOld(settings, plane, plane.LayerNo, altInfillLayers);
       
       LayerNr++; 

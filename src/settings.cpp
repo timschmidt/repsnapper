@@ -256,7 +256,7 @@ static struct {
   { "Hardware.PrintMargin.Z", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
   { "Hardware.ExtrudedMaterialWidth", 0.0, 10.0, 0.01, 0.1 },
-  { "Hardware.LayerThickness", 0.1, 3.0, 0.1, 0.2 },
+  { "Hardware.LayerThickness", 0.01, 3.0, 0.01, 0.2 },
   { "Hardware.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
   { "Hardware.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
 

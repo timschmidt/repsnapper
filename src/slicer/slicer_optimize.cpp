@@ -43,10 +43,10 @@ CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double 
 			newPoly->hole = poly->hole;
 			newPoly->index = p;
 
-			size_t count = poly->points.size();
+			size_t count = poly->size();
 			for(size_t i=0; i<count;i++)
 			{
-				newPoly->vertices.push_back((planeVertices[poly->points[i]]));
+			  newPoly->vertices.push_back(planeVertices[i]);
 			}
 			PushPoly(newPoly);
 		}
@@ -60,10 +60,10 @@ CuttingPlaneOptimizer::CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double 
 			Polygon2d* newPoly = new Polygon2d();
 			newPoly->hole = poly->hole;
 
-			size_t count = poly->points.size();
+			size_t count = poly->size();
 			for (size_t i = 0; i < count; i++)
 			{
-				newPoly->vertices.push_back((planeVertices[poly->points[i]]));
+			  newPoly->vertices.push_back(planeVertices[i]);
 			}
 			PushPoly(newPoly);
 		}
@@ -79,37 +79,34 @@ void CuttingPlaneOptimizer::Dispose()
 	}
 }
 
-void CuttingPlaneOptimizer::MakeOffsetPolygons(vector<Poly>& polys,
-					       vector<Vector2d>& vectors)
+void CuttingPlaneOptimizer::MakeOffsetPolygons(vector<Poly>& polys)
 {
 	for(list<Polygon2d*>::iterator pIt=this->positivePolygons.begin(); 
 	    pIt!=this->positivePolygons.end(); pIt++)
 	{
-	  DoMakeOffsetPolygons(*pIt, polys, vectors);
+	  DoMakeOffsetPolygons(*pIt, polys);
 	}
 }
 
 void CuttingPlaneOptimizer::DoMakeOffsetPolygons(Polygon2d* pPoly, 
-						 vector<Poly>& polys,
-						 vector<Vector2d>& vectors)
+						 vector<Poly>& polys)
 {
-  Poly p(this->cuttingPlane, &vectors);
-	for( vector<Vector2d>::iterator pIt = pPoly->vertices.begin(); 
-	     pIt!=pPoly->vertices.end(); pIt++)
+  Poly p(this->cuttingPlane);
+  for( vector<Vector2d>::iterator pIt = pPoly->vertices.begin(); 
+       pIt!=pPoly->vertices.end(); pIt++)
 	{
-		p.points.push_back(vectors.size());
-		vectors.push_back(*pIt);
+	  p.vertices.push_back(*pIt);
 	}
 	p.hole = pPoly->hole;
 	polys.push_back(p);
 
 	for( list<Polygon2d*>::iterator pIt = pPoly->containedSolids.begin(); pIt!=pPoly->containedSolids.end(); pIt++)
 	{
-		DoMakeOffsetPolygons(*pIt, polys, vectors);
+		DoMakeOffsetPolygons(*pIt, polys);
 	}
 	for( list<Polygon2d*>::iterator pIt = pPoly->containedHoles.begin(); pIt!=pPoly->containedHoles.end(); pIt++)
 	{
-		DoMakeOffsetPolygons(*pIt, polys, vectors);
+		DoMakeOffsetPolygons(*pIt, polys);
 	}
 }
 

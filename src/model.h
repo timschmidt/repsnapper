@@ -80,7 +80,11 @@ public:
 	// Slicing
 	void Slice(GCodeState &state, double printoffsetZ);
 	void CalcInfill(GCodeState &state);
-	void FindUncoveredPolygons();
+	void MakeShells();
+	void MakeUncoveredPolygons();
+	void MakeUncoveredPolygons(CuttingPlane *subjplane,const CuttingPlane *clipplane);
+	void MultiplyUncoveredPolygons();
+	void MakeSupportPolygons();
 
 	// GCode Functions
 	void init();
@@ -89,6 +93,7 @@ public:
 	void MakeRaft(GCodeState &state, double &z);
 	void WriteGCode(Glib::RefPtr<Gio::File> file);
 	void ClearGCode();
+	void ClearCuttingPlanes();
 	Glib::RefPtr<Gtk::TextBuffer> GetGCodeBuffer();
 	void GlDrawGCode(); // should be in the view
 

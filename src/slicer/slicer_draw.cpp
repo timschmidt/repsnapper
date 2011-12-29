@@ -201,58 +201,62 @@ void Slicer::draw(const Model *model, const Settings &settings) const
 
 }
 
-void Slicer::displayInfillOld(const Settings &settings, CuttingPlane &plane,
-			      uint LayerNr, vector<int>& altInfillLayers)
-{
+// void Slicer::displayInfillOld(const Settings &settings, CuttingPlane &plane,
+// 			      uint LayerNr, vector<int>& altInfillLayers)
+// {
+//   double fullInfillDistance = settings.Hardware.ExtrudedMaterialWidth
+//     * settings.Hardware.ExtrusionFactor;  
 
-  //cerr << "Slicer::displayInfillOld" <<  endl;
-	if (settings.Display.DisplayinFill)
-	{
-		vector<Vector2d> *infill = NULL;
-
-		CuttingPlane infillCuttingPlane = plane;
-		if (settings.Slicing.ShellOnly == false)
-		{
-			switch (settings.Slicing.ShrinkQuality)
-			{
-			case SHRINK_FAST:
-				infillCuttingPlane.ClearShrink();
-				infillCuttingPlane.ShrinkFast(settings.Hardware.ExtrudedMaterialWidth,
-							      settings.Slicing.Optimization,
-							      settings.Display.DisplayCuttingPlane,
-							      false, settings.Slicing.ShellCount);
-				break;
-			case SHRINK_LOGICK:
-				break;
-			}
-
-			// check if this if a layer we should use the alternate infill distance on
-			double infillDistance = settings.Slicing.InfillDistance;
-			if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end()) {
-			  infillDistance = settings.Slicing.AltInfillDistance;
-			}
-
-			infill = infillCuttingPlane.CalcInFillOld(infillDistance,
-						      settings.Slicing.InfillRotation,
-						      settings.Slicing.InfillRotationPrLayer,
-						      settings.Display.DisplayDebuginFill);
-			//infill = infillCuttingPlane.getInfillVertices();
-		}
-		glColor4f(1,1,0,1);
-		glPointSize(5);
-		glBegin(GL_LINES);
-		for (size_t i = 0; i < infill->size(); i += 2)
-		{
-			if (infill->size() > i+1)
-			{
-				glVertex3d ((*infill)[i  ].x, (*infill)[i  ].y, plane.getZ());
-				glVertex3d ((*infill)[i+1].x, (*infill)[i+1].y, plane.getZ());
-			}
-		}
-		glEnd();
-		delete infill;
-	}
-}
+//   //cerr << "Slicer::displayInfillOld" <<  endl;
+//   if (false)//settings.Display.DisplayinFill)
+//     {
+//       vector<Vector2d> *infill = NULL;
+      
+//       CuttingPlane infillCuttingPlane = plane;
+//       if (settings.Slicing.ShellOnly == false)
+// 	{
+// 	  switch (settings.Slicing.ShrinkQuality)
+// 	    {
+// 	    case SHRINK_FAST:
+// 	      //infillCuttingPlane.ClearShrink();
+// 	      infillCuttingPlane.MakeShells(settings.Slicing.ShellCount,
+// 					    settings.Hardware.ExtrudedMaterialWidth,
+// 					    settings.Slicing.Optimization,
+// 					    //settings.Display.DisplayCuttingPlane,
+// 					    false);
+// 	      break;
+// 	    case SHRINK_LOGICK:
+// 	      break;
+// 	    }
+	  
+// 	  // check if this if a layer we should use the alternate infill distance on
+// 	  double infillDistance = settings.Slicing.InfillDistance;
+// 	  if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end()) {
+// 	    infillDistance = settings.Slicing.AltInfillDistance;
+// 	  }
+	  
+// 	  infillCuttingPlane.CalcInfill(infillDistance,
+// 					fullInfillDistance,
+// 					settings.Slicing.InfillRotation,
+// 					settings.Slicing.InfillRotationPrLayer,
+// 					settings.Display.DisplayDebuginFill);
+// 	  //infill = infillCuttingPlane.getInfillVertices();
+// 	}
+//       glColor4f(1,1,0,1);
+//       glPointSize(5);
+//       glBegin(GL_LINES);
+//       for (size_t i = 0; i < infill->size(); i += 2)
+// 	{
+// 	  if (infill->size() > i+1)
+// 	    {
+// 	      glVertex3d ((*infill)[i  ].x, (*infill)[i  ].y, plane.getZ());
+// 	      glVertex3d ((*infill)[i+1].x, (*infill)[i+1].y, plane.getZ());
+// 	    }
+// 	}
+//       glEnd();
+//       delete infill;
+//     }
+// }
 
 void Slicer::draw_geometry() const
 {

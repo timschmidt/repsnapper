@@ -169,19 +169,20 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
   double z = Min.z + settings.Hardware.LayerThickness*0.5;
   double optimization = settings.Slicing.Optimization;
 
+  m_progress.start (_("Slicing"), Max.z);
 
   for (vector<CuttingPlane *>::iterator pIt = cuttingplanes.begin();
        pIt != cuttingplanes. end(); pIt++)
     delete *pIt;
   cuttingplanes.clear();
-
   double hackedZ;
   double hacked_layerthickness = optimization;
   bool polys_ok;
-  while(z<Max.z)
+  while(z < Max.z)
     {
       CuttingPlane * plane = new CuttingPlane(LayerNr); // one plane per layer, with all objects
-      m_progress.update(z/2.);
+      m_progress.update(z);
+      g_main_context_iteration(NULL,false);
       hackedZ = z;
       polys_ok = false;
       // try to slice all objects until polygons can be made, otherwise hack z
@@ -201,7 +202,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 			     +settings.Raft.Size*settings.RaftEnable, 0);
 		T.setTranslation(t);
 		// adding points and lines from object to plane:
-		slicer->CalcCuttingPlane(T, optimization, *plane);
+		slicer->CalcCuttingPlane(T, optimization, plane);
 	      }
 	  }
 	polys_ok = plane->MakePolygons(optimization);
@@ -216,37 +217,144 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 }
 
 
-
-
-void Model::FindUncoveredPolygons()
+void Model::MakeUncoveredPolygons()
 {
+  CuttingPlane emptyplane(cuttingplanes.size());
+  emptyplane.Clear();
+
+  m_progress.start (_("Find Uncovered"), cuttingplanes.size()+1);
+  // bottom to top:
   for (uint i=0; i <cuttingplanes.size()-1; i++) 
     {
-      cerr << "DIff plane "<< i <<": ";
-      CuttingPlane * plane1 = cuttingplanes[i];
-      CuttingPlane * plane2 = cuttingplanes[i+1];
-      ClipperLib::Polygons polys1 = plane1->getClipperPolygons();
-      ClipperLib::Polygons polys2 = plane2->getClipperPolygons();
-      ClipperLib::Clipper clpr;
-      clpr.AddPolygons(polys1,ClipperLib::ptSubject);
-      clpr.AddPolygons(polys2,ClipperLib::ptClip);
-      ClipperLib::Polygons uncovered;
-      clpr.Execute(ClipperLib::ctDifference, uncovered,
-		   ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
-      cerr << uncovered.size()<<  " uncovered polys, ";
-      ClipperLib::Polygons covered;
-      clpr.Execute(ClipperLib::ctIntersection, covered, 
-		   ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
-      cerr << covered.size()<<  " covered polys "<< endl;
-      plane1->setFullFillPolygons(uncovered);
-      plane1->setNormalFillPolygons(covered);
+      m_progress.update(i);
+      g_main_context_iteration(NULL,false);
+      MakeUncoveredPolygons(cuttingplanes[i],cuttingplanes[i+1]);
     }  
+
+  // top to bottom:
+  for (uint i=cuttingplanes.size()-1; i>1; i--) 
+    {
+      m_progress.update(i);
+      MakeUncoveredPolygons(cuttingplanes[i],cuttingplanes[i-1]);
+    }
+  MakeUncoveredPolygons(cuttingplanes.front(),&emptyplane);
+  MakeUncoveredPolygons(cuttingplanes.back(),&emptyplane);
+  m_progress.stop (_("Done"));
 }
 
+// find polys in subjplane that are not covered by any filled polygons of clipplane
+// -> split polys of subjplane in fully filled and normally filled
+void Model::MakeUncoveredPolygons(CuttingPlane * subjplane,
+				  const CuttingPlane * clipplane)
+{
+  ClipperLib::Polygons emptypolys;emptypolys.clear();
+  ClipperLib::Clipper clpr;
+  ClipperLib::Polygons subjOffsetCP =
+    subjplane->getClipperPolygons(subjplane->GetOffsetPolygons());
+  clpr.AddPolygons(subjOffsetCP,
+		   ClipperLib::ptSubject);
+  //clpr.AddPolygons(subjplane->getClipperPolygons(subjplane->GetFullFillPolygons()),
+  //		   ClipperLib::ptSubject);
+  clpr.AddPolygons(clipplane->getClipperPolygons(clipplane->GetOffsetPolygons()),
+		   ClipperLib::ptClip);
+  clpr.AddPolygons(clipplane->getClipperPolygons(clipplane->GetFullFillPolygons()),
+   		   ClipperLib::ptClip);
+  ClipperLib::Polygons uncovered;
+  ClipperLib::PolyFillType filltype = ClipperLib::pftEvenOdd;
+  clpr.Execute(ClipperLib::ctDifference, uncovered, filltype, ClipperLib::pftEvenOdd);
+  subjplane->addFullFillPolygons(uncovered); // maybe already have some 
+  // now join the full fill polygons (if added adjacent)
+  // clpr.Clear();
+  // ClipperLib::Polygons merged = 
+  //   subjplane->getMergedPolygons(subjplane->GetFullFillPolygons());
+  // ClipperLib::Polygons fullfill = 
+  //   subjplane->getClipperPolygons(subjplane->GetFullFillPolygons());
+  // ClipperLib::Polygons fullfill2;
+  // // make wider to get overlap
+  // ClipperLib::OffsetPolygons(fullfill,fullfill2, 2,ClipperLib::jtMiter,1);
+  // clpr.AddPolygons(fullfill2, ClipperLib::ptSubject);
+  // clpr.AddPolygons(emptypolys, ClipperLib::ptClip);
+  // clpr.Execute(ClipperLib::ctUnion, fullfill, ClipperLib::pftPositive,
+  // 	       ClipperLib::pftNegative);
+  // // shrink the result
+  // ClipperLib::OffsetPolygons(fullfill,fullfill2, -2,ClipperLib::jtMiter,1);
+  subjplane->mergeFullPolygons();
+  // substract full fill from normal fill:
+  clpr.Clear();
+  clpr.AddPolygons(subjOffsetCP, ClipperLib::ptSubject);
+  clpr.AddPolygons(uncovered, ClipperLib::ptClip);
+  ClipperLib::Polygons normal;
+  clpr.Execute(ClipperLib::ctDifference, normal, filltype, ClipperLib::pftEvenOdd);
+  subjplane->setNormalFillPolygons(normal);
+}				 
+				 
+void Model::MultiplyUncoveredPolygons()
+{
+  uint shells = settings.Slicing.ShellCount;
+  // bottom-up
+  for (uint i=0; i < cuttingplanes.size(); i++) 
+    {
+      ClipperLib::Polygons fullpolys = 
+	cuttingplanes[i]->getClipperPolygons(cuttingplanes[i]->GetFullFillPolygons());
+      for (uint s=1; s < shells; s++) 
+	if (int(i-s) > 1)
+	    cuttingplanes[i-s]->addFullPolygons(fullpolys);
+    }    
+  // top-down
+  for (int i=cuttingplanes.size()-1; i>=0; i--) 
+    {
+      ClipperLib::Polygons fullpolys = 
+	cuttingplanes[i]->getClipperPolygons(cuttingplanes[i]->GetFullFillPolygons());
+      for (uint s=1; s < shells; s++) 
+	if (i+s < cuttingplanes.size())
+	    cuttingplanes[i+s]->addFullPolygons(fullpolys);
+    }    
+  for (uint i=0; i < cuttingplanes.size(); i++) 
+    cuttingplanes[i]->mergeFullPolygons();
+}
+
+
+void Model::MakeSupportPolygons()
+{
+  m_progress.start (_("Support"), cuttingplanes.size()-1);
+  for (uint i=cuttingplanes.size()-1; i>0; i--) 
+    {
+      m_progress.update(i);
+      //cerr << "Support? plane "<< i <<": ";
+      CuttingPlane * plane1 = cuttingplanes[i];
+      CuttingPlane * plane2 = cuttingplanes[i-1];
+      ClipperLib::Polygons polys1 = 
+	plane1->getClipperPolygons(plane1->GetOffsetPolygons());
+      ClipperLib::Polygons polys2 = 
+	plane2->getClipperPolygons(plane2->GetPolygons());
+      // .......
+    }
+  m_progress.stop (_("Done"));
+}
+
+
+void Model::MakeShells()
+{
+  uint count = cuttingplanes.size();
+  m_progress.start (_("Shells"), count);
+  for (uint i=0; i < count; i++) 
+    {
+      m_progress.update(i);
+      g_main_context_iteration(NULL,false);
+      //cerr << "shrink plane " << i << endl;
+      cuttingplanes[i]->MakeShells(settings.Slicing.ShellCount,
+				   settings.Hardware.ExtrudedMaterialWidth,
+				   settings.Slicing.Optimization, false);
+    }
+  m_progress.stop (_("Done"));
+}
 
 
 void Model::CalcInfill(GCodeState &state)
 {
+
+  if (settings.Slicing.ShellOnly)
+    return ;
 
   uint LayerCount = cuttingplanes.size();
     // (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
@@ -254,63 +362,46 @@ void Model::CalcInfill(GCodeState &state)
   vector<int> altInfillLayers;
   settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
 
-  double z;
-  double printOffsetZ = settings.Hardware.PrintMargin.z;
-  double E = 0.0;
-
+  double infillDistance;
+  // for full polys/layers:
+  double fullInfillDistance = settings.Hardware.ExtrudedMaterialWidth
+    * settings.Hardware.ExtrusionFactor;  
   
+  Infill::clearPatterns();
+  m_progress.start (_("Infill"), cuttingplanes.size());
+
+  //cerr << "make infill"<< endl;
   for (uint i=0; i <cuttingplanes.size(); i++) 
     {
       CuttingPlane * plane = cuttingplanes[i];
-      //cout << i << ": ";
-      //plane->printinfo();
-      z = plane->getZ();
-      m_progress.update(Max.z/2. + z/2.);
+      // cout << i << ": ";
+      // plane->printinfo();
+      m_progress.update(i);
+      g_main_context_iteration(NULL,false);
       // inFill
-      vector<Vector2d> *infill = NULL;
-      for (guint shell = 1; shell <= settings.Slicing.ShellCount; shell++)
-	{
-	  plane->ClearShrink();
-	  plane->Shrink(settings.Slicing.ShrinkQuality,
-		       settings.Hardware.ExtrudedMaterialWidth,
-		       settings.Slicing.Optimization,
-		       settings.Display.DisplayCuttingPlane,
-		       false, shell);
+      
+      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), i) 
+	  != altInfillLayers.end())
+	infillDistance = settings.Slicing.AltInfillDistance;
+      else
+	infillDistance = settings.Slicing.InfillDistance;
 
-	  if (shell < settings.Slicing.ShellCount )
-	    { // no infill - just a shell ...
-	      plane->MakeGcode (state, NULL /* infill */, E, z + printOffsetZ,
-			       settings.Slicing, settings.Hardware);
-	    }
-	  else if (settings.Slicing.ShellOnly == false)
-	    { // last shell => calculate infill
-	      // check if this if a layer we should use the alternate infill distance on
-	      double infillDistance;
-	      if (settings.Slicing.SolidTopAndBottom &&
-		  ( i < settings.Slicing.ShellCount ||
-		    i > LayerCount-settings.Slicing.ShellCount-2 ))
-		{
-		  infillDistance = settings.Hardware.ExtrudedMaterialWidth*settings.Hardware.ExtrusionFactor;  // full fill for first layers (shell thickness)
-		}
-	      else {
-			infillDistance = settings.Slicing.InfillDistance;
-	      }
-	      
-	      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), i) 
-		  != altInfillLayers.end())
-		infillDistance = settings.Slicing.AltInfillDistance;
-	      infill = plane->CalcInFillOld (infillDistance,
-				settings.Slicing.InfillRotation,
-				settings.Slicing.InfillRotationPrLayer, 
-				settings.Display.DisplayDebuginFill);
-	      //infill = plane->getInfillVertices();
-	    }
-	}
-      // Make the last shell GCode from the plane and the infill
-      plane->MakeGcode (state, infill, E, z + printOffsetZ,
-		       settings.Slicing, settings.Hardware);
-      delete infill;
+      plane->CalcInfill(infillDistance, fullInfillDistance,
+			settings.Slicing.InfillRotation,
+			settings.Slicing.InfillRotationPrLayer, 
+			settings.Display.DisplayDebuginFill);
+      
+      // 	      if (settings.Slicing.SolidTopAndBottom &&
+      // 		  ( i < settings.Slicing.ShellCount ||
+      // 		    i > LayerCount-settings.Slicing.ShellCount-2 ))
+      // 		{
+      // 		  infillDistance = fullInfillDistance;
+      // 		}
+      // 	      else {
+      // 		infillDistance = settings.Slicing.InfillDistance;
+      // 	      }
     }
+  m_progress.stop (_("Done"));
 }
 
 void Model::ConvertToGCode()
@@ -320,8 +411,6 @@ void Model::ConvertToGCode()
   string GcodeLayer = settings.GCode.getLayerText();
   string GcodeEnd = settings.GCode.getEndText();
 
-
-  m_progress.start (_("Converting"), Max.z);
 
   GCodeState state(gcode);
 
@@ -338,11 +427,24 @@ void Model::ConvertToGCode()
 
   // Make Layers
   Slice(state, printOffsetZ);
-
-  FindUncoveredPolygons();
+  MakeShells();
+  MakeUncoveredPolygons();
+  MultiplyUncoveredPolygons();
+  MakeSupportPolygons();
 
   CalcInfill(state);
 
+  uint count =  cuttingplanes.size();
+  m_progress.start (_("Making GCode"), count+1);
+  double E = 0.0;
+  for (uint p=0;p<count;p++){
+    m_progress.update(p);
+    g_main_context_iteration(NULL,false);
+    //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
+    cuttingplanes[p]->MakeGcode (state, E, cuttingplanes[p]->getZ() + printOffsetZ,
+				 settings.Slicing, settings.Hardware);
+  }
+  //cerr <<" done."<< endl;
 
   double AntioozeDistance = settings.Slicing.AntioozeDistance;
   if (!settings.Slicing.EnableAntiooze)

@@ -22,11 +22,69 @@
 #include <vector>
 #include <vmmlib/vmmlib.h> 
 
+#include "cuttingplane.h"
+
+
 using namespace std; 
 using namespace vmml;
 
 class Poly;
 
+
+
+enum InfillType {ParallelInfill,LinesInfill};
+
+
+class Infill
+{
+  CuttingPlane *plane;
+
+  struct pattern 
+  {
+    InfillType type;
+    double angle;
+    double distance;
+    ClipperLib::Polygons cpolys;
+  } ;
+
+  static vector<struct pattern> savedPatterns;
+
+  ClipperLib::Polygons makeInfillPattern(InfillType type, double infillDistance,
+					 double offsetDistance,
+					 double rotation) ;
+
+  Infill(){}; 
+
+ public:
+
+  Infill(CuttingPlane *plane);
+  ~Infill(){}; 
+
+  static void clearPatterns();
+  InfillType type;
+    
+  Vector2d center,Min,Max;  
+  vector<Poly> infillpolys;  // for clipper polygon types
+  vector<Vector2d> infillvertices; // for lines types
+  
+  void calcInfill(vector<Poly> poly, InfillType type, double infillDistance, 
+		  double offsetDistance, double rotation);
+  void calcInfill(const vector<Poly> polys, const vector<Poly> fillpolys,
+		  double infillDistance, double offsetDistance);
+  void calcInfill(const vector<Poly> polys, const ClipperLib::Polygons ifcpolys,
+		  double infillDistance, double offsetDistance);
+
+
+  void getLines(vector<Vector3d> &lines) const;
+  
+  void clear(){infillpolys.clear();};
+  uint size() const {return infillpolys.size();};
+  void printinfo() const;
+};
+
+
+
+// for historic reasons:
 struct InFillHit
 {
 	Vector2d p;  // The intersection point
@@ -39,48 +97,3 @@ bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
 		  const Vector2d &p3, const Vector2d &p4, 
 		  InFillHit &hit, double maxoffset);
 
-
-class Infill
-{
-
- public:
-  Infill();
-  /* ~Infill(){}; */
-  
-  vector<Vector2d> infill;
-  
-  virtual void calcInfill(Poly *poly);
-
-  uint getSize() const {return infill.size();};
-  void printinfo() const;
-};
-
-
-class ZigZagInfill : public Infill
-{
- public:
-  ZigZagInfill() {Infill();};
-  ZigZagInfill(double fillRatio){ZigZagInfill(); this->fillRatio = fillRatio;};
-  ~ZigZagInfill(){};
-
-  double fillRatio;
-  void calcInfill(Poly *poly);
-  void calcInfill(Poly *poly, const Vector2d startpoint, 
-		  double startAngle, const double fillRatio);
-
-};
-
-
-class ParallelInfill : public Infill
-{
- public:
-  ParallelInfill(){Infill();};
-  ParallelInfill(double fillRatio){ParallelInfill(); this->fillRatio = fillRatio;};
-  ~ParallelInfill(){};
-
-  double fillRatio;
-  void calcInfill(Poly *poly);
-  void calcInfill(Poly *poly, 
-		  double startAngle, const double fillRatio);
-
-};

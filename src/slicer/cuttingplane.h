@@ -47,6 +47,7 @@ using namespace stdext;
 #include "platform.h"
 #include "gcode.h"
 #include "poly.h"
+#include "infill.h"
 
 
 
@@ -104,17 +105,16 @@ public:
 	void Shrink(double distance, list<Polygon2d*> &resPolygons);
 	void Draw();
 	void Dispose();
-	void MakeOffsetPolygons(vector<Poly>& polys, vector<Vector2d>& vectors);
+	void MakeOffsetPolygons(vector<Poly>& polys);
 	void RetrieveLines(vector<Vector3d>& lines);
 private:
 	void PushPoly(Polygon2d* poly);
-	void DoMakeOffsetPolygons(Polygon2d* pPoly, vector<Poly>& polys,
-				  vector<Vector2d>& vectors);
+	void DoMakeOffsetPolygons(Polygon2d* pPoly, vector<Poly>& polys);
 	void DoRetrieveLines(Polygon2d* pPoly, vector<Vector3d>& lines);
 };
 
 
-
+class Infill;
 
 
 // A (set of) 2D polygon extracted from a 3D model
@@ -129,15 +129,15 @@ public:
 	// CuttingPlane *previous, *next;
 
 	// Contract polygons:
-	void Shrink(int quality, double extrudedWidth, 
-		    double optimization, 
-		    bool DisplayCuttingPlane, bool useFillets, 
-		    int ShellCount);
-	void ShrinkFast(double distance, double optimization,
-			bool DisplayCuttingPlane,
-			bool useFillets, int ShellCount);
-	void ShrinkLogick(double distance, double optimization,
-			  bool DisplayCuttingPlane, int ShellCount);
+	/* void Shrink(int quality, double extrudedWidth,  */
+	/* 	    double optimization,  */
+	/* 	    bool DisplayCuttingPlane, bool useFillets,  */
+	/* 	    int ShellCount); */
+	/* void ShrinkFast(double distance, double optimization, */
+	/* 		bool DisplayCuttingPlane, */
+	/* 		bool useFillets, int ShellCount); */
+	/* void ShrinkLogick(double distance, double optimization, */
+	/* 		  bool DisplayCuttingPlane, int ShellCount); */
 	
 	// void  selfIntersectAndDivide();
 	/* guint selfIntersectAndDivideRecursive(double z, guint startPolygon,  */
@@ -153,27 +153,49 @@ public:
 
 	void ClearShrink()
 	{
-		offsetPolygons.clear();
-		offsetVertices.clear();
-		fullFillPolygons.clear();
-		fullFillVertices.clear();
+	  shellPolygons.clear();
+	  offsetPolygons.clear();
+	  //offsetVertices.clear();
+	  fullFillPolygons.clear();
+	  //fullFillVertices.clear();
 	}
 	
-	ClipperLib::Polygons getClipperPolygons(bool reverse=true) const;
+	ClipperLib::Polygons getClipperPolygons(const vector<Poly> polygons,
+						bool reverse=true) const;
+	ClipperLib::Polygons getMergedPolygons(const vector<Poly> polygons) const;
+	void mergeFullPolygons();
+	void addFullPolygons(const ClipperLib::Polygons) ;
 
 
-	void CalcInFill(double InfillDistance, 
-			double InfillRotation, double InfillRotationPrLayer,
-			bool DisplayDebuginFill);	// Collide an infill-line with the polygons
-	vector<Vector2d> * getInfillVertices() const;
+	void CalcInfill (double InfillDistance, 
+			 double FullInfillDistance,
+			 double InfillRotation, 
+			 double InfillRotationPrLayer,
+			 bool DisplayDebuginFill);
 
-	vector<Vector2d> * CalcInFillOld(double InfillDistance, 
-			   double InfillRotation, double InfillRotationPrLayer,
-			   bool DisplayDebuginFill);  
+	//vector<Vector2d> getInfillVertices() const;
+	
+
+	/* void CalcInFillOld(double InfillDistance,  */
+	/* 		   double InfillRotation, double InfillRotationPrLayer, */
+	/* 		   bool DisplayDebuginFill);   */
+	/* vector<Vector2d> * fillPolygons (const vector<Poly> polys, */
+	/* 				 double InfillDistance, */
+	/* 				 double InfillRotation,  */
+	/* 				 double InfillRotationPrLayer); */
 
 	void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, bool DrawOutlineNumbers,
-		  bool DrawCPLineNumbers, bool DrawCPVertexNumbers) const ;
+		  bool DrawCPLineNumbers, bool DrawCPVertexNumbers, bool DisplayInfill) 
+	  const ;
 	bool MakePolygons(double Optimization); // Link Segments to form polygons
+
+	void MakeShells(uint shellcount, double extrudedWidth, 
+			double optimization, 
+			bool useFillets);
+	vector<Poly> ShrinkedPolys(const vector<Poly> poly,
+				   double distance);
+	  
+	
 	bool CleanupConnectSegments();
 	bool CleanupSharedSegments();
 	// remove redudant points in given polygons -> done in poly.cpp
@@ -181,8 +203,13 @@ public:
 	// 		     vector<Poly> & polygons,
 	// 		     double Optimization);
 
+	void getOrderedPolyLines(const vector<Poly> polys, 
+				 Vector2d &startPoint,
+				 vector<Vector3d> &lines) const;
+	// result ready for gcoding
+	vector<Vector3d> getAllLines(Vector2d &startPoint) const; 
+
 	void MakeGcode (GCodeState &state,
-			const std::vector<Vector2d> *opt_infill,
 			double &E, double z,
 			const Settings::SlicingSettings &slicing,
 			const Settings::HardwareSettings &hardware);
@@ -195,11 +222,13 @@ public:
 		lines.clear();
 		vertices.clear();
 		polygons.clear();
-		points.clear();
+		//points.clear();
+		shellPolygons.clear();
 		offsetPolygons.clear();
-		offsetVertices.clear();
+		//offsetVertices.clear();
 		fullFillPolygons.clear();
-		fullFillVertices.clear();
+		//fullFillVertices.clear();
+		supportPolygons.clear();
 	}
 	void setZ(double value)
 	{
@@ -226,15 +255,25 @@ public:
 
 	vector<Poly> GetPolygons() const { return polygons; }
 	vector<Vector2d> GetVertices() const { return vertices; }
-	vector<Vector2d> GetOffsetVertices() const { return offsetVertices; }
-	vector<Vector2d> GetFullFillVertices() const { return fullFillVertices; }
+	//vector<Vector2d> GetOffsetVertices() const { return offsetVertices; }
+	vector<Poly> GetOffsetPolygons() const { return offsetPolygons; }
+	//vector<Vector2d> GetFullFillVertices() const { return fullFillVertices; }
+	vector<Poly> GetFullFillPolygons() const { return fullFillPolygons; }
+	//vector<Vector2d> GetSupportVertices() const { return supportVertices; }
+	vector<Poly> GetSupportPolygons() const { return supportPolygons; }
+
+	vector< vector<Poly> > GetShellPolygons() const { return shellPolygons; }
 
 	void setFullFillPolygons(const ClipperLib::Polygons cpolys);
+	void addFullFillPolygons(const ClipperLib::Polygons cpolys);
 	void setNormalFillPolygons(const ClipperLib::Polygons cpolys);
+	void setSupportPolygons(const ClipperLib::Polygons cpolys);
 
 	void printinfo() const ;
 private:
-	PointHash points;
+	//PointHash points;
+
+	Infill * infill;
 
 	vector<CuttingPlaneOptimizer*> optimizers;
 
@@ -243,10 +282,14 @@ private:
 	vector<Poly> polygons;		// Closed loops, have indices of vertices
 	double Z;
 
-	vector<Poly> offsetPolygons;	// Shrinked closed loops
-	vector<Vector2d> offsetVertices; // points for shrinked closed loops
+	vector< vector<Poly> > shellPolygons; // all shells except most inner
+	vector<Poly> offsetPolygons;	// most inner shell 
+
+	//vector<Vector2d> offsetVertices; // points for shrinked closed loops
 	vector<Poly> fullFillPolygons;	 // fully filled polygons (uncovered)
-	vector<Vector2d> fullFillVertices; // points for fully filled polygons
+	//vector<Vector2d> fullFillVertices; // points for fully filled polygons
+	vector<Poly> supportPolygons;	 // polygons to be filled with support pattern
+	//vector<Vector2d> supportVertices; // points for support
 };
 
 

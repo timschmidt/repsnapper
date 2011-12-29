@@ -81,14 +81,14 @@ public:
     int load(std::string filename);
 
 	void clear() { triangles.clear(); }
-	void displayInfillOld(const Settings &settings, CuttingPlane &plane, 
-			      guint LayerNr, vector<int>& altInfillLayers);
+	/* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
+	/* 		      guint LayerNr, vector<int>& altInfillLayers); */
 	void draw (const Model *model, const Settings &settings) const;
 	void draw_geometry () const;
 	void CenterAroundXY();
 	// Extract a 2D polygonset from a 3D model:
 	void CalcCuttingPlane(const Matrix4d &T,
-			      double optimization, CuttingPlane &plane) const;
+			      double optimization, CuttingPlane *plane) const;
 	// Auto-Rotate object to have the largest area surface down for printing:
 	void OptimizeRotation(); 
 	void CalcCenter();
