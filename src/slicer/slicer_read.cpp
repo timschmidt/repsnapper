@@ -276,7 +276,8 @@ int Slicer::load(string filename)
 	return -1;
     }
 
-    OptimizeRotation();
+    // OptimizeRotation(); // no, I probably have prepared the file
+    CenterAroundXY();
     CalcCenter();
 
     scale_factor = 1.0;
