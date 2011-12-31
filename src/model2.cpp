@@ -166,7 +166,8 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 {
   int LayerNr = 0;
   // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
-  double z = Min.z + settings.Hardware.LayerThickness*0.5;
+  // start at z=0, cut off everything below
+  double z = settings.Hardware.LayerThickness*0.5 ;   // + Min.z;
   double optimization = settings.Slicing.Optimization;
 
   m_progress.start (_("Slicing"), Max.z);
@@ -175,12 +176,15 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
        pIt != cuttingplanes. end(); pIt++)
     delete *pIt;
   cuttingplanes.clear();
+  double thickness;
   double hackedZ;
   double hacked_layerthickness = optimization;
   bool polys_ok;
   while(z < Max.z)
     {
       CuttingPlane * plane = new CuttingPlane(LayerNr); // one plane per layer, with all objects
+      thickness = settings.Hardware.LayerThickness;
+      plane->thickness = thickness;
       m_progress.update(z);
       g_main_context_iteration(NULL,false);
       hackedZ = z;
@@ -211,7 +215,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
       
       plane->setZ(z+printOffsetZ); // set back to real z
       cuttingplanes.push_back(plane);
-      z += settings.Hardware.LayerThickness;
+      z += thickness;
       LayerNr++;
     }
 }
@@ -263,21 +267,6 @@ void Model::MakeUncoveredPolygons(CuttingPlane * subjplane,
   ClipperLib::PolyFillType filltype = ClipperLib::pftEvenOdd;
   clpr.Execute(ClipperLib::ctDifference, uncovered, filltype, ClipperLib::pftEvenOdd);
   subjplane->addFullFillPolygons(uncovered); // maybe already have some 
-  // now join the full fill polygons (if added adjacent)
-  // clpr.Clear();
-  // ClipperLib::Polygons merged = 
-  //   subjplane->getMergedPolygons(subjplane->GetFullFillPolygons());
-  // ClipperLib::Polygons fullfill = 
-  //   subjplane->getClipperPolygons(subjplane->GetFullFillPolygons());
-  // ClipperLib::Polygons fullfill2;
-  // // make wider to get overlap
-  // ClipperLib::OffsetPolygons(fullfill,fullfill2, 2,ClipperLib::jtMiter,1);
-  // clpr.AddPolygons(fullfill2, ClipperLib::ptSubject);
-  // clpr.AddPolygons(emptypolys, ClipperLib::ptClip);
-  // clpr.Execute(ClipperLib::ctUnion, fullfill, ClipperLib::pftPositive,
-  // 	       ClipperLib::pftNegative);
-  // // shrink the result
-  // ClipperLib::OffsetPolygons(fullfill,fullfill2, -2,ClipperLib::jtMiter,1);
   subjplane->mergeFullPolygons();
   // substract full fill from normal fill:
   clpr.Clear();
@@ -291,6 +280,7 @@ void Model::MakeUncoveredPolygons(CuttingPlane * subjplane,
 void Model::MultiplyUncoveredPolygons()
 {
   uint shells = settings.Slicing.ShellCount;
+  m_progress.start (_("Top+Bottom Shells"), 3);
   // bottom-up
   for (uint i=0; i < cuttingplanes.size(); i++) 
     {
@@ -300,6 +290,7 @@ void Model::MultiplyUncoveredPolygons()
 	if (int(i-s) > 1)
 	    cuttingplanes[i-s]->addFullPolygons(fullpolys);
     }    
+  m_progress.update(1);
   // top-down
   for (int i=cuttingplanes.size()-1; i>=0; i--) 
     {
@@ -309,8 +300,11 @@ void Model::MultiplyUncoveredPolygons()
 	if (i+s < cuttingplanes.size())
 	    cuttingplanes[i+s]->addFullPolygons(fullpolys);
     }    
+  m_progress.update(2);
   for (uint i=0; i < cuttingplanes.size(); i++) 
     cuttingplanes[i]->mergeFullPolygons();
+  m_progress.update(3);
+  m_progress.stop (_("Done"));
 }
 
 

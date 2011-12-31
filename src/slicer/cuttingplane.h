@@ -237,6 +237,7 @@ public:
 	double getZ() const { return Z; }
 
 	int LayerNo;
+	double thickness;
 
 	int RegisterPoint(const Vector2d &p);
 
