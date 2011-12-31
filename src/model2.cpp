@@ -247,7 +247,7 @@ void Model::CalcInfill(GCodeState &state)
       m_progress.update(Max.z/2. + z/2.);
       // inFill
       vector<Vector2d> *infill = NULL;
-
+      cerr << "calcinfill z="<<z<< endl;
       for (guint shell = 1; shell <= settings.Slicing.ShellCount; shell++)
 	{
 	  plane.ClearShrink();

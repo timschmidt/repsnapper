@@ -1,0 +1,67 @@
+<html>
+
+<head>
+    
+  <script type="text/javascript" src="../../../../Scripts/jquery.js">
+  </script>
+    
+  <script type="text/javascript" src="../../../../Scripts/SyntaxHighlighter/scripts/shCore.js">
+  </script>
+    
+  <script type="text/javascript" src="../../../../Scripts/SyntaxHighlighter/scripts/shBrushDelphi.js">
+  </script>
+    
+  <link type="text/css" rel="stylesheet" href="../../../../Scripts/SyntaxHighlighter/styles/shCore.css">
+    
+  <link type="text/css" rel="stylesheet" href="../../../../Scripts/SyntaxHighlighter/styles/shThemeDefault.css">
+  
+
+  <title>Polygons</title>
+
+  <link rel="stylesheet" href="../../../../styles/Default.css" type="text/css">
+
+    
+  <script type="text/javascript" src="../../../../Scripts/bootstrap.js">
+  </script>
+  
+</head>
+
+<body bgcolor="#FFFFFF">
+    
+  <!-- THIS FILE HAS BEEN AUTOMATICALLY PROCESSED FROM A SOURCE COPY -->
+    
+  <!-- DO NOT EDIT MANUALLY !!! -->
+  
+  <table class="Banner" cellspacing="0" cellpadding="0" border="1" bordercolorlight="#303080" bordercolordark="#7070B0">
+    <tr>
+      <td class="Banner" nowrap=""><a href="../../../_Body.htm" class="Banner"><img src="../../../../Images/_Home.gif" align="absmiddle">Home</a>
+      </td>
+      <td class="Banner" nowrap=""><a href="../_Body.htm" class="Banner"><img src="../../../../Images/_Unit.gif" align="absmiddle">ClipperLib</a>
+      </td>
+      <td class="Banner" width="100%" align="right"><img src="../../../../Images/_Project_Logo.gif" align="absmiddle">
+      </td>
+    </tr>
+  </table>
+  <h1>Polygons</h1>
+
+
+  <p class="Decl"><span class="Comment">Del.&raquo;</span> TPolygons = <b>array of </b><a href="./Polygon.htm">TPolygon</a>;</p>
+
+  <p class="Decl2"><span class="Comment">C++&raquo;</span> <b>typedef</b> std::vector&lt; <a href="./Polygon.htm">Polygon</a> &gt; Polygons;</p>
+
+  <p class="Decl3"><span class="Comment">C#&raquo;</span> <b>using</b> Polygons = List&lt;List&lt; <a href="./IntPoint.htm">IntPoint</a> &gt;&gt;;</p>
+<br>
+
+  <p class="Body"> This structure encapsulates one or a number of outer and inner 'hole' <a href="./Polygon.htm">Polygon</a> contours (where inner polygon contours have an <a href="../Functions/Orientation.htm">Orientation</a> opposite that of outer contours).<br><br> <b>Polygons</b> can be passed to Clipper objects via the <a href="../Classes/ClipperBase/Methods/AddPolygons.htm">AddPolygons</a> method.<br><br> The <b>solution</b> parameter in Clipper's overloaded <a href="..\Classes\Clipper\Methods\Execute.htm">Execute</a> method can return either a <b>Polygons</b> structure or an <a href=".\ExPolygons.htm">ExPolygons</a> structure.<br><br> </p>
+<br>
+
+
+
+  <h2 id="auto">See Also</h2>
+  <p id="auto" class="Body"><a href="../Classes/ClipperBase/Methods/AddPolygons.htm">ClipperBase.AddPolygons</a>, <a href="../Classes/Clipper/Methods/Execute.htm">Clipper.Execute</a>, <a href="ExPolygons.htm">ExPolygons</a>, <a href="IntPoint.htm">IntPoint</a>, <a href="../Functions/Orientation.htm">Orientation</a>, <a href="Polygon.htm">Polygon</a></p>
+    
+  <p class="Copyright" id="auto"> <br><br> Copyright &copy;2010-2011 Angus Johnson&nbsp; - &nbsp; Clipper version 4.6.3 &nbsp; - &nbsp; Help file built on 11-November-2011 <br><br> </p>
+  
+</body>
+
+</html>
