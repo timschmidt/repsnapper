@@ -433,7 +433,7 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
     glPopMatrix();
   }
   glPopMatrix();
-
+  glLoadName(0); // Clear selection name to avoid selecting last object with later rendering.
 
   // draw total bounding box
   if(settings.Display.DisplayBBox)
