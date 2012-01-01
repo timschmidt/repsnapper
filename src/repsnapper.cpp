@@ -218,8 +218,12 @@ int main(int argc, char **argv)
     }
   }
 
-  // TODO: Error detection
-  model->LoadConfig(conf);
+  if (opts.settings_path.size() > 0)
+    model->LoadConfig(Gio::File::create_for_path(opts.settings_path));
+  else {
+      // TODO: Error detection
+    model->LoadConfig(conf);
+  }
 
   if (!opts.use_gui) {
     if (opts.stl_input_path.size() > 0) {
