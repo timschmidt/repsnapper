@@ -49,12 +49,16 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
   GdkGLConfig *glconfig;
 
   glconfig = gdk_gl_config_new_by_mode
-		    ((GdkGLConfigMode) (GDK_GL_MODE_RGB |
+		    ((GdkGLConfigMode) (GDK_GL_MODE_RGBA |
+					GDK_GL_MODE_ALPHA |
+					GDK_GL_MODE_STENCIL |
 					GDK_GL_MODE_DEPTH |
 					GDK_GL_MODE_DOUBLE));
   if (!glconfig) // try single buffered
     glconfig = gdk_gl_config_new_by_mode
-		      ((GdkGLConfigMode) (GDK_GL_MODE_RGB |
+		      ((GdkGLConfigMode) (GDK_GL_MODE_RGBA |
+					  GDK_GL_MODE_ALPHA |
+					  GDK_GL_MODE_STENCIL |
 					  GDK_GL_MODE_DEPTH));
   if (!gtk_widget_set_gl_capability (get_widget(), glconfig,
 				     NULL, TRUE, GDK_GL_RGBA_TYPE))
