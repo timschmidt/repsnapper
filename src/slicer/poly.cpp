@@ -219,12 +219,17 @@ void Poly::rotate(Vector2d center, double angle)
   }
 }
 
+// Find the vertex in the poly closest to point p
 uint Poly::nearestDistanceSqTo(const Vector2d p, double &mindist) const
 {
-  double d;
-  uint nindex;
-  for (uint i = 0; i < vertices.size()-1;  i++) {
-    d = (vertices[i]-p).lengthSquared();
+  assert(vertices.size() > 0);
+
+  // Start with first vertex as closest
+  uint nindex = 0;
+  mindist = (vertices[0]-p).lengthSquared();
+  // check the rest of the vertices for a closer one.
+  for (uint i = 1; i < vertices.size(); i++) {
+    double d = (vertices[i]-p).lengthSquared();
     if (d<mindist) {
       mindist= d;
       nindex = i;
