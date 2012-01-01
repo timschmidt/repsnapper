@@ -407,7 +407,6 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
         // draw highlight around selected object
         glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
         glLineWidth(3.0);
-        glEnable(GL_LINE_SMOOTH);
 	glEnable (GL_POLYGON_OFFSET_LINE);
 
         glDisable (GL_CULL_FACE);
@@ -421,7 +420,6 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
         glEnable (GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDisable(GL_STENCIL_TEST);
-        glDisable(GL_LINE_SMOOTH);
 	glDisable(GL_POLYGON_OFFSET_LINE);
       }
       else {

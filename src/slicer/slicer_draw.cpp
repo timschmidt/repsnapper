@@ -70,7 +70,6 @@ void Slicer::draw(const Model *model, const Settings &settings) const
   //cerr << "Slicer::draw" <<  endl;
 	// polygons
 	glEnable(GL_LIGHTING);
-	glEnable(GL_POINT_SMOOTH);
 
 	float no_mat[] = {0.0f, 0.0f, 0.0f, 1.0f};
 //	float mat_ambient[] = {0.7f, 0.7f, 0.7f, 1.0f};
@@ -157,7 +156,6 @@ void Slicer::draw(const Model *model, const Settings &settings) const
 	{
 		glColor4fv(settings.Display.EndpointsRGBA.rgba);
 		glPointSize(settings.Display.EndPointSize);
-		glEnable(GL_POINT_SMOOTH);
 		glBegin(GL_POINTS);
 		for(size_t i=0;i<triangles.size();i++)
 		{
