@@ -222,6 +222,10 @@ bool Render::on_button_release_event(GdkEventButton* event)
   	  m_selection->select(iter);
   	}
       }
+      else {
+	// click on no object - clear the selection
+	m_selection->unselect_all();
+      }
     }
   }
   else
