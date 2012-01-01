@@ -280,30 +280,36 @@ void Model::MakeUncoveredPolygons(CuttingPlane * subjplane,
 void Model::MultiplyUncoveredPolygons()
 {
   uint shells = settings.Slicing.ShellCount;
-  m_progress.start (_("Top+Bottom Shells"), 3);
+  m_progress.start (_("Top Shells"), cuttingplanes.size());
   // bottom-up
   for (uint i=0; i < cuttingplanes.size(); i++) 
     {
+      m_progress.update(i);
       ClipperLib::Polygons fullpolys = 
 	cuttingplanes[i]->getClipperPolygons(cuttingplanes[i]->GetFullFillPolygons());
       for (uint s=1; s < shells; s++) 
 	if (int(i-s) > 1)
 	    cuttingplanes[i-s]->addFullPolygons(fullpolys);
     }    
-  m_progress.update(1);
   // top-down
+  m_progress.stop (_("Done"));
+  m_progress.start (_("Bottom Shells"), cuttingplanes.size());
   for (int i=cuttingplanes.size()-1; i>=0; i--) 
     {
+      m_progress.update(i);
       ClipperLib::Polygons fullpolys = 
 	cuttingplanes[i]->getClipperPolygons(cuttingplanes[i]->GetFullFillPolygons());
       for (uint s=1; s < shells; s++) 
 	if (i+s < cuttingplanes.size())
 	    cuttingplanes[i+s]->addFullPolygons(fullpolys);
     }    
-  m_progress.update(2);
+  m_progress.stop (_("Done"));
+  m_progress.start (_("Merge Shells"), cuttingplanes.size());
   for (uint i=0; i < cuttingplanes.size(); i++) 
-    cuttingplanes[i]->mergeFullPolygons();
-  m_progress.update(3);
+    {
+      m_progress.update(i);
+      cuttingplanes[i]->mergeFullPolygons();
+    }
   m_progress.stop (_("Done"));
 }
 
@@ -422,8 +428,11 @@ void Model::ConvertToGCode()
   // Make Layers
   Slice(state, printOffsetZ);
   MakeShells();
-  MakeUncoveredPolygons();
-  MultiplyUncoveredPolygons();
+  if (settings.Slicing.SolidTopAndBottom)
+    {
+      MakeUncoveredPolygons();
+      MultiplyUncoveredPolygons();
+    }
   MakeSupportPolygons();
 
   CalcInfill(state);
