@@ -741,7 +741,7 @@ and others I forgot... (needs updating)</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Hello</property>
-                            <property name="digits">2</property>
+                            <property name="digits">1</property>
                           </object>
                         </child>
                       </object>
