@@ -9,6 +9,8 @@ src/file.cpp
 src/gcode.cpp
 src/model.cpp
 src/model2.cpp
+src/printer.cpp
+src/printer2.cpp
 src/render.cpp
 src/repsnapper.cpp
 src/rfo.cpp
