@@ -19,6 +19,7 @@
 */
 #include "config.h"
 #define  MODEL_IMPLEMENTATION
+#include <omp.h>
 #include <vector>
 #include <string>
 #include <cerrno>
@@ -240,12 +241,14 @@ void Model::MakeUncoveredPolygons()
   for (uint i=count-1; i>1; i--) 
     {
       m_progress.update(count + count - i);
+      g_main_context_iteration(NULL,false);
       MakeUncoveredPolygons(cuttingplanes[i],cuttingplanes[i-1]);
     }
   m_progress.update(2*count+1);
   MakeUncoveredPolygons(cuttingplanes.front(),&emptyplane);
   m_progress.update(2*count+2);
   MakeUncoveredPolygons(cuttingplanes.back(),&emptyplane);
+  g_main_context_iteration(NULL,false);
   m_progress.stop (_("Done"));
 }
 
@@ -282,16 +285,17 @@ void Model::MakeUncoveredPolygons(CuttingPlane * subjplane,
 				 
 void Model::MultiplyUncoveredPolygons()
 {
-  uint shells = settings.Slicing.ShellCount;
-  uint count = cuttingplanes.size();
+  int shells = settings.Slicing.ShellCount;
+  int count = cuttingplanes.size();
   m_progress.start (_("Uncovered Shells"), count*3);
   // bottom-up
-  for (uint i=0; i < count; i++) 
+  for (int i=0; i < count; i++) 
     {
       m_progress.update(i);
+      g_main_context_iteration(NULL,false);
       ClipperLib::Polygons fullpolys = 
 	cuttingplanes[i]->getClipperPolygons(cuttingplanes[i]->GetFullFillPolygons());
-      for (uint s=1; s < shells; s++) 
+      for (int s=1; s < shells; s++) 
 	if (int(i-s) > 1)
 	    cuttingplanes[i-s]->addFullPolygons(fullpolys);
     }    
@@ -299,18 +303,26 @@ void Model::MultiplyUncoveredPolygons()
   for (int i=count-1; i>=0; i--) 
     {
       m_progress.update(count + count -i);
+      g_main_context_iteration(NULL,false);
       ClipperLib::Polygons fullpolys = 
 	cuttingplanes[i]->getClipperPolygons(cuttingplanes[i]->GetFullFillPolygons());
-      for (uint s=1; s < shells; s++) 
+      for (int s=1; s < shells; s++) 
 	if (i+s < count)
 	    cuttingplanes[i+s]->addFullPolygons(fullpolys);
     }    
   // merge results
-  for (uint i=0; i < count; i++) 
+  {
+  int done = 0;
+  // #pragma omp parallel for schedule(static) ordered // somehow hangs
+  for (int i=0; i < count; i++) 
     {
-      m_progress.update(count + count +i);
+      m_progress.update(count + count + done);
+      g_main_context_iteration(NULL,false);
+      //cerr << i << endl;
       cuttingplanes[i]->mergeFullPolygons();
+      done ++;
     }
+  }
   m_progress.stop (_("Done"));
 }
 
@@ -321,6 +333,7 @@ void Model::MakeSupportPolygons()
   for (uint i=cuttingplanes.size()-1; i>0; i--) 
     {
       m_progress.update(i);
+      g_main_context_iteration(NULL,false);
       //cerr << "Support? plane "<< i <<": ";
       CuttingPlane * plane1 = cuttingplanes[i];
       CuttingPlane * plane2 = cuttingplanes[i-1];
@@ -336,19 +349,25 @@ void Model::MakeSupportPolygons()
 
 void Model::MakeShells()
 {
-  uint count = cuttingplanes.size();
+  int count = cuttingplanes.size();
   m_progress.start (_("Shells"), count);
   double matwidth;
-  for (uint i=0; i < count; i++) 
+
+  int done = 0;
+  {
+#pragma omp parallel for schedule(dynamic)
+  for (int i=0; i < count; i++) 
     {
-      m_progress.update(i);
+      m_progress.update(done);
       g_main_context_iteration(NULL,false);
       //cerr << "shrink plane " << i << endl;
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(cuttingplanes[i]->thickness);
       cuttingplanes[i]->MakeShells(settings.Slicing.ShellCount,
 				   matwidth,
 				   settings.Slicing.Optimization, false);
+      done++;
     }
+  }
   m_progress.stop (_("Done"));
 }
 
@@ -374,12 +393,16 @@ void Model::CalcInfill(GCodeState &state)
 
   Infill::clearPatterns();
   m_progress.start (_("Infill"), cuttingplanes.size());
+  int count = cuttingplanes.size();
 
   //cerr << "make infill"<< endl;
-  for (uint i=0; i <cuttingplanes.size(); i++) 
+  int done = 0;
+  {
+#pragma omp parallel for schedule(dynamic)
+  for (int i=0; i < count; i++) 
     {
       CuttingPlane * plane = cuttingplanes[i];
-      m_progress.update(i);
+      m_progress.update(done);
       g_main_context_iteration(NULL,false);
       // inFill      
 
@@ -397,7 +420,9 @@ void Model::CalcInfill(GCodeState &state)
 			settings.Slicing.InfillRotation,
 			settings.Slicing.InfillRotationPrLayer, 
 			settings.Display.DisplayDebuginFill);
+      done++;
     }
+  }
   m_progress.stop (_("Done"));
 }
 
