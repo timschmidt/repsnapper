@@ -62,7 +62,8 @@ class Infill
 
   static void clearPatterns();
   InfillType type;
-    
+  double angle;
+
   Vector2d center,Min,Max;  
   vector<Poly> infillpolys;  // for clipper polygon types
   vector<Vector2d> infillvertices; // for lines types
@@ -70,10 +71,11 @@ class Infill
   void calcInfill(vector<Poly> poly, InfillType type, double infillDistance, 
 		  double offsetDistance, double rotation);
   void calcInfill(const vector<Poly> polys, const vector<Poly> fillpolys,
-		  double infillDistance, double offsetDistance);
+		  double offsetDistance);
   void calcInfill(const vector<Poly> polys, const ClipperLib::Polygons ifcpolys,
-		  double infillDistance, double offsetDistance);
+		  double offsetDistance);
 
+  void addInfillPoly(const Poly p);
 
   void getLines(vector<Vector3d> &lines) const;
   

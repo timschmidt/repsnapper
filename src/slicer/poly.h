@@ -51,6 +51,8 @@ public:
 	Poly(CuttingPlane *plane,
 	     const ClipperLib::Polygon cpoly, bool reverse=false);
         ~Poly();
+
+	CuttingPlane * getPlane() const {return plane;};
 	Poly Shrinked(double distance) const;
 	Poly Shrinked(vector<Vector2d> *vertices, double distance);
 

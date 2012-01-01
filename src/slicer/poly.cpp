@@ -210,7 +210,6 @@ bool Poly::isHole()
 }
 void Poly::rotate(Vector2d center, double angle) 
 {
-  if (angle>M_PI) angle=2*M_PI-angle;
   double sina = sin(angle);
   double cosa = cos(angle);
   for (uint i = 0; i < vertices.size();  i++) {
