@@ -437,6 +437,7 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
   if(settings.Display.DisplayBBox)
     {
       // Draw bbox
+      glDisable(GL_DEPTH_TEST);
       glColor3f(1,0,0);
       glBegin(GL_LINE_LOOP);
       glVertex3f(Min.x, Min.y, Min.z);
@@ -462,8 +463,10 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
       glEnd();
     }
 
-  if(settings.Display.DisplayCuttingPlane)
+  if(settings.Display.DisplayCuttingPlane) {
+    glDisable(GL_DEPTH_TEST);
     drawCuttingPlanes(offset);
+  }
   
 }
 
