@@ -21,8 +21,6 @@
 #include <vmmlib/vmmlib.h>
 #include <polylib/Polygon2d.h>
 
-#include <omp.h>
-
 #include "slicer.h"
 #include "cuttingplane.h"
 #include "infill.h"
@@ -134,9 +132,7 @@ ClipperLib::Polygons CuttingPlane::getClipperPolygons(const vector<Poly> polygon
 {
   ClipperLib::Polygons cpolys;
   cpolys.resize(polygons.size());
-  int count = polygons.size();
-//#pragma omp parallel for
-  for (int i=0; i<count; i++) 
+  for (uint i=0; i<polygons.size(); i++) 
     {
       cpolys[i] = polygons[i].getClipperPolygon(reverse);
     }
@@ -298,8 +294,7 @@ bool CuttingPlane::CleanupSharedSegments()
 	vector<int> vertex_counts; // how many lines have each point
 	vertex_counts.resize (vertices.size());
 
-//#pragma omp parallel for
-	for (int i = 0; i < (int)lines.size(); i++)
+	for (uint i = 0; i < lines.size(); i++)
 	{
 	        vertex_counts[lines[i].start]++; 
 		vertex_counts[lines[i].end]++;
@@ -309,8 +304,7 @@ bool CuttingPlane::CleanupSharedSegments()
 	// an exit, if we have co-incident lines, then
 	// we have more than one; do we ?
 	std::vector<int> duplicate_points;
-//#pragma omp parallel for
-	for (int i = 0; i < (int)vertex_counts.size(); i++)
+	for (uint i = 0; i < vertex_counts.size(); i++)
 	{
 #if CUTTING_PLANE_DEBUG
 		cout << "vtx " << i << " count: " << vertex_counts[i] << "\n";
@@ -368,10 +362,8 @@ bool CuttingPlane::CleanupSharedSegments()
 void CuttingPlane::setNormalFillPolygons(const ClipperLib::Polygons cpolys)
 {
   offsetPolygons.clear();
-  int count = cpolys.size();
-  offsetPolygons.resize(count);
-//#pragma omp parallel for
-  for (int i=0; i < count; i++)
+  offsetPolygons.resize(cpolys.size());
+  for (uint i=0; i<cpolys.size(); i++)
     {
       offsetPolygons[i]=Poly(this, cpolys[i]);
     }
@@ -379,18 +371,15 @@ void CuttingPlane::setNormalFillPolygons(const ClipperLib::Polygons cpolys)
 void CuttingPlane::setFullFillPolygons(const ClipperLib::Polygons cpolys)
 {
   fullFillPolygons.clear();
-  int count = cpolys.size();
-  fullFillPolygons.resize(count);
-//#pragma omp parallel for
-  for (int i=0; i< count; i++)
+  fullFillPolygons.resize(cpolys.size());
+  for (uint i=0; i<cpolys.size(); i++)
     {
       fullFillPolygons[i]=Poly(this, cpolys[i]);
     }
 }
 void CuttingPlane::addFullFillPolygons(const ClipperLib::Polygons cpolys)
 {
-  int count = cpolys.size();
-  for (int i=0; i<count; i++)
+  for (uint i=0; i<cpolys.size(); i++)
     {
       fullFillPolygons.push_back(Poly(this, cpolys[i]));
     }
@@ -398,10 +387,8 @@ void CuttingPlane::addFullFillPolygons(const ClipperLib::Polygons cpolys)
 void CuttingPlane::setSupportPolygons(const ClipperLib::Polygons cpolys)
 {
   supportPolygons.clear();
-  int count = cpolys.size();
-  supportPolygons.resize(count);
-//#pragma omp parallel for
-  for (int i=0; i<count; i++)
+  supportPolygons.resize(cpolys.size());
+  for (uint i=0; i<cpolys.size(); i++)
     {
       supportPolygons[i] = Poly(this, cpolys[i]);
       cout << "support poly "<< i << ": ";
@@ -431,16 +418,14 @@ bool CuttingPlane::MakePolygons(double Optimization)
 		planepoints[lines[i].start].push_back(i); 
 
 	// Build polygons
-
-	int count = lines.size();
 	vector<bool> used;
-	used.resize(count);
-	for (int i=0;i<count;i++)
+	used.resize(lines.size());
+	for (uint i=0;i>used.size();i++)
 		used[i] = false;
 	
 	polygons.clear();
 
-	for (int current = 0; current < count; current++)
+	for (uint current = 0; current < lines.size(); current++)
 	{
 	  //cerr << used[current]<<"linksegments " << current << " of " << lines.size()<< endl;
 		if (used[current])
@@ -964,9 +949,7 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	// Draw the raw poly's in red
 	glColor3f(1,0,0);
 	glLineWidth(1);
-	int count = polygons.size();
-	//#pragma omp parallel for
-	for(int p=0; p<count;p++)
+	for(size_t p=0; p<polygons.size();p++)
 	{
 	  polygons[p].draw(GL_LINE_LOOP);
 	  polygons[p].draw(GL_POINTS);

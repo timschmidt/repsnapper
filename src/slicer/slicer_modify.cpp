@@ -17,20 +17,18 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "slicer.h"
-#include <omp.h>
 
 void Slicer::Scale(double in_scale_factor)
 {
-  int count = triangles.size();
-
-#pragma omp parallel for schedule(dynamic)
-    for(int i = 0; i < count; i++)
+    for(size_t i = 0; i < triangles.size(); i++)
     {
         for(int j = 0; j < 3; j++)
         {
             /* Translate to origin */
             triangles[i][j] = triangles[i][j] - Center;
+
             triangles[i][j].scale(in_scale_factor/scale_factor);
+
             triangles[i][j] = triangles[i][j] + Center;
         }
     }
@@ -127,9 +125,7 @@ void Slicer::RotateObject(Vector3d axis, double angle)
 	min.x = min.y = min.z = oldmin.x = oldmin.y = oldmin.z = 99999999.0;
 	max.x = max.y = max.z = oldmax.x = oldmax.y = oldmax.z -99999999.0;
 
-	int count = triangles.size();
-#pragma omp parallel for schedule(dynamic)
-	for (int i=0; i<count; i++)
+	for (size_t i=0; i<triangles.size(); i++)
 	{
 		triangles[i].AccumulateMinMax (oldmin, oldmax);
 
@@ -149,9 +145,7 @@ void Slicer::RotateObject(Vector3d axis, double angle)
 	// ensure our x/y bbox is at the same offset from the bottom/left
 	move.x = oldmin.x - min.x;
 	move.y = oldmin.y - min.y;
-
-#pragma omp parallel for schedule(dynamic)
-	for (int i = 0; i < count; i++)
+	for (uint i = 0; i < triangles.size(); i++)
 		triangles[i].Translate(move);
 	max.x += move.x;
 	min.x += move.x;
@@ -169,9 +163,7 @@ void Slicer::CenterAroundXY()
 {
 	Vector3d displacement = -Min;
 
-	int count = triangles.size();
-#pragma omp parallel for schedule(dynamic)
-	for(int i=0; i<count ; i++)
+	for(size_t i=0; i<triangles.size() ; i++)
 	{
 		triangles[i].A = triangles[i].A + displacement;
 		triangles[i].B = triangles[i].B + displacement;
