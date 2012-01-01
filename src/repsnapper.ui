@@ -2783,7 +2783,7 @@ and others I forgot... (needs updating)</property>
                       <object class="GtkLabel" id="label69">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Infill per Layer Rotation</property>
+                        <property name="label" translatable="yes">Infill Rotation per Layer (°)</property>
                       </object>
                       <packing>
                         <property name="left_attach">2</property>
@@ -2794,7 +2794,7 @@ and others I forgot... (needs updating)</property>
                       <object class="GtkLabel" id="label70">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Rotate</property>
+                        <property name="label" translatable="yes">Infill Rotation (°)</property>
                       </object>
                       <packing>
                         <property name="top_attach">1</property>
@@ -2805,7 +2805,7 @@ and others I forgot... (needs updating)</property>
                       <object class="GtkLabel" id="label71">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Infill Distance</property>
+                        <property name="label" translatable="yes">Infill Distance (Lines)</property>
                       </object>
                       <packing>
                         <property name="left_attach">2</property>

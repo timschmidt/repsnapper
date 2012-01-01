@@ -535,12 +535,12 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 	    {
 	      double fullInfillDistance = settings.Hardware.ExtrudedMaterialWidth
 		* settings.Hardware.ExtrusionFactor;  
-	      double infillDistance;
-	      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) 
-		  != altInfillLayers.end())
-		infillDistance = settings.Slicing.AltInfillDistance;
-	      else
-		infillDistance = settings.Slicing.InfillDistance;
+	      double infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
+	      // if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) 
+	      // 	  != altInfillLayers.end())
+	      // 	infillDistance = settings.Slicing.AltInfillDistance;
+	      // else
+	      // 	infillDistance = settings.Slicing.InfillDistance;
 	      plane->CalcInfill(infillDistance, fullInfillDistance,
 				settings.Slicing.InfillRotation,
 				settings.Slicing.InfillRotationPrLayer, 

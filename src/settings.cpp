@@ -241,7 +241,7 @@ static struct {
   { "Slicing.ShellCount", 0, 100, 1, 5 },
   { "Slicing.InfillRotation", -360, 360, 5, 45 },
   { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
-  { "Slicing.InfillDistance", 0.1, 10, 0.1, 1 },
+  { "Slicing.InfillDistance", 0.0, 10, 0.1, 1 },
   { "Slicing.AltInfillDistance", 0.1, 10, 0.1, 2 },
   { "Slicing.Optimization", 0.0, 1.0, 0.001, 0.1 },
   { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },

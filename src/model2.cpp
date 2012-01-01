@@ -362,10 +362,11 @@ void Model::CalcInfill(GCodeState &state)
   vector<int> altInfillLayers;
   settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
 
-  double infillDistance;
   // for full polys/layers:
   double fullInfillDistance = settings.Hardware.ExtrudedMaterialWidth
     * settings.Hardware.ExtrusionFactor;  
+  // normal fill:
+  double infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
   
   Infill::clearPatterns();
   m_progress.start (_("Infill"), cuttingplanes.size());
@@ -380,11 +381,11 @@ void Model::CalcInfill(GCodeState &state)
       g_main_context_iteration(NULL,false);
       // inFill
       
-      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), i) 
-	  != altInfillLayers.end())
-	infillDistance = settings.Slicing.AltInfillDistance;
-      else
-	infillDistance = settings.Slicing.InfillDistance;
+      // if (std::find(altInfillLayers.begin(), altInfillLayers.end(), i) 
+      // 	  != altInfillLayers.end())
+      // 	infillDistance = settings.Slicing.AltInfillDistance;
+      // else
+      // 	infillDistance = settings.Slicing.InfillDistance;
 
       plane->CalcInfill(infillDistance, fullInfillDistance,
 			settings.Slicing.InfillRotation,
