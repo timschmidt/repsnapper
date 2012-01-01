@@ -99,6 +99,7 @@ AC_CHECK_HEADER(GLUT/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   GL_LIBS="-L/usr/lib -lGLU -lGL -lglut"
   EXTRA_LDFLAGS=
   EXTRA_CFLAGS=
+  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 esac
 
