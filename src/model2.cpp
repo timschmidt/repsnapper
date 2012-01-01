@@ -226,9 +226,10 @@ void Model::MakeUncoveredPolygons()
   CuttingPlane emptyplane(cuttingplanes.size());
   emptyplane.Clear();
 
-  m_progress.start (_("Find Uncovered"), cuttingplanes.size()+1);
+  uint count = cuttingplanes.size();
+  m_progress.start (_("Find Uncovered"), 2*count+2);
   // bottom to top:
-  for (uint i=0; i <cuttingplanes.size()-1; i++) 
+  for (uint i=0; i <count-1; i++) 
     {
       m_progress.update(i);
       g_main_context_iteration(NULL,false);
@@ -236,12 +237,14 @@ void Model::MakeUncoveredPolygons()
     }  
 
   // top to bottom:
-  for (uint i=cuttingplanes.size()-1; i>1; i--) 
+  for (uint i=count-1; i>1; i--) 
     {
-      m_progress.update(i);
+      m_progress.update(count + count - i);
       MakeUncoveredPolygons(cuttingplanes[i],cuttingplanes[i-1]);
     }
+  m_progress.update(2*count+1);
   MakeUncoveredPolygons(cuttingplanes.front(),&emptyplane);
+  m_progress.update(2*count+2);
   MakeUncoveredPolygons(cuttingplanes.back(),&emptyplane);
   m_progress.stop (_("Done"));
 }
@@ -280,9 +283,10 @@ void Model::MakeUncoveredPolygons(CuttingPlane * subjplane,
 void Model::MultiplyUncoveredPolygons()
 {
   uint shells = settings.Slicing.ShellCount;
-  m_progress.start (_("Top Shells"), cuttingplanes.size());
+  uint count = cuttingplanes.size();
+  m_progress.start (_("Uncovered Shells"), count*3);
   // bottom-up
-  for (uint i=0; i < cuttingplanes.size(); i++) 
+  for (uint i=0; i < count; i++) 
     {
       m_progress.update(i);
       ClipperLib::Polygons fullpolys = 
@@ -292,22 +296,19 @@ void Model::MultiplyUncoveredPolygons()
 	    cuttingplanes[i-s]->addFullPolygons(fullpolys);
     }    
   // top-down
-  m_progress.stop (_("Done"));
-  m_progress.start (_("Bottom Shells"), cuttingplanes.size());
-  for (int i=cuttingplanes.size()-1; i>=0; i--) 
+  for (int i=count-1; i>=0; i--) 
     {
-      m_progress.update(i);
+      m_progress.update(count + count -i);
       ClipperLib::Polygons fullpolys = 
 	cuttingplanes[i]->getClipperPolygons(cuttingplanes[i]->GetFullFillPolygons());
       for (uint s=1; s < shells; s++) 
-	if (i+s < cuttingplanes.size())
+	if (i+s < count)
 	    cuttingplanes[i+s]->addFullPolygons(fullpolys);
     }    
-  m_progress.stop (_("Done"));
-  m_progress.start (_("Merge Shells"), cuttingplanes.size());
-  for (uint i=0; i < cuttingplanes.size(); i++) 
+  // merge results
+  for (uint i=0; i < count; i++) 
     {
-      m_progress.update(i);
+      m_progress.update(count + count +i);
       cuttingplanes[i]->mergeFullPolygons();
     }
   m_progress.stop (_("Done"));
