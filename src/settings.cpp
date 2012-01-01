@@ -136,7 +136,7 @@ static struct {
   { OFFSET (Hardware.PrintMargin.y), T_FLOAT, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
   { OFFSET (Hardware.PrintMargin.z), T_FLOAT, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
 
-  FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidth, "ExtrudedMaterialWidth", 0.7, false),
+  FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 0.7, false),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
   { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 19200, false }, /* 57600 ? */
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
@@ -255,7 +255,7 @@ static struct {
   { "Hardware.PrintMargin.Y", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.PrintMargin.Z", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
-  { "Hardware.ExtrudedMaterialWidth", 0.0, 10.0, 0.01, 0.1 },
+  { "Hardware.ExtrudedMaterialWidthRatio", 0.0, 10.0, 0.01, 1.8 },
   { "Hardware.LayerThickness", 0.01, 3.0, 0.01, 0.2 },
   { "Hardware.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
   { "Hardware.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
@@ -888,14 +888,20 @@ void Settings::connect_to_ui (Builder &builder)
   m_signal_update_settings_gui.emit();
 }
 
-// We do our internal measurement in terms of the length of extruded material
-float Settings::HardwareSettings::GetExtrudeFactor() const
+double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) const
 {
-  float f = 1.0;
+  return ExtrudedMaterialWidthRatio * layerheight * ExtrusionFactor;
+}
+
+// We do our internal measurement in terms of the length of extruded material
+double Settings::HardwareSettings::GetExtrudeFactor(double layerheight) const
+{
+  double f = 1.0;
+  double matWidth = GetExtrudedMaterialWidth(layerheight);
   if (CalibrateInput) {
     // otherwise we just work back from the extruded diameter for now.
-    f = (ExtrudedMaterialWidth * ExtrudedMaterialWidth) / (FilamentDiameter * FilamentDiameter);
+    f = (matWidth * matWidth) / (FilamentDiameter * FilamentDiameter);
   } // else: we work in terms of output anyway;
 
-  return f * ExtrusionFactor;
+  return f;
 }

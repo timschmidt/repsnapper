@@ -63,7 +63,8 @@ class Settings {
 
     vmml::Vector3d	Volume;      // Print volume
     vmml::Vector3d	PrintMargin;
-    float ExtrudedMaterialWidth;
+    float ExtrudedMaterialWidthRatio; // ratio of with to (layer) height
+    double GetExtrudedMaterialWidth(const double layerheight) const;
 
     std::string PortName;
     int SerialSpeed;
@@ -74,7 +75,7 @@ class Settings {
 
     float DownstreamMultiplier;
     float DownstreamExtrusionMultiplier;
-    float GetExtrudeFactor() const;
+    double GetExtrudeFactor(double layerheight) const;
   };
   HardwareSettings Hardware;
 

@@ -182,9 +182,9 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
   bool polys_ok;
   while(z < Max.z)
     {
-      CuttingPlane * plane = new CuttingPlane(LayerNr); // one plane per layer, with all objects
       thickness = settings.Hardware.LayerThickness;
-      plane->thickness = thickness;
+      // one plane per layer, with all objects
+      CuttingPlane * plane = new CuttingPlane(LayerNr, thickness); 
       m_progress.update(z);
       g_main_context_iteration(NULL,false);
       hackedZ = z;
@@ -223,7 +223,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 
 void Model::MakeUncoveredPolygons()
 {
-  CuttingPlane emptyplane(cuttingplanes.size());
+  CuttingPlane emptyplane(cuttingplanes.size(),settings.Hardware.LayerThickness);
   emptyplane.Clear();
 
   uint count = cuttingplanes.size();
@@ -338,13 +338,15 @@ void Model::MakeShells()
 {
   uint count = cuttingplanes.size();
   m_progress.start (_("Shells"), count);
+  double matwidth;
   for (uint i=0; i < count; i++) 
     {
       m_progress.update(i);
       g_main_context_iteration(NULL,false);
       //cerr << "shrink plane " << i << endl;
+      matwidth = settings.Hardware.GetExtrudedMaterialWidth(cuttingplanes[i]->thickness);
       cuttingplanes[i]->MakeShells(settings.Slicing.ShellCount,
-				   settings.Hardware.ExtrudedMaterialWidth,
+				   matwidth,
 				   settings.Slicing.Optimization, false);
     }
   m_progress.stop (_("Done"));
@@ -364,11 +366,12 @@ void Model::CalcInfill(GCodeState &state)
   settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
 
   // for full polys/layers:
-  double fullInfillDistance = settings.Hardware.ExtrudedMaterialWidth
-    * settings.Hardware.ExtrusionFactor;  
+  double fullInfillDistance ;
   // normal fill:
-  double infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
-  
+  double infillDistance;
+  double altInfillDistance;
+  double infilldist;
+
   Infill::clearPatterns();
   m_progress.start (_("Infill"), cuttingplanes.size());
 
@@ -376,32 +379,24 @@ void Model::CalcInfill(GCodeState &state)
   for (uint i=0; i <cuttingplanes.size(); i++) 
     {
       CuttingPlane * plane = cuttingplanes[i];
-      // cout << i << ": ";
-      // plane->printinfo();
       m_progress.update(i);
       g_main_context_iteration(NULL,false);
-      // inFill
-      
-      // if (std::find(altInfillLayers.begin(), altInfillLayers.end(), i) 
-      // 	  != altInfillLayers.end())
-      // 	infillDistance = settings.Slicing.AltInfillDistance;
-      // else
-      // 	infillDistance = settings.Slicing.InfillDistance;
+      // inFill      
 
-      plane->CalcInfill(infillDistance, fullInfillDistance,
+      fullInfillDistance = settings.Hardware.GetExtrudedMaterialWidth(plane->thickness);
+      infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
+      altInfillDistance = fullInfillDistance *(1+settings.Slicing.AltInfillDistance);
+
+      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), i) 
+      	  != altInfillLayers.end())
+      	infilldist = altInfillDistance;
+      else
+      	infilldist = infillDistance;
+
+      plane->CalcInfill(infilldist, fullInfillDistance,
 			settings.Slicing.InfillRotation,
 			settings.Slicing.InfillRotationPrLayer, 
 			settings.Display.DisplayDebuginFill);
-      
-      // 	      if (settings.Slicing.SolidTopAndBottom &&
-      // 		  ( i < settings.Slicing.ShellCount ||
-      // 		    i > LayerCount-settings.Slicing.ShellCount-2 ))
-      // 		{
-      // 		  infillDistance = fullInfillDistance;
-      // 		}
-      // 	      else {
-      // 		infillDistance = settings.Slicing.InfillDistance;
-      // 	      }
     }
   m_progress.stop (_("Done"));
 }

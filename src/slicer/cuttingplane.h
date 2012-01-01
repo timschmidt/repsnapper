@@ -123,7 +123,7 @@ class CuttingPlane
   friend class Poly;
 public:
   //CuttingPlane();
-	CuttingPlane(int layerno);
+  CuttingPlane(int layerno, double layerthickness);
 	~CuttingPlane();
 
 	// CuttingPlane *previous, *next;

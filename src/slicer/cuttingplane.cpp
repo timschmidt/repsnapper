@@ -91,10 +91,11 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 
 
 
-CuttingPlane::CuttingPlane(int layerno)
+CuttingPlane::CuttingPlane(int layerno, double layerthickness)
 {
   //cerr <<"CuttingPlane" << layerno << endl;
   LayerNo = layerno;
+  thickness = layerthickness;
   infill = new Infill(this);
 }
 // CuttingPlane::CuttingPlane()
@@ -876,7 +877,7 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 
 		// Make a PLOT accelerated line from LastPosition to lines[thisPoint]
 		state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
-						hardware.GetExtrudeFactor(),
+						hardware.GetExtrudeFactor(thickness),
 						E, z, slicing, hardware);
 		state.SetLastPosition(lines[thisPoint]);
 		thisPoint++;// = findClosestUnused (lines, state.LastPosition(), used);

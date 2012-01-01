@@ -505,6 +505,8 @@ void Model::drawCuttingPlanes(Vector3d offset) const
   if (have_planes) 
     glTranslatef(-offset.x, -offset.y, -offset.z);
 
+  double matwidth;
+  
   while(LayerNr < LayerCount)
     {
       if (have_planes)
@@ -514,8 +516,9 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 	}
       else
 	{
-	  plane = new CuttingPlane(LayerNr);
+	  plane = new CuttingPlane(LayerNr,settings.Hardware.LayerThickness);
 	  plane->setZ(z);
+	  matwidth = settings.Hardware.GetExtrudedMaterialWidth(plane->thickness);
 	  for(size_t o=0;o<rfo.Objects.size();o++)
 	    {
 	      for(size_t f=0;f<rfo.Objects[o].files.size();f++)
@@ -529,19 +532,20 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 	  plane->MakePolygons(settings.Slicing.Optimization);
 	  plane->MakeShells(//settings.Slicing.ShrinkQuality,
 			    settings.Slicing.ShellCount,
-			    settings.Hardware.ExtrudedMaterialWidth,
+			    matwidth,
 			    settings.Slicing.Optimization,
 			    false);
 	  if (settings.Display.DisplayinFill)
 	    {
-	      double fullInfillDistance = settings.Hardware.ExtrudedMaterialWidth
-		* settings.Hardware.ExtrusionFactor;  
+	      double fullInfillDistance = matwidth;
 	      double infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
-	      // if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) 
-	      // 	  != altInfillLayers.end())
-	      // 	infillDistance = settings.Slicing.AltInfillDistance;
-	      // else
-	      // 	infillDistance = settings.Slicing.InfillDistance;
+	      double altInfillDistance = fullInfillDistance *(1+settings.Slicing.AltInfillDistance);
+	      double infilldist;
+	      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) 
+		  != altInfillLayers.end())
+		infilldist = altInfillDistance;
+	      else
+		infilldist = infillDistance;
 	      plane->CalcInfill(infillDistance, fullInfillDistance,
 				settings.Slicing.InfillRotation,
 				settings.Slicing.InfillRotationPrLayer, 
