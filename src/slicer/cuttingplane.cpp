@@ -125,6 +125,8 @@ void CuttingPlane::CalcInfill (double InfillDistance,
 		     InfillDistance, FullInfillDistance, rot);
   infill->calcInfill(fullFillPolygons, type , 
 		     FullInfillDistance, FullInfillDistance, rot);
+  infill->calcInfill(supportPolygons, SupportInfill , 
+		     InfillDistance, InfillDistance, 0);
 }
 
 ClipperLib::Polygons CuttingPlane::getClipperPolygons(const vector<Poly> polygons,
@@ -165,22 +167,33 @@ void CuttingPlane::mergeFullPolygons()
   ClipperLib::Polygons merged = getMergedPolygons(GetFullFillPolygons());
   setFullFillPolygons(merged);
 }
+void CuttingPlane::mergeSupportPolygons() 
+{
+  ClipperLib::Polygons merged = getMergedPolygons(GetSupportPolygons());
+  setSupportPolygons(merged);
+}
 ClipperLib::Polygons CuttingPlane::getMergedPolygons(const vector<Poly> polygons) const
+{
+  ClipperLib::Polygons cpoly= getClipperPolygons(polygons);
+  return getMergedPolygons(cpoly);
+}
+ClipperLib::Polygons CuttingPlane::getMergedPolygons(const ClipperLib::Polygons cpolys)
+  const
 {
   ClipperLib::Polygons emptypolys;emptypolys.clear();
   ClipperLib::Clipper clpr;
   clpr.Clear();
-  ClipperLib::Polygons cpoly= getClipperPolygons(polygons);
   // make wider to get overlap
-  ClipperLib::Polygons cpoly2;
-  ClipperLib::OffsetPolygons(cpoly,cpoly2, 2,ClipperLib::jtMiter,1);
-  clpr.AddPolygons(cpoly2, ClipperLib::ptSubject);
+  ClipperLib::Polygons cpolys2;
+  ClipperLib::OffsetPolygons(cpolys,cpolys2, 2,ClipperLib::jtMiter,1);
+  clpr.AddPolygons(cpolys2, ClipperLib::ptSubject);
   clpr.AddPolygons(emptypolys, ClipperLib::ptClip);
-  clpr.Execute(ClipperLib::ctUnion, cpoly, ClipperLib::pftPositive,
+  ClipperLib::Polygons cpolys3;
+  clpr.Execute(ClipperLib::ctUnion, cpolys3, ClipperLib::pftPositive,
 	       ClipperLib::pftNegative);
   // shrink the result
-  ClipperLib::OffsetPolygons(cpoly,cpoly2, -2,ClipperLib::jtMiter,1);
-  return cpoly2;
+  ClipperLib::OffsetPolygons(cpolys3,cpolys2, -2,ClipperLib::jtMiter,1);
+  return cpolys2;
 }
 
 /*
@@ -387,12 +400,15 @@ void CuttingPlane::addFullFillPolygons(const ClipperLib::Polygons cpolys)
 void CuttingPlane::setSupportPolygons(const ClipperLib::Polygons cpolys)
 {
   supportPolygons.clear();
-  supportPolygons.resize(cpolys.size());
-  for (uint i=0; i<cpolys.size(); i++)
+  ClipperLib::Polygons merged = getMergedPolygons(cpolys);
+  int count = merged.size();
+  supportPolygons.resize(count);
+//#pragma omp parallel for
+  for (int i=0; i<count; i++)
     {
-      supportPolygons[i] = Poly(this, cpolys[i]);
-      cout << "support poly "<< i << ": ";
-      supportPolygons[i].printinfo();
+      supportPolygons[i] = Poly(this, merged[i]);
+      //cout << "support poly "<< i << ": ";
+      //supportPolygons[i].printinfo();
     }
 }
 
@@ -994,6 +1010,16 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	  //offsetPolygons[p].draw(GL_POINTS);
 	}
 
+	glColor4f(0.5,0.5,1.0,1);
+	glPointSize(3);
+	glLineWidth(3);
+	//cerr << "draw " << supportPolygons.size() << " supportpolys"<<endl;
+	for(size_t p=0;p<supportPolygons.size();p++)
+	  {
+	    //cerr << "supp draw " << p <<endl;
+	    supportPolygons[p].draw(GL_LINE_LOOP);
+	    supportPolygons[p].draw(GL_POINTS);
+	  }
 
 	if(DisplayInfill)
 	  {

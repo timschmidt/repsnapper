@@ -116,7 +116,8 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   vector<Poly> polys;
   switch (type)
     {
-    case ParallelInfill: // stripes
+    case SupportInfill: // stripes, but leave them as polygons
+    case ParallelInfill: // stripes, make them to lines later
       {
 	Poly poly(this->plane);
 	for (double x=Min.x; x <Max.x; x+= 2*infillDistance) {

@@ -315,20 +315,37 @@ void Model::MultiplyUncoveredPolygons()
 }
 
 
+void Model::MakeSupportPolygons(CuttingPlane * subjplane, // lower -> whill change
+				const CuttingPlane * clipplane) // upper 
+{
+  ClipperLib::Clipper clpr;
+  vector<Poly>  polysc = clipplane->GetPolygons();
+  ClipperLib::Polygons clipcpolys =
+    clipplane->getClipperPolygons(polysc); // outer polygons
+  clpr.AddPolygons(clipcpolys, ClipperLib::ptSubject);
+  clpr.AddPolygons(clipplane->getClipperPolygons(clipplane->GetSupportPolygons()),
+		   ClipperLib::ptSubject);
+
+  vector<Poly> polyss = subjplane->GetPolygons();
+  clpr.AddPolygons(subjplane->getClipperPolygons(polyss),
+				   ClipperLib::ptClip);
+
+  ClipperLib::Polygons support;
+  clpr.Execute(ClipperLib::ctDifference, support, 
+	       ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
+  subjplane->setSupportPolygons(support);
+}
+
 void Model::MakeSupportPolygons()
 {
-  m_progress.start (_("Support"), cuttingplanes.size()-1);
-  for (uint i=cuttingplanes.size()-1; i>0; i--) 
+  int count = cuttingplanes.size();
+  m_progress.start (_("Support"), count-1);
+  for (int i=count-1; i>0; i--) 
     {
-      m_progress.update(i);
+      m_progress.update(count-i);
+      g_main_context_iteration(NULL,false);
       //cerr << "Support? plane "<< i <<": ";
-      CuttingPlane * plane1 = cuttingplanes[i];
-      CuttingPlane * plane2 = cuttingplanes[i-1];
-      ClipperLib::Polygons polys1 = 
-	plane1->getClipperPolygons(plane1->GetOffsetPolygons());
-      ClipperLib::Polygons polys2 = 
-	plane2->getClipperPolygons(plane2->GetPolygons());
-      // .......
+      MakeSupportPolygons(cuttingplanes[i-1], cuttingplanes[i]);
     }
   m_progress.stop (_("Done"));
 }
@@ -424,13 +441,17 @@ void Model::ConvertToGCode()
 
   // Make Layers
   Slice(state, printOffsetZ);
+
   MakeShells();
+
   if (settings.Slicing.SolidTopAndBottom)
-    {
       MakeUncoveredPolygons();
+
+  if (settings.Slicing.Support)
+    MakeSupportPolygons(); // easier before multiplied uncovered bottoms
+
+  if (settings.Slicing.SolidTopAndBottom)
       MultiplyUncoveredPolygons();
-    }
-  MakeSupportPolygons();
 
   CalcInfill(state);
 

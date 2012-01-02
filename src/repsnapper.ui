@@ -136,9 +136,9 @@ and others I forgot... (needs updating)</property>
             <property name="can_focus">False</property>
             <child>
               <object class="GtkMenuItem" id="menuitem1">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">_File</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
@@ -147,9 +147,9 @@ and others I forgot... (needs updating)</property>
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkImageMenuItem" id="menu_open_stl">
-                        <property name="related_action">OpenStl</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="related_action">OpenStl</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <accelerator key="o" signal="activate" modifiers="GDK_CONTROL_MASK"/>
@@ -158,9 +158,9 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkImageMenuItem" id="menu_open_gcode">
                         <property name="label">Open GCode</property>
-                        <property name="related_action">OpenGCode</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="related_action">OpenGCode</property>
                         <property name="image">image2</property>
                         <property name="use_stock">False</property>
                         <accelerator key="o" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
@@ -175,9 +175,9 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem1">
                         <property name="label">gtk-open</property>
-                        <property name="related_action">LoadSettings</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="related_action">LoadSettings</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <accelerator key="l" signal="activate" modifiers="GDK_CONTROL_MASK"/>
@@ -186,9 +186,9 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem2">
                         <property name="label">gtk-save</property>
-                        <property name="related_action">SaveSettings</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="related_action">SaveSettings</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <accelerator key="s" signal="activate" modifiers="GDK_CONTROL_MASK"/>
@@ -197,9 +197,9 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem3">
                         <property name="label">gtk-save-as</property>
-                        <property name="related_action">SaveSettingsAs</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="related_action">SaveSettingsAs</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <accelerator key="s" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
@@ -214,9 +214,9 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkImageMenuItem" id="menu_quit">
                         <property name="label">gtk-quit</property>
-                        <property name="related_action">Quit</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="related_action">Quit</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <accelerator key="q" signal="activate" modifiers="GDK_CONTROL_MASK"/>
@@ -228,9 +228,9 @@ and others I forgot... (needs updating)</property>
             </child>
             <child>
               <object class="GtkMenuItem" id="menuitem2">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">_Edit</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
@@ -240,9 +240,9 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem6">
                         <property name="label">gtk-preferences</property>
-                        <property name="related_action">PreferencesDialog</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="related_action">PreferencesDialog</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
@@ -250,9 +250,9 @@ and others I forgot... (needs updating)</property>
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem9">
-                        <property name="related_action">Calibrate</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="related_action">Calibrate</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -263,9 +263,9 @@ and others I forgot... (needs updating)</property>
             </child>
             <child>
               <object class="GtkMenuItem" id="menuitem4">
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="use_action_appearance">False</property>
                 <property name="label" translatable="yes">_Help</property>
                 <property name="use_underline">True</property>
                 <child type="submenu">
@@ -274,9 +274,9 @@ and others I forgot... (needs updating)</property>
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkImageMenuItem" id="imagemenuitem10">
-                        <property name="related_action">About</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="related_action">About</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
@@ -323,10 +323,10 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkButton" id="p_pause">
                         <property name="label" translatable="yes">Pause</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="use_action_appearance">False</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -337,10 +337,10 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkButton" id="p_print">
                         <property name="label" translatable="yes">Print</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="use_action_appearance">False</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -351,10 +351,10 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkButton" id="i_home_all">
                         <property name="label" translatable="yes">Home All</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="use_action_appearance">False</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -365,10 +365,10 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkToggleButton" id="p_power">
                         <property name="label" translatable="yes">Power On</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="use_action_appearance">False</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -379,10 +379,10 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkButton" id="p_kick">
                         <property name="label" translatable="yes">Kick</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="use_action_appearance">False</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -464,10 +464,10 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkButton" id="m_load_stl">
                         <property name="label" translatable="yes">Load STL</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="use_action_appearance">False</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -478,10 +478,10 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkButton" id="g_convert_gcode">
                         <property name="label" translatable="yes">Convert to GCode</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="use_action_appearance">False</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -496,10 +496,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="m_save_stl">
                             <property name="label" translatable="yes">Save STL</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -510,10 +510,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="m_delete">
                             <property name="label" translatable="yes">Delete</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -524,10 +524,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="m_duplicate">
                             <property name="label" translatable="yes">Duplicate</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -582,10 +582,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="m_auto_rotate">
                             <property name="label" translatable="yes">Auto Rotate</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -596,10 +596,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="m_rot_x">
                             <property name="label" translatable="yes">X</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -610,10 +610,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="m_rot_y">
                             <property name="label" translatable="yes">Y</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -624,10 +624,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="m_rot_z">
                             <property name="label" translatable="yes">Z</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -741,7 +741,6 @@ and others I forgot... (needs updating)</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Hello</property>
-                            <property name="digits">1</property>
                           </object>
                         </child>
                       </object>
@@ -783,10 +782,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="g_load_gcode">
                             <property name="label" translatable="yes">Load GCode</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -801,10 +800,6 @@ and others I forgot... (needs updating)</property>
                             <property name="invisible_char">●</property>
                             <property name="text" translatable="yes">Text Output</property>
                             <property name="invisible_char_set">True</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -815,10 +810,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="g_save_gcode">
                             <property name="label" translatable="yes">Save GCode</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -1126,10 +1121,6 @@ and others I forgot... (needs updating)</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
                             <property name="numeric">True</property>
                           </object>
                           <packing>
@@ -1140,10 +1131,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkCheckButton" id="Misc.TempReadingEnabled">
                             <property name="label" translatable="yes">Monitor Temperature</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
+                            <property name="use_action_appearance">False</property>
                             <property name="active">True</property>
                             <property name="draw_indicator">True</property>
                           </object>
@@ -1151,10 +1142,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkCheckButton" id="i_fan_enabled">
                             <property name="label" translatable="yes">Fan Enabled</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
+                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -1182,10 +1173,6 @@ and others I forgot... (needs updating)</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
                             <property name="digits">1</property>
                             <property name="numeric">True</property>
                           </object>
@@ -1222,10 +1209,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="i_extrude_length">
                             <property name="label" translatable="yes">Purge</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -1236,10 +1223,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkCheckButton" id="i_reverse">
                             <property name="label" translatable="yes">Reverse Extrude</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
+                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -1308,10 +1295,6 @@ and others I forgot... (needs updating)</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -1324,10 +1307,6 @@ and others I forgot... (needs updating)</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -1342,10 +1321,6 @@ and others I forgot... (needs updating)</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
                             <property name="digits">2</property>
                           </object>
                           <packing>
@@ -1359,10 +1334,6 @@ and others I forgot... (needs updating)</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
                             <property name="digits">2</property>
                           </object>
                           <packing>
@@ -1461,10 +1432,6 @@ and others I forgot... (needs updating)</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">●</property>
                             <property name="invisible_char_set">True</property>
-                            <property name="primary_icon_activatable">False</property>
-                            <property name="secondary_icon_activatable">False</property>
-                            <property name="primary_icon_sensitive">True</property>
-                            <property name="secondary_icon_sensitive">True</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -1475,10 +1442,10 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <object class="GtkButton" id="g_send_gcode">
                             <property name="label" translatable="yes">Send</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
@@ -1600,10 +1567,10 @@ and others I forgot... (needs updating)</property>
                             <child>
                               <object class="GtkCheckButton" id="Misc.FileLoggingEnabled">
                                 <property name="label" translatable="yes">Enable Logging</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
+                                <property name="use_action_appearance">False</property>
                                 <property name="active">True</property>
                                 <property name="draw_indicator">True</property>
                               </object>
@@ -1611,10 +1578,10 @@ and others I forgot... (needs updating)</property>
                             <child>
                               <object class="GtkButton" id="i_clear_logs">
                                 <property name="label" translatable="yes">Clear Logs</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
+                                <property name="use_action_appearance">False</property>
                               </object>
                               <packing>
                                 <property name="left_attach">1</property>
@@ -1626,10 +1593,10 @@ and others I forgot... (needs updating)</property>
                             <child>
                               <object class="GtkCheckButton" id="Misc.ClearLogfilesWhenPrintStarts">
                                 <property name="label" translatable="yes">Clear Logs on Print Start</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">False</property>
+                                <property name="use_action_appearance">False</property>
                                 <property name="active">True</property>
                                 <property name="draw_indicator">True</property>
                               </object>
@@ -1719,10 +1686,10 @@ and others I forgot... (needs updating)</property>
             <child>
               <object class="GtkButton" id="Close">
                 <property name="label">gtk-close</property>
-                <property name="use_action_appearance">False</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="use_action_appearance">False</property>
                 <property name="use_stock">True</property>
               </object>
               <packing>
@@ -1781,10 +1748,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">2</property>
@@ -1822,10 +1785,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">6</property>
@@ -1837,10 +1796,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">4</property>
@@ -1893,10 +1848,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">6</property>
@@ -1910,10 +1861,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">4</property>
@@ -1927,10 +1874,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">2</property>
@@ -2097,10 +2040,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="can_focus">True</property>
                                     <property name="tooltip_text" translatable="yes">Manual tweak-able to increase or decrease the flow rate beyond what is specified above.</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                     <property name="digits">2</property>
                                   </object>
                                   <packing>
@@ -2129,10 +2068,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="can_focus">True</property>
                                     <property name="tooltip_text" translatable="yes">Manual tweak-able to increase or decrease the flow rate beyond what is specified above.</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                     <property name="digits">2</property>
                                   </object>
                                   <packing>
@@ -2160,10 +2095,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                     <property name="digits">2</property>
                                   </object>
                                   <packing>
@@ -2177,9 +2108,9 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label38">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="xalign">0</property>
-                                    <property name="label" translatable="yes">Extruded Material Width</property>
                                     <property name="tooltip_text" translatable="yes">Width to Layerheight Ratio of Extruded Line</property>
+                                    <property name="xalign">0</property>
+                                    <property name="label" translatable="yes">Extruded Material Width Ratio</property>
                                   </object>
                                   <packing>
                                     <property name="top_attach">2</property>
@@ -2192,10 +2123,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                     <property name="digits">2</property>
                                   </object>
                                   <packing>
@@ -2208,22 +2135,22 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Hardware.CalibrateInput">
                                     <property name="label" translatable="yes">Calibrate mm as input</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="tooltip_text" translatable="yes">Whether the 'mm' we generate in gcode are measured as mm of cold input filament, if not set is of hot output extrudate. More modern repraps can adapt their output and layer height by measuring the input flow rate and altering the layer height dynamically. If this is set, you also need to set the filament diameter.</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                 </child>
                                 <child>
                                   <object class="GtkCheckButton" id="Slicing.Use3DGcode">
                                     <property name="label" translatable="yes">Use 3D GCode</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="tooltip_text" translatable="yes">If you have a really obsolete reprap without a stepper controlled extruder you need to turn this on.</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -2234,10 +2161,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Slicing.UseIncrementalEcode">
                                     <property name="label" translatable="yes">Incremental Ecode</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="relief">half</property>
                                     <property name="active">True</property>
                                     <property name="draw_indicator">True</property>
@@ -2253,7 +2180,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label104">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">mm</property>
+                                    <property name="label" translatable="yes"></property>
                                     <property name="justify">center</property>
                                   </object>
                                   <packing>
@@ -2298,7 +2225,7 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label1061">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">mm</property>
+                                    <property name="label" translatable="yes"> </property>
                                     <property name="justify">center</property>
                                   </object>
                                   <packing>
@@ -2383,10 +2310,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">4</property>
@@ -2398,10 +2321,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">4</property>
@@ -2457,10 +2376,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">2</property>
@@ -2472,10 +2387,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">2</property>
@@ -2600,10 +2511,6 @@ and others I forgot... (needs updating)</property>
                                     <child internal-child="entry">
                                       <object class="GtkEntry" id="comboboxentry-entry2">
                                         <property name="can_focus">False</property>
-                                        <property name="primary_icon_activatable">False</property>
-                                        <property name="secondary_icon_activatable">False</property>
-                                        <property name="primary_icon_sensitive">True</property>
-                                        <property name="secondary_icon_sensitive">True</property>
                                       </object>
                                     </child>
                                   </object>
@@ -2618,10 +2525,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="can_focus">True</property>
                                     <property name="tooltip_text" translatable="yes">Recommended value for FiveD is 4</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -2660,10 +2563,6 @@ and others I forgot... (needs updating)</property>
                                     <property name="can_focus">True</property>
                                     <property name="tooltip_text" translatable="yes">Number of lines of output to retain for each scrollback buffer</property>
                                     <property name="invisible_char">•</property>
-                                    <property name="primary_icon_activatable">False</property>
-                                    <property name="secondary_icon_activatable">False</property>
-                                    <property name="primary_icon_sensitive">True</property>
-                                    <property name="secondary_icon_sensitive">True</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -2703,10 +2602,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Hardware.ValidateConnection">
                                     <property name="label" translatable="yes">Validate Connection</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -2755,10 +2654,10 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkCheckButton" id="Slicing.ShellOnly">
                     <property name="label" translatable="yes">Enable Shell Only (No Infill)</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
                     <property name="draw_indicator">True</property>
                   </object>
                   <packing>
@@ -2821,10 +2720,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -2837,10 +2732,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -2855,10 +2746,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">3</property>
@@ -2871,10 +2758,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                         <property name="digits">1</property>
                       </object>
                       <packing>
@@ -2898,11 +2781,11 @@ and others I forgot... (needs updating)</property>
                     <child>
                       <object class="GtkCheckButton" id="Slicing.SolidTopAndBottom">
                         <property name="label" translatable="yes">Solid Fill for Top and Bottom</property>
-                        <property name="use_action_appearance">False</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">False</property>
                         <property name="tooltip_text" translatable="yes">Free parts of layers (number given by Shell Count) will be completely filled</property>
+                        <property name="use_action_appearance">False</property>
                         <property name="active">True</property>
                         <property name="draw_indicator">True</property>
                       </object>
@@ -2913,7 +2796,19 @@ and others I forgot... (needs updating)</property>
                       </packing>
                     </child>
                     <child>
-                      <placeholder/>
+                      <object class="GtkCheckButton" id="Slicing.Support">
+                        <property name="label" translatable="yes">Build Support Structure</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>
@@ -2938,10 +2833,10 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkCheckButton" id="Slicing.EnableAntiooze">
                     <property name="label" translatable="yes">Enable Antiooze Retraction</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
                     <property name="draw_indicator">True</property>
                   </object>
                   <packing>
@@ -2967,10 +2862,6 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
-                    <property name="primary_icon_sensitive">True</property>
-                    <property name="secondary_icon_sensitive">True</property>
                     <property name="digits">2</property>
                   </object>
                   <packing>
@@ -3013,10 +2904,6 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
-                    <property name="primary_icon_sensitive">True</property>
-                    <property name="secondary_icon_sensitive">True</property>
                     <property name="digits">2</property>
                   </object>
                   <packing>
@@ -3064,10 +2951,10 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkCheckButton" id="Slicing.EnableAcceleration">
                     <property name="label" translatable="yes">Enable Acceleration</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
                     <property name="active">True</property>
                     <property name="draw_indicator">True</property>
                   </object>
@@ -3094,10 +2981,6 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
-                    <property name="primary_icon_sensitive">True</property>
-                    <property name="secondary_icon_sensitive">True</property>
                     <property name="digits">1</property>
                   </object>
                   <packing>
@@ -3156,10 +3039,6 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
-                    <property name="primary_icon_sensitive">True</property>
-                    <property name="secondary_icon_sensitive">True</property>
                     <property name="digits">3</property>
                   </object>
                   <packing>
@@ -3250,10 +3129,6 @@ and others I forgot... (needs updating)</property>
                     <property name="tooltip_text" translatable="yes">A comma separated list of layer numbers that should use the alternate infill distance.</property>
                     <property name="invisible_char">●</property>
                     <property name="invisible_char_set">True</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
-                    <property name="primary_icon_sensitive">True</property>
-                    <property name="secondary_icon_sensitive">True</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -3278,10 +3153,6 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
-                    <property name="primary_icon_sensitive">True</property>
-                    <property name="secondary_icon_sensitive">True</property>
                     <property name="digits">1</property>
                   </object>
                   <packing>
@@ -3316,10 +3187,10 @@ and others I forgot... (needs updating)</property>
                 <child>
                   <object class="GtkCheckButton" id="RaftEnable">
                     <property name="label" translatable="yes">Enable Raft</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>
+                    <property name="use_action_appearance">False</property>
                     <property name="draw_indicator">True</property>
                   </object>
                   <packing>
@@ -3352,10 +3223,6 @@ and others I forgot... (needs updating)</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3380,10 +3247,6 @@ and others I forgot... (needs updating)</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3397,10 +3260,6 @@ and others I forgot... (needs updating)</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3414,10 +3273,6 @@ and others I forgot... (needs updating)</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3431,10 +3286,6 @@ and others I forgot... (needs updating)</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3448,10 +3299,6 @@ and others I forgot... (needs updating)</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3465,10 +3312,6 @@ and others I forgot... (needs updating)</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3591,10 +3434,6 @@ and others I forgot... (needs updating)</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="invisible_char">●</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
-                    <property name="primary_icon_sensitive">True</property>
-                    <property name="secondary_icon_sensitive">True</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -3626,10 +3465,6 @@ and others I forgot... (needs updating)</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3655,10 +3490,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3673,10 +3504,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3691,10 +3518,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3709,10 +3532,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3727,10 +3546,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3745,10 +3560,6 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
                         <property name="invisible_char_set">True</property>
-                        <property name="primary_icon_activatable">False</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="primary_icon_sensitive">True</property>
-                        <property name="secondary_icon_sensitive">True</property>
                       </object>
                       <packing>
                         <property name="left_attach">1</property>
@@ -3879,10 +3690,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayWireframe">
                                     <property name="label" translatable="yes">Draw Wireframe</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -3895,10 +3706,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayNormals">
                                     <property name="label" translatable="yes">Draw Surface Normals</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -3911,10 +3722,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayEndpoints">
                                     <property name="label" translatable="yes">Draw Endpoints</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -3944,10 +3755,10 @@ and others I forgot... (needs updating)</property>
                                     </child>
                                     <child>
                                       <object class="GtkColorButton" id="Display.WireframeRGB">
-                                        <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
+                                        <property name="use_action_appearance">False</property>
                                         <property name="title" translatable="yes">Choose Wireframe Colour</property>
                                         <property name="color">#000000000000</property>
                                       </object>
@@ -3987,10 +3798,10 @@ and others I forgot... (needs updating)</property>
                                     </child>
                                     <child>
                                       <object class="GtkColorButton" id="Display.NormalsRGB">
-                                        <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
+                                        <property name="use_action_appearance">False</property>
                                         <property name="title" translatable="yes">Choose Normals Colour</property>
                                         <property name="color">#000000000000</property>
                                       </object>
@@ -4030,10 +3841,10 @@ and others I forgot... (needs updating)</property>
                                     </child>
                                     <child>
                                       <object class="GtkColorButton" id="Display.EndpointsRGB">
-                                        <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
+                                        <property name="use_action_appearance">False</property>
                                         <property name="title" translatable="yes">Choose Endpoints Colour</property>
                                         <property name="color">#000000000000</property>
                                       </object>
@@ -4055,10 +3866,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayBBox">
                                     <property name="label" translatable="yes">Draw Bounding Boxes</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4088,10 +3899,10 @@ and others I forgot... (needs updating)</property>
                                     </child>
                                     <child>
                                       <object class="GtkColorButton" id="Display.PolygonRGB">
-                                        <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
+                                        <property name="use_action_appearance">False</property>
                                         <property name="title" translatable="yes">Choose Polygon Colour</property>
                                         <property name="color">#000000000000</property>
                                       </object>
@@ -4132,10 +3943,6 @@ and others I forgot... (needs updating)</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">●</property>
-                                        <property name="primary_icon_activatable">False</property>
-                                        <property name="secondary_icon_activatable">False</property>
-                                        <property name="primary_icon_sensitive">True</property>
-                                        <property name="secondary_icon_sensitive">True</property>
                                         <property name="adjustment">Display.HighlightAdjustment</property>
                                         <property name="digits">2</property>
                                       </object>
@@ -4177,10 +3984,6 @@ and others I forgot... (needs updating)</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">•</property>
-                                        <property name="primary_icon_activatable">False</property>
-                                        <property name="secondary_icon_activatable">False</property>
-                                        <property name="primary_icon_sensitive">True</property>
-                                        <property name="secondary_icon_sensitive">True</property>
                                         <property name="adjustment">Display.NormalsLengthAdjustment</property>
                                         <property name="digits">2</property>
                                       </object>
@@ -4224,10 +4027,6 @@ and others I forgot... (needs updating)</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">•</property>
-                                        <property name="primary_icon_activatable">False</property>
-                                        <property name="secondary_icon_activatable">False</property>
-                                        <property name="primary_icon_sensitive">True</property>
-                                        <property name="secondary_icon_sensitive">True</property>
                                         <property name="adjustment">DisplayEndPointSizeAdjustment</property>
                                         <property name="digits">2</property>
                                       </object>
@@ -4250,10 +4049,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayWireframeShaded">
                                     <property name="label" translatable="yes">Shade Wireframe</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4272,10 +4071,10 @@ and others I forgot... (needs updating)</property>
                                     <child>
                                       <object class="GtkCheckButton" id="Display.DisplayPolygons">
                                         <property name="label" translatable="yes">Draw Polygons</property>
-                                        <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">False</property>
+                                        <property name="use_action_appearance">False</property>
                                         <property name="draw_indicator">True</property>
                                       </object>
                                     </child>
@@ -4350,10 +4149,10 @@ and others I forgot... (needs updating)</property>
                                     </child>
                                     <child>
                                       <object class="GtkColorButton" id="Display.GCodeExtrudeRGB">
-                                        <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
+                                        <property name="use_action_appearance">False</property>
                                         <property name="title" translatable="yes">Choose Extrusion Colour</property>
                                         <property name="color">#000000000000</property>
                                       </object>
@@ -4374,10 +4173,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.LuminanceShowsSpeed">
                                     <property name="label" translatable="yes">Adjust Luminance to Indicate Speed</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4408,10 +4207,10 @@ and others I forgot... (needs updating)</property>
                                     </child>
                                     <child>
                                       <object class="GtkColorButton" id="Display.GCodeMoveRGB">
-                                        <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
+                                        <property name="use_action_appearance">False</property>
                                         <property name="title" translatable="yes">Choose Head Movement Colour</property>
                                         <property name="color">#000000000000</property>
                                       </object>
@@ -4436,10 +4235,10 @@ and others I forgot... (needs updating)</property>
                                     <child>
                                       <object class="GtkCheckButton" id="Display.DisplayGCode">
                                         <property name="label" translatable="yes">Draw GCode</property>
-                                        <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">False</property>
+                                        <property name="use_action_appearance">False</property>
                                         <property name="draw_indicator">True</property>
                                       </object>
                                     </child>
@@ -4548,10 +4347,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayCuttingPlane">
                                     <property name="label" translatable="yes">Draw Cutting Plane</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4562,10 +4361,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayinFill">
                                     <property name="label" translatable="yes">Draw Infill Hatching</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4617,10 +4416,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayAllLayers">
                                     <property name="label" translatable="yes">Draw All Layers</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4682,10 +4481,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.EnableLight1">
                                     <property name="label" translatable="yes">1</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4697,10 +4496,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.EnableLight2">
                                     <property name="label" translatable="yes">2</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4712,10 +4511,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.EnableLight3">
                                     <property name="label" translatable="yes">3</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4727,10 +4526,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.EnableLight4">
                                     <property name="label" translatable="yes">4</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4808,10 +4607,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayDebug">
                                     <property name="label" translatable="yes">Enable Debug</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4858,10 +4657,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DrawCPOutlineNumbers">
                                     <property name="label" translatable="yes">Draw Polygon Numbers</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4873,10 +4672,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DrawCPLineNumbers">
                                     <property name="label" translatable="yes">Draw Line Numbers</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4888,10 +4687,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DrawCPVertexNumbers">
                                     <property name="label" translatable="yes">Draw Vertex Numbers</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4938,10 +4737,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DisplayDebuginFill">
                                     <property name="label" translatable="yes">Debug Infill</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4953,10 +4752,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DrawOutlineNumbers">
                                     <property name="label" translatable="yes">Draw Polygon Numbers</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4968,10 +4767,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DrawLineNumbers">
                                     <property name="label" translatable="yes">Draw Line Numbers</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -4983,10 +4782,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.DrawVertexNumbers">
                                     <property name="label" translatable="yes">Draw Vertex Numbers</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
@@ -5032,10 +4831,10 @@ and others I forgot... (needs updating)</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Display.CommsDebug">
                                     <property name="label" translatable="yes">Serial comms debug</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>

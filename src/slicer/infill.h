@@ -32,7 +32,7 @@ class Poly;
 
 
 
-enum InfillType {ParallelInfill,LinesInfill};
+enum InfillType {ParallelInfill,LinesInfill,SupportInfill};
 
 
 class Infill

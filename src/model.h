@@ -84,6 +84,8 @@ public:
 	void MakeUncoveredPolygons();
 	void MakeUncoveredPolygons(CuttingPlane *subjplane,const CuttingPlane *clipplane);
 	void MultiplyUncoveredPolygons();
+	void MakeSupportPolygons(CuttingPlane * subjplane, 
+				 const CuttingPlane * clipplane);
 	void MakeSupportPolygons();
 
 	// GCode Functions

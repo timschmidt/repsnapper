@@ -93,6 +93,7 @@ class Settings {
     float AltInfillDistance;
     std::string AltInfillLayersText;
     bool SolidTopAndBottom;
+    bool Support;
 
     bool ShellOnly;
     guint ShellCount;

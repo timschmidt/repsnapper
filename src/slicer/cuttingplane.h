@@ -163,7 +163,9 @@ public:
 	ClipperLib::Polygons getClipperPolygons(const vector<Poly> polygons,
 						bool reverse=true) const;
 	ClipperLib::Polygons getMergedPolygons(const vector<Poly> polygons) const;
+	ClipperLib::Polygons getMergedPolygons(const ClipperLib::Polygons cpolys) const;
 	void mergeFullPolygons();
+	void mergeSupportPolygons();
 	void addFullPolygons(const ClipperLib::Polygons) ;
 
 
@@ -263,7 +265,7 @@ public:
 	//vector<Vector2d> GetSupportVertices() const { return supportVertices; }
 	vector<Poly> GetSupportPolygons() const { return supportPolygons; }
 
-	vector< vector<Poly> > GetShellPolygons() const { return shellPolygons; }
+	vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
 
 	void setFullFillPolygons(const ClipperLib::Polygons cpolys);
 	void addFullFillPolygons(const ClipperLib::Polygons cpolys);
