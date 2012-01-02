@@ -38,6 +38,22 @@ GCode::GCode()
 	buffer = Gtk::TextBuffer::create();
 }
 
+double GCode::GetTimeEstimation() const
+{
+  Vector3d where(0,0,0);
+  double time = 0, feedrate=0, distance=0;
+  for (uint i=0; i<commands.size(); i++)
+	{
+	  if(commands[i].f!=0)
+		feedrate = commands[i].f;
+	  distance = (commands[i].where - where).length();
+	  time += distance/feedrate*60.;
+	  where = commands[i].where ;
+	}
+  return time;
+}
+
+
 void GCode::Read(Model *MVC, Progress *progress, string filename)
 {
 	clear();
@@ -202,7 +218,13 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 	Center.x = (Max.x + Min.x )/2;
 	Center.y = (Max.y + Min.y )/2;
 	Center.z = (Max.z + Min.z )/2;
-
+	
+	double time = GetTimeEstimation();
+	int h = (int)time/3600;
+	int min = ((int)time%3600)/60;
+	int sec = ((int)time-3600*h-60*min);
+	cout << "GCode Time Estimation "<< h <<"h "<<min <<"m " <<sec <<"s" <<endl; 
+	//??? to statusbar or where else?
 }
 
 void GCode::draw(const Settings &settings)

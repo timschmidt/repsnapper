@@ -40,6 +40,7 @@ struct GCodeStateImpl
 GCodeState::GCodeState(GCode &code)
 {
   pImpl = new GCodeStateImpl(code);
+  timeused = 0;
 }
 GCodeState::~GCodeState()
 {
@@ -62,8 +63,15 @@ void GCodeState::SetLastPosition(const Vector3d &v)
 }
 void GCodeState::AppendCommand(Command &command)
 {
+  Vector3d lastwhere = Vector3d(pImpl->lastCommand.where);
   pImpl->lastCommand = command;
   pImpl->code.commands.push_back(command);
+  if (command.f!=0)
+	{
+	  timeused += (command.where - lastwhere).length()/command.f*60;
+	  // cerr << "last   at "<< lastwhere << " feedrate: " << command.f<< endl;
+	  // cerr << "   now at "<<command.where << " time used: " << timeused << endl;
+	}
 }
 
 double GCodeState::GetLastLayerZ(double curZ)
@@ -104,6 +112,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 		return;
 
 	Command command;
+	Vector3d wherenow;
 
 	if (slicing.EnableAcceleration)
 	{
@@ -154,6 +163,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 				command.e = E;		// move or extrude?
 				command.f = hardware.MinPrintSpeedXY;
 				AppendCommand(command);
+
 			}// if we will never reach full speed
 			else
 			{

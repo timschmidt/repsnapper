@@ -206,6 +206,8 @@ public:
   Glib::RefPtr<Gtk::TextBuffer> buffer;
   GCodeIter *get_iter ();
 
+  double GetTimeEstimation() const;
+
 private:
   unsigned long unconfirmed_blocks;
 };

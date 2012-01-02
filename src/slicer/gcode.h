@@ -55,5 +55,6 @@ class GCodeState {
   void  ResetLastWhere(Vector3d to);
   double DistanceFromLastTo(Vector3d here);
   double LastCommandF();
+  double timeused;
 };
 

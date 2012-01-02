@@ -315,7 +315,7 @@ void Model::MultiplyUncoveredPolygons()
 }
 
 
-void Model::MakeSupportPolygons(CuttingPlane * subjplane, // lower -> whill change
+void Model::MakeSupportPolygons(CuttingPlane * subjplane, // lower -> will change
 				const CuttingPlane * clipplane) // upper 
 {
   ClipperLib::Clipper clpr;
@@ -465,7 +465,13 @@ void Model::ConvertToGCode()
     cuttingplanes[p]->MakeGcode (state, E, cuttingplanes[p]->getZ() + printOffsetZ,
 				 settings.Slicing, settings.Hardware);
   }
-  //cerr <<" done."<< endl;
+  int h = (int)state.timeused/3600;
+  int m = ((int)state.timeused%3600)/60;
+  int s = ((int)state.timeused-3600*h-60*m);
+  std::ostringstream ostr;
+  ostr << " Time to Print Estimation: " << h <<"h "<<m <<"m " <<s <<"s" ;
+  cout << ostr.str() << endl;
+  // ??? add this to statusbar or where else?
 
   double AntioozeDistance = settings.Slicing.AntioozeDistance;
   if (!settings.Slicing.EnableAntiooze)
@@ -477,5 +483,13 @@ void Model::ConvertToGCode()
 		  AntioozeDistance,
 		  settings.Slicing.AntioozeSpeed);
   m_progress.stop (_("Done"));
+
+  double time = gcode.GetTimeEstimation();
+  int hr = (int)time/3600;
+  int min = ((int)time%3600)/60;
+  int sec = ((int)time-3600*hr-60*min);
+  cout << "GCode Time Estimation "<< hr <<"h "<<min <<"m " <<sec <<"s" <<endl; 
+  //??? to statusbar or where else?
+
 }
 
