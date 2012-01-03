@@ -549,6 +549,7 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 	      plane->CalcInfill(infillDistance, fullInfillDistance,
 				settings.Slicing.InfillRotation,
 				settings.Slicing.InfillRotationPrLayer, 
+				settings.Slicing.ShellOnly,
 				settings.Display.DisplayDebuginFill);
 	    }
 	}

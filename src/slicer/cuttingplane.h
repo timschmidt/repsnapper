@@ -176,6 +176,7 @@ public:
 			 double FullInfillDistance,
 			 double InfillRotation, 
 			 double InfillRotationPrLayer,
+			 bool ShellOnly,
 			 bool DisplayDebuginFill);
 
 	//vector<Vector2d> getInfillVertices() const;

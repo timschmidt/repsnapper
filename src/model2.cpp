@@ -373,9 +373,6 @@ void Model::MakeShells()
 void Model::CalcInfill(GCodeState &state)
 {
 
-  if (settings.Slicing.ShellOnly)
-    return ;
-
   uint LayerCount = cuttingplanes.size();
     // (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
 
@@ -413,6 +410,7 @@ void Model::CalcInfill(GCodeState &state)
       plane->CalcInfill(infilldist, fullInfillDistance,
 			settings.Slicing.InfillRotation,
 			settings.Slicing.InfillRotationPrLayer, 
+			settings.Slicing.ShellOnly,
 			settings.Display.DisplayDebuginFill);
     }
   m_progress.stop (_("Done"));

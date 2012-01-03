@@ -114,6 +114,7 @@ void CuttingPlane::CalcInfill (double InfillDistance,
 			       double FullInfillDistance,
 			       double InfillRotation, 
 			       double InfillRotationPrLayer,
+			       bool ShellOnly, // only infill for fullfill (vertical shells)
 			       bool DisplayDebuginFill)
 {
   infill->clear();
@@ -121,8 +122,9 @@ void CuttingPlane::CalcInfill (double InfillDistance,
   infill = new Infill(this);
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
   InfillType type = ParallelInfill;
-  infill->calcInfill(offsetPolygons, type , 
-		     InfillDistance, FullInfillDistance, rot);
+  if (!ShellOnly)
+    infill->calcInfill(offsetPolygons, type , 
+		       InfillDistance, FullInfillDistance, rot);
   infill->calcInfill(fullFillPolygons, type , 
 		     FullInfillDistance, FullInfillDistance, rot);
   infill->calcInfill(supportPolygons, SupportInfill , 
@@ -1058,8 +1060,7 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	    glBegin(GL_LINES);	  
 	    for(size_t p=0;p < lines.size();p++)	      
 	      {	      
-		Vector3d v = lines[p];
-		glVertex3f(v.x,v.y,v.z);
+		glVertex3f(lines[p].x,lines[p].y,lines[p].z);
 	      }
 	    glEnd();
 	      // for(size_t p=0;p < infill->infillpolys.size();p++)
