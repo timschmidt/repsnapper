@@ -73,10 +73,11 @@ public:
 #define PTR_INT(obj, idx)       ((int *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_UINT(obj, idx)      ((uint *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_FLOAT(obj, idx)     ((float *)PTR_OFFSET (obj, settings[idx].member_offset))
+#define PTR_DOUBLE(obj, idx)     ((double *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_STRING(obj, idx)    ((std::string *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_COLOUR(obj, idx)    ((vmml::Vector4f *)PTR_OFFSET (obj, settings[idx].member_offset))
 
-enum SettingType { T_BOOL, T_INT, T_FLOAT, T_STRING, T_COLOUR_MEMBER };
+enum SettingType { T_BOOL, T_INT, T_FLOAT, T_DOUBLE, T_STRING, T_COLOUR_MEMBER };
 static struct {
   uint  member_offset;
   SettingType type;
@@ -128,13 +129,13 @@ static struct {
   FLOAT_MEMBER (Hardware.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0, false),
 
   // Volume
-  { OFFSET (Hardware.Volume.x), T_FLOAT, "mfVolumeX", "Hardware.Volume.X", 200, NULL, true },
-  { OFFSET (Hardware.Volume.y), T_FLOAT, "mfVolumeY", "Hardware.Volume.Y", 200, NULL, true },
-  { OFFSET (Hardware.Volume.z), T_FLOAT, "mfVolumeZ", "Hardware.Volume.Z", 140, NULL, true },
+  { OFFSET (Hardware.Volume.x), T_DOUBLE, "mfVolumeX", "Hardware.Volume.X", 200, NULL, true },
+  { OFFSET (Hardware.Volume.y), T_DOUBLE, "mfVolumeY", "Hardware.Volume.Y", 200, NULL, true },
+  { OFFSET (Hardware.Volume.z), T_DOUBLE, "mfVolumeZ", "Hardware.Volume.Z", 140, NULL, true },
   // PrintMargin
-  { OFFSET (Hardware.PrintMargin.x), T_FLOAT, "PrintMarginX", "Hardware.PrintMargin.X", 10, NULL, true },
-  { OFFSET (Hardware.PrintMargin.y), T_FLOAT, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
-  { OFFSET (Hardware.PrintMargin.z), T_FLOAT, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
+  { OFFSET (Hardware.PrintMargin.x), T_DOUBLE, "PrintMarginX", "Hardware.PrintMargin.X", 10, NULL, true },
+  { OFFSET (Hardware.PrintMargin.y), T_DOUBLE, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
+  { OFFSET (Hardware.PrintMargin.z), T_DOUBLE, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
 
   FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 0.7, false),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
@@ -403,6 +404,9 @@ void Settings::set_defaults ()
     case T_COLOUR_MEMBER:
       *PTR_FLOAT(this, i) = settings[i].def_float;
       break;
+    case T_DOUBLE:
+      *PTR_DOUBLE(this, i) = settings[i].def_float;
+      break;
     case T_STRING:
       *PTR_STRING(this, i) = std::string (settings[i].def_string);
       break;
@@ -485,6 +489,9 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     case T_COLOUR_MEMBER:
       *PTR_FLOAT(this, i) = cfg.get_double (group, key);
       break;
+    case T_DOUBLE:
+      *PTR_DOUBLE(this, i) = cfg.get_double (group, key);
+      break;
     case T_STRING:
       *PTR_STRING(this, i) = cfg.get_string (group, key);
       break;
@@ -521,6 +528,9 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
     case T_COLOUR_MEMBER:
       cfg.set_double (group, key, *PTR_FLOAT(this, i));
       break;
+    case T_DOUBLE:
+      cfg.set_double (group, key, *PTR_DOUBLE(this, i));
+      break;
     case T_STRING:
       cfg.set_string (group, key, *PTR_STRING(this, i));
       break;
@@ -540,11 +550,12 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
 void Settings::set_to_gui (Builder &builder, int i)
 {
   const char *glade_name = settings[i].glade_name;
+  SettingType t = settings[i].type;
 
   if (!glade_name)
         return;
 
-  switch (settings[i].type) {
+  switch (t) {
   case T_BOOL: {
     Gtk::CheckButton *check = NULL;
     builder->get_widget (glade_name, check);
@@ -555,7 +566,8 @@ void Settings::set_to_gui (Builder &builder, int i)
     break;
   }
   case T_INT:
-  case T_FLOAT: {
+  case T_FLOAT:
+  case T_DOUBLE: {
     Gtk::Widget *w = NULL;
     builder->get_widget (glade_name, w);
     if (!w) {
@@ -565,18 +577,22 @@ void Settings::set_to_gui (Builder &builder, int i)
 
     Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
     if (spin) {
-      if (settings[i].type == T_INT)
+      if (t == T_INT)
           spin->set_value (*PTR_INT(this, i));
-      else
+      else if (t == T_FLOAT)
           spin->set_value (*PTR_FLOAT(this, i));
+      else
+          spin->set_value (*PTR_DOUBLE(this, i));
       break;
     }
     Gtk::Range *range = dynamic_cast<Gtk::Range *>(w);
     if (range) {
-      if (settings[i].type == T_INT)
+      if (t == T_INT)
         range->set_value (*PTR_INT(this, i));
-      else
+      else if (t == T_FLOAT)
         range->set_value (*PTR_FLOAT(this, i));
+      else
+        range->set_value (*PTR_DOUBLE(this, i));
     }
     break;
   }
@@ -610,11 +626,12 @@ void Settings::set_shrink_to_gui (Builder &builder)
 void Settings::get_from_gui (Builder &builder, int i)
 {
   const char *glade_name = settings[i].glade_name;
+  SettingType t = settings[i].type;
 
   if (glade_name == NULL)
         return; /* Not an automatically connected setting */
 
-  switch (settings[i].type) {
+  switch (t) {
   case T_BOOL: {
     Gtk::CheckButton *check = NULL;
     builder->get_widget (glade_name, check);
@@ -625,7 +642,8 @@ void Settings::get_from_gui (Builder &builder, int i)
     break;
   }
   case T_INT:
-  case T_FLOAT: {
+  case T_FLOAT:
+  case T_DOUBLE: {
     Gtk::Widget *w = NULL;
     builder->get_widget (glade_name, w);
     if (!w) {
@@ -635,19 +653,23 @@ void Settings::get_from_gui (Builder &builder, int i)
 
     Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
     if (spin) {
-      if (settings[i].type == T_INT)
+      if (t == T_INT)
           *PTR_INT(this, i) = spin->get_value();
-      else
+      else if (t == T_FLOAT)
           *PTR_FLOAT(this, i) = spin->get_value();
+      else
+          *PTR_DOUBLE(this, i) = spin->get_value();
       break;
     }
 
     Gtk::Range *range = dynamic_cast<Gtk::Range *>(w);
     if (range) {
-      if (settings[i].type == T_INT)
+      if (t == T_INT)
           *PTR_INT(this, i) = range->get_value();
-      else
+      else if (t == T_FLOAT)
           *PTR_FLOAT(this, i) = range->get_value();
+      else
+          *PTR_DOUBLE(this, i) = range->get_value();
     }
     break;
   }
@@ -797,7 +819,8 @@ void Settings::connect_to_ui (Builder &builder)
       break;
     }
     case T_INT:
-    case T_FLOAT: {
+    case T_FLOAT:
+    case T_DOUBLE: {
       Gtk::Widget *w = NULL;
       builder->get_widget (glade_name, w);
       if (!w) {
