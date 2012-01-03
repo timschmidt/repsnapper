@@ -34,6 +34,8 @@
 #include "connectview.h"
 
 Model::Model() :
+  settings(),
+  Min(), Max(),
   errlog (Gtk::TextBuffer::create()),
   echolog (Gtk::TextBuffer::create())
 {
