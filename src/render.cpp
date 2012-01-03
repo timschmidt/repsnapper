@@ -92,6 +92,7 @@ Render::~Render()
 void Render::set_model(Model *model)
 {
   model->signal_rfo_changed().connect (sigc::mem_fun(*this, &Render::rfo_changed));
+  rfo_changed();
 }
 
 void Render::selection_changed()
@@ -101,7 +102,7 @@ void Render::selection_changed()
 
 void Render::rfo_changed()
 {
-  if (!get_model() || !get_model()->rfo.Objects.size())
+  if (!get_model())
     return;
 
   // reset the zoom to cover the entire model
@@ -305,9 +306,8 @@ void Render::SetEnableLight(unsigned int i, bool on)
 
 void Render::CenterView()
 {
-  glTranslatef (-get_model()->Center.x - get_model()->printOffset.x,
-		-get_model()->Center.y - get_model()->printOffset.y,
-		-get_model()->Center.z);
+  Vector3d c = get_model()->GetViewCenter();
+  glTranslatef (-c.x, -c.y, -c.z);
 }
 
 
