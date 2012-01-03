@@ -111,9 +111,9 @@ public:
 	Vector3d Center;
 	Vector3d Min;
 	Vector3d Max;
-	vmml::Vector3d printOffset; // margin + raft
 
 	void CalcBoundingBoxAndCenter();
+	Vector3d GetViewCenter();
         bool FindEmptyLocation(Vector3d &result, Slicer *stl);
 
 	sigc::signal< void > m_model_changed;

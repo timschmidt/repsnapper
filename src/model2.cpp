@@ -46,24 +46,29 @@ void Model::MakeRaft(GCodeState &state, double &z)
 {
   vector<InFillHit> HitsBuffer;
 
-  uint LayerNr = 0;
-  double size = settings.Raft.Size;
+  double raftSize = settings.Raft.Size;
+  Vector3d raftMin =  settings.Hardware.PrintMargin + Min;
+  Vector3d raftMax =  settings.Hardware.PrintMargin + Max + 2 * raftSize;
+  Vector2d Center = Vector2d((raftMin.x + raftMax.x) / 2,
+			     (raftMin.y + raftMax.y) / 2);
 
-  Vector2d raftMin =  Vector2d(Min.x - size + printOffset.x, Min.y - size + printOffset.y);
-  Vector2d raftMax =  Vector2d(Max.x + size + printOffset.x, Max.y + size + printOffset.y);
-
-  Vector2d Center = (Vector2d(Max.x + size, Max.y + size)-Vector2d(Min.x + size, Min.y + size))/2+Vector2d(printOffset.x, printOffset.y);
-
-  double Length = sqrt(2)*(   ((raftMax.x)>(raftMax.y)? (raftMax.x):(raftMax.y))  -  ((raftMin.x)<(raftMin.y)? (raftMin.x):(raftMin.y))  )/2.0;	// bbox of object
+  // bbox of object
+  double Length = (std::max(raftMax.x,raftMax.y) -
+		   std::min(raftMin.x, raftMin.y))/sqrt(2.0);
 
   double E = 0.0;
   double rot;
+  uint LayerNr = 0;
+  uint layerCount = settings.Raft.Phase[0].LayerCount +
+		    settings.Raft.Phase[1].LayerCount;
+  Settings::RaftSettings::PhasePropertiesType *props = &settings.Raft.Phase[0];
 
-  while(LayerNr < settings.Raft.Phase[0].LayerCount + settings.Raft.Phase[1].LayerCount)
+  while(LayerNr < layerCount)
     {
-      Settings::RaftSettings::PhasePropertiesType *props;
-      props = LayerNr < settings.Raft.Phase[0].LayerCount ?
-	&settings.Raft.Phase[0] : &settings.Raft.Phase[1];
+      // If we finished phase 0, start phase 1 of the raft...
+      if (LayerNr >= settings.Raft.Phase[0].LayerCount)
+	props = &settings.Raft.Phase[1];
+
       rot = (props->Rotation+(double)LayerNr * props->RotationPrLayer)/180.0*M_PI;
       Vector2d InfillDirX(cosf(rot), sinf(rot));
       Vector2d InfillDirY(-InfillDirX.y, InfillDirX.x);
@@ -428,7 +433,7 @@ void Model::ConvertToGCode()
 
   gcode.clear();
 
-  printOffset = settings.Hardware.PrintMargin;
+  Vector3d printOffset = settings.Hardware.PrintMargin;
   double printOffsetZ = settings.Hardware.PrintMargin.z;
 
   if (settings.RaftEnable)
@@ -460,8 +465,9 @@ void Model::ConvertToGCode()
     m_progress.update(p);
     g_main_context_iteration(NULL,false);
     //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
-    cuttingplanes[p]->MakeGcode (state, E, cuttingplanes[p]->getZ() + printOffsetZ,
-				 settings.Slicing, settings.Hardware);
+    cuttingplanes[p]->MakeGcode (state, E,
+		cuttingplanes[p]->getZ() + printOffsetZ,
+		settings.Slicing, settings.Hardware);
   }
   int h = (int)state.timeused/3600;
   int m = ((int)state.timeused%3600)/60;

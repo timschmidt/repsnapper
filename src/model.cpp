@@ -145,6 +145,7 @@ void Model::Read(Glib::RefPtr<Gio::File> file)
 void Model::ModelChanged()
 {
   //printer.update_temp_poll_interval(); // necessary?
+  CalcBoundingBoxAndCenter();
   m_model_changed.emit();
 }
 
@@ -336,13 +337,29 @@ void Model::CalcBoundingBoxAndCenter()
     }
   }
 
-  // Leave the alone if there's no objects
-  if (newMin.x <= newMax.x) {
+  if (newMin.x > newMax.x) {
+    // Show the whole platform if there's no objects
+    Min = Vector3d(0,0,0);
+    Vector3d pM = settings.Hardware.PrintMargin;
+    Max = settings.Hardware.Volume - pM - pM;
+    Max.z = 0;
+  }
+  else {
     Max = newMax;
     Min = newMin;
-    Center = (Max + Min) / 2.0;
-    m_signal_rfo_changed.emit();
   }
+
+  Center = (Max + Min) / 2.0;
+  m_signal_rfo_changed.emit();
+}
+
+Vector3d Model::GetViewCenter()
+{
+  Vector3d printOffset = settings.Hardware.PrintMargin;
+  if(settings.RaftEnable)
+    printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
+
+  return printOffset + Center;
 }
 
 // called from View::Draw
