@@ -126,7 +126,7 @@ void CuttingPlane::CalcInfill (double InfillDistance,
   infill->calcInfill(fullFillPolygons, type , 
 		     FullInfillDistance, FullInfillDistance, rot);
   infill->calcInfill(supportPolygons, SupportInfill , 
-		     InfillDistance, InfillDistance, 0);
+		     InfillDistance, InfillDistance, InfillRotation/180.0*M_PI);
 }
 
 ClipperLib::Polygons CuttingPlane::getClipperPolygons(const vector<Poly> polygons,
@@ -184,17 +184,30 @@ ClipperLib::Polygons CuttingPlane::getMergedPolygons(const ClipperLib::Polygons 
   ClipperLib::Clipper clpr;
   clpr.Clear();
   // make wider to get overlap
-  ClipperLib::Polygons cpolys2;
-  ClipperLib::OffsetPolygons(cpolys,cpolys2, 2,ClipperLib::jtMiter,1);
+  ClipperLib::Polygons cpolys2 = getOffsetPolygons(cpolys, 2);
   clpr.AddPolygons(cpolys2, ClipperLib::ptSubject);
   clpr.AddPolygons(emptypolys, ClipperLib::ptClip);
   ClipperLib::Polygons cpolys3;
   clpr.Execute(ClipperLib::ctUnion, cpolys3, ClipperLib::pftPositive,
 	       ClipperLib::pftNegative);
   // shrink the result
-  ClipperLib::OffsetPolygons(cpolys3,cpolys2, -2,ClipperLib::jtMiter,1);
+  return getOffsetPolygons(cpolys3, -2);
+}
+ClipperLib::Polygons CuttingPlane::getOffsetPolygons(const ClipperLib::Polygons cpolys,
+						     long clipperdist) const
+{
+  ClipperLib::Polygons cpolys2;
+  ClipperLib::OffsetPolygons(cpolys, cpolys2, clipperdist, ClipperLib::jtMiter, 1);  
   return cpolys2;
 }
+
+// circular numbering
+vector<Poly>  CuttingPlane::GetShellPolygonsCirc(int number) const
+{
+  number = (shellPolygons.size() +  number) % shellPolygons.size();
+  return shellPolygons[number];
+}
+
 
 /*
  * Unfortunately, finding connections via co-incident points detected by
@@ -772,6 +785,7 @@ void CuttingPlane::getOrderedPolyLines(const vector<Poly> polys,
   for(size_t q=0;q<count;q++) done[q]=false;
   uint ndone=0;
   double pdist, nstdist;
+  //double nlength;
   while (ndone < count) 
     {
       nstdist = 1000000;
@@ -781,6 +795,7 @@ void CuttingPlane::getOrderedPolyLines(const vector<Poly> polys,
 	    {
 	      pdist = 1000000;
 	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
+	      // nlength = polys[q].getLineLengthSq(nindex); // ...feature to come...
 	      if (pdist<nstdist){
 		npindex = q;      // index of nearest poly in polysleft
 		nstdist = pdist;  // distance of nearest poly
@@ -1035,8 +1050,20 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	      }
 	    glLineWidth(1);
 	    glColor4f(0.1,1,0.1,0.8);
-	    for(size_t p=0;p < infill->infillpolys.size();p++)
-	      infill->infillpolys[p].draw(GL_LINE_LOOP);
+	    
+	    // mimick gcode optimization of ordered lines
+	    Vector2d startp(0,0);
+	    vector<Vector3d> lines;
+	    getOrderedPolyLines(infill->infillpolys, startp, lines);
+	    glBegin(GL_LINES);	  
+	    for(size_t p=0;p < lines.size();p++)	      
+	      {	      
+		Vector3d v = lines[p];
+		glVertex3f(v.x,v.y,v.z);
+	      }
+	    glEnd();
+	      // for(size_t p=0;p < infill->infillpolys.size();p++)
+	      //   infill->infillpolys[p].draw(GL_LINE_LOOP);
 	  }
 
 	if(DrawVertexNumbers)

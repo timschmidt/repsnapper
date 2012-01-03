@@ -384,9 +384,21 @@ double Poly::getLayerNo() const { return plane->LayerNo;}
 // }
 
 
+// length of the line starting at startindex
+double Poly::getLinelengthSq(uint startindex) const
+{
+  double length = (getVertexCircular(startindex+1) - 
+		   getVertexCircular(startindex)).lengthSquared();
+  return length;
+}
+
+// closed lines sequence
 void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
 {
-  for(size_t i=0;i<vertices.size();i++)
+  size_t count = vertices.size();
+  if (count<2) return; // one point no line
+  if (count<3) count--; // two points one line
+  for(size_t i=0;i<count;i++)
     {
       lines.push_back(getVertexCircular3(i+startindex));
       lines.push_back(getVertexCircular3(i+startindex+1));

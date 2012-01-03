@@ -166,6 +166,9 @@ public:
 	ClipperLib::Polygons getMergedPolygons(const ClipperLib::Polygons cpolys) const;
 	void mergeFullPolygons();
 	void mergeSupportPolygons();
+	ClipperLib::Polygons getOffsetPolygons(const ClipperLib::Polygons cpolys,
+					       long clipperdist) const;
+
 	void addFullPolygons(const ClipperLib::Polygons) ;
 
 
@@ -266,6 +269,7 @@ public:
 	vector<Poly> GetSupportPolygons() const { return supportPolygons; }
 
 	vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
+	vector<Poly>  GetShellPolygonsCirc(int number) const;
 
 	void setFullFillPolygons(const ClipperLib::Polygons cpolys);
 	void addFullFillPolygons(const ClipperLib::Polygons cpolys);

@@ -92,6 +92,7 @@ public:
 	void drawLineNumbers() const;
 
 	void getLines(vector<Vector3d> &lines,uint startindex=0) const;
+	double getLinelengthSq(uint startindex) const;
 
 	uint size() const {return vertices.size(); };
 	void printinfo() const;

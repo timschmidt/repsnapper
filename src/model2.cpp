@@ -257,7 +257,7 @@ void Model::MakeUncoveredPolygons(CuttingPlane * subjplane,
   ClipperLib::Polygons emptypolys;emptypolys.clear();
   ClipperLib::Clipper clpr;
   ClipperLib::Polygons subjOffsetCP =
-    subjplane->getClipperPolygons(subjplane->GetOffsetPolygons());
+    subjplane->getClipperPolygons(subjplane->GetOffsetPolygons()); // outer shell
   clpr.AddPolygons(subjOffsetCP,
 		   ClipperLib::ptSubject);
   //clpr.AddPolygons(subjplane->getClipperPolygons(subjplane->GetFullFillPolygons()),
@@ -445,13 +445,13 @@ void Model::ConvertToGCode()
   MakeShells();
 
   if (settings.Slicing.SolidTopAndBottom)
-      MakeUncoveredPolygons();
+    MakeUncoveredPolygons();
 
   if (settings.Slicing.Support)
     MakeSupportPolygons(); // easier before multiplied uncovered bottoms
 
   if (settings.Slicing.SolidTopAndBottom)
-      MultiplyUncoveredPolygons();
+    MultiplyUncoveredPolygons();
 
   CalcInfill(state);
 
