@@ -252,12 +252,18 @@ filetype_t Slicer::getFileType(string filename) {
     string first_word;
     file >> first_word;
 
+    // Find bad Solid Works STL header
+    // 'solid binary STL from Solid Edge, Unigraphics Solutions Inc.'
+    string second_word;
+    if(first_word == "solid")
+      file >> second_word;      
+
     file.close();
 
-    if(first_word == "solid") { // ASCII
-        return ASCII_STL;
+    if(first_word == "solid" && second_word != "binary") { // ASCII
+      return ASCII_STL;
     } else {
-        return BINARY_STL;
+      return BINARY_STL;
     }
 }
 
