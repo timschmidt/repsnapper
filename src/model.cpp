@@ -28,7 +28,7 @@
 
 #include "stdafx.h"
 #include "model.h"
-#include "rfo.h"
+#include "objtree.h"
 #include "file.h"
 #include "settings.h"
 #include "connectview.h"
@@ -136,7 +136,7 @@ void Model::Read(Glib::RefPtr<Gio::File> file)
     else if (extn == ".rfo")
       {
 	//      ReadRFO (file);
-	//      return;
+	return;
       }
   }
   ReadStl (file);
@@ -155,19 +155,19 @@ static bool ClosestToOrigin (Vector3d a, Vector3d b)
 }
 
 
-bool Model::FindEmptyLocation(Vector3d &result, Shape *stl)
+bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
 {
   // Get all object positions
   vector<Vector3d> maxpos;
   vector<Vector3d> minpos;
 
-  for(uint o=0;o<rfo.Objects.size();o++)
+  for(uint o=0;o<objtree.Objects.size();o++)
   {
-    for(uint f=0;f<rfo.Objects[o].files.size();f++)
+    for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
     {
-      RFO_File *selectedFile = &rfo.Objects[o].files[f];
-      Vector3d p = selectedFile->transform3D.transform.getTranslation();
-      Vector3d size = selectedFile->stl.Max - selectedFile->stl.Min;
+      Shape *selectedShape = &objtree.Objects[o].shapes[f];
+      Vector3d p = selectedShape->transform3D.transform.getTranslation();
+      Vector3d size = selectedShape->Max - selectedShape->Min;
 
       minpos.push_back(Vector3d(p.x, p.y, p.z));
       maxpos.push_back(Vector3d(p.x+size.x, p.y+size.y, p.z));
@@ -177,7 +177,7 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *stl)
   // Get all possible object positions
 
   double d = 5.0; // 5mm spacing between objects
-  Vector3d StlDelta = (stl->Max-stl->Min);
+  Vector3d StlDelta = (shape->Max - shape->Min);
   vector<Vector3d> candidates;
 
   candidates.push_back(Vector3d(0.0, 0.0, 0.0));
@@ -236,30 +236,30 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *stl)
   return false;
 }
 
-RFO_File* Model::AddStl(RFO_Object *parent, Shape stl, string filename)
+Shape* Model::AddStl(TreeObject *parent, Shape shape, string filename)
 {
-  RFO_File *file;
+  Shape *retshape;
   bool found_location;
 
   if (!parent) {
-    if (rfo.Objects.size() <= 0)
-      rfo.newObject();
-    parent = &rfo.Objects.back();
+    if (objtree.Objects.size() <= 0)
+      objtree.newObject();
+    parent = &objtree.Objects.back();
   }
   g_assert (parent != NULL);
 
   // Decide where it's going
   Vector3d trans = Vector3d(0,0,0);
-  found_location = FindEmptyLocation(trans, &stl);
+  found_location = FindEmptyLocation(trans, &shape);
 
   // Add it to the set
   size_t found = filename.find_last_of("/\\");
-  Gtk::TreePath path = rfo.createFile (parent, stl, filename.substr(found+1));
-  file = &parent->files.back();
+  Gtk::TreePath path = objtree.addShape(parent, shape, filename.substr(found+1));
+  retshape = &parent->shapes.back();
 
   // Move it, if we found a suitable place
   if (found_location)
-    file->transform3D.transform.setTranslation(trans);
+    retshape->transform3D.transform.setTranslation(trans);
 
   // Update the view to include the new object
   CalcBoundingBoxAndCenter();
@@ -267,47 +267,47 @@ RFO_File* Model::AddStl(RFO_Object *parent, Shape stl, string filename)
   // Tell everyone
   m_signal_stl_added.emit (path);
 
-  return file;
+  return retshape;
 }
 
 void Model::newObject()
 {
-  rfo.newObject();
+  objtree.newObject();
 }
 
 /* Scales the object on changes of the scale slider */
-void Model::ScaleObject(RFO_File *file, RFO_Object *object, double scale)
+void Model::ScaleObject(Shape *shape, TreeObject *object, double scale)
 {
-  if (!file)
+  if (!shape)
     return;
 
-  file->stl.Scale(scale);
+  shape->Scale(scale);
   CalcBoundingBoxAndCenter();
 }
 
-void Model::RotateObject(RFO_File *file, RFO_Object *object, Vector4d rotate)
+void Model::RotateObject(Shape *shape, TreeObject *object, Vector4d rotate)
 {
   Vector3d rot(rotate.x, rotate.y, rotate.z);
 
-  if (!file)
+  if (!shape)
     return; // FIXME: rotate entire Objects ...
 
-  file->stl.Rotate(rot, rotate.w);
+  shape->Rotate(rot, rotate.w);
   CalcBoundingBoxAndCenter();
 }
 
-void Model::OptimizeRotation(RFO_File *file, RFO_Object *object)
+void Model::OptimizeRotation(Shape *shape, TreeObject *object)
 {
-  if (!file)
+  if (!shape)
     return; // FIXME: rotate entire Objects ...
 
-  file->stl.OptimizeRotation();
+  shape->OptimizeRotation();
   CalcBoundingBoxAndCenter();
 }
 
-void Model::DeleteRFO(Gtk::TreeModel::iterator &iter)
+void Model::DeleteObjTree(Gtk::TreeModel::iterator &iter)
 {
-  rfo.DeleteSelected (iter);
+  objtree.DeleteSelected (iter);
   ClearGCode();
   ClearCuttingPlanes();
   CalcBoundingBoxAndCenter();
@@ -325,11 +325,11 @@ void Model::CalcBoundingBoxAndCenter()
   Vector3d newMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
   Vector3d newMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
 
-  for (uint i = 0 ; i < rfo.Objects.size(); i++) {
-    for (uint j = 0; j < rfo.Objects[i].files.size(); j++) {
-      Matrix4d M = rfo.GetSTLTransformationMatrix (i, j);
-      Vector3d stlMin = M * rfo.Objects[i].files[j].stl.Min;
-      Vector3d stlMax = M * rfo.Objects[i].files[j].stl.Max;
+  for (uint i = 0 ; i < objtree.Objects.size(); i++) {
+    for (uint j = 0; j < objtree.Objects[i].shapes.size(); j++) {
+      Matrix4d M = objtree.GetSTLTransformationMatrix (i, j);
+      Vector3d stlMin = M * objtree.Objects[i].shapes[j].Min;
+      Vector3d stlMax = M * objtree.Objects[i].shapes[j].Max;
       for (uint k = 0; k < 3; k++) {
 	newMin.xyz[k] = MIN(stlMin.xyz[k], newMin.xyz[k]);
 	newMax.xyz[k] = MAX(stlMax.xyz[k], newMax.xyz[k]);
@@ -350,7 +350,7 @@ void Model::CalcBoundingBoxAndCenter()
   }
 
   Center = (Max + Min) / 2.0;
-  m_signal_rfo_changed.emit();
+  m_signal_tree_changed.emit();
 }
 
 Vector3d Model::GetViewCenter()
@@ -366,38 +366,38 @@ Vector3d Model::GetViewCenter()
 void Model::draw (Gtk::TreeModel::iterator &iter)
 {
 
-  RFO_File *sel_file;
-  RFO_Object *sel_object;
+  Shape *sel_shape;
+  TreeObject *sel_object;
   gint index = 1; // pick/select index. matches computation in update_model()
-  rfo.get_selected_stl (iter, sel_object, sel_file);
+  objtree.get_selected_stl (iter, sel_object, sel_shape);
 
   Vector3d printOffset = settings.Hardware.PrintMargin;
   if(settings.RaftEnable)
     printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
-  Vector3d translation = rfo.transform3D.transform.getTranslation();
+  Vector3d translation = objtree.transform3D.transform.getTranslation();
   Vector3d offset = printOffset + translation;
   
   // Add the print offset to the drawing location of the STL objects.
   glTranslatef(offset.x, offset.y, offset.z);
 
   glPushMatrix();
-  glMultMatrixd (&rfo.transform3D.transform.array[0]);
+  glMultMatrixd (&objtree.transform3D.transform.array[0]);
 
-  for (uint i = 0; i < rfo.Objects.size(); i++) {
-    RFO_Object *object = &rfo.Objects[i];
+  for (uint i = 0; i < objtree.Objects.size(); i++) {
+    TreeObject *object = &objtree.Objects[i];
     index++;
 
     glPushMatrix();
     glMultMatrixd (&object->transform3D.transform.array[0]);
-    for (uint j = 0; j < object->files.size(); j++) {
-      RFO_File *file = &object->files[j];
+    for (uint j = 0; j < object->shapes.size(); j++) {
+      Shape *shape = &object->shapes[j];
       glLoadName(index); // Load select/pick index
       index++;
       glPushMatrix();
-      glMultMatrixd (&file->transform3D.transform.array[0]);
+      glMultMatrixd (&shape->transform3D.transform.array[0]);
 
-      bool is_selected = (sel_file == file ||
-	  (!sel_file && sel_object == object));
+      bool is_selected = (sel_shape == shape ||
+	  (!sel_shape && sel_object == object));
 
       if (is_selected) {
         // Enable stencil buffer when we draw the selected object.
@@ -405,7 +405,7 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
         glStencilFunc(GL_ALWAYS, 1, 1);
         glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 
-        file->stl.draw (this, settings);
+        shape->draw (this, settings);
 
         if (!settings.Display.DisplayPolygons) {
                 // If not drawing polygons, need to draw the geometry
@@ -417,7 +417,7 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
                 glDepthMask(GL_FALSE);
                 glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-                file->stl.draw_geometry();
+                shape->draw_geometry();
 
                 glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
                 glDepthMask(GL_TRUE);
@@ -434,7 +434,7 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
         glStencilFunc(GL_NOTEQUAL, 1, 1);
 	glEnable(GL_DEPTH_TEST);
 
-	file->stl.draw_geometry();
+	shape->draw_geometry();
 
         glEnable (GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -442,7 +442,7 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
 	glDisable(GL_POLYGON_OFFSET_LINE);
       }
       else {
-        file->stl.draw (this, settings);
+        shape->draw (this, settings);
       }
 
       glPopMatrix();
@@ -538,14 +538,14 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 	  plane = new CuttingPlane(LayerNr,settings.Hardware.LayerThickness);
 	  plane->setZ(z);
 	  matwidth = settings.Hardware.GetExtrudedMaterialWidth(plane->thickness);
-	  for(size_t o=0;o<rfo.Objects.size();o++)
+	  for(size_t o=0;o<objtree.Objects.size();o++)
 	    {
-	      for(size_t f=0;f<rfo.Objects[o].files.size();f++)
+	      for(size_t f=0;f<objtree.Objects[o].shapes.size();f++)
 		{
-		  Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
+		  Matrix4d T = objtree.GetSTLTransformationMatrix(o,f);
 		  Vector3d t = T.getTranslation();
 		  T.setTranslation(t);
-		  rfo.Objects[o].files[f].stl.CalcCuttingPlane(T, settings.Slicing.Optimization, plane);
+		  objtree.Objects[o].shapes[f].CalcCuttingPlane(T, settings.Slicing.Optimization, plane);
 		}
 	    }
 

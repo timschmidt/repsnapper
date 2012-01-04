@@ -43,10 +43,10 @@ class Poly;
 class PrintInhibitor;
 class ProcessController;
 
-class RFO;
-class RFO_File;
-class RFO_Object;
-class RFO_Transform3D;
+class ObjectsTree;
+class TreeObject;
+class Shape;
+class Transform3D;
 
 
 enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };

@@ -91,8 +91,8 @@ Render::~Render()
 
 void Render::set_model(Model *model)
 {
-  model->signal_rfo_changed().connect (sigc::mem_fun(*this, &Render::rfo_changed));
-  rfo_changed();
+  model->signal_tree_changed().connect (sigc::mem_fun(*this, &Render::tree_changed));
+  tree_changed();
 }
 
 void Render::selection_changed()
@@ -100,7 +100,7 @@ void Render::selection_changed()
   queue_draw();
 }
 
-void Render::rfo_changed()
+void Render::tree_changed()
 {
   if (!get_model())
     return;
@@ -228,7 +228,7 @@ bool Render::on_button_release_event(GdkEventButton* event)
     if (m_downPoint.x == event->x && m_downPoint.y == event->y){ // click only
       guint index = find_object_at(event->x, event->y);
       if (index) {
-  	Gtk::TreeModel::iterator iter = get_model()->rfo.find_stl_by_index(index);
+  	Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
   	if (iter) {
   	  m_selection->select(iter);
   	}
@@ -273,17 +273,17 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
       double factor = 0.3;
       Vector3f delta3f(-delta.x*factor, delta.y*factor, 0);
       if (event->state & GDK_SHIFT_MASK) { // move object
-	RFO_File *file;
-	RFO_Object *object;
-	if (!m_view->get_selected_stl(object, file))
+	Shape *shape;
+	TreeObject *object;
+	if (!m_view->get_selected_stl(object, shape))
 	  return true;
-	if (!object && !file)
+	if (!object && !shape)
 	  return true;
-	RFO_Transform3D *transf;
-	if (!file)
+	Transform3D *transf;
+	if (!shape)
 	  transf = &object->transform3D;
 	else
-	  transf = &file->transform3D;
+	  transf = &shape->transform3D;
 	transf->move(delta3f);
 	m_view->get_model()->CalcBoundingBoxAndCenter();
       }

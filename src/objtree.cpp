@@ -19,21 +19,21 @@
 #include "config.h"
 #include <exception>
 #include <stdexcept>
-#include "stdafx.h"
-#include "rfo.h"
 
+#include "stdafx.h"
+#include "objtree.h"
 #include "model.h"
 
 
 
-void RFO_Transform3D::move(Vector3d delta)
+void Transform3D::move(Vector3d delta)
 {
   Vector3d trans = transform.getTranslation();
   transform.setTranslation(trans + delta);
 }
 
 
-Matrix4d RFO::GetSTLTransformationMatrix(int object, int file) const
+Matrix4d ObjectsTree::GetSTLTransformationMatrix(int object, int file) const
 {
 	Matrix4d result = transform3D.transform;
 //	Vector3f translation = result.getTranslation();
@@ -42,12 +42,12 @@ Matrix4d RFO::GetSTLTransformationMatrix(int object, int file) const
 	if(object >= 0)
 		result *= Objects[object].transform3D.transform;
 	if(file >= 0)
-		result *= Objects[object].files[file].transform3D.transform;
+		result *= Objects[object].shapes[file].transform3D.transform;
 	return result;
 }
 
 
-void RFO::clear()
+void ObjectsTree::clear()
 {
   Objects.clear();
   version = 0.0f;
@@ -56,41 +56,41 @@ void RFO::clear()
   update_model();
 }
 
-void RFO::DeleteSelected(Gtk::TreeModel::iterator &iter)
+void ObjectsTree::DeleteSelected(Gtk::TreeModel::iterator &iter)
 {
   int i = (*iter)[m_cols->m_object];
-  int j = (*iter)[m_cols->m_file];
+  int j = (*iter)[m_cols->m_shape];
 
   if (j >= 0)
-    Objects[i].files.erase (Objects[i].files.begin() + j);
+    Objects[i].shapes.erase (Objects[i].shapes.begin() + j);
   else if (i >= 0)
     Objects.erase (Objects.begin() + i);
   update_model();
 }
 
-void RFO::newObject()
+void ObjectsTree::newObject()
 {
-  Objects.push_back(RFO_Object());
+  Objects.push_back(TreeObject());
   update_model();
 }
 
-Gtk::TreePath RFO::createFile(RFO_Object *parent, const Shape &stl,
-			      std::string location)
+Gtk::TreePath ObjectsTree::addShape(TreeObject *parent, Shape &shape,
+				    std::string location)
 {
-  RFO_File r;
-  r.stl = stl;
-  r.location = location;
-  parent->files.push_back(r);
+  // Shape r= Shape(shape);
+  // // r.stl = stl;
+  shape.filename = location;
+  parent->shapes.push_back(shape);
   update_model();
   Gtk::TreePath path;
   path.push_back (0); // root
   path.push_back (parent->idx);
-  path.push_back (parent->files.size() - 1);
+  path.push_back (parent->shapes.size() - 1);
 
   return path;
 }
 
-RFO::RFO()
+ObjectsTree::ObjectsTree()
 {
   version=0.1f;
   m_cols = new ModelColumns();
@@ -98,7 +98,7 @@ RFO::RFO()
   update_model();
 }
 
-void RFO::update_model()
+void ObjectsTree::update_model()
 {
   // re-build the model each time for ease ...
   m_model->clear();
@@ -115,7 +115,7 @@ void RFO::update_model()
   Gtk::TreeModel::Row row = *root;
   row[m_cols->m_name] = root_label;
   row[m_cols->m_object] = -1;
-  row[m_cols->m_file] = -1;
+  row[m_cols->m_shape] = -1;
   row[m_cols->m_pickindex] = 0;
 
   gint index = 1; // pick/select index. matches computation in draw()
@@ -127,40 +127,41 @@ void RFO::update_model()
     Gtk::TreeModel::Row orow = *obj;
     orow[m_cols->m_name] = Objects[i].name;
     orow[m_cols->m_object] = i;
-    orow[m_cols->m_file] = -1;
+    orow[m_cols->m_shape] = -1;
     orow[m_cols->m_pickindex] = index++;
 
-    for (guint j = 0; j < Objects[i].files.size(); j++) {
-      Objects[i].files[j].idx = j;
+    for (guint j = 0; j < Objects[i].shapes.size(); j++) {
+      Objects[i].shapes[j].idx = j;
       Gtk::TreeModel::iterator iter = m_model->append(orow.children());
       row = *iter;
-      row[m_cols->m_name] = Objects[i].files[j].location;
+      row[m_cols->m_name] = Objects[i].shapes[j].filename;
       row[m_cols->m_object] = i;
-      row[m_cols->m_file] = j;
+      row[m_cols->m_shape] = j;
       row[m_cols->m_pickindex] = index++;
     }
   }
 }
 
-void RFO::get_selected_stl(Gtk::TreeModel::iterator &iter,
-			   RFO_Object *&object,
-			   RFO_File *&file)
+void ObjectsTree::get_selected_stl(Gtk::TreeModel::iterator &iter,
+				   TreeObject *&object,
+				   Shape *&shape)
 {
   object = NULL;
-  file = NULL;
+  shape= NULL;
 
   if (!iter)
     return;
 
   int i = (*iter)[m_cols->m_object];
-  int j = (*iter)[m_cols->m_file];
+  int j = (*iter)[m_cols->m_shape];
   if (i >= 0)
     object = &Objects[i];
   if (j >= 0)
-    file = &Objects[i].files[j];
+    shape = &Objects[i].shapes[j];
 }
 
-Gtk::TreeModel::iterator RFO::find_stl_in_children(Gtk::TreeModel::Children children, guint pickindex)
+Gtk::TreeModel::iterator ObjectsTree::find_stl_in_children(Gtk::TreeModel::Children children,
+							   guint pickindex)
 {
   Gtk::TreeModel::iterator iter = children.begin();
 
@@ -178,7 +179,7 @@ Gtk::TreeModel::iterator RFO::find_stl_in_children(Gtk::TreeModel::Children chil
   return invalid;
 }
 
-Gtk::TreeModel::iterator RFO::find_stl_by_index(guint pickindex)
+Gtk::TreeModel::iterator ObjectsTree::find_stl_by_index(guint pickindex)
 {
   return find_stl_in_children(m_model->children(), pickindex);
 }

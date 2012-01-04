@@ -26,7 +26,7 @@
 //#include "linked_ptr.h"
 
 //#include "slicer.h"
-#include "rfo.h"
+#include "objtree.h"
 #include "types.h"
 #include "slicer/gcode.h"
 #include "slicer/cuttingplane.h"
@@ -42,14 +42,14 @@
 class Model
 {
   
-	sigc::signal< void > m_signal_rfo_changed;
+	sigc::signal< void > m_signal_tree_changed;
 
 public:
 
 	Progress m_progress;
 
 	// Something in the rfo changed
-	sigc::signal< void > signal_rfo_changed() { return m_signal_rfo_changed; }
+	sigc::signal< void > signal_tree_changed() { return m_signal_tree_changed; }
 
 
 	Model();
@@ -63,16 +63,16 @@ public:
 
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file);
-	RFO_File *AddStl(RFO_Object *parent, Shape stl, string filename);
+	Shape *AddStl(TreeObject *parent, Shape stl, string filename);
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 
 	void Read(Glib::RefPtr<Gio::File> file);
 
-	void DeleteRFO(Gtk::TreeModel::iterator &iter);
+	void DeleteObjTree(Gtk::TreeModel::iterator &iter);
 
-	void OptimizeRotation(RFO_File *file, RFO_Object *object);
-	void ScaleObject(RFO_File *file, RFO_Object *object, double scale);
-	void RotateObject(RFO_File *file, RFO_Object *object, Vector4d rotate);
+	void OptimizeRotation(Shape *shape, TreeObject *object);
+	void ScaleObject(Shape *shape, TreeObject *object, double scale);
+	void RotateObject(Shape *shape, TreeObject *object, Vector4d rotate);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 
 	vector<CuttingPlane*> cuttingplanes;
@@ -121,7 +121,7 @@ public:
 	void ModelChanged();
 
 	// Truly the model
-	RFO rfo;
+	ObjectsTree objtree;
 	Glib::RefPtr<Gtk::TextBuffer> errlog, echolog;
 
 	void draw(Gtk::TreeModel::iterator &selected);

@@ -56,7 +56,17 @@ using namespace std;
 using namespace vmml;
 using namespace PolyLib;
 
-class RFO;
+
+class Transform3D
+{
+public:
+	Transform3D(){identity();}
+	void identity(){transform=Matrix4d::IDENTITY;}
+	Matrix4d transform;
+	void move(Vector3d delta);
+};
+
+
 
 enum filetype_t{
     ASCII_STL,
@@ -75,6 +85,10 @@ class Shape
 {
 public:
 	Shape();
+ 	string filename; 
+	int idx;
+
+	Transform3D transform3D; 
 
     int load(std::string filename);
 
@@ -108,4 +122,3 @@ private:
 };
 
 
-#include "rfo.h"

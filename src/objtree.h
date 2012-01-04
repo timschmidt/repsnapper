@@ -20,72 +20,64 @@
 
 #include "shape.h"
 
-class RFO_Transform3D
-{
-public:
-	RFO_Transform3D(){identity();}
-	void identity(){transform=Matrix4d::IDENTITY;}
-	Matrix4d transform;
-	void move(Vector3d delta);
-};
+/* class RFO_File */
+/* { */
+/* public: */
+/* 	RFO_File(){} */
+/* 	void Draw(); */
+/* 	RFO_Transform3D transform3D; */
+/* 	string location; */
+/* 	string filetype; */
+/* 	string material; */
+/* 	Shape stl; */
+/* 	Shape getSTL() const {return stl;}; */
+/* 	int idx; */
+/* }; */
 
-class RFO_File
+class TreeObject
 {
 public:
-	RFO_File(){}
-	void Draw();
-	RFO_Transform3D transform3D;
-	string location;
-	string filetype;
-	string material;
-	Shape stl;
-	Shape getSTL() const {return stl;};
-	int idx;
-};
-
-class RFO_Object
-{
-public:
-	RFO_Object(){name = "Unnamed object";};
+	TreeObject(){name = "Unnamed object";};
 	string name;
-	RFO_Transform3D transform3D;
-	vector<RFO_File> files;
+	Transform3D transform3D;
+	vector<Shape> shapes;
 	int idx;
 };
 
 
-class RFO
+class ObjectsTree
 {
 	void update_model();
 public:
 	class ModelColumns : public Gtk::TreeModelColumnRecord
 	{
 	public:
-		ModelColumns() { add (m_name); add (m_object); add (m_file); add(m_pickindex); }
+		ModelColumns() { add (m_name); add (m_object); add (m_shape); add(m_pickindex); }
 
 		Gtk::TreeModelColumn<Glib::ustring> m_name;
 		Gtk::TreeModelColumn<int>           m_object;
-		Gtk::TreeModelColumn<int>           m_file;
+		Gtk::TreeModelColumn<int>           m_shape;
 		Gtk::TreeModelColumn<int>           m_pickindex;
 	};
 
-	RFO();
+	ObjectsTree();
 
 	void clear();
 	void DeleteSelected(Gtk::TreeModel::iterator &iter);
 	//void draw(Settings &settings, Gtk::TreeModel::iterator &iter);
 	void newObject();
-	Gtk::TreePath createFile(RFO_Object *parent, const Shape &shape, std::string location);
-	void get_selected_stl(Gtk::TreeModel::iterator &iter, RFO_Object *&object, RFO_File *&file);
+	Gtk::TreePath addShape(TreeObject *parent, Shape &shape, std::string location);
+	void get_selected_stl(Gtk::TreeModel::iterator &iter, TreeObject *&object, Shape *&shape);
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
 	Matrix4d GetSTLTransformationMatrix(int object, int file) const;
 
-	vector<RFO_Object> Objects;
-	RFO_Transform3D transform3D;
+	vector<TreeObject> Objects;
+	Transform3D transform3D;
 	float version;
 	string m_filename;
 	Glib::RefPtr<Gtk::TreeStore> m_model;
 	ModelColumns   *m_cols;
 private:
-        Gtk::TreeModel::iterator find_stl_in_children(Gtk::TreeModel::Children children, guint pickindex);
+        Gtk::TreeModel::iterator find_stl_in_children(Gtk::TreeModel::Children children, 
+						      guint pickindex);
 };

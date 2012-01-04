@@ -29,8 +29,8 @@
 class Model;
 class Render;
 class Progress;
-class RFO_Object;
-class RFO_File;
+class TreeObject;
+class Shape;
 class ConnectView;
 //class PrintInhibitor;
 
@@ -101,7 +101,7 @@ class View : public Gtk::Window
   void temp_changed();
 
   // rfo bits
-  Gtk::TreeView *m_rfo_tree;
+  Gtk::TreeView *m_objtree;
   TranslationSpinRow *m_translation_row;
   void delete_selected_stl();
   void duplicate_selected_stl();
@@ -118,7 +118,7 @@ class View : public Gtk::Window
 
  public:
   Model *get_model() { return m_model; }
-  bool get_selected_stl(RFO_Object *&object, RFO_File *&file);
+  bool get_selected_stl(TreeObject *&object, Shape *&shape);
 
   View(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
   ~View();

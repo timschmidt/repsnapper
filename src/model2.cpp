@@ -34,7 +34,7 @@
 
 #include "stdafx.h"
 #include "model.h"
-#include "rfo.h"
+#include "objtree.h"
 #include "file.h"
 #include "settings.h"
 #include "connectview.h"
@@ -197,13 +197,13 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
       // try to slice all objects until polygons can be made, otherwise hack z
       while (!polys_ok){
 	plane->setZ(hackedZ);
-	for(uint o=0;o<rfo.Objects.size();o++)
+	for(uint o=0;o<objtree.Objects.size();o++)
 	  {
-	    for(uint f=0;f<rfo.Objects[o].files.size();f++)
+	    for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
 	      {
 		// Get a pointer to the object:
-		Shape* shape = &rfo.Objects[o].files[f].stl;
-		Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
+		Shape* shape = &objtree.Objects[o].shapes[f];
+		Matrix4d T = objtree.GetSTLTransformationMatrix(o,f);
 		Vector3d t = T.getTranslation();
 		t+= Vector3d(settings.Hardware.PrintMargin.x
 			     +settings.Raft.Size*settings.RaftEnable, 

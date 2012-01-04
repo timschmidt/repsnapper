@@ -26,7 +26,7 @@
 #include "view.h"
 #include "stdafx.h"
 #include "model.h"
-#include "rfo.h"
+#include "objtree.h"
 #include "file.h"
 #include "render.h"
 #include "settings.h"
@@ -251,22 +251,22 @@ static const char *axis_names[] = { "X", "Y", "Z" };
 class View::TranslationSpinRow {
   void spin_value_changed (int axis)
   {
-    RFO_File *file;
-    RFO_Object *object;
+    Shape *shape;
+    TreeObject *object;
 
     if (m_inhibit_update)
       return;
-    if (!m_view->get_selected_stl(object, file))
+    if (!m_view->get_selected_stl(object, shape))
       return;
-    if (!object && !file)
+    if (!object && !shape)
       return;
 
     double val = m_xyz[axis]->get_value();
     Matrix4d *mat;
-    if (!file)
+    if (!shape)
         mat = &object->transform3D.transform;
     else
-        mat = &file->transform3D.transform;
+        mat = &shape->transform3D.transform;
     Vector3d trans = mat->getTranslation();
     trans.xyz[axis] = val;
     mat->setTranslation (trans);
@@ -281,9 +281,9 @@ public:
   // Changed STL Selection - must update translation values
   void selection_changed ()
   {
-    RFO_File *file;
-    RFO_Object *object;
-    if (!m_view->get_selected_stl(object, file) || (!object && !file))
+    Shape *shape;
+    TreeObject *object;
+    if (!m_view->get_selected_stl(object, shape) || (!object && !shape))
       return;
 
     m_inhibit_update = true;
@@ -294,10 +294,10 @@ public:
 	  m_xyz[i]->set_value(0.0);
 	break;
       }
-      else if (!file)
+      else if (!shape)
 	mat = &object->transform3D.transform;
       else
-	mat = &file->transform3D.transform;
+	mat = &shape->transform3D.transform;
       Vector3d trans = mat->getTranslation();
       for (uint i = 0; i < 3; i++)
 	m_xyz[i]->set_value(trans.xyz[i]);
@@ -538,29 +538,29 @@ void View::alert (Gtk::MessageType t, const char *message,
 
 void View::rotate_selection (Vector4d rotate)
 {
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
 
-  m_model->RotateObject (file, object, rotate);
+  m_model->RotateObject (shape, object, rotate);
 
   queue_draw();
 }
 
 void View::stl_added (Gtk::TreePath &path)
 {
-  m_rfo_tree->expand_all();
-  // m_rfo_tree->get_selection()->unselect_all();
-  // m_rfo_tree->get_selection()->select (path);
+  m_objtree->expand_all();
+  // m_objtree->get_selection()->unselect_all();
+  // m_objtree->get_selection()->select (path);
 }
 
 void View::auto_rotate()
 {
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
 
-  m_model->OptimizeRotation(file, object);
+  m_model->OptimizeRotation(shape, object);
 }
 
 void View::kick_clicked()
@@ -607,14 +607,14 @@ bool View::key_pressed_event(GdkEventKey *event)
 {
   // FIXME: Cursor and TAB keys are stolen by UI
   //  cerr << "key " << event->keyval << endl;
-  if (m_rfo_tree->get_selection()->count_selected_rows() <= 0)
+  if (m_objtree->get_selection()->count_selected_rows() <= 0)
     return false;
   switch (event->keyval)
     {
     case GDK_Tab:
       {
-      Glib::RefPtr<Gtk::TreeSelection> selection = m_rfo_tree->get_selection();
-      Glib::RefPtr<Gtk::TreeStore> model = m_model->rfo.m_model;
+      Glib::RefPtr<Gtk::TreeSelection> selection = m_objtree->get_selection();
+      Glib::RefPtr<Gtk::TreeStore> model = m_model->objtree.m_model;
       Gtk::TreeModel::iterator sel = selection->get_selected();
       if (event->state & GDK_SHIFT_MASK)
 	sel--;
@@ -630,8 +630,8 @@ bool View::key_pressed_event(GdkEventKey *event)
       }
     case GDK_Escape:
       {
-	bool has_selected = m_rfo_tree->get_selection()->get_selected();
-	m_rfo_tree->get_selection()->unselect_all();
+	bool has_selected = m_objtree->get_selection()->get_selected();
+	m_objtree->get_selection()->unselect_all();
 	return has_selected;
       }
     case GDK_Delete:
@@ -684,19 +684,19 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(1,0,0, M_PI/2)));
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/2)));
   connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/2)));
-  m_builder->get_widget ("m_rfo_tree", m_rfo_tree);
+  m_builder->get_widget ("m_objtree", m_objtree);
 
   // Insert our keybindings all around the place
   signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
-  m_rfo_tree->signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
+  m_objtree->signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
 
-  m_translation_row = new TranslationSpinRow (this, m_rfo_tree, "m_box_translate");
+  m_translation_row = new TranslationSpinRow (this, m_objtree, "m_box_translate");
 
   Gtk::HScale *scale_slider;
   m_builder->get_widget("m_scale_slider", scale_slider);
   scale_slider->set_range(0.01, 10.0);
   scale_slider->set_value(1.0);
-  m_rfo_tree->get_selection()->signal_changed().connect
+  m_objtree->get_selection()->signal_changed().connect
       (sigc::mem_fun(*this, &View::update_scale_slider));
   scale_slider->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object));
@@ -752,7 +752,7 @@ View::View(BaseObjectType* cobject,
   if (!pBox)
     std::cerr << "missing box!";
   else {
-    m_renderer = new Render (this, m_rfo_tree->get_selection());
+    m_renderer = new Render (this, m_objtree->get_selection());
     pBox->add (*m_renderer);
   }
   showAllWidgets();
@@ -793,8 +793,8 @@ void View::setModel(Model *model)
   printer->signal_temp_changed.connect
     (sigc::mem_fun(*this, &View::temp_changed));
 
-  m_rfo_tree->set_model (m_model->rfo.m_model);
-  m_rfo_tree->append_column("Name", m_model->rfo.m_cols->m_name);
+  m_objtree->set_model (m_model->objtree.m_model);
+  m_objtree->append_column("Name", m_model->objtree.m_cols->m_name);
 
   Gtk::TextView *textv = NULL;
   m_builder->get_widget ("txt_gcode_result", textv);
@@ -858,30 +858,30 @@ void View::setModel(Model *model)
 
 void View::delete_selected_stl()
 {
-  if (m_rfo_tree->get_selection()->count_selected_rows() <= 0)
+  if (m_objtree->get_selection()->count_selected_rows() <= 0)
     return;
 
-  Gtk::TreeModel::iterator iter = m_rfo_tree->get_selection()->get_selected();
-  m_model->DeleteRFO(iter);
-  m_rfo_tree->expand_all();
+  Gtk::TreeModel::iterator iter = m_objtree->get_selection()->get_selected();
+  m_model->DeleteObjTree(iter);
+  m_objtree->expand_all();
 }
 
-bool View::get_selected_stl(RFO_Object *&object, RFO_File *&file)
+bool View::get_selected_stl(TreeObject *&object, Shape *&shape)
 {
-  Gtk::TreeModel::iterator iter = m_rfo_tree->get_selection()->get_selected();
-  m_model->rfo.get_selected_stl (iter, object, file);
-  return object != NULL || file != NULL;
+  Gtk::TreeModel::iterator iter = m_objtree->get_selection()->get_selected();
+  m_model->objtree.get_selected_stl (iter, object, shape);
+  return object != NULL || shape != NULL;
 }
 
 void View::duplicate_selected_stl()
 {
-  RFO_Object *object;
-  RFO_File *file;
-  if (!get_selected_stl (object, file) || !file)
+  TreeObject *object;
+  Shape *shape;
+  if (!get_selected_stl (object, shape) || !shape)
     return;
 
   // duplicate
-  m_model->AddStl (object, file->stl, file->location);
+  m_model->AddStl (object, *shape, shape->filename);
 
   queue_draw();
 }
@@ -921,31 +921,31 @@ bool View::updateStatusBar(GdkEventCrossing *event, Glib::ustring message)
 
 void View::scale_object()
 {
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
 
   Gtk::HScale *scale_slider;
   m_builder->get_widget("m_scale_slider", scale_slider);
 
-  m_model->ScaleObject (file, object, scale_slider->get_value());
+  m_model->ScaleObject (shape, object, scale_slider->get_value());
 }
 
 /* Updates the scale slider when a new STL is selected,
  * giving it the new STL's current scale factor */
 void View::update_scale_slider()
 {
-  RFO_File *file;
-  RFO_Object *object;
-  get_selected_stl (object, file);
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
 
-  if (!file)
+  if (!shape)
     return;
 
   Gtk::HScale *scale_slider;
   m_builder->get_widget("m_scale_slider", scale_slider);
 
-  scale_slider->set_value(file->stl.getScaleFactor());
+  scale_slider->set_value(shape->getScaleFactor());
 }
 
 // GPL bits below from model.cpp ...

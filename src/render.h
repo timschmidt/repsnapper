@@ -42,7 +42,7 @@ class Render : public Gtk::DrawingArea
 
   void SetEnableLight(unsigned int lightNr, bool on);
   void CenterView();
-  void rfo_changed();
+  void tree_changed();
   void selection_changed();
   GtkWidget *get_widget();
   guint find_object_at(gdouble x, gdouble y);
