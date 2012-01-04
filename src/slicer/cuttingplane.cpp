@@ -944,17 +944,17 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	    glColor4f(0.1,1,0.1,0.8);
 	    
 	    // mimick gcode optimization of ordered lines
-	    Vector2d startp(0,0);
-	    vector<Vector3d> lines;
-	    getOrderedPolyLines(infill->infillpolys, startp, lines);
-	    glBegin(GL_LINES);	  
-	    for(size_t p=0;p < lines.size();p++)	      
-	      {	      
-		glVertex3f(lines[p].x,lines[p].y,lines[p].z);
-	      }
-	    glEnd();
-	      // for(size_t p=0;p < infill->infillpolys.size();p++)
-	      //   infill->infillpolys[p].draw(GL_LINE_LOOP);
+	    // Vector2d startp(0,0);
+	    // vector<Vector3d> lines;
+	    // getOrderedPolyLines(infill->infillpolys, startp, lines);
+	    // glBegin(GL_LINES);	  
+	    // for(size_t p=0;p < lines.size();p++)	      
+	    //   {	      
+	    // 	glVertex3f(lines[p].x,lines[p].y,lines[p].z);
+	    //   }
+	    // glEnd();
+	    for(size_t p=0;p < infill->infillpolys.size();p++)
+	      infill->infillpolys[p].draw(GL_LINE_LOOP);
 	  }
 
 	if(DrawVertexNumbers)

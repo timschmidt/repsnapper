@@ -23,7 +23,7 @@
 #include <giomm/file.h>
 #include <vmmlib/vector3.h>
 
-enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
+//enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
 
 class Builder;
 class Settings {
@@ -99,7 +99,7 @@ class Settings {
     bool ShellOnly;
     guint ShellCount;
     bool EnableAcceleration;
-    int ShrinkQuality;
+    //int ShrinkQuality;
 
     float Optimization;
 
