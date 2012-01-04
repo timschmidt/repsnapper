@@ -109,6 +109,13 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   Vector2d Min = plane->Min;
   Vector2d Max = plane->Max;
   Vector2d center = (Min+Max)/2.;
+
+  // Expand the Min/Max bounding rect to account for the rotation of
+  // the infill....
+  // FIXME: We should just correctly cover the areas.
+  Min=center+(plane->Min-center)*2;
+  Max=center+(plane->Max-center)*2;
+
   // none found - make new:
   ClipperLib::Polygons cpolys;
   vector<Poly> polys;
