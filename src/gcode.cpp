@@ -373,7 +373,10 @@ bool add_text_filter_nan(string str, string &GcodeTxt)
   return true;  
 }
 
-void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &GcodeLayer, const string &GcodeEnd, bool UseIncrementalEcode, bool Use3DGcode, double AntioozeDistance, double AntioozeSpeed)
+void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, 
+		     const string &GcodeLayer, const string &GcodeEnd,
+		     bool UseIncrementalEcode, bool Use3DGcode,
+		     double AntioozeDistance, double AntioozeSpeed)
 {
 	double lastE = -10;
 	Vector3d pos(0,0,0);
@@ -399,7 +402,11 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 			commands[i].where.x = LastPos.x;
 			commands[i].where.y = LastPos.y;
 		case COORDINATEDMOTION:
-			if ((commands[i].where.x != LastPos.x) + (commands[i].where.y != LastPos.y) + (commands[i].where.z != LastPos.z) != 0 && AntioozeDistance != 0 && commands[i].e == lastE && !Use3DGcode && AntioozeDistance != 0)
+			if ((commands[i].where.x != LastPos.x) + 
+			    (commands[i].where.y != LastPos.y) +
+			    (commands[i].where.z != LastPos.z) != 0 &&
+			    AntioozeDistance != 0 && commands[i].e == lastE &&
+			    !Use3DGcode && AntioozeDistance != 0)
 			{
 				if (UseIncrementalEcode)
 				{
@@ -435,7 +442,12 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 				oss << " ;" << commands[i].comment << "\n";
 			else
 				oss <<  "\n";
-			if ((commands[i].where.x != LastPos.x) + (commands[i].where.y != LastPos.y) + (commands[i].where.z != LastPos.z) != 0 && AntioozeDistance != 0 && commands[i].e == lastE  && !Use3DGcode && AntioozeDistance != 0)
+			if ((commands[i].where.x != LastPos.x) + 
+			    (commands[i].where.y != LastPos.y) +
+			    (commands[i].where.z != LastPos.z) != 0 &&
+			    AntioozeDistance != 0 &&
+			    commands[i].e == lastE  && 
+			    !Use3DGcode && AntioozeDistance != 0)
 			{
 				if (UseIncrementalEcode)
 				{
@@ -457,14 +469,19 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, const string &G
 				lastE = commands[i].e;
 			break;
 		case EXTRUDERON:
-			if(i != 0 && commands[i-1].Code == EXTRUDEROFF) continue;	// Dont switch extruder on/off right after eachother
+		  // Dont switch extruder on/off right after eachother
+			if(i != 0 && commands[i-1].Code == EXTRUDEROFF) continue;
 			oss  << "M101\n";
 			add_text_filter_nan(oss.str(), GcodeTxt);
 			//GcodeTxt += oss.str();
 			break;
 		case EXTRUDEROFF:
-			if(i != 0 && (i+1) < commands.size() && commands[i+1].Code == EXTRUDERON) continue;	// Dont switch extruder on/off right after eachother
-			if(i != 0 && (i+1) < commands.size() && commands[i+1].Code == EXTRUDEROFF) continue;	// don't switch extruder off twize
+		  // Dont switch extruder on/off right after eachother
+			if(i != 0 && (i+1) < commands.size() && 
+			   commands[i+1].Code == EXTRUDERON) continue;	
+			// don't switch extruder off twize
+			if(i != 0 && (i+1) < commands.size() && 
+			   commands[i+1].Code == EXTRUDEROFF) continue;	
 			oss  << "M103\n";
 			add_text_filter_nan(oss.str(), GcodeTxt);
 			//GcodeTxt += oss.str();

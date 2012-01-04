@@ -495,8 +495,8 @@ void Model::ConvertToGCode()
     g_main_context_iteration(NULL,false);
     //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
     cuttingplanes[p]->MakeGcode (state, E,
-		cuttingplanes[p]->getZ() + printOffsetZ,
-		settings.Slicing, settings.Hardware);
+				 cuttingplanes[p]->getZ() + printOffsetZ,
+				 settings.Slicing, settings.Hardware);
   }
   int h = (int)state.timeused/3600;
   int m = ((int)state.timeused%3600)/60;

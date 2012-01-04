@@ -858,72 +858,42 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 
 	Command command;
 
-	double lastLayerZ = state.GetLastLayerZ(z);
-
-	// Set speed for next move
-	command.Code = SETSPEED;
-	command.where = Vector3d(0,0,lastLayerZ);
-	command.e = E;					// move
-	command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
-	state.AppendCommand(command);
-	command.comment = "";
-	// Move Z axis
-	command.Code = ZMOVE;
-	command.where = Vector3d(0,0,z);
-	command.e = E;					// move
-	command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
-	state.AppendCommand(command);
-	command.comment = "";
+	// Why move z axis separately?
+	// double lastLayerZ = state.GetLastLayerZ(z);
+	// // Set speed for next move
+	// command.Code = SETSPEED;
+	// command.where = Vector3d(0,0,lastLayerZ);
+	// command.e = E;					// move
+	// command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
+	// state.AppendCommand(command);
+	// command.comment = "";
+	// // Move Z axis
+	// command.Code = ZMOVE;
+	// command.where = Vector3d(0,0,z);
+	// command.e = E;					// move
+	// command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
+	// state.AppendCommand(command);
+	// command.comment = "";
 
 	Vector3d start3 = state.LastPosition();
 	Vector2d startPoint(start3.x,start3.y);
 	vector<Vector3d> lines = getAllLines(startPoint);
 
-	// Find closest point to last point
-
-	// std::vector<bool> used;
-	// used.resize(lines.size());
-	// for(size_t i=0;i<used.size();i++)
-	// 	used[i] = false;
-
-	//	cerr << "last position " << state.LastPosition() << "\n";
-	uint thisPoint = 0; //findClosestUnused (lines, state.LastPosition(), used);
-// 	if (thisPoint == -1)	// No lines = no gcode
-// 	{
-// #if CUTTING_PLANE_DEBUG // this happens often for the last slice ...
-// 		cerr << "find closest, and hence slicing failed at z" << z << "\n";
-// #endif
-// 		return;
-// 	}
-	// used[thisPoint] = true;
-
-	while(thisPoint < lines.size()) //!= -1)
+	for (uint i=0; i < lines.size(); i+=2)
 	{
-	  //		double len;
-		// Make a MOVE accelerated line from LastPosition to lines[thisPoint]
-		if(state.LastPosition() != lines[thisPoint]) //If we are going to somewhere else
-		{
-		  state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
-						  0.0, E, z, slicing, hardware);
+		// MOVE to start of next line
+		if(state.LastPosition() != lines[i]) 
+		  {
+		    state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[i],
+						    0.0, E, z, slicing, hardware);
+		    state.SetLastPosition (lines[i]);
+		  } 
 
-		  state.SetLastPosition (lines[thisPoint]);
-		} // If we are going to somewhere else
-
-		// used[thisPoint] = true;
-		// Find other end of line
-		thisPoint++; //findOtherEnd(thisPoint);
-		// used[thisPoint] = true;
-		// store thisPoint
-
-		// Make a PLOT accelerated line from LastPosition to lines[thisPoint]
-		state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[thisPoint],
+		// PLOT to endpoint of line 
+		state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[i+1],
 						hardware.GetExtrudeFactor(thickness),
 						E, z, slicing, hardware);
-		state.SetLastPosition(lines[thisPoint]);
-		thisPoint++;// = findClosestUnused (lines, state.LastPosition(), used);
-		// if(thisPoint != -1)
-		// 	used[thisPoint] = true;
-		// }
+		state.SetLastPosition(lines[i+1]);
 	}
 	state.SetLastLayerZ(z);
 }
