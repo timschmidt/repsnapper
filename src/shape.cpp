@@ -288,8 +288,20 @@ int Shape::load(string filename)
     CenterAroundXY();
     CalcCenter();
 
+    //cout << getSTLsolid(0) << endl;
     scale_factor = 1.0;
     return 0;
+}
+
+
+string Shape::getSTLsolid(int number) const
+{
+  stringstream sstr;
+  sstr << "solid Reprappersolid" << number <<endl;
+  for (uint i = 0; i < triangles.size(); i++)
+    sstr << triangles[i].getSTLfacet();
+  sstr << "endsolid Reprappersolid" << number <<endl;
+  return sstr.str();
 }
 
 
@@ -380,11 +392,11 @@ void Shape::OptimizeRotation()
 
 	switch(down)
 	{
-	case NEGX: RotateObject(Vector3d(0,-1,0), M_PI/2.0); break;
-	case POSX: RotateObject(Vector3d(0,1,0), M_PI/2.0); break;
-	case NEGY: RotateObject(Vector3d(1,0,0), M_PI/2.0); break;
-	case POSY: RotateObject(Vector3d(-1,0,0), M_PI/2.0); break;
-	case POSZ: RotateObject(Vector3d(1,0,0), M_PI); break;
+	case NEGX: Rotate(Vector3d(0,-1,0), M_PI/2.0); break;
+	case POSX: Rotate(Vector3d(0,1,0), M_PI/2.0); break;
+	case NEGY: Rotate(Vector3d(1,0,0), M_PI/2.0); break;
+	case POSY: Rotate(Vector3d(-1,0,0), M_PI/2.0); break;
+	case POSZ: Rotate(Vector3d(1,0,0), M_PI); break;
 	default: // unhandled
 	  break;
 	}
@@ -392,7 +404,7 @@ void Shape::OptimizeRotation()
 }
 
 // Rotate and adjust for the user - not a pure rotation by any means
-void Shape::RotateObject(Vector3d axis, double angle)
+void Shape::Rotate(Vector3d axis, double angle)
 {
 	Vector3d min,max;
 	Vector3d oldmin,oldmax;

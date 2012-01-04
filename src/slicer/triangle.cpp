@@ -77,7 +77,6 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 			   Vector2d &lineStart,
 			   Vector2d &lineEnd) const
 {
-
 	Vector3d p;
 	double t;
 
@@ -122,4 +121,18 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 	  }
 	
 	return num_cutpoints;
+}
+
+
+string Triangle::getSTLfacet() const
+{
+  stringstream sstr;
+  sstr << "  facet normal " << Normal.x << " " << Normal.x << " " << Normal.z <<endl;
+  sstr << "    outer loop"  << endl;
+  sstr << "      vertex "<< scientific << A.x << " " << A.y << " " << A.z <<endl;
+  sstr << "      vertex "<< scientific << B.x << " " << B.y << " " << B.z <<endl;
+  sstr << "      vertex "<< scientific << C.x << " " << C.y << " " << C.z <<endl;
+  sstr << "    endloop" << endl;
+  sstr << "  endfacet" << endl;
+  return sstr.str();
 }

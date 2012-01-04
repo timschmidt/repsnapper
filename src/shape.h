@@ -91,12 +91,14 @@ public:
 	void OptimizeRotation(); 
 	void CalcCenter();
 	// Rotation for manual rotate and used by OptimizeRotation:
-	void RotateObject(Vector3d axis, double angle);  
+	void Rotate(Vector3d axis, double angle);  
     void Scale(double scale_factor);
     double getScaleFactor(){ return scale_factor; };
 
 	vector<Triangle>  triangles;
 	Vector3d Min, Max, Center;
+
+	string getSTLsolid(int number) const;
 
 private:
     double scale_factor;

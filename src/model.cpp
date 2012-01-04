@@ -292,7 +292,7 @@ void Model::RotateObject(RFO_File *file, RFO_Object *object, Vector4d rotate)
   if (!file)
     return; // FIXME: rotate entire Objects ...
 
-  file->stl.RotateObject(rot, rotate.w);
+  file->stl.Rotate(rot, rotate.w);
   CalcBoundingBoxAndCenter();
 }
 

@@ -47,9 +47,11 @@ public:
 	Vector3d A,B,C,Normal;	// p1,p2,p3, Normal
 	Vector3d GetMax();
 	Vector3d GetMin();
+  
 	void AccumulateMinMax(Vector3d &min, Vector3d &max);
 	void Translate(const Vector3d &vector);
 	int CutWithPlane(double z, const Matrix4d &T, 
 			 Vector2d &lineStart, Vector2d &lineEnd) const;
+	string getSTLfacet() const;
 };
 
