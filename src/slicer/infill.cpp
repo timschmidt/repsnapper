@@ -40,7 +40,6 @@ void Infill::clearPatterns() {
   savedPatterns.clear();
 }
 
-
 // fill polys with type etc.
 void Infill::calcInfill(const vector<Poly> polys, InfillType type, 
 			double infillDistance, double offsetDistance, double rotation)
@@ -172,7 +171,6 @@ void Infill::addInfillPoly(const Poly p)
       double sina = sin(-angle);
       double cosa = cos(-angle);
       // use the lines that have the angle of this Infill
-      Poly * newpoly;
       for (uint i=0; i < p.size() ; i+=1 )
   	{
   	  l = (p.getVertexCircular(i+1) - p.getVertexCircular(i));     
@@ -181,10 +179,10 @@ void Infill::addInfillPoly(const Poly p)
 			  l.y*cosa+l.x*sina);
 	  if (ABS(rotl.x) < 0.1 && ABS(rotl.y) > 0.1)
   	    {
-	      newpoly = new Poly(p.getPlane());
-  	      newpoly->vertices.push_back(p.getVertexCircular(i));
-  	      newpoly->vertices.push_back(p.getVertexCircular(i+1));
-  	      infillpolys.push_back(*newpoly);
+	      Poly newpoly(p.getPlane());
+	      newpoly.vertices.push_back(p.getVertexCircular(i));
+	      newpoly.vertices.push_back(p.getVertexCircular(i+1));
+	      infillpolys.push_back(newpoly);
   	    }
   	}
     }
