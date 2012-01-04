@@ -51,8 +51,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define RESOLUTION 4
-#define FREE(p)            {if (p) {free(p); (p)= NULL;}}
 
 using namespace std;
 using namespace vmml;

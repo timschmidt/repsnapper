@@ -19,19 +19,6 @@
 #include "types.h"
 #pragma once
 
-// for PointHash
-#ifdef __GNUC__
-#  define _BACKWARD_BACKWARD_WARNING_H 1 // kill annoying warning
-#  include <ext/hash_map>
-namespace std
-{
-  using namespace __gnu_cxx;
-}
-#else
-#  include <hash_map>
-using namespace stdext;
-#endif
-
 #include <vector>
 #include <list>
 #include <iostream>
@@ -49,7 +36,7 @@ using namespace stdext;
 #include "poly.h"
 #include "infill.h"
 
-
+class CuttingPlaneOptimizer;
 
 #define CUTTING_PLANE_DEBUG 0
 
@@ -72,48 +59,6 @@ struct locator
 };
 
 
-
-/* associates adjacent points with integers */
-class PointHash
-{
-
-	struct Impl;
-	Impl *impl;
- public:
-	PointHash();
-	~PointHash();
-	PointHash(const PointHash &copy);
-	int  IndexOfPoint (const Vector2d &p);
-	void InsertPoint  (guint idx, const Vector2d &p);
-	void clear();
-
-        static const double mult;
-        static const double double_epsilon;
-};
-
-
-
-// For Logick shrinker ...
-class CuttingPlaneOptimizer
-{
-public:
-	double Z;
-	//CuttingPlaneOptimizer(double z) { Z = z; };
-	CuttingPlaneOptimizer(CuttingPlane* cuttingPlane, double z);
-	CuttingPlane* cuttingPlane;
-	list<Polygon2d*> positivePolygons;
-	void Shrink(double distance, list<Polygon2d*> &resPolygons);
-	void Draw();
-	void Dispose();
-	void MakeOffsetPolygons(vector<Poly>& polys);
-	void RetrieveLines(vector<Vector3d>& lines);
-private:
-	void PushPoly(Polygon2d* poly);
-	void DoMakeOffsetPolygons(Polygon2d* pPoly, vector<Poly>& polys);
-	void DoRetrieveLines(Polygon2d* pPoly, vector<Vector3d>& lines);
-};
-
-
 class Infill;
 
 
@@ -125,31 +70,6 @@ public:
   //CuttingPlane();
   CuttingPlane(int layerno, double layerthickness);
 	~CuttingPlane();
-
-	// CuttingPlane *previous, *next;
-
-	// Contract polygons:
-	/* void Shrink(int quality, double extrudedWidth,  */
-	/* 	    double optimization,  */
-	/* 	    bool DisplayCuttingPlane, bool useFillets,  */
-	/* 	    int ShellCount); */
-	/* void ShrinkFast(double distance, double optimization, */
-	/* 		bool DisplayCuttingPlane, */
-	/* 		bool useFillets, int ShellCount); */
-	/* void ShrinkLogick(double distance, double optimization, */
-	/* 		  bool DisplayCuttingPlane, int ShellCount); */
-	
-	// void  selfIntersectAndDivide();
-	/* guint selfIntersectAndDivideRecursive(double z, guint startPolygon,  */
-	/* 				      guint startVertex, */
-	/* 				      vector<outline> &outlines,  */
-	/* 				      const Vector2d endVertex, */
-	/* 				      guint &level, */
-	/* 				      double maxoffset); */
-	/* void  recurseSelfIntersectAndDivide  (double z, vector<locator> &EndPointStack, */
-	/* 				      vector<outline> &outlines, */
-	/* 				      vector<locator> &visited, */
-	/* 				      double maxoffset); */
 
 	void ClearShrink()
 	{
