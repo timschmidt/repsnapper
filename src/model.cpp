@@ -46,6 +46,8 @@ Model::Model() :
 
 Model::~Model()
 {
+  ClearCuttingPlanes();
+  ClearGCode();
 }
 
 void Model::alert (const char *message)
@@ -581,6 +583,12 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 		  settings.Display.DrawCPLineNumbers, 
 		  settings.Display.DrawCPVertexNumbers,
 		  settings.Display.DisplayinFill);
+
+      if (!have_planes)
+      {
+            // need to delete the temporary cutting plane
+            delete plane;
+      }
       // displayInfillOld(settings, plane, plane.LayerNo, altInfillLayers);
       
       LayerNr++; 
