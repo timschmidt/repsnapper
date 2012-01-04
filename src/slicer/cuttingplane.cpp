@@ -21,7 +21,7 @@
 #include <vmmlib/vmmlib.h>
 #include <polylib/Polygon2d.h>
 
-#include "object.h"
+#include "shape.h"
 #include "slicer_logick.h"
 #include "cuttingplane.h"
 #include "infill.h"

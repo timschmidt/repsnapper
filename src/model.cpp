@@ -115,7 +115,7 @@ void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
 
 void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 {
-  Object stl;
+  Shape stl;
   if (stl.load (file->get_path()) == 0)
     AddStl(NULL, stl, file->get_path());
   ModelChanged();
@@ -155,7 +155,7 @@ static bool ClosestToOrigin (Vector3d a, Vector3d b)
 }
 
 
-bool Model::FindEmptyLocation(Vector3d &result, Object *stl)
+bool Model::FindEmptyLocation(Vector3d &result, Shape *stl)
 {
   // Get all object positions
   vector<Vector3d> maxpos;
@@ -236,7 +236,7 @@ bool Model::FindEmptyLocation(Vector3d &result, Object *stl)
   return false;
 }
 
-RFO_File* Model::AddStl(RFO_Object *parent, Object stl, string filename)
+RFO_File* Model::AddStl(RFO_Object *parent, Shape stl, string filename)
 {
   RFO_File *file;
   bool found_location;

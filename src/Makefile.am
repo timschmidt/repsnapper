@@ -35,6 +35,7 @@ SHARED_SRC= \
 	src/gcode.cpp \
 	src/arcball.cpp \
 	src/rfo.cpp \
+	src/shape.cpp \
 	src/file.cpp \
 	src/platform.cpp \
 	src/render.cpp \
@@ -52,6 +53,7 @@ SHARED_INC= \
 	src/miniball.h \
 	src/model.h \
 	src/rfo.h \
+	src/shape.h \
 	src/file.h \
 	src/stdafx.h \
 	src/platform.h \

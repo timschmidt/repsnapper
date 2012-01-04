@@ -74,7 +74,7 @@ void RFO::newObject()
   update_model();
 }
 
-Gtk::TreePath RFO::createFile(RFO_Object *parent, const Object &stl,
+Gtk::TreePath RFO::createFile(RFO_Object *parent, const Shape &stl,
 			      std::string location)
 {
   RFO_File r;

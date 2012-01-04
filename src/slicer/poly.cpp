@@ -18,7 +18,7 @@
 */
 #include "config.h"
 #include "cuttingplane.h"
-#include "object.h"
+#include "shape.h"
 //#include "infill.h"
 #include "poly.h"
 

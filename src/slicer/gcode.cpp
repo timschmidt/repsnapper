@@ -17,7 +17,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "object.h"
+#include "shape.h"
 #include "cuttingplane.h"
 
 #include "gcode.h"

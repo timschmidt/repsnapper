@@ -202,7 +202,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 	    for(uint f=0;f<rfo.Objects[o].files.size();f++)
 	      {
 		// Get a pointer to the object:
-		Object* slicer = &rfo.Objects[o].files[f].stl;
+		Shape* shape = &rfo.Objects[o].files[f].stl;
 		Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
 		Vector3d t = T.getTranslation();
 		t+= Vector3d(settings.Hardware.PrintMargin.x
@@ -211,7 +211,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 			     +settings.Raft.Size*settings.RaftEnable, 0);
 		T.setTranslation(t);
 		// adding points and lines from object to plane:
-		slicer->CalcCuttingPlane(T, optimization, plane);
+		shape->CalcCuttingPlane(T, optimization, plane);
 	      }
 	  }
 	polys_ok = plane->MakePolygons(optimization);

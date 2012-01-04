@@ -63,7 +63,7 @@ public:
 
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file);
-	RFO_File *AddStl(RFO_Object *parent, Object stl, string filename);
+	RFO_File *AddStl(RFO_Object *parent, Shape stl, string filename);
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 
 	void Read(Glib::RefPtr<Gio::File> file);
@@ -115,7 +115,7 @@ public:
 
 	void CalcBoundingBoxAndCenter();
 	Vector3d GetViewCenter();
-        bool FindEmptyLocation(Vector3d &result, Object *stl);
+        bool FindEmptyLocation(Vector3d &result, Shape *stl);
 
 	sigc::signal< void > m_model_changed;
 	void ModelChanged();
