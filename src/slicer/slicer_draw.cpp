@@ -43,7 +43,7 @@ void checkGlutInit()
 	if (inited)
 		return;
 	inited = true;
-	int argc;
+	int argc = 1;
 	char *argv[] = { (char *) "repsnapper" };
 	glutInit (&argc, argv);
 }
