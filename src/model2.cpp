@@ -202,7 +202,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 	    for(uint f=0;f<rfo.Objects[o].files.size();f++)
 	      {
 		// Get a pointer to the object:
-		Slicer* slicer = &rfo.Objects[o].files[f].stl;
+		Object* slicer = &rfo.Objects[o].files[f].stl;
 		Matrix4d T = rfo.GetSTLTransformationMatrix(o,f);
 		Vector3d t = T.getTranslation();
 		t+= Vector3d(settings.Hardware.PrintMargin.x

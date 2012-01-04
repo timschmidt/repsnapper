@@ -21,10 +21,10 @@
 #include <vmmlib/vmmlib.h>
 #include <polylib/Polygon2d.h>
 
-#include "slicer.h"
+#include "object.h"
+#include "slicer_logick.h"
 #include "cuttingplane.h"
 #include "infill.h"
-#include "slicer_logick.h"
 
 
 bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2)

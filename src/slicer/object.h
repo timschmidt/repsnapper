@@ -71,10 +71,10 @@ void checkGlutInit();
 
 #define sqr(x) ((x)*(x))
 
-class Slicer
+class Object
 {
 public:
-	Slicer();
+	Object();
 
     int load(std::string filename);
 
