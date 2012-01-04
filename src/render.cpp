@@ -122,18 +122,24 @@ bool Render::on_configure_event(GdkEventConfigure* event)
 {
   GdkGLContext *glcontext = gtk_widget_get_gl_context (get_widget());
   GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (get_widget());
+  int w, h;
 
   if (!gldrawable || !gdk_gl_drawable_gl_begin (gldrawable, glcontext))
     return false;
 
+  w = get_width();
+  h = get_height();
+
   glLoadIdentity();
-  glViewport (0, 0, get_width(), get_height());
+  glViewport (0, 0, w, h);
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
   gluPerspective (45.0f, (float)get_width()/(float)get_height(),1.0f, 1000000.0f);
   glMatrixMode (GL_MODELVIEW);
   glLoadIdentity ();
-  m_arcBall->setBounds(get_width(), get_height());
+  
+  if (w > 1 && h > 1) // Limit arcball minimum size or it asserts
+    m_arcBall->setBounds(w, h);
   glEnable(GL_LIGHTING);
 
   struct { GLfloat x; GLfloat y; GLfloat z; } light_locations[] = {
