@@ -242,7 +242,7 @@ void Model::MakeUncoveredPolygons()
     }  
 
   // top to bottom:
-  for (uint i=count-1; i>1; i--) 
+  for (uint i=count-1; i>0; i--) 
     {
       m_progress.update(count + count - i);
       MakeUncoveredPolygons(cuttingplanes[i],cuttingplanes[i-1]);
