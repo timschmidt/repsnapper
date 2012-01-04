@@ -87,6 +87,7 @@ public:
 	void MakeSupportPolygons(CuttingPlane * subjplane, 
 				 const CuttingPlane * clipplane);
 	void MakeSupportPolygons();
+	void MakeSkirt();
 
 	// GCode Functions
 	void init();

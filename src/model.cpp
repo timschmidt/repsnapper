@@ -548,12 +548,15 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 		  rfo.Objects[o].files[f].stl.CalcCuttingPlane(T, settings.Slicing.Optimization, plane);
 		}
 	    }
+
 	  plane->MakePolygons(settings.Slicing.Optimization);
+
+	  bool makeskirt = (plane->getZ() <= settings.Slicing.SkirtHeight);
+
 	  plane->MakeShells(//settings.Slicing.ShrinkQuality,
 			    settings.Slicing.ShellCount,
-			    matwidth,
-			    settings.Slicing.Optimization,
-			    false);
+			    matwidth, settings.Slicing.Optimization,
+			    makeskirt, false);
 	  if (settings.Display.DisplayinFill)
 	    {
 	      double fullInfillDistance = matwidth;

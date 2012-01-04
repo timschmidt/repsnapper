@@ -2180,7 +2180,6 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkLabel" id="label104">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes"></property>
                                     <property name="justify">center</property>
                                   </object>
                                   <packing>
@@ -2670,7 +2669,7 @@ and others I forgot... (needs updating)</property>
                   <object class="GtkTable" id="table6">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="n_rows">2</property>
+                    <property name="n_rows">3</property>
                     <property name="n_columns">4</property>
                     <child>
                       <object class="GtkLabel" id="label68">
@@ -2694,6 +2693,7 @@ and others I forgot... (needs updating)</property>
                       <object class="GtkLabel" id="label70">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">The rotation of the first layers' infill and the support.</property>
                         <property name="label" translatable="yes">Infill Rotation (°)</property>
                       </object>
                       <packing>
@@ -2705,6 +2705,7 @@ and others I forgot... (needs updating)</property>
                       <object class="GtkLabel" id="label71">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">How many linewidths between the infill lines</property>
                         <property name="label" translatable="yes">Infill Distance (Lines)</property>
                       </object>
                       <packing>
@@ -2765,6 +2766,41 @@ and others I forgot... (needs updating)</property>
                         <property name="right_attach">4</property>
                         <property name="top_attach">1</property>
                         <property name="bottom_attach">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkSpinButton" id="Slicing.SkirtHeight">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">
+</property>
+                        <property name="invisible_char">●</property>
+                        <property name="digits">1</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label10">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Draws a line around everything up to the given height to help keeping warm. 
+Distance is twice the Infill Distance.</property>
+                        <property name="label" translatable="yes">Skirt Height (mm)</property>
+                      </object>
+                      <packing>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
                       </packing>
                     </child>
                   </object>

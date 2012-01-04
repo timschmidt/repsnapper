@@ -342,35 +342,64 @@ void Model::MakeSupportPolygons(CuttingPlane * subjplane, // lower -> will chang
 }
 
 void Model::MakeSupportPolygons()
-{
+{ 
   int count = cuttingplanes.size();
   m_progress.start (_("Support"), count-1);
   for (int i=count-1; i>0; i--) 
     {
       m_progress.update(count-i);
       g_main_context_iteration(NULL,false);
-      //cerr << "Support? plane "<< i <<": ";
       MakeSupportPolygons(cuttingplanes[i-1], cuttingplanes[i]);
     }
   m_progress.stop (_("Done"));
 }
 
+void Model::MakeSkirt()
+{
+  ClipperLib::Clipper clpr;
+  uint count = cuttingplanes.size();
+  uint startindex = count;
+  // find maximum of all calculated skirts
+  for (int i=count-1; i >= 0; i--) 
+    {
+      if (cuttingplanes[i]->getZ() > settings.Slicing.SkirtHeight) {
+	startindex = i;
+	continue;
+      }
+      clpr.AddPolygon(cuttingplanes[i]->skirtPolygon.getClipperPolygon(),
+		      ClipperLib::ptSubject);
+    }
+  ClipperLib::Polygons emptypolys;emptypolys.clear();
+  clpr.AddPolygons(emptypolys, ClipperLib::ptClip);
+
+  ClipperLib::Polygons skirts;
+  clpr.Execute(ClipperLib::ctDifference, skirts, 
+	       ClipperLib::pftPositive, ClipperLib::pftPositive);
+  // set this skirt for all skirted layers 
+  for (int i=startindex-1; i >= 0; i--) {
+    cuttingplanes[i]->setSkirtPolygon(skirts);
+  }
+}
 
 void Model::MakeShells()
 {
   uint count = cuttingplanes.size();
   m_progress.start (_("Shells"), count);
-  double matwidth;
+  double matwidth, skirtheight = settings.Slicing.SkirtHeight;
+  bool makeskirt=false;
   for (uint i=0; i < count; i++) 
     {
       m_progress.update(i);
       g_main_context_iteration(NULL,false);
       //cerr << "shrink plane " << i << endl;
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(cuttingplanes[i]->thickness);
+      
+      makeskirt = (cuttingplanes[i]->getZ() <= skirtheight);
       cuttingplanes[i]->MakeShells(settings.Slicing.ShellCount,
-				   matwidth,
-				   settings.Slicing.Optimization, false);
+				   matwidth, settings.Slicing.Optimization, 
+				   makeskirt, false);
     }
+  MakeSkirt();
   m_progress.stop (_("Done"));
 }
 

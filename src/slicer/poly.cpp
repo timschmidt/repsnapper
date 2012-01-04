@@ -263,6 +263,15 @@ bool Poly::polyInside(const Poly * poly, double maxoffset) const
 }
 
 
+void Poly::addVertex(Vector2d v, bool front)
+{
+  if (front)
+    vertices.insert(vertices.begin(),v);
+  else
+    vertices.push_back(v);
+};
+
+
 Vector2d Poly::getVertexCircular(int index) const
 {
   int size = vertices.size();
@@ -392,6 +401,17 @@ double Poly::getLinelengthSq(uint startindex) const
   return length;
 }
 
+// add to lines starting with nearest point to startPoint
+void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const
+{
+  if (size()<2) return;
+  double mindist = 1000000;
+  uint index = nearestDistanceSqTo(startPoint, mindist);
+  getLines(lines,index);
+  startPoint = Vector2d(lines.back().x,lines.back().y);
+}
+
+// add to lines starting with given index
 // closed lines sequence
 void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
 {

@@ -197,11 +197,18 @@ public:
 
 	void MakeShells(uint shellcount, double extrudedWidth, 
 			double optimization, 
+			bool makeskirt,
 			bool useFillets);
 	vector<Poly> ShrinkedPolys(const vector<Poly> poly,
-				   double distance);
+				   double distance, 
+				   ClipperLib::JoinType join_type = ClipperLib::jtMiter);
 	  
+	void calcConvexHull();
+	Poly hullPolygon;
 	
+	void MakeSkirt(double distance);
+	Poly skirtPolygon;
+
 	bool CleanupConnectSegments();
 	bool CleanupSharedSegments();
 	// remove redudant points in given polygons -> done in poly.cpp
@@ -235,6 +242,7 @@ public:
 		fullFillPolygons.clear();
 		//fullFillVertices.clear();
 		supportPolygons.clear();
+		skirtPolygon.clear();
 	}
 	void setZ(double value)
 	{
@@ -276,6 +284,7 @@ public:
 	void addFullFillPolygons(const ClipperLib::Polygons cpolys);
 	void setNormalFillPolygons(const ClipperLib::Polygons cpolys);
 	void setSupportPolygons(const ClipperLib::Polygons cpolys);
+	void setSkirtPolygon(const ClipperLib::Polygons cpolys);
 
 	void printinfo() const ;
 private:

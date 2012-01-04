@@ -426,6 +426,11 @@ void CuttingPlane::setSupportPolygons(const ClipperLib::Polygons cpolys)
       //supportPolygons[i].printinfo();
     }
 }
+void CuttingPlane::setSkirtPolygon(const ClipperLib::Polygons cpolys)
+{
+  skirtPolygon.clear();
+  skirtPolygon = Poly(this, cpolys.front());
+}
 
 /*
  * Attempt to link all the Segments in 'lines' together.
@@ -817,6 +822,8 @@ vector<Vector3d> CuttingPlane::getAllLines(Vector2d &startPoint) const
   vector<Vector3d> lines;
 
 
+  skirtPolygon.getLines(lines, startPoint);
+
   if( optimizers.size() > 1 )
 	{
 	  // Logick
@@ -924,6 +931,7 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 
 void CuttingPlane::MakeShells(uint shellcount, double extrudedWidth, 
 			      double optimization, 
+			      bool makeskirt,
 			      bool useFillets)
 {
   //cerr << "make " << shellcount << " shells "  << endl;
@@ -938,6 +946,11 @@ void CuttingPlane::MakeShells(uint shellcount, double extrudedWidth,
       shellPolygons.push_back(shrinked);
     }
   offsetPolygons = ShrinkedPolys(shrinked,distance); 
+
+  if (makeskirt) {
+    MakeSkirt(2*distance);
+  }
+
   //cerr << " .. made " << offsetPolygons.size() << " offsetpolys "  << endl;
   // for (uint i =0; i<shellPolygons.size(); i++) {
   //   cout << "shell " << i << endl;
@@ -947,16 +960,28 @@ void CuttingPlane::MakeShells(uint shellcount, double extrudedWidth,
   // }
 }
 
+void CuttingPlane::MakeSkirt(double distance)
+{
+  calcConvexHull();
+  skirtPolygon.clear();
+  if (hullPolygon.size()>0) {
+    vector<Poly> convex;
+    convex.push_back(hullPolygon);
+    skirtPolygon = (ShrinkedPolys(convex, -distance,ClipperLib::jtRound)).front();
+  }
+}
+
 // return the given polygons shrinked 
 vector<Poly> CuttingPlane::ShrinkedPolys(const vector<Poly> poly,
-					 double distance)
+					 double distance,
+					 ClipperLib::JoinType join_type) // default=jtMiter
 {
   ClipperLib::Polygons opolys;
   bool reverse=true;
   while (opolys.size()==0){ // try to reverse poly vertices if no result
     ClipperLib::Polygons cpolys = getClipperPolygons(poly,reverse);
     ClipperLib::OffsetPolygons(cpolys, opolys, -1000.*distance,
-			       ClipperLib::jtMiter,1);
+			       join_type,1);
                                //ClipperLib::jtRound);
     reverse=!reverse;
     if (reverse) break;
@@ -1018,6 +1043,11 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	      shellPolygons[p][q].draw(GL_LINE_LOOP);
 	      shellPolygons[p][q].draw(GL_POINTS);
 	    }
+
+
+	glColor4f(0.5,0.8,0.8,1);
+	glLineWidth(2);
+	skirtPolygon.draw(GL_LINE_LOOP);
 
 	glColor4f(1,1,1,1);
 	glPointSize(3);
@@ -1105,8 +1135,53 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 
 }
 
+// is B left of A wrt center?
+bool isleftof(Vector2d center, Vector2d A, Vector2d B)
+{
+  double position = (B.x-A.x)*(center.y-A.y) - (B.y-A.y)*(center.x-A.x);
+  // position = sign((p2-p1).cross(center-p1)[2]) ; // this would be 3d
+  return (position > 0);
+}
 
-
+// gift wrapping algo
+void CuttingPlane::calcConvexHull() 
+{
+  hullPolygon.clear();
+  hullPolygon=Poly(this);
+  vector<Vector2d> p;
+  for (uint i = 0; i<polygons.size(); i++)
+    p.insert(p.end(), polygons[i].vertices.begin(), polygons[i].vertices.end());
+  uint np = p.size();
+  //cerr << np << " points"<< endl;
+  if (np==0) return;
+  uint current;
+  double minx=10000,miny=10000;
+  for (uint i = 0; i < np; i++) { // get leftmost bottom
+    if (p[i].x < minx){
+      minx = p[i].x;
+      miny = p[i].y;
+      current = i;
+    }
+    else if (p[i].x==minx && p[i].y<miny){
+      minx = p[i].x;
+      miny = p[i].y;
+      current = i;
+    }
+  }
+  hullPolygon.addVertex(p[current]);
+  uint start = current;
+  uint leftmost ;
+  do 
+    {
+      leftmost=0;
+      for (uint i=1; i < np; i++)
+	if (leftmost == current || isleftof(p[current], p[i], p[leftmost])) // i more to the left?
+	  leftmost = i;
+      current = leftmost;
+      hullPolygon.addVertex(p[current], true); // to front: reverse order
+    }
+  while (current != start);
+}
 
 void CuttingPlane::printinfo() const 
 {

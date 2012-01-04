@@ -59,6 +59,9 @@ public:
 	// Remove vertices that are on a straight line
 	void cleanup(double maxerror);
 
+	void clear(){vertices.clear();};
+
+
 	vector< vector<Vector2d> > intersect(Poly &poly1, Poly &poly2) const;
 
 	bool vertexInside(const Vector2d point, double maxoffset) const;
@@ -81,7 +84,7 @@ public:
 	Vector3d getVertexCircular3(int pointindex) const; // 3d point at index 
 	//	vector<guint> points;			// points, indices into vertices
 	vector<Vector2d> vertices; // vertices
-	void addVertex(Vector2d v){vertices.push_back(v);};
+	void addVertex(Vector2d v, bool front=false);
 	bool hole; // this polygon is a hole
 	Vector2d center;
 	double getZ() const;
@@ -91,6 +94,7 @@ public:
 	void drawVertexNumbers() const; 
 	void drawLineNumbers() const;
 
+	void getLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
 	void getLines(vector<Vector3d> &lines,uint startindex=0) const;
 	double getLinelengthSq(uint startindex) const;
 

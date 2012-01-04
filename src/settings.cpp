@@ -158,6 +158,7 @@ static struct {
   STRING_MEMBER (Slicing.AltInfillLayersText, "AltInfillLayersText", "", false),
   BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, false),
   BOOL_MEMBER   (Slicing.Support, "Support", false, false),
+  FLOAT_MEMBER  (Slicing.SkirtHeight, "SkirtHeight", 0.0, false),
 
   BOOL_MEMBER   (Slicing.ShellOnly, "ShellOnly", false, true),
   INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),
@@ -248,6 +249,7 @@ static struct {
   { "Slicing.Optimization", 0.0, 1.0, 0.001, 0.1 },
   { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
   { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
+  { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },
 
   // Hardware
   { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },

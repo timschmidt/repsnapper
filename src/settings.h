@@ -94,6 +94,7 @@ class Settings {
     std::string AltInfillLayersText;
     bool SolidTopAndBottom;
     bool Support;
+    float SkirtHeight;
 
     bool ShellOnly;
     guint ShellCount;
