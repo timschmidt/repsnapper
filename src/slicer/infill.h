@@ -64,7 +64,6 @@ class Infill
   InfillType type;
   double angle;
 
-  Vector2d center,Min,Max;  
   vector<Poly> infillpolys;  // for clipper polygon types
   vector<Vector2d> infillvertices; // for lines types
   

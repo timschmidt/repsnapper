@@ -34,10 +34,6 @@ vector<struct Infill::pattern> Infill::savedPatterns;
 Infill::Infill(CuttingPlane *plane) 
 {
   this->plane = plane;
-  // helpers for pattern generation and rotation
-  center = (plane->Min+plane->Max)/2.;
-  Min=center+(plane->Min-center)*2;  // make bigger for rotation
-  Max=center+(plane->Max-center)*2;
 }
 
 void Infill::clearPatterns() {
@@ -110,6 +106,8 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	return savedPatterns[i].cpolys;
       }
   }
+  Vector2d Min = plane->Min;
+  Vector2d Max = plane->Max;
   Vector2d center = (Min+Max)/2.;
   // none found - make new:
   ClipperLib::Polygons cpolys;

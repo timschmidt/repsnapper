@@ -98,6 +98,8 @@ CuttingPlane::CuttingPlane(int layerno, double layerthickness)
   LayerNo = layerno;
   thickness = layerthickness;
   infill = new Infill(this);
+  Min = Vector2d(G_MAXDOUBLE, G_MAXDOUBLE);
+  Max = Vector2d(G_MINDOUBLE, G_MINDOUBLE);
 }
 // CuttingPlane::CuttingPlane()
 // {
@@ -1012,8 +1014,9 @@ void CuttingPlane::calcConvexHull()
   uint np = p.size();
   //cerr << np << " points"<< endl;
   if (np==0) return;
-  uint current;
-  double minx=10000,miny=10000;
+  uint current=np;
+  double minx=G_MAXDOUBLE;
+  double miny=G_MAXDOUBLE;
   for (uint i = 0; i < np; i++) { // get leftmost bottom
     if (p[i].x < minx){
       minx = p[i].x;
@@ -1026,6 +1029,8 @@ void CuttingPlane::calcConvexHull()
       current = i;
     }
   }
+  assert (current != np);
+
   hullPolygon.addVertex(p[current]);
   uint start = current;
   uint leftmost ;
