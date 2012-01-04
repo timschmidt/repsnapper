@@ -75,10 +75,10 @@ void View::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleB
 
 void View::load_gcode ()
 {
-  PrintInhibitor inhibitPrint(printer);
-  if (printer->IsPrinting())
+  PrintInhibitor inhibitPrint(m_printer);
+  if (m_printer->IsPrinting())
   {
-    printer->error (_("Complete print before reading"),
+    m_printer->error (_("Complete print before reading"),
 		   _("Reading GCode while printing will abort the print"));
     return;
   }
@@ -93,10 +93,10 @@ void View::save_gcode ()
 
 void View::convert_to_gcode ()
 {
-  PrintInhibitor inhibitPrint(printer);
-  if (printer->IsPrinting())
+  PrintInhibitor inhibitPrint(m_printer);
+  if (m_printer->IsPrinting())
     {
-      printer->error (_("Complete print before converting"),
+      m_printer->error (_("Complete print before converting"),
 		     _("Converting to GCode while printing will abort the print"));
       return;
     }
@@ -116,7 +116,7 @@ void View::save_stl ()
 
 void View::send_gcode ()
 {
-  printer->SendNow (m_gcode_entry->get_text().uppercase());
+  m_printer->SendNow (m_gcode_entry->get_text().uppercase());
   //m_gcode_entry->set_text("");
 }
 
@@ -179,7 +179,7 @@ View *View::create(Model *model)
 
 void View::printing_changed()
 {
-  if (printer->IsPrinting()) {
+  if (m_printer->IsPrinting()) {
     m_print_button->set_label (_("Restart"));
     m_continue_button->set_label (_("Pause"));
   } else {
@@ -191,9 +191,9 @@ void View::printing_changed()
 void View::power_toggled()
 {
   if (m_power_button->get_active())
-    printer->SendNow ("M80");
+    m_printer->SendNow ("M80");
   else
-    printer->SendNow ("M81");
+    m_printer->SendNow ("M81");
 }
 
 void View::enable_logging_toggled (Gtk::ToggleButton *button)
@@ -204,17 +204,17 @@ void View::enable_logging_toggled (Gtk::ToggleButton *button)
 void View::fan_enabled_toggled (Gtk::ToggleButton *button)
 {
   if (!button->get_active())
-    printer->SendNow ("M107");
+    m_printer->SendNow ("M107");
   else {
     std::stringstream oss;
     oss << "M106 S" << (int)m_fan_voltage->get_value();
-    printer->SendNow (oss.str());
+    m_printer->SendNow (oss.str());
   }
 }
 
 void View::run_extruder ()
 {
-  printer->RunExtruder (m_extruder_speed->get_value(),
+  m_printer->RunExtruder (m_extruder_speed->get_value(),
 			m_extruder_length->get_value(),
 			m_extruder_reverse->get_active());
 }
@@ -314,8 +314,8 @@ public:
     view->m_builder->get_widget (box_name, m_box);
 
     for (uint i = 0; i < 3; i++) {
-        m_box->add (*new Gtk::Label (axis_names[i]));
-        m_xyz[i] = new Gtk::SpinButton();
+        m_box->add (*manage(new Gtk::Label (axis_names[i])));
+        m_xyz[i] = manage (new Gtk::SpinButton());
         m_xyz[i]->set_numeric();
         m_xyz[i]->set_digits (1);
         m_xyz[i]->set_increments (0.5, 10);
@@ -357,11 +357,11 @@ public:
       oss << m_target->get_value();
     else
       oss << "0";
-    printer->SendNow (oss.str().data());
+    m_printer->SendNow (oss.str().data());
   }
 
   Model *m_model;
-  Printer *printer;
+  Printer *m_printer;
   TempType m_type;
   Gtk::Label *m_temp;
   Gtk::SpinButton *m_target;
@@ -373,20 +373,20 @@ public:
   }
 
   TempRow(Model *model, Printer *printer, TempType type) :
-    m_model(model), printer(printer), m_type(type)
+    m_model(model), m_printer(printer), m_type(type)
   {
     static const char *names[] = { N_("Nozzle"), N_("Bed") };
 
-    add(*(new Gtk::Label(_(names[type]))));
-    Gtk::ToggleButton *pOn = new Gtk::ToggleButton(_("Heat On"));
+    add(*manage(new Gtk::Label(_(names[type]))));
+    Gtk::ToggleButton *pOn = manage (new Gtk::ToggleButton(_("Heat On")));
     pOn->signal_toggled().connect
       (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
     add(*pOn);
-    add(*(new Gtk::Label(_("Temp. (°C)"))));
+    add(*manage (new Gtk::Label(_("Temp. (°C)"))));
     m_temp = new Gtk::Label(_("<unknown>"));
     add (*m_temp);
 
-    add(*(new Gtk::Label(_("Target:"))));
+    add(*manage(new Gtk::Label(_("Target:"))));
     m_target = new Gtk::SpinButton();
     m_target->set_increments (1, 5);
     m_target->set_range(25.0, 256.0);
@@ -414,20 +414,20 @@ class View::AxisRow : public Gtk::HBox {
 public:
   void home_clicked()
   {
-    printer->Home(std::string (axis_names[m_axis]));
+    m_printer->Home(std::string (axis_names[m_axis]));
     m_target->set_value(0.0);
   }
   void spin_value_changed ()
   {
     if (m_inhibit_update)
       return;
-    printer->Goto (std::string (axis_names[m_axis]), m_target->get_value());
+    m_printer->Goto (std::string (axis_names[m_axis]), m_target->get_value());
   }
   void nudge_clicked (double nudge)
   {
     m_inhibit_update = true;
     m_target->set_value (MAX (m_target->get_value () + nudge, 0.0));
-    printer->Move (std::string (axis_names[m_axis]), nudge);
+    m_printer->Move (std::string (axis_names[m_axis]), nudge);
     m_inhibit_update = false;
   }
   void add_nudge_button (double nudge)
@@ -443,7 +443,7 @@ public:
   }
   bool m_inhibit_update;
   Model *m_model;
-  Printer *printer;
+  Printer *m_printer;
   Gtk::SpinButton *m_target;
   int m_axis;
 
@@ -455,9 +455,9 @@ public:
     m_inhibit_update = false;
   }
   AxisRow(Model *model, Printer *printer, int axis) :
-    m_inhibit_update(false), m_model(model), printer(printer), m_axis(axis)
+    m_inhibit_update(false), m_model(model), m_printer(printer), m_axis(axis)
   {
-    add(*(new Gtk::Label(axis_names[axis])));
+    add(*manage(new Gtk::Label(axis_names[axis])));
     Gtk::Button *home = new Gtk::Button(_("Home"));
     home->signal_clicked().connect
       (sigc::mem_fun (*this, &AxisRow::home_clicked));
@@ -466,7 +466,7 @@ public:
     add_nudge_button (-10.0);
     add_nudge_button (-1.0);
     add_nudge_button (-0.1);
-    m_target = new Gtk::SpinButton();
+    m_target = manage (new Gtk::SpinButton());
     m_target->set_digits (1);
     m_target->set_increments (0.1, 1);
     m_target->set_range(-200.0, +200.0);
@@ -479,16 +479,11 @@ public:
     add_nudge_button (+1.0);
     add_nudge_button (+10.0);
   }
-
-  ~AxisRow()
-  {
-    delete m_target;
-  }
 };
 
 void View::home_all()
 {
-  printer->SendNow ("G28");
+  m_printer->SendNow ("G28");
   for (uint i = 0; i < 3; i++)
     m_axis_rows[i]->notify_homed();
 }
@@ -518,7 +513,7 @@ void View::save_settings_as()
 
 void View::inhibit_print_changed()
 {
-  if (printer->get_inhibit_print()) {
+  if (m_printer->get_inhibit_print()) {
     m_continue_button->set_sensitive (false);
     m_print_button->set_sensitive (false);
   } else {
@@ -588,18 +583,18 @@ void View::auto_rotate()
 
 void View::kick_clicked()
 {
-  printer->Kick();
+  m_printer->Kick();
   printing_changed();
 }
 void View::print_clicked()
 {
-  printer->gcode    = m_model->gcode;
-  printer->PrintButton();
+  m_printer->gcode    = m_model->gcode;
+  m_printer->PrintButton();
   printing_changed();
 }
 void View::continue_clicked()
 {
-  printer->ContinuePauseButton();
+  m_printer->ContinuePauseButton();
   printing_changed();
 }
 
@@ -618,7 +613,7 @@ void View::handle_ui_settings_changed()
 void View::temp_changed()
 {
   for (int i = 0; i < TEMP_LAST; i++)
-    m_temps[i]->update_temp (printer->get_temp((TempType) i));
+    m_temps[i]->update_temp (m_printer->get_temp((TempType) i));
 }
 
 bool View::moveSelected(float x, float y)
@@ -791,7 +786,7 @@ View::View(BaseObjectType* cobject,
 
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &View::run_extruder) );
 
-  printer = new Printer(this);
+  m_printer = new Printer(this);
 
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
@@ -799,7 +794,7 @@ View::View(BaseObjectType* cobject,
   if (!pBox)
     std::cerr << "missing box!";
   else {
-    m_renderer = new Render (this, m_objtree->get_selection());
+    m_renderer = manage(new Render (this, m_objtree->get_selection()));
     pBox->add (*m_renderer);
   }
   showAllWidgets();
@@ -815,7 +810,8 @@ View::~View()
   delete m_temps[TEMP_NOZZLE];
   delete m_temps[TEMP_BED];
   delete m_cnx_view;
-  //delete m_progress;
+  delete m_progress;
+  delete m_printer;
 }
 
 /* Recursively sets all widgets in the window to visible */
@@ -837,7 +833,7 @@ void View::setModel(Model *model)
     (sigc::mem_fun(*this, &View::update_settings_gui));
   m_model->settings.connect_to_ui (*((Builder *)&m_builder));
 
-  printer->signal_temp_changed.connect
+  m_printer->signal_temp_changed.connect
     (sigc::mem_fun(*this, &View::temp_changed));
 
   m_objtree->set_model (m_model->objtree.m_model);
@@ -860,47 +856,47 @@ void View::setModel(Model *model)
   m_model->m_progress = m_progress;
 
   // Connect / dis-connect button
-  m_cnx_view = new ConnectView(m_model, printer, &m_model->settings);
+  m_cnx_view = new ConnectView(m_printer, &m_model->settings);
   Gtk::Box *connect_box = NULL;
   m_builder->get_widget ("p_connect_button_box", connect_box);
   connect_box->add (*m_cnx_view);
 
   Gtk::Box *temp_box;
   m_builder->get_widget ("i_temp_box", temp_box);
-  m_temps[TEMP_NOZZLE] = new TempRow(m_model, printer, TEMP_NOZZLE);
-  m_temps[TEMP_BED] = new TempRow(m_model, printer, TEMP_BED);
+  m_temps[TEMP_NOZZLE] = new TempRow(m_model, m_printer, TEMP_NOZZLE);
+  m_temps[TEMP_BED] = new TempRow(m_model, m_printer, TEMP_BED);
   temp_box->add (*m_temps[TEMP_NOZZLE]);
   temp_box->add (*m_temps[TEMP_BED]);
 
   Gtk::Box *axis_box;
   m_builder->get_widget ("i_axis_controls", axis_box);
   for (uint i = 0; i < 3; i++) {
-    m_axis_rows[i] = new AxisRow (m_model, printer, i);
+    m_axis_rows[i] = new AxisRow (m_model, m_printer, i);
     axis_box->add (*m_axis_rows[i]);
   }
 
   Gtk::TextView *log_view;
   m_builder->get_widget("i_txt_comms", log_view);
-  log_view->set_buffer(printer->commlog);
+  log_view->set_buffer(m_printer->commlog);
   m_builder->get_widget("i_txt_errs", log_view);
   log_view->set_buffer(m_model->errlog);
   m_builder->get_widget("i_txt_echo", log_view);
   log_view->set_buffer(m_model->echolog);
 
   inhibit_print_changed();
-  printer->get_signal_inhibit_changed().connect (sigc::mem_fun(*this, &View::inhibit_print_changed));
+  m_printer->get_signal_inhibit_changed().connect (sigc::mem_fun(*this, &View::inhibit_print_changed));
   m_model->m_signal_stl_added.connect (sigc::mem_fun(*this, &View::stl_added));
   m_model->m_model_changed.connect (sigc::mem_fun(*this, &View::queue_draw));
   m_model->signal_alert.connect (sigc::mem_fun(*this, &View::alert));
-  printer->signal_alert.connect (sigc::mem_fun(*this, &View::alert));
+  m_printer->signal_alert.connect (sigc::mem_fun(*this, &View::alert));
 
   // connect settings
   // FIXME: better have settings here and delegate to model AND printer
   m_model->settings.connect_to_ui (*((Builder *)&m_builder));
 
-  printer->settings = m_model->settings;
-  printer->progress = m_model->m_progress;
-  printer->gcode    = m_model->gcode;
+  m_printer->settings = m_model->settings;
+  m_printer->progress = m_model->m_progress;
+  m_printer->gcode    = m_model->gcode;
 
   showAllWidgets();
 }

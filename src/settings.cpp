@@ -407,6 +407,7 @@ Settings::Settings ()
 
 Settings::~Settings()
 {
+  delete GCode.m_impl;
 }
 
 void Settings::set_defaults ()
@@ -642,16 +643,18 @@ void Settings::set_filltypes_to_gui (Builder &builder)
   cerr << Slicing.NormalFilltype << " ! " << Slicing.FullFilltype<< endl;
   Gtk::ComboBox *ncombo = NULL;
   builder->get_widget ("Slicing.NormalFilltype", ncombo);
-  if (ncombo)
+  if (ncombo) {
     if (ncombo->get_has_entry())
       ncombo->set_active (Slicing.NormalFilltype);
     else cerr <<"no entries in Slicing.NormalFilltype"<<  endl;
+  }
   Gtk::ComboBox *fcombo = NULL;
   builder->get_widget ("Slicing.FullFilltype", fcombo);
-  if (fcombo)
+  if (fcombo) {
     if (fcombo->get_has_entry())
       fcombo->set_active (Slicing.FullFilltype);
-  else cerr <<"no entries in  Slicing.FullFilltype"<<  endl;
+    else cerr <<"no entries in  Slicing.FullFilltype"<<  endl;
+  }
 }
 // void Settings::set_shrink_to_gui (Builder &builder)
 // {

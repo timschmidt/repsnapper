@@ -32,7 +32,6 @@ class Render : public Gtk::DrawingArea
   ArcBall  *m_arcBall;
   Matrix4fT m_transform;
   Vector2f  m_downPoint;
-  GLUquadricObj *m_quadratic;
   View *m_view;
   Model *get_model();
   Glib::RefPtr<Gtk::TreeSelection> m_selection;

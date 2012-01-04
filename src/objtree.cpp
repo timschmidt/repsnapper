@@ -90,6 +90,11 @@ ObjectsTree::ObjectsTree()
   update_model();
 }
 
+ObjectsTree::~ObjectsTree()
+{
+  delete m_cols;
+}
+
 void ObjectsTree::update_model()
 {
   // re-build the model each time for ease ...
