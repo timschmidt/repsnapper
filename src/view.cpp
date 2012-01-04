@@ -586,6 +586,12 @@ void View::update_settings_gui()
   m_model->settings.set_to_gui (*((Builder *)&m_builder));
 }
 
+void View::handle_ui_settings_changed()
+{
+  m_model->ClearCuttingPlanes();
+  queue_draw();
+}
+
 void View::temp_changed()
 {
   for (int i = 0; i < TEMP_LAST; i++)
@@ -779,7 +785,7 @@ void View::setModel(Model *model)
   m_renderer->set_model (model);
 
   m_model->settings.m_signal_visual_settings_changed.connect
-    (sigc::mem_fun(*this, &View::queue_draw));
+    (sigc::mem_fun(*this, &View::handle_ui_settings_changed));
   m_model->settings.m_signal_update_settings_gui.connect
     (sigc::mem_fun(*this, &View::update_settings_gui));
   m_model->settings.connect_to_ui (*((Builder *)&m_builder));
