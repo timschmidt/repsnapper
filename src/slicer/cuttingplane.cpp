@@ -410,7 +410,7 @@ void CuttingPlane::setNormalFillPolygons(const ClipperLib::Polygons cpolys)
   offsetPolygons.resize(cpolys.size());
   for (uint i=0; i<cpolys.size(); i++)
     {
-      offsetPolygons[i]=Poly(this, cpolys[i]);
+      offsetPolygons[i]=Poly(Z, cpolys[i]);
     }
 }
 void CuttingPlane::setFullFillPolygons(const ClipperLib::Polygons cpolys)
@@ -419,14 +419,14 @@ void CuttingPlane::setFullFillPolygons(const ClipperLib::Polygons cpolys)
   fullFillPolygons.resize(cpolys.size());
   for (uint i=0; i<cpolys.size(); i++)
     {
-      fullFillPolygons[i]=Poly(this, cpolys[i]);
+      fullFillPolygons[i]=Poly(Z, cpolys[i]);
     }
 }
 void CuttingPlane::addFullFillPolygons(const ClipperLib::Polygons cpolys)
 {
   for (uint i=0; i<cpolys.size(); i++)
     {
-      fullFillPolygons.push_back(Poly(this, cpolys[i]));
+      fullFillPolygons.push_back(Poly(Z, cpolys[i]));
     }
 }
 void CuttingPlane::setSupportPolygons(const ClipperLib::Polygons cpolys)
@@ -438,7 +438,7 @@ void CuttingPlane::setSupportPolygons(const ClipperLib::Polygons cpolys)
 //#pragma omp parallel for
   for (int i=0; i<count; i++)
     {
-      supportPolygons[i] = Poly(this, merged[i]);
+      supportPolygons[i] = Poly(Z, merged[i]);
       //cout << "support poly "<< i << ": ";
       //supportPolygons[i].printinfo();
     }
@@ -446,7 +446,7 @@ void CuttingPlane::setSupportPolygons(const ClipperLib::Polygons cpolys)
 void CuttingPlane::setSkirtPolygon(const ClipperLib::Polygons cpolys)
 {
   skirtPolygon.clear();
-  skirtPolygon = Poly(this, cpolys.front());
+  skirtPolygon = Poly(Z, cpolys.front());
 }
 
 /*
@@ -488,7 +488,7 @@ bool CuttingPlane::MakePolygons(double Optimization)
 		int startPoint = lines[current].start;
 		int endPoint = lines[current].end;
 
-		Poly poly = Poly(this);
+		Poly poly = Poly(Z);
 		poly.addVertex(vertices[endPoint]);
 		//poly.printinfo();
 		int count = lines.size()+100;
@@ -849,7 +849,7 @@ vector<Poly> CuttingPlane::ShrinkedPolys(const vector<Poly> poly,
   vector<Poly> shrinked;
   for(size_t p=0; p<opolys.size();p++)
     {
-      Poly offsetPoly = Poly(this, opolys[p], true);
+      Poly offsetPoly = Poly(Z, opolys[p], true);
       shrinked.push_back(offsetPoly);
     }
   return shrinked;
@@ -1011,7 +1011,7 @@ bool isleftof(Vector2d center, Vector2d A, Vector2d B)
 void CuttingPlane::calcConvexHull() 
 {
   hullPolygon.clear();
-  hullPolygon=Poly(this);
+  hullPolygon=Poly(Z);
   vector<Vector2d> p;
   for (uint i = 0; i<polygons.size(); i++)
     p.insert(p.end(), polygons[i].vertices.begin(), polygons[i].vertices.end());

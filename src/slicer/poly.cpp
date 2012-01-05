@@ -59,12 +59,12 @@ long double angleBetweenAtan2(Vector2d V1, Vector2d V2)
 
 Poly::Poly(){
   holecalculated = false;
-  this->plane = NULL;
+  this->z = -10;
 //   this->vertices = NULL;
 }
 
-Poly::Poly(CuttingPlane *plane){
-  this->plane = plane;
+Poly::Poly(double z){
+  this->z = z;
   holecalculated = false;
   hole=false;
   //cout << "POLY WITH PLANE"<< endl;
@@ -74,9 +74,8 @@ Poly::Poly(CuttingPlane *plane){
 
 
 // construct a Poly from a ClipperLib::Poly on given CuttingPlane
-Poly::Poly(CuttingPlane *plane,
-	   const ClipperLib::Polygon cpoly, bool reverse){
-  this->plane = plane;
+Poly::Poly(double z, const ClipperLib::Polygon cpoly, bool reverse){
+  this->z = z;
   vertices.clear();
   uint count = cpoly.size();
   vertices.resize(count);
@@ -283,7 +282,7 @@ Vector2d Poly::getVertexCircular(int index) const
 Vector3d Poly::getVertexCircular3(int pointindex) const
 {
   Vector2d v = getVertexCircular(pointindex);
-  return Vector3d(v.x,v.y,plane->Z);
+  return Vector3d(v.x,v.y,z);
 }
 
 
@@ -368,8 +367,8 @@ vector<InFillHit> Poly::lineIntersections(const Vector2d P1, const Vector2d P2,
   return HitsBuffer;
 }
 
-double Poly::getZ() const {return plane->getZ();} 
-double Poly::getLayerNo() const { return plane->LayerNo;}
+double Poly::getZ() const {return z;} 
+// double Poly::getLayerNo() const { return plane->LayerNo;}
 
 
 // vector<Vector2d> Poly::getInfillVertices () const {
@@ -519,7 +518,7 @@ void Poly::drawLineNumbers() const
 
 void Poly::printinfo() const
 {
-  cout <<"Poly at Z="<<plane->getZ()<<", layer "<<plane->LayerNo ;
+  cout <<"Poly at Z="<<z;
   cout <<", "<< vertices.size();
   cout <<" vertices";//, infill: "<< infill->getSize();
   cout << endl;

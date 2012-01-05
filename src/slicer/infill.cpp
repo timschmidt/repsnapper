@@ -80,7 +80,7 @@ void Infill::calcInfill(const vector<Poly> polys,
   clpr.Execute(ClipperLib::ctIntersection, result, filltype, ClipperLib::pftNonZero);
   for (uint i=0;i<result.size();i++)
     {
-      Poly p = Poly(plane, result[i]);
+      Poly p = Poly(plane->getZ(), result[i]);
       addInfillPoly(p);
     }
 }
@@ -123,7 +123,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
     case SupportInfill: // stripes, but leave them as polygons
     case ParallelInfill: // stripes, make them to lines later
       {
-	Poly poly(this->plane);
+	Poly poly(this->plane->getZ());
 	for (double x=Min.x; x <Max.x; x+= 2*infillDistance) {
 	  poly.addVertex(Vector2d(x,Min.y));
 	  poly.addVertex(Vector2d(x+infillDistance,Min.y));
@@ -139,7 +139,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       break;
     case LinesInfill: // lines only -- not possible
       {
-	Poly poly(this->plane);
+	Poly poly(this->plane->getZ());
 	for (double x=Min.x; x <Max.x; x+= infillDistance) {
 	  poly.addVertex(Vector2d(x,Min.y));
 	  poly.addVertex(Vector2d(x,Max.y));
@@ -179,7 +179,7 @@ void Infill::addInfillPoly(const Poly p)
 			  l.y*cosa+l.x*sina);
 	  if (ABS(rotl.x) < 0.1 && ABS(rotl.y) > 0.1)
   	    {
-	      Poly newpoly(p.getPlane());
+	      Poly newpoly(p.getZ());
 	      newpoly.vertices.push_back(p.getVertexCircular(i));
 	      newpoly.vertices.push_back(p.getVertexCircular(i+1));
 	      infillpolys.push_back(newpoly);

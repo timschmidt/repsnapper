@@ -211,7 +211,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 			     +settings.Raft.Size*settings.RaftEnable, 0);
 		T.setTranslation(t);
 		// adding points and lines from object to plane:
-		shape->CalcCuttingPlane(T, optimization, plane);
+		shape->CalcCuttingPlane(T, plane);
 	      }
 	  }
 	polys_ok = plane->MakePolygons(optimization);

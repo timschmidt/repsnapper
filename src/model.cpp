@@ -547,7 +547,7 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 		  Matrix4d T = objtree.GetSTLTransformationMatrix(o,f);
 		  Vector3d t = T.getTranslation();
 		  T.setTranslation(t);
-		  objtree.Objects[o].shapes[f].CalcCuttingPlane(T, settings.Slicing.Optimization, plane);
+		  objtree.Objects[o].shapes[f].CalcCuttingPlane(T, plane);
 		}
 	    }
 

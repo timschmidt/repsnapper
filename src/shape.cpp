@@ -313,9 +313,7 @@ void Shape::Scale(double in_scale_factor)
         {
             /* Translate to origin */
             triangles[i][j] = triangles[i][j] - Center;
-
             triangles[i][j].scale(in_scale_factor/scale_factor);
-
             triangles[i][j] = triangles[i][j] + Center;
         }
     }
@@ -327,7 +325,7 @@ void Shape::Scale(double in_scale_factor)
     Max = Max - Center;
     Max.scale(in_scale_factor/scale_factor);
     Max = Max + Center;
-
+    
 	CenterAroundXY();
 
     /* Save current scale_factor */
@@ -463,12 +461,224 @@ void Shape::CenterAroundXY()
 	CalcCenter();
 }
 
+// // every 2 points denote a line
+// vector<Vector2d> Shape::getCutlines(const Matrix4d &T, double z) const
+// {
+//   Vector2d lineStart;
+//   Vector2d lineEnd;
+//   int num_cutpoints;
+//   vector<Vector2d> lines; 
+//   for (size_t i = 0; i < triangles.size(); i++)
+//     {
+//       num_cutpoints = triangles[i].CutWithPlane(z, T, lineStart, lineEnd);
+//       if (num_cutpoints>1)
+// 	{
+// 	  Vector3d Norm3 = triangles[i].Normal;
+// 	  Vector2d triangleNormal = Vector2d(Norm3.x, Norm3.y);
+// 	  Vector2d segmentNormal = (lineEnd - lineStart).normal();
+// 	  triangleNormal.normalise();
+// 	  segmentNormal.normalise();
+// 	  if( (triangleNormal-segmentNormal).lengthSquared() > 0.2)  {
+// 	    // if normals do not align, flip the segment
+// 	    lines.push_back(lineEnd); 
+// 	    lines.push_back(lineStart);
+// 	  } else {
+// 	    lines.push_back(lineStart);
+// 	    lines.push_back(lineEnd); 
+// 	  }
+// 	}
+//     }
+//   return lines;
+// }
+
+bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
+				   vector<Poly> &polys) const
+{
+  ;
+  vector<Vector2d> vertices;
+  vector<Segment> lines = getCutlines(T,z,vertices);
+  
+  if (vertices.size()==0) return false; 
+  if (CleanupSharedSegments(vertices,lines)) return false; 
+  if (CleanupConnectSegments(vertices,lines)) return false;
+
+	vector< vector<int> > planepoints;
+	planepoints.resize(vertices.size());
+
+	// all line numbers starting from every point
+	for (uint i = 0; i < lines.size(); i++)
+		planepoints[lines[i].start].push_back(i); 
+
+	// Build polygons
+	vector<bool> used;
+	used.resize(lines.size());
+	for (uint i=0;i>used.size();i++)
+		used[i] = false;
+	
+	polys.clear();
+
+	for (uint current = 0; current < lines.size(); current++)
+	{
+	  //cerr << used[current]<<"linksegments " << current << " of " << lines.size()<< endl;
+		if (used[current])
+			continue; // already used
+		used[current] = true;
+
+		int startPoint = lines[current].start;
+		int endPoint = lines[current].end;
+
+		Poly poly = Poly(z);
+		poly.addVertex(vertices[endPoint]);
+		//poly.printinfo();
+		int count = lines.size()+100;
+		while (endPoint != startPoint && count != 0)	// While not closed
+		  {
+		        // lines starting at endPoint
+			const vector<int> &pathsfromhere = planepoints[endPoint];
+
+			// Find the next line.
+			if (pathsfromhere.size() == 0) // no where to go ...
+			{
+				// lets get to the bottom of this data set:
+				cout.precision (8);
+				cout.width (12);
+				cout << "\r\npolygon was cut at z " << z << " LinkSegments at vertex " << endPoint;
+				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\trefs\n";
+				for (int i = 0; i < (int)vertices.size(); i++)
+				{
+					int refs = 0, pol = 0;
+					for (int j = 0; j < (int)lines.size(); j++)
+					{
+						if (lines[j].start == i) { refs++; pol++; }
+						if (lines[j].end == i) { refs++; pol--; }
+					}
+					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y << "\t" << refs << " pol " << pol;
+					if (refs % 2) // oh dear, a dangling vertex
+						cout << " odd, dangling vertex\n";
+					cout << "\n";
+				}
+				cout << "\n " << lines.size() << " lines:\nline\tstart vtx\tend vtx\n";
+				for (int i = 0; i < (int)lines.size(); i++)
+				{
+					if (i == endPoint)
+						cout << "problem line:\n";
+					cout << i << "\t" << lines[i].start << "\t" << lines[i].end << "\n";
+				}
+
+				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\tlinked to\n";
+				for (int i = 0; i < (int)planepoints.size(); i++)
+				{
+					if (i == endPoint)
+						cout << "problem vertex:\n";
+					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y << "\t";
+					int j;
+					switch (planepoints[i].size()) {
+					case 0:
+						cout << "nothing - error !\n";
+						break;
+					case 1:
+						cout << "neighbour: " << planepoints[i][0];
+						break;
+					default:
+						cout << "Unusual - multiple: \n";
+						for (j = 0; j < (int)planepoints[i].size(); j++)
+							cout << planepoints[i][j] << " ";
+						cout << " ( " << j << " other vertices )";
+						break;
+					}
+
+					cout << "\n";
+				}
+				// model failure - we will get called recursivelly
+				// for a different z and different cutting plane.
+				return false;
+			} // endif nowhere to go
+			if (pathsfromhere.size() != 1)
+				cout << "Risky co-incident node \n";
+
+			// TODO: we need to do better here, some idas:
+			//       a) calculate the shortest path back to our start node, and
+			//          choose that and/or
+			//       b) identify all 2+ nodes and if they share start/end
+			//          directions eliminate them to join the polygons.
+
+			uint i;
+			// i = first unused path:
+			for (i = 0; i < pathsfromhere.size() && used[pathsfromhere[i]]; i++); 
+			if (i >= pathsfromhere.size())
+			{
+				cout << "no-where unused to go";
+				return false;
+			}
+			used[pathsfromhere[i]] = true;
+
+			const Segment &nextsegment = lines[pathsfromhere[i]];
+			assert( nextsegment.start == endPoint );
+			endPoint = nextsegment.end;
+
+			poly.addVertex(vertices[endPoint]);
+			count--;
+		}
+
+		// Check if loop is complete
+		if (count != 0) {
+		  poly.cleanup(Optimization);
+		  // cout << "## POLY add ";
+		  // poly.printinfo();
+		  polys.push_back(poly);		// This is good
+		} else {
+		  // We will be called for a slightly different z
+		  cout << "\r\nentered loop at shape polyons Z=" << z;
+		  return false;
+		}
+	}
+
+  return true;
+}
+
+vector<Segment> Shape::getCutlines(const Matrix4d &T, double z, vector<Vector2d> &vertices) const
+{
+  // Vector3d min = T*Min;
+  // Vector3d max = T*Max;
+  Vector2d lineStart;
+  Vector2d lineEnd;
+  int num_cutpoints;
+  vector<Segment> lines;
+  for (size_t i = 0; i < triangles.size(); i++)
+    {
+      Segment line(-1,-1);
+      num_cutpoints = triangles[i].CutWithPlane(z, T, lineStart, lineEnd);
+      if (num_cutpoints>0) {
+	line.start = vertices.size();
+	vertices.push_back(lineStart);
+      }
+      if (num_cutpoints>1) {
+	line.end = vertices.size();
+	vertices.push_back(lineEnd);
+      }
+      // Check segment normal against triangle normal. Flip segment, as needed.
+      if (line.start != -1 && line.end != -1 && line.end != line.start)	
+	{ // if we found a intersecting triangle
+	  Vector3d Norm = triangles[i].Normal;
+	  Vector2d triangleNormal = Vector2d(Norm.x, Norm.y);
+	  Vector2d segmentNormal = (lineEnd - lineStart).normal();
+	  triangleNormal.normalise();
+	  segmentNormal.normalise();
+	  if( (triangleNormal-segmentNormal).lengthSquared() > 0.2){
+	    // if normals does not align, flip the segment
+	    int iswap=line.start;line.start=line.end;line.end=iswap;
+	  }
+	  // cerr << "line "<<line.start << "-"<<line.end << endl;
+	  lines.push_back(line);
+	}
+    }
+  return lines;
+}
 
 
 // intersect lines with plane and link segments
 // add result to given CuttingPlane
-void Shape::CalcCuttingPlane(const Matrix4d &T, 
-			      double optimization, CuttingPlane *plane) const
+void Shape::CalcCuttingPlane(const Matrix4d &T, CuttingPlane *plane) const
 {
   double z = plane->getZ();
 #if CUTTING_PLANE_DEBUG
@@ -766,3 +976,183 @@ void Shape::draw_geometry() const
 	glEnd();
 }
 
+
+
+
+
+
+/*
+ * sometimes we find adjacent polygons with shared boundary
+ * points and lines; these cause grief and slowness in
+ * LinkSegments, so try to identify and join those polygons
+ * now.
+ */
+// ??? as only coincident lines are removed, couldn't this be
+// done easier by just running through all lines and finding them?
+bool CleanupSharedSegments(vector<Vector2d> &vertices, vector<Segment> &lines)
+{
+	vector<int> vertex_counts; // how many lines have each point
+	vertex_counts.resize (vertices.size());
+
+	for (uint i = 0; i < lines.size(); i++)
+	{
+	        vertex_counts[lines[i].start]++; 
+		vertex_counts[lines[i].end]++;
+	}
+
+	// ideally all points have an entrance and
+	// an exit, if we have co-incident lines, then
+	// we have more than one; do we ?
+	std::vector<int> duplicate_points;
+	for (uint i = 0; i < vertex_counts.size(); i++)
+	{
+// #if CUTTING_PLANE_DEBUG
+// 		cout << "vtx " << i << " count: " << vertex_counts[i] << "\n";
+// #endif
+		if (vertex_counts[i] > 2) // no more than 2 lines should share a point
+			duplicate_points.push_back (i);
+	}
+
+	if (duplicate_points.size() == 0)
+		return true; // all sane
+
+	for (uint i = 0; i < duplicate_points.size(); i++)
+	{
+		std::vector<int> dup_lines;
+
+		// find all line segments with this point in use 
+		for (uint j = 0; j < lines.size(); j++)
+		{
+			if (lines[j].start == duplicate_points[i] ||
+			    lines[j].end == duplicate_points[i])
+				dup_lines.push_back (j);
+		}
+
+		// identify and eliminate identical line segments
+		// NB. hopefully by here dup_lines.size is small.
+		std::vector<int> lines_to_delete;
+		for (uint j = 0; j < dup_lines.size(); j++)
+		{
+			const Segment &jr = lines[dup_lines[j]];
+			for (uint k = j + 1; k < dup_lines.size(); k++)
+			{
+				const Segment &kr = lines[dup_lines[k]];
+				if ((jr.start == kr.start && jr.end == kr.end) ||
+				    (jr.end == kr.start && jr.start == kr.end))
+				{
+					lines_to_delete.push_back (dup_lines[j]);
+					lines_to_delete.push_back (dup_lines[k]);
+				}
+			}
+		}
+		// we need to remove from the end first to avoid disturbing
+		// the order of removed items
+		std::sort(lines_to_delete.begin(), lines_to_delete.end());
+		for (int r = lines_to_delete.size() - 1; r >= 0; r--)
+		{
+// #if CUTTING_PLANE_DEBUG
+// 			cout << "delete co-incident line: " << lines_to_delete[r] << "\n";
+// #endif
+			lines.erase(lines.begin() + lines_to_delete[r]);
+		}
+	}
+	return true;
+}
+
+/*
+ * Unfortunately, finding connections via co-incident points detected by
+ * the PointHash is not perfect. For reasons unknown (probably rounding
+ * errors), this is often not enough. We fall-back to finding a nearest
+ * match from any detached points and joining them, with new synthetic
+ * segments.
+ */
+bool CleanupConnectSegments(vector<Vector2d> &vertices, vector<Segment> &lines)
+{
+	vector<int> vertex_types;
+	vector<int> vertex_counts;
+	vertex_types.resize (vertices.size());
+	vertex_counts.resize (vertices.size());
+
+	// which vertices are referred to, and how much:
+	for (uint i = 0; i < lines.size(); i++)
+	{
+		vertex_types[lines[i].start]++;
+		vertex_types[lines[i].end]--;
+		vertex_counts[lines[i].start]++;
+		vertex_counts[lines[i].end]++;
+	}
+
+	// the vertex_types count should be zero for all connected lines,
+	// positive for those ending no-where, and negative for
+	// those starting no-where.
+	std::vector<int> detached_points;
+	for (uint i = 0; i < vertex_types.size(); i++)
+	{
+		if (vertex_types[i])
+		{
+#if CUTTING_PLANE_DEBUG
+			cout << "detached point " << i << "\t" << vertex_types[i] << " refs at " << vertices[i].x << "\t" << vertices[i].y << "\n";
+#endif
+			detached_points.push_back (i); // i = vertex index
+		}
+	}
+
+	// Lets hope we have an even number of detached points
+	if (detached_points.size() % 2) {
+		cout << "oh dear - an odd number of detached points => an un-pairable impossibility\n";
+		return false;
+	}
+
+	// pair them nicely to their matching type
+	for (uint i = 0; i < detached_points.size(); i++)
+	{
+		double nearest_dist_sq = (std::numeric_limits<double>::max)();
+		uint   nearest = 0;
+		int   n = detached_points[i]; // vertex index of detached point i
+		if (n < 0) // handled already
+		  continue;
+
+		const Vector2d &p = vertices[n]; // the real detached point
+		// find nearest other detached point to the detached point n:
+		for (uint j = i + 1; j < detached_points.size(); j++)
+		{
+		        int pt = detached_points[j];
+			if (pt < 0) 
+			  continue; // already connected
+
+			// don't connect a start to a start, or end to end
+			if (vertex_types[n] == vertex_types[pt])
+			        continue; 
+
+			const Vector2d &q = vertices[pt];  // the real other point
+			double dist_sq = (p-q).lengthSquared(); //pow (p.x - q.x, 2) + pow (p.y - q.y, 2);
+			if (dist_sq < nearest_dist_sq)
+			{
+				nearest_dist_sq = dist_sq;
+				nearest = j;
+			}
+		}
+		assert (nearest != 0);
+
+		// allow points 10mm apart to be joined, not more
+		if (nearest_dist_sq > 100.0) {
+			cout << "oh dear - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - not connecting\n";
+			continue; //return false;
+		}
+		// warning above 1mm apart 
+		if (nearest_dist_sq > 1.0) {
+			cout << "warning - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - connecting anyway\n";
+		}
+
+#if CUTTING_PLANE_DEBUG
+		cout << "add join of length " << sqrt (nearest_dist_sq) << "\n" ;
+#endif
+		Segment seg(n, detached_points[nearest]);
+		if (vertex_types[n] > 0) // already had start but no end at this point
+			seg.Swap();
+		lines.push_back(seg);
+		detached_points[nearest] = -1;
+	}
+
+	return true;
+}

@@ -20,6 +20,7 @@
 
 #include "shape.h"
 
+
 /* class RFO_File */
 /* { */
 /* public: */
@@ -52,12 +53,11 @@ public:
 	class ModelColumns : public Gtk::TreeModelColumnRecord
 	{
 	public:
-		ModelColumns() { add (m_name); add (m_object); add (m_shape); add(m_pickindex); }
-
-		Gtk::TreeModelColumn<Glib::ustring> m_name;
-		Gtk::TreeModelColumn<int>           m_object;
-		Gtk::TreeModelColumn<int>           m_shape;
-		Gtk::TreeModelColumn<int>           m_pickindex;
+	  ModelColumns() { add (m_name); add (m_object); add (m_shape); add(m_pickindex); }
+	  Gtk::TreeModelColumn<Glib::ustring> m_name;
+	  Gtk::TreeModelColumn<int>           m_object;
+	  Gtk::TreeModelColumn<int>           m_shape;
+	  Gtk::TreeModelColumn<int>           m_pickindex;
 	};
 
 	ObjectsTree();
@@ -69,7 +69,7 @@ public:
 	Gtk::TreePath addShape(TreeObject *parent, Shape &shape, std::string location);
 	void get_selected_stl(Gtk::TreeModel::iterator &iter, TreeObject *&object, Shape *&shape);
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
-	Matrix4d GetSTLTransformationMatrix(int object, int file) const;
+	Matrix4d GetSTLTransformationMatrix(int object, int shape) const;
 
 	vector<TreeObject> Objects;
 	Transform3D transform3D;

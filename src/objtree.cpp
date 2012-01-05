@@ -33,7 +33,7 @@ void Transform3D::move(Vector3d delta)
 }
 
 
-Matrix4d ObjectsTree::GetSTLTransformationMatrix(int object, int file) const
+Matrix4d ObjectsTree::GetSTLTransformationMatrix(int object, int shape) const
 {
 	Matrix4d result = transform3D.transform;
 //	Vector3f translation = result.getTranslation();
@@ -41,8 +41,8 @@ Matrix4d ObjectsTree::GetSTLTransformationMatrix(int object, int file) const
 
 	if(object >= 0)
 		result *= Objects[object].transform3D.transform;
-	if(file >= 0)
-		result *= Objects[object].shapes[file].transform3D.transform;
+	if(shape >= 0)
+		result *= Objects[object].shapes[shape].transform3D.transform;
 	return result;
 }
 

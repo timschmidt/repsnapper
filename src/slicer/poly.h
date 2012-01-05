@@ -41,18 +41,19 @@ using namespace PolyLib;
 class Poly
 {
 
-  CuttingPlane *plane;
-	vector<Poly*> holes;
+  //CuttingPlane *plane;
+  double z;
+  //	vector<Poly*> holes;
 	bool holecalculated;
 	//Infill infill;
 public:
         Poly();
-	Poly(CuttingPlane *plane);
-	Poly(CuttingPlane *plane,
+	Poly(double z);
+	Poly(double z,
 	     const ClipperLib::Polygon cpoly, bool reverse=false);
         ~Poly();
 
-	CuttingPlane * getPlane() const {return plane;};
+	//CuttingPlane * getPlane() const {return plane;};
 	Poly Shrinked(double distance) const;
 	Poly Shrinked(vector<Vector2d> *vertices, double distance);
 

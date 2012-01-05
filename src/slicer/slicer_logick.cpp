@@ -89,7 +89,7 @@ void CuttingPlaneOptimizer::MakeOffsetPolygons(vector<Poly>& polys)
 void CuttingPlaneOptimizer::DoMakeOffsetPolygons(Polygon2d* pPoly, 
 						 vector<Poly>& polys)
 {
-  Poly p(this->cuttingPlane);
+  Poly p(this->cuttingPlane->getZ());
   for( vector<Vector2d>::iterator pIt = pPoly->vertices.begin(); 
        pIt!=pPoly->vertices.end(); pIt++)
 	{

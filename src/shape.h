@@ -51,7 +51,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-
 using namespace std;
 using namespace vmml;
 using namespace PolyLib;
@@ -67,6 +66,16 @@ public:
 };
 
 
+struct Segment {
+  Segment(guint s, guint e) { start = s; end = e; }
+  int start;		// Vertex index of start point
+    int end;		// Vertex index of end point
+  void Swap() {
+    int tmp = start;
+    start = end;
+    end = tmp;
+  }
+};
 
 enum filetype_t{
     ASCII_STL,
@@ -98,9 +107,12 @@ public:
 	void draw (const Model *model, const Settings &settings) const;
 	void draw_geometry () const;
 	void CenterAroundXY();
+	bool getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
+			    vector<Poly> &polys) const;
+	vector<Segment> getCutlines(const Matrix4d &T, double z, 
+				    vector<Vector2d> &vertices) const;
 	// Extract a 2D polygonset from a 3D model:
-	void CalcCuttingPlane(const Matrix4d &T,
-			      double optimization, CuttingPlane *plane) const;
+	void CalcCuttingPlane(const Matrix4d &T, CuttingPlane *plane) const;
 	// Auto-Rotate object to have the largest area surface down for printing:
 	void OptimizeRotation(); 
 	void CalcCenter();
@@ -122,3 +134,6 @@ private:
 };
 
 
+
+bool CleanupConnectSegments(vector<Vector2d> &vertices, vector<Segment> &lines);
+bool CleanupSharedSegments(vector<Vector2d> &vertices, vector<Segment> &lines);
