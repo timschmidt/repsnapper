@@ -105,15 +105,15 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	return savedPatterns[i].cpolys;
       }
   }
-  Vector2d Min = plane->Min;
-  Vector2d Max = plane->Max;
+  Vector2d Min = plane->getMin();
+  Vector2d Max = plane->getMax();
   Vector2d center = (Min+Max)/2.;
-
-  // Expand the Min/Max bounding rect to account for the rotation of
-  // the infill....
-  // FIXME: We should just correctly cover the areas.
-  Min=center+(plane->Min-center)*2;
-  Max=center+(plane->Max-center)*2;
+  // make square that masks everything even when rotated
+  Vector2d diag = Max-Min;
+  double square = MAX(diag.x,diag.y);
+  Vector2d sqdiag(square,square);
+  Min=center-sqdiag;
+  Max=center+sqdiag;
 
   // none found - make new:
   ClipperLib::Polygons cpolys;

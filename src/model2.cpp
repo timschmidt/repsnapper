@@ -366,7 +366,7 @@ void Model::MakeSkirt()
 	startindex = i;
 	continue;
       }
-      clpr.AddPolygon(cuttingplanes[i]->skirtPolygon.getClipperPolygon(),
+      clpr.AddPolygon(cuttingplanes[i]->GetSkirtPolygon().getClipperPolygon(),
 		      ClipperLib::ptSubject);
     }
   ClipperLib::Polygons emptypolys;emptypolys.clear();
@@ -383,6 +383,7 @@ void Model::MakeSkirt()
 
 void Model::MakeShells()
 {
+  uint skins = settings.Slicing.Skins;
   uint count = cuttingplanes.size();
   m_progress.start (_("Shells"), count);
   double matwidth, skirtheight = settings.Slicing.SkirtHeight;
@@ -397,7 +398,8 @@ void Model::MakeShells()
       makeskirt = (cuttingplanes[i]->getZ() <= skirtheight);
       cuttingplanes[i]->MakeShells(settings.Slicing.ShellCount,
 				   matwidth, settings.Slicing.Optimization, 
-				   makeskirt, false);
+				   makeskirt, (i==0?1:skins), //no skin on 1st layer
+				   false); 
     }
   MakeSkirt();
   m_progress.stop (_("Done"));
@@ -495,7 +497,7 @@ void Model::ConvertToGCode()
     g_main_context_iteration(NULL,false);
     //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
     cuttingplanes[p]->MakeGcode (state, E,
-				 cuttingplanes[p]->getZ() + printOffsetZ,
+				 printOffsetZ,
 				 settings.Slicing, settings.Hardware);
   }
   int h = (int)state.timeused/3600;

@@ -77,6 +77,7 @@ public:
 	  offsetPolygons.clear();
 	  //offsetVertices.clear();
 	  fullFillPolygons.clear();
+	  skinPolygons.clear();
 	  //fullFillVertices.clear();
 	}
 	
@@ -117,17 +118,16 @@ public:
 
 	void MakeShells(uint shellcount, double extrudedWidth, 
 			double optimization, 
-			bool makeskirt,
+			bool makeskirt, uint skins, 
 			bool useFillets);
 	vector<Poly> ShrinkedPolys(const vector<Poly> poly,
 				   double distance, 
 				   ClipperLib::JoinType join_type = ClipperLib::jtMiter);
 	  
 	void calcConvexHull();
-	Poly hullPolygon;
 	
 	void MakeSkirt(double distance);
-	Poly skirtPolygon;
+
 
 	bool CleanupConnectSegments();
 	bool CleanupSharedSegments();
@@ -139,16 +139,13 @@ public:
 	void getOrderedPolyLines(const vector<Poly> polys, 
 				 Vector2d &startPoint,
 				 vector<Vector3d> &lines) const;
-	// result ready for gcoding
-	vector<Vector3d> getAllLines(Vector2d &startPoint) const; 
 
 	void MakeGcode (GCodeState &state,
-			double &E, double z,
+			double &E, double offsetZ, 
 			const Settings::SlicingSettings &slicing,
 			const Settings::HardwareSettings &hardware);
 	bool VertexIsOutsideOriginalPolygons( Vector2d point, double z, double maxoffset) const ;
 
-	Vector2d Min, Max;  // Bounding box
 
 	void Clear()
 	{
@@ -162,7 +159,9 @@ public:
 		fullFillPolygons.clear();
 		//fullFillVertices.clear();
 		supportPolygons.clear();
+		hullPolygon.clear();
 		skirtPolygon.clear();
+		skinPolygons.clear();
 	}
 	void setZ(double value)
 	{
@@ -196,9 +195,9 @@ public:
 	vector<Poly> GetFullFillPolygons() const { return fullFillPolygons; }
 	//vector<Vector2d> GetSupportVertices() const { return supportVertices; }
 	vector<Poly> GetSupportPolygons() const { return supportPolygons; }
-
 	vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
 	vector<Poly>  GetShellPolygonsCirc(int number) const;
+	Poly  GetSkirtPolygon() const {return skirtPolygon; };
 
 	void setFullFillPolygons(const ClipperLib::Polygons cpolys);
 	void addFullFillPolygons(const ClipperLib::Polygons cpolys);
@@ -207,12 +206,19 @@ public:
 	void setSkirtPolygon(const ClipperLib::Polygons cpolys);
 
 	void printinfo() const ;
+
+	Vector2d getMin() const {return Min;};
+	Vector2d getMax() const {return Max;};
+	void setBBox(Vector2d min, Vector2d max);
+	void setBBox(Vector3d min, Vector3d max);
+
+
+
 private:
 	//PointHash points;
+	Vector2d Min, Max;  // Bounding box
 
 	Infill * infill;
-
-	vector<CuttingPlaneOptimizer*> optimizers;
 
 	vector<Vector2d> vertices;	// cutpoints with desired z plane
 	vector<Segment> lines;		// cutlines, have 2 vertex indices 
@@ -227,6 +233,10 @@ private:
 	//vector<Vector2d> fullFillVertices; // points for fully filled polygons
 	vector<Poly> supportPolygons;	 // polygons to be filled with support pattern
 	//vector<Vector2d> supportVertices; // points for support
+	vector<Poly> skinPolygons;
+	uint skins;
+	Poly hullPolygon;
+	Poly skirtPolygon;
 };
 
 

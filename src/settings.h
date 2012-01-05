@@ -95,6 +95,7 @@ class Settings {
     bool SolidTopAndBottom;
     bool Support;
     float SkirtHeight;
+    int Skins;
 
     bool ShellOnly;
     guint ShellCount;

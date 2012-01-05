@@ -91,10 +91,13 @@ public:
 	double getLayerNo() const;
 
 	void draw(int gl_type, bool reverse=false) const; // GL_LINE_LOOP or GL_POINTS
+	void draw(int gl_type, double z) const; // draw at given z
 	void drawVertexNumbers() const; 
 	void drawLineNumbers() const;
 
+	void getLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
 	void getLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
+	void getLines(vector<Vector2d> &lines,uint startindex=0) const;
 	void getLines(vector<Vector3d> &lines,uint startindex=0) const;
 	double getLinelengthSq(uint startindex) const;
 

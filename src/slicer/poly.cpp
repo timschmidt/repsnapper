@@ -410,7 +410,28 @@ void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const
   getLines(lines,index);
   startPoint = Vector2d(lines.back().x,lines.back().y);
 }
+void Poly::getLines(vector<Vector2d> &lines, Vector2d &startPoint) const
+{
+  if (size()<2) return;
+  double mindist = 1000000;
+  uint index = nearestDistanceSqTo(startPoint, mindist);
+  getLines(lines,index);
+  startPoint = Vector2d(lines.back().x,lines.back().y);
+}
 
+// add to lines starting with given index
+// closed lines sequence
+void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
+{
+  size_t count = vertices.size();
+  if (count<2) return; // one point no line
+  if (count<3) count--; // two points one line
+  for(size_t i=0;i<count;i++)
+    {
+      lines.push_back(getVertexCircular(i+startindex));
+      lines.push_back(getVertexCircular(i+startindex+1));
+    }
+}
 // add to lines starting with given index
 // closed lines sequence
 void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
@@ -446,6 +467,16 @@ vector<Vector2d> Poly::getMinMax() const{
   return range;
 }
 
+void Poly::draw(int gl_type, double z) const
+{
+  Vector2d v;
+  glBegin(gl_type);	  
+  for (uint i=0;i < vertices.size();i++){
+    v = getVertexCircular(i);
+    glVertex3f(v.x,v.y,z);
+  }
+  glEnd();
+}
 
 void Poly::draw(int gl_type, bool reverse) const
 {

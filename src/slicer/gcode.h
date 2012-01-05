@@ -41,15 +41,20 @@ class GCodeState {
  public:
   GCodeState(GCode &code);
   ~GCodeState();
-  void SetZ (double z);
+  /* void SetZ (double z); */
   void AppendCommand(Command &command);
+  void AddLines (vector<Vector3d> lines,
+		 double extrusionFactor,
+		 double offsetZ, double &E, 
+		 const Settings::SlicingSettings &slicing,
+		 const Settings::HardwareSettings &hardware);
   void MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 				 double extrusionFactor,
-				 double &E, double z,
+				 double offsetZ, double &E, 
 				 const Settings::SlicingSettings &slicing,
 				 const Settings::HardwareSettings &hardware);
-  double GetLastLayerZ(double curZ);
-  void  SetLastLayerZ(double z);
+  /* double GetLastLayerZ(double curZ); */
+  /* void  SetLastLayerZ(double z); */
   const Vector3d &LastPosition();
   void  SetLastPosition(const Vector3d &v);
   void  ResetLastWhere(Vector3d to);

@@ -554,11 +554,12 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 	  plane->MakePolygons(settings.Slicing.Optimization);
 
 	  bool makeskirt = (plane->getZ() <= settings.Slicing.SkirtHeight);
+	  uint skins = settings.Slicing.Skins;
 
 	  plane->MakeShells(//settings.Slicing.ShrinkQuality,
 			    settings.Slicing.ShellCount,
 			    matwidth, settings.Slicing.Optimization,
-			    makeskirt, false);
+			    makeskirt, skins, false);
 	  if (settings.Display.DisplayinFill)
 	    {
 	      double fullInfillDistance = matwidth;

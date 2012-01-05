@@ -112,6 +112,20 @@ CuttingPlane::~CuttingPlane()
 }
 
 
+void CuttingPlane::setBBox(Vector2d min, Vector2d max) 
+{
+  Min.x = MIN(Min.x,min.x);
+  Min.y = MIN(Min.y,min.y);
+  Max.x = MAX(Max.x,max.x);
+  Max.y = MAX(Max.y,max.y);
+}	
+void CuttingPlane::setBBox(Vector3d min, Vector3d max) 
+{
+  Min.x = MIN(Min.x,min.x);
+  Min.y = MIN(Min.y,min.y);
+  Max.x = MAX(Max.x,max.x);
+  Max.y = MAX(Max.y,max.y);
+}	
 
 void CuttingPlane::CalcInfill (double InfillDistance, 
 			       double FullInfillDistance,
@@ -475,7 +489,7 @@ bool CuttingPlane::MakePolygons(double Optimization)
 		int endPoint = lines[current].end;
 
 		Poly poly = Poly(this);
-		poly.vertices.push_back (vertices[endPoint]);
+		poly.addVertex(vertices[endPoint]);
 		//poly.printinfo();
 		int count = lines.size()+100;
 		while (endPoint != startPoint && count != 0)	// While not closed
@@ -563,7 +577,7 @@ bool CuttingPlane::MakePolygons(double Optimization)
 			assert( nextsegment.start == endPoint );
 			endPoint = nextsegment.end;
 
-			poly.vertices.push_back (vertices[endPoint]);
+			poly.addVertex(vertices[endPoint]);
 			count--;
 		}
 
@@ -601,7 +615,7 @@ bool CuttingPlane::VertexIsOutsideOriginalPolygons( Vector2d point, double z,
 
 void CuttingPlane::AddSegment(const Segment line)
 {
-	lines.push_back(line);
+  lines.push_back(line);
 }
 
 void CuttingPlane::AppendSegments(vector<Segment> segments)
@@ -707,48 +721,15 @@ void CuttingPlane::getOrderedPolyLines(const vector<Poly> polys,
     }
 }
 
-vector<Vector3d> CuttingPlane::getAllLines(Vector2d &startPoint) const
-{
-  vector<Vector3d> lines;
-
-
-  skirtPolygon.getLines(lines, startPoint);
-
-  if( optimizers.size() > 1 )
-	{
-	  // Logick
-	  for( uint i = 1; i < optimizers.size()-1; i++)
-		optimizers[i]->RetrieveLines(lines);
-	}
-  else
-	{
-	  for(size_t p=0;p<shellPolygons.size();p++) // outer to inner, in this order
-	    {
-	      getOrderedPolyLines(shellPolygons[p], startPoint, lines); // sorted
-	    }
-	  // for(size_t p=0;p<offsetPolygons.size();p++)
-	  //   offsetPolygons[p].getLines(lines);
-	  // for(size_t p=0;p<fullFillPolygons.size();p++)
-	  //   fullFillPolygons[p].getLines(lines);
-	}
-  
-  getOrderedPolyLines(infill->infillpolys, startPoint,lines);
-
-  return lines;
-}
-
 
 // Convert Cuttingplane to GCode
 void CuttingPlane::MakeGcode(GCodeState &state,
-			     double &E, double z,
+			     double &E, double offsetZ,
 			     const Settings::SlicingSettings &slicing,
 			     const Settings::HardwareSettings &hardware)
 {
-	// Make an array with all lines, then link'em
-
-	Command command;
-
 	// Why move z axis separately?
+        // Command command;
 	// double lastLayerZ = state.GetLastLayerZ(z);
 	// // Set speed for next move
 	// command.Code = SETSPEED;
@@ -765,37 +746,55 @@ void CuttingPlane::MakeGcode(GCodeState &state,
 	// state.AppendCommand(command);
 	// command.comment = "";
 
-	Vector3d start3 = state.LastPosition();
+        Vector3d start3 = state.LastPosition();
 	Vector2d startPoint(start3.x,start3.y);
-	vector<Vector3d> lines = getAllLines(startPoint);
 
-	for (uint i=0; i < lines.size(); i+=2)
-	{
-		// MOVE to start of next line
-		if(state.LastPosition() != lines[i]) 
-		  {
-		    state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[i],
-						    0.0, E, z, slicing, hardware);
-		    state.SetLastPosition (lines[i]);
-		  } 
+	double extrf = hardware.GetExtrudeFactor(thickness);
+	double skinextrf = extrf/skins/skins;
 
-		// PLOT to endpoint of line 
-		state.MakeAcceleratedGCodeLine (state.LastPosition(), lines[i+1],
-						hardware.GetExtrudeFactor(thickness),
-						E, z, slicing, hardware);
-		state.SetLastPosition(lines[i+1]);
+	vector<Vector3d> lines;
+
+	// Skirt
+	lines.clear();
+	skirtPolygon.getLines(lines, startPoint);
+	state.AddLines(lines, extrf, offsetZ, E, slicing, hardware);
+
+	// Skin (different extrusion factor)
+	lines.clear();
+	vector<Vector3d> skinlines;
+	for(size_t p=0;p<skinPolygons.size();p++) 
+	  skinPolygons[p].getLines(skinlines,startPoint);
+	for(int s=skins-1;s >= 0;s--) { // z offset
+	  double sz = Z - s*thickness/skins;
+	  for(size_t p=0;p<skinlines.size();p++) 
+	    lines.push_back(Vector3d(skinlines[p].x, skinlines[p].y, sz));
 	}
-	state.SetLastLayerZ(z);
+	state.AddLines(lines, skinextrf, offsetZ, E, slicing, hardware);
+	
+	// Shells
+	lines.clear();
+	for(size_t p=0;p<shellPolygons.size();p++) // outer to inner, in this order
+	  getOrderedPolyLines(shellPolygons[p], startPoint, lines); // sorted
+	// + Infill
+	getOrderedPolyLines(infill->infillpolys, startPoint,lines);
+	state.AddLines(lines, extrf, offsetZ, E, slicing, hardware);	       
 }
 
 
 void CuttingPlane::MakeShells(uint shellcount, double extrudedWidth, 
 			      double optimization, 
-			      bool makeskirt,
+			      bool makeskirt, uint skins,
 			      bool useFillets)
 {
   //cerr << "make " << shellcount << " shells "  << endl;
-  double distance = 0.5 * extrudedWidth; // 1st shell half offset from outside
+  this->skins = skins;
+  double distance = 0.;
+  if (skins>1) {
+    distance = 0.5 * extrudedWidth/skins;
+    skinPolygons = ShrinkedPolys(polygons,distance);
+    shellcount--;
+  }
+  distance += 0.5 * extrudedWidth; // 1st shell half offset from outside
   vector<Poly> shrinked = ShrinkedPolys(polygons,distance);
   shellPolygons.clear();
   shellPolygons.push_back(shrinked); // outer
@@ -880,10 +879,6 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	    }
 	}
 
-	if (optimizers.size()>1)
-	  for(size_t o=1;o<optimizers.size()-1;o++)
-	    optimizers[o]->Draw();
-
 	glPointSize(1);
 	glBegin(GL_POINTS);
 	glColor4f(1,0,0,1);
@@ -905,7 +900,16 @@ void CuttingPlane::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	    }
 
 
-	glColor4f(0.5,0.8,0.8,1);
+	glColor4f(0.5,0.9,1,1);
+	glLineWidth(1);
+	double zs = Z;
+	for(size_t s=0;s<skins;s++){
+	  for(size_t p=0;p<skinPolygons.size();p++)
+	    skinPolygons[p].draw(GL_LINE_LOOP,zs);
+	  zs-=thickness/skins;
+	}
+
+	glColor4f(0.5,0.8,0.8,.7);
 	glLineWidth(2);
 	skirtPolygon.draw(GL_LINE_LOOP);
 

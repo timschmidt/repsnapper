@@ -478,10 +478,7 @@ void Shape::CalcCuttingPlane(const Matrix4d &T,
 	Vector3d min = T*Min;
 	Vector3d max = T*Max;
 
- 	plane->Min.x = MIN(plane->Min.x,min.x);
-	plane->Min.y = MIN(plane->Min.y,min.y);
-	plane->Max.x = MAX(plane->Max.x,max.x);
-	plane->Max.y = MAX(plane->Max.y,max.y);
+	plane->setBBox(min,max);
 
 	Vector2d lineStart;
 	Vector2d lineEnd;

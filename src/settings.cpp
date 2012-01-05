@@ -159,6 +159,7 @@ static struct {
   BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, false),
   BOOL_MEMBER   (Slicing.Support, "Support", false, false),
   FLOAT_MEMBER  (Slicing.SkirtHeight, "SkirtHeight", 0.0, false),
+  INT_MEMBER    (Slicing.Skins, "Skins", 1, false),
 
   BOOL_MEMBER   (Slicing.ShellOnly, "ShellOnly", false, true),
   INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),
@@ -250,6 +251,7 @@ static struct {
   { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
   { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
   { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },
+  { "Slicing.Skins", 1, 5, 1, 1 },
 
   // Hardware
   { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },

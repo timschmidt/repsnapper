@@ -762,7 +762,7 @@ and others I forgot... (needs updating)</property>
                   <object class="GtkLabel" id="label3">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Load a Model</property>
+                    <property name="label" translatable="yes">Model</property>
                   </object>
                   <packing>
                     <property name="tab_fill">False</property>
@@ -981,7 +981,7 @@ and others I forgot... (needs updating)</property>
                   <object class="GtkLabel" id="label4">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Load Machine Code</property>
+                    <property name="label" translatable="yes">Machine Code</property>
                   </object>
                   <packing>
                     <property name="position">1</property>
@@ -2693,7 +2693,7 @@ and others I forgot... (needs updating)</property>
                       <object class="GtkLabel" id="label70">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">The rotation of the first layers' infill and the support.</property>
+                        <property name="tooltip_text" translatable="yes">The rotation of the first layer's infill and the support.</property>
                         <property name="label" translatable="yes">Infill Rotation (°)</property>
                       </object>
                       <packing>
@@ -2798,7 +2798,7 @@ Distance is twice the Infill Distance.</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkSpinButton" id="spinbutton1">
+                      <object class="GtkSpinButton" id="Slicing.Skins">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="invisible_char">●</property>
