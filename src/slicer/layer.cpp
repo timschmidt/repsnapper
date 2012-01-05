@@ -120,12 +120,12 @@ void Layer::CalcInfill (double InfillDistance,
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
   InfillType type = ParallelInfill;
   if (!ShellOnly)
-    infill->calcInfill(offsetPolygons, type, 
-		       InfillDistance, FullInfillDistance, rot);
-  infill->calcInfill(fullFillPolygons, type, 
-		     FullInfillDistance, FullInfillDistance, rot);
-  infill->calcInfill(supportPolygons, SupportInfill, 
-		     InfillDistance, InfillDistance, InfillRotation/180.0*M_PI);
+    infill->addInfill(offsetPolygons, type, 
+		      InfillDistance, FullInfillDistance, rot);
+  infill->addInfill(fullFillPolygons, type, 
+		    FullInfillDistance, FullInfillDistance, rot);
+  infill->addInfill(supportPolygons, SupportInfill, 
+		    InfillDistance, InfillDistance, InfillRotation/180.0*M_PI);
 }
 
 ClipperLib::Polygons Layer::getClipperPolygons(const vector<Poly> polygons,

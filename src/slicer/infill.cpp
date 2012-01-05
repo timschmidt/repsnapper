@@ -41,23 +41,23 @@ void Infill::clearPatterns() {
 }
 
 // fill polys with type etc.
-void Infill::calcInfill(const vector<Poly> polys, InfillType type, 
+void Infill::addInfill(const vector<Poly> polys, InfillType type, 
 			double infillDistance, double offsetDistance, double rotation)
 {
   ClipperLib::Polygons patterncpolys = 
     makeInfillPattern(type,infillDistance, offsetDistance, rotation);
-  calcInfill(polys, patterncpolys, offsetDistance);
+  addInfill(polys, patterncpolys, offsetDistance);
 }
 
 // fill polys with fillpolys
-void Infill::calcInfill(const vector<Poly> polys, const vector<Poly> fillpolys,
-			double offsetDistance)
+void Infill::addInfill(const vector<Poly> polys, const vector<Poly> fillpolys,
+		       double offsetDistance)
 {
-  calcInfill(polys, layer->getClipperPolygons(fillpolys), offsetDistance);
+  addInfill(polys, layer->getClipperPolygons(fillpolys), offsetDistance);
 }
 
 // clip infill pattern polys against polys (after NOT offsetting polys)
-void Infill::calcInfill(const vector<Poly> polys, 
+void Infill::addInfill(const vector<Poly> polys, 
 			const ClipperLib::Polygons patterncpolys,
 			double offsetDistance)
 {

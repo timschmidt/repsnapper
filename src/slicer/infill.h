@@ -55,6 +55,8 @@ class Infill
 
   Infill(){}; 
 
+  void addInfillPoly(const Poly p);
+
  public:
 
   Infill(Layer *layer);
@@ -67,14 +69,12 @@ class Infill
   vector<Poly> infillpolys;  // for clipper polygon types
   vector<Vector2d> infillvertices; // for lines types
   
-  void calcInfill(vector<Poly> poly, InfillType type, double infillDistance, 
+  void addInfill(vector<Poly> poly, InfillType type, double infillDistance, 
 		  double offsetDistance, double rotation);
-  void calcInfill(const vector<Poly> polys, const vector<Poly> fillpolys,
+  void addInfill(const vector<Poly> polys, const vector<Poly> fillpolys,
 		  double offsetDistance);
-  void calcInfill(const vector<Poly> polys, const ClipperLib::Polygons ifcpolys,
+  void addInfill(const vector<Poly> polys, const ClipperLib::Polygons ifcpolys,
 		  double offsetDistance);
-
-  void addInfillPoly(const Poly p);
 
   void getLines(vector<Vector3d> &lines) const;
   
