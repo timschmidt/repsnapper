@@ -31,9 +31,9 @@ vector<struct Infill::pattern> Infill::savedPatterns;
 // Infill::Infill(){
 //   infill.clear();
 // }
-Infill::Infill(CuttingPlane *plane) 
+Infill::Infill(Layer *layer) 
 {
-  this->plane = plane;
+  this->layer = layer;
 }
 
 void Infill::clearPatterns() {
@@ -53,7 +53,7 @@ void Infill::calcInfill(const vector<Poly> polys, InfillType type,
 void Infill::calcInfill(const vector<Poly> polys, const vector<Poly> fillpolys,
 			double offsetDistance)
 {
-  calcInfill(polys, plane->getClipperPolygons(fillpolys), offsetDistance);
+  calcInfill(polys, layer->getClipperPolygons(fillpolys), offsetDistance);
 }
 
 // clip infill pattern polys against polys (after NOT offsetting polys)
@@ -65,7 +65,7 @@ void Infill::calcInfill(const vector<Poly> polys,
   // // problem with offsetting is orientation so that a few polys won't get filled
   // ClipperLib::Polygons offset;
   // while (offset.size()==0){ // try to reverse poly vertices if no result
-  ClipperLib::Polygons cpolys = plane->getClipperPolygons(polys,reverse);
+  ClipperLib::Polygons cpolys = layer->getClipperPolygons(polys,reverse);
   //   // offset by half offsetDistance
   //   ClipperLib::OffsetPolygons(cpolys, offset, -1000.*offsetDistance/2.,
   // 			     ClipperLib::jtMiter,2);
@@ -80,7 +80,7 @@ void Infill::calcInfill(const vector<Poly> polys,
   clpr.Execute(ClipperLib::ctIntersection, result, filltype, ClipperLib::pftNonZero);
   for (uint i=0;i<result.size();i++)
     {
-      Poly p = Poly(plane->getZ(), result[i]);
+      Poly p = Poly(layer->getZ(), result[i]);
       addInfillPoly(p);
     }
 }
@@ -105,8 +105,8 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	return savedPatterns[i].cpolys;
       }
   }
-  Vector2d Min = plane->getMin();
-  Vector2d Max = plane->getMax();
+  Vector2d Min = layer->getMin();
+  Vector2d Max = layer->getMax();
   Vector2d center = (Min+Max)/2.;
   // make square that masks everything even when rotated
   Vector2d diag = Max-Min;
@@ -121,9 +121,10 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   switch (type)
     {
     case SupportInfill: // stripes, but leave them as polygons
+    case RaftInfill:    // stripes, but leave them as polygons
     case ParallelInfill: // stripes, make them to lines later
       {
-	Poly poly(this->plane->getZ());
+	Poly poly(this->layer->getZ());
 	for (double x=Min.x; x <Max.x; x+= 2*infillDistance) {
 	  poly.addVertex(Vector2d(x,Min.y));
 	  poly.addVertex(Vector2d(x+infillDistance,Min.y));
@@ -134,19 +135,19 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	poly.addVertex(Vector2d(Min.x,Min.y-infillDistance));
 	poly.rotate(center,rotation);
 	polys.push_back(poly);
-	cpolys = plane->getClipperPolygons(polys);
+	cpolys = layer->getClipperPolygons(polys);
       }
       break;
     case LinesInfill: // lines only -- not possible
       {
-	Poly poly(this->plane->getZ());
+	Poly poly(this->layer->getZ());
 	for (double x=Min.x; x <Max.x; x+= infillDistance) {
 	  poly.addVertex(Vector2d(x,Min.y));
 	  poly.addVertex(Vector2d(x,Max.y));
 	  poly.rotate(center,rotation);
 	  polys.push_back(poly);
 	}
-	cpolys = plane->getClipperPolygons(polys);
+	cpolys = layer->getClipperPolygons(polys);
 	cerr << cpolys.size() << endl; 
       }
       break;

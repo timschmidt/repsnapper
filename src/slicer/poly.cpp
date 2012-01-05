@@ -17,7 +17,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "config.h"
-#include "cuttingplane.h"
+#include "layer.h"
 #include "shape.h"
 //#include "infill.h"
 #include "poly.h"
@@ -73,7 +73,7 @@ Poly::Poly(double z){
 }
 
 
-// construct a Poly from a ClipperLib::Poly on given CuttingPlane
+// construct a Poly from a ClipperLib::Poly on given z height
 Poly::Poly(double z, const ClipperLib::Polygon cpoly, bool reverse){
   this->z = z;
   vertices.clear();
@@ -523,3 +523,74 @@ void Poly::printinfo() const
   cout <<" vertices";//, infill: "<< infill->getSize();
   cout << endl;
 }
+
+
+
+
+
+
+
+
+bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2)
+{
+	return d1.d < d2.d;
+}
+
+// calculates intersection and checks for parallel lines.
+// also checks that the intersection point is actually on
+// the line segment p1-p2
+bool IntersectXY(const Vector2d &p1, const Vector2d &p2, 
+		 const Vector2d &p3, const Vector2d &p4, InFillHit &hit,
+		 double maxoffset)
+{
+	// BBOX test
+	if(MIN(p1.x,p2.x) > MAX(p3.x,p4.x))
+		return false;
+	if(MAX(p1.x,p2.x) < MIN(p3.x,p4.x))
+		return false;
+	if(MIN(p1.y,p2.y) > MAX(p3.y,p4.y))
+		return false;
+	if(MAX(p1.y,p2.y) < MIN(p3.y,p4.y))
+		return false;
+
+
+	if(ABS(p1.x-p3.x) < maxoffset && ABS(p1.y - p3.y) < maxoffset)
+	{
+		hit.p = p1;
+		hit.d = (p1-hit.p).length();
+		hit.t = 0.0;
+		return true;
+	}
+	if(ABS(p2.x-p3.x) < maxoffset && ABS(p2.y - p3.y) < maxoffset)
+	{
+		hit.p = p2;
+		hit.d = (p1-hit.p).length();
+		hit.t = 1.0;
+		return true;
+	}
+	if(ABS(p1.x-p4.x) < maxoffset && ABS(p1.y - p4.y) < maxoffset)
+	{
+		hit.p = p1;
+		hit.d = (p1-hit.p).length();
+		hit.t = 0.0;
+		return true;
+	}
+	if(ABS(p2.x-p4.x) < maxoffset && ABS(p2.y - p4.y) < maxoffset)
+	{
+		hit.p = p2;
+		hit.d = (p1-hit.p).length();
+		hit.t = 1.0;
+		return true;
+	}
+
+	InFillHit hit2;
+	double t0,t1;
+	if(intersect2D_Segments(p1,p2,p3,p4,hit.p, hit2.p, t0,t1) == 1)
+	{
+	  hit.d = (p1-hit.p).length();
+	  hit.t = t0;
+	  return true;
+	}
+	return false;
+}
+

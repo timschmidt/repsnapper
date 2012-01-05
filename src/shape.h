@@ -112,7 +112,7 @@ public:
 	vector<Segment> getCutlines(const Matrix4d &T, double z, 
 				    vector<Vector2d> &vertices) const;
 	// Extract a 2D polygonset from a 3D model:
-	void CalcCuttingPlane(const Matrix4d &T, CuttingPlane *plane) const;
+	// void CalcLayer(const Matrix4d &T, CuttingPlane *plane) const;
 	// Auto-Rotate object to have the largest area surface down for printing:
 	void OptimizeRotation(); 
 	void CalcCenter();

@@ -17,7 +17,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "shape.h"
-#include "cuttingplane.h"
+#include "poly.h"
 
 
 // Constructor
@@ -492,15 +492,19 @@ void Shape::CenterAroundXY()
 // }
 
 bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
-				   vector<Poly> &polys) const
+			   vector<Poly> &polys) const
 {
-  ;
   vector<Vector2d> vertices;
   vector<Segment> lines = getCutlines(T,z,vertices);
   
+  if (z < Min.z || z > Max.z) return true; // no polys, but all ok
+
   if (vertices.size()==0) return false; 
-  if (CleanupSharedSegments(vertices,lines)) return false; 
-  if (CleanupConnectSegments(vertices,lines)) return false;
+  //cerr << "vertices ok" <<endl;
+  if (!CleanupSharedSegments(vertices,lines)) return false; 
+  //cerr << "clean shared ok" <<endl;
+  if (!CleanupConnectSegments(vertices,lines)) return false;
+  //cerr << "clean connect ok" <<endl;
 
 	vector< vector<int> > planepoints;
 	planepoints.resize(vertices.size());
@@ -515,7 +519,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
 	for (uint i=0;i>used.size();i++)
 		used[i] = false;
 	
-	polys.clear();
+	//polys.clear();
 
 	for (uint current = 0; current < lines.size(); current++)
 	{
@@ -678,50 +682,50 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z, vector<Vector2d>
 
 // intersect lines with plane and link segments
 // add result to given CuttingPlane
-void Shape::CalcCuttingPlane(const Matrix4d &T, CuttingPlane *plane) const
-{
-  double z = plane->getZ();
-#if CUTTING_PLANE_DEBUG
-	cout << "intersect with z " << z << "\n";
-#endif
+// void Shape::CalcCuttingPlane(const Matrix4d &T, CuttingPlane *plane) const
+// {
+//   double z = plane->getZ();
+// #if CUTTING_PLANE_DEBUG
+// 	cout << "intersect with z " << z << "\n";
+// #endif
 
-	Vector3d min = T*Min;
-	Vector3d max = T*Max;
+// 	Vector3d min = T*Min;
+// 	Vector3d max = T*Max;
 
-	plane->setBBox(min,max);
+// 	plane->setBBox(min,max);
 
-	Vector2d lineStart;
-	Vector2d lineEnd;
+// 	Vector2d lineStart;
+// 	Vector2d lineEnd;
 
-	int num_cutpoints;
-	for (size_t i = 0; i < triangles.size(); i++)
-	  {
-	    CuttingPlane::Segment line(-1,-1);
-	    num_cutpoints = triangles[i].CutWithPlane(z, T, lineStart, lineEnd);
-	    if (num_cutpoints>0)
-	      line.start = plane->RegisterPoint(lineStart);
-	    if (num_cutpoints>1)
-	      line.end = plane->RegisterPoint(lineEnd);
+// 	int num_cutpoints;
+// 	for (size_t i = 0; i < triangles.size(); i++)
+// 	  {
+// 	    CuttingPlane::Segment line(-1,-1);
+// 	    num_cutpoints = triangles[i].CutWithPlane(z, T, lineStart, lineEnd);
+// 	    if (num_cutpoints>0)
+// 	      line.start = plane->RegisterPoint(lineStart);
+// 	    if (num_cutpoints>1)
+// 	      line.end = plane->RegisterPoint(lineEnd);
 	      
-	    // Check segment normal against triangle normal. Flip segment, as needed.
-	    if (line.start != -1 && line.end != -1 && line.end != line.start)	
-	      // if we found a intersecting triangle
-	      {
-		Vector3d Norm = triangles[i].Normal;
-		Vector2d triangleNormal = Vector2d(Norm.x, Norm.y);
-		Vector2d segmentNormal = (lineEnd - lineStart).normal();
-		triangleNormal.normalise();
-		segmentNormal.normalise();
-		if( (triangleNormal-segmentNormal).lengthSquared() > 0.2)
-		  // if normals does not align, flip the segment
-		  line.Swap();
-		// cerr << "line "<<line.start << "-"<<line.end << endl;
-		// cerr << " -> "<< plane->GetVertices()[line.start] << "-"<<plane->GetVertices()[line.end] << endl;
-		plane->AddSegment(line);
-	      }
-	  }
-	return ;
-}
+// 	    // Check segment normal against triangle normal. Flip segment, as needed.
+// 	    if (line.start != -1 && line.end != -1 && line.end != line.start)	
+// 	      // if we found a intersecting triangle
+// 	      {
+// 		Vector3d Norm = triangles[i].Normal;
+// 		Vector2d triangleNormal = Vector2d(Norm.x, Norm.y);
+// 		Vector2d segmentNormal = (lineEnd - lineStart).normal();
+// 		triangleNormal.normalise();
+// 		segmentNormal.normalise();
+// 		if( (triangleNormal-segmentNormal).lengthSquared() > 0.2)
+// 		  // if normals does not align, flip the segment
+// 		  line.Swap();
+// 		// cerr << "line "<<line.start << "-"<<line.end << endl;
+// 		// cerr << " -> "<< plane->GetVertices()[line.start] << "-"<<plane->GetVertices()[line.end] << endl;
+// 		plane->AddSegment(line);
+// 	      }
+// 	  }
+// 	return ;
+// }
 
 
 
@@ -991,72 +995,64 @@ void Shape::draw_geometry() const
 // done easier by just running through all lines and finding them?
 bool CleanupSharedSegments(vector<Vector2d> &vertices, vector<Segment> &lines)
 {
-	vector<int> vertex_counts; // how many lines have each point
-	vertex_counts.resize (vertices.size());
-
-	for (uint i = 0; i < lines.size(); i++)
+  vector<int> vertex_counts; // how many lines have each point
+  vertex_counts.resize (vertices.size());
+  
+  for (uint i = 0; i < lines.size(); i++)
+    {
+      vertex_counts[lines[i].start]++; 
+      vertex_counts[lines[i].end]++;
+    }
+  
+  // ideally all points have an entrance and
+  // an exit, if we have co-incident lines, then
+  // we have more than one; do we ?
+  std::vector<int> duplicate_points;
+  for (uint i = 0; i < vertex_counts.size(); i++)
+    if (vertex_counts[i] > 2) // no more than 2 lines should share a point
+      duplicate_points.push_back (i);
+  
+  if (duplicate_points.size() == 0)
+    return true; // all sane
+  
+  for (uint i = 0; i < duplicate_points.size(); i++)
+    {
+      std::vector<int> dup_lines;
+      
+      // find all line segments with this point in use 
+      for (uint j = 0; j < lines.size(); j++)
 	{
-	        vertex_counts[lines[i].start]++; 
-		vertex_counts[lines[i].end]++;
+	  if (lines[j].start == duplicate_points[i] ||
+	      lines[j].end == duplicate_points[i])
+	    dup_lines.push_back (j);
 	}
-
-	// ideally all points have an entrance and
-	// an exit, if we have co-incident lines, then
-	// we have more than one; do we ?
-	std::vector<int> duplicate_points;
-	for (uint i = 0; i < vertex_counts.size(); i++)
+      
+      // identify and eliminate identical line segments
+      // NB. hopefully by here dup_lines.size is small.
+      std::vector<int> lines_to_delete;
+      for (uint j = 0; j < dup_lines.size(); j++)
 	{
-// #if CUTTING_PLANE_DEBUG
-// 		cout << "vtx " << i << " count: " << vertex_counts[i] << "\n";
-// #endif
-		if (vertex_counts[i] > 2) // no more than 2 lines should share a point
-			duplicate_points.push_back (i);
+	  const Segment &jr = lines[dup_lines[j]];
+	  for (uint k = j + 1; k < dup_lines.size(); k++)
+	    {
+	      const Segment &kr = lines[dup_lines[k]];
+	      if ((jr.start == kr.start && jr.end == kr.end) ||
+		  (jr.end == kr.start && jr.start == kr.end))
+		{
+		  lines_to_delete.push_back (dup_lines[j]);
+		  lines_to_delete.push_back (dup_lines[k]);
+		}
+	    }
 	}
-
-	if (duplicate_points.size() == 0)
-		return true; // all sane
-
-	for (uint i = 0; i < duplicate_points.size(); i++)
+      // we need to remove from the end first to avoid disturbing
+      // the order of removed items
+      std::sort(lines_to_delete.begin(), lines_to_delete.end());
+      for (int r = lines_to_delete.size() - 1; r >= 0; r--)
 	{
-		std::vector<int> dup_lines;
-
-		// find all line segments with this point in use 
-		for (uint j = 0; j < lines.size(); j++)
-		{
-			if (lines[j].start == duplicate_points[i] ||
-			    lines[j].end == duplicate_points[i])
-				dup_lines.push_back (j);
-		}
-
-		// identify and eliminate identical line segments
-		// NB. hopefully by here dup_lines.size is small.
-		std::vector<int> lines_to_delete;
-		for (uint j = 0; j < dup_lines.size(); j++)
-		{
-			const Segment &jr = lines[dup_lines[j]];
-			for (uint k = j + 1; k < dup_lines.size(); k++)
-			{
-				const Segment &kr = lines[dup_lines[k]];
-				if ((jr.start == kr.start && jr.end == kr.end) ||
-				    (jr.end == kr.start && jr.start == kr.end))
-				{
-					lines_to_delete.push_back (dup_lines[j]);
-					lines_to_delete.push_back (dup_lines[k]);
-				}
-			}
-		}
-		// we need to remove from the end first to avoid disturbing
-		// the order of removed items
-		std::sort(lines_to_delete.begin(), lines_to_delete.end());
-		for (int r = lines_to_delete.size() - 1; r >= 0; r--)
-		{
-// #if CUTTING_PLANE_DEBUG
-// 			cout << "delete co-incident line: " << lines_to_delete[r] << "\n";
-// #endif
-			lines.erase(lines.begin() + lines_to_delete[r]);
-		}
+	  lines.erase(lines.begin() + lines_to_delete[r]);
 	}
-	return true;
+    }
+  return true;
 }
 
 /*

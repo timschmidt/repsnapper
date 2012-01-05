@@ -589,7 +589,7 @@ void View::update_settings_gui()
 
 void View::handle_ui_settings_changed()
 {
-  m_model->ClearCuttingPlanes();
+  m_model->ClearLayers();
   queue_draw();
 }
 

@@ -4335,8 +4335,8 @@ Distance is twice the Infill Distance.</property>
                                 <property name="column_spacing">6</property>
                                 <property name="row_spacing">6</property>
                                 <child>
-                                  <object class="GtkCheckButton" id="Display.DisplayCuttingPlane">
-                                    <property name="label" translatable="yes">Draw Cutting Plane</property>
+                                  <object class="GtkCheckButton" id="Display.DisplayLayer">
+                                    <property name="label" translatable="yes">Draw Layer</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
@@ -4374,7 +4374,7 @@ Distance is twice the Infill Distance.</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Cutting Plane Height</property>
+                                        <property name="label" translatable="yes">Layer Height</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -4383,7 +4383,7 @@ Distance is twice the Infill Distance.</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkHScale" id="Display.CuttingPlaneValue">
+                                      <object class="GtkHScale" id="Display.LayerValue">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="digits">2</property>
@@ -4697,7 +4697,7 @@ Distance is twice the Infill Distance.</property>
                           <object class="GtkLabel" id="label115">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">&lt;b&gt;Cutting Plane Debug&lt;/b&gt;</property>
+                            <property name="label" translatable="yes">&lt;b&gt;Layer Debug&lt;/b&gt;</property>
                             <property name="use_markup">True</property>
                           </object>
                         </child>
@@ -4894,7 +4894,7 @@ Distance is twice the Infill Distance.</property>
       <widget name="Display.DisplayEndpoints"/>
       <widget name="label107"/>
       <widget name="label113"/>
-      <widget name="Display.DisplayCuttingPlane"/>
+      <widget name="Display.DisplayLayer"/>
       <widget name="label116"/>
       <widget name="label118"/>
     </widgets>

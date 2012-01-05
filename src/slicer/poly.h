@@ -25,11 +25,10 @@
 
 #include <clipper/clipper/polyclipping/trunk/cpp/clipper.hpp>
 
+
 /* #include "cuttingplane.h" */
 // #include "infill.h" 
 
-struct InFillHit;
-class CuttingPlane;
 //class Infill;
 
 using namespace std;
@@ -37,11 +36,23 @@ using namespace vmml;
 using namespace PolyLib;
 
 
+struct InFillHit
+{
+	Vector2d p;  // The intersection point
+	double d;     // Distance from the infill-line start point, used for sorting hits
+	double t;     // intersection point on first line
+};
+
+bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
+bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
+		  const Vector2d &p3, const Vector2d &p4, 
+		  InFillHit &hit, double maxoffset);
+
+
 
 class Poly
 {
 
-  //CuttingPlane *plane;
   double z;
   //	vector<Poly*> holes;
 	bool holecalculated;
@@ -53,7 +64,6 @@ public:
 	     const ClipperLib::Polygon cpoly, bool reverse=false);
         ~Poly();
 
-	//CuttingPlane * getPlane() const {return plane;};
 	Poly Shrinked(double distance) const;
 	Poly Shrinked(vector<Vector2d> *vertices, double distance);
 
@@ -89,6 +99,7 @@ public:
 	bool hole; // this polygon is a hole
 	Vector2d center;
 	double getZ() const;
+	void setZ(double z) {this->z = z;};
 	double getLayerNo() const;
 
 	void draw(int gl_type, bool reverse=false) const; // GL_LINE_LOOP or GL_POINTS

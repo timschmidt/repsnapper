@@ -18,7 +18,6 @@
 */
 
 #include "shape.h"
-#include "cuttingplane.h"
 
 #include "gcode.h"
 

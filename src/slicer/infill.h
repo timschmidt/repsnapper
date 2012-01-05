@@ -22,7 +22,7 @@
 #include <vector>
 #include <vmmlib/vmmlib.h> 
 
-#include "cuttingplane.h"
+#include "layer.h"
 
 
 using namespace std; 
@@ -32,12 +32,12 @@ class Poly;
 
 
 
-enum InfillType {ParallelInfill,LinesInfill,SupportInfill};
+enum InfillType {ParallelInfill,LinesInfill,SupportInfill,RaftInfill};
 
 
 class Infill
 {
-  CuttingPlane *plane;
+  Layer *layer;
 
   struct pattern 
   {
@@ -57,7 +57,7 @@ class Infill
 
  public:
 
-  Infill(CuttingPlane *plane);
+  Infill(Layer *layer);
   ~Infill(){}; 
 
   static void clearPatterns();
@@ -83,18 +83,4 @@ class Infill
   void printinfo() const;
 };
 
-
-
-// for historic reasons:
-struct InFillHit
-{
-	Vector2d p;  // The intersection point
-	double d;     // Distance from the infill-line start point, used for sorting hits
-	double t;     // intersection point on first line
-};
-
-bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
-bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
-		  const Vector2d &p3, const Vector2d &p4, 
-		  InFillHit &hit, double maxoffset);
 

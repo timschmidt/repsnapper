@@ -146,14 +146,14 @@ class Settings {
     bool DisplayinFill;
     bool DisplayDebuginFill;
     bool DisplayDebug;
-    bool DisplayCuttingPlane;
+    bool DisplayLayer;
     bool DrawVertexNumbers;
     bool DrawLineNumbers;
     bool DrawOutlineNumbers;
     bool DrawCPVertexNumbers;
     bool DrawCPLineNumbers;
     bool DrawCPOutlineNumbers;
-    float CuttingPlaneValue;
+    float LayerValue;
     bool LuminanceShowsSpeed;
     bool CommsDebug;
 

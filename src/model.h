@@ -29,7 +29,7 @@
 #include "objtree.h"
 #include "types.h"
 #include "slicer/gcode.h"
-#include "slicer/cuttingplane.h"
+#include "slicer/layer.h"
 #include "settings.h"
 #include "progress.h"
 
@@ -75,17 +75,17 @@ public:
 	void RotateObject(Shape *shape, TreeObject *object, Vector4d rotate);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 
-	vector<CuttingPlane*> cuttingplanes;
+	vector<Layer*> layers;
 	
 	// Slicing
 	void Slice(GCodeState &state, double printoffsetZ);
 	void CalcInfill(GCodeState &state);
 	void MakeShells();
 	void MakeUncoveredPolygons();
-	void MakeUncoveredPolygons(CuttingPlane *subjplane,const CuttingPlane *clipplane);
+	void MakeUncoveredPolygons(Layer *subjlayer,const Layer *cliplayer);
 	void MultiplyUncoveredPolygons();
-	void MakeSupportPolygons(CuttingPlane * subjplane, 
-				 const CuttingPlane * clipplane);
+	void MakeSupportPolygons(Layer * subjlayer, 
+				 const Layer * cliplayer);
 	void MakeSupportPolygons();
 	void MakeSkirt();
 
@@ -96,7 +96,7 @@ public:
 	void MakeRaft(GCodeState &state, double &z);
 	void WriteGCode(Glib::RefPtr<Gio::File> file);
 	void ClearGCode();
-	void ClearCuttingPlanes();
+	void ClearLayers();
 	Glib::RefPtr<Gtk::TextBuffer> GetGCodeBuffer();
 	void GlDrawGCode(); // should be in the view
 
@@ -125,7 +125,7 @@ public:
 	Glib::RefPtr<Gtk::TextBuffer> errlog, echolog;
 
 	void draw(Gtk::TreeModel::iterator &selected);
-	void drawCuttingPlanes(Vector3d offset) const;
+	void drawLayers(Vector3d offset) const;
 
 	sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
 	void alert (const char *message);

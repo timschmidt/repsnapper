@@ -39,8 +39,18 @@
 #include "settings.h"
 #include "connectview.h"
 
-#include "slicer/cuttingplane.h"
+#include "slicer/layer.h"
 #include "slicer/infill.h"
+
+
+// void Model::MakeRaft() // TODO use layers with convex hull poly + infill
+// {
+  
+// }
+
+
+
+
 
 void Model::MakeRaft(GCodeState &state, double &z)
 {
@@ -88,7 +98,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 	      Vector2d tmp = P1;
 	      P1 = P2;
 	      P2 = tmp;
-			}
+	    }
 
 	  //			glBegin(GL_LINES);
 	  //			glVertex2fv(&P1.x);
@@ -134,7 +144,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 	  state.MakeAcceleratedGCodeLine (Vector3d(P1.x,P1.y,z), 
 					  Vector3d(P2.x,P2.y,z),
 					  props->MaterialDistanceRatio,
-					  E, z, 
+					  z, E, 
 					  settings.Slicing, settings.Hardware);
 	  reverseLines = !reverseLines;
 	}
@@ -167,6 +177,9 @@ void Model::MakeRaft(GCodeState &state, double &z)
   gcode.commands.push_back(gotoE);
 }
 
+
+
+
 void Model::Slice(GCodeState &state, double printOffsetZ)
 {
   int LayerNr = 0;
@@ -177,10 +190,10 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 
   m_progress.start (_("Slicing"), Max.z);
 
-  for (vector<CuttingPlane *>::iterator pIt = cuttingplanes.begin();
-       pIt != cuttingplanes. end(); pIt++)
+  for (vector<Layer *>::iterator pIt = layers.begin();
+       pIt != layers. end(); pIt++)
     delete *pIt;
-  cuttingplanes.clear();
+  layers.clear();
   double thickness;
   double hackedZ;
   double hacked_layerthickness = optimization;
@@ -188,38 +201,38 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
   while(z < Max.z)
     {
       thickness = settings.Hardware.LayerThickness;
-      // one plane per layer, with all objects
-      CuttingPlane * plane = new CuttingPlane(LayerNr, thickness); 
+      // one layer per layer, with all objects
+      Layer * layer = new Layer(LayerNr, thickness); 
+      layer->setZ(z+printOffsetZ); // set to real z
       m_progress.update(z);
       g_main_context_iteration(NULL,false);
-      hackedZ = z;
-      polys_ok = false;
       // try to slice all objects until polygons can be made, otherwise hack z
-      while (!polys_ok){
-	plane->setZ(hackedZ);
-	for(uint o=0;o<objtree.Objects.size();o++)
+      for(uint o=0;o<objtree.Objects.size();o++)
+	for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
 	  {
-	    for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
-	      {
-		// Get a pointer to the object:
-		Shape* shape = &objtree.Objects[o].shapes[f];
-		Matrix4d T = objtree.GetSTLTransformationMatrix(o,f);
-		Vector3d t = T.getTranslation();
-		t+= Vector3d(settings.Hardware.PrintMargin.x
-			     +settings.Raft.Size*settings.RaftEnable, 
-			     settings.Hardware.PrintMargin.y
-			     +settings.Raft.Size*settings.RaftEnable, 0);
-		T.setTranslation(t);
-		// adding points and lines from object to plane:
-		shape->CalcCuttingPlane(T, plane);
-	      }
+	    hackedZ = z;
+	    polys_ok = false;
+	    while (!polys_ok && hackedZ<z+thickness){
+	      // Get a pointer to the object:
+	      Shape* shape = &objtree.Objects[o].shapes[f];
+	      Matrix4d T = objtree.GetSTLTransformationMatrix(o,f);
+	      Vector3d t = T.getTranslation();
+	      t+= Vector3d(settings.Hardware.PrintMargin.x
+			   +settings.Raft.Size*settings.RaftEnable, 
+			   settings.Hardware.PrintMargin.y
+			   +settings.Raft.Size*settings.RaftEnable, 0);
+	      T.setTranslation(t);
+	      vector<Poly> polys;
+	      // adding points and lines from object to layer:
+	      polys_ok=shape->getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
+					     settings.Slicing.Optimization,
+					     polys);
+	      if (polys_ok) layer->addPolygons(polys);
+	      else cerr << hacked_layerthickness << "hacked Z=" << hackedZ << endl;
+	      hackedZ += hacked_layerthickness;
+	    }
 	  }
-	polys_ok = plane->MakePolygons(optimization);
-	hackedZ += hacked_layerthickness;
-      }
-      
-      plane->setZ(z+printOffsetZ); // set back to real z
-      cuttingplanes.push_back(plane);
+      layers.push_back(layer);
       z += thickness;
       LayerNr++;
     }
@@ -228,128 +241,128 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 
 void Model::MakeUncoveredPolygons()
 {
-  CuttingPlane emptyplane(cuttingplanes.size(),settings.Hardware.LayerThickness);
-  emptyplane.Clear();
+  Layer emptylayer(layers.size(),settings.Hardware.LayerThickness);
+  emptylayer.Clear();
 
-  uint count = cuttingplanes.size();
+  uint count = layers.size();
   m_progress.start (_("Find Uncovered"), 2*count+2);
   // bottom to top:
   for (uint i=0; i <count-1; i++) 
     {
       m_progress.update(i);
       g_main_context_iteration(NULL,false);
-      MakeUncoveredPolygons(cuttingplanes[i],cuttingplanes[i+1]);
+      MakeUncoveredPolygons(layers[i],layers[i+1]);
     }  
 
   // top to bottom:
   for (uint i=count-1; i>0; i--) 
     {
       m_progress.update(count + count - i);
-      MakeUncoveredPolygons(cuttingplanes[i],cuttingplanes[i-1]);
+      MakeUncoveredPolygons(layers[i],layers[i-1]);
     }
   m_progress.update(2*count+1);
-  MakeUncoveredPolygons(cuttingplanes.front(),&emptyplane);
+  MakeUncoveredPolygons(layers.front(),&emptylayer);
   m_progress.update(2*count+2);
-  MakeUncoveredPolygons(cuttingplanes.back(),&emptyplane);
+  MakeUncoveredPolygons(layers.back(),&emptylayer);
   m_progress.stop (_("Done"));
 }
 
-// find polys in subjplane that are not covered by any filled polygons of clipplane
-// -> split polys of subjplane in fully filled and normally filled
-void Model::MakeUncoveredPolygons(CuttingPlane * subjplane,
-				  const CuttingPlane * clipplane)
+// find polys in subjlayer that are not covered by any filled polygons of cliplayer
+// -> split polys of subjlayer in fully filled and normally filled
+void Model::MakeUncoveredPolygons(Layer * subjlayer,
+				  const Layer * cliplayer)
 {
   ClipperLib::Polygons emptypolys;emptypolys.clear();
   ClipperLib::Clipper clpr;
   ClipperLib::Polygons subjOffsetCP =
-    subjplane->getClipperPolygons(subjplane->GetOffsetPolygons()); // outer shell
+    subjlayer->getClipperPolygons(subjlayer->GetOffsetPolygons()); // outer shell
   clpr.AddPolygons(subjOffsetCP,
 		   ClipperLib::ptSubject);
-  //clpr.AddPolygons(subjplane->getClipperPolygons(subjplane->GetFullFillPolygons()),
+  //clpr.AddPolygons(subjlayer->getClipperPolygons(subjlayer->GetFullFillPolygons()),
   //		   ClipperLib::ptSubject);
-  clpr.AddPolygons(clipplane->getClipperPolygons(clipplane->GetOffsetPolygons()),
+  clpr.AddPolygons(cliplayer->getClipperPolygons(cliplayer->GetOffsetPolygons()),
 		   ClipperLib::ptClip);
-  clpr.AddPolygons(clipplane->getClipperPolygons(clipplane->GetFullFillPolygons()),
+  clpr.AddPolygons(cliplayer->getClipperPolygons(cliplayer->GetFullFillPolygons()),
    		   ClipperLib::ptClip);
   ClipperLib::Polygons uncovered;
   ClipperLib::PolyFillType filltype = ClipperLib::pftEvenOdd;
   clpr.Execute(ClipperLib::ctDifference, uncovered, filltype, ClipperLib::pftEvenOdd);
-  subjplane->addFullFillPolygons(uncovered); // maybe already have some 
-  subjplane->mergeFullPolygons();
+  subjlayer->addFullFillPolygons(uncovered); // maybe already have some 
+  subjlayer->mergeFullPolygons();
   // substract full fill from normal fill:
   clpr.Clear();
   clpr.AddPolygons(subjOffsetCP, ClipperLib::ptSubject);
   clpr.AddPolygons(uncovered, ClipperLib::ptClip);
   ClipperLib::Polygons normal;
   clpr.Execute(ClipperLib::ctDifference, normal, filltype, ClipperLib::pftEvenOdd);
-  subjplane->setNormalFillPolygons(normal);
+  subjlayer->setNormalFillPolygons(normal);
 }				 
 				 
 void Model::MultiplyUncoveredPolygons()
 {
   uint shells = settings.Slicing.ShellCount;
-  uint count = cuttingplanes.size();
+  uint count = layers.size();
   m_progress.start (_("Uncovered Shells"), count*3);
   // bottom-up
   for (uint i=0; i < count; i++) 
     {
       m_progress.update(i);
       ClipperLib::Polygons fullpolys = 
-	cuttingplanes[i]->getClipperPolygons(cuttingplanes[i]->GetFullFillPolygons());
+	layers[i]->getClipperPolygons(layers[i]->GetFullFillPolygons());
       for (uint s=1; s < shells; s++) 
 	if (int(i-s) > 1)
-	    cuttingplanes[i-s]->addFullPolygons(fullpolys);
+	    layers[i-s]->addFullPolygons(fullpolys);
     }    
   // top-down
   for (int i=count-1; i>=0; i--) 
     {
       m_progress.update(count + count -i);
       ClipperLib::Polygons fullpolys = 
-	cuttingplanes[i]->getClipperPolygons(cuttingplanes[i]->GetFullFillPolygons());
+	layers[i]->getClipperPolygons(layers[i]->GetFullFillPolygons());
       for (uint s=1; s < shells; s++) 
 	if (i+s < count)
-	    cuttingplanes[i+s]->addFullPolygons(fullpolys);
+	    layers[i+s]->addFullPolygons(fullpolys);
     }    
   // merge results
   for (uint i=0; i < count; i++) 
     {
       m_progress.update(count + count +i);
-      cuttingplanes[i]->mergeFullPolygons();
+      layers[i]->mergeFullPolygons();
     }
   m_progress.stop (_("Done"));
 }
 
 
-void Model::MakeSupportPolygons(CuttingPlane * subjplane, // lower -> will change
-				const CuttingPlane * clipplane) // upper 
+void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
+				const Layer * cliplayer) // upper 
 {
   ClipperLib::Clipper clpr;
-  vector<Poly>  polysc = clipplane->GetPolygons();
+  vector<Poly>  polysc = cliplayer->GetPolygons();
   ClipperLib::Polygons clipcpolys =
-    clipplane->getClipperPolygons(polysc); // outer polygons
+    cliplayer->getClipperPolygons(polysc); // outer polygons
   clpr.AddPolygons(clipcpolys, ClipperLib::ptSubject);
-  clpr.AddPolygons(clipplane->getClipperPolygons(clipplane->GetSupportPolygons()),
+  clpr.AddPolygons(cliplayer->getClipperPolygons(cliplayer->GetSupportPolygons()),
 		   ClipperLib::ptSubject);
 
-  vector<Poly> polyss = subjplane->GetPolygons();
-  clpr.AddPolygons(subjplane->getClipperPolygons(polyss),
+  vector<Poly> polyss = subjlayer->GetPolygons();
+  clpr.AddPolygons(subjlayer->getClipperPolygons(polyss),
 				   ClipperLib::ptClip);
 
   ClipperLib::Polygons support;
   clpr.Execute(ClipperLib::ctDifference, support, 
 	       ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
-  subjplane->setSupportPolygons(support);
+  subjlayer->setSupportPolygons(support);
 }
 
 void Model::MakeSupportPolygons()
 { 
-  int count = cuttingplanes.size();
+  int count = layers.size();
   m_progress.start (_("Support"), count-1);
   for (int i=count-1; i>0; i--) 
     {
       m_progress.update(count-i);
       g_main_context_iteration(NULL,false);
-      MakeSupportPolygons(cuttingplanes[i-1], cuttingplanes[i]);
+      MakeSupportPolygons(layers[i-1], layers[i]);
     }
   m_progress.stop (_("Done"));
 }
@@ -357,16 +370,16 @@ void Model::MakeSupportPolygons()
 void Model::MakeSkirt()
 {
   ClipperLib::Clipper clpr;
-  uint count = cuttingplanes.size();
+  uint count = layers.size();
   uint startindex = count;
   // find maximum of all calculated skirts
   for (int i=count-1; i >= 0; i--) 
     {
-      if (cuttingplanes[i]->getZ() > settings.Slicing.SkirtHeight) {
+      if (layers[i]->getZ() > settings.Slicing.SkirtHeight) {
 	startindex = i;
 	continue;
       }
-      clpr.AddPolygon(cuttingplanes[i]->GetSkirtPolygon().getClipperPolygon(),
+      clpr.AddPolygon(layers[i]->GetSkirtPolygon().getClipperPolygon(),
 		      ClipperLib::ptSubject);
     }
   ClipperLib::Polygons emptypolys;emptypolys.clear();
@@ -377,14 +390,14 @@ void Model::MakeSkirt()
 	       ClipperLib::pftPositive, ClipperLib::pftPositive);
   // set this skirt for all skirted layers 
   for (int i=startindex-1; i >= 0; i--) {
-    cuttingplanes[i]->setSkirtPolygon(skirts);
+    layers[i]->setSkirtPolygon(skirts);
   }
 }
 
 void Model::MakeShells()
 {
   uint skins = settings.Slicing.Skins;
-  uint count = cuttingplanes.size();
+  uint count = layers.size();
   m_progress.start (_("Shells"), count);
   double matwidth, skirtheight = settings.Slicing.SkirtHeight;
   bool makeskirt=false;
@@ -392,11 +405,11 @@ void Model::MakeShells()
     {
       m_progress.update(i);
       g_main_context_iteration(NULL,false);
-      //cerr << "shrink plane " << i << endl;
-      matwidth = settings.Hardware.GetExtrudedMaterialWidth(cuttingplanes[i]->thickness);
+      //cerr << "shrink layer " << i << endl;
+      matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       
-      makeskirt = (cuttingplanes[i]->getZ() <= skirtheight);
-      cuttingplanes[i]->MakeShells(settings.Slicing.ShellCount,
+      makeskirt = (layers[i]->getZ() <= skirtheight);
+      layers[i]->MakeShells(settings.Slicing.ShellCount,
 				   matwidth, settings.Slicing.Optimization, 
 				   makeskirt, (i==0?1:skins), //no skin on 1st layer
 				   false); 
@@ -409,7 +422,7 @@ void Model::MakeShells()
 void Model::CalcInfill(GCodeState &state)
 {
 
-  uint LayerCount = cuttingplanes.size();
+  uint LayerCount = layers.size();
     // (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
 
   vector<int> altInfillLayers;
@@ -423,17 +436,17 @@ void Model::CalcInfill(GCodeState &state)
   double infilldist;
 
   Infill::clearPatterns();
-  m_progress.start (_("Infill"), cuttingplanes.size());
+  m_progress.start (_("Infill"), layers.size());
 
   //cerr << "make infill"<< endl;
-  for (uint i=0; i <cuttingplanes.size(); i++) 
+  for (uint i=0; i <layers.size(); i++) 
     {
-      CuttingPlane * plane = cuttingplanes[i];
+      Layer * layer = layers[i];
       m_progress.update(i);
       g_main_context_iteration(NULL,false);
       // inFill      
 
-      fullInfillDistance = settings.Hardware.GetExtrudedMaterialWidth(plane->thickness);
+      fullInfillDistance = settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
       infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
       altInfillDistance = fullInfillDistance *(1+settings.Slicing.AltInfillDistance);
 
@@ -443,7 +456,7 @@ void Model::CalcInfill(GCodeState &state)
       else
       	infilldist = infillDistance;
 
-      plane->CalcInfill(infilldist, fullInfillDistance,
+      layer->CalcInfill(infilldist, fullInfillDistance,
 			settings.Slicing.InfillRotation,
 			settings.Slicing.InfillRotationPrLayer, 
 			settings.Slicing.ShellOnly,
@@ -489,16 +502,16 @@ void Model::ConvertToGCode()
 
   CalcInfill(state);
 
-  uint count =  cuttingplanes.size();
+  uint count =  layers.size();
   m_progress.start (_("Making GCode"), count+1);
   double E = 0.0;
   for (uint p=0;p<count;p++){
     m_progress.update(p);
     g_main_context_iteration(NULL,false);
     //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
-    cuttingplanes[p]->MakeGcode (state, E,
-				 printOffsetZ,
-				 settings.Slicing, settings.Hardware);
+    layers[p]->MakeGcode (state, E,
+			  printOffsetZ,
+			  settings.Slicing, settings.Hardware);
   }
   int h = (int)state.timeused/3600;
   int m = ((int)state.timeused%3600)/60;

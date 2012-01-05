@@ -188,7 +188,7 @@ static struct {
   BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, false),
   BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
   BOOL_MEMBER (Display.CommsDebug, "CommsDebug", false, true),
-  BOOL_MEMBER (Display.DisplayCuttingPlane, "DisplayCuttingPlane", false, true),
+  BOOL_MEMBER (Display.DisplayLayer, "DisplayLayer", false, true),
   BOOL_MEMBER (Display.DrawVertexNumbers, "DrawVertexNumbers", false, true),
   BOOL_MEMBER (Display.DrawLineNumbers, "DrawLineNumbers", false, true),
   BOOL_MEMBER (Display.DrawOutlineNumbers, "DrawOutlineNumbers", false, true),
@@ -196,7 +196,7 @@ static struct {
   BOOL_MEMBER (Display.DrawCPLineNumbers, "DrawCPLineNumbers", false, true),
   BOOL_MEMBER (Display.DrawCPOutlineNumbers, "DrawCPOutlineNumbers", false, true),
 
-  FLOAT_MEMBER (Display.CuttingPlaneValue, "CuttingPlaneValue", 0, true),
+  FLOAT_MEMBER (Display.LayerValue, "LayerValue", 0, true),
   BOOL_MEMBER  (Display.LuminanceShowsSpeed, "LuminanceShowsSpeed", false, true),
   FLOAT_MEMBER (Display.Highlight, "Highlight", 0.7, true),
   FLOAT_MEMBER (Display.NormalsLength, "NormalsLength", 10, true),
@@ -288,7 +288,7 @@ static struct {
   float inc, inc_page;
 } ranges[] = {
   // Display plane
-  { "Display.CuttingPlaneValue", 0.0, 1.0, 0.0, 0.01 },
+  { "Display.LayerValue", 0.0, 1.0, 0.0, 0.01 },
   { "Display.GCodeDrawStart", 0.0, 1.0, 0.0, 0.1 },
   { "Display.GCodeDrawEnd", 0.0, 1.0, 0.0, 0.1 },
 };

@@ -32,6 +32,7 @@
 #include "file.h"
 #include "settings.h"
 #include "connectview.h"
+#include "layer.h"
 
 Model::Model() :
   settings(),
@@ -46,7 +47,7 @@ Model::Model() :
 
 Model::~Model()
 {
-  ClearCuttingPlanes();
+  ClearLayers();
   ClearGCode();
 }
 
@@ -89,11 +90,11 @@ void Model::ClearGCode()
   gcode.clear();
 }
 
-void Model::ClearCuttingPlanes()
+void Model::ClearLayers()
 {
-  for(uint i=0;i<cuttingplanes.size();i++)
-    cuttingplanes[i]->Clear();
-  cuttingplanes.clear();
+  for(uint i=0;i<layers.size();i++)
+    layers[i]->Clear();
+  layers.clear();
 }
 
 Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
@@ -121,7 +122,7 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
   if (stl.load (file->get_path()) == 0)
     AddStl(NULL, stl, file->get_path());
   ModelChanged();
-  ClearCuttingPlanes();
+  ClearLayers();
 }
 
 void Model::Read(Glib::RefPtr<Gio::File> file)
@@ -311,7 +312,7 @@ void Model::DeleteObjTree(Gtk::TreeModel::iterator &iter)
 {
   objtree.DeleteSelected (iter);
   ClearGCode();
-  ClearCuttingPlanes();
+  ClearLayers();
   CalcBoundingBoxAndCenter();
 }
 
@@ -484,86 +485,90 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
       glEnd();
     }
 
-  if(settings.Display.DisplayCuttingPlane) {
+  if(settings.Display.DisplayLayer) {
     glDisable(GL_DEPTH_TEST);
-    drawCuttingPlanes(offset);
+    drawLayers(offset);
   }
   
 }
 
-void Model::drawCuttingPlanes(Vector3d offset) const
+void Model::drawLayers(Vector3d offset) const
 {
   uint LayerNr;
 
-  bool have_planes = cuttingplanes.size() > 0; // have sliced already
+  bool have_layers = layers.size() > 0; // have sliced already
 
   double z;
   double zStep = settings.Hardware.LayerThickness;
-  double zSize = (Max.z-Min.z);
-  uint LayerCount = (uint)ceil((zSize + zStep*0.5)/zStep);
-  double sel_Z = settings.Display.CuttingPlaneValue*zSize;
+  double zSize = (Max.z-Min.z-zStep*0.5);
+  uint LayerCount = (uint)ceil((zSize - zStep*0.5)/zStep)-1;
+  double sel_Z = settings.Display.LayerValue*zSize;
   uint sel_Layer;
-  if (have_planes) 
-      sel_Layer = (uint)ceil(settings.Display.CuttingPlaneValue*(cuttingplanes.size()-1));
+  if (have_layers) 
+      sel_Layer = (uint)ceil(settings.Display.LayerValue*(layers.size()-1));
   else 
       sel_Layer = (uint)ceil(LayerCount*(sel_Z)/zSize);
   LayerCount = sel_Layer+1;
   if(settings.Display.DisplayAllLayers)
     {
       LayerNr = 0;
-      z=Min.z + 0.5*zStep;
-    } else 
+      z=Min.z;
+    }
+  else 
     {
       LayerNr = sel_Layer;
-      z=Min.z + sel_Z;
+      z= Min.z + sel_Z;
     }
+  z += 0.5*zStep; // always cut in middle of layer
+
   //cerr << zStep << ";"<<Max.z<<";"<<Min.z<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
+
 
   vector<int> altInfillLayers;
   settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
   
-  CuttingPlane* plane;
-  if (have_planes) 
+  Layer* layer;
+  if (have_layers) 
     glTranslatef(-offset.x, -offset.y, -offset.z);
 
   double matwidth;
   
   while(LayerNr < LayerCount)
     {
-      if (have_planes)
+      if (have_layers)
 	{
-	  plane = cuttingplanes[LayerNr];
-	  z = plane->getZ();
+	  layer = layers[LayerNr];
+	  z = layer->getZ();
 	}
       else
 	{
-	  plane = new CuttingPlane(LayerNr,settings.Hardware.LayerThickness);
-	  plane->setZ(z);
-	  matwidth = settings.Hardware.GetExtrudedMaterialWidth(plane->thickness);
+	  layer = new Layer(LayerNr,settings.Hardware.LayerThickness);
+	  layer->setZ(z);
+	  matwidth = settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
 	  for(size_t o=0;o<objtree.Objects.size();o++)
-	    {
-	      for(size_t f=0;f<objtree.Objects[o].shapes.size();f++)
-		{
-		  Matrix4d T = objtree.GetSTLTransformationMatrix(o,f);
-		  Vector3d t = T.getTranslation();
-		  T.setTranslation(t);
-		  objtree.Objects[o].shapes[f].CalcCuttingPlane(T, plane);
-		}
-	    }
-
-	  plane->MakePolygons(settings.Slicing.Optimization);
-
-	  bool makeskirt = (plane->getZ() <= settings.Slicing.SkirtHeight);
+	    for(size_t f=0;f<objtree.Objects[o].shapes.size();f++)
+	      {
+		Matrix4d T = objtree.GetSTLTransformationMatrix(o,f);
+		Vector3d t = T.getTranslation();
+		T.setTranslation(t);
+		vector<Poly> polys;
+		bool polys_ok=objtree.Objects[o].shapes[f].getPolygonsAtZ(T, z, 
+									  settings.Slicing.Optimization,
+									  layer->polygons);
+		if (polys_ok) layer->addPolygons(polys);
+	      }
+	  
+	  bool makeskirt = (layer->getZ() <= settings.Slicing.SkirtHeight);
 	  uint skins = settings.Slicing.Skins;
 
-	  plane->MakeShells(//settings.Slicing.ShrinkQuality,
+	  layer->MakeShells(//settings.Slicing.ShrinkQuality,
 			    settings.Slicing.ShellCount,
 			    matwidth, settings.Slicing.Optimization,
 			    makeskirt, skins, false);
 	  if (settings.Display.DisplayinFill)
 	    {
 	      double fullInfillDistance = matwidth;
-	      double infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
+	      double infillDistance = fullInfillDistance * (1+settings.Slicing.InfillDistance);
 	      double altInfillDistance = fullInfillDistance *(1+settings.Slicing.AltInfillDistance);
 	      double infilldist;
 	      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) 
@@ -571,26 +576,32 @@ void Model::drawCuttingPlanes(Vector3d offset) const
 		infilldist = altInfillDistance;
 	      else
 		infilldist = infillDistance;
-	      plane->CalcInfill(infillDistance, fullInfillDistance,
+	      layer->CalcInfill(infillDistance, fullInfillDistance,
 				settings.Slicing.InfillRotation,
 				settings.Slicing.InfillRotationPrLayer, 
 				settings.Slicing.ShellOnly,
 				settings.Display.DisplayDebuginFill);
 	    }
 	}
-      plane->Draw(settings.Display.DrawVertexNumbers,
+      // layer->Draw(settings.Display.DrawVertexNumbers,
+      // 		  settings.Display.DrawLineNumbers,
+      // 		  settings.Display.DrawCPOutlineNumbers,
+      // 		  settings.Display.DrawCPLineNumbers, 
+      // 		  settings.Display.DrawCPVertexNumbers,
+      // 		  settings.Display.DisplayinFill);
+      layer->Draw(settings.Display.DrawVertexNumbers,
 		  settings.Display.DrawLineNumbers,
 		  settings.Display.DrawCPOutlineNumbers,
 		  settings.Display.DrawCPLineNumbers, 
 		  settings.Display.DrawCPVertexNumbers,
 		  settings.Display.DisplayinFill);
 
-      if (!have_planes)
+      if (!have_layers)
       {
-            // need to delete the temporary cutting plane
-            delete plane;
+            // need to delete the temporary  layer
+            delete layer;
       }
-      // displayInfillOld(settings, plane, plane.LayerNo, altInfillLayers);
+      // displayInfillOld(settings, layer, layer.LayerNo, altInfillLayers);
       
       LayerNr++; 
       z+=zStep;
