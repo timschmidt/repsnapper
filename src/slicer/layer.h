@@ -43,6 +43,7 @@ class Infill;
 class Layer
 {
 
+  //  Clipping clipp;
 public:
   Layer();
   Layer(int layerno=-1, double thick=0.);
@@ -63,17 +64,15 @@ public:
 
 
 
-  ClipperLib::Polygons getClipperPolygons(const vector<Poly> polygons,
-					  bool reverse=true) const;
-  ClipperLib::Polygons getMergedPolygons(const vector<Poly> polygons) const;
-  ClipperLib::Polygons getMergedPolygons(const ClipperLib::Polygons cpolys) const;
+  // ClipperLib::Polygons getClipperPolygons(const vector<Poly> polygons,
+  // 					  bool reverse=true) const;
+  vector<Poly> getMergedPolygons(const vector<Poly> polys);
+  //ClipperLib::Polygons getMergedPolygons(const ClipperLib::Polygons cpolys) const;
   void mergeFullPolygons();
   void mergeSupportPolygons();
-  ClipperLib::Polygons getOffsetPolygons(const ClipperLib::Polygons cpolys,
-					 long clipperdist) const;
+  // vector<Poly> getOffsetPolygons(const vector<Poly> polys, long dist) const;
 
-  void addFullPolygons(const ClipperLib::Polygons) ;
-
+  void addFullPolygons(const vector<Poly> fullpolys) ;
 
   void CalcInfill (double InfillDistance, 
 		   double FullInfillDistance,
@@ -87,9 +86,9 @@ public:
   		  double optimization, 
   		  bool makeskirt, uint skins, 
   		  bool useFillets);
-  vector<Poly> ShrinkedPolys(const vector<Poly> poly,
-			     double distance, 
-			     ClipperLib::JoinType join_type = ClipperLib::jtMiter);
+  /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */
+  /* 			     double distance,  */
+  /* 			     ClipperLib::JoinType join_type = ClipperLib::jtMiter); */
   void calcConvexHull();
   void MakeSkirt(double distance);
 
@@ -104,11 +103,11 @@ public:
   vector<Poly>  GetShellPolygonsCirc(int number) const;
   Poly  GetSkirtPolygon() const {return skirtPolygon; };
 
-  void setFullFillPolygons(const ClipperLib::Polygons cpolys);
-  void addFullFillPolygons(const ClipperLib::Polygons cpolys);
-  void setNormalFillPolygons(const ClipperLib::Polygons cpolys);
-  void setSupportPolygons(const ClipperLib::Polygons cpolys);
-  void setSkirtPolygon(const ClipperLib::Polygons cpolys);
+  void setFullFillPolygons(const vector<Poly> polys);
+  void addFullFillPolygons(const vector<Poly> polys);
+  void setNormalFillPolygons(const vector<Poly> polys);
+  void setSupportPolygons(const vector<Poly> polys);
+  void setSkirtPolygon(const Poly poly);
 
   void getOrderedPolyLines(const vector<Poly> polys, 
 			   Vector2d &startPoint,

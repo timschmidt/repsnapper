@@ -41,15 +41,13 @@
 
 #include "slicer/layer.h"
 #include "slicer/infill.h"
+#include "slicer/clipping.h"
 
 
 // void Model::MakeRaft() // TODO use layers with convex hull poly + infill
 // {
   
 // }
-
-
-
 
 
 void Model::MakeRaft(GCodeState &state, double &z)
@@ -189,7 +187,6 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
   double optimization = settings.Slicing.Optimization;
 
   m_progress.start (_("Slicing"), Max.z);
-
   for (vector<Layer *>::iterator pIt = layers.begin();
        pIt != layers. end(); pIt++)
     delete *pIt;
@@ -236,6 +233,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
       z += thickness;
       LayerNr++;
     }
+  m_progress.stop (_("Done"));
 }
 
 
@@ -253,11 +251,11 @@ void Model::MakeUncoveredPolygons()
       g_main_context_iteration(NULL,false);
       MakeUncoveredPolygons(layers[i],layers[i+1]);
     }  
-
   // top to bottom:
   for (uint i=count-1; i>0; i--) 
     {
       m_progress.update(count + count - i);
+      g_main_context_iteration(NULL,false);
       MakeUncoveredPolygons(layers[i],layers[i-1]);
     }
   m_progress.update(2*count+1);
@@ -272,30 +270,19 @@ void Model::MakeUncoveredPolygons()
 void Model::MakeUncoveredPolygons(Layer * subjlayer,
 				  const Layer * cliplayer)
 {
-  ClipperLib::Polygons emptypolys;emptypolys.clear();
-  ClipperLib::Clipper clpr;
-  ClipperLib::Polygons subjOffsetCP =
-    subjlayer->getClipperPolygons(subjlayer->GetOffsetPolygons()); // outer shell
-  clpr.AddPolygons(subjOffsetCP,
-		   ClipperLib::ptSubject);
-  //clpr.AddPolygons(subjlayer->getClipperPolygons(subjlayer->GetFullFillPolygons()),
-  //		   ClipperLib::ptSubject);
-  clpr.AddPolygons(cliplayer->getClipperPolygons(cliplayer->GetOffsetPolygons()),
-		   ClipperLib::ptClip);
-  clpr.AddPolygons(cliplayer->getClipperPolygons(cliplayer->GetFullFillPolygons()),
-   		   ClipperLib::ptClip);
-  ClipperLib::Polygons uncovered;
-  ClipperLib::PolyFillType filltype = ClipperLib::pftEvenOdd;
-  clpr.Execute(ClipperLib::ctDifference, uncovered, filltype, ClipperLib::pftEvenOdd);
+  Clipping clipp;
+  clipp.clear();
+  clipp.addPolys(subjlayer->GetOffsetPolygons(),subject);
+  clipp.addPolys(cliplayer->GetOffsetPolygons(),clip);
+  clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
+  vector<Poly> uncovered = clipp.substract();
   subjlayer->addFullFillPolygons(uncovered); // maybe already have some 
   subjlayer->mergeFullPolygons();
   // substract full fill from normal fill:
-  clpr.Clear();
-  clpr.AddPolygons(subjOffsetCP, ClipperLib::ptSubject);
-  clpr.AddPolygons(uncovered, ClipperLib::ptClip);
-  ClipperLib::Polygons normal;
-  clpr.Execute(ClipperLib::ctDifference, normal, filltype, ClipperLib::pftEvenOdd);
-  subjlayer->setNormalFillPolygons(normal);
+  clipp.clear();
+  clipp.addPolys(subjlayer->GetOffsetPolygons(), subject);
+  clipp.addPolys(uncovered, clip);
+  subjlayer->setNormalFillPolygons(clipp.substract());
 }				 
 				 
 void Model::MultiplyUncoveredPolygons()
@@ -307,18 +294,16 @@ void Model::MultiplyUncoveredPolygons()
   for (uint i=0; i < count; i++) 
     {
       m_progress.update(i);
-      ClipperLib::Polygons fullpolys = 
-	layers[i]->getClipperPolygons(layers[i]->GetFullFillPolygons());
+      vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
       for (uint s=1; s < shells; s++) 
 	if (int(i-s) > 1)
 	    layers[i-s]->addFullPolygons(fullpolys);
-    }    
+    }
   // top-down
   for (int i=count-1; i>=0; i--) 
     {
       m_progress.update(count + count -i);
-      ClipperLib::Polygons fullpolys = 
-	layers[i]->getClipperPolygons(layers[i]->GetFullFillPolygons());
+      vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
       for (uint s=1; s < shells; s++) 
 	if (i+s < count)
 	    layers[i+s]->addFullPolygons(fullpolys);
@@ -336,22 +321,12 @@ void Model::MultiplyUncoveredPolygons()
 void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
 				const Layer * cliplayer) // upper 
 {
-  ClipperLib::Clipper clpr;
-  vector<Poly>  polysc = cliplayer->GetPolygons();
-  ClipperLib::Polygons clipcpolys =
-    cliplayer->getClipperPolygons(polysc); // outer polygons
-  clpr.AddPolygons(clipcpolys, ClipperLib::ptSubject);
-  clpr.AddPolygons(cliplayer->getClipperPolygons(cliplayer->GetSupportPolygons()),
-		   ClipperLib::ptSubject);
-
-  vector<Poly> polyss = subjlayer->GetPolygons();
-  clpr.AddPolygons(subjlayer->getClipperPolygons(polyss),
-				   ClipperLib::ptClip);
-
-  ClipperLib::Polygons support;
-  clpr.Execute(ClipperLib::ctDifference, support, 
-	       ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
-  subjlayer->setSupportPolygons(support);
+  Clipping clipp;
+  clipp.clear();
+  clipp.addPolys(cliplayer->GetPolygons(),subject);
+  clipp.addPolys(cliplayer->GetSupportPolygons(),subject);
+  clipp.addPolys(subjlayer->GetPolygons(),clip);
+  subjlayer->setSupportPolygons(clipp.substract());
 }
 
 void Model::MakeSupportPolygons()
@@ -369,28 +344,24 @@ void Model::MakeSupportPolygons()
 
 void Model::MakeSkirt()
 {
-  ClipperLib::Clipper clpr;
+  Clipping clipp;
   uint count = layers.size();
   uint startindex = count;
   // find maximum of all calculated skirts
+  clipp.clear();
   for (int i=count-1; i >= 0; i--) 
     {
       if (layers[i]->getZ() > settings.Slicing.SkirtHeight) {
 	startindex = i;
 	continue;
       }
-      clpr.AddPolygon(layers[i]->GetSkirtPolygon().getClipperPolygon(),
-		      ClipperLib::ptSubject);
+      Poly sp = layers[i]->GetSkirtPolygon();
+      clipp.addPoly(sp,subject);
     }
-  ClipperLib::Polygons emptypolys;emptypolys.clear();
-  clpr.AddPolygons(emptypolys, ClipperLib::ptClip);
-
-  ClipperLib::Polygons skirts;
-  clpr.Execute(ClipperLib::ctDifference, skirts, 
-	       ClipperLib::pftPositive, ClipperLib::pftPositive);
+  vector<Poly> skirts = clipp.unite();
   // set this skirt for all skirted layers 
   for (int i=startindex-1; i >= 0; i--) {
-    layers[i]->setSkirtPolygon(skirts);
+    layers[i]->setSkirtPolygon(skirts[0]);
   }
 }
 
@@ -435,6 +406,7 @@ void Model::CalcInfill(GCodeState &state)
   double altInfillDistance;
   double infilldist;
 
+  g_main_context_iteration(NULL,false);
   Infill::clearPatterns();
   m_progress.start (_("Infill"), layers.size());
 
@@ -488,7 +460,7 @@ void Model::ConvertToGCode()
 
   // Make Layers
   Slice(state, printOffsetZ);
-
+  
   MakeShells();
 
   if (settings.Slicing.SolidTopAndBottom)
@@ -502,6 +474,7 @@ void Model::ConvertToGCode()
 
   CalcInfill(state);
 
+  //  return;
   uint count =  layers.size();
   m_progress.start (_("Making GCode"), count+1);
   double E = 0.0;

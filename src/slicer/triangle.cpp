@@ -18,6 +18,30 @@
 */
 #include "triangle.h"
 
+
+
+Triangle::Triangle(const Vector3d &Point1,
+		   const Vector3d &Point2, const Vector3d &Point3)
+{ A=Point1;B=Point2;C=Point3;
+  calcNormal();
+}
+
+
+void Triangle::calcNormal()
+{
+  Vector3d AA=C-A;
+  Vector3d BB=C-B;
+  Normal = AA.cross(BB).getNormalized();
+}
+
+
+void Triangle::invertNormal()
+{
+  Vector3d swap = A;
+  A=C; C=swap;
+  calcNormal();
+}
+
 Vector3d &Triangle::operator[] (const int index)
 {
     switch(index) {
@@ -27,6 +51,8 @@ Vector3d &Triangle::operator[] (const int index)
     }
     return A;
 }
+
+
 
 double Triangle::area()
 {

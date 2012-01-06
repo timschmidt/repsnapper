@@ -37,7 +37,7 @@
 #  pragma warning( disable : 4244 4267)
 #endif
 
-
+class Clipping;
 
 class Model
 {
@@ -74,6 +74,7 @@ public:
 	void ScaleObject(Shape *shape, TreeObject *object, double scale);
 	void RotateObject(Shape *shape, TreeObject *object, Vector4d rotate);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
+	void InvertNormals(Shape *shape, TreeObject *object);
 
 	vector<Layer*> layers;
 	

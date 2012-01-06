@@ -239,7 +239,7 @@ void View::show_dialog(const char *name)
   }
   dialog->signal_response().connect (sigc::bind(sigc::mem_fun(*this, &View::hide_on_response), dialog));
   dialog->show();
-  dialog->set_transient_for (*this);
+  //  dialog->set_transient_for (*this);
 }
 
 void View::about_dialog()
@@ -548,6 +548,17 @@ void View::rotate_selection (Vector4d rotate)
   queue_draw();
 }
 
+void View::invertnormals_selection ()
+{
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
+
+  m_model->InvertNormals(shape, object);
+
+  queue_draw();
+}
+
 void View::stl_added (Gtk::TreePath &path)
 {
   m_objtree->expand_all();
@@ -589,7 +600,7 @@ void View::update_settings_gui()
 
 void View::handle_ui_settings_changed()
 {
-  m_model->ClearLayers();
+  //m_model->ClearLayers(); // not! at changing layer preview height for example
   queue_draw();
 }
 
@@ -685,6 +696,7 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(1,0,0, M_PI/2)));
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/2)));
   connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/2)));
+  connect_button ("m_normals",       sigc::mem_fun(*this, &View::invertnormals_selection));
   m_builder->get_widget ("m_objtree", m_objtree);
 
   // Insert our keybindings all around the place

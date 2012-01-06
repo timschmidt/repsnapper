@@ -130,6 +130,7 @@ class View : public Gtk::Window
   void alert (Gtk::MessageType t, const char *message,
 	      const char *secondary);
   void rotate_selection (vmml::Vector4d rotate);
+  void invertnormals_selection ();
   void stl_added (Gtk::TreePath &path);
 
   vmml::Matrix4d &SelectedNodeMatrix(guint objectNr = 1);

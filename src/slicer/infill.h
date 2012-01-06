@@ -23,7 +23,7 @@
 #include <vmmlib/vmmlib.h> 
 
 #include "layer.h"
-
+#include "clipping.h"
 
 using namespace std; 
 using namespace vmml;
@@ -56,11 +56,12 @@ class Infill
   Infill(){}; 
 
   void addInfillPoly(const Poly p);
+  void addInfillPolys(const vector<Poly> polys);
 
  public:
 
   Infill(Layer *layer);
-  ~Infill(){}; 
+  ~Infill(); 
 
   static void clearPatterns();
   InfillType type;
@@ -69,16 +70,16 @@ class Infill
   vector<Poly> infillpolys;  // for clipper polygon types
   vector<Vector2d> infillvertices; // for lines types
   
-  void addInfill(vector<Poly> poly, InfillType type, double infillDistance, 
+  void addInfill(double z, vector<Poly> poly, InfillType type, double infillDistance, 
 		  double offsetDistance, double rotation);
-  void addInfill(const vector<Poly> polys, const vector<Poly> fillpolys,
+  void addInfill(double z, const vector<Poly> polys, const vector<Poly> fillpolys,
 		  double offsetDistance);
-  void addInfill(const vector<Poly> polys, const ClipperLib::Polygons ifcpolys,
+  void addInfill(double z, const vector<Poly> polys, const ClipperLib::Polygons ifcpolys,
 		  double offsetDistance);
 
   void getLines(vector<Vector3d> &lines) const;
   
-  void clear(){infillpolys.clear();};
+  void clear();
   uint size() const {return infillpolys.size();};
   void printinfo() const;
 };

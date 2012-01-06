@@ -33,6 +33,8 @@ Layer::Layer(int layerno, double thick) : LayerNo(layerno), thickness(thick)
 
 Layer::~Layer()
 {
+  Clear();
+  delete infill;
 }
 
 void Layer::setBBox(Vector2d min, Vector2d max) 
@@ -53,7 +55,6 @@ void Layer::setBBox(Vector3d min, Vector3d max)
   Max.x = MAX(Max.x,max.x);
   Max.y = MAX(Max.y,max.y);
 }	
-
 
 
 void Layer::SetPolygons(vector<Poly> polys) {
@@ -81,32 +82,6 @@ void Layer::addPolygons(vector<Poly> polys)
     }
 }
 
-
-// return the given polygons shrinked 
-vector<Poly> Layer::ShrinkedPolys(const vector<Poly> poly,
-				  double distance,
-				  ClipperLib::JoinType join_type) // default=jtMiter
-{
-  ClipperLib::Polygons opolys;
-  bool reverse=true;
-  while (opolys.size()==0){ // try to reverse poly vertices if no result
-    ClipperLib::Polygons cpolys = getClipperPolygons(poly,reverse);
-    ClipperLib::OffsetPolygons(cpolys, opolys, -1000.*distance,
-			       join_type,1);
-                               //ClipperLib::jtRound);
-    reverse=!reverse;
-    if (reverse) break;
-  }
-
-  vector<Poly> shrinked;
-  for(size_t p=0; p<opolys.size();p++)
-    {
-      Poly offsetPoly = Poly(Z, opolys[p], true);
-      shrinked.push_back(offsetPoly);
-    }
-  return shrinked;
-}
-
 void Layer::CalcInfill (double InfillDistance, 
 			double FullInfillDistance,
 			double InfillRotation, 
@@ -114,144 +89,84 @@ void Layer::CalcInfill (double InfillDistance,
 			bool ShellOnly, // only infill for fullfill (vertical shells)
 			bool DisplayDebuginFill)
 {
-  infill->clear();
-  delete infill;
   infill = new Infill(this);
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
   InfillType type = ParallelInfill;
   if (!ShellOnly)
-    infill->addInfill(offsetPolygons, type, 
+    infill->addInfill(Z, offsetPolygons, type, 
 		      InfillDistance, FullInfillDistance, rot);
-  infill->addInfill(fullFillPolygons, type, 
+  infill->addInfill(Z, fullFillPolygons, type, 
 		    FullInfillDistance, FullInfillDistance, rot);
-  infill->addInfill(supportPolygons, SupportInfill, 
+  infill->addInfill(Z, supportPolygons, SupportInfill, 
 		    InfillDistance, InfillDistance, InfillRotation/180.0*M_PI);
 }
 
-ClipperLib::Polygons Layer::getClipperPolygons(const vector<Poly> polygons,
-					       bool reverse) const
-{
-  ClipperLib::Polygons cpolys;
-  cpolys.resize(polygons.size());
-  for (uint i=0; i<polygons.size(); i++) 
-    {
-      cpolys[i] = polygons[i].getClipperPolygon(reverse);
-    }
-  return cpolys;
-}
 
-void Layer::addFullPolygons(const ClipperLib::Polygons fullpolys) 
+// add full fill and substract them from normal fill polys 
+void Layer::addFullPolygons(const vector<Poly> fullpolys) 
 {
-  ClipperLib::Polygons inter,diff;
-  ClipperLib::Clipper clpr;
-  ClipperLib::PolyFillType filltype = ClipperLib::pftPositive;
-  ClipperLib::Polygons normalpolys = 
-    getClipperPolygons(GetOffsetPolygons());
-  clpr.Clear();
-  clpr.AddPolygons(normalpolys, ClipperLib::ptSubject);
-  clpr.AddPolygons(fullpolys, ClipperLib::ptClip);
-  clpr.Execute(ClipperLib::ctIntersection, inter, filltype, filltype);
+  Clipping clipp;
+  clipp.clear();
+  // full fill only where already normal fill
+  clipp.addPolys(GetOffsetPolygons(),subject); 
+  clipp.addPolys(fullpolys,clip);
+  vector<Poly> inter = clipp.intersect();
   addFullFillPolygons(inter);
   //substract from normals
-  clpr.Clear(); 
-  clpr.AddPolygons(normalpolys, ClipperLib::ptSubject);
-  clpr.AddPolygons(fullpolys, ClipperLib::ptClip);
-  clpr.Execute(ClipperLib::ctDifference,   diff,  filltype, filltype);
-  setNormalFillPolygons(diff);
+  clipp.clear();
+  clipp.addPolys(GetOffsetPolygons(),subject);
+  clipp.addPolys(fullpolys,clip);
+  setNormalFillPolygons(clipp.substract());
 }
 
 
 void Layer::mergeFullPolygons() 
 {
-  ClipperLib::Polygons merged = getMergedPolygons(GetFullFillPolygons());
-  setFullFillPolygons(merged);
+  setFullFillPolygons(Clipping::getMerged(GetFullFillPolygons()));
 }
 void Layer::mergeSupportPolygons() 
 {
-  ClipperLib::Polygons merged = getMergedPolygons(GetSupportPolygons());
-  setSupportPolygons(merged);
-}
-ClipperLib::Polygons Layer::getMergedPolygons(const vector<Poly> polygons) const
-{
-  ClipperLib::Polygons cpoly= getClipperPolygons(polygons);
-  return getMergedPolygons(cpoly);
-}
-ClipperLib::Polygons Layer::getMergedPolygons(const ClipperLib::Polygons cpolys)
-  const
-{
-  ClipperLib::Polygons emptypolys;emptypolys.clear();
-  ClipperLib::Clipper clpr;
-  clpr.Clear();
-  // make wider to get overlap
-  ClipperLib::Polygons cpolys2 = getOffsetPolygons(cpolys, 2);
-  clpr.AddPolygons(cpolys2, ClipperLib::ptSubject);
-  clpr.AddPolygons(emptypolys, ClipperLib::ptClip);
-  ClipperLib::Polygons cpolys3;
-  clpr.Execute(ClipperLib::ctUnion, cpolys3, ClipperLib::pftPositive,
-	       ClipperLib::pftNegative);
-  // shrink the result
-  return getOffsetPolygons(cpolys3, -2);
-}
-ClipperLib::Polygons Layer::getOffsetPolygons(const ClipperLib::Polygons cpolys,
-					      long clipperdist) const
-{
-  ClipperLib::Polygons cpolys2;
-  ClipperLib::OffsetPolygons(cpolys, cpolys2, clipperdist, ClipperLib::jtMiter, 1);  
-  return cpolys2;
+  setSupportPolygons(Clipping::getMerged(GetSupportPolygons()));
 }
 
 // circular numbering
-vector<Poly>  Layer::GetShellPolygonsCirc(int number) const
+vector<Poly> Layer::GetShellPolygonsCirc(int number) const
 {
   number = (shellPolygons.size() +  number) % shellPolygons.size();
   return shellPolygons[number];
 }
 
-void Layer::setNormalFillPolygons(const ClipperLib::Polygons cpolys)
+void Layer::setNormalFillPolygons(const vector<Poly> polys)
 {
   offsetPolygons.clear();
-  offsetPolygons.resize(cpolys.size());
-  for (uint i=0; i<cpolys.size(); i++)
-    {
-      offsetPolygons[i]=Poly(Z, cpolys[i]);
-    }
+  offsetPolygons = polys;
+  for (uint i=0; i<offsetPolygons.size();i++)
+    offsetPolygons[i].setZ(Z);
 }
 
-void Layer::setFullFillPolygons(const ClipperLib::Polygons cpolys)
+void Layer::setFullFillPolygons(const vector<Poly>  polys)
 {
   fullFillPolygons.clear();
-  fullFillPolygons.resize(cpolys.size());
-  for (uint i=0; i<cpolys.size(); i++)
-    {
-      fullFillPolygons[i]=Poly(Z, cpolys[i]);
-    }
+  fullFillPolygons = polys;
+  for (uint i=0; i<fullFillPolygons.size();i++)
+    fullFillPolygons[i].setZ(Z);
 }
 
-void Layer::addFullFillPolygons(const ClipperLib::Polygons cpolys)
+void Layer::addFullFillPolygons(const vector<Poly> polys)
 {
-  for (uint i=0; i<cpolys.size(); i++)
-    {
-      fullFillPolygons.push_back(Poly(Z, cpolys[i]));
-    }
+  fullFillPolygons.insert(fullFillPolygons.end(),polys.begin(),polys.end());
 }
-void Layer::setSupportPolygons(const ClipperLib::Polygons cpolys)
+
+void Layer::setSupportPolygons(const vector<Poly> polys)
 {
   supportPolygons.clear();
-  ClipperLib::Polygons merged = getMergedPolygons(cpolys);
-  int count = merged.size();
-  supportPolygons.resize(count);
-//#pragma omp parallel for
-  for (int i=0; i<count; i++)
-    {
-      supportPolygons[i] = Poly(Z, merged[i]);
-      //cout << "support poly "<< i << ": ";
-      //supportPolygons[i].printinfo();
-    }
+  supportPolygons = polys;
 }
-void Layer::setSkirtPolygon(const ClipperLib::Polygons cpolys)
+
+void Layer::setSkirtPolygon(const Poly poly)
 {
-  skirtPolygon.clear();
-  skirtPolygon = Poly(Z, cpolys.front());
+  skirtPolygon = poly;
+  skirtPolygon.setZ(Z);
 }
 
 
@@ -265,20 +180,20 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
   double distance = 0.;
   if (skins>1) {
     distance = 0.5 * extrudedWidth/skins;
-    skinPolygons = ShrinkedPolys(polygons,distance);
+    skinPolygons = Clipping::getOffset(polygons,-distance);//ShrinkedPolys(polygons,distance);
     shellcount--;
   }
   distance += 0.5 * extrudedWidth; // 1st shell half offset from outside
-  vector<Poly> shrinked = ShrinkedPolys(polygons,distance);
+  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);//ShrinkedPolys(polygons,distance);
   shellPolygons.clear();
   shellPolygons.push_back(shrinked); // outer
   distance = extrudedWidth;
   for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
     {
-      shrinked = ShrinkedPolys(shrinked,distance);
+      shrinked = Clipping::getOffset(shrinked,-distance); //ShrinkedPolys(shrinked,distance);
       shellPolygons.push_back(shrinked);
     }
-  offsetPolygons = ShrinkedPolys(shrinked,distance); 
+  offsetPolygons = Clipping::getOffset(shrinked,-distance);//ShrinkedPolys(shrinked,distance); 
 
   if (makeskirt) {
     MakeSkirt(2*distance);
@@ -297,11 +212,7 @@ void Layer::MakeSkirt(double distance)
 {
   calcConvexHull();
   skirtPolygon.clear();
-  if (hullPolygon.size()>0) {
-    vector<Poly> convex;
-    convex.push_back(hullPolygon);
-    skirtPolygon = (ShrinkedPolys(convex, -distance,ClipperLib::jtRound)).front();
-  }
+  skirtPolygon = Clipping::getOffset(hullPolygon,distance,jround);//(ShrinkedPolys(convex, -distance,ClipperLib::jtRound)).front();
 }
 
 

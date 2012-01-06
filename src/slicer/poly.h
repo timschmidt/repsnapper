@@ -23,10 +23,7 @@
 #include <vmmlib/vmmlib.h>
 #include <polylib/Polygon2d.h>
 
-#include <clipper/clipper/polyclipping/trunk/cpp/clipper.hpp>
 
-
-/* #include "cuttingplane.h" */
 // #include "infill.h" 
 
 //class Infill;
@@ -49,7 +46,6 @@ bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
 		  InFillHit &hit, double maxoffset);
 
 
-
 class Poly
 {
 
@@ -57,23 +53,25 @@ class Poly
   //	vector<Poly*> holes;
 	bool holecalculated;
 	//Infill infill;
+
+	//Clipping clipp;
 public:
         Poly();
 	Poly(double z);
-	Poly(double z,
-	     const ClipperLib::Polygon cpoly, bool reverse=false);
+	/* Poly(double z, */
+	/*      const ClipperLib::Polygon cpoly, bool reverse=false); */
         ~Poly();
 
 	Poly Shrinked(double distance) const;
 	Poly Shrinked(vector<Vector2d> *vertices, double distance);
 
 	// Remove vertices that are on a straight line
-	void cleanup(double maxerror);
+	void cleanup(double maxerror=0.05);
 
 	void clear(){vertices.clear();};
 
 
-	vector< vector<Vector2d> > intersect(Poly &poly1, Poly &poly2) const;
+	//vector< vector<Vector2d> > intersect(Poly &poly1, Poly &poly2) const;
 
 	bool vertexInside(const Vector2d point, double maxoffset) const;
 	bool polyInside(const Poly * poly, double maxoffset) const;
@@ -89,7 +87,7 @@ public:
 					    double maxerr) const;
 
 	// ClipperLib::Polygons getOffsetClipperPolygons(double dist) const ;
-	ClipperLib::Polygon getClipperPolygon(bool reverse=false) const;
+	// ClipperLib::Polygon getClipperPolygon(bool reverse=false) const;
 	
 	Vector2d getVertexCircular(int pointindex) const;  // 2d point at index 
 	Vector3d getVertexCircular3(int pointindex) const; // 3d point at index 

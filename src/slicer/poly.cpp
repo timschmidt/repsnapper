@@ -60,35 +60,18 @@ long double angleBetweenAtan2(Vector2d V1, Vector2d V2)
 Poly::Poly(){
   holecalculated = false;
   this->z = -10;
-//   this->vertices = NULL;
+  //clipp = new Clipping();
+  //   this->vertices = NULL;
 }
 
 Poly::Poly(double z){
   this->z = z;
   holecalculated = false;
   hole=false;
+  //clipp = new Clipping();
   //cout << "POLY WITH PLANE"<< endl;
   //plane->printinfo();
   //printinfo();
-}
-
-
-// construct a Poly from a ClipperLib::Poly on given z height
-Poly::Poly(double z, const ClipperLib::Polygon cpoly, bool reverse){
-  this->z = z;
-  vertices.clear();
-  uint count = cpoly.size();
-  vertices.resize(count);
-  for (uint i = 0 ; i<count;  i++) { 
-    Vector2d v(double(cpoly[i].X)/1000.-1000., 
-	       double(cpoly[i].Y)/1000.-1000.);
-    if (reverse)
-      vertices[i] = v;
-    else
-      vertices[count-i-1] = v;
-    //cerr << "Poly "<< i <<": "<< v <<  endl;
-  }
-  calcHole();
 }
 
 
@@ -130,7 +113,10 @@ Poly::Poly(double z, const ClipperLib::Polygon cpoly, bool reverse){
 //   return offsetPoly;
 // }
 
-Poly::~Poly(){}
+Poly::~Poly()
+{
+  //delete clipp;
+}
 
 // Remove vertices that are on a straight line
 void Poly::cleanup(double maxerror)
@@ -207,6 +193,8 @@ bool Poly::isHole()
     calcHole();
   return hole;
 }
+
+
 void Poly::rotate(Vector2d center, double angle) 
 {
   double sina = sin(angle);
@@ -286,30 +274,6 @@ Vector3d Poly::getVertexCircular3(int pointindex) const
 }
 
 
-// return intersection polys
-vector< vector<Vector2d> > Poly::intersect(Poly &poly1, Poly &poly2) const
-{
-  ClipperLib::Polygon cpoly1 = poly1.getClipperPolygon(),
-    cpoly2 =  poly2.getClipperPolygon();
-  ClipperLib::Clipper clppr;
-  ClipperLib::Polygons sol;
-  clppr.AddPolygon(cpoly1,ClipperLib::ptSubject);
-  clppr.AddPolygon(cpoly2,ClipperLib::ptClip);
-  clppr.Execute(ClipperLib::ctIntersection, sol, 
-		  ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
-
-  vector< vector<Vector2d> > result;
-  for(size_t i=0; i<sol.size();i++)
-    {
-      vector<Vector2d> polypoints;
-      ClipperLib::Polygon cpoly = sol[i];
-      for(size_t j=0; j<cpoly.size();j++){
-	polypoints.push_back(Vector2d(cpoly[j].X,cpoly[j].Y));
-      }
-      result.push_back(polypoints);
-    }
-    return result;
-}
 
 
 // ClipperLib::Polygons Poly::getOffsetClipperPolygons(double dist) const 
@@ -329,26 +293,6 @@ vector< vector<Vector2d> > Poly::intersect(Poly &poly1, Poly &poly2) const
 // }
 
 
-ClipperLib::Polygon Poly::getClipperPolygon(bool reverse) const 
-{
-  ClipperLib::Polygon cpoly;
-  cpoly.resize(vertices.size());
-  for(size_t i=0; i<vertices.size();i++){
-    Vector2d P1;
-    if (reverse)
-       P1 = getVertexCircular(-i); // normally have to reverse, why?
-    else 
-      P1 = getVertexCircular(i); 
-    cpoly[i]=(ClipperLib::IntPoint(1000*(P1.x+1000.),
-				   1000*(P1.y+1000.)));
-  }
-  // doesn't work...:
-  // cerr<< "poly is hole? "<< hole;
-  // cerr<< " -- orient=" <<ClipperLib::Orientation(cpoly) << endl;
-  // if (ClipperLib::Orientation(cpoly) == hole) 
-  //   std::reverse(cpoly.begin(),cpoly.end());
-  return cpoly;
-}
 
 
 vector<InFillHit> Poly::lineIntersections(const Vector2d P1, const Vector2d P2,
@@ -466,11 +410,20 @@ vector<Vector2d> Poly::getMinMax() const{
   return range;
 }
 
+Vector3d rotatedZ(Vector3d v, double angle) 
+{
+  double sina = sin(angle);
+  double cosa = cos(angle);
+  return Vector3d(v.x*cosa-v.y*sina,
+		  v.y*cosa+v.x*sina, v.z);
+}
+
 void Poly::draw(int gl_type, double z) const
 {
   Vector2d v;
+  uint count = vertices.size();
   glBegin(gl_type);	  
-  for (uint i=0;i < vertices.size();i++){
+  for (uint i=0;i < count;i++){
     v = getVertexCircular(i);
     glVertex3f(v.x,v.y,z);
   }
@@ -479,14 +432,23 @@ void Poly::draw(int gl_type, double z) const
 
 void Poly::draw(int gl_type, bool reverse) const
 {
-  Vector3d v;
+  Vector3d v;//,vn,m,dir;
+  uint count = vertices.size();
   glBegin(gl_type);	  
-  for (uint i=0;i < vertices.size();i++){
-    if (reverse)
+  for (uint i=0;i < count;i++){
+    if (reverse){
       v = getVertexCircular3(-i);
-    else
+      // vn = getVertexCircular3(-i-1);
+    } else {
       v = getVertexCircular3(i);
+      // vn = getVertexCircular3(i+1);
+    }
     glVertex3f(v.x,v.y,v.z);
+    // if (gl_type==GL_LINE_LOOP){
+    //   m = (v+vn)/2;
+    //   dir = m + rotatedZ((vn-v)/10,M_PI/2);
+    //   glVertex3f(dir.x,dir.y,z);
+    // }
   }
   glEnd();
 }

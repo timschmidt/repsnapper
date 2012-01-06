@@ -26,11 +26,25 @@
 using namespace std; 
 using namespace vmml;
 
+
 vector<struct Infill::pattern> Infill::savedPatterns;
+
 
 // Infill::Infill(){
 //   infill.clear();
 // }
+
+Infill::~Infill()
+{
+  clear();
+}
+
+void Infill::clear()
+{
+  infillpolys.clear();
+  infillvertices.clear();
+}
+
 Infill::Infill(Layer *layer) 
 {
   this->layer = layer;
@@ -41,31 +55,31 @@ void Infill::clearPatterns() {
 }
 
 // fill polys with type etc.
-void Infill::addInfill(const vector<Poly> polys, InfillType type, 
+void Infill::addInfill(double z, const vector<Poly> polys, InfillType type, 
 			double infillDistance, double offsetDistance, double rotation)
 {
   ClipperLib::Polygons patterncpolys = 
     makeInfillPattern(type,infillDistance, offsetDistance, rotation);
-  addInfill(polys, patterncpolys, offsetDistance);
+  addInfill(z, polys, patterncpolys, offsetDistance);
 }
 
 // fill polys with fillpolys
-void Infill::addInfill(const vector<Poly> polys, const vector<Poly> fillpolys,
+void Infill::addInfill(double z, const vector<Poly> polys, const vector<Poly> fillpolys,
 		       double offsetDistance)
 {
-  addInfill(polys, layer->getClipperPolygons(fillpolys), offsetDistance);
+  addInfill(z, polys, Clipping::getClipperPolygons(fillpolys), offsetDistance);
 }
 
 // clip infill pattern polys against polys (after NOT offsetting polys)
-void Infill::addInfill(const vector<Poly> polys, 
-			const ClipperLib::Polygons patterncpolys,
-			double offsetDistance)
+void Infill::addInfill(double z, const vector<Poly> polys, 
+		       const ClipperLib::Polygons patterncpolys,
+		       double offsetDistance)
 {
-  bool reverse=true;
+  //bool reverse=true;
   // // problem with offsetting is orientation so that a few polys won't get filled
   // ClipperLib::Polygons offset;
   // while (offset.size()==0){ // try to reverse poly vertices if no result
-  ClipperLib::Polygons cpolys = layer->getClipperPolygons(polys,reverse);
+  ClipperLib::Polygons cpolys = Clipping::getClipperPolygons(polys);
   //   // offset by half offsetDistance
   //   ClipperLib::OffsetPolygons(cpolys, offset, -1000.*offsetDistance/2.,
   // 			     ClipperLib::jtMiter,2);
@@ -78,11 +92,11 @@ void Infill::addInfill(const vector<Poly> polys,
   ClipperLib::Polygons result;
   ClipperLib::PolyFillType filltype = ClipperLib::pftNonZero; //?
   clpr.Execute(ClipperLib::ctIntersection, result, filltype, ClipperLib::pftNonZero);
-  for (uint i=0;i<result.size();i++)
-    {
-      Poly p = Poly(layer->getZ(), result[i]);
-      addInfillPoly(p);
-    }
+  addInfillPolys(Clipping::getPolys(result, z));
+  // for (uint i=0;i<result.size();i++)
+  //   {
+  //     Poly p = Poly(layer->getZ(), result[i]);
+  //   }
 }
 
 // generate infill pattern as a vector of polygons
@@ -135,7 +149,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	poly.addVertex(Vector2d(Min.x,Min.y-infillDistance));
 	poly.rotate(center,rotation);
 	polys.push_back(poly);
-	cpolys = layer->getClipperPolygons(polys);
+	cpolys = Clipping::getClipperPolygons(polys);
       }
       break;
     case LinesInfill: // lines only -- not possible
@@ -147,7 +161,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  poly.rotate(center,rotation);
 	  polys.push_back(poly);
 	}
-	cpolys = layer->getClipperPolygons(polys);
+	cpolys = Clipping::getClipperPolygons(polys);
 	cerr << cpolys.size() << endl; 
       }
       break;
@@ -162,6 +176,15 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   newPattern.cpolys=cpolys;
   savedPatterns.push_back(newPattern);
   return newPattern.cpolys;
+}
+
+void Infill::addInfillPolys(const vector<Poly> polys)
+{
+  if (type == ParallelInfill) 
+    for (uint i=0; i<polys.size();i++)
+      addInfillPoly(polys[i]);
+  else
+    infillpolys.insert(infillpolys.begin(),polys.begin(),polys.end());
 }
 
 void Infill::addInfillPoly(const Poly p)

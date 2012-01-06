@@ -34,6 +34,8 @@ public:
 	Triangle(const Vector3d &Norml, const Vector3d &Point1,
 		 const Vector3d &Point2, const Vector3d &Point3) 
 		{ Normal = Norml ; A=Point1;B=Point2;C=Point3;}
+	Triangle(const Vector3d &Point1,
+		 const Vector3d &Point2, const Vector3d &Point3);
 	Triangle() {};
 
 	/* Represent the triangle as an array of length 3 {A, B, C} */
@@ -41,6 +43,8 @@ public:
 
 	void SetPoints(const Vector3d &P1, const Vector3d &P2, const Vector3d &P3) { A=P1;B=P2;C=P3; }
 	void SetNormal(const Vector3d &Norml) { Normal=Norml;}
+	void calcNormal();
+	void invertNormal();
 	double area();
 
 	AXIS axis;			// Used for auto-rotation

@@ -126,6 +126,8 @@ public:
 
 	string getSTLsolid(int number) const;
 
+	void invertNormals();
+
 private:
     double scale_factor;
     int loadASCIISTL(std::string filename);

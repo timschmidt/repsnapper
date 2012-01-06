@@ -157,9 +157,9 @@ static struct {
   FLOAT_MEMBER  (Slicing.AltInfillDistance, "AltInfillDistance", 2.0, true),
   STRING_MEMBER (Slicing.AltInfillLayersText, "AltInfillLayersText", "", true),
   BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, false),
-  BOOL_MEMBER   (Slicing.Support, "Support", false, false),
-  FLOAT_MEMBER  (Slicing.SkirtHeight, "SkirtHeight", 0.0, false),
-  INT_MEMBER    (Slicing.Skins, "Skins", 1, false),
+  BOOL_MEMBER   (Slicing.Support, "Support", false, true),
+  FLOAT_MEMBER  (Slicing.SkirtHeight, "SkirtHeight", 0.0, true),
+  INT_MEMBER    (Slicing.Skins, "Skins", 1, true),
 
   BOOL_MEMBER   (Slicing.ShellOnly, "ShellOnly", false, true),
   INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),

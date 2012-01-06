@@ -103,10 +103,11 @@ int Shape::loadBinarySTL(string filename) {
         c = read_double (file);
         Vector3d Cx(a,b,c);
 
+	// done in Triangle
         /* Recalculate normal vector - can't trust an STL file! */
-        Vector3d AA=Cx-Ax;
-        Vector3d BB=Cx-Bx;
-	N = AA.cross(BB).getNormalized();
+        // Vector3d AA=Cx-Ax;
+        // Vector3d BB=Cx-Bx;
+	// N = AA.cross(BB).getNormalized();
 
         /* attribute byte count - sometimes contains face color
             information but is useless for our purposes */
@@ -116,7 +117,7 @@ int Shape::loadBinarySTL(string filename) {
 	// Repress unused variable warning.
 	(void)&byte_count;
 
-        Triangle T(N,Ax,Bx,Cx);
+        Triangle T(Ax,Bx,Cx);
 
 	//cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
 
@@ -212,15 +213,15 @@ int Shape::loadASCIISTL(string filename) {
             return -1;
         }
 
+	// done in Triangle
         /* Recalculate normal vector - can't trust an STL file! */
-        Vector3d AA=vertices[2]-vertices[0];
-        Vector3d BB=vertices[2]-vertices[1];
-	normal_vec = AA.cross(BB).getNormalized();
+        // Vector3d AA=vertices[2]-vertices[0];
+        // Vector3d BB=vertices[2]-vertices[1];
+	// normal_vec = AA.cross(BB).getNormalized();
 
 
         // Create triangle object and push onto the vector
-        Triangle triangle(normal_vec,
-			  vertices[0],
+        Triangle triangle(vertices[0],
 			  vertices[1],
 			  vertices[2]);
 
@@ -294,6 +295,13 @@ int Shape::load(string filename)
 }
 
 
+void Shape::invertNormals()
+{
+  for (uint i = 0; i < triangles.size(); i++)
+    triangles[i].invertNormal();
+}
+
+
 string Shape::getSTLsolid(int number) const
 {
   stringstream sstr;
@@ -303,6 +311,7 @@ string Shape::getSTLsolid(int number) const
   sstr << "endsolid Reprappersolid" << number <<endl;
   return sstr.str();
 }
+
 
 
 void Shape::Scale(double in_scale_factor)

@@ -308,6 +308,14 @@ void Model::OptimizeRotation(Shape *shape, TreeObject *object)
   CalcBoundingBoxAndCenter();
 }
 
+void Model::InvertNormals(Shape *shape, TreeObject *object)
+{
+  if (!shape)
+    return; 
+  shape->invertNormals();
+  CalcBoundingBoxAndCenter();
+}
+
 void Model::DeleteObjTree(Gtk::TreeModel::iterator &iter)
 {
   objtree.DeleteSelected (iter);
@@ -489,7 +497,6 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
     glDisable(GL_DEPTH_TEST);
     drawLayers(offset);
   }
-  
 }
 
 void Model::drawLayers(Vector3d offset) const
@@ -522,7 +529,6 @@ void Model::drawLayers(Vector3d offset) const
   z += 0.5*zStep; // always cut in middle of layer
 
   //cerr << zStep << ";"<<Max.z<<";"<<Min.z<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
-
 
   vector<int> altInfillLayers;
   settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
@@ -602,7 +608,6 @@ void Model::drawLayers(Vector3d offset) const
             delete layer;
       }
       // displayInfillOld(settings, layer, layer.LayerNo, altInfillLayers);
-      
       LayerNr++; 
       z+=zStep;
     }// while

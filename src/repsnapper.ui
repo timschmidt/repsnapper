@@ -740,7 +740,7 @@ and others I forgot... (needs updating)</property>
                           <object class="GtkHScale" id="m_scale_slider">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Hello</property>
+                            <property name="tooltip_text" translatable="yes">Resize Selected Object</property>
                           </object>
                         </child>
                       </object>
@@ -751,7 +751,36 @@ and others I forgot... (needs updating)</property>
                       </packing>
                     </child>
                     <child>
-                      <placeholder/>
+                      <object class="GtkHBox" id="hbox9">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkButton" id="m_normals">
+                            <property name="label" translatable="yes">Invert Normals</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="tooltip_text" translatable="yes">Invert all triangle normals if STL is inverted</property>
+                            <property name="use_action_appearance">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">10</property>
+                      </packing>
                     </child>
                     <child>
                       <placeholder/>
