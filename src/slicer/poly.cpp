@@ -60,15 +60,12 @@ long double angleBetweenAtan2(Vector2d V1, Vector2d V2)
 Poly::Poly(){
   holecalculated = false;
   this->z = -10;
-  //clipp = new Clipping();
-  //   this->vertices = NULL;
 }
 
 Poly::Poly(double z){
   this->z = z;
   holecalculated = false;
   hole=false;
-  //clipp = new Clipping();
   //cout << "POLY WITH PLANE"<< endl;
   //plane->printinfo();
   //printinfo();

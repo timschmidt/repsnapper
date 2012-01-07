@@ -75,17 +75,7 @@ void Infill::addInfill(double z, const vector<Poly> polys,
 		       const ClipperLib::Polygons patterncpolys,
 		       double offsetDistance)
 {
-  //bool reverse=true;
-  // // problem with offsetting is orientation so that a few polys won't get filled
-  // ClipperLib::Polygons offset;
-  // while (offset.size()==0){ // try to reverse poly vertices if no result
   ClipperLib::Polygons cpolys = Clipping::getClipperPolygons(polys);
-  //   // offset by half offsetDistance
-  //   ClipperLib::OffsetPolygons(cpolys, offset, -1000.*offsetDistance/2.,
-  // 			     ClipperLib::jtMiter,2);
-  //   reverse=!reverse;
-  //   if (reverse) break;
-  // }
   ClipperLib::Clipper clpr;
   clpr.AddPolygons(patterncpolys,ClipperLib::ptSubject);
   clpr.AddPolygons(cpolys,ClipperLib::ptClip);
@@ -93,10 +83,6 @@ void Infill::addInfill(double z, const vector<Poly> polys,
   ClipperLib::PolyFillType filltype = ClipperLib::pftNonZero; //?
   clpr.Execute(ClipperLib::ctIntersection, result, filltype, ClipperLib::pftNonZero);
   addInfillPolys(Clipping::getPolys(result, z));
-  // for (uint i=0;i<result.size();i++)
-  //   {
-  //     Poly p = Poly(layer->getZ(), result[i]);
-  //   }
 }
 
 // generate infill pattern as a vector of polygons

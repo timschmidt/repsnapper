@@ -30,8 +30,8 @@
 
 
 // Clipper uses non-negative long long integers, so we transform by:
-const double CL_FACTOR = 1000; // 1 = 1/1000 mm
-const double CL_OFFSET = 1000; // 1 m
+const double CL_FACTOR = 10000; // 1 = 1/10000 mm
+const double CL_OFFSET = 10000; // 10 m
 
 namespace CL = ClipperLib;
 

@@ -388,9 +388,9 @@ void Model::MakeShells()
       
       makeskirt = (layers[i]->getZ() <= skirtheight);
       layers[i]->MakeShells(settings.Slicing.ShellCount,
-				   matwidth, settings.Slicing.Optimization, 
-				   makeskirt, (i==0?1:skins), //no skin on 1st layer
-				   false); 
+			    matwidth, settings.Slicing.Optimization, 
+			    makeskirt, (i==0?1:skins), //no skin on 1st layer
+			    false); 
     }
   MakeSkirt();
   m_progress.stop (_("Done"));

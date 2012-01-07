@@ -918,17 +918,17 @@ void Settings::connect_to_ui (Builder &builder)
 
 double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) const
 {
-  return ExtrudedMaterialWidthRatio * layerheight * ExtrusionFactor;
+  return ExtrudedMaterialWidthRatio * layerheight;
 }
 
 // We do our internal measurement in terms of the length of extruded material
 double Settings::HardwareSettings::GetExtrudeFactor(double layerheight) const
 {
-  double f = 1.0;
+  double f = ExtrusionFactor;
   double matWidth = GetExtrudedMaterialWidth(layerheight);
   if (CalibrateInput) {
     // otherwise we just work back from the extruded diameter for now.
-    f = (matWidth * matWidth) / (FilamentDiameter * FilamentDiameter);
+    f *= (matWidth * matWidth) / (FilamentDiameter * FilamentDiameter);
   } // else: we work in terms of output anyway;
 
   return f;

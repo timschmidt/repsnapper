@@ -42,19 +42,36 @@ Layer::~Layer()
 }
 
 
+void clearpolys(vector<Poly> &polys){
+  for (uint i=0; i<polys.size();i++)
+    polys[i].clear();
+  polys.clear();
+}
+void clearpolys(vector< vector<Poly> > &polys){
+  for (uint i=0; i<polys.size();i++)
+    clearpolys(polys[i]);
+  polys.clear();
+}
+
 void Layer::Clear()
 {
   normalInfill->clear();
   fullInfill->clear();
   supportInfill->clear();
-  polygons.clear();
-  shellPolygons.clear();
-  offsetPolygons.clear();
-  fullFillPolygons.clear();
-  supportPolygons.clear();
+  clearpolys(polygons);
+  clearpolys(shellPolygons);
+  clearpolys(offsetPolygons);
+  clearpolys(fullFillPolygons);
+  clearpolys(supportPolygons);
+  clearpolys(skinPolygons);
+  // polygons.clear();
+  // shellPolygons.clear();
+  // offsetPolygons.clear();
+  // fullFillPolygons.clear();
+  // supportPolygons.clear();
   hullPolygon.clear();
   skirtPolygon.clear();
-  skinPolygons.clear();
+  // skinPolygons.clear();
 }
 
 void Layer::setBBox(Vector2d min, Vector2d max) 
@@ -85,7 +102,7 @@ void Layer::SetPolygons(const Matrix4d &T, const Shape shape,
   double offsetZ = Z;
   bool have_polys=false;
   while (!have_polys) {
-    polygons.clear();
+    clearpolys(polygons);
     have_polys = shape.getPolygonsAtZ(T, Optimization, offsetZ, polygons);
     offsetZ+=thickness/10.;
   }
@@ -160,7 +177,7 @@ vector<Poly> Layer::GetShellPolygonsCirc(int number) const
 
 void Layer::setNormalFillPolygons(const vector<Poly> polys)
 {
-  offsetPolygons.clear();
+  clearpolys(offsetPolygons);
   offsetPolygons = polys;
   for (uint i=0; i<offsetPolygons.size();i++)
     offsetPolygons[i].setZ(Z);
@@ -168,7 +185,7 @@ void Layer::setNormalFillPolygons(const vector<Poly> polys)
 
 void Layer::setFullFillPolygons(const vector<Poly>  polys)
 {
-  fullFillPolygons.clear();
+  clearpolys(fullFillPolygons);
   fullFillPolygons = polys;
   for (uint i=0; i<fullFillPolygons.size();i++)
     fullFillPolygons[i].setZ(Z);
@@ -181,7 +198,7 @@ void Layer::addFullFillPolygons(const vector<Poly> polys)
 
 void Layer::setSupportPolygons(const vector<Poly> polys)
 {
-  supportPolygons.clear();
+  clearpolys(supportPolygons);
   supportPolygons = polys;
 }
 
@@ -201,21 +218,21 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
   this->skins = skins;
   double distance = 0.;
   if (skins>1) {
-    distance = 0.5 * extrudedWidth/skins;
-    skinPolygons = Clipping::getOffset(polygons,-distance);//ShrinkedPolys(polygons,distance);
+    distance = 0.5 * extrudedWidth; // /skins;
+    skinPolygons = Clipping::getOffset(polygons,-distance);
     shellcount--;
   }
   distance += 0.5 * extrudedWidth; // 1st shell half offset from outside
-  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);//ShrinkedPolys(polygons,distance);
-  shellPolygons.clear();
+  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);
+  clearpolys(shellPolygons);
   shellPolygons.push_back(shrinked); // outer
   distance = extrudedWidth;
   for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
     {
-      shrinked = Clipping::getOffset(shrinked,-distance); //ShrinkedPolys(shrinked,distance);
+      shrinked = Clipping::getOffset(shrinked,-distance); 
       shellPolygons.push_back(shrinked);
     }
-  offsetPolygons = Clipping::getOffset(shrinked,-distance);//ShrinkedPolys(shrinked,distance); 
+  offsetPolygons = Clipping::getOffset(shrinked,-distance);
 
   if (makeskirt) {
     MakeSkirt(2*distance);
@@ -355,7 +372,7 @@ void Layer::MakeGcode(GCodeState &state,
 	Vector2d startPoint(start3.x,start3.y);
 
 	double extrf = hardware.GetExtrudeFactor(thickness);
-	double skinextrf = extrf/skins/skins;
+	double skinextrf = extrf/skins; // /skins; // only height change, keep width
 
 	vector<Vector3d> lines;
 
