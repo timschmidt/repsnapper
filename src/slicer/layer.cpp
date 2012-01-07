@@ -216,14 +216,13 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
 {
   //cerr << "make " << shellcount << " shells "  << endl;
   this->skins = skins;
-  double distance = 0.;
+  double distance = 0.5 * extrudedWidth;
   if (skins>1) {
-    distance = 0.5 * extrudedWidth; // /skins;
-    skinPolygons = Clipping::getOffset(polygons,-distance);
+    skinPolygons = Clipping::getOffset(polygons,-distance,jmiter,0.2);
     shellcount--;
+    distance += extrudedWidth; 
   }
-  distance += 0.5 * extrudedWidth; // 1st shell half offset from outside
-  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);
+  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance,jmiter,0.5);
   clearpolys(shellPolygons);
   shellPolygons.push_back(shrinked); // outer
   distance = extrudedWidth;

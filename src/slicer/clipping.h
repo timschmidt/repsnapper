@@ -76,13 +76,14 @@ public:
 
   static vector<Poly> getMerged(vector<Poly> polys);
   
-  static Poly getOffset(Poly poly, double distance, JoinType jtype=jmiter);
-  static vector<Poly> getOffset(vector<Poly> polys, double distance, JoinType jtype=jmiter);
+  static Poly getOffset(Poly poly, double distance, JoinType jtype=jmiter, double miterdist=1);
+  static vector<Poly> getOffset(vector<Poly> polys, double distance, 
+				JoinType jtype=jmiter,double miterdist=1);
 
   //vector< vector<Vector2d> > intersect(const Poly poly1, const Poly poly2) const;
 
-  static Poly getPoly(const CL::Polygon cpoly, double z, bool reverse=false);
-  static vector <Poly> getPolys(const CL::Polygons cpoly, double z, bool reverse=false);
+  static Poly getPoly(const CL::Polygon cpoly, double z);
+  static vector <Poly> getPolys(const CL::Polygons cpoly, double z);
 
   static CL::Polygon  getClipperPolygon (const Poly poly, bool reverse=false);
   static CL::Polygons getClipperPolygons(const vector<Poly> polys, bool reverse=false);

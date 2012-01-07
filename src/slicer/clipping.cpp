@@ -91,7 +91,9 @@ void Clipping::addPoly(const Poly poly, PolyType type)
 void Clipping::addPolys(const vector<Poly> polys, PolyType type)
 {
   clpr.AddPolygons(getClipperPolygons(polys),CLType(type));
-  lastZ = polys.back().getZ();
+  double z=0;
+  if (polys.size()>0) z= polys.back().getZ();
+  lastZ = z;
 }
 
 
@@ -155,17 +157,20 @@ vector<Poly> Clipping::substractMerged()
   return getPolys(getMerged(diff), lastZ);
 }
 
-Poly Clipping::getOffset(Poly poly, double distance, JoinType jtype)
+Poly Clipping::getOffset(Poly poly, double distance, JoinType jtype, double miterdist)
 {
   CL::Polygons cpolys; cpolys.push_back(getClipperPolygon(poly,true));
-  CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype));
+  CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
   return getPoly((CL::Polygon)offset.front(), poly.getZ());
 }
-vector<Poly> Clipping::getOffset(vector<Poly> polys, double distance, JoinType jtype)
+vector<Poly> Clipping::getOffset(vector<Poly> polys, double distance, JoinType jtype,
+				 double miterdist)
 {
   CL::Polygons cpolys = getClipperPolygons(polys,true);
-  CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype));
-  return getPolys(offset,polys.back().getZ());
+  CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
+  double z=0;
+  if (polys.size()>0) z= polys.back().getZ();
+  return getPolys(offset,z);
 }
 
 // offset with reverse test
@@ -173,20 +178,7 @@ CL::Polygons Clipping::CLOffset(CL::Polygons cpolys, int cldist,
 				CL::JoinType cljtype, double miter_limit)
 {
   CL::Polygons opolys;
-  // bool reverse=false;
-  // // try to reverse poly vertices if no result
-  // bool ok=false;
-  // while (!ok){ 
-  // for (uint i=0; i<cpolys.size();i++) 
-  //   std::reverse(cpolys[i].begin(),cpolys[i].end());
   CL::OffsetPolygons(cpolys, opolys, cldist, cljtype, miter_limit);
-  //   ok = (opolys.size()!=0 && opolys.front().size()!=0);
-  //   if (!ok)
-  //    
-  // 	
-  //   reverse=!reverse;
-  //   if (!reverse) break;
-  // }
   return opolys;
 }
 
@@ -215,7 +207,9 @@ vector<Poly> Clipping::getMerged(vector<Poly> polys)
   //CL::OffsetPolygons(cpolys3, offset, -2, ClipperLib::jtMiter, 1);
   //return getPolys(cpolys3,polys.back().getZ(),true);
   offset = CLOffset(cpolys3, -2, CL::jtMiter, 1);
-  return getPolys(offset, polys.back().getZ());
+  double z=0;
+  if (polys.size()>0) z= polys.back().getZ();
+  return getPolys(offset, z);
 }
 
 CL::Polygons Clipping::getMerged(CL::Polygons cpolys) 
@@ -230,7 +224,7 @@ CL::Polygons Clipping::getMerged(CL::Polygons cpolys)
   return CLOffset(cpolys3, -2, CL::jtMiter, 1);
 }
 
-Poly Clipping::getPoly(const CL::Polygon cpoly, double z, bool reverse) 
+Poly Clipping::getPoly(const CL::Polygon cpoly, double z) 
 {
   Poly p = Poly(z);
   p.vertices.clear();
@@ -238,22 +232,18 @@ Poly Clipping::getPoly(const CL::Polygon cpoly, double z, bool reverse)
   p.vertices.resize(count);
   for (uint i = 0 ; i<count;  i++) { 
     Vector2d v = getPoint(cpoly[i]);
-    // if (reverse)
-    //   p.vertices[i] = v;
-    // else
-      p.vertices[count-i-1] = v;
-    //cerr << "Poly "<< i <<": "<< v <<  endl;
+    p.vertices[count-i-1] = v;
   }
   p.cleanup();
   p.calcHole();
   return p;
 }
 
-vector<Poly> Clipping::getPolys(const CL::Polygons cpolys, double z, bool reverse) 
+vector<Poly> Clipping::getPolys(const CL::Polygons cpolys, double z) 
 {
   uint count = cpolys.size();
   vector<Poly> polys(count);
   for (uint i = 0 ; i<count;  i++) 
-    polys[i] = getPoly(cpolys[i], z, reverse);
+    polys[i] = getPoly(cpolys[i], z);
   return polys;
 }
