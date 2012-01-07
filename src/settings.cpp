@@ -137,9 +137,9 @@ static struct {
   { OFFSET (Hardware.PrintMargin.y), T_DOUBLE, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
   { OFFSET (Hardware.PrintMargin.z), T_DOUBLE, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
 
-  FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 0.7, false),
+  FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, false),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
-  { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 19200, false }, /* 57600 ? */
+  { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 57600, false }, 
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
   INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4, false),
@@ -151,9 +151,9 @@ static struct {
   FLOAT_MEMBER (Slicing.AntioozeDistance, "AntioozeDistance", 4.5, false),
   FLOAT_MEMBER (Slicing.AntioozeSpeed, "AntioozeSpeed", 1000.0, false),
 
-  FLOAT_MEMBER  (Slicing.InfillDistance, "InfillDistance", 2.0, true),
-  FLOAT_MEMBER  (Slicing.InfillRotation, "InfillRotation", 45.0, true),
-  FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, "InfillRotationPrLayer", 90.0, true),
+  FLOAT_MEMBER  (Slicing.InfillDistance, "InfillDistance", 3.0, true),
+  FLOAT_MEMBER  (Slicing.InfillRotation, "InfillRotation", 90.0, true),
+  FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, "InfillRotationPrLayer", 60.0, true),
   FLOAT_MEMBER  (Slicing.AltInfillDistance, "AltInfillDistance", 2.0, true),
   STRING_MEMBER (Slicing.AltInfillLayersText, "AltInfillLayersText", "", true),
   BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, false),
@@ -166,7 +166,7 @@ static struct {
   BOOL_MEMBER   (Slicing.EnableAcceleration, "EnableAcceleration", true, false),
 // ShrinkQuality is a special enumeration ...
 //  INT_MEMBER    (Slicing.ShrinkQuality, "ShrinkQuality", 0, true),
-  FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.02, false),
+  FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.005, false),
 
   // Misc.
   BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
