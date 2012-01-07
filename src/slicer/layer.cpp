@@ -358,7 +358,7 @@ void Layer::MakeGcode(GCodeState &state,
 	lines.clear();
 	for(size_t p=0;p<shellPolygons.size();p++) // outer to inner, in this order
 	  getOrderedPolyLines(shellPolygons[p], startPoint, lines); // sorted
-	// + Infill
+	// + Infill incl. Support
 	getOrderedPolyLines(infill->infillpolys, startPoint,lines);
 	state.AddLines(lines, extrf, offsetZ, E, slicing, hardware);	       
 }

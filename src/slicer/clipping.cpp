@@ -147,6 +147,13 @@ vector<Poly> Clipping::substract()
 	       CL::pftEvenOdd, CL::pftEvenOdd);
   return getPolys(diff, lastZ);
 }
+vector<Poly> Clipping::substractMerged()
+{
+  CL::Polygons diff;
+  clpr.Execute(CL::ctDifference, diff, 
+	       CL::pftEvenOdd, CL::pftEvenOdd);
+  return getPolys(getMerged(diff), lastZ);
+}
 
 Poly Clipping::getOffset(Poly poly, double distance, JoinType jtype)
 {
@@ -192,13 +199,13 @@ vector<Poly> Clipping::getMerged(vector<Poly> polys)
   //return getPolys(cpolys,polys.back().getZ(),true);
   // make wider to get overlap
   CL::Polygons offset;
-  offset = CLOffset(cpolys, 10, CL::jtMiter, 1);
+  offset = CLOffset(cpolys, 2, CL::jtMiter, 1);
   //CL::OffsetPolygons(cpolys, offset, 10, ClipperLib::jtMiter, 1);
-  return getPolys(offset, polys.back().getZ(),true);
+  //return getPolys(offset, polys.back().getZ(),true);
   clpr.Clear();
   clpr.AddPolygons(offset, CL::ptSubject);
-  CL::Polygons emptypolys;
-  clpr.AddPolygons(emptypolys, CL::ptClip);
+  // CL::Polygons emptypolys;
+  // clpr.AddPolygons(emptypolys, CL::ptClip);
   // unite
   CL::Polygons cpolys3;
   clpr.Execute(CL::ctUnion, cpolys3, 
@@ -206,11 +213,22 @@ vector<Poly> Clipping::getMerged(vector<Poly> polys)
   //cerr << cpolys3.size() << " - "<<offset.size() << endl;
   // shrink the result  
   //CL::OffsetPolygons(cpolys3, offset, -2, ClipperLib::jtMiter, 1);
-  return getPolys(cpolys3,polys.back().getZ(),true);
+  //return getPolys(cpolys3,polys.back().getZ(),true);
   offset = CLOffset(cpolys3, -2, CL::jtMiter, 1);
   return getPolys(offset, polys.back().getZ());
 }
 
+CL::Polygons Clipping::getMerged(CL::Polygons cpolys) 
+{
+  CL::Polygons offset;
+  offset = CLOffset(cpolys, 2, CL::jtMiter, 1);
+  clpr.Clear();
+  clpr.AddPolygons(offset, CL::ptSubject);
+  CL::Polygons cpolys3;
+  clpr.Execute(CL::ctUnion, cpolys3, 
+	       CL::pftPositive, CL::pftNegative);
+  return CLOffset(cpolys3, -2, CL::jtMiter, 1);
+}
 
 Poly Clipping::getPoly(const CL::Polygon cpoly, double z, bool reverse) 
 {

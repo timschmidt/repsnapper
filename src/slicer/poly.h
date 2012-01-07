@@ -66,7 +66,7 @@ public:
 	Poly Shrinked(vector<Vector2d> *vertices, double distance);
 
 	// Remove vertices that are on a straight line
-	void cleanup(double maxerror=0.05);
+	void cleanup(double maxerror=0.001);
 
 	void clear(){vertices.clear();};
 

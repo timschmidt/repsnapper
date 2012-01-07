@@ -332,12 +332,19 @@ void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
 void Model::MakeSupportPolygons()
 { 
   int count = layers.size();
-  m_progress.start (_("Support"), count-1);
+  m_progress.start (_("Support"), count*2);
   for (int i=count-1; i>0; i--) 
     {
       m_progress.update(count-i);
       g_main_context_iteration(NULL,false);
       MakeSupportPolygons(layers[i-1], layers[i]);
+    }
+  for (int i=0; i<count; i++) 
+    {
+      double distance = 1.5*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
+      m_progress.update(i+count);
+      vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());
+      layers[i]->setSupportPolygons(Clipping::getOffset(merged,-distance));
     }
   m_progress.stop (_("Done"));
 }
