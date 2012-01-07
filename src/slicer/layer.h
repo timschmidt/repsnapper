@@ -125,18 +125,7 @@ public:
 	    bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
 	    bool DrawCPVertexNumbers, bool DisplayInfill) const ;
     
-  void Clear()
-  {
-    polygons.clear();
-    shellPolygons.clear();
-    offsetPolygons.clear();
-    fullFillPolygons.clear();
-    supportPolygons.clear();
-    hullPolygon.clear();
-    skirtPolygon.clear();
-    skinPolygons.clear();
-  }
-
+  void Clear();
 
   void addPolygons(vector<Poly> polys);
   vector<Poly> polygons;		// original polygons directly from model
@@ -145,7 +134,9 @@ public:
 
   Vector2d Min, Max;  // Bounding box
 
-  Infill * infill;
+  Infill * normalInfill;
+  Infill * fullInfill;
+  Infill * supportInfill;
   
   vector< vector<Poly> > shellPolygons; // all shells except innermost
   vector<Poly> offsetPolygons;	        // innermost shell 

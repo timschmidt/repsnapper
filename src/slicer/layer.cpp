@@ -25,7 +25,9 @@
 
 Layer::Layer(int layerno, double thick) : LayerNo(layerno), thickness(thick) 
 {
-  infill = new Infill(this);
+  normalInfill = new Infill(this);
+  fullInfill = new Infill(this);
+  supportInfill = new Infill(this);
   Min = Vector2d(G_MAXDOUBLE, G_MAXDOUBLE);
   Max = Vector2d(G_MINDOUBLE, G_MINDOUBLE);
 }
@@ -34,7 +36,25 @@ Layer::Layer(int layerno, double thick) : LayerNo(layerno), thickness(thick)
 Layer::~Layer()
 {
   Clear();
-  delete infill;
+  delete normalInfill;
+  delete fullInfill;
+  delete supportInfill;
+}
+
+
+void Layer::Clear()
+{
+  normalInfill->clear();
+  fullInfill->clear();
+  supportInfill->clear();
+  polygons.clear();
+  shellPolygons.clear();
+  offsetPolygons.clear();
+  fullFillPolygons.clear();
+  supportPolygons.clear();
+  hullPolygon.clear();
+  skirtPolygon.clear();
+  skinPolygons.clear();
 }
 
 void Layer::setBBox(Vector2d min, Vector2d max) 
@@ -89,16 +109,18 @@ void Layer::CalcInfill (double InfillDistance,
 			bool ShellOnly, // only infill for fullfill (vertical shells)
 			bool DisplayDebuginFill)
 {
-  infill = new Infill(this);
+  normalInfill = new Infill(this);
+  fullInfill = new Infill(this);
+  supportInfill = new Infill(this);
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
   InfillType type = ParallelInfill;
   if (!ShellOnly)
-    infill->addInfill(Z, offsetPolygons, type, 
-		      InfillDistance, FullInfillDistance, rot);
-  infill->addInfill(Z, fullFillPolygons, type, 
-		    FullInfillDistance, FullInfillDistance, rot);
-  infill->addInfill(Z, supportPolygons, SupportInfill, 
-		    InfillDistance, InfillDistance, InfillRotation/180.0*M_PI);
+    normalInfill->addInfill(Z, offsetPolygons, type, 
+			    InfillDistance, FullInfillDistance, rot);
+  fullInfill->addInfill(Z, fullFillPolygons, type, 
+			FullInfillDistance, FullInfillDistance, rot);
+  supportInfill->addInfill(Z, supportPolygons, SupportInfill, 
+			   InfillDistance, InfillDistance, InfillRotation/180.0*M_PI);
 }
 
 
@@ -340,7 +362,10 @@ void Layer::MakeGcode(GCodeState &state,
 	// Skirt
 	lines.clear();
 	skirtPolygon.getLines(lines, startPoint);
-	state.AddLines(lines, extrf, offsetZ, E, slicing, hardware);
+
+	// Support
+	getOrderedPolyLines(supportInfill->infillpolys, startPoint,lines);
+	state.AddLines(lines, extrf, offsetZ, E, slicing, hardware);	       
 
 	// Skin (different extrusion factor)
 	lines.clear();
@@ -358,8 +383,9 @@ void Layer::MakeGcode(GCodeState &state,
 	lines.clear();
 	for(size_t p=0;p<shellPolygons.size();p++) // outer to inner, in this order
 	  getOrderedPolyLines(shellPolygons[p], startPoint, lines); // sorted
-	// + Infill incl. Support
-	getOrderedPolyLines(infill->infillpolys, startPoint,lines);
+	// Infill
+	getOrderedPolyLines(normalInfill->infillpolys, startPoint,lines);
+	getOrderedPolyLines(fullInfill->infillpolys, startPoint,lines);
 	state.AddLines(lines, extrf, offsetZ, E, slicing, hardware);	       
 }
 
@@ -474,8 +500,12 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
       // 	glVertex3f(lines[p].x,lines[p].y,lines[p].z);
       //   }
       // glEnd();
-      for(size_t p=0;p < infill->infillpolys.size();p++)
-	infill->infillpolys[p].draw(GL_LINE_LOOP);
+      for(size_t p=0;p < normalInfill->infillpolys.size();p++)
+	normalInfill->infillpolys[p].draw(GL_LINE_LOOP);
+      for(size_t p=0;p < fullInfill->infillpolys.size();p++)
+	fullInfill->infillpolys[p].draw(GL_LINE_LOOP);
+      for(size_t p=0;p < supportInfill->infillpolys.size();p++)
+	supportInfill->infillpolys[p].draw(GL_LINE_LOOP);
     }
   glLineWidth(1);
   
