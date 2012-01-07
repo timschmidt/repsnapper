@@ -150,14 +150,15 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 }
 
 
-string Triangle::getSTLfacet() const
+string Triangle::getSTLfacet(Matrix4d T) const
 {
+  Vector3d TA=T*A,TB=T*B,TC=T*C,TN=T*Normal;TN.normalize();
   stringstream sstr;
-  sstr << "  facet normal " << Normal.x << " " << Normal.x << " " << Normal.z <<endl;
+  sstr << "  facet normal " << TN.x << " " << TN.x << " " << TN.z <<endl;
   sstr << "    outer loop"  << endl;
-  sstr << "      vertex "<< scientific << A.x << " " << A.y << " " << A.z <<endl;
-  sstr << "      vertex "<< scientific << B.x << " " << B.y << " " << B.z <<endl;
-  sstr << "      vertex "<< scientific << C.x << " " << C.y << " " << C.z <<endl;
+  sstr << "      vertex "<< scientific << TA.x << " " << TA.y << " " << TA.z <<endl;
+  sstr << "      vertex "<< scientific << TB.x << " " << TB.y << " " << TB.z <<endl;
+  sstr << "      vertex "<< scientific << TC.x << " " << TC.y << " " << TC.z <<endl;
   sstr << "    endloop" << endl;
   sstr << "  endfacet" << endl;
   return sstr.str();

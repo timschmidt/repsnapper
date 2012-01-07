@@ -894,7 +894,7 @@ void View::duplicate_selected_stl()
     return;
 
   // duplicate
-  m_model->AddStl (object, *shape, shape->filename);
+  m_model->AddShape (object, *shape, shape->filename);
 
   queue_draw();
 }

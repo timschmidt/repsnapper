@@ -765,7 +765,7 @@ and others I forgot... (needs updating)</property>
                             <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
-                            <property name="expand">True</property>
+                            <property name="expand">False</property>
                             <property name="fill">True</property>
                             <property name="position">0</property>
                           </packing>
@@ -778,7 +778,7 @@ and others I forgot... (needs updating)</property>
                         </child>
                       </object>
                       <packing>
-                        <property name="expand">True</property>
+                        <property name="expand">False</property>
                         <property name="fill">True</property>
                         <property name="position">10</property>
                       </packing>

@@ -94,8 +94,11 @@ class Shape
 {
 public:
 	Shape();
+	Shape(string filename, istream *text);
  	string filename; 
 	int idx;
+
+	int parseASCIISTL(istream *text);
 
 	Transform3D transform3D; 
 
@@ -124,15 +127,17 @@ public:
 	vector<Triangle>  triangles;
 	Vector3d Min, Max, Center;
 
-	string getSTLsolid(int number) const;
+	string getSTLsolid() const;
 
 	void invertNormals();
 
-private:
-    double scale_factor;
+
     int loadASCIISTL(std::string filename);
     int loadBinarySTL(std::string filename);
-    filetype_t getFileType(std::string filename);
+    static filetype_t getFileType(std::string filename);
+
+private:
+    double scale_factor;
 };
 
 

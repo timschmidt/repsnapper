@@ -147,8 +147,8 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
     case STL:
       if (o == OPEN)
         model->ReadStl (file);
-      else
-        model->alert (_("STL saving not yet implemented"));
+      else if (o == SAVE)
+        model->SaveStl (file);
       model->settings.STLPath = directory_path;
       break;
     }

@@ -56,6 +56,6 @@ public:
 	void Translate(const Vector3d &vector);
 	int CutWithPlane(double z, const Matrix4d &T, 
 			 Vector2d &lineStart, Vector2d &lineEnd) const;
-	string getSTLfacet() const;
+	string getSTLfacet(Matrix4d = Matrix4d::IDENTITY) const;
 };
 

@@ -118,11 +118,62 @@ void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
 
 void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 {
-  Shape stl;
-  if (stl.load (file->get_path()) == 0)
-    AddStl(NULL, stl, file->get_path());
-  ModelChanged();
+  string path = file->get_path();
+  filetype_t ftype =  Shape::getFileType(path);
+  if (ftype == BINARY_STL) // only one shape per file
+    {
+      Shape shape;
+      shape.loadBinarySTL(path);      
+      AddShape(NULL, shape, path);
+      ModelChanged();
+     }
+  else if (ftype == ASCII_STL) // multiple shapes per file
+    {
+      ifstream fileis;
+      fileis.open(path.c_str());
+      size_t found = path.find_last_of("/\\");
+      vector<Shape> shapes;
+      while (!fileis.eof())
+	{
+	  Shape shape;
+	  uint ok = shape.parseASCIISTL(&fileis);
+	  if (ok==0) {
+	    // go back to get "solid " keyword again
+	    streampos where = fileis.tellg();
+	    where-=100;
+	    if (where < 0) break;
+	    fileis.seekg(where,ios::beg);
+	    cerr << "found shape "<<shape.filename<<endl;
+	    shapes.push_back(shape);
+	  }
+	}
+      if (shapes.size()==1){
+	shapes.front().filename = (string)path.substr(found+1);
+	AddShape(NULL, shapes.front(), shapes.front().filename , true);
+      }
+      else for (uint i=0;i<shapes.size();i++){
+	  // do not autoplace to keep saved positions
+	  AddShape(NULL, shapes[i], shapes[i].filename, false);
+	}
+      shapes.clear();
+      ModelChanged();
+      fileis.close();
+    }
   ClearLayers();
+}
+
+void Model::SaveStl(Glib::RefPtr<Gio::File> file)
+{
+  stringstream sstr;
+  for(uint o=0;o<objtree.Objects.size();o++)
+  {
+    for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
+    {
+      Shape *shape = &objtree.Objects[o].shapes[f];
+      sstr << shape->getSTLsolid() << endl;
+    }
+  }
+  Glib::file_set_contents (file->get_path(), sstr.str());
 }
 
 void Model::Read(Glib::RefPtr<Gio::File> file)
@@ -239,7 +290,7 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
   return false;
 }
 
-Shape* Model::AddStl(TreeObject *parent, Shape shape, string filename)
+Shape* Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autoplace)
 {
   Shape *retshape;
   bool found_location;
@@ -253,7 +304,7 @@ Shape* Model::AddStl(TreeObject *parent, Shape shape, string filename)
 
   // Decide where it's going
   Vector3d trans = Vector3d(0,0,0);
-  found_location = FindEmptyLocation(trans, &shape);
+  if (autoplace) found_location = FindEmptyLocation(trans, &shape);
 
   // Add it to the set
   size_t found = filename.find_last_of("/\\");

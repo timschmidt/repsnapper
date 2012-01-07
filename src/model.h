@@ -63,7 +63,9 @@ public:
 
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file);
-	Shape *AddStl(TreeObject *parent, Shape stl, string filename);
+	void SaveStl(Glib::RefPtr<Gio::File> file);
+	Shape *AddShape(TreeObject *parent, Shape shape, string filename,
+			bool autoplace = true);
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 
 	void Read(Glib::RefPtr<Gio::File> file);

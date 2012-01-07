@@ -25,8 +25,14 @@ Shape::Shape()
 {
 	Min.x = Min.y = Min.z = 0.0;
 	Max.x = Max.y = Max.z = 200.0;
-
 	CalcCenter();
+}
+
+
+Shape::Shape(string filename, istream *text){
+  this->filename = filename;
+  parseASCIISTL(text);
+  CalcCenter();
 }
 
 static float read_float(ifstream &file) {
@@ -125,22 +131,20 @@ int Shape::loadBinarySTL(string filename) {
         T.AccumulateMinMax (Min, Max);
     }
     file.close();
+    CenterAroundXY();
+    CalcCenter();
+    scale_factor = 1.0;
     return 0;
 }
 
 /* Loads an ASCII STL file by filename
  * Returns 0 on success and -1 on failure */
 int Shape::loadASCIISTL(string filename) {
-
     // Check filetype
     if(getFileType(filename) != ASCII_STL) {
         cerr << "None ASCII STL file passed to loadASCIIFile" << endl;
         return -1;
     }
-    triangles.clear();
-	Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
-	Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
-
     ifstream file;
     file.open(filename.c_str());
 
@@ -148,42 +152,66 @@ int Shape::loadASCIISTL(string filename) {
         cerr << "Error: Unable to open stl file - " << filename << endl;
         return -1;
     }
+    parseASCIISTL(&file);
+    CenterAroundXY();
+    CalcCenter();
+    this->filename = filename;
+    file.close();
+    return 0;
+} // STL::loadASCIIFile(string filename)
+
+
+int Shape::parseASCIISTL(istream *text) {
+
+    triangles.clear();
+    Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
+    Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
 
     /* ASCII files start with "solid [Name_of_file]"
      * so get rid of them to access the data */
     string solid;
-    getline (file, solid);
+    //getline (text, solid);
 
-    while(!file.eof()) { // Loop around all triangles
+    while(!(*text).eof()) { // Find next solid
+      *text >> solid;
+      if (solid == "solid") {
+	getline(*text,filename);
+      }
+      break;
+    }
+    if (solid != "solid") {
+      return -1;
+    }
+    while(!(*text).eof()) { // Loop around all triangles
         string facet;
-        file >> facet;
+        *text >> facet;
 
-        // Parse possible end of file - "endsolid"
+        // Parse possible end of text - "endsolid"
         if(facet == "endsolid") {
-            break;
+	  break;
         }
 
         if(facet != "facet") {
-            cerr << "Error: Facet keyword not found in STL file!" << endl;
+            cerr << "Error: Facet keyword not found in STL text!" << endl;
             return -1;
         }
 
         // Parse Face Normal - "normal %f %f %f"
         string normal;
         Vector3d normal_vec;
-        file >> normal
+        *text >> normal
              >> normal_vec.x
              >> normal_vec.y
              >> normal_vec.z;
 
         if(normal != "normal") {
-            cerr << "Error: normal keyword not found in STL file!" << endl;
+            cerr << "Error: normal keyword not found in STL text!" << endl;
             return -1;
         }
 
         // Parse "outer loop" line
         string outer, loop;
-        file >> outer >> loop;
+        *text >> outer >> loop;
         if(outer != "outer" || loop != "loop") {
             cerr << "Error: Outer/Loop keywords not found!" << endl;
             return -1;
@@ -193,7 +221,7 @@ int Shape::loadASCIISTL(string filename) {
         Vector3d vertices[3];
         for(int i=0; i<3; i++) {
             string vertex;
-            file >> vertex
+            *text >> vertex
                  >> vertices[i].x
                  >> vertices[i].y
                  >> vertices[i].z;
@@ -206,7 +234,7 @@ int Shape::loadASCIISTL(string filename) {
 
         // Parse end of vertices loop - "endloop endfacet"
         string endloop, endfacet;
-        file >> endloop >> endfacet;
+        *text >> endloop >> endfacet;
 
         if(endloop != "endloop" || endfacet != "endfacet") {
             cerr << "Error: Endloop or endfacet keyword not found" << endl;
@@ -214,7 +242,7 @@ int Shape::loadASCIISTL(string filename) {
         }
 
 	// done in Triangle
-        /* Recalculate normal vector - can't trust an STL file! */
+        /* Recalculate normal vector - can't trust an STL text! */
         // Vector3d AA=vertices[2]-vertices[0];
         // Vector3d BB=vertices[2]-vertices[1];
 	// normal_vec = AA.cross(BB).getNormalized();
@@ -229,9 +257,11 @@ int Shape::loadASCIISTL(string filename) {
 	//cout << "txt triangle "<< normal_vec << ":\n\t" << vertices[0] << "/\n\t"<<vertices[1] << "/\n\t"<<vertices[2] << endl;
         triangles.push_back(triangle);
     }
-    file.close();
+    CenterAroundXY();
+    CalcCenter();
+    scale_factor = 1.0;
     return 0;
-} // STL::loadASCIIFile(string filename)
+}
 
 /* Returns the filetype of the given file */
 filetype_t Shape::getFileType(string filename) {
@@ -302,13 +332,13 @@ void Shape::invertNormals()
 }
 
 
-string Shape::getSTLsolid(int number) const
+string Shape::getSTLsolid() const
 {
   stringstream sstr;
-  sstr << "solid Reprappersolid" << number <<endl;
+  sstr << "solid " << filename <<endl;
   for (uint i = 0; i < triangles.size(); i++)
-    sstr << triangles[i].getSTLfacet();
-  sstr << "endsolid Reprappersolid" << number <<endl;
+    sstr << triangles[i].getSTLfacet(transform3D.transform);
+  sstr << "endsolid " << filename <<endl;
   return sstr.str();
 }
 
@@ -466,6 +496,7 @@ void Shape::CenterAroundXY()
 
 	Max += displacement;
 	Min += displacement;
+	transform3D.move(-displacement);
 //	cout << "Center Around XY min" << Min << " max " << Max << "\n";
 	CalcCenter();
 }
