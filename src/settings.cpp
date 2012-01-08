@@ -279,6 +279,7 @@ static struct {
 
   // Display pane
   { "Display.TempUpdateSpeed", 0.1, 10.0, 0.5, 1.0 },
+  { "m_scale_value", 0.0001, 1000.0, 0.01, 0.1 },
 };
 
 // Add any [HV]Ranges to this array:

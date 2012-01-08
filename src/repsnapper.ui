@@ -13,10 +13,27 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
+  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
+    <property name="upper">30</property>
+    <property name="value">10</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
     <property name="upper">1</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
+    <property name="upper">20</property>
+    <property name="value">8</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
   </object>
   <object class="GtkAction" id="LoadSettings">
     <property name="label">Load Settings</property>
@@ -56,23 +73,6 @@
     <property name="label">Save Settings As</property>
     <property name="short_label">Save Settings As</property>
     <property name="tooltip">Save settings in a custom file</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
-    <property name="upper">30</property>
-    <property name="value">10</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
-    <property name="upper">20</property>
-    <property name="value">8</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
   </object>
   <object class="GtkAboutDialog" id="about_dialog">
     <property name="can_focus">False</property>
@@ -472,7 +472,7 @@ and others I forgot... (needs updating)</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="fill">True</property>
+                        <property name="fill">False</property>
                         <property name="position">0</property>
                       </packing>
                     </child>
@@ -486,7 +486,7 @@ and others I forgot... (needs updating)</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="fill">True</property>
+                        <property name="fill">False</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
@@ -712,14 +712,58 @@ and others I forgot... (needs updating)</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="l_scale_title">
+                      <object class="GtkHBox" id="hbox20">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Object Scaling</property>
+                        <property name="spacing">7</property>
+                        <child>
+                          <object class="GtkLabel" id="l_scale_title">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Object Scaling:</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="padding">5</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinButton" id="m_scale_value">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="invisible_char">●</property>
+                            <property name="truncate_multiline">True</property>
+                            <property name="climb_rate">0.100</property>
+                            <property name="digits">2</property>
+                            <property name="numeric">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="padding">10</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="m_normals">
+                            <property name="label" translatable="yes">Invert Normals</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="fill">True</property>
+                        <property name="fill">False</property>
                         <property name="position">7</property>
                       </packing>
                     </child>
@@ -738,11 +782,7 @@ and others I forgot... (needs updating)</property>
                       <object class="GtkEventBox" id="m_scale_event_box">
                         <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkHScale" id="m_scale_slider">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Resize Selected Object</property>
-                          </object>
+                          <placeholder/>
                         </child>
                       </object>
                       <packing>
@@ -756,19 +796,7 @@ and others I forgot... (needs updating)</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <child>
-                          <object class="GtkButton" id="m_normals">
-                            <property name="label" translatable="yes">Invert Normals</property>
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="tooltip_text" translatable="yes">Invert all triangle normals if STL is inverted</property>
-                            <property name="use_action_appearance">False</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
+                          <placeholder/>
                         </child>
                         <child>
                           <placeholder/>
@@ -1787,20 +1815,8 @@ and others I forgot... (needs updating)</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkLabel" id="label119">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Draw Layers: </property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkCheckButton" id="Display.DisplayLayer">
-                <property name="label" translatable="yes">Layer</property>
+                <property name="label" translatable="yes">Draw Layers</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
@@ -1811,7 +1827,7 @@ and others I forgot... (needs updating)</property>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
                 <property name="padding">10</property>
-                <property name="position">1</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
@@ -1827,7 +1843,7 @@ and others I forgot... (needs updating)</property>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
                 <property name="padding">10</property>
-                <property name="position">2</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
@@ -1843,7 +1859,7 @@ and others I forgot... (needs updating)</property>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
                 <property name="padding">10</property>
-                <property name="position">3</property>
+                <property name="position">2</property>
               </packing>
             </child>
             <child>
@@ -1856,7 +1872,7 @@ and others I forgot... (needs updating)</property>
                 <property name="expand">False</property>
                 <property name="fill">False</property>
                 <property name="padding">10</property>
-                <property name="position">4</property>
+                <property name="position">3</property>
               </packing>
             </child>
             <child>
@@ -1871,7 +1887,7 @@ and others I forgot... (needs updating)</property>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="padding">1</property>
-                <property name="position">5</property>
+                <property name="position">4</property>
               </packing>
             </child>
           </object>

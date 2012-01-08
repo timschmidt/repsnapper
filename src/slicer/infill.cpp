@@ -214,6 +214,9 @@ void Infill::getLines(vector<Vector3d> &lines) const
 
 void Infill::printinfo() const
 { 
-  cout << "Infill with " << infillpolys.size() << " polygons" <<endl;
+  cout << "Infill with " 
+       << infillvertices.size() << " polygons"
+       << infillpolys.size() << " polygons" 
+       <<endl;
 }
 

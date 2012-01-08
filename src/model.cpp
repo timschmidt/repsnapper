@@ -143,7 +143,6 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 	    where-=100;
 	    if (where < 0) break;
 	    fileis.seekg(where,ios::beg);
-	    cerr << "found shape "<<shape.filename<<endl;
 	    shapes.push_back(shape);
 	  }
 	}
@@ -552,14 +551,14 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
 
 void Model::drawLayers(Vector3d offset) const
 {
-  uint LayerNr;
+  int LayerNr;
 
   bool have_layers = layers.size() > 0; // have sliced already
 
   double z;
   double zStep = settings.Hardware.LayerThickness;
   double zSize = (Max.z-Min.z-zStep*0.5);
-  uint LayerCount = (uint)ceil((zSize - zStep*0.5)/zStep)-1;
+  int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
   double sel_Z = settings.Display.LayerValue*zSize;
   uint sel_Layer;
   if (have_layers) 
@@ -578,6 +577,7 @@ void Model::drawLayers(Vector3d offset) const
       z= Min.z + sel_Z;
     }
   z += 0.5*zStep; // always cut in middle of layer
+
 
   //cerr << zStep << ";"<<Max.z<<";"<<Min.z<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
 

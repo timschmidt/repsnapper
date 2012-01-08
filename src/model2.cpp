@@ -225,7 +225,7 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 					     settings.Slicing.Optimization,
 					     polys);
 	      if (polys_ok) layer->addPolygons(polys);
-	      else cerr << hacked_layerthickness << "hacked Z=" << hackedZ << endl;
+	      else cerr << "hacked Z=" << hackedZ << endl;
 	      hackedZ += hacked_layerthickness;
 	    }
 	  }
@@ -236,6 +236,13 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
   m_progress.stop (_("Done"));
 }
 
+void Model::MakeFullSkins()
+{
+  // not bottom layer
+  for (uint i=1; i < layers.size(); i++) {
+    layers[i]->makeSkinPolygons(settings.Slicing.Skins);
+  }
+}
 
 void Model::MakeUncoveredPolygons()
 {
@@ -276,13 +283,7 @@ void Model::MakeUncoveredPolygons(Layer * subjlayer,
   clipp.addPolys(cliplayer->GetOffsetPolygons(),clip);
   clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
   vector<Poly> uncovered = clipp.substract();
-  subjlayer->addFullFillPolygons(uncovered); // maybe already have some 
-  subjlayer->mergeFullPolygons();
-  // substract full fill from normal fill:
-  clipp.clear();
-  clipp.addPolys(subjlayer->GetOffsetPolygons(), subject);
-  clipp.addPolys(uncovered, clip);
-  subjlayer->setNormalFillPolygons(clipp.substract());
+  subjlayer->addFullPolygons(uncovered);
 }				 
 				 
 void Model::MultiplyUncoveredPolygons()
@@ -295,18 +296,25 @@ void Model::MultiplyUncoveredPolygons()
     {
       m_progress.update(i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
+      // we removed from full when skinning, so add them too
+      vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (uint s=1; s < shells; s++) 
-	if (int(i-s) > 1)
+	if (int(i-s) > 1) {
 	    layers[i-s]->addFullPolygons(fullpolys);
+	    layers[i-s]->addFullPolygons(skinfullpolys);
+	}
     }
   // top-down
   for (int i=count-1; i>=0; i--) 
     {
       m_progress.update(count + count -i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
+      vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (uint s=1; s < shells; s++) 
-	if (i+s < count)
+	if (i+s < count){
 	    layers[i+s]->addFullPolygons(fullpolys);
+	    layers[i+s]->addFullPolygons(skinfullpolys);
+	}
     }    
   // merge results
   for (uint i=0; i < count; i++) 
@@ -385,7 +393,6 @@ void Model::MakeShells()
       g_main_context_iteration(NULL,false);
       //cerr << "shrink layer " << i << endl;
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
-      
       makeskirt = (layers[i]->getZ() <= skirtheight);
       layers[i]->MakeShells(settings.Slicing.ShellCount,
 			    matwidth, settings.Slicing.Optimization, 
@@ -399,7 +406,6 @@ void Model::MakeShells()
 
 void Model::CalcInfill(GCodeState &state)
 {
-
   uint LayerCount = layers.size();
     // (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
 
@@ -440,6 +446,7 @@ void Model::CalcInfill(GCodeState &state)
 			settings.Slicing.InfillRotationPrLayer, 
 			settings.Slicing.ShellOnly,
 			settings.Display.DisplayDebuginFill);
+
     }
   m_progress.stop (_("Done"));
 }
@@ -475,6 +482,9 @@ void Model::ConvertToGCode()
 
   if (settings.Slicing.Support)
     MakeSupportPolygons(); // easier before multiplied uncovered bottoms
+
+  if (settings.Slicing.Skins>1)
+    MakeFullSkins(); // must before multiplied uncovered bottoms
 
   if (settings.Slicing.SolidTopAndBottom)
     MultiplyUncoveredPolygons();

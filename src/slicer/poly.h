@@ -58,6 +58,7 @@ class Poly
 public:
         Poly();
 	Poly(double z);
+        Poly(const Poly, double z);
 	/* Poly(double z, */
 	/*      const ClipperLib::Polygon cpoly, bool reverse=false); */
         ~Poly();

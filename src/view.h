@@ -55,7 +55,7 @@ class View : public Gtk::Window
   void continue_clicked();
   void add_statusbar_msg(const char *name, const char *message);
   void add_statusbar_msg(Gtk::Widget *widget, const char *message);
-  void update_scale_slider();
+  void update_scale_value();
   void scale_object();
 
   Printer *printer;

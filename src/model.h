@@ -86,6 +86,7 @@ public:
 	void MakeShells();
 	void MakeUncoveredPolygons();
 	void MakeUncoveredPolygons(Layer *subjlayer,const Layer *cliplayer);
+	void MakeFullSkins();
 	void MultiplyUncoveredPolygons();
 	void MakeSupportPolygons(Layer * subjlayer, 
 				 const Layer * cliplayer);

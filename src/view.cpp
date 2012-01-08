@@ -705,13 +705,13 @@ View::View(BaseObjectType* cobject,
 
   m_translation_row = new TranslationSpinRow (this, m_objtree, "m_box_translate");
 
-  Gtk::HScale *scale_slider;
-  m_builder->get_widget("m_scale_slider", scale_slider);
-  scale_slider->set_range(0.01, 10.0);
-  scale_slider->set_value(1.0);
+  Gtk::SpinButton *scale_value;
+  m_builder->get_widget("m_scale_value", scale_value);
+  scale_value->set_range(0.01, 10.0);
+  scale_value->set_value(1.0);
   m_objtree->get_selection()->signal_changed().connect
-      (sigc::mem_fun(*this, &View::update_scale_slider));
-  scale_slider->signal_value_changed().connect
+      (sigc::mem_fun(*this, &View::update_scale_value));
+  scale_value->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object));
 
   add_statusbar_msg("m_scale_event_box", _("Scale the selected object"));
@@ -938,15 +938,15 @@ void View::scale_object()
   TreeObject *object;
   get_selected_stl (object, shape);
 
-  Gtk::HScale *scale_slider;
-  m_builder->get_widget("m_scale_slider", scale_slider);
+  Gtk::SpinButton *scale_value;
+  m_builder->get_widget("m_scale_value", scale_value);
 
-  m_model->ScaleObject (shape, object, scale_slider->get_value());
+  m_model->ScaleObject (shape, object, scale_value->get_value());
 }
 
-/* Updates the scale slider when a new STL is selected,
+/* Updates the scale value when a new STL is selected,
  * giving it the new STL's current scale factor */
-void View::update_scale_slider()
+void View::update_scale_value()
 {
   Shape *shape;
   TreeObject *object;
@@ -955,10 +955,10 @@ void View::update_scale_slider()
   if (!shape)
     return;
 
-  Gtk::HScale *scale_slider;
-  m_builder->get_widget("m_scale_slider", scale_slider);
+  Gtk::SpinButton *scale_sb;
+  m_builder->get_widget("m_scale_value", scale_sb);
 
-  scale_slider->set_value(shape->getScaleFactor());
+  scale_sb->set_value(shape->getScaleFactor());
 }
 
 // GPL bits below from model.cpp ...

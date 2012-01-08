@@ -98,6 +98,7 @@ public:
 		   double z, double Optimization);
   vector<Poly> GetOffsetPolygons() const { return offsetPolygons; }
   vector<Poly> GetFullFillPolygons() const { return fullFillPolygons; }
+  vector<Poly> GetSkinFullPolygons() const { return skinFullFillPolygons; }
   vector<Poly> GetSupportPolygons() const { return supportPolygons; }
   vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
   vector<Poly>  GetShellPolygonsCirc(int number) const;
@@ -105,6 +106,7 @@ public:
 
   void setFullFillPolygons(const vector<Poly> polys);
   void addFullFillPolygons(const vector<Poly> polys);
+  void makeSkinPolygons(uint skins); 
   void setNormalFillPolygons(const vector<Poly> polys);
   void setSupportPolygons(const vector<Poly> polys);
   void setSkirtPolygon(const Poly poly);
@@ -136,6 +138,7 @@ public:
 
   Infill * normalInfill;
   Infill * fullInfill;
+  vector<Infill*> skinFullInfills;
   Infill * supportInfill;
   
   vector< vector<Poly> > shellPolygons; // all shells except innermost
@@ -144,6 +147,7 @@ public:
   vector<Poly> supportPolygons;	        // polygons to be filled with support pattern
   uint skins; // number of skin divisions
   vector<Poly> skinPolygons;            // outer skin polygons
+  vector<Poly> skinFullFillPolygons;    // skin polygons of fully filled areas
   Poly hullPolygon;                     // convex hull aroung everything
   Poly skirtPolygon;                    // skirt polygon
 

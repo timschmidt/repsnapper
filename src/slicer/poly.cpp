@@ -71,6 +71,16 @@ Poly::Poly(double z){
   //printinfo();
 }
 
+Poly::Poly(const Poly p, double z){
+  this->z = z;
+  holecalculated = false;
+  hole=false;
+  uint count = p.vertices.size();
+  vertices.resize(count);
+  for (uint i=0; i<count ; i++)
+    vertices[i] = p.vertices[i];
+}
+
 
 // Poly Poly::Shrinked(double distance) const{
 //   assert(plane!=NULL);
