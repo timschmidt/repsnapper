@@ -26,31 +26,42 @@
 
 #include "../gcode.h"
 
+#include "printlines.h"
+
 using namespace std;
 using namespace vmml;
 
 //using namespace PolyLib;
 
 class GCode;
-
-
 class Command;
 struct GCodeStateImpl;
+
 class GCodeState {
   GCodeStateImpl *pImpl;
  public:
   GCodeState(GCode &code);
   ~GCodeState();
   /* void SetZ (double z); */
-  void AppendCommand(Command &command);
-  void AddLines (vector<Vector3d> lines,
-		 double extrusionFactor,
-		 double offsetZ, double &E, 
+  void AppendCommand(Command &command, bool incrementalE);
+  void AddLines (vector<printline> lines,
+		 double extrusionfactor,
+		 double offsetZ, 
 		 const Settings::SlicingSettings &slicing,
 		 const Settings::HardwareSettings &hardware);
+  void AddLines (vector<Vector3d> lines,
+		 double extrusionFactor,
+		 double offsetZ, 
+		 const Settings::SlicingSettings &slicing,
+		 const Settings::HardwareSettings &hardware);
+  void MakeAcceleratedGCodeLine (printline line,
+				 double extrusionfactor,
+				 double offsetZ, 
+				 const Settings::SlicingSettings &slicing,
+				 const Settings::HardwareSettings &hardware);
   void MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 				 double extrusionFactor,
-				 double offsetZ, double &E, 
+				 double offsetZ, 
 				 const Settings::SlicingSettings &slicing,
 				 const Settings::HardwareSettings &hardware);
   /* double GetLastLayerZ(double curZ); */

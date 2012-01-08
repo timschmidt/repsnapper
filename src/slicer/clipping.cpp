@@ -33,15 +33,15 @@ Vector2d Clipping::getPoint(CL::IntPoint p)
 		  p.Y/CL_FACTOR-CL_OFFSET);
 }
 
-CL::Polygon Clipping::getClipperPolygon(const Poly poly, bool reverse) 
+CL::Polygon Clipping::getClipperPolygon(const Poly poly) 
 {
   CL::Polygon cpoly(poly.vertices.size());
   for(size_t i=0; i<poly.vertices.size();i++){
     Vector2d P1;
-    if (reverse)
-      P1 = poly.getVertexCircular(-i); // normally have to reverse, why?
-    else 
-      P1 = poly.getVertexCircular(i); 
+    // if (reverse)
+      P1 = poly.getVertexCircular(-i); // have to reverse from/to clipper
+    // else 
+    //   P1 = poly.getVertexCircular(i); 
     cpoly[i]=(ClipperPoint(P1));
   }
   // doesn't work...:
@@ -52,12 +52,12 @@ CL::Polygon Clipping::getClipperPolygon(const Poly poly, bool reverse)
   return cpoly;
 }
 
-CL::Polygons Clipping::getClipperPolygons(const vector<Poly> polys, bool reverse) 
+CL::Polygons Clipping::getClipperPolygons(const vector<Poly> polys) 
 {
   ClipperLib::Polygons cpolys(polys.size());
   for (uint i=0; i<polys.size(); i++) 
     {
-      cpolys[i] = getClipperPolygon(polys[i],reverse);
+      cpolys[i] = getClipperPolygon(polys[i]);
     }
   return cpolys;
 }
@@ -86,14 +86,16 @@ void Clipping::addPoly(const Poly poly, PolyType type)
 {
   clpr.AddPolygon(getClipperPolygon(poly),CLType(type));
   lastZ = poly.getZ();
+  lastExtrF = poly.getExtrusionFactor();
 }
 
 void Clipping::addPolys(const vector<Poly> polys, PolyType type)
 {
   clpr.AddPolygons(getClipperPolygons(polys),CLType(type));
-  double z=0;
-  if (polys.size()>0) z= polys.back().getZ();
-  lastZ = z;
+  if (polys.size()>0) {
+    lastZ = polys.back().getZ();
+    lastExtrF = polys.back().getExtrusionFactor();
+  }
 }
 
 
@@ -127,7 +129,7 @@ vector<Poly> Clipping::intersect()
   CL::Polygons inter;
   clpr.Execute(CL::ctIntersection, inter, 
 	       CL::pftNonZero, CL::pftNonZero);
-  return getPolys(inter, lastZ);
+  return getPolys(inter, lastZ, lastExtrF);
 }
 
 // have added Polyons by addPolygon(s)
@@ -138,7 +140,7 @@ vector<Poly> Clipping::unite()
   // clpr.AddPolygons(emptypolys, CLType(clip));
   clpr.Execute(CL::ctDifference, united, 
 	       CL::pftNonZero, CL::pftNonZero);
-  return getPolys(united, lastZ);  
+  return getPolys(united, lastZ, lastExtrF);  
 }
 
 // have added Polyons by addPolygon(s)
@@ -147,30 +149,33 @@ vector<Poly> Clipping::substract()
   CL::Polygons diff;
   clpr.Execute(CL::ctDifference, diff, 
 	       CL::pftEvenOdd, CL::pftEvenOdd);
-  return getPolys(diff, lastZ);
+  return getPolys(diff, lastZ, lastExtrF);
 }
 vector<Poly> Clipping::substractMerged()
 {
   CL::Polygons diff;
   clpr.Execute(CL::ctDifference, diff, 
 	       CL::pftEvenOdd, CL::pftEvenOdd);
-  return getPolys(getMerged(diff), lastZ);
+  return getPolys(getMerged(diff), lastZ, lastExtrF);
 }
 
-Poly Clipping::getOffset(Poly poly, double distance, JoinType jtype, double miterdist)
+vector<Poly> Clipping::getOffset(Poly poly, double distance, JoinType jtype, double miterdist)
 {
-  CL::Polygons cpolys; cpolys.push_back(getClipperPolygon(poly,true));
+  CL::Polygons cpolys; cpolys.push_back(getClipperPolygon(poly));
   CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
-  return getPoly((CL::Polygon)offset.front(), poly.getZ());
+  return getPolys(offset, poly.getZ(), poly.getExtrusionFactor());
 }
 vector<Poly> Clipping::getOffset(vector<Poly> polys, double distance, JoinType jtype,
 				 double miterdist)
 {
-  CL::Polygons cpolys = getClipperPolygons(polys,true);
+  CL::Polygons cpolys = getClipperPolygons(polys);
   CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
-  double z=0;
-  if (polys.size()>0) z= polys.back().getZ();
-  return getPolys(offset,z);
+  double z=0, extrf=1.;;
+  if (polys.size()>0) {
+    z= polys.back().getZ();
+    extrf = polys.back().getExtrusionFactor();
+  }
+  return getPolys(offset,z,extrf);
 }
 
 // offset with reverse test
@@ -187,7 +192,7 @@ vector<Poly> Clipping::getMerged(vector<Poly> polys)
 {
   //return polys;
   //CL::Clipper clpr;
-  CL::Polygons cpolys = getClipperPolygons(polys,true);
+  CL::Polygons cpolys = getClipperPolygons(polys);
   //return getPolys(cpolys,polys.back().getZ(),true);
   // make wider to get overlap
   CL::Polygons offset;
@@ -207,9 +212,12 @@ vector<Poly> Clipping::getMerged(vector<Poly> polys)
   //CL::OffsetPolygons(cpolys3, offset, -2, ClipperLib::jtMiter, 1);
   //return getPolys(cpolys3,polys.back().getZ(),true);
   offset = CLOffset(cpolys3, -2, CL::jtMiter, 1);
-  double z=0;
-  if (polys.size()>0) z= polys.back().getZ();
-  return getPolys(offset, z);
+  double z=0, extrf = 1.;
+  if (polys.size()>0) {
+    z= polys.back().getZ();
+    extrf = polys.back().getExtrusionFactor();
+  }
+  return getPolys(offset, z, extrf);
 }
 
 CL::Polygons Clipping::getMerged(CL::Polygons cpolys) 
@@ -224,26 +232,39 @@ CL::Polygons Clipping::getMerged(CL::Polygons cpolys)
   return CLOffset(cpolys3, -2, CL::jtMiter, 1);
 }
 
-Poly Clipping::getPoly(const CL::Polygon cpoly, double z) 
+Poly Clipping::getPoly(const CL::Polygon cpoly, double z, double extrusionfactor) 
 {
-  Poly p = Poly(z);
+  Poly p = Poly(z, extrusionfactor);
   p.vertices.clear();
   uint count = cpoly.size();
   p.vertices.resize(count);
   for (uint i = 0 ; i<count;  i++) { 
     Vector2d v = getPoint(cpoly[i]);
-    p.vertices[count-i-1] = v;
+    p.vertices[count-i-1] = v;  // reverse!
+    //p.vertices[i] = v; 
   }
   p.cleanup();
   p.calcHole();
   return p;
 }
 
-vector<Poly> Clipping::getPolys(const CL::Polygons cpolys, double z) 
+vector<Poly> Clipping::getPolys(const CL::Polygons cpolys, double z, double extrusionfactor) 
 {
   uint count = cpolys.size();
   vector<Poly> polys(count);
   for (uint i = 0 ; i<count;  i++) 
-    polys[i] = getPoly(cpolys[i], z);
+    polys[i] = getPoly(cpolys[i], z, extrusionfactor);
   return polys;
 }
+
+
+double Clipping::Area(const Poly poly){
+  CL::Polygon cp = getClipperPolygon(poly);
+  return (double)((long double)(CL::Area(cp))/CL_FACTOR/CL_FACTOR);
+}
+double Clipping::Area(const vector<Poly> polys){
+  double a=0;
+  for (uint i=0; i<polys.size(); i++)
+    a += Area(polys[i]);
+  return a;
+} 

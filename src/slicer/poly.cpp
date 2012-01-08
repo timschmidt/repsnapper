@@ -21,6 +21,8 @@
 #include "shape.h"
 //#include "infill.h"
 #include "poly.h"
+#include "printlines.h"
+
 
 long double angleBetween(Vector2d V1, Vector2d V2)
 {
@@ -60,10 +62,12 @@ long double angleBetweenAtan2(Vector2d V1, Vector2d V2)
 Poly::Poly(){
   holecalculated = false;
   this->z = -10;
+  extrusionfactor = 1.;
 }
 
-Poly::Poly(double z){
+Poly::Poly(double z, double extrusionfactor){
   this->z = z;
+  this->extrusionfactor = extrusionfactor;
   holecalculated = false;
   hole=false;
   //cout << "POLY WITH PLANE"<< endl;
@@ -73,6 +77,7 @@ Poly::Poly(double z){
 
 Poly::Poly(const Poly p, double z){
   this->z = z;
+  this->extrusionfactor = p.extrusionfactor;
   holecalculated = false;
   hole=false;
   uint count = p.vertices.size();
@@ -352,6 +357,16 @@ double Poly::getLinelengthSq(uint startindex) const
 }
 
 // add to lines starting with nearest point to startPoint
+void Poly::getLines(vector<printline> &plines, Vector2d &startPoint) const
+{
+  if (size()<2) return;
+  double mindist = 1000000;
+  uint index = nearestDistanceSqTo(startPoint, mindist);
+  getLines(plines,index);
+  startPoint = Vector2d(plines.back().to.x,plines.back().to.y);
+}
+
+
 void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const
 {
   if (size()<2) return;
@@ -370,7 +385,7 @@ void Poly::getLines(vector<Vector2d> &lines, Vector2d &startPoint) const
 }
 
 // add to lines starting with given index
-// closed lines sequence
+// closed lines sequence if number of vertices > 2
 void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
 {
   size_t count = vertices.size();
@@ -384,6 +399,20 @@ void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
 }
 // add to lines starting with given index
 // closed lines sequence
+void Poly::getLines(vector<printline> &plines, uint startindex) const
+{
+  size_t count = vertices.size();
+  if (count<2) return; // one point no line
+  if (count<3) count--; // two points one line
+  for(size_t i=0;i<count;i++)
+    {
+      struct printline pline;
+      pline.from = getVertexCircular3(i+startindex);
+      pline.to = getVertexCircular3(i+startindex+1);
+      pline.extrusionfactor = extrusionfactor ;
+      plines.push_back(pline);
+    }
+}
 void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
 {
   size_t count = vertices.size();
@@ -489,6 +518,7 @@ void Poly::printinfo() const
 {
   cout <<"Poly at Z="<<z;
   cout <<", "<< vertices.size();
+  cout <<", extrf="<< extrusionfactor;
   cout <<" vertices";//, infill: "<< infill->getSize();
   cout << endl;
 }

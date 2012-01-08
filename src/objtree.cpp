@@ -32,7 +32,6 @@ void Transform3D::move(Vector3d delta)
   transform.setTranslation(trans + delta);
 }
 
-
 Matrix4d ObjectsTree::GetSTLTransformationMatrix(int object, int shape) const
 {
 	Matrix4d result = transform3D.transform;

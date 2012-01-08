@@ -600,6 +600,7 @@ bool GCode::append_text (const std::string &line)
   }
 }
 
+
 std::string GCode::get_text () const
 {
   return buffer->get_text();

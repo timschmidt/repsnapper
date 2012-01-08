@@ -46,8 +46,9 @@ class Clipping
 
   static CL::Clipper clpr;
 
-  double lastZ; // remember last added polygon's Z for output
-  
+  double lastZ;     // remember last added polygon's Z for output
+  double lastExtrF; // remember last added polygon's extrusion factor for output
+
   static CL::JoinType CLType(JoinType type);
   static CL::PolyType CLType(PolyType type);
 
@@ -76,16 +77,20 @@ public:
 
   static vector<Poly> getMerged(vector<Poly> polys);
   
-  static Poly getOffset(Poly poly, double distance, JoinType jtype=jmiter, double miterdist=1);
+  static vector<Poly> getOffset(Poly poly, double distance, 
+				JoinType jtype=jmiter, double miterdist=1);
   static vector<Poly> getOffset(vector<Poly> polys, double distance, 
 				JoinType jtype=jmiter,double miterdist=1);
 
   //vector< vector<Vector2d> > intersect(const Poly poly1, const Poly poly2) const;
 
-  static Poly getPoly(const CL::Polygon cpoly, double z);
-  static vector <Poly> getPolys(const CL::Polygons cpoly, double z);
+  static Poly getPoly(const CL::Polygon cpoly, double z, double extrusionfactor);
+  static vector <Poly> getPolys(const CL::Polygons cpoly, double z, double extrusionfactor);
 
-  static CL::Polygon  getClipperPolygon (const Poly poly, bool reverse=false);
-  static CL::Polygons getClipperPolygons(const vector<Poly> polys, bool reverse=false);
+  static CL::Polygon  getClipperPolygon (const Poly poly);
+  static CL::Polygons getClipperPolygons(const vector<Poly> polys);
+
+  static double Area(const Poly poly);
+  static double Area(const vector<Poly> polys);
 
 };

@@ -134,6 +134,7 @@ int Shape::loadBinarySTL(string filename) {
     CenterAroundXY();
     CalcCenter();
     scale_factor = 1.0;
+    cout << "Shape has volume " << volume() << " mm^3"<<endl;
     return 0;
 }
 
@@ -254,12 +255,13 @@ int Shape::parseASCIISTL(istream *text) {
 			  vertices[2]);
 
         triangle.AccumulateMinMax(Min, Max);
-	//cout << "txt triangle "<< normal_vec << ":\n\t" << vertices[0] << "/\n\t"<<vertices[1] << "/\n\t"<<vertices[2] << endl;
+	//	cout << "txt triangle "<< normal_vec << ":\n\t" << vertices[0] << "/\n\t"<<vertices[1] << "/\n\t"<<vertices[2] << endl;
         triangles.push_back(triangle);
     }
     CenterAroundXY();
     CalcCenter();
     scale_factor = 1.0;
+    cout << "Shape has volume " << volume() << " mm^3"<<endl;
     return 0;
 }
 
@@ -292,7 +294,6 @@ filetype_t Shape::getFileType(string filename) {
       file >> second_word;      
 
     file.close();
-
     if(first_word == "solid" && second_word != "binary") { // ASCII
       return ASCII_STL;
     } else {
@@ -331,6 +332,13 @@ void Shape::invertNormals()
     triangles[i].invertNormal();
 }
 
+double Shape::volume() const
+{
+  double vol=0;
+  for (uint i = 0; i < triangles.size(); i++)
+    vol+=triangles[i].projectedvolume();
+  return vol;
+}
 
 string Shape::getSTLsolid() const
 {

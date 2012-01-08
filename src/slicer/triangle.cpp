@@ -56,10 +56,24 @@ Vector3d &Triangle::operator[] (const int index)
 
 double Triangle::area()
 {
-	return ( ((C-A).cross(B-A)).length() );
+	return 0.5* ((C-A).cross(B-A)).length() ;
 }
 
-Vector3d Triangle::GetMax()
+// add all these to get shape volume
+double Triangle::projectedvolume() const
+{
+  if (Normal.z==0) return 0;
+  Triangle xyproj = Triangle(Vector3d(A.x,A.y,0),
+			     Vector3d(B.x,B.y,0),
+			     Vector3d(C.x,C.y,0));
+  Vector3d min = GetMin();
+  Vector3d max = GetMax();
+  double vol =  xyproj.area()*0.5*(max.z+min.z);
+  if (Normal.z<0) vol=-vol; 
+  return vol;
+}
+
+Vector3d Triangle::GetMax() const
 {
 	Vector3d max(-99999999.0, -99999999.0, -99999999.0);
 	for (uint i = 0; i < 3; i++) {
@@ -70,7 +84,7 @@ Vector3d Triangle::GetMax()
 	return max;
 }
 
-Vector3d Triangle::GetMin()
+Vector3d Triangle::GetMin() const
 {
 	Vector3d min(99999999.0, 99999999.0, 99999999.0);
 	for (uint i = 0; i < 3; i++) {

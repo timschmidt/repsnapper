@@ -23,12 +23,13 @@
 #include "poly.h"
 #include "shape.h"
 #include "infill.h"
+#include "printlines.h"
 
 Layer::Layer(int layerno, double thick) : LayerNo(layerno), thickness(thick) 
 {
-  normalInfill = new Infill(this);
-  fullInfill = new Infill(this);
-  supportInfill = new Infill(this);
+  normalInfill = NULL;//new Infill(this,1.);
+  fullInfill = NULL;//new Infill(this,1.);
+  supportInfill = NULL;//new Infill(this,1.);
   skins=1;
   Min = Vector2d(G_MAXDOUBLE, G_MAXDOUBLE);
   Max = Vector2d(G_MINDOUBLE, G_MINDOUBLE);
@@ -38,10 +39,9 @@ Layer::Layer(int layerno, double thick) : LayerNo(layerno), thickness(thick)
 Layer::~Layer()
 {
   Clear();
-  delete normalInfill;
-  delete fullInfill;
-  skinFullInfills.clear();
-  delete supportInfill;
+  // delete normalInfill;
+  // delete fullInfill;
+  // delete supportInfill;
 }
 
 
@@ -58,9 +58,10 @@ void clearpolys(vector< vector<Poly> > &polys){
 
 void Layer::Clear()
 {
-  normalInfill->clear();
-  fullInfill->clear();
-  supportInfill->clear();
+  delete normalInfill;//->clear();
+  delete fullInfill;//->clear();
+  delete supportInfill;//->clear();
+  skinFullInfills.clear();
   clearpolys(polygons);
   clearpolys(shellPolygons);
   clearpolys(offsetPolygons);
@@ -68,14 +69,8 @@ void Layer::Clear()
   clearpolys(supportPolygons);
   clearpolys(skinPolygons);
   clearpolys(skinFullFillPolygons);
-  // polygons.clear();
-  // shellPolygons.clear();
-  // offsetPolygons.clear();
-  // fullFillPolygons.clear();
-  // supportPolygons.clear();
   hullPolygon.clear();
   skirtPolygon.clear();
-  // skinPolygons.clear();
 }
 
 void Layer::setBBox(Vector2d min, Vector2d max) 
@@ -130,43 +125,51 @@ void Layer::CalcInfill (double InfillDistance,
 			bool ShellOnly, // only infill for fullfill (vertical shells)
 			bool DisplayDebuginFill)
 {
-  normalInfill = new Infill(this);
-  fullInfill = new Infill(this);
+  // relative extrusion for skins:
+  double skinfillextrf = 1./skins/skins; 
+
+  normalInfill = new Infill(this,1.);
+  normalInfill->setName("normal");
+  //cout << "new "; normalInfill->printinfo();
+  fullInfill = new Infill(this,1.);
+  fullInfill->setName("full");
+  //cout << "new " ;fullInfill->printinfo();
   skinFullInfills.clear();
   //skinFullInfills.resize(skins);
-  supportInfill = new Infill(this);
+  supportInfill = new Infill(this,1.);
+  supportInfill->setName("support");
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
-  InfillType type = ParallelInfill;
   if (!ShellOnly)
-    normalInfill->addInfill(Z, offsetPolygons, type, 
+    normalInfill->addInfill(Z, offsetPolygons, ParallelInfill,
 			    InfillDistance, FullInfillDistance, rot);
-  fullInfill->addInfill(Z, fullFillPolygons, type, 
-			FullInfillDistance, FullInfillDistance, rot);
+  fullInfill->addInfill(Z, fullFillPolygons, PolyInfill,
+			FullInfillDistance, FullInfillDistance, 0);
   if (skins>1) {
     double skindistance = FullInfillDistance/skins;
     for (uint s = 0; s<skins; s++){
-      double drot = InfillRotationPrLayer/180.0*M_PI*s;
+      //double drot = InfillRotationPrLayer/180.0*M_PI*s;
       double sz = Z-thickness + (s+1)*thickness/skins;
       //cerr << Z << " : " << skins << " - "<< s << " - " << sz << " - " << thickness <<endl;
-      Infill *inf = new Infill(this);
-      inf->addInfill(sz, skinFullFillPolygons, type, 
-		     skindistance, skindistance, rot+drot);
+      Infill *inf = new Infill(this, skinfillextrf);
+      inf->setName("skin");
+      //cout << "new " ;inf->printinfo();
+      inf->addInfill(sz, skinFullFillPolygons, PolyInfill,
+		     skindistance, skindistance, 0);
       skinFullInfills.push_back(inf);
     }
   }
-  supportInfill->addInfill(Z, supportPolygons, SupportInfill, 
-			   InfillDistance, InfillDistance, InfillRotation/180.0*M_PI);
+  supportInfill->addInfill(Z, supportPolygons, PolyInfill, 
+			   InfillDistance, InfillDistance, 0);//InfillRotation/180.0*M_PI);
 }
 
 
-  // call when all full fills are outer areas
+// call when all full fills are outer areas
 void Layer::makeSkinPolygons(uint mskins) 
 {
   skins = mskins;
   vector<Poly> fp = GetFullFillPolygons();
   //double dist = thickness/skins;
   for (uint i=0; i<fp.size(); i++){
-    double pz = fp[i].getZ();
     skinFullFillPolygons.push_back(fp[i]);
     fullFillPolygons[i].clear();
     //fp.erase(fp.begin()+i);
@@ -201,6 +204,17 @@ void Layer::mergeFullPolygons()
 void Layer::mergeSupportPolygons() 
 {
   setSupportPolygons(Clipping::getMerged(GetSupportPolygons()));
+}
+
+vector<Poly> Layer::GetInnerShell() const
+{
+  if (shellPolygons.size()>0) return shellPolygons.back();
+  // no shells:
+  if (skinPolygons.size()>0) return skinPolygons;
+  // no skins
+  if (offsetPolygons.size()>0) return offsetPolygons;
+  // no offset
+  return polygons;
 }
 
 // circular numbering
@@ -255,7 +269,9 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
   vector<Poly> shrinked = Clipping::getOffset(polygons,-3*distance,jround);
   shrinked = Clipping::getOffset(shrinked,2*distance,jmiter,0);
   if (skins>1) {
-    skinPolygons = shrinked;
+    for (uint i = 0; i<shrinked.size(); i++) 
+      shrinked[i].setExtrusionFactor(1./skins);
+    skinPolygons = shrinked; 
   } else {
     clearpolys(shellPolygons);
     shellPolygons.push_back(shrinked); // outer
@@ -285,7 +301,9 @@ void Layer::MakeSkirt(double distance)
 {
   calcConvexHull();
   skirtPolygon.clear();
-  skirtPolygon = Clipping::getOffset(hullPolygon,distance,jround);//(ShrinkedPolys(convex, -distance,ClipperLib::jtRound)).front();
+  vector<Poly> skp = Clipping::getOffset(hullPolygon,distance,jround);
+  if (skp.size()>0)
+    skirtPolygon = skp.front();
 }
 
 
@@ -340,10 +358,13 @@ void Layer::calcConvexHull()
   while (current != start);
 }
 
-void Layer::getOrderedPolyLines(const vector<Poly> polys, 
-				Vector2d &startPoint,
-				vector<Vector3d> &lines) const
+void Layer::getOrderedPrintLines(const vector<Poly> polys, 
+				 Vector2d &startPoint,
+				 //				Printlines &printlines) const
+				 vector<printline> &plines,
+				 double linewidth,double linewidthratio,double optratio) const
 {
+  Printlines printlines;
   uint count  = polys.size();
   uint nvindex=-1;
   uint npindex=-1;
@@ -371,89 +392,100 @@ void Layer::getOrderedPolyLines(const vector<Poly> polys,
 	      }
 	    }
 	}
-      polys[npindex].getLines(lines,nvindex);
+      printlines.addPoly(polys[npindex],nvindex);
+      //polys[npindex].getLines(lines,nvindex); // add poly lines to lines
       done[npindex]=true;
       ndone++;
-      startPoint = Vector2d(lines.back().x,lines.back().y);
+      startPoint = printlines.lastPoint();//Vector2d(lines.back().x,lines.back().y);
     }
+  printlines.setZ(polys.back().getZ());
+  printlines.optimize(linewidth, linewidthratio, optratio);
+  printlines.getLines(plines);
 }
 
 // Convert to GCode
 void Layer::MakeGcode(GCodeState &state,
-		      double &E, double offsetZ,
+		      double offsetZ,
 		      const Settings::SlicingSettings &slicing,
 		      const Settings::HardwareSettings &hardware)
 {
-
-  // for (uint s = 0; s<skinFullInfills.size(); s++){
-  //     skinFullInfills[s]->printinfo();
-  //     //cerr << s << ":: "<<skinFullInfills[s]->infillpolys.size()<<endl;
-  //   }
-	 
-	 // Why move z axis separately?
-	 // Command command;
-	 // double lastLayerZ = state.GetLastLayerZ(z);
-	 // // Set speed for next move
-	 // command.Code = SETSPEED;
-	 // command.where = Vector3d(0,0,lastLayerZ);
-	 // command.e = E;					// move
-	 // command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
-	 // state.AppendCommand(command);
-	 // command.comment = "";
-	 // // Move Z axis
-	 // command.Code = ZMOVE;
-	 // command.where = Vector3d(0,0,z);
-	 // command.e = E;					// move
-	 // command.f = hardware.MinPrintSpeedZ;		// Use Min Z speed
-	 // state.AppendCommand(command);
-	 // command.comment = "";
-
-	 Vector3d start3 = state.LastPosition();
-       Vector2d startPoint(start3.x,start3.y);
-       
-	double extrf = hardware.GetExtrudeFactor(thickness);
-
-	double skinextrf = extrf/skins; // /skins; // only height change, keep width
-       
-       vector<Vector3d> lines;
-	//cerr << "gcode layer " << LayerNo << "z="<<Z<<endl;
-	// Skirt
-	lines.clear();
-	skirtPolygon.getLines(lines, startPoint);
-
-	// Support
-	getOrderedPolyLines(supportInfill->infillpolys, startPoint,lines);
-	state.AddLines(lines, extrf, offsetZ, E, slicing, hardware);	       
-
-	// Skin (different extrusion factor)
-	if (skins>1){
-	  lines.clear();
-	  vector<Vector3d> skinlines;
-	  for(size_t p=0;p<skinPolygons.size();p++) 
-	    skinPolygons[p].getLines(skinlines,startPoint);
-	  for(int s=1;s <= skins;s++) { // z offset
-	    // first skin infill
-	    //cerr << s << ":"<<skins<< ":"<<skinFullInfills.size()<<endl;
-	    getOrderedPolyLines(skinFullInfills[s-1]->infillpolys, startPoint,lines);
-	    // then skin polys
-	    double sz = Z - thickness + (s)*thickness/skins;
-	    for(size_t p=0;p<skinlines.size();p++) 
-	      lines.push_back(Vector3d(skinlines[p].x, skinlines[p].y, sz));
-	  }
-	  state.AddLines(lines, skinextrf, offsetZ, E, slicing, hardware);
-	}
+  Vector3d start3 = state.LastPosition();
+  Vector2d startPoint(start3.x,start3.y);
+  
+  double extrf = hardware.GetExtrudeFactor(thickness);
+  
+  double OPTRATIO = 1.5;
+  double optratio = OPTRATIO;
+  double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
+  double linewidth = thickness/linewidthratio;
 	
-       // Shells
-	lines.clear();
-	for(size_t p=0;p<shellPolygons.size();p++) // outer to inner, in this order
-	  getOrderedPolyLines(shellPolygons[p], startPoint, lines); // sorted
-	// Infill
-	getOrderedPolyLines(normalInfill->infillpolys, startPoint,lines);
-	getOrderedPolyLines(fullInfill->infillpolys, startPoint,lines);
-	state.AddLines(lines, extrf, offsetZ, E, slicing, hardware);	       
-
+  //vector<Vector3d> lines;
+  vector<printline> lines;
+  //cerr << "gcode layer " << LayerNo << "z="<<Z<<endl;
+  
+  // Skirt
+  lines.clear();
+  skirtPolygon.getLines(lines, startPoint);
+  
+  // Support
+  getOrderedPrintLines(supportInfill->infillpolys, startPoint, lines,
+		       linewidth, linewidthratio, optratio);
+  state.AddLines(lines, extrf, offsetZ, slicing, hardware);
+  
+  // Skin (different extrusion factor)
+  if (skins>1){
+    vector<printline> skinlines;
+    //lines.clear();
+    for(size_t p=0;p<skinPolygons.size();p++) {
+      skinPolygons[p].getLines(skinlines,startPoint);
+    }
+    // getOrderedPrintLines(skinPolygons, startPoint,lines, linewidth, linewidthratio, optratio);
+    // state.AddLines(lines, skinextrf, offsetZ, E, slicing, hardware);
+    for(uint s=1;s <= skins;s++) { // z offset of skin layers
+      lines.clear();
+      // first skin infill
+      //cerr << s << ":"<<skins<< ":"<<skinFullInfills.size()<<endl;
+      getOrderedPrintLines(skinFullInfills[s-1]->infillpolys, startPoint, lines,
+			   linewidth, linewidthratio, optratio);
+      state.AddLines(lines, extrf, offsetZ, slicing, hardware);
+      // then skin polys 
+      double sz = Z - thickness + (s)*thickness/skins;
+      lines.clear();
+      for(size_t p=0;p<skinlines.size();p++) {
+	printline sl = skinlines[p];
+	sl.from.z=sz;
+	sl.to.z=sz;
+	lines.push_back(sl);
+      }
+      state.AddLines(lines, extrf, offsetZ, slicing, hardware);
+    }
+  }
+  
+  // Shells
+  vector<Poly> shinfill; // shells plus infill, order them together
+  lines.clear();
+  for(size_t p=0;p<shellPolygons.size();p++) // outer to inner, in this order
+    shinfill.insert(shinfill.end(), shellPolygons[p].begin(),shellPolygons[p].end());
+  shinfill.insert(shinfill.end(),
+		  normalInfill->infillpolys.begin(), normalInfill->infillpolys.end());
+  shinfill.insert(shinfill.end(),
+		  fullInfill->infillpolys.begin(), fullInfill->infillpolys.end());
+  
+  getOrderedPrintLines(shinfill, startPoint, lines, 
+		       linewidth, linewidthratio, optratio); // sorted
+  // Infill
+  // getOrderedPrintLines(startPoint,lines, 
+  // 		    linewidth, linewidthratio, optratio);
+  // getOrderedPrintLines(fullInfill->infillpolys, startPoint,lines,
+  // 		    linewidth, linewidthratio, optratio);
+  state.AddLines(lines, extrf, offsetZ, slicing, hardware); 
 }
 
+
+double Layer::area() const
+{
+  return Clipping::Area(polygons);
+}
 
 void Layer::printinfo() const 
 {
@@ -524,9 +556,12 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
     {
       draw_polys(fullFillPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
       draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
-      draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
-      draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
-      draw_polys(supportInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
+      if (normalInfill)
+	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
+      if (fullInfill)
+	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
+      if (supportInfill)
+	draw_polys(supportInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
       for(size_t s=0;s<skinFullInfills.size();s++) 
 	draw_polys(skinFullInfills[s]->infillpolys, GL_LINE_LOOP, 3, 3, 0.2,1,0.2,0.6);
     }

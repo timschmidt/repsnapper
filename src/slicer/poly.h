@@ -16,8 +16,7 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#include "stdafx.h"
-#include "config.h"
+
 #pragma once
 
 #include <vmmlib/vmmlib.h>
@@ -32,6 +31,7 @@ using namespace std;
 using namespace vmml;
 using namespace PolyLib;
 
+struct printline;
 
 struct InFillHit
 {
@@ -48,8 +48,9 @@ bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
 
 class Poly
 {
-
   double z;
+  double extrusionfactor;
+
   //	vector<Poly*> holes;
 	bool holecalculated;
 	//Infill infill;
@@ -57,7 +58,7 @@ class Poly
 	//Clipping clipp;
 public:
         Poly();
-	Poly(double z);
+	Poly(double z, double extrusionfactor=1.);
         Poly(const Poly, double z);
 	/* Poly(double z, */
 	/*      const ClipperLib::Polygon cpoly, bool reverse=false); */
@@ -99,6 +100,8 @@ public:
 	Vector2d center;
 	double getZ() const;
 	void setZ(double z) {this->z = z;};
+	double getExtrusionFactor() const{return extrusionfactor;};
+	void setExtrusionFactor(double e){extrusionfactor = e;};
 	double getLayerNo() const;
 
 	void draw(int gl_type, bool reverse=false) const; // GL_LINE_LOOP or GL_POINTS
@@ -108,8 +111,10 @@ public:
 
 	void getLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
 	void getLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
+	void getLines(vector<printline> &plines, Vector2d &startPoint) const;
 	void getLines(vector<Vector2d> &lines,uint startindex=0) const;
 	void getLines(vector<Vector3d> &lines,uint startindex=0) const;
+	void getLines(vector<printline> &plines, uint startindex) const;
 	double getLinelengthSq(uint startindex) const;
 
 	uint size() const {return vertices.size(); };
