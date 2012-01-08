@@ -131,6 +131,7 @@ public:
 
 	void invertNormals();
 
+	double volume() const;
 
     int loadASCIISTL(std::string filename);
     int loadBinarySTL(std::string filename);

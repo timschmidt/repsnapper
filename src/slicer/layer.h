@@ -30,13 +30,14 @@
 
 #include "poly.h" 
 #include "gcode.h"
+// #include "printlines.h"
 
 /* #include "slicer_logick.h" */
 /* #include "cuttingplane.h" */
 /* #include "infill.h" */
 
 class Infill;
-
+class Printlines;
 //
 // A Layer containing and maintaining all polygons to be printed
 //
@@ -103,7 +104,8 @@ public:
   vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
   vector<Poly>  GetShellPolygonsCirc(int number) const;
   Poly  GetSkirtPolygon() const {return skirtPolygon; };
-
+  vector<Poly> GetInnerShell() const;
+  
   void setFullFillPolygons(const vector<Poly> polys);
   void addFullFillPolygons(const vector<Poly> polys);
   void makeSkinPolygons(uint skins); 
@@ -111,13 +113,14 @@ public:
   void setSupportPolygons(const vector<Poly> polys);
   void setSkirtPolygon(const Poly poly);
 
-  void getOrderedPolyLines(const vector<Poly> polys, 
-			   Vector2d &startPoint,
-			   vector<Vector3d> &lines) const;
+  void getOrderedPrintLines(const vector<Poly> polys, 
+			    Vector2d &startPoint,
+			    vector<printline> &lines,
+			    double linewidth,double linewidthratio,double optratio) const;
   
 
   void MakeGcode (GCodeState &state,
-  		  double &E, double offsetZ, 
+  		  double offsetZ, 
   		  const Settings::SlicingSettings &slicing,
   		  const Settings::HardwareSettings &hardware);
 
@@ -132,6 +135,8 @@ public:
   void addPolygons(vector<Poly> polys);
   vector<Poly> polygons;		// original polygons directly from model
 
+  double area() const;
+  
  private:
 
   Vector2d Min, Max;  // Bounding box

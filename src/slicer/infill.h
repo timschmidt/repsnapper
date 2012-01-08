@@ -32,7 +32,7 @@ class Poly;
 
 
 
-enum InfillType {ParallelInfill,LinesInfill,SupportInfill,RaftInfill};
+enum InfillType {ParallelInfill,PolyInfill,SupportInfill,RaftInfill};
 
 
 class Infill
@@ -49,33 +49,43 @@ class Infill
 
   static vector<struct pattern> savedPatterns;
 
-  ClipperLib::Polygons makeInfillPattern(InfillType type, double infillDistance,
+  ClipperLib::Polygons makeInfillPattern(InfillType type, 
+					 const vector<Poly> tofillpolys,
+					 double infillDistance,
 					 double offsetDistance,
 					 double rotation) ;
 
-  Infill(){}; 
+  Infill(); 
 
-  void addInfillPoly(const Poly p);
-  void addInfillPolys(const vector<Poly> polys);
+  void addInfillPoly(Poly p);
+  void addInfillPolys(vector<Poly> polys);
+
 
  public:
 
-  Infill(Layer *layer);
+  Infill(Layer *layer, double extrfactor);
   ~Infill(); 
+
+  double extrusionfactor;
+  string name; 
+
+  void setName(string s){name=s;};
+  string getName(){return name;};
 
   static void clearPatterns();
   InfillType type;
   double angle;
-
+  double infillDistance;
+  
   vector<Poly> infillpolys;  // for clipper polygon types
   vector<Vector2d> infillvertices; // for lines types
   
   void addInfill(double z, vector<Poly> poly, InfillType type, double infillDistance, 
-		  double offsetDistance, double rotation);
+		 double offsetDistance, double rotation);
   void addInfill(double z, const vector<Poly> polys, const vector<Poly> fillpolys,
-		  double offsetDistance);
+		 double offsetDistance);
   void addInfill(double z, const vector<Poly> polys, const ClipperLib::Polygons ifcpolys,
-		  double offsetDistance);
+		 double offsetDistance);
 
   void getLines(vector<Vector3d> &lines) const;
   

@@ -64,7 +64,6 @@ void Model::MakeRaft(GCodeState &state, double &z)
   double Length = (std::max(raftMax.x,raftMax.y) -
 		   std::min(raftMin.x, raftMin.y))/sqrt(2.0);
 
-  double E = 0.0;
   double rot;
   uint LayerNr = 0;
   uint layerCount = settings.Raft.Phase[0].LayerCount +
@@ -142,7 +141,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 	  state.MakeAcceleratedGCodeLine (Vector3d(P1.x,P1.y,z), 
 					  Vector3d(P2.x,P2.y,z),
 					  props->MaterialDistanceRatio,
-					  z, E, 
+					  z,
 					  settings.Slicing, settings.Hardware);
 	  reverseLines = !reverseLines;
 	}
@@ -152,7 +151,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
       g.where = Vector3d(P2.x, P2.y, z);
       g.f=settings.Hardware.MinPrintSpeedZ;
       g.comment = "Move Z";
-      g.e = E;
+      g.e = 0;
       gcode.commands.push_back(g);
       z += props->Thickness * settings.Hardware.LayerThickness;
 
@@ -161,7 +160,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
       g.where = Vector3d(P2.x, P2.y, z);
       g.f = settings.Hardware.MinPrintSpeedZ;
       g.comment = "Move Z";
-      g.e = E;
+      g.e = 0;
       gcode.commands.push_back(g);
 
       LayerNr++;
@@ -280,8 +279,9 @@ void Model::MakeUncoveredPolygons(Layer * subjlayer,
   Clipping clipp;
   clipp.clear();
   clipp.addPolys(subjlayer->GetOffsetPolygons(),subject);
-  clipp.addPolys(cliplayer->GetOffsetPolygons(),clip);
-  clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
+  clipp.addPolys(cliplayer->GetInnerShell(),clip);
+  // clipp.addPolys(cliplayer->GetOffsetPolygons(),clip);
+  // clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
   vector<Poly> uncovered = clipp.substract();
   subjlayer->addFullPolygons(uncovered);
 }				 
@@ -494,12 +494,11 @@ void Model::ConvertToGCode()
   //  return;
   uint count =  layers.size();
   m_progress.start (_("Making GCode"), count+1);
-  double E = 0.0;
   for (uint p=0;p<count;p++){
     m_progress.update(p);
     g_main_context_iteration(NULL,false);
     //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
-    layers[p]->MakeGcode (state, E,
+    layers[p]->MakeGcode (state,
 			  printOffsetZ,
 			  settings.Slicing, settings.Hardware);
   }
@@ -527,6 +526,9 @@ void Model::ConvertToGCode()
   int min = ((int)time%3600)/60;
   int sec = ((int)time-3600*hr-60*min);
   cout << "GCode Time Estimation "<< hr <<"h "<<min <<"m " <<sec <<"s" <<endl; 
+  double totlength = gcode.commands.back().e;
+  cout << "    total mm extruded "<< totlength  <<endl; 
+
   //??? to statusbar or where else?
 
 }
