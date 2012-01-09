@@ -714,7 +714,7 @@ View::View(BaseObjectType* cobject,
   scale_value->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object));
 
-  add_statusbar_msg("m_scale_event_box", _("Scale the selected object"));
+  //add_statusbar_msg("m_scale_event_box", _("Scale the selected object"));
 
   // GCode tab
   m_builder->get_widget ("g_gcode", m_gcode_entry);
