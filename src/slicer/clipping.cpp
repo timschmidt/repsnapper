@@ -128,7 +128,7 @@ vector<Poly> Clipping::intersect()
 {
   CL::Polygons inter;
   clpr.Execute(CL::ctIntersection, inter, 
-	       CL::pftNonZero, CL::pftNonZero);
+	       CL::pftEvenOdd, CL::pftEvenOdd);
   return getPolys(inter, lastZ, lastExtrF);
 }
 
@@ -139,7 +139,7 @@ vector<Poly> Clipping::unite()
   // CL::Polygons emptypolys;
   // clpr.AddPolygons(emptypolys, CLType(clip));
   clpr.Execute(CL::ctUnion, united, 
-	       CL::pftNonZero, CL::pftNonZero);
+	       CL::pftEvenOdd, CL::pftEvenOdd);
   return getPolys(united, lastZ, lastExtrF);  
 }
 
@@ -159,13 +159,13 @@ vector<Poly> Clipping::substractMerged()
   return getPolys(getMerged(diff), lastZ, lastExtrF);
 }
 
-vector<Poly> Clipping::getOffset(Poly poly, double distance, JoinType jtype, double miterdist)
+vector<Poly> Clipping::getOffset(const Poly poly, double distance, JoinType jtype, double miterdist)
 {
   CL::Polygons cpolys; cpolys.push_back(getClipperPolygon(poly));
   CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
   return getPolys(offset, poly.getZ(), poly.getExtrusionFactor());
 }
-vector<Poly> Clipping::getOffset(vector<Poly> polys, double distance, JoinType jtype,
+vector<Poly> Clipping::getOffset(const vector<Poly> polys, double distance, JoinType jtype,
 				 double miterdist)
 {
   CL::Polygons cpolys = getClipperPolygons(polys);
@@ -177,6 +177,22 @@ vector<Poly> Clipping::getOffset(vector<Poly> polys, double distance, JoinType j
   }
   return getPolys(offset,z,extrf);
 }
+
+// first goes in then out to get capped corners
+vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> polys, double distance, JoinType jtype,
+					 double miterdist)
+{
+  CL::Polygons cpolys = getClipperPolygons(polys);
+  CL::Polygons offset1 = CLOffset(cpolys, -3*CL_FACTOR*distance, CL::jtRound);
+  CL::Polygons offset = CLOffset(offset1, 2*CL_FACTOR*distance, CLType(jtype), miterdist);
+  double z=0, extrf=1.;;
+  if (polys.size()>0) {
+    z= polys.back().getZ();
+    extrf = polys.back().getExtrusionFactor();
+  }
+  return getPolys(offset,z,extrf);  
+}
+
 
 // offset with reverse test
 CL::Polygons Clipping::CLOffset(CL::Polygons cpolys, int cldist, 

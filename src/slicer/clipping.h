@@ -77,10 +77,12 @@ public:
 
   static vector<Poly> getMerged(vector<Poly> polys);
   
-  static vector<Poly> getOffset(Poly poly, double distance, 
+  static vector<Poly> getOffset(const Poly poly, double distance, 
 				JoinType jtype=jmiter, double miterdist=1);
-  static vector<Poly> getOffset(vector<Poly> polys, double distance, 
+  static vector<Poly> getOffset(const vector<Poly> polys, double distance, 
 				JoinType jtype=jmiter,double miterdist=1);
+  static vector<Poly> getShrinkedCapped(const vector<Poly> polys, double distance, 
+					JoinType jtype=jmiter,double miterdist=1);
 
   //vector< vector<Vector2d> > intersect(const Poly poly1, const Poly poly2) const;
 
