@@ -252,15 +252,22 @@ void GCode::draw(const Settings &settings)
 
 	if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
 	  {
-	    start = layerchanges[(uint)(settings.Display.GCodeDrawStart*float((layerchanges.size()-1)))];
-	    end =  layerchanges[(uint)(settings.Display.GCodeDrawEnd*float((layerchanges.size()-1)))];
+	    uint sind = (uint)(settings.Display.GCodeDrawStart*float((layerchanges.size())));
+	    start = layerchanges[sind];
+	    uint eind = (uint)(settings.Display.GCodeDrawEnd*float((layerchanges.size())));
+	    if (sind>=eind) {
+	      eind=sind+1;
+	    }
+	    end =  layerchanges[eind];
 	  }
+
 
 	double LastE=0.0;
 	bool extruderon = false;
         glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
+
 	
 	for(uint i=start;i<commands.size() && i < end ;i++)
 	{
@@ -342,7 +349,7 @@ void GCode::draw(const Settings &settings)
 			break; // ignored GCodes
 		}
 		if(commands[i].Code != EXTRUDERON && commands[i].Code != EXTRUDEROFF)
-		pos = commands[i].where;
+		  pos = commands[i].where;
 	}
 
 	glLineWidth(1);
