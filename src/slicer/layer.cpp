@@ -310,9 +310,7 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
 		       bool useFillets)
 {
   double distance = 0.5 * extrudedWidth;
-  // go in, then out to get rounded corners
-  vector<Poly> shrinked = Clipping::getOffset(polygons,-3*distance,jround);
-  shrinked = Clipping::getOffset(shrinked,2*distance,jmiter,0);
+  vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
   // outmost shells
   if (skins>1) { // either skins
     for (uint i = 0; i<shrinked.size(); i++) 
@@ -326,11 +324,11 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
   distance = extrudedWidth;
   for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
     {
-      shrinked = Clipping::getOffset(shrinked,-distance); 
+      shrinked = Clipping::getShrinkedCapped(shrinked,distance); 
       shellPolygons.push_back(shrinked);
     }
   // the filling polygon
-  fillPolygons = Clipping::getOffset(shrinked,-distance);
+  fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);
 
   calcConvexHull();
   if (makeskirt) {
