@@ -609,19 +609,19 @@ void Model::drawLayers(Vector3d offset) const
 		Vector3d t = T.getTranslation();
 		T.setTranslation(t);
 		vector<Poly> polys;
+		double max_grad;
 		bool polys_ok=objtree.Objects[o].shapes[f].getPolygonsAtZ(T, z, 
 									  settings.Slicing.Optimization,
-									  layer->polygons);
+									  layer->polygons,max_grad);
 		if (polys_ok) layer->addPolygons(polys);
 	      }
 	  
 	  bool makeskirt = (layer->getZ() <= settings.Slicing.SkirtHeight);
-	  uint skins = settings.Slicing.Skins;
 
 	  layer->MakeShells(//settings.Slicing.ShrinkQuality,
 			    settings.Slicing.ShellCount,
 			    matwidth, settings.Slicing.Optimization,
-			    makeskirt, skins, false);
+			    makeskirt, false);
 	  if (settings.Display.DisplayinFill)
 	    {
 	      double fullInfillDistance = matwidth;

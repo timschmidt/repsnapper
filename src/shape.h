@@ -111,9 +111,10 @@ public:
 	void draw_geometry () const;
 	void CenterAroundXY();
 	bool getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
-			    vector<Poly> &polys) const;
+			    vector<Poly> &polys, double &max_grad) const;
+	// returns maximum gradient
 	vector<Segment> getCutlines(const Matrix4d &T, double z, 
-				    vector<Vector2d> &vertices) const;
+				    vector<Vector2d> &vertices, double &max_grad) const;
 	// Extract a 2D polygonset from a 3D model:
 	// void CalcLayer(const Matrix4d &T, CuttingPlane *plane) const;
 	// Auto-Rotate object to have the largest area surface down for printing:
@@ -136,6 +137,7 @@ public:
     int loadASCIISTL(std::string filename);
     int loadBinarySTL(std::string filename);
     static filetype_t getFileType(std::string filename);
+
 
 private:
     double scale_factor;

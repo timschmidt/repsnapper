@@ -540,10 +540,10 @@ void Shape::CenterAroundXY()
 // }
 
 bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
-			   vector<Poly> &polys) const
+			   vector<Poly> &polys, double &max_grad) const
 {
   vector<Vector2d> vertices;
-  vector<Segment> lines = getCutlines(T,z,vertices);
+  vector<Segment> lines = getCutlines(T, z, vertices, max_grad);
   
   if (z < Min.z || z > Max.z) return true; // no polys, but all ok
 
@@ -688,14 +688,15 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
   return true;
 }
 
-vector<Segment> Shape::getCutlines(const Matrix4d &T, double z, vector<Vector2d> &vertices) const
+vector<Segment> Shape::getCutlines(const Matrix4d &T, double z, 
+				   vector<Vector2d> &vertices, double &max_gradient) const
 {
   // Vector3d min = T*Min;
   // Vector3d max = T*Max;
   Vector2d lineStart;
   Vector2d lineEnd;
-  int num_cutpoints;
   vector<Segment> lines;
+  int num_cutpoints;
   for (size_t i = 0; i < triangles.size(); i++)
     {
       Segment line(-1,-1);
@@ -703,6 +704,8 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z, vector<Vector2d>
       if (num_cutpoints>0) {
 	line.start = vertices.size();
 	vertices.push_back(lineStart);
+	if (abs(triangles[i].Normal.z) > max_gradient)
+	  max_gradient = abs(triangles[i].Normal.z);
       }
       if (num_cutpoints>1) {
 	line.end = vertices.size();

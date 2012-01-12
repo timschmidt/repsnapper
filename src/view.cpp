@@ -693,9 +693,9 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_delete",        sigc::mem_fun(*this, &View::delete_selected_stl) );
   connect_button ("m_duplicate",     sigc::mem_fun(*this, &View::duplicate_selected_stl) );
   connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &View::auto_rotate) );
-  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(1,0,0, M_PI/2)));
-  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/2)));
-  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/2)));
+  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(1,0,0, M_PI/6)));
+  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/6)));
+  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/6)));
   connect_button ("m_normals",       sigc::mem_fun(*this, &View::invertnormals_selection));
   m_builder->get_widget ("m_objtree", m_objtree);
 

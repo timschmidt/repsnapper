@@ -391,6 +391,7 @@ void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
   size_t count = vertices.size();
   if (count<2) return; // one point no line
   if (count<3) count--; // two points one line
+
   for(size_t i=0;i<count;i++)
     {
       lines.push_back(getVertexCircular(i+startindex));

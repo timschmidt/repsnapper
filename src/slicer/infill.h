@@ -32,7 +32,8 @@ class Poly;
 
 
 
-enum InfillType {ParallelInfill,PolyInfill,SupportInfill,RaftInfill};
+enum InfillType {ParallelInfill, ZigzagLineInfill, PolyInfill,
+		 SupportInfill, RaftInfill, BridgeInfill};
 
 
 class Infill
@@ -80,7 +81,9 @@ class Infill
   vector<Poly> infillpolys;  // for clipper polygon types
   vector<Vector2d> infillvertices; // for lines types
   
-  void addInfill(double z, vector<Poly> poly, InfillType type, double infillDistance, 
+  void addInfill(double z, Poly poly, InfillType type, double infillDistance, 
+		 double offsetDistance, double rotation);
+  void addInfill(double z, vector<Poly> polys, InfillType type, double infillDistance, 
 		 double offsetDistance, double rotation);
   void addInfill(double z, const vector<Poly> polys, const vector<Poly> fillpolys,
 		 double offsetDistance);
