@@ -56,7 +56,7 @@ class Clipping
   static Vector2d getPoint(CL::IntPoint p);
 
   static CL::Polygons CLOffset(CL::Polygons cpolys, int cldist, 
-			       CL::JoinType cljtype, double miter_limit=1);
+			       CL::JoinType cljtype, double miter_limit=1, bool reverse=false);
 
   static CL::Polygons getMerged(CL::Polygons cpolys);
 

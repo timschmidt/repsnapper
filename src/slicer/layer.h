@@ -47,7 +47,7 @@ class Layer
   //  Clipping clipp;
 public:
   Layer();
-  Layer(int layerno=-1, double thick=0.);
+  Layer(int layerno=-1, double thick=0., uint skins=1);
 
   ~Layer();
 
@@ -69,11 +69,11 @@ public:
   // 					  bool reverse=true) const;
   vector<Poly> getMergedPolygons(const vector<Poly> polys);
   //ClipperLib::Polygons getMergedPolygons(const ClipperLib::Polygons cpolys) const;
-  void mergeFullPolygons();
+  void mergeFullPolygons(bool bridge);
   void mergeSupportPolygons();
   // vector<Poly> getOffsetPolygons(const vector<Poly> polys, long dist) const;
 
-  void addFullPolygons(const vector<Poly> fullpolys) ;
+  void addFullPolygons(const vector<Poly> fullpolys, bool bridge) ;
 
   void CalcInfill (double InfillDistance, 
 		   double FullInfillDistance,
@@ -82,10 +82,12 @@ public:
 		   bool ShellOnly,
 		   bool DisplayDebuginFill);
 
+  vector<double> getBridgeRotations(const vector<Poly> poly) const;
+
   
   void MakeShells(uint shellcount, double extrudedWidth, 
   		  double optimization, 
-  		  bool makeskirt, uint skins, 
+  		  bool makeskirt, 
   		  bool useFillets);
   /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */
   /* 			     double distance,  */
@@ -99,6 +101,7 @@ public:
 		   double z, double Optimization);
   vector<Poly> GetOffsetPolygons() const { return offsetPolygons; }
   vector<Poly> GetFullFillPolygons() const { return fullFillPolygons; }
+  vector<Poly> GetBridgePolygons() const { return bridgePolygons; }
   vector<Poly> GetSkinFullPolygons() const { return skinFullFillPolygons; }
   vector<Poly> GetSupportPolygons() const { return supportPolygons; }
   vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
@@ -106,9 +109,12 @@ public:
   Poly  GetSkirtPolygon() const {return skirtPolygon; };
   vector<Poly> GetInnerShell() const;
   
-  void setFullFillPolygons(const vector<Poly> polys);
-  void addFullFillPolygons(const vector<Poly> polys);
-  void makeSkinPolygons(uint skins); 
+  void setFullFillPolygons(const vector<Poly> polys);  
+  void addFullFillPolygons(const vector<Poly> polys, bool bridge);
+  void setBridgePolygons(const vector<Poly>  polys);
+  void addBridgeFillPolygons(const vector<Poly> polys);
+  void setBridgeAngles(const vector<double> angles) {bridge_angles = angles;};
+  void makeSkinPolygons(); 
   void setNormalFillPolygons(const vector<Poly> polys);
   void setSupportPolygons(const vector<Poly> polys);
   void setSkirtPolygon(const Poly poly);
@@ -143,12 +149,15 @@ public:
 
   Infill * normalInfill;
   Infill * fullInfill;
+  Infill * bridgeInfill;
   vector<Infill*> skinFullInfills;
   Infill * supportInfill;
   
   vector< vector<Poly> > shellPolygons; // all shells except innermost
   vector<Poly> offsetPolygons;	        // innermost shell 
   vector<Poly> fullFillPolygons;        // fully filled polygons (uncovered)
+  vector<Poly> bridgePolygons;          // fully filled polygons (uncovered) for bridge
+  vector<double> bridge_angles;         // angle of each bridge polygon
   vector<Poly> supportPolygons;	        // polygons to be filled with support pattern
   uint skins; // number of skin divisions
   vector<Poly> skinPolygons;            // outer skin polygons

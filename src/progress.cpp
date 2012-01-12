@@ -53,6 +53,7 @@ void ViewProgress::update (double value)
 {
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->set_fraction(value / m_bar_max);
+  //g_main_context_iteration(NULL,true);
   Gtk::Main::iteration(false);
 }
 

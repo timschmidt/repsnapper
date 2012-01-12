@@ -81,11 +81,11 @@ public:
 	vector<Layer*> layers;
 	
 	// Slicing
-	void Slice(GCodeState &state, double printoffsetZ);
-	void CalcInfill(GCodeState &state);
+	void Slice(double printoffsetZ);
+	void CalcInfill();
 	void MakeShells();
-	void MakeUncoveredPolygons();
-	void MakeUncoveredPolygons(Layer *subjlayer,const Layer *cliplayer);
+	void MakeUncoveredPolygons(bool make_bridges=true);
+	vector<Poly> GetUncoveredPolygons(Layer *subjlayer,const Layer *cliplayer);
 	void MakeFullSkins();
 	void MultiplyUncoveredPolygons();
 	void MakeSupportPolygons(Layer * subjlayer, 

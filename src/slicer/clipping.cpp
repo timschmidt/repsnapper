@@ -138,7 +138,7 @@ vector<Poly> Clipping::unite()
   CL::Polygons united;
   // CL::Polygons emptypolys;
   // clpr.AddPolygons(emptypolys, CLType(clip));
-  clpr.Execute(CL::ctDifference, united, 
+  clpr.Execute(CL::ctUnion, united, 
 	       CL::pftNonZero, CL::pftNonZero);
   return getPolys(united, lastZ, lastExtrF);  
 }
@@ -180,9 +180,12 @@ vector<Poly> Clipping::getOffset(vector<Poly> polys, double distance, JoinType j
 
 // offset with reverse test
 CL::Polygons Clipping::CLOffset(CL::Polygons cpolys, int cldist, 
-				CL::JoinType cljtype, double miter_limit)
+				CL::JoinType cljtype, double miter_limit, bool reverse)
 {
   CL::Polygons opolys;
+  if (reverse) 
+    for (uint i=0; i<cpolys.size();i++)
+      std::reverse(cpolys[i].begin(),cpolys[i].end());
   CL::OffsetPolygons(cpolys, opolys, cldist, cljtype, miter_limit);
   return opolys;
 }
@@ -192,13 +195,14 @@ vector<Poly> Clipping::getMerged(vector<Poly> polys)
 {
   //return polys;
   //CL::Clipper clpr;
+  //std::reverse(polys.begin(),polys.end());
   CL::Polygons cpolys = getClipperPolygons(polys);
-  //return getPolys(cpolys,polys.back().getZ(),true);
+  //return getPolys(cpolys, polys.back().getZ(),polys.back().getExtrusionFactor());
   // make wider to get overlap
   CL::Polygons offset;
-  offset = CLOffset(cpolys, 2, CL::jtMiter, 1);
+  offset = CLOffset(cpolys, 5, CL::jtMiter, 1);
   //CL::OffsetPolygons(cpolys, offset, 10, ClipperLib::jtMiter, 1);
-  //return getPolys(offset, polys.back().getZ(),true);
+  // return getPolys(offset, polys.back().getZ(),polys.back().getExtrusionFactor());
   clpr.Clear();
   clpr.AddPolygons(offset, CL::ptSubject);
   // CL::Polygons emptypolys;

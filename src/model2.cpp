@@ -177,12 +177,25 @@ void Model::MakeRaft(GCodeState &state, double &z)
 
 
 
-void Model::Slice(GCodeState &state, double printOffsetZ)
+void Model::Slice(double printOffsetZ)
 {
   int LayerNr = 0;
+
+  // double max_thickness = settings.Hardware.LayerThickness*1.5;
+  // double min_thickness = settings.Hardware.LayerThickness/2;  
+  // double thickness = (max_thickness+min_thickness)/2.;
+
+
+  uint max_skins = settings.Slicing.Skins;
+  double skin_thickness = settings.Hardware.LayerThickness/max_skins;
+  uint skins = max_skins; 
+  double thickness = skin_thickness*skins;
+
   // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
   // start at z=0, cut off everything below
-  double z = settings.Hardware.LayerThickness*0.5 ;   // + Min.z;
+  double z = thickness*0.5;// + Min.z;
+
+
   double optimization = settings.Slicing.Optimization;
 
   m_progress.start (_("Slicing"), Max.z);
@@ -190,19 +203,17 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
        pIt != layers. end(); pIt++)
     delete *pIt;
   layers.clear();
-  double thickness;
   double hackedZ;
   double hacked_layerthickness = optimization;
   bool polys_ok;
   while(z < Max.z)
     {
-      thickness = settings.Hardware.LayerThickness;
       // one layer per layer, with all objects
-      Layer * layer = new Layer(LayerNr, thickness); 
+      Layer * layer = new Layer(LayerNr, thickness, skins); 
       layer->setZ(z+printOffsetZ); // set to real z
       m_progress.update(z);
-      g_main_context_iteration(NULL,false);
       // try to slice all objects until polygons can be made, otherwise hack z
+      double max_gradient = 0;
       for(uint o=0;o<objtree.Objects.size();o++)
 	for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
 	  {
@@ -222,13 +233,18 @@ void Model::Slice(GCodeState &state, double printOffsetZ)
 	      // adding points and lines from object to layer:
 	      polys_ok=shape->getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
 					     settings.Slicing.Optimization,
-					     polys);
+					     polys, max_gradient);
 	      if (polys_ok) layer->addPolygons(polys);
 	      else cerr << "hacked Z=" << hackedZ << endl;
 	      hackedZ += hacked_layerthickness;
 	    }
 	  }
       layers.push_back(layer);
+      // higher gradient -> slice thinner with fewer skin divisions
+      skins = max_skins-(uint)(max_skins* max_gradient);
+      assert (skins>0 && skins <=max_skins);
+      thickness = skin_thickness*skins;
+      //thickness = max_thickness-(max_thickness-min_thickness)*max_gradient;
       z += thickness;
       LayerNr++;
     }
@@ -239,51 +255,56 @@ void Model::MakeFullSkins()
 {
   // not bottom layer
   for (uint i=1; i < layers.size(); i++) {
-    layers[i]->makeSkinPolygons(settings.Slicing.Skins);
+    layers[i]->makeSkinPolygons();
   }
 }
 
-void Model::MakeUncoveredPolygons()
+void Model::MakeUncoveredPolygons(bool make_bridges)
 {
-  Layer emptylayer(layers.size(),settings.Hardware.LayerThickness);
-  emptylayer.Clear();
-
   uint count = layers.size();
   m_progress.start (_("Find Uncovered"), 2*count+2);
-  // bottom to top:
-  for (uint i=0; i <count-1; i++) 
+  // bottom to top: uncovered from above -> top polys
+  for (uint i = 0; i < count-1; i++) 
     {
       m_progress.update(i);
-      g_main_context_iteration(NULL,false);
-      MakeUncoveredPolygons(layers[i],layers[i+1]);
+      layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]),false);
     }  
-  // top to bottom:
-  for (uint i=count-1; i>0; i--) 
+  // top to bottom: uncovered from below -> bridge polys
+  for (uint i = count-1; i > 0; i--) 
     {
+      //cerr << "layer " << i << endl;
       m_progress.update(count + count - i);
-      g_main_context_iteration(NULL,false);
-      MakeUncoveredPolygons(layers[i],layers[i-1]);
+      vector<Poly> bridges = GetUncoveredPolygons(layers[i],layers[i-1]);
+      //make_bridges = false;
+      layers[i]->addFullPolygons(bridges,make_bridges);
+      if (make_bridges)
+	layers[i]->setBridgeAngles(layers[i-1]->getBridgeRotations(bridges));
     }
+  // // instead of just adding the ofsetPolygons 
+  // // we clip against empty planes to get well-oriented polygons ....
+  // Layer emptylayer(layers.size(),settings.Hardware.LayerThickness);
+  // emptylayer.Clear();
   m_progress.update(2*count+1);
-  MakeUncoveredPolygons(layers.front(),&emptylayer);
+  layers.front()->addFullPolygons(layers.front()->GetOffsetPolygons(),false);
+  //layers.front()->addFullPolygons(MakeUncoveredPolygons(layers.front(),&emptylayer),false);
   m_progress.update(2*count+2);
-  MakeUncoveredPolygons(layers.back(),&emptylayer);
+  layers.back()->addFullPolygons(layers.back()->GetOffsetPolygons(),false);
+  //layers.back()->addFullPolygons(MakeUncoveredPolygons(layers.back(),&emptylayer),false);
   m_progress.stop (_("Done"));
 }
 
 // find polys in subjlayer that are not covered by any filled polygons of cliplayer
-// -> split polys of subjlayer in fully filled and normally filled
-void Model::MakeUncoveredPolygons(Layer * subjlayer,
-				  const Layer * cliplayer)
+vector<Poly> Model::GetUncoveredPolygons(Layer * subjlayer,
+					 const Layer * cliplayer)
 {
   Clipping clipp;
   clipp.clear();
-  clipp.addPolys(subjlayer->GetOffsetPolygons(),subject);
-  clipp.addPolys(cliplayer->GetInnerShell(),clip);
+  clipp.addPolys(subjlayer->GetOffsetPolygons(),subject); 
+  clipp.addPolys(cliplayer->GetInnerShell(),clip); // have some overlap
   // clipp.addPolys(cliplayer->GetOffsetPolygons(),clip);
   // clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
   vector<Poly> uncovered = clipp.substract();
-  subjlayer->addFullPolygons(uncovered);
+  return uncovered;
 }				 
 				 
 void Model::MultiplyUncoveredPolygons()
@@ -291,36 +312,41 @@ void Model::MultiplyUncoveredPolygons()
   uint shells = settings.Slicing.ShellCount;
   uint count = layers.size();
   m_progress.start (_("Uncovered Shells"), count*3);
-  // bottom-up
+  // bottom-up: propagate downwards
   for (uint i=0; i < count; i++) 
     {
       m_progress.update(i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
+      vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
       // we removed from full when skinning, so add them too
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (uint s=1; s < shells; s++) 
 	if (int(i-s) > 1) {
-	    layers[i-s]->addFullPolygons(fullpolys);
-	    layers[i-s]->addFullPolygons(skinfullpolys);
+	  layers[i-s]->addFullPolygons(fullpolys,false);
+	  layers[i-s]->addFullPolygons(bridgepolys,false);
+	  layers[i-s]->addFullPolygons(skinfullpolys,false);
 	}
     }
-  // top-down
+  // top-down: propagate upwards
   for (int i=count-1; i>=0; i--) 
     {
       m_progress.update(count + count -i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
+      vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (uint s=1; s < shells; s++) 
 	if (i+s < count){
-	    layers[i+s]->addFullPolygons(fullpolys);
-	    layers[i+s]->addFullPolygons(skinfullpolys);
+	  layers[i+s]->addFullPolygons(fullpolys,false);
+	  layers[i+s]->addFullPolygons(bridgepolys,false);
+	  layers[i+s]->addFullPolygons(skinfullpolys,false);
 	}
     }    
   // merge results
   for (uint i=0; i < count; i++) 
     {
       m_progress.update(count + count +i);
-      layers[i]->mergeFullPolygons();
+      layers[i]->mergeFullPolygons(true);
+      layers[i]->mergeFullPolygons(false);
     }
   m_progress.stop (_("Done"));
 }
@@ -332,8 +358,10 @@ void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
   Clipping clipp;
   clipp.clear();
   clipp.addPolys(cliplayer->GetPolygons(),subject);
-  clipp.addPolys(cliplayer->GetSupportPolygons(),subject);
+  clipp.addPolys(cliplayer->GetSupportPolygons(),subject); // previous 
   clipp.addPolys(subjlayer->GetPolygons(),clip);
+  // widen from layer to layer, afterwards substract enlarged shape polygons?
+  //  subjlayer->setSupportPolygons(clipp.getOffset(clipp.substract(), 0.5*subjlayer->thickness));
   subjlayer->setSupportPolygons(clipp.substract());
 }
 
@@ -344,9 +372,9 @@ void Model::MakeSupportPolygons()
   for (int i=count-1; i>0; i--) 
     {
       m_progress.update(count-i);
-      g_main_context_iteration(NULL,false);
       MakeSupportPolygons(layers[i-1], layers[i]);
     }
+  // shrink a bit
   for (int i=0; i<count; i++) 
     {
       double distance = 1.5*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
@@ -382,7 +410,6 @@ void Model::MakeSkirt()
 
 void Model::MakeShells()
 {
-  uint skins = settings.Slicing.Skins;
   uint count = layers.size();
   m_progress.start (_("Shells"), count);
   double matwidth, skirtheight = settings.Slicing.SkirtHeight;
@@ -390,13 +417,12 @@ void Model::MakeShells()
   for (uint i=0; i < count; i++) 
     {
       m_progress.update(i);
-      g_main_context_iteration(NULL,false);
       //cerr << "shrink layer " << i << endl;
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       makeskirt = (layers[i]->getZ() <= skirtheight);
       layers[i]->MakeShells(settings.Slicing.ShellCount,
 			    matwidth, settings.Slicing.Optimization, 
-			    makeskirt, (i==0?1:skins), //no skin on 1st layer
+			    makeskirt, 
 			    false); 
     }
   MakeSkirt();
@@ -404,7 +430,7 @@ void Model::MakeShells()
 }
 
 
-void Model::CalcInfill(GCodeState &state)
+void Model::CalcInfill()
 {
   uint LayerCount = layers.size();
     // (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
@@ -419,16 +445,14 @@ void Model::CalcInfill(GCodeState &state)
   double altInfillDistance;
   double infilldist;
 
-  g_main_context_iteration(NULL,false);
   Infill::clearPatterns();
   m_progress.start (_("Infill"), layers.size());
 
   //cerr << "make infill"<< endl;
-  for (uint i=0; i <layers.size(); i++) 
+  for (uint i=0; i < layers.size(); i++) 
     {
       Layer * layer = layers[i];
       m_progress.update(i);
-      g_main_context_iteration(NULL,false);
       // inFill      
 
       fullInfillDistance = settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
@@ -473,7 +497,7 @@ void Model::ConvertToGCode()
     }
 
   // Make Layers
-  Slice(state, printOffsetZ);
+  Slice(printOffsetZ);
   
   MakeShells();
 
@@ -483,20 +507,18 @@ void Model::ConvertToGCode()
   if (settings.Slicing.Support)
     MakeSupportPolygons(); // easier before multiplied uncovered bottoms
 
-  if (settings.Slicing.Skins>1)
-    MakeFullSkins(); // must before multiplied uncovered bottoms
+  MakeFullSkins(); // must before multiplied uncovered bottoms
 
   if (settings.Slicing.SolidTopAndBottom)
     MultiplyUncoveredPolygons();
 
-  CalcInfill(state);
+  CalcInfill();
 
-  //  return;
+  state.ResetLastWhere(Vector3d(0,0,0));
   uint count =  layers.size();
   m_progress.start (_("Making GCode"), count+1);
   for (uint p=0;p<count;p++){
     m_progress.update(p);
-    g_main_context_iteration(NULL,false);
     //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
     layers[p]->MakeGcode (state,
 			  printOffsetZ,
