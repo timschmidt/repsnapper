@@ -71,7 +71,7 @@ public:
   //ClipperLib::Polygons getMergedPolygons(const ClipperLib::Polygons cpolys) const;
   void mergeFullPolygons(bool bridge);
   void mergeSupportPolygons();
-  // vector<Poly> getOffsetPolygons(const vector<Poly> polys, long dist) const;
+  // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
   void addFullPolygons(const vector<Poly> fullpolys, bool bridge) ;
 
@@ -99,7 +99,7 @@ public:
   void SetPolygons(vector<Poly> polys) ;
   void SetPolygons(const Matrix4d &T, const Shape shape, 
 		   double z, double Optimization);
-  vector<Poly> GetOffsetPolygons() const { return offsetPolygons; }
+  vector<Poly> GetFillPolygons() const { return fillPolygons; }
   vector<Poly> GetFullFillPolygons() const { return fullFillPolygons; }
   vector<Poly> GetBridgePolygons() const { return bridgePolygons; }
   vector<Poly> GetSkinFullPolygons() const { return skinFullFillPolygons; }
@@ -154,7 +154,7 @@ public:
   Infill * supportInfill;
   
   vector< vector<Poly> > shellPolygons; // all shells except innermost
-  vector<Poly> offsetPolygons;	        // innermost shell 
+  vector<Poly> fillPolygons;	        // innermost shell 
   vector<Poly> fullFillPolygons;        // fully filled polygons (uncovered)
   vector<Poly> bridgePolygons;          // fully filled polygons (uncovered) for bridge
   vector<double> bridge_angles;         // angle of each bridge polygon
