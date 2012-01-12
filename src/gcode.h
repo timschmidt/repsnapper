@@ -208,6 +208,8 @@ public:
 
   double GetTimeEstimation() const;
 
+  vector<uint>layerchanges;
+
 private:
   unsigned long unconfirmed_blocks;
 };
