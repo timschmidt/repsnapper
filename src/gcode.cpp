@@ -82,6 +82,9 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 
 	std::vector<Command> loaded_commands;
 
+	double lastZ=0.;
+	layerchanges.clear();
+
 	while(getline(file,s))
 	{
 		istringstream line(s);
@@ -90,7 +93,7 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 		line >> buffer;	// read something
 
 		progress->update(1.*file.tellg());
-		if (LineNr % 1000 == 0) g_main_context_iteration(NULL,false);
+		if (LineNr % 1000 == 0) g_main_context_iteration(NULL,true);
 
 		if (!append_text ((s+"\n").c_str()))
 		  continue;
@@ -157,6 +160,10 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 				Max.y = command.where.y;
 			if(command.where.z > Max.z)
 				Max.z = command.where.z;
+			if (command.where.z != lastZ) {
+			  lastZ=command.where.z;
+			  layerchanges.push_back(loaded_commands.size());
+			}
 			loaded_commands.push_back(command);
 		}
 		else if( buffer.find( "G0", 0) != string::npos )	//Rapid Motion
@@ -209,6 +216,10 @@ void GCode::Read(Model *MVC, Progress *progress, string filename)
 				Max.y = command.where.y;
 			if(command.where.z > Max.z)
 				Max.z = command.where.z;
+			if (command.where.z != lastZ) {
+			  lastZ=command.where.z;
+			  layerchanges.push_back(loaded_commands.size());
+			}
 			loaded_commands.push_back(command);
 		}
 	}
@@ -238,6 +249,13 @@ void GCode::draw(const Settings &settings)
 	Vector3d pos(0,0,0);
 	uint start = (uint)(settings.Display.GCodeDrawStart*float((commands.size())));
 	uint end = (uint)(settings.Display.GCodeDrawEnd*float(commands.size()));
+
+	if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
+	  {
+	    start = layerchanges[(uint)(settings.Display.GCodeDrawStart*float((layerchanges.size()-1)))];
+	    end =  layerchanges[(uint)(settings.Display.GCodeDrawEnd*float((layerchanges.size()-1)))];
+	  }
+
 	double LastE=0.0;
 	bool extruderon = false;
         glEnable(GL_BLEND);
@@ -385,8 +403,17 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 
 	GcodeTxt += GcodeStart + "\n";
 
+	double lastZ =0;
+	layerchanges.clear();
+
 	for(uint i=0;i<commands.size() ;i++)
 	{
+	  
+	  if(commands[i].where.z != lastZ) {
+	    layerchanges.push_back(i);
+	    lastZ=commands[i].where.z;
+	  }
+
 		oss.str( "" );
 		switch(commands[i].Code)
 		{
