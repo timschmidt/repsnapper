@@ -66,7 +66,7 @@ void Layer::Clear()
   skinFullInfills.clear();
   clearpolys(polygons);
   clearpolys(shellPolygons);
-  clearpolys(offsetPolygons);
+  clearpolys(fillPolygons);
   clearpolys(fullFillPolygons);
   clearpolys(bridgePolygons);
   clearpolys(supportPolygons);
@@ -171,7 +171,7 @@ void Layer::CalcInfill (double InfillDistance,
   supportInfill->setName("support");
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
   if (!ShellOnly)
-    normalInfill->addInfill(Z, offsetPolygons, ZigzagLineInfill, //ParallelInfill,
+    normalInfill->addInfill(Z, fillPolygons, ZigzagLineInfill, //ParallelInfill,
 			    InfillDistance, FullInfillDistance, rot);
   fullInfill->addInfill(Z, fullFillPolygons, PolyInfill,
 			FullInfillDistance, FullInfillDistance, 0);
@@ -222,7 +222,7 @@ void Layer::addFullPolygons(const vector<Poly> fullpolys, bool bridge)
   Clipping clipp;
   clipp.clear();
   // full fill only where already fill
-  clipp.addPolys(GetOffsetPolygons(),subject); 
+  clipp.addPolys(GetFillPolygons(),subject); 
   clipp.addPolys(fullpolys,clip);
   vector<Poly> inter = clipp.intersect();
   if (bridge) // this is a bridge
@@ -231,7 +231,7 @@ void Layer::addFullPolygons(const vector<Poly> fullpolys, bool bridge)
     fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
   //substract from normal fills
   clipp.clear();
-  clipp.addPolys(GetOffsetPolygons(),subject);  
+  clipp.addPolys(GetFillPolygons(),subject);  
   clipp.addPolys(inter,clip);
   setNormalFillPolygons(clipp.substract());
   //mergeFullPolygons(bridge);
@@ -256,7 +256,7 @@ vector<Poly> Layer::GetInnerShell() const
   // no shells:
   if (skinPolygons.size()>0) return skinPolygons;
   // no skins
-  if (offsetPolygons.size()>0) return offsetPolygons;
+  if (fillPolygons.size()>0) return fillPolygons;
   // no offset
   return polygons;
 }
@@ -270,10 +270,10 @@ vector<Poly> Layer::GetShellPolygonsCirc(int number) const
 
 void Layer::setNormalFillPolygons(const vector<Poly> polys)
 {
-  clearpolys(offsetPolygons);
-  offsetPolygons = polys;
-  for (uint i=0; i<offsetPolygons.size();i++)
-    offsetPolygons[i].setZ(Z);
+  clearpolys(fillPolygons);
+  fillPolygons = polys;
+  for (uint i=0; i<fillPolygons.size();i++)
+    fillPolygons[i].setZ(Z);
 }
 
 void Layer::setFullFillPolygons(const vector<Poly>  polys)
@@ -313,28 +313,31 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
   // go in, then out to get rounded corners
   vector<Poly> shrinked = Clipping::getOffset(polygons,-3*distance,jround);
   shrinked = Clipping::getOffset(shrinked,2*distance,jmiter,0);
-  if (skins>1) {
+  // outmost shells
+  if (skins>1) { // either skins
     for (uint i = 0; i<shrinked.size(); i++) 
       shrinked[i].setExtrusionFactor(1./skins);
     skinPolygons = shrinked; 
-  } else {
+  } else {  // or normal shell
     clearpolys(shellPolygons);
-    shellPolygons.push_back(shrinked); // outer
+    shellPolygons.push_back(shrinked); 
   }
+  // inner shells
   distance = extrudedWidth;
   for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
     {
       shrinked = Clipping::getOffset(shrinked,-distance); 
       shellPolygons.push_back(shrinked);
     }
-  offsetPolygons = Clipping::getOffset(shrinked,-distance);
+  // the filling polygon
+  fillPolygons = Clipping::getOffset(shrinked,-distance);
 
   calcConvexHull();
   if (makeskirt) {
     MakeSkirt(3*distance); // skirt distance = 3 * shell distance
   }
 
-  //cerr << " .. made " << offsetPolygons.size() << " offsetpolys "  << endl;
+  //cerr << " .. made " << fillPolygons.size() << " offsetpolys "  << endl;
   // for (uint i =0; i<shellPolygons.size(); i++) {
   //   cout << "shell " << i << endl;
   //   for (uint j =1; j<shellPolygons[i].size(); j++) {
@@ -608,7 +611,7 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   }
 
   draw_polys(shellPolygons, GL_LINE_LOOP, 2, 3, 0.5,0.8,0.8,.7);
-  draw_polys(offsetPolygons, GL_LINE_LOOP, 1, 3, 1,1,1,1);
+  draw_polys(fillPolygons, GL_LINE_LOOP, 1, 3, 1,1,1,1);
   draw_polys(supportPolygons, GL_LINE_LOOP, 3, 3, 0.5,0.5,1.0,1);
   draw_poly(hullPolygon, GL_LINE_LOOP, 3, 3, 0.8,0.6,0.0,0.5);
   if(DisplayInfill)

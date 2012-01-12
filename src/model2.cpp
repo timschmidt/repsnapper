@@ -285,10 +285,10 @@ void Model::MakeUncoveredPolygons(bool make_bridges)
   // Layer emptylayer(layers.size(),settings.Hardware.LayerThickness);
   // emptylayer.Clear();
   m_progress.update(2*count+1);
-  layers.front()->addFullPolygons(layers.front()->GetOffsetPolygons(),false);
+  layers.front()->addFullPolygons(layers.front()->GetFillPolygons(),false);
   //layers.front()->addFullPolygons(MakeUncoveredPolygons(layers.front(),&emptylayer),false);
   m_progress.update(2*count+2);
-  layers.back()->addFullPolygons(layers.back()->GetOffsetPolygons(),false);
+  layers.back()->addFullPolygons(layers.back()->GetFillPolygons(),false);
   //layers.back()->addFullPolygons(MakeUncoveredPolygons(layers.back(),&emptylayer),false);
   m_progress.stop (_("Done"));
 }
@@ -299,9 +299,9 @@ vector<Poly> Model::GetUncoveredPolygons(Layer * subjlayer,
 {
   Clipping clipp;
   clipp.clear();
-  clipp.addPolys(subjlayer->GetOffsetPolygons(),subject); 
+  clipp.addPolys(subjlayer->GetFillPolygons(),subject); 
   clipp.addPolys(cliplayer->GetInnerShell(),clip); // have some overlap
-  // clipp.addPolys(cliplayer->GetOffsetPolygons(),clip);
+  // clipp.addPolys(cliplayer->GetFillPolygons(),clip);
   // clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
   vector<Poly> uncovered = clipp.substract();
   return uncovered;
