@@ -192,7 +192,7 @@ void Printer::Print()
   gcode_iter = gcode.get_iter();
 
   set_printing (true);
-  progress.start (_("Printing"), gcode.commands.size());
+  progress->start (_("Printing"), gcode.commands.size());
   rr_dev_set_paused (device, RR_PRIO_NORMAL, 0);
 }
 
@@ -291,7 +291,7 @@ void RR_CALL Printer::rr_more_fn (rr_dev dev, void *closure)
   Printer *printer = static_cast<Printer*>(closure);
  
   if (printer->printing && printer->gcode_iter) {
-    printer->progress.update (printer->gcode_iter->m_cur_line -
+    printer->progress->update (printer->gcode_iter->m_cur_line -
 			      rr_dev_buffered_lines (printer->device));
     while (rr_dev_write_more (printer->device) && !printer->gcode_iter->finished()) {
       std::string line = printer->gcode_iter->next_line();
@@ -302,7 +302,7 @@ void RR_CALL Printer::rr_more_fn (rr_dev dev, void *closure)
     if (printer->gcode_iter->finished())
     {
       printer->set_printing (false);
-      printer->progress.stop (_("Printed"));
+      printer->progress->stop (_("Printed"));
     }
   }
 }

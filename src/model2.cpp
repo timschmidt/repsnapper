@@ -32,6 +32,8 @@
 #include <glib/gutils.h>
 #include <libreprap/comms.h>
 
+#include <omp.h>
+
 #include "stdafx.h"
 #include "model.h"
 #include "objtree.h"
@@ -198,7 +200,7 @@ void Model::Slice(double printOffsetZ)
 
   double optimization = settings.Slicing.Optimization;
 
-  m_progress.start (_("Slicing"), Max.z);
+  m_progress->start (_("Slicing"), Max.z);
   for (vector<Layer *>::iterator pIt = layers.begin();
        pIt != layers. end(); pIt++)
     delete *pIt;
@@ -211,11 +213,13 @@ void Model::Slice(double printOffsetZ)
       // one layer per layer, with all objects
       Layer * layer = new Layer(LayerNr, thickness, skins); 
       layer->setZ(z+printOffsetZ); // set to real z
-      m_progress.update(z);
+      //cerr << z+printOffsetZ << endl;
+      m_progress->update(z);
       // try to slice all objects until polygons can be made, otherwise hack z
       double max_gradient = 0;
-      for(uint o=0;o<objtree.Objects.size();o++)
-	for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
+      for(int o=0;o<(int)objtree.Objects.size();o++)
+#pragma omp for 
+	for(int f=0;f < (int)objtree.Objects[o].shapes.size();f++)
 	  {
 	    hackedZ = z;
 	    polys_ok = false;
@@ -248,32 +252,38 @@ void Model::Slice(double printOffsetZ)
       z += thickness;
       LayerNr++;
     }
-  m_progress.stop (_("Done"));
+  //m_progress->stop (_("Done"));
 }
 
 void Model::MakeFullSkins()
 {
   // not bottom layer
-  for (uint i=1; i < layers.size(); i++) {
+
+  m_progress->restart (_("Skins"), layers.size());
+  // #pragma omp parallel for schedule(dynamic) ordered
+  for (int i=1; i < (int)layers.size(); i++) {
+    m_progress->update(i);
     layers[i]->makeSkinPolygons();
   }
+  //m_progress->stop (_("Done"));
 }
 
 void Model::MakeUncoveredPolygons(bool make_bridges)
 {
-  uint count = layers.size();
-  m_progress.start (_("Find Uncovered"), 2*count+2);
+  int count = (int)layers.size();
+  m_progress->restart (_("Find Uncovered"), 2*count+2);
   // bottom to top: uncovered from above -> top polys
-  for (uint i = 0; i < count-1; i++) 
+  //#pragma omp parallel for // no
+  for (int i = 0; i < count-1; i++) 
     {
-      m_progress.update(i);
+      m_progress->update(i);
       layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]),false);
     }  
   // top to bottom: uncovered from below -> bridge polys
   for (uint i = count-1; i > 0; i--) 
     {
       //cerr << "layer " << i << endl;
-      m_progress.update(count + count - i);
+      m_progress->update(count + count - i);
       vector<Poly> bridges = GetUncoveredPolygons(layers[i],layers[i-1]);
       //make_bridges = false;
       layers[i]->addFullPolygons(bridges,make_bridges);
@@ -284,13 +294,13 @@ void Model::MakeUncoveredPolygons(bool make_bridges)
   // // we clip against empty planes to get well-oriented polygons ....
   // Layer emptylayer(layers.size(),settings.Hardware.LayerThickness);
   // emptylayer.Clear();
-  m_progress.update(2*count+1);
+  m_progress->update(2*count+1);
   layers.front()->addFullPolygons(layers.front()->GetFillPolygons(),false);
   //layers.front()->addFullPolygons(MakeUncoveredPolygons(layers.front(),&emptylayer),false);
-  m_progress.update(2*count+2);
+  m_progress->update(2*count+2);
   layers.back()->addFullPolygons(layers.back()->GetFillPolygons(),false);
   //layers.back()->addFullPolygons(MakeUncoveredPolygons(layers.back(),&emptylayer),false);
-  m_progress.stop (_("Done"));
+  //m_progress->stop (_("Done"));
 }
 
 // find polys in subjlayer that are not covered by any filled polygons of cliplayer
@@ -309,19 +319,21 @@ vector<Poly> Model::GetUncoveredPolygons(Layer * subjlayer,
 				 
 void Model::MultiplyUncoveredPolygons()
 {
-  uint shells = settings.Slicing.ShellCount;
-  uint count = layers.size();
-  m_progress.start (_("Uncovered Shells"), count*3);
+  int shells = (int)settings.Slicing.ShellCount;
+  int count = (int)layers.size();
+  m_progress->restart (_("Uncovered Shells"), count*3);
   // bottom-up: propagate downwards
-  for (uint i=0; i < count; i++) 
+  int i,s;
+  //#pragma omp parallel for schedule(static) ordered private(s) private(layers) 
+  for (i=0; i < count; i++) 
     {
-      m_progress.update(i);
+      m_progress->update(i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
       vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
       // we removed from full when skinning, so add them too
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
-      for (uint s=1; s < shells; s++) 
-	if (int(i-s) > 1) {
+      for (s=1; s < shells; s++) 
+	if (i-s > 1) {
 	  layers[i-s]->addFullPolygons(fullpolys,false);
 	  layers[i-s]->addFullPolygons(bridgepolys,false);
 	  layers[i-s]->addFullPolygons(skinfullpolys,false);
@@ -330,11 +342,11 @@ void Model::MultiplyUncoveredPolygons()
   // top-down: propagate upwards
   for (int i=count-1; i>=0; i--) 
     {
-      m_progress.update(count + count -i);
+      m_progress->update(count + count -i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
       vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
-      for (uint s=1; s < shells; s++) 
+      for (int s=1; s < shells; s++) 
 	if (i+s < count){
 	  layers[i+s]->addFullPolygons(fullpolys,false);
 	  layers[i+s]->addFullPolygons(bridgepolys,false);
@@ -342,19 +354,20 @@ void Model::MultiplyUncoveredPolygons()
 	}
     }    
   // merge results
-  for (uint i=0; i < count; i++) 
+  for (int i=0; i < count; i++) 
     {
-      m_progress.update(count + count +i);
+      m_progress->update(count + count +i);
       layers[i]->mergeFullPolygons(true);
       layers[i]->mergeFullPolygons(false);
     }
-  m_progress.stop (_("Done"));
+  //m_progress->stop (_("Done"));
 }
 
 
 void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
 				const Layer * cliplayer) // upper 
 {
+  // JUST USE BRIDGE POLYGONS!
   Clipping clipp;
   clipp.clear();
   clipp.addPolys(cliplayer->GetPolygons(),subject);
@@ -368,21 +381,21 @@ void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
 void Model::MakeSupportPolygons()
 { 
   int count = layers.size();
-  m_progress.start (_("Support"), count*2);
+  m_progress->restart (_("Support"), count*2);
   for (int i=count-1; i>0; i--) 
     {
-      m_progress.update(count-i);
+      m_progress->update(count-i);
       MakeSupportPolygons(layers[i-1], layers[i]);
     }
   // shrink a bit
   for (int i=0; i<count; i++) 
     {
       double distance = 1.5*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
-      m_progress.update(i+count);
+      m_progress->update(i+count);
       vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());
       layers[i]->setSupportPolygons(Clipping::getOffset(merged,-distance));
     }
-  m_progress.stop (_("Done"));
+  //  m_progress->stop (_("Done"));
 }
 
 void Model::MakeSkirt()
@@ -410,14 +423,15 @@ void Model::MakeSkirt()
 
 void Model::MakeShells()
 {
-  uint count = layers.size();
-  m_progress.start (_("Shells"), count);
+  int count = (int)layers.size();
+  m_progress->restart (_("Shells"), count);
   double matwidth, skirtheight = settings.Slicing.SkirtHeight;
   bool makeskirt=false;
-  for (uint i=0; i < count; i++) 
+
+#pragma omp parallel for schedule(dynamic) 
+  for (int i=0; i < count; i++) 
     {
-      m_progress.update(i);
-      //cerr << "shrink layer " << i << endl;
+      m_progress->update(i);
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       makeskirt = (layers[i]->getZ() <= skirtheight);
       layers[i]->MakeShells(settings.Slicing.ShellCount,
@@ -426,7 +440,8 @@ void Model::MakeShells()
 			    false); 
     }
   MakeSkirt();
-  m_progress.stop (_("Done"));
+  m_progress->update(count);
+  //m_progress->stop (_("Done"));
 }
 
 
@@ -446,16 +461,17 @@ void Model::CalcInfill()
   double infilldist;
 
   Infill::clearPatterns();
-  m_progress.start (_("Infill"), layers.size());
+  m_progress->start (_("Infill"), layers.size());
 
   //cerr << "make infill"<< endl;
-  for (uint i=0; i < layers.size(); i++) 
+  int count = (int)layers.size();
+  //#pragma omp parallel for schedule(static) ordered
+  for (int i=0; i < count ; i++) 
     {
-      Layer * layer = layers[i];
-      m_progress.update(i);
+      m_progress->update(i);
       // inFill      
 
-      fullInfillDistance = settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
+      fullInfillDistance = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
       altInfillDistance = fullInfillDistance *(1+settings.Slicing.AltInfillDistance);
 
@@ -465,14 +481,14 @@ void Model::CalcInfill()
       else
       	infilldist = infillDistance;
 
-      layer->CalcInfill(infilldist, fullInfillDistance,
+      layers[i]->CalcInfill(infilldist, fullInfillDistance,
 			settings.Slicing.InfillRotation,
 			settings.Slicing.InfillRotationPrLayer, 
 			settings.Slicing.ShellOnly,
 			settings.Display.DisplayDebuginFill);
 
     }
-  m_progress.stop (_("Done"));
+  //m_progress->stop (_("Done"));
 }
 
 void Model::ConvertToGCode()
@@ -490,35 +506,57 @@ void Model::ConvertToGCode()
   Vector3d printOffset = settings.Hardware.PrintMargin;
   double printOffsetZ = settings.Hardware.PrintMargin.z;
 
+  is_calculating=true;
+
+  //m_progress->start (_("Converting"), 9.);
+  // m_progress->update(0.);
+
   if (settings.RaftEnable)
     {
       printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
       MakeRaft (state, printOffsetZ);
     }
 
+  // m_progress->set_label (_("Slicing"));
+  // m_progress->update(1.);
+
   // Make Layers
   Slice(printOffsetZ);
   
+  // m_progress->set_label (_("Shells"));
+  // m_progress->update(2.);
   MakeShells();
 
+  // m_progress->set_label (_("Uncovered"));
+  // m_progress->update(3.);
   if (settings.Slicing.SolidTopAndBottom)
     MakeUncoveredPolygons();
+
+  // m_progress->set_label (_("Support"));
+  // m_progress->update(4.);
 
   if (settings.Slicing.Support)
     MakeSupportPolygons(); // easier before multiplied uncovered bottoms
 
+  // m_progress->set_label (_("Tops and Bottoms"));
+  // m_progress->update(5.);
   MakeFullSkins(); // must before multiplied uncovered bottoms
 
+  m_progress->update(6.);
   if (settings.Slicing.SolidTopAndBottom)
     MultiplyUncoveredPolygons();
 
+  // m_progress->set_label (_("Infill"));
+  // m_progress->update(7.);
   CalcInfill();
 
   state.ResetLastWhere(Vector3d(0,0,0));
   uint count =  layers.size();
-  m_progress.start (_("Making GCode"), count+1);
+  // m_progress->set_label (_("GCode"));
+  // m_progress->update(8.);
+  m_progress->start (_("Making GCode"), count+1);
   for (uint p=0;p<count;p++){
-    m_progress.update(p);
+    m_progress->update(p);
     //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
     layers[p]->MakeGcode (state,
 			  printOffsetZ,
@@ -536,12 +574,17 @@ void Model::ConvertToGCode()
   if (!settings.Slicing.EnableAntiooze)
     AntioozeDistance = 0;
 
+  // m_progress->set_label (_("Collecting GCode"));
+  // m_progress->update(9.);
   gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
 		  settings.Slicing.UseIncrementalEcode,
 		  settings.Slicing.Use3DGcode,
 		  AntioozeDistance,
 		  settings.Slicing.AntioozeSpeed);
-  m_progress.stop (_("Done"));
+
+  m_progress->stop (_("Done"));
+
+  is_calculating=false;
 
   double time = gcode.GetTimeEstimation();
   int hr = (int)time/3600;

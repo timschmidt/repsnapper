@@ -158,7 +158,7 @@ inline string FromDouble(const double i)
 enum GCodes{GOTO, DRAWTO, MILLIMETERSASUNITS, RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D,  EXTRUDERON, EXTRUDEROFF, ARCCLOCKWISE, ARCCOUNTERCLOCKWISE, DWELL, INCHESASUNITS, GOHOME, GOHOMEVIAINTERMEDIATEPOINT, ABSOLUTEPOSITIONING, INCREMENTALPOSITIONING, SETCURRENTASHOME, SELECTEXTRUDER, ZMOVE, SETSPEED};
 
 class Model;
-class Progress;
+class ViewProgress;
 class Command
 {
 public:
@@ -188,7 +188,7 @@ class GCode
 public:
   GCode();
 
-  void Read  (Model *model, Progress *progress, string filename);
+  void Read  (Model *model, ViewProgress *progress, string filename);
   //void Write (Model *model, string filename);
   void draw  (const Settings &settings);
   void MakeText(string &GcodeTxt, const string &GcodeStart,

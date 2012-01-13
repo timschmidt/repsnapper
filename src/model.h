@@ -46,7 +46,7 @@ class Model
 
 public:
 
-	Progress m_progress;
+	ViewProgress *m_progress;
 
 	// Something in the rfo changed
 	sigc::signal< void > signal_tree_changed() { return m_signal_tree_changed; }
@@ -139,7 +139,7 @@ public:
 
 	GCode gcode;
  private:
-
+	bool is_calculating;
 	//GCodeIter *m_iter;
 };
 

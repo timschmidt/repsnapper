@@ -22,19 +22,29 @@
 #include "model.h"
 #include "progress.h"
 
-ViewProgress::ViewProgress(Progress *progress, Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
+//ViewProgress::ViewProgress(Progress *progress, Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
+ViewProgress::ViewProgress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
   m_box (box), m_bar(bar), m_label(label)
 {
   m_bar_max = 0.0;
   box->hide();
-  progress->m_signal_progress_start.connect  (sigc::mem_fun(*this, &ViewProgress::start));
-  progress->m_signal_progress_update.connect (sigc::mem_fun(*this, &ViewProgress::update));
-  progress->m_signal_progress_stop.connect   (sigc::mem_fun(*this, &ViewProgress::stop));
+  // progress->m_signal_progress_start.connect  (sigc::mem_fun(*this, &ViewProgress::start));
+  // progress->m_signal_progress_update.connect (sigc::mem_fun(*this, &ViewProgress::update));
+  // progress->m_signal_progress_stop.connect   (sigc::mem_fun(*this, &ViewProgress::stop));
+  // progress->m_signal_progress_label.connect  (sigc::mem_fun(*this, &ViewProgress::set_label));
 }
 
 void ViewProgress::start (const char *label, double max)
 {
   m_box->show();
+  m_bar_max = max;
+  m_label->set_label (label);
+  m_bar_cur = 0.0;
+  m_bar->set_fraction(0.0);
+}
+void ViewProgress::restart (const char *label, double max)
+{
+  //m_box->show();
   m_bar_max = max;
   m_label->set_label (label);
   m_bar_cur = 0.0;
@@ -53,8 +63,8 @@ void ViewProgress::update (double value)
 {
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->set_fraction(value / m_bar_max);
-  //g_main_context_iteration(NULL,true);
   Gtk::Main::iteration(false);
+  g_main_context_iteration(NULL,false);
 }
 
 void ViewProgress::set_label (const std::string label)
