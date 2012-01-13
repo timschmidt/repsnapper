@@ -167,7 +167,7 @@ void Layer::CalcInfill (double InfillDistance,
   //cout << "new " ;fullInfill->printinfo();
   skinFullInfills.clear();
   //skinFullInfills.resize(skins);
-  supportInfill = new Infill(this,1.);
+  supportInfill = new Infill(this,0.5); // thinner walls for support
   supportInfill->setName("support");
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
   if (!ShellOnly)
@@ -197,7 +197,7 @@ void Layer::CalcInfill (double InfillDistance,
     }
   }
   supportInfill->addInfill(Z, supportPolygons, PolyInfill, 
-			   InfillDistance, InfillDistance, 0);//InfillRotation/180.0*M_PI);
+			   1.5*InfillDistance, 1.5*InfillDistance, 0);//InfillRotation/180.0*M_PI);
 }
 
 
