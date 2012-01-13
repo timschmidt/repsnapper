@@ -20,6 +20,7 @@
 #include "poly.h"
 
 
+
 // Constructor
 Shape::Shape()
 {
@@ -260,6 +261,8 @@ int Shape::parseASCIISTL(istream *text) {
     }
     CenterAroundXY();
     CalcCenter();
+    // cerr << triangles.size() << endl;
+    // cerr << Center << " - " << Min << " - " << Max <<  endl;
     scale_factor = 1.0;
     cout << "Shape has volume " << volume() << " mm^3"<<endl;
     return 0;
@@ -359,21 +362,21 @@ void Shape::Scale(double in_scale_factor)
         for(int j = 0; j < 3; j++)
         {
             /* Translate to origin */
-            triangles[i][j] = triangles[i][j] - Center;
+            triangles[i][j] = triangles[i][j] - Min;
             triangles[i][j].scale(in_scale_factor/scale_factor);
-            triangles[i][j] = triangles[i][j] + Center;
+            triangles[i][j] = triangles[i][j] + Min;
         }
     }
 
-    Min = Min - Center;
-    Min.scale(in_scale_factor/scale_factor);
-    Min = Min + Center;
+    //Min = Min - Center;
+    //Min.scale(in_scale_factor/scale_factor);
+    //Min = Min + Center;
 
-    Max = Max - Center;
+    Max -= Min;
     Max.scale(in_scale_factor/scale_factor);
-    Max = Max + Center;
+    Max += Min;
     
-	CenterAroundXY();
+    CenterAroundXY();
 
     /* Save current scale_factor */
     scale_factor = in_scale_factor;
@@ -488,6 +491,7 @@ void Shape::Rotate(Vector3d axis, double angle)
 
 	Min = min;
 	Max = max;
+	CenterAroundXY();
 //	cout << "min " << Min << " max " << Max << "\n";
 }
 
@@ -697,7 +701,8 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   Vector2d lineEnd;
   vector<Segment> lines;
   int num_cutpoints;
-  for (size_t i = 0; i < triangles.size(); i++)
+
+  for (uint i = 0; i < triangles.size(); i++)
     {
       Segment line(-1,-1);
       num_cutpoints = triangles[i].CutWithPlane(z, T, lineStart, lineEnd);
