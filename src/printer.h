@@ -64,7 +64,7 @@ class Printer
 	~Printer();
 
 	Settings settings;
-	Progress progress;
+	ViewProgress *progress;
 
 	bool inhibit_print;
 	sigc::signal< void > signal_inhibit_changed;

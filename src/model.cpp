@@ -43,6 +43,7 @@ Model::Model() :
   // Variable defaults
   Center.x = Center.y = 100.0;
   Center.z = 0.0;
+  is_calculating= false;
 }
 
 Model::~Model()
@@ -79,9 +80,9 @@ void Model::SimpleAdvancedToggle()
 
 void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
 {
-  m_progress.start (_("Converting"), 100.0);
-  gcode.Read (this, &m_progress, file->get_path());
-  m_progress.stop (_("Done"));
+  m_progress->start (_("Converting"), 100.0);
+  gcode.Read (this, m_progress, file->get_path());
+  m_progress->stop (_("Done"));
   ModelChanged();
 }
 
@@ -136,14 +137,14 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
       while (!fileis.eof())
 	{
 	  Shape shape;
-	  uint ok = shape.parseASCIISTL(&fileis);
+	  int ok = shape.parseASCIISTL(&fileis);
 	  if (ok==0) {
+	    shapes.push_back(shape);
 	    // go back to get "solid " keyword again
 	    streampos where = fileis.tellg();
 	    where-=100;
 	    if (where < 0) break;
 	    fileis.seekg(where,ios::beg);
-	    shapes.push_back(shape);
 	  }
 	}
       if (shapes.size()==1){
@@ -426,7 +427,7 @@ Vector3d Model::GetViewCenter()
 // called from View::Draw
 void Model::draw (Gtk::TreeModel::iterator &iter)
 {
-
+  
   Shape *sel_shape;
   TreeObject *sel_object;
   gint index = 1; // pick/select index. matches computation in update_model()

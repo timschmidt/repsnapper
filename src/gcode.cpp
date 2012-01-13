@@ -54,7 +54,7 @@ double GCode::GetTimeEstimation() const
 }
 
 
-void GCode::Read(Model *MVC, Progress *progress, string filename)
+void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 {
 	clear();
 

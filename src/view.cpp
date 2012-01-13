@@ -781,7 +781,7 @@ View::~View()
   delete m_temps[TEMP_NOZZLE];
   delete m_temps[TEMP_BED];
   delete m_cnx_view;
-  delete m_progress;
+  //delete m_progress;
 }
 
 /* Recursively sets all widgets in the window to visible */
@@ -821,7 +821,9 @@ void View::setModel(Model *model)
   m_builder->get_widget("progress_bar", bar);
   m_builder->get_widget("progress_label", label);
   // FIXME: better have own Progress and delegate to model AND printer
-  m_progress = new ViewProgress (&m_model->m_progress, box, bar, label);
+  //m_progress = new ViewProgress (&m_model->m_progress, box, bar, label);
+  m_progress = new ViewProgress (box, bar, label);
+  m_model->m_progress = m_progress;
 
   // Connect / dis-connect button
   m_cnx_view = new ConnectView(m_model, printer, &m_model->settings);
