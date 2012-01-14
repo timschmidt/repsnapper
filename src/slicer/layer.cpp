@@ -377,7 +377,12 @@ void Layer::calcConvexHull()
     p.insert(p.end(), polygons[i].vertices.begin(), polygons[i].vertices.end());
   uint np = p.size();
   //cerr << np << " points"<< endl;
-  if (np==0) return;
+  if (np<2) return;
+  if (np<4) {
+    for (uint i = 0; i < np; i++) 
+      hullPolygon.addVertex(p[i]);
+    return;
+  }
   uint current=np;
   double minx=G_MAXDOUBLE;
   double miny=G_MAXDOUBLE;

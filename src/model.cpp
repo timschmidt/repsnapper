@@ -397,8 +397,9 @@ void Model::CalcBoundingBoxAndCenter()
   Vector3d newMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
 
   for (uint i = 0 ; i < objtree.Objects.size(); i++) {
+    Matrix4d M = objtree.GetSTLTransformationMatrix (i);
     for (uint j = 0; j < objtree.Objects[i].shapes.size(); j++) {
-      Matrix4d M = objtree.GetSTLTransformationMatrix (i, j);
+      objtree.Objects[i].shapes[j].CalcBBox();
       Vector3d stlMin = M * objtree.Objects[i].shapes[j].Min;
       Vector3d stlMax = M * objtree.Objects[i].shapes[j].Max;
       for (uint k = 0; k < 3; k++) {
@@ -526,6 +527,10 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
   // draw total bounding box
   if(settings.Display.DisplayBBox)
     {
+      for (uint i = 0; i < objtree.Objects.size(); i++) {
+	for (uint j = 0; j < objtree.Objects[i].size(); j++) 
+	  objtree.Objects[i].shapes[j].drawBBox();
+      }
       // Draw bbox
       glDisable(GL_DEPTH_TEST);
       glColor3f(1,0,0);
@@ -612,10 +617,10 @@ void Model::drawLayers(Vector3d offset) const
 	  layer = new Layer(LayerNr,settings.Hardware.LayerThickness);
 	  layer->setZ(z);
 	  matwidth = settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
-	  for(size_t o=0;o<objtree.Objects.size();o++)
+	  for(size_t o=0;o<objtree.Objects.size();o++){
+	    Matrix4d T = objtree.GetSTLTransformationMatrix(o);
 	    for(size_t f=0;f<objtree.Objects[o].shapes.size();f++)
 	      {
-		Matrix4d T = objtree.GetSTLTransformationMatrix(o,f);
 		Vector3d t = T.getTranslation();
 		T.setTranslation(t);
 		vector<Poly> polys;
@@ -625,11 +630,11 @@ void Model::drawLayers(Vector3d offset) const
 									  layer->polygons,max_grad);
 		if (polys_ok) layer->addPolygons(polys);
 	      }
+	  }
 	  
 	  bool makeskirt = (layer->getZ() <= settings.Slicing.SkirtHeight);
 
-	  layer->MakeShells(//settings.Slicing.ShrinkQuality,
-			    settings.Slicing.ShellCount,
+	  layer->MakeShells(settings.Slicing.ShellCount,
 			    matwidth, settings.Slicing.Optimization,
 			    makeskirt, false);
 	  if (settings.Display.DisplayinFill)
@@ -652,12 +657,6 @@ void Model::drawLayers(Vector3d offset) const
 				settings.Display.DisplayDebuginFill);
 	    }
 	}
-      // layer->Draw(settings.Display.DrawVertexNumbers,
-      // 		  settings.Display.DrawLineNumbers,
-      // 		  settings.Display.DrawCPOutlineNumbers,
-      // 		  settings.Display.DrawCPLineNumbers, 
-      // 		  settings.Display.DrawCPVertexNumbers,
-      // 		  settings.Display.DisplayinFill);
       layer->Draw(settings.Display.DrawVertexNumbers,
 		  settings.Display.DrawLineNumbers,
 		  settings.Display.DrawCPOutlineNumbers,
@@ -670,7 +669,6 @@ void Model::drawLayers(Vector3d offset) const
             // need to delete the temporary  layer
             delete layer;
       }
-      // displayInfillOld(settings, layer, layer.LayerNo, altInfillLayers);
       LayerNr++; 
       z+=zStep;
     }// while

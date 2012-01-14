@@ -42,6 +42,7 @@ public:
 	string name;
 	Transform3D transform3D;
 	vector<Shape> shapes;
+	uint size(){return shapes.size();};
 	int idx;
 };
 
@@ -69,7 +70,7 @@ public:
 	Gtk::TreePath addShape(TreeObject *parent, Shape &shape, std::string location);
 	void get_selected_stl(Gtk::TreeModel::iterator &iter, TreeObject *&object, Shape *&shape);
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
-	Matrix4d GetSTLTransformationMatrix(int object, int shape) const;
+	Matrix4d GetSTLTransformationMatrix(int object, int shape=-1) const;
 
 	vector<TreeObject> Objects;
 	Transform3D transform3D;

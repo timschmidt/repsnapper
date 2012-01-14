@@ -271,7 +271,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     }
     else if (event->state & GDK_BUTTON3_MASK) { // pan
       double factor = 0.3;
-      Vector3f delta3f(-delta.x*factor, delta.y*factor, 0);
+      Vector3d delta3f(-delta.x*factor, delta.y*factor, 0);
       if (event->state & GDK_SHIFT_MASK) { // move object
 	Shape *shape;
 	TreeObject *object;

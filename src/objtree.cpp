@@ -25,13 +25,6 @@
 #include "model.h"
 
 
-
-void Transform3D::move(Vector3d delta)
-{
-  Vector3d trans = transform.getTranslation();
-  transform.setTranslation(trans + delta);
-}
-
 Matrix4d ObjectsTree::GetSTLTransformationMatrix(int object, int shape) const
 {
 	Matrix4d result = transform3D.transform;

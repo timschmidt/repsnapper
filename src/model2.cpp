@@ -217,7 +217,14 @@ void Model::Slice(double printOffsetZ)
       m_progress->update(z);
       // try to slice all objects until polygons can be made, otherwise hack z
       double max_gradient = 0;
-      for(int o=0;o<(int)objtree.Objects.size();o++)
+      for(int o=0;o<(int)objtree.Objects.size();o++) {
+	Matrix4d T = objtree.GetSTLTransformationMatrix(o);
+	Vector3d t = T.getTranslation();
+	t+= Vector3d(settings.Hardware.PrintMargin.x
+		     +settings.Raft.Size*settings.RaftEnable, 
+		     settings.Hardware.PrintMargin.y
+		     +settings.Raft.Size*settings.RaftEnable, 0);
+	T.setTranslation(t);
 #pragma omp for schedule(dynamic)
 	for(int f=0;f < (int)objtree.Objects[o].shapes.size();f++)
 	  {
@@ -226,13 +233,6 @@ void Model::Slice(double printOffsetZ)
 	    while (!polys_ok && hackedZ<z+thickness){
 	      // Get a pointer to the object:
 	      Shape* shape = &objtree.Objects[o].shapes[f];
-	      Matrix4d T = objtree.GetSTLTransformationMatrix(o,f);
-	      Vector3d t = T.getTranslation();
-	      t+= Vector3d(settings.Hardware.PrintMargin.x
-			   +settings.Raft.Size*settings.RaftEnable, 
-			   settings.Hardware.PrintMargin.y
-			   +settings.Raft.Size*settings.RaftEnable, 0);
-	      T.setTranslation(t);
 	      vector<Poly> polys;
 	      // adding points and lines from object to layer:
 	      polys_ok=shape->getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
@@ -243,6 +243,7 @@ void Model::Slice(double printOffsetZ)
 	      hackedZ += hacked_layerthickness;
 	    }
 	  }
+      }
       layers.push_back(layer);
       // higher gradient -> slice thinner with fewer skin divisions
       if (varSlicing) {
