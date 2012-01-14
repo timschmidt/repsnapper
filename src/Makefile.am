@@ -44,7 +44,7 @@ SHARED_SRC= \
 	src/printer2.cpp \
 	src/progress.cpp \
 	src/connectview.cpp \
-	src/settings.cpp
+	src/settings.cpp 
 
 SHARED_INC= \
 	src/arcball.h \
@@ -64,7 +64,7 @@ SHARED_INC= \
 	src/connectview.h \
 	src/settings.h \
 	src/view.h \
-	src/types.h
+	src/types.h 
 
 include src/slicer/Makefile.am
 
@@ -74,7 +74,7 @@ repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) src/repsnapper.cpp
 
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 
-repsnapper_LDADD = libpolylib.la libreprap.la libclipper.la -lgomp $(GTKMM_LIBS) $(GL_LIBS) 
+repsnapper_LDADD = libpolylib.la libreprap.la libclipper.la -lgomp $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(BOOST_LDFLAGS)
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
 dist_repsnapperdata_DATA = src/repsnapper.ui

@@ -119,13 +119,14 @@ void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
 
 void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 {
+  bool autoplace = settings.Misc.ShapeAutoplace;
   string path = file->get_path();
   filetype_t ftype =  Shape::getFileType(path);
   if (ftype == BINARY_STL) // only one shape per file
     {
       Shape shape;
       shape.loadBinarySTL(path);      
-      AddShape(NULL, shape, path);
+      AddShape(NULL, shape, path,autoplace);
       ModelChanged();
      }
   else if (ftype == ASCII_STL) // multiple shapes per file
@@ -149,7 +150,7 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 	}
       if (shapes.size()==1){
 	shapes.front().filename = (string)path.substr(found+1);
-	AddShape(NULL, shapes.front(), shapes.front().filename , true);
+	AddShape(NULL, shapes.front(), shapes.front().filename , autoplace);
       }
       else for (uint i=0;i<shapes.size();i++){
 	  // do not autoplace to keep saved positions
@@ -159,6 +160,14 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
       ModelChanged();
       fileis.close();
     }
+  else if (ftype == VRML) 
+    {
+      Shape shape;
+      shape.loadASCIIVRML(path);      
+      AddShape(NULL, shape, path,autoplace);
+      ModelChanged();
+    }
+
   ClearLayers();
 }
 

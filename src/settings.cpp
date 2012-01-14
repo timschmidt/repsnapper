@@ -89,7 +89,7 @@ static struct {
   gboolean triggers_redraw;
 } settings[] = {
   // Raft:
-
+  
   BOOL_MEMBER  (RaftEnable, "RaftEnable", false, true),
   FLOAT_MEMBER (Raft.Size,  "RaftSize",   1.33, true),
 
@@ -160,7 +160,7 @@ static struct {
   INT_MEMBER    (Slicing.NormalFilltype, "NormalFilltype", 0, true),
   INT_MEMBER    (Slicing.FullFilltype, "FullFilltype", 0, true),
   BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, false),
-  BOOL_MEMBER   (Slicing.Support, "Support", false, true),
+  BOOL_MEMBER   (Slicing.Support, "Support", true, true),
   FLOAT_MEMBER  (Slicing.SkirtHeight, "SkirtHeight", 0.0, true),
   INT_MEMBER    (Slicing.Skins, "Skins", 1, true),
   BOOL_MEMBER   (Slicing.Varslicing, "Varslicing", false, false),
@@ -173,6 +173,7 @@ static struct {
   FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.005, false),
 
   // Misc.
+  BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
   BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
   BOOL_MEMBER (Misc.TempReadingEnabled, "TempReadingEnabled", true, false),
   BOOL_MEMBER (Misc.ClearLogfilesWhenPrintStarts, "ClearLogfilesWhenPrintStarts", true, false),

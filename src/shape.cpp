@@ -16,10 +16,11 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+
 #include "shape.h"
 #include "poly.h"
 
-
+//#include "vrml.h"
 
 // Constructor
 Shape::Shape()
@@ -137,6 +138,99 @@ int Shape::loadBinarySTL(string filename) {
     scale_factor = 1.0;
     cout << "Shape has volume " << volume() << " mm^3"<<endl;
     return 0;
+}
+
+
+int Shape::loadASCIIVRML(std::string filename) {
+  if(getFileType(filename) != VRML) {
+    cerr << "No VRML file file passed to loadASCIIVRML" << endl;
+    return -1;
+  }
+    triangles.clear();
+    Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
+    Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
+  
+  //#ifndef HAVE_OPENVRML
+#if 1
+    ifstream file;
+    file.open(filename.c_str());
+
+    if(file.fail()) {
+        cerr << "Error: Unable to open vrml file - " << filename << endl;
+        return -1;
+    }
+    string word;
+    std::vector<float> vertices;
+    std::vector<int> indices;
+    bool finished = false;
+    while(!file.eof() && !finished) { 
+      // while (word!="Shape"  && !file.eof())
+      // 	file >> word;
+      // while (word!="Appearance" && !file.eof())
+      // 	file >> word;
+      // while (word!="Coordinate" && !file.eof())
+      // 	file >> word;
+
+      while (word!="point" && !file.eof())
+	file >> word;
+      file >> word; 
+      if (word=="[") {
+	float f;
+	while (word!="]" && !file.eof()){
+	  file >> word;
+	  if (word!="]")
+	    if (word.find("#")!=0) {
+	      std::istringstream iss(word);
+	      iss >> f;
+	      vertices.push_back(f);
+	      //cerr << f << ", ";
+	    }
+	}
+	//cerr << endl;
+      }
+      while (word!="coordIndex"  && !file.eof())
+	file >> word;
+      file >> word; 
+      if (word=="[") {
+	int c;
+	while (word!="]" && !file.eof()){
+	  file >> word;
+	  if (word!="]")
+	    if (word.find("#")!=0) {
+	      std::istringstream iss(word);
+	      iss >> c;
+	      indices.push_back(c);
+	      //cerr << c << ", ";
+	    }
+	}
+	//cerr << endl;
+      }
+    }
+    file.close();
+
+    //cerr << vertices.size() << " - " << indices.size() << endl;
+    if (indices.size()%4!=0) return -1;
+    if (vertices.size()%3!=0) return -1;
+    cerr <<"read ok" << endl;
+    vector<Vector3d> vert;
+    for (uint i=0; i<vertices.size();i+=3)
+      vert.push_back(Vector3d(vertices[i],
+			      vertices[i+1],
+			      vertices[i+2]));
+    for (uint i=0; i<indices.size();i+=4){
+      Triangle T(vert[indices[i]],vert[indices[i+1]],vert[indices[i+2]]);
+      triangles.push_back(T);
+      T.AccumulateMinMax (Min, Max);
+      //triangles.push_back(t);
+    }
+
+#else // HAVE_OPENVRML
+      // VRMLFile vf(filename);
+      // this->triangles = vf.getTriangles();
+#endif
+    CenterAroundXY();
+    CalcCenter();
+    scale_factor = 1.0;
 }
 
 /* Loads an ASCII STL file by filename
@@ -274,6 +368,10 @@ filetype_t Shape::getFileType(string filename) {
     // Extract file extension (i.e. "stl")
     string extension = filename.substr(filename.find_last_of(".")+1);
 
+    if(extension == "wrl" || extension == "WRL") {
+        return VRML;
+    }
+
     if(extension != "stl" && extension != "STL") {
         return NONE_STL;
     }
@@ -282,7 +380,7 @@ filetype_t Shape::getFileType(string filename) {
     file.open(filename.c_str());
 
     if(file.fail()) {
-        cerr << "Error: Unable to open stl file - " << filename << endl;
+        cerr << "Error: Unable to open file - " << filename << endl;
         return NONE_STL;
     }
 
