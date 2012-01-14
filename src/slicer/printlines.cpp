@@ -78,7 +78,6 @@ void Printlines::optimize(double linewidth, double linewidthratio, double optrat
   //cout << "optimize " ; printinfo();
   //optimizeLinedistances(linewidth);
   // optimizeCorners(linewidth,linewidthratio,optratio);
-  
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
 }

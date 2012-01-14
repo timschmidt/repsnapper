@@ -41,7 +41,7 @@
 #include "triangle.h"
 
 
-#define ABS(a)	   (((a) < 0) ? -(a) : (a))
+//#define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
 /* A number that speaks for itself, every kissable digit.                    */
 
@@ -63,6 +63,7 @@ public:
 	void identity(){transform=Matrix4d::IDENTITY;}
 	Matrix4d transform;
 	void move(Vector3d delta);
+	void rotate(double x, double y, double z);
 };
 
 
@@ -80,7 +81,8 @@ struct Segment {
 enum filetype_t{
     ASCII_STL,
     BINARY_STL,
-    NONE_STL
+    NONE_STL,
+    VRML
 };
 
 
@@ -137,6 +139,9 @@ public:
     int loadASCIISTL(std::string filename);
     int loadBinarySTL(std::string filename);
     static filetype_t getFileType(std::string filename);
+
+
+    int loadASCIIVRML(std::string filename);
 
 
 private:

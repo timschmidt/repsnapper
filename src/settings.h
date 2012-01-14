@@ -112,6 +112,7 @@ class Settings {
   SlicingSettings Slicing;
 
   struct MiscSettings {
+    bool ShapeAutoplace;
     bool FileLoggingEnabled;
     bool TempReadingEnabled;
     bool ClearLogfilesWhenPrintStarts;

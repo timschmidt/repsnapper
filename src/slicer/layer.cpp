@@ -313,8 +313,8 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
 		       bool useFillets)
 {
   double distance = 0.5 * extrudedWidth;
-  //vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);
-  vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
+  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);
+  //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
   // outmost shells
   if (skins>1) { // either skins
     for (uint i = 0; i<shrinked.size(); i++) 
@@ -406,6 +406,12 @@ void Layer::calcConvexHull()
 	  leftmost = i;
       current = leftmost;
       hullPolygon.addVertex(p[current], true); // to front: reverse order
+      if (hullPolygon.size()>np){
+	cerr << "couldn't make convex hull on layer "<< LayerNo << endl;
+	printinfo();
+	hullPolygon.clear();
+	break;
+      }
     }
   while (current != start);
 }
