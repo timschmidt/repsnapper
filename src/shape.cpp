@@ -22,19 +22,48 @@
 
 //#include "vrml.h"
 
+
+
+
+void Transform3D::move(Vector3d delta)
+{
+  Vector3d trans = transform.getTranslation();
+  transform.setTranslation(trans + delta);
+}
+
+void Transform3D::scale(double x)
+{
+  transform.m[3][3] = 1/x;
+}
+
+void Transform3D::rotate(Vector3d axis, double angle)
+{
+  Vector3d naxis=axis;
+  naxis.normalise();
+  transform.rotate(angle,naxis );
+}
+void Transform3D::rotate(Vector3d center, double x, double y, double z)
+{
+  move(-center);
+  if (x!=0) transform.rotateX(x);
+  if (y!=0) transform.rotateY(y);
+  if (z!=0) transform.rotateZ(z);
+  move(center);
+}
+
+
 // Constructor
 Shape::Shape()
 {
 	Min.x = Min.y = Min.z = 0.0;
 	Max.x = Max.y = Max.z = 200.0;
-	CalcCenter();
+	CalcBBox();
 }
 
 
 Shape::Shape(string filename, istream *text){
   this->filename = filename;
   parseASCIISTL(text);
-  CalcCenter();
 }
 
 static float read_float(ifstream &file) {
@@ -130,11 +159,10 @@ int Shape::loadBinarySTL(string filename) {
 	//cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
 
         triangles.push_back(T);
-        T.AccumulateMinMax (Min, Max);
     }
     file.close();
+    CalcBBox();
     CenterAroundXY();
-    CalcCenter();
     scale_factor = 1.0;
     cout << "Shape has volume " << volume() << " mm^3"<<endl;
     return 0;
@@ -220,7 +248,6 @@ int Shape::loadASCIIVRML(std::string filename) {
     for (uint i=0; i<indices.size();i+=4){
       Triangle T(vert[indices[i]],vert[indices[i+1]],vert[indices[i+2]]);
       triangles.push_back(T);
-      T.AccumulateMinMax (Min, Max);
       //triangles.push_back(t);
     }
 
@@ -229,8 +256,8 @@ int Shape::loadASCIIVRML(std::string filename) {
       // this->triangles = vf.getTriangles();
 #endif
     CenterAroundXY();
-    CalcCenter();
     scale_factor = 1.0;
+    return 0;
 }
 
 /* Loads an ASCII STL file by filename
@@ -250,7 +277,6 @@ int Shape::loadASCIISTL(string filename) {
     }
     parseASCIISTL(&file);
     CenterAroundXY();
-    CalcCenter();
     this->filename = filename;
     file.close();
     return 0;
@@ -349,12 +375,10 @@ int Shape::parseASCIISTL(istream *text) {
 			  vertices[1],
 			  vertices[2]);
 
-        triangle.AccumulateMinMax(Min, Max);
 	//	cout << "txt triangle "<< normal_vec << ":\n\t" << vertices[0] << "/\n\t"<<vertices[1] << "/\n\t"<<vertices[2] << endl;
         triangles.push_back(triangle);
     }
     CenterAroundXY();
-    CalcCenter();
     // cerr << triangles.size() << endl;
     // cerr << Center << " - " << Min << " - " << Max <<  endl;
     scale_factor = 1.0;
@@ -419,7 +443,6 @@ int Shape::load(string filename)
 
     // OptimizeRotation(); // no, I probably have prepared the file
     CenterAroundXY();
-    CalcCenter();
 
     //cout << getSTLsolid(0) << endl;
     scale_factor = 1.0;
@@ -437,7 +460,7 @@ double Shape::volume() const
 {
   double vol=0;
   for (uint i = 0; i < triangles.size(); i++)
-    vol+=triangles[i].projectedvolume();
+    vol+=triangles[i].projectedvolume(transform3D.transform);
   return vol;
 }
 
@@ -455,6 +478,10 @@ string Shape::getSTLsolid() const
 
 void Shape::Scale(double in_scale_factor)
 {
+  transform3D.scale(in_scale_factor);
+  CalcBBox();
+  return;
+
     for(size_t i = 0; i < triangles.size(); i++)
     {
         for(int j = 0; j < 3; j++)
@@ -480,9 +507,13 @@ void Shape::Scale(double in_scale_factor)
     scale_factor = in_scale_factor;
 }
 
-void Shape::CalcCenter()
+void Shape::CalcBBox()
 {
-	Center = (Max + Min )/2;
+  Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
+  Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
+  for(size_t i = 0; i < triangles.size(); i++)
+    triangles[i].AccumulateMinMax (Min, Max, transform3D.transform);
+  Center = (Max + Min )/2;
 }
 
 void Shape::OptimizeRotation()
@@ -552,63 +583,65 @@ void Shape::OptimizeRotation()
 // Rotate and adjust for the user - not a pure rotation by any means
 void Shape::Rotate(Vector3d axis, double angle)
 {
-	Vector3d min,max;
-	Vector3d oldmin,oldmax;
+  
+  // transform3D.rotate(Center, axis.x*angle, axis.y*angle, axis.z*angle);
+  // //transform3D.rotate(axis, angle);
+  // CalcBBox();
+  // return;
 
-	min.x = min.y = min.z = oldmin.x = oldmin.y = oldmin.z = 99999999.0;
-	max.x = max.y = max.z = oldmax.x = oldmax.y = oldmax.z -99999999.0;
-
+  // do a real rotation because matrix transform gives errors when slicing
 	for (size_t i=0; i<triangles.size(); i++)
 	{
-		triangles[i].AccumulateMinMax (oldmin, oldmax);
+	  //triangles[i].AccumulateMinMax (oldmin, oldmax);
 
 		triangles[i].Normal = triangles[i].Normal.rotate(angle, axis.x, axis.y, axis.z);
 		triangles[i].A = triangles[i].A.rotate(angle, axis.x, axis.y, axis.z);
 		triangles[i].B = triangles[i].B.rotate(angle, axis.x, axis.y, axis.z);
 		triangles[i].C = triangles[i].C.rotate(angle, axis.x, axis.y, axis.z);
 
-		triangles[i].AccumulateMinMax (min, max);
+		//triangles[i].AccumulateMinMax (min, max);
 	}
-	Vector3d move(0, 0, 0);
-	// if we rotated under the bed, translate us up again
-	if (min.z < 0) {
-		move.z = - min.z;
-//		cout << "vector moveup: " << move << "\n";
-	}
-	// ensure our x/y bbox is at the same offset from the bottom/left
-	move.x = oldmin.x - min.x;
-	move.y = oldmin.y - min.y;
-	for (uint i = 0; i < triangles.size(); i++)
-		triangles[i].Translate(move);
-	max.x += move.x;
-	min.x += move.x;
-	max.y += move.y;
-	min.y += move.y;
-	max.z += move.z;
-	min.z += move.z;
+// 	Vector3d move(0, 0, 0);
+// 	// if we rotated under the bed, translate us up again
+// 	if (min.z < 0) {
+// 		move.z = - min.z;
+// //		cout << "vector moveup: " << move << "\n";
+// 	}
+// 	// ensure our x/y bbox is at the same offset from the bottom/left
+// 	move.x = oldmin.x - min.x;
+// 	move.y = oldmin.y - min.y;
+// 	for (uint i = 0; i < triangles.size(); i++)
+// 		triangles[i].Translate(move);
+// 	max.x += move.x;
+// 	min.x += move.x;
+// 	max.y += move.y;
+// 	min.y += move.y;
+// 	max.z += move.z;
+// 	min.z += move.z;
 
-	Min = min;
-	Max = max;
+// 	Min = min;
+// 	Max = max;
 	CenterAroundXY();
-//	cout << "min " << Min << " max " << Max << "\n";
+// //	cout << "min " << Min << " max " << Max << "\n";
 }
 
 void Shape::CenterAroundXY()
 {
-	Vector3d displacement = -Min;
+  CalcBBox();
+  Vector3d displacement = -Vector3d(Center.x,Center.y,Min.z);
 
-	for(size_t i=0; i<triangles.size() ; i++)
-	{
-		triangles[i].A = triangles[i].A + displacement;
-		triangles[i].B = triangles[i].B + displacement;
-		triangles[i].C = triangles[i].C + displacement;
-	}
-
-	Max += displacement;
-	Min += displacement;
-	transform3D.move(-displacement);
-//	cout << "Center Around XY min" << Min << " max " << Max << "\n";
-	CalcCenter();
+  for(size_t i=0; i<triangles.size() ; i++)
+    {
+      triangles[i].A = triangles[i].A + displacement;
+      triangles[i].B = triangles[i].B + displacement;
+      triangles[i].C = triangles[i].C + displacement;
+    }
+  
+  Max += displacement;
+  Min += displacement;
+  transform3D.move(-displacement);
+// //	cout << "Center Around XY min" << Min << " max " << Max << "\n";
+  CalcBBox();
 }
 
 // // every 2 points denote a line
@@ -641,6 +674,8 @@ void Shape::CenterAroundXY()
 //   return lines;
 // }
 
+
+// given the overall translation matrix, not our own!
 bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
 			   vector<Poly> &polys, double &max_grad) const
 {
@@ -651,9 +686,9 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
 
   if (vertices.size()==0) return false; 
   //cerr << "vertices ok" <<endl;
-  if (!CleanupSharedSegments(vertices,lines)) return false; 
+  if (!CleanupSharedSegments(lines)) return false; 
   //cerr << "clean shared ok" <<endl;
-  if (!CleanupConnectSegments(vertices,lines)) return false;
+  if (!CleanupConnectSegments(vertices,lines,true)) return false;
   //cerr << "clean connect ok" <<endl;
 
 	vector< vector<int> > planepoints;
@@ -800,10 +835,13 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   vector<Segment> lines;
   int num_cutpoints;
 
+  // we know our own tranform:
+  Matrix4d transform = transform3D.transform*T;
+
   for (uint i = 0; i < triangles.size(); i++)
     {
       Segment line(-1,-1);
-      num_cutpoints = triangles[i].CutWithPlane(z, T, lineStart, lineEnd);
+      num_cutpoints = triangles[i].CutWithPlane(z, transform, lineStart, lineEnd);
       if (num_cutpoints>0) {
 	line.start = vertices.size();
 	vertices.push_back(lineStart);
@@ -915,8 +953,6 @@ void renderBitmapString(Vector3d pos, void* font, string text)
 }
 
 
-// FIXME: why !? do we grub around with the rfo here ?
-//  --> the model ist sliced here again in addition to model2.cpp???
 // called from Model::draw
 void Shape::draw(const Model *model, const Settings &settings) const 
 {
@@ -1019,12 +1055,13 @@ void Shape::draw(const Model *model, const Settings &settings) const
 		glEnd();
 	}
 	glDisable(GL_DEPTH_TEST);
+}
 
-
-	if(settings.Display.DisplayBBox)
-	  {
+// the bounding box is in real coordinates (not transformed)
+void Shape::drawBBox() const 
+{
 		// Draw bbox
-		glColor3f(1,0,0);
+		glColor3f(1,0.2,0.2);
 		glLineWidth(1);
 		glBegin(GL_LINE_LOOP);
 		glVertex3f(Min.x, Min.y, Min.z);
@@ -1048,8 +1085,6 @@ void Shape::draw(const Model *model, const Settings &settings) const
 		glVertex3f(Max.x, Min.y, Min.z);
 		glVertex3f(Max.x, Min.y, Max.z);
 		glEnd();
-	}
-
 }
 
 // void Shape::displayInfillOld(const Settings &settings, CuttingPlane &plane,
@@ -1147,8 +1182,35 @@ void Shape::draw_geometry() const
  */
 // ??? as only coincident lines are removed, couldn't this be
 // done easier by just running through all lines and finding them?
-bool CleanupSharedSegments(vector<Vector2d> &vertices, vector<Segment> &lines)
+bool CleanupSharedSegments(vector<Segment> &lines)
 {
+  vector<int> lines_to_delete;
+  for (uint j = 0; j < lines.size(); j++) {
+    const Segment &jr = lines[j];
+    for (uint k = j + 1; k < lines.size(); k++)
+      {
+	const Segment &kr = lines[k];
+	if ((jr.start == kr.start && jr.end == kr.end) ||
+	    (jr.end == kr.start && jr.start == kr.end))
+	  {
+	    lines_to_delete.push_back (j);
+	    lines_to_delete.push_back (k); // remove both???
+	  }
+      }
+  }
+  // we need to remove from the end first to avoid disturbing
+  // the order of removed items
+  std::sort(lines_to_delete.begin(), lines_to_delete.end());
+  for (int r = lines_to_delete.size() - 1; r >= 0; r--)
+    {
+      lines.erase(lines.begin() + lines_to_delete[r]);
+    }
+  return true;
+
+
+
+
+#if 0
   vector<int> vertex_counts; // how many lines have each point
   vertex_counts.resize (vertices.size());
   
@@ -1207,6 +1269,7 @@ bool CleanupSharedSegments(vector<Vector2d> &vertices, vector<Segment> &lines)
 	}
     }
   return true;
+#endif
 }
 
 /*
@@ -1216,26 +1279,26 @@ bool CleanupSharedSegments(vector<Vector2d> &vertices, vector<Segment> &lines)
  * match from any detached points and joining them, with new synthetic
  * segments.
  */
-bool CleanupConnectSegments(vector<Vector2d> &vertices, vector<Segment> &lines)
+bool CleanupConnectSegments(vector<Vector2d> &vertices, vector<Segment> &lines, bool connect_all)
 {
 	vector<int> vertex_types;
-	vector<int> vertex_counts;
 	vertex_types.resize (vertices.size());
-	vertex_counts.resize (vertices.size());
+	// vector<int> vertex_counts;
+	// vertex_counts.resize (vertices.size());
 
 	// which vertices are referred to, and how much:
 	for (uint i = 0; i < lines.size(); i++)
 	{
 		vertex_types[lines[i].start]++;
 		vertex_types[lines[i].end]--;
-		vertex_counts[lines[i].start]++;
-		vertex_counts[lines[i].end]++;
+		// vertex_counts[lines[i].start]++;
+		// vertex_counts[lines[i].end]++;
 	}
 
 	// the vertex_types count should be zero for all connected lines,
 	// positive for those ending no-where, and negative for
 	// those starting no-where.
-	std::vector<int> detached_points;
+	std::vector<int> detached_points; // points with only one line
 	for (uint i = 0; i < vertex_types.size(); i++)
 	{
 		if (vertex_types[i])
@@ -1285,12 +1348,12 @@ bool CleanupConnectSegments(vector<Vector2d> &vertices, vector<Segment> &lines)
 		assert (nearest != 0);
 
 		// allow points 10mm apart to be joined, not more
-		if (nearest_dist_sq > 100.0) {
+		if (!connect_all && nearest_dist_sq > 100.0) {
 			cout << "oh dear - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - not connecting\n";
 			continue; //return false;
 		}
 		// warning above 1mm apart 
-		if (nearest_dist_sq > 1.0) {
+		if (!connect_all && nearest_dist_sq > 1.0) {
 			cout << "warning - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - connecting anyway\n";
 		}
 

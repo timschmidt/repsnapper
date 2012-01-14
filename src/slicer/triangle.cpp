@@ -60,45 +60,47 @@ double Triangle::area()
 }
 
 // add all these to get shape volume
-double Triangle::projectedvolume() const
+double Triangle::projectedvolume(Matrix4d T) const
 {
   if (Normal.z==0) return 0;
   Triangle xyproj = Triangle(Vector3d(A.x,A.y,0),
 			     Vector3d(B.x,B.y,0),
 			     Vector3d(C.x,C.y,0));
-  Vector3d min = GetMin();
-  Vector3d max = GetMax();
+  Vector3d min = GetMin(T);
+  Vector3d max = GetMax(T);
   double vol =  xyproj.area()*0.5*(max.z+min.z);
   if (Normal.z<0) vol=-vol; 
   return vol;
 }
 
-Vector3d Triangle::GetMax() const
+Vector3d Triangle::GetMax(Matrix4d T) const
 {
 	Vector3d max(-99999999.0, -99999999.0, -99999999.0);
+	Vector3d TA=T*A,TB=T*B,TC=T*C;
 	for (uint i = 0; i < 3; i++) {
-		max[i] = MAX(max[i], A[i]);
-		max[i] = MAX(max[i], B[i]);
-		max[i] = MAX(max[i], C[i]);
+		max[i] = MAX(max[i], TA[i]);
+		max[i] = MAX(max[i], TB[i]);
+		max[i] = MAX(max[i], TC[i]);
 	}
 	return max;
 }
 
-Vector3d Triangle::GetMin() const
+Vector3d Triangle::GetMin(Matrix4d T) const
 {
 	Vector3d min(99999999.0, 99999999.0, 99999999.0);
+	Vector3d TA=T*A,TB=T*B,TC=T*C;
 	for (uint i = 0; i < 3; i++) {
-		min[i] = MIN(min[i], A[i]);
-		min[i] = MIN(min[i], B[i]);
-		min[i] = MIN(min[i], C[i]);
+		min[i] = MIN(min[i], TA[i]);
+		min[i] = MIN(min[i], TB[i]);
+		min[i] = MIN(min[i], TC[i]);
 	}
 	return min;
 }
 
-void Triangle::AccumulateMinMax(Vector3d &min, Vector3d &max)
+void Triangle::AccumulateMinMax(Vector3d &min, Vector3d &max, Matrix4d T)
 {
-	Vector3d tmin = GetMin();
-	Vector3d tmax = GetMax();
+	Vector3d tmin = GetMin(T);
+	Vector3d tmax = GetMax(T);
 	for (uint i = 0; i < 3; i++) {
 		min[i] = MIN(tmin[i], min[i]);
 		max[i] = MAX(tmax[i], max[i]);

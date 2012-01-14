@@ -62,8 +62,10 @@ public:
 	Transform3D(){identity();}
 	void identity(){transform=Matrix4d::IDENTITY;}
 	Matrix4d transform;
+	void scale(double x);
 	void move(Vector3d delta);
-	void rotate(double x, double y, double z);
+	void rotate(Vector3d center, double x, double y, double z);
+	void rotate(Vector3d axis, double angle);
 };
 
 
@@ -111,6 +113,7 @@ public:
 	/* 		      guint LayerNr, vector<int>& altInfillLayers); */
 	void draw (const Model *model, const Settings &settings) const;
 	void draw_geometry () const;
+	void drawBBox() const; 
 	void CenterAroundXY();
 	bool getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
 			    vector<Poly> &polys, double &max_grad) const;
@@ -121,7 +124,7 @@ public:
 	// void CalcLayer(const Matrix4d &T, CuttingPlane *plane) const;
 	// Auto-Rotate object to have the largest area surface down for printing:
 	void OptimizeRotation(); 
-	void CalcCenter();
+	void CalcBBox();
 	// Rotation for manual rotate and used by OptimizeRotation:
 	void Rotate(Vector3d axis, double angle);  
     void Scale(double scale_factor);
@@ -150,5 +153,6 @@ private:
 
 
 
-bool CleanupConnectSegments(vector<Vector2d> &vertices, vector<Segment> &lines);
-bool CleanupSharedSegments(vector<Vector2d> &vertices, vector<Segment> &lines);
+bool CleanupConnectSegments(vector<Vector2d> &vertices, vector<Segment> &lines,
+			    bool connect_all=false);
+bool CleanupSharedSegments(vector<Segment> &lines);
