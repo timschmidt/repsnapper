@@ -36,7 +36,9 @@
 /* #include "cuttingplane.h" */
 /* #include "infill.h" */
 
+//#include "infill.h"
 class Infill;
+
 class Printlines;
 //
 // A Layer containing and maintaining all polygons to be printed
@@ -75,12 +77,10 @@ public:
 
   void addFullPolygons(const vector<Poly> fullpolys, bool bridge) ;
 
-  void CalcInfill (double InfillDistance, 
-		   double FullInfillDistance,
-		   double InfillRotation, 
-		   double InfillRotationPrLayer,
-		   bool ShellOnly,
-		   bool DisplayDebuginFill);
+  void CalcInfill (int normalfilltype, int fullfilltype,
+		   double InfillDistance,  double FullInfillDistance,
+		   double InfillRotation,  double InfillRotationPrLayer,
+		   bool ShellOnly,  bool DisplayDebuginFill);
 
   vector<double> getBridgeRotations(const vector<Poly> poly) const;
 
