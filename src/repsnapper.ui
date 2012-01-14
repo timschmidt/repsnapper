@@ -13,11 +13,6 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
-  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
   <object class="GtkAction" id="LoadSettings">
     <property name="label">Load Settings</property>
     <property name="short_label">Load Settings</property>
@@ -67,6 +62,11 @@
     <property name="value">10</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
   </object>
   <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
     <property name="upper">20</property>
@@ -124,8 +124,6 @@ and others I forgot... (needs updating)</property>
     <property name="stock">gtk-open</property>
   </object>
   <object class="GtkWindow" id="main_window">
-    <property name="width_request">1000</property>
-    <property name="height_request">500</property>
     <property name="can_focus">False</property>
     <child>
       <object class="GtkVBox" id="vbox1">
@@ -567,7 +565,7 @@ and others I forgot... (needs updating)</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="fill">False</property>
+                        <property name="fill">True</property>
                         <property name="position">2</property>
                       </packing>
                     </child>
@@ -650,7 +648,7 @@ and others I forgot... (needs updating)</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="fill">False</property>
+                        <property name="fill">True</property>
                         <property name="position">3</property>
                       </packing>
                     </child>
@@ -866,14 +864,14 @@ and others I forgot... (needs updating)</property>
                         <property name="can_focus">False</property>
                         <property name="spacing">7</property>
                         <child>
-                          <object class="GtkLabel" id="l_scale_title">
+                          <object class="GtkLabel" id="label119">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">Object Scaling:</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
-                            <property name="fill">True</property>
+                            <property name="fill">False</property>
                             <property name="padding">5</property>
                             <property name="position">0</property>
                           </packing>
@@ -911,7 +909,7 @@ and others I forgot... (needs updating)</property>
                       </object>
                       <packing>
                         <property name="expand">False</property>
-                        <property name="fill">False</property>
+                        <property name="fill">True</property>
                         <property name="position">8</property>
                       </packing>
                     </child>
@@ -3155,7 +3153,37 @@ Distance is twice the Infill Distance.</property>
                       </packing>
                     </child>
                     <child>
-                      <placeholder/>
+                      <object class="GtkLabel" id="label116">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Normal Fill</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">2</property>
+                        <property name="right_attach">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBox" id="Slicing.NormalFilltype">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">3</property>
+                        <property name="right_attach">4</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBox" id="Slicing.FullFilltype">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">3</property>
+                        <property name="right_attach">4</property>
+                        <property name="top_attach">1</property>
+                        <property name="bottom_attach">2</property>
+                      </packing>
                     </child>
                     <child>
                       <placeholder/>
@@ -3164,13 +3192,17 @@ Distance is twice the Infill Distance.</property>
                       <placeholder/>
                     </child>
                     <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
+                      <object class="GtkLabel" id="label118">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Full Fill</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">2</property>
+                        <property name="right_attach">3</property>
+                        <property name="top_attach">1</property>
+                        <property name="bottom_attach">2</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>
@@ -3201,7 +3233,20 @@ Distance is twice the Infill Distance.</property>
                       </packing>
                     </child>
                     <child>
-                      <placeholder/>
+                      <object class="GtkCheckButton" id="Slicing.Varslicing">
+                        <property name="label" translatable="yes">Variable Slicing</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="tooltip_text" translatable="yes">Subdivide layers depending on steepness. Maximum divisions given by Number of Skins</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>

@@ -23,6 +23,7 @@
 
 #include <stdafx.h>
 
+#include "infill.h"
 /*
  * How settings are intended to work:
  *
@@ -156,10 +157,13 @@ static struct {
   FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, "InfillRotationPrLayer", 60.0, true),
   FLOAT_MEMBER  (Slicing.AltInfillDistance, "AltInfillDistance", 2.0, true),
   STRING_MEMBER (Slicing.AltInfillLayersText, "AltInfillLayersText", "", true),
+  INT_MEMBER    (Slicing.NormalFilltype, "NormalFilltype", 0, true),
+  INT_MEMBER    (Slicing.FullFilltype, "FullFilltype", 0, true),
   BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, false),
   BOOL_MEMBER   (Slicing.Support, "Support", false, true),
   FLOAT_MEMBER  (Slicing.SkirtHeight, "SkirtHeight", 0.0, true),
   INT_MEMBER    (Slicing.Skins, "Skins", 1, true),
+  BOOL_MEMBER   (Slicing.Varslicing, "Varslicing", false, false),
 
   BOOL_MEMBER   (Slicing.ShellOnly, "ShellOnly", false, true),
   INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),
@@ -422,6 +426,8 @@ void Settings::set_defaults ()
   }
 
   //Slicing.ShrinkQuality = SHRINK_FAST;
+  Slicing.NormalFilltype = ParallelInfill;
+  Slicing.FullFilltype = ParallelInfill;
 
   GCode.m_impl->setDefaults();
 
@@ -619,6 +625,24 @@ void Settings::set_to_gui (Builder &builder, int i)
   }
 }
 
+
+void Settings::set_filltypes_to_gui (Builder &builder)
+{
+  
+  cerr << Slicing.NormalFilltype << " ! " << Slicing.FullFilltype<< endl;
+  Gtk::ComboBox *ncombo = NULL;
+  builder->get_widget ("Slicing.NormalFilltype", ncombo);
+  if (ncombo)
+    if (ncombo->get_has_entry())
+      ncombo->set_active (Slicing.NormalFilltype);
+    else cerr <<"no entries in Slicing.NormalFilltype"<<  endl;
+  Gtk::ComboBox *fcombo = NULL;
+  builder->get_widget ("Slicing.FullFilltype", fcombo);
+  if (fcombo)
+    if (fcombo->get_has_entry())
+      fcombo->set_active (Slicing.FullFilltype);
+  else cerr <<"no entries in  Slicing.FullFilltype"<<  endl;
+}
 // void Settings::set_shrink_to_gui (Builder &builder)
 // {
 //   // Slicing.ShrinkQuality
@@ -704,6 +728,19 @@ void Settings::get_from_gui (Builder &builder, int i)
     m_signal_visual_settings_changed.emit();
 }
 
+void Settings::get_filltypes_from_gui (Builder &builder)
+{
+  Gtk::ComboBox *combo = NULL;
+  builder->get_widget ("Slicing.NormalFilltype", combo);
+  if (combo)
+    Slicing.NormalFilltype = combo->get_active_row_number ();
+  builder->get_widget ("Slicing.FullFilltype", combo);
+  if (combo)
+    Slicing.FullFilltype = combo->get_active_row_number ();
+  else cerr << "no Slicing.FullFilltype combo" << endl;
+  cerr << "read combos: " << Slicing.NormalFilltype <<  " / " << Slicing.FullFilltype << endl;
+}
+
 // void Settings::get_shrink_from_gui (Builder &builder)
 // {
 //   // Slicing.ShrinkQuality
@@ -752,6 +789,7 @@ void Settings::set_to_gui (Builder &builder)
     set_to_gui (builder, i);
   }
   // set_shrink_to_gui (builder);
+  set_filltypes_to_gui (builder);
 
   for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
       const char *glade_name = colour_selectors[i].glade_name;
@@ -853,6 +891,40 @@ void Settings::connect_to_ui (Builder &builder)
     }
   }
 
+  // Slicing.*Filltype
+  cerr << "set infill combos" << endl;
+  Gtk::ComboBox *ncombo = NULL;
+  Gtk::ComboBox *fcombo = NULL;
+  builder->get_widget ("Slicing.NormalFilltype", ncombo);
+  builder->get_widget ("Slicing.FullFilltype", fcombo);
+  if (ncombo && fcombo) {// && !ncombo->get_model() && !fcombo->get_model()) {
+    ncombo->clear();
+    fcombo->clear();
+    Glib::RefPtr<Gtk::ListStore> lnstore;
+    Glib::RefPtr<Gtk::ListStore> lfstore;
+    Gtk::TreeModelColumnRecord nrecord;
+    Gtk::TreeModelColumnRecord frecord;
+    Gtk::TreeModelColumn<Glib::ustring> ncolumn;
+    Gtk::TreeModelColumn<Glib::ustring> fcolumn;
+    nrecord.add (ncolumn);
+    frecord.add (fcolumn);
+    lnstore = Gtk::ListStore::create(nrecord);
+    lfstore = Gtk::ListStore::create(frecord);
+    uint nfills = sizeof(InfillNames)/sizeof(string);
+    for (uint i=0; i<nfills; i++) {
+      cerr << "adding " <<InfillNames[i] << endl;
+      lnstore->append()->set_value (0, Glib::ustring(InfillNames[i]));
+      lfstore->append()->set_value (0, Glib::ustring(InfillNames[i]));
+    }
+    ncombo->set_model (lnstore);
+    fcombo->set_model (lfstore);
+    ncombo->pack_start (ncolumn);
+    fcombo->pack_start (fcolumn);
+    ncombo->signal_changed().connect
+      (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
+    fcombo->signal_changed().connect
+      (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
+  }
   // // Slicing.ShrinkQuality
   // Gtk::ComboBox *combo = NULL;
   // builder->get_widget ("Slicing.ShrinkQuality", combo);
@@ -866,7 +938,6 @@ void Settings::connect_to_ui (Builder &builder)
   //   model->append()->set_value (0, Glib::ustring("Logick"));
   //   combo->set_model (model);
   //   combo->pack_start (column);
-
     // combo->signal_changed().connect
     //   (sigc::bind(sigc::mem_fun(*this, &Settings::get_shrink_from_gui), builder));
   // }

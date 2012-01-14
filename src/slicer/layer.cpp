@@ -147,16 +147,16 @@ vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
   return angles;
 }
 
-void Layer::CalcInfill (double InfillDistance, 
-			double FullInfillDistance,
-			double InfillRotation, 
-			double InfillRotationPrLayer,
+void Layer::CalcInfill (int normalfilltype, int fullfilltype,
+			double InfillDistance, 	double FullInfillDistance,
+			double InfillRotation, 	double InfillRotationPrLayer,
 			bool ShellOnly, // only infill for fullfill (vertical shells)
 			bool DisplayDebuginFill)
 {
   // relative extrusion for skins:
   double skinfillextrf = 1./skins/skins; 
 
+  //cerr <<"infill "<< normalfilltype << " - " <<fullfilltype<< endl;
   normalInfill = new Infill(this,1.);
   normalInfill->setName("normal");
   //cout << "new "; normalInfill->printinfo();
@@ -170,10 +170,13 @@ void Layer::CalcInfill (double InfillDistance,
   supportInfill = new Infill(this,0.5); // thinner walls for support
   supportInfill->setName("support");
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
+  //cerr << fillPolygons.size();
   if (!ShellOnly)
-    normalInfill->addInfill(Z, fillPolygons, ZigzagLineInfill, //ParallelInfill,
+    normalInfill->addInfill(Z, fillPolygons, (InfillType)normalfilltype, //ParallelInfill,
 			    InfillDistance, FullInfillDistance, rot);
-  fullInfill->addInfill(Z, fullFillPolygons, PolyInfill,
+  //normalInfill->printinfo();
+  
+  fullInfill->addInfill(Z, fullFillPolygons, (InfillType)fullfilltype,
 			FullInfillDistance, FullInfillDistance, 0);
   
   
@@ -191,13 +194,13 @@ void Layer::CalcInfill (double InfillDistance,
       Infill *inf = new Infill(this, skinfillextrf);
       inf->setName("skin");
       //cout << "new " ;inf->printinfo();
-      inf->addInfill(sz, skinFullFillPolygons, PolyInfill,
+      inf->addInfill(sz, skinFullFillPolygons, (InfillType)fullfilltype,//PolyInfill,
 		     skindistance, skindistance, 0);
       skinFullInfills.push_back(inf);
     }
   }
   supportInfill->addInfill(Z, supportPolygons, PolyInfill, 
-			   1.5*InfillDistance, 1.5*InfillDistance, 0);//InfillRotation/180.0*M_PI);
+			   InfillDistance, InfillDistance, 0);//InfillRotation/180.0*M_PI);
 }
 
 
@@ -234,7 +237,7 @@ void Layer::addFullPolygons(const vector<Poly> fullpolys, bool bridge)
   clipp.addPolys(GetFillPolygons(),subject);  
   clipp.addPolys(inter,clip);
   setNormalFillPolygons(clipp.substract());
-  //mergeFullPolygons(bridge);
+  mergeFullPolygons(bridge);
 }
 
 
@@ -310,6 +313,7 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
 		       bool useFillets)
 {
   double distance = 0.5 * extrudedWidth;
+  //vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);
   vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
   // outmost shells
   if (skins>1) { // either skins
@@ -324,12 +328,14 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
   distance = extrudedWidth;
   for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
     {
-      shrinked = Clipping::getShrinkedCapped(shrinked,distance); 
+      shrinked = Clipping::getOffset(shrinked,-distance);
+      //shrinked = Clipping::getShrinkedCapped(shrinked,distance); 
       shellPolygons.push_back(shrinked);
     }
   // the filling polygon
-  fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);
-
+  fillPolygons = Clipping::getOffset(shrinked,-distance);
+  //fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);
+  //cerr << LayerNo << " > " << fillPolygons.size()<< endl;
   calcConvexHull();
   if (makeskirt) {
     MakeSkirt(3*distance); // skirt distance = 3 * shell distance

@@ -187,6 +187,7 @@ void Model::Slice(double printOffsetZ)
   // double min_thickness = settings.Hardware.LayerThickness/2;  
   // double thickness = (max_thickness+min_thickness)/2.;
 
+  bool varSlicing = settings.Slicing.Varslicing;
 
   uint max_skins = settings.Slicing.Skins;
   double skin_thickness = settings.Hardware.LayerThickness/max_skins;
@@ -196,7 +197,6 @@ void Model::Slice(double printOffsetZ)
   // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
   // start at z=0, cut off everything below
   double z = thickness*0.5;// + Min.z;
-
 
   double optimization = settings.Slicing.Optimization;
 
@@ -218,7 +218,7 @@ void Model::Slice(double printOffsetZ)
       // try to slice all objects until polygons can be made, otherwise hack z
       double max_gradient = 0;
       for(int o=0;o<(int)objtree.Objects.size();o++)
-#pragma omp for 
+#pragma omp for schedule(dynamic)
 	for(int f=0;f < (int)objtree.Objects[o].shapes.size();f++)
 	  {
 	    hackedZ = z;
@@ -245,9 +245,11 @@ void Model::Slice(double printOffsetZ)
 	  }
       layers.push_back(layer);
       // higher gradient -> slice thinner with fewer skin divisions
-      skins = max_skins-(uint)(max_skins* max_gradient);
-      assert (skins>0 && skins <=max_skins);
-      thickness = skin_thickness*skins;
+      if (varSlicing) {
+	skins = max_skins-(uint)(max_skins* max_gradient);
+	assert (skins>0 && skins <=max_skins);
+	thickness = skin_thickness*skins;
+      }
       //thickness = max_thickness-(max_thickness-min_thickness)*max_gradient;
       z += thickness;
       LayerNr++;
@@ -367,7 +369,6 @@ void Model::MultiplyUncoveredPolygons()
 void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
 				const Layer * cliplayer) // upper 
 {
-  // JUST USE BRIDGE POLYGONS!
   Clipping clipp;
   clipp.clear();
   clipp.addPolys(cliplayer->GetPolygons(),subject);
@@ -428,7 +429,7 @@ void Model::MakeShells()
   double matwidth, skirtheight = settings.Slicing.SkirtHeight;
   bool makeskirt=false;
 
-#pragma omp parallel for schedule(dynamic) 
+//#pragma omp parallel for schedule(dynamic) ordered
   for (int i=0; i < count; i++) 
     {
       m_progress->update(i);
@@ -481,11 +482,13 @@ void Model::CalcInfill()
       else
       	infilldist = infillDistance;
 
-      layers[i]->CalcInfill(infilldist, fullInfillDistance,
-			settings.Slicing.InfillRotation,
-			settings.Slicing.InfillRotationPrLayer, 
-			settings.Slicing.ShellOnly,
-			settings.Display.DisplayDebuginFill);
+      layers[i]->CalcInfill(settings.Slicing.NormalFilltype,
+			    settings.Slicing.FullFilltype,
+			    infilldist, fullInfillDistance,
+			    settings.Slicing.InfillRotation,
+			    settings.Slicing.InfillRotationPrLayer, 
+			    settings.Slicing.ShellOnly,
+			    settings.Display.DisplayDebuginFill);
 
     }
   //m_progress->stop (_("Done"));

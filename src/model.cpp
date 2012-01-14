@@ -634,7 +634,9 @@ void Model::drawLayers(Vector3d offset) const
 		infilldist = altInfillDistance;
 	      else
 		infilldist = infillDistance;
-	      layer->CalcInfill(infillDistance, fullInfillDistance,
+	      layer->CalcInfill(settings.Slicing.NormalFilltype,
+				settings.Slicing.FullFilltype,
+				infillDistance, fullInfillDistance,
 				settings.Slicing.InfillRotation,
 				settings.Slicing.InfillRotationPrLayer, 
 				settings.Slicing.ShellOnly,

@@ -157,6 +157,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	Vector2d sqdiag(square,square);
 	Min=center-sqdiag;
 	Max=center+sqdiag;
+	cerr << Min << "--"<<Max<< "::"<< center << endl;
 	Poly poly(this->layer->getZ());
 	for (double x = Min.x; x < Max.x; x += 2*infillDistance) {
 	  poly.addVertex(Vector2d(x,Min.y));

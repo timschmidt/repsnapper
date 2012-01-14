@@ -31,9 +31,12 @@ using namespace vmml;
 class Poly;
 
 
-
+// user selectable have to be first
 enum InfillType {ParallelInfill, ZigzagLineInfill, PolyInfill,
 		 SupportInfill, RaftInfill, BridgeInfill};
+
+// these are available for user selection (order must be same as types):
+const string InfillNames[] = {"Parallel", "Zigzag", "Polygons"};
 
 
 class Infill
