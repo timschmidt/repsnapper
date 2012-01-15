@@ -131,6 +131,7 @@ class View : public Gtk::Window
 	      const char *secondary);
   void rotate_selection (vmml::Vector4d rotate);
   void invertnormals_selection ();
+  void mirror_selection ();
   void stl_added (Gtk::TreePath &path);
 
   vmml::Matrix4d &SelectedNodeMatrix(guint objectNr = 1);

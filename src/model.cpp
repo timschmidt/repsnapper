@@ -370,9 +370,18 @@ void Model::OptimizeRotation(Shape *shape, TreeObject *object)
 
 void Model::InvertNormals(Shape *shape, TreeObject *object)
 {
-  if (!shape)
+  if (shape)
+    shape->invertNormals();
+  else // if (object) object->invertNormals();
     return; 
-  shape->invertNormals();
+  CalcBoundingBoxAndCenter();
+}
+void Model::Mirror(Shape *shape, TreeObject *object)
+{
+  if (shape)
+    shape->mirror();
+  else // if (object) object->mirror();
+    return; 
   CalcBoundingBoxAndCenter();
 }
 

@@ -129,6 +129,7 @@ public:
 	void Rotate(Vector3d axis, double angle);  
     void Scale(double scale_factor);
     double getScaleFactor(){ return scale_factor; };
+    void PlaceOnPlatform();
 
 	vector<Triangle>  triangles;
 	Vector3d Min, Max, Center;
@@ -136,6 +137,7 @@ public:
 	string getSTLsolid() const;
 
 	void invertNormals();
+	void mirror();
 
 	double volume() const;
 
