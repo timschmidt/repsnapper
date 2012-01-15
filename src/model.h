@@ -77,6 +77,7 @@ public:
 	void RotateObject(Shape *shape, TreeObject *object, Vector4d rotate);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 	void InvertNormals(Shape *shape, TreeObject *object);
+	void Mirror(Shape *shape, TreeObject *object);
 
 	vector<Layer*> layers;
 	

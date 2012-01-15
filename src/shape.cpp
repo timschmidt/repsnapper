@@ -456,6 +456,12 @@ void Shape::invertNormals()
     triangles[i].invertNormal();
 }
 
+void Shape::mirror()
+{
+  for (uint i = 0; i < triangles.size(); i++)
+    triangles[i].mirrorX(Center);
+}
+
 double Shape::volume() const
 {
   double vol=0;
@@ -580,27 +586,35 @@ void Shape::OptimizeRotation()
 	CenterAroundXY();
 }
 
+void Shape::PlaceOnPlatform()
+{
+  CalcBBox();
+  transform3D.move(Vector3d(0,0,-Min.z));
+}
+
 // Rotate and adjust for the user - not a pure rotation by any means
 void Shape::Rotate(Vector3d axis, double angle)
 {
   
   // transform3D.rotate(Center, axis.x*angle, axis.y*angle, axis.z*angle);
   // //transform3D.rotate(axis, angle);
-  // CalcBBox();
+  CalcBBox();
   // return;
 
   // do a real rotation because matrix transform gives errors when slicing
 	for (size_t i=0; i<triangles.size(); i++)
 	{
 	  //triangles[i].AccumulateMinMax (oldmin, oldmax);
+	  triangles[i].rotate(axis, angle);
 
-		triangles[i].Normal = triangles[i].Normal.rotate(angle, axis.x, axis.y, axis.z);
-		triangles[i].A = triangles[i].A.rotate(angle, axis.x, axis.y, axis.z);
-		triangles[i].B = triangles[i].B.rotate(angle, axis.x, axis.y, axis.z);
-		triangles[i].C = triangles[i].C.rotate(angle, axis.x, axis.y, axis.z);
+		// triangles[i].Normal = triangles[i].Normal.rotate(angle, axis.x, axis.y, axis.z);
+		// triangles[i].A = triangles[i].A.rotate(angle, axis.x, axis.y, axis.z);
+		// triangles[i].B = triangles[i].B.rotate(angle, axis.x, axis.y, axis.z);
+		// triangles[i].C = triangles[i].C.rotate(angle, axis.x, axis.y, axis.z);
 
 		//triangles[i].AccumulateMinMax (min, max);
 	}
+	PlaceOnPlatform();
 // 	Vector3d move(0, 0, 0);
 // 	// if we rotated under the bed, translate us up again
 // 	if (min.z < 0) {
@@ -621,7 +635,7 @@ void Shape::Rotate(Vector3d axis, double angle)
 
 // 	Min = min;
 // 	Max = max;
-	CenterAroundXY();
+	//CenterAroundXY();
 // //	cout << "min " << Min << " max " << Max << "\n";
 }
 
