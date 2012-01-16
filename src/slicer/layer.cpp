@@ -177,7 +177,7 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
   //normalInfill->printinfo();
   
   fullInfill->addInfill(Z, fullFillPolygons, (InfillType)fullfilltype,
-			FullInfillDistance, FullInfillDistance, 0);
+			FullInfillDistance, FullInfillDistance, rot);
   
   
   assert(bridge_angles.size() == bridgePolygons.size());
