@@ -239,6 +239,12 @@ bool Render::on_button_release_event(GdkEventButton* event)
       }
     }
   }
+  else if (event->button == 3) {
+    if (event->state & GDK_SHIFT_MASK) { // move object
+      m_view->get_model()->CalcBoundingBoxAndCenter();
+      queue_draw();
+    }
+  }
   else
     return Gtk::DrawingArea::on_button_release_event (event);
   return true;
@@ -257,9 +263,10 @@ bool Render::on_scroll_event(GdkEventScroll* event)
 
 bool Render::on_motion_notify_event(GdkEventMotion* event)
 {
+  bool redraw=true;
   if (event->state & GDK_BUTTON1_MASK) { // rotate
     m_arcBall->dragAccumulate(event->x, event->y, &m_transform);
-    queue_draw();
+    if (redraw) queue_draw();
     return true;
   }
   else {
@@ -273,19 +280,22 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
       double factor = 0.3;
       Vector3d delta3f(-delta.x*factor, delta.y*factor, 0);
       if (event->state & GDK_SHIFT_MASK) { // move object
-	Shape *shape;
-	TreeObject *object;
-	if (!m_view->get_selected_stl(object, shape))
+	if (false);//delta3f.x<1 && delta3f.y<1) redraw=false;
+	else {
+	  Shape *shape;
+	  TreeObject *object;
+	  if (!m_view->get_selected_stl(object, shape))
 	  return true;
-	if (!object && !shape)
-	  return true;
-	Transform3D *transf;
-	if (!shape)
-	  transf = &object->transform3D;
-	else
-	  transf = &shape->transform3D;
-	transf->move(delta3f);
-	m_view->get_model()->CalcBoundingBoxAndCenter();
+	  if (!object && !shape)
+	    return true;
+	  Transform3D *transf;
+	  if (!shape)
+	    transf = &object->transform3D;
+	  else
+	    transf = &shape->transform3D;
+	  transf->move(delta3f);
+	  //m_view->get_model()->CalcBoundingBoxAndCenter();
+	}
       }
       else {
 	Matrix4f matrix;
@@ -297,7 +307,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
       }
     }
     m_downPoint = dragp;
-    queue_draw();
+    if (redraw) queue_draw();
     return true;
   }
   return Gtk::DrawingArea::on_motion_notify_event (event);

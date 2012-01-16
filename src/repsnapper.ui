@@ -298,6 +298,7 @@ and others I forgot... (needs updating)</property>
             <property name="position">2000</property>
             <child>
               <object class="GtkVBox" id="vbox4">
+                <property name="width_request">400</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
@@ -448,11 +449,12 @@ and others I forgot... (needs updating)</property>
               </object>
               <packing>
                 <property name="resize">True</property>
-                <property name="shrink">True</property>
+                <property name="shrink">False</property>
               </packing>
             </child>
             <child>
               <object class="GtkNotebook" id="notebook1">
+                <property name="width_request">400</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <child>
@@ -733,7 +735,6 @@ and others I forgot... (needs updating)</property>
                     </child>
                     <child>
                       <object class="GtkScrolledWindow" id="scrolledwindow2">
-                        <property name="width_request">250</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="hscrollbar_policy">automatic</property>
@@ -3227,12 +3228,6 @@ Distance is twice the Infill Distance.</property>
                       </packing>
                     </child>
                     <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
                       <object class="GtkLabel" id="label118">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -3244,6 +3239,12 @@ Distance is twice the Infill Distance.</property>
                         <property name="top_attach">1</property>
                         <property name="bottom_attach">2</property>
                       </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                   </object>
                   <packing>
