@@ -486,6 +486,7 @@ void Shape::Scale(double in_scale_factor)
 {
   transform3D.scale(in_scale_factor);
   CalcBBox();
+  scale_factor = in_scale_factor;
   return;
 
     for(size_t i = 0; i < triangles.size(); i++)
@@ -584,12 +585,16 @@ void Shape::OptimizeRotation()
 	  break;
 	}
 	CenterAroundXY();
+	PlaceOnPlatform();
 }
 
 void Shape::PlaceOnPlatform()
 {
   CalcBBox();
-  transform3D.move(Vector3d(0,0,-Min.z));
+  double movex=-MIN(0,Min.x);//*scale_factor);
+  double movey=-MIN(0,Min.y);//*scale_factor);
+  transform3D.move(Vector3d(movex,movey,-Min.z));//*scale_factor));
+  CalcBBox();
 }
 
 // Rotate and adjust for the user - not a pure rotation by any means
