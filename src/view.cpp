@@ -573,8 +573,8 @@ void View::mirror_selection ()
 void View::stl_added (Gtk::TreePath &path)
 {
   m_objtree->expand_all();
-  // m_objtree->get_selection()->unselect_all();
-  // m_objtree->get_selection()->select (path);
+  m_objtree->get_selection()->unselect_all();
+  m_objtree->get_selection()->select (path);
 }
 
 void View::auto_rotate()
