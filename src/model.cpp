@@ -108,7 +108,7 @@ Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
 void Model::GlDrawGCode(int layerno)
 {
   gcode.draw (settings, layerno, false);
-  unsigned long currentlayer = gcode.getLayerNo(currentprintingline);
+  int currentlayer = gcode.getLayerNo(currentprintingline);
   if (currentlayer>=0)
     gcode.draw (settings, currentlayer, true);
 }

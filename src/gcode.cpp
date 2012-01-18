@@ -223,6 +223,8 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting)
 {
 	/*--------------- Drawing -----------------*/
 
+  //cerr << "gc draw "<<layer << " - " <<liveprinting << endl;
+
 	Vector3d thisPos(0,0,0);
 	Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
 	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
