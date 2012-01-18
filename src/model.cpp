@@ -117,7 +117,7 @@ void Model::GlDrawGCode(double layerz)
 {
   int layer = gcode.getLayerNo(layerz);
   if (layer>=0)
-    gcode.draw (settings, layer);
+    GlDrawGCode(layer);
 }
 
 
