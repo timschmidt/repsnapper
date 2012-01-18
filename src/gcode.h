@@ -136,7 +136,7 @@ public:
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
 	string comment;
 	void draw(Vector3d fromwhere) const; 
-	string GetGCodeText(Vector3d LastPos, double lastE, bool incrementalEcode) const;
+	string GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalEcode) const;
 	string info() const;
 };
 

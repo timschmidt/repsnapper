@@ -132,7 +132,7 @@ Command::Command(string gcodeline, Vector3d defaultpos){
     }
 }
 
-string Command::GetGCodeText(Vector3d LastPos, double lastE, bool incrementalEcode) const
+string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalEcode) const
 {
   ostringstream ostr; 
   if (MCODES[Code]=="") {
@@ -141,26 +141,38 @@ string Command::GetGCodeText(Vector3d LastPos, double lastE, bool incrementalEco
     return ostr.str();
   }
   ostr << MCODES[Code] << " ";
+  string comm = comment;
   switch (Code) {
   case RAPIDMOTION:
   case COORDINATEDMOTION:
   case COORDINATEDMOTION3D:
-    if(where.x != LastPos.x)
+    if(where.x != LastPos.x) {
       ostr << "X" << where.x << " ";
-    if(where.y != LastPos.y)
+      LastPos.x = where.x;
+    }
+    if(where.y != LastPos.y) {
       ostr << "Y" << where.y << " ";
+      LastPos.y = where.y;
+    }
   case ZMOVE:
-    if(where.z != LastPos.z)
+    if(where.z != LastPos.z) {
       ostr << "Z" << where.z << " ";
-    if(incrementalEcode && e != 0 ||
-       !incrementalEcode && e != lastE)
+      LastPos.z = where.z;
+      comm += " Z-Change";
+    }
+    if(!incrementalEcode && e != 0 ||
+       incrementalEcode  && e != lastE) {
       ostr << "E" << e << " ";
+      lastE = e;
+    } else {      
+      comm += " Move Only";
+    }
   case SETSPEED:
     ostr << "F" << f;
   default: ;
   }
-  if(comment.length() != 0)
-    ostr << " ; " << comment;
+  if(comm.length() != 0)
+    ostr << " ; " << comm;
   //cerr << info()<< endl;
   return ostr.str();
 }
@@ -519,9 +531,9 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	    layerchanges.push_back(i);
 	    lastZ=commands[i].where.z;
 	  }
-	  
+
 	  GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, UseIncrementalEcode) + "\n";
-	  
+
 	// 	oss.str( "" );
 	// 	switch(commands[i].Code)
 	// 	{
