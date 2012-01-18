@@ -113,7 +113,7 @@ public:
   void addFullFillPolygons(const vector<Poly> polys, bool bridge);
   void setBridgePolygons(const vector<Poly>  polys);
   void addBridgeFillPolygons(const vector<Poly> polys);
-  void setBridgeAngles(const vector<double> angles) {bridge_angles = angles;};
+  void setBridgeAngles(const vector<double> angles);
   void makeSkinPolygons(); 
   void setNormalFillPolygons(const vector<Poly> polys);
   void setSupportPolygons(const vector<Poly> polys);

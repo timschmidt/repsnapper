@@ -170,7 +170,7 @@ static struct {
   BOOL_MEMBER   (Slicing.EnableAcceleration, "EnableAcceleration", true, false),
 // ShrinkQuality is a special enumeration ...
 //  INT_MEMBER    (Slicing.ShrinkQuality, "ShrinkQuality", 0, true),
-  FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.005, false),
+  FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, false),
 
   // Misc.
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
@@ -221,6 +221,8 @@ static struct {
       "Display.GCodeExtrudeColour", 1.0, 1.0, 0.0, 1.0, true),
   COLOUR_MEMBER(Display.GCodeMoveRGBA,
       "Display.GCodeMoveColour", 1.0, 0.05, 1, 0.5, true),
+  COLOUR_MEMBER(Display.GCodePrintingRGBA,
+      "Display.GCodePrintingColour", 0.1, 0.5, 0.0, 1.0, true),
 };
 
 // Add any GtkSpinButtons to this array:
@@ -309,6 +311,7 @@ colour_selectors[] = {
   { OFFSET(Display.NormalsRGBA), "Display.NormalsRGB" },
   { OFFSET(Display.EndpointsRGBA), "Display.EndpointsRGB" },
   { OFFSET(Display.GCodeExtrudeRGBA), "Display.GCodeExtrudeRGB" },
+  { OFFSET(Display.GCodePrintingRGBA), "Display.GCodePrintingRGB" },
   { OFFSET(Display.GCodeMoveRGBA), "Display.GCodeMoveRGB" }
 };
 
@@ -965,7 +968,7 @@ void Settings::connect_to_ui (Builder &builder)
   builder->get_widget ("Hardware.SerialSpeed", portspeed);
   if (portspeed) {
     const guint32 speeds[] = {
-        9600, 19200, 38400, 57600, 115200, 230400, 576000
+      9600, 19200, 38400, 57600, 115200, 230400, 250000, 576000
     };
 
     Glib::RefPtr<Gtk::ListStore> model;

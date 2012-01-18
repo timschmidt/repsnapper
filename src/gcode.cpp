@@ -30,6 +30,74 @@
 
 using namespace std;
 
+
+
+Command::Command(string gcodeline, Vector3d defaultpos){
+  where = defaultpos;
+  e=0.0;
+  f=0.0;
+
+  istringstream line(gcodeline);
+  string buffer;
+  line >> buffer;	// read something
+  
+  // if (!append_text ((s+"\n").c_str()))
+  //   continue;
+  
+  if(buffer.find( ";", 0) != string::npos)	// COMMENT
+    return;
+  
+  if( buffer.find( "G21", 0) != string::npos )	//Coordinated Motion
+    {
+      Code = MILLIMETERSASUNITS;
+      return; //loaded_commands.push_back(command);
+    }
+   
+  if( buffer.find( "G1", 0) != string::npos )	//string::npos means not defined
+    Code = COORDINATEDMOTION;
+  else if( buffer.find( "G0", 0) != string::npos )	//Rapid Motion
+    Code = RAPIDMOTION;
+
+  while(line >> buffer)	// read next keyword
+    {
+      if( buffer.find( "X", 0) != string::npos ) {
+	string number = buffer.substr(1,buffer.length()-1); // 16 characters
+	where.x = ToDouble(number);
+      }
+      if( buffer.find( "Y", 0) != string::npos ) {
+	string number = buffer.substr(1,buffer.length()-1);
+	where.y = ToDouble(number);
+      }
+      if( buffer.find( "Z", 0) != string::npos ) {
+	string number = buffer.substr(1,buffer.length()-1);
+	where.z = ToDouble(number);
+      }
+      if( buffer.find( "E", 0) != string::npos ) {
+	string number = buffer.substr(1,buffer.length()-1);
+	e = ToDouble(number);
+      }
+      if( buffer.find( "F", 0) != string::npos ) {
+	string number = buffer.substr(1,buffer.length()-1);
+	f = ToDouble(number);
+      }
+    }
+}
+
+
+void Command::draw(Vector3d fromwhere) {
+  glLineWidth(3);
+  glBegin(GL_LINES);
+  glColor3f(0.75f,0.8f,0.0f);
+  glVertex3dv((GLdouble*)&fromwhere);
+  glVertex3dv((GLdouble*)&where);
+  glEnd();
+}
+void Command::printinfo()
+{
+  cout << "Command: Code="<<Code<<", where="  <<where << ", f="<<f<<", e="<<e<< endl;
+}
+
+
 GCode::GCode()
 {
 	Min.x = Min.y = Min.z = 99999999.0;
@@ -87,141 +155,35 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 
 	while(getline(file,s))
 	{
-		istringstream line(s);
 		LineNr++;
-		string buffer;
-		line >> buffer;	// read something
-
 		progress->update(1.*file.tellg());
 		if (LineNr % 1000 == 0) g_main_context_iteration(NULL,true);
-
-		if (!append_text ((s+"\n").c_str()))
+		Command command(s, globalPos);
+		// cout << s << endl;
+		// command.printinfo();
+		command.draw(globalPos);
+		if(command.where.x < -100)
 		  continue;
-
-		if(buffer.find( ";", 0) != string::npos)	// COMMENT
-			continue;
-
-		Command command;
-
-		if( buffer.find( "G21", 0) != string::npos )	//Coordinated Motion
-		{
-			command.Code = MILLIMETERSASUNITS;
-			loaded_commands.push_back(command);
-		}
-
-
-		if( buffer.find( "G1", 0) != string::npos )	//string::npos means not defined
-		{
-			command.Code = COORDINATEDMOTION;
-			command.where = globalPos;
-			while(line >> buffer)	// read next keyword
-			{
-				if( buffer.find( "X", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.x = ToDouble(number);
-				}
-				if( buffer.find( "Y", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.y = ToDouble(number);
-				}
-				if( buffer.find( "Z", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.z = ToDouble(number);
-				}
-				if( buffer.find( "E", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.e = ToDouble(number);
-				}
-				if( buffer.find( "F", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.f = ToDouble(number);
-				}
-			}
-			if(command.where.x < -100)
-				continue;
-			if(command.where.y < -100)
-				continue;
-			globalPos = command.where;
-
-			if(command.where.x < Min.x)
-				Min.x = command.where.x;
-			if(command.where.y < Min.y)
-				Min.y = command.where.y;
-			if(command.where.z < Min.z)
-				Min.z = command.where.z;
-			if(command.where.x > Max.x)
-				Max.x = command.where.x;
-			if(command.where.y > Max.y)
-				Max.y = command.where.y;
-			if(command.where.z > Max.z)
-				Max.z = command.where.z;
-			if (command.where.z != lastZ) {
-			  lastZ=command.where.z;
-			  layerchanges.push_back(loaded_commands.size());
-			}
-			loaded_commands.push_back(command);
-		}
-		else if( buffer.find( "G0", 0) != string::npos )	//Rapid Motion
-		{
-			command.Code = RAPIDMOTION;
-			command.where = globalPos;
-			while(line >> buffer)	// read next keyword
-			{
-				if( buffer.find( "X", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.x = ToDouble(number);
-				}
-				if( buffer.find( "Y", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.y = ToDouble(number);
-				}
-				if( buffer.find( "Z", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.where.z = ToDouble(number);
-				}
-				if( buffer.find( "E", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.e = ToDouble(number);
-				}
-				if( buffer.find( "F", 0) != string::npos )	//string::npos means not defined
-				{
-					string number = buffer.substr(1,buffer.length()-1);				// 16 characters
-					command.f = ToDouble(number);
-				}
-			}
-			if(command.where.x < -100)
-				continue;
-			if(command.where.y < -100)
-				continue;
-			globalPos = command.where;
-
-			if(command.where.x < Min.x)
-				Min.x = command.where.x;
-			if(command.where.y < Min.y)
-				Min.y = command.where.y;
-			if(command.where.z < Min.z)
-				Min.z = command.where.z;
-			if(command.where.x > Max.x)
-				Max.x = command.where.x;
-			if(command.where.y > Max.y)
-				Max.y = command.where.y;
-			if(command.where.z > Max.z)
-				Max.z = command.where.z;
-			if (command.where.z != lastZ) {
-			  lastZ=command.where.z;
-			  layerchanges.push_back(loaded_commands.size());
-			}
-			loaded_commands.push_back(command);
-		}
+		if(command.where.y < -100)
+		  continue;
+		globalPos = command.where;
+		if(command.where.x < Min.x)
+		  Min.x = command.where.x;
+		if(command.where.y < Min.y)
+		  Min.y = command.where.y;
+		if(command.where.z < Min.z)
+		  Min.z = command.where.z;
+		if(command.where.x > Max.x)
+		  Max.x = command.where.x;
+		if(command.where.y > Max.y)
+		  Max.y = command.where.y;
+		if(command.where.z > Max.z)
+		  Max.z = command.where.z;
+		if (command.where.z != lastZ) {
+		  lastZ=command.where.z;
+		  layerchanges.push_back(loaded_commands.size());
+		} 
+		loaded_commands.push_back(command);
 	}
 
 	commands = loaded_commands;
@@ -238,7 +200,26 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	//??? to statusbar or where else?
 }
 
-void GCode::draw(const Settings &settings)
+int GCode::getLayerNo(const double z) const
+{
+  if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
+    for(uint i=0;i<layerchanges.size() ;i++)
+      if (commands.size()>layerchanges[i])
+	if ( abs(commands[layerchanges[i]].where.z-z)<0.001) return i;
+  return -1;
+}
+
+int GCode::getLayerNo(const unsigned long commandno) const
+{
+  if (commandno<0) return commandno;
+  if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
+    for(uint i=0;i<layerchanges.size() ;i++)
+      if (layerchanges[i] > commandno)
+	return (i-1);
+  return -1;
+}
+
+void GCode::draw(const Settings &settings, int layer, bool liveprinting)
 {
 	/*--------------- Drawing -----------------*/
 
@@ -247,19 +228,35 @@ void GCode::draw(const Settings &settings)
 	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
 	double	Distance = 0.0;
 	Vector3d pos(0,0,0);
-	uint start = (uint)(settings.Display.GCodeDrawStart*float((commands.size())));
-	uint end = (uint)(settings.Display.GCodeDrawEnd*float(commands.size()));
+	Vector3d defaultpos(-1,-1,-1);
+	uint start, end;
 
 	if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
 	  {
-	    uint sind = (uint)(settings.Display.GCodeDrawStart*float((layerchanges.size())));
-	    start = layerchanges[sind];
-	    uint eind = (uint)(settings.Display.GCodeDrawEnd*float((layerchanges.size())));
-	    if (sind>=eind) {
-	      eind=sind+1;
+	    if (layer>-1) {
+	      if (layer == 0)
+		start = 0;
+	      else
+		start = layerchanges[layer];
+	      if (layer<(int)layerchanges.size()-1)
+		end = layerchanges[layer+1];
+	      else 
+		end = commands.size();
 	    }
-	    end =  layerchanges[eind];
+	    else {
+	      uint sind = (uint)(settings.Display.GCodeDrawStart*float((layerchanges.size())));
+	      start = layerchanges[sind];
+	      uint eind = (uint)(settings.Display.GCodeDrawEnd*float((layerchanges.size())));
+	      if (sind>=eind) {
+		eind=sind+1;
+	      }
+	      end =  layerchanges[eind];
+	    }
 	  }
+	else {
+	  start = (uint)(settings.Display.GCodeDrawStart*float((commands.size())));
+	  end = (uint)(settings.Display.GCodeDrawEnd*float(commands.size()));
+	}
 
 
 	double LastE=0.0;
@@ -268,6 +265,14 @@ void GCode::draw(const Settings &settings)
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
 
+	// get starting point 
+	if (start>0)
+	  for(uint i=start;i<commands.size() && i < end ;i++)
+	    {
+	      while (commands[i].where == defaultpos) ;
+	      pos = commands[i].where;
+	      break;
+	    }
 	
 	for(uint i=start;i<commands.size() && i < end ;i++)
 	{
@@ -282,10 +287,14 @@ void GCode::draw(const Settings &settings)
 			extruderon = false;
 			break;
 		case COORDINATEDMOTION3D:
-			if (extruderon)
-			  Color = settings.Display.GCodeExtrudeRGBA;
-			else
-			  Color = settings.Display.GCodeMoveRGBA;
+		  if (extruderon) {
+		    if (liveprinting)
+		      Color = settings.Display.GCodePrintingRGBA;
+		    else
+		      Color = settings.Display.GCodeExtrudeRGBA;
+		  }
+		  else
+		    Color = settings.Display.GCodeMoveRGBA;
 			LastColor = Color;
 			Distance += (commands[i].where-pos).length();
 			glLineWidth(3);
@@ -307,7 +316,10 @@ void GCode::draw(const Settings &settings)
 				double luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
 				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0;
-				Color = settings.Display.GCodeMoveRGBA;
+				if (liveprinting)
+				  Color = settings.Display.GCodePrintingRGBA;
+				else
+				  Color = settings.Display.GCodeExtrudeRGBA;
 				Color *= luma;
 				}
 			else
@@ -317,7 +329,10 @@ void GCode::draw(const Settings &settings)
 				double luma = speed/settings.Hardware.MaxPrintSpeedXY;
 				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0;
-			        Color = settings.Display.GCodeExtrudeRGBA;
+				if (liveprinting)
+				  Color = settings.Display.GCodePrintingRGBA;
+				else
+				  Color = settings.Display.GCodeExtrudeRGBA;
 				Color *= luma;
 				}
 			if(settings.Display.LuminanceShowsSpeed == false)
@@ -397,6 +412,8 @@ bool add_text_filter_nan(string str, string &GcodeTxt)
   }
   return true;  
 }
+
+
 
 void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, 
 		     const string &GcodeLayer, const string &GcodeEnd,
@@ -610,6 +627,7 @@ void GCode::clear()
 {
   buffer->erase (buffer->begin(), buffer->end());
   commands.clear();
+  layerchanges.clear();
 }
 
 
@@ -635,6 +653,18 @@ bool GCodeIter::finished()
 
 GCodeIter *GCode::get_iter ()
 {
-  return new GCodeIter (buffer);
+  GCodeIter *iter = new GCodeIter (buffer);
+  iter->time_estimation = GetTimeEstimation();
+  return iter;
 }
 
+Command GCodeIter::getCurrentCommand(Vector3d defaultwhere)
+{
+  Gtk::TextBuffer::iterator from ,to;
+  // cerr <<"currline" << defaultwhere << endl;
+  // cerr <<"currline" << (int) m_cur_line << endl;
+  from = m_buffer->get_iter_at_line (m_cur_line);
+  to   = m_buffer->get_iter_at_line (m_cur_line+1);
+  Command command(m_buffer->get_text (from, to), defaultwhere);
+  return command;
+}

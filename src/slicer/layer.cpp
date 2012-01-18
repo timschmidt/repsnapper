@@ -69,6 +69,7 @@ void Layer::Clear()
   clearpolys(fillPolygons);
   clearpolys(fullFillPolygons);
   clearpolys(bridgePolygons);
+  bridge_angles.clear();
   clearpolys(supportPolygons);
   clearpolys(skinPolygons);
   clearpolys(skinFullFillPolygons);
@@ -126,13 +127,13 @@ void Layer::addPolygons(vector<Poly> polys)
 vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
   vector<double> angles; angles.resize(polys.size());
   Clipping clipp;
-  vector<Poly> offset = clipp.getOffset(polygons,2*thickness);
+  vector<Poly> offset = polygons;//clipp.getOffset(polygons,3*thickness);
   for (uint i=0; i<polys.size(); i++) 
     {
       // intersect bridge poly with polygons below (=pillars of bridge)
       clipp.clear();
       clipp.addPolys(offset,subject); 
-      clipp.addPoly(polys[i],clip); 
+      clipp.addPolys(clipp.getOffset(polys[i],2*thickness),clip); 
       vector<Poly> pillars = clipp.intersect();
       // get average direction of the connection lines of all the intersections
       Vector2d dir(0,0);
@@ -179,6 +180,7 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
   fullInfill->addInfill(Z, fullFillPolygons, (InfillType)fullfilltype,
 			FullInfillDistance, FullInfillDistance, rot);
   
+  //  cerr << LayerNo << ": "<<bridgePolygons.size() << " = " << bridge_angles.size() << endl;
   
   assert(bridge_angles.size() == bridgePolygons.size());
   for (uint b=0; b<bridgePolygons.size(); b++){
@@ -200,7 +202,7 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
     }
   }
   supportInfill->addInfill(Z, supportPolygons, PolyInfill, 
-			   InfillDistance, InfillDistance, 0);//InfillRotation/180.0*M_PI);
+			   1.5*InfillDistance, 1.5*InfillDistance, 0);//InfillRotation/180.0*M_PI);
 }
 
 
@@ -220,17 +222,32 @@ void Layer::makeSkinPolygons()
 
 
 // add full fill and substract them from normal fill polys 
-void Layer::addFullPolygons(const vector<Poly> fullpolys, bool bridge) 
+void Layer::addFullPolygons(const vector<Poly> newpolys, bool bridge) 
 {
+  if (newpolys.size()==0) return;
+  if (bridge){
+    // cerr << LayerNo << " - " <<bridgePolygons.size() << endl;
+    // cerr  <<newpolys.size() << endl;
+    bridgePolygons.clear();
+  }
   Clipping clipp;
   clipp.clear();
   // full fill only where already fill
   clipp.addPolys(GetFillPolygons(),subject); 
-  clipp.addPolys(fullpolys,clip);
+  if (bridge){
+    clipp.addPolys(GetFullFillPolygons(),subject); 
+  }
+  //  else clipp.addPolys(GetFillPolygons(),subject); 
+  clipp.addPolys(newpolys,clip);
   vector<Poly> inter = clipp.intersect();
-  if (bridge) // this is a bridge
+  if (bridge) {// this is a bridge
+    //for (uint i=0; i<
+    // clipp.clear();
+    // clipp.addPolys(inter,subject);  
+    // clipp.addPolys(GetFillPolygons(),clip);
+    // inter = clipp.substract();
     bridgePolygons.insert(bridgePolygons.end(),inter.begin(),inter.end());
-  else
+  } else
     fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
   //substract from normal fills
   clipp.clear();
@@ -243,9 +260,11 @@ void Layer::addFullPolygons(const vector<Poly> fullpolys, bool bridge)
 
 void Layer::mergeFullPolygons(bool bridge) 
 {
-  if (bridge)
+  if (bridge) {
+    //cerr << bridgePolygons.size() ;
     setBridgePolygons(Clipping::getMerged(bridgePolygons));
-  else  
+    //cerr << " --> " << bridgePolygons.size() << endl;
+  } else  
     setFullFillPolygons(Clipping::getMerged(fullFillPolygons));
 }
 void Layer::mergeSupportPolygons() 
@@ -292,6 +311,10 @@ void Layer::setBridgePolygons(const vector<Poly>  polys)
   bridgePolygons = polys;
   for (uint i=0; i<bridgePolygons.size();i++)
     bridgePolygons[i].setZ(Z);
+}
+void Layer::setBridgeAngles(const vector<double> angles)
+{
+  bridge_angles=angles; // .insert(bridge_angles.begin(),angles.begin(),angles.end());
 }
 
 void Layer::setSupportPolygons(const vector<Poly> polys)
@@ -629,11 +652,11 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   draw_polys(fillPolygons, GL_LINE_LOOP, 1, 3, 1,1,1,1);
   draw_polys(supportPolygons, GL_LINE_LOOP, 3, 3, 0.5,0.5,1.0,1);
   draw_poly(hullPolygon, GL_LINE_LOOP, 3, 3, 0.8,0.6,0.0,0.5);
+  draw_polys(bridgePolygons, GL_LINE_LOOP, 3, 3, 0.8,0.5,0.5,0.8);
+  draw_polys(fullFillPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
+  draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
   if(DisplayInfill)
     {
-      draw_polys(fullFillPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
-      draw_polys(bridgePolygons, GL_LINE_LOOP, 1, 3, 0.8,0.5,0.5,1);
-      draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
       if (normalInfill)
 	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
       if (fullInfill)

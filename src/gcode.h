@@ -163,10 +163,13 @@ class Command
 {
 public:
 	Command(){where.x=where.y=where.z=e=-1.0;f=0.0;};
+	Command(string gcodeline, Vector3d defaultpos);
 	GCodes Code;
 	Vector3d where;
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
 	string comment;
+	void draw(Vector3d fromwhere);
+	void printinfo();
 };
 
 class GCodeImpl;
@@ -181,6 +184,10 @@ class GCodeIter
   GCodeIter (Glib::RefPtr<Gtk::TextBuffer> buffer);
   std::string next_line ();
   bool finished();
+  double time_used;
+  time_t time_started;
+  double time_estimation;
+  Command getCurrentCommand(Vector3d defaultwhere);
 };
 
 class GCode
@@ -190,7 +197,7 @@ public:
 
   void Read  (Model *model, ViewProgress *progress, string filename);
   //void Write (Model *model, string filename);
-  void draw  (const Settings &settings);
+  void draw  (const Settings &settings, int layer=-1, bool liveprinting=false);
   void MakeText(string &GcodeTxt, const string &GcodeStart,
 		const string &GcodeLayer, const string &GcodeEnd,
 		bool UseIncrementalEcode, bool Use3DGcode,
@@ -208,8 +215,10 @@ public:
 
   double GetTimeEstimation() const;
 
-  vector<uint>layerchanges;
-
+  vector<unsigned long>layerchanges;
+  int getLayerNo(const double z) const;
+  int getLayerNo(const unsigned long commandno) const;
+  
 private:
   unsigned long unconfirmed_blocks;
 };

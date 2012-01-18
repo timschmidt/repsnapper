@@ -769,7 +769,7 @@ View::View(BaseObjectType* cobject,
 
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &View::run_extruder) );
 
-  printer = new Printer();
+  printer = new Printer(this);
 
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
@@ -1092,5 +1092,10 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 
 	// Draw all objects
 	m_model->draw(selected);
+}
 
+void View::showCurrentPrinting(unsigned long donelines)
+{
+  m_model->setCurrentPrintingLine(donelines);
+  queue_draw();
 }

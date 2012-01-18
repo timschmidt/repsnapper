@@ -22,12 +22,14 @@
 #pragma once
 
 #include <gtkmm.h>
+#include <time.h>
 
 #include "types.h"
 #include "config.h"
 #include "settings.h"
 #include "gcode.h"
 #include "progress.h"
+
 
 #include <libreprap/comms.h>
 
@@ -58,9 +60,14 @@ class Printer
 	sigc::connection temp_timeout;
 	bool temp_timeout_cb();
 
+	time_t print_started_time;
+	double total_time_to_print ;
+
+	
+	View * view;
 
  public:
-	Printer();
+	Printer(View *view);
 	~Printer();
 
 	Settings settings;
@@ -99,6 +106,9 @@ class Printer
 	void Continue();
 	void Kick();
 	void Restart();
+	
+	void draw_current(Vector3d &from);
+	double getCurrentPrintingZ();
 
 	void RunExtruder(double extruder_speed, double extruder_length, bool reverse);
 	void SendNow(string str);
