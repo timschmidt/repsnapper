@@ -54,6 +54,8 @@ void Infill::clear()
 }
 
 void Infill::clearPatterns() {
+  for (uint i=0; i<savedPatterns.size(); i++)
+    savedPatterns[i].cpolys.clear();
   savedPatterns.clear();
 }
 
@@ -121,21 +123,36 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   this->type = type;
   //cerr << "have " << savedPatterns.size()<<" saved patterns " << endl;
   // look for saved pattern for this rotation
-  if (type != PolyInfill) // can't save PolyInfill
-    {
+  Vector2d Min,Max;
+  Min = layer->getMin();
+  Max = layer->getMax();
+  if (type != PolyInfill) { // can't save PolyInfill
+    if (savedPatterns.size()>0){
       while (rotation>2*M_PI) rotation -= 2*M_PI;
       while (rotation<0) rotation += 2*M_PI;
       this->angle= rotation;
-      for (uint i = 0; i < savedPatterns.size(); i++) {
-	if (savedPatterns[i].type == type &&
-	    abs(savedPatterns[i].distance-infillDistance) < 0.01 &&
-	    abs(savedPatterns[i].angle-rotation) < 0.01 )
+      
+      for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
+	   sIt != savedPatterns.end(); sIt++){
+	//cerr << sIt->Min << endl;
+	if (sIt->type == type &&
+	    abs(sIt->distance-infillDistance) < 0.01 &&
+	    abs(sIt->angle-rotation) < 0.01 )
 	  {
 	    //cerr << "found saved pattern no " << i << "with" <<savedPatterns[i].cpolys.size() <<" polys"<<endl;
-	    return savedPatterns[i].cpolys;
+	    // is it too small for this layer?
+	    if (sIt->Min.x > Min.x || sIt->Min.y > Min.y || 
+		sIt->Max.x < Max.x || sIt->Max.y < Max.y) 
+	      {
+		savedPatterns.erase(sIt++);
+		break; // there is no other match
+	      }
+	    else
+	      return sIt->cpolys;
 	  }
       }
     }
+  }
   // none found - make new:
   ClipperLib::Polygons cpolys;
   bool zigzag = false;
@@ -148,8 +165,6 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
     case BridgeInfill:    // stripes, make them to lines later
     case ParallelInfill:  // stripes, make them to lines later
       {
-	Vector2d Min = layer->getMin();
-	Vector2d Max = layer->getMax();
 	Vector2d center = (Min+Max)/2.;
 	// make square that masks everything even when rotated
 	Vector2d diag = Max-Min;
@@ -157,7 +172,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	Vector2d sqdiag(square,square);
 	Min=center-sqdiag;
 	Max=center+sqdiag;
-	cerr << Min << "--"<<Max<< "::"<< center << endl;
+	//cerr << Min << "--"<<Max<< "::"<< center << endl;
 	Poly poly(this->layer->getZ());
 	for (double x = Min.x; x < Max.x; x += 2*infillDistance) {
 	  poly.addVertex(Vector2d(x,Min.y));
@@ -229,7 +244,12 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   newPattern.angle=rotation;
   newPattern.distance=infillDistance;
   newPattern.cpolys=cpolys;
-  savedPatterns.push_back(newPattern);
+  if (type != PolyInfill) // can't save PolyInfill
+    {
+      newPattern.Min=Min;
+      newPattern.Max=Max;
+      savedPatterns.push_back(newPattern);
+    }
   return newPattern.cpolys;
 }
 

@@ -33,6 +33,7 @@
 #include "settings.h"
 #include "connectview.h"
 #include "layer.h"
+#include "infill.h"
 
 Model::Model() :
   settings(),
@@ -96,6 +97,7 @@ void Model::ClearLayers()
   for(uint i=0;i<layers.size();i++)
     layers[i]->Clear();
   layers.clear();
+  Infill::clearPatterns();
 }
 
 Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
@@ -219,6 +221,7 @@ void Model::Read(Glib::RefPtr<Gio::File> file)
 void Model::ModelChanged()
 {
   //printer.update_temp_poll_interval(); // necessary?
+  Infill::clearPatterns();
   CalcBoundingBoxAndCenter();
   m_model_changed.emit();
 }
@@ -313,7 +316,7 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
 Shape* Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autoplace)
 {
   Shape *retshape;
-  bool found_location;
+  bool found_location=false;
 
   if (!parent) {
     if (objtree.Objects.size() <= 0)
@@ -645,9 +648,11 @@ void Model::drawLayers(Vector3d offset) const
 		T.setTranslation(t);
 		vector<Poly> polys;
 		double max_grad;
-		bool polys_ok=objtree.Objects[o].shapes[f].getPolygonsAtZ(T, z, 
-									  settings.Slicing.Optimization,
-									  layer->polygons,max_grad);
+		bool polys_ok=
+		  objtree.Objects[o].shapes[f].getPolygonsAtZ(T, z, 
+							      settings.Slicing.Optimization,
+							      polys,
+							      max_grad);
 		if (polys_ok) layer->addPolygons(polys);
 	      }
 	  }

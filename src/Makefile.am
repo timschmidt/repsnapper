@@ -26,7 +26,7 @@ repsnapper_CPPFLAGS = \
         -DSYSCONFDIR='$(repsnapperconfdir)' \
 	-DLOCALEDIR='"$(localedir)"' \
 	-fopenmp \
-	-g -O0 $(WARNING_FLAGS)
+	-g -O3 $(WARNING_FLAGS)
 
 SHARED_SRC= \
 	src/model.cpp \
