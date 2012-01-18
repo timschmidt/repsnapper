@@ -103,8 +103,12 @@ public:
 	void ClearGCode();
 	void ClearLayers();
 	Glib::RefPtr<Gtk::TextBuffer> GetGCodeBuffer();
-	void GlDrawGCode(); // should be in the view
-
+	void GlDrawGCode(int layer=-1); // should be in the view
+	void GlDrawGCode(double Z); 
+	void setCurrentPrintingLine(long donelines){
+	  currentprintingline = donelines;
+	}
+	unsigned long currentprintingline;
 
 	Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
 	void SelectedNodeMatrices(vector<Matrix4d *> &result );

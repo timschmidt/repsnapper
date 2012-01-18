@@ -551,7 +551,8 @@ void Shape::OptimizeRotation()
 					positive=1;
 				AXIS axisNr = (AXIS)(triangleAxis*2+positive);
 				triangles[i].axis = axisNr;
-				if( ! (ABS(Min[triangleAxis]-triangles[i].A[triangleAxis]) < 1.1 || ABS(Max[triangleAxis]-triangles[i].A[triangleAxis]) < 1.1) )	// not close to boundingbox edges?
+				if( ! (ABS(Min[triangleAxis]-triangles[i].A[triangleAxis]) < 1.1 
+				       || ABS(Max[triangleAxis]-triangles[i].A[triangleAxis]) < 1.1) )	// not close to boundingbox edges?
 				{
 					triangles[i].axis = NOT_ALIGNED;	// Not close to bounding box
 					break;
@@ -591,9 +592,13 @@ void Shape::OptimizeRotation()
 void Shape::PlaceOnPlatform()
 {
   CalcBBox();
-  double movex=-MIN(0,Min.x);//*scale_factor);
-  double movey=-MIN(0,Min.y);//*scale_factor);
-  transform3D.move(Vector3d(movex,movey,-Min.z));//*scale_factor));
+  Vector3d centerbefore=Center;
+  transform3D.move(Vector3d(0,0,-Min.z));
+  CalcBBox();
+  Vector3d move = centerbefore-Center;
+  if (Center.x+move.x<0) move.x-=Min.x;
+  if (Center.y+move.y<0) move.y-=Min.y;
+  transform3D.move(Vector3d(move.x,move.y,0));
   CalcBBox();
 }
 
@@ -619,7 +624,7 @@ void Shape::Rotate(Vector3d axis, double angle)
 
 		//triangles[i].AccumulateMinMax (min, max);
 	}
-	PlaceOnPlatform();
+  PlaceOnPlatform();
 // 	Vector3d move(0, 0, 0);
 // 	// if we rotated under the bed, translate us up again
 // 	if (min.z < 0) {

@@ -28,10 +28,11 @@
 #include "config.h"
 
 #include "printer.h"
+#include "view.h"
 
 // everything taken out of model.cpp
 
-Printer::Printer() :
+Printer::Printer(View *view) :
   printing (false),
   inhibit_print (false),
   commlog (Gtk::TextBuffer::create())
@@ -47,6 +48,7 @@ Printer::Printer() :
 			    rr_log_fn, cl);
   update_temp_poll_interval ();
   gcode_iter = NULL;
+  this->view = view;
 }
 
 Printer::~Printer()
@@ -190,7 +192,7 @@ void Printer::Print()
 
   delete (gcode_iter);
   gcode_iter = gcode.get_iter();
-
+  gcode_iter->time_started = time(NULL);
   set_printing (true);
   progress->start (_("Printing"), gcode.commands.size());
   rr_dev_set_paused (device, RR_PRIO_NORMAL, 0);
@@ -286,22 +288,49 @@ void RR_CALL Printer::rr_reply_fn (rr_dev dev, int type, float value,
   }
 }
 
+string timeleft_str(long seconds) {
+  ostringstream ostr; 
+  ostr << _("Printing (");
+  int hrs = (int)seconds/3600;
+  if (hrs>0) {
+    ostr << hrs << _(" hr");
+    if (hrs>1) cerr << _("s");
+    ostr << ", ";
+    seconds -= 3600*hrs;
+  }
+  if (seconds>60)
+    ostr << (int)seconds/60 << _(" min left)");
+  else
+    ostr << (int)seconds << _(" sec left)");
+  return ostr.str();
+}
+
 void RR_CALL Printer::rr_more_fn (rr_dev dev, void *closure)
 {
   Printer *printer = static_cast<Printer*>(closure);
  
   if (printer->printing && printer->gcode_iter) {
-    printer->progress->update (printer->gcode_iter->m_cur_line -
-			      rr_dev_buffered_lines (printer->device));
+    int donelines = printer->gcode_iter->m_cur_line - rr_dev_buffered_lines (printer->device);
+    time_t time_used = time(NULL) - printer->gcode_iter->time_started;
+    int tot_lines = printer->gcode_iter->m_line_count;
+    if (tot_lines>0) {
+      double done = 1.*donelines/tot_lines;
+      double timeleft = time_used/done - time_used;
+      printer->progress->set_label(timeleft_str(timeleft));
+      printer->progress->update (donelines);
+    }
+    if (time_used%3==0) printer->view->showCurrentPrinting(donelines);
     while (rr_dev_write_more (printer->device) && !printer->gcode_iter->finished()) {
       std::string line = printer->gcode_iter->next_line();
-      if (line.length() > 0 && line[0] != ';')
+      if (line.length() > 0 && line[0] != ';') {
 	rr_dev_enqueue_cmd (printer->device, RR_PRIO_NORMAL, line.data(), line.size());
+      }
     }
 
     if (printer->gcode_iter->finished())
     {
       printer->set_printing (false);
+      printer->view->showCurrentPrinting(-1);
       printer->progress->stop (_("Printed"));
     }
   }
@@ -313,6 +342,22 @@ void Printer::set_printing (bool pprinting)
     return;
   printing = pprinting;
   printing_changed.emit();
+}
+
+double Printer::getCurrentPrintingZ() {
+  if (gcode_iter){
+    Command command = gcode_iter->getCurrentCommand(Vector3d(0,0,0));
+    return command.where.x;
+  } 
+  return 0;
+}
+void Printer::draw_current (Vector3d &from)
+{
+  if (gcode_iter){
+    Command command = gcode_iter->getCurrentCommand(from);
+    command.draw(from);
+    from =  command.where;
+  }
 }
 
 void RR_CALL Printer::rr_error_fn (rr_dev dev, int error_code,

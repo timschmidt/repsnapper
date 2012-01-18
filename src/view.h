@@ -141,6 +141,7 @@ class View : public Gtk::Window
   // view nasties ...
   void Draw (Gtk::TreeModel::iterator &selected);
   void DrawGrid ();
+  void showCurrentPrinting(unsigned long donelines);
 };
 
 #ifdef MODEL_IMPLEMENTATION

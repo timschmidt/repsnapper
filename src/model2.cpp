@@ -271,12 +271,12 @@ void Model::MakeFullSkins()
   //m_progress->stop (_("Done"));
 }
 
+
 void Model::MakeUncoveredPolygons(bool make_bridges)
 {
   int count = (int)layers.size();
   m_progress->restart (_("Find Uncovered"), 2*count+2);
   // bottom to top: uncovered from above -> top polys
-  //#pragma omp parallel for // no
   for (int i = 0; i < count-1; i++) 
     {
       m_progress->update(i);
@@ -290,19 +290,17 @@ void Model::MakeUncoveredPolygons(bool make_bridges)
       vector<Poly> bridges = GetUncoveredPolygons(layers[i],layers[i-1]);
       //make_bridges = false;
       layers[i]->addFullPolygons(bridges,make_bridges);
-      if (make_bridges)
-	layers[i]->setBridgeAngles(layers[i-1]->getBridgeRotations(bridges));
+      if (make_bridges) {
+	vector<Poly> bridges_result = layers[i]->GetBridgePolygons();
+	vector<double> angles = layers[i-1]->getBridgeRotations(bridges_result);
+	layers[i]->setBridgeAngles(angles);
+	//cerr << bridges_result.size() << " - " << angles.size() << endl;
+      }
     }
-  // // instead of just adding the ofsetPolygons 
-  // // we clip against empty planes to get well-oriented polygons ....
-  // Layer emptylayer(layers.size(),settings.Hardware.LayerThickness);
-  // emptylayer.Clear();
   m_progress->update(2*count+1);
   layers.front()->addFullPolygons(layers.front()->GetFillPolygons(),false);
-  //layers.front()->addFullPolygons(MakeUncoveredPolygons(layers.front(),&emptylayer),false);
   m_progress->update(2*count+2);
   layers.back()->addFullPolygons(layers.back()->GetFillPolygons(),false);
-  //layers.back()->addFullPolygons(MakeUncoveredPolygons(layers.back(),&emptylayer),false);
   //m_progress->stop (_("Done"));
 }
 
@@ -313,9 +311,10 @@ vector<Poly> Model::GetUncoveredPolygons(Layer * subjlayer,
   Clipping clipp;
   clipp.clear();
   clipp.addPolys(subjlayer->GetFillPolygons(),subject); 
+  clipp.addPolys(subjlayer->GetFullFillPolygons(),subject); 
   clipp.addPolys(cliplayer->GetInnerShell(),clip); // have some overlap
-  // clipp.addPolys(cliplayer->GetFillPolygons(),clip);
-  // clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
+  //clipp.addPolys(cliplayer->GetFillPolygons(),clip);
+  //clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
   vector<Poly> uncovered = clipp.substract();
   return uncovered;
 }				 
@@ -327,7 +326,6 @@ void Model::MultiplyUncoveredPolygons()
   m_progress->restart (_("Uncovered Shells"), count*3);
   // bottom-up: propagate downwards
   int i,s;
-  //#pragma omp parallel for schedule(static) ordered private(s) private(layers) 
   for (i=0; i < count; i++) 
     {
       m_progress->update(i);
@@ -360,7 +358,7 @@ void Model::MultiplyUncoveredPolygons()
   for (int i=0; i < count; i++) 
     {
       m_progress->update(count + count +i);
-      layers[i]->mergeFullPolygons(true);
+      //layers[i]->mergeFullPolygons(true);
       layers[i]->mergeFullPolygons(false);
     }
   //m_progress->stop (_("Done"));
@@ -392,7 +390,7 @@ void Model::MakeSupportPolygons()
   // shrink a bit
   for (int i=0; i<count; i++) 
     {
-      double distance = 1.5*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
+      double distance = 2*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       m_progress->update(i+count);
       vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());
       layers[i]->setSupportPolygons(Clipping::getOffset(merged,-distance));
@@ -534,7 +532,7 @@ void Model::ConvertToGCode()
   // m_progress->set_label (_("Uncovered"));
   // m_progress->update(3.);
   if (settings.Slicing.SolidTopAndBottom)
-    MakeUncoveredPolygons();
+    MakeUncoveredPolygons(!settings.Slicing.Support); // not bridging when support
 
   // m_progress->set_label (_("Support"));
   // m_progress->update(4.);
@@ -546,7 +544,7 @@ void Model::ConvertToGCode()
   // m_progress->update(5.);
   MakeFullSkins(); // must before multiplied uncovered bottoms
 
-  m_progress->update(6.);
+  //  m_progress->update(6.);
   if (settings.Slicing.SolidTopAndBottom)
     MultiplyUncoveredPolygons();
 
@@ -596,7 +594,10 @@ void Model::ConvertToGCode()
   int sec = ((int)time-3600*hr-60*min);
   cout << "GCode Time Estimation "<< hr <<"h "<<min <<"m " <<sec <<"s" <<endl; 
   double totlength = gcode.commands.back().e;
-  cout << "    total mm extruded "<< totlength  <<endl; 
+  cout << "    total mm extruded "<< totlength  << endl; 
+  double ccm = totlength*settings.Hardware.FilamentDiameter*settings.Hardware.FilamentDiameter/4.*M_PI/1000 ;
+  cout << "    = " << ccm << " cm^3 " << endl;
+  cout << "    (ABS: ~" << ccm*1.08 << " g, PLA: ~" << ccm*1.25 << " g"<< endl; 
 
   //??? to statusbar or where else?
 

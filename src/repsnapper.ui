@@ -1358,7 +1358,7 @@ and others I forgot... (needs updating)</property>
                             <property name="can_focus">False</property>
                             <property name="xalign">1</property>
                             <property name="xpad">10</property>
-                            <property name="label" translatable="yes">Fan Voltage</property>
+                            <property name="label" translatable="yes">Fan Level</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -1371,8 +1371,11 @@ and others I forgot... (needs updating)</property>
                           <object class="GtkSpinButton" id="i_fan_voltage">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
+                            <property name="tooltip_text" translatable="yes">Level: 0-255</property>
                             <property name="invisible_char">•</property>
-                            <property name="digits">1</property>
+                            <property name="width_chars">3</property>
+                            <property name="truncate_multiline">True</property>
+                            <property name="progress_pulse_step">1</property>
                             <property name="numeric">True</property>
                           </object>
                           <packing>
@@ -4598,7 +4601,43 @@ Distance is twice the Infill Distance.</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <placeholder/>
+                                  <object class="GtkHBox" id="hbox29">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <child>
+                                      <object class="GtkLabel" id="label121">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="tooltip_text" translatable="yes">GCode when Printing</property>
+                                        <property name="label" translatable="yes">Live Extrude Color</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkColorButton" id="Display.GCodePrintingRGB">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">True</property>
+                                        <property name="use_action_appearance">False</property>
+                                        <property name="title" translatable="yes">Choose Extrusion Colour</property>
+                                        <property name="color">#000000000000</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="padding">3</property>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
+                                  </packing>
                                 </child>
                               </object>
                             </child>
@@ -5080,5 +5119,14 @@ Distance is twice the Infill Distance.</property>
       <widget name="Hardware.MaxPrintSpeedXY"/>
       <widget name="Hardware.MinPrintSpeedXY"/>
     </widgets>
+  </object>
+  <object class="GtkAdjustment" id="fine_rot_x">
+    <property name="lower">-180</property>
+    <property name="upper">180</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">30</property>
+    <property name="page_size">1</property>
+    <signal name="changed" handler="on_fine_rot_x_changed" swapped="no"/>
+    <signal name="value-changed" handler="on_fine_rot_x_value_changed" swapped="no"/>
   </object>
 </interface>

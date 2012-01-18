@@ -167,6 +167,7 @@ class Settings {
     vmml::Vector4f NormalsRGBA;
     vmml::Vector4f EndpointsRGBA;
     vmml::Vector4f GCodeExtrudeRGBA;
+    vmml::Vector4f GCodePrintingRGBA;
     vmml::Vector4f GCodeMoveRGBA;
     float    Highlight;
     float    NormalsLength;

@@ -166,18 +166,15 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	      poly.addVertex(Vector2d(x,y));
 	      poly.addVertex(Vector2d(x+infillDistance,y+infillDistance));
 	    }
-	  } else {
-	    poly.addVertex(Vector2d(x+infillDistance,Min.y));
-	    poly.addVertex(Vector2d(x+infillDistance,Max.y));
-	  }
-	  if (zigzag) {
 	    for (double y = Max.y; y > Min.y; y -= 2*infillDistance) {
 	      poly.addVertex(Vector2d(x+infillDistance,y+infillDistance));
 	      poly.addVertex(Vector2d(x+2*infillDistance,y));
 	    }
-	  }
-	  else
+	  } else {
+	    poly.addVertex(Vector2d(x+infillDistance,Min.y));
+	    poly.addVertex(Vector2d(x+infillDistance,Max.y));
 	    poly.addVertex(Vector2d(x+2*infillDistance,Max.y));
+	  }
 	}
 	poly.addVertex(Vector2d(Max.x,Min.y-infillDistance));
 	poly.addVertex(Vector2d(Min.x,Min.y-infillDistance));
