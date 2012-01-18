@@ -106,56 +106,23 @@ Main code follows
 */
 
 
-inline int ToInt(const std::string& s)
-{
-	std::istringstream i(s);
-	int x;
-	if (!(i >> x))
-		return -1;
-	return x;
-}
+enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
+	    RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D,  
+	    EXTRUDERON, EXTRUDEROFF, //  6 7
+	    ARCCLOCKWISE, ARCCOUNTERCLOCKWISE,  // 8 9
+	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 10 11
+	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 12 13
+	    ABSOLUTEPOSITIONING, INCREMENTALPOSITIONING, // 14 15
+	    SETCURRENTASHOME, SELECTEXTRUDER, ZMOVE, SETSPEED}; // 16 - 19
+const string MCODES[] = {"G92", "", "",
+			 "G0", "G1", "G1",
+			 "M101", "M103", // eon eoff
+			 "", "",
+			 "G21", "", // mm in
+			 "", "",
+			 "", "", // abs inc
+			 "", "T0", "G1", "G1" };
 
-inline float ToFloat(const std::string& s)
-{
-	std::istringstream i(s);
-	float x;
-	if (!(i >> x))
-		return -1;
-	return x;
-}
-
-inline double ToDouble(const std::string& s)
-{
-	std::istringstream i(s);
-	double x;
-	if (!(i >> x))
-		return -1;
-	return x;
-}
-
-inline string FromInt(const int i)
-{
-	std::stringstream s;
-	s << i;
-	return s.str();
-}
-
-inline string FromFloat(const float i)
-{
-	std::stringstream s;
-	s << i;
-	return s.str();
-}
-
-inline string FromDouble(const double i)
-{
-	std::stringstream s;
-	s << i;
-	return s.str();
-}
-
-
-enum GCodes{GOTO, DRAWTO, MILLIMETERSASUNITS, RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D,  EXTRUDERON, EXTRUDEROFF, ARCCLOCKWISE, ARCCOUNTERCLOCKWISE, DWELL, INCHESASUNITS, GOHOME, GOHOMEVIAINTERMEDIATEPOINT, ABSOLUTEPOSITIONING, INCREMENTALPOSITIONING, SETCURRENTASHOME, SELECTEXTRUDER, ZMOVE, SETSPEED};
 
 class Model;
 class ViewProgress;
@@ -168,8 +135,9 @@ public:
 	Vector3d where;
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
 	string comment;
-	void draw(Vector3d fromwhere);
-	void printinfo();
+	void draw(Vector3d fromwhere) const; 
+	string GetGCodeText(Vector3d LastPos, double lastE, bool incrementalEcode) const;
+	string info() const;
 };
 
 class GCodeImpl;
