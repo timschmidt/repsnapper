@@ -48,6 +48,7 @@ class Infill
     InfillType type;
     double angle;
     double distance;
+    Vector2d Min,Max; 
     ClipperLib::Polygons cpolys;
   } ;
 

@@ -61,9 +61,9 @@ public:
 
   Vector2d getMin() const {return Min;};
   Vector2d getMax() const {return Max;};
-  void setBBox(Vector2d min, Vector2d max);
-  void setBBox(vector<Vector2d> minmax);
-  void setBBox(Vector3d min, Vector3d max);
+  /* void setBBox(Vector2d min, Vector2d max); */
+  /* void setBBox(vector<Vector2d> minmax); */
+  /* void setBBox(Vector3d min, Vector3d max); */
 
 
 
@@ -139,7 +139,6 @@ public:
   void Clear();
 
   void addPolygons(vector<Poly> polys);
-  vector<Poly> polygons;		// original polygons directly from model
 
   double area() const;
   
@@ -153,6 +152,7 @@ public:
   vector<Infill*> skinFullInfills;
   Infill * supportInfill;
   
+  vector<Poly> polygons;		// original polygons directly from model
   vector< vector<Poly> > shellPolygons; // all shells except innermost
   vector<Poly> fillPolygons;	        // innermost shell 
   vector<Poly> fullFillPolygons;        // fully filled polygons (uncovered)

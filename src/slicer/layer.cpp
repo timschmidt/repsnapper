@@ -77,50 +77,52 @@ void Layer::Clear()
   skirtPolygon.clear();
 }
 
-void Layer::setBBox(Vector2d min, Vector2d max) 
-{
-  Min.x = MIN(Min.x,min.x);
-  Min.y = MIN(Min.y,min.y);
-  Max.x = MAX(Max.x,max.x);
-  Max.y = MAX(Max.y,max.y);
-}	
-void Layer::setBBox(vector<Vector2d> minmax) 
-{
-  setBBox(minmax[0],minmax[1]);
-}
-void Layer::setBBox(Vector3d min, Vector3d max) 
-{
-  Min.x = MIN(Min.x,min.x);
-  Min.y = MIN(Min.y,min.y);
-  Max.x = MAX(Max.x,max.x);
-  Max.y = MAX(Max.y,max.y);
-}	
+// void Layer::setBBox(Vector2d min, Vector2d max) 
+// {
+//   Min.x = MIN(Min.x,min.x);
+//   Min.y = MIN(Min.y,min.y);
+//   Max.x = MAX(Max.x,max.x);
+//   Max.y = MAX(Max.y,max.y);
+// }	
+// void Layer::setBBox(vector<Vector2d> minmax) 
+// {
+//   setBBox(minmax[0],minmax[1]);
+// }
+// void Layer::setBBox(Vector3d min, Vector3d max) 
+// {
+//   Min.x = MIN(Min.x,min.x);
+//   Min.y = MIN(Min.y,min.y);
+//   Max.x = MAX(Max.x,max.x);
+//   Max.y = MAX(Max.y,max.y);
+// }	
 
 
 void Layer::SetPolygons(vector<Poly> polys) {
   this->polygons = polys;
+  for(uint i=0;i<polygons.size();i++){
+    polygons[i].setZ(Z); 
+  }
 }
 void Layer::SetPolygons(const Matrix4d &T, const Shape shape, 
 			double z, double Optimization) {
   double offsetZ = Z;
-  bool have_polys=false;
-  while (!have_polys) {
-    clearpolys(polygons);
+  bool polys_ok=false;
+  while (!polys_ok) {
     double max_grad;
-    have_polys = shape.getPolygonsAtZ(T, Optimization, offsetZ, polygons, max_grad);
+    polys_ok = shape.getPolygonsAtZ(T, Optimization, offsetZ, polygons, max_grad);
     offsetZ+=thickness/10.;
   }
-  for(uint i=0;i<polygons.size();i++)
-    polygons[i].setZ(Z);
+  for(uint i=0;i<polygons.size();i++){
+    polygons[i].setZ(Z); 
+  }
 }
 
 void Layer::addPolygons(vector<Poly> polys)
 {
-  for (uint i =0;i<polys.size();i++)
-    {
-      polygons.push_back(polys[i]);
-      setBBox(polys[i].getMinMax());
-    }
+  for(uint i=0;i<polys.size();i++){
+    polys[i].setZ(Z); 
+  }
+  polygons.insert(polygons.end(),polys.begin(),polys.end());
 }
 
 // these are used for the bridge polys of the layer above 
@@ -390,6 +392,8 @@ bool isleftof(Vector2d center, Vector2d A, Vector2d B)
   return (position > 0);
 }
 
+
+// calc convex hull and Min and Max of layer
 // gift wrapping algo
 void Layer::calcConvexHull() 
 {
@@ -423,6 +427,10 @@ void Layer::calcConvexHull()
   }
   assert (current != np);
 
+  Min.x = min(Min.x,p[current].x);
+  Min.y = min(Min.y,p[current].y);
+  Max.x = max(Max.x,p[current].x);
+  Max.y = max(Max.y,p[current].y);
   hullPolygon.addVertex(p[current]);
   uint start = current;
   uint leftmost ;
@@ -434,6 +442,10 @@ void Layer::calcConvexHull()
 	  leftmost = i;
       current = leftmost;
       hullPolygon.addVertex(p[current], true); // to front: reverse order
+      Min.x = min(Min.x,p[current].x);
+      Min.y = min(Min.y,p[current].y);
+      Max.x = max(Max.x,p[current].x);
+      Max.y = max(Max.y,p[current].y);
       if (hullPolygon.size()>np){
 	cerr << "couldn't make convex hull on layer "<< LayerNo << endl;
 	printinfo();

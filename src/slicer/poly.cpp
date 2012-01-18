@@ -441,7 +441,7 @@ vector<Vector2d> Poly::getMinMax() const{
     if (v.y<miny) miny=v.y;
     if (v.y>maxy) maxy=v.y;
   }
-  //cerr<< "minmax at Z=" << plane->getZ() << ": "<<minx <<"/"<<miny << " -- "<<maxx<<"/"<<maxy<<endl;
+  //cerr<< "minmax at Z=" << getZ() << ": "<<minx <<"/"<<miny << " -- "<<maxx<<"/"<<maxy<<endl;
   range[0] = Vector2d(minx,miny);
   range[1] = Vector2d(maxx,maxy);
   return range;
