@@ -72,6 +72,11 @@ void Model::MakeRaft(GCodeState &state, double &z)
 		    settings.Raft.Phase[1].LayerCount;
   Settings::RaftSettings::PhasePropertiesType *props = &settings.Raft.Phase[0];
 
+  double thickness = props->Thickness * settings.Hardware.LayerThickness;
+  double extrusionfactor = settings.Hardware.GetExtrudeFactor(thickness)
+    * props->MaterialDistanceRatio;
+
+
   while(LayerNr < layerCount)
     {
       // If we finished phase 0, start phase 1 of the raft...
@@ -142,7 +147,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 
 	  state.MakeAcceleratedGCodeLine (Vector3d(P1.x,P1.y,z), 
 					  Vector3d(P2.x,P2.y,z),
-					  props->MaterialDistanceRatio,
+					  extrusionfactor,
 					  z,
 					  settings.Slicing, settings.Hardware);
 	  reverseLines = !reverseLines;
@@ -155,7 +160,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
       g.comment = "Move Z";
       g.e = 0;
       gcode.commands.push_back(g);
-      z += props->Thickness * settings.Hardware.LayerThickness;
+      z += thickness;
 
       // Move Z
       g.Code = ZMOVE;
@@ -169,11 +174,11 @@ void Model::MakeRaft(GCodeState &state, double &z)
     }
 
   // restore the E state
-  Command gotoE;
-  gotoE.Code = GOTO;
-  gotoE.e = 0;
-  gotoE.comment = _("Reset E for the remaining print");
-  gcode.commands.push_back(gotoE);
+  // Command gotoE;
+  // gotoE.Code = GOTO;
+  // gotoE.e = 0;
+  // gotoE.comment = _("Reset E for the remaining print");
+  // gcode.commands.push_back(gotoE);
 }
 
 
