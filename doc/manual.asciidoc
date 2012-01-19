@@ -4,7 +4,7 @@ Welcome to the RepSnapper Manual, although currently a work in progress this gui
 
 Contact Info
 
-    * Irc channel: #repsnapper at irc://chat.freenode.net
+    * Irc channel: #repsnapper at irc://irc.freenode.net
 
 Timothy Schmidt Version
 
@@ -52,7 +52,7 @@ Although RepSnapper is not generally tested outside of windows/linux/mac you may
     * git
     * libgtkmm-2.4-dev
     * libgktglext1-dev
-    * libreprap
+
 =====
 
 === Linux ===
@@ -76,14 +76,13 @@ sudo apt-get install git-core build-essential TODO
 ----
 
 ===== Acquire source and compile =====
-Install libreprap: https://github.com/Ralith/libreprap/blob/master/INSTALL
 ----
 git clone git://github.com/timschmidt/repsnapper.git
 cd repsnapper
 ./autogen.sh
 make
 ----
-Executable (repsnapper) will be left in the src folder. Install with "sudo make install"
+Executable (repsnapper) will be left in the top folder. Install with "sudo make install"
 
 ==== Fedora ====
 ===== Installing from yum =====
@@ -105,16 +104,6 @@ For Fedora 15 (tested on x86_64)
 ----
 yum install git gtk2-devel gcc-c++ gcc binutils make cmake gtkglextmm gtkglextmm-devel freeglut-devel libusb1-devel intltool gtkmm*
 ----
-Install libreprap (from https://github.com/Ralith/libreprap/blob/master/INSTALL):
-----
-git clone https://github.com/Ralith/libreprap.git
-cd libreprap
-cmake .
-make
-su
-make install
-cd ..
-----
 
 Install repsnapper:
 ----
@@ -130,7 +119,6 @@ make
 
 Run the program:
 ----
-cd src
 ./repsnapper
 ----
 
@@ -148,14 +136,14 @@ sudo zypper install TODO
 ----
 
 ==== Generic installation instructions ====
-Install libreprap: https://github.com/Ralith/libreprap/blob/master/INSTALL
+
 ----
 git clone git://github.com/timschmidt/repsnapper.git
 cd repsnapper
 ./autogen.sh
 make
 ----
-Executable (repsnapper) will be left in the src folder. Install with "sudo make install"
+Executable (repsnapper) will be left in the top folder. Install with "sudo make install"
 
 === Windows ===
 Currently black magic. Nightly builds coming...
@@ -173,7 +161,6 @@ sudo port install TODO
 
 Acquire source and compile:
 ----
-Install libreprap: https://github.com/Ralith/libreprap/blob/master/INSTALL
 git clone git://github.com/timschmidt/repsnapper.git
 cd repsnapper
 ./autogen.sh
@@ -216,22 +203,18 @@ Load STL::
     Loads an STL file
 
 Save STL::
-    Not yet implemented
-
-Fix STL errors::
-    Presumably makes the structure water tight and aligns all surface normals.
+    Saves all objects in their current state to a single STL file. 
 
 Save Settings::
     Saves all configuration settings. The configuration settings are stored in a file called repsnapper.conf
 
 [TIP]
-Repsnapper stores the setttings file the current working directory (So If you start repsnapper in a different working directory don't be surprised if all the settings are back to defaults) This will hopefully be rectified soon.
-
-Load Settings::
-    Loads configuration settings from a file.
 
 Save Settings As::
     Saves configuration settings in a file of your choice.
+
+Load Settings::
+    Loads configuration settings from a file.
 
 Delete::
     Deletes the selected STL from the current working area.
@@ -270,11 +253,9 @@ Alternate Infill Layers::
 Raft Enable::
     Select this option to print a "raft" on the build surface before printing your desired object.  May help alleviate problems with uneven build surfaces.
 
-Shrinking Algorithm::
-    Algorithm used to slice objects and generate printing path.
-
 Optimization::
-    unknown
+    Polygon curves are straightened up to the given offset (to get faster prints)
+
 
 ==== Raft Settings Window ====
 
@@ -313,8 +294,8 @@ Use incremental ecode::
 Use 3D Gcode::
     Enable this option when using Makerbot firmware (or if you use the M101/M103 commands for tool control)
 
-Extruded material width::
-    Width of the extrude material, in millimeters.
+Extruded material width ratio::
+    Width of the extrude material in proportion to layer thickness.
 
 Extrusion multiplier::
     Allows calibration of the extruder without having to adjust E_STEPS_PER_MM in the firmware.
@@ -566,8 +547,8 @@ Viewing STL in repsnapper
 Once an STL is loaded you can rotate, translate and/or scale the view in the 3D viewer so as to see what the object looks like, doing so will not effect the print its mearly for viewing purposes.
 
     * To rotate the view of the STL hold down the left mouse button and drag.
-    * To translate the view the STL hold down the left and right mouse button and drag.
-    * To scale the view the STL hold down the right mouse button and drag, or turn the wheel on your mouse.
+    * To translate the view the STL hold down the right mouse button and drag.
+    * To scale the view the STL hold down the middle mouse button and drag, or turn the wheel on your mouse.
 
 Note: the grid shows your build platform / printing area
 Working with STL
@@ -669,7 +650,7 @@ Go back to the 'interactive control' tab.
 
 == Development ==
 === Comms debugging ===
-Even if you have a working machine, it can be usefult to emulate a serial connection to see what the firmware would see. Using socat (install from your distro repos as usual).
+Even if you have a working machine, it can be useful to emulate a serial connection to see what the firmware would see. Using socat (install from your distro repos as usual).
 For the simplest case, issue "socat -d -d pty,raw,echo=0 readline" in a terminal. It reports the address to to connect RepSnapper to, (something like /dev/pts/N). You should disable connection
 validation int the printer settings dialog. If you happen to have a working firmware in a simulator (please share if you do :), then you can use "socat -d -d pty,raw,echo=0 pty,raw,echo=0",
 which gives two addresses, so you can connect anything to RepSnapper. You could also use another serial terminal app this way.
