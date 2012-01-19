@@ -849,6 +849,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
   return true;
 }
 
+
 vector<Segment> Shape::getCutlines(const Matrix4d &T, double z, 
 				   vector<Vector2d> &vertices, double &max_gradient) const
 {
@@ -858,9 +859,9 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   Vector2d lineEnd;
   vector<Segment> lines;
   int num_cutpoints;
-
+  
   // we know our own tranform:
-  Matrix4d transform = transform3D.transform*T;
+  Matrix4d transform = T * transform3D.transform ;
 
   for (uint i = 0; i < triangles.size(); i++)
     {
@@ -1303,7 +1304,7 @@ bool CleanupSharedSegments(vector<Segment> &lines)
  * match from any detached points and joining them, with new synthetic
  * segments.
  */
-bool CleanupConnectSegments(vector<Vector2d> &vertices, vector<Segment> &lines, bool connect_all)
+bool CleanupConnectSegments(const vector<Vector2d> vertices, vector<Segment> &lines, bool connect_all)
 {
 	vector<int> vertex_types;
 	vertex_types.resize (vertices.size());
