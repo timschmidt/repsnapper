@@ -131,8 +131,8 @@ public:
     double getScaleFactor(){ return scale_factor; };
     void PlaceOnPlatform();
 
-	vector<Triangle>  triangles;
 	Vector3d Min, Max, Center;
+
 
 	string getSTLsolid() const;
 
@@ -151,10 +151,14 @@ public:
 
 private:
     double scale_factor;
+
+    vector<Triangle>  triangles;
+    vector<Polygon2d>  polygons;  // surface polygons instead of triangles
+    void calcPolygons();
 };
 
 
 
-bool CleanupConnectSegments(vector<Vector2d> &vertices, vector<Segment> &lines,
+bool CleanupConnectSegments(const vector<Vector2d> vertices, vector<Segment> &lines,
 			    bool connect_all=false);
 bool CleanupSharedSegments(vector<Segment> &lines);
