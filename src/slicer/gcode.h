@@ -44,6 +44,7 @@ class GCodeState {
   ~GCodeState();
   /* void SetZ (double z); */
   void AppendCommand(Command &command, bool incrementalE);
+  void AppendCommand(GCodes code, bool incrementalE=false, string comment="");
   void AddLines (vector<printline> lines,
 		 double extrusionfactor,
 		 double offsetZ, 

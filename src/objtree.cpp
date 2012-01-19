@@ -152,6 +152,7 @@ void ObjectsTree::get_selected_stl(Gtk::TreeModel::iterator &iter,
     shape = &Objects[i].shapes[j];
 }
 
+
 Gtk::TreeModel::iterator ObjectsTree::find_stl_in_children(Gtk::TreeModel::Children children,
 							   guint pickindex)
 {

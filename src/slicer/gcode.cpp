@@ -65,16 +65,17 @@ void GCodeState::AppendCommand(Command &command, bool incrementalE)
   Vector3d lastwhere = Vector3d(pImpl->lastCommand.where);
   if (incrementalE)
     command.e += pImpl->lastCommand.e;
+  if (command.f!=0)
+    timeused += (command.where - lastwhere).length()/command.f*60;
   pImpl->lastCommand = command;
   pImpl->code.commands.push_back(command);
-  if (command.f!=0)
-	{
-	  timeused += (command.where - lastwhere).length()/command.f*60;
-	  // cerr << "last   at "<< lastwhere << " feedrate: " << command.f<< endl;
-	  // cerr << "   now at "<<command.where << " time used: " << timeused << endl;
-	}
 }
-
+void GCodeState::AppendCommand(GCodes code, bool incrementalE, string comment)
+{
+  Command comm(code);
+  comm.comment = comment;
+  AppendCommand(comm, incrementalE);
+}
 // double GCodeState::GetLastLayerZ(double curZ)
 // {
 //   if (pImpl->lastLayerZ <= 0)

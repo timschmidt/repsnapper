@@ -81,6 +81,22 @@ inline string FromDouble(const double i)
 
 
 
+Command::Command(GCodes code, const Vector3d where, double E, double F) {
+  Code = code;
+  this->where = where;
+  e=E;
+  f=F;
+}
+
+Command::Command(const Command &rhs){
+  Code = rhs.Code;
+  where = rhs.where;
+  e = rhs.e;
+  f = rhs.f;
+  comment = rhs.comment;
+}
+
+
 Command::Command(string gcodeline, Vector3d defaultpos){
   where = defaultpos;
   e=0.0;
@@ -119,6 +135,7 @@ Command::Command(string gcodeline, Vector3d defaultpos){
       }
       if( buffer.find( "Z", 0) != string::npos ) {
 	string number = buffer.substr(1,buffer.length()-1);
+	cerr << "found Z" << buffer << endl;
 	where.z = ToDouble(number);
       }
       if( buffer.find( "E", 0) != string::npos ) {
@@ -140,6 +157,31 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
     ostr << "; Unknown GCode for " << info() <<endl;
     return ostr.str();
   }
+
+  // going down? -> split xy and z movements
+  Vector3d delta = where-LastPos;
+  if ( (where.z < 0 || delta.z < 0) && (delta.x!=0 || delta.y!=0) ) { 
+    Command xycommand(*this); // copy
+    xycommand.comment = comment +  _(" xy part");
+    Command zcommand(*this); // copy
+    zcommand.comment = comment + _(" z part");
+    if (where.z < 0) { // z<0 cannot be absolute -> positions are relative
+      xycommand.where.z = 0.; 
+      zcommand.where.x = zcommand.where.y = 0.; // this command will be z-only
+      zcommand.e = 0; // all extrusion in xy
+    } else {
+      xycommand.where.z = LastPos.z;
+      zcommand.e = lastE;
+    }
+    cerr << "split xy and z commands delta=" << delta <<endl;
+    // cerr << info() << endl;
+    // cerr << xycommand.info() << endl;
+    // cerr << zcommand.info() << endl<< endl;
+    ostr << xycommand.GetGCodeText(LastPos, lastE, incrementalEcode) << endl;
+    ostr <<  zcommand.GetGCodeText(LastPos, lastE, incrementalEcode) ;
+    return ostr.str();
+  }
+
   ostr << MCODES[Code] << " ";
   string comm = comment;
   switch (Code) {
@@ -158,14 +200,14 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
     if(where.z != LastPos.z) {
       ostr << "Z" << where.z << " ";
       LastPos.z = where.z;
-      comm += " Z-Change";
+      comm += _(" Z-Change");
     }
     if(!incrementalEcode && e != 0 ||
        incrementalEcode  && e != lastE) {
       ostr << "E" << e << " ";
       lastE = e;
     } else {      
-      comm += " Move Only";
+      comm += _(" Move Only");
     }
   case SETSPEED:
     ostr << "F" << f;
@@ -188,7 +230,7 @@ void Command::draw(Vector3d fromwhere) const {
 string Command::info() const
 {
   ostringstream ostr;
-  ostr << "Command: Code="<<Code<<", where="  <<where << ", f="<<f<<", e="<<e;
+  ostr << "Command '" << comment << "': Code="<<Code<<", where="  <<where << ", f="<<f<<", e="<<e;
   return ostr.str();
 }
 
@@ -246,6 +288,8 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	std::vector<Command> loaded_commands;
 
 	double lastZ=0.;
+	double lastE=0.;
+	double lastF=0.;
 	layerchanges.clear();
 
 	while(getline(file,s))
@@ -254,8 +298,16 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 		progress->update(1.*file.tellg());
 		//if (LineNr % 1000 == 0) g_main_context_iteration(NULL,true);
 		Command command(s, globalPos);
+		if (command.e==0)
+		  command.e= lastE;
+		else
+		  lastE=command.e;
+		if (command.f==0)
+		  command.f= lastF;
+		else
+		  lastF=command.f;
 		// cout << s << endl;
-		// command.printinfo();
+		cerr << command.info()<< endl;
 		if(command.where.x < -100)
 		  continue;
 		if(command.where.y < -100)
@@ -524,16 +576,14 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	double lastZ =0;
 	layerchanges.clear();
 
-	for(uint i=0;i<commands.size() ;i++)
-	{
-	  
+	for(uint i=0;i<commands.size() ;i++) {
 	  if(commands[i].where.z != lastZ) {
 	    layerchanges.push_back(i);
 	    lastZ=commands[i].where.z;
 	  }
-
+	  
 	  GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, UseIncrementalEcode) + "\n";
-
+	  
 	// 	oss.str( "" );
 	// 	switch(commands[i].Code)
 	// 	{

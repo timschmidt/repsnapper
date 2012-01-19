@@ -171,6 +171,8 @@ static struct {
 // ShrinkQuality is a special enumeration ...
 //  INT_MEMBER    (Slicing.ShrinkQuality, "ShrinkQuality", 0, true),
   FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, false),
+  BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, false),
+  // FLOAT_MEMBER  (Slicing.SerialBuildHeight, "SerialBuildHeight", 0.00, false),
 
   // Misc.
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
@@ -259,6 +261,7 @@ static struct {
   { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
   { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },
   { "Slicing.Skins", 1, 5, 1, 1 },
+  { "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
 
   // Hardware
   { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },
@@ -1008,4 +1011,14 @@ double Settings::HardwareSettings::GetExtrudeFactor(double layerheight) const
   } // else: we work in terms of output anyway;
 
   return f;
+}
+
+Matrix4d Settings::getBasicTransformation(Matrix4d T) const
+{
+  Vector3d t = T.getTranslation();
+  t+= Vector3d(Hardware.PrintMargin.x+Raft.Size*RaftEnable, 
+	       Hardware.PrintMargin.y+Raft.Size*RaftEnable, 
+	       0);
+  T.setTranslation(t);
+  return T;
 }
