@@ -20,6 +20,7 @@
 #include "stdafx.h"
 #include "config.h"
 #include "printer.h"
+#include "model.h"
 
 // everything taken out of model2.cpp
 
@@ -27,6 +28,9 @@
 
 void Printer::Home(string axis)
 {
+  assert (m_model != NULL);
+  Settings *settings = &m_model->settings;
+
   if(printing)
     {
       alert(_("Can't go home while printing"));
@@ -37,9 +41,9 @@ void Printer::Home(string axis)
       string buffer="G1 F";
       std::stringstream oss;
       if(axis == "Z")
-	oss << settings.Hardware.MaxPrintSpeedZ;
+	oss << settings->Hardware.MaxPrintSpeedZ;
       else
-	oss << settings.Hardware.MaxPrintSpeedXY;
+	oss << settings->Hardware.MaxPrintSpeedXY;
       buffer+= oss.str();
       SendNow(buffer);
       buffer="G1 ";
@@ -58,9 +62,9 @@ void Printer::Home(string axis)
       buffer+= oss.str();
       SendNow(buffer);
       if(axis == "Z")
-	oss << settings.Hardware.MinPrintSpeedZ;
+	oss << settings->Hardware.MinPrintSpeedZ;
       else
-	oss << settings.Hardware.MinPrintSpeedXY;
+	oss << settings->Hardware.MinPrintSpeedXY;
       buffer="G1 ";
       buffer+="F";
       buffer+= oss.str();
@@ -85,6 +89,8 @@ void Printer::Home(string axis)
 
 void Printer::Move(string axis, double distance)
 {
+  assert (m_model != NULL);
+  Settings *settings = &m_model->settings;
   if (printing)
     {
       alert(_("Can't move manually while printing"));
@@ -96,9 +102,9 @@ void Printer::Move(string axis, double distance)
       string buffer="G1 F";
       std::stringstream oss;
       if(axis == "Z")
-	oss << settings.Hardware.MaxPrintSpeedZ;
+	oss << settings->Hardware.MaxPrintSpeedZ;
       else
-	oss << settings.Hardware.MaxPrintSpeedXY;
+	oss << settings->Hardware.MaxPrintSpeedXY;
       buffer+= oss.str();
       SendNow(buffer);
       buffer="G1 ";
@@ -108,9 +114,9 @@ void Printer::Move(string axis, double distance)
       buffer+= oss.str();
       oss.str("");
       if(axis == "Z")
-	oss << settings.Hardware.MaxPrintSpeedZ;
+	oss << settings->Hardware.MaxPrintSpeedZ;
       else
-	oss << settings.Hardware.MaxPrintSpeedXY;
+	oss << settings->Hardware.MaxPrintSpeedXY;
       buffer+=" F"+oss.str();
       SendNow(buffer);
       SendNow("G90");	// absolute positioning
@@ -121,6 +127,8 @@ void Printer::Move(string axis, double distance)
 
 void Printer::Goto(string axis, double position)
 {
+  assert (m_model != NULL);
+  Settings *settings = &m_model->settings;
   if (printing)
     {
       alert (_("Can't move manually while printing"));
@@ -130,7 +138,7 @@ void Printer::Goto(string axis, double position)
     {
       string buffer="G1 F";
       std::stringstream oss;
-      oss << settings.Hardware.MaxPrintSpeedXY;
+      oss << settings->Hardware.MaxPrintSpeedXY;
       buffer+= oss.str();
       SendNow(buffer);
       buffer="G1 ";
@@ -139,7 +147,7 @@ void Printer::Goto(string axis, double position)
       oss << position;
       buffer+= oss.str();
       oss.str("");
-      oss << settings.Hardware.MaxPrintSpeedXY;
+      oss << settings->Hardware.MaxPrintSpeedXY;
       buffer+=" F"+oss.str();
       SendNow(buffer);
     }

@@ -33,16 +33,15 @@ class ConnectView : public Gtk::VBox {
   Gtk::ComboBoxEntryText m_combo;
   bool               m_setting_state;
 
-  Model             *m_model;
-  Printer  *printer;
   Settings          *m_settings;
+  Printer           *m_printer;
 
   void connect_toggled();
   void serial_state_changed (SerialState state);
   void signal_entry_changed();
   bool find_ports();
  public:
-  ConnectView (Model *model, Printer *printer, Settings *settings, bool show_connect = true);
+  ConnectView (Printer *printer, Settings *m_settings, bool show_connect = true);
   void try_set_state (bool connected);
 };
 

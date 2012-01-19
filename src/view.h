@@ -121,6 +121,7 @@ class View : public Gtk::Window
 
  public:
   Model *get_model() { return m_model; }
+  ViewProgress *get_view_progress() { return m_progress; }
   bool get_selected_stl(TreeObject *&object, Shape *&shape);
 
   View(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);

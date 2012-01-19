@@ -586,9 +586,9 @@ void View::kick_clicked()
   m_printer->Kick();
   printing_changed();
 }
+
 void View::print_clicked()
 {
-  m_printer->gcode    = m_model->gcode;
   m_printer->PrintButton();
   printing_changed();
 }
@@ -850,10 +850,10 @@ void View::setModel(Model *model)
   m_builder->get_widget("progress_box", box);
   m_builder->get_widget("progress_bar", bar);
   m_builder->get_widget("progress_label", label);
-  // FIXME: better have own Progress and delegate to model AND printer
-  //m_progress = new ViewProgress (&m_model->m_progress, box, bar, label);
+  // Create ViewProgress widget and inform model about it
   m_progress = new ViewProgress (box, bar, label);
-  m_model->m_progress = m_progress;
+
+  m_model->SetViewProgress(m_progress);
 
   // Connect / dis-connect button
   m_cnx_view = new ConnectView(m_printer, &m_model->settings);
@@ -894,9 +894,7 @@ void View::setModel(Model *model)
   // FIXME: better have settings here and delegate to model AND printer
   m_model->settings.connect_to_ui (*((Builder *)&m_builder));
 
-  m_printer->settings = m_model->settings;
-  m_printer->progress = m_model->m_progress;
-  m_printer->gcode    = m_model->gcode;
+  m_printer->setModel(model);
 
   showAllWidgets();
 }

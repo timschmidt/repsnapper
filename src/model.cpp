@@ -79,6 +79,11 @@ void Model::SimpleAdvancedToggle()
   cout << _("not yet implemented\n");
 }
 
+void Model::SetViewProgress (ViewProgress *progress)
+{
+  m_progress = progress;
+}
+
 void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
 {
   m_progress->start (_("Converting"), 100.0);
