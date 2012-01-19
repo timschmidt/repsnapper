@@ -112,7 +112,7 @@ enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
 	    ARCCLOCKWISE, ARCCOUNTERCLOCKWISE,  // 8 9
 	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 10 11
 	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 12 13
-	    ABSOLUTEPOSITIONING, INCREMENTALPOSITIONING, // 14 15
+	    ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 14 15
 	    SETCURRENTASHOME, SELECTEXTRUDER, ZMOVE, SETSPEED}; // 16 - 19
 const string MCODES[] = {"G92", "", "",
 			 "G0", "G1", "G1",
@@ -120,7 +120,7 @@ const string MCODES[] = {"G92", "", "",
 			 "", "",
 			 "G21", "", // mm in
 			 "", "",
-			 "", "", // abs inc
+			 "G90", "G91", // abs. rel. pos
 			 "", "T0", "G1", "G1" };
 
 
@@ -130,7 +130,9 @@ class Command
 {
 public:
 	Command(){where.x=where.y=where.z=e=-1.0;f=0.0;};
+	Command(GCodes code, const Vector3d where=Vector3d(0,0,0), double E=0, double F=0);
 	Command(string gcodeline, Vector3d defaultpos);
+	Command(const Command &rhs);
 	GCodes Code;
 	Vector3d where;
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)

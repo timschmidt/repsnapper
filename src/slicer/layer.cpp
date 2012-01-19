@@ -117,6 +117,32 @@ void Layer::SetPolygons(const Matrix4d &T, const Shape shape,
   }
 }
 
+int Layer::addShape(Matrix4d T, const Shape shape, double z, double Optimization, 
+		     double &max_gradient)
+{
+  double hackedZ = z;
+  bool polys_ok = false;
+  vector<Poly> polys;
+  int num_polys=-1;
+  // try to slice all objects until polygons can be made, otherwise hack z
+  while (!polys_ok && hackedZ < z+thickness) {
+    polys.clear();
+    polys_ok=shape.getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
+				  Optimization,
+				  polys, max_gradient);
+    if (polys_ok) {
+      num_polys = polys.size();
+      addPolygons(polys);
+    } else {
+      num_polys=-1;
+      cerr << "hacked Z=" << hackedZ << endl;
+    }
+    hackedZ += Optimization;
+  }
+  return num_polys;
+}
+
+
 void Layer::addPolygons(vector<Poly> polys)
 {
   for(uint i=0;i<polys.size();i++){

@@ -139,6 +139,8 @@ public:
   void Clear();
 
   void addPolygons(vector<Poly> polys);
+  int addShape(Matrix4d T, const Shape shape, double z, double Optimization,
+	       double &max_gradient);
 
   double area() const;
   

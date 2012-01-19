@@ -21,9 +21,11 @@
 
 #include <string>
 #include <giomm/file.h>
-#include <vmmlib/vector3.h>
+#include <vmmlib/vmmlib.h>
 
 //enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
+
+
 
 class Builder;
 class Settings {
@@ -104,6 +106,9 @@ class Settings {
     guint ShellCount;
     bool EnableAcceleration;
     //int ShrinkQuality;
+
+    bool BuildSerial;
+    //float SerialBuildHeight;
 
     float Optimization;
 
@@ -201,6 +206,8 @@ class Settings {
 
   Settings ();
   ~Settings();
+
+  vmml::Matrix4d getBasicTransformation(vmml::Matrix4d T) const;
 
   // sync changed settings with the GUI eg. used post load
   void set_to_gui (Builder &builder);

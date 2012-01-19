@@ -186,6 +186,19 @@ void Model::MakeRaft(GCodeState &state, double &z)
 
 void Model::Slice(double printOffsetZ)
 {
+  
+  // get a linear collection of shapes
+  vector<Shape*> shapes;
+  vector<Matrix4d> transforms;
+  for  (uint o = 0; o< objtree.Objects.size() ; o++){
+    Matrix4d T = 
+      settings.getBasicTransformation(objtree.GetSTLTransformationMatrix(o));
+    for (uint s = 0; s < objtree.Objects[o].shapes.size(); s++)  {
+      shapes.push_back(&objtree.Objects[o].shapes[s]);
+      transforms.push_back(T);
+    }
+  }
+  
   int LayerNr = 0;
 
   // double max_thickness = settings.Hardware.LayerThickness*1.5;
@@ -201,65 +214,77 @@ void Model::Slice(double printOffsetZ)
 
   // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
   // start at z=0, cut off everything below
-  double z = thickness*0.5;// + Min.z;
 
-  double optimization = settings.Slicing.Optimization;
+  double minZ = thickness*0.5;// + Min.z; 
+  double z = minZ;
 
   m_progress->start (_("Slicing"), Max.z);
   for (vector<Layer *>::iterator pIt = layers.begin();
        pIt != layers. end(); pIt++)
     delete *pIt;
   layers.clear();
-  double hackedZ;
-  double hacked_layerthickness = optimization;
-  bool polys_ok;
+
+  double serialheight = 0.;
+  if (settings.Slicing.BuildSerial)
+    // there will be problems with layer handling if objects at a given height
+    serialheight = Max.z; // settings.Slicing.SerialBuildHeight; 
+  
+  uint currentshape = 0;
+
+  double shape_z = z;
+  double max_shape_z = z + serialheight;
+  Layer * layer = new Layer(LayerNr, thickness, skins); 
+  double max_gradient = 0;
+  int new_polys=0;
   while(z < Max.z)
     {
-      // one layer per layer, with all objects
-      Layer * layer = new Layer(LayerNr, thickness, skins); 
-      layer->setZ(z+printOffsetZ); // set to real z
-      //cerr << z+printOffsetZ << endl;
-      m_progress->update(z);
-      // try to slice all objects until polygons can be made, otherwise hack z
-      double max_gradient = 0;
-      for(int o=0;o<(int)objtree.Objects.size();o++) {
-	Matrix4d T = objtree.GetSTLTransformationMatrix(o);
-	Vector3d t = T.getTranslation();
-	t+= Vector3d(settings.Hardware.PrintMargin.x
-		     +settings.Raft.Size*settings.RaftEnable, 
-		     settings.Hardware.PrintMargin.y
-		     +settings.Raft.Size*settings.RaftEnable, 0);
-	T.setTranslation(t);
-#pragma omp for schedule(dynamic)
-	for(int f=0;f < (int)objtree.Objects[o].shapes.size();f++)
-	  {
-	    hackedZ = z;
-	    polys_ok = false;
-	    while (!polys_ok && hackedZ<z+thickness){
-	      // Get a pointer to the object:
-	      Shape* shape = &objtree.Objects[o].shapes[f];
-	      vector<Poly> polys;
-	      // adding points and lines from object to layer:
-	      polys_ok=shape->getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
-					     settings.Slicing.Optimization,
-					     polys, max_gradient);
-	      if (polys_ok) layer->addPolygons(polys);
-	      else cerr << "hacked Z=" << hackedZ << endl;
-	      hackedZ += hacked_layerthickness;
-	    }
+      m_progress->update(z);	
+      shape_z = z; 
+      max_shape_z = min(shape_z + serialheight, Max.z); 
+      while ( currentshape < shapes.size() && shape_z <= max_shape_z ) {
+	// cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape 
+	//      << " of "<< shapes.size()<<endl;
+	layer->setZ(shape_z + printOffsetZ); // set to real z
+	if (z==minZ) LayerNr=0; // these layers will not be handled als bridges etc.
+	new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
+				    shape_z, settings.Slicing.Optimization,
+				    max_gradient);
+	if (shape_z >= max_shape_z) { // next shape, reset z
+	  currentshape++; 
+	  shape_z = z;
+	} else {  // next z, same shape
+	  if (varSlicing) { // higher gradient -> slice thinner with fewer skin divisions
+	    skins = max_skins-(uint)(max_skins* max_gradient);
+	    thickness = skin_thickness*skins;
 	  }
-      }
-      layers.push_back(layer);
-      // higher gradient -> slice thinner with fewer skin divisions
-      if (varSlicing) {
-	skins = max_skins-(uint)(max_skins* max_gradient);
-	assert (skins>0 && skins <=max_skins);
-	thickness = skin_thickness*skins;
+	  shape_z += thickness; 
+	  max_gradient=0;
+	  if (new_polys>0){
+	    layers.push_back(layer);
+	    layer = new Layer(LayerNr++, thickness, skins);
+	  }
+	}
       }
       //thickness = max_thickness-(max_thickness-min_thickness)*max_gradient;
-      z += thickness;
-      LayerNr++;
+      if (currentshape < shapes.size()) { // reached max_shape_z, next shape
+	currentshape++;
+      } else {
+	if (new_polys>0){
+	  if (varSlicing) {
+	    skins = max_skins-(uint)(max_skins* max_gradient);
+	    thickness = skin_thickness*skins;
+	  }
+	  layers.push_back(layer);
+	  layer = new Layer(LayerNr++, thickness, skins);
+	}
+	z = max_shape_z + thickness; 
+	currentshape = 0; // all shapes again
+      }
+      max_gradient=0;
+      //cerr << "    Z="<<z<<endl;
     }
+  delete layer;
+  // shapes.clear();
   //m_progress->stop (_("Done"));
 }
 
@@ -294,8 +319,10 @@ void Model::MakeUncoveredPolygons(bool make_bridges)
       m_progress->update(count + count - i);
       vector<Poly> bridges = GetUncoveredPolygons(layers[i],layers[i-1]);
       //make_bridges = false;
-      layers[i]->addFullPolygons(bridges,make_bridges);
-      if (make_bridges) {
+      // no bridge on marked layers (serial build)
+      bool mbridge = make_bridges && layers[i]->LayerNo != 0; 
+      layers[i]->addFullPolygons(bridges, mbridge);
+      if (mbridge) {
 	vector<Poly> bridges_result = layers[i]->GetBridgePolygons();
 	vector<double> angles = layers[i-1]->getBridgeRotations(bridges_result);
 	layers[i]->setBridgeAngles(angles);
@@ -390,11 +417,13 @@ void Model::MakeSupportPolygons()
   for (int i=count-1; i>0; i--) 
     {
       m_progress->update(count-i);
+      if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i]);
     }
   // shrink a bit
   for (int i=0; i<count; i++) 
     {
+      if (layers[i]->LayerNo == 0) continue;
       double distance = 2*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       m_progress->update(i+count);
       vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());
@@ -562,6 +591,9 @@ void Model::ConvertToGCode()
   // m_progress->set_label (_("GCode"));
   // m_progress->update(8.);
   m_progress->start (_("Making GCode"), count+1);
+  
+  state.AppendCommand(ABSOLUTEPOSITIONING, false, "Absolute Pos");
+
   for (uint p=0;p<count;p++){
     m_progress->update(p);
     //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
