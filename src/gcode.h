@@ -185,7 +185,7 @@ public:
 
   double GetTimeEstimation() const;
 
-  vector<unsigned long>layerchanges;
+  vector<unsigned long> layerchanges;
   int getLayerNo(const double z) const;
   int getLayerNo(const unsigned long commandno) const;
   

@@ -384,35 +384,49 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting)
 	double	Distance = 0.0;
 	Vector3d pos(0,0,0);
 	Vector3d defaultpos(-1,-1,-1);
-	uint start, end;
+	uint start = 0, end = 0;
+        uint n_cmds = commands.size();
 
-	if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
-	  {
+	if (layerchanges.size()>0) {
+            // have recorded layerchange indices -> draw whole layers
 	    if (layer>-1) {
-	      if (layer == 0)
-		start = 0;
-	      else
+	      if (layer != 0)
 		start = layerchanges[layer];
+
 	      if (layer < (int)layerchanges.size()-1)
 		end = layerchanges[layer+1];
 	      else 
 		end = commands.size();
 	    }
 	    else {
-	      uint sind = (uint)(settings.Display.GCodeDrawStart*float((layerchanges.size())));
-	      start = layerchanges[sind];
-	      uint eind = (uint)(settings.Display.GCodeDrawEnd*float((layerchanges.size())));
+              int n_changes = layerchanges.size();
+	      int sind = 0;
+	      int eind = 0;
+
+              if (n_changes > 0) {
+                sind = (uint)(settings.Display.GCodeDrawStart*(n_changes-1));
+	        eind = (uint)(settings.Display.GCodeDrawEnd*(n_changes-1));
+              }
 	      if (sind>=eind) {
-		eind=sind+1;
-	      }
-	      end =  layerchanges[eind];
+		eind = MIN(sind+1, n_changes-1);
+              }
+
+              sind = CLAMP(sind, 0, n_changes-1);
+              eind = CLAMP(eind, 0, n_changes-1);
+
+	      start = layerchanges[sind];
+	      end = layerchanges[eind];
 	    }
-	  }
+	}
 	else {
-	  start = (uint)(settings.Display.GCodeDrawStart*float((commands.size())));
-	  end = (uint)(settings.Display.GCodeDrawEnd*float(commands.size()));
+          if (n_cmds > 0) {
+	    start = (uint)(settings.Display.GCodeDrawStart*(n_cmds));
+	    end = (uint)(settings.Display.GCodeDrawEnd*(n_cmds));
+          }
 	}
 
+	start = CLAMP (start, 0, n_cmds);
+	end = CLAMP (end, 0, n_cmds);
 
 	double LastE=0.0;
 	bool extruderon = false;
@@ -421,16 +435,17 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting)
         glDisable(GL_LIGHTING);
 
 	// get starting point 
-	if (start>0)
-	  for(uint i=start;i<commands.size() && i < end ;i++)
+	if (start>0) {
+	  for(uint i=start; i < end ;i++)
 	    {
-	      while (commands[i].where == defaultpos && i<commands.size()-1) 
+	      while (commands[i].where == defaultpos && i < n_cmds-1)
 		i++;
 	      pos = commands[i].where;
 	      break;
 	    }
+        }
 	
-	for(uint i=start;i<commands.size() && i < end ;i++)
+	for(uint i=start; i < end; i++)
 	{
 		switch(commands[i].Code)
 		{
