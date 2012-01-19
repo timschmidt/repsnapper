@@ -57,6 +57,9 @@ class View : public Gtk::Window
   void add_statusbar_msg(Gtk::Widget *widget, const char *message);
   void update_scale_value();
   void scale_object();
+  void scale_object_x();
+  void scale_object_y();
+  void scale_object_z();
 
   Printer *printer;
 

@@ -245,7 +245,7 @@ void Model::Slice(double printOffsetZ)
 	// cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape 
 	//      << " of "<< shapes.size()<<endl;
 	layer->setZ(shape_z + printOffsetZ); // set to real z
-	if (z==minZ) LayerNr=0; // these layers will not be handled als bridges etc.
+	if (shape_z==minZ) LayerNr = 0; // these layers will not be handled als bridges etc.
 	new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
 				    shape_z, settings.Slicing.Optimization,
 				    max_gradient);
