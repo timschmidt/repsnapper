@@ -725,6 +725,28 @@ View::View(BaseObjectType* cobject,
       (sigc::mem_fun(*this, &View::update_scale_value));
   scale_value->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object));
+  m_builder->get_widget("scale_x", scale_value);
+  scale_value->set_range(0.01, 10.0);
+  scale_value->set_value(1.0);
+  m_objtree->get_selection()->signal_changed().connect
+      (sigc::mem_fun(*this, &View::update_scale_value));
+  scale_value->signal_value_changed().connect
+      (sigc::mem_fun(*this, &View::scale_object_x));
+  m_builder->get_widget("scale_y", scale_value);
+  scale_value->set_range(0.01, 10.0);
+  scale_value->set_value(1.0);
+  m_objtree->get_selection()->signal_changed().connect
+      (sigc::mem_fun(*this, &View::update_scale_value));
+  scale_value->signal_value_changed().connect
+      (sigc::mem_fun(*this, &View::scale_object_y));
+  m_builder->get_widget("scale_z", scale_value);
+  scale_value->set_range(0.01, 10.0);
+  scale_value->set_value(1.0);
+  m_objtree->get_selection()->signal_changed().connect
+      (sigc::mem_fun(*this, &View::update_scale_value));
+  scale_value->signal_value_changed().connect
+      (sigc::mem_fun(*this, &View::scale_object_z));
+
 
   //add_statusbar_msg("m_scale_event_box", _("Scale the selected object"));
 
@@ -951,11 +973,46 @@ void View::scale_object()
   Shape *shape;
   TreeObject *object;
   get_selected_stl (object, shape);
+  
+  double scale=1;
 
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("m_scale_value", scale_value);
-
-  m_model->ScaleObject (shape, object, scale_value->get_value());
+  scale = scale_value->get_value();
+  m_model->ScaleObject (shape, object, scale);
+}
+void View::scale_object_x()
+{
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
+  double scale=1;
+  Gtk::SpinButton *scale_value;
+  m_builder->get_widget("scale_x", scale_value);
+  scale = scale_value->get_value();
+  m_model->ScaleObjectX(shape, object, scale);
+}
+void View::scale_object_y()
+{
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
+  double scale=1;
+  Gtk::SpinButton *scale_value;
+  m_builder->get_widget("scale_y", scale_value);
+  scale = scale_value->get_value();
+  m_model->ScaleObjectY(shape, object,scale);
+}
+void View::scale_object_z()
+{
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
+  double scale=1;
+  Gtk::SpinButton *scale_value;
+  m_builder->get_widget("scale_z", scale_value);
+  scale = scale_value->get_value();
+  m_model->ScaleObjectZ(shape, object, scale);
 }
 
 /* Updates the scale value when a new STL is selected,
@@ -971,8 +1028,13 @@ void View::update_scale_value()
 
   Gtk::SpinButton *scale_sb;
   m_builder->get_widget("m_scale_value", scale_sb);
-
   scale_sb->set_value(shape->getScaleFactor());
+  m_builder->get_widget("scale_x", scale_sb);
+  scale_sb->set_value(shape->getScaleFactorX());
+  m_builder->get_widget("scale_y", scale_sb);
+  scale_sb->set_value(shape->getScaleFactorY());
+  m_builder->get_widget("scale_z", scale_sb);
+  scale_sb->set_value(shape->getScaleFactorZ());
 }
 
 // GPL bits below from model.cpp ...

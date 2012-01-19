@@ -63,6 +63,9 @@ public:
 	void identity(){transform=Matrix4d::IDENTITY;}
 	Matrix4d transform;
 	void scale(double x);
+	void scale_x(double x);
+	void scale_y(double x);
+	void scale_z(double x);
 	void move(Vector3d delta);
 	void rotate(Vector3d center, double x, double y, double z);
 	void rotate(Vector3d axis, double angle);
@@ -128,7 +131,13 @@ public:
 	// Rotation for manual rotate and used by OptimizeRotation:
 	void Rotate(Vector3d axis, double angle);  
     void Scale(double scale_factor);
+    void ScaleX(double scale_factor);
+    void ScaleY(double scale_factor);
+    void ScaleZ(double scale_factor);
     double getScaleFactor(){ return scale_factor; };
+    double getScaleFactorX(){ return scale_factor_x; };
+    double getScaleFactorY(){ return scale_factor_y; };
+    double getScaleFactorZ(){ return scale_factor_z; };
     void PlaceOnPlatform();
 
 	Vector3d Min, Max, Center;
@@ -150,7 +159,7 @@ public:
 
 
 private:
-    double scale_factor;
+    double scale_factor,scale_factor_x,scale_factor_y,scale_factor_z;
 
     vector<Triangle>  triangles;
     vector<Polygon2d>  polygons;  // surface polygons instead of triangles

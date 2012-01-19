@@ -33,7 +33,24 @@ void Transform3D::move(Vector3d delta)
 
 void Transform3D::scale(double x)
 {
+  //scale(x,x,x);
   transform.m[3][3] = 1/x;
+}
+
+void Transform3D::scale_x(double x)
+{
+  cerr << "scalex" << x << endl;
+  transform.m[0][0] = x;
+}
+  void Transform3D::scale_y(double x)
+{
+  cerr << "scaley" << x << endl;
+  transform.m[1][1] = x;
+}
+void Transform3D::scale_z(double x)
+{
+  cerr << "scalez" << x << endl;
+  transform.m[2][2] = x;
 }
 
 void Transform3D::rotate(Vector3d axis, double angle)
@@ -164,6 +181,7 @@ int Shape::loadBinarySTL(string filename) {
     CalcBBox();
     CenterAroundXY();
     scale_factor = 1.0;
+    scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     cout << "Shape has volume " << volume() << " mm^3"<<endl;
     return 0;
 }
@@ -257,6 +275,7 @@ int Shape::loadASCIIVRML(std::string filename) {
 #endif
     CenterAroundXY();
     scale_factor = 1.0;
+    scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     return 0;
 }
 
@@ -382,6 +401,7 @@ int Shape::parseASCIISTL(istream *text) {
     // cerr << triangles.size() << endl;
     // cerr << Center << " - " << Min << " - " << Max <<  endl;
     scale_factor = 1.0;
+    scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     cout << "Shape has volume " << volume() << " mm^3"<<endl;
     return 0;
 }
@@ -446,6 +466,7 @@ int Shape::load(string filename)
 
     //cout << getSTLsolid(0) << endl;
     scale_factor = 1.0;
+    scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     return 0;
 }
 
@@ -481,14 +502,35 @@ string Shape::getSTLsolid() const
 }
 
 
-
 void Shape::Scale(double in_scale_factor)
 {
   transform3D.scale(in_scale_factor);
-  CalcBBox();
   scale_factor = in_scale_factor;
-  return;
+  CalcBBox();
+}
 
+void Shape::ScaleX(double x)
+{
+  transform3D.scale_x(x);
+  scale_factor_x = x;
+  CalcBBox();
+  return;
+}
+void Shape::ScaleY(double x)
+{
+  transform3D.scale_y(x);
+  scale_factor_y = x;
+  CalcBBox();
+  return;
+}
+void Shape::ScaleZ(double x)
+{
+  transform3D.scale_z(x);
+  scale_factor_z = x;
+  CalcBBox();
+  return;
+}
+#if 0
     for(size_t i = 0; i < triangles.size(); i++)
     {
         for(int j = 0; j < 3; j++)
@@ -512,7 +554,8 @@ void Shape::Scale(double in_scale_factor)
 
     /* Save current scale_factor */
     scale_factor = in_scale_factor;
-}
+#endif
+
 
 void Shape::CalcBBox()
 {

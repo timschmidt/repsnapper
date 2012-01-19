@@ -294,7 +294,7 @@ string timeleft_str(long seconds) {
   int hrs = (int)seconds/3600;
   if (hrs>0) {
     ostr << hrs << _(" hr");
-    if (hrs>1) cerr << _("s");
+    if (hrs>1) ostr << _("s");
     ostr << ", ";
     seconds -= 3600*hrs;
   }

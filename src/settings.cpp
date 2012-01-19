@@ -261,7 +261,7 @@ static struct {
   { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
   { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },
   { "Slicing.Skins", 1, 5, 1, 1 },
-  { "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
+  //{ "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
 
   // Hardware
   { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },
@@ -290,6 +290,9 @@ static struct {
   // Display pane
   { "Display.TempUpdateSpeed", 0.1, 10.0, 0.5, 1.0 },
   { "m_scale_value", 0.0001, 1000.0, 0.01, 0.1 },
+  { "scale_x", 0.0001, 1000.0, 0.01, 0.1 },
+  { "scale_y", 0.0001, 1000.0, 0.01, 0.1 },
+  { "scale_z", 0.0001, 1000.0, 0.01, 0.1 },
 };
 
 // Add any [HV]Ranges to this array:

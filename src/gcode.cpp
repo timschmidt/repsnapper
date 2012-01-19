@@ -160,6 +160,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
 
   // going down? -> split xy and z movements
   Vector3d delta = where-LastPos;
+  double retractE = 2; //mm
   if ( (where.z < 0 || delta.z < 0) && (delta.x!=0 || delta.y!=0) ) { 
     Command xycommand(*this); // copy
     xycommand.comment = comment +  _(" xy part");
@@ -168,10 +169,16 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
     if (where.z < 0) { // z<0 cannot be absolute -> positions are relative
       xycommand.where.z = 0.; 
       zcommand.where.x = zcommand.where.y = 0.; // this command will be z-only
-      zcommand.e = 0; // all extrusion in xy
     } else {
       xycommand.where.z = LastPos.z;
-      zcommand.e = lastE;
+    }
+    if (incrementalEcode) {    // retract filament at xy move
+      xycommand.e = lastE-retractE;
+      zcommand.e = lastE-retractE;
+    }
+    else {
+      xycommand.e = -retractE; // retract filament at xy move
+      zcommand.e = 0; // all extrusion in xy
     }
     cerr << "split xy and z commands delta=" << delta <<endl;
     // cerr << info() << endl;

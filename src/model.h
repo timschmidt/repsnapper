@@ -74,6 +74,9 @@ public:
 
 	void OptimizeRotation(Shape *shape, TreeObject *object);
 	void ScaleObject(Shape *shape, TreeObject *object, double scale);
+	void ScaleObjectX(Shape *shape, TreeObject *object, double scale);
+	void ScaleObjectY(Shape *shape, TreeObject *object, double scale);
+	void ScaleObjectZ(Shape *shape, TreeObject *object, double scale);
 	void RotateObject(Shape *shape, TreeObject *object, Vector4d rotate);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 	void InvertNormals(Shape *shape, TreeObject *object);
