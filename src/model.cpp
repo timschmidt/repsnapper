@@ -36,6 +36,7 @@
 #include "infill.h"
 
 Model::Model() :
+  currentprintingline(0),
   settings(),
   Min(), Max(),
   errlog (Gtk::TextBuffer::create()),
