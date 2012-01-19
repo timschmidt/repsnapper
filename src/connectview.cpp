@@ -85,7 +85,7 @@ void ConnectView::signal_entry_changed()
 bool ConnectView::find_ports() {
   m_combo.clear();
 
-  m_combo.append_text(m_settings->Hardware.PortName);
+  m_combo.append(m_settings->Hardware.PortName);
 
   char **ports = rr_enumerate_ports();
   if (ports == NULL) {
@@ -93,7 +93,7 @@ bool ConnectView::find_ports() {
   }
 
   for(size_t i = 0; ports[i] != NULL; ++i) {
-    m_combo.append_text(ports[i]);
+    m_combo.append(ports[i]);
     free(ports[i]);
   }
 
