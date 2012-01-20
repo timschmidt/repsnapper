@@ -413,9 +413,10 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting)
 
               sind = CLAMP(sind, 0, n_changes-1);
               eind = CLAMP(eind, 0, n_changes-1);
-
+	      
 	      start = layerchanges[sind];
 	      end = layerchanges[eind];
+	      if (sind == n_changes-1) end = commands.size(); // get last layer
 	    }
 	}
 	else {
