@@ -307,12 +307,13 @@ void Infill::getLines(vector<Vector3d> &lines) const
     }
 }
 
-void Infill::printinfo() const
+string Infill::info() const
 { 
-  cout << "Infill " << name 
+  ostringstream ostr;
+  ostr << "Infill " << name 
        << ": extrf=" << extrusionfactor 
        << ", polygons: " << infillpolys.size() 
-       << ", vertices: "<< infillvertices.size()
-       <<endl;
+       << ", vertices: "<< infillvertices.size();
+  return ostr.str();
 }
 

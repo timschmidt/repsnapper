@@ -98,7 +98,7 @@ class Infill
   
   void clear();
   uint size() const {return infillpolys.size();};
-  void printinfo() const;
+  string info() const;
 };
 
 
