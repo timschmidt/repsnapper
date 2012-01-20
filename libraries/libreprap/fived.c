@@ -16,12 +16,14 @@ float_reply (rr_dev dev, char **i, rr_reply type)
 int
 fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
 {
-  if (!strncasecmp ("ok", reply, 2)) {
+  uint okoffset = 2;
+  if (reply[1]==':')  okoffset = 0; // a single T/B message (waiting for warm up (M109))
+  if (okoffset==0 || !strncasecmp ("ok", reply, 2)) {
     rr_dev_handle_ok (dev);
 
     /* Parse values */
     char *i;
-    for (i = (char*)reply + 2; i < reply + nbytes; ++i) {
+    for (i = (char*)reply + okoffset; i < reply + nbytes; ++i) {
       if (isspace (*i))
 	continue;
       switch (toupper (*i)) {
