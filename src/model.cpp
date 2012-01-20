@@ -408,21 +408,6 @@ void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
   CalcBoundingBoxAndCenter();
 }
 
-// void Model::ScaleObject(Shape *shape, TreeObject *object,
-// 			 double scale_x, double scale_y, double scale_z)
-// {
-//   if (shape)
-//     shape->Scale(scale_x,scale_y,scale_z);
-//   else if (object)
-//     for (uint s = 0;s<object->shapes.size(); s++) {
-//       double xfact = object->shapes[s].getScaleFactorX();
-//       double yfact = object->shapes[s].getScaleFactorY();
-//       double zfact = object->shapes[s].getScaleFactorZ();
-//       object->shapes[s].Scale(xfact*scale_x,yfact*scale_y,zfact*scale_z);
-//     }
-//   else return;
-//   CalcBoundingBoxAndCenter();
-// }
 
 void Model::RotateObject(Shape *shape, TreeObject *object, Vector4d rotate)
 {
