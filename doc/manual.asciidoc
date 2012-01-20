@@ -4,7 +4,7 @@ Welcome to the RepSnapper Manual, although currently a work in progress this gui
 
 Contact Info
 
-    * Irc channel: #repsnapper at irc://chat.freenode.net
+    * Irc channel: #repsnapper at irc://irc.freenode.net
 
 Timothy Schmidt Version
 
