@@ -678,7 +678,7 @@ void Model::drawLayers(Vector3d offset) const
   vector<int> altInfillLayers;
   settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
   
-  Layer* layer;
+  Layer* layer=NULL;
   if (have_layers) 
     glTranslatef(-offset.x, -offset.y, -offset.z);
 
@@ -731,6 +731,7 @@ void Model::drawLayers(Vector3d offset) const
 		infilldist = infillDistance;
 	      layer->CalcInfill(settings.Slicing.NormalFilltype,
 				settings.Slicing.FullFilltype,
+				settings.Slicing.SupportFilltype,
 				infillDistance, fullInfillDistance,
 				settings.Slicing.InfillRotation,
 				settings.Slicing.InfillRotationPrLayer, 
@@ -754,4 +755,5 @@ void Model::drawLayers(Vector3d offset) const
       z+=zStep;
     }// while
 }
+
 

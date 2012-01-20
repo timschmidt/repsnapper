@@ -53,8 +53,8 @@ class View : public Gtk::Window
   void kick_clicked();
   void print_clicked();
   void continue_clicked();
-  void add_statusbar_msg(const char *name, const char *message);
-  void add_statusbar_msg(Gtk::Widget *widget, const char *message);
+  /* void add_statusbar_msg(const char *name, const char *message); */
+  /* void add_statusbar_msg(Gtk::Widget *widget, const char *message); */
   void update_scale_value();
   void scale_object();
   void scale_object_x();
@@ -117,7 +117,7 @@ class View : public Gtk::Window
   void setModel (Model *model);
   void showAllWidgets();
 
-  bool updateStatusBar(GdkEventCrossing *event, Glib::ustring message);
+  bool statusBarMessage(Glib::ustring message);
 
  public:
   Model *get_model() { return m_model; }

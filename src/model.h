@@ -47,6 +47,7 @@ class Model
 public:
 
 	ViewProgress *m_progress;
+	Gtk::Statusbar *statusbar;
 
 	// Something in the rfo changed
 	sigc::signal< void > signal_tree_changed() { return m_signal_tree_changed; }
@@ -54,7 +55,6 @@ public:
 
 	Model();
 	~Model();
-	void progess_bar_start (const char *label, double max);
 
 	void SimpleAdvancedToggle();
 	void SaveConfig(Glib::RefPtr<Gio::File> file);

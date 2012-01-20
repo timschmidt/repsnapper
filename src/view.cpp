@@ -325,9 +325,9 @@ public:
             (sigc::bind(sigc::mem_fun(*this, &TranslationSpinRow::spin_value_changed), (int)i));
 
         /* Add statusbar message */
-        stringstream oss;
-        oss << "Move object in " << axis_names[i] << "-direction (mm)";
-        m_view->add_statusbar_msg(m_xyz[i], oss.str().c_str());
+        // stringstream oss;
+        // oss << "Move object in " << axis_names[i] << "-direction (mm)";
+        // m_view->add_statusbar_msg(m_xyz[i], oss.str().c_str());
     }
     selection_changed();
     m_box->show_all();
@@ -859,6 +859,11 @@ void View::setModel(Model *model)
   m_progress = new ViewProgress (box, bar, label);
   m_model->m_progress = m_progress;
 
+  Gtk::Statusbar *sbar = NULL;
+  m_builder->get_widget("statusbar", sbar);
+  m_model->statusbar = sbar;
+  
+
   // Connect / dis-connect button
   m_cnx_view = new ConnectView(m_model, printer, &m_model->settings);
   Gtk::Box *connect_box = NULL;
@@ -935,36 +940,36 @@ void View::duplicate_selected_stl()
   queue_draw();
 }
 
-// Given a widget by label, adds a statusbar message on rollover
-void View::add_statusbar_msg(const char *name, const char *msg)
-{
-  Gtk::Widget *widget = NULL;
-  m_builder->get_widget (name, widget);
-  add_statusbar_msg (widget, msg);
-}
+// // Given a widget by label, adds a statusbar message on rollover
+// void View::add_statusbar_msg(const char *name, const char *msg)
+// {
+//   Gtk::Widget *widget = NULL;
+//   m_builder->get_widget (name, widget);
+//   add_statusbar_msg (widget, msg);
+// }
 
-// Given a widget by pointer reference, adds a statusbar message on rollover
-void View::add_statusbar_msg(Gtk::Widget *widget, const char *msg)
-{
-  widget->signal_enter_notify_event().connect
-      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), msg));
-  widget->signal_leave_notify_event().connect
-      (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), ""));
-}
+// // Given a widget by pointer reference, adds a statusbar message on rollover
+// void View::add_statusbar_msg(Gtk::Widget *widget, const char *msg)
+// {
+//   widget->signal_enter_notify_event().connect
+//       (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), msg));
+//   widget->signal_leave_notify_event().connect
+//       (sigc::bind<Glib::ustring>(sigc::mem_fun(*this, &View::updateStatusBar), ""));
+// }
 
 /* Handler for widget rollover. Displays a message in the window status bar */
-bool View::updateStatusBar(GdkEventCrossing *event, Glib::ustring message)
+bool View::statusBarMessage(Glib::ustring message)
 {
     Gtk::Statusbar *statusbar;
     m_builder->get_widget("statusbar", statusbar);
-    if(event->type == GDK_ENTER_NOTIFY) {
-        statusbar->push(message);
-    } else { // event->type == GDK_LEAVE_NOTIFY
-        /* 2 pops because sometimes a previous leave event may have be missed
-         * leaving a message on the statusbar stack */
-        statusbar->pop();
-        statusbar->pop();
-    }
+    // if(event->type == GDK_ENTER_NOTIFY) {
+    statusbar->push(message);
+    // } else { // event->type == GDK_LEAVE_NOTIFY
+    //     /* 2 pops because sometimes a previous leave event may have be missed
+    //      * leaving a message on the statusbar stack */
+    //     statusbar->pop();
+    //     statusbar->pop();
+    // }
     return false;
 }
 

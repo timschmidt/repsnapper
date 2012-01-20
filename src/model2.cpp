@@ -417,7 +417,7 @@ void Model::MakeSupportPolygons()
   for (int i=count-1; i>0; i--) 
     {
       m_progress->update(count-i);
-      if (layers[i]->LayerNo == 0) continue;
+      if (layers[i]->LayerNo == 0 || layers[i-1]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i]);
     }
   // shrink a bit
@@ -517,6 +517,7 @@ void Model::CalcInfill()
 
       layers[i]->CalcInfill(settings.Slicing.NormalFilltype,
 			    settings.Slicing.FullFilltype,
+			    settings.Slicing.SupportFilltype,
 			    infilldist, fullInfillDistance,
 			    settings.Slicing.InfillRotation,
 			    settings.Slicing.InfillRotationPrLayer, 
@@ -605,9 +606,10 @@ void Model::ConvertToGCode()
   int m = ((int)state.timeused%3600)/60;
   int s = ((int)state.timeused-3600*h-60*m);
   std::ostringstream ostr;
-  ostr << " Time to Print Estimation: " << h <<"h "<<m <<"m " <<s <<"s" ;
-  cout << ostr.str() << endl;
-  // ??? add this to statusbar or where else?
+  ostr << _("Time Estimation: ") ;
+  if (h>0) ostr << h <<_("h") ;
+  ostr <<m <<_("m") <<s <<_("s") ;
+  statusbar->push(ostr.str());//cout << ostr.str() << endl;
 
   double AntioozeDistance = settings.Slicing.AntioozeDistance;
   if (!settings.Slicing.EnableAntiooze)
@@ -626,17 +628,18 @@ void Model::ConvertToGCode()
   is_calculating=false;
 
   double time = gcode.GetTimeEstimation();
-  int hr = (int)time/3600;
-  int min = ((int)time%3600)/60;
-  int sec = ((int)time-3600*hr-60*min);
-  cout << "GCode Time Estimation "<< hr <<"h "<<min <<"m " <<sec <<"s" <<endl; 
+  h = (int)time/3600;
+  m = ((int)time%3600)/60;
+  s = ((int)time-3600*h-60*m);
+  ostr.clear();
+  ostr << " -- GCode Estimation: ";
+  if (h>0) ostr << h <<_("h");
+  ostr<< m <<_("m") << s <<_("s") ;
   double totlength = gcode.commands.back().e;
-  cout << "    total mm extruded "<< totlength  << endl; 
+  ostr << " - total extruded: "<< totlength << "mm";
   double ccm = totlength*settings.Hardware.FilamentDiameter*settings.Hardware.FilamentDiameter/4.*M_PI/1000 ;
-  cout << "    = " << ccm << " cm^3 " << endl;
-  cout << "    (ABS: ~" << ccm*1.08 << " g, PLA: ~" << ccm*1.25 << " g"<< endl; 
-
-  //??? to statusbar or where else?
-
+  ostr << " = " << ccm << "cm^3 ";
+  ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)"; 
+  statusbar->push(ostr.str());
 }
 
