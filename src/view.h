@@ -61,7 +61,7 @@ class View : public Gtk::Window
   void scale_object_y();
   void scale_object_z();
 
-  Printer *printer;
+  Printer *m_printer;
 
   Glib::RefPtr<Gtk::Builder> m_builder;
   Model *m_model;
@@ -121,10 +121,11 @@ class View : public Gtk::Window
 
  public:
   Model *get_model() { return m_model; }
+  ViewProgress *get_view_progress() { return m_progress; }
   bool get_selected_stl(TreeObject *&object, Shape *&shape);
 
   View(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
-  ~View();
+  virtual ~View();
   static View *create (Model *model);
 
   void progess_bar_start (const char *label, double max);

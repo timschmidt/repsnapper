@@ -47,7 +47,6 @@ typedef struct rr_dev_t *rr_dev;
 
 class Printer
 {
-
 	bool printing;
 
 	unsigned long unconfirmed_lines;
@@ -63,15 +62,11 @@ class Printer
 	time_t print_started_time;
 	double total_time_to_print ;
 
-	
-	View * view;
-
+	View *m_view;
+        Model *m_model;
  public:
 	Printer(View *view);
 	~Printer();
-
-	Settings settings;
-	ViewProgress *progress;
 
 	bool inhibit_print;
 	sigc::signal< void > signal_inhibit_changed;
@@ -94,6 +89,8 @@ class Printer
 	void update_temp_poll_interval();
 
 	bool IsPrinting() { return printing; }
+
+        void setModel (Model *model);
 
 	// Communication
 	//void SetGcode(GCode gcode);
@@ -130,7 +127,6 @@ class Printer
 
 	Glib::RefPtr<Gtk::TextBuffer> commlog;
 
-	GCode gcode;
  private:
 	bool handle_dev_fd (Glib::IOCondition cond);
 
@@ -144,10 +140,17 @@ class Printer
 	static void RR_CALL rr_log_fn     (rr_dev dev, int type, const char *buffer,
 					   size_t len, void *closure);
 
+        void handle_rr_reply(rr_dev dev, int type, float value,
+            void *expansion);
+	void handle_rr_more (rr_dev dev);
+	void handle_rr_error (rr_dev dev, int error_code,
+	    const char *msg, size_t len);
+	void handle_rr_wait_wr (rr_dev dev, int wait);
+	void handle_rr_log (rr_dev dev, int type, const char *buffer,
+            size_t len);
+
 	GCodeIter *gcode_iter;
-
 };
-
 
 
 // Exception safe guard to stop people printing

@@ -30,6 +30,8 @@
 #include "printer.h"
 #include "view.h"
 
+#include "model.h"
+
 // everything taken out of model.cpp
 
 Printer::Printer(View *view) :
@@ -46,9 +48,8 @@ Printer::Printer(View *view) :
 			    rr_error_fn, cl,
 			    rr_wait_wr_fn, cl,
 			    rr_log_fn, cl);
-  update_temp_poll_interval ();
   gcode_iter = NULL;
-  this->view = view;
+  m_view = view;
 }
 
 Printer::~Printer()
@@ -70,12 +71,13 @@ void Printer::error (const char *message, const char *secondary)
 
 void Printer::update_core_settings ()
 {
-  rr_dev_enable_debugging(device, settings.Display.CommsDebug);
+  if (m_model)
+    rr_dev_enable_debugging(device, m_model->settings.Display.CommsDebug);
 }
 
 bool Printer::temp_timeout_cb()
 {
-  if (IsConnected() && settings.Misc.TempReadingEnabled)
+  if (IsConnected() && m_model && m_model->settings.Misc.TempReadingEnabled)
     SendNow("M105");
   update_temp_poll_interval();
   return true;
@@ -83,18 +85,26 @@ bool Printer::temp_timeout_cb()
 
 void Printer::update_temp_poll_interval()
 {
-//  cerr << "set poll interval ms: " << settings.Display.TempUpdateSpeed * 1000 << "\n";
   temp_timeout.disconnect();
-  temp_timeout = Glib::signal_timeout().connect(sigc::mem_fun(*this, &Printer::temp_timeout_cb), settings.Display.TempUpdateSpeed * 1000);
+
+  if (m_model) {
+    unsigned int timeout = m_model->settings.Display.TempUpdateSpeed;
+    temp_timeout = Glib::signal_timeout().connect_seconds(
+        sigc::mem_fun(*this, &Printer::temp_timeout_cb), timeout);
+  }
 }
 
+void Printer::setModel(Model *model)
+{
+  m_model = model;
+
+  update_temp_poll_interval();
+}
 
 void Printer::Restart()
 {
   Print();
 }
-
-
 
 void Printer::ContinuePauseButton()
 {
@@ -139,14 +149,19 @@ bool Printer::IsConnected()
 void Printer::serial_try_connect (bool connect)
 {
   int result;
+
+  assert(m_model != NULL); // Need a model first
+
   if (connect) {
     signal_serial_state_changed.emit (SERIAL_CONNECTING);
-    //cerr << "connect" << settings.Hardware.PortName.c_str() <<  " at " << settings.Hardware.SerialSpeed << endl;
-    result = rr_dev_open (device, settings.Hardware.PortName.c_str(),
-			  settings.Hardware.SerialSpeed);
+    result = rr_dev_open (device,
+                 m_model->settings.Hardware.PortName.c_str(),
+		 m_model->settings.Hardware.SerialSpeed);
+
     if(result < 0) {
       signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
-      error (_("Failed to connect to device"), _("an error occured while connecting"));
+      error (_("Failed to connect to device"),
+             _("an error occured while connecting"));
     } else {
       rr_dev_reset (device);
       signal_serial_state_changed.emit (SERIAL_CONNECTED);
@@ -183,6 +198,8 @@ void Printer::SimplePrint()
 
 void Printer::Print()
 {
+  assert(m_model != NULL);
+
   if (rr_dev_fd (device) < 0) {
     alert (_("Not connected to printer.\nCannot start printing"));
     return;
@@ -191,17 +208,23 @@ void Printer::Print()
   rr_dev_reset (device);
 
   delete (gcode_iter);
-  gcode_iter = gcode.get_iter();
+  gcode_iter = m_model->gcode.get_iter();
   gcode_iter->time_started = time(NULL);
   set_printing (true);
-  progress->start (_("Printing"), gcode.commands.size());
+  m_view->get_view_progress()->start (_("Printing"),
+    m_model->gcode.commands.size());
   rr_dev_set_paused (device, RR_PRIO_NORMAL, 0);
 }
 
-void Printer::RunExtruder (double extruder_speed, double extruder_length, bool reverse)
+void
+Printer::RunExtruder (double extruder_speed, double extruder_length,
+    bool reverse)
 {
   static bool extruderIsRunning = false;
-  if (settings.Slicing.Use3DGcode) {
+
+  assert(m_model != NULL); // Need a model first
+
+  if (m_model->settings.Slicing.Use3DGcode) {
     if (extruderIsRunning)
       SendNow("M103");
     else
@@ -273,15 +296,20 @@ void RR_CALL Printer::rr_reply_fn (rr_dev dev, int type, float value,
 				 void *expansion, void *closure)
 {
   Printer *printer = static_cast<Printer *>(closure);
+  printer->handle_rr_reply(dev, type, value, expansion);
+}
 
+void
+Printer::handle_rr_reply(rr_dev dev, int type, float value, void *expansion)
+{
   switch (type) {
   case RR_NOZZLE_TEMP:
-    printer->temps[TEMP_NOZZLE] = value;
-    printer->signal_temp_changed.emit();
+    temps[TEMP_NOZZLE] = value;
+    signal_temp_changed.emit();
     break;
   case RR_BED_TEMP:
-    printer->temps[TEMP_BED] = value;
-    printer->signal_temp_changed.emit();
+    temps[TEMP_BED] = value;
+    signal_temp_changed.emit();
     break;
   default:
     break;
@@ -308,30 +336,53 @@ string timeleft_str(long seconds) {
 void RR_CALL Printer::rr_more_fn (rr_dev dev, void *closure)
 {
   Printer *printer = static_cast<Printer*>(closure);
+// <<<<<<< HEAD
  
-  if (printer->printing && printer->gcode_iter) {
-    int donelines = printer->gcode_iter->m_cur_line - rr_dev_buffered_lines (printer->device);
-    time_t time_used = time(NULL) - printer->gcode_iter->time_started;
-    int tot_lines = printer->gcode_iter->m_line_count;
+  // if (printer->printing && printer->gcode_iter) {
+  //   int donelines = printer->gcode_iter->m_cur_line - rr_dev_buffered_lines (printer->device);
+  //   time_t time_used = time(NULL) - printer->gcode_iter->time_started;
+  //   int tot_lines = printer->gcode_iter->m_line_count;
+  //   if (tot_lines>0) {
+  //     double done = 1.*donelines/tot_lines;
+  //     double timeleft = time_used/done - time_used;
+  //     printer->progress->set_label(timeleft_str(timeleft));
+  //     printer->progress->update (donelines);
+  //   }
+  //   if (time_used%3==0) printer->view->showCurrentPrinting(donelines);
+  //   while (rr_dev_write_more (printer->device) && !printer->gcode_iter->finished()) {
+  //     std::string line = printer->gcode_iter->next_line();
+  //     if (line.length() > 0 && line[0] != ';') {
+  // 	rr_dev_enqueue_cmd (printer->device, RR_PRIO_NORMAL, line.data(), line.size());
+// =======
+  printer->handle_rr_more(dev);
+}
+
+void Printer::handle_rr_more (rr_dev dev)
+{
+  if (printing && gcode_iter) {
+    int donelines = gcode_iter->m_cur_line - rr_dev_buffered_lines (device);
+    time_t time_used = time(NULL) - gcode_iter->time_started;
+    int tot_lines = gcode_iter->m_line_count;
     if (tot_lines>0) {
       double done = 1.*donelines/tot_lines;
       double timeleft = time_used/done - time_used;
-      printer->progress->set_label(timeleft_str(timeleft));
-      printer->progress->update (donelines);
+      m_view->get_view_progress()->set_label(timeleft_str(timeleft));
+      m_view->get_view_progress()->update (donelines);
     }
-    if (time_used%3==0) printer->view->showCurrentPrinting(donelines);
-    while (rr_dev_write_more (printer->device) && !printer->gcode_iter->finished()) {
-      std::string line = printer->gcode_iter->next_line();
+    if (time_used%3==0) m_view->showCurrentPrinting(donelines);
+    while (rr_dev_write_more (device) && !gcode_iter->finished()) {
+      std::string line = gcode_iter->next_line();
       if (line.length() > 0 && line[0] != ';') {
-	rr_dev_enqueue_cmd (printer->device, RR_PRIO_NORMAL, line.data(), line.size());
+	rr_dev_enqueue_cmd (device, RR_PRIO_NORMAL, line.data(), line.size());
+// >>>>>>> bb01b914fd0689ec27ef0969c09795dfac29d86c
       }
     }
 
-    if (printer->gcode_iter->finished())
+    if (gcode_iter->finished())
     {
-      printer->set_printing (false);
-      printer->view->showCurrentPrinting(-1);
-      printer->progress->stop (_("Printed"));
+      set_printing (false);
+      m_view->showCurrentPrinting(-1);
+      m_view->get_view_progress()->stop (_("Printed"));
     }
   }
 }
@@ -364,24 +415,40 @@ void RR_CALL Printer::rr_error_fn (rr_dev dev, int error_code,
 				 const char *msg, size_t len,
 				 void *closure)
 {
+  Printer *printer = static_cast<Printer*>(closure);
+
+  printer->handle_rr_error (dev, error_code, msg, len);
+}
+
+void
+Printer::handle_rr_error (rr_dev dev, int error_code,
+    const char *msg, size_t len)
+{
   char *str = g_strndup (msg, len);
   g_warning (_("Error (%d) '%s' - user popup ?"), error_code, str);
   g_free (str);
 }
 
+
 void RR_CALL Printer::rr_wait_wr_fn (rr_dev dev, int wait_write, void *closure)
 {
   Printer *printer = static_cast<Printer*>(closure);
 
+  printer->handle_rr_wait_wr (dev, wait_write);
+}
+
+void
+Printer::handle_rr_wait_wr (rr_dev dev, int wait_write)
+{
   Glib::IOCondition cond = (Glib::IO_ERR | Glib::IO_HUP |
 			    Glib::IO_PRI | Glib::IO_IN);
   if (wait_write)
     cond |= Glib::IO_OUT;
 
   // FIXME: it'd be way nicer to change the existing poll record
-  printer->devconn.disconnect();
-  printer->devconn = Glib::signal_io().connect
-    (sigc::mem_fun (*printer, &Printer::handle_dev_fd), rr_dev_fd (dev), cond);
+  devconn.disconnect();
+  devconn = Glib::signal_io().connect
+    (sigc::mem_fun (*this, &Printer::handle_dev_fd), rr_dev_fd (dev), cond);
 }
 
 void RR_CALL Printer::rr_log_fn (rr_dev dev, int type,
@@ -389,6 +456,12 @@ void RR_CALL Printer::rr_log_fn (rr_dev dev, int type,
 			       size_t len, void *closure)
 {
   Printer *printer = static_cast<Printer*>(closure);
+  printer->handle_rr_log(dev, type, buffer, len);
+}
+
+void
+Printer::handle_rr_log (rr_dev dev, int type, const char *buffer, size_t len)
+{
   string str;
 
   switch (type) {
@@ -404,7 +477,7 @@ void RR_CALL Printer::rr_log_fn (rr_dev dev, int type,
     break;
   }
   str += string (buffer, len);
-  printer->commlog->insert (printer->commlog->end(), str);
+  commlog->insert (commlog->end(), str);
 }
 
 // ------------------------------ libreprap integration above ------------------------------

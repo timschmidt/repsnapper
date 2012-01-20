@@ -48,6 +48,7 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
 
   GdkGLConfig *glconfig;
 
+  // glconfig is leaked at program exit
   glconfig = gdk_gl_config_new_by_mode
 		    ((GdkGLConfigMode) (GDK_GL_MODE_RGBA |
 					GDK_GL_MODE_ALPHA |
@@ -87,6 +88,8 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
 Render::~Render()
 {
   delete m_arcBall;
+  for (uint i = 0; i < N_LIGHTS; i++)
+    delete (m_lights[i]);
 }
 
 void Render::set_model(Model *model)
@@ -167,9 +170,6 @@ bool Render::on_configure_event(GdkEventConfigure* event)
   glDepthFunc (GL_LEQUAL);
   glEnable (GL_DEPTH_TEST);
   glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-  m_quadratic = gluNewQuadric();
-  gluQuadricNormals(m_quadratic, GLU_SMOOTH);
-  gluQuadricTexture(m_quadratic, GL_TRUE);
 
   gdk_gl_drawable_gl_end (gldrawable);
 

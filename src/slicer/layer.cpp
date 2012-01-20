@@ -521,9 +521,11 @@ void Layer::getOrderedPrintLines(const vector<Poly> polys,
       ndone++;
       startPoint = printlines.lastPoint();//Vector2d(lines.back().x,lines.back().y);
     }
-  printlines.setZ(polys.back().getZ());
-  printlines.optimize(linewidth, linewidthratio, optratio);
-  printlines.getLines(plines);
+  if (count) {
+    printlines.setZ(polys.back().getZ());
+    printlines.optimize(linewidth, linewidthratio, optratio);
+    printlines.getLines(plines);
+  }
 }
 
 // Convert to GCode

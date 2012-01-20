@@ -62,6 +62,7 @@ public:
 	};
 
 	ObjectsTree();
+	~ObjectsTree();
 
 	void clear();
 	void DeleteSelected(Gtk::TreeModel::iterator &iter);

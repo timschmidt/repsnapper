@@ -132,6 +132,9 @@ int main(int argc, char **argv)
   bindtextdomain (GETTEXT_PACKAGE, locale_dir);
   textdomain (GETTEXT_PACKAGE);
 
+  g_free(locale_dir);
+  locale_dir = NULL;
+
   if (!gtk_gl_init_check (&argc, &argv) ||
       !gdk_gl_init_check (&argc, &argv) ) {
     std::cerr << "Failed to initialize GL\n";
@@ -240,12 +243,15 @@ int main(int argc, char **argv)
     return 0;
   }
 
-  View::create(model);
+  View* mainwin = View::create(model);
 
   for (uint i = 0; i < opts.files.size(); i++)
     model->Read(Gio::File::create_for_path(opts.files[i]));
 
   tk.run();
+
+  delete mainwin;
+  delete model;
 
   return 0;
 }

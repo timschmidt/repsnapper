@@ -43,15 +43,12 @@ class Model
 {
   
 	sigc::signal< void > m_signal_tree_changed;
+	ViewProgress *m_progress;
 
 public:
-
-	ViewProgress *m_progress;
 	Gtk::Statusbar *statusbar;
-
 	// Something in the rfo changed
 	sigc::signal< void > signal_tree_changed() { return m_signal_tree_changed; }
-
 
 	Model();
 	~Model();
@@ -69,6 +66,7 @@ public:
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 
 	void Read(Glib::RefPtr<Gio::File> file);
+	void SetViewProgress (ViewProgress *progress);
 
 	void DeleteObjTree(Gtk::TreeModel::iterator &iter);
 
@@ -146,6 +144,7 @@ public:
 	void ClearLogs();
 
 	GCode gcode;
+
  private:
 	bool is_calculating;
 	//GCodeIter *m_iter;

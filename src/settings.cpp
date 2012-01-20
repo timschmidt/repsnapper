@@ -408,6 +408,7 @@ Settings::Settings ()
 
 Settings::~Settings()
 {
+  delete GCode.m_impl;
 }
 
 void Settings::set_defaults ()

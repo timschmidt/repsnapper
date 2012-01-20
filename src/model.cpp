@@ -36,6 +36,7 @@
 #include "infill.h"
 
 Model::Model() :
+  currentprintingline(0),
   settings(),
   Min(), Max(),
   errlog (Gtk::TextBuffer::create()),
@@ -77,6 +78,11 @@ void Model::LoadConfig(Glib::RefPtr<Gio::File> file)
 void Model::SimpleAdvancedToggle()
 {
   cout << _("not yet implemented\n");
+}
+
+void Model::SetViewProgress (ViewProgress *progress)
+{
+  m_progress = progress;
 }
 
 void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
