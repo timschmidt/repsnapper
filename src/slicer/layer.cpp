@@ -218,14 +218,13 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype, int supportfilltyp
   if (skins>1) {
     double skindistance = FullInfillDistance/skins;
     for (uint s = 0; s<skins; s++){
-      //double drot = InfillRotationPrLayer/180.0*M_PI*s;
+      double drot = rot + InfillRotationPrLayer/180.0*M_PI*s;
       double sz = Z-thickness + (s+1)*thickness/skins;
       //cerr << Z << " : " << skins << " - "<< s << " - " << sz << " - " << thickness <<endl;
       Infill *inf = new Infill(this, skinfillextrf);
       inf->setName("skin");
-      //cout << "new " ;inf->printinfo();
-      inf->addInfill(sz, skinFullFillPolygons, (InfillType)fullfilltype,//PolyInfill,
-		     skindistance, skindistance, 0);
+      inf->addInfill(sz, skinFullFillPolygons, (InfillType)fullfilltype,
+		     skindistance, skindistance, drot);
       skinFullInfills.push_back(inf);
     }
   }
