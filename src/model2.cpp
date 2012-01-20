@@ -199,6 +199,7 @@ void Model::Slice(double printOffsetZ)
     }
   }
   
+
   int LayerNr = 0;
 
   // double max_thickness = settings.Hardware.LayerThickness*1.5;
@@ -242,13 +243,13 @@ void Model::Slice(double printOffsetZ)
       shape_z = z; 
       max_shape_z = min(shape_z + serialheight, Max.z); 
       while ( currentshape < shapes.size() && shape_z <= max_shape_z ) {
-	// cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape 
-	//      << " of "<< shapes.size()<<endl;
 	layer->setZ(shape_z + printOffsetZ); // set to real z
 	if (shape_z==minZ) LayerNr = 0; // these layers will not be handled als bridges etc.
 	new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
 				    shape_z, settings.Slicing.Optimization,
 				    max_gradient);
+	// cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape 
+	//      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
 	if (shape_z >= max_shape_z) { // next shape, reset z
 	  currentshape++; 
 	  shape_z = z;
@@ -259,7 +260,7 @@ void Model::Slice(double printOffsetZ)
 	  }
 	  shape_z += thickness; 
 	  max_gradient=0;
-	  if (new_polys>0){
+	  if (new_polys>-1){
 	    layers.push_back(layer);
 	    layer = new Layer(LayerNr++, thickness, skins);
 	  }
@@ -269,7 +270,7 @@ void Model::Slice(double printOffsetZ)
       if (currentshape < shapes.size()) { // reached max_shape_z, next shape
 	currentshape++;
       } else {
-	if (new_polys>0){
+	if (new_polys>-1){ 
 	  if (varSlicing) {
 	    skins = max_skins-(uint)(max_skins* max_gradient);
 	    thickness = skin_thickness*skins;
@@ -281,7 +282,7 @@ void Model::Slice(double printOffsetZ)
 	currentshape = 0; // all shapes again
       }
       max_gradient=0;
-      //cerr << "    Z="<<z<<endl;
+      //cerr << "    Z="<<z << "Max.z="<<Max.z<<endl;
     }
   delete layer;
   // shapes.clear();
@@ -417,13 +418,13 @@ void Model::MakeSupportPolygons()
   for (int i=count-1; i>0; i--) 
     {
       m_progress->update(count-i);
-      if (layers[i]->LayerNo == 0 || layers[i-1]->LayerNo == 0) continue;
+      if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i]);
     }
   // shrink a bit
   for (int i=0; i<count; i++) 
     {
-      if (layers[i]->LayerNo == 0) continue;
+      //if (layers[i]->LayerNo == 0) continue;
       double distance = 2*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       m_progress->update(i+count);
       vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());

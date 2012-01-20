@@ -180,7 +180,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
       xycommand.e = -retractE; // retract filament at xy move
       zcommand.e = 0; // all extrusion in xy
     }
-    cerr << "split xy and z commands delta=" << delta <<endl;
+    //cerr << "split xy and z commands delta=" << delta <<endl;
     // cerr << info() << endl;
     // cerr << xycommand.info() << endl;
     // cerr << zcommand.info() << endl<< endl;

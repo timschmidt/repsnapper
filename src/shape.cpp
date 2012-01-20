@@ -33,23 +33,22 @@ void Transform3D::move(Vector3d delta)
 
 void Transform3D::scale(double x)
 {
-  //scale(x,x,x);
   transform.m[3][3] = 1/x;
 }
 
 void Transform3D::scale_x(double x)
 {
-  cerr << "scalex" << x << endl;
+  //cerr << "scalex" << x << endl;
   transform.m[0][0] = x;
 }
   void Transform3D::scale_y(double x)
 {
-  cerr << "scaley" << x << endl;
+  //cerr << "scaley" << x << endl;
   transform.m[1][1] = x;
 }
 void Transform3D::scale_z(double x)
 {
-  cerr << "scalez" << x << endl;
+  //cerr << "scalez" << x << endl;
   transform.m[2][2] = x;
 }
 
