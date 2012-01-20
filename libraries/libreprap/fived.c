@@ -17,7 +17,9 @@ int
 fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
 {
   uint okoffset = 2;
-  if (reply[1]==':')  okoffset = 0; // a single T/B message (waiting for warm up (M109))
+  // a single T/B message (waiting for warm up (M109/M190)):
+  if (!strncasecmp ("T:", reply, 2) ||
+      !strncasecmp ("B:", reply, 2))  okoffset = 0;
   if (okoffset==0 || !strncasecmp ("ok", reply, 2)) {
     rr_dev_handle_ok (dev);
 
