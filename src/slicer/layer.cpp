@@ -230,7 +230,7 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype, int supportfilltyp
     }
   }
   supportInfill->addInfill(Z, supportPolygons, (InfillType)supportfilltype, 
-			   1.5*InfillDistance, 1.5*InfillDistance, 0);//InfillRotation/180.0*M_PI);
+			   1.*InfillDistance, 1.*InfillDistance, 0);
 }
 
 
@@ -550,17 +550,11 @@ void Layer::MakeGcode(GCodeState &state,
   //cerr << "gcode layer " << LayerNo << "z="<<Z<<endl;
 
   
-  // 1. Skirt
-  lines.clear();
-  skirtPolygon.getLines(lines, startPoint);
+  lines.clear(); // will contain everything
 
-  // 2. Support
-  getOrderedPrintLines(supportInfill->infillpolys, startPoint, lines,
-		       linewidth, linewidthratio, optratio);
-  
-  vector<Poly> polys;
+  vector<Poly> polys; // intermediate collection
 
-  // 3. Skin 
+  // 1. Skins, because they are the lowest lines, below layer Z
   if (skins>1){
     for(uint s=1;s <= skins;s++) { // z offset from bottom to top
       polys.clear();
@@ -574,14 +568,21 @@ void Layer::MakeGcode(GCodeState &state,
       polys.insert(polys.end(),
 		   skinFullInfills[s-1]->infillpolys.begin(),
 		   skinFullInfills[s-1]->infillpolys.end());
-      // order all of this skin layer:
+      // add all of this skin layer to lines
       getOrderedPrintLines(polys, startPoint, lines, 
 			   linewidth, linewidthratio, optratio); 
     }
   }
+  polys.clear();
+
+  // 2. Skirt
+  skirtPolygon.getLines(lines, startPoint);
+
+  // 3. Support
+  getOrderedPrintLines(supportInfill->infillpolys, startPoint, lines,
+		       linewidth, linewidthratio, optratio);
 
   // 4. all other polygons:
-  polys.clear();
   
   //  Shells
   //vector<Poly> shinfill; // shells plus infill, order them together
@@ -594,10 +595,10 @@ void Layer::MakeGcode(GCodeState &state,
   polys.insert(polys.end(),
 	       bridgeInfill->infillpolys.begin(), bridgeInfill->infillpolys.end());
   
-
   getOrderedPrintLines(polys, startPoint, lines, 
 		       linewidth, linewidthratio, optratio); 
 
+  // push all lines to gcode
   state.AddLines(lines, extrf, offsetZ, slicing, hardware); 
 }
 
