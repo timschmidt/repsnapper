@@ -101,6 +101,7 @@ class Settings {
     bool Varslicing;
     int NormalFilltype;
     int FullFilltype;
+    int SupportFilltype;
 
     bool ShellOnly;
     guint ShellCount;

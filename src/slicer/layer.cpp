@@ -176,7 +176,7 @@ vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
   return angles;
 }
 
-void Layer::CalcInfill (int normalfilltype, int fullfilltype,
+void Layer::CalcInfill (int normalfilltype, int fullfilltype, int supportfilltype,
 			double InfillDistance, 	double FullInfillDistance,
 			double InfillRotation, 	double InfillRotationPrLayer,
 			bool ShellOnly, // only infill for fullfill (vertical shells)
@@ -229,7 +229,7 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
       skinFullInfills.push_back(inf);
     }
   }
-  supportInfill->addInfill(Z, supportPolygons, PolyInfill, 
+  supportInfill->addInfill(Z, supportPolygons, (InfillType)supportfilltype, 
 			   1.5*InfillDistance, 1.5*InfillDistance, 0);//InfillRotation/180.0*M_PI);
 }
 
@@ -474,7 +474,7 @@ void Layer::calcConvexHull()
       Max.y = max(Max.y,p[current].y);
       if (hullPolygon.size()>np){
 	cerr << "couldn't make convex hull on layer "<< LayerNo << endl;
-	printinfo();
+	cerr <<info()<<endl;
 	hullPolygon.clear();
 	break;
       }
@@ -607,9 +607,10 @@ double Layer::area() const
   return Clipping::Area(polygons);
 }
 
-void Layer::printinfo() const 
+string Layer::info() const 
 {
-  cout <<"Layer at Z="<<Z<<" Lno="<<LayerNo 
+  ostringstream ostr;
+  ostr <<"Layer at Z="<<Z<<" Lno="<<LayerNo 
        <<", "<<skins <<" skins"
        <<", "<<polygons.size() <<" polys"
        <<", "<<shellPolygons.size() <<" shells"
@@ -617,22 +618,22 @@ void Layer::printinfo() const
        <<", "<<bridgePolygons.size() <<" bridge polys"
        <<", "<<skinFullFillPolygons.size() <<" skin fullfill polys"
        <<", "<<supportPolygons.size() <<" support polys";
-  cout <<", infill: ";
+  ostr <<", infill: ";
   if (normalInfill)
-    cout <<" normal "<<normalInfill->size() ;
+    ostr <<" normal "<<normalInfill->size() ;
   if (fullInfill)
-    cout <<", full "<<fullInfill->size()  ;
+    ostr <<", full "<<fullInfill->size()  ;
   if (bridgeInfill)
-    cout <<", bridge "<<bridgeInfill->size() ;
+    ostr <<", bridge "<<bridgeInfill->size() ;
   if (supportInfill)
-    cout<<", support "<<supportInfill->size() ;
-  cout <<", skinfills "<<skinFullInfills.size() ;
+    ostr<<", support "<<supportInfill->size() ;
+  ostr <<", skinfills "<<skinFullInfills.size() ;
   
   // if (next)
   //   cout <<", next: "<<next->LayerNo;
   // if (previous)
   // cout <<", previous: "<<previous->LayerNo;
-  cout << endl;
+  return ostr.str();
 }
  
 

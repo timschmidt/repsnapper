@@ -77,7 +77,7 @@ public:
 
   void addFullPolygons(const vector<Poly> fullpolys, bool bridge) ;
 
-  void CalcInfill (int normalfilltype, int fullfilltype,
+  void CalcInfill (int normalfilltype, int fullfilltype, int supportfilltype,
 		   double InfillDistance,  double FullInfillDistance,
 		   double InfillRotation,  double InfillRotationPrLayer,
 		   bool ShellOnly,  bool DisplayDebuginFill);
@@ -130,7 +130,7 @@ public:
   		  const Settings::SlicingSettings &slicing,
   		  const Settings::HardwareSettings &hardware);
 
-  void printinfo() const ;
+  string info() const ;
 
   void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 	    bool DrawOutlineNumbers, bool DrawCPLineNumbers, 

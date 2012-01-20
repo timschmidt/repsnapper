@@ -45,13 +45,13 @@ class Model
 	sigc::signal< void > m_signal_tree_changed;
 	ViewProgress *m_progress;
 public:
+	Gtk::Statusbar *statusbar;
 
 	// Something in the rfo changed
 	sigc::signal< void > signal_tree_changed() { return m_signal_tree_changed; }
 
 	Model();
 	~Model();
-	void progess_bar_start (const char *label, double max);
 
 	void SimpleAdvancedToggle();
 	void SaveConfig(Glib::RefPtr<Gio::File> file);

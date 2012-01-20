@@ -159,6 +159,7 @@ static struct {
   STRING_MEMBER (Slicing.AltInfillLayersText, "AltInfillLayersText", "", true),
   INT_MEMBER    (Slicing.NormalFilltype, "NormalFilltype", 0, true),
   INT_MEMBER    (Slicing.FullFilltype, "FullFilltype", 0, true),
+  INT_MEMBER    (Slicing.SupportFilltype, "SupportFilltype", 0, true),
   BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, false),
   BOOL_MEMBER   (Slicing.Support, "Support", true, true),
   FLOAT_MEMBER  (Slicing.SkirtHeight, "SkirtHeight", 0.0, true),
@@ -439,6 +440,7 @@ void Settings::set_defaults ()
   //Slicing.ShrinkQuality = SHRINK_FAST;
   Slicing.NormalFilltype = ParallelInfill;
   Slicing.FullFilltype = ParallelInfill;
+  Slicing.SupportFilltype = PolyInfill;
 
   GCode.m_impl->setDefaults();
 
@@ -640,21 +642,24 @@ void Settings::set_to_gui (Builder &builder, int i)
 void Settings::set_filltypes_to_gui (Builder &builder)
 {
   
-  cerr << Slicing.NormalFilltype << " ! " << Slicing.FullFilltype<< endl;
-  Gtk::ComboBox *ncombo = NULL;
-  builder->get_widget ("Slicing.NormalFilltype", ncombo);
-  if (ncombo) {
-    if (ncombo->get_has_entry())
-      ncombo->set_active (Slicing.NormalFilltype);
+  cerr << Slicing.NormalFilltype << " ! " << Slicing.FullFilltype
+       << " ! " << Slicing.SupportFilltype<< endl;
+  Gtk::ComboBox *combo = NULL;
+  builder->get_widget ("Slicing.NormalFilltype", combo);
+  if (combo)
+    if (combo->get_has_entry())
+      combo->set_active (Slicing.NormalFilltype);
     else cerr <<"no entries in Slicing.NormalFilltype"<<  endl;
-  }
-  Gtk::ComboBox *fcombo = NULL;
-  builder->get_widget ("Slicing.FullFilltype", fcombo);
-  if (fcombo) {
-    if (fcombo->get_has_entry())
-      fcombo->set_active (Slicing.FullFilltype);
-    else cerr <<"no entries in  Slicing.FullFilltype"<<  endl;
-  }
+  builder->get_widget ("Slicing.FullFilltype", combo);
+  if (combo)
+    if (combo->get_has_entry())
+      combo->set_active (Slicing.FullFilltype);
+  else cerr <<"no entries in  Slicing.FullFilltype"<<  endl;
+  builder->get_widget ("Slicing.SupportFilltype", combo);
+  if (combo)
+    if (combo->get_has_entry())
+      combo->set_active (Slicing.SupportFilltype);
+  else cerr <<"no entries in  Slicing.SupportFilltype"<<  endl;
 }
 // void Settings::set_shrink_to_gui (Builder &builder)
 // {
@@ -751,7 +756,13 @@ void Settings::get_filltypes_from_gui (Builder &builder)
   if (combo)
     Slicing.FullFilltype = combo->get_active_row_number ();
   else cerr << "no Slicing.FullFilltype combo" << endl;
-  cerr << "read combos: " << Slicing.NormalFilltype <<  " / " << Slicing.FullFilltype << endl;
+  builder->get_widget ("Slicing.SupportFilltype", combo);
+  if (combo)
+    Slicing.SupportFilltype = combo->get_active_row_number ();
+  else cerr << "no Slicing.SupportFilltype combo" << endl;
+  cerr << "read combos: " << Slicing.NormalFilltype 
+       <<  " / " << Slicing.FullFilltype 
+       <<  " / " << Slicing.SupportFilltype << endl;
 }
 
 // void Settings::get_shrink_from_gui (Builder &builder)
@@ -908,34 +919,47 @@ void Settings::connect_to_ui (Builder &builder)
   cerr << "set infill combos" << endl;
   Gtk::ComboBox *ncombo = NULL;
   Gtk::ComboBox *fcombo = NULL;
+  Gtk::ComboBox *scombo = NULL;
   builder->get_widget ("Slicing.NormalFilltype", ncombo);
   builder->get_widget ("Slicing.FullFilltype", fcombo);
-  if (ncombo && fcombo) {// && !ncombo->get_model() && !fcombo->get_model()) {
+  builder->get_widget ("Slicing.SupportFilltype", scombo);
+  if (ncombo && fcombo && scombo) {// && !ncombo->get_model() && !fcombo->get_model()) {
     ncombo->clear();
     fcombo->clear();
+    scombo->clear();
     Glib::RefPtr<Gtk::ListStore> lnstore;
     Glib::RefPtr<Gtk::ListStore> lfstore;
+    Glib::RefPtr<Gtk::ListStore> lsstore;
     Gtk::TreeModelColumnRecord nrecord;
     Gtk::TreeModelColumnRecord frecord;
+    Gtk::TreeModelColumnRecord srecord;
     Gtk::TreeModelColumn<Glib::ustring> ncolumn;
     Gtk::TreeModelColumn<Glib::ustring> fcolumn;
+    Gtk::TreeModelColumn<Glib::ustring> scolumn;
     nrecord.add (ncolumn);
     frecord.add (fcolumn);
+    srecord.add (scolumn);
     lnstore = Gtk::ListStore::create(nrecord);
     lfstore = Gtk::ListStore::create(frecord);
+    lsstore = Gtk::ListStore::create(srecord);
     uint nfills = sizeof(InfillNames)/sizeof(string);
     for (uint i=0; i<nfills; i++) {
       cerr << "adding " <<InfillNames[i] << endl;
       lnstore->append()->set_value (0, Glib::ustring(InfillNames[i]));
       lfstore->append()->set_value (0, Glib::ustring(InfillNames[i]));
+      lsstore->append()->set_value (0, Glib::ustring(InfillNames[i]));
     }
     ncombo->set_model (lnstore);
     fcombo->set_model (lfstore);
+    scombo->set_model (lsstore);
     ncombo->pack_start (ncolumn);
     fcombo->pack_start (fcolumn);
+    scombo->pack_start (scolumn);
     ncombo->signal_changed().connect
       (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
     fcombo->signal_changed().connect
+      (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
+    scombo->signal_changed().connect
       (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
   }
   // // Slicing.ShrinkQuality
