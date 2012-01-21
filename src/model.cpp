@@ -586,9 +586,10 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
       else {
         shape->draw (this, settings);
       }
-
       glPopMatrix();
-    }
+      if(settings.Display.DisplayBBox)
+	shape->drawBBox();
+     }
     glPopMatrix();
   }
   glPopMatrix();
@@ -597,10 +598,6 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
   // draw total bounding box
   if(settings.Display.DisplayBBox)
     {
-      for (uint i = 0; i < objtree.Objects.size(); i++) {
-	for (uint j = 0; j < objtree.Objects[i].size(); j++) 
-	  objtree.Objects[i].shapes[j].drawBBox();
-      }
       // Draw bbox
       glDisable(GL_DEPTH_TEST);
       glColor3f(1,0,0);
