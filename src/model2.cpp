@@ -262,7 +262,7 @@ void Model::Slice(double printOffsetZ)
 	  max_gradient=0;
 	  if (new_polys>-1){
 	    layers.push_back(layer);
-	    layer = new Layer(LayerNr++, thickness, skins);
+	    layer = new Layer(++LayerNr, thickness, skins);
 	  }
 	}
       }
@@ -276,7 +276,7 @@ void Model::Slice(double printOffsetZ)
 	    thickness = skin_thickness*skins;
 	  }
 	  layers.push_back(layer);
-	  layer = new Layer(LayerNr++, thickness, skins);
+	  layer = new Layer(++LayerNr, thickness, skins);
 	}
 	z = max_shape_z + thickness; 
 	currentshape = 0; // all shapes again
