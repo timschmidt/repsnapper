@@ -158,36 +158,6 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
     return ostr.str();
   }
 
-  // going down? -> split xy and z movements
-  Vector3d delta = where-LastPos;
-  double retractE = 2; //mm
-  if ( (where.z < 0 || delta.z < 0) && (delta.x!=0 || delta.y!=0) ) { 
-    Command xycommand(*this); // copy
-    xycommand.comment = comment +  _(" xy part");
-    Command zcommand(*this); // copy
-    zcommand.comment = comment + _(" z part");
-    if (where.z < 0) { // z<0 cannot be absolute -> positions are relative
-      xycommand.where.z = 0.; 
-      zcommand.where.x = zcommand.where.y = 0.; // this command will be z-only
-    } else {
-      xycommand.where.z = LastPos.z;
-    }
-    if (incrementalEcode) {    // retract filament at xy move
-      xycommand.e = lastE-retractE;
-      zcommand.e = lastE-retractE;
-    }
-    else {
-      xycommand.e = -retractE; // retract filament at xy move
-      zcommand.e = 0; // all extrusion in xy
-    }
-    //cerr << "split xy and z commands delta=" << delta <<endl;
-    // cerr << info() << endl;
-    // cerr << xycommand.info() << endl;
-    // cerr << zcommand.info() << endl<< endl;
-    ostr << xycommand.GetGCodeText(LastPos, lastE, incrementalEcode) << endl;
-    ostr <<  zcommand.GetGCodeText(LastPos, lastE, incrementalEcode) ;
-    return ostr.str();
-  }
 
   ostr << MCODES[Code] << " ";
   string comm = comment;
@@ -195,6 +165,37 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
   case RAPIDMOTION:
   case COORDINATEDMOTION:
   case COORDINATEDMOTION3D:
+    {// going down? -> split xy and z movements
+      Vector3d delta = where-LastPos;
+      double retractE = 2; //mm
+      if ( (where.z < 0 || delta.z < 0) && (delta.x!=0 || delta.y!=0) ) { 
+	Command xycommand(*this); // copy
+	xycommand.comment = comment +  _(" xy part");
+	Command zcommand(*this); // copy
+	zcommand.comment = comment + _(" z part");
+	if (where.z < 0) { // z<0 cannot be absolute -> positions are relative
+	  xycommand.where.z = 0.; 
+	  zcommand.where.x = zcommand.where.y = 0.; // this command will be z-only
+	} else {
+	  xycommand.where.z = LastPos.z;
+	}
+	if (incrementalEcode) {    // retract filament at xy move
+	  xycommand.e = lastE-retractE;
+	  zcommand.e = lastE-retractE;
+	}
+	else {
+	  xycommand.e = -retractE; // retract filament at xy move
+	  zcommand.e = 0; // all extrusion in xy
+	}
+	//cerr << "split xy and z commands delta=" << delta <<endl;
+	// cerr << info() << endl;
+	// cerr << xycommand.info() << endl;
+	// cerr << zcommand.info() << endl<< endl;
+	ostr << xycommand.GetGCodeText(LastPos, lastE, incrementalEcode) << endl;
+	ostr <<  zcommand.GetGCodeText(LastPos, lastE, incrementalEcode) ;
+	return ostr.str();
+      }
+    }
     if(where.x != LastPos.x) {
       ostr << "X" << where.x << " ";
       LastPos.x = where.x;
