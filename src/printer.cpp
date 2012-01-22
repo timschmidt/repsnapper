@@ -35,6 +35,8 @@
 
 Printer::Printer(View *view) :
   printing (false),
+  lastdonelines(0),
+  lasttimeshown(0),
   inhibit_print (false),
   commlog (Gtk::TextBuffer::create())
 {
@@ -139,6 +141,18 @@ void Printer::PrintButton()
     Print();
 }
 
+void Printer::StopButton()
+{
+  Stop();
+}
+
+void Printer::ResetButton()
+{
+  Stop();
+
+  // how to reset?
+}
+
 bool Printer::IsConnected()
 {
   return rr_dev_fd (device) >= 0;
@@ -180,7 +194,7 @@ void Printer::serial_try_connect (bool connect)
 }
 
 
-// void Printer::SetGcode(GCode gcode)
+// void Printer::SetGCode(GCode gcode)
 // {
 //   this->gcode = gcode;
 // }
@@ -208,10 +222,9 @@ void Printer::Print()
 
   delete (gcode_iter);
   gcode_iter = m_model->gcode.get_iter();
-  gcode_iter->time_started = time(NULL);
   set_printing (true);
   m_view->get_view_progress()->start (_("Printing"),
-    m_model->gcode.commands.size());
+    gcode_iter->m_line_count);
   rr_dev_set_paused (device, RR_PRIO_NORMAL, 0);
 }
 
@@ -260,9 +273,16 @@ void Printer::SendNow(string str)
     error (_("Can't send command"), _("You must first connect to a device!"));
 }
 
-void Printer::STOP()
-{
-  SendNow ("M112");
+void Printer::Stop()
+{  
+  set_printing (false);
+  assert(m_model != NULL);
+  
+  if (rr_dev_fd (device) < 0) {
+    alert (_("Not connected to printer.\nCannot stop printing"));
+    return;
+  }
+
   rr_dev_reset (device);
 }
 
@@ -326,9 +346,10 @@ string timeleft_str(long seconds) {
     seconds -= 3600*hrs;
   }
   if (seconds>60)
-    ostr << (int)seconds/60 << _(" min left)");
-  else
-    ostr << (int)seconds << _(" sec left)");
+    ostr << (int)seconds/60 << _(" min ");
+  if (seconds<300)
+    ostr << (int)seconds%60 << _(" sec ");
+  ostr << _("left)");
   return ostr.str();
 }
 
@@ -341,16 +362,24 @@ void RR_CALL Printer::rr_more_fn (rr_dev dev, void *closure)
 void Printer::handle_rr_more (rr_dev dev)
 {
   if (printing && gcode_iter) {
-    int donelines = gcode_iter->m_cur_line - rr_dev_buffered_lines (device);
     time_t time_used = time(NULL) - gcode_iter->time_started;
-    int tot_lines = gcode_iter->m_line_count;
-    if (tot_lines>0) {
-      double done = 1.*donelines/tot_lines;
-      double timeleft = time_used/done - time_used;
-      m_view->get_view_progress()->set_label(timeleft_str(timeleft));
-      m_view->get_view_progress()->update (donelines);
+    if (time_used != lasttimeshown) { // show once a second
+      int n_buffered = rr_dev_buffered_lines(device);
+      int donelines = gcode_iter->m_cur_line - n_buffered;
+      if (donelines < 100) gcode_iter->time_started = time(NULL); 
+      int tot_lines = gcode_iter->m_line_count;
+      if (tot_lines>0) {
+	if (donelines > 100) {
+	  double done = 1.*donelines/tot_lines;
+	  double timeleft = time_used/done - time_used;
+	  m_view->get_view_progress()->set_label(timeleft_str(timeleft));
+	  m_view->get_view_progress()->update (donelines);
+	}
+      }
+      m_view->showCurrentPrinting(lastdonelines, donelines+n_buffered);
+      lastdonelines=donelines;
+      lasttimeshown = time_used;
     }
-    if (time_used%3==0) m_view->showCurrentPrinting(donelines);
     while (rr_dev_write_more (device) && !gcode_iter->finished()) {
       std::string line = gcode_iter->next_line();
       if (line.length() > 0 && line[0] != ';') {
@@ -361,7 +390,7 @@ void Printer::handle_rr_more (rr_dev dev)
     if (gcode_iter->finished())
     {
       set_printing (false);
-      m_view->showCurrentPrinting(-1);
+      m_view->showCurrentPrinting(-1,0);
       m_view->get_view_progress()->stop (_("Printed"));
     }
   }

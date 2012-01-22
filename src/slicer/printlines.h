@@ -56,13 +56,18 @@ class Printlines
 
  public:
   Printlines(){};
-  ~Printlines(){lines.clear();};
+  ~Printlines(){clear();};
   
+  void clear(){lines.clear();};
+
   Vector2d lastPoint() const;
 
   void addLine(Vector2d from, Vector2d to, double feedrate=1.0);
   void addPoly(const Poly poly, int startindex=0);
-
+  void makeLines(const vector<Poly> polys, 
+		 Vector2d &startPoint, vector<printline> &plines,
+		 double linewidth, double linewidthratio, double optratio);
+    
   void optimize(double linewidth, double linewidthratio, double optratio);
 
   void getLines(vector<Vector2d> &lines) const;
