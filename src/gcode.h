@@ -108,20 +108,24 @@ Main code follows
 
 enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
 	    RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D,  
-	    EXTRUDERON, EXTRUDEROFF, //  6 7
+	    EXTRUDERON, EXTRUDERONREVERSE, EXTRUDEROFF, //  6 7
 	    ARCCLOCKWISE, ARCCOUNTERCLOCKWISE,  // 8 9
 	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 10 11
 	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 12 13
 	    ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 14 15
-	    SETCURRENTASHOME, SELECTEXTRUDER, ZMOVE, SETSPEED}; // 16 - 19
+	    SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 16 - 19
+	    FANON,FANOFF,
+	    ASKTEMP};
 const string MCODES[] = {"G92", "", "",
 			 "G0", "G1", "G1",
-			 "M101", "M103", // eon eoff
-			 "", "",
-			 "G21", "", // mm in
-			 "", "",
+			 "M101", "M102", "M103", // eon erev eoff
+			 "", "", // arcs
+			 "G21", "G20", // mm in
+			 "G28", "",
 			 "G90", "G91", // abs. rel. pos
-			 "", "T0", "G1", "G1" };
+			 "G92", "T0", "G1", "G1" ,
+			 "M106", "M107",
+			 "M105"}; // temp?
 
 
 class Model;
