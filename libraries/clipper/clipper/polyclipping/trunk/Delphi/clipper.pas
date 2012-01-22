@@ -3,10 +3,10 @@ unit clipper;
 (*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6.4                                                           *
-* Date      :  4 December 2011                                                 *
+* Version   :  4.6.5                                                           *
+* Date      :  17 January 2011                                                 *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2010-2011                                         *
+* Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
 * License:                                                                     *
 * Use, modification & distribution is subject to Boost Software License Ver 1. *
@@ -279,11 +279,6 @@ function ReversePoints(const pts: TPolygons): TPolygons; overload;
 function OffsetPolygons(const pts: TPolygons; const delta: double;
   JoinType: TJoinType = jtSquare; MiterLimit: double = 2): TPolygons;
 
-//TrimPolygons removes very narrow 'spikes' that can very rarely appear when
-//rounding polygons with fractional coordinates. A 'spike' is created when
-//an edge is longer that 2 units but ends within one unit of an adjacent edge.
-function TrimPolygon(const poly: TPolygon): TPolygon;
-function TrimPolygons(const polys: TPolygons): TPolygons;
 //SimplifyPolygon converts a self-intersecting polygon into a simple polygon.
 function SimplifyPolygon(const poly: TPolygon): TPolygons;
 function SimplifyPolygons(const polys: TPolygons): TPolygons;
@@ -591,7 +586,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function PointsEqual(const P1, P2: TIntPoint): Boolean; overload;
+function PointsEqual(const P1, P2: TIntPoint): Boolean;
 begin
   Result := (P1.X = P2.X) and (P1.Y = P2.Y);
 end;
@@ -3385,18 +3380,22 @@ begin
 
       if PointInPolygon(outRec2.pts.pt, outRec1.pts, fUse64BitRange) then
       begin
+        //outRec2 is contained by outRec1 ...
         outRec2.isHole := not outRec1.isHole;
         outRec2.FirstLeft := outRec1;
         if (outRec2.isHole = Orientation(outRec2, fUse64BitRange)) then
           ReversePolyPtLinks(outRec2.pts);
       end else if PointInPolygon(outRec1.pts.pt, outRec2.pts, fUse64BitRange) then
       begin
+        //outRec1 is contained by outRec2 ...
         outRec2.isHole := outRec1.isHole;
         outRec1.isHole := not outRec2.isHole;
         outRec2.FirstLeft := outRec1.FirstLeft;
         outRec1.FirstLeft := outRec2;
         if (outRec1.isHole = Orientation(outRec1, fUse64BitRange)) then
           ReversePolyPtLinks(outRec1.pts);
+        //make sure any contained holes now link to the correct polygon ...
+        if fixHoleLinkages then CheckHoleLinkages1(outRec1, outRec2);
       end else
       begin
         outRec2.isHole := outRec1.isHole;
@@ -3705,175 +3704,6 @@ begin
     free;
   end;
 end;
-
-//------------------------------------------------------------------------------
-// TidyPolygon ...
-//------------------------------------------------------------------------------
-
-function ClosestPointOnLine(const pt, linePt1, linePt2: TIntPoint): TIntPoint;
-var
-  q: double;
-begin
-  if (linePt1.X = linePt2.X) and (linePt1.Y = linePt2.Y) then
-    Result := linePt1
-  else
-  begin
-    q := ((pt.X-linePt1.X)*(linePt2.X-linePt1.X) +
-      (pt.Y-linePt1.Y)*(linePt2.Y-linePt1.Y)) /
-      (sqr(linePt2.X-linePt1.X) + sqr(linePt2.Y-linePt1.Y));
-    Result.X := round((1-q)*linePt1.X + q*linePt2.X);
-    Result.Y := round((1-q)*linePt1.Y + q*linePt2.Y);
-  end;
-end;
-//------------------------------------------------------------------------------
-
-function DistSqr(const pt1, pt2: TIntPoint): Int64;
-begin
-  result := (pt1.X - pt2.X)*(pt1.X - pt2.X) + (pt1.Y - pt2.Y)*(pt1.Y - pt2.Y);
-end;
-//------------------------------------------------------------------------------
-
-function MaxDxDy(const pt1, pt2: TIntPoint): Int64;
-var
-  dy: Int64;
-begin
-  result := abs(pt1.X - pt2.X);
-  dy := abs(pt1.Y - pt2.Y);
-  if dy > result then result := dy;
-end;
-//------------------------------------------------------------------------------
-
-function EdgesVeryClose(const pt1, pt2, pt3: TIntPoint): boolean;
-var
-  cpol: TIntPoint;
-begin
-  //returns true if pt1 is no more than one unit away from segment pt2-pt3
-  // or if pt3 is no more than one unit away from segment pt1-pt2.
-  if ((pt1.X - pt2.X >= 0) = (pt2.X - pt3.X >= 0)) and
-    ((pt1.Y - pt2.Y >= 0) = (pt2.Y - pt3.Y >= 0)) then
-      result := false //ie the angle formed by pt1, pt2 & pt3 is non-acute
-  else if DistSqr(pt1, pt2) > distSqr(pt2, pt3) then
-  begin
-    cpol := ClosestPointOnLine(pt3, pt1, pt2);
-    result := MaxDxDy(pt3, cpol) < 2;
-  end else
-  begin
-    cpol := ClosestPointOnLine(pt1, pt2, pt3);
-    result := MaxDxDy(pt1, cpol) < 2;
-  end;
-end;
-//------------------------------------------------------------------------------
-
-type
-    POutPt2 = ^TOutPt2;
-    TOutPt2 = record
-    pt       : TIntPoint;
-    norm     : TDoublePoint;
-    next     : POutPt2;
-    prev     : POutPt2;
-  end;
-
-function AddOutPt2(current: POutPt2; const pt:TIntPoint): POutPt2;
-begin
-  new(result);
-  if not assigned(current) then
-  begin
-    result.next := result;
-    result.prev := result;
-  end else
-  begin
-    result.next := current.next;
-    result.prev := current;
-    current.next.prev := result;
-    current.next := result;
-  end;
-  result.pt := pt;
-end;
-//------------------------------------------------------------------------------
-
-function DeleteOutPt2(current: POutPt2; updateNorm: boolean): POutPt2;
-begin
-  result := current.prev;
-  if result = current then
-  begin
-    result := nil;
-    Dispose(current);
-  end else
-  begin
-    result.next := current.next;
-    current.next.prev := result;
-    Dispose(current);
-    if updateNorm then
-      result.norm := GetUnitNormal(result.pt, result.next.pt);
-  end;
-end;
-//------------------------------------------------------------------------------
-
-function TrimPolygon(const poly: TPolygon): TPolygon;
-var
-  i, highI: integer;
-  outPt2, last: POutPt2;
-  d: Int64;
-begin
-  highI := high(poly);
-  setlength(result, highI+1);
-  if highI < 0 then exit;
-  outPt2 := AddOutPt2(nil, poly[highI]);
-  outPt2.norm := GetUnitNormal(poly[highI], poly[0]);
-  for i := 0 to highI -1 do
-  begin
-    if PointsEqual(outPt2.pt, poly[i]) then continue;
-    outPt2 := AddOutPt2(outPt2, poly[i]);
-    outPt2.norm := GetUnitNormal(poly[i], poly[i+1]);
-  end;
-
-  last := outPt2.prev;
-  while true do
-  begin
-    if last.next = last.prev then break;
-    d := MaxDxDy(outPt2.pt, outPt2.prev.pt);
-    if (d < 2) or
-      ((abs(outPt2.prev.norm.X * outPt2.norm.Y -
-        outPt2.norm.X * outPt2.prev.norm.Y) < 0.26) and
-      EdgesVeryClose(outPt2.prev.pt, outPt2.pt, outPt2.next.pt)) then
-    begin
-      outPt2 := DeleteOutPt2(outPt2, true);
-      last := outPt2;
-    end
-    else if outPt2 = last then
-      break;
-    outPt2 := outPt2.next;
-  end;
-
-  i := 1;
-  last := outPt2.prev;
-  while outPt2 <> last do
-  begin
-    inc(i);
-    outPt2 := outPt2.next;
-  end;
-  if i < 3 then exit;
-  SetLength(result, i);
-  for i := 0 to i -1 do
-  begin
-    result[i] := outPt2.pt;
-    outPt2 := outPt2.next;
-  end;
-  while assigned(outPt2) do
-    outPt2 := DeleteOutPt2(outPt2, false);
-end;
-//------------------------------------------------------------------------------
-
-function TrimPolygons(const polys: TPolygons): TPolygons;
-var
-  i, len: integer;
-begin
-  len := length(polys);
-  setLength(result, len);
-  for i := 0 to len -1 do
-    result[i] := TrimPolygon(polys[i]);
-end;
-//------------------------------------------------------------------------------
 
 function SimplifyPolygon(const poly: TPolygon): TPolygons;
 begin

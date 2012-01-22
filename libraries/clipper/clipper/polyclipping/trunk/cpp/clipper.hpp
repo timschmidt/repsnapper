@@ -1,10 +1,10 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6.4                                                           *
-* Date      :  4 December 2011                                                 *
+* Version   :  4.6.5                                                           *
+* Date      :  17 January 2011                                                 *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2010-2011                                         *
+* Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
 * License:                                                                     *
 * Use, modification & distribution is subject to Boost Software License Ver 1. *
