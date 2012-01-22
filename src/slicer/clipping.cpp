@@ -200,9 +200,9 @@ CL::Polygons Clipping::CLOffset(CL::Polygons cpolys, int cldist,
 {
   CL::Polygons opolys;
   if (reverse) 
-    for (uint i=0; i<cpolys.size();i++)
-      std::reverse(cpolys[i].begin(),cpolys[i].end());
+    CL::ReversePoints(opolys);
   CL::OffsetPolygons(cpolys, opolys, cldist, cljtype, miter_limit);
+  CL::SimplifyPolygons(opolys);
   return opolys;
 }
 
