@@ -1,10 +1,10 @@
 ﻿/*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6.4                                                           *
-* Date      :  4 December 2011                                                 *
+* Version   :  4.6.5                                                           *
+* Date      :  17 January 2011                                                 *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2010-2011                                         *
+* Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
 * License:                                                                     *
 * Use, modification & distribution is subject to Boost Software License Ver 1. *
@@ -3138,6 +3138,7 @@ namespace ClipperLib
 
                 if (PointInPolygon(outRec2.pts.pt, outRec1.pts, m_UseFullRange))
                 {
+                    //outRec1 is contained by outRec2 ...
                     outRec2.isHole = !outRec1.isHole;
                     outRec2.FirstLeft = outRec1;
                     if (outRec2.isHole == Orientation(outRec2, m_UseFullRange)) 
@@ -3145,12 +3146,15 @@ namespace ClipperLib
                 }
                 else if (PointInPolygon(outRec1.pts.pt, outRec2.pts, m_UseFullRange))
                 {
+                    //outRec2 is contained by outRec1 ...
                     outRec2.isHole = outRec1.isHole;
                     outRec1.isHole = !outRec2.isHole;
                     outRec2.FirstLeft = outRec1.FirstLeft;
                     outRec1.FirstLeft = outRec2;
                     if (outRec1.isHole == Orientation(outRec1, m_UseFullRange))
                       ReversePolyPtLinks(outRec1.pts);
+                    //make sure any contained holes now link to the correct polygon ...
+                    if (fixHoleLinkages) CheckHoleLinkages1(outRec1, outRec2);
                 }
                 else
                 {
