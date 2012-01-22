@@ -45,6 +45,50 @@ void Printlines::addPoly(const Poly poly, int startindex)
   }
 }
 
+void Printlines::makeLines(const vector<Poly> polys, 
+			   Vector2d &startPoint, vector<printline> &plines,
+			   double linewidth, double linewidthratio, double optratio)
+{
+  uint count = polys.size();
+  uint nvindex=-1;
+  uint npindex=-1;
+  uint nindex;
+  vector<bool> done; // polys not yet handled
+  done.resize(count);
+  for(size_t q=0;q<count;q++) done[q]=false;
+  uint ndone=0;
+  double pdist, nstdist;
+  //double nlength;
+  while (ndone < count) 
+    {
+      nstdist = 1000000;
+      for(size_t q=0;q<count;q++) // find nearest polygon
+	{
+	  if (!done[q])
+	    {
+	      pdist = 1000000;
+	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
+	      // nlength = polys[q].getLineLengthSq(nindex); // ...feature to come...
+	      if (pdist<nstdist){
+		npindex = q;      // index of nearest poly in polysleft
+		nstdist = pdist;  // distance of nearest poly
+		nvindex = nindex; // nearest point in nearest poly
+	      }
+	    }
+	}
+      addPoly(polys[npindex],nvindex);
+      //polys[npindex].getLines(lines,nvindex); // add poly lines to lines
+      done[npindex]=true;
+      ndone++;
+      startPoint = lastPoint();//Vector2d(lines.back().x,lines.back().y);
+    }
+  if (count) {
+    setZ(polys.back().getZ());
+    optimize(linewidth, linewidthratio, optratio);
+    getLines(plines);
+  }
+}
+
 double Printlines::angle(Vector2d p) const
 {
   double a = atan2(p.y,p.x);
@@ -136,6 +180,7 @@ bool Printlines::capCorner(line &l1, line &l2,
 			  double linewidth, double linewidthratio, 
 			  double optratio)
 {
+  double MINLEN = 4; // minimum line length to handle
   bool done = false;
   if (l1.to!=l2.from) return done;  // only handle adjacent lines
   //if ((l1.to-l2.from).length() > linewidth ) return done;
@@ -144,27 +189,25 @@ bool Printlines::capCorner(line &l1, line &l2,
   while (da<-M_PI)da+=M_PI;
   double tana = abs(tan((da)/2.));
   // new endpoints should have this distance:
-  double dist = linewidth ; //dafactor * linewidth * linewidthratio * optratio ;
+  double dist = linewidth * linewidthratio ; //dafactor * linewidth * linewidthratio * optratio ;
   // cut until endpoints have the distance
   double cutlength = dist*tana/2. ; // cut both lines by this length
   cerr << "da=" << da<< " -> "<< cutlength<<endl;
   //cerr  << dist << " : " << da << endl;
   Vector2d d1 = l1.to-l1.from;
   double d1l = d1.length();
-  if (d1l > 4)
-    if(d1l > cutlength){
-      double newlenfact1 = 1-cutlength/d1l;
-      l1.to = l1.from + d1*newlenfact1;
-      done = true;
-    } else l1.to=l1.from; // delete line if too short
+  if (d1l > MINLEN && d1l > cutlength){
+    double newlenfact1 = 1-cutlength/d1l;
+    l1.to = l1.from + d1*newlenfact1;
+    done = true;
+  } // else l1.to=l1.from; // delete line if too short
   Vector2d d2 = l2.from-l2.to;
   double d2l = d2.length();
-  if (d2l > 4)
-    if (d2l > cutlength){
-      double lenfact2 = 1-cutlength/d2l;
-      l2.from = l2.to + d2*lenfact2;
-      done = true;
-    } //else l2.to=l2.from; // delete line if too short
+  if (d2l > MINLEN && d2l > cutlength){
+    double lenfact2 = 1-cutlength/d2l;
+    l2.from = l2.to + d2*lenfact2;
+    done = true;
+  } //else l2.to=l2.from; // delete line if too short 
   return done;
 }
 

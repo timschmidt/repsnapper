@@ -183,8 +183,8 @@ vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> polys, double distan
 					 double miterdist)
 {
   CL::Polygons cpolys = getClipperPolygons(polys);
-  CL::Polygons offset1 = CLOffset(cpolys, -3*CL_FACTOR*distance, CL::jtRound);
-  CL::Polygons offset = CLOffset(offset1, 2*CL_FACTOR*distance, CLType(jtype), miterdist);
+  CL::Polygons offset1 = CLOffset(cpolys, -2*CL_FACTOR*distance, CLType(jtype), 0);// CL::jtRound);
+  CL::Polygons offset = CLOffset(offset1, 1*CL_FACTOR*distance, CLType(jtype), 0);
   double z=0, extrf=1.;;
   if (polys.size()>0) {
     z= polys.back().getZ();

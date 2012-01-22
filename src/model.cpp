@@ -37,6 +37,7 @@
 
 Model::Model() :
   currentprintingline(0),
+  currentbufferedlines(0),
   settings(),
   Min(), Max(),
   errlog (Gtk::TextBuffer::create()),
@@ -113,14 +114,20 @@ Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
 
 void Model::GlDrawGCode(int layerno)
 {
-  gcode.draw (settings, layerno, false);
-  int currentlayer = gcode.getLayerNo(currentprintingline);
-  if (currentlayer>=0)
-    gcode.draw (settings, currentlayer, true);
+  if (settings.Display.DisplayGCode) 
+    gcode.draw (settings, layerno, false);
+  if (currentprintingline>=0) {
+    int currentlayer = gcode.getLayerNo(currentprintingline);
+    if (currentlayer>=0)
+      gcode.draw (settings, currentlayer, true, 1);
+    gcode.drawCommands(settings, currentprintingline-currentbufferedlines, currentprintingline,
+		       true, 3);
+  }
 }
 
 void Model::GlDrawGCode(double layerz)
 {
+  if (!settings.Display.DisplayGCode) return;
   int layer = gcode.getLayerNo(layerz);
   if (layer>=0)
     GlDrawGCode(layer);

@@ -481,51 +481,51 @@ void Layer::calcConvexHull()
   while (current != start);
 }
 
-void Layer::getOrderedPrintLines(const vector<Poly> polys, 
-				 Vector2d &startPoint,
-				 vector<printline> &plines,
-				 double linewidth,double linewidthratio,double optratio) const
-{
-  Printlines printlines;
-  uint count  = polys.size();
-  uint nvindex=-1;
-  uint npindex=-1;
-  uint nindex;
-  vector<bool> done; // polys not yet handled
-  done.resize(count);
-  for(size_t q=0;q<count;q++) done[q]=false;
-  uint ndone=0;
-  double pdist, nstdist;
-  //double nlength;
-  while (ndone < count) 
-    {
-      nstdist = 1000000;
-      for(size_t q=0;q<count;q++) // find nearest polygon
-	{
-	  if (!done[q])
-	    {
-	      pdist = 1000000;
-	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
-	      // nlength = polys[q].getLineLengthSq(nindex); // ...feature to come...
-	      if (pdist<nstdist){
-		npindex = q;      // index of nearest poly in polysleft
-		nstdist = pdist;  // distance of nearest poly
-		nvindex = nindex; // nearest point in nearest poly
-	      }
-	    }
-	}
-      printlines.addPoly(polys[npindex],nvindex);
-      //polys[npindex].getLines(lines,nvindex); // add poly lines to lines
-      done[npindex]=true;
-      ndone++;
-      startPoint = printlines.lastPoint();//Vector2d(lines.back().x,lines.back().y);
-    }
-  if (count) {
-    printlines.setZ(polys.back().getZ());
-    printlines.optimize(linewidth, linewidthratio, optratio);
-    printlines.getLines(plines);
-  }
-}
+// void Layer::getOrderedPrintLines(const vector<Poly> polys, 
+// 				 Vector2d &startPoint,
+// 				 vector<printline> &plines,
+// 				 double linewidth,double linewidthratio,double optratio) const
+// {
+
+  // uint count  = polys.size();
+  // uint nvindex=-1;
+  // uint npindex=-1;
+  // uint nindex;
+  // vector<bool> done; // polys not yet handled
+  // done.resize(count);
+  // for(size_t q=0;q<count;q++) done[q]=false;
+  // uint ndone=0;
+  // double pdist, nstdist;
+  // //double nlength;
+  // while (ndone < count) 
+  //   {
+  //     nstdist = 1000000;
+  //     for(size_t q=0;q<count;q++) // find nearest polygon
+  // 	{
+  // 	  if (!done[q])
+  // 	    {
+  // 	      pdist = 1000000;
+  // 	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
+  // 	      // nlength = polys[q].getLineLengthSq(nindex); // ...feature to come...
+  // 	      if (pdist<nstdist){
+  // 		npindex = q;      // index of nearest poly in polysleft
+  // 		nstdist = pdist;  // distance of nearest poly
+  // 		nvindex = nindex; // nearest point in nearest poly
+  // 	      }
+  // 	    }
+  // 	}
+  //     printlines.addPoly(polys[npindex],nvindex);
+  //     //polys[npindex].getLines(lines,nvindex); // add poly lines to lines
+  //     done[npindex]=true;
+  //     ndone++;
+  //     startPoint = printlines.lastPoint();//Vector2d(lines.back().x,lines.back().y);
+  //   }
+  // if (count) {
+  //   printlines.setZ(polys.back().getZ());
+  //   printlines.optimize(linewidth, linewidthratio, optratio);
+  //   printlines.getLines(plines);
+  // }
+// }
 
 // Convert to GCode
 void Layer::MakeGcode(GCodeState &state,
@@ -548,6 +548,7 @@ void Layer::MakeGcode(GCodeState &state,
   vector<printline> lines;
   //cerr << "gcode layer " << LayerNo << "z="<<Z<<endl;
 
+  Printlines printlines;
   
   lines.clear(); // will contain everything
 
@@ -568,8 +569,10 @@ void Layer::MakeGcode(GCodeState &state,
 		   skinFullInfills[s-1]->infillpolys.begin(),
 		   skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
-      getOrderedPrintLines(polys, startPoint, lines, 
-			   linewidth, linewidthratio, optratio); 
+      printlines.clear();
+      printlines.makeLines(polys, startPoint, lines, linewidth, linewidthratio, optratio);
+      // getOrderedPrintLines(polys, startPoint, lines, 
+      // 			   linewidth, linewidthratio, optratio); 
     }
   }
   polys.clear();
@@ -578,8 +581,11 @@ void Layer::MakeGcode(GCodeState &state,
   skirtPolygon.getLines(lines, startPoint);
 
   // 3. Support
-  getOrderedPrintLines(supportInfill->infillpolys, startPoint, lines,
+  printlines.clear();
+  printlines.makeLines(supportInfill->infillpolys, startPoint, lines, 
 		       linewidth, linewidthratio, optratio);
+  // getOrderedPrintLines(supportInfill->infillpolys, startPoint, lines,
+  // 		       linewidth, linewidthratio, optratio);
 
   // 4. all other polygons:
   
@@ -594,8 +600,11 @@ void Layer::MakeGcode(GCodeState &state,
   polys.insert(polys.end(),
 	       bridgeInfill->infillpolys.begin(), bridgeInfill->infillpolys.end());
   
-  getOrderedPrintLines(polys, startPoint, lines, 
-		       linewidth, linewidthratio, optratio); 
+  printlines.clear();
+  printlines.makeLines(polys, startPoint, lines, 
+		       linewidth, linewidthratio, optratio);
+  // getOrderedPrintLines(polys, startPoint, lines, 
+  // 		       linewidth, linewidthratio, optratio); 
 
   // push all lines to gcode
   state.AddLines(lines, extrf, offsetZ, slicing, hardware); 

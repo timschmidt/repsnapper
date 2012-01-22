@@ -119,10 +119,10 @@ public:
   void setSupportPolygons(const vector<Poly> polys);
   void setSkirtPolygon(const Poly poly);
 
-  void getOrderedPrintLines(const vector<Poly> polys, 
-			    Vector2d &startPoint,
-			    vector<printline> &lines,
-			    double linewidth,double linewidthratio,double optratio) const;
+  /* void getOrderedPrintLines(const vector<Poly> polys,  */
+  /* 			    Vector2d &startPoint, */
+  /* 			    vector<printline> &lines, */
+  /* 			    double linewidth,double linewidthratio,double optratio) const; */
   
 
   void MakeGcode (GCodeState &state,

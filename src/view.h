@@ -52,7 +52,9 @@ class View : public Gtk::Window
   void power_toggled();
   void kick_clicked();
   void print_clicked();
+  /* void stop_clicked(); */
   void continue_clicked();
+  void reset_clicked();
   /* void add_statusbar_msg(const char *name, const char *message); */
   /* void add_statusbar_msg(Gtk::Widget *widget, const char *message); */
   void update_scale_value();
@@ -71,7 +73,9 @@ class View : public Gtk::Window
   Render *m_renderer;
 
   Gtk::Button *m_print_button;
+  /* Gtk::Button *m_stop_button; */
   Gtk::Button *m_continue_button;
+  Gtk::Button *m_reset_button;
   Gtk::ToggleButton *m_power_button;
 
   void connect_button(const char *name, const sigc::slot<void> &slot);
@@ -145,7 +149,7 @@ class View : public Gtk::Window
   // view nasties ...
   void Draw (Gtk::TreeModel::iterator &selected);
   void DrawGrid ();
-  void showCurrentPrinting(unsigned long donelines);
+  void showCurrentPrinting(unsigned long fromline, unsigned long toline);
 };
 
 #ifdef MODEL_IMPLEMENTATION

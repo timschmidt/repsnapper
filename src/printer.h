@@ -51,6 +51,9 @@ class Printer
 
 	unsigned long unconfirmed_lines;
 
+	unsigned long lastdonelines; // for live view
+	time_t lasttimeshown;
+
 	SerialState serial_state;
 	void set_printing (bool printing);
 	void update_core_settings();
@@ -63,7 +66,8 @@ class Printer
 	double total_time_to_print ;
 
 	View *m_view;
-        Model *m_model;
+        //GCode *m_gcode;
+	Model *m_model;
  public:
 	Printer(View *view);
 	~Printer();
@@ -90,7 +94,8 @@ class Printer
 
 	bool IsPrinting() { return printing; }
 
-        void setModel (Model *model);
+        //void setGCode (GCode gcode);
+	void setModel(Model *model);
 
 	// Communication
 	//void SetGcode(GCode gcode);
@@ -100,9 +105,11 @@ class Printer
 
 	void Print();
 	void Pause();
+	void Stop();
 	void Continue();
 	void Kick();
 	void Restart();
+	void Reset();
 	
 	void draw_current(Vector3d &from);
 	double getCurrentPrintingZ();
@@ -117,13 +124,14 @@ class Printer
 	void Home(string axis);
 	void Move(string axis, double distance);
 	void Goto(string axis, double position);
-	void STOP();
 
 	rr_dev device;
 	sigc::connection devconn;
 
 	void PrintButton();
+	void StopButton();
 	void ContinuePauseButton();
+	void ResetButton();
 
 	Glib::RefPtr<Gtk::TextBuffer> commlog;
 

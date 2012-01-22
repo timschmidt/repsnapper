@@ -366,25 +366,23 @@ int GCode::getLayerNo(const double z) const
 int GCode::getLayerNo(const unsigned long commandno) const
 {
   if (commandno<0) return commandno;
-  if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
+  if (layerchanges.size()>0) {// have recorded layerchange indices -> draw whole layers
+    if (commandno > layerchanges.back()  && commandno < commands.size()) // last layer?
+      return layerchanges.size()-1;
     for(uint i=0;i<layerchanges.size() ;i++)
       if (layerchanges[i] > commandno)
 	return (i-1);
+  }
   return -1;
 }
 
-void GCode::draw(const Settings &settings, int layer, bool liveprinting)
+void GCode::draw(const Settings &settings, int layer, bool liveprinting, int linewidth)
 {
 	/*--------------- Drawing -----------------*/
 
   //cerr << "gc draw "<<layer << " - " <<liveprinting << endl;
 
 	Vector3d thisPos(0,0,0);
-	Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
-	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
-	double	Distance = 0.0;
-	Vector3d pos(0,0,0);
-	Vector3d defaultpos(-1,-1,-1);
 	uint start = 0, end = 0;
         uint n_cmds = commands.size();
 
@@ -427,15 +425,29 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting)
           }
 	}
 
-	start = CLAMP (start, 0, n_cmds);
-	end = CLAMP (end, 0, n_cmds);
+	drawCommands(settings, start, end, liveprinting, linewidth);
+}
 
+
+void GCode::drawCommands(const Settings &settings, uint start, uint end,
+			 bool liveprinting, int linewidth)
+{
 	double LastE=0.0;
 	bool extruderon = false;
+	Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
+	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
+
         glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
+        uint n_cmds = commands.size();
+	double	Distance = 0.0;
+	Vector3d defaultpos(-1,-1,-1);
+	Vector3d pos(0,0,0);
 
+
+	start = CLAMP (start, 0, n_cmds);
+	end = CLAMP (end, 0, n_cmds);
 	// get starting point 
 	if (start>0) {
 	  for(uint i=start; i < end ;i++)
@@ -471,7 +483,7 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting)
 		  }
 			LastColor = Color;
 			Distance += (commands[i].where-pos).length();
-			glLineWidth(3);
+			glLineWidth(linewidth);
 			glBegin(GL_LINES);
 			glColor4fv(&Color[0]);
 			if(i==end-1)
@@ -485,7 +497,7 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting)
 		case COORDINATEDMOTION:
 			if(commands[i].e == LastE)
 				{
-				glLineWidth(3);
+				glLineWidth(linewidth);
 				double speed = commands[i].f;
 				double luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
 				if(settings.Display.LuminanceShowsSpeed == false)
@@ -494,7 +506,7 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting)
 				}
 			else
 				{
-				glLineWidth(3);
+				glLineWidth(linewidth);
 				double speed = commands[i].f;
 				double luma = speed/settings.Hardware.MaxPrintSpeedXY;
 				if(settings.Display.LuminanceShowsSpeed == false)
@@ -538,36 +550,36 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting)
 	}
 
 	glLineWidth(1);
-	std::stringstream oss;
+	// std::stringstream oss;
+	// oss << "Length: "  << Distance/1000.0 << " - " << Distance/200000.0 << " Hour.";
+	//std::cout << oss.str();
 
-	oss << "Length: "  << Distance/1000.0 << " - " << Distance/200000.0 << " Hour.";
-//	std::cout << oss.str();
 
-
-	// Draw bbox
-	glColor3f(1,0,0);
-	glBegin(GL_LINE_LOOP);
-	glVertex3f(Min.x, Min.y, Min.z);
-	glVertex3f(Max.x, Min.y, Min.z);
-	glVertex3f(Max.x, Max.y, Min.z);
-	glVertex3f(Min.x, Max.y, Min.z);
-	glEnd();
-	glBegin(GL_LINE_LOOP);
-	glVertex3f(Min.x, Min.y, Max.z);
-	glVertex3f(Max.x, Min.y, Max.z);
-	glVertex3f(Max.x, Max.y, Max.z);
-	glVertex3f(Min.x, Max.y, Max.z);
-	glEnd();
-	glBegin(GL_LINES);
-	glVertex3f(Min.x, Min.y, Min.z);
-	glVertex3f(Min.x, Min.y, Max.z);
-	glVertex3f(Min.x, Max.y, Min.z);
-	glVertex3f(Min.x, Max.y, Max.z);
-	glVertex3f(Max.x, Max.y, Min.z);
-	glVertex3f(Max.x, Max.y, Max.z);
-	glVertex3f(Max.x, Min.y, Min.z);
-	glVertex3f(Max.x, Min.y, Max.z);
-	glEnd();
+	// bbox for gcode??
+	// // Draw bbox
+	// glColor3f(1,0,0);
+	// glBegin(GL_LINE_LOOP);
+	// glVertex3f(Min.x, Min.y, Min.z);
+	// glVertex3f(Max.x, Min.y, Min.z);
+	// glVertex3f(Max.x, Max.y, Min.z);
+	// glVertex3f(Min.x, Max.y, Min.z);
+	// glEnd();
+	// glBegin(GL_LINE_LOOP);
+	// glVertex3f(Min.x, Min.y, Max.z);
+	// glVertex3f(Max.x, Min.y, Max.z);
+	// glVertex3f(Max.x, Max.y, Max.z);
+	// glVertex3f(Min.x, Max.y, Max.z);
+	// glEnd();
+	// glBegin(GL_LINES);
+	// glVertex3f(Min.x, Min.y, Min.z);
+	// glVertex3f(Min.x, Min.y, Max.z);
+	// glVertex3f(Min.x, Max.y, Min.z);
+	// glVertex3f(Min.x, Max.y, Max.z);
+	// glVertex3f(Max.x, Max.y, Min.z);
+	// glVertex3f(Max.x, Max.y, Max.z);
+	// glVertex3f(Max.x, Min.y, Min.z);
+	// glVertex3f(Max.x, Min.y, Max.z);
+	// glEnd();
 
 }
 

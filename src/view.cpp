@@ -189,7 +189,7 @@ void View::printing_changed()
 }
 
 void View::power_toggled()
-{
+{ // FIXME button active???
   if (m_power_button->get_active())
     m_printer->SendNow ("M80");
   else
@@ -592,9 +592,20 @@ void View::print_clicked()
   m_printer->PrintButton();
   printing_changed();
 }
+
+// void View::stop_clicked()
+// {
+//   m_printer->StopButton();
+//   printing_changed();
+// }
 void View::continue_clicked()
 {
   m_printer->ContinuePauseButton();
+  printing_changed();
+}
+void View::reset_clicked()
+{
+  m_printer->ResetButton();
   printing_changed();
 }
 
@@ -761,8 +772,12 @@ View::View(BaseObjectType* cobject,
   m_power_button->signal_toggled().connect    (sigc::mem_fun(*this, &View::power_toggled));
   m_builder->get_widget ("p_print", m_print_button);
   m_print_button->signal_clicked().connect    (sigc::mem_fun(*this, &View::print_clicked) );
+  // m_builder->get_widget ("p_stop", m_stop_button);
+  // m_stop_button->signal_clicked().connect    (sigc::mem_fun(*this, &View::stop_clicked) );
   m_builder->get_widget ("p_pause", m_continue_button);
   m_continue_button->signal_clicked().connect (sigc::mem_fun(*this, &View::continue_clicked));
+  m_builder->get_widget ("p_reset", m_reset_button);
+  m_reset_button->signal_clicked().connect (sigc::mem_fun(*this, &View::reset_clicked));
 
   // Interactive tab
   connect_button ("i_home_all",        sigc::mem_fun(*this, &View::home_all));
@@ -1146,17 +1161,14 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 	glDisable (GL_POLYGON_OFFSET_FILL);
 
 	// Draw GCode, which already incorporates any print offset
-	if (m_model->settings.Display.DisplayGCode)
-	{
-		m_model->GlDrawGCode();
-	}
+	m_model->GlDrawGCode();
 
 	// Draw all objects
 	m_model->draw(selected);
 }
 
-void View::showCurrentPrinting(unsigned long donelines)
+void View::showCurrentPrinting(unsigned long fromline, unsigned long toline)
 {
-  m_model->setCurrentPrintingLine(donelines);
+  m_model->setCurrentPrintingLine(fromline, toline);
   queue_draw();
 }

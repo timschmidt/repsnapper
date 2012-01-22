@@ -106,10 +106,12 @@ public:
 	Glib::RefPtr<Gtk::TextBuffer> GetGCodeBuffer();
 	void GlDrawGCode(int layer=-1); // should be in the view
 	void GlDrawGCode(double Z); 
-	void setCurrentPrintingLine(long donelines){
-	  currentprintingline = donelines;
+	void setCurrentPrintingLine(long fromline, long toline){
+	  currentprintingline = toline;
+	  currentbufferedlines = (int)(toline-fromline);
 	}
 	unsigned long currentprintingline;
+	int currentbufferedlines;
 
 	Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
 	void SelectedNodeMatrices(vector<Matrix4d *> &result );
