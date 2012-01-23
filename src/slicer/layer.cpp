@@ -363,9 +363,10 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
 		       bool useFillets)
 {
   double distance = 0.5 * extrudedWidth;
+  double cleandist = min(extrudedWidth/3., thickness/2.);
   vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);
   for (uint i = 0; i<shrinked.size(); i++)  
-    shrinked[i].cleanup(distance);
+    shrinked[i].cleanup(cleandist);
   //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
   // outmost shells
   if (skins>1) { // either skins
@@ -383,14 +384,14 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
     {
       shrinked = Clipping::getOffset(shrinked,-distance);
       for (uint i = 0; i<shrinked.size(); i++)  
-	shrinked[i].cleanup(distance/2.);
+	shrinked[i].cleanup(cleandist);
       //shrinked = Clipping::getShrinkedCapped(shrinked,distance); 
       shellPolygons.push_back(shrinked);
     }
   // the filling polygon
   fillPolygons = Clipping::getOffset(shrinked,-distance);
   for (uint i = 0; i<fillPolygons.size(); i++)  
-    fillPolygons[i].cleanup(distance/2.);
+    fillPolygons[i].cleanup(cleandist);
   //fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);
   //cerr << LayerNo << " > " << fillPolygons.size()<< endl;
   calcConvexHull();
@@ -411,8 +412,10 @@ void Layer::MakeSkirt(double distance)
 {
   skirtPolygon.clear();
   vector<Poly> skp = Clipping::getOffset(hullPolygon,distance,jround);
-  if (skp.size()>0)
+  if (skp.size()>0){
     skirtPolygon = skp.front();
+    skirtPolygon.cleanup(distance/3.);
+  }
 }
 
 
@@ -486,6 +489,7 @@ void Layer::calcConvexHull()
       }
     }
   while (current != start);
+  hullPolygon.cleanup(thickness/2.);
 }
 
 
