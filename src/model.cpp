@@ -259,7 +259,7 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
       Vector3d p = selectedShape->transform3D.transform.getTranslation();
       Vector3d size = selectedShape->Max - selectedShape->Min;
 
-      minpos.push_back(Vector3d(p.x, p.y, p.z));
+      minpos.push_back(Vector3d(p.x,p.y,p.z));
       maxpos.push_back(Vector3d(p.x+size.x, p.y+size.y, p.z));
     }
   }
@@ -270,7 +270,7 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
   Vector3d StlDelta = (shape->Max - shape->Min);
   vector<Vector3d> candidates;
 
-  candidates.push_back(Vector3d(0.0, 0.0, 0.0));
+  candidates.push_back(-shape->Min);//Vector3d(0.0, 0.0, 0.0));
 
   for (uint j=0; j<maxpos.size(); j++)
   {
@@ -341,7 +341,6 @@ Shape* Model::AddShape(TreeObject *parent, Shape shape, string filename, bool au
   // Decide where it's going
   Vector3d trans = Vector3d(0,0,0);
   if (autoplace) found_location = FindEmptyLocation(trans, &shape);
-
   // Add it to the set
   size_t found = filename.find_last_of("/\\");
   Gtk::TreePath path = objtree.addShape(parent, shape, filename.substr(found+1));
