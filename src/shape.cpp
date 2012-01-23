@@ -742,7 +742,7 @@ void Shape::CenterAroundXY()
 
 
 // given the overall translation matrix, not our own!
-bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
+bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, 
 			   vector<Poly> &polys, double &max_grad) const
 {
   vector<Vector2d> vertices;
@@ -877,7 +877,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
 
 		// Check if loop is complete
 		if (count != 0) {
-		  poly.cleanup(Optimization);
+		  //poly.cleanup(Optimization);
 		  // cout << "## POLY add ";
 		  // poly.printinfo();
 		  polys.push_back(poly);		// This is good

@@ -68,7 +68,8 @@ public:
 	Poly Shrinked(vector<Vector2d> *vertices, double distance);
 
 	// simplify douglas-peucker
-	void cleanup(double maxerror, uint start=0, uint end=0);
+	void cleanup(double maxerror);
+	vector<Vector2d> cleaned(const vector<Vector2d> vertices, double maxerror) const;
 
 	void clear(){vertices.clear();};
 
@@ -93,7 +94,8 @@ public:
 	
 	Vector2d getVertexCircular(int pointindex) const;  // 2d point at index 
 	Vector3d getVertexCircular3(int pointindex) const; // 3d point at index 
-	//	vector<guint> points;			// points, indices into vertices
+	vector<Vector2d> getVertexRangeCircular(int from, int to) const;
+
 	vector<Vector2d> vertices; // vertices
 	void addVertex(Vector2d v, bool front=false);
 	bool hole; // this polygon is a hole

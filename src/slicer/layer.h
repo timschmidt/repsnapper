@@ -86,7 +86,6 @@ public:
 
   
   void MakeShells(uint shellcount, double extrudedWidth, 
-  		  double optimization, 
   		  bool makeskirt, 
   		  bool useFillets);
   /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */
@@ -97,8 +96,7 @@ public:
 
   vector<Poly> GetPolygons() const { return polygons; };
   void SetPolygons(vector<Poly> polys) ;
-  void SetPolygons(const Matrix4d &T, const Shape shape, 
-		   double z, double Optimization);
+  void SetPolygons(const Matrix4d &T, const Shape shape, double z);
   vector<Poly> GetFillPolygons() const { return fillPolygons; }
   vector<Poly> GetFullFillPolygons() const { return fullFillPolygons; }
   vector<Poly> GetBridgePolygons() const { return bridgePolygons; }
@@ -139,7 +137,7 @@ public:
   void Clear();
 
   void addPolygons(vector<Poly> polys);
-  int addShape(Matrix4d T, const Shape shape, double z, double Optimization,
+  int addShape(Matrix4d T, const Shape shape, double z, 
 	       double &max_gradient);
 
   double area() const;
