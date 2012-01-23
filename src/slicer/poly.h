@@ -67,8 +67,8 @@ public:
 	Poly Shrinked(double distance) const;
 	Poly Shrinked(vector<Vector2d> *vertices, double distance);
 
-	// Remove vertices that are on a straight line
-	void cleanup(double maxerror=0.001);
+	// simplify douglas-peucker
+	void cleanup(double maxerror, uint start=0, uint end=0);
 
 	void clear(){vertices.clear();};
 

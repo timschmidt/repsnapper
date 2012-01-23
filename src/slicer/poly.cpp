@@ -130,6 +130,45 @@ Poly::~Poly()
   //delete clipp;
 }
 
+
+// Douglas-Peucker algorithm
+void Poly::cleanup(double epsilon, uint start, uint end)
+{ 
+  if (epsilon == 0) return;
+  if (start==0 && end==0) end = vertices.size()-1; // first call
+  if ((int)(end-start)<4) return; // keep triangle at least
+  if (vertices.size()<4) return;
+  double dmax = 0;
+  //cerr <<vertices.size() << " : " <<start << "--"<< end <<" / " <<epsilon<<endl;
+  //Find the point with the maximum distance from line start-end
+  uint index = 0;
+  Vector2d normal = (vertices[end]-vertices[start]).normal();
+  normal.normalize();
+  //cerr <<vertices[end] << vertices[start] << normal << endl;
+  for (uint i = start+1; i < end ; i++) {
+    double dist = abs(dot((vertices[i]-vertices[start]),normal));
+    if (dist >= epsilon && dist > dmax) {
+      index = i;
+      dmax = dist;
+    }
+  }
+  //cerr <<"dmax "<< dmax << endl;
+  if (index > 1 && index < end-1) {
+    // divide at max dist point and cleanup both parts recursively 
+    // first cleanup last part to keep index valid
+    cleanup(epsilon, index, end); // from index to end
+    cleanup(epsilon, start, index); // from start to index
+  }
+  else { // all points are nearer than espilon
+    //cerr << "delete from "  << start+1 << " to " << end-1 << " of " <<vertices.size() << endl;
+    // delete all points between start and end
+    vertices.erase(vertices.begin()+start+1,vertices.begin()+end);
+    //cerr << "--> " <<vertices.size() << endl;
+  }
+}
+
+#if 0
+// this is old
 // Remove vertices that are on a straight line
 void Poly::cleanup(double maxerror)
 { 
@@ -162,6 +201,8 @@ void Poly::cleanup(double maxerror)
 	}
     }
 }
+#endif
+
 
 void Poly::calcHole()
 {

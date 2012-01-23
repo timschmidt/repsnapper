@@ -139,7 +139,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    abs(sIt->distance-infillDistance) < 0.01 &&
 	    abs(sIt->angle-rotation) < 0.01 )
 	  {
-	    //cerr << "found saved pattern no " << i << "with" <<savedPatterns[i].cpolys.size() <<" polys"<<endl;
+	    //cerr << "found saved pattern no " << sIt-savedPatterns.begin() << " with " << sIt->cpolys.size() <<" polys"<<endl;
 	    // is it too small for this layer?
 	    if (sIt->Min.x > Min.x || sIt->Min.y > Min.y || 
 		sIt->Max.x < Max.x || sIt->Max.y < Max.y) 
