@@ -135,7 +135,7 @@ Command::Command(string gcodeline, Vector3d defaultpos){
       }
       if( buffer.find( "Z", 0) != string::npos ) {
 	string number = buffer.substr(1,buffer.length()-1);
-	cerr << "found Z" << buffer << endl;
+	//cerr << "found Z" << buffer << endl;
 	where.z = ToDouble(number);
       }
       if( buffer.find( "E", 0) != string::npos ) {
@@ -277,7 +277,7 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	double filesize = double(file.tellg());
 	file.seekg (0);
 
-	progress->start("Loading GCode", filesize);
+	progress->start(_("Loading GCode"), filesize);
 
 	if(!file.good())
 	{
@@ -303,8 +303,8 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	while(getline(file,s))
 	{
 		LineNr++;
-		progress->update(1.*file.tellg());
-		//if (LineNr % 1000 == 0) g_main_context_iteration(NULL,true);
+		if (LineNr%100==0) progress->update(1.*file.tellg());
+
 		Command command(s, globalPos);
 		if (command.e==0)
 		  command.e= lastE;
@@ -315,7 +315,7 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 		else
 		  lastF=command.f;
 		// cout << s << endl;
-		cerr << command.info()<< endl;
+		//cerr << command.info()<< endl;
 		if(command.where.x < -100)
 		  continue;
 		if(command.where.y < -100)
@@ -600,7 +600,8 @@ bool add_text_filter_nan(string str, string &GcodeTxt)
 void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, 
 		     const string &GcodeLayer, const string &GcodeEnd,
 		     bool UseIncrementalEcode, bool Use3DGcode,
-		     double AntioozeDistance, double AntioozeSpeed)
+		     double AntioozeDistance, double AntioozeSpeed,
+		     ViewProgress * progress)
 {
 	double lastE = -10;
 	Vector3d pos(0,0,0);
@@ -612,6 +613,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	double lastZ =0;
 	layerchanges.clear();
 
+	progress->restart(_("Collecting GCode"),commands.size());
 	for(uint i=0;i<commands.size() ;i++) {
 	  if(commands[i].where.z != lastZ) {
 	    layerchanges.push_back(i);
@@ -620,6 +622,8 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	  
 	  GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, UseIncrementalEcode) + "\n";
 	  
+	  if (i%100==0) progress->update(i);
+
 	// 	oss.str( "" );
 	// 	switch(commands[i].Code)
 	// 	{
