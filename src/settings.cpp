@@ -171,7 +171,7 @@ static struct {
   BOOL_MEMBER   (Slicing.EnableAcceleration, "EnableAcceleration", true, false),
 // ShrinkQuality is a special enumeration ...
 //  INT_MEMBER    (Slicing.ShrinkQuality, "ShrinkQuality", 0, true),
-  FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, false),
+  FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
   BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, false),
   // FLOAT_MEMBER  (Slicing.SerialBuildHeight, "SerialBuildHeight", 0.00, false),
 
@@ -257,7 +257,7 @@ static struct {
   { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
   { "Slicing.InfillDistance", 0.0, 10, 0.1, 1 },
   { "Slicing.AltInfillDistance", 0.1, 10, 0.1, 2 },
-  { "Slicing.Optimization", 0.0, 1.0, 0.001, 0.1 },
+  { "Slicing.Optimization", 0.0, 10.0, 0.01, 0.1 },
   { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
   { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
   { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },

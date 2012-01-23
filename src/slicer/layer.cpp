@@ -367,8 +367,10 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
   //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
   // outmost shells
   if (skins>1) { // either skins
-    for (uint i = 0; i<shrinked.size(); i++) 
+    for (uint i = 0; i<shrinked.size(); i++)  {
+      shrinked[i].cleanup(optimization);
       shrinked[i].setExtrusionFactor(1./skins);
+    }
     skinPolygons = shrinked; 
   } else {  // or normal shell
     clearpolys(shellPolygons);

@@ -161,7 +161,7 @@ vector<Poly> Clipping::substractMerged()
 
 vector<Poly> Clipping::getOffset(const Poly poly, double distance, JoinType jtype, double miterdist)
 {
-  CL::Polygons cpolys; cpolys.push_back(getClipperPolygon(poly));
+  CL::Polygons cpolys(1); cpolys[0]=getClipperPolygon(poly);
   CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
   return getPolys(offset, poly.getZ(), poly.getExtrusionFactor());
 }
@@ -263,7 +263,6 @@ Poly Clipping::getPoly(const CL::Polygon cpoly, double z, double extrusionfactor
     p.vertices[count-i-1] = v;  // reverse!
     //p.vertices[i] = v; 
   }
-  p.cleanup();
   p.calcHole();
   return p;
 }
