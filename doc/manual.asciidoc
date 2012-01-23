@@ -2,6 +2,8 @@
 
 Welcome to the RepSnapper Manual, although currently a work in progress this guide aims to help you install and use your RepSnapper software.
 
+This manual is quite outdated. For compiling and installing please see the README file at https://github.com/timschmidt/repsnapper/blob/master/README after you obtained the sources. Any pre-compiled binaries will be very outdated, too.
+
 Contact Info
 
     * Irc channel: #repsnapper at irc://irc.freenode.net
@@ -166,7 +168,7 @@ cd repsnapper
 ./autogen.sh
 make
 ----
-Executable (repsnapper) will be left in the src folder. Currently there is no install rule.
+Executable (repsnapper) will be left in the top folder. Currently there is no install rule.
 
 == Configuration ==
 Not uptodate, but still useful:
@@ -518,13 +520,13 @@ Test::
 To run repsnapper on
 
 windows::
-    double click the repsnapper.exe file within the repsnapper/src directory
+    double click the repsnapper.exe file within the repsnapper directory
 
 linux::
-    type repsnapper/src/repsnapper into the console window.
+    type repsnapper/repsnapper into the console window.
 
 OSX::
-    type repsnapper/src/repsnapper into the console window.
+    type repsnapper/repsnapper into the console window.
 
 After launching the repsnapper application you are presented with the main window of the application
 
