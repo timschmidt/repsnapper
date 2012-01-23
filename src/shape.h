@@ -118,7 +118,7 @@ public:
 	void draw_geometry () const;
 	void drawBBox() const; 
 	void CenterAroundXY();
-	bool getPolygonsAtZ(const Matrix4d &T, double z, double Optimization,
+	bool getPolygonsAtZ(const Matrix4d &T, double z, 
 			    vector<Poly> &polys, double &max_grad) const;
 	// returns maximum gradient
 	vector<Segment> getCutlines(const Matrix4d &T, double z, 

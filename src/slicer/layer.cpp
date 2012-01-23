@@ -104,20 +104,21 @@ void Layer::SetPolygons(vector<Poly> polys) {
   }
 }
 void Layer::SetPolygons(const Matrix4d &T, const Shape shape, 
-			double z, double Optimization) {
+			double z) {
   double offsetZ = Z;
   bool polys_ok=false;
   while (!polys_ok) {
     double max_grad;
-    polys_ok = shape.getPolygonsAtZ(T, Optimization, offsetZ, polygons, max_grad);
+    polys_ok = shape.getPolygonsAtZ(T, offsetZ, polygons, max_grad);
     offsetZ+=thickness/10.;
   }
   for(uint i=0;i<polygons.size();i++){
+    polygons[i].cleanup(thickness/2);
     polygons[i].setZ(Z); 
   }
 }
 
-int Layer::addShape(Matrix4d T, const Shape shape, double z, double Optimization, 
+int Layer::addShape(Matrix4d T, const Shape shape, double z, 
 		     double &max_gradient)
 {
   double hackedZ = z;
@@ -128,7 +129,6 @@ int Layer::addShape(Matrix4d T, const Shape shape, double z, double Optimization
   while (!polys_ok && hackedZ < z+thickness) {
     polys.clear();
     polys_ok=shape.getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
-				  Optimization,
 				  polys, max_gradient);
     if (polys_ok) {
       num_polys = polys.size();
@@ -137,7 +137,7 @@ int Layer::addShape(Matrix4d T, const Shape shape, double z, double Optimization
       num_polys=-1;
       cerr << "hacked Z=" << hackedZ << endl;
     }
-    hackedZ += Optimization;
+    hackedZ += thickness/10;
   }
   return num_polys;
 }
@@ -146,6 +146,7 @@ int Layer::addShape(Matrix4d T, const Shape shape, double z, double Optimization
 void Layer::addPolygons(vector<Poly> polys)
 {
   for(uint i=0;i<polys.size();i++){
+    polys[i].cleanup(thickness/2);
     polys[i].setZ(Z); 
   }
   polygons.insert(polygons.end(),polys.begin(),polys.end());
@@ -358,14 +359,13 @@ void Layer::setSkirtPolygon(const Poly poly)
 
 
 void Layer::MakeShells(uint shellcount, double extrudedWidth, 
-		       double optimization, 
 		       bool makeskirt, 
 		       bool useFillets)
 {
   double distance = 0.5 * extrudedWidth;
   vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);
   for (uint i = 0; i<shrinked.size(); i++)  
-    shrinked[i].cleanup(optimization);
+    shrinked[i].cleanup(distance);
   //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
   // outmost shells
   if (skins>1) { // either skins
@@ -383,14 +383,14 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
     {
       shrinked = Clipping::getOffset(shrinked,-distance);
       for (uint i = 0; i<shrinked.size(); i++)  
-	shrinked[i].cleanup(optimization);
+	shrinked[i].cleanup(distance/2.);
       //shrinked = Clipping::getShrinkedCapped(shrinked,distance); 
       shellPolygons.push_back(shrinked);
     }
   // the filling polygon
   fillPolygons = Clipping::getOffset(shrinked,-distance);
   for (uint i = 0; i<fillPolygons.size(); i++)  
-    fillPolygons[i].cleanup(optimization);
+    fillPolygons[i].cleanup(distance/2.);
   //fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);
   //cerr << LayerNo << " > " << fillPolygons.size()<< endl;
   calcConvexHull();

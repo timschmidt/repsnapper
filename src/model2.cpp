@@ -246,7 +246,7 @@ void Model::Slice(double printOffsetZ)
 	layer->setZ(shape_z + printOffsetZ); // set to real z
 	if (shape_z==minZ) LayerNr = 0; // these layers will not be handled als bridges etc.
 	new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
-				    shape_z, settings.Slicing.Optimization,
+				    shape_z, 
 				    max_gradient);
 	// cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape 
 	//      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
@@ -470,7 +470,7 @@ void Model::MakeShells()
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       makeskirt = (layers[i]->getZ() <= skirtheight);
       layers[i]->MakeShells(settings.Slicing.ShellCount,
-			    matwidth, settings.Slicing.Optimization, 
+			    matwidth, 
 			    makeskirt, 
 			    false); 
     }

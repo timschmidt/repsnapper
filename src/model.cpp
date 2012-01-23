@@ -700,7 +700,6 @@ void Model::drawLayers(Vector3d offset) const
 		double max_grad;
 		bool polys_ok=
 		  objtree.Objects[o].shapes[f].getPolygonsAtZ(T, z, 
-							      settings.Slicing.Optimization,
 							      polys,
 							      max_grad);
 		if (polys_ok) layer->addPolygons(polys);
@@ -710,7 +709,7 @@ void Model::drawLayers(Vector3d offset) const
 	  bool makeskirt = (layer->getZ() <= settings.Slicing.SkirtHeight);
 
 	  layer->MakeShells(settings.Slicing.ShellCount,
-			    matwidth, settings.Slicing.Optimization,
+			    matwidth, 
 			    makeskirt, false);
 	  if (settings.Display.DisplayinFill)
 	    {

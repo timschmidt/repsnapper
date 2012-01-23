@@ -130,41 +130,55 @@ Poly::~Poly()
   //delete clipp;
 }
 
+void Poly::cleanup(double epsilon)
+{
+  vertices = cleaned(vertices, epsilon);
+  uint n_vert = vertices.size();
+  vector<Vector2d> invert;
+  invert.insert(invert.end(),vertices.begin()+n_vert/2,vertices.end());
+  invert.insert(invert.end(),vertices.begin(),vertices.begin()+n_vert/2);
+  vertices = cleaned(invert, epsilon);
+}
 
 // Douglas-Peucker algorithm
-void Poly::cleanup(double epsilon, uint start, uint end)
+vector<Vector2d> Poly::cleaned(const vector<Vector2d> vert, double epsilon) const
 { 
-  if (epsilon == 0) return;
-  if (start==0 && end==0) end = vertices.size()-1; // first call
-  if ((int)(end-start)<4) return; // keep triangle at least
-  if (vertices.size()<4) return;
+  if (epsilon == 0) return vert;
+  uint n_vert = vert.size();
+  if (n_vert<3) return vert;
   double dmax = 0;
-  //cerr <<vertices.size() << " : " <<start << "--"<< end <<" / " <<epsilon<<endl;
   //Find the point with the maximum distance from line start-end
   uint index = 0;
-  Vector2d normal = (vertices[end]-vertices[start]).normal();
+  Vector2d normal = (vert.back()-vert.front()).normal();
   normal.normalize();
-  //cerr <<vertices[end] << vertices[start] << normal << endl;
-  for (uint i = start+1; i < end ; i++) {
-    double dist = abs(dot((vertices[i]-vertices[start]),normal));
-    if (dist >= epsilon && dist > dmax) {
-      index = i;
-      dmax = dist;
+  if( (normal.length()==0) || ((abs(normal.length())-1)>epsilon) ) return vert;
+  for (uint i = 1; i < n_vert-1 ; i++) 
+    {
+      double dist = abs(dot((vert[i]-vert.front()),normal));
+      if (dist >= epsilon && dist > dmax) {
+	index = i;
+	dmax = dist;
+      }
     }
-  }
-  //cerr <<"dmax "<< dmax << endl;
-  if (index > 1 && index < end-1) {
-    // divide at max dist point and cleanup both parts recursively 
-    // first cleanup last part to keep index valid
-    cleanup(epsilon, index, end); // from index to end
-    cleanup(epsilon, start, index); // from start to index
-  }
-  else { // all points are nearer than espilon
-    //cerr << "delete from "  << start+1 << " to " << end-1 << " of " <<vertices.size() << endl;
-    // delete all points between start and end
-    vertices.erase(vertices.begin()+start+1,vertices.begin()+end);
-    //cerr << "--> " <<vertices.size() << endl;
-  }
+  vector<Vector2d> newvert;
+  if (index > 0) // there is a point > epsilon
+    {
+      // divide at max dist point and cleanup both parts recursively 
+      vector<Vector2d> part1;
+      part1.insert(part1.end(), vert.begin(), vert.begin()+index+1);
+      vector<Vector2d> c1 = cleaned(part1, epsilon);
+      vector<Vector2d> part2;
+      part2.insert(part2.end(), vert.begin()+index, vert.end());
+      vector<Vector2d> c2 = cleaned(part2, epsilon);
+      newvert.insert(newvert.end(), c1.begin(), c1.end()-1);
+      newvert.insert(newvert.end(), c2.begin(), c2.end());
+    }
+  else 
+    { // all points are nearer than espilon
+      newvert.push_back(vert.front());
+      newvert.push_back(vert.back());
+    }
+  return newvert;
 }
 
 #if 0
@@ -326,6 +340,14 @@ Vector3d Poly::getVertexCircular3(int pointindex) const
   return Vector3d(v.x,v.y,z);
 }
 
+vector<Vector2d> Poly::getVertexRangeCircular(int from, int to) const
+{
+  vector<Vector2d> v;
+  int size = vertices.size();
+  for (int i = from; i<=to; i++) 
+    v.push_back(vertices[(i+size)%size]);
+  return v;
+}
 
 
 
