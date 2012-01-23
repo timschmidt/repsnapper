@@ -239,7 +239,7 @@ void Model::Slice(double printOffsetZ)
   int new_polys=0;
   while(z < Max.z)
     {
-      m_progress->update(z);	
+      if (LayerNr%10==0) m_progress->update(z);	
       shape_z = z; 
       max_shape_z = min(shape_z + serialheight, Max.z); 
       while ( currentshape < shapes.size() && shape_z <= max_shape_z ) {
@@ -296,7 +296,7 @@ void Model::MakeFullSkins()
   m_progress->restart (_("Skins"), layers.size());
   // #pragma omp parallel for schedule(dynamic) ordered
   for (int i=1; i < (int)layers.size(); i++) {
-    m_progress->update(i);
+    if (i%10==0) m_progress->update(i);
     layers[i]->makeSkinPolygons();
   }
   //m_progress->stop (_("Done"));
@@ -310,14 +310,14 @@ void Model::MakeUncoveredPolygons(bool make_bridges)
   // bottom to top: uncovered from above -> top polys
   for (int i = 0; i < count-1; i++) 
     {
-      m_progress->update(i);
+      if (i%10==0) m_progress->update(i);
       layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]),false);
     }  
   // top to bottom: uncovered from below -> bridge polys
   for (uint i = count-1; i > 0; i--) 
     {
       //cerr << "layer " << i << endl;
-      m_progress->update(count + count - i);
+      if (i%10==0) m_progress->update(count + count - i);
       vector<Poly> bridges = GetUncoveredPolygons(layers[i],layers[i-1]);
       //make_bridges = false;
       // no bridge on marked layers (serial build)
@@ -376,7 +376,7 @@ void Model::MultiplyUncoveredPolygons()
   // top-down: propagate upwards
   for (int i=count-1; i>=0; i--) 
     {
-      m_progress->update(count + count -i);
+      if (i%10==0) m_progress->update(count + count -i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
       vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
@@ -390,7 +390,7 @@ void Model::MultiplyUncoveredPolygons()
   // merge results
   for (int i=0; i < count; i++) 
     {
-      m_progress->update(count + count +i);
+      if (i%10==0) m_progress->update(count + count +i);
       //layers[i]->mergeFullPolygons(true);
       layers[i]->mergeFullPolygons(false);
     }
@@ -417,7 +417,7 @@ void Model::MakeSupportPolygons()
   m_progress->restart (_("Support"), count*2);
   for (int i=count-1; i>0; i--) 
     {
-      m_progress->update(count-i);
+      if (i%10==0) m_progress->update(count-i);
       if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i]);
     }
@@ -426,7 +426,7 @@ void Model::MakeSupportPolygons()
     {
       //if (layers[i]->LayerNo == 0) continue;
       double distance = 2*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
-      m_progress->update(i+count);
+      if (i%10==0) m_progress->update(i+count);
       vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());
       layers[i]->setSupportPolygons(Clipping::getOffset(merged,-distance));
     }
@@ -466,7 +466,7 @@ void Model::MakeShells()
 //#pragma omp parallel for schedule(dynamic) ordered
   for (int i=0; i < count; i++) 
     {
-      m_progress->update(i);
+      if (i%10==0) m_progress->update(i);
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       makeskirt = (layers[i]->getZ() <= skirtheight);
       layers[i]->MakeShells(settings.Slicing.ShellCount,
@@ -503,7 +503,7 @@ void Model::CalcInfill()
   //#pragma omp parallel for schedule(static) ordered
   for (int i=0; i < count ; i++) 
     {
-      m_progress->update(i);
+      if (i%10==0) m_progress->update(i);
       // inFill      
 
       fullInfillDistance = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
@@ -622,7 +622,8 @@ void Model::ConvertToGCode()
 		  settings.Slicing.UseIncrementalEcode,
 		  settings.Slicing.Use3DGcode,
 		  AntioozeDistance,
-		  settings.Slicing.AntioozeSpeed);
+		  settings.Slicing.AntioozeSpeed,
+		  m_progress);
 
   m_progress->stop (_("Done"));
 
