@@ -25,7 +25,7 @@ repsnapper_CPPFLAGS = \
         -DRSDATADIR='$(repsnapperdatadir)' \
         -DSYSCONFDIR='$(repsnapperconfdir)' \
 	-DLOCALEDIR='"$(localedir)"' \
-	-fopenmp \
+	$(OPENMP_CFLAGS) \
 	-g -O3 $(WARNING_FLAGS)
 
 SHARED_SRC= \
@@ -74,7 +74,7 @@ repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) src/repsnapper.cpp
 
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 
-repsnapper_LDADD = libpolylib.la libreprap.la libclipper.la -lgomp $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(BOOST_LDFLAGS)
+repsnapper_LDADD = libpolylib.la libreprap.la libclipper.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(BOOST_LDFLAGS)
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
 dist_repsnapperdata_DATA = src/repsnapper.ui

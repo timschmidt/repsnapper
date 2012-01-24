@@ -2,6 +2,7 @@
     This file is a part of the RepSnapper project.
     Copyright (C) 2010  Kulitorum
     Copyright (C) 2011  Michael Meeks <michael.meeks@novell.com>
+    Copyright (C) 2012  martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -361,7 +362,7 @@ void Model::MultiplyUncoveredPolygons()
   int i,s;
   for (i=0; i < count; i++) 
     {
-      m_progress->update(i);
+      if (i%10==0) m_progress->update(i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
       vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
       // we removed from full when skinning, so add them too
@@ -463,10 +464,16 @@ void Model::MakeShells()
   double matwidth, skirtheight = settings.Slicing.SkirtHeight;
   bool makeskirt=false;
 
-//#pragma omp parallel for schedule(dynamic) ordered
+  omp_lock_t progress_lock;
+  omp_init_lock(&progress_lock);
+#pragma omp parallel for schedule(dynamic) 
   for (int i=0; i < count; i++) 
     {
-      if (i%10==0) m_progress->update(i);
+      if (i%10==0) {
+	omp_set_lock(&progress_lock);
+	m_progress->update(i);
+	omp_unset_lock(&progress_lock);
+      }
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       makeskirt = (layers[i]->getZ() <= skirtheight);
       layers[i]->MakeShells(settings.Slicing.ShellCount,
@@ -474,6 +481,7 @@ void Model::MakeShells()
 			    makeskirt, 
 			    false); 
     }
+  omp_destroy_lock(&progress_lock);
   MakeSkirt();
   m_progress->update(count);
   //m_progress->stop (_("Done"));
@@ -500,10 +508,18 @@ void Model::CalcInfill()
 
   //cerr << "make infill"<< endl;
   int count = (int)layers.size();
-  //#pragma omp parallel for schedule(static) ordered
+// omp not possible because of static saved infill patterns, have to create them in advance
+  omp_lock_t progress_lock;
+  omp_init_lock(&progress_lock);
+#pragma omp parallel for schedule(dynamic) 
   for (int i=0; i < count ; i++) 
     {
-      if (i%10==0) m_progress->update(i);
+      // int tid = omp_get_thread_num( );
+      if (i%10==0){
+	omp_set_lock(&progress_lock);
+	m_progress->update(i);
+	omp_unset_lock(&progress_lock);
+      }
       // inFill      
 
       fullInfillDistance = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
@@ -526,6 +542,7 @@ void Model::CalcInfill()
 			    settings.Display.DisplayDebuginFill);
 
     }
+  omp_destroy_lock(&progress_lock);
   //m_progress->stop (_("Done"));
 }
 

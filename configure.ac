@@ -40,6 +40,8 @@ dnl 			      [AC_DEFINE([HAVE_OPENVRML], [1], [Use OpenVRML])],
 dnl 			      [AC_DEFINE([NO_VRML], [1], [Without OpenVRML])])],
 dnl )
 
+AC_OPENMP()
+
 dnl ------------------------------------------------------------------
 dnl libreprap is (for now) built in from a copy in libraries/libreprap
 dnl thus avoiding cmake, and user confusion.
