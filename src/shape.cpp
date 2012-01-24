@@ -339,23 +339,23 @@ int Shape::parseASCIISTL(istream *text) {
         // Parse Face Normal - "normal %f %f %f"
         string normal;
         Vector3d normal_vec;
-        *text >> normal
-             >> normal_vec.x
-             >> normal_vec.y
-             >> normal_vec.z;
-
+        *text >> normal;
         if(normal != "normal") {
             cerr << "Error: normal keyword not found in STL text!" << endl;
-            return -1;
-        }
+	}
+	
+	// forget about normals, we calculate them
 
         // Parse "outer loop" line
         string outer, loop;
-        *text >> outer >> loop;
-        if(outer != "outer" || loop != "loop") {
-            cerr << "Error: Outer/Loop keywords not found!" << endl;
-            return -1;
-        }
+	while (outer!="outer" && !(*text).eof()) {
+	  *text >> outer;
+	}
+	*text >> loop;
+	if(outer != "outer" || loop != "loop") {
+	  cerr << "Error: Outer/Loop keywords not found!" << endl;
+	  return -1;
+	}
 
         // Grab the 3 vertices - each one of the form "vertex %f %f %f"
         Vector3d vertices[3];
