@@ -22,6 +22,8 @@
 #include <vector>
 #include <vmmlib/vmmlib.h> 
 
+#include <omp.h>
+
 #include "layer.h"
 #include "clipping.h"
 
@@ -53,6 +55,7 @@ class Infill
   } ;
 
   static vector<struct pattern> savedPatterns;
+  static omp_lock_t save_lock;
 
   ClipperLib::Polygons makeInfillPattern(InfillType type, 
 					 const vector<Poly> tofillpolys,

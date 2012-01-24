@@ -28,6 +28,7 @@ using namespace vmml;
 
 
 vector<struct Infill::pattern> Infill::savedPatterns;
+omp_lock_t Infill::save_lock;
 
 
 Infill::Infill(){
@@ -57,6 +58,8 @@ void Infill::clearPatterns() {
   for (uint i=0; i<savedPatterns.size(); i++)
     savedPatterns[i].cpolys.clear();
   savedPatterns.clear();
+  omp_destroy_lock(&save_lock);
+  omp_init_lock(&save_lock);
 }
 
 
@@ -126,6 +129,10 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   Vector2d Min,Max;
   Min = layer->getMin();
   Max = layer->getMax();
+
+  //omp_set_lock(&save_lock);
+  //int tid = omp_get_thread_num( );
+  //cerr << "thread "<<tid << " looking for pattern " << endl;
   if (type != PolyInfill) { // can't save PolyInfill
     if (savedPatterns.size()>0){
       while (rotation>2*M_PI) rotation -= 2*M_PI;
@@ -144,8 +151,10 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    if (sIt->Min.x > Min.x || sIt->Min.y > Min.y || 
 		sIt->Max.x < Max.x || sIt->Max.y < Max.y) 
 	      {
+		omp_set_lock(&save_lock);
 		savedPatterns.erase(sIt++);
-		break; // there is no other match
+		omp_unset_lock(&save_lock);
+		//break; // there is no other match
 	      }
 	    else
 	      return sIt->cpolys;
@@ -153,6 +162,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       }
     }
   }
+  //omp_unset_lock(&save_lock);
   // none found - make new:
   ClipperLib::Polygons cpolys;
   bool zigzag = false;
@@ -239,6 +249,9 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       cerr << "infill type " << type << " unknown "<< endl;
     }
   // save 
+  omp_set_lock(&save_lock);
+  //tid = omp_get_thread_num( );
+  //cerr << "thread "<<tid << " saving pattern " << endl;
   struct pattern newPattern;
   newPattern.type=type;
   newPattern.angle=rotation;
@@ -250,6 +263,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       newPattern.Max=Max;
       savedPatterns.push_back(newPattern);
     }
+  omp_unset_lock(&save_lock);
   return newPattern.cpolys;
 }
 
