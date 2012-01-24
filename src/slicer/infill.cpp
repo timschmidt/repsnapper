@@ -179,7 +179,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	// make square that masks everything even when rotated
 	Vector2d diag = Max-Min;
 	double square = MAX(diag.x,diag.y);
-	Vector2d sqdiag(square,square);
+	Vector2d sqdiag(2*square,2*square);
 	Min=center-sqdiag;
 	Max=center+sqdiag;
 	//cerr << Min << "--"<<Max<< "::"<< center << endl;
