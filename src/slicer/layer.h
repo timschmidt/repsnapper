@@ -75,7 +75,6 @@ public:
   void mergeSupportPolygons();
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
-  void addFullPolygons(const vector<Poly> fullpolys, bool bridge) ;
 
   void CalcInfill (int normalfilltype, int fullfilltype, int supportfilltype,
 		   double InfillDistance,  double FullInfillDistance,
@@ -108,9 +107,10 @@ public:
   vector<Poly> GetInnerShell() const;
   
   void setFullFillPolygons(const vector<Poly> polys);  
-  void addFullFillPolygons(const vector<Poly> polys, bool bridge);
+  void addFullFillPolygons(const vector<Poly> polys);
+  void addFullPolygons(const vector<Poly> fullpolys) ;
   void setBridgePolygons(const vector<Poly>  polys);
-  void addBridgeFillPolygons(const vector<Poly> polys);
+  void addBridgePolygons(const vector<Poly> polys);
   void setBridgeAngles(const vector<double> angles);
   void makeSkinPolygons(); 
   void setNormalFillPolygons(const vector<Poly> polys);
