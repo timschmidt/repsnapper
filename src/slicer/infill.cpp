@@ -55,6 +55,7 @@ void Infill::clear()
 }
 
 void Infill::clearPatterns() {
+  cerr << "clearpatterns" << endl;
   for (uint i=0; i<savedPatterns.size(); i++)
     savedPatterns[i].cpolys.clear();
   savedPatterns.clear();
@@ -135,12 +136,13 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   //cerr << "thread "<<tid << " looking for pattern " << endl;
   if (type != PolyInfill) { // can't save PolyInfill
     if (savedPatterns.size()>0){
+      //cerr << savedPatterns.size() << " patterns" << endl;
       while (rotation>2*M_PI) rotation -= 2*M_PI;
       while (rotation<0) rotation += 2*M_PI;
       this->angle= rotation;
-      
+      vector<uint> matches;
       for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
-	   sIt != savedPatterns.end(); sIt++){
+      	   sIt != savedPatterns.end(); sIt++){
 	//cerr << sIt->Min << endl;
 	if (sIt->type == type &&
 	    abs(sIt->distance-infillDistance) < 0.01 &&
@@ -151,15 +153,21 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    if (sIt->Min.x > Min.x || sIt->Min.y > Min.y || 
 		sIt->Max.x < Max.x || sIt->Max.y < Max.y) 
 	      {
-		omp_set_lock(&save_lock);
-		savedPatterns.erase(sIt++);
-		omp_unset_lock(&save_lock);
+		matches.push_back(sIt-savedPatterns.begin());
 		//break; // there is no other match
 	      }
 	    else
 	      return sIt->cpolys;
 	  }
       }
+      sort(matches.rbegin(), matches.rend());
+      omp_set_lock(&save_lock);
+      for (uint i=0; i<matches.size(); i++) {
+	//cerr << i << " - " ;
+	savedPatterns.erase(savedPatterns.begin()+matches[i]);
+      }
+      //cerr << endl;
+      omp_unset_lock(&save_lock);
     }
   }
   //omp_unset_lock(&save_lock);
@@ -218,7 +226,10 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  double firstshrink=0.5*infillDistance;
 	  if (parea<0) firstshrink=-0.5*infillDistance;
 	  vector<Poly> shrinked = Clipping::getOffset(tofillpolys[i],firstshrink);
-	  ipolys.push_back(Clipping::getOffset(shrinked,0.5*infillDistance));
+	  vector<Poly> shrinked2 = Clipping::getOffset(shrinked,0.5*infillDistance);
+	  for (uint i=0;i<shrinked2.size();i++)
+	    shrinked2[i].cleanup(0.3*infillDistance);
+	  ipolys.push_back(shrinked2);
 	  //ipolys.insert(ipolys.end(),shrinked.begin(),shrinked.end());
 	  double area = Clipping::Area(shrinked);
 	  //cerr << "shr " <<parea << " - " <<area<< " - " << " : " <<endl;
@@ -227,10 +238,15 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  while (shrinked.size()>0){ 
 	    if (area*parea<0)  break;
 	    //cerr << "shr " <<parea << " - " <<area<< " - " << shrcount << " : " <<endl;
-	    ipolys.push_back(Clipping::getOffset(shrinked,0.5*infillDistance));
+	    shrinked2 = Clipping::getOffset(shrinked,0.5*infillDistance);
+	    for (uint i=0;i<shrinked2.size();i++)
+	      shrinked2[i].cleanup(0.3*infillDistance);
+	    ipolys.push_back(shrinked2);
 	    //ipolys.insert(ipolys.end(),shrinked.begin(),shrinked.end());
 	    lastnumpolys = shrinked.size();
 	    shrinked = Clipping::getOffset(shrinked,-infillDistance);
+	    for (uint i=0;i<shrinked.size();i++)
+	      shrinked[i].cleanup(0.3*infillDistance);
 	    area = Clipping::Area(shrinked);
 	    //shrcount++;
 	  }
@@ -262,6 +278,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       newPattern.Min=Min;
       newPattern.Max=Max;
       savedPatterns.push_back(newPattern);
+      //cerr << "saved pattern " << endl;
     }
   omp_unset_lock(&save_lock);
   return newPattern.cpolys;

@@ -312,7 +312,7 @@ void Model::MakeUncoveredPolygons(bool make_bridges)
   for (int i = 0; i < count-1; i++) 
     {
       if (i%10==0) m_progress->update(i);
-      layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]),false);
+      layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]));
     }  
   // top to bottom: uncovered from below -> bridge polys
   for (uint i = count-1; i > 0; i--) 
@@ -323,18 +323,20 @@ void Model::MakeUncoveredPolygons(bool make_bridges)
       //make_bridges = false;
       // no bridge on marked layers (serial build)
       bool mbridge = make_bridges && layers[i]->LayerNo != 0; 
-      layers[i]->addFullPolygons(bridges, mbridge);
       if (mbridge) {
+	layers[i]->addBridgePolygons(bridges);
 	vector<Poly> bridges_result = layers[i]->GetBridgePolygons();
 	vector<double> angles = layers[i-1]->getBridgeRotations(bridges_result);
 	layers[i]->setBridgeAngles(angles);
 	//cerr << bridges_result.size() << " - " << angles.size() << endl;
       }
+      else layers[i]->addFullPolygons(bridges);
+
     }
   m_progress->update(2*count+1);
-  layers.front()->addFullPolygons(layers.front()->GetFillPolygons(),false);
+  layers.front()->addFullPolygons(layers.front()->GetFillPolygons());
   m_progress->update(2*count+2);
-  layers.back()->addFullPolygons(layers.back()->GetFillPolygons(),false);
+  layers.back()->addFullPolygons(layers.back()->GetFillPolygons());
   //m_progress->stop (_("Done"));
 }
 
@@ -346,6 +348,7 @@ vector<Poly> Model::GetUncoveredPolygons(Layer * subjlayer,
   clipp.clear();
   clipp.addPolys(subjlayer->GetFillPolygons(),subject); 
   clipp.addPolys(subjlayer->GetFullFillPolygons(),subject); 
+  clipp.addPolys(subjlayer->GetBridgePolygons(),subject); 
   clipp.addPolys(cliplayer->GetInnerShell(),clip); // have some overlap
   //clipp.addPolys(cliplayer->GetFillPolygons(),clip);
   //clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
@@ -369,9 +372,9 @@ void Model::MultiplyUncoveredPolygons()
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (s=1; s < shells; s++) 
 	if (i-s > 1) {
-	  layers[i-s]->addFullPolygons(fullpolys,false);
-	  layers[i-s]->addFullPolygons(bridgepolys,false);
-	  layers[i-s]->addFullPolygons(skinfullpolys,false);
+	  layers[i-s]->addFullPolygons(fullpolys);
+	  layers[i-s]->addFullPolygons(bridgepolys);
+	  layers[i-s]->addFullPolygons(skinfullpolys);
 	}
     }
   // top-down: propagate upwards
@@ -383,9 +386,9 @@ void Model::MultiplyUncoveredPolygons()
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (int s=1; s < shells; s++) 
 	if (i+s < count){
-	  layers[i+s]->addFullPolygons(fullpolys,false);
-	  layers[i+s]->addFullPolygons(bridgepolys,false);
-	  layers[i+s]->addFullPolygons(skinfullpolys,false);
+	  layers[i+s]->addFullPolygons(fullpolys);
+	  layers[i+s]->addFullPolygons(bridgepolys);
+	  layers[i+s]->addFullPolygons(skinfullpolys);
 	}
     }    
   // merge results
@@ -508,7 +511,6 @@ void Model::CalcInfill()
 
   //cerr << "make infill"<< endl;
   int count = (int)layers.size();
-// omp not possible because of static saved infill patterns, have to create them in advance
   omp_lock_t progress_lock;
   omp_init_lock(&progress_lock);
 #pragma omp parallel for schedule(dynamic) 

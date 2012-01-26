@@ -248,41 +248,41 @@ void Layer::makeSkinPolygons()
   }
 }
 
-
-// add full fill and substract them from normal fill polys 
-void Layer::addFullPolygons(const vector<Poly> newpolys, bool bridge) 
+// add bridge polys and substract them from normal and full fill polys 
+void Layer::addBridgePolygons(const vector<Poly> newpolys) 
 {
   if (newpolys.size()==0) return;
-  if (bridge){
-    // cerr << LayerNo << " - " <<bridgePolygons.size() << endl;
-    // cerr  <<newpolys.size() << endl;
-    bridgePolygons.clear();
-  }
+  bridgePolygons.clear();
   Clipping clipp;
   clipp.clear();
-  // full fill only where already fill
   clipp.addPolys(GetFillPolygons(),subject); 
-  if (bridge){
-    clipp.addPolys(GetFullFillPolygons(),subject); 
-  }
-  //  else clipp.addPolys(GetFillPolygons(),subject); 
   clipp.addPolys(newpolys,clip);
   vector<Poly> inter = clipp.intersect();
-  if (bridge) {// this is a bridge
-    //for (uint i=0; i<
-    // clipp.clear();
-    // clipp.addPolys(inter,subject);  
-    // clipp.addPolys(GetFillPolygons(),clip);
-    // inter = clipp.substract();
-    bridgePolygons.insert(bridgePolygons.end(),inter.begin(),inter.end());
-  } else
-    fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
+  bridgePolygons= inter;//.insert(bridgePolygons.end(),inter.begin(),inter.end());
+  clipp.clear();
+  clipp.addPolys(GetFillPolygons(),subject);  
+  clipp.addPolys(inter,clip);
+  setNormalFillPolygons(clipp.substract());
+  mergeFullPolygons(true);
+}
+
+// add full fill and substract them from normal fill polys 
+void Layer::addFullPolygons(const vector<Poly> newpolys) 
+{
+  if (newpolys.size()==0) return;
+  Clipping clipp;
+  clipp.clear();
+  // full fill only where already normal fill
+  clipp.addPolys(GetFillPolygons(),subject); 
+  clipp.addPolys(newpolys,clip);
+  vector<Poly> inter = clipp.intersect();
+  fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
   //substract from normal fills
   clipp.clear();
   clipp.addPolys(GetFillPolygons(),subject);  
   clipp.addPolys(inter,clip);
   setNormalFillPolygons(clipp.substract());
-  mergeFullPolygons(bridge);
+  mergeFullPolygons(false);
 }
 
 
@@ -428,68 +428,65 @@ bool isleftof(Vector2d center, Vector2d A, Vector2d B)
 }
 
 
+// 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
+// Returns a positive value, if OAB makes a counter-clockwise turn,
+// negative for clockwise turn, and zero if the points are collinear.
+double cross(const Vector2d &O, const Vector2d &A, const Vector2d &B)
+{
+  return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+}
+struct sortable_point {
+  Vector2d v;
+  bool operator <(const sortable_point &p) const {
+    return (v.x < p.v.x) || ((v.x == p.v.x) && (v.y < p.v.y));
+  }
+};
+
 // calc convex hull and Min and Max of layer
-// gift wrapping algo
+// Monotone chain algo
+// http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
 void Layer::calcConvexHull() 
 {
   hullPolygon.clear();
   hullPolygon=Poly(Z);
-  vector<Vector2d> p;
-  for (uint i = 0; i<polygons.size(); i++)
-    p.insert(p.end(), polygons[i].vertices.begin(), polygons[i].vertices.end());
-  uint np = p.size();
-  //cerr << np << " points"<< endl;
-  if (np<2) return;
-  if (np<4) {
-    for (uint i = 0; i < np; i++) 
-      hullPolygon.addVertex(p[i]);
+  vector<struct sortable_point> P;
+  for (uint i = 0; i<polygons.size(); i++) 
+    for (uint j = 0; j<polygons[i].size(); j++) {
+      struct sortable_point point;
+      point.v = polygons[i].vertices[j];
+      P.push_back(point);
+    }
+  
+  int n = P.size();
+  vector<Vector2d> H(2*n);
+  //cerr << n << " points"<< endl;
+  if (n<2) return;
+  if (n<4) {
+    for (int i = 0; i < n; i++) 
+      hullPolygon.addVertex(P[i].v);
     return;
   }
-  uint current=np;
-  double minx=G_MAXDOUBLE;
-  double miny=G_MAXDOUBLE;
-  for (uint i = 0; i < np; i++) { // get leftmost bottom
-    if (p[i].x < minx){
-      minx = p[i].x;
-      miny = p[i].y;
-      current = i;
-    }
-    else if (p[i].x==minx && p[i].y<miny){
-      minx = p[i].x;
-      miny = p[i].y;
-      current = i;
-    }
+  sort(P.begin(), P.end());
+  // for (int i = 0; i < n; i++) {
+  //   cerr <<P[i].v<< endl;
+  // }
+  // Build lower hull
+  int k=0;
+  for (int i = 0; i < n; i++) {
+    while (k >= 2 && cross(H[k-2], H[k-1], P[i].v) <= 0) k--;
+    H[k++] = P[i].v;
   }
-  assert (current != np);
-
-  Min.x = min(Min.x,p[current].x);
-  Min.y = min(Min.y,p[current].y);
-  Max.x = max(Max.x,p[current].x);
-  Max.y = max(Max.y,p[current].y);
-  hullPolygon.addVertex(p[current]);
-  uint start = current;
-  uint leftmost ;
-  do 
-    {
-      leftmost=0;
-      for (uint i=1; i < np; i++)
-	if (leftmost == current || isleftof(p[current], p[i], p[leftmost])) // i more to the left?
-	  leftmost = i;
-      current = leftmost;
-      hullPolygon.addVertex(p[current], true); // to front: reverse order
-      Min.x = min(Min.x,p[current].x);
-      Min.y = min(Min.y,p[current].y);
-      Max.x = max(Max.x,p[current].x);
-      Max.y = max(Max.y,p[current].y);
-      if (hullPolygon.size()>np){
-	cerr << "couldn't make convex hull on layer "<< LayerNo << endl;
-	cerr <<info()<<endl;
-	hullPolygon.clear();
-	break;
-      }
-    }
-  while (current != start);
-  hullPolygon.cleanup(thickness/2.);
+ 
+  // Build upper hull
+  for (int i = n-2, t = k+1; i >= 0; i--) {
+    while (k >= t && cross(H[k-2], H[k-1], P[i].v) <= 0) k--;
+    H[k++] = P[i].v;
+  }
+  H.resize(k);
+  hullPolygon.vertices = H;
+  vector<Vector2d> minmax = hullPolygon.getMinMax();
+  Min = minmax[0];
+  Max = minmax[1];
 }
 
 
