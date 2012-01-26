@@ -55,7 +55,7 @@ void Infill::clear()
 }
 
 void Infill::clearPatterns() {
-  cerr << "clearpatterns" << endl;
+  //  cerr << "clearpatterns" << endl;
   for (uint i=0; i<savedPatterns.size(); i++)
     savedPatterns[i].cpolys.clear();
   savedPatterns.clear();

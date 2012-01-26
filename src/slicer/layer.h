@@ -85,8 +85,7 @@ public:
 
   
   void MakeShells(uint shellcount, double extrudedWidth, 
-  		  bool makeskirt, 
-  		  bool useFillets);
+  		  bool makeskirt, double infilloverlap);
   /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */
   /* 			     double distance,  */
   /* 			     ClipperLib::JoinType join_type = ClipperLib::jtMiter); */

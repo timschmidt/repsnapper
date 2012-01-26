@@ -359,11 +359,10 @@ void Layer::setSkirtPolygon(const Poly poly)
 
 
 void Layer::MakeShells(uint shellcount, double extrudedWidth, 
-		       bool makeskirt, 
-		       bool useFillets)
+		       bool makeskirt, double infilloverlap)
 {
   double distance = 0.5 * extrudedWidth;
-  double cleandist = min(extrudedWidth/3., thickness/2.);
+  double cleandist = min(extrudedWidth/4., thickness/3.);
   vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);
   for (uint i = 0; i<shrinked.size(); i++)  
     shrinked[i].cleanup(cleandist);
@@ -389,7 +388,7 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
       shellPolygons.push_back(shrinked);
     }
   // the filling polygon
-  fillPolygons = Clipping::getOffset(shrinked,-distance);
+  fillPolygons = Clipping::getOffset(shrinked,-(1.-infilloverlap)*distance);
   for (uint i = 0; i<fillPolygons.size(); i++)  
     fillPolygons[i].cleanup(cleandist);
   //fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);

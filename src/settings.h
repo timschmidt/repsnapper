@@ -94,6 +94,7 @@ class Settings {
     float InfillRotationPrLayer;
     float AltInfillDistance;
     std::string AltInfillLayersText;
+    float InfillOverlap;
     bool SolidTopAndBottom;
     bool Support;
     float SkirtHeight;
