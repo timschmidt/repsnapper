@@ -34,11 +34,11 @@ class Poly;
 
 
 // user selectable have to be first
-enum InfillType {ParallelInfill, ZigzagLineInfill, PolyInfill,
+enum InfillType {ParallelInfill, ZigzagLineInfill, PolyInfill, HilbertInfill, 
 		 SupportInfill, RaftInfill, BridgeInfill};
 
 // these are available for user selection (order must be same as types):
-const string InfillNames[] = {"Parallel", "Zigzag", "Polygons"};
+const string InfillNames[] = {"Parallel", "Zigzag", "Polygons", "Hilbert Curve"};
 
 
 class Infill

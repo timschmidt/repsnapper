@@ -30,6 +30,8 @@ using namespace vmml;
 vector<struct Infill::pattern> Infill::savedPatterns;
 omp_lock_t Infill::save_lock;
 
+void hilbert(int level,int direction, double infillDistance, vector<Vector2d> &v);
+
 
 Infill::Infill(){
   this->extrusionfactor = 1.;
@@ -217,6 +219,22 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	cpolys = Clipping::getClipperPolygons(polys);
       }
       break;
+    case HilbertInfill:  
+      {
+	Poly poly(this->layer->getZ());
+	Vector2d center = (Min+Max)/2.;
+	Vector2d diag = Max-Min;
+	double square = MAX(Max.x,Max.y);
+	int level = (int)ceil(log2(2*square/infillDistance));
+	//cerr << "level " << level;
+	// start at 0,0 to get the same location for all layers
+	poly.addVertex(Vector2d(0,0)); 
+	hilbert(level, 0, infillDistance,  poly.vertices);
+	vector<Poly> polys(1);
+	polys[0] = poly;
+	cpolys = Clipping::getClipperPolygons(polys);
+      }
+      break;
     case PolyInfill: // fill all polygons with their shrinked polys
       {
 	vector< vector<Poly> > ipolys; // "shells"
@@ -348,3 +366,94 @@ string Infill::info() const
   return ostr.str();
 }
 
+
+
+// Hilbert curve
+// http://www.compuphase.com/hilbert.htm
+enum {
+  UP,
+  LEFT,
+  DOWN,
+  RIGHT,
+};
+void move(int direction, double infillDistance, vector<Vector2d> &v){
+  Vector2d d(0,0);
+  switch (direction) {
+  case LEFT:  d.x=-infillDistance;break;
+  case RIGHT: d.x=infillDistance;break;
+  case UP:    d.y=-infillDistance;break;
+  case DOWN:  d.y= infillDistance;break;
+  }
+  Vector2d last;
+  if (v.size()==0) last = Vector2d(0,0);
+  else last = v.back();
+  //cerr <<"move " << direction << " : "<<last+d<<endl;
+  v.push_back(last+d);
+}
+void hilbert(int level,int direction, double infillDistance, vector<Vector2d> &v)
+{
+  //cerr <<"hilbert level " << level<< endl;
+  if (level==1) {
+    switch (direction) {
+    case LEFT:
+      move(RIGHT,infillDistance,v);      /* move() could draw a line in... */
+      move(DOWN, infillDistance,v);       /* ...the indicated direction */
+      move(LEFT, infillDistance,v);
+      break;
+    case RIGHT:
+      move(LEFT, infillDistance,v);
+      move(UP,   infillDistance,v);
+      move(RIGHT,infillDistance,v);
+      break;
+    case UP:
+      move(DOWN, infillDistance,v);
+      move(RIGHT,infillDistance,v);
+      move(UP,   infillDistance,v);
+      break;
+    case DOWN:
+      move(UP,   infillDistance,v);
+      move(LEFT, infillDistance,v);
+      move(DOWN, infillDistance,v);
+      break;
+    } /* switch */
+  } else {
+    switch (direction) {
+    case LEFT:
+      hilbert(level-1,UP,infillDistance,v);
+      move(RIGHT,infillDistance,v);
+      hilbert(level-1,LEFT,infillDistance,v);
+      move(DOWN,infillDistance,v);
+      hilbert(level-1,LEFT,infillDistance,v);
+      move(LEFT,infillDistance,v);
+      hilbert(level-1,DOWN,infillDistance,v);
+      break;
+    case RIGHT:
+      hilbert(level-1,DOWN,infillDistance,v);
+      move(LEFT,infillDistance,v);
+      hilbert(level-1,RIGHT,infillDistance,v);
+      move(UP,infillDistance,v);
+      hilbert(level-1,RIGHT,infillDistance,v);
+      move(RIGHT,infillDistance,v);
+      hilbert(level-1,UP,infillDistance,v);
+      break;
+    case UP:
+      hilbert(level-1,LEFT,infillDistance,v);
+      move(DOWN,infillDistance,v);
+      hilbert(level-1,UP,infillDistance,v);
+      move(RIGHT,infillDistance,v);
+      hilbert(level-1,UP,infillDistance,v);
+      move(UP,infillDistance,v);
+      hilbert(level-1,RIGHT,infillDistance,v);
+      break;
+    case DOWN:
+      hilbert(level-1,RIGHT,infillDistance,v);
+      move(UP,infillDistance,v);
+      hilbert(level-1,DOWN,infillDistance,v);
+      move(LEFT,infillDistance,v);
+      hilbert(level-1,DOWN,infillDistance,v);
+      move(DOWN,infillDistance,v);
+      hilbert(level-1,LEFT,infillDistance,v);
+      break;
+    } /* switch */
+  } /* if */
+}
