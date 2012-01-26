@@ -125,7 +125,7 @@ static struct {
   FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5, false),
   FLOAT_MEMBER (Hardware.ExtrusionFactor, "ExtrusionFactor", 1.0, false),
   FLOAT_MEMBER (Hardware.FilamentDiameter, "FilamentDiameter", 3.0, false),
-  FLOAT_MEMBER (Hardware.LayerThickness, "LayerThickness", 0.4, false),
+  FLOAT_MEMBER (Hardware.LayerThickness, "LayerThickness", 0.4, true),
   FLOAT_MEMBER (Hardware.DownstreamMultiplier, "DownstreamMultiplier", 1.0, false),
   FLOAT_MEMBER (Hardware.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0, false),
 
@@ -138,7 +138,7 @@ static struct {
   { OFFSET (Hardware.PrintMargin.y), T_DOUBLE, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
   { OFFSET (Hardware.PrintMargin.z), T_DOUBLE, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
 
-  FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, false),
+  FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
   { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 57600, false }, 
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
@@ -156,6 +156,7 @@ static struct {
   FLOAT_MEMBER  (Slicing.InfillRotation, "InfillRotation", 90.0, true),
   FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, "InfillRotationPrLayer", 60.0, true),
   FLOAT_MEMBER  (Slicing.AltInfillDistance, "AltInfillDistance", 2.0, true),
+  FLOAT_MEMBER  (Slicing.InfillOverlap, "InfillOverlap", 0.2, true),
   STRING_MEMBER (Slicing.AltInfillLayersText, "AltInfillLayersText", "", true),
   INT_MEMBER    (Slicing.NormalFilltype, "NormalFilltype", 0, true),
   INT_MEMBER    (Slicing.FullFilltype, "FullFilltype", 0, true),
@@ -257,6 +258,7 @@ static struct {
   { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
   { "Slicing.InfillDistance", 0.0, 10, 0.1, 1 },
   { "Slicing.AltInfillDistance", 0.1, 10, 0.1, 2 },
+  { "Slicing.InfillOverlap", 0, 1.0 , 0.01, 0.1},
   //{ "Slicing.Optimization", 0.0, 10.0, 0.01, 0.1 },
   { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
   { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
