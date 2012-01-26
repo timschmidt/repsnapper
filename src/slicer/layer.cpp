@@ -348,7 +348,15 @@ void Layer::setBridgeAngles(const vector<double> angles)
 void Layer::setSupportPolygons(const vector<Poly> polys)
 {
   clearpolys(supportPolygons);
+
   supportPolygons = polys;
+  for (uint i=0; i<supportPolygons.size(); i++) {
+    vector<Vector2d> minmax = supportPolygons[i].getMinMax();
+    Min.x = min(minmax[0].x,Min.x);
+    Min.y = min(minmax[0].y,Min.y);
+    Max.x = max(minmax[1].x,Max.x);
+    Max.y = max(minmax[1].y,Max.y);
+  }
 }
 
 void Layer::setSkirtPolygon(const Poly poly)
