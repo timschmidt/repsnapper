@@ -22,10 +22,13 @@
 #include <vector>
 #include <vmmlib/vmmlib.h> 
 
+#include <glib/gi18n.h>
+
 #include <omp.h>
 
 #include "layer.h"
 #include "clipping.h"
+
 
 using namespace std; 
 using namespace vmml;
@@ -38,7 +41,7 @@ enum InfillType {ParallelInfill, ZigzagLineInfill, PolyInfill, HilbertInfill,
 		 SupportInfill, RaftInfill, BridgeInfill};
 
 // these are available for user selection (order must be same as types):
-const string InfillNames[] = {"Parallel", "Zigzag", "Polygons", "Hilbert Curve"};
+const string InfillNames[] = {_("Parallel"), _("Zigzag"), _("Polygons"), _("Hilbert Curve")};
 
 
 class Infill
