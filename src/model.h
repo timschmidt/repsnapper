@@ -29,7 +29,7 @@
 #include "objtree.h"
 #include "types.h"
 #include "slicer/gcode.h"
-#include "slicer/layer.h"
+/*#include "slicer/layer.h"*/
 #include "settings.h"
 #include "progress.h"
 
@@ -38,6 +38,7 @@
 #endif
 
 class Clipping;
+class Layer;
 
 class Model
 {

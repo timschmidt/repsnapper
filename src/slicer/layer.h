@@ -104,6 +104,7 @@ public:
   vector<Poly>  GetShellPolygonsCirc(int number) const;
   Poly  GetSkirtPolygon() const {return skirtPolygon; };
   vector<Poly> GetInnerShell() const;
+  vector<Poly> GetOuterShell() const;
   
   void setFullFillPolygons(const vector<Poly> polys);  
   void addFullFillPolygons(const vector<Poly> polys);

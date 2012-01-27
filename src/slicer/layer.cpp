@@ -238,14 +238,16 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype, int supportfilltyp
 void Layer::makeSkinPolygons() 
 {
   if (skins<2) return;
-  vector<Poly> fp = GetFullFillPolygons();
-  //double dist = thickness/skins;
-  for (uint i=0; i<fp.size(); i++){
-    skinFullFillPolygons.push_back(fp[i]);
-    fullFillPolygons[i].clear();
-    //fp.erase(fp.begin()+i);
-    //i--;
-  }
+  skinFullFillPolygons = fullFillPolygons;
+  fullFillPolygons.clear();
+  // vector<Poly> fp = fullFillPolygons;
+  // //double dist = thickness/skins;
+  // for (uint i=0; i<fullFillPolygons.size(); i++){
+  //   //   skinFullFillPolygons.push_back(fp[i]);
+  //   fullFillPolygons[i].clear();
+  // //   //fp.erase(fp.begin()+i);
+  // //   //i--;
+  //  }
 }
 
 // add bridge polys and substract them from normal and full fill polys 
@@ -255,12 +257,12 @@ void Layer::addBridgePolygons(const vector<Poly> newpolys)
   bridgePolygons.clear();
   Clipping clipp;
   clipp.clear();
-  clipp.addPolys(GetFillPolygons(),subject); 
+  clipp.addPolys(fillPolygons,subject); 
   clipp.addPolys(newpolys,clip);
   vector<Poly> inter = clipp.intersect();
   bridgePolygons= inter;//.insert(bridgePolygons.end(),inter.begin(),inter.end());
   clipp.clear();
-  clipp.addPolys(GetFillPolygons(),subject);  
+  clipp.addPolys(fillPolygons,subject);  
   clipp.addPolys(inter,clip);
   setNormalFillPolygons(clipp.substract());
   mergeFullPolygons(true);
@@ -273,13 +275,13 @@ void Layer::addFullPolygons(const vector<Poly> newpolys)
   Clipping clipp;
   clipp.clear();
   // full fill only where already normal fill
-  clipp.addPolys(GetFillPolygons(),subject); 
+  clipp.addPolys(fillPolygons,subject); 
   clipp.addPolys(newpolys,clip);
   vector<Poly> inter = clipp.intersect();
   fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
   //substract from normal fills
   clipp.clear();
-  clipp.addPolys(GetFillPolygons(),subject);  
+  clipp.addPolys(fillPolygons,subject);  
   clipp.addPolys(inter,clip);
   setNormalFillPolygons(clipp.substract());
   mergeFullPolygons(false);
@@ -303,6 +305,16 @@ void Layer::mergeSupportPolygons()
 vector<Poly> Layer::GetInnerShell() const
 {
   if (shellPolygons.size()>0) return shellPolygons.back();
+  // no shells:
+  if (skinPolygons.size()>0) return skinPolygons;
+  // no skins
+  if (fillPolygons.size()>0) return fillPolygons;
+  // no offset
+  return polygons;
+}
+vector<Poly> Layer::GetOuterShell() const
+{
+  if (shellPolygons.size()>0) return shellPolygons.front();
   // no shells:
   if (skinPolygons.size()>0) return skinPolygons;
   // no skins
@@ -348,7 +360,6 @@ void Layer::setBridgeAngles(const vector<double> angles)
 void Layer::setSupportPolygons(const vector<Poly> polys)
 {
   clearpolys(supportPolygons);
-
   supportPolygons = polys;
   for (uint i=0; i<supportPolygons.size(); i++) {
     vector<Vector2d> minmax = supportPolygons[i].getMinMax();
