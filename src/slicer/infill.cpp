@@ -225,7 +225,9 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	Vector2d center = (Min+Max)/2.;
 	Vector2d diag = Max-Min;
 	double square = MAX(Max.x,Max.y);
+	if (infillDistance<=0) break;
 	int level = (int)ceil(log2(2*square/infillDistance));
+	if (level<0) break;
 	//cerr << "level " << level;
 	// start at 0,0 to get the same location for all layers
 	poly.addVertex(Vector2d(0,0)); 

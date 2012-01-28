@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <requires lib="gtk+" version="2.20"/>
+  <requires lib="gtk+" version="2.24"/>
   <!-- interface-naming-policy project-wide -->
   <object class="GtkAction" id="About">
     <property name="label">_About</property>
@@ -12,6 +12,17 @@
     <property name="label">_Calibrate</property>
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
+  </object>
+  <object class="GtkAction" id="LoadSettings">
+    <property name="label">Load Settings</property>
+    <property name="short_label">Load Settings</property>
+    <property name="tooltip">Load application settings profile</property>
+  </object>
+  <object class="GtkAction" id="OpenGCode">
+    <property name="label">Load _GCode</property>
+    <property name="short_label">Load GCode</property>
+    <property name="tooltip">Load a file of control codes</property>
+    <property name="stock_id">gtk-open</property>
   </object>
   <object class="GtkAction" id="OpenStl">
     <property name="label">Load _STL</property>
@@ -56,17 +67,6 @@
     <property name="upper">1</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAction" id="LoadSettings">
-    <property name="label">Load Settings</property>
-    <property name="short_label">Load Settings</property>
-    <property name="tooltip">Load application settings profile</property>
-  </object>
-  <object class="GtkAction" id="OpenGCode">
-    <property name="label">Load _GCode</property>
-    <property name="short_label">Load GCode</property>
-    <property name="tooltip">Load a file of control codes</property>
-    <property name="stock_id">gtk-open</property>
   </object>
   <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
     <property name="upper">20</property>
@@ -3153,21 +3153,6 @@ THE HEAD MOVING DOWN!
                                 <property name="column_spacing">6</property>
                                 <property name="row_spacing">6</property>
                                 <child>
-                                  <object class="GtkComboBoxEntry" id="Hardware.SerialSpeed">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <child internal-child="entry">
-                                      <object class="GtkEntry" id="comboboxentry-entry2">
-                                        <property name="can_focus">False</property>
-                                      </object>
-                                    </child>
-                                  </object>
-                                  <packing>
-                                    <property name="left_attach">1</property>
-                                    <property name="right_attach">3</property>
-                                  </packing>
-                                </child>
-                                <child>
                                   <object class="GtkSpinButton" id="Hardware.ReceivingBufferSize">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
@@ -3260,6 +3245,16 @@ THE HEAD MOVING DOWN!
                                     <property name="right_attach">3</property>
                                     <property name="top_attach">3</property>
                                     <property name="bottom_attach">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkComboBox" id="Hardware.SerialSpeed">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">3</property>
                                   </packing>
                                 </child>
                               </object>
@@ -3410,28 +3405,6 @@ Distance is twice the Infill Distance.</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBox" id="Slicing.NormalFilltype">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">3</property>
-                        <property name="right_attach">4</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkComboBox" id="Slicing.FullFilltype">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">3</property>
-                        <property name="right_attach">4</property>
-                        <property name="top_attach">1</property>
-                        <property name="bottom_attach">2</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkLabel" id="label118">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -3458,24 +3431,6 @@ Distance is twice the Infill Distance.</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkComboBox" id="Slicing.SupportFilltype">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="left_attach">3</property>
-                        <property name="right_attach">4</property>
-                        <property name="top_attach">2</property>
-                        <property name="bottom_attach">3</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
                       <object class="GtkLabel" id="label54">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -3499,6 +3454,46 @@ Distance is twice the Infill Distance.</property>
                         <property name="top_attach">3</property>
                         <property name="bottom_attach">4</property>
                       </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBox" id="Slicing.NormalFilltype">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">3</property>
+                        <property name="right_attach">4</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBox" id="Slicing.FullFilltype">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">3</property>
+                        <property name="right_attach">4</property>
+                        <property name="top_attach">1</property>
+                        <property name="bottom_attach">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBox" id="Slicing.SupportFilltype">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">3</property>
+                        <property name="right_attach">4</property>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                    <child>
+                      <placeholder/>
                     </child>
                   </object>
                   <packing>
