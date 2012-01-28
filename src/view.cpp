@@ -817,7 +817,6 @@ View::View(BaseObjectType* cobject,
 
 View::~View()
 {
-  save_settings();
   delete m_translation_row;
   for (uint i = 0; i < 3; i++) {
     delete m_axis_rows[i];

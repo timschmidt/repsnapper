@@ -440,9 +440,9 @@ void Settings::set_defaults ()
   }
 
   //Slicing.ShrinkQuality = SHRINK_FAST;
-  Slicing.NormalFilltype = ParallelInfill;
-  Slicing.FullFilltype = ParallelInfill;
-  Slicing.SupportFilltype = PolyInfill;
+  // Slicing.NormalFilltype = ParallelInfill;
+  // Slicing.FullFilltype = ParallelInfill;
+  // Slicing.SupportFilltype = PolyInfill;
 
   GCode.m_impl->setDefaults();
 
@@ -643,25 +643,24 @@ void Settings::set_to_gui (Builder &builder, int i)
 
 void Settings::set_filltypes_to_gui (Builder &builder)
 {
-  
-  cerr << Slicing.NormalFilltype << " ! " << Slicing.FullFilltype
-       << " ! " << Slicing.SupportFilltype<< endl;
+  // cerr << Slicing.NormalFilltype << " ! " << Slicing.FullFilltype
+  //      << " ! " << Slicing.SupportFilltype<< endl;
   Gtk::ComboBox *combo = NULL;
+  // avoid getting overwritten by callback
+  uint norm = Slicing.NormalFilltype;
+  uint full = Slicing.FullFilltype;
+  uint support = Slicing.SupportFilltype;
   builder->get_widget ("Slicing.NormalFilltype", combo);
   if (combo)
-    if (combo->get_has_entry())
-      combo->set_active (Slicing.NormalFilltype);
-    else cerr <<"no entries in Slicing.NormalFilltype"<<  endl;
+    combo->set_active (norm);
+  combo = NULL;
   builder->get_widget ("Slicing.FullFilltype", combo);
   if (combo)
-    if (combo->get_has_entry())
-      combo->set_active (Slicing.FullFilltype);
-  else cerr <<"no entries in  Slicing.FullFilltype"<<  endl;
+    combo->set_active (full);
+  combo = NULL;
   builder->get_widget ("Slicing.SupportFilltype", combo);
   if (combo)
-    if (combo->get_has_entry())
-      combo->set_active (Slicing.SupportFilltype);
-  else cerr <<"no entries in  Slicing.SupportFilltype"<<  endl;
+    combo->set_active (support);
 }
 // void Settings::set_shrink_to_gui (Builder &builder)
 // {
@@ -750,21 +749,26 @@ void Settings::get_from_gui (Builder &builder, int i)
 
 void Settings::get_filltypes_from_gui (Builder &builder)
 {
+  // cerr <<"Get_filltypes " << endl;
   Gtk::ComboBox *combo = NULL;
   builder->get_widget ("Slicing.NormalFilltype", combo);
-  if (combo)
+  if (combo) {
     Slicing.NormalFilltype = combo->get_active_row_number ();
+  }
+  else cerr << "no Slicing.NormalFilltype combo" << endl;
   builder->get_widget ("Slicing.FullFilltype", combo);
-  if (combo)
+  if (combo) {
     Slicing.FullFilltype = combo->get_active_row_number ();
+  }
   else cerr << "no Slicing.FullFilltype combo" << endl;
   builder->get_widget ("Slicing.SupportFilltype", combo);
-  if (combo)
+  if (combo){
     Slicing.SupportFilltype = combo->get_active_row_number ();
+  }
   else cerr << "no Slicing.SupportFilltype combo" << endl;
-  cerr << "read combos: " << Slicing.NormalFilltype 
-       <<  " / " << Slicing.FullFilltype 
-       <<  " / " << Slicing.SupportFilltype << endl;
+  // cerr << "read combos: " << Slicing.NormalFilltype 
+  //      <<  " / " << Slicing.FullFilltype 
+  //      <<  " / " << Slicing.SupportFilltype << endl;
 }
 
 // void Settings::get_shrink_from_gui (Builder &builder)
@@ -776,13 +780,58 @@ void Settings::get_filltypes_from_gui (Builder &builder)
 //     Slicing.ShrinkQuality = combo->get_active_row_number ();
 // }
 
+
+string combobox_get_active_value(Gtk::ComboBox *combo){
+  uint c = combo->get_active_row_number();
+  Glib::ustring rval;
+  combo->get_model()->children()[c].get_value(0,rval);
+  return string(rval);
+}
+
+bool combobox_set_to(Gtk::ComboBox *combo, string value){
+  Glib::ustring val(value);
+  Glib::RefPtr<Gtk::TreeModel> model = combo->get_model();
+  uint nch = model->children().size();
+  Glib::ustring rval;
+  Glib::ustring gvalue(value.c_str());
+  for (uint c=0; c < nch; c++) {
+    Gtk::TreeRow row = model->children()[c];
+    row.get_value(0,rval);
+    if (rval== gvalue) {
+      combo->set_active(c);
+      return true;
+    }
+  }
+  cerr << "value " << value << " not found in combobox" << endl;
+  return false;
+}
+
+void set_up_combobox(Gtk::ComboBox *combo, vector<string> values)
+{
+  if (combo->get_model()) return;
+  //cerr << "setup " ;
+  Gtk::TreeModelColumn<Glib::ustring> column;
+  Gtk::TreeModelColumnRecord record;
+  record.add(column);
+  Glib::RefPtr<Gtk::ListStore> store = Gtk::ListStore::create(record);
+  combo->pack_start (column);
+  combo->set_model(store);
+  for (uint i=0; i<values.size(); i++) {
+    //    cerr << " adding " << values[i] << endl;
+    store->append()->set_value(0, Glib::ustring(values[i].c_str()));
+  }
+  combo->set_active(0);
+  //cerr << "ok" << endl;
+}
+
+
 void Settings::get_port_speed_from_gui (Builder &builder)
 {
-  // Hardware.SerialSpeed
-  Gtk::ComboBoxEntry *combo = NULL;
+  Gtk::ComboBox *combo = NULL;
   builder->get_widget ("Hardware.SerialSpeed", combo);
-  if (combo)
-    Hardware.SerialSpeed = atoi(combo->get_active_text().c_str());
+  if (combo) {
+    Hardware.SerialSpeed = atoi(combobox_get_active_value(combo).c_str());
+  }
 }
 
 void Settings::get_colour_from_gui (Builder &builder, int i)
@@ -833,15 +882,16 @@ void Settings::set_to_gui (Builder &builder)
   }
 
   // Set serial speed. Find the row that holds this value
-  Gtk::ComboBoxEntry *portspeed = NULL;
+  Gtk::ComboBox *portspeed = NULL;
   builder->get_widget ("Hardware.SerialSpeed", portspeed);
   if (portspeed) {
     std::ostringstream ostr;
     ostr << Hardware.SerialSpeed;
-    Glib::ustring val(ostr.str());
-    portspeed->get_entry()->set_text(val);
+    combobox_set_to(portspeed, ostr.str());
   }
 }
+
+
 
 void Settings::connect_to_ui (Builder &builder)
 {
@@ -918,52 +968,22 @@ void Settings::connect_to_ui (Builder &builder)
   }
 
   // Slicing.*Filltype
-  cerr << "set infill combos" << endl;
-  Gtk::ComboBox *ncombo = NULL;
-  Gtk::ComboBox *fcombo = NULL;
-  Gtk::ComboBox *scombo = NULL;
-  builder->get_widget ("Slicing.NormalFilltype", ncombo);
-  builder->get_widget ("Slicing.FullFilltype", fcombo);
-  builder->get_widget ("Slicing.SupportFilltype", scombo);
-  if (ncombo && fcombo && scombo) {// && !ncombo->get_model() && !fcombo->get_model()) {
-    ncombo->clear();
-    fcombo->clear();
-    scombo->clear();
-    Glib::RefPtr<Gtk::ListStore> lnstore;
-    Glib::RefPtr<Gtk::ListStore> lfstore;
-    Glib::RefPtr<Gtk::ListStore> lsstore;
-    Gtk::TreeModelColumnRecord nrecord;
-    Gtk::TreeModelColumnRecord frecord;
-    Gtk::TreeModelColumnRecord srecord;
-    Gtk::TreeModelColumn<Glib::ustring> ncolumn;
-    Gtk::TreeModelColumn<Glib::ustring> fcolumn;
-    Gtk::TreeModelColumn<Glib::ustring> scolumn;
-    nrecord.add (ncolumn);
-    frecord.add (fcolumn);
-    srecord.add (scolumn);
-    lnstore = Gtk::ListStore::create(nrecord);
-    lfstore = Gtk::ListStore::create(frecord);
-    lsstore = Gtk::ListStore::create(srecord);
-    uint nfills = sizeof(InfillNames)/sizeof(string);
-    for (uint i=0; i<nfills; i++) {
-      cerr << "adding " <<InfillNames[i] << endl;
-      lnstore->append()->set_value (0, Glib::ustring(InfillNames[i]));
-      lfstore->append()->set_value (0, Glib::ustring(InfillNames[i]));
-      lsstore->append()->set_value (0, Glib::ustring(InfillNames[i]));
-    }
-    ncombo->set_model (lnstore);
-    fcombo->set_model (lfstore);
-    scombo->set_model (lsstore);
-    ncombo->pack_start (ncolumn);
-    fcombo->pack_start (fcolumn);
-    scombo->pack_start (scolumn);
-    ncombo->signal_changed().connect
-      (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
-    fcombo->signal_changed().connect
-      (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
-    scombo->signal_changed().connect
-      (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
-  }
+  Gtk::ComboBox *combo = NULL;
+  uint nfills = sizeof(InfillNames)/sizeof(string);
+  vector<string> infills(InfillNames,InfillNames+nfills);
+  builder->get_widget ("Slicing.NormalFilltype", combo);
+  set_up_combobox(combo,infills);
+  combo->signal_changed().connect
+    (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
+  builder->get_widget ("Slicing.FullFilltype", combo);
+  set_up_combobox(combo,infills);
+  combo->signal_changed().connect
+    (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
+  builder->get_widget ("Slicing.SupportFilltype", combo);
+  set_up_combobox(combo,infills);
+  combo->signal_changed().connect
+    (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
+
   // // Slicing.ShrinkQuality
   // Gtk::ComboBox *combo = NULL;
   // builder->get_widget ("Slicing.ShrinkQuality", combo);
@@ -999,26 +1019,14 @@ void Settings::connect_to_ui (Builder &builder)
   }
 
   // Serial port speed
-  Gtk::ComboBoxEntry *portspeed = NULL;
-  builder->get_widget ("Hardware.SerialSpeed", portspeed);
+  Gtk::ComboBox *portspeed = NULL;
+  builder->get_widget ("Hardware.SerialSpeed",portspeed);
   if (portspeed) {
-    const guint32 speeds[] = {
-      9600, 19200, 38400, 57600, 115200, 230400, 250000, 576000
+    const char *speeds[] = {
+      "9600", "19200", "38400", "57600", "115200", "230400", "250000", "500000", "576000"
     };
-
-    Glib::RefPtr<Gtk::ListStore> model;
-    Gtk::TreeModelColumnRecord record;
-    Gtk::TreeModelColumn<Glib::ustring> column;
-    record.add (column);
-    model = Gtk::ListStore::create(record);
-    for (guint i = 0; i < G_N_ELEMENTS(speeds); i++) {
-      std::ostringstream val;
-      val << speeds[i];
-      model->append()->set_value (0, Glib::ustring(val.str()));
-    }
-    portspeed->set_model (model);
-    portspeed->set_text_column (0);
-
+    vector<string> speedstr(speeds, speeds+sizeof(speeds)/sizeof(string));
+    set_up_combobox(portspeed, speedstr);
     portspeed->signal_changed().connect
       (sigc::bind(sigc::mem_fun(*this, &Settings::get_port_speed_from_gui), builder));
   }
