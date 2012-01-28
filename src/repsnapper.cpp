@@ -132,6 +132,7 @@ int main(int argc, char **argv)
   bindtextdomain (GETTEXT_PACKAGE, locale_dir);
   textdomain (GETTEXT_PACKAGE);
 
+  //cerr << locale_dir<< endl;
   g_free(locale_dir);
   locale_dir = NULL;
 

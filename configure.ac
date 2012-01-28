@@ -84,7 +84,7 @@ mingw*)
   GL_LIBS="-lopengl32 -lglu32 -lglut32"
   EXTRA_LDFLAGS="-Wl,-subsystem,windows -shared-libgcc"
   EXTRA_CFLAGS="-fexceptions -mthreads"
-AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
+  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 freebsd*)
   GL_LIBS="-L/usr/local/lib -lGLU -lGL -lglut"
@@ -92,7 +92,7 @@ freebsd*)
   CFLAGS="-I/usr/local/include"
   CXXFLAGS="-I/usr/local/include"
   CPPFLAGS="-I/usr/local/include"
-AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
+  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 Darwin*)
   GL_LIBS="-L/usr/local/lib -lGLU -lOpenGL -lGLUT -lglut"
@@ -100,7 +100,7 @@ Darwin*)
   CFLAGS="-I/usr/local/include -I/opt/homebrew/include"
   CXXFLAGS="-I/usr/local/include -I/opt/homebrew/include"
   CPPFLAGS="-I/usr/local/include -I/opt/homebrew/include"
-AC_CHECK_HEADER(GLUT/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
+  AC_CHECK_HEADER(GLUT/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 *)
   GL_LIBS="-L/usr/lib -lGLU -lGL -lglut"
