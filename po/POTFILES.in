@@ -4,16 +4,29 @@
 #
 [encoding: UTF-8]
 repsnapper.desktop.in
+src/arcball.cpp
 src/connectview.cpp
 src/file.cpp
 src/gcode.cpp
 src/model.cpp
 src/model2.cpp
+src/objtree.cpp
+src/platform.cpp
 src/printer.cpp
 src/printer2.cpp
+src/progress.cpp
 src/render.cpp
 src/repsnapper.cpp
-src/rfo.cpp
+src/settings.cpp
+src/shape.cpp
 src/view.cpp
+src/vrml.cpp
+src/slicer/clipping.cpp
+src/slicer/gcode.cpp
+src/slicer/infill.cpp
+src/slicer/layer.cpp
+src/slicer/poly.cpp
+src/slicer/printlines.cpp
+src/slicer/triangle.cpp
 
 [type: gettext/glade]src/repsnapper.ui
