@@ -362,6 +362,7 @@ void Layer::setSupportPolygons(const vector<Poly> polys)
   clearpolys(supportPolygons);
   supportPolygons = polys;
   for (uint i=0; i<supportPolygons.size(); i++) {
+    supportPolygons[i].cleanup(thickness/4.);
     vector<Vector2d> minmax = supportPolygons[i].getMinMax();
     Min.x = min(minmax[0].x,Min.x);
     Min.y = min(minmax[0].y,Min.y);
@@ -387,25 +388,27 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth,
     shrinked[i].cleanup(cleandist);
   //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
   // outmost shells
-  if (skins>1) { // either skins
-    for (uint i = 0; i<shrinked.size(); i++)  {
-      shrinked[i].setExtrusionFactor(1./skins);
+  if (shellcount > 0) {
+    if (skins>1) { // either skins 
+      for (uint i = 0; i<shrinked.size(); i++)  {
+	shrinked[i].setExtrusionFactor(1./skins);
+      }
+      skinPolygons = shrinked; 
+    } else {  // or normal shell
+      clearpolys(shellPolygons);
+      shellPolygons.push_back(shrinked); 
     }
-    skinPolygons = shrinked; 
-  } else {  // or normal shell
-    clearpolys(shellPolygons);
-    shellPolygons.push_back(shrinked); 
+    // inner shells
+    distance = extrudedWidth;
+    for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
+      {
+	shrinked = Clipping::getOffset(shrinked,-distance);
+	for (uint i = 0; i<shrinked.size(); i++)  
+	  shrinked[i].cleanup(cleandist);
+	//shrinked = Clipping::getShrinkedCapped(shrinked,distance); 
+	shellPolygons.push_back(shrinked);
+      }
   }
-  // inner shells
-  distance = extrudedWidth;
-  for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
-    {
-      shrinked = Clipping::getOffset(shrinked,-distance);
-      for (uint i = 0; i<shrinked.size(); i++)  
-	shrinked[i].cleanup(cleandist);
-      //shrinked = Clipping::getShrinkedCapped(shrinked,distance); 
-      shellPolygons.push_back(shrinked);
-    }
   // the filling polygon
   fillPolygons = Clipping::getOffset(shrinked,-(1.-infilloverlap)*distance);
   for (uint i = 0; i<fillPolygons.size(); i++)  
