@@ -171,3 +171,4 @@ private:
 bool CleanupConnectSegments(const vector<Vector2d> vertices, vector<Segment> &lines,
 			    bool connect_all=false);
 bool CleanupSharedSegments(vector<Segment> &lines);
+bool CleanupStraightLines(const vector<Vector2d> vertices, vector<Segment> &lines);

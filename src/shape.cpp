@@ -741,6 +741,84 @@ void Shape::CenterAroundXY()
 // }
 
 
+bool getLineSequences(const vector<Segment> lines, vector< vector<uint> > &connectedlines)
+{
+  uint nlines = lines.size();
+  //cerr << "lines size " << nlines << endl;
+  if (nlines==0) return true;
+  vector<bool> linedone(nlines);
+  for (uint l=0; l < nlines; l++) linedone[l] = false;
+  vector<uint> sequence;
+  uint donelines = 0;
+  vector<uint> connections;
+  while (donelines < nlines) {
+    connections.clear();
+    for (uint l=0; l < nlines; l++) { // add next connecting line
+      if ( !linedone[l] && 
+	   ( (sequence.size()==0) || 
+	     (lines[l].start == lines[sequence.back()].end) ) ) {
+	connections.push_back(l);
+	//cerr << "found connection" << endl;
+      }
+    }
+    if (connections.size()>0) {
+      //cerr << "found " << connections.size() << " connections" << endl;
+      sequence.push_back(connections[0]);
+      linedone[connections[0]] =true;
+      donelines++;
+      if (lines[sequence.front()].start == lines[sequence.back()].end) {
+	//cerr << "closed sequence" << endl;
+        connectedlines.push_back(sequence);
+      // 	  sequence.clear();
+      }
+    } else { //   (!foundconnection) {  // new sequence
+      //cerr << "sequence size " << sequence.size() << endl;
+      connectedlines.push_back(sequence);
+      sequence.clear();
+      for (uint l=0; l < nlines; l++) { // add next best undone line
+	if (!linedone[l]) {
+	  sequence.push_back(l);
+	  linedone[l] = true;
+	  donelines++;
+	  break;
+	}
+      }
+    }
+  }
+  if (sequence.size()>0)
+    connectedlines.push_back(sequence);
+  //cerr << "found "<< connectedlines.size() << " sequences" << endl;
+  return true;
+}
+
+bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, 
+			   vector<Poly> &polys, double &max_grad) const
+{
+  vector<Vector2d> vertices;
+  vector<Segment> lines = getCutlines(T, z, vertices, max_grad);
+  //cerr << vertices.size() << " " << lines.size() << endl;
+  if (!CleanupSharedSegments(lines)) return false;
+  // if (!CleanupStraightLines(vertices, lines)) return false;
+  if (!CleanupConnectSegments(vertices,lines,true)) return false;
+  //cerr << vertices.size() << " " << lines.size() << endl;
+  vector< vector<uint> > connectedlines; // sequence of connected lines indices
+  if (!getLineSequences(lines, connectedlines)) return false;
+  for (uint i=0; i<connectedlines.size();i++){
+    Poly poly(z);
+    for (uint j=0; j<connectedlines[i].size();j++){
+      poly.addVertex(vertices[lines[connectedlines[i][j]].start]);
+    }
+    if (lines[connectedlines[i].back()].end !=
+	lines[connectedlines[i].front()].start )
+      poly.addVertex(vertices[lines[connectedlines[i].back()].end]);
+    //cerr << "poly size " << poly.size() << endl;
+    polys.push_back(poly);
+  }
+  //cerr << "found " << polys.size() << " polys" << endl;
+  return true;
+}
+
+#if 0
 // given the overall translation matrix, not our own!
 bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, 
 			   vector<Poly> &polys, double &max_grad) const
@@ -890,7 +968,16 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 
   return true;
 }
+#endif
 
+int find_vertex(const vector<Vector2d> vertices,  const Vector2d v, double delta = 0.0001)
+{
+  for (uint i = 0; i<vertices.size(); i++) {
+    if ( (v-vertices[i]).lengthSquared() < delta ) 
+      return i;
+  }
+  return -1;
+}
 
 vector<Segment> Shape::getCutlines(const Matrix4d &T, double z, 
 				   vector<Vector2d> &vertices, double &max_gradient) const
@@ -901,7 +988,6 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   Vector2d lineEnd;
   vector<Segment> lines;
   int num_cutpoints;
-  
   // we know our own tranform:
   Matrix4d transform = T * transform3D.transform ;
 
@@ -910,14 +996,24 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
       Segment line(-1,-1);
       num_cutpoints = triangles[i].CutWithPlane(z, transform, lineStart, lineEnd);
       if (num_cutpoints>0) {
-	line.start = vertices.size();
-	vertices.push_back(lineStart);
+	int havev = find_vertex(vertices, lineStart);
+	if (havev >= 0) 
+	  line.start = havev;
+	else {
+	  line.start = vertices.size();
+	  vertices.push_back(lineStart);
+	}
 	if (abs(triangles[i].Normal.z) > max_gradient)
 	  max_gradient = abs(triangles[i].Normal.z);
       }
       if (num_cutpoints>1) {
-	line.end = vertices.size();
-	vertices.push_back(lineEnd);
+	int havev = find_vertex(vertices, lineEnd);
+	if (havev >= 0) 
+	  line.end = havev;
+	else {
+	  line.end = vertices.size();
+	  vertices.push_back(lineEnd);
+	}
       }
       // Check segment normal against triangle normal. Flip segment, as needed.
       if (line.start != -1 && line.end != -1 && line.end != line.start)	
@@ -928,7 +1024,7 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
 	  triangleNormal.normalise();
 	  segmentNormal.normalise();
 	  if( (triangleNormal-segmentNormal).lengthSquared() > 0.2){
-	    // if normals does not align, flip the segment
+	    // if normals do not align, flip the segment
 	    int iswap=line.start;line.start=line.end;line.end=iswap;
 	  }
 	  // cerr << "line "<<line.start << "-"<<line.end << endl;
@@ -1236,7 +1332,30 @@ void Shape::draw_geometry() const
 	glEnd();
 }
 
-
+// we dont want this
+// bool CleanupStraightLines(const vector<Vector2d> vertices, vector<Segment> &lines)
+// {
+//   vector<int> lines_to_delete;
+//   for (uint j = 0; j < lines.size(); j++) {
+//     for (uint k = j + 1; k < lines.size(); k++) {
+//       if ( lines[j].end == lines[k].start ) {
+// 	Vector2d dirj = vertices[lines[j].end]-vertices[lines[j].start];
+// 	Vector2d dirk = vertices[lines[k].end]-vertices[lines[k].start];
+// 	dirj.normalize();
+// 	dirk.normalize();
+// 	if ((dirk-dirj).lengthSquared() < 0.1) {
+// 	  cerr << "equal direction" << endl;
+// 	  lines[j].end = lines[k].end;
+// 	  lines_to_delete.push_back(k);
+// 	}
+//       }    
+//     }
+//   }
+//   std::sort(lines_to_delete.begin(), lines_to_delete.end());
+//   for (int r = lines_to_delete.size() - 1; r >= 0; r--)
+//     lines.erase(lines.begin() + lines_to_delete[r]);
+//   return true;
+// }
 
 
 
@@ -1251,6 +1370,7 @@ void Shape::draw_geometry() const
 // done easier by just running through all lines and finding them?
 bool CleanupSharedSegments(vector<Segment> &lines)
 {
+#if 1
   vector<int> lines_to_delete;
   for (uint j = 0; j < lines.size(); j++) {
     const Segment &jr = lines[j];
@@ -1274,7 +1394,7 @@ bool CleanupSharedSegments(vector<Segment> &lines)
     }
   return true;
 
-
+#endif
 
 
 #if 0

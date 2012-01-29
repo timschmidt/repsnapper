@@ -407,9 +407,9 @@ void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
 {
   Clipping clipp;
   clipp.clear();
-  clipp.addPolys(cliplayer->GetPolygons(),subject);
+  clipp.addPolys(cliplayer->GetOuterShell(),subject);
   clipp.addPolys(cliplayer->GetSupportPolygons(),subject); // previous 
-  clipp.addPolys(subjlayer->GetPolygons(),clip);
+  clipp.addPolys(subjlayer->GetOuterShell(),clip);
   // widen from layer to layer, afterwards substract enlarged shape polygons?
   //  subjlayer->setSupportPolygons(clipp.getOffset(clipp.substract(), 0.5*subjlayer->thickness));
   subjlayer->setSupportPolygons(clipp.getMerged(clipp.substract()));
