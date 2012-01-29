@@ -3,13 +3,12 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-27 09:14+0100\n"
-"PO-Revision-Date: 2012-01-27 09:54+0100\n"
+"POT-Creation-Date: 2012-01-29 02:38+0100\n"
+"PO-Revision-Date: 2012-01-29 03:11+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -85,7 +84,6 @@ msgid " Move Only"
 msgstr "Nur Bewegung"
 
 #: ../src/gcode.cpp:280
-#, fuzzy
 msgid "Loading GCode"
 msgstr "GCode laden"
 
@@ -101,12 +99,11 @@ msgstr "noch nicht implementiert\n"
 msgid "Converting"
 msgstr "Konvertiere"
 
-#: ../src/model.cpp:93 ../src/model2.cpp:647
+#: ../src/model.cpp:93 ../src/model2.cpp:652
 msgid "Done"
 msgstr "Fertig"
 
 #: ../src/model2.cpp:223
-#, fuzzy
 msgid "Slicing"
 msgstr "Schichteinstellungen"
 
@@ -127,35 +124,33 @@ msgstr "Unbedeckte Flächen"
 msgid "Support"
 msgstr "Gerüst"
 
-#: ../src/model2.cpp:466
+#: ../src/model2.cpp:471
 msgid "Shells"
 msgstr "Hüllen"
 
-#: ../src/model2.cpp:510 ../src/repsnapper.ui.h:95
-#, fuzzy
+#: ../src/model2.cpp:515 ../src/repsnapper.ui.h:95
 msgid "Infill"
-msgstr "Füllung Debuggen"
+msgstr "Füllung"
 
 #. m_progress->set_label (_("GCode"));
 #. m_progress->update(8.);
-#: ../src/model2.cpp:614
-#, fuzzy
+#: ../src/model2.cpp:619
 msgid "Making GCode"
-msgstr "GCode darstellen"
+msgstr "Erzeuge GCode"
 
-#: ../src/model2.cpp:629
+#: ../src/model2.cpp:634
 msgid "Time Estimation: "
 msgstr "Geschätzte Dauer: "
 
-#: ../src/model2.cpp:630 ../src/model2.cpp:657
+#: ../src/model2.cpp:635 ../src/model2.cpp:662
 msgid "h"
 msgstr ""
 
-#: ../src/model2.cpp:631 ../src/model2.cpp:658
+#: ../src/model2.cpp:636 ../src/model2.cpp:663
 msgid "m"
 msgstr ""
 
-#: ../src/model2.cpp:631 ../src/model2.cpp:658 ../src/printer.cpp:345
+#: ../src/model2.cpp:636 ../src/model2.cpp:663
 msgid "s"
 msgstr ""
 
@@ -168,7 +163,6 @@ msgid "Failed to connect to device"
 msgstr "Konnte nicht mit dem Gerät verbinden"
 
 #: ../src/printer.cpp:178
-#, fuzzy
 msgid "an error occured while connecting"
 msgstr "Kann nicht in Ausgangsposition, während gedruckt wird"
 
@@ -201,7 +195,6 @@ msgid "You must first connect to a device!"
 msgstr "Zuerst muss verbunden werden!"
 
 #: ../src/printer.cpp:283
-#, fuzzy
 msgid ""
 "Not connected to printer.\n"
 "Cannot stop printing"
@@ -218,31 +211,34 @@ msgid "Error writing to device!"
 msgstr "Fehler beim Schreiben zum Gerät"
 
 #: ../src/printer.cpp:341
-#, fuzzy
 msgid "Printing ("
 msgstr "Druckt (noch "
 
 #: ../src/printer.cpp:344
-msgid " hr"
+msgid " hrs,"
 msgstr " Std"
 
-#: ../src/printer.cpp:350
+#: ../src/printer.cpp:345
+msgid " hr,"
+msgstr " Std,"
+
+#: ../src/printer.cpp:349
 msgid " min "
 msgstr " Min "
 
-#: ../src/printer.cpp:352
+#: ../src/printer.cpp:351
 msgid " sec "
 msgstr " Sek "
 
-#: ../src/printer.cpp:353
+#: ../src/printer.cpp:352
 msgid "left)"
 msgstr ")"
 
-#: ../src/printer.cpp:395
+#: ../src/printer.cpp:394
 msgid "Printed"
 msgstr "Gedruckt"
 
-#: ../src/printer.cpp:438
+#: ../src/printer.cpp:437
 #, c-format
 msgid "Error (%d) '%s' - user popup ?"
 msgstr "Fehler (%d) '%s' - Fenster?"
@@ -409,6 +405,23 @@ msgstr "Sollwert:"
 msgid "Home"
 msgstr "Startposition"
 
+#. these are available for user selection (order must be same as types):
+#: ../src/slicer/infill.h:44
+msgid "Parallel"
+msgstr "Linien"
+
+#: ../src/slicer/infill.h:44
+msgid "Zigzag"
+msgstr "Zickzack"
+
+#: ../src/slicer/infill.h:44 ../src/repsnapper.ui.h:131
+msgid "Polygons"
+msgstr "Polygone"
+
+#: ../src/slicer/infill.h:44
+msgid "Hilbert Curve"
+msgstr "Hilbertkurve"
+
 #: ../src/repsnapper.ui.h:1
 msgid "\n"
 msgstr ""
@@ -450,7 +463,6 @@ msgid "<b>Base</b>"
 msgstr "Unterlage"
 
 #: ../src/repsnapper.ui.h:12
-#, fuzzy
 msgid "<b>Comms Debug</b>"
 msgstr "<b>Kommunikation Debuggen</b>"
 
@@ -479,7 +491,6 @@ msgid "<b>Interface</b>"
 msgstr "Zwischenschicht"
 
 #: ../src/repsnapper.ui.h:19
-#, fuzzy
 msgid "<b>Layer Debug</b>"
 msgstr "<b>Schichten-Debug</b>"
 
@@ -492,7 +503,6 @@ msgid "<b>Print Speeds</b>"
 msgstr "<b>Druckgeschwindigkeiten</b>"
 
 #: ../src/repsnapper.ui.h:22
-#, fuzzy
 msgid "<b>STL Rendering Colors</b>"
 msgstr "<b>STL-Darstellung</b>"
 
@@ -505,26 +515,22 @@ msgid "<b>Size</b>"
 msgstr "<b>Größe</b>"
 
 #: ../src/repsnapper.ui.h:25
-#, fuzzy
 msgid "Acceleration Distance:"
-msgstr "Beschleunigung Abstand"
+msgstr "Beschleunigungsstrecke"
 
 #: ../src/repsnapper.ui.h:26
 msgid "Adjust Luminance to Indicate Speed"
 msgstr "Geschwindigkeit durch Luminanz darstellen"
 
 #: ../src/repsnapper.ui.h:27
-#, fuzzy
 msgid "All Layers"
 msgstr "Alle Schichten"
 
 #: ../src/repsnapper.ui.h:28
-#, fuzzy
 msgid "Alternate Infill Distance:"
 msgstr "Alternativer Füllabstand"
 
 #: ../src/repsnapper.ui.h:29
-#, fuzzy
 msgid "Alternate Layers:"
 msgstr "Alternative Schichten"
 
@@ -566,27 +572,27 @@ msgstr "mm des Filaments"
 
 #: ../src/repsnapper.ui.h:41
 msgid "Choose Endpoints Colour"
-msgstr ""
+msgstr "Endpunktfarbe"
 
 #: ../src/repsnapper.ui.h:42
 msgid "Choose Extrusion Colour"
-msgstr ""
+msgstr "Extrusionsfarbe"
 
 #: ../src/repsnapper.ui.h:43
 msgid "Choose Head Movement Colour"
-msgstr ""
+msgstr "Bewegungsfarbe"
 
 #: ../src/repsnapper.ui.h:44
 msgid "Choose Normals Colour"
-msgstr ""
+msgstr "Normalenfarbe"
 
 #: ../src/repsnapper.ui.h:45
 msgid "Choose Polygon Colour"
-msgstr ""
+msgstr "Polygonfarbe"
 
 #: ../src/repsnapper.ui.h:46
 msgid "Choose Wireframe Colour"
-msgstr ""
+msgstr "Drahtmodellfarbe"
 
 #: ../src/repsnapper.ui.h:47
 msgid "Clear Logs"
@@ -641,12 +647,10 @@ msgid "Distance Between Lines"
 msgstr "Abstand zwischen Linien"
 
 #: ../src/repsnapper.ui.h:60
-#, fuzzy
 msgid "Draw GCode"
 msgstr "GCode zeigen"
 
 #: ../src/repsnapper.ui.h:61
-#, fuzzy
 msgid "Draw Layers"
 msgstr "Schichten zeigen"
 
@@ -655,7 +659,6 @@ msgid "Draw Line Numbers"
 msgstr "Liniennummern zeigen"
 
 #: ../src/repsnapper.ui.h:63
-#, fuzzy
 msgid "Draw Models: "
 msgstr "Objekte zeigen: "
 
@@ -709,7 +712,6 @@ msgid "End"
 msgstr "Ende"
 
 #: ../src/repsnapper.ui.h:76
-#, fuzzy
 msgid "Endpoints"
 msgstr "Endpunkte darstellen"
 
@@ -719,10 +721,9 @@ msgstr "Fehler/Warnungen"
 
 #: ../src/repsnapper.ui.h:78
 msgid "Extrude Colour"
-msgstr ""
+msgstr "Extrusionsfarbe"
 
 #: ../src/repsnapper.ui.h:79
-#, fuzzy
 msgid "Extruded Material Width Ratio"
 msgstr "Breite des extrudierten Materials"
 
@@ -749,19 +750,18 @@ msgstr "Filamentdurchmesser"
 #: ../src/repsnapper.ui.h:85
 msgid ""
 "Free parts of layers (number given by Shell Count) will be completely filled"
-msgstr "Freiliegende Flächen (so viele wie Anzahl Hüllen) werden komplett gefüllt"
+msgstr ""
+"Freiliegende Flächen (so viele wie Anzahl Hüllen) werden komplett gefüllt"
 
 #: ../src/repsnapper.ui.h:86
 msgid "From:"
 msgstr "Von:"
 
 #: ../src/repsnapper.ui.h:87
-#, fuzzy
 msgid "Full Fill"
 msgstr "Komplette Füllung"
 
 #: ../src/repsnapper.ui.h:88
-#, fuzzy
 msgid "GCode when Printing"
 msgstr "GCode, während gedruckt wird"
 
@@ -800,12 +800,10 @@ msgid "Infill Overlap"
 msgstr "Füllungsüberhang"
 
 #: ../src/repsnapper.ui.h:98
-#, fuzzy
 msgid "Infill Rotation (°)"
 msgstr "Drehung der Füllung"
 
 #: ../src/repsnapper.ui.h:99
-#, fuzzy
 msgid "Infill Rotation per Layer (°)"
 msgstr "Drehung pro Schicht"
 
@@ -842,7 +840,6 @@ msgid "Level: 0-255"
 msgstr "Stärke: 0-255"
 
 #: ../src/repsnapper.ui.h:108
-#, fuzzy
 msgid "Live Extrude Color"
 msgstr "Farbe Extrudierung"
 
@@ -855,7 +852,6 @@ msgid "Load STL"
 msgstr "STL laden"
 
 #: ../src/repsnapper.ui.h:111
-#, fuzzy
 msgid "Machine Code"
 msgstr "GCode laden"
 
@@ -898,7 +894,6 @@ msgid "Next Layer"
 msgstr "Schichtwechsel"
 
 #: ../src/repsnapper.ui.h:121
-#, fuzzy
 msgid "No Infill"
 msgstr "Füllung Debuggen"
 
@@ -923,7 +918,6 @@ msgid "Number of lines of output to retain for each scrollback buffer"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:127
-#, fuzzy
 msgid "Object Rotation:"
 msgstr "Drehung:"
 
@@ -934,11 +928,6 @@ msgstr "Skalierung:"
 #: ../src/repsnapper.ui.h:129
 msgid "Object Translation:"
 msgstr "Verschiebung:"
-
-#: ../src/repsnapper.ui.h:131
-#, fuzzy
-msgid "Polygons"
-msgstr "Polygone"
 
 #: ../src/repsnapper.ui.h:132
 msgid "Power On"
@@ -981,12 +970,10 @@ msgid "Result"
 msgstr "Ergebnis"
 
 #: ../src/repsnapper.ui.h:142
-#, fuzzy
 msgid "Retraction Distance (mm)"
 msgstr "Filamentrückzug (mm)"
 
 #: ../src/repsnapper.ui.h:143
-#, fuzzy
 msgid "Retraction Speed (mm/min)"
 msgstr "Geschwindigkeit Filamentrückzug (mm/s)"
 
@@ -1081,9 +1068,8 @@ msgid "Support Fill"
 msgstr "Gerüstfüllung"
 
 #: ../src/repsnapper.ui.h:166
-#, fuzzy
 msgid "Surface Normals"
-msgstr "Flächennormalen darstellen"
+msgstr "Flächennormalen"
 
 #: ../src/repsnapper.ui.h:167
 msgid "Temperature Ratio"
@@ -1142,12 +1128,11 @@ msgstr ""
 
 #: ../src/repsnapper.ui.h:179
 msgid "Width to Layerheight Ratio of Extruded Line"
-msgstr "Verhältnis Höhe zu Breite der extrudierten Linie"
+msgstr "Verhältnis Breite zu Höhe der extrudierten Linie"
 
 #: ../src/repsnapper.ui.h:180
-#, fuzzy
 msgid "Wireframe"
-msgstr "Drahtmodell darstellen"
+msgstr "Drahtmodell"
 
 #: ../src/repsnapper.ui.h:181
 msgid "X"
@@ -1171,7 +1156,7 @@ msgstr "Z-Achse"
 
 #: ../src/repsnapper.ui.h:186
 msgid "_Autoplace"
-msgstr "Autom. platzieren"
+msgstr "_Autom. platzieren"
 
 #: ../src/repsnapper.ui.h:187
 msgid "_Edit"
@@ -1186,7 +1171,6 @@ msgid "_Help"
 msgstr "_Hilfe"
 
 #: ../src/repsnapper.ui.h:190
-#, fuzzy
 msgid "_Print"
 msgstr "_Drucken"
 
@@ -1209,6 +1193,9 @@ msgstr ""
 #: ../src/repsnapper.ui.h:195
 msgid "repsnapper Preferences"
 msgstr "repsnapper-Einstellungen"
+
+#~ msgid " hr"
+#~ msgstr " Std"
 
 #~ msgid "unknown shrinking algorithm"
 #~ msgstr "unbekannter Schrumpfalgorithmus"

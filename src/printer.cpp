@@ -341,9 +341,8 @@ string timeleft_str(long seconds) {
   ostr << _("Printing (");
   int hrs = (int)seconds/3600;
   if (hrs>0) {
-    ostr << hrs << _(" hr");
-    if (hrs>1) ostr << _("s");
-    ostr << ", ";
+    if (hrs>1) ostr << hrs << _(" hrs,");
+    else ostr << hrs << _(" hr,");
     seconds -= 3600*hrs;
   }
   if (seconds>60)
