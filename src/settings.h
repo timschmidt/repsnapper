@@ -103,6 +103,10 @@ class Settings {
     int NormalFilltype;
     int FullFilltype;
     int SupportFilltype;
+    bool MakeDecor;
+    int DecorFilltype;
+    float DecorInfillDistance;
+    float DecorInfillRotation;
 
     bool ShellOnly;
     guint ShellCount;

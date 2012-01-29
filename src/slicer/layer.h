@@ -76,13 +76,15 @@ public:
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
 
-  void CalcInfill (int normalfilltype, int fullfilltype, int supportfilltype,
+  void CalcInfill (int normalfilltype, int fullfilltype, 
+		   int supportfilltype, int decorfilltype,
 		   double InfillDistance,  double FullInfillDistance,
 		   double InfillRotation,  double InfillRotationPrLayer,
+		   double DecorInfillDistance, double DecorInfillRotation, 
 		   bool ShellOnly,  bool DisplayDebuginFill);
 
   vector<double> getBridgeRotations(const vector<Poly> poly) const;
-
+  void calcBridgeAngles(const Layer *layerbelow);
   
   void MakeShells(uint shellcount, double extrudedWidth, 
   		  bool makeskirt, double infilloverlap);
@@ -100,6 +102,7 @@ public:
   vector<Poly> GetBridgePolygons() const { return bridgePolygons; }
   vector<Poly> GetSkinFullPolygons() const { return skinFullFillPolygons; }
   vector<Poly> GetSupportPolygons() const { return supportPolygons; }
+  vector<Poly> GetDecorPolygons() const { return decorPolygons; }
   vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
   vector<Poly>  GetShellPolygonsCirc(int number) const;
   Poly  GetSkirtPolygon() const {return skirtPolygon; };
@@ -108,7 +111,7 @@ public:
   
   void setFullFillPolygons(const vector<Poly> polys);  
   void addFullFillPolygons(const vector<Poly> polys);
-  void addFullPolygons(const vector<Poly> fullpolys) ;
+  void addFullPolygons(const vector<Poly> fullpolys, bool decor=false) ;
   void setBridgePolygons(const vector<Poly>  polys);
   void addBridgePolygons(const vector<Poly> polys);
   void setBridgeAngles(const vector<double> angles);
@@ -116,6 +119,7 @@ public:
   void setNormalFillPolygons(const vector<Poly> polys);
   void setSupportPolygons(const vector<Poly> polys);
   void setSkirtPolygon(const Poly poly);
+  void setDecorPolygons(const vector<Poly> polys);
 
   /* void getOrderedPrintLines(const vector<Poly> polys,  */
   /* 			    Vector2d &startPoint, */
@@ -151,6 +155,7 @@ public:
   Infill * bridgeInfill;
   vector<Infill*> skinFullInfills;
   Infill * supportInfill;
+  Infill * decorInfill;
   
   vector<Poly> polygons;		// original polygons directly from model
   vector< vector<Poly> > shellPolygons; // all shells except innermost
@@ -164,5 +169,6 @@ public:
   vector<Poly> skinFullFillPolygons;    // skin polygons of fully filled areas
   Poly hullPolygon;                     // convex hull aroung everything
   Poly skirtPolygon;                    // skirt polygon
+  vector<Poly> decorPolygons;           // decoration polygons
 
 };

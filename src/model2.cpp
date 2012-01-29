@@ -304,7 +304,7 @@ void Model::MakeFullSkins()
 }
 
 
-void Model::MakeUncoveredPolygons(bool make_bridges)
+void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
 {
   int count = (int)layers.size();
   m_progress->restart (_("Find Uncovered"), 2*count+2);
@@ -312,7 +312,7 @@ void Model::MakeUncoveredPolygons(bool make_bridges)
   for (int i = 0; i < count-1; i++) 
     {
       if (i%10==0) m_progress->update(i);
-      layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]));
+      layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]), make_decor);
     }  
   // top to bottom: uncovered from below -> bridge polys
   for (uint i = count-1; i > 0; i--) 
@@ -325,18 +325,18 @@ void Model::MakeUncoveredPolygons(bool make_bridges)
       bool mbridge = make_bridges && layers[i]->LayerNo != 0; 
       if (mbridge) {
 	layers[i]->addBridgePolygons(bridges);
-	vector<Poly> bridges_result = layers[i]->GetBridgePolygons();
-	vector<double> angles = layers[i-1]->getBridgeRotations(bridges_result);
-	layers[i]->setBridgeAngles(angles);
+	layers[i]->calcBridgeAngles(layers[i-1]);
+	// vector<Poly> bridges_result = layers[i]->GetBridgePolygons();
+	// vector<double> angles = layers[i-1]->getBridgeRotations(bridges_result);
+	// layers[i]->setBridgeAngles(angles);
 	//cerr << bridges_result.size() << " - " << angles.size() << endl;
       }
-      else layers[i]->addFullPolygons(bridges);
-
+      else layers[i]->addFullPolygons(bridges,make_decor);
     }
   m_progress->update(2*count+1);
-  layers.front()->addFullPolygons(layers.front()->GetFillPolygons());
+  layers.front()->addFullPolygons(layers.front()->GetFillPolygons(), make_decor);
   m_progress->update(2*count+2);
-  layers.back()->addFullPolygons(layers.back()->GetFillPolygons());
+  layers.back()->addFullPolygons(layers.back()->GetFillPolygons(), make_decor);
   //m_progress->stop (_("Done"));
 }
 
@@ -367,14 +367,15 @@ void Model::MultiplyUncoveredPolygons()
     {
       if (i%10==0) m_progress->update(i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
+      vector<Poly> decorpolys = layers[i]->GetDecorPolygons();
       vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
-      // we removed from full when skinning, so add them too
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (s=1; s < shells; s++) 
 	if (i-s > 1) {
 	  layers[i-s]->addFullPolygons(fullpolys);
 	  layers[i-s]->addFullPolygons(bridgepolys);
 	  layers[i-s]->addFullPolygons(skinfullpolys);
+	  layers[i-s]->addFullPolygons(decorpolys);
 	}
     }
   // top-down: propagate upwards
@@ -382,6 +383,7 @@ void Model::MultiplyUncoveredPolygons()
     {
       if (i%10==0) m_progress->update(count + count -i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
+      vector<Poly> decorpolys = layers[i]->GetDecorPolygons();
       vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (int s=1; s < shells; s++) 
@@ -389,6 +391,7 @@ void Model::MultiplyUncoveredPolygons()
 	  layers[i+s]->addFullPolygons(fullpolys);
 	  layers[i+s]->addFullPolygons(bridgepolys);
 	  layers[i+s]->addFullPolygons(skinfullpolys);
+	  layers[i+s]->addFullPolygons(decorpolys);
 	}
     }    
   // merge results
@@ -542,9 +545,12 @@ void Model::CalcInfill()
       layers[i]->CalcInfill(settings.Slicing.NormalFilltype,
 			    settings.Slicing.FullFilltype,
 			    settings.Slicing.SupportFilltype,
+			    settings.Slicing.DecorFilltype,
 			    infilldist, fullInfillDistance,
 			    settings.Slicing.InfillRotation,
 			    settings.Slicing.InfillRotationPrLayer, 
+			    settings.Slicing.DecorInfillDistance,
+			    settings.Slicing.DecorInfillRotation, 
 			    settings.Slicing.ShellOnly,
 			    settings.Display.DisplayDebuginFill);
 
@@ -592,7 +598,8 @@ void Model::ConvertToGCode()
   // m_progress->set_label (_("Uncovered"));
   // m_progress->update(3.);
   if (settings.Slicing.SolidTopAndBottom)
-    MakeUncoveredPolygons(!settings.Slicing.Support); // not bridging when support
+    // not bridging when support
+    MakeUncoveredPolygons(settings.Slicing.MakeDecor, !settings.Slicing.Support);
 
   // m_progress->set_label (_("Support"));
   // m_progress->update(4.);

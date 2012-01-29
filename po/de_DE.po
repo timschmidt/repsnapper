@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-29 02:38+0100\n"
-"PO-Revision-Date: 2012-01-29 03:11+0100\n"
+"PO-Revision-Date: 2012-01-29 14:12+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -19,11 +19,11 @@ msgstr ""
 
 #: ../repsnapper.desktop.in.h:1
 msgid "Controls your 3D plastic printer"
-msgstr "Bedienung des 3D-Druckers"
+msgstr "Steuerung des 3D-Druckers"
 
 #: ../repsnapper.desktop.in.h:2
 msgid "RepRap control software"
-msgstr "RepRap-Bedienung"
+msgstr "RepRap-Steuerung"
 
 #: ../repsnapper.desktop.in.h:3
 msgid "repsnapper"
@@ -943,7 +943,7 @@ msgstr "Puffergröße (GCode-Zeilen)"
 
 #: ../src/repsnapper.ui.h:135
 msgid "Printer Controls"
-msgstr "Druckerbedienung"
+msgstr "Druckersteuerung"
 
 #: ../src/repsnapper.ui.h:136
 msgid "Progress"

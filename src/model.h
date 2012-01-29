@@ -87,7 +87,7 @@ public:
 	void Slice(double printoffsetZ);
 	void CalcInfill();
 	void MakeShells();
-	void MakeUncoveredPolygons(bool make_bridges=true);
+	void MakeUncoveredPolygons(bool make_decor, bool make_bridges=true);
 	vector<Poly> GetUncoveredPolygons(Layer *subjlayer,const Layer *cliplayer);
 	void MakeFullSkins();
 	void MultiplyUncoveredPolygons();

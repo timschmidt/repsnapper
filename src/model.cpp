@@ -726,9 +726,12 @@ void Model::drawLayers(Vector3d offset) const
 	      layer->CalcInfill(settings.Slicing.NormalFilltype,
 				settings.Slicing.FullFilltype,
 				settings.Slicing.SupportFilltype,
+				settings.Slicing.DecorFilltype,
 				infillDistance, fullInfillDistance,
 				settings.Slicing.InfillRotation,
 				settings.Slicing.InfillRotationPrLayer, 
+				settings.Slicing.DecorInfillDistance,
+				settings.Slicing.DecorInfillRotation, 
 				settings.Slicing.ShellOnly,
 				settings.Display.DisplayDebuginFill);
 	    }

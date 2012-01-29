@@ -161,6 +161,10 @@ static struct {
   INT_MEMBER    (Slicing.NormalFilltype, "NormalFilltype", 0, true),
   INT_MEMBER    (Slicing.FullFilltype, "FullFilltype", 0, true),
   INT_MEMBER    (Slicing.SupportFilltype, "SupportFilltype", 0, true),
+  BOOL_MEMBER   (Slicing.MakeDecor, "MakeDecor", true, true),
+  INT_MEMBER    (Slicing.DecorFilltype, "DecorFilltype", 0, true),
+  FLOAT_MEMBER  (Slicing.DecorInfillRotation, "DecorInfillRotation", 0, true),
+  FLOAT_MEMBER  (Slicing.DecorInfillDistance, "DecorInfillDistance", 2.0, true),
   BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, false),
   BOOL_MEMBER   (Slicing.Support, "Support", true, true),
   FLOAT_MEMBER  (Slicing.SkirtHeight, "SkirtHeight", 0.0, true),
@@ -258,6 +262,8 @@ static struct {
   { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
   { "Slicing.InfillDistance", 0.0, 10, 0.1, 1 },
   { "Slicing.AltInfillDistance", 0.1, 10, 0.1, 2 },
+  { "Slicing.DecorInfillDistance", 0.0, 10, 0.1, 1 },
+  { "Slicing.DecorInfillRotation", -360, 360, 5, 45 },
   { "Slicing.InfillOverlap", 0, 1.0 , 0.01, 0.1},
   //{ "Slicing.Optimization", 0.0, 10.0, 0.01, 0.1 },
   { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
@@ -650,6 +656,7 @@ void Settings::set_filltypes_to_gui (Builder &builder)
   uint norm = Slicing.NormalFilltype;
   uint full = Slicing.FullFilltype;
   uint support = Slicing.SupportFilltype;
+  uint decor = Slicing.DecorFilltype;
   builder->get_widget ("Slicing.NormalFilltype", combo);
   if (combo)
     combo->set_active (norm);
@@ -661,6 +668,9 @@ void Settings::set_filltypes_to_gui (Builder &builder)
   builder->get_widget ("Slicing.SupportFilltype", combo);
   if (combo)
     combo->set_active (support);
+  builder->get_widget ("Slicing.DecorFilltype", combo);
+  if (combo)
+    combo->set_active (decor);
 }
 // void Settings::set_shrink_to_gui (Builder &builder)
 // {
@@ -766,6 +776,11 @@ void Settings::get_filltypes_from_gui (Builder &builder)
     Slicing.SupportFilltype = combo->get_active_row_number ();
   }
   else cerr << "no Slicing.SupportFilltype combo" << endl;
+  builder->get_widget ("Slicing.DecorFilltype", combo);
+  if (combo){
+    Slicing.DecorFilltype = combo->get_active_row_number ();
+  }
+  else cerr << "no Slicing.DecorFilltype combo" << endl;
   // cerr << "read combos: " << Slicing.NormalFilltype 
   //      <<  " / " << Slicing.FullFilltype 
   //      <<  " / " << Slicing.SupportFilltype << endl;
@@ -980,6 +995,10 @@ void Settings::connect_to_ui (Builder &builder)
   combo->signal_changed().connect
     (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
   builder->get_widget ("Slicing.SupportFilltype", combo);
+  set_up_combobox(combo,infills);
+  combo->signal_changed().connect
+    (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
+  builder->get_widget ("Slicing.DecorFilltype", combo);
   set_up_combobox(combo,infills);
   combo->signal_changed().connect
     (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
