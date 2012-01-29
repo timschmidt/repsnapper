@@ -71,6 +71,8 @@ public:
 	void cleanup(double maxerror);
 	vector<Vector2d> cleaned(const vector<Vector2d> vertices, double maxerror) const;
 
+	void reverse() {std::reverse(vertices.begin(),vertices.end());};
+
 	void clear(){vertices.clear();};
 
 
