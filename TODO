@@ -1,3 +1,4 @@
+
 --- the plan ---
 
 * Create a wizard to select a default machine to base settings on ...
@@ -26,13 +27,6 @@ G92 E0
 
 * save target temperature, extruder length etc. ...
 
-* fix multiple shells work
-	- so we can get gears printing nicely
-
-* fix Logick crashes when rendering ...
-
-* fix 'customize' stuff ...
-
 * Bin the two 'load' menu items - just one 'open' menu ...
 	+ with a gcode and stl filter drop-down ?
 * Add a preview widget to the file menu
@@ -54,7 +48,6 @@ G92 E0
 		+ you need to tweak permissions, or add yourself
 		  to XYZ group, and re-login ...
 
-* Finish the 'Display' settings page
 * add Hardware Settings profiles:
 	+ "Mendel", "XYZ", "etc." ? :-)
 
@@ -75,12 +68,9 @@ G92 E0
 * serial connection
 	* add a test serial connection ...
 
-* RFO re-work
-	+ class name fixing: RFO_File etc.
+* Object tree re-work
 	+ encapsulate the selection concept in a clean abstract object
 	+ re-work RFO storage to use pointers not vectors with instances
-
-* add click-to-select in the 3D view
 
 * bug fixing:
 	+ arcball / rotation resetting ...
