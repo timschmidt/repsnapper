@@ -58,8 +58,6 @@ class Clipping
   static CL::Polygons CLOffset(CL::Polygons cpolys, int cldist, 
 			       CL::JoinType cljtype, double miter_limit=1, bool reverse=false);
 
-  static CL::Polygons getMerged(CL::Polygons cpolys);
-
 public:
   Clipping(){};
   ~Clipping(){clear();};
@@ -76,7 +74,8 @@ public:
   // vector<Poly> xor();
 
   static vector<Poly> getMerged(vector<Poly> polys);
-  
+  static CL::Polygons getMerged(CL::Polygons cpolys);
+
   static vector<Poly> getOffset(const Poly poly, double distance, 
 				JoinType jtype=jmiter, double miterdist=1);
   static vector<Poly> getOffset(const vector<Poly> polys, double distance, 

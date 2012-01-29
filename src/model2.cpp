@@ -412,7 +412,7 @@ void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
   clipp.addPolys(subjlayer->GetPolygons(),clip);
   // widen from layer to layer, afterwards substract enlarged shape polygons?
   //  subjlayer->setSupportPolygons(clipp.getOffset(clipp.substract(), 0.5*subjlayer->thickness));
-  subjlayer->setSupportPolygons(clipp.substract());
+  subjlayer->setSupportPolygons(clipp.getMerged(clipp.substract()));
 }
 
 void Model::MakeSupportPolygons()
@@ -421,6 +421,7 @@ void Model::MakeSupportPolygons()
   m_progress->restart (_("Support"), count*2);
   for (int i=count-1; i>0; i--) 
     {
+      //cerr << "support layer "<< i << endl;
       if (i%10==0) m_progress->update(count-i);
       if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i]);
@@ -428,11 +429,15 @@ void Model::MakeSupportPolygons()
   // shrink a bit
   for (int i=0; i<count; i++) 
     {
+      //cerr << "shrink support layer "<< i << endl;
       //if (layers[i]->LayerNo == 0) continue;
       double distance = 2*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       if (i%10==0) m_progress->update(i+count);
-      vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());
-      layers[i]->setSupportPolygons(Clipping::getOffset(merged,-distance));
+      // vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());
+      // cerr << merged.size() << " polys" << endl;
+      vector<Poly> offset = 
+	Clipping::getOffset(layers[i]->GetSupportPolygons(),-distance);
+      layers[i]->setSupportPolygons(offset);
     }
   //  m_progress->stop (_("Done"));
 }

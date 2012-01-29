@@ -209,12 +209,20 @@ CL::Polygons Clipping::CLOffset(CL::Polygons cpolys, int cldist,
 // overlap a bit and unite to merge adjacent polys
 vector<Poly> Clipping::getMerged(vector<Poly> polys) 
 {
+  CL::Polygons cpolys = getClipperPolygons(polys);
+  CL::Polygons merged = getMerged(cpolys);
+  double z=0, extrf = 1.;
+  if (polys.size()>0) {
+    z= polys.back().getZ();
+    extrf = polys.back().getExtrusionFactor();
+  }
+  return getPolys(merged, z, extrf);
+}
+// overlap a bit and unite to merge adjacent polys
+CL::Polygons Clipping::getMerged(CL::Polygons cpolys) 
+{
   //  return polys;
   int OFFSET=3;
-  //CL::Clipper clpr;
-  //std::reverse(polys.begin(),polys.end());
-  CL::Polygons cpolys = getClipperPolygons(polys);
-  //return getPolys(cpolys, polys.back().getZ(),polys.back().getExtrusionFactor());
   // make wider to get overlap
   CL::Polygons offset;
   offset = CLOffset(cpolys, OFFSET, CL::jtMiter, 1);
@@ -222,34 +230,13 @@ vector<Poly> Clipping::getMerged(vector<Poly> polys)
   // return getPolys(offset, polys.back().getZ(),polys.back().getExtrusionFactor());
   clpr.Clear();
   clpr.AddPolygons(offset, CL::ptSubject);
-  // CL::Polygons emptypolys;
-  // clpr.AddPolygons(emptypolys, CL::ptClip);
-  // unite
   CL::Polygons cpolys3;
   clpr.Execute(CL::ctUnion, cpolys3, CL::pftPositive, CL::pftNegative);
   //cerr << cpolys3.size() << " - "<<offset.size() << endl;
   // shrink the result  
   //CL::OffsetPolygons(cpolys3, offset, -2, ClipperLib::jtMiter, 1);
   //return getPolys(cpolys3,polys.back().getZ(),true);
-  offset = CLOffset(cpolys3, -OFFSET, CL::jtMiter, 1);
-  double z=0, extrf = 1.;
-  if (polys.size()>0) {
-    z= polys.back().getZ();
-    extrf = polys.back().getExtrusionFactor();
-  }
-  return getPolys(offset, z, extrf);
-}
-
-CL::Polygons Clipping::getMerged(CL::Polygons cpolys) 
-{
-  CL::Polygons offset;
-  offset = CLOffset(cpolys, 2, CL::jtMiter, 1);
-  clpr.Clear();
-  clpr.AddPolygons(offset, CL::ptSubject);
-  CL::Polygons cpolys3;
-  clpr.Execute(CL::ctUnion, cpolys3, 
-	       CL::pftPositive, CL::pftNegative);
-  return CLOffset(cpolys3, -2, CL::jtMiter, 1);
+  return CLOffset(cpolys3, -OFFSET, CL::jtMiter, 1);
 }
 
 Poly Clipping::getPoly(const CL::Polygon cpoly, double z, double extrusionfactor) 
