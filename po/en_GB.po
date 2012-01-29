@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-27 09:14+0100\n"
+"POT-Creation-Date: 2012-01-29 02:38+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: michael.meeks@novell.com\n"
 "Language-Team: British English <gb@li.org>\n"
@@ -100,7 +100,7 @@ msgstr ""
 msgid "Converting"
 msgstr ""
 
-#: ../src/model.cpp:93 ../src/model2.cpp:647
+#: ../src/model.cpp:93 ../src/model2.cpp:652
 msgid "Done"
 msgstr ""
 
@@ -125,33 +125,33 @@ msgstr ""
 msgid "Support"
 msgstr ""
 
-#: ../src/model2.cpp:466
+#: ../src/model2.cpp:471
 msgid "Shells"
 msgstr ""
 
-#: ../src/model2.cpp:510 ../src/repsnapper.ui.h:95
+#: ../src/model2.cpp:515 ../src/repsnapper.ui.h:95
 msgid "Infill"
 msgstr ""
 
 #. m_progress->set_label (_("GCode"));
 #. m_progress->update(8.);
-#: ../src/model2.cpp:614
+#: ../src/model2.cpp:619
 msgid "Making GCode"
 msgstr ""
 
-#: ../src/model2.cpp:629
+#: ../src/model2.cpp:634
 msgid "Time Estimation: "
 msgstr ""
 
-#: ../src/model2.cpp:630 ../src/model2.cpp:657
+#: ../src/model2.cpp:635 ../src/model2.cpp:662
 msgid "h"
 msgstr ""
 
-#: ../src/model2.cpp:631 ../src/model2.cpp:658
+#: ../src/model2.cpp:636 ../src/model2.cpp:663
 msgid "m"
 msgstr ""
 
-#: ../src/model2.cpp:631 ../src/model2.cpp:658 ../src/printer.cpp:345
+#: ../src/model2.cpp:636 ../src/model2.cpp:663
 msgid "s"
 msgstr ""
 
@@ -210,26 +210,30 @@ msgid "Printing ("
 msgstr ""
 
 #: ../src/printer.cpp:344
-msgid " hr"
+msgid " hrs,"
 msgstr ""
 
-#: ../src/printer.cpp:350
+#: ../src/printer.cpp:345
+msgid " hr,"
+msgstr ""
+
+#: ../src/printer.cpp:349
 msgid " min "
 msgstr ""
 
-#: ../src/printer.cpp:352
+#: ../src/printer.cpp:351
 msgid " sec "
 msgstr ""
 
-#: ../src/printer.cpp:353
+#: ../src/printer.cpp:352
 msgid "left)"
 msgstr ""
 
-#: ../src/printer.cpp:395
+#: ../src/printer.cpp:394
 msgid "Printed"
 msgstr ""
 
-#: ../src/printer.cpp:438
+#: ../src/printer.cpp:437
 #, c-format
 msgid "Error (%d) '%s' - user popup ?"
 msgstr ""
@@ -380,6 +384,23 @@ msgstr ""
 
 #: ../src/view.cpp:461
 msgid "Home"
+msgstr ""
+
+#. these are available for user selection (order must be same as types):
+#: ../src/slicer/infill.h:44
+msgid "Parallel"
+msgstr ""
+
+#: ../src/slicer/infill.h:44
+msgid "Zigzag"
+msgstr ""
+
+#: ../src/slicer/infill.h:44 ../src/repsnapper.ui.h:131
+msgid "Polygons"
+msgstr ""
+
+#: ../src/slicer/infill.h:44
+msgid "Hilbert Curve"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:1
@@ -880,10 +901,6 @@ msgstr ""
 
 #: ../src/repsnapper.ui.h:129
 msgid "Object Translation:"
-msgstr ""
-
-#: ../src/repsnapper.ui.h:131
-msgid "Polygons"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:132

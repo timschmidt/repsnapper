@@ -18,12 +18,14 @@ src/progress.cpp
 src/render.cpp
 src/repsnapper.cpp
 src/settings.cpp
+src/settings.h
 src/shape.cpp
 src/view.cpp
 src/vrml.cpp
 src/slicer/clipping.cpp
 src/slicer/gcode.cpp
 src/slicer/infill.cpp
+src/slicer/infill.h
 src/slicer/layer.cpp
 src/slicer/poly.cpp
 src/slicer/printlines.cpp
