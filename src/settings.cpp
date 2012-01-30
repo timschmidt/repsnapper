@@ -848,7 +848,10 @@ void Settings::get_port_speed_from_gui (Builder &builder)
   Gtk::ComboBox *combo = NULL;
   builder->get_widget ("Hardware.SerialSpeed", combo);
   if (combo) {
-    Hardware.SerialSpeed = atoi(combobox_get_active_value(combo).c_str());
+    if (combo->get_has_entry())
+      Hardware.SerialSpeed = atoi(combo->get_entry_text().c_str()); // doesnt work - no signal
+    else
+      Hardware.SerialSpeed = atoi(combobox_get_active_value(combo).c_str());
   }
 }
 
