@@ -28,25 +28,19 @@
 #include <vmmlib/vmmlib.h>
 #include <polylib/Polygon2d.h>
 
-#include "poly.h" 
+#include "poly.h"
 #include "gcode.h"
-// #include "printlines.h"
 
-/* #include "slicer_logick.h" */
-/* #include "cuttingplane.h" */
-/* #include "infill.h" */
-
-//#include "infill.h"
 class Infill;
-
 class Printlines;
+
+
 //
 // A Layer containing and maintaining all polygons to be printed
 //
 class Layer
 {
 
-  //  Clipping clipp;
 public:
   Layer();
   Layer(int layerno=-1, double thick=0., uint skins=1);

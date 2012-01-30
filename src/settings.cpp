@@ -180,6 +180,8 @@ static struct {
   BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, false),
   // FLOAT_MEMBER  (Slicing.SerialBuildHeight, "SerialBuildHeight", 0.00, false),
 
+  FLOAT_MEMBER  (Slicing.MinLayertime, "MinLayertime", 5, true),
+
   // Misc.
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
   BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
@@ -270,6 +272,7 @@ static struct {
   { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
   { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },
   { "Slicing.Skins", 1, 5, 1, 1 },
+  { "Slicing.MinLayertime", 0.0, 100, 1, 10 },
   //{ "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
 
   // Hardware

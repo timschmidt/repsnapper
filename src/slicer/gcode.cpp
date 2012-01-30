@@ -20,6 +20,7 @@
 #include "shape.h"
 
 #include "gcode.h"
+#include "printlines.h"
 
 
 struct GCodeStateImpl
@@ -103,18 +104,20 @@ double GCodeState::LastCommandF()
   return pImpl->lastCommand.f;
 }
 
-void GCodeState::AddLines (vector<printline> lines,
+void GCodeState::AddLines (vector<printline> plines,
 			   double extrusionfactor,
 			   double offsetZ, 
 			   const Settings::SlicingSettings &slicing,
 			   const Settings::HardwareSettings &hardware)
 {
-  for (uint i=0; i < lines.size(); i++)
-    MakeAcceleratedGCodeLine (lines[i], extrusionfactor, offsetZ, slicing, hardware);
+  for (uint i=0; i < plines.size(); i++)
+    MakeAcceleratedGCodeLine (plines[i], extrusionfactor, 
+			      offsetZ, slicing, hardware);
 }
 
 void GCodeState::AddLines (vector<Vector3d> lines,
 			   double extrusionFactor,
+			   double maxspeed,
 			   double offsetZ, 
 			   const Settings::SlicingSettings &slicing,
 			   const Settings::HardwareSettings &hardware)
@@ -124,12 +127,14 @@ void GCodeState::AddLines (vector<Vector3d> lines,
       // MOVE to start of next line
       if(LastPosition() != lines[i]) 
 	{
-	  MakeAcceleratedGCodeLine (LastPosition(), lines[i], 0.0, 
+	  MakeAcceleratedGCodeLine (LastPosition(), lines[i],
+				    0, maxspeed, 
 				    offsetZ, slicing, hardware);
 	  SetLastPosition (lines[i]);
 	} 
       // PLOT to endpoint of line 
-      MakeAcceleratedGCodeLine (LastPosition(), lines[i+1], extrusionFactor, 
+      MakeAcceleratedGCodeLine (LastPosition(), lines[i+1], 
+				maxspeed, extrusionFactor, 
 				offsetZ, slicing, hardware);
     SetLastPosition(lines[i+1]);
     }
@@ -144,16 +149,20 @@ void GCodeState::MakeAcceleratedGCodeLine (printline pline,
 					   const Settings::HardwareSettings &hardware)
 {
   if(LastPosition() != pline.from) {
-    MakeAcceleratedGCodeLine(LastPosition(), pline.from, 0, 
+    MakeAcceleratedGCodeLine(LastPosition(), pline.from, 
+			     0, pline.speed,
 			     offsetZ, slicing, hardware);
   }
-  MakeAcceleratedGCodeLine(pline.from, pline.to, extrusionfactor*pline.extrusionfactor, 
+  MakeAcceleratedGCodeLine(pline.from, pline.to, 
+			   extrusionfactor * pline.extrusionfactor, 
+			   pline.speed, 
 			   offsetZ, slicing, hardware);
   SetLastPosition(pline.to);
 }
 
 void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 					   double extrusionFactor, 
+					   double maxspeed,
 					   double offsetZ, 
 					   const Settings::SlicingSettings &slicing,
 					   const Settings::HardwareSettings &hardware)
@@ -165,6 +174,8 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 
   bool incrementalE = slicing.UseIncrementalEcode;
 
+  double minspeed = hardware.MinPrintSpeedXY;
+  maxspeed = max(minspeed,maxspeed); // in case maxspeed is too low
   if (slicing.EnableAcceleration)
     {
       double len;
@@ -178,7 +189,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
       command.Code = SETSPEED;
       command.where = start;
       command.e = 0.0;	       
-      command.f = hardware.MinPrintSpeedXY;
+      command.f = minspeed;
 	  
       AppendCommand(command,incrementalE);
 	  
@@ -190,13 +201,13 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 	  double extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 	  command.e = extrudedMaterial;  
 	  double lengthFactor = (len/2.0)/hardware.DistanceToReachFullSpeed;
-	  command.f = (hardware.MaxPrintSpeedXY-hardware.MinPrintSpeedXY)*lengthFactor+hardware.MinPrintSpeedXY;
+	  command.f = (maxspeed-minspeed)*lengthFactor+minspeed;
 	  AppendCommand(command,incrementalE);
 	  // And then decelerate
 	  command.Code = COORDINATEDMOTION;
 	  command.where = end;
 	  command.e = extrudedMaterial;
-	  command.f = hardware.MinPrintSpeedXY;
+	  command.f = minspeed;
 	  AppendCommand(command,incrementalE);
 		
 	}// if we will never reach full speed
@@ -207,7 +218,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 	  command.where = start+(direction*hardware.DistanceToReachFullSpeed);
 	  double extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 	  command.e = extrudedMaterial;
-	  command.f = hardware.MaxPrintSpeedXY;
+	  command.f = maxspeed;
 	  AppendCommand(command,incrementalE);
 		
 	  // Sustian speed till deacceleration starts
@@ -215,7 +226,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 	  command.where = end-(direction*hardware.DistanceToReachFullSpeed);
 	  extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 	  command.e = extrudedMaterial;
-	  command.f = hardware.MaxPrintSpeedXY;
+	  command.f = maxspeed;
 	  AppendCommand(command,incrementalE);
 		
 	  // deacceleration untill end
@@ -223,11 +234,11 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 	  command.where = end;
 	  extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 	  command.e = extrudedMaterial;
-	  command.f = hardware.MinPrintSpeedXY;
+	  command.f = minspeed;
 	  AppendCommand(command,incrementalE);
 	} // if we will reach full speed
     }
-  else	// No accleration
+  else	// No accleration 
     {
       // Make a accelerated line from lastCommand.where to lines[thisPoint]
       ResetLastWhere (start);
@@ -235,21 +246,19 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 	{
 	  command.Code = EXTRUDEROFF;
 	  AppendCommand(command,incrementalE);
-	  double speed = hardware.MinPrintSpeedXY;
 	  command.Code = COORDINATEDMOTION3D;
 	  command.where = start;
 	  command.e = 0;	    
-	  command.f = speed;
+	  command.f = maxspeed;
 	  AppendCommand(command,incrementalE);
 		
 	  command.Code = EXTRUDERON;
 	  AppendCommand(command,incrementalE);
 		
-	  speed = hardware.MinPrintSpeedXY;
 	  command.Code = COORDINATEDMOTION3D;
 	  command.where = end;
-	  command.e = 0;    
-	  command.f = speed;
+	  command.e = 0;
+	  command.f = maxspeed;
 	  AppendCommand(command,incrementalE);
 	  // Done, switch extruder off
 	  command.Code = EXTRUDEROFF;
@@ -258,11 +267,11 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
       else	// 5d gcode, no acceleration
 	{
 	  // set start speed to max
-	  if(LastCommandF() != hardware.MaxPrintSpeedXY)
+	  if(LastCommandF() != maxspeed)
 	    {
 	      command.Code = SETSPEED;
 	      command.where = Vector3d(start.x, start.y, start.z);
-	      command.f=hardware.MaxPrintSpeedXY;
+	      command.f=maxspeed;
 	      command.e = 0;
 	      AppendCommand(command,incrementalE);
 	    }
@@ -271,7 +280,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 	  command.where = end;
 	  double extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 	  command.e = extrudedMaterial;
-	  command.f = hardware.MaxPrintSpeedXY;
+	  command.f = maxspeed;
 	  AppendCommand(command,incrementalE);
 	}	// 5D gcode
     }// If using firmware acceleration

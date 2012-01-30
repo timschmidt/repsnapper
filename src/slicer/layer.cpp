@@ -562,11 +562,13 @@ void Layer::MakeGcode(GCodeState &state,
   Vector2d startPoint(start3.x,start3.y);
   
   double extrf = hardware.GetExtrudeFactor(thickness);
-  
+
   double OPTRATIO = 1.5;
   double optratio = OPTRATIO;
   double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
   double linewidth = thickness/linewidthratio;
+
+  double minspeed = hardware.MinPrintSpeedXY, maxspeed = hardware.MaxPrintSpeedXY;
 	
   //vector<Vector3d> lines;
   vector<printline> lines;
@@ -594,7 +596,11 @@ void Layer::MakeGcode(GCodeState &state,
 		   skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
       printlines.clear();
-      printlines.makeLines(polys, startPoint, lines, linewidth, linewidthratio, optratio);
+      printlines.makeLines(polys, startPoint, 
+			   minspeed, maxspeed, 
+			   linewidth, linewidthratio, optratio);
+      printlines.slowdownTo(slicing.MinLayertime);
+      printlines.getLines(lines);
     }
   }
   polys.clear();
@@ -604,8 +610,11 @@ void Layer::MakeGcode(GCodeState &state,
 
   // 3. Support
   printlines.clear();
-  printlines.makeLines(supportInfill->infillpolys, startPoint, lines, 
+  printlines.makeLines(supportInfill->infillpolys, startPoint,
+		       minspeed, maxspeed, 
 		       linewidth, linewidthratio, optratio);
+  printlines.slowdownTo(slicing.MinLayertime);
+  printlines.getLines(lines);
 
   // 4. all other polygons:
   
@@ -622,8 +631,12 @@ void Layer::MakeGcode(GCodeState &state,
 	       bridgeInfill->infillpolys.begin(), bridgeInfill->infillpolys.end());
   
   printlines.clear();
-  printlines.makeLines(polys, startPoint, lines, 
+  printlines.makeLines(polys, startPoint,
+		       minspeed, maxspeed, 
 		       linewidth, linewidthratio, optratio);
+  printlines.slowdownTo(slicing.MinLayertime);
+  printlines.getLines(lines);
+
 
   // push all lines to gcode
   state.AddLines(lines, extrf, offsetZ, slicing, hardware); 

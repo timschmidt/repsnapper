@@ -22,11 +22,12 @@
 #include "settings.h"
 
 #include <vmmlib/vmmlib.h>
-#include <polylib/Polygon2d.h>
+//#include <polylib/Polygon2d.h>
 
 #include "../gcode.h"
 
-#include "printlines.h"
+//#include "printlines.h"
+struct printline;
 
 using namespace std;
 using namespace vmml;
@@ -52,6 +53,7 @@ class GCodeState {
 		 const Settings::HardwareSettings &hardware);
   void AddLines (vector<Vector3d> lines,
 		 double extrusionFactor,
+		 double maxspeed,
 		 double offsetZ, 
 		 const Settings::SlicingSettings &slicing,
 		 const Settings::HardwareSettings &hardware);
@@ -62,6 +64,7 @@ class GCodeState {
 				 const Settings::HardwareSettings &hardware);
   void MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 				 double extrusionFactor,
+				 double maxspeed,
 				 double offsetZ, 
 				 const Settings::SlicingSettings &slicing,
 				 const Settings::HardwareSettings &hardware);

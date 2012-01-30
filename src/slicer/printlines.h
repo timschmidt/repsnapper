@@ -18,25 +18,25 @@
 */
 #pragma once
 
-
 #include <vector>
 //#include <list>
-//#include <polylib/Polygon2d.h>
+
 #include <vmmlib/vmmlib.h>
 
+using namespace std;
+using namespace vmml;
 
-#include "poly.h"
+
+class Poly;
+
 
 struct printline
 {
   Vector3d from, to;
+  double speed;
   double extrusionfactor; 
 };
 
-
-using namespace std;
-//using namespace PolyLib;
-using namespace vmml;
 
 // a bunch of printlines: lines with feedrate
 // optimize for corners etc.
@@ -46,13 +46,17 @@ class Printlines
   struct line
   {
     Vector2d from, to;
-    double feedrate; // relative feedrate
+    double speed; // mm/min(!)
+    double feedrate; // relative extrusion feedrate 
     double angle; // angle of line
   };
 
   vector<struct line> lines;
 
   double z;
+
+  void addPoly(const Poly poly, int startindex=0, double speed=1);
+  void addLine(Vector2d from, Vector2d to, double speed=1, double feedrate=1.0);
 
  public:
   Printlines(){};
@@ -62,13 +66,16 @@ class Printlines
 
   Vector2d lastPoint() const;
 
-  void addLine(Vector2d from, Vector2d to, double feedrate=1.0);
-  void addPoly(const Poly poly, int startindex=0);
   void makeLines(const vector<Poly> polys, 
-		 Vector2d &startPoint, vector<printline> &plines,
+		 Vector2d &startPoint, 
+		 double minspeed, double maxspeed,
 		 double linewidth, double linewidthratio, double optratio);
     
-  void optimize(double linewidth, double linewidthratio, double optratio);
+  void optimize(double minspeed, double maxspeed,
+		double linewidth, double linewidthratio, double optratio);
+
+  // slow down to total time needed (cooling)
+  void slowdownTo(double totalseconds);
 
   void getLines(vector<Vector2d> &lines) const;
   void getLines(vector<Vector3d> &lines) const;
@@ -77,8 +84,10 @@ class Printlines
   uint size() const {return lines.size(); };
 
   double totalLength() const;
+  double totalSeconds() const;
+  double totalSecondsExtruding() const;
 
-  void printinfo() const;
+  string info() const;
   void setZ(double z) {this->z=z;};
   double getZ() const {return z;};
   

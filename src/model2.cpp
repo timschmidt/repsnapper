@@ -148,6 +148,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 
 	  state.MakeAcceleratedGCodeLine (Vector3d(P1.x,P1.y,z), 
 					  Vector3d(P2.x,P2.y,z),
+					  settings.Hardware.MaxPrintSpeedXY,
 					  extrusionfactor,
 					  z,
 					  settings.Slicing, settings.Hardware);

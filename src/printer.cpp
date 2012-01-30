@@ -413,7 +413,7 @@ double Printer::getCurrentPrintingZ() {
 }
 void Printer::draw_current (Vector3d &from)
 {
-  if (gcode_iter){
+  if (printing && gcode_iter){
     Command command = gcode_iter->getCurrentCommand(from);
     command.draw(from);
     from =  command.where;

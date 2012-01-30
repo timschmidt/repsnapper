@@ -17,36 +17,49 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-
 #include "printlines.h"
+#include "poly.h"
 
 
-
-void Printlines::addLine(Vector2d from, Vector2d to, double feedrate)
+void Printlines::addLine(const Vector2d from, const Vector2d to, 
+			 double speed, double feedrate)
 {
   if (to==from) return;
+  if (lines.size() > 0) {
+    struct line lastline = lines.back();
+    if (!(lastline.to == from)) { // add moveline
+      struct line l;
+      l.from = lastline.to;
+      l.to = from;
+      l.speed=speed;
+      l.feedrate=0;
+      l.angle = angle(l);
+      lines.push_back(l);
+    }
+  }
   struct line l;
-  Vector2d d = to-from;
   l.from = from;
   l.to=to;
+  l.speed=speed;
   l.feedrate=feedrate;
   //l.lengthSq = lengthSq(l);
   l.angle = angle(l);
   lines.push_back(l);
 }
 
-void Printlines::addPoly(const Poly poly, int startindex)
+void Printlines::addPoly(const Poly poly, int startindex, double speed)
 {
   vector<Vector2d> pvert;
   poly.getLines(pvert,startindex);
   assert(pvert.size() % 2 == 0);
   for (uint i=0; i<pvert.size();i+=2){
-    addLine(pvert[i],pvert[i+1],poly.getExtrusionFactor());
+    addLine(pvert[i], pvert[i+1], speed, poly.getExtrusionFactor());
   }
 }
 
 void Printlines::makeLines(const vector<Poly> polys, 
-			   Vector2d &startPoint, vector<printline> &plines,
+			   Vector2d &startPoint,
+			   double minspeed, double maxspeed, // mm/s
 			   double linewidth, double linewidthratio, double optratio)
 {
   uint count = polys.size();
@@ -76,7 +89,7 @@ void Printlines::makeLines(const vector<Poly> polys,
 	      }
 	    }
 	}
-      addPoly(polys[npindex],nvindex);
+      addPoly(polys[npindex], nvindex, maxspeed);
       //polys[npindex].getLines(lines,nvindex); // add poly lines to lines
       done[npindex]=true;
       ndone++;
@@ -84,8 +97,7 @@ void Printlines::makeLines(const vector<Poly> polys,
     }
   if (count) {
     setZ(polys.back().getZ());
-    optimize(linewidth, linewidthratio, optratio);
-    getLines(plines);
+    optimize(minspeed, maxspeed, linewidth, linewidthratio, optratio);
   }
 }
 
@@ -117,13 +129,27 @@ double Printlines::length(const line l) const
   return sqrt(lengthSq(l));
 }
 
-void Printlines::optimize(double linewidth, double linewidthratio, double optratio)
+void Printlines::optimize(double minspeed, double maxspeed,
+			  double linewidth, double linewidthratio, double optratio)
 {
   //cout << "optimize " ; printinfo();
   //optimizeLinedistances(linewidth);
   // optimizeCorners(linewidth,linewidthratio,optratio);
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
+}
+
+void Printlines::slowdownTo(double totalseconds) 
+{
+  if (totalseconds == 0) return;
+  double totalnow = totalSecondsExtruding();
+  if (totalnow == 0) return;
+  double speedfactor = totalnow / totalseconds;
+  if (speedfactor >= 1.) return;
+  for (uint i=0; i < lines.size(); i++){
+    if (lines[i].feedrate>0)
+      lines[i].speed *= speedfactor;
+  }
 }
 
 // merge too near parallel lines
@@ -263,6 +289,7 @@ void Printlines::getLines(vector<printline> &plines) const
       struct printline pline;
       pline.from = Vector3d(lIt->from.x,lIt->from.y,z);
       pline.to = Vector3d(lIt->to.x,lIt->to.y,z);
+      pline.speed = lIt->speed;
       pline.extrusionfactor = lIt->feedrate;
       plines.push_back(pline);
     } else cerr<< "zero line" << endl;
@@ -273,16 +300,34 @@ double Printlines::totalLength() const
 {
   double l = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
-    l += sqrt(lengthSq(*lIt));
+    l += length(*lIt);
   }
   return l;
+}
+
+double Printlines::totalSeconds() const 
+{
+  double t = 0;
+  for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
+    t += length(*lIt) / lIt->speed ;
+  }
+  return t * 60;
+}
+double Printlines::totalSecondsExtruding() const 
+{
+  double t = 0;
+  for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
+    if (lIt->feedrate>0)
+      t += length(*lIt) / lIt->speed ;
+  }
+  return t * 60;
 }
 
 string Printlines::GCode(Vector3d &lastpos, double &E, double feedrate, double speed) const
 {
   ostringstream o;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
-    o << GCode(*lIt, lastpos, E, feedrate, speed);
+    o << GCode(*lIt, lastpos, E, speed * lIt->feedrate, speed * lIt->speed);
   }
   return o.str();
 }
@@ -307,9 +352,10 @@ string Printlines::GCode(line l, Vector3d &lastpos, double &E, double feedrate,
   return o.str();
 }
 
-void Printlines::printinfo() const
+string Printlines::info() const
 {
-  cout << "Printlines " <<size()<<" lines"
-       << ", total "<<totalLength()<< "mm"
-       << endl;
+  ostringstream ostr;
+  ostr << "Printlines " <<size()<<" lines"
+       << ", total "<<totalLength()<< "mm" ;
+  return ostr.str();
 }

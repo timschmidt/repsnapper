@@ -108,6 +108,8 @@ class Settings {
     float DecorInfillDistance;
     float DecorInfillRotation;
 
+    float MinLayertime;
+
     bool ShellOnly;
     guint ShellCount;
     bool EnableAcceleration;

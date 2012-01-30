@@ -24,7 +24,6 @@
 class View;
 class Model;
 class gllight;
-class ArcBallT;
 class Settings;
 
 class Render : public Gtk::DrawingArea
