@@ -13,6 +13,22 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
+  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
+    <property name="upper">30</property>
+    <property name="value">10</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
   <object class="GtkAction" id="LoadSettings">
     <property name="label">Load Settings</property>
     <property name="short_label">Load Settings</property>
@@ -51,22 +67,6 @@
     <property name="label">Save Settings As</property>
     <property name="short_label">Save Settings As</property>
     <property name="tooltip">Save settings in a custom file</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
-    <property name="upper">30</property>
-    <property name="value">10</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
   </object>
   <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
     <property name="upper">20</property>
@@ -1561,7 +1561,7 @@ THE HEAD MOVING DOWN!
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="i_fan_voltage">
+                          <object class="GtkSpinButton" id="Printer.FanVoltage">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="tooltip_text" translatable="yes">Level: 0-255</property>
@@ -1686,7 +1686,7 @@ THE HEAD MOVING DOWN!
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="i_ex_length">
+                          <object class="GtkSpinButton" id="Printer.ExtrudeAmount">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>
@@ -1698,7 +1698,7 @@ THE HEAD MOVING DOWN!
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkSpinButton" id="i_ex_speed">
+                          <object class="GtkSpinButton" id="Printer.ExtrudeSpeed">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="invisible_char">•</property>

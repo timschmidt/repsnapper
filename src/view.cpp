@@ -215,8 +215,8 @@ void View::fan_enabled_toggled (Gtk::ToggleButton *button)
 void View::run_extruder ()
 {
   m_printer->RunExtruder (m_extruder_speed->get_value(),
-			m_extruder_length->get_value(),
-			m_extruder_reverse->get_active());
+			  m_extruder_length->get_value(),
+			  m_extruder_reverse->get_active());
 }
 
 void View::clear_logs()
@@ -784,20 +784,20 @@ View::View(BaseObjectType* cobject,
   connect_toggled ("Misc.FileLoggingEnabled", sigc::mem_fun(*this, &View::enable_logging_toggled));
   connect_button ("i_clear_logs",      sigc::mem_fun(*this, &View::clear_logs) );
   m_builder->get_widget ("i_reverse", m_extruder_reverse);
-  m_builder->get_widget ("i_ex_speed", m_extruder_speed);
-  m_extruder_speed->set_range(10.0, 10000.0);
-  m_extruder_speed->set_increments (10, 100);
-  m_extruder_speed->set_value (300.0);
-  m_builder->get_widget ("i_ex_length", m_extruder_length);
-  m_extruder_length->set_range(0.0, 1000.0);
-  m_extruder_length->set_increments (1, 10);
-  m_extruder_length->set_value (10.0);
+  m_builder->get_widget ("Printer.ExtrudeSpeed", m_extruder_speed);
+  // m_extruder_speed->set_range(10.0, 10000.0);
+  // m_extruder_speed->set_increments (10, 100);
+  // m_extruder_speed->set_value (300.0);
+  m_builder->get_widget ("Printer.ExtrudeAmount", m_extruder_length);
+  // m_extruder_length->set_range(0.0, 1000.0);
+  // m_extruder_length->set_increments (1, 10);
+  // m_extruder_length->set_value (10.0);
   // FIXME: connect i_update_interval (etc.)
   connect_toggled ("i_fan_enabled", sigc::mem_fun(*this, &View::fan_enabled_toggled));
-  m_builder->get_widget ("i_fan_voltage", m_fan_voltage);
-  m_fan_voltage->set_range(0.0, 255.0);
-  m_fan_voltage->set_increments (1, 2);
-  m_fan_voltage->set_value (180.0);
+  m_builder->get_widget ("Printer.FanVoltage", m_fan_voltage);
+  // m_fan_voltage->set_range(0.0, 255.0);
+  // m_fan_voltage->set_increments (1, 2);
+  // m_fan_voltage->set_value (180.0);
 
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &View::run_extruder) );
 

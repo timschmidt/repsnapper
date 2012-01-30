@@ -145,6 +145,13 @@ static struct {
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
   INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4, false),
 
+  // Printer
+  FLOAT_MEMBER  (Printer.ExtrudeAmount, "Printer.ExtrudeAmount", 5, false),
+  FLOAT_MEMBER  (Printer.ExtrudeSpeed, "Printer.ExtrudeSpeed", 100, false),
+  INT_MEMBER    (Printer.FanVoltage, "Printer.FanVoltage", 200, false),
+  // FLOAT_MEMBER  (Printer.NozzleTemp, "Printer.NozzleTemp", 210, false),
+  // FLOAT_MEMBER  (Printer.BedTemp, "Printer.BedTemp", 60, false),
+
   // Slicing
   BOOL_MEMBER  (Slicing.UseIncrementalEcode, "UseIncrementalEcode", true, false),
   BOOL_MEMBER  (Slicing.Use3DGcode, "Use3DGcode", false, false),
@@ -298,6 +305,13 @@ static struct {
 
   { "Hardware.DownstreamMultiplier", 0.01, 25.0, 0.01, 0.1 },
   { "Hardware.DownstreamExtrusionMultiplier", 0.01, 25.0, 0.01, 0.1 },
+
+  //Printer
+  { "Printer.ExtrudeAmount", 0.0, 1000.0, 1.0, 10.0 },
+  { "Printer.ExtrudeSpeed", 0.0, 1000.0, 1.0, 10.0 },
+  { "Printer.FanVoltage", 0, 255, 1, 10 },
+  // { "Printer.NozzleTemp", 0.0, 300.0, 1.0, 10.0 },
+  // { "Printer.BedTemp", 0.0, 200.0, 1.0, 10.0 },
 
   // Display pane
   { "Display.TempUpdateSpeed", 0.1, 10.0, 0.5, 1.0 },
@@ -509,8 +523,13 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     if (!get_group_and_key (i, group, key))
       continue;
 
-    if (!cfg.has_key (group, key))
+
+    try {
+      if (!cfg.has_key (group, key))
+	continue;
+    } catch (const Glib::KeyFileError &err) {
       continue;
+    }
 
     // group & string ...
     switch (settings[i].type) {

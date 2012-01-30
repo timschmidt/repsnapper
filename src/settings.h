@@ -81,6 +81,15 @@ class Settings {
   };
   HardwareSettings Hardware;
 
+  struct PrinterSettings {
+    float ExtrudeAmount;
+    float ExtrudeSpeed;
+    float NozzleTemp;
+    float BedTemp;
+    int FanVoltage;
+  };
+  PrinterSettings Printer;
+
   struct SlicingSettings {
     bool  UseIncrementalEcode;
     bool  Use3DGcode;
