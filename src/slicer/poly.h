@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <vmmlib/vmmlib.h>
+#include "stdafx.h"
 #include <polylib/Polygon2d.h>
 
 

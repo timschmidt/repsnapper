@@ -104,7 +104,13 @@ sanity_checks ($system);# unless($system eq 'Darwin');
 
 my $aclocal_flags = $ENV{ACLOCAL_FLAGS};
 
-$aclocal_flags = "-I ./m4 -I /usr/local" if (($aclocal_flags eq "") && ($system eq 'Darwin'));
+if (($aclocal_flags eq "") && ($system eq 'Darwin')) {
+  if (-d '/opt/homebrew/share/aclocal') {
+    $aclocal_flags = "-I ./m4 -I /opt/homebrew/share/aclocal -I /usr/local";
+  } else {
+    $aclocal_flags = "-I ./m4 -I /usr/local";
+  }
+}
 
 print "aclocal_flags : $aclocal_flags \n";
 
@@ -142,4 +148,4 @@ if (defined $ENV{NOCONFIGURE}) {
 # indent-tabs-mode: nil
 # End:
 
-# vim:set shiftwidth=4 softtabstop=4 expandtab: #
+# vim:set ft=perl shiftwidth=4 softtabstop=4 expandtab: #

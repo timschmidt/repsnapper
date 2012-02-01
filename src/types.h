@@ -34,15 +34,12 @@ class Point2f;
 class Printer;
 class Settings;
 class Triangle;
-class Settings;
 class Segment2f;
 class AsyncSerial;
 class RepRapSerial;
-class CuttingPlane;
-class Poly;
+class Layer;
 class PrintInhibitor;
 class ProcessController;
-
 class ObjectsTree;
 class TreeObject;
 class Shape;

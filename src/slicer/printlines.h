@@ -21,13 +21,7 @@
 #include <vector>
 //#include <list>
 
-#include <vmmlib/vmmlib.h>
-
-using namespace std;
-using namespace vmml;
-
-
-class Poly;
+#include "stdafx.h"
 
 
 struct printline
