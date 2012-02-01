@@ -1,6 +1,8 @@
 AC_PREREQ(2.63)
 AC_INIT([repsnapper],[1.9.0],[https://github.com/timschmidt/repsnapper])
 
+CPPFLAGS+="-I/usr/local/include"
+
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/repsnapper.cpp])
 AC_CONFIG_MACRO_DIR([m4])
@@ -78,7 +80,7 @@ dnl AC_SUBST(LIBREPRAP_CFLAGS)
 dnl AC_SUBST(LIBREPRAP_LIBS)
 
 AC_SUBST(DISTCHECK_LIBREPRAP_FLAGS)
-
+ 
 case "$host_os" in
 mingw*)
   GL_LIBS="-lopengl32 -lglu32 -lglut32"
@@ -109,7 +111,6 @@ Darwin*)
   AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 esac
-
 
 
 AC_SUBST(GL_LIBS)
