@@ -1,6 +1,6 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2011  martin.dieringer@gmx.de
+    Copyright (C) 2011-12  martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -71,6 +71,9 @@ class Printlines
   // slow down to total time needed (cooling)
   void slowdownTo(double totalseconds);
 
+  // keep movements inside polys when possible (against stringing)
+  void clipMovements(const vector<Poly> polys, double maxerr=0.0001);
+
   void getLines(vector<Vector2d> &lines) const;
   void getLines(vector<Vector3d> &lines) const;
   void getLines(vector<printline> &plines) const;
@@ -95,6 +98,8 @@ class Printlines
   void optimizeCorners(double linewidth, double linewidthratio, double optratio);
   bool capCorner(line &l1, line &l2, double linewidth, double linewidthratio, 
 		 double optratio);
+
+  uint divideline(uint lineindex, const vector<Vector2d> points);
 
   double angle(const Vector2d p) const;
   double angle(const line l) const;

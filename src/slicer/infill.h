@@ -1,6 +1,6 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2011  martin.dieringer@gmx.de
+    Copyright (C) 2011-12  martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,26 +19,19 @@
 
 #pragma once 
 
-#include <vector>
-#include <vmmlib/vmmlib.h> 
+/* #include <vector> */
+/* #include <vmmlib/vmmlib.h>  */
 
-#include <glib/gi18n.h>
-
+/* #include <glib/gi18n.h> */
 #include <omp.h>
 
-#include "layer.h"
+#include "stdafx.h"
 #include "clipping.h"
 
 
-using namespace std; 
-using namespace vmml;
-
-class Poly;
-
-
 // user selectable have to be first
-enum InfillType {ParallelInfill, ZigzagLineInfill, PolyInfill, HilbertInfill, 
-		 SupportInfill, RaftInfill, BridgeInfill};
+enum InfillType {ParallelInfill, SmallZigzagInfill, PolyInfill, HilbertInfill, 
+		 SupportInfill, RaftInfill, BridgeInfill, ZigzagInfill};
 
 // these are available for user selection (order must be same as types):
 const string InfillNames[] = {_("Parallel"), _("Zigzag"), _("Polygons"), _("Hilbert Curve")};

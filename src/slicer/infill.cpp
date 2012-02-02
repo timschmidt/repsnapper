@@ -1,6 +1,6 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2011  martin.dieringer@gmx.de
+    Copyright (C) 2011-12  martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,14 +17,9 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-
 #include "infill.h"
 #include "poly.h"
-
-// #include <vmmlib/vmmlib.h> 
-
-using namespace std; 
-using namespace vmml;
+#include "layer.h"
 
 
 vector<struct Infill::pattern> Infill::savedPatterns;
@@ -178,8 +173,9 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   bool zigzag = false;
   switch (type)
     {
-    case ZigzagLineInfill: // zigzag lines
+    case SmallZigzagInfill: // small zigzag lines
     zigzag = true;
+    //case ZigzagInfill: // long zigzag lines, make lines later
     case SupportInfill: // stripes, but leave them as polygons
     case RaftInfill:    // stripes, but leave them as polygons
     case BridgeInfill:    // stripes, make them to lines later
@@ -293,7 +289,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   newPattern.angle=rotation;
   newPattern.distance=infillDistance;
   newPattern.cpolys=cpolys;
-  if (type != PolyInfill) // can't save PolyInfill
+  if (type != PolyInfill && type != ZigzagInfill) // can't save these
     {
       newPattern.Min=Min;
       newPattern.Max=Max;
@@ -305,8 +301,6 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 }
 
 
-
-
 void Infill::addInfillPolys(vector<Poly> polys)
 {
   for (uint i=0; i<polys.size();i++)
@@ -315,7 +309,10 @@ void Infill::addInfillPolys(vector<Poly> polys)
 
 void Infill::addInfillPoly(Poly p)
 {
+  // Poly *zigzagpoly = NULL;
   switch (type) {
+  // case ZigzagInfill: // take parallel lines and connect ends
+  //   zigzagpoly = new Poly(p.getZ(),extrusionfactor);
   case BridgeInfill:
   case ParallelInfill:
     { // make lines instead of closed polygons
@@ -331,13 +328,31 @@ void Infill::addInfillPoly(Poly p)
 			  l.y*cosa+l.x*sina);
 	  if (abs(rotl.x) < 0.1 && abs(rotl.y) > 0.1)
   	    {
-	      Poly newpoly(p.getZ(), extrusionfactor);
-	      newpoly.vertices.push_back(p.getVertexCircular(i));
-	      newpoly.vertices.push_back(p.getVertexCircular(i+1));
-	      infillpolys.push_back(newpoly);
+	      // if (zigzagpoly) {
+	      // 	zigzagpoly->addVertex(p.getVertexCircular(i+i%2));
+	      // 	zigzagpoly->addVertex(p.getVertexCircular(i+1+i%2));
+	      // } else
+	      {
+		Poly newpoly(p.getZ(), extrusionfactor);
+		newpoly.vertices.push_back(p.getVertexCircular(i));
+		newpoly.vertices.push_back(p.getVertexCircular(i+1));
+		infillpolys.push_back(newpoly);
+	      }
   	    }
+	  // else
+	  //   if (zigzagpoly) {
+	  //     zigzagpoly->addVertex(p.getVertexCircular(i));	      
+	  //   }
   	}
-    } break;
+      // if (zigzagpoly) {
+      // 	cerr << zigzagpoly->size()<< endl;
+      // 	if (zigzagpoly->size()>0)
+      // 	  infillpolys.push_back(*zigzagpoly);
+      // 	else delete zigzagpoly;
+      // 	cerr << infillpolys.size()<< endl;
+      // }
+    } 
+    break;
   default:
     {
       p.setExtrusionFactor(extrusionfactor);

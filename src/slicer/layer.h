@@ -26,7 +26,7 @@
 #include <iostream>
 
 #include <vmmlib/vmmlib.h>
-#include <polylib/Polygon2d.h>
+//#include <polylib/Polygon2d.h>
 
 #include "poly.h"
 #include "gcode.h"

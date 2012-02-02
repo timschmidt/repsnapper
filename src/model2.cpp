@@ -55,7 +55,7 @@
 
 void Model::MakeRaft(GCodeState &state, double &z)
 {
-  vector<InFillHit> HitsBuffer;
+  vector<Intersection> HitsBuffer;
 
   double raftSize = settings.Raft.Size;
   Vector3d raftMin =  settings.Hardware.PrintMargin + Min;
@@ -111,7 +111,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 
 	  // Crop lines to bbox*size
 	  Vector3d point;
-	  InFillHit hit;
+	  Intersection hit;
 	  HitsBuffer.clear();
 	  Vector2d P3(raftMin.x, raftMin.y);
 	  Vector2d P4(raftMin.x, raftMax.y);
@@ -141,7 +141,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 	  if(HitsBuffer.size() != 2)
 	    continue;
 
-	  std::sort(HitsBuffer.begin(), HitsBuffer.end(), InFillHitCompareFunc);
+	  std::sort(HitsBuffer.begin(), HitsBuffer.end());
 
 	  P1 = HitsBuffer[0].p;
 	  P2 = HitsBuffer[1].p;
@@ -201,12 +201,7 @@ void Model::Slice(double printOffsetZ)
     }
   }
   
-
   int LayerNr = 0;
-
-  // double max_thickness = settings.Hardware.LayerThickness*1.5;
-  // double min_thickness = settings.Hardware.LayerThickness/2;  
-  // double thickness = (max_thickness+min_thickness)/2.;
 
   bool varSlicing = settings.Slicing.Varslicing;
 

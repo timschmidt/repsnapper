@@ -1,6 +1,6 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2010  Kulitorum
+    Copyright (C) 2011-12 martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,31 +20,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include <polylib/Polygon2d.h>
-
-
-// #include "infill.h" 
-
-//class Infill;
-
-using namespace std;
-using namespace vmml;
-using namespace PolyLib;
-
-struct printline;
-
-struct InFillHit
-{
-	Vector2d p;  // The intersection point
-	double d;     // Distance from the infill-line start point, used for sorting hits
-	double t;     // intersection point on first line
-};
-
-bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2);
-bool IntersectXY (const Vector2d &p1, const Vector2d &p2,
-		  const Vector2d &p3, const Vector2d &p4, 
-		  InFillHit &hit, double maxoffset);
-
+#include "geometry.h"
 
 class Poly
 {
@@ -52,10 +28,8 @@ class Poly
   double extrusionfactor;
 
   //	vector<Poly*> holes;
-	bool holecalculated;
-	//Infill infill;
+  bool holecalculated;
 
-	//Clipping clipp;
 public:
         Poly();
 	Poly(double z, double extrusionfactor=1.);
@@ -63,6 +37,8 @@ public:
 	/* Poly(double z, */
 	/*      const ClipperLib::Polygon cpoly, bool reverse=false); */
         ~Poly();
+	
+	Vector2d operator[](uint i) const {return vertices[i];};
 
 	Poly Shrinked(double distance) const;
 	Poly Shrinked(vector<Vector2d> *vertices, double distance);
@@ -78,9 +54,10 @@ public:
 
 	//vector< vector<Vector2d> > intersect(Poly &poly1, Poly &poly2) const;
 
-	bool vertexInside(const Vector2d point, double maxoffset) const;
-	bool polyInside(const Poly * poly, double maxoffset) const;
+	bool vertexInside(const Vector2d point, double maxoffset=0.0001) const;
+	bool polyInside(const Poly * poly, double maxoffset=0.0001) const;
 	uint nearestDistanceSqTo(const Vector2d p, double &mindist) const;
+	void nearestIndices(const Poly p2, int &thisindex, int &otherindex) const;
 
 	void rotate(Vector2d center, double angle);
 
@@ -88,8 +65,8 @@ public:
 	bool isHole();
 
 	vector<Vector2d> getMinMax() const;
-	vector<InFillHit> lineIntersections(const Vector2d P1, const Vector2d P2,
-					    double maxerr) const;
+	vector<Intersection> lineIntersections(const Vector2d P1, const Vector2d P2,
+					       double maxerr=0.0001) const;
 
 	// ClipperLib::Polygons getOffsetClipperPolygons(double dist) const ;
 	// ClipperLib::Polygon getClipperPolygon(bool reverse=false) const;
@@ -121,8 +98,11 @@ public:
 	void getLines(vector<printline> &plines, uint startindex) const;
 	double getLinelengthSq(uint startindex) const;
 
+
+	vector<Vector2d> getPathAround(const Vector2d from, const Vector2d to) const;
+
 	uint size() const {return vertices.size(); };
-	void printinfo() const;
+	string info() const;
 
 };
 

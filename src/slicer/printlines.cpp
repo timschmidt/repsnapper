@@ -1,6 +1,6 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2011  martin.dieringer@gmx.de
+    Copyright (C) 2011-12  martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 
 #include "printlines.h"
 #include "poly.h"
-
 
 void Printlines::addLine(const Vector2d from, const Vector2d to, 
 			 double speed, double feedrate)
@@ -93,7 +92,8 @@ void Printlines::makeLines(const vector<Poly> polys,
       //polys[npindex].getLines(lines,nvindex); // add poly lines to lines
       done[npindex]=true;
       ndone++;
-      startPoint = lastPoint();//Vector2d(lines.back().x,lines.back().y);
+      if (lines.size()>0)
+	startPoint = lastPoint();//Vector2d(lines.back().x,lines.back().y);
     }
   if (count) {
     setZ(polys.back().getZ());
@@ -137,6 +137,76 @@ void Printlines::optimize(double minspeed, double maxspeed,
   // optimizeCorners(linewidth,linewidthratio,optratio);
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
+}
+
+uint Printlines::divideline(uint lineindex, const vector<Vector2d> points) 
+{
+  vector<line> newlines;
+  line l = lines[lineindex];
+  for (int i = -1; i < (int)points.size(); i++) {
+    line nl;
+    if (i<0) nl.from = l.from;
+    else nl.from=points[i];
+    if (i>(int)points.size()-2) nl.to=l.to;
+    else nl.to=points[i+1];
+    nl.speed = l.speed;
+    nl.feedrate = l.feedrate;
+    nl.angle = angle(nl);
+    newlines.push_back(nl);
+  }
+  if (newlines.size() > 0) {
+    //cerr << newlines.size() << " new lines" << endl;
+    lines.erase(lines.begin()+lineindex);
+    lines.insert(lines.begin()+lineindex, newlines.begin(), newlines.end());
+    return newlines.size()-1; // return how many more lines now 
+  }
+  return 0;
+}
+
+// walk around holes
+void Printlines::clipMovements(const vector<Poly> polys, double maxerr) 
+{
+  if (lines.size()==0) return;
+  vector<line> newlines;
+  for (uint i=0; i < lines.size(); i++) {
+    if (lines[i].feedrate == 0) {
+      for (uint p = 0; p < polys.size(); p++) {
+	vector<Intersection> pinter = 
+	  polys[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
+	if (pinter.size() > 0) {
+	  if (pinter.size()%2 == 0) { // holes
+	    std::sort(pinter.begin(), pinter.end());
+	    //cerr << pinter.size() << " intersections at poly " << p <<  endl;
+	    vector<Vector2d> path = 
+	      polys[p].getPathAround(pinter.front().p, pinter.back().p);
+	    //cerr << i << " -- " << lines.size() << " --  path " << path.size()<< endl;
+	    i += (divideline(i,path)); //if (i>0) i--; // test new lines again?
+	  }
+	  else if (0) {//(pinter.size()==1){ // going out
+	    // find polys that are connected by this line
+	    int frompoly=-1, topoly=-1;
+	    for (uint op = 0; op < polys.size(); op++) {
+	      if (polys[op].vertexInside(lines[i].from)) frompoly=(int)op;
+	      if (polys[op].vertexInside(lines[i].to)) topoly=(int)op;
+	    }
+	    cerr <<i << " : "<<frompoly << " p>> " << topoly << endl;
+	    if (frompoly>-1 && topoly>-1 && frompoly!=topoly) {
+	      int fromind,toind;
+	      polys[frompoly].nearestIndices(polys[topoly], fromind, toind);
+	      cerr <<fromind << " i>> " << toind << endl;
+	      vector<Vector2d> path;
+	      //path.push_back(lines[i].from);
+	      path.push_back(polys[frompoly].vertices[fromind]);
+	      path.push_back(polys[topoly].vertices[toind]);
+	      //path.push_back(lines[i].to);
+	      i+= (divideline(i,path)); // test new lines again?
+	    }
+	    //   cerr << pinter.size()  <<" uneven intersections at poly " << p << endl;
+	  }
+	}
+      }
+    }
+  }
 }
 
 void Printlines::slowdownTo(double totalseconds) 

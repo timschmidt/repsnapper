@@ -30,7 +30,7 @@
 #include <algorithm>
 
 #include <vmmlib/vmmlib.h>
-#include <polylib/Polygon2d.h>
+//#include <polylib/Polygon2d.h>
 
 #include "stdafx.h"
 #include "string.h"
@@ -53,7 +53,7 @@
 
 using namespace std;
 using namespace vmml;
-using namespace PolyLib;
+//using namespace PolyLib;
 
 
 class Transform3D
@@ -162,7 +162,7 @@ private:
     double scale_factor,scale_factor_x,scale_factor_y,scale_factor_z;
 
     vector<Triangle>  triangles;
-    vector<Polygon2d>  polygons;  // surface polygons instead of triangles
+    //vector<Polygon2d>  polygons;  // surface polygons instead of triangles
     void calcPolygons();
 };
 

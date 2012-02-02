@@ -44,7 +44,7 @@ class ObjectsTree;
 class TreeObject;
 class Shape;
 class Transform3D;
-
+class Infill;
 
 enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
 enum SerialState { SERIAL_DISCONNECTED, SERIAL_DISCONNECTING,

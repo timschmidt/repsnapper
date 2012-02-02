@@ -769,7 +769,7 @@ bool getLineSequences(const vector<Segment> lines, vector< vector<uint> > &conne
       if (lines[sequence.front()].start == lines[sequence.back()].end) {
 	//cerr << "closed sequence" << endl;
         connectedlines.push_back(sequence);
-      // 	  sequence.clear();
+	sequence.clear();
       }
     } else { //   (!foundconnection) {  // new sequence
       //cerr << "sequence size " << sequence.size() << endl;
@@ -798,7 +798,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
   vector<Segment> lines = getCutlines(T, z, vertices, max_grad);
   //cerr << vertices.size() << " " << lines.size() << endl;
   if (!CleanupSharedSegments(lines)) return false;
-  // if (!CleanupStraightLines(vertices, lines)) return false;
+  //cerr << vertices.size() << " " << lines.size() << endl;
   if (!CleanupConnectSegments(vertices,lines,true)) return false;
   //cerr << vertices.size() << " " << lines.size() << endl;
   vector< vector<uint> > connectedlines; // sequence of connected lines indices

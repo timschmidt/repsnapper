@@ -1,6 +1,7 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2010  Kulitorum
+    Copyright (C) 2010 Kulitorum
+    Copyright (C) 2011-12 martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,18 +23,16 @@
 //#include "infill.h"
 #include "poly.h"
 #include "printlines.h"
+#include "clipping.h"
 
 
 long double angleBetween(Vector2d V1, Vector2d V2)
 {
   long double result, dotproduct, lengtha, lengthb;
-
-  dotproduct =  (V1.x * V2.x) + (V1.y * V2.y);
-  lengtha = V1.length();//sqrt(V1.x * V1.x + V1.y * V1.y);
-  lengthb = V2.length();//sqrt(V2.x * V2.x + V2.y * V2.y);
-	
-	result = acosl( dotproduct / (lengtha * lengthb) );
-
+  dotproduct =  V1.dot(V2);
+  lengtha = V1.length();
+  lengthb = V2.length();
+  result = acosl( dotproduct / (lengtha * lengthb) );
   if(result < 0)
     result += M_PI;
   else
@@ -87,47 +86,8 @@ Poly::Poly(const Poly p, double z){
 }
 
 
-// Poly Poly::Shrinked(double distance) const{
-//   assert(plane!=NULL);
-//   size_t count = vertices.size();
-//   //cerr << "poly shrink dist=" << distance << endl;
-//   //plane->printinfo();
-//   Poly offsetPoly(plane);
-//   //offsetPoly.printinfo();
-//   offsetPoly.vertices.clear();
-//   Vector2d Na,Nb,Nc,V1,V2,displace,p;
-//   long double s;
-//   for(size_t i=0; i < count; i++)
-//     {
-//       Na = getVertexCircular(i-1);
-//       Nb = getVertexCircular(i);
-//       Nc = getVertexCircular(i+1);      
-//       V1 = (Nb-Na).getNormalized();
-//       V2 = (Nc-Nb).getNormalized();
-      
-//       displace = (V2 - V1).getNormalized();
-//       double a = angleBetween(V1,V2);
-
-//       bool convex = V1.cross(V2) < 0;
-//       s = sinl(a*0.5);
-//       if (convex){
-// 	s=-s;
-//       }
-//       if (s==0){ // hopefully never happens
-// 	cerr << "zero angle while shrinking, will have bad shells" << endl;
-// 	s=1.; 
-//       }
-//       p = Nb + displace * distance/s;
-
-//       offsetPoly.vertices.push_back(p);
-//     }
-//   offsetPoly.calcHole();
-//   return offsetPoly;
-// }
-
 Poly::~Poly()
 {
-  //delete clipp;
 }
 
 void Poly::cleanup(double epsilon)
@@ -154,7 +114,7 @@ vector<Vector2d> Poly::cleaned(const vector<Vector2d> vert, double epsilon) cons
   if( (normal.length()==0) || ((abs(normal.length())-1)>epsilon) ) return vert;
   for (uint i = 1; i < n_vert-1 ; i++) 
     {
-      double dist = abs(dot((vert[i]-vert.front()),normal));
+      double dist = abs((vert[i]-vert.front()).dot(normal));
       if (dist >= epsilon && dist > dmax) {
 	index = i;
 	dmax = dist;
@@ -180,42 +140,6 @@ vector<Vector2d> Poly::cleaned(const vector<Vector2d> vert, double epsilon) cons
     }
   return newvert;
 }
-
-#if 0
-// this is old
-// Remove vertices that are on a straight line
-void Poly::cleanup(double maxerror)
-{ 
-  if (vertices.size()<1) return;
-  for (size_t v = 0; v < vertices.size() + 1; )
-    {
-      Vector2d p1 = getVertexCircular(v-1);
-      Vector2d p2 = getVertexCircular(v); 
-      Vector2d p3 = getVertexCircular(v+1);
-
-      Vector2d v1 = (p2-p1);
-      Vector2d v2 = (p3-p2);
-
-      if (v1.lengthSquared() == 0 || v2.lengthSquared() == 0) 
-	{
-	  vertices.erase(vertices.begin()+(v % vertices.size()));	  
-	  if (vertices.size() < 1) break;
-	}
-      else
-	{
-	  v1.normalize();
-	  v2.normalize();
-	  if ((v1-v2).lengthSquared() < maxerror)
-	    {
-	      vertices.erase(vertices.begin()+(v % vertices.size()));
-	      if (vertices.size() < 1) break;
-	    }
-	  else
-	    v++;
-	}
-    }
-}
-#endif
 
 
 void Poly::calcHole()
@@ -273,11 +197,26 @@ void Poly::rotate(Vector2d center, double angle)
   }
 }
 
+// nearest connection point indices of this and other poly 
+void Poly::nearestIndices(const Poly p2, int &thisindex, int &otherindex) const
+{
+  double mindist = 1000000;
+  for (uint i = 1; i < vertices.size(); i++) {
+    for (uint j = 1; j < p2.vertices.size(); j++) {
+      double d = (vertices[i]-p2.vertices[j]).lengthSquared();
+      if (d<mindist) {
+	mindist = d;
+	thisindex = i;
+	otherindex= j;
+      }
+    }
+  }
+}
+
 // Find the vertex in the poly closest to point p
 uint Poly::nearestDistanceSqTo(const Vector2d p, double &mindist) const
 {
   assert(vertices.size() > 0);
-
   // Start with first vertex as closest
   uint nindex = 0;
   mindist = (vertices[0]-p).lengthSquared();
@@ -350,65 +289,28 @@ vector<Vector2d> Poly::getVertexRangeCircular(int from, int to) const
 }
 
 
-
-// ClipperLib::Polygons Poly::getOffsetClipperPolygons(double dist) const 
-// {
-//   bool reverse = true;
-//   ClipperLib::Polygons cpolys;
-//   ClipperLib::Polygons offset;
-//   while (offset.size()==0){ // try to reverse poly vertices if no result
-//     cpolys.push_back(getClipperPolygon(reverse));
-//     // offset by half infillDistance
-//     ClipperLib::OffsetPolygons(cpolys, offset, 1000.*dist,
-// 			       ClipperLib::jtMiter,2);
-//     reverse=!reverse;
-//     if (reverse) break; 
-//   }
-//   return offset;
-// }
-
-
-
-
-vector<InFillHit> Poly::lineIntersections(const Vector2d P1, const Vector2d P2,
-					  double maxerr) const
+vector<Intersection> Poly::lineIntersections(const Vector2d P1, const Vector2d P2,
+					     double maxerr) const
 {
-  vector<InFillHit> HitsBuffer;
+  vector<Intersection> HitsBuffer;
   Vector2d P3,P4;
   for(size_t i = 0; i < vertices.size(); i++)
     {  
       P3 = getVertexCircular(i);
       P4 = getVertexCircular(i+1);
-      InFillHit hit;
-      if (IntersectXY (P1,P2,P3,P4,hit,maxerr))
+      Intersection hit;
+      if (IntersectXY(P1,P2,P3,P4,hit,maxerr))
 	HitsBuffer.push_back(hit);
     }
+  // std::sort(HitsBuffer.begin(),HitsBuffer.end());
+  // vector<Vector2d> v(HitsBuffer.size());
+  // for(size_t i = 0; i < v.size(); i++)
+  //   v[i] = HitsBuffer[i].p;
   return HitsBuffer;
 }
 
 double Poly::getZ() const {return z;} 
 // double Poly::getLayerNo() const { return plane->LayerNo;}
-
-
-// vector<Vector2d> Poly::getInfillVertices () const {
-//   cerr << "get infill vertices"<<endl;
-//   printinfo();
-//   cerr << "get " << infill.infill.size() << " infill vertices "<< endl;
-//   return infill.infill;
-// };
-
-// void Poly::calcInfill (double InfillDistance,
-// 		       double InfillRotation, // radians!
-// 		       bool DisplayDebuginFill)
-// {
-//   ParallelInfill infill;
-//   cerr << " Poly parinfill: " << endl;
-//   if (!hole)
-//     infill.calcInfill(this,InfillRotation,InfillDistance); 
-//   infill.printinfo();
-//   this->infill = infill;
-//   printinfo();
-// }
 
 
 // length of the line starting at startindex
@@ -489,6 +391,50 @@ void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
     }
 }
 
+vector<Vector2d> Poly::getPathAround(const Vector2d from, const Vector2d to) const
+{
+  double dist;
+  vector<Vector2d> path1, path2;
+  Poly off = Clipping::getOffset(*this, 0, jround).front();
+  //cerr << size()<<  " Off " << off.size()<< endl;
+  int nvert = off.size();
+  if (nvert==0) return path1;
+  int fromind = (int)off.nearestDistanceSqTo(from, dist);
+  int toind = (int)off.nearestDistanceSqTo(to, dist);
+  if (fromind==toind) {
+    path1.push_back(off[fromind]);
+    return path1;
+  }
+  //calc both direction paths
+  if(fromind < toind) {
+    for (int i=fromind; i<=toind; i++)
+      path1.push_back(off.getVertexCircular(i));
+    for (int i=fromind+nvert; i>=toind; i--)
+      path2.push_back(off.getVertexCircular(i));
+  } else {
+    for (int i=fromind; i>=toind; i--)
+      path1.push_back(off.getVertexCircular(i));
+    for (int i=fromind; i<=toind+nvert; i++)
+      path2.push_back(off.getVertexCircular(i));
+  }
+  // find shorter one
+  double len1=0,len2=0;
+  for (uint i=1; i<path1.size(); i++) 
+    len1+=(path1[i]-path1[i-1]).lengthSquared();
+  for (uint i=1; i<path2.size(); i++) 
+    len2+=(path2[i]-path2[i-1]).lengthSquared();
+  if (len1 < len2) {
+     // path1.insert(path1.begin(),from);
+     // path1.push_back(to);
+    return path1;
+  }
+  else{
+     // path2.insert(path2.begin(),from);
+     // path2.push_back(to);
+    return path2;
+  }
+}
+
 
 vector<Vector2d> Poly::getMinMax() const{
   double minx=6000,miny=6000;
@@ -498,13 +444,11 @@ vector<Vector2d> Poly::getMinMax() const{
   Vector2d v;
   for (uint i=0; i < vertices.size();i++){
     v = vertices[i];
-    //cerr << "vert " << i << ": " <<v << endl ;
     if (v.x<minx) minx=v.x;
     if (v.x>maxx) maxx=v.x;
     if (v.y<miny) miny=v.y;
     if (v.y>maxy) maxy=v.y;
   }
-  //cerr<< "minmax at Z=" << getZ() << ": "<<minx <<"/"<<miny << " -- "<<maxx<<"/"<<maxy<<endl;
   range[0] = Vector2d(minx,miny);
   range[1] = Vector2d(maxx,maxy);
   return range;
@@ -518,6 +462,17 @@ Vector3d rotatedZ(Vector3d v, double angle)
 		  v.y*cosa+v.x*sina, v.z);
 }
 
+Vector3d random3d(Vector3d v, double delta=0.3)
+{
+  double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
+  return Vector3d(v.x+randdelta, v.y+randdelta, v.z+randdelta);
+}
+Vector2d random2d(Vector2d v, double delta=0.3)
+{
+  double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
+  return Vector2d(v.x+randdelta, v.y+randdelta);
+}
+
 void Poly::draw(int gl_type, double z) const
 {
   Vector2d v;
@@ -525,6 +480,7 @@ void Poly::draw(int gl_type, double z) const
   glBegin(gl_type);	  
   for (uint i=0;i < count;i++){
     v = getVertexCircular(i);
+    //v = random2d(v);
     glVertex3f(v.x,v.y,z);
   }
   glEnd();
@@ -543,6 +499,7 @@ void Poly::draw(int gl_type, bool reverse) const
       v = getVertexCircular3(i);
       // vn = getVertexCircular3(i+1);
     }
+    //v = random3d(v);
     glVertex3f(v.x,v.y,v.z);
     // if (gl_type==GL_LINE_LOOP){
     //   m = (v+vn)/2;
@@ -578,82 +535,13 @@ void Poly::drawLineNumbers() const
 }
 
 
-void Poly::printinfo() const
+string Poly::info() const
 {
-  cout <<"Poly at Z="<<z;
-  cout <<", "<< vertices.size();
-  cout <<", extrf="<< extrusionfactor;
-  cout <<" vertices";//, infill: "<< infill->getSize();
-  cout << endl;
-}
-
-
-
-
-
-
-
-
-bool InFillHitCompareFunc(const InFillHit& d1, const InFillHit& d2)
-{
-	return d1.d < d2.d;
-}
-
-// calculates intersection and checks for parallel lines.
-// also checks that the intersection point is actually on
-// the line segment p1-p2
-bool IntersectXY(const Vector2d &p1, const Vector2d &p2, 
-		 const Vector2d &p3, const Vector2d &p4, InFillHit &hit,
-		 double maxoffset)
-{
-	// BBOX test
-	if(MIN(p1.x,p2.x) > MAX(p3.x,p4.x))
-		return false;
-	if(MAX(p1.x,p2.x) < MIN(p3.x,p4.x))
-		return false;
-	if(MIN(p1.y,p2.y) > MAX(p3.y,p4.y))
-		return false;
-	if(MAX(p1.y,p2.y) < MIN(p3.y,p4.y))
-		return false;
-
-
-	if(ABS(p1.x-p3.x) < maxoffset && ABS(p1.y - p3.y) < maxoffset)
-	{
-		hit.p = p1;
-		hit.d = (p1-hit.p).length();
-		hit.t = 0.0;
-		return true;
-	}
-	if(ABS(p2.x-p3.x) < maxoffset && ABS(p2.y - p3.y) < maxoffset)
-	{
-		hit.p = p2;
-		hit.d = (p1-hit.p).length();
-		hit.t = 1.0;
-		return true;
-	}
-	if(ABS(p1.x-p4.x) < maxoffset && ABS(p1.y - p4.y) < maxoffset)
-	{
-		hit.p = p1;
-		hit.d = (p1-hit.p).length();
-		hit.t = 0.0;
-		return true;
-	}
-	if(ABS(p2.x-p4.x) < maxoffset && ABS(p2.y - p4.y) < maxoffset)
-	{
-		hit.p = p2;
-		hit.d = (p1-hit.p).length();
-		hit.t = 1.0;
-		return true;
-	}
-
-	InFillHit hit2;
-	double t0,t1;
-	if(intersect2D_Segments(p1,p2,p3,p4,hit.p, hit2.p, t0,t1) == 1)
-	{
-	  hit.d = (p1-hit.p).length();
-	  hit.t = t0;
-	  return true;
-	}
-	return false;
+  ostringstream ostr;
+  ostr <<"Poly at Z="<<z;
+  ostr <<", "<< vertices.size();
+  ostr <<", extrf="<< extrusionfactor;
+  ostr <<" vertices";
+  return ostr.str();
 }
 

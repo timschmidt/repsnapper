@@ -10,6 +10,7 @@
 # option, any later version, incorporated herein by reference.
 
 SHARED_SRC += \
+	src/slicer/geometry.cpp \
 	src/slicer/printlines.cpp \
 	src/slicer/clipping.cpp \
 	src/slicer/infill.cpp \
@@ -19,6 +20,7 @@ SHARED_SRC += \
 	src/slicer/triangle.cpp
 
 SHARED_INC += \
+	src/slicer/geometry.h \
 	src/slicer/printlines.h \
 	src/slicer/clipping.h \
 	src/slicer/gcode.h \

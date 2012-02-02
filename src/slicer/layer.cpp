@@ -1,4 +1,3 @@
-
 /*
     This file is a part of the RepSnapper project.
     Copyright (C) 2010  Kulitorum
@@ -600,6 +599,7 @@ void Layer::MakeGcode(GCodeState &state,
 			   minspeed, maxspeed, 
 			   linewidth, linewidthratio, optratio);
       printlines.slowdownTo(slicing.MinLayertime);
+      printlines.clipMovements(GetOuterShell());
       printlines.getLines(lines);
     }
   }
@@ -614,6 +614,7 @@ void Layer::MakeGcode(GCodeState &state,
 		       minspeed, maxspeed, 
 		       linewidth, linewidthratio, optratio);
   printlines.slowdownTo(slicing.MinLayertime);
+  printlines.clipMovements(GetOuterShell());
   printlines.getLines(lines);
 
   // 4. all other polygons:
@@ -635,6 +636,7 @@ void Layer::MakeGcode(GCodeState &state,
 		       minspeed, maxspeed, 
 		       linewidth, linewidthratio, optratio);
   printlines.slowdownTo(slicing.MinLayertime);
+  printlines.clipMovements(GetOuterShell(), linewidth/2.);
   printlines.getLines(lines);
 
 

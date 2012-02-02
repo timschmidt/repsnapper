@@ -39,3 +39,4 @@ stamp-h1
 po/*.gmo
 repsnapper
 debian
+intltool-*.in
