@@ -337,7 +337,7 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
 }
 
 // find polys in subjlayer that are not covered by any filled polygons of cliplayer
-vector<Poly> Model::GetUncoveredPolygons(Layer * subjlayer,
+vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
 					 const Layer * cliplayer)
 {
   Clipping clipp;
@@ -345,8 +345,8 @@ vector<Poly> Model::GetUncoveredPolygons(Layer * subjlayer,
   clipp.addPolys(subjlayer->GetFillPolygons(),subject); 
   clipp.addPolys(subjlayer->GetFullFillPolygons(),subject); 
   clipp.addPolys(subjlayer->GetBridgePolygons(),subject); 
-  clipp.addPolys(cliplayer->GetOuterShell(),clip); // have some overlap
-  //clipp.addPolys(cliplayer->GetFillPolygons(),clip);
+  //clipp.addPolys(cliplayer->GetOuterShell(),clip); // have some overlap
+  clipp.addPolys(cliplayer->GetPolygons(),clip);
   //clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
   vector<Poly> uncovered = clipp.substract();
   return uncovered;

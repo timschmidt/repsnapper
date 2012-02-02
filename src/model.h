@@ -88,7 +88,8 @@ public:
 	void CalcInfill();
 	void MakeShells();
 	void MakeUncoveredPolygons(bool make_decor, bool make_bridges=true);
-	vector<Poly> GetUncoveredPolygons(Layer *subjlayer,const Layer *cliplayer);
+	vector<Poly> GetUncoveredPolygons(const Layer *subjlayer, 
+					  const Layer *cliplayer);
 	void MakeFullSkins();
 	void MultiplyUncoveredPolygons();
 	void MakeSupportPolygons(Layer * subjlayer, 
