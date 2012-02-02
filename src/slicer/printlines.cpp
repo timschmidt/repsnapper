@@ -154,7 +154,7 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> points)
     nl.angle = angle(nl);
     newlines.push_back(nl);
   }
-  if (newlines.size() > 0) {
+  if (newlines.size() > 0 && lines.size() > lineindex) {
     //cerr << newlines.size() << " new lines" << endl;
     lines.erase(lines.begin()+lineindex);
     lines.insert(lines.begin()+lineindex, newlines.begin(), newlines.end());
