@@ -63,6 +63,10 @@ void ViewProgress::update (double value)
 {
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->set_fraction(value / m_bar_max);
+  ostringstream o; o << value <<"/"<< m_bar_max;
+  m_bar->set_text(o.str());
+  int perc = (int(m_bar->get_fraction()*100));
+  cerr << m_label->get_label() << " " << o.str() << " -- " << perc << "%              \r";
   Gtk::Main::iteration(false);
   g_main_context_iteration(NULL,false);
 }

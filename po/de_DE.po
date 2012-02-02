@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-01-30 18:36+0100\n"
-"PO-Revision-Date: 2012-02-01 12:23+0100\n"
+"PO-Revision-Date: 2012-02-02 09:47+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -947,7 +947,7 @@ msgstr "Skalierung:"
 
 #: ../src/repsnapper.ui.h:134
 msgid "Object Translation:"
-msgstr "Verschiebung:"
+msgstr "Verschieben:"
 
 #: ../src/repsnapper.ui.h:137
 msgid "Power On"

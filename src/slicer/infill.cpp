@@ -127,7 +127,9 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   Vector2d Min,Max;
   Min = layer->getMin();
   Max = layer->getMax();
+  ClipperLib::Polygons cpolys;
 
+  if (tofillpolys.size()==0) return cpolys;
   //omp_set_lock(&save_lock);
   //int tid = omp_get_thread_num( );
   //cerr << "thread "<<tid << " looking for pattern " << endl;
@@ -145,7 +147,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    abs(sIt->distance-infillDistance) < 0.01 &&
 	    abs(sIt->angle-rotation) < 0.01 )
 	  {
-	    //cerr << "found saved pattern no " << sIt-savedPatterns.begin() << " with " << sIt->cpolys.size() <<" polys"<<endl;
+	    //cerr << name << " found saved pattern no " << sIt-savedPatterns.begin() << " with " << sIt->cpolys.size() <<" polys"<< endl << "type "<< sIt->type << sIt->Min << sIt->Max << endl;
 	    // is it too small for this layer?
 	    if (sIt->Min.x > Min.x || sIt->Min.y > Min.y || 
 		sIt->Max.x < Max.x || sIt->Max.y < Max.y) 
@@ -169,7 +171,6 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   }
   //omp_unset_lock(&save_lock);
   // none found - make new:
-  ClipperLib::Polygons cpolys;
   bool zigzag = false;
   switch (type)
     {
@@ -184,8 +185,8 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	Vector2d center = (Min+Max)/2.;
 	// make square that masks everything even when rotated
 	Vector2d diag = Max-Min;
-	double square = MAX(diag.x,diag.y);
-	Vector2d sqdiag(2*square,2*square);
+	double square = max(diag.x,diag.y);
+	Vector2d sqdiag(square*2/3,square*2/3);
 	Min=center-sqdiag;
 	Max=center+sqdiag;
 	//cerr << Min << "--"<<Max<< "::"<< center << endl;
