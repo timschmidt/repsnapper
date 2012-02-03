@@ -149,6 +149,8 @@ static struct {
   FLOAT_MEMBER  (Printer.ExtrudeAmount, "Printer.ExtrudeAmount", 5, false),
   FLOAT_MEMBER  (Printer.ExtrudeSpeed, "Printer.ExtrudeSpeed", 100, false),
   INT_MEMBER    (Printer.FanVoltage, "Printer.FanVoltage", 200, false),
+  BOOL_MEMBER   (Printer.Logging, "Printer.Logging", false, false),
+  BOOL_MEMBER   (Printer.ClearLogOnPrintStart, "Printer.ClearLogOnPrintStart", false, false),
   // FLOAT_MEMBER  (Printer.NozzleTemp, "Printer.NozzleTemp", 210, false),
   // FLOAT_MEMBER  (Printer.BedTemp, "Printer.BedTemp", 60, false),
 
@@ -191,9 +193,8 @@ static struct {
 
   // Misc.
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
-  BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
+  //BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
   BOOL_MEMBER (Misc.TempReadingEnabled, "TempReadingEnabled", true, false),
-  BOOL_MEMBER (Misc.ClearLogfilesWhenPrintStarts, "ClearLogfilesWhenPrintStarts", true, false),
 
   // GCode - handled by GCodeImpl
   BOOL_MEMBER (Display.DisplayGCode, "DisplayGCode", true, true),

@@ -141,6 +141,7 @@ class View : public Gtk::Window
   void invertnormals_selection ();
   void mirror_selection ();
   void stl_added (Gtk::TreePath &path);
+  void model_changed ();
 
   vmml::Matrix4d &SelectedNodeMatrix(guint objectNr = 1);
   void SelectedNodeMatrices(std::vector<vmml::Matrix4d *> &result );

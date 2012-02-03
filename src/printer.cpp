@@ -34,13 +34,14 @@
 
 // everything taken out of model.cpp
 
-Printer::Printer(View *view) :
+Printer::Printer(View *view, Gtk::TextView *v_commlog) :
   printing (false),
   lastdonelines(0),
   lasttimeshown(0),
   inhibit_print (false),
-  commlog (Gtk::TextBuffer::create())
+  commlog(v_commlog)
 {
+  commlog->set_buffer(Gtk::TextBuffer::create());
   // TODO: Configurable protocol, cache size
   void *cl = static_cast<void *>(this);
   device = rr_dev_create (RR_PROTO_FIVED,
@@ -471,13 +472,18 @@ void RR_CALL Printer::rr_log_fn (rr_dev dev, int type,
 void
 Printer::handle_rr_log (rr_dev dev, int type, const char *buffer, size_t len)
 {
+  if (!commlog) return;
+  bool recvsend = ( m_model && m_model->settings.Printer.Logging) ;
+
   string str;
 
   switch (type) {
   case RR_LOG_RECV:
+    if (!recvsend) return;
     str = "<-- ";
     break;
   case RR_LOG_SEND:
+    if (!recvsend) return;
     str = "--> ";
     break;
   case RR_LOG_MSG:
@@ -485,8 +491,13 @@ Printer::handle_rr_log (rr_dev dev, int type, const char *buffer, size_t len)
     str = "; ";
     break;
   }
+  Glib::RefPtr<Gtk::TextBuffer> c_buffer = commlog->get_buffer();
   str += string (buffer, len);
-  commlog->insert (commlog->end(), str);
+  Gtk::TextBuffer::iterator tend = c_buffer->end();
+  c_buffer->insert (tend, str);
+  tend = c_buffer->end();
+  commlog->scroll_to(tend);
+
 }
 
 // ------------------------------ libreprap integration above ------------------------------

@@ -87,6 +87,8 @@ class Settings {
     float NozzleTemp;
     float BedTemp;
     int FanVoltage;
+    bool Logging;
+    bool ClearLogOnPrintStart;
   };
   PrinterSettings Printer;
 

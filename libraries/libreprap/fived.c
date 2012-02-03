@@ -89,6 +89,9 @@ fived_handle_reply (rr_dev dev, const char *reply, size_t nbytes)
   } else if (!strncasecmp ("start", reply, 5)) {
     return rr_dev_handle_start (dev);
 
+  } else if (!strncasecmp ("echo", reply, 4)) {
+    return 0;
+
   } else
     return rr_dev_emit_error (dev, RR_E_UNKNOWN_REPLY, reply, nbytes);
 }

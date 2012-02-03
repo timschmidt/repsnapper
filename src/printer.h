@@ -69,7 +69,7 @@ class Printer
         //GCode *m_gcode;
 	Model *m_model;
  public:
-	Printer(View *view);
+	Printer(View *view, Gtk::TextView *v_commlog=NULL);
 	~Printer();
 
 	bool inhibit_print;
@@ -133,7 +133,7 @@ class Printer
 	void ContinuePauseButton();
 	void ResetButton();
 
-	Glib::RefPtr<Gtk::TextBuffer> commlog;
+	Glib::RefPtr<Gtk::TextView> commlog;
 
  private:
 	bool handle_dev_fd (Glib::IOCondition cond);

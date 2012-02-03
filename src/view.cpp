@@ -198,7 +198,7 @@ void View::power_toggled()
 
 void View::enable_logging_toggled (Gtk::ToggleButton *button)
 {
-  m_model->settings.Misc.FileLoggingEnabled = button->get_active();
+  m_model->settings.Printer.Logging = button->get_active();
 }
 
 void View::fan_enabled_toggled (Gtk::ToggleButton *button)
@@ -221,6 +221,7 @@ void View::run_extruder ()
 
 void View::clear_logs()
 {
+  m_printer->commlog->get_buffer()->set_text("");
   m_model->ClearLogs();
 }
 
@@ -572,6 +573,11 @@ void View::stl_added (Gtk::TreePath &path)
   m_objtree->get_selection()->select (path);
 }
 
+void View::model_changed ()
+{
+  queue_draw();
+}
+
 void View::auto_rotate()
 {
   Shape *shape;
@@ -781,8 +787,8 @@ View::View(BaseObjectType* cobject,
 
   // Interactive tab
   connect_button ("i_home_all",        sigc::mem_fun(*this, &View::home_all));
-  connect_toggled ("Misc.FileLoggingEnabled", sigc::mem_fun(*this, &View::enable_logging_toggled));
-  connect_button ("i_clear_logs",      sigc::mem_fun(*this, &View::clear_logs) );
+  connect_toggled ("Printer.Logging", sigc::mem_fun(*this, &View::enable_logging_toggled));
+  connect_button ("Printer.ClearLog",      sigc::mem_fun(*this, &View::clear_logs) );
   m_builder->get_widget ("i_reverse", m_extruder_reverse);
   m_builder->get_widget ("Printer.ExtrudeSpeed", m_extruder_speed);
   // m_extruder_speed->set_range(10.0, 10000.0);
@@ -801,7 +807,10 @@ View::View(BaseObjectType* cobject,
 
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &View::run_extruder) );
 
-  m_printer = new Printer(this);
+  Gtk::TextView *textv = NULL;
+  m_builder->get_widget ("i_txt_comms", textv);
+
+  m_printer = new Printer(this, textv);
 
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
@@ -895,8 +904,8 @@ void View::setModel(Model *model)
   }
 
   Gtk::TextView *log_view;
-  m_builder->get_widget("i_txt_comms", log_view);
-  log_view->set_buffer(m_printer->commlog);
+  // m_builder->get_widget("i_txt_comms", log_view);
+  // log_view->set_buffer(m_printer->commlog);
   m_builder->get_widget("i_txt_errs", log_view);
   log_view->set_buffer(m_model->errlog);
   m_builder->get_widget("i_txt_echo", log_view);
@@ -905,7 +914,7 @@ void View::setModel(Model *model)
   inhibit_print_changed();
   m_printer->get_signal_inhibit_changed().connect (sigc::mem_fun(*this, &View::inhibit_print_changed));
   m_model->m_signal_stl_added.connect (sigc::mem_fun(*this, &View::stl_added));
-  m_model->m_model_changed.connect (sigc::mem_fun(*this, &View::queue_draw));
+  m_model->m_model_changed.connect (sigc::mem_fun(*this, &View::model_changed));
   m_model->signal_alert.connect (sigc::mem_fun(*this, &View::alert));
   m_printer->signal_alert.connect (sigc::mem_fun(*this, &View::alert));
 
