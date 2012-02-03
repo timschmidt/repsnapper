@@ -24,7 +24,7 @@
 
 //ViewProgress::ViewProgress(Progress *progress, Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
 ViewProgress::ViewProgress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
-  m_box (box), m_bar(bar), m_label(label)
+  m_box (box), m_bar(bar), m_label(label), to_terminal(true)
 {
   m_bar_max = 0.0;
   box->hide();
@@ -65,8 +65,10 @@ void ViewProgress::update (double value)
   m_bar->set_fraction(value / m_bar_max);
   ostringstream o; o << value <<"/"<< m_bar_max;
   m_bar->set_text(o.str());
-  int perc = (int(m_bar->get_fraction()*100));
-  cerr << m_label->get_label() << " " << o.str() << " -- " << perc << "%              \r";
+  if (to_terminal) {
+    int perc = (int(m_bar->get_fraction()*100));
+    cerr << m_label->get_label() << " " << o.str() << " -- " << perc << "%              \r";
+  }
   Gtk::Main::iteration(false);
   g_main_context_iteration(NULL,false);
 }
@@ -77,3 +79,5 @@ void ViewProgress::set_label (const std::string label)
   if (old != label)
     m_label->set_label (label);
 }
+
+

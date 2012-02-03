@@ -191,6 +191,8 @@ static struct {
 
   FLOAT_MEMBER  (Slicing.MinLayertime, "MinLayertime", 5, true),
 
+  BOOL_MEMBER   (Slicing.LinelengthSort, "LinelengthSort", false, false),
+
   // Misc.
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
   //BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
@@ -211,6 +213,7 @@ static struct {
   BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, false),
   BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
   BOOL_MEMBER (Display.CommsDebug, "CommsDebug", false, true),
+  BOOL_MEMBER (Display.TerminalProgress, "TerminalProgress", false, true),
   BOOL_MEMBER (Display.DisplayLayer, "DisplayLayer", false, true),
   BOOL_MEMBER (Display.DrawVertexNumbers, "DrawVertexNumbers", false, true),
   BOOL_MEMBER (Display.DrawLineNumbers, "DrawLineNumbers", false, true),

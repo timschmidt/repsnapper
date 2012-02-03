@@ -569,6 +569,8 @@ void Layer::MakeGcode(GCodeState &state,
 
   double minspeed = hardware.MinPrintSpeedXY, maxspeed = hardware.MaxPrintSpeedXY;
 	
+  bool linelengthsort = slicing.LinelengthSort;
+
   //vector<Vector3d> lines;
   vector<printline> lines;
   //cerr << "gcode layer " << LayerNo << "z="<<Z<<endl;
@@ -612,7 +614,8 @@ void Layer::MakeGcode(GCodeState &state,
   printlines.clear();
   printlines.makeLines(supportInfill->infillpolys, startPoint,
 		       minspeed, maxspeed, 
-		       linewidth, linewidthratio, optratio);
+		       linewidth, linewidthratio, optratio,
+		       linelengthsort);
   printlines.slowdownTo(slicing.MinLayertime);
   printlines.clipMovements(GetOuterShell());
   printlines.getLines(lines);
@@ -634,7 +637,8 @@ void Layer::MakeGcode(GCodeState &state,
   printlines.clear();
   printlines.makeLines(polys, startPoint,
 		       minspeed, maxspeed, 
-		       linewidth, linewidthratio, optratio);
+		       linewidth, linewidthratio, optratio,
+		       linelengthsort);
   printlines.slowdownTo(slicing.MinLayertime);
   printlines.clipMovements(GetOuterShell(), linewidth/2.);
   printlines.getLines(lines);

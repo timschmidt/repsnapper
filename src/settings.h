@@ -119,6 +119,8 @@ class Settings {
     float DecorInfillDistance;
     float DecorInfillRotation;
 
+    bool LinelengthSort;
+
     float MinLayertime;
 
     bool ShellOnly;
@@ -184,6 +186,7 @@ class Settings {
     float LayerValue;
     bool LuminanceShowsSpeed;
     bool CommsDebug;
+    bool TerminalProgress;
 
     // Rendering
     vmml::Vector4f PolygonRGBA;

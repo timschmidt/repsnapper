@@ -10,6 +10,7 @@ src/file.cpp
 src/gcode.cpp
 src/model.cpp
 src/model2.cpp
+src/objtree.h
 src/objtree.cpp
 src/platform.cpp
 src/printer.cpp

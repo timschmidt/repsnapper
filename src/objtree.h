@@ -38,7 +38,7 @@
 class TreeObject
 {
 public:
-	TreeObject(){name = "Unnamed object";};
+  TreeObject(){name = _("Unnamed object");};
 	string name;
 	Transform3D transform3D;
 	vector<Shape> shapes;

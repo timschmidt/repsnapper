@@ -216,6 +216,7 @@ void Model::Slice(double printOffsetZ)
   double minZ = thickness*0.5;// + Min.z; 
   double z = minZ;
 
+  m_progress->set_terminal_output(settings.Display.TerminalProgress);
   m_progress->start (_("Slicing"), Max.z);
   for (vector<Layer *>::iterator pIt = layers.begin();
        pIt != layers. end(); pIt++)
@@ -303,6 +304,7 @@ void Model::MakeFullSkins()
 void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
 {
   int count = (int)layers.size();
+  if (count == 0 ) return;
   m_progress->restart (_("Find Uncovered"), 2*count+2);
   // bottom to top: uncovered from above -> top polys
   for (int i = 0; i < count-1; i++) 

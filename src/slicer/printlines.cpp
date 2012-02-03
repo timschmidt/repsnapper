@@ -59,37 +59,57 @@ void Printlines::addPoly(const Poly poly, int startindex, double speed)
 void Printlines::makeLines(const vector<Poly> polys, 
 			   Vector2d &startPoint,
 			   double minspeed, double maxspeed, // mm/s
-			   double linewidth, double linewidthratio, double optratio)
+			   double linewidth, double linewidthratio, double optratio,
+			   bool linelengthsort)
 {
   uint count = polys.size();
-  uint nvindex=-1;
-  uint npindex=-1;
+  int nvindex=-1;
+  int npindex=-1;
   uint nindex;
-  vector<bool> done; // polys not yet handled
-  done.resize(count);
+  vector<bool> done(count); // polys not yet handled
   for(size_t q=0;q<count;q++) done[q]=false;
   uint ndone=0;
   double pdist, nstdist;
   //double nlength;
+  double lastavlength = -1;
   while (ndone < count) 
     {
+      if (linelengthsort && npindex>=0) lastavlength = polys[npindex].averageLinelengthSq();
       nstdist = 1000000;
-      for(size_t q=0;q<count;q++) // find nearest polygon
-	{
-	  if (!done[q])
+      for(size_t q=0; q<count; q++) { // find nearest polygon
+	if (!done[q])
+	  {
+	    pdist = 1000000;
+	    nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
+	    if (pdist<nstdist){
+	      npindex = q;      // index of nearest poly in polysleft
+	      nstdist = pdist;  // distance of nearest poly
+	      nvindex = nindex; // nearest point in nearest poly
+	    }
+	  }
+      }
+      // find next nearest polygon, but with similar line length
+      if (linelengthsort && lastavlength > 0) { 
+	double minavlengthdiff = 10000000;
+	for(size_t q=0; q<count; q++) {
+	  if (!done[q]) 
 	    {
-	      pdist = 1000000;
 	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
-	      // nlength = polys[q].getLineLengthSq(nindex); // ...feature to come...
-	      if (pdist<nstdist){
-		npindex = q;      // index of nearest poly in polysleft
-		nstdist = pdist;  // distance of nearest poly
-		nvindex = nindex; // nearest point in nearest poly
+	      if ( pdist < 100*nstdist ){// || 
+		//(nstdist==0 && pdist < 10000*linewidth*linewidth) ) {
+		double avlength = polys[q].averageLinelengthSq();		
+		double avldiff = abs(avlength-lastavlength);
+		if (avldiff < minavlengthdiff) {
+		  //cerr << npindex << " : " <<avlength << " - " <<avldiff << endl;
+		  minavlengthdiff = avldiff;
+		  npindex = q;
+		  nvindex = nindex;
+		}
 	      }
 	    }
 	}
+      }
       addPoly(polys[npindex], nvindex, maxspeed);
-      //polys[npindex].getLines(lines,nvindex); // add poly lines to lines
       done[npindex]=true;
       ndone++;
       if (lines.size()>0)
@@ -137,6 +157,18 @@ void Printlines::optimize(double minspeed, double maxspeed,
   // optimizeCorners(linewidth,linewidthratio,optratio);
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
+}
+
+// split at length 0 < t < 1
+uint Printlines::divideline(uint lineindex, const double t) 
+{
+  line *l = &lines[lineindex];
+  Vector2d d = l->to - l->from;
+  vector<Vector2d> points(1);
+  points[0] = l->from + d * t * d.length();
+  uint nlines = divideline(lineindex, points);
+  delete l;
+  return nlines;
 }
 
 uint Printlines::divideline(uint lineindex, const vector<Vector2d> points) 
@@ -348,7 +380,7 @@ void Printlines::getLines(vector<Vector3d> &olines) const
     if (lIt->from != lIt->to){
       olines.push_back(Vector3d(lIt->from.x,lIt->from.y,z));
       olines.push_back(Vector3d(lIt->to.x,lIt->to.y,z));
-    } else cerr<< "zero line" << endl;
+    }// else cerr<< "zero line" << endl;
   }
 }
 
@@ -362,7 +394,7 @@ void Printlines::getLines(vector<printline> &plines) const
       pline.speed = lIt->speed;
       pline.extrusionfactor = lIt->feedrate;
       plines.push_back(pline);
-    } else cerr<< "zero line" << endl;
+    } // else cerr<< "zero line" << endl;
   }
 }
 

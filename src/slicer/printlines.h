@@ -63,7 +63,8 @@ class Printlines
   void makeLines(const vector<Poly> polys, 
 		 Vector2d &startPoint, 
 		 double minspeed, double maxspeed,
-		 double linewidth, double linewidthratio, double optratio);
+		 double linewidth, double linewidthratio, double optratio,
+		 bool linelengthsort = false);
     
   void optimize(double minspeed, double maxspeed,
 		double linewidth, double linewidthratio, double optratio);
@@ -100,6 +101,7 @@ class Printlines
 		 double optratio);
 
   uint divideline(uint lineindex, const vector<Vector2d> points);
+  uint divideline(uint lineindex, const double t);
 
   double angle(const Vector2d p) const;
   double angle(const line l) const;

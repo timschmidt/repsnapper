@@ -321,6 +321,15 @@ double Poly::getLinelengthSq(uint startindex) const
   return length;
 }
 
+double Poly::averageLinelengthSq() const
+{
+  double l=0;
+  for (uint i = 0; i<vertices.size(); i++){
+    l+=getLinelengthSq(i);
+  }
+  return l/vertices.size();
+}
+
 // add to lines starting with nearest point to startPoint
 void Poly::getLines(vector<printline> &plines, Vector2d &startPoint) const
 {
@@ -330,8 +339,6 @@ void Poly::getLines(vector<printline> &plines, Vector2d &startPoint) const
   getLines(plines,index);
   startPoint = Vector2d(plines.back().to.x,plines.back().to.y);
 }
-
-
 void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const
 {
   if (size()<2) return;
