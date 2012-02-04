@@ -33,6 +33,7 @@
 //#include <polylib/Polygon2d.h>
 
 #include "stdafx.h"
+#include "types.h"
 #include "string.h"
 
 //#include "gcode.h"
@@ -154,6 +155,8 @@ public:
     int loadBinarySTL(std::string filename);
     static filetype_t getFileType(std::string filename);
 
+    bool hasAdjacentTriangleTo(Triangle triangle) const;
+    void splitshapes(vector<Shape> &shapes, ViewProgress *progress=NULL);
 
     int loadASCIIVRML(std::string filename);
 

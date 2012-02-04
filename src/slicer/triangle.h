@@ -62,5 +62,7 @@ public:
 
 	double projectedvolume(const Matrix4d T=Matrix4d::IDENTITY) const;
 
+	bool isConnectedTo(Triangle other, double maxsqerr=0.0001);
+
 };
 

@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-02-03 11:46+0100\n"
-"PO-Revision-Date: 2012-02-03 11:51+0100\n"
+"POT-Creation-Date: 2012-02-04 10:40+0100\n"
+"PO-Revision-Date: 2012-02-04 10:40+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -925,7 +925,7 @@ msgstr "Schichtwechsel"
 
 #: ../src/repsnapper.ui.h:128
 msgid "No Infill"
-msgstr "Füllung Debuggen"
+msgstr "Ohne Füllung"
 
 #: ../src/repsnapper.ui.h:129
 msgid "Normal Fill"

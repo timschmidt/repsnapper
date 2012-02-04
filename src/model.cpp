@@ -175,8 +175,8 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 	  }
 	}
       if (shapes.size()==1){
-	shapes.front().filename = (string)path.substr(found+1);
-	AddShape(NULL, shapes.front(), shapes.front().filename , autoplace);
+	shapes.front().filename = (string)path.substr(found+1); 
+	AddShape(NULL, shapes.front(), shapes.front().filename, autoplace);
       }
       else for (uint i=0;i<shapes.size();i++){
 	  // do not autoplace to keep saved positions
@@ -326,10 +326,11 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
   return false;
 }
 
-Shape* Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autoplace)
+int Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autoplace)
 {
-  Shape *retshape;
+  //Shape *retshape;
   bool found_location=false;
+
 
   if (!parent) {
     if (objtree.Objects.size() <= 0)
@@ -337,26 +338,39 @@ Shape* Model::AddShape(TreeObject *parent, Shape shape, string filename, bool au
     parent = &objtree.Objects.back();
   }
   g_assert (parent != NULL);
-
+  
   // Decide where it's going
   Vector3d trans = Vector3d(0,0,0);
   if (autoplace) found_location = FindEmptyLocation(trans, &shape);
   // Add it to the set
   size_t found = filename.find_last_of("/\\");
   Gtk::TreePath path = objtree.addShape(parent, shape, filename.substr(found+1));
-  retshape = &parent->shapes.back();
-
+  Shape *retshape = &parent->shapes.back();
+  
   // Move it, if we found a suitable place
   if (found_location)
     retshape->transform3D.transform.setTranslation(trans);
-
+  
   // Update the view to include the new object
   CalcBoundingBoxAndCenter();
-
-  // Tell everyone
+  
+    // Tell everyone
   m_signal_stl_added.emit (path);
+  
+  return 0;
+}
 
-  return retshape;
+int Model::SplitShape(TreeObject *parent, Shape shape, string filename)
+{
+  vector<Shape> splitshapes;
+  shape.splitshapes(splitshapes, m_progress);
+  if (splitshapes.size()<2) return splitshapes.size();
+  for (uint s = 0; s <  splitshapes.size(); s++) {
+    ostringstream sfn;
+    sfn << filename << "_" << (s+1) ;
+    AddShape(parent,splitshapes[s], sfn.str() ,false);
+  }
+  return splitshapes.size();
 }
 
 void Model::newObject()

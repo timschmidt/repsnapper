@@ -59,6 +59,17 @@ Vector3d &Triangle::operator[] (const int index)
     return A;
 }
 
+bool Triangle::isConnectedTo(Triangle other, double maxsqerr) 
+{
+  // for (uint i = 0; i < 3; i++) {
+  //   Vector3d p = (Vector3d)(operator[](i));
+  for (uint j = 0; j < 3; j++)  {
+    if (( A - other[j]).lengthSquared() < maxsqerr)  return true;
+    if (( B - other[j]).lengthSquared() < maxsqerr)  return true;
+    if (( C - other[j]).lengthSquared() < maxsqerr)  return true;
+  }
+  return false;
+}
 
 
 double Triangle::area()

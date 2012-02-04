@@ -112,6 +112,7 @@ class View : public Gtk::Window
   TranslationSpinRow *m_translation_row;
   void delete_selected_stl();
   void duplicate_selected_stl();
+  void split_selected_stl();
   void auto_rotate();
   void update_settings_gui();
   void handle_ui_settings_changed();

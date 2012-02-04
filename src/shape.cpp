@@ -19,9 +19,9 @@
 
 #include "shape.h"
 #include "poly.h"
+#include "progress.h"
 
 //#include "vrml.h"
-
 
 
 
@@ -38,17 +38,14 @@ void Transform3D::scale(double x)
 
 void Transform3D::scale_x(double x)
 {
-  //cerr << "scalex" << x << endl;
   transform.m[0][0] = x;
 }
   void Transform3D::scale_y(double x)
 {
-  //cerr << "scaley" << x << endl;
   transform.m[1][1] = x;
 }
 void Transform3D::scale_z(double x)
 {
-  //cerr << "scalez" << x << endl;
   transform.m[2][2] = x;
 }
 
@@ -73,6 +70,10 @@ Shape::Shape()
 {
 	Min.x = Min.y = Min.z = 0.0;
 	Max.x = Max.y = Max.z = 200.0;
+	scale_factor_x = 1;
+	scale_factor_y = 1;
+	scale_factor_z = 1;
+	scale_factor = 1;
 	CalcBBox();
 }
 
@@ -350,6 +351,7 @@ int Shape::parseASCIISTL(istream *text) {
         string outer, loop;
 	while (outer!="outer" && !(*text).eof()) {
 	  *text >> outer;
+	  //cerr << outer<< endl;
 	}
 	*text >> loop;
 	if(outer != "outer" || loop != "loop") {
@@ -469,6 +471,55 @@ int Shape::load(string filename)
     return 0;
 }
 
+
+bool Shape::hasAdjacentTriangleTo(Triangle triangle) const
+{
+  for (uint i = 0; i < triangles.size(); i++)
+    if (triangle.isConnectedTo(triangles[i],0.1)) return true;
+  return false;
+}
+void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress) 
+{
+  uint n_tr = triangles.size();
+  vector<bool> done(n_tr);
+  for (uint i = 0; i < n_tr; i++) done[i] = false;
+  uint donetriangles = 0;
+  if (progress) progress->start(_("Split Shapes"), n_tr);
+  while (donetriangles < n_tr) 
+    {
+      bool foundadj = false;
+      for (uint s = 0; s < shapes.size(); s++){
+	for (uint i = 0; i < n_tr; i++){
+	  if (!done[i]) {
+	    if (//shapes[s].triangles.size() == 0 ||
+		shapes[s].hasAdjacentTriangleTo(triangles[i])) {
+	      shapes[s].triangles.push_back(triangles[i]);
+	      done[i] = true;
+	      donetriangles++;
+	      foundadj = true;
+	    }
+	  }
+	}
+      } 
+      //  have no shape any triangle attaches to
+      if (!foundadj) {
+	Shape shape;
+	// take next undone triangle for new shape
+	for (uint i = 0; i < n_tr; i++) 
+	  if (!done[i]) {
+	    shapes.push_back(shape);
+	    shapes.back().triangles.push_back(triangles[i]);
+	    cerr << "shape " << shapes.size() << endl;
+	    done[i] = true;
+	    donetriangles++;
+	    break;
+	  }
+      }
+      if (progress) progress->update(donetriangles);
+   }
+   if (progress) progress->stop("_(Done)");
+   cerr << shapes.size() << " shapes " << endl;
+}
 
 void Shape::invertNormals()
 {
@@ -634,79 +685,34 @@ void Shape::OptimizeRotation()
 void Shape::PlaceOnPlatform()
 {
   CalcBBox();
-  Vector3d centerbefore=Center;
   transform3D.move(Vector3d(0,0,-Min.z));
-  CalcBBox();
-  Vector3d move = centerbefore-Center;
-  if (Center.x+move.x<0) move.x-=Min.x;
-  if (Center.y+move.y<0) move.y-=Min.y;
-  transform3D.move(Vector3d(move.x,move.y,0));
   CalcBBox();
 }
 
 // Rotate and adjust for the user - not a pure rotation by any means
 void Shape::Rotate(Vector3d axis, double angle)
 {
-  
-  // transform3D.rotate(Center, axis.x*angle, axis.y*angle, axis.z*angle);
-  // //transform3D.rotate(axis, angle);
-  CalcBBox();
-  // return;
-
+  CenterAroundXY();
+  Vector3d CenterXY(Center.x, Center.y, 0);
   // do a real rotation because matrix transform gives errors when slicing
-	for (size_t i=0; i<triangles.size(); i++)
-	{
-	  //triangles[i].AccumulateMinMax (oldmin, oldmax);
-	  triangles[i].rotate(axis, angle);
-
-		// triangles[i].Normal = triangles[i].Normal.rotate(angle, axis.x, axis.y, axis.z);
-		// triangles[i].A = triangles[i].A.rotate(angle, axis.x, axis.y, axis.z);
-		// triangles[i].B = triangles[i].B.rotate(angle, axis.x, axis.y, axis.z);
-		// triangles[i].C = triangles[i].C.rotate(angle, axis.x, axis.y, axis.z);
-
-		//triangles[i].AccumulateMinMax (min, max);
-	}
+  for (size_t i=0; i<triangles.size(); i++)
+    {
+      triangles[i].rotate(axis, angle);
+    }
   PlaceOnPlatform();
-// 	Vector3d move(0, 0, 0);
-// 	// if we rotated under the bed, translate us up again
-// 	if (min.z < 0) {
-// 		move.z = - min.z;
-// //		cout << "vector moveup: " << move << "\n";
-// 	}
-// 	// ensure our x/y bbox is at the same offset from the bottom/left
-// 	move.x = oldmin.x - min.x;
-// 	move.y = oldmin.y - min.y;
-// 	for (uint i = 0; i < triangles.size(); i++)
-// 		triangles[i].Translate(move);
-// 	max.x += move.x;
-// 	min.x += move.x;
-// 	max.y += move.y;
-// 	min.y += move.y;
-// 	max.z += move.z;
-// 	min.z += move.z;
-
-// 	Min = min;
-// 	Max = max;
-	//CenterAroundXY();
-// //	cout << "min " << Min << " max " << Max << "\n";
 }
 
 void Shape::CenterAroundXY()
 {
   CalcBBox();
-  Vector3d displacement = -Vector3d(Center.x,Center.y,Min.z);
-
+  Vector3d displacement = transform3D.transform.getTranslation() - Center;
   for(size_t i=0; i<triangles.size() ; i++)
     {
       triangles[i].A = triangles[i].A + displacement;
       triangles[i].B = triangles[i].B + displacement;
       triangles[i].C = triangles[i].C + displacement;
     }
-  
-  Max += displacement;
-  Min += displacement;
   transform3D.move(-displacement);
-// //	cout << "Center Around XY min" << Min << " max " << Max << "\n";
   CalcBBox();
 }
 
