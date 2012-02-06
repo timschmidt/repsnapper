@@ -62,6 +62,7 @@ class Printlines
 
   void makeLines(const vector<Poly> polys, 
 		 Vector2d &startPoint, 
+		 bool displace_startpoint, 
 		 double minspeed, double maxspeed,
 		 double linewidth, double linewidthratio, double optratio,
 		 bool linelengthsort = false);

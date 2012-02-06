@@ -597,7 +597,7 @@ void Layer::MakeGcode(GCodeState &state,
 		   skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
       printlines.clear();
-      printlines.makeLines(polys, startPoint, 
+      printlines.makeLines(polys, startPoint,  (s==1), //displace at first skin
 			   minspeed, maxspeed, 
 			   linewidth, linewidthratio, optratio);
       printlines.slowdownTo(slicing.MinLayertime);
@@ -635,7 +635,7 @@ void Layer::MakeGcode(GCodeState &state,
 	       bridgeInfill->infillpolys.begin(), bridgeInfill->infillpolys.end());
   
   printlines.clear();
-  printlines.makeLines(polys, startPoint,
+  printlines.makeLines(polys, startPoint, true, //displace at beginning
 		       minspeed, maxspeed, 
 		       linewidth, linewidthratio, optratio,
 		       linelengthsort);

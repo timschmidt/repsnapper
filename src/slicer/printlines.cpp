@@ -58,6 +58,7 @@ void Printlines::addPoly(const Poly poly, int startindex, double speed)
 
 void Printlines::makeLines(const vector<Poly> polys, 
 			   Vector2d &startPoint,
+			   bool displace_startpoint, 
 			   double minspeed, double maxspeed, // mm/s
 			   double linewidth, double linewidthratio, double optratio,
 			   bool linelengthsort)
@@ -95,7 +96,7 @@ void Printlines::makeLines(const vector<Poly> polys,
 	  if (!done[q]) 
 	    {
 	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
-	      if ( pdist < 100*nstdist ){// || 
+	      if ( pdist < 400 ){ // nearer than 20mm // || 
 		//(nstdist==0 && pdist < 10000*linewidth*linewidth) ) {
 		double avlength = polys[q].averageLinelengthSq();		
 		double avldiff = abs(avlength-lastavlength);
@@ -109,11 +110,13 @@ void Printlines::makeLines(const vector<Poly> polys,
 	    }
 	}
       }
+      if (displace_startpoint && ndone==0)  // displace first point
+	nvindex = (nvindex+1)%polys[npindex].size();
       addPoly(polys[npindex], nvindex, maxspeed);
       done[npindex]=true;
       ndone++;
       if (lines.size()>0)
-	startPoint = lastPoint();//Vector2d(lines.back().x,lines.back().y);
+	startPoint = lastPoint();
     }
   if (count) {
     setZ(polys.back().getZ());
