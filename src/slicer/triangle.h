@@ -46,7 +46,7 @@ public:
 	void calcNormal();
 	void invertNormal();
 	void mirrorX(const Vector3d center);
-	double area();
+	double area() const;
 	void rotate(const Vector3d axis, double angle);
 
 	AXIS axis;			// Used for auto-rotation

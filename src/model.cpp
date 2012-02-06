@@ -348,8 +348,10 @@ int Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autop
   Shape *retshape = &parent->shapes.back();
   
   // Move it, if we found a suitable place
-  if (found_location)
+  if (found_location) {
     retshape->transform3D.transform.setTranslation(trans);
+    retshape->PlaceOnPlatform();
+  }
   
   // Update the view to include the new object
   CalcBoundingBoxAndCenter();

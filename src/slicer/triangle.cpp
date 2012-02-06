@@ -72,7 +72,7 @@ bool Triangle::isConnectedTo(Triangle other, double maxsqerr)
 }
 
 
-double Triangle::area()
+double Triangle::area() const
 {
 	return 0.5* ((C-A).cross(B-A)).length() ;
 }
