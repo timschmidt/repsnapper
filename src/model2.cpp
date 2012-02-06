@@ -658,16 +658,18 @@ void Model::ConvertToGCode()
 
   is_calculating=false;
 
-  double time = gcode.GetTimeEstimation();
-  h = (int)time/3600;
-  m = ((int)time%3600)/60;
-  s = ((int)time-3600*h-60*m);
   ostr.clear();
-  ostr << " -- GCode Estimation: ";
-  if (h>0) ostr << h <<_("h");
-  ostr<< m <<_("m") << s <<_("s") ;
+  double gctime = gcode.GetTimeEstimation();
+  if (abs(state.timeused - gctime) > 10) {
+    h = (int)(gctime/3600);
+    m = ((int)gctime)%3600/60;
+    s = (int)(gctime)-3600*h-60*m;
+    ostr << _(" -- GCode Estimation: ");
+    if (h>0) ostr << h <<_("h");
+    ostr<< m <<_("m") << s <<_("s") ;
+  }
   double totlength = gcode.commands.back().e;
-  ostr << " - total extruded: "<< totlength << "mm";
+  ostr << _(" - total extruded: ") << totlength << "mm";
   double ccm = totlength*settings.Hardware.FilamentDiameter*settings.Hardware.FilamentDiameter/4.*M_PI/1000 ;
   ostr << " = " << ccm << "cm^3 ";
   ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)"; 

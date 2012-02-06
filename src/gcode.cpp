@@ -259,8 +259,10 @@ double GCode::GetTimeEstimation() const
 	{
 	  if(commands[i].f!=0)
 		feedrate = commands[i].f;
-	  distance = (commands[i].where - where).length();
-	  time += distance/feedrate*60.;
+	  if (feedrate!=0) {
+	    distance = (commands[i].where - where).length();
+	    time += distance/feedrate*60.;
+	  }
 	  where = commands[i].where ;
 	}
   return time;

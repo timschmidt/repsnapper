@@ -656,34 +656,25 @@ vector<Vector3d> Shape::getMostUsedNormals() const
 void Shape::OptimizeRotation()
 {
   CenterAroundXY();
-  Vector3d N,N0;
-  double lN0=0;
   vector<Vector3d> normals = getMostUsedNormals();
+  // cycle through most-used normals?
 
-  // FIXME how to rotate z-axis to a normal?
-  // and cycle through most-used normals?
-
+  Vector3d N;
+  Vector3d Z(0,0,-1);
+  double angle=0;
   for (uint n=0; n < normals.size(); n++) { 
     //cerr << n << normals[n] << endl;
     N = normals[n];
-    N0 = Vector3d(N.x, N.y, 0); // projection on XY
-    lN0 = N0.length();
-    if (lN0>0) break;
+    angle = acos(N.dot(Z));
+    if (angle>0) break;
   }
-
-  if (lN0 < 0.01 || lN0 > 10000) return;
-  //cerr << N0<<lN0<< endl;
-  Vector3d Y(0,1,0);
-  double alpha = acos(N0.dot(Y)/lN0);
-  if (N.x < 0) alpha = -alpha;
-  //cerr << alpha<< endl;
-  Vector3d N0p(N0.y,-N0.x,0); // perpendicular to N0
-  double lN0p = N0p.length();
-  if (lN0p < 0.01 || lN0p > 10000) return;  
-  double beta  = acos(N0.dot(N)/lN0p);
-  //cerr << beta<< endl;
-  Rotate(Vector3d(0,0,1),-alpha+M_PI/2); // around Z axis
-  Rotate(N0p,beta+M_PI/2);
+  
+  if (angle > 0) {
+    Vector3d axis = N.cross(Z);
+    axis.normalize(); //??
+    //cerr << angle << " - " << axis << endl;
+    Rotate(axis,angle);
+  }
 
 
 
