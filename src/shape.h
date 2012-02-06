@@ -126,6 +126,8 @@ public:
 				    vector<Vector2d> &vertices, double &max_grad) const;
 	// Extract a 2D polygonset from a 3D model:
 	// void CalcLayer(const Matrix4d &T, CuttingPlane *plane) const;
+
+    vector<Vector3d> getMostUsedNormals() const;
 	// Auto-Rotate object to have the largest area surface down for printing:
 	void OptimizeRotation(); 
 	void CalcBBox();
@@ -155,7 +157,7 @@ public:
     int loadBinarySTL(std::string filename);
     static filetype_t getFileType(std::string filename);
 
-    bool hasAdjacentTriangleTo(Triangle triangle) const;
+    bool hasAdjacentTriangleTo(Triangle triangle, double sqdistance = 0.05) const;
     void splitshapes(vector<Shape> &shapes, ViewProgress *progress=NULL);
 
     int loadASCIIVRML(std::string filename);

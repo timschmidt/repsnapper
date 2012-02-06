@@ -178,7 +178,6 @@ int Shape::loadBinarySTL(string filename) {
         triangles.push_back(T);
     }
     file.close();
-    CalcBBox();
     CenterAroundXY();
     scale_factor = 1.0;
     scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
@@ -472,10 +471,10 @@ int Shape::load(string filename)
 }
 
 
-bool Shape::hasAdjacentTriangleTo(Triangle triangle) const
+bool Shape::hasAdjacentTriangleTo(Triangle triangle, double sqdistance) const
 {
   for (uint i = 0; i < triangles.size(); i++)
-    if (triangle.isConnectedTo(triangles[i],0.1)) return true;
+    if (triangle.isConnectedTo(triangles[i],sqdistance)) return true;
   return false;
 }
 void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress) 
@@ -616,8 +615,80 @@ void Shape::CalcBBox()
   Center = (Max + Min )/2;
 }
 
+ struct SNorm {
+   Vector3d normal;
+   double area;
+   bool operator<(const SNorm &other) const {return (area<other.area);};
+ } ;
+ 
+vector<Vector3d> Shape::getMostUsedNormals() const
+{
+  vector<struct SNorm> normals; 
+  // vector<Vector3d> normals;
+  // vector<double> area;
+  uint ntr = triangles.size();
+  vector<bool> done(ntr);
+  for(size_t i=0;i<ntr;i++) done[ntr] = false;
+  for(size_t i=0;i<ntr;i++)
+    {
+      bool havenormal = false;
+      for (uint n=0; n < normals.size(); n++) {
+	if ((normals[n].normal - triangles[i].Normal).lengthSquared() < 0.01) {
+	  havenormal = true;
+	  normals[n].area += triangles[i].area();
+	  done[i] = true;
+	}
+      }
+      if (!havenormal){
+	SNorm n; n.normal = triangles[i].Normal; n.area = triangles[i].area();
+	normals.push_back(n);
+	done[i] = true;
+      }
+    }
+  std::sort(normals.rbegin(),normals.rend());
+  //cerr << normals.size() << endl;
+  vector<Vector3d> nv(normals.size());
+  for (uint n=0; n < normals.size(); n++) nv[n] = normals[n].normal;
+  return nv;
+}
+
+
 void Shape::OptimizeRotation()
 {
+  CenterAroundXY();
+  Vector3d N,N0;
+  double lN0=0;
+  vector<Vector3d> normals = getMostUsedNormals();
+
+  // FIXME how to rotate z-axis to a normal?
+  // and cycle through most-used normals?
+
+  for (uint n=0; n < normals.size(); n++) { 
+    //cerr << n << normals[n] << endl;
+    N = normals[n];
+    N0 = Vector3d(N.x, N.y, 0); // projection on XY
+    lN0 = N0.length();
+    if (lN0>0) break;
+  }
+
+  if (lN0 < 0.01 || lN0 > 10000) return;
+  //cerr << N0<<lN0<< endl;
+  Vector3d Y(0,1,0);
+  double alpha = acos(N0.dot(Y)/lN0);
+  if (N.x < 0) alpha = -alpha;
+  //cerr << alpha<< endl;
+  Vector3d N0p(N0.y,-N0.x,0); // perpendicular to N0
+  double lN0p = N0p.length();
+  if (lN0p < 0.01 || lN0p > 10000) return;  
+  double beta  = acos(N0.dot(N)/lN0p);
+  //cerr << beta<< endl;
+  Rotate(Vector3d(0,0,1),-alpha+M_PI/2); // around Z axis
+  Rotate(N0p,beta+M_PI/2);
+
+
+
+#if 0  // this only does 90° rotations 
+
 	// Find the axis that has the largest surface
 	// Rotate to point this face towards -Z
 
@@ -678,6 +749,7 @@ void Shape::OptimizeRotation()
 	default: // unhandled
 	  break;
 	}
+#endif
 	CenterAroundXY();
 	PlaceOnPlatform();
 }
