@@ -224,7 +224,6 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
   bridgeInfill->setName("bridge");
   //cout << "new " ;fullInfill->printinfo();
   skinFullInfills.clear();
-  //skinFullInfills.resize(skins);
   supportInfill = new Infill(this,0.5); // thinner walls for support
   supportInfill->setName("support");
   decorInfill = new Infill(this,1.);
@@ -233,9 +232,8 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
   //cerr << fillPolygons.size();
   if (!ShellOnly)
-    normalInfill->addInfill(Z, fillPolygons, (InfillType)normalfilltype, //ParallelInfill,
+    normalInfill->addInfill(Z, fillPolygons, (InfillType)normalfilltype, 
 			    InfillDistance, FullInfillDistance, rot);
-  //normalInfill->printinfo();
   
   fullInfill->addInfill(Z, fullFillPolygons, (InfillType)fullfilltype,
 			FullInfillDistance, FullInfillDistance, rot);

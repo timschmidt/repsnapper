@@ -633,7 +633,7 @@ vector<Vector3d> Shape::getMostUsedNormals() const
     {
       bool havenormal = false;
       for (uint n=0; n < normals.size(); n++) {
-	if ((normals[n].normal - triangles[i].Normal).lengthSquared() < 0.01) {
+	if ((normals[n].normal - triangles[i].Normal).lengthSquared() < 0.000001) {
 	  havenormal = true;
 	  normals[n].area += triangles[i].area();
 	  done[i] = true;
@@ -666,16 +666,14 @@ void Shape::OptimizeRotation()
     //cerr << n << normals[n] << endl;
     N = normals[n];
     angle = acos(N.dot(Z));
-    if (angle>0) break;
+    if (angle>0) {
+      Vector3d axis = N.cross(Z);
+      if (axis.lengthSquared()>0.1) {
+	Rotate(axis,angle);
+	break;
+      }
+    }
   }
-  
-  if (angle > 0) {
-    Vector3d axis = N.cross(Z);
-    axis.normalize(); //??
-    //cerr << angle << " - " << axis << endl;
-    Rotate(axis,angle);
-  }
-
 
 
 #if 0  // this only does 90° rotations 

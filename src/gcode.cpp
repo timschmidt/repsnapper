@@ -505,6 +505,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 				if(settings.Display.LuminanceShowsSpeed == false)
 					luma = 1.0;
 				Color = settings.Display.GCodeMoveRGBA;
+				Color *= luma;
 				}
 			else
 				{

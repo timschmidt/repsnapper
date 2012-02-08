@@ -733,7 +733,7 @@ void Model::drawLayers(Vector3d offset) const
 	      double fullInfillDistance = matwidth;
 	      double infillDistance = fullInfillDistance * (1+settings.Slicing.InfillDistance);
 	      double altInfillDistance = fullInfillDistance *(1+settings.Slicing.AltInfillDistance);
-	      double infilldist;
+	      double infilldist=0;
 	      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) 
 		  != altInfillLayers.end())
 		infilldist = altInfillDistance;
@@ -743,7 +743,7 @@ void Model::drawLayers(Vector3d offset) const
 				settings.Slicing.FullFilltype,
 				settings.Slicing.SupportFilltype,
 				settings.Slicing.DecorFilltype,
-				infillDistance, fullInfillDistance,
+				infilldist, fullInfillDistance,
 				settings.Slicing.InfillRotation,
 				settings.Slicing.InfillRotationPrLayer, 
 				settings.Slicing.DecorInfillDistance,

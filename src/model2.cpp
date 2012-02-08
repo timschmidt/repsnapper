@@ -320,14 +320,10 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
       vector<Poly> bridges = GetUncoveredPolygons(layers[i],layers[i-1]);
       //make_bridges = false;
       // no bridge on marked layers (serial build)
-      bool mbridge = make_bridges && layers[i]->LayerNo != 0; 
+      bool mbridge = make_bridges && (layers[i]->LayerNo != 0); 
       if (mbridge) {
 	layers[i]->addBridgePolygons(bridges);
 	layers[i]->calcBridgeAngles(layers[i-1]);
-	// vector<Poly> bridges_result = layers[i]->GetBridgePolygons();
-	// vector<double> angles = layers[i-1]->getBridgeRotations(bridges_result);
-	// layers[i]->setBridgeAngles(angles);
-	//cerr << bridges_result.size() << " - " << angles.size() << endl;
       }
       else layers[i]->addFullPolygons(bridges,make_decor);
     }
@@ -348,7 +344,8 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
   clipp.addPolys(subjlayer->GetFullFillPolygons(),subject); 
   clipp.addPolys(subjlayer->GetBridgePolygons(),subject); 
   //clipp.addPolys(cliplayer->GetOuterShell(),clip); // have some overlap
-  clipp.addPolys(cliplayer->GetPolygons(),clip);
+  clipp.addPolys(cliplayer->GetInnerShell(),clip); // have some more overlap
+  //clipp.addPolys(cliplayer->GetPolygons(),clip);
   //clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
   vector<Poly> uncovered = clipp.substract();
   return uncovered;
@@ -381,9 +378,9 @@ void Model::MultiplyUncoveredPolygons()
     {
       if (i%10==0) m_progress->update(count + count -i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
-      vector<Poly> decorpolys = layers[i]->GetDecorPolygons();
       vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
+      vector<Poly> decorpolys = layers[i]->GetDecorPolygons();
       for (int s=1; s < shells; s++) 
 	if (i+s < count){
 	  layers[i+s]->addFullPolygons(fullpolys);

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-02-06 12:20+0100\n"
-"PO-Revision-Date: 2012-02-06 12:40+0100\n"
+"PO-Revision-Date: 2012-02-08 00:21+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -160,7 +160,7 @@ msgstr " -- Geschätzte Dauer: "
 
 #: ../src/model2.cpp:672
 msgid " - total extruded: "
-msgstr "Gesamtfilament"
+msgstr " - Gesamtfilament: "
 
 #: ../src/objtree.h:41
 msgid "Unnamed object"
