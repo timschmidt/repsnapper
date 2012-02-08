@@ -25,6 +25,7 @@
 #include "printlines.h"
 #include "clipping.h"
 
+#include <poly2tri/poly2tri/poly2tri/poly2tri.h>
 
 long double angleBetween(Vector2d V1, Vector2d V2)
 {
@@ -460,6 +461,27 @@ vector<Vector2d> Poly::getMinMax() const{
   range[1] = Vector2d(maxx,maxy);
   return range;
 }
+
+
+vector<Triangle> Poly::getTriangulation()  const 
+{
+  vector<p2t::Point*> points(vertices.size());
+  for (guint i=0; i<vertices.size(); i++)  
+    points[i] = new p2t::Point(vertices[i].x,vertices[i].y);
+  p2t::CDT cdt(points);
+  cdt.Triangulate();
+  vector<p2t::Triangle*> ptriangles = cdt.GetTriangles();
+  vector<Triangle> triangles(ptriangles.size());
+  for (guint i=0; i<ptriangles.size(); i++) {
+    Vector3d A(ptriangles[i]->GetPoint(0)->x, ptriangles[i]->GetPoint(0)->y, z);
+    Vector3d B(ptriangles[i]->GetPoint(1)->x, ptriangles[i]->GetPoint(1)->y, z);
+    Vector3d C(ptriangles[i]->GetPoint(2)->x, ptriangles[i]->GetPoint(2)->y, z);
+    triangles[i] = Triangle(A, B, C);
+  }
+  return triangles;
+}
+
+
 
 Vector3d rotatedZ(Vector3d v, double angle) 
 {

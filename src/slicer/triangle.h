@@ -59,6 +59,7 @@ public:
 	int CutWithPlane(double z, const Matrix4d &T, 
 			 Vector2d &lineStart, Vector2d &lineEnd) const;
 	string getSTLfacet(Matrix4d = Matrix4d::IDENTITY) const;
+	void draw(int gl_type) const;
 
 	double projectedvolume(const Matrix4d T=Matrix4d::IDENTITY) const;
 

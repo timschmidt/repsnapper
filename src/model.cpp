@@ -722,6 +722,14 @@ void Model::drawLayers(Vector3d offset) const
 	      }
 	  }
 	  
+	  vector<Poly> polys = layer->GetPolygons();
+	  for (guint i=0; i<polys.size();i++){
+	    vector<Triangle> tri = polys[i].getTriangulation();
+	    for (guint j=0; j<tri.size();j++){
+	      tri[j].draw(GL_LINE_LOOP);
+	    }
+	  }
+	  
 	  bool makeskirt = (layer->getZ() <= settings.Slicing.SkirtHeight);
 
 	  layer->MakeShells(settings.Slicing.ShellCount,
