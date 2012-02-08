@@ -3,8 +3,8 @@ unit clipper;
 (*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6.5                                                           *
-* Date      :  17 January 2011                                                 *
+* Version   :  4.6.6                                                           *
+* Date      :  3 February 2011                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -1448,7 +1448,8 @@ begin
       if not assigned(outRec.pts) then continue;
       FixupOutPolygon(outRec);
       if not assigned(outRec.pts) then continue;
-      if outRec.isHole and fixHoleLinkages then FixHoleLinkage(outRec);
+      if outRec.isHole and fixHoleLinkages then
+        FixHoleLinkage(outRec);
       if (outRec.isHole = fReverseOutput) xor Orientation(outRec, fUse64BitRange) then
         ReversePolyPtLinks(outRec.pts);
     end;
@@ -3424,14 +3425,21 @@ begin
       //make sure any holes contained by outRec2 now link to outRec1 ...
       if fixHoleLinkages then CheckHoleLinkages2(outRec1, outRec2);
 
+      //sort out hole vs outer and then recheck orientation ...
+      if (outRec1.isHole <> outRec2.isHole) and
+        ((outRec2.bottomPt.pt.Y > outRec1.bottomPt.pt.Y) or
+          (outRec2.bottomPt.pt.Y = outRec1.bottomPt.pt.Y) and
+          (outRec2.bottomPt.pt.X < outRec1.bottomPt.pt.X)) then
+          outRec1.isHole := outRec2.isHole;
+      if outRec1.isHole = Orientation(outRec1, fUse64BitRange) then
+        ReversePolyPtLinks(outRec1.pts);
+
       //delete the obsolete pointer ...
       OKIdx := outRec1.idx;
       ObsoleteIdx := outRec2.idx;
       outRec2.pts := nil;
       outRec2.bottomPt := nil;
       outRec2.AppendLink := outRec1;
-      //holes are practically always joined to outers, not vice versa ...
-      if outRec1.isHole and not outRec2.isHole then outRec1.isHole := false;
 
       //now fixup any subsequent joins ...
       for j := i+1 to fJoinList.count -1 do

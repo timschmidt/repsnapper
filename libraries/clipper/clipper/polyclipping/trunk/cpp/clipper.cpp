@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6.5                                                           *
-* Date      :  17 January 2011                                                 *
+* Version   :  4.6.6                                                           *
+* Date      :  3 February 2011                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -365,21 +365,16 @@ bool Orientation(OutRec *outRec, bool UseFullInt64Range)
     op = op->next;
   }
 
-  IntPoint vec1, vec2;
-  vec1.X = op->pt.X - op->prev->pt.X;
-  vec1.Y = op->pt.Y - op->prev->pt.Y;
-  vec2.X = op->next->pt.X - op->pt.X;
-  vec2.Y = op->next->pt.Y - op->pt.Y;
+  IntPoint ip1, ip2;
+  ip1.X = op->pt.X - op->prev->pt.X;
+  ip1.Y = op->pt.Y - op->prev->pt.Y;
+  ip2.X = op->next->pt.X - op->pt.X;
+  ip2.Y = op->next->pt.Y - op->pt.Y;
 
   if (UseFullInt64Range)
-  {
-    Int128 cross = Int128(vec1.X) * Int128(vec2.Y) - Int128(vec2.X) * Int128(vec1.Y);
-    return cross > 0;
-  }
+    return Int128(ip1.X) * Int128(ip2.Y) - Int128(ip2.X) * Int128(ip1.Y) > 0;
   else
-  {
-    return (vec1.X * vec2.Y - vec2.X * vec1.Y) > 0;
-  }
+    return (ip1.X * ip2.Y - ip2.X * ip1.Y) > 0;
 }
 //------------------------------------------------------------------------------
 
@@ -1255,7 +1250,6 @@ bool Clipper::ExecuteInternal(bool fixHoleLinkages)
         (m_ReverseOutput ^ Orientation(outRec, m_UseFullRange)))
           ReversePolyPtLinks(*outRec->pts);
     }
-
     JoinCommonEdges(fixHoleLinkages);
     if (fixHoleLinkages)
       std::sort(m_PolyOuts.begin(), m_PolyOuts.end(), PolySort);
@@ -2976,14 +2970,21 @@ void Clipper::JoinCommonEdges(bool fixHoleLinkages)
       //make sure any holes contained by outRec2 now link to outRec1 ...
       if (fixHoleLinkages) CheckHoleLinkages2(outRec1, outRec2);
 
+      //sort out hole vs outer and then recheck orientation ...
+      if (outRec1->isHole != outRec2->isHole &&
+        (outRec2->bottomPt->pt.Y > outRec1->bottomPt->pt.Y ||
+        (outRec2->bottomPt->pt.Y == outRec1->bottomPt->pt.Y &&
+        outRec2->bottomPt->pt.X < outRec1->bottomPt->pt.X)))
+          outRec1->isHole = outRec2->isHole;
+      if (outRec1->isHole == Orientation(outRec1, m_UseFullRange))
+        ReversePolyPtLinks(*outRec1->pts);
+
       //delete the obsolete pointer ...
       int OKIdx = outRec1->idx;
       int ObsoleteIdx = outRec2->idx;
       outRec2->pts = 0;
       outRec2->bottomPt = 0;
       outRec2->AppendLink = outRec1;
-      //holes are practically always joined to outers, not vice versa ...
-      if (outRec1->isHole && !outRec2->isHole) outRec1->isHole = false;
 
       //now fixup any subsequent Joins that match this polygon
       for (JoinList::size_type k = i+1; k < m_Joins.size(); k++)

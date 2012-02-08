@@ -1,8 +1,8 @@
 ﻿/*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6.5                                                           *
-* Date      :  17 January 2011                                                 *
+* Version   :  4.6.6                                                           *
+* Date      :  3 February 2011                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -356,7 +356,7 @@ namespace ClipperLib
     //Others rules include Positive, Negative and ABS_GTR_EQ_TWO (only in OpenGL)
     //see http://glprogramming.com/red/chapter11.html
     public enum PolyFillType { pftEvenOdd, pftNonZero, pftPositive, pftNegative };
-    public enum JoinType { jtSquare, jtMiter, jtRound };
+    public enum JoinType { jtSquare, jtRound, jtMiter };
 
 
     internal enum EdgeSide { esLeft, esRight };
@@ -3185,14 +3185,21 @@ namespace ClipperLib
                 //make sure any holes contained by outRec2 now link to outRec1 ...
                 if (fixHoleLinkages) CheckHoleLinkages2(outRec1, outRec2);
 
+                //sort out hole vs outer and then recheck orientation ...
+                if (outRec1.isHole != outRec2.isHole &&
+                  (outRec2.bottomPt.pt.Y > outRec1.bottomPt.pt.Y ||
+                  (outRec2.bottomPt.pt.Y == outRec1.bottomPt.pt.Y &&
+                  outRec2.bottomPt.pt.X < outRec1.bottomPt.pt.X)))
+                    outRec1.isHole = outRec2.isHole;
+                if (outRec1.isHole == Orientation(outRec1, m_UseFullRange))
+                    ReversePolyPtLinks(outRec1.pts);
+                
                 //delete the obsolete pointer ...
                 int OKIdx = outRec1.idx;
                 int ObsoleteIdx = outRec2.idx;
                 outRec2.pts = null;
                 outRec2.bottomPt = null;
                 outRec2.AppendLink = outRec1;
-                //holes are practically always joined to outers, not vice versa ...
-                if (outRec1.isHole && !outRec2.isHole) outRec1.isHole = false;
 
                 //now fixup any subsequent joins that match this polygon
                 for (int k = i + 1; k < m_Joins.Count; k++)

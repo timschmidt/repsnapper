@@ -295,7 +295,7 @@ void SaveToFile(char *filename, Polygons &pp, double scale = 1)
     else
     {
       for (unsigned j = 0; j < pp[i].size(); ++j)
-        fprintf(f, "%Ld, %Ld,\n", pp[i][j].X, pp[i][j].Y );
+        fprintf(f, "%lld, %lld,\n", pp[i][j].X, pp[i][j].Y );
     }
   }
   fclose(f);
@@ -339,7 +339,7 @@ void SaveToFile(char *filename, ExPolygons &pp, double scale = 1)
       for (Polygon::size_type j = 0; j < pp[i].outer.size(); ++j)
       {
         IntPoint *p = &pp[i].outer[j];
-        fprintf(f, "%Ld, %Ld,\n", p->X, p->Y );
+        fprintf(f, "%lld, %lld,\n", p->X, p->Y );
       }
       //do hole polygons ...
       for (Polygon::size_type j = 0; j < pp[i].holes.size(); ++j)
@@ -348,7 +348,7 @@ void SaveToFile(char *filename, ExPolygons &pp, double scale = 1)
         fprintf(f, "%d\n", h->size());
         for (Polygon::iterator it = h->begin(); it != h->end(); it++)
         {
-          fprintf(f, "%Ld, %Ld,\n", it->X, it->Y );
+          fprintf(f, "%lld, %lld,\n", it->X, it->Y );
         }
       }
     }

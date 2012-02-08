@@ -2,6 +2,10 @@
 Clipper Change Log
 ============================================================
 
+v4.6.6 - 3 February 2012
+* Bugfix: Another obscure bug occasionally causing incorrect 
+  polygon orientation. 
+
 v4.6.5 - 17 January 2012
 * Bugfix: Obscure bug occasionally causing incorrect hole 
   assignment in ExPolygon structure. 
