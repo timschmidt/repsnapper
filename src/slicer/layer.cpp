@@ -415,12 +415,12 @@ void Layer::setSkirtPolygon(const Poly poly)
 }
 
 
-void Layer::MakeShells(uint shellcount, double extrudedWidth, 
+void Layer::MakeShells(uint shellcount, double extrudedWidth, double shelloffset,
 		       bool makeskirt, double infilloverlap)
 {
   double distance = 0.5 * extrudedWidth;
   double cleandist = min(extrudedWidth/4., thickness/3.);
-  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance);
+  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance-shelloffset);
   for (uint i = 0; i<shrinked.size(); i++)  
     shrinked[i].cleanup(cleandist);
   //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);

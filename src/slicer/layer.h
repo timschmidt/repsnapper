@@ -80,7 +80,7 @@ public:
   vector<double> getBridgeRotations(const vector<Poly> poly) const;
   void calcBridgeAngles(const Layer *layerbelow);
   
-  void MakeShells(uint shellcount, double extrudedWidth, 
+  void MakeShells(uint shellcount, double extrudedWidth, double shelloffset,
   		  bool makeskirt, double infilloverlap);
   /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */
   /* 			     double distance,  */

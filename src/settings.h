@@ -131,6 +131,7 @@ class Settings {
     bool BuildSerial;
     //float SerialBuildHeight;
 
+    float ShellOffset;
     //float Optimization;
 
     void GetAltInfillLayers(std::vector<int>& layers, guint layerCount) const;

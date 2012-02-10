@@ -484,6 +484,7 @@ void Model::MakeShells()
       makeskirt = (layers[i]->getZ() <= skirtheight);
       layers[i]->MakeShells(settings.Slicing.ShellCount,
 			    matwidth, 
+			    settings.Slicing.ShellOffset,
 			    makeskirt, 
 			    settings.Slicing.InfillOverlap); 
     }
