@@ -343,8 +343,8 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
   clipp.addPolys(subjlayer->GetFillPolygons(),subject); 
   clipp.addPolys(subjlayer->GetFullFillPolygons(),subject); 
   clipp.addPolys(subjlayer->GetBridgePolygons(),subject); 
-  //clipp.addPolys(cliplayer->GetOuterShell(),clip); // have some overlap
-  clipp.addPolys(cliplayer->GetInnerShell(),clip); // have some more overlap
+  clipp.addPolys(cliplayer->GetOuterShell(),clip); // have some overlap
+  //clipp.addPolys(cliplayer->GetInnerShell(),clip); // have some more overlap
   //clipp.addPolys(cliplayer->GetPolygons(),clip);
   //clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
   vector<Poly> uncovered = clipp.substract();
@@ -421,7 +421,7 @@ void Model::MakeSupportPolygons()
     {
       //cerr << "support layer "<< i << endl;
       if (i%10==0) m_progress->update(count-i);
-      if (layers[i]->LayerNo == 0) continue;
+      //if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i]);
     }
   // shrink a bit
@@ -509,7 +509,6 @@ void Model::CalcInfill()
   double altInfillDistance;
   double infilldist;
 
-  Infill::clearPatterns();
   m_progress->start (_("Infill"), layers.size());
 
   //cerr << "make infill"<< endl;
@@ -556,6 +555,7 @@ void Model::CalcInfill()
 
 void Model::ConvertToGCode()
 {
+  is_calculating=true;
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();
   string GcodeLayer = settings.GCode.getLayerText();
@@ -565,11 +565,11 @@ void Model::ConvertToGCode()
   GCodeState state(gcode);
 
   gcode.clear();
+  Infill::clearPatterns();
 
   Vector3d printOffset = settings.Hardware.PrintMargin;
   double printOffsetZ = settings.Hardware.PrintMargin.z;
 
-  is_calculating=true;
 
   //m_progress->start (_("Converting"), 9.);
   // m_progress->update(0.);

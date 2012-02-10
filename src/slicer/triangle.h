@@ -38,6 +38,8 @@ public:
 		 const Vector3d &Point2, const Vector3d &Point3);
 	Triangle() {};
 
+	Triangle transformed(const Matrix4d T) const;
+
 	/* Represent the triangle as an array of length 3 {A, B, C} */
 	Vector3d &operator[](const int index);
 
@@ -58,6 +60,10 @@ public:
 	void Translate(const Vector3d &vector);
 	int CutWithPlane(double z, const Matrix4d &T, 
 			 Vector2d &lineStart, Vector2d &lineEnd) const;
+	int SplitAtPlane(double z, 
+			 vector<Triangle> &uppertriangles,
+			 vector<Triangle> &lowertriangles,
+			 const Matrix4d T=Matrix4d::IDENTITY) const;
 	string getSTLfacet(Matrix4d = Matrix4d::IDENTITY) const;
 	void draw(int gl_type) const;
 

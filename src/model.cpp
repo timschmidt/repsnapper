@@ -41,12 +41,12 @@ Model::Model() :
   settings(),
   Min(), Max(),
   errlog (Gtk::TextBuffer::create()),
-  echolog (Gtk::TextBuffer::create())
+  echolog (Gtk::TextBuffer::create()),
+  is_calculating(false)
 {
   // Variable defaults
   Center.x = Center.y = 100.0;
   Center.z = 0.0;
-  is_calculating= false;
 }
 
 Model::~Model()
@@ -375,6 +375,19 @@ int Model::SplitShape(TreeObject *parent, Shape shape, string filename)
   return splitshapes.size();
 }
 
+int Model::DivideShape(TreeObject *parent, Shape shape, string filename)
+{
+  Shape upper,lower;
+  Matrix4d T = Matrix4d::IDENTITY;;//FIXME! objtree.GetSTLTransformationMatrix(parent);
+  int num = shape.divideAtZ(0, upper, lower, T);
+  if (num<2) return num;
+  else if (num==2) {
+    AddShape(parent, upper, filename+_("_upper") ,false);
+    AddShape(parent, lower, filename+_("_lower") ,false);
+  }
+  return num;
+}
+
 void Model::newObject()
 {
   objtree.newObject();
@@ -457,7 +470,7 @@ void Model::InvertNormals(Shape *shape, TreeObject *object)
     shape->invertNormals();
   else // if (object) object->invertNormals();
     return; 
-  CalcBoundingBoxAndCenter();
+  //CalcBoundingBoxAndCenter();
 }
 void Model::Mirror(Shape *shape, TreeObject *object)
 {
@@ -465,7 +478,7 @@ void Model::Mirror(Shape *shape, TreeObject *object)
     shape->mirror();
   else // if (object) object->mirror();
     return; 
-  CalcBoundingBoxAndCenter();
+  //CalcBoundingBoxAndCenter();
 }
 
 void Model::DeleteObjTree(Gtk::TreeModel::iterator &iter)
@@ -655,6 +668,8 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
 
 void Model::drawLayers(Vector3d offset) const
 {
+
+  if (is_calculating) return; // infill calculation (saved patterns) would be disturbed
   int LayerNr;
 
   bool have_layers = layers.size() > 0; // have sliced already
@@ -710,8 +725,8 @@ void Model::drawLayers(Vector3d offset) const
 	    Matrix4d T = objtree.GetSTLTransformationMatrix(o);
 	    for(size_t f=0;f<objtree.Objects[o].shapes.size();f++)
 	      {
-		Vector3d t = T.getTranslation();
-		T.setTranslation(t);
+		// Vector3d t = T.getTranslation();
+		// T.setTranslation(t);
 		vector<Poly> polys;
 		double max_grad;
 		bool polys_ok=
@@ -724,7 +739,8 @@ void Model::drawLayers(Vector3d offset) const
 	  
 	  vector<Poly> polys = layer->GetPolygons();
 	  for (guint i=0; i<polys.size();i++){
-	    vector<Triangle> tri = polys[i].getTriangulation();
+	    vector<Triangle> tri;
+	    polys[i].getTriangulation(tri);
 	    for (guint j=0; j<tri.size();j++){
 	      tri[j].draw(GL_LINE_LOOP);
 	    }

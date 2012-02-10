@@ -35,6 +35,12 @@ void Triangle::calcNormal()
 }
 
 
+
+Triangle Triangle::transformed(const Matrix4d T) const
+{
+  return Triangle(T*A,T*B,T*C);
+}
+
 void Triangle::invertNormal()
 {
   Vector3d swap = A;
@@ -139,6 +145,57 @@ void Triangle::rotate(const Vector3d axis, double angle)
   B = B.rotate(angle, axis.x, axis.y, axis.z);
   C = C.rotate(angle, axis.x, axis.y, axis.z);
   calcNormal();
+}
+
+int Triangle::SplitAtPlane(double z, 
+			   vector<Triangle> &uppertriangles,
+			   vector<Triangle> &lowertriangles,
+			   const Matrix4d T) const
+{
+  vector<Vector3d> upper, lower;
+  if  ((T*A).z>z) upper.push_back(T*A); else lower.push_back(T*A);
+  if  ((T*B).z>z) upper.push_back(T*B); else lower.push_back(T*B);
+  if  ((T*C).z>z) upper.push_back(T*C); else lower.push_back(T*C);
+  Vector2d lstart,lend;
+  int cut = CutWithPlane(z,T,lstart,lend);
+  if (cut==0) return 0;
+  else if (cut==1) { // cut at a triangle point 
+    if (upper.size()>lower.size())
+      upper.push_back(Vector3d(lstart.x,lstart.y,z));
+    else
+      lower.push_back(Vector3d(lstart.x,lstart.y,z));
+  }
+  else if (cut==2) {
+    upper.push_back(Vector3d(lstart.x,lstart.y,z));
+    upper.push_back(Vector3d(lend.x,lend.y,z));
+    lower.push_back(Vector3d(lstart.x,lstart.y,z));
+    lower.push_back(Vector3d(lend.x,lend.y,z));
+  }
+  if (upper.size()==3) { // half of triangle with 1 triangle point
+    uppertriangles.push_back(Triangle(upper[0],upper[1],upper[2]));
+  }
+  else if (upper.size()==4) { // 0 and 1 are triangle points, 2 and 3 are cutline
+    if ((upper[0]-upper[2]).lengthSquared()<(upper[1]-upper[2]).lengthSquared()){
+      uppertriangles.push_back(Triangle(upper[2],upper[3],upper[0]));
+      uppertriangles.push_back(Triangle(upper[0],upper[3],upper[1]));
+    } else {
+      uppertriangles.push_back(Triangle(upper[3],upper[2],upper[1]));
+      uppertriangles.push_back(Triangle(upper[0],upper[3],upper[1]));
+    }
+  }
+  else cerr << "upper size " << upper.size() << endl;
+  if (lower.size()==3) {
+    lowertriangles.push_back(Triangle(lower[0],lower[1],lower[2]));
+  }
+  else if (lower.size()==4) {
+  }
+  else cerr << "lower size " << lower.size() << endl;
+  Vector3d TN = T*Normal; TN.normalize();
+  for (guint i=0; i<uppertriangles.size();i++) 
+    if ((uppertriangles[i].Normal + TN).length()<1) uppertriangles[i].invertNormal();
+  for (guint i=0; i<lowertriangles.size();i++) 
+    if ((lowertriangles[i].Normal + TN).length()<1) lowertriangles[i].invertNormal();
+  return cut;
 }
 
 int Triangle::CutWithPlane(double z, const Matrix4d &T, 

@@ -463,7 +463,7 @@ vector<Vector2d> Poly::getMinMax() const{
 }
 
 
-vector<Triangle> Poly::getTriangulation()  const 
+int Poly::getTriangulation(vector<Triangle> &triangles)  const 
 {
   vector<p2t::Point*> points(vertices.size());
   for (guint i=0; i<vertices.size(); i++)  
@@ -471,14 +471,14 @@ vector<Triangle> Poly::getTriangulation()  const
   p2t::CDT cdt(points);
   cdt.Triangulate();
   vector<p2t::Triangle*> ptriangles = cdt.GetTriangles();
-  vector<Triangle> triangles(ptriangles.size());
+  //vector<Triangle> triangles(ptriangles.size());
   for (guint i=0; i<ptriangles.size(); i++) {
     Vector3d A(ptriangles[i]->GetPoint(0)->x, ptriangles[i]->GetPoint(0)->y, z);
     Vector3d B(ptriangles[i]->GetPoint(1)->x, ptriangles[i]->GetPoint(1)->y, z);
     Vector3d C(ptriangles[i]->GetPoint(2)->x, ptriangles[i]->GetPoint(2)->y, z);
-    triangles[i] = Triangle(A, B, C);
+    triangles.push_back(Triangle(A, B, C));
   }
-  return triangles;
+  return triangles.size();
 }
 
 
@@ -491,12 +491,12 @@ Vector3d rotatedZ(Vector3d v, double angle)
 		  v.y*cosa+v.x*sina, v.z);
 }
 
-Vector3d random3d(Vector3d v, double delta=0.3)
+Vector3d random3d(Vector3d v, double delta=0.1)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
   return Vector3d(v.x+randdelta, v.y+randdelta, v.z+randdelta);
 }
-Vector2d random2d(Vector2d v, double delta=0.3)
+Vector2d random2d(Vector2d v, double delta=0.1)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
   return Vector2d(v.x+randdelta, v.y+randdelta);
@@ -509,7 +509,7 @@ void Poly::draw(int gl_type, double z) const
   glBegin(gl_type);	  
   for (uint i=0;i < count;i++){
     v = getVertexCircular(i);
-    //v = random2d(v);
+    v = random2d(v);
     glVertex3f(v.x,v.y,z);
   }
   glEnd();
@@ -528,7 +528,7 @@ void Poly::draw(int gl_type, bool reverse) const
       v = getVertexCircular3(i);
       // vn = getVertexCircular3(i+1);
     }
-    //v = random3d(v);
+    v = random3d(v);
     glVertex3f(v.x,v.y,v.z);
     // if (gl_type==GL_LINE_LOOP){
     //   m = (v+vn)/2;

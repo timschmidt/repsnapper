@@ -743,6 +743,42 @@ void Shape::OptimizeRotation()
 	PlaceOnPlatform();
 }
 
+int Shape::divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) const
+{
+  vector<Poly> polys;
+  double max_grad;
+  bool ok = getPolygonsAtZ(T, z, polys, max_grad);
+  if (!ok) return 0;
+  vector<Triangle> surf;
+  for (guint i=0; i< polys.size(); i++) {
+    polys[i].getTriangulation(surf);
+  }
+  lower.triangles.insert(lower.triangles.end(),surf.begin(),surf.end());
+  for (guint i=0; i<surf.size(); i++) surf[i].invertNormal();
+  upper.triangles.insert(upper.triangles.end(),surf.begin(),surf.end());
+  vector<Triangle> toboth;
+  for (guint i=0; i< triangles.size(); i++) {
+    Triangle tt = triangles[i].transformed(T*transform3D.transform);
+    if (tt.A.z < z && tt.B.z < z && tt.C.z < z )
+      lower.triangles.push_back(tt);
+    else if (tt.A.z > z && tt.B.z > z && tt.C.z > z )
+      upper.triangles.push_back(tt);
+    else
+      toboth.push_back(tt);
+  }
+  vector<Triangle> uppersplit,lowersplit;
+  for (guint i=0; i< toboth.size(); i++) {
+    toboth[i].SplitAtPlane(z, uppersplit,lowersplit);
+  }
+  upper.triangles.insert(upper.triangles.end(),
+			 uppersplit.begin(),uppersplit.end());
+  lower.triangles.insert(lower.triangles.end(),
+			 lowersplit.begin(),lowersplit.end());
+  return 2;
+}
+
+
+
 void Shape::PlaceOnPlatform()
 {
   CalcBBox();

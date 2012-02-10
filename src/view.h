@@ -113,6 +113,7 @@ class View : public Gtk::Window
   void delete_selected_stl();
   void duplicate_selected_stl();
   void split_selected_stl();
+  void divide_selected_stl();
   void auto_rotate();
   void update_settings_gui();
   void handle_ui_settings_changed();

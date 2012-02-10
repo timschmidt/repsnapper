@@ -65,6 +65,7 @@ public:
 	int AddShape(TreeObject *parent, Shape shape, string filename,
 		     bool autoplace = true);
 	int SplitShape(TreeObject *parent, Shape shape, string filename);
+	int DivideShape(TreeObject *parent, Shape shape, string filename);
 
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 

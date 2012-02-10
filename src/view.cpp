@@ -716,6 +716,7 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_delete",        sigc::mem_fun(*this, &View::delete_selected_stl) );
   connect_button ("m_duplicate",     sigc::mem_fun(*this, &View::duplicate_selected_stl) );
   connect_button ("m_split",         sigc::mem_fun(*this, &View::split_selected_stl) );
+  connect_button ("m_divide",        sigc::mem_fun(*this, &View::divide_selected_stl) );
   connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &View::auto_rotate) );
   connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(1,0,0, M_PI/6)));
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/6)));
@@ -965,6 +966,17 @@ void View::split_selected_stl()
   if (!get_selected_stl (object, shape) || !shape)
     return;
   if (m_model->SplitShape (object, *shape, shape->filename) > 1) {
+    // delete shape?
+  }
+  queue_draw();
+}
+void View::divide_selected_stl()
+{
+  TreeObject *object;
+  Shape *shape;
+  if (!get_selected_stl (object, shape) || !shape)
+    return;
+  if (m_model->DivideShape (object, *shape, shape->filename) > 1) {
     // delete shape?
   }
   queue_draw();

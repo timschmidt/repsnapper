@@ -101,7 +101,7 @@ public:
 
 	vector<Vector2d> getPathAround(const Vector2d from, const Vector2d to) const;
 
-	vector<Triangle> getTriangulation()  const ;
+	int getTriangulation(vector<Triangle> &triangles)  const ;
 
 	uint size() const {return vertices.size(); };
 	string info() const;

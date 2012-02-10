@@ -52,10 +52,12 @@ void Infill::clear()
 }
 
 void Infill::clearPatterns() {
-  //  cerr << "clearpatterns" << endl;
-  for (uint i=0; i<savedPatterns.size(); i++)
+  for (uint i=0; i<savedPatterns.size(); i++) {
+    savedPatterns[i].type = INVALIDINFILL;
     savedPatterns[i].cpolys.clear();
+  }
   savedPatterns.clear();
+  //cerr << "clearpatterns " << savedPatterns.size() << endl;
   omp_destroy_lock(&save_lock);
   omp_init_lock(&save_lock);
 }
@@ -73,9 +75,12 @@ void Infill::addInfill(double z, const vector<Poly> polys, InfillType type,
 		       double infillDistance, double offsetDistance, double rotation)
 {
   this->infillDistance = infillDistance;
+
+  omp_set_lock(&save_lock);
   ClipperLib::Polygons patterncpolys = 
     makeInfillPattern(type, polys, infillDistance, offsetDistance, rotation);
   addInfill(z, polys, patterncpolys, offsetDistance);
+  omp_unset_lock(&save_lock);
 }
 
 
@@ -142,7 +147,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       vector<uint> matches;
       for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
       	   sIt != savedPatterns.end(); sIt++){
-	//cerr << sIt->Min << endl;
+	//cerr << sIt->Min << sIt->Max <<endl;
 	if (sIt->type == type &&
 	    abs(sIt->distance-infillDistance) < 0.01 &&
 	    abs(sIt->angle-rotation) < 0.01 )
@@ -155,18 +160,18 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 		matches.push_back(sIt-savedPatterns.begin());
 		//break; // there is no other match
 	      }
-	    else
+	    else {
+	      //cerr <<"return "<<  sIt->cpolys.size()<< endl;
 	      return sIt->cpolys;
+	    }
 	  }
       }
       sort(matches.rbegin(), matches.rend());
-      omp_set_lock(&save_lock);
       for (uint i=0; i<matches.size(); i++) {
 	//cerr << i << " - " ;
 	savedPatterns.erase(savedPatterns.begin()+matches[i]);
       }
       //cerr << endl;
-      omp_unset_lock(&save_lock);
     }
   }
   //omp_unset_lock(&save_lock);
@@ -282,7 +287,6 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       cerr << "infill type " << type << " unknown "<< endl;
     }
   // save 
-  omp_set_lock(&save_lock);
   //tid = omp_get_thread_num( );
   //cerr << "thread "<<tid << " saving pattern " << endl;
   struct pattern newPattern;
@@ -297,7 +301,6 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       savedPatterns.push_back(newPattern);
       //cerr << "saved pattern " << endl;
     }
-  omp_unset_lock(&save_lock);
   return newPattern.cpolys;
 }
 

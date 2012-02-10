@@ -159,6 +159,7 @@ public:
 
     bool hasAdjacentTriangleTo(Triangle triangle, double sqdistance = 0.05) const;
     void splitshapes(vector<Shape> &shapes, ViewProgress *progress=NULL);
+    int divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) const;
 
     int loadASCIIVRML(std::string filename);
 

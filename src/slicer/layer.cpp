@@ -734,7 +734,6 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
     zs-=thickness/skins;
   }
 
-  draw_polys(shellPolygons, GL_LINE_LOOP, 2, 3, 0.5,0.8,0.8,.7);
   draw_polys(fillPolygons, GL_LINE_LOOP, 1, 3, 1,1,1,1);
   draw_polys(supportPolygons, GL_LINE_LOOP, 3, 3, 0.5,0.5,1.0,1);
   draw_poly(hullPolygon, GL_LINE_LOOP, 3, 3, 0.8,0.6,0.0,0.5);
