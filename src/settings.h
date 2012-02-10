@@ -21,13 +21,18 @@
 
 #include <string>
 #include <giomm/file.h>
-#include <vmmlib/vmmlib.h>
 
-//enum SHRINK_QUALITY { SHRINK_FAST, SHRINK_LOGICK };
+#include "stdafx.h"
 
+// Allow passing as a pointer to something to
+// avoid including glibmm in every header.
+class Builder : public Glib::RefPtr<Gtk::Builder>
+{
+public:
+  Builder() {}
+  ~Builder() {}
+};
 
-
-class Builder;
 class Settings {
  public:
 
