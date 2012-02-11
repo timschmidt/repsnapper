@@ -107,6 +107,9 @@ class View : public Gtk::Window
   TempRow *m_temps[TEMP_LAST];
   void temp_changed();
 
+  void new_custombutton();
+  void hide_custombutton_dlg(int code, Gtk::Dialog *dialog);
+
   // rfo bits
   Gtk::TreeView *m_objtree;
   TranslationSpinRow *m_translation_row;

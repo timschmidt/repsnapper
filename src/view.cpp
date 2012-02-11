@@ -225,6 +225,46 @@ void View::clear_logs()
   m_model->ClearLogs();
 }
 
+void View::new_custombutton()
+{
+  Gtk::Dialog *dialog;
+  m_builder->get_widget ("custom_button_dialog", dialog);
+  dialog->show();
+  dialog->signal_response().connect (sigc::bind(sigc::mem_fun(*this, &View::hide_custombutton_dlg), dialog));  
+}
+void View::hide_custombutton_dlg(int code, Gtk::Dialog *dialog)
+{
+  Gtk::Entry *nameentry;
+  m_builder->get_widget ("custom_name", nameentry);
+  string name = nameentry->get_text();
+  Gtk::TextView *tview;
+  m_builder->get_widget ("custom_gcode", tview);
+  string gcode = tview->get_buffer()->get_text();
+  cerr << "CUSTOM code=" << code << " name=" << name << " gcode=" << gcode << endl;
+  bool have_name=false;
+  if (code==1) {  // OK clicked
+    for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++) 
+      {
+	if (m_model->settings.CustomButtonLabel[i] == name){
+	  m_model->settings.CustomButtonGcode[i] = gcode;
+	  have_name = true;
+	  break;
+	}
+      }
+    if (!have_name) 
+      {
+	m_model->settings.CustomButtonLabel.push_back(name);
+	m_model->settings.CustomButtonGcode.push_back(gcode);
+	Gtk::Toolbar *toolbar;
+	m_builder->get_widget ("i_custom_toolbar", toolbar);
+	Gtk::ToolButton button(name);
+	//toolbar->append(button, sigc::mem_fun
+      }
+  }
+  dialog->hide();
+}
+
+
 void View::hide_on_response(int, Gtk::Dialog *dialog)
 {
   dialog->hide();
@@ -808,6 +848,8 @@ View::View(BaseObjectType* cobject,
   // m_fan_voltage->set_value (180.0);
 
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &View::run_extruder) );
+
+  connect_button ("i_new_custombutton", sigc::mem_fun(*this, &View::new_custombutton) );
 
   Gtk::TextView *textv = NULL;
   m_builder->get_widget ("i_txt_comms", textv);
