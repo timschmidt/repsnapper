@@ -165,13 +165,25 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 	{
 	  Shape shape;
 	  int ok = shape.parseASCIISTL(&fileis);
-	  if (ok==0) {
+	  if (ok>=0) {
 	    shapes.push_back(shape);
 	    // go back to get "solid " keyword again
 	    streampos where = fileis.tellg();
 	    where-=100;
 	    if (where < 0) break;
 	    fileis.seekg(where,ios::beg);
+	  }
+	  else {
+	    cerr <<"Could not read STL in ASCII mode: "<< path 
+		 << " (bad header?), trying Binary " << endl ;
+	    int ret = shape.loadBinarySTL(path);
+	    if (ret >= 0) {
+	      AddShape(NULL, shape, path,autoplace);
+	      ModelChanged();
+	      ClearLayers();
+	      return;
+	    }
+	    break;
 	  }
 	}
       if (shapes.size()==1){
@@ -350,9 +362,9 @@ int Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autop
   // Move it, if we found a suitable place
   if (found_location) {
     retshape->transform3D.transform.setTranslation(trans);
-    retshape->PlaceOnPlatform();
   }
-  
+  retshape->PlaceOnPlatform();
+
   // Update the view to include the new object
   CalcBoundingBoxAndCenter();
   

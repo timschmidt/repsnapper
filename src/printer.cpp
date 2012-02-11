@@ -348,7 +348,7 @@ string timeleft_str(long seconds) {
   }
   if (seconds>60)
     ostr << (int)seconds/60 << _(" min ");
-  if (seconds<300)
+  if (hrs == 0 && seconds<300)
     ostr << (int)seconds%60 << _(" sec ");
   ostr << _("left)");
   return ostr.str();

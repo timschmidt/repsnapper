@@ -421,7 +421,7 @@ void Model::MakeSupportPolygons()
     {
       //cerr << "support layer "<< i << endl;
       if (i%10==0) m_progress->update(count-i);
-      //if (layers[i]->LayerNo == 0) continue;
+      if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i]);
     }
   // shrink a bit

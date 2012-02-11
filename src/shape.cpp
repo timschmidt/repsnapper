@@ -111,9 +111,9 @@ static double read_double(ifstream &file) {
  * Returns 0 on success and -1 on failure */
 int Shape::loadBinarySTL(string filename) {
 
-    if(getFileType(filename) != BINARY_STL) {
-        return -1;
-    }
+    // if(getFileType(filename) != BINARY_STL) {
+    //     return -1;
+    // }
 
     triangles.clear();
     Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
@@ -293,11 +293,16 @@ int Shape::loadASCIISTL(string filename) {
         cerr << "Error: Unable to open stl file - " << filename << endl;
         return -1;
     }
-    parseASCIISTL(&file);
+    int ret = parseASCIISTL(&file);
+    if (ret < 0) {// cannot parse, try binary
+      cerr << "Could not read "<< filename << " in ASCII mode, trying Binary"<< endl;
+      file.close();
+      return loadBinarySTL(filename);
+    }
     CenterAroundXY();
     this->filename = filename;
     file.close();
-    return 0;
+    return ret;
 } // STL::loadASCIIFile(string filename)
 
 
