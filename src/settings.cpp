@@ -174,6 +174,7 @@ static struct {
   BOOL_MEMBER   (Slicing.ShellOnly, "ShellOnly", false, true),
   INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),
   BOOL_MEMBER   (Slicing.EnableAcceleration, "EnableAcceleration", true, false),
+  FLOAT_MEMBER  (Slicing.MinLayertime, "MinLayertime", 5, false),
 // ShrinkQuality is a special enumeration ...
 //  INT_MEMBER    (Slicing.ShrinkQuality, "ShrinkQuality", 0, true),
   //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
