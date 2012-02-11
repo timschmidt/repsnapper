@@ -62,6 +62,11 @@ Although RepSnapper is not generally tested outside of windows/linux/mac you may
 ==== Ubuntu ====
 =====  Install dependencies =====
 
+Ubuntu 11.10:
+----
+sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev freeglut3-dev
+----
+
 Ubuntu 11.04:
 ----
 sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev libglut3-dev 
