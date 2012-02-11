@@ -173,18 +173,18 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 	    if (where < 0) break;
 	    fileis.seekg(where,ios::beg);
 	  }
-	  else {
-	    cerr <<"Could not read STL in ASCII mode: "<< path 
-		 << " (bad header?), trying Binary " << endl ;
-	    int ret = shape.loadBinarySTL(path);
-	    if (ret >= 0) {
-	      AddShape(NULL, shape, path,autoplace);
-	      ModelChanged();
-	      ClearLayers();
-	      return;
-	    }
-	    break;
-	  }
+	  // else {
+	  //   cerr <<"Could not read STL in ASCII mode: "<< path 
+	  // 	 << " (bad header?), trying Binary " << endl ;
+	  //   int ret = shape.loadBinarySTL(path);
+	  //   if (ret >= 0) {
+	  //     AddShape(NULL, shape, path,autoplace);
+	  //     ModelChanged();
+	  //     ClearLayers();
+	  //     return;
+	  //   }
+	  //   break;
+	  // }
 	}
       if (shapes.size()==1){
 	shapes.front().filename = (string)path.substr(found+1); 
