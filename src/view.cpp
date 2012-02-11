@@ -430,7 +430,7 @@ public:
     add(*manage(new Gtk::Label(_("Target:"))));
     m_target = new Gtk::SpinButton();
     m_target->set_increments (1, 5);
-    m_target->set_range(25.0, 256.0);
+    m_target->set_range(25.0, 300.0);
     switch (type) {
     case TEMP_NOZZLE:
     default:
