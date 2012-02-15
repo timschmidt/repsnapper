@@ -72,6 +72,7 @@ class Printlines
 
   // slow down to total time needed (cooling)
   void slowdownTo(double totalseconds);
+  void setSpeedFactor(double speedfactor);
 
   // keep movements inside polys when possible (against stringing)
   void clipMovements(const vector<Poly> polys, double maxerr=0.0001);

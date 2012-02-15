@@ -139,6 +139,8 @@ class Settings {
     float ShellOffset;
     //float Optimization;
 
+    guint FirstLayersNum;
+    float FirstLayersSpeed;
     void GetAltInfillLayers(std::vector<int>& layers, guint layerCount) const;
   };
   SlicingSettings Slicing;

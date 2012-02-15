@@ -244,6 +244,14 @@ void Printlines::clipMovements(const vector<Poly> polys, double maxerr)
   }
 }
 
+void Printlines::setSpeedFactor(double speedfactor)
+{
+  if (speedfactor == 1) return;
+  for (uint i=0; i < lines.size(); i++){
+    if (lines[i].feedrate>0)
+      lines[i].speed *= speedfactor;
+  }
+}
 void Printlines::slowdownTo(double totalseconds) 
 {
   if (totalseconds == 0) return;
@@ -251,10 +259,7 @@ void Printlines::slowdownTo(double totalseconds)
   if (totalnow == 0) return;
   double speedfactor = totalnow / totalseconds;
   if (speedfactor >= 1.) return;
-  for (uint i=0; i < lines.size(); i++){
-    if (lines[i].feedrate>0)
-      lines[i].speed *= speedfactor;
-  }
+  setSpeedFactor(speedfactor);
 }
 
 // merge too near parallel lines

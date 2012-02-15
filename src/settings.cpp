@@ -182,9 +182,9 @@ static struct {
   // FLOAT_MEMBER  (Slicing.SerialBuildHeight, "SerialBuildHeight", 0.00, false),
   FLOAT_MEMBER  (Slicing.DecorInfillDistance, "DecorInfillDistance", 2.0, true),
   FLOAT_MEMBER  (Slicing.ShellOffset, "ShellOffset", 0.1, true),
-
   BOOL_MEMBER   (Slicing.LinelengthSort, "LinelengthSort", false, false),
-
+  INT_MEMBER    (Slicing.FirstLayersNum, "FirstLayersNum", 1, true),
+  FLOAT_MEMBER  (Slicing.FirstLayersSpeed, "FirstLayersSpeed", 0.5, true),
   // Misc.
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
   //BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
@@ -278,6 +278,8 @@ static struct {
   { "Slicing.MinLayertime", 0.0, 100, 1, 10 },
   //{ "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
   { "Slicing.ShellOffset", -10, 10, 0.1, 1 },
+  { "Slicing.FirstLayersNum", 0, 1000, 1, 10 },
+  { "Slicing.FirstLayersSpeed", 0.01, 3, 0.01, 0.1 },
 
   // Hardware
   { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },
