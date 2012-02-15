@@ -107,8 +107,11 @@ class View : public Gtk::Window
   TempRow *m_temps[TEMP_LAST];
   void temp_changed();
 
-  void new_custombutton();
+  void edit_custombutton(string name="", string code="", Gtk::ToolButton *button=NULL);
+  void new_custombutton() {edit_custombutton();};
   void hide_custombutton_dlg(int code, Gtk::Dialog *dialog);
+  void add_custombutton(string name, string gcode);
+  void custombutton_pressed(string name, Gtk::ToolButton *button);
 
   // rfo bits
   Gtk::TreeView *m_objtree;

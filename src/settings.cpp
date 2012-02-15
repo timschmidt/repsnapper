@@ -143,8 +143,8 @@ static struct {
   INT_MEMBER    (Printer.FanVoltage, "Printer.FanVoltage", 200, false),
   BOOL_MEMBER   (Printer.Logging, "Printer.Logging", false, false),
   BOOL_MEMBER   (Printer.ClearLogOnPrintStart, "Printer.ClearLogOnPrintStart", false, false),
-  // FLOAT_MEMBER  (Printer.NozzleTemp, "Printer.NozzleTemp", 210, false),
-  // FLOAT_MEMBER  (Printer.BedTemp, "Printer.BedTemp", 60, false),
+  FLOAT_MEMBER  (Printer.NozzleTemp, "Printer.NozzleTemp", 210, false),
+  FLOAT_MEMBER  (Printer.BedTemp, "Printer.BedTemp", 60, false),
 
   // Slicing
   BOOL_MEMBER  (Slicing.UseIncrementalEcode, "UseIncrementalEcode", true, false),
@@ -307,8 +307,8 @@ static struct {
   { "Printer.ExtrudeAmount", 0.0, 1000.0, 1.0, 10.0 },
   { "Printer.ExtrudeSpeed", 0.0, 1000.0, 1.0, 10.0 },
   { "Printer.FanVoltage", 0, 255, 1, 10 },
-  // { "Printer.NozzleTemp", 0.0, 300.0, 1.0, 10.0 },
-  // { "Printer.BedTemp", 0.0, 200.0, 1.0, 10.0 },
+  { "Printer.NozzleTemp", 0.0, 300.0, 1.0, 10.0 },
+  { "Printer.BedTemp", 0.0, 200.0, 1.0, 10.0 },
 
   // Display pane
   { "Display.TempUpdateSpeed", 0.1, 10.0, 0.5, 1.0 },
@@ -553,6 +553,16 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
   }
 
   GCode.m_impl->loadSettings (cfg);
+  
+  vector<string> cbkeys = cfg.get_keys ("CustomButtons");
+  CustomButtonLabel.resize(cbkeys.size());
+  CustomButtonGcode.resize(cbkeys.size());
+  for (guint i = 0; i < cbkeys.size(); i++) {  
+    string s = cbkeys[i];
+    std::replace(s.begin(),s.end(),'_',' ');
+    CustomButtonLabel[i] = s;
+    CustomButtonGcode[i] = cfg.get_string("CustomButtons", cbkeys[i]);
+  }
 
   m_signal_visual_settings_changed.emit();
   m_signal_update_settings_gui.emit();
@@ -592,6 +602,13 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
   }
 
   GCode.m_impl->saveSettings (cfg);
+  
+  string CBgroup="CustomButtons";
+  for (guint i=0; i<CustomButtonLabel.size(); i++)  {
+    string s = CustomButtonLabel[i];
+    std::replace(s.begin(),s.end(),' ','_');
+    cfg.set_string(CBgroup, s, CustomButtonGcode[i]);
+  }
 
   Glib::ustring contents = cfg.to_data();
   Glib::file_set_contents (file->get_path(), contents);
@@ -663,6 +680,7 @@ void Settings::set_to_gui (Builder &builder, int i)
     std::cerr << "corrupt setting type\n";
     break;
   }
+
 }
 
 
@@ -926,6 +944,8 @@ void Settings::set_to_gui (Builder &builder)
     ostr << Hardware.SerialSpeed;
     combobox_set_to(portspeed, ostr.str());
   }
+
+
 }
 
 

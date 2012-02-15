@@ -49,7 +49,6 @@ class Progress;
 class ViewProgress;
 
 
-enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
 enum SerialState { SERIAL_DISCONNECTED, SERIAL_DISCONNECTING,
 		   SERIAL_CONNECTED, SERIAL_CONNECTING };
 

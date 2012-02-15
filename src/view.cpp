@@ -116,7 +116,8 @@ void View::save_stl ()
 
 void View::send_gcode ()
 {
-  m_printer->SendNow (m_gcode_entry->get_text().uppercase());
+  m_printer->SendNow (m_gcode_entry->get_text());
+  m_gcode_entry->select_region(0,-1);
   //m_gcode_entry->set_text("");
 }
 
@@ -190,6 +191,7 @@ void View::printing_changed()
 
 void View::power_toggled()
 { // FIXME button active???
+  if (m_printer->IsPrinting()) return;
   if (m_power_button->get_active())
     m_printer->SendNow ("M80");
   else
@@ -225,12 +227,19 @@ void View::clear_logs()
   m_model->ClearLogs();
 }
 
-void View::new_custombutton()
+void View::edit_custombutton(string name, string code, Gtk::ToolButton *button)
 {
   Gtk::Dialog *dialog;
   m_builder->get_widget ("custom_button_dialog", dialog);
+  Gtk::Entry *nameentry;
+  m_builder->get_widget ("custom_name", nameentry);
+  nameentry->set_text(name);
+  //if (name!="") nameentry->set_sensitive(false);
+  Gtk::TextView *tview;
+  m_builder->get_widget ("custom_gcode", tview);
+  tview->get_buffer()->set_text(code);
   dialog->show();
-  dialog->signal_response().connect (sigc::bind(sigc::mem_fun(*this, &View::hide_custombutton_dlg), dialog));  
+  dialog->signal_response().connect (sigc::bind(sigc::mem_fun(*this, &View::hide_custombutton_dlg), dialog));
 }
 void View::hide_custombutton_dlg(int code, Gtk::Dialog *dialog)
 {
@@ -240,7 +249,6 @@ void View::hide_custombutton_dlg(int code, Gtk::Dialog *dialog)
   Gtk::TextView *tview;
   m_builder->get_widget ("custom_gcode", tview);
   string gcode = tview->get_buffer()->get_text();
-  cerr << "CUSTOM code=" << code << " name=" << name << " gcode=" << gcode << endl;
   bool have_name=false;
   if (code==1) {  // OK clicked
     for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++) 
@@ -251,19 +259,67 @@ void View::hide_custombutton_dlg(int code, Gtk::Dialog *dialog)
 	  break;
 	}
       }
-    if (!have_name) 
-      {
-	m_model->settings.CustomButtonLabel.push_back(name);
-	m_model->settings.CustomButtonGcode.push_back(gcode);
-	Gtk::Toolbar *toolbar;
-	m_builder->get_widget ("i_custom_toolbar", toolbar);
-	Gtk::ToolButton button(name);
-	//toolbar->append(button, sigc::mem_fun
-      }
+    if (!have_name){
+      m_model->settings.CustomButtonLabel.push_back(name);
+      m_model->settings.CustomButtonGcode.push_back(gcode);
+      add_custombutton(name, gcode);
+    }
   }
   dialog->hide();
 }
 
+void View::add_custombutton(string name, string gcode)  
+{
+  Gtk::Toolbar *toolbar;
+  m_builder->get_widget ("i_custom_toolbar", toolbar);
+  if (toolbar) {
+    //cerr << toolbar->get_n_items() << " items" << endl;
+    Gtk::ToolButton *button = new Gtk::ToolButton(name);
+    button->set_is_important(true);
+    toolbar->append(*button, 
+		    sigc::bind(sigc::mem_fun(*this,
+					     &View::custombutton_pressed), name, button));
+    button->set_tooltip_text(gcode);
+    button->set_sensitive(true);
+    toolbar->set_sensitive(true);
+    toolbar->show_all();
+  } else cerr << "no Toolbar for button!" << endl;
+}
+
+void View::custombutton_pressed(string name, Gtk::ToolButton *button)
+{
+  Gtk::ToggleButton *rembutton;
+  m_builder->get_widget ("i_remove_custombutton", rembutton);
+  Gtk::ToggleButton *editbutton;
+  m_builder->get_widget ("i_edit_custombutton", editbutton);
+  Gtk::Toolbar *toolbar;
+  m_builder->get_widget ("i_custom_toolbar", toolbar);
+  if (!toolbar) return;
+  for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++) 
+    {
+      if (m_model->settings.CustomButtonLabel[i] == name) 
+	{
+	  if (editbutton->get_active()) {
+	    cerr << "edit button " << name <<endl;
+	    editbutton->set_active(false);
+	    edit_custombutton(m_model->settings.CustomButtonLabel[i],
+			      m_model->settings.CustomButtonGcode[i], button);
+	  } else if (rembutton->get_active()) {
+	    rembutton->set_active(false);
+	    toolbar->remove(*button);
+	    m_model->settings.CustomButtonGcode.
+	      erase(m_model->settings.CustomButtonGcode.begin()+i);
+	    m_model->settings.CustomButtonLabel.
+	      erase(m_model->settings.CustomButtonLabel.begin()+i);
+	  } else {
+	    //cerr << "button name " << name << endl;
+	    cerr << "sending command " << m_model->settings.CustomButtonGcode[i] << endl;
+	    m_printer->SendNow(m_model->settings.CustomButtonGcode[i]);
+	  }
+	  break;
+      }
+  }
+}
 
 void View::hide_on_response(int, Gtk::Dialog *dialog)
 {
@@ -390,15 +446,10 @@ public:
   // see: http://reprap.org/wiki/RepRapGCodes for more details
   void heat_toggled (Gtk::ToggleButton *pOn)
   {
-    static const char *mdetail[] = { "M104", "M140" };
-    std::stringstream oss;
-    oss << mdetail[m_type];
-    oss << " S";
-    if (pOn->get_active())
-      oss << m_target->get_value();
-    else
-      oss << "0";
-    m_printer->SendNow (oss.str().data());
+    float value = 0;
+    if (pOn->get_active()) 
+      value = m_target->get_value();
+    m_printer->SetTemp(m_type, value);
   }
 
   Model *m_model;
@@ -413,12 +464,12 @@ public:
     m_temp->set_text(tmp);
   }
 
-  TempRow(Model *model, Printer *printer, TempType type) :
-    m_model(model), m_printer(printer), m_type(type)
+  TempRow(Model *model, Printer *printer, TempType type, Gtk::SpinButton *target) :
+    m_model(model), m_printer(printer), m_type(type), m_target(target)
   {
-    static const char *names[] = { N_("Nozzle"), N_("Bed") };
+    // static const char *names[] = { N_("Nozzle"), N_("Bed") };
 
-    add(*manage(new Gtk::Label(_(names[type]))));
+    // add(*manage(new Gtk::Label(_(names[type]))));
     Gtk::ToggleButton *pOn = manage (new Gtk::ToggleButton(_("Heat On")));
     pOn->signal_toggled().connect
       (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
@@ -428,25 +479,25 @@ public:
     add (*m_temp);
 
     add(*manage(new Gtk::Label(_("Target:"))));
-    m_target = new Gtk::SpinButton();
-    m_target->set_increments (1, 5);
-    m_target->set_range(25.0, 300.0);
-    switch (type) {
-    case TEMP_NOZZLE:
-    default:
-      m_target->set_value(225.0);
-      break;
-    case TEMP_BED:
-      m_target->set_value(60.0);
-      break;
-    }
-    add (*m_target);
+    // m_target = new Gtk::SpinButton();
+    // m_target->set_increments (1, 5);
+    // m_target->set_range(25.0, 300.0);
+    // switch (type) {
+    // case TEMP_NOZZLE:
+    // default:
+    //   m_target->set_value(m_model->settings.Printer.NozzleTemp);
+    //   break;
+    // case TEMP_BED:
+    //   m_target->set_value(m_model->settings.Printer.BedTemp);
+    //   break;
+    // }
+    // add (*m_target);
   }
 
   ~TempRow()
   {
     delete m_temp;
-    delete m_target;
+    // delete m_target;
   }
 };
 
@@ -524,6 +575,7 @@ public:
 
 void View::home_all()
 {
+  if (m_printer->IsPrinting()) return;
   m_printer->SendNow ("G28");
   for (uint i = 0; i < 3; i++)
     m_axis_rows[i]->notify_homed();
@@ -659,6 +711,18 @@ void View::update_settings_gui()
 {
   // awful cast-ness to avoid having glibmm headers everywhere.
   m_model->settings.set_to_gui (*((Builder *)&m_builder));
+
+  Gtk::Toolbar *toolbar;
+  m_builder->get_widget ("i_custom_toolbar", toolbar);
+  if (toolbar) {
+    vector<Gtk::Widget*> buts = toolbar->get_children();
+    for (guint i=buts.size(); i>0; i--) {
+      toolbar->remove(*buts[i-1]);
+    }
+    for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++) 
+      add_custombutton(m_model->settings.CustomButtonLabel[i],
+		       m_model->settings.CustomButtonGcode[i]);
+  }
 }
 
 void View::handle_ui_settings_changed()
@@ -935,8 +999,12 @@ void View::setModel(Model *model)
 
   Gtk::Box *temp_box;
   m_builder->get_widget ("i_temp_box", temp_box);
-  m_temps[TEMP_NOZZLE] = new TempRow(m_model, m_printer, TEMP_NOZZLE);
-  m_temps[TEMP_BED] = new TempRow(m_model, m_printer, TEMP_BED);
+  Gtk::SpinButton *nozzle;
+  m_builder->get_widget ("Printer.NozzleTemp", nozzle);
+  m_temps[TEMP_NOZZLE] = new TempRow(m_model, m_printer, TEMP_NOZZLE, nozzle);
+  Gtk::SpinButton *bed;
+  m_builder->get_widget ("Printer.BedTemp", bed);
+  m_temps[TEMP_BED] = new TempRow(m_model, m_printer, TEMP_BED, bed);
   temp_box->add (*m_temps[TEMP_NOZZLE]);
   temp_box->add (*m_temps[TEMP_BED]);
 

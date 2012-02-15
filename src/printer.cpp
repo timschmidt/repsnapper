@@ -19,6 +19,10 @@
 
 #include <cerrno>
 #include <functional>
+#include <iostream>
+#include <ctype.h>
+#include <algorithm>
+
 
 #include <glib/gutils.h>
 
@@ -201,6 +205,25 @@ void Printer::serial_try_connect (bool connect)
 //   this->gcode = gcode;
 // }
 
+void Printer::SetTemp(TempType type, float value) 
+{  
+  ostringstream os;
+  switch (type) {
+  case TEMP_NOZZLE:
+    os << "M104 S";
+    break;
+  case TEMP_BED:
+    os << "M140 S";
+    break;
+  default:
+    cerr << "No such Temptype: " << type << endl;
+    return;
+  }
+  os << value << endl;
+  SendNow(os.str());
+}
+
+
 void Printer::SimplePrint()
 {
   if (printing)
@@ -266,9 +289,9 @@ Printer::RunExtruder (double extruder_speed, double extruder_length,
   SendNow("G1 F1500.0");
   SendNow("G92 E0");	// set extruder zero
 }
-
 void Printer::SendNow(string str)
 {
+  std::transform(str.begin(), str.end(), str.begin(), ::toupper);
   if (rr_dev_fd (device) > 0)
     rr_dev_enqueue_cmd (device, RR_PRIO_HIGH, str.data(), str.size());
   else

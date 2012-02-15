@@ -43,6 +43,8 @@ using namespace std;
 #  define RR_CALL
 #endif
 
+enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
+
 typedef struct rr_dev_t *rr_dev;
 
 class Printer
@@ -111,6 +113,8 @@ class Printer
 	void Restart();
 	void Reset();
 	
+	void SetTemp(TempType type, float value);
+
 	void draw_current(Vector3d &from);
 	double getCurrentPrintingZ();
 
