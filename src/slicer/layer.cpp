@@ -602,7 +602,7 @@ void Layer::MakeGcode(GCodeState &state,
       printlines.makeLines(polys, startPoint,  (s==1), //displace at first skin
 			   minspeed, maxspeed, 
 			   linewidth, linewidthratio, optratio);
-      printlines.slowdownTo(slicing.MinLayertime);
+      printlines.slowdownTo(slicing.MinLayertime/skins/3);
       printlines.setSpeedFactor(speedfactor);
       printlines.clipMovements(GetOuterShell());
       printlines.getLines(lines);
@@ -619,7 +619,7 @@ void Layer::MakeGcode(GCodeState &state,
 		       minspeed, maxspeed, 
 		       linewidth, linewidthratio, optratio,
 		       linelengthsort);
-  printlines.slowdownTo(slicing.MinLayertime);
+  printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.clipMovements(GetOuterShell());
   printlines.getLines(lines);
@@ -643,11 +643,10 @@ void Layer::MakeGcode(GCodeState &state,
 		       minspeed, maxspeed, 
 		       linewidth, linewidthratio, optratio,
 		       linelengthsort);
-  printlines.slowdownTo(slicing.MinLayertime);
+  printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.clipMovements(GetOuterShell(), linewidth/2.);
   printlines.getLines(lines);
-
 
   // push all lines to gcode
   state.AddLines(lines, extrf, offsetZ, slicing, hardware); 
