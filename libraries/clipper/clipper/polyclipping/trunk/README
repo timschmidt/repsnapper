@@ -2,6 +2,9 @@
 Clipper Change Log
 ============================================================
 
+v4.7 - 10 February 2012
+* Improved the joining of output polygons sharing a common edge.
+
 v4.6.6 - 3 February 2012
 * Bugfix: Another obscure bug occasionally causing incorrect 
   polygon orientation. 

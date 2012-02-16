@@ -3,8 +3,8 @@ unit clipper;
 (*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6.6                                                           *
-* Date      :  3 February 2011                                                 *
+* Version   :  4.7                                                             *
+* Date      :  10 February 2011                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -653,10 +653,11 @@ end;
 
 function Orientation(outRec: POutRec; UseFullInt64Range: boolean): boolean; overload;
 var
-  op, opBottom: POutPt;
+  op, opBottom, opPrev, opNext: POutPt;
   vec1, vec2: TIntPoint;
   cross: TInt128;
 begin
+  //first make sure bottomPt is correctly assigned ...
   opBottom := outRec.pts;
   op := opBottom.next;
   while op <> outRec.pts do
@@ -668,11 +669,22 @@ begin
     end;
     op := op.next;
   end;
-  vec1.X := op.pt.X - op.prev.pt.X;
-  vec1.Y := op.pt.Y - op.prev.pt.Y;
-  vec2.X := op.next.pt.X - op.pt.X;
-  vec2.Y := op.next.pt.Y - op.pt.Y;
+  outRec.bottomPt := opBottom;
 
+  //find vertices either side of bottomPt (skipping duplicate points) ....
+  opPrev := op.prev;
+  while (op <> opPrev) and PointsEqual(op.pt, opPrev.pt) do
+    opPrev := opPrev.prev;
+  opNext := op.next;
+  while (op <> opNext) and PointsEqual(op.pt, opNext.pt) do
+    opNext := opNext.next;
+
+  vec1.X := op.pt.X - opPrev.pt.X;
+  vec1.Y := op.pt.Y - opPrev.pt.Y;
+  vec2.X := opNext.pt.X - op.pt.X;
+  vec2.Y := opNext.pt.Y - op.pt.Y;
+
+  //perform cross product to determine left or right 'turning' ...
   if UseFullInt64Range then
   begin
     cross := Int128Sub(Int128Mul(vec1.X, vec2.Y), Int128Mul(vec2.X, vec1.Y));
@@ -791,11 +803,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 
-function SlopesEqual(e1, e2: PEdge; UseFullInt64Range: boolean): boolean; overload;
+function SlopesEqual(e1, e2: PEdge;
+  UseFullInt64Range: boolean): boolean; overload;
 begin
-  if (e1.ybot = e1.ytop) then result := (e2.ybot = e2.ytop)
-  else if (e1.xbot = e1.xtop) then result := (e2.xbot = e2.xtop)
-  else if UseFullInt64Range then
+  if UseFullInt64Range then
     result := Int128Equal(Int128Mul(e1.ytop-e1.ybot, e2.xtop-e2.xbot),
       Int128Mul(e1.xtop-e1.xbot, e2.ytop-e2.ybot))
   else
@@ -807,9 +818,7 @@ end;
 function SlopesEqual(const pt1, pt2, pt3: TIntPoint;
   UseFullInt64Range: boolean): boolean; overload;
 begin
-  if (pt1.Y = pt2.Y) then result := (pt2.Y = pt3.Y)
-  else if (pt1.X = pt2.X) then result := (pt2.X = pt3.X)
-  else if UseFullInt64Range then
+  if UseFullInt64Range then
     result := Int128Equal(
       Int128Mul(pt1.Y-pt2.Y, pt2.X-pt3.X), Int128Mul(pt1.X-pt2.X, pt2.Y-pt3.Y))
   else
@@ -820,9 +829,7 @@ end;
 function SlopesEqual(const pt1, pt2, pt3, pt4: TIntPoint;
   UseFullInt64Range: boolean): boolean; overload;
 begin
-  if (pt1.Y = pt2.Y) then result := (pt3.Y = pt4.Y)
-  else if (pt1.X = pt2.X) then result := (pt3.X = pt4.X)
-  else if UseFullInt64Range then
+  if UseFullInt64Range then
     result := Int128Equal( Int128Mul(pt1.Y-pt2.Y, pt3.X-pt4.X),
       Int128Mul(pt1.X-pt2.X, pt3.Y-pt4.Y))
   else
@@ -1670,6 +1677,8 @@ end;
 //------------------------------------------------------------------------------
 
 procedure TClipper.AddLocalMinPoly(e1, e2: PEdge; const pt: TIntPoint);
+var
+  e, prevE: PEdge;
 begin
   if (e2.dx = horizontal) or (e1.dx > e2.dx) then
   begin
@@ -1677,13 +1686,27 @@ begin
     e2.outIdx := e1.outIdx;
     e1.side := esLeft;
     e2.side := esRight;
+    e := e1;
+    if e.prevInAEL = e2 then
+      prevE := e2.prevInAEL else
+      prevE := e.prevInAEL;
   end else
   begin
     AddOutPt(e2, e1, pt);
     e1.outIdx := e2.outIdx;
     e1.side := esRight;
     e2.side := esLeft;
+    e := e2;
+    prevE := e2.prevInAEL;
+    if e.prevInAEL = e1 then
+      prevE := e1.prevInAEL else
+      prevE := e.prevInAEL;
   end;
+
+  if assigned(prevE) and (prevE.outIdx >= 0) and
+    (TopX(prevE, pt.Y) = TopX(e, pt.Y)) and
+     SlopesEqual(e, prevE, fUse64BitRange) then
+       AddJoin(e, prevE);
 end;
 //------------------------------------------------------------------------------
 
@@ -1920,12 +1943,6 @@ begin
 
     if IsContributing(lb) then
       AddLocalMinPoly(lb, rb, IntPoint(lb.xcurr, CurrentLm.y));
-
-    //if output polygons share an edge with lb, they'll need joining later ...
-    if (lb.outIdx >= 0) and assigned(lb.prevInAEL) and
-       (lb.prevInAEL.outIdx >= 0) and (lb.prevInAEL.xcurr = lb.xbot) and
-       SlopesEqual(lb, lb.prevInAEL, fUse64BitRange) then
-         AddJoin(lb, lb.prevInAEL);
 
     //if output polygons share an edge with rb, they'll need joining later ...
     if (rb.outIdx >= 0) then
@@ -3425,12 +3442,16 @@ begin
       //make sure any holes contained by outRec2 now link to outRec1 ...
       if fixHoleLinkages then CheckHoleLinkages2(outRec1, outRec2);
 
+      //cleanup edges ...
+      FixupOutPolygon(outRec1);
+
       //sort out hole vs outer and then recheck orientation ...
       if (outRec1.isHole <> outRec2.isHole) and
         ((outRec2.bottomPt.pt.Y > outRec1.bottomPt.pt.Y) or
           (outRec2.bottomPt.pt.Y = outRec1.bottomPt.pt.Y) and
           (outRec2.bottomPt.pt.X < outRec1.bottomPt.pt.X)) then
           outRec1.isHole := outRec2.isHole;
+
       if outRec1.isHole = Orientation(outRec1, fUse64BitRange) then
         ReversePolyPtLinks(outRec1.pts);
 
@@ -3449,10 +3470,6 @@ begin
         if (jr2.poly2Idx = ObsoleteIdx) then jr2.poly2Idx := OKIdx;
       end;
 
-      //cleanup edges ...
-      if assigned(outRec1.pts) then
-        FixupOutPolygon(outRec1) else
-        FixupOutPolygon(outRec2);
     end;
   end;
 end;

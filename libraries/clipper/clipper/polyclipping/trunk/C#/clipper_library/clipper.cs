@@ -1,8 +1,8 @@
 ﻿/*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.6.6                                                           *
-* Date      :  3 February 2011                                                 *
+* Version   :  4.7                                                             *
+* Date      :  10 February 2011                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -514,11 +514,9 @@ namespace ClipperLib
         }
         //------------------------------------------------------------------------------
 
-        internal bool SlopesEqual(TEdge e1, TEdge e2, bool UseFulllongRange)
+        internal bool SlopesEqual(TEdge e1, TEdge e2, bool UseFullRange)
         {
-            if (e1.ybot == e1.ytop) return (e2.ybot == e2.ytop);
-            else if (e1.xbot == e1.xtop) return (e2.xbot == e2.xtop);
-            else if (UseFulllongRange)
+            if (UseFullRange)
               return Int128.Int128Mul(e1.ytop - e1.ybot, e2.xtop - e2.xbot) ==
                   Int128.Int128Mul(e1.xtop - e1.xbot, e2.ytop - e2.ybot);
             else return (Int64)(e1.ytop - e1.ybot) * (e2.xtop - e2.xbot) -
@@ -527,11 +525,9 @@ namespace ClipperLib
         //------------------------------------------------------------------------------
 
         protected bool SlopesEqual(IntPoint pt1, IntPoint pt2,
-            IntPoint pt3, bool UseFulllongRange)
+            IntPoint pt3, bool UseFullRange)
         {
-            if (pt1.Y == pt2.Y) return (pt2.Y == pt3.Y);
-            else if (pt1.X == pt2.X) return (pt2.X == pt3.X);
-            else if (UseFulllongRange)
+            if (UseFullRange)
                 return Int128.Int128Mul(pt1.Y - pt2.Y, pt2.X - pt3.X) ==
                   Int128.Int128Mul(pt1.X - pt2.X, pt2.Y - pt3.Y);
             else return
@@ -540,11 +536,9 @@ namespace ClipperLib
         //------------------------------------------------------------------------------
 
         protected bool SlopesEqual(IntPoint pt1, IntPoint pt2,
-            IntPoint pt3, IntPoint pt4, bool UseFulllongRange)
+            IntPoint pt3, IntPoint pt4, bool UseFullRange)
         {
-            if (pt1.Y == pt2.Y) return (pt3.Y == pt4.Y);
-            else if (pt1.X == pt2.X) return (pt3.X == pt4.X);
-            else if (UseFulllongRange)
+            if (UseFullRange)
                 return Int128.Int128Mul(pt1.Y - pt2.Y, pt3.X - pt4.X) ==
                   Int128.Int128Mul(pt1.X - pt2.X, pt3.Y - pt4.Y);
             else return
@@ -1254,13 +1248,6 @@ namespace ClipperLib
             if( IsContributing(lb) )
                 AddLocalMinPoly(lb, rb, new IntPoint(lb.xcurr, m_CurrentLM.Y));
 
-
-            //if output polygons share an edge, they'll need joining later ...
-            if (lb.outIdx >= 0 && lb.prevInAEL != null &&
-              lb.prevInAEL.outIdx >= 0 && lb.prevInAEL.xcurr == lb.xbot &&
-               SlopesEqual(lb, lb.prevInAEL, m_UseFullRange))
-                AddJoin(lb, lb.prevInAEL, -1, -1);
-
             //if any output polygons share an edge, they'll need joining later ...
             if (rb.outIdx >= 0)
             {
@@ -1674,12 +1661,18 @@ namespace ClipperLib
 
         private void AddLocalMinPoly(TEdge e1, TEdge e2, IntPoint pt)
         {
+            TEdge e, prevE;
             if (e2.dx == horizontal || (e1.dx > e2.dx))
             {
                 AddOutPt(e1, e2, pt);
                 e2.outIdx = e1.outIdx;
                 e1.side = EdgeSide.esLeft;
                 e2.side = EdgeSide.esRight;
+                e = e1;
+                if (e.prevInAEL == e2)
+                  prevE = e2.prevInAEL; 
+                else
+                  prevE = e.prevInAEL;
             }
             else
             {
@@ -1687,7 +1680,18 @@ namespace ClipperLib
                 e1.outIdx = e2.outIdx;
                 e1.side = EdgeSide.esRight;
                 e2.side = EdgeSide.esLeft;
+                e = e2;
+                if (e.prevInAEL == e1)
+                    prevE = e1.prevInAEL;
+                else
+                    prevE = e.prevInAEL;
             }
+
+            if (prevE != null && prevE.outIdx >= 0 &&
+                (TopX(prevE, pt.Y) == TopX(e, pt.Y)) &&
+                 SlopesEqual(e, prevE, m_UseFullRange))
+                   AddJoin(e, prevE, -1, -1);
+
         }
         //------------------------------------------------------------------------------
 
@@ -2873,6 +2877,7 @@ namespace ClipperLib
 
         private bool Orientation(OutRec outRec, bool UseFull64BitRange)
         {
+            //first make sure bottomPt is correctly assigned ...
             OutPt opBottom = outRec.pts, op = outRec.pts.next;
             while (op != outRec.pts) 
             {
@@ -2883,9 +2888,18 @@ namespace ClipperLib
 	            }
 	            op = op.next;
             }
+            outRec.bottomPt = opBottom;
 
-            IntPoint vec1 = new IntPoint(op.pt.X - op.prev.pt.X, op.pt.Y - op.prev.pt.Y);
-            IntPoint vec2 = new IntPoint(op.next.pt.X - op.pt.X, op.next.pt.Y - op.pt.Y);
+            //find vertices either side of bottomPt (skipping duplicate points) ....
+            OutPt opPrev = op.prev;
+            OutPt opNext = op.next;
+            while (op != opPrev && PointsEqual(op.pt, opPrev.pt)) 
+              opPrev = opPrev.prev;
+            while (op != opNext && PointsEqual(op.pt, opNext.pt))
+              opNext = opNext.next;
+
+            IntPoint vec1 = new IntPoint(op.pt.X - opPrev.pt.X, op.pt.Y - opPrev.pt.Y);
+            IntPoint vec2 = new IntPoint(opNext.pt.X - op.pt.X, opNext.pt.Y - op.pt.Y);
 
             if (UseFull64BitRange)
             {
@@ -3185,6 +3199,9 @@ namespace ClipperLib
                 //make sure any holes contained by outRec2 now link to outRec1 ...
                 if (fixHoleLinkages) CheckHoleLinkages2(outRec1, outRec2);
 
+                //now cleanup redundant edges too ...
+                FixupOutPolygon(outRec1);
+
                 //sort out hole vs outer and then recheck orientation ...
                 if (outRec1.isHole != outRec2.isHole &&
                   (outRec2.bottomPt.pt.Y > outRec1.bottomPt.pt.Y ||
@@ -3208,11 +3225,6 @@ namespace ClipperLib
                     if (j2.poly1Idx == ObsoleteIdx) j2.poly1Idx = OKIdx;
                     if (j2.poly2Idx == ObsoleteIdx) j2.poly2Idx = OKIdx;
                 }
-                //now cleanup redundant edges too ...
-                if (outRec1.pts != null)
-                    FixupOutPolygon(outRec1);
-                else
-                    FixupOutPolygon(outRec2);
             }
           }
         }
