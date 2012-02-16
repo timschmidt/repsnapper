@@ -313,12 +313,16 @@ void View::custombutton_pressed(string name, Gtk::ToolButton *button)
 	      erase(m_model->settings.CustomButtonLabel.begin()+i);
 	  } else {
 	    //cerr << "button name " << name << endl;
-	    cerr << "sending command " << m_model->settings.CustomButtonGcode[i] << endl;
-	    m_printer->SendNow(m_model->settings.CustomButtonGcode[i]);
+	    stringstream s(m_model->settings.CustomButtonGcode[i]);
+	    string item;
+	    while (getline(s,item)) {
+	      cerr << "sending command " << item<< endl;
+		m_printer->SendNow(item);
+	    }
 	  }
 	  break;
-      }
-  }
+	}
+    }
 }
 
 void View::hide_on_response(int, Gtk::Dialog *dialog)
