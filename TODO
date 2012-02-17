@@ -23,10 +23,6 @@ G92 E0
 * Add low prio idle handler for error dialogs: can't connect to device eg.
 * show heat on in a better way ...
 
-* Add time-estimation back ...
-
-* save target temperature, extruder length etc. ...
-
 * Bin the two 'load' menu items - just one 'open' menu ...
 	+ with a gcode and stl filter drop-down ?
 * Add a preview widget to the file menu
@@ -51,12 +47,6 @@ G92 E0
 * add Hardware Settings profiles:
 	+ "Mendel", "XYZ", "etc." ? :-)
 
-* do settings work ...
-	* auto-connect settings to the UI
-	* finish the settings we cannot do manually ...
-		+ custom button foo ...
-	+ another biig table of spin-button / range details etc.
-
 * win32 osc build fun ...
 
 --- older stuff ---
@@ -73,9 +63,4 @@ G92 E0
 	+ re-work RFO storage to use pointers not vectors with instances
 
 * bug fixing:
-	+ arcball / rotation resetting ...
 	+ re-instate a non-gui mode ...
-
-* add log scrolling:
-	+ gtk_text_view_scroll_to_iter [etc.]
-	+ when the adjustments change etc.

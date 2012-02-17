@@ -141,8 +141,8 @@ public:
 	ObjectsTree objtree;
 	Glib::RefPtr<Gtk::TextBuffer> errlog, echolog;
 
-	void draw(Gtk::TreeModel::iterator &selected);
-	void drawLayers(Vector3d offset) const;
+	int draw(Gtk::TreeModel::iterator &selected);
+	int drawLayers(Vector3d offset) const;
 
 	sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
 	void alert (const char *message);

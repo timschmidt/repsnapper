@@ -1311,7 +1311,17 @@ void View::Draw (Gtk::TreeModel::iterator &selected)
 	m_model->GlDrawGCode();
 
 	// Draw all objects
-	m_model->draw(selected);
+	int layerdrawn = m_model->draw(selected);
+	if (layerdrawn > -1) {
+	  Gtk::Label *layerlabel;
+	  m_builder->get_widget("layerno_label", layerlabel);
+	  if (layerlabel){
+	    stringstream s; 
+	    s << layerdrawn ;
+	    layerlabel->set_text(s.str());
+	  }
+	}
+
 }
 
 void View::showCurrentPrinting(unsigned long fromline, unsigned long toline)

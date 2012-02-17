@@ -552,7 +552,7 @@ Vector3d Model::GetViewCenter()
 }
 
 // called from View::Draw
-void Model::draw (Gtk::TreeModel::iterator &iter)
+int Model::draw (Gtk::TreeModel::iterator &iter)
 {
   
   Shape *sel_shape;
@@ -672,16 +672,21 @@ void Model::draw (Gtk::TreeModel::iterator &iter)
       glEnd();
     }
 
-  if(settings.Display.DisplayLayer) {
-    glDisable(GL_DEPTH_TEST);
-    drawLayers(offset);
-  }
+    if(settings.Display.DisplayLayer) {
+      return drawLayers(offset);
+    }
+    return -1;
 }
 
-void Model::drawLayers(Vector3d offset) const
+// if single layer returns layerno of drawn layer 
+// else returns -1
+int Model::drawLayers(Vector3d offset) const
 {
 
-  if (is_calculating) return; // infill calculation (saved patterns) would be disturbed
+  glDisable(GL_DEPTH_TEST);
+  int drawn = -1;
+
+  if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
   int LayerNr;
 
   bool have_layers = layers.size() > 0; // have sliced already
@@ -727,6 +732,7 @@ void Model::drawLayers(Vector3d offset) const
 	{
 	  layer = layers[LayerNr];
 	  z = layer->getZ();
+	  drawn = layer->LayerNo;
 	}
       else
 	{
@@ -804,6 +810,7 @@ void Model::drawLayers(Vector3d offset) const
       LayerNr++; 
       z+=zStep;
     }// while
+  return drawn;
 }
 
 

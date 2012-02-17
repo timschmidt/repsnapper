@@ -233,6 +233,7 @@ void Model::Slice(double printOffsetZ)
   double shape_z = z;
   double max_shape_z = z + serialheight;
   Layer * layer = new Layer(LayerNr, thickness, skins); 
+  LayerNr = 1;
   double max_gradient = 0;
   int new_polys=0;
   while(z < Max.z)
@@ -242,7 +243,10 @@ void Model::Slice(double printOffsetZ)
       max_shape_z = min(shape_z + serialheight, Max.z); 
       while ( currentshape < shapes.size() && shape_z <= max_shape_z ) {
 	layer->setZ(shape_z + printOffsetZ); // set to real z
-	if (shape_z==minZ) LayerNr = 0; // these layers will not be handled als bridges etc.
+	if (shape_z == minZ) { // the layer is on the platform
+	  layer->LayerNo = 0;
+	  LayerNr = 1; 
+	}
 	new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
 				    shape_z, 
 				    max_gradient);
@@ -257,10 +261,10 @@ void Model::Slice(double printOffsetZ)
 	    thickness = skin_thickness*skins;
 	  }
 	  shape_z += thickness; 
-	  max_gradient=0;
-	  if (new_polys>-1){
+	  max_gradient = 0;
+	  if (new_polys > -1){
 	    layers.push_back(layer);
-	    layer = new Layer(++LayerNr, thickness, skins);
+	    layer = new Layer(LayerNr++, thickness, skins);
 	  }
 	}
       }
@@ -268,15 +272,15 @@ void Model::Slice(double printOffsetZ)
       if (currentshape < shapes.size()) { // reached max_shape_z, next shape
 	currentshape++;
       } else {
-	if (new_polys>-1){ 
+	if (new_polys > -1){ 
 	  if (varSlicing) {
 	    skins = max_skins-(uint)(max_skins* max_gradient);
 	    thickness = skin_thickness*skins;
 	  }
 	  layers.push_back(layer);
-	  layer = new Layer(++LayerNr, thickness, skins);
+	  layer = new Layer(LayerNr++, thickness, skins);
 	}
-	z = max_shape_z + thickness; 
+	z = max_shape_z + thickness;
 	currentshape = 0; // all shapes again
       }
       max_gradient=0;
