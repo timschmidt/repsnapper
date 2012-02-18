@@ -795,13 +795,31 @@ void Shape::PlaceOnPlatform()
 void Shape::Rotate(Vector3d axis, double angle)
 {
   CenterAroundXY();
-  Vector3d CenterXY(Center.x, Center.y, 0);
+  // Vector3d CenterXY(Center.x, Center.y, 0);
   // do a real rotation because matrix transform gives errors when slicing
   for (size_t i=0; i<triangles.size(); i++)
     {
       triangles[i].rotate(axis, angle);
     }
   PlaceOnPlatform();
+}
+
+// this is primitive, it just rotates triangle vertices
+void Shape::Twist(double angle)
+{
+  CenterAroundXY();
+  CalcBBox();
+  double h = Max.z-Min.z;
+  double hangle=0;
+  for (size_t i=0; i<triangles.size(); i++) {
+    for (size_t j=0; j<3; j++) 
+      {
+	hangle = angle * (triangles[i][j].z - Min.z) / h;
+	triangles[i][j] = triangles[i][j].rotate(hangle,0,0,1);
+      }
+    triangles[i].calcNormal();
+  }
+  CalcBBox();
 }
 
 void Shape::CenterAroundXY()

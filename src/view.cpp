@@ -640,6 +640,15 @@ void View::rotate_selection (Vector4d rotate)
   queue_draw();
 }
 
+void View::twist_selection (double angle)
+{
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
+  m_model->TwistObject (shape, object, angle);
+  queue_draw();
+}
+
 void View::invertnormals_selection ()
 {
   Shape *shape;
@@ -830,7 +839,9 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/6)));
   connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/6)));
   connect_button ("m_normals",       sigc::mem_fun(*this, &View::invertnormals_selection));
-  connect_button ("m_mirror",       sigc::mem_fun(*this, &View::mirror_selection));
+  connect_button ("m_mirror",        sigc::mem_fun(*this, &View::mirror_selection));
+  connect_button ("twist_neg",       sigc::bind(sigc::mem_fun(*this, &View::twist_selection), -M_PI/12));
+  connect_button ("twist_pos",       sigc::bind(sigc::mem_fun(*this, &View::twist_selection), M_PI/12));
   m_builder->get_widget ("m_objtree", m_objtree);
 
   // Insert our keybindings all around the place
@@ -868,7 +879,6 @@ View::View(BaseObjectType* cobject,
       (sigc::mem_fun(*this, &View::update_scale_value));
   scale_value->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object_z));
-
 
   //add_statusbar_msg("m_scale_event_box", _("Scale the selected object"));
 
@@ -1128,6 +1138,7 @@ bool View::statusBarMessage(Glib::ustring message)
     // }
     return false;
 }
+
 
 void View::scale_object()
 {

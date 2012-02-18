@@ -467,6 +467,14 @@ void Model::RotateObject(Shape *shape, TreeObject *object, Vector4d rotate)
   CalcBoundingBoxAndCenter();
 }
 
+void Model::TwistObject(Shape *shape, TreeObject *object, double angle)
+{
+  if (!shape)
+    return; 
+  shape->Twist(angle);
+  CalcBoundingBoxAndCenter();
+}
+
 void Model::OptimizeRotation(Shape *shape, TreeObject *object)
 {
   if (!shape)
@@ -683,10 +691,10 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
 int Model::drawLayers(Vector3d offset) const
 {
 
+  if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
+
   glDisable(GL_DEPTH_TEST);
   int drawn = -1;
-
-  if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
   int LayerNr;
 
   bool have_layers = layers.size() > 0; // have sliced already

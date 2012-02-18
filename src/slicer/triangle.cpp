@@ -140,7 +140,6 @@ void Triangle::Translate(const Vector3d &vector)
 
 void Triangle::rotate(const Vector3d axis, double angle) 
 {
-  //Normal = triangles[i].Normal.rotate(angle, axis.x, axis.y, axis.z);
   A = A.rotate(angle, axis.x, axis.y, axis.z);
   B = B.rotate(angle, axis.x, axis.y, axis.z);
   C = C.rotate(angle, axis.x, axis.y, axis.z);

@@ -133,6 +133,8 @@ public:
 	void CalcBBox();
 	// Rotation for manual rotate and used by OptimizeRotation:
 	void Rotate(Vector3d axis, double angle);  
+	void Twist(double angle);
+
     void Scale(double scale_factor);
     void ScaleX(double scale_factor);
     void ScaleY(double scale_factor);

@@ -146,6 +146,7 @@ class View : public Gtk::Window
   void alert (Gtk::MessageType t, const char *message,
 	      const char *secondary);
   void rotate_selection (vmml::Vector4d rotate);
+  void twist_selection (double angle);
   void invertnormals_selection ();
   void mirror_selection ();
   void stl_added (Gtk::TreePath &path);
