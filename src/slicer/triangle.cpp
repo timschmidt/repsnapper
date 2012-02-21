@@ -17,7 +17,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "triangle.h"
-
+#include "geometry.h"
 
 
 Triangle::Triangle(const Vector3d &Point1,
@@ -146,6 +146,61 @@ void Triangle::rotate(const Vector3d axis, double angle)
   calcNormal();
 }
 
+void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &triangles)
+{
+  assert(fourpoints.size()==4);
+  vector<Triangle> tr(2);
+  double SMALL = 0.01;
+  // find diagonals
+  double dist = dist3D_Segment_to_Segment(fourpoints[0],fourpoints[2],
+					  fourpoints[1],fourpoints[3], 
+					  SMALL*SMALL);
+  if (dist < SMALL) 
+    { // found -> divide at shorter diagonal 
+      if ((fourpoints[0]-fourpoints[2]).lengthSquared() 
+	  < (fourpoints[1]-fourpoints[3]).lengthSquared()) { 
+	  tr[0] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
+	  tr[1] = Triangle(fourpoints[2],fourpoints[3],fourpoints[0]);
+      } else {
+	tr[0] = Triangle(fourpoints[0],fourpoints[1],fourpoints[3]);
+	tr[1] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
+      }
+    } 
+  else 
+    { // take other 2
+      double dist = dist3D_Segment_to_Segment(fourpoints[1],fourpoints[2],
+					      fourpoints[0],fourpoints[3], 
+					      SMALL*SMALL);
+      if (dist < SMALL) 
+	{
+	  if ((fourpoints[1]-fourpoints[2]).lengthSquared() 
+	      < (fourpoints[0]-fourpoints[3]).lengthSquared()) {
+	    tr[0] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
+	    tr[1] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
+	  } else {
+	    tr[0] = Triangle(fourpoints[1],fourpoints[0],fourpoints[3]);
+	    tr[1] = Triangle(fourpoints[0],fourpoints[2],fourpoints[3]);
+	  }   
+	} 
+      else 
+	{ // take 3rd possibility, not the case here, because 2-3 is cut line
+	  double dist = dist3D_Segment_to_Segment(fourpoints[0],fourpoints[1],
+						  fourpoints[2],fourpoints[3],
+						  SMALL*SMALL);
+	  if (dist < SMALL) 
+	    {
+	      tr[0] = Triangle(fourpoints[0],fourpoints[2],fourpoints[3]);
+	      tr[1] = Triangle(fourpoints[2],fourpoints[1],fourpoints[3]);
+	    }
+	  else  {
+	    cerr << dist << " cannot find diagonals" << endl;
+	    return;
+	  }
+	}
+    }
+  triangles.insert(triangles.end(), tr.begin(), tr.end());
+}
+
 int Triangle::SplitAtPlane(double z, 
 			   vector<Triangle> &uppertriangles,
 			   vector<Triangle> &lowertriangles,
@@ -170,30 +225,28 @@ int Triangle::SplitAtPlane(double z,
     lower.push_back(Vector3d(lstart.x,lstart.y,z));
     lower.push_back(Vector3d(lend.x,lend.y,z));
   }
+  vector<Triangle> uppertr,lowertr;
   if (upper.size()==3) { // half of triangle with 1 triangle point
-    uppertriangles.push_back(Triangle(upper[0],upper[1],upper[2]));
+    uppertr.push_back(Triangle(upper[0],upper[1],upper[2]));
   }
   else if (upper.size()==4) { // 0 and 1 are triangle points, 2 and 3 are cutline
-    if ((upper[0]-upper[2]).lengthSquared()<(upper[1]-upper[2]).lengthSquared()){
-      uppertriangles.push_back(Triangle(upper[2],upper[3],upper[0]));
-      uppertriangles.push_back(Triangle(upper[0],upper[3],upper[1]));
-    } else {
-      uppertriangles.push_back(Triangle(upper[3],upper[2],upper[1]));
-      uppertriangles.push_back(Triangle(upper[0],upper[3],upper[1]));
-    }
+    triangulateQuadrilateral(upper, uppertr);
   }
   else cerr << "upper size " << upper.size() << endl;
   if (lower.size()==3) {
-    lowertriangles.push_back(Triangle(lower[0],lower[1],lower[2]));
+    lowertr.push_back(Triangle(lower[0],lower[1],lower[2]));
   }
   else if (lower.size()==4) {
+    triangulateQuadrilateral(lower, lowertr);
   }
   else cerr << "lower size " << lower.size() << endl;
   Vector3d TN = T*Normal; TN.normalize();
-  for (guint i=0; i<uppertriangles.size();i++) 
-    if ((uppertriangles[i].Normal + TN).length()<1) uppertriangles[i].invertNormal();
-  for (guint i=0; i<lowertriangles.size();i++) 
-    if ((lowertriangles[i].Normal + TN).length()<1) lowertriangles[i].invertNormal();
+  for (guint i=0; i < uppertr.size(); i++) 
+    if ((uppertr[i].Normal + TN).length()<0.1) uppertr[i].invertNormal();
+  for (guint i=0; i < lowertr.size(); i++) 
+    if ((lowertr[i].Normal + TN).length()<0.1) lowertr[i].invertNormal();
+  uppertriangles.insert(uppertriangles.end(),uppertr.begin(),uppertr.end()); 
+  lowertriangles.insert(lowertriangles.end(),lowertr.begin(),lowertr.end()); 
   return cut;
 }
 

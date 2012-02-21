@@ -40,3 +40,8 @@ struct Intersection
 bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 		 const Vector2d &p3, const Vector2d &p4, 
 		 Intersection &hit, double maxoffset=0.0001);
+
+
+
+double dist3D_Segment_to_Segment(Vector3d S1P0, Vector3d S1P1, 
+				 Vector3d S2P0, Vector3d S2P1, double SMALL_NUM);

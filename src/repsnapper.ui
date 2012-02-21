@@ -949,8 +949,7 @@ THE HEAD MOVING DOWN!
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="tooltip_text" translatable="yes">Divide shape at plane z=0
-NOT WORKING</property>
+                            <property name="tooltip_text" translatable="yes">Divide shape at plane z=0</property>
                             <property name="use_action_appearance">False</property>
                           </object>
                           <packing>

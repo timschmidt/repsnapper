@@ -773,12 +773,13 @@ int Shape::divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) co
   }
   vector<Triangle> uppersplit,lowersplit;
   for (guint i=0; i< toboth.size(); i++) {
-    toboth[i].SplitAtPlane(z, uppersplit,lowersplit);
+    toboth[i].SplitAtPlane(z, uppersplit, lowersplit);
   }
   upper.triangles.insert(upper.triangles.end(),
 			 uppersplit.begin(),uppersplit.end());
   lower.triangles.insert(lower.triangles.end(),
 			 lowersplit.begin(),lowersplit.end());
+  lower.Rotate(Vector3d(0,1,0),M_PI);
   return 2;
 }
 

@@ -541,7 +541,7 @@ void Model::CalcInfill()
       else
       	infilldist = infillDistance;
 
-      if ((int)layers[i]->LayerNo < settings.Slicing.FirstLayersNum) {
+      if (layers[i]->LayerNo < (int)settings.Slicing.FirstLayersNum) {
       	infilldist = max(infilldist,
 			 (double)settings.Slicing.FirstLayersInfillDist);
       	fullInfillDistance = max(fullInfillDistance,
