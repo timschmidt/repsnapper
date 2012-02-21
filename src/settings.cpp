@@ -558,14 +558,17 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
 
   GCode.m_impl->loadSettings (cfg);
   
-  vector<string> cbkeys = cfg.get_keys ("CustomButtons");
-  CustomButtonLabel.resize(cbkeys.size());
-  CustomButtonGcode.resize(cbkeys.size());
-  for (guint i = 0; i < cbkeys.size(); i++) {  
-    string s = cbkeys[i];
-    std::replace(s.begin(),s.end(),'_',' ');
-    CustomButtonLabel[i] = s;
-    CustomButtonGcode[i] = cfg.get_string("CustomButtons", cbkeys[i]);
+  try {
+    vector<string> cbkeys = cfg.get_keys ("CustomButtons");
+    CustomButtonLabel.resize(cbkeys.size());
+    CustomButtonGcode.resize(cbkeys.size());
+    for (guint i = 0; i < cbkeys.size(); i++) {  
+      string s = cbkeys[i];
+      std::replace(s.begin(),s.end(),'_',' ');
+      CustomButtonLabel[i] = s;
+      CustomButtonGcode[i] = cfg.get_string("CustomButtons", cbkeys[i]);
+    }
+  } catch (const Glib::KeyFileError &err) {
   }
 
   m_signal_visual_settings_changed.emit();
