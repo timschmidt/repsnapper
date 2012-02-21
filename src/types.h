@@ -16,13 +16,14 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
-#ifndef TYPES_H
-#define TYPES_H
 
-// avoid having to re-type forward definitions and enums a lot
-enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
+/* #ifndef TYPES_H */
+/* #define TYPES_H */
+#pragma once
 
 // try to avoid compile time explosion by reducing includes
+
+
 class GUI;
 class Poly;
 class View;
@@ -30,12 +31,9 @@ class GCode;
 class Model;
 class Render;
 class Command;
-class Point2f;
 class Printer;
 class Settings;
 class Triangle;
-class Segment2f;
-class AsyncSerial;
 class RepRapSerial;
 class Layer;
 class PrintInhibitor;
@@ -52,4 +50,7 @@ class ViewProgress;
 enum SerialState { SERIAL_DISCONNECTED, SERIAL_DISCONNECTING,
 		   SERIAL_CONNECTED, SERIAL_CONNECTING };
 
-#endif // ENUMS_H
+// avoid having to re-type forward definitions and enums a lot
+enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
+
+/* #endif // TYPES_H */

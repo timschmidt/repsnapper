@@ -18,8 +18,8 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "types.h"
 #pragma once
+#include "types.h"
 
 #include <clipper/clipper/polyclipping/trunk/cpp/clipper.hpp>
 // see http://angusj.com/delphi/clipper.php

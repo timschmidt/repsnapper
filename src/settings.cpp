@@ -185,6 +185,7 @@ static struct {
   BOOL_MEMBER   (Slicing.LinelengthSort, "LinelengthSort", false, false),
   INT_MEMBER    (Slicing.FirstLayersNum, "FirstLayersNum", 1, true),
   FLOAT_MEMBER  (Slicing.FirstLayersSpeed, "FirstLayersSpeed", 0.5, true),
+  FLOAT_MEMBER  (Slicing.FirstLayersInfillDist, "FirstLayersInfillDist", 0.8, true),
   // Misc.
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
   //BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
@@ -280,6 +281,7 @@ static struct {
   { "Slicing.ShellOffset", -10, 10, 0.1, 1 },
   { "Slicing.FirstLayersNum", 0, 1000, 1, 10 },
   { "Slicing.FirstLayersSpeed", 0.01, 3, 0.01, 0.1 },
+  { "Slicing.FirstLayersInfillDist", 0.0, 100, 0.01, 0.1 },
 
   // Hardware
   { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },

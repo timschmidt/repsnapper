@@ -141,6 +141,7 @@ class Settings {
 
     guint FirstLayersNum;
     float FirstLayersSpeed;
+    float FirstLayersInfillDist;
     void GetAltInfillLayers(std::vector<int>& layers, guint layerCount) const;
   };
   SlicingSettings Slicing;
