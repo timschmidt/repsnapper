@@ -302,8 +302,12 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	double lastF=0.;
 	layerchanges.clear();
 
+	stringstream alltext;
+
 	while(getline(file,s))
 	{
+	  alltext << s << endl;
+
 		LineNr++;
 		if (LineNr%100==0) progress->update(1.*file.tellg());
 
@@ -344,6 +348,8 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 
 	commands = loaded_commands;
 
+	buffer->set_text(alltext.str());
+	
 	Center.x = (Max.x + Min.x )/2;
 	Center.y = (Max.y + Min.y )/2;
 	Center.z = (Max.z + Min.z )/2;
