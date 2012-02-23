@@ -139,7 +139,7 @@ vector<Poly> Clipping::unite()
   // CL::Polygons emptypolys;
   // clpr.AddPolygons(emptypolys, CLType(clip));
   clpr.Execute(CL::ctUnion, united, 
-	       CL::pftEvenOdd, CL::pftEvenOdd);
+	       CL::pftPositive, CL::pftPositive);
   return getPolys(united, lastZ, lastExtrF);  
 }
 
@@ -159,14 +159,15 @@ vector<Poly> Clipping::substractMerged()
   return getPolys(getMerged(diff), lastZ, lastExtrF);
 }
 
-vector<Poly> Clipping::getOffset(const Poly poly, double distance, JoinType jtype, double miterdist)
+vector<Poly> Clipping::getOffset(const Poly poly, double distance, 
+				 JoinType jtype, double miterdist)
 {
   CL::Polygons cpolys(1); cpolys[0]=getClipperPolygon(poly);
   CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
   return getPolys(offset, poly.getZ(), poly.getExtrusionFactor());
 }
-vector<Poly> Clipping::getOffset(const vector<Poly> polys, double distance, JoinType jtype,
-				 double miterdist)
+vector<Poly> Clipping::getOffset(const vector<Poly> polys, double distance, 
+				 JoinType jtype, double miterdist)
 {
   CL::Polygons cpolys = getClipperPolygons(polys);
   CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
@@ -179,8 +180,8 @@ vector<Poly> Clipping::getOffset(const vector<Poly> polys, double distance, Join
 }
 
 // first goes in then out to get capped corners
-vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> polys, double distance, JoinType jtype,
-					 double miterdist)
+vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> polys, double distance, 
+					 JoinType jtype, double miterdist)
 {
   CL::Polygons cpolys = getClipperPolygons(polys);
   CL::Polygons offset1 = CLOffset(cpolys, -2*CL_FACTOR*distance, CLType(jtype), 0);// CL::jtRound);

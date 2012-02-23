@@ -462,10 +462,10 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth, double shelloffset
 void Layer::MakeSkirt(double distance)
 {
   skirtPolygon.clear();
-  vector<Poly> skp = Clipping::getOffset(hullPolygon,distance,jround);
+  vector<Poly> skp = Clipping::getOffset(hullPolygon, distance, jround);
   if (skp.size()>0){
     skirtPolygon = skp.front();
-    skirtPolygon.cleanup(distance/3.);
+    skirtPolygon.cleanup(distance/8.);
   }
 }
 
@@ -538,6 +538,7 @@ void Layer::calcConvexHull()
   vector<Vector2d> minmax = hullPolygon.getMinMax();
   Min = minmax[0];
   Max = minmax[1];
+  hullPolygon.reverse();
 }
 
 
@@ -724,6 +725,9 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 			   GLUT_BITMAP_8_BY_13 , oss.str());
       }
 
+  draw_poly(hullPolygon,  GL_LINE_LOOP, 3, 3, 0.8,0.6,0.0,0.5);
+  draw_poly(skirtPolygon, GL_LINE_LOOP, 3, 3, 1,1,0,1);
+
   draw_polys(shellPolygons, GL_LINE_LOOP, 1, 3, 1,1,.2,1);
 
   glColor4f(0.5,0.9,1,1);
@@ -737,7 +741,6 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 
   draw_polys(fillPolygons, GL_LINE_LOOP, 1, 3, 1,1,1,1);
   draw_polys(supportPolygons, GL_LINE_LOOP, 3, 3, 0.5,0.5,1.0,1);
-  draw_poly(hullPolygon, GL_LINE_LOOP, 3, 3, 0.8,0.6,0.0,0.5);
   draw_polys(bridgePolygons, GL_LINE_LOOP, 3, 3, 0.8,0.5,0.5,0.8);
   draw_polys(fullFillPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
   draw_polys(decorPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);

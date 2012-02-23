@@ -494,12 +494,12 @@ Vector3d rotatedZ(Vector3d v, double angle)
 		  v.y*cosa+v.x*sina, v.z);
 }
 
-Vector3d random3d(Vector3d v, double delta=0.1)
+Vector3d random3d(Vector3d v, double delta=0.05)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
   return Vector3d(v.x+randdelta, v.y+randdelta, v.z+randdelta);
 }
-Vector2d random2d(Vector2d v, double delta=0.1)
+Vector2d random2d(Vector2d v, double delta=0.05)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
   return Vector2d(v.x+randdelta, v.y+randdelta);
@@ -571,9 +571,8 @@ string Poly::info() const
 {
   ostringstream ostr;
   ostr <<"Poly at Z="<<z;
-  ostr <<", "<< vertices.size();
+  ostr <<", "<< vertices.size() <<" vertices";
   ostr <<", extrf="<< extrusionfactor;
-  ostr <<" vertices";
   return ostr.str();
 }
 
