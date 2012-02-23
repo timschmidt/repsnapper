@@ -120,6 +120,7 @@ class Settings {
     int NormalFilltype;
     int FullFilltype;
     int SupportFilltype;
+    float SupportExtrusion;
     bool MakeDecor;
     int DecorFilltype;
     float DecorInfillDistance;

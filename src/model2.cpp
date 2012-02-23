@@ -551,6 +551,7 @@ void Model::CalcInfill()
       layers[i]->CalcInfill(settings.Slicing.NormalFilltype,
 			    settings.Slicing.FullFilltype,
 			    settings.Slicing.SupportFilltype,
+			    settings.Slicing.SupportExtrusion,
 			    settings.Slicing.DecorFilltype,
 			    infilldist, fullInfillDistance,
 			    settings.Slicing.InfillRotation,

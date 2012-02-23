@@ -71,7 +71,8 @@ public:
 
 
   void CalcInfill (int normalfilltype, int fullfilltype, 
-		   int supportfilltype, int decorfilltype,
+		   int supportfilltype, double supportextrfactor,
+		   int decorfilltype,
 		   double InfillDistance,  double FullInfillDistance,
 		   double InfillRotation,  double InfillRotationPrLayer,
 		   double DecorInfillDistance, double DecorInfillRotation, 

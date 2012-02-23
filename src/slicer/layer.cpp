@@ -204,7 +204,8 @@ vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
 }
 
 void Layer::CalcInfill (int normalfilltype, int fullfilltype,
-			int supportfilltype, int decorfilltype,
+			int supportfilltype, double supportextrfactor,
+			int decorfilltype,
 			double InfillDistance, 	double FullInfillDistance,
 			double InfillRotation, 	double InfillRotationPrLayer,
 			double DecorInfillDistance, double DecorInfillRotation, 
@@ -213,24 +214,19 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
 {
   // relative extrusion for skins:
   double skinfillextrf = 1./skins/skins; 
-
-  //cerr <<"infill "<< normalfilltype << " - " <<fullfilltype<< endl;
   normalInfill = new Infill(this,1.);
   normalInfill->setName("normal");
-  //cout << "new "; normalInfill->printinfo();
   fullInfill = new Infill(this,1.);
   fullInfill->setName("full");
   bridgeInfill = new Infill(this,1.);
   bridgeInfill->setName("bridge");
-  //cout << "new " ;fullInfill->printinfo();
   skinFullInfills.clear();
-  supportInfill = new Infill(this,0.5); // thinner walls for support
+  supportInfill = new Infill(this,supportextrfactor); // thinner walls for support
   supportInfill->setName("support");
   decorInfill = new Infill(this,1.);
   decorInfill->setName("decor");
 
   double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
-  //cerr << fillPolygons.size();
   if (!ShellOnly)
     normalInfill->addInfill(Z, fillPolygons, (InfillType)normalfilltype, 
 			    InfillDistance, FullInfillDistance, rot);
@@ -242,8 +238,6 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
 			 DecorInfillDistance, DecorInfillDistance,
 			 DecorInfillRotation/180.0*M_PI);
   
-  //  cerr << LayerNo << ": "<<bridgePolygons.size() << " = " << bridge_angles.size() << endl;
-  
   assert(bridge_angles.size() == bridgePolygons.size());
   for (uint b=0; b<bridgePolygons.size(); b++){
     bridgeInfill->addInfill(Z, bridgePolygons[b], BridgeInfill,
@@ -254,7 +248,6 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
     for (uint s = 0; s<skins; s++){
       double drot = rot + InfillRotationPrLayer/180.0*M_PI*s;
       double sz = Z-thickness + (s+1)*thickness/skins;
-      //cerr << Z << " : " << skins << " - "<< s << " - " << sz << " - " << thickness <<endl;
       Infill *inf = new Infill(this, skinfillextrf);
       inf->setName("skin");
       inf->addInfill(sz, skinFullFillPolygons, (InfillType)fullfilltype,
