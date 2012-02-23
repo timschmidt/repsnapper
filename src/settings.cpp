@@ -111,6 +111,7 @@ static struct {
   BOOL_MEMBER  (Hardware.CalibrateInput,  "CalibrateInput",  false, false),
   FLOAT_MEMBER (Hardware.MinPrintSpeedXY, "MinPrintSpeedXY", 1000, false),
   FLOAT_MEMBER (Hardware.MaxPrintSpeedXY, "MaxPrintSpeedXY", 4000, false),
+  FLOAT_MEMBER (Hardware.MoveSpeed,       "MoveSpeed",  4000, false),
   FLOAT_MEMBER (Hardware.MinPrintSpeedZ,  "MinPrintSpeedZ",  50, false),
   FLOAT_MEMBER (Hardware.MaxPrintSpeedZ,  "MaxPrintSpeedZ",  150, false),
 
@@ -296,8 +297,9 @@ static struct {
   { "Hardware.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
   { "Hardware.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
 
-  { "Hardware.MinPrintSpeedXY", 1.0, 8000.0, 10.0, 100.0 },
-  { "Hardware.MaxPrintSpeedXY", 1.0, 8000.0, 10.0, 100.0 },
+  { "Hardware.MinPrintSpeedXY", 1.0, 20000.0, 10.0, 100.0 },
+  { "Hardware.MaxPrintSpeedXY", 1.0, 20000.0, 10.0, 100.0 },
+  { "Hardware.MoveSpeed", 1.0, 20000.0, 10.0, 100.0 },
   { "Hardware.MinPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
   { "Hardware.MaxPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
 

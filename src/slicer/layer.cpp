@@ -565,7 +565,9 @@ void Layer::MakeGcode(GCodeState &state,
   double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
   double linewidth = thickness/linewidthratio;
 
-  double minspeed = hardware.MinPrintSpeedXY, maxspeed = hardware.MaxPrintSpeedXY;
+  double minspeed = hardware.MinPrintSpeedXY, 
+    maxspeed = hardware.MaxPrintSpeedXY,
+    movespeed = hardware.MoveSpeed;
 	
   bool linelengthsort = slicing.LinelengthSort;
 
@@ -600,7 +602,7 @@ void Layer::MakeGcode(GCodeState &state,
       // add all of this skin layer to lines
       printlines.clear();
       printlines.makeLines(polys, startPoint,  (s==1), //displace at first skin
-			   minspeed, maxspeed, 
+			   minspeed, maxspeed, movespeed,  
 			   linewidth, linewidthratio, optratio);
       printlines.slowdownTo(slicing.MinLayertime/skins/3);
       printlines.setSpeedFactor(speedfactor);
@@ -616,7 +618,7 @@ void Layer::MakeGcode(GCodeState &state,
   // 3. Support
   printlines.clear();
   printlines.makeLines(supportInfill->infillpolys, startPoint,
-		       minspeed, maxspeed, 
+		       minspeed, maxspeed, movespeed, 
 		       linewidth, linewidthratio, optratio,
 		       linelengthsort);
   printlines.slowdownTo(slicing.MinLayertime/2);
@@ -640,7 +642,7 @@ void Layer::MakeGcode(GCodeState &state,
   
   printlines.clear();
   printlines.makeLines(polys, startPoint, true, //displace at beginning
-		       minspeed, maxspeed, 
+		       minspeed, maxspeed, movespeed,
 		       linewidth, linewidthratio, optratio,
 		       linelengthsort);
   printlines.slowdownTo(slicing.MinLayertime/2);

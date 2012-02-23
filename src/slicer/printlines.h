@@ -49,8 +49,10 @@ class Printlines
 
   double z;
 
-  void addPoly(const Poly poly, int startindex=0, double speed=1);
-  void addLine(Vector2d from, Vector2d to, double speed=1, double feedrate=1.0);
+  void addPoly(const Poly poly, int startindex=0, 
+	       double speed=1, double movespeed=1);
+  void addLine(Vector2d from, Vector2d to, 
+	       double speed=1, double movespeed=1, double feedrate=1.0);
 
  public:
   Printlines(){};
@@ -63,11 +65,11 @@ class Printlines
   void makeLines(const vector<Poly> polys, 
 		 Vector2d &startPoint, 
 		 bool displace_startpoint, 
-		 double minspeed, double maxspeed,
+		 double minspeed, double maxspeed, double movespeed,
 		 double linewidth, double linewidthratio, double optratio,
 		 bool linelengthsort = false);
     
-  void optimize(double minspeed, double maxspeed,
+  void optimize(double minspeed, double maxspeed, double movespeed,
 		double linewidth, double linewidthratio, double optratio);
 
   // slow down to total time needed (cooling)

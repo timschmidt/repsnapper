@@ -118,6 +118,7 @@ void GCodeState::AddLines (vector<printline> plines,
 void GCodeState::AddLines (vector<Vector3d> lines,
 			   double extrusionFactor,
 			   double maxspeed,
+			   double maxmovespeed,
 			   double offsetZ, 
 			   const Settings::SlicingSettings &slicing,
 			   const Settings::HardwareSettings &hardware)
@@ -128,13 +129,13 @@ void GCodeState::AddLines (vector<Vector3d> lines,
       if(LastPosition() != lines[i]) 
 	{
 	  MakeAcceleratedGCodeLine (LastPosition(), lines[i],
-				    0, maxspeed, 
+				    0, maxmovespeed,
 				    offsetZ, slicing, hardware);
 	  SetLastPosition (lines[i]);
 	} 
       // PLOT to endpoint of line 
       MakeAcceleratedGCodeLine (LastPosition(), lines[i+1], 
-				maxspeed, extrusionFactor, 
+				extrusionFactor, maxspeed, 
 				offsetZ, slicing, hardware);
     SetLastPosition(lines[i+1]);
     }
@@ -148,9 +149,9 @@ void GCodeState::MakeAcceleratedGCodeLine (printline pline,
 					   const Settings::SlicingSettings &slicing,
 					   const Settings::HardwareSettings &hardware)
 {
-  if(LastPosition() != pline.from) {
+  if(LastPosition() != pline.from) { // then first move to pline.from
     MakeAcceleratedGCodeLine(LastPosition(), pline.from, 
-			     0, pline.speed,
+			     0, hardware.MoveSpeed,
 			     offsetZ, slicing, hardware);
   }
   MakeAcceleratedGCodeLine(pline.from, pline.to, 

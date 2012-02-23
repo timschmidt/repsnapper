@@ -58,6 +58,7 @@ class Settings {
   struct HardwareSettings {
     float MinPrintSpeedXY;
     float MaxPrintSpeedXY;
+    float MoveSpeed;
     float MinPrintSpeedZ;
     float MaxPrintSpeedZ;
 

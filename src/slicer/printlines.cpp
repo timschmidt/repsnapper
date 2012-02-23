@@ -21,7 +21,7 @@
 #include "poly.h"
 
 void Printlines::addLine(const Vector2d from, const Vector2d to, 
-			 double speed, double feedrate)
+			 double speed, double movespeed, double feedrate)
 {
   if (to==from) return;
   if (lines.size() > 0) {
@@ -30,7 +30,7 @@ void Printlines::addLine(const Vector2d from, const Vector2d to,
       struct line l;
       l.from = lastline.to;
       l.to = from;
-      l.speed=speed;
+      l.speed=movespeed;
       l.feedrate=0;
       l.angle = angle(l);
       lines.push_back(l);
@@ -46,20 +46,21 @@ void Printlines::addLine(const Vector2d from, const Vector2d to,
   lines.push_back(l);
 }
 
-void Printlines::addPoly(const Poly poly, int startindex, double speed)
+void Printlines::addPoly(const Poly poly, int startindex, 
+			 double speed, double movespeed)
 {
   vector<Vector2d> pvert;
   poly.getLines(pvert,startindex);
   assert(pvert.size() % 2 == 0);
   for (uint i=0; i<pvert.size();i+=2){
-    addLine(pvert[i], pvert[i+1], speed, poly.getExtrusionFactor());
+    addLine(pvert[i], pvert[i+1], speed, movespeed, poly.getExtrusionFactor());
   }
 }
 
 void Printlines::makeLines(const vector<Poly> polys, 
 			   Vector2d &startPoint,
 			   bool displace_startpoint, 
-			   double minspeed, double maxspeed, // mm/s
+			   double minspeed, double maxspeed, double movespeed, // mm/s
 			   double linewidth, double linewidthratio, double optratio,
 			   bool linelengthsort)
 {
@@ -112,7 +113,7 @@ void Printlines::makeLines(const vector<Poly> polys,
       }
       if (displace_startpoint && ndone==0)  // displace first point
 	nvindex = (nvindex+1)%polys[npindex].size();
-      addPoly(polys[npindex], nvindex, maxspeed);
+      addPoly(polys[npindex], nvindex, maxspeed, movespeed);
       done[npindex]=true;
       ndone++;
       if (lines.size()>0)
@@ -120,7 +121,7 @@ void Printlines::makeLines(const vector<Poly> polys,
     }
   if (count) {
     setZ(polys.back().getZ());
-    optimize(minspeed, maxspeed, linewidth, linewidthratio, optratio);
+    optimize(minspeed, maxspeed, movespeed, linewidth, linewidthratio, optratio);
   }
 }
 
@@ -152,7 +153,7 @@ double Printlines::length(const line l) const
   return sqrt(lengthSq(l));
 }
 
-void Printlines::optimize(double minspeed, double maxspeed,
+void Printlines::optimize(double minspeed, double maxspeed, double movespeed,
 			  double linewidth, double linewidthratio, double optratio)
 {
   //cout << "optimize " ; printinfo();

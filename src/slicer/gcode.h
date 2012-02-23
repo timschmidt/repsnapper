@@ -54,6 +54,7 @@ class GCodeState {
   void AddLines (vector<Vector3d> lines,
 		 double extrusionFactor,
 		 double maxspeed,
+		 double movespeed,
 		 double offsetZ, 
 		 const Settings::SlicingSettings &slicing,
 		 const Settings::HardwareSettings &hardware);
