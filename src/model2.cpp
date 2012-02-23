@@ -531,7 +531,8 @@ void Model::CalcInfill()
       }
       // inFill      
 
-      fullInfillDistance = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
+      fullInfillDistance = 
+	settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
       altInfillDistance = fullInfillDistance *(1+settings.Slicing.AltInfillDistance);
 
