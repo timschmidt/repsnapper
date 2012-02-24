@@ -11,7 +11,7 @@
 bin_PROGRAMS = repsnapper
 
 LIB_DIR=$(top_srcdir)/libraries
-WARNING_FLAGS = -Wall -Wno-invalid-offsetof
+WARNING_FLAGS = -Wall -Wsign-compare -Wno-invalid-offsetof 
 
 repsnapper_CPPFLAGS = \
 	-I$(LIB_DIR)/vmmlib/include \

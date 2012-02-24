@@ -406,27 +406,27 @@ vector<Vector2d> Poly::getPathAround(const Vector2d from, const Vector2d to) con
 {
   double dist;
   vector<Vector2d> path1, path2;
-  Poly off = Clipping::getOffset(*this, 0, jround).front();
+  // Poly off = Clipping::getOffset(*this, 0, jround).front();
   //cerr << size()<<  " Off " << off.size()<< endl;
-  int nvert = off.size();
+  int nvert = size();
   if (nvert==0) return path1;
-  int fromind = (int)off.nearestDistanceSqTo(from, dist);
-  int toind = (int)off.nearestDistanceSqTo(to, dist);
+  int fromind = (int)nearestDistanceSqTo(from, dist);
+  int toind = (int)nearestDistanceSqTo(to, dist);
   if (fromind==toind) {
-    path1.push_back(off[fromind]);
+    path1.push_back(vertices[fromind]);
     return path1;
   }
   //calc both direction paths
   if(fromind < toind) {
     for (int i=fromind; i<=toind; i++)
-      path1.push_back(off.getVertexCircular(i));
+      path1.push_back(getVertexCircular(i));
     for (int i=fromind+nvert; i>=toind; i--)
-      path2.push_back(off.getVertexCircular(i));
+      path2.push_back(getVertexCircular(i));
   } else {
     for (int i=fromind; i>=toind; i--)
-      path1.push_back(off.getVertexCircular(i));
+      path1.push_back(getVertexCircular(i));
     for (int i=fromind; i<=toind+nvert; i++)
-      path2.push_back(off.getVertexCircular(i));
+      path2.push_back(getVertexCircular(i));
   }
   // find shorter one
   double len1=0,len2=0;

@@ -176,7 +176,7 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
 	  if ((fourpoints[1]-fourpoints[2]).lengthSquared() 
 	      < (fourpoints[0]-fourpoints[3]).lengthSquared()) {
 	    tr[0] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
-	    tr[1] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
+  	    tr[1] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
 	  } else {
 	    tr[0] = Triangle(fourpoints[1],fourpoints[0],fourpoints[3]);
 	    tr[1] = Triangle(fourpoints[0],fourpoints[2],fourpoints[3]);

@@ -569,12 +569,12 @@ void Model::CalcInfill()
 
 void Model::ConvertToGCode()
 {
+  if (is_calculating) return;
   is_calculating=true;
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();
   string GcodeLayer = settings.GCode.getLayerText();
   string GcodeEnd = settings.GCode.getEndText();
-
 
   GCodeState state(gcode);
 
@@ -584,65 +584,46 @@ void Model::ConvertToGCode()
   Vector3d printOffset = settings.Hardware.PrintMargin;
   double printOffsetZ = settings.Hardware.PrintMargin.z;
 
-
-  //m_progress->start (_("Converting"), 9.);
-  // m_progress->update(0.);
-
   if (settings.RaftEnable)
     {
       printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
       MakeRaft (state, printOffsetZ);
     }
 
-  // m_progress->set_label (_("Slicing"));
-  // m_progress->update(1.);
-
   // Make Layers
   Slice(printOffsetZ);
   
-  // m_progress->set_label (_("Shells"));
-  // m_progress->update(2.);
   MakeShells();
 
-  // m_progress->set_label (_("Uncovered"));
-  // m_progress->update(3.);
   if (settings.Slicing.SolidTopAndBottom)
     // not bridging when support
     MakeUncoveredPolygons(settings.Slicing.MakeDecor, !settings.Slicing.Support);
 
-  // m_progress->set_label (_("Support"));
-  // m_progress->update(4.);
-
   if (settings.Slicing.Support)
     MakeSupportPolygons(); // easier before multiplied uncovered bottoms
 
-  // m_progress->set_label (_("Tops and Bottoms"));
-  // m_progress->update(5.);
   MakeFullSkins(); // must before multiplied uncovered bottoms
 
-  //  m_progress->update(6.);
   if (settings.Slicing.SolidTopAndBottom)
     MultiplyUncoveredPolygons();
 
-  // m_progress->set_label (_("Infill"));
-  // m_progress->update(7.);
   CalcInfill();
 
   state.ResetLastWhere(Vector3d(0,0,0));
   uint count =  layers.size();
-  // m_progress->set_label (_("GCode"));
-  // m_progress->update(8.);
+
   m_progress->start (_("Making GCode"), count+1);
   
   state.AppendCommand(ABSOLUTEPOSITIONING, false, "Absolute Pos");
 
   for (uint p=0;p<count;p++){
     m_progress->update(p);
-    //cerr << "\rGCode layer " << (p+1) << " of " << count  ;
+    //cerr << "GCode layer " << (p+1) << " of " << count  << endl;;
     layers[p]->MakeGcode (state,
 			  printOffsetZ,
 			  settings.Slicing, settings.Hardware);
   }
+
   int h = (int)state.timeused/3600;
   int m = ((int)state.timeused%3600)/60;
   int s = ((int)state.timeused-3600*h-60*m);
@@ -667,8 +648,6 @@ void Model::ConvertToGCode()
 
   m_progress->stop (_("Done"));
 
-  is_calculating=false;
-
   ostr.clear();
   double gctime = gcode.GetTimeEstimation();
   if (abs(state.timeused - gctime) > 10) {
@@ -685,5 +664,7 @@ void Model::ConvertToGCode()
   ostr << " = " << ccm << "cm^3 ";
   ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)"; 
   statusbar->push(ostr.str());
+
+  is_calculating=false;
 }
 

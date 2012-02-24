@@ -116,7 +116,7 @@ void Model::GlDrawGCode(int layerno)
 {
   if (settings.Display.DisplayGCode) 
     gcode.draw (settings, layerno, false);
-  if (currentprintingline>=0) {
+  if (currentprintingline>0) {
     int currentlayer = gcode.getLayerNo(currentprintingline);
     if (currentlayer>=0)
       gcode.draw (settings, currentlayer, true, 1);

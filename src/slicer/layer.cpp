@@ -620,8 +620,7 @@ void Layer::MakeGcode(GCodeState &state,
   printlines.clipMovements(GetOuterShell());
   printlines.getLines(lines);
 
-  // 4. all other polygons:
-  
+  // 4. all other polygons:  
   //  Shells
   for(size_t p=0;p<shellPolygons.size();p++) // outer to inner, in this order
     polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());

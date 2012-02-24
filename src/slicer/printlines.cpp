@@ -181,9 +181,9 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> points)
   line l = lines[lineindex];
   for (int i = -1; i < (int)points.size(); i++) {
     line nl;
-    if (i<0) nl.from = l.from;
+    if (i < 0) nl.from = l.from;
     else nl.from=points[i];
-    if (i>(int)points.size()-2) nl.to=l.to;
+    if (i > (int)points.size()-2) nl.to=l.to;
     else nl.to=points[i+1];
     nl.speed = l.speed;
     nl.feedrate = l.feedrate;
@@ -204,42 +204,45 @@ void Printlines::clipMovements(const vector<Poly> polys, double maxerr)
 {
   if (lines.size()==0) return;
   vector<line> newlines;
-  for (uint i=0; i < lines.size(); i++) {
+  for (guint i=0; i < lines.size(); i++) {
     if (lines[i].feedrate == 0) {
+      int frompoly=-1, topoly=-1;
       for (uint p = 0; p < polys.size(); p++) {
+	if (frompoly==-1 && polys[p].vertexInside(lines[i].from))
+	  frompoly=(int)p;
+	if (topoly==-1 && polys[p].vertexInside(lines[i].to))
+	  topoly=(int)p;
 	vector<Intersection> pinter = 
 	  polys[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
 	if (pinter.size() > 0) {
 	  if (pinter.size()%2 == 0) { // holes
 	    std::sort(pinter.begin(), pinter.end());
-	    //cerr << pinter.size() << " intersections at poly " << p <<  endl;
 	    vector<Vector2d> path = 
 	      polys[p].getPathAround(pinter.front().p, pinter.back().p);
-	    //cerr << i << " -- " << lines.size() << " --  path " << path.size()<< endl;
 	    i += (divideline(i,path)); //if (i>0) i--; // test new lines again?
 	  }
-	  else if (0) {//(pinter.size()==1){ // going out
-	    // find polys that are connected by this line
-	    int frompoly=-1, topoly=-1;
-	    for (uint op = 0; op < polys.size(); op++) {
-	      if (polys[op].vertexInside(lines[i].from)) frompoly=(int)op;
-	      if (polys[op].vertexInside(lines[i].to)) topoly=(int)op;
-	    }
-	    cerr <<i << " : "<<frompoly << " p>> " << topoly << endl;
-	    if (frompoly>-1 && topoly>-1 && frompoly!=topoly) {
-	      int fromind,toind;
-	      polys[frompoly].nearestIndices(polys[topoly], fromind, toind);
-	      cerr <<fromind << " i>> " << toind << endl;
-	      vector<Vector2d> path;
-	      //path.push_back(lines[i].from);
-	      path.push_back(polys[frompoly].vertices[fromind]);
-	      path.push_back(polys[topoly].vertices[toind]);
-	      //path.push_back(lines[i].to);
-	      i+= (divideline(i,path)); // test new lines again?
-	    }
-	    //   cerr << pinter.size()  <<" uneven intersections at poly " << p << endl;
-	  }
 	}
+      }
+      if (0 && frompoly != -1 && topoly != -1 && frompoly != topoly) {
+	cerr <<i << " : "<<frompoly << " p>> " << topoly << endl;	
+	// vector<Intersection> frominter = 
+	//   polys[frompoly].lineIntersections(lines[i].from,lines[i].to, maxerr);
+	// vector<Intersection> tointer = 
+	//   polys[topoly].lineIntersections(lines[i].from,lines[i].to, maxerr);
+	// cerr << frominter.size() << " -- " << tointer.size() << endl;
+	// vector<Vector2d> frompath = 
+	//   polys[frompoly].getPathAround(lines[i].from, lines[i].to);
+	// vector<Vector2d> topath = 
+	//   polys[topoly].getPathAround(lines[i].from, lines[i].to);
+	// cerr << frompath.size() << " -- " << topath.size() << endl;
+	int fromind, toind;
+	polys[frompoly].nearestIndices(polys[topoly], fromind, toind);
+	vector<Vector2d> path;
+	//path.push_back(lines[i].from);
+	path.push_back(polys[frompoly].vertices[fromind]);
+	path.push_back(polys[topoly].vertices[toind]);
+	//path.push_back(lines[i].to);
+	//i+= (divideline(i,path)); // test new lines again?
       }
     }
   }
