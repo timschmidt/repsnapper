@@ -72,6 +72,7 @@ class Infill
 
   double extrusionfactor;
   string name; 
+  bool cached; // if this pattern comes from savedPatterns
 
   void setName(string s){name=s;};
   string getName(){return name;};

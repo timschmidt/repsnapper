@@ -28,12 +28,14 @@ omp_lock_t Infill::save_lock;
 void hilbert(int level,int direction, double infillDistance, vector<Vector2d> &v);
 
 
-Infill::Infill(){
-  this->extrusionfactor = 1.;
+Infill::Infill() 
+  : extrusionfactor(1), cached(false)
+{
 }
 
 
-Infill::Infill(Layer *mlayer, double extrfactor) 
+Infill::Infill (Layer *mlayer, double extrfactor) 
+  : cached(false)
 {
   layer = mlayer;
   extrusionfactor = extrfactor;
@@ -125,6 +127,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 					       double rotation) 
 {
   this->type = type;
+  cached = false;
   //cerr << "have " << savedPatterns.size()<<" saved patterns " << endl;
   // look for saved pattern for this rotation
   const Vector2d Min = layer->getMin();
@@ -159,6 +162,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	      }
 	    else {
 	      //cerr <<"return "<<  sIt->cpolys.size()<< endl;
+	      cached = true;
 	      return sIt->cpolys;
 	    }
 	  }

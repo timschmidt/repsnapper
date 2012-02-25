@@ -344,10 +344,10 @@ vector<Poly> Layer::GetInnerShell() const
 }
 vector<Poly> Layer::GetOuterShell() const
 {
-  if (shellPolygons.size()>0) return shellPolygons.front();
-  // no shells:
   if (skinPolygons.size()>0) return skinPolygons;
   // no skins
+  if (shellPolygons.size()>0) return shellPolygons.front();
+  // no shells:
   if (fillPolygons.size()>0) return fillPolygons;
   // no offset
   return polygons;
@@ -685,35 +685,47 @@ string Layer::info() const
 
 
 void draw_poly(Poly poly, int gl_type, int linewidth, int pointsize,
-	       float r, float g, float b, float a)
+	       const float *rgb, float a)
 {
-  glColor4f(r,g,b,a);
+  glColor4f(rgb[0],rgb[1],rgb[2],a);
   glLineWidth(linewidth);
   glPointSize(pointsize);
   poly.draw(gl_type);
 }
 void draw_polys(vector <Poly> polys, int gl_type, int linewidth, int pointsize,
-		 float r, float g, float b, float a)
+		const float *rgb, float a)
 {
-  glColor4f(r,g,b,a);
+  glColor4f(rgb[0],rgb[1],rgb[2], a);
   glLineWidth(linewidth);
   glPointSize(pointsize);
   for(size_t p=0; p<polys.size();p++)
     polys[p].draw(gl_type);
 }
 void draw_polys(vector< vector <Poly> > polys, int gl_type, int linewidth, int pointsize,
-		 float r, float g, float b, float a)
+		const float *rgb, float a)
 {
   for(size_t p=0; p<polys.size();p++)
-    draw_polys(polys[p], gl_type, linewidth, pointsize, r,g,b,a);
+    draw_polys(polys[p], gl_type, linewidth, pointsize, rgb,a);
 }
+
+float const GREEN[] = {0.1, 1, 0.1};
+float const BLUEGREEN[] = {0.1, 0.9, 0.7};
+float const BLUE2[] = {0.5,0.5,1.0};
+float const RED[] = {1, 0, 0};
+float const RED2[] = {0.8,0.5,0.5};
+float const RED3[] = {0.8,0.3,0.1};
+float const ORANGE[] = {1, 0, 0};
+float const YELLOW[] = {1, 1, 0};
+float const YELLOW2[] = {1, 1, 0.2};
+float const WHITE[] = {1, 1, 1};
+float const GREY[] = {0.5,0.5,0.5};
 
 void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 		 bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
 		 bool DrawCPVertexNumbers, bool DisplayInfill) const 
 {
-  draw_polys(polygons, GL_LINE_LOOP, 1, 3, 1,0,0,1);
-  draw_polys(polygons, GL_POINTS, 1, 3, 1,0,0,1);
+  draw_polys(polygons, GL_LINE_LOOP, 1, 3, RED,1);
+  draw_polys(polygons, GL_POINTS, 1, 3, RED,1);
 
   if(DrawOutlineNumbers)
     for(size_t p=0; p<polygons.size();p++)
@@ -724,10 +736,10 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 			   GLUT_BITMAP_8_BY_13 , oss.str());
       }
 
-  draw_poly(hullPolygon,  GL_LINE_LOOP, 3, 3, 0.8,0.6,0.0,0.5);
-  draw_poly(skirtPolygon, GL_LINE_LOOP, 3, 3, 1,1,0,1);
+  draw_poly(hullPolygon,  GL_LINE_LOOP, 3, 3, ORANGE,0.5);
+  draw_poly(skirtPolygon, GL_LINE_LOOP, 3, 3, YELLOW,1);
 
-  draw_polys(shellPolygons, GL_LINE_LOOP, 1, 3, 1,1,.2,1);
+  draw_polys(shellPolygons, GL_LINE_LOOP, 1, 3, YELLOW2, 1);
 
   glColor4f(0.5,0.9,1,1);
   glLineWidth(1);
@@ -738,26 +750,32 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
     zs-=thickness/skins;
   }
 
-  draw_polys(fillPolygons, GL_LINE_LOOP, 1, 3, 1,1,1,1);
-  draw_polys(supportPolygons, GL_LINE_LOOP, 3, 3, 0.5,0.5,1.0,1);
-  draw_polys(bridgePolygons, GL_LINE_LOOP, 3, 3, 0.8,0.5,0.5,0.8);
-  draw_polys(fullFillPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
-  draw_polys(decorPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
-  draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, 0.5,0.5,0.5,1);
+  draw_polys(fillPolygons, GL_LINE_LOOP, 1, 3, WHITE,1);
+  draw_polys(supportPolygons, GL_LINE_LOOP, 3, 3, BLUE2 ,1);
+  draw_polys(bridgePolygons, GL_LINE_LOOP, 3, 3, RED2,0.8);
+  draw_polys(fullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,1);
+  draw_polys(decorPolygons, GL_LINE_LOOP, 1, 3, GREY,1);
+  draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,1);
   if(DisplayInfill)
     {
       if (normalInfill)
-	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
+	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+		   (normalInfill->cached?BLUEGREEN:GREEN),0.8);
       if (fullInfill)
-	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
+	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+		   (fullInfill->cached?BLUEGREEN:GREEN),0.8);
       if (decorInfill)
-	draw_polys(decorInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
+	draw_polys(decorInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+		   (decorInfill->cached?BLUEGREEN:GREEN),0.8);
       if (bridgeInfill)
-	draw_polys(bridgeInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.8,0.3,0.1,0.8);
+	draw_polys(bridgeInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+		   RED3,0.8);
       if (supportInfill)
-	draw_polys(supportInfill->infillpolys, GL_LINE_LOOP, 1, 3, 0.1,1,0.1,0.8);
+	draw_polys(supportInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+		   (supportInfill->cached?BLUEGREEN:GREEN),0.8);
       for(size_t s=0;s<skinFullInfills.size();s++) 
-	draw_polys(skinFullInfills[s]->infillpolys, GL_LINE_LOOP, 3, 3, 0.2,1,0.2,0.6);
+	draw_polys(skinFullInfills[s]->infillpolys, GL_LINE_LOOP, 3, 3, 
+		   (skinFullInfills[s]->cached?BLUEGREEN:GREEN),0.6);
     }
   glLineWidth(1);  
   if(DrawCPVertexNumbers)
