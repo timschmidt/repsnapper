@@ -223,7 +223,7 @@ vector<Poly> Clipping::getMerged(vector<Poly> polys)
 CL::Polygons Clipping::getMerged(CL::Polygons cpolys) 
 {
   //  return polys;
-  int OFFSET=3;
+  int OFFSET=1;
   // make wider to get overlap
   CL::Polygons offset;
   offset = CLOffset(cpolys, OFFSET, CL::jtMiter, 1);
