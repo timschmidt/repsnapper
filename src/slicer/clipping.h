@@ -69,8 +69,8 @@ public:
 
   vector<Poly> intersect();
   vector<Poly> unite();
-  vector<Poly> substract();
-  vector<Poly> substractMerged();
+  vector<Poly> subtract();
+  vector<Poly> subtractMerged();
   // vector<Poly> xor();
 
   static vector<Poly> getMerged(vector<Poly> polys);

@@ -290,7 +290,7 @@ void Layer::addBridgePolygons(const vector<Poly> newpolys)
   clipp.clear();
   clipp.addPolys(fillPolygons,subject);  
   clipp.addPolys(inter,clip);
-  setNormalFillPolygons(clipp.substract());
+  setNormalFillPolygons(clipp.subtract());
   mergeFullPolygons(true);
 }
 
@@ -313,7 +313,7 @@ void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor)
   clipp.clear();
   clipp.addPolys(fillPolygons,subject);  
   clipp.addPolys(inter,clip);
-  setNormalFillPolygons(clipp.substract());
+  setNormalFillPolygons(clipp.subtract());
   mergeFullPolygons(false);
 }
 
@@ -334,12 +334,12 @@ void Layer::mergeSupportPolygons()
 
 vector<Poly> Layer::GetInnerShell() const
 {
+  // if (fillPolygons.size()>0) return fillPolygons;
+  // // no offset
   if (shellPolygons.size()>0) return shellPolygons.back();
   // no shells:
   if (skinPolygons.size()>0) return skinPolygons;
   // no skins
-  if (fillPolygons.size()>0) return fillPolygons;
-  // no offset
   return polygons;
 }
 vector<Poly> Layer::GetOuterShell() const
@@ -724,8 +724,8 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 		 bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
 		 bool DrawCPVertexNumbers, bool DisplayInfill) const 
 {
-  draw_polys(polygons, GL_LINE_LOOP, 1, 3, RED,1);
-  draw_polys(polygons, GL_POINTS, 1, 3, RED,1);
+  draw_polys(polygons, GL_LINE_LOOP, 1, 3, RED, 1);
+  draw_polys(polygons, GL_POINTS,    1, 3, RED, 1);
 
   if(DrawOutlineNumbers)
     for(size_t p=0; p<polygons.size();p++)
@@ -736,9 +736,8 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 			   GLUT_BITMAP_8_BY_13 , oss.str());
       }
 
-  draw_poly(hullPolygon,  GL_LINE_LOOP, 3, 3, ORANGE,0.5);
-  draw_poly(skirtPolygon, GL_LINE_LOOP, 3, 3, YELLOW,1);
-
+  draw_poly(hullPolygon,    GL_LINE_LOOP, 3, 3, ORANGE,  0.5);
+  draw_poly(skirtPolygon,   GL_LINE_LOOP, 3, 3, YELLOW,  1);
   draw_polys(shellPolygons, GL_LINE_LOOP, 1, 3, YELLOW2, 1);
 
   glColor4f(0.5,0.9,1,1);
@@ -750,33 +749,34 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
     zs-=thickness/skins;
   }
 
-  draw_polys(fillPolygons, GL_LINE_LOOP, 1, 3, WHITE,1);
-  draw_polys(supportPolygons, GL_LINE_LOOP, 3, 3, BLUE2 ,1);
-  draw_polys(bridgePolygons, GL_LINE_LOOP, 3, 3, RED2,0.8);
-  draw_polys(fullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,1);
-  draw_polys(decorPolygons, GL_LINE_LOOP, 1, 3, GREY,1);
-  draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,1);
+  draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 1);
+  draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1);
+  draw_polys(bridgePolygons,       GL_LINE_LOOP, 3, 3, RED2,  0.8);
+  draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 3, GREY,  1);
+  draw_polys(decorPolygons,        GL_LINE_LOOP, 1, 3, GREY,  1);
+  draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  1);
   if(DisplayInfill)
     {
       if (normalInfill)
 	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
-		   (normalInfill->cached?BLUEGREEN:GREEN),0.8);
+		   (normalInfill->cached?BLUEGREEN:GREEN), 0.8);
       if (fullInfill)
 	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
-		   (fullInfill->cached?BLUEGREEN:GREEN),0.8);
+		   (fullInfill->cached?BLUEGREEN:GREEN), 0.8);
       if (decorInfill)
 	draw_polys(decorInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
-		   (decorInfill->cached?BLUEGREEN:GREEN),0.8);
+		   (decorInfill->cached?BLUEGREEN:GREEN), 0.8);
       if (bridgeInfill)
 	draw_polys(bridgeInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   RED3,0.8);
       if (supportInfill)
 	draw_polys(supportInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
-		   (supportInfill->cached?BLUEGREEN:GREEN),0.8);
+		   (supportInfill->cached?BLUEGREEN:GREEN), 0.8);
       for(size_t s=0;s<skinFullInfills.size();s++) 
 	draw_polys(skinFullInfills[s]->infillpolys, GL_LINE_LOOP, 3, 3, 
-		   (skinFullInfills[s]->cached?BLUEGREEN:GREEN),0.6);
+		   (skinFullInfills[s]->cached?BLUEGREEN:GREEN), 0.6);
     }
+  //draw_polys(GetInnerShell(), GL_LINE_LOOP, 2, 3, WHITE,  1);
   glLineWidth(1);  
   if(DrawCPVertexNumbers)
     for(size_t p=0; p<polygons.size();p++)

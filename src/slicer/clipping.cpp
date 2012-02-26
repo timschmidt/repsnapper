@@ -144,14 +144,14 @@ vector<Poly> Clipping::unite()
 }
 
 // have added Polyons by addPolygon(s)
-vector<Poly> Clipping::substract()
+vector<Poly> Clipping::subtract()
 {
   CL::Polygons diff;
   clpr.Execute(CL::ctDifference, diff, 
 	       CL::pftEvenOdd, CL::pftEvenOdd);
   return getPolys(diff, lastZ, lastExtrF);
 }
-vector<Poly> Clipping::substractMerged()
+vector<Poly> Clipping::subtractMerged()
 {
   CL::Polygons diff;
   clpr.Execute(CL::ctDifference, diff, 
