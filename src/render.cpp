@@ -212,20 +212,24 @@ bool Render::on_expose_event(GdkEventExpose* event)
 
 bool Render::on_button_press_event(GdkEventButton* event)
 {
-  if (event->button == 1) {
+  // if (event->button == 1) {
     m_arcBall->click (event->x, event->y, &m_transform);
-  }
-  else if (event->button == 3 || event->button == 2)
+  // }
+  // else if (event->button == 3 || event->button == 2)
     m_downPoint = Vector2f (event->x, event->y);  
-  else
-    return Gtk::DrawingArea::on_button_press_event (event);
+  // else
+  //   return Gtk::DrawingArea::on_button_press_event (event);
   return true;
 }
 
 bool Render::on_button_release_event(GdkEventButton* event)
 {
   if (event->button == 1) {
-    if (m_downPoint.x == event->x && m_downPoint.y == event->y){ // click only
+    if (event->state & GDK_SHIFT_MASK) { // move object
+      m_view->get_model()->CalcBoundingBoxAndCenter();
+      queue_draw();
+    }
+    else if (m_downPoint.x == event->x && m_downPoint.y == event->y){ // click only
       guint index = find_object_at(event->x, event->y);
       if (index) {
   	Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
@@ -237,12 +241,6 @@ bool Render::on_button_release_event(GdkEventButton* event)
 	// click on no object - clear the selection
 	m_selection->unselect_all();
       }
-    }
-  }
-  else if (event->button == 3) {
-    if (event->state & GDK_SHIFT_MASK) { // move object
-      m_view->get_model()->CalcBoundingBoxAndCenter();
-      queue_draw();
     }
   }
   else
@@ -264,47 +262,48 @@ bool Render::on_scroll_event(GdkEventScroll* event)
 bool Render::on_motion_notify_event(GdkEventMotion* event)
 {
   bool redraw=true;
-  if (event->state & GDK_BUTTON1_MASK) { // rotate
-    m_arcBall->dragAccumulate(event->x, event->y, &m_transform);
+  Vector2f dragp(event->x, event->y);
+  Vector2f delta = m_downPoint - dragp;
+  double factor = 0.3;
+  Vector3d delta3f(-delta.x*factor, delta.y*factor, 0);
+  if (event->state & GDK_BUTTON1_MASK) { // move or rotate
+    if (event->state & GDK_SHIFT_MASK) { // move object
+      if (false);//delta3f.x<1 && delta3f.y<1) redraw=false;
+      else {
+	Shape *shape;
+	TreeObject *object;
+	if (!m_view->get_selected_stl(object, shape))
+	  return true;
+	if (!object && !shape)
+	  return true;
+	Transform3D *transf;
+	if (!shape)
+	  transf = &object->transform3D;
+	else
+	  transf = &shape->transform3D;
+	transf->move(delta3f);
+	m_downPoint = dragp;
+	//m_view->get_model()->CalcBoundingBoxAndCenter();
+      }
+    }
+    else { // rotate
+      m_arcBall->dragAccumulate(event->x, event->y, &m_transform);
+    }
     if (redraw) queue_draw();
     return true;
   }
   else {
-    Vector2f dragp(event->x, event->y);
-    Vector2f delta = m_downPoint - dragp;
     if (event->state & GDK_BUTTON2_MASK) { // zoom
       double factor = 1.0 + 0.01 * (delta.x - delta.y);
       m_zoom *= factor;
     }
     else if (event->state & GDK_BUTTON3_MASK) { // pan
-      double factor = 0.3;
-      Vector3d delta3f(-delta.x*factor, delta.y*factor, 0);
-      if (event->state & GDK_SHIFT_MASK) { // move object
-	if (false);//delta3f.x<1 && delta3f.y<1) redraw=false;
-	else {
-	  Shape *shape;
-	  TreeObject *object;
-	  if (!m_view->get_selected_stl(object, shape))
-	  return true;
-	  if (!object && !shape)
-	    return true;
-	  Transform3D *transf;
-	  if (!shape)
-	    transf = &object->transform3D;
-	  else
-	    transf = &shape->transform3D;
-	  transf->move(delta3f);
-	  //m_view->get_model()->CalcBoundingBoxAndCenter();
-	}
-      }
-      else {
-	Matrix4f matrix;
-	memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
-	Vector3f m_transl = matrix.getTranslation();
-	m_transl += delta3f;
-	matrix.setTranslation(m_transl);
-	memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));
-      }
+      Matrix4f matrix;
+      memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
+      Vector3f m_transl = matrix.getTranslation();
+      m_transl += delta3f;
+      matrix.setTranslation(m_transl);
+      memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));      
     }
     m_downPoint = dragp;
     if (redraw) queue_draw();
