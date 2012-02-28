@@ -447,22 +447,21 @@ void Model::MakeSupportPolygons()
 void Model::MakeSkirt()
 {
   Clipping clipp;
-  uint count = layers.size();
-  uint startindex = count;
+  guint count = layers.size();
+  guint endindex = 0;
   // find maximum of all calculated skirts
   clipp.clear();
-  for (int i=count-1; i >= 0; i--) 
+  for (guint i=0; i < count; i++) 
     {
-      if (layers[i]->getZ() > settings.Slicing.SkirtHeight) {
-	startindex = i;
-	continue;
-      }
+      if (layers[i]->getZ() > settings.Slicing.SkirtHeight)
+	break;
       Poly sp = layers[i]->GetSkirtPolygon();
       clipp.addPoly(sp,subject);
+      endindex = i;
     }
   vector<Poly> skirts = clipp.unite();
   // set this skirt for all skirted layers 
-  for (int i=startindex-1; i >= 0; i--) {
+  for (int i=0; i<=endindex; i++) {
     layers[i]->setSkirtPolygon(skirts[0]);
   }
 }
