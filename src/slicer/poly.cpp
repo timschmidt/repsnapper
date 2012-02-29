@@ -30,37 +30,6 @@
 
 #include <poly2tri/poly2tri/poly2tri/poly2tri.h>
 
-long double angleBetween(Vector2d V1, Vector2d V2)
-{
-  long double result, dotproduct, lengtha, lengthb;
-  dotproduct =  V1.dot(V2);
-  lengtha = V1.length();
-  lengthb = V2.length();
-  result = acosl( dotproduct / (lengtha * lengthb) );
-  if(result < 0)
-    result += M_PI;
-  else
-    result -= M_PI;
-  return result;
-}
-
-// not correct
-long double angleBetweenAtan2(Vector2d V1, Vector2d V2)
-{
-  long double result;
-
-  Vector2d V1n = V1.getNormalized();
-  Vector2d V2n = V2.getNormalized();
-	
-  long double a2 = atan2l(V2n.y, V2n.x);
-  long double a1 = atan2l(V1n.y, V1n.x);
-  result = a2 - a1;
-
-  if(result < 0)
-    result += 2.*M_PI;
-  return result;
-}
-
 
 Poly::Poly(){
   holecalculated = false;
@@ -340,14 +309,6 @@ double Poly::averageLinelengthSq() const
 }
 
 // add to lines starting with nearest point to startPoint
-void Poly::getLines(vector<printline> &plines, Vector2d &startPoint) const
-{
-  if (size()<2) return;
-  double mindist = 1000000;
-  uint index = nearestDistanceSqTo(startPoint, mindist);
-  getLines(plines,index);
-  startPoint = Vector2d(plines.back().to.x,plines.back().to.y);
-}
 void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const
 {
   if (size()<2) return;
@@ -377,22 +338,6 @@ void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
     {
       lines.push_back(getVertexCircular(i+startindex));
       lines.push_back(getVertexCircular(i+startindex+1));
-    }
-}
-// add to lines starting with given index
-// closed lines sequence
-void Poly::getLines(vector<printline> &plines, uint startindex) const
-{
-  size_t count = vertices.size();
-  if (count<2) return; // one point no line
-  if (count<3) count--; // two points one line
-  for(size_t i=0;i<count;i++)
-    {
-      struct printline pline;
-      pline.from = getVertexCircular3(i+startindex);
-      pline.to = getVertexCircular3(i+startindex+1);
-      pline.extrusionfactor = extrusionfactor ;
-      plines.push_back(pline);
     }
 }
 void Poly::getLines(vector<Vector3d> &lines, uint startindex) const

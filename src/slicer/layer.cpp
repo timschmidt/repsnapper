@@ -470,13 +470,6 @@ void Layer::MakeSkirt(double distance)
 }
 
 
-// is B left of A wrt center?
-bool isleftof(Vector2d center, Vector2d A, Vector2d B)
-{
-  double position = (B.x-A.x)*(center.y-A.y) - (B.y-A.y)*(center.x-A.x);
-  // position = sign((p2-p1).cross(center-p1)[2]) ; // this would be 3d
-  return (position > 0);
-}
 
 
 // 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
@@ -548,10 +541,9 @@ void Layer::MakeGcode(GCodeState &state,
 		      const Settings::SlicingSettings &slicing,
 		      const Settings::HardwareSettings &hardware)
 {
-
   Vector3d start3 = state.LastPosition();
   Vector2d startPoint(start3.x,start3.y);
-  
+
   double extrf = hardware.GetExtrudeFactor(thickness);
 
   double OPTRATIO = 1.5;
@@ -562,8 +554,10 @@ void Layer::MakeGcode(GCodeState &state,
   double minspeed = hardware.MinPrintSpeedXY, 
     maxspeed = hardware.MaxPrintSpeedXY,
     movespeed = hardware.MoveSpeed;
-	
+
   bool linelengthsort = slicing.LinelengthSort;
+  double maxArcAngle = slicing.ArcsMaxAngle * M_PI/180;
+  if (!slicing.UseArcs) maxArcAngle = -1;
 
   float speedfactor = 1;
   if ((guint)LayerNo < slicing.FirstLayersNum)
@@ -574,7 +568,7 @@ void Layer::MakeGcode(GCodeState &state,
   //cerr << "gcode layer " << LayerNo << "z="<<Z<<endl;
 
   Printlines printlines;
-  
+
   lines.clear(); // will contain everything
 
   vector<Poly> polys; // intermediate collection
@@ -598,7 +592,7 @@ void Layer::MakeGcode(GCodeState &state,
       printlines.setName("skin");
       printlines.makeLines(polys, startPoint,  (s==1), //displace at first skin
 			   minspeed, maxspeed, movespeed,  
-			   linewidth, linewidthratio, optratio);
+			   linewidth, linewidthratio, optratio, maxArcAngle, false);
       printlines.slowdownTo(slicing.MinLayertime/skins/3);
       printlines.setSpeedFactor(speedfactor);
       printlines.clipMovements(GetOuterShell());
@@ -624,7 +618,7 @@ void Layer::MakeGcode(GCodeState &state,
   printlines.makeLines(supportInfill->infillpolys, startPoint, false,
 		       minspeed, maxspeed, movespeed, 
 		       linewidth, linewidthratio, optratio,
-		       linelengthsort);
+		       maxArcAngle, linelengthsort);
   printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.getLines(lines);
@@ -647,7 +641,7 @@ void Layer::MakeGcode(GCodeState &state,
   printlines.makeLines(polys, startPoint, true, //displace at beginning
 		       minspeed, maxspeed, movespeed,
 		       linewidth, linewidthratio, optratio,
-		       linelengthsort);
+		       maxArcAngle, linelengthsort);
   printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.clipMovements(GetOuterShell(), linewidth/2.);

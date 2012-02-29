@@ -21,6 +21,65 @@
 
 #include "geometry.h"
 
+// template < typename T > 
+// long double angleBetween(T V1, T V2) 
+// {
+//   long double dotproduct =  V1.dot(V2);
+//   long double length = V1.length() * V2.length();
+//   long double result = acosl( dotproduct / length ); // 0 .. pi 
+//   if (isleftof(T(), V2, V1)) 
+//       result = -result;
+//   return result;
+// }
+
+// from V1 to V2
+long double angleBetween(Vector3d V1, Vector3d V2)
+{
+  long double dotproduct =  V1.dot(V2);
+  long double length = V1.length() * V2.length();
+  long double result = acosl( dotproduct / length ); // 0 .. pi 
+  if (isleftof(Vector3d(0,0,0), V2, V1)) 
+      result = -result;
+  return result;
+}
+
+long double angleBetween(Vector2d V1, Vector2d V2)
+{
+  long double result, dotproduct, length;
+  dotproduct =  V1.dot(V2);
+  length = V1.length() * V2.length();
+  result = acosl( dotproduct / length ); // 0..pi
+  if (isleftof(Vector2d(0,0), V2, V1)) 
+      result = -result;
+  return result;
+}
+
+
+// is B left of A wrt center?
+bool isleftof(Vector2d center, Vector2d A, Vector2d B)
+{
+  double position = (B.x-A.x)*(center.y-A.y) - (B.y-A.y)*(center.x-A.x);
+  return (position > 0);
+}
+bool isleftof(Vector3d center, Vector3d A, Vector3d B)
+{
+  return ((B-A).cross(center-A).z > 0); 
+}
+// // http://www.cs.uwaterloo.ca/~tmchan/ch3d/ch3dquad.cc
+// double turn(Point p, Point q, Point r) {  // <0 iff cw
+//   return (q.x-p.x)*(r.y-p.y) - (r.x-p.x)*(q.y-p.y);
+// }
+
+void center_perpendicular(const Vector2d from, const Vector2d to,
+			  Vector2d &p1, Vector2d &p2)
+{
+  Vector2d center = (from+to)/2.;
+  Vector2d dir = Vector2d(from.y-to.y, to.x-from.x);
+  p1 = center; 
+  p2 = center + dir;
+}
+
+
 
 
 //////////////////////////////////////////////////////////////
@@ -59,11 +118,6 @@
 // }
 
 
-int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
-			  const Vector2d &p3, const Vector2d &p4, 
-			  Vector2d &I0, Vector2d &I1, 
-			  double &t0, double &t1,
-			  double maxerr=0.0001);
 
 
 // calculates intersection and checks for parallel lines.
@@ -115,7 +169,8 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 
   Intersection hit2;
   double t0,t1;
-  if(intersect2D_Segments(p1,p2,p3,p4,hit.p, hit2.p, t0,t1) > 0)
+  int is = intersect2D_Segments(p1,p2,p3,p4,hit.p, hit2.p, t0,t1);
+  if (is > 0 && is < 3)
     {
       hit.d = (p1-hit.p).length();
       hit.t = t0;
@@ -161,6 +216,7 @@ int inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
 //    Return: 0=disjoint (no intersect)
 //            1=intersect in unique point I0
 //            2=overlap in segment from I0 to I1
+//            3=intersect outside 
 #define perp(u,v)  ((u).x * (v).y - (u).y * (v).x)  // perp product (2D)
 int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
 			  const Vector2d &p3, const Vector2d &p4, 
@@ -228,20 +284,24 @@ int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
     I0 = p3 + v*t0;
     I1 = p3 + v*t1;
     return 2;
-  }
+  } // end parallel
 
+  bool outside = false;
   // the segments are skew and may intersect in a point
   // get the intersect parameter for S1
   t0 = perp(v,w) / D;
-  if (t0 < 0 || t0 > 1)               // no intersect with S1
-    return 0;
+  if (t0 < 0 || t0 > 1)               // no intersect in S1
+    outside = true;
+  //return 0;
 
   // get the intersect parameter for S2
   t1 = perp(u,w) / D;
-  if (t1 < 0 || t1 > 1)               // no intersect with S2
-    return 0;
+  if (t1 < 0 || t1 > 1)               // no intersect in S2
+    outside = true;
+  //    return 0;
 
   I0 = p1 + u * t0;               // compute S1 intersect point
+  if (outside) return 3;
   return 1;
 }
 

@@ -93,10 +93,10 @@ public:
 
 	void getLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
 	void getLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
-	void getLines(vector<printline> &plines, Vector2d &startPoint) const;
+	/* void getLines(vector<printline> &plines, Vector2d &startPoint) const; */
 	void getLines(vector<Vector2d> &lines,uint startindex=0) const;
 	void getLines(vector<Vector3d> &lines,uint startindex=0) const;
-	void getLines(vector<printline> &plines, uint startindex) const;
+	/* void getLines(vector<printline> &plines, uint startindex) const; */
 	double getLinelengthSq(uint startindex) const;
 	double averageLinelengthSq() const;
 

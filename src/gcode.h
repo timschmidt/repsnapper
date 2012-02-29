@@ -107,7 +107,8 @@ Main code follows
 
 
 enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
-	    RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D,  
+	    RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D,
+	    ARC_CW, ARC_CCW,
 	    EXTRUDERON, EXTRUDERONREVERSE, EXTRUDEROFF, //  6 7
 	    ARCCLOCKWISE, ARCCOUNTERCLOCKWISE,  // 8 9
 	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 10 11
@@ -118,6 +119,7 @@ enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
 	    ASKTEMP};
 const string MCODES[] = {"G92", "", "",
 			 "G0", "G1", "G1",
+			 "G2", "G3",
 			 "M101", "M102", "M103", // eon erev eoff
 			 "", "", // arcs
 			 "G21", "G20", // mm in
@@ -140,9 +142,11 @@ public:
 	Command(const Command &rhs);
 	GCodes Code;
 	Vector3d where;
+	Vector3d arcIJK; // I,J,K (dx, dy, dz) 
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
 	string comment;
-	void draw(Vector3d fromwhere) const; 
+	void draw(Vector3d &lastPos, guint linewidth, Vector4f color) const;
+	void draw(Vector3d &lastPos) const;
 	string GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalEcode) const;
 	string info() const;
 };

@@ -27,6 +27,7 @@
 
 #include "model.h"
 #include "progress.h"
+#include "geometry.h"
 
 using namespace std;
 
@@ -91,6 +92,7 @@ Command::Command(GCodes code, const Vector3d where, double E, double F) {
 Command::Command(const Command &rhs){
   Code = rhs.Code;
   where = rhs.where;
+  arcIJK = rhs.arcIJK;
   e = rhs.e;
   f = rhs.f;
   comment = rhs.comment;
@@ -99,6 +101,7 @@ Command::Command(const Command &rhs){
 
 Command::Command(string gcodeline, Vector3d defaultpos){
   where = defaultpos;
+  arcIJK = Vector3d(0,0,0);
   e=0.0;
   f=0.0;
 
@@ -122,27 +125,54 @@ Command::Command(string gcodeline, Vector3d defaultpos){
     Code = COORDINATEDMOTION;
   else if( buffer.find( "G0", 0) != string::npos )	//Rapid Motion
     Code = RAPIDMOTION;
+  else if( buffer.find( "G2", 0) != string::npos )	// CW ARC
+    Code = ARC_CW;
+  else if( buffer.find( "G3", 0) != string::npos )	// CCW ARC
+    Code = ARC_CCW;
 
   while(line >> buffer)	// read next keyword
     {
-      if( buffer.find( "X", 0) != string::npos ) {
+      if( buffer.find( ";", 0) != string::npos ) {
+	return;
+      }
+      else if( buffer.find( "X", 0) != string::npos ) {
 	string number = buffer.substr(1,buffer.length()-1); // 16 characters
 	where.x = ToDouble(number);
       }
-      if( buffer.find( "Y", 0) != string::npos ) {
+      else if( buffer.find( "Y", 0) != string::npos ) {
 	string number = buffer.substr(1,buffer.length()-1);
 	where.y = ToDouble(number);
       }
-      if( buffer.find( "Z", 0) != string::npos ) {
+      else if( buffer.find( "Z", 0) != string::npos ) {
 	string number = buffer.substr(1,buffer.length()-1);
-	//cerr << "found Z" << buffer << endl;
 	where.z = ToDouble(number);
       }
-      if( buffer.find( "E", 0) != string::npos ) {
+      else if((Code == ARC_CW || Code == ARC_CCW)
+	 && buffer.find( "I", 0) != string::npos ) {
+	string number = buffer.substr(1,buffer.length()-1);
+	arcIJK.x = ToDouble(number);
+      }
+      else if((Code == ARC_CW || Code == ARC_CCW)
+	 && buffer.find( "J", 0) != string::npos ) {
+	string number = buffer.substr(1,buffer.length()-1);
+	arcIJK.y = ToDouble(number);
+      }
+      else if((Code == ARC_CW || Code == ARC_CCW)
+	 && buffer.find( "K", 0) != string::npos ) {
+	cerr << "cannot handle ARC K command (yet?)!" << endl;
+	//string number = buffer.substr(1,buffer.length()-1);
+	//arcIJK.z = ToDouble(number);
+      }
+      else if((Code == ARC_CW || Code == ARC_CCW)
+	 && buffer.find( "R", 0) != string::npos ) {
+	cerr << "cannot handle ARC R command (yet?)!" << endl;
+	//string number = buffer.substr(1,buffer.length()-1);
+      }
+      else if( buffer.find( "E", 0) != string::npos ) {
 	string number = buffer.substr(1,buffer.length()-1);
 	e = ToDouble(number);
       }
-      if( buffer.find( "F", 0) != string::npos ) {
+      else if( buffer.find( "F", 0) != string::npos ) {
 	string number = buffer.substr(1,buffer.length()-1);
 	f = ToDouble(number);
       }
@@ -158,10 +188,14 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
     return ostr.str();
   }
 
-
   ostr << MCODES[Code] << " ";
   string comm = comment;
   switch (Code) {
+  case ARC_CW:
+  case ARC_CCW:
+    if (arcIJK.x!=0) ostr << "I" << arcIJK.x << " ";
+    if (arcIJK.y!=0) ostr << "J" << arcIJK.y << " ";
+    if (arcIJK.z!=0) ostr << "K" << arcIJK.z << " ";
   case RAPIDMOTION:
   case COORDINATEDMOTION:
   case COORDINATEDMOTION3D:
@@ -175,17 +209,17 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
 	zcommand.comment = comment + _(" z part");
 	if (where.z < 0) { // z<0 cannot be absolute -> positions are relative
 	  xycommand.where.z = 0.; 
-	  zcommand.where.x = zcommand.where.y = 0.; // this command will be z-only
+	  zcommand.where.x  = zcommand.where.y = 0.; // this command will be z-only
 	} else {
 	  xycommand.where.z = LastPos.z;
 	}
 	if (incrementalEcode) {    // retract filament at xy move
 	  xycommand.e = lastE-retractE;
-	  zcommand.e = lastE-retractE;
+	  zcommand.e  = lastE-retractE;
 	}
 	else {
 	  xycommand.e = -retractE; // retract filament at xy move
-	  zcommand.e = 0; // all extrusion in xy
+	  zcommand.e  = 0; // all extrusion in xy
 	}
 	//cerr << "split xy and z commands delta=" << delta <<endl;
 	// cerr << info() << endl;
@@ -218,7 +252,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
       comm += _(" Move Only");
     }
   case SETSPEED:
-    ostr << "F" << f;
+    ostr << "F" << f;    
   default: ;
   }
   if(comm.length() != 0)
@@ -227,14 +261,51 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
   return ostr.str();
 }
 
-void Command::draw(Vector3d fromwhere) const {
-  glLineWidth(3);
+void Command::draw(Vector3d &lastPos) const 
+{
   glBegin(GL_LINES);
-  glColor3f(0.75f,0.8f,0.0f);
-  glVertex3dv((GLdouble*)&fromwhere);
+  if (Code == ARC_CW || Code == ARC_CCW) {
+    Vector3d center = lastPos + arcIJK;
+    Vector3d P = -arcIJK, Q = where-center; // arc endpoints
+    glColor4f(1.f,0.f,0.0f,0.3f);
+    glVertex3dv((GLdouble*)&center);
+    glVertex3dv((GLdouble*)&lastPos);
+    glVertex3dv((GLdouble*)&lastPos);
+    glVertex3dv((GLdouble*)&where);
+    bool ccw = (Code == ARC_CCW);
+    if (ccw)
+      glColor3f(0.7f,0.3f,0.6f);
+    else 
+      glColor3f(1.f,0.5f,0.0f);
+    long double angle;
+    angle = angleBetween(P,Q); // ccw angle
+    if (!ccw) angle=-angle;
+    if (angle <= 0) angle += 2*M_PI;
+    if (angle < 0) cerr << "ANGLE<0 " << angle<< endl;
+    Vector3d arcpoint;
+    double astep = arcIJK.length()*angle/400.;
+    double dz = where.z-lastPos.z; // z move with arc
+    for (double a = 0; a < angle; a+=astep){
+      arcpoint = center + P.rotate(a, 0,0,ccw?1:-1);
+      if (dz!=0) arcpoint.z = lastPos.z + a*(dz)/angle;
+      glVertex3dv((GLdouble*)&lastPos);
+      glVertex3dv((GLdouble*)&arcpoint);
+      lastPos = arcpoint;
+    }
+  }
+  glVertex3dv((GLdouble*)&lastPos);
   glVertex3dv((GLdouble*)&where);
   glEnd();
+  lastPos = where;
 }
+
+void Command::draw(Vector3d &lastPos, guint linewidth, Vector4f color) const 
+{
+  glLineWidth(linewidth);
+  glColor4fv(&color[0]);
+  draw(lastPos);
+}
+
 string Command::info() const
 {
   ostringstream ostr;
@@ -442,17 +513,15 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 {
 	double LastE=0.0;
 	bool extruderon = false;
-	Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
+	// Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
 	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
 
         glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
         uint n_cmds = commands.size();
-	double	Distance = 0.0;
 	Vector3d defaultpos(-1,-1,-1);
 	Vector3d pos(0,0,0);
-
 
 	start = CLAMP (start, 0, n_cmds);
 	end = CLAMP (end, 0, n_cmds);
@@ -479,7 +548,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		case EXTRUDEROFF:
 			extruderon = false;
 			break;
-		case COORDINATEDMOTION3D:
+		case COORDINATEDMOTION3D: // old 3D gcode
 		  if (extruderon) {
 		    if (liveprinting)
 		      Color = settings.Display.GCodePrintingRGBA;
@@ -489,67 +558,41 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		  else {
 		    Color = settings.Display.GCodeMoveRGBA;
 		  }
-			LastColor = Color;
-			Distance += (commands[i].where-pos).length();
-			glLineWidth(linewidth);
-			glBegin(GL_LINES);
-			glColor4fv(&Color[0]);
-			if(i==end-1)
-				glColor4f(0,1,0,Color.a);
-			glVertex3dv((GLdouble*)&pos);
-			glVertex3dv((GLdouble*)&commands[i].where);
-			glEnd();
-			LastColor = Color;
+			// LastColor = Color;
+			commands[i].draw(pos, linewidth, Color);
+			// LastColor = Color;
 			LastE=commands[i].e;
 			break;
+		case ARC_CW:
+		case ARC_CCW:
 		case COORDINATEDMOTION:
-			if(commands[i].e == LastE)
-				{
-				glLineWidth(linewidth);
-				double speed = commands[i].f;
-				double luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
-				if(settings.Display.LuminanceShowsSpeed == false)
-					luma = 1.0;
-				Color = settings.Display.GCodeMoveRGBA;
-				Color *= luma;
-				}
+		  {
+		    double speed = commands[i].f;
+		    double luma = 1.;
+		    if(commands[i].e == LastE)
+		      {
+			luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
+			Color = settings.Display.GCodeMoveRGBA;
+		      }
+		    else
+		      {
+			luma = speed / settings.Hardware.MaxPrintSpeedXY;
+			if (liveprinting)
+			  Color = settings.Display.GCodePrintingRGBA;
 			else
-				{
-				glLineWidth(linewidth);
-				double speed = commands[i].f;
-				double luma = speed/settings.Hardware.MaxPrintSpeedXY;
-				if(settings.Display.LuminanceShowsSpeed == false)
-					luma = 1.0;
-				if (liveprinting)
-				  Color = settings.Display.GCodePrintingRGBA;
-				else
-				  Color = settings.Display.GCodeExtrudeRGBA;
-				Color *= luma;
-				}
-			if(settings.Display.LuminanceShowsSpeed == false)
-				LastColor = Color;
-			Distance += (commands[i].where-pos).length();
-			glBegin(GL_LINES);
-			glColor4fv(&LastColor[0]);
-			if(i==end-1)
-				glColor3f(1,0,0);
-			glVertex3dv((GLdouble*)&pos);
-			glColor4fv(&Color[0]);
-			if(i==end-1)
-				glColor3f(1,0,0);
-			glVertex3dv((GLdouble*)&commands[i].where);
-			glEnd();
-			LastColor = Color;
-			LastE=commands[i].e;
-			break;
+			  Color = settings.Display.GCodeExtrudeRGBA;
+		      }
+		    if(settings.Display.LuminanceShowsSpeed)
+		      Color *= luma;
+		    // if(settings.Display.LuminanceShowsSpeed == false)
+		    // 	LastColor = Color;
+		    commands[i].draw(pos, linewidth, Color);
+		    // LastColor = Color;
+		    LastE=commands[i].e;
+		    break;
+		  }
 		case RAPIDMOTION:
-			glLineWidth(1);
-			glBegin(GL_LINES);
-			glColor3f(0.75f,0.0f,0.0f);
-			Distance += (commands[i].where-pos).length();
-			glVertex3dv((GLdouble*)&pos);
-			glVertex3dv((GLdouble*)&commands[i].where);
-			glEnd();
+		  commands[i].draw(pos, 1, Color);
 			break;
 		default:
 			break; // ignored GCodes
@@ -557,39 +600,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		if(commands[i].Code != EXTRUDERON && commands[i].Code != EXTRUDEROFF)
 		  pos = commands[i].where;
 	}
-
 	glLineWidth(1);
-	// std::stringstream oss;
-	// oss << "Length: "  << Distance/1000.0 << " - " << Distance/200000.0 << " Hour.";
-	//std::cout << oss.str();
-
-
-	// bbox for gcode??
-	// // Draw bbox
-	// glColor3f(1,0,0);
-	// glBegin(GL_LINE_LOOP);
-	// glVertex3f(Min.x, Min.y, Min.z);
-	// glVertex3f(Max.x, Min.y, Min.z);
-	// glVertex3f(Max.x, Max.y, Min.z);
-	// glVertex3f(Min.x, Max.y, Min.z);
-	// glEnd();
-	// glBegin(GL_LINE_LOOP);
-	// glVertex3f(Min.x, Min.y, Max.z);
-	// glVertex3f(Max.x, Min.y, Max.z);
-	// glVertex3f(Max.x, Max.y, Max.z);
-	// glVertex3f(Min.x, Max.y, Max.z);
-	// glEnd();
-	// glBegin(GL_LINES);
-	// glVertex3f(Min.x, Min.y, Min.z);
-	// glVertex3f(Min.x, Min.y, Max.z);
-	// glVertex3f(Min.x, Max.y, Min.z);
-	// glVertex3f(Min.x, Max.y, Max.z);
-	// glVertex3f(Max.x, Max.y, Min.z);
-	// glVertex3f(Max.x, Max.y, Max.z);
-	// glVertex3f(Max.x, Min.y, Min.z);
-	// glVertex3f(Max.x, Min.y, Max.z);
-	// glEnd();
-
 }
 
 bool add_text_filter_nan(string str, string &GcodeTxt)

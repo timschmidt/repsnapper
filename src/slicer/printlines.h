@@ -29,6 +29,8 @@ struct printline
   Vector3d from, to;
   double speed;
   double extrusionfactor; 
+  Vector3d arcIJK;  // if is an arc
+  short arc; // -1: ccw arc, 1: cw arc, 0: not an arc
 };
 
 
@@ -43,8 +45,10 @@ class Printlines
     double speed; // mm/min(!)
     double feedrate; // relative extrusion feedrate 
     double angle; // angle of line
+    Vector2d arccenter;
+    short arc;  // -1: ccw arc, 1: cw arc, 0: not an arcx
   };
-
+    
   vector<struct line> lines;
 
   double z;
@@ -65,15 +69,26 @@ class Printlines
 
   Vector2d lastPoint() const;
 
+  void makeLines(const Poly poly, 
+		 Vector2d &startPoint, 
+		 bool displace_startpoint, 
+		 double minspeed, double maxspeed, double movespeed,
+		 double linewidth, double linewidthratio, double optratio,
+		 double maxArcAngle, bool linelengthsort = false);
   void makeLines(const vector<Poly> polys, 
 		 Vector2d &startPoint, 
 		 bool displace_startpoint, 
 		 double minspeed, double maxspeed, double movespeed,
 		 double linewidth, double linewidthratio, double optratio,
-		 bool linelengthsort = false);
+		 double maxArcAngle, bool linelengthsort = false);
     
   void optimize(double minspeed, double maxspeed, double movespeed,
-		double linewidth, double linewidthratio, double optratio);
+		double linewidth, double linewidthratio, double optratio,
+		double maxArcAngle);
+
+  guint makeArcs(double maxAngle);
+  guint makeIntoArc(guint fromind, guint toind);
+
 
   // slow down to total time needed (cooling)
   void slowdownTo(double totalseconds);
@@ -96,7 +111,6 @@ class Printlines
   void setZ(double z) {this->z=z;};
   double getZ() const {return z;};
   
-
   string GCode(Vector3d &lastpos, double &E, double feedrate, double speed) const;
 
  private:
@@ -110,7 +124,6 @@ class Printlines
   uint divideline(uint lineindex, const vector<Vector2d> points);
   uint divideline(uint lineindex, const double t);
 
-  double angle(const Vector2d p) const;
   double angle(const line l) const;
   double angle(const line l1, const line l2) const;
   double lengthSq(const line l) const;

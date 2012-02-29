@@ -64,6 +64,7 @@ class GCodeState {
 				 const Settings::SlicingSettings &slicing,
 				 const Settings::HardwareSettings &hardware);
   void MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
+				 Vector3d arcIJK, short arc,
 				 double extrusionFactor,
 				 double maxspeed,
 				 double offsetZ, 

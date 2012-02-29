@@ -33,6 +33,7 @@ void Printlines::addLine(const Vector2d from, const Vector2d to,
       l.speed=movespeed;
       l.feedrate=0;
       l.angle = angle(l);
+      l.arc = false;
       lines.push_back(l);
     }
   }
@@ -43,6 +44,7 @@ void Printlines::addLine(const Vector2d from, const Vector2d to,
   l.feedrate=feedrate;
   //l.lengthSq = lengthSq(l);
   l.angle = angle(l);
+  l.arc = false;
   lines.push_back(l);
 }
 
@@ -57,12 +59,26 @@ void Printlines::addPoly(const Poly poly, int startindex,
   }
 }
 
+void Printlines::makeLines(const Poly poly, 
+			   Vector2d &startPoint,
+			   bool displace_startpoint, 
+			   double minspeed, double maxspeed, double movespeed, // mm/s
+			   double linewidth, double linewidthratio, double optratio,
+			   double maxArcAngle, bool linelengthsort)
+{
+  if (poly.size()==0) return;
+  vector<Poly> polys(1); polys[0] = poly;
+  makeLines(polys, startPoint, displace_startpoint,
+	    minspeed, maxspeed, movespeed, // mm/s
+	    linewidth, linewidthratio,  optratio,
+	    maxArcAngle, linelengthsort);
+}
 void Printlines::makeLines(const vector<Poly> polys, 
 			   Vector2d &startPoint,
 			   bool displace_startpoint, 
 			   double minspeed, double maxspeed, double movespeed, // mm/s
 			   double linewidth, double linewidthratio, double optratio,
-			   bool linelengthsort)
+			   double maxArcAngle, bool linelengthsort)
 {
   uint count = polys.size();
   int nvindex=-1;
@@ -76,7 +92,8 @@ void Printlines::makeLines(const vector<Poly> polys,
   double lastavlength = -1;
   while (ndone < count) 
     {
-      if (linelengthsort && npindex>=0) lastavlength = polys[npindex].averageLinelengthSq();
+      if (linelengthsort && npindex>=0) 
+	lastavlength = polys[npindex].averageLinelengthSq();
       nstdist = 1000000;
       for(size_t q=0; q<count; q++) { // find nearest polygon
 	if (!done[q])
@@ -119,48 +136,131 @@ void Printlines::makeLines(const vector<Poly> polys,
       if (lines.size()>0)
 	startPoint = lastPoint();
     }
-  if (count) {
-    setZ(polys.back().getZ());
-    optimize(minspeed, maxspeed, movespeed, linewidth, linewidthratio, optratio);
-  }
+  if (count == 0) return;
+  setZ(polys.back().getZ());
+  optimize(minspeed, maxspeed, movespeed, 
+	   linewidth, linewidthratio, optratio, maxArcAngle);
 }
 
-double Printlines::angle(Vector2d p) const
-{
-  double a = atan2(p.y,p.x);
-  if (a<0) a+=2.*M_PI;
-  return a;
-}
 double Printlines::angle(const line l) const
 {
-  return angle(l.to-l.from);
+  return angleBetween(l.from, l.to);
 }
 double Printlines::angle(const line l1,const line l2) const
 {
   double da=l2.angle-l1.angle;
-  
-  // double da = angle(l2)-angle(l1);
   return da;
 }
 
 double Printlines::lengthSq(const line l) const
 {
-  return (l.to-l.from).lengthSquared();
+  if (!l.arc) 
+    return (l.to-l.from).lengthSquared();
+  else
+    return pow(length(l),2);
 }
 
 double Printlines::length(const line l) const
 {
-  return sqrt(lengthSq(l));
+  if (!l.arc) 
+    return sqrt(lengthSq(l));
+  else {
+    double radius = (l.from-l.arccenter).length();
+    return 2*M_PI*radius / l.angle;
+  }
 }
 
 void Printlines::optimize(double minspeed, double maxspeed, double movespeed,
-			  double linewidth, double linewidthratio, double optratio)
+			  double linewidth, double linewidthratio, double optratio,
+			  double maxArcAngle)
 {
   //cout << "optimize " ; printinfo();
   //optimizeLinedistances(linewidth);
   // optimizeCorners(linewidth,linewidthratio,optratio);
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
+  makeArcs(maxArcAngle);
+}
+
+
+guint Printlines::makeArcs(double maxAngle)
+{
+  if (maxAngle < 0) return 0;
+  //cerr << name << " makeArcs "  << lines.size() << endl;
+  double arcAngle = -100;  // angles between lines
+  double arcLength = -100; // lines length
+  double arcFeed = -100;   // lines feed rate
+  guint  arcstart = 0;
+  for (guint i=1; i < lines.size(); i++) {
+    double dangle = angle(lines[i],lines[i-1]);
+    double feedrate = lines[i].feedrate;
+    double llength = length(lines[i]);
+    // test if NOT continue arc:
+    if (lines[i].arc != 0                  // is an arc
+	|| (lines[i].from-lines[i-1].to).lengthSquared() > 0.01 // not adjacent
+	|| abs(feedrate-arcFeed) > 0.01    // different feedrate
+	|| abs(dangle) < 0.0001            // straight continuation
+	|| abs(dangle) > maxAngle          // too big angle
+	|| abs(llength-arcLength) > 0.1    // same line length
+	|| abs(dangle-arcAngle) > 0.1) {   // different angle 
+      arcAngle  = dangle;
+      arcLength = llength;
+      arcFeed   = feedrate;
+      if (arcstart+2 < i-1) // more than two arc lines
+	i -= makeIntoArc(arcstart, i-1); // straight lines are being removed
+      else // not in arc
+	arcstart = i;
+    } else { 
+      // continue arc
+    }
+  }  
+  // remaining
+  if (arcstart+2 < lines.size()-1) 
+    makeIntoArc(arcstart, lines.size()-1); 
+  return 0;
+}
+
+// return how many lines are removed 
+guint Printlines::makeIntoArc(guint fromind, guint toind)
+{
+  Vector2d P = lines[fromind].from;
+  Vector2d Q = lines[toind].to;
+  // center perp of start -- endpoint:
+  Vector2d connp1,connp2;
+  center_perpendicular(P, Q, connp1, connp2);  
+  // center perp of midpoint -- endpoint:
+  guint midind = (toind+fromind)/2;
+  Vector2d midp1,midp2;
+  center_perpendicular(lines[midind].from, lines[toind].to,
+   		       midp1, midp2);
+  // intersection = center
+  Vector2d center, ip;
+  double t0, t1;
+  int is = intersect2D_Segments(connp1,connp2,midp1,midp2, 
+   				center, ip, t0,t1);
+  if (is > 0) { 
+    double angle = angleBetween(P - center, Q - center);
+    bool ccw = isleftof(center, P, Q);
+    if (angle<=0) {
+      angle+=2*M_PI;
+    } 
+
+    short arctype = ccw ? -1 : 1; 
+    struct line newline;
+    newline.from      = P;
+    newline.to        = Q;
+    newline.speed     = lines[fromind].speed;
+    newline.feedrate  = lines[fromind].feedrate;
+    newline.angle     = angle;
+    newline.arccenter = center;
+    newline.arc       = arctype;
+    lines[fromind] = newline;
+    lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
+    //lines.insert(lines.begin()+fromind,newline);
+    //cerr << toind-fromind << " lines removed" << endl;
+    return toind-fromind;
+  } else cerr << "no Intersection of arc perpendiculars!" << endl;
+  return 0;
 }
 
 // split at length 0 < t < 1
@@ -187,6 +287,7 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> points)
     else nl.to=points[i+1];
     nl.speed = l.speed;
     nl.feedrate = l.feedrate;
+    nl.arc = 0;
     nl.angle = angle(nl);
     newlines.push_back(nl);
   }
@@ -401,10 +502,17 @@ void Printlines::getLines(vector<printline> &plines) const
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
     if (lIt->from != lIt->to){
       struct printline pline;
-      pline.from = Vector3d(lIt->from.x,lIt->from.y,z);
-      pline.to = Vector3d(lIt->to.x,lIt->to.y,z);
-      pline.speed = lIt->speed;
+      pline.from            = Vector3d(lIt->from.x, lIt->from.y, z);
+      pline.to              = Vector3d(lIt->to.x, lIt->to.y, z);
+      pline.speed           = lIt->speed;
+      pline.arc             = lIt->arc;
       pline.extrusionfactor = lIt->feedrate;
+      if (lIt->arc) {
+	Vector2d arcIJK2 = lIt->arccenter - lIt->from;
+	pline.arcIJK = Vector3d(arcIJK2.x, arcIJK2.y, 0);
+	double linlength = (lIt->to - lIt->from).length();
+	pline.extrusionfactor *= length(*lIt) / linlength;
+      }
       plines.push_back(pline);
     } // else cerr<< "zero line" << endl;
   }
@@ -443,11 +551,11 @@ string Printlines::GCode(Vector3d &lastpos, double &E, double feedrate, double s
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
     o << GCode(*lIt, lastpos, E, speed * lIt->feedrate, speed * lIt->speed);
   }
+  cerr << "PL gcode " << o.str()<< endl;
   return o.str();
 }
 
 
-// not used
 string Printlines::GCode(line l, Vector3d &lastpos, double &E, double feedrate, 
 			 double speed) const
 {
@@ -459,9 +567,9 @@ string Printlines::GCode(line l, Vector3d &lastpos, double &E, double feedrate,
   E+=EX;
   lastpos = to;
   ostringstream o;
-  if (distmove>0.01)
+  if (distmove>0.001)
     o << "G1 X"<<from.x<<" Y"<<from.y<<" Z"<<from.z<<" E0 F"<<speed << endl;
-  if (distline>0.01) 
+  if (distline>0.001) 
     o << "G1 X"<<to.x<<" Y"<<to.y<<" Z"<<to.z<<" E"<<EX<<" F"<<speed << endl;
   return o.str();
 }
@@ -469,7 +577,7 @@ string Printlines::GCode(line l, Vector3d &lastpos, double &E, double feedrate,
 string Printlines::info() const
 {
   ostringstream ostr;
-  ostr << "Printlines " <<size()<<" lines"
+  ostr << "Printlines "<<name<<": " <<size()<<" lines"
        << ", total "<<totalLength()<< "mm" ;
   return ostr.str();
 }

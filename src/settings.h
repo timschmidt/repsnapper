@@ -101,6 +101,8 @@ class Settings {
   struct SlicingSettings {
     bool  UseIncrementalEcode;
     bool  Use3DGcode;
+    bool  UseArcs;
+    float ArcsMaxAngle;
 
     bool  EnableAntiooze;
     float AntioozeDistance;
@@ -114,6 +116,7 @@ class Settings {
     float InfillOverlap;
     bool SolidTopAndBottom;
     bool Support;
+    bool Skirt;
     float SkirtHeight;
     int Skins;
     bool Varslicing;
@@ -132,7 +135,7 @@ class Settings {
 
     bool ShellOnly;
     guint ShellCount;
-    bool EnableAcceleration;
+    /* bool EnableAcceleration; */
     //int ShrinkQuality;
 
     bool BuildSerial;

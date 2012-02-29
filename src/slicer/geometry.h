@@ -26,6 +26,16 @@ using namespace std;
 using namespace vmml;
 
 
+/* template < typename T >  */
+/* long double angleBetween(T V1, T V2); */
+long double angleBetween(Vector3d V1, Vector3d V2);
+long double angleBetween(Vector2d V1, Vector2d V2);
+void center_perpendicular(const Vector2d from, const Vector2d to,
+			  Vector2d &p1, Vector2d &p2);
+
+bool isleftof(Vector2d center, Vector2d A, Vector2d B);
+bool isleftof(Vector3d center, Vector3d A, Vector3d B);
+
 struct printline;
 
 struct Intersection
@@ -37,6 +47,11 @@ struct Intersection
 };
 
 
+int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
+			  const Vector2d &p3, const Vector2d &p4, 
+			  Vector2d &I0, Vector2d &I1, 
+			  double &t0, double &t1,
+			  double maxerr=0.0001);
 bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 		 const Vector2d &p3, const Vector2d &p4, 
 		 Intersection &hit, double maxoffset=0.0001);

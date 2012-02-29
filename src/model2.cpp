@@ -148,6 +148,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 
 	  state.MakeAcceleratedGCodeLine (Vector3d(P1.x,P1.y,z), 
 					  Vector3d(P2.x,P2.y,z),
+					  Vector3d(0,0,0),0,
 					  settings.Hardware.MaxPrintSpeedXY,
 					  extrusionfactor,
 					  z,
@@ -483,7 +484,7 @@ void Model::MakeShells()
 	omp_unset_lock(&progress_lock);
       }
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
-      makeskirt = (layers[i]->getZ() <= skirtheight);
+      makeskirt = settings.Slicing.Skirt && (layers[i]->getZ() <= skirtheight);
       layers[i]->MakeShells(settings.Slicing.ShellCount,
 			    matwidth, 
 			    settings.Slicing.ShellOffset,
@@ -491,7 +492,7 @@ void Model::MakeShells()
 			    settings.Slicing.InfillOverlap); 
     }
   omp_destroy_lock(&progress_lock);
-  MakeSkirt();
+  if (settings.Slicing.Skirt) MakeSkirt();
   m_progress->update(count);
   //m_progress->stop (_("Done"));
 }
