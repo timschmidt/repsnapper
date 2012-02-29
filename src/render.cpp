@@ -212,13 +212,20 @@ bool Render::on_expose_event(GdkEventExpose* event)
 
 bool Render::on_button_press_event(GdkEventButton* event)
 {
-  // if (event->button == 1) {
-    m_arcBall->click (event->x, event->y, &m_transform);
-  // }
+  m_arcBall->click (event->x, event->y, &m_transform);
   // else if (event->button == 3 || event->button == 2)
-    m_downPoint = Vector2f (event->x, event->y);  
+  m_downPoint = Vector2f (event->x, event->y);  
   // else
   //   return Gtk::DrawingArea::on_button_press_event (event);
+  if (event->button == 1) {
+    guint index = find_object_at(event->x, event->y);
+    if (index) {
+      Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
+      if (iter) {
+	m_selection->select(iter);
+      }
+    }
+  }
   return true;
 }
 
@@ -231,16 +238,8 @@ bool Render::on_button_release_event(GdkEventButton* event)
     }
     else if (m_downPoint.x == event->x && m_downPoint.y == event->y){ // click only
       guint index = find_object_at(event->x, event->y);
-      if (index) {
-  	Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
-  	if (iter) {
-  	  m_selection->select(iter);
-  	}
-      }
-      else {
-	// click on no object - clear the selection
-	m_selection->unselect_all();
-      }
+      // click on no object - clear the selection
+      if (!index) m_selection->unselect_all();
     }
   }
   else
