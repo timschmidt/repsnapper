@@ -232,15 +232,19 @@ int main(int argc, char **argv)
   if (!opts.use_gui) {
     if (opts.stl_input_path.size() > 0) {
       model->Read(Gio::File::create_for_path(opts.stl_input_path));
-
       if (opts.settings_path.size() > 0)
         model->LoadConfig(Gio::File::create_for_path(opts.settings_path));
 
+      ViewProgress vprog(new Gtk::HBox(),new Gtk::ProgressBar(),new Gtk::Label());
+      vprog.set_terminal_output(true);
+      model->SetViewProgress(&vprog);
+      model->statusbar=NULL;
       model->ConvertToGCode();
 
       if (opts.gcode_output_path.size() > 0)
         model->WriteGCode(Gio::File::create_for_path(opts.gcode_output_path));
-    }
+      else cerr << _("No output file given (use -o)") << endl;
+    } else cerr << _("No input file given (use -i)") << endl;
     return 0;
   }
 

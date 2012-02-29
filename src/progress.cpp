@@ -45,6 +45,9 @@ void ViewProgress::start (const char *label, double max)
 void ViewProgress::restart (const char *label, double max)
 {
   //m_box->show();
+  if (to_terminal) {
+    cerr << m_label->get_label() << " -- " << _(" done.") << "                     " << endl;  
+  }
   m_bar_max = max;
   m_label->set_label (label);
   m_bar_cur = 0.0;
@@ -53,6 +56,9 @@ void ViewProgress::restart (const char *label, double max)
 
 void ViewProgress::stop (const char *label)
 {
+  if (to_terminal) {
+    cerr << m_label->get_label() << " -- " << _(" done.") << "                     " << endl;  
+  }
   m_label->set_label (label);
   m_bar_cur = m_bar_max;
   m_bar->set_fraction(1.0);
@@ -80,4 +86,7 @@ void ViewProgress::set_label (const std::string label)
     m_label->set_label (label);
 }
 
-
+void ViewProgress::set_terminal_output (bool terminal)
+{
+  to_terminal=terminal;
+}

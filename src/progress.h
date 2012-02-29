@@ -71,7 +71,7 @@ class ViewProgress {
   double maximum() { return m_bar_max; }
   double value() { return m_bar_cur; }
   bool to_terminal;
-  void set_terminal_output (bool terminal){to_terminal=terminal;};
+  void set_terminal_output(bool terminal);
 };
 
 #endif // PROGRESS_H

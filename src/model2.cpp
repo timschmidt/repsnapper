@@ -202,7 +202,6 @@ void Model::Slice(double printOffsetZ)
   }
   
   int LayerNr = 0;
-
   bool varSlicing = settings.Slicing.Varslicing;
 
   uint max_skins = settings.Slicing.Skins;
@@ -461,7 +460,7 @@ void Model::MakeSkirt()
     }
   vector<Poly> skirts = clipp.unite();
   // set this skirt for all skirted layers 
-  for (int i=0; i<=endindex; i++) {
+  for (guint i=0; i<=endindex; i++) {
     layers[i]->setSkirtPolygon(skirts[0]);
   }
 }
@@ -623,21 +622,10 @@ void Model::ConvertToGCode()
 			  settings.Slicing, settings.Hardware);
   }
 
-  int h = (int)state.timeused/3600;
-  int m = ((int)state.timeused%3600)/60;
-  int s = ((int)state.timeused-3600*h-60*m);
-  std::ostringstream ostr;
-  ostr << _("Time Estimation: ") ;
-  if (h>0) ostr << h <<_("h") ;
-  ostr <<m <<_("m") <<s <<_("s") ;
-  statusbar->push(ostr.str());//cout << ostr.str() << endl;
-
   double AntioozeDistance = settings.Slicing.AntioozeDistance;
   if (!settings.Slicing.EnableAntiooze)
     AntioozeDistance = 0;
 
-  // m_progress->set_label (_("Collecting GCode"));
-  // m_progress->update(9.);
   gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
 		  settings.Slicing.UseIncrementalEcode,
 		  settings.Slicing.Use3DGcode,
@@ -647,13 +635,20 @@ void Model::ConvertToGCode()
 
   m_progress->stop (_("Done"));
 
-  ostr.clear();
+  int h = (int)state.timeused/3600;
+  int m = ((int)state.timeused%3600)/60;
+  int s = ((int)state.timeused-3600*h-60*m);
+  std::ostringstream ostr;
+  ostr << _("Time Estimation: ") ;
+  if (h>0) ostr << h <<_("h") ;
+  ostr <<m <<_("m") <<s <<_("s") ;
+
   double gctime = gcode.GetTimeEstimation();
   if (abs(state.timeused - gctime) > 10) {
     h = (int)(gctime/3600);
     m = ((int)gctime)%3600/60;
     s = (int)(gctime)-3600*h-60*m;
-    ostr << _(" -- GCode Estimation: ");
+    ostr << _(" / GCode Estimation: ");
     if (h>0) ostr << h <<_("h");
     ostr<< m <<_("m") << s <<_("s") ;
   }
@@ -662,7 +657,11 @@ void Model::ConvertToGCode()
   double ccm = totlength*settings.Hardware.FilamentDiameter*settings.Hardware.FilamentDiameter/4.*M_PI/1000 ;
   ostr << " = " << ccm << "cm^3 ";
   ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)"; 
-  statusbar->push(ostr.str());
+  if (statusbar)
+    statusbar->push(ostr.str());
+  else 
+    cout << ostr.str() << endl;
+
 
   is_calculating=false;
 }
