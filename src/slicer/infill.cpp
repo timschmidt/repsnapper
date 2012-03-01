@@ -250,7 +250,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  vector<Poly> shrinked = Clipping::getOffset(tofillpolys[i],firstshrink);
 	  vector<Poly> shrinked2 = Clipping::getOffset(shrinked,0.5*infillDistance);
 	  for (uint i=0;i<shrinked2.size();i++)
-	    shrinked2[i].cleanup(0.3*infillDistance);
+	    shrinked2[i].cleanup(0.1*infillDistance);
 	  ipolys.push_back(shrinked2);
 	  //ipolys.insert(ipolys.end(),shrinked.begin(),shrinked.end());
 	  double area = Clipping::Area(shrinked);
@@ -262,13 +262,13 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    //cerr << "shr " <<parea << " - " <<area<< " - " << shrcount << " : " <<endl;
 	    shrinked2 = Clipping::getOffset(shrinked,0.5*infillDistance);
 	    for (uint i=0;i<shrinked2.size();i++)
-	      shrinked2[i].cleanup(0.3*infillDistance);
+	      shrinked2[i].cleanup(0.1*infillDistance);
 	    ipolys.push_back(shrinked2);
 	    //ipolys.insert(ipolys.end(),shrinked.begin(),shrinked.end());
 	    lastnumpolys = shrinked.size();
 	    shrinked = Clipping::getOffset(shrinked,-infillDistance);
 	    for (uint i=0;i<shrinked.size();i++)
-	      shrinked[i].cleanup(0.3*infillDistance);
+	      shrinked[i].cleanup(0.1*infillDistance);
 	    area = Clipping::Area(shrinked);
 	    //shrcount++;
 	  }
