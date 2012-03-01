@@ -129,6 +129,9 @@ class View : public Gtk::Window
   void setModel (Model *model);
   void showAllWidgets();
 
+  int getMainwindowWidth();
+  int getMainwindowHeight();
+
   bool statusBarMessage(Glib::ustring message);
 
  public:

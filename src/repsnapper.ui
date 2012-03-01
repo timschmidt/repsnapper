@@ -595,7 +595,7 @@ and others I forgot... (needs updating)</property>
             </child>
             <child>
               <object class="GtkNotebook" id="notebook1">
-                <property name="width_request">400</property>
+                <property name="width_request">300</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <child>

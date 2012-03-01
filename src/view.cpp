@@ -600,6 +600,8 @@ void View::save_settings()
   std::string user_config_file = Glib::build_filename (user_config_bits);
   Glib::RefPtr<Gio::File> conf = Gio::File::create_for_path(user_config_file);
 
+  m_model->settings.Misc.window_width  = getMainwindowWidth();
+  m_model->settings.Misc.window_height = getMainwindowHeight();
   m_model->SaveConfig (conf);
 }
 
@@ -965,6 +967,21 @@ void View::showAllWidgets() {
     m_builder->get_widget("main_window", pWindow);
     if (pWindow)
       pWindow->show_all();
+}
+
+int View::getMainwindowWidth()
+{
+  Gtk::Window *pWindow = NULL;
+  m_builder->get_widget("main_window", pWindow);
+  if (pWindow) return pWindow->get_width();
+  return -1;
+}
+int View::getMainwindowHeight()
+{
+  Gtk::Window *pWindow = NULL;
+  m_builder->get_widget("main_window", pWindow);
+  if (pWindow) return pWindow->get_height();
+  return -1;
 }
 
 void View::setModel(Model *model)

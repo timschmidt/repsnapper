@@ -156,6 +156,8 @@ class Settings {
     bool FileLoggingEnabled;
     bool TempReadingEnabled;
     bool ClearLogfilesWhenPrintStarts;
+    int window_width;
+    int window_height;
   };
   MiscSettings Misc;
 

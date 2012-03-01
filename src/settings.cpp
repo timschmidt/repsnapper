@@ -178,8 +178,7 @@ static struct {
   INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),
   // BOOL_MEMBER   (Slicing.EnableAcceleration, "EnableAcceleration", true, false),
   FLOAT_MEMBER  (Slicing.MinLayertime, "MinLayertime", 5, false),
-// ShrinkQuality is a special enumeration ...
-//  INT_MEMBER    (Slicing.ShrinkQuality, "ShrinkQuality", 0, true),
+
   //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
   BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, false),
   // FLOAT_MEMBER  (Slicing.SerialBuildHeight, "SerialBuildHeight", 0.00, false),
@@ -567,6 +566,14 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
   }
 
   GCode.m_impl->loadSettings (cfg);
+
+  try {
+    Misc.window_width = cfg.get_integer ("Misc", "WindowWidth");
+    Misc.window_height = cfg.get_integer ("Misc", "WindowHeight");
+  } catch (const Glib::KeyFileError &err) {
+    Misc.window_width =-1;
+    Misc.window_height=-1;
+  }
   
   try {
     vector<string> cbkeys = cfg.get_keys ("CustomButtons");
@@ -617,6 +624,10 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
       break;
     };
   }
+  ostringstream os; os << Misc.window_width;
+  cfg.set_string("Misc", "WindowWidth", os.str());
+  os.str(""); os << Misc.window_height;
+  cfg.set_string("Misc", "WindowHeight", os.str());
 
   GCode.m_impl->saveSettings (cfg);
   
@@ -698,6 +709,10 @@ void Settings::set_to_gui (Builder &builder, int i)
     break;
   }
 
+  Gtk::Window *pWindow = NULL;
+  builder->get_widget("main_window", pWindow);
+  if (pWindow && Misc.window_width > 0 && Misc.window_height > 0)
+    pWindow->resize(Misc.window_width, Misc.window_height);
 }
 
 
@@ -726,14 +741,6 @@ void Settings::set_filltypes_to_gui (Builder &builder)
   if (combo)
     combo->set_active (decor);
 }
-// void Settings::set_shrink_to_gui (Builder &builder)
-// {
-//   // Slicing.ShrinkQuality
-//   Gtk::ComboBox *combo = NULL;
-//   builder->get_widget ("Slicing.ShrinkQuality", combo);
-//   if (combo)
-//     combo->set_active (Slicing.ShrinkQuality);
-// }
 
 void Settings::get_from_gui (Builder &builder, int i)
 {
@@ -840,16 +847,6 @@ void Settings::get_filltypes_from_gui (Builder &builder)
   //      <<  " / " << Slicing.SupportFilltype << endl;
 }
 
-// void Settings::get_shrink_from_gui (Builder &builder)
-// {
-//   // Slicing.ShrinkQuality
-//   Gtk::ComboBox *combo = NULL;
-//   builder->get_widget ("Slicing.ShrinkQuality", combo);
-//   if (combo)
-//     Slicing.ShrinkQuality = combo->get_active_row_number ();
-// }
-
-
 string combobox_get_active_value(Gtk::ComboBox *combo){
   uint c = combo->get_active_row_number();
   Glib::ustring rval;
@@ -935,7 +932,7 @@ void Settings::set_to_gui (Builder &builder)
 
     set_to_gui (builder, i);
   }
-  // set_shrink_to_gui (builder);
+
   set_filltypes_to_gui (builder);
 
   for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
@@ -1061,23 +1058,6 @@ void Settings::connect_to_ui (Builder &builder)
   set_up_combobox(combo,infills);
   combo->signal_changed().connect
     (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
-
-  // // Slicing.ShrinkQuality
-  // Gtk::ComboBox *combo = NULL;
-  // builder->get_widget ("Slicing.ShrinkQuality", combo);
-  // if (combo) {
-  //   Glib::RefPtr<Gtk::ListStore> model;
-  //   Gtk::TreeModelColumnRecord record;
-  //   Gtk::TreeModelColumn<Glib::ustring> column;
-  //   record.add (column);
-  //   model = Gtk::ListStore::create(record);
-  //   model->append()->set_value (0, Glib::ustring("Fast"));
-  //   model->append()->set_value (0, Glib::ustring("Logick"));
-  //   combo->set_model (model);
-  //   combo->pack_start (column);
-    // combo->signal_changed().connect
-    //   (sigc::bind(sigc::mem_fun(*this, &Settings::get_shrink_from_gui), builder));
-  // }
 
   // Colour selectors
   for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
