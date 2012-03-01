@@ -1229,17 +1229,16 @@ void checkGlutInit()
 	glutInit (&argc, argv);
 }
 
-void renderBitmapString(Vector3d pos, void* font, string text)
+void drawString(Vector3d pos, string text)
 {
-	char asd[100];
-	char *a = &asd[0];
-
+  drawString(pos,GLUT_BITMAP_HELVETICA_12,text);
+}
+void drawString(Vector3d pos, void* font, string text)
+{
 	checkGlutInit();
-
-	sprintf(asd,"%s",text.c_str());
 	glRasterPos3d(pos.x, pos.y, pos.z);
-	for (uint c=0;c<text.size();c++)
-		glutBitmapCharacter(font, (int)*a++);
+	for (uint c=0;c<text.length();c++)
+		glutBitmapCharacter(font, text[c]);
 }
 
 

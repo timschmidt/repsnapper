@@ -732,7 +732,7 @@ float const GREY[] = {0.5,0.5,0.5};
 
 void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 		 bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
-		 bool DrawCPVertexNumbers, bool DisplayInfill) const 
+		 bool DrawCPVertexNumbers, bool DisplayInfill) 
 {
   draw_polys(polygons, GL_LINE_LOOP, 1, 3, RED, 1);
   draw_polys(polygons, GL_POINTS,    1, 3, RED, 1);
@@ -742,8 +742,8 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
       {
 	ostringstream oss;
 	oss << p;
-	renderBitmapString(Vector3f(polygons[p].center.x, polygons[p].center.y, Z) , 
-			   GLUT_BITMAP_8_BY_13 , oss.str());
+	Vector2d center = polygons[p].getCenter();
+	drawString(Vector3d(center.x, center.y, Z), oss.str());
       }
 
   draw_poly(hullPolygon,    GL_LINE_LOOP, 3, 3, ORANGE,  0.5);

@@ -189,6 +189,11 @@ bool Poly::isHole()
   return hole;
 }
 
+Vector2d Poly::getCenter() 
+{
+  if (!holecalculated) calcHole();
+  return center;
+}
 
 void Poly::rotate(Vector2d center, double angle) 
 {
@@ -550,7 +555,7 @@ void Poly::drawVertexNumbers() const
     glVertex3f(v.x,v.y,v.z);
     ostringstream oss;
     oss << i;
-    renderBitmapString(v, GLUT_BITMAP_8_BY_13 , oss.str());
+    drawString(v, oss.str());
   }
 }
 
@@ -562,7 +567,7 @@ void Poly::drawLineNumbers() const
     v2 = getVertexCircular3(i+1);
     ostringstream oss;
     oss << i;
-    renderBitmapString((v+v2)/2., GLUT_BITMAP_8_BY_13 , oss.str());
+    drawString((v+v2)/2., oss.str());
   }
 }
 

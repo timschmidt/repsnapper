@@ -131,7 +131,7 @@ public:
 
   void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 	    bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
-	    bool DrawCPVertexNumbers, bool DisplayInfill) const ;
+	    bool DrawCPVertexNumbers, bool DisplayInfill);
     
   void Clear();
 

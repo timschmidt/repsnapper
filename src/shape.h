@@ -92,7 +92,8 @@ enum filetype_t{
 };
 
 
-void renderBitmapString(Vector3d pos, void* font, string text);
+void drawString(Vector3d pos, string text);
+void drawString(Vector3d pos, void* font, string text);
 void checkGlutInit();
 
 

@@ -79,6 +79,7 @@ public:
 	void addVertex(Vector2d v, bool front=false);
 	bool hole; // this polygon is a hole
 	Vector2d center;
+	Vector2d getCenter();
 	double getZ() const;
 	void setZ(double z) {this->z = z;};
 	double getExtrusionFactor() const{return extrusionfactor;};
