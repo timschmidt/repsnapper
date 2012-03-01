@@ -37,7 +37,10 @@ long double angleBetween(Vector3d V1, Vector3d V2)
 {
   long double dotproduct =  V1.dot(V2);
   long double length = V1.length() * V2.length();
-  long double result = acosl( dotproduct / length ); // 0 .. pi 
+  long double quot = dotproduct / length;
+  if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
+  if (quot < -1 && quot > -1.0001) quot = -1;
+  long double result = acosl( quot ); // 0 .. pi 
   if (isleftof(Vector3d(0,0,0), V2, V1)) 
       result = -result;
   return result;
@@ -45,10 +48,12 @@ long double angleBetween(Vector3d V1, Vector3d V2)
 
 long double angleBetween(Vector2d V1, Vector2d V2)
 {
-  long double result, dotproduct, length;
-  dotproduct =  V1.dot(V2);
-  length = V1.length() * V2.length();
-  result = acosl( dotproduct / length ); // 0..pi
+  long double dotproduct =  V1.dot(V2);
+  long double length = V1.length() * V2.length();
+  long double quot = dotproduct / length;
+  if (quot > 1  && quot < 1.0001) quot = 1;
+  if (quot < -1 && quot > -1.0001) quot = -1;
+  long double result = acosl( quot ); // 0 .. pi 
   if (isleftof(Vector2d(0,0), V2, V1)) 
       result = -result;
   return result;
@@ -59,7 +64,7 @@ long double angleBetween(Vector2d V1, Vector2d V2)
 bool isleftof(Vector2d center, Vector2d A, Vector2d B)
 {
   double position = (B.x-A.x)*(center.y-A.y) - (B.y-A.y)*(center.x-A.x);
-  return (position > 0);
+  return (position >= 0);
 }
 bool isleftof(Vector3d center, Vector3d A, Vector3d B)
 {
@@ -80,6 +85,11 @@ void center_perpendicular(const Vector2d from, const Vector2d to,
 }
 
 
+Vector3d cross2d(Vector2d A, Vector2d B, double z)
+{
+  Vector3d A3(A.x,A.y,z),  B3(B.x,B.y,z);
+  return A3.cross(B3);
+}
 
 
 //////////////////////////////////////////////////////////////
@@ -379,3 +389,16 @@ double dist3D_Segment_to_Segment(Vector3d S1P0, Vector3d S1P1,
 
      return dP.length();   // return the closest distance
  }
+
+void testangles(){
+  Vector2d C(0,0);
+  Vector2d P(-1,1);
+  for (double a = 0; a < 2*M_PI; a+=0.3){
+    Vector2d Q(cos(a), sin(a));
+    double an = angleBetween(P,Q);
+    double bn = angleBetween(Q,P);
+    //if(an<0) an+=2*M_PI;
+    //if(bn<0) bn+=2*M_PI;
+    cerr << a*180/M_PI << " - " << an*180/M_PI << " - " << bn*180/M_PI << endl;
+  }
+}

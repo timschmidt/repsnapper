@@ -129,6 +129,9 @@ class Printlines
   double lengthSq(const line l) const;
   double length(const line l) const;
 
+  Vector2d arcCenter(const struct line l1, const struct line l2, 
+		     double maxerr) const;
+  
   string GCode(line l, Vector3d &lastpos, double &E, double feedrate, double speed) const;
 
   typedef vector<line>::const_iterator lineCIt ;

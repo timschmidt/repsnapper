@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-01 06:17+0100\n"
-"PO-Revision-Date: 2012-03-01 06:18+0100\n"
+"POT-Creation-Date: 2012-03-01 11:32+0100\n"
+"PO-Revision-Date: 2012-03-01 11:32+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -83,11 +83,11 @@ msgstr " Z-Schritt"
 msgid " Move Only"
 msgstr " Nur Bewegung"
 
-#: ../src/gcode.cpp:353
+#: ../src/gcode.cpp:362
 msgid "Loading GCode"
 msgstr "Lade GCode"
 
-#: ../src/gcode.cpp:636
+#: ../src/gcode.cpp:645
 msgid "Collecting GCode"
 msgstr "Sammle GCode"
 
@@ -99,7 +99,7 @@ msgstr "noch nicht implementiert\n"
 msgid "Converting"
 msgstr "Konvertiere"
 
-#: ../src/model.cpp:93 ../src/model2.cpp:637
+#: ../src/model.cpp:93 ../src/model2.cpp:638
 msgid "Done"
 msgstr "Fertig"
 
@@ -132,39 +132,39 @@ msgstr "Unbedeckte Flächen"
 msgid "Support"
 msgstr "Gerüst"
 
-#: ../src/model2.cpp:472
+#: ../src/model2.cpp:473
 msgid "Shells"
 msgstr "Hüllen"
 
-#: ../src/model2.cpp:516 ../src/repsnapper.ui.h:108
+#: ../src/model2.cpp:517 ../src/repsnapper.ui.h:108
 msgid "Infill"
 msgstr "Füllung"
 
-#: ../src/model2.cpp:614
+#: ../src/model2.cpp:615
 msgid "Making GCode"
 msgstr "Erzeuge GCode"
 
-#: ../src/model2.cpp:643
+#: ../src/model2.cpp:644
 msgid "Time Estimation: "
 msgstr "Geschätzte Dauer: "
 
-#: ../src/model2.cpp:644 ../src/model2.cpp:653
+#: ../src/model2.cpp:645 ../src/model2.cpp:654
 msgid "h"
 msgstr ""
 
-#: ../src/model2.cpp:645 ../src/model2.cpp:654
+#: ../src/model2.cpp:646 ../src/model2.cpp:655
 msgid "m"
 msgstr ""
 
-#: ../src/model2.cpp:645 ../src/model2.cpp:654
+#: ../src/model2.cpp:646 ../src/model2.cpp:655
 msgid "s"
 msgstr ""
 
-#: ../src/model2.cpp:652
+#: ../src/model2.cpp:653
 msgid " / GCode Estimation: "
 msgstr "/ Geschätzte Dauer: "
 
-#: ../src/model2.cpp:657
+#: ../src/model2.cpp:658
 msgid " - total extruded: "
 msgstr " - Gesamtfilament: "
 
@@ -827,8 +827,8 @@ msgid "Filament Diameter"
 msgstr "Filamentdurchmesser"
 
 #: ../src/repsnapper.ui.h:97
-msgid "From:"
-msgstr "Von:"
+msgid "From/Single:"
+msgstr "Von/Einzeln:"
 
 #: ../src/repsnapper.ui.h:98
 msgid "Full Fill"
@@ -1336,6 +1336,9 @@ msgstr ""
 #: ../src/repsnapper.ui.h:224
 msgid "repsnapper Preferences"
 msgstr "repsnapper-Einstellungen"
+
+#~ msgid "From:"
+#~ msgstr "Von:"
 
 #~ msgid "<b>Layers\t</b>"
 #~ msgstr "<b>Schichten</b>"

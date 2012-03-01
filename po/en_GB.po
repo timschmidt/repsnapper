@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-01 06:17+0100\n"
+"POT-Creation-Date: 2012-03-01 11:32+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: michael.meeks@novell.com\n"
 "Language-Team: British English <gb@li.org>\n"
@@ -84,11 +84,11 @@ msgstr ""
 msgid " Move Only"
 msgstr ""
 
-#: ../src/gcode.cpp:353
+#: ../src/gcode.cpp:362
 msgid "Loading GCode"
 msgstr ""
 
-#: ../src/gcode.cpp:636
+#: ../src/gcode.cpp:645
 msgid "Collecting GCode"
 msgstr ""
 
@@ -100,7 +100,7 @@ msgstr ""
 msgid "Converting"
 msgstr ""
 
-#: ../src/model.cpp:93 ../src/model2.cpp:637
+#: ../src/model.cpp:93 ../src/model2.cpp:638
 msgid "Done"
 msgstr ""
 
@@ -133,39 +133,39 @@ msgstr ""
 msgid "Support"
 msgstr ""
 
-#: ../src/model2.cpp:472
+#: ../src/model2.cpp:473
 msgid "Shells"
 msgstr ""
 
-#: ../src/model2.cpp:516 ../src/repsnapper.ui.h:108
+#: ../src/model2.cpp:517 ../src/repsnapper.ui.h:108
 msgid "Infill"
 msgstr ""
 
-#: ../src/model2.cpp:614
+#: ../src/model2.cpp:615
 msgid "Making GCode"
 msgstr ""
 
-#: ../src/model2.cpp:643
+#: ../src/model2.cpp:644
 msgid "Time Estimation: "
 msgstr ""
 
-#: ../src/model2.cpp:644 ../src/model2.cpp:653
+#: ../src/model2.cpp:645 ../src/model2.cpp:654
 msgid "h"
 msgstr ""
 
-#: ../src/model2.cpp:645 ../src/model2.cpp:654
+#: ../src/model2.cpp:646 ../src/model2.cpp:655
 msgid "m"
 msgstr ""
 
-#: ../src/model2.cpp:645 ../src/model2.cpp:654
+#: ../src/model2.cpp:646 ../src/model2.cpp:655
 msgid "s"
 msgstr ""
 
-#: ../src/model2.cpp:652
+#: ../src/model2.cpp:653
 msgid " / GCode Estimation: "
 msgstr ""
 
-#: ../src/model2.cpp:657
+#: ../src/model2.cpp:658
 msgid " - total extruded: "
 msgstr ""
 
@@ -804,7 +804,7 @@ msgid "Filament Diameter"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:97
-msgid "From:"
+msgid "From/Single:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:98

@@ -261,49 +261,63 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
   return ostr.str();
 }
 
-void Command::draw(Vector3d &lastPos) const 
+void Command::draw(Vector3d &lastPos, bool arrows) const 
 {
+  GLfloat ccol[4];
+  glGetFloatv(GL_CURRENT_COLOR,&ccol[0]);
   glBegin(GL_LINES);
+  // arc:
   if (Code == ARC_CW || Code == ARC_CCW) {
     Vector3d center = lastPos + arcIJK;
     Vector3d P = -arcIJK, Q = where-center; // arc endpoints
-    glColor4f(1.f,0.f,0.0f,0.3f);
-    glVertex3dv((GLdouble*)&center);
-    glVertex3dv((GLdouble*)&lastPos);
-    glVertex3dv((GLdouble*)&lastPos);
-    glVertex3dv((GLdouble*)&where);
+    // glColor4f(1.f,0.f,0.0f,0.3f);
+    // glVertex3dv((GLdouble*)&center);
+    // glVertex3dv((GLdouble*)&lastPos);
+    // glVertex3dv((GLdouble*)&lastPos);
+    // glVertex3dv((GLdouble*)&where);
     bool ccw = (Code == ARC_CCW);
-    if (ccw)
-      glColor3f(0.7f,0.3f,0.6f);
-    else 
-      glColor3f(1.f,0.5f,0.0f);
+    // if (ccw)
+    //   glColor4f(1.f,0.7f,0.1f,ccol[3]);
+    // else 
+    glColor4f(1.f,0.5f,0.0f,ccol[3]);
     long double angle;
     angle = angleBetween(P,Q); // ccw angle
     if (!ccw) angle=-angle;
     if (angle <= 0) angle += 2*M_PI;
-    if (angle < 0) cerr << "ANGLE<0 " << angle<< endl;
     Vector3d arcpoint;
-    double astep = arcIJK.length()*angle/400.;
+    double astep = angle/arcIJK.length()/10;
     double dz = where.z-lastPos.z; // z move with arc
     for (double a = 0; a < angle; a+=astep){
-      arcpoint = center + P.rotate(a, 0,0,ccw?1:-1);
-      if (dz!=0) arcpoint.z = lastPos.z + a*(dz)/angle;
+      arcpoint = center + P.rotate(a, 0.,0.,ccw?1.:-1.);
+      if (dz!=0 && angle!=0) arcpoint.z = lastPos.z + a*(dz)/angle;
       glVertex3dv((GLdouble*)&lastPos);
       glVertex3dv((GLdouble*)&arcpoint);
       lastPos = arcpoint;
     }
+    glGetFloatv(GL_CURRENT_COLOR,ccol);
   }
   glVertex3dv((GLdouble*)&lastPos);
   glVertex3dv((GLdouble*)&where);
+  if (arrows) {
+    glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
+    // 0.4mm long arrows
+    Vector3d arrdir = (where-lastPos).getNormalized() * 0.4; 
+    Vector3d arrdir2(-0.5*arrdir.y,0.5*arrdir.x,arrdir.z);
+    glVertex3dv((GLdouble*)&where);
+    glVertex3dv((GLdouble*)&(where-arrdir+arrdir2));
+    glVertex3dv((GLdouble*)&where);
+    glVertex3dv((GLdouble*)&(where-arrdir-arrdir2));
+  }
   glEnd();
   lastPos = where;
 }
 
-void Command::draw(Vector3d &lastPos, guint linewidth, Vector4f color) const 
+void Command::draw(Vector3d &lastPos, guint linewidth, 
+		   Vector4f color, bool arrows) const 
 {
   glLineWidth(linewidth);
   glColor4fv(&color[0]);
-  draw(lastPos);
+  draw(lastPos, arrows);
 }
 
 string Command::info() const
@@ -464,6 +478,7 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
 	Vector3d thisPos(0,0,0);
 	uint start = 0, end = 0;
         uint n_cmds = commands.size();
+	bool arrows = true;
 
 	if (layerchanges.size()>0) {
             // have recorded layerchange indices -> draw whole layers
@@ -488,11 +503,13 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
 	      if (sind>=eind) {
 		eind = MIN(sind+1, n_changes-1);
               }
+	      else arrows = false; // arrows only for single layers
 
               sind = CLAMP(sind, 0, n_changes-1);
               eind = CLAMP(eind, 0, n_changes-1);
 	      
 	      start = layerchanges[sind];
+	      //if (start>0) start-=1; // get one command before layer
 	      end = layerchanges[eind];
 	      if (sind == n_changes-1) end = commands.size(); // get last layer
 	    }
@@ -504,12 +521,12 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
           }
 	}
 
-	drawCommands(settings, start, end, liveprinting, linewidth);
+	drawCommands(settings, start, end, liveprinting, linewidth, arrows);
 }
 
 
 void GCode::drawCommands(const Settings &settings, uint start, uint end,
-			 bool liveprinting, int linewidth)
+			 bool liveprinting, int linewidth, bool arrows)
 {
 	double LastE=0.0;
 	bool extruderon = false;
@@ -559,10 +576,10 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		    Color = settings.Display.GCodeMoveRGBA;
 		  }
 			// LastColor = Color;
-			commands[i].draw(pos, linewidth, Color);
-			// LastColor = Color;
-			LastE=commands[i].e;
-			break;
+		  commands[i].draw(pos, linewidth, Color, arrows);
+		  // LastColor = Color;
+		  LastE=commands[i].e;
+		  break;
 		case ARC_CW:
 		case ARC_CCW:
 		case COORDINATEDMOTION:
@@ -586,13 +603,13 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		      Color *= luma;
 		    // if(settings.Display.LuminanceShowsSpeed == false)
 		    // 	LastColor = Color;
-		    commands[i].draw(pos, linewidth, Color);
+		    commands[i].draw(pos, linewidth, Color, arrows);
 		    // LastColor = Color;
 		    LastE=commands[i].e;
 		    break;
 		  }
 		case RAPIDMOTION:
-		  commands[i].draw(pos, 1, Color);
+		  commands[i].draw(pos, 1, Color, arrows);
 			break;
 		default:
 			break; // ignored GCodes

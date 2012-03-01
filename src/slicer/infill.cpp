@@ -246,7 +246,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  double parea = Clipping::Area(tofillpolys[i]);
 	  // make first larger to get clip overlap
 	  double firstshrink=0.5*infillDistance;
-	  if (parea<0) firstshrink=-0.5*infillDistance;
+	  if (parea<0) firstshrink=-0.5*infillDistance; 
 	  vector<Poly> shrinked = Clipping::getOffset(tofillpolys[i],firstshrink);
 	  vector<Poly> shrinked2 = Clipping::getOffset(shrinked,0.5*infillDistance);
 	  for (uint i=0;i<shrinked2.size();i++)
@@ -255,10 +255,9 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  //ipolys.insert(ipolys.end(),shrinked.begin(),shrinked.end());
 	  double area = Clipping::Area(shrinked);
 	  //cerr << "shr " <<parea << " - " <<area<< " - " << " : " <<endl;
-	  //int shrcount =1;
 	  int lastnumpolys=0;
 	  while (shrinked.size()>0){ 
-	    if (area*parea<0)  break;
+	    if (area*parea<0)  break; // went beyond zero size
 	    //cerr << "shr " <<parea << " - " <<area<< " - " << shrcount << " : " <<endl;
 	    shrinked2 = Clipping::getOffset(shrinked,0.5*infillDistance);
 	    for (uint i=0;i<shrinked2.size();i++)
@@ -270,10 +269,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    for (uint i=0;i<shrinked.size();i++)
 	      shrinked[i].cleanup(0.1*infillDistance);
 	    area = Clipping::Area(shrinked);
-	    //shrcount++;
 	  }
-	  // // remove last because they are too small
-	  // ipolys.erase(ipolys.end()-lastnumpolys,ipolys.end());
 	}
 	vector<Poly> opolys;
 	for (uint i=0;i<ipolys.size();i++){

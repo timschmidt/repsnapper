@@ -36,6 +36,8 @@ void center_perpendicular(const Vector2d from, const Vector2d to,
 bool isleftof(Vector2d center, Vector2d A, Vector2d B);
 bool isleftof(Vector3d center, Vector3d A, Vector3d B);
 
+Vector3d cross2d(Vector2d A, Vector2d B, double z=0);
+
 struct printline;
 
 struct Intersection
@@ -60,3 +62,6 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 
 double dist3D_Segment_to_Segment(Vector3d S1P0, Vector3d S1P1, 
 				 Vector3d S2P0, Vector3d S2P1, double SMALL_NUM);
+
+
+void testangles();

@@ -469,6 +469,7 @@ void Model::MakeSkirt()
 void Model::MakeShells()
 {
   int count = (int)layers.size();
+  if (count == 0) return;
   m_progress->restart (_("Shells"), count);
   double matwidth, skirtheight = settings.Slicing.SkirtHeight;
   bool makeskirt=false;

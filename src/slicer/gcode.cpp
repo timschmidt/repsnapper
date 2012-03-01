@@ -287,10 +287,16 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 	  if (arc == 0) { // make line
 	    command.Code = COORDINATEDMOTION;
 	  } else { // make arc
-	    if (arc==1) command.Code = ARC_CW;
-	    else        command.Code = ARC_CCW;
+	    if (arc==1) {
+	      command.Code = ARC_CW;
+	      command.comment = "cw arc";
+	    }
+	    else if (arc==-1) {
+	      command.Code = ARC_CCW;
+	      command.comment = "ccw arc";
+	    }
+	    else cerr << "Undefined arc direction! "<< arc << endl;
 	    command.arcIJK = arcIJK;
-	    command.comment = "arc";
 	  }
 	  AppendCommand(command,incrementalE);
 	}	// 5D gcode

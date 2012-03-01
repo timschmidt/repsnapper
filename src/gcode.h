@@ -145,8 +145,9 @@ public:
 	Vector3d arcIJK; // I,J,K (dx, dy, dz) 
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
 	string comment;
-	void draw(Vector3d &lastPos, guint linewidth, Vector4f color) const;
-	void draw(Vector3d &lastPos) const;
+	void draw(Vector3d &lastPos, guint linewidth, 
+		  Vector4f color, bool arrows=true) const;
+	void draw(Vector3d &lastPos, bool arrows=true) const;
 	string GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalEcode) const;
 	string info() const;
 };
@@ -179,7 +180,7 @@ public:
   void draw  (const Settings &settings, int layer=-1, bool liveprinting=false,
 	      int linewidth=3);
   void drawCommands(const Settings &settings, uint start, uint end,
-		    bool liveprinting, int linewidth);
+		    bool liveprinting, int linewidth, bool arrows);
   void MakeText(string &GcodeTxt, const string &GcodeStart,
 		const string &GcodeLayer, const string &GcodeEnd,
 		bool UseIncrementalEcode, bool Use3DGcode,

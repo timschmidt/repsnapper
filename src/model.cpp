@@ -120,8 +120,8 @@ void Model::GlDrawGCode(int layerno)
     int currentlayer = gcode.getLayerNo(currentprintingline);
     if (currentlayer>=0)
       gcode.draw (settings, currentlayer, true, 1);
-    gcode.drawCommands(settings, currentprintingline-currentbufferedlines, currentprintingline,
-		       true, 3);
+    gcode.drawCommands(settings, currentprintingline-currentbufferedlines, 
+		       currentprintingline, true, 3, true);
   }
 }
 

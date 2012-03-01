@@ -148,8 +148,7 @@ double Printlines::angle(const line l) const
 }
 double Printlines::angle(const line l1,const line l2) const
 {
-  double da=l2.angle-l1.angle;
-  return da;
+  return angleBetween((l2.to-l2.from), (l1.to-l1.from));
 }
 
 double Printlines::lengthSq(const line l) const
@@ -182,40 +181,57 @@ void Printlines::optimize(double minspeed, double maxspeed, double movespeed,
   makeArcs(maxArcAngle);
 }
 
+// gets center of common arc of 2 lines if radii inside maxerr range
+Vector2d Printlines::arcCenter(const struct line l1, const struct line l2,
+			       double maxerr) const
+{
+  Vector2d l1p1,l1p2;
+  center_perpendicular(l1.from, l1.to, l1p1, l1p2);
+  Vector2d l2p1,l2p2;
+  center_perpendicular(l2.from, l2.to, l2p1, l2p2);
+  Vector2d center, ip;
+  double t0, t1;
+  int is = intersect2D_Segments(l1p1, l1p2, l2p1, l2p2,
+   				center, ip, t0,t1);
+  if (is > 0) {
+    // radii match?
+    if (abs((l1p1-center).lengthSquared() -
+	    (l1p1-center).lengthSquared()) < maxerr)
+      return center;
+  }
+  return Vector2d(10000000,10000000);
+}
 
 guint Printlines::makeArcs(double maxAngle)
 {
   if (maxAngle < 0) return 0;
-  //cerr << name << " makeArcs "  << lines.size() << endl;
-  double arcAngle = -100;  // angles between lines
-  double arcLength = -100; // lines length
-  double arcFeed = -100;   // lines feed rate
+  double arcRadiusSq = 0;  
+  Vector2d arccenter;
   guint  arcstart = 0;
   for (guint i=1; i < lines.size(); i++) {
-    double dangle = angle(lines[i],lines[i-1]);
-    double feedrate = lines[i].feedrate;
-    double llength = length(lines[i]);
+    double dangle         = angle(lines[i], lines[i-1]);
+    double feedratechange = lines[i].feedrate - lines[i-1].feedrate;
+    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.005*arcRadiusSq);
+    double radiusSq       = (center - lines[i].from).lengthSquared();
     // test if NOT continue arc:
     if (lines[i].arc != 0                  // is an arc
 	|| (lines[i].from-lines[i-1].to).lengthSquared() > 0.01 // not adjacent
-	|| abs(feedrate-arcFeed) > 0.01    // different feedrate
-	|| abs(dangle) < 0.0001            // straight continuation
-	|| abs(dangle) > maxAngle          // too big angle
-	|| abs(llength-arcLength) > 0.1    // same line length
-	|| abs(dangle-arcAngle) > 0.1) {   // different angle 
-      arcAngle  = dangle;
-      arcLength = llength;
-      arcFeed   = feedrate;
-      if (arcstart+2 < i-1) // more than two arc lines
-	i -= makeIntoArc(arcstart, i-1); // straight lines are being removed
-      else // not in arc
-	arcstart = i;
-    } else { 
-      // continue arc
-    }
+	|| abs(feedratechange) > 0.1       // different feedrate
+	|| abs(dangle) < 0.001             // straight continuation
+	|| abs(dangle) > maxAngle && 2*M_PI-abs(dangle) > maxAngle  // too big angle
+	|| (arccenter-center).lengthSquared() > 0.005*radiusSq // center displacement
+	) { 
+      arccenter   = center;
+      arcRadiusSq = radiusSq;
+      // this on doesn't fit, so i-1 is the last line that fits
+      if (arcstart+1 < i-1) // at least two arc lines
+	i -= makeIntoArc(arcstart, i-1) ; // straight lines are being removed
+      //else // not in arc, set start for potential next arc
+      arcstart = i;
+    } 
   }  
   // remaining
-  if (arcstart+2 < lines.size()-1) 
+  if (arcstart+1 < lines.size()-1) 
     makeIntoArc(arcstart, lines.size()-1); 
   return 0;
 }
@@ -231,33 +247,29 @@ guint Printlines::makeIntoArc(guint fromind, guint toind)
   // center perp of midpoint -- endpoint:
   guint midind = (toind+fromind)/2;
   Vector2d midp1,midp2;
-  center_perpendicular(lines[midind].from, lines[toind].to,
-   		       midp1, midp2);
+  center_perpendicular(lines[midind].from, lines[toind].to, midp1, midp2);
   // intersection = center
   Vector2d center, ip;
   double t0, t1;
-  int is = intersect2D_Segments(connp1,connp2,midp1,midp2, 
+  int is = intersect2D_Segments(connp1, connp2, midp1, midp2, 
    				center, ip, t0,t1);
-  if (is > 0) { 
-    double angle = angleBetween(P - center, Q - center);
-    bool ccw = isleftof(center, P, Q);
+  if (is > 0) {
+    double angle = angleBetween(P-center, Q-center);
+    bool ccw = isleftof(center, lines[fromind].from, lines[fromind].to);
     if (angle<=0) {
       angle+=2*M_PI;
-    } 
-
+    }
     short arctype = ccw ? -1 : 1; 
     struct line newline;
     newline.from      = P;
     newline.to        = Q;
     newline.speed     = lines[fromind].speed;
     newline.feedrate  = lines[fromind].feedrate;
-    newline.angle     = angle;
+    newline.angle     = angle; // not used anywhere (-> for drawing?)
     newline.arccenter = center;
     newline.arc       = arctype;
     lines[fromind] = newline;
     lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
-    //lines.insert(lines.begin()+fromind,newline);
-    //cerr << toind-fromind << " lines removed" << endl;
     return toind-fromind;
   } else cerr << "no Intersection of arc perpendiculars!" << endl;
   return 0;
@@ -510,8 +522,8 @@ void Printlines::getLines(vector<printline> &plines) const
       if (lIt->arc) {
 	Vector2d arcIJK2 = lIt->arccenter - lIt->from;
 	pline.arcIJK = Vector3d(arcIJK2.x, arcIJK2.y, 0);
-	double linlength = (lIt->to - lIt->from).length();
-	pline.extrusionfactor *= length(*lIt) / linlength;
+	double linearlength = (lIt->to - lIt->from).length();
+	pline.extrusionfactor *= length(*lIt) / linearlength;
       }
       plines.push_back(pline);
     } // else cerr<< "zero line" << endl;

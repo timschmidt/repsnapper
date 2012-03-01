@@ -465,7 +465,7 @@ void Layer::MakeSkirt(double distance)
   vector<Poly> skp = Clipping::getOffset(hullPolygon, distance, jround);
   if (skp.size()>0){
     skirtPolygon = skp.front();
-    skirtPolygon.cleanup(distance/8.);
+    skirtPolygon.cleanup(distance/5.);
   }
 }
 

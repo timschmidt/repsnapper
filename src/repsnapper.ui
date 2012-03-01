@@ -2657,7 +2657,7 @@ THE HEAD MOVING DOWN!
                       <object class="GtkLabel" id="label91">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">From:</property>
+                        <property name="label" translatable="yes">From/Single:</property>
                       </object>
                       <packing>
                         <property name="x_options"></property>
