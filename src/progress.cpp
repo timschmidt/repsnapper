@@ -36,15 +36,19 @@ ViewProgress::ViewProgress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *lab
 
 void ViewProgress::start (const char *label, double max)
 {
+  GDK_THREADS_ENTER ();
   m_box->show();
   m_bar_max = max;
   m_label->set_label (label);
   m_bar_cur = 0.0;
   m_bar->set_fraction(0.0);
+  Gtk::Main::iteration(false);
+  GDK_THREADS_LEAVE ();
 }
 void ViewProgress::restart (const char *label, double max)
 {
   //m_box->show();
+  GDK_THREADS_ENTER ();
   if (to_terminal) {
     cerr << m_label->get_label() << " -- " << _(" done.") << "                     " << endl;  
   }
@@ -52,10 +56,13 @@ void ViewProgress::restart (const char *label, double max)
   m_label->set_label (label);
   m_bar_cur = 0.0;
   m_bar->set_fraction(0.0);
+  Gtk::Main::iteration(false);
+  GDK_THREADS_LEAVE ();
 }
 
 void ViewProgress::stop (const char *label)
 {
+  GDK_THREADS_ENTER ();
   if (to_terminal) {
     cerr << m_label->get_label() << " -- " << _(" done.") << "                     " << endl;  
   }
@@ -63,10 +70,13 @@ void ViewProgress::stop (const char *label)
   m_bar_cur = m_bar_max;
   m_bar->set_fraction(1.0);
   m_box->hide();
+  Gtk::Main::iteration(false);
+  GDK_THREADS_LEAVE ();
 }
 
 void ViewProgress::update (double value)
 {
+  GDK_THREADS_ENTER ();
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->set_fraction(value / m_bar_max);
   ostringstream o; o << value <<"/"<< m_bar_max;
@@ -76,14 +86,18 @@ void ViewProgress::update (double value)
     cerr << m_label->get_label() << " " << o.str() << " -- " << perc << "%              \r";
   }
   Gtk::Main::iteration(false);
-  g_main_context_iteration(NULL,false);
+   //g_main_context_iteration(NULL,false);
+  GDK_THREADS_LEAVE ();
 }
 
 void ViewProgress::set_label (const std::string label)
 {
+  GDK_THREADS_ENTER ();
   std::string old = m_label->get_label();
   if (old != label)
     m_label->set_label (label);
+  Gtk::Main::iteration(false);
+  GDK_THREADS_LEAVE ();
 }
 
 void ViewProgress::set_terminal_output (bool terminal)
