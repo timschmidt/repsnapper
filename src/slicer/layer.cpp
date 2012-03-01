@@ -607,17 +607,23 @@ void Layer::MakeGcode(GCodeState &state,
   polys.clear();
 
   // 2. Skirt
-  skirtPolygon.getLines(lines, startPoint);
+  printlines.clear();
+  printlines.makeLines(skirtPolygon, startPoint, false,
+		       minspeed, maxspeed, movespeed, 
+		       linewidth, linewidthratio, optratio,
+		       maxArcAngle, linelengthsort);
+  printlines.slowdownTo(slicing.MinLayertime/2);
+  printlines.setSpeedFactor(speedfactor);
+  printlines.getLines(lines);
 
   // 3. Support
   printlines.clear();
-  printlines.makeLines(supportInfill->infillpolys, startPoint,
+  printlines.makeLines(supportInfill->infillpolys, startPoint, false,
 		       minspeed, maxspeed, movespeed, 
 		       linewidth, linewidthratio, optratio,
 		       linelengthsort);
   printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
-  printlines.clipMovements(GetOuterShell());
   printlines.getLines(lines);
 
   // 4. all other polygons:  
