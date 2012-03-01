@@ -595,6 +595,7 @@ void Layer::MakeGcode(GCodeState &state,
 		   skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
       printlines.clear();
+      printlines.setName("skin");
       printlines.makeLines(polys, startPoint,  (s==1), //displace at first skin
 			   minspeed, maxspeed, movespeed,  
 			   linewidth, linewidthratio, optratio);
@@ -608,6 +609,7 @@ void Layer::MakeGcode(GCodeState &state,
 
   // 2. Skirt
   printlines.clear();
+  printlines.setName("Skirt");
   printlines.makeLines(skirtPolygon, startPoint, false,
 		       minspeed, maxspeed, movespeed, 
 		       linewidth, linewidthratio, optratio,
@@ -618,6 +620,7 @@ void Layer::MakeGcode(GCodeState &state,
 
   // 3. Support
   printlines.clear();
+  printlines.setName("Support");
   printlines.makeLines(supportInfill->infillpolys, startPoint, false,
 		       minspeed, maxspeed, movespeed, 
 		       linewidth, linewidthratio, optratio,
@@ -640,6 +643,7 @@ void Layer::MakeGcode(GCodeState &state,
 	       bridgeInfill->infillpolys.begin(), bridgeInfill->infillpolys.end());
   
   printlines.clear();
+  printlines.setName("ShellsAndInfill");
   printlines.makeLines(polys, startPoint, true, //displace at beginning
 		       minspeed, maxspeed, movespeed,
 		       linewidth, linewidthratio, optratio,

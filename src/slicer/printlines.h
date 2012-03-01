@@ -49,16 +49,19 @@ class Printlines
 
   double z;
 
+  string name;
+
   void addPoly(const Poly poly, int startindex=0, 
 	       double speed=1, double movespeed=1);
   void addLine(Vector2d from, Vector2d to, 
 	       double speed=1, double movespeed=1, double feedrate=1.0);
 
  public:
-  Printlines(){};
+  Printlines(){name = "";};
   ~Printlines(){clear();};
   
   void clear(){lines.clear();};
+  void setName(string s){name=s;};
 
   Vector2d lastPoint() const;
 
