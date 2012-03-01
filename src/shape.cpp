@@ -1374,6 +1374,22 @@ void Shape::drawBBox() const
 		glVertex3f(Max.x, Min.y, Min.z);
 		glVertex3f(Max.x, Min.y, Max.z);
 		glEnd();
+
+  glColor3f(1,0.6,0.6);
+  ostringstream val;
+  val.precision(1);
+  Vector3d pos;
+  val << fixed << (Max.x-Min.x);
+  pos = Vector3d((Max.x+Min.x)/2.,Min.y,Max.z);
+  drawString(pos,val.str());
+  val.str("");
+  val << fixed << (Max.y-Min.y);
+  pos = Vector3d(Min.x,(Max.y+Min.y)/2.,Max.z);
+  drawString(pos,val.str());
+  val.str("");
+  val << fixed << (Max.z-Min.z);
+  pos = Vector3d(Min.x,Min.y,(Max.z+Min.z)/2.);
+  drawString(pos,val.str());
 }
 
 // void Shape::displayInfillOld(const Settings &settings, CuttingPlane &plane,

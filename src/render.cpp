@@ -265,6 +265,8 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   Vector2f delta = m_downPoint - dragp;
   double factor = 0.3;
   Vector3d delta3f(-delta.x*factor, delta.y*factor, 0);
+  get_model()->setMeasuresPoint(Vector2d((10.+event->x)/(get_width()-20),
+					 (10.+get_height()-event->y)/(get_height()-20)));
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
     if (event->state & GDK_SHIFT_MASK) { // move object
       if (false);//delta3f.x<1 && delta3f.y<1) redraw=false;

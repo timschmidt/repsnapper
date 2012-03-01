@@ -678,6 +678,21 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
       glVertex3f(Max.x, Min.y, Min.z);
       glVertex3f(Max.x, Min.y, Max.z);
       glEnd();
+      glColor3f(1,0.6,0.6);
+      ostringstream val;
+      val.precision(1);
+      Vector3d pos;
+      val << fixed << (Max.x-Min.x);
+      pos = Vector3d((Max.x+Min.x)/2.,Min.y,Max.z);
+      drawString(pos,val.str());
+      val.str("");
+      val << fixed << (Max.y-Min.y);
+      pos = Vector3d(Min.x,(Max.y+Min.y)/2.,Max.z);
+      drawString(pos,val.str());
+      val.str("");
+      val << fixed << (Max.z-Min.z);
+      pos = Vector3d(Min.x,Min.y,(Max.z+Min.z)/2.);
+      drawString(pos,val.str());
     }
 
     if(settings.Display.DisplayLayer) {
@@ -811,6 +826,9 @@ int Model::drawLayers(Vector3d offset) const
 		  settings.Display.DrawCPVertexNumbers,
 		  settings.Display.DisplayinFill);
 
+      if (settings.Display.DrawMeasures)
+	layer->DrawMeasures(measuresPoint);
+
       if (!have_layers)
       {
             // need to delete the temporary  layer
@@ -823,3 +841,9 @@ int Model::drawLayers(Vector3d offset) const
 }
 
 
+// point is (0,0)..(1,1)
+void Model::setMeasuresPoint(const Vector2d point) 
+{
+  measuresPoint = Vector2d(Min.x+point.x*(Max.x-Min.x),
+			   Min.y+point.y*(Max.y-Min.y));
+}

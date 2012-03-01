@@ -144,6 +144,8 @@ public:
 
 	int draw(Gtk::TreeModel::iterator &selected);
 	int drawLayers(Vector3d offset) const;
+	void setMeasuresPoint(const Vector2d point);
+	Vector2d measuresPoint;
 
 	sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
 	void alert (const char *message);

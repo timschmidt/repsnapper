@@ -220,6 +220,7 @@ static struct {
   BOOL_MEMBER (Display.DrawCPVertexNumbers, "DrawCPVertexNumbers", false, true),
   BOOL_MEMBER (Display.DrawCPLineNumbers, "DrawCPLineNumbers", false, true),
   BOOL_MEMBER (Display.DrawCPOutlineNumbers, "DrawCPOutlineNumbers", false, true),
+  BOOL_MEMBER (Display.DrawMeasures, "DrawMeasures", true, true),
 
   FLOAT_MEMBER (Display.LayerValue, "LayerValue", 0, true),
   BOOL_MEMBER  (Display.LuminanceShowsSpeed, "LuminanceShowsSpeed", false, true),

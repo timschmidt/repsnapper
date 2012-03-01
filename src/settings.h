@@ -197,6 +197,7 @@ class Settings {
     bool DrawCPVertexNumbers;
     bool DrawCPLineNumbers;
     bool DrawCPOutlineNumbers;
+    bool DrawMeasures;
     float LayerValue;
     bool LuminanceShowsSpeed;
     bool CommsDebug;
