@@ -575,7 +575,7 @@ string Printlines::GCode(line l, Vector3d &lastpos, double &E, double feedrate,
   lastpos = to;
   ostringstream o;
   if (distmove>0.001)
-    o << "G1 X"<<from.x<<" Y"<<from.y<<" Z"<<from.z<<" E0 F"<<speed << endl;
+    o << "G1 X"<<from.x<<" Y"<<from.y<<" Z"<<from.z<<" F"<<speed << endl;
   if (distline>0.001) 
     o << "G1 X"<<to.x<<" Y"<<to.y<<" Z"<<to.z<<" E"<<EX<<" F"<<speed << endl;
   return o.str();
