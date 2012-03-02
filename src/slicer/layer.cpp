@@ -573,6 +573,9 @@ void Layer::MakeGcode(GCodeState &state,
 
   vector<Poly> polys; // intermediate collection
 
+  // polys to keep line movements inside
+  vector<Poly> clippolys = GetOuterShell(); 
+
   // 1. Skins, because they are the lowest lines, below layer Z
   if (skins>1){
     for(uint s=1;s <= skins;s++) { // z offset from bottom to top
@@ -590,12 +593,12 @@ void Layer::MakeGcode(GCodeState &state,
       // add all of this skin layer to lines
       printlines.clear();
       printlines.setName("skin");
-      printlines.makeLines(polys, startPoint,  (s==1), //displace at first skin
+      printlines.makeLines(polys, &clippolys, startPoint, 
+			   (s==1), //displace at first skin
 			   minspeed, maxspeed, movespeed,  
 			   linewidth, linewidthratio, optratio, maxArcAngle, false);
       printlines.slowdownTo(slicing.MinLayertime/skins/3);
       printlines.setSpeedFactor(speedfactor);
-      printlines.clipMovements(GetOuterShell());
       printlines.getLines(lines);
     }
   }
@@ -604,7 +607,8 @@ void Layer::MakeGcode(GCodeState &state,
   // 2. Skirt
   printlines.clear();
   printlines.setName("Skirt");
-  printlines.makeLines(skirtPolygon, startPoint, false,
+  vector <Poly> skirts(1); skirts[0] = skirtPolygon;
+  printlines.makeLines(skirts, NULL, startPoint, false,
 		       minspeed, maxspeed, movespeed, 
 		       linewidth, linewidthratio, optratio,
 		       maxArcAngle, linelengthsort);
@@ -615,7 +619,7 @@ void Layer::MakeGcode(GCodeState &state,
   // 3. Support
   printlines.clear();
   printlines.setName("Support");
-  printlines.makeLines(supportInfill->infillpolys, startPoint, false,
+  printlines.makeLines(supportInfill->infillpolys, NULL, startPoint, false,
 		       minspeed, maxspeed, movespeed, 
 		       linewidth, linewidthratio, optratio,
 		       maxArcAngle, linelengthsort);
@@ -638,13 +642,12 @@ void Layer::MakeGcode(GCodeState &state,
   
   printlines.clear();
   printlines.setName("ShellsAndInfill");
-  printlines.makeLines(polys, startPoint, true, //displace at beginning
+  printlines.makeLines(polys, &clippolys, startPoint, true, //displace at beginning
 		       minspeed, maxspeed, movespeed,
 		       linewidth, linewidthratio, optratio,
 		       maxArcAngle, linelengthsort);
   printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
-  printlines.clipMovements(GetOuterShell(), linewidth/2.);
   printlines.getLines(lines);
 
   // push all lines to gcode

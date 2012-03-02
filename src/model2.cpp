@@ -614,6 +614,7 @@ void Model::ConvertToGCode()
 
   m_progress->start (_("Making GCode"), count+1);
   
+  state.AppendCommand(MILLIMETERSASUNITS,  false, "Millimeters");
   state.AppendCommand(ABSOLUTEPOSITIONING, false, "Absolute Pos");
 
   for (uint p=0;p<count;p++){

@@ -279,7 +279,7 @@ void Command::draw(Vector3d &lastPos, bool arrows) const
     // if (ccw)
     //   glColor4f(1.f,0.7f,0.1f,ccol[3]);
     // else 
-    glColor4f(1.f,0.5f,0.0f,ccol[3]);
+    //glColor4f(1.f,0.5f,0.0f,ccol[3]);
     long double angle;
     angle = angleBetween(P,Q); // ccw angle
     if (!ccw) angle=-angle;

@@ -59,21 +59,8 @@ void Printlines::addPoly(const Poly poly, int startindex,
   }
 }
 
-void Printlines::makeLines(const Poly poly, 
-			   Vector2d &startPoint,
-			   bool displace_startpoint, 
-			   double minspeed, double maxspeed, double movespeed, // mm/s
-			   double linewidth, double linewidthratio, double optratio,
-			   double maxArcAngle, bool linelengthsort)
-{
-  if (poly.size()==0) return;
-  vector<Poly> polys(1); polys[0] = poly;
-  makeLines(polys, startPoint, displace_startpoint,
-	    minspeed, maxspeed, movespeed, // mm/s
-	    linewidth, linewidthratio,  optratio,
-	    maxArcAngle, linelengthsort);
-}
 void Printlines::makeLines(const vector<Poly> polys, 
+			   const vector<Poly> *clippolys,
 			   Vector2d &startPoint,
 			   bool displace_startpoint, 
 			   double minspeed, double maxspeed, double movespeed, // mm/s
@@ -81,6 +68,7 @@ void Printlines::makeLines(const vector<Poly> polys,
 			   double maxArcAngle, bool linelengthsort)
 {
   uint count = polys.size();
+  if (polys.size()==0) return;
   int nvindex=-1;
   int npindex=-1;
   uint nindex;
@@ -96,6 +84,7 @@ void Printlines::makeLines(const vector<Poly> polys,
 	lastavlength = polys[npindex].averageLinelengthSq();
       nstdist = 1000000;
       for(size_t q=0; q<count; q++) { // find nearest polygon
+	if (polys[q].size() == 0) {done[q] = true; ndone++;}
 	if (!done[q])
 	  {
 	    pdist = 1000000;
@@ -130,14 +119,17 @@ void Printlines::makeLines(const vector<Poly> polys,
       }
       if (displace_startpoint && ndone==0)  // displace first point
 	nvindex = (nvindex+1)%polys[npindex].size();
-      addPoly(polys[npindex], nvindex, maxspeed, movespeed);
-      done[npindex]=true;
-      ndone++;
+      if (npindex >= 0 && npindex >=0) {
+	addPoly(polys[npindex], nvindex, maxspeed, movespeed);
+	done[npindex]=true;
+	ndone++;
+      }
       if (lines.size()>0)
 	startPoint = lastPoint();
     }
   if (count == 0) return;
   setZ(polys.back().getZ());
+  clipMovements(clippolys, linewidth/2.);
   optimize(minspeed, maxspeed, movespeed, 
 	   linewidth, linewidthratio, optratio, maxArcAngle);
 }
@@ -204,6 +196,7 @@ Vector2d Printlines::arcCenter(const struct line l1, const struct line l2,
 
 guint Printlines::makeArcs(double maxAngle)
 {
+  if (lines.size() < 2) return 0;
   if (maxAngle < 0) return 0;
   double arcRadiusSq = 0;  
   Vector2d arccenter;
@@ -239,6 +232,7 @@ guint Printlines::makeArcs(double maxAngle)
 // return how many lines are removed 
 guint Printlines::makeIntoArc(guint fromind, guint toind)
 {
+  if (toind < fromind || toind+1 > lines.size()) return 0;
   Vector2d P = lines[fromind].from;
   Vector2d Q = lines[toind].to;
   // center perp of start -- endpoint:
@@ -313,25 +307,26 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> points)
 }
 
 // walk around holes
-void Printlines::clipMovements(const vector<Poly> polys, double maxerr) 
+void Printlines::clipMovements(const vector<Poly> *polys, double maxerr) 
 {
+  if (polys==NULL) return;
   if (lines.size()==0) return;
   vector<line> newlines;
   for (guint i=0; i < lines.size(); i++) {
     if (lines[i].feedrate == 0) {
       int frompoly=-1, topoly=-1;
-      for (uint p = 0; p < polys.size(); p++) {
-	if (frompoly==-1 && polys[p].vertexInside(lines[i].from))
+      for (uint p = 0; p < polys->size(); p++) {
+	if (frompoly==-1 && (*polys)[p].vertexInside(lines[i].from))
 	  frompoly=(int)p;
-	if (topoly==-1 && polys[p].vertexInside(lines[i].to))
+	if (topoly==-1 && (*polys)[p].vertexInside(lines[i].to))
 	  topoly=(int)p;
 	vector<Intersection> pinter = 
-	  polys[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
+	  (*polys)[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
 	if (pinter.size() > 0) {
 	  if (pinter.size()%2 == 0) { // holes
 	    std::sort(pinter.begin(), pinter.end());
 	    vector<Vector2d> path = 
-	      polys[p].getPathAround(pinter.front().p, pinter.back().p);
+	      (*polys)[p].getPathAround(pinter.front().p, pinter.back().p);
 	    i += (divideline(i,path)); //if (i>0) i--; // test new lines again?
 	  }
 	}
@@ -349,11 +344,11 @@ void Printlines::clipMovements(const vector<Poly> polys, double maxerr)
 	//   polys[topoly].getPathAround(lines[i].from, lines[i].to);
 	// cerr << frompath.size() << " -- " << topath.size() << endl;
 	int fromind, toind;
-	polys[frompoly].nearestIndices(polys[topoly], fromind, toind);
+	(*polys)[frompoly].nearestIndices((*polys)[topoly], fromind, toind);
 	vector<Vector2d> path;
 	//path.push_back(lines[i].from);
-	path.push_back(polys[frompoly].vertices[fromind]);
-	path.push_back(polys[topoly].vertices[toind]);
+	path.push_back((*polys)[frompoly].vertices[fromind]);
+	path.push_back((*polys)[topoly].vertices[toind]);
 	//path.push_back(lines[i].to);
 	//i+= (divideline(i,path)); // test new lines again?
       }

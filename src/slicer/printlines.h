@@ -69,13 +69,8 @@ class Printlines
 
   Vector2d lastPoint() const;
 
-  void makeLines(const Poly poly, 
-		 Vector2d &startPoint, 
-		 bool displace_startpoint, 
-		 double minspeed, double maxspeed, double movespeed,
-		 double linewidth, double linewidthratio, double optratio,
-		 double maxArcAngle, bool linelengthsort = false);
-  void makeLines(const vector<Poly> polys, 
+  void makeLines(const vector<Poly> polys,
+		 const vector<Poly> *clippolys,
 		 Vector2d &startPoint, 
 		 bool displace_startpoint, 
 		 double minspeed, double maxspeed, double movespeed,
@@ -95,7 +90,7 @@ class Printlines
   void setSpeedFactor(double speedfactor);
 
   // keep movements inside polys when possible (against stringing)
-  void clipMovements(const vector<Poly> polys, double maxerr=0.0001);
+  void clipMovements(const vector<Poly> *polys, double maxerr=0.0001);
 
   void getLines(vector<Vector2d> &lines) const;
   void getLines(vector<Vector3d> &lines) const;
