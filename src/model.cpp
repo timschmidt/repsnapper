@@ -143,11 +143,13 @@ void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
 }
 
 
-void Model::ReadStl(Glib::RefPtr<Gio::File> file)
+void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
 {
   bool autoplace = settings.Misc.ShapeAutoplace;
   string path = file->get_path();
-  filetype_t ftype =  Shape::getFileType(path);
+  if (ftype==UNKNOWN_TYPE)
+    ftype =  Shape::getFileType(path);
+  
   if (ftype == BINARY_STL) // only one shape per file
     {
       Shape shape;
@@ -173,18 +175,12 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 	    if (where < 0) break;
 	    fileis.seekg(where,ios::beg);
 	  }
-	  // else {
-	  //   cerr <<"Could not read STL in ASCII mode: "<< path 
-	  // 	 << " (bad header?), trying Binary " << endl ;
-	  //   int ret = shape.loadBinarySTL(path);
-	  //   if (ret >= 0) {
-	  //     AddShape(NULL, shape, path,autoplace);
-	  //     ModelChanged();
-	  //     ClearLayers();
-	  //     return;
-	  //   }
-	  //   break;
-	  // }
+	  else if (shapes.size()==0) {
+	    cerr <<"Could not read STL in ASCII mode: "<< path 
+	   	 << " (bad header?), trying Binary " << endl ;
+	    ReadStl(file, BINARY_STL);
+	    return;
+	  }
 	}
       if (shapes.size()==1){
 	shapes.front().filename = (string)path.substr(found+1); 

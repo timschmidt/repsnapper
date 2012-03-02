@@ -60,7 +60,7 @@ public:
 	void LoadConfig(Glib::RefPtr<Gio::File> file);
 
 	// STL Functions
-	void ReadStl(Glib::RefPtr<Gio::File> file);
+	void ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype=UNKNOWN_TYPE);
 	void SaveStl(Glib::RefPtr<Gio::File> file);
 	int AddShape(TreeObject *parent, Shape shape, string filename,
 		     bool autoplace = true);

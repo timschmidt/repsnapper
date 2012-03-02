@@ -88,7 +88,8 @@ enum filetype_t{
     ASCII_STL,
     BINARY_STL,
     NONE_STL,
-    VRML
+    VRML,
+    UNKNOWN_TYPE
 };
 
 

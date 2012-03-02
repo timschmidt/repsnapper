@@ -50,7 +50,5 @@ class ViewProgress;
 enum SerialState { SERIAL_DISCONNECTED, SERIAL_DISCONNECTING,
 		   SERIAL_CONNECTED, SERIAL_CONNECTING };
 
-// avoid having to re-type forward definitions and enums a lot
-enum FileType { TYPE_STL, TYPE_RFO, TYPE_GCODE, TYPE_AUTO };
 
 /* #endif // TYPES_H */
