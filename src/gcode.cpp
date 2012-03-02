@@ -245,7 +245,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
       comm += _(" Z-Change");
     }
     if((!incrementalEcode && e != 0) ||
-       (incrementalEcode  && e != lastE)) {
+       (incrementalEcode  && e != lastE && e != 0)) {
       ostr << "E" << e << " ";
       lastE = e;
     } else {      
