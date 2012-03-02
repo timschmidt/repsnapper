@@ -157,7 +157,7 @@ double Printlines::length(const line l) const
     return sqrt(lengthSq(l));
   else {
     double radius = (l.from-l.arccenter).length();
-    return 2*M_PI*radius / l.angle;
+    return radius * l.angle;
   }
 }
 
@@ -250,9 +250,8 @@ guint Printlines::makeIntoArc(guint fromind, guint toind)
   if (is > 0) {
     double angle = angleBetween(P-center, Q-center);
     bool ccw = isleftof(center, lines[fromind].from, lines[fromind].to);
-    if (angle<=0) {
-      angle+=2*M_PI;
-    }
+    if (!ccw) angle = -angle;
+    if (angle<=0) angle+=2*M_PI;
     short arctype = ccw ? -1 : 1; 
     struct line newline;
     newline.from      = P;
