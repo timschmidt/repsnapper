@@ -184,7 +184,8 @@ public:
   void MakeText(string &GcodeTxt, const string &GcodeStart,
 		const string &GcodeLayer, const string &GcodeEnd,
 		bool UseIncrementalEcode, bool Use3DGcode,
-		double AntioozeDistance, double AntioozeSpeed,
+		double AntioozeDistance, double AntioozeAmount,
+		double AntioozeSpeed,
 		ViewProgress * progress);
   
   bool append_text (const std::string &line);

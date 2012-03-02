@@ -13,11 +13,6 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
-  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
   <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
     <property name="upper">30</property>
     <property name="value">10</property>
@@ -62,6 +57,11 @@
     <property name="label">Save Settings As</property>
     <property name="short_label">Save Settings As</property>
     <property name="tooltip">Save settings in a custom file</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
   </object>
   <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
     <property name="upper">1</property>
@@ -3915,6 +3915,7 @@ THE HEAD MOVING DOWN!
                                       <object class="GtkLabel" id="label142">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
+                                        <property name="xalign">1</property>
                                         <property name="label" translatable="yes">Extrusion Factor:</property>
                                       </object>
                                       <packing>
@@ -3931,7 +3932,7 @@ THE HEAD MOVING DOWN!
                                         <property name="digits">2</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">True</property>
+                                        <property name="expand">False</property>
                                         <property name="fill">True</property>
                                         <property name="position">3</property>
                                       </packing>
@@ -3992,7 +3993,7 @@ THE HEAD MOVING DOWN!
                                         <property name="digits">2</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">True</property>
+                                        <property name="expand">False</property>
                                         <property name="fill">True</property>
                                         <property name="position">3</property>
                                       </packing>
@@ -4001,7 +4002,8 @@ THE HEAD MOVING DOWN!
                                       <object class="GtkLabel" id="label128">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Rotation</property>
+                                        <property name="xalign">1</property>
+                                        <property name="label" translatable="yes">Rotation:</property>
                                       </object>
                                       <packing>
                                         <property name="expand">True</property>
@@ -4017,7 +4019,7 @@ THE HEAD MOVING DOWN!
                                         <property name="invisible_char_set">True</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">True</property>
+                                        <property name="expand">False</property>
                                         <property name="fill">True</property>
                                         <property name="position">5</property>
                                       </packing>
@@ -4092,6 +4094,7 @@ THE HEAD MOVING DOWN!
                                       <object class="GtkLabel" id="label73">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
+                                        <property name="xalign">1</property>
                                         <property name="label" translatable="yes">Alternate Infill Distance:</property>
                                       </object>
                                       <packing>
@@ -4292,6 +4295,7 @@ THE HEAD MOVING DOWN!
                                   <object class="GtkLabel" id="label10">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
+                                    <property name="xalign">1</property>
                                     <property name="label" translatable="yes">Skirt Height (mm):</property>
                                   </object>
                                   <packing>
@@ -4345,6 +4349,7 @@ THE HEAD MOVING DOWN!
                                   <object class="GtkLabel" id="label126">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
+                                    <property name="xalign">1</property>
                                     <property name="label" translatable="yes">Max. Line Angles:</property>
                                   </object>
                                   <packing>
@@ -4407,17 +4412,54 @@ THE HEAD MOVING DOWN!
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkCheckButton" id="Slicing.EnableAntiooze">
-                                <property name="label" translatable="yes">Enable Antiooze Retraction</property>
+                              <object class="GtkHBox" id="hbox44">
                                 <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">False</property>
-                                <property name="use_action_appearance">False</property>
-                                <property name="draw_indicator">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkCheckButton" id="Slicing.EnableAntiooze">
+                                    <property name="label" translatable="yes">Enable Antiooze Retraction</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
+                                    <property name="draw_indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="label143">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="xalign">1</property>
+                                    <property name="label" translatable="yes">Minimum Distance (mm):</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSpinButton" id="Slicing.AntioozeDistance">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="digits">2</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">2</property>
+                                  </packing>
+                                </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
                                 <property name="position">0</property>
                               </packing>
                             </child>
@@ -4429,10 +4471,10 @@ THE HEAD MOVING DOWN!
                                   <object class="GtkLabel" id="label48">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Retraction Speed (mm/min)</property>
+                                    <property name="label" translatable="yes">Retraction Speed (mm/min):</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">True</property>
+                                    <property name="expand">False</property>
                                     <property name="fill">True</property>
                                     <property name="position">0</property>
                                   </packing>
@@ -4443,11 +4485,10 @@ THE HEAD MOVING DOWN!
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
                                     <property name="invisible_char_set">True</property>
-                                    <property name="digits">2</property>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
-                                    <property name="fill">True</property>
+                                    <property name="fill">False</property>
                                     <property name="position">1</property>
                                   </packing>
                                 </child>
@@ -4455,7 +4496,8 @@ THE HEAD MOVING DOWN!
                                   <object class="GtkLabel" id="label47">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Retraction Distance (mm)</property>
+                                    <property name="xalign">1</property>
+                                    <property name="label" translatable="yes">Retraction Amount (mm):</property>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
@@ -4464,7 +4506,7 @@ THE HEAD MOVING DOWN!
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSpinButton" id="Slicing.AntioozeDistance">
+                                  <object class="GtkSpinButton" id="Slicing.AntioozeAmount">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
@@ -4472,7 +4514,7 @@ THE HEAD MOVING DOWN!
                                     <property name="digits">2</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">True</property>
+                                    <property name="expand">False</property>
                                     <property name="fill">True</property>
                                     <property name="position">3</property>
                                   </packing>

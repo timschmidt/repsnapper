@@ -175,7 +175,7 @@ void Printlines::optimize(double minspeed, double maxspeed, double movespeed,
 
 // gets center of common arc of 2 lines if radii inside maxerr range
 Vector2d Printlines::arcCenter(const struct line l1, const struct line l2,
-			       double maxerr) const
+			       double maxSqerr) const
 {
   Vector2d l1p1,l1p2;
   center_perpendicular(l1.from, l1.to, l1p1, l1p2);
@@ -188,7 +188,7 @@ Vector2d Printlines::arcCenter(const struct line l1, const struct line l2,
   if (is > 0) {
     // radii match?
     if (abs((l1p1-center).lengthSquared() -
-	    (l2p1-center).lengthSquared()) < maxerr)
+	    (l2p1-center).lengthSquared()) < maxSqerr)
       return center;
   }
   return Vector2d(10000000,10000000);
@@ -204,21 +204,21 @@ guint Printlines::makeArcs(double maxAngle)
   for (guint i=1; i < lines.size(); i++) {
     double dangle         = angle(lines[i], lines[i-1]);
     double feedratechange = lines[i].feedrate - lines[i-1].feedrate;
-    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.03*arcRadiusSq);
+    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.1*arcRadiusSq);
     double radiusSq       = (center - lines[i].from).lengthSquared();
     // test if NOT continue arc:
     if (lines[i].arc != 0                  // is an arc
-	|| (lines[i].from-lines[i-1].to).lengthSquared() > 0.01 // not adjacent
+	|| (lines[i].from-lines[i-1].to).lengthSquared() > 0.05 // not adjacent
 	|| abs(feedratechange) > 0.1       // different feedrate
-	|| abs(dangle) < 0.001             // straight continuation
-	|| abs(dangle) > maxAngle && 2*M_PI-abs(dangle) > maxAngle  // too big angle
-	|| (arccenter-center).lengthSquared() > 0.03*radiusSq // center displacement
+	|| abs(dangle) < 0.0001             // straight continuation
+	|| abs(dangle) > maxAngle          // too big angle
+	|| (arccenter-center).lengthSquared() > 0.1*radiusSq // center displacement
 	) { 
       arccenter   = center;
       arcRadiusSq = radiusSq;
       // this one doesn't fit, so i-1 is the last line that fits
       if (arcstart+2 < i-1) // at least three arc lines
-	i -= makeIntoArc(arcstart, i-1) ; // straight lines are being removed
+	i -= makeIntoArc(arcstart, i-1); // straight lines are being removed
       //else 
       // not in arc, set start for potential next arc
       arcstart = i;

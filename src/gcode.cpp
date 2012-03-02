@@ -639,7 +639,8 @@ bool add_text_filter_nan(string str, string &GcodeTxt)
 void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, 
 		     const string &GcodeLayer, const string &GcodeEnd,
 		     bool UseIncrementalEcode, bool Use3DGcode,
-		     double AntioozeDistance, double AntioozeSpeed,
+		     double AntioozeDistance, double AntioozeAmount,
+		     double AntioozeSpeed,
 		     ViewProgress * progress)
 {
 	double lastE = -10;
@@ -653,12 +654,25 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	layerchanges.clear();
 
 	progress->restart(_("Collecting GCode"),commands.size());
-	for(uint i=0;i<commands.size() ;i++) {
+
+	for(uint i = 0; i < commands.size(); i++) {
 	  if(commands[i].where.z != lastZ) {
 	    layerchanges.push_back(i);
 	    lastZ=commands[i].where.z;
 	  }
-	  
+
+	  if (commands[i].e - lastE == 0) { // Move only
+	    if (AntioozeDistance > 0) {
+	      double distance = (commands[i].where - LastPos).length();
+	      if (distance > AntioozeDistance) {
+		Command retract(COORDINATEDMOTION, LastPos, 
+				lastE - AntioozeAmount, AntioozeSpeed);
+		retract.comment = _("Filament Retract");
+		GcodeTxt += retract.GetGCodeText(LastPos, lastE, UseIncrementalEcode) + "\n";
+	      }
+	    }
+	  }
+
 	  GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, UseIncrementalEcode) + "\n";
 	  
 	  if (i%100==0) progress->update(i);

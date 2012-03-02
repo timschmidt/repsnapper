@@ -106,6 +106,7 @@ class Settings {
 
     bool  EnableAntiooze;
     float AntioozeDistance;
+    float AntioozeAmount;
     float AntioozeSpeed;
 
     float InfillDistance;
