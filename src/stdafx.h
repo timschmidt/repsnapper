@@ -16,6 +16,7 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+
 // stdafx.h : include file for standard system include files,
 // or project specific include files that are used frequently, but
 // are changed infrequently
@@ -31,16 +32,16 @@
 #ifdef WIN32
 #  pragma warning( disable : 4311 4312 4244 4267 4800)
 #endif
-typedef unsigned int        uint;
 
+typedef unsigned int        uint;
 
 #define DEBUG_ECHO (1<<0)
 #define DEBUG_INFO (1<<1)
 #define DEBUG_ERRORS (1<<2)
 #ifdef WIN32
-	#include <windows.h>											// Header File For Windows
+	#include <windows.h>   // Header File For Windows
 	#include <tchar.h>
-typedef unsigned int        uint;
+typedef unsigned int        guint;
 #endif
 #include "platform.h"   // OpenGL, glu, glut in cross-platform way
 #include <stdio.h>
@@ -58,6 +59,5 @@ using namespace vmml;
 //assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits
 # define Epsilon 1.0e-5
 
-typedef unsigned int uint;
 
 #endif // STDAFX_H

@@ -276,7 +276,7 @@ void Layer::makeSkinPolygons()
   //  }
 }
 
-// add bridge polys and substract them from normal and full fill polys 
+// add bridge polys and subtract them from normal and full fill polys 
 void Layer::addBridgePolygons(const vector<Poly> newpolys) 
 {
   if (newpolys.size()==0) return;
@@ -294,7 +294,7 @@ void Layer::addBridgePolygons(const vector<Poly> newpolys)
   mergeFullPolygons(true);
 }
 
-// add full fill and substract them from normal fill polys 
+// add full fill and subtract them from normal fill polys 
 void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor) 
 {
   if (newpolys.size()==0) return;
@@ -309,10 +309,11 @@ void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor)
   else
     fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
 
-  //substract from normal fills
+  //subtract from normal fills
   clipp.clear();
   clipp.addPolys(fillPolygons,subject);  
   clipp.addPolys(inter,clip);
+  //cerr << fillPolygons.size() << " - " << inter.size() << endl;
   setNormalFillPolygons(clipp.subtract());
   mergeFullPolygons(false);
 }

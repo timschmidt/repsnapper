@@ -304,9 +304,11 @@ void Command::draw(Vector3d &lastPos, bool arrows) const
     Vector3d arrdir = (where-lastPos).getNormalized() * 0.4; 
     Vector3d arrdir2(-0.5*arrdir.y,0.5*arrdir.x,arrdir.z);
     glVertex3dv((GLdouble*)&where);
-    glVertex3dv((GLdouble*)&(where-arrdir+arrdir2));
+    Vector3d arr1 = where-arrdir+arrdir2;
+    glVertex3dv((GLdouble*)&(arr1));
     glVertex3dv((GLdouble*)&where);
-    glVertex3dv((GLdouble*)&(where-arrdir-arrdir2));
+    Vector3d arr2 = where-arrdir-arrdir2;
+    glVertex3dv((GLdouble*)&(arr2));
   }
   glEnd();
   lastPos = where;

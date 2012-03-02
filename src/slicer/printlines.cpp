@@ -216,10 +216,11 @@ guint Printlines::makeArcs(double maxAngle)
 	) { 
       arccenter   = center;
       arcRadiusSq = radiusSq;
-      // this on doesn't fit, so i-1 is the last line that fits
-      if (arcstart+2 < i-1) // at least two arc lines
+      // this one doesn't fit, so i-1 is the last line that fits
+      if (arcstart+2 < i-1) // at least three arc lines
 	i -= makeIntoArc(arcstart, i-1) ; // straight lines are being removed
-      //else // not in arc, set start for potential next arc
+      //else 
+      // not in arc, set start for potential next arc
       arcstart = i;
     } 
   }  
@@ -258,7 +259,7 @@ guint Printlines::makeIntoArc(guint fromind, guint toind)
     newline.to        = Q;
     newline.speed     = lines[fromind].speed;
     newline.feedrate  = lines[fromind].feedrate;
-    newline.angle     = angle; // not used anywhere (-> for drawing?)
+    newline.angle     = angle;  // for arc length calculation (->extrusion)
     newline.arccenter = center;
     newline.arc       = arctype;
     lines[fromind] = newline;

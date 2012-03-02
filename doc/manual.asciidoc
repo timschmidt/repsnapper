@@ -89,7 +89,7 @@ cd repsnapper
 ./autogen.sh
 make
 ----
-Executable (repsnapper) will be left in the top folder. Install with "sudo make install"
+Executable (repsnapper) will be left in the top folder. Install with "sudo make install-strip"
 
 ==== Fedora ====
 ===== Installing from yum =====
@@ -121,7 +121,7 @@ echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
 ldconfig
 exit
 ./autogen.sh
-make
+make -j3
 ----
 
 Run the program:
@@ -132,7 +132,7 @@ Run the program:
 Install and run:
 ----
 su
-make install
+make install-strip
 exit
 repsnapper
 ----
@@ -148,9 +148,9 @@ sudo zypper install TODO
 git clone git://github.com/timschmidt/repsnapper.git
 cd repsnapper
 ./autogen.sh
-make
+make -j3
 ----
-Executable (repsnapper) will be left in the top folder. Install with "sudo make install"
+Executable (repsnapper) will be left in the top folder. Install with "sudo make install-strip"
 
 === Windows ===
 Currently black magic. Nightly builds coming...
@@ -171,7 +171,7 @@ Acquire source and compile:
 git clone git://github.com/timschmidt/repsnapper.git
 cd repsnapper
 ./autogen.sh
-make
+make -j3
 ----
 Executable (repsnapper) will be left in the top folder. Currently there is no install rule.
 
