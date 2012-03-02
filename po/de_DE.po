@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-01 11:32+0100\n"
-"PO-Revision-Date: 2012-03-01 11:32+0100\n"
+"POT-Creation-Date: 2012-03-02 07:22+0100\n"
+"PO-Revision-Date: 2012-03-02 07:22+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -83,11 +83,11 @@ msgstr " Z-Schritt"
 msgid " Move Only"
 msgstr " Nur Bewegung"
 
-#: ../src/gcode.cpp:362
+#: ../src/gcode.cpp:367
 msgid "Loading GCode"
 msgstr "Lade GCode"
 
-#: ../src/gcode.cpp:645
+#: ../src/gcode.cpp:653
 msgid "Collecting GCode"
 msgstr "Sammle GCode"
 
@@ -99,7 +99,7 @@ msgstr "noch nicht implementiert\n"
 msgid "Converting"
 msgstr "Konvertiere"
 
-#: ../src/model.cpp:93 ../src/model2.cpp:638
+#: ../src/model.cpp:93 ../src/model2.cpp:639
 msgid "Done"
 msgstr "Fertig"
 
@@ -144,27 +144,27 @@ msgstr "Füllung"
 msgid "Making GCode"
 msgstr "Erzeuge GCode"
 
-#: ../src/model2.cpp:644
+#: ../src/model2.cpp:645
 msgid "Time Estimation: "
 msgstr "Geschätzte Dauer: "
 
-#: ../src/model2.cpp:645 ../src/model2.cpp:654
+#: ../src/model2.cpp:646 ../src/model2.cpp:655
 msgid "h"
 msgstr ""
 
-#: ../src/model2.cpp:646 ../src/model2.cpp:655
+#: ../src/model2.cpp:647 ../src/model2.cpp:656
 msgid "m"
 msgstr ""
 
-#: ../src/model2.cpp:646 ../src/model2.cpp:655
+#: ../src/model2.cpp:647 ../src/model2.cpp:656
 msgid "s"
 msgstr ""
 
-#: ../src/model2.cpp:653
+#: ../src/model2.cpp:654
 msgid " / GCode Estimation: "
 msgstr "/ Geschätzte Dauer: "
 
-#: ../src/model2.cpp:658
+#: ../src/model2.cpp:659
 msgid " - total extruded: "
 msgstr " - Gesamtfilament: "
 
@@ -844,7 +844,7 @@ msgstr "GCode, während gedruckt wird"
 
 #: ../src/repsnapper.ui.h:101
 msgid "Generate Arcs GCode (G2,G3)"
-msgstr "Arcs GCode erzeugen (G2,G3)"
+msgstr "GCode-Kreisbögen erzeugen (G2,G3)"
 
 #: ../src/repsnapper.ui.h:102
 msgid "Hardware Settings"

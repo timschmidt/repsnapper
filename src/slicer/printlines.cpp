@@ -188,7 +188,7 @@ Vector2d Printlines::arcCenter(const struct line l1, const struct line l2,
   if (is > 0) {
     // radii match?
     if (abs((l1p1-center).lengthSquared() -
-	    (l1p1-center).lengthSquared()) < maxerr)
+	    (l2p1-center).lengthSquared()) < maxerr)
       return center;
   }
   return Vector2d(10000000,10000000);
@@ -204,7 +204,7 @@ guint Printlines::makeArcs(double maxAngle)
   for (guint i=1; i < lines.size(); i++) {
     double dangle         = angle(lines[i], lines[i-1]);
     double feedratechange = lines[i].feedrate - lines[i-1].feedrate;
-    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.005*arcRadiusSq);
+    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.03*arcRadiusSq);
     double radiusSq       = (center - lines[i].from).lengthSquared();
     // test if NOT continue arc:
     if (lines[i].arc != 0                  // is an arc
@@ -212,19 +212,19 @@ guint Printlines::makeArcs(double maxAngle)
 	|| abs(feedratechange) > 0.1       // different feedrate
 	|| abs(dangle) < 0.001             // straight continuation
 	|| abs(dangle) > maxAngle && 2*M_PI-abs(dangle) > maxAngle  // too big angle
-	|| (arccenter-center).lengthSquared() > 0.005*radiusSq // center displacement
+	|| (arccenter-center).lengthSquared() > 0.03*radiusSq // center displacement
 	) { 
       arccenter   = center;
       arcRadiusSq = radiusSq;
       // this on doesn't fit, so i-1 is the last line that fits
-      if (arcstart+1 < i-1) // at least two arc lines
+      if (arcstart+2 < i-1) // at least two arc lines
 	i -= makeIntoArc(arcstart, i-1) ; // straight lines are being removed
       //else // not in arc, set start for potential next arc
       arcstart = i;
     } 
   }  
   // remaining
-  if (arcstart+1 < lines.size()-1) 
+  if (arcstart+2 < lines.size()-1) 
     makeIntoArc(arcstart, lines.size()-1); 
   return 0;
 }
