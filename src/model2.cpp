@@ -479,6 +479,7 @@ void Model::MakeShells()
 #pragma omp parallel for schedule(dynamic) 
   for (int i=0; i < count; i++) 
     {
+      //cerr << "thread " << omp_get_thread_num() << endl;
       if (i%10==0) {
 	omp_set_lock(&progress_lock);
 	m_progress->update(i);
@@ -523,7 +524,7 @@ void Model::CalcInfill()
 #pragma omp parallel for schedule(dynamic) 
   for (int i=0; i < count ; i++) 
     {
-      // int tid = omp_get_thread_num( );
+      //cerr << "thread " << omp_get_thread_num() << endl;
       if (i%10==0){
 	omp_set_lock(&progress_lock);
 	m_progress->update(i);

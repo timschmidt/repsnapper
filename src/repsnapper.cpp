@@ -117,7 +117,7 @@ Glib::RefPtr<Gio::File> find_global_config() {
 int main(int argc, char **argv)
 {
   Glib::thread_init();
-  //gdk_threads_init(); // makes linux hang
+  //gdk_threads_init();
   Gtk::Main tk(argc, argv);
 
   gchar *locale_dir;
