@@ -1,9 +1,0 @@
-LIBRARY clipper.dll
-
-EXPORTS
-  ClipperFree@4         @1
-  ClipperClear@4        @2
-  ClipperSolution@12    @3
-  ClipperExecute@20     @4
-  ClipperAddPolygon@12  @5
-  ClipperCreate@0       @6
