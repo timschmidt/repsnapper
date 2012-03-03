@@ -2,6 +2,19 @@
 Clipper Change Log
 ============================================================
 
+v4.7.2 - 4 March 2012
+* Bugfix: Fixed bug introduced in ver 4.7 which sometimes caused 
+  an exception if ExPolygon structure was passed to Clipper's 
+  Execute method. 
+
+v4.7.1 - 3 March 2012
+* Bugfix: Rare crash when JoinCommonEdges joined polygons that 
+  'cancelled' each other. 
+* Bugfix: Clipper's internal Orientation method occasionally 
+  returned wrong result. 
+* Update: Improved C# code (thanks to numerous excellent suggestions 
+  from David Piepgrass) 
+
 v4.7 - 10 February 2012
 * Improved the joining of output polygons sharing a common edge.
 

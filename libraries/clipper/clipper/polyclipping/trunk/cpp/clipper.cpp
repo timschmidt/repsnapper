@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7                                                             *
-* Date      :  10 February 2011                                                *
+* Version   :  4.7.2                                                           *
+* Date      :  4 March 2012                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -372,7 +372,9 @@ bool Orientation(OutRec *outRec, bool UseFullInt64Range)
     op = op->next;
   }
   outRec->bottomPt = opBottom;
+  opBottom->idx = outRec->idx;
 
+  op = opBottom;
   //find vertices either side of bottomPt (skipping duplicate points) ....
   OutPt *opPrev = op->prev;
   OutPt *opNext = op->next;
@@ -2986,14 +2988,16 @@ void Clipper::JoinCommonEdges(bool fixHoleLinkages)
       //now cleanup redundant edges too ...
       FixupOutPolygon(*outRec1);
 
-      //sort out hole vs outer and then recheck orientation ...
-      if (outRec1->isHole != outRec2->isHole &&
-        (outRec2->bottomPt->pt.Y > outRec1->bottomPt->pt.Y ||
-        (outRec2->bottomPt->pt.Y == outRec1->bottomPt->pt.Y &&
-        outRec2->bottomPt->pt.X < outRec1->bottomPt->pt.X)))
-          outRec1->isHole = outRec2->isHole;
-      if (outRec1->isHole == Orientation(outRec1, m_UseFullRange))
-        ReversePolyPtLinks(*outRec1->pts);
+      if (outRec1->pts) {
+        //sort out hole vs outer and then recheck orientation ...
+        if (outRec1->isHole != outRec2->isHole &&
+          (outRec2->bottomPt->pt.Y > outRec1->bottomPt->pt.Y ||
+          (outRec2->bottomPt->pt.Y == outRec1->bottomPt->pt.Y &&
+          outRec2->bottomPt->pt.X < outRec1->bottomPt->pt.X)))
+            outRec1->isHole = outRec2->isHole;
+        if (outRec1->isHole == Orientation(outRec1, m_UseFullRange))
+          ReversePolyPtLinks(*outRec1->pts);
+      }
 
       //delete the obsolete pointer ...
       int OKIdx = outRec1->idx;
