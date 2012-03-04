@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-02 11:49+0100\n"
-"PO-Revision-Date: 2012-03-02 11:51+0100\n"
+"POT-Creation-Date: 2012-03-04 06:32+0100\n"
+"PO-Revision-Date: 2012-03-04 06:42+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -103,15 +103,15 @@ msgstr "noch nicht implementiert\n"
 msgid "Converting"
 msgstr "Konvertiere"
 
-#: ../src/model.cpp:93 ../src/model2.cpp:642
+#: ../src/model.cpp:93 ../src/model2.cpp:663
 msgid "Done"
 msgstr "Fertig"
 
-#: ../src/model.cpp:397
+#: ../src/model.cpp:393
 msgid "_upper"
 msgstr "_oben"
 
-#: ../src/model.cpp:398
+#: ../src/model.cpp:394
 msgid "_lower"
 msgstr "_unten"
 
@@ -128,47 +128,47 @@ msgstr ""
 msgid "Find Uncovered"
 msgstr "Unbedeckte Flächen finden"
 
-#: ../src/model2.cpp:362
+#: ../src/model2.cpp:364
 msgid "Uncovered Shells"
 msgstr "Unbedeckte Flächen"
 
-#: ../src/model2.cpp:423
+#: ../src/model2.cpp:443
 msgid "Support"
 msgstr "Gerüst"
 
-#: ../src/model2.cpp:473
+#: ../src/model2.cpp:493
 msgid "Shells"
 msgstr "Hüllen"
 
-#: ../src/model2.cpp:517 ../src/repsnapper.ui.h:108
+#: ../src/model2.cpp:538 ../src/repsnapper.ui.h:108
 msgid "Infill"
 msgstr "Füllung"
 
-#: ../src/model2.cpp:615
+#: ../src/model2.cpp:636
 msgid "Making GCode"
 msgstr "Erzeuge GCode"
 
-#: ../src/model2.cpp:648
+#: ../src/model2.cpp:669
 msgid "Time Estimation: "
 msgstr "Geschätzte Dauer: "
 
-#: ../src/model2.cpp:649 ../src/model2.cpp:658
+#: ../src/model2.cpp:670 ../src/model2.cpp:679
 msgid "h"
 msgstr ""
 
-#: ../src/model2.cpp:650 ../src/model2.cpp:659
+#: ../src/model2.cpp:671 ../src/model2.cpp:680
 msgid "m"
 msgstr ""
 
-#: ../src/model2.cpp:650 ../src/model2.cpp:659
+#: ../src/model2.cpp:671 ../src/model2.cpp:680
 msgid "s"
 msgstr ""
 
-#: ../src/model2.cpp:657
+#: ../src/model2.cpp:678
 msgid " / GCode Estimation: "
 msgstr "/ Geschätzte Dauer: "
 
-#: ../src/model2.cpp:662
+#: ../src/model2.cpp:683
 msgid " - total extruded: "
 msgstr " - Gesamtfilament: "
 
@@ -285,7 +285,7 @@ msgstr "Bewegung mit unbekannter Achse"
 msgid "Goto called with unknown axis"
 msgstr "Ziel angegeben ohne Achse"
 
-#: ../src/progress.cpp:53 ../src/progress.cpp:67
+#: ../src/progress.cpp:54 ../src/progress.cpp:69
 msgid " done."
 msgstr " fertig."
 
@@ -363,6 +363,38 @@ msgstr "Keine Ausgabedatei angegeben (-o)"
 msgid "No input file given (use -i)"
 msgstr "Keine Eingabedatei angegeben (-i)"
 
+#: ../src/settings.cpp:522
+msgid "Failed to load settings from file '"
+msgstr "Konnte Einstellungen nicht einlesen: '"
+
+#: ../src/settings.cpp:526
+msgid "Exception "
+msgstr "Fehler "
+
+#: ../src/settings.cpp:526
+msgid " loading settings from file '"
+msgstr " beim einlesen der Datei '"
+
+#: ../src/settings.cpp:530
+msgid "parsing config from '"
+msgstr "Lese Einstellungen von '"
+
+#: ../src/settings.cpp:565 ../src/settings.cpp:710 ../src/settings.cpp:811
+msgid "corrupt setting type\n"
+msgstr "Defekte Einstellung\n"
+
+#: ../src/settings.cpp:661 ../src/settings.cpp:760
+msgid "Missing boolean config item "
+msgstr "Boolsche Einstellung fehlt: "
+
+#: ../src/settings.cpp:672 ../src/settings.cpp:701 ../src/settings.cpp:801
+msgid "Missing user interface item "
+msgstr "GUI-Element fehlt: "
+
+#: ../src/settings.cpp:771
+msgid "Missing GUI element "
+msgstr "GUI-Element fehlt: "
+
 #: ../src/shape.cpp:491
 msgid "Split Shapes"
 msgstr "Teilen"
@@ -381,7 +413,7 @@ msgstr "Druck fertigstellen vor Umwandlung"
 
 #: ../src/view.cpp:100
 msgid "Converting to GCode while printing will abort the print"
-msgstr "Umwandlung würde den Druck abbrechen"
+msgstr "GCode-Erstellung würde den laufenden Druck abbrechen"
 
 #: ../src/view.cpp:145
 msgid "Error reading UI description!!"
@@ -552,7 +584,7 @@ msgstr "<b>Schichten-Debug</b>"
 
 #: ../src/repsnapper.ui.h:25
 msgid "<b>Lighting</b>"
-msgstr "Beleuchtung"
+msgstr "<b>Beleuchtung</b>"
 
 #: ../src/repsnapper.ui.h:26
 msgid "<b>Optimization</b>"
@@ -596,11 +628,11 @@ msgstr "Alle"
 
 #: ../src/repsnapper.ui.h:36
 msgid "Alternate Infill Distance:"
-msgstr "Alternativer Füllabstand"
+msgstr "Alternativer Füllabstand:"
 
 #: ../src/repsnapper.ui.h:37
 msgid "Alternate Layers:"
-msgstr "Alternative Schichten"
+msgstr "Alternative Schichten:"
 
 #: ../src/repsnapper.ui.h:38
 msgid "Auto Rotate"
@@ -1421,9 +1453,6 @@ msgstr "repsnapper-Einstellungen"
 
 #~ msgid "Reset E for the remaining print"
 #~ msgstr "E zurücksetzen für verbleibenden Druck"
-
-#~ msgid "failed to open file"
-#~ msgstr "Konnte Datei nicht öffnen"
 
 #~ msgid "Scale the selected object"
 #~ msgstr "Gewähltes Objekt skalieren"

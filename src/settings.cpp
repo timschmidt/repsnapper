@@ -519,15 +519,15 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
 
   try {
     if (!cfg.load_from_file (file->get_path())) {
-      std::cout << "Failed to load settings from file '" << file->get_path() << "\n";
+      std::cout << _("Failed to load settings from file '") << file->get_path() << "\n";
       return;
     }
   } catch (const Glib::KeyFileError &err) {
-    std::cout << "Exception " << err.what() << " loading settings from file '" << file->get_path() << "\n";
+    std::cout << _("Exception ") << err.what() << _(" loading settings from file '") << file->get_path() << "\n";
     return;
   }
 
-  std::cout << "parsing config from '" << file->get_path() << "\n";
+  std::cout << _("parsing config from '") << file->get_path() << "\n";
 
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
     Glib::ustring group, key;
@@ -562,7 +562,7 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
       *PTR_STRING(this, i) = cfg.get_string (group, key);
       break;
     default:
-      std::cerr << "corrupt setting type\n";
+      std::cerr << _("corrupt setting type\n");
       break;
     }
   }
@@ -658,7 +658,7 @@ void Settings::set_to_gui (Builder &builder, int i)
     Gtk::CheckButton *check = NULL;
     builder->get_widget (glade_name, check);
     if (!check)
-      std::cerr << "Missing boolean config item " << glade_name << "\n";
+      std::cerr << _("Missing boolean config item ") << glade_name << "\n";
     else
       check->set_active (*PTR_BOOL(this, i));
     break;
@@ -669,7 +669,7 @@ void Settings::set_to_gui (Builder &builder, int i)
     Gtk::Widget *w = NULL;
     builder->get_widget (glade_name, w);
     if (!w) {
-      std::cerr << "Missing user interface item " << glade_name << "\n";
+      std::cerr << _("Missing user interface item ") << glade_name << "\n";
       break;
     }
 
@@ -698,7 +698,7 @@ void Settings::set_to_gui (Builder &builder, int i)
     Gtk::Entry *e = NULL;
     builder->get_widget (glade_name, e);
     if (!e) {
-      std::cerr << "Missing user interface item " << glade_name << "\n";
+      std::cerr << _("Missing user interface item ") << glade_name << "\n";
       break;
     }
     e->set_text(*PTR_STRING(this, i));
@@ -707,7 +707,7 @@ void Settings::set_to_gui (Builder &builder, int i)
   case T_COLOUR_MEMBER:
     break; // Ignore, Colour members are special 
   default:
-    std::cerr << "corrupt setting type\n";
+    std::cerr << _("corrupt setting type\n");
     break;
   }
 
@@ -757,7 +757,7 @@ void Settings::get_from_gui (Builder &builder, int i)
     Gtk::CheckButton *check = NULL;
     builder->get_widget (glade_name, check);
     if (!check)
-      std::cerr << "Missing boolean config item " << glade_name << "\n";
+      std::cerr << _("Missing boolean config item ") << glade_name << "\n";
     else
       *PTR_BOOL(this, i) = check->get_active();
     break;
@@ -768,7 +768,7 @@ void Settings::get_from_gui (Builder &builder, int i)
     Gtk::Widget *w = NULL;
     builder->get_widget (glade_name, w);
     if (!w) {
-      std::cerr << "Missing GUI element " << glade_name << "\n";
+      std::cerr << _("Missing GUI element ") << glade_name << "\n";
       break;
     }
 
@@ -798,7 +798,7 @@ void Settings::get_from_gui (Builder &builder, int i)
     Gtk::Entry *e = NULL;
     builder->get_widget (glade_name, e);
     if (!e) {
-      std::cerr << "Missing user interface item " << glade_name << "\n";
+      std::cerr << _("Missing user interface item ") << glade_name << "\n";
       break;
     }
     *PTR_STRING(this, i) = std::string(e->get_text());
@@ -808,7 +808,7 @@ void Settings::get_from_gui (Builder &builder, int i)
     // Ignore, colour members are special
     break;
   default:
-    std::cerr << "corrupt setting type\n";
+    std::cerr << _("corrupt setting type\n");
     break;
   }
 

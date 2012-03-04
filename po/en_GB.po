@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-02 11:49+0100\n"
+"POT-Creation-Date: 2012-03-04 06:32+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: michael.meeks@novell.com\n"
 "Language-Team: British English <gb@li.org>\n"
@@ -104,15 +104,15 @@ msgstr ""
 msgid "Converting"
 msgstr ""
 
-#: ../src/model.cpp:93 ../src/model2.cpp:642
+#: ../src/model.cpp:93 ../src/model2.cpp:663
 msgid "Done"
 msgstr ""
 
-#: ../src/model.cpp:397
+#: ../src/model.cpp:393
 msgid "_upper"
 msgstr ""
 
-#: ../src/model.cpp:398
+#: ../src/model.cpp:394
 msgid "_lower"
 msgstr ""
 
@@ -129,47 +129,47 @@ msgstr ""
 msgid "Find Uncovered"
 msgstr ""
 
-#: ../src/model2.cpp:362
+#: ../src/model2.cpp:364
 msgid "Uncovered Shells"
 msgstr ""
 
-#: ../src/model2.cpp:423
+#: ../src/model2.cpp:443
 msgid "Support"
 msgstr ""
 
-#: ../src/model2.cpp:473
+#: ../src/model2.cpp:493
 msgid "Shells"
 msgstr ""
 
-#: ../src/model2.cpp:517 ../src/repsnapper.ui.h:108
+#: ../src/model2.cpp:538 ../src/repsnapper.ui.h:108
 msgid "Infill"
 msgstr ""
 
-#: ../src/model2.cpp:615
+#: ../src/model2.cpp:636
 msgid "Making GCode"
 msgstr ""
 
-#: ../src/model2.cpp:648
+#: ../src/model2.cpp:669
 msgid "Time Estimation: "
 msgstr ""
 
-#: ../src/model2.cpp:649 ../src/model2.cpp:658
+#: ../src/model2.cpp:670 ../src/model2.cpp:679
 msgid "h"
 msgstr ""
 
-#: ../src/model2.cpp:650 ../src/model2.cpp:659
+#: ../src/model2.cpp:671 ../src/model2.cpp:680
 msgid "m"
 msgstr ""
 
-#: ../src/model2.cpp:650 ../src/model2.cpp:659
+#: ../src/model2.cpp:671 ../src/model2.cpp:680
 msgid "s"
 msgstr ""
 
-#: ../src/model2.cpp:657
+#: ../src/model2.cpp:678
 msgid " / GCode Estimation: "
 msgstr ""
 
-#: ../src/model2.cpp:662
+#: ../src/model2.cpp:683
 msgid " - total extruded: "
 msgstr ""
 
@@ -280,7 +280,7 @@ msgstr ""
 msgid "Goto called with unknown axis"
 msgstr ""
 
-#: ../src/progress.cpp:53 ../src/progress.cpp:67
+#: ../src/progress.cpp:54 ../src/progress.cpp:69
 msgid " done."
 msgstr ""
 
@@ -342,6 +342,38 @@ msgstr ""
 
 #: ../src/repsnapper.cpp:248
 msgid "No input file given (use -i)"
+msgstr ""
+
+#: ../src/settings.cpp:522
+msgid "Failed to load settings from file '"
+msgstr ""
+
+#: ../src/settings.cpp:526
+msgid "Exception "
+msgstr ""
+
+#: ../src/settings.cpp:526
+msgid " loading settings from file '"
+msgstr ""
+
+#: ../src/settings.cpp:530
+msgid "parsing config from '"
+msgstr ""
+
+#: ../src/settings.cpp:565 ../src/settings.cpp:710 ../src/settings.cpp:811
+msgid "corrupt setting type\n"
+msgstr ""
+
+#: ../src/settings.cpp:661 ../src/settings.cpp:760
+msgid "Missing boolean config item "
+msgstr ""
+
+#: ../src/settings.cpp:672 ../src/settings.cpp:701 ../src/settings.cpp:801
+msgid "Missing user interface item "
+msgstr ""
+
+#: ../src/settings.cpp:771
+msgid "Missing GUI element "
 msgstr ""
 
 #: ../src/shape.cpp:491
