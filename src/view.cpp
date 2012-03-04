@@ -807,7 +807,7 @@ bool View::key_pressed_event(GdkEventKey *event)
 
 View::View(BaseObjectType* cobject,
 	   const Glib::RefPtr<Gtk::Builder>& builder)
-  : Gtk::Window(cobject), m_builder(builder)
+  : Gtk::Window(cobject), m_builder(builder), printtofile_name("")
 {
   // Menus
   connect_action ("OpenStl",         sigc::mem_fun(*this, &View::load_stl) );
@@ -821,6 +821,8 @@ View::View(BaseObjectType* cobject,
   connect_action ("SaveSettings",    sigc::mem_fun(*this, &View::save_settings));
   connect_action ("SaveSettingsAs",  sigc::mem_fun(*this, &View::save_settings_as));
 
+
+  connect_button ("printtofilebutton",      sigc::mem_fun(*this, &View::PrintToFile) );
 #if 0
   // Simple tab
   connect_button ("s_load_stl",      sigc::mem_fun(*this, &View::load_stl) );
@@ -968,6 +970,65 @@ void View::showAllWidgets() {
     if (pWindow)
       pWindow->show_all();
 }
+
+// this mode will not connect to a printer
+// instead shows a "save gcode" button 
+// for use with pronterface
+// call repsnapper with -i and -o filenames 
+void View::setNonPrintingMode(bool noprinting, string filename) {
+  if (noprinting) {
+    Gtk::HBox *hbox = NULL;
+    m_builder->get_widget("printer controls", hbox);
+    if (hbox)
+      hbox->hide();
+    else cerr << "No printer controls GUI element found" << endl;
+    Gtk::Notebook *nb = NULL;
+    m_builder->get_widget("controlnotebook", nb);
+    if (nb) {
+      Gtk::VBox *vbox = NULL;
+      m_builder->get_widget("printercontrols", vbox);
+      if (vbox) {
+	int num = nb->page_num(*vbox);
+	nb->remove_page(num);
+      } else cerr << "No printercontrols GUI element found" << endl;
+      m_builder->get_widget("logsbox", vbox);
+      if (vbox) {
+	int num = nb->page_num(*vbox);
+	nb->remove_page(num);
+      } else cerr << "No logsbox GUI element found" << endl;
+    } else cerr << "No controlnotebook GUI element found" << endl;
+    Gtk::Label *lab = NULL;
+    m_builder->get_widget("outfilelabel", lab);
+    if (lab) {
+      lab->set_label(_("Output File: ")+filename);
+      printtofile_name = filename;
+    }
+    else cerr << "No outfilelabel GUI element found" << endl;
+  } else {
+    Gtk::HBox *hbox = NULL;
+    m_builder->get_widget("printtofile", hbox);
+    if (hbox)
+      hbox->hide();
+    else cerr << "No  printtfile GUI element found" << endl;
+  }
+}
+
+void View::PrintToFile() {
+  if (printtofile_name != "") {
+    if (m_model) {
+      if (m_model->gcode.commands.size() == 0) {
+	alert(Gtk::MESSAGE_WARNING,"No GCode","Generate GCode first");
+	return;
+      }
+      Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(printtofile_name);
+      m_model->WriteGCode(file);
+      cerr << "saved GCode to file " << printtofile_name << endl;
+      Gtk::Main::quit();
+    }
+    else cerr << " no model " << endl;
+  } else cerr << " no filename " << endl;
+}
+
 
 int View::getMainwindowWidth()
 {

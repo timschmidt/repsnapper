@@ -135,6 +135,10 @@ class View : public Gtk::Window
   bool statusBarMessage(Glib::ustring message);
 
  public:
+  void setNonPrintingMode(bool noprinting=true, string filename="");
+  void PrintToFile();
+  string printtofile_name;
+
   Model *get_model() { return m_model; }
   ViewProgress *get_view_progress() { return m_progress; }
   bool get_selected_stl(TreeObject *&object, Shape *&shape);

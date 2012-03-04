@@ -55,21 +55,23 @@ private:
 	}
 	void usage ()
 	{
-		fprintf (stderr, _("Version: %s\n"), VERSION);
-		fprintf (stderr, _("Usage: repsnapper [OPTION]... [FILE]...\n"
-			 "Start reprap control software and load [FILES]\n"
-			 "Options:\n"
-			 "  -t, --no-gui           act as a head-less renderer\n"
-			 "  -i, --input [file]     read file gcode to [file]\n"
-			 "  -o, --output [file]    output gcode to [file]\n"
-			 "  -s, --settings [file]  read render settings [file]\n"
-			 "  -h, --help             show this help\n"
-			 "\n"
-			 "Report bugs to #repsnapper, irc.freenode.net\n\n"));
+	  fprintf (stderr, _("Version: %s\n"), VERSION);
+	  fprintf (stderr, _("Usage: repsnapper [OPTION]... [FILE]...\n"
+			     "Start reprap control software and load [FILES]\n"
+			     "Options:\n"
+			     "  -t, --no-gui           act as a head-less renderer\n"
+			     "  -i, --input [file]     read file gcode to [file]\n"
+			     "  -o, --output [file]    if not head-less (-t),\n"
+			     "                         enter non-printing GUI mode\n"
+			     "                         only able to output gcode to [file]\n"
+			     "  -s, --settings [file]  read render settings [file]\n"
+			     "  -h, --help             show this help\n"
+			     "\n"
+			     "Report bugs to #repsnapper, irc.freenode.net\n\n"));
 		exit (1);
 	}
 public:
-	// FIXME: should really use boost::program_options
+
 	CommandLineOptions(int argc, char **argv)
 	{
 		init ();
@@ -117,7 +119,7 @@ Glib::RefPtr<Gio::File> find_global_config() {
 int main(int argc, char **argv)
 {
   Glib::thread_init();
-  //gdk_threads_init();
+  //gdk_threads_init(); // excludes OMP threads?
   Gtk::Main tk(argc, argv);
 
   gchar *locale_dir;
@@ -230,9 +232,16 @@ int main(int argc, char **argv)
     model->LoadConfig(conf);
   }
 
+  bool nonprintingmode = false;
+  if (opts.stl_input_path.size() > 0) {
+    model->Read(Gio::File::create_for_path(opts.stl_input_path));
+  }
+
+  if (opts.gcode_output_path.size() > 0) {
+    nonprintingmode = true;
+  }
+
   if (!opts.use_gui) {
-    if (opts.stl_input_path.size() > 0) {
-      model->Read(Gio::File::create_for_path(opts.stl_input_path));
       if (opts.settings_path.size() > 0)
         model->LoadConfig(Gio::File::create_for_path(opts.settings_path));
 
@@ -245,11 +254,12 @@ int main(int argc, char **argv)
       if (opts.gcode_output_path.size() > 0)
         model->WriteGCode(Gio::File::create_for_path(opts.gcode_output_path));
       else cerr << _("No output file given (use -o)") << endl;
-    } else cerr << _("No input file given (use -i)") << endl;
     return 0;
   }
 
   View* mainwin = View::create(model);
+
+  mainwin->setNonPrintingMode(nonprintingmode, opts.gcode_output_path);
 
   for (uint i = 0; i < opts.files.size(); i++)
     model->Read(Gio::File::create_for_path(opts.files[i]));

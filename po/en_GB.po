@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-04 09:47+0100\n"
+"POT-Creation-Date: 2012-03-04 17:56+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: michael.meeks@novell.com\n"
 "Language-Team: British English <gb@li.org>\n"
@@ -84,16 +84,24 @@ msgstr ""
 msgid " Move Only"
 msgstr ""
 
-#: ../src/gcode.cpp:369
+#: ../src/gcode.cpp:381
 msgid "Loading GCode"
 msgstr ""
 
-#: ../src/gcode.cpp:656
+#: ../src/gcode.cpp:668
 msgid "Collecting GCode"
 msgstr ""
 
-#: ../src/gcode.cpp:672 ../src/gcode.cpp:678
+#: ../src/gcode.cpp:685
 msgid "Filament Retract"
+msgstr ""
+
+#: ../src/gcode.cpp:691
+msgid "Filament Retract move"
+msgstr ""
+
+#: ../src/gcode.cpp:697
+msgid "Filament Retract pushback"
 msgstr ""
 
 #: ../src/model.cpp:81
@@ -185,7 +193,7 @@ msgstr ""
 msgid " / GCode Estimation: "
 msgstr ""
 
-#: ../src/model2.cpp:686
+#: ../src/model2.cpp:687
 msgid " - total extruded: "
 msgstr ""
 
@@ -317,7 +325,9 @@ msgid ""
 "Options:\n"
 "  -t, --no-gui           act as a head-less renderer\n"
 "  -i, --input [file]     read file gcode to [file]\n"
-"  -o, --output [file]    output gcode to [file]\n"
+"  -o, --output [file]    if not head-less (-t),\n"
+"                         enter non-printing GUI mode\n"
+"                         only able to output gcode to [file]\n"
 "  -s, --settings [file]  read render settings [file]\n"
 "  -h, --help             show this help\n"
 "\n"
@@ -325,39 +335,35 @@ msgid ""
 "\n"
 msgstr ""
 
-#: ../src/repsnapper.cpp:162
+#: ../src/repsnapper.cpp:164
 msgid "Couldn't create user config directory!"
 msgstr ""
 
-#: ../src/repsnapper.cpp:183 ../src/repsnapper.cpp:206
+#: ../src/repsnapper.cpp:185 ../src/repsnapper.cpp:208
 msgid "Couldn't find global configuration!"
 msgstr ""
 
-#: ../src/repsnapper.cpp:185 ../src/repsnapper.cpp:208
+#: ../src/repsnapper.cpp:187 ../src/repsnapper.cpp:210
 msgid "It is likely that repsnapper is not correctly installed."
 msgstr ""
 
 #. Fall back to global config
-#: ../src/repsnapper.cpp:200
+#: ../src/repsnapper.cpp:202
 msgid "Unable to create user config"
 msgstr ""
 
-#: ../src/repsnapper.cpp:202
+#: ../src/repsnapper.cpp:204
 msgid ""
 "\n"
 "Falling back to global config. Settings will not be saved."
 msgstr ""
 
-#: ../src/repsnapper.cpp:217
+#: ../src/repsnapper.cpp:219
 msgid "Failed to locate config"
 msgstr ""
 
-#: ../src/repsnapper.cpp:247
+#: ../src/repsnapper.cpp:256
 msgid "No output file given (use -o)"
-msgstr ""
-
-#: ../src/repsnapper.cpp:248
-msgid "No input file given (use -i)"
 msgstr ""
 
 #: ../src/settings.cpp:521
@@ -464,6 +470,10 @@ msgstr ""
 
 #: ../src/view.cpp:557
 msgid "Home"
+msgstr ""
+
+#: ../src/view.cpp:1003
+msgid "Output File: "
 msgstr ""
 
 #. these are available for user selection (order must be same as types):
@@ -708,167 +718,167 @@ msgid "Communication"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:60
-msgid "Convert to _GCode"
-msgstr ""
-
-#: ../src/repsnapper.ui.h:61
 msgid "Cooling: Minimum Time per Layer (s):"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:62
+#: ../src/repsnapper.ui.h:61
 msgid "Custom Button"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:63
+#: ../src/repsnapper.ui.h:62
 msgid "D_uplicate"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:64
+#: ../src/repsnapper.ui.h:63
 msgid "Debug"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:65
+#: ../src/repsnapper.ui.h:64
 msgid "Debug Infill"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:66
+#: ../src/repsnapper.ui.h:65
 msgid "Decor"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:67
+#: ../src/repsnapper.ui.h:66
 msgid "Decoration:"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:68
+#: ../src/repsnapper.ui.h:67
 msgid "Delete"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:69
+#: ../src/repsnapper.ui.h:68
 msgid "Dimensions"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:70
+#: ../src/repsnapper.ui.h:69
 msgid "Display Settings"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:71
+#: ../src/repsnapper.ui.h:70
 msgid "Distance Between Lines"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:72
+#: ../src/repsnapper.ui.h:71
 msgid "Divide"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:73
+#: ../src/repsnapper.ui.h:72
 msgid "Divide shape at plane z=0"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:74
+#: ../src/repsnapper.ui.h:73
 msgid "Draw GCode"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:75
+#: ../src/repsnapper.ui.h:74
 msgid "Draw Layers"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:76
+#: ../src/repsnapper.ui.h:75
 msgid "Draw Line Numbers"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:77
+#: ../src/repsnapper.ui.h:76
 msgid "Draw Models: "
 msgstr ""
 
-#: ../src/repsnapper.ui.h:78
+#: ../src/repsnapper.ui.h:77
 msgid "Draw Polygon Numbers"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:79
+#: ../src/repsnapper.ui.h:78
 msgid "Draw Vertex Numbers"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:80
+#: ../src/repsnapper.ui.h:79
 msgid "Echo"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:81
+#: ../src/repsnapper.ui.h:80
 msgid "Edit"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:82
+#: ../src/repsnapper.ui.h:81
 msgid "Enable Acceleration"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:83
+#: ../src/repsnapper.ui.h:82
 msgid "Enable Antiooze Retraction"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:84
+#: ../src/repsnapper.ui.h:83
 msgid "Enable Debug"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:85
+#: ../src/repsnapper.ui.h:84
 msgid "Enable Lights"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:86
+#: ../src/repsnapper.ui.h:85
 msgid "Enable Raft"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:87
+#: ../src/repsnapper.ui.h:86
 msgid "End"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:88
+#: ../src/repsnapper.ui.h:87
 msgid "Endpoints"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:89
+#: ../src/repsnapper.ui.h:88
 msgid "Errors/Warnings"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:90
+#: ../src/repsnapper.ui.h:89
 msgid "Extrude Colour"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:91
+#: ../src/repsnapper.ui.h:90
 msgid "Extruded Material Width Ratio"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:92
+#: ../src/repsnapper.ui.h:91
 msgid "Extrusion Factor:"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:93
+#: ../src/repsnapper.ui.h:92
 msgid "Extrusion Multiplier"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:94
+#: ../src/repsnapper.ui.h:93
 msgid "Fan Enabled"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:95
+#: ../src/repsnapper.ui.h:94
 msgid "Fan Level"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:96
+#: ../src/repsnapper.ui.h:95
 msgid "Filament Diameter"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:97
+#: ../src/repsnapper.ui.h:96
 msgid "From/Single:"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:98
+#: ../src/repsnapper.ui.h:97
 msgid "GCode"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:99
+#: ../src/repsnapper.ui.h:98
 msgid "GCode when Printing"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:100
+#: ../src/repsnapper.ui.h:99
 msgid "Generate Arcs GCode (G2,G3)"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:100
+msgid "Generate _GCode"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:101
@@ -1162,130 +1172,134 @@ msgid "Save GCode"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:176
-msgid "Save STL"
+msgid "Save GCode and Close"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:177
-msgid "Scrollback"
+msgid "Save STL"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:178
-msgid "Send GCode"
+msgid "Scrollback"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:179
-msgid "Serial Link Speed"
+msgid "Send GCode"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:180
-msgid "Serial _Build"
+msgid "Serial Link Speed"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:181
-msgid "Serial comms debug"
+msgid "Serial _Build"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:182
-msgid "Shade Wireframe"
+msgid "Serial comms debug"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:183
-msgid "Shells:"
+msgid "Shade Wireframe"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:184
-msgid "Size"
+msgid "Shells:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:185
-msgid "Skins:"
+msgid "Size"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:186
-msgid "Skirt"
+msgid "Skins:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:187
-msgid "Slicer Settings"
+msgid "Skirt"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:188
-msgid "Solid Fill for Top and Bottom"
+msgid "Slicer Settings"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:189
-msgid "Solid Fill:"
+msgid "Solid Fill for Top and Bottom"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:190
-msgid "Sort Printed Lines by Length"
+msgid "Solid Fill:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:191
-msgid "Speed (mm/min)"
+msgid "Sort Printed Lines by Length"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:192
-msgid "Speed Ratio:"
+msgid "Speed (mm/min)"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:193
-msgid "Split"
+msgid "Speed Ratio:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:194
-msgid "Split into single shapes"
+msgid "Split"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:195
-msgid "Start"
+msgid "Split into single shapes"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:196
-msgid "Support:"
+msgid "Start"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:197
-msgid "Surface Normals"
+msgid "Support:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:198
-msgid "Temperature Ratio"
+msgid "Surface Normals"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:199
-msgid "Text Output"
+msgid "Temperature Ratio"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:200
-msgid "Thickness Ratio"
+msgid "Text Output"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:201
-msgid "To:"
+msgid "Thickness Ratio"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:202
-msgid "Twist:"
+msgid "To:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:203
-msgid "Update Interval (sec)"
+msgid "Twist:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:204
-msgid "Validate Connection"
+msgid "Update Interval (sec)"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:205
-msgid "Variable Slicing"
+msgid "Validate Connection"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:206
-msgid "Website"
+msgid "Variable Slicing"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:207
+msgid "Website"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:208
 msgid ""
 "Whether the 'mm' we generate in gcode are measured as mm of cold input "
 "filament, if not set is of hot output extrudate. More modern repraps can "
@@ -1294,70 +1308,74 @@ msgid ""
 "the filament diameter."
 msgstr ""
 
-#: ../src/repsnapper.ui.h:208
+#: ../src/repsnapper.ui.h:209
 msgid "Width to Layerheight Ratio of Extruded Line"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:209
+#: ../src/repsnapper.ui.h:210
 msgid "Wireframe"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:210
+#: ../src/repsnapper.ui.h:211
 msgid "X"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:211
+#: ../src/repsnapper.ui.h:212
 msgid "X/Y Axes"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:212
+#: ../src/repsnapper.ui.h:213
 msgid "Y"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:213
+#: ../src/repsnapper.ui.h:214
 msgid "Z"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:214
+#: ../src/repsnapper.ui.h:215
 msgid "Z Axis"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:215
+#: ../src/repsnapper.ui.h:216
 msgid "_Autoplace"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:216
+#: ../src/repsnapper.ui.h:217
 msgid "_Edit"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:217
+#: ../src/repsnapper.ui.h:218
 msgid "_File"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:218
+#: ../src/repsnapper.ui.h:219
 msgid "_Help"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:219
+#: ../src/repsnapper.ui.h:220
 msgid "_Print"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:220
+#: ../src/repsnapper.ui.h:221
 msgid "_Support"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:221
-msgid "lines"
-msgstr ""
-
 #: ../src/repsnapper.ui.h:222
-msgid "mm"
+msgid "label"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:223
-msgid "mm/min"
+msgid "lines"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:224
+msgid "mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:225
+msgid "mm/min"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:226
 msgid "repsnapper Preferences"
 msgstr ""
