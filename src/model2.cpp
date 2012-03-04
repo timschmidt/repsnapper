@@ -600,7 +600,8 @@ void Model::ConvertToGCode()
 
   if (settings.Slicing.SolidTopAndBottom)
     // not bridging when support
-    MakeUncoveredPolygons(settings.Slicing.MakeDecor, !settings.Slicing.Support);
+    MakeUncoveredPolygons(settings.Slicing.MakeDecor,
+			  !settings.Slicing.NoBridges && !settings.Slicing.Support);
 
   if (settings.Slicing.Support)
     MakeSupportPolygons(); // easier before multiplied uncovered bottoms

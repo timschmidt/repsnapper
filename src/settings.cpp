@@ -190,6 +190,7 @@ static struct {
   FLOAT_MEMBER  (Slicing.FirstLayersInfillDist, "FirstLayersInfillDist", 0.8, true),
   BOOL_MEMBER   (Slicing.UseArcs, "UseArcs", false, false),
   FLOAT_MEMBER    (Slicing.ArcsMaxAngle, "ArcsMaxAngle", 20, false),
+  BOOL_MEMBER  (Slicing.NoBridges, "NoBridges", false, false),
 
   // Misc.
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),

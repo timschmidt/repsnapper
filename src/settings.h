@@ -103,6 +103,8 @@ class Settings {
     bool  UseArcs;
     float ArcsMaxAngle;
 
+    bool NoBridges;
+
     bool  EnableAntiooze;
     float AntioozeDistance;
     float AntioozeAmount;
