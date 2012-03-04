@@ -42,6 +42,7 @@ Printer::Printer(View *view, Gtk::TextView *v_commlog) :
   printing (false),
   lastdonelines(0),
   lasttimeshown(0),
+  m_model(NULL),
   inhibit_print (false),
   commlog(v_commlog)
 {
