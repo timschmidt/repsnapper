@@ -148,8 +148,7 @@ static struct {
   FLOAT_MEMBER  (Printer.BedTemp, "Printer.BedTemp", 60, false),
 
   // Slicing
-  BOOL_MEMBER  (Slicing.UseIncrementalEcode, "UseIncrementalEcode", true, false),
-  BOOL_MEMBER  (Slicing.Use3DGcode, "Use3DGcode", false, false),
+  BOOL_MEMBER  (Slicing.RelativeEcode, "RelativeEcode", false, false),
   BOOL_MEMBER  (Slicing.EnableAntiooze, "EnableAntiooze", false, false),
   FLOAT_MEMBER (Slicing.AntioozeDistance, "AntioozeDistance", 4.5, false),
   FLOAT_MEMBER (Slicing.AntioozeAmount, "AntioozeAmount", 1, false),

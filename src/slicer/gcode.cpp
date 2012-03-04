@@ -61,21 +61,21 @@ void GCodeState::SetLastPosition(const Vector3d &v)
   if (!isnan(v.y) && !isnan(v.x)) // >= 0 && v.x >= 0)
     pImpl->LastPosition = v;
 }
-void GCodeState::AppendCommand(Command &command, bool incrementalE)
+void GCodeState::AppendCommand(Command &command, bool relativeE)
 {
   Vector3d lastwhere = Vector3d(pImpl->lastCommand.where);
-  if (incrementalE)
+  if (!relativeE) 
     command.e += pImpl->lastCommand.e;
   if (command.f!=0)
     timeused += (command.where - lastwhere).length()/command.f*60;
   pImpl->lastCommand = command;
   pImpl->code.commands.push_back(command);
 }
-void GCodeState::AppendCommand(GCodes code, bool incrementalE, string comment)
+void GCodeState::AppendCommand(GCodes code, bool relativeE, string comment)
 {
   Command comm(code);
   comm.comment = comment;
-  AppendCommand(comm, incrementalE);
+  AppendCommand(comm, relativeE);
 }
 // double GCodeState::GetLastLayerZ(double curZ)
 // {
@@ -177,7 +177,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 
   Command command;
 
-  bool incrementalE = slicing.UseIncrementalEcode;
+  bool relativeE = slicing.RelativeEcode;
 
   double minspeed = hardware.MinPrintSpeedXY;
   maxspeed = max(minspeed,maxspeed); // in case maxspeed is too low
@@ -246,29 +246,29 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
   // else	// No accleration 
     {
       ResetLastWhere (start);
-      if (slicing.Use3DGcode)
-	{
-	  command.Code = EXTRUDEROFF;
-	  AppendCommand(command,incrementalE);
-	  command.Code = COORDINATEDMOTION3D;
-	  command.where = start;
-	  command.e = 0;	    
-	  command.f = maxspeed;
-	  AppendCommand(command,incrementalE);
+      // if (slicing.Use3DGcode)
+      // 	{
+      // 	  command.Code = EXTRUDEROFF;
+      // 	  AppendCommand(command,relativeE);
+      // 	  command.Code = COORDINATEDMOTION3D;
+      // 	  command.where = start;
+      // 	  command.e = 0;	    
+      // 	  command.f = maxspeed;
+      // 	  AppendCommand(command,relativeE);
 		
-	  command.Code = EXTRUDERON;
-	  AppendCommand(command,incrementalE);
+      // 	  command.Code = EXTRUDERON;
+      // 	  AppendCommand(command,relativeE);
 		
-	  command.Code = COORDINATEDMOTION3D;
-	  command.where = end;
-	  command.e = 0;
-	  command.f = maxspeed;
-	  AppendCommand(command,incrementalE);
-	  // Done, switch extruder off
-	  command.Code = EXTRUDEROFF;
-	  AppendCommand(command,incrementalE);
-	}
-      else	// 5d gcode, no acceleration
+      // 	  command.Code = COORDINATEDMOTION3D;
+      // 	  command.where = end;
+      // 	  command.e = 0;
+      // 	  command.f = maxspeed;
+      // 	  AppendCommand(command,relativeE);
+      // 	  // Done, switch extruder off
+      // 	  command.Code = EXTRUDEROFF;
+      // 	  AppendCommand(command,relativeE);
+      // 	}
+      // else	// 5d gcode, no acceleration
 	{
 	  // // set start speed to max
 	  // if(LastCommandF() != maxspeed)
@@ -298,7 +298,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 	    else cerr << "Undefined arc direction! "<< arc << endl;
 	    command.arcIJK = arcIJK;
 	  }
-	  AppendCommand(command,incrementalE);
+	  AppendCommand(command,relativeE);
 	}	// 5D gcode
     }// If using firmware acceleration
 }

@@ -552,9 +552,11 @@ double Printlines::totalSecondsExtruding() const
   return t * 60;
 }
 
-string Printlines::GCode(Vector3d &lastpos, double &E, double feedrate, double speed) const
+string Printlines::GCode(Vector3d &lastpos, double &E, double feedrate, 
+			 double speed, bool relativeE) const
 {
   ostringstream o;
+  // E is total E so far (if absolute Ecode)
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
     o << GCode(*lIt, lastpos, E, speed * lIt->feedrate, speed * lIt->speed);
   }
@@ -564,20 +566,24 @@ string Printlines::GCode(Vector3d &lastpos, double &E, double feedrate, double s
 
 
 string Printlines::GCode(line l, Vector3d &lastpos, double &E, double feedrate, 
-			 double speed) const
+			 double speed, bool relativeE) const
 {
   double distline = (l.to-l.from).length();
   Vector3d from=Vector3d(l.from.x,l.from.y,z);
   Vector3d to=Vector3d(l.to.x,l.to.y,z);
   double distmove = (from-lastpos).length();
-  double EX = distline * l.feedrate * feedrate;
-  E+=EX;
+  double EX = distline * l.feedrate * feedrate; // this line's E
+  if (!relativeE) { // if absolute E
+    E += EX;  // add to total E
+    EX = E;   // write total E
+  } // else write single line EX
   lastpos = to;
   ostringstream o;
-  if (distmove>0.001)
+  if (distmove > 0.001)
     o << "G1 X"<<from.x<<" Y"<<from.y<<" Z"<<from.z<<" F"<<speed << endl;
-  if (distline>0.001) 
-    o << "G1 X"<<to.x<<" Y"<<to.y<<" Z"<<to.z<<" E"<<EX<<" F"<<speed << endl;
+  if (distline > 0.001) 
+    o << "G1 X"<<to.x  <<" Y"<<to.y  <<" Z"<<to.z  <<" E"<< EX <<" F"<<speed << endl;
+  cerr << "PL gcode " << o.str()<< endl;
   return o.str();
 }
 

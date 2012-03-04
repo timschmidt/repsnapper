@@ -107,16 +107,17 @@ Main code follows
 
 
 enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
-	    RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D,
-	    ARC_CW, ARC_CCW,
-	    EXTRUDERON, EXTRUDERONREVERSE, EXTRUDEROFF, //  6 7
-	    ARCCLOCKWISE, ARCCOUNTERCLOCKWISE,  // 8 9
-	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 10 11
-	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 12 13
-	    ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 14 15
-	    SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 16 - 19
-	    FANON,FANOFF,
-	    ASKTEMP};
+	    RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D, // 3 ..
+	    ARC_CW, ARC_CCW, // 6 ..
+	    EXTRUDERON, EXTRUDERONREVERSE, EXTRUDEROFF, //  8 ..
+	    ARCCLOCKWISE, ARCCOUNTERCLOCKWISE,  // 10 ..
+	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 12 ..
+	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 14 ..
+	    ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 16 ..
+	    ABSOLUTE_ECODE, RELATIVE_ECODE, // 18 ..
+	    SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 20 ..
+	    FANON, FANOFF, // 24 ..
+	    ASKTEMP }; // 26
 const string MCODES[] = {"G92", "", "",
 			 "G0", "G1", "G1",
 			 "G2", "G3",
@@ -125,6 +126,7 @@ const string MCODES[] = {"G92", "", "",
 			 "G21", "G20", // mm in
 			 "G28", "",
 			 "G90", "G91", // abs. rel. pos
+			 "M82", "M83", // abs. E, relative E
 			 "G92", "T0", "G1", "G1" ,
 			 "M106", "M107",
 			 "M105"}; // temp?
@@ -148,7 +150,7 @@ public:
 	void draw(Vector3d &lastPos, guint linewidth, 
 		  Vector4f color, bool arrows=true) const;
 	void draw(Vector3d &lastPos, bool arrows=true) const;
-	string GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalEcode) const;
+	string GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcode) const;
 	string info() const;
 };
 
@@ -183,7 +185,7 @@ public:
 		    bool liveprinting, int linewidth, bool arrows);
   void MakeText(string &GcodeTxt, const string &GcodeStart,
 		const string &GcodeLayer, const string &GcodeEnd,
-		bool UseIncrementalEcode, bool Use3DGcode,
+		bool RelativeEcode,
 		double AntioozeDistance, double AntioozeAmount,
 		double AntioozeSpeed,
 		ViewProgress * progress);
@@ -198,6 +200,7 @@ public:
   Glib::RefPtr<Gtk::TextBuffer> buffer;
   GCodeIter *get_iter ();
 
+  double GetTotalExtruded(bool relativeEcode) const;
   double GetTimeEstimation() const;
 
   vector<unsigned long> layerchanges;

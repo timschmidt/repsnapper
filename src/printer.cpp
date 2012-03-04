@@ -258,18 +258,18 @@ void
 Printer::RunExtruder (double extruder_speed, double extruder_length,
     bool reverse)
 {
-  static bool extruderIsRunning = false;
+  //static bool extruderIsRunning = false; // 3D
 
   assert(m_model != NULL); // Need a model first
 
-  if (m_model->settings.Slicing.Use3DGcode) {
-    if (extruderIsRunning)
-      SendNow("M103");
-    else
-      SendNow("M101");
-    extruderIsRunning = !extruderIsRunning;
-    return;
-  }
+  // if (m_model->settings.Slicing.Use3DGcode) {
+  //   if (extruderIsRunning)
+  //     SendNow("M103");
+  //   else
+  //     SendNow("M101");
+  //   extruderIsRunning = !extruderIsRunning;
+  //   return;
+  // }
 
   std::stringstream oss;
   string command("G1 F");

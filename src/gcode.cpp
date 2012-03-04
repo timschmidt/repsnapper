@@ -179,7 +179,7 @@ Command::Command(string gcodeline, Vector3d defaultpos){
     }
 }
 
-string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalEcode) const
+string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcode) const
 {
   ostringstream ostr; 
   if (MCODES[Code]=="") {
@@ -199,9 +199,9 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
   case RAPIDMOTION:
   case COORDINATEDMOTION:
   case COORDINATEDMOTION3D:
-    {// going down? -> split xy and z movements
+    { // going down? -> split xy and z movements
       Vector3d delta = where-LastPos;
-      double retractE = 2; //mm
+      const double RETRACT_E = 2; //mm
       if ( (where.z < 0 || delta.z < 0) && (delta.x!=0 || delta.y!=0) ) { 
 	Command xycommand(*this); // copy
 	xycommand.comment = comment +  _(" xy part");
@@ -213,20 +213,20 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
 	} else {
 	  xycommand.where.z = LastPos.z;
 	}
-	if (incrementalEcode) {    // retract filament at xy move
-	  xycommand.e = lastE-retractE;
-	  zcommand.e  = lastE-retractE;
+	if (relativeEcode) { 
+	  xycommand.e = -RETRACT_E; // retract filament at xy move
+	  zcommand.e  = 0;         // all extrusion done in xy
 	}
 	else {
-	  xycommand.e = -retractE; // retract filament at xy move
-	  zcommand.e  = 0; // all extrusion in xy
+	  xycommand.e = lastE - RETRACT_E;
+	  zcommand.e  = lastE - RETRACT_E;
 	}
 	//cerr << "split xy and z commands delta=" << delta <<endl;
 	// cerr << info() << endl;
 	// cerr << xycommand.info() << endl;
 	// cerr << zcommand.info() << endl<< endl;
-	ostr << xycommand.GetGCodeText(LastPos, lastE, incrementalEcode) << endl;
-	ostr <<  zcommand.GetGCodeText(LastPos, lastE, incrementalEcode) ;
+	ostr << xycommand.GetGCodeText(LastPos, lastE, relativeEcode) << endl;
+	ostr <<  zcommand.GetGCodeText(LastPos, lastE, relativeEcode) ;
 	return ostr.str();
       }
     }
@@ -244,8 +244,8 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool incrementalE
       LastPos.z = where.z;
       comm += _(" Z-Change");
     }
-    if((!incrementalEcode && e != 0) ||
-       (incrementalEcode  && e != lastE && e != 0)) {
+    if((relativeEcode   && e != 0) || 
+       (!relativeEcode  && e != lastE)) {
       ostr << "E" << e << " ";
       lastE = e;
     } else {      
@@ -336,6 +336,18 @@ GCode::GCode()
 	Max.x = Max.y = Max.z = -99999999.0;
 	Center.x = Center.y = Center.z = 0.0;
 	buffer = Gtk::TextBuffer::create();
+}
+
+double GCode::GetTotalExtruded(bool relativeEcode) const
+{
+  double E=0;
+  if (relativeEcode) {
+    for (uint i=0; i<commands.size(); i++) 
+      E += commands[i].e;
+  } else {
+    E = commands.back().e;
+  }
+  return E;
 }
 
 double GCode::GetTimeEstimation() const
@@ -638,7 +650,7 @@ bool add_text_filter_nan(string str, string &GcodeTxt)
 
 void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, 
 		     const string &GcodeLayer, const string &GcodeEnd,
-		     bool UseIncrementalEcode, bool Use3DGcode,
+		     bool RelativeEcode, 
 		     double AntioozeDistance, double AntioozeAmount,
 		     double AntioozeSpeed,
 		     ViewProgress * progress)
@@ -661,23 +673,39 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	    lastZ=commands[i].where.z;
 	  }
 
-	  if (commands[i].e - lastE == 0) { // Move only
+	  if ((!RelativeEcode && commands[i].e - lastE == 0)
+	      || (RelativeEcode && commands[i].e == 0) ) { // Move only
 	    if (AntioozeDistance > 0) {
 	      double distance = (commands[i].where - LastPos).length();
 	      if (distance > AntioozeDistance) {
-		Command retract(COORDINATEDMOTION, LastPos, 
-				lastE - AntioozeAmount, AntioozeSpeed);
+		double E = lastE - AntioozeAmount;
+		if (RelativeEcode) E = -AntioozeAmount;
+		// retract filament before movement:
+		Command retract(COORDINATEDMOTION, LastPos, E, AntioozeSpeed);
 		retract.comment = _("Filament Retract");
-		GcodeTxt += retract.GetGCodeText(LastPos, lastE, UseIncrementalEcode) + "\n";
+		GcodeTxt += retract.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
+		if (RelativeEcode) E = 0;
+		else               E = lastE;
+		// move without extrusion:
+		Command move(COORDINATEDMOTION, commands[i].where, E, commands[i].f);
+		move.comment = _("Filament Retract move");
+		GcodeTxt += move.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
+		// push filament back
+		if (RelativeEcode) { E = AntioozeAmount; lastE = E; }
+		else               E = lastE + AntioozeAmount;
+		Command push(COORDINATEDMOTION, commands[i].where, E, AntioozeSpeed);
+		push.comment = _("Filament Retract pushback");
+		GcodeTxt += push.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
+		continue; // this move is done
 	      }
 	    }
 	  }
 
-	  GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, UseIncrementalEcode) + "\n";
+	  GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
 	  
 	  if (i%100==0) progress->update(i);
-
-	// 	oss.str( "" );
+	}
+	  // 	oss.str( "" );
 	// 	switch(commands[i].Code)
 	// 	{
 	// 	case SELECTEXTRUDER:
@@ -824,7 +852,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 	}
 	// 	pos = commands[i].where;
 	// cerr<< oss.str()<< endl;
-	}
+	//}
 
 	add_text_filter_nan(GcodeEnd + "\n", GcodeTxt);
 	//GcodeTxt += GcodeEnd + "\n";

@@ -329,7 +329,9 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
 	layers[i]->addBridgePolygons(bridges);
 	layers[i]->calcBridgeAngles(layers[i-1]);
       }
-      else layers[i]->addFullPolygons(bridges,make_decor);
+      else {
+	layers[i]->addFullPolygons(bridges,make_decor);
+      }
     }
   m_progress->update(2*count+1);
   layers.front()->addFullPolygons(layers.front()->GetFillPolygons(), make_decor);
@@ -615,10 +617,14 @@ void Model::ConvertToGCode()
 
   m_progress->start (_("Making GCode"), count+1);
   
-  state.AppendCommand(MILLIMETERSASUNITS,  false, "Millimeters");
-  state.AppendCommand(ABSOLUTEPOSITIONING, false, "Absolute Pos");
+  state.AppendCommand(MILLIMETERSASUNITS,  false, _("Millimeters"));
+  state.AppendCommand(ABSOLUTEPOSITIONING, false, _("Absolute Pos"));
+  if (settings.Slicing.RelativeEcode)  
+    state.AppendCommand(RELATIVE_ECODE, false, _("Relative E Code"));
+  else
+    state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
 
-  for (uint p=0;p<count;p++){
+  for (uint p=0; p<count; p++) {
     m_progress->update(p);
     //cerr << "GCode layer " << (p+1) << " of " << count  << endl;;
     layers[p]->MakeGcode (state,
@@ -635,8 +641,7 @@ void Model::ConvertToGCode()
   }
 
   gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
-		  settings.Slicing.UseIncrementalEcode,
-		  settings.Slicing.Use3DGcode,
+		  settings.Slicing.RelativeEcode,
 		  AntioozeDistance, AntioozeAmount, AntioozeSpeed,
 		  m_progress);
 
@@ -659,7 +664,8 @@ void Model::ConvertToGCode()
     if (h>0) ostr << h <<_("h");
     ostr<< m <<_("m") << s <<_("s") ;
   }
-  double totlength = gcode.commands.back().e;
+
+  double totlength = gcode.GetTotalExtruded(settings.Slicing.RelativeEcode);
   ostr << _(" - total extruded: ") << totlength << "mm";
   double ccm = totlength*settings.Hardware.FilamentDiameter*settings.Hardware.FilamentDiameter/4.*M_PI/1000 ;
   ostr << " = " << ccm << "cm^3 ";

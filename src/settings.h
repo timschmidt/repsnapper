@@ -99,8 +99,7 @@ class Settings {
   PrinterSettings Printer;
 
   struct SlicingSettings {
-    bool  UseIncrementalEcode;
-    bool  Use3DGcode;
+    bool  RelativeEcode;
     bool  UseArcs;
     float ArcsMaxAngle;
 

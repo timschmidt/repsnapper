@@ -106,7 +106,8 @@ class Printlines
   void setZ(double z) {this->z=z;};
   double getZ() const {return z;};
   
-  string GCode(Vector3d &lastpos, double &E, double feedrate, double speed) const;
+  string GCode(Vector3d &lastpos, double &E, double feedrate, 
+	       double speed, bool relativeE = false) const;
 
  private:
   void optimizeLinedistances(double maxdist);
@@ -127,7 +128,8 @@ class Printlines
   Vector2d arcCenter(const struct line l1, const struct line l2, 
 		     double maxerr) const;
   
-  string GCode(line l, Vector3d &lastpos, double &E, double feedrate, double speed) const;
+  string GCode(line l, Vector3d &lastpos, double &E, double feedrate, 
+	       double speed, bool relativeE = false) const;
 
   typedef vector<line>::const_iterator lineCIt ;
   typedef vector<line>::iterator lineIt ;
