@@ -1083,7 +1083,7 @@ void Settings::connect_to_ui (Builder &builder)
   builder->get_widget ("Hardware.SerialSpeed",portspeed);
   if (portspeed) {
     const char *speeds[] = {
-      "9600", "19200", "38400", "57600", "115200", "230400", "250000", "500000", "576000"
+      "9600", "19200", "38400", "57600", "115200", "230400", "250000", "500000", "576000", "1000000"
     };
     vector<string> speedstr(speeds, speeds+sizeof(speeds)/sizeof(string));
     set_up_combobox(portspeed, speedstr);
