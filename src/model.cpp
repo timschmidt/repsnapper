@@ -785,7 +785,7 @@ int Model::drawLayers(Vector3d offset) const
 	  layer->MakeShells(settings.Slicing.ShellCount,
 			    matwidth, 
 			    settings.Slicing.ShellOffset,
-			    makeskirt, 
+			    makeskirt, settings.Slicing.SkirtDistance,
 			    settings.Slicing.InfillOverlap);
 	  if (settings.Display.DisplayinFill)
 	    {

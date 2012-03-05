@@ -493,7 +493,7 @@ void Model::MakeShells()
       layers[i]->MakeShells(settings.Slicing.ShellCount,
 			    matwidth, 
 			    settings.Slicing.ShellOffset,
-			    makeskirt, 
+			    makeskirt, settings.Slicing.SkirtDistance,
 			    settings.Slicing.InfillOverlap); 
     }
   omp_destroy_lock(&progress_lock);

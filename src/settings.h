@@ -120,6 +120,7 @@ class Settings {
     bool Support;
     bool Skirt;
     float SkirtHeight;
+    float SkirtDistance;
     int Skins;
     bool Varslicing;
     int NormalFilltype;
