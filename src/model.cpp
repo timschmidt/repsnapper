@@ -736,9 +736,6 @@ int Model::drawLayers(Vector3d offset) const
 
   //cerr << zStep << ";"<<Max.z<<";"<<Min.z<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
 
-  vector<int> altInfillLayers;
-  settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
-  
   Layer* layer=NULL;
   if (have_layers) 
     glTranslatef(-offset.x, -offset.y, -offset.z);
@@ -792,15 +789,34 @@ int Model::drawLayers(Vector3d offset) const
 			    settings.Slicing.InfillOverlap);
 	  if (settings.Display.DisplayinFill)
 	    {
-	      double fullInfillDistance = matwidth;
-	      double infillDistance = fullInfillDistance * (1+settings.Slicing.InfillDistance);
-	      double altInfillDistance = fullInfillDistance *(1+settings.Slicing.AltInfillDistance);
+	      // inFill distances in real mm
 	      double infilldist=0;
-	      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) 
-		  != altInfillLayers.end())
-		infilldist = altInfillDistance;
-	      else
-		infilldist = infillDistance;
+	      double fullInfillDistance = matwidth;
+	      double infillDistance = 0;
+	      double altInfillDistance = 0;
+	      bool shellOnly = settings.Slicing.ShellOnly;
+	      fullInfillDistance = settings.GetInfillDistance(layer->thickness, 100);
+	      if (settings.Slicing.InfillPercent == 0) 
+		shellOnly = true;
+	      else 
+		infillDistance = 
+		  settings.GetInfillDistance(layer->thickness,
+					     settings.Slicing.InfillPercent);
+	      if (settings.Slicing.AltInfillPercent != 0) 
+		altInfillDistance = 
+		  settings.GetInfillDistance(layer->thickness,
+					     settings.Slicing.AltInfillPercent);
+	      if (settings.Slicing.AltInfillLayers!=0 
+		  && layer->LayerNo % settings.Slicing.AltInfillLayers == 0) 
+		  infilldist = altInfillDistance;
+		else
+		  infilldist = infillDistance;
+	      if (layer->LayerNo < (int)settings.Slicing.FirstLayersNum) {
+		infilldist = max(infilldist,
+				 (double)settings.Slicing.FirstLayersInfillDist);
+		fullInfillDistance = max(fullInfillDistance,
+					 (double)settings.Slicing.FirstLayersInfillDist);
+	      }
 	      layer->CalcInfill(settings.Slicing.NormalFilltype,
 				settings.Slicing.FullFilltype,
 				settings.Slicing.SupportFilltype,
@@ -811,7 +827,7 @@ int Model::drawLayers(Vector3d offset) const
 				settings.Slicing.InfillRotationPrLayer, 
 				settings.Slicing.DecorInfillDistance,
 				settings.Slicing.DecorInfillRotation, 
-				settings.Slicing.ShellOnly,
+				shellOnly,
 				settings.Display.DisplayDebuginFill);
 	    }
 	}

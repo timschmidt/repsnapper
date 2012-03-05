@@ -504,18 +504,15 @@ void Model::MakeShells()
 
 void Model::CalcInfill()
 {
-  uint LayerCount = layers.size();
+  //uint LayerCount = layers.size();
     // (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
 
-  vector<int> altInfillLayers;
-  settings.Slicing.GetAltInfillLayers (altInfillLayers, LayerCount);
-
   // for full polys/layers:
-  double fullInfillDistance ;
+  double fullInfillDistance=0;
   // normal fill:
-  double infillDistance;
-  double altInfillDistance;
-  double infilldist;
+  double infillDistance=0;
+  double altInfillDistance=0;
+  double infilldist=0;
 
   m_progress->start (_("Infill"), layers.size());
 
@@ -532,19 +529,23 @@ void Model::CalcInfill()
 	m_progress->update(i);
 	omp_unset_lock(&progress_lock);
       }
-      // inFill      
-
-      fullInfillDistance = 
-	settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
-      infillDistance = fullInfillDistance *(1+settings.Slicing.InfillDistance);
-      altInfillDistance = fullInfillDistance *(1+settings.Slicing.AltInfillDistance);
-
-      if (std::find(altInfillLayers.begin(), altInfillLayers.end(), i) 
-      	  != altInfillLayers.end())
-      	infilldist = altInfillDistance;
+      // inFill distances in real mm
+      bool shellOnly = settings.Slicing.ShellOnly;
+      fullInfillDistance = settings.GetInfillDistance(layers[i]->thickness, 100);
+      if (settings.Slicing.InfillPercent == 0) 
+	shellOnly = true;
+      else 
+	infillDistance = settings.GetInfillDistance(layers[i]->thickness,
+						    settings.Slicing.InfillPercent);
+      if (settings.Slicing.AltInfillPercent != 0) 
+	altInfillDistance = settings.GetInfillDistance(layers[i]->thickness,
+						       settings.Slicing.AltInfillPercent);
+						       
+      if (settings.Slicing.AltInfillLayers!=0 
+	  && layers[i]->LayerNo % settings.Slicing.AltInfillLayers == 0) 
+	infilldist = altInfillDistance;
       else
-      	infilldist = infillDistance;
-
+	infilldist = infillDistance;
       if (layers[i]->LayerNo < (int)settings.Slicing.FirstLayersNum) {
       	infilldist = max(infilldist,
 			 (double)settings.Slicing.FirstLayersInfillDist);
@@ -562,7 +563,7 @@ void Model::CalcInfill()
 			    settings.Slicing.InfillRotationPrLayer, 
 			    settings.Slicing.DecorInfillDistance,
 			    settings.Slicing.DecorInfillRotation, 
-			    settings.Slicing.ShellOnly,
+			    shellOnly,
 			    settings.Display.DisplayDebuginFill);
 
     }

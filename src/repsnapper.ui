@@ -830,7 +830,7 @@ and others I forgot... (needs updating)</property>
                               <object class="GtkLabel" id="label71">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Infill Distance</property>
+                                <property name="label" translatable="yes">Infill Percent</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -840,12 +840,11 @@ and others I forgot... (needs updating)</property>
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkSpinButton" id="Slicing.InfillDistance">
+                              <object class="GtkSpinButton" id="Slicing.InfillPercent">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="invisible_char">●</property>
                                 <property name="invisible_char_set">True</property>
-                                <property name="digits">1</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -4132,8 +4131,7 @@ THE HEAD MOVING DOWN!
                                       <object class="GtkLabel" id="label72">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="xalign">1</property>
-                                        <property name="label" translatable="yes">Alternate Layers:</property>
+                                        <property name="label" translatable="yes">Alternate Layers every:</property>
                                       </object>
                                       <packing>
                                         <property name="expand">True</property>
@@ -4142,14 +4140,13 @@ THE HEAD MOVING DOWN!
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkEntry" id="Slicing.AltInfillLayersText">
+                                      <object class="GtkSpinButton" id="Slicing.AltInfillLayers">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">●</property>
-                                        <property name="invisible_char_set">True</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">True</property>
+                                        <property name="expand">False</property>
                                         <property name="fill">True</property>
                                         <property name="position">1</property>
                                       </packing>
@@ -4158,8 +4155,7 @@ THE HEAD MOVING DOWN!
                                       <object class="GtkLabel" id="label73">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="xalign">1</property>
-                                        <property name="label" translatable="yes">Alternate Infill Distance:</property>
+                                        <property name="label" translatable="yes">Alternate Infill Percent:</property>
                                       </object>
                                       <packing>
                                         <property name="expand">True</property>
@@ -4168,15 +4164,14 @@ THE HEAD MOVING DOWN!
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="Slicing.AltInfillDistance">
+                                      <object class="GtkSpinButton" id="Slicing.AltInfillPercent">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">●</property>
                                         <property name="invisible_char_set">True</property>
-                                        <property name="digits">1</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">True</property>
+                                        <property name="expand">False</property>
                                         <property name="fill">True</property>
                                         <property name="position">3</property>
                                       </packing>
@@ -4769,7 +4764,7 @@ THE HEAD MOVING DOWN!
                                   <object class="GtkLabel" id="label139">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Minimum Infill Distance</property>
+                                    <property name="label" translatable="yes">Minimum Infill Distance (line widths)</property>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>

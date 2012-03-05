@@ -110,11 +110,11 @@ class Settings {
     float AntioozeAmount;
     float AntioozeSpeed;
 
-    float InfillDistance;
+    float InfillPercent;
     float InfillRotation;
     float InfillRotationPrLayer;
-    float AltInfillDistance;
-    std::string AltInfillLayersText;
+    float AltInfillPercent;
+    int AltInfillLayers;
     float InfillOverlap;
     bool SolidTopAndBottom;
     bool Support;
@@ -149,7 +149,7 @@ class Settings {
     guint FirstLayersNum;
     float FirstLayersSpeed;
     float FirstLayersInfillDist;
-    void GetAltInfillLayers(std::vector<int>& layers, guint layerCount) const;
+    //void GetAltInfillLayers(std::vector<int>& layers, guint layerCount) const;
   };
   SlicingSettings Slicing;
 
@@ -249,6 +249,9 @@ class Settings {
   ~Settings();
 
   vmml::Matrix4d getBasicTransformation(vmml::Matrix4d T) const;
+
+  // return real mm depending on hardware extrusion width setting
+  double GetInfillDistance(double layerthickness, float percent) const;
 
   // sync changed settings with the GUI eg. used post load
   void set_to_gui (Builder &builder);

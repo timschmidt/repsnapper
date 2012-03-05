@@ -154,12 +154,12 @@ static struct {
   FLOAT_MEMBER (Slicing.AntioozeAmount, "AntioozeAmount", 1, false),
   FLOAT_MEMBER (Slicing.AntioozeSpeed, "AntioozeSpeed", 1000.0, false),
 
-  FLOAT_MEMBER  (Slicing.InfillDistance, "InfillDistance", 3.0, true),
+  FLOAT_MEMBER  (Slicing.InfillPercent, "InfillPercent", 30, true),
   FLOAT_MEMBER  (Slicing.InfillRotation, "InfillRotation", 90.0, true),
   FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, "InfillRotationPrLayer", 60.0, true),
-  FLOAT_MEMBER  (Slicing.AltInfillDistance, "AltInfillDistance", 2.0, true),
+  FLOAT_MEMBER  (Slicing.AltInfillPercent, "AltInfillPercent", 80, true),
   FLOAT_MEMBER  (Slicing.InfillOverlap, "InfillOverlap", 0.2, true),
-  STRING_MEMBER (Slicing.AltInfillLayersText, "AltInfillLayersText", "", true),
+  INT_MEMBER    (Slicing.AltInfillLayers, "AltInfillLayers", 0, true),
   INT_MEMBER    (Slicing.NormalFilltype, "NormalFilltype", 0, true),
   INT_MEMBER    (Slicing.FullFilltype, "FullFilltype", 0, true),
   INT_MEMBER    (Slicing.SupportFilltype, "SupportFilltype", 0, true),
@@ -182,7 +182,6 @@ static struct {
   //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
   BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, false),
   // FLOAT_MEMBER  (Slicing.SerialBuildHeight, "SerialBuildHeight", 0.00, false),
-  FLOAT_MEMBER  (Slicing.DecorInfillDistance, "DecorInfillDistance", 2.0, true),
   FLOAT_MEMBER  (Slicing.ShellOffset, "ShellOffset", 0.1, true),
   BOOL_MEMBER   (Slicing.LinelengthSort, "LinelengthSort", false, false),
   INT_MEMBER    (Slicing.FirstLayersNum, "FirstLayersNum", 1, true),
@@ -273,8 +272,9 @@ static struct {
   { "Slicing.ShellCount", 0, 100, 1, 5 },
   { "Slicing.InfillRotation", -360, 360, 5, 45 },
   { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
-  { "Slicing.InfillDistance", 0.0, 10, 0.1, 1 },
-  { "Slicing.AltInfillDistance", 0.1, 10, 0.1, 2 },
+  { "Slicing.InfillPercent", 0.0, 100.0, 1, 10.0 },
+  { "Slicing.AltInfillPercent", 0.0, 100.0, 1, 10.0 },
+  { "Slicing.AltInfillLayers", 0, 10000, 10, 100 },
   { "Slicing.DecorInfillDistance", 0.0, 10, 0.1, 1 },
   { "Slicing.DecorInfillRotation", -360, 360, 5, 45 },
   { "Slicing.InfillOverlap", 0, 1.0 , 0.01, 0.1},
@@ -418,24 +418,32 @@ std::string Settings::GCodeType::getText(GCodeTextType t)
   return m_impl->m_GCode[t]->get_text();
 }
 
-void Settings::SlicingSettings::GetAltInfillLayers(std::vector<int>& layers, uint layerCount) const
+// return infill distance in mm
+double Settings::GetInfillDistance(double layerthickness, float percent) const
 {
-  size_t start = 0, end = AltInfillLayersText.find(',');
-
-  if (AltInfillLayersText == "")
-    return;
-
-  while(start != std::string::npos) {
-    int num = atoi(AltInfillLayersText.data() + start);
-    if(num < 0) {
-      num += layerCount;
-    }
-    layers.push_back (num);
-
-    start = end;
-    end = AltInfillLayersText.find(',', start+1);
-  }
+  double fullInfillDistance = 
+    Hardware.GetExtrudedMaterialWidth(layerthickness);
+  if (percent == 0) return 10000000;
+  return fullInfillDistance * (100./percent);  
 }
+// void Settings::SlicingSettings::GetAltInfillLayers(std::vector<int>& layers, uint layerCount) const
+// {
+//   size_t start = 0, end = AltInfillLayersText.find(',');
+
+//   if (AltInfillLayersText == "")
+//     return;
+
+//   while(start != std::string::npos) {
+//     int num = atoi(AltInfillLayersText.data() + start);
+//     if(num < 0) {
+//       num += layerCount;
+//     }
+//     layers.push_back (num);
+
+//     start = end;
+//     end = AltInfillLayersText.find(',', start+1);
+//   }
+// }
 
 Settings::Settings ()
 {
