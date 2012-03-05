@@ -304,7 +304,7 @@ void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor)
   clipp.addPolys(fillPolygons,subject); 
   clipp.addPolys(newpolys,clip);
   vector<Poly> inter = clipp.intersect();
-  if (decor)
+  if (decor)//  && LayerNo != 0) // no decor on base layers
     decorPolygons.insert(decorPolygons.end(),inter.begin(),inter.end());
   else
     fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
@@ -322,9 +322,7 @@ void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor)
 void Layer::mergeFullPolygons(bool bridge) 
 {
   if (bridge) {
-    //cerr << bridgePolygons.size() ;
     setBridgePolygons(Clipping::getMerged(bridgePolygons));
-    //cerr << " --> " << bridgePolygons.size() << endl;
   } else  
     setFullFillPolygons(Clipping::getMerged(fullFillPolygons));
 }
@@ -410,7 +408,7 @@ void Layer::setSkirtPolygon(const Poly poly)
 
 
 void Layer::MakeShells(uint shellcount, double extrudedWidth, double shelloffset,
-		       bool makeskirt, double infilloverlap)
+		       bool makeskirt, double skirtdistance, double infilloverlap)
 {
   double distance = 0.5 * extrudedWidth;
   double cleandist = min(extrudedWidth/4., thickness/3.);
@@ -448,7 +446,7 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth, double shelloffset
   //cerr << LayerNo << " > " << fillPolygons.size()<< endl;
   calcConvexHull();
   if (makeskirt) {
-    MakeSkirt(3*distance); // skirt distance = 3 * shell distance
+    MakeSkirt(skirtdistance); // skirt distance = 3 * shell distance
   }
 
   //cerr << " .. made " << fillPolygons.size() << " offsetpolys "  << endl;

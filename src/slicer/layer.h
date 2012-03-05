@@ -82,7 +82,7 @@ public:
   void calcBridgeAngles(const Layer *layerbelow);
   
   void MakeShells(uint shellcount, double extrudedWidth, double shelloffset,
-  		  bool makeskirt, double infilloverlap);
+  		  bool makeskirt, double skirtdistance, double infilloverlap);
   /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */
   /* 			     double distance,  */
   /* 			     ClipperLib::JoinType join_type = ClipperLib::jtMiter); */
