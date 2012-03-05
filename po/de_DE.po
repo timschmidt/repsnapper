@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-05 07:16+0100\n"
-"PO-Revision-Date: 2012-03-05 07:21+0100\n"
+"POT-Creation-Date: 2012-03-05 17:35+0100\n"
+"PO-Revision-Date: 2012-03-05 17:36+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -111,7 +111,7 @@ msgstr "noch nicht implementiert\n"
 msgid "Converting"
 msgstr "Konvertiere"
 
-#: ../src/model.cpp:93 ../src/model2.cpp:650
+#: ../src/model.cpp:93 ../src/model2.cpp:651
 msgid "Done"
 msgstr "Fertig"
 
@@ -136,63 +136,63 @@ msgstr ""
 msgid "Find Uncovered"
 msgstr "Unbedeckte Flächen finden"
 
-#: ../src/model2.cpp:364
+#: ../src/model2.cpp:365
 msgid "Uncovered Shells"
 msgstr "Unbedeckte Flächen"
 
-#: ../src/model2.cpp:425
+#: ../src/model2.cpp:426
 msgid "Support"
 msgstr "Gerüst"
 
-#: ../src/model2.cpp:475
+#: ../src/model2.cpp:476
 msgid "Shells"
 msgstr "Hüllen"
 
-#: ../src/model2.cpp:517 ../src/repsnapper.ui.h:108
+#: ../src/model2.cpp:518 ../src/repsnapper.ui.h:108
 msgid "Infill"
 msgstr "Füllung"
 
-#: ../src/model2.cpp:620
+#: ../src/model2.cpp:621
 msgid "Making GCode"
 msgstr "Erzeuge GCode"
 
-#: ../src/model2.cpp:622
+#: ../src/model2.cpp:623
 msgid "Millimeters"
 msgstr "Millimeter"
 
-#: ../src/model2.cpp:623
+#: ../src/model2.cpp:624
 msgid "Absolute Pos"
 msgstr "Absolute Pos"
 
-#: ../src/model2.cpp:625
+#: ../src/model2.cpp:626
 msgid "Relative E Code"
 msgstr "Relativer E-Code"
 
-#: ../src/model2.cpp:627
+#: ../src/model2.cpp:628
 msgid "Absolute E Code"
 msgstr "Absoluter E-Code"
 
-#: ../src/model2.cpp:656
+#: ../src/model2.cpp:657
 msgid "Time Estimation: "
 msgstr "Geschätzte Dauer: "
 
-#: ../src/model2.cpp:657 ../src/model2.cpp:666
+#: ../src/model2.cpp:658 ../src/model2.cpp:667
 msgid "h"
 msgstr ""
 
-#: ../src/model2.cpp:658 ../src/model2.cpp:667
+#: ../src/model2.cpp:659 ../src/model2.cpp:668
 msgid "m"
 msgstr ""
 
-#: ../src/model2.cpp:658 ../src/model2.cpp:667
+#: ../src/model2.cpp:659 ../src/model2.cpp:668
 msgid "s"
 msgstr ""
 
-#: ../src/model2.cpp:665
+#: ../src/model2.cpp:666
 msgid " / GCode Estimation: "
 msgstr " / Geschätzte Dauer: "
 
-#: ../src/model2.cpp:671
+#: ../src/model2.cpp:672
 msgid " - total extruded: "
 msgstr " - Gesamtfilament: "
 
@@ -386,35 +386,35 @@ msgstr "Kann Konfiguration nicht finden"
 msgid "No output file given (use -o)"
 msgstr "Keine Ausgabedatei angegeben (-o)"
 
-#: ../src/settings.cpp:530
+#: ../src/settings.cpp:532
 msgid "Failed to load settings from file '"
 msgstr "Konnte Einstellungen nicht einlesen: '"
 
-#: ../src/settings.cpp:534
+#: ../src/settings.cpp:536
 msgid "Exception "
 msgstr "Fehler "
 
-#: ../src/settings.cpp:534
+#: ../src/settings.cpp:536
 msgid " loading settings from file '"
 msgstr " beim einlesen der Datei '"
 
-#: ../src/settings.cpp:538
+#: ../src/settings.cpp:540
 msgid "parsing config from '"
 msgstr "Lese Einstellungen von '"
 
-#: ../src/settings.cpp:573 ../src/settings.cpp:718 ../src/settings.cpp:819
+#: ../src/settings.cpp:575 ../src/settings.cpp:720 ../src/settings.cpp:821
 msgid "corrupt setting type\n"
 msgstr "Defekte Einstellung\n"
 
-#: ../src/settings.cpp:669 ../src/settings.cpp:768
+#: ../src/settings.cpp:671 ../src/settings.cpp:770
 msgid "Missing boolean config item "
 msgstr "Boolsche Einstellung fehlt: "
 
-#: ../src/settings.cpp:680 ../src/settings.cpp:709 ../src/settings.cpp:809
+#: ../src/settings.cpp:682 ../src/settings.cpp:711 ../src/settings.cpp:811
 msgid "Missing user interface item "
 msgstr "GUI-Element fehlt: "
 
-#: ../src/settings.cpp:779
+#: ../src/settings.cpp:781
 msgid "Missing GUI element "
 msgstr "GUI-Element fehlt: "
 
@@ -871,7 +871,7 @@ msgstr "Extrusionsfarbe"
 
 #: ../src/repsnapper.ui.h:92
 msgid "Extruded Material Width Ratio"
-msgstr "Breite des extrudierten Materials"
+msgstr "Breite/Höhe des extrudierten Materials"
 
 #: ../src/repsnapper.ui.h:93
 msgid "Extrusion Factor:"
@@ -1037,7 +1037,7 @@ msgstr "Ab Distanz (mm):"
 
 #: ../src/repsnapper.ui.h:134
 msgid "Minimum Infill Distance (line widths)"
-msgstr "Minimaler Füllungsabstand (Linenbreiten)"
+msgstr "Minimaler Füllungsabstand (Linienbreiten)"
 
 #: ../src/repsnapper.ui.h:135
 msgid "Mirror"
@@ -1328,10 +1328,14 @@ msgid "Variable Slicing"
 msgstr "Variable Schichten"
 
 #: ../src/repsnapper.ui.h:209
+msgid "Very First Layer Height Ratio"
+msgstr "Rel. Höhe der allerersten Schicht"
+
+#: ../src/repsnapper.ui.h:210
 msgid "Website"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:210
+#: ../src/repsnapper.ui.h:211
 msgid ""
 "Whether the 'mm' we generate in gcode are measured as mm of cold input "
 "filament, if not set is of hot output extrudate. More modern repraps can "
@@ -1342,75 +1346,75 @@ msgstr ""
 "GCode enthält die Längen in Einheiten des Filaments, oder des extrudierten\n"
 "Materials. "
 
-#: ../src/repsnapper.ui.h:211
+#: ../src/repsnapper.ui.h:212
 msgid "Width to Layerheight Ratio of Extruded Line"
 msgstr "Verhältnis Breite zu Höhe der extrudierten Linie"
 
-#: ../src/repsnapper.ui.h:212
+#: ../src/repsnapper.ui.h:213
 msgid "Wireframe"
 msgstr "Drahtmodell"
 
-#: ../src/repsnapper.ui.h:213
+#: ../src/repsnapper.ui.h:214
 msgid "X"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:214
+#: ../src/repsnapper.ui.h:215
 msgid "X/Y Axes"
 msgstr "X/Y-Achsen"
 
-#: ../src/repsnapper.ui.h:215
+#: ../src/repsnapper.ui.h:216
 msgid "Y"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:216
+#: ../src/repsnapper.ui.h:217
 msgid "Z"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:217
+#: ../src/repsnapper.ui.h:218
 msgid "Z Axis"
 msgstr "Z-Achse"
 
-#: ../src/repsnapper.ui.h:218
+#: ../src/repsnapper.ui.h:219
 msgid "_Autoplace"
 msgstr "_Autom. platzieren"
 
-#: ../src/repsnapper.ui.h:219
+#: ../src/repsnapper.ui.h:220
 msgid "_Edit"
 msgstr "_Bearbeiten"
 
-#: ../src/repsnapper.ui.h:220
+#: ../src/repsnapper.ui.h:221
 msgid "_File"
 msgstr "_Datei"
 
-#: ../src/repsnapper.ui.h:221
+#: ../src/repsnapper.ui.h:222
 msgid "_Help"
 msgstr "_Hilfe"
 
-#: ../src/repsnapper.ui.h:222
+#: ../src/repsnapper.ui.h:223
 msgid "_Print"
 msgstr "_Drucken"
 
-#: ../src/repsnapper.ui.h:223
+#: ../src/repsnapper.ui.h:224
 msgid "_Support"
 msgstr "Gerüs_t"
 
-#: ../src/repsnapper.ui.h:224
+#: ../src/repsnapper.ui.h:225
 msgid "label"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:225
+#: ../src/repsnapper.ui.h:226
 msgid "lines"
 msgstr "Zeilen"
 
-#: ../src/repsnapper.ui.h:226
+#: ../src/repsnapper.ui.h:227
 msgid "mm"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:227
+#: ../src/repsnapper.ui.h:228
 msgid "mm/min"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:228
+#: ../src/repsnapper.ui.h:229
 msgid "repsnapper Preferences"
 msgstr "repsnapper-Einstellungen"
 

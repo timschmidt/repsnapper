@@ -213,7 +213,7 @@ void Model::Slice(double printOffsetZ)
   // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
   // start at z=0, cut off everything below
 
-  double minZ = thickness*0.5;// + Min.z; 
+  double minZ = thickness*settings.Slicing.FirstLayerHeight;// + Min.z; 
   double z = minZ;
 
   m_progress->set_terminal_output(settings.Display.TerminalProgress);
@@ -233,6 +233,7 @@ void Model::Slice(double printOffsetZ)
   double shape_z = z;
   double max_shape_z = z + serialheight;
   Layer * layer = new Layer(LayerNr, thickness, skins); 
+  layer->setZ(shape_z);
   LayerNr = 1;
   double max_gradient = 0;
   int new_polys=0;

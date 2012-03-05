@@ -187,6 +187,7 @@ static struct {
   INT_MEMBER    (Slicing.FirstLayersNum, "FirstLayersNum", 1, true),
   FLOAT_MEMBER  (Slicing.FirstLayersSpeed, "FirstLayersSpeed", 0.5, true),
   FLOAT_MEMBER  (Slicing.FirstLayersInfillDist, "FirstLayersInfillDist", 0.8, true),
+  FLOAT_MEMBER  (Slicing.FirstLayerHeight, "FirstLayerHeight", 0.7, true),
   BOOL_MEMBER   (Slicing.UseArcs, "UseArcs", false, false),
   FLOAT_MEMBER    (Slicing.ArcsMaxAngle, "ArcsMaxAngle", 20, false),
   BOOL_MEMBER  (Slicing.NoBridges, "NoBridges", false, false),
@@ -291,6 +292,7 @@ static struct {
   { "Slicing.FirstLayersNum", 0, 1000, 1, 10 },
   { "Slicing.FirstLayersSpeed", 0.01, 3, 0.01, 0.1 },
   { "Slicing.FirstLayersInfillDist", 0.0, 100, 0.01, 0.1 },
+  { "Slicing.FirstLayerHeight", 0.0, 1., 0.01, 0.1 },
   { "Slicing.ArcsMaxAngle", 0, 180, 1, 10 },
 
   // Hardware
