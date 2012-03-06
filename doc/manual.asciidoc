@@ -2,7 +2,6 @@
 
 Welcome to the RepSnapper Manual, although currently a work in progress this guide aims to help you install and use your RepSnapper software.
 
-This manual is quite outdated. For compiling and installing please see the README file at https://github.com/timschmidt/repsnapper/blob/master/README after you obtained the sources. Any pre-compiled binaries will be very outdated, too.
 
 Contact Info
 
@@ -24,14 +23,17 @@ For historical reasons we leave here the links to the old svn version that devel
     * Bug tracker: http://bugs.kulitorum.com
 
 == Installation from binaries ==
+
+All these binaries are very much out of date. Everything from before Feb. 2012 has almost nothing to do with the current state of development. Please see below for intalling from source.
+
 === Linux ===
 
 There are currently no Repsnapper binaries pre-built for Linux.  However, installation from source is relatively simple.  If you'd like to package Repsnapper for your Linux distribution, please let us know!
 
 === Windows ===
 
-Download the latest version of Repsnapper for Windows http://www.kulitorum.com/RepSnapperBeta.rar (Kulitorums version of the v1 code from git)
-This is older, but should work with tonokip and FiveD: http://svn.kulitorum.com/RepSnapper/MSVC9/Release/RepSnapper.exe[here].
+Old v1 of Repsnapper for Windows http://www.kulitorum.com/RepSnapperBeta.rar (Kulitorums version)
+This is even older, but should work with tonokip and FiveD: http://svn.kulitorum.com/RepSnapper/MSVC9/Release/RepSnapper.exe[here].
 
 === OS X ===
 
@@ -93,7 +95,7 @@ Executable (repsnapper) will be left in the top folder. Install with "sudo make 
 
 ==== Fedora ====
 ===== Installing from yum =====
-Repsnapper is currently packaged by jebba for Fedora 14 at this repository: http://repos.fedorapeople.org/repos/jebba/reprap/
+Repsnapper was packaged by jebba for Fedora 14 at this repository: http://repos.fedorapeople.org/repos/jebba/reprap/
 ----
 su
 wget -P /etc/yum.repos.d/ http://repos.fedorapeople.org/repos/jebba/reprap/fedora-reprap.repo
@@ -175,7 +177,14 @@ make -j3
 ----
 Executable (repsnapper) will be left in the top folder. Currently there is no install rule.
 
+
+= Printrun/pronterface integration as pure slicer =
+
+  As the serial communications section of repsnapper is not really state-of-the-art and may be only working in particular circumstances, you could try using pronterface for the printing part.
+  In pronterface, set the option "slicecommand" to "repsnapper -o $o $s" and you will get a window where you can manipulate and slice your model and then send the GCode back to pronterface for printing.
+
 == Configuration ==
+
 Not uptodate, but still useful:
 
 === Simple tab ===
@@ -187,7 +196,7 @@ Port::
     Manually selects the serial communication port that you want to talk across.
 
 Speed::
-    The serial communications baud rate. Typically 19200 - must however match the setting in your firmware. For example in the latest svn firmware the baud is 57600 by default in configuration.h the value in repsnapper must match this value.
+    The serial communications baud rate. Typically 115200 - must however match the setting in your firmware. 
 
 Load STL::
     Loads an STL file
@@ -210,10 +219,10 @@ Load STL::
     Loads an STL file
 
 Save STL::
-    Saves all objects in their current state to a single STL file. 
+    Saves all objects in their current position to a single STL file. You will actually save the complete printing plate to a single STL file without combining the single objects. After loading the file you can manipulate them individually. These multiple-object STL files can also be read and merged by meshlab.
 
 Save Settings::
-    Saves all configuration settings. The configuration settings are stored in a file called repsnapper.conf
+    Saves all configuration settings. The configuration settings are stored in a file called repsnapper.conf.
 
 [TIP]
 
@@ -525,13 +534,11 @@ Test::
 To run repsnapper on
 
 windows::
-    double click the repsnapper.exe file within the repsnapper directory
+    double click the repsnapper.exe file.
 
-linux::
-    type repsnapper/repsnapper into the console window.
+linux/OSX/xBSD::
+    type ./repsnapper into the console window or install it by 'make install-strip', then you should have repsnapper on your path.
 
-OSX::
-    type repsnapper/repsnapper into the console window.
 
 After launching the repsnapper application you are presented with the main window of the application
 
@@ -562,8 +569,13 @@ Working with STL
 
 Once an STL is loaded, you can move it to further onto the build platform, rotate it and scale it. You can also duplicate it and load additional STL files onto the build platform.
 
-    * To move the STL, first select it on the browser, then tab to the translate box and enter absolute values into the X and Y fields. You can also drag the object by left-click-hold in the X or Y box then dragging it with the mouse. Apparently changing the Z value is not recommended.
+    * To move around individual objects or a group of objects use Shift and the left mouse button.
+    * Or tab to the translate box and enter absolute values into the X and Y fields. 
+    * If the object is not on the Platform, you can also try rotating it about the Z axis to automatically make it touch the Z=0 plane.
+    * Everything below the Z=0 plane will not be sliced, so you will not get negative Z values in youe GCode. 
+
     * Duplicate adds another copy of the STL beside the first.
+
 
 Convert to GCode
 Repsnapper displaying GCode
@@ -574,6 +586,8 @@ Converting to GCode is a simple process,
     * press the Convert to GCode button.
 
 You can generate quite useful and very printable GCode using the default settings of RepSnapper. There are however also a host of user changeable settings that will alter/adjust the generation of GCode, see RepSnapper Manual: Setting GCode options for details.
+
+
 Print
 
 To send the GCode to a FiveD GCode compatible printer:
