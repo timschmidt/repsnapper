@@ -1,6 +1,7 @@
 /*
     This file is a part of the RepSnapper project.
     Copyright (C) 2010  Kulitorum
+    Copyright (C) 2011-12  martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -489,6 +490,7 @@ void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress)
   for (uint i = 0; i < n_tr; i++) done[i] = false;
   uint donetriangles = 0;
   if (progress) progress->start(_("Split Shapes"), n_tr);
+  int progress_steps = (int)(n_tr/100);
   while (donetriangles < n_tr) 
     {
       bool foundadj = false;
@@ -519,7 +521,8 @@ void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress)
 	    break;
 	  }
       }
-      if (progress) progress->update(donetriangles);
+      if (progress && donetriangles%progress_steps==0) 
+	progress->update(donetriangles);
    }
    if (progress) progress->stop("_(Done)");
    cerr << shapes.size() << " shapes " << endl;

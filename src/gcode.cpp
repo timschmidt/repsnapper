@@ -296,21 +296,32 @@ void Command::draw(Vector3d &lastPos, bool arrows) const
     }
     glGetFloatv(GL_CURRENT_COLOR,ccol);
   }
-  glVertex3dv((GLdouble*)&lastPos);
-  glVertex3dv((GLdouble*)&where);
-  if (arrows) {
-    glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
-    // 0.4mm long arrows
-    Vector3d arrdir = (where-lastPos).getNormalized() * 0.4; 
-    Vector3d arrdir2(-0.5*arrdir.y,0.5*arrdir.x,arrdir.z);
-    glVertex3dv((GLdouble*)&where);
-    Vector3d arr1 = where-arrdir+arrdir2;
-    glVertex3dv((GLdouble*)&(arr1));
-    glVertex3dv((GLdouble*)&where);
-    Vector3d arr2 = where-arrdir-arrdir2;
-    glVertex3dv((GLdouble*)&(arr2));
+  if (lastPos==where) {
+    glEnd();
+    if (arrows) {
+      glPointSize(10);
+      glBegin(GL_POINTS);
+      //glColor4f(1.,0.1,0.1,ccol[3]);
+      glVertex3dv((GLdouble*)&where);    
+      glEnd();
+    }
+  } else {
+    glVertex3dv((GLdouble*)&(lastPos));
+    glVertex3dv((GLdouble*)&(where));
+    if (arrows) {
+      glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
+      // 0.4mm long arrows
+      Vector3d arrdir = (where-lastPos).getNormalized() * 0.4; 
+      Vector3d arrdir2(-0.5*arrdir.y,0.5*arrdir.x,arrdir.z);
+      glVertex3dv((GLdouble*)&where);
+      Vector3d arr1 = where-arrdir+arrdir2;
+      glVertex3dv((GLdouble*)&(arr1));
+      glVertex3dv((GLdouble*)&where);
+      Vector3d arr2 = where-arrdir-arrdir2;
+      glVertex3dv((GLdouble*)&(arr2));
+    }
+    glEnd();
   }
-  glEnd();
   lastPos = where;
 }
 
@@ -553,6 +564,8 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
         uint n_cmds = commands.size();
 	Vector3d defaultpos(-1,-1,-1);
 	Vector3d pos(0,0,0);
+	
+	bool relativeE = settings.Slicing.RelativeEcode;
 
 	start = CLAMP (start, 0, n_cmds);
 	end = CLAMP (end, 0, n_cmds);
@@ -600,7 +613,8 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		  {
 		    double speed = commands[i].f;
 		    double luma = 1.;
-		    if(commands[i].e == LastE)
+		    if( (!relativeE && commands[i].e == LastE)
+			|| (relativeE && commands[i].e == 0) )
 		      {
 			luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
 			Color = settings.Display.GCodeMoveRGBA;
@@ -652,7 +666,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 		     const string &GcodeLayer, const string &GcodeEnd,
 		     bool RelativeEcode, 
 		     double AntioozeDistance, double AntioozeAmount,
-		     double AntioozeSpeed,
+		     double AntioozeSpeed, bool AntioozeRepushAfter, 
 		     ViewProgress * progress)
 {
 	double lastE = -10;
@@ -666,13 +680,14 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	layerchanges.clear();
 
 	progress->restart(_("Collecting GCode"),commands.size());
-
+	int progress_steps=(int)(commands.size()/100);
+	
 	for(uint i = 0; i < commands.size(); i++) {
 	  if(commands[i].where.z != lastZ) {
 	    layerchanges.push_back(i);
 	    lastZ=commands[i].where.z;
 	  }
-
+#if 0 // antiooze in printlines
 	  if ((!RelativeEcode && commands[i].e - lastE == 0)
 	      || (RelativeEcode && commands[i].e == 0) ) { // Move only
 	    if (AntioozeDistance > 0) {
@@ -684,26 +699,29 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 		Command retract(COORDINATEDMOTION, LastPos, E, AntioozeSpeed);
 		retract.comment = _("Filament Retract");
 		GcodeTxt += retract.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
-		if (RelativeEcode) E = 0;
-		else               E = lastE;
-		// move without extrusion:
-		Command move(COORDINATEDMOTION, commands[i].where, E, commands[i].f);
-		move.comment = _("Filament Retract move");
-		GcodeTxt += move.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
-		// push filament back
-		if (RelativeEcode) { E = AntioozeAmount; lastE = E; }
-		else               E = lastE + AntioozeAmount;
-		Command push(COORDINATEDMOTION, commands[i].where, E, AntioozeSpeed);
-		push.comment = _("Filament Retract pushback");
-		GcodeTxt += push.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
-		continue; // this move is done
+		if (AntioozeRepushAfter) { // push back after move
+		  // NOT TESTED WITH AntioozeRepushAfter==false !!!
+		  if (RelativeEcode) E = 0;
+		  else               E = lastE;
+		  // move without extrusion:
+		  Command move(COORDINATEDMOTION, commands[i].where, E, commands[i].f);
+		  move.comment = _("Filament Retract move");
+		  GcodeTxt += move.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
+		  // push filament back
+		  if (RelativeEcode) { E = AntioozeAmount; lastE = E; }
+		  else               E = lastE + AntioozeAmount;
+		  Command push(COORDINATEDMOTION, commands[i].where, E, AntioozeSpeed);
+		  push.comment = _("Filament Retract pushback");
+		  GcodeTxt += push.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
+		  continue; // this move is done
+		} else if (RelativeEcode) lastE = E; 
 	      }
 	    }
 	  }
-
+#endif
 	  GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
 	  
-	  if (i%100==0) progress->update(i);
+	  if (i%progress_steps==0) progress->update(i);
 	}
 	  // 	oss.str( "" );
 	// 	switch(commands[i].Code)

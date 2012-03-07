@@ -91,6 +91,16 @@ Vector3d cross2d(Vector2d A, Vector2d B, double z)
   return A3.cross(B3);
 }
 
+Vector3d random_displace(Vector3d v, double delta)
+{
+  double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
+  return Vector3d(v.x+randdelta, v.y+randdelta, v.z+randdelta);
+}
+Vector2d random_displace(Vector2d v, double delta)
+{
+  double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
+  return Vector2d(v.x+randdelta, v.y+randdelta);
+}
 
 //////////////////////////////////////////////////////////////
 ///////////////////////////// LINE INTERSECTION //////////////

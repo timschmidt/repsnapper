@@ -58,7 +58,7 @@ const Vector3d &GCodeState::LastPosition()
 void GCodeState::SetLastPosition(const Vector3d &v)
 {
   // For some reason we get lots of -nan co-ordinates in lines[] - odd ...
-  if (!isnan(v.y) && !isnan(v.x)) // >= 0 && v.x >= 0)
+  if (!isnan(v.y) && !isnan(v.x) && !isnan(v.z))
     pImpl->LastPosition = v;
 }
 void GCodeState::AppendCommand(Command &command, bool relativeE)
@@ -115,7 +115,7 @@ void GCodeState::AddLines (vector<printline> plines,
 			      offsetZ, slicing, hardware);
 }
 
-void GCodeState::AddLines (vector<Vector3d> lines,
+void GCodeState::AddLines (vector<Vector3d> linespoints,
 			   double extrusionFactor,
 			   double maxspeed,
 			   double maxmovespeed,
@@ -123,23 +123,23 @@ void GCodeState::AddLines (vector<Vector3d> lines,
 			   const Settings::SlicingSettings &slicing,
 			   const Settings::HardwareSettings &hardware)
 {
-  for (uint i=0; i < lines.size(); i+=2)
+  for (uint i=0; i < linespoints.size(); i+=2)
     {
       // MOVE to start of next line
-      if(LastPosition() != lines[i]) 
+      if(LastPosition() != linespoints[i]) 
 	{
-	  MakeAcceleratedGCodeLine (LastPosition(), lines[i],
+	  MakeAcceleratedGCodeLine (LastPosition(), linespoints[i],
 				    Vector3d(0,0,0),0,
 				    0, maxmovespeed,
 				    offsetZ, slicing, hardware);
-	  SetLastPosition (lines[i]);
+	  SetLastPosition (linespoints[i]);
 	} 
       // PLOT to endpoint of line 
-      MakeAcceleratedGCodeLine (LastPosition(), lines[i+1], 
+      MakeAcceleratedGCodeLine (LastPosition(), linespoints[i+1], 
 				Vector3d(0,0,0),0,
 				extrusionFactor, maxspeed, 
 				offsetZ, slicing, hardware);
-    SetLastPosition(lines[i+1]);
+    SetLastPosition(linespoints[i+1]);
     }
   //SetLastLayerZ(z);
 }
@@ -156,9 +156,13 @@ void GCodeState::MakeAcceleratedGCodeLine (printline pline,
 			     Vector3d(0,0,0),0,
 			     0, hardware.MoveSpeed,
 			     offsetZ, slicing, hardware);
+    SetLastPosition(pline.from);
   }
+  double extrusion = pline.extrusionfactor;
+  if (pline.from != pline.to) // not extrusion only
+    extrusion *= extrusionfactor;
   MakeAcceleratedGCodeLine(pline.from, pline.to, pline.arcIJK, pline.arc,
-			   extrusionfactor * pline.extrusionfactor, 
+			   extrusion,
 			   pline.speed, 
 			   offsetZ, slicing, hardware);
   SetLastPosition(pline.to);
@@ -181,125 +185,30 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 
   double minspeed = hardware.MinPrintSpeedXY;
   maxspeed = max(minspeed,maxspeed); // in case maxspeed is too low
-  // if (slicing.EnableAcceleration)
-  //   {
-  //     double len;
-  //     ResetLastWhere (start);
-	  
-  //     Vector3d direction = end-start;
-  //     len = direction.length();	// total distance
-  //     direction.normalize();
-	  
-  //     // Set start
-  //     command.Code = SETSPEED;
-  //     command.where = start;
-  //     command.e = 0.0;	       
-  //     command.f = minspeed;
-	  
-  //     AppendCommand(command,incrementalE);
-	  
-  //     if(len < hardware.DistanceToReachFullSpeed*2)
-  // 	{
-  // 	  // TODO: First point of acceleration is the middle of the line segment
-  // 	  command.Code = COORDINATEDMOTION;
-  // 	  command.where = (start+end)*0.5;
-  // 	  double extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
-  // 	  command.e = extrudedMaterial;  
-  // 	  double lengthFactor = (len/2.0)/hardware.DistanceToReachFullSpeed;
-  // 	  command.f = (maxspeed-minspeed)*lengthFactor+minspeed;
-  // 	  AppendCommand(command,incrementalE);
-  // 	  // And then decelerate
-  // 	  command.Code = COORDINATEDMOTION;
-  // 	  command.where = end;
-  // 	  command.e = extrudedMaterial;
-  // 	  command.f = minspeed;
-  // 	  AppendCommand(command,incrementalE);
-		
-  // 	}// if we will never reach full speed
-  //     else
-  // 	{
-  // 	  // Move to max speed
-  // 	  command.Code = COORDINATEDMOTION;
-  // 	  command.where = start+(direction*hardware.DistanceToReachFullSpeed);
-  // 	  double extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
-  // 	  command.e = extrudedMaterial;
-  // 	  command.f = maxspeed;
-  // 	  AppendCommand(command,incrementalE);
-		
-  // 	  // Sustian speed till deacceleration starts
-  // 	  command.Code = COORDINATEDMOTION;
-  // 	  command.where = end-(direction*hardware.DistanceToReachFullSpeed);
-  // 	  extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
-  // 	  command.e = extrudedMaterial;
-  // 	  command.f = maxspeed;
-  // 	  AppendCommand(command,incrementalE);
-		
-  // 	  // deacceleration untill end
-  // 	  command.Code = COORDINATEDMOTION;
-  // 	  command.where = end;
-  // 	  extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
-  // 	  command.e = extrudedMaterial;
-  // 	  command.f = minspeed;
-  // 	  AppendCommand(command,incrementalE);
-  // 	} // if we will reach full speed
-  //   }
-  // else	// No accleration 
-    {
-      ResetLastWhere (start);
-      // if (slicing.Use3DGcode)
-      // 	{
-      // 	  command.Code = EXTRUDEROFF;
-      // 	  AppendCommand(command,relativeE);
-      // 	  command.Code = COORDINATEDMOTION3D;
-      // 	  command.where = start;
-      // 	  command.e = 0;	    
-      // 	  command.f = maxspeed;
-      // 	  AppendCommand(command,relativeE);
-		
-      // 	  command.Code = EXTRUDERON;
-      // 	  AppendCommand(command,relativeE);
-		
-      // 	  command.Code = COORDINATEDMOTION3D;
-      // 	  command.where = end;
-      // 	  command.e = 0;
-      // 	  command.f = maxspeed;
-      // 	  AppendCommand(command,relativeE);
-      // 	  // Done, switch extruder off
-      // 	  command.Code = EXTRUDEROFF;
-      // 	  AppendCommand(command,relativeE);
-      // 	}
-      // else	// 5d gcode, no acceleration
-	{
-	  // // set start speed to max
-	  // if(LastCommandF() != maxspeed)
-	  //   {
-	  //     command.Code = SETSPEED;
-	  //     command.where = Vector3d(start.x, start.y, start.z);
-	  //     command.f=maxspeed;
-	  //     command.e = 0;
-	  //     AppendCommand(command,incrementalE);
-	  //   }
-	  // store endPoint
-	  command.where = end;
-	  double extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
-	  command.e = extrudedMaterial;
-	  command.f = maxspeed;
-	  if (arc == 0) { // make line
-	    command.Code = COORDINATEDMOTION;
-	  } else { // make arc
-	    if (arc==1) {
-	      command.Code = ARC_CW;
-	      command.comment = "cw arc";
-	    }
-	    else if (arc==-1) {
-	      command.Code = ARC_CCW;
-	      command.comment = "ccw arc";
-	    }
-	    else cerr << "Undefined arc direction! "<< arc << endl;
-	    command.arcIJK = arcIJK;
-	  }
-	  AppendCommand(command,relativeE);
-	}	// 5D gcode
-    }// If using firmware acceleration
+  ResetLastWhere (start);
+  command.where = end;
+  double extrudedMaterial;
+  if (start==end)  {// pure extrusions
+    extrudedMaterial = extrusionFactor;
+    command.comment = _("Extrusion only");
+  } else 
+    extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
+  command.e = extrudedMaterial;
+  command.f = maxspeed;
+  if (arc == 0) { // make line
+    command.Code = COORDINATEDMOTION;
+  } else { // make arc
+    if (arc==1) {
+      command.Code = ARC_CW;
+      command.comment = "cw arc";
+    }
+    else if (arc==-1) {
+      command.Code = ARC_CCW;
+      command.comment = "ccw arc";
+    }
+    else cerr << "Undefined arc direction! "<< arc << endl;
+    command.arcIJK = arcIJK;
+  }
+  AppendCommand(command,relativeE);
 }
 

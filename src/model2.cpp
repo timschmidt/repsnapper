@@ -638,6 +638,7 @@ void Model::ConvertToGCode()
   double AntioozeDistance = settings.Slicing.AntioozeDistance;
   double AntioozeAmount = settings.Slicing.AntioozeAmount;
   double AntioozeSpeed = settings.Slicing.AntioozeSpeed;
+  bool AntioozeRepushAfter = true; // NOT TESTED WITH false, no setting !!!
   if (!settings.Slicing.EnableAntiooze){
     AntioozeDistance = 0;
     AntioozeAmount = 0;
@@ -645,7 +646,7 @@ void Model::ConvertToGCode()
 
   gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
 		  settings.Slicing.RelativeEcode,
-		  AntioozeDistance, AntioozeAmount, AntioozeSpeed,
+		  AntioozeDistance, AntioozeAmount, AntioozeSpeed, AntioozeRepushAfter,
 		  m_progress);
 
   m_progress->stop (_("Done"));

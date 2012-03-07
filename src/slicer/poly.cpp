@@ -222,6 +222,7 @@ bool Poly::vertexInside(const Vector2d p, double maxoffset) const
   return c;
 }
 
+// given poly completely contained in this?
 bool Poly::polyInside(const Poly * poly, double maxoffset) const
 {
   uint i, count=0;
@@ -444,16 +445,6 @@ Vector3d rotatedZ(Vector3d v, double angle)
 		  v.y*cosa+v.x*sina, v.z);
 }
 
-Vector3d random3d(Vector3d v, double delta=0.05)
-{
-  double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
-  return Vector3d(v.x+randdelta, v.y+randdelta, v.z+randdelta);
-}
-Vector2d random2d(Vector2d v, double delta=0.05)
-{
-  double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
-  return Vector2d(v.x+randdelta, v.y+randdelta);
-}
 
 void Poly::draw(int gl_type, double z) const
 {
@@ -462,7 +453,7 @@ void Poly::draw(int gl_type, double z) const
   glBegin(gl_type);	  
   for (uint i=0;i < count;i++){
     v = getVertexCircular(i);
-    v = random2d(v);
+    v = random_displace(v);
     glVertex3f(v.x,v.y,z);
   }
   glEnd();
@@ -481,7 +472,7 @@ void Poly::draw(int gl_type, bool reverse) const
       v = getVertexCircular3(i);
       // vn = getVertexCircular3(i+1);
     }
-    v = random3d(v);
+    v = random_displace(v);
     glVertex3f(v.x,v.y,v.z);
     // if (gl_type==GL_LINE_LOOP){
     //   m = (v+vn)/2;

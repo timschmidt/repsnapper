@@ -152,6 +152,7 @@ static struct {
   BOOL_MEMBER  (Slicing.EnableAntiooze, "EnableAntiooze", false, false),
   FLOAT_MEMBER (Slicing.AntioozeDistance, "AntioozeDistance", 4.5, false),
   FLOAT_MEMBER (Slicing.AntioozeAmount, "AntioozeAmount", 1, false),
+  FLOAT_MEMBER (Slicing.AntioozeRepushRatio, "AntioozeRepushRatio", 0.8, false),
   FLOAT_MEMBER (Slicing.AntioozeSpeed, "AntioozeSpeed", 1000.0, false),
 
   FLOAT_MEMBER  (Slicing.InfillPercent, "InfillPercent", 30, true),
@@ -285,6 +286,7 @@ static struct {
   { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
   { "Slicing.AntioozeAmount", 0.0, 25.0, 0.1, 1 },
   { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
+  { "Slicing.AntioozeRepushRatio", 0.0, 1.0, 0.01, 0.1 },
   { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },
   { "Slicing.SkirtDistance", 0.0, 100, 0.1, 1 },
   { "Slicing.Skins", 1, 5, 1, 1 },

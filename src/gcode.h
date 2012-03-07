@@ -187,7 +187,7 @@ public:
 		const string &GcodeLayer, const string &GcodeEnd,
 		bool RelativeEcode,
 		double AntioozeDistance, double AntioozeAmount,
-		double AntioozeSpeed,
+		double AntioozeSpeed, bool AntioozeRepushAfter, 
 		ViewProgress * progress);
   
   bool append_text (const std::string &line);

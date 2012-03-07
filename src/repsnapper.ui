@@ -4554,7 +4554,7 @@ THE HEAD MOVING DOWN!
                                   <object class="GtkLabel" id="label48">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Retraction Speed (mm/min):</property>
+                                    <property name="label" translatable="yes">Speed (mm/min):</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -4580,7 +4580,7 @@ THE HEAD MOVING DOWN!
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="xalign">1</property>
-                                    <property name="label" translatable="yes">Retraction Amount (mm):</property>
+                                    <property name="label" translatable="yes">Amount (mm):</property>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
@@ -4600,6 +4600,32 @@ THE HEAD MOVING DOWN!
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
                                     <property name="position">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="label146">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="tooltip_text" translatable="yes">how much should be repushed before next line</property>
+                                    <property name="label" translatable="yes">Repush Ratio</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSpinButton" id="Slicing.AntioozeRepushRatio">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="digits">2</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">5</property>
                                   </packing>
                                 </child>
                               </object>

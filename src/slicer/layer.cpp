@@ -550,9 +550,14 @@ void Layer::MakeGcode(GCodeState &state,
   double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
   double linewidth = thickness/linewidthratio;
 
-  double minspeed = hardware.MinPrintSpeedXY, 
+  double minspeed = hardware.MinPrintSpeedXY,
     maxspeed = hardware.MaxPrintSpeedXY,
     movespeed = hardware.MoveSpeed;
+
+  double AOmindistance = slicing.AntioozeDistance,
+    AOamount = slicing.AntioozeAmount,
+    AOspeed =  slicing.AntioozeSpeed,
+    AOrepushratio = slicing.AntioozeRepushRatio;
 
   bool linelengthsort = slicing.LinelengthSort;
   double maxArcAngle = slicing.ArcsMaxAngle * M_PI/180;
@@ -595,7 +600,8 @@ void Layer::MakeGcode(GCodeState &state,
       printlines.makeLines(polys, &clippolys, startPoint, 
 			   (s==1), //displace at first skin
 			   minspeed, maxspeed, movespeed,  
-			   linewidth, linewidthratio, optratio, maxArcAngle, false);
+			   linewidth, linewidthratio, optratio, maxArcAngle, false,
+			   AOmindistance, AOspeed, AOamount, AOrepushratio);
       printlines.slowdownTo(slicing.MinLayertime/skins/3);
       printlines.setSpeedFactor(speedfactor);
       printlines.getLines(lines);
@@ -610,7 +616,8 @@ void Layer::MakeGcode(GCodeState &state,
   printlines.makeLines(skirts, NULL, startPoint, false,
 		       minspeed, maxspeed, movespeed, 
 		       linewidth, linewidthratio, optratio,
-		       maxArcAngle, linelengthsort);
+		       maxArcAngle, linelengthsort,
+		       AOmindistance, AOspeed, AOamount, AOrepushratio);
   printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.getLines(lines);
@@ -621,7 +628,8 @@ void Layer::MakeGcode(GCodeState &state,
   printlines.makeLines(supportInfill->infillpolys, NULL, startPoint, false,
 		       minspeed, maxspeed, movespeed, 
 		       linewidth, linewidthratio, optratio,
-		       maxArcAngle, linelengthsort);
+		       maxArcAngle, linelengthsort,
+		       AOmindistance, AOspeed, AOamount, AOrepushratio);
   printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.getLines(lines);
@@ -644,7 +652,8 @@ void Layer::MakeGcode(GCodeState &state,
   printlines.makeLines(polys, &clippolys, startPoint, true, //displace at beginning
 		       minspeed, maxspeed, movespeed,
 		       linewidth, linewidthratio, optratio,
-		       maxArcAngle, linelengthsort);
+		       maxArcAngle, linelengthsort,
+		       AOmindistance, AOspeed, AOamount, AOrepushratio);
   printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.getLines(lines);

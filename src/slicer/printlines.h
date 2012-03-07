@@ -24,6 +24,7 @@
 #include "stdafx.h"
 
 
+// 3D printline for passing to GCode
 struct printline
 {
   Vector3d from, to;
@@ -34,22 +35,41 @@ struct printline
 };
 
 
+// single 2D printline
+class PLine
+{
+  friend class Printlines;
+  PLine(const Vector2d from, const Vector2d to, double speed, 
+	double feedrate);
+  PLine(const Vector2d from, const Vector2d to, double speed, 
+	double feedrate, short arc, Vector2d arccenter, double angle);
+  Vector2d from, to;
+  double speed; // mm/min (!)
+  double feedrate; // relative extrusion feedrate 
+  double angle; // angle of line
+  Vector2d arccenter;
+  short arc;  // -1: ccw arc, 1: cw arc, 0: not an arcx
+
+  double getExtrusionAmount() const; 
+  void addExtrusionAmount(double amount);
+  double calcangle() const;
+  double calcangle(const PLine rhs) const;
+  double lengthSq() const;
+  double length() const;
+  double time() const;  // time in minutes
+  struct printline getPrintline(double z) const;
+  string info() const;
+ public: 
+  ~PLine(){};
+};
+
+
 // a bunch of printlines: lines with feedrate
 // optimize for corners etc.
 class Printlines
 {
-
-  struct line
-  {
-    Vector2d from, to;
-    double speed; // mm/min(!)
-    double feedrate; // relative extrusion feedrate 
-    double angle; // angle of line
-    Vector2d arccenter;
-    short arc;  // -1: ccw arc, 1: cw arc, 0: not an arcx
-  };
     
-  vector<struct line> lines;
+  vector<PLine> lines;
 
   double z;
 
@@ -75,11 +95,15 @@ class Printlines
 		 bool displace_startpoint, 
 		 double minspeed, double maxspeed, double movespeed,
 		 double linewidth, double linewidthratio, double optratio,
-		 double maxArcAngle, bool linelengthsort = false);
+		 double maxArcAngle, bool linelengthsort,
+		 double AOmindistance, double AOspeed,
+		 double AOamount, double AOrepushratio);
     
   void optimize(double minspeed, double maxspeed, double movespeed,
 		double linewidth, double linewidthratio, double optratio,
-		double maxArcAngle);
+		double maxArcAngle,
+		double AOmindistance, double AOspeed,
+		double AOamount, double AOrepushratio);
 
   guint makeArcs(double maxAngle);
   guint makeIntoArc(guint fromind, guint toind);
@@ -92,8 +116,8 @@ class Printlines
   // keep movements inside polys when possible (against stringing)
   void clipMovements(const vector<Poly> *polys, double maxerr=0.0001);
 
-  void getLines(vector<Vector2d> &lines) const;
-  void getLines(vector<Vector3d> &lines) const;
+  void getLines(vector<Vector2d> &linespoints) const;
+  void getLines(vector<Vector3d> &linespoints) const;
   void getLines(vector<printline> &plines) const;
 
   uint size() const {return lines.size(); };
@@ -102,36 +126,38 @@ class Printlines
   double totalSeconds() const;
   double totalSecondsExtruding() const;
 
-  string info() const;
   void setZ(double z) {this->z=z;};
   double getZ() const {return z;};
   
   string GCode(Vector3d &lastpos, double &E, double feedrate, 
-	       double speed, bool relativeE = false) const;
+	       double minspeed, double maxspeed, double movespeed, 
+	       bool relativeE) const;
+  string info() const;
+  string lineinfo(const struct printline l) const;
 
  private:
   void optimizeLinedistances(double maxdist);
-  void mergelines(line &l1, line &l2, double maxdist);
-  double distance(const Vector2d p, const line l2) const;
+  void mergelines(PLine &l1, PLine &l2, double maxdist);
+  double distance(const Vector2d p, const PLine l2) const;
   void optimizeCorners(double linewidth, double linewidthratio, double optratio);
-  bool capCorner(line &l1, line &l2, double linewidth, double linewidthratio, 
+  bool capCorner(PLine &l1, PLine &l2, double linewidth, double linewidthratio, 
 		 double optratio);
+
+  uint makeAntioozeRetraction(double AOmindistance, double AOspeed,
+			      double AOamount, double AOrepushratio);
 
   uint divideline(uint lineindex, const vector<Vector2d> points);
   uint divideline(uint lineindex, const double t);
 
-  double angle(const line l) const;
-  double angle(const line l1, const line l2) const;
-  double lengthSq(const line l) const;
-  double length(const line l) const;
 
-  Vector2d arcCenter(const struct line l1, const struct line l2, 
+  Vector2d arcCenter(const PLine l1, const PLine l2, 
 		     double maxerr) const;
   
-  string GCode(line l, Vector3d &lastpos, double &E, double feedrate, 
-	       double speed, bool relativeE = false) const;
+  string GCode(PLine l, Vector3d &lastpos, double &E, double feedrate, 
+	       double minspeed, double maxspeed, double movespeed, 
+	       bool relativeE) const;
 
-  typedef vector<line>::const_iterator lineCIt ;
-  typedef vector<line>::iterator lineIt ;
+  typedef vector<PLine>::const_iterator lineCIt ;
+  typedef vector<PLine>::iterator lineIt ;
   //list<line>::iterator lIt;
 };

@@ -65,3 +65,7 @@ double dist3D_Segment_to_Segment(Vector3d S1P0, Vector3d S1P1,
 
 
 void testangles();
+
+
+Vector3d random_displace(Vector3d v, double delta=0.05);
+Vector2d random_displace(Vector2d v, double delta=0.05);
