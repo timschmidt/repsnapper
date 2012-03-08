@@ -23,7 +23,9 @@
 
 
 vector<struct Infill::pattern> Infill::savedPatterns;
+#ifdef _OPENMP
 omp_lock_t Infill::save_lock;
+#endif
 
 void hilbert(int level,int direction, double infillDistance, vector<Vector2d> &v);
 
@@ -60,8 +62,10 @@ void Infill::clearPatterns() {
   }
   savedPatterns.clear();
   //cerr << "clearpatterns " << savedPatterns.size() << endl;
+#ifdef _OPENMP
   omp_destroy_lock(&save_lock);
   omp_init_lock(&save_lock);
+#endif
 }
 
 
@@ -78,11 +82,15 @@ void Infill::addInfill(double z, const vector<Poly> polys, InfillType type,
 {
   this->infillDistance = infillDistance;
 
+#ifdef _OPENMP
   omp_set_lock(&save_lock);
+#endif
   ClipperLib::Polygons patterncpolys = 
     makeInfillPattern(type, polys, infillDistance, offsetDistance, rotation);
   addInfill(z, polys, patterncpolys, offsetDistance);
+#ifdef _OPENMP
   omp_unset_lock(&save_lock);
+#endif
 }
 
 // fill polys with fillpolys

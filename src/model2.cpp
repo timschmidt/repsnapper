@@ -33,7 +33,9 @@
 #include <glib/gutils.h>
 #include <libreprap/comms.h>
 
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include "stdafx.h"
 #include "model.h"
@@ -477,16 +479,21 @@ void Model::MakeShells()
   double matwidth, skirtheight = settings.Slicing.SkirtHeight;
   bool makeskirt=false;
 
+#ifdef _OPENMP
   omp_lock_t progress_lock;
   omp_init_lock(&progress_lock);
 #pragma omp parallel for schedule(dynamic) 
+#endif
   for (int i=0; i < count; i++) 
     {
-      //cerr << "thread " << omp_get_thread_num() << endl;
       if (i%10==0) {
+#ifdef _OPENMP
 	omp_set_lock(&progress_lock);
+#endif
 	m_progress->update(i);
+#ifdef _OPENMP
 	omp_unset_lock(&progress_lock);
+#endif
       }
       matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
       makeskirt = settings.Slicing.Skirt && (layers[i]->getZ() <= skirtheight);
@@ -496,7 +503,9 @@ void Model::MakeShells()
 			    makeskirt, settings.Slicing.SkirtDistance,
 			    settings.Slicing.InfillOverlap); 
     }
+#ifdef _OPENMP
   omp_destroy_lock(&progress_lock);
+#endif
   if (settings.Slicing.Skirt) MakeSkirt();
   m_progress->update(count);
   //m_progress->stop (_("Done"));
@@ -519,16 +528,22 @@ void Model::CalcInfill()
 
   //cerr << "make infill"<< endl;
   int count = (int)layers.size();
+#ifdef _OPENMP
   omp_lock_t progress_lock;
   omp_init_lock(&progress_lock);
 #pragma omp parallel for schedule(dynamic) 
+#endif
   for (int i=0; i < count ; i++) 
     {
       //cerr << "thread " << omp_get_thread_num() << endl;
       if (i%10==0){
+#ifdef _OPENMP
 	omp_set_lock(&progress_lock);
+#endif
 	m_progress->update(i);
+#ifdef _OPENMP
 	omp_unset_lock(&progress_lock);
+#endif
       }
       // inFill distances in real mm
       bool shellOnly = settings.Slicing.ShellOnly;
@@ -568,7 +583,9 @@ void Model::CalcInfill()
 			    settings.Display.DisplayDebuginFill);
 
     }
+#ifdef _OPENMP
   omp_destroy_lock(&progress_lock);
+#endif
   //m_progress->stop (_("Done"));
 }
 
