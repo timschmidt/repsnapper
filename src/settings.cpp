@@ -133,7 +133,7 @@ static struct {
 
   FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
-  { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 57600, false }, 
+  { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, false }, 
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
   INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4, false),
@@ -864,10 +864,22 @@ void Settings::get_filltypes_from_gui (Builder &builder)
 }
 
 string combobox_get_active_value(Gtk::ComboBox *combo){
-  uint c = combo->get_active_row_number();
-  Glib::ustring rval;
-  combo->get_model()->children()[c].get_value(0,rval);
-  return string(rval);
+#if GTK_VERSION_GE(2, 24)
+  if (combo->get_has_entry()) 
+    {
+      Gtk::Entry *entry = combo->get_entry();
+      if (entry)
+	return string(entry->get_text());
+    } else 
+#endif
+    {
+      uint c = combo->get_active_row_number();
+      Glib::ustring rval;
+      combo->get_model()->children()[c].get_value(0,rval);
+      return string(rval);
+    }
+  cerr << "could not get combobox active value" << endl;
+  return "";
 }
 
 bool combobox_set_to(Gtk::ComboBox *combo, string value){
@@ -876,14 +888,27 @@ bool combobox_set_to(Gtk::ComboBox *combo, string value){
   uint nch = model->children().size();
   Glib::ustring rval;
   Glib::ustring gvalue(value.c_str());
-  for (uint c=0; c < nch; c++) {
-    Gtk::TreeRow row = model->children()[c];
-    row.get_value(0,rval);
-    if (rval== gvalue) {
-      combo->set_active(c);
-      return true;
+#if GTK_VERSION_GE(2, 24)
+  if (combo->get_has_entry())
+    {
+      Gtk::Entry *entry = combo->get_entry();
+      if (entry) {
+	entry->set_text(value);
+	return true;
+      }
     }
-  }
+  else
+#endif
+    {
+      for (uint c=0; c < nch; c++) {
+	Gtk::TreeRow row = model->children()[c];
+	row.get_value(0,rval);
+	if (rval== gvalue) {
+	  combo->set_active(c);
+	  return true;
+	}
+      }
+    }
   cerr << "value " << value << " not found in combobox" << endl;
   return false;
 }
@@ -899,10 +924,13 @@ void set_up_combobox(Gtk::ComboBox *combo, vector<string> values)
   combo->pack_start (column);
   combo->set_model(store);
   for (uint i=0; i<values.size(); i++) {
-    //    cerr << " adding " << values[i] << endl;
+    //cerr << " adding " << values[i] << endl;
     store->append()->set_value(0, Glib::ustring(values[i].c_str()));
   }
-  combo->set_active(0);
+#if GTK_VERSION_GE(2, 24)
+  if (!combo->get_has_entry())
+#endif
+    combo->set_active(0);
   //cerr << "ok" << endl;
 }
 
@@ -910,11 +938,17 @@ void set_up_combobox(Gtk::ComboBox *combo, vector<string> values)
 void Settings::get_port_speed_from_gui (Builder &builder)
 {
   Gtk::ComboBox *combo = NULL;
+  // Gtk::ComboBoxEntryText *tcombo = NULL;
+  // builder->get_widget_derived ("Hardware.SerialSpeed", tcombo);
   builder->get_widget ("Hardware.SerialSpeed", combo);
   if (combo) {
 #if GTK_VERSION_GE(2, 24)
-    if (combo->get_has_entry())
-      Hardware.SerialSpeed = atoi(combo->get_entry_text().c_str()); // doesnt work - no signal
+    if (combo->get_has_entry()) {
+      Gtk::Entry *entry = combo->get_entry();
+      if (entry) {
+	Hardware.SerialSpeed = atoi(entry->get_text().c_str()); 
+      }
+    }
     else
 #endif
       Hardware.SerialSpeed = atoi(combobox_get_active_value(combo).c_str());
@@ -976,8 +1010,6 @@ void Settings::set_to_gui (Builder &builder)
     ostr << Hardware.SerialSpeed;
     combobox_set_to(portspeed, ostr.str());
   }
-
-
 }
 
 

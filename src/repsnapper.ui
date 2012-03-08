@@ -3737,6 +3737,8 @@ THE HEAD MOVING DOWN!
                                   <object class="GtkComboBox" id="Hardware.SerialSpeed">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
+                                    <property name="has_entry">True</property>
+                                    <property name="entry_text_column">0</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
