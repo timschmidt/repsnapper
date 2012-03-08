@@ -85,7 +85,11 @@ void ConnectView::signal_entry_changed()
 bool ConnectView::find_ports() {
   m_combo.clear();
 
+#if GTK_VERSION_GE(2, 24)
   m_combo.append(m_settings->Hardware.PortName);
+#else
+  m_combo.append_text(m_settings->Hardware.PortName);
+#endif
 
   char **ports = rr_enumerate_ports();
   if (ports == NULL) {
@@ -93,7 +97,11 @@ bool ConnectView::find_ports() {
   }
 
   for(size_t i = 0; ports[i] != NULL; ++i) {
+#if GTK_VERSION_GE(2, 24)
     m_combo.append(ports[i]);
+#else
+    m_combo.append_text(ports[i]);
+#endif
     free(ports[i]);
   }
 
