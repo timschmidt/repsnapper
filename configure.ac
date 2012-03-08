@@ -1,8 +1,6 @@
 AC_PREREQ(2.63)
 AC_INIT([repsnapper],[1.9.0],[https://github.com/timschmidt/repsnapper])
 
-CPPFLAGS+="-I/usr/local/include"
-
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/repsnapper.cpp])
 AC_CONFIG_MACRO_DIR([m4])
@@ -25,6 +23,12 @@ LT_INIT([disable-static])
 GETTEXT_PACKAGE=repsnapper
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",[The prefix for our gettext translation domains.])
+case "$host_os" in
+freebsd*)
+  dnl FreeBSD specific hack to search for libintl.h in /usr/local/include
+  CPPFLAGS "$CPPFLAGS -I/usr/local/include"
+  ;;
+esac
 IT_PROG_INTLTOOL(0.26)
 AM_GLIB_GNU_GETTEXT
 
@@ -91,17 +95,17 @@ mingw*)
 freebsd*)
   GL_LIBS="-L/usr/local/lib -lGLU -lGL -lglut"
   EXTRA_LDFLAGS="-L/usr/local/lib"
-  CFLAGS="-I/usr/local/include"
-  CXXFLAGS="-I/usr/local/include"
-  CPPFLAGS="-I/usr/local/include"
+  CFLAGS="$CFLAGS -I/usr/local/include"
+  CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+  CPPFLAGS="$CPPFLAGS -I/usr/local/include"
   AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 Darwin*)
   GL_LIBS="-L/usr/local/lib -lGLU -lOpenGL -lGLUT -lglut"
   EXTRA_LDFLAGS="-L/usr/local/lib -L/opt/homebrew/lib"
-  CFLAGS="-I/usr/local/include -I/opt/homebrew/include"
-  CXXFLAGS="-I/usr/local/include -I/opt/homebrew/include"
-  CPPFLAGS="-I/usr/local/include -I/opt/homebrew/include"
+  CFLAGS="$CFLAGS -I/usr/local/include -I/opt/homebrew/include"
+  CXXFLAGS="$CXXFLAGS -I/usr/local/include -I/opt/homebrew/include"
+  CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/homebrew/include"
   AC_CHECK_HEADER(GLUT/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 *)
