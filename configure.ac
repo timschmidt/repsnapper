@@ -26,7 +26,7 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",[The prefix for our gette
 case "$host_os" in
 freebsd*)
   dnl FreeBSD specific hack to search for libintl.h in /usr/local/include
-  CPPFLAGS "$CPPFLAGS -I/usr/local/include"
+  CPPFLAGS="$CPPFLAGS -I/usr/local/include"
   ;;
 esac
 IT_PROG_INTLTOOL(0.26)
