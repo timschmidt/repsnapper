@@ -180,6 +180,9 @@ static struct {
   INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),
   // BOOL_MEMBER   (Slicing.EnableAcceleration, "EnableAcceleration", true, false),
   FLOAT_MEMBER  (Slicing.MinLayertime, "MinLayertime", 5, false),
+  BOOL_MEMBER   (Slicing.FanControl, "FanControl", false, false),
+  INT_MEMBER    (Slicing.MinFanSpeed, "MinFanSpeed", 150, true),
+  INT_MEMBER    (Slicing.MaxFanSpeed, "MaxFanSpeed", 255, true),
 
   //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
   BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, false),
@@ -291,6 +294,8 @@ static struct {
   { "Slicing.SkirtDistance", 0.0, 100, 0.1, 1 },
   { "Slicing.Skins", 1, 5, 1, 1 },
   { "Slicing.MinLayertime", 0.0, 100, 1, 10 },
+  { "Slicing.MinFanSpeed", 0, 255, 5, 25 },
+  { "Slicing.MaxFanSpeed", 0, 255, 5, 25 },
   //{ "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
   { "Slicing.ShellOffset", -10, 10, 0.1, 1 },
   { "Slicing.FirstLayersNum", 0, 1000, 1, 10 },
@@ -327,7 +332,7 @@ static struct {
   //Printer
   { "Printer.ExtrudeAmount", 0.0, 1000.0, 1.0, 10.0 },
   { "Printer.ExtrudeSpeed", 0.0, 1000.0, 1.0, 10.0 },
-  { "Printer.FanVoltage", 0, 255, 1, 10 },
+  { "Printer.FanVoltage", 0, 255, 5, 25 },
   { "Printer.NozzleTemp", 0.0, 300.0, 1.0, 10.0 },
   { "Printer.BedTemp", 0.0, 200.0, 1.0, 10.0 },
 

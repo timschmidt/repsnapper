@@ -63,12 +63,14 @@ void GCodeState::SetLastPosition(const Vector3d &v)
 }
 void GCodeState::AppendCommand(Command &command, bool relativeE)
 {
-  Vector3d lastwhere = Vector3d(pImpl->lastCommand.where);
-  if (!relativeE) 
-    command.e += pImpl->lastCommand.e;
-  if (command.f!=0)
-    timeused += (command.where - lastwhere).length()/command.f*60;
-  pImpl->lastCommand = command;
+  if (!command.is_value) {
+    Vector3d lastwhere = Vector3d(pImpl->lastCommand.where);
+    if (!relativeE) 
+      command.e += pImpl->lastCommand.e;
+    if (command.f!=0)
+      timeused += (command.where - lastwhere).length()/command.f*60;
+    pImpl->lastCommand = command;
+  }
   pImpl->code.commands.push_back(command);
 }
 void GCodeState::AppendCommand(GCodes code, bool relativeE, string comment)
@@ -179,6 +181,7 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
    //  return;
 
   Command command;
+  command.is_value = false;
 
   bool relativeE = slicing.RelativeEcode;
 

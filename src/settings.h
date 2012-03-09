@@ -136,6 +136,9 @@ class Settings {
     bool LinelengthSort;
 
     float MinLayertime;
+    bool FanControl;
+    int MinFanSpeed;
+    int MaxFanSpeed;
 
     bool ShellOnly;
     guint ShellCount;

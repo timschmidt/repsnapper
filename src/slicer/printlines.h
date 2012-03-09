@@ -111,7 +111,7 @@ class Printlines
 
 
   // slow down to total time needed (cooling)
-  void slowdownTo(double totalseconds);
+  double slowdownTo(double totalseconds); // returns speedfactor
   void setSpeedFactor(double speedfactor);
 
   // keep movements inside polys when possible (against stringing)

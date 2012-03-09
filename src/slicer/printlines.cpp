@@ -361,10 +361,10 @@ uint Printlines::makeAntioozeRetraction(double AOmindistance, double AOspeed,
 	firstlinetosplit--;
 	enddistance -= lines[firstlinetosplit].length();
       }
-      if (enddistance > 0) {  // move distance too short, slow down
-	double speedratio = AOspeed / totaldistance*totaltime;
+      // if (enddistance > 0) {  // move distance too short, slow down
+      // 	double speedratio = AOspeed / totaldistance*totaltime;
 
-      }
+      // }
       //cerr << "retract " << totaldistance << ": " <<movestart << "--" << moveend << " num " << moveend-movestart+1 << " split " << firstlinetosplit << " time " << repushtime << " dist " << repushdistance << endl;
       PLine retractl(lines[movestart].from, lines[movestart].from, AOspeed, 0); 
       if (movestart > 0) { // add partial extrusion to line before move
@@ -480,14 +480,14 @@ void Printlines::setSpeedFactor(double speedfactor)
       lines[i].speed *= speedfactor;
   }
 }
-void Printlines::slowdownTo(double totalseconds) 
+double Printlines::slowdownTo(double totalseconds) 
 {
-  if (totalseconds == 0) return;
   double totalnow = totalSecondsExtruding();
-  if (totalnow == 0) return;
+  if (totalseconds == 0 || totalnow == 0) return 1;
   double speedfactor = totalnow / totalseconds;
-  if (speedfactor >= 1.) return;
+  if (speedfactor >= 1.) return speedfactor;
   setSpeedFactor(speedfactor);
+  return speedfactor;
 }
 
 // merge too near parallel lines
@@ -645,7 +645,7 @@ double Printlines::totalSecondsExtruding() const
 {
   double t = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
-    if (lIt->feedrate>0)
+    if (lIt->feedrate>0 || lIt->absolute_feed!=0)
       t += lIt->time() ;
   }
   return t * 60;

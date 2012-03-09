@@ -13,6 +13,28 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
+  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
+    <property name="upper">30</property>
+    <property name="value">10</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
+    <property name="upper">20</property>
+    <property name="value">8</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAction" id="LoadSettings">
     <property name="label">Load Settings</property>
     <property name="short_label">Load Settings</property>
@@ -51,28 +73,6 @@
     <property name="label">Save Settings As</property>
     <property name="short_label">Save Settings As</property>
     <property name="tooltip">Save settings in a custom file</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
-    <property name="upper">30</property>
-    <property name="value">10</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
-    <property name="upper">20</property>
-    <property name="value">8</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
   </object>
   <object class="GtkAboutDialog" id="about_dialog">
     <property name="can_focus">False</property>
@@ -4280,42 +4280,7 @@ THE HEAD MOVING DOWN!
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkHBox" id="hbox32">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <child>
-                                  <object class="GtkLabel" id="label130">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="xalign">1</property>
-                                    <property name="label" translatable="yes">Cooling: Minimum Time per Layer (s):</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSpinButton" id="Slicing.MinLayertime">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="invisible_char">●</property>
-                                    <property name="invisible_char_set">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="padding">5</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">2</property>
-                              </packing>
+                              <placeholder/>
                             </child>
                             <child>
                               <object class="GtkHBox" id="hbox34">
@@ -4479,6 +4444,161 @@ THE HEAD MOVING DOWN!
                     <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkFrame" id="frame19">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label_xalign">0</property>
+                    <property name="shadow_type">none</property>
+                    <child>
+                      <object class="GtkAlignment" id="alignment33">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="left_padding">12</property>
+                        <child>
+                          <object class="GtkAlignment" id="alignment34">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkVBox" id="vbox7">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkHBox" id="hbox32">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <child>
+                                      <object class="GtkLabel" id="label130">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="xalign">1</property>
+                                        <property name="label" translatable="yes">Minimum Time per Layer (s):</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkSpinButton" id="Slicing.MinLayertime">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="invisible_char">●</property>
+                                        <property name="invisible_char_set">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">False</property>
+                                        <property name="padding">5</property>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">False</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkHBox" id="hbox46">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <child>
+                                      <object class="GtkCheckButton" id="Slicing.FanControl">
+                                        <property name="label" translatable="yes">Fan Control</property>
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="receives_default">False</property>
+                                        <property name="use_action_appearance">False</property>
+                                        <property name="draw_indicator">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="label148">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Min. Speed:</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">1</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkSpinButton" id="Slicing.MinFanSpeed">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="invisible_char">●</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">2</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="label149">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Max. Speed:</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">3</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkSpinButton" id="Slicing.MaxFanSpeed">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="invisible_char">●</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">False</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">4</property>
+                                      </packing>
+                                    </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">True</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child type="label">
+                      <object class="GtkLabel" id="label147">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">&lt;b&gt;Cooling&lt;/b&gt;</property>
+                        <property name="use_markup">True</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
@@ -4652,7 +4772,7 @@ THE HEAD MOVING DOWN!
                   <packing>
                     <property name="expand">True</property>
                     <property name="fill">True</property>
-                    <property name="position">2</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
                 <child>
@@ -4729,7 +4849,7 @@ THE HEAD MOVING DOWN!
                   <packing>
                     <property name="expand">True</property>
                     <property name="fill">True</property>
-                    <property name="position">3</property>
+                    <property name="position">4</property>
                   </packing>
                 </child>
                 <child>
@@ -4902,11 +5022,8 @@ THE HEAD MOVING DOWN!
                   <packing>
                     <property name="expand">True</property>
                     <property name="fill">True</property>
-                    <property name="position">4</property>
+                    <property name="position">5</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
               </object>
               <packing>

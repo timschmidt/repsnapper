@@ -138,13 +138,16 @@ class ViewProgress;
 class Command
 {
 public:
-	Command(){where.x=where.y=where.z=e=-1.0;f=0.0;};
+        Command();
 	Command(GCodes code, const Vector3d where=Vector3d(0,0,0), double E=0, double F=0);
+	Command(GCodes code, double value); // S value gcodes
 	Command(string gcodeline, Vector3d defaultpos);
 	Command(const Command &rhs);
 	GCodes Code;
 	Vector3d where;
 	Vector3d arcIJK; // I,J,K (dx, dy, dz) 
+	bool is_value; // M commands
+	double value; // M commands S value code
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
 	string comment;
 	void draw(Vector3d &lastPos, guint linewidth, 

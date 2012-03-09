@@ -82,17 +82,33 @@ inline string FromDouble(const double i)
 
 
 
+Command::Command() 
+  : where(Vector3d(-1,-1,-1)), is_value(false), f(0.0), e(-1.0)
+{}
+
 Command::Command(GCodes code, const Vector3d where, double E, double F) {
   Code = code;
+  is_value = false;
   this->where = where;
   e=E;
   f=F;
+}
+
+Command::Command(GCodes code, double value) {
+  Code = code;
+  is_value = true;
+  this->value = value;
+  this->where = Vector3d(0,0,0);
+  e=0;
+  f=0;
 }
 
 Command::Command(const Command &rhs){
   Code = rhs.Code;
   where = rhs.where;
   arcIJK = rhs.arcIJK;
+  is_value = rhs.is_value;
+  value = rhs.value;
   e = rhs.e;
   f = rhs.f;
   comment = rhs.comment;
@@ -121,6 +137,7 @@ Command::Command(string gcodeline, Vector3d defaultpos){
       return; //loaded_commands.push_back(command);
     }
    
+  is_value = false;
   if( buffer.find( "G1", 0) != string::npos )	//string::npos means not defined
     Code = COORDINATEDMOTION;
   else if( buffer.find( "G0", 0) != string::npos )	//Rapid Motion
@@ -129,14 +146,23 @@ Command::Command(string gcodeline, Vector3d defaultpos){
     Code = ARC_CW;
   else if( buffer.find( "G3", 0) != string::npos )	// CCW ARC
     Code = ARC_CCW;
+  else if( buffer.find( "M", 0) != string::npos ) {	// M Command
+    string number = buffer.substr(1,buffer.length()-1); 
+    value = ToDouble(number);
+    is_value = true;
+  }
 
   while(line >> buffer)	// read next keyword
     {
-      if( buffer.find( ";", 0) != string::npos ) {
+      if (is_value && buffer.find( "S", 0) != string::npos ) {
+	string number = buffer.substr(1,buffer.length()-1); 
+	value = ToDouble(number);
+      }
+      else if( buffer.find( ";", 0) != string::npos ) {
 	return;
       }
       else if( buffer.find( "X", 0) != string::npos ) {
-	string number = buffer.substr(1,buffer.length()-1); // 16 characters
+	string number = buffer.substr(1,buffer.length()-1); 
 	where.x = ToDouble(number);
       }
       else if( buffer.find( "Y", 0) != string::npos ) {
@@ -188,8 +214,17 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcod
     return ostr.str();
   }
 
-  ostr << MCODES[Code] << " ";
   string comm = comment;
+
+  ostr << MCODES[Code] << " ";
+
+  if (is_value){
+    ostr << "S"<<value;
+    if(comm.length() != 0)
+      ostr << " ; " << comm;
+    return ostr.str();
+  }
+
   switch (Code) {
   case ARC_CW:
   case ARC_CCW:
@@ -573,7 +608,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	if (start>0) {
 	  for(uint i=start; i < end ;i++)
 	    {
-	      while (commands[i].where == defaultpos && i < n_cmds-1)
+	      while (commands[i].is_value || commands[i].where == defaultpos && i < n_cmds-1)
 		i++;
 	      pos = commands[i].where;
 	      break;
@@ -582,6 +617,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	
 	for(uint i=start; i < end; i++)
 	{
+	  if (commands[i].is_value) continue;
 		switch(commands[i].Code)
 		{
 		case SETSPEED:
@@ -683,7 +719,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	int progress_steps=(int)(commands.size()/100);
 	
 	for(uint i = 0; i < commands.size(); i++) {
-	  if(commands[i].where.z != lastZ) {
+	  if(!commands[i].is_value && commands[i].where.z != lastZ) {
 	    layerchanges.push_back(i);
 	    lastZ=commands[i].where.z;
 	  }

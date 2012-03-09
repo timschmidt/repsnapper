@@ -573,6 +573,8 @@ void Layer::MakeGcode(GCodeState &state,
 
   Printlines printlines;
 
+  double slowdownfactor = 1;
+
   lines.clear(); // will contain everything
 
   vector<Poly> polys; // intermediate collection
@@ -602,7 +604,7 @@ void Layer::MakeGcode(GCodeState &state,
 			   minspeed, maxspeed, movespeed,  
 			   linewidth, linewidthratio, optratio, maxArcAngle, false,
 			   AOmindistance, AOspeed, AOamount, AOrepushratio);
-      printlines.slowdownTo(slicing.MinLayertime/skins/3);
+      slowdownfactor *= printlines.slowdownTo(slicing.MinLayertime/skins/3);
       printlines.setSpeedFactor(speedfactor);
       printlines.getLines(lines);
     }
@@ -618,7 +620,7 @@ void Layer::MakeGcode(GCodeState &state,
 		       linewidth, linewidthratio, optratio,
 		       maxArcAngle, linelengthsort,
 		       AOmindistance, AOspeed, AOamount, AOrepushratio);
-  printlines.slowdownTo(slicing.MinLayertime/2);
+  slowdownfactor *= printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.getLines(lines);
 
@@ -630,7 +632,7 @@ void Layer::MakeGcode(GCodeState &state,
 		       linewidth, linewidthratio, optratio,
 		       maxArcAngle, linelengthsort,
 		       AOmindistance, AOspeed, AOamount, AOrepushratio);
-  printlines.slowdownTo(slicing.MinLayertime/2);
+  slowdownfactor *= printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.getLines(lines);
 
@@ -654,9 +656,21 @@ void Layer::MakeGcode(GCodeState &state,
 		       linewidth, linewidthratio, optratio,
 		       maxArcAngle, linelengthsort,
 		       AOmindistance, AOspeed, AOamount, AOrepushratio);
-  printlines.slowdownTo(slicing.MinLayertime/2);
+  slowdownfactor *= printlines.slowdownTo(slicing.MinLayertime/2);
   printlines.setSpeedFactor(speedfactor);
   printlines.getLines(lines);
+
+  if (slicing.FanControl) {
+    if (slowdownfactor < 1 && slowdownfactor > 0) { 
+      double fanfactor = 1-slowdownfactor; 
+      int fanspeed = 
+	int(slicing.MinFanSpeed + fanfactor * (slicing.MaxFanSpeed-slicing.MinFanSpeed));
+      fanspeed = CLAMP(fanspeed, slicing.MinFanSpeed, slicing.MaxFanSpeed);
+      //cerr << slowdownfactor << " - " << fanfactor << " - " << fanspeed << " - " << endl;
+      Command fancommand(FANON, fanspeed);
+      state.AppendCommand(fancommand,false);
+    }
+  }
 
   // push all lines to gcode
   state.AddLines(lines, extrf, offsetZ, slicing, hardware); 
