@@ -2,6 +2,9 @@
 Clipper Change Log
 ============================================================
 
+v4.7.3 - 7 March 2012
+* Bugfix: Another minor bugfix.
+
 v4.7.2 - 4 March 2012
 * Bugfix: Fixed bug introduced in ver 4.7 which sometimes caused 
   an exception if ExPolygon structure was passed to Clipper's 
