@@ -128,7 +128,7 @@ Command::Command(string gcodeline, Vector3d defaultpos){
   // if (!append_text ((s+"\n").c_str()))
   //   continue;
   
-  if(buffer.find( ";", 0) != string::npos)	// COMMENT
+  if(buffer[0] == ';')	// COMMENT
     return;
   
   if( buffer.find( "G21", 0) != string::npos )	//Coordinated Motion
@@ -146,59 +146,59 @@ Command::Command(string gcodeline, Vector3d defaultpos){
     Code = ARC_CW;
   else if( buffer.find( "G3", 0) != string::npos )	// CCW ARC
     Code = ARC_CCW;
-  else if( buffer.find( "M", 0) != string::npos ) {	// M Command
-    string number = buffer.substr(1,buffer.length()-1); 
-    value = ToDouble(number);
+  else if( buffer[0] == 'M' ) {	               // M Command
+    // string number = buffer.substr(1,buffer.length()-1);  // not needed 
+    // What Code is it?
     is_value = true;
   }
 
   while(line >> buffer)	// read next keyword
     {
-      if (is_value && buffer.find( "S", 0) != string::npos ) {
+      if ( is_value && buffer[0] == 'S' ) {
 	string number = buffer.substr(1,buffer.length()-1); 
 	value = ToDouble(number);
       }
-      else if( buffer.find( ";", 0) != string::npos ) {
+      else if( buffer[0] == ';' ) {
 	return;
       }
-      else if( buffer.find( "X", 0) != string::npos ) {
+      else if( buffer[0] == 'X' ) {
 	string number = buffer.substr(1,buffer.length()-1); 
 	where.x = ToDouble(number);
       }
-      else if( buffer.find( "Y", 0) != string::npos ) {
+      else if( buffer[0] == 'Y' ) {
 	string number = buffer.substr(1,buffer.length()-1);
 	where.y = ToDouble(number);
       }
-      else if( buffer.find( "Z", 0) != string::npos ) {
+      else if( buffer[0] == 'Z' ) {
 	string number = buffer.substr(1,buffer.length()-1);
 	where.z = ToDouble(number);
       }
       else if((Code == ARC_CW || Code == ARC_CCW)
-	 && buffer.find( "I", 0) != string::npos ) {
+	      &&  buffer[0] == 'I' ) {
 	string number = buffer.substr(1,buffer.length()-1);
 	arcIJK.x = ToDouble(number);
       }
       else if((Code == ARC_CW || Code == ARC_CCW)
-	 && buffer.find( "J", 0) != string::npos ) {
+	      &&  buffer[0] == 'J' ) {
 	string number = buffer.substr(1,buffer.length()-1);
 	arcIJK.y = ToDouble(number);
       }
       else if((Code == ARC_CW || Code == ARC_CCW)
-	 && buffer.find( "K", 0) != string::npos ) {
+	      &&  buffer[0] == 'K' ) {
 	cerr << "cannot handle ARC K command (yet?)!" << endl;
 	//string number = buffer.substr(1,buffer.length()-1);
 	//arcIJK.z = ToDouble(number);
       }
       else if((Code == ARC_CW || Code == ARC_CCW)
-	 && buffer.find( "R", 0) != string::npos ) {
+	      &&  buffer[0] == 'R' ) {
 	cerr << "cannot handle ARC R command (yet?)!" << endl;
 	//string number = buffer.substr(1,buffer.length()-1);
       }
-      else if( buffer.find( "E", 0) != string::npos ) {
+      else if( buffer[0] == 'E' ) {
 	string number = buffer.substr(1,buffer.length()-1);
 	e = ToDouble(number);
       }
-      else if( buffer.find( "F", 0) != string::npos ) {
+      else if( buffer[0] == 'F' ) {
 	string number = buffer.substr(1,buffer.length()-1);
 	f = ToDouble(number);
       }
@@ -717,6 +717,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 
 	progress->restart(_("Collecting GCode"),commands.size());
 	int progress_steps=(int)(commands.size()/100);
+	if (progress_steps==0) progress_steps=1;
 	
 	for(uint i = 0; i < commands.size(); i++) {
 	  if(!commands[i].is_value && commands[i].where.z != lastZ) {

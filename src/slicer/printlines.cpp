@@ -353,7 +353,7 @@ uint Printlines::makeAntioozeRetraction(double AOmindistance, double AOspeed,
     }
     if (totaldistance > AOmindistance) {
       double repushamount = AOamount*AOrepushratio;
-      double repushtime = repushamount/AOspeed;
+      // double repushtime = repushamount/AOspeed;
       // double repushdistance = repushtime * lines[moveend].speed;
       // double enddistance = repushdistance;
       // uint firstlinetosplit = moveend+1;
