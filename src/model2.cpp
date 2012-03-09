@@ -152,7 +152,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 					  Vector3d(P2.x,P2.y,z),
 					  Vector3d(0,0,0),0,
 					  settings.Hardware.MaxPrintSpeedXY,
-					  extrusionfactor,
+					  extrusionfactor, 0, 
 					  z,
 					  settings.Slicing, settings.Hardware);
 	  reverseLines = !reverseLines;

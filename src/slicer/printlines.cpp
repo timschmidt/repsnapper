@@ -27,7 +27,7 @@
 PLine::PLine(const Vector2d from_, const Vector2d to_, double speed_, 
 	     double feedrate_)
   : from(from_), to(to_), speed(speed_), 
-    feedrate(feedrate_),
+    feedrate(feedrate_), absolute_feed(0),
     arc(0)
 {
   angle = calcangle();
@@ -36,7 +36,7 @@ PLine::PLine(const Vector2d from_, const Vector2d to_, double speed_,
 // for arc line
 PLine::PLine(const Vector2d from_, const Vector2d to_, double speed_, 
 	     double feedrate_, short arc_, Vector2d arccenter_, double angle_)
-  : from(from_), to(to_), speed(speed_), feedrate(feedrate_),
+  : from(from_), to(to_), speed(speed_), feedrate(feedrate_), absolute_feed(0),
     angle(angle_), arccenter(arccenter_), arc(arc_)
 {
 }
@@ -80,6 +80,7 @@ struct printline PLine::getPrintline(double z) const
   pline.speed           = speed;
   pline.arc             = arc;
   pline.extrusionfactor = feedrate;
+  pline.absolute_extrusion = absolute_feed;
   if (arc) {
     Vector2d arcIJK2 = arccenter - from;
     pline.arcIJK = Vector3d(arcIJK2.x, arcIJK2.y, 0);
@@ -89,24 +90,22 @@ struct printline PLine::getPrintline(double z) const
   return pline;
 }
 
-double PLine::getExtrusionAmount() const
+void PLine::addAbsoluteExtrusionAmount(double amount)
 {
-  return feedrate * length();
-}
-void PLine::addExtrusionAmount(double amount)
-{
-  feedrate += amount/length();
+  absolute_feed += amount;
 }
 
 string PLine::info() const
 {
   ostringstream ostr;
-  ostr << "line "<< from << to << " angle="<< (int)angle*180/M_PI
+  ostr << "line "<< from;
+  if (to!=from) ostr << to;
+  ostr << " angle="<< (int)angle*180/M_PI
        << " length="<< length() << " speed=" << speed 
        << " feedr=" << feedrate << " arc=" << arc;
   if (arc!=0)
     ostr << " arccenter=" << arccenter;
-  ostr <<  " extrusion amount=" << getExtrusionAmount();
+  ostr <<  " feedrate=" << feedrate << " abs.extr="<< absolute_feed;
   return ostr.str();
 }
 
@@ -366,15 +365,14 @@ uint Printlines::makeAntioozeRetraction(double AOmindistance, double AOspeed,
 	double speedratio = AOspeed / totaldistance*totaltime;
 
       }
-
       //cerr << "retract " << totaldistance << ": " <<movestart << "--" << moveend << " num " << moveend-movestart+1 << " split " << firstlinetosplit << " time " << repushtime << " dist " << repushdistance << endl;
-      PLine retractl(lines[movestart].from, lines[movestart].from, AOspeed, -AOamount); 
-      //cerr << retractl.info() << endl;
-      PLine repushl (lines[moveend].to,     lines[moveend].to,     AOspeed,  repushamount);
-      //cerr << repushl.info() << endl;
+      PLine retractl(lines[movestart].from, lines[movestart].from, AOspeed, 0); 
+      retractl.addAbsoluteExtrusionAmount(-AOamount);
+      PLine repushl (lines[moveend].to,     lines[moveend].to,     AOspeed, 0);
+      repushl.addAbsoluteExtrusionAmount(repushamount);
       if (moveend+1 < lines.size()) { // add rest to next line
 	//cerr << lines[moveend+1].info() << endl;
-	lines[moveend+1].addExtrusionAmount(AOamount-repushamount);
+	lines[moveend+1].addAbsoluteExtrusionAmount(AOamount-repushamount);
 	//cerr << lines[moveend+1].info() << endl;
       }
       lines.insert(lines.begin()+moveend+1, repushl); // (inserts before)
@@ -601,7 +599,7 @@ Vector2d Printlines::lastPoint() const
 void Printlines::getLines(vector<Vector2d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
-    if (lIt->from == lIt->to && lIt->feedrate == 0) continue;
+    if (lIt->from == lIt->to && lIt->feedrate == 0 && lIt->absolute_feed == 0) continue;
     olines.push_back(lIt->from);
     olines.push_back(lIt->to);
   }
@@ -609,7 +607,7 @@ void Printlines::getLines(vector<Vector2d> &olines) const
 void Printlines::getLines(vector<Vector3d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
-    if (lIt->from == lIt->to && lIt->feedrate == 0) continue;
+    if (lIt->from == lIt->to && lIt->feedrate == 0 && lIt->absolute_feed == 0) continue;
     olines.push_back(Vector3d(lIt->from.x,lIt->from.y,z));
     olines.push_back(Vector3d(lIt->to.x,lIt->to.y,z));
   }
@@ -618,7 +616,7 @@ void Printlines::getLines(vector<Vector3d> &olines) const
 void Printlines::getLines(vector<printline> &plines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
-    if (lIt->from == lIt->to && lIt->feedrate == 0) continue;
+    if (lIt->from == lIt->to && lIt->feedrate == 0 && lIt->absolute_feed == 0) continue;
     plines.push_back(lIt->getPrintline(z));
   }
 }
@@ -701,6 +699,8 @@ string Printlines::lineinfo(const struct printline l) const
   ostr << "line "<< l.from << l.to 
        << " speed=" << l.speed 
        << " extrf=" << l.extrusionfactor << " arc=" << l.arc;
+  if (l.absolute_extrusion!=0)
+    ostr << " abs_extr="<<l.absolute_extrusion;
   if (l.arc!=0)
     ostr << " arcIJK=" << l.arcIJK;
   return ostr.str();

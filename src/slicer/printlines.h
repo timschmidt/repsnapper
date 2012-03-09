@@ -30,6 +30,7 @@ struct printline
   Vector3d from, to;
   double speed;
   double extrusionfactor; 
+  double absolute_extrusion; // additional absolute extrusion /mm (retract/repush f.e.)
   Vector3d arcIJK;  // if is an arc
   short arc; // -1: ccw arc, 1: cw arc, 0: not an arc
 };
@@ -46,12 +47,12 @@ class PLine
   Vector2d from, to;
   double speed; // mm/min (!)
   double feedrate; // relative extrusion feedrate 
+  double absolute_feed; // additional absolute feed /mm (retract/repush f.e.)
   double angle; // angle of line
   Vector2d arccenter;
   short arc;  // -1: ccw arc, 1: cw arc, 0: not an arcx
 
-  double getExtrusionAmount() const; 
-  void addExtrusionAmount(double amount);
+  void addAbsoluteExtrusionAmount(double amount);
   double calcangle() const;
   double calcangle(const PLine rhs) const;
   double lengthSq() const;

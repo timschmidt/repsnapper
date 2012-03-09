@@ -130,14 +130,14 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
 	{
 	  MakeAcceleratedGCodeLine (LastPosition(), linespoints[i],
 				    Vector3d(0,0,0),0,
-				    0, maxmovespeed,
+				    0, 0, maxmovespeed,
 				    offsetZ, slicing, hardware);
 	  SetLastPosition (linespoints[i]);
 	} 
       // PLOT to endpoint of line 
       MakeAcceleratedGCodeLine (LastPosition(), linespoints[i+1], 
 				Vector3d(0,0,0),0,
-				extrusionFactor, maxspeed, 
+				extrusionFactor, 0, maxspeed, 
 				offsetZ, slicing, hardware);
     SetLastPosition(linespoints[i+1]);
     }
@@ -154,15 +154,13 @@ void GCodeState::MakeAcceleratedGCodeLine (printline pline,
   if(LastPosition() != pline.from) { // then first move to pline.from
     MakeAcceleratedGCodeLine(LastPosition(), pline.from, 
 			     Vector3d(0,0,0),0,
-			     0, hardware.MoveSpeed,
+			     0, 0, hardware.MoveSpeed,
 			     offsetZ, slicing, hardware);
     SetLastPosition(pline.from);
   }
-  double extrusion = pline.extrusionfactor;
-  if (pline.from != pline.to) // not extrusion only
-    extrusion *= extrusionfactor;
   MakeAcceleratedGCodeLine(pline.from, pline.to, pline.arcIJK, pline.arc,
-			   extrusion,
+			   pline.extrusionfactor * extrusionfactor,
+			   pline.absolute_extrusion,
 			   pline.speed, 
 			   offsetZ, slicing, hardware);
   SetLastPosition(pline.to);
@@ -171,6 +169,7 @@ void GCodeState::MakeAcceleratedGCodeLine (printline pline,
 void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
 					   Vector3d arcIJK, short arc,
 					   double extrusionFactor, 
+					   double absolute_extrusion,
 					   double maxspeed,
 					   double offsetZ, 
 					   const Settings::SlicingSettings &slicing,
@@ -188,11 +187,16 @@ void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
   ResetLastWhere (start);
   command.where = end;
   double extrudedMaterial;
-  if (start==end)  {// pure extrusions
-    extrudedMaterial = extrusionFactor;
-    command.comment = _("Extrusion only");
+  if (start==end)  { // pure extrusions
+    extrudedMaterial = 0;
+    command.comment = _("Extrusion only ");
   } else 
     extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
+
+  if (absolute_extrusion!=0) {
+    command.comment += _("Absolute Extrusion");
+  }
+  extrudedMaterial += absolute_extrusion;
   command.e = extrudedMaterial;
   command.f = maxspeed;
   if (arc == 0) { // make line
