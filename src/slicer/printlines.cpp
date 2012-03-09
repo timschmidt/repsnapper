@@ -367,13 +367,16 @@ uint Printlines::makeAntioozeRetraction(double AOmindistance, double AOspeed,
       }
       //cerr << "retract " << totaldistance << ": " <<movestart << "--" << moveend << " num " << moveend-movestart+1 << " split " << firstlinetosplit << " time " << repushtime << " dist " << repushdistance << endl;
       PLine retractl(lines[movestart].from, lines[movestart].from, AOspeed, 0); 
-      retractl.addAbsoluteExtrusionAmount(-AOamount);
+      if (movestart > 0) { // add partial extrusion to line before move
+	lines[movestart-1].addAbsoluteExtrusionAmount(-AOamount+repushamount);
+	retractl.addAbsoluteExtrusionAmount(-repushamount);
+      }
+      else 
+	retractl.addAbsoluteExtrusionAmount(-AOamount);
       PLine repushl (lines[moveend].to,     lines[moveend].to,     AOspeed, 0);
       repushl.addAbsoluteExtrusionAmount(repushamount);
       if (moveend+1 < lines.size()) { // add rest to next line
-	//cerr << lines[moveend+1].info() << endl;
 	lines[moveend+1].addAbsoluteExtrusionAmount(AOamount-repushamount);
-	//cerr << lines[moveend+1].info() << endl;
       }
       lines.insert(lines.begin()+moveend+1, repushl); // (inserts before)
       lines.insert(lines.begin()+movestart, retractl);

@@ -4559,7 +4559,7 @@ THE HEAD MOVING DOWN!
                                     <property name="label" translatable="yes">Speed (mm/min):</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
+                                    <property name="expand">True</property>
                                     <property name="fill">True</property>
                                     <property name="position">0</property>
                                   </packing>
@@ -4581,7 +4581,6 @@ THE HEAD MOVING DOWN!
                                   <object class="GtkLabel" id="label47">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="xalign">1</property>
                                     <property name="label" translatable="yes">Amount (mm):</property>
                                   </object>
                                   <packing>
@@ -4609,7 +4608,7 @@ THE HEAD MOVING DOWN!
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="tooltip_text" translatable="yes">how much should be repushed before next line</property>
-                                    <property name="label" translatable="yes">Repush Ratio</property>
+                                    <property name="label" translatable="yes">On-Halt Ratio</property>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
