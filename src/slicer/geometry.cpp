@@ -20,6 +20,7 @@
 
 
 #include "geometry.h"
+#include "poly.h"
 
 // template < typename T > 
 // long double angleBetween(T V1, T V2) 
@@ -438,3 +439,143 @@ void testangles(){
     cerr << a*180/M_PI << " - " << an*180/M_PI << " - " << bn*180/M_PI << endl;
   }
 }
+
+
+
+/////////////////// PATH IN POLYGON //////////////////////
+
+//  Public-domain code by Darel Rex Finley, 2006.
+// http://alienryderflex.com/shortest_path/
+
+bool pointInPolys(Vector2d point,  vector<Poly> polys)
+{
+  for (uint i=0; i< polys.size(); i++)
+    if (polys[i].vertexInside(point)) return true;
+  return false;
+}
+
+// will return false
+// if the line cuts any of the given polygons except excluded one
+bool lineInPolys(Vector2d from, Vector2d to, vector<Poly> polys, 
+		 int excludepoly, double maxerr)
+{
+  uint ninter = 0;
+  for (int i=0; i< (int)polys.size(); i++) {
+    if (i != excludepoly){
+      if (polys[i].vertexInside(from)) ninter++;
+      if (polys[i].vertexInside(to)) ninter++;
+      vector<Intersection> inter = polys[i].lineIntersections(from,to,maxerr);
+      ninter += inter.size();
+    }
+  }
+  return (ninter != 0);
+}
+      
+//  Finds the shortest path from from to to that stays within the polygon set.
+//
+//  Note:  To be safe, the solutionX and solutionY arrays should be large enough
+//         to accommodate all the corners of your polygon set (although it is
+//         unlikely that anywhere near that many elements will ever be needed).
+//
+//  Returns true if the optimal solution was found, or false if there is no solution.
+//  If a solution was found, the solution vector will contain the coordinates
+//  of the intermediate nodes of the path, in order.  (The startpoint and endpoint
+//  are assumed, and will not be included in the solution.)
+
+struct pathpoint {
+  Vector2d v;
+  double totalDist;
+  int prev;
+};
+// excludepoly: poly not to test, contains from and to vectors.
+bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepoly, 
+		  vector<Vector2d> &path, double maxerr)
+{
+  //  Fail if either the startpoint or endpoint is outside the polygon set.
+  if (!pointInPolys(from, polys)
+      ||  !pointInPolys(to, polys))
+    return false; 
+  
+  //  If there is a straight-line solution, no path vertices added
+  if (lineInPolys(from, to, polys, excludepoly, maxerr)) 
+    return true; 
+
+  const double INF = 9999999.;     //  (larger than total solution dist could ever be)
+  double  bestDist, newDist ;
+  // uint numpoints=0;
+  // for (uint i=0; i<polys.size(); i++) numpoints += polys[i].size();
+  vector<struct pathpoint> pointList;
+  //  Build a point list that refers to the corners of the
+  //  polygons, as well as to the startpoint and endpoint.
+  pointList.push_back((pathpoint){from, 0, 0});
+  for (uint i=0; i<polys.size(); i++)
+    for (uint j=0; j<polys[i].size(); j++)
+      pointList.push_back((pathpoint){polys[i].vertices[j], 0, 0});
+  pointList.push_back((pathpoint){to, 0, 0});
+  uint pointCount = pointList.size();
+
+  //  Initialize the shortest-path tree to include just the startpoint.
+  uint treeCount=1; 
+
+  //  Iteratively grow the shortest-path tree until it reaches the endpoint
+  //  -- or until it becomes unable to grow, in which case exit with failure.
+  uint bestI = 0, bestJ = 0;
+  while (bestJ < pointCount-1) { // until the to-point is arrived
+    bestDist = INF;
+    // for every path point so far find another with minimal total path length 
+    for (uint i = 0; i < treeCount; i++) {
+      for (uint j = treeCount; j < pointCount; j++) {
+	if (lineInPolys(pointList[i].v, pointList[j].v, 
+			polys, -1, maxerr)) { // line does not intersect
+	  // take point into account
+	  newDist = pointList[i].totalDist + 
+	    (pointList[i].v - pointList[j].v).length();
+	  if (newDist < bestDist) { // if shortest total path 
+	    //cerr << i << " found " << j << " - " << newDist << " - " <<pointList[j].v <<endl;
+	    bestDist = newDist;
+	    bestI = i;
+	    bestJ = j;
+	  }
+	}
+      }
+    }
+    if (bestDist==INF) return false;   //  (no solution)
+
+    pointList[bestJ].prev      = bestI   ;
+    pointList[bestJ].totalDist = bestDist;
+    //cerr << bestI << " PRE "<<pointList[bestJ].prev << endl;
+    // store all tree points below treeCount
+    // struct pathpoint SWAP = pointList[treeCount];
+    // pointList[treeCount] = pointList[bestJ];
+    // pointList[bestJ] = SWAP;
+    swap(pointList[bestJ], pointList[treeCount]);
+    treeCount++; 
+  }
+  for (uint i = 0; i < treeCount; i++) {
+    cerr << i << " PL " << pointList[i].prev << endl;
+  }
+  int numsolutions = 0;
+  int i = treeCount -1;
+  while (i > 0) {
+    path.push_back(pointList[i].v);
+    i = pointList[i].prev;
+    numsolutions++;
+    cerr << treeCount << " - " << numsolutions << " - " << i << endl;
+  }
+  return true;
+  
+  int j = numsolutions-1;
+  if (j > 0) {
+    int psize = path.size();
+    path.resize(psize + j);
+    i = treeCount-1;
+    while (j >= 0) {
+      i = pointList[i].prev;
+      path[psize + j] = pointList[i].v;
+      j--;
+    }
+  }
+  //  Success.
+  return true; 
+}
+  

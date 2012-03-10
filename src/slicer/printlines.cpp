@@ -141,7 +141,7 @@ void Printlines::addPoly(const Poly poly, int startindex,
 }
 
 void Printlines::makeLines(const vector<Poly> polys, 
-			   const vector<Poly> *clippolys,
+			   vector<Poly> *clippolys,
 			   Vector2d &startPoint,
 			   bool displace_startpoint, 
 			   double minspeed, double maxspeed, double movespeed, // mm/s
@@ -423,7 +423,7 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> points)
 }
 
 // walk around holes
-void Printlines::clipMovements(const vector<Poly> *polys, double maxerr) 
+void Printlines::clipMovements(vector<Poly> *polys, double maxerr) 
 {
   if (polys==NULL) return;
   if (lines.size()==0) return;
@@ -432,21 +432,53 @@ void Printlines::clipMovements(const vector<Poly> *polys, double maxerr)
     if (lines[i].feedrate == 0) {
       int frompoly=-1, topoly=-1;
       for (uint p = 0; p < polys->size(); p++) {
-	if (frompoly==-1 && (*polys)[p].vertexInside(lines[i].from))
+	if ((frompoly==-1) && (*polys)[p].vertexInside(lines[i].from, maxerr))
 	  frompoly=(int)p;
-	if (topoly==-1 && (*polys)[p].vertexInside(lines[i].to))
+	if ((topoly==-1) && (*polys)[p].vertexInside(lines[i].to, maxerr))
 	  topoly=(int)p;
-	vector<Intersection> pinter = 
-	  (*polys)[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
-	if (pinter.size() > 0) {
-	  if (pinter.size()%2 == 0) { // holes
-	    std::sort(pinter.begin(), pinter.end());
-	    vector<Vector2d> path = 
-	      (*polys)[p].getPathAround(pinter.front().p, pinter.back().p);
-	    i += (divideline(i,path)); //if (i>0) i--; // test new lines again?
+      }
+      if ((frompoly == -1) || (topoly == -1)) {
+	//cerr <<frompoly << " -- " << topoly << endl;
+	continue; 
+      }
+      // line outside polys - ?
+      // line inside same poly, find path:
+      if (topoly == frompoly) {
+#define FASTPATH 0
+#if FASTPATH // find shortest path through polygon
+	vector<Poly> holes;
+	holes.push_back((*polys)[frompoly]);
+	for (uint p = 0; p < polys->size(); p++) {
+	  //   //if ((*polys)[p].isHole())
+	  if ((*polys)[frompoly].polyInside(&(*polys)[p])) 
+	    holes.push_back((*polys)[p]);
+	}
+	vector<Vector2d> path;
+	bool ispath = shortestPath(lines[i].from,lines[i].to,
+				   holes, frompoly, path, maxerr);
+	if (ispath) {
+	  int divisions = (divideline(i,path)); 
+	  i += divisions;
+	  if (divisions>0)
+	    cerr << divisions << " div in poly " << topoly << " - " << ispath << " path " << path.size()<<endl;
+	}
+	continue; // next line
+#else // walk along perimeters
+	for (uint p = 0; p < polys->size(); p++) {
+	  vector<Intersection> pinter = 
+	    (*polys)[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
+	  if (pinter.size() > 0) {
+	    if (pinter.size()%2 == 0) { // holes
+	      // --- TODO for all pairs of pinter ! 
+	      std::sort(pinter.begin(), pinter.end());
+	      vector<Vector2d> path = 
+		(*polys)[p].getPathAround(pinter.front().p, pinter.back().p);
+	      i += (divideline(i,path)); //if (i>0) i--; // test new lines again?
+	    }
 	  }
 	}
       }
+#endif
       if (0 && frompoly != -1 && topoly != -1 && frompoly != topoly) {
 	cerr <<i << " : "<<frompoly << " p>> " << topoly << endl;	
 	// vector<Intersection> frominter = 

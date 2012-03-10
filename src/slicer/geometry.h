@@ -73,3 +73,7 @@ void testangles();
 
 Vector3d random_displace(Vector3d v, double delta=0.05);
 Vector2d random_displace(Vector2d v, double delta=0.05);
+
+
+bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepoly, 
+		  vector<Vector2d> &path, double maxerr);
