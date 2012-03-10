@@ -29,7 +29,7 @@
 #define _WIN32_WINNT 0x0501	// Change this to the appropriate value to target other versions of Windows.
 #endif
 
-#ifdef WIN32
+#ifdef _MSC_VER // Visual C++ compiler
 #  pragma warning( disable : 4311 4312 4244 4267 4800)
 #endif
 

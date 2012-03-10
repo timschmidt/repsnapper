@@ -1216,7 +1216,9 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
 
 #ifdef WIN32
 #  include <GL/glut.h>	// Header GLUT Library
+#endif
 
+#ifdef _MSC_VER
 #  pragma warning( disable : 4018 4267)
 #endif
 

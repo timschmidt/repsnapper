@@ -34,7 +34,7 @@
 #include "progress.h"
 #include "slicer/poly.h"
 
-#ifdef WIN32
+#ifdef _MSC_VER // Visual C++ compiler
 #  pragma warning( disable : 4244 4267)
 #endif
 
