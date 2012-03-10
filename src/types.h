@@ -43,7 +43,6 @@ class TreeObject;
 class Shape;
 class Transform3D;
 class Infill;
-class Progress;
 class ViewProgress;
 
 

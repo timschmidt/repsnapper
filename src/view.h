@@ -28,7 +28,6 @@
 
 class Model;
 class Render;
-class Progress;
 class TreeObject;
 class Shape;
 class ConnectView;
