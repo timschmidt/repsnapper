@@ -58,19 +58,19 @@ class GCodeState {
 		 double offsetZ, 
 		 const Settings::SlicingSettings &slicing,
 		 const Settings::HardwareSettings &hardware);
-  void MakeAcceleratedGCodeLine (printline line,
-				 double extrusionfactor,
-				 double offsetZ, 
-				 const Settings::SlicingSettings &slicing,
-				 const Settings::HardwareSettings &hardware);
-  void MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
-				 Vector3d arcIJK, short arc,
-				 double extrusionFactor,
-				 double absolute_extrusion,
-				 double maxspeed,
-				 double offsetZ, 
-				 const Settings::SlicingSettings &slicing,
-				 const Settings::HardwareSettings &hardware);
+  void MakeGCodeLine (printline line,
+		      double extrusionfactor,
+		      double offsetZ, 
+		      const Settings::SlicingSettings &slicing,
+		      const Settings::HardwareSettings &hardware);
+  void MakeGCodeLine (Vector3d start, Vector3d end,
+		      Vector3d arcIJK, short arc,
+		      double extrusionFactor,
+		      double absolute_extrusion,
+		      double maxspeed,
+		      double offsetZ, 
+		      const Settings::SlicingSettings &slicing,
+		      const Settings::HardwareSettings &hardware);
   /* double GetLastLayerZ(double curZ); */
   /* void  SetLastLayerZ(double z); */
   const Vector3d &LastPosition();

@@ -119,7 +119,7 @@ Glib::RefPtr<Gio::File> find_global_config() {
 int main(int argc, char **argv)
 {
   Glib::thread_init();
-  //gdk_threads_init(); // excludes OMP threads?
+  // gdk_threads_init(); // locks everything at least on freebsd
   Gtk::Main tk(argc, argv);
 
   gchar *locale_dir;

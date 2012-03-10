@@ -124,8 +124,8 @@ int Shape::loadBinarySTL(string filename) {
     file.open(filename.c_str());
 
     if(file.fail()) {
-        cerr << "Error: Unable to open stl file - " << filename << endl;
-        return -1;
+      cerr << _("Error: Unable to open stl file - ") << filename << endl;
+      return -1;
     }
 
     /* Binary STL files have a meaningless 80 byte header
@@ -182,14 +182,14 @@ int Shape::loadBinarySTL(string filename) {
     CenterAroundXY();
     scale_factor = 1.0;
     scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
-    cout << "Shape has volume " << volume() << " mm^3"<<endl;
+    cout << _("Shape has volume ") << volume() << " mm^3"<<endl;
     return 0;
 }
 
 
 int Shape::loadASCIIVRML(std::string filename) {
   if(getFileType(filename) != VRML) {
-    cerr << "No VRML file file passed to loadASCIIVRML" << endl;
+    cerr << _("No VRML file file passed to loadASCIIVRML") << endl;
     return -1;
   }
     triangles.clear();
@@ -202,8 +202,8 @@ int Shape::loadASCIIVRML(std::string filename) {
     file.open(filename.c_str());
 
     if(file.fail()) {
-        cerr << "Error: Unable to open vrml file - " << filename << endl;
-        return -1;
+      cerr << _("Error: Unable to open vrml file - ") << filename << endl;
+      return -1;
     }
     string word;
     std::vector<float> vertices;
@@ -257,7 +257,7 @@ int Shape::loadASCIIVRML(std::string filename) {
     //cerr << vertices.size() << " - " << indices.size() << endl;
     if (indices.size()%4!=0) return -1;
     if (vertices.size()%3!=0) return -1;
-    cerr <<"read ok" << endl;
+    //cerr <<"read ok" << endl;
     vector<Vector3d> vert;
     for (uint i=0; i<vertices.size();i+=3)
       vert.push_back(Vector3d(vertices[i],
@@ -284,19 +284,19 @@ int Shape::loadASCIIVRML(std::string filename) {
 int Shape::loadASCIISTL(string filename) {
     // Check filetype
     if(getFileType(filename) != ASCII_STL) {
-        cerr << "None ASCII STL file passed to loadASCIIFile" << endl;
-        return -1;
+      cerr << _("None ASCII STL file passed to loadASCIIFile") << endl;
+      return -1;
     }
     ifstream file;
     file.open(filename.c_str());
 
     if(file.fail()) {
-        cerr << "Error: Unable to open stl file - " << filename << endl;
-        return -1;
+      cerr << _("Error: Unable to open stl file - ") << filename << endl;
+      return -1;
     }
     int ret = parseASCIISTL(&file);
     if (ret < 0) {// cannot parse, try binary
-      cerr << "Could not read "<< filename << " in ASCII mode, trying Binary"<< endl;
+      cerr << _("Could not read file in ASCII mode, trying Binary: ")<< filename << endl;
       file.close();
       return loadBinarySTL(filename);
     }
@@ -338,8 +338,8 @@ int Shape::parseASCIISTL(istream *text) {
         }
 
         if(facet != "facet") {
-            cerr << "Error: Facet keyword not found in STL text!" << endl;
-            return -1;
+	  cerr << _("Error: Facet keyword not found in STL text!") << endl;
+	  return -1;
         }
 
         // Parse Face Normal - "normal %f %f %f"
@@ -347,7 +347,7 @@ int Shape::parseASCIISTL(istream *text) {
         Vector3d normal_vec;
         *text >> normal;
         if(normal != "normal") {
-            cerr << "Error: normal keyword not found in STL text!" << endl;
+	  cerr << _("Error: normal keyword not found in STL text!") << endl;
 	}
 	
 	// forget about normals, we calculate them
@@ -360,7 +360,7 @@ int Shape::parseASCIISTL(istream *text) {
 	}
 	*text >> loop;
 	if(outer != "outer" || loop != "loop") {
-	  cerr << "Error: Outer/Loop keywords not found!" << endl;
+	  cerr << _("Error: Outer/Loop keywords not found!") << endl;
 	  return -1;
 	}
 
@@ -374,8 +374,8 @@ int Shape::parseASCIISTL(istream *text) {
                  >> vertices[i].z;
 
             if(vertex != "vertex") {
-                cerr << "Error: Vertex keyword not found" << endl;
-                return -1;
+	      cerr << _("Error: Vertex keyword not found") << endl;
+	      return -1;
             }
         }
 
@@ -384,8 +384,8 @@ int Shape::parseASCIISTL(istream *text) {
         *text >> endloop >> endfacet;
 
         if(endloop != "endloop" || endfacet != "endfacet") {
-            cerr << "Error: Endloop or endfacet keyword not found" << endl;
-            return -1;
+	  cerr << _("Error: Endloop or endfacet keyword not found") << endl;
+	  return -1;
         }
 
 	// done in Triangle
@@ -408,7 +408,7 @@ int Shape::parseASCIISTL(istream *text) {
     // cerr << Center << " - " << Min << " - " << Max <<  endl;
     scale_factor = 1.0;
     scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
-    cout << "Shape has volume " << volume() << " mm^3"<<endl;
+    cout << _("Shape has volume ") << volume() << " mm^3"<<endl;
     return 0;
 }
 
@@ -430,8 +430,8 @@ filetype_t Shape::getFileType(string filename) {
     file.open(filename.c_str());
 
     if(file.fail()) {
-        cerr << "Error: Unable to open file - " << filename << endl;
-        return NONE_STL;
+      cerr << _("Error: Unable to open file - ") << filename << endl;
+      return NONE_STL;
     }
 
     // ASCII files start with "solid [Name_of_file]"
@@ -463,7 +463,7 @@ int Shape::load(string filename)
     } else if (type == BINARY_STL) { // Binary
         loadBinarySTL(filename);
     } else {
-	cerr << "unrecognized file - " << filename << endl;
+      cerr << _("unrecognized file - ") << filename << endl;
 	return -1;
     }
 
@@ -515,7 +515,7 @@ void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress)
 	  if (!done[i]) {
 	    shapes.push_back(shape);
 	    shapes.back().triangles.push_back(triangles[i]);
-	    cerr << "shape " << shapes.size() << endl;
+	    cerr << _("shape ") << shapes.size() << endl;
 	    done[i] = true;
 	    donetriangles++;
 	    break;
@@ -525,7 +525,7 @@ void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress)
 	progress->update(donetriangles);
    }
    if (progress) progress->stop("_(Done)");
-   cerr << shapes.size() << " shapes " << endl;
+   cerr << shapes.size() << _(" shapes ") << endl;
 }
 
 void Shape::invertNormals()

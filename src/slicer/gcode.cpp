@@ -113,8 +113,7 @@ void GCodeState::AddLines (vector<printline> plines,
 			   const Settings::HardwareSettings &hardware)
 {
   for (uint i=0; i < plines.size(); i++)
-    MakeAcceleratedGCodeLine (plines[i], extrusionfactor, 
-			      offsetZ, slicing, hardware);
+    MakeGCodeLine (plines[i], extrusionfactor, offsetZ, slicing, hardware);
 }
 
 void GCodeState::AddLines (vector<Vector3d> linespoints,
@@ -130,52 +129,50 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
       // MOVE to start of next line
       if(LastPosition() != linespoints[i]) 
 	{
-	  MakeAcceleratedGCodeLine (LastPosition(), linespoints[i],
-				    Vector3d(0,0,0),0,
-				    0, 0, maxmovespeed,
-				    offsetZ, slicing, hardware);
+	  MakeGCodeLine (LastPosition(), linespoints[i],
+			 Vector3d(0,0,0),0, 0, 0, maxmovespeed,
+			 offsetZ, slicing, hardware);
 	  SetLastPosition (linespoints[i]);
 	} 
       // PLOT to endpoint of line 
-      MakeAcceleratedGCodeLine (LastPosition(), linespoints[i+1], 
-				Vector3d(0,0,0),0,
-				extrusionFactor, 0, maxspeed, 
-				offsetZ, slicing, hardware);
+      MakeGCodeLine (LastPosition(), linespoints[i+1], 
+		     Vector3d(0,0,0),0, extrusionFactor, 0, maxspeed, 
+		     offsetZ, slicing, hardware);
     SetLastPosition(linespoints[i+1]);
     }
   //SetLastLayerZ(z);
 }
 
 
-void GCodeState::MakeAcceleratedGCodeLine (printline pline,
-					   double extrusionfactor,
-					   double offsetZ, 
-					   const Settings::SlicingSettings &slicing,
-					   const Settings::HardwareSettings &hardware)
+void GCodeState::MakeGCodeLine (printline pline,
+				double extrusionfactor,
+				double offsetZ, 
+				const Settings::SlicingSettings &slicing,
+				const Settings::HardwareSettings &hardware)
 {
   if(LastPosition() != pline.from) { // then first move to pline.from
-    MakeAcceleratedGCodeLine(LastPosition(), pline.from, 
-			     Vector3d(0,0,0),0,
-			     0, 0, hardware.MoveSpeed,
-			     offsetZ, slicing, hardware);
+    MakeGCodeLine(LastPosition(), pline.from, 
+		 Vector3d(0,0,0),0,
+		 0, 0, hardware.MoveSpeed,
+		 offsetZ, slicing, hardware);
     SetLastPosition(pline.from);
   }
-  MakeAcceleratedGCodeLine(pline.from, pline.to, pline.arcIJK, pline.arc,
-			   pline.extrusionfactor * extrusionfactor,
-			   pline.absolute_extrusion,
-			   pline.speed, 
-			   offsetZ, slicing, hardware);
+  MakeGCodeLine(pline.from, pline.to, pline.arcIJK, pline.arc,
+	       pline.extrusionfactor * extrusionfactor,
+	       pline.absolute_extrusion,
+	       pline.speed, 
+	       offsetZ, slicing, hardware);
   SetLastPosition(pline.to);
 }
 
-void GCodeState::MakeAcceleratedGCodeLine (Vector3d start, Vector3d end,
-					   Vector3d arcIJK, short arc,
-					   double extrusionFactor, 
-					   double absolute_extrusion,
-					   double maxspeed,
-					   double offsetZ, 
-					   const Settings::SlicingSettings &slicing,
-					   const Settings::HardwareSettings &hardware)
+void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
+				Vector3d arcIJK, short arc,
+				double extrusionFactor, 
+				double absolute_extrusion,
+				double maxspeed,
+				double offsetZ, 
+				const Settings::SlicingSettings &slicing,
+				const Settings::HardwareSettings &hardware)
 {
    // if ((end-start).length() < 0.05)	// ignore micro moves
    //  return;

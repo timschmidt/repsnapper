@@ -102,6 +102,32 @@ Vector2d random_displace(Vector2d v, double delta)
   return Vector2d(v.x+randdelta, v.y+randdelta);
 }
 
+// squared minimum distance of p to segment s1--s2, onseg = resulting point on segment
+// http://stackoverflow.com/a/1501725
+double minimum_distance_Sq(const Vector2d s1, const Vector2d s2, 
+			const Vector2d p, Vector2d &onseg) {
+  const double l2 = (s2-s1).lengthSquared();  // i.e. |w-v|^2 -  avoid a sqrt
+  if (l2 == 0.0) { // s1 == s2 case
+    onseg = s1;
+    return (p-s1).lengthSquared();   
+  } 
+  // Consider the line extending the segment, parameterized as s1 + t (s2 - s1).
+  // We find projection of point p onto the line. 
+  // It falls where t = [(p-s1) . (s2-s1)] / |s2-s1|^2
+  const double t = (p-s1).dot(s2-s1) / l2;
+  if (t < 0.0) {
+    onseg = s1;
+    return (p-s1).lengthSquared();       // Beyond the 's1' end of the segment
+  }
+  else if (t > 1.0) {
+    onseg = s2;
+    return (p-s2).lengthSquared();  // Beyond the 's2' end of the segment
+  }
+  onseg = s1 + (s2 - s1) * t;  // Projection falls on the segment
+  return (onseg-p).lengthSquared();
+}
+
+
 //////////////////////////////////////////////////////////////
 ///////////////////////////// LINE INTERSECTION //////////////
 //////////////////////////////////////////////////////////////

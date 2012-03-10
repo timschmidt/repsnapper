@@ -93,6 +93,8 @@ class Infill
 		 double offsetDistance, double rotation);
   void addInfill(double z, vector<Poly> polys, InfillType type, double infillDistance, 
 		 double offsetDistance, double rotation);
+  void addInfill(double z, ExPoly expoly, InfillType type, double infillDistance, 
+		 double offsetDistance, double rotation);
   void addInfill(double z, const vector<Poly> polys, const vector<Poly> fillpolys,
 		 double offsetDistance);
   void addInfill(double z, const vector<Poly> polys, const ClipperLib::Polygons ifcpolys,

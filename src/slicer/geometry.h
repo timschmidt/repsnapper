@@ -38,6 +38,10 @@ bool isleftof(Vector3d center, Vector3d A, Vector3d B);
 
 Vector3d cross2d(Vector2d A, Vector2d B, double z=0);
 
+double minimum_distance_Sq(const Vector2d s1, const Vector2d s2, 
+			   const Vector2d p, Vector2d &onseg);
+
+
 struct printline;
 
 struct Intersection

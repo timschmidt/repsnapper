@@ -29,7 +29,6 @@ Layer::Layer(int layerno, double thick, uint skins)
 {
   normalInfill = NULL;//new Infill(this,1.);
   fullInfill = NULL;//new Infill(this,1.);
-  bridgeInfill = NULL;//new Infill(this,1.);
   supportInfill = NULL;//new Infill(this,1.);
   decorInfill = NULL;//new Infill(this,1.);
   Min = Vector2d(G_MAXDOUBLE, G_MAXDOUBLE);
@@ -51,6 +50,15 @@ void clearpolys(vector<Poly> &polys){
     polys[i].clear();
   polys.clear();
 }
+void clearpolys(vector<ExPoly> &polys){
+  for (uint i=0; i<polys.size();i++) {
+    polys[i].outer.clear();
+    for (uint j=0; j<polys[i].holes.size();j++) {
+      polys[i].holes[j].clear();
+    }
+  }
+  polys.clear();
+}
 void clearpolys(vector< vector<Poly> > &polys){
   for (uint i=0; i<polys.size();i++)
     clearpolys(polys[i]);
@@ -61,7 +69,6 @@ void Layer::Clear()
 {
   delete normalInfill;//->clear();
   delete fullInfill;//->clear();
-  delete bridgeInfill;//->clear();
   delete supportInfill;//->clear();
   delete decorInfill;//->clear();
   skinFullInfills.clear();
@@ -70,8 +77,10 @@ void Layer::Clear()
   clearpolys(fillPolygons);
   clearpolys(fullFillPolygons);
   clearpolys(bridgePolygons);
-  clearpolys(decorPolygons);
+  clearpolys(bridgePillars);
   bridge_angles.clear();
+  bridgeInfills.clear();
+  clearpolys(decorPolygons);
   clearpolys(supportPolygons);
   clearpolys(skinPolygons);
   clearpolys(skinFullFillPolygons);
@@ -158,28 +167,39 @@ void Layer::addPolygons(vector<Poly> polys)
 void Layer::calcBridgeAngles(const Layer *layerbelow) {
   bridge_angles.resize(bridgePolygons.size());
   Clipping clipp;
-  vector<Poly> polysbelow = layerbelow->polygons;//clipp.getOffset(polygons,3*thickness);
+  vector<Poly> polysbelow = layerbelow->GetInnerShell();//clipp.getOffset(polygons,3*thickness);
+  bridgePillars.resize(bridgePolygons.size());
   for (uint i=0; i<bridgePolygons.size(); i++) 
     {
       // intersect bridge poly with polygons below (=pillars of bridge)
       clipp.clear();
       clipp.addPolys(polysbelow,subject); 
-      clipp.addPolys(clipp.getOffset(bridgePolygons[i],2*thickness),clip); 
-      vector<Poly> pillars = clipp.intersect();
-      // get average direction of the connection lines of all the intersections
+      clipp.addPolys(clipp.getOffset(bridgePolygons[i].outer,thickness),clip); 
+      bridgePillars[i] = clipp.intersect();
+      
+      // TODO detect circular bridges -> rotating infill?
+
+      
+      // get average direction of the mutual connections of all the intersections
       Vector2d dir(0,0);
-      for (uint p=0; p<pillars.size(); p++){
-	for (uint q=p+1; q<pillars.size(); q++){
-	  dir+=pillars[q].center-pillars[p].center;
+      for (uint p=0; p<bridgePillars[i].size(); p++){
+	for (uint q=p+1; q<bridgePillars[i].size(); q++){
+	  // Vector2d p1,p2; 
+	  // bridgePillars[i][q].shortestConnectionSq(bridgePillars[i][p], p1,p2);
+	  // dir += (p2-p1);
+	  dir += bridgePillars[i][q].center - bridgePillars[i][p].center;
 	}
       }
       //cerr << pillars.size() << " - " << dir << endl;
       bridge_angles[i] = atan2(dir.y,dir.x);
+      if (bridge_angles[i]<0) bridge_angles[i]+=M_PI;
     }
 }
 
 // these are used for the bridge polys of the layer above 
+// NOT USED, NOT TESTED, using calcBridgeAngles
 vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
+  cerr << "Layer::getBridgeRotations" << endl;
   vector<double> angles; angles.resize(polys.size());
   Clipping clipp;
   vector<Poly> offset = polygons;//clipp.getOffset(polygons,3*thickness);
@@ -218,8 +238,6 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
   normalInfill->setName("normal");
   fullInfill = new Infill(this,1.);
   fullInfill->setName("full");
-  bridgeInfill = new Infill(this,1.);
-  bridgeInfill->setName("bridge");
   skinFullInfills.clear();
   supportInfill = new Infill(this,supportextrfactor); // thinner walls for support
   supportInfill->setName("support");
@@ -238,11 +256,15 @@ void Layer::CalcInfill (int normalfilltype, int fullfilltype,
 			 DecorInfillDistance, DecorInfillDistance,
 			 DecorInfillRotation/180.0*M_PI);
   
-  assert(bridge_angles.size() == bridgePolygons.size());
-  for (uint b=0; b<bridgePolygons.size(); b++){
-    bridgeInfill->addInfill(Z, bridgePolygons[b], BridgeInfill,
-			    FullInfillDistance, FullInfillDistance, bridge_angles[b]+M_PI/2);
+  assert(bridge_angles.size() >= bridgePolygons.size());
+  bridgeInfills.resize(bridgePolygons.size());
+  for (uint b=0; b < bridgePolygons.size(); b++){  
+    bridgeInfills[b] = new Infill(this,1.);
+    bridgeInfills[b]->addInfill(Z, bridgePolygons[b], BridgeInfill, 
+				FullInfillDistance, FullInfillDistance, 
+				bridge_angles[b]+M_PI/2);
   }
+
   if (skins>1) {
     double skindistance = FullInfillDistance/skins;
     for (uint s = 0; s<skins; s++){
@@ -277,21 +299,34 @@ void Layer::makeSkinPolygons()
 }
 
 // add bridge polys and subtract them from normal and full fill polys 
-void Layer::addBridgePolygons(const vector<Poly> newpolys) 
+// each given ExPoly is a single bridge with its holes
+void Layer::addBridgePolygons(const vector<ExPoly> newexpolys) 
 {
-  if (newpolys.size()==0) return;
+  // clip against normal fill and make these areas into bridges:
+  uint num_bridges = newexpolys.size();
+  if (num_bridges==0) return;
+  Clipping clipp; // making bridge
+  clipp.clear();
   bridgePolygons.clear();
-  Clipping clipp;
+  for (uint i=0; i < num_bridges; i++){
+    vector<Poly> newpolys = Clipping::getPolys(newexpolys[i]);
+    clipp.clear();
+    clipp.addPolys(fillPolygons,subject); 
+    clipp.addPolys(newpolys, clip);
+    vector<ExPoly> exbridges = clipp.ext_intersect();
+    bridgePolygons.insert(bridgePolygons.end(),exbridges.begin(),exbridges.end());
+  }
+  // subtract from normal fill to get new normal fills:
   clipp.clear();
   clipp.addPolys(fillPolygons,subject); 
-  clipp.addPolys(newpolys,clip);
-  vector<Poly> inter = clipp.intersect();
-  bridgePolygons= inter;//.insert(bridgePolygons.end(),inter.begin(),inter.end());
-  clipp.clear();
-  clipp.addPolys(fillPolygons,subject);  
-  clipp.addPolys(inter,clip);
+  clipp.addPolys(newexpolys, clip);
   setNormalFillPolygons(clipp.subtract());
   mergeFullPolygons(true);
+}
+
+void Layer::addFullPolygons(const vector<ExPoly> newpolys, bool decor)
+{
+  addFullPolygons(Clipping::getPolys(newpolys),decor);
 }
 
 // add full fill and subtract them from normal fill polys 
@@ -322,7 +357,7 @@ void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor)
 void Layer::mergeFullPolygons(bool bridge) 
 {
   if (bridge) {
-    setBridgePolygons(Clipping::getMerged(bridgePolygons));
+    // setBridgePolygons(Clipping::getMerged(bridgePolygons));
   } else  
     setFullFillPolygons(Clipping::getMerged(fullFillPolygons));
 }
@@ -367,19 +402,39 @@ void Layer::setNormalFillPolygons(const vector<Poly> polys)
     fillPolygons[i].setZ(Z);
 }
 
-void Layer::setFullFillPolygons(const vector<Poly>  polys)
+void Layer::setFullFillPolygons(const vector<Poly> polys)
 {
   clearpolys(fullFillPolygons);
   fullFillPolygons = polys;
   for (uint i=0; i<fullFillPolygons.size();i++)
     fullFillPolygons[i].setZ(Z);
 }
-void Layer::setBridgePolygons(const vector<Poly>  polys)
+void Layer::setBridgePolygons(const vector<ExPoly> expolys)
 {
+  uint count = expolys.size();
+  // vector<Poly> polygroups;
+  // vector<bool> done; done.resize(count);
+  // for (uint i=0; i<count;i++) done[i] = false;
+  // for (uint i=0; i<count;i++) {
+  //   if (!done[i]){
+  //     vector<Poly> group;
+  //     group.push_back(polys[i]);
+  //     done[i] = true;
+  //   }
+  //   for (uint j=i+1; j<polys.size();j++){
+  //     if (!done[j]){
+  // 	if (polys[.polyInside(polys[j]){
+  // 	    done[j] = true;
+  // 	  g
+  //   }
+  // }
   clearpolys(bridgePolygons);
-  bridgePolygons = polys;
-  for (uint i=0; i<bridgePolygons.size();i++)
-    bridgePolygons[i].setZ(Z);
+  bridgePolygons = expolys;
+  for (uint i=0; i<count; i++) { 
+    bridgePolygons[i].outer.setZ(Z);
+    for (uint h = 0; h < bridgePolygons[i].holes.size(); h++) 
+      bridgePolygons[i].holes[h].setZ(Z);
+  }
 }
 void Layer::setBridgeAngles(const vector<double> angles)
 {
@@ -646,8 +701,10 @@ void Layer::MakeGcode(GCodeState &state,
 	       fullInfill->infillpolys.begin(), fullInfill->infillpolys.end());
   polys.insert(polys.end(),
 	       decorInfill->infillpolys.begin(), decorInfill->infillpolys.end());
-  polys.insert(polys.end(),
-	       bridgeInfill->infillpolys.begin(), bridgeInfill->infillpolys.end());
+  for (uint b=0; b < bridgeInfills.size(); b++)
+    polys.insert(polys.end(),
+		 bridgeInfills[b]->infillpolys.begin(),
+		 bridgeInfills[b]->infillpolys.end());
   
   printlines.clear();
   printlines.setName("ShellsAndInfill");
@@ -698,8 +755,8 @@ string Layer::info() const
     ostr <<" normal "<<normalInfill->size() ;
   if (fullInfill)
     ostr <<", full "<<fullInfill->size()  ;
-  if (bridgeInfill)
-    ostr <<", bridge "<<bridgeInfill->size() ;
+  if (bridgeInfills.size()>0)
+    ostr <<", bridges "<<bridgeInfills.size() ;
   if (supportInfill)
     ostr<<", support "<<supportInfill->size() ;
   ostr <<", skinfills "<<skinFullInfills.size() ;
@@ -735,6 +792,14 @@ void draw_polys(vector< vector <Poly> > polys, int gl_type, int linewidth, int p
 {
   for(size_t p=0; p<polys.size();p++)
     draw_polys(polys[p], gl_type, linewidth, pointsize, rgb,a);
+}
+void draw_polys(vector <ExPoly> expolys, int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a)
+{
+  for(size_t p=0; p < expolys.size();p++) {
+    draw_poly(expolys[p].outer,  gl_type, linewidth, pointsize, rgb, a);
+    draw_polys(expolys[p].holes, gl_type, linewidth, pointsize, rgb, a);
+  }
 }
 
 float const GREEN[] = {0.1, 1, 0.1};
@@ -781,6 +846,7 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 1);
   draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1);
   draw_polys(bridgePolygons,       GL_LINE_LOOP, 3, 3, RED2,  0.8);
+  draw_polys(bridgePillars,        GL_LINE_LOOP, 3, 3, YELLOW, 0.8);
   draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 3, GREY,  1);
   draw_polys(decorPolygons,        GL_LINE_LOOP, 1, 3, GREY,  1);
   draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  1);
@@ -795,9 +861,11 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
       if (decorInfill)
 	draw_polys(decorInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   (decorInfill->cached?BLUEGREEN:GREEN), 0.8);
-      if (bridgeInfill)
-	draw_polys(bridgeInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
-		   RED3,0.8);
+      uint bridgecount = bridgeInfills.size();
+      if (bridgecount>0)
+	for (uint i = 0; i<bridgecount; i++)
+	  draw_polys(bridgeInfills[i]->infillpolys, GL_LINE_LOOP, 2, 3, 
+		     RED3,0.9);
       if (supportInfill)
 	draw_polys(supportInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   (supportInfill->cached?BLUEGREEN:GREEN), 0.8);

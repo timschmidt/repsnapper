@@ -32,13 +32,12 @@
 /*#include "slicer/layer.h"*/
 #include "settings.h"
 #include "progress.h"
+#include "slicer/poly.h"
 
 #ifdef WIN32
 #  pragma warning( disable : 4244 4267)
 #endif
 
-class Clipping;
-class Layer;
 
 class Model
 {
@@ -94,6 +93,8 @@ public:
 	void MakeUncoveredPolygons(bool make_decor, bool make_bridges=true);
 	vector<Poly> GetUncoveredPolygons(const Layer *subjlayer, 
 					  const Layer *cliplayer);
+	vector<ExPoly> GetUncoveredExPolygons(const Layer * subjlayer,
+					      const Layer * cliplayer);
 	void MakeFullSkins();
 	void MultiplyUncoveredPolygons();
 	void MakeSupportPolygons(Layer * subjlayer, 

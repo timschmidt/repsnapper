@@ -93,6 +93,28 @@ void Infill::addInfill(double z, const vector<Poly> polys, InfillType type,
 #endif
 }
 
+void Infill::addInfill(double z, ExPoly expoly, InfillType type, 
+		       double infillDistance, double offsetDistance, double rotation)
+{
+  vector<Poly> polys = Clipping::getPolys(expoly);
+  addInfill (z, polys, type, infillDistance, offsetDistance, rotation);
+}
+
+// calculates angles for bridges
+// void Infill::addBridgeInfill(double z, const vector<Poly> polys,
+// 			     double infillDistance, double offsetDistance, 
+// 			     vector<polys> bridgepillars)
+// {
+//   type = BridgeInfill;
+//   this->infillDistance = infillDistance;
+
+//   omp_set_lock(&save_lock);
+//   ClipperLib::Polygons patterncpolys = 
+//     makeInfillPattern(type, polys, infillDistance, offsetDistance, rotation);
+//   addInfill(z, polys, patterncpolys, offsetDistance);
+//   omp_unset_lock(&save_lock);
+// }
+
 // fill polys with fillpolys
 void Infill::addInfill(double z, const vector<Poly> polys, 
 		       const vector<Poly> fillpolys,
@@ -116,7 +138,7 @@ void Infill::addInfill(double z, const vector<Poly> polys,
   clpr.AddPolygons(cpolys,ClipperLib::ptClip);
   ClipperLib::Polygons result;
   clpr.Execute(ClipperLib::ctIntersection, result, 
-	       ClipperLib::pftEvenOdd, ClipperLib::pftNonZero);
+	       ClipperLib::pftNonZero, ClipperLib::pftNonZero);
   if (type==PolyInfill) { // reversal from evenodd clipping
     for (uint i = 0; i<result.size(); i+=2)
       std::reverse(result[i].begin(),result[i].end());

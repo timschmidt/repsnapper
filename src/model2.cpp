@@ -148,13 +148,13 @@ void Model::MakeRaft(GCodeState &state, double &z)
 	  P1 = HitsBuffer[0].p;
 	  P2 = HitsBuffer[1].p;
 
-	  state.MakeAcceleratedGCodeLine (Vector3d(P1.x,P1.y,z), 
-					  Vector3d(P2.x,P2.y,z),
-					  Vector3d(0,0,0),0,
-					  settings.Hardware.MaxPrintSpeedXY,
-					  extrusionfactor, 0, 
-					  z,
-					  settings.Slicing, settings.Hardware);
+	  state.MakeGCodeLine (Vector3d(P1.x,P1.y,z), 
+			       Vector3d(P2.x,P2.y,z),
+			       Vector3d(0,0,0), 0,
+			       settings.Hardware.MaxPrintSpeedXY,
+			       extrusionfactor, 0,
+			       z,
+			       settings.Slicing, settings.Hardware);
 	  reverseLines = !reverseLines;
 	}
       // Set startspeed for Z-move
@@ -324,16 +324,17 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
     {
       //cerr << "layer " << i << endl;
       if (i%10==0) m_progress->update(count + count - i);
-      vector<Poly> bridges = GetUncoveredPolygons(layers[i],layers[i-1]);
       //make_bridges = false;
       // no bridge on marked layers (serial build)
       bool mbridge = make_bridges && (layers[i]->LayerNo != 0); 
       if (mbridge) {
-	layers[i]->addBridgePolygons(bridges);
+	vector<ExPoly> uncovered = GetUncoveredExPolygons(layers[i],layers[i-1]);
+	layers[i]->addBridgePolygons(uncovered);
 	layers[i]->calcBridgeAngles(layers[i-1]);
       }
       else {
-	layers[i]->addFullPolygons(bridges,make_decor);
+	vector<Poly> uncovered = GetUncoveredPolygons(layers[i],layers[i-1]);
+	layers[i]->addFullPolygons(uncovered,make_decor);
       }
     }
   m_progress->update(2*count+1);
@@ -352,11 +353,27 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
   clipp.addPolys(subjlayer->GetFillPolygons(),subject); 
   clipp.addPolys(subjlayer->GetFullFillPolygons(),subject); 
   clipp.addPolys(subjlayer->GetBridgePolygons(),subject); 
+  clipp.addPolys(cliplayer->GetOuterShell(),clip); // have some overlap
+  //clipp.addPolys(cliplayer->GetInnerShell(), clip); // have some more overlap
+  //clipp.addPolys(cliplayer->GetPolygons(),clip);
+  //clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
+  vector<Poly> uncovered = clipp.subtract();
+  return uncovered;
+}				 
+// find polys in subjlayer that are not covered by any filled polygons of cliplayer
+vector<ExPoly> Model::GetUncoveredExPolygons(const Layer * subjlayer,
+					     const Layer * cliplayer)
+{
+  Clipping clipp;
+  clipp.clear();
+  clipp.addPolys(subjlayer->GetFillPolygons(),subject); 
+  clipp.addPolys(subjlayer->GetFullFillPolygons(),subject); 
+  clipp.addPolys(subjlayer->GetBridgePolygons(),subject); 
   //clipp.addPolys(cliplayer->GetOuterShell(),clip); // have some overlap
   clipp.addPolys(cliplayer->GetInnerShell(), clip); // have some more overlap
   //clipp.addPolys(cliplayer->GetPolygons(),clip);
   //clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
-  vector<Poly> uncovered = clipp.subtract();
+  vector<ExPoly> uncovered = clipp.ext_subtract();
   return uncovered;
 }				 
 				 
@@ -372,7 +389,7 @@ void Model::MultiplyUncoveredPolygons()
       if (i%10==0) m_progress->update(i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
       vector<Poly> decorpolys = layers[i]->GetDecorPolygons();
-      vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
+      vector<ExPoly> bridgepolys = layers[i]->GetBridgePolygons();
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (s=1; s < shells; s++) 
 	if (i-s > 1) {
@@ -387,7 +404,7 @@ void Model::MultiplyUncoveredPolygons()
     {
       if (i%10==0) m_progress->update(count + count -i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
-      vector<Poly> bridgepolys = layers[i]->GetBridgePolygons();
+      vector<ExPoly> bridgepolys = layers[i]->GetBridgePolygons();
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
       vector<Poly> decorpolys = layers[i]->GetDecorPolygons();
       for (int s=1; s < shells; s++) 

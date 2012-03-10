@@ -22,6 +22,7 @@
 #include "stdafx.h"
 #include "geometry.h"
 
+
 class Poly
 {
   double z;
@@ -58,6 +59,7 @@ public:
 	bool polyInside(const Poly * poly, double maxoffset=0.0001) const;
 	uint nearestDistanceSqTo(const Vector2d p, double &mindist) const;
 	void nearestIndices(const Poly p2, int &thisindex, int &otherindex) const;
+	double shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end) const;
 
 	void rotate(Vector2d center, double angle);
 
@@ -108,4 +110,9 @@ public:
 	string info() const;
 
 };
+
+typedef struct {
+  Poly outer;
+  vector<Poly> holes;
+} ExPoly;
 

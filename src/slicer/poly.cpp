@@ -208,6 +208,47 @@ uint Poly::nearestDistanceSqTo(const Vector2d p, double &mindist) const
   }
   return nindex;
 }
+// returns length and two points
+double Poly::shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end) const
+{
+  double min1 = 100000000, min2 = 100000000;
+  int minindex1=0, minindex2=0;
+  Vector2d onpoint1, onpoint2;
+  // test this vertices
+  for (uint i = 0; i < vertices.size(); i++) {
+    for (uint j = 0; j < p2.vertices.size(); j++) {
+      Vector2d onpoint; // on p2
+      // dist from point i to lines on p2
+      const double mindist = minimum_distance_Sq(p2.vertices[j], 
+						 p2.getVertexCircular(j+1),
+						 vertices[i], onpoint);
+      if (mindist < min1) {
+	min1 = mindist; onpoint1 = onpoint; minindex1 = i;
+      }
+    }
+  }
+  // test p2 vertices  
+  for (uint i = 0; i < p2.vertices.size(); i++) {
+    for (uint j = 0; j < vertices.size(); j++) {
+      Vector2d onpoint; // on this
+      // dist from p2 point i to lines on this
+      const double mindist = minimum_distance_Sq(vertices[j], 
+						 getVertexCircular(j+1),
+						 p2.vertices[i], onpoint);
+      if (mindist < min2) {
+	min2 = mindist; onpoint2 = onpoint; minindex2 = i;
+      }
+    }
+  }
+  if (min1 < min2) { // this vertex, some point on p2 lines
+    start = getVertexCircular(minindex1);
+    end = onpoint1;
+  } else { // p2 vertex, some point of this lines
+    start = p2.getVertexCircular(minindex2);
+    end = onpoint2;
+  }
+  return (end-start).lengthSquared();
+}
 
 bool Poly::vertexInside(const Vector2d p, double maxoffset) const
 {

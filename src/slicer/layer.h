@@ -94,7 +94,7 @@ public:
   void SetPolygons(const Matrix4d &T, const Shape shape, double z);
   vector<Poly> GetFillPolygons() const { return fillPolygons; }
   vector<Poly> GetFullFillPolygons() const { return fullFillPolygons; }
-  vector<Poly> GetBridgePolygons() const { return bridgePolygons; }
+  vector<ExPoly> GetBridgePolygons() const { return bridgePolygons; }
   vector<Poly> GetSkinFullPolygons() const { return skinFullFillPolygons; }
   vector<Poly> GetSupportPolygons() const { return supportPolygons; }
   vector<Poly> GetDecorPolygons() const { return decorPolygons; }
@@ -106,9 +106,10 @@ public:
   
   void setFullFillPolygons(const vector<Poly> polys);  
   void addFullFillPolygons(const vector<Poly> polys);
-  void addFullPolygons(const vector<Poly> fullpolys, bool decor=false) ;
-  void setBridgePolygons(const vector<Poly>  polys);
-  void addBridgePolygons(const vector<Poly> polys);
+  void addFullPolygons(const vector<Poly> fullpolys, bool decor=false);
+  void addFullPolygons(const vector<ExPoly> expolys, bool decor=false);
+  void setBridgePolygons(const vector<ExPoly>  polys);
+  void addBridgePolygons(const vector<ExPoly> polys);
   void setBridgeAngles(const vector<double> angles);
   void makeSkinPolygons(); 
   void setNormalFillPolygons(const vector<Poly> polys);
@@ -148,7 +149,7 @@ public:
 
   Infill * normalInfill;
   Infill * fullInfill;
-  Infill * bridgeInfill;
+  vector<Infill*> bridgeInfills; // an infill for every brigde (different angles)
   vector<Infill*> skinFullInfills;
   Infill * supportInfill;
   Infill * decorInfill;
@@ -157,8 +158,9 @@ public:
   vector< vector<Poly> > shellPolygons; // all shells except innermost
   vector<Poly> fillPolygons;	        // innermost shell 
   vector<Poly> fullFillPolygons;        // fully filled polygons (uncovered)
-  vector<Poly> bridgePolygons;          // fully filled polygons (uncovered) for bridge
-  vector<double> bridge_angles;         // angle of each bridge polygon
+  vector<ExPoly> bridgePolygons; // fully filled ex-polygons with holes (uncovered) for bridge
+  vector<double> bridge_angles;  // angles of each bridge ex-polygon
+  vector< vector<Poly> > bridgePillars; // bridge pillars for debugging
   vector<Poly> supportPolygons;	        // polygons to be filled with support pattern
   uint skins; // number of skin divisions
   vector<Poly> skinPolygons;            // outer skin polygons

@@ -66,10 +66,14 @@ public:
 
   void addPoly(const Poly poly, PolyType type);
   void addPolys(const vector<Poly> poly, PolyType type);
+  void addPolys(const vector<ExPoly> expolys, PolyType type);
+  void addPolys(const ExPoly poly, PolyType type);
 
   vector<Poly> intersect();
+  vector<ExPoly> ext_intersect();
   vector<Poly> unite();
   vector<Poly> subtract();
+  vector<ExPoly> ext_subtract();
   vector<Poly> subtractMerged();
   // vector<Poly> xor();
 
@@ -80,16 +84,28 @@ public:
 				JoinType jtype=jmiter, double miterdist=1);
   static vector<Poly> getOffset(const vector<Poly> polys, double distance, 
 				JoinType jtype=jmiter,double miterdist=1);
+  static vector<Poly> getOffset(const ExPoly expoly, double distance, 
+				JoinType jtype, double miterdist);
   static vector<Poly> getShrinkedCapped(const vector<Poly> polys, double distance, 
 					JoinType jtype=jmiter,double miterdist=1);
 
   //vector< vector<Vector2d> > intersect(const Poly poly1, const Poly poly2) const;
 
   static Poly getPoly(const CL::Polygon cpoly, double z, double extrusionfactor);
-  static vector <Poly> getPolys(const CL::Polygons cpoly, double z, double extrusionfactor);
+  static vector<Poly> getPolys(const ExPoly expoly);
+  static vector<Poly> getPolys(const vector<ExPoly> expolys);
+  static vector<Poly> getPolys(const CL::Polygons cpoly, double z, double extrusionfactor);
+  static vector<ExPoly> getExPolys(const CL::ExPolygons excpolys, double z,
+				   double extrusionfactor);
 
+  static vector<ExPoly> getExPolys(const vector<Poly> polys, 
+				   double z, double extrusionfactor);
+  static CL::ExPolygons getExClipperPolygons(const vector<Poly> polys);
+  
   static CL::Polygon  getClipperPolygon (const Poly poly);
   static CL::Polygons getClipperPolygons(const vector<Poly> polys);
+  static CL::Polygons getClipperPolygons(const ExPoly expoly);
+  static CL::ExPolygons getClipperPolygons(const vector<ExPoly> expolys);
 
   static double Area(const Poly poly);
   static double Area(const vector<Poly> polys);
