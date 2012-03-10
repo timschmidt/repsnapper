@@ -2,9 +2,13 @@ Ubuntu Natty instructions.
 
 Make sure wine, mingw32 and nsis packages are installed w/ apt.
 
-You need the right version of mingw32 (gcc-mingw32 in Ubuntu natty is built with 
---disable-shared, which breaks C++ exception handling. See
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625778). I haven't tried OpenSuse's
+You need the right version of mingw32 (mingw32, not gcc-mingw32 in Ubuntu natty is built
+with --disable-shared, which breaks C++ exception handling. See
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625778). I haven't tried OpenSuse's mingw32
+to see if it has the same problem.
+As of 10 Mar 2012, Debian's mingw32 package doesn't have the required shared version of
+libgcc_s, and needs rebuilding with a patch to provide it. Basically, check that the
+version of mingw32 you have installs a libgcc_s.a and provides libgcc_sjlj_1.dll.
 
 Create a build dir and
 
