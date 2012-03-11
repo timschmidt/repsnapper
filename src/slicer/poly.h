@@ -55,7 +55,8 @@ public:
 
 	//vector< vector<Vector2d> > intersect(Poly &poly1, Poly &poly2) const;
 
-	bool vertexInside(const Vector2d point, double maxoffset=0.0001) const;
+	bool vertexInside(const Vector2d point, double maxoffset=0.01) const;
+	bool vertexInside2(const Vector2d point, double maxoffset=0.01) const;
 	bool polyInside(const Poly * poly, double maxoffset=0.0001) const;
 	uint nearestDistanceSqTo(const Vector2d p, double &mindist) const;
 	void nearestIndices(const Poly p2, int &thisindex, int &otherindex) const;
@@ -68,7 +69,7 @@ public:
 
 	vector<Vector2d> getMinMax() const;
 	vector<Intersection> lineIntersections(const Vector2d P1, const Vector2d P2,
-					       double maxerr=0.0001) const;
+					       double maxerr=0.01) const;
 
 	// ClipperLib::Polygons getOffsetClipperPolygons(double dist) const ;
 	// ClipperLib::Polygon getClipperPolygon(bool reverse=false) const;

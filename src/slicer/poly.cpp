@@ -250,16 +250,47 @@ double Poly::shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end)
   return (end-start).lengthSquared();
 }
 
-bool Poly::vertexInside(const Vector2d p, double maxoffset) const
+
+bool Poly::vertexInside(const Vector2d point, double maxoffset) const
 {
-  uint c = 0;
-  for (uint i = 0; i < vertices.size()-1;  i++) {
+  // Shoot a ray along +X and count the number of intersections.
+  // If n_intersections is even, return false, else return true
+  Vector2d EndP(point.x+10000, point.y);
+  int intersectcount = 1; // we want to test if uneven
+
+  for(size_t i=0; i<vertices.size();i++)
+    {
+      Vector2d P1 = getVertexCircular(i-1);
+      Vector2d P2 = vertices[i];
+                   
+      // Skip horizontal lines, we can't intersect with them, 
+      // because the test line is horizontal
+      if(P1.y == P2.y)      
+	continue;
+      
+      Intersection hit;
+      if(IntersectXY(point,EndP,P1,P2,hit,maxoffset))
+	intersectcount++;
+    }
+  return intersectcount%2;
+}
+
+// http://paulbourke.net/geometry/insidepoly/
+// not really working
+bool Poly::vertexInside2(const Vector2d p, double maxoffset) const
+{
+  uint c = false;
+  //Poly off = Clipping::getOffset(*this,maxoffset).front();
+  for (uint i = 0; i < vertices.size();  i++) {
     Vector2d Pi = vertices[i];
-    Vector2d Pj = vertices[i+1];
-    if ( ((Pi.y>p.y) != (Pj.y>p.y)) &&
-	 (p.x < (Pj.x-Pi.x) * (p.y-Pi.y) / (Pj.y-Pj.y) + Pi.x) )
+    Vector2d Pj = getVertexCircular(i+1);
+    if ( ((Pi.y > p.y) != (Pj.y > p.y)) &&
+	 (abs(p.x - (Pj.x-Pi.x) * (p.y-Pi.y) / (Pj.y-Pj.y) + Pi.x) > maxoffset) )
       c = !c;
   }
+  if (!c) 
+    for (uint i = 0; i < vertices.size();  i++) 
+      if ((vertices[i]-p).length() < maxoffset) return true; // on a vertex    
   return c;
 }
 
@@ -268,7 +299,7 @@ bool Poly::polyInside(const Poly * poly, double maxoffset) const
 {
   uint i, count=0;
   for (i = 0; i < poly->vertices.size();  i++) {
-    Vector2d P = poly->getVertexCircular(i);
+    Vector2d P = poly->vertices[i];
     if (vertexInside(P,maxoffset))
       count++;
   }
