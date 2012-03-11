@@ -28,58 +28,86 @@
 #include "model.h"
 #include "progress.h"
 #include "geometry.h"
+#include "ctype.h"
 
 using namespace std;
 
+// String feeder class
+class Feed {
+public:
+  Feed(std::string s) : str(s), pos(0) { }
+  char get() {     return (pos < str.size()) ? str[pos++] : 0;  }
+  void unget() {   if (pos) --pos;  }
+protected:
+  std::string str;
+  size_t pos;
+};
 
-inline int ToInt(const std::string& s)
+// Gcode string feeder, skips over spaces and comments
+class GcodeFeed : public Feed {
+public:
+  GcodeFeed( std::string s) : Feed(s) {}
+
+  char get() {
+    while ( 1 ) {
+      char ch = Feed::get();
+
+      if (isspace(ch)) continue ;
+
+      if (ch == ';') {// ; COMMENT #EOL
+	str="";
+	return 0;
+      }
+
+      if (ch == '(') // ( COMMENT )
+      {
+	while (ch && ch != ')')
+	  ch = Feed::get();
+	continue;
+      }
+      return ch;
+    }
+  }
+};
+
+inline std::string ParseNumber(GcodeFeed & f) {
+  std::string str;
+  for (char ch = f.get(); ch; ch = f.get()) {
+    if (!isdigit(ch) && ch != '.' && ch != '+' && ch != '-') { // Non-number part
+      f.unget(); // We read something that doesn't belong to us
+      break;
+    }
+    str += ch;
+  }
+  return str;
+}
+
+inline int ToInt(GcodeFeed &f)
 {
-	std::istringstream i(s);
+	std::istringstream i(ParseNumber(f));
 	int x;
 	if (!(i >> x))
 		return -1;
 	return x;
 }
 
-inline float ToFloat(const std::string& s)
+inline float ToFloat(GcodeFeed &f)
 {
-	std::istringstream i(s);
+	std::istringstream i(ParseNumber(f));
 	float x;
 	if (!(i >> x))
 		return -1;
 	return x;
 }
 
-inline double ToDouble(const std::string& s)
+inline double ToDouble(GcodeFeed &f)
 {
-	std::istringstream i(s);
+	std::istringstream i(ParseNumber(f));
 	double x;
 	if (!(i >> x))
 		return -1;
 	return x;
 }
-
-inline string FromInt(const int i)
-{
-	std::stringstream s;
-	s << i;
-	return s.str();
-}
-
-inline string FromFloat(const float i)
-{
-	std::stringstream s;
-	s << i;
-	return s.str();
-}
-
-inline string FromDouble(const double i)
-{
-	std::stringstream s;
-	s << i;
-	return s.str();
-}
-
 
 
 Command::Command() 
@@ -114,95 +142,78 @@ Command::Command(const Command &rhs){
   comment = rhs.comment;
 }
 
-
+/**
+ * Parse GCodes from a delivered line.
+ * Comments are from ; to end-of-line
+ * Comments are from ( to )
+ * Spaces and case outside of comments are ignored completely, according to NIST standard
+ * Multiple commands can appear on one line
+ * Uninteresting commands are silently dropped.
+ *
+ * @param gcodeline the string containing a line of gcode
+ * @param defaultpos
+ * @param [OUT] gcodeline the unparsed portion of the string
+ */
 Command::Command(string gcodeline, Vector3d defaultpos){
   where = defaultpos;
   arcIJK = Vector3d(0,0,0);
   e=0.0;
   f=0.0;
-
-  istringstream line(gcodeline);
-  string buffer;
-  line >> buffer;	// read something
-  
-  // if (!append_text ((s+"\n").c_str()))
-  //   continue;
-  
-  if(buffer[0] == ';')	// COMMENT
-    return;
-  
-  if( buffer.find( "G21", 0) != string::npos )	//Coordinated Motion
-    {
-      Code = MILLIMETERSASUNITS;
-      return; //loaded_commands.push_back(command);
-    }
-   
   is_value = false;
-  if( buffer.find( "G1", 0) != string::npos )	//string::npos means not defined
-    Code = COORDINATEDMOTION;
-  else if( buffer.find( "G0", 0) != string::npos )	//Rapid Motion
-    Code = RAPIDMOTION;
-  else if( buffer.find( "G2", 0) != string::npos )	// CW ARC
-    Code = ARC_CW;
-  else if( buffer.find( "G3", 0) != string::npos )	// CCW ARC
-    Code = ARC_CCW;
-  else if( buffer[0] == 'M' ) {	               // M Command
-    // string number = buffer.substr(1,buffer.length()-1);  // not needed 
-    // What Code is it?
-    is_value = true;
-  }
 
-  while(line >> buffer)	// read next keyword
+  // Notes:
+  //   Spaces are not significant in GCode
+  //   Weird-ass syntax like "G1X + 0 . 2543" is the same as "G1 X0.2453"
+  //   "G02" is the same as "G2"
+  //   Multiple Gxx codes on a line are accepted, but results are undefined.
+
+  GcodeFeed buffer(gcodeline) ;
+
+  for (char ch = buffer.get(); ch; ch = buffer.get()) {
+    // GCode is always <LETTER> <NUMBER>
+    ch=toupper(ch);
+    float num = ToFloat(buffer) ;
+
+    switch (ch)
     {
-      if ( is_value && buffer[0] == 'S' ) {
-	string number = buffer.substr(1,buffer.length()-1); 
-	value = ToDouble(number);
+    case 'G':
+      switch( int(num) ) {
+      case 1:		// G1
+	Code = COORDINATEDMOTION;
+	break;
+      case 0:		// G0
+	Code = RAPIDMOTION;
+	break;
+      case 2:		// G2
+	Code = ARC_CW;
+	break;
+      case 3:		// G3
+	Code = ARC_CCW;
+	break;
+      case 21:		// G21
+	// FIXME: Technically this is allowed on the same line with 'move' codes
+	//        i.e., 'G1 X25 Y25 G21'  means "move to X=25mm, Y=25mm"
+	Code = MILLIMETERSASUNITS;
+	break;
       }
-      else if( buffer[0] == ';' ) {
-	return;
-      }
-      else if( buffer[0] == 'X' ) {
-	string number = buffer.substr(1,buffer.length()-1); 
-	where.x = ToDouble(number);
-      }
-      else if( buffer[0] == 'Y' ) {
-	string number = buffer.substr(1,buffer.length()-1);
-	where.y = ToDouble(number);
-      }
-      else if( buffer[0] == 'Z' ) {
-	string number = buffer.substr(1,buffer.length()-1);
-	where.z = ToDouble(number);
-      }
-      else if((Code == ARC_CW || Code == ARC_CCW)
-	      &&  buffer[0] == 'I' ) {
-	string number = buffer.substr(1,buffer.length()-1);
-	arcIJK.x = ToDouble(number);
-      }
-      else if((Code == ARC_CW || Code == ARC_CCW)
-	      &&  buffer[0] == 'J' ) {
-	string number = buffer.substr(1,buffer.length()-1);
-	arcIJK.y = ToDouble(number);
-      }
-      else if((Code == ARC_CW || Code == ARC_CCW)
-	      &&  buffer[0] == 'K' ) {
-	cerr << "cannot handle ARC K command (yet?)!" << endl;
-	//string number = buffer.substr(1,buffer.length()-1);
-	//arcIJK.z = ToDouble(number);
-      }
-      else if((Code == ARC_CW || Code == ARC_CCW)
-	      &&  buffer[0] == 'R' ) {
-	cerr << "cannot handle ARC R command (yet?)!" << endl;
-	//string number = buffer.substr(1,buffer.length()-1);
-      }
-      else if( buffer[0] == 'E' ) {
-	string number = buffer.substr(1,buffer.length()-1);
-	e = ToDouble(number);
-      }
-      else if( buffer[0] == 'F' ) {
-	string number = buffer.substr(1,buffer.length()-1);
-	f = ToDouble(number);
-      }
+      break;
+    case 'M':      is_value = true;  break;
+    case 'S':      value = num;      break;
+    case 'E':      e = num;          break;
+    case 'F':      f = num;          break;
+    case 'X':      where.x = num;    break;
+    case 'Y':      where.y = num;    break;
+    case 'Z':      where.z = num;    break;
+    case 'I':      arcIJK.x = num;   break;
+    case 'J':      arcIJK.y = num;   break;
+    case 'K':
+      cerr << "cannot handle ARC K command (yet?)!" << endl;
+      break;
+    case 'R':
+      cerr << "cannot handle ARC R command (yet?)!" << endl;
+      break;
     }
+  }
 }
 
 string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcode) const
@@ -608,7 +619,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	if (start>0) {
 	  for(uint i=start; i < end ;i++)
 	    {
-	      while (commands[i].is_value || commands[i].where == defaultpos && i < n_cmds-1)
+	      while ((commands[i].is_value || commands[i].where == defaultpos) && i < n_cmds-1)
 		i++;
 	      pos = commands[i].where;
 	      break;
