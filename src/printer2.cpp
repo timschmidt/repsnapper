@@ -29,7 +29,7 @@
 void Printer::Home(string axis)
 {
   assert (m_model != NULL);
-  Settings *settings = &m_model->settings;
+  // Settings *settings = &m_model->settings;
 
   if(printing)
     {
