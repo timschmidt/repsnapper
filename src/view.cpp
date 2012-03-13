@@ -468,6 +468,12 @@ public:
     m_temp->set_text(tmp);
   }
 
+  void target_changed()
+  {
+    float value = m_target->get_value();
+    m_printer->SetTemp(m_type, value);
+  }
+
   TempRow(Model *model, Printer *printer, TempType type, Gtk::SpinButton *target) :
     m_model(model), m_printer(printer), m_type(type), m_target(target)
   {
@@ -478,6 +484,10 @@ public:
     pOn->signal_toggled().connect
       (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
     add(*pOn);
+
+    m_target->signal_value_changed().connect
+        (sigc::mem_fun(*this, &TempRow::target_changed));
+
     add(*manage (new Gtk::Label(_("Temp. (°C)"))));
     m_temp = new Gtk::Label(_("<unknown>"));
     add (*m_temp);
