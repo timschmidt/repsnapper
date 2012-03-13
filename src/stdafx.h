@@ -41,6 +41,7 @@ typedef unsigned int        uint;
 #ifdef WIN32
 	#include <windows.h>   // Header File For Windows
 	#include <tchar.h>
+        #undef interface // Undo braindead define from Windows that conflicts with glibmm DBUS binding
 typedef unsigned int        guint;
 #endif
 #include "platform.h"   // OpenGL, glu, glut in cross-platform way
