@@ -448,7 +448,7 @@ class View::TempRow : public Gtk::HBox {
 
 public:
   // see: http://reprap.org/wiki/RepRapGCodes for more details
-  void heat_toggled (Gtk::ToggleButton *pOn)
+  void heat_changed (Gtk::ToggleButton *pOn)
   {
     float value = 0;
     if (pOn->get_active()) 
@@ -468,12 +468,6 @@ public:
     m_temp->set_text(tmp);
   }
 
-  void target_changed()
-  {
-    float value = m_target->get_value();
-    m_printer->SetTemp(m_type, value);
-  }
-
   TempRow(Model *model, Printer *printer, TempType type, Gtk::SpinButton *target) :
     m_model(model), m_printer(printer), m_type(type), m_target(target)
   {
@@ -482,11 +476,10 @@ public:
     // add(*manage(new Gtk::Label(_(names[type]))));
     Gtk::ToggleButton *pOn = manage (new Gtk::ToggleButton(_("Heat On")));
     pOn->signal_toggled().connect
-      (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_toggled), pOn));
+      (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_changed), pOn));
     add(*pOn);
-
     m_target->signal_value_changed().connect
-        (sigc::mem_fun(*this, &TempRow::target_changed));
+      (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_changed), pOn));
 
     add(*manage (new Gtk::Label(_("Temp. (°C)"))));
     m_temp = new Gtk::Label(_("<unknown>"));
