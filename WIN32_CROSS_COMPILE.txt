@@ -1,16 +1,27 @@
-Ubuntu Natty instructions.
+Instructions for building for win32 using cross-compilation
 
-Make sure wine, mingw32 and nsis packages are installed w/ apt.
+Tested on Debian Sarge
+
+1) Install jhbuild, Wine, mingw32-binutils, mingw32-runtime and nsis packages via APT
+jhbuild needs to be at least version 2.30.2 for .tar.xz file support.
+
+2) Mingw32 compiler
 
 You need the right version of mingw32 (mingw32, not gcc-mingw32 in Ubuntu natty is built
 with --disable-shared, which breaks C++ exception handling. See
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625778). I haven't tried OpenSuse's mingw32
-to see if it has the same problem.
-As of 10 Mar 2012, Debian's mingw32 package doesn't have the required shared version of
-libgcc_s, and needs rebuilding with a patch to provide it. Basically, check that the
-version of mingw32 you have installs a libgcc_s.a and provides libgcc_sjlj_1.dll.
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625778). I haven't tried
+OpenSuse's mingw32 to see if it has the same problem.
+As of 10 Mar 2012, Debian's mingw32 package doesn't have the required shared
+version of libgcc_s, and needs rebuilding with a patch to provide it.
+Basically, check that the version of mingw32 you have installs a libgcc_s.a
+and provides libgcc_sjlj_1.dll.
 
-Create a build dir and
+Even better, is to rebuild mingw32 to use DWARF style exception handling, as
+well as shared libgcc (in which case, you'll have libgcc_dw2_1.dll instead of
+libgcc_sjlj_1.dll) (TBD: Expand these instructions)
+
+3) Build pre-requisites
+4) Create a build dir and
 
 export BUILDDIR=`pwd`/build/
 
