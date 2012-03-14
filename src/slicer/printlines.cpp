@@ -50,22 +50,27 @@ vector<Command> PLine3::getCommands(Vector3d &lastpos, double extrusion,
     commands.push_back( Command(COORDINATEDMOTION, from, 0, movespeed) );
   
   double extrudedMaterial = length() * extrusionfactor * extrusion;
+  extrudedMaterial += absolute_extrusion;
   //cerr << "extr " << extrudedMaterial<< endl;
   double comm_speed = max(minspeed, this->speed); // in case maxspeed is too low
+  Command command;
   if (arc) 
     {
       GCodes gc = (arc==-1 ? ARC_CCW : ARC_CW);
-      Command command = Command (gc, to, extrudedMaterial, comm_speed);
+      command = Command (gc, to, extrudedMaterial, comm_speed);
       command.arcIJK = arcIJK;
       ostringstream o;
       o << (int)(arcangle*180/M_PI) << "° arc";
       command.comment += o.str();
-      commands.push_back(command);
     }
   else
     {
-      commands.push_back(Command (COORDINATEDMOTION, to, extrudedMaterial, comm_speed));
+      command = Command (COORDINATEDMOTION, to, extrudedMaterial, comm_speed);
     }
+  if (absolute_extrusion!=0) {
+    command.comment += _(" Absolute Extrusion");
+  }
+  commands.push_back(command);
   lastpos = to;
   return commands;
 }
