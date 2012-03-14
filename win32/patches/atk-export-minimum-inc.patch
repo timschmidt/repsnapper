@@ -1,0 +1,9 @@
+--- atk/atk.symbols	2012-03-13 14:42:48.179678138 +1100
++++ atk/atk.symbols.mininc	2012-03-13 14:42:33.311677419 +1100
+@@ -239,5 +239,6 @@
+ 	atk_value_get_current_value
+ 	atk_value_get_maximum_value
+ 	atk_value_get_minimum_value
++	atk_value_get_minimum_increment
+ 	atk_value_get_type
+ 	atk_value_set_current_value

@@ -1,0 +1,36 @@
+--- gtkglext-1.2.0.orig/configure.in	2006-02-05 14:17:19.000000000 +1100
++++ gtkglext-1.2.0/configure.in	2012-03-13 23:19:12.041177670 +1100
+@@ -345,11 +345,16 @@
+ ## calls. Oh, also the later pkg-config calls don't include 
+ ## the version requirements since those make the module lists 
+ ## annoying to construct
++if test "x$os_win32" != "xyes"; then
++    PANGOX="pangox_pkg >= pangox_required_version" 
++    PANGOX_PKG="pangox_pkg"
++fi
++
+ PKG_CHECK_MODULES([BASE_DEPENDENCIES], [\
+ gtk_pkg >= gtk_required_version \
+ gdk_pkg >= gdk_required_version \
+ pango_pkg >= pango_required_version \
+-pangox_pkg >= pangox_required_version \
++$PANGOX
+ gmodule_pkg >= gmodule_required_version \
+ ])
+ 
+@@ -794,7 +799,7 @@
+ # CFLAGS and LIBS
+ ##################################################
+ 
+-GDKGLEXT_PACKAGES="gdk_pkg pango_pkg pangox_pkg gmodule_pkg"
++GDKGLEXT_PACKAGES="gdk_pkg pango_pkg $PANGOX_PKG gmodule_pkg"
+ GDKGLEXT_EXTRA_CFLAGS="$GL_CFLAGS $GDKGLEXT_WIN_CFLAGS"
+ GDKGLEXT_EXTRA_LIBS="$GL_LIBS $GDKGLEXT_WIN_LIBS"
+ GDKGLEXT_DEP_CFLAGS="$GDKGLEXT_EXTRA_CFLAGS `$PKG_CONFIG --cflags $GDKGLEXT_PACKAGES`"
+--- gtkglext-1.2.0.orig/autogen.sh	1970-01-01 10:00:00.000000000 +1000
++++ gtkglext-1.2.0/autogen.sh	2012-03-13 23:45:49.705254993 +1100
+@@ -0,0 +1,4 @@
++#!/bin/sh
++
++autoreconf -i
++./configure "$@"

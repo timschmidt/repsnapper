@@ -1,0 +1,14 @@
+--- gdk-pixbuf-2.24.1.orig/gdk-pixbuf/io-gdip-animation.c	2011-12-17 08:43:53.000000000 +1100
++++ gdk-pixbuf-2.24.1/gdk-pixbuf/io-gdip-animation.c	2012-03-13 14:02:16.787560466 +1100
+@@ -165,6 +165,11 @@
+ G_DEFINE_TYPE (GdkPixbufGdipAnimIter, gdk_pixbuf_gdip_anim_iter, GDK_TYPE_PIXBUF_ANIMATION_ITER);
+ 
+ static void
++gdk_pixbuf_gdip_anim_iter_init (GdkPixbufGdipAnimIter *iter)
++{
++}
++
++static void
+ gdk_pixbuf_gdip_anim_iter_class_init (GdkPixbufGdipAnimIterClass *klass)
+ {
+         GObjectClass *object_class = G_OBJECT_CLASS (klass);

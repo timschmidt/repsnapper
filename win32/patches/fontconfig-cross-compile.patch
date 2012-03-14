@@ -1,0 +1,81 @@
+diff -ur fontconfig-2.8.0.orig/configure.in fontconfig-2.8.0/configure.in
+--- fontconfig-2.8.0.orig/configure.in	2009-11-19 10:49:23.000000000 +1100
++++ fontconfig-2.8.0/configure.in	2012-03-14 22:08:39.725154354 +1100
+@@ -103,9 +103,13 @@
+ AC_MSG_CHECKING([for a C compiler for build tools])
+ if test $cross_compiling = yes; then
+   AC_CHECK_PROGS(CC_FOR_BUILD, gcc cc)
++  CFLAGS_FOR_BUILD=
+ else
+   CC_FOR_BUILD=$CC
++  CFLAGS_FOR_BUILD=$CFLAGS
+ fi
+ AC_MSG_RESULT([$CC_FOR_BUILD])
++ AC_MSG_RESULT([flags = $CFLAGS_FOR_BUILD])
+ AC_SUBST(CC_FOR_BUILD)
++ AC_SUBST(CFLAGS_FOR_BUILD)
+
+AC_MSG_CHECKING([for suffix of executable build tools])
+if test $cross_compiling = yes; then
+diff -ur fontconfig-2.8.0.orig/doc/Makefile.am fontconfig-2.8.0/doc/Makefile.am
+--- fontconfig-2.8.0.orig/doc/Makefile.am	2009-11-17 04:24:52.000000000 +1100
++++ fontconfig-2.8.0/doc/Makefile.am	2012-03-14 22:07:47.749151839 +1100
+@@ -22,6 +22,7 @@
+ # PERFORMANCE OF THIS SOFTWARE.
+ 
+ CC = @CC_FOR_BUILD@
++CFLAGS = @CFLAGS_FOR_BUILD@
+ EXEEXT = @EXEEXT_FOR_BUILD@
+ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+ 
+diff -ur fontconfig-2.8.0.orig/fc-arch/Makefile.am fontconfig-2.8.0/fc-arch/Makefile.am
+--- fontconfig-2.8.0.orig/fc-arch/Makefile.am	2009-11-19 01:31:09.000000000 +1100
++++ fontconfig-2.8.0/fc-arch/Makefile.am	2012-03-14 22:07:35.629151253 +1100
+@@ -23,6 +23,7 @@
+ #
+ 
+ CC = @CC_FOR_BUILD@
++CFLAGS = @CFLAGS_FOR_BUILD@
+ EXEEXT = @EXEEXT_FOR_BUILD@
+ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+ 
+diff -ur fontconfig-2.8.0.orig/fc-case/Makefile.am fontconfig-2.8.0/fc-case/Makefile.am
+--- fontconfig-2.8.0.orig/fc-case/Makefile.am	2012-03-14 22:06:35.157148325 +1100
++++ fontconfig-2.8.0/fc-case/Makefile.am	2012-03-14 22:06:54.425149259 +1100
+@@ -23,6 +23,7 @@
+ #
+ 
+ CC = @CC_FOR_BUILD@
++CFLAGS = @CFLAGS_FOR_BUILD@
+ EXEEXT = @EXEEXT_FOR_BUILD@
+ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+ 
+diff -ur fontconfig-2.8.0.orig/fc-glyphname/Makefile.am fontconfig-2.8.0/fc-glyphname/Makefile.am
+--- fontconfig-2.8.0.orig/fc-glyphname/Makefile.am	2009-11-19 01:27:57.000000000 +1100
++++ fontconfig-2.8.0/fc-glyphname/Makefile.am	2012-03-14 22:07:54.281152155 +1100
+@@ -23,6 +23,7 @@
+ #
+ 
+ CC = @CC_FOR_BUILD@
++CFLAGS = @CFLAGS_FOR_BUILD@
+ EXEEXT = @EXEEXT_FOR_BUILD@
+ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+ 
+diff -ur fontconfig-2.8.0.orig/fc-lang/Makefile.am fontconfig-2.8.0/fc-lang/Makefile.am
+--- fontconfig-2.8.0.orig/fc-lang/Makefile.am	2009-11-19 01:27:43.000000000 +1100
++++ fontconfig-2.8.0/fc-lang/Makefile.am	2012-03-14 22:07:43.845151650 +1100
+@@ -23,6 +23,7 @@
+ #
+ 
+ CC = @CC_FOR_BUILD@
++CFLAGS = @CFLAGS_FOR_BUILD@
+ EXEEXT = @EXEEXT_FOR_BUILD@
+ LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+ 
+--- fontconfig-2.8.0.orig/autogen.sh	1970-01-01 10:00:00.000000000 +1000
++++ fontconfig-2.8.0/autogen.sh	2012-03-13 23:45:49.705254993 +1100
+@@ -0,0 +1,4 @@
++#!/bin/sh
++
++autoreconf -i
++./configure "$@"

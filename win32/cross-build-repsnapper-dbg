@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export BUILD_FLAVOUR=dbg
+
+exec ./common-build.sh "$@"

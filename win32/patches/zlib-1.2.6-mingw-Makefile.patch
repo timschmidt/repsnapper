@@ -1,0 +1,29 @@
+--- win32/Makefile.gcc	2012-01-30 03:53:53.000000000 +1100
++++ win32/Makefile.gcc.new	2012-03-12 08:42:16.077999243 +1100
+@@ -23,14 +23,14 @@
+ # If the platform is *not* MinGW (e.g. it is Cygwin or UWIN),
+ # the DLL name should be changed from "zlib1.dll".
+ 
+-STATICLIB = libz.a
++STATICLIB = libz.dll.a
+ SHAREDLIB = zlib1.dll
+-IMPLIB    = libz.dll.a
++IMPLIB    = libz.a
+ 
+ #
+ # Set to 1 if shared object needs to be installed
+ #
+-SHARED_MODE=0
++SHARED_MODE=1
+ 
+ #LOC = -DASMV
+ #LOC = -DDEBUG -g
+@@ -60,7 +60,7 @@
+ RM = rm -f
+ 
+ prefix ?= /usr/local
+-exec_prefix = $(prefix)
++exec_prefix ?= $(prefix)
+ 
+ OBJS = adler32.o compress.o crc32.o deflate.o gzclose.o gzlib.o gzread.o \
+        gzwrite.o infback.o inffast.o inflate.o inftrees.o trees.o uncompr.o zutil.o

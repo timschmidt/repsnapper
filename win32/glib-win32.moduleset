@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<moduleset>
+	<repository type="svn" name="svn.gnome.org" default="yes" href="http://svn.gnome.org/svn/"/>
+
+<tarball id="iconv" version="1.12">
+	<source href="http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.12.tar.gz" md5sum="c2be282595751535a618ae0edeb8f648"/>
+</tarball>
+
+<tarball id="gettext" version="0.18">
+	<source href="ftp://ftp.gnu.org/pub/gnu/gettext/gettext-0.18.tar.gz" md5sum="d52a3e061032a1ed13856d42fc86f0fd"/>
+	<patches>
+		<patch file="gettext_0_18_crossbuild_override_tools_fix.patch"/>
+	</patches>
+	<dependencies>
+		<dep package="iconv"/>
+	</dependencies>
+</tarball>
+
+
+<!--
+<tarball id="glib" version="2.24.1">
+	<source href="http://download.gnome.org/sources/glib/2.24/glib-2.24.1.tar.bz2" sha256sum="b49d2dddc1becabffc88d0116967196be064b6b6e9ecac438701fdad9fac1f02"/>
+	<dependencies>
+		<dep package="gettext"/>
+		<dep package="iconv"/>
+		<dep package="zlib"/>
+	</dependencies>
+</tarball>
+-->
+<tarball id="glib" version="2.27.5">
+	<source href="http://ftp.gnome.org/pub/GNOME/sources/glib/2.27/glib-2.27.5.tar.bz2" sha256sum="aad3038db865b762e01b1dc455ffd601b4083c069018d290e5fdfe1a61d328dc"/>
+	<dependencies>
+		<dep package="gettext"/>
+		<dep package="iconv"/>
+		<dep package="zlib"/>
+	</dependencies>
+</tarball>
+
+<tarball id="libsigc++" version="2.0.18">
+        <source href="http://ftp.gnome.org/pub/GNOME/sources/libsigc++/2.0/libsigc++-2.0.18.tar.bz2" sha256sum="53e7d030b73815a31781c26acb42f7880df3e786ed46a8fe3cde08a4c21ecceb"/>
+</tarball>
+
+<tarball id="mm-common" version="0.9.5">
+        <source href="http://ftp.acc.umu.se/pub/gnome/sources/mm-common/0.9/mm-common-0.9.5.tar.bz2" sha256sum="9c602dba89d264a4719db996b9b169716df2d4d10bcd24e56fc3572865a5cb8b"/>
+</tarball>
+
+<repository type="tarball" name="gnome"
+    href="http://ftp.acc.umu.se/pub/gnome/sources/" />
+
+<autotools id="glibmm" autogen-sh="autogen.sh" skip-autogen="false" >
+        <branch module="glibmm/2.27/glibmm-2.27.5.1.tar.bz2" version="2.27.5.1" repo="gnome" 
+           hash="sha256:6d66ec215bf6cd34edc46d90339c4535ad0b4507427868d3cf9e4c5b281a5fd4">
+        </branch>
+        <dependencies>
+		<dep package="glib"/>
+		<dep package="libsigc++"/>
+                <dep package="mm-common"/>
+        </dependencies>
+</autotools>
+
+</moduleset>

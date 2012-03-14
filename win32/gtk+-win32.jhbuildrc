@@ -1,0 +1,167 @@
+# -*- mode: python -*-
+# This code is licensed under the GPLv2 License
+# Derived work from the original freedesktop.org example.jhbuildrc
+#
+# This jhbuildrc file is created for the purpose of cross compile Gtk+
+# with Mingw32 under Linux.
+#
+# Author:      Alberto Ruiz <aruiz@gnome.org>
+#
+# modified by: Rolf Gebhardt <rg@klige.de>
+# 
+
+moduleset = os.environ['PWD']+'/gtk+-win32.moduleset'
+
+modules = ['gtkmm', 'libglade', 'gtkglext' ]
+
+flavour = os.environ['BUILD_FLAVOUR']
+
+if flavour == 'rls':
+        flavour_ext = 'rls'
+        flavour_opt = '--enable-debug=no'
+else:
+        flavour_ext = 'dbg'
+        flavour_opt = "--enable-debug=yes"
+
+
+# checkoutroot: path to download packages elsewhere
+# prefix:       target path to install the compiled binaries
+checkoutroot = os.path.join (os.sep, os.environ['PWD'], 'checkout.'+flavour_ext)
+prefix = os.path.join (os.sep, os.environ['PWD'], 'target.'+flavour_ext)
+
+os.environ['prefix'] = prefix
+
+#The host value is obtained with the result of executing
+#the config.guess script on any of the packages.
+#This value must be valid for most linux/x86 out there
+os.environ['HOST'] = 'i686-pc-linux-gnu'
+os.environ['TARGET'] = 'i586-pc-mingw32'
+
+# Clear PKG_CONFIG_PATH
+os.environ['PKG_CONFIG_PATH'] = ""
+os.environ['PKG_CONFIG_LIBDIR'] = os.path.join(os.sep, prefix, 'lib', 'pkgconfig')
+addpath('PKG_CONFIG_PATH', os.path.join(os.sep, prefix, 'lib64', 'pkgconfig'))
+# addpath('PKG_CONFIG_PATH', os.path.join(os.sep, 'usr', 'lib', 'pkgconfig'))
+# addpath('PKG_CONFIG_PATH', os.path.join(os.sep, 'usr', 'share', 'pkgconfig'))
+
+#Prefix for all the tools
+mingw_tool_prefix = '/usr/bin/i586-mingw32msvc-'
+
+mingw_tools = {'ADDR2LINE': 'addr2line',
+	'AS': 'as', 'CC': 'gcc', 'CPP': 'cpp',
+	'Cppfilt': 'c++filt', 'CXX': 'g++',
+	'DLLTOOL': 'dlltool', 'DLLWRAP': 'dllwrap',
+	'GCOV': 'gcov', 'LD': 'ld', 'NM': 'nm',
+	'OBJCOPY': 'objcopy', 'OBJDUMP': 'objdump',
+	'READELF': 'readelf', 'SIZE': 'size',
+	'STRINGS': 'strings', 'WINDRES': 'windres',
+	'AR': 'ar', 'RANLIB': 'ranlib', 'STRIP': 'strip'}
+
+#Exporting all as enviroment variables with its prefix
+mingw_tools_args = str()
+for tool in mingw_tools.keys():
+	fullpath_tool = mingw_tool_prefix + mingw_tools[tool]
+	os.environ[tool] = fullpath_tool
+
+#Added another common env var name for windres
+os.environ['RC'] = os.environ['WINDRES']
+
+#Exporting tool flags enviroment variables
+os.environ['LDFLAGS']  = '-L'+prefix+'/lib -shared-libgcc -mthreads -fexceptions'
+os.environ['CFLAGS']   = '-mms-bitfields -march=i686'
+os.environ['CPPFLAGS'] = '-I'+prefix+'/include'
+os.environ['CXXFLAGS'] = '-mms-bitfields -march=i686 -fexceptions -shared-libgcc -mthreads'
+os.environ['ARFLAGS']  = '-ar rcs'
+os.environ['INSTALL']  = os.path.expanduser('~/bin/install-check')
+
+if flavour == 'dbg':
+    os.environ['CFLAGS']   += ' -g -O0'
+    os.environ['CXXFLAGS'] += ' -g -O0'
+
+#needed by win32/Makefile.gcc of zlib
+os.environ['INCLUDE_PATH'] = prefix+'/include'
+os.environ['LIBRARY_PATH'] = prefix+'/lib'
+os.environ['BINARY_PATH']  = prefix+'/bin'
+
+# always autogen because otherwise freetype will not build
+alwaysautogen = True
+
+# Don't pass lib64 as the libdir on 64 bit systems
+use_lib64 = False
+
+#Populating autogenargs
+autogenargs  = ' --build='+os.environ['HOST']
+autogenargs += ' --host='+os.environ['TARGET']
+autogenargs += ' --target='+os.environ['TARGET']
+autogenargs += ' --disable-docs'
+autogenargs += ' --enable-all-warnings --enable-maintainer-mode'
+autogenargs += ' --disable-static'
+autogenargs += ' '+flavour_opt
+
+for tool in ('AR', 'RANLIB', 'STRIP', 'AS',
+	     'DLLTOOL', 'OBJDUMP', 'NM', 'WINDRES'):
+	autogenargs += ' '+tool+'="'+os.environ[tool]+'" '
+
+#Module specific configure arguments
+module_autogenargs['zlib']       = ' --prefix='+prefix+' --shared'
+
+module_autogenargs['gettext']    = autogenargs + """ --without-emacs \
+                                                     --without-cvs \
+                                                     --disable-curses \
+                                                     --disable-java \
+                                                     --disable-native-java \
+                                                     --enable-relocatable"""
+
+module_autogenargs['glib']       = autogenargs + """ --enable-explicit-deps=no \
+                                                     --disable-gtk-doc"""
+
+module_autogenargs['cairo']      = autogenargs + """ --enable-explicit-deps=no \
+                                                     --enable-xlib=no \
+                                                     --enable-xlib-xrender=no \
+                                                     --enable-win32-font=yes"""
+
+module_autogenargs['pixman']     = autogenargs + """ --enable-gtk=no"""
+
+module_autogenargs['pango']      = autogenargs + """ --disable-gtk-doc \
+                                                     --enable-explicit-deps=no \
+                                                     --with-included-modules \
+                                                     --enable-introspection=no"""
+
+module_autogenargs['atk']        = autogenargs + """ --disable-glibtest \
+                                                     --disable-scrollkeeper \
+                                                     --disable-gtk-doc \
+                                                     --enable-introspection=no"""
+
+module_autogenargs['gdk-pixbuf']       = autogenargs + """ --disable-glibtest \
+                                                     --disable-scrollkeeper \
+                                                     --disable-gtk-doc \
+                                                     --with-included-modules \
+                                                     --without-libjasper \
+                                                     --enable-introspection=no"""
+
+module_autogenargs['gtk+']       = autogenargs + """ --disable-glibtest \
+                                                     --disable-scrollkeeper \
+                                                     --disable-gtk-doc \
+                                                     --enable-introspection=no"""
+
+module_autogenargs['fontconfig'] = autogenargs + """ --with-arch=i686"""
+
+module_autogenargs['freetype']   = autogenargs + """ --with-arch=i686 \
+                                                     --disable-gtk-doc \
+                                                     --disable-docs"""
+
+module_autogenargs['libxml2']    = autogenargs + """ --with-arch=i686 \
+                                                     --with-python=no \
+                                                     --with-iconv=yes"""
+
+module_autogenargs['glibmm']    = autogenargs + """ --disable-documentation """
+module_autogenargs['gtkmm']    = autogenargs + """ --disable-documentation """
+module_autogenargs['atkmm']    = autogenargs + """ --disable-documentation """
+
+# Pass -j4 to make by default, override with module_makeargs where that doesn't work
+makeargs = "-j4"
+
+# module_makeargs['freetype'] = ""
+
+# Todo:
+# module_autogenargs['jasper'] = autogenargs + """ --enable-shared --disable-static"""

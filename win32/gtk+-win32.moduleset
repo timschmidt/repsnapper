@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<moduleset>
+	<include href="glib-win32.moduleset"/>
+	<include href="imglibs-win32.moduleset"/>
+
+	<repository type="svn" name="svn.gnome.org" default="yes" href="http://svn.gnome.org/svn/"/>
+
+<tarball id="cairo" version="1.8.10">
+	<source href="http://cairographics.org/releases/cairo-1.8.10.tar.gz" md5sum="b60a82f405f9400bbfdcf850b1728d25"/>
+	<dependencies>
+		<dep package="zlib"/>
+		<dep package="png"/>
+		<dep package="pixman"/>
+		<dep package="fontconfig"/>
+	</dependencies>
+</tarball>
+
+<tarball id="cairomm" version="1.8.6">
+	<source href="http://cairographics.org/releases/cairomm-1.8.6.tar.gz" sha256sum="138368d0200c18735ae544983516d10721158d0c6c6723c885952da88f7321ef"/>
+	<dependencies>
+		<dep package="zlib"/>
+		<dep package="png"/>
+		<dep package="pixman"/>
+		<dep package="fontconfig"/>
+	</dependencies>
+</tarball>
+
+<tarball id="pixman" version="0.24.4">
+	<source href="http://cairographics.org/releases/pixman-0.24.4.tar.gz" md5sum="fee074965c310c46d9c0ab3e5fd656bf"/>
+	<dependencies>
+	</dependencies>
+</tarball>
+
+<tarball id="pango" version="1.28.1">
+	<source href="http://ftp.acc.umu.se/pub/gnome/sources/pango/1.28/pango-1.28.1.tar.bz2" sha256sum="8f3eaab506f613dd25bb1fa65ea87a145d523d066d90c227bdb3016523451bc2"/>
+	<dependencies>
+		<dep package="cairo"/>
+		<dep package="pixman"/>
+		<dep package="glib"/>
+		<dep package="fontconfig"/>
+	</dependencies>
+</tarball>
+
+<tarball id="atk" version="1.30.0">
+	<source href="http://ftp.acc.umu.se/pub/gnome/sources/atk/1.30/atk-1.30.0.tar.bz2" sha256sum="92b9b1213cafc68fe9c3806273b968c26423237d7b1f631dd83dc5270b8c268c"/>
+	<dependencies>
+		<dep package="glib"/>
+	</dependencies>
+        <patches>
+            <patch file="atk-export-minimum-inc.patch" />
+        </patches>
+</tarball>
+
+<tarball id="atkmm" version="2.22.6">
+	<source href="http://ftp.acc.umu.se/pub/gnome/sources/atkmm/2.22/atkmm-2.22.6.tar.xz" sha256sum="0a74295106b9e3ae552b169eb4e098b8b825c4115045b9d5134a6c79a238aeb6"/>
+	<dependencies>
+		<dep package="atk"/>
+	</dependencies>
+</tarball>
+
+<tarball id="gdk-pixbuf" version="2.24.1">
+	<source href="http://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/2.24/gdk-pixbuf-2.24.1.tar.xz" sha256sum="da7a3f00db360913716368e19e336402755cafa93769f3cfa28a969303e4bee1"/>
+        <patches>
+          <patch file="gdk_pixbuf_2_24_1_io_gdip_fix.patch" strip="1" />
+        </patches>
+	<dependencies>
+                <dep package="tiff"/>
+                <dep package="png"/>
+                <dep package="jpeg"/>
+		<dep package="glib"/>
+	</dependencies>
+</tarball>
+
+<repository type="tarball" name="fontconfig"
+    href="http://www.fontconfig.org/release" />
+
+<autotools id="fontconfig" autogen-sh="autogen.sh" skip-autogen="false" >
+        <branch module="fontconfig-2.8.0.tar.gz" version="2.8.0" repo="fontconfig"
+           hash="md5:77e15a92006ddc2adbb06f840d591c0e">
+          <patch file="fontconfig-cross-compile.patch" strip="1" />
+        </branch>
+        <dependencies>
+                <dep package="freetype" />
+        </dependencies>
+</autotools>
+
+<tarball id="freetype" version="2.4.2">
+	<source href="http://download.savannah.gnu.org/releases/freetype/freetype-2.4.2.tar.gz" md5sum="5a3920aa1a8a0f3734612e8729df54d8"/>
+	<dependencies>
+		<dep package="libxml2"/>
+	</dependencies>
+</tarball>
+
+
+<tarball id="libxml2" version="2.7.8">
+	<source href="ftp://xmlsoft.org/libxml2/libxml2-2.7.8.tar.gz" md5sum="8127a65e8c3b08856093099b52599c86"/>
+        <patches>
+          <patch file="libxml-mingw-dllexports.patch"/>
+        </patches>
+	<dependencies>
+		<dep package="iconv"/>
+	</dependencies>
+</tarball>
+
+<tarball id="gtk+" version="2.24.10">
+	<source href="http://ftp.acc.umu.se/pub/gnome/sources/gtk+/2.24/gtk+-2.24.10.tar.xz" sha256sum="ea56e31bb9d6e19ed2e8911f4c7ac493cb804431caa21cdcadae625d375a0e89"/>
+	<dependencies>
+		<dep package="glib"/>
+		<dep package="gdk-pixbuf"/>
+		<dep package="cairo"/>
+		<dep package="atk"/>
+		<dep package="pango"/>
+<!-- ToDo:
+		<dep package="jasper"/>
+-->
+	</dependencies>
+        <patches>
+          <patch file="gtk_2_24_10_schar_marshal.patch"/>
+        </patches>
+</tarball>
+
+<tarball id="libglade" version="2.6.4">
+	<source href="http://ftp.acc.umu.se/pub/gnome/sources/libglade/2.6/libglade-2.6.4.tar.gz" sha256sum="c41d189b68457976069073e48d6c14c183075d8b1d8077cb6dfb8b7c5097add3"/>
+	<dependencies>
+		<dep package="glib"/>
+		<dep package="gtk+"/>
+		<dep package="libxml2"/>
+	</dependencies>
+</tarball>
+
+<tarball id="pangomm" version="2.28.1">
+	<source href="http://ftp.acc.umu.se/pub/gnome/sources/pangomm/2.28/pangomm-2.28.4.tar.xz" sha256sum="778dcb66a793cbfd52a9f92ee5a71b888c3603a913fc1ddc48a30204de6d6c82"/>
+	<dependencies>
+		<dep package="pango"/>
+		<dep package="cairomm"/>
+	</dependencies>
+</tarball>
+
+<tarball id="gtkmm" version="2.24.2">
+	<source href="http://ftp.acc.umu.se/pub/gnome/sources/gtkmm/2.24/gtkmm-2.24.2.tar.xz" sha256sum="c90c7a29c20dd6d795925bd66ad1ff40be07cea0e4c03f4d6105a8c07448953d"/>
+	<dependencies>
+		<dep package="glibmm"/>
+		<dep package="pangomm"/>
+		<dep package="atkmm"/>
+		<dep package="gtk+"/>
+	</dependencies>
+</tarball>
+
+<repository type="tarball" name="gtkglext"
+    href="http://downloads.sourceforge.net/gtkglext/" />
+
+<autotools id="gtkglext" version="1.2.0" autogen-sh="autogen.sh" skip-autogen="false" >
+        <branch module="gtkglext-1.2.0.tar.gz" version="1.2.0" repo="gtkglext" 
+           hash="sha256:e5073f3c6b816e7fa67d359d9745a5bb5de94a628ac85f624c992925a46844f9">
+          <patch file="gtkglext-pangox-configure.patch" strip="1" />
+          <patch file="gtkglext-fixups.patch" strip="1" />
+        </branch>
+        <dependencies>
+                <dep package="gtk+" />
+        </dependencies>
+</autotools>
+
+<!-- ToDo:
+<tarball id="glade3" version="3.6.7">
+	<source href="http://ftp.acc.umu.se/pub/gnome/sources/glade3/3.6/glade3-3.6.7.tar.gz" sha256sum="4527cee057452883d28b6fb88dd35a70b9db9c17393fab76a558e9a1b5901d4d"/>
+	<dependencies>
+		<dep package="glib"/>
+		<dep package="gtk+"/>
+		<dep package="libxml2"/>
+		<dep package="libglade"/>
+	</dependencies>
+</tarball>
+-->
+
+</moduleset>

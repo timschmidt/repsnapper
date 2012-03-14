@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<moduleset>
+	<repository type="svn" name="svn.gnome.org" default="yes" href="http://svn.gnome.org/svn/"/>
+
+<tarball id="zlib" version="1.2.6" makeargs="-f win32/Makefile.gcc -e zlib1.dll" makeinstallargs="-f win32/Makefile.gcc -e install">
+	<source href="http://prdownloads.sourceforge.net/libpng/zlib-1.2.6.tar.gz" md5sum="618e944d7c7cd6521551e30b32322f4a"/>
+	<patches>
+		<patch file="zlib-1.2.6-mingw-Makefile.patch"/>
+	</patches>
+</tarball>
+
+<tarball id="tiff" version="3.8.2">
+	<source href="http://download.osgeo.org/libtiff/tiff-3.8.2.tar.gz" md5sum="fbb6f446ea4ed18955e2714934e5b698"/>
+	<dependencies>
+		<dep package="jpeg"/>
+	</dependencies>
+</tarball>
+
+<tarball id="png" version="1.2.20">
+	<source href="http://downloads.sourceforge.net/libpng/libpng-1.2.20.tar.bz2" md5sum="8c186d9da3d011e2c3076b28f9c6be7b"/>
+	<dependencies>
+		<dep package="zlib"/>
+	</dependencies>
+</tarball>
+
+<!-- ToDo:
+<tarball id="jasper" version="1.900.1">
+	<source href="http://www.ece.uvic.ca/~mdadams/jasper/software/jasper-1.900.1.zip" md5sum="a342b2b4495b3e1394e161eb5d85d754"/>
+	<dependencies>
+		<dep package="jpeg"/>
+	</dependencies>
+
+</tarball>
+-->
+
+<tarball id="jpeg" version="8b" checkoutdir="jpeg-8b">
+	<source href="http://www.ijg.org/files/jpegsrc.v8b.tar.gz" md5sum="e022acbc5b36cd2cb70785f5b575661e"/>
+</tarball>
+
+</moduleset>

@@ -1,0 +1,11 @@
+--- gtk/gtkmarshal.c.schar	2012-03-13 14:14:13.495595154 +1100
++++ gtk/gtkmarshal.c	2012-03-13 14:14:25.771595747 +1100
+@@ -6,7 +6,7 @@
+ 
+ #ifdef G_ENABLE_DEBUG
+ #define g_marshal_value_peek_boolean(v)  g_value_get_boolean (v)
+-#define g_marshal_value_peek_char(v)     g_value_get_schar (v)
++#define g_marshal_value_peek_char(v)     g_value_get_char (v)
+ #define g_marshal_value_peek_uchar(v)    g_value_get_uchar (v)
+ #define g_marshal_value_peek_int(v)      g_value_get_int (v)
+ #define g_marshal_value_peek_uint(v)     g_value_get_uint (v)
