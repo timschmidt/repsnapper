@@ -191,7 +191,6 @@ void Model::MakeRaft(GCodeState &state, double &z)
 
 void Model::Slice(double printOffsetZ)
 {
-  
   // get a linear collection of shapes
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
@@ -203,7 +202,6 @@ void Model::Slice(double printOffsetZ)
       transforms.push_back(T);
     }
   }
-  
   int LayerNr = 0;
   bool varSlicing = settings.Slicing.Varslicing;
 
@@ -235,16 +233,18 @@ void Model::Slice(double printOffsetZ)
   double shape_z = z;
   double max_shape_z = z + serialheight;
   Layer * layer = new Layer(LayerNr, thickness, skins); 
+  int progress_steps=(int)(Max.z/thickness/100);
+  if (progress_steps==0) progress_steps=1;
   layer->setZ(shape_z);
   LayerNr = 1;
   double max_gradient = 0;
   int new_polys=0;
   while(z < Max.z)
     {
-      if (LayerNr%10==0) m_progress->update(z);	
       shape_z = z; 
       max_shape_z = min(shape_z + serialheight, Max.z); 
       while ( currentshape < shapes.size() && shape_z <= max_shape_z ) {
+	if (LayerNr%progress_steps==0) m_progress->update(shape_z);	
 	layer->setZ(shape_z + printOffsetZ); // set to real z
 	if (shape_z == minZ) { // the layer is on the platform
 	  layer->LayerNo = 0;
@@ -299,9 +299,11 @@ void Model::MakeFullSkins()
   // not bottom layer
 
   m_progress->restart (_("Skins"), layers.size());
+  int progress_steps=(int)(layers.size()/100);
+  if (progress_steps==0) progress_steps=1;
   // #pragma omp parallel for schedule(dynamic) ordered
   for (int i=1; i < (int)layers.size(); i++) {
-    if (i%10==0) m_progress->update(i);
+    if (i%progress_steps==0) m_progress->update(i);
     layers[i]->makeSkinPolygons();
   }
   //m_progress->stop (_("Done"));
@@ -313,17 +315,19 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
   int count = (int)layers.size();
   if (count == 0 ) return;
   m_progress->restart (_("Find Uncovered"), 2*count+2);
+  int progress_steps=(int)((2*count+2)/100);
+  if (progress_steps==0) progress_steps=1;
   // bottom to top: uncovered from above -> top polys
   for (int i = 0; i < count-1; i++) 
     {
-      if (i%10==0) m_progress->update(i);
+      if (i%progress_steps==0) m_progress->update(i);
       layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]), make_decor);
     }  
   // top to bottom: uncovered from below -> bridge polys
   for (uint i = count-1; i > 0; i--) 
     {
       //cerr << "layer " << i << endl;
-      if (i%10==0) m_progress->update(count + count - i);
+      if (i%progress_steps==0) m_progress->update(count + count - i);
       //make_bridges = false;
       // no bridge on marked layers (serial build)
       bool mbridge = make_bridges && (layers[i]->LayerNo != 0); 
@@ -381,12 +385,15 @@ void Model::MultiplyUncoveredPolygons()
 {
   int shells = (int)settings.Slicing.ShellCount;
   int count = (int)layers.size();
+
   m_progress->restart (_("Uncovered Shells"), count*3);
+  int progress_steps=(int)(count*3/100);
+  if (progress_steps==0) progress_steps=1;
   // bottom-up: propagate downwards
   int i,s;
   for (i=0; i < count; i++) 
     {
-      if (i%10==0) m_progress->update(i);
+      if (i%progress_steps==0) m_progress->update(i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
       vector<Poly> decorpolys = layers[i]->GetDecorPolygons();
       vector<ExPoly> bridgepolys = layers[i]->GetBridgePolygons();
@@ -402,7 +409,7 @@ void Model::MultiplyUncoveredPolygons()
   // top-down: propagate upwards
   for (int i=count-1; i>=0; i--) 
     {
-      if (i%10==0) m_progress->update(count + count -i);
+      if (i%progress_steps==0) m_progress->update(count + count -i);
       vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
       vector<ExPoly> bridgepolys = layers[i]->GetBridgePolygons();
       vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
@@ -418,7 +425,7 @@ void Model::MultiplyUncoveredPolygons()
   // merge results
   for (int i=0; i < count; i++) 
     {
-      if (i%10==0) m_progress->update(count + count +i);
+      if (i%progress_steps==0) m_progress->update(count + count +i);
       //layers[i]->mergeFullPolygons(true);
       layers[i]->mergeFullPolygons(false);
     }
@@ -443,10 +450,13 @@ void Model::MakeSupportPolygons()
 { 
   int count = layers.size();
   m_progress->restart (_("Support"), count*2);
+  int progress_steps=(int)(count*2/100);
+  if (progress_steps==0) progress_steps=1;
+
   for (int i=count-1; i>0; i--) 
     {
       //cerr << "support layer "<< i << endl;
-      if (i%10==0) m_progress->update(count-i);
+      if (i%progress_steps==0) m_progress->update(count-i);
       if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i]);
     }
@@ -456,7 +466,7 @@ void Model::MakeSupportPolygons()
       //cerr << "shrink support layer "<< i << endl;
       //if (layers[i]->LayerNo == 0) continue;
       double distance = 2*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
-      if (i%10==0) m_progress->update(i+count);
+      if (i%progress_steps==0) m_progress->update(i+count);
       // vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());
       // cerr << merged.size() << " polys" << endl;
       vector<Poly> offset = 
@@ -493,6 +503,8 @@ void Model::MakeShells()
   int count = (int)layers.size();
   if (count == 0) return;
   m_progress->restart (_("Shells"), count);
+  int progress_steps=(int)(count/100);
+  if (progress_steps==0) progress_steps=1;
   double matwidth, skirtheight = settings.Slicing.SkirtHeight;
   bool makeskirt=false;
 
@@ -503,7 +515,7 @@ void Model::MakeShells()
 #endif
   for (int i=0; i < count; i++) 
     {
-      if (i%10==0) {
+      if (i%progress_steps==0) {
 #ifdef _OPENMP
 	omp_set_lock(&progress_lock);
 #endif
@@ -542,6 +554,8 @@ void Model::CalcInfill()
   double infilldist=0;
 
   m_progress->start (_("Infill"), layers.size());
+  int progress_steps=(int)(layers.size()/100);
+  if (progress_steps==0) progress_steps=1;
 
   //cerr << "make infill"<< endl;
   int count = (int)layers.size();
@@ -553,7 +567,7 @@ void Model::CalcInfill()
   for (int i=0; i < count ; i++) 
     {
       //cerr << "thread " << omp_get_thread_num() << endl;
-      if (i%10==0){
+      if (i%progress_steps==0){
 #ifdef _OPENMP
 	omp_set_lock(&progress_lock);
 #endif
@@ -614,7 +628,6 @@ void Model::ConvertToGCode()
   string GcodeStart = settings.GCode.getStartText();
   string GcodeLayer = settings.GCode.getLayerText();
   string GcodeEnd = settings.GCode.getEndText();
-
   GCodeState state(gcode);
 
   gcode.clear();
