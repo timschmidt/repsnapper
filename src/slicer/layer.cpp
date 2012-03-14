@@ -642,12 +642,16 @@ void Layer::MakeGcode(GCodeState &state,
 
   // 4. all other polygons:  
 
-  // TODO: do shells separately, inner first, calculate extrusionfactor
+  // TODO: calculate extrusionfactor
   // for rectangle vs. ellipsis
 
   //  Shells
-  for(size_t p=0;p<shellPolygons.size();p++) // outer to inner, in this order
-    polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());
+  for(int p=shellPolygons.size()-1; p>=0; p--) // inner to outer and don't reorder
+    //polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());
+    printlines.makeLines(shellPolygons[p], (p==(int)(shellPolygons.size())-1), //displace at beginning
+			 slicing, hardware, 
+			 startPoint, lines);
+
   //  Infill
   polys.insert(polys.end(),
 	       normalInfill->infillpolys.begin(), normalInfill->infillpolys.end());
