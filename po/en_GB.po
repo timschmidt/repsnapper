@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-09 16:53+0100\n"
+"POT-Creation-Date: 2012-03-14 14:55+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: michael.meeks@novell.com\n"
 "Language-Team: British English <gb@li.org>\n"
@@ -66,42 +66,12 @@ msgstr ""
 msgid "Choose STL filename"
 msgstr ""
 
-#. copy
-#: ../src/gcode.cpp:242
-msgid " xy part"
-msgstr ""
-
-#. copy
-#: ../src/gcode.cpp:244
-msgid " z part"
-msgstr ""
-
-#: ../src/gcode.cpp:280
-msgid " Z-Change"
-msgstr ""
-
-#: ../src/gcode.cpp:287
-msgid " Move Only"
-msgstr ""
-
-#: ../src/gcode.cpp:427
+#: ../src/gcode.cpp:84
 msgid "Loading GCode"
 msgstr ""
 
-#: ../src/gcode.cpp:718
+#: ../src/gcode.cpp:383
 msgid "Collecting GCode"
-msgstr ""
-
-#: ../src/gcode.cpp:736
-msgid "Filament Retract"
-msgstr ""
-
-#: ../src/gcode.cpp:744
-msgid "Filament Retract move"
-msgstr ""
-
-#: ../src/gcode.cpp:750
-msgid "Filament Retract pushback"
 msgstr ""
 
 #: ../src/model.cpp:81
@@ -112,7 +82,7 @@ msgstr ""
 msgid "Converting"
 msgstr ""
 
-#: ../src/model.cpp:93 ../src/model2.cpp:669
+#: ../src/model.cpp:93 ../src/model2.cpp:699
 msgid "Done"
 msgstr ""
 
@@ -124,7 +94,7 @@ msgstr ""
 msgid "_lower"
 msgstr ""
 
-#: ../src/model2.cpp:222
+#: ../src/model2.cpp:220
 msgid "Slicing"
 msgstr ""
 
@@ -133,67 +103,67 @@ msgstr ""
 msgid "Skins"
 msgstr ""
 
-#: ../src/model2.cpp:315
+#: ../src/model2.cpp:317
 msgid "Find Uncovered"
 msgstr ""
 
-#: ../src/model2.cpp:367
+#: ../src/model2.cpp:389
 msgid "Uncovered Shells"
 msgstr ""
 
-#: ../src/model2.cpp:428
+#: ../src/model2.cpp:452
 msgid "Support"
 msgstr ""
 
-#: ../src/model2.cpp:478
+#: ../src/model2.cpp:505
 msgid "Shells"
 msgstr ""
 
-#: ../src/model2.cpp:527 ../src/repsnapper.ui.h:110
+#: ../src/model2.cpp:556 ../src/repsnapper.ui.h:110
 msgid "Infill"
 msgstr ""
 
-#: ../src/model2.cpp:638
+#: ../src/model2.cpp:668
 msgid "Making GCode"
 msgstr ""
 
-#: ../src/model2.cpp:640
+#: ../src/model2.cpp:670
 msgid "Millimeters"
 msgstr ""
 
-#: ../src/model2.cpp:641
+#: ../src/model2.cpp:671
 msgid "Absolute Pos"
 msgstr ""
 
-#: ../src/model2.cpp:643
+#: ../src/model2.cpp:673
 msgid "Relative E Code"
 msgstr ""
 
-#: ../src/model2.cpp:645
+#: ../src/model2.cpp:675
 msgid "Absolute E Code"
 msgstr ""
 
-#: ../src/model2.cpp:675
+#: ../src/model2.cpp:705
 msgid "Time Estimation: "
 msgstr ""
 
-#: ../src/model2.cpp:676 ../src/model2.cpp:685
+#: ../src/model2.cpp:706 ../src/model2.cpp:715
 msgid "h"
 msgstr ""
 
-#: ../src/model2.cpp:677 ../src/model2.cpp:686
+#: ../src/model2.cpp:707 ../src/model2.cpp:716
 msgid "m"
 msgstr ""
 
-#: ../src/model2.cpp:677 ../src/model2.cpp:686
+#: ../src/model2.cpp:707 ../src/model2.cpp:716
 msgid "s"
 msgstr ""
 
-#: ../src/model2.cpp:684
+#: ../src/model2.cpp:714
 msgid " / GCode Estimation: "
 msgstr ""
 
-#: ../src/model2.cpp:690
+#: ../src/model2.cpp:720
 msgid " - total extruded: "
 msgstr ""
 
@@ -288,19 +258,19 @@ msgstr ""
 msgid "Can't go home while printing"
 msgstr ""
 
-#: ../src/printer2.cpp:87
+#: ../src/printer2.cpp:88
 msgid "Home called with unknown axis"
 msgstr ""
 
-#: ../src/printer2.cpp:96 ../src/printer2.cpp:134
+#: ../src/printer2.cpp:97 ../src/printer2.cpp:135
 msgid "Can't move manually while printing"
 msgstr ""
 
-#: ../src/printer2.cpp:125
+#: ../src/printer2.cpp:126
 msgid "Move called with unknown axis"
 msgstr ""
 
-#: ../src/printer2.cpp:155
+#: ../src/printer2.cpp:156
 msgid "Goto called with unknown axis"
 msgstr ""
 
@@ -366,40 +336,101 @@ msgstr ""
 msgid "No output file given (use -o)"
 msgstr ""
 
-#: ../src/settings.cpp:541
+#: ../src/settings.cpp:542
 msgid "Failed to load settings from file '"
 msgstr ""
 
-#: ../src/settings.cpp:545
+#: ../src/settings.cpp:546
 msgid "Exception "
 msgstr ""
 
-#: ../src/settings.cpp:545
+#: ../src/settings.cpp:546
 msgid " loading settings from file '"
 msgstr ""
 
-#: ../src/settings.cpp:549
+#: ../src/settings.cpp:550
 msgid "parsing config from '"
 msgstr ""
 
-#: ../src/settings.cpp:584 ../src/settings.cpp:729 ../src/settings.cpp:830
+#: ../src/settings.cpp:585 ../src/settings.cpp:730 ../src/settings.cpp:831
 msgid "corrupt setting type\n"
 msgstr ""
 
-#: ../src/settings.cpp:680 ../src/settings.cpp:779
+#: ../src/settings.cpp:681 ../src/settings.cpp:780
 msgid "Missing boolean config item "
 msgstr ""
 
-#: ../src/settings.cpp:691 ../src/settings.cpp:720 ../src/settings.cpp:820
+#: ../src/settings.cpp:692 ../src/settings.cpp:721 ../src/settings.cpp:821
 msgid "Missing user interface item "
 msgstr ""
 
-#: ../src/settings.cpp:790
+#: ../src/settings.cpp:791
 msgid "Missing GUI element "
+msgstr ""
+
+#: ../src/shape.cpp:127 ../src/shape.cpp:294
+msgid "Error: Unable to open stl file - "
+msgstr ""
+
+#: ../src/shape.cpp:185 ../src/shape.cpp:411
+msgid "Shape has volume "
+msgstr ""
+
+#: ../src/shape.cpp:192
+msgid "No VRML file file passed to loadASCIIVRML"
+msgstr ""
+
+#: ../src/shape.cpp:205
+msgid "Error: Unable to open vrml file - "
+msgstr ""
+
+#: ../src/shape.cpp:287
+msgid "None ASCII STL file passed to loadASCIIFile"
+msgstr ""
+
+#. cannot parse, try binary
+#: ../src/shape.cpp:299
+msgid "Could not read file in ASCII mode, trying Binary: "
+msgstr ""
+
+#: ../src/shape.cpp:341
+msgid "Error: Facet keyword not found in STL text!"
+msgstr ""
+
+#: ../src/shape.cpp:350
+msgid "Error: normal keyword not found in STL text!"
+msgstr ""
+
+#: ../src/shape.cpp:363
+msgid "Error: Outer/Loop keywords not found!"
+msgstr ""
+
+#: ../src/shape.cpp:377
+msgid "Error: Vertex keyword not found"
+msgstr ""
+
+#: ../src/shape.cpp:387
+msgid "Error: Endloop or endfacet keyword not found"
+msgstr ""
+
+#: ../src/shape.cpp:433
+msgid "Error: Unable to open file - "
+msgstr ""
+
+#: ../src/shape.cpp:466
+msgid "unrecognized file - "
 msgstr ""
 
 #: ../src/shape.cpp:492
 msgid "Split Shapes"
+msgstr ""
+
+#: ../src/shape.cpp:518
+msgid "shape "
+msgstr ""
+
+#: ../src/shape.cpp:528
+msgid " shapes "
 msgstr ""
 
 #: ../src/view.cpp:81
@@ -456,31 +487,32 @@ msgstr ""
 msgid "Heat On"
 msgstr ""
 
-#: ../src/view.cpp:481
+#: ../src/view.cpp:484
 msgid "Temp. (°C)"
 msgstr ""
 
-#: ../src/view.cpp:482
+#: ../src/view.cpp:485
 msgid "<unknown>"
 msgstr ""
 
-#: ../src/view.cpp:485
+#: ../src/view.cpp:488
 msgid "Target:"
 msgstr ""
 
-#: ../src/view.cpp:557
+#: ../src/view.cpp:560
 msgid "Home"
 msgstr ""
 
-#: ../src/view.cpp:1003
+#: ../src/view.cpp:1006
 msgid "Output File: "
 msgstr ""
 
-#: ../src/slicer/gcode.cpp:195
+#. pure extrusions
+#: ../src/slicer/gcode.cpp:176 ../src/slicer/gcode.cpp:212
 msgid "Extrusion only "
 msgstr ""
 
-#: ../src/slicer/gcode.cpp:200
+#: ../src/slicer/gcode.cpp:217
 msgid "Absolute Extrusion"
 msgstr ""
 
@@ -1240,110 +1272,114 @@ msgid "Shells:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:191
-msgid "Size"
+msgid "Show Extruded Line Borders"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:192
-msgid "Skins:"
+msgid "Size"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:193
-msgid "Skirt"
+msgid "Skins:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:194
-msgid "Skirt Distance (mm):"
+msgid "Skirt"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:195
-msgid "Slicer Settings"
+msgid "Skirt Distance (mm):"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:196
-msgid "Solid Fill for Top and Bottom"
+msgid "Slicer Settings"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:197
-msgid "Solid Fill:"
+msgid "Solid Fill for Top and Bottom"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:198
-msgid "Sort Printed Lines by Length"
+msgid "Solid Fill:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:199
-msgid "Speed (mm/min)"
+msgid "Sort Printed Lines by Length"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:200
-msgid "Speed (mm/min):"
+msgid "Speed (mm/min)"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:201
-msgid "Speed Ratio:"
+msgid "Speed (mm/min):"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:202
-msgid "Split"
+msgid "Speed Ratio:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:203
-msgid "Split into single shapes"
+msgid "Split"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:204
-msgid "Start"
+msgid "Split into single shapes"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:205
-msgid "Support:"
+msgid "Start"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:206
-msgid "Surface Normals"
+msgid "Support:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:207
-msgid "Temperature Ratio"
+msgid "Surface Normals"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:208
-msgid "Text Output"
+msgid "Temperature Ratio"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:209
-msgid "Thickness Ratio"
+msgid "Text Output"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:210
-msgid "To:"
+msgid "Thickness Ratio"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:211
-msgid "Twist:"
+msgid "To:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:212
-msgid "Update Interval (sec)"
+msgid "Twist:"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:213
-msgid "Validate Connection"
+msgid "Update Interval (sec)"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:214
-msgid "Variable Slicing"
+msgid "Validate Connection"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:215
-msgid "Very First Layer Height Ratio"
+msgid "Variable Slicing"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:216
-msgid "Website"
+msgid "Very First Layer Height Ratio"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:217
+msgid "Website"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:218
 msgid ""
 "Whether the 'mm' we generate in gcode are measured as mm of cold input "
 "filament, if not set is of hot output extrudate. More modern repraps can "
@@ -1352,78 +1388,150 @@ msgid ""
 "the filament diameter."
 msgstr ""
 
-#: ../src/repsnapper.ui.h:218
+#: ../src/repsnapper.ui.h:219
 msgid "Width to Layerheight Ratio of Extruded Line"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:219
+#: ../src/repsnapper.ui.h:220
 msgid "Wireframe"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:220
+#: ../src/repsnapper.ui.h:221
 msgid "X"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:221
-msgid "X/Y Axes"
-msgstr ""
-
 #: ../src/repsnapper.ui.h:222
-msgid "Y"
+msgid "X +0.1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:223
-msgid "Z"
+msgid "X +1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:224
-msgid "Z Axis"
+msgid "X +10 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:225
-msgid "_Autoplace"
+msgid "X -0.1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:226
-msgid "_Edit"
+msgid "X -1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:227
-msgid "_File"
+msgid "X -10 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:228
-msgid "_Help"
+msgid "X/Y Axes"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:229
-msgid "_Print"
+msgid "Y"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:230
-msgid "_Support"
+msgid "Y +0.1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:231
-msgid "how much should be retracted and repushed while halting"
+msgid "Y +1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:232
-msgid "label"
+msgid "Y +10 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:233
-msgid "lines"
+msgid "Y -0.1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:234
-msgid "mm"
+msgid "Y -1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:235
-msgid "mm/min"
+msgid "Y -10 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:236
+msgid "Z"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:237
+msgid "Z +0.1 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:238
+msgid "Z +1 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:239
+msgid "Z +10 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:240
+msgid "Z -0.1 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:241
+msgid "Z -1 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:242
+msgid "Z -10 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:243
+msgid "Z Axis"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:244
+msgid "_Autoplace"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:245
+msgid "_Edit"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:246
+msgid "_File"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:247
+msgid "_Help"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:248
+msgid "_Print"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:249
+msgid "_Support"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:250
+msgid "how much should be retracted and repushed while halting"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:251
+msgid "label"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:252
+msgid "lines"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:253
+msgid "mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:254
+msgid "mm/min"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:255
 msgid "repsnapper Preferences"
 msgstr ""

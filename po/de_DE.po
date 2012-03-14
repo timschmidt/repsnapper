@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-09 16:53+0100\n"
-"PO-Revision-Date: 2012-03-09 16:53+0100\n"
+"POT-Creation-Date: 2012-03-14 14:55+0100\n"
+"PO-Revision-Date: 2012-03-14 15:01+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -65,43 +65,13 @@ msgstr "GCODE-Datei wählen"
 msgid "Choose STL filename"
 msgstr "STL-Datei wählen"
 
-#. copy
-#: ../src/gcode.cpp:242
-msgid " xy part"
-msgstr " xy-Teil"
-
-#. copy
-#: ../src/gcode.cpp:244
-msgid " z part"
-msgstr " z-Teil"
-
-#: ../src/gcode.cpp:280
-msgid " Z-Change"
-msgstr " Z-Schritt"
-
-#: ../src/gcode.cpp:287
-msgid " Move Only"
-msgstr " Nur Bewegung"
-
-#: ../src/gcode.cpp:427
+#: ../src/gcode.cpp:84
 msgid "Loading GCode"
 msgstr "Lade GCode"
 
-#: ../src/gcode.cpp:718
+#: ../src/gcode.cpp:383
 msgid "Collecting GCode"
 msgstr "Sammle GCode"
-
-#: ../src/gcode.cpp:736
-msgid "Filament Retract"
-msgstr "Filamentrückzug"
-
-#: ../src/gcode.cpp:744
-msgid "Filament Retract move"
-msgstr "Filamentrückzug Bewegung"
-
-#: ../src/gcode.cpp:750
-msgid "Filament Retract pushback"
-msgstr "Filamentrückzug Ende"
 
 #: ../src/model.cpp:81
 msgid "not yet implemented\n"
@@ -111,7 +81,7 @@ msgstr "noch nicht implementiert\n"
 msgid "Converting"
 msgstr "Konvertiere"
 
-#: ../src/model.cpp:93 ../src/model2.cpp:669
+#: ../src/model.cpp:93 ../src/model2.cpp:699
 msgid "Done"
 msgstr "Fertig"
 
@@ -123,7 +93,7 @@ msgstr "_oben"
 msgid "_lower"
 msgstr "_unten"
 
-#: ../src/model2.cpp:222
+#: ../src/model2.cpp:220
 msgid "Slicing"
 msgstr "Schichten"
 
@@ -132,67 +102,67 @@ msgstr "Schichten"
 msgid "Skins"
 msgstr ""
 
-#: ../src/model2.cpp:315
+#: ../src/model2.cpp:317
 msgid "Find Uncovered"
 msgstr "Unbedeckte Flächen finden"
 
-#: ../src/model2.cpp:367
+#: ../src/model2.cpp:389
 msgid "Uncovered Shells"
 msgstr "Unbedeckte Flächen"
 
-#: ../src/model2.cpp:428
+#: ../src/model2.cpp:452
 msgid "Support"
 msgstr "Gerüst"
 
-#: ../src/model2.cpp:478
+#: ../src/model2.cpp:505
 msgid "Shells"
 msgstr "Hüllen"
 
-#: ../src/model2.cpp:527 ../src/repsnapper.ui.h:110
+#: ../src/model2.cpp:556 ../src/repsnapper.ui.h:110
 msgid "Infill"
 msgstr "Füllung"
 
-#: ../src/model2.cpp:638
+#: ../src/model2.cpp:668
 msgid "Making GCode"
 msgstr "Erzeuge GCode"
 
-#: ../src/model2.cpp:640
+#: ../src/model2.cpp:670
 msgid "Millimeters"
 msgstr "Millimeter"
 
-#: ../src/model2.cpp:641
+#: ../src/model2.cpp:671
 msgid "Absolute Pos"
 msgstr "Absolute Pos"
 
-#: ../src/model2.cpp:643
+#: ../src/model2.cpp:673
 msgid "Relative E Code"
 msgstr "Relativer E-Code"
 
-#: ../src/model2.cpp:645
+#: ../src/model2.cpp:675
 msgid "Absolute E Code"
 msgstr "Absoluter E-Code"
 
-#: ../src/model2.cpp:675
+#: ../src/model2.cpp:705
 msgid "Time Estimation: "
 msgstr "Geschätzte Dauer: "
 
-#: ../src/model2.cpp:676 ../src/model2.cpp:685
+#: ../src/model2.cpp:706 ../src/model2.cpp:715
 msgid "h"
-msgstr ""
+msgstr "h"
 
-#: ../src/model2.cpp:677 ../src/model2.cpp:686
+#: ../src/model2.cpp:707 ../src/model2.cpp:716
 msgid "m"
-msgstr ""
+msgstr "m"
 
-#: ../src/model2.cpp:677 ../src/model2.cpp:686
+#: ../src/model2.cpp:707 ../src/model2.cpp:716
 msgid "s"
-msgstr ""
+msgstr "s"
 
-#: ../src/model2.cpp:684
+#: ../src/model2.cpp:714
 msgid " / GCode Estimation: "
 msgstr " / Geschätzte Dauer: "
 
-#: ../src/model2.cpp:690
+#: ../src/model2.cpp:720
 msgid " - total extruded: "
 msgstr " - Gesamtfilament: "
 
@@ -293,19 +263,19 @@ msgstr "Fehler (%d) '%s' - Fenster?"
 msgid "Can't go home while printing"
 msgstr "Kann nicht in Ausgangsposition, während gedruckt wird"
 
-#: ../src/printer2.cpp:87
+#: ../src/printer2.cpp:88
 msgid "Home called with unknown axis"
 msgstr "Ausgangsposition ohne Achse?"
 
-#: ../src/printer2.cpp:96 ../src/printer2.cpp:134
+#: ../src/printer2.cpp:97 ../src/printer2.cpp:135
 msgid "Can't move manually while printing"
 msgstr "Kann nicht bewegen, während gedruckt wird"
 
-#: ../src/printer2.cpp:125
+#: ../src/printer2.cpp:126
 msgid "Move called with unknown axis"
 msgstr "Bewegung mit unbekannter Achse"
 
-#: ../src/printer2.cpp:155
+#: ../src/printer2.cpp:156
 msgid "Goto called with unknown axis"
 msgstr "Ziel angegeben ohne Achse"
 
@@ -386,41 +356,102 @@ msgstr "Kann Konfiguration nicht finden"
 msgid "No output file given (use -o)"
 msgstr "Keine Ausgabedatei angegeben (-o)"
 
-#: ../src/settings.cpp:541
+#: ../src/settings.cpp:542
 msgid "Failed to load settings from file '"
 msgstr "Konnte Einstellungen nicht einlesen: '"
 
-#: ../src/settings.cpp:545
+#: ../src/settings.cpp:546
 msgid "Exception "
 msgstr "Fehler "
 
-#: ../src/settings.cpp:545
+#: ../src/settings.cpp:546
 msgid " loading settings from file '"
 msgstr " beim einlesen der Datei '"
 
-#: ../src/settings.cpp:549
+#: ../src/settings.cpp:550
 msgid "parsing config from '"
 msgstr "Lese Einstellungen von '"
 
-#: ../src/settings.cpp:584 ../src/settings.cpp:729 ../src/settings.cpp:830
+#: ../src/settings.cpp:585 ../src/settings.cpp:730 ../src/settings.cpp:831
 msgid "corrupt setting type\n"
 msgstr "Defekte Einstellung\n"
 
-#: ../src/settings.cpp:680 ../src/settings.cpp:779
+#: ../src/settings.cpp:681 ../src/settings.cpp:780
 msgid "Missing boolean config item "
 msgstr "Boolsche Einstellung fehlt: "
 
-#: ../src/settings.cpp:691 ../src/settings.cpp:720 ../src/settings.cpp:820
+#: ../src/settings.cpp:692 ../src/settings.cpp:721 ../src/settings.cpp:821
 msgid "Missing user interface item "
 msgstr "GUI-Element fehlt: "
 
-#: ../src/settings.cpp:790
+#: ../src/settings.cpp:791
 msgid "Missing GUI element "
 msgstr "GUI-Element fehlt: "
+
+#: ../src/shape.cpp:127 ../src/shape.cpp:294
+msgid "Error: Unable to open stl file - "
+msgstr "Fehler: Kann STL-Datei nicht öffnen: "
+
+#: ../src/shape.cpp:185 ../src/shape.cpp:411
+msgid "Shape has volume "
+msgstr "Teil hat ein Volumen von "
+
+#: ../src/shape.cpp:192
+msgid "No VRML file file passed to loadASCIIVRML"
+msgstr "Keine VRML-Datei an loadASCIIVRML gegeben"
+
+#: ../src/shape.cpp:205
+msgid "Error: Unable to open vrml file - "
+msgstr "Fehler: kann VRML-Datei nich laden: "
+
+#: ../src/shape.cpp:287
+msgid "None ASCII STL file passed to loadASCIIFile"
+msgstr ""
+
+#. cannot parse, try binary
+#: ../src/shape.cpp:299
+msgid "Could not read file in ASCII mode, trying Binary: "
+msgstr "Kann nicht als ASCII laden, versuche binär:"
+
+#: ../src/shape.cpp:341
+msgid "Error: Facet keyword not found in STL text!"
+msgstr "Fehler: kein \"Facet\" in STL"
+
+#: ../src/shape.cpp:350
+msgid "Error: normal keyword not found in STL text!"
+msgstr "Fehler: kein \"normal\" in STL"
+
+#: ../src/shape.cpp:363
+msgid "Error: Outer/Loop keywords not found!"
+msgstr "Fehler: Kein \"outer/loop\" gefunden"
+
+#: ../src/shape.cpp:377
+msgid "Error: Vertex keyword not found"
+msgstr "Fehler: kein \"Vertex\""
+
+#: ../src/shape.cpp:387
+msgid "Error: Endloop or endfacet keyword not found"
+msgstr ""
+
+#: ../src/shape.cpp:433
+msgid "Error: Unable to open file - "
+msgstr "Fehler: Kann Datei nicht öffnen: "
+
+#: ../src/shape.cpp:466
+msgid "unrecognized file - "
+msgstr "unbekannte Datei: "
 
 #: ../src/shape.cpp:492
 msgid "Split Shapes"
 msgstr "Teilen"
+
+#: ../src/shape.cpp:518
+msgid "shape "
+msgstr "Teil "
+
+#: ../src/shape.cpp:528
+msgid " shapes "
+msgstr " Teile "
 
 #: ../src/view.cpp:81
 msgid "Complete print before reading"
@@ -476,31 +507,32 @@ msgstr "Fortfahren"
 msgid "Heat On"
 msgstr "Heizung an"
 
-#: ../src/view.cpp:481
+#: ../src/view.cpp:484
 msgid "Temp. (°C)"
-msgstr ""
+msgstr "Temp. (°C)"
 
-#: ../src/view.cpp:482
+#: ../src/view.cpp:485
 msgid "<unknown>"
 msgstr "<unbekannt>"
 
-#: ../src/view.cpp:485
+#: ../src/view.cpp:488
 msgid "Target:"
 msgstr "Sollwert:"
 
-#: ../src/view.cpp:557
+#: ../src/view.cpp:560
 msgid "Home"
 msgstr "Startposition"
 
-#: ../src/view.cpp:1003
+#: ../src/view.cpp:1006
 msgid "Output File: "
 msgstr "Ausgabedatei:"
 
-#: ../src/slicer/gcode.cpp:195
+#. pure extrusions
+#: ../src/slicer/gcode.cpp:176 ../src/slicer/gcode.cpp:212
 msgid "Extrusion only "
 msgstr "Nur Extrusion"
 
-#: ../src/slicer/gcode.cpp:200
+#: ../src/slicer/gcode.cpp:217
 msgid "Absolute Extrusion"
 msgstr "Absoluter E-Code"
 
@@ -699,7 +731,7 @@ msgstr "Begrenzungen"
 
 #: ../src/repsnapper.ui.h:45
 msgid "Bridges are sometimes buggy"
-msgstr ""
+msgstr "Brücken können fehlerhaft sein"
 
 #: ../src/repsnapper.ui.h:46
 msgid "Build Volume"
@@ -1264,110 +1296,114 @@ msgid "Shells:"
 msgstr "Hüllen:"
 
 #: ../src/repsnapper.ui.h:191
+msgid "Show Extruded Line Borders"
+msgstr "Zeige Extrusionssumrandung"
+
+#: ../src/repsnapper.ui.h:192
 msgid "Size"
 msgstr "Größe"
 
-#: ../src/repsnapper.ui.h:192
+#: ../src/repsnapper.ui.h:193
 msgid "Skins:"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:193
+#: ../src/repsnapper.ui.h:194
 msgid "Skirt"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:194
+#: ../src/repsnapper.ui.h:195
 msgid "Skirt Distance (mm):"
 msgstr "Skirt-Abstand (mm):"
 
-#: ../src/repsnapper.ui.h:195
+#: ../src/repsnapper.ui.h:196
 msgid "Slicer Settings"
 msgstr "Schichten"
 
-#: ../src/repsnapper.ui.h:196
+#: ../src/repsnapper.ui.h:197
 msgid "Solid Fill for Top and Bottom"
 msgstr "Oberste und unterste Schichten vollständig füllen"
 
-#: ../src/repsnapper.ui.h:197
+#: ../src/repsnapper.ui.h:198
 msgid "Solid Fill:"
 msgstr "Normale Füllung:"
 
-#: ../src/repsnapper.ui.h:198
+#: ../src/repsnapper.ui.h:199
 msgid "Sort Printed Lines by Length"
 msgstr "Gedruckte Linien nach Länge sortieren"
 
-#: ../src/repsnapper.ui.h:199
+#: ../src/repsnapper.ui.h:200
 msgid "Speed (mm/min)"
 msgstr "Geschwindigkeit (mm/min)"
 
-#: ../src/repsnapper.ui.h:200
+#: ../src/repsnapper.ui.h:201
 msgid "Speed (mm/min):"
 msgstr "Geschwindigkeit (mm/min)"
 
-#: ../src/repsnapper.ui.h:201
+#: ../src/repsnapper.ui.h:202
 msgid "Speed Ratio:"
 msgstr "Rel. Geschwindigkeit"
 
-#: ../src/repsnapper.ui.h:202
+#: ../src/repsnapper.ui.h:203
 msgid "Split"
 msgstr "Teilen"
 
-#: ../src/repsnapper.ui.h:203
+#: ../src/repsnapper.ui.h:204
 msgid "Split into single shapes"
 msgstr "In Einzelteile zerlegenn"
 
-#: ../src/repsnapper.ui.h:204
+#: ../src/repsnapper.ui.h:205
 msgid "Start"
 msgstr "Starten"
 
-#: ../src/repsnapper.ui.h:205
+#: ../src/repsnapper.ui.h:206
 msgid "Support:"
 msgstr "Gerüst:"
 
-#: ../src/repsnapper.ui.h:206
+#: ../src/repsnapper.ui.h:207
 msgid "Surface Normals"
 msgstr "Flächennormalen"
 
-#: ../src/repsnapper.ui.h:207
+#: ../src/repsnapper.ui.h:208
 msgid "Temperature Ratio"
 msgstr "Temperaturverhältnis"
 
-#: ../src/repsnapper.ui.h:208
+#: ../src/repsnapper.ui.h:209
 msgid "Text Output"
 msgstr "Textausgabe"
 
-#: ../src/repsnapper.ui.h:209
+#: ../src/repsnapper.ui.h:210
 msgid "Thickness Ratio"
 msgstr "Schichtdickenverhältnis"
 
-#: ../src/repsnapper.ui.h:210
+#: ../src/repsnapper.ui.h:211
 msgid "To:"
 msgstr "Bis:"
 
-#: ../src/repsnapper.ui.h:211
+#: ../src/repsnapper.ui.h:212
 msgid "Twist:"
 msgstr "Verdrehen:"
 
-#: ../src/repsnapper.ui.h:212
+#: ../src/repsnapper.ui.h:213
 msgid "Update Interval (sec)"
 msgstr "Aktualisierung (s)"
 
-#: ../src/repsnapper.ui.h:213
+#: ../src/repsnapper.ui.h:214
 msgid "Validate Connection"
 msgstr "Verbindung prüfen"
 
-#: ../src/repsnapper.ui.h:214
+#: ../src/repsnapper.ui.h:215
 msgid "Variable Slicing"
 msgstr "Variable Schichten"
 
-#: ../src/repsnapper.ui.h:215
+#: ../src/repsnapper.ui.h:216
 msgid "Very First Layer Height Ratio"
 msgstr "Rel. Höhe der allerersten Schicht"
 
-#: ../src/repsnapper.ui.h:216
+#: ../src/repsnapper.ui.h:217
 msgid "Website"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:217
+#: ../src/repsnapper.ui.h:218
 msgid ""
 "Whether the 'mm' we generate in gcode are measured as mm of cold input "
 "filament, if not set is of hot output extrudate. More modern repraps can "
@@ -1378,81 +1414,174 @@ msgstr ""
 "GCode enthält die Längen in Einheiten des Filaments, oder des extrudierten\n"
 "Materials. "
 
-#: ../src/repsnapper.ui.h:218
+#: ../src/repsnapper.ui.h:219
 msgid "Width to Layerheight Ratio of Extruded Line"
 msgstr "Verhältnis Breite zu Höhe der extrudierten Linie"
 
-#: ../src/repsnapper.ui.h:219
+#: ../src/repsnapper.ui.h:220
 msgid "Wireframe"
 msgstr "Drahtmodell"
 
-#: ../src/repsnapper.ui.h:220
+#: ../src/repsnapper.ui.h:221
 msgid "X"
 msgstr ""
 
-#: ../src/repsnapper.ui.h:221
-msgid "X/Y Axes"
-msgstr "X/Y-Achsen"
-
 #: ../src/repsnapper.ui.h:222
-msgid "Y"
+msgid "X +0.1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:223
-msgid "Z"
+msgid "X +1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:224
-msgid "Z Axis"
-msgstr "Z-Achse"
+msgid "X +10 mm"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:225
-msgid "_Autoplace"
-msgstr "_Autom. platzieren"
+msgid "X -0.1 mm"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:226
-msgid "_Edit"
-msgstr "_Bearbeiten"
+msgid "X -1 mm"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:227
-msgid "_File"
-msgstr "_Datei"
+msgid "X -10 mm"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:228
-msgid "_Help"
-msgstr "_Hilfe"
+msgid "X/Y Axes"
+msgstr "X/Y-Achsen"
 
 #: ../src/repsnapper.ui.h:229
-msgid "_Print"
-msgstr "_Drucken"
+msgid "Y"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:230
-msgid "_Support"
-msgstr "Gerüs_t"
+msgid "Y +0.1 mm"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:231
-msgid "how much should be retracted and repushed while halting"
-msgstr "Anteil während des Haltens"
+msgid "Y +1 mm"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:232
-msgid "label"
+msgid "Y +10 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:233
-msgid "lines"
-msgstr "Zeilen"
+msgid "Y -0.1 mm"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:234
-msgid "mm"
+msgid "Y -1 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:235
-msgid "mm/min"
+msgid "Y -10 mm"
 msgstr ""
 
 #: ../src/repsnapper.ui.h:236
+msgid "Z"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:237
+msgid "Z +0.1 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:238
+msgid "Z +1 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:239
+msgid "Z +10 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:240
+msgid "Z -0.1 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:241
+msgid "Z -1 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:242
+msgid "Z -10 mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:243
+msgid "Z Axis"
+msgstr "Z-Achse"
+
+#: ../src/repsnapper.ui.h:244
+msgid "_Autoplace"
+msgstr "_Autom. platzieren"
+
+#: ../src/repsnapper.ui.h:245
+msgid "_Edit"
+msgstr "_Bearbeiten"
+
+#: ../src/repsnapper.ui.h:246
+msgid "_File"
+msgstr "_Datei"
+
+#: ../src/repsnapper.ui.h:247
+msgid "_Help"
+msgstr "_Hilfe"
+
+#: ../src/repsnapper.ui.h:248
+msgid "_Print"
+msgstr "_Drucken"
+
+#: ../src/repsnapper.ui.h:249
+msgid "_Support"
+msgstr "Gerüs_t"
+
+#: ../src/repsnapper.ui.h:250
+msgid "how much should be retracted and repushed while halting"
+msgstr "Anteil während des Haltens"
+
+#: ../src/repsnapper.ui.h:251
+msgid "label"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:252
+msgid "lines"
+msgstr "Zeilen"
+
+#: ../src/repsnapper.ui.h:253
+msgid "mm"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:254
+msgid "mm/min"
+msgstr ""
+
+#: ../src/repsnapper.ui.h:255
 msgid "repsnapper Preferences"
 msgstr "repsnapper-Einstellungen"
+
+#~ msgid " xy part"
+#~ msgstr " xy-Teil"
+
+#~ msgid " z part"
+#~ msgstr " z-Teil"
+
+#~ msgid " Z-Change"
+#~ msgstr " Z-Schritt"
+
+#~ msgid " Move Only"
+#~ msgstr " Nur Bewegung"
+
+#~ msgid "Filament Retract"
+#~ msgstr "Filamentrückzug"
+
+#~ msgid "Filament Retract move"
+#~ msgstr "Filamentrückzug Bewegung"
+
+#~ msgid "Filament Retract pushback"
+#~ msgstr "Filamentrückzug Ende"
 
 #~ msgid "Repush Ratio"
 #~ msgstr "Zurückschieben (Anteil)"
