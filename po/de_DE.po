@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-03-14 14:55+0100\n"
-"PO-Revision-Date: 2012-03-14 18:43+0100\n"
+"PO-Revision-Date: 2012-03-14 20:51+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -1325,7 +1325,7 @@ msgstr "Oberste und unterste Schichten vollständig füllen"
 
 #: ../src/repsnapper.ui.h:198
 msgid "Solid Fill:"
-msgstr "Normale Füllung:"
+msgstr "Volle Füllung:"
 
 #: ../src/repsnapper.ui.h:199
 msgid "Sort Printed Lines by Length"
@@ -1337,11 +1337,11 @@ msgstr "Geschwindigkeit (mm/min)"
 
 #: ../src/repsnapper.ui.h:201
 msgid "Speed (mm/min):"
-msgstr "Geschwindigkeit (mm/min)"
+msgstr "Geschwindigkeit (mm/min):"
 
 #: ../src/repsnapper.ui.h:202
 msgid "Speed Ratio:"
-msgstr "Rel. Geschwindigkeit"
+msgstr "Rel. Geschwindigkeit:"
 
 #: ../src/repsnapper.ui.h:203
 msgid "Split"
