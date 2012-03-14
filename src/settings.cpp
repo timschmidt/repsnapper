@@ -206,6 +206,7 @@ static struct {
   BOOL_MEMBER (Display.DisplayGCode, "DisplayGCode", true, true),
   FLOAT_MEMBER (Display.GCodeDrawStart, "GCodeDrawStart", 0.0, true),
   FLOAT_MEMBER (Display.GCodeDrawEnd, "GCodeDrawEnd", 1.0, true),
+  BOOL_MEMBER (Display.DisplayGCodeBorders, "DisplayGCodeBorders", true, true),
   BOOL_MEMBER (Display.DisplayEndpoints, "DisplayEndpoints", false, true),
   BOOL_MEMBER (Display.DisplayNormals, "DisplayNormals", false, true),
   BOOL_MEMBER (Display.DisplayBBox, "DisplayBBox", false, true),
@@ -1148,10 +1149,13 @@ void Settings::connect_to_ui (Builder &builder)
   m_signal_update_settings_gui.emit();
 }
 
+
 double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) const
 {
   return ExtrudedMaterialWidthRatio * layerheight;
 }
+
+// TODO This depends whether lines are packed or not - ellipsis/rectangle
 
 // We do our internal measurement in terms of the length of extruded material
 double Settings::HardwareSettings::GetExtrudeFactor(double layerheight) const

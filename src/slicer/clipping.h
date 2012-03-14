@@ -31,7 +31,7 @@
 
 // Clipper uses non-negative long long integers, so we transform by:
 const double CL_FACTOR = 10000; // 1 = 1/10000 mm
-const double CL_OFFSET = 10000; // 10 m
+const double CL_OFFSET = 10000; // 10 meters
 
 namespace CL = ClipperLib;
 

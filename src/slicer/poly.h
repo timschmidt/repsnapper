@@ -89,8 +89,8 @@ public:
 	void setExtrusionFactor(double e){extrusionfactor = e;};
 	double getLayerNo() const;
 
-	void draw(int gl_type, bool reverse=false) const; // GL_LINE_LOOP or GL_POINTS
-	void draw(int gl_type, double z) const; // draw at given z
+	void draw(int gl_type, bool reverse=false, bool randomized=true) const; 
+	void draw(int gl_type, double z, bool randomized=true) const; // draw at given z
 	void drawVertexNumbers() const; 
 	void drawLineNumbers() const;
 

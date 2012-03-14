@@ -201,6 +201,7 @@ class Settings {
     bool DisplayDebuginFill;
     bool DisplayDebug;
     bool DisplayLayer;
+    bool DisplayGCodeBorders;
     bool DrawVertexNumbers;
     bool DrawLineNumbers;
     bool DrawOutlineNumbers;

@@ -23,22 +23,40 @@
 
 #include "stdafx.h"
 
+class PLine; // see below
 
-// 3D printline for passing to GCode
-struct printline
+
+
+// 3D printline for making GCode
+class PLine3
 {
+ public: 
+  PLine3(PLine pline, double z);
+  ~PLine3(){};
+
   Vector3d from, to;
   double speed;
   double extrusionfactor; 
   double absolute_extrusion; // additional absolute extrusion /mm (retract/repush f.e.)
   Vector3d arcIJK;  // if is an arc
   short arc; // -1: ccw arc, 1: cw arc, 0: not an arc
+  double arcangle;
+
+  vector<Command> getCommands(Vector3d &lastpos, double extrusion,
+			      double minspeed, double maxspeed, double movespeed) const;
+  // not used
+  string GCode(Vector3d &lastpos, double &lastE, double feedrate, 
+	       double minspeed, double maxspeed, double movespeed, 
+	       bool relativeE) const;
+  double length() const;
+  string info() const;
 };
 
 
 // single 2D printline
 class PLine
 {
+  friend class PLine3;
   friend class Printlines;
   PLine(const Vector2d from, const Vector2d to, double speed, 
 	double feedrate);
@@ -58,7 +76,8 @@ class PLine
   double lengthSq() const;
   double length() const;
   double time() const;  // time in minutes
-  struct printline getPrintline(double z) const;
+  PLine3 getPrintline(double z) const;
+  bool is_noop() const;
   string info() const;
  public: 
   ~PLine(){};
@@ -73,6 +92,7 @@ class Printlines
   vector<PLine> lines;
 
   double z;
+  double Zoffset; // global offset for generated PLine3s, always added at setZ()
 
   string name;
 
@@ -82,7 +102,7 @@ class Printlines
 	       double speed=1, double movespeed=1, double feedrate=1.0);
 
  public:
-  Printlines(){name = "";};
+  Printlines(double z_offset=0);
   ~Printlines(){clear();};
   
   void clear(){lines.clear();};
@@ -119,7 +139,7 @@ class Printlines
 
   void getLines(vector<Vector2d> &linespoints) const;
   void getLines(vector<Vector3d> &linespoints) const;
-  void getLines(vector<printline> &plines) const;
+  void getLines(vector<PLine3> &plines) const;
 
   uint size() const {return lines.size(); };
 
@@ -127,14 +147,14 @@ class Printlines
   double totalSeconds() const;
   double totalSecondsExtruding() const;
 
-  void setZ(double z) {this->z=z;};
+  // every added poly will set this
+  void setZ(double z) {this->z = z + Zoffset;};
   double getZ() const {return z;};
   
-  string GCode(Vector3d &lastpos, double &E, double feedrate, 
-	       double minspeed, double maxspeed, double movespeed, 
-	       bool relativeE) const;
+  /* string GCode(Vector3d &lastpos, double &E, double feedrate,  */
+  /* 	       double minspeed, double maxspeed, double movespeed,  */
+  /* 	       bool relativeE) const; */
   string info() const;
-  string lineinfo(const struct printline l) const;
 
  private:
   void optimizeLinedistances(double maxdist);
@@ -154,9 +174,9 @@ class Printlines
   Vector2d arcCenter(const PLine l1, const PLine l2, 
 		     double maxerr) const;
   
-  string GCode(PLine l, Vector3d &lastpos, double &E, double feedrate, 
-	       double minspeed, double maxspeed, double movespeed, 
-	       bool relativeE) const;
+  /* string GCode(PLine l, Vector3d &lastpos, double &E, double feedrate,  */
+  /* 	       double minspeed, double maxspeed, double movespeed,  */
+  /* 	       bool relativeE) const; */
 
   typedef vector<PLine>::const_iterator lineCIt ;
   typedef vector<PLine>::iterator lineIt ;

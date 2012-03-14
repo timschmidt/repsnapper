@@ -77,3 +77,5 @@ Vector2d random_displace(Vector2d v, double delta=0.05);
 
 bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepoly, 
 		  vector<Vector2d> &path, double maxerr);
+
+vector<Poly> thick_line(const Vector2d from, const Vector2d to, double distance);

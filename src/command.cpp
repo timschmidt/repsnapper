@@ -110,46 +110,35 @@ inline double ToDouble(GcodeFeed &f)
 }
 
 
+
+
 Command::Command() 
-  : where(Vector3d(-1,-1,-1)), is_value(false), f(0.0), e(-1.0)
+  : where(0,0,0), is_value(false), f(0.0), e(0.0)
 {}
 
-Command::Command(GCodes code, const Vector3d where, double E, double F) {
-  Code = code;
-  is_value = false;
-  this->where = where;
-  e=E;
-  f=F;
+Command::Command(GCodes code, const Vector3d position, double E, double F) 
+  : Code(code), where(position), is_value(false),  f(F), e(E)
+{
 }
 
-Command::Command(GCodes code, double value) {
-  Code = code;
-  is_value = true;
-  this->value = value;
-  this->where = Vector3d(0,0,0);
-  e=0;
-  f=0;
+Command::Command(GCodes code, double value_) 
+  : Code(code), where(0,0,0), is_value(true), value(value_), f(0), e(0)
+{
 }
 
-Command::Command(string comment_only) {
-  Code = COMMENT;
-  is_value = false;
-  comment = comment_only;
-  this->value = 0;
-  this->where = Vector3d(0,0,0);
-  e=0;
-  f=0;
+Command::Command(string comment_only) 
+  : Code(COMMENT), where(0,0,0), is_value(true), value(0), f(0), e(0),
+    comment(comment_only)
+{
 }
 
-Command::Command(const Command &rhs){
-  Code = rhs.Code;
-  where = rhs.where;
-  arcIJK = rhs.arcIJK;
-  is_value = rhs.is_value;
-  value = rhs.value;
-  e = rhs.e;
-  f = rhs.f;
-  comment = rhs.comment;
+Command::Command(const Command &rhs)
+  : Code(rhs.Code), where(rhs.where), 
+    arcIJK (rhs.arcIJK), 
+    is_value(rhs.is_value), value(rhs.value), 
+    f(rhs.f), e(rhs.e),
+    comment(rhs.comment)
+{
 }
 
 /**
@@ -239,7 +228,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcod
 
   ostr << MCODES[Code] << " ";
 
-  if (is_value){
+  if (is_value && Code!=COMMENT){
     ostr << "S"<<value;
     if(comm.length() != 0)
       ostr << " ; " << comm;
@@ -311,13 +300,30 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcod
     ostr << "F" << f;    
   default: ;
   }
-  if(comm.length() != 0)
-    ostr << " ; " << comm;
-  //cerr << info()<< endl;
+  if(comm.length() != 0) {
+    if (Code!=COMMENT) ostr << " ; " ;
+    ostr << comm;
+  }
+  // ostr << "; "<< info(); // show Command on line
   return ostr.str();
 }
 
-void Command::draw(Vector3d &lastPos, bool arrows) const 
+
+void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short ccw)
+{
+  Vector3d arcpoint;
+  Vector3d radiusv =  lastPos-center;
+  double astep = angle/(radiusv).length()/20;
+  for (double a = 0; a < angle; a+=astep){
+    arcpoint = center + radiusv.rotate(a, 0.,0.,ccw?1.:-1.);
+    if (dz!=0 && angle!=0) arcpoint.z = lastPos.z + a*(dz)/angle;
+    glVertex3dv((GLdouble*)&lastPos);
+    glVertex3dv((GLdouble*)&arcpoint);
+    lastPos = arcpoint;
+  }
+}
+
+void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const 
 {
   GLfloat ccol[4];
   glGetFloatv(GL_CURRENT_COLOR,&ccol[0]);
@@ -326,11 +332,12 @@ void Command::draw(Vector3d &lastPos, bool arrows) const
   if (Code == ARC_CW || Code == ARC_CCW) {
     Vector3d center = lastPos + arcIJK;
     Vector3d P = -arcIJK, Q = where-center; // arc endpoints
-    // glColor4f(1.f,0.f,0.0f,0.3f);
-    // glVertex3dv((GLdouble*)&center);
-    // glVertex3dv((GLdouble*)&lastPos);
+    glColor4f(1.f,0.f,0.0f,0.3f);
+    glVertex3dv((GLdouble*)&center);
+    glVertex3dv((GLdouble*)&lastPos);
     // glVertex3dv((GLdouble*)&lastPos);
     // glVertex3dv((GLdouble*)&where);
+    glColor4fv(ccol);
     bool ccw = (Code == ARC_CCW);
     // if (ccw)
     //   glColor4f(1.f,0.7f,0.1f,ccol[3]);
@@ -340,15 +347,29 @@ void Command::draw(Vector3d &lastPos, bool arrows) const
     angle = angleBetween(P,Q); // ccw angle
     if (!ccw) angle=-angle;
     if (angle <= 0) angle += 2*M_PI;
-    Vector3d arcpoint;
-    double astep = angle/arcIJK.length()/10;
+    if (abs(angle) < 0.00001) angle = 2*M_PI;
     double dz = where.z-lastPos.z; // z move with arc
-    for (double a = 0; a < angle; a+=astep){
-      arcpoint = center + P.rotate(a, 0.,0.,ccw?1.:-1.);
-      if (dz!=0 && angle!=0) arcpoint.z = lastPos.z + a*(dz)/angle;
-      glVertex3dv((GLdouble*)&lastPos);
-      glVertex3dv((GLdouble*)&arcpoint);
-      lastPos = arcpoint;
+    Vector3d arcstart = lastPos;
+    draw_arc(lastPos, center, angle, dz, ccw);
+    // Vector3d arcpoint;
+    // double astep = angle/arcIJK.length()/20;
+    // for (double a = 0; a < angle; a+=astep){
+    //   arcpoint = center + P.rotate(a, 0.,0.,ccw?1.:-1.);
+    //   if (dz!=0 && angle!=0) arcpoint.z = lastPos.z + a*(dz)/angle;
+    //   glVertex3dv((GLdouble*)&lastPos);
+    //   glVertex3dv((GLdouble*)&arcpoint);
+    //   lastPos = arcpoint;
+    // }
+    if (arrows && extrwidth > 0) {
+      glEnd();
+      glLineWidth(1);
+      Vector3d dradius = arcIJK.getNormalized()*extrwidth/2;
+      glBegin(GL_LINES);
+      Vector3d offstart = arcstart+dradius;
+      draw_arc(offstart, center, angle, dz, ccw);
+      offstart = arcstart-dradius;
+      draw_arc(offstart, center, angle, dz, ccw);
+      glEnd();
     }
     glGetFloatv(GL_CURRENT_COLOR,ccol);
   }
@@ -377,22 +398,33 @@ void Command::draw(Vector3d &lastPos, bool arrows) const
       glVertex3dv((GLdouble*)&(arr2));
     }
     glEnd();
+    if (arrows && extrwidth > 0) {
+      glLineWidth(1);
+      vector<Poly> thickpoly = thick_line(Vector2d(lastPos.x,lastPos.y),
+					  Vector2d(where.x,where.y), extrwidth);
+      for (uint i=0; i<thickpoly.size();i++) {
+	thickpoly[i].cleanup(0.01);
+	thickpoly[i].draw(GL_LINE_LOOP, where.z, false);
+      }
+    }
   }
   lastPos = where;
 }
 
 void Command::draw(Vector3d &lastPos, guint linewidth, 
-		   Vector4f color, bool arrows) const 
+		   Vector4f color, double extrwidth, bool arrows) const 
 {
   glLineWidth(linewidth);
   glColor4fv(&color[0]);
-  draw(lastPos, arrows);
+  draw(lastPos, extrwidth, arrows);
 }
 
 string Command::info() const
 {
   ostringstream ostr;
-  ostr << "Command '" << comment << "': Code="<<Code<<", where="  <<where << ", f="<<f<<", e="<<e;
+  ostr << "Command";
+  if (comment!="") ostr << " '" << comment << "'";
+  ostr << ": Code="<<Code<<", where="  <<where << ", f="<<f<<", e="<<e;
   return ostr.str();
 }
 

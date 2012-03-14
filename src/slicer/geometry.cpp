@@ -21,6 +21,7 @@
 
 #include "geometry.h"
 #include "poly.h"
+#include "clipping.h"
 
 // template < typename T > 
 // long double angleBetween(T V1, T V2) 
@@ -579,3 +580,21 @@ bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepol
   return true; 
 }
   
+
+vector<Poly> thick_line(const Vector2d from, const Vector2d to, double distance) 
+{
+  Poly poly;
+  Vector2d dir = (to-from).getNormalized() * distance/4.;
+  Vector2d dirp(-dir.y,dir.x);
+  poly.addVertex(from-dir-dirp);
+  poly.addVertex(from-dir+dirp);
+  poly.addVertex(to+dir+dirp);
+  poly.addVertex(to+dir-dirp);
+  vector<Poly> p; p.push_back(poly);
+  return Clipping::getOffset(poly, distance/4, jmiter, 0);
+
+  // slow:
+  // poly.addVertex(from);
+  // poly.addVertex(to);
+  // return Clipping::getOffset(poly, distance/2, jround, distance/2.);
+}

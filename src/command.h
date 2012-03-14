@@ -131,7 +131,7 @@ const string MCODES[] = {"G92", "", "",
 			 "G92", "T0", "G1", "G1" ,
 			 "M106", "M107",
 			 "M105", // temp? 
-			 "" };
+			 "; " };
 
 
 class Model;
@@ -154,8 +154,8 @@ public:
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
 	string comment;
 	void draw(Vector3d &lastPos, guint linewidth, 
-		  Vector4f color, bool arrows=true) const;
-	void draw(Vector3d &lastPos, bool arrows=true) const;
+		  Vector4f color, double extrwidth, bool arrows=true) const;
+	void draw(Vector3d &lastPos, double extrwidth, bool arrows=true) const;
 	string GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcode) const;
 	string info() const;
 };

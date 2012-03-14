@@ -46,7 +46,8 @@ class GCodeState {
   /* void SetZ (double z); */
   void AppendCommand(Command &command, bool incrementalE);
   void AppendCommand(GCodes code, bool incrementalE=false, string comment="");
-  void AddLines (vector<printline> lines,
+  void AppendCommands(vector<Command> commands, bool relativeE);
+  void AddLines (vector<PLine3> lines,
 		 double extrusionfactor,
 		 double offsetZ, 
 		 const Settings::SlicingSettings &slicing,
@@ -58,7 +59,7 @@ class GCodeState {
 		 double offsetZ, 
 		 const Settings::SlicingSettings &slicing,
 		 const Settings::HardwareSettings &hardware);
-  void MakeGCodeLine (printline line,
+  void MakeGCodeLine (PLine3 line,
 		      double extrusionfactor,
 		      double offsetZ, 
 		      const Settings::SlicingSettings &slicing,

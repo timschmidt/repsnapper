@@ -27,10 +27,10 @@
 Layer::Layer(int layerno, double thick, uint skins) 
   : LayerNo(layerno), thickness(thick), skins(skins)
 {
-  normalInfill = NULL;//new Infill(this,1.);
-  fullInfill = NULL;//new Infill(this,1.);
-  supportInfill = NULL;//new Infill(this,1.);
-  decorInfill = NULL;//new Infill(this,1.);
+  normalInfill = NULL;
+  fullInfill = NULL;
+  supportInfill = NULL;
+  decorInfill = NULL;
   Min = Vector2d(G_MAXDOUBLE, G_MAXDOUBLE);
   Max = Vector2d(G_MINDOUBLE, G_MINDOUBLE);
 }
@@ -39,9 +39,6 @@ Layer::Layer(int layerno, double thick, uint skins)
 Layer::~Layer()
 {
   Clear();
-  // delete normalInfill;
-  // delete fullInfill;
-  // delete supportInfill;
 }
 
 
@@ -67,10 +64,10 @@ void clearpolys(vector< vector<Poly> > &polys){
 
 void Layer::Clear()
 {
-  delete normalInfill;//->clear();
-  delete fullInfill;//->clear();
-  delete supportInfill;//->clear();
-  delete decorInfill;//->clear();
+  delete normalInfill;
+  delete fullInfill;
+  delete supportInfill;
+  delete decorInfill;
   skinFullInfills.clear();
   clearpolys(polygons);
   clearpolys(shellPolygons);
@@ -179,7 +176,6 @@ void Layer::calcBridgeAngles(const Layer *layerbelow) {
       
       // TODO detect circular bridges -> rotating infill?
 
-      
       // get average direction of the mutual connections of all the intersections
       Vector2d dir(0,0);
       for (uint p=0; p<bridgePillars[i].size(); p++){
@@ -622,11 +618,8 @@ void Layer::MakeGcode(GCodeState &state,
   if ((guint)LayerNo < slicing.FirstLayersNum)
     speedfactor = slicing.FirstLayersSpeed;
 
-  //vector<Vector3d> lines;
-  vector<printline> lines;
-  //cerr << "gcode layer " << LayerNo << "z="<<Z<<endl;
-
-  Printlines printlines;
+  vector<PLine3> lines;
+  Printlines printlines(offsetZ);
 
   double slowdownfactor = 1;
 
@@ -641,10 +634,10 @@ void Layer::MakeGcode(GCodeState &state,
   if (skins>1){
     for(uint s=1;s <= skins;s++) { // z offset from bottom to top
       polys.clear();
-      double sz = Z - thickness + (s)*thickness/skins;
+      double skin_z = Z - thickness + (s)*thickness/skins;
       // outlines
       for(size_t p=0;p<skinPolygons.size();p++) { 
-	Poly sp(skinPolygons[p],sz);
+	Poly sp(skinPolygons[p], skin_z);
 	polys.push_back(sp);
       }
       // skin infill polys
@@ -692,9 +685,14 @@ void Layer::MakeGcode(GCodeState &state,
   printlines.getLines(lines);
 
   // 4. all other polygons:  
+
+  // TODO: do shells separately, inner first, calculate extrusionfactor
+  // for rectangle vs. ellipsis
+
   //  Shells
   for(size_t p=0;p<shellPolygons.size();p++) // outer to inner, in this order
     polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());
+  //  Infill
   polys.insert(polys.end(),
 	       normalInfill->infillpolys.begin(), normalInfill->infillpolys.end());
   polys.insert(polys.end(),
@@ -730,7 +728,16 @@ void Layer::MakeGcode(GCodeState &state,
   }
 
   // push all lines to gcode
-  state.AddLines(lines, extrf, offsetZ, slicing, hardware); 
+  // state.AddLines(lines, extrf, offsetZ, slicing, hardware); 
+  // return;
+  Command comment("Layer start");
+  state.AppendCommand(comment,slicing.RelativeEcode);
+  start3 = state.LastPosition();
+  for (uint i = 0; i < lines.size(); i++) {
+    //state.MakeGCodeLine (lines[i], extrf, offsetZ, slicing, hardware);
+    vector<Command> cc = lines[i].getCommands(start3, extrf, minspeed, maxspeed, movespeed);
+    state.AppendCommands(cc, slicing.RelativeEcode);
+  }
 }
 
 

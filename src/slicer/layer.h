@@ -165,7 +165,7 @@ public:
   uint skins; // number of skin divisions
   vector<Poly> skinPolygons;            // outer skin polygons
   vector<Poly> skinFullFillPolygons;    // skin polygons of fully filled areas
-  Poly hullPolygon;                     // convex hull aroung everything
+  Poly hullPolygon;                     // convex hull around everything
   Poly skirtPolygon;                    // skirt polygon
   vector<Poly> decorPolygons;           // decoration polygons
 

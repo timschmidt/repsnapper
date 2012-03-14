@@ -57,19 +57,18 @@ const Vector3d &GCodeState::LastPosition()
 }
 void GCodeState::SetLastPosition(const Vector3d &v)
 {
-  // For some reason we get lots of -nan co-ordinates in lines[] - odd ...
-  if (!isnan(v.y) && !isnan(v.x) && !isnan(v.z))
-    pImpl->LastPosition = v;
+  pImpl->LastPosition = v;
 }
 void GCodeState::AppendCommand(Command &command, bool relativeE)
 {
   if (!command.is_value) {
-    Vector3d lastwhere = Vector3d(pImpl->lastCommand.where);
     if (!relativeE) 
       command.e += pImpl->lastCommand.e;
-    if (command.f!=0)
-      timeused += (command.where - lastwhere).length()/command.f*60;
+    if (command.f!=0) {
+      timeused += (command.where - pImpl->lastCommand.where).length()/command.f*60;
+    }
     pImpl->lastCommand = command;
+    pImpl->LastPosition = command.where;
   }
   pImpl->code.commands.push_back(command);
 }
@@ -78,6 +77,12 @@ void GCodeState::AppendCommand(GCodes code, bool relativeE, string comment)
   Command comm(code);
   comm.comment = comment;
   AppendCommand(comm, relativeE);
+}
+void GCodeState::AppendCommands(vector<Command> commands, bool relativeE)
+{
+  for (uint i = 0; i < commands.size(); i++) {
+    AppendCommand(commands[i], relativeE);
+  }
 }
 // double GCodeState::GetLastLayerZ(double curZ)
 // {
@@ -106,7 +111,8 @@ double GCodeState::LastCommandF()
   return pImpl->lastCommand.f;
 }
 
-void GCodeState::AddLines (vector<printline> plines,
+// dont use -- commands are generated in PLine3 printlines.cpp
+void GCodeState::AddLines (vector<PLine3> plines,
 			   double extrusionfactor,
 			   double offsetZ, 
 			   const Settings::SlicingSettings &slicing,
@@ -144,25 +150,41 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
 }
 
 
-void GCodeState::MakeGCodeLine (printline pline,
+// dont use -- commands are generated in PLine3 printlines.cpp
+void GCodeState::MakeGCodeLine (PLine3 pline,
 				double extrusionfactor,
 				double offsetZ, 
 				const Settings::SlicingSettings &slicing,
 				const Settings::HardwareSettings &hardware)
 {
+  bool relativeE = slicing.RelativeEcode;
+  double minspeed = hardware.MinPrintSpeedXY;
+  double maxspeed = hardware.MaxPrintSpeedXY;
+  cerr << "dont use GCodeState::MakeGCodeLine (PLine3 pline..." << endl; 
+
   if(LastPosition() != pline.from) { // then first move to pline.from
-    MakeGCodeLine(LastPosition(), pline.from, 
-		 Vector3d(0,0,0),0,
-		 0, 0, hardware.MoveSpeed,
-		 offsetZ, slicing, hardware);
-    SetLastPosition(pline.from);
+    maxspeed = max(minspeed, (double)hardware.MoveSpeed); // in case maxspeed is too low
+    Command command(COORDINATEDMOTION, pline.from, 0, maxspeed);
+    AppendCommand(command,relativeE);
+    //SetLastPosition(pline.from);
+  }
+
+  if (pline.arc == 0) { // make line
+      maxspeed = max(minspeed, pline.speed); // in case maxspeed is too low
+    double extrudedMaterial = DistanceFromLastTo(pline.to) * extrusionfactor;
+    Command command(COORDINATEDMOTION, pline.to, extrudedMaterial, maxspeed);
+    if (pline.from==pline.to) command.comment = _("Extrusion only ");
+  } else { // make arc
+    cerr << "no arc in GCodeState::MakeGCodeLine (PLine3 pline..." 
+	 << "   dont use this function" << endl;
+    
   }
   MakeGCodeLine(pline.from, pline.to, pline.arcIJK, pline.arc,
 	       pline.extrusionfactor * extrusionfactor,
 	       pline.absolute_extrusion,
 	       pline.speed, 
 	       offsetZ, slicing, hardware);
-  SetLastPosition(pline.to);
+  //SetLastPosition(pline.to);
 }
 
 void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
@@ -186,12 +208,10 @@ void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
   maxspeed = max(minspeed,maxspeed); // in case maxspeed is too low
   ResetLastWhere (start);
   command.where = end;
-  double extrudedMaterial;
   if (start==end)  { // pure extrusions
-    extrudedMaterial = 0;
     command.comment = _("Extrusion only ");
-  } else 
-    extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
+  } 
+  double extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 
   if (absolute_extrusion!=0) {
     command.comment += _("Absolute Extrusion");

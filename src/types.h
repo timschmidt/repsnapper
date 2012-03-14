@@ -28,6 +28,7 @@ class GUI;
 class Poly;
 class View;
 class GCode;
+class PLine3;
 class Model;
 class Render;
 class Command;

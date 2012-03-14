@@ -19,6 +19,112 @@
 
 #include "printlines.h"
 #include "poly.h"
+#include "slicer/gcode.h"
+
+
+///////////// PLine3: single 3D printline //////////////////////
+
+PLine3::PLine3(const PLine pline, double z)
+{
+  from               = Vector3d(pline.from.x, pline.from.y, z);
+  to                 = Vector3d(pline.to.x,   pline.to.y,   z);
+  speed              = pline.speed;
+  extrusionfactor    = pline.feedrate;
+  absolute_extrusion = pline.absolute_feed;
+  arc                = pline.arc;
+  arcangle           = pline.angle;
+  if (arc) {
+    Vector2d arcIJK2 = pline.arccenter - pline.from;
+    arcIJK = Vector3d(arcIJK2.x, arcIJK2.y, 0);
+    // double linearlength = (pline.to - pline.from).length();
+    // if (linearlength!=0) // not full circle
+    //   extrusionfactor *= pline.length() / linearlength;
+  }
+}
+
+vector<Command> PLine3::getCommands(Vector3d &lastpos, double extrusion,
+				    double minspeed, double maxspeed, double movespeed) const
+{
+  vector<Command> commands;
+  if (lastpos != from)  // move first
+    commands.push_back( Command(COORDINATEDMOTION, from, 0, movespeed) );
+  
+  double extrudedMaterial = length() * extrusionfactor * extrusion;
+  //cerr << "extr " << extrudedMaterial<< endl;
+  double comm_speed = max(minspeed, this->speed); // in case maxspeed is too low
+  if (arc) 
+    {
+      GCodes gc = (arc==-1 ? ARC_CCW : ARC_CW);
+      Command command = Command (gc, to, extrudedMaterial, comm_speed);
+      command.arcIJK = arcIJK;
+      ostringstream o;
+      o << (int)(arcangle*180/M_PI) << "° arc";
+      command.comment += o.str();
+      commands.push_back(command);
+    }
+  else
+    {
+      commands.push_back(Command (COORDINATEDMOTION, to, extrudedMaterial, comm_speed));
+    }
+  lastpos = to;
+  return commands;
+}
+
+// // not used
+// string PLine3::GCode(Vector3d &lastpos, double &lastE, double feedrate, 
+// 		     double minspeed, double maxspeed, double movespeed, 
+// 		     bool relativeE) const
+// {
+//   ostringstream o;
+//   double distline = length();
+//   double movefirst = (from-lastpos).length();
+//   double speed = movespeed;
+//   if (movefirst > 0.001) {
+//     speed = CLAMP(speed, minspeed, movespeed); // ???
+//     o << "G1 X"<<from.x<<" Y"<<from.y<<" Z"<<from.z<<" F"<<speed << endl;
+//   }
+
+//   double EX = distline * feedrate * feedrate; // this line's E
+//   bool noextrusion = (EX==0);
+//   if (!relativeE) { // if absolute E
+//     lastE += EX;  // add to total E
+//     EX = lastE;   // write total E
+//   } // else write single line EX
+//   if ( !(distline > 0.001 && noextrusion)) {
+//     speed = CLAMP(maxspeed, minspeed, maxspeed); // ???
+//     o << "G1 X" << to.x  << " Y" << to.y  << " Z" << to.z  
+//       << " E" << EX << " F" << speed << endl;
+//   }
+//   cerr << "PL gcode " << o.str()<< endl;
+//   lastpos = to;
+//   return o.str();
+// }
+
+
+double PLine3::length() const
+{
+  if (!arc) 
+    return (to-from).length();
+  else {
+    double radius = arcIJK.length();
+    return radius * arcangle;
+  }
+}
+
+string PLine3::info() const
+{
+  ostringstream ostr;
+  ostr << "line "<< from;
+  if (to!=from) ostr << to;
+  ostr << " speed=" << speed 
+       << " extrf=" << extrusionfactor << " arc=" << arc;
+  if (absolute_extrusion!=0)
+    ostr << " abs_extr="<<absolute_extrusion;
+  if (arc!=0)
+    ostr << " arcIJK=" << arcIJK;
+  return ostr.str();
+}
+
 
 
 
@@ -43,10 +149,12 @@ PLine::PLine(const Vector2d from_, const Vector2d to_, double speed_,
 
 double PLine::calcangle() const
 {
+  assert(!arc);
   return angleBetween(from, to);
 }
 double PLine::calcangle(const PLine rhs) const
 {
+  assert(!arc);
   return angleBetween((rhs.to-rhs.from), (to-from));
 }
 
@@ -72,22 +180,9 @@ double PLine::time() const
   return length()/speed;
 }
 
-struct printline PLine::getPrintline(double z) const
+PLine3 PLine::getPrintline(double z) const
 {
-  struct printline pline;
-  pline.from            = Vector3d(from.x, from.y, z);
-  pline.to              = Vector3d(to.x, to.y, z);
-  pline.speed           = speed;
-  pline.arc             = arc;
-  pline.extrusionfactor = feedrate;
-  pline.absolute_extrusion = absolute_feed;
-  if (arc) {
-    Vector2d arcIJK2 = arccenter - from;
-    pline.arcIJK = Vector3d(arcIJK2.x, arcIJK2.y, 0);
-    double linearlength = (to - from).length();
-    pline.extrusionfactor *= length() / linearlength;
-  }
-  return pline;
+  return PLine3(*this, z);
 }
 
 void PLine::addAbsoluteExtrusionAmount(double amount)
@@ -95,16 +190,26 @@ void PLine::addAbsoluteExtrusionAmount(double amount)
   absolute_feed += amount;
 }
 
+bool PLine::is_noop() const 
+{
+  return (from == to && feedrate == 0 && absolute_feed == 0);
+}
+
 string PLine::info() const
 {
   ostringstream ostr;
-  ostr << "line "<< from;
+  ostr << "line ";
+  if (arc!=0) {
+    if (arc==-1) ostr << "C";
+    ostr << "CW arc ";
+  }
+  ostr << from;
   if (to!=from) ostr << to;
-  ostr << " angle="<< (int)angle*180/M_PI
+  ostr << " angle="<< (int)(angle*180/M_PI)<<"°"
        << " length="<< length() << " speed=" << speed 
-       << " feedr=" << feedrate << " arc=" << arc;
+       << " feedr=" << feedrate;
   if (arc!=0)
-    ostr << " arccenter=" << arccenter;
+    ostr << " center=" << arccenter;
   ostr <<  " feedrate=" << feedrate << " abs.extr="<< absolute_feed;
   return ostr.str();
 }
@@ -112,6 +217,11 @@ string PLine::info() const
 
 
 ///////////// Printlines //////////////////////
+
+
+Printlines::Printlines(double z_offset) :
+  Zoffset(z_offset), name("")
+{}
 
 
 void Printlines::addLine(const Vector2d from, const Vector2d to, 
@@ -268,22 +378,23 @@ guint Printlines::makeArcs(double maxAngle)
     Vector2d center       = arcCenter(lines[i-1], lines[i], 0.1*arcRadiusSq);
     double radiusSq       = (center - lines[i].from).lengthSquared();
     // test if NOT continue arc:
-    if (lines[i].arc != 0                  // is an arc
+    if (lines[i].arc != 0                  // is an arc already
 	|| (lines[i].from-lines[i-1].to).lengthSquared() > 0.05 // not adjacent
 	|| abs(feedratechange) > 0.1       // different feedrate
-	|| abs(dangle) < 0.0001             // straight continuation
+	|| abs(dangle) < 0.0001            // straight continuation
 	|| abs(dangle) > maxAngle          // too big angle
-	|| (arccenter-center).lengthSquared() > 0.1*radiusSq // center displacement
-	) { 
-      arccenter   = center;
-      arcRadiusSq = radiusSq;
-      // this one doesn't fit, so i-1 is the last line that fits
-      if (arcstart+2 < i-1) // at least three arc lines
-	i -= makeIntoArc(arcstart, i-1); // straight lines are being removed
-      //else 
-      // not in arc, set start for potential next arc
-      arcstart = i;
-    } 
+	|| ( i>1 && (arccenter-center).lengthSquared() > 0.1*radiusSq ) // center displacement
+	) 
+      { 
+	arccenter   = center;
+	arcRadiusSq = radiusSq;
+	// this one doesn't fit, so i-1 is the last line that fits
+	if (arcstart+2 < i-1) // at least three lines to make an arc
+	  i -= makeIntoArc(arcstart, i-1); // straight lines are being removed
+	//else 
+	// not in arc, set start for potential next arc
+	  arcstart = i;
+      }
   }  
   // remaining
   if (arcstart+2 < lines.size()-1) 
@@ -295,28 +406,41 @@ guint Printlines::makeArcs(double maxAngle)
 guint Printlines::makeIntoArc(guint fromind, guint toind)
 {
   if (toind < fromind || toind+1 > lines.size()) return 0;
+  //cerr<< "arcstart = " << fromind << endl;
   Vector2d P = lines[fromind].from;
   Vector2d Q = lines[toind].to;
+  // get center: intersection of center perpendiculars of 2 chords
   // center perp of start -- endpoint:
-  Vector2d connp1,connp2;
-  center_perpendicular(P, Q, connp1, connp2);  
+  bool fullcircle = (P==Q);
+  guint end1ind = toind;
+  if (fullcircle) { // take midpoint for first center_perp
+    end1ind = (toind+fromind)/2;
+  }
+  Vector2d chord1p1, chord1p2;
+  center_perpendicular(P, lines[end1ind].to, chord1p1, chord1p2);  
   // center perp of midpoint -- endpoint:
-  guint midind = (toind+fromind)/2;
-  Vector2d midp1,midp2;
-  center_perpendicular(lines[midind].from, lines[toind].to, midp1, midp2);
+  guint start2ind = (toind+fromind)/2;
+  Vector2d chord2p1, chord2p2;
+  center_perpendicular(lines[start2ind].from, Q, chord2p1, chord2p2);
   // intersection = center
   Vector2d center, ip;
   double t0, t1;
-  int is = intersect2D_Segments(connp1, connp2, midp1, midp2, 
+  int is = intersect2D_Segments(chord1p1, chord1p2, chord2p1, chord2p2, 
    				center, ip, t0,t1);
   if (is > 0) {
-    double angle = angleBetween(P-center, Q-center);
+    double angle;
+    if (fullcircle) angle = 2*M_PI;
+    else            angle = angleBetween(P-center, Q-center);
     bool ccw = isleftof(center, lines[fromind].from, lines[fromind].to);
     if (!ccw) angle = -angle;
     if (angle<=0) angle+=2*M_PI;
     short arctype = ccw ? -1 : 1; 
     PLine newline(P, Q, lines[fromind].speed, lines[fromind].feedrate,
 		  arctype, center, angle);
+    // if (fullcircle) {
+    //   //cerr << newline.info() << endl;
+    //   cerr << newline.getPrintline(0).info() << endl;
+    // }
     lines[fromind] = newline;
     lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
     return toind-fromind;
@@ -447,7 +571,7 @@ void Printlines::clipMovements(vector<Poly> *polys, double maxerr)
 #define FASTPATH 0
 #if FASTPATH // find shortest path through polygon
 	vector<Poly> holes;
-	holes.push_back((*polys)[frompoly]);
+	//holes.push_back((*polys)[frompoly]);
 	for (uint p = 0; p < polys->size(); p++) {
 	  //   //if ((*polys)[p].isHole())
 	  if ((*polys)[frompoly].polyInside(&(*polys)[p])) 
@@ -469,16 +593,16 @@ void Printlines::clipMovements(vector<Poly> *polys, double maxerr)
 	    (*polys)[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
 	  if (pinter.size() > 0) {
 	    if (pinter.size()%2 == 0) { // holes
-	      // --- TODO for all pairs of pinter ! 
 	      std::sort(pinter.begin(), pinter.end());
 	      vector<Vector2d> path = 
 		(*polys)[p].getPathAround(pinter.front().p, pinter.back().p);
-	      i += (divideline(i,path)); //if (i>0) i--; // test new lines again?
+	      // after divide, skip number of added lines -> test remaining line later
+	      i += (divideline(i,path)); 
 	    }
 	  }
 	}
-      }
 #endif
+      }
       if (0 && frompoly != -1 && topoly != -1 && frompoly != topoly) {
 	cerr <<i << " : "<<frompoly << " p>> " << topoly << endl;	
 	// vector<Intersection> frominter = 
@@ -634,7 +758,7 @@ Vector2d Printlines::lastPoint() const
 void Printlines::getLines(vector<Vector2d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
-    if (lIt->from == lIt->to && lIt->feedrate == 0 && lIt->absolute_feed == 0) continue;
+    if (lIt->is_noop()) continue;
     olines.push_back(lIt->from);
     olines.push_back(lIt->to);
   }
@@ -642,17 +766,17 @@ void Printlines::getLines(vector<Vector2d> &olines) const
 void Printlines::getLines(vector<Vector3d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
-    if (lIt->from == lIt->to && lIt->feedrate == 0 && lIt->absolute_feed == 0) continue;
+    if (lIt->is_noop()) continue;
     olines.push_back(Vector3d(lIt->from.x,lIt->from.y,z));
     olines.push_back(Vector3d(lIt->to.x,lIt->to.y,z));
   }
 }
 
-void Printlines::getLines(vector<printline> &plines) const
+void Printlines::getLines(vector<PLine3> &plines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
-    if (lIt->from == lIt->to && lIt->feedrate == 0 && lIt->absolute_feed == 0) continue;
-    plines.push_back(lIt->getPrintline(z));
+    if (lIt->is_noop()) continue;
+    plines.push_back( PLine3(*lIt,z) );
   }
 }
 
@@ -683,63 +807,21 @@ double Printlines::totalSecondsExtruding() const
   return t * 60;
 }
 
-// not used (yet)
-string Printlines::GCode(Vector3d &lastpos, double &E, double feedrate, 
-			 double minspeed, double maxspeed, double movespeed, 
-			 bool relativeE) const
-{
-  ostringstream o;
-  // E is total E so far (if absolute Ecode)
-  for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
-    o << GCode(*lIt, lastpos, E, feedrate, minspeed, maxspeed, movespeed, relativeE);
-  }
-  cerr << "PL gcode " << o.str()<< endl;
-  return o.str();
-}
+// not used
+// string Printlines::GCode(Vector3d &lastpos, double &E, double feedrate, 
+// 			 double minspeed, double maxspeed, double movespeed, 
+// 			 bool relativeE) const
+// {
+//   ostringstream o;
+//   // E is total E so far (if absolute Ecode)
+//   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
+//     o << GCode(*lIt, lastpos, E, feedrate, minspeed, maxspeed, movespeed, relativeE);
+//   }
+//   cerr << "PL gcode " << o.str()<< endl;
+//   return o.str();
+// }
 
-// not used (yet)  --> TODO should go to PLine class (or PLine3 ...?)
-string Printlines::GCode(PLine l, Vector3d &lastpos, double &E, double feedrate, 
-			 double minspeed, double maxspeed, double movespeed, 
-			 bool relativeE) const
-{
-  ostringstream o;
-  double distline = l.length();
-  Vector3d from=Vector3d(l.from.x,l.from.y,z);
-  Vector3d to=Vector3d(l.to.x,l.to.y,z);
-  double movefirst = (from-lastpos).length();
-  if (movefirst > 0.001) {
-    double speed = CLAMP(l.speed, minspeed, movespeed);
-    o << "G1 X"<<from.x<<" Y"<<from.y<<" Z"<<from.z<<" F"<<speed << endl;
-  }
 
-  double EX = distline * l.feedrate * feedrate; // this line's E
-  bool noextrusion = (EX==0);
-  if (!relativeE) { // if absolute E
-    E += EX;  // add to total E
-    EX = E;   // write total E
-  } // else write single line EX
-  if ( !(distline > 0.001 && noextrusion)) {
-    double speed = CLAMP(l.speed, minspeed, maxspeed);
-    o << "G1 X" << to.x  << " Y" << to.y  << " Z" << to.z  
-      << " E" << EX << " F" << speed << endl;
-  }
-  cerr << "PL gcode " << o.str()<< endl;
-  lastpos = to;
-  return o.str();
-}
-
-string Printlines::lineinfo(const struct printline l) const
-{
-  ostringstream ostr;
-  ostr << "line "<< l.from << l.to 
-       << " speed=" << l.speed 
-       << " extrf=" << l.extrusionfactor << " arc=" << l.arc;
-  if (l.absolute_extrusion!=0)
-    ostr << " abs_extr="<<l.absolute_extrusion;
-  if (l.arc!=0)
-    ostr << " arcIJK=" << l.arcIJK;
-  return ostr.str();
-}
 string Printlines::info() const
 {
   ostringstream ostr;

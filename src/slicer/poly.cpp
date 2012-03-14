@@ -518,20 +518,20 @@ Vector3d rotatedZ(Vector3d v, double angle)
 }
 
 
-void Poly::draw(int gl_type, double z) const
+void Poly::draw(int gl_type, double z, bool randomized) const
 {
   Vector2d v;
   uint count = vertices.size();
   glBegin(gl_type);	  
   for (uint i=0;i < count;i++){
     v = getVertexCircular(i);
-    v = random_displace(v);
+    if (randomized) v = random_displace(v);
     glVertex3f(v.x,v.y,z);
   }
   glEnd();
 }
 
-void Poly::draw(int gl_type, bool reverse) const
+void Poly::draw(int gl_type, bool reverse, bool randomized) const
 {
   Vector3d v;//,vn,m,dir;
   uint count = vertices.size();
@@ -544,7 +544,7 @@ void Poly::draw(int gl_type, bool reverse) const
       v = getVertexCircular3(i);
       // vn = getVertexCircular3(i+1);
     }
-    v = random_displace(v);
+    if (randomized) v = random_displace(v);
     glVertex3f(v.x,v.y,v.z);
     // if (gl_type==GL_LINE_LOOP){
     //   m = (v+vn)/2;
