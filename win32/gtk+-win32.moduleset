@@ -5,18 +5,22 @@
 
 	<repository type="svn" name="svn.gnome.org" default="yes" href="http://svn.gnome.org/svn/"/>
 
-<tarball id="cairo" version="1.8.10">
-	<source href="http://cairographics.org/releases/cairo-1.8.10.tar.gz" md5sum="b60a82f405f9400bbfdcf850b1728d25"/>
+<tarball id="cairo" version="1.10.2">
+	<!-- <source href="http://cairographics.org/releases/cairo-1.8.10.tar.gz" md5sum="b60a82f405f9400bbfdcf850b1728d25"/> -->
+	<source href="http://cairographics.org/releases/cairo-1.10.2.tar.gz" sha256sum="ccce5ae03f99c505db97c286a0c9a90a926d3c6e"/>
 	<dependencies>
 		<dep package="zlib"/>
 		<dep package="png"/>
 		<dep package="pixman"/>
 		<dep package="fontconfig"/>
 	</dependencies>
+        <patches>
+        <patch file="cairo_1_10_2_mingw_ffs_func.patch" strip="1" />
+        </patches>
 </tarball>
 
-<tarball id="cairomm" version="1.8.6">
-	<source href="http://cairographics.org/releases/cairomm-1.8.6.tar.gz" sha256sum="138368d0200c18735ae544983516d10721158d0c6c6723c885952da88f7321ef"/>
+<tarball id="cairomm" version="1.10.0">
+	<source href="http://cairographics.org/releases/cairomm-1.10.0.tar.gz" sha256sum="f08bf8a331067f0d1e876523f07238fba6b26b99"/>
 	<dependencies>
 		<dep package="zlib"/>
 		<dep package="png"/>

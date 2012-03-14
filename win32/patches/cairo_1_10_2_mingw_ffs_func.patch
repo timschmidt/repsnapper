@@ -1,0 +1,13 @@
+--- cairo-1.10.2/src/cairo.c.orig	2012-03-14 23:19:12.077359190 +1100
++++ cairo-1.10.2/src/cairo.c	2012-03-14 23:20:34.117363162 +1100
+@@ -43,6 +43,10 @@
+ #include "cairo-error-private.h"
+ #include "cairo-path-private.h"
+ 
++#ifdef __MINGW32__
++#define ffs __builtin_ffs
++#endif
++
+ /**
+  * SECTION:cairo
+  * @Title: cairo_t
