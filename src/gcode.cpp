@@ -298,9 +298,10 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 			break;
 		case COORDINATEDMOTION3D: // old 3D gcode
 		  if (extruderon) {
-		    if (liveprinting)
+		    if (liveprinting) {
+		      extrwidth = 0;
 		      Color = settings.Display.GCodePrintingRGBA;
-		    else
+		    } else
 		      Color = settings.Display.GCodeExtrudeRGBA;
 		  }
 		  else {
@@ -326,9 +327,10 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		    else
 		      {
 			luma = speed / settings.Hardware.MaxPrintSpeedXY;
-			if (liveprinting)
+			if (liveprinting) {
 			  Color = settings.Display.GCodePrintingRGBA;
-			else
+			  extrwidth = 0;
+			} else
 			  Color = settings.Display.GCodeExtrudeRGBA;
 		      }
 		    if(settings.Display.LuminanceShowsSpeed)
