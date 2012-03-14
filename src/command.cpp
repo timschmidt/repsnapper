@@ -351,15 +351,7 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     double dz = where.z-lastPos.z; // z move with arc
     Vector3d arcstart = lastPos;
     draw_arc(lastPos, center, angle, dz, ccw);
-    // Vector3d arcpoint;
-    // double astep = angle/arcIJK.length()/20;
-    // for (double a = 0; a < angle; a+=astep){
-    //   arcpoint = center + P.rotate(a, 0.,0.,ccw?1.:-1.);
-    //   if (dz!=0 && angle!=0) arcpoint.z = lastPos.z + a*(dz)/angle;
-    //   glVertex3dv((GLdouble*)&lastPos);
-    //   glVertex3dv((GLdouble*)&arcpoint);
-    //   lastPos = arcpoint;
-    // }
+    // extrusion boundary:
     if (arrows && extrwidth > 0) {
       glEnd();
       glLineWidth(1);
@@ -369,7 +361,7 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
       draw_arc(offstart, center, angle, dz, ccw);
       offstart = arcstart-dradius;
       draw_arc(offstart, center, angle, dz, ccw);
-      glEnd();
+      //glEnd();
     }
     glGetFloatv(GL_CURRENT_COLOR,ccol);
   }

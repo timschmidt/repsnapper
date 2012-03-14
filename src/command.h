@@ -118,7 +118,8 @@ enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
 	    SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 20 ..
 	    FANON, FANOFF, // 24 ..
 	    ASKTEMP, // 26
-	    COMMENT };
+	    COMMENT, LAYERCHANGE };
+
 const string MCODES[] = {"G92", "", "",
 			 "G0", "G1", "G1",
 			 "G2", "G3",
@@ -131,7 +132,7 @@ const string MCODES[] = {"G92", "", "",
 			 "G92", "T0", "G1", "G1" ,
 			 "M106", "M107",
 			 "M105", // temp? 
-			 "; " };
+			 "; ", "; Layer" };
 
 
 class Model;

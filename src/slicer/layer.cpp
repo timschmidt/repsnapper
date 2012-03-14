@@ -730,7 +730,7 @@ void Layer::MakeGcode(GCodeState &state,
   // push all lines to gcode
   // state.AddLines(lines, extrf, offsetZ, slicing, hardware); 
   // return;
-  Command comment("Layer start");
+  Command comment(LAYERCHANGE, LayerNo);
   state.AppendCommand(comment,slicing.RelativeEcode);
   start3 = state.LastPosition();
   for (uint i = 0; i < lines.size(); i++) {

@@ -385,42 +385,15 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	if (progress_steps==0) progress_steps=1;
 	
 	for(uint i = 0; i < commands.size(); i++) {
-	  if(!commands[i].is_value && commands[i].where.z != lastZ) {
+	  if ( //commands[i].Code == LAYERCHANGE  ||
+	      (!commands[i].is_value && commands[i].where.z != lastZ) ) {
 	    layerchanges.push_back(i);
 	    lastZ=commands[i].where.z;
 	  }
-#if 0 // antiooze in printlines
-	  if ((!RelativeEcode && commands[i].e - lastE == 0)
-	      || (RelativeEcode && commands[i].e == 0) ) { // Move only
-	    if (AntioozeDistance > 0) {
-	      double distance = (commands[i].where - LastPos).length();
-	      if (distance > AntioozeDistance) {
-		double E = lastE - AntioozeAmount;
-		if (RelativeEcode) E = -AntioozeAmount;
-		// retract filament before movement:
-		Command retract(COORDINATEDMOTION, LastPos, E, AntioozeSpeed);
-		retract.comment = _("Filament Retract");
-		GcodeTxt += retract.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
-		if (AntioozeRepushAfter) { // push back after move
-		  // NOT TESTED WITH AntioozeRepushAfter==false !!!
-		  if (RelativeEcode) E = 0;
-		  else               E = lastE;
-		  // move without extrusion:
-		  Command move(COORDINATEDMOTION, commands[i].where, E, commands[i].f);
-		  move.comment = _("Filament Retract move");
-		  GcodeTxt += move.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
-		  // push filament back
-		  if (RelativeEcode) { E = AntioozeAmount; lastE = E; }
-		  else               E = lastE + AntioozeAmount;
-		  Command push(COORDINATEDMOTION, commands[i].where, E, AntioozeSpeed);
-		  push.comment = _("Filament Retract pushback");
-		  GcodeTxt += push.GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
-		  continue; // this move is done
-		} else if (RelativeEcode) lastE = E; 
-	      }
-	    }
-	  }
-#endif
+
+	  if ( commands[i].Code == LAYERCHANGE ) 
+	    GcodeTxt += GcodeLayer + "\n";
+
 	  GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
 	  
 	  if (i%progress_steps==0) progress->update(i);
