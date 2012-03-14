@@ -596,34 +596,11 @@ void Layer::MakeGcode(GCodeState &state,
 
   double extrf = hardware.GetExtrudeFactor(thickness);
 
-  double OPTRATIO = 1.5;
-  double optratio = OPTRATIO;
-  double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
-  double linewidth = thickness/linewidthratio;
 
-  double minspeed = hardware.MinPrintSpeedXY,
-    maxspeed = hardware.MaxPrintSpeedXY,
-    movespeed = hardware.MoveSpeed;
-
-  double AOmindistance = slicing.AntioozeDistance,
-    AOamount = slicing.AntioozeAmount,
-    AOspeed =  slicing.AntioozeSpeed,
-    AOrepushratio = slicing.AntioozeRepushRatio;
-
-  bool linelengthsort = slicing.LinelengthSort;
-  double maxArcAngle = slicing.ArcsMaxAngle * M_PI/180;
-  if (!slicing.UseArcs) maxArcAngle = -1;
-
-  float speedfactor = 1;
-  if ((guint)LayerNo < slicing.FirstLayersNum)
-    speedfactor = slicing.FirstLayersSpeed;
-
-  vector<PLine3> lines;
+  vector<PLine3> lines3;
   Printlines printlines(offsetZ);
 
-  double slowdownfactor = 1;
-
-  lines.clear(); // will contain everything
+  vector<PLine> lines;  
 
   vector<Poly> polys; // intermediate collection
 
@@ -645,44 +622,23 @@ void Layer::MakeGcode(GCodeState &state,
 		   skinFullInfills[s-1]->infillpolys.begin(),
 		   skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
-      printlines.clear();
-      printlines.setName("skin");
-      printlines.makeLines(polys, &clippolys, startPoint, 
-			   (s==1), //displace at first skin
-			   minspeed, maxspeed, movespeed,  
-			   linewidth, linewidthratio, optratio, maxArcAngle, false,
-			   AOmindistance, AOspeed, AOamount, AOrepushratio);
-      slowdownfactor *= printlines.slowdownTo(slicing.MinLayertime/skins/3);
-      printlines.setSpeedFactor(speedfactor);
-      printlines.getLines(lines);
+      printlines.makeLines(polys, (s==1), //displace at first skin
+			   slicing, hardware, 
+			   startPoint, lines);
     }
   }
   polys.clear();
 
   // 2. Skirt
-  printlines.clear();
-  printlines.setName("Skirt");
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
-  printlines.makeLines(skirts, NULL, startPoint, false,
-		       minspeed, maxspeed, movespeed, 
-		       linewidth, linewidthratio, optratio,
-		       maxArcAngle, linelengthsort,
-		       AOmindistance, AOspeed, AOamount, AOrepushratio);
-  slowdownfactor *= printlines.slowdownTo(slicing.MinLayertime/2);
-  printlines.setSpeedFactor(speedfactor);
-  printlines.getLines(lines);
+  printlines.makeLines(skirts, false,
+		       slicing, hardware, 
+		       startPoint, lines);
 
   // 3. Support
-  printlines.clear();
-  printlines.setName("Support");
-  printlines.makeLines(supportInfill->infillpolys, NULL, startPoint, false,
-		       minspeed, maxspeed, movespeed, 
-		       linewidth, linewidthratio, optratio,
-		       maxArcAngle, linelengthsort,
-		       AOmindistance, AOspeed, AOamount, AOrepushratio);
-  slowdownfactor *= printlines.slowdownTo(slicing.MinLayertime/2);
-  printlines.setSpeedFactor(speedfactor);
-  printlines.getLines(lines);
+  printlines.makeLines(supportInfill->infillpolys, false,
+		       slicing, hardware, 
+		       startPoint, lines);
 
   // 4. all other polygons:  
 
@@ -704,38 +660,49 @@ void Layer::MakeGcode(GCodeState &state,
 		 bridgeInfills[b]->infillpolys.begin(),
 		 bridgeInfills[b]->infillpolys.end());
   
-  printlines.clear();
-  printlines.setName("ShellsAndInfill");
-  printlines.makeLines(polys, &clippolys, startPoint, true, //displace at beginning
-		       minspeed, maxspeed, movespeed,
-		       linewidth, linewidthratio, optratio,
-		       maxArcAngle, linelengthsort,
-		       AOmindistance, AOspeed, AOamount, AOrepushratio);
-  slowdownfactor *= printlines.slowdownTo(slicing.MinLayertime/2);
-  printlines.setSpeedFactor(speedfactor);
-  printlines.getLines(lines);
+  printlines.makeLines(polys, true, //displace at beginning
+		       slicing, hardware, 
+		       startPoint, lines);
 
-  if (slicing.FanControl) {
-    if (slowdownfactor < 1 && slowdownfactor > 0) { 
-      double fanfactor = 1-slowdownfactor; 
-      int fanspeed = 
-	int(slicing.MinFanSpeed + fanfactor * (slicing.MaxFanSpeed-slicing.MinFanSpeed));
-      fanspeed = CLAMP(fanspeed, slicing.MinFanSpeed, slicing.MaxFanSpeed);
-      //cerr << slowdownfactor << " - " << fanfactor << " - " << fanspeed << " - " << endl;
-      Command fancommand(FANON, fanspeed);
-      state.AppendCommand(fancommand,false);
-    }
-  }
+  // FINISH
 
-  // push all lines to gcode
-  // state.AddLines(lines, extrf, offsetZ, slicing, hardware); 
-  // return;
   Command comment(LAYERCHANGE, LayerNo);
   state.AppendCommand(comment,slicing.RelativeEcode);
+
+  float speedfactor = 1;
+  if ((guint)LayerNo < slicing.FirstLayersNum)
+    speedfactor = slicing.FirstLayersSpeed;
+
+  double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
+  double linewidth = thickness/linewidthratio;
+  printlines.clipMovements(&clippolys, lines, linewidth/2.);
+  printlines.optimize(hardware, slicing, lines);
+  printlines.setSpeedFactor(speedfactor, lines);
+  double slowdownfactor = printlines.slowdownTo(slicing.MinLayertime,lines);
+
+  if (slicing.FanControl) {
+    int fanspeed = slicing.MinFanSpeed;
+    if (slowdownfactor < 1 && slowdownfactor > 0) { 
+      double fanfactor = 1-slowdownfactor; 
+      fanspeed += 
+	int(fanfactor * (slicing.MaxFanSpeed-slicing.MinFanSpeed));
+      fanspeed = CLAMP(fanspeed, slicing.MinFanSpeed, slicing.MaxFanSpeed);
+      //cerr << slowdownfactor << " - " << fanfactor << " - " << fanspeed << " - " << endl;
+    } 
+    Command fancommand(FANON, fanspeed);
+    state.AppendCommand(fancommand,false);
+  }
+
+  printlines.getLines(lines, lines3);
+
+
+  double minspeed = hardware.MinPrintSpeedXY,
+    maxspeed = hardware.MaxPrintSpeedXY,
+    movespeed = hardware.MoveSpeed;
+  // push all lines to gcode
   start3 = state.LastPosition();
-  for (uint i = 0; i < lines.size(); i++) {
-    //state.MakeGCodeLine (lines[i], extrf, offsetZ, slicing, hardware);
-    vector<Command> cc = lines[i].getCommands(start3, extrf, minspeed, maxspeed, movespeed);
+  for (uint i = 0; i < lines3.size(); i++) {
+    vector<Command> cc = lines3[i].getCommands(start3, extrf, minspeed, maxspeed, movespeed);
     state.AppendCommands(cc, slicing.RelativeEcode);
   }
 }

@@ -224,42 +224,44 @@ Printlines::Printlines(double z_offset) :
 {}
 
 
-void Printlines::addLine(const Vector2d from, const Vector2d to, 
-			 double speed, double movespeed, double feedrate)
+void Printlines::addLine(vector<PLine> &lines, const Vector2d from, const Vector2d to, 
+			 double speed, double movespeed, double feedrate) const
 {
   if (to==from) return;
   if (lines.size() > 0) {
-    PLine lastline = lines.back();
-    if (!(lastline.to == from)) { // add moveline
-      PLine l(lastline.to, from, movespeed, 0);
-      lines.push_back(l);
+    PLine *lastline = &lines.back();
+    if (!(lastline->to == from)) { // add moveline
+      lines.push_back(PLine(lastline->to, from, movespeed, 0));
     }
   }
-  PLine l(from, to, speed, feedrate);
-  lines.push_back(l);
+  lines.push_back(PLine(from, to, speed, feedrate));
 }
 
-void Printlines::addPoly(const Poly poly, int startindex, 
-			 double speed, double movespeed)
+void Printlines::addPoly(vector<PLine> &lines, const Poly poly, int startindex, 
+			 double speed, double movespeed) const
 {
   vector<Vector2d> pvert;
   poly.getLines(pvert,startindex);
   assert(pvert.size() % 2 == 0);
   for (uint i=0; i<pvert.size();i+=2){
-    addLine(pvert[i], pvert[i+1], speed, movespeed, poly.getExtrusionFactor());
+    addLine(lines, pvert[i], pvert[i+1], speed, movespeed, poly.getExtrusionFactor());
   }
 }
 
-void Printlines::makeLines(const vector<Poly> polys, 
-			   vector<Poly> *clippolys,
-			   Vector2d &startPoint,
+void Printlines::makeLines(const vector<Poly> polys,
 			   bool displace_startpoint, 
-			   double minspeed, double maxspeed, double movespeed, // mm/s
-			   double linewidth, double linewidthratio, double optratio,
-			   double maxArcAngle, bool linelengthsort,
-			   double AOmindistance, double AOspeed,
-			   double AOamount, double AOrepushratio)
+			   const Settings::SlicingSettings &slicing,
+			   const Settings::HardwareSettings &hardware,
+			   Vector2d &startPoint,
+			   vector<PLine> &lines)
 {
+  // double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
+  //double linewidth = layerthickness/linewidthratio;
+  //double minspeed = hardware.MinPrintSpeedXY,
+  double maxspeed = hardware.MaxPrintSpeedXY,
+    movespeed = hardware.MoveSpeed;
+  bool linelengthsort = slicing.LinelengthSort;
+
   uint count = polys.size();
   if (polys.size()==0) return;
   int nvindex=-1;
@@ -313,35 +315,35 @@ void Printlines::makeLines(const vector<Poly> polys,
       if (displace_startpoint && ndone==0)  // displace first point
 	nvindex = (nvindex+1)%polys[npindex].size();
       if (npindex >= 0 && npindex >=0) {
-	addPoly(polys[npindex], nvindex, maxspeed, movespeed);
+	addPoly(lines, polys[npindex], nvindex, maxspeed, movespeed);
 	done[npindex]=true;
 	ndone++;
       }
       if (lines.size()>0)
-	startPoint = lastPoint();
+	startPoint = lines.back().to;
     }
   if (count == 0) return;
   setZ(polys.back().getZ());
-  clipMovements(clippolys, linewidth/2.);
-  optimize(minspeed, maxspeed, movespeed, 
-	   linewidth, linewidthratio, optratio, maxArcAngle,
-	   AOmindistance, AOspeed, AOamount, AOrepushratio);
+  // clipMovements(clippolys, linewidth/2.);
+  // optimize(linewidth, linewidthratio, optratio, maxArcAngle,
+  // 	   hardware, slicing, lines);
 }
 
 
-void Printlines::optimize(double minspeed, double maxspeed, double movespeed,
-			  double linewidth, double linewidthratio, double optratio,
-			  double maxArcAngle,
-			  double AOmindistance, double AOspeed,
-			  double AOamount, double AOrepushratio)
+void Printlines::optimize(const Settings::HardwareSettings &hardware,
+			  const Settings::SlicingSettings &slicing,
+			  vector<PLine> &lines) const
 {
   //cout << "optimize " ; printinfo();
   //optimizeLinedistances(linewidth);
+  // double OPTRATIO = 1.5;
+  // double optratio = OPTRATIO; //corner cap
   // optimizeCorners(linewidth,linewidthratio,optratio);
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
-  makeArcs(maxArcAngle);
-  makeAntioozeRetraction(AOmindistance, AOspeed, AOamount, AOrepushratio);
+
+  makeArcs(slicing, lines);
+  makeAntioozeRetraction(slicing, lines);
 }
 
 // gets center of common arc of 2 lines if radii match inside maxSqerr range
@@ -365,8 +367,12 @@ Vector2d Printlines::arcCenter(const PLine l1, const PLine l2,
   return Vector2d(10000000,10000000);
 }
 
-guint Printlines::makeArcs(double maxAngle)
+uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
+			   vector<PLine> &lines) const
 {
+  double maxAngle = slicing.ArcsMaxAngle * M_PI/180;
+  if (!slicing.UseArcs) maxAngle = -1;
+
   if (lines.size() < 2) return 0;
   if (maxAngle < 0) return 0;
   double arcRadiusSq = 0;  
@@ -390,7 +396,7 @@ guint Printlines::makeArcs(double maxAngle)
 	arcRadiusSq = radiusSq;
 	// this one doesn't fit, so i-1 is the last line that fits
 	if (arcstart+2 < i-1) // at least three lines to make an arc
-	  i -= makeIntoArc(arcstart, i-1); // straight lines are being removed
+	  i -= makeIntoArc(arcstart, i-1, lines); // straight lines are being removed
 	//else 
 	// not in arc, set start for potential next arc
 	  arcstart = i;
@@ -398,12 +404,12 @@ guint Printlines::makeArcs(double maxAngle)
   }  
   // remaining
   if (arcstart+2 < lines.size()-1) 
-    makeIntoArc(arcstart, lines.size()-1); 
+    makeIntoArc(arcstart, lines.size()-1, lines); 
   return 0;
 }
 
 // return how many lines are removed 
-guint Printlines::makeIntoArc(guint fromind, guint toind)
+uint Printlines::makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) const
 {
   if (toind < fromind || toind+1 > lines.size()) return 0;
   //cerr<< "arcstart = " << fromind << endl;
@@ -448,9 +454,13 @@ guint Printlines::makeIntoArc(guint fromind, guint toind)
   return 0;
 }
 
-uint Printlines::makeAntioozeRetraction(double AOmindistance, double AOspeed,
-					double AOamount, double AOrepushratio)
+uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing,
+					vector<PLine> &lines) const
 {
+  double AOmindistance = slicing.AntioozeDistance,
+    AOamount = slicing.AntioozeAmount,
+    AOspeed =  slicing.AntioozeSpeed,
+    AOrepushratio = slicing.AntioozeRepushRatio;
   // 1. retract: 
   // either halt and retract or retract on the way before the move?
   // 2. repush:
@@ -512,18 +522,19 @@ uint Printlines::makeAntioozeRetraction(double AOmindistance, double AOspeed,
 }
 
 // split at length 0 < t < 1
-uint Printlines::divideline(uint lineindex, const double t) 
+uint Printlines::divideline(uint lineindex, const double t, vector<PLine> &lines) const
 {
   PLine *l = &lines[lineindex];
   Vector2d d = l->to - l->from;
   vector<Vector2d> points(1);
   points[0] = l->from + d * t * d.length();
-  uint nlines = divideline(lineindex, points);
+  uint nlines = divideline(lineindex, points, lines);
   delete l;
   return nlines;
 }
 
-uint Printlines::divideline(uint lineindex, const vector<Vector2d> points) 
+uint Printlines::divideline(uint lineindex, const vector<Vector2d> points,
+			    vector<PLine> &lines) const
 {
   vector<PLine> newlines;
   PLine l = lines[lineindex];
@@ -547,7 +558,8 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> points)
 }
 
 // walk around holes
-void Printlines::clipMovements(vector<Poly> *polys, double maxerr) 
+void Printlines::clipMovements(vector<Poly> *polys, vector<PLine> &lines,
+			       double maxerr) const
 {
   if (polys==NULL) return;
   if (lines.size()==0) return;
@@ -597,7 +609,7 @@ void Printlines::clipMovements(vector<Poly> *polys, double maxerr)
 	      vector<Vector2d> path = 
 		(*polys)[p].getPathAround(pinter.front().p, pinter.back().p);
 	      // after divide, skip number of added lines -> test remaining line later
-	      i += (divideline(i,path)); 
+	      i += (divideline(i, path, lines)); 
 	    }
 	  }
 	}
@@ -628,7 +640,7 @@ void Printlines::clipMovements(vector<Poly> *polys, double maxerr)
   }
 }
 
-void Printlines::setSpeedFactor(double speedfactor)
+void Printlines::setSpeedFactor(double speedfactor, vector<PLine> &lines) const
 {
   if (speedfactor == 1) return;
   for (uint i=0; i < lines.size(); i++){
@@ -636,18 +648,18 @@ void Printlines::setSpeedFactor(double speedfactor)
       lines[i].speed *= speedfactor;
   }
 }
-double Printlines::slowdownTo(double totalseconds) 
+double Printlines::slowdownTo(double totalseconds, vector<PLine> &lines) const
 {
-  double totalnow = totalSecondsExtruding();
+  double totalnow = totalSecondsExtruding(lines);
   if (totalseconds == 0 || totalnow == 0) return 1;
   double speedfactor = totalnow / totalseconds;
   if (speedfactor >= 1.) return speedfactor;
-  setSpeedFactor(speedfactor);
+  setSpeedFactor(speedfactor,lines);
   return speedfactor;
 }
 
 // merge too near parallel lines
-void Printlines::mergelines(PLine &l1, PLine &l2, double maxdist) 
+void Printlines::mergelines(PLine &l1, PLine &l2, double maxdist) const
 {
   Vector2d d2 = l2.to - l2.from;
   double len2 = d2.length();
@@ -679,7 +691,7 @@ void Printlines::mergelines(PLine &l1, PLine &l2, double maxdist)
 //   return d;
 // }
 
-void Printlines::optimizeLinedistances(double maxdist)
+void Printlines::optimizeLinedistances(double maxdist, vector<PLine> &lines) const
 {
  uint count = lines.size();
  for (uint i=0; i<count; i++){
@@ -697,8 +709,8 @@ void Printlines::optimizeLinedistances(double maxdist)
 }
 
 bool Printlines::capCorner(PLine &l1, PLine &l2, 
-			  double linewidth, double linewidthratio, 
-			  double optratio)
+			   double linewidth, double linewidthratio, 
+			   double optratio) const
 {
   double MINLEN = 4; // minimum line length to handle
   bool done = false;
@@ -731,7 +743,8 @@ bool Printlines::capCorner(PLine &l1, PLine &l2,
   return done;
 }
 
-void Printlines::optimizeCorners(double linewidth, double linewidthratio, double optratio)
+void Printlines::optimizeCorners(double linewidth, double linewidthratio, double optratio,
+				 vector<PLine> &lines) const
 {
   //cout << "optimizecorners " ; printinfo();
  uint count = lines.size();
@@ -749,13 +762,14 @@ void Printlines::optimizeCorners(double linewidth, double linewidthratio, double
 }
 
 
-Vector2d Printlines::lastPoint() const
-{
-  return lines.back().to;
-}
+// Vector2d Printlines::lastPoint() const
+// {
+//   return lines.back().to;
+// }
 
 
-void Printlines::getLines(vector<Vector2d> &olines) const
+void Printlines::getLines(const vector<PLine> lines, 
+			  vector<Vector2d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
     if (lIt->is_noop()) continue;
@@ -763,7 +777,8 @@ void Printlines::getLines(vector<Vector2d> &olines) const
     olines.push_back(lIt->to);
   }
 }
-void Printlines::getLines(vector<Vector3d> &olines) const
+void Printlines::getLines(const vector<PLine> lines, 
+			  vector<Vector3d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
     if (lIt->is_noop()) continue;
@@ -772,7 +787,8 @@ void Printlines::getLines(vector<Vector3d> &olines) const
   }
 }
 
-void Printlines::getLines(vector<PLine3> &plines) const
+void Printlines::getLines(const vector<PLine> lines, 
+			  vector<PLine3> &plines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
     if (lIt->is_noop()) continue;
@@ -780,7 +796,7 @@ void Printlines::getLines(vector<PLine3> &plines) const
   }
 }
 
-double Printlines::totalLength() const 
+double Printlines::totalLength(const vector<PLine> lines) const 
 {
   double l = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -789,7 +805,7 @@ double Printlines::totalLength() const
   return l;
 }
 
-double Printlines::totalSeconds() const 
+double Printlines::totalSeconds(const vector<PLine> lines) const 
 {
   double t = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -797,7 +813,7 @@ double Printlines::totalSeconds() const
   }
   return t * 60;
 }
-double Printlines::totalSecondsExtruding() const 
+double Printlines::totalSecondsExtruding(const vector<PLine> lines) const 
 {
   double t = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -825,7 +841,6 @@ double Printlines::totalSecondsExtruding() const
 string Printlines::info() const
 {
   ostringstream ostr;
-  ostr << "Printlines "<<name<<": " <<size()<<" lines"
-       << ", total "<<totalLength()<< "mm" ;
+  ostr << "Printlines "<<name<<" at z=" <<z;
   return ostr.str();
 }

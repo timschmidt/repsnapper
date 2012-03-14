@@ -22,6 +22,8 @@
 //#include <list>
 
 #include "stdafx.h"
+#include "settings.h"
+
 
 class PLine; // see below
 
@@ -89,63 +91,60 @@ class PLine
 class Printlines
 {
     
-  vector<PLine> lines;
-
   double z;
   double Zoffset; // global offset for generated PLine3s, always added at setZ()
 
   string name;
 
-  void addPoly(const Poly poly, int startindex=0, 
-	       double speed=1, double movespeed=1);
-  void addLine(Vector2d from, Vector2d to, 
-	       double speed=1, double movespeed=1, double feedrate=1.0);
+  void addPoly(vector<PLine> &lines, const Poly poly, int startindex=0, 
+	       double speed=1, double movespeed=1) const;
+  void addLine(vector<PLine> &lines, Vector2d from, Vector2d to, 
+	       double speed=1, double movespeed=1, double feedrate=1.0) const;
 
  public:
   Printlines(double z_offset=0);
-  ~Printlines(){clear();};
+  ~Printlines(){};
   
-  void clear(){lines.clear();};
   void setName(string s){name=s;};
 
   Vector2d lastPoint() const;
 
-  void makeLines(const vector<Poly> polys,
-		 vector<Poly> *clippolys,
-		 Vector2d &startPoint, 
+  void makeLines(const vector<Poly> polys, 
 		 bool displace_startpoint, 
-		 double minspeed, double maxspeed, double movespeed,
-		 double linewidth, double linewidthratio, double optratio,
-		 double maxArcAngle, bool linelengthsort,
-		 double AOmindistance, double AOspeed,
-		 double AOamount, double AOrepushratio);
+		 const Settings::SlicingSettings &slicing,
+		 const Settings::HardwareSettings &hardware,
+		 Vector2d &startPoint,
+		 vector<PLine> &lines);
     
-  void optimize(double minspeed, double maxspeed, double movespeed,
-		double linewidth, double linewidthratio, double optratio,
-		double maxArcAngle,
-		double AOmindistance, double AOspeed,
-		double AOamount, double AOrepushratio);
+  void optimize(const Settings::HardwareSettings &hardware,
+		const Settings::SlicingSettings &slicing,
+		vector<PLine> &lines) const;
 
-  guint makeArcs(double maxAngle);
-  guint makeIntoArc(guint fromind, guint toind);
+  uint makeArcs(const Settings::SlicingSettings &slicing,
+		 vector<PLine> &lines) const;
+  uint makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) const;
 
+  uint makeAntioozeRetraction(const Settings::SlicingSettings &slicing,
+			      vector<PLine> &lines) const;
 
   // slow down to total time needed (cooling)
-  double slowdownTo(double totalseconds); // returns speedfactor
-  void setSpeedFactor(double speedfactor);
+  double slowdownTo(double totalseconds, vector<PLine> &lines) const; // returns speedfactor
+  void setSpeedFactor(double speedfactor, vector<PLine> &lines) const;
 
   // keep movements inside polys when possible (against stringing)
-  void clipMovements(vector<Poly> *polys, double maxerr=0.01);
+  void clipMovements(vector<Poly> *polys, vector<PLine> &lines,
+		     double maxerr=0.01) const;
 
-  void getLines(vector<Vector2d> &linespoints) const;
-  void getLines(vector<Vector3d> &linespoints) const;
-  void getLines(vector<PLine3> &plines) const;
+  void getLines(const vector<PLine> lines,
+		vector<Vector2d> &linespoints) const;
+  void getLines(const vector<PLine> lines,
+		vector<Vector3d> &linespoints) const;
+  void getLines(const vector<PLine> lines,
+		vector<PLine3> &plines) const;
 
-  uint size() const {return lines.size(); };
-
-  double totalLength() const;
-  double totalSeconds() const;
-  double totalSecondsExtruding() const;
+  double totalLength(const vector<PLine> lines) const;
+  double totalSeconds(const vector<PLine> lines) const;
+  double totalSecondsExtruding(const vector<PLine> lines) const;
 
   // every added poly will set this
   void setZ(double z) {this->z = z + Zoffset;};
@@ -156,19 +155,19 @@ class Printlines
   /* 	       bool relativeE) const; */
   string info() const;
 
+
  private:
-  void optimizeLinedistances(double maxdist);
-  void mergelines(PLine &l1, PLine &l2, double maxdist);
+  void optimizeLinedistances(double maxdist, vector<PLine> &lines) const;
+  void mergelines(PLine &l1, PLine &l2, double maxdist) const;
   double distance(const Vector2d p, const PLine l2) const;
-  void optimizeCorners(double linewidth, double linewidthratio, double optratio);
+  void optimizeCorners(double linewidth, double linewidthratio, double optratio,
+		       vector<PLine> &lines) const;
   bool capCorner(PLine &l1, PLine &l2, double linewidth, double linewidthratio, 
-		 double optratio);
+		 double optratio) const;
 
-  uint makeAntioozeRetraction(double AOmindistance, double AOspeed,
-			      double AOamount, double AOrepushratio);
-
-  uint divideline(uint lineindex, const vector<Vector2d> points);
-  uint divideline(uint lineindex, const double t);
+  uint divideline(uint lineindex, const vector<Vector2d> points,
+		  vector<PLine> &lines) const;
+  uint divideline(uint lineindex, const double t, vector<PLine> &lines) const;
 
 
   Vector2d arcCenter(const PLine l1, const PLine l2, 

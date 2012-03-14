@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-03-14 14:55+0100\n"
-"PO-Revision-Date: 2012-03-14 15:01+0100\n"
+"PO-Revision-Date: 2012-03-14 18:43+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -1031,7 +1031,7 @@ msgstr "Länge (mm)"
 
 #: ../src/repsnapper.ui.h:123
 msgid "Live Extrude Color"
-msgstr "Farbe Extrudierung"
+msgstr "Live-Extrudierfarbe"
 
 #: ../src/repsnapper.ui.h:124
 msgid "Load GCode"
