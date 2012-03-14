@@ -11,9 +11,10 @@ if [ ! -d "$TARGET/lib/gdk-pixbuf-2.0/2.10.0/" ]; then
   mkdir -p "$TARGET/lib/gdk-pixbuf-2.0/2.10.0/"
 fi
 
-if [ -f "$TARGET/bin/gdk-pixbuf-query-loaders.exe" ]; then
-  wine "$TARGET/bin/gdk-pixbuf-query-loaders.exe" > "$TARGET/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
-fi
+# FIXME: gdk-pixbuf-query-loaders.exe needs to be run on the target, by the installer or so
+# if [ -f "$TARGET/bin/gdk-pixbuf-query-loaders.exe" ]; then
+#   wine "$TARGET/bin/gdk-pixbuf-query-loaders.exe" > "$TARGET/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+# fi
 
 # Copy GLUT files into place
 GLUTVER=3.7.6

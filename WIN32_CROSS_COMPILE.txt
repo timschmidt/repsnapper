@@ -2,7 +2,7 @@ Instructions for building for win32 using cross-compilation
 
 Tested on Debian Sarge
 
-1) Install jhbuild, Wine, mingw32-binutils, mingw32-runtime and nsis packages via APT
+1) Install jhbuild, unzip, mingw32-binutils, mingw32-runtime and nsis packages via APT
 jhbuild needs to be at least version 2.30.2 for .tar.xz file support.
 
 2) Mingw32 compiler
@@ -20,28 +20,13 @@ Even better, is to rebuild mingw32 to use DWARF style exception handling, as
 well as shared libgcc (in which case, you'll have libgcc_dw2_1.dll instead of
 libgcc_sjlj_1.dll) (TBD: Expand these instructions)
 
-3) Build pre-requisites
-4) Create a build dir and
+3) make distclean in the toplevel directory to unconfigure it, if you've been
+building there already. It needs to be unconfigured for the cross compile done by
+the script in the next step.
+4) cd into win32 and run either cross-build-repsnapper-rls (Release version) or
+cross-build-repsnapper-dbg (Debug)
 
-export BUILDDIR=`pwd`/build/
-
-Get gtkmm win32 binaries (http://live.gnome.org/gtkmm/MSWindows)
-Gtk gtkglext win32 http://www.bonifazi.eu/appunti/gtkglext-win32-1.2.0.exe
-Install both into build dir.
-
-# Install GLUT for win32
-# http://www.opengl.org/wiki/MinGW
-# Get zip file, unpack. mkdir 
-
-# Build/install mingw32 version of libtool. FIXME: Not sure if libtool is needed.
-apt-get source libtool
-./configure --host=i586-mingw32msvc --prefix="$BUILDDIR" --enable-static --disable-shared
-make && make install
-
-# Build
-cd repsnapper
-
-PKG_CONFIG=$BUILDDIR/bin/pkg-config.exe CPPFLAGS=-I$BUILDDIR/include PKG_CONFIG_PATH=$BUILDDIR/lib/pkgconfig ./configure --host=i586-mingw32msvc --prefix="$BUILDDIR" --enable-doxygen=no
-make && make install
+Hopefully, it all runs succesfully - at which point there should be a usable tree in
+win32/checkout.rls (or checkout.dbg)
 
 TODO: Wrap it all up into installer with NSIS script.
