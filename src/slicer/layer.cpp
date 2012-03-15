@@ -610,8 +610,8 @@ void Layer::MakeGcode(GCodeState &state,
   // 1. Skins, because they are the lowest lines, below layer Z
   if (skins>1){
     for(uint s=1;s <= skins;s++) { // z offset from bottom to top
-      polys.clear();
       double skin_z = Z - thickness + (s)*thickness/skins;
+      cerr << s << " -- " << Z << " -- "<<skin_z <<" -- " << thickness <<  endl;
       // outlines
       for(size_t p=0;p<skinPolygons.size();p++) { 
 	Poly sp(skinPolygons[p], skin_z);
@@ -625,9 +625,13 @@ void Layer::MakeGcode(GCodeState &state,
       printlines.makeLines(polys, (s==1), //displace at first skin
 			   slicing, hardware, 
 			   startPoint, lines);
+      // have to get all these separately because z changes (FIXME)
+      printlines.slowdownTo(slicing.MinLayertime/skins,lines);
+      printlines.getLines(lines, lines3);
+      lines.clear();
+      polys.clear();
     }
   }
-  polys.clear();
 
   // 2. Skirt
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
