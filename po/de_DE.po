@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-03-14 14:55+0100\n"
-"PO-Revision-Date: 2012-03-14 20:51+0100\n"
+"PO-Revision-Date: 2012-03-15 11:22+0100\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -160,7 +160,7 @@ msgstr "s"
 
 #: ../src/model2.cpp:714
 msgid " / GCode Estimation: "
-msgstr " / Geschätzte Dauer: "
+msgstr " / GCode-Schätzung: "
 
 #: ../src/model2.cpp:720
 msgid " - total extruded: "

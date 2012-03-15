@@ -375,18 +375,17 @@ Vector2d Printlines::arcCenter(const PLine l1, const PLine l2,
 uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
 			   vector<PLine> &lines) const
 {
-  double maxAngle = slicing.ArcsMaxAngle * M_PI/180;
-  if (!slicing.UseArcs) maxAngle = -1;
-
+  if (!slicing.UseArcs) return 0;
   if (lines.size() < 2) return 0;
+  double maxAngle = slicing.ArcsMaxAngle * M_PI/180;
   if (maxAngle < 0) return 0;
   double arcRadiusSq = 0;  
   Vector2d arccenter;
-  guint  arcstart = 0;
+  guint arcstart = 0;
   for (guint i=1; i < lines.size(); i++) {
     double dangle         = lines[i].calcangle(lines[i-1]);
     double feedratechange = lines[i].feedrate - lines[i-1].feedrate;
-    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.05*arcRadiusSq);
+    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.06*arcRadiusSq);
     double radiusSq       = (center - lines[i].from).lengthSquared();
     // test if NOT continue arc:
     if (lines[i].arc != 0                  // is an arc already
@@ -394,7 +393,7 @@ uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
 	|| abs(feedratechange) > 0.1       // different feedrate
 	|| abs(dangle) < 0.0001            // straight continuation
 	|| abs(dangle) > maxAngle          // too big angle
-	|| ( i>1 && (arccenter-center).lengthSquared() > 0.05*radiusSq ) // center displacement
+	|| ( i>1 && (arccenter-center).lengthSquared() > 0.06*radiusSq ) // center displacement
 	) 
       { 
 	arccenter   = center;
