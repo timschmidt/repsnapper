@@ -43,14 +43,16 @@ GCode::GCode()
 
 double GCode::GetTotalExtruded(bool relativeEcode) const
 {
-  double E=0;
   if (relativeEcode) {
+    double E=0;
     for (uint i=0; i<commands.size(); i++) 
       E += commands[i].e;
+    return E;
   } else {
-    E = commands.back().e;
+    for (uint i=commands.size()-1; i>0; i--) 
+      if (commands[i].e>0)
+	return commands[i].e;
   }
-  return E;
 }
 
 double GCode::GetTimeEstimation() const
