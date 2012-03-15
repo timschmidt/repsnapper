@@ -97,9 +97,9 @@ public:
 					      const Layer * cliplayer);
 	void MakeFullSkins();
 	void MultiplyUncoveredPolygons();
-	void MakeSupportPolygons(Layer * subjlayer, 
-				 const Layer * cliplayer);
-	void MakeSupportPolygons();
+	void MakeSupportPolygons(Layer * subjlayer, const Layer * cliplayer, 
+				 double widen=0);
+	void MakeSupportPolygons(double widen=0);
 	void MakeSkirt();
 
 	// GCode Functions

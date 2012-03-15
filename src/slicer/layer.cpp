@@ -611,7 +611,7 @@ void Layer::MakeGcode(GCodeState &state,
   if (skins>1){
     for(uint s=1;s <= skins;s++) { // z offset from bottom to top
       double skin_z = Z - thickness + (s)*thickness/skins;
-      cerr << s << " -- " << Z << " -- "<<skin_z <<" -- " << thickness <<  endl;
+      //cerr << s << " -- " << Z << " -- "<<skin_z <<" -- " << thickness <<  endl;
       // outlines
       for(size_t p=0;p<skinPolygons.size();p++) { 
 	Poly sp(skinPolygons[p], skin_z);
@@ -625,7 +625,7 @@ void Layer::MakeGcode(GCodeState &state,
       printlines.makeLines(polys, (s==1), //displace at first skin
 			   slicing, hardware, 
 			   startPoint, lines);
-      // have to get all these separately because z changes (FIXME)
+      // have to get all these separately because z changes (F8IXME)
       printlines.slowdownTo(slicing.MinLayertime/skins,lines);
       printlines.getLines(lines, lines3);
       lines.clear();

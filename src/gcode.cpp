@@ -53,6 +53,7 @@ double GCode::GetTotalExtruded(bool relativeEcode) const
       if (commands[i].e>0)
 	return commands[i].e;
   }
+  return 0;
 }
 
 double GCode::GetTimeEstimation() const

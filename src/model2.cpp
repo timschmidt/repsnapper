@@ -437,19 +437,23 @@ void Model::MultiplyUncoveredPolygons()
 
 
 void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
-				const Layer * cliplayer) // upper 
+				const Layer * cliplayer,  // upper 
+				double widen)
 {
   Clipping clipp;
   clipp.clear();
-  clipp.addPolys(cliplayer->GetOuterShell(),subject);
+  clipp.addPolys(cliplayer->GetPolygons(),subject);
   clipp.addPolys(cliplayer->GetSupportPolygons(),subject); // previous 
-  clipp.addPolys(subjlayer->GetOuterShell(),clip);
-  // widen from layer to layer, afterwards subtract enlarged shape polygons?
-  //  subjlayer->setSupportPolygons(clipp.getOffset(clipp.subtract(), 0.5*subjlayer->thickness));
-  subjlayer->setSupportPolygons(clipp.getMerged(clipp.subtract()));
+  clipp.addPolys(subjlayer->GetPolygons(),clip);
+  if (widen != 0)
+    // widen from layer to layer
+    subjlayer->setSupportPolygons(clipp.getOffset(clipp.subtract(),
+						  widen * subjlayer->thickness));
+  else
+    subjlayer->setSupportPolygons(clipp.getMerged(clipp.subtract()));
 }
 
-void Model::MakeSupportPolygons()
+void Model::MakeSupportPolygons(double widen)
 { 
   int count = layers.size();
   m_progress->restart (_("Support"), count*2);
@@ -461,7 +465,7 @@ void Model::MakeSupportPolygons()
       //cerr << "support layer "<< i << endl;
       if (i%progress_steps==0) m_progress->update(count-i);
       if (layers[i]->LayerNo == 0) continue;
-      MakeSupportPolygons(layers[i-1], layers[i]);
+      MakeSupportPolygons(layers[i-1], layers[i], widen);
     }
   // shrink a bit
   for (int i=0; i<count; i++) 
@@ -656,7 +660,8 @@ void Model::ConvertToGCode()
 			  !settings.Slicing.NoBridges && !settings.Slicing.Support);
 
   if (settings.Slicing.Support)
-    MakeSupportPolygons(); // easier before multiplied uncovered bottoms
+    // easier before having multiplied uncovered bottoms
+    MakeSupportPolygons(settings.Slicing.SupportWiden); 
 
   MakeFullSkins(); // must before multiplied uncovered bottoms
 

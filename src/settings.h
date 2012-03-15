@@ -119,6 +119,7 @@ class Settings {
     float InfillOverlap;
     bool SolidTopAndBottom;
     bool Support;
+    float SupportWiden;
     bool Skirt;
     float SkirtHeight;
     float SkirtDistance;
