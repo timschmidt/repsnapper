@@ -385,6 +385,9 @@ void Model::MultiplyUncoveredPolygons()
 {
   int shells = (int)settings.Slicing.ShellCount;
   int count = (int)layers.size();
+  
+  // add another full layer if making decor
+  if (settings.Slicing.MakeDecor) shells++;
 
   m_progress->restart (_("Uncovered Shells"), count*3);
   int progress_steps=(int)(count*3/100);
