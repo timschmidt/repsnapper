@@ -403,8 +403,9 @@ public:
       else
 	mat = &shape->transform3D.transform;
       Vector3d trans = mat->getTranslation();
+      double scale = mat->m[3][3];
       for (uint i = 0; i < 3; i++)
-	m_xyz[i]->set_value(trans.xyz[i]);
+	m_xyz[i]->set_value(trans.xyz[i]/scale);
       break;
     }
     m_inhibit_update = false;
@@ -687,6 +688,7 @@ void View::stl_added (Gtk::TreePath &path)
 
 void View::model_changed ()
 {
+  m_translation_row->selection_changed();
   queue_draw();
 }
 
