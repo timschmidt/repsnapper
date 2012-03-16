@@ -8,11 +8,26 @@ DISTCHECK_CONFIGURE_FLAGS = @DISTCHECK_LIBREPRAP_FLAGS@
 EXTRA_DIST = \
 	README \
 	HACKING \
-	repsnapper.desktop.in
+	repsnapper.desktop.in \
+        README.win32 \
+        licenses/BSL-1.0.txt \
+        licenses/GPL-2.0.txt \
+        licenses/LGPL-2.0.txt \
+        licenses/MIT.txt \
+        licenses/vmmlib-license.txt
 
 Applicationsdir = $(datadir)/applications/
 Applications_in_files = repsnapper.desktop.in
 Applications_DATA = repsnapper.desktop
+
+if WIN32_BUILD
+WIN32_FILES = README.win32 licenses/GPL-2.0.txt
+else
+WIN32_FILES =
+endif
+
+win32extrasdir = $(prefix)
+win32extras_DATA = $(WIN32_FILES)
 
 @INTLTOOL_DESKTOP_RULE@
 

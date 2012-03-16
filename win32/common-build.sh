@@ -42,3 +42,10 @@ for f in $GCCPATH/libgcc*dll; do
   cp "$f" "$TARGET/bin"
 done
 
+if [ "$BUILD_FLAVOUR" = "rls" ]; then
+  echo "Building installer..."
+  # run NSIS installer script for release build
+  makensis -V2 -NOCD "$CHECKOUT"/repsnapper/win32/repsnapper.nsi || exit 2
+fi
+
+echo "All done..."

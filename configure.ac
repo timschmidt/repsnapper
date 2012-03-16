@@ -1,5 +1,5 @@
 AC_PREREQ(2.63)
-AC_INIT([repsnapper],[1.9.0],[https://github.com/timschmidt/repsnapper])
+AC_INIT([repsnapper],[1.9.0],[https://github.com/timschmidt/repsnapper], [repsnapper], [https://github.com/timschmidt/repsnapper])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/repsnapper.cpp])
@@ -91,6 +91,7 @@ mingw*)
   EXTRA_LDFLAGS="-Wl,-subsystem,windows -shared-libgcc"
   EXTRA_CFLAGS="-fexceptions -mthreads"
   AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
+  WIN32_BUILD=yes
   ;;
 freebsd*)
   GL_LIBS="-L/usr/local/lib -lGLU -lGL -lglut"
@@ -117,11 +118,18 @@ Darwin*)
 esac
 
 
+AM_CONDITIONAL(WIN32_BUILD, test "x$WIN32_BUILD" = "xyes")
+
 AC_SUBST(GL_LIBS)
 AC_SUBST(EXTRA_LDFLAGS)
 AC_SUBST(EXTRA_CFLAGS)
 
+dnl Convert install path to use \\ for substitution in the win32 nsi script
+prefix_win=`echo $prefix | sed -e 's|/|\\\\|g'`
+AC_SUBST(prefix_win)
+
 AC_CONFIG_FILES([
   Makefile
-  po/Makefile.in])
+  po/Makefile.in
+  win32/repsnapper.nsi])
 AC_OUTPUT
