@@ -118,7 +118,8 @@ public:
 	void clear() { triangles.clear(); }
 	/* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
 	/* 		      guint LayerNr, vector<int>& altInfillLayers); */
-	void draw (const Model *model, const Settings &settings) const;
+	void draw (const Model *model, const Settings &settings, 
+		   bool highlight=false) const;
 	void draw_geometry () const;
 	void drawBBox() const; 
 	void CenterAroundXY();

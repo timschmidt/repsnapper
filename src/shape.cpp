@@ -1248,7 +1248,7 @@ void drawString(Vector3d pos, void* font, string text)
 
 
 // called from Model::draw
-void Shape::draw(const Model *model, const Settings &settings) const 
+void Shape::draw(const Model *model, const Settings &settings, bool highlight) const 
 {
   //cerr << "Shape::draw" <<  endl;
 	// polygons
@@ -1268,6 +1268,10 @@ void Shape::draw(const Model *model, const Settings &settings) const
         for (i = 0; i < 4; i++)
             mat_diffuse[i] = settings.Display.PolygonRGBA.rgba[i];
 
+	if (highlight)
+	  //for (i = 0; i < 4; i++)
+	  mat_diffuse[3] += 0.3*(1.-mat_diffuse[3]);
+	  
 	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.Display.Highlight;
 
 	/* draw sphere in first row, first column
