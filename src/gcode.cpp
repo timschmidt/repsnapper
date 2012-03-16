@@ -272,6 +272,8 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 
 	start = CLAMP (start, 0, n_cmds-1);
 	end = CLAMP (end, 0, n_cmds-1);
+	
+	if (end<=start) return;
 
 	// get starting point 
 	if (start>0) {
