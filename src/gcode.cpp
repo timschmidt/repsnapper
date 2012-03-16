@@ -257,6 +257,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
         uint n_cmds = commands.size();
+	if (n_cmds==0) return;
 	Vector3d defaultpos(0,0,0);
 	Vector3d pos(0,0,0);
 	
@@ -267,8 +268,8 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	  extrusionwidth = 
 	    settings.Hardware.GetExtrudedMaterialWidth(settings.Hardware.LayerThickness);
 
-	start = CLAMP (start, 0, n_cmds);
-	end = CLAMP (end, 0, n_cmds);
+	start = CLAMP (start, 0, n_cmds-1);
+	end = CLAMP (end, 0, n_cmds-1);
 
 	// get starting point 
 	if (start>0) {
@@ -285,7 +286,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	glVertex3dv((GLdouble*)&pos);    
 	glEnd();
 	
-	for(uint i=start; i < end; i++)
+	for(uint i=start; i <= end; i++)
 	{
 	  double extrwidth = extrusionwidth;
 	  if (commands[i].is_value) continue;
