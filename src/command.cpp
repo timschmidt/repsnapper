@@ -351,10 +351,11 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     double dz = where.z-lastPos.z; // z move with arc
     Vector3d arcstart = lastPos;
     draw_arc(lastPos, center, angle, dz, ccw);
-    // extrusion boundary:
+    // extrusion boundary for arc:
     if (arrows && extrwidth > 0) {
       glEnd();
       glLineWidth(1);
+      glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
       Vector3d dradius = arcIJK.getNormalized()*extrwidth/2;
       glBegin(GL_LINES);
       Vector3d offstart = arcstart+dradius;
@@ -363,7 +364,6 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
       draw_arc(offstart, center, angle, dz, ccw);
       //glEnd();
     }
-    glGetFloatv(GL_CURRENT_COLOR,ccol);
   }
   if (lastPos==where) {
     glEnd();
@@ -390,8 +390,10 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
       glVertex3dv((GLdouble*)&(arr2));
     }
     glEnd();
+    // extrusion boundary for straight line:
     if (arrows && extrwidth > 0) {
       glLineWidth(1);
+      glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
       vector<Poly> thickpoly = thick_line(Vector2d(lastPos.x,lastPos.y),
 					  Vector2d(where.x,where.y), extrwidth);
       for (uint i=0; i<thickpoly.size();i++) {
