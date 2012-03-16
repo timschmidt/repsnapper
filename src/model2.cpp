@@ -445,12 +445,15 @@ void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
   clipp.addPolys(cliplayer->GetPolygons(),subject);
   clipp.addPolys(cliplayer->GetSupportPolygons(),subject); // previous 
   clipp.addPolys(subjlayer->GetPolygons(),clip);
+
+  vector<Poly> spolys;
   if (widen != 0)
     // widen from layer to layer
-    subjlayer->setSupportPolygons(clipp.getOffset(clipp.subtract(),
-						  widen * subjlayer->thickness));
+    spolys = clipp.getOffset(clipp.subtract(),
+			     widen * subjlayer->thickness);
   else
-    subjlayer->setSupportPolygons(clipp.getMerged(clipp.subtract()));
+    spolys = clipp.getMerged(clipp.subtract());
+  subjlayer->setSupportPolygons(spolys);
 }
 
 void Model::MakeSupportPolygons(double widen)

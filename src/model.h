@@ -144,9 +144,12 @@ public:
 	Glib::RefPtr<Gtk::TextBuffer> errlog, echolog;
 
 	int draw(Gtk::TreeModel::iterator &selected);
-	int drawLayers(Vector3d offset) const;
+	int drawLayers(double height, Vector3d offset, bool calconly = false) const;
 	void setMeasuresPoint(const Vector2d point);
 	Vector2d measuresPoint;
+
+	Layer * calcSingleLayer(double z, uint LayerNr, 
+				double thickness, bool calcinfill) const;
 
 	sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
 	void alert (const char *message);

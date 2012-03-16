@@ -64,7 +64,7 @@ public:
   void draw  (const Settings &settings, int layer=-1, bool liveprinting=false,
 	      int linewidth=3);
   void drawCommands(const Settings &settings, uint start, uint end,
-		    bool liveprinting, int linewidth, bool arrows);
+		    bool liveprinting, int linewidth, bool arrows, bool boundary=false);
   void MakeText(string &GcodeTxt, const string &GcodeStart,
 		const string &GcodeLayer, const string &GcodeEnd,
 		bool RelativeEcode,

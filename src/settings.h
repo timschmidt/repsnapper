@@ -203,6 +203,7 @@ class Settings {
     bool DisplayDebug;
     bool DisplayLayer;
     bool DisplayGCodeBorders;
+    bool DisplayGCodeArrows;
     bool DrawVertexNumbers;
     bool DrawLineNumbers;
     bool DrawOutlineNumbers;

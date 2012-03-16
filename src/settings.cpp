@@ -208,6 +208,7 @@ static struct {
   FLOAT_MEMBER (Display.GCodeDrawStart, "GCodeDrawStart", 0.0, true),
   FLOAT_MEMBER (Display.GCodeDrawEnd, "GCodeDrawEnd", 1.0, true),
   BOOL_MEMBER (Display.DisplayGCodeBorders, "DisplayGCodeBorders", true, true),
+  BOOL_MEMBER (Display.DisplayGCodeArrows, "DisplayGCodeArrows", true, true),
   BOOL_MEMBER (Display.DisplayEndpoints, "DisplayEndpoints", false, true),
   BOOL_MEMBER (Display.DisplayNormals, "DisplayNormals", false, true),
   BOOL_MEMBER (Display.DisplayBBox, "DisplayBBox", false, true),

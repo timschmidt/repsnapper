@@ -121,7 +121,8 @@ void Model::GlDrawGCode(int layerno)
     if (currentlayer>=0)
       gcode.draw (settings, currentlayer, true, 1);
     gcode.drawCommands(settings, currentprintingline-currentbufferedlines, 
-		       currentprintingline, true, 3, true);
+		       currentprintingline, false, 3, true, 
+		       settings.Display.DisplayGCodeBorders);
   }
 }
 
@@ -702,34 +703,56 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
       pos = Vector3d(Min.x,Min.y,(Max.z+Min.z)/2.);
       drawString(pos,val.str());
     }
-
+    
     if(settings.Display.DisplayLayer) {
-      return drawLayers(offset);
+      drawLayers(settings.Display.LayerValue,
+		 offset, !settings.Display.DisplayLayer);
+    }
+    if (layers.size() == 0) { // live gcode if not calculated yet
+      if(settings.Display.DisplayGCode) {
+	vector<Command> commands;
+	Vector3d start(0,0,0);
+	double thickness = settings.Hardware.LayerThickness;
+	double z = settings.Display.GCodeDrawStart * Max.z + thickness/2;
+	int LayerCount = (int)ceil(Max.z/thickness)-1;
+	uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
+	Layer * layer = calcSingleLayer(z, LayerNo, thickness, true);
+	if (layer) {
+	  layer->MakeGcode(start, commands, 0, 
+			   settings.Slicing, settings.Hardware);
+	  GCodeState state(gcode);
+	  state.AppendCommands(commands,settings.Slicing.RelativeEcode);
+	  gcode.drawCommands(settings, 1, commands.size()-1, true, 2, 
+			     settings.Display.DisplayGCodeArrows,
+			     settings.Display.DisplayGCodeBorders);
+	  gcode.clear();
+	  delete layer;
+	}
+      }
     }
     return -1;
 }
 
 // if single layer returns layerno of drawn layer 
 // else returns -1
-int Model::drawLayers(Vector3d offset) const
+int Model::drawLayers(double height, Vector3d offset, bool calconly) const
 {
-
   if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
 
   glDisable(GL_DEPTH_TEST);
   int drawn = -1;
   int LayerNr;
 
-  bool have_layers = layers.size() > 0; // have sliced already
+  bool have_layers = (layers.size() > 0); // have sliced already
 
   double z;
   double zStep = settings.Hardware.LayerThickness;
   double zSize = (Max.z-Min.z-zStep*0.5);
   int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
-  double sel_Z = settings.Display.LayerValue*zSize;
+  double sel_Z = height*zSize;
   uint sel_Layer;
   if (have_layers) 
-      sel_Layer = (uint)ceil(settings.Display.LayerValue*(layers.size()-1));
+      sel_Layer = (uint)ceil(height*(layers.size()-1));
   else 
       sel_Layer = (uint)ceil(LayerCount*(sel_Z)/zSize);
   LayerCount = sel_Layer+1;
@@ -745,15 +768,12 @@ int Model::drawLayers(Vector3d offset) const
     }
   z += 0.5*zStep; // always cut in middle of layer
 
-
   //cerr << zStep << ";"<<Max.z<<";"<<Min.z<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
 
   Layer* layer=NULL;
   if (have_layers) 
     glTranslatef(-offset.x, -offset.y, -offset.z);
 
-  double matwidth;
-  
   while(LayerNr < LayerCount)
     {
       if (have_layers)
@@ -764,94 +784,22 @@ int Model::drawLayers(Vector3d offset) const
 	}
       else
 	{
-	  layer = new Layer(LayerNr,settings.Hardware.LayerThickness);
-	  layer->setZ(z);
-	  matwidth = settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
-	  for(size_t o=0;o<objtree.Objects.size();o++){
-	    Matrix4d T = objtree.GetSTLTransformationMatrix(o);
-	    for(size_t f=0;f<objtree.Objects[o].shapes.size();f++)
-	      {
-		// Vector3d t = T.getTranslation();
-		// T.setTranslation(t);
-		vector<Poly> polys;
-		double max_grad;
-		bool polys_ok=
-		  objtree.Objects[o].shapes[f].getPolygonsAtZ(T, z, 
-							      polys,
-							      max_grad);
-		if (polys_ok) layer->addPolygons(polys);
-	      }
-	  }
-	  
-	  // vector<Poly> polys = layer->GetPolygons();
-	  // for (guint i=0; i<polys.size();i++){
-	  //   vector<Triangle> tri;
-	  //   polys[i].getTriangulation(tri);
-	  //   for (guint j=0; j<tri.size();j++){
-	  //     tri[j].draw(GL_LINE_LOOP);
-	  //   }
-	  // }
-	  
-	  bool makeskirt = (layer->getZ() <= settings.Slicing.SkirtHeight);
-
-	  layer->MakeShells(settings.Slicing.ShellCount,
-			    matwidth, 
-			    settings.Slicing.ShellOffset,
-			    makeskirt, settings.Slicing.SkirtDistance,
-			    settings.Slicing.InfillOverlap);
-	  if (settings.Display.DisplayinFill)
-	    {
-	      // inFill distances in real mm
-	      double infilldist=0;
-	      double fullInfillDistance = matwidth;
-	      double infillDistance = 0;
-	      double altInfillDistance = 0;
-	      bool shellOnly = settings.Slicing.ShellOnly;
-	      fullInfillDistance = settings.GetInfillDistance(layer->thickness, 100);
-	      if (settings.Slicing.InfillPercent == 0) 
-		shellOnly = true;
-	      else 
-		infillDistance = 
-		  settings.GetInfillDistance(layer->thickness,
-					     settings.Slicing.InfillPercent);
-	      if (settings.Slicing.AltInfillPercent != 0) 
-		altInfillDistance = 
-		  settings.GetInfillDistance(layer->thickness,
-					     settings.Slicing.AltInfillPercent);
-	      if (settings.Slicing.AltInfillLayers!=0 
-		  && layer->LayerNo % settings.Slicing.AltInfillLayers == 0) 
-		  infilldist = altInfillDistance;
-		else
-		  infilldist = infillDistance;
-	      if (layer->LayerNo < (int)settings.Slicing.FirstLayersNum) {
-		infilldist = max(infilldist,
-				 (double)settings.Slicing.FirstLayersInfillDist);
-		fullInfillDistance = max(fullInfillDistance,
-					 (double)settings.Slicing.FirstLayersInfillDist);
-	      }
-	      layer->CalcInfill(settings.Slicing.NormalFilltype,
-				settings.Slicing.FullFilltype,
-				settings.Slicing.SupportFilltype,
-				settings.Slicing.SupportExtrusion,
-				settings.Slicing.DecorFilltype,
-				infilldist, fullInfillDistance,
-				settings.Slicing.InfillRotation,
-				settings.Slicing.InfillRotationPrLayer, 
-				settings.Slicing.DecorInfillDistance,
-				settings.Slicing.DecorInfillRotation, 
-				shellOnly,
-				settings.Display.DisplayDebuginFill);
-	    }
+	  layer = calcSingleLayer(z, LayerNr, 
+				  settings.Hardware.LayerThickness,
+				  settings.Display.DisplayinFill);
 	}
-      layer->Draw(settings.Display.DrawVertexNumbers,
-		  settings.Display.DrawLineNumbers,
-		  settings.Display.DrawCPOutlineNumbers,
-		  settings.Display.DrawCPLineNumbers, 
-		  settings.Display.DrawCPVertexNumbers,
-		  settings.Display.DisplayinFill);
 
-      if (settings.Display.DrawMeasures)
-	layer->DrawMeasures(measuresPoint);
+      if (!calconly) {
+	layer->Draw(settings.Display.DrawVertexNumbers,
+		    settings.Display.DrawLineNumbers,
+		    settings.Display.DrawCPOutlineNumbers,
+		    settings.Display.DrawCPLineNumbers, 
+		    settings.Display.DrawCPVertexNumbers,
+		    settings.Display.DisplayinFill);
+
+	if (settings.Display.DrawMeasures)
+	  layer->DrawMeasures(measuresPoint);
+      }
 
       if (!have_layers)
       {
@@ -864,6 +812,92 @@ int Model::drawLayers(Vector3d offset) const
   return drawn;
 }
 
+
+Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
+			       bool calcinfill) const 
+{
+  if (is_calculating) return NULL; // infill calculation (saved patterns) would be disturbed
+  Layer * layer = new Layer(LayerNr, thickness);
+  layer->setZ(z);
+  for(size_t o=0;o<objtree.Objects.size();o++){
+    Matrix4d T = objtree.GetSTLTransformationMatrix(o);
+    for(size_t f=0;f<objtree.Objects[o].shapes.size();f++)
+      {
+	// Vector3d t = T.getTranslation();
+	// T.setTranslation(t);
+	vector<Poly> polys;
+	double max_grad;
+	bool polys_ok=
+	  objtree.Objects[o].shapes[f].getPolygonsAtZ(T, z, 
+						      polys,
+						      max_grad);
+	if (polys_ok) layer->addPolygons(polys);
+      }
+  }
+	  
+  // vector<Poly> polys = layer->GetPolygons();
+  // for (guint i=0; i<polys.size();i++){
+  //   vector<Triangle> tri;
+  //   polys[i].getTriangulation(tri);
+  //   for (guint j=0; j<tri.size();j++){
+  //     tri[j].draw(GL_LINE_LOOP);
+  //   }
+  // }
+	  
+  bool makeskirt = settings.Slicing.Skirt && (layer->getZ() <= settings.Slicing.SkirtHeight);
+  
+  double matwidth = settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
+  layer->MakeShells(settings.Slicing.ShellCount,
+		   matwidth, 
+		   settings.Slicing.ShellOffset,
+		   makeskirt, settings.Slicing.SkirtDistance,
+		   settings.Slicing.InfillOverlap);
+
+  if (calcinfill)
+    {
+      // inFill distances in real mm
+      double infilldist=0;
+      double fullInfillDistance = matwidth;
+      double infillDistance = 0;
+      double altInfillDistance = 0;
+      bool shellOnly = settings.Slicing.ShellOnly;
+      fullInfillDistance = settings.GetInfillDistance(layer->thickness, 100);
+      if (settings.Slicing.InfillPercent == 0) 
+	shellOnly = true;
+      else 
+	infillDistance = 
+	  settings.GetInfillDistance(layer->thickness,
+				     settings.Slicing.InfillPercent);
+      if (settings.Slicing.AltInfillPercent != 0) 
+	altInfillDistance = 
+	  settings.GetInfillDistance(layer->thickness,
+				     settings.Slicing.AltInfillPercent);
+      if (settings.Slicing.AltInfillLayers!=0 
+	  && layer->LayerNo % settings.Slicing.AltInfillLayers == 0) 
+	infilldist = altInfillDistance;
+      else
+	infilldist = infillDistance;
+      if (layer->LayerNo < (int)settings.Slicing.FirstLayersNum) {
+	infilldist = max(infilldist,
+			 (double)settings.Slicing.FirstLayersInfillDist);
+	fullInfillDistance = max(fullInfillDistance,
+				 (double)settings.Slicing.FirstLayersInfillDist);
+      }
+      layer->CalcInfill(settings.Slicing.NormalFilltype,
+		       settings.Slicing.FullFilltype,
+		       settings.Slicing.SupportFilltype,
+		       settings.Slicing.SupportExtrusion,
+		       settings.Slicing.DecorFilltype,
+		       infilldist, fullInfillDistance,
+		       settings.Slicing.InfillRotation,
+		       settings.Slicing.InfillRotationPrLayer, 
+		       settings.Slicing.DecorInfillDistance,
+		       settings.Slicing.DecorInfillRotation, 
+		       shellOnly,
+		       settings.Display.DisplayDebuginFill);
+    }
+  return layer;
+}
 
 // point is (0,0)..(1,1)
 void Model::setMeasuresPoint(const Vector2d point) 

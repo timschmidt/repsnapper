@@ -241,12 +241,14 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
           }
 	}
 
-	drawCommands(settings, start, end, liveprinting, linewidth, arrows);
+	drawCommands(settings, start, end, liveprinting, linewidth, 
+		     arrows && settings.Display.DisplayGCodeArrows,
+		     !liveprinting && settings.Display.DisplayGCodeBorders);
 }
 
 
 void GCode::drawCommands(const Settings &settings, uint start, uint end,
-			 bool liveprinting, int linewidth, bool arrows)
+			 bool liveprinting, int linewidth, bool arrows, bool boundary)
 {
 	double LastE=0.0;
 	bool extruderon = false;
@@ -264,7 +266,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	bool relativeE = settings.Slicing.RelativeEcode;
 
 	double extrusionwidth = 0;
-	if (settings.Display.DisplayGCodeBorders)
+	if (boundary)
 	  extrusionwidth = 
 	    settings.Hardware.GetExtrudedMaterialWidth(settings.Hardware.LayerThickness);
 
@@ -303,7 +305,6 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		case COORDINATEDMOTION3D: // old 3D gcode
 		  if (extruderon) {
 		    if (liveprinting) {
-		      extrwidth = 0;
 		      Color = settings.Display.GCodePrintingRGBA;
 		    } else
 		      Color = settings.Display.GCodeExtrudeRGBA;
@@ -333,7 +334,6 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 			luma = speed / settings.Hardware.MaxPrintSpeedXY;
 			if (liveprinting) {
 			  Color = settings.Display.GCodePrintingRGBA;
-			  extrwidth = 0;
 			} else
 			  Color = settings.Display.GCodeExtrudeRGBA;
 		      }

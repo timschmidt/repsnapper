@@ -352,7 +352,7 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     Vector3d arcstart = lastPos;
     draw_arc(lastPos, center, angle, dz, ccw);
     // extrusion boundary for arc:
-    if (arrows && extrwidth > 0) {
+    if (extrwidth > 0) {
       glEnd();
       glLineWidth(1);
       glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
@@ -379,9 +379,11 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     glVertex3dv((GLdouble*)&(where));
     if (arrows) {
       glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
-      // 0.4mm long arrows
-      Vector3d arrdir = (where-lastPos).getNormalized() * 0.4; 
-      Vector3d arrdir2(-0.5*arrdir.y,0.5*arrdir.x,arrdir.z);
+      // 0.4mm long arrows if no boundary
+      double alen = 0.4;
+      if (extrwidth > 0) alen =  1.2*extrwidth ;
+      Vector3d arrdir = (where-lastPos).getNormalized() * alen; 
+      Vector3d arrdir2(-1.2*alen*arrdir.y, 1.2*alen*arrdir.x, arrdir.z);
       glVertex3dv((GLdouble*)&where);
       Vector3d arr1 = where-arrdir+arrdir2;
       glVertex3dv((GLdouble*)&(arr1));
@@ -391,7 +393,7 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     }
     glEnd();
     // extrusion boundary for straight line:
-    if (arrows && extrwidth > 0) {
+    if (extrwidth > 0) {
       glLineWidth(1);
       glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
       vector<Poly> thickpoly = thick_line(Vector2d(lastPos.x,lastPos.y),
