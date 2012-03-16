@@ -682,26 +682,21 @@ void Model::ConvertToGCode()
   else
     state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
 
+  vector<Command> commands;
+  Vector3d start = state.LastPosition();
   for (uint p=0; p<count; p++) {
     m_progress->update(p);
     //cerr << "GCode layer " << (p+1) << " of " << count  << endl;;
-    layers[p]->MakeGcode (state,
+    layers[p]->MakeGcode (start,
+			  commands,
 			  printOffsetZ,
 			  settings.Slicing, settings.Hardware);
   }
-
-  double AntioozeDistance = settings.Slicing.AntioozeDistance;
-  double AntioozeAmount = settings.Slicing.AntioozeAmount;
-  double AntioozeSpeed = settings.Slicing.AntioozeSpeed;
-  bool AntioozeRepushAfter = true; // NOT TESTED WITH false, no setting !!!
-  if (!settings.Slicing.EnableAntiooze){
-    AntioozeDistance = 0;
-    AntioozeAmount = 0;
-  }
-
+  
+  state.AppendCommands(commands, settings.Slicing.RelativeEcode);
+  
   gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
 		  settings.Slicing.RelativeEcode,
-		  AntioozeDistance, AntioozeAmount, AntioozeSpeed, AntioozeRepushAfter,
 		  m_progress);
 
   m_progress->stop (_("Done"));

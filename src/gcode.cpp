@@ -371,8 +371,6 @@ bool add_text_filter_nan(string str, string &GcodeTxt)
 void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, 
 		     const string &GcodeLayer, const string &GcodeEnd,
 		     bool RelativeEcode, 
-		     double AntioozeDistance, double AntioozeAmount,
-		     double AntioozeSpeed, bool AntioozeRepushAfter, 
 		     ViewProgress * progress)
 {
 	double lastE = -10;

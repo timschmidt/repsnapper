@@ -42,13 +42,15 @@ PLine3::PLine3(const PLine pline, double z)
   }
 }
 
-vector<Command> PLine3::getCommands(Vector3d &lastpos, double extrusion,
-				    double minspeed, double maxspeed, double movespeed) const
+int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
+			double extrusion,
+			double minspeed, double maxspeed, double movespeed) const
 {
-  vector<Command> commands;
-  if (lastpos != from)  // move first
+  int count=0;
+  if (lastpos != from) {  // move first
     commands.push_back( Command(COORDINATEDMOTION, from, 0, movespeed) );
-  
+    count++;
+  }  
   double extrudedMaterial = length() * extrusionfactor * extrusion;
   extrudedMaterial += absolute_extrusion;
   //cerr << "extr " << extrudedMaterial<< endl;
@@ -71,8 +73,9 @@ vector<Command> PLine3::getCommands(Vector3d &lastpos, double extrusion,
     command.comment += _(" Absolute Extrusion");
   }
   commands.push_back(command);
+  count++;
   lastpos = to;
-  return commands;
+  return count;
 }
 
 // // not used

@@ -44,8 +44,8 @@ class PLine3
   short arc; // -1: ccw arc, 1: cw arc, 0: not an arc
   double arcangle;
 
-  vector<Command> getCommands(Vector3d &lastpos, double extrusion,
-			      double minspeed, double maxspeed, double movespeed) const;
+  int getCommands(Vector3d &lastpos, vector<Command> &commands, double extrusion,
+		  double minspeed, double maxspeed, double movespeed) const;
   // not used
   string GCode(Vector3d &lastpos, double &lastE, double feedrate, 
 	       double minspeed, double maxspeed, double movespeed, 

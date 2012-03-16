@@ -586,13 +586,15 @@ void Layer::calcConvexHull()
 
 
 // Convert to GCode
-void Layer::MakeGcode(GCodeState &state,
+void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
+		      vector<Command> &commands,
 		      double offsetZ,
 		      const Settings::SlicingSettings &slicing,
-		      const Settings::HardwareSettings &hardware)
+		      const Settings::HardwareSettings &hardware) const
 {
-  Vector3d start3 = state.LastPosition();
-  Vector2d startPoint(start3.x,start3.y);
+  // Vector3d start3 = state.LastPosition();
+  // Vector2d startPoint(start3.x,start3.y);
+  Vector2d startPoint(lastPos.x,lastPos.y);
 
   double extrf = hardware.GetExtrudeFactor(thickness);
 
@@ -679,7 +681,7 @@ void Layer::MakeGcode(GCodeState &state,
   // FINISH
 
   Command comment(LAYERCHANGE, LayerNo);
-  state.AppendCommand(comment,slicing.RelativeEcode);
+  commands.push_back(comment);
 
   float speedfactor = 1;
   if ((guint)LayerNo < slicing.FirstLayersNum)
@@ -702,7 +704,7 @@ void Layer::MakeGcode(GCodeState &state,
       //cerr << slowdownfactor << " - " << fanfactor << " - " << fanspeed << " - " << endl;
     } 
     Command fancommand(FANON, fanspeed);
-    state.AppendCommand(fancommand,false);
+    commands.push_back(fancommand);
   }
 
   printlines.getLines(lines, lines3);
@@ -712,10 +714,10 @@ void Layer::MakeGcode(GCodeState &state,
     maxspeed = hardware.MaxPrintSpeedXY,
     movespeed = hardware.MoveSpeed;
   // push all lines to gcode
-  start3 = state.LastPosition();
+  // start3 = state.LastPosition();
   for (uint i = 0; i < lines3.size(); i++) {
-    vector<Command> cc = lines3[i].getCommands(start3, extrf, minspeed, maxspeed, movespeed);
-    state.AppendCommands(cc, slicing.RelativeEcode);
+    lines3[i].getCommands(lastPos, commands, extrf, minspeed, maxspeed, movespeed);
+    //state.AppendCommands(cc, slicing.RelativeEcode);
   }
 }
 

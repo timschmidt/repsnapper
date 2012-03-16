@@ -123,10 +123,11 @@ public:
   /* 			    double linewidth,double linewidthratio,double optratio) const; */
   
 
-  void MakeGcode (GCodeState &state,
+  void MakeGcode (Vector3d &start,
+		  vector<Command> &commands,
   		  double offsetZ, 
   		  const Settings::SlicingSettings &slicing,
-  		  const Settings::HardwareSettings &hardware);
+  		  const Settings::HardwareSettings &hardware) const;
 
   string info() const ;
 
