@@ -721,6 +721,7 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
 	uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
 	Layer * layer = calcSingleLayer(z, LayerNo, thickness, true);
 	if (layer) {
+	  glDisable(GL_DEPTH_TEST);
 	  layer->MakeGcode(start, commands, 0, 
 			   settings.Slicing, settings.Hardware);
 	  GCodeState state(gcode);
