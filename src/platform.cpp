@@ -59,8 +59,14 @@ std::vector<std::string> Platform::getConfigPaths()
   dirs.push_back(std::string("src") + G_DIR_SEPARATOR);
 
   /* Otherwise prefer the app's current directory */
-  if (binary_path)
+  if (binary_path) {
     dirs.push_back(std::string(binary_path) + G_DIR_SEPARATOR);
+    /* Finally prefer an etc/xdg path in app's current directory */
+#ifdef WIN32
+    dirs.push_back(std::string(binary_path) + G_DIR_SEPARATOR + ".." + G_DIR_SEPARATOR +
+       "etc" + G_DIR_SEPARATOR + "xdg" + G_DIR_SEPARATOR + "repsnapper");
+#endif
+  }
 
   dirs.push_back(std::string(G_STRINGIFY(RSDATADIR)) + G_DIR_SEPARATOR);
   dirs.push_back(std::string(G_STRINGIFY(SYSCONFDIR)) + G_DIR_SEPARATOR);
