@@ -36,6 +36,8 @@
 #include "infill.h"
 
 Model::Model() :
+  m_previewLayer(NULL),
+  m_previewGCodeLayer(NULL),
   currentprintingline(0),
   currentbufferedlines(0),
   settings(),
@@ -105,6 +107,15 @@ void Model::ClearLayers()
     layers[i]->Clear();
   layers.clear();
   Infill::clearPatterns();
+  ClearPreview();
+}
+
+void Model::ClearPreview()
+{
+  if (m_previewLayer) delete m_previewLayer;
+  m_previewLayer = NULL;
+  if (m_previewGCodeLayer) delete m_previewGCodeLayer;
+  m_previewGCodeLayer = NULL;
 }
 
 Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
@@ -713,24 +724,26 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
     }
     if (layers.size() == 0) { // live gcode if not calculated yet
       if(settings.Display.DisplayGCode) {
-	vector<Command> commands;
 	Vector3d start(0,0,0);
 	double thickness = settings.Hardware.LayerThickness;
 	double z = settings.Display.GCodeDrawStart * Max.z + thickness/2;
 	int LayerCount = (int)ceil(Max.z/thickness)-1;
 	uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
-	Layer * layer = calcSingleLayer(z, LayerNo, thickness, true);
-	if (layer) {
+	bool newlayer = (!m_previewGCodeLayer || z != m_previewGCodeLayer->getZ());
+	m_previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
+	if (m_previewGCodeLayer) {
 	  glDisable(GL_DEPTH_TEST);
-	  layer->MakeGcode(start, commands, 0, 
-			   settings.Slicing, settings.Hardware);
-	  GCodeState state(gcode);
-	  state.AppendCommands(commands,settings.Slicing.RelativeEcode);
-	  gcode.drawCommands(settings, 1, commands.size()-1, true, 2, 
-			     settings.Display.DisplayGCodeArrows,
-			     settings.Display.DisplayGCodeBorders);
-	  gcode.clear();
-	  delete layer;
+	  if (newlayer) {
+	    vector<Command> commands;
+	    m_previewGCodeLayer->MakeGcode(start, commands, 0, 
+					   settings.Slicing, settings.Hardware);
+	    GCodeState state(gcode);
+	    gcode.clear();
+	    state.AppendCommands(commands,settings.Slicing.RelativeEcode);
+	  }
+	  gcode.drawCommands(settings, 1, gcode.commands.size(), true, 2, 
+	  		     settings.Display.DisplayGCodeArrows,
+	  		     settings.Display.DisplayGCodeBorders);
 	}
       }
     }
@@ -739,7 +752,7 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
 
 // if single layer returns layerno of drawn layer 
 // else returns -1
-int Model::drawLayers(double height, Vector3d offset, bool calconly) const
+int Model::drawLayers(double height, Vector3d offset, bool calconly) 
 {
   if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
 
@@ -788,9 +801,10 @@ int Model::drawLayers(double height, Vector3d offset, bool calconly) const
 	}
       else
 	{
-	  layer = calcSingleLayer(z, LayerNr, 
-				  settings.Hardware.LayerThickness,
-				  settings.Display.DisplayinFill);
+	  m_previewLayer = calcSingleLayer(z, LayerNr, 
+					   settings.Hardware.LayerThickness,
+					   settings.Display.DisplayinFill, false);
+	  layer = m_previewLayer;
 	}
 
       if (!calconly) {
@@ -805,11 +819,11 @@ int Model::drawLayers(double height, Vector3d offset, bool calconly) const
 	  layer->DrawMeasures(measuresPoint);
       }
 
-      if (!have_layers)
-      {
-            // need to delete the temporary  layer
-            delete layer;
-      }
+      // if (!have_layers)
+      // {
+      //       // need to delete the temporary  layer
+      //       delete layer;
+      // }
       LayerNr++; 
       z+=zStep;
     }// while
@@ -818,9 +832,17 @@ int Model::drawLayers(double height, Vector3d offset, bool calconly) const
 
 
 Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
-			       bool calcinfill) const 
+			       bool calcinfill, bool for_gcode) const
 {
   if (is_calculating) return NULL; // infill calculation (saved patterns) would be disturbed
+  if (for_gcode) {
+    if (m_previewGCodeLayer && m_previewGCodeLayer->getZ() == z
+      && m_previewGCodeLayer->thickness) 
+      return m_previewGCodeLayer;
+  } else {
+    if (m_previewLayer && m_previewLayer->getZ() == z
+	&& m_previewLayer->thickness) return m_previewLayer; 
+  }
   Layer * layer = new Layer(LayerNr, thickness);
   layer->setZ(z);
   for(size_t o=0;o<objtree.Objects.size();o++){
@@ -900,6 +922,8 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 		       shellOnly,
 		       settings.Display.DisplayDebuginFill);
     }
+  // if (for_gcode) m_previewGCodeLayer = layer;
+  // else m_previewLayer = layer;
   return layer;
 }
 

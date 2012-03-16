@@ -314,6 +314,7 @@ void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short
   Vector3d arcpoint;
   Vector3d radiusv =  lastPos-center;
   double astep = angle/(radiusv).length()/20;
+  if (angle/astep > 10000) astep = angle/10000;
   for (double a = 0; a < angle; a+=astep){
     arcpoint = center + radiusv.rotate(a, 0.,0.,ccw?1.:-1.);
     if (dz!=0 && angle!=0) arcpoint.z = lastPos.z + a*(dz)/angle;

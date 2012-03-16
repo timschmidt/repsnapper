@@ -749,7 +749,7 @@ void View::update_settings_gui()
 
 void View::handle_ui_settings_changed()
 {
-  //m_model->ClearLayers(); // not! at changing layer preview height for example
+  m_model->ClearPreview();
   queue_draw();
 }
 

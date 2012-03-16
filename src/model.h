@@ -86,6 +86,9 @@ public:
 
 	vector<Layer*> layers;
 	
+	Layer * m_previewLayer;
+	Layer * m_previewGCodeLayer;
+	
 	// Slicing
 	void Slice(double printoffsetZ);
 	void CalcInfill();
@@ -110,6 +113,7 @@ public:
 	void WriteGCode(Glib::RefPtr<Gio::File> file);
 	void ClearGCode();
 	void ClearLayers();
+	void ClearPreview();
 	Glib::RefPtr<Gtk::TextBuffer> GetGCodeBuffer();
 	void GlDrawGCode(int layer=-1); // should be in the view
 	void GlDrawGCode(double Z); 
@@ -144,12 +148,12 @@ public:
 	Glib::RefPtr<Gtk::TextBuffer> errlog, echolog;
 
 	int draw(Gtk::TreeModel::iterator &selected);
-	int drawLayers(double height, Vector3d offset, bool calconly = false) const;
+	int drawLayers(double height, Vector3d offset, bool calconly = false);
 	void setMeasuresPoint(const Vector2d point);
 	Vector2d measuresPoint;
 
-	Layer * calcSingleLayer(double z, uint LayerNr, 
-				double thickness, bool calcinfill) const;
+	Layer * calcSingleLayer(double z, uint LayerNr, double thickness, 
+				bool calcinfill, bool for_gcode=false) const ;
 
 	sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
 	void alert (const char *message);
