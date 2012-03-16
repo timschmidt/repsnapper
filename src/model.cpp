@@ -605,51 +605,54 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
 	  (!sel_shape && sel_object == object));
 
       // this is slow for big shapes
-      // if (is_selected) {
-      //   // Enable stencil buffer when we draw the selected object.
-      //   glEnable(GL_STENCIL_TEST);
-      //   glStencilFunc(GL_ALWAYS, 1, 1);
-      //   glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+      if (is_selected) {
+	if (!shape->slow_drawing) {
+	  // Enable stencil buffer when we draw the selected object.
+	  glEnable(GL_STENCIL_TEST);
+	  glStencilFunc(GL_ALWAYS, 1, 1);
+	  glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 
-      //   shape->draw (this, settings);
+	  shape->draw (this, settings);
 
-      //   if (!settings.Display.DisplayPolygons) {
-      //           // If not drawing polygons, need to draw the geometry
-      //           // manually, but invisible, to set up the stencil buffer
-      //           glEnable(GL_CULL_FACE);
-      //           glEnable(GL_DEPTH_TEST);
-      //           glEnable(GL_BLEND);
-      //           // Set to not draw anything, and not update depth buffer
-      //           glDepthMask(GL_FALSE);
-      //           glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	  if (!settings.Display.DisplayPolygons) {
+	    // If not drawing polygons, need to draw the geometry
+	    // manually, but invisible, to set up the stencil buffer
+	    glEnable(GL_CULL_FACE);
+	    glEnable(GL_DEPTH_TEST);
+	    glEnable(GL_BLEND);
+	    // Set to not draw anything, and not update depth buffer
+	    glDepthMask(GL_FALSE);
+	    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-      //           shape->draw_geometry();
+	    shape->draw_geometry();
 
-      //           glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-      //           glDepthMask(GL_TRUE);
-      //   }
+	    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	    glDepthMask(GL_TRUE);
+	  }
 
-      //   // draw highlight around selected object
-      //   glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-      //   glLineWidth(3.0);
-      // 	glEnable (GL_POLYGON_OFFSET_LINE);
+	  // draw highlight around selected object
+	  glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+	  glLineWidth(3.0);
+	  glEnable (GL_POLYGON_OFFSET_LINE);
 
-      //   glDisable (GL_CULL_FACE);
-      //   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      //   glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-      //   glStencilFunc(GL_NOTEQUAL, 1, 1);
-      // 	glEnable(GL_DEPTH_TEST);
+	  glDisable (GL_CULL_FACE);
+	  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	  glStencilFunc(GL_NOTEQUAL, 1, 1);
+	  glEnable(GL_DEPTH_TEST);
 
-      // 	shape->draw_geometry();
+	  shape->draw_geometry();
 
-      //   glEnable (GL_CULL_FACE);
-      //   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-      //   glDisable(GL_STENCIL_TEST);
-      // 	glDisable(GL_POLYGON_OFFSET_LINE);
-      // }
-      // else {
-      shape->draw (this, settings, is_selected);
-      // }
+	  glEnable (GL_CULL_FACE);
+	  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	  glDisable(GL_STENCIL_TEST);
+	  glDisable(GL_POLYGON_OFFSET_LINE);
+	}
+	else shape->draw (this, settings, true);
+      }
+      else {
+	shape->draw (this, settings, false);
+      }
       glPopMatrix();
       if(settings.Display.DisplayBBox)
 	shape->drawBBox();

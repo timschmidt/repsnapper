@@ -68,6 +68,7 @@ void Transform3D::rotate(Vector3d center, double x, double y, double z)
 
 // Constructor
 Shape::Shape()
+  : slow_drawing(false)
 {
 	Min.x = Min.y = Min.z = 0.0;
 	Max.x = Max.y = Max.z = 200.0;
@@ -79,7 +80,9 @@ Shape::Shape()
 }
 
 
-Shape::Shape(string filename, istream *text){
+Shape::Shape(string filename, istream *text)
+  : slow_drawing(false)
+{
   this->filename = filename;
   parseASCIISTL(text);
 }
@@ -1248,7 +1251,7 @@ void drawString(Vector3d pos, void* font, string text)
 
 
 // called from Model::draw
-void Shape::draw(const Model *model, const Settings &settings, bool highlight) const 
+void Shape::draw(const Model *model, const Settings &settings, bool highlight) 
 {
   //cerr << "Shape::draw" <<  endl;
 	// polygons
@@ -1458,8 +1461,11 @@ void Shape::drawBBox() const
 //     }
 // }
 
-void Shape::draw_geometry() const
+void Shape::draw_geometry() 
 {
+	Glib::TimeVal starttime;
+	starttime.assign_current_time();
+
 	glBegin(GL_TRIANGLES);
 	for(size_t i=0;i<triangles.size();i++)
 	{
@@ -1481,6 +1487,11 @@ void Shape::draw_geometry() const
 		glVertex3dv((GLdouble*)&triangles[i].C);
 	}
 	glEnd();
+
+	Glib::TimeVal endtime;
+	endtime.assign_current_time();
+	Glib::TimeVal usedtime = endtime-starttime;
+	if (usedtime.as_double() > 0.3) slow_drawing = true;
 }
 
 // we dont want this

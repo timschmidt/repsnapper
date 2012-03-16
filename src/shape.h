@@ -119,8 +119,8 @@ public:
 	/* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
 	/* 		      guint LayerNr, vector<int>& altInfillLayers); */
 	void draw (const Model *model, const Settings &settings, 
-		   bool highlight=false) const;
-	void draw_geometry () const;
+		   bool highlight=false);
+	void draw_geometry ();
 	void drawBBox() const; 
 	void CenterAroundXY();
 	bool getPolygonsAtZ(const Matrix4d &T, double z, 
@@ -169,6 +169,7 @@ public:
 
     int loadASCIIVRML(std::string filename);
 
+    bool slow_drawing;
 
 private:
     double scale_factor,scale_factor_x,scale_factor_y,scale_factor_z;
