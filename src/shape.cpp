@@ -185,7 +185,12 @@ int Shape::loadBinarySTL(string filename) {
     CenterAroundXY();
     scale_factor = 1.0;
     scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
-    cout << _("Shape has volume ") << volume() << " mm^3"<<endl;
+    double vol = volume();
+    if (vol < 0) {
+      invertNormals();
+      vol = -vol;
+    }
+    cout << _("Shape has volume ") << vol << " mm^3"<<endl;
     return 0;
 }
 
