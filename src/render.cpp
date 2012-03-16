@@ -283,7 +283,8 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  transf = &object->transform3D;
 	else
 	  transf = &shape->transform3D;
-	transf->move(delta3f);
+	double scale = transf->transform.m[3][3];
+	transf->move(delta3f*scale);
 	m_downPoint = dragp;
 	//m_view->get_model()->CalcBoundingBoxAndCenter();
       }

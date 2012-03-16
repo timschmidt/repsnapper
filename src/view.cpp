@@ -369,8 +369,9 @@ class View::TranslationSpinRow {
         mat = &object->transform3D.transform;
     else
         mat = &shape->transform3D.transform;
+    double scale = mat->m[3][3];
     Vector3d trans = mat->getTranslation();
-    trans.xyz[axis] = val;
+    trans.xyz[axis] = val*scale;
     mat->setTranslation (trans);
     m_view->get_model()->CalcBoundingBoxAndCenter();
     m_view->get_model()->ModelChanged();
@@ -421,7 +422,7 @@ public:
         m_xyz[i]->set_numeric();
         m_xyz[i]->set_digits (1);
         m_xyz[i]->set_increments (0.5, 10);
-        m_xyz[i]->set_range(-500.0, +500.0);
+        m_xyz[i]->set_range(-5000.0, +5000.0);
         m_box->add (*m_xyz[i]);
         m_xyz[i]->signal_value_changed().connect
             (sigc::bind(sigc::mem_fun(*this, &TranslationSpinRow::spin_value_changed), (int)i));
