@@ -373,6 +373,7 @@ class View::TranslationSpinRow {
     trans.xyz[axis] = val;
     mat->setTranslation (trans);
     m_view->get_model()->CalcBoundingBoxAndCenter();
+    m_view->get_model()->ModelChanged();
   }
 public:
   bool m_inhibit_update;

@@ -244,6 +244,8 @@ void Model::ModelChanged()
   //printer.update_temp_poll_interval(); // necessary?
   Infill::clearPatterns();
   CalcBoundingBoxAndCenter();
+  ClearLayers();
+  ClearGCode();
   m_model_changed.emit();
 }
 
@@ -363,7 +365,7 @@ int Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autop
 
   // Update the view to include the new object
   CalcBoundingBoxAndCenter();
-  
+  ModelChanged();
     // Tell everyone
   m_signal_stl_added.emit (path);
   
@@ -393,6 +395,7 @@ int Model::DivideShape(TreeObject *parent, Shape shape, string filename)
     AddShape(parent, upper, filename+_("_upper") ,false);
     AddShape(parent, lower, filename+_("_lower") ,false);
   }
+  ModelChanged();
   return num;
 }
 
@@ -413,6 +416,7 @@ void Model::ScaleObject(Shape *shape, TreeObject *object, double scale)
     }
   else return;
   CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 void Model::ScaleObjectX(Shape *shape, TreeObject *object, double scale)
 {
@@ -425,6 +429,7 @@ void Model::ScaleObjectX(Shape *shape, TreeObject *object, double scale)
     }
   else return;
   CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 void Model::ScaleObjectY(Shape *shape, TreeObject *object, double scale)
 {
@@ -437,6 +442,7 @@ void Model::ScaleObjectY(Shape *shape, TreeObject *object, double scale)
     }
   else return;
   CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
 {
@@ -449,6 +455,7 @@ void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
     }
   else return;
   CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 
 
@@ -458,9 +465,9 @@ void Model::RotateObject(Shape *shape, TreeObject *object, Vector4d rotate)
 
   if (!shape)
     return; // FIXME: rotate entire Objects ...
-
   shape->Rotate(rot, rotate.w);
   CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 
 void Model::TwistObject(Shape *shape, TreeObject *object, double angle)
@@ -469,15 +476,16 @@ void Model::TwistObject(Shape *shape, TreeObject *object, double angle)
     return; 
   shape->Twist(angle);
   CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 
 void Model::OptimizeRotation(Shape *shape, TreeObject *object)
 {
   if (!shape)
     return; // FIXME: rotate entire Objects ...
-
   shape->OptimizeRotation();
   CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 
 void Model::InvertNormals(Shape *shape, TreeObject *object)
@@ -487,6 +495,7 @@ void Model::InvertNormals(Shape *shape, TreeObject *object)
   else // if (object) object->invertNormals();
     return; 
   //CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 void Model::Mirror(Shape *shape, TreeObject *object)
 {
@@ -494,7 +503,8 @@ void Model::Mirror(Shape *shape, TreeObject *object)
     shape->mirror();
   else // if (object) object->mirror();
     return; 
-  //CalcBoundingBoxAndCenter();
+  CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 
 void Model::DeleteObjTree(Gtk::TreeModel::iterator &iter)
@@ -503,6 +513,7 @@ void Model::DeleteObjTree(Gtk::TreeModel::iterator &iter)
   ClearGCode();
   ClearLayers();
   CalcBoundingBoxAndCenter();
+  ModelChanged();
 }
 
 

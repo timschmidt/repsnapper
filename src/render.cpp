@@ -234,6 +234,7 @@ bool Render::on_button_release_event(GdkEventButton* event)
   if (event->button == 1) {
     if (event->state & GDK_SHIFT_MASK) { // move object
       m_view->get_model()->CalcBoundingBoxAndCenter();
+      m_view->get_model()->ModelChanged();
       queue_draw();
     }
     else if (m_downPoint.x == event->x && m_downPoint.y == event->y){ // click only
