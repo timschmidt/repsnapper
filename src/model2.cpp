@@ -590,7 +590,11 @@ void Model::CalcInfill()
 
 void Model::ConvertToGCode()
 {
-  if (is_calculating) return;
+  if (is_calculating) {
+    //do_calculate = false; // TODO: make calculation cancel on second button click
+    return;
+  }
+  //do_calculate = true;
   is_calculating=true;
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();

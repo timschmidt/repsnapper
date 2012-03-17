@@ -180,6 +180,7 @@ View *View::create(Model *model)
 
 void View::printing_changed()
 {
+  m_model->SetIsPrinting(m_printer->IsPrinting());
   if (m_printer->IsPrinting()) {
     m_print_button->set_label (_("Restart"));
     m_continue_button->set_label (_("Pause"));

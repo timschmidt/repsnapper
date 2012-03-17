@@ -233,7 +233,6 @@ bool Render::on_button_release_event(GdkEventButton* event)
 {
   if (event->button == 1) {
     if (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK)  { // move object
-      m_view->get_model()->CalcBoundingBoxAndCenter();
       m_view->get_model()->ModelChanged();
       queue_draw();
     }

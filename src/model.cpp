@@ -44,7 +44,8 @@ Model::Model() :
   Min(), Max(),
   errlog (Gtk::TextBuffer::create()),
   echolog (Gtk::TextBuffer::create()),
-  is_calculating(false)
+  is_calculating(false),
+  is_printing(false)
 {
   // Variable defaults
   Center.x = Center.y = 100.0;
@@ -86,14 +87,6 @@ void Model::SimpleAdvancedToggle()
 void Model::SetViewProgress (ViewProgress *progress)
 {
   m_progress = progress;
-}
-
-void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
-{
-  m_progress->start (_("Converting"), 100.0);
-  gcode.Read (this, m_progress, file->get_path());
-  m_progress->stop (_("Done"));
-  ModelChanged();
 }
 
 void Model::ClearGCode()
@@ -251,13 +244,27 @@ void Model::Read(Glib::RefPtr<Gio::File> file)
   ReadStl (file);
 }
 
+void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
+{
+  if (is_calculating) return;
+  if (is_printing) return;
+  is_calculating=true;
+  m_progress->start (_("Converting"), 100.0);
+  gcode.Read (this, m_progress, file->get_path());
+  m_progress->stop (_("Done"));
+  is_calculating=false;
+}
+
+
 void Model::ModelChanged()
 {
   //printer.update_temp_poll_interval(); // necessary?
-  Infill::clearPatterns();
   CalcBoundingBoxAndCenter();
-  ClearLayers();
-  ClearGCode();
+  Infill::clearPatterns();
+  if (!is_printing) {
+    ClearLayers();
+    ClearGCode();
+  }
   m_model_changed.emit();
 }
 
@@ -777,9 +784,10 @@ int Model::drawLayers(double height, Vector3d offset, bool calconly)
 
   bool have_layers = (layers.size() > 0); // have sliced already
 
+  double minZ = max(0.0, Min.z);
   double z;
   double zStep = settings.Hardware.LayerThickness;
-  double zSize = (Max.z-Min.z-zStep*0.5);
+  double zSize = (Max.z - minZ - zStep*0.5);
   int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
   double sel_Z = height*zSize;
   uint sel_Layer;
@@ -791,12 +799,12 @@ int Model::drawLayers(double height, Vector3d offset, bool calconly)
   if(settings.Display.DisplayAllLayers)
     {
       LayerNr = 0;
-      z=Min.z;
+      z=minZ;
     }
   else 
     {
       LayerNr = sel_Layer;
-      z= Min.z + sel_Z;
+      z= minZ + sel_Z;
     }
   z += 0.5*zStep; // always cut in middle of layer
 

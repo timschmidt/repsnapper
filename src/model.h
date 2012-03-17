@@ -164,8 +164,11 @@ public:
 
 	GCode gcode;
 
+	void SetIsPrinting(bool printing) { is_printing = printing; };
+
  private:
 	bool is_calculating;
+	bool is_printing;
 	//GCodeIter *m_iter;
 };
 
