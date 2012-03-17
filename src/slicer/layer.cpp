@@ -615,12 +615,13 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		      const Settings::SlicingSettings &slicing,
 		      const Settings::HardwareSettings &hardware) const
 {
-  // Vector3d start3 = state.LastPosition();
-  // Vector2d startPoint(start3.x,start3.y);
+
+  double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
+  double linewidth = thickness/linewidthratio;
+
   Vector2d startPoint(lastPos.x,lastPos.y);
 
   double extrf = hardware.GetExtrudeFactor(thickness);
-
 
   vector<PLine3> lines3;
   Printlines printlines(offsetZ);
@@ -650,7 +651,9 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       printlines.makeLines(polys, (s==1), //displace at first skin
 			   slicing, hardware, 
 			   startPoint, lines);
-      // have to get all these separately because z changes (F8IXME)
+      // have to get all these separately because z changes (FIXME)
+      printlines.clipMovements(&clippolys, lines, linewidth/2.);
+      printlines.optimize(hardware, slicing, lines);
       printlines.slowdownTo(slicing.MinLayertime/skins,lines);
       printlines.getLines(lines, lines3);
       lines.clear();
@@ -710,8 +713,6 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   if ((guint)LayerNo < slicing.FirstLayersNum)
     speedfactor = slicing.FirstLayersSpeed;
 
-  double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
-  double linewidth = thickness/linewidthratio;
   printlines.clipMovements(&clippolys, lines, linewidth/2.);
   printlines.optimize(hardware, slicing, lines);
   printlines.setSpeedFactor(speedfactor, lines);
