@@ -18,6 +18,12 @@
     <property name="short_label">Load Settings</property>
     <property name="tooltip">Load application settings profile</property>
   </object>
+  <object class="GtkAction" id="OpenGCode">
+    <property name="label">Load _GCode</property>
+    <property name="short_label">Load GCode</property>
+    <property name="tooltip">Load a file of control codes</property>
+    <property name="stock_id">gtk-open</property>
+  </object>
   <object class="GtkAction" id="OpenStl">
     <property name="label">Load _STL</property>
     <property name="short_label">Load STL</property>
@@ -67,12 +73,6 @@
     <property name="value">8</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAction" id="OpenGCode">
-    <property name="label">Load _GCode</property>
-    <property name="short_label">Load GCode</property>
-    <property name="tooltip">Load a file of control codes</property>
-    <property name="stock_id">gtk-open</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
@@ -1390,20 +1390,7 @@ THE HEAD MOVING DOWN!
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkCheckButton" id="Slicing.NoBridges">
-                                <property name="label" translatable="yes">Disable Bridges</property>
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">False</property>
-                                <property name="tooltip_text" translatable="yes">Bridges are sometimes buggy</property>
-                                <property name="use_action_appearance">False</property>
-                                <property name="draw_indicator">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
+                              <placeholder/>
                             </child>
                           </object>
                           <packing>
@@ -4334,34 +4321,7 @@ THE HEAD MOVING DOWN!
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
-                                    <property name="x_options"></property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel" id="label54">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Infill Overlap:</property>
-                                  </object>
-                                  <packing>
-                                    <property name="top_attach">2</property>
-                                    <property name="bottom_attach">3</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSpinButton" id="Slicing.InfillOverlap">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="invisible_char">●</property>
-                                    <property name="invisible_char_set">True</property>
-                                    <property name="digits">2</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left_attach">1</property>
-                                    <property name="right_attach">2</property>
-                                    <property name="top_attach">2</property>
-                                    <property name="bottom_attach">3</property>
-                                    <property name="x_options">GTK_EXPAND</property>
+                                    <property name="x_options">GTK_FILL</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -4568,7 +4528,7 @@ THE HEAD MOVING DOWN!
                                   <packing>
                                     <property name="left_attach">3</property>
                                     <property name="right_attach">4</property>
-                                    <property name="x_options"></property>
+                                    <property name="x_options">GTK_FILL</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -4626,7 +4586,6 @@ THE HEAD MOVING DOWN!
                                   <object class="GtkLabel" id="label128">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="xalign">1</property>
                                     <property name="label" translatable="yes">Rotation:</property>
                                   </object>
                                   <packing>
@@ -4741,6 +4700,7 @@ THE HEAD MOVING DOWN!
                                     <property name="label" translatable="yes">Bridges Extrusion Factor:</property>
                                   </object>
                                   <packing>
+                                    <property name="left_attach">1</property>
                                     <property name="right_attach">3</property>
                                     <property name="top_attach">9</property>
                                     <property name="bottom_attach">10</property>
@@ -4762,7 +4722,29 @@ THE HEAD MOVING DOWN!
                                   </packing>
                                 </child>
                                 <child>
-                                  <placeholder/>
+                                  <object class="GtkLabel" id="label54">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">Infill Overlap:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">4</property>
+                                    <property name="right_attach">5</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSpinButton" id="Slicing.InfillOverlap">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                    <property name="digits">2</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">5</property>
+                                    <property name="right_attach">6</property>
+                                    <property name="x_options">GTK_FILL</property>
+                                  </packing>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -4826,6 +4808,23 @@ THE HEAD MOVING DOWN!
                                 </child>
                                 <child>
                                   <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="Slicing.NoBridges">
+                                    <property name="label" translatable="yes">Disable Bridges</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
+                                    <property name="draw_indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="top_attach">9</property>
+                                    <property name="bottom_attach">10</property>
+                                  </packing>
                                 </child>
                               </object>
                               <packing>
@@ -4872,21 +4871,17 @@ THE HEAD MOVING DOWN!
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <child>
-                              <object class="GtkHBox" id="hbox38">
+                              <object class="GtkTable" id="table16">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
+                                <property name="n_rows">5</property>
+                                <property name="n_columns">6</property>
                                 <child>
                                   <object class="GtkLabel" id="label131">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="xalign">1</property>
                                     <property name="label" translatable="yes">Offset Outer Shells by (mm):</property>
                                   </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
                                 </child>
                                 <child>
                                   <object class="GtkSpinButton" id="Slicing.ShellOffset">
@@ -4897,40 +4892,24 @@ THE HEAD MOVING DOWN!
                                     <property name="digits">2</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
                                   </packing>
                                 </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkCheckButton" id="Slicing.Varslicing">
-                                <property name="label" translatable="yes">Variable Slicing</property>
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">False</property>
-                                <property name="use_action_appearance">False</property>
-                                <property name="draw_indicator">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <object class="GtkHBox" id="hbox34">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
+                                <child>
+                                  <object class="GtkCheckButton" id="Slicing.Varslicing">
+                                    <property name="label" translatable="yes">Variable Slicing</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
+                                    <property name="draw_indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
+                                  </packing>
+                                </child>
                                 <child>
                                   <object class="GtkCheckButton" id="Slicing.Skirt">
                                     <property name="label" translatable="yes">Skirt</property>
@@ -4941,23 +4920,21 @@ THE HEAD MOVING DOWN!
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">0</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                   </packing>
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label10">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="xalign">1</property>
                                     <property name="label" translatable="yes">Height (mm):</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="padding">5</property>
-                                    <property name="position">1</property>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -4969,21 +4946,23 @@ THE HEAD MOVING DOWN!
                                     <property name="digits">1</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">2</property>
+                                    <property name="left_attach">3</property>
+                                    <property name="right_attach">4</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                   </packing>
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label145">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Skirt Distance (mm):</property>
+                                    <property name="label" translatable="yes">Distance (mm):</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">3</property>
+                                    <property name="left_attach">4</property>
+                                    <property name="right_attach">5</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -4991,25 +4970,16 @@ THE HEAD MOVING DOWN!
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
                                     <property name="digits">1</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">4</property>
+                                    <property name="left_attach">5</property>
+                                    <property name="right_attach">6</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
                                   </packing>
                                 </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">3</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkHBox" id="hbox43">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Slicing.UseArcs">
                                     <property name="label" translatable="yes">Generate Arcs GCode (G2,G3)</property>
@@ -5020,22 +4990,22 @@ THE HEAD MOVING DOWN!
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">0</property>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                   </packing>
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label126">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="xalign">1</property>
-                                    <property name="label" translatable="yes">Max. Line Angles:</property>
+                                    <property name="label" translatable="yes">Max. Angles:</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">1</property>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -5043,33 +5013,83 @@ THE HEAD MOVING DOWN!
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
                                   </object>
                                   <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">2</property>
+                                    <property name="left_attach">3</property>
+                                    <property name="right_attach">4</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                   </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkCheckButton" id="Slicing.LinelengthSort">
+                                    <property name="label" translatable="yes">Sort Printed Lines by Length</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="use_action_appearance">False</property>
+                                    <property name="draw_indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">4</property>
+                                    <property name="bottom_attach">5</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                               </object>
                               <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">4</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkCheckButton" id="Slicing.LinelengthSort">
-                                <property name="label" translatable="yes">Sort Printed Lines by Length</property>
-                                <property name="visible">True</property>
-                                <property name="can_focus">True</property>
-                                <property name="receives_default">False</property>
-                                <property name="use_action_appearance">False</property>
-                                <property name="draw_indicator">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">False</property>
-                                <property name="position">5</property>
+                                <property name="expand">True</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
                               </packing>
                             </child>
                           </object>
@@ -5111,20 +5131,20 @@ THE HEAD MOVING DOWN!
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <child>
-                                  <object class="GtkHBox" id="hbox32">
+                                  <object class="GtkTable" id="table17">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
+                                    <property name="n_rows">2</property>
+                                    <property name="n_columns">5</property>
                                     <child>
                                       <object class="GtkLabel" id="label130">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="xalign">1</property>
                                         <property name="label" translatable="yes">Minimum Time per Layer (s):</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">False</property>
-                                        <property name="position">0</property>
+                                        <property name="right_attach">2</property>
+                                        <property name="x_options"></property>
                                       </packing>
                                     </child>
                                     <child>
@@ -5135,23 +5155,11 @@ THE HEAD MOVING DOWN!
                                         <property name="invisible_char_set">True</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">False</property>
-                                        <property name="padding">5</property>
-                                        <property name="position">1</property>
+                                        <property name="left_attach">2</property>
+                                        <property name="right_attach">3</property>
+                                        <property name="x_options">GTK_FILL</property>
                                       </packing>
                                     </child>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkHBox" id="hbox46">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
                                     <child>
                                       <object class="GtkCheckButton" id="Slicing.FanControl">
                                         <property name="label" translatable="yes">Fan Control</property>
@@ -5162,9 +5170,9 @@ THE HEAD MOVING DOWN!
                                         <property name="draw_indicator">True</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">True</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">0</property>
+                                        <property name="top_attach">1</property>
+                                        <property name="bottom_attach">2</property>
+                                        <property name="x_options">GTK_EXPAND</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -5174,9 +5182,10 @@ THE HEAD MOVING DOWN!
                                         <property name="label" translatable="yes">Min. Speed:</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">True</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">1</property>
+                                        <property name="left_attach">1</property>
+                                        <property name="right_attach">2</property>
+                                        <property name="top_attach">1</property>
+                                        <property name="bottom_attach">2</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -5184,11 +5193,14 @@ THE HEAD MOVING DOWN!
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">●</property>
+                                        <property name="invisible_char_set">True</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">2</property>
+                                        <property name="left_attach">2</property>
+                                        <property name="right_attach">3</property>
+                                        <property name="top_attach">1</property>
+                                        <property name="bottom_attach">2</property>
+                                        <property name="x_options">GTK_FILL</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -5198,9 +5210,10 @@ THE HEAD MOVING DOWN!
                                         <property name="label" translatable="yes">Max. Speed:</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">True</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">3</property>
+                                        <property name="left_attach">3</property>
+                                        <property name="right_attach">4</property>
+                                        <property name="top_attach">1</property>
+                                        <property name="bottom_attach">2</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -5208,22 +5221,28 @@ THE HEAD MOVING DOWN!
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">●</property>
+                                        <property name="invisible_char_set">True</property>
                                       </object>
                                       <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">4</property>
+                                        <property name="left_attach">4</property>
+                                        <property name="right_attach">5</property>
+                                        <property name="top_attach">1</property>
+                                        <property name="bottom_attach">2</property>
+                                        <property name="x_options">GTK_FILL</property>
                                       </packing>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
                                     </child>
                                   </object>
                                   <packing>
                                     <property name="expand">True</property>
                                     <property name="fill">True</property>
-                                    <property name="position">1</property>
+                                    <property name="position">0</property>
                                   </packing>
-                                </child>
-                                <child>
-                                  <placeholder/>
                                 </child>
                               </object>
                             </child>
