@@ -398,7 +398,7 @@ void Printer::handle_rr_more (rr_dev dev)
 	  double done = 1.*donelines/tot_lines;
 	  double timeleft = time_used/done - time_used;
 	  m_view->get_view_progress()->set_label(timeleft_str(timeleft));
-	  m_view->get_view_progress()->update (donelines);
+	  m_view->get_view_progress()->update (donelines, false);
 	}
       }
       m_view->showCurrentPrinting(lastdonelines, donelines+n_buffered);
