@@ -219,62 +219,85 @@ vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
   return angles;
 }
 
-void Layer::CalcInfill (int normalfilltype, int fullfilltype,
-			int supportfilltype, double supportextrfactor,
-			int decorfilltype,
-			double InfillDistance, 	double FullInfillDistance,
-			double InfillRotation, 	double InfillRotationPrLayer,
-			double DecorInfillDistance, double DecorInfillRotation, 
-			bool ShellOnly, // only infill for fullfill (vertical shells)
-			bool DisplayDebuginFill)
+void Layer::CalcInfill (const Settings &settings)
 {
+  // inFill distances in real mm:
+  // for full polys/layers:
+  double fullInfillDistance=0;
+  double infillDistance=0; // normal fill
+  double altInfillDistance=0;
+  double infilldist=0;
+  bool shellOnly = settings.Slicing.ShellOnly;
+  fullInfillDistance = settings.GetInfillDistance(thickness, 100);
+  if (settings.Slicing.InfillPercent == 0) 
+    shellOnly = true;
+  else 
+    infillDistance = settings.GetInfillDistance(thickness,
+						settings.Slicing.InfillPercent);
+  if (settings.Slicing.AltInfillPercent != 0) 
+    altInfillDistance = settings.GetInfillDistance(thickness,
+						   settings.Slicing.AltInfillPercent);
+						       
+  if (settings.Slicing.AltInfillLayers!=0 
+      && LayerNo % settings.Slicing.AltInfillLayers == 0) 
+    infilldist = altInfillDistance;
+  else
+    infilldist = infillDistance;
+  if (LayerNo < (int)settings.Slicing.FirstLayersNum) {
+    infilldist = max(infilldist,
+		     (double)settings.Slicing.FirstLayersInfillDist);
+    fullInfillDistance = max(fullInfillDistance,
+			     (double)settings.Slicing.FirstLayersInfillDist);
+  }
   // relative extrusion for skins:
   double skinfillextrf = 1./skins/skins; 
-  normalInfill = new Infill(this,1.);
+  normalInfill = new Infill(this,settings.Slicing.NormalFillExtrusion);
   normalInfill->setName("normal");
-  fullInfill = new Infill(this,1.);
+  fullInfill = new Infill(this,settings.Slicing.FullFillExtrusion);
   fullInfill->setName("full");
   skinFullInfills.clear();
-  supportInfill = new Infill(this,supportextrfactor); // thinner walls for support
+  supportInfill = new Infill(this,settings.Slicing.SupportExtrusion); // thinner walls for support
   supportInfill->setName("support");
   decorInfill = new Infill(this,1.);
   decorInfill->setName("decor");
 
-  double rot = (InfillRotation + (double)LayerNo*InfillRotationPrLayer)/180.0*M_PI;
-  if (!ShellOnly)
-    normalInfill->addInfill(Z, fillPolygons, (InfillType)normalfilltype, 
-			    InfillDistance, FullInfillDistance, rot);
+  double rot = (settings.Slicing.InfillRotation 
+		+ (double)LayerNo*settings.Slicing.InfillRotationPrLayer)/180.0*M_PI;
+  if (!settings.Slicing.ShellOnly)
+    normalInfill->addInfill(Z, fillPolygons, (InfillType)settings.Slicing.NormalFilltype, 
+			    infilldist, fullInfillDistance, rot);
   
-  fullInfill->addInfill(Z, fullFillPolygons, (InfillType)fullfilltype,
-			FullInfillDistance, FullInfillDistance, rot);
+  fullInfill->addInfill(Z, fullFillPolygons, (InfillType)settings.Slicing.FullFilltype,
+			fullInfillDistance, fullInfillDistance, rot);
 
-  decorInfill->addInfill(Z, decorPolygons, (InfillType)decorfilltype,
-			 DecorInfillDistance, DecorInfillDistance,
-			 DecorInfillRotation/180.0*M_PI);
+  decorInfill->addInfill(Z, decorPolygons, (InfillType)settings.Slicing.DecorFilltype,
+			 settings.Slicing.DecorInfillDistance,
+			 settings.Slicing.DecorInfillDistance,
+			 settings.Slicing.DecorInfillRotation/180.0*M_PI);
   
   assert(bridge_angles.size() >= bridgePolygons.size());
   bridgeInfills.resize(bridgePolygons.size());
   for (uint b=0; b < bridgePolygons.size(); b++){  
-    bridgeInfills[b] = new Infill(this,1.);
+    bridgeInfills[b] = new Infill(this, settings.Slicing.BridgeExtrusion);
     bridgeInfills[b]->addInfill(Z, bridgePolygons[b], BridgeInfill, 
-				FullInfillDistance, FullInfillDistance, 
+				fullInfillDistance, fullInfillDistance,
 				bridge_angles[b]+M_PI/2);
   }
 
   if (skins>1) {
-    double skindistance = FullInfillDistance/skins;
+    double skindistance = fullInfillDistance/skins;
     for (uint s = 0; s<skins; s++){
-      double drot = rot + InfillRotationPrLayer/180.0*M_PI*s;
+      double drot = rot + settings.Slicing.InfillRotationPrLayer/180.0*M_PI*s;
       double sz = Z-thickness + (s+1)*thickness/skins;
       Infill *inf = new Infill(this, skinfillextrf);
       inf->setName("skin");
-      inf->addInfill(sz, skinFullFillPolygons, (InfillType)fullfilltype,
+      inf->addInfill(sz, skinFullFillPolygons, (InfillType)settings.Slicing.FullFilltype,
 		     skindistance, skindistance, drot);
       skinFullInfills.push_back(inf);
     }
   }
-  supportInfill->addInfill(Z, supportPolygons, (InfillType)supportfilltype, 
-			   1.*InfillDistance, 1.*InfillDistance, 0);
+  supportInfill->addInfill(Z, supportPolygons, (InfillType)settings.Slicing.SupportFilltype,
+			   infilldist, infilldist, 0);
 }
 
 

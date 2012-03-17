@@ -874,56 +874,13 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   
   double matwidth = settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
   layer->MakeShells(settings.Slicing.ShellCount,
-		   matwidth, 
-		   settings.Slicing.ShellOffset,
-		   makeskirt, settings.Slicing.SkirtDistance,
-		   settings.Slicing.InfillOverlap);
-
+		    matwidth, 
+		    settings.Slicing.ShellOffset,
+		    makeskirt, settings.Slicing.SkirtDistance,
+		    settings.Slicing.InfillOverlap);
+  
   if (calcinfill)
-    {
-      // inFill distances in real mm
-      double infilldist=0;
-      double fullInfillDistance = matwidth;
-      double infillDistance = 0;
-      double altInfillDistance = 0;
-      bool shellOnly = settings.Slicing.ShellOnly;
-      fullInfillDistance = settings.GetInfillDistance(layer->thickness, 100);
-      if (settings.Slicing.InfillPercent == 0) 
-	shellOnly = true;
-      else 
-	infillDistance = 
-	  settings.GetInfillDistance(layer->thickness,
-				     settings.Slicing.InfillPercent);
-      if (settings.Slicing.AltInfillPercent != 0) 
-	altInfillDistance = 
-	  settings.GetInfillDistance(layer->thickness,
-				     settings.Slicing.AltInfillPercent);
-      if (settings.Slicing.AltInfillLayers!=0 
-	  && layer->LayerNo % settings.Slicing.AltInfillLayers == 0) 
-	infilldist = altInfillDistance;
-      else
-	infilldist = infillDistance;
-      if (layer->LayerNo < (int)settings.Slicing.FirstLayersNum) {
-	infilldist = max(infilldist,
-			 (double)settings.Slicing.FirstLayersInfillDist);
-	fullInfillDistance = max(fullInfillDistance,
-				 (double)settings.Slicing.FirstLayersInfillDist);
-      }
-      layer->CalcInfill(settings.Slicing.NormalFilltype,
-		       settings.Slicing.FullFilltype,
-		       settings.Slicing.SupportFilltype,
-		       settings.Slicing.SupportExtrusion,
-		       settings.Slicing.DecorFilltype,
-		       infilldist, fullInfillDistance,
-		       settings.Slicing.InfillRotation,
-		       settings.Slicing.InfillRotationPrLayer, 
-		       settings.Slicing.DecorInfillDistance,
-		       settings.Slicing.DecorInfillRotation, 
-		       shellOnly,
-		       settings.Display.DisplayDebuginFill);
-    }
-  // if (for_gcode) m_previewGCodeLayer = layer;
-  // else m_previewLayer = layer;
+    layer->CalcInfill(settings);
   return layer;
 }
 

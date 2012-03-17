@@ -556,12 +556,6 @@ void Model::CalcInfill()
   //uint LayerCount = layers.size();
     // (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
 
-  // for full polys/layers:
-  double fullInfillDistance=0;
-  // normal fill:
-  double infillDistance=0;
-  double altInfillDistance=0;
-  double infilldist=0;
 
   m_progress->start (_("Infill"), layers.size());
   int progress_steps=(int)(layers.size()/100);
@@ -586,43 +580,7 @@ void Model::CalcInfill()
 	omp_unset_lock(&progress_lock);
 #endif
       }
-      // inFill distances in real mm
-      bool shellOnly = settings.Slicing.ShellOnly;
-      fullInfillDistance = settings.GetInfillDistance(layers[i]->thickness, 100);
-      if (settings.Slicing.InfillPercent == 0) 
-	shellOnly = true;
-      else 
-	infillDistance = settings.GetInfillDistance(layers[i]->thickness,
-						    settings.Slicing.InfillPercent);
-      if (settings.Slicing.AltInfillPercent != 0) 
-	altInfillDistance = settings.GetInfillDistance(layers[i]->thickness,
-						       settings.Slicing.AltInfillPercent);
-						       
-      if (settings.Slicing.AltInfillLayers!=0 
-	  && layers[i]->LayerNo % settings.Slicing.AltInfillLayers == 0) 
-	infilldist = altInfillDistance;
-      else
-	infilldist = infillDistance;
-      if (layers[i]->LayerNo < (int)settings.Slicing.FirstLayersNum) {
-      	infilldist = max(infilldist,
-			 (double)settings.Slicing.FirstLayersInfillDist);
-      	fullInfillDistance = max(fullInfillDistance,
-				 (double)settings.Slicing.FirstLayersInfillDist);
-      }
-
-      layers[i]->CalcInfill(settings.Slicing.NormalFilltype,
-			    settings.Slicing.FullFilltype,
-			    settings.Slicing.SupportFilltype,
-			    settings.Slicing.SupportExtrusion,
-			    settings.Slicing.DecorFilltype,
-			    infilldist, fullInfillDistance,
-			    settings.Slicing.InfillRotation,
-			    settings.Slicing.InfillRotationPrLayer, 
-			    settings.Slicing.DecorInfillDistance,
-			    settings.Slicing.DecorInfillRotation, 
-			    shellOnly,
-			    settings.Display.DisplayDebuginFill);
-
+      layers[i]->CalcInfill(settings);
     }
 #ifdef _OPENMP
   omp_destroy_lock(&progress_lock);

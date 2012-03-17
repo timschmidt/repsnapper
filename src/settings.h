@@ -104,6 +104,7 @@ class Settings {
     float ArcsMaxAngle;
 
     bool NoBridges;
+    float BridgeExtrusion;
 
     bool  EnableAntiooze;
     float AntioozeDistance;
@@ -126,7 +127,9 @@ class Settings {
     int Skins;
     bool Varslicing;
     int NormalFilltype;
+    float NormalFillExtrusion;
     int FullFilltype;
+    float FullFillExtrusion;
     int SupportFilltype;
     float SupportExtrusion;
     bool MakeDecor;

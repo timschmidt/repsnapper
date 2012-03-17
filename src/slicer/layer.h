@@ -69,14 +69,7 @@ public:
   void mergeSupportPolygons();
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
-
-  void CalcInfill (int normalfilltype, int fullfilltype, 
-		   int supportfilltype, double supportextrfactor,
-		   int decorfilltype,
-		   double InfillDistance,  double FullInfillDistance,
-		   double InfillRotation,  double InfillRotationPrLayer,
-		   double DecorInfillDistance, double DecorInfillRotation, 
-		   bool ShellOnly,  bool DisplayDebuginFill);
+  void CalcInfill (const Settings &settings);
 
   vector<double> getBridgeRotations(const vector<Poly> poly) const;
   void calcBridgeAngles(const Layer *layerbelow);
