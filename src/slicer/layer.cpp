@@ -633,7 +633,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   // polys to keep line movements inside
   vector<Poly> clippolys = GetOuterShell(); 
 
-  // 1. Skins, because they are the lowest lines, below layer Z
+  // 1. Skins, all but last, because they are the lowest lines, below layer Z
   if (skins>1){
     for(uint s=1;s <= skins;s++) { // z offset from bottom to top
       double skin_z = Z - thickness + (s)*thickness/skins;
@@ -651,11 +651,13 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       printlines.makeLines(polys, (s==1), //displace at first skin
 			   slicing, hardware, 
 			   startPoint, lines);
-      // have to get all these separately because z changes (FIXME)
-      printlines.clipMovements(&clippolys, lines, linewidth/2.);
-      printlines.optimize(hardware, slicing, slicing.MinLayertime/skins, lines);
-      printlines.getLines(lines, lines3);
-      lines.clear();
+      if (s < skins) { // not on the last layer, this handle with all other lines
+	// have to get all these separately because z changes 
+	printlines.clipMovements(&clippolys, lines, linewidth/2.);
+	printlines.optimize(hardware, slicing, slicing.MinLayertime/skins, lines);
+	printlines.getLines(lines, lines3);
+	lines.clear();
+      }
       polys.clear();
     }
   }
