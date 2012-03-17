@@ -519,6 +519,22 @@ void Model::Mirror(Shape *shape, TreeObject *object)
   ModelChanged();
 }
 
+void Model::PlaceOnPlatform(Shape *shape, TreeObject *object)
+{
+  if (shape)
+    shape->PlaceOnPlatform();
+  else if(object) {
+    Transform3D * transf = &object->transform3D;
+    transf->move(Vector3f(0, 0, -transf->transform.getTranslation().z));
+    for (uint s = 0;s<object->shapes.size(); s++) {
+      object->shapes[s].PlaceOnPlatform();
+    }
+  }
+  else return;
+  CalcBoundingBoxAndCenter();
+  ModelChanged();
+}
+
 void Model::DeleteObjTree(Gtk::TreeModel::iterator &iter)
 {
   objtree.DeleteSelected (iter);
@@ -581,7 +597,6 @@ Vector3d Model::GetViewCenter()
 // called from View::Draw
 int Model::draw (Gtk::TreeModel::iterator &iter)
 {
-  
   Shape *sel_shape;
   TreeObject *sel_object;
   gint index = 1; // pick/select index. matches computation in update_model()

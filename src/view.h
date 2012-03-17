@@ -155,6 +155,7 @@ class View : public Gtk::Window
   void twist_selection (double angle);
   void invertnormals_selection ();
   void mirror_selection ();
+  void placeonplatform_selection ();
   void stl_added (Gtk::TreePath &path);
   void model_changed ();
 

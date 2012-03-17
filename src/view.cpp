@@ -668,6 +668,15 @@ void View::invertnormals_selection ()
   queue_draw();
 }
 
+void View::placeonplatform_selection ()
+{
+  Shape *shape;
+  TreeObject *object;
+  get_selected_stl (object, shape);
+  m_model->PlaceOnPlatform(shape, object);
+  queue_draw();
+}
+
 void View::mirror_selection ()
 {
   Shape *shape;
@@ -850,6 +859,7 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/6)));
   connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/6)));
   connect_button ("m_normals",       sigc::mem_fun(*this, &View::invertnormals_selection));
+  connect_button ("m_platform",       sigc::mem_fun(*this, &View::placeonplatform_selection));
   connect_button ("m_mirror",        sigc::mem_fun(*this, &View::mirror_selection));
   connect_button ("twist_neg",       sigc::bind(sigc::mem_fun(*this, &View::twist_selection), -M_PI/12));
   connect_button ("twist_pos",       sigc::bind(sigc::mem_fun(*this, &View::twist_selection), M_PI/12));

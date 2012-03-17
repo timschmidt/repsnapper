@@ -80,6 +80,7 @@ public:
 	void ScaleObjectZ(Shape *shape, TreeObject *object, double scale);
 	void RotateObject(Shape *shape, TreeObject *object, Vector4d rotate);
 	void TwistObject(Shape *shape, TreeObject *object, double angle);
+	void PlaceOnPlatform(Shape *shape, TreeObject *object);
 	bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
 	void InvertNormals(Shape *shape, TreeObject *object);
 	void Mirror(Shape *shape, TreeObject *object);
