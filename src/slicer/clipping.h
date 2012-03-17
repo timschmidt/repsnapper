@@ -1,6 +1,5 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2010  Kulitorum
     Copyright (C) 2012  martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
