@@ -88,6 +88,8 @@ void ViewProgress::update (double value)
     int perc = (int(m_bar->get_fraction()*100));
     cerr << m_label->get_label() << " " << o.str() << " -- " << perc << "%              \r";
   }
+  while( gtk_events_pending () )
+    gtk_main_iteration ();
   //g_main_context_iteration(NULL,false);
   Gtk::Main::iteration(false);
   //GDK_THREADS_LEAVE ();
