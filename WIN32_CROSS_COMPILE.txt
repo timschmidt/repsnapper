@@ -2,7 +2,8 @@ Instructions for building for win32 using cross-compilation
 
 Tested on Debian Sarge
 
-1) Install jhbuild, unzip, mingw32-binutils, mingw32-runtime and nsis packages via APT
+1) Install jhbuild, unzip, libglib2.0-dev (for glib-genmarshal),
+mingw32-binutils, mingw32-runtime and nsis packages via APT
 jhbuild needs to be at least version 2.30.2 for .tar.xz file support.
 
 2) Mingw32 compiler
