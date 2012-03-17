@@ -120,7 +120,8 @@ class Printlines
     
   void optimize(const Settings::HardwareSettings &hardware,
 		const Settings::SlicingSettings &slicing,
-		vector<PLine> &lines) const;
+		double slowdowntime,
+		vector<PLine> &lines);
 
   uint makeArcs(const Settings::SlicingSettings &slicing,
 		 vector<PLine> &lines) const;
@@ -130,7 +131,7 @@ class Printlines
 			      vector<PLine> &lines) const;
 
   // slow down to total time needed (cooling)
-  double slowdownTo(double totalseconds, vector<PLine> &lines) const; // returns speedfactor
+  double slowdownTo(double totalseconds, vector<PLine> &lines) ; // returns slowdownfactor
   void setSpeedFactor(double speedfactor, vector<PLine> &lines) const;
 
   // keep movements inside polys when possible (against stringing)
@@ -151,7 +152,9 @@ class Printlines
   // every added poly will set this
   void setZ(double z) {this->z = z + Zoffset;};
   double getZ() const {return z;};
-  
+
+  double getSlowdownFactor() const {return slowdownfactor;};
+
   /* string GCode(Vector3d &lastpos, double &E, double feedrate,  */
   /* 	       double minspeed, double maxspeed, double movespeed,  */
   /* 	       bool relativeE) const; */
@@ -174,6 +177,8 @@ class Printlines
 
   Vector2d arcCenter(const PLine l1, const PLine l2, 
 		     double maxerr) const;
+
+  double slowdownfactor; // result of slowdown/setspeedfactor. not used here.
   
   /* string GCode(PLine l, Vector3d &lastpos, double &E, double feedrate,  */
   /* 	       double minspeed, double maxspeed, double movespeed,  */

@@ -354,7 +354,8 @@ void Printlines::makeLines(const vector<Poly> polys,
 
 void Printlines::optimize(const Settings::HardwareSettings &hardware,
 			  const Settings::SlicingSettings &slicing,
-			  vector<PLine> &lines) const
+			  double slowdowntime,
+			  vector<PLine> &lines)
 {
   //cout << "optimize " ; printinfo();
   //optimizeLinedistances(linewidth);
@@ -363,8 +364,8 @@ void Printlines::optimize(const Settings::HardwareSettings &hardware,
   // optimizeCorners(linewidth,linewidthratio,optratio);
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
-
   makeArcs(slicing, lines);
+  slowdownTo(slowdowntime, lines);
   makeAntioozeRetraction(slicing, lines);
 }
 
@@ -481,18 +482,14 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
   double AOmindistance = slicing.AntioozeDistance,
     AOamount = slicing.AntioozeAmount,
     AOspeed =  slicing.AntioozeSpeed,
-    AOrepushratio = slicing.AntioozeRepushRatio;
-  // 1. retract: 
-  // either halt and retract or retract on the way before the move?
-  // 2. repush:
-  // simple idea: re-push partially on the end of move 
-  // idea 2: move most of the way without repush, then 
-  // start repushing so that repush speed matches last part of movement.
+    AOonhaltratio = slicing.AntioozeHaltRatio;
+
   if (lines.size() < 2 || AOmindistance <=0 || AOamount == 0) return 0;
   uint movestart = 0, moveend = 0;
   uint count = lines.size();
   uint i = 0;
   while (i < count) {
+    // find start and end of movement
     while (i < count && lines[i].feedrate != 0) {
       i++; movestart = i;
     }
@@ -507,34 +504,52 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
       totaltime += len/lines[j].speed;
     }
     if (totaldistance > AOmindistance) {
-      double repushamount = AOamount*AOrepushratio;
-      // double repushtime = repushamount/AOspeed;
-      // double repushdistance = repushtime * lines[moveend].speed;
-      // double enddistance = repushdistance;
-      // uint firstlinetosplit = moveend+1;
-      // while (enddistance > 0 && firstlinetosplit > movestart) {
-      // 	firstlinetosplit--;
-      // 	enddistance -= lines[firstlinetosplit].length();
-      // }
-      // if (enddistance > 0) {  // move distance too short, slow down
-      // 	double speedratio = AOspeed / totaldistance*totaltime;
+      double onhalt_amount = AOamount * AOonhaltratio;
+      double onmove_amount = AOamount - onhalt_amount;
+      double onmove_linelength = onmove_amount / AOspeed;
+      
+      // don't start retract before previous repush is over
+      uint lastrepushingline = movestart-1;
+      while ( lastrepushingline > 0 
+	      && !lines[lastrepushingline].absolute_feed != 0 )
+	lastrepushingline--;
 
-      // }
-      //cerr << "retract " << totaldistance << ": " <<movestart << "--" << moveend << " num " << moveend-movestart+1 << " split " << firstlinetosplit << " time " << repushtime << " dist " << repushdistance << endl;
-      PLine retractl(lines[movestart].from, lines[movestart].from, AOspeed, 0); 
-      if (movestart > 0) { // add partial extrusion to line before move
-	lines[movestart-1].addAbsoluteExtrusionAmount(-AOamount+repushamount);
-	retractl.addAbsoluteExtrusionAmount(-repushamount);
+      // distribute onmove_amount to lines before and after
+      // TODO divide lines before and after if lon enough
+      uint movei = movestart;
+      double tract_amount_left = onmove_amount;
+      while (movei > lastrepushingline+1 && tract_amount_left > 0) {
+	movei--;
+	double amount = min(onmove_amount, AOspeed * lines[movei].time());
+	lines[movei].addAbsoluteExtrusionAmount(-amount);
+	tract_amount_left -= amount;
       }
-      else 
-	retractl.addAbsoluteExtrusionAmount(-AOamount);
-      PLine repushl (lines[moveend].to,     lines[moveend].to,     AOspeed, 0);
-      repushl.addAbsoluteExtrusionAmount(repushamount);
-      if (moveend+1 < lines.size()) { // add rest to next line
-	lines[moveend+1].addAbsoluteExtrusionAmount(AOamount-repushamount);
+      // if (tract_amount_left > 0) 
+      // 	cerr <<  " + " <<tract_amount_left << endl;;
+      movei = moveend;
+      double push_amount_left = onmove_amount;
+      while (movei < lines.size()-1 && push_amount_left > 0) {
+	movei++;
+	double amount = min(onmove_amount, AOspeed * lines[movei].time());
+	lines[movei].addAbsoluteExtrusionAmount(amount);
+	push_amount_left -= amount;
       }
-      lines.insert(lines.begin()+moveend+1, repushl); // (inserts before)
-      lines.insert(lines.begin()+movestart, retractl);
+      // if (push_amount_left > 0) 
+      // 	cerr << " - " <<push_amount_left << endl;;
+
+      // add two halting PLines with retract only
+      double halt_repush = onhalt_amount + push_amount_left;
+      if (halt_repush != 0) {
+	PLine repushl (lines[moveend].to,     lines[moveend].to,     AOspeed, 0);
+	repushl.addAbsoluteExtrusionAmount(halt_repush);
+	lines.insert(lines.begin()+moveend+1, repushl); // (inserts before)
+      }
+      double halt_retr = - onhalt_amount - tract_amount_left;
+      if (halt_retr != 0) {
+	PLine retractl(lines[movestart].from, lines[movestart].from, AOspeed, 0); 
+	retractl.addAbsoluteExtrusionAmount(halt_retr);
+	lines.insert(lines.begin()+movestart, retractl);
+      }
       i+=2;
     }
     count = lines.size();
@@ -542,7 +557,7 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
   return 0;
 }
 
-// split at length 0 < t < 1
+// split line at length 0 < t < 1
 uint Printlines::divideline(uint lineindex, const double t, vector<PLine> &lines) const
 {
   PLine *l = &lines[lineindex];
@@ -669,14 +684,15 @@ void Printlines::setSpeedFactor(double speedfactor, vector<PLine> &lines) const
       lines[i].speed *= speedfactor;
   }
 }
-double Printlines::slowdownTo(double totalseconds, vector<PLine> &lines) const
+double Printlines::slowdownTo(double totalseconds, vector<PLine> &lines) 
 {
   double totalnow = totalSecondsExtruding(lines);
   if (totalseconds == 0 || totalnow == 0) return 1;
   double speedfactor = totalnow / totalseconds;
-  if (speedfactor >= 1.) return speedfactor;
-  setSpeedFactor(speedfactor,lines);
-  return speedfactor;
+  if (speedfactor < 1.)
+    setSpeedFactor(speedfactor,lines);
+  slowdownfactor *= speedfactor;
+  return slowdownfactor;
 }
 
 // merge too near parallel lines

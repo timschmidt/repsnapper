@@ -653,8 +653,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 			   startPoint, lines);
       // have to get all these separately because z changes (FIXME)
       printlines.clipMovements(&clippolys, lines, linewidth/2.);
-      printlines.optimize(hardware, slicing, lines);
-      printlines.slowdownTo(slicing.MinLayertime/skins,lines);
+      printlines.optimize(hardware, slicing, slicing.MinLayertime/skins, lines);
       printlines.getLines(lines, lines3);
       lines.clear();
       polys.clear();
@@ -714,9 +713,9 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
     speedfactor = slicing.FirstLayersSpeed;
 
   printlines.clipMovements(&clippolys, lines, linewidth/2.);
-  printlines.optimize(hardware, slicing, lines);
+  printlines.optimize(hardware, slicing, slicing.MinLayertime, lines);
   printlines.setSpeedFactor(speedfactor, lines);
-  double slowdownfactor = printlines.slowdownTo(slicing.MinLayertime,lines);
+  double slowdownfactor = printlines.getSlowdownFactor();
 
   if (slicing.FanControl) {
     int fanspeed = slicing.MinFanSpeed;

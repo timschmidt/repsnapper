@@ -5415,7 +5415,7 @@ THE HEAD MOVING DOWN!
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSpinButton" id="Slicing.AntioozeRepushRatio">
+                                  <object class="GtkSpinButton" id="Slicing.AntioozeHaltRatio">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
