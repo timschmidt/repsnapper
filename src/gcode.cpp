@@ -320,6 +320,9 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		  break;
 		case ARC_CW:
 		case ARC_CCW:
+		  if (i==start) {
+		    break; // don't draw arcs at beginning (wrong startpoint)
+		  }
 		case COORDINATEDMOTION:
 		  {
 		    double speed = commands[i].f;
