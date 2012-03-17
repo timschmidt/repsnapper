@@ -356,6 +356,7 @@ int Shape::parseASCIISTL(istream *text) {
         *text >> normal;
         if(normal != "normal") {
 	  cerr << _("Error: normal keyword not found in STL text!") << endl;
+	  return -1;
 	}
 	
 	// forget about normals, we calculate them
