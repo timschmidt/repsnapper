@@ -13,6 +13,23 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
+  <object class="GtkAction" id="LoadSettings">
+    <property name="label">Load Settings</property>
+    <property name="short_label">Load Settings</property>
+    <property name="tooltip">Load application settings profile</property>
+  </object>
+  <object class="GtkAction" id="OpenStl">
+    <property name="label">Load _STL</property>
+    <property name="short_label">Load STL</property>
+    <property name="tooltip">Load an STL file</property>
+    <property name="stock_id">gtk-open</property>
+  </object>
+  <object class="GtkAction" id="PreferencesDialog">
+    <property name="label">_Preferences</property>
+    <property name="short_label">Preferences</property>
+    <property name="tooltip">Open the Preferences Dialog</property>
+    <property name="stock_id">gtk-preferences</property>
+  </object>
   <object class="GtkAction" id="Quit">
     <property name="label">_Quit</property>
     <property name="short_label">Quit</property>
@@ -51,28 +68,11 @@
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkAction" id="LoadSettings">
-    <property name="label">Load Settings</property>
-    <property name="short_label">Load Settings</property>
-    <property name="tooltip">Load application settings profile</property>
-  </object>
   <object class="GtkAction" id="OpenGCode">
     <property name="label">Load _GCode</property>
     <property name="short_label">Load GCode</property>
     <property name="tooltip">Load a file of control codes</property>
     <property name="stock_id">gtk-open</property>
-  </object>
-  <object class="GtkAction" id="OpenStl">
-    <property name="label">Load _STL</property>
-    <property name="short_label">Load STL</property>
-    <property name="tooltip">Load an STL file</property>
-    <property name="stock_id">gtk-open</property>
-  </object>
-  <object class="GtkAction" id="PreferencesDialog">
-    <property name="label">_Preferences</property>
-    <property name="short_label">Preferences</property>
-    <property name="tooltip">Open the Preferences Dialog</property>
-    <property name="stock_id">gtk-preferences</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
@@ -4087,10 +4087,31 @@ THE HEAD MOVING DOWN!
                                   </packing>
                                 </child>
                                 <child>
-                                  <placeholder/>
+                                  <object class="GtkLabel" id="label156">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">E max.</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">5</property>
+                                    <property name="right_attach">6</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
+                                  </packing>
                                 </child>
                                 <child>
-                                  <placeholder/>
+                                  <object class="GtkSpinButton" id="Hardware.EMaxSpeed">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Max. speed your extruder can stand</property>
+                                    <property name="invisible_char">●</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">6</property>
+                                    <property name="right_attach">7</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
+                                  </packing>
                                 </child>
                               </object>
                             </child>

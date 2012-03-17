@@ -114,6 +114,7 @@ static struct {
   FLOAT_MEMBER (Hardware.MoveSpeed,       "MoveSpeed",  4000, false),
   FLOAT_MEMBER (Hardware.MinPrintSpeedZ,  "MinPrintSpeedZ",  50, false),
   FLOAT_MEMBER (Hardware.MaxPrintSpeedZ,  "MaxPrintSpeedZ",  150, false),
+  FLOAT_MEMBER (Hardware.EMaxSpeed,       "EMaxSpeed",  100, false),
 
   // FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5, false),
   FLOAT_MEMBER (Hardware.ExtrusionFactor, "ExtrusionFactor", 1.0, true),
@@ -332,6 +333,7 @@ static struct {
   { "Hardware.MoveSpeed", 1.0, 20000.0, 10.0, 100.0 },
   { "Hardware.MinPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
   { "Hardware.MaxPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
+  { "Hardware.EMaxSpeed", 1.0, 20000.0, 10.0, 100.0 },
 
   { "Hardware.ReceivingBufferSize", 1.0, 100.0, 1.0, 5.0 },
   { "Hardware.KeepLines", 100.0, 100000.0, 1.0, 500.0 },

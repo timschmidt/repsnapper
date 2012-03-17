@@ -735,11 +735,13 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   double minspeed = hardware.MinPrintSpeedXY,
     maxspeed = hardware.MaxPrintSpeedXY,
-    movespeed = hardware.MoveSpeed;
+    movespeed = hardware.MoveSpeed,
+    emax = hardware.EMaxSpeed;
+  
   // push all lines to gcode
   // start3 = state.LastPosition();
   for (uint i = 0; i < lines3.size(); i++) {
-    lines3[i].getCommands(lastPos, commands, extrf, minspeed, maxspeed, movespeed);
+    lines3[i].getCommands(lastPos, commands, extrf, minspeed, maxspeed, movespeed, emax);
     //state.AppendCommands(cc, slicing.RelativeEcode);
   }
 }

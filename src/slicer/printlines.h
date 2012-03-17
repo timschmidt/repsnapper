@@ -45,12 +45,14 @@ class PLine3
   double arcangle;
 
   int getCommands(Vector3d &lastpos, vector<Command> &commands, double extrusion,
-		  double minspeed, double maxspeed, double movespeed) const;
+		  double minspeed, double maxspeed, double movespeed,
+		  double maxEspeed) const;
   // not used
   string GCode(Vector3d &lastpos, double &lastE, double feedrate, 
 	       double minspeed, double maxspeed, double movespeed, 
 	       bool relativeE) const;
   double length() const;
+  double time() const;
   string info() const;
 };
 

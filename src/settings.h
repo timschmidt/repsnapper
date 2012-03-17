@@ -61,6 +61,7 @@ class Settings {
     float MoveSpeed;
     float MinPrintSpeedZ;
     float MaxPrintSpeedZ;
+    float EMaxSpeed;
 
     bool  CalibrateInput; // hardware treats 'mm' as cold input mm not of hot output.
     float DistanceToReachFullSpeed;

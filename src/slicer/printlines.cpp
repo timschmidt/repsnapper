@@ -44,17 +44,26 @@ PLine3::PLine3(const PLine pline, double z)
 
 int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 			double extrusion,
-			double minspeed, double maxspeed, double movespeed) const
+			double minspeed, double maxspeed, double movespeed,
+			double maxEspeed) const
 {
   int count=0;
   if (lastpos != from) {  // move first
     commands.push_back( Command(COORDINATEDMOTION, from, 0, movespeed) );
     count++;
   }  
-  double extrudedMaterial = length() * extrusionfactor * extrusion;
-  extrudedMaterial += absolute_extrusion;
-  //cerr << "extr " << extrudedMaterial<< endl;
   double comm_speed = max(minspeed, this->speed); // in case maxspeed is too low
+  double len = length();
+  double espeed = 0;
+  double extrudedMaterial = len * extrusionfactor * extrusion;
+  if (len > 0)
+    espeed = extrudedMaterial*comm_speed/len;
+  if (extrudedMaterial == 0) // no matter what additional absolute_extrusion
+    comm_speed = movespeed;
+  else 
+    if (espeed > maxEspeed)
+      comm_speed *= maxEspeed/espeed;
+  extrudedMaterial += absolute_extrusion; // allowed to push/pull at arbitrary speed    
   Command command;
   if (arc) 
     {
@@ -76,6 +85,11 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
   count++;
   lastpos = to;
   return count;
+}
+
+double PLine3::time() const
+{
+  return length()/speed;
 }
 
 // // not used
