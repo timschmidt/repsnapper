@@ -232,7 +232,7 @@ bool Render::on_button_press_event(GdkEventButton* event)
 bool Render::on_button_release_event(GdkEventButton* event)
 {
   if (event->button == 1) {
-    if (event->state & GDK_SHIFT_MASK) { // move object
+    if (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK)  { // move object
       m_view->get_model()->CalcBoundingBoxAndCenter();
       m_view->get_model()->ModelChanged();
       queue_draw();
@@ -269,7 +269,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   get_model()->setMeasuresPoint(Vector2d((10.+event->x)/(get_width()-20),
 					 (10.+get_height()-event->y)/(get_height()-20)));
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
-    if (event->state & GDK_SHIFT_MASK) { // move object
+    if (event->state & GDK_SHIFT_MASK) { // move object XY
       if (false);//delta3f.x<1 && delta3f.y<1) redraw=false;
       else {
 	Shape *shape;
@@ -288,6 +288,23 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	m_downPoint = dragp;
 	//m_view->get_model()->CalcBoundingBoxAndCenter();
       }
+    }
+    else if (event->state & GDK_CONTROL_MASK) { // move object Z wise
+      Vector3d delta3fz(0, 0, delta.y*factor);
+	Shape *shape;
+	TreeObject *object;
+	if (!m_view->get_selected_stl(object, shape))
+	  return true;
+	if (!object && !shape)
+	  return true;
+	Transform3D *transf;
+	if (!shape)
+	  transf = &object->transform3D;
+	else
+	  transf = &shape->transform3D;
+	double scale = transf->transform.m[3][3];
+	transf->move(delta3fz*scale);
+	m_downPoint = dragp;
     }
     else { // rotate
       m_arcBall->dragAccumulate(event->x, event->y, &m_transform);
