@@ -250,7 +250,7 @@ void Layer::CalcInfill (const Settings &settings)
 			     (double)settings.Slicing.FirstLayersInfillDist);
   }
   // relative extrusion for skins:
-  double skinfillextrf = 1./skins/skins; 
+  double skinfillextrf = settings.Slicing.FullFillExtrusion/skins/skins; 
   normalInfill = new Infill(this,settings.Slicing.NormalFillExtrusion);
   normalInfill->setName("normal");
   fullInfill = new Infill(this,settings.Slicing.FullFillExtrusion);
