@@ -242,7 +242,7 @@ string PLine::info() const
 
 
 Printlines::Printlines(double z_offset) :
-  Zoffset(z_offset), name("")
+  Zoffset(z_offset), name(""), slowdownfactor(1.)
 {}
 
 
@@ -271,17 +271,17 @@ void Printlines::addPoly(vector<PLine> &lines, const Poly poly, int startindex,
 }
 
 void Printlines::makeLines(const vector<Poly> polys,
-			   bool displace_startpoint, 
+			   bool displace_startpoint, 			   
 			   const Settings::SlicingSettings &slicing,
 			   const Settings::HardwareSettings &hardware,
 			   Vector2d &startPoint,
-			   vector<PLine> &lines)
+			   vector<PLine> &lines,
+			   double maxspeed)
 {
   // double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
   //double linewidth = layerthickness/linewidthratio;
-  //double minspeed = hardware.MinPrintSpeedXY,
-  double maxspeed = hardware.MaxPrintSpeedXY,
-    movespeed = hardware.MoveSpeed;
+  if ( maxspeed == 0 ) maxspeed = hardware.MaxPrintSpeedXY;
+  double movespeed = hardware.MoveSpeed;
   bool linelengthsort = slicing.LinelengthSort;
 
   uint count = polys.size();
@@ -506,38 +506,37 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
     if (totaldistance > AOmindistance) {
       double onhalt_amount = AOamount * AOonhaltratio;
       double onmove_amount = AOamount - onhalt_amount;
-      double onmove_linelength = onmove_amount / AOspeed;
+      //double onmove_linelength = onmove_amount / AOspeed;
       
-      // don't start retract before previous repush is over
-      uint lastrepushingline = movestart-1;
-      while ( lastrepushingline > 0 
-	      && !lines[lastrepushingline].absolute_feed != 0 )
-	lastrepushingline--;
-
       // distribute onmove_amount to lines before and after
-      // TODO divide lines before and after if lon enough
-      uint movei = movestart;
+      // TODO divide lines before and after if long enough?
+      int movei = movestart-1;
       double tract_amount_left = onmove_amount;
-      while (movei > lastrepushingline+1 && tract_amount_left > 0) {
-	movei--;
+      while (movei >= 0 
+	     && lines[movei].absolute_feed == 0 // stop at last repush
+	     && lines[movei].feedrate != 0      // stop at last move-only
+	     && tract_amount_left > 0) {
 	double amount = min(onmove_amount, AOspeed * lines[movei].time());
 	lines[movei].addAbsoluteExtrusionAmount(-amount);
 	tract_amount_left -= amount;
+	movei--;
       }
       // if (tract_amount_left > 0) 
-      // 	cerr <<  " + " <<tract_amount_left << endl;;
-      movei = moveend;
+      //cerr <<  " + " <<tract_amount_left << " -- " << movestart-movei << endl;;
+      movei = moveend+1;
       double push_amount_left = onmove_amount;
-      while (movei < lines.size()-1 && push_amount_left > 0) {
-	movei++;
+      while (movei < (int)lines.size()
+	     && lines[movei].feedrate != 0 // stop at next move-only line
+	     && push_amount_left > 0) {
 	double amount = min(onmove_amount, AOspeed * lines[movei].time());
 	lines[movei].addAbsoluteExtrusionAmount(amount);
 	push_amount_left -= amount;
+	movei++;
       }
       // if (push_amount_left > 0) 
       // 	cerr << " - " <<push_amount_left << endl;;
 
-      // add two halting PLines with retract only
+      // add two halting PLines with retract/repush only
       double halt_repush = onhalt_amount + push_amount_left;
       if (halt_repush != 0) {
 	PLine repushl (lines[moveend].to,     lines[moveend].to,     AOspeed, 0);
@@ -689,9 +688,10 @@ double Printlines::slowdownTo(double totalseconds, vector<PLine> &lines)
   double totalnow = totalSecondsExtruding(lines);
   if (totalseconds == 0 || totalnow == 0) return 1;
   double speedfactor = totalnow / totalseconds;
-  if (speedfactor < 1.)
+  if (speedfactor < 1.){
     setSpeedFactor(speedfactor,lines);
-  slowdownfactor *= speedfactor;
+    slowdownfactor *= speedfactor;
+  }
   return slowdownfactor;
 }
 
@@ -838,6 +838,15 @@ double Printlines::totalLength(const vector<PLine> lines) const
   double l = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
     l += lIt->length();
+  }
+  return l;
+}
+
+double Printlines::total_rel_Extrusion(const vector<PLine> lines) const 
+{
+  double l = 0;
+  for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
+    l += lIt->length() * lIt->feedrate;
   }
   return l;
 }

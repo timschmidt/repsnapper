@@ -650,7 +650,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       // add all of this skin layer to lines
       printlines.makeLines(polys, (s==1), //displace at first skin
 			   slicing, hardware, 
-			   startPoint, lines);
+			   startPoint, lines, hardware.MaxShellSpeed);
       if (s < skins) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes 
 	printlines.clipMovements(&clippolys, lines, linewidth/2.);
@@ -666,7 +666,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
   printlines.makeLines(skirts, false,
 		       slicing, hardware, 
-		       startPoint, lines);
+		       startPoint, lines, hardware.MaxShellSpeed);
 
   // 3. Support
   printlines.makeLines(supportInfill->infillpolys, false,
@@ -685,7 +685,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   // printlines.makeLines(shellPolygons[p], (p==(int)(shellPolygons.size())-1), 
   printlines.makeLines(polys, true, //displace at beginning
 		       slicing, hardware, 
-		       startPoint, lines);
+		       startPoint, lines, hardware.MaxShellSpeed);
   // TODO:  sort inner to outer in printlines
   polys.clear();
 

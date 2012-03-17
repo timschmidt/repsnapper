@@ -116,7 +116,8 @@ class Printlines
 		 const Settings::SlicingSettings &slicing,
 		 const Settings::HardwareSettings &hardware,
 		 Vector2d &startPoint,
-		 vector<PLine> &lines);
+		 vector<PLine> &lines, 
+		 double maxspeed = 0);
     
   void optimize(const Settings::HardwareSettings &hardware,
 		const Settings::SlicingSettings &slicing,
@@ -148,6 +149,8 @@ class Printlines
   double totalLength(const vector<PLine> lines) const;
   double totalSeconds(const vector<PLine> lines) const;
   double totalSecondsExtruding(const vector<PLine> lines) const;
+
+  double total_rel_Extrusion(const vector<PLine> lines) const; 
 
   // every added poly will set this
   void setZ(double z) {this->z = z + Zoffset;};

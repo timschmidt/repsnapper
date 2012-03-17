@@ -63,6 +63,8 @@ class Settings {
     float MaxPrintSpeedZ;
     float EMaxSpeed;
 
+    float MaxShellSpeed;
+
     bool  CalibrateInput; // hardware treats 'mm' as cold input mm not of hot output.
     float DistanceToReachFullSpeed;
     float ExtrusionFactor;
