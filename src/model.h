@@ -93,6 +93,7 @@ public:
 	double m_previewGCode_z;
 	// Slicing
 	void Slice(double printoffsetZ);
+	void CleanupLayers();
 	void CalcInfill();
 	void MakeShells();
 	void MakeUncoveredPolygons(bool make_decor, bool make_bridges=true);

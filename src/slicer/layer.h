@@ -132,6 +132,7 @@ public:
   void Clear();
 
   void addPolygons(vector<Poly> polys);
+  void cleanupPolygons();
   int addShape(Matrix4d T, const Shape shape, double z, 
 	       double &max_gradient);
 

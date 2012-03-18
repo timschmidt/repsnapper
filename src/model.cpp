@@ -884,7 +884,9 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 	  objtree.Objects[o].shapes[f].getPolygonsAtZ(T, z, 
 						      polys,
 						      max_grad);
-	if (polys_ok) layer->addPolygons(polys);
+	if (polys_ok){
+	  layer->addPolygons(polys);
+	}
       }
   }
 	  

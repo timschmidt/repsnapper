@@ -113,6 +113,7 @@ void Layer::SetPolygons(vector<Poly> polys) {
 }
 void Layer::SetPolygons(const Matrix4d &T, const Shape shape, 
 			double z) {
+  cerr << "Layer::SetPolygons" << endl;
   double offsetZ = Z;
   bool polys_ok=false;
   while (!polys_ok) {
@@ -121,7 +122,6 @@ void Layer::SetPolygons(const Matrix4d &T, const Shape shape,
     offsetZ+=thickness/10.;
   }
   for(uint i=0;i<polygons.size();i++){
-    polygons[i].cleanup(thickness/3.);
     polygons[i].setZ(Z); 
   }
 }
@@ -147,14 +147,20 @@ int Layer::addShape(Matrix4d T, const Shape shape, double z,
     }
     hackedZ += thickness/10;
   }
+  cleanupPolygons();
   return num_polys;
 }
 
+void Layer::cleanupPolygons()
+{
+  for(uint i=0; i < polygons.size(); i++){
+    polygons[i].cleanup(thickness/3.);
+  }
+}
 
 void Layer::addPolygons(vector<Poly> polys)
 {
   for(uint i=0;i<polys.size();i++){
-    polys[i].cleanup(thickness/3);
     polys[i].setZ(Z); 
   }
   polygons.insert(polygons.end(),polys.begin(),polys.end());
@@ -538,12 +544,9 @@ void Layer::MakeSkirt(double distance)
   vector<Poly> skp = Clipping::getOffset(hullPolygon, distance, jround);
   if (skp.size()>0){
     skirtPolygon = skp.front();
-    skirtPolygon.cleanup(distance/5.);
+    skirtPolygon.cleanup(thickness);
   }
 }
-
-
-
 
 // 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
 // Returns a positive value, if OAB makes a counter-clockwise turn,
