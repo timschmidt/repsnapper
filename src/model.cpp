@@ -37,7 +37,7 @@
 
 Model::Model() :
   m_previewLayer(NULL),
-  m_previewGCodeLayer(NULL),
+  //m_previewGCodeLayer(NULL),
   currentprintingline(0),
   currentbufferedlines(0),
   settings(),
@@ -92,6 +92,8 @@ void Model::SetViewProgress (ViewProgress *progress)
 void Model::ClearGCode()
 {
   gcode.clear();
+  m_previewGCode.clear();
+  m_previewGCode_z = -100000;
 }
 
 void Model::ClearLayers()
@@ -107,8 +109,8 @@ void Model::ClearPreview()
 {
   if (m_previewLayer) delete m_previewLayer;
   m_previewLayer = NULL;
-  if (m_previewGCodeLayer) delete m_previewGCodeLayer;
-  m_previewGCodeLayer = NULL;
+  // if (m_previewGCodeLayer) delete m_previewGCodeLayer;
+  // m_previewGCodeLayer = NULL;
 }
 
 Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
@@ -744,29 +746,31 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
       drawLayers(settings.Display.LayerValue,
 		 offset, !settings.Display.DisplayLayer);
     }
-    if (layers.size() == 0) { // live gcode if not calculated yet
-      if(settings.Display.DisplayGCode) {
+    if(settings.Display.DisplayGCode) { 
+      // preview gcode if not calculated yet
+      if ( layers.size() == 0 
+	   && gcode.commands.size() == 0 ) { 
 	Vector3d start(0,0,0);
 	double thickness = settings.Hardware.LayerThickness;
 	double z = settings.Display.GCodeDrawStart * Max.z + thickness/2;
 	int LayerCount = (int)ceil(Max.z/thickness)-1;
 	uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
-	bool newlayer = (!m_previewGCodeLayer || z != m_previewGCodeLayer->getZ());
-	m_previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
-	if (m_previewGCodeLayer) {
-	  glDisable(GL_DEPTH_TEST);
-	  if (newlayer) {
+	if (z != m_previewGCode_z) {
+	  Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
+	  if (previewGCodeLayer) {
+	    glDisable(GL_DEPTH_TEST);
 	    vector<Command> commands;
-	    m_previewGCodeLayer->MakeGcode(start, commands, 0, 
-					   settings.Slicing, settings.Hardware);
-	    GCodeState state(gcode);
-	    gcode.clear();
-	    state.AppendCommands(commands,settings.Slicing.RelativeEcode);
+	    previewGCodeLayer->MakeGcode(start, commands, 0, 
+					 settings.Slicing, settings.Hardware);
+	    GCodeState state(m_previewGCode);
+	    m_previewGCode.clear();
+	    state.AppendCommands(commands, settings.Slicing.RelativeEcode);
+	    m_previewGCode_z = z;
 	  }
-	  gcode.drawCommands(settings, 1, gcode.commands.size(), true, 2, 
-	  		     settings.Display.DisplayGCodeArrows,
-	  		     settings.Display.DisplayGCodeBorders);
 	}
+	m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2, 
+				    settings.Display.DisplayGCodeArrows,
+				    settings.Display.DisplayGCodeBorders);
       }
     }
     return -1;
@@ -859,9 +863,9 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 {
   if (is_calculating) return NULL; // infill calculation (saved patterns) would be disturbed
   if (for_gcode) {
-    if (m_previewGCodeLayer && m_previewGCodeLayer->getZ() == z
-      && m_previewGCodeLayer->thickness) 
-      return m_previewGCodeLayer;
+    // if (m_previewGCodeLayer && m_previewGCodeLayer->getZ() == z
+    //   && m_previewGCodeLayer->thickness) 
+    //   return m_previewGCodeLayer;
   } else {
     if (m_previewLayer && m_previewLayer->getZ() == z
 	&& m_previewLayer->thickness) return m_previewLayer; 

@@ -88,8 +88,9 @@ public:
 	vector<Layer*> layers;
 	
 	Layer * m_previewLayer;
-	Layer * m_previewGCodeLayer;
-	
+	//Layer * m_previewGCodeLayer;
+	GCode m_previewGCode;
+	double m_previewGCode_z;
 	// Slicing
 	void Slice(double printoffsetZ);
 	void CalcInfill();

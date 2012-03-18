@@ -121,7 +121,7 @@ void Layer::SetPolygons(const Matrix4d &T, const Shape shape,
     offsetZ+=thickness/10.;
   }
   for(uint i=0;i<polygons.size();i++){
-    polygons[i].cleanup(thickness/2);
+    polygons[i].cleanup(thickness/3.);
     polygons[i].setZ(Z); 
   }
 }
@@ -154,7 +154,7 @@ int Layer::addShape(Matrix4d T, const Shape shape, double z,
 void Layer::addPolygons(vector<Poly> polys)
 {
   for(uint i=0;i<polys.size();i++){
-    polys[i].cleanup(thickness/2);
+    polys[i].cleanup(thickness/3);
     polys[i].setZ(Z); 
   }
   polygons.insert(polygons.end(),polys.begin(),polys.end());
