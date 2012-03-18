@@ -45,7 +45,7 @@
 #include <stdexcept>
 #include <cstring>
 #include <cstdlib>
-#include <ostream>
+#include <iostream>
 
 namespace ClipperLib {
 
@@ -1172,6 +1172,7 @@ bool PolySort(OutRec *or1, OutRec *or2)
     else return false;
   }
   int i1, i2;
+    if (or1->FirstLeft==NULL) return false;
   if (or1->isHole)
     i1 = or1->FirstLeft->idx; else
     i1 = or1->idx;
