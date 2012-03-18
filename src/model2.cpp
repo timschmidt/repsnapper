@@ -220,6 +220,9 @@ void Model::CleanupLayers()
 }
 
 
+bool layersort(const Layer * l1, const Layer * l2){
+  return (l1->Z < l2->Z);
+}
 
 void Model::Slice(double printOffsetZ)
 {
@@ -262,15 +265,17 @@ void Model::Slice(double printOffsetZ)
   if (skins == 1 && (!settings.Slicing.BuildSerial || shapes.size() == 1) )
     { // simple, can do multihreading
       if (progress_steps==0) progress_steps=1;
-      int num_layers = Max.z / thickness;
+      int num_layers = (int)ceil((Max.z - minZ) / thickness);
+      vector<Layer*> omp_layers;
       layers.resize(num_layers);
+      int nlayer;
 #ifdef _OPENMP
       omp_lock_t progress_lock;
       omp_init_lock(&progress_lock);
 #pragma omp parallel for schedule(dynamic) 
 #endif
-      for (LayerNr = 0; LayerNr < num_layers; LayerNr++) {
-	if (LayerNr%progress_steps==0) {
+      for (nlayer = 0; nlayer < num_layers; nlayer++) {
+	if (nlayer%progress_steps==0) {
 #ifdef _OPENMP
 	  omp_set_lock(&progress_lock);
 #endif
@@ -279,18 +284,18 @@ void Model::Slice(double printOffsetZ)
 	  omp_unset_lock(&progress_lock);
 #endif
 	}
-	Layer * layer = new Layer(LayerNr, thickness, skins); 
-	layer->setZ(z);
-	for (uint nshape= 0; nshape < shapes.size(); nshape++)
-	  layer->addShape(transforms[nshape], *shapes[nshape],
-			  z, max_gradient);
-	// cerr << LayerNr << " - " << z << " - " << thickness << " - "
-	//      << new_polys << " - " << max_gradient <<endl;
-	// cerr << layer->info() << endl;
-	z += thickness;
-	layers[LayerNr] = layer;
+	z = minZ + thickness * nlayer;
+	Layer * layer = new Layer(nlayer, thickness, skins); 
+	layer->setZ(z + printOffsetZ); // set to real z
+	int new_polys=0;
+	for (uint nshape= 0; nshape < shapes.size(); nshape++) {
+	  new_polys += layer->addShape(transforms[nshape], *shapes[nshape],
+				       z, max_gradient);
+	}
+	layers[nlayer] = layer;
       }
 #ifdef _OPENMP
+      std::sort(layers.begin(), layers.end(), layersort);
       omp_destroy_lock(&progress_lock);
 #endif
     }
