@@ -487,7 +487,7 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
   uint i = 0;
   while (i < count) {
     // find start and end of movement
-    while (i < count && lines[i].feedrate != 0) {
+    while (i < count && (lines[i].feedrate != 0)) {
       i++; movestart = i;
     }
     while (i < count && lines[i].feedrate == 0) {
@@ -551,14 +551,15 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
 	PLine repushl (lines[moveend].to,     lines[moveend].to,     AOspeed, 0);
 	repushl.addAbsoluteExtrusionAmount(halt_repush);
 	lines.insert(lines.begin()+moveend+1, repushl); // (inserts before)
+	i++;
       }
       double halt_retr = - onhalt_amount - tract_amount_left;
       if (halt_retr != 0) {
 	PLine retractl(lines[movestart].from, lines[movestart].from, AOspeed, 0); 
 	retractl.addAbsoluteExtrusionAmount(halt_retr);
 	lines.insert(lines.begin()+movestart, retractl);
+	i++;
       }
-      i+=2;
     }
     count = lines.size();
   }
