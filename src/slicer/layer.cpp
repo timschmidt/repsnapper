@@ -244,10 +244,10 @@ void Layer::CalcInfill (const Settings &settings)
   else
     infilldist = infillDistance;
   if (LayerNo < (int)settings.Slicing.FirstLayersNum) {
-    infilldist = max(infilldist,
-		     (double)settings.Slicing.FirstLayersInfillDist);
-    fullInfillDistance = max(fullInfillDistance,
-			     (double)settings.Slicing.FirstLayersInfillDist);
+    double first_infdist = 
+      fullInfillDistance * (1+(double)settings.Slicing.FirstLayersInfillDist);
+    infilldist = max(infilldist, first_infdist);
+    fullInfillDistance = max(fullInfillDistance, first_infdist);
   }
   // relative extrusion for skins:
   double skinfillextrf = settings.Slicing.FullFillExtrusion/skins/skins; 
