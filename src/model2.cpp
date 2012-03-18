@@ -205,15 +205,14 @@ void Model::Slice(double printOffsetZ)
   int LayerNr = 0;
   bool varSlicing = settings.Slicing.Varslicing;
 
-  uint max_skins = settings.Slicing.Skins;
-  double skin_thickness = settings.Hardware.LayerThickness/max_skins;
-  uint skins = max_skins; 
-  double thickness = skin_thickness*skins;
+  uint max_skins = max(1, settings.Slicing.Skins);
+  double thickness = (double)settings.Hardware.LayerThickness;
+  double skin_thickness = thickness / max_skins;
+  uint skins = max_skins; // probably variable 
 
-  // Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
-  // start at z=0, cut off everything below
-
-  double minZ = thickness*settings.Slicing.FirstLayerHeight;// + Min.z; 
+  // - Start at z~=0, cut off everything below
+  // - Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
+  double minZ = thickness * settings.Slicing.FirstLayerHeight;// + Min.z; 
   double z = minZ;
 
   m_progress->set_terminal_output(settings.Display.TerminalProgress);
@@ -652,10 +651,14 @@ void Model::ConvertToGCode()
   for (uint p=0; p<count; p++) {
     m_progress->update(p);
     //cerr << "GCode layer " << (p+1) << " of " << count  << endl;;
-    layers[p]->MakeGcode (start,
-			  commands,
-			  printOffsetZ,
-			  settings.Slicing, settings.Hardware);
+    try {
+      layers[p]->MakeGcode (start,
+			    commands,
+			    printOffsetZ,
+			    settings.Slicing, settings.Hardware);
+    } catch (Glib::Error e) {
+      error("GCode Error:", (e.what()).c_str());
+    }
   }
   
   state.AppendCommands(commands, settings.Slicing.RelativeEcode);

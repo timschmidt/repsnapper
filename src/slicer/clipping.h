@@ -108,5 +108,7 @@ public:
 
   static double Area(const Poly poly);
   static double Area(const vector<Poly> polys);
+  static double Area(const ExPoly expoly);
+  static double Area(const vector<ExPoly> expolys);
 
 };

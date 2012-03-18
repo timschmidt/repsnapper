@@ -119,6 +119,10 @@ Command::Command()
 Command::Command(GCodes code, const Vector3d position, double E, double F) 
   : Code(code), where(position), is_value(false),  f(F), e(E)
 {
+  //assert(where.z>=0);
+  if (where.z< 0) {
+    throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at "+info()));
+  }
 }
 
 Command::Command(GCodes code, double value_) 
@@ -212,6 +216,10 @@ Command::Command(string gcodeline, Vector3d defaultpos){
       cerr << "cannot handle ARC R command (yet?)!" << endl;
       break;
     }
+  }
+  //assert(where.z>=0);
+  if (where.z < 0) {
+    throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at " + info()));
   }
 }
 

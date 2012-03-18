@@ -626,33 +626,36 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   vector<PLine3> lines3;
   Printlines printlines(offsetZ);
 
-  vector<PLine> lines;  
+  vector<PLine> lines;
 
   vector<Poly> polys; // intermediate collection
 
   // polys to keep line movements inside
-  vector<Poly> clippolys = GetOuterShell(); 
+  vector<Poly> clippolys = GetOuterShell();
 
   // 1. Skins, all but last, because they are the lowest lines, below layer Z
-  if (skins>1){
-    for(uint s=1;s <= skins;s++) { // z offset from bottom to top
+  if (skins > 1) {
+    for(uint s = 1; s <= skins; s++) { // z offset from bottom to top
       double skin_z = Z - thickness + (s)*thickness/skins;
+      if ( skin_z < 0 )
+	continue;
       //cerr << s << " -- " << Z << " -- "<<skin_z <<" -- " << thickness <<  endl;
-      // outlines
-      for(size_t p=0;p<skinPolygons.size();p++) { 
+      // outlines:
+      //if (s<skins)
+      for(size_t p = 0; p < skinPolygons.size(); p++) {
 	Poly sp(skinPolygons[p], skin_z);
 	polys.push_back(sp);
       }
-      // skin infill polys
+      // skin infill polys:
       polys.insert(polys.end(),
 		   skinFullInfills[s-1]->infillpolys.begin(),
 		   skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
       printlines.makeLines(polys, (s==1), //displace at first skin
-			   slicing, hardware, 
+			   slicing, hardware,
 			   startPoint, lines, hardware.MaxShellSpeed);
       if (s < skins) { // not on the last layer, this handle with all other lines
-	// have to get all these separately because z changes 
+	// have to get all these separately because z changes
 	printlines.clipMovements(&clippolys, lines, linewidth/2.);
 	printlines.optimize(hardware, slicing, slicing.MinLayertime/skins, lines);
 	printlines.getLines(lines, lines3);
@@ -660,31 +663,30 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       }
       polys.clear();
     }
-  }
+  } // last skin layer now still in lines
 
   // 2. Skirt
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
   printlines.makeLines(skirts, false,
-		       slicing, hardware, 
+		       slicing, hardware,
 		       startPoint, lines, hardware.MaxShellSpeed);
 
   // 3. Support
   printlines.makeLines(supportInfill->infillpolys, false,
-		       slicing, hardware, 
+		       slicing, hardware,
 		       startPoint, lines);
 
   // 4. all other polygons:  
-
 
   // TODO: calculate extrusionfactor
   // for rectangle vs. ellipsis (inner shell vs. outer shell)
 
   //  Shells
-  for(int p=shellPolygons.size()-1; p>=0; p--) // inner to outer 
+  for(int p=shellPolygons.size()-1; p>=0; p--) // inner to outer
     polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());
   // printlines.makeLines(shellPolygons[p], (p==(int)(shellPolygons.size())-1), 
   printlines.makeLines(polys, true, //displace at beginning
-		       slicing, hardware, 
+		       slicing, hardware,
 		       startPoint, lines, hardware.MaxShellSpeed);
   // TODO:  sort inner to outer in printlines
   polys.clear();

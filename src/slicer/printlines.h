@@ -99,7 +99,7 @@ class Printlines
   string name;
 
   void addPoly(vector<PLine> &lines, const Poly poly, int startindex=0, 
-	       double speed=1, double movespeed=1) const;
+	       double speed=1, double movespeed=1);
   void addLine(vector<PLine> &lines, Vector2d from, Vector2d to, 
 	       double speed=1, double movespeed=1, double feedrate=1.0) const;
 

@@ -395,3 +395,17 @@ double Clipping::Area(const vector<Poly> polys){
     a += Area(polys[i]);
   return a;
 } 
+
+double Clipping::Area(const ExPoly expoly){
+  double a = Area(expoly.outer);
+  for (uint i = 0; i < expoly.holes.size(); i++) {
+    a -= Area(expoly.holes[i]);
+  }
+  return a;
+}
+double Clipping::Area(const vector<ExPoly> expolys){
+  double a=0;
+  for (uint i=0; i<expolys.size(); i++)
+    a += Area(expolys[i]);
+  return a;
+} 

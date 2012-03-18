@@ -25,7 +25,7 @@
 ///////////// PLine3: single 3D printline //////////////////////
 
 PLine3::PLine3(const PLine pline, double z)
-{
+{ 
   from               = Vector3d(pline.from.x, pline.from.y, z);
   to                 = Vector3d(pline.to.x,   pline.to.y,   z);
   speed              = pline.speed;
@@ -260,14 +260,16 @@ void Printlines::addLine(vector<PLine> &lines, const Vector2d from, const Vector
 }
 
 void Printlines::addPoly(vector<PLine> &lines, const Poly poly, int startindex, 
-			 double speed, double movespeed) const
+			 double speed, double movespeed)
 {
   vector<Vector2d> pvert;
   poly.getLines(pvert,startindex);
+  if (pvert.size() == 0) return;
   assert(pvert.size() % 2 == 0);
   for (uint i=0; i<pvert.size();i+=2){
     addLine(lines, pvert[i], pvert[i+1], speed, movespeed, poly.getExtrusionFactor());
   }
+  setZ(poly.getZ());
 }
 
 void Printlines::makeLines(const vector<Poly> polys,
@@ -284,13 +286,13 @@ void Printlines::makeLines(const vector<Poly> polys,
   double movespeed = hardware.MoveSpeed;
   bool linelengthsort = slicing.LinelengthSort;
 
-  uint count = polys.size();
-  if (polys.size()==0) return;
+  const uint count = polys.size();
+  if (count == 0) return;
   int nvindex=-1;
   int npindex=-1;
   uint nindex;
   vector<bool> done(count); // polys not yet handled
-  for(size_t q=0;q<count;q++) done[q]=false;
+  for(size_t q=0; q < count; q++) done[q]=false;
   uint ndone=0;
   double pdist, nstdist;
   //double nlength;
@@ -335,7 +337,7 @@ void Printlines::makeLines(const vector<Poly> polys,
 	}
       }
       if (displace_startpoint && ndone==0)  // displace first point
-	nvindex = (nvindex+1)%polys[npindex].size();
+	nvindex = (nvindex+1) % polys[npindex].size();
       if (npindex >= 0 && npindex >=0) {
 	addPoly(lines, polys[npindex], nvindex, maxspeed, movespeed);
 	done[npindex]=true;
@@ -344,11 +346,6 @@ void Printlines::makeLines(const vector<Poly> polys,
       if (lines.size()>0)
 	startPoint = lines.back().to;
     }
-  if (count == 0) return;
-  setZ(polys.back().getZ());
-  // clipMovements(clippolys, linewidth/2.);
-  // optimize(linewidth, linewidthratio, optratio, maxArcAngle,
-  // 	   hardware, slicing, lines);
 }
 
 

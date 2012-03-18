@@ -50,8 +50,9 @@ Poly::Poly(double z, double extrusionfactor){
 Poly::Poly(const Poly p, double z){
   this->z = z;
   this->extrusionfactor = p.extrusionfactor;
-  holecalculated = false;
-  hole=false;
+  holecalculated = p.holecalculated;
+  hole = p.hole;
+  center = p.center;
   uint count = p.vertices.size();
   vertices.resize(count);
   for (uint i=0; i<count ; i++)
