@@ -513,9 +513,15 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
 	     && lines[movei].absolute_feed == 0 // stop at last repush
 	     && lines[movei].feedrate != 0      // stop at last move-only
 	     && tract_amount_left > 0) {
-	double amount = min(onmove_amount, AOspeed * lines[movei].time());
-	lines[movei].addAbsoluteExtrusionAmount(-amount);
-	tract_amount_left -= amount;
+	double amount = AOspeed * lines[movei].time(); // possible amount in line
+	// if (amount > tract_amount_left) { // line longer than necessary
+	// }
+	// else 
+	{
+	  amount = min(tract_amount_left, amount);
+	  lines[movei].addAbsoluteExtrusionAmount(-amount);
+	  tract_amount_left -= amount;
+	}
 	movei--;
       }
       // if (tract_amount_left > 0) 
@@ -525,10 +531,16 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
       while (movei < (int)lines.size()
 	     && lines[movei].feedrate != 0 // stop at next move-only line
 	     && push_amount_left > 0) {
-	double amount = min(onmove_amount, AOspeed * lines[movei].time());
-	lines[movei].addAbsoluteExtrusionAmount(amount);
-	push_amount_left -= amount;
-	movei++;
+	double amount = AOspeed * lines[movei].time(); // possible amount in line
+	// if (amount > push_amount_left) { // line longer than necessary
+	// }
+	// else 
+	{
+	  amount = min(push_amount_left, amount);
+	  lines[movei].addAbsoluteExtrusionAmount(amount);
+	  push_amount_left -= amount;
+	  movei++;
+	}
       }
       // if (push_amount_left > 0) 
       // 	cerr << " - " <<push_amount_left << endl;;
