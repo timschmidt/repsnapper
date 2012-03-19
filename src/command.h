@@ -153,6 +153,9 @@ public:
 	bool is_value; // M commands
 	double value; // M commands S value code
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
+
+	double abs_extr; // for debugging/painting
+
 	string comment;
 	void draw(Vector3d &lastPos, guint linewidth, 
 		  Vector4f color, double extrwidth, bool arrows=true) const;

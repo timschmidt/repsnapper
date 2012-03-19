@@ -117,7 +117,7 @@ Command::Command()
 {}
 
 Command::Command(GCodes code, const Vector3d position, double E, double F) 
-  : Code(code), where(position), is_value(false),  f(F), e(E)
+  : Code(code), where(position), is_value(false),  f(F), e(E), abs_extr(0)
 {
   //assert(where.z>=0);
   if (where.z< 0) {
@@ -126,12 +126,12 @@ Command::Command(GCodes code, const Vector3d position, double E, double F)
 }
 
 Command::Command(GCodes code, double value_) 
-  : Code(code), where(0,0,0), is_value(true), value(value_), f(0), e(0)
+  : Code(code), where(0,0,0), is_value(true), value(value_), f(0), e(0), abs_extr(0)
 {
 }
 
 Command::Command(string comment_only) 
-  : Code(COMMENT), where(0,0,0), is_value(true), value(0), f(0), e(0),
+  : Code(COMMENT), where(0,0,0), is_value(true), value(0), f(0), e(0), abs_extr(0),
     comment(comment_only)
 {
 }
@@ -141,6 +141,7 @@ Command::Command(const Command &rhs)
     arcIJK (rhs.arcIJK), 
     is_value(rhs.is_value), value(rhs.value), 
     f(rhs.f), e(rhs.e),
+    abs_extr(rhs.abs_extr),
     comment(rhs.comment)
 {
 }
@@ -157,13 +158,9 @@ Command::Command(const Command &rhs)
  * @param defaultpos
  * @param [OUT] gcodeline the unparsed portion of the string
  */
-Command::Command(string gcodeline, Vector3d defaultpos){
-  where = defaultpos;
-  arcIJK = Vector3d(0,0,0);
-  e=0.0;
-  f=0.0;
-  is_value = false;
-
+Command::Command(string gcodeline, Vector3d defaultpos) 
+  : where(defaultpos),  arcIJK(0,0,0), is_value(false),  f(0), e(0), abs_extr(0)
+{
   // Notes:
   //   Spaces are not significant in GCode
   //   Weird-ass syntax like "G1X + 0 . 2543" is the same as "G1 X0.2453"
@@ -312,6 +309,9 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcod
     if (Code!=COMMENT) ostr << " ; " ;
     ostr << comm;
   }
+  if(abs_extr != 0) 
+    ostr << "; AbsE " << abs_extr;
+    
   // ostr << "; "<< info(); // show Command on line
   return ostr.str();
 }
@@ -419,6 +419,9 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
 void Command::draw(Vector3d &lastPos, guint linewidth, 
 		   Vector4f color, double extrwidth, bool arrows) const 
 {
+  if (abs_extr!=0) linewidth+=(1+abs(abs_extr));
+  // if (abs_extr>0) linewidth*=abs_extr;
+  // else if (abs_extr<0) linewidth/=(-abs_extr);
   glLineWidth(linewidth);
   glColor4fv(&color[0]);
   draw(lastPos, extrwidth, arrows);
