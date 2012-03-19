@@ -339,6 +339,7 @@ void View::show_dialog(const char *name)
     cerr << "no such dialog " << name << "\n";
     return;
   }
+  dialog->set_icon_name("gtk-convert");
   dialog->signal_response().connect (sigc::bind(sigc::mem_fun(*this, &View::hide_on_response), dialog));
   dialog->show();
   //  dialog->set_transient_for (*this);
