@@ -104,6 +104,15 @@ Vector2d random_displace(Vector2d v, double delta)
   return Vector2d(v.x+randdelta, v.y+randdelta);
 }
 
+
+Vector2d rotated(Vector2d p, Vector2d center, double angle, bool ccw)
+{
+  Vector3d center3 (center.x, center.y, 0);
+  Vector3d radius3 (p.x - center.x, p.y - center.y, 0);
+  Vector3d rrotated3 = radius3.rotate(angle, 0.,0., ccw?1.:-1.);
+  return center + Vector2d(rrotated3.x, rrotated3.y);
+}
+
 // squared minimum distance of p to segment s1--s2, onseg = resulting point on segment
 // http://stackoverflow.com/a/1501725
 double minimum_distance_Sq(const Vector2d s1, const Vector2d s2, 
@@ -581,17 +590,40 @@ bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepol
 }
   
 
-vector<Poly> thick_line(const Vector2d from, const Vector2d to, double distance) 
+vector<Poly> thick_line(const Vector2d from, const Vector2d to, double width) 
 {
   Poly poly;
-  Vector2d dir = (to-from).getNormalized() * distance/4.;
+  Vector2d dir = (to-from).getNormalized() * width/4.;
   Vector2d dirp(-dir.y,dir.x);
   poly.addVertex(from-dir-dirp);
   poly.addVertex(from-dir+dirp);
   poly.addVertex(to+dir+dirp);
   poly.addVertex(to+dir-dirp);
   vector<Poly> p; p.push_back(poly);
-  return Clipping::getOffset(poly, distance/4, jmiter, 0);
+  return Clipping::getOffset(poly, width/4, jmiter, 0);
+
+  // slow:
+  // poly.addVertex(from);
+  // poly.addVertex(to);
+  // return Clipping::getOffset(poly, distance/2, jround, distance/2.);
+}
+
+// directed (one end is wider than the other)
+vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to, 
+			    double fr_width, double to_width) 
+{
+  Poly poly;
+  Vector2d fdir = (to-from).getNormalized() * fr_width/4.;
+  Vector2d tdir = (to-from).getNormalized() * to_width/4.;
+  Vector2d fr_dirp(-fdir.y, fdir.x);
+  Vector2d to_dirp(-tdir.y, tdir.x);
+  poly.addVertex(from-fdir-fr_dirp);
+  poly.addVertex(from-fdir+fr_dirp);
+  poly.addVertex(to+tdir+to_dirp);
+  poly.addVertex(to+tdir-to_dirp);
+  vector<Poly> p; p.push_back(poly);
+  return p;
+  //return Clipping::getOffset(poly, distance/4, jmiter, 0);
 
   // slow:
   // poly.addVertex(from);

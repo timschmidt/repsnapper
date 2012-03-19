@@ -101,7 +101,6 @@ public:
   Poly  GetSkirtPolygon() const {return skirtPolygon; };
   vector<Poly> GetInnerShell() const;
   vector<Poly> GetOuterShell() const;
-  void SetRaftPolygons(const vector<Poly> polys);
   Poly GetHullPolygon() const {return hullPolygon;};
   
   void setFullFillPolygons(const vector<Poly> polys);  
@@ -170,6 +169,5 @@ public:
   Poly hullPolygon;                     // convex hull around everything
   Poly skirtPolygon;                    // skirt polygon
   vector<Poly> decorPolygons;           // decoration polygons
-  //vector<Poly> raftPolygons;            // raft polygons, if raft layer
 
 };

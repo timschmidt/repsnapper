@@ -405,8 +405,17 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     if (extrwidth > 0) {
       glLineWidth(1);
       glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
-      vector<Poly> thickpoly = thick_line(Vector2d(lastPos.x,lastPos.y),
-					  Vector2d(where.x,where.y), extrwidth);
+      vector<Poly> thickpoly;
+      if (abs_extr != 0) {
+	double fr_extr = extrwidth / (1+abs_extr);
+	double to_extr = extrwidth * (1+abs_extr);
+	thickpoly = dir_thick_line(Vector2d(lastPos.x,lastPos.y),
+				   Vector2d(where.x,where.y), 
+				   fr_extr, to_extr);
+      } else
+	thickpoly = thick_line(Vector2d(lastPos.x,lastPos.y),
+			       Vector2d(where.x,where.y), 
+			       extrwidth);
       for (uint i=0; i<thickpoly.size();i++) {
 	thickpoly[i].cleanup(0.01);
 	thickpoly[i].draw(GL_LINE_LOOP, where.z, false);

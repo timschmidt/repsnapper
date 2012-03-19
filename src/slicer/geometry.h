@@ -41,6 +41,7 @@ Vector3d cross2d(Vector2d A, Vector2d B, double z=0);
 double minimum_distance_Sq(const Vector2d s1, const Vector2d s2, 
 			   const Vector2d p, Vector2d &onseg);
 
+Vector2d rotated(Vector2d p, Vector2d center, double angle, bool ccw=true);
 
 struct printline;
 
@@ -78,4 +79,6 @@ Vector2d random_displace(Vector2d v, double delta=0.05);
 bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepoly, 
 		  vector<Vector2d> &path, double maxerr);
 
-vector<Poly> thick_line(const Vector2d from, const Vector2d to, double distance);
+vector<Poly> thick_line(const Vector2d from, const Vector2d to, double width);
+vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to, 
+			    double fr_width, double to_width);
