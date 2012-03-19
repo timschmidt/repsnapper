@@ -47,11 +47,11 @@ class GCodeState {
   void AppendCommand(Command &command, bool incrementalE);
   void AppendCommand(GCodes code, bool incrementalE=false, string comment="");
   void AppendCommands(vector<Command> commands, bool relativeE);
-  void AddLines (vector<PLine3> lines,
-		 double extrusionfactor,
-		 double offsetZ, 
-		 const Settings::SlicingSettings &slicing,
-		 const Settings::HardwareSettings &hardware);
+  /* void AddLines (vector<PLine3> lines, */
+  /* 		 double extrusionfactor, */
+  /* 		 double offsetZ,  */
+  /* 		 const Settings::SlicingSettings &slicing, */
+  /* 		 const Settings::HardwareSettings &hardware); */
   void AddLines (vector<Vector3d> lines,
 		 double extrusionFactor,
 		 double maxspeed,
@@ -59,11 +59,11 @@ class GCodeState {
 		 double offsetZ, 
 		 const Settings::SlicingSettings &slicing,
 		 const Settings::HardwareSettings &hardware);
-  void MakeGCodeLine (PLine3 line,
-		      double extrusionfactor,
-		      double offsetZ, 
-		      const Settings::SlicingSettings &slicing,
-		      const Settings::HardwareSettings &hardware);
+  /* void MakeGCodeLine (PLine3 line, */
+  /* 		      double extrusionfactor, */
+  /* 		      double offsetZ,  */
+  /* 		      const Settings::SlicingSettings &slicing, */
+  /* 		      const Settings::HardwareSettings &hardware); */
   void MakeGCodeLine (Vector3d start, Vector3d end,
 		      Vector3d arcIJK, short arc,
 		      double extrusionFactor,

@@ -225,6 +225,19 @@ vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
   return angles;
 }
 
+// fills polys with raft type infill
+// so this layer will have the raft as normal infill
+void Layer::CalcRaftInfill (const vector<Poly> polys, 
+			    double extrusionfactor, double infilldistance,
+			    double rotation)
+{
+  setMinMax(polys);
+  normalInfill = new Infill(this, extrusionfactor);
+  normalInfill->setName("Raft");
+  normalInfill->addInfill(Z, polys, RaftInfill, 
+			  infilldistance, infilldistance, rotation);
+}
+
 void Layer::CalcInfill (const Settings &settings)
 {
   // inFill distances in real mm:
@@ -604,12 +617,26 @@ void Layer::calcConvexHull()
   }
   H.resize(k);
   hullPolygon.vertices = H;
-  vector<Vector2d> minmax = hullPolygon.getMinMax();
-  Min = minmax[0];
-  Max = minmax[1];
+  setMinMax(hullPolygon);
   hullPolygon.reverse();
 }
 
+void Layer::setMinMax(const vector<Poly> polys) 
+{
+  Min = Vector2d( 10000000., 10000000.);
+  Max = Vector2d(-10000000., -10000000.);
+  for (uint i = 0; i< polys.size(); i++) {
+    vector<Vector2d> minmax = polys[i].getMinMax();
+    Min.x = min(Min.x, minmax[0].x); Min.y = min(Min.y, minmax[0].y);
+    Max.x = max(Max.x, minmax[1].x); Max.y = max(Max.y, minmax[1].y);
+  }
+}
+void Layer::setMinMax(const Poly poly) 
+{
+  vector<Vector2d> minmax = poly.getMinMax();
+  Min = minmax[0];
+  Max = minmax[1];
+}
 
 // Convert to GCode
 void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
@@ -650,9 +677,10 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 	polys.push_back(sp);
       }
       // skin infill polys:
-      polys.insert(polys.end(),
-		   skinFullInfills[s-1]->infillpolys.begin(),
-		   skinFullInfills[s-1]->infillpolys.end());
+      if (skinFullInfills[s-1])
+	polys.insert(polys.end(),
+		     skinFullInfills[s-1]->infillpolys.begin(),
+		     skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
       printlines.makeLines(polys, (s==1), //displace at first skin
 			   slicing, hardware,
@@ -675,9 +703,10 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		       startPoint, lines, hardware.MaxShellSpeed);
 
   // 3. Support
-  printlines.makeLines(supportInfill->infillpolys, false,
-		       slicing, hardware,
-		       startPoint, lines);
+  if (supportInfill)
+    printlines.makeLines(supportInfill->infillpolys, false,
+			 slicing, hardware,
+			 startPoint, lines);
 
   // 4. all other polygons:  
 
@@ -695,16 +724,20 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   polys.clear();
 
   //  Infill
-  polys.insert(polys.end(),
-	       normalInfill->infillpolys.begin(), normalInfill->infillpolys.end());
-  polys.insert(polys.end(),
-	       fullInfill->infillpolys.begin(), fullInfill->infillpolys.end());
-  polys.insert(polys.end(),
-	       decorInfill->infillpolys.begin(), decorInfill->infillpolys.end());
-  for (uint b=0; b < bridgeInfills.size(); b++)
+  if (normalInfill)
     polys.insert(polys.end(),
-		 bridgeInfills[b]->infillpolys.begin(),
-		 bridgeInfills[b]->infillpolys.end());
+		 normalInfill->infillpolys.begin(), normalInfill->infillpolys.end());
+  if (fullInfill)
+    polys.insert(polys.end(),
+		 fullInfill->infillpolys.begin(), fullInfill->infillpolys.end());
+  if (decorInfill)
+    polys.insert(polys.end(),
+		 decorInfill->infillpolys.begin(), decorInfill->infillpolys.end());
+  for (uint b=0; b < bridgeInfills.size(); b++)
+    if (bridgeInfills[b])
+      polys.insert(polys.end(),
+		   bridgeInfills[b]->infillpolys.begin(),
+		   bridgeInfills[b]->infillpolys.end());
   
   printlines.makeLines(polys, true, //displace at beginning
 		       slicing, hardware, 

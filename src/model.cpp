@@ -768,6 +768,7 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
 	    m_previewGCode_z = z;
 	  }
 	}
+	glDisable(GL_DEPTH_TEST);
 	m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2, 
 				    settings.Display.DisplayGCodeArrows,
 				    settings.Display.DisplayGCodeBorders);

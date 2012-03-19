@@ -92,7 +92,7 @@ public:
 	GCode m_previewGCode;
 	double m_previewGCode_z;
 	// Slicing
-	void Slice(double printoffsetZ);
+	void Slice();
 	void CleanupLayers();
 	void CalcInfill();
 	void MakeShells();

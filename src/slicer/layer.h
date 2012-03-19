@@ -55,7 +55,9 @@ public:
 
   Vector2d getMin() const {return Min;};
   Vector2d getMax() const {return Max;};
-  /* void setBBox(Vector2d min, Vector2d max); */
+  void setMinMax(const Poly poly);
+  void setMinMax(const vector<Poly> polys);
+    /* void setBBox(Vector2d min, Vector2d max); */
   /* void setBBox(vector<Vector2d> minmax); */
   /* void setBBox(Vector3d min, Vector3d max); */
 
@@ -70,6 +72,9 @@ public:
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
   void CalcInfill (const Settings &settings);
+  void CalcRaftInfill (const vector<Poly> polys, 
+		       double extrusionfactor, double infilldistance,
+		       double rotation);
 
   vector<double> getBridgeRotations(const vector<Poly> poly) const;
   void calcBridgeAngles(const Layer *layerbelow);
@@ -96,6 +101,8 @@ public:
   Poly  GetSkirtPolygon() const {return skirtPolygon; };
   vector<Poly> GetInnerShell() const;
   vector<Poly> GetOuterShell() const;
+  void SetRaftPolygons(const vector<Poly> polys);
+  Poly GetHullPolygon() const {return hullPolygon;};
   
   void setFullFillPolygons(const vector<Poly> polys);  
   void addFullFillPolygons(const vector<Poly> polys);
@@ -163,5 +170,6 @@ public:
   Poly hullPolygon;                     // convex hull around everything
   Poly skirtPolygon;                    // skirt polygon
   vector<Poly> decorPolygons;           // decoration polygons
+  //vector<Poly> raftPolygons;            // raft polygons, if raft layer
 
 };

@@ -49,12 +49,61 @@
 #include "slicer/clipping.h"
 
 
-// void Model::MakeRaft() // TODO use layers with convex hull poly + infill
-// {
-  
-// }
+void Model::MakeRaft(GCodeState &state, double &z)
+{
+  if (layers.size() == 0) return;
+  vector<Poly> raftpolys = 
+    Clipping::getOffset(layers[0]->GetHullPolygon(), settings.Raft.Size, jround);
+  for (uint i = 0; i< raftpolys.size(); i++) 
+    raftpolys[i].cleanup(settings.Hardware.LayerThickness/4);
 
 
+  Settings::RaftSettings::PhasePropertiesType basesettings = 
+    settings.Raft.Phase[0];
+  Settings::RaftSettings::PhasePropertiesType interfacesettings = 
+    settings.Raft.Phase[1];
+
+  vector<Layer*> raft_layers;
+
+  double rotation = basesettings.Rotation;
+  double basethickness = settings.Hardware.LayerThickness 
+    * basesettings.Thickness;
+  double interthickness = settings.Hardware.LayerThickness 
+    * interfacesettings.Thickness;
+
+  double totalthickness = basesettings.LayerCount * basethickness 
+    + interfacesettings.LayerCount * interthickness;
+
+  double raft_z = -totalthickness + basethickness * settings.Slicing.FirstLayerHeight;
+
+  for (uint i = 0; i < basesettings.LayerCount; i++) {
+    Layer * layer = new Layer(-interfacesettings.LayerCount-basesettings.LayerCount + i, 
+			       basethickness, 1);
+    layer->setZ(raft_z);
+    layer->CalcRaftInfill(raftpolys,basesettings.MaterialDistanceRatio,
+			  basesettings.Distance, rotation);
+    raft_layers.push_back(layer);
+    rotation += basesettings.RotationPrLayer*M_PI/180;
+    raft_z += basethickness;
+  }
+  rotation = interfacesettings.Rotation;
+  for (uint i = 0; i < interfacesettings.LayerCount; i++) {
+    Layer * layer = new Layer(-basesettings.LayerCount + i, 
+			      interthickness, 1);
+    layer->setZ(raft_z);
+    layer->CalcRaftInfill(raftpolys,interfacesettings.MaterialDistanceRatio,
+			  interfacesettings.Distance, rotation);
+    
+    raft_layers.push_back(layer);
+    rotation += interfacesettings.RotationPrLayer*M_PI/180;
+    raft_z += interthickness;
+  }
+  layers.insert(layers.begin(),raft_layers.begin(),raft_layers.end());
+  z += totalthickness;
+}
+
+#if 0
+// old raft
 void Model::MakeRaft(GCodeState &state, double &z)
 {
   vector<Intersection> HitsBuffer;
@@ -185,7 +234,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
   // gotoE.comment = _("Reset E for the remaining print");
   // gcode.commands.push_back(gotoE);
 }
-
+#endif // 0
 
 // this is of not much use, too fast
 void Model::CleanupLayers()
@@ -224,7 +273,7 @@ bool layersort(const Layer * l1, const Layer * l2){
   return (l1->Z < l2->Z);
 }
 
-void Model::Slice(double printOffsetZ)
+void Model::Slice()
 {
   // get a linear collection of shapes
   vector<Shape*> shapes;
@@ -286,7 +335,7 @@ void Model::Slice(double printOffsetZ)
 	}
 	z = minZ + thickness * nlayer;
 	Layer * layer = new Layer(nlayer, thickness, skins); 
-	layer->setZ(z + printOffsetZ); // set to real z
+	layer->setZ(z); // set to real z
 	int new_polys=0;
 	for (uint nshape= 0; nshape < shapes.size(); nshape++) {
 	  new_polys += layer->addShape(transforms[nshape], *shapes[nshape],
@@ -315,7 +364,7 @@ void Model::Slice(double printOffsetZ)
 	  max_shape_z = min(shape_z + serialheight, Max.z); 
 	  while ( currentshape < shapes.size() && shape_z <= max_shape_z ) {
 	    if (LayerNr%progress_steps==0) m_progress->update(shape_z);	
-	    layer->setZ(shape_z + printOffsetZ); // set to real z
+	    layer->setZ(shape_z); // set to real z
 	    if (shape_z == minZ) { // the layer is on the platform
 	      layer->LayerNo = 0;
 	      LayerNr = 1; 
@@ -679,15 +728,9 @@ void Model::ConvertToGCode()
   Vector3d printOffset = settings.Hardware.PrintMargin;
   double printOffsetZ = settings.Hardware.PrintMargin.z;
 
-  if (settings.RaftEnable)
-    {
-      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
-      MakeRaft (state, printOffsetZ);
-    }
-
   // Make Layers
-  Slice(printOffsetZ);
-  
+  Slice();
+
   //CleanupLayers();
 
   MakeShells();
@@ -707,6 +750,13 @@ void Model::ConvertToGCode()
     MultiplyUncoveredPolygons();
 
   CalcInfill();
+
+  if (settings.RaftEnable)
+    {
+      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
+      MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
+    }
+  
 
   state.ResetLastWhere(Vector3d(0,0,0));
   uint count =  layers.size();

@@ -111,16 +111,16 @@ double GCodeState::LastCommandF()
   return pImpl->lastCommand.f;
 }
 
-// dont use -- commands are generated in PLine3 printlines.cpp
-void GCodeState::AddLines (vector<PLine3> plines,
-			   double extrusionfactor,
-			   double offsetZ, 
-			   const Settings::SlicingSettings &slicing,
-			   const Settings::HardwareSettings &hardware)
-{
-  for (uint i=0; i < plines.size(); i++)
-    MakeGCodeLine (plines[i], extrusionfactor, offsetZ, slicing, hardware);
-}
+// // dont use -- commands are generated in PLine3 printlines.cpp
+// void GCodeState::AddLines (vector<PLine3> plines,
+// 			   double extrusionfactor,
+// 			   double offsetZ, 
+// 			   const Settings::SlicingSettings &slicing,
+// 			   const Settings::HardwareSettings &hardware)
+// {
+//   for (uint i=0; i < plines.size(); i++)
+//     MakeGCodeLine (plines[i], extrusionfactor, offsetZ, slicing, hardware);
+// }
 
 void GCodeState::AddLines (vector<Vector3d> linespoints,
 			   double extrusionFactor,
@@ -150,42 +150,42 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
 }
 
 
-// dont use -- commands are generated in PLine3 printlines.cpp
-void GCodeState::MakeGCodeLine (PLine3 pline,
-				double extrusionfactor,
-				double offsetZ, 
-				const Settings::SlicingSettings &slicing,
-				const Settings::HardwareSettings &hardware)
-{
-  bool relativeE = slicing.RelativeEcode;
-  double minspeed = hardware.MinPrintSpeedXY;
-  double maxspeed = hardware.MaxPrintSpeedXY;
-  cerr << "dont use GCodeState::MakeGCodeLine (PLine3 pline..." << endl; 
+// // dont use -- commands are generated in PLine3 printlines.cpp
+// void GCodeState::MakeGCodeLine (PLine3 pline,
+// 				double extrusionfactor,
+// 				double offsetZ, 
+// 				const Settings::SlicingSettings &slicing,
+// 				const Settings::HardwareSettings &hardware)
+// {
+//   bool relativeE = slicing.RelativeEcode;
+//   double minspeed = hardware.MinPrintSpeedXY;
+//   double maxspeed = hardware.MaxPrintSpeedXY;
+//   cerr << "dont use GCodeState::MakeGCodeLine (PLine3 pline..." << endl; 
 
-  if(LastPosition() != pline.from) { // then first move to pline.from
-    maxspeed = max(minspeed, (double)hardware.MoveSpeed); // in case maxspeed is too low
-    Command command(COORDINATEDMOTION, pline.from, 0, maxspeed);
-    AppendCommand(command,relativeE);
-    //SetLastPosition(pline.from);
-  }
+//   if(LastPosition() != pline.from) { // then first move to pline.from
+//     maxspeed = max(minspeed, (double)hardware.MoveSpeed); // in case maxspeed is too low
+//     Command command(COORDINATEDMOTION, pline.from, 0, maxspeed);
+//     AppendCommand(command,relativeE);
+//     //SetLastPosition(pline.from);
+//   }
 
-  if (pline.arc == 0) { // make line
-      maxspeed = max(minspeed, pline.speed); // in case maxspeed is too low
-    double extrudedMaterial = DistanceFromLastTo(pline.to) * extrusionfactor;
-    Command command(COORDINATEDMOTION, pline.to, extrudedMaterial, maxspeed);
-    if (pline.from==pline.to) command.comment = _("Extrusion only ");
-  } else { // make arc
-    cerr << "no arc in GCodeState::MakeGCodeLine (PLine3 pline..." 
-	 << "   dont use this function" << endl;
+//   if (pline.arc == 0) { // make line
+//       maxspeed = max(minspeed, pline.speed); // in case maxspeed is too low
+//     double extrudedMaterial = DistanceFromLastTo(pline.to) * extrusionfactor;
+//     Command command(COORDINATEDMOTION, pline.to, extrudedMaterial, maxspeed);
+//     if (pline.from==pline.to) command.comment = _("Extrusion only ");
+//   } else { // make arc
+//     cerr << "no arc in GCodeState::MakeGCodeLine (PLine3 pline..." 
+// 	 << "   dont use this function" << endl;
     
-  }
-  MakeGCodeLine(pline.from, pline.to, pline.arcIJK, pline.arc,
-	       pline.extrusionfactor * extrusionfactor,
-	       pline.absolute_extrusion,
-	       pline.speed, 
-	       offsetZ, slicing, hardware);
-  //SetLastPosition(pline.to);
-}
+//   }
+//   MakeGCodeLine(pline.from, pline.to, pline.arcIJK, pline.arc,
+// 	       pline.extrusionfactor * extrusionfactor,
+// 	       pline.absolute_extrusion,
+// 	       pline.speed, 
+// 	       offsetZ, slicing, hardware);
+//   //SetLastPosition(pline.to);
+// }
 
 void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
 				Vector3d arcIJK, short arc,

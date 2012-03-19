@@ -214,7 +214,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
     zigzag = true;
     //case ZigzagInfill: // long zigzag lines, make lines later
     case SupportInfill: // stripes, but leave them as polygons
-    case RaftInfill:    // stripes, but leave them as polygons
+    case RaftInfill:      // stripes, make them to lines later
     case BridgeInfill:    // stripes, make them to lines later
     case ParallelInfill:  // stripes, make them to lines later
       {
@@ -348,6 +348,7 @@ void Infill::addInfillPoly(Poly p)
   // case ZigzagInfill: // take parallel lines and connect ends
   //   zigzagpoly = new Poly(p.getZ(),extrusionfactor);
   case BridgeInfill:
+  case RaftInfill:
   case ParallelInfill:
     { // make lines instead of closed polygons
       Vector2d l,rotl;
