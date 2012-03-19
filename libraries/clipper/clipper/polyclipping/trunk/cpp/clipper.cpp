@@ -1162,8 +1162,8 @@ bool Clipper::Execute(ClipType clipType, ExPolygons &solution,
 
 bool PolySort(OutRec *or1, OutRec *or2)
 {
-    if (or1==NULL) return false;
-    if (or2==NULL) return true;
+    // if (or1==NULL) return false;
+    // if (or2==NULL) return true;
   if (or1 == or2) return false;
   if (!or1->pts || !or2->pts)
   {
@@ -1174,11 +1174,11 @@ bool PolySort(OutRec *or1, OutRec *or2)
     else return false;
   }
   int i1, i2;
-    if (or1->FirstLeft==NULL) return false;
+    // if (or1->FirstLeft==NULL) return false;
   if (or1->isHole)
     i1 = or1->FirstLeft->idx; else
     i1 = or1->idx;
-    if (or2->FirstLeft==NULL) return true;
+    // if (or2->FirstLeft==NULL) return true;
   if (or2->isHole)
     i2 = or2->FirstLeft->idx; else
     i2 = or2->idx;
@@ -2992,7 +2992,11 @@ void Clipper::JoinCommonEdges(bool fixHoleLinkages)
       FixupOutPolygon(*outRec1);
 
       if (outRec1->pts)
-        outRec1->isHole = Orientation(outRec1, m_UseFullRange);
+	{
+	  outRec1->isHole = Orientation(outRec1, m_UseFullRange);
+	  if (outRec1->isHole && !outRec1->FirstLeft) //add this 
+	    outRec1->FirstLeft = outRec2->FirstLeft; //and this line
+	}	
 
       //delete the obsolete pointer ...
       int OKIdx = outRec1->idx;
