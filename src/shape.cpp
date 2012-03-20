@@ -126,7 +126,7 @@ int Shape::loadBinarySTL(string filename)
     Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
 
     ifstream file;
-    file.open(filename.c_str());
+    file.open(filename.c_str(), ifstream::in | ifstream::binary);
 
     if(file.fail()) {
       cerr << _("Error: Unable to open stl file - ") << filename << endl;
@@ -143,7 +143,8 @@ int Shape::loadBinarySTL(string filename)
     num_triangles = buffer[0] | buffer[1] << 8 | buffer[2] << 16 | buffer[3] << 24;
     triangles.reserve(num_triangles);
 
-    for(uint i = 0; i < num_triangles; i++)
+    uint i = 0;
+    for(; i < num_triangles; i++)
     {
         double a,b,c;
         a = read_double (file);
@@ -163,6 +164,11 @@ int Shape::loadBinarySTL(string filename)
         c = read_double (file);
         Vector3d Cx(a,b,c);
 
+        if (file.eof()) {
+            cerr << _("Unexpected EOF reading STL file - ") << filename << endl;
+            break;
+        }
+
         /* attribute byte count - sometimes contains face color
             information but is useless for our purposes */
         unsigned short byte_count;
@@ -173,11 +179,14 @@ int Shape::loadBinarySTL(string filename)
 
         Triangle T(Ax,Bx,Cx);
 
-	//cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
+	// cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
 
         triangles.push_back(T);
     }
     file.close();
+
+    // cerr << "Read " << i << " triangles of " << num_triangles << " from file" << endl;
+
     CenterAroundXY();
     scale_factor = 1.0;
     scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
