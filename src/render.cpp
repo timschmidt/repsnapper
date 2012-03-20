@@ -310,19 +310,44 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     }
     if (redraw) queue_draw();
     return true;
-  }
+  } // BUTTON1
   else {
     if (event->state & GDK_BUTTON2_MASK) { // zoom
       double factor = 1.0 + 0.01 * (delta.x - delta.y);
-      m_zoom *= factor;
+      if (event->state & GDK_SHIFT_MASK) { // scale shape
+	Shape *shape;
+	TreeObject *object;
+	if (!m_view->get_selected_stl(object, shape))
+	  return true;
+	if (!object && !shape)
+	  return true;
+	if (shape) {
+	  shape->Scale(shape->getScaleFactor()/factor);
+	  m_view->update_scale_value();
+	}
+      } else { // zoom view
+	m_zoom *= factor;
+      }
     }
     else if (event->state & GDK_BUTTON3_MASK) { // pan
-      Matrix4f matrix;
-      memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
-      Vector3f m_transl = matrix.getTranslation();
-      m_transl += delta3f;
-      matrix.setTranslation(m_transl);
-      memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));      
+      if (event->state & GDK_SHIFT_MASK) { // rotate shape
+	Shape *shape;
+	TreeObject *object;
+	if (!m_view->get_selected_stl(object, shape))
+	  return true;
+	if (!shape)
+	  return true;
+	Vector3d axis(delta.y, delta.x ,0);
+	shape->Rotate(axis, -delta.length()/100.);
+	m_downPoint = dragp;
+      } else {  // move object XY
+	Matrix4f matrix;
+	memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
+	Vector3f m_transl = matrix.getTranslation();
+	m_transl += delta3f;
+	matrix.setTranslation(m_transl);
+	memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));      
+      }
     }
     m_downPoint = dragp;
     if (redraw) queue_draw();

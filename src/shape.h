@@ -64,6 +64,8 @@ public:
 	Transform3D(){identity();}
 	void identity(){transform=Matrix4d::IDENTITY;}
 	Matrix4d transform;
+	Matrix4f getFloatTransform() const;
+	void setTransform(Matrix4f matrf);
 	void scale(double x);
 	void scale_x(double x);
 	void scale_y(double x);

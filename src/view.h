@@ -40,6 +40,7 @@ class View : public Gtk::Window
   class TranslationSpinRow;
 
   friend class PrintInhibitor;
+  friend class Render;
 
   void load_gcode();
   void save_gcode();

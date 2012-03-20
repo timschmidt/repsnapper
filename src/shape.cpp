@@ -25,6 +25,14 @@
 //#include "vrml.h"
 
 
+Matrix4f Transform3D::getFloatTransform() const 
+{
+  return (Matrix4f) transform;
+}
+void Transform3D::setTransform(Matrix4f matr) 
+{
+  transform = (Matrix4f) matr;
+}
 
 void Transform3D::move(Vector3d delta)
 {
@@ -34,6 +42,7 @@ void Transform3D::move(Vector3d delta)
 
 void Transform3D::scale(double x)
 {
+  if (x==0) return;
   transform.m[3][3] = 1/x;
 }
 
