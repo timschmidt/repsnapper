@@ -22,9 +22,6 @@
 #include "poly.h"
 #include "progress.h"
 
-//#include "vrml.h"
-
-
 Matrix4f Transform3D::getFloatTransform() const 
 {
   return (Matrix4f) transform;
@@ -63,7 +60,7 @@ void Transform3D::rotate(Vector3d axis, double angle)
 {
   Vector3d naxis=axis;
   naxis.normalise();
-  transform.rotate(angle,naxis );
+  transform.rotate(angle,naxis);
 }
 void Transform3D::rotate(Vector3d center, double x, double y, double z)
 {
@@ -122,12 +119,8 @@ static double read_double(ifstream &file) {
 
 /* Loads an binary STL file by filename
  * Returns 0 on success and -1 on failure */
-int Shape::loadBinarySTL(string filename) {
-
-    // if(getFileType(filename) != BINARY_STL) {
-    //     return -1;
-    // }
-
+int Shape::loadBinarySTL(string filename) 
+{
     triangles.clear();
     Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
     Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
@@ -170,12 +163,6 @@ int Shape::loadBinarySTL(string filename) {
         c = read_double (file);
         Vector3d Cx(a,b,c);
 
-	// done in Triangle
-        /* Recalculate normal vector - can't trust an STL file! */
-        // Vector3d AA=Cx-Ax;
-        // Vector3d BB=Cx-Bx;
-	// N = AA.cross(BB).getNormalized();
-
         /* attribute byte count - sometimes contains face color
             information but is useless for our purposes */
         unsigned short byte_count;
@@ -204,7 +191,8 @@ int Shape::loadBinarySTL(string filename) {
 }
 
 
-int Shape::loadASCIIVRML(std::string filename) {
+int Shape::loadASCIIVRML(std::string filename) 
+{
   if(getFileType(filename) != VRML) {
     cerr << _("No VRML file file passed to loadASCIIVRML") << endl;
     return -1;
@@ -213,8 +201,6 @@ int Shape::loadASCIIVRML(std::string filename) {
     Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
     Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
   
-  //#ifndef HAVE_OPENVRML
-#if 1
     ifstream file;
     file.open(filename.c_str());
 
@@ -271,10 +257,8 @@ int Shape::loadASCIIVRML(std::string filename) {
     }
     file.close();
 
-    //cerr << vertices.size() << " - " << indices.size() << endl;
     if (indices.size()%4!=0) return -1;
     if (vertices.size()%3!=0) return -1;
-    //cerr <<"read ok" << endl;
     vector<Vector3d> vert;
     for (uint i=0; i<vertices.size();i+=3)
       vert.push_back(Vector3d(vertices[i],
@@ -283,13 +267,8 @@ int Shape::loadASCIIVRML(std::string filename) {
     for (uint i=0; i<indices.size();i+=4){
       Triangle T(vert[indices[i]],vert[indices[i+1]],vert[indices[i+2]]);
       triangles.push_back(T);
-      //triangles.push_back(t);
     }
 
-#else // HAVE_OPENVRML
-      // VRMLFile vf(filename);
-      // this->triangles = vf.getTriangles();
-#endif
     CenterAroundXY();
     scale_factor = 1.0;
     scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
@@ -406,24 +385,13 @@ int Shape::parseASCIISTL(istream *text) {
 	  return -1;
         }
 
-	// done in Triangle
-        /* Recalculate normal vector - can't trust an STL text! */
-        // Vector3d AA=vertices[2]-vertices[0];
-        // Vector3d BB=vertices[2]-vertices[1];
-	// normal_vec = AA.cross(BB).getNormalized();
-
-
         // Create triangle object and push onto the vector
         Triangle triangle(vertices[0],
 			  vertices[1],
 			  vertices[2]);
-
-	//	cout << "txt triangle "<< normal_vec << ":\n\t" << vertices[0] << "/\n\t"<<vertices[1] << "/\n\t"<<vertices[2] << endl;
         triangles.push_back(triangle);
     }
     CenterAroundXY();
-    // cerr << triangles.size() << endl;
-    // cerr << Center << " - " << Min << " - " << Max <<  endl;
     scale_factor = 1.0;
     scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     cout << _("Shape has volume ") << volume() << " mm^3"<<endl;
@@ -605,32 +573,6 @@ void Shape::ScaleZ(double x)
   CalcBBox();
   return;
 }
-#if 0
-    for(size_t i = 0; i < triangles.size(); i++)
-    {
-        for(int j = 0; j < 3; j++)
-        {
-            /* Translate to origin */
-            triangles[i][j] = triangles[i][j] - Min;
-            triangles[i][j].scale(in_scale_factor/scale_factor);
-            triangles[i][j] = triangles[i][j] + Min;
-        }
-    }
-
-    //Min = Min - Center;
-    //Min.scale(in_scale_factor/scale_factor);
-    //Min = Min + Center;
-
-    Max -= Min;
-    Max.scale(in_scale_factor/scale_factor);
-    Max += Min;
-    
-    CenterAroundXY();
-
-    /* Save current scale_factor */
-    scale_factor = in_scale_factor;
-#endif
-
 
 void Shape::CalcBBox()
 {
@@ -700,73 +642,8 @@ void Shape::OptimizeRotation()
       }
     }
   }
-
-
-#if 0  // this only does 90° rotations 
-
-	// Find the axis that has the largest surface
-	// Rotate to point this face towards -Z
-
-	// if dist center <|> 0.1 && Normal points towards, add area
-
-	Vector3d AXIS_VECTORS[3];
-	AXIS_VECTORS[0] = Vector3d(1,0,0);
-	AXIS_VECTORS[1] = Vector3d(0,1,0);
-	AXIS_VECTORS[2] = Vector3d(0,0,1);
-
-	double area[6];
-	for(uint i=0;i<6;i++)
-		area[i] = 0.0;
-
-	for(size_t i=0;i<triangles.size();i++)
-	{
-		triangles[i].axis = NOT_ALIGNED;
-		for(size_t triangleAxis=0;triangleAxis<3;triangleAxis++)
-		{
-			if (triangles[i].Normal.cross(AXIS_VECTORS[triangleAxis]).length() < 0.1)
-			{
-				int positive=0;
-				if(triangles[i].Normal[triangleAxis] > 0)// positive
-					positive=1;
-				AXIS axisNr = (AXIS)(triangleAxis*2+positive);
-				triangles[i].axis = axisNr;
-				if( ! (ABS(Min[triangleAxis]-triangles[i].A[triangleAxis]) < 1.1 
-				       || ABS(Max[triangleAxis]-triangles[i].A[triangleAxis]) < 1.1) )	// not close to boundingbox edges?
-				{
-					triangles[i].axis = NOT_ALIGNED;	// Not close to bounding box
-					break;
-				}
-				area[axisNr] += triangles[i].area();
-				break;
-			}
-		}
-	}
-
-
-	AXIS down = NOT_ALIGNED;
-	double LargestArea = 0;
-	for(uint i=0;i<6;i++)
-	{
-		if(area[i] > LargestArea)
-		{
-			LargestArea = area[i];
-			down = (AXIS)i;
-		}
-	}
-
-	switch(down)
-	{
-	case NEGX: Rotate(Vector3d(0,-1,0), M_PI/2.0); break;
-	case POSX: Rotate(Vector3d(0,1,0), M_PI/2.0); break;
-	case NEGY: Rotate(Vector3d(1,0,0), M_PI/2.0); break;
-	case POSY: Rotate(Vector3d(-1,0,0), M_PI/2.0); break;
-	case POSZ: Rotate(Vector3d(1,0,0), M_PI); break;
-	default: // unhandled
-	  break;
-	}
-#endif
-	CenterAroundXY();
-	PlaceOnPlatform();
+  CenterAroundXY();
+  PlaceOnPlatform();
 }
 
 int Shape::divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) const
@@ -817,7 +694,7 @@ void Shape::PlaceOnPlatform()
 void Shape::Rotate(Vector3d axis, double angle)
 {
   CenterAroundXY();
-  // Vector3d CenterXY(Center.x, Center.y, 0);
+  // transform3D.rotate(axis,angle);
   // do a real rotation because matrix transform gives errors when slicing
   for (size_t i=0; i<triangles.size(); i++)
     {
@@ -850,9 +727,7 @@ void Shape::CenterAroundXY()
   Vector3d displacement = transform3D.transform.getTranslation() - Center;
   for(size_t i=0; i<triangles.size() ; i++)
     {
-      triangles[i].A = triangles[i].A + displacement;
-      triangles[i].B = triangles[i].B + displacement;
-      triangles[i].C = triangles[i].C + displacement;
+      triangles[i].Translate(displacement);
     }
   transform3D.move(-displacement);
   CalcBBox();
@@ -966,157 +841,157 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
   return true;
 }
 
-#if 0
-// given the overall translation matrix, not our own!
-bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, 
-			   vector<Poly> &polys, double &max_grad) const
-{
-  vector<Vector2d> vertices;
-  vector<Segment> lines = getCutlines(T, z, vertices, max_grad);
+// #if 0
+// // given the overall translation matrix, not our own!
+// bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, 
+// 			   vector<Poly> &polys, double &max_grad) const
+// {
+//   vector<Vector2d> vertices;
+//   vector<Segment> lines = getCutlines(T, z, vertices, max_grad);
   
-  if (z < Min.z || z > Max.z) return true; // no polys, but all ok
+//   if (z < Min.z || z > Max.z) return true; // no polys, but all ok
 
-  if (vertices.size()==0) return false; 
-  //cerr << "vertices ok" <<endl;
-  if (!CleanupSharedSegments(lines)) return false; 
-  //cerr << "clean shared ok" <<endl;
-  if (!CleanupConnectSegments(vertices,lines,true)) return false;
-  //cerr << "clean connect ok" <<endl;
+//   if (vertices.size()==0) return false; 
+//   //cerr << "vertices ok" <<endl;
+//   if (!CleanupSharedSegments(lines)) return false; 
+//   //cerr << "clean shared ok" <<endl;
+//   if (!CleanupConnectSegments(vertices,lines,true)) return false;
+//   //cerr << "clean connect ok" <<endl;
 
-	vector< vector<int> > planepoints;
-	planepoints.resize(vertices.size());
+// 	vector< vector<int> > planepoints;
+// 	planepoints.resize(vertices.size());
 
-	// all line numbers starting from every point
-	for (uint i = 0; i < lines.size(); i++)
-		planepoints[lines[i].start].push_back(i); 
+// 	// all line numbers starting from every point
+// 	for (uint i = 0; i < lines.size(); i++)
+// 		planepoints[lines[i].start].push_back(i); 
 
-	// Build polygons
-	vector<bool> used;
-	used.resize(lines.size());
-	for (uint i=0;i>used.size();i++)
-		used[i] = false;
+// 	// Build polygons
+// 	vector<bool> used;
+// 	used.resize(lines.size());
+// 	for (uint i=0;i>used.size();i++)
+// 		used[i] = false;
 	
-	//polys.clear();
+// 	//polys.clear();
 
-	for (uint current = 0; current < lines.size(); current++)
-	{
-	  //cerr << used[current]<<"linksegments " << current << " of " << lines.size()<< endl;
-		if (used[current])
-			continue; // already used
-		used[current] = true;
+// 	for (uint current = 0; current < lines.size(); current++)
+// 	{
+// 	  //cerr << used[current]<<"linksegments " << current << " of " << lines.size()<< endl;
+// 		if (used[current])
+// 			continue; // already used
+// 		used[current] = true;
 
-		int startPoint = lines[current].start;
-		int endPoint = lines[current].end;
+// 		int startPoint = lines[current].start;
+// 		int endPoint = lines[current].end;
 
-		Poly poly = Poly(z);
-		poly.addVertex(vertices[endPoint]);
-		//poly.printinfo();
-		int count = lines.size()+100;
-		while (endPoint != startPoint && count != 0)	// While not closed
-		  {
-		        // lines starting at endPoint
-			const vector<int> &pathsfromhere = planepoints[endPoint];
+// 		Poly poly = Poly(z);
+// 		poly.addVertex(vertices[endPoint]);
+// 		//poly.printinfo();
+// 		int count = lines.size()+100;
+// 		while (endPoint != startPoint && count != 0)	// While not closed
+// 		  {
+// 		        // lines starting at endPoint
+// 			const vector<int> &pathsfromhere = planepoints[endPoint];
 
-			// Find the next line.
-			if (pathsfromhere.size() == 0) // no where to go ...
-			{
-				// lets get to the bottom of this data set:
-				cout.precision (8);
-				cout.width (12);
-				cout << "\r\npolygon was cut at z " << z << " LinkSegments at vertex " << endPoint;
-				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\trefs\n";
-				for (int i = 0; i < (int)vertices.size(); i++)
-				{
-					int refs = 0, pol = 0;
-					for (int j = 0; j < (int)lines.size(); j++)
-					{
-						if (lines[j].start == i) { refs++; pol++; }
-						if (lines[j].end == i) { refs++; pol--; }
-					}
-					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y << "\t" << refs << " pol " << pol;
-					if (refs % 2) // oh dear, a dangling vertex
-						cout << " odd, dangling vertex\n";
-					cout << "\n";
-				}
-				cout << "\n " << lines.size() << " lines:\nline\tstart vtx\tend vtx\n";
-				for (int i = 0; i < (int)lines.size(); i++)
-				{
-					if (i == endPoint)
-						cout << "problem line:\n";
-					cout << i << "\t" << lines[i].start << "\t" << lines[i].end << "\n";
-				}
+// 			// Find the next line.
+// 			if (pathsfromhere.size() == 0) // no where to go ...
+// 			{
+// 				// lets get to the bottom of this data set:
+// 				cout.precision (8);
+// 				cout.width (12);
+// 				cout << "\r\npolygon was cut at z " << z << " LinkSegments at vertex " << endPoint;
+// 				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\trefs\n";
+// 				for (int i = 0; i < (int)vertices.size(); i++)
+// 				{
+// 					int refs = 0, pol = 0;
+// 					for (int j = 0; j < (int)lines.size(); j++)
+// 					{
+// 						if (lines[j].start == i) { refs++; pol++; }
+// 						if (lines[j].end == i) { refs++; pol--; }
+// 					}
+// 					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y << "\t" << refs << " pol " << pol;
+// 					if (refs % 2) // oh dear, a dangling vertex
+// 						cout << " odd, dangling vertex\n";
+// 					cout << "\n";
+// 				}
+// 				cout << "\n " << lines.size() << " lines:\nline\tstart vtx\tend vtx\n";
+// 				for (int i = 0; i < (int)lines.size(); i++)
+// 				{
+// 					if (i == endPoint)
+// 						cout << "problem line:\n";
+// 					cout << i << "\t" << lines[i].start << "\t" << lines[i].end << "\n";
+// 				}
 
-				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\tlinked to\n";
-				for (int i = 0; i < (int)planepoints.size(); i++)
-				{
-					if (i == endPoint)
-						cout << "problem vertex:\n";
-					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y << "\t";
-					int j;
-					switch (planepoints[i].size()) {
-					case 0:
-						cout << "nothing - error !\n";
-						break;
-					case 1:
-						cout << "neighbour: " << planepoints[i][0];
-						break;
-					default:
-						cout << "Unusual - multiple: \n";
-						for (j = 0; j < (int)planepoints[i].size(); j++)
-							cout << planepoints[i][j] << " ";
-						cout << " ( " << j << " other vertices )";
-						break;
-					}
+// 				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\tlinked to\n";
+// 				for (int i = 0; i < (int)planepoints.size(); i++)
+// 				{
+// 					if (i == endPoint)
+// 						cout << "problem vertex:\n";
+// 					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y << "\t";
+// 					int j;
+// 					switch (planepoints[i].size()) {
+// 					case 0:
+// 						cout << "nothing - error !\n";
+// 						break;
+// 					case 1:
+// 						cout << "neighbour: " << planepoints[i][0];
+// 						break;
+// 					default:
+// 						cout << "Unusual - multiple: \n";
+// 						for (j = 0; j < (int)planepoints[i].size(); j++)
+// 							cout << planepoints[i][j] << " ";
+// 						cout << " ( " << j << " other vertices )";
+// 						break;
+// 					}
 
-					cout << "\n";
-				}
-				// model failure - we will get called recursivelly
-				// for a different z and different cutting plane.
-				return false;
-			} // endif nowhere to go
-			if (pathsfromhere.size() != 1)
-				cout << "Risky co-incident node \n";
+// 					cout << "\n";
+// 				}
+// 				// model failure - we will get called recursivelly
+// 				// for a different z and different cutting plane.
+// 				return false;
+// 			} // endif nowhere to go
+// 			if (pathsfromhere.size() != 1)
+// 				cout << "Risky co-incident node \n";
 
-			// TODO: we need to do better here, some idas:
-			//       a) calculate the shortest path back to our start node, and
-			//          choose that and/or
-			//       b) identify all 2+ nodes and if they share start/end
-			//          directions eliminate them to join the polygons.
+// 			// TODO: we need to do better here, some idas:
+// 			//       a) calculate the shortest path back to our start node, and
+// 			//          choose that and/or
+// 			//       b) identify all 2+ nodes and if they share start/end
+// 			//          directions eliminate them to join the polygons.
 
-			uint i;
-			// i = first unused path:
-			for (i = 0; i < pathsfromhere.size() && used[pathsfromhere[i]]; i++); 
-			if (i >= pathsfromhere.size())
-			{
-				cout << "no-where unused to go";
-				return false;
-			}
-			used[pathsfromhere[i]] = true;
+// 			uint i;
+// 			// i = first unused path:
+// 			for (i = 0; i < pathsfromhere.size() && used[pathsfromhere[i]]; i++); 
+// 			if (i >= pathsfromhere.size())
+// 			{
+// 				cout << "no-where unused to go";
+// 				return false;
+// 			}
+// 			used[pathsfromhere[i]] = true;
 
-			const Segment &nextsegment = lines[pathsfromhere[i]];
-			assert( nextsegment.start == endPoint );
-			endPoint = nextsegment.end;
+// 			const Segment &nextsegment = lines[pathsfromhere[i]];
+// 			assert( nextsegment.start == endPoint );
+// 			endPoint = nextsegment.end;
 
-			poly.addVertex(vertices[endPoint]);
-			count--;
-		}
+// 			poly.addVertex(vertices[endPoint]);
+// 			count--;
+// 		}
 
-		// Check if loop is complete
-		if (count != 0) {
-		  //poly.cleanup(Optimization);
-		  // cout << "## POLY add ";
-		  // poly.printinfo();
-		  polys.push_back(poly);		// This is good
-		} else {
-		  // We will be called for a slightly different z
-		  cout << "\r\nentered loop at shape polyons Z=" << z;
-		  return false;
-		}
-	}
+// 		// Check if loop is complete
+// 		if (count != 0) {
+// 		  //poly.cleanup(Optimization);
+// 		  // cout << "## POLY add ";
+// 		  // poly.printinfo();
+// 		  polys.push_back(poly);		// This is good
+// 		} else {
+// 		  // We will be called for a slightly different z
+// 		  cout << "\r\nentered loop at shape polyons Z=" << z;
+// 		  return false;
+// 		}
+// 	}
 
-  return true;
-}
-#endif
+//   return true;
+// }
+// #endif
 
 int find_vertex(const vector<Vector2d> vertices,  const Vector2d v, double delta = 0.0001)
 {
@@ -1138,7 +1013,7 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   int num_cutpoints;
   // we know our own tranform:
   Matrix4d transform = T * transform3D.transform ;
-
+  
   for (uint i = 0; i < triangles.size(); i++)
     {
       Segment line(-1,-1);
@@ -1419,62 +1294,6 @@ void Shape::drawBBox() const
   drawString(pos,val.str());
 }
 
-// void Shape::displayInfillOld(const Settings &settings, CuttingPlane &plane,
-// 			      uint LayerNr, vector<int>& altInfillLayers)
-// {
-//   double fullInfillDistance = settings.Hardware.ExtrudedMaterialWidth
-//     * settings.Hardware.ExtrusionFactor;  
-
-//   //cerr << "Shape::displayInfillOld" <<  endl;
-//   if (false)//settings.Display.DisplayinFill)
-//     {
-//       vector<Vector2d> *infill = NULL;
-      
-//       CuttingPlane infillCuttingPlane = plane;
-//       if (settings.Slicing.ShellOnly == false)
-// 	{
-// 	  switch (settings.Slicing.ShrinkQuality)
-// 	    {
-// 	    case SHRINK_FAST:
-// 	      //infillCuttingPlane.ClearShrink();
-// 	      infillCuttingPlane.MakeShells(settings.Slicing.ShellCount,
-// 					    settings.Hardware.ExtrudedMaterialWidth,
-// 					    settings.Slicing.Optimization,
-// 					    //settings.Display.DisplayCuttingPlane,
-// 					    false);
-// 	      break;
-// 	    case SHRINK_LOGICK:
-// 	      break;
-// 	    }
-	  
-// 	  // check if this if a layer we should use the alternate infill distance on
-// 	  double infillDistance = settings.Slicing.InfillDistance;
-// 	  if (std::find(altInfillLayers.begin(), altInfillLayers.end(), LayerNr) != altInfillLayers.end()) {
-// 	    infillDistance = settings.Slicing.AltInfillDistance;
-// 	  }
-	  
-// 	  infillCuttingPlane.CalcInfill(infillDistance,
-// 					fullInfillDistance,
-// 					settings.Slicing.InfillRotation,
-// 					settings.Slicing.InfillRotationPrLayer,
-// 					settings.Display.DisplayDebuginFill);
-// 	  //infill = infillCuttingPlane.getInfillVertices();
-// 	}
-//       glColor4f(1,1,0,1);
-//       glPointSize(5);
-//       glBegin(GL_LINES);
-//       for (size_t i = 0; i < infill->size(); i += 2)
-// 	{
-// 	  if (infill->size() > i+1)
-// 	    {
-// 	      glVertex3d ((*infill)[i  ].x, (*infill)[i  ].y, plane.getZ());
-// 	      glVertex3d ((*infill)[i+1].x, (*infill)[i+1].y, plane.getZ());
-// 	    }
-// 	}
-//       glEnd();
-//       delete infill;
-//     }
-// }
 
 void Shape::draw_geometry() 
 {
@@ -1547,8 +1366,9 @@ void Shape::draw_geometry()
 // done easier by just running through all lines and finding them?
 bool CleanupSharedSegments(vector<Segment> &lines)
 {
-#if 1
+#if 1 // just remove coincident lines
   vector<int> lines_to_delete;
+
   for (uint j = 0; j < lines.size(); j++) {
     const Segment &jr = lines[j];
     for (uint k = j + 1; k < lines.size(); k++)
@@ -1557,8 +1377,9 @@ bool CleanupSharedSegments(vector<Segment> &lines)
 	if ((jr.start == kr.start && jr.end == kr.end) ||
 	    (jr.end == kr.start && jr.start == kr.end))
 	  {
-	    lines_to_delete.push_back (j);
-	    lines_to_delete.push_back (k); // remove both???
+	    lines_to_delete.push_back (j);  // remove both???
+	    //lines_to_delete.push_back (k);
+	    break;
 	  }
       }
   }
@@ -1567,6 +1388,7 @@ bool CleanupSharedSegments(vector<Segment> &lines)
   std::sort(lines_to_delete.begin(), lines_to_delete.end());
   for (int r = lines_to_delete.size() - 1; r >= 0; r--)
     {
+      cerr << lines_to_delete[r] << endl;
       lines.erase(lines.begin() + lines_to_delete[r]);
     }
   return true;
