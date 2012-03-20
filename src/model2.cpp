@@ -297,7 +297,6 @@ void Model::Slice()
   // - Start at z~=0, cut off everything below
   // - Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
   double minZ = thickness * settings.Slicing.FirstLayerHeight;// + Min.z; 
-  double z = minZ;
 
   double max_gradient = 0;
 
@@ -324,6 +323,7 @@ void Model::Slice()
 #pragma omp parallel for schedule(dynamic) 
 #endif
       for (nlayer = 0; nlayer < num_layers; nlayer++) {
+	double z = minZ + thickness * nlayer;
 	if (nlayer%progress_steps==0) {
 #ifdef _OPENMP
 	  omp_set_lock(&progress_lock);
@@ -333,7 +333,6 @@ void Model::Slice()
 	  omp_unset_lock(&progress_lock);
 #endif
 	}
-	z = minZ + thickness * nlayer;
 	Layer * layer = new Layer(nlayer, thickness, skins); 
 	layer->setZ(z); // set to real z
 	int new_polys=0;
@@ -352,6 +351,7 @@ void Model::Slice()
     { // have skins and/or serial build
       uint currentshape = 0;
       double serialheight = Max.z; // settings.Slicing.SerialBuildHeight; 
+      double z = minZ;
       double shape_z = z;
       double max_shape_z = z + serialheight;
       Layer * layer = new Layer(LayerNr, thickness, skins); 
