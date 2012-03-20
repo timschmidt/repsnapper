@@ -231,12 +231,12 @@ bool Render::on_button_press_event(GdkEventButton* event)
 
 bool Render::on_button_release_event(GdkEventButton* event)
 {
-  if (event->button == 1) {
-    if (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK)  { // move object
-      m_view->get_model()->ModelChanged();
-      queue_draw();
-    }
-    else if (m_downPoint.x == event->x && m_downPoint.y == event->y){ // click only
+  if (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK)  { // move object
+    m_view->get_model()->ModelChanged();
+    queue_draw();
+  }
+  else if (event->button == 1) {
+    if (m_downPoint.x == event->x && m_downPoint.y == event->y){ // click only
       guint index = find_object_at(event->x, event->y);
       // click on no object - clear the selection
       if (!index) m_selection->unselect_all();
@@ -337,7 +337,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  return true;
 	if (!shape)
 	  return true;
-	Vector3d axis(delta.y, delta.x ,0);
+	Vector3d axis(delta.y, delta.x, 0);
 	shape->Rotate(axis, -delta.length()/100.);
 	m_downPoint = dragp;
       } else {  // move object XY
