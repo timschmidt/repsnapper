@@ -262,6 +262,7 @@ int main(int argc, char **argv)
   mainwin->setNonPrintingMode(nonprintingmode, opts.gcode_output_path);
 
   mainwin->set_icon_name("gtk-convert");
+  mainwin->set_title("Repsnapper");
 
   for (uint i = 0; i < opts.files.size(); i++)
     model->Read(Gio::File::create_for_path(opts.files[i]));
