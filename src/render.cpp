@@ -325,8 +325,9 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  transf = &object->transform3D;
 	else
 	  transf = &shape->transform3D;
-	double scale = transf->transform.m[3][3];
-	transf->move(delta3f*scale);
+	Matrix4f rot = ((Matrix4f)m_transform.M).getTransposed();
+	Vector3f deltaxy = rot*delta3f;
+	transf->move(Vector3f(deltaxy.x,deltaxy.y,0.));
 	m_downPoint = dragp;
 	//m_view->get_model()->CalcBoundingBoxAndCenter();
       }
@@ -383,7 +384,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	Vector3d axis(delta.y, delta.x, 0);
 	shape->Rotate(axis, -delta.length()/100.);
 	m_downPoint = dragp;
-      } else {  // move object XY
+      } else {  // move view XY
 	Matrix4f matrix;
 	memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
 	Vector3f m_transl = matrix.getTranslation();
