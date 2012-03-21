@@ -44,6 +44,7 @@ class Render : public Gtk::DrawingArea
   void selection_changed();
   GtkWidget *get_widget();
   guint find_object_at(gdouble x, gdouble y);
+  Vector3d mouse_on_plane(double x, double y, double plane_z=0) const;
 
  public:
   Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection);

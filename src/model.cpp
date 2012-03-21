@@ -913,9 +913,8 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   return layer;
 }
 
-// point is (0,0)..(1,1)
+
 void Model::setMeasuresPoint(const Vector2d point) 
 {
-  measuresPoint = Vector2d(Min.x+point.x*(Max.x-Min.x),
-			   Min.y+point.y*(Max.y-Min.y));
+  measuresPoint = point ;
 }

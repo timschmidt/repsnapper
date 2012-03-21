@@ -256,10 +256,7 @@ bool Render::on_button_press_event(GdkEventButton* event)
 {
   grab_focus();
   m_arcBall->click (event->x, event->y, &m_transform);
-  // else if (event->button == 3 || event->button == 2)
-  m_downPoint = Vector2f (event->x, event->y);  
-  // else
-  //   return Gtk::DrawingArea::on_button_press_event (event);
+  m_downPoint = Vector2f(event->x, event->y);
   if (event->button == 1) {
     guint index = find_object_at(event->x, event->y);
     if (index) {
@@ -308,8 +305,12 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   Vector2f delta = m_downPoint - dragp;
   double factor = 0.3;
   Vector3d delta3f(-delta.x*factor, delta.y*factor, 0);
-  get_model()->setMeasuresPoint(Vector2d((10.+event->x)/(get_width()-20),
-					 (10.+get_height()-event->y)/(get_height()-20)));
+  Vector3d mouse_down_plat = mouse_on_plane(m_downPoint.x, m_downPoint.y);
+  Vector3d mousePlat  = mouse_on_plane(event->x, event->y);
+  Vector2d mouse_xy   = Vector2d(mousePlat.x, mousePlat.y);
+  Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x, mouse_down_plat.y);
+  get_model()->setMeasuresPoint(mouse_xy);
+
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
     if (event->state & GDK_SHIFT_MASK) { // move object XY
       if (false);//delta3f.x<1 && delta3f.y<1) redraw=false;
@@ -325,11 +326,8 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  transf = &object->transform3D;
 	else
 	  transf = &shape->transform3D;
-	Matrix4f rot = ((Matrix4f)m_transform.M).getTransposed();
-	Vector3f deltaxy = rot*delta3f;
-	transf->move(Vector3f(deltaxy.x,deltaxy.y,0.));
+	transf->move(Vector3d(deltamouse.x, deltamouse.y, 0.));
 	m_downPoint = dragp;
-	//m_view->get_model()->CalcBoundingBoxAndCenter();
       }
     }
     else if (event->state & GDK_CONTROL_MASK) { // move object Z wise
@@ -388,7 +386,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	Matrix4f matrix;
 	memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
 	Vector3f m_transl = matrix.getTranslation();
-	m_transl += delta3f;
+	m_transl += Vector3d(deltamouse.x, deltamouse.y, 0.);
 	matrix.setTranslation(m_transl);
 	memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));      
       }
@@ -486,4 +484,33 @@ guint Render::find_object_at(gdouble x, gdouble y)
   }
 
   return name;
+}
+
+
+// http://www.3dkingdoms.com/selection.html
+Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
+{
+  // This function will find 2 points in world space that are on the line into the screen defined by screen-space( ie. window-space ) point (x,y)
+  double mvmatrix[16];
+  double projmatrix[16];
+  int viewport[4];
+  double dX, dY, dZ, dClickY; // glUnProject uses doubles, 
+	
+  glGetIntegerv(GL_VIEWPORT, viewport);	
+  glGetDoublev (GL_MODELVIEW_MATRIX, mvmatrix);
+  glGetDoublev (GL_PROJECTION_MATRIX, projmatrix);
+  dClickY = double ((double)get_height() - y); // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
+	
+  gluUnProject ((double) x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
+  Vector3d rayP1( dX, dY, dZ );
+  gluUnProject ((double) x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
+  Vector3d rayP2( dX, dY,dZ );
+
+  // intersect with z=0;
+  if (rayP2.z != rayP1.z) {
+    double t = -rayP1.z/(rayP2.z-rayP1.z);
+    Vector3d downP = rayP1 +  (rayP2-rayP1) * t;
+    return downP;
+  }
+  else return rayP1;
 }
