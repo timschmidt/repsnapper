@@ -309,7 +309,9 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   Vector3d mousePlat  = mouse_on_plane(event->x, event->y);
   Vector2d mouse_xy   = Vector2d(mousePlat.x, mousePlat.y);
   Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x, mouse_down_plat.y);
-  get_model()->setMeasuresPoint(mouse_xy);
+  Vector3d mouse_down_preview = mouse_on_plane(m_downPoint.x, m_downPoint.y,
+					       get_model()->get_preview_Z());
+  get_model()->setMeasuresPoint(mouse_down_preview);
 
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
     if (event->state & GDK_SHIFT_MASK) { // move object XY
@@ -386,7 +388,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	Matrix4f matrix;
 	memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
 	Vector3f m_transl = matrix.getTranslation();
-	m_transl += Vector3d(deltamouse.x, deltamouse.y, 0.);
+	m_transl += delta3f;//Vector3d(deltamouse.x, deltamouse.y, 0.);
 	matrix.setTranslation(m_transl);
 	memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));      
       }
@@ -508,7 +510,7 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
 
   // intersect with z=0;
   if (rayP2.z != rayP1.z) {
-    double t = -rayP1.z/(rayP2.z-rayP1.z);
+    double t = (plane_z-rayP1.z)/(rayP2.z-rayP1.z);
     Vector3d downP = rayP1 +  (rayP2-rayP1) * t;
     return downP;
   }

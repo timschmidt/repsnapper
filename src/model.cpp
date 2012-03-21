@@ -914,7 +914,13 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 }
 
 
-void Model::setMeasuresPoint(const Vector2d point) 
+double Model::get_preview_Z()
 {
-  measuresPoint = point ;
+  if (m_previewLayer) return m_previewLayer->getZ();
+  return 0;
+}
+
+void Model::setMeasuresPoint(const Vector3d point) 
+{
+  measuresPoint = Vector2d(point.x, point.y) ;
 }

@@ -88,6 +88,7 @@ public:
 	vector<Layer*> layers;
 	
 	Layer * m_previewLayer;
+	double get_preview_Z();
 	//Layer * m_previewGCodeLayer;
 	GCode m_previewGCode;
 	double m_previewGCode_z;
@@ -152,7 +153,7 @@ public:
 
 	int draw(Gtk::TreeModel::iterator &selected);
 	int drawLayers(double height, Vector3d offset, bool calconly = false);
-	void setMeasuresPoint(const Vector2d point);
+	void setMeasuresPoint(const Vector3d point);
 	Vector2d measuresPoint;
 
 	Layer * calcSingleLayer(double z, uint LayerNr, double thickness, 
