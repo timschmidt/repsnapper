@@ -174,7 +174,8 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   if (type != PolyInfill) { // can't save PolyInfill
     if (savedPatterns.size()>0){
       //cerr << savedPatterns.size() << " patterns" << endl;
-      vector<vector<struct pattern>::iterator> too_small;
+      vector<uint> too_small;
+      //vector<vector<struct pattern>::iterator> too_small;
       for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
       	   sIt != savedPatterns.end(); sIt++){
 	//cerr << sIt->Min << sIt->Max <<endl;
@@ -187,7 +188,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    if (sIt->Min.x > Min.x || sIt->Min.y > Min.y || 
 		sIt->Max.x < Max.x || sIt->Max.y < Max.y) 
 	      {
-		too_small.push_back(sIt);
+		too_small.push_back(sIt-savedPatterns.begin());
 		//break; // there is no other match
 	      }
 	    else {
@@ -200,7 +201,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       sort(too_small.rbegin(), too_small.rend());
       for (uint i = 0; i < too_small.size(); i++) {
 	//cerr << i << " - " ;
-	savedPatterns.erase(too_small[i]);
+	savedPatterns.erase(savedPatterns.begin()+too_small[i]);
       }
       //cerr << endl;
     }
