@@ -57,11 +57,14 @@ class Clipping
   static CL::Polygons CLOffset(CL::Polygons cpolys, int cldist, 
 			       CL::JoinType cljtype, double miter_limit=1, bool reverse=false);
 
+  /* vector<CL::Polygons> subjpolygons; */ // for debugging
+  /* vector<CL::Polygons> clippolygons; */
+
 public:
   Clipping(){};
   ~Clipping(){clear();};
 
-  void clear(){clpr.Clear();};
+  void clear();
 
   void addPoly(const Poly poly, PolyType type);
   void addPolys(const vector<Poly> poly, PolyType type);

@@ -124,7 +124,7 @@ class View : public Gtk::Window
   void update_settings_gui();
   void handle_ui_settings_changed();
   bool key_pressed_event(GdkEventKey *event);
-  bool moveSelected( float x, float y );
+  bool moveSelected( float x, float y, float z=0);
 
   void setModel (Model *model);
   void showAllWidgets();

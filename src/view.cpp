@@ -770,14 +770,25 @@ void View::temp_changed()
     m_temps[i]->update_temp (m_printer->get_temp((TempType) i));
 }
 
-bool View::moveSelected(float x, float y)
+bool View::moveSelected(float x, float y, float z)
 {
-  return false;
+  Shape *shape;
+  TreeObject *object;
+  if (!get_selected_stl(object, shape))
+    return true;
+  if (!object && !shape)
+    return true;
+  Transform3D *transf;
+  if (!shape)
+    transf = &object->transform3D;
+  else
+    transf = &shape->transform3D;
+  transf->move(Vector3d(x,y,z));
+  return true;
 }
 
 bool View::key_pressed_event(GdkEventKey *event)
 {
-  // FIXME: Cursor and TAB keys are stolen by UI
   //  cerr << "key " << event->keyval << endl;
   if (m_objtree->get_selection()->count_selected_rows() <= 0)
     return false;

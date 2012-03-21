@@ -408,7 +408,7 @@ void Model::Slice()
 	  max_gradient=0;
 	  //cerr << "    Z="<<z << "Max.z="<<Max.z<<endl;
 	}
-      delete layer;
+      delete layer; // have made one more than needed
     }
   // shapes.clear();
   //m_progress->stop (_("Done"));

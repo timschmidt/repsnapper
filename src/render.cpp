@@ -44,9 +44,14 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
 	      Gdk::BUTTON_RELEASE_MASK |
 	      Gdk::BUTTON1_MOTION_MASK |
 	      Gdk::BUTTON2_MOTION_MASK |
-	      Gdk::BUTTON3_MOTION_MASK);
+	      Gdk::BUTTON3_MOTION_MASK |
+	      Gdk::KEY_PRESS_MASK |
+	      Gdk::KEY_RELEASE_MASK 
+	      );
 
   GdkGLConfig *glconfig;
+  set_can_focus (true);
+
 
   // glconfig is leaked at program exit
   glconfig = gdk_gl_config_new_by_mode
@@ -209,9 +214,47 @@ bool Render::on_expose_event(GdkEventExpose* event)
   return true;
 }
 
+bool Render::on_key_press_event(GdkEventKey* event) {
+  // cerr << "key " << event->keyval << endl;
+  bool moveZ = (event->state & GDK_SHIFT_MASK);
+  bool ret = false;
+  switch (event->keyval)
+    {
+    case GDK_Up: case GDK_KP_Up:
+      if (moveZ) ret = m_view->moveSelected( 0.0,  0.0, 1.0 );
+      else ret = m_view->moveSelected( 0.0,  1.0 );
+      break;
+    case GDK_Down: case GDK_KP_Down:
+      if (moveZ) ret = m_view->moveSelected( 0.0,  0.0, -1.0 );
+      else ret = m_view->moveSelected( 0.0, -1.0 );
+      break;
+    case GDK_Left: case GDK_KP_Left:
+      ret = m_view->moveSelected( -1.0, 0.0 );
+      break;
+    case GDK_Right: case GDK_KP_Right:
+      ret = m_view->moveSelected(  1.0, 0.0 );
+      break;
+    }
+  queue_draw();
+  return ret;
+}
+
+bool Render::on_key_release_event(GdkEventKey* event) {
+  switch (event->keyval)
+    {
+    case GDK_Up: case GDK_KP_Up:
+    case GDK_Down: case GDK_KP_Down:
+    case GDK_Left: case GDK_KP_Left:
+    case GDK_Right: case GDK_KP_Right:
+      m_view->get_model()->ModelChanged();
+      return false;
+    }  
+  return true;
+}
 
 bool Render::on_button_press_event(GdkEventButton* event)
 {
+  grab_focus();
   m_arcBall->click (event->x, event->y, &m_transform);
   // else if (event->button == 3 || event->button == 2)
   m_downPoint = Vector2f (event->x, event->y);  

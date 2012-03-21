@@ -156,25 +156,25 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 					       double offsetDistance,
 					       double rotation) 
 {
+  ClipperLib::Polygons cpolys;
+  if (tofillpolys.size()==0) return cpolys;
   this->type = type;
   cached = false;
   //cerr << "have " << savedPatterns.size()<<" saved patterns " << endl;
   // look for saved pattern for this rotation
   const Vector2d Min = layer->getMin();
   const Vector2d Max = layer->getMax();
-  ClipperLib::Polygons cpolys;
   while (rotation>2*M_PI) rotation -= 2*M_PI;
   while (rotation<0) rotation += 2*M_PI;
   this->angle= rotation;
 
-  if (tofillpolys.size()==0) return cpolys;
   //omp_set_lock(&save_lock);
   //int tid = omp_get_thread_num( );
   //cerr << "thread "<<tid << " looking for pattern " << endl;
   if (type != PolyInfill) { // can't save PolyInfill
     if (savedPatterns.size()>0){
       //cerr << savedPatterns.size() << " patterns" << endl;
-      vector<uint> matches;
+      vector<vector<struct pattern>::iterator> too_small;
       for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
       	   sIt != savedPatterns.end(); sIt++){
 	//cerr << sIt->Min << sIt->Max <<endl;
@@ -187,7 +187,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    if (sIt->Min.x > Min.x || sIt->Min.y > Min.y || 
 		sIt->Max.x < Max.x || sIt->Max.y < Max.y) 
 	      {
-		matches.push_back(sIt-savedPatterns.begin());
+		too_small.push_back(sIt);
 		//break; // there is no other match
 	      }
 	    else {
@@ -197,10 +197,10 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    }
 	  }
       }
-      sort(matches.rbegin(), matches.rend());
-      for (uint i=0; i<matches.size(); i++) {
+      sort(too_small.rbegin(), too_small.rend());
+      for (uint i = 0; i < too_small.size(); i++) {
 	//cerr << i << " - " ;
-	savedPatterns.erase(savedPatterns.begin()+matches[i]);
+	savedPatterns.erase(too_small[i]);
       }
       //cerr << endl;
     }

@@ -21,6 +21,23 @@
 
 CL::Clipper Clipping::clpr;
 
+void printCpolygons(vector<CL::Polygons> p) {
+  for (uint i = 0; i<p.size(); i++) {
+    cout << "polygon " << i << endl;
+    for (uint j = 0; j<p[i].size(); j++) {
+      cout << p[i][j] << endl;//": "<<p[i][j].Y << endl;
+    }
+  }
+}
+
+
+void Clipping::clear()
+{
+  clpr.Clear();
+  // subjpolygons.clear();
+  // clippolygons.clear();
+}
+
 CL::IntPoint Clipping::ClipperPoint(Vector2d v) 
 {
   return CL::IntPoint(CL_FACTOR*(v.x+CL_OFFSET),
@@ -105,7 +122,12 @@ void Clipping::addPoly(const Poly poly, PolyType type)
 
 void Clipping::addPolys(const vector<Poly> polys, PolyType type)
 {
-  clpr.AddPolygons(getClipperPolygons(polys),CLType(type));
+  CL::Polygons cp = getClipperPolygons(polys);
+  // if (type==clip)
+  //   clippolygons.push_back(cp);
+  // else  if (type==subject)
+  //   subjpolygons.push_back(cp);
+  clpr.AddPolygons(cp,CLType(type));
   if (polys.size()>0) {
     lastZ = polys.back().getZ();
     lastExtrF = polys.back().getExtrusionFactor();

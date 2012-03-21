@@ -88,7 +88,7 @@ static struct {
   // Raft Base
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_BASE].LayerCount), T_INT,
     "BaseLayerCount", "BaseLayerCount", 1, NULL, true },
-  FLOAT_PHASE_MEMBER(BASE, Base, MaterialDistanceRatio, 1.8, false),
+  FLOAT_PHASE_MEMBER(BASE, Base, MaterialDistanceRatio, 1.8, true),
   FLOAT_PHASE_MEMBER(BASE, Base, Rotation, 0.0, false),
   FLOAT_PHASE_MEMBER(BASE, Base, RotationPrLayer, 90.0, false),
   FLOAT_PHASE_MEMBER(BASE, Base, Distance, 2.0, false),
@@ -98,7 +98,7 @@ static struct {
   // Raft Interface
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_INTERFACE].LayerCount), T_INT,
     "InterfaceLayerCount", "InterfaceLayerCount", 2, NULL, true },
-  FLOAT_PHASE_MEMBER(INTERFACE, Interface, MaterialDistanceRatio, 1.0, false),
+  FLOAT_PHASE_MEMBER(INTERFACE, Interface, MaterialDistanceRatio, 1.0, true),
   FLOAT_PHASE_MEMBER(INTERFACE, Interface, Rotation, 90.0, false),
   FLOAT_PHASE_MEMBER(INTERFACE, Interface, RotationPrLayer, 90.0, false),
   FLOAT_PHASE_MEMBER(INTERFACE, Interface, Distance, 2.0, false),

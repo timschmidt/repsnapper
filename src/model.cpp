@@ -758,7 +758,6 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
 	if (z != m_previewGCode_z) {
 	  Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
 	  if (previewGCodeLayer) {
-	    glDisable(GL_DEPTH_TEST);
 	    vector<Command> commands;
 	    previewGCodeLayer->MakeGcode(start, commands, 0, 
 					 settings.Slicing, settings.Hardware);

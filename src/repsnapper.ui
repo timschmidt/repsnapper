@@ -1070,25 +1070,10 @@ and others I forgot... (needs updating)</property>
             <property name="can_focus">True</property>
             <property name="position">2000</property>
             <child>
-              <object class="GtkVBox" id="vbox4">
+              <object class="GtkVBox" id="viewvbox">
                 <property name="width_request">400</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <child>
-                  <object class="GtkHBox" id="viewarea">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="events">GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_STRUCTURE_MASK</property>
-                    <child>
-                      <placeholder/>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
                 <child>
                   <object class="GtkHBox" id="progress_box">
                     <property name="can_focus">False</property>
@@ -1121,6 +1106,21 @@ and others I forgot... (needs updating)</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="pack_type">end</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkHBox" id="viewarea">
+                    <property name="can_focus">True</property>
+                    <property name="events">GDK_EXPOSURE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_STRUCTURE_MASK</property>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">1</property>
                   </packing>

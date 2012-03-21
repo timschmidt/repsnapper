@@ -623,7 +623,7 @@ void Layer::calcConvexHull()
 
 void Layer::setMinMax(const vector<Poly> polys) 
 {
-  Min = Vector2d( 10000000., 10000000.);
+  Min = Vector2d( 10000000.,  10000000.);
   Max = Vector2d(-10000000., -10000000.);
   for (uint i = 0; i< polys.size(); i++) {
     vector<Vector2d> minmax = polys[i].getMinMax();
@@ -983,6 +983,15 @@ void Layer::DrawMeasures(Vector2d point)
     glVertex3d(yint[i].p.x-ticksize, yint[i].p.y, Z);    
     glVertex3d(yint[i].p.x+ticksize, yint[i].p.y, Z);    
   }
+  // draw BBox
+  glVertex3d(Min.x, Min.y, Z);
+  glVertex3d(Max.x, Min.y, Z);
+  glVertex3d(Max.x, Min.y, Z);
+  glVertex3d(Max.x, Max.y, Z);
+  glVertex3d(Max.x, Max.y, Z);
+  glVertex3d(Min.x, Max.y, Z);
+  glVertex3d(Min.x, Max.y, Z);
+  glVertex3d(Min.x, Min.y, Z);
   glEnd();
   // draw numbers
   ostringstream val;

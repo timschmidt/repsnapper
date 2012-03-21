@@ -580,6 +580,7 @@ void Shape::ScaleZ(double x)
   transform3D.scale_z(x);
   scale_factor_z = x;
   CalcBBox();
+  PlaceOnPlatform();
   return;
 }
 
@@ -1397,7 +1398,6 @@ bool CleanupSharedSegments(vector<Segment> &lines)
   std::sort(lines_to_delete.begin(), lines_to_delete.end());
   for (int r = lines_to_delete.size() - 1; r >= 0; r--)
     {
-      cerr << lines_to_delete[r] << endl;
       lines.erase(lines.begin() + lines_to_delete[r]);
     }
   return true;
