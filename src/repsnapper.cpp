@@ -125,10 +125,10 @@ int main(int argc, char **argv)
   gchar *locale_dir;
 
 #ifdef G_OS_WIN32
-#warning "Windows port: Most likely needs its own locale dir here"
   char *inst_dir;
   inst_dir = g_win32_get_package_installation_directory_of_module (NULL);
   locale_dir = g_build_filename (inst_dir, "share", "locale", NULL);
+  g_free (inst_dir);
 #else
   locale_dir = g_strdup (LOCALEDIR);
 #endif
