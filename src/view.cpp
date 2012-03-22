@@ -1333,14 +1333,13 @@ void View::DrawGrid()
 	glLineWidth (2.0);
 
 	glBegin(GL_LINES);
-	glColor4f (0.8f, 0.8f, 0.8f, 1.0f);
+	//glColor4f (0.8f, 0.8f, 0.8f, 1.0f);
         // left edge
 	glVertex3f (0.0f, 0.0f, 0.0f);
 	glVertex3f (0.0f, volume.y, 0.0f);
         // near edge
 	glVertex3f (0.0f, 0.0f, 0.0f);
 	glVertex3f (volume.x, 0.0f, 0.0f);
-
 
 	glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
         // right edge
@@ -1349,7 +1348,31 @@ void View::DrawGrid()
         // far edge
 	glVertex3f (0.0f, volume.y, 0.0f);
 	glVertex3f (volume.x, volume.y, 0.0f);
+
+	// top 
+	glColor4f (0.5f, 0.5f, 0.5f, 0.5f);
+        // left edge
+	glVertex3f (0.0f, 0.0f, volume.z);
+	glVertex3f (0.0f, volume.y, volume.z);
+        // near edge
+	glVertex3f (0.0f, 0.0f, volume.z);
+	glVertex3f (volume.x, 0.0f, volume.z);
+        // right edge
+	glVertex3f (volume.x, 0.0f, volume.z);
+	glVertex3f (volume.x, volume.y, volume.z);
+        // far edge
+	glVertex3f (0.0f, volume.y, volume.z);
+	glVertex3f (volume.x, volume.y, volume.z);
+	
+	// verticals at rear
+	glVertex3f (0.0f, volume.y, 0);
+	glVertex3f (0.0f, volume.y, volume.z);
+	glVertex3f (volume.x, volume.y, 0);
+	glVertex3f (volume.x, volume.y, volume.z);
+
 	glEnd();
+
+
 
         // Draw thin internal lines
 	glLineWidth (1.0);
@@ -1384,31 +1407,43 @@ void View::DrawGrid()
         glMaterialf(GL_FRONT, GL_SHININESS, 0.5f);
         glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
 
+	// bottom
         glBegin(GL_TRIANGLE_STRIP);
         glNormal3f(0.0f, 0.0f, 1.0f);
-
 	glVertex3f (pM.x, pM.y, 0.0f);
 	glVertex3f (0.0f, 0.0f, 0.0f);
 	glVertex3f (volume.x - pM.x, pM.y, 0.0f);
 	glVertex3f (volume.x, 0.0f, 0.0f);
-
 	glVertex3f (volume.x - pM.x, volume.y - pM.y, 0.0f);
 	glVertex3f (volume.x, volume.y, 0.0f);
-
 	glVertex3f (pM.x, volume.y - pM.y, 0.0f);
 	glVertex3f (0.0f, volume.y, 0.0f);
-
 	glVertex3f (pM.x, pM.y, 0.0f);
 	glVertex3f (0.0f, 0.0f, 0.0f);
         glEnd();
 
-	// mark front left
-        glBegin(GL_TRIANGLES);
-        glNormal3f (0.0f, 0.0f, 1.0f);
-	glVertex3f (pM.x, pM.y, 0.0f);
-	glVertex3f (pM.x+10.0f, pM.y, 0.0f);
-	glVertex3f (pM.x, pM.y+10.0f, 0.0f);
+	// top
+        glBegin(GL_TRIANGLE_STRIP);
+        glNormal3f(0.0f, 0.0f, 1.0f);
+	glVertex3f (pM.x, pM.y, volume.z);
+	glVertex3f (0.0f, 0.0f, volume.z);
+	glVertex3f (volume.x - pM.x, pM.y, volume.z);
+	glVertex3f (volume.x, 0.0f, volume.z);
+	glVertex3f (volume.x - pM.x, volume.y - pM.y, volume.z);
+	glVertex3f (volume.x, volume.y, volume.z);
+	glVertex3f (pM.x, volume.y - pM.y, volume.z);
+	glVertex3f (0.0f, volume.y, volume.z);
+	glVertex3f (pM.x, pM.y, volume.z);
+	glVertex3f (0.0f, 0.0f, volume.z);
         glEnd();
+
+	// mark front left
+        // glBegin(GL_TRIANGLES);
+        // glNormal3f (0.0f, 0.0f, 1.0f);
+	// glVertex3f (pM.x, pM.y, 0.0f);
+	// glVertex3f (pM.x+10.0f, pM.y, 0.0f);
+	// glVertex3f (pM.x, pM.y+10.0f, 0.0f);
+        // glEnd();
 
         // Draw print surface
         float mat_diffuse_white[] = {0.5f, 0.5f, 0.5f, 0.05f};
