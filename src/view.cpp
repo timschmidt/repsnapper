@@ -1333,16 +1333,19 @@ void View::DrawGrid()
 	glLineWidth (2.0);
 
 	glBegin(GL_LINES);
+	glColor4f (0.8f, 0.8f, 0.8f, 1.0f);
         // left edge
 	glVertex3f (0.0f, 0.0f, 0.0f);
 	glVertex3f (0.0f, volume.y, 0.0f);
-        // right edge
-	glVertex3f (volume.x, 0.0f, 0.0f);
-	glVertex3f (volume.x, volume.y, 0.0f);
         // near edge
 	glVertex3f (0.0f, 0.0f, 0.0f);
 	glVertex3f (volume.x, 0.0f, 0.0f);
 
+
+	glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
+        // right edge
+	glVertex3f (volume.x, 0.0f, 0.0f);
+	glVertex3f (volume.x, volume.y, 0.0f);
         // far edge
 	glVertex3f (0.0f, volume.y, 0.0f);
 	glVertex3f (volume.x, volume.y, 0.0f);
@@ -1397,6 +1400,14 @@ void View::DrawGrid()
 
 	glVertex3f (pM.x, pM.y, 0.0f);
 	glVertex3f (0.0f, 0.0f, 0.0f);
+        glEnd();
+
+	// mark front left
+        glBegin(GL_TRIANGLES);
+        glNormal3f (0.0f, 0.0f, 1.0f);
+	glVertex3f (pM.x, pM.y, 0.0f);
+	glVertex3f (pM.x+10.0f, pM.y, 0.0f);
+	glVertex3f (pM.x, pM.y+10.0f, 0.0f);
         glEnd();
 
         // Draw print surface
