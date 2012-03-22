@@ -588,45 +588,9 @@ struct sortable_point {
 // http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
 void Layer::calcConvexHull() 
 {
-  hullPolygon.clear();
-  hullPolygon=Poly(Z);
-  vector<struct sortable_point> P;
-  for (uint i = 0; i<polygons.size(); i++) 
-    for (uint j = 0; j<polygons[i].size(); j++) {
-      struct sortable_point point;
-      point.v = polygons[i].vertices[j];
-      P.push_back(point);
-    }
-  
-  int n = P.size();
-  vector<Vector2d> H(2*n);
-  //cerr << n << " points"<< endl;
-  if (n<2) return;
-  if (n<4) {
-    for (int i = 0; i < n; i++) 
-      hullPolygon.addVertex(P[i].v);
-    return;
-  }
-  sort(P.begin(), P.end());
-  // for (int i = 0; i < n; i++) {
-  //   cerr <<P[i].v<< endl;
-  // }
-  // Build lower hull
-  int k=0;
-  for (int i = 0; i < n; i++) {
-    while (k >= 2 && cross(H[k-2], H[k-1], P[i].v) <= 0) k--;
-    H[k++] = P[i].v;
-  }
- 
-  // Build upper hull
-  for (int i = n-2, t = k+1; i >= 0; i--) {
-    while (k >= t && cross(H[k-2], H[k-1], P[i].v) <= 0) k--;
-    H[k++] = P[i].v;
-  }
-  H.resize(k);
-  hullPolygon.vertices = H;
+  hullPolygon = convexHull2D(polygons);
+  hullPolygon.setZ(Z);
   setMinMax(hullPolygon);
-  hullPolygon.reverse();
 }
 
 void Layer::setMinMax(const vector<Poly> polys) 
@@ -729,6 +693,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		       slicing, hardware,
 		       startPoint, lines, hardware.MaxShellSpeed);
   // TODO:  sort inner to outer in printlines
+  //printlines.roundCorners(2,lines);
   polys.clear();
 
   //  Infill
@@ -750,6 +715,8 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   printlines.makeLines(polys, true, //displace at beginning
 		       slicing, hardware, 
 		       startPoint, lines);
+  //printlines.roundCorners(2,lines);
+  polys.clear();
 
   // FINISH
 

@@ -69,6 +69,9 @@ double dist3D_Segment_to_Segment(Vector3d S1P0, Vector3d S1P1,
 				 Vector3d S2P0, Vector3d S2P1, double SMALL_NUM);
 
 
+Poly convexHull2D(const vector<Poly> polygons);
+
+
 void testangles();
 
 

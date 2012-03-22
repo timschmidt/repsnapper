@@ -139,6 +139,48 @@ double minimum_distance_Sq(const Vector2d s1, const Vector2d s2,
 }
 
 
+vector<Poly> thick_line(const Vector2d from, const Vector2d to, double width) 
+{
+  Poly poly;
+  Vector2d dir = (to-from).getNormalized() * width/4.;
+  Vector2d dirp(-dir.y,dir.x);
+  poly.addVertex(from-dir-dirp);
+  poly.addVertex(from-dir+dirp);
+  poly.addVertex(to+dir+dirp);
+  poly.addVertex(to+dir-dirp);
+  vector<Poly> p; p.push_back(poly);
+  return Clipping::getOffset(poly, width/4, jmiter, 0);
+
+  // slow:
+  // poly.addVertex(from);
+  // poly.addVertex(to);
+  // return Clipping::getOffset(poly, distance/2, jround, distance/2.);
+}
+
+// directed (one end is wider than the other)
+vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to, 
+			    double fr_width, double to_width) 
+{
+  Poly poly;
+  Vector2d fdir = (to-from).getNormalized() * fr_width/4.;
+  Vector2d tdir = (to-from).getNormalized() * to_width/4.;
+  Vector2d fr_dirp(-fdir.y, fdir.x);
+  Vector2d to_dirp(-tdir.y, tdir.x);
+  poly.addVertex(from-fdir-fr_dirp);
+  poly.addVertex(from-fdir+fr_dirp);
+  poly.addVertex(to+tdir+to_dirp);
+  poly.addVertex(to+tdir-to_dirp);
+  vector<Poly> p; p.push_back(poly);
+  return p;
+  //return Clipping::getOffset(poly, distance/4, jmiter, 0);
+
+  // slow:
+  // poly.addVertex(from);
+  // poly.addVertex(to);
+  // return Clipping::getOffset(poly, distance/2, jround, distance/2.);
+}
+
+
 //////////////////////////////////////////////////////////////
 ///////////////////////////// LINE INTERSECTION //////////////
 //////////////////////////////////////////////////////////////
@@ -590,43 +632,65 @@ bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepol
 }
   
 
-vector<Poly> thick_line(const Vector2d from, const Vector2d to, double width) 
-{
-  Poly poly;
-  Vector2d dir = (to-from).getNormalized() * width/4.;
-  Vector2d dirp(-dir.y,dir.x);
-  poly.addVertex(from-dir-dirp);
-  poly.addVertex(from-dir+dirp);
-  poly.addVertex(to+dir+dirp);
-  poly.addVertex(to+dir-dirp);
-  vector<Poly> p; p.push_back(poly);
-  return Clipping::getOffset(poly, width/4, jmiter, 0);
 
-  // slow:
-  // poly.addVertex(from);
-  // poly.addVertex(to);
-  // return Clipping::getOffset(poly, distance/2, jround, distance/2.);
+/////////////////////////// CONVEX HULL /////////////////////////
+
+// http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
+
+
+// 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
+// Returns a positive value, if OAB makes a counter-clockwise turn,
+// negative for clockwise turn, and zero if the points are collinear.
+double cross_2(const Vector2d &O, const Vector2d &A, const Vector2d &B)
+{
+   return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
 }
 
-// directed (one end is wider than the other)
-vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to, 
-			    double fr_width, double to_width) 
-{
-  Poly poly;
-  Vector2d fdir = (to-from).getNormalized() * fr_width/4.;
-  Vector2d tdir = (to-from).getNormalized() * to_width/4.;
-  Vector2d fr_dirp(-fdir.y, fdir.x);
-  Vector2d to_dirp(-tdir.y, tdir.x);
-  poly.addVertex(from-fdir-fr_dirp);
-  poly.addVertex(from-fdir+fr_dirp);
-  poly.addVertex(to+tdir+to_dirp);
-  poly.addVertex(to+tdir-to_dirp);
-  vector<Poly> p; p.push_back(poly);
-  return p;
-  //return Clipping::getOffset(poly, distance/4, jmiter, 0);
+struct sortable_point {
+  Vector2d v;
+  bool operator <(const sortable_point &p) const {
+    return (v.x < p.v.x) || ((v.x == p.v.x) && (v.y < p.v.y));
+  }
+};
 
-  // slow:
-  // poly.addVertex(from);
-  // poly.addVertex(to);
-  // return Clipping::getOffset(poly, distance/2, jround, distance/2.);
+// calc convex hull and Min and Max of layer
+// Monotone chain algo
+Poly convexHull2D(const vector<Poly> polygons) 
+{
+  Poly hullPolygon;
+  vector<struct sortable_point> P;
+  for (uint i = 0; i<polygons.size(); i++) 
+    for (uint j = 0; j<polygons[i].size(); j++) {
+      struct sortable_point point;
+      point.v = polygons[i].vertices[j];
+      P.push_back(point);
+    }
+  
+  int n = P.size();
+  vector<Vector2d> H(2*n);
+
+  if (n<2) return hullPolygon;
+  if (n<4) {
+    for (int i = 0; i < n; i++) 
+      hullPolygon.addVertex(P[i].v);
+    return hullPolygon;
+  }
+  sort(P.begin(), P.end());
+
+  // Build lower hull
+  int k=0;
+  for (int i = 0; i < n; i++) {
+    while (k >= 2 && cross_2(H[k-2], H[k-1], P[i].v) <= 0) k--;
+    H[k++] = P[i].v;
+  }
+ 
+  // Build upper hull
+  for (int i = n-2, t = k+1; i >= 0; i--) {
+    while (k >= t && cross_2(H[k-2], H[k-1], P[i].v) <= 0) k--;
+    H[k++] = P[i].v;
+  }
+  H.resize(k);
+  hullPolygon.vertices = H;
+  hullPolygon.reverse();
+  return hullPolygon;
 }
