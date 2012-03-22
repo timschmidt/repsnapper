@@ -468,35 +468,31 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
   //m_progress->stop (_("Done"));
 }
 
-// find polys in subjlayer that are not covered by any filled polygons of cliplayer
+// find polys in subjlayer that are not covered by shell of cliplayer
 vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
 					 const Layer * cliplayer)
 {
   Clipping clipp;
   clipp.clear();
-  clipp.addPolys(subjlayer->GetFillPolygons(),subject); 
-  clipp.addPolys(subjlayer->GetFullFillPolygons(),subject); 
-  clipp.addPolys(subjlayer->GetBridgePolygons(),subject); 
-  //clipp.addPolys(cliplayer->GetOuterShell(),clip); // have some overlap
-  clipp.addPolys(cliplayer->GetInnerShell(), clip); // have some more overlap
-  //clipp.addPolys(cliplayer->GetPolygons(),clip);
-  //clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
-  vector<Poly> uncovered = clipp.subtract();
-  return uncovered;
+  clipp.addPolys(subjlayer->GetFillPolygons(),     subject); 
+  clipp.addPolys(subjlayer->GetFullFillPolygons(), subject); 
+  clipp.addPolys(subjlayer->GetBridgePolygons(),   subject); 
+  //clipp.addPolys(cliplayer->GetOuterShell(),       clip); // have some overlap
+  clipp.addPolys(cliplayer->GetInnerShell(),       clip); // have some more overlap
+  vector<Poly> uncovered = clipp.subtractMerged();
+  return uncovered; 
 }				 
-// find polys in subjlayer that are not covered by any filled polygons of cliplayer
+// find polys in subjlayer that are not covered by shell of cliplayer
 vector<ExPoly> Model::GetUncoveredExPolygons(const Layer * subjlayer,
 					     const Layer * cliplayer)
 {
-  Clipping clipp;
+  Clipping clipp(false);
   clipp.clear();
-  clipp.addPolys(subjlayer->GetFillPolygons(),subject); 
-  clipp.addPolys(subjlayer->GetFullFillPolygons(),subject); 
-  clipp.addPolys(subjlayer->GetBridgePolygons(),subject); 
-  //clipp.addPolys(cliplayer->GetOuterShell(),clip); // have some overlap
-  clipp.addPolys(cliplayer->GetInnerShell(), clip); // have some more overlap
-  //clipp.addPolys(cliplayer->GetPolygons(),clip);
-  //clipp.addPolys(cliplayer->GetFullFillPolygons(),clip);
+  clipp.addPolys(subjlayer->GetFillPolygons(),     subject); 
+  clipp.addPolys(subjlayer->GetFullFillPolygons(), subject); 
+  clipp.addPolys(subjlayer->GetBridgePolygons(),   subject); 
+  //clipp.addPolys(cliplayer->GetOuterShell(),       clip); // have some overlap
+  clipp.addPolys(cliplayer->GetInnerShell(),       clip); // have some more overlap
   vector<ExPoly> uncovered = clipp.ext_subtract();
   return uncovered;
 }				 
@@ -517,42 +513,58 @@ void Model::MultiplyUncoveredPolygons()
   for (i=0; i < count; i++) 
     {
       if (i%progress_steps==0) m_progress->update(i);
-      vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
-      vector<Poly> decorpolys = layers[i]->GetDecorPolygons();
-      vector<ExPoly> bridgepolys = layers[i]->GetBridgePolygons();
-      vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
+      vector<Poly>   fullpolys     = layers[i]->GetFullFillPolygons();
+      vector<Poly>   decorpolys    = layers[i]->GetDecorPolygons();
+      vector<ExPoly> bridgepolys   = layers[i]->GetBridgePolygons();
+      vector<Poly>   skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (s=1; s < shells; s++) 
 	if (i-s > 1) {
-	  layers[i-s]->addFullPolygons(fullpolys);
-	  layers[i-s]->addFullPolygons(bridgepolys);
-	  layers[i-s]->addFullPolygons(skinfullpolys);
-	  layers[i-s]->addFullPolygons(decorpolys);
+	  layers[i-s]->addFullPolygons (fullpolys);
+	  layers[i-s]->addFullPolygons (bridgepolys);
+	  layers[i-s]->addFullPolygons (skinfullpolys);
+	  layers[i-s]->addFullPolygons (decorpolys);
 	}
     }
   // top-down: propagate upwards
   for (int i=count-1; i>=0; i--) 
     {
       if (i%progress_steps==0) m_progress->update(count + count -i);
-      vector<Poly> fullpolys = layers[i]->GetFullFillPolygons();
-      vector<ExPoly> bridgepolys = layers[i]->GetBridgePolygons();
-      vector<Poly> skinfullpolys = layers[i]->GetSkinFullPolygons();
-      vector<Poly> decorpolys = layers[i]->GetDecorPolygons();
+      vector<Poly>   fullpolys     = layers[i]->GetFullFillPolygons();
+      vector<ExPoly> bridgepolys   = layers[i]->GetBridgePolygons();
+      vector<Poly>   skinfullpolys = layers[i]->GetSkinFullPolygons();
+      vector<Poly>   decorpolys    = layers[i]->GetDecorPolygons();
       for (int s=1; s < shells; s++) 
 	if (i+s < count){
-	  layers[i+s]->addFullPolygons(fullpolys);
-	  layers[i+s]->addFullPolygons(bridgepolys);
-	  layers[i+s]->addFullPolygons(skinfullpolys);
-	  layers[i+s]->addFullPolygons(decorpolys);
+	  layers[i+s]->addFullPolygons (fullpolys);
+	  layers[i+s]->addFullPolygons (bridgepolys);
+	  layers[i+s]->addFullPolygons (skinfullpolys);
+	  layers[i+s]->addFullPolygons (decorpolys);
 	}
     }    
+
+  m_progress->set_label(_("Merging Full Polygons"));
   // merge results
-  for (int i=0; i < count; i++) 
+#ifdef _OPENMP
+  omp_lock_t progress_lock;
+  omp_init_lock(&progress_lock);
+#pragma omp parallel for schedule(dynamic) 
+#endif
+  for (i=0; i < count; i++) 
     {
-      if (i%progress_steps==0) m_progress->update(count + count +i);
-      //layers[i]->mergeFullPolygons(true);
+      if (i%progress_steps==0) {
+#ifdef _OPENMP
+	omp_set_lock(&progress_lock);
+#endif
+	m_progress->update(count + count +i);
+#ifdef _OPENMP
+	omp_unset_lock(&progress_lock);
+#endif
+      }
       layers[i]->mergeFullPolygons(false);
     }
-  //m_progress->stop (_("Done"));
+#ifdef _OPENMP
+  omp_destroy_lock(&progress_lock);
+#endif  //m_progress->stop (_("Done"));
 }
 
 
@@ -562,9 +574,9 @@ void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
 {
   Clipping clipp;
   clipp.clear();
-  clipp.addPolys(cliplayer->GetPolygons(),subject);
-  clipp.addPolys(cliplayer->GetSupportPolygons(),subject); // previous 
-  clipp.addPolys(subjlayer->GetPolygons(),clip);
+  clipp.addPolys(cliplayer->GetPolygons(),        subject);
+  clipp.addPolys(cliplayer->GetSupportPolygons(), subject); // previous 
+  clipp.addPolys(subjlayer->GetPolygons(),        clip);
 
   vector<Poly> spolys;
   if (widen != 0)
@@ -585,7 +597,6 @@ void Model::MakeSupportPolygons(double widen)
 
   for (int i=count-1; i>0; i--) 
     {
-      //cerr << "support layer "<< i << endl;
       if (i%progress_steps==0) m_progress->update(count-i);
       if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i], widen);
@@ -673,16 +684,12 @@ void Model::MakeShells()
 
 void Model::CalcInfill()
 {
-  //uint LayerCount = layers.size();
-    // (uint)ceil((Max.z+settings.Hardware.LayerThickness*0.5)/settings.Hardware.LayerThickness);
-
-
-  m_progress->start (_("Infill"), layers.size());
-  int progress_steps=(int)(layers.size()/100);
+  int count = (int)layers.size();
+  m_progress->start (_("Infill"), count);
+  int progress_steps=(count/100);
   if (progress_steps==0) progress_steps=1;
 
   //cerr << "make infill"<< endl;
-  int count = (int)layers.size();
 #ifdef _OPENMP
   omp_lock_t progress_lock;
   omp_init_lock(&progress_lock);
@@ -719,14 +726,14 @@ void Model::ConvertToGCode()
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();
   string GcodeLayer = settings.GCode.getLayerText();
-  string GcodeEnd = settings.GCode.getEndText();
+  string GcodeEnd   = settings.GCode.getEndText();
   GCodeState state(gcode);
 
   gcode.clear();
   Infill::clearPatterns();
 
-  Vector3d printOffset = settings.Hardware.PrintMargin;
-  double printOffsetZ = settings.Hardware.PrintMargin.z;
+  Vector3d printOffset  = settings.Hardware.PrintMargin;
+  double   printOffsetZ = settings.Hardware.PrintMargin.z;
 
   // Make Layers
   Slice();

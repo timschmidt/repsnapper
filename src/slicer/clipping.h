@@ -43,7 +43,7 @@ class Clipping
 {
   friend class Poly;
 
-  static CL::Clipper clpr;
+  CL::Clipper clpr;
 
   double lastZ;     // remember last added polygon's Z for output
   double lastExtrF; // remember last added polygon's extrusion factor for output
@@ -57,11 +57,12 @@ class Clipping
   static CL::Polygons CLOffset(CL::Polygons cpolys, int cldist, 
 			       CL::JoinType cljtype, double miter_limit=1, bool reverse=false);
 
-  /* vector<CL::Polygons> subjpolygons; */ // for debugging
-  /* vector<CL::Polygons> clippolygons; */
+  bool debug;
+  vector<CL::Polygons> subjpolygons; // for debugging
+  vector<CL::Polygons> clippolygons;
 
 public:
-  Clipping(){};
+  Clipping(bool debugclipper=false){debug = debugclipper;};
   ~Clipping(){clear();};
 
   void clear();
@@ -79,8 +80,8 @@ public:
   vector<Poly> subtractMerged();
   // vector<Poly> xor();
 
-  static vector<Poly> getMerged(vector<Poly> polys);
-  static CL::Polygons getMerged(CL::Polygons cpolys);
+  static vector<Poly> getMerged(vector<Poly> polys, double overlap=0.01);
+  static CL::Polygons getMerged(CL::Polygons cpolys, int overlap=3);
 
   static vector<Poly> getOffset(const Poly poly, double distance, 
 				JoinType jtype=jmiter, double miterdist=1);

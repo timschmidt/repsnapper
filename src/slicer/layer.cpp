@@ -381,23 +381,31 @@ void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor)
     decorPolygons.insert(decorPolygons.end(),inter.begin(),inter.end());
   else
     fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
-
-  //subtract from normal fills
-  clipp.clear();
-  clipp.addPolys(fillPolygons,subject);  
-  clipp.addPolys(inter,clip);
-  //cerr << fillPolygons.size() << " - " << inter.size() << endl;
-  setNormalFillPolygons(clipp.subtract());
-  mergeFullPolygons(false);
+  //mergeFullPolygons(false); // done separately
 }
 
+void cleanup(vector<Poly> &polys, double error)
+{
+  for (uint i = 0; i<polys.size(); i++)
+    polys[i].cleanup(error);
+}
 
 void Layer::mergeFullPolygons(bool bridge) 
 {
   if (bridge) {
-    // setBridgePolygons(Clipping::getMerged(bridgePolygons));
-  } else  
-    setFullFillPolygons(Clipping::getMerged(fullFillPolygons));
+    // setBridgePolygons(Clipping::getMerged(bridgePolygons, thickness));
+    // clipp.addPolys(bridgePolygons,clip);
+  } else {
+    setFullFillPolygons(Clipping::getMerged(fullFillPolygons, thickness));
+    cleanup(fullFillPolygons, thickness/4.);
+    //subtract from normal fills
+    Clipping clipp;
+    cleanup(fillPolygons, thickness/4.);
+    clipp.addPolys(fillPolygons,subject);  
+    clipp.addPolys(fullFillPolygons,clip);
+    vector<Poly> normals = clipp.subtractMerged();
+    setNormalFillPolygons(normals);
+  }
 }
 void Layer::mergeSupportPolygons() 
 {
@@ -746,6 +754,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   // FINISH
 
   Command comment(LAYERCHANGE, LayerNo);
+  comment.comment += info();
   commands.push_back(comment);
 
   float speedfactor = 1;
