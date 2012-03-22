@@ -297,23 +297,25 @@ void Model::Slice()
   // - Start at z~=0, cut off everything below
   // - Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
   double minZ = thickness * settings.Slicing.FirstLayerHeight;// + Min.z; 
+  Vector3d volume = settings.Hardware.Volume;
+  double maxZ = volume.z - settings.Hardware.PrintMargin.z;
 
   double max_gradient = 0;
 
   m_progress->set_terminal_output(settings.Display.TerminalProgress);
-  m_progress->start (_("Slicing"), Max.z);
+  m_progress->start (_("Slicing"), maxZ);
   for (vector<Layer *>::iterator pIt = layers.begin();
        pIt != layers. end(); pIt++)
     delete *pIt;
   layers.clear();
 
-  int progress_steps=(int)(Max.z/thickness/100);
+  int progress_steps=(int)(maxZ/thickness/100);
   if (progress_steps==0) progress_steps=1;
 
   if (skins == 1 && (!settings.Slicing.BuildSerial || shapes.size() == 1) )
     { // simple, can do multihreading
       if (progress_steps==0) progress_steps=1;
-      int num_layers = (int)ceil((Max.z - minZ) / thickness);
+      int num_layers = (int)ceil((maxZ - minZ) / thickness);
       vector<Layer*> omp_layers;
       layers.resize(num_layers);
       int nlayer;
@@ -350,7 +352,7 @@ void Model::Slice()
   else 
     { // have skins and/or serial build
       uint currentshape = 0;
-      double serialheight = Max.z; // settings.Slicing.SerialBuildHeight; 
+      double serialheight = maxZ; // settings.Slicing.SerialBuildHeight; 
       double z = minZ;
       double shape_z = z;
       double max_shape_z = z + serialheight;
@@ -358,10 +360,10 @@ void Model::Slice()
       layer->setZ(shape_z);
       LayerNr = 1;
       int new_polys=0;
-      while(z < Max.z)
+      while(z < maxZ)
 	{
 	  shape_z = z; 
-	  max_shape_z = min(shape_z + serialheight, Max.z); 
+	  max_shape_z = min(shape_z + serialheight, maxZ); 
 	  while ( currentshape < shapes.size() && shape_z <= max_shape_z ) {
 	    if (LayerNr%progress_steps==0) m_progress->update(shape_z);	
 	    layer->setZ(shape_z); // set to real z
