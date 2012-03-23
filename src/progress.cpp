@@ -37,6 +37,7 @@ ViewProgress::ViewProgress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *lab
 void ViewProgress::start (const char *label, double max)
 {
   //  GDK_THREADS_ENTER ();
+  do_continue = true;
   m_box->show();
   m_bar_max = max;
   m_label->set_label (label);
@@ -46,8 +47,9 @@ void ViewProgress::start (const char *label, double max)
   Gtk::Main::iteration(false);
   //GDK_THREADS_LEAVE ();
 }
-void ViewProgress::restart (const char *label, double max)
+bool ViewProgress::restart (const char *label, double max)
 {
+  if (!do_continue) return false;
   //m_box->show();
   //GDK_THREADS_ENTER ();
   if (to_terminal) {
@@ -60,6 +62,7 @@ void ViewProgress::restart (const char *label, double max)
   //g_main_context_iteration(NULL,false);
   Gtk::Main::iteration(false);
   //GDK_THREADS_LEAVE ();
+  return true;
 }
 
 void ViewProgress::stop (const char *label)
@@ -77,7 +80,7 @@ void ViewProgress::stop (const char *label)
   //GDK_THREADS_LEAVE ();
 }
 
-void ViewProgress::update (double value, bool take_priority)
+bool ViewProgress::update (double value, bool take_priority)
 {
   //GDK_THREADS_ENTER ();
   m_bar_cur = CLAMP(value, 0, 1.0);
@@ -94,6 +97,7 @@ void ViewProgress::update (double value, bool take_priority)
   //g_main_context_iteration(NULL,false);
   Gtk::Main::iteration(false);
   //GDK_THREADS_LEAVE ();
+  return do_continue;
 }
 
 void ViewProgress::set_label (const std::string label)
@@ -111,3 +115,4 @@ void ViewProgress::set_terminal_output (bool terminal)
 {
   to_terminal=terminal;
 }
+

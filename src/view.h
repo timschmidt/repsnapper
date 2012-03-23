@@ -133,7 +133,8 @@ class View : public Gtk::Window
   int getMainwindowHeight();
 
   bool statusBarMessage(Glib::ustring message);
-
+  void stop_progress();
+  
  public:
   void setNonPrintingMode(bool noprinting=true, string filename="");
   void PrintToFile();

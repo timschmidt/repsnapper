@@ -282,7 +282,7 @@ void Layer::CalcInfill (const Settings &settings)
 
   double rot = (settings.Slicing.InfillRotation 
 		+ (double)LayerNo*settings.Slicing.InfillRotationPrLayer)/180.0*M_PI;
-  if (!settings.Slicing.ShellOnly)
+  if (!shellOnly)
     normalInfill->addInfill(Z, fillPolygons, (InfillType)settings.Slicing.NormalFilltype, 
 			    infilldist, fullInfillDistance, rot);
   

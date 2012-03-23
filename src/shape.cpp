@@ -498,12 +498,14 @@ void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress)
   for (uint i = 0; i < n_tr; i++) done[i] = false;
   uint donetriangles = 0;
   if (progress) progress->start(_("Split Shapes"), n_tr);
-  int progress_steps = (int)(n_tr/100);
+  int progress_steps = max(1,(int)(n_tr/100));
   while (donetriangles < n_tr) 
     {
       bool foundadj = false;
-      for (uint s = 0; s < shapes.size(); s++){
-	for (uint i = 0; i < n_tr; i++){
+      for (uint i = 0; i < n_tr; i++){
+	for (uint s = 0; s < shapes.size(); s++){
+	  if (progress && donetriangles%progress_steps==0) 
+	    if(!progress->update(donetriangles)) break;
 	  if (!done[i]) {
 	    if (//shapes[s].triangles.size() == 0 ||
 		shapes[s].hasAdjacentTriangleTo(triangles[i])) {
@@ -518,10 +520,10 @@ void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress)
       //  have no shape any triangle attaches to
       if (!foundadj) {
 	Shape shape;
+	shapes.push_back(shape);
 	// take next undone triangle for new shape
 	for (uint i = 0; i < n_tr; i++) 
 	  if (!done[i]) {
-	    shapes.push_back(shape);
 	    shapes.back().triangles.push_back(triangles[i]);
 	    cerr << _("shape ") << shapes.size() << endl;
 	    done[i] = true;
@@ -530,7 +532,7 @@ void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress)
 	  }
       }
       if (progress && donetriangles%progress_steps==0) 
-	progress->update(donetriangles);
+	if(!progress->update(donetriangles)) break;
    }
    if (progress) progress->stop("_(Done)");
    cerr << shapes.size() << _(" shapes ") << endl;

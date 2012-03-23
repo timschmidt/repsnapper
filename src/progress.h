@@ -61,9 +61,9 @@ class ViewProgress {
   double m_bar_cur;
  public:
   void start (const char *label, double max);
-  void restart (const char *label, double max);
+  bool restart (const char *label, double max);
   void stop (const char *label);
-  void update (double value, bool take_priority=true);
+  bool update (double value, bool take_priority=true);
   //ViewProgress(Progress *model, Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label);
   ViewProgress(){};
   ViewProgress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label);
@@ -72,6 +72,8 @@ class ViewProgress {
   double value() { return m_bar_cur; }
   bool to_terminal;
   void set_terminal_output(bool terminal);
+  bool do_continue;
+  void stop_running(){do_continue = false;};
 };
 
 #endif // PROGRESS_H

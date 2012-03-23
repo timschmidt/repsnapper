@@ -108,6 +108,7 @@ void Model::ClearPreview()
 {
   if (m_previewLayer) delete m_previewLayer;
   m_previewLayer = NULL;
+  m_previewGCode.clear();
   // if (m_previewGCodeLayer) delete m_previewGCodeLayer;
   // m_previewGCodeLayer = NULL;
 }
@@ -299,7 +300,7 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
 
   double d = 5.0; // 5mm spacing between objects
   Vector3d StlDelta = (shape->Max - shape->Min);
-  cerr << shape->Max << shape->Min << StlDelta << endl;
+  //cerr << shape->Max << shape->Min << StlDelta << endl;
   vector<Vector3d> candidates;
 
   candidates.push_back(-shape->Min);//Vector3d(0.0, 0.0, 0.0));

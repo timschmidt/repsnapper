@@ -878,6 +878,10 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_mirror",        sigc::mem_fun(*this, &View::mirror_selection));
   connect_button ("twist_neg",       sigc::bind(sigc::mem_fun(*this, &View::twist_selection), -M_PI/12));
   connect_button ("twist_pos",       sigc::bind(sigc::mem_fun(*this, &View::twist_selection), M_PI/12));
+
+  connect_button ("progress_stop",   sigc::mem_fun(*this, &View::stop_progress));
+
+
   m_builder->get_widget ("m_objtree", m_objtree);
 
   // Insert our keybindings all around the place
@@ -1248,6 +1252,12 @@ bool View::statusBarMessage(Glib::ustring message)
     //     statusbar->pop();
     // }
     return false;
+}
+
+
+void View::stop_progress()
+{
+  m_progress->stop_running();
 }
 
 
