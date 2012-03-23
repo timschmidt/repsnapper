@@ -10,7 +10,7 @@
 #include <sstream>
 
 
-#include <vmmlib/vmmlib.h>
+#include <vmmlib/vmmlib.hpp>
 
 
 namespace vmml
@@ -67,21 +67,31 @@ bool svd_test::run()
     };
     VtCorrect = VtCorrectData;
     
-    ok = U.isEqualTo( UCorrect, _tolerance );
-    if ( ok ) ok = Wdiag.isEqualTo( WdiagCorrect, _tolerance );
-    if ( ok ) ok = Vt.isEqualTo( VtCorrect, _tolerance );
+    ok = U == UCorrect;
+    if ( ok ) ok = Wdiag == WdiagCorrect;
+    if ( ok ) ok = Vt == VtCorrect;
     
-    log( "singular value decomposition", ok );
+    log( "singular value decomposition, maximum precision", ok, true );
+
+    double tolerance = 1e-8;
+    ok = U.equals( UCorrect, tolerance );
+    if ( ok ) ok = Wdiag.equals( WdiagCorrect, tolerance );
+    if ( ok ) ok = Vt.equals( VtCorrect, tolerance );
+    log( "singular value decomposition, tolerance 1e-8", ok );
+
     if ( ! ok )
     {
         std::stringstream ss;
         ss
-            << "U " << U 
+            << "U " << U << "\n"
+            << "U correct " << UCorrect << "\n"
+            << "U diff " << UCorrect - U << "\n"
             << "Wdiag " << Wdiag << "\n"
-            << "Vt " << Vt 
-            << "U correct " << UCorrect
             << "Wdiag correct" << WdiagCorrect << "\n"
-            << "Vt correct" << VtCorrect
+            << "Wdiag diff " << WdiagCorrect - Wdiag << "\n"
+            << "Vt " << Vt << "\n"
+            << "Vt correct" << VtCorrect << "\n"
+            << "Vt diff " << VtCorrect - Vt << "\n"
             << std::endl;
         log_error( ss.str() );
             

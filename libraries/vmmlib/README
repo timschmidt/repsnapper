@@ -2,4 +2,6 @@ VMMLib is a small templatized vector and matrix math library.
 
 License: (revised) BSD
 
+VMMLib depends on LAPACK and BLAS, if you just want to use VMMLib basic without depending on LAPACK/BLAS, enable VMMLIB_BASIC_ONLY. 
+
 

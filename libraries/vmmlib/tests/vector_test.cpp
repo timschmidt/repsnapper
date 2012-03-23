@@ -1,20 +1,23 @@
 #include "vector_test.hpp"
 
 #include <vmmlib/vector.hpp>
+#include <vmmlib/math.hpp>
 #include <sstream>
 #include <cmath>
 
 namespace vmml
 {
+
+
 bool
 vector_test::run()
 {
     bool ok = true;
     
-    vector< 4 > v;
+    vector< 4, double > v;
     double data[] = { 1, 2, 3, 4 };
        
-    v.copyFrom1DimCArray( data );
+    v.iter_set( data, data+4 );
     
     // tests copyFrom1DimCArray function
 	ok = true;
@@ -27,13 +30,13 @@ vector_test::run()
         
         tmp = 4;
         float dataf[] = { 4, 3, 2, 1 };
-        v.copyFrom1DimCArray( dataf );
+        v.iter_set( dataf, dataf + 4 );
 		for( size_t index = 0; ok && index < 4; ++index, --tmp )
 		{
             ok = v.at( index ) == tmp;
 		}
 
-		log( "copyFrom1DimCArray(...)", ok  );
+		log( "set( input_iterator begin_, input_iterator end_ )", ok  );
 		if ( ! ok )
 		{
 			std::stringstream error;
@@ -46,8 +49,8 @@ vector_test::run()
     // tests operator+ function
 	ok = true;
 	{
-        vector< 4 > v_other;
-        vector< 4 > v_result;
+        vector< 4, double > v_other;
+        vector< 4, double > v_result;
         
         v = data;
         
@@ -99,8 +102,8 @@ vector_test::run()
     // tests operator- function
 	ok = true;
 	{
-        vector< 4 > v_other;
-        vector< 4 > v_result;
+        vector< 4, double > v_other;
+        vector< 4, double > v_result;
         
         v = data;
         
@@ -152,8 +155,8 @@ vector_test::run()
     // tests operator* function
 	ok = true;
 	{
-        vector< 4 > v_other;
-        vector< 4 > v_result;
+        vector< 4, double > v_other;
+        vector< 4, double > v_result;
         
         v = data;
         
@@ -204,8 +207,8 @@ vector_test::run()
     // tests operator/ function
 	ok = true;
 	{
-        vector< 4 > v_other;
-        vector< 4 > v_result;
+        vector< 4, double > v_other;
+        vector< 4, double > v_result;
         
         v = data;
         
@@ -215,32 +218,32 @@ vector_test::run()
         v_result = v / v_other;
 		for( size_t index = 0; ok && index < 4; ++index )
 		{
-            ok = v_result.at( index ) == 0.5;
+            ok = ( v_result.at( index ) - 0.5 ) < 1e-12;
 		}
 
         v_result = v;
         v_result /= v_other;
 		for( size_t index = 0; ok && index < 4; ++index )
 		{
-            ok = v_result.at( index ) == 0.5;
+            ok = ( v_result.at( index ) - 0.5 ) < 1e-12;
 		}
 
 
         v_result = v / 1.5;
 		for( size_t index = 0; ok && index < 4; ++index )
 		{
-            ok = v_result.at( index ) == v.at( index ) / 1.5;
+            ok = ( v_result.at( index ) - ( v.at( index ) / 1.5 ) ) < 1e-12;
 		}
 
         v_result = v;
         v_result /= 1.5;
 		for( size_t index = 0; ok && index < 4; ++index )
 		{
-            ok = v_result.at( index ) == v.at( index ) / 1.5;
+            ok = ( v_result.at( index ) - ( v.at( index ) / 1.5 ) ) < 1e-12;
 		}
 
 		log( "operator/, operator/=", ok  );
-		if ( ! ok )
+		if ( !ok )
 		{
 			std::stringstream error;
 			error 
@@ -256,17 +259,17 @@ vector_test::run()
     // tests norm / normSquared (length/lengthSquared) computation
 	ok = true;
 	{
-        vector< 4 > vec;
+        vector< 4, double > vec;
         vec = data;
         
-        double normSquared = vec.normSquared();
+        double normSquared = vec.squared_length();
         ok = normSquared == 1 * 1 + 2 * 2 + 3 * 3 + 4 * 4;
 
-        double norm = vec.norm();
+        double norm = vec.length();
         if ( ok ) 
-            ok = details::getSquareRoot( normSquared ) == norm;
+            ok = sqrt( normSquared ) == norm;
 
-		log( "norm(), normSquared()", ok  );
+		log( "length(), squared_length()", ok  );
 
     }
 
@@ -274,22 +277,22 @@ vector_test::run()
     // tests normalize
 	ok = true;
 	{
-        vector< 4 > vec;
+        vector< 4, double > vec;
         vec = data;
         vec.normalize();
-        ok = vec.norm() == 1.0;
+        ok = vec.length() == 1.0;
 
 		log( "normalize(), maximum precision", ok, true  );
         if ( ! ok )
         {
-            ok = vec.norm() - 1.0 < 1e-15;
+            ok = vec.length() - 1.0 < 1e-15;
             log( "normalize(), tolerance 1e-15", ok  );
         }
 
         if ( ! ok )
         {
             std::stringstream ss;
-            ss << "norm after normalize() " << vec.norm() << std::endl;
+            ss << "length after normalize() " << vec.length() << std::endl;
             log_error( ss.str() );
         }
 
@@ -305,32 +308,59 @@ vector_test::run()
         v2C = vData;
         vector< 2, double > v2( 1, 2 );
         
-        if ( v2 != v2C )
+        if ( ok && v2 != v2C )
             ok = false;
 
         vector< 3, double > v3C;
         v3C = vData;
         vector< 3, double > v3( 1, 2, 3 );
 
-        if ( v3 != v3C )
+        if ( ok && v3 != v3C )
             ok = false;
             
         vector< 4, double > v4C;
         v4C = vData;
         
-        if ( v4 != v4C ) 
+        if ( ok && v4 != v4C ) 
             ok = false;
-            
+          
         double vData2[] = { 23, 23, 23, 23 };
         v4C = vData2;
         
         vector< 4, double > v4_( 23 );
-        if ( v4_ != v4C )
+        if ( ok && v4_ != v4C )
             ok = false;
+       
+        v3 = vData;
+        v4C = vData;
+        vector< 4, double > v4from3_1( v3, vData[ 3 ] );
+        if ( ok && v4from3_1 != v4C )
+            ok = false;
+            
+        double hvData[] = { 1., 2., 3., 0.25 };
+        double xvData[] = { 4.0, 8.0, 12.0 };
         
-        log( "initializing constructors ", ok );
-    
-    
+        vector< 4, double > homogenous;
+        homogenous.iter_set( hvData, hvData + 4 );
+        vector< 3, double > nonh;
+        nonh.iter_set( xvData, xvData + 3 );
+        
+        vector< 4, double > htest( nonh );
+
+        // to-homogenous-coordinates ctor
+        if ( ok && htest != vector< 4, double >( 4, 8., 12., 1. ) )
+        {
+            ok = false;
+        }
+        vector< 3, double > nhtest( homogenous );
+        
+        // from homogenous-coordiates ctor
+        if ( ok && nhtest != nonh )
+        {
+            ok = false;
+        }
+
+        log( "constructors ", ok );
     
     }
 
@@ -339,9 +369,9 @@ vector_test::run()
     // set tests 
 	{
         bool ok = true;
-        vector< 4 > vec;
+        vector< 4, double > vec;
         vec.set( 2, 3, 4, 5 );
-        vector< 4 > vecCorrect;
+        vector< 4, double > vecCorrect;
         double vCData[] = { 2, 3, 4, 5 };
         vecCorrect = vCData;
         if ( vec != vecCorrect )
@@ -354,7 +384,7 @@ vector_test::run()
         if ( vec != vecCorrect )
             ok = false;
         
-        vector< 3 > v( 2, 3, 4 );
+        vector< 3, double > v( 2, 3, 4 );
         // uncommenting the following line will throw a compiler error because the number 
         // of arguments to set is != M
         //v.set( 2, 3, 4, 5 );
@@ -364,9 +394,6 @@ vector_test::run()
         if ( vec != vecCorrect )
             ok = false;
         
-
-        std::cout << vec << std::endl;
-        std::cout << v << std::endl;
         log( "set() functions", ok );
     }
 
@@ -413,10 +440,10 @@ vector_test::run()
         vector< 3, float > v0( 1, 2, 3 );
         vector< 3, float > v1( -6, 5, -4 );
         vector< 3, float > v2( -2, 2, -1 );
-        v0.distanceSquared( v1 );
+        v0.squared_distance( v1 );
         
         vector< 3, float > n;
-        n.computeNormal( v0, v1, v2 );
+        n.compute_normal( v0, v1, v2 );
         
         vector< 3, double > vd( 3, 2, 1 );
         v0 = vd;
@@ -429,16 +456,16 @@ vector_test::run()
         vector< 4, size_t > vui( 0, 5, 2, 4 );
     
         bool ok = true;
-        size_t index = vf.getSmallestComponentIndex();
-        float f = vf.getSmallestComponent();
+        size_t index = vf.find_min_index();
+        float f = vf.find_min();
         
         if ( index != 2 || f != -99.0f )
             ok = false;
         
         if ( ok )
         {
-            index = vf.getLargestComponentIndex();
-            f = vf.getLargestComponent();
+            index = vf.find_max_index();
+            f = vf.find_max();
             
             if ( index != 1 || f != 3.0f )
                 ok = false;
@@ -447,8 +474,8 @@ vector_test::run()
         size_t ui;
         if ( ok )
         {
-            index = vui.getSmallestComponentIndex();
-            ui = vui.getSmallestComponent();
+            index = vui.find_min_index();
+            ui = vui.find_min();
             if ( index != 0 || ui != 0 )
             {
                 ok = false;
@@ -457,22 +484,21 @@ vector_test::run()
 
         if ( ok )
         {
-            index = vui.getLargestComponentIndex();
-            ui = vui.getLargestComponent();
+            index = vui.find_max_index();
+            ui = vui.find_max();
             if ( index != 1 || ui != 5 )
             {
                 ok = false;
             }
         }
 
-        log( "getSmallest/LargestComponent(), ...ComponentIndex()", ok );
+        log( "find_min/max(), find_min_index/max_index()", ok );
     
     }
 
     {
         vector< 4, float > v( -1.0f, 3.0f, -99.0f, -0.9f );
         float f = 4.0f;
-        
         vector< 4, float > v_scaled = f * v;
 
         ok = true;
@@ -485,6 +511,87 @@ vector_test::run()
 
     }
 
+    {
+        vector< 3, float > vf( 3.0, 2.0, 1.0 );
+        vector< 3, double > vd( vf );
+        vector< 3, double >::const_iterator it = vd.begin(), it_end = vd.end();
+        vector< 3, float >::const_iterator fit = vf.begin();
+        bool ok = true;
+        for( ; ok && it != it_end; ++it, ++fit )
+        {
+            if ( *it != *fit )
+                ok = false;
+        }
+        vd = 0.0;
+        vd = vf;
+        for( ; ok && it != it_end; ++it, ++fit )
+        {
+            if ( *it != *fit )
+                ok = false;
+        }
+        
+        // to-homogenous-coords and from-homogenous-coords assignment ops
+        // are already tested in the tests for the respective ctors,
+        // since the ctors call the assignment ops
+        
+        log( "conversion operator=, conversion ctor", ok );
+    }
+    
+    
+    {
+        vector< 4, float > vf( 3.0, 2.0, 1.0, 1.0 );
+        vector< 3, float >& v3 = vf.get_sub_vector< 3 >();
+        bool ok = v3.x() == vf.x() && v3.y() == vf.y();
+        v3.normalize();
+
+        if ( ok ) 
+            ok = v3.x() == vf.x() && v3.y() == vf.y();
+        log( "get_sub_vector< N >()", ok );
+        
+    }
+    
+    #ifndef VMMLIB_NO_CONVERSION_OPERATORS
+    {
+        vector< 4, double > v;
+        double* array               = v;
+        //const double* const_array   = v;
+
+        array[ 1 ]          = 2.0;
+        //const_array[ 2 ]    = 3.0;
+    
+    }
+    #endif
+    
+    {
+		//elementwise sqrt
+        vector< 4, float > vsq( 9.0, 4.0, 1.0, 2.0 );
+        vector< 4, float > vsq_check( 3.0, 2.0, 1.0, 1.414213538169861 );
+		vsq.sqrt_elementwise();
+        bool ok = vsq == vsq_check;
+		
+		log( "elementwise sqrt ", ok );
+    }
+    {
+		//elementwise sqrt
+        vector< 4, float > vr( 9.0, 4.0, 1.0, 2.0 );
+        vector< 4, float > vr_check( 0.1111111119389534, 0.25, 1, 0.5 );
+		vr.reciprocal();
+        bool ok = vr == vr_check;
+				
+		log( "reciprocal ", ok );
+    }
+    {
+		//l2 norm
+        vector< 4, float > vr( 9.0, 4.0, 1.0, 2.0 );
+		double v_norm_check = 10.09950493836208;
+		double v_norm = vr.norm();
+			
+        bool ok = ((v_norm - v_norm_check) < 0.0001);
+		
+		log( "l2 norm ", ok );
+    }
+	
+	
     return ok;
 }
 

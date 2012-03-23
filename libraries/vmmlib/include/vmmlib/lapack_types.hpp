@@ -16,7 +16,7 @@ typedef __CLPK_integer  lapack_int;
 
 #else
 
-typedef ssize_t         lapack_int;
+typedef integer         lapack_int;
 
 #endif
 

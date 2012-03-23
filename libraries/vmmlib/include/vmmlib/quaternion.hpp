@@ -12,7 +12,8 @@
 
 #include <vmmlib/vector.hpp>
 #include <vmmlib/matrix.hpp>
-#include <vmmlib/details.hpp>
+#include <vmmlib/math.hpp>
+#include <vmmlib/enable_if.hpp>
 
 #include <vmmlib/exception.hpp>
 #include <vmmlib/vmmlib_config.hpp>
@@ -33,168 +34,149 @@
 namespace vmml
 {
 
-template < typename float_t >
-class quaternion
+template < typename T >
+class quaternion : private vector< 4, T >
 {
 public:
-    // accessors
-	inline float_t& operator()( size_t position );
-	inline const float_t& operator()( size_t position ) const;
-	inline float_t& operator[]( size_t position );
-	inline const float_t& operator[]( size_t position ) const;
-	inline float_t& at( size_t position );
-	inline const float_t& at( size_t position ) const;
+    typedef vector< 4, T >  super;
 
-    inline float_t& x();
-    inline const float_t& x() const;
-    inline float_t& y();
-    inline const float_t& y() const;
-    inline float_t& z();
-    inline const float_t& z() const;
-    inline float_t& w();
-    inline const float_t& w() const;
+    using super::operator();
+    //using super::operator=;
+    using super::at;
+    using super::x;
+    using super::y;
+    using super::z;
+    using super::w;
+    using super::array;
+    using super::find_min;
+    using super::find_max;
+    using super::find_min_index;
+    using super::find_max_index;
+    using super::iter_set;
 
 	//constructors
 	quaternion(); // warning: components NOT initialised (for performance)
-	quaternion( float_t x, float_t y, float_t z, float_t w );
-	quaternion( const vector< 3, float_t >& xyz , float_t w );
+	quaternion( T x, T y, T z, T w );
+
+	quaternion( const vector< 3, T >& xyz , T w );
     // initializes the quaternion with xyz, sets w to zero
-	quaternion( const vector< 3, float_t >& xyz );
+	quaternion( const vector< 3, T >& xyz );
     
-	// use rotation matrices only!
-	quaternion( const matrix< 3, 3, float_t >& rotationMatrix );
-    // only uses the rotational part ( top-left 3x3 )
-	quaternion( const matrix< 4, 4, float_t >& matrix );
+    // uses the top-left 3x3 part of the supplied matrix as rotation matrix
+    template< size_t M >
+    quaternion( const matrix< M, M, T >& rotation_matrix_,
+        typename enable_if< M >= 3 >::type* = 0 );
 	
     void zero();
     void identity();
 
     template< size_t DIM >
-    void fromRotationMatrix( const matrix< DIM, DIM, float_t >& rotationMatrix );
+    void set( const matrix< DIM, DIM, T >& rotation_matrix_ );
     
-	void set( float_t ww, float_t xx, float_t yy, float_t zz);
+	void set( T ww, T xx, T yy, T zz);
+    void set( vector< 3, T >& xyz, T w );
 
-	const quaternion& operator=( const quaternion& a );
-
-    // copies the values in array a to *this
-    // a must be a 4-component float_t c-style array
-	void operator=( float_t* a );
-    void copyFrom1DimCArray( const float_t* a );
+    template< typename input_iterator_t >
+    void set( input_iterator_t begin_, input_iterator_t end_ );
     
-	bool operator==( const float_t& a ) const;
-	bool operator!=( const float_t& a ) const;
+	bool operator==( const T& a ) const;
+	bool operator!=( const T& a ) const;
 	
 	bool operator==( const quaternion& a ) const;
 	bool operator!=( const quaternion& a ) const;
 
-	bool isAkin( const quaternion& a, 
-				 const float_t& delta = std::numeric_limits< float_t >::epsilon() );
+	bool operator==( const vector< 4, T >& a ) const;
+	bool operator!=( const vector< 4, T >& a ) const;
+
+	bool is_akin( const quaternion& a, 
+				 const T& delta = std::numeric_limits< T >::epsilon() );
 				 	
-
 	void conjugate();
-	quaternion getConjugate() const;
+	quaternion get_conjugate() const;
 
-	float_t abs() const;
-	float_t absSquared() const;
+	T abs() const;
+	T squared_abs() const;
 	
-	float_t normalize();
-	quaternion getNormalized() const;
+	T normalize();
+	quaternion get_normalized() const;
 
 	quaternion negate() const;
 	quaternion operator-() const;
+    
+    const quaternion& operator=(const quaternion& other);
+    const vector< 4, T >& operator=( const vector< 4, T >& other );
 
     //
 	// quaternion/quaternion operations
 	//
-    quaternion operator+( const quaternion< float_t >& a ) const;
-	quaternion operator-( const quaternion< float_t >& a ) const;
+    quaternion operator+( const quaternion< T >& a ) const;
+	quaternion operator-( const quaternion< T >& a ) const;
 	// caution: a * q != q * a in general
-	quaternion operator*( const quaternion< float_t >& a ) const;
-	void operator+=( const quaternion< float_t >& a );
-	void operator-=( const quaternion< float_t >& a );
+	quaternion operator*( const quaternion< T >& a ) const;
+	void operator+=( const quaternion< T >& a );
+	void operator-=( const quaternion< T >& a );
 	// caution: a *= q != q *= a in general
-	void operator*=( const quaternion< float_t >& a );
+	void operator*=( const quaternion< T >& a );
 
     //
 	// quaternion/scalar operations
     //
-	quaternion operator*( float_t a ) const;
-	quaternion operator/( float_t a ) const;
+	quaternion operator*( T a ) const;
+	quaternion operator/( T a ) const;
 	
-	void operator*=( float_t a );
-	void operator/=( float_t a );
+	void operator*=( T a );
+	void operator/=( T a );
 	
     //
 	//quaternion/vector operations
 	//
-    quaternion operator+( const vector< 3, float_t >& a ) const;
-	quaternion operator-( const vector< 3, float_t >& a ) const;
-	quaternion operator*( const vector< 3, float_t >& a ) const;
+    quaternion operator+( const vector< 3, T >& a ) const;
+	quaternion operator-( const vector< 3, T >& a ) const;
+	quaternion operator*( const vector< 3, T >& a ) const;
 
-	void operator+=( const vector< 3, float_t >& a );
-	void operator-=( const vector< 3, float_t >& a );
-	void operator*=( const vector< 3, float_t >& a );
+	void operator+=( const vector< 3, T >& a );
+	void operator-=( const vector< 3, T >& a );
+	void operator*=( const vector< 3, T >& a );
 	
     // vec3 = this x b
-	vector< 3, float_t > cross( const quaternion< float_t >& b ) const;
+	vector< 3, T > cross( const quaternion< T >& b ) const;
 
-	float_t dot( const quaternion< float_t >& a ) const;
-	static float_t dot( const quaternion< float_t >& a, const quaternion< float_t >& b );
+	T dot( const quaternion< T >& a ) const;
+	static T dot( const quaternion< T >& a, const quaternion< T >& b );
 	
 	// returns multiplicative inverse
-	quaternion getInverse();
+	quaternion inverse();
 	
 	void normal( const quaternion& aa, const quaternion& bb, const quaternion& cc,  const quaternion& dd );
 	quaternion normal( const quaternion& aa, const quaternion& bb, const quaternion& cc );
 	
 	// to combine two rotations, multiply the respective quaternions before using rotate 
 	// instead of rotating twice for increased performance, but be aware of non-commutativity!
-	void rotate( float_t theta, const vector< 3, float_t >& a );
-	void rotatex( float_t theta );
-	void rotatey( float_t theta );
-	void rotatez( float_t theta );
-	quaternion rotate( float_t theta, vector< 3, float_t >& axis, const vector< 3, float_t >& a );
-	quaternion rotatex( float_t theta, const vector< 3, float_t >& a );
-	quaternion rotatey( float_t theta, const vector< 3, float_t >& a );
-	quaternion rotatez( float_t theta, const vector< 3, float_t >& a );
+	void rotate( T theta, const vector< 3, T >& a );
+	quaternion rotate( T theta, vector< 3, T >& axis, const vector< 3, T >& a );
+	quaternion rotate_x( T theta, const vector< 3, T >& a );
+	quaternion rotate_y( T theta, const vector< 3, T >& a );
+	quaternion rotate_z( T theta, const vector< 3, T >& a );
 	
-	quaternion slerp( float_t a, const quaternion< float_t >& p, const quaternion& q );
+	quaternion slerp( T a, const quaternion< T >& p, const quaternion& q );
 	
-	float_t getMinComponent();
-	float_t getMaxComponent();
-  
-    matrix< 3, 3, float_t > getRotationMatrix() const;
+    matrix< 3, 3, T > get_rotation_matrix() const;
 
     template< size_t DIM >
-    void getRotationMatrix( matrix< DIM, DIM, float_t >& result ) const;
-    	
-	friend std::ostream& operator << ( std::ostream& os, const quaternion& q )
+    void get_rotation_matrix( matrix< DIM, DIM, T >& result ) const;
+    
+	friend std::ostream& operator<< ( std::ostream& os, const quaternion& q )
 	{
-		const std::ios::fmtflags flags =    os.flags();
-		const int				 prec  =    os.precision();
-		
-		os. setf( std::ios::right, std::ios::adjustfield );
-		os.precision( 5 );
-		os << "[" 
-            << std::setw(10) << "w: " << q.w() << " " 
-            << std::setw(10) << "xyz: " << q.x() << " " 
-            << std::setw(10) << q.y() << " " 
-            << std::setw(10) << q.z() 
-            << " ]";
-		os.precision( prec );
-		os.setf( flags );
-		return os;
+        os << "(";
+        size_t index = 0;
+        for( ; index < 3; ++index )
+        {
+            os << q.at( index ) << ", ";
+        }
+        os << q.at( index ) << ") ";
+        return os;
 	};
     
-    //storage -> layout x,y,z,w 
-    float_t array[ 4 ]
-    #ifndef VMMLIB_DONT_FORCE_ALIGNMENT
-        #ifdef _GCC
-            __attribute__((aligned(16)))
-        #endif
-    #endif
-    ;
-
 	static const quaternion ZERO;
 	static const quaternion IDENTITY;
 	static const quaternion QUATERI;
@@ -204,38 +186,40 @@ public:
 }; // class quaternion
 
 #ifndef VMMLIB_NO_TYPEDEFS
+
 typedef quaternion< float >  quaternionf;
 typedef quaternion< double > quaterniond;
+
 #endif
 
 // - implementation - //
 
-template < typename float_t >
-const quaternion< float_t > quaternion< float_t >::ZERO( 0, 0, 0, 0 );
+template < typename T >
+const quaternion< T > quaternion< T >::ZERO( 0, 0, 0, 0 );
 
-template < typename float_t >
-const quaternion< float_t > quaternion< float_t >::IDENTITY( 0, 0, 0, 1 );
+template < typename T >
+const quaternion< T > quaternion< T >::IDENTITY( 0, 0, 0, 1 );
 
-template < typename float_t >
-const quaternion< float_t > quaternion< float_t >::QUATERI( 1, 0, 0, 0 );
+template < typename T >
+const quaternion< T > quaternion< T >::QUATERI( 1, 0, 0, 0 );
 
-template < typename float_t >
-const quaternion< float_t > quaternion< float_t >::QUATERJ( 0, 1, 0, 0 );
+template < typename T >
+const quaternion< T > quaternion< T >::QUATERJ( 0, 1, 0, 0 );
 
-template < typename float_t >
-const quaternion< float_t > quaternion< float_t >::QUATERK( 0, 0, 1, 0 );
+template < typename T >
+const quaternion< T > quaternion< T >::QUATERK( 0, 0, 1, 0 );
 
 
-template < typename float_t >
-quaternion< float_t >::quaternion()
+template < typename T >
+quaternion< T >::quaternion()
 {
     // intentionally left empty
 }
 
 
 
-template < typename float_t >
-quaternion< float_t >::quaternion( float_t x_, float_t y_, float_t z_, float_t w_ )
+template < typename T >
+quaternion< T >::quaternion( T x_, T y_, T z_, T w_ )
 {
     x() = x_;
     y() = y_;
@@ -245,56 +229,49 @@ quaternion< float_t >::quaternion( float_t x_, float_t y_, float_t z_, float_t w
 
 
 
-template < typename float_t >
-quaternion< float_t >::quaternion(
-    const vector< 3, float_t >& xyz,
-    float_t w_ 
+template < typename T >
+quaternion< T >::quaternion(
+    const vector< 3, T >& xyz,
+    T w_ 
     )
 {
-	w() = w_;
-    memcpy( array, xyz.array, 3 * sizeof( float_t ) );
+    super::set( xyz, w_ );
 }
 
 
 
 
-template < typename float_t >
-quaternion< float_t >::quaternion( const vector< 3, float_t >& xyz )
+template < typename T >
+quaternion< T >::quaternion( const vector< 3, T >& xyz )
 {
-	w() = 0.0;
-    memcpy( array, xyz.array, 3 * sizeof( float_t ) );
+    super::set( xyz, static_cast< T >( 0.0 ) );
 }
 
 
 
-
-template < typename float_t >
-quaternion< float_t >::quaternion( const matrix< 3, 3, float_t >& M )
+template< typename T >
+template< size_t M >
+quaternion< T >::quaternion( const matrix< M, M, T >& rotation_matrix_,
+    typename enable_if< M >= 3 >::type* )
 {
-    fromRotationMatrix< 3 >( M );
-}
-
-
-template < typename float_t >
-quaternion< float_t >::quaternion( const matrix< 4, 4, float_t >& M )
-{
-    fromRotationMatrix< 4 >( M );
+    this->template set< M >( rotation_matrix_ );
 }
 
 
 
-template < typename float_t >
+ // top-left 3x3 is interpreted as rot matrix.
+template < typename T >
 template< size_t DIM >
 void
-quaternion< float_t >::
-fromRotationMatrix( const matrix< DIM, DIM, float_t >& M )
+quaternion< T >::
+set( const matrix< DIM, DIM, T >& M )
 {
-    float_t trace = M( 0, 0 ) + M( 1, 1 ) + M( 2,2 ) + 1.0;
+    T trace = M( 0, 0 ) + M( 1, 1 ) + M( 2,2 ) + 1.0;
     
     // very small traces may introduce a big numerical error
     if( trace > QUATERNION_TRACE_EPSILON )
     {
-        float_t s = 0.5 / details::getSquareRoot( trace );
+        T s = 0.5 / sqrt( trace );
         x() = M( 2, 1 ) - M( 1, 2 );
         x() *= s;
 
@@ -308,10 +285,13 @@ fromRotationMatrix( const matrix< DIM, DIM, float_t >& M )
     }
     else 
     {
+        vector< 3, T > diag( M( 0, 0 ), M( 1, 1 ), M( 2, 2 ) );
+        size_t largest = diag.find_max_index();
+        
         // 0, 0 is largest
-        if ( M( 0, 0 ) > M( 1, 1 ) && M( 0, 0 ) > M( 2, 2 ) )
+        if ( largest == 0 )
         {
-            float_t s = 0.5 / details::getSquareRoot( 1.0 + M( 0, 0 ) - M( 1, 1 ) - M( 2, 2 ) );
+            T s = 0.5 / sqrt( 1.0 + M( 0, 0 ) - M( 1, 1 ) - M( 2, 2 ) );
             x() = 0.25 / s;
 
             y() = M( 0,1 ) + M( 1,0 );
@@ -323,65 +303,65 @@ fromRotationMatrix( const matrix< DIM, DIM, float_t >& M )
             w() = M( 1,2 ) - M( 2,1 );
             w() *= s;
         }
+        else if ( largest == 1 )
+        {
+            T s = 0.5 / sqrt( 1.0 + M( 1,1 ) - M( 0,0 ) - M( 2,2 ) );
+            x() = M( 0,1 ) + M( 1,0 );
+            x() *= s;
+
+            y() = 0.25 / s;
+
+            z() = M( 1,2 ) + M( 2,1 );
+            z() *= s;
+
+            w() = M( 0,2 ) - M( 2,0 );
+            w() *= s;
+        }
+        // 2, 2 is largest
+        else if ( largest == 2 )
+        {
+            T s = 0.5 / sqrt( 1.0 + M( 2,2 ) - M( 0,0 ) - M( 1,1 ) );
+            x() = M( 0,2 ) + M( 2,0 );
+            x() *= s;
+
+            y() = M( 1,2 ) + M( 2,1 );
+            y() *= s;
+
+            z() = 0.25 / s;
+
+            w() = M( 0,1 ) - M( 1,0 );
+            w() *= s;
+        }
         else
         {
-            // 1, 1 is largest
-            if ( M( 1, 1 ) > M( 2, 2 ) )
-            {
-                float_t s = 0.5 / details::getSquareRoot( 1.0 + M( 1,1 ) - M( 0,0 ) - M( 2,2 ) );
-                x() = M( 0,1 ) + M( 1,0 );
-                x() *= s;
-
-                y() = 0.25 / s;
-
-                z() = M( 1,2 ) + M( 2,1 );
-                z() *= s;
-
-                w() = M( 0,2 ) - M( 2,0 );
-                w() *= s;
-            }
-            // 2, 2 is largest
-            else 
-            {
-                float_t s = 0.5 / details::getSquareRoot( 1.0 + M( 2,2 ) - M( 0,0 ) - M( 1,1 ) );
-                x() = M( 0,2 ) + M( 2,0 );
-                x() *= s;
-
-                y() = M( 1,2 ) + M( 2,1 );
-                y() *= s;
-
-                z() = 0.25 / s;
-
-                w() = M( 0,1 ) - M( 1,0 );
-                w() *= s;
-            }
+            assert( 0 );
         }
     }
 }
 
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::zero()
+quaternion< T >::zero()
 {
-    memcpy( array, ZERO.array, 4 * sizeof( float_t ) );
+    (*this) = ZERO;
 }
 
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::identity()
+quaternion< T >::identity()
 {
-    memcpy( array, IDENTITY.array, 4 * sizeof( float_t ) );
+    (*this) = IDENTITY;
 }
 
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::set( float_t xx, float_t yy, float_t zz, float_t ww )
+quaternion< T >::set( T xx, T yy, T zz, T ww )
 {
 	x() = xx;
 	y() = yy;
@@ -391,54 +371,66 @@ quaternion< float_t >::set( float_t xx, float_t yy, float_t zz, float_t ww )
 
 
 
-template < typename float_t >
+template< typename T >
 void
-quaternion< float_t >::copyFrom1DimCArray( const float_t* a )
+quaternion< T >::set( vector< 3, T >& xyz, T _w )
 {
-    memcpy( array, a, 4 * sizeof( float_t ) );
+    x() = xyz.x();
+    y() = xyz.y();
+    z() = xyz.z();
+    w() = _w;
 }
 
 
 
-template < typename float_t >
-inline void
-quaternion< float_t >::operator=( float_t* a )
+template < typename T >
+template< typename input_iterator_t >
+void
+quaternion< T >::set( input_iterator_t begin_, input_iterator_t end_ )
 {
-    copyFrom1DimCArray( a );
+    super::template set< input_iterator_t >( begin_, end_ );
 }
 
 
 
-template < typename float_t >
-const quaternion< float_t >&
-quaternion < float_t >::operator=( const quaternion< float_t >& a )
-{
-    memcpy( array, a.array, 4 * sizeof( float_t ) );
-	return *this;
-}
-
-
-
-template < typename float_t >
+template < typename T >
 bool
-quaternion< float_t >::operator==( const float_t& a ) const
+quaternion< T >::operator==( const T& a ) const
 {
 	return ( w() == a && x() == 0 && y() == 0 && z() == 0 );
 }
 
 
 
-template < typename float_t >
-bool quaternion< float_t >::operator!=( const float_t& a ) const
+template < typename T >
+bool quaternion< T >::operator!=( const T& a ) const
 {
 	return ( w() != a || x() != 0 || y() != 0 || z() != 0 );
 }
 
 
-
-template < typename float_t >
+template < typename T >
 bool
-quaternion< float_t >::operator==( const quaternion& a ) const
+quaternion< T >::operator==( const vector< 4, T >& a ) const
+{
+    return this->operator==( 
+        reinterpret_cast< const quaternion< T >& >( a ) 
+            );
+}
+
+
+template < typename T >
+bool
+quaternion< T >::operator!=( const vector< 4, T >& a ) const
+{
+	return ! this->operator==( a );
+}
+
+
+
+template < typename T >
+bool
+quaternion< T >::operator==( const quaternion& a ) const
 {
 	return ( 
         w() == a.w() && 
@@ -450,18 +442,18 @@ quaternion< float_t >::operator==( const quaternion& a ) const
 
 
 
-template < typename float_t >
+template < typename T >
 bool
-quaternion< float_t >::operator!=( const quaternion& a ) const
+quaternion< T >::operator!=( const quaternion& a ) const
 {
 	return ! this->operator==( a );
 }
 
 
 
-template < typename float_t >
+template < typename T >
 bool
-quaternion< float_t >::isAkin( const quaternion& a, const float_t& delta )
+quaternion< T >::is_akin( const quaternion& a, const T& delta )
 {
 	if( fabsf( w() - a.w() ) > delta || 
         fabsf( x() - a.x() ) > delta || 
@@ -474,147 +466,8 @@ quaternion< float_t >::isAkin( const quaternion& a, const float_t& delta )
 
 
 
-template < typename float_t >
-inline float_t&
-quaternion< float_t >::x()
-{
-    return array[ 0 ];
-}
-
-
-
-template < typename float_t >
-inline const float_t&
-quaternion< float_t >::x() const
-{
-    return array[ 0 ];
-}
-
-
-
-template < typename float_t >
-inline float_t&
-quaternion< float_t >::y()
-{
-    return array[ 1 ];
-}
-
-
-
-template < typename float_t >
-inline const float_t&
-quaternion< float_t >::y() const
-{
-    return array[ 1 ];
-}
-
-
-
-template < typename float_t >
-inline float_t&
-quaternion< float_t >::z()
-{
-    return array[ 2 ];
-}
-
-
-
-template < typename float_t >
-inline const float_t&
-quaternion< float_t >::z() const
-{
-    return array[ 2 ];
-}
-
-
-
-template < typename float_t >
-inline float_t&
-quaternion< float_t >::w()
-{
-    return array[ 3 ];
-}
-
-
-
-template < typename float_t >
-inline const float_t&
-quaternion< float_t >::w() const
-{
-    return array[ 3 ];
-}
-
-
-
-template < typename float_t >
-inline float_t&
-quaternion< float_t >::at( size_t index )
-{
-    #ifdef VMMLIB_SAFE_ACCESSORS
-    if ( index >= 4 )
-    {
-        VMMLIB_ERROR( "at() - index out of bounds", VMMLIB_HERE );
-    }
-    #endif
-    return array[ index ];
-
-}
-
-
-
-template < typename float_t >
-inline const float_t&
-quaternion< float_t >::at( size_t index ) const
-{
-    #ifdef VMMLIB_SAFE_ACCESSORS
-    if ( index >= 4 )
-    {
-        VMMLIB_ERROR( "at() - index out of bounds", VMMLIB_HERE );
-    }
-    #endif
-    return array[ index ];
-}
-
-
-
-template < typename float_t >
-inline float_t&
-quaternion< float_t >::operator[]( size_t index )
-{
-    return at( index );
-}
-
-
-
-template < typename float_t >
-inline const float_t&
-quaternion< float_t >::operator[]( size_t index ) const
-{
-    return at( index );
-}
-
-
-
-template < typename float_t >
-inline float_t&
-quaternion< float_t >::operator()( size_t index )
-{
-    return at( index );
-}
-
-	
-
-template < typename float_t >
-inline const float_t&
-quaternion< float_t >::operator()( size_t index ) const
-{
-    return at( index );
-}
-
-
-
-template < typename float_t >
-void quaternion< float_t >::conjugate() 
+template < typename T >
+void quaternion< T >::conjugate() 
 {
     x() = -x();
     y() = -y();
@@ -623,48 +476,48 @@ void quaternion< float_t >::conjugate()
 
 
 
-template < typename float_t >
-quaternion< float_t > quaternion< float_t >::getConjugate() const
+template < typename T >
+quaternion< T > quaternion< T >::get_conjugate() const
 {
-	return quaternion< float_t > ( -x(), -y(), -z(), w() );
+	return quaternion< T > ( -x(), -y(), -z(), w() );
 }
 
 
 
-template < typename float_t >
-float_t
-quaternion< float_t >::abs() const
+template < typename T >
+T
+quaternion< T >::abs() const
 {
-	return details::getSquareRoot( absSquared() );
+	return sqrt( squared_abs() );
 }
 
 
 
-template < typename float_t >
-float_t quaternion< float_t >::absSquared() const
+template < typename T >
+T quaternion< T >::squared_abs() const
 {
 	return x() * x() + y() * y() + z() * z() + w() * w();
 }
 
 
 
-template < typename float_t >
-quaternion< float_t > quaternion< float_t >::getInverse()
+template < typename T >
+quaternion< T > quaternion< T >::inverse()
 {
-	quaternion< float_t > q( *this );
+	quaternion< T > q( *this );
     q.conjugate();
     
-	float_t tmp = absSquared();
-	tmp = 1.0f / tmp;
+	T tmp = squared_abs();
+	tmp = static_cast< T >( 1.0 ) / tmp;
 	return q * tmp;
 }
 
 
 
-template < typename float_t >
-float_t quaternion< float_t >::normalize()
+template < typename T >
+T quaternion< T >::normalize()
 {
-	float_t length = abs();
+	T length = abs();
 	if( length == 0.0 )
 		return 0.0;
 	length = 1.0f / length;
@@ -674,13 +527,13 @@ float_t quaternion< float_t >::normalize()
 
 
 
-template < typename float_t >
-quaternion< float_t >
-quaternion< float_t >::getNormalized() const
+template < typename T >
+quaternion< T >
+quaternion< T >::get_normalized() const
 {
-    quaternion< float_t > normalized_quaternion( *this );
-    normalized_quaternion.normalize();
-	return normalized_quaternion;
+    quaternion< T > q( *this );
+    q.normalize();
+	return q;
 }
 
 
@@ -689,18 +542,18 @@ quaternion< float_t >::getNormalized() const
 // quaternion/quaternion operations
 //
 
-template < typename float_t >
-quaternion< float_t >
-quaternion< float_t >::operator+( const quaternion< float_t >& a ) const
+template < typename T >
+quaternion< T >
+quaternion< T >::operator+( const quaternion< T >& a ) const
 {
 	return quaternion( x() + a.x(), y() + a.y(), z() + a.z(), w() + a.w() );
 }
 
 
 
-template < typename float_t >
-quaternion< float_t >
-quaternion< float_t >::operator-( const quaternion< float_t >& a ) const
+template < typename T >
+quaternion< T >
+quaternion< T >::operator-( const quaternion< T >& a ) const
 {
 	return quaternion( x() - a.x(), y() - a.y(), z() - a.z(), w() - a.w() );
 }
@@ -708,11 +561,11 @@ quaternion< float_t >::operator-( const quaternion< float_t >& a ) const
 
 
 // returns Grasssmann product
-template < typename float_t >
-quaternion< float_t >
-quaternion< float_t >::operator*( const quaternion< float_t >& a ) const
+template < typename T >
+quaternion< T >
+quaternion< T >::operator*( const quaternion< T >& a ) const
 {
-    quaternion< float_t > ret( *this );
+    quaternion< T > ret( *this );
     ret *= a;
     return ret;
 }
@@ -720,12 +573,12 @@ quaternion< float_t >::operator*( const quaternion< float_t >& a ) const
 
 
 // Grassmann product
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::operator*=( const quaternion< float_t >& q )
+quaternion< T >::operator*=( const quaternion< T >& q )
 {
     #if 0
-    quaternion< float_t > orig( *this );
+    quaternion< T > orig( *this );
 	x() = orig.w() * a.x() + orig.x() * a.w() + orig.y() * a.z() - orig.z() * a.y();
 	y() = orig.w() * a.y() + orig.y() * a.w() + orig.z() * a.x() - orig.x() * a.z();
 	z() = orig.w() * a.z() + orig.z() * a.w() + orig.x() * a.y() - orig.y() * a.x();
@@ -735,30 +588,32 @@ quaternion< float_t >::operator*=( const quaternion< float_t >& q )
     // optimized version, 7 less mul, but 15 more add/subs
     // after Henrik Engstrom, from a gamedev.net article.
 
-    const float_t& a = array[ 3 ];
-    const float_t& b = array[ 0 ];
-    const float_t& c = array[ 1 ];
-    const float_t& d = array[ 2 ];
-    const float_t& x = q.array[ 3 ];
-    const float_t& y = q.array[ 0 ];
-    const float_t& z = q.array[ 1 ];
-    const float_t& w = q.array[ 2 ];
+    T* _array = super::array;
 
-    const float_t tmp_00 = (d - c) * (z - w);
-    const float_t tmp_01 = (a + b) * (x + y);
-    const float_t tmp_02 = (a - b) * (z + w);
-    const float_t tmp_03 = (c + d) * (x - y);
-    const float_t tmp_04 = (d - b) * (y - z);
-    const float_t tmp_05 = (d + b) * (y + z);
-    const float_t tmp_06 = (a + c) * (x - w);
-    const float_t tmp_07 = (a - c) * (x + w);
-    const float_t tmp_08 = tmp_05 + tmp_06 + tmp_07;
-    const float_t tmp_09 = 0.5 * (tmp_04 + tmp_08);
+    const T& a = _array[ 3 ];
+    const T& b = _array[ 0 ];
+    const T& c = _array[ 1 ];
+    const T& d = _array[ 2 ];
+    const T& _x = q.array[ 3 ];
+    const T& _y = q.array[ 0 ];
+    const T& _z = q.array[ 1 ];
+    const T& _w = q.array[ 2 ];
+
+    const T tmp_00 = (d - c) * (_z - _w);
+    const T tmp_01 = (a + b) * (_x + _y);
+    const T tmp_02 = (a - b) * (_z + _w);
+    const T tmp_03 = (c + d) * (_x - _y);
+    const T tmp_04 = (d - b) * (_y - _z);
+    const T tmp_05 = (d + b) * (_y + _z);
+    const T tmp_06 = (a + c) * (_x - _w);
+    const T tmp_07 = (a - c) * (_x + _w);
+    const T tmp_08 = tmp_05 + tmp_06 + tmp_07;
+    const T tmp_09 = 0.5 * (tmp_04 + tmp_08);
     
-    array[ 3 ] = tmp_00 + tmp_09 - tmp_05;
-    array[ 0 ] = tmp_01 + tmp_09 - tmp_08;
-    array[ 1 ] = tmp_02 + tmp_09 - tmp_07;
-    array[ 2 ] = tmp_03 + tmp_09 - tmp_06;   
+    _array[ 3 ] = tmp_00 + tmp_09 - tmp_05;
+    _array[ 0 ] = tmp_01 + tmp_09 - tmp_08;
+    _array[ 1 ] = tmp_02 + tmp_09 - tmp_07;
+    _array[ 2 ] = tmp_03 + tmp_09 - tmp_06;   
     
     #endif
 }
@@ -767,18 +622,18 @@ quaternion< float_t >::operator*=( const quaternion< float_t >& q )
 
 
 
-template < typename float_t >
-quaternion< float_t > 
-quaternion< float_t >::operator-() const
+template < typename T >
+quaternion< T > 
+quaternion< T >::operator-() const
 {
 	return quaternion( -x(), -y(), -z(), -w() );
 }
 
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::operator+=( const quaternion< float_t >& a )
+quaternion< T >::operator+=( const quaternion< T >& a )
 {
     array[ 0 ] += a.array[ 0 ];
     array[ 1 ] += a.array[ 1 ];
@@ -788,9 +643,9 @@ quaternion< float_t >::operator+=( const quaternion< float_t >& a )
 
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::operator-=( const quaternion< float_t >& a )
+quaternion< T >::operator-=( const quaternion< T >& a )
 {
     array[ 0 ] -= a.array[ 0 ];
     array[ 1 ] -= a.array[ 1 ];
@@ -804,18 +659,18 @@ quaternion< float_t >::operator-=( const quaternion< float_t >& a )
 // quaternion/scalar operations		
 //
 
-template < typename float_t >
-quaternion< float_t >
-quaternion< float_t >::operator*( const float_t a ) const
+template < typename T >
+quaternion< T >
+quaternion< T >::operator*( const T a ) const
 {
 	return quaternion( x() * a, y() * a, z() * a, w() * a );
 }
 
 
 	
-template < typename float_t >
-quaternion< float_t >
-quaternion< float_t >::operator/( float_t a ) const
+template < typename T >
+quaternion< T >
+quaternion< T >::operator/( T a ) const
 {  
     if ( a == 0.0 )
     {
@@ -827,9 +682,9 @@ quaternion< float_t >::operator/( float_t a ) const
 
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::operator*=( float_t a ) 
+quaternion< T >::operator*=( T a ) 
 {
 	array[ 0 ] *= a;
 	array[ 1 ] *= a;
@@ -839,9 +694,9 @@ quaternion< float_t >::operator*=( float_t a )
 	
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::operator/=( float_t a ) 
+quaternion< T >::operator/=( T a ) 
 {
     if ( a == 0.0 )
     {
@@ -854,27 +709,27 @@ quaternion< float_t >::operator/=( float_t a )
 
 //quaternion/vector operations
 
-template < typename float_t >
-quaternion< float_t >
-quaternion< float_t >::operator+( const vector< 3, float_t >& a ) const
+template < typename T >
+quaternion< T >
+quaternion< T >::operator+( const vector< 3, T >& a ) const
 {
 	return quaternion( x() + a.x(), y() + a.y(), z() + a.z(), w() );
 }
 
 
 
-template < typename float_t >
-quaternion< float_t >
-quaternion< float_t >::operator-( const vector< 3, float_t >& a ) const
+template < typename T >
+quaternion< T >
+quaternion< T >::operator-( const vector< 3, T >& a ) const
 {
 	return quaternion( w(), x() - a.x(), y() - a.y(), z() - a.z() );
 }
 
 
 
-template < typename float_t >
-quaternion< float_t >
-quaternion< float_t >::operator*( const vector< 3, float_t >& a ) const
+template < typename T >
+quaternion< T >
+quaternion< T >::operator*( const vector< 3, T >& a ) const
 {
 	return quaternion( -x() * a.x() - y() * a.y() - z() * a.z(),
 	 					w() * a.x() + y() * a.z() - z() * a.y(), 
@@ -884,9 +739,9 @@ quaternion< float_t >::operator*( const vector< 3, float_t >& a ) const
 
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::operator+=( const vector< 3, float_t >& xyz )
+quaternion< T >::operator+=( const vector< 3, T >& xyz )
 {
 	x() += xyz.x();
 	y() += xyz.y();
@@ -895,9 +750,9 @@ quaternion< float_t >::operator+=( const vector< 3, float_t >& xyz )
 
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::operator-=( const vector< 3, float_t >& xyz )
+quaternion< T >::operator-=( const vector< 3, T >& xyz )
 {
 	x() -= xyz.x();
 	y() -= xyz.y();
@@ -907,28 +762,28 @@ quaternion< float_t >::operator-=( const vector< 3, float_t >& xyz )
 
 
 
-template < typename float_t >
+template < typename T >
 void
-quaternion< float_t >::operator*=(const vector< 3, float_t >& a )
+quaternion< T >::operator*=(const vector< 3, T >& a )
 {
-    float_t x = x();
-    float_t y = y();
-    float_t z = z();
-    float_t w = w();
+    T _x = x();
+    T _y = y();
+    T _z = z();
+    T _w = w();
     
-	x() = w * a.x() + y * a.z() - z * a.y();
-	y() = w * a.y() + z * a.x() - x * a.z();
-	z() = w * a.z() + x * a.y() - y * a.x();
-    w() = -x * a.x() - y * a.y() - z * a.z();
+	x() = _w * a.x() + _y * a.z() - _z * a.y();
+	y() = _w * a.y() + _z * a.x() - _x * a.z();
+	z() = _w * a.z() + _x * a.y() - _y * a.x();
+    w() = -_x * a.x() - _y * a.y() - _z * a.z();
 }
 	
 
 
 
-template < typename float_t >
-vector< 3, float_t > quaternion< float_t >::cross( const quaternion< float_t >& bb ) const
+template < typename T >
+vector< 3, T > quaternion< T >::cross( const quaternion< T >& bb ) const
 {
-	vector< 3, float_t > result;
+	vector< 3, T > result;
 
     result.array[ 0 ] = y() * bb.z() - z() * bb.y(); 
     result.array[ 1 ] = z() * bb.x() - x() * bb.z(); 
@@ -939,45 +794,45 @@ vector< 3, float_t > quaternion< float_t >::cross( const quaternion< float_t >& 
 
 
 
-template < typename float_t >
-float_t quaternion< float_t >::dot( const quaternion< float_t >& a ) const
+template < typename T >
+T quaternion< T >::dot( const quaternion< T >& a ) const
 {
 	return w() * a.w() + x() * a.x() + y() * a.y() + z() * a.z();
 }
 
 
 
-template < typename float_t >
-float_t quaternion< float_t >::
-dot( const quaternion< float_t >& a, const quaternion< float_t >& b )
+template < typename T >
+T quaternion< T >::
+dot( const quaternion< T >& a, const quaternion< T >& b )
 {
 	return a.w() * b.w() + a.x() * b.x() + a.y() * b.y() + a.z() * b.z();
 }
 
 
 
-template < typename float_t >
-void quaternion< float_t >::normal( const quaternion< float_t >& aa,
-							  const quaternion< float_t >& bb,
-							  const quaternion< float_t >& cc,
-							  const quaternion< float_t >& dd )
+template < typename T >
+void quaternion< T >::normal( const quaternion< T >& aa,
+							  const quaternion< T >& bb,
+							  const quaternion< T >& cc,
+							  const quaternion< T >& dd )
 {
 	//right hand system, CCW triangle
-	const quaternion< float_t > quat_t = bb - aa;
-	const quaternion< float_t > quat_u = cc - aa;
-	const quaternion< float_t > quat_v = dd - aa;
+	const quaternion< T > quat_t = bb - aa;
+	const quaternion< T > quat_u = cc - aa;
+	const quaternion< T > quat_v = dd - aa;
 	cross( quat_t, quat_u, quat_v );
 	normalize();
 }
 
 
 
-template < typename float_t >
-quaternion< float_t > quaternion< float_t >::normal( const quaternion< float_t >& aa,
-										 const quaternion< float_t >& bb,
-										 const quaternion< float_t >& cc )
+template < typename T >
+quaternion< T > quaternion< T >::normal( const quaternion< T >& aa,
+										 const quaternion< T >& bb,
+										 const quaternion< T >& cc )
 {
-	quaternion< float_t > tmp;
+	quaternion< T > tmp;
 	tmp.normal( *this, aa, bb, cc );
 	return tmp;
 }
@@ -986,99 +841,77 @@ quaternion< float_t > quaternion< float_t >::normal( const quaternion< float_t >
 // to combine two rotations, multiply the respective quaternions before using rotate 
 // instead of rotating twice for increased performance, but be aware of non-commutativity!
 // (the first rotation quaternion has to be the first factor)
-template< typename float_t >
-quaternion< float_t >
-quaternion< float_t >::rotate( float_t theta, vector< 3, float_t >& axis, const vector< 3, float_t >& a )
+template< typename T >
+quaternion< T >
+quaternion< T >::rotate( T theta, vector< 3, T >& axis, const vector< 3, T >& a )
 {
-	quaternion< float_t > p = a;
-	float_t alpha = theta / 2;
-	quaternion< float_t > q = cos( alpha ) + ( sin( alpha ) * axis.normalize() );
+	quaternion< T > p = a;
+	T alpha = theta / 2;
+	quaternion< T > q = cos( alpha ) + ( sin( alpha ) * axis.normalize() );
 	return q * p * q.invert();
 }
 
 
 
-template< typename float_t >
-quaternion< float_t > quaternion< float_t >::rotatex( float_t theta, const vector< 3, float_t >& a )
+template< typename T >
+quaternion< T > quaternion< T >::rotate_x( T theta, const vector< 3, T >& a )
 {
-	quaternion< float_t > p = a;
-	float_t alpha = theta / 2;
-	quaternion< float_t > q = cos( alpha ) + ( sin( alpha ) *  QUATERI );
+	quaternion< T > p = a;
+	T alpha = theta / 2;
+	quaternion< T > q = cos( alpha ) + ( sin( alpha ) *  QUATERI );
 	return q * p * q.invert();
 }
 
 
 
-template< typename float_t >
-quaternion< float_t > quaternion< float_t >::rotatey( float_t theta, const vector< 3, float_t >& a )
+template< typename T >
+quaternion< T > quaternion< T >::rotate_y( T theta, const vector< 3, T >& a )
 {
-	quaternion< float_t > p = a;
-	float_t alpha = theta / 2;
-	quaternion< float_t > q = cos( alpha ) + ( sin( alpha ) *  QUATERJ );
+	quaternion< T > p = a;
+	T alpha = theta / 2;
+	quaternion< T > q = cos( alpha ) + ( sin( alpha ) *  QUATERJ );
 	return q * p * q.invert();
 }
 
 
 
-template< typename float_t >
-quaternion< float_t > quaternion< float_t >::rotatez( float_t theta, const vector< 3, float_t >& a )
+template< typename T >
+quaternion< T > quaternion< T >::rotate_z( T theta, const vector< 3, T >& a )
 {
-	quaternion< float_t > p = a;
-	float_t alpha = theta / 2;
-	quaternion< float_t > q = cos( alpha ) + ( sin( alpha ) *  QUATERK );
+	quaternion< T > p = a;
+	T alpha = theta / 2;
+	quaternion< T > q = cos( alpha ) + ( sin( alpha ) *  QUATERK );
 	return q * p * q.invert();
 }
 
 
 
-template < typename float_t >
-float_t quaternion< float_t >::getMinComponent()
+template < typename T >
+matrix< 3, 3, T >
+quaternion< T >::get_rotation_matrix() const
 {
-	float_t m = std::min( w(), x() );
-	m = std::min( m, y() );
-	m = std::min( m, z() );
-	return m;
-}
-
-
-
-template < typename float_t >
-float_t quaternion< float_t >::getMaxComponent()
-{
-	float_t m = std::max( w(), x() );
-	m = std::max( m(), y() );
-	m = std::max( m(), z() );
-	return m;
-}
-
-
-
-template < typename float_t >
-matrix< 3, 3, float_t >
-quaternion< float_t >::getRotationMatrix() const
-{
-    matrix< 3, 3, float_t > result;
-    getRotationMatrix< 3 >( result );
+    matrix< 3, 3, T > result;
+    get_rotation_matrix< 3 >( result );
     return result;
 }
 
 
 
-template < typename float_t >
+template < typename T >
 template< size_t DIM >
 void
-quaternion< float_t >::getRotationMatrix( matrix< DIM, DIM, float_t >& M ) const
+quaternion< T >::get_rotation_matrix( matrix< DIM, DIM, T >& M ) const
 {
-    float_t w2 = w() * w();
-    float_t x2 = x() * x();
-    float_t y2 = y() * y();
-    float_t z2 = z() * z();
-    float_t wx = w() * x();
-    float_t wy = w() * y();
-    float_t wz = w() * z();
-    float_t xy = x() * y();
-    float_t xz = x() * z();
-    float_t yz = y() * z();
+    T w2 = w() * w();
+    T x2 = x() * x();
+    T y2 = y() * y();
+    T z2 = z() * z();
+    T wx = w() * x();
+    T wy = w() * y();
+    T wz = w() * z();
+    T xy = x() * y();
+    T xz = x() * z();
+    T yz = y() * z();
 
     M( 0, 0 ) = w2 + x2 - y2 - z2;
     M( 0, 1 ) = 2. * (xy - wz);
@@ -1094,14 +927,14 @@ quaternion< float_t >::getRotationMatrix( matrix< DIM, DIM, float_t >& M ) const
 
 
 
-template < typename float_t >
-quaternion< float_t > quaternion< float_t >::
-slerp( float_t a, const quaternion< float_t >& p, const quaternion< float_t >& q )
+template < typename T >
+quaternion< T > quaternion< T >::
+slerp( T a, const quaternion< T >& p, const quaternion< T >& q )
 {
 	p = p.normalize();
 	q = q.normalize();
-	float_t cosine = p.dot(q);
-	quaternion< float_t > quat_t;
+	T cosine = p.dot(q);
+	quaternion< T > quat_t;
 	
 	// check if inverted rotation is needed
 	if ( cosine < 0.0 )
@@ -1117,20 +950,41 @@ slerp( float_t a, const quaternion< float_t >& p, const quaternion< float_t >& q
 	if( cosine.abs() < 1 - 1e-13 )
 	{
 		// standard slerp
-		float_t sine = sqrt( 1. - ( cosine * cosine ) );
-		float_t angle = atan2( sine, cosine );
-		float_t coeff1 = sin( 1.0 - a ) * angle / sine;
-		float_t coeff2 = sin( a * angle ) / sine;
+		T sine = sqrt( 1. - ( cosine * cosine ) );
+		T angle = atan2( sine, cosine );
+		T coeff1 = sin( 1.0 - a ) * angle / sine;
+		T coeff2 = sin( a * angle ) / sine;
 		return coeff1 * p + coeff2 * quat_t;
 	}
 	else
 	{
 		// linear interpolation for very small angles  
-		quaternion< float_t > quat_u = ( 1. - a ) * p + a * quat_t;
+		quaternion< T > quat_u = ( 1. - a ) * p + a * quat_t;
 		quat_u.normalize();
 		return quat_u;
 	}
 }
 
+
+
+template < typename T >
+const quaternion< T >&
+quaternion< T >::operator=(const quaternion& other)
+{
+    memcpy( array, other.array, 4 * sizeof( T ) );
+    return *this;
+}
+
+
+template < typename T >
+const vector< 4, T >&
+quaternion< T >::operator=( const vector< 4, T >& other )
+{
+    memcpy( array, other.array, 4 * sizeof( T ) );
+    return other;
+}
+
+
 }
 #endif
+

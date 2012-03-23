@@ -4,6 +4,9 @@
 * @author Jonas Boesch
 * @author Stefan Eilemann
 * @author Renato Pajarola
+* @author Susanne Suter
+* @author Philipp Schlegel
+* @author Daniel Pfeifer
 * @author David H. Eberly ( Wild Magic )
 * @author Andrew Willmott ( VL )
 *
@@ -22,6 +25,7 @@
 #include <vmmlib/matrix.hpp>
 #include <vmmlib/quaternion.hpp>
 #include <vmmlib/frustum.hpp>
-#include <vmmlib/frustumCuller.hpp>
+#include <vmmlib/frustum_culler.hpp>
 
 #endif
+

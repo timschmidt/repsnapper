@@ -1,0 +1,18 @@
+VMMLib - Vector & Matrix Math Lib - AUTHORS
+
+Susanne Suter (susuter@ifi.uzh.ch) 
+Jonas Boesch (boesch@ifi.uzh.ch)
+Stefan Eilemann (eile@gmail.com)
+Renato Pajarola (pajarola@ifi.uzh.ch)
+Philip Schlegel (schlegel@ifi.uzh.ch)
+
+With contributions from:
+Daniel Pfeifer (daniel@pfeifer-mail.de) - CMake Build System, Linux fixes
+Jaroslav Skarvada (jskarvad@redhat.com) - Red Hat packaging, RH compatibility fixes
+Bas Wijnen (wijnen@debian.org) - Debian packaging
+
+see ACKNOWLEDGEMENTS
+- Parts of the source code of VMMLib were inspired by David Eberly's 
+Wild Magic and Andrew Willmott's VL.
+- enable_if was inspired by Boost (http://www.boost.org/doc/libs/1_39_0/libs/utility/enable_if.html)
+

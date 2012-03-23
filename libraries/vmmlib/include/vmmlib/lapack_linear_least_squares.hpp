@@ -14,7 +14,7 @@
 *
 * this is a wrapper for the following lapack routines: 
 *   
-* xGESV
+* xGELS
 *
 *
 */ 
@@ -129,7 +129,7 @@ llsq_call_xgels( llsq_params_xgels< double >& p )
 template< size_t M, size_t N, typename float_t >
 struct linear_least_squares_xgels
 {
-    void compute( 
+    bool compute( 
         const matrix< M, N, float_t >& A, 
         const vector< M, float_t >& B, 
         vector< N, float_t >& x );
@@ -152,7 +152,7 @@ protected:
 
 
 template< size_t M, size_t N, typename float_t >
-void
+bool
 linear_least_squares_xgels< M, N, float_t >::compute( 
     const matrix< M, N, float_t >& A, 
     const vector< M, float_t >& B, 
@@ -171,7 +171,7 @@ linear_least_squares_xgels< M, N, float_t >::compute(
             x( index ) = _b( index );
         }
     
-        return;
+        return true;
     }    
     if ( p.info < 0 )
     {
@@ -179,10 +179,13 @@ linear_least_squares_xgels< M, N, float_t >::compute(
     }
     else
     {
+        std::cout << "A\n" << A << std::endl;
+        std::cout << "B\n" << B << std::endl;
+
         VMMLIB_ERROR( "least squares solution could not be computed.", 
             VMMLIB_HERE );
     }
-
+    return false;
 }
 
 

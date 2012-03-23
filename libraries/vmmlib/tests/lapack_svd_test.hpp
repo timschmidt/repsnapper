@@ -9,7 +9,7 @@ namespace vmml
 class lapack_svd_test : public unit_test
 {
 public:
-	lapack_svd_test() : unit_test( "singular value decomposition (svd) using lapack" ) {}
+	lapack_svd_test() : unit_test( "SVD, singular value decomposition using lapack" ) {}
     virtual bool run();
 
 protected:

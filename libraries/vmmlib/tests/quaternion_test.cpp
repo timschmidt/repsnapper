@@ -1,6 +1,8 @@
 #include "quaternion_test.hpp"
 #include <iostream>
 
+#include <vmmlib/math.hpp>
+
 using namespace std;
 namespace vmml
 {
@@ -13,11 +15,11 @@ quaternion_test::run()
 {
     quaternion< double > q;
     double QData[] = { 1., 6., 3., 8.  };
-    q.array[ 0 ] = QData[ 0 ];
-    q.array[ 1 ] = QData[ 1 ];
-    q.array[ 2 ] = QData[ 2 ];
-    q.array[ 3 ] = QData[ 3 ];
-
+    for( size_t index = 0; index < 4; ++index )
+    {
+        q.array[ index ] = QData[ index ];
+    }
+    
     // operator==/!= tests
     {
         bool ok = true;
@@ -28,7 +30,7 @@ quaternion_test::run()
         qq.array[ 3 ] = qqq.array[ 3 ] = 8.0;
         if ( qq != qqq )
             ok = false;
-        if ( ! ( qq == qqq ) )
+        if ( ok && ! ( qq == qqq ) )
             ok = false;
         log( "operator==, operator!=", ok );
     }
@@ -41,9 +43,11 @@ quaternion_test::run()
         if ( tquaternion_test != q )
             ok = false;
         
-        tquaternion_test = QData;
-        if ( tquaternion_test != q )
+        tquaternion_test.iter_set< double* >( QData, QData + 4 );
+        if ( ok && tquaternion_test != q )
             ok = false;
+            
+        
 
         log( "operator=", ok );    
     }
@@ -54,19 +58,19 @@ quaternion_test::run()
         quaterniond qq( q );
         if ( q != qq )
             ok = false;
-    
+
         quaterniond t( 1., 6., 3., 8 );
-        if ( q != t )
+        if ( ok && q != t )
             ok = false;
-    
+
         vector< 3, double > xyz;
         double xyzData[] = { 1., 6., 3. };
         xyz = xyzData;
         
         quaterniond s( xyz, 8 );
-        if ( q != s )
+        if ( ok && q != s )
             ok = false;
-        
+               
         matrix< 3, 3, double > mat;
         double matData[] = { 1., 0., 0., 0., 0., 1., 0., -1., 0. };
         mat = matData;
@@ -105,11 +109,11 @@ quaternion_test::run()
     // abs
     {
         bool ok = true;
-        if ( q.abs() != details::getSquareRoot( 110.0 ) )
+        if ( q.abs() != sqrt( 110.0 ) )
             ok = false;
-        if ( q.absSquared() != 110 )
+        if ( q.squared_abs() != 110 )
             ok = false;
-        log( "abs(), absSquared()", ok );   
+        log( "abs(), squared_abs()", ok );   
     }
 
 
@@ -117,7 +121,7 @@ quaternion_test::run()
     {
         bool ok = true;
         quaterniond conj(  -1., -6., -3., 8. );
-        if ( q.getConjugate() != conj ) 
+        if ( q.get_conjugate() != conj ) 
             ok = false;
         
         conj.conjugate();

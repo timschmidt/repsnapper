@@ -1,5 +1,7 @@
 #include "performance_test.hpp"
 
+#include <assert.h>
+
 namespace vmml
 {
 

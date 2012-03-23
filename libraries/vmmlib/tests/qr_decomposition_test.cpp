@@ -12,59 +12,89 @@ qr_decomposition_test::run()
 {
     bool ok = true;
     
-    // tests qr decomposition using gram-schmidt
-	ok = true;
-	{
-            matrix< 4, 3, double > A;
-            matrix< 4, 4, double > Q;
-            matrix< 4, 4, double > Q_correct;
-            matrix< 3, 3, double > R;
-            matrix< 3, 3, double > R_correct;
+    // tests qr decomposition using modified gram-schmidt
+    {
+        matrix< 3, 3, double > A, Q, R;
+        double Adata[] = { 12, -51, 4, 6, 167, -68, -4, 24, -41 };
+        A.set( Adata, Adata + 9 );
+        qr_decompose_gram_schmidt( A, Q, R );
 
-            double data[ 4 * 3 ] = { 0.8147, 0.6324, 0.9575, 0.9058, 0.0975, 
-                0.9649, 0.1270, 0.2785, 0.1576, 0.9134, 0.5469, 0.9706 };
-            A = data;
-                      
-            double correct_solution_Q[ 4 * 4 ] = 
-                {   -0.5332, 0.4892, 0.6519, 0.2267, 
-                    -0.5928, -0.7162, 0.1668, -0.3284,
-                    -0.0831, 0.4507, -0.0991, -0.8833, 
-                    -0.5978, 0.2112, -0.7331, 0.2462 };
-            Q_correct = correct_solution_Q;
+        double Qcorrect[] = {
+            6./7, -69./175, 58./175,
+            3./7, 158./175, -6./175,
+            -2./7, 6./35, 33./35 };
+        
+        double Rcorrect[] = { 14, 21, -14, 0, 175, -70, 0, 0, -35 };
+        matrix< 3, 3, double > Qc, Rc;
+        Qc.set( Qcorrect, Qcorrect + 9 );
+        Rc.set( Rcorrect, Rcorrect + 9 );
 
-            double correct_solution_R[ 4 * 3 ] = {
-                -1.5279, -0.7451, -1.6759, 
-                0,       0.4805,  0.0534, 
-                0,       0,       0.0580,
-                0,       0,       0
-                };
-            R_correct = correct_solution_R;
-
-            qr_decompose_gram_schmidt( A, Q, R );
-
-
-            ok = ( R == R_correct && Q == Q_correct );
-            log( "qr_decomposition of a 3x3 matrix using stabilized Gram-Schmidt (maximum precision)", ok, true  );
-
-            if ( ! ok )
+        for( size_t index = 0; ok && index < 3; ++index )
+        {
+            vector< 3, double > q = Q.get_column( index );
+            vector< 3, double > qc = Qc.get_column( index );
+            ok = q == qc; 
+            if ( ! ok ) 
             {
-                ok = R.isEqualTo( R_correct, 1e-9 ) && Q.isEqualTo( Q_correct, 1e-9 );
-                
-                log( "qr_decomposition a 3x3 matrix using stabilized Gram-Schmidt with precision tolerance 1e-9", ok );
+                q *= -1.0;
+                ok = q == qc;
             }
-
-		if ( ! ok )
-		{
-			std::stringstream error;
-			error << " A " << A << std::endl;
-			error << " Q " << Q << std::endl;
-			error << " Q correct" << Q_correct << std::endl;
-			error << " R " << R << std::endl;
-			error << " R correct " << R_correct << std::endl;
-			log_error( error.str() );
-		}
-	
-	}
+        }
+        for( size_t index = 0; ok && index < 3; ++index )
+        {
+            vector< 3, double > r = R.get_row( index );
+            vector< 3, double > rc = Rc.get_row( index );
+            ok = r == rc; 
+            if ( ! ok ) 
+            {
+                r *= -1.0;
+                ok = r == rc;
+            }
+        }
+        
+        log( "QR decomposition using modified gram-schmidt, maximal precision", ok, true );
+        
+        if ( ! ok )
+        {
+            ok = true;
+            double tolerance = 1e-9;
+            for( size_t index = 0; ok && index < 3; ++index )
+            {
+                vector< 3, double > q = Q.get_column( index );
+                vector< 3, double > qc = Qc.get_column( index );
+                ok = q.equals( qc, tolerance ); 
+                if ( ! ok ) 
+                {
+                    q *= -1.0;
+                    ok = q.equals( qc, tolerance );
+                }
+            }
+            for( size_t index = 0; ok && index < 3; ++index )
+            {
+                vector< 3, double > r = R.get_row( index );
+                vector< 3, double > rc = Rc.get_row( index );
+                ok = r.equals( rc, tolerance ); 
+                if ( ! ok ) 
+                {
+                    r *= -1.0;
+                    ok = r.equals( rc );
+                }
+            }
+            log( "QR decomposition using modified gram-schmidt, tolerance 1e-9", ok );
+            if ( ! ok ) 
+            {
+                std::stringstream error;
+                error << " A " << A << std::endl;
+                error << " Q " << Q << std::endl;
+                error << " Qc " << Qc << std::endl;
+                error << " diff " << Q - Qc << std::endl;
+                error << " R " << R << std::endl;
+                error << " Rc " << Rc << std::endl;
+                error << " diff " << R - Rc << std::endl;
+                std::cout << error.str() << std::endl;
+            }
+        }
+    }
     return ok;
 }
 

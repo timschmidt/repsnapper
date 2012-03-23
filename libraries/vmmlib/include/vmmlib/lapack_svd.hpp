@@ -156,14 +156,23 @@ struct lapack_svd
     lapack_svd();
     ~lapack_svd();
 
-    // slow version, use if U and Vt are needed
-    bool compute(
+    // slow version, full SVD, use if all values of U(MXM) and Vt(NXN) are needed
+    bool compute_full(
         const matrix< M, N, float_t >& A,
-        matrix< M, N, float_t >& U,
+        matrix< M, M, float_t >& U,
         vector< N, float_t >& sigma,
         matrix< N, N, float_t >& Vt
         );
-
+	
+    // version of reduced SVD, computes only most significant left and right singular vectors, 
+	// i.e., use if U(MXN) and Vt(NXN) are needed
+    bool compute(
+				 const matrix< M, N, float_t >& A,
+				 matrix< M, N, float_t >& U,
+				 vector< N, float_t >& sigma,
+				 matrix< N, N, float_t >& Vt
+				 );
+	
     // overwrites A with the result U, 
     bool compute_and_overwrite_input( 
         matrix< M, N, float_t >& A_U,
@@ -224,19 +233,20 @@ lapack_svd< M, N, float_t >::~lapack_svd()
 
 template< size_t M, size_t N, typename float_t >
 bool
-lapack_svd< M, N, float_t >::compute(
+lapack_svd< M, N, float_t >::compute_full(
     const matrix< M, N, float_t >& A,
-    matrix< M, N, float_t >& U,
+    matrix< M, M, float_t >& U,
     vector< N, float_t >& S,
     matrix< N, N, float_t >& Vt
     )
 {
     // lapack destroys the contents of the input matrix
-    matrix< M, N, float_t > AA( A );
+    typedef matrix< M, N, float_t > m_type;
+	m_type* AA = new m_type( A );
 
     p.jobu      = 'A';
     p.jobvt     = 'A';
-    p.a         = AA.array;
+    p.a         = AA->array;
     p.u         = U.array;
     p.s         = S.array;
     p.vt        = Vt.array;
@@ -244,10 +254,38 @@ lapack_svd< M, N, float_t >::compute(
 
     lapack::svd_call< float_t >( p );
     
+	delete AA;
+	
     return p.info == 0;
 }
-
-
+	
+template< size_t M, size_t N, typename float_t >
+bool
+lapack_svd< M, N, float_t >::compute(
+									 const matrix< M, N, float_t >& A,
+									 matrix< M, N, float_t >& U,
+									 vector< N, float_t >& S,
+									 matrix< N, N, float_t >& Vt
+									 )
+{
+	// lapack destroys the contents of the input matrix
+    typedef matrix< M, N, float_t > m_type;
+	m_type* AA = new m_type( A );
+	
+	p.jobu      = 'S';
+	p.jobvt     = 'S';
+	p.a         = AA->array;
+	p.u         = U.array;
+	p.s         = S.array;
+	p.vt        = Vt.array;
+	p.ldvt      = N;
+	
+	lapack::svd_call< float_t >( p );
+	delete AA;
+	
+	return p.info == 0;
+}
+	
 
 template< size_t M, size_t N, typename float_t >
 bool
@@ -277,7 +315,8 @@ lapack_svd< M, N, float_t >::compute(
     )
 {
     // lapack destroys the contents of the input matrix
-    matrix< M, N, float_t > AA( A ); 
+    typedef matrix< M, N, float_t > m_type;
+	m_type* AA = new m_type( A );
     
     p.jobu      = 'N';
     p.jobvt     = 'N';
@@ -288,6 +327,8 @@ lapack_svd< M, N, float_t >::compute(
 
     lapack::svd_call< float_t >( p );
 
+	delete AA;
+	
     return p.info == 0;
 }
 

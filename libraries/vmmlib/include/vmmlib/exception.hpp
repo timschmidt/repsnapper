@@ -70,7 +70,7 @@ private:
     // disallow std ctor
     exception() : _here( *new except_here( "", 0 ) ){};
     // disallow assignment operator
-    virtual const exception& operator=( const exception& e ){return *this;}
+    virtual const exception& operator=( const exception& ){ return *this; }
 
 
 };
@@ -79,3 +79,4 @@ private:
 } // namespace stream_process
 
 #endif
+

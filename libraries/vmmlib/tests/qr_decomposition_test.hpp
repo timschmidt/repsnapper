@@ -9,7 +9,7 @@ namespace vmml
 class qr_decomposition_test : public unit_test
 {
 public:
-	qr_decomposition_test() : unit_test( "qr decomposition" ) {}
+	qr_decomposition_test() : unit_test( "QR decomposition" ) {}
 
     bool run();
 protected:

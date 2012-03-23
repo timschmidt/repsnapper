@@ -4,9 +4,6 @@
 #include <vmmlib/matrix.hpp>
 #include <vmmlib/vector.hpp>
 
-// fixme?
-#include <vmmlib/helperFunctions.h>
-#include <vmmlib/details.hpp>
 #include <cmath>
 
 namespace vmml
@@ -53,7 +50,7 @@ void svdecompose(
                     s += a[k][i] * a[k][i];
                 }
                 f = a[i][i];
-                g = -sign( vmml::details::getSquareRoot(s), f);
+                g = -math::sign( static_cast< T >(sqrt(s)), f);
                 h = f * g - s;
                 a[i][i] = f - g;
                 for ( j = l; j < n; ++j ) 
@@ -82,7 +79,7 @@ void svdecompose(
                     s += a[i][k] * a[i][k];
                 }
                 f = a[i][l];
-                g = -sign(vmml::details::getSquareRoot(s), f);
+                g = -math::sign( static_cast< T >( sqrt(s)), f);
                 h = f * g - s;
                 a[i][l] = f - g;
                 for ( k = l; k < n; ++k )
@@ -98,7 +95,7 @@ void svdecompose(
                     a[i][k] *= scale;
             }
         }
-        anorm = max( anorm, static_cast< T >( ( fabs( w[i] ) + fabs( rv1[i] ) ) ) );
+        anorm = (std::max)( anorm, static_cast< T >( ( fabs( w[i] ) + fabs( rv1[i] ) ) ) );
     }
     for ( i = n-1; i >= 0; --i ) 
     { // Accumulation of right-hand transformations.
@@ -177,7 +174,7 @@ void svdecompose(
                     if ( ( fabs(f) + anorm ) == anorm )
                         break;
                     g = w[i];
-                    h = pythag(f, g);
+                    h = math::pythag(f, g);
                     w[i] = h;
                     h = 1.0 / h;
                     c = g * h;
@@ -213,8 +210,8 @@ void svdecompose(
             g = rv1[nm];
             h = rv1[k];
             f = ( (y-z) * (y+z) + (g-h) * (g+h) ) / (2.0 * h * y );
-            g = pythag( f, static_cast< T >( 1.0 ) );
-            f = ( ( x - z ) * ( x + z ) + h * ( ( y / ( f + sign( g, f ) ) ) - h ) ) / x;
+            g = math::pythag( f, static_cast< T >( 1.0 ) );
+            f = ( ( x - z ) * ( x + z ) + h * ( ( y / ( f + math::sign( g, f ) ) ) - h ) ) / x;
             c = s = 1.0;				  // Next QR transformation:
             
             for ( j = l; j <= nm; ++j ) 
@@ -224,7 +221,7 @@ void svdecompose(
                 y = w[i];
                 h = s * g;
                 g = c * g;
-                z = pythag( f, h );
+                z = math::pythag( f, h );
                 rv1[j] = z;
                 c = f / z;
                 s = h / z;
@@ -239,7 +236,7 @@ void svdecompose(
                     v[jj][j] = x * c + z * s;
                     v[jj][i] = z * c - x * s;
                 }
-                z = pythag( f, h );
+                z = math::pythag( f, h );
                 w[j] = z; // Rotation can be arbitrary if z = 0.
                 if ( z ) 
                 {
