@@ -356,6 +356,7 @@ void Infill::addInfillPoly(Poly p)
       double sina = sin(-angle);
       double cosa = cos(-angle);
       // use the lines that have the angle of this Infill
+      Poly newpoly(p.getZ(), extrusionfactor);
       for (uint i=0; i < p.size() ; i+=1 )
   	{
   	  l = (p.getVertexCircular(i+1) - p.getVertexCircular(i));     
@@ -369,10 +370,10 @@ void Infill::addInfillPoly(Poly p)
 	      // 	zigzagpoly->addVertex(p.getVertexCircular(i+1+i%2));
 	      // } else
 	      {
-		Poly newpoly(p.getZ(), extrusionfactor);
+		//Poly newpoly(p.getZ(), extrusionfactor);
 		newpoly.vertices.push_back(p.getVertexCircular(i));
 		newpoly.vertices.push_back(p.getVertexCircular(i+1));
-		infillpolys.push_back(newpoly);
+		//infillpolys.push_back(newpoly);
 	      }
   	    }
 	  // else
@@ -380,6 +381,7 @@ void Infill::addInfillPoly(Poly p)
 	  //     zigzagpoly->addVertex(p.getVertexCircular(i));	      
 	  //   }
   	}
+      infillpolys.push_back(newpoly);
       // if (zigzagpoly) {
       // 	cerr << zigzagpoly->size()<< endl;
       // 	if (zigzagpoly->size()>0)
