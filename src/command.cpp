@@ -190,14 +190,14 @@ Command::Command(string gcodeline, Vector3d defaultpos)
       Code = getCode(commss.str());
       comment = ""; 
       break;
-    case 'S':      value = num;      break;
-    case 'E':      e = num;          break;
-    case 'F':      f = num;          break;
-    case 'X':      where.x()  = num;   break;
-    case 'Y':      where.y()  = num;   break;
-    case 'Z':      where.z()  = num;   break;
-    case 'I':      arcIJK.x() = num;   break;
-    case 'J':      arcIJK.y() = num;   break;
+    case 'S':  value      = num; break;
+    case 'E':  e          = num; break;
+    case 'F':  f          = num; break;
+    case 'X':  where.x()  = num; break;
+    case 'Y':  where.y()  = num; break;
+    case 'Z':  where.z()  = num; break;
+    case 'I':  arcIJK.x() = num; break;
+    case 'J':  arcIJK.y() = num; break;
     case 'K':
       cerr << "cannot handle ARC K command (yet?)!" << endl;
       break;
@@ -218,11 +218,10 @@ Command::Command(string gcodeline, Vector3d defaultpos)
 GCodes Command::getCode(const string commstr) const
 {
   GCodes code = COMMENT;
-  for (uint i = 0; i < NUM_GCODES; i++){
+  for (int i = 0; i < NUM_GCODES; i++){
     if (MCODES[i] == commstr) {
-      code =  (GCodes)i;
-      //cerr << commstr << " = " << code << endl;
-      break;
+      code = (GCodes)i;
+      return code;
     }
   }
   return code;
@@ -324,6 +323,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     }
     lastF = f;
     break;
+  case UNKNOWN:
   default: ;
   }
   if(comm.length() != 0) {

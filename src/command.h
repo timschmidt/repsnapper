@@ -115,8 +115,9 @@ enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
 	    ASKTEMP, // 27
 	    EXTRUDERTEMP, BEDTEMP,
 	    COMMENT, LAYERCHANGE,
-            };
-const int NUM_GCODES = 32;
+	    UNKNOWN};
+
+const int NUM_GCODES = 33;
 
 const string MCODES[] = {"G92", "", "",
 			 "G0", "G1", "G1",
@@ -131,7 +132,8 @@ const string MCODES[] = {"G92", "", "",
 			 "M106", "M107",
 			 "M105", // temp? 
 			 "M104", "M140",
-			 "; ", "; Layer" };
+			 "; ", "; Layer",
+			 "; UNKNOWN"};
 
 class Model;
 class ViewProgress;
