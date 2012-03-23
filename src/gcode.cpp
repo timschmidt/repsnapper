@@ -43,6 +43,7 @@ GCode::GCode()
 
 double GCode::GetTotalExtruded(bool relativeEcode) const
 {
+  if (commands.size()==0) return 0;
   if (relativeEcode) {
     double E=0;
     for (uint i=0; i<commands.size(); i++) 
@@ -85,6 +86,9 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	file.seekg (0);
 
 	progress->start(_("Loading GCode"), filesize);
+	int progress_steps=(int)(filesize/1000);
+	if (progress_steps==0) progress_steps=1;
+	
 
 	if(!file.good())
 	{
@@ -106,6 +110,7 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	double lastE=0.;
 	double lastF=0.;
 	layerchanges.clear();
+	bool belowzero = false;
 
 	stringstream alltext;
 
@@ -113,10 +118,19 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	{
 	  alltext << s << endl;
 
+	  
 		LineNr++;
-		if (LineNr%100==0) progress->update(1.*file.tellg());
+		unsigned long fpos = file.tellg();
+		if (fpos%progress_steps==0) if (!progress->update(fpos)) break;
 
-		Command command(s, globalPos);
+		Command command;
+		try {
+		  command = Command(s, globalPos);
+		} catch (Glib::OptionError e) {
+		  if (!belowzero) // only once
+		    cerr << "GCode below zero!"<< endl;// ; //alert("GCode problem");
+		  belowzero = true;
+		}
 		if (command.e==0)
 		  command.e= lastE;
 		else
