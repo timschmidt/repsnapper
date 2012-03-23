@@ -22,6 +22,8 @@
 #include "poly.h"
 #include "progress.h"
 
+
+
 Matrix4f Transform3D::getFloatTransform() const 
 {
   return (Matrix4f) transform;
@@ -31,43 +33,52 @@ void Transform3D::setTransform(Matrix4f matr)
   transform = (Matrix4f) matr;
 }
 
+Vector3d Transform3D::getTranslation() const
+{
+  Vector3d p;
+  transform.get_translation(p);
+  return p;
+}
+
+
 void Transform3D::move(Vector3d delta)
 {
-  Vector3d trans = transform.getTranslation();
-  transform.setTranslation(trans + delta);
+  Vector3d trans = getTranslation();
+  transform.set_translation(trans + delta);
 }
 
 void Transform3D::scale(double x)
 {
   if (x==0) return;
-  transform.m[3][3] = 1/x;
+  transform[3][3] = 1/x;
 }
 
 void Transform3D::scale_x(double x)
 {
-  transform.m[0][0] = x;
+  transform[0][0] = x;
 }
   void Transform3D::scale_y(double x)
 {
-  transform.m[1][1] = x;
+  transform[1][1] = x;
 }
 void Transform3D::scale_z(double x)
 {
-  transform.m[2][2] = x;
+  transform[2][2] = x;
 }
 
 void Transform3D::rotate(Vector3d axis, double angle)
 {
-  Vector3d naxis=axis;
-  naxis.normalise();
-  transform.rotate(angle,naxis);
+  Matrix4d rot = Matrix4d::IDENTITY;
+  Vector3d naxis = axis; naxis.normalize();
+  rot.rotate(angle, naxis);
+  transform = rot * transform; 
 }
 void Transform3D::rotate(Vector3d center, double x, double y, double z)
 {
   move(-center);
-  if (x!=0) transform.rotateX(x);
-  if (y!=0) transform.rotateY(y);
-  if (z!=0) transform.rotateZ(z);
+  if (x!=0) transform.rotate_x(x);
+  if (y!=0) transform.rotate_y(y);
+  if (z!=0) transform.rotate_z(z);
   move(center);
 }
 
@@ -76,8 +87,8 @@ void Transform3D::rotate(Vector3d center, double x, double y, double z)
 Shape::Shape()
   : slow_drawing(false)
 {
-	Min.x = Min.y = Min.z = 0.0;
-	Max.x = Max.y = Max.z = 200.0;
+  Min.set(0,0,0);
+  Max.set(200,200,200);
 	scale_factor_x = 1;
 	scale_factor_y = 1;
 	scale_factor_z = 1;
@@ -122,8 +133,9 @@ static double read_double(ifstream &file) {
 int Shape::loadBinarySTL(string filename) 
 {
     triangles.clear();
-    Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
-    Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
+
+    Min.set(INFTY,INFTY,INFTY);
+    Max.set(-INFTY,-INFTY,-INFTY);
 
     ifstream file;
     file.open(filename.c_str(), ifstream::in | ifstream::binary);
@@ -207,8 +219,8 @@ int Shape::loadASCIIVRML(std::string filename)
     return -1;
   }
     triangles.clear();
-    Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
-    Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
+    Min.set(INFTY,INFTY,INFTY);
+    Max.set(-INFTY,-INFTY,-INFTY);
   
     ifstream file;
     file.open(filename.c_str());
@@ -315,8 +327,9 @@ int Shape::loadASCIISTL(string filename) {
 int Shape::parseASCIISTL(istream *text) {
 
     triangles.clear();
-    Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
-    Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
+    Min.set(INFTY,INFTY,INFTY);
+    Max.set(-INFTY,-INFTY,-INFTY);
+
 
     /* ASCII files start with "solid [Name_of_file]"
      * so get rid of them to access the data */
@@ -375,9 +388,9 @@ int Shape::parseASCIISTL(istream *text) {
         for(int i=0; i<3; i++) {
             string vertex;
             *text >> vertex
-                 >> vertices[i].x
-                 >> vertices[i].y
-                 >> vertices[i].z;
+		  >> vertices[i].x()
+		  >> vertices[i].y()
+		  >> vertices[i].z();
 
             if(vertex != "vertex") {
 	      cerr << _("Error: Vertex keyword not found") << endl;
@@ -586,8 +599,8 @@ void Shape::ScaleZ(double x)
 
 void Shape::CalcBBox()
 {
-  Min.x = Min.y = Min.z = numeric_limits<double>::infinity();
-  Max.x = Max.y = Max.z = -numeric_limits<double>::infinity();
+  Min.set(INFTY,INFTY,INFTY);
+  Max.set(-INFTY,-INFTY,-INFTY);
   for(size_t i = 0; i < triangles.size(); i++)
     triangles[i].AccumulateMinMax (Min, Max, transform3D.transform);
   Center = (Max + Min )/2;
@@ -611,7 +624,7 @@ vector<Vector3d> Shape::getMostUsedNormals() const
     {
       bool havenormal = false;
       for (uint n=0; n < normals.size(); n++) {
-	if ((normals[n].normal - triangles[i].Normal).lengthSquared() < 0.000001) {
+	if ((normals[n].normal - triangles[i].Normal).squared_length() < 0.000001) {
 	  havenormal = true;
 	  normals[n].area += triangles[i].area();
 	  done[i] = true;
@@ -646,7 +659,7 @@ void Shape::OptimizeRotation()
     angle = acos(N.dot(Z));
     if (angle>0) {
       Vector3d axis = N.cross(Z);
-      if (axis.lengthSquared()>0.1) {
+      if (axis.squared_length()>0.1) {
 	Rotate(axis,angle);
 	break;
       }
@@ -672,9 +685,9 @@ int Shape::divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) co
   vector<Triangle> toboth;
   for (guint i=0; i< triangles.size(); i++) {
     Triangle tt = triangles[i].transformed(T*transform3D.transform);
-    if (tt.A.z < z && tt.B.z < z && tt.C.z < z )
+    if (tt.A.z() < z && tt.B.z() < z && tt.C.z() < z )
       lower.triangles.push_back(tt);
-    else if (tt.A.z > z && tt.B.z > z && tt.C.z > z )
+    else if (tt.A.z() > z && tt.B.z() > z && tt.C.z() > z )
       upper.triangles.push_back(tt);
     else
       toboth.push_back(tt);
@@ -691,12 +704,10 @@ int Shape::divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) co
   return 2;
 }
 
-
-
 void Shape::PlaceOnPlatform()
 {
   CalcBBox();
-  transform3D.move(Vector3d(0,0,-Min.z));
+  transform3D.move(Vector3d(0,0,-Min.z()));
   CalcBBox();
 }
 
@@ -704,7 +715,7 @@ void Shape::PlaceOnPlatform()
 void Shape::Rotate(Vector3d axis, double angle)
 {
   CenterAroundXY();
-  // transform3D.rotate(axis,angle);
+  //transform3D.rotate(axis,angle);
   // do a real rotation because matrix transform gives errors when slicing
   for (size_t i=0; i<triangles.size(); i++)
     {
@@ -717,14 +728,14 @@ void Shape::Rotate(Vector3d axis, double angle)
 void Shape::Twist(double angle)
 {
   CenterAroundXY();
-  CalcBBox();
-  double h = Max.z-Min.z;
+  double h = Max.z()-Min.z();
   double hangle=0;
+  Vector3d axis(0,0,1);
   for (size_t i=0; i<triangles.size(); i++) {
     for (size_t j=0; j<3; j++) 
       {
-	hangle = angle * (triangles[i][j].z - Min.z) / h;
-	triangles[i][j] = triangles[i][j].rotate(hangle,0,0,1);
+	hangle = angle * (triangles[i][j].z() - Min.z()) / h;
+	triangles[i][j] = triangles[i][j].rotate(hangle,axis);
       }
     triangles[i].calcNormal();
   }
@@ -734,7 +745,7 @@ void Shape::Twist(double angle)
 void Shape::CenterAroundXY()
 {
   CalcBBox();
-  Vector3d displacement = transform3D.transform.getTranslation() - Center;
+  Vector3d displacement = transform3D.getTranslation() - Center;
   for(size_t i=0; i<triangles.size() ; i++)
     {
       triangles[i].Translate(displacement);
@@ -756,7 +767,7 @@ void Shape::CenterAroundXY()
 //       if (num_cutpoints>1)
 // 	{
 // 	  Vector3d Norm3 = triangles[i].Normal;
-// 	  Vector2d triangleNormal = Vector2d(Norm3.x, Norm3.y);
+// 	  Vector2d triangleNormal = Vector2d(Norm3.x, Norm3.y());
 // 	  Vector2d segmentNormal = (lineEnd - lineStart).normal();
 // 	  triangleNormal.normalise();
 // 	  segmentNormal.normalise();
@@ -859,7 +870,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 //   vector<Vector2d> vertices;
 //   vector<Segment> lines = getCutlines(T, z, vertices, max_grad);
   
-//   if (z < Min.z || z > Max.z) return true; // no polys, but all ok
+//   if (z < Min.z() || z > Max.z()) return true; // no polys, but all ok
 
 //   if (vertices.size()==0) return false; 
 //   //cerr << "vertices ok" <<endl;
@@ -918,7 +929,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 // 						if (lines[j].start == i) { refs++; pol++; }
 // 						if (lines[j].end == i) { refs++; pol--; }
 // 					}
-// 					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y << "\t" << refs << " pol " << pol;
+// 					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y() << "\t" << refs << " pol " << pol;
 // 					if (refs % 2) // oh dear, a dangling vertex
 // 						cout << " odd, dangling vertex\n";
 // 					cout << "\n";
@@ -936,7 +947,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 // 				{
 // 					if (i == endPoint)
 // 						cout << "problem vertex:\n";
-// 					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y << "\t";
+// 					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y() << "\t";
 // 					int j;
 // 					switch (planepoints[i].size()) {
 // 					case 0:
@@ -1006,7 +1017,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 int find_vertex(const vector<Vector2d> vertices,  const Vector2d v, double delta = 0.0001)
 {
   for (uint i = 0; i<vertices.size(); i++) {
-    if ( (v-vertices[i]).lengthSquared() < delta ) 
+    if ( (v-vertices[i]).squared_length() < delta ) 
       return i;
   }
   return -1;
@@ -1036,8 +1047,8 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
 	  line.start = vertices.size();
 	  vertices.push_back(lineStart);
 	}
-	if (abs(triangles[i].Normal.z) > max_gradient)
-	  max_gradient = abs(triangles[i].Normal.z);
+	if (abs(triangles[i].Normal.z()) > max_gradient)
+	  max_gradient = abs(triangles[i].Normal.z());
       }
       if (num_cutpoints>1) {
 	int havev = find_vertex(vertices, lineEnd);
@@ -1052,11 +1063,12 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
       if (line.start != -1 && line.end != -1 && line.end != line.start)	
 	{ // if we found a intersecting triangle
 	  Vector3d Norm = triangles[i].Normal;
-	  Vector2d triangleNormal = Vector2d(Norm.x, Norm.y);
-	  Vector2d segmentNormal = (lineEnd - lineStart).normal();
-	  triangleNormal.normalise();
-	  segmentNormal.normalise();
-	  if( (triangleNormal-segmentNormal).lengthSquared() > 0.2){
+	  Vector2d triangleNormal = Vector2d(Norm.x(), Norm.y());
+	  Vector2d segment = (lineEnd - lineStart);
+	  Vector2d segmentNormal(-segment.y(),segment.x()); 
+	  triangleNormal.normalize();
+	  segmentNormal.normalize();
+	  if( (triangleNormal-segmentNormal).squared_length() > 0.2){
 	    // if normals do not align, flip the segment
 	    int iswap=line.start;line.start=line.end;line.end=iswap;
 	  }
@@ -1100,7 +1112,7 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
 // 	      // if we found a intersecting triangle
 // 	      {
 // 		Vector3d Norm = triangles[i].Normal;
-// 		Vector2d triangleNormal = Vector2d(Norm.x, Norm.y);
+// 		Vector2d triangleNormal = Vector2d(Norm.x, Norm.y());
 // 		Vector2d segmentNormal = (lineEnd - lineStart).normal();
 // 		triangleNormal.normalise();
 // 		segmentNormal.normalise();
@@ -1144,7 +1156,7 @@ void drawString(Vector3d pos, string text)
 void drawString(Vector3d pos, void* font, string text)
 {
 	checkGlutInit();
-	glRasterPos3d(pos.x, pos.y, pos.z);
+	glRasterPos3d(pos.x(), pos.y(), pos.z());
 	for (uint c=0;c<text.length();c++)
 		glutBitmapCharacter(font, text[c]);
 }
@@ -1168,8 +1180,10 @@ void Shape::draw(const Model *model, const Settings &settings, bool highlight)
 //	float mat_emission[] = {0.3f, 0.2f, 0.2f, 0.0f};
         int i;
 
-        for (i = 0; i < 4; i++)
-            mat_diffuse[i] = settings.Display.PolygonRGBA.rgba[i];
+
+        for (i = 0; i < 4; i++) {
+	  mat_diffuse[i] = settings.Display.PolygonRGBA[i];
+	}
 
 	if (highlight)
 	  //for (i = 0; i < 4; i++)
@@ -1208,18 +1222,18 @@ void Shape::draw(const Model *model, const Settings &settings, bool highlight)
 
 
                 for (i = 0; i < 4; i++)
-                        mat_diffuse[i] = settings.Display.WireframeRGBA.rgba[i];
+                        mat_diffuse[i] = settings.Display.WireframeRGBA[i];
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
-		glColor4fv(settings.Display.WireframeRGBA.rgba);
+		glColor4fv(settings.Display.WireframeRGBA);
 		for(size_t i=0;i<triangles.size();i++)
 		{
 			glBegin(GL_LINE_LOOP);
 			glLineWidth(1);
-			glNormal3dv((GLdouble*)&triangles[i].Normal);
-			glVertex3dv((GLdouble*)&triangles[i].A);
-			glVertex3dv((GLdouble*)&triangles[i].B);
-			glVertex3dv((GLdouble*)&triangles[i].C);
+			glNormal3dv((GLdouble*)&(triangles[i].Normal));
+			glVertex3dv((GLdouble*)&(triangles[i].A));
+			glVertex3dv((GLdouble*)&(triangles[i].B));
+			glVertex3dv((GLdouble*)&(triangles[i].C));
 			glEnd();
 		}
 	}
@@ -1229,7 +1243,7 @@ void Shape::draw(const Model *model, const Settings &settings, bool highlight)
 	// normals
 	if(settings.Display.DisplayNormals)
 	{
-		glColor4fv(settings.Display.NormalsRGBA.rgba);
+		glColor4fv(settings.Display.NormalsRGBA);
 		glBegin(GL_LINES);
 		for(size_t i=0;i<triangles.size();i++)
 		{
@@ -1244,14 +1258,14 @@ void Shape::draw(const Model *model, const Settings &settings, bool highlight)
 	// Endpoints
 	if(settings.Display.DisplayEndpoints)
 	{
-		glColor4fv(settings.Display.EndpointsRGBA.rgba);
+		glColor4fv(settings.Display.EndpointsRGBA);
 		glPointSize(settings.Display.EndPointSize);
 		glBegin(GL_POINTS);
 		for(size_t i=0;i<triangles.size();i++)
 		{
-			glVertex3f(triangles[i].A.x, triangles[i].A.y, triangles[i].A.z);
-			glVertex3f(triangles[i].B.x, triangles[i].B.y, triangles[i].B.z);
-			glVertex3f(triangles[i].C.x, triangles[i].C.y, triangles[i].C.z);
+		  glVertex3dv((GLdouble*)&(triangles[i].A));
+		  glVertex3dv((GLdouble*)&(triangles[i].B));
+		  glVertex3dv((GLdouble*)&(triangles[i].C));
 		}
 		glEnd();
 	}
@@ -1265,42 +1279,42 @@ void Shape::drawBBox() const
 		glColor3f(1,0.2,0.2);
 		glLineWidth(1);
 		glBegin(GL_LINE_LOOP);
-		glVertex3f(Min.x, Min.y, Min.z);
-		glVertex3f(Min.x, Max.y, Min.z);
-		glVertex3f(Max.x, Max.y, Min.z);
-		glVertex3f(Max.x, Min.y, Min.z);
+		glVertex3f(Min.x(), Min.y(), Min.z());
+		glVertex3f(Min.x(), Max.y(), Min.z());
+		glVertex3f(Max.x(), Max.y(), Min.z());
+		glVertex3f(Max.x(), Min.y(), Min.z());
 		glEnd();
 		glBegin(GL_LINE_LOOP);
-		glVertex3f(Min.x, Min.y, Max.z);
-		glVertex3f(Min.x, Max.y, Max.z);
-		glVertex3f(Max.x, Max.y, Max.z);
-		glVertex3f(Max.x, Min.y, Max.z);
+		glVertex3f(Min.x(), Min.y(), Max.z());
+		glVertex3f(Min.x(), Max.y(), Max.z());
+		glVertex3f(Max.x(), Max.y(), Max.z());
+		glVertex3f(Max.x(), Min.y(), Max.z());
 		glEnd();
 		glBegin(GL_LINES);
-		glVertex3f(Min.x, Min.y, Min.z);
-		glVertex3f(Min.x, Min.y, Max.z);
-		glVertex3f(Min.x, Max.y, Min.z);
-		glVertex3f(Min.x, Max.y, Max.z);
-		glVertex3f(Max.x, Max.y, Min.z);
-		glVertex3f(Max.x, Max.y, Max.z);
-		glVertex3f(Max.x, Min.y, Min.z);
-		glVertex3f(Max.x, Min.y, Max.z);
+		glVertex3f(Min.x(), Min.y(), Min.z());
+		glVertex3f(Min.x(), Min.y(), Max.z());
+		glVertex3f(Min.x(), Max.y(), Min.z());
+		glVertex3f(Min.x(), Max.y(), Max.z());
+		glVertex3f(Max.x(), Max.y(), Min.z());
+		glVertex3f(Max.x(), Max.y(), Max.z());
+		glVertex3f(Max.x(), Min.y(), Min.z());
+		glVertex3f(Max.x(), Min.y(), Max.z());
 		glEnd();
 
   glColor3f(1,0.6,0.6);
   ostringstream val;
   val.precision(1);
   Vector3d pos;
-  val << fixed << (Max.x-Min.x);
-  pos = Vector3d((Max.x+Min.x)/2.,Min.y,Max.z);
+  val << fixed << (Max.x()-Min.x());
+  pos = Vector3d((Max.x()+Min.x())/2.,Min.y(),Max.z());
   drawString(pos,val.str());
   val.str("");
-  val << fixed << (Max.y-Min.y);
-  pos = Vector3d(Min.x,(Max.y+Min.y)/2.,Max.z);
+  val << fixed << (Max.y()-Min.y());
+  pos = Vector3d(Min.x(),(Max.y()+Min.y())/2.,Max.z());
   drawString(pos,val.str());
   val.str("");
-  val << fixed << (Max.z-Min.z);
-  pos = Vector3d(Min.x,Min.y,(Max.z+Min.z)/2.);
+  val << fixed << (Max.z()-Min.z());
+  pos = Vector3d(Min.x(),Min.y(),(Max.z()+Min.z())/2.);
   drawString(pos,val.str());
 }
 
@@ -1325,10 +1339,10 @@ void Shape::draw_geometry()
 			default: glColor4f(0.2f,0.2f,0.2f,opacity); break;
 			}
 #endif
-		glNormal3dv((GLdouble*)&triangles[i].Normal);
-		glVertex3dv((GLdouble*)&triangles[i].A);
-		glVertex3dv((GLdouble*)&triangles[i].B);
-		glVertex3dv((GLdouble*)&triangles[i].C);
+		glNormal3dv((GLdouble*)&(triangles[i].Normal));
+		glVertex3dv((GLdouble*)&(triangles[i].A));
+		glVertex3dv((GLdouble*)&(triangles[i].B));
+		glVertex3dv((GLdouble*)&(triangles[i].C));
 	}
 	glEnd();
 
@@ -1499,7 +1513,7 @@ bool CleanupConnectSegments(const vector<Vector2d> vertices, vector<Segment> &li
 		if (vertex_types[i])
 		{
 #if CUTTING_PLANE_DEBUG
-			cout << "detached point " << i << "\t" << vertex_types[i] << " refs at " << vertices[i].x << "\t" << vertices[i].y << "\n";
+			cout << "detached point " << i << "\t" << vertex_types[i] << " refs at " << vertices[i].x() << "\t" << vertices[i].y() << "\n";
 #endif
 			detached_points.push_back (i); // i = vertex index
 		}
@@ -1533,7 +1547,7 @@ bool CleanupConnectSegments(const vector<Vector2d> vertices, vector<Segment> &li
 			        continue; 
 
 			const Vector2d &q = vertices[pt];  // the real other point
-			double dist_sq = (p-q).lengthSquared(); //pow (p.x - q.x, 2) + pow (p.y - q.y, 2);
+			double dist_sq = (p-q).squared_length(); //pow (p.x() - q.x(), 2) + pow (p.y() - q.y(), 2);
 			if (dist_sq < nearest_dist_sq)
 			{
 				nearest_dist_sq = dist_sq;

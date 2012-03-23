@@ -1162,8 +1162,8 @@ bool Clipper::Execute(ClipType clipType, ExPolygons &solution,
 
 bool PolySort(OutRec *or1, OutRec *or2)
 {
-    // if (or1==NULL) return false;
-    // if (or2==NULL) return true;
+  // if (or1==NULL) return false;
+  // if (or2==NULL) return true;
   if (or1 == or2) return false;
   if (!or1->pts || !or2->pts)
   {
@@ -1174,20 +1174,20 @@ bool PolySort(OutRec *or1, OutRec *or2)
     else return false;
   }
   int i1, i2;
-    if (or1->FirstLeft==NULL) {
-      // std::cerr << or1 << std::endl;
-      // throw 22;
-      return false;
-    }
+  if (or1->FirstLeft==NULL) {
+    // std::cerr << or1 << std::endl;
+    //throw 22;
+    return false;
+  }
   if (or1->isHole)
     i1 = or1->FirstLeft->idx; else
     i1 = or1->idx;
-    if (or2->FirstLeft==NULL) {
-      // std::cerr << or1 << std::endl;
-      // throw 22;
-      return false;
-    }
-  if (or2->isHole)
+  if (or2->FirstLeft==NULL) {
+    // std::cerr << or1 << std::endl;
+    //throw 22;
+    return false;
+  }
+if (or2->isHole)
     i2 = or2->FirstLeft->idx; else
     i2 = or2->idx;
   int result = i1 - i2;

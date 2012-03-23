@@ -24,6 +24,7 @@
 
 #include "stdafx.h"
 
+
 // Allow passing as a pointer to something to
 // avoid including glibmm in every header.
 class Builder : public Glib::RefPtr<Gtk::Builder>
@@ -72,8 +73,8 @@ class Settings {
 
     float LayerThickness;
 
-    vmml::Vector3d	Volume;      // Print volume
-    vmml::Vector3d	PrintMargin;
+    vmml::vec3d	Volume;      // Print volume
+    vmml::vec3d	PrintMargin;
     float ExtrudedMaterialWidthRatio; // ratio of with to (layer) height
     double GetExtrudedMaterialWidth(const double layerheight) const;
 
@@ -223,13 +224,13 @@ class Settings {
     bool TerminalProgress;
 
     // Rendering
-    vmml::Vector4f PolygonRGBA;
-    vmml::Vector4f WireframeRGBA;
-    vmml::Vector4f NormalsRGBA;
-    vmml::Vector4f EndpointsRGBA;
-    vmml::Vector4f GCodeExtrudeRGBA;
-    vmml::Vector4f GCodePrintingRGBA;
-    vmml::Vector4f GCodeMoveRGBA;
+    Vector4f PolygonRGBA;
+    Vector4f WireframeRGBA;
+    Vector4f NormalsRGBA;
+    Vector4f EndpointsRGBA;
+    Vector4f GCodeExtrudeRGBA;
+    Vector4f GCodePrintingRGBA;
+    Vector4f GCodeMoveRGBA;
     float    Highlight;
     float    NormalsLength;
     float    EndPointSize;
@@ -263,7 +264,7 @@ class Settings {
   Settings ();
   ~Settings();
 
-  vmml::Matrix4d getBasicTransformation(vmml::Matrix4d T) const;
+  Matrix4d getBasicTransformation(Matrix4d T) const;
 
   // return real mm depending on hardware extrusion width setting
   double GetInfillDistance(double layerthickness, float percent) const;

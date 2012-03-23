@@ -19,9 +19,6 @@
 
 #pragma once 
 
-/* #include <vector> */
-/* #include <vmmlib/vmmlib.h>  */
-
 /* #include <glib/gi18n.h> */
 #ifdef _OPENMP
 #include <omp.h>

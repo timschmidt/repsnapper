@@ -48,17 +48,30 @@ typedef unsigned int        guint;
 #include <stdio.h>
 #include <glib/gi18n.h>
 #include <gtkmm.h>
-#include <vmmlib/vmmlib.h>
 #include "math.h" // Needed for sqrtf
 #include "types.h"
 
+#define VMMLIB_BASIC_ONLY
+#include <vmmlib/vmmlib.hpp>
 // Unpleasant needs un-winding ...
 using namespace std;
-using namespace vmml;
+//using namespace vmml;
+
+typedef vmml::vec2d Vector2d;
+typedef vmml::vec2f Vector2f;
+typedef vmml::vec3d Vector3d;
+typedef vmml::vec3f Vector3f;
+typedef vmml::vec4d Vector4d;
+typedef vmml::vec4f Vector4f;
+typedef vmml::mat4d Matrix4d;
+typedef vmml::mat4f Matrix4f;
+
 
 //utility macros
 //assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits
 # define Epsilon 1.0e-5
+
+const double INFTY = numeric_limits<double>::infinity();
 
 
 #endif // STDAFX_H

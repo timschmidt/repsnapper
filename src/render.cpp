@@ -114,15 +114,9 @@ void Render::tree_changed()
     return;
 
   // reset the zoom to cover the entire model
-  m_zoom = (get_model()->Max - get_model()->Min).getMaxComponent();
+  m_zoom = (get_model()->Max - get_model()->Min).find_max();
   // reset the pan to center
-  Matrix4f matrix;
-  memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
-  Vector3f m_transl = matrix.getTranslation();
-  m_transl = Vector3f(0, 0, 0);
-  matrix.setTranslation(m_transl);
-  memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));
-
+  setArcballTrans(m_transform, Vector3d::ZERO);
   queue_draw();
 }
 
@@ -165,8 +159,8 @@ bool Render::on_configure_event(GdkEventConfigure* event)
     m_lights[i]->SetSpecular(1.0f, 1.0f, 1.0f, 1.0f);
     m_lights[i]->Enable(false);
     m_lights[i]->SetLocation(light_locations[i].x,
-			   light_locations[i].y,
-			   light_locations[i].z, 0);
+			     light_locations[i].y,
+			     light_locations[i].z, 0);
   }
   m_lights[0]->Enable(true);
   m_lights[3]->Enable(true);
@@ -252,12 +246,13 @@ bool Render::on_key_release_event(GdkEventKey* event) {
   return true;
 }
 
+
 bool Render::on_button_press_event(GdkEventButton* event)
 {
   grab_focus();
-  m_arcBall->click (event->x, event->y, &m_transform);
   m_downPoint = Vector2f(event->x, event->y);
   if (event->button == 1) {
+    m_arcBall->click (event->x, event->y, &m_transform);
     guint index = find_object_at(event->x, event->y);
     if (index) {
       Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
@@ -271,12 +266,13 @@ bool Render::on_button_press_event(GdkEventButton* event)
 
 bool Render::on_button_release_event(GdkEventButton* event)
 {
+  //dragging = false;
   if (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK)  { // move object
     m_view->get_model()->ModelChanged();
     queue_draw();
   }
   else if (event->button == 1) {
-    if (m_downPoint.x == event->x && m_downPoint.y == event->y){ // click only
+    if (m_downPoint.x() == event->x && m_downPoint.y() == event->y){ // click only
       guint index = find_object_at(event->x, event->y);
       // click on no object - clear the selection
       if (!index) m_selection->unselect_all();
@@ -304,18 +300,18 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   Vector2f dragp(event->x, event->y);
   Vector2f delta = m_downPoint - dragp;
   double factor = 0.3;
-  Vector3d delta3f(-delta.x*factor, delta.y*factor, 0);
-  Vector3d mouse_down_plat = mouse_on_plane(m_downPoint.x, m_downPoint.y);
+  Vector3d delta3f(-delta.x()*factor, delta.y()*factor, 0);
+  Vector3d mouse_down_plat = mouse_on_plane(m_downPoint.x(), m_downPoint.y());
   Vector3d mousePlat  = mouse_on_plane(event->x, event->y);
-  Vector2d mouse_xy   = Vector2d(mousePlat.x, mousePlat.y);
-  Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x, mouse_down_plat.y);
-  Vector3d mouse_down_preview = mouse_on_plane(m_downPoint.x, m_downPoint.y,
+  Vector2d mouse_xy   = Vector2d(mousePlat.x(), mousePlat.y());
+  Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x(), mouse_down_plat.y());
+  Vector3d mouse_down_preview = mouse_on_plane(m_downPoint.x(), m_downPoint.y(),
 					       get_model()->get_preview_Z());
   get_model()->setMeasuresPoint(mouse_down_preview);
 
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
     if (event->state & GDK_SHIFT_MASK) { // move object XY
-      if (false);//delta3f.x<1 && delta3f.y<1) redraw=false;
+      if (false);//delta3f.x()<1 && delta3f.y()<1) redraw=false;
       else {
 	Shape *shape;
 	TreeObject *object;
@@ -328,12 +324,11 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  transf = &object->transform3D;
 	else
 	  transf = &shape->transform3D;
-	transf->move(Vector3d(deltamouse.x, deltamouse.y, 0.));
-	m_downPoint = dragp;
+	transf->move(Vector3d(deltamouse.x(), deltamouse.y(), 0.));
       }
     }
     else if (event->state & GDK_CONTROL_MASK) { // move object Z wise
-      Vector3d delta3fz(0, 0, delta.y*factor);
+      Vector3d delta3fz(0, 0, delta.y()*factor);
 	Shape *shape;
 	TreeObject *object;
 	if (!m_view->get_selected_stl(object, shape))
@@ -345,19 +340,21 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  transf = &object->transform3D;
 	else
 	  transf = &shape->transform3D;
-	double scale = transf->transform.m[3][3];
+	double scale = transf->transform[3][3];
 	transf->move(delta3fz*scale);
-	m_downPoint = dragp;
     }
-    else { // rotate
+    else { // rotate view
+      //Vector3d axis(delta.y(), delta.x(), 0);
+      //rotArcballTrans(m_transform, axis, -delta.length()/100.);
       m_arcBall->dragAccumulate(event->x, event->y, &m_transform);
     }
+    m_downPoint = dragp;
     if (redraw) queue_draw();
     return true;
-  } // BUTTON1
+  } // BUTTON 1
   else {
     if (event->state & GDK_BUTTON2_MASK) { // zoom
-      double factor = 1.0 + 0.01 * (delta.x - delta.y);
+      double factor = 1.0 + 0.01 * (delta.x() - delta.y());
       if (event->state & GDK_SHIFT_MASK) { // scale shape
 	Shape *shape;
 	TreeObject *object;
@@ -372,7 +369,8 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
       } else { // zoom view
 	m_zoom *= factor;
       }
-    }
+      m_downPoint = dragp;
+    } // BUTTON 2
     else if (event->state & GDK_BUTTON3_MASK) { // pan
       if (event->state & GDK_SHIFT_MASK) { // rotate shape
 	Shape *shape;
@@ -381,19 +379,13 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  return true;
 	if (!shape)
 	  return true;
-	Vector3d axis(delta.y, delta.x, 0);
+	Vector3d axis(delta.y(), delta.x(), 0);
 	shape->Rotate(axis, -delta.length()/100.);
-	m_downPoint = dragp;
       } else {  // move view XY
-	Matrix4f matrix;
-	memcpy(&matrix.m00, &m_transform.M[0], sizeof(Matrix4f));
-	Vector3f m_transl = matrix.getTranslation();
-	m_transl += delta3f;//Vector3d(deltamouse.x, deltamouse.y, 0.);
-	matrix.setTranslation(m_transl);
-	memcpy(&m_transform.M[0], &matrix.m00, sizeof(Matrix4f));      
+	moveArcballTrans(m_transform, delta3f);
       }
-    }
-    m_downPoint = dragp;
+      m_downPoint = dragp;
+    } // BUTTON 3
     if (redraw) queue_draw();
     return true;
   }
@@ -410,7 +402,7 @@ void Render::SetEnableLight(unsigned int i, bool on)
 void Render::CenterView()
 {
   Vector3d c = get_model()->GetViewCenter();
-  glTranslatef (-c.x, -c.y, -c.z);
+  glTranslatef (-c.x(), -c.y(), -c.z());
 }
 
 
@@ -509,8 +501,8 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
   Vector3d rayP2( dX, dY,dZ );
 
   // intersect with z=0;
-  if (rayP2.z != rayP1.z) {
-    double t = (plane_z-rayP1.z)/(rayP2.z-rayP1.z);
+  if (rayP2.z() != rayP1.z()) {
+    double t = (plane_z-rayP1.z())/(rayP2.z()-rayP1.z());
     Vector3d downP = rayP1 +  (rayP2-rayP1) * t;
     return downP;
   }

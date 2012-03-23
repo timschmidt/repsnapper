@@ -185,8 +185,8 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  {
 	    //cerr << name << " found saved pattern no " << sIt-savedPatterns.begin() << " with " << sIt->cpolys.size() <<" polys"<< endl << "type "<< sIt->type << sIt->Min << sIt->Max << endl;
 	    // is it too small for this layer?
-	    if (sIt->Min.x > Min.x || sIt->Min.y > Min.y || 
-		sIt->Max.x < Max.x || sIt->Max.y < Max.y) 
+	    if (sIt->Min.x() > Min.x() || sIt->Min.y() > Min.y() || 
+		sIt->Max.x() < Max.x() || sIt->Max.y() < Max.y()) 
 	      {
 		too_small.push_back(sIt-savedPatterns.begin());
 		//break; // there is no other match
@@ -222,30 +222,30 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	Vector2d center = (Min+Max)/2.;
 	// make square that masks everything even when rotated
 	Vector2d diag = Max-Min;
-	double square = max(diag.x,diag.y);
+	double square = max(diag.x(),diag.y());
 	Vector2d sqdiag(square*2/3,square*2/3);
 	Vector2d pMin=center-sqdiag, pMax=center+sqdiag;
 	//cerr << pMin << "--"<<pMax<< "::"<< center << endl;
 	Poly poly(this->layer->getZ());
-	for (double x = pMin.x; x < pMax.x; x += 2*infillDistance) {
-	  poly.addVertex(Vector2d(x, pMin.y));
+	for (double x = pMin.x(); x < pMax.x(); x += 2*infillDistance) {
+	  poly.addVertex(Vector2d(x, pMin.y()));
 	  if (zigzag){
-	    for (double y = pMin.y+infillDistance; y < pMax.y; y += 2*infillDistance) {
+	    for (double y = pMin.y()+infillDistance; y < pMax.y(); y += 2*infillDistance) {
 	      poly.addVertex(Vector2d(x,y));
 	      poly.addVertex(Vector2d(x+infillDistance,y+infillDistance));
 	    }
-	    for (double y = pMax.y; y > pMin.y; y -= 2*infillDistance) {
+	    for (double y = pMax.y(); y > pMin.y(); y -= 2*infillDistance) {
 	      poly.addVertex(Vector2d(x+infillDistance,y+infillDistance));
 	      poly.addVertex(Vector2d(x+2*infillDistance,y));
 	    }
 	  } else {
-	    poly.addVertex(Vector2d(x+infillDistance,   pMin.y));
-	    poly.addVertex(Vector2d(x+infillDistance,   pMax.y));
-	    poly.addVertex(Vector2d(x+2*infillDistance, pMax.y));
+	    poly.addVertex(Vector2d(x+infillDistance,   pMin.y()));
+	    poly.addVertex(Vector2d(x+infillDistance,   pMax.y()));
+	    poly.addVertex(Vector2d(x+2*infillDistance, pMax.y()));
 	  }
 	}
-	poly.addVertex(Vector2d(pMax.x, pMin.y-infillDistance));
-	poly.addVertex(Vector2d(pMin.x, pMin.y-infillDistance));
+	poly.addVertex(Vector2d(pMax.x(), pMin.y()-infillDistance));
+	poly.addVertex(Vector2d(pMin.x(), pMin.y()-infillDistance));
 	poly.rotate(center,rotation);
 	vector<Poly> polys(1);
 	polys[0] = poly;
@@ -257,7 +257,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	Poly poly(this->layer->getZ());
 	Vector2d center = (Min+Max)/2.;
 	Vector2d diag = Max-Min;
-	double square = MAX(Max.x,Max.y);
+	double square = MAX(Max.x(),Max.y());
 	if (infillDistance<=0) break;
 	int level = (int)ceil(log2(2*square/infillDistance));
 	if (level<0) break;
@@ -285,7 +285,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  ipolys.push_back(shrinked2);
 	  double area = Clipping::Area(shrinked);
 	  //cerr << "shr " << parea << " - " <<area<< " - " << " : " <<endl;
-	  int lastnumpolys=0;
+	  // int lastnumpolys=0;
 	  // int shrcount=0;
 	  while (shrinked.size()>0){ 
 	    if (area*parea < 0)  break; // went beyond zero size
@@ -294,7 +294,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	    for (uint i=0;i<shrinked2.size();i++)
 	      shrinked2[i].cleanup(0.1*infillDistance);
 	    ipolys.push_back(shrinked2);
-	    lastnumpolys = shrinked.size();
+	    //lastnumpolys = shrinked.size();
 	    shrinked = Clipping::getOffset(shrinked,-infillDistance);
 	    for (uint i=0;i<shrinked.size();i++)
 	      shrinked[i].cleanup(0.1*infillDistance);
@@ -360,9 +360,9 @@ void Infill::addInfillPoly(Poly p)
   	{
   	  l = (p.getVertexCircular(i+1) - p.getVertexCircular(i));     
 	  // rotate with neg. infill angle and see whether it's 90° as infill lines
-	  rotl = Vector2d(l.x*cosa-l.y*sina, 
-			  l.y*cosa+l.x*sina);
-	  if (abs(rotl.x) < 0.1 && abs(rotl.y) > 0.1)
+	  rotl = Vector2d(l.x()*cosa-l.y()*sina, 
+			  l.y()*cosa+l.x()*sina);
+	  if (abs(rotl.x()) < 0.1 && abs(rotl.y()) > 0.1)
   	    {
 	      // if (zigzagpoly) {
 	      // 	zigzagpoly->addVertex(p.getVertexCircular(i+i%2));
@@ -432,10 +432,10 @@ enum {
 void move(int direction, double infillDistance, vector<Vector2d> &v){
   Vector2d d(0,0);
   switch (direction) {
-  case LEFT:  d.x=-infillDistance;break;
-  case RIGHT: d.x=infillDistance;break;
-  case UP:    d.y=-infillDistance;break;
-  case DOWN:  d.y= infillDistance;break;
+  case LEFT:  d.x()=-infillDistance;break;
+  case RIGHT: d.x()=infillDistance;break;
+  case UP:    d.y()=-infillDistance;break;
+  case DOWN:  d.y()= infillDistance;break;
   }
   Vector2d last;
   if (v.size()==0) last = Vector2d(0,0);

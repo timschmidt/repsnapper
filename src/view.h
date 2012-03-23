@@ -21,8 +21,8 @@
 
 #include <vector>
 #include <gtkmm.h>
-#include <vmmlib/vmmlib.h>
-#include "types.h"
+
+#include "stdafx.h"
 #include "progress.h"
 #include "printer.h"
 
@@ -152,7 +152,7 @@ class View : public Gtk::Window
   void inhibit_print_changed();
   void alert (Gtk::MessageType t, const char *message,
 	      const char *secondary);
-  void rotate_selection (vmml::Vector4d rotate);
+  void rotate_selection (Vector4d rotate);
   void twist_selection (double angle);
   void invertnormals_selection ();
   void mirror_selection ();
@@ -160,8 +160,8 @@ class View : public Gtk::Window
   void stl_added (Gtk::TreePath &path);
   void model_changed ();
 
-  vmml::Matrix4d &SelectedNodeMatrix(guint objectNr = 1);
-  void SelectedNodeMatrices(std::vector<vmml::Matrix4d *> &result );
+  Matrix4d &SelectedNodeMatrix(guint objectNr = 1);
+  void SelectedNodeMatrices(std::vector<Matrix4d *> &result );
   void newObject();
 
   // view nasties ...

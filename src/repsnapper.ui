@@ -6166,7 +6166,7 @@ THE HEAD MOVING DOWN!
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.WireframeRGB">
+                                      <object class="GtkColorButton" id="Display.WireframeRGBA">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -6209,7 +6209,7 @@ THE HEAD MOVING DOWN!
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.NormalsRGB">
+                                      <object class="GtkColorButton" id="Display.NormalsRGBA">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -6252,7 +6252,7 @@ THE HEAD MOVING DOWN!
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.EndpointsRGB">
+                                      <object class="GtkColorButton" id="Display.EndpointsRGBA">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -6294,7 +6294,7 @@ THE HEAD MOVING DOWN!
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.PolygonRGB">
+                                      <object class="GtkColorButton" id="Display.PolygonRGBA">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -6570,7 +6570,7 @@ THE HEAD MOVING DOWN!
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.GCodeExtrudeRGB">
+                                      <object class="GtkColorButton" id="Display.GCodeExtrudeRGBA">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -6626,7 +6626,7 @@ THE HEAD MOVING DOWN!
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.GCodeMoveRGB">
+                                      <object class="GtkColorButton" id="Display.GCodeMoveRGBA">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
@@ -6666,7 +6666,7 @@ THE HEAD MOVING DOWN!
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkColorButton" id="Display.GCodePrintingRGB">
+                                      <object class="GtkColorButton" id="Display.GCodePrintingRGBA">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>

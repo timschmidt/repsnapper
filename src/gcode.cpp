@@ -35,10 +35,10 @@ using namespace std;
 
 GCode::GCode()
 {
-	Min.x = Min.y = Min.z = 99999999.0;
-	Max.x = Max.y = Max.z = -99999999.0;
-	Center.x = Center.y = Center.z = 0.0;
-	buffer = Gtk::TextBuffer::create();
+  Min.set(99999999.0,99999999.0,99999999.0);
+  Max.set(-99999999.0,-99999999.0,-99999999.0);
+  Center.set(0,0,0);
+  buffer = Gtk::TextBuffer::create();
 }
 
 double GCode::GetTotalExtruded(bool relativeEcode) const
@@ -97,8 +97,8 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	string s;
 
 	Vector3d globalPos(0,0,0);
-	Min.x = Min.y = Min.z = 99999999.0;
-	Max.x = Max.y = Max.z = -99999999.0;
+	Min.set(99999999.0,99999999.0,99999999.0);
+	Max.set(-99999999.0,-99999999.0,-99999999.0);
 
 	std::vector<Command> loaded_commands;
 
@@ -127,25 +127,25 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 		  lastF=command.f;
 		// cout << s << endl;
 		//cerr << command.info()<< endl;
-		if(command.where.x < -100)
+		if(command.where.x() < -100)
 		  continue;
-		if(command.where.y < -100)
+		if(command.where.y() < -100)
 		  continue;
 		globalPos = command.where;
-		if(command.where.x < Min.x)
-		  Min.x = command.where.x;
-		if(command.where.y < Min.y)
-		  Min.y = command.where.y;
-		if(command.where.z < Min.z)
-		  Min.z = command.where.z;
-		if(command.where.x > Max.x)
-		  Max.x = command.where.x;
-		if(command.where.y > Max.y)
-		  Max.y = command.where.y;
-		if(command.where.z > Max.z)
-		  Max.z = command.where.z;
-		if (command.where.z != lastZ) {
-		  lastZ=command.where.z;
+		if(command.where.x() < Min.x())
+		  Min.x() = command.where.x();
+		if(command.where.y() < Min.y())
+		  Min.y() = command.where.y();
+		if(command.where.z() < Min.z())
+		  Min.z() = command.where.z();
+		if(command.where.x() > Max.x())
+		  Max.x() = command.where.x();
+		if(command.where.y() > Max.y())
+		  Max.y() = command.where.y();
+		if(command.where.z() > Max.z())
+		  Max.z() = command.where.z();
+		if (command.where.z() != lastZ) {
+		  lastZ=command.where.z();
 		  layerchanges.push_back(loaded_commands.size());
 		} 
 		loaded_commands.push_back(command);
@@ -155,9 +155,9 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 
 	buffer->set_text(alltext.str());
 	
-	Center.x = (Max.x + Min.x )/2;
-	Center.y = (Max.y + Min.y )/2;
-	Center.z = (Max.z + Min.z )/2;
+	Center.x() = (Max.x() + Min.x() )/2;
+	Center.y() = (Max.y() + Min.y() )/2;
+	Center.z() = (Max.z() + Min.z() )/2;
 	
 	double time = GetTimeEstimation();
 	int h = (int)time/3600;
@@ -172,7 +172,7 @@ int GCode::getLayerNo(const double z) const
   if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
     for(uint i=0;i<layerchanges.size() ;i++)
       if (commands.size()>layerchanges[i])
-	if ( abs(commands[layerchanges[i]].where.z-z)<0.001) return i;
+	if ( abs(commands[layerchanges[i]].where.z()-z)<0.001) return i;
   return -1;
 }
 
@@ -395,16 +395,16 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	if (progress_steps==0) progress_steps=1;
 	
 	for(uint i = 0; i < commands.size(); i++) {
-	  if ( (!commands[i].is_value && commands[i].where.z != lastZ) ) {
+	  if ( (!commands[i].is_value && commands[i].where.z() != lastZ) ) {
 	    layerchanges.push_back(i);
-	    lastZ = commands[i].where.z;
+	    lastZ = commands[i].where.z();
 	    if (lastZ<0) cerr << i << " - " <<lastZ << endl;
 	  }
 
 	  if ( commands[i].Code == LAYERCHANGE ) 
 	    GcodeTxt += GcodeLayer + "\n";
 
-	  if ( commands[i].where.z < 0 )  {
+	  if ( commands[i].where.z() < 0 )  {
 	    cerr << i << " Z < 0 "  << commands[i].info() << endl;
 	  }
 	  else
@@ -421,15 +421,15 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 		//GcodeTxt += oss.str();
 	// 		break;
 	// 	case SETSPEED:
-	// 		commands[i].where.z = LastPos.z;
+	// 		commands[i].where.z() = LastPos.z();
 	// 		commands[i].e = lastE;
 	// 	case ZMOVE:
-	// 		commands[i].where.x = LastPos.x;
-	// 		commands[i].where.y = LastPos.y;
+	// 		commands[i].where.x() = LastPos.x();
+	// 		commands[i].where.y() = LastPos.y();
 	// 	case COORDINATEDMOTION:
-	// 		if ((commands[i].where.x != LastPos.x) + 
-	// 		    (commands[i].where.y != LastPos.y) +
-	// 		    (commands[i].where.z != LastPos.z) != 0 &&
+	// 		if ((commands[i].where.x() != LastPos.x()) + 
+	// 		    (commands[i].where.y() != LastPos.y()) +
+	// 		    (commands[i].where.z() != LastPos.z()) != 0 &&
 	// 		    AntioozeDistance != 0 && commands[i].e == lastE &&
 	// 		    !Use3DGcode && AntioozeDistance != 0)
 	// 		{
@@ -443,12 +443,12 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 			}
 	// 		}
 	// 		oss  << "G1 ";
-	// 		if(commands[i].where.x != LastPos.x)
-	// 			oss << "X" << commands[i].where.x << " ";
-	// 		if(commands[i].where.y != LastPos.y)
-	// 			oss << "Y" << commands[i].where.y << " ";
-	// 		if(commands[i].where.z != LastPos.z)
-	// 			oss << "Z" << commands[i].where.z << " ";
+	// 		if(commands[i].where.x() != LastPos.x())
+	// 			oss << "X" << commands[i].where.x() << " ";
+	// 		if(commands[i].where.y() != LastPos.y())
+	// 			oss << "Y" << commands[i].where.y() << " ";
+	// 		if(commands[i].where.z() != LastPos.z())
+	// 			oss << "Z" << commands[i].where.z() << " ";
 	// 		if(commands[i].e != lastE)
 	// 		{
 	// 			if(UseIncrementalEcode)	// in incremental mode, the same is nothing
@@ -467,9 +467,9 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 			oss << " ;" << commands[i].comment << "\n";
 	// 		else
 	// 			oss <<  "\n";
-	// 		if ((commands[i].where.x != LastPos.x) + 
-	// 		    (commands[i].where.y != LastPos.y) +
-	// 		    (commands[i].where.z != LastPos.z) != 0 &&
+	// 		if ((commands[i].where.x() != LastPos.x()) + 
+	// 		    (commands[i].where.y() != LastPos.y()) +
+	// 		    (commands[i].where.z() != LastPos.z()) != 0 &&
 	// 		    AntioozeDistance != 0 &&
 	// 		    commands[i].e == lastE  && 
 	// 		    !Use3DGcode && AntioozeDistance != 0)
@@ -485,7 +485,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 		}
 	// 		add_text_filter_nan(oss.str(), GcodeTxt);
 	// 		//GcodeTxt += oss.str();
-	// 		if(commands[i].Code == ZMOVE && commands[i].where.z != LastPos.z)
+	// 		if(commands[i].Code == ZMOVE && commands[i].where.z() != LastPos.z())
 	// 		  add_text_filter_nan(GcodeLayer + "\n", GcodeTxt);
 	// 		  //GcodeTxt += GcodeLayer + "\n";
 
@@ -512,7 +512,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 		//GcodeTxt += oss.str();
 	// 		break;
 	// 	case COORDINATEDMOTION3D:
-	// 		oss  << "G1 X" << commands[i].where.x << " Y" << commands[i].where.y << " Z" << commands[i].where.z;
+	// 		oss  << "G1 X" << commands[i].where.x() << " Y" << commands[i].where.y() << " Z" << commands[i].where.z();
 	// 		oss << " F" << commands[i].f;
 	// 		if(commands[i].comment.length() != 0)
 	// 			oss << " ;" << commands[i].comment << "\n";
@@ -523,27 +523,27 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 		LastPos = commands[i].where;
 	// 		break;
 	// 	case RAPIDMOTION:
-	// 		oss  << "G0 X" << commands[i].where.x << " Y" << commands[i].where.y << " Z" << commands[i].where.z  << "\n";
+	// 		oss  << "G0 X" << commands[i].where.x() << " Y" << commands[i].where.y() << " Z" << commands[i].where.z()  << "\n";
 	// 		add_text_filter_nan(oss.str(), GcodeTxt);
 	// 		//GcodeTxt += oss.str();
 	// 		LastPos = commands[i].where;
 	// 		break;
 	// 	case GOTO:
 	// 		oss  << "G92";
-	// 		if(commands[i].where.x != LastPos.x && commands[i].where.x >= 0)
+	// 		if(commands[i].where.x() != LastPos.x() && commands[i].where.x() >= 0)
 	// 		{
-	// 			LastPos.x = commands[i].where.x;
-	// 			oss << " X" << commands[i].where.x;
+	// 			LastPos.x() = commands[i].where.x();
+	// 			oss << " X" << commands[i].where.x();
 	// 		}
-	// 		if(commands[i].where.y != LastPos.y && commands[i].where.y >= 0)
+	// 		if(commands[i].where.y() != LastPos.y() && commands[i].where.y() >= 0)
 	// 		{
-	// 			LastPos.y = commands[i].where.y;
-	// 			oss << " Y" << commands[i].where.y;
+	// 			LastPos.y() = commands[i].where.y();
+	// 			oss << " Y" << commands[i].where.y();
 	// 		}
-	// 		if(commands[i].where.z != LastPos.z && commands[i].where.z >= 0)
+	// 		if(commands[i].where.z() != LastPos.z() && commands[i].where.z() >= 0)
 	// 		{
-	// 			LastPos.z = commands[i].where.z;
-	// 			oss << " Z" << commands[i].where.z;
+	// 			LastPos.z() = commands[i].where.z();
+	// 			oss << " Z" << commands[i].where.z();
 	// 		}
 	// 		if(commands[i].e != lastE && commands[i].e >= 0.0)
 	// 		{

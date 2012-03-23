@@ -31,7 +31,7 @@ void Triangle::calcNormal()
 {
   Vector3d AA=C-A;
   Vector3d BB=C-B;
-  Normal = AA.cross(BB).getNormalized();
+  Normal = normalized(AA.cross(BB));
 }
 
 
@@ -51,7 +51,7 @@ void Triangle::invertNormal()
 void Triangle::mirrorX(Vector3d center)
 {
   for (uint i = 0; i < 3; i++) 
-    operator[](i).x = center.x-operator[](i).x;
+    operator[](i).x() = center.x()-operator[](i).x();
   invertNormal();
 }
 
@@ -70,9 +70,9 @@ bool Triangle::isConnectedTo(Triangle other, double maxsqerr)
   // for (uint i = 0; i < 3; i++) {
   //   Vector3d p = (Vector3d)(operator[](i));
   for (uint j = 0; j < 3; j++)  {
-    if (( A - other[j]).lengthSquared() < maxsqerr)  return true;
-    if (( B - other[j]).lengthSquared() < maxsqerr)  return true;
-    if (( C - other[j]).lengthSquared() < maxsqerr)  return true;
+    if (( A - other[j]).squared_length() < maxsqerr)  return true;
+    if (( B - other[j]).squared_length() < maxsqerr)  return true;
+    if (( C - other[j]).squared_length() < maxsqerr)  return true;
   }
   return false;
 }
@@ -86,14 +86,14 @@ double Triangle::area() const
 // add all these to get shape volume
 double Triangle::projectedvolume(Matrix4d T) const
 {
-  if (Normal.z==0) return 0;
-  Triangle xyproj = Triangle(Vector3d(A.x,A.y,0),
-			     Vector3d(B.x,B.y,0),
-			     Vector3d(C.x,C.y,0));
+  if (Normal.z()==0) return 0;
+  Triangle xyproj = Triangle(Vector3d(A.x(),A.y(),0),
+			     Vector3d(B.x(),B.y(),0),
+			     Vector3d(C.x(),C.y(),0));
   Vector3d min = GetMin(T);
   Vector3d max = GetMax(T);
-  double vol =  xyproj.area()*0.5*(max.z+min.z);
-  if (Normal.z<0) vol=-vol; 
+  double vol =  xyproj.area()*0.5*(max.z()+min.z());
+  if (Normal.z()<0) vol=-vol; 
   return vol;
 }
 
@@ -140,9 +140,9 @@ void Triangle::Translate(const Vector3d &vector)
 
 void Triangle::rotate(const Vector3d axis, double angle) 
 {
-  A = A.rotate(angle, axis.x, axis.y, axis.z);
-  B = B.rotate(angle, axis.x, axis.y, axis.z);
-  C = C.rotate(angle, axis.x, axis.y, axis.z);
+  A = A.rotate(angle, axis);
+  B = B.rotate(angle, axis);
+  C = C.rotate(angle, axis);
   calcNormal();
 }
 
@@ -157,8 +157,8 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
 					  SMALL*SMALL);
   if (dist < SMALL) 
     { // found -> divide at shorter diagonal 
-      if ((fourpoints[0]-fourpoints[2]).lengthSquared() 
-	  < (fourpoints[1]-fourpoints[3]).lengthSquared()) { 
+      if ((fourpoints[0]-fourpoints[2]).squared_length() 
+	  < (fourpoints[1]-fourpoints[3]).squared_length()) { 
 	  tr[0] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
 	  tr[1] = Triangle(fourpoints[2],fourpoints[3],fourpoints[0]);
       } else {
@@ -173,8 +173,8 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
 					      SMALL*SMALL);
       if (dist < SMALL) 
 	{
-	  if ((fourpoints[1]-fourpoints[2]).lengthSquared() 
-	      < (fourpoints[0]-fourpoints[3]).lengthSquared()) {
+	  if ((fourpoints[1]-fourpoints[2]).squared_length() 
+	      < (fourpoints[0]-fourpoints[3]).squared_length()) {
 	    tr[0] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
   	    tr[1] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
 	  } else {
@@ -207,23 +207,23 @@ int Triangle::SplitAtPlane(double z,
 			   const Matrix4d T) const
 {
   vector<Vector3d> upper, lower;
-  if  ((T*A).z>z) upper.push_back(T*A); else lower.push_back(T*A);
-  if  ((T*B).z>z) upper.push_back(T*B); else lower.push_back(T*B);
-  if  ((T*C).z>z) upper.push_back(T*C); else lower.push_back(T*C);
+  if  ((T*A).z()>z) upper.push_back(T*A); else lower.push_back(T*A);
+  if  ((T*B).z()>z) upper.push_back(T*B); else lower.push_back(T*B);
+  if  ((T*C).z()>z) upper.push_back(T*C); else lower.push_back(T*C);
   Vector2d lstart,lend;
   int cut = CutWithPlane(z,T,lstart,lend);
   if (cut==0) return 0;
   else if (cut==1) { // cut at a triangle point 
     if (upper.size()>lower.size())
-      upper.push_back(Vector3d(lstart.x,lstart.y,z));
+      upper.push_back(Vector3d(lstart.x(),lstart.y(),z));
     else
-      lower.push_back(Vector3d(lstart.x,lstart.y,z));
+      lower.push_back(Vector3d(lstart.x(),lstart.y(),z));
   }
   else if (cut==2) {
-    upper.push_back(Vector3d(lstart.x,lstart.y,z));
-    upper.push_back(Vector3d(lend.x,lend.y,z));
-    lower.push_back(Vector3d(lstart.x,lstart.y,z));
-    lower.push_back(Vector3d(lend.x,lend.y,z));
+    upper.push_back(Vector3d(lstart.x(),lstart.y(),z));
+    upper.push_back(Vector3d(lend.x(),lend.y(),z));
+    lower.push_back(Vector3d(lstart.x(),lstart.y(),z));
+    lower.push_back(Vector3d(lend.x(),lend.y(),z));
   }
   vector<Triangle> uppertr,lowertr;
   if (upper.size()==3) { // half of triangle with 1 triangle point
@@ -262,38 +262,38 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 
 	int num_cutpoints = 0;
 	// Are the points on opposite sides of the plane?
-	if ((z <= P1.z) != (z <= P2.z))
+	if ((z <= P1.z()) != (z <= P2.z()))
 	  {
-	    t = (z-P1.z)/(P2.z-P1.z);
+	    t = (z-P1.z())/(P2.z()-P1.z());
 	    p = P1+((Vector3d)(P2-P1)*t);
-	    lineStart = Vector2d(p.x,p.y);
+	    lineStart = Vector2d(p.x(),p.y());
 	    num_cutpoints = 1;
 	  }
 	
 	P1 = T*this->B;
 	P2 = T*this->C;
-	if ((z <= P1.z) != (z <= P2.z))
+	if ((z <= P1.z()) != (z <= P2.z()))
 	  {
-	    t = (z-P1.z)/(P2.z-P1.z);
+	    t = (z-P1.z())/(P2.z()-P1.z());
 	    p = P1+((Vector3d)(P2-P1)*t);
 	    if(num_cutpoints > 0)
 	      {
-		lineEnd = Vector2d(p.x,p.y);
+		lineEnd = Vector2d(p.x(),p.y());
 		num_cutpoints = 2;
 	      }
 	    else
 	      {
-		lineStart = Vector2d(p.x,p.y);
+		lineStart = Vector2d(p.x(),p.y());
 		num_cutpoints = 1;
 	      }
 	  }
 	P1 = T*this->C;
 	P2 = T*this->A;
-	if ((z <= P1.z) != (z <= P2.z))
+	if ((z <= P1.z()) != (z <= P2.z()))
 	  {
-	    t = (z-P1.z)/(P2.z-P1.z);
+	    t = (z-P1.z())/(P2.z()-P1.z());
 	    p = P1+((Vector3d)(P2-P1)*t);	    
-	    lineEnd = Vector2d(p.x,p.y);
+	    lineEnd = Vector2d(p.x(),p.y());
 	    if( lineEnd != lineStart ) num_cutpoints = 2;
 	  }
 	
@@ -303,9 +303,9 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 void Triangle::draw(int gl_type) const
 {
   glBegin(gl_type);	  
-  glVertex3f(A.x,A.y,A.z);
-  glVertex3f(B.x,B.y,B.z);
-  glVertex3f(C.x,C.y,C.z);
+  glVertex3f(A.x(),A.y(),A.z());
+  glVertex3f(B.x(),B.y(),B.z());
+  glVertex3f(C.x(),C.y(),C.z());
   glEnd();
 }
 
@@ -314,11 +314,11 @@ string Triangle::getSTLfacet(Matrix4d T) const
 {
   Vector3d TA=T*A,TB=T*B,TC=T*C,TN=T*Normal;TN.normalize();
   stringstream sstr;
-  sstr << "  facet normal " << TN.x << " " << TN.x << " " << TN.z <<endl;
+  sstr << "  facet normal " << TN.x() << " " << TN.x() << " " << TN.z() <<endl;
   sstr << "    outer loop"  << endl;
-  sstr << "      vertex "<< scientific << TA.x << " " << TA.y << " " << TA.z <<endl;
-  sstr << "      vertex "<< scientific << TB.x << " " << TB.y << " " << TB.z <<endl;
-  sstr << "      vertex "<< scientific << TC.x << " " << TC.y << " " << TC.z <<endl;
+  sstr << "      vertex "<< scientific << TA.x() << " " << TA.y() << " " << TA.z() <<endl;
+  sstr << "      vertex "<< scientific << TB.x() << " " << TB.y() << " " << TB.z() <<endl;
+  sstr << "      vertex "<< scientific << TC.x() << " " << TC.y() << " " << TC.z() <<endl;
   sstr << "    endloop" << endl;
   sstr << "  endfacet" << endl;
   return sstr.str();

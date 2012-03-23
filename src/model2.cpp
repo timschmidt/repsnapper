@@ -298,7 +298,7 @@ void Model::Slice()
   // - Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
   double minZ = thickness * settings.Slicing.FirstLayerHeight;// + Min.z; 
   Vector3d volume = settings.Hardware.Volume;
-  double maxZ = volume.z - settings.Hardware.PrintMargin.z;
+  double maxZ = min(Max.z(), volume.z() - settings.Hardware.PrintMargin.z());
 
   double max_gradient = 0;
 
@@ -735,7 +735,7 @@ void Model::ConvertToGCode()
   Infill::clearPatterns();
 
   Vector3d printOffset  = settings.Hardware.PrintMargin;
-  double   printOffsetZ = settings.Hardware.PrintMargin.z;
+  double   printOffsetZ = settings.Hardware.PrintMargin.z();
 
   // Make Layers
   Slice();

@@ -26,8 +26,8 @@
 
 PLine3::PLine3(const PLine pline, double z)
 { 
-  from               = Vector3d(pline.from.x, pline.from.y, z);
-  to                 = Vector3d(pline.to.x,   pline.to.y,   z);
+  from               = Vector3d(pline.from.x(), pline.from.y(), z);
+  to                 = Vector3d(pline.to.x(),   pline.to.y(),   z);
   speed              = pline.speed;
   extrusionfactor    = pline.feedrate;
   absolute_extrusion = pline.absolute_feed;
@@ -35,7 +35,7 @@ PLine3::PLine3(const PLine pline, double z)
   arcangle           = pline.angle;
   if (arc) {
     Vector2d arcIJK2 = pline.arccenter - pline.from;
-    arcIJK = Vector3d(arcIJK2.x, arcIJK2.y, 0);
+    arcIJK = Vector3d(arcIJK2.x(), arcIJK2.y(), 0);
     // double linearlength = (pline.to - pline.from).length();
     // if (linearlength!=0) // not full circle
     //   extrusionfactor *= pline.length() / linearlength;
@@ -48,14 +48,16 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 			double maxEspeed) const
 {
   int count=0;
-  if (lastpos != from) {  // move first
+  if ((lastpos-from).squared_length() > 0.05) {  // move first
     commands.push_back( Command(COORDINATEDMOTION, from, 0, movespeed) );
     count++;
   }  
-  double comm_speed = max(minspeed, this->speed); // in case maxspeed is too low
+  double comm_speed = this->speed;
+  if (absolute_extrusion == 0) 
+    comm_speed = max(minspeed, this->speed); // in case speed is too low
   double len = length();
-  double espeed = 0;
   double extrudedMaterial = len * extrusionfactor * extrusion;
+  double espeed = maxEspeed;
   if (len > 0)
     espeed = extrudedMaterial*comm_speed/len;
   if (extrudedMaterial == 0) // no matter what additional absolute_extrusion
@@ -78,9 +80,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     {
       command = Command (COORDINATEDMOTION, to, extrudedMaterial, comm_speed);
     }
-  if (absolute_extrusion!=0) {
-    command.comment += _(" Absolute Extrusion");
-  }
+  command.abs_extr += absolute_extrusion;
   commands.push_back(command);
   count++;
   lastpos = to;
@@ -103,7 +103,7 @@ double PLine3::time() const
 //   double speed = movespeed;
 //   if (movefirst > 0.001) {
 //     speed = CLAMP(speed, minspeed, movespeed); // ???
-//     o << "G1 X"<<from.x<<" Y"<<from.y<<" Z"<<from.z<<" F"<<speed << endl;
+//     o << "G1 X"<<from.x()<<" Y"<<from.y()<<" Z"<<from.z()<<" F"<<speed << endl;
 //   }
 
 //   double EX = distline * feedrate * feedrate; // this line's E
@@ -114,7 +114,7 @@ double PLine3::time() const
 //   } // else write single line EX
 //   if ( !(distline > 0.001 && noextrusion)) {
 //     speed = CLAMP(maxspeed, minspeed, maxspeed); // ???
-//     o << "G1 X" << to.x  << " Y" << to.y  << " Z" << to.z  
+//     o << "G1 X" << to.x()  << " Y" << to.y()  << " Z" << to.z()  
 //       << " E" << EX << " F" << speed << endl;
 //   }
 //   cerr << "PL gcode " << o.str()<< endl;
@@ -176,14 +176,15 @@ double PLine::calcangle() const
 }
 double PLine::calcangle(const PLine rhs) const
 {
-  assert(!arc);
+  // assert(!arc);
+  // assert(!rhs.arc);
   return angleBetween((rhs.to-rhs.from), (to-from));
 }
 
 double PLine::lengthSq() const
 {
   if (!arc) 
-    return (to-from).lengthSquared();
+    return (to-from).squared_length();
   else
     return pow(length(),2);
 }
@@ -250,13 +251,16 @@ void Printlines::addLine(vector<PLine> &lines, const Vector2d from, const Vector
 			 double speed, double movespeed, double feedrate) const
 {
   if (to==from) return;
+  Vector2d lfrom = from;
   if (lines.size() > 0) {
-    PLine *lastline = &lines.back();
-    if (!(lastline->to == from)) { // add moveline
-      lines.push_back(PLine(lastline->to, from, movespeed, 0));
+    Vector2d lastpos = lines.back().to;
+    if ((lastpos - lfrom).squared_length() > 0.1) { // add moveline
+      lines.push_back(PLine(lastpos, lfrom, movespeed, 0));
+    } else {
+      lfrom = lastpos;
     }
   }
-  lines.push_back(PLine(from, to, speed, feedrate));
+  lines.push_back(PLine(lfrom, to, speed, feedrate));
 }
 
 void Printlines::addPoly(vector<PLine> &lines, const Poly poly, int startindex, 
@@ -380,8 +384,8 @@ Vector2d Printlines::arcCenter(const PLine l1, const PLine l2,
    				center, ip, t0,t1);
   if (is > 0) {
     // radii match?
-    if (abs((l1p1-center).lengthSquared() -
-	    (l2p1-center).lengthSquared()) < maxSqerr)
+    if (abs((l1p1-center).squared_length() -
+	    (l2p1-center).squared_length()) < maxSqerr)
       return center;
   }
   return Vector2d(10000000,10000000);
@@ -395,20 +399,21 @@ uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
   double maxAngle = slicing.ArcsMaxAngle * M_PI/180;
   if (maxAngle < 0) return 0;
   double arcRadiusSq = 0;  
-  Vector2d arccenter;
+  Vector2d arccenter(1000000,1000000);
   guint arcstart = 0;
-  for (guint i=1; i < lines.size(); i++) {
+  for (uint i=1; i < lines.size(); i++) {
+    // if (lines[i-1].arc) { arcstart = i;   continue; }
+    // if (lines[i].arc)   { i++; arcstart = i; continue; }
     double dangle         = lines[i].calcangle(lines[i-1]);
     double feedratechange = lines[i].feedrate - lines[i-1].feedrate;
     Vector2d center       = arcCenter(lines[i-1], lines[i], 0.06*arcRadiusSq);
-    double radiusSq       = (center - lines[i].from).lengthSquared();
+    double radiusSq       = (center - lines[i].from).squared_length();
     // test if NOT continue arc:
-    if (lines[i].arc != 0                  // is an arc already
-	|| (lines[i].from-lines[i-1].to).lengthSquared() > 0.05 // not adjacent
+    if ((lines[i].from-lines[i-1].to).squared_length() > 0.05 // not adjacent
 	|| abs(feedratechange) > 0.1       // different feedrate
 	|| abs(dangle) < 0.0001            // straight continuation
 	|| abs(dangle) > maxAngle          // too big angle
-	|| ( i>1 && (arccenter-center).lengthSquared() > 0.06*radiusSq ) // center displacement
+	|| ( i>1 && (arccenter-center).squared_length() > 0.06*radiusSq ) // center displacement
 	) 
       { 
 	arccenter   = center;
@@ -418,7 +423,7 @@ uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
 	  i -= makeIntoArc(arcstart, i-1, lines); // straight lines are being removed
 	//else 
 	// not in arc, set start for potential next arc
-	  arcstart = i;
+	arcstart = i;
       }
   }  
   // remaining
@@ -473,9 +478,244 @@ uint Printlines::makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) c
   return 0;
 }
 
+uint Printlines::roundCorners(double maxdistance, vector<PLine> &lines) const
+{
+  if (lines.size() < 2) return 0;
+  uint num = 0;
+  for (uint i=0; i < lines.size()-1; i++) {
+    uint n = makeCornerArc(maxdistance, i, lines);
+    i+=n;
+    num+=n;
+  }
+  return num;
+}
+
+// make corner of lines[ind], lines[ind+1] into arc
+uint Printlines::makeCornerArc(double maxdistance, uint ind, 
+			       vector<PLine> &lines) const
+{
+  if (ind >= lines.size()) return 0;
+  //if (lines[ind].feedrate != lines[ind+1].feedrate) return 0;
+  if (lines[ind].arc!=0 || lines[ind+1].arc!=0) return 0;
+  if ((lines[ind].to-lines[ind+1].from).squared_length() > 0.01) return 0;
+  double l1 = lines[ind].length();
+  double l2 = lines[ind+1].length();
+  if (l1<maxdistance/2 || l2<maxdistance/2) return 0;
+  maxdistance = min(maxdistance, l1/2.);
+  maxdistance = min(maxdistance, l2/2.);
+  Vector2d dir1 = lines[ind].to-lines[ind].from;
+  Vector2d dir2 = lines[ind+1].to-lines[ind+1].from;
+  double angle = angleBetween(dir1, dir2);
+  // arc start and end point:
+  Vector2d p1 = lines[ind].to - normalized(dir1)*maxdistance;
+  Vector2d p2 = lines[ind+1].from + normalized(dir2)*maxdistance;
+  Intersection inter;
+  Vector2d center, I1;
+  double t0,t1;
+  // intersect perpendiculars at arc start/end
+  int is = intersect2D_Segments(p1, p1 + Vector2d(-dir1.y(),dir1.x()),
+				p2, p2 + Vector2d(-dir2.y(),dir2.x()),
+   				center, I1, t0,t1);
+  if (is==0) return 0;
+  bool ccw = isleftof(center, p1, p2);
+  if (!ccw) angle = -angle;
+  if (angle<=0) angle+=2*M_PI;
+  short arctype = ccw ? -1 : 1; 
+  PLine arcline(p1, p2, lines[ind].speed, lines[ind].feedrate,
+		arctype, center, angle);
+  PLine pline1(lines[ind].from, p1, lines[ind].speed, lines[ind].feedrate);
+  PLine pline2(p2, lines[ind+1].to, lines[ind+1].speed, lines[ind+1].feedrate);
+
+  lines[ind] = pline1;
+  lines[ind+1] = arcline;
+  lines.insert(lines.begin()+ind+2, pline2);
+  return 1;
+}
+
+
+int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed, 
+					  uint fromline, uint toline, 
+					  bool at_end,  // add to end of range (retract)
+					  vector<PLine> &lines,
+					  double &havedistributed) const
+{
+  if (fromline > toline) { // no lines to distribute the amount could be found
+    if (at_end) {  // add retracting halt after toline
+      if (toline > lines.size()-1)
+	toline = lines.size()-1;
+      PLine halt (lines[toline].to, lines[toline].to, AOspeed, 0);
+      halt.addAbsoluteExtrusionAmount(AOamount);
+      havedistributed += AOamount;  
+      //cerr << "tract " <<halt.info() << endl;
+      lines.insert(lines.begin()+toline+1, halt); // (inserts before)
+    } else {       // add repushing halt before fromline
+      if (fromline > lines.size()-1) 
+	fromline = lines.size()-1;
+      PLine halt (lines[fromline].from, lines[fromline].from, AOspeed, 0);
+      halt.addAbsoluteExtrusionAmount(AOamount);
+      havedistributed += AOamount;
+      //cerr << "push "<< halt.info() << endl;
+      lines.insert(lines.begin()+fromline, halt); // (inserts before)      
+    }
+    return 1;
+  }
+  double AOtime = abs(AOamount) / AOspeed; // time needed for AO on move
+  double linestime = 0;  // time all lines normally need
+  for (uint i=fromline; i<=toline; i++) linestime += lines[i].time();
+  if (linestime < AOtime) {
+    // slow down lines to get enough time for AOamount
+    double speedfactor = linestime / AOtime;
+    for (uint i=fromline; i<=toline; i++) 
+      lines[i].speed *= speedfactor;
+    linestime /= speedfactor; // now lines are slower
+  }
+  bool negative = (AOamount < 0);
+  // now distribute
+  double restamount = AOamount; // +-
+  uint iline = fromline;    if (at_end) iline = toline; // start here
+  double dist = 0;
+  while ( (restamount < 0) == (AOamount < 0) ) { // while same sign
+    double lineamount = lines[iline].time() * AOspeed; // max. possible amount at line
+    if (negative) lineamount = -lineamount;
+    if (abs(lineamount) > abs(restamount)) // line longer than necessary
+      { // -> split line
+	double resttime    = abs(restamount) / AOspeed;
+	double splitlength = lines[iline].speed * resttime;
+	if (at_end) splitlength = lines[iline].length() - splitlength;
+	int added = divideline(iline, splitlength, lines);
+	if (added == 1) {
+	  if (at_end)
+	    lines[iline+1].addAbsoluteExtrusionAmount(restamount); // +-
+	  else
+	    lines[iline]  .addAbsoluteExtrusionAmount(restamount); // +-
+	  dist += restamount;
+	  havedistributed += restamount;
+	  if (abs(dist-AOamount)>0.01) cerr << " wrong longline  "<< dist << endl;
+	  return added; // finished here
+	}
+	else cerr << " bad split/rest amount " << endl;
+      }
+    else
+      {
+	lines[iline].addAbsoluteExtrusionAmount(lineamount); // +-
+	havedistributed+= lineamount;
+	dist += lineamount;
+      }
+    restamount -= lineamount;
+    if (at_end) {
+      iline--; 
+      if (iline < fromline) break; // finished
+    } else {
+      iline++;
+      if (iline > toline) break; // finished
+    }
+  }
+  if (abs(dist-AOamount)>0.01) cerr << " wrong norm line  "<< dist << endl;
+  return 0; // normally no split was done
+}
+
+#define NEW_ANTIOOZE 0
+#if NEW_ANTIOOZE
+// call after lines have been slowed down!
 uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing,
 					vector<PLine> &lines) const
 {
+  if (!slicing.EnableAntiooze) return 0;
+  double 
+    AOmindistance = slicing.AntioozeDistance,
+    AOamount      = slicing.AntioozeAmount,
+    AOspeed       = slicing.AntioozeSpeed,
+    AOonhaltratio = slicing.AntioozeHaltRatio;
+  if (lines.size() < 2 || AOmindistance <=0 || AOamount == 0) return 0;
+
+  uint movestart  = 0, moveend = 0;
+  uint count = lines.size();
+  uint total_added = 0;
+  uint i = 0;
+  double total_extrusionsum = 0;
+  while (i < count) {
+    double extrusionsum = 0;
+    // find move start
+    while (i < count && ( lines[i].feedrate != 0 )) {
+      i++; movestart = i;
+    }
+    if (i == count) break;
+    // find move end
+    while (i < count && lines[i].feedrate == 0 ) {
+      moveend = i; i++;
+    }
+    double totaldistance=0;
+    for (uint j = movestart; j <= moveend; j++)
+      totaldistance += lines[j].length();
+
+    if (totaldistance < AOmindistance) continue;
+
+    uint added=0;
+    double onhalt_amount = AOamount * AOonhaltratio;
+    double onmove_amount = AOamount - onhalt_amount;
+    // do all from behind to keep indices right
+    // find lines to distribute repush
+    if (moveend < lines.size()-1) {
+      uint pushend = moveend+1;
+      while (pushend < lines.size()-1 && lines[pushend].feedrate != 0 )
+	pushend++;
+      double dist = 0;
+      int newl = distribute_AntioozeAmount(onmove_amount, AOspeed,
+					   moveend+1, pushend-1,
+					   false, lines, dist);
+      added +=newl;
+      double linesext = 0;
+      for (uint i = moveend+1; i<=pushend-1+newl; i++) linesext+=lines[i].absolute_feed;
+      if (abs(linesext-onmove_amount)>0.01) cerr  << "wrong lines dist push " << linesext << endl;
+      extrusionsum += dist;
+      if (abs(dist-onmove_amount)>0.01) cerr << " wrong distrib push " << dist << endl;
+    }
+    // on-halt repush and retract 
+    if (onhalt_amount != 0) {
+      PLine repushl (lines[moveend].to,     lines[moveend].to,     AOspeed, 0);
+      repushl.addAbsoluteExtrusionAmount(onhalt_amount);
+      lines.insert(lines.begin()+moveend+1, repushl); // (inserts before)
+      extrusionsum += onhalt_amount;
+      added ++;
+      PLine retractl(lines[movestart].from, lines[movestart].from, AOspeed, 0); 
+      retractl.addAbsoluteExtrusionAmount(-onhalt_amount);
+      lines.insert(lines.begin()+movestart, retractl);
+      extrusionsum -= onhalt_amount;
+      added ++;
+    }
+    // find lines to distribute retract
+    if (movestart > 1) {
+      uint tractstart = movestart-1;
+      while (tractstart > 0 &&  lines[tractstart].feedrate != 0 )
+	tractstart--;
+      double dist = 0;
+      int newl = distribute_AntioozeAmount(-onmove_amount, AOspeed,
+					   tractstart+1, movestart-1,
+					   true, lines,dist);
+      double linesext = 0;
+      for (uint i = tractstart+1-newl; i<=movestart-1; i++) linesext+=lines[i].absolute_feed;
+      if (abs(linesext+onmove_amount)>0.01) cerr  << "wrong lines dist tract " << linesext << endl;
+      added += newl;
+      extrusionsum += dist;
+      if (abs(dist+onmove_amount)>0.01) cerr << " wrong distrib tract " << dist << endl;
+    }
+    i += added;
+    total_added += added;
+    if (abs(extrusionsum) > 0.01) cerr << "wrong AO extr.: " << extrusionsum << endl;
+    count = lines.size();
+    total_extrusionsum += extrusionsum;
+  }
+  if (abs(total_extrusionsum) > 0.01) cerr << "wrong total AO extr.: " << total_extrusionsum << endl;
+  return total_added;
+}
+
+#else  // old ANTIOOZE
+
+// call after lines have been slowed down!
+uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing,
+					vector<PLine> &lines) const
+{
+  if (!slicing.EnableAntiooze) return 0;
   double AOmindistance = slicing.AntioozeDistance,
     AOamount = slicing.AntioozeAmount,
     AOspeed =  slicing.AntioozeSpeed,
@@ -487,10 +727,10 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
   uint i = 0;
   while (i < count) {
     // find start and end of movement
-    while (i < count && (lines[i].feedrate != 0)) {
+    while (i < count && ( lines[i].feedrate != 0 || lines[i].absolute_feed != 0 )) {
       i++; movestart = i;
     }
-    while (i < count && lines[i].feedrate == 0) {
+    while (i < count && lines[i].feedrate == 0 && lines[i].absolute_feed == 0) {
       moveend = i; i++;
     }
     if (moveend < movestart) continue;
@@ -503,8 +743,7 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
     if (totaldistance > AOmindistance) {
       double onhalt_amount = AOamount * AOonhaltratio;
       double onmove_amount = AOamount - onhalt_amount;
-      //double onmove_linelength = onmove_amount / AOspeed;
-      
+      //
       // distribute onmove_amount to lines before and after
       // TODO divide lines before and after if long enough?
       int movei = movestart-1;
@@ -514,33 +753,55 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
 	     && lines[movei].feedrate != 0      // stop at last move-only
 	     && tract_amount_left > 0) {
 	double amount = AOspeed * lines[movei].time(); // possible amount in line
-	// if (amount > tract_amount_left) { // line longer than necessary
-	// }
-	// else 
-	{
-	  amount = min(tract_amount_left, amount);
-	  lines[movei].addAbsoluteExtrusionAmount(-amount);
-	  tract_amount_left -= amount;
-	}
+	if (amount > tract_amount_left) 
+	  { // line longer than necessary
+	    double AOlength = tract_amount_left * lines[movei].speed / AOspeed;
+	    int added = divideline(movei, AOlength, lines);
+	    if (added>0){
+	      lines[movei+1].addAbsoluteExtrusionAmount(-tract_amount_left);
+	      tract_amount_left = 0;
+	      moveend   += added;
+	      movestart += added;
+	      i         += added;
+	      break; // finished with 
+	    }
+	    else cerr << "not divided" << endl;
+	  }
+	else 
+	  {
+	    amount = min(tract_amount_left, amount);
+	    lines[movei].addAbsoluteExtrusionAmount(-amount);
+	    tract_amount_left -= amount;
+	  }
 	movei--;
       }
-      // if (tract_amount_left > 0) 
-      //cerr <<  " + " <<tract_amount_left << " -- " << movestart-movei << endl;;
+      if (tract_amount_left > 0) {
+	// TODO slow down line(s)
+	//cerr <<  " + " <<tract_amount_left << " -- " << movestart-movei << endl;;
+      }
       movei = moveend+1;
       double push_amount_left = onmove_amount;
       while (movei < (int)lines.size()
 	     && lines[movei].feedrate != 0 // stop at next move-only line
 	     && push_amount_left > 0) {
 	double amount = AOspeed * lines[movei].time(); // possible amount in line
-	// if (amount > push_amount_left) { // line longer than necessary
-	// }
+	// if (amount > push_amount_left) 
+	//   { // line longer than necessary
+	//     double AOlength = tract_amount_left * lines[movei].speed / AOspeed;
+	//     int added = divideline(movei, AOlength, lines);
+	//     lines[movei].addAbsoluteExtrusionAmount(push_amount_left);
+	//     push_amount_left = 0;
+	//     moveend   += added;
+	//     movei     += added;
+	//     i         += added;
+	//   }
 	// else 
-	{
-	  amount = min(push_amount_left, amount);
-	  lines[movei].addAbsoluteExtrusionAmount(amount);
-	  push_amount_left -= amount;
-	  movei++;
-	}
+	  {
+	    amount = min(push_amount_left, amount);
+	    lines[movei].addAbsoluteExtrusionAmount(amount);
+	    push_amount_left -= amount;
+	  }
+	movei++;
       }
       // if (push_amount_left > 0) 
       // 	cerr << " - " <<push_amount_left << endl;;
@@ -560,43 +821,60 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
 	lines.insert(lines.begin()+movestart, retractl);
 	i++;
       }
+      if (i < movei-1) i = movei-1;
     }
     count = lines.size();
   }
   return 0;
 }
+#endif // old ANTIOOZE
 
-// split line at length 0 < t < 1
-uint Printlines::divideline(uint lineindex, const double t, vector<PLine> &lines) const
+// split line at given length 
+uint Printlines::divideline(uint lineindex, const double length, vector<PLine> &lines) const
 {
   PLine *l = &lines[lineindex];
-  Vector2d d = l->to - l->from;
-  vector<Vector2d> points(1);
-  points[0] = l->from + d * t * d.length();
-  uint nlines = divideline(lineindex, points, lines);
-  delete l;
-  return nlines;
+  double linelen = l->length();
+  if (length > linelen) return 0;
+  if ( !l->arc ) {
+    Vector2d d = l->to - l->from;
+    vector<Vector2d> points(1);
+    points[0] = l->from + d * (length/linelen);
+    uint nlines = divideline(lineindex, points, lines);
+    return nlines;
+  } else {
+    //cerr <<endl<< lines[lineindex].info() << endl;
+    double angle = l->angle * length/linelen;
+    //cerr << angle*180/M_PI << " - " <<length << endl;
+    Vector2d arcpoint = rotated(l->from, l->arccenter, angle, (l->arc < 0));
+    PLine line1(l->from, arcpoint, l->speed, l->feedrate, 
+		l->arc, l->arccenter, angle);
+    PLine line2(arcpoint, l->to,   l->speed, l->feedrate, 
+		l->arc, l->arccenter, l->angle-angle);
+    lines[lineindex] = line1;
+    lines.insert(lines.begin() + lineindex + 1, line2);
+    // cerr << line1.info() << endl;
+    // cerr << line2.info() << endl;
+    return 1;
+  }
 }
 
 uint Printlines::divideline(uint lineindex, const vector<Vector2d> points,
 			    vector<PLine> &lines) const
 {
+  uint npoints = points.size();
+  if (npoints == 0) return 0;
   vector<PLine> newlines;
-  PLine l = lines[lineindex];
-  for (int i = -1; i < (int)points.size(); i++) {
-    Vector2d from, to;
-    if (i < 0) from = l.from;
-    else       from = points[i];
-    if (i > (int)points.size()-2) 
-      to = l.to;
-    else 
-      to = points[i+1];
-    newlines.push_back(PLine(from, to, l.speed, l.feedrate));
+  PLine *l = &(lines[lineindex]);
+  newlines.push_back(PLine(l->from, points[0], l->speed, l->feedrate));
+  for (uint i = 0; i < npoints-1; i++) {
+    newlines.push_back(PLine(points[i], points[i+1], l->speed, l->feedrate));
   }
+  newlines.push_back(PLine(points[npoints-1], l->to, l->speed, l->feedrate));
   if (newlines.size() > 0 && lines.size() > lineindex) {
     //cerr << newlines.size() << " new lines" << endl;
-    lines.erase(lines.begin()+lineindex);
-    lines.insert(lines.begin()+lineindex, newlines.begin(), newlines.end());
+    lines[lineindex] = newlines[0];
+    if (newlines.size() > 1)
+      lines.insert(lines.begin()+lineindex+1, newlines.begin()+1, newlines.end());
     return newlines.size()-1; // return how many more lines now 
   }
   return 0;
@@ -711,7 +989,7 @@ void Printlines::mergelines(PLine &l1, PLine &l2, double maxdist) const
   Vector2d d2 = l2.to - l2.from;
   double len2 = d2.length();
   if (len2==0) return;
-  double dist2 = abs(d2.cross(l1.from-l2.from)) / len2 ; // by area of parallelogram 
+  double dist2 = abs(cross2d(d2,l1.from-l2.from).length()) / len2 ; // by area of parallelogram 
   //cerr << len2 << " - " << len2b << endl;
   // Vector2d dp = l1.to - l2.from;
   // double l = dot(dp,d2);
@@ -829,8 +1107,8 @@ void Printlines::getLines(const vector<PLine> lines,
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
     if (lIt->is_noop()) continue;
-    olines.push_back(Vector3d(lIt->from.x,lIt->from.y,z));
-    olines.push_back(Vector3d(lIt->to.x,lIt->to.y,z));
+    olines.push_back(Vector3d(lIt->from.x(),lIt->from.y(),z));
+    olines.push_back(Vector3d(lIt->to.x(),lIt->to.y(),z));
   }
 }
 

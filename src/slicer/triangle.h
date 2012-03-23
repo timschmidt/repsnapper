@@ -22,7 +22,6 @@
 #include "stdafx.h"
 #include "string.h"
 #include "math.h"
-#include <vmmlib/vmmlib.h>
 
 
 enum AXIS {NEGX, POSX, NEGY, POSY, NEGZ, POSZ, NOT_ALIGNED};

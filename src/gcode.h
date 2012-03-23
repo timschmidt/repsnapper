@@ -20,21 +20,13 @@
 #include <gtkmm.h>
 
 #include <vector>
-#include "platform.h"
-#include "math.h"                                               // Needed for sqrtf
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 
-#include <vmmlib/vmmlib.h>
-
 #include "command.h"
-
-using namespace std;
-using namespace vmml;
-
 
 class GCodeImpl;
 class RepRapSerial;

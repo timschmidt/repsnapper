@@ -119,8 +119,8 @@ Command::Command()
 Command::Command(GCodes code, const Vector3d position, double E, double F) 
   : Code(code), where(position), is_value(false),  f(F), e(E), abs_extr(0)
 {
-  //assert(where.z>=0);
-  if (where.z< 0) {
+  //assert(where.z()>=0);
+  if (where.z()< 0) {
     throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at "+info()));
   }
 }
@@ -201,11 +201,11 @@ Command::Command(string gcodeline, Vector3d defaultpos)
     case 'S':      value = num;      break;
     case 'E':      e = num;          break;
     case 'F':      f = num;          break;
-    case 'X':      where.x = num;    break;
-    case 'Y':      where.y = num;    break;
-    case 'Z':      where.z = num;    break;
-    case 'I':      arcIJK.x = num;   break;
-    case 'J':      arcIJK.y = num;   break;
+    case 'X':      where.x() = num;    break;
+    case 'Y':      where.y() = num;    break;
+    case 'Z':      where.z() = num;    break;
+    case 'I':      arcIJK.x() = num;   break;
+    case 'J':      arcIJK.y() = num;   break;
     case 'K':
       cerr << "cannot handle ARC K command (yet?)!" << endl;
       break;
@@ -214,8 +214,8 @@ Command::Command(string gcodeline, Vector3d defaultpos)
       break;
     }
   }
-  //assert(where.z>=0);
-  if (where.z < 0) {
+  //assert(where.z()>=0);
+  if (where.z() < 0) {
     throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at " + info()));
   }
 }
@@ -243,25 +243,25 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcod
   switch (Code) {
   case ARC_CW:
   case ARC_CCW:
-    if (arcIJK.x!=0) ostr << "I" << arcIJK.x << " ";
-    if (arcIJK.y!=0) ostr << "J" << arcIJK.y << " ";
-    if (arcIJK.z!=0) ostr << "K" << arcIJK.z << " ";
+    if (arcIJK.x()!=0) ostr << "I" << arcIJK.x() << " ";
+    if (arcIJK.y()!=0) ostr << "J" << arcIJK.y() << " ";
+    if (arcIJK.z()!=0) ostr << "K" << arcIJK.z() << " ";
   case RAPIDMOTION:
   case COORDINATEDMOTION:
   case COORDINATEDMOTION3D:
     { // going down? -> split xy and z movements
       Vector3d delta = where-LastPos;
       const double RETRACT_E = 2; //mm
-      if ( (where.z < 0 || delta.z < 0) && (delta.x!=0 || delta.y!=0) ) { 
+      if ( (where.z() < 0 || delta.z() < 0) && (delta.x()!=0 || delta.y()!=0) ) { 
 	Command xycommand(*this); // copy
 	xycommand.comment = comment +  _(" xy part");
 	Command zcommand(*this); // copy
 	zcommand.comment = comment + _(" z part");
-	if (where.z < 0) { // z<0 cannot be absolute -> positions are relative
-	  xycommand.where.z = 0.; 
-	  zcommand.where.x  = zcommand.where.y = 0.; // this command will be z-only
+	if (where.z() < 0) { // z<0 cannot be absolute -> positions are relative
+	  xycommand.where.z() = 0.; 
+	  zcommand.where.x()  = zcommand.where.y() = 0.; // this command will be z-only
 	} else {
-	  xycommand.where.z = LastPos.z;
+	  xycommand.where.z() = LastPos.z();
 	}
 	if (relativeEcode) { 
 	  xycommand.e = -RETRACT_E; // retract filament at xy move
@@ -280,18 +280,18 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcod
 	return ostr.str();
       }
     }
-    if(where.x != LastPos.x) {
-      ostr << "X" << where.x << " ";
-      LastPos.x = where.x;
+    if(where.x() != LastPos.x()) {
+      ostr << "X" << where.x() << " ";
+      LastPos.x() = where.x();
     }
-    if(where.y != LastPos.y) {
-      ostr << "Y" << where.y << " ";
-      LastPos.y = where.y;
+    if(where.y() != LastPos.y()) {
+      ostr << "Y" << where.y() << " ";
+      LastPos.y() = where.y();
     }
   case ZMOVE:
-    if(where.z != LastPos.z) {
-      ostr << "Z" << where.z << " ";
-      LastPos.z = where.z;
+    if(where.z() != LastPos.z()) {
+      ostr << "Z" << where.z() << " ";
+      LastPos.z() = where.z();
       comm += _(" Z-Change");
     }
     if((relativeEcode   && e != 0) || 
@@ -323,11 +323,12 @@ void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short
   Vector3d radiusv =  lastPos-center;
   double astep = angle/(radiusv).length()/20;
   if (angle/astep > 10000) astep = angle/10000;
+  Vector3d axis(0.,0.,ccw?1.:-1.);
   for (double a = 0; a < angle; a+=astep){
-    arcpoint = center + radiusv.rotate(a, 0.,0.,ccw?1.:-1.);
-    if (dz!=0 && angle!=0) arcpoint.z = lastPos.z + a*(dz)/angle;
-    glVertex3dv((GLdouble*)&lastPos);
-    glVertex3dv((GLdouble*)&arcpoint);
+    arcpoint = center + radiusv.rotate(a, axis);
+    if (dz!=0 && angle!=0) arcpoint.z() = lastPos.z() + a*(dz)/angle;
+    glVertex3dv(lastPos);
+    glVertex3dv(arcpoint);
     lastPos = arcpoint;
   }
 }
@@ -342,8 +343,8 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     Vector3d center = lastPos + arcIJK;
     Vector3d P = -arcIJK, Q = where-center; // arc endpoints
     glColor4f(1.f,0.f,0.0f,0.3f);
-    glVertex3dv((GLdouble*)&center);
-    glVertex3dv((GLdouble*)&lastPos);
+    glVertex3dv(center);
+    glVertex3dv(lastPos);
     // glVertex3dv((GLdouble*)&lastPos);
     // glVertex3dv((GLdouble*)&where);
     glColor4fv(ccol);
@@ -357,7 +358,7 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     if (!ccw) angle=-angle;
     if (angle <= 0) angle += 2*M_PI;
     if (abs(angle) < 0.00001) angle = 2*M_PI;
-    double dz = where.z-lastPos.z; // z move with arc
+    double dz = where.z()-lastPos.z(); // z move with arc
     Vector3d arcstart = lastPos;
     draw_arc(lastPos, center, angle, dz, ccw);
     // extrusion boundary for arc:
@@ -365,7 +366,8 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
       glEnd();
       glLineWidth(1);
       glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
-      Vector3d dradius = arcIJK.getNormalized()*extrwidth/2;
+      Vector3d normarcIJK(arcIJK); normarcIJK.normalize();
+      Vector3d dradius = normarcIJK*extrwidth/2;
       glBegin(GL_LINES);
       Vector3d offstart = arcstart+dradius;
       draw_arc(offstart, center, angle, dz, ccw);
@@ -380,25 +382,26 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
       glPointSize(10);
       glBegin(GL_POINTS);
       //glColor4f(1.,0.1,0.1,ccol[3]);
-      glVertex3dv((GLdouble*)&where);    
+      glVertex3dv(where);    
       glEnd();
     }
   } else {
-    glVertex3dv((GLdouble*)&(lastPos));
-    glVertex3dv((GLdouble*)&(where));
+    glVertex3dv(lastPos);
+    glVertex3dv(where);
     if (arrows) {
       glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
       // 0.4mm long arrows if no boundary
       double alen = 0.4;
-      if (extrwidth > 0) alen =  1.2*extrwidth ;
-      Vector3d arrdir = (where-lastPos).getNormalized() * alen; 
-      Vector3d arrdir2(-1.2*alen*arrdir.y, 1.2*alen*arrdir.x, arrdir.z);
-      glVertex3dv((GLdouble*)&where);
+      if (extrwidth > 0) alen = 1.2*extrwidth ;
+      Vector3d normdir(where-lastPos); normdir.normalize();
+      Vector3d arrdir = normdir * alen; 
+      Vector3d arrdir2(-1.2*alen*normdir.y(), 1.2*alen*normdir.x(), arrdir.z());
+      glVertex3dv(where);
       Vector3d arr1 = where-arrdir+arrdir2;
-      glVertex3dv((GLdouble*)&(arr1));
-      glVertex3dv((GLdouble*)&where);
+      glVertex3dv(arr1);
+      glVertex3dv(where);
       Vector3d arr2 = where-arrdir-arrdir2;
-      glVertex3dv((GLdouble*)&(arr2));
+      glVertex3dv(arr2);
     }
     glEnd();
     // extrusion boundary for straight line:
@@ -409,16 +412,16 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
       if (abs_extr != 0) {
 	double fr_extr = extrwidth / (1+abs_extr);
 	double to_extr = extrwidth * (1+abs_extr);
-	thickpoly = dir_thick_line(Vector2d(lastPos.x,lastPos.y),
-				   Vector2d(where.x,where.y), 
+	thickpoly = dir_thick_line(Vector2d(lastPos.x(),lastPos.y()),
+				   Vector2d(where.x(),where.y()), 
 				   fr_extr, to_extr);
       } else
-	thickpoly = thick_line(Vector2d(lastPos.x,lastPos.y),
-			       Vector2d(where.x,where.y), 
+	thickpoly = thick_line(Vector2d(lastPos.x(),lastPos.y()),
+			       Vector2d(where.x(),where.y()), 
 			       extrwidth);
       for (uint i=0; i<thickpoly.size();i++) {
 	thickpoly[i].cleanup(0.01);
-	thickpoly[i].draw(GL_LINE_LOOP, where.z, false);
+	thickpoly[i].draw(GL_LINE_LOOP, where.z(), false);
       }
     }
   }

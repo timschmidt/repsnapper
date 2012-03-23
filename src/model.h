@@ -23,13 +23,11 @@
 
 #include <giomm/file.h>
 
-//#include "linked_ptr.h"
+#include "stdafx.h"
 
-//#include "slicer.h"
 #include "objtree.h"
 #include "types.h"
 #include "slicer/gcode.h"
-/*#include "slicer/layer.h"*/
 #include "settings.h"
 #include "progress.h"
 #include "slicer/poly.h"

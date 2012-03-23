@@ -20,18 +20,13 @@
 #include <gtkmm.h>
 
 #include <vector>
-#include "platform.h"
-#include "math.h"                                               // Needed for sqrtf
+#include "stdafx.h"
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 
-#include <vmmlib/vmmlib.h>
-
-using namespace std;
-using namespace vmml;
 
 /*
 

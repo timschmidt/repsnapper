@@ -48,8 +48,7 @@ Model::Model() :
   is_printing(false)
 {
   // Variable defaults
-  Center.x = Center.y = 100.0;
-  Center.z = 0.0;
+  Center.set(100.,100.,0.);
 }
 
 Model::~Model()
@@ -272,26 +271,27 @@ void Model::ModelChanged()
 
 static bool ClosestToOrigin (Vector3d a, Vector3d b)
 {
-  return (a.x*a.x + a.y*a.y + a.z*a.z) < (b.x*b.x + b.y*b.y + b.z*b.z);
+  return (a.squared_length()) < (b.squared_length());
 }
 
 
 bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
 {
   // Get all object positions
-  vector<Vector3d> maxpos;
-  vector<Vector3d> minpos;
+  std::vector<Vector3d> maxpos;
+  std::vector<Vector3d> minpos;
 
   for(uint o=0;o<objtree.Objects.size();o++)
   {
     for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
     {
       Shape *selectedShape = &objtree.Objects[o].shapes[f];
-      Vector3d p = selectedShape->transform3D.transform.getTranslation();
+      Vector3d p ;
+      selectedShape->transform3D.transform.get_translation(p);
       Vector3d size = selectedShape->Max - selectedShape->Min;
 
-      minpos.push_back(Vector3d(p.x,p.y,p.z));
-      maxpos.push_back(Vector3d(p.x+size.x, p.y+size.y, p.z));
+      minpos.push_back(p);
+      maxpos.push_back(p + Vector3d(size.x(), size.y(), 0));
     }
   }
 
@@ -299,15 +299,16 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
 
   double d = 5.0; // 5mm spacing between objects
   Vector3d StlDelta = (shape->Max - shape->Min);
+  cerr << shape->Max << shape->Min << StlDelta << endl;
   vector<Vector3d> candidates;
 
   candidates.push_back(-shape->Min);//Vector3d(0.0, 0.0, 0.0));
 
   for (uint j=0; j<maxpos.size(); j++)
   {
-    candidates.push_back(Vector3d(maxpos[j].x+d, minpos[j].y, maxpos[j].z));
-    candidates.push_back(Vector3d(minpos[j].x, maxpos[j].y+d, maxpos[j].z));
-    candidates.push_back(Vector3d(maxpos[j].x+d, maxpos[j].y+d, maxpos[j].z));
+    candidates.push_back(maxpos[j] + Vector3d(d,0,0));
+    candidates.push_back(minpos[j] + Vector3d(0,d,0));
+    candidates.push_back(maxpos[j] + Vector3d(d,d,0));
   }
 
   // Prefer positions closest to origin
@@ -322,14 +323,14 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
     {
       if (
           // check x
-          ((minpos[k].x <= candidates[c].x && candidates[c].x <= maxpos[k].x) ||
-          (candidates[c].x <= minpos[k].x && maxpos[k].x <= candidates[c].x+StlDelta.x+d) ||
-          (minpos[k].x <= candidates[c].x+StlDelta.x+d && candidates[c].x+StlDelta.x+d <= maxpos[k].x))
+          ((minpos[k].x() <= candidates[c].x() && candidates[c].x() <= maxpos[k].x()) ||
+          (candidates[c].x() <= minpos[k].x() && maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d) ||
+          (minpos[k].x() <= candidates[c].x()+StlDelta.x()+d && candidates[c].x()+StlDelta.x()+d <= maxpos[k].x()))
           &&
           // check y
-          ((minpos[k].y <= candidates[c].y && candidates[c].y <= maxpos[k].y) ||
-          (candidates[c].y <= minpos[k].y && maxpos[k].y <= candidates[c].y+StlDelta.y+d) ||
-          (minpos[k].y <= candidates[c].y+StlDelta.y+d && candidates[c].y+StlDelta.y+d <= maxpos[k].y))
+          ((minpos[k].y() <= candidates[c].y()) && (candidates[c].y() <= maxpos[k].y()) ||
+          (candidates[c].y() <= minpos[k].y() && maxpos[k].y() <= candidates[c].y()+StlDelta.y()+d) ||
+          (minpos[k].y() <= candidates[c].y()+StlDelta.y()+d && candidates[c].y()+StlDelta.y()+d <= maxpos[k].y()))
       )
       {
         ok = false;
@@ -337,8 +338,8 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
       }
 
       // volume boundary
-      if (candidates[c].x+StlDelta.x > (settings.Hardware.Volume.x - 2*settings.Hardware.PrintMargin.x) ||
-          candidates[c].y+StlDelta.y > (settings.Hardware.Volume.y - 2*settings.Hardware.PrintMargin.y))
+      if (candidates[c].x()+StlDelta.x() > (settings.Hardware.Volume.x() - 2*settings.Hardware.PrintMargin.x()) ||
+          candidates[c].y()+StlDelta.y() > (settings.Hardware.Volume.y() - 2*settings.Hardware.PrintMargin.y()))
       {
         ok = false;
         break;
@@ -346,9 +347,9 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
     }
     if (ok)
     {
-      result.x = candidates[c].x;
-      result.y = candidates[c].y;
-      result.z = candidates[c].z;
+      result.x() = candidates[c].x();
+      result.y() = candidates[c].y();
+      result.z() = candidates[c].z();
       return true;
     }
   }
@@ -380,7 +381,7 @@ int Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autop
   
   // Move it, if we found a suitable place
   if (found_location) {
-    retshape->transform3D.transform.setTranslation(trans);
+    retshape->transform3D.move(trans);
   }
   retshape->PlaceOnPlatform();
 
@@ -482,11 +483,11 @@ void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
 
 void Model::RotateObject(Shape *shape, TreeObject *object, Vector4d rotate)
 {
-  Vector3d rot(rotate.x, rotate.y, rotate.z);
+  Vector3d rot(rotate.x(), rotate.y(), rotate.z());
 
   if (!shape)
     return; // FIXME: rotate entire Objects ...
-  shape->Rotate(rot, rotate.w);
+  shape->Rotate(rot, rotate.w());
   CalcBoundingBoxAndCenter();
   ModelChanged();
 }
@@ -534,7 +535,7 @@ void Model::PlaceOnPlatform(Shape *shape, TreeObject *object)
     shape->PlaceOnPlatform();
   else if(object) {
     Transform3D * transf = &object->transform3D;
-    transf->move(Vector3f(0, 0, -transf->transform.getTranslation().z));
+    transf->move(Vector3f(0, 0, -transf->getTranslation().z()));
     for (uint s = 0;s<object->shapes.size(); s++) {
       object->shapes[s].PlaceOnPlatform();
     }
@@ -572,18 +573,18 @@ void Model::CalcBoundingBoxAndCenter()
       Vector3d stlMin = M * objtree.Objects[i].shapes[j].Min;
       Vector3d stlMax = M * objtree.Objects[i].shapes[j].Max;
       for (uint k = 0; k < 3; k++) {
-	newMin.xyz[k] = MIN(stlMin.xyz[k], newMin.xyz[k]);
-	newMax.xyz[k] = MAX(stlMax.xyz[k], newMax.xyz[k]);
+	newMin[k] = MIN(stlMin[k], newMin[k]);
+	newMax[k] = MAX(stlMax[k], newMax[k]);
       }
     }
   }
 
-  if (newMin.x > newMax.x) {
+  if (newMin.x() > newMax.x()) {
     // Show the whole platform if there's no objects
     Min = Vector3d(0,0,0);
     Vector3d pM = settings.Hardware.PrintMargin;
     Max = settings.Hardware.Volume - pM - pM;
-    Max.z = 0;
+    Max.z() = 0;
   }
   else {
     Max = newMax;
@@ -614,11 +615,11 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
   Vector3d printOffset = settings.Hardware.PrintMargin;
   if(settings.RaftEnable)
     printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
-  Vector3d translation = objtree.transform3D.transform.getTranslation();
+  Vector3d translation = objtree.transform3D.getTranslation();
   Vector3d offset = printOffset + translation;
   
   // Add the print offset to the drawing location of the STL objects.
-  glTranslatef(offset.x, offset.y, offset.z);
+  glTranslatef(offset.x(),offset.y(),offset.z());
 
   glPushMatrix();
   glMultMatrixd (&objtree.transform3D.transform.array[0]);
@@ -704,41 +705,41 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
       glDisable(GL_DEPTH_TEST);
       glColor3f(1,0,0);
       glBegin(GL_LINE_LOOP);
-      glVertex3f(Min.x, Min.y, Min.z);
-      glVertex3f(Min.x, Max.y, Min.z);
-      glVertex3f(Max.x, Max.y, Min.z);
-      glVertex3f(Max.x, Min.y, Min.z);
+      glVertex3f(Min.x(), Min.y(), Min.z());
+      glVertex3f(Min.x(), Max.y(), Min.z());
+      glVertex3f(Max.x(), Max.y(), Min.z());
+      glVertex3f(Max.x(), Min.y(), Min.z());
       glEnd();
       glBegin(GL_LINE_LOOP);
-      glVertex3f(Min.x, Min.y, Max.z);
-      glVertex3f(Min.x, Max.y, Max.z);
-      glVertex3f(Max.x, Max.y, Max.z);
-      glVertex3f(Max.x, Min.y, Max.z);
+      glVertex3f(Min.x(), Min.y(), Max.z());
+      glVertex3f(Min.x(), Max.y(), Max.z());
+      glVertex3f(Max.x(), Max.y(), Max.z());
+      glVertex3f(Max.x(), Min.y(), Max.z());
       glEnd();
       glBegin(GL_LINES);
-      glVertex3f(Min.x, Min.y, Min.z);
-      glVertex3f(Min.x, Min.y, Max.z);
-      glVertex3f(Min.x, Max.y, Min.z);
-      glVertex3f(Min.x, Max.y, Max.z);
-      glVertex3f(Max.x, Max.y, Min.z);
-      glVertex3f(Max.x, Max.y, Max.z);
-      glVertex3f(Max.x, Min.y, Min.z);
-      glVertex3f(Max.x, Min.y, Max.z);
+      glVertex3f(Min.x(), Min.y(), Min.z());
+      glVertex3f(Min.x(), Min.y(), Max.z());
+      glVertex3f(Min.x(), Max.y(), Min.z());
+      glVertex3f(Min.x(), Max.y(), Max.z());
+      glVertex3f(Max.x(), Max.y(), Min.z());
+      glVertex3f(Max.x(), Max.y(), Max.z());
+      glVertex3f(Max.x(), Min.y(), Min.z());
+      glVertex3f(Max.x(), Min.y(), Max.z());
       glEnd();
       glColor3f(1,0.6,0.6);
       ostringstream val;
       val.precision(1);
       Vector3d pos;
-      val << fixed << (Max.x-Min.x);
-      pos = Vector3d((Max.x+Min.x)/2.,Min.y,Max.z);
+      val << fixed << (Max.x()-Min.x());
+      pos = Vector3d((Max.x()+Min.x())/2.,Min.y(),Max.z());
       drawString(pos,val.str());
       val.str("");
-      val << fixed << (Max.y-Min.y);
-      pos = Vector3d(Min.x,(Max.y+Min.y)/2.,Max.z);
+      val << fixed << (Max.y()-Min.y());
+      pos = Vector3d(Min.x(),(Max.y()+Min.y())/2.,Max.z());
       drawString(pos,val.str());
       val.str("");
-      val << fixed << (Max.z-Min.z);
-      pos = Vector3d(Min.x,Min.y,(Max.z+Min.z)/2.);
+      val << fixed << (Max.z()-Min.z());
+      pos = Vector3d(Min.x(),Min.y(),(Max.z()+Min.z())/2.);
       drawString(pos,val.str());
     }
     
@@ -752,8 +753,8 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
 	   && gcode.commands.size() == 0 ) { 
 	Vector3d start(0,0,0);
 	double thickness = settings.Hardware.LayerThickness;
-	double z = settings.Display.GCodeDrawStart * Max.z + thickness/2;
-	int LayerCount = (int)ceil(Max.z/thickness)-1;
+	double z = settings.Display.GCodeDrawStart * Max.z() + thickness/2;
+	int LayerCount = (int)ceil(Max.z()/thickness)-1;
 	uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
 	if (z != m_previewGCode_z) {
 	  Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
@@ -788,10 +789,10 @@ int Model::drawLayers(double height, Vector3d offset, bool calconly)
 
   bool have_layers = (layers.size() > 0); // have sliced already
 
-  double minZ = max(0.0, Min.z);
+  double minZ = max(0.0, Min.z());
   double z;
   double zStep = settings.Hardware.LayerThickness;
-  double zSize = (Max.z - minZ - zStep*0.5);
+  double zSize = (Max.z() - minZ - zStep*0.5);
   int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
   double sel_Z = height*zSize;
   uint sel_Layer;
@@ -812,11 +813,11 @@ int Model::drawLayers(double height, Vector3d offset, bool calconly)
     }
   z += 0.5*zStep; // always cut in middle of layer
 
-  //cerr << zStep << ";"<<Max.z<<";"<<Min.z<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
+  //cerr << zStep << ";"<<Max.z()<<";"<<Min.z()<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
 
   Layer* layer=NULL;
   if (have_layers) 
-    glTranslatef(-offset.x, -offset.y, -offset.z);
+    glTranslatef(-offset.x(), -offset.y(), -offset.z());
 
   while(LayerNr < LayerCount)
     {
@@ -922,5 +923,5 @@ double Model::get_preview_Z()
 
 void Model::setMeasuresPoint(const Vector3d point) 
 {
-  measuresPoint = Vector2d(point.x, point.y) ;
+  measuresPoint = Vector2d(point.x(), point.y()) ;
 }

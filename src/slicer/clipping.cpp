@@ -48,8 +48,8 @@ void Clipping::clear()
 
 CL::IntPoint Clipping::ClipperPoint(Vector2d v) 
 {
-  return CL::IntPoint(CL_FACTOR*(v.x+CL_OFFSET),
-		      CL_FACTOR*(v.y+CL_OFFSET));
+  return CL::IntPoint(CL_FACTOR*(v.x()+CL_OFFSET),
+		      CL_FACTOR*(v.y()+CL_OFFSET));
 }
 Vector2d Clipping::getPoint(CL::IntPoint p) 
 {

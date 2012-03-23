@@ -21,24 +21,14 @@
 #pragma once
 #include <vector>
 #include <list>
-#include "platform.h"
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <limits>
 #include <algorithm>
-
-#include <vmmlib/vmmlib.h>
-//#include <polylib/Polygon2d.h>
-
 #include "stdafx.h"
-#include "types.h"
 #include "string.h"
-
-//#include "gcode.h"
-#include "math.h"
 #include "settings.h"
 #include "triangle.h"
 
@@ -53,11 +43,6 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-using namespace std;
-using namespace vmml;
-//using namespace PolyLib;
-
-
 class Transform3D
 {
 public:
@@ -65,7 +50,8 @@ public:
 	void identity(){transform=Matrix4d::IDENTITY;}
 	Matrix4d transform;
 	Matrix4f getFloatTransform() const;
-	void setTransform(Matrix4f matrf);
+	Vector3d getTranslation() const;
+	void setTransform(Matrix4f matrf); 
 	void scale(double x);
 	void scale_x(double x);
 	void scale_y(double x);

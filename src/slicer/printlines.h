@@ -62,8 +62,10 @@ class PLine
 {
   friend class PLine3;
   friend class Printlines;
+  // non-arc
   PLine(const Vector2d from, const Vector2d to, double speed, 
 	double feedrate);
+  // arc
   PLine(const Vector2d from, const Vector2d to, double speed, 
 	double feedrate, short arc, Vector2d arccenter, double angle);
   Vector2d from, to;
@@ -128,6 +130,9 @@ class Printlines
 		 vector<PLine> &lines) const;
   uint makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) const;
 
+  uint roundCorners(double maxdistance, vector<PLine> &lines) const;
+  uint makeCornerArc(double maxdistance, uint ind, vector<PLine> &lines) const;
+
   uint makeAntioozeRetraction(const Settings::SlicingSettings &slicing,
 			      vector<PLine> &lines) const;
 
@@ -175,8 +180,13 @@ class Printlines
 
   uint divideline(uint lineindex, const vector<Vector2d> points,
 		  vector<PLine> &lines) const;
-  uint divideline(uint lineindex, const double t, vector<PLine> &lines) const;
+  uint divideline(uint lineindex, const double length, vector<PLine> &lines) const;
 
+  int distribute_AntioozeAmount(double AOamount, double AOspeed, 
+				uint fromline, uint toline,  
+				bool at_end,   // add to end of range (retract)
+				vector<PLine> &lines,
+				double &havedistributed) const;
 
   Vector2d arcCenter(const PLine l1, const PLine l2, 
 		     double maxerr) const;
@@ -190,4 +200,5 @@ class Printlines
   typedef vector<PLine>::const_iterator lineCIt ;
   typedef vector<PLine>::iterator lineIt ;
   //list<line>::iterator lIt;
+
 };

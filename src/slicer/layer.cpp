@@ -87,9 +87,9 @@ void Layer::Clear()
 
 // void Layer::setBBox(Vector2d min, Vector2d max) 
 // {
-//   Min.x = MIN(Min.x,min.x);
+//   Min.x() = MIN(Min.x(),min.x());
 //   Min.y = MIN(Min.y,min.y);
-//   Max.x = MAX(Max.x,max.x);
+//   Max.x() = MAX(Max.x(),max.x());
 //   Max.y = MAX(Max.y,max.y);
 // }	
 // void Layer::setBBox(vector<Vector2d> minmax) 
@@ -98,9 +98,9 @@ void Layer::Clear()
 // }
 // void Layer::setBBox(Vector3d min, Vector3d max) 
 // {
-//   Min.x = MIN(Min.x,min.x);
+//   Min.x() = MIN(Min.x(),min.x());
 //   Min.y = MIN(Min.y,min.y);
-//   Max.x = MAX(Max.x,max.x);
+//   Max.x() = MAX(Max.x(),max.x());
 //   Max.y = MAX(Max.y,max.y);
 // }	
 
@@ -193,7 +193,7 @@ void Layer::calcBridgeAngles(const Layer *layerbelow) {
 	}
       }
       //cerr << pillars.size() << " - " << dir << endl;
-      bridge_angles[i] = atan2(dir.y,dir.x);
+      bridge_angles[i] = atan2(dir.y(),dir.x());
       if (bridge_angles[i]<0) bridge_angles[i]+=M_PI;
     }
 }
@@ -220,7 +220,7 @@ vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
 	}
       }
       //cerr << pillars.size() << " - " << dir << endl;
-      angles[i] = atan2(dir.y,dir.x);
+      angles[i] = atan2(dir.y(),dir.x());
     }
   return angles;
 }
@@ -494,10 +494,10 @@ void Layer::setSupportPolygons(const vector<Poly> polys)
   for (uint i=0; i<supportPolygons.size(); i++) {
     supportPolygons[i].cleanup(thickness/4.);
     vector<Vector2d> minmax = supportPolygons[i].getMinMax();
-    Min.x = min(minmax[0].x,Min.x);
-    Min.y = min(minmax[0].y,Min.y);
-    Max.x = max(minmax[1].x,Max.x);
-    Max.y = max(minmax[1].y,Max.y);
+    Min.x() = min(minmax[0].x(),Min.x());
+    Min.y() = min(minmax[0].y(),Min.y());
+    Max.x() = max(minmax[1].x(),Max.x());
+    Max.y() = max(minmax[1].y(),Max.y());
   }
 }
 
@@ -574,12 +574,12 @@ void Layer::MakeSkirt(double distance)
 // negative for clockwise turn, and zero if the points are collinear.
 double cross(const Vector2d &O, const Vector2d &A, const Vector2d &B)
 {
-  return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+  return (A.x() - O.x()) * (B.y() - O.y()) - (A.y() - O.y()) * (B.x() - O.x());
 }
 struct sortable_point {
   Vector2d v;
   bool operator <(const sortable_point &p) const {
-    return (v.x < p.v.x) || ((v.x == p.v.x) && (v.y < p.v.y));
+    return (v.x() < p.v.x()) || ((v.x() == p.v.x()) && (v.y() < p.v.y()));
   }
 };
 
@@ -599,8 +599,8 @@ void Layer::setMinMax(const vector<Poly> polys)
   Max = Vector2d(-10000000., -10000000.);
   for (uint i = 0; i< polys.size(); i++) {
     vector<Vector2d> minmax = polys[i].getMinMax();
-    Min.x = min(Min.x, minmax[0].x); Min.y = min(Min.y, minmax[0].y);
-    Max.x = max(Max.x, minmax[1].x); Max.y = max(Max.y, minmax[1].y);
+    Min.x() = min(Min.x(), minmax[0].x()); Min.y() = min(Min.y(), minmax[0].y());
+    Max.x() = max(Max.x(), minmax[1].x()); Max.y() = max(Max.y(), minmax[1].y());
   }
 }
 void Layer::setMinMax(const Poly poly) 
@@ -621,7 +621,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
   double linewidth = thickness/linewidthratio;
 
-  Vector2d startPoint(lastPos.x,lastPos.y);
+  Vector2d startPoint(lastPos.x(),lastPos.y());
 
   double extrf = hardware.GetExtrudeFactor(thickness);
 
@@ -856,7 +856,7 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	ostringstream oss;
 	oss << p;
 	Vector2d center = polygons[p].getCenter();
-	drawString(Vector3d(center.x, center.y, Z), oss.str());
+	drawString(Vector3d(center.x(), center.y(), Z), oss.str());
       }
 
   draw_poly(hullPolygon,    GL_LINE_LOOP, 3, 3, ORANGE,  0.5);
@@ -915,21 +915,21 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 
 void Layer::DrawMeasures(Vector2d point)
 {
-  Vector2d x0(Min.x-10, point.y);
-  Vector2d x1(Max.x+10, point.y);
-  Vector2d y0(point.x, Min.y-10);
-  Vector2d y1(point.x, Max.y+10);
+  Vector2d x0(Min.x()-10, point.y());
+  Vector2d x1(Max.x()+10, point.y());
+  Vector2d y0(point.x(), Min.y()-10);
+  Vector2d y1(point.x(), Max.y()+10);
 
   // cut axes with layer polygons
   vector<Intersection> xint, yint;
   Intersection hit;
-  hit.p = Vector2d(Min.x,point.y); hit.d = 10;
+  hit.p = Vector2d(Min.x(),point.y()); hit.d = 10;
   xint.push_back(hit);
-  hit.p = Vector2d(Max.x,point.y); hit.d = Max.x-Min.x+10;
+  hit.p = Vector2d(Max.x(),point.y()); hit.d = Max.x()-Min.x()+10;
   xint.push_back(hit);
-  hit.p = Vector2d(point.x,Min.y); hit.d = 10;
+  hit.p = Vector2d(point.x(),Min.y()); hit.d = 10;
   yint.push_back(hit);
-  hit.p = Vector2d(point.x,Max.y); hit.d = Max.y-Min.y+10;
+  hit.p = Vector2d(point.x(),Max.y()); hit.d = Max.y()-Min.y()+10;
   yint.push_back(hit);
 
   for(size_t p=0; p<polygons.size();p++) {
@@ -945,44 +945,44 @@ void Layer::DrawMeasures(Vector2d point)
   glColor4f(1.,1.,1.,1.);
   glBegin(GL_LINES);
   // draw lines
-  glVertex3d(Min.x, x0.y, Z);
-  glVertex3d(Max.x, x1.y, Z);
-  glVertex3d(y0.x, Min.y, Z);
-  glVertex3d(y1.x, Max.y, Z);
+  glVertex3d(Min.x(), x0.y(), Z);
+  glVertex3d(Max.x(), x1.y(), Z);
+  glVertex3d(y0.x(), Min.y(), Z);
+  glVertex3d(y1.x(), Max.y(), Z);
   // draw ticks
   double ticksize=2;
   for(guint i = 0; i<xint.size(); i++) {
-    glVertex3d(xint[i].p.x, xint[i].p.y-ticksize, Z);    
-    glVertex3d(xint[i].p.x, xint[i].p.y+ticksize, Z);    
+    glVertex3d(xint[i].p.x(), xint[i].p.y()-ticksize, Z);    
+    glVertex3d(xint[i].p.x(), xint[i].p.y()+ticksize, Z);    
   }
   for(guint i = 0; i<yint.size(); i++) {
-    glVertex3d(yint[i].p.x-ticksize, yint[i].p.y, Z);    
-    glVertex3d(yint[i].p.x+ticksize, yint[i].p.y, Z);    
+    glVertex3d(yint[i].p.x()-ticksize, yint[i].p.y(), Z);    
+    glVertex3d(yint[i].p.x()+ticksize, yint[i].p.y(), Z);    
   }
   // draw BBox
-  glVertex3d(Min.x, Min.y, Z);
-  glVertex3d(Max.x, Min.y, Z);
-  glVertex3d(Max.x, Min.y, Z);
-  glVertex3d(Max.x, Max.y, Z);
-  glVertex3d(Max.x, Max.y, Z);
-  glVertex3d(Min.x, Max.y, Z);
-  glVertex3d(Min.x, Max.y, Z);
-  glVertex3d(Min.x, Min.y, Z);
+  glVertex3d(Min.x(), Min.y(), Z);
+  glVertex3d(Max.x(), Min.y(), Z);
+  glVertex3d(Max.x(), Min.y(), Z);
+  glVertex3d(Max.x(), Max.y(), Z);
+  glVertex3d(Max.x(), Max.y(), Z);
+  glVertex3d(Min.x(), Max.y(), Z);
+  glVertex3d(Min.x(), Max.y(), Z);
+  glVertex3d(Min.x(), Min.y(), Z);
   glEnd();
   // draw numbers
   ostringstream val;
   val.precision(1);
   for(guint i = 1; i<xint.size(); i++) {
     val.str("");
-    double v = xint[i].p.x-xint[i-1].p.x;
+    double v = xint[i].p.x()-xint[i-1].p.x();
     val << fixed << v;
-    drawString(Vector3d((xint[i].p.x+xint[i-1].p.x)/2.,xint[i].p.y+1,Z),val.str());
+    drawString(Vector3d((xint[i].p.x()+xint[i-1].p.x())/2.,xint[i].p.y()+1,Z),val.str());
   }
   for(guint i = 1; i<yint.size(); i++) {
     val.str("");
-    double v = yint[i].p.y-yint[i-1].p.y;
+    double v = yint[i].p.y()-yint[i-1].p.y();
     val << fixed << v;
-    drawString(Vector3d(yint[i].p.x+1,(yint[i].p.y+yint[i-1].p.y)/2.,Z),val.str());
+    drawString(Vector3d(yint[i].p.x()+1,(yint[i].p.y()+yint[i-1].p.y())/2.,Z),val.str());
   }
 
 }

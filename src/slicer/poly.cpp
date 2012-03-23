@@ -83,7 +83,7 @@ vector<Vector2d> Poly::cleaned(const vector<Vector2d> vert, double epsilon) cons
   double dmax = 0;
   //Find the point with the maximum distance from line start-end
   uint index = 0;
-  Vector2d normal = (vert.back()-vert.front()).normal();
+  Vector2d normal = normalV(vert.back()-vert.front());
   normal.normalize();
   if( (normal.length()==0) || ((abs(normal.length())-1)>epsilon) ) return vert;
   for (uint i = 1; i < n_vert-1 ; i++) 
@@ -128,14 +128,14 @@ void Poly::calcHole()
 	{
 	  q = vertices[vert];
 	  center += q;
-	  if(q.x > p.x)
+	  if(q.x() > p.x())
 	    {
 	      p = q;
 	      v=vert;
 	    }
-	  else if(q.x == p.x && q.y > p.y)
+	  else if(q.x() == p.x() && q.y() > p.y())
 	    {
-	      p.y = q.y;
+	      p.y() = q.y();
 	      v=vert;
 	    }
 	}
@@ -148,7 +148,7 @@ void Poly::calcHole()
 
 	Vector2d Va=V2-V1;
 	Vector2d Vb=V3-V2;
-	hole = Va.cross(Vb) > 0; 
+	hole = cross(Vb,Va) > 0; 
 	holecalculated = true;
 }
 
@@ -171,8 +171,8 @@ void Poly::rotate(Vector2d center, double angle)
   double cosa = cos(angle);
   for (uint i = 0; i < vertices.size();  i++) {
     Vector2d mv = vertices[i]-center;
-    vertices[i] = Vector2d(mv.x*cosa-mv.y*sina+center.x, 
-			   mv.y*cosa+mv.x*sina+center.y);
+    vertices[i] = Vector2d(mv.x()*cosa-mv.y()*sina+center.x(), 
+			   mv.y()*cosa+mv.x()*sina+center.y());
   }
 }
 
@@ -182,7 +182,7 @@ void Poly::nearestIndices(const Poly p2, int &thisindex, int &otherindex) const
   double mindist = 1000000;
   for (uint i = 1; i < vertices.size(); i++) {
     for (uint j = 1; j < p2.vertices.size(); j++) {
-      double d = (vertices[i]-p2.vertices[j]).lengthSquared();
+      double d = (vertices[i]-p2.vertices[j]).squared_length();
       if (d<mindist) {
 	mindist = d;
 	thisindex = i;
@@ -198,10 +198,10 @@ uint Poly::nearestDistanceSqTo(const Vector2d p, double &mindist) const
   assert(vertices.size() > 0);
   // Start with first vertex as closest
   uint nindex = 0;
-  mindist = (vertices[0]-p).lengthSquared();
+  mindist = (vertices[0]-p).squared_length();
   // check the rest of the vertices for a closer one.
   for (uint i = 1; i < vertices.size(); i++) {
-    double d = (vertices[i]-p).lengthSquared();
+    double d = (vertices[i]-p).squared_length();
     if (d<mindist) {
       mindist= d;
       nindex = i;
@@ -248,7 +248,7 @@ double Poly::shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end)
     start = p2.getVertexCircular(minindex2);
     end = onpoint2;
   }
-  return (end-start).lengthSquared();
+  return (end-start).squared_length();
 }
 
 
@@ -256,7 +256,7 @@ bool Poly::vertexInside(const Vector2d point, double maxoffset) const
 {
   // Shoot a ray along +X and count the number of intersections.
   // If n_intersections is even, return false, else return true
-  Vector2d EndP(point.x+10000, point.y);
+  Vector2d EndP(point.x()+10000, point.y());
   int intersectcount = 1; // we want to test if uneven
 
   for(size_t i=0; i<vertices.size();i++)
@@ -266,7 +266,7 @@ bool Poly::vertexInside(const Vector2d point, double maxoffset) const
                    
       // Skip horizontal lines, we can't intersect with them, 
       // because the test line is horizontal
-      if(P1.y == P2.y)      
+      if(P1.y() == P2.y())      
 	continue;
       
       Intersection hit;
@@ -285,8 +285,8 @@ bool Poly::vertexInside2(const Vector2d p, double maxoffset) const
   for (uint i = 0; i < vertices.size();  i++) {
     Vector2d Pi = vertices[i];
     Vector2d Pj = getVertexCircular(i+1);
-    if ( ((Pi.y > p.y) != (Pj.y > p.y)) &&
-	 (abs(p.x - (Pj.x-Pi.x) * (p.y-Pi.y) / (Pj.y-Pj.y) + Pi.x) > maxoffset) )
+    if ( ((Pi.y() > p.y()) != (Pj.y() > p.y())) &&
+	 (abs(p.x() - (Pj.x()-Pi.x()) * (p.y()-Pi.y()) / (Pj.y()-Pj.y()) + Pi.x()) > maxoffset) )
       c = !c;
   }
   if (!c) 
@@ -328,7 +328,7 @@ Vector2d Poly::getVertexCircular(int index) const
 Vector3d Poly::getVertexCircular3(int pointindex) const
 {
   Vector2d v = getVertexCircular(pointindex);
-  return Vector3d(v.x,v.y,z);
+  return Vector3d(v.x(),v.y(),z);
 }
 
 vector<Vector2d> Poly::getVertexRangeCircular(int from, int to) const
@@ -369,7 +369,7 @@ double Poly::getZ() const {return z;}
 double Poly::getLinelengthSq(uint startindex) const
 {
   double length = (getVertexCircular(startindex+1) - 
-		   getVertexCircular(startindex)).lengthSquared();
+		   getVertexCircular(startindex)).squared_length();
   return length;
 }
 
@@ -389,7 +389,7 @@ void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const
   double mindist = 1000000;
   uint index = nearestDistanceSqTo(startPoint, mindist);
   getLines(lines,index);
-  startPoint = Vector2d(lines.back().x,lines.back().y);
+  startPoint = Vector2d(lines.back().x(),lines.back().y());
 }
 void Poly::getLines(vector<Vector2d> &lines, Vector2d &startPoint) const
 {
@@ -397,7 +397,7 @@ void Poly::getLines(vector<Vector2d> &lines, Vector2d &startPoint) const
   double mindist = 1000000;
   uint index = nearestDistanceSqTo(startPoint, mindist);
   getLines(lines,index);
-  startPoint = Vector2d(lines.back().x,lines.back().y);
+  startPoint = Vector2d(lines.back().x(),lines.back().y());
 }
 
 // add to lines starting with given index
@@ -455,9 +455,9 @@ vector<Vector2d> Poly::getPathAround(const Vector2d from, const Vector2d to) con
   // find shorter one
   double len1=0,len2=0;
   for (uint i=1; i<path1.size(); i++) 
-    len1+=(path1[i]-path1[i-1]).lengthSquared();
+    len1+=(path1[i]-path1[i-1]).squared_length();
   for (uint i=1; i<path2.size(); i++) 
-    len2+=(path2[i]-path2[i-1]).lengthSquared();
+    len2+=(path2[i]-path2[i-1]).squared_length();
   if (len1 < len2) {
      // path1.insert(path1.begin(),from);
      // path1.push_back(to);
@@ -479,10 +479,10 @@ vector<Vector2d> Poly::getMinMax() const{
   Vector2d v;
   for (uint i=0; i < vertices.size();i++){
     v = vertices[i];
-    if (v.x<minx) minx=v.x;
-    if (v.x>maxx) maxx=v.x;
-    if (v.y<miny) miny=v.y;
-    if (v.y>maxy) maxy=v.y;
+    if (v.x()<minx) minx=v.x();
+    if (v.x()>maxx) maxx=v.x();
+    if (v.y()<miny) miny=v.y();
+    if (v.y()>maxy) maxy=v.y();
   }
   range[0] = Vector2d(minx,miny);
   range[1] = Vector2d(maxx,maxy);
@@ -494,7 +494,7 @@ int Poly::getTriangulation(vector<Triangle> &triangles)  const
 {
   vector<p2t::Point*> points(vertices.size());
   for (guint i=0; i<vertices.size(); i++)  
-    points[i] = new p2t::Point(vertices[i].x,vertices[i].y);
+    points[i] = new p2t::Point(vertices[i].x(),vertices[i].y());
   p2t::CDT cdt(points);
   cdt.Triangulate();
   vector<p2t::Triangle*> ptriangles = cdt.GetTriangles();
@@ -514,8 +514,8 @@ Vector3d rotatedZ(Vector3d v, double angle)
 {
   double sina = sin(angle);
   double cosa = cos(angle);
-  return Vector3d(v.x*cosa-v.y*sina,
-		  v.y*cosa+v.x*sina, v.z);
+  return Vector3d(v.x()*cosa-v.y()*sina,
+		  v.y()*cosa+v.x()*sina, v.z());
 }
 
 
@@ -527,7 +527,7 @@ void Poly::draw(int gl_type, double z, bool randomized) const
   for (uint i=0;i < count;i++){
     v = getVertexCircular(i);
     if (randomized) v = random_displace(v);
-    glVertex3f(v.x,v.y,z);
+    glVertex3f(v.x(),v.y(),z);
   }
   glEnd();
 }
@@ -546,11 +546,11 @@ void Poly::draw(int gl_type, bool reverse, bool randomized) const
       // vn = getVertexCircular3(i+1);
     }
     if (randomized) v = random_displace(v);
-    glVertex3f(v.x,v.y,v.z);
+    glVertex3f(v.x(),v.y(),v.z());
     // if (gl_type==GL_LINE_LOOP){
     //   m = (v+vn)/2;
     //   dir = m + rotatedZ((vn-v)/10,M_PI/2);
-    //   glVertex3f(dir.x,dir.y,z);
+    //   glVertex3f(dir.x(),dir.y(),z);
     // }
   }
   glEnd();
@@ -561,7 +561,7 @@ void Poly::drawVertexNumbers() const
   Vector3d v;
   for (uint i=0;i < vertices.size();i++){
     v = getVertexCircular3(i);
-    glVertex3f(v.x,v.y,v.z);
+    glVertex3f(v.x(),v.y(),v.z());
     ostringstream oss;
     oss << i;
     drawString(v, oss.str());

@@ -23,6 +23,67 @@
 #include "poly.h"
 #include "clipping.h"
 
+
+/// VMML helpers
+
+void move(Vector3f delta, Matrix4f &mat){
+  Vector3f trans;
+  mat.get_translation(trans);
+  mat.set_translation(trans+delta);
+}
+
+Vector3d normalized(const Vector3d v){
+  Vector3d n(v); n.normalize(); return n;
+}
+Vector2d normalized(const Vector2d v){
+  Vector2d n(v); n.normalize(); return n;
+}
+
+void moveArcballTrans(Matrix4fT &matfT, const Vector3d delta) {
+  Matrix4f matf;
+  typedef Matrix4f::iterator mIt;
+  for (mIt it = matf.begin(); it!=matf.end(); ++it){
+    uint i = it - matf.begin();
+    *it = matfT.M[i];
+  }
+  move(delta,matf);  
+  for (mIt it = matf.begin(); it!=matf.end(); ++it){
+    uint i = it - matf.begin();
+    matfT.M[i] = *it;
+  }
+}
+void setArcballTrans(Matrix4fT &matfT, const Vector3d trans) {
+  Matrix4f matf;
+  typedef Matrix4f::iterator  mIt;
+  for (mIt it = matf.begin(); it!=matf.end(); ++it){
+    uint i = it - matf.begin();
+    *it = matfT.M[i];
+  }
+  matf.set_translation(trans);
+  for (mIt it = matf.begin(); it!=matf.end(); ++it){
+    uint i = it - matf.begin();
+    matfT.M[i] = *it;
+  }
+}
+void rotArcballTrans(Matrix4fT &matfT,  Vector3d axis, double angle)
+{
+  Matrix4f rot = Matrix4f::IDENTITY;
+  Vector3d naxis = axis; naxis.normalize();
+  rot.rotate(angle, naxis);
+  Matrix4f matf;
+  typedef Matrix4f::iterator  mIt;
+  for (mIt it = matf.begin(); it!=matf.end(); ++it){
+    uint i = it - matf.begin();
+    *it = matfT.M[i];
+  }
+  matf = rot * matf;
+  for (mIt it = matf.begin(); it!=matf.end(); ++it){
+    uint i = it - matf.begin();
+    matfT.M[i] = *it;
+  }
+}
+
+
 // template < typename T > 
 // long double angleBetween(T V1, T V2) 
 // {
@@ -65,62 +126,73 @@ long double angleBetween(Vector2d V1, Vector2d V2)
 // is B left of A wrt center?
 bool isleftof(Vector2d center, Vector2d A, Vector2d B)
 {
-  double position = (B.x-A.x)*(center.y-A.y) - (B.y-A.y)*(center.x-A.x);
+  double position = (B.x()-A.x())*(center.y()-A.y()) - (B.y()-A.y())*(center.x()-A.x());
   return (position >= 0);
 }
 bool isleftof(Vector3d center, Vector3d A, Vector3d B)
 {
-  return ((B-A).cross(center-A).z > 0); 
+  return ((B-A).cross(center-A).z() > 0); 
 }
 // // http://www.cs.uwaterloo.ca/~tmchan/ch3d/ch3dquad.cc
 // double turn(Point p, Point q, Point r) {  // <0 iff cw
-//   return (q.x-p.x)*(r.y-p.y) - (r.x-p.x)*(q.y-p.y);
+//   return (q.x()-p.x())*(r.y()-p.y()) - (r.x()-p.x())*(q.y()-p.y());
 // }
 
 void center_perpendicular(const Vector2d from, const Vector2d to,
 			  Vector2d &p1, Vector2d &p2)
 {
   Vector2d center = (from+to)/2.;
-  Vector2d dir = Vector2d(from.y-to.y, to.x-from.x);
+  Vector2d dir = Vector2d(from.y()-to.y(), to.x()-from.x());
   p1 = center; 
   p2 = center + dir;
 }
 
 
+double cross(const Vector2d a, const Vector2d b)
+{
+  return (b.x()*a.y()) - (b.y()*a.x());
+}
+
 Vector3d cross2d(Vector2d A, Vector2d B, double z)
 {
-  Vector3d A3(A.x,A.y,z),  B3(B.x,B.y,z);
+  Vector3d A3(A.x(),A.y(),z),  B3(B.x(),B.y(),z);
   return A3.cross(B3);
 }
+Vector2d normalV(const Vector2d a)
+{
+  return Vector2d(-a.y(),a.x());
+}
+
 
 Vector3d random_displace(Vector3d v, double delta)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
-  return Vector3d(v.x+randdelta, v.y+randdelta, v.z+randdelta);
+  return Vector3d(v.x()+randdelta, v.y()+randdelta, v.z()+randdelta);
 }
 Vector2d random_displace(Vector2d v, double delta)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
-  return Vector2d(v.x+randdelta, v.y+randdelta);
+  return Vector2d(v.x()+randdelta, v.y()+randdelta);
 }
 
 
 Vector2d rotated(Vector2d p, Vector2d center, double angle, bool ccw)
 {
-  Vector3d center3 (center.x, center.y, 0);
-  Vector3d radius3 (p.x - center.x, p.y - center.y, 0);
-  Vector3d rrotated3 = radius3.rotate(angle, 0.,0., ccw?1.:-1.);
-  return center + Vector2d(rrotated3.x, rrotated3.y);
+  Vector3d center3 (center.x(), center.y(), 0);
+  Vector3d radius3 (p.x() - center.x(), p.y() - center.y(), 0);
+  Vector3d axis(0.,0., ccw?1.:-1.);
+  Vector3d rrotated3 = radius3.rotate(angle, axis);
+  return center + Vector2d(rrotated3.x(), rrotated3.y());
 }
 
 // squared minimum distance of p to segment s1--s2, onseg = resulting point on segment
 // http://stackoverflow.com/a/1501725
 double minimum_distance_Sq(const Vector2d s1, const Vector2d s2, 
 			const Vector2d p, Vector2d &onseg) {
-  const double l2 = (s2-s1).lengthSquared();  // i.e. |w-v|^2 -  avoid a sqrt
+  const double l2 = (s2-s1).squared_length();  // i.e. |w-v|^2 -  avoid a sqrt
   if (l2 == 0.0) { // s1 == s2 case
     onseg = s1;
-    return (p-s1).lengthSquared();   
+    return (p-s1).squared_length();   
   } 
   // Consider the line extending the segment, parameterized as s1 + t (s2 - s1).
   // We find projection of point p onto the line. 
@@ -128,22 +200,22 @@ double minimum_distance_Sq(const Vector2d s1, const Vector2d s2,
   const double t = (p-s1).dot(s2-s1) / l2;
   if (t < 0.0) {
     onseg = s1;
-    return (p-s1).lengthSquared();       // Beyond the 's1' end of the segment
+    return (p-s1).squared_length();       // Beyond the 's1' end of the segment
   }
   else if (t > 1.0) {
     onseg = s2;
-    return (p-s2).lengthSquared();  // Beyond the 's2' end of the segment
+    return (p-s2).squared_length();  // Beyond the 's2' end of the segment
   }
   onseg = s1 + (s2 - s1) * t;  // Projection falls on the segment
-  return (onseg-p).lengthSquared();
+  return (onseg-p).squared_length();
 }
 
 
 vector<Poly> thick_line(const Vector2d from, const Vector2d to, double width) 
 {
   Poly poly;
-  Vector2d dir = (to-from).getNormalized() * width/4.;
-  Vector2d dirp(-dir.y,dir.x);
+  Vector2d dir = (to-from); dir.normalize(); dir *= width/4.;
+  Vector2d dirp(-dir.y(),dir.x());
   poly.addVertex(from-dir-dirp);
   poly.addVertex(from-dir+dirp);
   poly.addVertex(to+dir+dirp);
@@ -162,10 +234,10 @@ vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to,
 			    double fr_width, double to_width) 
 {
   Poly poly;
-  Vector2d fdir = (to-from).getNormalized() * fr_width/4.;
-  Vector2d tdir = (to-from).getNormalized() * to_width/4.;
-  Vector2d fr_dirp(-fdir.y, fdir.x);
-  Vector2d to_dirp(-tdir.y, tdir.x);
+  Vector2d fdir = (to-from); fdir.normalize(); fdir *= fr_width/4.;
+  Vector2d tdir = (to-from); tdir.normalize(); tdir *= to_width/4.;
+  Vector2d fr_dirp(-fdir.y(), fdir.x());
+  Vector2d to_dirp(-tdir.y(), tdir.x());
   poly.addVertex(from-fdir-fr_dirp);
   poly.addVertex(from-fdir+fr_dirp);
   poly.addVertex(to+tdir+to_dirp);
@@ -192,16 +264,16 @@ vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to,
 // 		     Intersection &hit,
 // 		     double maxoffset) 
 // { 
-//   double bx = p2.x - p1.x;
-//   double by = p2.y - p1.y;
-//   double dx = p4.x - p3.x;
-//   double dy = p4.y - p3.y;
+//   double bx = p2.x() - p1.x();
+//   double by = p2.y() - p1.y();
+//   double dx = p4.x() - p3.x();
+//   double dy = p4.y() - p3.y();
 //   double b_dot_d_perp = bx * dy - by * dx;
 //   if (abs(b_dot_d_perp) < maxoffset) { // parallel
 //     return false;
 //   }
-//   double cx = p3.x - p1.x;
-//   double cy = p3.y - p1.y;
+//   double cx = p3.x() - p1.x();
+//   double cy = p3.y() - p1.y();
 //   double t = (cx * dy - cy * dx) / b_dot_d_perp;
 //   if (t < maxoffset || t > 1-maxoffset) {
 //     return false;
@@ -210,7 +282,7 @@ vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to,
 //   if (u < maxoffset || u > 1-maxoffset) { 
 //     return false;
 //   }
-//   hit.p = Vector2d(p1.x + t*bx, p2.y + t*by);
+//   hit.p = Vector2d(p1.x() + t*bx, p2.y() + t*by);
 //   hit.t = t;
 //   hit.d = (p1-hit.p).length();
 //   return true;
@@ -227,38 +299,38 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 		 double maxoffset)
 {
   // // BBOX test
-  // if(MIN(p1.x,p2.x) > MAX(p3.x,p4.x))
+  // if(MIN(p1.x(),p2.x()) > MAX(p3.x(),p4.x()))
   //   return false;
-  // if(MAX(p1.x,p2.x) < MIN(p3.x,p4.x))
+  // if(MAX(p1.x(),p2.x()) < MIN(p3.x(),p4.x()))
   //   return false;
-  // if(MIN(p1.y,p2.y) > MAX(p3.y,p4.y))
+  // if(MIN(p1.y(),p2.y()) > MAX(p3.y(),p4.y()))
   //   return false;
-  // if(MAX(p1.y,p2.y) < MIN(p3.y,p4.y))
+  // if(MAX(p1.y(),p2.y()) < MIN(p3.y(),p4.y()))
   //   return false;
 
 
-  // if(ABS(p1.x-p3.x) < maxoffset && ABS(p1.y - p3.y) < maxoffset)
+  // if(ABS(p1.x()-p3.x()) < maxoffset && ABS(p1.y() - p3.y()) < maxoffset)
   //   {
   //     hit.p = p1;
   //     hit.d = (p1-hit.p).length();
   //     hit.t = 0.0;
   //     return true;
   //   }
-  // if(ABS(p2.x-p3.x) < maxoffset && ABS(p2.y - p3.y) < maxoffset)
+  // if(ABS(p2.x()-p3.x()) < maxoffset && ABS(p2.y() - p3.y()) < maxoffset)
   //   {
   //     hit.p = p2;
   //     hit.d = (p1-hit.p).length();
   //     hit.t = 1.0;
   //     return true;
   //   }
-  // if(ABS(p1.x-p4.x) < maxoffset && ABS(p1.y - p4.y) < maxoffset)
+  // if(ABS(p1.x()-p4.x()) < maxoffset && ABS(p1.y() - p4.y()) < maxoffset)
   //   {
   //     hit.p = p1;
   //     hit.d = (p1-hit.p).length();
   //     hit.t = 0.0;
   //     return true;
   //   }
-  // if(ABS(p2.x-p4.x) < maxoffset && ABS(p2.y - p4.y) < maxoffset)
+  // if(ABS(p2.x()-p4.x()) < maxoffset && ABS(p2.y() - p4.y()) < maxoffset)
   //   {
   //     hit.p = p2;
   //     hit.d = (p1-hit.p).length();
@@ -293,16 +365,16 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 //            0 = P is not inside S
 int inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
 {
-  if (p1.x != p2.x) {    // S is not vertical
-    if (p1.x <= P.x && P.x <= p2.x)
+  if (p1.x() != p2.x()) {    // S is not vertical
+    if (p1.x() <= P.x() && P.x() <= p2.x())
       return 1;
-    if (p1.x >= P.x && P.x >= p2.x)
+    if (p1.x() >= P.x() && P.x() >= p2.x())
       return 1;
   }
   else {    // S is vertical, so test y coordinate
-    if (p1.y <= P.y && P.y <= p2.y)
+    if (p1.y() <= P.y() && P.y() <= p2.y())
       return 1;
-    if (p1.y >= P.y && P.y >= p2.y)
+    if (p1.y() >= P.y() && P.y() >= p2.y())
       return 1;
   }
   return 0;
@@ -316,7 +388,7 @@ int inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
 //            1=intersect in unique point I0
 //            2=overlap in segment from I0 to I1
 //            3=intersect outside 
-#define perp(u,v)  ((u).x * (v).y - (u).y * (v).x)  // perp product (2D)
+#define perp(u,v)  ((u).x() * (v).y() - (u).y() * (v).x())  // perp product (2D)
 int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
 			  const Vector2d &p3, const Vector2d &p4, 
 			  Vector2d &I0, Vector2d &I1, 
@@ -358,13 +430,13 @@ int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
     // they are collinear segments - get overlap (or not)
     //double t0, t1;                   // endpoints of S1 in eqn for S2
     Vector2d w2 = p2 - p3;
-    if (v.x != 0) {
-      t0 = w.x / v.x;
-      t1 = w2.x / v.x;
+    if (v.x() != 0) {
+      t0 = w.x() / v.x();
+      t1 = w2.x() / v.x();
     }
     else {
-      t0 = w.y / v.y;
-      t1 = w2.y / v.y;
+      t0 = w.y() / v.y();
+      t1 = w2.y() / v.y();
     }
     if (t0 > t1) {                  // must have t0 smaller than t1
       double t=t0; t0=t1; t1=t;    // swap if not
@@ -643,13 +715,13 @@ bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepol
 // negative for clockwise turn, and zero if the points are collinear.
 double cross_2(const Vector2d &O, const Vector2d &A, const Vector2d &B)
 {
-   return (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+   return (A.x() - O.x()) * (B.y() - O.y()) - (A.y() - O.y()) * (B.x() - O.x());
 }
 
 struct sortable_point {
   Vector2d v;
   bool operator <(const sortable_point &p) const {
-    return (v.x < p.v.x) || ((v.x == p.v.x) && (v.y < p.v.y));
+    return (v.x() < p.v.x()) || ((v.x() == p.v.x()) && (v.y() < p.v.y()));
   }
 };
 

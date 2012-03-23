@@ -50,11 +50,13 @@
 #define STRING_MEMBER(field, config_name, def_value, redraw) \
   { OFFSET (field), T_STRING, config_name, #field, 0.0, def_value, redraw }
 
+
 #define COLOUR_MEMBER(field, config_name, def_valueR, def_valueG, def_valueB, def_valueA, redraw) \
-  { OFFSET (field.r), T_COLOUR_MEMBER, config_name "R", NULL, def_valueR, NULL, redraw }, \
-  { OFFSET (field.g), T_COLOUR_MEMBER, config_name "G", NULL, def_valueG, NULL, redraw }, \
-  { OFFSET (field.b), T_COLOUR_MEMBER, config_name "B", NULL, def_valueB, NULL, redraw }, \
-  { OFFSET (field.a), T_COLOUR_MEMBER, config_name "A", NULL, def_valueA, NULL, redraw }
+  { OFFSET (field.array[0]), T_COLOUR_MEMBER, config_name "R", NULL, def_valueR, NULL, redraw }, \
+  { OFFSET (field.array[1]), T_COLOUR_MEMBER, config_name "G", NULL, def_valueG, NULL, redraw }, \
+  { OFFSET (field.array[2]), T_COLOUR_MEMBER, config_name "B", NULL, def_valueB, NULL, redraw }, \
+  { OFFSET (field.array[3]), T_COLOUR_MEMBER, config_name "A", NULL, def_valueA, NULL, redraw }
+
 
 #define FLOAT_PHASE_MEMBER(phase, phasestd, member, def_value, redraw) \
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_##phase].member), T_FLOAT, \
@@ -68,7 +70,7 @@
 #define PTR_FLOAT(obj, idx)     ((float *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_DOUBLE(obj, idx)     ((double *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_STRING(obj, idx)    ((std::string *)PTR_OFFSET (obj, settings[idx].member_offset))
-#define PTR_COLOUR(obj, idx)    ((vmml::Vector4f *)PTR_OFFSET (obj, settings[idx].member_offset))
+#define PTR_COLOUR(obj, idx)    ((Vector4f *)PTR_OFFSET (obj, settings[idx].member_offset))
 
 enum SettingType { T_BOOL, T_INT, T_FLOAT, T_DOUBLE, T_STRING, T_COLOUR_MEMBER };
 static struct {
@@ -80,6 +82,7 @@ static struct {
   const char *def_string;
   gboolean triggers_redraw;
 } settings[] = {
+
   // Raft:
   
   BOOL_MEMBER  (RaftEnable, "RaftEnable", false, true),
@@ -124,18 +127,19 @@ static struct {
   FLOAT_MEMBER (Hardware.DownstreamMultiplier, "DownstreamMultiplier", 1.0, false),
   FLOAT_MEMBER (Hardware.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0, false),
 
-  // Volume
-  { OFFSET (Hardware.Volume.x), T_DOUBLE, "mfVolumeX", "Hardware.Volume.X", 200, NULL, true },
-  { OFFSET (Hardware.Volume.y), T_DOUBLE, "mfVolumeY", "Hardware.Volume.Y", 200, NULL, true },
-  { OFFSET (Hardware.Volume.z), T_DOUBLE, "mfVolumeZ", "Hardware.Volume.Z", 140, NULL, true },
+  // Volume.
+  { OFFSET (Hardware.Volume.array[0]), T_DOUBLE, "mfVolumeX", "Hardware.Volume.X", 200, NULL, true },
+  { OFFSET (Hardware.Volume.array[1]), T_DOUBLE, "mfVolumeY", "Hardware.Volume.Y", 200, NULL, true },
+  { OFFSET (Hardware.Volume.array[2]), T_DOUBLE, "mfVolumeZ", "Hardware.Volume.Z", 140, NULL, true },
+
   // PrintMargin
-  { OFFSET (Hardware.PrintMargin.x), T_DOUBLE, "PrintMarginX", "Hardware.PrintMargin.X", 10, NULL, true },
-  { OFFSET (Hardware.PrintMargin.y), T_DOUBLE, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
-  { OFFSET (Hardware.PrintMargin.z), T_DOUBLE, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
+  { OFFSET (Hardware.PrintMargin.array[0]), T_DOUBLE, "PrintMarginX", "Hardware.PrintMargin.X", 10, NULL, true },
+  { OFFSET (Hardware.PrintMargin.array[1]), T_DOUBLE, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
+  { OFFSET (Hardware.PrintMargin.array[2]), T_DOUBLE, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
 
   FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
-  { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, false }, 
+  { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, false },
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
   INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4, false),
@@ -191,7 +195,6 @@ static struct {
 
   //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
   BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, true),
-  // FLOAT_MEMBER  (Slicing.SerialBuildHeight, "SerialBuildHeight", 0.00, false),
   FLOAT_MEMBER  (Slicing.ShellOffset, "ShellOffset", 0.1, true),
   BOOL_MEMBER   (Slicing.LinelengthSort, "LinelengthSort", false, true),
   INT_MEMBER    (Slicing.FirstLayersNum, "FirstLayersNum", 1, true),
@@ -243,20 +246,21 @@ static struct {
   FLOAT_MEMBER (Display.TempUpdateSpeed, "TempUpdateSpeed", 3, false),
 
   // Colour selectors settings
+
   COLOUR_MEMBER(Display.PolygonRGBA,
-      "Display.PolygonColour", 0, 1.0, 1.0, 0.5, true),
+		"Display.PolygonColour", 0, 1.0, 1.0, 0.5, true),
   COLOUR_MEMBER(Display.WireframeRGBA,
-      "Display.WireframeColour", 1.0, 0.48, 0, 0.5, true),
+		"Display.WireframeColour", 1.0, 0.48, 0, 0.5, true),
   COLOUR_MEMBER(Display.NormalsRGBA,
-      "Display.NormalsColour", 0.62, 1.0, 0, 1.0, true),
+		"Display.NormalsColour", 0.62, 1.0, 0, 1.0, true),
   COLOUR_MEMBER(Display.EndpointsRGBA,
-      "Display.EndpointsColour", 0, 1.0, 0.7, 1.0, true),
+		"Display.EndpointsColour", 0, 1.0, 0.7, 1.0, true),
   COLOUR_MEMBER(Display.GCodeExtrudeRGBA,
-      "Display.GCodeExtrudeColour", 1.0, 1.0, 0.0, 1.0, true),
+		"Display.GCodeExtrudeColour", 1.0, 1.0, 0.0, 1.0, true),
   COLOUR_MEMBER(Display.GCodeMoveRGBA,
-      "Display.GCodeMoveColour", 1.0, 0.05, 1, 0.5, true),
+		"Display.GCodeMoveColour", 1.0, 0.05, 1, 0.5, true),
   COLOUR_MEMBER(Display.GCodePrintingRGBA,
-      "Display.GCodePrintingColour", 0.1, 0.5, 0.0, 1.0, true),
+		"Display.GCodePrintingColour", 0.1, 0.5, 0.0, 1.0, true),
 };
 
 // Add any GtkSpinButtons to this array:
@@ -375,13 +379,13 @@ static struct {
   const char *glade_name;
 }
 colour_selectors[] = {
-  { OFFSET(Display.PolygonRGBA), "Display.PolygonRGB" },
-  { OFFSET(Display.WireframeRGBA), "Display.WireframeRGB" },
-  { OFFSET(Display.NormalsRGBA), "Display.NormalsRGB" },
-  { OFFSET(Display.EndpointsRGBA), "Display.EndpointsRGB" },
-  { OFFSET(Display.GCodeExtrudeRGBA), "Display.GCodeExtrudeRGB" },
-  { OFFSET(Display.GCodePrintingRGBA), "Display.GCodePrintingRGB" },
-  { OFFSET(Display.GCodeMoveRGBA), "Display.GCodeMoveRGB" }
+  { OFFSET(Display.PolygonRGBA), "Display.PolygonRGBA" },
+  { OFFSET(Display.WireframeRGBA), "Display.WireframeRGBA" },
+  { OFFSET(Display.NormalsRGBA), "Display.NormalsRGBA" },
+  { OFFSET(Display.EndpointsRGBA), "Display.EndpointsRGBA" },
+  { OFFSET(Display.GCodeExtrudeRGBA), "Display.GCodeExtrudeRGBA" },
+  { OFFSET(Display.GCodePrintingRGBA), "Display.GCodePrintingRGBA" },
+  { OFFSET(Display.GCodeMoveRGBA), "Display.GCodeMoveRGBA" }
 };
 
 static const char *GCodeNames[] = { "Start", "Layer", "End" };
@@ -502,7 +506,7 @@ void Settings::set_defaults ()
       *PTR_STRING(this, i) = std::string (settings[i].def_string);
       break;
     default:
-      std::cerr << "corrupt setting type\n";
+      std::cerr << "corrupt setting type " << endl;
       break;
     }
   }
@@ -515,8 +519,8 @@ void Settings::set_defaults ()
   GCode.m_impl->setDefaults();
 
   // The vectors map each to 3 spin boxes, one per dimension
-  Hardware.Volume = vmml::Vector3d (200,200,140);
-  Hardware.PrintMargin = vmml::Vector3d (10,10,0);
+  Hardware.Volume = Vector3d (200,200,140);
+  Hardware.PrintMargin = Vector3d (10,10,0);
 }
 
 bool Settings::get_group_and_key (int i, Glib::ustring &group, Glib::ustring &key)
@@ -563,11 +567,11 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
   std::cout << _("parsing config from '") << file->get_path() << "\n";
 
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
+
     Glib::ustring group, key;
 
     if (!get_group_and_key (i, group, key))
       continue;
-
 
     try {
       if (!cfg.has_key (group, key))
@@ -595,7 +599,7 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
       *PTR_STRING(this, i) = cfg.get_string (group, key);
       break;
     default:
-      std::cerr << _("corrupt setting type\n");
+      std::cerr << _("corrupt setting type") << group << " : " << key << endl;;
       break;
     }
   }
@@ -740,7 +744,7 @@ void Settings::set_to_gui (Builder &builder, int i)
   case T_COLOUR_MEMBER:
     break; // Ignore, Colour members are special 
   default:
-    std::cerr << _("corrupt setting type\n");
+    std::cerr << _("corrupt setting type\n") << glade_name <<endl;;
     break;
   }
 
@@ -841,7 +845,7 @@ void Settings::get_from_gui (Builder &builder, int i)
     // Ignore, colour members are special
     break;
   default:
-    std::cerr << _("corrupt setting type\n");
+    std::cerr << _("corrupt setting type") << glade_name << endl;;
     break;
   }
 
@@ -977,18 +981,18 @@ void Settings::get_port_speed_from_gui (Builder &builder)
 void Settings::get_colour_from_gui (Builder &builder, int i)
 {
   const char *glade_name = colour_selectors[i].glade_name;
-  vmml::Vector4f *dest =
-      (vmml::Vector4f *)PTR_OFFSET(this, colour_selectors[i].member_offset);
+  Vector4f *dest =
+      (Vector4f *)PTR_OFFSET(this, colour_selectors[i].member_offset);
   Gdk::Color c;
   Gtk::ColorButton *w = NULL;
   builder->get_widget (glade_name, w);
   if (!w) return;
 
   c = w->get_color();
-  dest->r = c.get_red_p();
-  dest->g = c.get_green_p();
-  dest->b = c.get_blue_p();
-  dest->a = (float) (w->get_alpha()) / 65535.0;
+  dest->r() = c.get_red_p();
+  dest->g() = c.get_green_p();
+  dest->b() = c.get_blue_p();
+  dest->a() = (float) (w->get_alpha()) / 65535.0;
 
   m_signal_visual_settings_changed.emit();
 }
@@ -1000,7 +1004,6 @@ void Settings::set_to_gui (Builder &builder)
 
     if (!glade_name)
       continue;
-
     set_to_gui (builder, i);
   }
 
@@ -1008,16 +1011,16 @@ void Settings::set_to_gui (Builder &builder)
 
   for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
       const char *glade_name = colour_selectors[i].glade_name;
-      vmml::Vector4f *src =
-        (vmml::Vector4f *) PTR_OFFSET(this, colour_selectors[i].member_offset);
+      Vector4f *src =
+        (Vector4f *) PTR_OFFSET(this, colour_selectors[i].member_offset);
       Gdk::Color c;
       Gtk::ColorButton *w = NULL;
       builder->get_widget (glade_name, w);
       if (w) {
         w->set_use_alpha(true);
-        c.set_rgb_p(src->r, src->g, src->b);
+        c.set_rgb_p(src->r(), src->g(), src->b());
         w->set_color(c);
-        w->set_alpha(src->a * 65535.0);
+        w->set_alpha(src->a() * 65535.0);
       }
   }
 
@@ -1185,10 +1188,11 @@ double Settings::HardwareSettings::GetExtrudeFactor(double layerheight) const
 
 Matrix4d Settings::getBasicTransformation(Matrix4d T) const
 {
-  Vector3d t = T.getTranslation();
-  t+= Vector3d(Hardware.PrintMargin.x+Raft.Size*RaftEnable, 
-	       Hardware.PrintMargin.y+Raft.Size*RaftEnable, 
+  Vector3d t;
+  T.get_translation(t);
+  t+= Vector3d(Hardware.PrintMargin.x()+Raft.Size*RaftEnable, 
+	       Hardware.PrintMargin.y()+Raft.Size*RaftEnable, 
 	       0);
-  T.setTranslation(t);
+  T.set_translation(t);
   return T;
 }

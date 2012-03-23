@@ -20,11 +20,16 @@
 #pragma once
 
 #include "stdafx.h"
+#include "arcball.h"
 
-
-using namespace std;
-using namespace vmml;
-
+void move(Vector3f delta, Matrix4f &mat);
+Vector3d normalized(const Vector3d v);
+Vector2d normalized(const Vector2d v);
+Vector2d normalV(const Vector2d a);
+double cross(const Vector2d a, const Vector2d b);
+void moveArcballTrans(Matrix4fT &matfT, const Vector3d delta);
+void setArcballTrans(Matrix4fT &matfT, const Vector3d trans);
+void rotArcballTrans(Matrix4fT &transform,  Vector3d axis, double angle);
 
 /* template < typename T >  */
 /* long double angleBetween(T V1, T V2); */

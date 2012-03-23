@@ -371,10 +371,11 @@ class View::TranslationSpinRow {
         mat = &object->transform3D.transform;
     else
         mat = &shape->transform3D.transform;
-    double scale = mat->m[3][3];
-    Vector3d trans = mat->getTranslation();
-    trans.xyz[axis] = val*scale;
-    mat->setTranslation (trans);
+    double scale = (*mat)[3][3];
+    Vector3d trans;
+    mat->get_translation(trans);
+    trans[axis] = val*scale;
+    mat->set_translation (trans);
     m_view->get_model()->CalcBoundingBoxAndCenter();
     m_view->get_model()->ModelChanged();
   }
@@ -394,7 +395,7 @@ public:
 
     m_inhibit_update = true;
     for (uint i = 0; i < 3; i++) {
-      const Matrix4d *mat;
+      Matrix4d *mat;
       if (!object) {
 	for (uint i = 0; i < 3; i++)
 	  m_xyz[i]->set_value(0.0);
@@ -404,10 +405,11 @@ public:
 	mat = &object->transform3D.transform;
       else
 	mat = &shape->transform3D.transform;
-      Vector3d trans = mat->getTranslation();
-      double scale = mat->m[3][3];
+      Vector3d trans;
+      mat->get_translation(trans);
+      double scale = (*mat)[3][3];
       for (uint i = 0; i < 3; i++)
-	m_xyz[i]->set_value(trans.xyz[i]/scale);
+	m_xyz[i]->set_value(trans[i]/scale);
       break;
     }
     m_inhibit_update = false;
@@ -977,6 +979,7 @@ View::View(BaseObjectType* cobject,
     m_renderer = manage(new Render (this, m_objtree->get_selection()));
     pBox->add (*m_renderer);
   }
+
   showAllWidgets();
 }
 
@@ -1336,39 +1339,39 @@ void View::DrawGrid()
 	//glColor4f (0.8f, 0.8f, 0.8f, 1.0f);
         // left edge
 	glVertex3f (0.0f, 0.0f, 0.0f);
-	glVertex3f (0.0f, volume.y, 0.0f);
+	glVertex3f (0.0f, volume.y(), 0.0f);
         // near edge
 	glVertex3f (0.0f, 0.0f, 0.0f);
-	glVertex3f (volume.x, 0.0f, 0.0f);
+	glVertex3f (volume.x(), 0.0f, 0.0f);
 
 	glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
         // right edge
-	glVertex3f (volume.x, 0.0f, 0.0f);
-	glVertex3f (volume.x, volume.y, 0.0f);
+	glVertex3f (volume.x(), 0.0f, 0.0f);
+	glVertex3f (volume.x(), volume.y(), 0.0f);
         // far edge
-	glVertex3f (0.0f, volume.y, 0.0f);
-	glVertex3f (volume.x, volume.y, 0.0f);
+	glVertex3f (0.0f, volume.y(), 0.0f);
+	glVertex3f (volume.x(), volume.y(), 0.0f);
 
 	// top 
 	glColor4f (0.5f, 0.5f, 0.5f, 0.5f);
         // left edge
-	glVertex3f (0.0f, 0.0f, volume.z);
-	glVertex3f (0.0f, volume.y, volume.z);
+	glVertex3f (0.0f, 0.0f, volume.z());
+	glVertex3f (0.0f, volume.y(), volume.z());
         // near edge
-	glVertex3f (0.0f, 0.0f, volume.z);
-	glVertex3f (volume.x, 0.0f, volume.z);
+	glVertex3f (0.0f, 0.0f, volume.z());
+	glVertex3f (volume.x(), 0.0f, volume.z());
         // right edge
-	glVertex3f (volume.x, 0.0f, volume.z);
-	glVertex3f (volume.x, volume.y, volume.z);
+	glVertex3f (volume.x(), 0.0f, volume.z());
+	glVertex3f (volume.x(), volume.y(), volume.z());
         // far edge
-	glVertex3f (0.0f, volume.y, volume.z);
-	glVertex3f (volume.x, volume.y, volume.z);
+	glVertex3f (0.0f, volume.y(), volume.z());
+	glVertex3f (volume.x(), volume.y(), volume.z());
 	
 	// verticals at rear
-	glVertex3f (0.0f, volume.y, 0);
-	glVertex3f (0.0f, volume.y, volume.z);
-	glVertex3f (volume.x, volume.y, 0);
-	glVertex3f (volume.x, volume.y, volume.z);
+	glVertex3f (0.0f, volume.y(), 0);
+	glVertex3f (0.0f, volume.y(), volume.z());
+	glVertex3f (volume.x(), volume.y(), 0);
+	glVertex3f (volume.x(), volume.y(), volume.z());
 
 	glEnd();
 
@@ -1378,14 +1381,14 @@ void View::DrawGrid()
 	glLineWidth (1.0);
 
 	glBegin(GL_LINES);
-	for (uint x = 10; x < volume.x; x += 10) {
+	for (uint x = 10; x < volume.x(); x += 10) {
 		glVertex3f (x, 0.0f, 0.0f);
-		glVertex3f (x, volume.y, 0.0f);
+		glVertex3f (x, volume.y(), 0.0f);
 	}
 
-	for (uint y = 10; y < volume.y; y += 10) {
+	for (uint y = 10; y < volume.y(); y += 10) {
 		glVertex3f (0.0f, y, 0.0f);
-		glVertex3f (volume.x, y, 0.0f);
+		glVertex3f (volume.x(), y, 0.0f);
 	}
 
 	glEnd();
@@ -1410,39 +1413,39 @@ void View::DrawGrid()
 	// bottom
         glBegin(GL_TRIANGLE_STRIP);
         glNormal3f(0.0f, 0.0f, 1.0f);
-	glVertex3f (pM.x, pM.y, 0.0f);
+	glVertex3f (pM.x(), pM.y(), 0.0f);
 	glVertex3f (0.0f, 0.0f, 0.0f);
-	glVertex3f (volume.x - pM.x, pM.y, 0.0f);
-	glVertex3f (volume.x, 0.0f, 0.0f);
-	glVertex3f (volume.x - pM.x, volume.y - pM.y, 0.0f);
-	glVertex3f (volume.x, volume.y, 0.0f);
-	glVertex3f (pM.x, volume.y - pM.y, 0.0f);
-	glVertex3f (0.0f, volume.y, 0.0f);
-	glVertex3f (pM.x, pM.y, 0.0f);
+	glVertex3f (volume.x() - pM.x(), pM.y(), 0.0f);
+	glVertex3f (volume.x(), 0.0f, 0.0f);
+	glVertex3f (volume.x() - pM.x(), volume.y() - pM.y(), 0.0f);
+	glVertex3f (volume.x(), volume.y(), 0.0f);
+	glVertex3f (pM.x(), volume.y() - pM.y(), 0.0f);
+	glVertex3f (0.0f, volume.y(), 0.0f);
+	glVertex3f (pM.x(), pM.y(), 0.0f);
 	glVertex3f (0.0f, 0.0f, 0.0f);
         glEnd();
 
 	// top
         glBegin(GL_TRIANGLE_STRIP);
         glNormal3f(0.0f, 0.0f, 1.0f);
-	glVertex3f (pM.x, pM.y, volume.z);
-	glVertex3f (0.0f, 0.0f, volume.z);
-	glVertex3f (volume.x - pM.x, pM.y, volume.z);
-	glVertex3f (volume.x, 0.0f, volume.z);
-	glVertex3f (volume.x - pM.x, volume.y - pM.y, volume.z);
-	glVertex3f (volume.x, volume.y, volume.z);
-	glVertex3f (pM.x, volume.y - pM.y, volume.z);
-	glVertex3f (0.0f, volume.y, volume.z);
-	glVertex3f (pM.x, pM.y, volume.z);
-	glVertex3f (0.0f, 0.0f, volume.z);
+	glVertex3f (pM.x(), pM.y(), volume.z());
+	glVertex3f (0.0f, 0.0f, volume.z());
+	glVertex3f (volume.x() - pM.x(), pM.y(), volume.z());
+	glVertex3f (volume.x(), 0.0f, volume.z());
+	glVertex3f (volume.x() - pM.x(), volume.y() - pM.y(), volume.z());
+	glVertex3f (volume.x(), volume.y(), volume.z());
+	glVertex3f (pM.x(), volume.y() - pM.y(), volume.z());
+	glVertex3f (0.0f, volume.y(), volume.z());
+	glVertex3f (pM.x(), pM.y(), volume.z());
+	glVertex3f (0.0f, 0.0f, volume.z());
         glEnd();
 
 	// mark front left
         // glBegin(GL_TRIANGLES);
         // glNormal3f (0.0f, 0.0f, 1.0f);
-	// glVertex3f (pM.x, pM.y, 0.0f);
-	// glVertex3f (pM.x+10.0f, pM.y, 0.0f);
-	// glVertex3f (pM.x, pM.y+10.0f, 0.0f);
+	// glVertex3f (pM.x(), pM.y(), 0.0f);
+	// glVertex3f (pM.x()+10.0f, pM.y(), 0.0f);
+	// glVertex3f (pM.x(), pM.y()+10.0f, 0.0f);
         // glEnd();
 
         // Draw print surface
@@ -1450,10 +1453,10 @@ void View::DrawGrid()
         glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_white);
 
         glBegin(GL_QUADS);
-	glVertex3f (pM.x, pM.y, 0.0f);
-	glVertex3f (volume.x - pM.x, pM.y, 0.0f);
-	glVertex3f (volume.x - pM.x, volume.y - pM.y, 0.0f);
-	glVertex3f (pM.x, volume.y - pM.y, 0.0f);
+	glVertex3f (pM.x(), pM.y(), 0.0f);
+	glVertex3f (volume.x() - pM.x(), pM.y(), 0.0f);
+	glVertex3f (volume.x() - pM.x(), volume.y() - pM.y(), 0.0f);
+	glVertex3f (pM.x(), volume.y() - pM.y(), 0.0f);
         glEnd();
 
 	glDisable (GL_LIGHTING);

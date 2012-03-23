@@ -19,14 +19,11 @@
 */
 
 #pragma once
-#include "types.h"
+#include "stdafx.h"
 
 #include <vector>
 #include <list>
 #include <iostream>
-
-#include <vmmlib/vmmlib.h>
-//#include <polylib/Polygon2d.h>
 
 #include "poly.h"
 #include "gcode.h"

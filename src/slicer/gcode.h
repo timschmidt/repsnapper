@@ -21,18 +21,10 @@
 
 #include "settings.h"
 
-#include <vmmlib/vmmlib.h>
-//#include <polylib/Polygon2d.h>
-
 #include "../gcode.h"
 
 //#include "printlines.h"
 struct printline;
-
-using namespace std;
-using namespace vmml;
-
-//using namespace PolyLib;
 
 class GCode;
 class Command;
