@@ -21,7 +21,7 @@
 
 #include "settings.h"
 
-#include "../gcode.h"
+#include "gcode.h"
 
 //#include "printlines.h"
 struct printline;

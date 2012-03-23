@@ -19,7 +19,7 @@
 
 #include "shape.h"
 
-#include "gcode.h"
+#include "gcodestate.h"
 #include "printlines.h"
 
 

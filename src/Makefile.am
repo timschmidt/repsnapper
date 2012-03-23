@@ -33,6 +33,7 @@ SHARED_SRC= \
 	src/view.cpp \
 	src/gllight.cpp \
 	src/gcode.cpp \
+	src/gcodestate.cpp \
 	src/command.cpp \
 	src/arcball.cpp \
 	src/objtree.cpp \
@@ -50,6 +51,7 @@ SHARED_INC= \
 	src/arcball.h \
 	src/convert.h \
 	src/gcode.h \
+	src/gcodestate.h \
 	src/command.h \
 	src/gllight.h \
 	src/miniball.h \

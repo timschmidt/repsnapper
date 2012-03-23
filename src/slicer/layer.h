@@ -26,7 +26,7 @@
 #include <iostream>
 
 #include "poly.h"
-#include "gcode.h"
+#include "gcodestate.h"
 
 class Infill;
 class Printlines;

@@ -27,7 +27,7 @@
 
 #include "objtree.h"
 #include "types.h"
-#include "slicer/gcode.h"
+#include "gcodestate.h"
 #include "settings.h"
 #include "progress.h"
 #include "slicer/poly.h"

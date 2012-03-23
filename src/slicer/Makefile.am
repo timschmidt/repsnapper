@@ -16,14 +16,12 @@ SHARED_SRC += \
 	src/slicer/infill.cpp \
 	src/slicer/poly.cpp \
 	src/slicer/layer.cpp \
-	src/slicer/gcode.cpp \
 	src/slicer/triangle.cpp
 
 SHARED_INC += \
 	src/slicer/geometry.h \
 	src/slicer/printlines.h \
 	src/slicer/clipping.h \
-	src/slicer/gcode.h \
 	src/slicer/triangle.h \
 	src/slicer/layer.h \
 	src/slicer/infill.h \

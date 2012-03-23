@@ -19,7 +19,7 @@
 
 #include "printlines.h"
 #include "poly.h"
-#include "slicer/gcode.h"
+#include "gcodestate.h"
 
 
 ///////////// PLine3: single 3D printline //////////////////////
