@@ -338,11 +338,56 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 
 void Infill::addInfillPolys(vector<Poly> polys)
 {
-  for (uint i=0; i<polys.size();i++)
-    addInfillPoly(polys[i]);
+  // switch (type) {
+  // case BridgeInfill:
+  // case RaftInfill:
+  // case ParallelInfill:
+  //   {
+  //     vector<Vector2d> lines;
+  //     Vector2d l,rotl;
+  //     double sina = sin(-angle);
+  //     double cosa = cos(-angle);
+  //     Poly newpoly(polys.back().getZ(), extrusionfactor);
+  //     newpoly.setClosed(false);
+  //     for (uint j = 0; j < polys.size(); j++) {
+  // 	for (uint i = 0; i < polys[i].size() ; i++ )
+  // 	  {
+  // 	    l = (polys[j][i+1] - polys[j][i]);     
+  // 	    // rotate with neg. infill angle and see whether it's 90° as infill lines
+  // 	    rotl = Vector2d(l.x()*cosa - l.y()*sina, 
+  // 			    l.y()*cosa + l.x()*sina);
+  // 	    if (abs(rotl.x()) < 0.1 && abs(rotl.y()) > 0.1)
+  // 	      {
+  // 		lines.push_back(polys[j][i]);
+  // 		lines.push_back(polys[j][i+1]);
+  // 	      }
+  // 	  }
+  //     }
+  //     if (lines.size() > 1) {
+  // 	newpoly.addVertex(lines[0]);
+  // 	newpoly.addVertex(lines[1]);
+  // 	for (uint i = 2; i < lines.size()-1 ; i+=2 ) {
+  // 	  double dist1 = (lines[i]   - lines[i-1]).squared_length();
+  // 	  double dist2 = (lines[i+1] - lines[i-1]).squared_length();
+  // 	  if (dist1 < dist2) {
+  // 	    newpoly.addVertex(lines[i]);
+  // 	    newpoly.addVertex(lines[i+1]);
+  // 	  } else {
+  // 	    newpoly.addVertex(lines[i+1]);
+  // 	    newpoly.addVertex(lines[i]);
+  // 	  }
+  // 	}
+  //     }
+  //     infillpolys.push_back(newpoly);
+  //     break;
+  //   }
+  // default:
+    for (uint i=0; i<polys.size();i++)
+      addInfillPoly(polys[i]);
+  // }
 }
 
-void Infill::addInfillPoly(Poly p)
+void Infill::addInfillPoly(Poly p) // p is result of an already clipped pattern
 {
   // Poly *zigzagpoly = NULL;
   switch (type) {
@@ -356,10 +401,10 @@ void Infill::addInfillPoly(Poly p)
       double sina = sin(-angle);
       double cosa = cos(-angle);
       // use the lines that have the angle of this Infill
-      Poly newpoly(p.getZ(), extrusionfactor);
+      //uint counter = 0;
       for (uint i=0; i < p.size() ; i+=1 )
   	{
-  	  l = (p.getVertexCircular(i+1) - p.getVertexCircular(i));     
+  	  l = (p[i+1] - p[i]);     
 	  // rotate with neg. infill angle and see whether it's 90° as infill lines
 	  rotl = Vector2d(l.x()*cosa-l.y()*sina, 
 			  l.y()*cosa+l.x()*sina);
@@ -370,10 +415,10 @@ void Infill::addInfillPoly(Poly p)
 	      // 	zigzagpoly->addVertex(p.getVertexCircular(i+1+i%2));
 	      // } else
 	      {
-		//Poly newpoly(p.getZ(), extrusionfactor);
-		newpoly.vertices.push_back(p.getVertexCircular(i));
-		newpoly.vertices.push_back(p.getVertexCircular(i+1));
-		//infillpolys.push_back(newpoly);
+		Poly newpoly(p.getZ(), extrusionfactor);
+		newpoly.vertices.push_back(p[i]);
+		newpoly.vertices.push_back(p[i+1]);
+		infillpolys.push_back(newpoly);
 	      }
   	    }
 	  // else
@@ -381,7 +426,6 @@ void Infill::addInfillPoly(Poly p)
 	  //     zigzagpoly->addVertex(p.getVertexCircular(i));	      
 	  //   }
   	}
-      infillpolys.push_back(newpoly);
       // if (zigzagpoly) {
       // 	cerr << zigzagpoly->size()<< endl;
       // 	if (zigzagpoly->size()>0)

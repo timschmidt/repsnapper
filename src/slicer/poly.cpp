@@ -31,13 +31,17 @@
 #include <poly2tri/poly2tri/poly2tri/poly2tri.h>
 
 
-Poly::Poly(){
+Poly::Poly()
+{
+  closed = true;
   holecalculated = false;
   this->z = -10;
   extrusionfactor = 1.;
 }
 
-Poly::Poly(double z, double extrusionfactor){
+Poly::Poly(double z, double extrusionfactor)
+{
+  closed = true;
   this->z = z;
   this->extrusionfactor = extrusionfactor;
   holecalculated = false;
@@ -47,7 +51,9 @@ Poly::Poly(double z, double extrusionfactor){
   //printinfo();
 }
 
-Poly::Poly(const Poly p, double z){
+Poly::Poly(const Poly p, double z)
+{
+  closed = true;
   this->z = z;
   this->extrusionfactor = p.extrusionfactor;
   holecalculated = p.holecalculated;
@@ -406,8 +412,7 @@ void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
 {
   size_t count = vertices.size();
   if (count<2) return; // one point no line
-  if (count<3) count--; // two points one line
-
+  if (!closed || count<3) count--; // two points one line
   for(size_t i=0;i<count;i++)
     {
       lines.push_back(getVertexCircular(i+startindex));
@@ -418,8 +423,8 @@ void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
 {
   size_t count = vertices.size();
   if (count<2) return; // one point no line
-  if (count<3) count--; // two points one line
-  for(size_t i=0;i<count;i++)
+  if (!closed || count<3) count--; // two points one line
+  for(size_t i = 0; i < count; i++)
     {
       lines.push_back(getVertexCircular3(i+startindex));
       lines.push_back(getVertexCircular3(i+startindex+1));

@@ -30,6 +30,7 @@ class Poly
 
   //	vector<Poly*> holes;
   bool holecalculated;
+  bool closed;
 
 public:
         Poly();
@@ -39,7 +40,13 @@ public:
 	/*      const ClipperLib::Polygon cpoly, bool reverse=false); */
         ~Poly();
 	
-	Vector2d operator[](uint i) const {return vertices[i];};
+	void setClosed(bool c) { closed = c; };
+
+	Vector2d operator[](int i) const {
+	  if (i >= 0 && i < (int)vertices.size())
+	    return vertices[i];
+	  else return vertices[(vertices.size()+i)%vertices.size()];
+	};
 
 	Poly Shrinked(double distance) const;
 	Poly Shrinked(vector<Vector2d> *vertices, double distance);
