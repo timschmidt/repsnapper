@@ -203,6 +203,8 @@ static struct {
   FLOAT_MEMBER  (Slicing.FirstLayerHeight, "FirstLayerHeight", 0.7, true),
   BOOL_MEMBER   (Slicing.UseArcs, "UseArcs", false, true),
   FLOAT_MEMBER  (Slicing.ArcsMaxAngle, "ArcsMaxAngle", 20, true),
+  BOOL_MEMBER   (Slicing.RoundCorners, "RoundCorners", true, true),
+  FLOAT_MEMBER  (Slicing.CornerRadius, "CornerRadius", 1., true),
   BOOL_MEMBER   (Slicing.NoBridges, "NoBridges", false, true),
   FLOAT_MEMBER  (Slicing.BridgeExtrusion, "BridgeExtrusion", 1, true),
 
@@ -319,6 +321,7 @@ static struct {
   { "Slicing.FirstLayersInfillDist", 0.0, 100, 0.01, 0.1 },
   { "Slicing.FirstLayerHeight", 0.0, 1., 0.01, 0.1 },
   { "Slicing.ArcsMaxAngle", 0, 180, 1, 10 },
+  { "Slicing.CornerRadius", 0, 5, 0.01, 0.1 },
 
   // Hardware
   { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },

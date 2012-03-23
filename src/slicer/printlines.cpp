@@ -307,15 +307,17 @@ void Printlines::makeLines(const vector<Poly> polys,
 	lastavlength = polys[npindex].averageLinelengthSq();
       nstdist = 1000000;
       for(size_t q=0; q<count; q++) { // find nearest polygon
-	if (polys[q].size() == 0) {done[q] = true; ndone++;}
 	if (!done[q])
 	  {
-	    pdist = 1000000;
-	    nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
-	    if (pdist<nstdist){
-	      npindex = q;      // index of nearest poly in polysleft
-	      nstdist = pdist;  // distance of nearest poly
-	      nvindex = nindex; // nearest point in nearest poly
+	    if (polys[q].size() == 0) {done[q] = true; ndone++;}
+	    else {
+	      pdist = 1000000;
+	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
+	      if (pdist<nstdist){
+		npindex = q;      // index of nearest poly in polysleft
+		nstdist = pdist;  // distance of nearest poly
+		nvindex = nindex; // nearest point in nearest poly
+	      }
 	    }
 	  }
       }
@@ -467,6 +469,7 @@ uint Printlines::makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) c
     short arctype = ccw ? -1 : 1; 
     PLine newline(P, Q, lines[fromind].speed, lines[fromind].feedrate,
 		  arctype, center, angle);
+
     // if (fullcircle) {
     //   //cerr << newline.info() << endl;
     //   cerr << newline.getPrintline(0).info() << endl;
@@ -494,21 +497,23 @@ uint Printlines::roundCorners(double maxdistance, vector<PLine> &lines) const
 uint Printlines::makeCornerArc(double maxdistance, uint ind, 
 			       vector<PLine> &lines) const
 {
-  if (ind >= lines.size()) return 0;
+  if (ind > lines.size()-2) return 0;
   //if (lines[ind].feedrate != lines[ind+1].feedrate) return 0;
-  if (lines[ind].arc!=0 || lines[ind+1].arc!=0) return 0;
-  if ((lines[ind].to-lines[ind+1].from).squared_length() > 0.01) return 0;
+  if (lines[ind].arc != 0 || lines[ind+1].arc != 0) return 0;
+  if ((lines[ind].to - lines[ind+1].from).squared_length() > 0.01) return 0;
+  if ((lines[ind].from - lines[ind+1].to).squared_length() 
+      < maxdistance*maxdistance) return 0;
   double l1 = lines[ind].length();
   double l2 = lines[ind+1].length();
-  if (l1<maxdistance/2 || l2<maxdistance/2) return 0;
-  maxdistance = min(maxdistance, l1/2.);
-  maxdistance = min(maxdistance, l2/2.);
+  if (l1 < maxdistance/2 || l2 < maxdistance/2) return 0;
+  maxdistance   = min(maxdistance, l1/2.);
+  maxdistance   = min(maxdistance, l2/2.);
   Vector2d dir1 = lines[ind].to-lines[ind].from;
   Vector2d dir2 = lines[ind+1].to-lines[ind+1].from;
-  double angle = angleBetween(dir1, dir2);
+  double angle  = angleBetween(dir1, dir2);
   // arc start and end point:
-  Vector2d p1 = lines[ind].to - normalized(dir1)*maxdistance;
-  Vector2d p2 = lines[ind+1].from + normalized(dir2)*maxdistance;
+  Vector2d p1   = lines[ind].to - normalized(dir1)*maxdistance;
+  Vector2d p2   = lines[ind+1].from + normalized(dir2)*maxdistance;
   Intersection inter;
   Vector2d center, I1;
   double t0,t1;
@@ -517,18 +522,32 @@ uint Printlines::makeCornerArc(double maxdistance, uint ind,
 				p2, p2 + Vector2d(-dir2.y(),dir2.x()),
    				center, I1, t0,t1);
   if (is==0) return 0;
+  if ((center - p1).squared_length() > 2*maxdistance) return 0; // calc error
   bool ccw = isleftof(center, p1, p2);
   if (!ccw) angle = -angle;
-  if (angle<=0) angle+=2*M_PI;
+  if (angle <= 0) angle += 2*M_PI;
   short arctype = ccw ? -1 : 1; 
-  PLine arcline(p1, p2, lines[ind].speed, lines[ind].feedrate,
-		arctype, center, angle);
+  bool split = false;
   PLine pline1(lines[ind].from, p1, lines[ind].speed, lines[ind].feedrate);
   PLine pline2(p2, lines[ind+1].to, lines[ind+1].speed, lines[ind+1].feedrate);
-
+  Vector2d splitp3;
+  if (lines[ind].feedrate != lines[ind+1].feedrate) { // need 2 half arcs
+    split   = true;
+    angle  /= 2;
+    splitp3 = p2; // splitp3 now end of both arcs
+    p2 = rotated(p1, center, angle, ccw); // p2 now half-way point
+  }
+  PLine arcline(p1, p2, lines[ind].speed, lines[ind].feedrate,
+		arctype, center, angle);
   lines[ind] = pline1;
   lines[ind+1] = arcline;
   lines.insert(lines.begin()+ind+2, pline2);
+  if (split) {
+    PLine arc2(p2, splitp3, pline2.speed, pline2.feedrate,
+	       arctype, center, angle);
+    lines.insert(lines.begin()+ind+2, arc2);
+    return 2;
+  }
   return 1;
 }
 
@@ -822,6 +841,9 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
 	i++;
       }
       if (i < movei-1) i = movei-1;
+    } else { // on moves shorter than AOdistance:
+      // TODO retract and repush as much as is possible with AOspeed
+      // without slowing down movement
     }
     count = lines.size();
   }

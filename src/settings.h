@@ -106,6 +106,8 @@ class Settings {
     bool  RelativeEcode;
     bool  UseArcs;
     float ArcsMaxAngle;
+    bool  RoundCorners;
+    float CornerRadius;
 
     bool NoBridges;
     float BridgeExtrusion;

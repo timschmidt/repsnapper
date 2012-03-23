@@ -619,7 +619,8 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 {
 
   double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
-  double linewidth = thickness/linewidthratio;
+  double linewidth = thickness*linewidthratio;
+  double cornerradius = linewidth*slicing.CornerRadius;
 
   Vector2d startPoint(lastPos.x(),lastPos.y());
 
@@ -693,7 +694,8 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		       slicing, hardware,
 		       startPoint, lines, hardware.MaxShellSpeed);
   // TODO:  sort inner to outer in printlines
-  //printlines.roundCorners(2,lines);
+  if (slicing.UseArcs && slicing.RoundCorners) 
+    printlines.roundCorners(cornerradius,lines);
   polys.clear();
 
   //  Infill
@@ -715,7 +717,8 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   printlines.makeLines(polys, true, //displace at beginning
 		       slicing, hardware, 
 		       startPoint, lines);
-  //printlines.roundCorners(2,lines);
+  if (slicing.UseArcs && slicing.RoundCorners) 
+    printlines.roundCorners(cornerradius,lines);
   polys.clear();
 
   // FINISH

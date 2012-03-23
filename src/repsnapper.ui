@@ -4959,8 +4959,8 @@ THE HEAD MOVING DOWN!
                                     <property name="label" translatable="yes">Height (mm):</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">2</property>
-                                    <property name="right_attach">3</property>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
                                     <property name="top_attach">1</property>
                                     <property name="bottom_attach">2</property>
                                   </packing>
@@ -4974,8 +4974,8 @@ THE HEAD MOVING DOWN!
                                     <property name="digits">1</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">3</property>
-                                    <property name="right_attach">4</property>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
                                     <property name="top_attach">1</property>
                                     <property name="bottom_attach">2</property>
                                   </packing>
@@ -5010,7 +5010,7 @@ THE HEAD MOVING DOWN!
                                 </child>
                                 <child>
                                   <object class="GtkCheckButton" id="Slicing.UseArcs">
-                                    <property name="label" translatable="yes">Generate Arcs GCode (G2,G3)</property>
+                                    <property name="label" translatable="yes">Arcs GCode (G2,G3)</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
@@ -5018,7 +5018,6 @@ THE HEAD MOVING DOWN!
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="right_attach">2</property>
                                     <property name="top_attach">3</property>
                                     <property name="bottom_attach">4</property>
                                   </packing>
@@ -5030,8 +5029,8 @@ THE HEAD MOVING DOWN!
                                     <property name="label" translatable="yes">Max. Angles:</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">2</property>
-                                    <property name="right_attach">3</property>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
                                     <property name="top_attach">3</property>
                                     <property name="bottom_attach">4</property>
                                   </packing>
@@ -5044,8 +5043,8 @@ THE HEAD MOVING DOWN!
                                     <property name="invisible_char_set">True</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">3</property>
-                                    <property name="right_attach">4</property>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
                                     <property name="top_attach">3</property>
                                     <property name="bottom_attach">4</property>
                                   </packing>
@@ -5066,10 +5065,49 @@ THE HEAD MOVING DOWN!
                                   </packing>
                                 </child>
                                 <child>
-                                  <placeholder/>
+                                  <object class="GtkCheckButton" id="Slicing.RoundCorners">
+                                    <property name="label" translatable="yes">Round Corners</property>
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="receives_default">False</property>
+                                    <property name="tooltip_text" translatable="yes">Make Corners into arcs</property>
+                                    <property name="use_action_appearance">False</property>
+                                    <property name="draw_indicator">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">3</property>
+                                    <property name="right_attach">4</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
+                                  </packing>
                                 </child>
                                 <child>
-                                  <placeholder/>
+                                  <object class="GtkSpinButton" id="Slicing.CornerRadius">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="digits">2</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">5</property>
+                                    <property name="right_attach">6</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="label12">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="tooltip_text" translatable="yes">Line width ratio</property>
+                                    <property name="label" translatable="yes">Radius:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">4</property>
+                                    <property name="right_attach">5</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
+                                  </packing>
                                 </child>
                                 <child>
                                   <placeholder/>

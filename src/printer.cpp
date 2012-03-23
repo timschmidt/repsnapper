@@ -440,7 +440,11 @@ void Printer::draw_current (Vector3d &from)
 {
   if (printing && gcode_iter){
     Command command = gcode_iter->getCurrentCommand(from);
-    command.draw(from,0);
+    if (m_model) 
+      command.draw(from, 3, m_model->settings.Display.GCodeExtrudeRGBA, 0, 
+		   m_model->settings.Display.DisplayGCodeArrows);
+    else 
+      command.draw(from, 0);
   }
 }
 
