@@ -168,42 +168,34 @@ Command::Command(string gcodeline, Vector3d defaultpos)
   //   Multiple Gxx codes on a line are accepted, but results are undefined.
 
   GcodeFeed buffer(gcodeline) ;
+  //default:
+  Code = COMMENT; 
+  comment = gcodeline;
 
   for (char ch = buffer.get(); ch; ch = buffer.get()) {
     // GCode is always <LETTER> <NUMBER>
     ch=toupper(ch);
     float num = ToFloat(buffer) ;
+    
+    stringstream commss; commss << ch << num;
 
     switch (ch)
     {
     case 'G':
-      switch( int(num) ) {
-      case 1:		// G1
-	Code = COORDINATEDMOTION;
-	break;
-      case 0:		// G0
-	Code = RAPIDMOTION;
-	break;
-      case 2:		// G2
-	Code = ARC_CW;
-	break;
-      case 3:		// G3
-	Code = ARC_CCW;
-	break;
-      case 21:		// G21
-	// FIXME: Technically this is allowed on the same line with 'move' codes
-	//        i.e., 'G1 X25 Y25 G21'  means "move to X=25mm, Y=25mm"
-	Code = MILLIMETERSASUNITS;
-	break;
-      }
+      Code = getCode(commss.str());
+      comment = "";
       break;
-    case 'M':      is_value = true;  break;
+    case 'M':           // M commands     
+      is_value = true;  
+      Code = getCode(commss.str());
+      comment = ""; 
+      break;
     case 'S':      value = num;      break;
     case 'E':      e = num;          break;
     case 'F':      f = num;          break;
-    case 'X':      where.x() = num;    break;
-    case 'Y':      where.y() = num;    break;
-    case 'Z':      where.z() = num;    break;
+    case 'X':      where.x()  = num;   break;
+    case 'Y':      where.y()  = num;   break;
+    case 'Z':      where.z()  = num;   break;
     case 'I':      arcIJK.x() = num;   break;
     case 'J':      arcIJK.y() = num;   break;
     case 'K':
@@ -212,18 +204,35 @@ Command::Command(string gcodeline, Vector3d defaultpos)
     case 'R':
       cerr << "cannot handle ARC R command (yet?)!" << endl;
       break;
+    default:
+      cerr << "cannot parse GCode line " << gcodeline << endl;
+      break;
     }
   }
-  //assert(where.z()>=0);
+
   if (where.z() < 0) {
     throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at " + info()));
   }
 }
 
-string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcode) const
+GCodes Command::getCode(const string commstr) const
+{
+  GCodes code = COMMENT;
+  for (uint i = 0; i < NUM_GCODES; i++){
+    if (MCODES[i] == commstr) {
+      code =  (GCodes)i;
+      //cerr << commstr << " = " << code << endl;
+      break;
+    }
+  }
+  return code;
+}
+
+string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF, 
+			     bool relativeEcode) const
 {
   ostringstream ostr; 
-  if (MCODES[Code]=="") {
+  if (Code > NUM_GCODES || MCODES[Code]=="") {
     cerr << "Don't know GCode for Command type "<< Code <<endl;
     ostr << "; Unknown GCode for " << info() <<endl;
     return ostr.str();
@@ -239,6 +248,10 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcod
       ostr << " ; " << comm;
     return ostr.str();
   }
+
+  const uint PREC = 3;
+  ostr.precision(PREC);
+  ostr << fixed ;
 
   switch (Code) {
   case ARC_CW:
@@ -275,8 +288,8 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcod
 	// cerr << info() << endl;
 	// cerr << xycommand.info() << endl;
 	// cerr << zcommand.info() << endl<< endl;
-	ostr << xycommand.GetGCodeText(LastPos, lastE, relativeEcode) << endl;
-	ostr <<  zcommand.GetGCodeText(LastPos, lastE, relativeEcode) ;
+	ostr << xycommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) << endl;
+	ostr <<  zcommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) ;
 	return ostr.str();
       }
     }
@@ -296,13 +309,21 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcod
     }
     if((relativeEcode   && e != 0) || 
        (!relativeEcode  && e != lastE)) {
+      ostr.precision(5);
       ostr << "E" << e << " ";
+      ostr.precision(PREC);
       lastE = e;
     } else {      
       comm += _(" Move Only");
     }
   case SETSPEED:
-    ostr << "F" << f;    
+    if (f != lastF) {
+      ostr.precision(0);
+      ostr << "F" << f;
+      ostr.precision(PREC);
+    }
+    lastF = f;
+    break;
   default: ;
   }
   if(comm.length() != 0) {

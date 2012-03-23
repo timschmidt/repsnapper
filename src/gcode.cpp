@@ -57,6 +57,16 @@ double GCode::GetTotalExtruded(bool relativeEcode) const
   return 0;
 }
 
+void GCode::translate(Vector3d trans)
+{
+  for (uint i=0; i<commands.size(); i++) 
+    commands[i].where += trans;  
+  Min+=trans;
+  Max+=trans;
+  Center+=trans;
+}
+
+
 double GCode::GetTimeEstimation() const
 {
   Vector3d where(0,0,0);
@@ -395,13 +405,15 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 		     ViewProgress * progress)
 {
 	double lastE = -10;
+	double lastF = 0; // last Feedrate (can be omitted when same)
 	Vector3d pos(0,0,0);
 	Vector3d LastPos(-10,-10,-10);
 	std::stringstream oss;
 
 	GcodeTxt += GcodeStart + "\n";
 
-	double lastZ =0;
+	double lastZ = 0;
+
 	layerchanges.clear();
 
 	progress->restart(_("Collecting GCode"),commands.size());
@@ -409,6 +421,8 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	if (progress_steps==0) progress_steps=1;
 	
 	for(uint i = 0; i < commands.size(); i++) {
+	  if (i%progress_steps==0) if (!progress->update(i)) break;
+
 	  if ( (!commands[i].is_value && commands[i].where.z() != lastZ) ) {
 	    layerchanges.push_back(i);
 	    lastZ = commands[i].where.z();
@@ -421,11 +435,14 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	  if ( commands[i].where.z() < 0 )  {
 	    cerr << i << " Z < 0 "  << commands[i].info() << endl;
 	  }
-	  else
-	    GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, RelativeEcode) + "\n";
-	  
-	  if (i%progress_steps==0) progress->update(i);
+	  else {
+	    GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, lastF, RelativeEcode) + "\n";
+	  }
 	}
+
+	add_text_filter_nan(GcodeEnd + "\n", GcodeTxt);
+	buffer->set_text (GcodeTxt);
+
 	  // 	oss.str( "" );
 	// 	switch(commands[i].Code)
 	// 	{
@@ -575,10 +592,6 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// cerr<< oss.str()<< endl;
 	//}
 
-	add_text_filter_nan(GcodeEnd + "\n", GcodeTxt);
-	//GcodeTxt += GcodeEnd + "\n";
-
-	buffer->set_text (GcodeTxt);
 }
 
 // void GCode::Write (Model *model, string filename)

@@ -67,7 +67,11 @@ public:
   void clear();
 
   std::vector<Command> commands;
+  uint size() { return commands.size(); };
+
   Vector3d Min, Max, Center;
+
+  void translate(Vector3d trans);
 
   Glib::RefPtr<Gtk::TextBuffer> buffer;
   GCodeIter *get_iter ();

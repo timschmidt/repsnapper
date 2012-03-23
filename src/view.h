@@ -44,6 +44,7 @@ class View : public Gtk::Window
 
   void load_gcode();
   void save_gcode();
+  void move_gcode_to_platform ();
   void convert_to_gcode();
   void load_stl();
   void save_stl();

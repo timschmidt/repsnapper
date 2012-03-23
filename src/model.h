@@ -26,7 +26,6 @@
 #include "stdafx.h"
 
 #include "objtree.h"
-#include "types.h"
 #include "gcodestate.h"
 #include "settings.h"
 #include "progress.h"
@@ -110,6 +109,8 @@ public:
 	// GCode Functions
 	void init();
 	void ReadGCode(Glib::RefPtr<Gio::File> file);
+	void translateGCode(Vector3d trans);
+
 	void ConvertToGCode();
 	void MakeRaft(GCodeState &state, double &z);
 	void WriteGCode(Glib::RefPtr<Gio::File> file);

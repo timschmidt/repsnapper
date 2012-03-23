@@ -1951,12 +1951,12 @@ THE HEAD MOVING DOWN!
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkEntry" id="g_text_output_entry">
+                          <object class="GtkButton" id="g_platform">
+                            <property name="label" translatable="yes">To Platform</property>
+                            <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="no_show_all">True</property>
-                            <property name="invisible_char">●</property>
-                            <property name="text" translatable="yes">Text Output</property>
-                            <property name="invisible_char_set">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>

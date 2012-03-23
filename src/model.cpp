@@ -258,14 +258,32 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
 }
 
 
+void Model::translateGCode(Vector3d trans) 
+{
+  gcode.translate(trans);
+  string GcodeTxt;
+  string GcodeStart = settings.GCode.getStartText();
+  string GcodeLayer = settings.GCode.getLayerText();
+  string GcodeEnd   = settings.GCode.getEndText();
+  m_progress->start(_("Moving GCode"),gcode.commands.size());
+  gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
+		  settings.Slicing.RelativeEcode,
+		  m_progress);
+  m_progress->stop();
+}
+
+
+
 void Model::ModelChanged()
 {
   //printer.update_temp_poll_interval(); // necessary?
   CalcBoundingBoxAndCenter();
   Infill::clearPatterns();
   if (!is_printing) {
-    ClearLayers();
-    ClearGCode();
+    if ( layers.size()>0 || m_previewGCode.size()>0 || m_previewLayer ) {
+      ClearGCode();
+      ClearLayers();
+    }
   }
   m_model_changed.emit();
 }
@@ -480,7 +498,6 @@ void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
   CalcBoundingBoxAndCenter();
   ModelChanged();
 }
-
 
 void Model::RotateObject(Shape *shape, TreeObject *object, Vector4d rotate)
 {

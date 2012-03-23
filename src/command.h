@@ -105,15 +105,18 @@ enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
 	    RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D, // 3 ..
 	    ARC_CW, ARC_CCW, // 6 ..
 	    EXTRUDERON, EXTRUDERONREVERSE, EXTRUDEROFF, //  8 ..
-	    ARCCLOCKWISE, ARCCOUNTERCLOCKWISE,  // 10 ..
-	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 12 ..
-	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 14 ..
-	    ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 16 ..
-	    ABSOLUTE_ECODE, RELATIVE_ECODE, // 18 ..
-	    SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 20 ..
-	    FANON, FANOFF, // 24 ..
-	    ASKTEMP, // 26
-	    COMMENT, LAYERCHANGE };
+	    ARCCLOCKWISE, ARCCOUNTERCLOCKWISE,  // 11 ..
+	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 13 ..
+	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 15 ..
+	    ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 17 ..
+	    ABSOLUTE_ECODE, RELATIVE_ECODE, // 19 ..
+	    SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 21 ..
+	    FANON, FANOFF, // 25 ..
+	    ASKTEMP, // 27
+	    EXTRUDERTEMP, BEDTEMP,
+	    COMMENT, LAYERCHANGE,
+            };
+const int NUM_GCODES = 32;
 
 const string MCODES[] = {"G92", "", "",
 			 "G0", "G1", "G1",
@@ -127,8 +130,8 @@ const string MCODES[] = {"G92", "", "",
 			 "G92", "T0", "G1", "G1" ,
 			 "M106", "M107",
 			 "M105", // temp? 
+			 "M104", "M140",
 			 "; ", "; Layer" };
-
 
 class Model;
 class ViewProgress;
@@ -155,6 +158,9 @@ public:
 	void draw(Vector3d &lastPos, guint linewidth, 
 		  Vector4f color, double extrwidth, bool arrows=true) const;
 	void draw(Vector3d &lastPos, double extrwidth, bool arrows=true) const;
-	string GetGCodeText(Vector3d &LastPos, double &lastE, bool relativeEcode) const;
+	string GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
+			    bool relativeEcode) const;
+	GCodes getCode(const string commstr) const;
+
 	string info() const;
 };

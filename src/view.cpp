@@ -91,6 +91,12 @@ void View::save_gcode ()
   FileChooser::ioDialog (m_model, FileChooser::SAVE, FileChooser::GCODE);
 }
 
+void View::move_gcode_to_platform ()
+{
+  m_model->translateGCode(- m_model->gcode.Min 
+			  + m_model->settings.Hardware.PrintMargin);
+}
+
 void View::convert_to_gcode ()
 {
   PrintInhibitor inhibitPrint(m_printer);
@@ -776,10 +782,10 @@ bool View::moveSelected(float x, float y, float z)
 {
   Shape *shape;
   TreeObject *object;
-  if (!get_selected_stl(object, shape))
+  if (!get_selected_stl(object, shape) || (!object && !shape)){
+    m_model->translateGCode(Vector3d(10*x,10*y,z));
     return true;
-  if (!object && !shape)
-    return true;
+  }
   Transform3D *transf;
   if (!shape)
     transf = &object->transform3D;
@@ -931,6 +937,7 @@ View::View(BaseObjectType* cobject,
   connect_button ("g_convert_gcode", sigc::mem_fun(*this, &View::convert_to_gcode) );
   connect_button ("g_save_gcode",    sigc::mem_fun(*this, &View::save_gcode) );
   connect_button ("g_send_gcode",    sigc::mem_fun(*this, &View::send_gcode) );
+  connect_button ("g_platform",      sigc::mem_fun(*this, &View::move_gcode_to_platform) );
 
   // Print tab
   connect_button ("p_kick",          sigc::mem_fun(*this, &View::kick_clicked) );
