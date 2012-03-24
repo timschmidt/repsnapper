@@ -124,7 +124,8 @@ class Settings {
     float AltInfillPercent;
     int AltInfillLayers;
     float InfillOverlap;
-    bool SolidTopAndBottom;
+    //bool SolidTopAndBottom;
+    int SolidLayers;
     bool Support;
     float SupportWiden;
     bool Skirt;

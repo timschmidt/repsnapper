@@ -177,7 +177,7 @@ static struct {
   INT_MEMBER    (Slicing.DecorFilltype, "DecorFilltype", 0, true),
   FLOAT_MEMBER  (Slicing.DecorInfillRotation, "DecorInfillRotation", 0, true),
   FLOAT_MEMBER  (Slicing.DecorInfillDistance, "DecorInfillDistance", 2.0, true),
-  BOOL_MEMBER   (Slicing.SolidTopAndBottom, "SolidTopAndBottom", true, true),
+  INT_MEMBER    (Slicing.SolidLayers, "SolidLayers", 2, true),
   BOOL_MEMBER   (Slicing.Support, "Support", true, true),
   FLOAT_MEMBER  (Slicing.SupportWiden, "SupportWiden", 0, true),
   BOOL_MEMBER   (Slicing.Skirt, "Skirt", false, true),
@@ -290,6 +290,7 @@ static struct {
 
   // Slicing
   { "Slicing.ShellCount", 0, 100, 1, 5 },
+  { "Slicing.SolidLayers", 0, 100, 1, 5 },
   { "Slicing.InfillRotation", -360, 360, 5, 45 },
   { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
   { "Slicing.InfillPercent", 0.0, 100.0, 1, 10.0 },
