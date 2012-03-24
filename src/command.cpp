@@ -411,12 +411,12 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     glVertex3dv(where);
     if (arrows) {
       glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
-      // 0.4mm long arrows if no boundary
-      double alen = 0.4;
+      // 0.3mm long arrows if no boundary
+      double alen = 0.3;
       if (extrwidth > 0) alen = 1.2*extrwidth ;
       Vector3d normdir = normalized(where-lastPos);
       Vector3d arrdir = normdir * alen; 
-      Vector3d arrdir2(-1.2*alen*normdir.y(), 1.2*alen*normdir.x(), arrdir.z());
+      Vector3d arrdir2(-0.5*alen*normdir.y(), 0.5*alen*normdir.x(), arrdir.z());
       glVertex3dv(where);
       Vector3d arr1 = where-arrdir+arrdir2;
       glVertex3dv(arr1);
