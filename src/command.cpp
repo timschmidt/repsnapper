@@ -414,7 +414,7 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
       // 0.4mm long arrows if no boundary
       double alen = 0.4;
       if (extrwidth > 0) alen = 1.2*extrwidth ;
-      Vector3d normdir(where-lastPos); normdir.normalize();
+      Vector3d normdir = normalized(where-lastPos);
       Vector3d arrdir = normdir * alen; 
       Vector3d arrdir2(-1.2*alen*normdir.y(), 1.2*alen*normdir.x(), arrdir.z());
       glVertex3dv(where);

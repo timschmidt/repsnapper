@@ -767,8 +767,8 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
     }
     if(settings.Display.DisplayGCode) { 
       // preview gcode if not calculated yet
-      if ( layers.size() == 0 
-	   && gcode.commands.size() == 0 ) { 
+      if ( m_previewGCode.size() != 0 ||
+	   layers.size() == 0 && gcode.commands.size() == 0 ) { 
 	Vector3d start(0,0,0);
 	double thickness = settings.Hardware.LayerThickness;
 	double z = settings.Display.GCodeDrawStart * Max.z() + thickness/2;

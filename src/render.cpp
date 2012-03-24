@@ -307,7 +307,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x(), mouse_down_plat.y());
   Vector3d mouse_down_preview = mouse_on_plane(m_downPoint.x(), m_downPoint.y(),
 					       get_model()->get_preview_Z());
-  get_model()->setMeasuresPoint(mouse_down_preview);
+  get_model()->setMeasuresPoint(mousePlat);
 
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
     if (event->state & GDK_SHIFT_MASK) { // move object XY
@@ -389,6 +389,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     if (redraw) queue_draw();
     return true;
   }
+  if (redraw) queue_draw();
   return Gtk::DrawingArea::on_motion_notify_event (event);
 }
 
