@@ -44,26 +44,20 @@ Printer::Printer(View *view, Gtk::TextView *v_commlog) :
   lasttimeshown(0),
   m_model(NULL),
   inhibit_print (false),
+  device(NULL),
   commlog(v_commlog)
 {
   commlog->set_buffer(Gtk::TextBuffer::create());
-  // TODO: Configurable protocol, cache size
-  void *cl = static_cast<void *>(this);
-  device = rr_dev_create (RR_PROTO_FIVED,
-			    4,
-			    rr_reply_fn, cl,
-			    rr_more_fn, cl,
-			    rr_error_fn, cl,
-			    rr_wait_wr_fn, cl,
-			    rr_log_fn, cl);
   gcode_iter = NULL;
   m_view = view;
 }
 
 Printer::~Printer()
 {
+  if (device==NULL) return;
   temp_timeout.disconnect();
   rr_dev_free (device);
+  device = NULL;
 }
 
 
@@ -79,6 +73,7 @@ void Printer::error (const char *message, const char *secondary)
 
 void Printer::update_core_settings ()
 {
+  if (device==NULL) return;
   if (m_model)
     rr_dev_enable_debugging(device, m_model->settings.Display.CommsDebug);
 }
@@ -124,6 +119,7 @@ void Printer::ContinuePauseButton()
 
 void Printer::Pause()
 {
+  if (device==NULL) return;
   set_printing (false);
   rr_dev_set_paused (device, RR_PRIO_NORMAL, 1);
 }
@@ -162,6 +158,7 @@ void Printer::ResetButton()
 
 bool Printer::IsConnected()
 {
+  if (device==NULL) return false;
   return rr_dev_is_connected(device);
 }
 
@@ -169,14 +166,24 @@ bool Printer::IsConnected()
 void Printer::serial_try_connect (bool connect)
 {
   int result;
-
   assert(m_model != NULL); // Need a model first
 
   if (connect) {
+    void *cl = static_cast<void *>(this);
+    // TODO: Configurable protocol, cache size
+    device = rr_dev_create (RR_PROTO_FIVED,
+			    m_model->settings.Hardware.ReceivingBufferSize,
+			    rr_reply_fn, cl,
+			    rr_more_fn, cl,
+			    rr_error_fn, cl,
+			    rr_wait_wr_fn, cl,
+			    rr_log_fn, cl);
+
     signal_serial_state_changed.emit (SERIAL_CONNECTING);
+
     result = rr_dev_open (device,
-                 m_model->settings.Hardware.PortName.c_str(),
-		 m_model->settings.Hardware.SerialSpeed);
+			  m_model->settings.Hardware.PortName.c_str(),
+			  m_model->settings.Hardware.SerialSpeed);
 
     if(result < 0) {
       signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
@@ -187,15 +194,21 @@ void Printer::serial_try_connect (bool connect)
       signal_serial_state_changed.emit (SERIAL_CONNECTED);
     }
   } else {
-    signal_serial_state_changed.emit (SERIAL_DISCONNECTING);
-    devconn.disconnect();
-    rr_dev_close (device);
-    devconn.disconnect();
-    signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
-
     if (printing) {
+      error (_("Cannot disconnet"),
+             _("printer is printing"));
+    }
+    else {
+      signal_serial_state_changed.emit (SERIAL_DISCONNECTING);
+      devconn.disconnect();
+      rr_dev_close (device);
+      devconn.disconnect();
+      signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
       Pause();
-      g_warning ("FIXME: warn of dis-connect while printing !");
+      temp_timeout.disconnect();
+      if (device)
+	rr_dev_free (device);
+      device = NULL;
     }
   }
 }
@@ -292,6 +305,7 @@ Printer::RunExtruder (double extruder_speed, double extruder_length,
 }
 void Printer::SendNow(string str)
 {
+  if (device==NULL) return;
   std::transform(str.begin(), str.end(), str.begin(), ::toupper);
   if (rr_dev_is_connected (device))
     rr_dev_enqueue_cmd (device, RR_PRIO_HIGH, str.data(), str.size());
@@ -301,6 +315,7 @@ void Printer::SendNow(string str)
 
 void Printer::Stop()
 {  
+  if (device==NULL) return;
   set_printing (false);
   assert(m_model != NULL);
   
@@ -319,6 +334,7 @@ void Printer::Stop()
 
 bool Printer::handle_dev_fd (Glib::IOCondition cond)
 {
+  if (device==NULL) return false;
   int result;
   if (cond & Glib::IO_IN) {
     result = rr_dev_handle_readable (device);

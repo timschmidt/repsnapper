@@ -28,9 +28,6 @@
 
 void Printer::Home(string axis)
 {
-  assert (m_model != NULL);
-  // Settings *settings = &m_model->settings;
-
   if(printing)
     {
       alert(_("Can't go home while printing"));
@@ -39,46 +36,6 @@ void Printer::Home(string axis)
   if(axis == "X" || axis == "Y" || axis == "Z")
     {
       SendNow("G28 "+axis+"0");
-      // string buffer="G1 F";
-      // std::stringstream oss;
-      // if(axis == "Z")
-      // 	oss << settings->Hardware.MaxPrintSpeedZ;
-      // else
-      // 	oss << settings->Hardware.MaxPrintSpeedXY;
-      // buffer+= oss.str();
-      // SendNow(buffer);
-      // buffer="G1 ";
-      // buffer += axis;
-      // buffer+="-250 F";
-      // buffer+= oss.str();
-      // SendNow(buffer);
-      // buffer="G92 ";
-      // buffer += axis;
-      // buffer+="0";
-      // SendNow(buffer);	// Set this as home
-      // oss.str("");
-      // buffer="G1 ";
-      // buffer += axis;
-      // buffer+="1 F";
-      // buffer+= oss.str();
-      // SendNow(buffer);
-      // if(axis == "Z")
-      // 	oss << settings->Hardware.MinPrintSpeedZ;
-      // else
-      // 	oss << settings->Hardware.MinPrintSpeedXY;
-      // buffer="G1 ";
-      // buffer+="F";
-      // buffer+= oss.str();
-      // SendNow(buffer);	// set slow speed
-      // buffer="G1 ";
-      // buffer += axis;
-      // buffer+="-10 F";
-      // buffer+= oss.str();
-      // SendNow(buffer);
-      // buffer="G92 ";
-      // buffer += axis;
-      // buffer+="0";
-      // SendNow(buffer);	// Set this as home
     }
   else if(axis == "ALL")
     {

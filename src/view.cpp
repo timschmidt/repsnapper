@@ -979,8 +979,6 @@ View::View(BaseObjectType* cobject,
   Gtk::TextView *textv = NULL;
   m_builder->get_widget ("i_txt_comms", textv);
 
-  m_printer = new Printer(this, textv);
-
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
   m_builder->get_widget("viewarea", pBox);
@@ -992,6 +990,8 @@ View::View(BaseObjectType* cobject,
   }
 
   showAllWidgets();
+
+  m_printer = NULL;
 }
 
 View::~View()
@@ -1100,9 +1100,6 @@ void View::setModel(Model *model)
     (sigc::mem_fun(*this, &View::update_settings_gui));
   m_model->settings.connect_to_ui (*((Builder *)&m_builder));
 
-  m_printer->signal_temp_changed.connect
-    (sigc::mem_fun(*this, &View::temp_changed));
-
   m_objtree->set_model (m_model->objtree.m_model);
   m_objtree->append_column("Name", m_model->objtree.m_cols->m_name);
 
@@ -1126,6 +1123,9 @@ void View::setModel(Model *model)
   m_builder->get_widget("statusbar", sbar);
   m_model->statusbar = sbar;
   
+  m_printer = new Printer(this, textv);
+  m_printer->signal_temp_changed.connect
+    (sigc::mem_fun(*this, &View::temp_changed));
 
   // Connect / dis-connect button
   m_cnx_view = new ConnectView(m_printer, &m_model->settings);
