@@ -129,7 +129,7 @@ public:
 
   void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 	    bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
-	    bool DrawCPVertexNumbers, bool DisplayInfill);
+	    bool DrawCPVertexNumbers, bool DisplayInfill, bool DebugInfill);
   void DrawMeasures(Vector2d point);
  
   void Clear();

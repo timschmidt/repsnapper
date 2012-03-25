@@ -765,7 +765,7 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
       drawLayers(settings.Display.LayerValue,
 		 offset, !settings.Display.DisplayLayer);
     }
-    if(settings.Display.DisplayGCode) { 
+    if(settings.Display.DisplayGCode && gcode.size() == 0) { 
       // preview gcode if not calculated yet
       if ( m_previewGCode.size() != 0 ||
 	   layers.size() == 0 && gcode.commands.size() == 0 ) { 
@@ -859,7 +859,8 @@ int Model::drawLayers(double height, Vector3d offset, bool calconly)
 		    settings.Display.DrawCPOutlineNumbers,
 		    settings.Display.DrawCPLineNumbers, 
 		    settings.Display.DrawCPVertexNumbers,
-		    settings.Display.DisplayinFill);
+		    settings.Display.DisplayinFill,
+		    settings.Display.DisplayDebuginFill);
 
 	if (settings.Display.DrawMeasures)
 	  layer->DrawMeasures(measuresPoint);

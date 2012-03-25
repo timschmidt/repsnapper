@@ -101,6 +101,9 @@ class Infill
   
   void clear();
   uint size() const {return infillpolys.size();};
+  
+  vector<Poly> getCachedPattern(double z);
+
   string info() const;
 };
 

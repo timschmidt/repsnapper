@@ -153,8 +153,9 @@ int Layer::addShape(Matrix4d T, const Shape shape, double z,
 
 void Layer::cleanupPolygons()
 {
+  double clean = thickness/3.;
   for(uint i=0; i < polygons.size(); i++){
-    polygons[i].cleanup(thickness/3.);
+    polygons[i].cleanup(clean);
   }
 }
 
@@ -256,7 +257,6 @@ void Layer::CalcInfill (const Settings &settings)
   if (settings.Slicing.AltInfillPercent != 0) 
     altInfillDistance = settings.GetInfillDistance(thickness,
 						   settings.Slicing.AltInfillPercent);
-						       
   if (settings.Slicing.AltInfillLayers!=0 
       && LayerNo % settings.Slicing.AltInfillLayers == 0) 
     infilldist = altInfillDistance;
@@ -848,7 +848,8 @@ float const GREY[] = {0.5,0.5,0.5};
 
 void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 		 bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
-		 bool DrawCPVertexNumbers, bool DisplayInfill) 
+		 bool DrawCPVertexNumbers, bool DisplayInfill, 
+		 bool DebugInfill) 
 {
   draw_polys(polygons, GL_LINE_LOOP, 1, 3, RED, 1);
   draw_polys(polygons, GL_POINTS,    1, 3, RED, 1);
@@ -875,24 +876,34 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
     zs-=thickness/skins;
   }
 
-  draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 1);
+  draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 0.6);
   draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1);
-  draw_polys(bridgePolygons,       GL_LINE_LOOP, 3, 3, RED2,  0.8);
-  draw_polys(bridgePillars,        GL_LINE_LOOP, 3, 3, YELLOW, 0.8);
-  draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 3, GREY,  1);
+  draw_polys(bridgePolygons,       GL_LINE_LOOP, 3, 3, RED2,  0.7);
+  draw_polys(bridgePillars,        GL_LINE_LOOP, 3, 3, YELLOW, 0.7);
+  draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 3, GREY,  0.6);
   draw_polys(decorPolygons,        GL_LINE_LOOP, 1, 3, GREY,  1);
-  draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  1);
+  draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  0.6);
   if(DisplayInfill)
     {
       if (normalInfill)
 	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
-		   (normalInfill->cached?BLUEGREEN:GREEN), 0.8);
+		   (normalInfill->cached?BLUEGREEN:GREEN), 1);
+      if(DebugInfill && normalInfill->cached)
+	draw_polys(normalInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
+		   ORANGE, 0.5);
+      
       if (fullInfill)
 	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   (fullInfill->cached?BLUEGREEN:GREEN), 0.8);
+      if(DebugInfill && fullInfill->cached)
+	draw_polys(fullInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
+		   ORANGE, 0.5);
       if (decorInfill)
 	draw_polys(decorInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   (decorInfill->cached?BLUEGREEN:GREEN), 0.8);
+      if(DebugInfill && decorInfill->cached)
+	draw_polys(decorInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
+		   ORANGE, 0.5);
       uint bridgecount = bridgeInfills.size();
       if (bridgecount>0)
 	for (uint i = 0; i<bridgecount; i++)
@@ -901,6 +912,9 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
       if (supportInfill)
 	draw_polys(supportInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   (supportInfill->cached?BLUEGREEN:GREEN), 0.8);
+      if(DebugInfill && supportInfill->cached)
+	draw_polys(supportInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
+		   ORANGE, 0.5);
       for(size_t s=0;s<skinFullInfills.size();s++) 
 	draw_polys(skinFullInfills[s]->infillpolys, GL_LINE_LOOP, 3, 3, 
 		   (skinFullInfills[s]->cached?BLUEGREEN:GREEN), 0.6);

@@ -455,6 +455,23 @@ void Infill::getLines(vector<Vector3d> &lines) const
     }
 }
 
+vector<Poly> Infill::getCachedPattern(double z) {
+  vector<Poly> cached;
+  if (type != PolyInfill) // can't save PolyInfill
+    if (savedPatterns.size()>0)
+      for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
+      	   sIt != savedPatterns.end(); sIt++)
+	if (sIt->type == type &&
+	    abs(sIt->distance-infillDistance) < 0.01 &&
+	    abs(sIt->angle-angle) < 0.01 )
+	  {
+	    cached = Clipping::getPolys(sIt->cpolys,z,extrusionfactor);
+	    break;
+	  }
+  return cached;
+};
+
+
 string Infill::info() const
 { 
   ostringstream ostr;
