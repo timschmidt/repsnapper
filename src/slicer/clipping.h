@@ -71,14 +71,19 @@ public:
   void addPolys(const vector<Poly> poly, PolyType type);
   void addPolys(const vector<ExPoly> expolys, PolyType type);
   void addPolys(const ExPoly poly, PolyType type);
+  void addPolygons(CL::Polygons cp, PolyType type);
 
+  // do after addPoly... and before clipping/results
+  void setZ(double z) {lastZ = z;};
+  void setExtrusionFactor(double e) {lastExtrF = e;};
+  
   vector<Poly> intersect();
   vector<ExPoly> ext_intersect();
   vector<Poly> unite();
   vector<Poly> subtract();
   vector<ExPoly> ext_subtract();
   vector<Poly> subtractMerged();
-  // vector<Poly> xor();
+  vector<Poly> Xor();
 
   static vector<Poly> getMerged(vector<Poly> polys, double overlap=0.01);
   static CL::Polygons getMerged(CL::Polygons cpolys, int overlap=3);
@@ -88,7 +93,10 @@ public:
   static vector<Poly> getOffset(const vector<Poly> polys, double distance, 
 				JoinType jtype=jmiter,double miterdist=1);
   static vector<Poly> getOffset(const ExPoly expoly, double distance, 
-				JoinType jtype, double miterdist);
+				JoinType jtype=jmiter, double miterdist=1);
+  static vector<Poly> getOffset(const vector<ExPoly> expolys, double distance, 
+				JoinType jtype=jmiter, double miterdist=1);
+
   static vector<Poly> getShrinkedCapped(const vector<Poly> polys, double distance, 
 					JoinType jtype=jmiter,double miterdist=1);
 
@@ -103,6 +111,7 @@ public:
 
   static vector<ExPoly> getExPolys(const vector<Poly> polys, 
 				   double z, double extrusionfactor);
+  static vector<ExPoly> getExPolys(const vector<Poly> polys);
   static CL::ExPolygons getExClipperPolygons(const vector<Poly> polys);
   
   static CL::Polygon  getClipperPolygon (const Poly poly);
