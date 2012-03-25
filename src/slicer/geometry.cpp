@@ -164,12 +164,12 @@ Vector2d normalV(const Vector2d a)
 }
 
 
-Vector3d random_displace(Vector3d v, double delta)
+Vector3d random_displaced(Vector3d v, double delta)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
   return Vector3d(v.x()+randdelta, v.y()+randdelta, v.z()+randdelta);
 }
-Vector2d random_displace(Vector2d v, double delta)
+Vector2d random_displaced(Vector2d v, double delta)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
   return Vector2d(v.x()+randdelta, v.y()+randdelta);
@@ -294,9 +294,9 @@ vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to,
 // calculates intersection and checks for parallel lines.
 // also checks that the intersection point is actually on
 // the line segment p1-p2
-bool IntersectXY(const Vector2d &p1, const Vector2d &p2, 
-		 const Vector2d &p3, const Vector2d &p4, Intersection &hit,
-		 double maxoffset)
+bool IntersectXY(const Vector2d p1, const Vector2d p2, 
+		 const Vector2d p3, const Vector2d p4, 
+		 Intersection &hit, double maxoffset)
 {
   // // BBOX test
   // if(MIN(p1.x(),p2.x()) > MAX(p3.x(),p4.x()))
@@ -338,9 +338,9 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
   //     return true;
   //   }
 
-  Intersection hit2;
-  double t0,t1;
-  int is = intersect2D_Segments(p1,p2,p3,p4,hit.p, hit2.p, t0,t1);
+  Vector2d inter2;
+  double t0, t1;
+  int is = intersect2D_Segments(p1,p2,p3,p4, hit.p, inter2, t0, t1);
   if (is > 0 && is < 3)
     {
       hit.d = (p1-hit.p).length();
@@ -363,7 +363,7 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 //    Input:  a point P, and a collinear segment S
 //    Return: 1 = P is inside S
 //            0 = P is not inside S
-int inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
+int inSegment( const Vector2d P, const Vector2d p1, const Vector2d &p2)
 {
   if (p1.x() != p2.x()) {    // S is not vertical
     if (p1.x() <= P.x() && P.x() <= p2.x())
@@ -381,7 +381,7 @@ int inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
 }
 
 // intersect2D_2Segments(): the intersection of 2 finite 2D segments
-//    Input:  two finite segments S1 and S2
+//    Input:  two finite segments p1-p2 and p3-p4
 //    Output: *I0 = intersect point (when it exists)
 //            *I1 = endpoint of intersect segment [I0,I1] (when it exists)
 //    Return: 0=disjoint (no intersect)
@@ -389,8 +389,8 @@ int inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
 //            2=overlap in segment from I0 to I1
 //            3=intersect outside 
 #define perp(u,v)  ((u).x() * (v).y() - (u).y() * (v).x())  // perp product (2D)
-int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
-			  const Vector2d &p3, const Vector2d &p4, 
+int intersect2D_Segments( const Vector2d p1, const Vector2d p2, 
+			  const Vector2d p3, const Vector2d p4, 
 			  Vector2d &I0, Vector2d &I1, 
 			  double &t0, double &t1,
 			  double maxerr)
@@ -563,6 +563,7 @@ void testangles(){
     cerr << a*180/M_PI << " - " << an*180/M_PI << " - " << bn*180/M_PI << endl;
   }
 }
+
 
 
 

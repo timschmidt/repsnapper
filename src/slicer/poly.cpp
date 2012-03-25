@@ -531,7 +531,7 @@ void Poly::draw(int gl_type, double z, bool randomized) const
   glBegin(gl_type);	  
   for (uint i=0;i < count;i++){
     v = getVertexCircular(i);
-    if (randomized) v = random_displace(v);
+    if (randomized) v = random_displaced(v);
     glVertex3f(v.x(),v.y(),z);
   }
   glEnd();
@@ -550,7 +550,7 @@ void Poly::draw(int gl_type, bool reverse, bool randomized) const
       v = getVertexCircular3(i);
       // vn = getVertexCircular3(i+1);
     }
-    if (randomized) v = random_displace(v);
+    if (randomized) v = random_displaced(v);
     glVertex3f(v.x(),v.y(),v.z());
     // if (gl_type==GL_LINE_LOOP){
     //   m = (v+vn)/2;

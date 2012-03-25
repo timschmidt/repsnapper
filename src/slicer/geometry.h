@@ -59,13 +59,13 @@ struct Intersection
 };
 
 
-int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
-			  const Vector2d &p3, const Vector2d &p4, 
+int intersect2D_Segments( const Vector2d p1, const Vector2d p2, 
+			  const Vector2d p3, const Vector2d p4, 
 			  Vector2d &I0, Vector2d &I1, 
 			  double &t0, double &t1,
 			  double maxerr=0.0001);
-bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
-		 const Vector2d &p3, const Vector2d &p4, 
+bool IntersectXY(const Vector2d p1, const Vector2d p2,
+		 const Vector2d p3, const Vector2d p4, 
 		 Intersection &hit, double maxoffset=0.0001);
 
 
@@ -80,8 +80,8 @@ Poly convexHull2D(const vector<Poly> polygons);
 void testangles();
 
 
-Vector3d random_displace(Vector3d v, double delta=0.05);
-Vector2d random_displace(Vector2d v, double delta=0.05);
+Vector3d random_displaced(Vector3d v, double delta=0.05);
+Vector2d random_displaced(Vector2d v, double delta=0.05);
 
 
 bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepoly, 
