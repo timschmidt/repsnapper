@@ -509,7 +509,8 @@ vector<ExPoly> Model::GetUncoveredExPolygons(const Layer * subjlayer,
 				 
 void Model::MultiplyUncoveredPolygons()
 {
-  int shells = (int)settings.Slicing.SolidLayers;
+  int shells = (int)ceil(settings.Slicing.SolidThickness/settings.Hardware.LayerThickness);
+  shells = max(shells, (int)settings.Slicing.ShellCount);
   if (shells<1) return;
   int count = (int)layers.size();
   
@@ -760,7 +761,7 @@ void Model::ConvertToGCode()
 
   MakeShells();
 
-  if (settings.Slicing.SolidLayers > 0)
+  if (settings.Slicing.SolidThickness > 0 || settings.Slicing.ShellCount > 0)
     // not bridging when support
     MakeUncoveredPolygons(settings.Slicing.MakeDecor,
 			  !settings.Slicing.NoBridges && !settings.Slicing.Support);
