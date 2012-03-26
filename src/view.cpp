@@ -976,9 +976,6 @@ View::View(BaseObjectType* cobject,
 
   connect_button ("i_new_custombutton", sigc::mem_fun(*this, &View::new_custombutton) );
 
-  Gtk::TextView *textv = NULL;
-  m_builder->get_widget ("i_txt_comms", textv);
-
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
   m_builder->get_widget("viewarea", pBox);
@@ -1103,9 +1100,9 @@ void View::setModel(Model *model)
   m_objtree->set_model (m_model->objtree.m_model);
   m_objtree->append_column("Name", m_model->objtree.m_cols->m_name);
 
-  Gtk::TextView *textv = NULL;
-  m_builder->get_widget ("txt_gcode_result", textv);
-  textv->set_buffer (m_model->GetGCodeBuffer());
+  Gtk::TextView *gcodev = NULL;
+  m_builder->get_widget ("txt_gcode_result", gcodev);
+  gcodev->set_buffer (m_model->GetGCodeBuffer());
 
   // Main view progress bar
   Gtk::Box *box = NULL;
@@ -1123,7 +1120,17 @@ void View::setModel(Model *model)
   m_builder->get_widget("statusbar", sbar);
   m_model->statusbar = sbar;
   
-  m_printer = new Printer(this, textv);
+  Gtk::TextView *log_view;
+  m_builder->get_widget("i_txt_comms", log_view);
+  // log_view->set_buffer(m_printer->commlog);
+  Gtk::TextView *err_view;
+  m_builder->get_widget("i_txt_errs", err_view);
+  err_view->set_buffer(m_model->errlog);
+  Gtk::TextView *echo_view;
+  m_builder->get_widget("i_txt_echo", echo_view);
+  echo_view->set_buffer(m_model->echolog);
+
+  m_printer = new Printer(this, log_view);
   m_printer->signal_temp_changed.connect
     (sigc::mem_fun(*this, &View::temp_changed));
 
@@ -1151,13 +1158,6 @@ void View::setModel(Model *model)
     axis_box->add (*m_axis_rows[i]);
   }
 
-  Gtk::TextView *log_view;
-  // m_builder->get_widget("i_txt_comms", log_view);
-  // log_view->set_buffer(m_printer->commlog);
-  m_builder->get_widget("i_txt_errs", log_view);
-  log_view->set_buffer(m_model->errlog);
-  m_builder->get_widget("i_txt_echo", log_view);
-  log_view->set_buffer(m_model->echolog);
 
   inhibit_print_changed();
   m_printer->get_signal_inhibit_changed().connect (sigc::mem_fun(*this, &View::inhibit_print_changed));
