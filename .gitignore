@@ -40,3 +40,4 @@ po/*.gmo
 repsnapper
 debian
 intltool-*.in
+src/gitversion.h
