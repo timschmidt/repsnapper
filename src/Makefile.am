@@ -75,6 +75,11 @@ include src/slicer/Makefile.am
 
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) src/repsnapper.cpp
 
+src/gitversion.h: FORCE
+	(cd src && sh gitversion.sh)
+FORCE:
+
+
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 
 repsnapper_LDADD = libreprap.la libclipper.la libpoly2tri.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(BOOST_LDFLAGS)

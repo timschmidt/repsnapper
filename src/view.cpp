@@ -33,6 +33,9 @@
 #include "progress.h"
 #include "connectview.h"
 
+#include "gitversion.h"
+
+
 bool View::on_delete_event(GdkEventAny* event)
 {
   Gtk::Main::quit();
@@ -752,6 +755,10 @@ void View::update_settings_gui()
 {
   // awful cast-ness to avoid having glibmm headers everywhere.
   m_model->settings.set_to_gui (*((Builder *)&m_builder));
+
+  Gtk::AboutDialog *about;
+  m_builder->get_widget ("about_dialog", about);
+  about->set_comments("git version:\n"+GIT_COMMIT + "\nDate:\n" + GIT_COMMIT_DATE);
 
   Gtk::Toolbar *toolbar;
   m_builder->get_widget ("i_custom_toolbar", toolbar);
