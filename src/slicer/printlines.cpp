@@ -48,7 +48,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 			double maxEspeed) const
 {
   int count=0;
-  if ((lastpos-from).squared_length() > 0.05) {  // move first
+  if ((lastpos-from).squared_length() > 0.005) {  // move first
     commands.push_back( Command(COORDINATEDMOTION, from, 0, movespeed) );
     count++;
   }  
@@ -67,13 +67,15 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
       comm_speed *= maxEspeed/espeed;
   extrudedMaterial += absolute_extrusion; // allowed to push/pull at arbitrary speed    
   Command command;
-  if (arc) 
+  if (arc)
     {
       GCodes gc = (arc==-1 ? ARC_CCW : ARC_CW);
       command = Command (gc, to, extrudedMaterial, comm_speed);
       command.arcIJK = arcIJK;
       ostringstream o;
-      o << (int)(arcangle*180/M_PI) << "° arc";
+      o << (int)(arcangle*180/M_PI) << "° ";
+      if (arc<0) o << "c";
+      o << "cw arc";
       command.comment += o.str();
     }
   else
@@ -81,8 +83,11 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
       command = Command (COORDINATEDMOTION, to, extrudedMaterial, comm_speed);
     }
   command.abs_extr += absolute_extrusion;
-  commands.push_back(command);
-  count++;
+  if (!command.hasNoEffect(from,0,0,true)) {
+    commands.push_back(command);
+    count++;
+  }
+  else cerr << command.info() << endl;
   lastpos = to;
   return count;
 }
@@ -172,13 +177,11 @@ PLine::PLine(const Vector2d from_, const Vector2d to_, double speed_,
 double PLine::calcangle() const
 {
   assert(!arc);
-  return angleBetween(from, to);
+  return angleBetween(Vector2d(1,0), to-from);
 }
 double PLine::calcangle(const PLine rhs) const
 {
-  // assert(!arc);
-  // assert(!rhs.arc);
-  return angleBetween((rhs.to-rhs.from), (to-from));
+  return angleBetween( (to-from), (rhs.to-rhs.from) );
 }
 
 double PLine::lengthSq() const
@@ -254,7 +257,7 @@ void Printlines::addLine(vector<PLine> &lines, const Vector2d from, const Vector
   Vector2d lfrom = from;
   if (lines.size() > 0) {
     Vector2d lastpos = lines.back().to;
-    if ((lastpos - lfrom).squared_length() > 0.1) { // add moveline
+    if ((lastpos - lfrom).squared_length() > 0.01) { // add moveline
       lines.push_back(PLine(lastpos, lfrom, movespeed, 0));
     } else {
       lfrom = lastpos;
@@ -298,20 +301,20 @@ void Printlines::makeLines(const vector<Poly> polys,
   vector<bool> done(count); // polys not yet handled
   for(size_t q=0; q < count; q++) done[q]=false;
   uint ndone=0;
-  double pdist, nstdist;
   //double nlength;
   double lastavlength = -1;
   while (ndone < count) 
     {
       if (linelengthsort && npindex>=0) 
 	lastavlength = polys[npindex].averageLinelengthSq();
-      nstdist = 1000000;
+      double nstdist = INFTY;
+      double pdist;
       for(size_t q=0; q<count; q++) { // find nearest polygon
 	if (!done[q])
 	  {
 	    if (polys[q].size() == 0) {done[q] = true; ndone++;}
 	    else {
-	      pdist = 1000000;
+	      pdist = INFTY;
 	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
 	      if (pdist<nstdist){
 		npindex = q;      // index of nearest poly in polysleft
@@ -408,14 +411,14 @@ uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
     // if (lines[i].arc)   { i++; arcstart = i; continue; }
     double dangle         = lines[i].calcangle(lines[i-1]);
     double feedratechange = lines[i].feedrate - lines[i-1].feedrate;
-    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.06*arcRadiusSq);
+    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.02*arcRadiusSq);
     double radiusSq       = (center - lines[i].from).squared_length();
     // test if NOT continue arc:
     if ((lines[i].from-lines[i-1].to).squared_length() > 0.05 // not adjacent
 	|| abs(feedratechange) > 0.1       // different feedrate
 	|| abs(dangle) < 0.0001            // straight continuation
 	|| abs(dangle) > maxAngle          // too big angle
-	|| ( i>1 && (arccenter-center).squared_length() > 0.06*radiusSq ) // center displacement
+	|| ( i>1 && (arccenter-center).squared_length() > 0.02*radiusSq ) // center displacement
 	) 
       { 
 	arccenter   = center;
@@ -494,25 +497,27 @@ uint Printlines::roundCorners(double maxdistance, vector<PLine> &lines) const
 }
 
 // make corner of lines[ind], lines[ind+1] into arc
+// maxdistance is distance of arc begin from corner
 uint Printlines::makeCornerArc(double maxdistance, uint ind, 
 			       vector<PLine> &lines) const
 {
   if (ind > lines.size()-2) return 0;
   //if (lines[ind].feedrate != lines[ind+1].feedrate) return 0;
   if (lines[ind].arc != 0 || lines[ind+1].arc != 0) return 0;
+  // movement in between?
   if ((lines[ind].to - lines[ind+1].from).squared_length() > 0.01) return 0;
   if ((lines[ind].from - lines[ind+1].to).squared_length() 
       < maxdistance*maxdistance) return 0;
   double l1 = lines[ind].length();
   double l2 = lines[ind+1].length();
-  if (l1 < maxdistance/2 || l2 < maxdistance/2) return 0;
+  if (l1 < 2*maxdistance || l2 < 2*maxdistance) return 0;
   maxdistance   = min(maxdistance, l1/2.);
   maxdistance   = min(maxdistance, l2/2.);
-  Vector2d dir1 = lines[ind].to-lines[ind].from;
-  Vector2d dir2 = lines[ind+1].to-lines[ind+1].from;
+  Vector2d dir1 = lines[ind].to - lines[ind].from;
+  Vector2d dir2 = lines[ind+1].to - lines[ind+1].from;
   double angle  = angleBetween(dir1, dir2);
   // arc start and end point:
-  Vector2d p1   = lines[ind].to - normalized(dir1)*maxdistance;
+  Vector2d p1   = lines[ind].to     - normalized(dir1)*maxdistance;
   Vector2d p2   = lines[ind+1].from + normalized(dir2)*maxdistance;
   Intersection inter;
   Vector2d center, I1;
@@ -528,7 +533,7 @@ uint Printlines::makeCornerArc(double maxdistance, uint ind,
   if (angle <= 0) angle += 2*M_PI;
   short arctype = ccw ? -1 : 1; 
   bool split = false;
-  PLine pline1(lines[ind].from, p1, lines[ind].speed, lines[ind].feedrate);
+  PLine pline1(lines[ind].from, p1, lines[ind].speed,   lines[ind].feedrate);
   PLine pline2(p2, lines[ind+1].to, lines[ind+1].speed, lines[ind+1].feedrate);
   Vector2d splitp3;
   if (lines[ind].feedrate != lines[ind+1].feedrate) { // need 2 half arcs
@@ -540,12 +545,19 @@ uint Printlines::makeCornerArc(double maxdistance, uint ind,
   PLine arcline(p1, p2, lines[ind].speed, lines[ind].feedrate,
 		arctype, center, angle);
   lines[ind] = pline1;
-  lines[ind+1] = arcline;
-  lines.insert(lines.begin()+ind+2, pline2);
+  if (p2 != p1)  {
+    lines[ind+1] = arcline;
+    lines.insert(lines.begin()+ind+2, pline2);
+  } 
+  else {  // arcline has zero length
+    lines[ind+1] = pline2;
+    return 0;
+  }
   if (split) {
     PLine arc2(p2, splitp3, pline2.speed, pline2.feedrate,
 	       arctype, center, angle);
-    lines.insert(lines.begin()+ind+2, arc2);
+    if (p2 != splitp3) 
+      lines.insert(lines.begin()+ind+2, arc2);
     return 2;
   }
   return 1;
@@ -840,7 +852,7 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
 	lines.insert(lines.begin()+movestart, retractl);
 	i++;
       }
-      if (i < movei-1) i = movei-1;
+      if ( movei > 1 && i < (uint)(movei-1)) i = (uint)(movei-1);
     } else { // on moves shorter than AOdistance:
       // TODO retract and repush as much as is possible with AOspeed
       // without slowing down movement
@@ -858,15 +870,13 @@ uint Printlines::divideline(uint lineindex, const double length, vector<PLine> &
   double linelen = l->length();
   if (length > linelen) return 0;
   if ( !l->arc ) {
-    Vector2d d = l->to - l->from;
+    Vector2d dir = l->to - l->from;
     vector<Vector2d> points(1);
-    points[0] = l->from + d * (length/linelen);
+    points[0] = l->from + dir * (length/linelen);
     uint nlines = divideline(lineindex, points, lines);
     return nlines;
   } else {
-    //cerr <<endl<< lines[lineindex].info() << endl;
     double angle = l->angle * length/linelen;
-    //cerr << angle*180/M_PI << " - " <<length << endl;
     Vector2d arcpoint = rotated(l->from, l->arccenter, angle, (l->arc < 0));
     PLine line1(l->from, arcpoint, l->speed, l->feedrate, 
 		l->arc, l->arccenter, angle);
@@ -874,8 +884,6 @@ uint Printlines::divideline(uint lineindex, const double length, vector<PLine> &
 		l->arc, l->arccenter, l->angle-angle);
     lines[lineindex] = line1;
     lines.insert(lines.begin() + lineindex + 1, line2);
-    // cerr << line1.info() << endl;
-    // cerr << line2.info() << endl;
     return 1;
   }
 }
@@ -1064,8 +1072,8 @@ bool Printlines::capCorner(PLine &l1, PLine &l2,
   if (l1.to!=l2.from) return done;  // only handle adjacent lines
   //if ((l1.to-l2.from).length() > linewidth ) return done;
   double da = l1.calcangle(l2);
-  while (da>M_PI) da-=M_PI;
-  while (da<-M_PI)da+=M_PI;
+  while (da>=2*M_PI) da-=2*M_PI;
+  while (da<=-2*M_PI)da+=2*M_PI;
   double tana = abs(tan((da)/2.));
   // new endpoints should have this distance:
   double dist = linewidth * linewidthratio ; //dafactor * linewidth * linewidthratio * optratio ;

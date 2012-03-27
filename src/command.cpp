@@ -227,6 +227,14 @@ GCodes Command::getCode(const string commstr) const
   return code;
 }
 
+bool Command::hasNoEffect(const Vector3d LastPos, const double lastE, 
+			  const double lastF, const bool relativeEcode) const
+{
+  return ((Code == COORDINATEDMOTION || Code == COORDINATEDMOTION3D)
+	  && where == LastPos  
+	  && ((relativeEcode && e == 0) || (!relativeEcode && e == lastE)) 
+	  && abs_extr == 0);
+} 
 string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF, 
 			     bool relativeEcode) const
 {
@@ -248,7 +256,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     return ostr.str();
   }
 
-  const uint PREC = 3;
+  const uint PREC = 4;
   ostr.precision(PREC);
   ostr << fixed ;
 
@@ -312,7 +320,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
       ostr << "E" << e << " ";
       ostr.precision(PREC);
       lastE = e;
-    } else {      
+    } else {  
       comm += _(" Move Only");
     }
   case SETSPEED:
@@ -324,7 +332,9 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     lastF = f;
     break;
   case UNKNOWN:
-  default: ;
+    cerr << "unknown GCode " << info() << endl;
+    break;
+  default:;
   }
   if(comm.length() != 0) {
     if (Code!=COMMENT) ostr << " ; " ;
@@ -341,11 +351,12 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short ccw)
 {
   Vector3d arcpoint;
-  Vector3d radiusv =  lastPos-center;
-  double astep = angle/(radiusv).length()/20;
+  Vector3d radiusv = lastPos-center;
+  double astep = angle/radiusv.length()/30.;
   if (angle/astep > 10000) astep = angle/10000;
+  if (angle<0) ccw=!ccw;
   Vector3d axis(0.,0.,ccw?1.:-1.);
-  for (double a = 0; a < angle; a+=astep){
+  for (long double a = 0; abs(a) < abs(angle); a+=astep){
     arcpoint = center + radiusv.rotate(a, axis);
     if (dz!=0 && angle!=0) arcpoint.z() = lastPos.z() + a*(dz)/angle;
     glVertex3dv(lastPos);
@@ -363,22 +374,32 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
   if (Code == ARC_CW || Code == ARC_CCW) {
     Vector3d center = lastPos + arcIJK;
     Vector3d P = -arcIJK, Q = where-center; // arc endpoints
-    glColor4f(1.f,0.f,0.0f,0.3f);
+    glColor4f(0.f,1.f,0.0f,0.2f);
     glVertex3dv(center);
     glVertex3dv(lastPos);
-    // glVertex3dv((GLdouble*)&lastPos);
-    // glVertex3dv((GLdouble*)&where);
+    glColor4f(1.f,0.f,0.0f,0.2f);
+    glVertex3dv(center);
+    glVertex3dv(where);
     glColor4fv(ccol);
     bool ccw = (Code == ARC_CCW);
-    // if (ccw)
-    //   glColor4f(1.f,0.7f,0.1f,ccol[3]);
-    // else 
-    //glColor4f(1.f,0.5f,0.0f,ccol[3]);
+    if (ccw)
+      glColor4f(0.5f,0.5f,1.f,ccol[3]);
+    else 
+      glColor4f(1.f,0.5f,0.0f,ccol[3]);
     long double angle;
-    angle = angleBetween(P,Q); // ccw angle
-    if (!ccw) angle=-angle;
-    if (angle <= 0) angle += 2*M_PI;
-    if (abs(angle) < 0.00001) angle = 2*M_PI;
+    if (P==Q) angle = 2*M_PI;
+    else {
+#if 0  // marlin calculation (motion_control.cpp)
+      angle = atan2(P.x()*Q.y()-P.y()*Q.x(), P.x()*Q.x()+P.y()*Q.y());
+      if (angle < 0) angle += 2*M_PI;
+      if (!ccw) angle-=2*M_PI; // angle sign determines rotation
+#else
+      angle = angleBetween(P,Q); // ccw angle
+      if (!ccw) angle=-angle;
+      if (angle < 0) angle += 2*M_PI;  // alway positive, ccw determines rotation
+#endif
+    }
+    //if (abs(angle) < 0.00001) angle = 0;
     double dz = where.z()-lastPos.z(); // z move with arc
     Vector3d arcstart = lastPos;
     draw_arc(lastPos, center, angle, dz, ccw);
