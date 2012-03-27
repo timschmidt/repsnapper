@@ -39,6 +39,7 @@ class GCodeIter
   unsigned long m_line_count, m_cur_line;
   GCodeIter (Glib::RefPtr<Gtk::TextBuffer> buffer);
   std::string next_line ();
+  std::string next_line_stripped();
   bool finished();
   double time_used;
   time_t time_started;

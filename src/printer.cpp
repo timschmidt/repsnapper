@@ -422,7 +422,7 @@ void Printer::handle_rr_more (rr_dev dev)
       lasttimeshown = time_used;
     }
     while (rr_dev_write_more (device) && !gcode_iter->finished()) {
-      std::string line = gcode_iter->next_line();
+      std::string line = gcode_iter->next_line_stripped();
       if (line.length() > 0 && line[0] != ';') {
 	rr_dev_enqueue_cmd (device, RR_PRIO_NORMAL, line.data(), line.size());
       }

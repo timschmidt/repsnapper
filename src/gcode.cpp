@@ -647,6 +647,18 @@ std::string GCodeIter::next_line()
   m_it = m_buffer->get_iter_at_line (m_cur_line++);
   return m_buffer->get_text (last, m_it);
 }
+std::string GCodeIter::next_line_stripped()
+{
+  string line = next_line();
+  size_t pos = line.find(";");
+  size_t newline = line.find("\n");
+  if (pos!=string::npos){
+    line = line.substr(0,pos);
+    if (newline!=string::npos)
+      line += "\n";
+  }
+  return line;
+}
 
 bool GCodeIter::finished()
 {
