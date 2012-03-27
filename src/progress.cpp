@@ -85,7 +85,12 @@ bool ViewProgress::update (double value, bool take_priority)
   //GDK_THREADS_ENTER ();
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->set_fraction(value / m_bar_max);
-  ostringstream o; o << value <<"/"<< m_bar_max;
+  ostringstream o; 
+  if(floor(value) != value && floor(m_bar_max) != m_bar_max) 
+    o.precision(1);
+  else
+    o.precision(0);
+  o << fixed << value <<"/"<< m_bar_max;
   m_bar->set_text(o.str());
   if (to_terminal) {
     int perc = (int(m_bar->get_fraction()*100));

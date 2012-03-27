@@ -22,7 +22,6 @@
 #include "stdafx.h"
 #include "geometry.h"
 
-
 class Poly
 {
   double z;
@@ -41,6 +40,7 @@ public:
         ~Poly();
 	
 	void setClosed(bool c) { closed = c; };
+	bool isClosed() const { return closed; };
 
 	Vector2d operator[](int i) const {
 	  if (i >= 0 && i < (int)vertices.size())
@@ -48,8 +48,8 @@ public:
 	  else return vertices[(vertices.size()+i)%vertices.size()];
 	};
 
-	Poly Shrinked(double distance) const;
-	Poly Shrinked(vector<Vector2d> *vertices, double distance);
+	/* Poly Shrinked(double distance) const; */
+	/* Poly Shrinked(vector<Vector2d> *vertices, double distance); */
 
 	// simplify douglas-peucker
 	void cleanup(double maxerror);
@@ -62,21 +62,22 @@ public:
 
 	//vector< vector<Vector2d> > intersect(Poly &poly1, Poly &poly2) const;
 
-	bool vertexInside(const Vector2d point, double maxoffset=0.01) const;
-	bool vertexInside2(const Vector2d point, double maxoffset=0.01) const;
+	bool vertexInside(const Vector2d point, double maxoffset=0.0001) const;
+	bool vertexInside2(const Vector2d point, double maxoffset=0.0001) const;
 	bool polyInside(const Poly * poly, double maxoffset=0.0001) const;
 	uint nearestDistanceSqTo(const Vector2d p, double &mindist) const;
 	void nearestIndices(const Poly p2, int &thisindex, int &otherindex) const;
 	double shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end) const;
 
 	void rotate(Vector2d center, double angle);
+	void move(Vector2d delta);
 
 	void calcHole(); // calc center and whether this is a hole 
 	bool isHole();
 
 	vector<Vector2d> getMinMax() const;
 	vector<Intersection> lineIntersections(const Vector2d P1, const Vector2d P2,
-					       double maxerr=0.01) const;
+					       double maxerr=0.0001) const;
 
 	// ClipperLib::Polygons getOffsetClipperPolygons(double dist) const ;
 	// ClipperLib::Polygon getClipperPolygon(bool reverse=false) const;
@@ -96,17 +97,16 @@ public:
 	void setExtrusionFactor(double e){extrusionfactor = e;};
 	double getLayerNo() const;
 
-	void draw(int gl_type, bool reverse=false, bool randomized=true) const; 
+	void draw(int gl_type, bool randomized=true) const; 
 	void draw(int gl_type, double z, bool randomized=true) const; // draw at given z
 	void drawVertexNumbers() const; 
 	void drawLineNumbers() const;
 
 	void getLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
 	void getLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
-	/* void getLines(vector<printline> &plines, Vector2d &startPoint) const; */
 	void getLines(vector<Vector2d> &lines,uint startindex=0) const;
 	void getLines(vector<Vector3d> &lines,uint startindex=0) const;
-	/* void getLines(vector<printline> &plines, uint startindex) const; */
+
 	double getLinelengthSq(uint startindex) const;
 	double averageLinelengthSq() const;
 
@@ -115,12 +115,20 @@ public:
 	int getTriangulation(vector<Triangle> &triangles)  const ;
 
 	uint size() const {return vertices.size(); };
+	Vector2d front() {return vertices.front(); };
+	Vector2d back()  {return vertices.back(); };
+	void push_back (Vector2d v) {vertices.push_back(v);};
+	void push_front(Vector2d v) {vertices.insert(vertices.begin(),v);};
+
 	string info() const;
 
-};
+	string SVGpolygon(string style="fill: black") const;
+ };
+
 
 typedef struct {
   Poly outer;
   vector<Poly> holes;
 } ExPoly;
+
 

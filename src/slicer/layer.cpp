@@ -24,6 +24,9 @@
 #include "infill.h"
 #include "printlines.h"
 
+// polygons will be simplified to thickness/CLEANFACTOR
+#define CLEANFACTOR 5
+
 Layer::Layer(int layerno, double thick, uint skins) 
   : LayerNo(layerno), thickness(thick), skins(skins)
 {
@@ -153,7 +156,7 @@ int Layer::addShape(Matrix4d T, const Shape shape, double z,
 
 void Layer::cleanupPolygons()
 {
-  double clean = thickness/3.;
+  double clean = thickness/CLEANFACTOR;
   for(uint i=0; i < polygons.size(); i++){
     polygons[i].cleanup(clean);
   }
@@ -397,10 +400,10 @@ void Layer::mergeFullPolygons(bool bridge)
     // clipp.addPolys(bridgePolygons,clip);
   } else {
     setFullFillPolygons(Clipping::getMerged(fullFillPolygons, thickness));
-    cleanup(fullFillPolygons, thickness/4.);
+    cleanup(fullFillPolygons, thickness/CLEANFACTOR);
     //subtract from normal fills
     Clipping clipp;
-    cleanup(fillPolygons, thickness/4.);
+    cleanup(fillPolygons, thickness/CLEANFACTOR);
     clipp.addPolys(fillPolygons,subject);  
     clipp.addPolys(fullFillPolygons,clip);
     vector<Poly> normals = clipp.subtractMerged();
@@ -492,7 +495,7 @@ void Layer::setSupportPolygons(const vector<Poly> polys)
   clearpolys(supportPolygons);
   supportPolygons = polys;
   for (uint i=0; i<supportPolygons.size(); i++) {
-    supportPolygons[i].cleanup(thickness/4.);
+    supportPolygons[i].cleanup(thickness/CLEANFACTOR);
     vector<Vector2d> minmax = supportPolygons[i].getMinMax();
     Min.x() = min(minmax[0].x(),Min.x());
     Min.y() = min(minmax[0].y(),Min.y());
@@ -512,7 +515,7 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth, double shelloffset
 		       bool makeskirt, double skirtdistance, double infilloverlap)
 {
   double distance = 0.5 * extrudedWidth;
-  double cleandist = min(extrudedWidth/4., thickness/3.);
+  double cleandist = min(distance/CLEANFACTOR, thickness/CLEANFACTOR);
   vector<Poly> shrinked = Clipping::getOffset(polygons,-distance-shelloffset);
   for (uint i = 0; i<shrinked.size(); i++)  
     shrinked[i].cleanup(cleandist);
@@ -595,8 +598,8 @@ void Layer::calcConvexHull()
 
 void Layer::setMinMax(const vector<Poly> polys) 
 {
-  Min = Vector2d( 10000000.,  10000000.);
-  Max = Vector2d(-10000000., -10000000.);
+  Min = Vector2d( INFTY, INFTY);
+  Max = Vector2d(-INFTY, -INFTY);
   for (uint i = 0; i< polys.size(); i++) {
     vector<Vector2d> minmax = polys[i].getMinMax();
     Min.x() = min(Min.x(), minmax[0].x()); Min.y() = min(Min.y(), minmax[0].y());

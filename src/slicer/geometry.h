@@ -31,8 +31,8 @@ void moveArcballTrans(Matrix4fT &matfT, const Vector3d delta);
 void setArcballTrans(Matrix4fT &matfT, const Vector3d trans);
 void rotArcballTrans(Matrix4fT &transform,  Vector3d axis, double angle);
 
-/* template < typename T >  */
-/* long double angleBetween(T V1, T V2); */
+/* template< size_t M, typename T > */
+/* long double angleBetween(const vmml::vector< M, T > V1, const vmml::vector< M, T > V2 ); */
 long double angleBetween(Vector3d V1, Vector3d V2);
 long double angleBetween(Vector2d V1, Vector2d V2);
 void center_perpendicular(const Vector2d from, const Vector2d to,
@@ -43,8 +43,8 @@ bool isleftof(Vector3d center, Vector3d A, Vector3d B);
 
 Vector3d cross2d(Vector2d A, Vector2d B, double z=0);
 
-double minimum_distance_Sq(const Vector2d s1, const Vector2d s2, 
-			   const Vector2d p, Vector2d &onseg);
+double point_segment_distance_Sq(const Vector2d s1, const Vector2d s2, 
+				 const Vector2d p, Vector2d &onseg);
 
 Vector2d rotated(Vector2d p, Vector2d center, double angle, bool ccw=true);
 

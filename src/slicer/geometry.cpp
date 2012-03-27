@@ -83,13 +83,16 @@ void rotArcballTrans(Matrix4fT &matfT,  Vector3d axis, double angle)
   }
 }
 
-
-// template < typename T > 
-// long double angleBetween(T V1, T V2) 
+// // from V1 to V2
+// template< size_t M, typename T >
+// long double angleBetween(const vmml::vector< M, T > V1, const vmml::vector< M, T > V2 ) 
 // {
 //   long double dotproduct =  V1.dot(V2);
 //   long double length = V1.length() * V2.length();
-//   long double result = acosl( dotproduct / length ); // 0 .. pi 
+//   long double quot = dotproduct / length;
+//   if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
+//   if (quot < -1 && quot > -1.0001) quot = -1;
+//   long double result = acosl( quot ); // 0 .. pi 
 //   if (isleftof(T(), V2, V1)) 
 //       result = -result;
 //   return result;
@@ -187,7 +190,7 @@ Vector2d rotated(Vector2d p, Vector2d center, double angle, bool ccw)
 
 // squared minimum distance of p to segment s1--s2, onseg = resulting point on segment
 // http://stackoverflow.com/a/1501725
-double minimum_distance_Sq(const Vector2d s1, const Vector2d s2, 
+double point_segment_distance_Sq(const Vector2d s1, const Vector2d s2, 
 			const Vector2d p, Vector2d &onseg) {
   const double l2 = (s2-s1).squared_length();  // i.e. |w-v|^2 -  avoid a sqrt
   if (l2 == 0.0) { // s1 == s2 case
@@ -361,23 +364,23 @@ bool IntersectXY(const Vector2d p1, const Vector2d p2,
 //
 // inSegment(): determine if a point is inside a segment
 //    Input:  a point P, and a collinear segment S
-//    Return: 1 = P is inside S
-//            0 = P is not inside S
-int inSegment( const Vector2d P, const Vector2d p1, const Vector2d &p2)
+//    Return: true  = P is inside S
+//            fasle = P is not inside S
+bool inSegment( const Vector2d P, const Vector2d p1, const Vector2d &p2)
 {
   if (p1.x() != p2.x()) {    // S is not vertical
     if (p1.x() <= P.x() && P.x() <= p2.x())
-      return 1;
+      return true;
     if (p1.x() >= P.x() && P.x() >= p2.x())
-      return 1;
+      return true;
   }
   else {    // S is vertical, so test y coordinate
     if (p1.y() <= P.y() && P.y() <= p2.y())
-      return 1;
+      return true;
     if (p1.y() >= P.y() && P.y() >= p2.y())
-      return 1;
+      return true;
   }
-  return 0;
+  return false;
 }
 
 // intersect2D_2Segments(): the intersection of 2 finite 2D segments
@@ -416,13 +419,13 @@ int intersect2D_Segments( const Vector2d p1, const Vector2d p2,
       return 1;
     }
     if (du==0) {                    // S1 is a single point
-      if (inSegment(p1, p3, p4) == 0)  // but is not in S2
+      if (!inSegment(p1, p3, p4))  // but is not in S2
 	return 0;
       I0 = p1;
       return 1;
     }
     if (dv==0) {                    // S2 a single point
-      if (inSegment(p3, p1,p2) == 0)  // but is not in S1
+      if (!inSegment(p3, p1,p2))  // but is not in S1
 	return 0;
       I0 = p3;
       return 1;

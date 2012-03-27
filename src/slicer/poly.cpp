@@ -73,6 +73,7 @@ Poly::~Poly()
 void Poly::cleanup(double epsilon)
 {
   vertices = cleaned(vertices, epsilon);
+  if (!closed) return;
   uint n_vert = vertices.size();
   vector<Vector2d> invert;
   invert.insert(invert.end(),vertices.begin()+n_vert/2,vertices.end());
@@ -182,12 +183,23 @@ void Poly::rotate(Vector2d center, double angle)
   }
 }
 
+void Poly::move(Vector2d delta) 
+{
+  for (uint i = 0; i < vertices.size();  i++) {
+    vertices[i] += delta;
+  }
+  center+=delta;
+}
+
 // nearest connection point indices of this and other poly 
+// if poly is not closed, only test first and last point
 void Poly::nearestIndices(const Poly p2, int &thisindex, int &otherindex) const
 {
   double mindist = 1000000;
-  for (uint i = 1; i < vertices.size(); i++) {
-    for (uint j = 1; j < p2.vertices.size(); j++) {
+  for (uint i = 0; i < vertices.size(); i++) {
+    if (!closed && i != 0 && i != vertices.size()-1) continue;
+    for (uint j = 0; j < p2.vertices.size(); j++) {
+      if (!p2.closed && j != 0 && j != p2.vertices.size()-1) continue;
       double d = (vertices[i]-p2.vertices[j]).squared_length();
       if (d<mindist) {
 	mindist = d;
@@ -199,6 +211,7 @@ void Poly::nearestIndices(const Poly p2, int &thisindex, int &otherindex) const
 }
 
 // Find the vertex in the poly closest to point p
+// if not closed, only look for first and last point
 uint Poly::nearestDistanceSqTo(const Vector2d p, double &mindist) const
 {
   assert(vertices.size() > 0);
@@ -207,6 +220,7 @@ uint Poly::nearestDistanceSqTo(const Vector2d p, double &mindist) const
   mindist = (vertices[0]-p).squared_length();
   // check the rest of the vertices for a closer one.
   for (uint i = 1; i < vertices.size(); i++) {
+    if (!closed && i != 0 && i != vertices.size()-1) continue;
     double d = (vertices[i]-p).squared_length();
     if (d<mindist) {
       mindist= d;
@@ -226,9 +240,9 @@ double Poly::shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end)
     for (uint j = 0; j < p2.vertices.size(); j++) {
       Vector2d onpoint; // on p2
       // dist from point i to lines on p2
-      const double mindist = minimum_distance_Sq(p2.vertices[j], 
-						 p2.getVertexCircular(j+1),
-						 vertices[i], onpoint);
+      const double mindist = 
+	point_segment_distance_Sq(p2.vertices[j], p2.getVertexCircular(j+1),
+				  vertices[i], onpoint);
       if (mindist < min1) {
 	min1 = mindist; onpoint1 = onpoint; minindex1 = i;
       }
@@ -239,9 +253,9 @@ double Poly::shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end)
     for (uint j = 0; j < vertices.size(); j++) {
       Vector2d onpoint; // on this
       // dist from p2 point i to lines on this
-      const double mindist = minimum_distance_Sq(vertices[j], 
-						 getVertexCircular(j+1),
-						 p2.vertices[i], onpoint);
+      const double mindist = 
+	point_segment_distance_Sq(vertices[j], getVertexCircular(j+1),
+				  p2.vertices[i], onpoint);
       if (mindist < min2) {
 	min2 = mindist; onpoint2 = onpoint; minindex2 = i;
       }
@@ -357,8 +371,9 @@ vector<Intersection> Poly::lineIntersections(const Vector2d P1, const Vector2d P
       P3 = getVertexCircular(i);
       P4 = getVertexCircular(i+1);
       Intersection hit;
-      if (IntersectXY(P1,P2,P3,P4,hit,maxerr))
+      if (IntersectXY(P1,P2,P3,P4,hit,maxerr)) {
 	HitsBuffer.push_back(hit);
+      }
     }
   // std::sort(HitsBuffer.begin(),HitsBuffer.end());
   // vector<Vector2d> v(HitsBuffer.size());
@@ -392,7 +407,7 @@ double Poly::averageLinelengthSq() const
 void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const
 {
   if (size()<2) return;
-  double mindist = 1000000;
+  double mindist = INFTY;
   uint index = nearestDistanceSqTo(startPoint, mindist);
   getLines(lines,index);
   startPoint = Vector2d(lines.back().x(),lines.back().y());
@@ -400,35 +415,50 @@ void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const
 void Poly::getLines(vector<Vector2d> &lines, Vector2d &startPoint) const
 {
   if (size()<2) return;
-  double mindist = 1000000;
+  double mindist = INFTY;
   uint index = nearestDistanceSqTo(startPoint, mindist);
   getLines(lines,index);
-  startPoint = Vector2d(lines.back().x(),lines.back().y());
+  startPoint = Vector2d(lines.back());
 }
 
 // add to lines starting with given index
-// closed lines sequence if number of vertices > 2
+// closed lines sequence if number of vertices > 2 and poly is closed
 void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
 {
+  vector<Vector2d> mylines;
   size_t count = vertices.size();
   if (count<2) return; // one point no line
-  if (!closed || count<3) count--; // two points one line
-  for(size_t i=0;i<count;i++)
+  bool closedlines = closed;
+  if (count<3) closedlines = false; // two points one line
+  for(size_t i = startindex; i < count+startindex; i++)
     {
-      lines.push_back(getVertexCircular(i+startindex));
-      lines.push_back(getVertexCircular(i+startindex+1));
+      if (!closedlines && i == count-1) continue;
+      mylines.push_back(getVertexCircular(i));
+      mylines.push_back(getVertexCircular(i+1));
     }
+  if (!closedlines && startindex == count-1)
+    lines.insert(lines.end(),mylines.rbegin(),mylines.rend());
+  else
+    lines.insert(lines.end(),mylines.begin(),mylines.end());
 }
+
 void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
 {
+  vector<Vector3d> mylines;
   size_t count = vertices.size();
   if (count<2) return; // one point no line
-  if (!closed || count<3) count--; // two points one line
-  for(size_t i = 0; i < count; i++)
+  bool closedlines = closed;
+  if (count<3) closedlines = false; // two points one line
+  for(size_t i = startindex; i < count+startindex; i++)
     {
-      lines.push_back(getVertexCircular3(i+startindex));
-      lines.push_back(getVertexCircular3(i+startindex+1));
+      if (!closedlines && i == count-1) continue;
+      lines.push_back(getVertexCircular3(i));
+      lines.push_back(getVertexCircular3(i+1));
     }
+  if (!closedlines && startindex == count-1)
+    lines.insert(lines.end(),mylines.rbegin(),mylines.rend());
+  else
+    lines.insert(lines.end(),mylines.begin(),mylines.end());
 }
 
 vector<Vector2d> Poly::getPathAround(const Vector2d from, const Vector2d to) const
@@ -528,35 +558,42 @@ void Poly::draw(int gl_type, double z, bool randomized) const
 {
   Vector2d v;
   uint count = vertices.size();
-  glBegin(gl_type);	  
-  for (uint i=0;i < count;i++){
+  if (!closed && gl_type == GL_LINE_LOOP) {
+    gl_type = GL_LINES;
+    count--;
+  }
+  glBegin(gl_type);
+  for (uint i=0; i < count; i++){
     v = getVertexCircular(i);
     if (randomized) v = random_displaced(v);
     glVertex3f(v.x(),v.y(),z);
+    if ( gl_type == GL_LINES ) {
+      Vector2d vn = getVertexCircular(i+1);
+      if (randomized) vn = random_displaced(vn);
+      glVertex3f(vn.x(),vn.y(),z);
+    }
   }
   glEnd();
 }
 
-void Poly::draw(int gl_type, bool reverse, bool randomized) const
+void Poly::draw(int gl_type, bool randomized) const
 {
-  Vector3d v;//,vn,m,dir;
+  Vector3d v;
   uint count = vertices.size();
+  if (!closed && gl_type == GL_LINE_LOOP){
+    gl_type = GL_LINES;
+    count--;
+  }
   glBegin(gl_type);	  
-  for (uint i=0;i < count;i++){
-    if (reverse){
-      v = getVertexCircular3(-i);
-      // vn = getVertexCircular3(-i-1);
-    } else {
-      v = getVertexCircular3(i);
-      // vn = getVertexCircular3(i+1);
-    }
+  for (uint i=0; i < count;i++){
+    v = getVertexCircular3(i);
     if (randomized) v = random_displaced(v);
-    glVertex3f(v.x(),v.y(),v.z());
-    // if (gl_type==GL_LINE_LOOP){
-    //   m = (v+vn)/2;
-    //   dir = m + rotatedZ((vn-v)/10,M_PI/2);
-    //   glVertex3f(dir.x(),dir.y(),z);
-    // }
+    glVertex3dv(v);
+    if ( gl_type == GL_LINES ) {
+      Vector3d vn = getVertexCircular3(i+1);
+      if (randomized) vn = random_displaced(vn);
+      glVertex3dv(vn);
+    }
   }
   glEnd();
 }
@@ -595,3 +632,16 @@ string Poly::info() const
   return ostr.str();
 }
 
+
+string Poly::SVGpolygon(string style) const
+{
+  ostringstream ostr;
+  ostr << "  <polygon points=\"";
+  for (uint i=0; i<size(); i++) {
+    ostr.precision(5);
+    ostr  << fixed << vertices[i].x() << "," << vertices[i].y();
+    if (i < size()-1) ostr << " ";
+  }
+  ostr << "\" style=\"" << style <<"\">";
+  return ostr.str();
+}

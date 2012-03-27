@@ -85,7 +85,7 @@ public:
   vector<Poly> subtractMerged();
   vector<Poly> Xor();
 
-  static vector<Poly> getMerged(vector<Poly> polys, double overlap=0.01);
+  static vector<Poly> getMerged(vector<Poly> polys, double overlap=0.001);
   static CL::Polygons getMerged(CL::Polygons cpolys, int overlap=3);
 
   static vector<Poly> getOffset(const Poly poly, double distance, 
