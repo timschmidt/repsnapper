@@ -103,6 +103,7 @@ long double angleBetween(Vector3d V1, Vector3d V2)
 {
   long double dotproduct =  V1.dot(V2);
   long double length = V1.length() * V2.length();
+  if (length==0) return 0;
   long double quot = dotproduct / length;
   if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
   if (quot < -1 && quot > -1.0001) quot = -1;
@@ -116,6 +117,7 @@ long double angleBetween(Vector2d V1, Vector2d V2)
 {
   long double dotproduct =  V1.dot(V2);
   long double length = V1.length() * V2.length();
+  if (length==0) return 0;
   long double quot = dotproduct / length;
   if (quot > 1  && quot < 1.0001) quot = 1;
   if (quot < -1 && quot > -1.0001) quot = -1;
