@@ -397,7 +397,7 @@ Vector2d Printlines::arcCenter(const PLine l1, const PLine l2,
 }
 
 uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
-			   vector<PLine> &lines) const
+			  vector<PLine> &lines) const
 {
   if (!slicing.UseArcs) return 0;
   if (lines.size() < 2) return 0;
@@ -502,17 +502,15 @@ uint Printlines::makeCornerArc(double maxdistance, uint ind,
 			       vector<PLine> &lines) const
 {
   if (ind > lines.size()-2) return 0;
-  //if (lines[ind].feedrate != lines[ind+1].feedrate) return 0;
   if (lines[ind].arc != 0 || lines[ind+1].arc != 0) return 0;
   // movement in between?
   if ((lines[ind].to - lines[ind+1].from).squared_length() > 0.01) return 0;
-  if ((lines[ind].from - lines[ind+1].to).squared_length() 
-      < maxdistance*maxdistance) return 0;
+  // if ((lines[ind].from - lines[ind+1].to).squared_length() 
+  //     < maxdistance*maxdistance) return 0;
   double l1 = lines[ind].length();
   double l2 = lines[ind+1].length();
-  if (l1 < 2*maxdistance || l2 < 2*maxdistance) return 0;
-  maxdistance   = min(maxdistance, l1/2.);
-  maxdistance   = min(maxdistance, l2/2.);
+  maxdistance   = min(maxdistance, l1); // ok to eat up line 1
+  maxdistance   = min(maxdistance, l2 / 2.1); // only eat up less than half of second line
   Vector2d dir1 = lines[ind].to - lines[ind].from;
   Vector2d dir2 = lines[ind+1].to - lines[ind+1].from;
   double angle  = angleBetween(dir1, dir2);
@@ -532,35 +530,42 @@ uint Printlines::makeCornerArc(double maxdistance, uint ind,
   if (!ccw) angle = -angle;
   if (angle <= 0) angle += 2*M_PI;
   short arctype = ccw ? -1 : 1; 
-  bool split = false;
-  PLine pline1(lines[ind].from, p1, lines[ind].speed,   lines[ind].feedrate);
-  PLine pline2(p2, lines[ind+1].to, lines[ind+1].speed, lines[ind+1].feedrate);
-  Vector2d splitp3;
-  if (lines[ind].feedrate != lines[ind+1].feedrate) { // need 2 half arcs
-    split   = true;
-    angle  /= 2;
-    splitp3 = p2; // splitp3 now end of both arcs
-    p2 = rotated(p1, center, angle, ccw); // p2 now half-way point
+  // need 2 half arcs?
+  bool split = (lines[ind].feedrate != lines[ind+1].feedrate);
+
+  vector<PLine> newlines;
+  uint numnew = 0;
+  if (p1 != lines[ind].from) { // straight line 1
+    newlines.push_back(PLine(lines[ind].from, p1, 
+			     lines[ind].speed,   lines[ind].feedrate));
+    numnew++;
   }
-  PLine arcline(p1, p2, lines[ind].speed, lines[ind].feedrate,
-		arctype, center, angle);
-  lines[ind] = pline1;
   if (p2 != p1)  {
-    lines[ind+1] = arcline;
-    lines.insert(lines.begin()+ind+2, pline2);
-  } 
-  else {  // arcline has zero length
-    lines[ind+1] = pline2;
-    return 0;
+    if (split) { // 2 arcs
+      Vector2d splitp = rotated(p1, center, angle/2, ccw); // half-way point
+      newlines.push_back(PLine(p1, splitp, lines[ind].speed, lines[ind].feedrate,
+			       arctype, center, angle/2));
+      newlines.push_back(PLine(splitp, p2, lines[ind+1].speed, lines[ind+1].feedrate,
+			       arctype, center, angle/2));
+      numnew+=2;
+    } else { // 1 arc
+      newlines.push_back(PLine(p1, p2, lines[ind].speed, lines[ind].feedrate,
+			       arctype, center, angle));
+      numnew++;
+    }
   }
-  if (split) {
-    PLine arc2(p2, splitp3, pline2.speed, pline2.feedrate,
-	       arctype, center, angle);
-    if (p2 != splitp3) 
-      lines.insert(lines.begin()+ind+2, arc2);
-    return 2;
+  if (p2 != lines[ind+1].to) { // straight line 2
+    newlines.push_back(PLine(p2, lines[ind+1].to, 
+			     lines[ind+1].speed, lines[ind+1].feedrate));
+    numnew++;
   }
-  return 1;
+  if (numnew>0) 
+    lines[ind] = newlines[0];
+  if (numnew>1) 
+    lines[ind+1] = newlines[1];
+  if (numnew>2) 
+    lines.insert(lines.begin()+ind+2, newlines.begin()+2, newlines.end());
+  return numnew-2;
 }
 
 
