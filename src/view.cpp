@@ -914,22 +914,16 @@ View::View(BaseObjectType* cobject,
   m_builder->get_widget("scale_x", scale_value);
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
-  m_objtree->get_selection()->signal_changed().connect
-      (sigc::mem_fun(*this, &View::update_scale_value));
   scale_value->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object_x));
   m_builder->get_widget("scale_y", scale_value);
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
-  m_objtree->get_selection()->signal_changed().connect
-      (sigc::mem_fun(*this, &View::update_scale_value));
   scale_value->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object_y));
   m_builder->get_widget("scale_z", scale_value);
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
-  m_objtree->get_selection()->signal_changed().connect
-      (sigc::mem_fun(*this, &View::update_scale_value));
   scale_value->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object_z));
 
