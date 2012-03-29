@@ -8,6 +8,7 @@ RepSnapper is an alternative host software for controlling the RepRap (http://re
    make
    ./repsnapper
 
+For more details on prerequisites see manual.asciidoc in the doc subdirectory.
 
 = Documentation =
 
