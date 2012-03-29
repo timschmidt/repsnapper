@@ -33,7 +33,7 @@ inline GtkWidget *Render::get_widget()
   return GTK_WIDGET (gobj());
 }
 
-inline Model *Render::get_model() { return m_view->get_model(); }
+inline Model *Render::get_model() const { return m_view->get_model(); }
 
 Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
   m_arcBall(new ArcBall()), m_view (view), m_selection(selection)
@@ -268,7 +268,7 @@ bool Render::on_button_release_event(GdkEventButton* event)
 {
   //dragging = false;
   if (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK)  { // move object
-    m_view->get_model()->ModelChanged();
+    get_model()->ModelChanged();
     queue_draw();
   }
   else if (event->button == 1) {
@@ -305,9 +305,9 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   Vector3d mousePlat  = mouse_on_plane(event->x, event->y);
   Vector2d mouse_xy   = Vector2d(mousePlat.x(), mousePlat.y());
   Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x(), mouse_down_plat.y());
-  Vector3d mouse_down_preview = mouse_on_plane(m_downPoint.x(), m_downPoint.y(),
-					       get_model()->get_preview_Z());
-  get_model()->setMeasuresPoint(mousePlat);
+  Vector3d mouse_preview = mouse_on_plane(event->x, event->y,
+					  get_model()->get_preview_Z());
+  get_model()->setMeasuresPoint(mouse_preview);
 
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
     if (event->state & GDK_SHIFT_MASK) { // move object XY
@@ -485,7 +485,11 @@ guint Render::find_object_at(gdouble x, gdouble y)
 // http://www.3dkingdoms.com/selection.html
 Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
 {
-  // This function will find 2 points in world space that are on the line into the screen defined by screen-space( ie. window-space ) point (x,y)
+  Vector3d margin;
+  Model *m = get_model();
+  if (m!=NULL) margin = m->settings.Hardware.PrintMargin;
+
+ // This function will find 2 points in world space that are on the line into the screen defined by screen-space( ie. window-space ) point (x,y)
   double mvmatrix[16];
   double projmatrix[16];
   int viewport[4];
@@ -505,7 +509,7 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
   if (rayP2.z() != rayP1.z()) {
     double t = (plane_z-rayP1.z())/(rayP2.z()-rayP1.z());
     Vector3d downP = rayP1 +  (rayP2-rayP1) * t;
-    return downP;
+    return downP - margin;
   }
-  else return rayP1;
+  else return rayP1 - margin;
 }
