@@ -238,8 +238,8 @@ void Layer::CalcRaftInfill (const vector<Poly> polys,
   setMinMax(polys);
   normalInfill = new Infill(this, extrusionfactor);
   normalInfill->setName("Raft");
-  normalInfill->addInfill(Z, polys, RaftInfill, 
-			  infilldistance, infilldistance, rotation);
+  normalInfill->addPolys(Z, polys, RaftInfill, 
+			 infilldistance, infilldistance, rotation);
 }
 
 void Layer::CalcInfill (const Settings &settings)
@@ -286,24 +286,24 @@ void Layer::CalcInfill (const Settings &settings)
   double rot = (settings.Slicing.InfillRotation 
 		+ (double)LayerNo*settings.Slicing.InfillRotationPrLayer)/180.0*M_PI;
   if (!shellOnly)
-    normalInfill->addInfill(Z, fillPolygons, (InfillType)settings.Slicing.NormalFilltype, 
-			    infilldist, fullInfillDistance, rot);
+    normalInfill->addPolys(Z, fillPolygons, (InfillType)settings.Slicing.NormalFilltype, 
+			   infilldist, fullInfillDistance, rot);
   
-  fullInfill->addInfill(Z, fullFillPolygons, (InfillType)settings.Slicing.FullFilltype,
-			fullInfillDistance, fullInfillDistance, rot);
-
-  decorInfill->addInfill(Z, decorPolygons, (InfillType)settings.Slicing.DecorFilltype,
-			 settings.Slicing.DecorInfillDistance,
-			 settings.Slicing.DecorInfillDistance,
-			 settings.Slicing.DecorInfillRotation/180.0*M_PI);
+  fullInfill->addPolys(Z, fullFillPolygons, (InfillType)settings.Slicing.FullFilltype,
+		       fullInfillDistance, fullInfillDistance, rot);
+  
+  decorInfill->addPolys(Z, decorPolygons, (InfillType)settings.Slicing.DecorFilltype,
+			settings.Slicing.DecorInfillDistance,
+			settings.Slicing.DecorInfillDistance,
+			settings.Slicing.DecorInfillRotation/180.0*M_PI);
   
   assert(bridge_angles.size() >= bridgePolygons.size());
   bridgeInfills.resize(bridgePolygons.size());
   for (uint b=0; b < bridgePolygons.size(); b++){  
     bridgeInfills[b] = new Infill(this, settings.Slicing.BridgeExtrusion);
-    bridgeInfills[b]->addInfill(Z, bridgePolygons[b], BridgeInfill, 
-				fullInfillDistance, fullInfillDistance,
-				bridge_angles[b]+M_PI/2);
+    bridgeInfills[b]->addPoly(Z, bridgePolygons[b], BridgeInfill, 
+			      fullInfillDistance, fullInfillDistance,
+			      bridge_angles[b]+M_PI/2);
   }
 
   if (skins>1) {
@@ -313,13 +313,13 @@ void Layer::CalcInfill (const Settings &settings)
       double sz = Z-thickness + (s+1)*thickness/skins;
       Infill *inf = new Infill(this, skinfillextrf);
       inf->setName("skin");
-      inf->addInfill(sz, skinFullFillPolygons, (InfillType)settings.Slicing.FullFilltype,
-		     skindistance, skindistance, drot);
+      inf->addPolys(sz, skinFullFillPolygons, (InfillType)settings.Slicing.FullFilltype,
+		    skindistance, skindistance, drot);
       skinFullInfills.push_back(inf);
     }
   }
-  supportInfill->addInfill(Z, supportPolygons, (InfillType)settings.Slicing.SupportFilltype,
-			   infilldist, infilldist, 0);
+  supportInfill->addPolys(Z, supportPolygons, (InfillType)settings.Slicing.SupportFilltype,
+			  infilldist, infilldist, 0);
 }
 
 
