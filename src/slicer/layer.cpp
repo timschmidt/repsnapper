@@ -698,7 +698,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		       startPoint, lines, hardware.MaxShellSpeed);
   // TODO:  sort inner to outer in printlines
   if (slicing.UseArcs && slicing.RoundCorners) 
-    printlines.roundCorners(cornerradius,lines);
+    printlines.roundCorners(cornerradius, slicing.MinArcLength, lines);
   polys.clear();
 
   //  Infill
@@ -721,7 +721,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		       slicing, hardware, 
 		       startPoint, lines);
   if (slicing.UseArcs && slicing.RoundCorners) 
-    printlines.roundCorners(cornerradius,lines);
+    printlines.roundCorners(cornerradius, slicing.MinArcLength, lines);
   polys.clear();
 
   // FINISH

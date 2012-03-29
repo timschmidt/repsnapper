@@ -106,6 +106,7 @@ class Settings {
     bool  RelativeEcode;
     bool  UseArcs;
     float ArcsMaxAngle;
+    float MinArcLength;
     bool  RoundCorners;
     float CornerRadius;
 

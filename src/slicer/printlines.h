@@ -130,8 +130,9 @@ class Printlines
 		 vector<PLine> &lines) const;
   uint makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) const;
 
-  uint roundCorners(double maxdistance, vector<PLine> &lines) const;
-  uint makeCornerArc(double maxdistance, uint ind, vector<PLine> &lines) const;
+  uint roundCorners(double maxdistance, double minarclength, vector<PLine> &lines) const;
+  uint makeCornerArc(double maxdistance, double minarclength,
+		     uint ind, vector<PLine> &lines) const;
 
   uint makeAntioozeRetraction(const Settings::SlicingSettings &slicing,
 			      vector<PLine> &lines) const;

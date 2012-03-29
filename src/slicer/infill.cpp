@@ -136,9 +136,9 @@ void Infill::addPolys(double z, const vector<Poly> polys,
   clipp.addPolygons(patterncpolys, clip);
   clipp.setExtrusionFactor(extrusionfactor); // set my extfactor
   vector<Poly> result = clipp.intersect();
-  // if (type==PolyInfill)  // reversal from evenodd clipping
-  //   for (uint i = 0; i<result.size(); i+=2)
-  //     result[i].reverse();
+  if (type==PolyInfill)  // reversal from evenodd clipping
+    for (uint i = 0; i<result.size(); i+=2)
+      result[i].reverse();
   addInfillPolys(result);  
 }
 
@@ -257,8 +257,6 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
     case HilbertInfill:  
       {
 	Poly poly(this->layer->getZ());
-	Vector2d center = (Min+Max)/2.;
-	Vector2d diag = Max-Min;
 	double square = MAX(Max.x()-Min.x(),Max.y()-Min.y());
 	if (infillDistance<=0) break;
 	int level = (int)ceil(log2(2*square/infillDistance));

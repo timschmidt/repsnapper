@@ -484,12 +484,13 @@ uint Printlines::makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) c
   return 0;
 }
 
-uint Printlines::roundCorners(double maxdistance, vector<PLine> &lines) const
+uint Printlines::roundCorners(double maxdistance, double minarclength, 
+			      vector<PLine> &lines) const
 {
   if (lines.size() < 2) return 0;
   uint num = 0;
   for (uint i=0; i < lines.size()-1; i++) {
-    uint n = makeCornerArc(maxdistance, i, lines);
+    uint n = makeCornerArc(maxdistance, minarclength, i, lines);
     i+=n;
     num+=n;
   }
@@ -498,7 +499,8 @@ uint Printlines::roundCorners(double maxdistance, vector<PLine> &lines) const
 
 // make corner of lines[ind], lines[ind+1] into arc
 // maxdistance is distance of arc begin from corner
-uint Printlines::makeCornerArc(double maxdistance, uint ind, 
+uint Printlines::makeCornerArc(double maxdistance, double minarclength, 
+			       uint ind, 
 			       vector<PLine> &lines) const
 {
   if (ind > lines.size()-2) return 0;
@@ -525,13 +527,16 @@ uint Printlines::makeCornerArc(double maxdistance, uint ind,
 				p2, p2 + Vector2d(-dir2.y(),dir2.x()),
    				center, I1, t0,t1);
   if (is==0) return 0;
-  if ((center - p1).squared_length() > 2*maxdistance) return 0; // calc error
+  double radius =  (center - p1).length();
+  if (radius > maxdistance) return 0; // calc error
   bool ccw = isleftof(center, p1, p2);
   if (!ccw) angle = -angle;
   if (angle <= 0) angle += 2*M_PI;
   short arctype = ccw ? -1 : 1; 
   // need 2 half arcs?
   bool split = (lines[ind].feedrate != lines[ind+1].feedrate);
+  // too small arc, replace by 2 straight lines
+  bool toosmall = (radius * angle < minarclength);
 
   vector<PLine> newlines;
   uint numnew = 0;
@@ -541,12 +546,20 @@ uint Printlines::makeCornerArc(double maxdistance, uint ind,
     numnew++;
   }
   if (p2 != p1)  {
-    if (split) { // 2 arcs
-      Vector2d splitp = rotated(p1, center, angle/2, ccw); // half-way point
-      newlines.push_back(PLine(p1, splitp, lines[ind].speed, lines[ind].feedrate,
-			       arctype, center, angle/2));
-      newlines.push_back(PLine(splitp, p2, lines[ind+1].speed, lines[ind+1].feedrate,
-			       arctype, center, angle/2));
+    if (split || toosmall) { // calc arc midpoint
+      const Vector2d splitp = rotated(p1, center, angle/2, ccw);
+      if (toosmall) { // 2 straight lines
+	newlines.push_back(PLine(p1, splitp,
+				 lines[ind].speed,   lines[ind].feedrate));
+	newlines.push_back(PLine(splitp, p2,
+				 lines[ind+1].speed, lines[ind+1].feedrate));
+      }
+      else if (split) { // 2 arcs
+	newlines.push_back(PLine(p1, splitp, lines[ind].speed,   lines[ind].feedrate,
+				 arctype, center, angle/2));
+	newlines.push_back(PLine(splitp, p2, lines[ind+1].speed, lines[ind+1].feedrate,
+				 arctype, center, angle/2));
+      }
       numnew+=2;
     } else { // 1 arc
       newlines.push_back(PLine(p1, p2, lines[ind].speed, lines[ind].feedrate,
