@@ -6,6 +6,7 @@
 #else
 
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -13,9 +14,81 @@
 #include <termios.h>
 #include <errno.h>
 
+#ifdef __linux__
+//#ifdef HAVE_ASM_IOCTLS_H
+#include <asm/ioctls.h>
+
+//#endif
+
+struct linux_serial_struct {
+	int	type;
+	int	line;
+	int	port;
+	int	irq;
+	int	flags;
+	int	xmit_fifo_size;
+	int	custom_divisor;
+	int	baud_base;
+	unsigned short	close_delay;
+	char	io_type;
+	char	reserved_char[1];
+	int	hub6;
+	unsigned short	closing_wait; /* time to wait before closing */
+	unsigned short	closing_wait2; /* no longer used... */
+	unsigned char	*iomem_base;
+	unsigned short	iomem_reg_shift;
+	int	reserved[2];
+};
+#define ASYNC_SPD_MASK	0x1030
+#define ASYNC_SPD_CUST	0x0030  /* Use user-specified divisor */
+
+
+linux_set_speed_custom(int fd, long baud){
+  struct linux_serial_struct serinfo;
+  serinfo.reserved_char[0] = 0;
+  if (ioctl(fd, TIOCGSERIAL, &serinfo) < 0) {
+    perror("Cannot get serial info from port");
+    return -1;
+  }
+  int speed = (int)baud;
+  /* printf("old baud_base %li divisor %li = %li\n",  */
+  /* 	 serinfo.baud_base , serinfo.custom_divisor, */
+  /* 	 serinfo.baud_base / serinfo.custom_divisor); */
+  
+  if ( (serinfo.baud_base / serinfo.custom_divisor) != speed ) {
+    int divisor = (int)(serinfo.baud_base  / baud);
+    int closestSpeed = (int)(serinfo.baud_base / divisor);
+    if (closestSpeed < speed * 98 / 100 || closestSpeed > speed * 102 / 100) {
+      printf("Cannot set serial port speed to %li. Closest possible is %li\n", 
+	     speed, closestSpeed);
+      return -1;
+    }
+    serinfo.custom_divisor = divisor;
+    serinfo.flags = (serinfo.flags | ASYNC_SPD_CUST);
+    printf("setting baud_base %li divisor %li = %li baud\n",
+	   serinfo.baud_base, serinfo.custom_divisor,
+	   (long)(serinfo.baud_base / serinfo.custom_divisor));
+    if (ioctl(fd, TIOCSSERIAL, &serinfo) < 0) {
+      perror("Cannot set serial speed");
+      return -1;
+    }
+  }
+
+#ifdef B38400
+  return B38400; // this is the value used to connect
+#else
+  printf("could not set custom baud rate %i", baud);
+  return -1;
+#endif
+}
+
+#endif // __linux__
+
+
 // Convert between the numeric speed and the termios representation
 // thereof.  Returns < 0 if argument is an unsupported speed.
-static speed_t ntocf(long l) {
+static speed_t ntocf(const long l) {
+#ifdef __linux__
 	switch(l) {
 #ifdef B0
 	case 0:
@@ -142,8 +215,12 @@ static speed_t ntocf(long l) {
 		return B4000000;
 #endif
 	default:
-		return -1;
+	  printf( "non-standard baudrate %i\n",  l);
+	  return -1;
 	}
+#else /* non-linux: */
+	return (speed_t) l;
+#endif
 }
 
 // Repeated many times to allow errors to be isolated to the specific
@@ -182,8 +259,12 @@ serial_init(int fd, long speed, char **detail)
   {
     speed_t cfspeed = ntocf(speed);
     if(cfsetispeed(&attribs, cfspeed) < 0) {
+#ifdef __linux__
+      return linux_set_speed_custom(fd, speed);
+#else
       *detail = "can't set input speed";
-      return -1;
+	return -1;
+#endif
     }
     serial_set_attrib(fd, &attribs);
     if(cfsetospeed(&attribs, cfspeed) < 0) {
