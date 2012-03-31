@@ -44,7 +44,7 @@ Vector3d Transform3D::getTranslation() const
 void Transform3D::move(Vector3d delta)
 {
   Vector3d trans = getTranslation();
-  transform.set_translation(trans + delta);
+  transform.set_translation(trans + delta * transform[3][3]); // unscale delta
 }
 
 void Transform3D::scale(double x)
