@@ -213,6 +213,16 @@ int GCode::getLayerNo(const unsigned long commandno) const
   return -1;
 }
 
+int GCode::getLayerStart(const int layerno) const
+{
+  if (layerchanges.size()>layerno) return layerchanges[layerno];
+  return 0;
+}
+int GCode::getLayerEnd(const int layerno) const
+{
+  if (layerchanges.size()>layerno+1) return layerchanges[layerno+1]-1;
+  return commands.size()-1;
+}
 void GCode::draw(const Settings &settings, int layer, bool liveprinting, int linewidth)
 {
 	/*--------------- Drawing -----------------*/

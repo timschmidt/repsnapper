@@ -106,11 +106,13 @@ void Printer::setModel(Model *model)
 
 void Printer::Restart()
 {
+  if (device==NULL) return;
   Print();
 }
 
 void Printer::ContinuePauseButton()
 {
+  if (device==NULL) return;
   if (printing)
     Pause();
   else
@@ -126,18 +128,21 @@ void Printer::Pause()
 
 void Printer::Continue()
 {
+  if (device==NULL) return;
   set_printing (true);
   rr_dev_set_paused (device, RR_PRIO_NORMAL, 0);
 }
 
 void Printer::Kick()
 {
+  if (device==NULL) return;
   rr_dev_kick (device);
   Continue();
 }
 
 void Printer::PrintButton()
 {
+  if (device==NULL) return;
   if (printing)
     Restart();
   else
@@ -146,11 +151,13 @@ void Printer::PrintButton()
 
 void Printer::StopButton()
 {
+  if (device==NULL) return;
   Stop();
 }
 
 void Printer::ResetButton()
 {
+  if (device==NULL) return;
   Stop();
 
   // how to reset?
@@ -250,8 +257,8 @@ void Printer::SimplePrint()
 
 void Printer::Print()
 {
+  if (device==NULL) return;
   assert(m_model != NULL);
-
   if (!rr_dev_is_connected (device)) {
     alert (_("Not connected to printer.\nCannot start printing"));
     return;
