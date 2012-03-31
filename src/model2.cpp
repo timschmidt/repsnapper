@@ -487,6 +487,7 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
   clipp.addPolys(subjlayer->GetFillPolygons(),     subject); 
   clipp.addPolys(subjlayer->GetFullFillPolygons(), subject); 
   clipp.addPolys(subjlayer->GetBridgePolygons(),   subject); 
+  clipp.addPolys(subjlayer->GetDecorPolygons(),    subject); 
   //clipp.addPolys(cliplayer->GetOuterShell(),       clip); // have some overlap
   clipp.addPolys(cliplayer->GetInnerShell(),       clip); // have some more overlap
   vector<Poly> uncovered = clipp.subtractMerged();
@@ -501,6 +502,7 @@ vector<ExPoly> Model::GetUncoveredExPolygons(const Layer * subjlayer,
   clipp.addPolys(subjlayer->GetFillPolygons(),     subject); 
   clipp.addPolys(subjlayer->GetFullFillPolygons(), subject); 
   clipp.addPolys(subjlayer->GetBridgePolygons(),   subject); 
+  clipp.addPolys(subjlayer->GetDecorPolygons(),    subject); 
   //clipp.addPolys(cliplayer->GetOuterShell(),       clip); // have some overlap
   clipp.addPolys(cliplayer->GetInnerShell(),       clip); // have some more overlap
   vector<ExPoly> uncovered = clipp.ext_subtract();
@@ -737,10 +739,8 @@ void Model::CalcInfill()
 void Model::ConvertToGCode()
 {
   if (is_calculating) {
-    //do_calculate = false; // TODO: make calculation cancel on second button click
     return;
   }
-  //do_calculate = true;
   is_calculating=true;
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();

@@ -362,7 +362,7 @@ void Layer::addBridgePolygons(const vector<ExPoly> newexpolys)
   clipp.addPolys(fillPolygons,subject); 
   clipp.addPolys(newexpolys, clip);
   setNormalFillPolygons(clipp.subtract());
-  mergeFullPolygons(true);
+  //  mergeFullPolygons(true);
 }
 
 void Layer::addFullPolygons(const vector<ExPoly> newpolys, bool decor)
@@ -384,7 +384,10 @@ void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor)
     decorPolygons.insert(decorPolygons.end(),inter.begin(),inter.end());
   else
     fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
-  //mergeFullPolygons(false); // done separately
+
+  vector<Poly> normals = clipp.subtractMerged();
+  setNormalFillPolygons(normals);
+ //mergeFullPolygons(false); // done separately
 }
 
 void cleanup(vector<Poly> &polys, double error)
@@ -395,22 +398,28 @@ void cleanup(vector<Poly> &polys, double error)
 
 void Layer::mergeFullPolygons(bool bridge) 
 {
-  if (bridge) {
-    // setBridgePolygons(Clipping::getMerged(bridgePolygons, thickness));
-    // clipp.addPolys(bridgePolygons,clip);
-  } else {
-    setFullFillPolygons(Clipping::getMerged(fullFillPolygons, thickness));
-    cleanup(fullFillPolygons, thickness/CLEANFACTOR);
-    //subtract from normal fills
-    Clipping clipp;
-    cleanup(fillPolygons, thickness/CLEANFACTOR);
-    clipp.addPolys(fillPolygons,subject);  
-    clipp.addPolys(fullFillPolygons,clip);
-    vector<Poly> normals = clipp.subtractMerged();
-    setNormalFillPolygons(normals);
-  }
+  // if (bridge) {
+  //   // setBridgePolygons(Clipping::getMerged(bridgePolygons, thickness));
+  //   // clipp.addPolys(bridgePolygons,clip);
+  // } else {
+  //subtract decor from full 
+  Clipping clipp;
+  // clipp.addPolys(fullFillPolygons,subject);
+  // clipp.addPolys(decorPolygons,clip);
+  // setFullFillPolygons(clipp.subtract());
+  setFullFillPolygons(Clipping::getMerged(fullFillPolygons, thickness));
+  cleanup(fullFillPolygons, thickness/CLEANFACTOR);
+  //subtract from normal fills
+  clipp.clear();
+  cleanup(fillPolygons, thickness/CLEANFACTOR);
+  clipp.addPolys(fillPolygons,subject);  
+  clipp.addPolys(fullFillPolygons,clip);
+  clipp.addPolys(decorPolygons,clip);
+  vector<Poly> normals = clipp.subtractMerged();
+  setNormalFillPolygons(normals);
+  // }
 }
-void Layer::mergeSupportPolygons() 
+void Layer::mergeSupportPolygons()
 {
   setSupportPolygons(Clipping::getMerged(GetSupportPolygons()));
 }
