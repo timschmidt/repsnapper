@@ -134,15 +134,15 @@ class Printlines
   uint makeCornerArc(double maxdistance, double minarclength,
 		     uint ind, vector<PLine> &lines) const;
 
-  uint makeAntioozeRetraction(const Settings::SlicingSettings &slicing,
-			      vector<PLine> &lines) const;
+  uint makeAntioozeRetract(const Settings::SlicingSettings &slicing,
+			   vector<PLine> &lines) const;
 
   // slow down to total time needed (cooling)
   double slowdownTo(double totalseconds, vector<PLine> &lines) ; // returns slowdownfactor
   void setSpeedFactor(double speedfactor, vector<PLine> &lines) const;
 
   // keep movements inside polys when possible (against stringing)
-  void clipMovements(vector<Poly> *polys, vector<PLine> &lines,
+  void clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
 		     double maxerr=0.0001) const;
 
   void getLines(const vector<PLine> lines,

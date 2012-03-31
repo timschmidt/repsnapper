@@ -372,7 +372,7 @@ void Printlines::optimize(const Settings::HardwareSettings &hardware,
   // cout << GCode(start,E,1,1000);
   makeArcs(slicing, lines);
   slowdownTo(slowdowntime, lines);
-  makeAntioozeRetraction(slicing, lines);
+  makeAntioozeRetract(slicing, lines);
 }
 
 // gets center of common arc of 2 lines if radii match inside maxSqerr range
@@ -666,8 +666,8 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
 #define NEW_ANTIOOZE 0
 #if NEW_ANTIOOZE
 // call after lines have been slowed down!
-uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing,
-					vector<PLine> &lines) const
+uint Printlines::makeAntioozeRetract(const Settings::SlicingSettings &slicing,
+				     vector<PLine> &lines) const
 {
   if (!slicing.EnableAntiooze) return 0;
   double 
@@ -685,7 +685,7 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
   while (i < count) {
     double extrusionsum = 0;
     // find move start
-    while (i < count && ( lines[i].feedrate != 0 )) {
+    while (i < count && lines[i].feedrate != 0 ) {
       i++; movestart = i;
     }
     if (i == count) break;
@@ -761,8 +761,8 @@ uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing
 #else  // old ANTIOOZE
 
 // call after lines have been slowed down!
-uint Printlines::makeAntioozeRetraction(const Settings::SlicingSettings &slicing,
-					vector<PLine> &lines) const
+uint Printlines::makeAntioozeRetract(const Settings::SlicingSettings &slicing,
+				     vector<PLine> &lines) const
 {
   if (!slicing.EnableAntiooze) return 0;
   double AOmindistance = slicing.AntioozeDistance,
@@ -929,11 +929,10 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> points,
 }
 
 // walk around holes
-void Printlines::clipMovements(vector<Poly> *polys, vector<PLine> &lines,
+void Printlines::clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
 			       double maxerr) const
 {
-  if (polys==NULL) return;
-  if (lines.size()==0) return;
+  if (polys==NULL || lines.size()==0) return;
   vector<PLine> newlines;
   for (guint i=0; i < lines.size(); i++) {
     if (lines[i].feedrate == 0) {
@@ -964,7 +963,7 @@ void Printlines::clipMovements(vector<Poly> *polys, vector<PLine> &lines,
 	bool ispath = shortestPath(lines[i].from,lines[i].to,
 				   holes, frompoly, path, maxerr);
 	if (ispath) {
-	  int divisions = (divideline(i,path)); 
+	  int divisions = (divideline(i,path,lines)); 
 	  i += divisions;
 	  if (divisions>0)
 	    cerr << divisions << " div in poly " << topoly << " - " << ispath << " path " << path.size()<<endl;
@@ -986,8 +985,8 @@ void Printlines::clipMovements(vector<Poly> *polys, vector<PLine> &lines,
 	}
 #endif
       }
-      if (0 && frompoly != -1 && topoly != -1 && frompoly != topoly) {
-	cerr <<i << " : "<<frompoly << " p>> " << topoly << endl;	
+      else if (0 && frompoly != -1 && topoly != -1 && frompoly != topoly) {
+	cerr << i << " : "<<frompoly << " p>> " << topoly << endl;	
 	// vector<Intersection> frominter = 
 	//   polys[frompoly].lineIntersections(lines[i].from,lines[i].to, maxerr);
 	// vector<Intersection> tointer = 
@@ -1005,7 +1004,11 @@ void Printlines::clipMovements(vector<Poly> *polys, vector<PLine> &lines,
 	path.push_back((*polys)[frompoly].vertices[fromind]);
 	path.push_back((*polys)[topoly].vertices[toind]);
 	//path.push_back(lines[i].to);
-	//i+= (divideline(i,path)); // test new lines again?
+	for (uint pi=0; pi < path.size(); pi++)
+	  cerr << path[pi] << endl;
+	int div=(divideline(i, path, lines));
+	cerr << fromind << "--" << toind << "  - " << div <<endl;
+	i+=div;
       }
     }
   }

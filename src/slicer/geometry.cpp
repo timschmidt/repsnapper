@@ -193,7 +193,7 @@ Vector2d rotated(Vector2d p, Vector2d center, double angle, bool ccw)
 // squared minimum distance of p to segment s1--s2, onseg = resulting point on segment
 // http://stackoverflow.com/a/1501725
 double point_segment_distance_Sq(const Vector2d s1, const Vector2d s2, 
-			const Vector2d p, Vector2d &onseg) {
+				 const Vector2d p, Vector2d &onseg) {
   const double l2 = (s2-s1).squared_length();  // i.e. |w-v|^2 -  avoid a sqrt
   if (l2 == 0.0) { // s1 == s2 case
     onseg = s1;
@@ -365,9 +365,9 @@ bool IntersectXY(const Vector2d p1, const Vector2d p2,
 // Users of this code must verify correctness for their application.
 //
 // inSegment(): determine if a point is inside a segment
-//    Input:  a point P, and a collinear segment S
-//    Return: true  = P is inside S
-//            fasle = P is not inside S
+//    Input:  a point P, and a collinear segment p1--p2
+//    Return: true  = P is inside p1--p2
+//            fasle = P is not inside p1--p2
 bool inSegment( const Vector2d P, const Vector2d p1, const Vector2d &p2)
 {
   if (p1.x() != p2.x()) {    // S is not vertical
@@ -574,15 +574,15 @@ void testangles(){
 
 /////////////////// PATH IN POLYGON //////////////////////
 
-//  Public-domain code by Darel Rex Finley, 2006.
-// http://alienryderflex.com/shortest_path/
-
 bool pointInPolys(Vector2d point,  vector<Poly> polys)
 {
   for (uint i=0; i< polys.size(); i++)
     if (polys[i].vertexInside(point)) return true;
   return false;
 }
+
+//  Public-domain code by Darel Rex Finley, 2006.
+// http://alienryderflex.com/shortest_path/
 
 // will return false
 // if the line cuts any of the given polygons except excluded one

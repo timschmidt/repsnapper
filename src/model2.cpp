@@ -489,7 +489,7 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
   clipp.addPolys(subjlayer->GetBridgePolygons(),   subject); 
   clipp.addPolys(subjlayer->GetDecorPolygons(),    subject); 
   //clipp.addPolys(cliplayer->GetOuterShell(),       clip); // have some overlap
-  clipp.addPolys(cliplayer->GetInnerShell(),       clip); // have some more overlap
+  clipp.addPolys(*(cliplayer->GetInnerShell()),       clip); // have some more overlap
   vector<Poly> uncovered = clipp.subtractMerged();
   return uncovered; 
 }				 
@@ -504,7 +504,7 @@ vector<ExPoly> Model::GetUncoveredExPolygons(const Layer * subjlayer,
   clipp.addPolys(subjlayer->GetBridgePolygons(),   subject); 
   clipp.addPolys(subjlayer->GetDecorPolygons(),    subject); 
   //clipp.addPolys(cliplayer->GetOuterShell(),       clip); // have some overlap
-  clipp.addPolys(cliplayer->GetInnerShell(),       clip); // have some more overlap
+  clipp.addPolys(*(cliplayer->GetInnerShell()),    clip); // have some more overlap
   vector<ExPoly> uncovered = clipp.ext_subtract();
   return uncovered;
 }				 
@@ -601,7 +601,7 @@ void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
     spolys = clipp.getOffset(clipp.subtract(),
 			     widen * subjlayer->thickness);
   else
-    spolys = clipp.getMerged(clipp.subtract());
+    spolys = clipp.subtractMerged();
   subjlayer->setSupportPolygons(spolys);
 }
 

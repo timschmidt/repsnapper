@@ -240,12 +240,12 @@ vector<ExPoly> Clipping::ext_subtract()
 		 CL::pftEvenOdd, CL::pftEvenOdd);
   return getExPolys(diff, lastZ, lastExtrF);
 }
-vector<Poly> Clipping::subtractMerged()
+vector<Poly> Clipping::subtractMerged(double dist)
 {
   CL::Polygons diff;
   clpr.Execute(CL::ctDifference, diff, 
 	       CL::pftEvenOdd, CL::pftEvenOdd);
-  return getPolys(getMerged(diff), lastZ, lastExtrF);
+  return getPolys(getMerged(diff, dist), lastZ, lastExtrF);
 }
 
 vector<Poly> Clipping::Xor()

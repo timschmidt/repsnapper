@@ -195,7 +195,7 @@ void Poly::move(Vector2d delta)
 // if poly is not closed, only test first and last point
 void Poly::nearestIndices(const Poly p2, int &thisindex, int &otherindex) const
 {
-  double mindist = 1000000;
+  double mindist = INFTY;
   for (uint i = 0; i < vertices.size(); i++) {
     if (!closed && i != 0 && i != vertices.size()-1) continue;
     for (uint j = 0; j < p2.vertices.size(); j++) {
@@ -278,11 +278,14 @@ bool Poly::vertexInside(const Vector2d point, double maxoffset) const
   // If n_intersections is even, return false, else return true
   Vector2d EndP(point.x()+10000, point.y());
   int intersectcount = 1; // we want to test if uneven
-
+  double maxoffsetSq = maxoffset*maxoffset;
+  Vector2d dummy;
   for(size_t i=0; i<vertices.size();i++)
     {
       Vector2d P1 = getVertexCircular(i-1);
       Vector2d P2 = vertices[i];
+
+      if (point_segment_distance_Sq(point, P1, P2, dummy) <= maxoffsetSq) return true;
                    
       // Skip horizontal lines, we can't intersect with them, 
       // because the test line is horizontal

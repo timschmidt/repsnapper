@@ -174,7 +174,7 @@ void Layer::addPolygons(vector<Poly> polys)
 void Layer::calcBridgeAngles(const Layer *layerbelow) {
   bridge_angles.resize(bridgePolygons.size());
   Clipping clipp;
-  vector<Poly> polysbelow = layerbelow->GetInnerShell();//clipp.getOffset(polygons,3*thickness);
+  vector<Poly> polysbelow = *(layerbelow->GetInnerShell());//clipp.getOffset(polygons,3*thickness);
   bridgePillars.resize(bridgePolygons.size());
   for (uint i=0; i<bridgePolygons.size(); i++) 
     {
@@ -385,7 +385,7 @@ void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor)
   else
     fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
 
-  vector<Poly> normals = clipp.subtractMerged();
+  vector<Poly> normals = clipp.subtractMerged(thickness/2.);
   setNormalFillPolygons(normals);
  //mergeFullPolygons(false); // done separately
 }
@@ -424,25 +424,25 @@ void Layer::mergeSupportPolygons()
   setSupportPolygons(Clipping::getMerged(GetSupportPolygons()));
 }
 
-vector<Poly> Layer::GetInnerShell() const
+const vector<Poly> * Layer::GetInnerShell() const
 {
   // if (fillPolygons.size()>0) return fillPolygons;
   // // no offset
-  if (shellPolygons.size()>0) return shellPolygons.back();
+  if (shellPolygons.size()>0) return &(shellPolygons.back());
   // no shells:
-  if (skinPolygons.size()>0) return skinPolygons;
+  if (skinPolygons.size()>0) return &skinPolygons;
   // no skins
-  return polygons;
+  return &polygons;
 }
-vector<Poly> Layer::GetOuterShell() const
+const vector<Poly> * Layer::GetOuterShell() const
 {
-  if (skinPolygons.size()>0) return skinPolygons;
+  if (skinPolygons.size()>0) return &skinPolygons;
   // no skins
-  if (shellPolygons.size()>0) return shellPolygons.front();
+  if (shellPolygons.size()>0) return &(shellPolygons.front());
   // no shells:
-  if (fillPolygons.size()>0) return fillPolygons;
+  if (fillPolygons.size()>0) return &fillPolygons;
   // no offset
-  return polygons;
+  return &polygons;
 }
 
 // circular numbering
@@ -646,7 +646,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   vector<Poly> polys; // intermediate collection
 
   // polys to keep line movements inside
-  vector<Poly> clippolys = GetOuterShell();
+  const vector<Poly> * clippolys = GetOuterShell();
 
   // 1. Skins, all but last, because they are the lowest lines, below layer Z
   if (skins > 1) {
@@ -672,7 +672,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 			   startPoint, lines, hardware.MaxShellSpeed);
       if (s < skins) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
-	printlines.clipMovements(&clippolys, lines, linewidth/2.);
+	printlines.clipMovements(clippolys, lines, linewidth/2.);
 	printlines.optimize(hardware, slicing, slicing.MinLayertime/skins, lines);
 	printlines.getLines(lines, lines3);
 	lines.clear();
@@ -743,7 +743,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   if ((guint)LayerNo < slicing.FirstLayersNum)
     speedfactor = slicing.FirstLayersSpeed;
 
-  printlines.clipMovements(&clippolys, lines, linewidth/2.);
+  printlines.clipMovements(clippolys, lines, linewidth/2.);
   printlines.optimize(hardware, slicing, slicing.MinLayertime, lines);
   printlines.setSpeedFactor(speedfactor, lines);
   double slowdownfactor = printlines.getSlowdownFactor();
@@ -828,8 +828,9 @@ void draw_polys(vector <Poly> polys, int gl_type, int linewidth, int pointsize,
   glColor4f(rgb[0],rgb[1],rgb[2], a);
   glLineWidth(linewidth);
   glPointSize(pointsize);
-  for(size_t p=0; p<polys.size();p++)
+  for(size_t p=0; p<polys.size();p++) {
     polys[p].draw(gl_type);
+  }
 }
 void draw_polys(vector< vector <Poly> > polys, int gl_type, int linewidth, int pointsize,
 		const float *rgb, float a)
@@ -933,13 +934,25 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
     }
   //draw_polys(GetInnerShell(), GL_LINE_LOOP, 2, 3, WHITE,  1);
   glLineWidth(1);  
-  if(DrawCPVertexNumbers)
+  if(DrawCPVertexNumbers) // poly vertex numbers
     for(size_t p=0; p<polygons.size();p++)
       polygons[p].drawVertexNumbers();
   
-  if(DrawCPLineNumbers)
+  if(DrawCPLineNumbers)  // poly line numbers
     for(size_t p=0; p<polygons.size();p++)
       polygons[p].drawLineNumbers();
+
+  if(DrawVertexNumbers) { // infill vertex numbers
+    for(size_t p=0; p<fillPolygons.size();p++)
+      fillPolygons[p].drawVertexNumbers();
+    for(size_t p=0; p<fullFillPolygons.size();p++)
+      fullFillPolygons[p].drawVertexNumbers();
+    for(size_t p=0; p<decorPolygons.size();p++)
+      decorPolygons[p].drawVertexNumbers();
+    for(size_t p=0; p<shellPolygons.size();p++)
+      for(size_t q=0; q<shellPolygons[p].size();q++)
+	shellPolygons[p][q].drawVertexNumbers();
+  }
 }
 
 void Layer::DrawMeasures(Vector2d point)

@@ -96,8 +96,8 @@ public:
   vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
   vector<Poly>  GetShellPolygonsCirc(int number) const;
   Poly  GetSkirtPolygon() const {return skirtPolygon; };
-  vector<Poly> GetInnerShell() const;
-  vector<Poly> GetOuterShell() const;
+  const vector<Poly> * GetInnerShell() const;
+  const vector<Poly> * GetOuterShell() const;
   Poly GetHullPolygon() const {return hullPolygon;};
   
   void setFullFillPolygons(const vector<Poly> polys);  

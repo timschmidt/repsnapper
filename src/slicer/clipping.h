@@ -82,7 +82,7 @@ public:
   vector<Poly> unite();
   vector<Poly> subtract();
   vector<ExPoly> ext_subtract();
-  vector<Poly> subtractMerged();
+  vector<Poly> subtractMerged(double overlap=0.001);
   vector<Poly> Xor();
 
   static vector<Poly> getMerged(vector<Poly> polys, double overlap=0.001);
