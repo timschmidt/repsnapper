@@ -9,7 +9,7 @@ DATE=`  echo "$LOG" | awk -v FS="Date:   " '/Date:/{print $2; exit}'`
 
 OLDCOMMIT=""
 if [ -e $VERSION_H ]; then
-    OLDCOMMIT=`awk -v FS="\=" '/const string GIT_COMMIT=/{print $2}' $VERSION_H`
+    OLDCOMMIT=`awk -v FS="=" '/const string GIT_COMMIT=/{print $2}' $VERSION_H`
 fi
 
 if [ "x\"$COMMIT\";" == "x$OLDCOMMIT" ]; then
