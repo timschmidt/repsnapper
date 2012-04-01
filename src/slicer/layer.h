@@ -76,8 +76,9 @@ public:
   vector<double> getBridgeRotations(const vector<Poly> poly) const;
   void calcBridgeAngles(const Layer *layerbelow);
   
-  void MakeShells(uint shellcount, double extrudedWidth, double shelloffset,
-  		  bool makeskirt, double skirtdistance, double infilloverlap);
+  void MakeShells(const Settings &settings); 
+  // uint shellcount, double extrudedWidth, double shelloffset,
+  // bool makeskirt, double skirtdistance, double infilloverlap);
   /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */
   /* 			     double distance,  */
   /* 			     ClipperLib::JoinType join_type = ClipperLib::jtMiter); */

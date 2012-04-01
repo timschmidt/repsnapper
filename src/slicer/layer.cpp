@@ -520,12 +520,21 @@ void Layer::setSkirtPolygon(const Poly poly)
 }
 
 
-void Layer::MakeShells(uint shellcount, double extrudedWidth, double shelloffset,
-		       bool makeskirt, double skirtdistance, double infilloverlap)
+void Layer::MakeShells(const Settings &settings)
 {
-  double distance = 0.5 * extrudedWidth;
-  double cleandist = min(distance/CLEANFACTOR, thickness/CLEANFACTOR);
+  double extrudedWidth        = settings.Hardware.GetExtrudedMaterialWidth(thickness);
+  double roundline_extrfactor = 
+    settings.Hardware.RoundedLinewidthCorrection(extrudedWidth,thickness);
+  double distance       = 0.5 * extrudedWidth;
+  double cleandist      = min(distance/CLEANFACTOR, thickness/CLEANFACTOR);
+  double shelloffset    = settings.Slicing.ShellOffset;
   vector<Poly> shrinked = Clipping::getOffset(polygons,-distance-shelloffset);
+  uint shellcount       = settings.Slicing.ShellCount;
+  double skirtdistance  = settings.Slicing.SkirtDistance;
+  double infilloverlap  = settings.Slicing.InfillOverlap;
+  bool makeskirt        = ( settings.Slicing.Skirt 
+			    && (getZ() <= settings.Slicing.SkirtHeight) );
+
   for (uint i = 0; i<shrinked.size(); i++)  
     shrinked[i].cleanup(cleandist);
   //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
@@ -533,11 +542,14 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth, double shelloffset
   if (shellcount > 0) {
     if (skins>1) { // either skins 
       for (uint i = 0; i<shrinked.size(); i++)  {
-	shrinked[i].setExtrusionFactor(1./skins);
+	shrinked[i].setExtrusionFactor(1./skins*roundline_extrfactor);
       }
       skinPolygons = shrinked; 
     } else {  // or normal shell
       clearpolys(shellPolygons);
+      for (uint i = 0; i<shrinked.size(); i++)  {
+	shrinked[i].setExtrusionFactor(roundline_extrfactor);
+      }
       shellPolygons.push_back(shrinked); 
     }
     // inner shells
@@ -545,8 +557,8 @@ void Layer::MakeShells(uint shellcount, double extrudedWidth, double shelloffset
     for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
       {
 	shrinked = Clipping::getOffset(shrinked,-distance);
-	for (uint i = 0; i<shrinked.size(); i++)  
-	  shrinked[i].cleanup(cleandist);
+	for (uint j = 0; j<shrinked.size(); j++) 
+	  shrinked[j].cleanup(cleandist);
 	//shrinked = Clipping::getShrinkedCapped(shrinked,distance); 
 	shellPolygons.push_back(shrinked);
       }

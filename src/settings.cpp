@@ -1174,19 +1174,36 @@ void Settings::connect_to_ui (Builder &builder)
 }
 
 
+// extrusion ratio for round-edge lines
+double Settings::HardwareSettings::RoundedLinewidthCorrection(double extr_width,
+							      double layerheight)
+{
+  double factor = 1 + (M_PI/4.-1) * layerheight/extr_width;
+  // assume 2 half circles at edges
+  //    /-------------------\
+  //   |                     |
+  //    \-------------------/
+  //cerr << "round factor " << factor << endl;
+  return factor;
+
+}
+
+
 double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) const
 {
+  // ExtrudedMaterialWidthRatio is preset by user 
   return ExtrudedMaterialWidthRatio * layerheight;
 }
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
 
-// We do our internal measurement in terms of the length of extruded material
+
+// how much mm filament material per extruded line length mm -> E gcode 
 double Settings::HardwareSettings::GetExtrudeFactor(double layerheight) const
 {
-  double f = ExtrusionFactor;
-  double matWidth = GetExtrudedMaterialWidth(layerheight);
-  if (CalibrateInput) {
+  double f = ExtrusionFactor; // overall factor
+  double matWidth = GetExtrudedMaterialWidth(layerheight); // this is the goal
+  if (CalibrateInput) {  // means we use input filament diameter
     // otherwise we just work back from the extruded diameter for now.
     f *= (matWidth * matWidth) / (FilamentDiameter * FilamentDiameter);
   } // else: we work in terms of output anyway;

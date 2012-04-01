@@ -66,7 +66,7 @@ class Settings {
 
     float MaxShellSpeed;
 
-    bool  CalibrateInput; // hardware treats 'mm' as cold input mm not of hot output.
+    bool  CalibrateInput; // hardware treats 'mm' as filament input mm not of nozzle output.
     float DistanceToReachFullSpeed;
     float ExtrusionFactor;
     float FilamentDiameter;
@@ -87,6 +87,7 @@ class Settings {
 
     float DownstreamMultiplier;
     float DownstreamExtrusionMultiplier;
+    static double RoundedLinewidthCorrection(double extr_width, double layerheight);
     double GetExtrudeFactor(double layerheight) const;
   };
   HardwareSettings Hardware;

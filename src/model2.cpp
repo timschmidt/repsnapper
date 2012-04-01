@@ -663,8 +663,6 @@ void Model::MakeShells()
   if (!m_progress->restart (_("Shells"), count)) return;
   int progress_steps=(int)(count/100);
   if (progress_steps==0) progress_steps=1;
-  double matwidth, skirtheight = settings.Slicing.SkirtHeight;
-  bool makeskirt=false;
   bool cont = true;
 
 #ifdef _OPENMP
@@ -684,13 +682,7 @@ void Model::MakeShells()
 #endif
       }
       if (!cont) continue;
-      matwidth = settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
-      makeskirt = settings.Slicing.Skirt && (layers[i]->getZ() <= skirtheight);
-      layers[i]->MakeShells(settings.Slicing.ShellCount,
-			    matwidth, 
-			    settings.Slicing.ShellOffset,
-			    makeskirt, settings.Slicing.SkirtDistance,
-			    settings.Slicing.InfillOverlap); 
+      layers[i]->MakeShells(settings);
     }
 #ifdef _OPENMP
   omp_destroy_lock(&progress_lock);

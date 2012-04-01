@@ -122,15 +122,17 @@ void Model::GlDrawGCode(int layerno)
 {
   if (settings.Display.DisplayGCode) 
     gcode.draw (settings, layerno, false);
-  if (currentprintingline>0) {
-    int currentlayer = gcode.getLayerNo(currentprintingline);
+  // assume that the real printing line is the one at the start of the buffer
+  unsigned long printedline = currentprintingline - currentbufferedlines;
+  if (printedline > 0) {
+    int currentlayer = gcode.getLayerNo(printedline);
     if (currentlayer>=0) {
       int start = gcode.getLayerStart(currentlayer);
       int end = gcode.getLayerEnd(currentlayer);
       //gcode.draw (settings, currentlayer, true, 1);
-      gcode.drawCommands(settings, start, currentprintingline, true, 4, false, 
+      gcode.drawCommands(settings, start, printedline, true, 4, false, 
 			 settings.Display.DisplayGCodeBorders);
-      gcode.drawCommands(settings,  currentprintingline, end,  true, 1, false, 
+      gcode.drawCommands(settings,  printedline, end,  true, 1, false, 
 			 settings.Display.DisplayGCodeBorders);
     }
     // gcode.drawCommands(settings, currentprintingline-currentbufferedlines, 
@@ -926,14 +928,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   //   }
   // }
 	  
-  bool makeskirt = settings.Slicing.Skirt && (layer->getZ() <= settings.Slicing.SkirtHeight);
-  
-  double matwidth = settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
-  layer->MakeShells(settings.Slicing.ShellCount,
-		    matwidth, 
-		    settings.Slicing.ShellOffset,
-		    makeskirt, settings.Slicing.SkirtDistance,
-		    settings.Slicing.InfillOverlap);
+  layer->MakeShells(settings);
   
   if (calcinfill)
     layer->CalcInfill(settings);

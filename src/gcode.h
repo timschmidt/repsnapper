@@ -83,8 +83,8 @@ public:
   vector<unsigned long> layerchanges;
   int getLayerNo(const double z) const;
   int getLayerNo(const unsigned long commandno) const;
-  int getLayerStart(const int layerno) const;
-  int getLayerEnd(const int layerno) const;
+  unsigned long getLayerStart(const uint layerno) const;
+  unsigned long getLayerEnd(const uint layerno) const;
   
 private:
   unsigned long unconfirmed_blocks;
