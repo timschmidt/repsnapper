@@ -35,6 +35,11 @@
     <property name="short_label">Preferences</property>
     <property name="tooltip">Open the Preferences Dialog</property>
     <property name="stock_id">gtk-preferences</property>
+  </object> 
+  <object class="GtkAction" id="Fullscreen">
+    <property name="label">Fullscreen</property>
+    <property name="short_label">Fullscreen</property>
+    <property name="tooltip">Toggle Fullscreen</property>
   </object>
   <object class="GtkAction" id="Quit">
     <property name="label">_Quit</property>
@@ -860,6 +865,15 @@ and others I forgot... (needs updating)</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                         <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkCheckMenuItem" id="imagemenuitem7">
+                        <property name="can_focus">False</property>
+                        <property name="related_action">Fullscreen</property>
+                        <property name="use_underline">True</property>
+                        <property name="active">false</property>
+                        <accelerator key="F11" signal="activate"/>
                       </object>
                     </child>
                     <child>
