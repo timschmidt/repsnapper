@@ -8,6 +8,7 @@ src/arcball.cpp
 src/connectview.cpp
 src/file.cpp
 src/gcode.cpp
+src/gcodestate.cpp
 src/model.cpp
 src/model2.cpp
 src/objtree.h
@@ -23,7 +24,6 @@ src/settings.h
 src/shape.cpp
 src/view.cpp
 src/slicer/clipping.cpp
-src/slicer/gcode.cpp
 src/slicer/infill.cpp
 src/slicer/infill.h
 src/slicer/layer.cpp
