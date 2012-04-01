@@ -159,8 +159,8 @@ void Printer::ResetButton()
 {
   if (device==NULL) return;
   Stop();
-
-  // how to reset?
+  cerr << "resetting..."<< endl;
+  rr_dev_reset_device(device);
 }
 
 bool Printer::IsConnected()

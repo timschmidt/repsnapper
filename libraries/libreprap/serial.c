@@ -17,7 +17,7 @@
 #ifdef __linux__
 //#ifdef HAVE_ASM_IOCTLS_H
 #include <asm/ioctls.h>
-
+#include <sys/ioctl.h>
 //#endif
 
 struct linux_serial_struct {
@@ -152,7 +152,11 @@ static speed_t ntocf(const long l) {
 #endif
 #ifdef B38400
 	case 38400:
-		return B38400;
+	  /* reset ??? */
+	  /* ioctl(mHandle, TIOCGSERIAL, &ss); */
+	  /* ss.flags &= ~ASYNC_SPD_MASK; */
+	  /* ioctl(mHandle, TIOCSSERIAL, &ss); */
+	  return B38400;
 #endif
 #ifdef B57600
 	case 57600:
@@ -218,9 +222,9 @@ static speed_t ntocf(const long l) {
 	  printf( "non-standard baudrate %i\n",  l);
 	  return -1;
 	}
-#else /* non-linux: */
+#else /* non-linux : */
 	return (speed_t) l;
-#endif
+#endif // __linux__
 }
 
 // Repeated many times to allow errors to be isolated to the specific
@@ -362,4 +366,32 @@ serial_close(Serial fd)
 
   return result;
 }
-#endif
+
+
+int
+serial_setDTR(Serial fd, short dtr)
+{
+  /* printf("DTR %i\n",dtr); */
+  int status;
+  ioctl(fd, TIOCMGET, &status);
+  if (status<0) return;
+  if (dtr==1)
+    status &= TIOCM_DTR; // DTR 1
+  else if (dtr==0)
+    status &= ~TIOCM_DTR; // DTR 0
+  ioctl(fd, TIOCMSET, &status);
+}
+
+int
+serial_flipDTR(Serial fd)
+{
+  int status;
+  ioctl(fd, TIOCMGET, &status);
+  if (status<0) return;
+  if (status & TIOCM_DTR)
+    serial_setDTR(fd, 0);
+  else
+    serial_setDTR(fd, 1);
+}
+
+#endif // !WIN32
