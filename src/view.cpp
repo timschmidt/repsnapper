@@ -118,6 +118,18 @@ void View::load_stl ()
   FileChooser::ioDialog (m_model, FileChooser::OPEN, FileChooser::STL);
 }
 
+void View::toggle_fullscreen()
+{ 
+  static bool is_fullscreen = false;
+  if (is_fullscreen) {
+    unfullscreen();
+    is_fullscreen = false;
+  } else {
+    fullscreen();
+    is_fullscreen = true;
+  }
+}
+
 void View::save_stl ()
 {
   FileChooser::ioDialog (m_model, FileChooser::SAVE, FileChooser::STL);
@@ -859,8 +871,10 @@ View::View(BaseObjectType* cobject,
   connect_action ("Quit",            sigc::ptr_fun(&Gtk::Main::quit));
   connect_action ("About",           sigc::mem_fun(*this, &View::about_dialog) );
 
+  connect_action ("Fullscreen",        sigc::mem_fun(*this, &View::toggle_fullscreen) );
   connect_action ("PreferencesDialog", sigc::bind(sigc::mem_fun(*this, &View::show_dialog),
 						  "preferences_dlg"));
+  
   connect_action ("LoadSettings",    sigc::mem_fun(*this, &View::load_settings));
   connect_action ("SaveSettings",    sigc::mem_fun(*this, &View::save_settings));
   connect_action ("SaveSettingsAs",  sigc::mem_fun(*this, &View::save_settings_as));
