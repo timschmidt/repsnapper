@@ -42,6 +42,7 @@ class View : public Gtk::Window
   friend class PrintInhibitor;
   friend class Render;
 
+  void toggle_fullscreen();
   void load_gcode();
   void save_gcode();
   void move_gcode_to_platform ();
