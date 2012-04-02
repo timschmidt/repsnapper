@@ -77,13 +77,23 @@ public:
   void setZ(double z) {lastZ = z;};
   void setExtrusionFactor(double e) {lastExtrF = e;};
   
-  vector<Poly> intersect();
-  vector<ExPoly> ext_intersect();
-  vector<Poly> unite();
-  vector<Poly> subtract();
-  vector<ExPoly> ext_subtract();
-  vector<Poly> subtractMerged(double overlap=0.001);
-  vector<Poly> Xor();
+  vector<Poly>   intersect      (CL::PolyFillType sft=CL::pftEvenOdd, 
+				 CL::PolyFillType cft=CL::pftEvenOdd);
+  vector<Poly>   unite          (CL::PolyFillType sft=CL::pftEvenOdd, 
+				 CL::PolyFillType cft=CL::pftEvenOdd);
+  vector<Poly>   subtract       (CL::PolyFillType sft=CL::pftEvenOdd, 
+				 CL::PolyFillType cft=CL::pftEvenOdd);
+  vector<Poly>   subtractMerged (double overlap=0.001,
+				 CL::PolyFillType sft=CL::pftEvenOdd, 
+				 CL::PolyFillType cft=CL::pftEvenOdd);
+  vector<Poly>   Xor            (CL::PolyFillType sft=CL::pftEvenOdd, 
+				 CL::PolyFillType cft=CL::pftEvenOdd);
+  vector<ExPoly> ext_intersect  (CL::PolyFillType sft=CL::pftEvenOdd, 
+				 CL::PolyFillType cft=CL::pftEvenOdd);
+  vector<ExPoly> ext_unite      (CL::PolyFillType sft=CL::pftEvenOdd, 
+				 CL::PolyFillType cft=CL::pftEvenOdd);
+  vector<ExPoly> ext_subtract   (CL::PolyFillType sft=CL::pftEvenOdd, 
+				 CL::PolyFillType cft=CL::pftEvenOdd);
 
   static vector<Poly> getMerged(vector<Poly> polys, double overlap=0.001);
   static CL::Polygons getMerged(CL::Polygons cpolys, int overlap=3);
@@ -109,9 +119,9 @@ public:
   static vector<ExPoly> getExPolys(const CL::ExPolygons excpolys, double z,
 				   double extrusionfactor);
 
-  static vector<ExPoly> getExPolys(const vector<Poly> polys, 
+  static vector<ExPoly> getExPolys(vector<Poly> polys, 
 				   double z, double extrusionfactor);
-  static vector<ExPoly> getExPolys(const vector<Poly> polys);
+  static vector<ExPoly> getExPolys(vector<Poly> polys);
   static CL::ExPolygons getExClipperPolygons(const vector<Poly> polys);
   
   static CL::Polygon  getClipperPolygon (const Poly poly);

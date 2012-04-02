@@ -55,16 +55,16 @@ public:
 	void cleanup(double maxerror);
 	vector<Vector2d> cleaned(const vector<Vector2d> vertices, double maxerror) const;
 
-	void reverse() {std::reverse(vertices.begin(),vertices.end());};
+	void reverse() {std::reverse(vertices.begin(),vertices.end());holecalculated = false;};
 
-	void clear(){vertices.clear();};
+	void clear(){vertices.clear(); holecalculated = false;};
 
 
 	//vector< vector<Vector2d> > intersect(Poly &poly1, Poly &poly2) const;
 
 	bool vertexInside(const Vector2d point, double maxoffset=0.0001) const;
 	bool vertexInside2(const Vector2d point, double maxoffset=0.0001) const;
-	bool polyInside(const Poly * poly, double maxoffset=0.0001) const;
+	bool isInside(const Poly * poly, double maxoffset=0.0001) const;
 	uint nearestDistanceSqTo(const Vector2d p, double &mindist) const;
 	void nearestIndices(const Poly p2, int &thisindex, int &otherindex) const;
 	double shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end) const;
@@ -91,7 +91,7 @@ public:
 	bool hole; // this polygon is a hole
 	Vector2d center;
 	Vector2d getCenter();
-	double getZ() const;
+	double getZ() const {return z;} 
 	void setZ(double z) {this->z = z;};
 	double getExtrusionFactor() const{return extrusionfactor;};
 	void setExtrusionFactor(double e){extrusionfactor = e;};
@@ -117,8 +117,10 @@ public:
 	uint size() const {return vertices.size(); };
 	Vector2d front() {return vertices.front(); };
 	Vector2d back()  {return vertices.back(); };
-	void push_back (Vector2d v) {vertices.push_back(v);};
-	void push_front(Vector2d v) {vertices.insert(vertices.begin(),v);};
+	void push_back (Vector2d v) {
+	  vertices.push_back(v); holecalculated = false;};
+	void push_front(Vector2d v) {
+	  vertices.insert(vertices.begin(),v); holecalculated = false;};
 
 	string info() const;
 

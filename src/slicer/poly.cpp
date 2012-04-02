@@ -56,13 +56,16 @@ Poly::Poly(const Poly p, double z)
   closed = true;
   this->z = z;
   this->extrusionfactor = p.extrusionfactor;
-  holecalculated = p.holecalculated;
-  hole = p.hole;
-  center = p.center;
   uint count = p.vertices.size();
   vertices.resize(count);
   for (uint i=0; i<count ; i++)
     vertices[i] = p.vertices[i];
+  holecalculated = p.holecalculated;
+  if (holecalculated) {
+    hole = p.hole;
+    center = p.center;
+  } else
+    calcHole();
 }
 
 
@@ -79,6 +82,7 @@ void Poly::cleanup(double epsilon)
   invert.insert(invert.end(),vertices.begin()+n_vert/2,vertices.end());
   invert.insert(invert.end(),vertices.begin(),vertices.begin()+n_vert/2);
   vertices = cleaned(invert, epsilon);
+  calcHole();
 }
 
 // Douglas-Peucker algorithm
@@ -127,7 +131,7 @@ void Poly::calcHole()
 {
   	if(vertices.size() == 0)
 	  return;	// hole is undefined
-	Vector2d p(-6000, -6000);
+	Vector2d p(-INFTY, -INFTY);
 	int v=0;
 	center = Vector2d(0,0);
 	Vector2d q;
@@ -153,9 +157,9 @@ void Poly::calcHole()
 	Vector2d V2 = getVertexCircular(v);
 	Vector2d V3 = getVertexCircular(v+1);
 
-	Vector2d Va=V2-V1;
-	Vector2d Vb=V3-V2;
-	hole = cross(Vb,Va) > 0; 
+	// Vector2d Va=V2-V1;
+	// Vector2d Vb=V3-V2;
+	hole = isleftof(V2, V3, V1); //cross(Vb,Va) > 0; 
 	holecalculated = true;
 }
 
@@ -172,15 +176,18 @@ Vector2d Poly::getCenter()
   return center;
 }
 
-void Poly::rotate(Vector2d center, double angle) 
+void Poly::rotate(Vector2d rotcenter, double angle) 
 {
   double sina = sin(angle);
   double cosa = cos(angle);
   for (uint i = 0; i < vertices.size();  i++) {
-    Vector2d mv = vertices[i]-center;
-    vertices[i] = Vector2d(mv.x()*cosa-mv.y()*sina+center.x(), 
-			   mv.y()*cosa+mv.x()*sina+center.y());
+    Vector2d mv = vertices[i]-rotcenter;
+    vertices[i] = Vector2d(mv.x()*cosa-mv.y()*sina+rotcenter.x(), 
+			   mv.y()*cosa+mv.x()*sina+rotcenter.y());
   }
+  Vector2d mc = center-rotcenter;
+  center = Vector2d(mc.x()*cosa - mc.y()*sina + rotcenter.x(), 
+		    mc.y()*cosa + mc.x()*sina + rotcenter.y());
 }
 
 void Poly::move(Vector2d delta) 
@@ -318,16 +325,15 @@ bool Poly::vertexInside2(const Vector2d p, double maxoffset) const
   return c;
 }
 
-// given poly completely contained in this?
-bool Poly::polyInside(const Poly * poly, double maxoffset) const
+// this polys completely contained in other
+bool Poly::isInside(const Poly * poly, double maxoffset) const
 {
   uint i, count=0;
-  for (i = 0; i < poly->vertices.size();  i++) {
-    Vector2d P = poly->vertices[i];
-    if (vertexInside(P,maxoffset))
+  for (i = 0; i < vertices.size();  i++) {
+    if (poly->vertexInside(vertices[i],maxoffset))
       count++;
   }
-  return count == poly->vertices.size();
+  return count == vertices.size();
 }
 
 
@@ -337,6 +343,7 @@ void Poly::addVertex(Vector2d v, bool front)
     vertices.insert(vertices.begin(),v);
   else
     vertices.push_back(v);
+  holecalculated=false;
 };
 
 
@@ -385,7 +392,6 @@ vector<Intersection> Poly::lineIntersections(const Vector2d P1, const Vector2d P
   return HitsBuffer;
 }
 
-double Poly::getZ() const {return z;} 
 // double Poly::getLayerNo() const { return plane->LayerNo;}
 
 
@@ -577,28 +583,21 @@ void Poly::draw(int gl_type, double z, bool randomized) const
     }
   }
   glEnd();
+  // if (hole) {
+  //   glBegin(GL_LINES);
+  //   for (uint i=0; i < count; i++){
+  //     glVertex3d(center.x(),center.y(),z);
+  //     Vector2d vn = vertices[i];
+  //     if (randomized) vn = random_displaced(vn);
+  //     glVertex3d(vn.x(),vn.y(),z);
+  //   }
+  //   glEnd();
+  // }
 }
 
 void Poly::draw(int gl_type, bool randomized) const
 {
-  Vector3d v;
-  uint count = vertices.size();
-  if (!closed && gl_type == GL_LINE_LOOP){
-    gl_type = GL_LINES;
-    count--;
-  }
-  glBegin(gl_type);	  
-  for (uint i=0; i < count;i++){
-    v = getVertexCircular3(i);
-    if (randomized) v = random_displaced(v);
-    glVertex3dv(v);
-    if ( gl_type == GL_LINES ) {
-      Vector3d vn = getVertexCircular3(i+1);
-      if (randomized) vn = random_displaced(vn);
-      glVertex3dv(vn);
-    }
-  }
-  glEnd();
+  draw(gl_type, getZ(), randomized);
 }
 
 void Poly::drawVertexNumbers() const

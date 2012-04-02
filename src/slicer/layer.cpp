@@ -343,10 +343,10 @@ void Layer::makeSkinPolygons()
 // each given ExPoly is a single bridge with its holes
 void Layer::addBridgePolygons(const vector<ExPoly> newexpolys) 
 {
-  // clip against normal fill and make these areas into bridges:
+  // clip againt normal fill and make these areas into bridges:
+  Clipping clipp;
   uint num_bridges = newexpolys.size();
   if (num_bridges==0) return;
-  Clipping clipp; // making bridge
   clipp.clear();
   bridgePolygons.clear();
   for (uint i=0; i < num_bridges; i++){
@@ -357,12 +357,11 @@ void Layer::addBridgePolygons(const vector<ExPoly> newexpolys)
     vector<ExPoly> exbridges = clipp.ext_intersect();
     bridgePolygons.insert(bridgePolygons.end(),exbridges.begin(),exbridges.end());
   }
-  // subtract from normal fill to get new normal fills:
+  // subtract from normal fill
   clipp.clear();
   clipp.addPolys(fillPolygons,subject); 
   clipp.addPolys(newexpolys, clip);
   setNormalFillPolygons(clipp.subtract());
-  //  mergeFullPolygons(true);
 }
 
 void Layer::addFullPolygons(const vector<ExPoly> newpolys, bool decor)

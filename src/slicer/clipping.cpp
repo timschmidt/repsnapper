@@ -1,3 +1,4 @@
+
 /*
     This file is a part of the RepSnapper project.
     Copyright (C) 2012  martin.dieringer@gmx.de
@@ -184,45 +185,53 @@ void Clipping::addPolygons(CL::Polygons cp, PolyType type)
 // }
 
 // have added Polyons by addPolygon(s)
-vector<Poly> Clipping::intersect()
+vector<Poly> Clipping::intersect(CL::PolyFillType sft, 
+				 CL::PolyFillType cft)
 {
   CL::Polygons inter;
-  clpr.Execute(CL::ctIntersection, inter, 
-	       CL::pftEvenOdd, CL::pftEvenOdd);
+  clpr.Execute(CL::ctIntersection, inter, sft, cft);
   return getPolys(inter, lastZ, lastExtrF);
 }
-vector<ExPoly> Clipping::ext_intersect()
+vector<ExPoly> Clipping::ext_intersect(CL::PolyFillType sft, 
+				       CL::PolyFillType cft)
 {
   CL::ExPolygons inter;
-  clpr.Execute(CL::ctIntersection, inter,
-	       CL::pftEvenOdd, CL::pftEvenOdd);
+  clpr.Execute(CL::ctIntersection, inter, sft, cft);
   return getExPolys(inter, lastZ, lastExtrF);
 }
 
 // have added Polyons by addPolygon(s)
-vector<Poly> Clipping::unite()
+vector<Poly> Clipping::unite(CL::PolyFillType sft, 
+			     CL::PolyFillType cft)
 {
   CL::Polygons united;
-  clpr.Execute(CL::ctUnion, united, 
-	       CL::pftPositive, CL::pftPositive);
+  clpr.Execute(CL::ctUnion, united, sft, cft);
   return getPolys(united, lastZ, lastExtrF);  
 }
+vector<ExPoly> Clipping::ext_unite(CL::PolyFillType sft, 
+				   CL::PolyFillType cft)
+{
+  CL::ExPolygons inter;
+  clpr.Execute(CL::ctUnion, inter, sft, cft);
+  return getExPolys(inter, lastZ, lastExtrF);
+}
+
 
 // have added Polyons by addPolygon(s)
-vector<Poly> Clipping::subtract()
+vector<Poly> Clipping::subtract(CL::PolyFillType sft, 
+				CL::PolyFillType cft)
 {
   CL::Polygons diff;
-  clpr.Execute(CL::ctDifference, diff, 
-	       CL::pftEvenOdd, CL::pftEvenOdd);
+  clpr.Execute(CL::ctDifference, diff, sft, cft);
   return getPolys(diff, lastZ, lastExtrF);
 }
-vector<ExPoly> Clipping::ext_subtract()
+vector<ExPoly> Clipping::ext_subtract(CL::PolyFillType sft, 
+				      CL::PolyFillType cft)
 {
   CL::ExPolygons diff;
   if (debug) {
     try {
-      clpr.Execute(CL::ctDifference, diff, 
-		   CL::pftEvenOdd, CL::pftEvenOdd);
+      clpr.Execute(CL::ctDifference, diff, sft, cft);
     } catch (int e){
       cerr << lastZ<<" - " << lastExtrF<< endl;
       if (e == 22){
@@ -240,19 +249,20 @@ vector<ExPoly> Clipping::ext_subtract()
 		 CL::pftEvenOdd, CL::pftEvenOdd);
   return getExPolys(diff, lastZ, lastExtrF);
 }
-vector<Poly> Clipping::subtractMerged(double dist)
+vector<Poly> Clipping::subtractMerged(double dist,
+				      CL::PolyFillType sft, 
+				      CL::PolyFillType cft)
 {
   CL::Polygons diff;
-  clpr.Execute(CL::ctDifference, diff, 
-	       CL::pftEvenOdd, CL::pftEvenOdd);
+  clpr.Execute(CL::ctDifference, diff, sft, cft);
   return getPolys(getMerged(diff, dist), lastZ, lastExtrF);
 }
 
-vector<Poly> Clipping::Xor()
+vector<Poly> Clipping::Xor(CL::PolyFillType sft, 
+			   CL::PolyFillType cft)
 {
   CL::Polygons xored;
-  clpr.Execute(CL::ctXor, xored, 
-	       CL::pftEvenOdd, CL::pftEvenOdd);
+  clpr.Execute(CL::ctXor, xored, sft, cft);
   return getPolys(xored, lastZ, lastExtrF);  
 }
 
@@ -407,10 +417,10 @@ vector<ExPoly> Clipping::getExPolys(const CL::ExPolygons excpolys, double z,
 }
 vector<Poly> Clipping::getPolys(const ExPoly expoly) 
 {
-  vector<Poly> polys (expoly.holes.size()+1);
-  polys[0] = expoly.outer;
-  for (uint i = 0; i < expoly.holes.size(); i++)
-    polys[i+1] = expoly.holes[i];
+  Clipping clipp;  
+  clipp.addPoly(expoly.outer,  subject);
+  clipp.addPolys(expoly.holes, clip);
+  vector<Poly> polys = clipp.subtract();
   return polys;
 }
 vector<Poly> Clipping::getPolys(const vector<ExPoly> expolys)
@@ -423,17 +433,36 @@ vector<Poly> Clipping::getPolys(const vector<ExPoly> expolys)
   return polys;
 }
 
-vector<ExPoly> Clipping::getExPolys(const vector<Poly> polys)
+vector<ExPoly> Clipping::getExPolys(vector<Poly> polys)
 {
-  return getExPolys(getExClipperPolygons(polys),
-		    polys.back().getZ(),
-		    polys.back().getExtrusionFactor());
+  // return getExPolys(getExClipperPolygons(polys), 
+  // 		    polys.back().getZ(),polys.back().getExtrusionFactor());
+  vector<ExPoly> expolys;
+  vector<Poly> holes;
+  for (uint i = 0; i<polys.size(); i++) {
+    if (polys[i].isHole()) {
+      holes.push_back(polys[i]);
+    } else {
+      ExPoly expoly;
+      expoly.outer = polys[i];
+      expolys.push_back(expoly);
+    }
+  }
+  for (uint j = 0; j<expolys.size(); j++)
+    for (uint i = 0; i<holes.size(); i++)
+      if (holes[i].isInside(&(expolys[j].outer)))
+	expolys[j].holes.push_back(holes[i]);
+  return expolys;
 }
 
-vector<ExPoly> Clipping::getExPolys(const vector<Poly> polys,
+vector<ExPoly> Clipping::getExPolys(vector<Poly> polys,
  				    double z, double extrusionfactor)
-{
-  return getExPolys(getExClipperPolygons(polys), z, extrusionfactor);
+{  
+  for (uint i = 0; i<polys.size(); i++) {
+    polys[i].setZ(z);
+    polys[i].setExtrusionFactor(extrusionfactor);
+  }
+  return getExPolys(polys);
 }
 //   CL::ExPolygons excpolys = getExClipperPolygons(polys);
 //   uint count = excpolys.size();

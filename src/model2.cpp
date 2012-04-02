@@ -462,8 +462,8 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
       // no bridge on marked layers (serial build)
       bool mbridge = make_bridges && (layers[i]->LayerNo != 0); 
       if (mbridge) {
-	vector<ExPoly> uncovered = GetUncoveredExPolygons(layers[i],layers[i-1]);
-	layers[i]->addBridgePolygons(uncovered);
+	vector<Poly> uncovered = GetUncoveredPolygons(layers[i],layers[i-1]);
+	layers[i]->addBridgePolygons(Clipping::getExPolys(uncovered));
 	layers[i]->calcBridgeAngles(layers[i-1]);
       }
       else {
@@ -493,24 +493,10 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
   vector<Poly> uncovered = clipp.subtractMerged();
   return uncovered; 
 }				 
-// find polys in subjlayer that are not covered by shell of cliplayer
-vector<ExPoly> Model::GetUncoveredExPolygons(const Layer * subjlayer,
-					     const Layer * cliplayer)
-{
-  Clipping clipp(false);
-  clipp.clear();
-  clipp.addPolys(subjlayer->GetFillPolygons(),     subject); 
-  clipp.addPolys(subjlayer->GetFullFillPolygons(), subject); 
-  clipp.addPolys(subjlayer->GetBridgePolygons(),   subject); 
-  clipp.addPolys(subjlayer->GetDecorPolygons(),    subject); 
-  //clipp.addPolys(cliplayer->GetOuterShell(),       clip); // have some overlap
-  clipp.addPolys(*(cliplayer->GetInnerShell()),    clip); // have some more overlap
-  vector<ExPoly> uncovered = clipp.ext_subtract();
-  return uncovered;
-}				 
 				 
 void Model::MultiplyUncoveredPolygons()
 {
+  if (settings.Slicing.ShellOnly && settings.Slicing.SolidThickness == 0.0) return;
   int shells = (int)ceil(settings.Slicing.SolidThickness/settings.Hardware.LayerThickness);
   shells = max(shells, (int)settings.Slicing.ShellCount);
   if (shells<1) return;
@@ -522,24 +508,23 @@ void Model::MultiplyUncoveredPolygons()
   if (!m_progress->restart (_("Uncovered Shells"), count*3)) return;
   int progress_steps=(int)(count*3/100);
   if (progress_steps==0) progress_steps=1;
-  // bottom-up: propagate downwards
+  // bottom-up: mulitply downwards
   int i,s;
   for (i=0; i < count; i++) 
     {
       if (i%progress_steps==0) if(!m_progress->update(i)) return;
+      // (brigdepolys are not multiplied downwards)
       vector<Poly>   fullpolys     = layers[i]->GetFullFillPolygons();
       vector<Poly>   decorpolys    = layers[i]->GetDecorPolygons();
-      vector<ExPoly> bridgepolys   = layers[i]->GetBridgePolygons();
       vector<Poly>   skinfullpolys = layers[i]->GetSkinFullPolygons();
       for (s=1; s < shells; s++) 
 	if (i-s > 1) {
 	  layers[i-s]->addFullPolygons (fullpolys);
-	  layers[i-s]->addFullPolygons (bridgepolys);
 	  layers[i-s]->addFullPolygons (skinfullpolys);
 	  layers[i-s]->addFullPolygons (decorpolys);
 	}
     }
-  // top-down: propagate upwards
+  // top-down: mulitply upwards
   for (int i=count-1; i>=0; i--) 
     {
       if (i%progress_steps==0) if (!m_progress->update(count + count -i)) return;

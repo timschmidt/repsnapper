@@ -97,8 +97,6 @@ public:
 	void MakeUncoveredPolygons(bool make_decor, bool make_bridges=true);
 	vector<Poly> GetUncoveredPolygons(const Layer *subjlayer, 
 					  const Layer *cliplayer);
-	vector<ExPoly> GetUncoveredExPolygons(const Layer * subjlayer,
-					      const Layer * cliplayer);
 	void MakeFullSkins();
 	void MultiplyUncoveredPolygons();
 	void MakeSupportPolygons(Layer * subjlayer, const Layer * cliplayer, 

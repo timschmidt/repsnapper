@@ -858,6 +858,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 	lines[connectedlines[i].front()].start )
       poly.addVertex(vertices[lines[connectedlines[i].back()].end]);
     //cerr << "poly size " << poly.size() << endl;
+    poly.calcHole();
     polys.push_back(poly);
   }
   //cerr << "found " << polys.size() << " polys" << endl;
