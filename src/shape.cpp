@@ -417,19 +417,19 @@ int Shape::load(string filename)
 	return -1;
     }
 
+    // somehow sort triangles by height to save time when slicing?
+    // problem: transform matrix
     //std::sort(triangles.begin(),triangles.end(),Triangle::maxZsort());
 
-    // OptimizeRotation(); // no, I probably have prepared the file
     CenterAroundXY();
 
-    //cout << getSTLsolid(0) << endl;
     scale_factor = 1.0;
     scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     return 0;
 }
 
 
-bool Shape::hasAdjacentTriangleTo(Triangle triangle, double sqdistance) const
+bool Shape::hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance) const
 {
   for (uint i = 0; i < triangles.size(); i++)
     if (triangle.isConnectedTo(triangles[i],sqdistance)) return true;
@@ -658,7 +658,7 @@ void Shape::PlaceOnPlatform()
 }
 
 // Rotate and adjust for the user - not a pure rotation by any means
-void Shape::Rotate(Vector3d axis, double angle)
+void Shape::Rotate(const Vector3d & axis, const double & angle)
 {
   CenterAroundXY();
   //transform3D.rotate(axis,angle);
@@ -961,7 +961,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 // }
 // #endif
 
-int find_vertex(const vector<Vector2d> vertices,  const Vector2d v, double delta = 0.0001)
+int find_vertex(const vector<Vector2d> &vertices,  const Vector2d &v, double delta = 0.0001)
 {
   for (uint i = 0; i<vertices.size(); i++) {
     if ( (v-vertices[i]).squared_length() < delta ) 
@@ -1096,11 +1096,11 @@ void checkGlutInit()
 	glutInit (&argc, argv);
 }
 
-void drawString(Vector3d pos, string text)
+void drawString(const Vector3d &pos, const string &text)
 {
   drawString(pos,GLUT_BITMAP_HELVETICA_12,text);
 }
-void drawString(Vector3d pos, void* font, string text)
+void drawString(const Vector3d &pos, void* font, const string &text)
 {
 	checkGlutInit();
 	glRasterPos3d(pos.x(), pos.y(), pos.z());
@@ -1435,7 +1435,7 @@ bool CleanupSharedSegments(vector<Segment> &lines)
  * match from any detached points and joining them, with new synthetic
  * segments.
  */
-bool CleanupConnectSegments(const vector<Vector2d> vertices, vector<Segment> &lines, bool connect_all)
+bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &lines, bool connect_all)
 {
 	vector<int> vertex_types;
 	vertex_types.resize (vertices.size());

@@ -74,13 +74,13 @@ void Infill::clearPatterns() {
 
 
 // fill polys with type etc.
-void Infill::addPoly(double z, const Poly poly, InfillType type, 
+void Infill::addPoly(double z, const Poly &poly, InfillType type, 
 		     double infillDistance, double offsetDistance, double rotation)
 {
   vector<Poly> polys; polys.push_back(poly);
   addPolys(z, polys, type, infillDistance, offsetDistance, rotation);
 }
-void Infill::addPolys(double z, const vector<Poly> polys, InfillType type, 
+void Infill::addPolys(double z, const vector<Poly> &polys, InfillType type, 
 		      double infillDistance, double offsetDistance, double rotation)
 {
   this->infillDistance = infillDistance;
@@ -96,7 +96,7 @@ void Infill::addPolys(double z, const vector<Poly> polys, InfillType type,
   addPolys(z, polys, patterncpolys, offsetDistance);
 }
 
-void Infill::addPoly(double z, ExPoly expoly, InfillType type, 
+void Infill::addPoly(double z, const ExPoly &expoly, InfillType type, 
 		     double infillDistance, double offsetDistance, double rotation)
 {
   vector<Poly> polys = Clipping::getPolys(expoly);
@@ -119,16 +119,16 @@ void Infill::addPoly(double z, ExPoly expoly, InfillType type,
 // }
 
 // fill polys with fillpolys
-void Infill::addPolys(double z, const vector<Poly> polys, 
-		      const vector<Poly> fillpolys,
+void Infill::addPolys(double z, const vector<Poly> &polys, 
+		      const vector<Poly> &fillpolys,
 		      double offsetDistance)
 {
   addPolys(z, polys, Clipping::getClipperPolygons(fillpolys), offsetDistance);
 }
 
 // clip infill pattern polys against polys
-void Infill::addPolys(double z, const vector<Poly> polys, 
-		      const ClipperLib::Polygons patterncpolys,
+void Infill::addPolys(double z, const vector<Poly> &polys, 
+		      const ClipperLib::Polygons &patterncpolys,
 		      double offsetDistance)
 {
   Clipping clipp;
@@ -144,7 +144,7 @@ void Infill::addPolys(double z, const vector<Poly> polys,
 
 // generate infill pattern as a vector of polygons
 ClipperLib::Polygons Infill::makeInfillPattern(InfillType type, 
-					       const vector<Poly> tofillpolys,
+					       const vector<Poly> &tofillpolys,
 					       double infillDistance,
 					       double offsetDistance,
 					       double rotation) 
@@ -336,7 +336,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 }
 
 
-int smallest(vector<double> nums, double &minimum)
+int smallest(const vector<double> &nums, double &minimum)
 {
   minimum = INFTY;
   int minind = -1;
@@ -349,8 +349,8 @@ int smallest(vector<double> nums, double &minimum)
   return minind;
 }
 
-bool intersectsPolys(const Vector2d P1, const Vector2d P2, 
-		     const vector<Poly> polys, double err=0.01)
+bool intersectsPolys(const Vector2d &P1, const Vector2d &P2, 
+		     const vector<Poly> &polys, double err=0.01)
 {
   Intersection inter;
   for (size_t ci = 0; ci < polys.size(); ci++) {
@@ -369,7 +369,7 @@ bool intersectsPolys(const Vector2d P1, const Vector2d P2,
 // polys will later be connected by moves (as printlines)
 // that is: connect nearest lines, but when connection intersects anything,
 //          start a new path (poly)
-vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> lines)
+vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines)
 {
   vector<Poly> polys;
   uint count = lines.size();
@@ -465,7 +465,7 @@ bool sameAngle(double angle1, double angle2, double err)
 }
 
 
-void Infill::addInfillPolys(vector<Poly> polys)
+void Infill::addInfillPolys(const vector<Poly> &polys)
 {
 #define NEWINFILL 1
 #if NEWINFILL
@@ -502,7 +502,7 @@ void Infill::addInfillPolys(vector<Poly> polys)
 #endif
 }
 
-void Infill::addInfillPoly(Poly p) // p is result of a clipped pattern
+void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
 {
 #if NEWINFILL==0
   // Poly *zigzagpoly = NULL;
@@ -555,8 +555,8 @@ void Infill::addInfillPoly(Poly p) // p is result of a clipped pattern
     {
 #else
 #endif
-      p.setExtrusionFactor(extrusionfactor);
-      infillpolys.push_back(p);
+      Poly newpoly(p.getZ(), extrusionfactor);
+      infillpolys.push_back(newpoly);
 #if NEWINFILL==0
     }
   }

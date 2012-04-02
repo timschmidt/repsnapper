@@ -250,7 +250,7 @@ Printlines::Printlines(double z_offset) :
 {}
 
 
-void Printlines::addLine(vector<PLine> &lines, const Vector2d from, const Vector2d to, 
+void Printlines::addLine(vector<PLine> &lines, const Vector2d &from, const Vector2d &to, 
 			 double speed, double movespeed, double feedrate) const
 {
   if (to==from) return;
@@ -266,7 +266,7 @@ void Printlines::addLine(vector<PLine> &lines, const Vector2d from, const Vector
   lines.push_back(PLine(lfrom, to, speed, feedrate));
 }
 
-void Printlines::addPoly(vector<PLine> &lines, const Poly poly, int startindex, 
+void Printlines::addPoly(vector<PLine> &lines, const Poly &poly, int startindex, 
 			 double speed, double movespeed)
 {
   vector<Vector2d> pvert;
@@ -279,7 +279,7 @@ void Printlines::addPoly(vector<PLine> &lines, const Poly poly, int startindex,
   setZ(poly.getZ());
 }
 
-void Printlines::makeLines(const vector<Poly> polys,
+void Printlines::makeLines(const vector<Poly> &polys,
 			   bool displace_startpoint, 			   
 			   const Settings::SlicingSettings &slicing,
 			   const Settings::HardwareSettings &hardware,
@@ -376,7 +376,7 @@ void Printlines::optimize(const Settings::HardwareSettings &hardware,
 }
 
 // gets center of common arc of 2 lines if radii match inside maxSqerr range
-Vector2d Printlines::arcCenter(const PLine l1, const PLine l2,
+Vector2d Printlines::arcCenter(const PLine &l1, const PLine &l2,
 			       double maxSqerr) const
 {
   Vector2d l1p1,l1p2;
@@ -906,7 +906,7 @@ uint Printlines::divideline(uint lineindex, const double length, vector<PLine> &
   }
 }
 
-uint Printlines::divideline(uint lineindex, const vector<Vector2d> points,
+uint Printlines::divideline(uint lineindex, const vector<Vector2d> &points,
 			    vector<PLine> &lines) const
 {
   uint npoints = points.size();
@@ -1144,7 +1144,7 @@ void Printlines::optimizeCorners(double linewidth, double linewidthratio, double
 // }
 
 
-void Printlines::getLines(const vector<PLine> lines, 
+void Printlines::getLines(const vector<PLine> &lines, 
 			  vector<Vector2d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
@@ -1153,7 +1153,7 @@ void Printlines::getLines(const vector<PLine> lines,
     olines.push_back(lIt->to);
   }
 }
-void Printlines::getLines(const vector<PLine> lines, 
+void Printlines::getLines(const vector<PLine> &lines, 
 			  vector<Vector3d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
@@ -1163,7 +1163,7 @@ void Printlines::getLines(const vector<PLine> lines,
   }
 }
 
-void Printlines::getLines(const vector<PLine> lines, 
+void Printlines::getLines(const vector<PLine> &lines, 
 			  vector<PLine3> &plines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
@@ -1172,7 +1172,7 @@ void Printlines::getLines(const vector<PLine> lines,
   }
 }
 
-double Printlines::totalLength(const vector<PLine> lines) const 
+double Printlines::totalLength(const vector<PLine> &lines) const 
 {
   double l = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1181,7 +1181,7 @@ double Printlines::totalLength(const vector<PLine> lines) const
   return l;
 }
 
-double Printlines::total_rel_Extrusion(const vector<PLine> lines) const 
+double Printlines::total_rel_Extrusion(const vector<PLine> &lines) const 
 {
   double l = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1190,7 +1190,7 @@ double Printlines::total_rel_Extrusion(const vector<PLine> lines) const
   return l;
 }
 
-double Printlines::totalSeconds(const vector<PLine> lines) const 
+double Printlines::totalSeconds(const vector<PLine> &lines) const 
 {
   double t = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1198,7 +1198,7 @@ double Printlines::totalSeconds(const vector<PLine> lines) const
   }
   return t * 60;
 }
-double Printlines::totalSecondsExtruding(const vector<PLine> lines) const 
+double Printlines::totalSecondsExtruding(const vector<PLine> &lines) const 
 {
   double t = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){

@@ -34,7 +34,7 @@ class Poly
 public:
         Poly();
 	Poly(double z, double extrusionfactor=1.);
-        Poly(const Poly, double z);
+        Poly(const Poly &p, double z);
 	/* Poly(double z, */
 	/*      const ClipperLib::Polygon cpoly, bool reverse=false); */
         ~Poly();

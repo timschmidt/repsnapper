@@ -57,8 +57,8 @@ enum filetype_t{
 };
 
 
-void drawString(Vector3d pos, string text);
-void drawString(Vector3d pos, void* font, string text);
+void drawString(const Vector3d &pos, void* font, const string &text);
+void drawString(const Vector3d &pos, const string &text);
 void checkGlutInit();
 
 
@@ -99,7 +99,7 @@ public:
 	void OptimizeRotation(); 
 	void CalcBBox();
 	// Rotation for manual rotate and used by OptimizeRotation:
-	void Rotate(Vector3d axis, double angle);  
+	void Rotate(const Vector3d & axis, const double &angle);  
 	void Twist(double angle);
 
     void Scale(double scale_factor);
@@ -126,7 +126,7 @@ public:
     int loadBinarySTL(std::string filename);
     static filetype_t getFileType(std::string filename);
 
-    bool hasAdjacentTriangleTo(Triangle triangle, double sqdistance = 0.05) const;
+    bool hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance = 0.05) const;
     void splitshapes(vector<Shape> &shapes, ViewProgress *progress=NULL);
     int divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) const;
 
@@ -137,14 +137,14 @@ public:
 private:
     double scale_factor,scale_factor_x,scale_factor_y,scale_factor_z;
 
-    vector<Triangle>  triangles;
+    vector<Triangle> triangles;
     //vector<Polygon2d>  polygons;  // surface polygons instead of triangles
     void calcPolygons();
 };
 
 
 
-bool CleanupConnectSegments(const vector<Vector2d> vertices, vector<Segment> &lines,
+bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &lines,
 			    bool connect_all=false);
 bool CleanupSharedSegments(vector<Segment> &lines);
-bool CleanupStraightLines(const vector<Vector2d> vertices, vector<Segment> &lines);
+bool CleanupStraightLines(const vector<Vector2d> &vertices, vector<Segment> &lines);

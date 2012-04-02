@@ -88,20 +88,20 @@ void Transform3D::rotate(Vector3d center, double x, double y, double z)
 
 /// VMML helpers
 
-void move(Vector3f delta, Matrix4f &mat){
+void move(const Vector3f &delta, Matrix4f &mat){
   Vector3f trans;
   mat.get_translation(trans);
   mat.set_translation(trans+delta);
 }
 
-Vector3d normalized(const Vector3d v){
+Vector3d normalized(const Vector3d &v){
   Vector3d n(v); n.normalize(); return n;
 }
-Vector2d normalized(const Vector2d v){
+Vector2d normalized(const Vector2d &v){
   Vector2d n(v); n.normalize(); return n;
 }
 
-void moveArcballTrans(Matrix4fT &matfT, const Vector3d delta) {
+void moveArcballTrans(Matrix4fT &matfT, const Vector3d &delta) {
   Matrix4f matf;
   typedef Matrix4f::iterator mIt;
   for (mIt it = matf.begin(); it!=matf.end(); ++it){
@@ -114,7 +114,7 @@ void moveArcballTrans(Matrix4fT &matfT, const Vector3d delta) {
     matfT.M[i] = *it;
   }
 }
-void setArcballTrans(Matrix4fT &matfT, const Vector3d trans) {
+void setArcballTrans(Matrix4fT &matfT, const Vector3d &trans) {
   Matrix4f matf;
   typedef Matrix4f::iterator  mIt;
   for (mIt it = matf.begin(); it!=matf.end(); ++it){
@@ -127,10 +127,10 @@ void setArcballTrans(Matrix4fT &matfT, const Vector3d trans) {
     matfT.M[i] = *it;
   }
 }
-void rotArcballTrans(Matrix4fT &matfT,  Vector3d axis, double angle)
+void rotArcballTrans(Matrix4fT &matfT,  const Vector3d &axis, double angle)
 {
   Matrix4f rot = Matrix4f::IDENTITY;
-  Vector3d naxis = axis; naxis.normalize();
+  Vector3d naxis(axis); naxis.normalize();
   rot.rotate(angle, naxis);
   Matrix4f matf;
   typedef Matrix4f::iterator  mIt;
@@ -161,7 +161,7 @@ void rotArcballTrans(Matrix4fT &matfT,  Vector3d axis, double angle)
 // }
 
 // from V1 to V2
-long double angleBetween(Vector3d V1, Vector3d V2)
+long double angleBetween(const Vector3d &V1, const Vector3d &V2)
 {
   long double dotproduct =  V1.dot(V2);
   long double length = V1.length() * V2.length();
@@ -175,7 +175,7 @@ long double angleBetween(Vector3d V1, Vector3d V2)
   return result;
 }
 
-long double angleBetween(Vector2d V1, Vector2d V2)
+long double angleBetween(const Vector2d &V1, const Vector2d &V2)
 {
   long double dotproduct =  V1.dot(V2);
   long double length = V1.length() * V2.length();
@@ -191,12 +191,12 @@ long double angleBetween(Vector2d V1, Vector2d V2)
 
 
 // is B left of A wrt center?
-bool isleftof(Vector2d center, Vector2d A, Vector2d B)
+bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B)
 {
   double position = (B.x()-A.x())*(center.y()-A.y()) - (B.y()-A.y())*(center.x()-A.x());
   return (position >= 0);
 }
-bool isleftof(Vector3d center, Vector3d A, Vector3d B)
+bool isleftof(const  Vector3d &center, const Vector3d &A, const Vector3d &B)
 {
   return ((B-A).cross(center-A).z() > 0); 
 }
@@ -205,7 +205,7 @@ bool isleftof(Vector3d center, Vector3d A, Vector3d B)
 //   return (q.x()-p.x())*(r.y()-p.y()) - (r.x()-p.x())*(q.y()-p.y());
 // }
 
-void center_perpendicular(const Vector2d from, const Vector2d to,
+void center_perpendicular(const Vector2d &from, const Vector2d &to,
 			  Vector2d &p1, Vector2d &p2)
 {
   Vector2d center = (from+to)/2.;
@@ -215,35 +215,35 @@ void center_perpendicular(const Vector2d from, const Vector2d to,
 }
 
 
-double cross(const Vector2d a, const Vector2d b)
+double cross(const Vector2d &a, const Vector2d &b)
 {
   return (b.x()*a.y()) - (b.y()*a.x());
 }
 
-Vector3d cross2d(Vector2d A, Vector2d B, double z)
+Vector3d cross2d(const Vector2d &A, const Vector2d &B, double z)
 {
   Vector3d A3(A.x(),A.y(),z),  B3(B.x(),B.y(),z);
   return A3.cross(B3);
 }
-Vector2d normalV(const Vector2d a)
+Vector2d normalV(const Vector2d &a)
 {
   return Vector2d(-a.y(),a.x());
 }
 
 
-Vector3d random_displaced(Vector3d v, double delta)
+Vector3d random_displaced(const Vector3d &v, double delta)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
   return Vector3d(v.x()+randdelta, v.y()+randdelta, v.z()+randdelta);
 }
-Vector2d random_displaced(Vector2d v, double delta)
+Vector2d random_displaced(const Vector2d &v, double delta)
 {
   double randdelta = delta * (rand()%1000000)/1000000 - delta/2.;
   return Vector2d(v.x()+randdelta, v.y()+randdelta);
 }
 
 
-Vector2d rotated(Vector2d p, Vector2d center, double angle, bool ccw)
+Vector2d rotated(const Vector2d &p, const Vector2d &center, double angle, bool ccw)
 {
   Vector3d center3 (center.x(), center.y(), 0);
   Vector3d radius3 (p.x() - center.x(), p.y() - center.y(), 0);
@@ -254,8 +254,8 @@ Vector2d rotated(Vector2d p, Vector2d center, double angle, bool ccw)
 
 // squared minimum distance of p to segment s1--s2, onseg = resulting point on segment
 // http://stackoverflow.com/a/1501725
-double point_segment_distance_Sq(const Vector2d s1, const Vector2d s2, 
-				 const Vector2d p, Vector2d &onseg) {
+double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2, 
+				 const Vector2d &p, Vector2d &onseg) {
   const double l2 = (s2-s1).squared_length();  // i.e. |w-v|^2 -  avoid a sqrt
   if (l2 == 0.0) { // s1 == s2 case
     onseg = s1;
@@ -278,7 +278,7 @@ double point_segment_distance_Sq(const Vector2d s1, const Vector2d s2,
 }
 
 
-vector<Poly> thick_line(const Vector2d from, const Vector2d to, double width) 
+vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width) 
 {
   Poly poly;
   Vector2d dir = (to-from); dir.normalize(); dir *= width/4.;
@@ -297,7 +297,7 @@ vector<Poly> thick_line(const Vector2d from, const Vector2d to, double width)
 }
 
 // directed (one end is wider than the other)
-vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to, 
+vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to, 
 			    double fr_width, double to_width) 
 {
   Poly poly;
@@ -361,8 +361,8 @@ vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to,
 // calculates intersection and checks for parallel lines.
 // also checks that the intersection point is actually on
 // the line segment p1-p2
-bool IntersectXY(const Vector2d p1, const Vector2d p2, 
-		 const Vector2d p3, const Vector2d p4, 
+bool IntersectXY(const Vector2d &p1, const Vector2d &p2, 
+		 const Vector2d &p3, const Vector2d &p4, 
 		 Intersection &hit, double maxoffset)
 {
   // // BBOX test
@@ -430,7 +430,7 @@ bool IntersectXY(const Vector2d p1, const Vector2d p2,
 //    Input:  a point P, and a collinear segment p1--p2
 //    Return: true  = P is inside p1--p2
 //            fasle = P is not inside p1--p2
-bool inSegment( const Vector2d P, const Vector2d p1, const Vector2d &p2)
+bool inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
 {
   if (p1.x() != p2.x()) {    // S is not vertical
     if (p1.x() <= P.x() && P.x() <= p2.x())
@@ -456,8 +456,8 @@ bool inSegment( const Vector2d P, const Vector2d p1, const Vector2d &p2)
 //            2=overlap in segment from I0 to I1
 //            3=intersect outside 
 #define perp(u,v)  ((u).x() * (v).y() - (u).y() * (v).x())  // perp product (2D)
-int intersect2D_Segments( const Vector2d p1, const Vector2d p2, 
-			  const Vector2d p3, const Vector2d p4, 
+int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
+			  const Vector2d &p3, const Vector2d &p4, 
 			  Vector2d &I0, Vector2d &I1, 
 			  double &t0, double &t1,
 			  double maxerr)
@@ -547,8 +547,8 @@ int intersect2D_Segments( const Vector2d p1, const Vector2d p2,
 // dist3D_Segment_to_Segment():
 //    Input:  two 3D line segments S1 and S2
 //    Return: the shortest distance between S1 and S2
-double dist3D_Segment_to_Segment(Vector3d S1P0, Vector3d S1P1, 
-				 Vector3d S2P0, Vector3d S2P1, double SMALL_NUM)
+double dist3D_Segment_to_Segment(const Vector3d &S1P0, const Vector3d &S1P1, 
+				 const Vector3d &S2P0, const Vector3d &S2P1, double SMALL_NUM)
 {
      Vector3d   u = S1P1 - S1P0;
      Vector3d   v = S2P1 - S2P0;
@@ -636,7 +636,7 @@ void testangles(){
 
 /////////////////// PATH IN POLYGON //////////////////////
 
-bool pointInPolys(Vector2d point,  vector<Poly> polys)
+bool pointInPolys(const Vector2d &point,  const vector<Poly> &polys)
 {
   for (uint i=0; i< polys.size(); i++)
     if (polys[i].vertexInside(point)) return true;
@@ -648,7 +648,7 @@ bool pointInPolys(Vector2d point,  vector<Poly> polys)
 
 // will return false
 // if the line cuts any of the given polygons except excluded one
-bool lineInPolys(Vector2d from, Vector2d to, vector<Poly> polys, 
+bool lineInPolys(const Vector2d &from, const Vector2d &to, const vector<Poly> &polys, 
 		 int excludepoly, double maxerr)
 {
   uint ninter = 0;
@@ -680,7 +680,8 @@ struct pathpoint {
   int prev;
 };
 // excludepoly: poly not to test, contains from and to vectors.
-bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepoly, 
+bool shortestPath(const Vector2d &from, const Vector2d &to, 
+		  const vector<Poly> &polys, int excludepoly, 
 		  vector<Vector2d> &path, double maxerr)
 {
   //  Fail if either the startpoint or endpoint is outside the polygon set.
@@ -795,7 +796,7 @@ struct sortable_point {
 
 // calc convex hull and Min and Max of layer
 // Monotone chain algo
-Poly convexHull2D(const vector<Poly> polygons) 
+Poly convexHull2D(const vector<Poly> &polygons) 
 {
   Poly hullPolygon;
   vector<struct sortable_point> P;

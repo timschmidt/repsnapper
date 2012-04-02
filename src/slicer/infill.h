@@ -55,15 +55,15 @@ class Infill
 #endif
 
   ClipperLib::Polygons makeInfillPattern(InfillType type, 
-					 const vector<Poly> tofillpolys,
+					 const vector<Poly> &tofillpolys,
 					 double infillDistance,
 					 double offsetDistance,
 					 double rotation) ;
 
   Infill(); 
 
-  void addInfillPoly(Poly p);
-  void addInfillPolys(vector<Poly> polys);
+  void addInfillPoly(const Poly &p);
+  void addInfillPolys(const vector<Poly> &polys);
 
   vector<Poly> tofillpolys;  // the polygons that are being filled
 
@@ -87,21 +87,21 @@ class Infill
   vector<Poly> infillpolys;  // for clipper polygon types
   vector<Vector2d> infillvertices; // for lines types
   
-  void addPoly(double z, Poly poly, InfillType type, double infillDistance, 
+  void addPoly (double z, const Poly &poly, InfillType type, double infillDistance, 
 	       double offsetDistance, double rotation);
-  void addPolys(double z, vector<Poly> polys, InfillType type, double infillDistance, 
+  void addPolys(double z, const vector<Poly> &polys, InfillType type, double infillDistance, 
 		double offsetDistance, double rotation);
-  void addPoly(double z, ExPoly expoly, InfillType type, double infillDistance, 
+  void addPoly (double z, const ExPoly &expoly, InfillType type, double infillDistance, 
 	       double offsetDistance, double rotation);
-  void addPolys(double z, const vector<Poly> polys, const vector<Poly> fillpolys,
+  void addPolys(double z, const vector<Poly> &polys, const vector<Poly> &fillpolys,
 		double offsetDistance);
-  void addPolys(double z, const vector<Poly> polys, const ClipperLib::Polygons ifcpolys,
+  void addPolys(double z, const vector<Poly> &polys, const ClipperLib::Polygons &ifcpolys,
 		double offsetDistance);
 
   void getLines(vector<Vector3d> &lines) const;
   
   typedef struct { Vector2d from; Vector2d to; } infillline;
-  vector<Poly> sortedpolysfromlines(const vector<infillline> lines);
+  vector<Poly> sortedpolysfromlines(const vector<infillline> &lines);
 
   void clear();
   uint size() const {return infillpolys.size();};

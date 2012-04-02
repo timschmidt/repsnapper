@@ -100,9 +100,9 @@ class Printlines
 
   string name;
 
-  void addPoly(vector<PLine> &lines, const Poly poly, int startindex=0, 
+  void addPoly(vector<PLine> &lines, const Poly &poly, int startindex=0, 
 	       double speed=1, double movespeed=1);
-  void addLine(vector<PLine> &lines, Vector2d from, Vector2d to, 
+  void addLine(vector<PLine> &lines, const Vector2d &from, const Vector2d &to, 
 	       double speed=1, double movespeed=1, double feedrate=1.0) const;
 
  public:
@@ -113,7 +113,7 @@ class Printlines
 
   Vector2d lastPoint() const;
 
-  void makeLines(const vector<Poly> polys, 
+  void makeLines(const vector<Poly> &polys, 
 		 bool displace_startpoint, 
 		 const Settings::SlicingSettings &slicing,
 		 const Settings::HardwareSettings &hardware,
@@ -127,7 +127,7 @@ class Printlines
 		vector<PLine> &lines);
 
   uint makeArcs(const Settings::SlicingSettings &slicing,
-		 vector<PLine> &lines) const;
+		vector<PLine> &lines) const;
   uint makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) const;
 
   uint roundCorners(double maxdistance, double minarclength, vector<PLine> &lines) const;
@@ -145,18 +145,18 @@ class Printlines
   void clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
 		     double maxerr=0.0001) const;
 
-  void getLines(const vector<PLine> lines,
+  void getLines(const vector<PLine> &lines,
 		vector<Vector2d> &linespoints) const;
-  void getLines(const vector<PLine> lines,
+  void getLines(const vector<PLine> &lines,
 		vector<Vector3d> &linespoints) const;
-  void getLines(const vector<PLine> lines,
+  void getLines(const vector<PLine> &lines,
 		vector<PLine3> &plines) const;
 
-  double totalLength(const vector<PLine> lines) const;
-  double totalSeconds(const vector<PLine> lines) const;
-  double totalSecondsExtruding(const vector<PLine> lines) const;
+  double totalLength(const vector<PLine> &lines) const;
+  double totalSeconds(const vector<PLine> &lines) const;
+  double totalSecondsExtruding(const vector<PLine> &lines) const;
 
-  double total_rel_Extrusion(const vector<PLine> lines) const; 
+  double total_rel_Extrusion(const vector<PLine> &lines) const; 
 
   // every added poly will set this
   void setZ(double z) {this->z = z + Zoffset;};
@@ -173,13 +173,13 @@ class Printlines
  private:
   void optimizeLinedistances(double maxdist, vector<PLine> &lines) const;
   void mergelines(PLine &l1, PLine &l2, double maxdist) const;
-  double distance(const Vector2d p, const PLine l2) const;
+  double distance(const Vector2d &p, const PLine &l2) const;
   void optimizeCorners(double linewidth, double linewidthratio, double optratio,
 		       vector<PLine> &lines) const;
   bool capCorner(PLine &l1, PLine &l2, double linewidth, double linewidthratio, 
 		 double optratio) const;
 
-  uint divideline(uint lineindex, const vector<Vector2d> points,
+  uint divideline(uint lineindex, const vector<Vector2d> &points,
 		  vector<PLine> &lines) const;
   uint divideline(uint lineindex, const double length, vector<PLine> &lines) const;
 
@@ -189,7 +189,7 @@ class Printlines
 				vector<PLine> &lines,
 				double &havedistributed) const;
 
-  Vector2d arcCenter(const PLine l1, const PLine l2, 
+  Vector2d arcCenter(const PLine &l1, const PLine &l2, 
 		     double maxerr) const;
 
   double slowdownfactor; // result of slowdown/setspeedfactor. not used here.

@@ -35,6 +35,7 @@
 #include "layer.h"
 #include "infill.h"
 #include "progress.h"
+#include "shape.h"
 
 Model::Model() :
   m_previewLayer(NULL),

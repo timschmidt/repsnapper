@@ -48,31 +48,31 @@ public:
 };
 
 
-void move(Vector3f delta, Matrix4f &mat);
-Vector3d normalized(const Vector3d v);
-Vector2d normalized(const Vector2d v);
-Vector2d normalV(const Vector2d a);
-double cross(const Vector2d a, const Vector2d b);
-void moveArcballTrans(Matrix4fT &matfT, const Vector3d delta);
-void setArcballTrans(Matrix4fT &matfT, const Vector3d trans);
-void rotArcballTrans(Matrix4fT &transform,  Vector3d axis, double angle);
+void move(const Vector3f &delta, Matrix4f &mat);
+Vector3d normalized(const Vector3d &v);
+Vector2d normalized(const Vector2d &v);
+Vector2d normalV(const Vector2d &a);
+double cross(const Vector2d &a, const Vector2d &b);
+void moveArcballTrans(Matrix4fT &matfT, const Vector3d &delta);
+void setArcballTrans(Matrix4fT &matfT, const Vector3d &trans);
+void rotArcballTrans(Matrix4fT &transform,  const Vector3d &axis, double angle);
 
 /* template< size_t M, typename T > */
 /* long double angleBetween(const vmml::vector< M, T > V1, const vmml::vector< M, T > V2 ); */
-long double angleBetween(Vector3d V1, Vector3d V2);
-long double angleBetween(Vector2d V1, Vector2d V2);
-void center_perpendicular(const Vector2d from, const Vector2d to,
+long double angleBetween(const Vector3d &V1, const Vector3d &V2);
+long double angleBetween(const Vector2d &V1, const Vector2d &V2);
+void center_perpendicular(const Vector2d &from, const Vector2d &to,
 			  Vector2d &p1, Vector2d &p2);
 
-bool isleftof(Vector2d center, Vector2d A, Vector2d B);
-bool isleftof(Vector3d center, Vector3d A, Vector3d B);
+bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B);
+bool isleftof(const Vector3d &center, const Vector3d &A, const Vector3d &B);
 
-Vector3d cross2d(Vector2d A, Vector2d B, double z=0);
+Vector3d cross2d(const Vector2d &A, const Vector2d &B, double z=0);
 
-double point_segment_distance_Sq(const Vector2d s1, const Vector2d s2, 
-				 const Vector2d p, Vector2d &onseg);
+double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2, 
+				 const Vector2d &p, Vector2d &onseg);
 
-Vector2d rotated(Vector2d p, Vector2d center, double angle, bool ccw=true);
+Vector2d rotated(const Vector2d &p, const Vector2d &center, double angle, bool ccw=true);
 
 struct printline;
 
@@ -85,34 +85,35 @@ struct Intersection
 };
 
 
-int intersect2D_Segments( const Vector2d p1, const Vector2d p2, 
-			  const Vector2d p3, const Vector2d p4, 
+int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
+			  const Vector2d &p3, const Vector2d &p4, 
 			  Vector2d &I0, Vector2d &I1, 
 			  double &t0, double &t1,
 			  double maxerr=0.0001);
-bool IntersectXY(const Vector2d p1, const Vector2d p2,
-		 const Vector2d p3, const Vector2d p4, 
+bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
+		 const Vector2d &p3, const Vector2d &p4, 
 		 Intersection &hit, double maxoffset=0.0001);
 
 
 
-double dist3D_Segment_to_Segment(Vector3d S1P0, Vector3d S1P1, 
-				 Vector3d S2P0, Vector3d S2P1, double SMALL_NUM);
+double dist3D_Segment_to_Segment(const Vector3d &S1P0, const Vector3d &S1P1, 
+				 const Vector3d &S2P0, const Vector3d &S2P1, double SMALL_NUM);
 
 
-Poly convexHull2D(const vector<Poly> polygons);
+Poly convexHull2D(const vector<Poly> &polygons);
 
 
 void testangles();
 
 
-Vector3d random_displaced(Vector3d v, double delta=0.05);
-Vector2d random_displaced(Vector2d v, double delta=0.05);
+Vector3d random_displaced(const Vector3d &v, double delta=0.05);
+Vector2d random_displaced(const Vector2d &v, double delta=0.05);
 
 
-bool shortestPath(Vector2d from, Vector2d to, vector<Poly> polys, int excludepoly, 
+bool shortestPath(const Vector2d &from, const Vector2d &to, 
+		  const vector<Poly> &polys, int excludepoly, 
 		  vector<Vector2d> &path, double maxerr);
 
-vector<Poly> thick_line(const Vector2d from, const Vector2d to, double width);
-vector<Poly> dir_thick_line(const Vector2d from, const Vector2d to, 
+vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width);
+vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to, 
 			    double fr_width, double to_width);

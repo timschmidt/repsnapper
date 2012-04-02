@@ -51,7 +51,7 @@ Poly::Poly(double z, double extrusionfactor)
   //printinfo();
 }
 
-Poly::Poly(const Poly p, double z)
+Poly::Poly(const Poly &p, double z)
 {
   closed = true;
   this->z = z;
@@ -67,7 +67,6 @@ Poly::Poly(const Poly p, double z)
   } else
     calcHole();
 }
-
 
 Poly::~Poly()
 {

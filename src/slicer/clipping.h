@@ -51,10 +51,10 @@ class Clipping
   static CL::JoinType CLType(JoinType type);
   static CL::PolyType CLType(PolyType type);
 
-  static CL::IntPoint ClipperPoint(Vector2d v);
-  static Vector2d getPoint(CL::IntPoint p);
+  static CL::IntPoint ClipperPoint(const Vector2d &v);
+  static Vector2d getPoint(const CL::IntPoint &p);
 
-  static CL::Polygons CLOffset(CL::Polygons cpolys, int cldist, 
+  static CL::Polygons CLOffset(const CL::Polygons &cpolys, int cldist, 
 			       CL::JoinType cljtype, double miter_limit=1, bool reverse=false);
 
   bool debug;
@@ -67,11 +67,11 @@ public:
 
   void clear();
 
-  void addPoly(const Poly poly, PolyType type);
-  void addPolys(const vector<Poly> poly, PolyType type);
-  void addPolys(const vector<ExPoly> expolys, PolyType type);
-  void addPolys(const ExPoly poly, PolyType type);
-  void addPolygons(CL::Polygons cp, PolyType type);
+  void addPoly    (const Poly &poly, PolyType type);
+  void addPolys   (const vector<Poly> &poly, PolyType type);
+  void addPolys   (const vector<ExPoly> &expolys, PolyType type);
+  void addPolys   (const ExPoly &poly, PolyType type);
+  void addPolygons(const CL::Polygons &cp, PolyType type);
 
   // do after addPoly... and before clipping/results
   void setZ(double z) {lastZ = z;};
@@ -95,43 +95,43 @@ public:
   vector<ExPoly> ext_subtract   (CL::PolyFillType sft=CL::pftEvenOdd, 
 				 CL::PolyFillType cft=CL::pftEvenOdd);
 
-  static vector<Poly> getMerged(vector<Poly> polys, double overlap=0.001);
-  static CL::Polygons getMerged(CL::Polygons cpolys, int overlap=3);
+  static vector<Poly> getMerged(const vector<Poly> &polys, double overlap=0.001);
+  static CL::Polygons getMerged(const CL::Polygons &cpolys, int overlap=3);
 
-  static vector<Poly> getOffset(const Poly poly, double distance, 
+  static vector<Poly> getOffset(const Poly &poly, double distance, 
 				JoinType jtype=jmiter, double miterdist=1);
-  static vector<Poly> getOffset(const vector<Poly> polys, double distance, 
+  static vector<Poly> getOffset(const vector<Poly> &polys, double distance, 
 				JoinType jtype=jmiter,double miterdist=1);
-  static vector<Poly> getOffset(const ExPoly expoly, double distance, 
+  static vector<Poly> getOffset(const ExPoly &expoly, double distance, 
 				JoinType jtype=jmiter, double miterdist=1);
-  static vector<Poly> getOffset(const vector<ExPoly> expolys, double distance, 
+  static vector<Poly> getOffset(const vector<ExPoly> &expolys, double distance, 
 				JoinType jtype=jmiter, double miterdist=1);
 
-  static vector<Poly> getShrinkedCapped(const vector<Poly> polys, double distance, 
+  static vector<Poly> getShrinkedCapped(const vector<Poly> &polys, double distance, 
 					JoinType jtype=jmiter,double miterdist=1);
 
   //vector< vector<Vector2d> > intersect(const Poly poly1, const Poly poly2) const;
 
-  static Poly getPoly(const CL::Polygon cpoly, double z, double extrusionfactor);
-  static vector<Poly> getPolys(const ExPoly expoly);
-  static vector<Poly> getPolys(const vector<ExPoly> expolys);
-  static vector<Poly> getPolys(const CL::Polygons cpoly, double z, double extrusionfactor);
-  static vector<ExPoly> getExPolys(const CL::ExPolygons excpolys, double z,
+  static Poly           getPoly(const CL::Polygon &cpoly, double z, double extrusionfactor);
+  static vector<Poly>   getPolys(const ExPoly &expoly);
+  static vector<Poly>   getPolys(const vector<ExPoly> &expolys);
+  static vector<Poly>   getPolys(const CL::Polygons &cpoly, double z, double extrusionfactor);
+  static vector<ExPoly> getExPolys(const CL::ExPolygons &excpolys, double z,
 				   double extrusionfactor);
 
-  static vector<ExPoly> getExPolys(vector<Poly> polys, 
+  static vector<ExPoly> getExPolys(const vector<Poly> &polys, 
 				   double z, double extrusionfactor);
-  static vector<ExPoly> getExPolys(vector<Poly> polys);
-  static CL::ExPolygons getExClipperPolygons(const vector<Poly> polys);
+  static vector<ExPoly> getExPolys(vector<Poly> &polys);
+  static CL::ExPolygons getExClipperPolygons(const vector<Poly> &polys);
   
-  static CL::Polygon  getClipperPolygon (const Poly poly);
-  static CL::Polygons getClipperPolygons(const vector<Poly> polys);
-  static CL::Polygons getClipperPolygons(const ExPoly expoly);
-  static CL::ExPolygons getClipperPolygons(const vector<ExPoly> expolys);
+  static CL::Polygon    getClipperPolygon (const Poly &poly);
+  static CL::Polygons   getClipperPolygons(const vector<Poly> &polys);
+  static CL::Polygons   getClipperPolygons(const ExPoly &expoly);
+  static CL::ExPolygons getClipperPolygons(const vector<ExPoly> &expolys);
 
-  static double Area(const Poly poly);
-  static double Area(const vector<Poly> polys);
-  static double Area(const ExPoly expoly);
-  static double Area(const vector<ExPoly> expolys);
+  static double Area(const Poly &poly);
+  static double Area(const vector<Poly> &polys);
+  static double Area(const ExPoly &expoly);
+  static double Area(const vector<ExPoly> &expolys);
 
 };
