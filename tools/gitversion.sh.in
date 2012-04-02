@@ -38,7 +38,7 @@ if [ -e $VERSION_H ]; then
     OLDCOMMIT=`$AWK -v FS="$FSEQUAL" '/const string GIT_COMMIT=/{print $2}' $VERSION_H`
 fi
 
-if [ "x\"$COMMIT\"" = "x$OLDCOMMIT" ]; then
+if [ "x\"$COMMIT\";" = "x$OLDCOMMIT" ]; then
     echo "Commit has not changed"
 else
     echo "Updating commit"
