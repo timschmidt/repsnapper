@@ -363,16 +363,17 @@ void Printlines::optimize(const Settings::HardwareSettings &hardware,
 			  double slowdowntime,
 			  vector<PLine> &lines)
 {
-  //cout << "optimize " ; printinfo();
   //optimizeLinedistances(linewidth);
   // double OPTRATIO = 1.5;
   // double optratio = OPTRATIO; //corner cap
   // optimizeCorners(linewidth,linewidthratio,optratio);
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
+  //cerr << "optimize" << endl;
   makeArcs(slicing, lines);
   slowdownTo(slowdowntime, lines);
   makeAntioozeRetract(slicing, lines);
+  //cerr << " ok" << endl;
 }
 
 // gets center of common arc of 2 lines if radii match inside maxSqerr range
@@ -578,7 +579,7 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
     lines[ind+1] = newlines[1];
   if (numnew>2) 
     lines.insert(lines.begin()+ind+2, newlines.begin()+2, newlines.end());
-  return numnew-2;
+  return max(0, (int)numnew - 2);
 }
 
 
@@ -797,7 +798,7 @@ uint Printlines::makeAntioozeRetract(const Settings::SlicingSettings &slicing,
       // TODO divide lines before and after if long enough?
       int movei = movestart-1;
       double tract_amount_left = onmove_amount;
-      while (movei >= 0 
+      while (movei >= 0
 	     && lines[movei].absolute_feed == 0 // stop at last repush
 	     && lines[movei].feedrate != 0      // stop at last move-only
 	     && tract_amount_left > 0) {

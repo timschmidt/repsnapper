@@ -774,12 +774,11 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   printlines.getLines(lines, lines3);
 
-
   double minspeed = hardware.MinPrintSpeedXY,
     maxspeed = hardware.MaxPrintSpeedXY,
     movespeed = hardware.MoveSpeed,
     emax = hardware.EMaxSpeed;
-  
+
   // push all lines to gcode
   // start3 = state.LastPosition();
   for (uint i = 0; i < lines3.size(); i++) {
