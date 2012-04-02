@@ -76,9 +76,13 @@ include src/slicer/Makefile.am
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) src/repsnapper.cpp
 
 src/gitversion.h: FORCE
-	(cd src && sh gitversion.sh)
+	sh $(top_builddir)/tools/gitversion.sh $(top_builddir)/src/gitversion.h $(top_srcdir)/src/gitversion.h
 FORCE:
 
+built_header_make=src/gitversion.h
+
+BUILT_SOURCES += $(built_header_make)
+EXTRA_DIST += $(built_header_make)
 
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 

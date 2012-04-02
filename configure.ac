@@ -131,5 +131,6 @@ AC_SUBST(prefix_win)
 AC_CONFIG_FILES([
   Makefile
   po/Makefile.in
-  win32/repsnapper.nsi])
+  win32/repsnapper.nsi
+  tools/gitversion.sh])
 AC_OUTPUT
