@@ -28,10 +28,6 @@
 #include "poly.h"
 #include "gcodestate.h"
 
-class Infill;
-class Printlines;
-
-
 //
 // A Layer containing and maintaining all polygons to be printed
 //

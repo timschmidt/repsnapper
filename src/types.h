@@ -28,6 +28,9 @@ class GUI;
 class Poly;
 class View;
 class GCode;
+class GCodeState;
+class GCodeIter;
+class Printlines;
 class PLine3;
 class Model;
 class Render;
@@ -45,7 +48,8 @@ class Shape;
 class Transform3D;
 class Infill;
 class ViewProgress;
-
+class ConnectView;
+class Transform3D;
 
 enum SerialState { SERIAL_DISCONNECTED, SERIAL_DISCONNECTING,
 		   SERIAL_CONNECTED, SERIAL_CONNECTING };

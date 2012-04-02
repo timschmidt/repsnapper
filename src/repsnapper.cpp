@@ -29,6 +29,7 @@
 #include "view.h"
 #include "model.h"
 #include "gcode.h"
+#include "progress.h"
 
 using namespace std;
 

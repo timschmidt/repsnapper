@@ -23,14 +23,14 @@
 #include <gtkmm.h>
 
 #include "stdafx.h"
-#include "progress.h"
+//#include "progress.h"
 #include "printer.h"
 
-class Model;
-class Render;
-class TreeObject;
-class Shape;
-class ConnectView;
+/* class Model; */
+/* class Render; */
+/* class TreeObject; */
+/* class Shape; */
+/* class ConnectView; */
 //class PrintInhibitor;
 
 class View : public Gtk::Window

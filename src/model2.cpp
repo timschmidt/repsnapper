@@ -43,6 +43,7 @@
 #include "file.h"
 #include "settings.h"
 #include "connectview.h"
+#include "progress.h"
 
 #include "slicer/layer.h"
 #include "slicer/infill.h"
@@ -680,6 +681,8 @@ void Model::MakeShells()
 
 void Model::CalcInfill()
 {
+  if (settings.Slicing.ShellOnly && settings.Slicing.SolidThickness == 0.0) return;
+
   int count = (int)layers.size();
   m_progress->start (_("Infill"), count);
   int progress_steps=(count/100);
@@ -738,7 +741,8 @@ void Model::ConvertToGCode()
 
   MakeShells();
 
-  if (settings.Slicing.SolidThickness > 0 || settings.Slicing.ShellCount > 0)
+  if (!settings.Slicing.ShellOnly && 
+      (settings.Slicing.SolidThickness > 0 || settings.Slicing.ShellCount > 0))
     // not bridging when support
     MakeUncoveredPolygons(settings.Slicing.MakeDecor,
 			  !settings.Slicing.NoBridges && !settings.Slicing.Support);

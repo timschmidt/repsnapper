@@ -26,7 +26,6 @@ Triangle::Triangle(const Vector3d &Point1,
   calcNormal();
 }
 
-
 void Triangle::calcNormal()
 {
   Vector3d AA=C-A;
@@ -36,7 +35,7 @@ void Triangle::calcNormal()
 
 
 
-Triangle Triangle::transformed(const Matrix4d T) const
+Triangle Triangle::transformed(const Matrix4d &T) const
 {
   return Triangle(T*A,T*B,T*C);
 }
@@ -55,7 +54,16 @@ void Triangle::mirrorX(Vector3d center)
   invertNormal();
 }
 
-Vector3d &Triangle::operator[] (const int index)
+Vector3d &Triangle::operator[] (const uint index)
+{
+    switch(index) {
+        case 0: return A;
+        case 1: return B;
+        case 2: return C;
+    }
+    return A;
+}
+Vector3d const &Triangle::operator[] (const uint index) const
 {
     switch(index) {
         case 0: return A;
@@ -65,7 +73,7 @@ Vector3d &Triangle::operator[] (const int index)
     return A;
 }
 
-bool Triangle::isConnectedTo(Triangle other, double maxsqerr) 
+bool Triangle::isConnectedTo(Triangle const &other, double maxsqerr) const
 {
   // for (uint i = 0; i < 3; i++) {
   //   Vector3d p = (Vector3d)(operator[](i));
@@ -84,7 +92,7 @@ double Triangle::area() const
 }
 
 // add all these to get shape volume
-double Triangle::projectedvolume(Matrix4d T) const
+double Triangle::projectedvolume(const Matrix4d &T) const
 {
   if (Normal.z()==0) return 0;
   Triangle xyproj = Triangle(Vector3d(A.x(),A.y(),0),
@@ -97,7 +105,7 @@ double Triangle::projectedvolume(Matrix4d T) const
   return vol;
 }
 
-Vector3d Triangle::GetMax(Matrix4d T) const
+Vector3d Triangle::GetMax(const Matrix4d &T) const
 {
 	Vector3d max(-99999999.0, -99999999.0, -99999999.0);
 	Vector3d TA=T*A,TB=T*B,TC=T*C;
@@ -109,7 +117,7 @@ Vector3d Triangle::GetMax(Matrix4d T) const
 	return max;
 }
 
-Vector3d Triangle::GetMin(Matrix4d T) const
+Vector3d Triangle::GetMin(const Matrix4d &T) const
 {
 	Vector3d min(99999999.0, 99999999.0, 99999999.0);
 	Vector3d TA=T*A,TB=T*B,TC=T*C;
@@ -121,7 +129,7 @@ Vector3d Triangle::GetMin(Matrix4d T) const
 	return min;
 }
 
-void Triangle::AccumulateMinMax(Vector3d &min, Vector3d &max, Matrix4d T)
+void Triangle::AccumulateMinMax(Vector3d &min, Vector3d &max, const Matrix4d &T)
 {
 	Vector3d tmin = GetMin(T);
 	Vector3d tmax = GetMax(T);
@@ -204,7 +212,7 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
 int Triangle::SplitAtPlane(double z, 
 			   vector<Triangle> &uppertriangles,
 			   vector<Triangle> &lowertriangles,
-			   const Matrix4d T) const
+			   const Matrix4d &T) const
 {
   vector<Vector3d> upper, lower;
   if  ((T*A).z()>z) upper.push_back(T*A); else lower.push_back(T*A);
@@ -310,7 +318,7 @@ void Triangle::draw(int gl_type) const
 }
 
 
-string Triangle::getSTLfacet(Matrix4d T) const
+string Triangle::getSTLfacet(const Matrix4d &T) const
 {
   Vector3d TA=T*A,TB=T*B,TC=T*C,TN=T*Normal;TN.normalize();
   stringstream sstr;

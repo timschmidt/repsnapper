@@ -34,6 +34,7 @@
 #include "printer.h"
 #include "view.h"
 
+#include "progress.h"
 #include "model.h"
 
 // everything taken out of model.cpp

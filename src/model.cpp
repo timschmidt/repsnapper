@@ -34,6 +34,7 @@
 #include "connectview.h"
 #include "layer.h"
 #include "infill.h"
+#include "progress.h"
 
 Model::Model() :
   m_previewLayer(NULL),

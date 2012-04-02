@@ -30,6 +30,8 @@
 #include "geometry.h"
 #include "ctype.h"
 
+#include "slicer/poly.h"
+
 using namespace std;
 
 // String feeder class

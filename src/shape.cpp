@@ -21,66 +21,8 @@
 #include "shape.h"
 #include "poly.h"
 #include "progress.h"
+#include "settings.h"
 
-
-
-Matrix4f Transform3D::getFloatTransform() const 
-{
-  return (Matrix4f) transform;
-}
-void Transform3D::setTransform(Matrix4f matr) 
-{
-  transform = (Matrix4f) matr;
-}
-
-Vector3d Transform3D::getTranslation() const
-{
-  Vector3d p;
-  transform.get_translation(p);
-  return p;
-}
-
-
-void Transform3D::move(Vector3d delta)
-{
-  Vector3d trans = getTranslation();
-  transform.set_translation(trans + delta * transform[3][3]); // unscale delta
-}
-
-void Transform3D::scale(double x)
-{
-  if (x==0) return;
-  transform[3][3] = 1/x;
-}
-
-void Transform3D::scale_x(double x)
-{
-  transform[0][0] = x;
-}
-  void Transform3D::scale_y(double x)
-{
-  transform[1][1] = x;
-}
-void Transform3D::scale_z(double x)
-{
-  transform[2][2] = x;
-}
-
-void Transform3D::rotate(Vector3d axis, double angle)
-{
-  Matrix4d rot = Matrix4d::IDENTITY;
-  Vector3d naxis = axis; naxis.normalize();
-  rot.rotate(angle, naxis);
-  transform = rot * transform; 
-}
-void Transform3D::rotate(Vector3d center, double x, double y, double z)
-{
-  move(-center);
-  if (x!=0) transform.rotate_x(x);
-  if (y!=0) transform.rotate_y(y);
-  if (z!=0) transform.rotate_z(z);
-  move(center);
-}
 
 
 // Constructor
@@ -474,6 +416,8 @@ int Shape::load(string filename)
       cerr << _("unrecognized file - ") << filename << endl;
 	return -1;
     }
+
+    //std::sort(triangles.begin(),triangles.end(),Triangle::maxZsort());
 
     // OptimizeRotation(); // no, I probably have prepared the file
     CenterAroundXY();

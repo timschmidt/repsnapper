@@ -24,16 +24,14 @@
 #include <gtkmm.h>
 #include <time.h>
 
-#include "types.h"
-#include "config.h"
-#include "settings.h"
-#include "gcode.h"
-#include "progress.h"
+#include "types.h" 
+/* #include "config.h" */
+/* #include "settings.h" */
+/* #include "gcode.h" */
+/* #include "progress.h" */
 
 
 #include <libreprap/comms.h>
-
-using namespace std;
 
 
 // For libreprap callbacks

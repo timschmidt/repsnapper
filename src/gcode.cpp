@@ -29,8 +29,7 @@
 #include "progress.h"
 #include "geometry.h"
 #include "ctype.h"
-
-using namespace std;
+#include "settings.h"
 
 
 GCode::GCode()

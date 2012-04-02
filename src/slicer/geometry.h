@@ -22,6 +22,32 @@
 #include "stdafx.h"
 #include "arcball.h"
 
+
+#define PI 3.141592653589793238462643383279502884197169399375105820974944592308
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+class Transform3D
+{
+public:
+	Transform3D(){identity();}
+	void identity(){transform=Matrix4d::IDENTITY;}
+	Matrix4d transform;
+	Matrix4f getFloatTransform() const;
+	Vector3d getTranslation() const;
+	void setTransform(Matrix4f matrf); 
+	void scale(double x);
+	void scale_x(double x);
+	void scale_y(double x);
+	void scale_z(double x);
+	void move(Vector3d delta);
+	void rotate(Vector3d center, double x, double y, double z);
+	void rotate(Vector3d axis, double angle);
+};
+
+
 void move(Vector3f delta, Matrix4f &mat);
 Vector3d normalized(const Vector3d v);
 Vector2d normalized(const Vector2d v);

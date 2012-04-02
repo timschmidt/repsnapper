@@ -25,11 +25,12 @@
 
 #include "stdafx.h"
 
-#include "objtree.h"
-#include "gcodestate.h"
+#include "objtree.h" 
+#include "gcode.h" 
+/* #include "gcodestate.h" */
 #include "settings.h"
-#include "progress.h"
-#include "slicer/poly.h"
+/* #include "progress.h" */
+/* #include "slicer/poly.h" */
 
 #ifdef _MSC_VER // Visual C++ compiler
 #  pragma warning( disable : 4244 4267)
