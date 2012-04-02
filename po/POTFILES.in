@@ -5,6 +5,7 @@
 [encoding: UTF-8]
 repsnapper.desktop.in
 src/arcball.cpp
+src/command.cpp
 src/connectview.cpp
 src/file.cpp
 src/gcode.cpp
