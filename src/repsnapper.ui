@@ -42,42 +42,42 @@
   </object>
   <object class="GtkAction" id="LoadSettings">
     <property name="label" translatable="yes">Load Settings</property>
-    <property name="short_label">Load Settings</property>
-    <property name="tooltip">Load application settings profile</property>
+    <property name="short_label" translatable="yes">Load Settings</property>
+    <property name="tooltip" translatable="yes">Load application settings profile</property>
   </object>
   <object class="GtkAction" id="OpenGCode">
     <property name="label" translatable="yes">Load _GCode</property>
-    <property name="short_label">Load GCode</property>
-    <property name="tooltip">Load a file of control codes</property>
+    <property name="short_label" translatable="yes">Load GCode</property>
+    <property name="tooltip" translatable="yes">Load a file of control codes</property>
     <property name="stock_id">gtk-open</property>
   </object>
   <object class="GtkAction" id="OpenStl">
     <property name="label" translatable="yes">Load _STL</property>
-    <property name="short_label">Load STL</property>
-    <property name="tooltip">Load an STL file</property>
+    <property name="short_label" translatable="yes">Load STL</property>
+    <property name="tooltip" translatable="yes">Load an STL file</property>
     <property name="stock_id">gtk-open</property>
   </object>
   <object class="GtkAction" id="PreferencesDialog">
     <property name="label" translatable="yes">_Preferences</property>
-    <property name="short_label">Preferences</property>
-    <property name="tooltip">Open the Preferences Dialog</property>
+    <property name="short_label" translatable="yes">Preferences</property>
+    <property name="tooltip" translatable="yes">Open the Preferences Dialog</property>
     <property name="stock_id">gtk-preferences</property>
   </object>
   <object class="GtkAction" id="Quit">
     <property name="label" translatable="yes">_Quit</property>
-    <property name="short_label">Quit</property>
-    <property name="tooltip">Exit Repsnapper</property>
+    <property name="short_label" translatable="yes">Quit</property>
+    <property name="tooltip" translatable="yes">Exit Repsnapper</property>
     <property name="stock_id">gtk-quit</property>
   </object>
   <object class="GtkAction" id="SaveSettings">
     <property name="label" translatable="yes">Save Settings</property>
-    <property name="short_label">Save Settings</property>
-    <property name="tooltip">Save application settings profile</property>
+    <property name="short_label" translatable="yes">Save Settings</property>
+    <property name="tooltip" translatable="yes">Save application settings profile</property>
   </object>
   <object class="GtkAction" id="SaveSettingsAs">
     <property name="label" translatable="yes">Save Settings As</property>
-    <property name="short_label">Save Settings As</property>
-    <property name="tooltip">Save settings in a custom file</property>
+    <property name="short_label" translatable="yes">Save Settings As</property>
+    <property name="tooltip" translatable="yes">Save settings in a custom file</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
