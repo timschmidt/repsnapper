@@ -436,30 +436,33 @@ public:
     m_inhibit_update = false;
   }
 
-  TranslationSpinRow(View *view, Gtk::TreeView *rfo_tree,
-	  const char *box_name) :
+  TranslationSpinRow(View *view, Gtk::TreeView *rfo_tree) :
     m_inhibit_update(false), m_view(view)
   {
-    view->m_builder->get_widget (box_name, m_box);
+    // view->m_builder->get_widget (box_name, m_box);
+
+    view->m_builder->get_widget ("translate_x", m_xyz[0]);
+    view->m_builder->get_widget ("translate_y", m_xyz[1]);
+    view->m_builder->get_widget ("translate_z", m_xyz[2]);
 
     for (uint i = 0; i < 3; i++) {
-        m_box->add (*manage(new Gtk::Label (axis_names[i])));
-        m_xyz[i] = manage (new Gtk::SpinButton());
-        m_xyz[i]->set_numeric();
-        m_xyz[i]->set_digits (1);
-        m_xyz[i]->set_increments (0.5, 10);
-        m_xyz[i]->set_range(-5000.0, +5000.0);
-        m_box->add (*m_xyz[i]);
-        m_xyz[i]->signal_value_changed().connect
-            (sigc::bind(sigc::mem_fun(*this, &TranslationSpinRow::spin_value_changed), (int)i));
+    //     m_box->add (*manage(new Gtk::Label (axis_names[i])));
+    //     m_xyz[i] = manage (new Gtk::SpinButton());
+    //     m_xyz[i]->set_numeric();
+    //     m_xyz[i]->set_digits (1);
+    //     m_xyz[i]->set_increments (0.5, 10);
+    //     m_xyz[i]->set_range(-5000.0, +5000.0);
+    //     m_box->add (*m_xyz[i]);
+      m_xyz[i]->signal_value_changed().connect
+	(sigc::bind(sigc::mem_fun(*this, &TranslationSpinRow::spin_value_changed), (int)i));
 
-        /* Add statusbar message */
-        // stringstream oss;
-        // oss << "Move object in " << axis_names[i] << "-direction (mm)";
-        // m_view->add_statusbar_msg(m_xyz[i], oss.str().c_str());
+    //     /* Add statusbar message */
+    //     // stringstream oss;
+    //     // oss << "Move object in " << axis_names[i] << "-direction (mm)";
+    //     // m_view->add_statusbar_msg(m_xyz[i], oss.str().c_str());
     }
     selection_changed();
-    m_box->show_all();
+    // m_box->show_all();
 
     rfo_tree->get_selection()->signal_changed().connect
       (sigc::mem_fun(*this, &TranslationSpinRow::selection_changed));
@@ -916,7 +919,7 @@ View::View(BaseObjectType* cobject,
   signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
   m_objtree->signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
 
-  m_translation_row = new TranslationSpinRow (this, m_objtree, "m_box_translate");
+  m_translation_row = new TranslationSpinRow (this, m_objtree);
 
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("m_scale_value", scale_value);

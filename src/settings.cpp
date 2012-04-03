@@ -368,6 +368,9 @@ static struct {
   { "scale_x", 0.0001, 1000.0, 0.01, 0.1 },
   { "scale_y", 0.0001, 1000.0, 0.01, 0.1 },
   { "scale_z", 0.0001, 1000.0, 0.01, 0.1 },
+  { "translate_x", -5000, 5000.0, 1, 10 },
+  { "translate_y", -5000, 5000.0, 1, 10 },
+  { "translate_z", -5000, 5000.0, 0.1, 1 },
 };
 
 // Add any [HV]Ranges to this array:
