@@ -906,6 +906,12 @@ uint Printlines::divideline(uint lineindex, const double length, vector<PLine> &
     return 1;
   }
 }
+uint Printlines::divideline(uint lineindex, const Vector2d &point,
+			    vector<PLine> &lines) const
+{
+  vector<Vector2d> p(1); p[0] = point;
+  return divideline(lineindex, p, lines);
+}
 
 uint Printlines::divideline(uint lineindex, const vector<Vector2d> &points,
 			    vector<PLine> &lines) const
@@ -930,24 +936,64 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> &points,
 }
 
 // walk around holes
-void Printlines::clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
+#define NEWCLIP 1
+#if NEWCLIP
+void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 			       double maxerr) const
 {
-  if (polys==NULL || lines.size()==0) return;
+  if (polys.size()==0 || lines.size()==0) return;
   vector<PLine> newlines;
   for (guint i=0; i < lines.size(); i++) {
     if (lines[i].feedrate == 0) {
       int frompoly=-1, topoly=-1;
-      for (uint p = 0; p < polys->size(); p++) {
-	if ((frompoly==-1) && (*polys)[p].vertexInside(lines[i].from, maxerr))
+      for (uint p = 0; p < polys.size(); p++) {
+	if ((frompoly==-1) && polys[p].vertexInside(lines[i].from, maxerr))
 	  frompoly=(int)p;
-	if ((topoly==-1) && (*polys)[p].vertexInside(lines[i].to, maxerr))
+	if ((topoly==-1) && polys[p].vertexInside(lines[i].to, maxerr))
+	  topoly=(int)p;
+      }
+      //cerr << frompoly << " --> "<< topoly << endl;
+      for (uint p = 0; p < polys.size(); p++) {
+	vector<Intersection> pinter = 
+	  polys[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
+	if (pinter.size() > 0) {
+	  if (polys[p].hole || pinter.size()%2 == 0) {
+	    vector<Vector2d> path = 
+	      polys[p].getPathAround(lines[i].from, lines[i].to);
+	    // after divide, skip number of added lines -> test remaining line later
+	    i += (divideline(i, path, lines)); 
+	    continue;
+	  }
+	}
+      }
+    }
+  }  
+}
+#else  // old clip
+void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
+			       double maxerr) const
+{
+  if (polys.size()==0 || lines.size()==0) return;
+  vector<PLine> newlines;
+  for (guint i=0; i < lines.size(); i++) {
+    if (lines[i].feedrate == 0) {
+      int frompoly=-1, topoly=-1;
+      for (uint p = 0; p < polys.size(); p++) {
+	if ((frompoly==-1) && polys[p].vertexInside(lines[i].from, maxerr))
+	  frompoly=(int)p;
+	if ((topoly==-1) && polys[p].vertexInside(lines[i].to, maxerr))
 	  topoly=(int)p;
       }
       if ((frompoly == -1) || (topoly == -1)) {
 	//cerr <<frompoly << " -- " << topoly << endl;
 	continue; 
       }
+      // if (frompoly != topoly && polys[frompoly].hole) { // walk out of hole 
+      // 	double dist;
+      // 	uint nearest = polys[frompoly].nearestDistanceSqTo(lines[i].from, dist);
+      // 	i += divideline(i,polys[frompoly][nearest],lines); 
+      // 	continue;
+      // }
       // line outside polys - ?
       // line inside same poly, find path:
       if (topoly == frompoly) {
@@ -957,8 +1003,8 @@ void Printlines::clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
 	//holes.push_back((*polys)[frompoly]);
 	for (uint p = 0; p < polys->size(); p++) {
 	  //   //if ((*polys)[p].isHole())
-	  if ((*polys)[frompoly].polyInside(&(*polys)[p])) 
-	    holes.push_back((*polys)[p]);
+	  if (polys[frompoly].polyInside(polys[p])) 
+	    holes.push_back(polys[p]);
 	}
 	vector<Vector2d> path;
 	bool ispath = shortestPath(lines[i].from,lines[i].to,
@@ -971,14 +1017,14 @@ void Printlines::clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
 	}
 	continue; // next line
 #else // walk along perimeters
-	for (uint p = 0; p < polys->size(); p++) {
-	  vector<Intersection> pinter = 
-	    (*polys)[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
+	for (uint p = 0; p < polys.size(); p++) {
+ 	  vector<Intersection> pinter = 
+	    polys[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
 	  if (pinter.size() > 0) {
 	    if (pinter.size()%2 == 0) { // holes
 	      std::sort(pinter.begin(), pinter.end());
 	      vector<Vector2d> path = 
-		(*polys)[p].getPathAround(pinter.front().p, pinter.back().p);
+		polys[p].getPathAround(pinter.front().p, pinter.back().p);
 	      // after divide, skip number of added lines -> test remaining line later
 	      i += (divideline(i, path, lines)); 
 	    }
@@ -986,7 +1032,7 @@ void Printlines::clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
 	}
 #endif
       }
-      else if (0 && frompoly != -1 && topoly != -1 && frompoly != topoly) {
+      else if (frompoly != -1 && topoly != -1 && frompoly != topoly) {
 	cerr << i << " : "<<frompoly << " p>> " << topoly << endl;	
 	// vector<Intersection> frominter = 
 	//   polys[frompoly].lineIntersections(lines[i].from,lines[i].to, maxerr);
@@ -999,11 +1045,11 @@ void Printlines::clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
 	//   polys[topoly].getPathAround(lines[i].from, lines[i].to);
 	// cerr << frompath.size() << " -- " << topath.size() << endl;
 	int fromind, toind;
-	(*polys)[frompoly].nearestIndices((*polys)[topoly], fromind, toind);
+	polys[frompoly].nearestIndices(polys[topoly], fromind, toind);
 	vector<Vector2d> path;
 	//path.push_back(lines[i].from);
-	path.push_back((*polys)[frompoly].vertices[fromind]);
-	path.push_back((*polys)[topoly].vertices[toind]);
+	path.push_back(polys[frompoly].vertices[fromind]);
+	path.push_back(polys[topoly].vertices[toind]);
 	//path.push_back(lines[i].to);
 	for (uint pi=0; pi < path.size(); pi++)
 	  cerr << path[pi] << endl;
@@ -1014,6 +1060,8 @@ void Printlines::clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
     }
   }
 }
+#endif // NEWCLIP=0 
+
 
 void Printlines::setSpeedFactor(double speedfactor, vector<PLine> &lines) const
 {

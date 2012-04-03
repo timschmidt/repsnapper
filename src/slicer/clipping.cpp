@@ -384,7 +384,7 @@ CL::Polygons Clipping::getMerged(const CL::Polygons &cpolys, int overlap)
 
 Poly Clipping::getPoly(const CL::Polygon &cpoly, double z, double extrusionfactor) 
 {
-  Poly p = Poly(z, extrusionfactor);
+  Poly p(z, extrusionfactor);
   p.vertices.clear();
   uint count = cpoly.size();
   p.vertices.resize(count);

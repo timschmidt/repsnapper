@@ -142,7 +142,7 @@ class Printlines
   void setSpeedFactor(double speedfactor, vector<PLine> &lines) const;
 
   // keep movements inside polys when possible (against stringing)
-  void clipMovements(const vector<Poly> *polys, vector<PLine> &lines,
+  void clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 		     double maxerr=0.0001) const;
 
   void getLines(const vector<PLine> &lines,
@@ -179,6 +179,8 @@ class Printlines
   bool capCorner(PLine &l1, PLine &l2, double linewidth, double linewidthratio, 
 		 double optratio) const;
 
+  uint divideline(uint lineindex, const Vector2d &point,
+		  vector<PLine> &lines) const;
   uint divideline(uint lineindex, const vector<Vector2d> &points,
 		  vector<PLine> &lines) const;
   uint divideline(uint lineindex, const double length, vector<PLine> &lines) const;

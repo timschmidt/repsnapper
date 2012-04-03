@@ -683,7 +683,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 			   startPoint, lines, hardware.MaxShellSpeed);
       if (s < skins) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
-	printlines.clipMovements(clippolys, lines, linewidth/2.);
+	printlines.clipMovements(*clippolys, lines, linewidth/2.);
 	printlines.optimize(hardware, slicing, slicing.MinLayertime/skins, lines);
 	printlines.getLines(lines, lines3);
 	lines.clear();
@@ -754,7 +754,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   if ((guint)LayerNo < slicing.FirstLayersNum)
     speedfactor = slicing.FirstLayersSpeed;
 
-  printlines.clipMovements(clippolys, lines, linewidth/2.);
+  printlines.clipMovements(*clippolys, lines, linewidth/2.);
   printlines.optimize(hardware, slicing, slicing.MinLayertime, lines);
   printlines.setSpeedFactor(speedfactor, lines);
   double slowdownfactor = printlines.getSlowdownFactor();
