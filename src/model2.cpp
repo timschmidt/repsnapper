@@ -580,7 +580,7 @@ void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
   clipp.addPolys(cliplayer->GetPolygons(),        subject);
   clipp.addPolys(cliplayer->GetSupportPolygons(), subject); // previous 
   clipp.addPolys(subjlayer->GetPolygons(),        clip);
-
+  clipp.setZ(subjlayer->getZ());
   vector<Poly> spolys;
   if (widen != 0)
     // widen from layer to layer

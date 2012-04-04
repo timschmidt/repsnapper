@@ -75,6 +75,7 @@ public:
 
   // do after addPoly... and before clipping/results
   void setZ(double z) {lastZ = z;};
+  double getZ() const {return lastZ;};
   void setExtrusionFactor(double e) {lastExtrF = e;};
   
   vector<Poly>   intersect      (CL::PolyFillType sft=CL::pftEvenOdd, 

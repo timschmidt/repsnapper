@@ -249,7 +249,7 @@ void Layer::CalcInfill (const Settings &settings)
   double fullInfillDistance=0;
   double infillDistance=0; // normal fill
   double altInfillDistance=0;
-  double infilldist=0;
+  double normalInfilldist=0;
   bool shellOnly = settings.Slicing.ShellOnly;
   fullInfillDistance = settings.GetInfillDistance(thickness, 100);
   if (settings.Slicing.InfillPercent == 0) 
@@ -260,15 +260,15 @@ void Layer::CalcInfill (const Settings &settings)
   if (settings.Slicing.AltInfillPercent != 0) 
     altInfillDistance = settings.GetInfillDistance(thickness,
 						   settings.Slicing.AltInfillPercent);
-  if (settings.Slicing.AltInfillLayers!=0 
+  if (settings.Slicing.AltInfillLayers != 0 
       && LayerNo % settings.Slicing.AltInfillLayers == 0) 
-    infilldist = altInfillDistance;
+    normalInfilldist = altInfillDistance;
   else
-    infilldist = infillDistance;
+    normalInfilldist = infillDistance;
   if (LayerNo < (int)settings.Slicing.FirstLayersNum) {
     double first_infdist = 
       fullInfillDistance * (1+(double)settings.Slicing.FirstLayersInfillDist);
-    infilldist = max(infilldist, first_infdist);
+    normalInfilldist   = max(normalInfilldist,   first_infdist);
     fullInfillDistance = max(fullInfillDistance, first_infdist);
   }
   // relative extrusion for skins:
@@ -287,7 +287,7 @@ void Layer::CalcInfill (const Settings &settings)
 		+ (double)LayerNo*settings.Slicing.InfillRotationPrLayer)/180.0*M_PI;
   if (!shellOnly)
     normalInfill->addPolys(Z, fillPolygons, (InfillType)settings.Slicing.NormalFilltype, 
-			   infilldist, fullInfillDistance, rot);
+			   normalInfilldist, fullInfillDistance, rot);
   
   fullInfill->addPolys(Z, fullFillPolygons, (InfillType)settings.Slicing.FullFilltype,
 		       fullInfillDistance, fullInfillDistance, rot);
@@ -319,7 +319,7 @@ void Layer::CalcInfill (const Settings &settings)
     }
   }
   supportInfill->addPolys(Z, supportPolygons, (InfillType)settings.Slicing.SupportFilltype,
-			  infilldist, infilldist, 0);
+			  infillDistance, infillDistance, 0);
 }
 
 

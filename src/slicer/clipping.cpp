@@ -280,7 +280,7 @@ vector<Poly> Clipping::getOffset(const vector<Poly> &polys, double distance,
   CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
   double z=0, extrf=1.;;
   if (polys.size()>0) {
-    z= polys.back().getZ();
+    z = polys.back().getZ();
     extrf = polys.back().getExtrusionFactor();
   }
   return getPolys(offset,z,extrf);
