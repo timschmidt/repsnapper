@@ -18,6 +18,7 @@ repsnapper_CPPFLAGS = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/slicer \
+	-I$(top_builddir)/src \
 	-I$(LIB_DIR) \
 	-DHAVE_GTK $(CFLAGS) $(EXTRA_CFLAGS) -I$(LIB_DIR) $(GTKMM_CFLAGS) \
 	$(LIBREPRAP_CFLAGS) \

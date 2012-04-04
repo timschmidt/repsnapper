@@ -5,18 +5,20 @@ if [ "$#" -lt 2 ]; then
   exit 1
 fi
 
-TOPDIR=`dirname "$0"`/..
 VERSION_H="$1"
 TARBALL_VERSION_H="$2"
+TOPSRCDIR=`dirname "${TARBALL_VERSION_H}"`/..
 
 # Check if building from git
-if [ ! -d "${TOPDIR}/.git" ]; then
+if [ ! -d "${TOPSRCDIR}/.git" ]; then
     # Not git, just ensure output file exists
     if [ ! -f "${TARBALL_VERSION_H}" ]; then
-        echo "Error: Not building from git and ${TARBALL_VERSION_H} doesn't exist"
-        exit 1 # Fail
+        echo "Warning: Not building from git and ${TARBALL_VERSION_H} doesn't exist"
+        echo const string GIT_COMMIT=\"Unknown\"\;     > $VERSION_H
+        echo const string GIT_COMMIT_DATE=\"Unknown\"\; >> $VERSION_H
+    else
+        echo "Not updating ${VERSION_H} - building from tarball"
     fi
-    echo "Not updating ${VERSION_H} - building from tarball"
     exit 0
 fi
 
@@ -28,6 +30,8 @@ if [ "X`${AWK} --version | head -n 1 | grep BSD`" != "X" ] ; then
     FSEQUAL="\="
 fi
 
+GIT_DIR="${TOPSRCDIR}/.git"
+export GIT_DIR
 LOG=`git log -1`
 
 COMMIT=`echo "$LOG" | $AWK '/commit/{print $2; exit}'`
