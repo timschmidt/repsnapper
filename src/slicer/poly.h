@@ -48,6 +48,8 @@ public:
 	  else return vertices[(vertices.size()+i)%vertices.size()];
 	};
 
+	uint nextVertex(uint i) const {return (i+1)%vertices.size();};
+
 	/* Poly Shrinked(double distance) const; */
 	/* Poly Shrinked(vector<Vector2d> *vertices, double distance); */
 
@@ -62,32 +64,33 @@ public:
 
 	//vector< vector<Vector2d> > intersect(Poly &poly1, Poly &poly2) const;
 
-	bool vertexInside(const Vector2d point, double maxoffset=0.0001) const;
-	bool vertexInside2(const Vector2d point, double maxoffset=0.0001) const;
-	bool isInside(const Poly * poly, double maxoffset=0.0001) const;
-	uint nearestDistanceSqTo(const Vector2d p, double &mindist) const;
-	void nearestIndices(const Poly p2, int &thisindex, int &otherindex) const;
-	double shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end) const;
+	bool vertexInside(const Vector2d &point, double maxoffset=0.0001) const;
+	bool vertexInside2(const Vector2d &point, double maxoffset=0.0001) const;
+	bool isInside(const Poly &poly, double maxoffset=0.0001) const;
+	uint nearestDistanceSqTo(const Vector2d &p, double &mindist) const;
+	void nearestIndices(const Poly &p2, int &thisindex, int &otherindex) const;
+	double shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end) const;
+	double angleAtVertex(uint i) const;
 
-	void rotate(Vector2d center, double angle);
-	void move(Vector2d delta);
+	void rotate(const Vector2d &center, double angle);
+	void move(const Vector2d &delta);
 
 	void calcHole(); // calc center and whether this is a hole 
 	bool isHole();
 
 	vector<Vector2d> getMinMax() const;
-	vector<Intersection> lineIntersections(const Vector2d P1, const Vector2d P2,
+	vector<Intersection> lineIntersections(const Vector2d &P1, const Vector2d &P2,
 					       double maxerr=0.0001) const;
 
 	// ClipperLib::Polygons getOffsetClipperPolygons(double dist) const ;
 	// ClipperLib::Polygon getClipperPolygon(bool reverse=false) const;
 	
-	Vector2d getVertexCircular(int pointindex) const;  // 2d point at index 
+	Vector2d const &getVertexCircular(int pointindex) const;  // 2d point at index 
 	Vector3d getVertexCircular3(int pointindex) const; // 3d point at index 
 	vector<Vector2d> getVertexRangeCircular(int from, int to) const;
 
 	vector<Vector2d> vertices; // vertices
-	void addVertex(Vector2d v, bool front=false);
+	void addVertex(const Vector2d v, bool front=false);
 	bool hole; // this polygon is a hole
 	Vector2d center;
 	Vector2d getCenter();
@@ -100,6 +103,7 @@ public:
 	void draw(int gl_type, bool randomized=true) const; 
 	void draw(int gl_type, double z, bool randomized=true) const; // draw at given z
 	void drawVertexNumbers() const; 
+	void drawVertexAngles() const; 
 	void drawLineNumbers() const;
 
 	void getLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
@@ -110,7 +114,7 @@ public:
 	double getLinelengthSq(uint startindex) const;
 	double averageLinelengthSq() const;
 
-	vector<Vector2d> getPathAround(const Vector2d from, const Vector2d to) const;
+	vector<Vector2d> getPathAround(const Vector2d &from, const Vector2d &to) const;
 
 	int getTriangulation(vector<Triangle> &triangles)  const ;
 

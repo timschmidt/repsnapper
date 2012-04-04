@@ -175,7 +175,7 @@ Vector2d Poly::getCenter()
   return center;
 }
 
-void Poly::rotate(Vector2d rotcenter, double angle) 
+void Poly::rotate(const Vector2d &rotcenter, double angle) 
 {
   double sina = sin(angle);
   double cosa = cos(angle);
@@ -189,7 +189,7 @@ void Poly::rotate(Vector2d rotcenter, double angle)
 		    mc.y()*cosa + mc.x()*sina + rotcenter.y());
 }
 
-void Poly::move(Vector2d delta) 
+void Poly::move(const Vector2d &delta) 
 {
   for (uint i = 0; i < vertices.size();  i++) {
     vertices[i] += delta;
@@ -199,7 +199,7 @@ void Poly::move(Vector2d delta)
 
 // nearest connection point indices of this and other poly 
 // if poly is not closed, only test first and last point
-void Poly::nearestIndices(const Poly p2, int &thisindex, int &otherindex) const
+void Poly::nearestIndices(const Poly &p2, int &thisindex, int &otherindex) const
 {
   double mindist = INFTY;
   for (uint i = 0; i < vertices.size(); i++) {
@@ -218,7 +218,7 @@ void Poly::nearestIndices(const Poly p2, int &thisindex, int &otherindex) const
 
 // Find the vertex in the poly closest to point p
 // if not closed, only look for first and last point
-uint Poly::nearestDistanceSqTo(const Vector2d p, double &mindist) const
+uint Poly::nearestDistanceSqTo(const Vector2d &p, double &mindist) const
 {
   assert(vertices.size() > 0);
   // Start with first vertex as closest
@@ -236,7 +236,7 @@ uint Poly::nearestDistanceSqTo(const Vector2d p, double &mindist) const
   return nindex;
 }
 // returns length and two points
-double Poly::shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end) const
+double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end) const
 {
   double min1 = 100000000, min2 = 100000000;
   int minindex1=0, minindex2=0;
@@ -278,7 +278,13 @@ double Poly::shortestConnectionSq(const Poly p2, Vector2d &start, Vector2d &end)
 }
 
 
-bool Poly::vertexInside(const Vector2d point, double maxoffset) const
+double Poly::angleAtVertex(uint i) const 
+{
+  return angleBetween(getVertexCircular(i)-getVertexCircular(i-1),
+		      getVertexCircular(i+1)-getVertexCircular(i));
+}
+
+bool Poly::vertexInside(const Vector2d &point, double maxoffset) const
 {
   // Shoot a ray along +X and count the number of intersections.
   // If n_intersections is even, return false, else return true
@@ -307,7 +313,7 @@ bool Poly::vertexInside(const Vector2d point, double maxoffset) const
 
 // http://paulbourke.net/geometry/insidepoly/
 // not really working
-bool Poly::vertexInside2(const Vector2d p, double maxoffset) const
+bool Poly::vertexInside2(const Vector2d &p, double maxoffset) const
 {
   uint c = false;
   //Poly off = Clipping::getOffset(*this,maxoffset).front();
@@ -325,18 +331,18 @@ bool Poly::vertexInside2(const Vector2d p, double maxoffset) const
 }
 
 // this polys completely contained in other
-bool Poly::isInside(const Poly * poly, double maxoffset) const
+bool Poly::isInside(const Poly &poly, double maxoffset) const
 {
   uint i, count=0;
   for (i = 0; i < vertices.size();  i++) {
-    if (poly->vertexInside(vertices[i],maxoffset))
+    if (poly.vertexInside(vertices[i],maxoffset))
       count++;
   }
   return count == vertices.size();
 }
 
 
-void Poly::addVertex(Vector2d v, bool front)
+void Poly::addVertex(const Vector2d v, bool front)
 {
   if (front)
     vertices.insert(vertices.begin(),v);
@@ -346,7 +352,7 @@ void Poly::addVertex(Vector2d v, bool front)
 };
 
 
-Vector2d Poly::getVertexCircular(int index) const
+Vector2d const &Poly::getVertexCircular(int index) const
 {
   int size = vertices.size();
   index = (index + size) % size;
@@ -370,7 +376,7 @@ vector<Vector2d> Poly::getVertexRangeCircular(int from, int to) const
 }
 
 
-vector<Intersection> Poly::lineIntersections(const Vector2d P1, const Vector2d P2,
+vector<Intersection> Poly::lineIntersections(const Vector2d &P1, const Vector2d &P2,
 					     double maxerr) const
 {
   vector<Intersection> HitsBuffer;
@@ -469,7 +475,7 @@ void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
     lines.insert(lines.end(),mylines.begin(),mylines.end());
 }
 
-vector<Vector2d> Poly::getPathAround(const Vector2d from, const Vector2d to) const
+vector<Vector2d> Poly::getPathAround(const Vector2d &from, const Vector2d &to) const
 {
   double dist;
   vector<Vector2d> path1, path2;
@@ -607,6 +613,19 @@ void Poly::drawVertexNumbers() const
     glVertex3f(v.x(),v.y(),v.z());
     ostringstream oss;
     oss << i;
+    drawString(v, oss.str());
+  }
+}
+
+void Poly::drawVertexAngles() const
+{
+  Vector3d v;
+  for (uint i=0;i < vertices.size();i++){
+    v = getVertexCircular3(i);
+    glVertex3f(v.x(),v.y(),v.z());
+    double angle = angleAtVertex(i);
+    ostringstream oss; 
+    oss << (int)(angle*180/M_PI);
     drawString(v, oss.str());
   }
 }

@@ -947,6 +947,7 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   if(DrawCPVertexNumbers) // poly vertex numbers
     for(size_t p=0; p<polygons.size();p++)
       polygons[p].drawVertexNumbers();
+      //polygons[p].drawVertexAngles();
   
   if(DrawCPLineNumbers)  // poly line numbers
     for(size_t p=0; p<polygons.size();p++)

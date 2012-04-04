@@ -345,8 +345,14 @@ void Printlines::makeLines(const vector<Poly> &polys,
 	    }
 	}
       }
-      if (displace_startpoint && ndone==0)  // displace first point
-	nvindex = (nvindex+1) % polys[npindex].size();
+      // displace first point to next sharp corner (>pi/4)
+      if (displace_startpoint && ndone==0) { 
+	int oldnvindex = nvindex; // if none found, stay here
+	nvindex = polys[npindex].nextVertex(nvindex);
+	while (nvindex != oldnvindex &&
+	       abs(polys[npindex].angleAtVertex(nvindex) < M_PI/4))
+	  nvindex = polys[npindex].nextVertex(nvindex);
+      }
       if (npindex >= 0 && npindex >=0) {
 	addPoly(lines, polys[npindex], nvindex, maxspeed, movespeed);
 	done[npindex]=true;
