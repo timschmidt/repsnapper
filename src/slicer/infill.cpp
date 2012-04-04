@@ -495,10 +495,14 @@ void Infill::addInfillPolys(const vector<Poly> &polys)
     }
   default:
 #endif
-    for (uint i=0; i<polys.size();i++)
-      addInfillPoly(polys[i]);
 #if NEWINFILL
+    infillpolys = polys;
+    // Poly newpoly(p.getZ(), extrusionfactor);
+    // infillpolys.push_back(newpoly);
   }
+#else
+  for (uint i=0; i<polys.size();i++)
+    addInfillPoly(polys[i]);
 #endif
 }
 
@@ -553,11 +557,8 @@ void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
     break;
   default:
     {
-#else
-#endif
       Poly newpoly(p.getZ(), extrusionfactor);
       infillpolys.push_back(newpoly);
-#if NEWINFILL==0
     }
   }
 #endif
@@ -596,9 +597,10 @@ string Infill::info() const
 { 
   ostringstream ostr;
   ostr << "Infill " << name 
-       << ": extrf=" << extrusionfactor 
+       << ": type=" << type
+       << ", extrf=" << extrusionfactor 
        << ", polygons: " << infillpolys.size() 
-       << ", vertices: "<< infillvertices.size();
+       << ", vertices: " << infillvertices.size();
   return ostr.str();
 }
 
