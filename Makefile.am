@@ -8,7 +8,7 @@ DISTCLEANFILES = tools/gitversion.sh
 BUILT_SOURCES = tools/gitversion.sh
 
 EXTRA_DIST = \
-	README \
+	README.asciidoc \
 	HACKING \
 	repsnapper.desktop.in \
         README.win32 \
