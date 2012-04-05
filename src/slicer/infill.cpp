@@ -160,8 +160,14 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   const Vector2d Max = layer->getMax();
   while (rotation > 2*M_PI) rotation -= 2*M_PI;
   while (rotation < 0) rotation += 2*M_PI;
-  this->angle= rotation;
+  this->angle = rotation;
 
+  if (type == HexInfill) { 
+    if (layer->LayerNo%2 != 0) 
+      angle = M_PI/2;
+    else
+      angle = 0.;
+  }
   //omp_set_lock(&save_lock);
   //int tid = omp_get_thread_num( );
   //cerr << "thread "<<tid << " looking for pattern " << endl;
@@ -172,7 +178,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       	   sIt != savedPatterns.end(); sIt++){
 	if (sIt->type == type &&
 	    abs((sIt->distance-infillDistance)/infillDistance) < 0.01 &&
-	    abs((sIt->angle-rotation)/rotation) < 0.01 )
+	    abs((sIt->angle-angle)/angle) < 0.01 )
 	  {
 	    //cerr << name << " found saved pattern no " << sIt-savedPatterns.begin() << " with " << sIt->cpolys.size() <<" polys"<< endl << "type "<< sIt->type << sIt->Min << sIt->Max << endl;
 	    // is it too small for this layer?
@@ -201,24 +207,14 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
     {
     case HexInfill: 
       {
-	Vector2d center = (Min+Max)/2.;
-	// make square that masks everything even when rotated
-	Vector2d diag = Max-Min;
-	double square = max(diag.x(),diag.y());
-	Vector2d sqdiag(square*2/3,square*2/3);
-	Vector2d pMin=Vector2d::ZERO, pMax=center+sqdiag;
-	double hexd = infillDistance/(1+sqrt(3.)/4.);
+	Vector2d pMin=Vector2d::ZERO, pMax=Max*1.1;
+	double hexd = infillDistance;// /(1+sqrt(3.)/4.);
 	double hexa = hexd*sqrt(3.)/2.;
-	//pMin = -pMax;
 	// the two parts have to fit
-	center = pMax/2;
-	Vector2d hexrotcenter = Vector2d((double)(floor(center.x()/2*hexa)) * 2*hexa ,
-					 (double)(floor(center.y()/hexd)) * hexd );
-	
 	Poly poly(this->layer->getZ());
-	if (layer->LayerNo%2==0) { // two alternating parts
+	if (layer->LayerNo%2 != 0) { // two alternating parts
 	  double ymax = pMax.y();;
-	  for (double x = pMin.x(); x < pMax.x(); ) {
+	  for (double x = pMin.x(); x < pMax.x(); x += 2*hexa) {
 	    poly.addVertex(x, pMin.y());
 	    for (double y = pMin.y(); y < pMax.y(); ) {
 	      poly.addVertex(x, y);
@@ -240,26 +236,23 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	      y-=2*hexd;
 	      poly.addVertex(x2, y-hexd/2);
 	    }
-	    x += 2*hexa;
 	  }
 	  poly.addVertex(pMax.x(), pMin.y()-infillDistance);
 	  poly.addVertex(pMin.x(), pMin.y()-infillDistance);
 	} else { 
 	  double xmax = pMax.x();;
-	  for (double y = pMin.y(); y < pMax.y(); ) {
+	  for (double y = pMin.y(); y < pMax.y(); y += 3*hexd) {
 	    for (double x = pMin.x(); x < pMax.x(); ) {
 	      poly.addVertex(x, y);
 	      poly.addVertex(x+hexa, y+hexd/2.);
 	      x += 2*hexa;
 	      xmax = x;
 	    }
-	    for (double x = xmax; x > pMin.y(); ) {
+	    for (double x = xmax; x > pMin.y(); x -= 2*hexa) {
 	      double y2 = y+1.5*hexd;
 	      poly.addVertex(x+hexa,  y2);
 	      poly.addVertex(x, y2+hexd/2);
-	      x -= 2*hexa;
 	    }
-	    y += 3*hexd;
 	  }
 	  poly.addVertex(pMin.x(), pMax.y()-infillDistance);
 	  poly.addVertex(pMin.x(), pMin.y()-infillDistance);
@@ -320,7 +313,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	poly.addVertex(pMin.x(), pMin.y()-infillDistance);
 	// Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
 	if (!zigzag) 
-	  poly.rotate(center,rotation);
+	  poly.rotate(center,angle);
 	// poly2.rotate(center,rotation);
 	vector<Poly> polys(1);
 	polys[0] = poly;
@@ -398,7 +391,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
     {
       struct pattern newPattern;
       newPattern.type=type;
-      newPattern.angle=rotation;
+      newPattern.angle=angle;
       newPattern.distance=infillDistance;
       newPattern.cpolys=cpolys;
       newPattern.Min=Min;

@@ -377,16 +377,25 @@ void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor)
   clipp.clear();
   // full fill only where already normal fill
   clipp.addPolys(fillPolygons,subject); 
+  if (decor) clipp.addPolys(fullFillPolygons,subject); 
   clipp.addPolys(newpolys,clip);
+  clipp.setZ(Z);
   vector<Poly> inter = clipp.intersect();
-  if (decor)//  && LayerNo != 0) // no decor on base layers
-    decorPolygons.insert(decorPolygons.end(),inter.begin(),inter.end());
-  else
-    fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
-
   vector<Poly> normals = clipp.subtractMerged(thickness/2.);
+  if (decor) {//  && LayerNo != 0) // no decor on base layers
+    decorPolygons.insert(decorPolygons.end(), inter.begin(), inter.end());
+    Clipping clipp;
+    clipp.addPolys(fullFillPolygons,subject);
+    clipp.addPolys(inter,clip);
+    clipp.setZ(Z);
+    setFullFillPolygons(clipp.subtract());
+  }
+  else {
+    fullFillPolygons.insert(fullFillPolygons.end(),inter.begin(),inter.end());
+  }
+
   setNormalFillPolygons(normals);
- //mergeFullPolygons(false); // done separately
+  //  mergeFullPolygons(false); // done separately
 }
 
 void cleanup(vector<Poly> &polys, double error)
@@ -406,6 +415,7 @@ void Layer::mergeFullPolygons(bool bridge)
   // clipp.addPolys(fullFillPolygons,subject);
   // clipp.addPolys(decorPolygons,clip);
   // setFullFillPolygons(clipp.subtract());
+
   setFullFillPolygons(Clipping::getMerged(fullFillPolygons, thickness));
   cleanup(fullFillPolygons, thickness/CLEANFACTOR);
   //subtract from normal fills
@@ -903,8 +913,8 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1);
   draw_polys(bridgePolygons,       GL_LINE_LOOP, 3, 3, RED2,  0.7);
   draw_polys(bridgePillars,        GL_LINE_LOOP, 3, 3, YELLOW, 0.7);
-  draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 3, GREY,  0.6);
-  draw_polys(decorPolygons,        GL_LINE_LOOP, 1, 3, GREY,  1);
+  draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 1, GREY,  0.6);
+  draw_polys(decorPolygons,        GL_LINE_LOOP, 1, 3, WHITE,  1);
   draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  0.6);
   if(DisplayInfill)
     {

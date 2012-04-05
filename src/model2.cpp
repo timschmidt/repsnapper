@@ -468,7 +468,7 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
 	layers[i]->calcBridgeAngles(layers[i-1]);
       }
       else {
-	vector<Poly> uncovered = GetUncoveredPolygons(layers[i],layers[i-1]);
+	const vector<Poly> &uncovered = GetUncoveredPolygons(layers[i],layers[i-1]);
 	layers[i]->addFullPolygons(uncovered,make_decor);
       }
     }
@@ -503,8 +503,11 @@ void Model::MultiplyUncoveredPolygons()
   if (shells<1) return;
   int count = (int)layers.size();
   
+  int numdecor = 0;
   // add another full layer if making decor
-  if (settings.Slicing.MakeDecor) shells++;
+  if (settings.Slicing.MakeDecor) 
+    numdecor = settings.Slicing.DecorLayers;
+  shells += numdecor;
 
   if (!m_progress->restart (_("Uncovered Shells"), count*3)) return;
   int progress_steps=(int)(count*3/100);
@@ -515,32 +518,32 @@ void Model::MultiplyUncoveredPolygons()
     {
       if (i%progress_steps==0) if(!m_progress->update(i)) return;
       // (brigdepolys are not multiplied downwards)
-      vector<Poly>   fullpolys     = layers[i]->GetFullFillPolygons();
-      vector<Poly>   decorpolys    = layers[i]->GetDecorPolygons();
-      vector<Poly>   skinfullpolys = layers[i]->GetSkinFullPolygons();
+      const vector<Poly> &fullpolys     = layers[i]->GetFullFillPolygons();
+      const vector<Poly> &skinfullpolys = layers[i]->GetSkinFullPolygons();
+      const vector<Poly> &decorpolys    = layers[i]->GetDecorPolygons();
       for (s=1; s < shells; s++) 
 	if (i-s > 1) {
-	  layers[i-s]->addFullPolygons (fullpolys);
-	  layers[i-s]->addFullPolygons (skinfullpolys);
-	  layers[i-s]->addFullPolygons (decorpolys);
+	  layers[i-s]->addFullPolygons (fullpolys,     false);
+	  layers[i-s]->addFullPolygons (skinfullpolys, false);
+	  layers[i-s]->addFullPolygons (decorpolys,    s < numdecor);
 	}
     }
   // top-down: mulitply upwards
   for (int i=count-1; i>=0; i--) 
     {
       if (i%progress_steps==0) if (!m_progress->update(count + count -i)) return;
-      vector<Poly>   fullpolys     = layers[i]->GetFullFillPolygons();
-      vector<ExPoly> bridgepolys   = layers[i]->GetBridgePolygons();
-      vector<Poly>   skinfullpolys = layers[i]->GetSkinFullPolygons();
-      vector<Poly>   decorpolys    = layers[i]->GetDecorPolygons();
+      const vector<Poly>   &fullpolys     = layers[i]->GetFullFillPolygons();
+      const vector<ExPoly> &bridgepolys   = layers[i]->GetBridgePolygons();
+      const vector<Poly>   &skinfullpolys = layers[i]->GetSkinFullPolygons();
+      const vector<Poly>   &decorpolys    = layers[i]->GetDecorPolygons();
       for (int s=1; s < shells; s++) 
 	if (i+s < count){
-	  layers[i+s]->addFullPolygons (fullpolys);
-	  layers[i+s]->addFullPolygons (bridgepolys);
-	  layers[i+s]->addFullPolygons (skinfullpolys);
-	  layers[i+s]->addFullPolygons (decorpolys);
+	  layers[i+s]->addFullPolygons (fullpolys,     false);
+	  layers[i+s]->addFullPolygons (bridgepolys,   false);
+	  layers[i+s]->addFullPolygons (skinfullpolys, false);
+	  layers[i+s]->addFullPolygons (decorpolys,    s < numdecor);
 	}
-    }    
+    }
 
   m_progress->set_label(_("Merging Full Polygons"));
   // merge results

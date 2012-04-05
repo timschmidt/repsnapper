@@ -144,6 +144,7 @@ class Settings {
     float SupportExtrusion;
     bool MakeDecor;
     int DecorFilltype;
+    int DecorLayers;
     float DecorInfillDistance;
     float DecorInfillRotation;
 
