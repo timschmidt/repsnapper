@@ -213,17 +213,20 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	double square = max(diag.x(),diag.y());
 	Vector2d sqdiag(square*2/3,square*2/3);
 	Vector2d pMin=center-sqdiag, pMax=center+sqdiag;
-	//cerr << pMin << "--"<<pMax<< "::"<< center << endl;
+	if (zigzag) pMin=Vector2d::ZERO;
+	// cerr << pMin << "--"<<pMax<< "::"<< center << endl;
 	Poly poly(this->layer->getZ());
 	uint count = 0;
 	for (double x = pMin.x(); x < pMax.x(); x += infillDistance) {
 	  poly.addVertex(Vector2d(x, pMin.y()));
 	  if (zigzag){
-	    for (double y = pMin.y()+infillDistance; y < pMax.y(); y += 2*infillDistance) {
+	    double ymax=pMax.y();;
+	    for (double y = pMin.y(); y < pMax.y(); y += 2*infillDistance) {
 	      poly.addVertex(Vector2d(x,y));
 	      poly.addVertex(Vector2d(x+infillDistance,y+infillDistance));
+	      ymax = y;
 	    }
-	    for (double y = pMax.y(); y > pMin.y(); y -= 2*infillDistance) {
+	    for (double y = ymax; y > pMin.y(); y -= 2*infillDistance) {
 	      poly.addVertex(Vector2d(x+infillDistance,y+infillDistance));
 	      poly.addVertex(Vector2d(x+2*infillDistance,y));
 	    }
@@ -246,7 +249,8 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	poly.addVertex(Vector2d(pMax.x(), pMin.y()-infillDistance));
 	poly.addVertex(Vector2d(pMin.x(), pMin.y()-infillDistance));
 	// Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
-	poly.rotate(center,rotation);
+	if (!zigzag) 
+	  poly.rotate(center,rotation);
 	// poly2.rotate(center,rotation);
 	vector<Poly> polys(1);
 	polys[0] = poly;
