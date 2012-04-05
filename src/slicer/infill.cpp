@@ -225,15 +225,13 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	      y+=1.5*hexd;
 	      ymax = y;
 	    }
-	    for (double y = ymax; y > pMin.y(); ) {
+	    for (double y = ymax; y > pMin.y(); y-=2*hexd) {
 	      double x2 = x+hexa+layer->thickness/10.; // offset to not combine polys
 	      y+=0.5*hexd;
 	      poly.addVertex(x2, y);
 	      poly.addVertex(x2+hexa, y-hexd/2);
 	      y-=1.5*hexd;
 	      poly.addVertex(x2+hexa, y);
-	      poly.addVertex(x2, y-hexd/2);
-	      y-=2*hexd;
 	      poly.addVertex(x2, y-hexd/2);
 	    }
 	  }
