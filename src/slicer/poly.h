@@ -55,7 +55,8 @@ public:
 
 	// simplify douglas-peucker
 	void cleanup(double maxerror);
-	vector<Vector2d> cleaned(const vector<Vector2d> vertices, double maxerror) const;
+	static vector<Vector2d> cleaned(const vector<Vector2d> &vertices, 
+					double maxerror);
 
 	void reverse() {std::reverse(vertices.begin(),vertices.end());holecalculated = false;};
 
@@ -90,7 +91,8 @@ public:
 	vector<Vector2d> getVertexRangeCircular(int from, int to) const;
 
 	vector<Vector2d> vertices; // vertices
-	void addVertex(const Vector2d v, bool front=false);
+	void addVertex(const Vector2d &v, bool front=false);
+	void addVertex(double x, double y, bool front=false);
 	bool hole; // this polygon is a hole
 	Vector2d center;
 	Vector2d getCenter();

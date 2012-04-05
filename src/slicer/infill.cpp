@@ -199,13 +199,85 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   bool zigzag = false;
   switch (type)
     {
-    case SmallZigzagInfill: // small zigzag lines
-    zigzag = true;
-    //case ZigzagInfill: // long zigzag lines, make lines later
-    case SupportInfill: // stripes, but leave them as polygons
-    case RaftInfill:      // stripes, make them to lines later
-    case BridgeInfill:    // stripes, make them to lines later
-    case ParallelInfill:  // stripes, make them to lines later
+    case HexInfill: 
+      {
+	Vector2d center = (Min+Max)/2.;
+	// make square that masks everything even when rotated
+	Vector2d diag = Max-Min;
+	double square = max(diag.x(),diag.y());
+	Vector2d sqdiag(square*2/3,square*2/3);
+	Vector2d pMin=Vector2d::ZERO, pMax=center+sqdiag;
+	double hexd = infillDistance/(1+sqrt(3.)/4.);
+	double hexa = hexd*sqrt(3.)/2.;
+	//pMin = -pMax;
+	// the two parts have to fit
+	center = pMax/2;
+	Vector2d hexrotcenter = Vector2d((double)(floor(center.x()/2*hexa)) * 2*hexa ,
+					 (double)(floor(center.y()/hexd)) * hexd );
+	
+	Poly poly(this->layer->getZ());
+	if (layer->LayerNo%2==0) { // two alternating parts
+	  double ymax = pMax.y();;
+	  for (double x = pMin.x(); x < pMax.x(); ) {
+	    poly.addVertex(x, pMin.y());
+	    for (double y = pMin.y(); y < pMax.y(); ) {
+	      poly.addVertex(x, y);
+	      poly.addVertex(x+hexa, y+hexd/2);
+	      y+=1.5*hexd;
+	      poly.addVertex(x+hexa, y);
+	      poly.addVertex(x, y+hexd/2);
+	      y+=1.5*hexd;
+	      ymax = y;
+	    }
+	    for (double y = ymax; y > pMin.y(); ) {
+	      double x2 = x+hexa+layer->thickness/10.; // offset to not combine polys
+	      y+=0.5*hexd;
+	      poly.addVertex(x2, y);
+	      poly.addVertex(x2+hexa, y-hexd/2);
+	      y-=1.5*hexd;
+	      poly.addVertex(x2+hexa, y);
+	      poly.addVertex(x2, y-hexd/2);
+	      y-=2*hexd;
+	      poly.addVertex(x2, y-hexd/2);
+	    }
+	    x += 2*hexa;
+	  }
+	  poly.addVertex(pMax.x(), pMin.y()-infillDistance);
+	  poly.addVertex(pMin.x(), pMin.y()-infillDistance);
+	} else { 
+	  double xmax = pMax.x();;
+	  for (double y = pMin.y(); y < pMax.y(); ) {
+	    for (double x = pMin.x(); x < pMax.x(); ) {
+	      poly.addVertex(x, y);
+	      poly.addVertex(x+hexa, y+hexd/2.);
+	      x += 2*hexa;
+	      xmax = x;
+	    }
+	    for (double x = xmax; x > pMin.y(); ) {
+	      double y2 = y+1.5*hexd;
+	      poly.addVertex(x+hexa,  y2);
+	      poly.addVertex(x, y2+hexd/2);
+	      x -= 2*hexa;
+	    }
+	    y += 3*hexd;
+	  }
+	  poly.addVertex(pMin.x(), pMax.y()-infillDistance);
+	  poly.addVertex(pMin.x(), pMin.y()-infillDistance);
+	}
+	// Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
+	vector<Poly> polys(1);
+	polys[0] = poly;
+	// polys[1] = poly2;
+	cpolys = Clipping::getClipperPolygons(polys);
+      }
+      break;
+    case SmallZigzagInfill: // small zigzag lines -> square pattern
+      zigzag = true;
+    //case ZigzagInfill: // long zigzag lines
+    case SupportInfill:
+    case RaftInfill:
+    case BridgeInfill:
+    case ParallelInfill:
       {
 	Vector2d center = (Min+Max)/2.;
 	// make square that masks everything even when rotated
@@ -213,41 +285,39 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	double square = max(diag.x(),diag.y());
 	Vector2d sqdiag(square*2/3,square*2/3);
 	Vector2d pMin=center-sqdiag, pMax=center+sqdiag;
-	if (zigzag) pMin=Vector2d::ZERO;
+	if (zigzag) pMin=Vector2d::ZERO; // fixed position
 	// cerr << pMin << "--"<<pMax<< "::"<< center << endl;
 	Poly poly(this->layer->getZ());
 	uint count = 0;
-	for (double x = pMin.x(); x < pMax.x(); x += infillDistance) {
-	  poly.addVertex(Vector2d(x, pMin.y()));
-	  if (zigzag){
+	for (double x = pMin.x(); x < pMax.x(); ) {
+	  double x2 = x+infillDistance;
+	  poly.addVertex(x, pMin.y());
+	  if (zigzag) { // zigzag -> squares
 	    double ymax=pMax.y();;
 	    for (double y = pMin.y(); y < pMax.y(); y += 2*infillDistance) {
-	      poly.addVertex(Vector2d(x,y));
-	      poly.addVertex(Vector2d(x+infillDistance,y+infillDistance));
+	      poly.addVertex(x, y);
+	      poly.addVertex(x2, y+infillDistance);
 	      ymax = y;
 	    }
 	    for (double y = ymax; y > pMin.y(); y -= 2*infillDistance) {
-	      poly.addVertex(Vector2d(x+infillDistance,y+infillDistance));
-	      poly.addVertex(Vector2d(x+2*infillDistance,y));
+	      poly.addVertex(x2, y+infillDistance);
+	      poly.addVertex(x2+infillDistance, y);
 	    }
-	    x+=infillDistance;
-	  } else {
+	    x += 2*infillDistance;
+	  } else {      // normal line infill
 	    if (count%2){
-	      poly.addVertex(Vector2d(x,   pMin.y()));
-	      poly.addVertex(Vector2d(x+infillDistance,   pMin.y()));
-	      //poly.addVertex(Vector2d(x+2*infillDistance, pMax.y()));
+	      poly.addVertex(x,  pMin.y());
+	      poly.addVertex(x2, pMin.y());
 	    } else {
-	      poly.addVertex(Vector2d(x,   pMax.y()));
-	      poly.addVertex(Vector2d(x+infillDistance,   pMax.y()));
-	      // poly.addVertex(Vector2d(x+infillDistance,   pMax.y()));
-	      // poly.addVertex(Vector2d(x+infillDistance,   pMin.y()));
-	      // poly.addVertex(Vector2d(x+2*infillDistance, pMin.y()));
+	      poly.addVertex(x,  pMax.y());
+	      poly.addVertex(x2, pMax.y());
 	    }
+	    x += infillDistance;
 	  }
 	  count ++;
 	}
-	poly.addVertex(Vector2d(pMax.x(), pMin.y()-infillDistance));
-	poly.addVertex(Vector2d(pMin.x(), pMin.y()-infillDistance));
+	poly.addVertex(pMax.x(), pMin.y()-infillDistance);
+	poly.addVertex(pMin.x(), pMin.y()-infillDistance);
 	// Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
 	if (!zigzag) 
 	  poly.rotate(center,rotation);
@@ -267,7 +337,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	if (level<0) break;
 	//cerr << "level " << level;
 	// start at 0,0 to get the same location for all layers
-	poly.addVertex(Vector2d(0,0)); 
+	poly.addVertex(0,0);
 	hilbert(level, 0, infillDistance,  poly.vertices);
 	vector<Poly> polys(1);
 	polys[0] = poly;

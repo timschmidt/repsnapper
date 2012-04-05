@@ -23,7 +23,6 @@
 #include "layer.h"
 #include "config.h"
 #include "shape.h"
-//#include "infill.h"
 #include "printlines.h"
 #include "clipping.h"
 
@@ -85,7 +84,7 @@ void Poly::cleanup(double epsilon)
 }
 
 // Douglas-Peucker algorithm
-vector<Vector2d> Poly::cleaned(const vector<Vector2d> vert, double epsilon) const
+vector<Vector2d> Poly::cleaned(const vector<Vector2d> &vert, double epsilon)
 { 
   if (epsilon == 0) return vert;
   uint n_vert = vert.size();
@@ -342,15 +341,19 @@ bool Poly::isInside(const Poly &poly, double maxoffset) const
 }
 
 
-void Poly::addVertex(const Vector2d v, bool front)
+void Poly::addVertex(const Vector2d &v, bool front)
 {
   if (front)
     vertices.insert(vertices.begin(),v);
   else
     vertices.push_back(v);
   holecalculated=false;
-};
+}
 
+void Poly::addVertex(double x, double y, bool front)
+{
+  addVertex(Vector2d(x,y), front);
+}
 
 Vector2d const &Poly::getVertexCircular(int index) const
 {
