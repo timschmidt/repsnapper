@@ -108,13 +108,13 @@ void Layer::Clear()
 // }	
 
 
-void Layer::SetPolygons(vector<Poly> polys) {
+void Layer::SetPolygons(vector<Poly> &polys) {
   this->polygons = polys;
   for(uint i=0;i<polygons.size();i++){
     polygons[i].setZ(Z); 
   }
 }
-void Layer::SetPolygons(const Matrix4d &T, const Shape shape, 
+void Layer::SetPolygons(const Matrix4d &T, const Shape &shape, 
 			double z) {
   cerr << "Layer::SetPolygons" << endl;
   double offsetZ = Z;
@@ -129,7 +129,7 @@ void Layer::SetPolygons(const Matrix4d &T, const Shape shape,
   }
 }
 
-int Layer::addShape(Matrix4d T, const Shape shape, double z, 
+int Layer::addShape(const Matrix4d &T, const Shape &shape, double z, 
 		     double &max_gradient)
 {
   double hackedZ = z;
@@ -162,7 +162,7 @@ void Layer::cleanupPolygons()
   }
 }
 
-void Layer::addPolygons(vector<Poly> polys)
+void Layer::addPolygons(vector<Poly> &polys)
 {
   for(uint i=0;i<polys.size();i++){
     polys[i].setZ(Z); 
@@ -204,7 +204,7 @@ void Layer::calcBridgeAngles(const Layer *layerbelow) {
 
 // these are used for the bridge polys of the layer above 
 // NOT USED, NOT TESTED, using calcBridgeAngles
-vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
+vector <double> Layer::getBridgeRotations(const vector<Poly> &polys) const{
   cerr << "Layer::getBridgeRotations" << endl;
   vector<double> angles; angles.resize(polys.size());
   Clipping clipp;
@@ -231,7 +231,7 @@ vector <double> Layer::getBridgeRotations(const vector<Poly> polys) const{
 
 // fills polys with raft type infill
 // so this layer will have the raft as normal infill
-void Layer::CalcRaftInfill (const vector<Poly> polys, 
+void Layer::CalcRaftInfill (const vector<Poly> &polys, 
 			    double extrusionfactor, double infilldistance,
 			    double rotation)
 {
@@ -341,7 +341,7 @@ void Layer::makeSkinPolygons()
 
 // add bridge polys and subtract them from normal and full fill polys 
 // each given ExPoly is a single bridge with its holes
-void Layer::addBridgePolygons(const vector<ExPoly> newexpolys) 
+void Layer::addBridgePolygons(const vector<ExPoly> &newexpolys) 
 {
   // clip against normal fill and make these areas into bridges:
   Clipping clipp;
@@ -364,13 +364,13 @@ void Layer::addBridgePolygons(const vector<ExPoly> newexpolys)
   setNormalFillPolygons(clipp.subtract());
 }
 
-void Layer::addFullPolygons(const vector<ExPoly> newpolys, bool decor)
+void Layer::addFullPolygons(const vector<ExPoly> &newpolys, bool decor)
 {
   addFullPolygons(Clipping::getPolys(newpolys),decor);
 }
 
 // add full fill and subtract them from normal fill polys 
-void Layer::addFullPolygons(const vector<Poly> newpolys, bool decor) 
+void Layer::addFullPolygons(const vector<Poly> &newpolys, bool decor) 
 {
   if (newpolys.size()==0) return;
   Clipping clipp;
@@ -461,7 +461,7 @@ vector<Poly> Layer::GetShellPolygonsCirc(int number) const
   return shellPolygons[number];
 }
 
-void Layer::setNormalFillPolygons(const vector<Poly> polys)
+void Layer::setNormalFillPolygons(const vector<Poly> &polys)
 {
   clearpolys(fillPolygons);
   fillPolygons = polys;
@@ -469,14 +469,14 @@ void Layer::setNormalFillPolygons(const vector<Poly> polys)
     fillPolygons[i].setZ(Z);
 }
 
-void Layer::setFullFillPolygons(const vector<Poly> polys)
+void Layer::setFullFillPolygons(const vector<Poly> &polys)
 {
   clearpolys(fullFillPolygons);
   fullFillPolygons = polys;
   for (uint i=0; i<fullFillPolygons.size();i++)
     fullFillPolygons[i].setZ(Z);
 }
-void Layer::setBridgePolygons(const vector<ExPoly> expolys)
+void Layer::setBridgePolygons(const vector<ExPoly> &expolys)
 {
   uint count = expolys.size();
   // vector<Poly> polygroups;
@@ -503,12 +503,12 @@ void Layer::setBridgePolygons(const vector<ExPoly> expolys)
       bridgePolygons[i].holes[h].setZ(Z);
   }
 }
-void Layer::setBridgeAngles(const vector<double> angles)
+void Layer::setBridgeAngles(const vector<double> &angles)
 {
   bridge_angles=angles; // .insert(bridge_angles.begin(),angles.begin(),angles.end());
 }
 
-void Layer::setSupportPolygons(const vector<Poly> polys)
+void Layer::setSupportPolygons(const vector<Poly> &polys)
 {
   clearpolys(supportPolygons);
   supportPolygons = polys;
@@ -522,7 +522,7 @@ void Layer::setSupportPolygons(const vector<Poly> polys)
   }
 }
 
-void Layer::setSkirtPolygon(const Poly poly)
+void Layer::setSkirtPolygon(const Poly &poly)
 {
   skirtPolygon = poly;
   skirtPolygon.setZ(Z);
@@ -605,16 +605,16 @@ void Layer::MakeSkirt(double distance)
 // 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
 // Returns a positive value, if OAB makes a counter-clockwise turn,
 // negative for clockwise turn, and zero if the points are collinear.
-double cross(const Vector2d &O, const Vector2d &A, const Vector2d &B)
-{
-  return (A.x() - O.x()) * (B.y() - O.y()) - (A.y() - O.y()) * (B.x() - O.x());
-}
-struct sortable_point {
-  Vector2d v;
-  bool operator <(const sortable_point &p) const {
-    return (v.x() < p.v.x()) || ((v.x() == p.v.x()) && (v.y() < p.v.y()));
-  }
-};
+// double cross(const Vector2d &O, const Vector2d &A, const Vector2d &B)
+// {
+//   return (A.x() - O.x()) * (B.y() - O.y()) - (A.y() - O.y()) * (B.x() - O.x());
+// }
+// struct sortable_point {
+//   Vector2d v;
+//   bool operator <(const sortable_point &p) const {
+//     return (v.x() < p.v.x()) || ((v.x() == p.v.x()) && (v.y() < p.v.y()));
+//   }
+// };
 
 // calc convex hull and Min and Max of layer
 // Monotone chain algo
@@ -626,7 +626,7 @@ void Layer::calcConvexHull()
   setMinMax(hullPolygon);
 }
 
-void Layer::setMinMax(const vector<Poly> polys) 
+void Layer::setMinMax(const vector<Poly> &polys) 
 {
   Min = Vector2d( INFTY, INFTY);
   Max = Vector2d(-INFTY, -INFTY);
@@ -636,7 +636,7 @@ void Layer::setMinMax(const vector<Poly> polys)
     Max.x() = max(Max.x(), minmax[1].x()); Max.y() = max(Max.y(), minmax[1].y());
   }
 }
-void Layer::setMinMax(const Poly poly) 
+void Layer::setMinMax(const Poly &poly) 
 {
   vector<Vector2d> minmax = poly.getMinMax();
   Min = minmax[0];
@@ -715,9 +715,6 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 			 startPoint, lines);
 
   // 4. all other polygons:  
-
-  // TODO: calculate extrusionfactor
-  // for rectangle vs. ellipsis (inner shell vs. outer shell)
 
   //  Shells
   for(int p=shellPolygons.size()-1; p>=0; p--) // inner to outer
@@ -834,7 +831,7 @@ string Layer::info() const
  
 
 
-void draw_poly(Poly poly, int gl_type, int linewidth, int pointsize,
+void draw_poly(const Poly &poly, int gl_type, int linewidth, int pointsize,
 	       const float *rgb, float a)
 {
   glColor4f(rgb[0],rgb[1],rgb[2],a);
@@ -842,7 +839,7 @@ void draw_poly(Poly poly, int gl_type, int linewidth, int pointsize,
   glPointSize(pointsize);
   poly.draw(gl_type);
 }
-void draw_polys(vector <Poly> polys, int gl_type, int linewidth, int pointsize,
+void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int pointsize,
 		const float *rgb, float a)
 {
   glColor4f(rgb[0],rgb[1],rgb[2], a);
@@ -852,13 +849,13 @@ void draw_polys(vector <Poly> polys, int gl_type, int linewidth, int pointsize,
     polys[p].draw(gl_type);
   }
 }
-void draw_polys(vector< vector <Poly> > polys, int gl_type, int linewidth, int pointsize,
+void draw_polys(const vector< vector <Poly> > &polys, int gl_type, int linewidth, int pointsize,
 		const float *rgb, float a)
 {
   for(size_t p=0; p<polys.size();p++)
     draw_polys(polys[p], gl_type, linewidth, pointsize, rgb,a);
 }
-void draw_polys(vector <ExPoly> expolys, int gl_type, int linewidth, int pointsize,
+void draw_polys(const vector <ExPoly> &expolys, int gl_type, int linewidth, int pointsize,
 		const float *rgb, float a)
 {
   for(size_t p=0; p < expolys.size();p++) {
@@ -976,7 +973,7 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   }
 }
 
-void Layer::DrawMeasures(Vector2d point)
+void Layer::DrawMeasures(const Vector2d &point)
 {
   Vector2d x0(Min.x()-10, point.y());
   Vector2d x1(Max.x()+10, point.y());

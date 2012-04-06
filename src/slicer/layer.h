@@ -48,26 +48,26 @@ public:
 
   Vector2d getMin() const {return Min;};
   Vector2d getMax() const {return Max;};
-  void setMinMax(const Poly poly);
-  void setMinMax(const vector<Poly> polys);
+  void setMinMax(const Poly &poly);
+  void setMinMax(const vector<Poly> &polys);
     /* void setBBox(Vector2d min, Vector2d max); */
   /* void setBBox(vector<Vector2d> minmax); */
   /* void setBBox(Vector3d min, Vector3d max); */
 
   // ClipperLib::Polygons getClipperPolygons(const vector<Poly> polygons,
   // 					  bool reverse=true) const;
-  vector<Poly> getMergedPolygons(const vector<Poly> polys);
+  vector<Poly> getMergedPolygons(const vector<Poly> &polys);
   //ClipperLib::Polygons getMergedPolygons(const ClipperLib::Polygons cpolys) const;
   void mergeFullPolygons(bool bridge);
   void mergeSupportPolygons();
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
   void CalcInfill (const Settings &settings);
-  void CalcRaftInfill (const vector<Poly> polys, 
+  void CalcRaftInfill (const vector<Poly> &polys, 
 		       double extrusionfactor, double infilldistance,
 		       double rotation);
 
-  vector<double> getBridgeRotations(const vector<Poly> poly) const;
+  vector<double> getBridgeRotations(const vector<Poly> &poly) const;
   void calcBridgeAngles(const Layer *layerbelow);
   
   void MakeShells(const Settings &settings); 
@@ -80,8 +80,8 @@ public:
   void MakeSkirt(double distance);
 
   vector<Poly> GetPolygons() const { return polygons; };
-  void SetPolygons(vector<Poly> polys) ;
-  void SetPolygons(const Matrix4d &T, const Shape shape, double z);
+  void SetPolygons(vector<Poly> &polys) ;
+  void SetPolygons(const Matrix4d &T, const Shape &shape, double z);
   vector<Poly> GetFillPolygons() const { return fillPolygons; }
   vector<Poly> GetFullFillPolygons() const { return fullFillPolygons; }
   vector<ExPoly> GetBridgePolygons() const { return bridgePolygons; }
@@ -95,18 +95,18 @@ public:
   const vector<Poly> * GetOuterShell() const;
   Poly GetHullPolygon() const {return hullPolygon;};
   
-  void setFullFillPolygons(const vector<Poly> polys);  
-  void addFullFillPolygons(const vector<Poly> polys);
-  void addFullPolygons(const vector<Poly> fullpolys, bool decor=false);
-  void addFullPolygons(const vector<ExPoly> expolys, bool decor=false);
-  void setBridgePolygons(const vector<ExPoly>  polys);
-  void addBridgePolygons(const vector<ExPoly> polys);
-  void setBridgeAngles(const vector<double> angles);
+  void setFullFillPolygons(const vector<Poly> &polys);  
+  void addFullFillPolygons(const vector<Poly> &polys);
+  void addFullPolygons(const vector<Poly> &fullpolys, bool decor=false);
+  void addFullPolygons(const vector<ExPoly> &expolys, bool decor=false);
+  void setBridgePolygons(const vector<ExPoly> &polys);
+  void addBridgePolygons(const vector<ExPoly> &polys);
+  void setBridgeAngles(const vector<double> &angles);
   void makeSkinPolygons(); 
-  void setNormalFillPolygons(const vector<Poly> polys);
-  void setSupportPolygons(const vector<Poly> polys);
-  void setSkirtPolygon(const Poly poly);
-  void setDecorPolygons(const vector<Poly> polys);
+  void setNormalFillPolygons(const vector<Poly> &polys);
+  void setSupportPolygons(const vector<Poly> &polys);
+  void setSkirtPolygon(const Poly &poly);
+  void setDecorPolygons(const vector<Poly> &polys);
 
   /* void getOrderedPrintLines(const vector<Poly> polys,  */
   /* 			    Vector2d &startPoint, */
@@ -125,13 +125,13 @@ public:
   void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 	    bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
 	    bool DrawCPVertexNumbers, bool DisplayInfill, bool DebugInfill);
-  void DrawMeasures(Vector2d point);
+  void DrawMeasures(const Vector2d &point);
  
   void Clear();
 
-  void addPolygons(vector<Poly> polys);
+  void addPolygons(vector<Poly> &polys);
   void cleanupPolygons();
-  int addShape(Matrix4d T, const Shape shape, double z, 
+  int addShape(const Matrix4d &T, const Shape &shape, double z, 
 	       double &max_gradient);
 
   double area() const;
