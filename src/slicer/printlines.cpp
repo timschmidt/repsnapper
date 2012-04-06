@@ -21,10 +21,9 @@
 #include "poly.h"
 #include "gcodestate.h"
 
-
 ///////////// PLine3: single 3D printline //////////////////////
 
-PLine3::PLine3(const PLine pline, double z)
+PLine3::PLine3(const PLine &pline, double z)
 { 
   from               = Vector3d(pline.from.x(), pline.from.y(), z);
   to                 = Vector3d(pline.to.x(),   pline.to.y(),   z);
@@ -157,7 +156,7 @@ string PLine3::info() const
 
 ///////////// PLine: single 2D printline //////////////////////
 
-PLine::PLine(const Vector2d from_, const Vector2d to_, double speed_, 
+PLine::PLine(const Vector2d &from_, const Vector2d &to_, double speed_, 
 	     double feedrate_)
   : from(from_), to(to_), speed(speed_), 
     feedrate(feedrate_), absolute_feed(0),
@@ -167,8 +166,8 @@ PLine::PLine(const Vector2d from_, const Vector2d to_, double speed_,
 }
 
 // for arc line
-PLine::PLine(const Vector2d from_, const Vector2d to_, double speed_, 
-	     double feedrate_, short arc_, Vector2d arccenter_, double angle_)
+PLine::PLine(const Vector2d &from_, const Vector2d &to_, double speed_, 
+	     double feedrate_, short arc_, const Vector2d &arccenter_, double angle_)
   : from(from_), to(to_), speed(speed_), feedrate(feedrate_), absolute_feed(0),
     angle(angle_), arccenter(arccenter_), arc(arc_)
 {
@@ -396,8 +395,8 @@ Vector2d Printlines::arcCenter(const PLine &l1, const PLine &l2,
    				center, ip, t0,t1);
   if (is > 0) {
     // radii match?
-    if (abs((l1p1-center).squared_length() -
-	    (l2p1-center).squared_length()) < maxSqerr)
+    if (abs(l1p1.squared_distance(center) -
+	    l2p1.squared_distance(center)) < maxSqerr)
       return center;
   }
   return Vector2d(10000000,10000000);
@@ -534,8 +533,8 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
 				p2, p2 + Vector2d(-dir2.y(),dir2.x()),
    				center, I1, t0,t1);
   if (is==0) return 0;
-  double radius =  (center - p1).length();
-  if (radius > maxdistance) return 0; // calc error
+  double radius = center.distance(p1);
+  if (radius > 10*maxdistance) return 0; // calc error(?)
   bool ccw = isleftof(center, p1, p2);
   if (!ccw) angle = -angle;
   if (angle <= 0) angle += 2*M_PI;
@@ -543,7 +542,10 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   // need 2 half arcs?
   bool split = (lines[ind].feedrate != lines[ind+1].feedrate);
   // too small arc, replace by 2 straight lines
-  bool toosmall = (radius * angle < minarclength);
+  bool toosmall = ((radius * angle) < (split?minarclength:(minarclength*2)));
+  // too small to make 2 lines, just make 1 line
+  bool toosmallfortwo  =  ((radius * angle) < (split?(minarclength/2):minarclength));
+  if (toosmallfortwo) return 0;
 
   vector<PLine> newlines;
   uint numnew = 0;
@@ -553,7 +555,12 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
     numnew++;
   }
   if (p2 != p1)  {
-    if (split || toosmall) { // calc arc midpoint
+    if (toosmallfortwo) { // 1 line
+      const double feedr = ( lines[ind].feedrate + lines[ind+1].feedrate ) / 2;
+      newlines.push_back(PLine(p1, p2, lines[ind].speed, feedr));
+      numnew++;
+    }
+    else if (split || toosmall) { // calc arc midpoint
       const Vector2d splitp = rotated(p1, center, angle/2, ccw);
       if (toosmall) { // 2 straight lines
 	newlines.push_back(PLine(p1, splitp,

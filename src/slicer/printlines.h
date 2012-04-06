@@ -33,7 +33,7 @@ class PLine; // see below
 class PLine3
 {
  public: 
-  PLine3(PLine pline, double z);
+  PLine3(const PLine &pline, double z);
   ~PLine3(){};
 
   Vector3d from, to;
@@ -63,11 +63,11 @@ class PLine
   friend class PLine3;
   friend class Printlines;
   // non-arc
-  PLine(const Vector2d from, const Vector2d to, double speed, 
+  PLine(const Vector2d &from, const Vector2d &to, double speed, 
 	double feedrate);
   // arc
-  PLine(const Vector2d from, const Vector2d to, double speed, 
-	double feedrate, short arc, Vector2d arccenter, double angle);
+  PLine(const Vector2d &from, const Vector2d &to, double speed, 
+	double feedrate, short arc, const Vector2d &arccenter, double angle);
   Vector2d from, to;
   double speed; // mm/min (!)
   double feedrate; // relative extrusion feedrate 

@@ -695,6 +695,8 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 	// have to get all these separately because z changes
 	printlines.clipMovements(*clippolys, lines, linewidth/2.);
 	printlines.optimize(hardware, slicing, slicing.MinLayertime/skins, lines);
+	if (slicing.UseArcs && slicing.RoundCorners) 
+	  printlines.roundCorners(cornerradius, slicing.MinArcLength, lines);
 	printlines.getLines(lines, lines3);
 	lines.clear();
       }
@@ -724,8 +726,6 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		       slicing, hardware,
 		       startPoint, lines, hardware.MaxShellSpeed);
   // TODO:  sort inner to outer in printlines
-  if (slicing.UseArcs && slicing.RoundCorners) 
-    printlines.roundCorners(cornerradius, slicing.MinArcLength, lines);
   polys.clear();
 
   //  Infill
@@ -747,8 +747,6 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   printlines.makeLines(polys, true, //displace at beginning
 		       slicing, hardware, 
 		       startPoint, lines);
-  if (slicing.UseArcs && slicing.RoundCorners) 
-    printlines.roundCorners(cornerradius, slicing.MinArcLength, lines);
   polys.clear();
 
   // FINISH
@@ -763,6 +761,8 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   printlines.clipMovements(*clippolys, lines, linewidth/2.);
   printlines.optimize(hardware, slicing, slicing.MinLayertime, lines);
+  if (slicing.UseArcs && slicing.RoundCorners) 
+    printlines.roundCorners(cornerradius, slicing.MinArcLength, lines);
   printlines.setSpeedFactor(speedfactor, lines);
   double slowdownfactor = printlines.getSlowdownFactor();
 
