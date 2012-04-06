@@ -15,6 +15,7 @@ WARNING_FLAGS = -Wall -Wsign-compare -Wno-invalid-offsetof
 
 repsnapper_CPPFLAGS = \
 	-I$(LIB_DIR)/vmmlib/include \
+	-I$(LIB_DIR)/lmfit/lmfit-3.2/lib \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/slicer \
@@ -87,7 +88,7 @@ EXTRA_DIST += $(built_header_make)
 
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 
-repsnapper_LDADD = libreprap.la libclipper.la libpoly2tri.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(BOOST_LDFLAGS)
+repsnapper_LDADD = libreprap.la libclipper.la libpoly2tri.la liblmfit.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(BOOST_LDFLAGS)
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
 dist_repsnapperdata_DATA = src/repsnapper.ui
