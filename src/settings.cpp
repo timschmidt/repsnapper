@@ -198,7 +198,6 @@ static struct {
   //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
   BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, true),
   FLOAT_MEMBER  (Slicing.ShellOffset, "ShellOffset", 0.1, true),
-  BOOL_MEMBER   (Slicing.LinelengthSort, "LinelengthSort", false, true),
   INT_MEMBER    (Slicing.FirstLayersNum, "FirstLayersNum", 1, true),
   FLOAT_MEMBER  (Slicing.FirstLayersSpeed, "FirstLayersSpeed", 0.5, true),
   FLOAT_MEMBER  (Slicing.FirstLayersInfillDist, "FirstLayersInfillDist", 0.8, true),

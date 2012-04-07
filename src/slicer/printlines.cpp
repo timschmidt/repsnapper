@@ -290,7 +290,6 @@ void Printlines::makeLines(const vector<Poly> &polys,
   //double linewidth = layerthickness/linewidthratio;
   if ( maxspeed == 0 ) maxspeed = hardware.MaxPrintSpeedXY;
   double movespeed = hardware.MoveSpeed;
-  bool linelengthsort = slicing.LinelengthSort;
 
   const uint count = polys.size();
   if (count == 0) return;
@@ -301,11 +300,8 @@ void Printlines::makeLines(const vector<Poly> &polys,
   for(size_t q=0; q < count; q++) done[q]=false;
   uint ndone=0;
   //double nlength;
-  double lastavlength = -1;
   while (ndone < count) 
     {
-      if (linelengthsort && npindex>=0) 
-	lastavlength = polys[npindex].averageLinelengthSq();
       double nstdist = INFTY;
       double pdist;
       for(size_t q=0; q<count; q++) { // find nearest polygon
@@ -322,27 +318,6 @@ void Printlines::makeLines(const vector<Poly> &polys,
 	      }
 	    }
 	  }
-      }
-      // find next nearest polygon, but with similar line length
-      if (linelengthsort && lastavlength > 0) { 
-	double minavlengthdiff = 10000000;
-	for(size_t q=0; q<count; q++) {
-	  if (!done[q]) 
-	    {
-	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
-	      if ( pdist < 400 ){ // nearer than 20mm // || 
-		//(nstdist==0 && pdist < 10000*linewidth*linewidth) ) {
-		double avlength = polys[q].averageLinelengthSq();		
-		double avldiff = abs(avlength-lastavlength);
-		if (avldiff < minavlengthdiff) {
-		  //cerr << npindex << " : " <<avlength << " - " <<avldiff << endl;
-		  minavlengthdiff = avldiff;
-		  npindex = q;
-		  nvindex = nindex;
-		}
-	      }
-	    }
-	}
       }
       // displace first point to next sharp corner (>pi/4)
       if (displace_startpoint && ndone==0) { 

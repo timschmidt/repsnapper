@@ -148,8 +148,6 @@ class Settings {
     float DecorInfillDistance;
     float DecorInfillRotation;
 
-    bool LinelengthSort;
-
     float MinLayertime;
     bool FanControl;
     int MinFanSpeed;
