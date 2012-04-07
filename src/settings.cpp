@@ -230,7 +230,7 @@ static struct {
   BOOL_MEMBER (Display.DisplayPolygons, "DisplayPolygons", true, true),
   BOOL_MEMBER (Display.DisplayAllLayers, "DisplayAllLayers", false, true),
   BOOL_MEMBER (Display.DisplayinFill, "DisplayinFill", false, true),
-  BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, false),
+  BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, true),
   BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
   BOOL_MEMBER (Display.CommsDebug, "CommsDebug", false, true),
   BOOL_MEMBER (Display.TerminalProgress, "TerminalProgress", false, true),
@@ -897,6 +897,7 @@ void Settings::get_filltypes_from_gui (Builder &builder)
   // cerr << "read combos: " << Slicing.NormalFilltype 
   //      <<  " / " << Slicing.FullFilltype 
   //      <<  " / " << Slicing.SupportFilltype << endl;
+  m_signal_visual_settings_changed.emit();
 }
 
 string combobox_get_active_value(Gtk::ComboBox *combo){

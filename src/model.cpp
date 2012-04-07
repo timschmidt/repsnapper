@@ -92,9 +92,9 @@ void Model::SetViewProgress (ViewProgress *progress)
 
 void Model::ClearGCode()
 {
-  gcode.clear();
   m_previewGCode.clear();
   m_previewGCode_z = -100000;
+  gcode.clear();
 }
 
 void Model::ClearLayers()
@@ -111,8 +111,7 @@ void Model::ClearPreview()
   if (m_previewLayer) delete m_previewLayer;
   m_previewLayer = NULL;
   m_previewGCode.clear();
-  // if (m_previewGCodeLayer) delete m_previewGCodeLayer;
-  // m_previewGCodeLayer = NULL;
+  m_previewGCode_z = -100000;
 }
 
 Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
@@ -781,10 +780,10 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
       if ( m_previewGCode.size() != 0 ||
 	   ( layers.size() == 0 && gcode.commands.size() == 0 ) ) { 
 	Vector3d start(0,0,0);
-	double thickness = settings.Hardware.LayerThickness;
-	double z = settings.Display.GCodeDrawStart * Max.z() + thickness/2;
-	int LayerCount = (int)ceil(Max.z()/thickness)-1;
-	uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
+	const double thickness = settings.Hardware.LayerThickness;
+	const double z = settings.Display.GCodeDrawStart * Max.z() + thickness/2;
+	const int LayerCount = (int)ceil(Max.z()/thickness)-1;
+	const uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
 	if (z != m_previewGCode_z) {
 	  Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
 	  if (previewGCodeLayer) {
@@ -893,11 +892,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 			       bool calcinfill, bool for_gcode) const
 {
   if (is_calculating) return NULL; // infill calculation (saved patterns) would be disturbed
-  if (for_gcode) {
-    // if (m_previewGCodeLayer && m_previewGCodeLayer->getZ() == z
-    //   && m_previewGCodeLayer->thickness) 
-    //   return m_previewGCodeLayer;
-  } else {
+  if (!for_gcode) {
     if (m_previewLayer && m_previewLayer->getZ() == z
 	&& m_previewLayer->thickness) return m_previewLayer; 
   }
