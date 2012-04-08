@@ -63,11 +63,6 @@ class PLine
   friend class PLine3;
   friend class Printlines;
   // non-arc
-  PLine(const Vector2d &from, const Vector2d &to, double speed, 
-	double feedrate);
-  // arc
-  PLine(const Vector2d &from, const Vector2d &to, double speed, 
-	double feedrate, short arc, const Vector2d &arccenter, double angle);
   Vector2d from, to;
   double speed; // mm/min (!)
   double feedrate; // relative extrusion feedrate 
@@ -76,7 +71,19 @@ class PLine
   Vector2d arccenter;
   short arc;  // -1: ccw arc, 1: cw arc, 0: not an arcx
 
-  void addAbsoluteExtrusionAmount(double amount);
+ public: 
+  PLine(const Vector2d &from, const Vector2d &to, double speed, 
+	double feedrate);
+  // arc
+  PLine(const Vector2d &from, const Vector2d &to, double speed, 
+	double feedrate, short arc, const Vector2d &arccenter, double angle);
+
+  ~PLine(){};
+
+  const Vector2d &getFrom() const { return from; };
+  const Vector2d &getTo()   const { return to; };
+
+  void addAbsoluteExtrusionAmount(double amount, double max_absspeed = -1);
   double calcangle() const;
   double calcangle(const PLine rhs) const;
   double lengthSq() const;
@@ -85,8 +92,6 @@ class PLine
   PLine3 getPrintline(double z) const;
   bool is_noop() const;
   string info() const;
- public: 
-  ~PLine(){};
 };
 
 
@@ -124,6 +129,7 @@ class Printlines
   void optimize(const Settings::HardwareSettings &hardware,
 		const Settings::SlicingSettings &slicing,
 		double slowdowntime,
+		double cornerradius,
 		vector<PLine> &lines);
 
   uint makeArcs(const Settings::SlicingSettings &slicing,
@@ -134,6 +140,10 @@ class Printlines
   uint makeCornerArc(double maxdistance, double minarclength,
 		     uint ind, vector<PLine> &lines) const;
 
+  bool find_nextmove(double minlength, uint startindex, 
+		     uint &movestart, uint &moveend, 
+		     uint &tractstart, uint &pushend,
+		     const vector<PLine> &lines) const;
   uint makeAntioozeRetract(const Settings::SlicingSettings &slicing,
 			   vector<PLine> &lines) const;
 
@@ -156,6 +166,7 @@ class Printlines
   double totalSeconds(const vector<PLine> &lines) const;
   double totalSecondsExtruding(const vector<PLine> &lines) const;
 
+  double total_Extrusion(const vector<PLine> &lines) const;
   double total_rel_Extrusion(const vector<PLine> &lines) const; 
 
   // every added poly will set this
