@@ -841,3 +841,32 @@ void Model::ConvertToGCode()
   is_calculating=false;
 }
 
+string Model::getSVG() const 
+{
+  ostringstream ostr;
+  ostr << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" <<endl
+       << "<!-- Created by Repsnapper -->" << endl
+       << "<svg " << endl
+       << "\txmlns:svg=\"http://www.w3.org/2000/svg\""<< endl
+       << "\txmlns=\"http://www.w3.org/2000/svg\"" << endl
+       << "\tversion=\"1.1\"" << endl
+    //<< "\twidth=\"" << Max.x()-Min.x() <<"\" height=\""<< Max.y()-Min.y() << "\""
+       << ">" << endl;
+  //Vector2d trans(Min.x(),Min.y());
+  for (uint i = 0; i < layers.size(); i++) {
+    ostr << "\t<g id=\"Layer_"<< i << "_Z=" << layers[i]->getZ() << "\">" 
+	 << "\t\t" << layers[i]->SVGpath() 
+	 << "\t</g>" << endl;
+  }
+  ostr << "</svg>" << endl;
+  return ostr.str();
+}
+
+
+void Model::SliceToSVG(Glib::RefPtr<Gio::File> file) 
+{
+  if (is_calculating) return;
+  Slice();
+  m_progress->stop (_("Done"));
+  Glib::file_set_contents (file->get_path(), getSVG());
+}

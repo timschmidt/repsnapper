@@ -105,6 +105,11 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
     directory = model->settings.GCodePath.c_str();
     multiple = (o == FileChooser::OPEN);
     break;
+  case SVG:
+    filter = "*.svg";    
+    title = _("Choose SVG filename");
+    directory = model->settings.GCodePath.c_str();
+    break;
   case STL:
   default:
     filter = "*.stl";
@@ -142,6 +147,10 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
         model->LoadConfig (file);
       else
         model->SaveConfig (file);
+      break;
+    case SVG:
+      if (o == SAVE)
+	model->SliceToSVG (file);
       break;
     default:
     case STL:

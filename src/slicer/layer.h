@@ -136,6 +136,8 @@ public:
 
   double area() const;
   
+  string SVGpath(const Vector2d &trans=Vector2d::ZERO) const;
+
  private:
 
   Vector2d Min, Max;  // Bounding box

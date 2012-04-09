@@ -828,6 +828,19 @@ string Layer::info() const
 }
  
 
+string Layer::SVGpath(const Vector2d &trans) const
+{
+  ostringstream ostr;
+  ostr << "<path d=\"";
+  for (uint i = 0; i<polygons.size(); i++) {
+    ostr << polygons[i].SVGpath(trans);
+  }
+  ostr << "\" "
+       << "style=\"fill:back;fill-opacity:1;stroke:black;stroke-width:0\" "
+       << "fill-rule=\"evenodd\" />";
+  return ostr.str();
+}
+
 
 void draw_poly(const Poly &poly, int gl_type, int linewidth, int pointsize,
 	       const float *rgb, float a)

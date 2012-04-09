@@ -135,6 +135,11 @@ void View::save_stl ()
   FileChooser::ioDialog (m_model, FileChooser::SAVE, FileChooser::STL);
 }
 
+void View::slice_svg ()
+{
+  FileChooser::ioDialog (m_model, FileChooser::SAVE, FileChooser::SVG);
+}
+
 void View::send_gcode ()
 {
   m_printer->SendNow (m_gcode_entry->get_text());
@@ -896,6 +901,7 @@ View::View(BaseObjectType* cobject,
   // View tab
   connect_button ("m_load_stl",      sigc::mem_fun(*this, &View::load_stl) );
   connect_button ("m_save_stl",      sigc::mem_fun(*this, &View::save_stl) );
+  connect_button ("m_slice_svg",     sigc::mem_fun(*this, &View::slice_svg) );
   connect_button ("m_delete",        sigc::mem_fun(*this, &View::delete_selected_stl) );
   connect_button ("m_duplicate",     sigc::mem_fun(*this, &View::duplicate_selected_stl) );
   connect_button ("m_split",         sigc::mem_fun(*this, &View::split_selected_stl) );

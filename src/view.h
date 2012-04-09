@@ -49,6 +49,7 @@ class View : public Gtk::Window
   void convert_to_gcode();
   void load_stl();
   void save_stl();
+  void slice_svg();
   void send_gcode();
   void printing_changed();
   void power_toggled();

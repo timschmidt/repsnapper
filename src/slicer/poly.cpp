@@ -50,15 +50,14 @@ Poly::Poly(double z, double extrusionfactor)
   //printinfo();
 }
 
-Poly::Poly(const Poly &p, double z)
+Poly::Poly(const Poly &p, double z_)
 {
-  closed = true;
-  this->z = z;
+  closed = p.closed;
+  this->z = z_;
   this->extrusionfactor = p.extrusionfactor;
-  uint count = p.vertices.size();
-  vertices.resize(count);
-  for (uint i=0; i<count ; i++)
-    vertices[i] = p.vertices[i];
+  //uint count = p.vertices.size();
+  // vertices.resize(count);
+  this->vertices = p.vertices;
   holecalculated = p.holecalculated;
   if (holecalculated) {
     hole = p.hole;
@@ -666,5 +665,23 @@ string Poly::SVGpolygon(string style) const
     if (i < size()-1) ostr << " ";
   }
   ostr << "\" style=\"" << style <<"\">";
+  return ostr.str();
+}
+
+string Poly::SVGpath(const Vector2d &trans) const
+{
+  if (size()==0) return "";
+  ostringstream ostr;
+  Poly transpoly(*this,0);
+  transpoly.move(trans);
+  ostr << "M ";
+  ostr  << fixed << transpoly[0].x() << " " << transpoly[0].y();
+  for (uint i=1; i < transpoly.size(); i++) {
+    ostr.precision(5);
+    ostr  << fixed << " L " << transpoly[i].x() << " " << transpoly[i].y();
+    if (i < size()-1) ostr << " ";
+  }
+  if (closed)
+  ostr << " Z";
   return ostr.str();
 }

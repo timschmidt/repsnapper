@@ -22,7 +22,7 @@
 class Model;
 namespace FileChooser {
   enum Type {
-    STL, RFO, GCODE, SETTINGS
+    STL, SVG, RFO, GCODE, SETTINGS
   };
   enum Op {
     OPEN, SAVE

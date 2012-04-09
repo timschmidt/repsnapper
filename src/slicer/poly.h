@@ -131,6 +131,7 @@ public:
 	string info() const;
 
 	string SVGpolygon(string style="fill: black") const;
+	string SVGpath(const Vector2d &trans=Vector2d::ZERO) const;
  };
 
 
