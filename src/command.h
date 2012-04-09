@@ -156,6 +156,8 @@ public:
 
 	double abs_extr; // for debugging/painting
 
+	bool not_layerchange; // don't record as layerchange for lifted moves
+
 	string comment;
 	void draw(Vector3d &lastPos, guint linewidth, 
 		  Vector4f color, double extrwidth, bool arrows=true) const;

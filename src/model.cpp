@@ -287,15 +287,15 @@ void Model::translateGCode(Vector3d trans)
 void Model::ModelChanged()
 {
   //printer.update_temp_poll_interval(); // necessary?
-  CalcBoundingBoxAndCenter();
-  Infill::clearPatterns();
   if (!is_printing) {
+    CalcBoundingBoxAndCenter();
+    Infill::clearPatterns();
     if ( layers.size()>0 || m_previewGCode.size()>0 || m_previewLayer ) {
       ClearGCode();
       ClearLayers();
     }
+    m_model_changed.emit();
   }
-  m_model_changed.emit();
 }
 
 static bool ClosestToOrigin (Vector3d a, Vector3d b)

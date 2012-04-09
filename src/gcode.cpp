@@ -432,15 +432,18 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	for(uint i = 0; i < commands.size(); i++) {
 	  if (i%progress_steps==0) if (!progress->update(i)) break;
 
-	  if ( (!commands[i].is_value && commands[i].where.z() != lastZ) ) {
-	    layerchanges.push_back(i);
-	    lastZ = commands[i].where.z();
-	    if (lastZ<0) cerr << i << " - " <<lastZ << endl;
-	  }
-
+	  if (i>0)
+	    if ( !commands[i].is_value && commands[i].where.z() != lastZ
+		 && !commands[i]  .not_layerchange
+		 && !commands[i-1].not_layerchange ) {
+	      layerchanges.push_back(i);
+	      lastZ = commands[i].where.z();
+	      if (lastZ<0) cerr << i << " - " <<lastZ << endl;
+	    }
+	  
 	  if ( commands[i].Code == LAYERCHANGE ) 
 	    GcodeTxt += GcodeLayer + "\n";
-
+	  
 	  if ( commands[i].where.z() < 0 )  {
 	    cerr << i << " Z < 0 "  << commands[i].info() << endl;
 	  }

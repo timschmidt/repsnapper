@@ -25,6 +25,10 @@
 
 PLine3::PLine3(const PLine &pline, double z)
 { 
+  if (pline.lifted > 0) {
+    z += pline.lifted;
+    lifted = true;
+  }
   from               = Vector3d(pline.from.x(), pline.from.y(), z);
   to                 = Vector3d(pline.to.x(),   pline.to.y(),   z);
   speed              = pline.speed;
@@ -33,11 +37,8 @@ PLine3::PLine3(const PLine &pline, double z)
   arc                = pline.arc;
   arcangle           = pline.angle;
   if (arc) {
-    Vector2d arcIJK2 = pline.arccenter - pline.from;
+    const Vector2d arcIJK2 = pline.arccenter - pline.from;
     arcIJK = Vector3d(arcIJK2.x(), arcIJK2.y(), 0);
-    // double linearlength = (pline.to - pline.from).length();
-    // if (linearlength!=0) // not full circle
-    //   extrusionfactor *= pline.length() / linearlength;
   }
 }
 
@@ -47,8 +48,10 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 			double maxEspeed) const
 {
   int count=0;
+
   if ((lastpos-from).squared_length() > 0.005) {  // move first
     commands.push_back( Command(COORDINATEDMOTION, from, 0, movespeed) );
+    lastpos = from;
     count++;
   }  
   double comm_speed = this->speed;
@@ -81,6 +84,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     {
       command = Command (COORDINATEDMOTION, to, extrudedMaterial, comm_speed);
     }
+  command.not_layerchange = lifted;
   command.abs_extr += absolute_extrusion;
   if (!command.hasNoEffect(from,0,0,true)) {
     commands.push_back(command);
@@ -148,6 +152,8 @@ string PLine3::info() const
     ostr << " abs_extr="<<absolute_extrusion;
   if (arc!=0)
     ostr << " arcIJK=" << arcIJK;
+  if (lifted)
+    ostr << " lifted";
   return ostr.str();
 }
 
@@ -157,19 +163,20 @@ string PLine3::info() const
 ///////////// PLine: single 2D printline //////////////////////
 
 PLine::PLine(const Vector2d &from_, const Vector2d &to_, double speed_, 
-	     double feedrate_)
+	     double feedrate_, double lifted_)
   : from(from_), to(to_), speed(speed_), 
     feedrate(feedrate_), absolute_feed(0),
-    arc(0)
+    arc(0), lifted(lifted_)
 {
   angle = calcangle();
 }
 
 // for arc line
 PLine::PLine(const Vector2d &from_, const Vector2d &to_, double speed_, 
-	     double feedrate_, short arc_, const Vector2d &arccenter_, double angle_)
+	     double feedrate_, short arc_, const Vector2d &arccenter_, double angle_,
+	     double lifted_)
   : from(from_), to(to_), speed(speed_), feedrate(feedrate_), absolute_feed(0),
-    angle(angle_), arccenter(arccenter_), arc(arc_)
+    angle(angle_), arccenter(arccenter_), arc(arc_), lifted(lifted_)
 {
 }
 
@@ -243,6 +250,8 @@ string PLine::info() const
   if (arc!=0)
     ostr << " center=" << arccenter;
   ostr <<  " feedrate=" << feedrate << " abs.extr="<< absolute_feed;
+  if (lifted !=0)
+    ostr << " lifted=" << lifted;
   return ostr.str();
 }
 
@@ -347,6 +356,7 @@ void Printlines::makeLines(const vector<Poly> &polys,
 
 void Printlines::optimize(const Settings::HardwareSettings &hardware,
 			  const Settings::SlicingSettings &slicing,
+			  double linewidth,
 			  double slowdowntime,
 			  double cornerradius,
 			  vector<PLine> &lines)
@@ -358,7 +368,7 @@ void Printlines::optimize(const Settings::HardwareSettings &hardware,
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
   //cerr << "optimize" << endl;
-  makeArcs(slicing, lines);
+  makeArcs(slicing, linewidth, lines);
   slowdownTo(slowdowntime, lines);
   if (slicing.UseArcs && slicing.RoundCorners) 
     roundCorners(cornerradius, slicing.MinArcLength, lines);
@@ -370,6 +380,111 @@ void Printlines::optimize(const Settings::HardwareSettings &hardware,
   // else
   //   cerr << " ok" << endl;
 }
+
+
+#define FITARC 0
+#if FITARC
+
+// find center for best fit of arclines
+bool fit_arc(const vector<PLine> &lines, uint fromind, uint toind,
+	     double sq_error, 
+	     Vector2d &result_center, double &result_radiussq)
+{
+  if (toind-fromind < 2) return false;
+  if (toind > lines.size()) return false;
+  const int n_par = 3; // center x,y and arc radius_sq
+  // start values:
+  const Vector2d &P = lines[fromind].getFrom();
+  const Vector2d &Q = lines[toind].getTo();
+  const Vector2d startxy = (P+Q)/2.;
+  double par[3] = { startxy.x(), startxy.y(), P.squared_distance(Q) };
+
+  int m_dat = toind-fromind+1;
+  arc_data_struct data;
+  data.px = new double[m_dat];
+  data.py = new double[m_dat];
+  data.px[0] = P.x();
+  data.py[0] = P.y();
+  for (int i = 0; i < m_dat; i++) {
+    data.px[i] = lines[fromind+i].getTo().x();
+    data.py[i] = lines[fromind+i].getTo().y();
+  }
+  return fit_arc(m_dat, data, n_par, par, sq_error,
+		 result_center, result_radiussq);
+}
+
+
+// max offset of the arc from the line
+double arc_offset(const Vector2d &center, const PLine &line)
+{
+  const double r = center.distance(line.getFrom());
+  const double angle = abs(angleBetween(line.getFrom()-center, line.getTo()-center));
+  const double off =  r - r*sin(angle/2);
+  //cerr << "offset " << off << endl;
+  return off;
+}
+
+bool continues_arc(const Vector2d &center, 
+		   uint index, double maxAngle,
+		   const vector<PLine> &lines)
+{
+  if (index < 2 || index >= lines.size()) return false;
+  const PLine &l1 = lines[index-2]; 
+  const PLine &l2 = lines[index-1]; 
+  const PLine &l3 = lines[index]; 
+  const double angle1 = l1.calcangle(l2);
+  const double angle2 = l2.calcangle(l3);
+  if (abs(angle1) < 0.001) return false;
+  if (abs(angle2) < 0.001) return false;
+  const double len2 = l2.length();
+  const double len3 = l3.length();
+  if (abs(len2) < 0.001) return false;
+  if (abs(len3) < 0.001) return false;
+  return ( angle1 < maxAngle && angle2 < maxAngle 
+	   && abs(angle1/angle2-1) < 0.3
+	   && abs(len2/len3-1) < 0.3 );
+}
+
+
+
+
+uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
+			  double linewidth,
+			  vector<PLine> &lines) const
+{
+  if (!slicing.UseArcs) return 0;
+  if (lines.size() < 3) return 0;
+  const double maxAngle = slicing.ArcsMaxAngle * M_PI/180;
+  const double linewidth_sq = linewidth*linewidth;
+  if (maxAngle <= 0) return 0;
+  double arcRadiusSq = 0;  
+  Vector2d arccenter(1000000,1000000);
+  guint arcstart = 0;
+  Vector2d newcenter;
+  double newradiusSq = 0;
+  uint i = arcstart;
+  uint arcend = i;
+  while (arcstart < lines.size()-4) {
+    i = arcstart+2;
+    arcend = arcstart;
+    while ( continues_arc(arccenter, i, maxAngle, lines) ) {
+      if ( fit_arc (lines, arcstart, i, linewidth_sq, newcenter, newradiusSq) 
+	   //&&  arc_offset(newcenter, lines[i]) < 5*linewidth 
+	   ) {
+	arccenter = newcenter;
+	arcend = i;
+      }
+      i++;
+    }
+    if (arcend > arcstart + 2) {
+      cerr << "found arc from " << arcstart << " to " << arcend << endl;
+      i -= makeIntoArc(arccenter, arcstart, arcend, lines); 
+    }
+    arcstart = i+1; 
+  }
+}
+
+#else
 
 // gets center of common arc of 2 lines if radii match inside maxSqerr range
 Vector2d Printlines::arcCenter(const PLine &l1, const PLine &l2,
@@ -393,6 +508,7 @@ Vector2d Printlines::arcCenter(const PLine &l1, const PLine &l2,
 }
 
 uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
+			  double linewidth,
 			  vector<PLine> &lines) const
 {
   if (!slicing.UseArcs) return 0;
@@ -403,54 +519,93 @@ uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
   Vector2d arccenter(1000000,1000000);
   guint arcstart = 0;
   for (uint i=1; i < lines.size(); i++) {
-    // if (lines[i-1].arc) { arcstart = i;   continue; }
-    // if (lines[i].arc)   { i++; arcstart = i; continue; }
-    double dangle         = lines[i].calcangle(lines[i-1]);
-    double feedratechange = lines[i].feedrate - lines[i-1].feedrate;
-    Vector2d center       = arcCenter(lines[i-1], lines[i], 0.02*arcRadiusSq);
-    double radiusSq       = (center - lines[i].from).squared_length();
+    const PLine &l1 = lines[i-1];
+    const PLine &l2 = lines[i];
+    if (l1.arc) { arcstart = i+1; cerr << "1 arc" << endl;continue; }
+    if (l2.arc) { i++; arcstart = i+1;cerr << "2 arc" << endl; continue; }
+    double dangle         = l2.calcangle(l1);
+    double feedratechange = l2.feedrate - l1.feedrate;
+    Vector2d nextcenter   = arcCenter(l2, l1, 0.05*arcRadiusSq);
+    double radiusSq       = nextcenter.squared_distance(l2.from);
     // test if NOT continue arc:
-    if ((lines[i].from-lines[i-1].to).squared_length() > 0.05 // not adjacent
-	|| abs(feedratechange) > 0.1       // different feedrate
-	|| abs(dangle) < 0.0001            // straight continuation
-	|| abs(dangle) > maxAngle          // too big angle
-	|| ( i>1 && (arccenter-center).squared_length() > 0.02*radiusSq ) // center displacement
-	) 
-      { 
-	arccenter   = center;
+    if (l2.from.squared_distance(l1.to) > 0.001 // not adjacent
+	|| abs(feedratechange) > 0.1            // different feedrate
+	|| abs(dangle) < 0.0001                 // straight continuation
+	|| abs(dangle) > maxAngle               // too big angle
+	|| ( i>1 && arccenter.squared_distance(nextcenter) > 0.05*radiusSq ) // center displacement
+	)
+      {
+	arccenter   = nextcenter;
 	arcRadiusSq = radiusSq;
-	// this one doesn't fit, so i-1 is the last line that fits
+	// this one doesn't fit, so i-1 is last line of the arc
 	if (arcstart+2 < i-1) // at least three lines to make an arc
-	  i -= makeIntoArc(arcstart, i-1, lines); // straight lines are being removed
-	//else 
-	// not in arc, set start for potential next arc
+	  i -= makeIntoArc(arcstart, i-1, lines); 
+	// set start for potential next arc
 	arcstart = i;
       }
-  }  
+  }
   // remaining
   if (arcstart+2 < lines.size()-1) 
     makeIntoArc(arcstart, lines.size()-1, lines); 
   return 0;
 }
+#endif
+
+
+uint Printlines::makeIntoArc(const Vector2d &center, 
+			     guint fromind, guint toind,
+			     vector<PLine> &lines) const
+{
+  if (toind < fromind+1 || toind+1 > lines.size()) return 0;
+  const Vector2d &P = lines[fromind].from;
+  const Vector2d &Q = lines[toind].to;
+  bool fullcircle = (P==Q);
+  double angle;
+  if (fullcircle) angle = 2*M_PI;
+  else            angle = angleBetween(P-center, Q-center);
+  bool ccw = isleftof(center, lines[fromind].from, lines[fromind].to);
+  if (!ccw) angle = -angle;
+  if (angle<=0) angle+=2*M_PI;
+  short arctype = ccw ? -1 : 1; 
+  PLine newline(P, Q, lines[fromind].speed, lines[fromind].feedrate,
+		arctype, center, angle, lines[fromind].lifted);
+  lines[fromind] = newline;
+  lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
+  return toind-fromind;
+}
 
 // return how many lines are removed 
-uint Printlines::makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) const
+uint Printlines::makeIntoArc(guint fromind, guint toind,
+			     vector<PLine> &lines) const
 {
-  if (toind < fromind || toind+1 > lines.size()) return 0;
+  if (toind < fromind+1 || toind+1 > lines.size()) return 0;
   //cerr<< "arcstart = " << fromind << endl;
-  Vector2d P = lines[fromind].from;
-  Vector2d Q = lines[toind].to;
+  const Vector2d &P = lines[fromind].from;
+  const Vector2d &Q = lines[toind].to;
+
+#if FITARC
+
+  Vector2d center; double fitradius_sq;
+  vector<Vector2d> arcpoints;
+  arcpoints.push_back(P);
+  for (uint i = fromind; i <= toind; i++)
+    arcpoints.push_back(lines[i].to);
+
+  if (  fit_arc(arcpoints, 0.1, center, fitradius_sq) ) {
+    cerr << " found center " << center << " radius="<< sqrt(fitradius_sq) << endl;
+#else
+
+  bool fullcircle = (P==Q);
   // get center: intersection of center perpendiculars of 2 chords
   // center perp of start -- endpoint:
-  bool fullcircle = (P==Q);
   guint end1ind = toind;
-  if (fullcircle) { // take midpoint for first center_perp
-    end1ind = (toind+fromind)/2;
-  }
+  //if (fullcircle) { // take one-third for first center_perp
+    end1ind = fromind + (toind-fromind)/2;
+    //}
   Vector2d chord1p1, chord1p2;
   center_perpendicular(P, lines[end1ind].to, chord1p1, chord1p2);  
   // center perp of midpoint -- endpoint:
-  guint start2ind = (toind+fromind)/2;
+  guint start2ind =  fromind + (toind-fromind)/2;
   Vector2d chord2p1, chord2p2;
   center_perpendicular(lines[start2ind].from, Q, chord2p1, chord2p2);
   // intersection = center
@@ -459,18 +614,20 @@ uint Printlines::makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) c
   int is = intersect2D_Segments(chord1p1, chord1p2, chord2p1, chord2p2, 
    				center, ip, t0,t1);
   if (is > 0) {
-    double angle;
-    if (fullcircle) angle = 2*M_PI;
-    else            angle = angleBetween(P-center, Q-center);
-    bool ccw = isleftof(center, lines[fromind].from, lines[fromind].to);
-    if (!ccw) angle = -angle;
-    if (angle<=0) angle+=2*M_PI;
-    short arctype = ccw ? -1 : 1; 
-    PLine newline(P, Q, lines[fromind].speed, lines[fromind].feedrate,
-		  arctype, center, angle);
-    lines[fromind] = newline;
-    lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
-    return toind-fromind;
+#endif
+    return makeIntoArc(center, fromind, toind, lines);
+    // double angle;
+    // if (fullcircle) angle = 2*M_PI;
+    // else            angle = angleBetween(P-center, Q-center);
+    // bool ccw = isleftof(center, lines[fromind].from, lines[fromind].to);
+    // if (!ccw) angle = -angle;
+    // if (angle<=0) angle+=2*M_PI;
+    // short arctype = ccw ? -1 : 1; 
+    // PLine newline(P, Q, lines[fromind].speed, lines[fromind].feedrate,
+    // 		  arctype, center, angle);
+    // lines[fromind] = newline;
+    // lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
+    // return toind-fromind;
   } else cerr << "no Intersection of arc perpendiculars!" << endl;
   return 0;
 }
@@ -536,39 +693,39 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   uint numnew = 0;
   if (p1 != lines[ind].from) { // straight line 1
     newlines.push_back(PLine(lines[ind].from, p1, 
-			     lines[ind].speed,   lines[ind].feedrate));
+			     lines[ind].speed, lines[ind].feedrate, lines[ind].lifted));
     numnew++;
   }
   if (p2 != p1)  {
     if (toosmallfortwo) { // 1 line
       const double feedr = ( lines[ind].feedrate + lines[ind+1].feedrate ) / 2;
-      newlines.push_back(PLine(p1, p2, lines[ind].speed, feedr));
+      newlines.push_back(PLine(p1, p2, lines[ind].speed, feedr, lines[ind].lifted));
       numnew++;
     }
     else if (split || toosmall) { // calc arc midpoint
       const Vector2d splitp = rotated(p1, center, angle/2, ccw);
       if (toosmall) { // 2 straight lines
-	newlines.push_back(PLine(p1, splitp,
-				 lines[ind].speed,   lines[ind].feedrate));
-	newlines.push_back(PLine(splitp, p2,
-				 lines[ind+1].speed, lines[ind+1].feedrate));
+	newlines.push_back(PLine(p1, splitp, lines[ind].speed,
+				 lines[ind].feedrate, lines[ind].lifted));
+	newlines.push_back(PLine(splitp, p2, lines[ind+1].speed,
+				 lines[ind+1].feedrate, lines[ind+1].lifted));
       }
       else if (split) { // 2 arcs
 	newlines.push_back(PLine(p1, splitp, lines[ind].speed,   lines[ind].feedrate,
-				 arctype, center, angle/2));
+				 arctype, center, angle/2, lines[ind].lifted));
 	newlines.push_back(PLine(splitp, p2, lines[ind+1].speed, lines[ind+1].feedrate,
-				 arctype, center, angle/2));
+				 arctype, center, angle/2, lines[ind+1].lifted));
       }
       numnew+=2;
     } else { // 1 arc
       newlines.push_back(PLine(p1, p2, lines[ind].speed, lines[ind].feedrate,
-			       arctype, center, angle));
+			       arctype, center, angle, lines[ind].lifted));
       numnew++;
     }
   }
   if (p2 != lines[ind+1].to) { // straight line 2
-    newlines.push_back(PLine(p2, lines[ind+1].to, 
-			     lines[ind+1].speed, lines[ind+1].feedrate));
+    newlines.push_back(PLine(p2, lines[ind+1].to, lines[ind+1].speed,
+			     lines[ind+1].feedrate, lines[ind].lifted));
     numnew++;
   }
   if (numnew>0) 
@@ -667,8 +824,7 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
   double AOtime = abs(AOamount) / AOspeed; // time needed for AO on move
   double linestime = 0;  // time all lines normally need
   for (uint i=fromline; i<=toline; i++) linestime += lines[i].time();
-  assert (linestime > 0);
-  if (linestime < AOtime) {
+  if (linestime > 0 && linestime < AOtime) {
     // slow down lines to get enough time for AOamount
     double speedfactor = linestime / AOtime;
     //cerr << "slow down factor "<< speedfactor<< endl;
@@ -755,6 +911,12 @@ uint Printlines::makeAntioozeRetract(const Settings::SlicingSettings &slicing,
     // do all from behind to keep indices right
     // find lines to distribute repush
     if (moveend > lines.size()-2) moveend = lines.size()-2;
+    if (slicing.AntioozeZlift > 0)
+      for (uint i = movestart; i <= moveend; i++) 
+	lines[i].lifted = slicing.AntioozeZlift;
+
+    
+
     double dist = 0;
     uint newl = distribute_AntioozeAmount(onmove_amount, AOspeed,
 					  moveend+1, pushend,
@@ -938,9 +1100,9 @@ uint Printlines::divideline(uint lineindex, const double length, vector<PLine> &
     double angle = l->angle * length/linelen;
     Vector2d arcpoint = rotated(l->from, l->arccenter, angle, (l->arc < 0));
     PLine line1(l->from, arcpoint, l->speed, l->feedrate, 
-		l->arc, l->arccenter, angle);
+		l->arc, l->arccenter, angle, l->lifted);
     PLine line2(arcpoint, l->to,   l->speed, l->feedrate, 
-		l->arc, l->arccenter, l->angle-angle);
+		l->arc, l->arccenter, l->angle-angle, l->lifted);
     if (l->absolute_feed != 0) { // distribute absolute extrusion 
       double totlength = line1.length() + line2.length();
       line1.absolute_feed = l->absolute_feed * line1.length()/totlength;
@@ -965,11 +1127,11 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> &points,
   if (npoints == 0) return 0;
   vector<PLine> newlines;
   PLine *l = &lines[lineindex];
-  newlines.push_back(PLine(l->from, points[0], l->speed, l->feedrate));
+  newlines.push_back(PLine(l->from, points[0], l->speed, l->feedrate, l->lifted));
   for (uint i = 0; i < npoints-1; i++) {
-    newlines.push_back(PLine(points[i], points[i+1], l->speed, l->feedrate));
+    newlines.push_back(PLine(points[i], points[i+1], l->speed, l->feedrate, l->lifted));
   }
-  newlines.push_back(PLine(points[npoints-1], l->to, l->speed, l->feedrate));
+  newlines.push_back(PLine(points[npoints-1], l->to, l->speed, l->feedrate, l->lifted));
   if (l->absolute_feed != 0) { // distribute absolute extrusion 
     double totlength = 0;
     for (uint i = 0; i < newlines.size(); i++){

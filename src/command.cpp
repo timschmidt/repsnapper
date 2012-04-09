@@ -1,6 +1,7 @@
 /*
     This file is a part of the RepSnapper project.
     Copyright (C) 2010  Kulitorum
+    Copyright (C) 2011-12  martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -115,11 +116,13 @@ inline double ToDouble(GcodeFeed &f)
 
 
 Command::Command() 
-  : where(0,0,0), is_value(false), f(0.0), e(0.0)
+  : where(0,0,0), is_value(false), f(0.0), e(0.0), not_layerchange(false)
+
 {}
 
 Command::Command(GCodes code, const Vector3d position, double E, double F) 
-  : Code(code), where(position), is_value(false),  f(F), e(E), abs_extr(0)
+  : Code(code), where(position), is_value(false),  f(F), e(E), abs_extr(0),
+    not_layerchange(false)
 {
   //assert(where.z()>=0);
   if (where.z()< 0) {
@@ -128,7 +131,9 @@ Command::Command(GCodes code, const Vector3d position, double E, double F)
 }
 
 Command::Command(GCodes code, double value_) 
-  : Code(code), where(0,0,0), is_value(true), value(value_), f(0), e(0), abs_extr(0)
+  : Code(code), where(0,0,0), is_value(true), value(value_), 
+    f(0), e(0), abs_extr(0),
+    not_layerchange(false)
 {
 }
 
@@ -144,6 +149,7 @@ Command::Command(const Command &rhs)
     is_value(rhs.is_value), value(rhs.value), 
     f(rhs.f), e(rhs.e),
     abs_extr(rhs.abs_extr),
+    not_layerchange(rhs.not_layerchange),
     comment(rhs.comment)
 {
 }
@@ -354,13 +360,15 @@ void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short
 {
   Vector3d arcpoint;
   Vector3d radiusv = lastPos-center;
+  radiusv.z() = 0;
   double astep = angle/radiusv.length()/30.;
   if (angle/astep > 10000) astep = angle/10000;
   if (angle<0) ccw=!ccw;
   Vector3d axis(0.,0.,ccw?1.:-1.);
+  double startZ = lastPos.z();
   for (long double a = 0; abs(a) < abs(angle); a+=astep){
     arcpoint = center + radiusv.rotate(a, axis);
-    if (dz!=0 && angle!=0) arcpoint.z() = lastPos.z() + a*(dz)/angle;
+    if (dz!=0 && angle!=0) arcpoint.z() = startZ + dz*a/angle;
     glVertex3dv(lastPos);
     glVertex3dv(arcpoint);
     lastPos = arcpoint;
@@ -384,10 +392,13 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
     glVertex3dv(where);
     glColor4fv(ccol);
     bool ccw = (Code == ARC_CCW);
-    if (ccw)
-      glColor4f(0.5f,0.5f,1.f,ccol[3]);
-    else 
-      glColor4f(1.f,0.5f,0.0f,ccol[3]);
+    float lum = ccol[3];
+    if (where == lastPos) // full circle
+      glColor4f(1.f,0.f,1.f,lum);
+    // else if (ccw)
+    //   glColor4f(0.5f,0.5f,1.f,lum);
+    // else 
+    //   glColor4f(1.f,0.5f,0.0f,lum);
     long double angle;
     if (P==Q) angle = 2*M_PI;
     else {
@@ -438,14 +449,16 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
       double alen = 0.3;
       if (extrwidth > 0) alen = 1.2*extrwidth ;
       Vector3d normdir = normalized(where-lastPos);
-      Vector3d arrdir = normdir * alen; 
-      Vector3d arrdir2(-0.5*alen*normdir.y(), 0.5*alen*normdir.x(), arrdir.z());
-      glVertex3dv(where);
-      Vector3d arr1 = where-arrdir+arrdir2;
-      glVertex3dv(arr1);
-      glVertex3dv(where);
-      Vector3d arr2 = where-arrdir-arrdir2;
-      glVertex3dv(arr2);
+      if (normdir.x() != 0 || normdir.y() != 0 ) {
+	Vector3d arrdir = normdir * alen; 
+	Vector3d arrdir2(-0.5*alen*normdir.y(), 0.5*alen*normdir.x(), arrdir.z());
+	glVertex3dv(where);
+	Vector3d arr1 = where-arrdir+arrdir2;
+	glVertex3dv(arr1);
+	glVertex3dv(where);
+	Vector3d arr2 = where-arrdir-arrdir2;
+	glVertex3dv(arr2);
+      }
     }
     glEnd();
     // extrusion boundary for straight line:

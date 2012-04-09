@@ -119,6 +119,7 @@ class Settings {
     float AntioozeAmount;
     float AntioozeSpeed;
     float AntioozeHaltRatio;
+    float AntioozeZlift;
 
     float InfillPercent;
     float InfillRotation;

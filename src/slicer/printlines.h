@@ -43,6 +43,7 @@ class PLine3
   Vector3d arcIJK;  // if is an arc
   short arc; // -1: ccw arc, 1: cw arc, 0: not an arc
   double arcangle;
+  bool lifted;
 
   int getCommands(Vector3d &lastpos, vector<Command> &commands, double extrusion,
 		  double minspeed, double maxspeed, double movespeed,
@@ -71,12 +72,15 @@ class PLine
   Vector2d arccenter;
   short arc;  // -1: ccw arc, 1: cw arc, 0: not an arcx
 
+  double lifted; // antiooze z-lift 
+
  public: 
   PLine(const Vector2d &from, const Vector2d &to, double speed, 
-	double feedrate);
+	double feedrate, double lifted = 0.);
   // arc
   PLine(const Vector2d &from, const Vector2d &to, double speed, 
-	double feedrate, short arc, const Vector2d &arccenter, double angle);
+	double feedrate, short arc, const Vector2d &arccenter, double angle, 
+	double lifted = 0.);
 
   ~PLine(){};
 
@@ -128,13 +132,17 @@ class Printlines
     
   void optimize(const Settings::HardwareSettings &hardware,
 		const Settings::SlicingSettings &slicing,
+		double linewidth,
 		double slowdowntime,
 		double cornerradius,
 		vector<PLine> &lines);
 
   uint makeArcs(const Settings::SlicingSettings &slicing,
+		double linewidth, 
 		vector<PLine> &lines) const;
   uint makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) const;
+  uint makeIntoArc(const Vector2d &center, guint fromind, guint toind,
+		   vector<PLine> &lines) const;
 
   uint roundCorners(double maxdistance, double minarclength, vector<PLine> &lines) const;
   uint makeCornerArc(double maxdistance, double minarclength,
