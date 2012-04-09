@@ -117,3 +117,15 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
 vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width);
 vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to, 
 			    double fr_width, double to_width);
+
+
+bool fit_arc(const vector<Vector2d> &points, double sq_error, 
+	     Vector2d &result_center, double &result_radius);
+
+typedef struct {
+  double *px, *py; // arc points
+} arc_data_struct;
+
+bool fit_arc(const int m_dat, const arc_data_struct data, 
+	     const int n_par, double *par, double sq_error,
+	     Vector2d &result_center, double &result_radiussq);

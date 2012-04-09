@@ -23,6 +23,10 @@
 #include "poly.h"
 #include "clipping.h"
 
+// limfit library for arc fitting
+#include <lmmin.h>
+
+
 ///////// Transform3D ////////////////////////////////////
 Matrix4f Transform3D::getFloatTransform() const 
 {
@@ -82,6 +86,104 @@ void Transform3D::rotate(Vector3d center, double x, double y, double z)
   move(center);
 }
 ///////////////////////////////////////////////////////
+
+
+
+//////////////////////////// ARC FITTING //////////////////////////
+
+
+/* function evaluation, determination of residues */
+// residue is difference between radius parameter and distance of point to center
+void evaluate_arcfit( const double *par, int m_dat, const void *data,
+		      double *fvec, int *info )
+{
+  /* for readability, perform explicit type conversion */
+  arc_data_struct *arcdata;
+  arcdata = (arc_data_struct*)data;
+  const Vector2d center(par[0], par[1]);
+  //const double radius_sq = par[2];
+  int i;
+  for ( i = 0; i < m_dat; i++ ) {
+    const Vector2d arcpoint(arcdata->px[i], arcdata->py[i]);
+    const double distance_sq = center.squared_distance(arcpoint);
+    fvec[i] = abs(par[2] - distance_sq); // sq.radius difference = residue
+  }
+}
+
+bool fit_arc(const int m_dat, const arc_data_struct data, 
+	     const int n_par, double *par, double sq_error,
+	     Vector2d &result_center, double &result_radiussq)
+{
+  lm_status_struct status;
+  lm_control_struct control = lm_control_double;
+  control.printflags = 0; // 3 = monitor status (+1) and parameters (+2)
+  control.maxcall = 200;
+  control.ftol = sq_error; // max square error sum
+
+  // printf( "Fitting:\n" );
+  lmmin( n_par, par, m_dat, (const void*) &data,
+	 evaluate_arcfit, &control, &status, lm_printout_std );
+
+  result_center.x() = par[0];
+  result_center.y() = par[1];
+  result_radiussq   = par[2];
+
+
+  double fvec[m_dat];
+  int info;
+  evaluate_arcfit(par, m_dat, (const void*) &data, fvec, &info);
+  double totres = 0;
+  for (int i=0; i<m_dat; ++i ) totres+=fvec[i];
+  
+  return  (totres < sq_error);
+
+  printf( "\nResults:\n" );
+  printf( "status after %d function evaluations:\n  %s\n",
+	  status.nfev, lm_infmsg[status.info] );
+  
+  printf("obtained parameters:\n");
+  int i;
+  for ( i=0; i<n_par; ++i )
+    printf("  par[%i] = %12g\n", i, par[i]);
+  printf("obtained norm:\n  %12g\n", status.fnorm );
+
+  // printf("fitting data as follows:\n");
+  // double ff;
+  // for ( i=0; i<m_dat; ++i ){
+  //     ff = f(tx[i], tz[i], par);
+  //     printf( "  t[%2d]=%12g,%12g y=%12g fit=%12g residue=%12g\n",
+  //             i, tx[i], tz[i], y[i], ff, y[i] - ff );
+  // }
+  // free(data.px);
+  // free(data.py);
+}
+
+// find center for best fit of arcpoints
+bool fit_arc(const vector<Vector2d> &points, double sq_error, 
+	     Vector2d &result_center, double &result_radiussq)
+{
+  if (points.size() < 3) return false;
+  const int n_par = 3; // center x,y and arc radius_sq
+  // start values:
+  const Vector2d P = points[0];
+  const Vector2d Q = points.back();
+  const Vector2d startxy = (P+Q)/2.;
+  double par[3] = { startxy.x(), startxy.y(), P.squared_distance(Q) };
+
+  int m_dat = points.size();
+  arc_data_struct data;
+  data.px = new double[m_dat];
+  data.py = new double[m_dat];
+  for (int i = 0; i < m_dat; i++) {
+    data.px[i] = points[i].x();
+    data.py[i] = points[i].y();
+  }
+  return fit_arc(m_dat, data, n_par, par, sq_error,
+		 result_center, result_radiussq);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
 
 
 
