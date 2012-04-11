@@ -34,7 +34,7 @@ Matrix4d ObjectsTree::GetSTLTransformationMatrix(int object, int shape) const
 	if(object >= 0)
 		result *= Objects[object].transform3D.transform;
 	if(shape >= 0)
-		result *= Objects[object].shapes[shape].transform3D.transform;
+		result *= Objects[object].shapes[shape]->transform3D.transform;
 	return result;
 }
 
@@ -66,12 +66,12 @@ void ObjectsTree::newObject()
   update_model();
 }
 
-Gtk::TreePath ObjectsTree::addShape(TreeObject *parent, Shape &shape,
+Gtk::TreePath ObjectsTree::addShape(TreeObject *parent, Shape *shape,
 				    std::string location)
 {
   // Shape r= Shape(shape);
   // // r.stl = stl;
-  shape.filename = location;
+  shape->filename = location;
   parent->shapes.push_back(shape);
   update_model();
   Gtk::TreePath path;
@@ -128,10 +128,10 @@ void ObjectsTree::update_model()
     orow[m_cols->m_pickindex] = index++;
 
     for (guint j = 0; j < Objects[i].shapes.size(); j++) {
-      Objects[i].shapes[j].idx = j;
+      Objects[i].shapes[j]->idx = j;
       Gtk::TreeModel::iterator iter = m_model->append(orow.children());
       row = *iter;
-      row[m_cols->m_name] = Objects[i].shapes[j].filename;
+      row[m_cols->m_name] = Objects[i].shapes[j]->filename;
       row[m_cols->m_object] = i;
       row[m_cols->m_shape] = j;
       row[m_cols->m_pickindex] = index++;
@@ -154,7 +154,7 @@ void ObjectsTree::get_selected_stl(Gtk::TreeModel::iterator &iter,
   if (i >= 0)
     object = &Objects[i];
   if (j >= 0)
-    shape = &Objects[i].shapes[j];
+    shape = Objects[i].shapes[j];
 }
 
 

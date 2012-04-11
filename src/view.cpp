@@ -1224,8 +1224,15 @@ void View::duplicate_selected_stl()
   if (!get_selected_stl (object, shape) || !shape)
     return;
 
+  Shape * newshape;
+
+  FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
+  if (flatshape != NULL)
+    newshape = new FlatShape(*flatshape);
+  else
+    newshape = new Shape(*shape);
   // duplicate
-  m_model->AddShape (object, *shape, shape->filename);
+  m_model->AddShape (object, newshape, shape->filename);
 
   queue_draw();
 }
@@ -1236,7 +1243,7 @@ void View::split_selected_stl()
   Shape *shape;
   if (!get_selected_stl (object, shape) || !shape)
     return;
-  if (m_model->SplitShape (object, *shape, shape->filename) > 1) {
+  if (m_model->SplitShape (object, shape, shape->filename) > 1) {
     // delete shape?
   }
   queue_draw();
@@ -1247,7 +1254,7 @@ void View::divide_selected_stl()
   Shape *shape;
   if (!get_selected_stl (object, shape) || !shape)
     return;
-  if (m_model->DivideShape (object, *shape, shape->filename) > 1) {
+  if (m_model->DivideShape (object, shape, shape->filename) > 1) {
     // delete shape?
   }
   queue_draw();

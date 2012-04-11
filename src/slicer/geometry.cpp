@@ -379,9 +379,20 @@ double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2,
   return (onseg-p).squared_length();
 }
 
+vector<Poly> thick_lines(const vector<Vector2d> &points,  double width) 
+{
+  vector<Poly> poly;
+  for (uint i = 0; i<points.size()-1; i++) {
+    vector<Poly> thick_l = thick_line(points[i],points[i+1],width);
+    poly.insert(poly.end(),thick_l.begin(),thick_l.end());
+  }
+  return poly;
+}
 
 vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width) 
 {
+  vector<Poly> p;
+  if (to==from) return p;
   Poly poly;
   Vector2d dir = (to-from); dir.normalize(); dir *= width/4.;
   Vector2d dirp(-dir.y(),dir.x());
@@ -389,7 +400,7 @@ vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width)
   poly.addVertex(from-dir+dirp);
   poly.addVertex(to+dir+dirp);
   poly.addVertex(to+dir-dirp);
-  vector<Poly> p; p.push_back(poly);
+  p.push_back(poly);
   return Clipping::getOffset(poly, width/4, jmiter, 0);
 
   // slow:

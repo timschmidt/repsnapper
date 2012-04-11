@@ -647,20 +647,19 @@ void Layer::setMinMax(const Poly &poly)
 void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		      vector<Command> &commands,
 		      double offsetZ,
-		      const Settings::SlicingSettings &slicing,
-		      const Settings::HardwareSettings &hardware) const
+		      const Settings &settings) const
 {
 
-  double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
-  double linewidth = thickness*linewidthratio;
-  double cornerradius = linewidth*slicing.CornerRadius;
+  const double linewidthratio = settings.Hardware.ExtrudedMaterialWidthRatio;
+  const double linewidth      = thickness*linewidthratio;
+  const double cornerradius   = linewidth*settings.Slicing.CornerRadius;
 
   Vector2d startPoint(lastPos.x(),lastPos.y());
 
-  double extrf = hardware.GetExtrudeFactor(thickness);
+  const double extrf = settings.Hardware.GetExtrudeFactor(thickness);
 
   vector<PLine3> lines3;
-  Printlines printlines(offsetZ);
+  Printlines printlines(&settings, offsetZ);
 
   vector<PLine> lines;
 
@@ -689,13 +688,13 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		     skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
       printlines.makeLines(polys, (s==1), //displace at first skin
-			   slicing, hardware,
-			   startPoint, lines, hardware.MaxShellSpeed);
+			   startPoint, lines, settings.Hardware.MaxShellSpeed);
       if (s < skins) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
-	printlines.clipMovements(*clippolys, lines, linewidth/2.);
-	printlines.optimize(hardware, slicing, linewidth,
-			    slicing.MinLayertime/skins, cornerradius, lines);
+	if (!settings.Slicing.ZliftAlways)
+	  printlines.clipMovements(*clippolys, lines, linewidth/2.);
+	printlines.optimize(linewidth,
+			    settings.Slicing.MinLayertime/skins, cornerradius, lines);
 	printlines.getLines(lines, lines3);
 	lines.clear();
       }
@@ -706,13 +705,11 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   // 2. Skirt
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
   printlines.makeLines(skirts, false,
-		       slicing, hardware,
-		       startPoint, lines, hardware.MaxShellSpeed);
+		       startPoint, lines, settings.Hardware.MaxShellSpeed);
 
   // 3. Support
   if (supportInfill)
     printlines.makeLines(supportInfill->infillpolys, false,
-			 slicing, hardware,
 			 startPoint, lines);
 
   // 4. all other polygons:  
@@ -722,8 +719,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
     polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());
   // printlines.makeLines(shellPolygons[p], (p==(int)(shellPolygons.size())-1), 
   printlines.makeLines(polys, true, //displace at beginning
-		       slicing, hardware,
-		       startPoint, lines, hardware.MaxShellSpeed);
+		       startPoint, lines, settings.Hardware.MaxShellSpeed);
   // TODO:  sort inner to outer in printlines
   polys.clear();
 
@@ -744,7 +740,6 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		   bridgeInfills[b]->infillpolys.end());
   
   printlines.makeLines(polys, true, //displace at beginning
-		       slicing, hardware, 
 		       startPoint, lines);
   polys.clear();
 
@@ -755,22 +750,23 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   commands.push_back(comment);
 
   float speedfactor = 1;
-  if ((guint)LayerNo < slicing.FirstLayersNum)
-    speedfactor = slicing.FirstLayersSpeed;
+  if ((guint)LayerNo < settings.Slicing.FirstLayersNum)
+    speedfactor = settings.Slicing.FirstLayersSpeed;
 
-  printlines.clipMovements(*clippolys, lines, linewidth/2.);
-  printlines.optimize(hardware, slicing, linewidth, 
-		      slicing.MinLayertime, cornerradius, lines);
+  if (!settings.Slicing.ZliftAlways)
+    printlines.clipMovements(*clippolys, lines, linewidth/2.);
+  printlines.optimize(linewidth, 
+		      settings.Slicing.MinLayertime, cornerradius, lines);
   printlines.setSpeedFactor(speedfactor, lines);
   double slowdownfactor = printlines.getSlowdownFactor();
 
-  if (slicing.FanControl) {
-    int fanspeed = slicing.MinFanSpeed;
+  if (settings.Slicing.FanControl) {
+    int fanspeed = settings.Slicing.MinFanSpeed;
     if (slowdownfactor < 1 && slowdownfactor > 0) { 
       double fanfactor = 1-slowdownfactor; 
       fanspeed += 
-	int(fanfactor * (slicing.MaxFanSpeed-slicing.MinFanSpeed));
-      fanspeed = CLAMP(fanspeed, slicing.MinFanSpeed, slicing.MaxFanSpeed);
+	int(fanfactor * (settings.Slicing.MaxFanSpeed-settings.Slicing.MinFanSpeed));
+      fanspeed = CLAMP(fanspeed, settings.Slicing.MinFanSpeed, settings.Slicing.MaxFanSpeed);
       //cerr << slowdownfactor << " - " << fanfactor << " - " << fanspeed << " - " << endl;
     } 
     Command fancommand(FANON, fanspeed);
@@ -779,10 +775,11 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   printlines.getLines(lines, lines3);
 
-  double minspeed = hardware.MinPrintSpeedXY,
-    maxspeed = hardware.MaxPrintSpeedXY,
-    movespeed = hardware.MoveSpeed,
-    emax = hardware.EMaxSpeed;
+  const double 
+    minspeed  = settings.Hardware.MinPrintSpeedXY,
+    maxspeed  = settings.Hardware.MaxPrintSpeedXY,
+    movespeed = settings.Hardware.MoveSpeed,
+    emax      = settings.Hardware.EMaxSpeed;
 
   // push all lines to gcode
   // start3 = state.LastPosition();
@@ -836,7 +833,7 @@ string Layer::SVGpath(const Vector2d &trans) const
     ostr << polygons[i].SVGpath(trans);
   }
   ostr << "\" "
-       << "style=\"fill:back;fill-opacity:1;stroke:black;stroke-width:0\" "
+       << "style=\"fill:black;fill-opacity:1;stroke:black;stroke-width:0\" "
        << "fill-rule=\"evenodd\" />";
   return ostr.str();
 }

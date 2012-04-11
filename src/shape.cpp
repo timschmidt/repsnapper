@@ -19,10 +19,9 @@
 */
 
 #include "shape.h"
-#include "poly.h"
 #include "progress.h"
 #include "settings.h"
-
+#include "clipping.h"
 
 
 // Constructor
@@ -45,6 +44,11 @@ Shape::Shape(string filename, istream *text)
   this->filename = filename;
   parseASCIISTL(text);
 }
+
+void Shape::clear() {
+  triangles.clear();
+};
+
 
 static float read_float(ifstream &file) {
 	// Read platform independent 32 bit ieee 754 little-endian float.
@@ -435,7 +439,7 @@ bool Shape::hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance) c
     if (triangle.isConnectedTo(triangles[i],sqdistance)) return true;
   return false;
 }
-void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress) 
+void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress) 
 {
   uint n_tr = triangles.size();
   vector<bool> done(n_tr);
@@ -452,8 +456,8 @@ void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress)
 	    if(!progress->update(donetriangles)) break;
 	  if (!done[i]) {
 	    if (//shapes[s].triangles.size() == 0 ||
-		shapes[s].hasAdjacentTriangleTo(triangles[i])) {
-	      shapes[s].triangles.push_back(triangles[i]);
+		shapes[s]->hasAdjacentTriangleTo(triangles[i])) {
+	      shapes[s]->triangles.push_back(triangles[i]);
 	      done[i] = true;
 	      donetriangles++;
 	      foundadj = true;
@@ -463,12 +467,12 @@ void Shape::splitshapes(vector<Shape> &shapes, ViewProgress *progress)
       } 
       //  have no shape any triangle attaches to
       if (!foundadj) {
-	Shape shape;
+	Shape *shape = new Shape();
 	shapes.push_back(shape);
 	// take next undone triangle for new shape
 	for (uint i = 0; i < n_tr; i++) 
 	  if (!done[i]) {
-	    shapes.back().triangles.push_back(triangles[i]);
+	    shapes.back()->triangles.push_back(triangles[i]);
 	    cerr << _("shape ") << shapes.size() << endl;
 	    done[i] = true;
 	    donetriangles++;
@@ -552,11 +556,11 @@ void Shape::CalcBBox()
   Center = (Max + Min )/2;
 }
 
- struct SNorm {
-   Vector3d normal;
-   double area;
-   bool operator<(const SNorm &other) const {return (area<other.area);};
- } ;
+struct SNorm {
+  Vector3d normal;
+  double area;
+  bool operator<(const SNorm &other) const {return (area<other.area);};
+} ;
  
 vector<Vector3d> Shape::getMostUsedNormals() const
 {
@@ -615,7 +619,7 @@ void Shape::OptimizeRotation()
   PlaceOnPlatform();
 }
 
-int Shape::divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) const
+int Shape::divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) const
 {
   vector<Poly> polys;
   double max_grad;
@@ -625,16 +629,16 @@ int Shape::divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) co
   for (guint i=0; i< polys.size(); i++) {
     polys[i].getTriangulation(surf);
   }
-  lower.triangles.insert(lower.triangles.end(),surf.begin(),surf.end());
+  lower->triangles.insert(lower->triangles.end(),surf.begin(),surf.end());
   for (guint i=0; i<surf.size(); i++) surf[i].invertNormal();
-  upper.triangles.insert(upper.triangles.end(),surf.begin(),surf.end());
+  upper->triangles.insert(upper->triangles.end(),surf.begin(),surf.end());
   vector<Triangle> toboth;
   for (guint i=0; i< triangles.size(); i++) {
     Triangle tt = triangles[i].transformed(T*transform3D.transform);
     if (tt.A.z() < z && tt.B.z() < z && tt.C.z() < z )
-      lower.triangles.push_back(tt);
+      lower->triangles.push_back(tt);
     else if (tt.A.z() > z && tt.B.z() > z && tt.C.z() > z )
-      upper.triangles.push_back(tt);
+      upper->triangles.push_back(tt);
     else
       toboth.push_back(tt);
   }
@@ -642,11 +646,11 @@ int Shape::divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) co
   for (guint i=0; i< toboth.size(); i++) {
     toboth[i].SplitAtPlane(z, uppersplit, lowersplit);
   }
-  upper.triangles.insert(upper.triangles.end(),
+  upper->triangles.insert(upper->triangles.end(),
 			 uppersplit.begin(),uppersplit.end());
-  lower.triangles.insert(lower.triangles.end(),
+  lower->triangles.insert(lower->triangles.end(),
 			 lowersplit.begin(),lowersplit.end());
-  lower.Rotate(Vector3d(0,1,0),M_PI);
+  lower->Rotate(Vector3d(0,1,0),M_PI);
   return 2;
 }
 
@@ -810,7 +814,6 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 }
 
 // #if 0
-// // given the overall translation matrix, not our own!
 // bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, 
 // 			   vector<Poly> &polys, double &max_grad) const
 // {
@@ -1525,3 +1528,501 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 
 	return true;
 }
+
+
+string Shape::info() const
+{
+  ostringstream ostr;
+  ostr <<"Shape with "<<triangles.size() << " triangles "
+       << "min/max/center: "<<Min<<Max <<Center ;
+  return ostr.str();
+}
+
+
+
+
+
+
+
+
+////////////////////////////// FlatShape /////////////////////////
+
+FlatShape::FlatShape()
+{
+  slow_drawing = false;
+  Min.set(0,0,0);
+  Max.set(200,200,0);
+  scale_factor_x = 1;
+  scale_factor_y = 1;
+  scale_factor = 1;
+  CalcBBox();
+}
+
+
+FlatShape::FlatShape(string filename) 
+{
+  slow_drawing = false;
+  this->filename = filename;
+  loadSVG(filename);
+}
+  
+// FlatShape::FlatShape(const FlatShape &rhs) 
+// {
+//   slow_drawing = false;
+//   polygons = rhs.polygons;
+//   scale_factor_x = rhs.scale_factor_x;
+//   scale_factor_y = rhs.scale_factor_y;
+//   scale_factor = rhs.scale_factor;
+//   Min = rhs.Min;
+//   Max = rhs.Max;
+//   Center = rhs.Center;
+// }
+
+vector<string> REMatches(const Glib::RefPtr<Glib::Regex> &RE,
+			 const string &input,
+			 const string &name)
+{
+  Glib::MatchInfo match_info;
+  vector<string> matches;
+  if (RE->match(input, match_info)) {
+    matches.push_back(match_info.fetch_named(name).c_str());
+    while (match_info.next()){
+      matches.push_back(match_info.fetch_named(name).c_str());
+    }
+  }
+  return matches;
+}
+vector<string> REMatches(const string &regex, 
+			 const string &input,
+			 const string &name)
+{
+  Glib::RefPtr<Glib::Regex> RE = Glib::Regex::create(regex);
+  return REMatches(RE, input,name);
+}
+
+// int loadSVGold(string filename)
+// {
+//   Min=Vector3d(1000000,1000000,0);
+//   Max=Vector3d(-1000000,-1000000,0);
+
+//   polygons.clear();
+  
+//   ifstream file;
+//   file.open(filename.c_str());
+    
+  
+//   string lines;  
+//   string line;
+//   if (file.is_open()) {
+//     while ( file.good() ) {
+//       getline (file,line);
+//       lines += line;
+//     }
+//     file.close();
+
+//     Glib::RefPtr<Glib::Regex> polyregex = 
+//       Glib::Regex::create ("(?ims)<path.*?stroke\\:none.*?\\sd\\=\"(?<POLY>.*?(Z|\"/\\>))");
+//     Glib::RefPtr<Glib::Regex> strokeregex = 
+//       Glib::Regex::create ("(?ims)<path.*?(?<STROKE>fill\\:none.*?\\sd\\=\".*?\"/\\>)");
+//     Glib::RefPtr<Glib::Regex> strwidthregex =
+//       Glib::Regex::create ("stroke\\-width\\:(?<STRWIDTH>[\\-\\.\\d]+)");
+//     Glib::RefPtr<Glib::Regex> pointregex =
+//       Glib::Regex::create ("(?<POINT>[LM](\\s+[\\-\\.\\d]+){2})");
+//     Glib::RefPtr<Glib::Regex> transregex =
+//       Glib::Regex::create ("transform=\"(?<TRANS>.*?)\"");
+//     Glib::RefPtr<Glib::Regex> matrixregex =
+//       Glib::Regex::create ("matrix\\((?<MATR>([\\-\\.\\d]*?(\\,|\\))){6})");
+
+//     vector<string> strokes = REMatches(strokeregex, lines, "STROKE");
+//     for (uint i = 0; i < strokes.size(); i++) {
+//       cerr << i << ": "<<strokes[i] << endl;
+//       vector<string> strwidth = REMatches(strwidthregex,strokes[i],"STRWIDTH");
+//       for (uint j = 0; j < strwidth.size(); j++) {
+// 	cerr << "STRW " << strwidth[j] << endl;
+//       }
+//       vector<string> points = REMatches(pointregex,strokes[i],"POINT");
+//       for (uint j = 0; j < points.size(); j++) {
+// 	cerr << j << ":: "<<points[j]<< endl;
+//       }
+//       vector<string> trans = REMatches(transregex,strokes[i],"TRANS");
+//       for (uint j = 0; j < trans.size(); j++) {
+// 	cerr << j << "trans: "<<trans[j]<< endl;
+// 	vector<string> matrix = REMatches(matrixregex,trans[j],"MATR");
+// 	for (uint k = 0; k < matrix.size(); k++) 
+// 	  cerr << k << " matr: "<<matrix[k]<< endl;	  
+//       }
+//     }
+//     vector<string> polys = REMatches(polyregex, lines, "POLY");
+//     for (uint i = 0; i < polys.size(); i++) {
+//       vector<string> points = REMatches(pointregex, polys[i], "POINT");
+//       Poly poly;
+//       //cout << i << ": ";
+//       //cout << polys[i] << endl;
+//       for (uint j = 0; j < points.size(); j++) {
+// 	//cout << j << " - " << points[j]  << endl ;
+// 	istringstream is(points[j]);
+// 	string type;
+// 	is >> type;
+// 	//cerr << type<< endl;
+// 	if (type=="M" || type == "L") {
+// 	  double x,y;
+// 	  is >> x;
+// 	  is >> y;
+// 	  //cout << x << "," << y << endl;
+// 	  poly.addVertex(x,y);
+// 	  if (x<Min.x()) Min.x() = x;
+// 	  if (y<Min.y()) Min.y() = y;
+// 	  if (x>Max.x()) Max.x() = x;
+// 	  if (y>Max.y()) Max.y() = y;
+// 	}
+//       }
+//       if (poly.size()>0) {
+// 	poly.setZ(0);
+// 	//cerr << poly.info() << endl;
+// 	polygons.push_back(poly);
+//       }
+//       cout << endl;
+//     }
+//   }
+//   else cerr << _("Error: Unable to open SVG file - ") << filename << endl;
+//   Center = (Min+Max)/2;
+// }
+
+bool FlatShape::getPolygonsAtZ(const Matrix4d &T, double z, 
+			       vector<Poly> &polys, double &max_grad) const
+{
+  max_grad = 0;
+  polys = polygons;
+  const Matrix4d trans = T * transform3D.transform;
+  //cerr << " get polys at "<< z  << " with " << endl<<trans << endl;
+  for (uint i = 0; i < polys.size(); i++) {
+    polys[i].setZ(0);
+    polys[i].transform(trans);
+  }
+  return true;
+}
+
+void FlatShape::clear()
+{
+  polygons.clear();
+}
+
+void FlatShape::draw_geometry() {
+  for (uint i = 0; i < polygons.size(); i++) {
+    polygons[i].draw_as_surface();
+    //polygons[i].draw(GL_LINE_LOOP);
+  }
+}
+
+void FlatShape::CalcBBox()
+{
+  Min.set(INFTY,INFTY,0);
+  Max.set(-INFTY,-INFTY,0);
+  for(size_t i = 0; i < polygons.size(); i++)
+    for(size_t j = 0; j < polygons[i].size(); j++){
+      if ( polygons[i][j].x() < Min.x() ) Min.x() = polygons[i][j].x();
+      if ( polygons[i][j].y() < Min.y() ) Min.y() = polygons[i][j].y();
+      if ( polygons[i][j].x() > Max.x() ) Max.x() = polygons[i][j].x();
+      if ( polygons[i][j].y() > Max.y() ) Max.y() = polygons[i][j].y();
+    }
+  Min = transform3D.transform*Min;
+  Max = transform3D.transform*Max;
+  Center = (Max + Min )/2;
+}
+
+
+void FlatShape::mirror()
+{
+  for (uint i = 0; i < polygons.size(); i++)
+    polygons[i].mirrorX(Center);
+}
+
+// Rotate and adjust for the user - not a pure rotation by any means
+void FlatShape::Rotate(const Vector3d & axis, const double & angle)
+{
+  if (axis.z()==0) return; // try to only 2D-rotate
+  Vector2d center(Center.x(),Center.y());
+  for (size_t i=0; i<polygons.size(); i++)
+    {
+      polygons[i].rotate(center, angle);
+    }
+  PlaceOnPlatform();
+}
+
+void FlatShape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress) 
+{
+  uint count = polygons.size();
+  if (progress) progress->start(_("Split Polygons"), count);
+  int progress_steps = max(1,(int)(count/100));
+
+  for (uint i = 0; i < count; i++) {
+    FlatShape *fs  = new FlatShape();
+    fs->polygons.push_back(polygons[i]);
+    if (progress && i%progress_steps==0 && !progress->update(count)) break;
+    shapes.push_back(fs);
+  }
+  progress->stop("_(Done)");
+}
+
+
+string FlatShape::info() const
+{
+  ostringstream ostr;
+  ostr <<"FlatShape with "<<polygons.size() << " polygons "
+       << "min/max/center: "<<Min<<Max <<Center ;
+  return ostr.str();
+}
+
+////////////////////////////// XML //////////////////////////////////////////
+
+inline double ToDouble(string s)
+{
+	std::istringstream i(s);
+	double x;
+	if (!(i >> x))
+		return -1;
+	return x;
+}
+
+const Glib::RefPtr<Glib::Regex> polyregex = 
+    Glib::Regex::create ("(?ims)<path.*?stroke\\:none.*?\\sd\\=\"(?<POLY>.*?(Z|\"/\\>))");
+const Glib::RefPtr<Glib::Regex> strokeregex = 
+    Glib::Regex::create ("(?ims)<path.*?(?<STROKE>fill\\:none.*?\\sd\\=\".*?\"/\\>)");
+const Glib::RefPtr<Glib::Regex> strwidthregex =
+    Glib::Regex::create ("stroke\\-width\\:(?<STRWIDTH>[\\-\\.\\d]+)");
+const Glib::RefPtr<Glib::Regex> pointregex =
+    Glib::Regex::create ("(?<POINT>[LM](\\s+[\\-\\.\\d]+){2})");
+const Glib::RefPtr<Glib::Regex> transregex =
+    Glib::Regex::create ("transform=\"(?<TRANS>.*?)\"");
+const Glib::RefPtr<Glib::Regex> matrixregex =
+    Glib::Regex::create ("matrix\\((?<MATR>([\\-\\.\\d]*?(\\,|\\))){6})");
+
+
+Matrix3d svg_trans(const string &line)
+{
+  Matrix3d mat;
+  vector<string> val = REMatches(matrixregex, line, "MATR");
+  if (val.size()>0) {
+    vector<string> vals = Glib::Regex::split_simple("[\\,\\)]",val[0]);
+    if (vals.size()>5) {
+      mat.set_row(0,Vector3d(ToDouble(vals[0]),ToDouble(vals[2]),ToDouble(vals[4])));
+      mat.set_row(1,Vector3d(ToDouble(vals[1]),ToDouble(vals[3]),ToDouble(vals[5])));
+      mat.set_row(2,Vector3d(0,0,1));
+    }
+  }
+  return mat;
+}
+
+string get_attr(const string &line, const string &attrname)
+{
+  vector<string> parts = Glib::Regex::split_simple(";",line);
+  for (uint p = 0; p < parts.size(); p++) {
+    vector<string> lr = Glib::Regex::split_simple(":",parts[p]);
+    if (lr.size()==2){
+      if (lr[0] == attrname) return lr[1];
+    } else return "";
+  }
+  return "";
+}
+
+vector<Vector2d> ToVertices(const string &line)
+{
+  vector<string> points = REMatches(pointregex, line, "POINT");
+  vector<Vector2d> v;
+  for (uint j = 0; j < points.size(); j++) {
+    //cout << j << " - " << points[j]  << endl ;
+    istringstream is(points[j]);
+    string type;
+    is >> type;
+    //cerr << type<< endl;
+    if (type=="M" || type == "L") {
+      double x,y;
+      if (is >> x && is >> y) 
+	//cout << x << "," << y << endl;
+	v.push_back(Vector2d(x,y));
+    }
+  }
+  return v;
+}
+
+int FlatShape::svg_addPolygon()
+{ 
+  
+  vector<Poly> polys;
+  if (svg_cur_style.find("stroke:none") != string::npos) { // polygon
+    Poly poly;
+    poly.vertices = ToVertices(svg_cur_path);
+    poly.setZ(0);
+    poly.reverse();
+    polys.push_back(poly);
+  }
+  else if (svg_cur_style.find("fill:none") != string::npos) { // stroke
+    // cerr << "stroke " << svg_cur_path << endl;
+    // cerr << "\t" << svg_cur_style << endl;
+    string wstr = get_attr(svg_cur_style,"stroke-width");
+    double width = ToDouble(wstr);
+    // cerr << "\t width " << wstr << " = " << width << endl;
+    vector<Vector2d> vertices = ToVertices(svg_cur_path);
+    polys = thick_lines(vertices, width);
+    // cerr <<"thick "<< polys.size()<<" of " << vertices.size() << endl;
+  }
+  else {
+    cerr << "unknown " << svg_cur_path << endl;
+    cerr << "\t" << svg_cur_style << endl;
+  }
+
+  if (polys.size()>0) {
+    if (svg_cur_trans!="") {
+      // cerr << svg_cur_trans << endl;
+      Matrix3d  mat = svg_trans(svg_cur_trans);
+      // cerr << mat << endl;
+      for (uint i=0; i < polys.size(); i++)
+	polys[i].transform(mat);
+    }
+    polygons.insert(polygons.begin(),polys.begin(),polys.end());
+  }
+  return polys.size();
+} 
+
+
+void FlatShape::xml_handle_node(const xmlpp::Node* node)
+{
+  //std::cout << std::endl; //Separate nodes by an empty line.
+  
+  const xmlpp::ContentNode* nodeContent = dynamic_cast<const xmlpp::ContentNode*>(node);
+  const xmlpp::TextNode*       nodeText = dynamic_cast<const xmlpp::TextNode*>(node);
+  const xmlpp::CommentNode* nodeComment = dynamic_cast<const xmlpp::CommentNode*>(node);
+
+  // if(nodeText && nodeText->is_white_space()) //Let's ignore the indenting - you don't always want to do this.
+  //   return;
+    
+  const Glib::ustring nodename = node->get_name();
+
+  if(!nodeText && !nodeComment && !nodename.empty()) //Let's not say "name: text".
+  {
+    const Glib::ustring namespace_prefix = node->get_namespace_prefix();
+    if (svg_cur_name!="") svg_addPolygon();
+    svg_cur_name = nodename;
+    svg_cur_path = "";
+    svg_cur_trans = "";
+    svg_cur_style = "";
+    // if(namespace_prefix.empty()) 
+    //   std::cout << "Node name = " << nodename << std::endl;
+    // else
+    //   std::cout << "Node name = " << namespace_prefix << ":" << nodename << std::endl;
+  }
+  // else if(nodeText) //Let's say when it's text. - e.g. let's say what that white space is.
+  // {
+  //   std::cout << "Text Node" << std::endl;
+  // }
+
+  //Treat the various node types differently: 
+  // if(nodeText)
+  // {
+  //   std::cout << "text = \"" << nodeText->get_content() << "\"" << std::endl;
+  // }
+  // else if(nodeComment)
+  // {
+  //   std::cout << "comment = " << nodeComment->get_content() << std::endl;
+  // }
+  // else if(nodeContent)
+  // {
+  //   std::cout << "content = " << nodeContent->get_content() << std::endl;
+  // } else
+  if (const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(node)) {
+    //A normal Element node:
+    
+    //line() works only for ElementNodes.
+    // std::cout << "     line = " << node->get_line() << std::endl;
+
+    //attributes:
+    const xmlpp::Element::AttributeList& attributes = nodeElement->get_attributes();
+    for(xmlpp::Element::AttributeList::const_iterator iter = attributes.begin(); 
+	iter != attributes.end(); ++iter)
+    {
+      const xmlpp::Attribute* attribute = *iter;
+
+      const Glib::ustring namespace_prefix = attribute->get_namespace_prefix();
+      string attr = attribute->get_name();
+      if (attr=="d")
+	svg_cur_path  = attribute->get_value();
+      else if (attr == "style")
+	svg_cur_style = attribute->get_value();
+      else if (attr == "transform")
+	svg_cur_trans = attribute->get_value();
+      else if (svg_cur_name == "svg" ){
+	if (attr == "width" || attr == "height") {
+	  string val = attribute->get_value();
+	  if (val.find("pt") != string::npos)
+	    svg_prescale = 0.3527;
+	}	  
+      }
+      else 
+	cerr << "unknown Attribute in " << svg_cur_name << " : " << attr << " = " <<attribute->get_value() << endl;
+      // if(namespace_prefix.empty()) 
+      //   std::cout << "  Attribute " << attribute->get_name() << " = " <<  << std::endl; 
+      // else
+      //   std::cout << "  Attribute " << namespace_prefix  << ":" << attribute->get_name() << " = " << attribute->get_value() << std::endl;
+    }
+
+    const xmlpp::Attribute* attribute = nodeElement->get_attribute("title");
+    if(attribute)
+    {
+      std::cout << "title found: =" << attribute->get_value() << std::endl;
+    }
+  }
+  
+  if(!nodeContent)
+  {
+    //Recurse through child nodes:
+    xmlpp::Node::NodeList list = node->get_children();
+    for(xmlpp::Node::NodeList::iterator iter = list.begin(); iter != list.end(); ++iter)
+    {
+      xml_handle_node(*iter); //recursive
+    }
+  }
+}
+
+
+int FlatShape::loadSVG(string filename) 
+{  // Set the global C++ locale to the user-configured locale,
+  // so we can use std::cout with UTF-8, via Glib::ustring, without exceptions.
+
+  #ifdef LIBXMLCPP_EXCEPTIONS_ENABLED
+  try
+  {
+  #endif //LIBXMLCPP_EXCEPTIONS_ENABLED 
+    xmlpp::DomParser parser;
+    //parser.set_validate();
+    parser.set_substitute_entities(); //We just want the text to be resolved/unescaped automatically.
+    parser.parse_file(filename);
+    if(parser)
+    {
+      polygons.clear();
+      svg_cur_name = "";
+      svg_prescale = 1.;
+      //Walk the tree:
+      const xmlpp::Node* pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
+      xml_handle_node(pNode);
+    }
+
+    if (svg_prescale!=1)
+      for (uint i= 0; i<polygons.size(); i++) 
+	for (uint j= 0; j<polygons[i].size(); j++) 
+	  polygons[i].vertices[j] *= svg_prescale;
+    Clipping clipp;
+    clipp.addPolys(polygons, subject);
+    polygons = clipp.unite(CL::pftNonZero,CL::pftNegative);
+    CalcBBox();
+  #ifdef LIBXMLCPP_EXCEPTIONS_ENABLED
+  }
+  catch(const std::exception& ex)
+  {
+    std::cerr << "Exception caught: " << ex.what() << std::endl;
+  }
+  #endif //LIBXMLCPP_EXCEPTIONS_ENABLED 
+
+  return 0;
+}
+
+

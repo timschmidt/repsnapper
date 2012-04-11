@@ -260,9 +260,11 @@ string PLine::info() const
 ///////////// Printlines //////////////////////
 
 
-Printlines::Printlines(double z_offset) :
+Printlines::Printlines(const Settings * settings, double z_offset) :
   Zoffset(z_offset), name(""), slowdownfactor(1.)
-{}
+{
+  this->settings = settings;
+}
 
 
 void Printlines::addLine(vector<PLine> &lines, const Vector2d &from, const Vector2d &to, 
@@ -273,7 +275,10 @@ void Printlines::addLine(vector<PLine> &lines, const Vector2d &from, const Vecto
   if (lines.size() > 0) {
     Vector2d lastpos = lines.back().to;
     if ((lastpos - lfrom).squared_length() > 0.01) { // add moveline
-      lines.push_back(PLine(lastpos, lfrom, movespeed, 0));
+      PLine move(lastpos, lfrom, movespeed, 0);
+      if (settings->Slicing.ZliftAlways)
+	move.lifted = settings->Slicing.AntioozeZlift;
+      lines.push_back(move);
     } else {
       lfrom = lastpos;
     }
@@ -296,16 +301,14 @@ void Printlines::addPoly(vector<PLine> &lines, const Poly &poly, int startindex,
 
 void Printlines::makeLines(const vector<Poly> &polys,
 			   bool displace_startpoint, 			   
-			   const Settings::SlicingSettings &slicing,
-			   const Settings::HardwareSettings &hardware,
 			   Vector2d &startPoint,
 			   vector<PLine> &lines,
 			   double maxspeed)
 {
   // double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
   //double linewidth = layerthickness/linewidthratio;
-  if ( maxspeed == 0 ) maxspeed = hardware.MaxPrintSpeedXY;
-  double movespeed = hardware.MoveSpeed;
+  if ( maxspeed == 0 ) maxspeed = settings->Hardware.MaxPrintSpeedXY;
+  double movespeed = settings->Hardware.MoveSpeed;
 
   const uint count = polys.size();
   if (count == 0) return;
@@ -354,9 +357,7 @@ void Printlines::makeLines(const vector<Poly> &polys,
 }
 
 
-void Printlines::optimize(const Settings::HardwareSettings &hardware,
-			  const Settings::SlicingSettings &slicing,
-			  double linewidth,
+void Printlines::optimize(double linewidth,
 			  double slowdowntime,
 			  double cornerradius,
 			  vector<PLine> &lines)
@@ -368,12 +369,12 @@ void Printlines::optimize(const Settings::HardwareSettings &hardware,
   // double E=0;Vector3d start(0,0,0);
   // cout << GCode(start,E,1,1000);
   //cerr << "optimize" << endl;
-  makeArcs(slicing, linewidth, lines);
+  makeArcs(linewidth, lines);
   slowdownTo(slowdowntime, lines);
-  if (slicing.UseArcs && slicing.RoundCorners) 
-    roundCorners(cornerradius, slicing.MinArcLength, lines);
+  if (settings->Slicing.UseArcs && settings->Slicing.RoundCorners) 
+    roundCorners(cornerradius, settings->Slicing.MinArcLength, lines);
   double totext = total_Extrusion(lines);
-  makeAntioozeRetract(slicing, lines);
+  makeAntioozeRetract(lines);
   double totext2 = total_Extrusion(lines);
   if (abs(totext-totext2)>0.01) 
     cerr << "extrusion difference after antiooze " << totext2-totext << endl;
@@ -448,13 +449,12 @@ bool continues_arc(const Vector2d &center,
 
 
 
-uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
-			  double linewidth,
+uint Printlines::makeArcs(double linewidth,
 			  vector<PLine> &lines) const
 {
   if (!slicing.UseArcs) return 0;
   if (lines.size() < 3) return 0;
-  const double maxAngle = slicing.ArcsMaxAngle * M_PI/180;
+  const double maxAngle = settings->Slicing.ArcsMaxAngle * M_PI/180;
   const double linewidth_sq = linewidth*linewidth;
   if (maxAngle <= 0) return 0;
   double arcRadiusSq = 0;  
@@ -507,13 +507,12 @@ Vector2d Printlines::arcCenter(const PLine &l1, const PLine &l2,
   return Vector2d(10000000,10000000);
 }
 
-uint Printlines::makeArcs(const Settings::SlicingSettings &slicing,
-			  double linewidth,
+uint Printlines::makeArcs(double linewidth,
 			  vector<PLine> &lines) const
 {
-  if (!slicing.UseArcs) return 0;
+  if (!settings->Slicing.UseArcs) return 0;
   if (lines.size() < 2) return 0;
-  double maxAngle = slicing.ArcsMaxAngle * M_PI/180;
+  double maxAngle = settings->Slicing.ArcsMaxAngle * M_PI/180;
   if (maxAngle < 0) return 0;
   double arcRadiusSq = 0;  
   Vector2d arccenter(1000000,1000000);
@@ -699,7 +698,8 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   if (p2 != p1)  {
     if (toosmallfortwo) { // 1 line
       const double feedr = ( lines[ind].feedrate + lines[ind+1].feedrate ) / 2;
-      newlines.push_back(PLine(p1, p2, lines[ind].speed, feedr, lines[ind].lifted));
+      newlines.push_back(PLine(p1, p2, lines[ind].speed, feedr, 
+			       feedr!=0?lines[ind].lifted:0));
       numnew++;
     }
     else if (split || toosmall) { // calc arc midpoint
@@ -725,7 +725,7 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   }
   if (p2 != lines[ind+1].to) { // straight line 2
     newlines.push_back(PLine(p2, lines[ind+1].to, lines[ind+1].speed,
-			     lines[ind+1].feedrate, lines[ind].lifted));
+			     lines[ind+1].feedrate, lines[ind+1].lifted));
     numnew++;
   }
   if (numnew>0) 
@@ -884,15 +884,14 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
 
 
 // call after lines have been slowed down!
-uint Printlines::makeAntioozeRetract(const Settings::SlicingSettings &slicing,
-				     vector<PLine> &lines) const
+uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
 {
-  if (!slicing.EnableAntiooze) return 0;
+  if (!settings->Slicing.EnableAntiooze) return 0;
   double 
-    AOmindistance = slicing.AntioozeDistance,
-    AOamount      = slicing.AntioozeAmount,
-    AOspeed       = slicing.AntioozeSpeed,
-    AOonhaltratio = slicing.AntioozeHaltRatio;
+    AOmindistance = settings->Slicing.AntioozeDistance,
+    AOamount      = settings->Slicing.AntioozeAmount,
+    AOspeed       = settings->Slicing.AntioozeSpeed,
+    AOonhaltratio = settings->Slicing.AntioozeHaltRatio;
   if (lines.size() < 2 || AOmindistance <=0 || AOamount == 0) return 0;
   const double onhalt_amount = AOamount * AOonhaltratio;
   const double onmove_amount = AOamount - onhalt_amount;
@@ -911,9 +910,9 @@ uint Printlines::makeAntioozeRetract(const Settings::SlicingSettings &slicing,
     // do all from behind to keep indices right
     // find lines to distribute repush
     if (moveend > lines.size()-2) moveend = lines.size()-2;
-    if (slicing.AntioozeZlift > 0)
+    if (settings->Slicing.AntioozeZlift > 0)
       for (uint i = movestart; i <= moveend; i++) 
-	lines[i].lifted = slicing.AntioozeZlift;
+	lines[i].lifted = settings->Slicing.AntioozeZlift;
 
     
 

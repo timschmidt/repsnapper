@@ -117,8 +117,7 @@ public:
   void MakeGcode (Vector3d &start,
 		  vector<Command> &commands,
   		  double offsetZ, 
-  		  const Settings::SlicingSettings &slicing,
-  		  const Settings::HardwareSettings &hardware) const;
+  		  const Settings &settings) const;
 
   string info() const ;
 

@@ -159,6 +159,20 @@ void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
   Glib::file_set_contents (file->get_path(), contents);
 }
 
+void Model::ReadSVG(Glib::RefPtr<Gio::File> file)
+{
+  if (is_calculating) return;
+  if (is_printing) return;
+  bool autoplace = settings.Misc.ShapeAutoplace;
+  string path = file->get_path();
+  FlatShape * svgshape = new FlatShape(path);
+  cerr << svgshape->info() << endl;
+  AddShape(NULL, svgshape, path, autoplace);
+  ModelChanged();
+  ClearLayers();
+}
+
+
 
 void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
 {
@@ -169,8 +183,8 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
   
   if (ftype == BINARY_STL) // only one shape per file
     {
-      Shape shape;
-      shape.loadBinarySTL(path);      
+      Shape *shape = new Shape();
+      shape->loadBinarySTL(path);      
       AddShape(NULL, shape, path,autoplace);
       ModelChanged();
      }
@@ -179,11 +193,11 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
       ifstream fileis;
       fileis.open(path.c_str());
       size_t found = path.find_last_of("/\\");
-      vector<Shape> shapes;
+      vector<Shape*> shapes;
       while (!fileis.eof())
 	{
-	  Shape shape;
-	  int ok = shape.parseASCIISTL(&fileis);
+	  Shape *shape = new Shape();
+	  int ok = shape->parseASCIISTL(&fileis);
 	  if (ok>=0) {
 	    shapes.push_back(shape);
 	    // go back to get "solid " keyword again
@@ -200,12 +214,12 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
 	  }
 	}
       if (shapes.size()==1){
-	shapes.front().filename = (string)path.substr(found+1); 
-	AddShape(NULL, shapes.front(), shapes.front().filename, autoplace);
+	shapes.front()->filename = (string)path.substr(found+1); 
+	AddShape(NULL, shapes.front(), shapes.front()->filename, autoplace);
       }
       else for (uint i=0;i<shapes.size();i++){
 	  // do not autoplace to keep saved positions
-	  AddShape(NULL, shapes[i], shapes[i].filename, false);
+	  AddShape(NULL, shapes[i], shapes[i]->filename, false);
 	}
       shapes.clear();
       ModelChanged();
@@ -213,8 +227,8 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
     }
   else if (ftype == VRML) 
     {
-      Shape shape;
-      shape.loadASCIIVRML(path);      
+      Shape *shape = new Shape();
+      shape->loadASCIIVRML(path);      
       AddShape(NULL, shape, path,autoplace);
       ModelChanged();
     }
@@ -229,7 +243,7 @@ void Model::SaveStl(Glib::RefPtr<Gio::File> file)
   {
     for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
     {
-      Shape *shape = &objtree.Objects[o].shapes[f];
+      Shape *shape = objtree.Objects[o].shapes[f];
       sstr << shape->getSTLsolid() << endl;
     }
   }
@@ -247,6 +261,11 @@ void Model::Read(Glib::RefPtr<Gio::File> file)
 	ReadGCode (file);
 	return;
       }
+    else if (extn == ".svg")
+      {
+	ReadSVG (file);
+	return;
+      }
     else if (extn == ".rfo")
       {
 	//      ReadRFO (file);
@@ -261,7 +280,7 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
   if (is_calculating) return;
   if (is_printing) return;
   is_calculating=true;
-  m_progress->start (_("Converting"), 100.0);
+  m_progress->start (_("Reading GCode"), 100.0);
   gcode.Read (this, m_progress, file->get_path());
   m_progress->stop (_("Done"));
   is_calculating=false;
@@ -304,7 +323,7 @@ static bool ClosestToOrigin (Vector3d a, Vector3d b)
 }
 
 
-bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
+bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
 {
   // Get all object positions
   std::vector<Vector3d> maxpos;
@@ -314,7 +333,7 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
   {
     for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
     {
-      Shape *selectedShape = &objtree.Objects[o].shapes[f];
+      Shape *selectedShape = objtree.Objects[o].shapes[f];
       Vector3d p ;
       selectedShape->transform3D.transform.get_translation(p);
       Vector3d size = selectedShape->Max - selectedShape->Min;
@@ -387,11 +406,15 @@ bool Model::FindEmptyLocation(Vector3d &result, Shape *shape)
   return false;
 }
 
-int Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autoplace)
+int Model::AddShape(TreeObject *parent, Shape *shape, string filename, bool autoplace)
 {
   //Shape *retshape;
   bool found_location=false;
 
+
+  FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
+  if (flatshape != NULL)
+    shape = flatshape;
 
   if (!parent) {
     if (objtree.Objects.size() <= 0)
@@ -402,11 +425,11 @@ int Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autop
   
   // Decide where it's going
   Vector3d trans = Vector3d(0,0,0);
-  if (autoplace) found_location = FindEmptyLocation(trans, &shape);
+  if (autoplace) found_location = FindEmptyLocation(trans, shape);
   // Add it to the set
   size_t found = filename.find_last_of("/\\");
   Gtk::TreePath path = objtree.addShape(parent, shape, filename.substr(found+1));
-  Shape *retshape = &parent->shapes.back();
+  Shape *retshape = parent->shapes.back();
   
   // Move it, if we found a suitable place
   if (found_location) {
@@ -423,24 +446,25 @@ int Model::AddShape(TreeObject *parent, Shape shape, string filename, bool autop
   return 0;
 }
 
-int Model::SplitShape(TreeObject *parent, Shape shape, string filename)
+int Model::SplitShape(TreeObject *parent, Shape *shape, string filename)
 {
-  vector<Shape> splitshapes;
-  shape.splitshapes(splitshapes, m_progress);
+  vector<Shape*> splitshapes;
+  shape->splitshapes(splitshapes, m_progress);
   if (splitshapes.size()<2) return splitshapes.size();
   for (uint s = 0; s <  splitshapes.size(); s++) {
     ostringstream sfn;
     sfn << filename << "_" << (s+1) ;
-    AddShape(parent,splitshapes[s], sfn.str() ,false);
+    AddShape(parent, splitshapes[s], sfn.str() ,false);
   }
   return splitshapes.size();
 }
 
-int Model::DivideShape(TreeObject *parent, Shape shape, string filename)
+int Model::DivideShape(TreeObject *parent, Shape *shape, string filename)
 {
-  Shape upper,lower;
+  Shape *upper = new Shape();
+  Shape *lower = new Shape();
   Matrix4d T = Matrix4d::IDENTITY;;//FIXME! objtree.GetSTLTransformationMatrix(parent);
-  int num = shape.divideAtZ(0, upper, lower, T);
+  int num = shape->divideAtZ(0, upper, lower, T);
   if (num<2) return num;
   else if (num==2) {
     AddShape(parent, upper, filename+_("_upper") ,false);
@@ -463,7 +487,7 @@ void Model::ScaleObject(Shape *shape, TreeObject *object, double scale)
   else if(object)
     for (uint s = 0;s<object->shapes.size(); s++) {
       //double fact = object->shapes[s].getScaleFactor();
-      object->shapes[s].Scale(scale);
+      object->shapes[s]->Scale(scale);
     }
   else return;
   CalcBoundingBoxAndCenter();
@@ -476,7 +500,7 @@ void Model::ScaleObjectX(Shape *shape, TreeObject *object, double scale)
   else if(object)
     for (uint s = 0;s<object->shapes.size(); s++) {
       //double fact = object->shapes[s].getScaleFactor();
-      object->shapes[s].ScaleX(scale);
+      object->shapes[s]->ScaleX(scale);
     }
   else return;
   CalcBoundingBoxAndCenter();
@@ -489,7 +513,7 @@ void Model::ScaleObjectY(Shape *shape, TreeObject *object, double scale)
   else if(object)
     for (uint s = 0;s<object->shapes.size(); s++) {
       //double fact = object->shapes[s].getScaleFactor();
-      object->shapes[s].ScaleY(scale);
+      object->shapes[s]->ScaleY(scale);
     }
   else return;
   CalcBoundingBoxAndCenter();
@@ -502,7 +526,7 @@ void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
   else if(object)
     for (uint s = 0;s<object->shapes.size(); s++) {
       //      double fact = object->shapes[s].getScaleFactorZ();
-      object->shapes[s].ScaleZ(scale);
+      object->shapes[s]->ScaleZ(scale);
     }
   else return;
   CalcBoundingBoxAndCenter();
@@ -565,7 +589,7 @@ void Model::PlaceOnPlatform(Shape *shape, TreeObject *object)
     Transform3D * transf = &object->transform3D;
     transf->move(Vector3f(0, 0, -transf->getTranslation().z()));
     for (uint s = 0;s<object->shapes.size(); s++) {
-      object->shapes[s].PlaceOnPlatform();
+      object->shapes[s]->PlaceOnPlatform();
     }
   }
   else return;
@@ -597,9 +621,9 @@ void Model::CalcBoundingBoxAndCenter()
   for (uint i = 0 ; i < objtree.Objects.size(); i++) {
     Matrix4d M = objtree.GetSTLTransformationMatrix (i);
     for (uint j = 0; j < objtree.Objects[i].shapes.size(); j++) {
-      objtree.Objects[i].shapes[j].CalcBBox();
-      Vector3d stlMin = M * objtree.Objects[i].shapes[j].Min;
-      Vector3d stlMax = M * objtree.Objects[i].shapes[j].Max;
+      objtree.Objects[i].shapes[j]->CalcBBox();
+      Vector3d stlMin = M * objtree.Objects[i].shapes[j]->Min;
+      Vector3d stlMax = M * objtree.Objects[i].shapes[j]->Max;
       for (uint k = 0; k < 3; k++) {
 	newMin[k] = MIN(stlMin[k], newMin[k]);
 	newMax[k] = MAX(stlMax[k], newMax[k]);
@@ -659,7 +683,7 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
     glPushMatrix();
     glMultMatrixd (&object->transform3D.transform.array[0]);
     for (uint j = 0; j < object->shapes.size(); j++) {
-      Shape *shape = &object->shapes[j];
+      Shape *shape = object->shapes[j];
       glLoadName(index); // Load select/pick index
       index++;
       glPushMatrix();
@@ -788,8 +812,7 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
 	  Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
 	  if (previewGCodeLayer) {
 	    vector<Command> commands;
-	    previewGCodeLayer->MakeGcode(start, commands, 0, 
-					 settings.Slicing, settings.Hardware);
+	    previewGCodeLayer->MakeGcode(start, commands, 0, settings);
 	    GCodeState state(m_previewGCode);
 	    m_previewGCode.clear();
 	    state.AppendCommands(commands, settings.Slicing.RelativeEcode);
@@ -807,7 +830,7 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
 
 // if single layer returns layerno of drawn layer 
 // else returns -1
-int Model::drawLayers(double height, Vector3d offset, bool calconly) 
+int Model::drawLayers(double height, const Vector3d &offset, bool calconly) 
 {
   if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
 
@@ -907,9 +930,9 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 	vector<Poly> polys;
 	double max_grad;
 	bool polys_ok=
-	  objtree.Objects[o].shapes[f].getPolygonsAtZ(T, z, 
-						      polys,
-						      max_grad);
+	  objtree.Objects[o].shapes[f]->getPolygonsAtZ(T, z, 
+						       polys,
+						       max_grad);
 	if (polys_ok){
 	  layer->addPolygons(polys);
 	}
@@ -939,7 +962,7 @@ double Model::get_preview_Z()
   return 0;
 }
 
-void Model::setMeasuresPoint(const Vector3d point) 
+void Model::setMeasuresPoint(const Vector3d &point) 
 {
   measuresPoint = Vector2d(point.x(), point.y()) ;
 }

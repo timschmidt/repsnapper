@@ -175,16 +175,9 @@ Vector2d Poly::getCenter()
 
 void Poly::rotate(const Vector2d &rotcenter, double angle) 
 {
-  double sina = sin(angle);
-  double cosa = cos(angle);
   for (uint i = 0; i < vertices.size();  i++) {
-    Vector2d mv = vertices[i]-rotcenter;
-    vertices[i] = Vector2d(mv.x()*cosa-mv.y()*sina+rotcenter.x(), 
-			   mv.y()*cosa+mv.x()*sina+rotcenter.y());
+    vertices[i] = rotated(vertices[i], rotcenter, angle);
   }
-  Vector2d mc = center-rotcenter;
-  center = Vector2d(mc.x()*cosa - mc.y()*sina + rotcenter.x(), 
-		    mc.y()*cosa + mc.x()*sina + rotcenter.y());
 }
 
 void Poly::move(const Vector2d &delta) 
@@ -194,6 +187,32 @@ void Poly::move(const Vector2d &delta)
   }
   center+=delta;
 }
+
+void Poly::transform(const Matrix4d &T) {
+  for (uint i = 0; i < vertices.size();  i++) {
+    const Vector3d v = T * getVertexCircular3(i) ;
+    vertices[i].set(v.x(),v.y()); 
+  }
+  setZ((T * Vector3d(0,0,z)).z());
+  calcHole();
+}
+
+void Poly::transform(const Matrix3d &T) {
+  for (uint i = 0; i < vertices.size();  i++) {
+    vertices[i] = T * vertices[i];
+  }
+  calcHole();
+}
+
+void Poly::mirrorX(const Vector3d &center)
+{
+  uint count = size();
+  for (uint i = 0; i < count; i++)
+    vertices[i].x() = center.x() - vertices[i].x();
+  reverse();
+  calcHole();
+}
+
 
 // nearest connection point indices of this and other poly 
 // if poly is not closed, only test first and last point
@@ -540,20 +559,25 @@ vector<Vector2d> Poly::getMinMax() const{
   return range;
 }
 
-
 int Poly::getTriangulation(vector<Triangle> &triangles)  const 
 {
+  if(vertices.size()<3) return 0;
+  triangles.clear();
   vector<p2t::Point*> points(vertices.size());
-  for (guint i=0; i<vertices.size(); i++)  
-    points[i] = new p2t::Point(vertices[i].x(),vertices[i].y());
+  // add 1000,1000 because poly2tri crashed on some negative values
+  for (guint i=0; i<vertices.size(); i++)  {
+    points[i] = new p2t::Point(vertices[i].x()+1000,vertices[i].y()+1000);
+  }
   p2t::CDT cdt(points);
   cdt.Triangulate();
   vector<p2t::Triangle*> ptriangles = cdt.GetTriangles();
-  //vector<Triangle> triangles(ptriangles.size());
   for (guint i=0; i<ptriangles.size(); i++) {
-    Vector3d A(ptriangles[i]->GetPoint(0)->x, ptriangles[i]->GetPoint(0)->y, z);
-    Vector3d B(ptriangles[i]->GetPoint(1)->x, ptriangles[i]->GetPoint(1)->y, z);
-    Vector3d C(ptriangles[i]->GetPoint(2)->x, ptriangles[i]->GetPoint(2)->y, z);
+    const p2t::Point *tp0 = ptriangles[i]->GetPoint(0);
+    const p2t::Point *tp1 = ptriangles[i]->GetPoint(1);
+    const p2t::Point *tp2 = ptriangles[i]->GetPoint(2);
+    Vector3d A(tp0->x-1000, tp0->y-1000, z);
+    Vector3d B(tp1->x-1000, tp1->y-1000, z);
+    Vector3d C(tp2->x-1000, tp2->y-1000, z);
     triangles.push_back(Triangle(A, B, C));
   }
   return triangles.size();
@@ -569,6 +593,20 @@ Vector3d rotatedZ(Vector3d v, double angle)
 		  v.y()*cosa+v.x()*sina, v.z());
 }
 
+void Poly::draw_as_surface() const
+{
+  vector<Triangle> triangles;
+  getTriangulation(triangles);
+  glBegin(GL_TRIANGLES);
+  for(size_t i=0;i<triangles.size();i++)
+    {
+      glNormal3dv((GLdouble*)&(triangles[i].Normal));
+      glVertex3dv((GLdouble*)&(triangles[i].A));
+      glVertex3dv((GLdouble*)&(triangles[i].B));
+      glVertex3dv((GLdouble*)&(triangles[i].C));
+    }
+  glEnd();
+}
 
 void Poly::draw(int gl_type, double z, bool randomized) const
 {

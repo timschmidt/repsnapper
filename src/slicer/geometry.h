@@ -115,6 +115,7 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
 		  vector<Vector2d> &path, double maxerr);
 
 vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width);
+vector<Poly> thick_lines(const vector<Vector2d> &points,  double width);
 vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to, 
 			    double fr_width, double to_width);
 

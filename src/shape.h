@@ -31,10 +31,11 @@
 //#include "settings.h"
 #include "triangle.h"
 #include "slicer/geometry.h"
+#include "poly.h"
 
 //#define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
-/* A number that speaks for itself, every kissable digit.                    */
+#include <libxml++/libxml++.h>
 
 
 struct Segment {
@@ -53,6 +54,7 @@ enum filetype_t{
     BINARY_STL,
     NONE_STL,
     VRML,
+    SVG,
     UNKNOWN_TYPE
 };
 
@@ -64,7 +66,8 @@ void checkGlutInit();
 
 #define sqr(x) ((x)*(x))
 
-class Shape
+
+class Shape 
 {
 public:
 	Shape();
@@ -76,17 +79,17 @@ public:
 
 	Transform3D transform3D; 
 
-    int load(std::string filename);
+	int load(std::string filename);
 
-	void clear() { triangles.clear(); }
+	virtual void clear();
 	/* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
 	/* 		      guint LayerNr, vector<int>& altInfillLayers); */
 	void draw (const Model *model, const Settings &settings, 
 		   bool highlight=false);
-	void draw_geometry ();
+	virtual void draw_geometry ();
 	void drawBBox() const; 
 	void CenterAroundXY();
-	bool getPolygonsAtZ(const Matrix4d &T, double z, 
+	virtual bool getPolygonsAtZ(const Matrix4d &T, double z, 
 			    vector<Poly> &polys, double &max_grad) const;
 	// returns maximum gradient
 	vector<Segment> getCutlines(const Matrix4d &T, double z, 
@@ -94,31 +97,31 @@ public:
 	// Extract a 2D polygonset from a 3D model:
 	// void CalcLayer(const Matrix4d &T, CuttingPlane *plane) const;
 
-    vector<Vector3d> getMostUsedNormals() const;
+    virtual vector<Vector3d> getMostUsedNormals() const;
 	// Auto-Rotate object to have the largest area surface down for printing:
-	void OptimizeRotation(); 
-	void CalcBBox();
+    virtual void OptimizeRotation(); 
+    virtual void CalcBBox();
 	// Rotation for manual rotate and used by OptimizeRotation:
-	void Rotate(const Vector3d & axis, const double &angle);  
+    virtual void Rotate(const Vector3d & axis, const double &angle);  
 	void Twist(double angle);
 
-    void Scale(double scale_factor);
-    void ScaleX(double scale_factor);
-    void ScaleY(double scale_factor);
-    void ScaleZ(double scale_factor);
+	void Scale(double scale_factor);
+	void ScaleX(double scale_factor);
+	void ScaleY(double scale_factor);
+	virtual void ScaleZ(double scale_factor);
     double getScaleFactor(){ return scale_factor; };
     double getScaleFactorX(){ return scale_factor_x; };
     double getScaleFactorY(){ return scale_factor_y; };
-    double getScaleFactorZ(){ return scale_factor_z; };
+    virtual double getScaleFactorZ(){ return scale_factor_z; };
     void PlaceOnPlatform();
 
-	Vector3d Min, Max, Center;
+    Vector3d Min, Max, Center;
 
 
 	string getSTLsolid() const;
 
 	void invertNormals();
-	void mirror();
+	virtual void mirror();
 
 	double volume() const;
 
@@ -126,20 +129,27 @@ public:
     int loadBinarySTL(std::string filename);
     static filetype_t getFileType(std::string filename);
 
-    bool hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance = 0.05) const;
-    void splitshapes(vector<Shape> &shapes, ViewProgress *progress=NULL);
-    int divideAtZ(double z, Shape &upper, Shape &lower, const Matrix4d &T) const;
+    virtual void splitshapes(vector<Shape*> &shapes, ViewProgress *progress=NULL);
+
+    int divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) const;
 
     int loadASCIIVRML(std::string filename);
 
     bool slow_drawing;
+    virtual string info() const;
+
+protected:
+    double scale_factor,scale_factor_x,scale_factor_y;
 
 private:
-    double scale_factor,scale_factor_x,scale_factor_y,scale_factor_z;
+    double scale_factor_z;
 
     vector<Triangle> triangles;
     //vector<Polygon2d>  polygons;  // surface polygons instead of triangles
     void calcPolygons();
+
+    bool hasAdjacentTriangleTo(const Triangle &triangle, 
+			       double sqdistance = 0.05) const;
 };
 
 
@@ -148,3 +158,79 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 			    bool connect_all=false);
 bool CleanupSharedSegments(vector<Segment> &lines);
 bool CleanupStraightLines(const vector<Vector2d> &vertices, vector<Segment> &lines);
+
+
+// shape to represent a 2-dimensional Object (SVG file etc.)
+class FlatShape : public Shape
+{
+ public:
+  FlatShape();
+  FlatShape(string filename);
+  /* FlatShape(const FlatShape &rhs); */
+  
+  int loadSVG(istream *text);
+
+  bool getPolygonsAtZ(const Matrix4d &T, double z,
+  		      vector<Poly> &polys, double &max_grad) const;
+
+
+  /* int load(std::string filename); */
+
+  void clear();
+
+  /* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
+  /* 		      guint LayerNr, vector<int>& altInfillLayers); */
+  /* void draw (const Model *model, const Settings &settings, */
+  /* 	     bool highlight=false); */
+
+  void draw_geometry ();
+  /* void drawBBox() const;  */
+  /*void CenterAroundXY();*/
+
+  /* vector<Vector3d> getMostUsedNormals() const; */
+
+  // Auto-Rotate object to have the largest area surface down for printing:
+  /* void OptimizeRotation();  */
+  void CalcBBox();
+
+  // Rotation for manual rotate and used by OptimizeRotation:
+  void Rotate(const Vector3d & axis, const double &angle);   
+    
+  /* void Scale(double scale_factor); */
+  /* void ScaleX(double scale_factor); */
+  /* void ScaleY(double scale_factor); */
+  /* void ScaleZ(double scale_factor){}; */
+
+  /* double getScaleFactor(){ return scale_factor; }; */
+  /* double getScaleFactorX(){ return scale_factor_x; }; */
+  /* double getScaleFactorY(){ return scale_factor_y; }; */
+  /* double getScaleFactorZ(){ return 1; };  */
+
+
+    
+  /* void invertNormals(); */
+  void mirror(); 
+
+
+
+  double area() const;
+  
+  int loadSVG(std::string filename);
+  void xml_handle_node(const xmlpp::Node* node);
+  string svg_cur_style;
+  string svg_cur_name;
+  string svg_cur_trans;
+  string svg_cur_path;
+  double svg_prescale;
+  int svg_addPolygon();
+
+
+  static filetype_t getFileType(std::string filename) {return SVG;};
+
+  void splitshapes(vector<Shape*> &shapes, ViewProgress *progress=NULL);
+
+  string info() const;
+
+ private:
+  vector<Poly> polygons;
+};

@@ -46,6 +46,10 @@ dnl 			      [AC_DEFINE([HAVE_OPENVRML], [1], [Use OpenVRML])],
 dnl 			      [AC_DEFINE([NO_VRML], [1], [Without OpenVRML])])],
 dnl )
 
+PKG_CHECK_MODULES(XMLPP, libxml++-2.6 >= 2.10.0)
+# AC_SUBST(XMLPP_CFLAGS)
+# AC_SUBST(XMLPP_LIBS)
+
 AC_OPENMP()
 
 dnl ------------------------------------------------------------------

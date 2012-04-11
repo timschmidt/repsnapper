@@ -161,6 +161,7 @@ static struct {
   FLOAT_MEMBER (Slicing.AntioozeHaltRatio, "AntioozeHaltRatio", 0.2, true),
   FLOAT_MEMBER (Slicing.AntioozeSpeed, "AntioozeSpeed", 1000.0, true),
   FLOAT_MEMBER (Slicing.AntioozeZlift, "AntioozeZlift", 0, true),
+  BOOL_MEMBER  (Slicing.ZliftAlways, "ZliftAlways", false, true),
 
   FLOAT_MEMBER  (Slicing.InfillPercent, "InfillPercent", 30, true),
   FLOAT_MEMBER  (Slicing.InfillRotation, "InfillRotation", 90.0, true),
@@ -322,7 +323,7 @@ static struct {
   { "Slicing.MinFanSpeed", 0, 255, 5, 25 },
   { "Slicing.MaxFanSpeed", 0, 255, 5, 25 },
   //{ "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
-  { "Slicing.ShellOffset", -10, 10, 0.1, 1 },
+  { "Slicing.ShellOffset", -10, 10, 0.01, 0.1 },
   { "Slicing.FirstLayersNum", 0, 1000, 1, 10 },
   { "Slicing.FirstLayersSpeed", 0.01, 3, 0.01, 0.1 },
   { "Slicing.FirstLayersInfillDist", 0.0, 100, 0.01, 0.1 },

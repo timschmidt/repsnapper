@@ -39,9 +39,10 @@ class TreeObject
 {
 public:
   TreeObject(){name = _("Unnamed object");};
+  ~TreeObject(){shapes.clear();};
 	string name;
 	Transform3D transform3D;
-	vector<Shape> shapes;
+	vector<Shape*> shapes;
 	uint size(){return shapes.size();};
 	int idx;
 };
@@ -68,7 +69,7 @@ public:
 	void DeleteSelected(Gtk::TreeModel::iterator &iter);
 	//void draw(Settings &settings, Gtk::TreeModel::iterator &iter);
 	void newObject();
-	Gtk::TreePath addShape(TreeObject *parent, Shape &shape, std::string location);
+	Gtk::TreePath addShape(TreeObject *parent, Shape *shape, std::string location);
 	void get_selected_stl(Gtk::TreeModel::iterator &iter, TreeObject *&object, Shape *&shape);
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
 	Matrix4d GetSTLTransformationMatrix(int object, int shape=-1) const;

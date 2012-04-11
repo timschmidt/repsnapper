@@ -62,6 +62,9 @@ public:
 
 	void clear(){vertices.clear(); holecalculated = false;};
 
+	void transform(const Matrix4d &T);
+	void transform(const Matrix3d &T);
+	void mirrorX(const Vector3d &center);
 
 	//vector< vector<Vector2d> > intersect(Poly &poly1, Poly &poly2) const;
 
@@ -107,7 +110,8 @@ public:
 	void drawVertexNumbers() const; 
 	void drawVertexAngles() const; 
 	void drawLineNumbers() const;
-
+	void draw_as_surface() const;
+  
 	void getLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
 	void getLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
 	void getLines(vector<Vector2d> &lines,uint startindex=0) const;

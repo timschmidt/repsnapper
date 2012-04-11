@@ -65,6 +65,7 @@ typedef vmml::vec4d Vector4d;
 typedef vmml::vec4f Vector4f;
 typedef vmml::mat4d Matrix4d;
 typedef vmml::mat4f Matrix4f;
+typedef vmml::mat3d Matrix3d;
 
 
 //utility macros

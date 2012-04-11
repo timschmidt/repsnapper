@@ -47,9 +47,9 @@ public:
 	/* void SetNormal(const Vector3d &Norml) { Normal=Norml;} */
 	void calcNormal();
 	void invertNormal();
-	void mirrorX(const Vector3d center);
+	void mirrorX(const Vector3d &center);
 	double area() const;
-	void rotate(const Vector3d axis, double angle);
+	void rotate(const Vector3d &axis, double angle);
 
 	AXIS axis;			// Used for auto-rotation
 	Vector3d A,B,C,Normal;	// p1,p2,p3, Normal

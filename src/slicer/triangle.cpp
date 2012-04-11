@@ -47,7 +47,7 @@ void Triangle::invertNormal()
   calcNormal();
 }
 
-void Triangle::mirrorX(Vector3d center)
+void Triangle::mirrorX(const Vector3d &center)
 {
   for (uint i = 0; i < 3; i++) 
     operator[](i).x() = center.x()-operator[](i).x();
@@ -146,7 +146,7 @@ void Triangle::Translate(const Vector3d &vector)
 	C += vector;
 }
 
-void Triangle::rotate(const Vector3d axis, double angle) 
+void Triangle::rotate(const Vector3d &axis, double angle) 
 {
   A = A.rotate(angle, axis);
   B = B.rotate(angle, axis);

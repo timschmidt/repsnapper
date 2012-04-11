@@ -120,6 +120,7 @@ class Settings {
     float AntioozeSpeed;
     float AntioozeHaltRatio;
     float AntioozeZlift;
+    bool ZliftAlways;
 
     float InfillPercent;
     float InfillRotation;

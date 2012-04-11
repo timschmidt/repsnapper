@@ -24,20 +24,20 @@ For historical reasons we leave here the links to the old svn version that devel
 
 == Installation from binaries ==
 
-All these binaries are very much out of date. Everything from before Feb. 2012 has almost nothing to do with the current state of development. Please see below for intalling from source.
-
 === Linux ===
 
 There are currently no Repsnapper binaries pre-built for Linux.  However, installation from source is relatively simple.  If you'd like to package Repsnapper for your Linux distribution, please let us know!
 
 === Windows ===
 
-Old v1 of Repsnapper for Windows http://www.kulitorum.com/RepSnapperBeta.rar (Kulitorums version)
+There are beta versions for Windows, see the "Downloads" on github. The Windows version cannot communicate with a printer and can only calculate on a single CPU.
+
+Historians only: the v1 of Repsnapper for Windows is here: http://www.kulitorum.com/RepSnapperBeta.rar (Kulitorums version).
 This is even older, but should work with tonokip and FiveD: http://svn.kulitorum.com/RepSnapper/MSVC9/Release/RepSnapper.exe[here].
 
 === OS X ===
 
-Old v1:
+Old v1 (historians again):
 David Buzz has posted binaries for OS X https://sites.google.com/site/davidbuzz/repsnapper-for-osx-binaries[here].
 
 == Installation from source ==
@@ -56,6 +56,7 @@ Although RepSnapper is not generally tested outside of windows/linux/mac you may
     * git
     * libgtkmm-2.4-dev
     * libgktglext1-dev
+    * libxml++-2.6
 
 =====
 
@@ -66,17 +67,17 @@ Although RepSnapper is not generally tested outside of windows/linux/mac you may
 
 Ubuntu 11.10:
 --------------------------
-sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev gtk2-engines-pixbuf freeglut3-dev
+sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev gtk2-engines-pixbuf freeglut3-dev libxml++
 --------------------------
 
 Ubuntu 11.04:
 --------------------------
-sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev libglut3-dev 
+sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev libglut3-dev libxml++
 --------------------------
 
 Ubuntu 10.10:
 --------------------------
-sudo apt-get install git-core build-essential automake intltool libtool libgtkmm-2.4-dev libgtkglext1-dev libglut3-dev
+sudo apt-get install git-core build-essential automake intltool libtool libgtkmm-2.4-dev libgtkglext1-dev libglut3-dev libxml++
 --------------------------
 
 Ubuntu 10.04:

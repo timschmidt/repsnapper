@@ -1,6 +1,7 @@
 /*
     This file is a part of the RepSnapper project.
     Copyright (C) 2010 Michael Meeks
+    Copyright (C) 2012 martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -24,59 +25,60 @@
 #include "file.h"
 #include "model.h"
 
+string to_lower(const string &l)
+{
+  string lower;
+  lower.resize(l.size());
+  std::transform(l.begin(), l.end(), lower.begin(), (int(*)(int))std::tolower);
+  return lower;
+}
+
 namespace {
-  static GSList *openGtk(const char *directory, const char *filter_str,
-                                  FileChooser::Op op, const char *title, gboolean multiple) {
-    GSList *result = NULL;
-    GtkFileChooserAction action;
+
+  const vector< Glib::RefPtr< Gio::File > > 
+  openGtk(const string &directory, const vector<string> &file_filters,
+	   FileChooser::Op op, const string &title, gboolean multiple) {
+    // GSList *result = NULL;
+    Gtk::FileChooserAction action;
     const char *button_text;
 
     switch (op) {
     case FileChooser::SAVE:
       button_text = GTK_STOCK_SAVE;
-      action = GTK_FILE_CHOOSER_ACTION_SAVE;
+      action = Gtk::FILE_CHOOSER_ACTION_SAVE;
       break;
     case FileChooser::OPEN:
     default:
-      action = GTK_FILE_CHOOSER_ACTION_OPEN;
+      action = Gtk::FILE_CHOOSER_ACTION_OPEN;
       button_text = GTK_STOCK_OPEN;
       break;
     }
 
-    GtkWidget *dialog = gtk_file_chooser_dialog_new
-      (title, NULL /* FIXME transience */, action,
-       GTK_STOCK_CANCEL,
-       GTK_RESPONSE_CANCEL,
-       button_text,
-       GTK_RESPONSE_ACCEPT,
-       NULL);
-    GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
-    if (directory)
-      gtk_file_chooser_set_current_folder (chooser, directory);
+    Gtk::FileChooserDialog dialog(title, action);
+    dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+    dialog.add_button(Gtk::Stock::OK, Gtk::RESPONSE_ACCEPT);
 
-    gtk_file_chooser_set_select_multiple (chooser, multiple);
+    if (directory!="")
+      dialog.set_current_folder (directory);
+    
+    dialog.set_select_multiple (multiple);
 
     // essentially case-insensitive file filter
-    GtkFileFilter *filter = gtk_file_filter_new ();
-    string filter_work_string = filter_str;
-    gtk_file_filter_add_pattern (filter, filter_work_string.c_str());
-    transform(filter_work_string.begin(), filter_work_string.end(),filter_work_string.begin(),::toupper);
-    gtk_file_filter_add_pattern (filter, filter_work_string.c_str());
-    transform(filter_work_string.begin(), filter_work_string.end(),filter_work_string.begin(),::tolower);
-    gtk_file_filter_add_pattern (filter, filter_work_string.c_str());
-    gtk_file_filter_set_name (filter,filter_work_string.c_str());
-    gtk_file_chooser_add_filter (chooser, filter);
+    Gtk::FileFilter filter;
+    for (uint i=0; i<file_filters.size(); i++) {
+      filter.add_pattern(to_lower(file_filters[i]));
+    }
+    dialog.add_filter (filter);
 
     // an option to open improperly named files
-    GtkFileFilter *allfiles = gtk_file_filter_new();
-    gtk_file_filter_add_pattern (allfiles, "*");
-    gtk_file_filter_set_name (allfiles, _("All Files"));
-    gtk_file_chooser_add_filter (chooser, allfiles);
+    Gtk::FileFilter allfiles;
+    allfiles.add_pattern("*");
+    allfiles.set_name(_("All Files"));
+    dialog.add_filter (allfiles);
 
-    if (gtk_dialog_run (GTK_DIALOG (chooser)) == GTK_RESPONSE_ACCEPT) {
-      result = gtk_file_chooser_get_files(chooser);
-    }
-    gtk_widget_destroy (dialog);
+    dialog.run();
+    
+    std::vector< Glib::RefPtr < Gio::File > > result = dialog.get_files();
 
     return result;
   }
@@ -86,54 +88,60 @@ namespace {
 // FIXME: impl. multi-selection cleanly
 void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
 {
-  GSList *files;
-  GSList *cur;
-  const char *filter;
-  const char *directory;
-  const char *title;
+  vector<Glib::RefPtr<Gio::File> > files;
+  vector<string> filter(1);
+  string directory;
+  string title;
+
   gboolean multiple = FALSE;
+
+  const string dfilt[] = { "*.stl", "*.gcode", "*.wrl", "*.svg" };
+  vector<string> defaultfilter(dfilt, dfilt+(sizeof(dfilt)/sizeof(string)));
 
   switch (t) {
   case SETTINGS:
-    filter = "*.conf";
+    filter[0] = "*.conf" ;
     title = _("Choose settings filename");
-    directory = model->settings.STLPath.c_str();
+    directory = model->settings.STLPath;
     break;
   case GCODE:
-    filter = "*.gcode";
+    filter[0] = "*.gcode" ;
+    directory = model->settings.GCodePath;
     title = _("Choose GCODE filename");
-    directory = model->settings.GCodePath.c_str();
     multiple = (o == FileChooser::OPEN);
     break;
   case SVG:
-    filter = "*.svg";    
+    filter[0] = "*.svg" ;
     title = _("Choose SVG filename");
-    directory = model->settings.GCodePath.c_str();
+    directory = model->settings.STLPath;
     break;
   case STL:
+    filter = defaultfilter; //"*.stl";
+    title = _("Choose filename");
+    multiple = (o == FileChooser::OPEN);
+    break;
   default:
-    filter = "*.stl";
-    title = _("Choose STL filename");
-    directory = model->settings.STLPath.c_str();
+    filter = defaultfilter;
+    title = _("Choose filename");
+    directory = model->settings.STLPath;
     multiple = (o == FileChooser::OPEN);
     break;
   }
 
-  if (!directory || directory[0] == '\0')
+  if (directory == "")
     directory = ".";
 
   files = openGtk (directory, filter, o, title, multiple);
-  if(!files) // TODO: Indicate error on errors. Nothing on cancellation
-    return;
 
-  for (cur = files; cur != NULL; cur = g_slist_next(cur)) {
-    Glib::RefPtr<Gio::File> file = Glib::wrap((GFile *)(cur->data)); // Takes ownership
+  for (uint i= 0; i < files.size(); i++) {
 
+    Glib::RefPtr<Gio::File> &file = files[i];
+    
     if (!file) 
       continue; // should never happen
 
-   std::string directory_path = file->get_parent()->get_path();
-
+    std::string directory_path = file->get_parent()->get_path();
+    
     switch (t) {
     case GCODE:
       if (o == OPEN)
@@ -149,18 +157,20 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
         model->SaveConfig (file);
       break;
     case SVG:
-      if (o == SAVE)
+      if (o == OPEN)
+	model->ReadSVG (file);
+      else
 	model->SliceToSVG (file);
       break;
-    default:
     case STL:
+    default:
       if (o == OPEN)
-        model->ReadStl (file);
+        model->Read(file);
       else if (o == SAVE)
         model->SaveStl (file);
       model->settings.STLPath = directory_path;
       break;
     }
   }
-  g_slist_free(files);
+
 }

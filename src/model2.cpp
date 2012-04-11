@@ -285,7 +285,7 @@ void Model::Slice()
     Matrix4d T = 
       settings.getBasicTransformation(objtree.GetSTLTransformationMatrix(o));
     for (uint s = 0; s < objtree.Objects[o].shapes.size(); s++)  {
-      shapes.push_back(&objtree.Objects[o].shapes[s]);
+      shapes.push_back(objtree.Objects[o].shapes[s]);
       transforms.push_back(T);
     }
   }
@@ -790,7 +790,7 @@ void Model::ConvertToGCode()
       layers[p]->MakeGcode (start,
 			    commands,
 			    printOffsetZ,
-			    settings.Slicing, settings.Hardware);
+			    settings);
     } catch (Glib::Error e) {
       error("GCode Error:", (e.what()).c_str());
     }

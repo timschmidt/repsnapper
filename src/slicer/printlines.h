@@ -115,30 +115,27 @@ class Printlines
 	       double speed=1, double movespeed=1, double feedrate=1.0) const;
 
  public:
-  Printlines(double z_offset=0);
+  Printlines(const Settings *settings, double z_offset=0);
   ~Printlines(){};
-  
+
+  const Settings *settings;
+
   void setName(string s){name=s;};
 
   Vector2d lastPoint() const;
 
   void makeLines(const vector<Poly> &polys, 
 		 bool displace_startpoint, 
-		 const Settings::SlicingSettings &slicing,
-		 const Settings::HardwareSettings &hardware,
 		 Vector2d &startPoint,
 		 vector<PLine> &lines, 
 		 double maxspeed = 0);
     
-  void optimize(const Settings::HardwareSettings &hardware,
-		const Settings::SlicingSettings &slicing,
-		double linewidth,
+  void optimize(double linewidth,
 		double slowdowntime,
 		double cornerradius,
 		vector<PLine> &lines);
 
-  uint makeArcs(const Settings::SlicingSettings &slicing,
-		double linewidth, 
+  uint makeArcs(double linewidth, 
 		vector<PLine> &lines) const;
   uint makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) const;
   uint makeIntoArc(const Vector2d &center, guint fromind, guint toind,
@@ -152,8 +149,7 @@ class Printlines
 		     uint &movestart, uint &moveend, 
 		     uint &tractstart, uint &pushend,
 		     const vector<PLine> &lines) const;
-  uint makeAntioozeRetract(const Settings::SlicingSettings &slicing,
-			   vector<PLine> &lines) const;
+  uint makeAntioozeRetract(vector<PLine> &lines) const;
 
   // slow down to total time needed (cooling)
   double slowdownTo(double totalseconds, vector<PLine> &lines) ; // returns slowdownfactor

@@ -60,10 +60,10 @@ public:
 	void ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype=UNKNOWN_TYPE);
 	void SaveStl(Glib::RefPtr<Gio::File> file);
 
-	int AddShape(TreeObject *parent, Shape shape, string filename,
+	int AddShape(TreeObject *parent, Shape * shape, string filename,
 		     bool autoplace = true);
-	int SplitShape(TreeObject *parent, Shape shape, string filename);
-	int DivideShape(TreeObject *parent, Shape shape, string filename);
+	int SplitShape(TreeObject *parent, Shape *shape, string filename);
+	int DivideShape(TreeObject *parent, Shape *shape, string filename);
 
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 
@@ -142,7 +142,7 @@ public:
 
 	void CalcBoundingBoxAndCenter();
 	Vector3d GetViewCenter();
-        bool FindEmptyLocation(Vector3d &result, Shape *stl);
+        bool FindEmptyLocation(Vector3d &result, const Shape *stl);
 
 	sigc::signal< void > m_model_changed;
 	void ModelChanged();
@@ -152,8 +152,8 @@ public:
 	Glib::RefPtr<Gtk::TextBuffer> errlog, echolog;
 
 	int draw(Gtk::TreeModel::iterator &selected);
-	int drawLayers(double height, Vector3d offset, bool calconly = false);
-	void setMeasuresPoint(const Vector3d point);
+	int drawLayers(double height, const Vector3d &offset, bool calconly = false);
+	void setMeasuresPoint(const Vector3d &point);
 	Vector2d measuresPoint;
 
 	Layer * calcSingleLayer(double z, uint LayerNr, double thickness, 
@@ -170,6 +170,7 @@ public:
 	void SetIsPrinting(bool printing) { is_printing = printing; };
 
 	string getSVG() const;
+	void ReadSVG(Glib::RefPtr<Gio::File> file);
 	
  private:
 	bool is_calculating;
