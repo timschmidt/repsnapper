@@ -635,13 +635,16 @@ void Model::MakeSkirt()
       if (layers[i]->getZ() > settings.Slicing.SkirtHeight)
 	break;
       Poly sp = layers[i]->GetSkirtPolygon();
-      clipp.addPoly(sp,subject);
-      endindex = i;
+      if (sp.size()>0) {
+	clipp.addPoly(sp,subject);
+	endindex = i;
+      }
     }
   vector<Poly> skirts = clipp.unite();
   // set this skirt for all skirted layers 
-  for (guint i=0; i<=endindex; i++) {
-    layers[i]->setSkirtPolygon(skirts[0]);
+  if (skirts.size()>0)
+    for (guint i=0; i<=endindex; i++) {
+      layers[i]->setSkirtPolygon(skirts.front());
   }
 }
 
