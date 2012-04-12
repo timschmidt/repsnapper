@@ -1,4 +1,4 @@
-= Repsnapper Users Manual =
+== Repsnapper Users Manual ==
 
 Welcome to the RepSnapper Manual, although currently a work in progress this guide aims to help you install and use your RepSnapper software.
 
@@ -151,6 +151,7 @@ cd repsnapper
 ./autogen.sh
 make -j3
 --------------------------
+
 Executable (repsnapper) will be left in the top folder. Install with "sudo make install-strip"
 
 === Windows ===
@@ -160,20 +161,24 @@ Currently black magic. Nightly builds coming...
 
 Install http://developer.apple.com/technologies/xcode.html[XCode].
 
-Install http://www.macports.org/[MacPorts]
+Install http://www.macports.org/[MacPorts].
+
 
 Run from a terminal window:
+
 --------------------------
 sudo port install intltool boost gtkmm gtkglext
 --------------------------
 
 Acquire source and compile:
+
 --------------------------
 git clone git://github.com/timschmidt/repsnapper.git
 cd repsnapper
 ./autogen.sh
 make -j3
 --------------------------
+
 Executable (repsnapper) will be left in the top folder. Currently there is no install rule.
 
 
@@ -273,7 +278,7 @@ Optimization::
     Polygon curves are straightened up to the given offset (to get faster prints)
 
 
-==== Raft Settings Window ====
+=== Raft Settings Window ===
 
 Larger than objects::
     Number of millimeters by which the raft should be larger than the base of the printed object.
@@ -296,7 +301,7 @@ Thickness Ratio::
 Temperature ratio::
     The normal printing temperature is multiplied by this ratio to determine the temperature used while printing the raft.
 
-==== Printer Settings Window ====
+=== Printer Settings Window ===
 
 Build volume::
     Maximum build envelope of the printer.
@@ -529,6 +534,7 @@ Test::
     Sends the current GCode to the printer.
 
 == Use ==
+
 === Launching ===
 
 To run repsnapper on
@@ -553,10 +559,11 @@ To load an STL into the 3D view
 The 3D view should now display your STL. Use this button to pull in a facet file to process into Gcode.
 
 [TIP]
-If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using ./ivcon file.stl file.stlb and loading the binary version into repsnapper instead. you can get ivcon here. Compile using gcc -lm ivcon.c -o ivcon
+If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using meshlab or similar. 
 
-Viewing the STL
-Viewing STL in repsnapper
+=== Viewing the STL ===
+
+==== Viewing STL in repsnapper ====
 
 Once an STL is loaded you can rotate, translate and/or scale the view in the 3D viewer so as to see what the object looks like, doing so will not effect the print its mearly for viewing purposes.
 
@@ -577,23 +584,21 @@ Once an STL is loaded, you can move it to further onto the build platform, rotat
     * Duplicate adds another copy of the STL beside the first.
 
 
-Convert to GCode
+=== Convert to GCode ===
 Repsnapper displaying GCode
 
-Converting to GCode is a simple process,
+Converting to GCode is a simple process:
 
-    * click the GCode tab and
-    * press the Convert to GCode button.
+    * Press the Convert to GCode button.
 
 You can generate quite useful and very printable GCode using the default settings of RepSnapper. There are however also a host of user changeable settings that will alter/adjust the generation of GCode, see RepSnapper Manual: Setting GCode options for details.
 
 
-Print
+=== Print ===
 
 To send the GCode to a FiveD GCode compatible printer:
 
-    * open the Print tab, and
-    * click the Connect to printer button. (you set com-port and speed in "Simple tab")
+    * click the Connect to printer button. (you set com-port and speed in "Settings")
     * Check the Communication Log tab to make sure the printer has connected and is receiving temperature signals from the Extruder Controller.
 
 
@@ -633,7 +638,7 @@ Gcode
     * Start tab
     * Cleared the text out of the other tabs, knowing that the steppers are skipping steps is a good thing at the beginning.
 
-Appendix A.
+== Appendix A. ==
 
 Everything happens from the Print tab when you want to manually control your bot.
 

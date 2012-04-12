@@ -1,8 +1,8 @@
 RepSnapper is an alternative host software for controlling the RepRap (http://reprap.org) open source 3D printer.
 
-= Compilation =
+== Compilation ==
 
-   To build and run repsnapper do:
+To build and run repsnapper do:
 
    ./autogen.sh
    make
@@ -10,14 +10,14 @@ RepSnapper is an alternative host software for controlling the RepRap (http://re
 
 For more details on prerequisites see manual.asciidoc in the doc subdirectory.
 
-= Documentation =
+== Documentation ==
 
 For latest documentation, see:
 * https://github.com/timschmidt/repsnapper/blob/master/doc/manual.asciidoc RepSnapper v2 Manual
 For version 1.1.x, see:
 * https://github.com/timschmidt/repsnapper/blob/repsnapper-1.1.x/doc/manual.asciidoc RepSnapper v1 Manual
 
-= Contact Info =
+== Contact Info ==
 
     * Irc channel: #repsnapper at irc://chat.freenode.net
 
