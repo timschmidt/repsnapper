@@ -12,7 +12,7 @@
 
 moduleset = os.environ['PWD']+'/gtk+-win32.moduleset'
 
-modules = ['gtkmm', 'libglade', 'gtkglext' ]
+modules = ['gtkmm', 'libglade', 'gtkglext', 'libxml++' ]
 
 flavour = os.environ['BUILD_FLAVOUR']
 

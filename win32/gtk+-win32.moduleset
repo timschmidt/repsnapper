@@ -99,7 +99,7 @@
 <tarball id="libxml2" version="2.7.8">
 	<source href="ftp://xmlsoft.org/libxml2/libxml2-2.7.8.tar.gz" md5sum="8127a65e8c3b08856093099b52599c86"/>
         <patches>
-          <patch file="libxml-mingw-dllexports.patch"/>
+          <!-- <patch file="libxml-mingw-dllexports.patch"/> -->
         </patches>
 	<dependencies>
 		<dep package="iconv"/>
@@ -161,6 +161,18 @@
         </branch>
         <dependencies>
                 <dep package="gtk+" />
+        </dependencies>
+</autotools>
+
+<repository type="tarball" name="ftpgnome"
+    href="http://ftp.gnome.org/pub/GNOME/sources/" />
+
+<autotools id="libxml++">
+        <branch module="libxml++/2.35/libxml++-2.35.2.tar.xz" version="2.35.2" repo="ftpgnome" 
+           hash="sha256:12da8044979f66134be3802a2227b089c62e197a66d5002a1f9e3f343acd272e">
+        </branch>
+        <dependencies>
+                <dep package="libxml2" />
         </dependencies>
 </autotools>
 
