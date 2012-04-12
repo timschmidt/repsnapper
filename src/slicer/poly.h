@@ -95,7 +95,9 @@ public:
 
 	vector<Vector2d> vertices; // vertices
 	void addVertex(const Vector2d &v, bool front=false);
+	void addVertexUnique(const Vector2d &v, bool front=false);
 	void addVertex(double x, double y, bool front=false);
+	void addVertexUnique(double x, double y, bool front=false);
 	bool hole; // this polygon is a hole
 	Vector2d center;
 	Vector2d getCenter();

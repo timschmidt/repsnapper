@@ -32,6 +32,13 @@ string to_lower(const string &l)
   std::transform(l.begin(), l.end(), lower.begin(), (int(*)(int))std::tolower);
   return lower;
 }
+string to_upper(const string &l)
+{
+  string lower;
+  lower.resize(l.size());
+  std::transform(l.begin(), l.end(), lower.begin(), (int(*)(int))std::toupper);
+  return lower;
+}
 
 namespace {
 
@@ -65,8 +72,10 @@ namespace {
 
     // essentially case-insensitive file filter
     Gtk::FileFilter filter;
+    filter.set_name(_("Readable Files"));
     for (uint i=0; i<file_filters.size(); i++) {
       filter.add_pattern(to_lower(file_filters[i]));
+      filter.add_pattern(to_upper(file_filters[i]));
     }
     dialog.add_filter (filter);
 

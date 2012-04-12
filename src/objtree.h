@@ -66,14 +66,17 @@ public:
 	~ObjectsTree();
 
 	void clear();
-	void DeleteSelected(Gtk::TreeModel::iterator &iter);
+	void DeleteSelected(vector<Gtk::TreeModel::Path> &iter);
 	//void draw(Settings &settings, Gtk::TreeModel::iterator &iter);
 	void newObject();
 	Gtk::TreePath addShape(TreeObject *parent, Shape *shape, std::string location);
-	void get_selected_stl(Gtk::TreeModel::iterator &iter, TreeObject *&object, Shape *&shape);
+	void get_selected_objects(vector<Gtk::TreeModel::Path> &iter, 
+				  vector<TreeObject*> &object, vector<Shape*> &shape);
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
-	Matrix4d GetSTLTransformationMatrix(int object, int shape=-1) const;
-
+				  
+	Matrix4d getTransformationMatrix(int object, int shape=-1) const;
+	
+	TreeObject * getParent(const Shape *shape);
 	vector<TreeObject> Objects;
 	Transform3D transform3D;
 	float version;

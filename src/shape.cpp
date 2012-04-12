@@ -30,11 +30,7 @@ Shape::Shape()
 {
   Min.set(0,0,0);
   Max.set(200,200,200);
-	scale_factor_x = 1;
-	scale_factor_y = 1;
-	scale_factor_z = 1;
-	scale_factor = 1;
-	CalcBBox();
+  CalcBBox();
 }
 
 
@@ -146,8 +142,6 @@ int Shape::loadBinarySTL(string filename)
     // cerr << "Read " << i << " triangles of " << num_triangles << " from file" << endl;
 
     CenterAroundXY();
-    scale_factor = 1.0;
-    scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     double vol = volume();
     if (vol < 0) {
       invertNormals();
@@ -237,8 +231,6 @@ int Shape::loadASCIIVRML(std::string filename)
     }
 
     CenterAroundXY();
-    scale_factor = 1.0;
-    scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     return 0;
 }
 
@@ -360,8 +352,6 @@ int Shape::parseASCIISTL(istream *text) {
         triangles.push_back(triangle);
     }
     CenterAroundXY();
-    scale_factor = 1.0;
-    scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     cout << _("Shape has volume ") << volume() << " mm^3"<<endl;
     return 0;
 }
@@ -427,8 +417,6 @@ int Shape::load(string filename)
 
     CenterAroundXY();
 
-    scale_factor = 1.0;
-    scale_factor_x=scale_factor_y=scale_factor_z = 1.0;
     return 0;
 }
 
@@ -520,28 +508,24 @@ string Shape::getSTLsolid() const
 void Shape::Scale(double in_scale_factor)
 {
   transform3D.scale(in_scale_factor);
-  scale_factor = in_scale_factor;
   CalcBBox();
 }
 
 void Shape::ScaleX(double x)
 {
   transform3D.scale_x(x);
-  scale_factor_x = x;
   CalcBBox();
   return;
 }
 void Shape::ScaleY(double x)
 {
   transform3D.scale_y(x);
-  scale_factor_y = x;
   CalcBBox();
   return;
 }
 void Shape::ScaleZ(double x)
 {
   transform3D.scale_z(x);
-  scale_factor_z = x;
   CalcBBox();
   PlaceOnPlatform();
   return;
@@ -1552,9 +1536,6 @@ FlatShape::FlatShape()
   slow_drawing = false;
   Min.set(0,0,0);
   Max.set(200,200,0);
-  scale_factor_x = 1;
-  scale_factor_y = 1;
-  scale_factor = 1;
   CalcBBox();
 }
 
@@ -1730,6 +1711,12 @@ void FlatShape::CalcBBox()
   Center = (Max + Min )/2;
 }
 
+
+void FlatShape::invertNormals()
+{
+  for (uint i = 0; i < polygons.size(); i++)
+    polygons[i].reverse();
+}
 
 void FlatShape::mirror()
 {

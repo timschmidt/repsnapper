@@ -379,32 +379,46 @@ void View::about_dialog()
 static const char *axis_names[] = { "X", "Y", "Z" };
 
 class View::TranslationSpinRow {
+
+  // apply values to objects
   void spin_value_changed (int axis)
   {
-    Shape *shape;
-    TreeObject *object;
+    vector<Shape*> shapes;
+    vector<TreeObject*> objects;
 
     if (m_inhibit_update)
       return;
-    if (!m_view->get_selected_stl(object, shape))
-      return;
-    if (!object && !shape)
+    if (!m_view->get_selected_objects(objects, shapes))
       return;
 
+    if (shapes.size()==0 && objects.size()==0)
+      return;
+  
     double val = m_xyz[axis]->get_value();
     Matrix4d *mat;
-    if (!shape)
-        mat = &object->transform3D.transform;
+    if (shapes.size()!=0)
+      for (uint s=0; s<shapes.size(); s++) {
+	mat = &shapes[s]->transform3D.transform;
+	double scale = (*mat)[3][3];
+	Vector3d trans;
+	mat->get_translation(trans);
+	trans[axis] = val*scale;
+	mat->set_translation (trans);
+      } 
     else
-        mat = &shape->transform3D.transform;
-    double scale = (*mat)[3][3];
-    Vector3d trans;
-    mat->get_translation(trans);
-    trans[axis] = val*scale;
-    mat->set_translation (trans);
+      for (uint o=0; o<objects.size(); o++) {
+	mat = &objects[o]->transform3D.transform;
+	double scale = (*mat)[3][3];
+	Vector3d trans;
+	mat->get_translation(trans);
+	trans[axis] = val*scale;
+	mat->set_translation (trans);
+      } 
+
     m_view->get_model()->CalcBoundingBoxAndCenter();
     m_view->get_model()->ModelChanged();
   }
+
 public:
   bool m_inhibit_update;
   View *m_view;
@@ -414,23 +428,27 @@ public:
   // Changed STL Selection - must update translation values
   void selection_changed ()
   {
-    Shape *shape;
-    TreeObject *object;
-    if (!m_view->get_selected_stl(object, shape) || (!object && !shape))
+    vector<Shape*> shapes;
+    vector<TreeObject*> objects;
+
+    if (!m_view->get_selected_objects(objects, shapes))
+      return;
+
+    if (shapes.size()==0 && objects.size()==0)
       return;
 
     m_inhibit_update = true;
     for (uint i = 0; i < 3; i++) {
       Matrix4d *mat;
-      if (!object) {
+      if (objects.size()==0) {
 	for (uint i = 0; i < 3; i++)
 	  m_xyz[i]->set_value(0.0);
 	break;
       }
-      else if (!shape)
-	mat = &object->transform3D.transform;
+      else if (shapes.size()==0)
+	mat = &objects.back()->transform3D.transform;
       else
-	mat = &shape->transform3D.transform;
+	mat = &shapes.back()->transform3D.transform;
       Vector3d trans;
       mat->get_translation(trans);
       double scale = (*mat)[3][3];
@@ -441,7 +459,7 @@ public:
     m_inhibit_update = false;
   }
 
-  TranslationSpinRow(View *view, Gtk::TreeView *rfo_tree) :
+  TranslationSpinRow(View *view, Gtk::TreeView *treeview) :
     m_inhibit_update(false), m_view(view)
   {
     // view->m_builder->get_widget (box_name, m_box);
@@ -469,7 +487,7 @@ public:
     selection_changed();
     // m_box->show_all();
 
-    rfo_tree->get_selection()->signal_changed().connect
+    treeview->get_selection()->signal_changed().connect
       (sigc::mem_fun(*this, &TranslationSpinRow::selection_changed));
   }
 
@@ -672,60 +690,73 @@ void View::alert (Gtk::MessageType t, const char *message,
 
 void View::rotate_selection (Vector4d rotate)
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
-
-  m_model->RotateObject (shape, object, rotate);
-
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  for (uint i=0; i<shapes.size() ; i++)
+    m_model->RotateObject (shapes[i], NULL, rotate);
   queue_draw();
 }
 
 void View::twist_selection (double angle)
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
-  m_model->TwistObject (shape, object, angle);
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  for (uint i=0; i<shapes.size() ; i++)
+    m_model->TwistObject (shapes[i], NULL, angle);
   queue_draw();
 }
 
 void View::invertnormals_selection ()
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
-
-  m_model->InvertNormals(shape, object);
-
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++)
+      m_model->InvertNormals(shapes[i], NULL);
+  else
+    for (uint i=0; i<objects.size() ; i++)
+      m_model->InvertNormals(NULL, objects[i]);
   queue_draw();
 }
 
 void View::placeonplatform_selection ()
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
-  m_model->PlaceOnPlatform(shape, object);
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++)
+      m_model->PlaceOnPlatform(shapes[i], NULL);
+  else
+    for (uint i=0; i<objects.size() ; i++)
+      m_model->PlaceOnPlatform(NULL, objects[i]);
+
   queue_draw();
 }
 
 void View::mirror_selection ()
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
-
-  m_model->Mirror(shape, object);
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++)
+      m_model->Mirror(shapes[i], NULL);
+  else
+    for (uint i=0; i<objects.size() ; i++)
+      m_model->Mirror(NULL, objects[i]);
 
   queue_draw();
 }
 
 void View::stl_added (Gtk::TreePath &path)
 {
-  m_objtree->expand_all();
-  m_objtree->get_selection()->unselect_all();
-  m_objtree->get_selection()->select (path);
+  m_treeview->expand_all();
+  m_treeview->get_selection()->unselect_all();
+  m_treeview->get_selection()->select (path);
 }
 
 void View::model_changed ()
@@ -736,11 +767,15 @@ void View::model_changed ()
 
 void View::auto_rotate()
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
-
-  m_model->OptimizeRotation(shape, object);
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++)
+      m_model->OptimizeRotation(shapes[i], NULL);
+  else
+    for (uint i=0; i<objects.size() ; i++)
+      m_model->OptimizeRotation(NULL, objects[i]);
 }
 
 void View::kick_clicked()
@@ -808,31 +843,34 @@ void View::temp_changed()
 
 bool View::moveSelected(float x, float y, float z)
 {
-  Shape *shape;
-  TreeObject *object;
-  if (!get_selected_stl(object, shape) || (!object && !shape)){
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0) 
+    for (uint s=0; s<shapes.size(); s++) {
+      shapes[s]->transform3D.move(Vector3d(x,y,z));
+    }
+  else if (objects.size()>0)
+    for (uint o=0; o<objects.size(); o++) {
+      objects[o]->transform3D.move(Vector3d(x,y,z));
+    }
+  else {
     m_model->translateGCode(Vector3d(10*x,10*y,z));
     return true;
   }
-  Transform3D *transf;
-  if (!shape)
-    transf = &object->transform3D;
-  else
-    transf = &shape->transform3D;
-  transf->move(Vector3d(x,y,z));
   return true;
 }
 
 bool View::key_pressed_event(GdkEventKey *event)
 {
   //  cerr << "key " << event->keyval << endl;
-  if (m_objtree->get_selection()->count_selected_rows() <= 0)
+  if (m_treeview->get_selection()->count_selected_rows() <= 0)
     return false;
   switch (event->keyval)
     {
     case GDK_Tab:
       {
-      Glib::RefPtr<Gtk::TreeSelection> selection = m_objtree->get_selection();
+      Glib::RefPtr<Gtk::TreeSelection> selection = m_treeview->get_selection();
       Glib::RefPtr<Gtk::TreeStore> model = m_model->objtree.m_model;
       Gtk::TreeModel::iterator sel = selection->get_selected();
       if (event->state & GDK_SHIFT_MASK)
@@ -849,13 +887,13 @@ bool View::key_pressed_event(GdkEventKey *event)
       }
     case GDK_Escape:
       {
-	bool has_selected = m_objtree->get_selection()->get_selected();
-	m_objtree->get_selection()->unselect_all();
+	bool has_selected = m_treeview->get_selection()->get_selected();
+	m_treeview->get_selection()->unselect_all();
 	return has_selected;
       }
     case GDK_Delete:
     case GDK_KP_Delete:
-      delete_selected_stl();
+      delete_selected_objects();
       return true;
     case GDK_Up: case GDK_KP_Up:
       return moveSelected( 0.0,  1.0 );
@@ -902,10 +940,10 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_load_stl",      sigc::mem_fun(*this, &View::load_stl) );
   connect_button ("m_save_stl",      sigc::mem_fun(*this, &View::save_stl) );
   connect_button ("m_slice_svg",     sigc::mem_fun(*this, &View::slice_svg) );
-  connect_button ("m_delete",        sigc::mem_fun(*this, &View::delete_selected_stl) );
-  connect_button ("m_duplicate",     sigc::mem_fun(*this, &View::duplicate_selected_stl) );
-  connect_button ("m_split",         sigc::mem_fun(*this, &View::split_selected_stl) );
-  connect_button ("m_divide",        sigc::mem_fun(*this, &View::divide_selected_stl) );
+  connect_button ("m_delete",        sigc::mem_fun(*this, &View::delete_selected_objects) );
+  connect_button ("m_duplicate",     sigc::mem_fun(*this, &View::duplicate_selected_objects) );
+  connect_button ("m_split",         sigc::mem_fun(*this, &View::split_selected_objects) );
+  connect_button ("m_divide",        sigc::mem_fun(*this, &View::divide_selected_objects) );
   connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &View::auto_rotate) );
   connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(1,0,0, M_PI/6)));
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/6)));
@@ -919,19 +957,20 @@ View::View(BaseObjectType* cobject,
   connect_button ("progress_stop",   sigc::mem_fun(*this, &View::stop_progress));
 
 
-  m_builder->get_widget ("m_objtree", m_objtree);
+  m_builder->get_widget ("m_treeview", m_treeview);
 
   // Insert our keybindings all around the place
   signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
-  m_objtree->signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
-
-  m_translation_row = new TranslationSpinRow (this, m_objtree);
+  m_treeview->signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
+  // m_treeview->set_reorderable(true); // this is too simple
+  m_treeview->get_selection()->set_mode(Gtk::SELECTION_MULTIPLE);
+  m_translation_row = new TranslationSpinRow (this, m_treeview);
 
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("m_scale_value", scale_value);
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
-  m_objtree->get_selection()->signal_changed().connect
+  m_treeview->get_selection()->signal_changed().connect
       (sigc::mem_fun(*this, &View::update_scale_value));
   scale_value->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object));
@@ -1007,7 +1046,7 @@ View::View(BaseObjectType* cobject,
   if (!pBox)
     std::cerr << "missing box!";
   else {
-    m_renderer = manage(new Render (this, m_objtree->get_selection()));
+    m_renderer = manage(new Render (this, m_treeview->get_selection()));
     pBox->add (*m_renderer);
   }
 
@@ -1122,8 +1161,8 @@ void View::setModel(Model *model)
     (sigc::mem_fun(*this, &View::update_settings_gui));
   m_model->settings.connect_to_ui (*((Builder *)&m_builder));
 
-  m_objtree->set_model (m_model->objtree.m_model);
-  m_objtree->append_column("Name", m_model->objtree.m_cols->m_name);
+  m_treeview->set_model (m_model->objtree.m_model);
+  m_treeview->append_column("Name", m_model->objtree.m_cols->m_name);
 
   Gtk::TextView *gcodev = NULL;
   m_builder->get_widget ("txt_gcode_result", gcodev);
@@ -1200,64 +1239,73 @@ void View::setModel(Model *model)
   showAllWidgets();
 }
 
-void View::delete_selected_stl()
+void View::delete_selected_objects()
 {
-  if (m_objtree->get_selection()->count_selected_rows() <= 0)
-    return;
+  vector<Gtk::TreeModel::Path> path = m_treeview->get_selection()->get_selected_rows();
 
-  Gtk::TreeModel::iterator iter = m_objtree->get_selection()->get_selected();
-  m_model->DeleteObjTree(iter);
-  m_objtree->expand_all();
+  m_model->DeleteObjTree(path);
+  m_treeview->expand_all();
 }
 
-bool View::get_selected_stl(TreeObject *&object, Shape *&shape)
+bool View::get_selected_objects(vector<TreeObject*> &objects, vector<Shape*> &shapes)
 {
-  Gtk::TreeModel::iterator iter = m_objtree->get_selection()->get_selected();
-  m_model->objtree.get_selected_stl (iter, object, shape);
-  return object != NULL || shape != NULL;
+  vector<Gtk::TreeModel::Path> iter = m_treeview->get_selection()->get_selected_rows();
+  m_model->objtree.get_selected_objects(iter, objects, shapes);
+  return objects.size() != 0 || shapes.size() != 0;
 }
 
-void View::duplicate_selected_stl()
+void View::duplicate_selected_objects()
 {
-  TreeObject *object;
-  Shape *shape;
-  if (!get_selected_stl (object, shape) || !shape)
-    return;
-
-  Shape * newshape;
-
-  FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
-  if (flatshape != NULL)
-    newshape = new FlatShape(*flatshape);
-  else
-    newshape = new Shape(*shape);
-  // duplicate
-  m_model->AddShape (object, newshape, shape->filename);
-
-  queue_draw();
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++) {
+      Shape * newshape;
+      FlatShape* flatshape = dynamic_cast<FlatShape*>(shapes[i]);
+      if (flatshape != NULL)
+	newshape = new FlatShape(*flatshape);
+      else
+	newshape = new Shape(*shapes[i]);
+      // duplicate
+      TreeObject* object = m_model->objtree.getParent(shapes[i]);
+      if (object !=NULL)
+	m_model->AddShape (object, newshape, shapes[i]->filename);
+      queue_draw();
+    }
 }
 
-void View::split_selected_stl()
+void View::split_selected_objects()
 {
-  TreeObject *object;
-  Shape *shape;
-  if (!get_selected_stl (object, shape) || !shape)
-    return;
-  if (m_model->SplitShape (object, shape, shape->filename) > 1) {
-    // delete shape?
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0) {
+    for (uint i=0; i<shapes.size() ; i++) {
+      TreeObject* object = m_model->objtree.getParent(shapes[i]);
+      if (object !=NULL)
+	if (m_model->SplitShape (object, shapes[i], shapes[i]->filename) > 1) {
+	// delete shape?
+      }
+    }
+    queue_draw();
   }
-  queue_draw();
 }
-void View::divide_selected_stl()
+void View::divide_selected_objects()
 {
-  TreeObject *object;
-  Shape *shape;
-  if (!get_selected_stl (object, shape) || !shape)
-    return;
-  if (m_model->DivideShape (object, shape, shape->filename) > 1) {
-    // delete shape?
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0) {
+    for (uint i=0; i<shapes.size() ; i++) {
+      TreeObject* object = m_model->objtree.getParent(shapes[i]);
+      if (object !=NULL)
+	if (m_model->DivideShape (object, shapes[i], shapes[i]->filename) > 1) {
+	// delete shape?
+      }
+    }
+    queue_draw();
   }
-  queue_draw();
 }
 
 // // Given a widget by label, adds a statusbar message on rollover
@@ -1302,71 +1350,104 @@ void View::stop_progress()
 
 void View::scale_object()
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
-  
   double scale=1;
-
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("m_scale_value", scale_value);
   scale = scale_value->get_value();
-  m_model->ScaleObject (shape, object, scale);
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++) {
+      shapes[i]->transform3D.scale(scale);
+    }
+  else if (objects.size()>0)
+    for (uint i=0; i<objects.size() ; i++) {
+      objects[i]->transform3D.scale(scale);
+    }
+  m_model->CalcBoundingBoxAndCenter();
+  m_model->ModelChanged();
 }
+
 void View::scale_object_x()
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
   double scale=1;
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("scale_x", scale_value);
   scale = scale_value->get_value();
-  m_model->ScaleObjectX(shape, object, scale);
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++) {
+      shapes[i]->transform3D.scale_x(scale);
+    }
+  else if (objects.size()>0)
+    for (uint i=0; i<objects.size() ; i++) {
+      objects[i]->transform3D.scale_x(scale);
+    }
+  m_model->CalcBoundingBoxAndCenter();
+  m_model->ModelChanged();
 }
 void View::scale_object_y()
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
   double scale=1;
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("scale_y", scale_value);
   scale = scale_value->get_value();
-  m_model->ScaleObjectY(shape, object,scale);
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++) {
+      shapes[i]->transform3D.scale_y(scale);
+    }
+  else if (objects.size()>0)
+    for (uint i=0; i<objects.size() ; i++) {
+      objects[i]->transform3D.scale_y(scale);
+    }
+  m_model->CalcBoundingBoxAndCenter();
+  m_model->ModelChanged();
 }
 void View::scale_object_z()
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
   double scale=1;
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("scale_z", scale_value);
   scale = scale_value->get_value();
-  m_model->ScaleObjectZ(shape, object, scale);
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++) {
+      shapes[i]->transform3D.scale_z(scale);
+    }
+  else if (objects.size()>0)
+    for (uint i=0; i<objects.size() ; i++) {
+      objects[i]->transform3D.scale_z(scale);
+    }
+  m_model->CalcBoundingBoxAndCenter();
+  m_model->ModelChanged();
 }
 
 /* Updates the scale value when a new STL is selected,
  * giving it the new STL's current scale factor */
 void View::update_scale_value()
 {
-  Shape *shape;
-  TreeObject *object;
-  get_selected_stl (object, shape);
-
-  if (!shape)
-    return;
-
-  Gtk::SpinButton *scale_sb;
-  m_builder->get_widget("m_scale_value", scale_sb);
-  scale_sb->set_value(shape->getScaleFactor());
-  m_builder->get_widget("scale_x", scale_sb);
-  scale_sb->set_value(shape->getScaleFactorX());
-  m_builder->get_widget("scale_y", scale_sb);
-  scale_sb->set_value(shape->getScaleFactorY());
-  m_builder->get_widget("scale_z", scale_sb);
-  scale_sb->set_value(shape->getScaleFactorZ());
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)  {
+    Gtk::SpinButton *scale_sb;
+    m_builder->get_widget("m_scale_value", scale_sb);
+    scale_sb->set_value(shapes.back()->getScaleFactor());
+    m_builder->get_widget("scale_x", scale_sb);
+    scale_sb->set_value(shapes.back()->getScaleFactorX());
+    m_builder->get_widget("scale_y", scale_sb);
+    scale_sb->set_value(shapes.back()->getScaleFactorY());
+    m_builder->get_widget("scale_z", scale_sb);
+    scale_sb->set_value(shapes.back()->getScaleFactorZ());
+  }
 }
 
 // GPL bits below from model.cpp ...
@@ -1512,7 +1593,7 @@ void View::DrawGrid()
 }
 
 // called from Render::on_expose_event
-void View::Draw (Gtk::TreeModel::iterator &selected)
+void View::Draw (vector<Gtk::TreeModel::Path> &selected)
 {
 	// Draw the grid, pushed back so it can be seen
 	// when viewed from below.

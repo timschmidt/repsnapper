@@ -70,7 +70,7 @@ public:
 	void Read(Glib::RefPtr<Gio::File> file);
 	void SetViewProgress (ViewProgress *progress);
 
-	void DeleteObjTree(Gtk::TreeModel::iterator &iter);
+	void DeleteObjTree(vector<Gtk::TreeModel::Path> &iter);
 
 	void OptimizeRotation(Shape *shape, TreeObject *object);
 	void ScaleObject(Shape *shape, TreeObject *object, double scale);
@@ -151,7 +151,7 @@ public:
 	ObjectsTree objtree;
 	Glib::RefPtr<Gtk::TextBuffer> errlog, echolog;
 
-	int draw(Gtk::TreeModel::iterator &selected);
+	int draw(vector<Gtk::TreeModel::Path> &selected);
 	int drawLayers(double height, const Vector3d &offset, bool calconly = false);
 	void setMeasuresPoint(const Vector3d &point);
 	Vector2d measuresPoint;

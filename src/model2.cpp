@@ -283,7 +283,7 @@ void Model::Slice()
   vector<Matrix4d> transforms;
   for  (uint o = 0; o< objtree.Objects.size() ; o++){
     Matrix4d T = 
-      settings.getBasicTransformation(objtree.GetSTLTransformationMatrix(o));
+      settings.getBasicTransformation(objtree.getTransformationMatrix(o));
     for (uint s = 0; s < objtree.Objects[o].shapes.size(); s++)  {
       shapes.push_back(objtree.Objects[o].shapes[s]);
       transforms.push_back(T);

@@ -32,8 +32,8 @@
 class Transform3D
 {
 public:
-	Transform3D(){identity();}
-	void identity(){transform=Matrix4d::IDENTITY;}
+  Transform3D();
+  void identity();
 	Matrix4d transform;
 	Matrix4f getFloatTransform() const;
 	Vector3d getTranslation() const;
@@ -45,6 +45,7 @@ public:
 	void move(Vector3d delta);
 	void rotate(Vector3d center, double x, double y, double z);
 	void rotate(Vector3d axis, double angle);
+	double scale_factor,scale_factor_x,scale_factor_y,scale_factor_z;
 };
 
 

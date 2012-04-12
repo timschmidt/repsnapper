@@ -26,8 +26,20 @@
 // limfit library for arc fitting
 #include <lmmin.h>
 
-
 ///////// Transform3D ////////////////////////////////////
+Transform3D::Transform3D()
+{
+  identity();
+}
+
+void Transform3D::identity()
+{
+  transform=Matrix4d::IDENTITY;
+  scale_factor_x = 1;
+  scale_factor_y = 1;
+  scale_factor_z = 1;
+  scale_factor = 1;
+}
 Matrix4f Transform3D::getFloatTransform() const 
 {
   return (Matrix4f) transform;
@@ -55,19 +67,23 @@ void Transform3D::scale(double x)
 {
   if (x==0) return;
   transform[3][3] = 1/x;
+  scale_factor = x;
 }
 
 void Transform3D::scale_x(double x)
 {
   transform[0][0] = x;
+  scale_factor_x = x;
 }
   void Transform3D::scale_y(double x)
 {
   transform[1][1] = x;
+  scale_factor_y = x;
 }
 void Transform3D::scale_z(double x)
 {
   transform[2][2] = x;
+  scale_factor_z = x;
 }
 
 void Transform3D::rotate(Vector3d axis, double angle)

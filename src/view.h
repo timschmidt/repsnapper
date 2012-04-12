@@ -117,12 +117,12 @@ class View : public Gtk::Window
   void custombutton_pressed(string name, Gtk::ToolButton *button);
 
   // rfo bits
-  Gtk::TreeView *m_objtree;
+  Gtk::TreeView *m_treeview;
   TranslationSpinRow *m_translation_row;
-  void delete_selected_stl();
-  void duplicate_selected_stl();
-  void split_selected_stl();
-  void divide_selected_stl();
+  void delete_selected_objects();
+  void duplicate_selected_objects();
+  void split_selected_objects();
+  void divide_selected_objects();
   void auto_rotate();
   void update_settings_gui();
   void handle_ui_settings_changed();
@@ -145,7 +145,7 @@ class View : public Gtk::Window
 
   Model *get_model() { return m_model; }
   ViewProgress *get_view_progress() { return m_progress; }
-  bool get_selected_stl(TreeObject *&object, Shape *&shape);
+  bool get_selected_objects(vector<TreeObject*> &objects, vector<Shape*> &shapes);
 
   View(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
   virtual ~View();
@@ -169,7 +169,7 @@ class View : public Gtk::Window
   void newObject();
 
   // view nasties ...
-  void Draw (Gtk::TreeModel::iterator &selected);
+  void Draw (vector<Gtk::TreeModel::Path> &selected);
   void DrawGrid ();
   void showCurrentPrinting(unsigned long fromline, unsigned long toline);
 };

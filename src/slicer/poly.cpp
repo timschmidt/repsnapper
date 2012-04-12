@@ -367,11 +367,24 @@ void Poly::addVertex(const Vector2d &v, bool front)
     vertices.push_back(v);
   holecalculated=false;
 }
+void Poly::addVertexUnique(const Vector2d &v, bool front)
+{
+  for (uint i = 0; i < vertices.size();  i++) {
+    if (vertices[i] == v) return;
+  }
+  addVertex(v,front);
+}
 
 void Poly::addVertex(double x, double y, bool front)
 {
   addVertex(Vector2d(x,y), front);
 }
+
+void Poly::addVertexUnique(double x, double y, bool front)
+{
+  addVertexUnique(Vector2d(x,y), front);
+}
+
 
 Vector2d const &Poly::getVertexCircular(int index) const
 {

@@ -1429,7 +1429,7 @@ and others I forgot... (needs updating)</property>
                         <property name="hscrollbar_policy">automatic</property>
                         <property name="vscrollbar_policy">automatic</property>
                         <child>
-                          <object class="GtkTreeView" id="m_objtree">
+                          <object class="GtkTreeView" id="m_treeview">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="headers_visible">False</property>

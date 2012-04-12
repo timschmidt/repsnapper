@@ -193,9 +193,11 @@ bool Render::on_expose_event(GdkEventExpose* event)
   glColor3f(0.75f,0.75f,1.0f);
 
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
-  Gtk::TreeModel::iterator iter = m_selection->get_selected();
+  // Gtk::TreeModel::iterator iter = m_selection->get_selected();
 
-  m_view->Draw (iter);
+  vector<Gtk::TreeModel::Path> selpath = m_selection->get_selected_rows();
+
+  m_view->Draw (selpath);
 
   glPopMatrix();
 
@@ -253,11 +255,13 @@ bool Render::on_button_press_event(GdkEventButton* event)
   grab_focus();
   m_downPoint = Vector2f(event->x, event->y);
   if (event->button == 1) {
+    // on button 1, if there is an object, select it (easier dragging)
     m_arcBall->click (event->x, event->y, &m_transform);
     guint index = find_object_at(event->x, event->y);
     if (index) {
       Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
-      if (iter) {
+      if (!m_selection->is_selected(iter)) {
+	m_selection->unselect_all();
 	m_selection->select(iter);
       }
     }
@@ -272,15 +276,28 @@ bool Render::on_button_release_event(GdkEventButton* event)
     get_model()->ModelChanged();
     queue_draw();
   }
-  else if (event->button == 1) {
-    if (m_downPoint.x() == event->x && m_downPoint.y() == event->y){ // click only
-      guint index = find_object_at(event->x, event->y);
-      // click on no object - clear the selection
-      if (!index) m_selection->unselect_all();
+  else {
+    guint index = find_object_at(event->x, event->y);
+    if (index) {
+      Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
+      if (iter) {
+	if (event->button == 1)  {
+	  m_selection->unselect_all();
+	}
+	if (m_selection->is_selected(iter))
+	  m_selection->unselect(iter);
+	else
+	  m_selection->select(iter);
+      }
+    }
+    // click on no object - clear the selection:
+    else if (event->button == 1)  {
+      if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
+	m_selection->unselect_all();
     }
   }
-  else
-    return Gtk::DrawingArea::on_button_release_event (event);
+  // else
+  //   return Gtk::DrawingArea::on_button_release_event (event);
   return true;
 }
 
@@ -314,42 +331,49 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     if (event->state & GDK_SHIFT_MASK) { // move object XY
       if (false);//delta3f.x()<1 && delta3f.y()<1) redraw=false;
       else {
-	Shape *shape;
-	TreeObject *object;
-	if (!m_view->get_selected_stl(object, shape))
+	vector<Shape*> shapes;
+	vector<TreeObject*>objects;
+	if (!m_view->get_selected_objects(objects, shapes))
 	  return true;
-	if (!object && !shape)
-	  return true;
-	Transform3D *transf;
-	if (!shape)
-	  transf = &object->transform3D;
-	else
-	  transf = &shape->transform3D;
-	transf->move(Vector3d(deltamouse.x(), deltamouse.y(), 0.));
+	Vector3d movevec(deltamouse.x(), deltamouse.y(), 0.);
+	if (shapes.size()>0) 
+	  for (uint s=0; s<shapes.size(); s++) {
+	    shapes[s]->transform3D.move(movevec);
+	  }
+	else 
+	  for (uint o=0; o<objects.size(); o++) {
+	    objects[o]->transform3D.move(movevec);
+	  }
       }
+      m_downPoint = dragp;
     }
     else if (event->state & GDK_CONTROL_MASK) { // move object Z wise
       Vector3d delta3fz(0, 0, delta.y()*factor);
-	Shape *shape;
-	TreeObject *object;
-	if (!m_view->get_selected_stl(object, shape))
-	  return true;
-	if (!object && !shape)
-	  return true;
-	Transform3D *transf;
-	if (!shape)
-	  transf = &object->transform3D;
-	else
-	  transf = &shape->transform3D;
-	double scale = transf->transform[3][3];
-	transf->move(delta3fz*scale);
+      vector<Shape*> shapes;
+      vector<TreeObject*>objects;
+      if (!m_view->get_selected_objects(objects, shapes))
+	return true;
+      if (shapes.size()>0) 
+	for (uint s=0; s<shapes.size(); s++) {
+	  Transform3D &transf = shapes[s]->transform3D;
+	  double scale = transf.transform[3][3];
+	  Vector3d movevec = delta3fz*scale;
+	  transf.move(movevec);
+	}
+      else 
+	for (uint o=0; o<objects.size(); o++) {
+	  Transform3D &transf = objects[o]->transform3D;
+	  double scale = transf.transform[3][3];
+	  Vector3d movevec = delta3fz*scale;
+	  transf.move(movevec);
+	}
+      m_downPoint = dragp;
     }
     else { // rotate view
       //Vector3d axis(delta.y(), delta.x(), 0);
       //rotArcballTrans(m_transform, axis, -delta.length()/100.);
       m_arcBall->dragAccumulate(event->x, event->y, &m_transform);
     }
-    m_downPoint = dragp;
     if (redraw) queue_draw();
     return true;
   } // BUTTON 1
@@ -357,14 +381,14 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     if (event->state & GDK_BUTTON2_MASK) { // zoom
       double factor = 1.0 + 0.01 * (delta.x() - delta.y());
       if (event->state & GDK_SHIFT_MASK) { // scale shape
-	Shape *shape;
-	TreeObject *object;
-	if (!m_view->get_selected_stl(object, shape))
+	vector<Shape*> shapes;
+	vector<TreeObject*>objects;
+	if (!m_view->get_selected_objects(objects, shapes))
 	  return true;
-	if (!object && !shape)
-	  return true;
-	if (shape) {
-	  shape->Scale(shape->getScaleFactor()/factor);
+	if (shapes.size()>0) {
+	  for (uint s=0; s<shapes.size(); s++) {
+	    shapes[s]->Scale(shapes[s]->getScaleFactor()/factor);
+	  }
 	  m_view->update_scale_value();
 	}
       } else { // zoom view
@@ -374,14 +398,16 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     } // BUTTON 2
     else if (event->state & GDK_BUTTON3_MASK) { // pan
       if (event->state & GDK_SHIFT_MASK) { // rotate shape
-	Shape *shape;
-	TreeObject *object;
-	if (!m_view->get_selected_stl(object, shape))
-	  return true;
-	if (!shape)
+	vector<Shape*> shapes;
+	vector<TreeObject*>objects;
+	if (!m_view->get_selected_objects(objects, shapes))
 	  return true;
 	Vector3d axis(delta.y(), delta.x(), 0);
-	shape->Rotate(axis, -delta.length()/100.);
+	if (shapes.size()>0) {
+	  for (uint s=0; s<shapes.size(); s++) {
+	    shapes[s]->Rotate(axis, -delta.length()/100.);
+	  } 
+	}
       } else {  // move view XY
 	moveArcballTrans(m_transform, delta3f);
       }
@@ -444,7 +470,7 @@ guint Render::find_object_at(gdouble x, gdouble y)
 
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
 
-  Gtk::TreeModel::iterator no_object;
+  vector<Gtk::TreeModel::Path> no_object;
   m_view->Draw (no_object);
 
   // restor projection and model matrices

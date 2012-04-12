@@ -109,10 +109,10 @@ public:
 	void ScaleX(double scale_factor);
 	void ScaleY(double scale_factor);
 	virtual void ScaleZ(double scale_factor);
-    double getScaleFactor(){ return scale_factor; };
-    double getScaleFactorX(){ return scale_factor_x; };
-    double getScaleFactorY(){ return scale_factor_y; };
-    virtual double getScaleFactorZ(){ return scale_factor_z; };
+    double getScaleFactor(){ return transform3D.scale_factor; };
+    double getScaleFactorX(){ return transform3D.scale_factor_x; };
+    double getScaleFactorY(){ return transform3D.scale_factor_y; };
+    virtual double getScaleFactorZ(){ return transform3D.scale_factor_z; };
     void PlaceOnPlatform();
 
     Vector3d Min, Max, Center;
@@ -139,10 +139,8 @@ public:
     virtual string info() const;
 
 protected:
-    double scale_factor,scale_factor_x,scale_factor_y;
 
 private:
-    double scale_factor_z;
 
     vector<Triangle> triangles;
     //vector<Polygon2d>  polygons;  // surface polygons instead of triangles
@@ -208,7 +206,7 @@ class FlatShape : public Shape
 
 
     
-  /* void invertNormals(); */
+  void invertNormals();
   void mirror(); 
 
 

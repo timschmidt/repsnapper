@@ -485,10 +485,10 @@ void Model::ScaleObject(Shape *shape, TreeObject *object, double scale)
   if (shape)
     shape->Scale(scale);
   else if(object)
-    for (uint s = 0;s<object->shapes.size(); s++) {
+    //    for (uint s = 0;s<object->shapes.size(); s++) {
       //double fact = object->shapes[s].getScaleFactor();
-      object->shapes[s]->Scale(scale);
-    }
+      object->transform3D.scale(scale);
+  //}
   else return;
   CalcBoundingBoxAndCenter();
   ModelChanged();
@@ -533,12 +533,11 @@ void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
   ModelChanged();
 }
 
-void Model::RotateObject(Shape *shape, TreeObject *object, Vector4d rotate)
+void Model::RotateObject(Shape* shape, TreeObject* object, Vector4d rotate)
 {
-  Vector3d rot(rotate.x(), rotate.y(), rotate.z());
-
   if (!shape)
-    return; // FIXME: rotate entire Objects ...
+    return; 
+  Vector3d rot(rotate.x(), rotate.y(), rotate.z());
   shape->Rotate(rot, rotate.w());
   CalcBoundingBoxAndCenter();
   ModelChanged();
@@ -597,7 +596,7 @@ void Model::PlaceOnPlatform(Shape *shape, TreeObject *object)
   ModelChanged();
 }
 
-void Model::DeleteObjTree(Gtk::TreeModel::iterator &iter)
+void Model::DeleteObjTree(vector<Gtk::TreeModel::Path> &iter)
 {
   objtree.DeleteSelected (iter);
   ClearGCode();
@@ -619,7 +618,7 @@ void Model::CalcBoundingBoxAndCenter()
   Vector3d newMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
 
   for (uint i = 0 ; i < objtree.Objects.size(); i++) {
-    Matrix4d M = objtree.GetSTLTransformationMatrix (i);
+    Matrix4d M = objtree.getTransformationMatrix (i);
     for (uint j = 0; j < objtree.Objects[i].shapes.size(); j++) {
       objtree.Objects[i].shapes[j]->CalcBBox();
       Vector3d stlMin = M * objtree.Objects[i].shapes[j]->Min;
@@ -657,12 +656,12 @@ Vector3d Model::GetViewCenter()
 }
 
 // called from View::Draw
-int Model::draw (Gtk::TreeModel::iterator &iter)
+int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 {
-  Shape *sel_shape;
-  TreeObject *sel_object;
+  vector<Shape*> sel_shapes;
+  vector<TreeObject*> sel_objects;
   gint index = 1; // pick/select index. matches computation in update_model()
-  objtree.get_selected_stl (iter, sel_object, sel_shape);
+  objtree.get_selected_objects(iter, sel_objects, sel_shapes);
 
   Vector3d printOffset = settings.Hardware.PrintMargin;
   if(settings.RaftEnable)
@@ -689,8 +688,14 @@ int Model::draw (Gtk::TreeModel::iterator &iter)
       glPushMatrix();
       glMultMatrixd (&shape->transform3D.transform.array[0]);
 
-      bool is_selected = (sel_shape == shape ||
-	  (!sel_shape && sel_object == object));
+      bool is_selected = false;
+      for (uint o = 0; o < sel_objects.size(); o++)
+	if (sel_objects[o] == object)
+	  is_selected = true;
+      if (!is_selected)
+	for (uint s = 0; s < sel_shapes.size(); s++) 
+	  if (sel_shapes[s] == shape)
+	    is_selected = true;
 
       // this is slow for big shapes
       if (is_selected) {
@@ -922,7 +927,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   Layer * layer = new Layer(LayerNr, thickness);
   layer->setZ(z);
   for(size_t o=0;o<objtree.Objects.size();o++){
-    Matrix4d T = objtree.GetSTLTransformationMatrix(o);
+    Matrix4d T = objtree.getTransformationMatrix(o);
     for(size_t f=0;f<objtree.Objects[o].shapes.size();f++)
       {
 	// Vector3d t = T.getTranslation();
