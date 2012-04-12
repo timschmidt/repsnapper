@@ -383,8 +383,8 @@ void Printlines::optimize(double linewidth,
 }
 
 
-#define FITARC 0
-#if FITARC
+#define FITARC_FIND 0
+#if FITARC_FIND
 
 // find center for best fit of arclines
 bool fit_arc(const vector<PLine> &lines, uint fromind, uint toind,
@@ -580,8 +580,8 @@ uint Printlines::makeIntoArc(guint fromind, guint toind,
   if (toind < fromind+1 || toind+1 > lines.size()) return 0;
   //cerr<< "arcstart = " << fromind << endl;
   const Vector2d &P = lines[fromind].from;
-  const Vector2d &Q = lines[toind].to;
 
+#define FITARC 0
 #if FITARC
 
   Vector2d center; double fitradius_sq;
@@ -593,6 +593,7 @@ uint Printlines::makeIntoArc(guint fromind, guint toind,
   if (  fit_arc(arcpoints, 0.1, center, fitradius_sq) ) {
     cerr << " found center " << center << " radius="<< sqrt(fitradius_sq) << endl;
 #else
+  const Vector2d &Q = lines[toind].to;
 
   bool fullcircle = (P==Q);
   // get center: intersection of center perpendiculars of 2 chords
@@ -627,7 +628,7 @@ uint Printlines::makeIntoArc(guint fromind, guint toind,
     // lines[fromind] = newline;
     // lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
     // return toind-fromind;
-  } else cerr << "no Intersection of arc perpendiculars!" << endl;
+  } else cerr << "arc not possible" << endl;
   return 0;
 }
 

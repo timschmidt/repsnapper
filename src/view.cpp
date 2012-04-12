@@ -109,8 +109,15 @@ void View::convert_to_gcode ()
 		     _("Converting to GCode while printing will abort the print"));
       return;
     }
-
-  m_model->ConvertToGCode();
+  if (m_model->settings.Slicing.SelectedOnly) {
+    vector<Shape*> shapes;
+    vector<Matrix4d> transforms;
+    vector<Gtk::TreeModel::Path> iter = m_treeview->get_selection()->get_selected_rows();
+    m_model->objtree.get_selected_shapes(iter, shapes, transforms);
+    m_model->ConvertToGCode(shapes,transforms);
+  }
+  else
+    m_model->ConvertToGCode();
 }
 
 void View::load_stl ()
@@ -1242,7 +1249,6 @@ void View::setModel(Model *model)
 void View::delete_selected_objects()
 {
   vector<Gtk::TreeModel::Path> path = m_treeview->get_selection()->get_selected_rows();
-
   m_model->DeleteObjTree(path);
   m_treeview->expand_all();
 }

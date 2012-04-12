@@ -71,7 +71,14 @@ public:
 	void newObject();
 	Gtk::TreePath addShape(TreeObject *parent, Shape *shape, std::string location);
 	void get_selected_objects(vector<Gtk::TreeModel::Path> &iter, 
-				  vector<TreeObject*> &object, vector<Shape*> &shape);
+				  vector<TreeObject*> &object, vector<Shape*> &shape) ;
+
+	void get_selected_shapes(vector<Gtk::TreeModel::Path> &iter, 
+				 vector<Shape*> &shape, vector<Matrix4d> &transforms);
+
+
+	void get_all_shapes(vector<Shape*> &shapes, vector<Matrix4d> &transforms) const;
+
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
 				  
 	Matrix4d getTransformationMatrix(int object, int shape=-1) const;

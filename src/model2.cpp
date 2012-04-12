@@ -276,19 +276,28 @@ bool layersort(const Layer * l1, const Layer * l2){
   return (l1->Z < l2->Z);
 }
 
-void Model::Slice()
+void Model::Slice() 
 {
-  // get a linear collection of shapes
+  if (is_calculating) {
+    return;
+  }
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
-  for  (uint o = 0; o< objtree.Objects.size() ; o++){
-    Matrix4d T = 
-      settings.getBasicTransformation(objtree.getTransformationMatrix(o));
-    for (uint s = 0; s < objtree.Objects[o].shapes.size(); s++)  {
-      shapes.push_back(objtree.Objects[o].shapes[s]);
-      transforms.push_back(T);
-    }
+  objtree.get_all_shapes(shapes,transforms);
+  Slice(shapes, transforms);
+}
+
+void Model::Slice(vector<Shape*> shapes,
+		  vector<Matrix4d> &transforms)
+{
+  if (is_calculating) {
+    return;
   }
+  is_calculating=true;
+
+  for (uint i = 0; i<transforms.size(); i++)
+    transforms[i] = settings.getBasicTransformation(transforms[i]);
+
   int LayerNr = 0;
   bool varSlicing = settings.Slicing.Varslicing;
 
@@ -421,6 +430,7 @@ void Model::Slice()
 	}
       delete layer; // have made one more than needed
     }
+  is_calculating=false;
   // shapes.clear();
   //m_progress->stop (_("Done"));
 }
@@ -727,6 +737,22 @@ void Model::ConvertToGCode()
   if (is_calculating) {
     return;
   }
+  // get a linear collection of shapes
+  vector<Shape*> shapes;
+  vector<Matrix4d> transforms;
+  objtree.get_all_shapes(shapes,transforms);
+  ConvertToGCode(shapes, transforms);
+}
+
+void Model::ConvertToGCode(vector<Shape*> shapes,
+			   vector<Matrix4d> &transforms)
+{
+  if (is_calculating) {
+    return;
+  }
+  // for (uint i = 0; i<transforms.size(); i++)
+  //   transforms[i] = settings.getBasicTransformation(transforms[i]);
+
   is_calculating=true;
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();
@@ -741,7 +767,8 @@ void Model::ConvertToGCode()
   double   printOffsetZ = settings.Hardware.PrintMargin.z();
 
   // Make Layers
-  Slice();
+  is_calculating=false;
+  Slice(shapes, transforms);
 
   //CleanupLayers();
 
@@ -870,6 +897,16 @@ void Model::SliceToSVG(Glib::RefPtr<Gio::File> file)
 {
   if (is_calculating) return;
   Slice();
+  m_progress->stop (_("Done"));
+  Glib::file_set_contents (file->get_path(), getSVG());
+}
+
+void Model::SliceToSVG(Glib::RefPtr<Gio::File> file,
+		       vector<Shape*> shapes,
+		       vector<Matrix4d> &transforms)
+{
+  if (is_calculating) return;
+  Slice(shapes,transforms);
   m_progress->stop (_("Done"));
   Glib::file_set_contents (file->get_path(), getSVG());
 }

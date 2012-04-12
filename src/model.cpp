@@ -659,9 +659,10 @@ Vector3d Model::GetViewCenter()
 int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 {
   vector<Shape*> sel_shapes;
-  vector<TreeObject*> sel_objects;
+  vector<Matrix4d> transforms;
+  objtree.get_selected_shapes(iter, sel_shapes, transforms);
+
   gint index = 1; // pick/select index. matches computation in update_model()
-  objtree.get_selected_objects(iter, sel_objects, sel_shapes);
 
   Vector3d printOffset = settings.Hardware.PrintMargin;
   if(settings.RaftEnable)
@@ -689,10 +690,10 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       glMultMatrixd (&shape->transform3D.transform.array[0]);
 
       bool is_selected = false;
-      for (uint o = 0; o < sel_objects.size(); o++)
-	if (sel_objects[o] == object)
-	  is_selected = true;
-      if (!is_selected)
+      // for (uint o = 0; o < sel_objects.size(); o++)
+      // 	if (sel_objects[o] == object)
+      // 	  is_selected = true;
+      // if (!is_selected)
 	for (uint s = 0; s < sel_shapes.size(); s++) 
 	  if (sel_shapes[s] == shape)
 	    is_selected = true;
@@ -924,25 +925,29 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
     if (m_previewLayer && m_previewLayer->getZ() == z
 	&& m_previewLayer->thickness) return m_previewLayer; 
   }
+  vector<Shape*> shapes;
+  vector<Matrix4d> transforms;
+  
+  // if (settings.Slicing.SelectedOnly)
+  //   objtree.get_selected_shapes(iter, shapes, transforms);
+  // else 
+  objtree.get_all_shapes(shapes, transforms);
+
   Layer * layer = new Layer(LayerNr, thickness);
   layer->setZ(z);
-  for(size_t o=0;o<objtree.Objects.size();o++){
-    Matrix4d T = objtree.getTransformationMatrix(o);
-    for(size_t f=0;f<objtree.Objects[o].shapes.size();f++)
-      {
-	// Vector3d t = T.getTranslation();
-	// T.setTranslation(t);
-	vector<Poly> polys;
-	double max_grad;
-	bool polys_ok=
-	  objtree.Objects[o].shapes[f]->getPolygonsAtZ(T, z, 
-						       polys,
-						       max_grad);
-	if (polys_ok){
-	  layer->addPolygons(polys);
-	}
+  for(size_t f=0;f < shapes.size();f++)
+    {
+      // Vector3d t = T.getTranslation();
+      // T.setTranslation(t);
+      vector<Poly> polys;
+      double max_grad;
+      bool polys_ok = shapes[f]->getPolygonsAtZ(transforms[f], z, 
+						polys,
+						max_grad);
+      if (polys_ok){
+	layer->addPolygons(polys);
       }
-  }
+    }
 	  
   // vector<Poly> polys = layer->GetPolygons();
   // for (guint i=0; i<polys.size();i++){

@@ -47,7 +47,7 @@ namespace {
 	   FileChooser::Op op, const string &title, gboolean multiple) {
     // GSList *result = NULL;
     Gtk::FileChooserAction action;
-    const char *button_text;
+    const char *button_text = NULL;
 
     switch (op) {
     case FileChooser::SAVE:

@@ -137,7 +137,6 @@ void ObjectsTree::get_selected_objects(vector<Gtk::TreeModel::Path> &path,
   objects.clear();
   shapes.clear();
   if (path.size()==0) return;
-  //cerr << path.size() << " selected " <<endl;
   for (uint p = 0; p < path.size(); p++) {
     // cerr << "sel " << p << " -> "<< path[p].to_string ()
     // 	 << " - "<< path[p].size() << endl;
@@ -151,6 +150,50 @@ void ObjectsTree::get_selected_objects(vector<Gtk::TreeModel::Path> &path,
     }
     else if (num == 3) { // have shapes
       shapes.push_back(Objects[path[p][1]].shapes[path[p][2]]);
+    }
+  }
+}
+void ObjectsTree::get_selected_shapes(vector<Gtk::TreeModel::Path> &path,
+				      vector<Shape*> &allshapes,
+				      vector<Matrix4d> &transforms)
+{
+  vector<Shape*> sel_shapes;
+  vector<TreeObject*> sel_objects;
+  get_selected_objects(path, sel_objects, sel_shapes);
+  // add shapes if their parent object not selected
+  for (uint s = 0; s < sel_shapes.size(); s++) {
+    bool parent_obj_selected = false;
+    for (uint o = 0; o < sel_objects.size(); o++) {
+      if (getParent(sel_shapes[s]) == &Objects[o])
+	parent_obj_selected = true;
+    }
+    if (!parent_obj_selected){
+      allshapes.push_back(sel_shapes[s]);
+      transforms.push_back(transform3D.transform 
+			   * getParent(sel_shapes[s])->transform3D.transform);
+    }
+  }
+  // add all shapes of selected objects
+  for (uint o = 0; o < sel_objects.size(); o++) {
+    Matrix4d otrans = 
+      transform3D.transform * sel_objects[o]->transform3D.transform;
+    allshapes.insert(allshapes.begin(),
+		     sel_objects[o]->shapes.begin(), sel_objects[o]->shapes.end());
+    for (uint s = 0; s < sel_objects[o]->shapes.size(); s++) {
+      transforms.push_back(otrans);
+    }
+  }
+}
+
+void ObjectsTree::get_all_shapes(vector<Shape*> &allshapes, vector<Matrix4d> &transforms) const
+{
+  for (uint o = 0; o < Objects.size(); o++) {
+    Matrix4d otrans =  
+      transform3D.transform * Objects[o].transform3D.transform;
+    allshapes.insert(allshapes.begin(),
+		     Objects[o].shapes.begin(), Objects[o].shapes.end());
+    for (uint s = 0; s < Objects[o].shapes.size(); s++) {
+      transforms.push_back(otrans);
     }
   }
 }

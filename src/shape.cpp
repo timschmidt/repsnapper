@@ -1488,7 +1488,8 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 				nearest = j;
 			}
 		}
-		assert (nearest != 0);
+		//assert (nearest != 0);
+		if (nearest == 0) continue;
 
 		// allow points 10mm apart to be joined, not more
 		if (!connect_all && nearest_dist_sq > 100.0) {
@@ -1690,8 +1691,8 @@ void FlatShape::clear()
 
 void FlatShape::draw_geometry() {
   for (uint i = 0; i < polygons.size(); i++) {
-    polygons[i].draw_as_surface();
-    //polygons[i].draw(GL_LINE_LOOP);
+    //polygons[i].draw_as_surface(); // poly2tri crashes
+    polygons[i].draw(GL_LINE_LOOP,false);
   }
 }
 
@@ -1853,9 +1854,9 @@ int FlatShape::svg_addPolygon()
     polys = thick_lines(vertices, width);
     // cerr <<"thick "<< polys.size()<<" of " << vertices.size() << endl;
   }
-  else {
-    cerr << "unknown " << svg_cur_path << endl;
-    cerr << "\t" << svg_cur_style << endl;
+  else if (svg_cur_style!="") { 
+    cerr << "unknown " << svg_cur_path << " in " << svg_cur_name << endl;
+    cerr << "\t style: " << svg_cur_style << endl;
   }
 
   if (polys.size()>0) {
@@ -1863,8 +1864,10 @@ int FlatShape::svg_addPolygon()
       // cerr << svg_cur_trans << endl;
       Matrix3d  mat = svg_trans(svg_cur_trans);
       // cerr << mat << endl;
-      for (uint i=0; i < polys.size(); i++)
+      for (uint i=0; i < polys.size(); i++) {
+	polys[i].setZ(0);
 	polys[i].transform(mat);
+      }
     }
     polygons.insert(polygons.begin(),polys.begin(),polys.end());
   }
@@ -1943,6 +1946,8 @@ void FlatShape::xml_handle_node(const xmlpp::Node* node)
 	  if (val.find("pt") != string::npos)
 	    svg_prescale = 0.3527;
 	}	  
+      }
+      else if (attr=="id"){
       }
       else 
 	cerr << "unknown Attribute in " << svg_cur_name << " : " << attr << " = " <<attribute->get_value() << endl;

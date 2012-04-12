@@ -162,6 +162,7 @@ class Settings {
 
     bool BuildSerial;
     //float SerialBuildHeight;
+    bool SelectedOnly;
 
     float ShellOffset;
     //float Optimization;
