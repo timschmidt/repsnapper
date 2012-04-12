@@ -299,6 +299,8 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	
 	bool relativeE = settings.Slicing.RelativeEcode;
 
+	bool debug_arcs = settings.Display.DisplayDebugArcs;
+
 	double extrusionwidth = 0;
 	if (boundary)
 	  extrusionwidth = 
@@ -349,7 +351,8 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		    Color = settings.Display.GCodeMoveRGBA;
 		    extrwidth = 0;
 		  }
-		  commands[i].draw(pos, linewidth, Color, extrwidth, arrows);
+		  commands[i].draw(pos, linewidth, Color, extrwidth, 
+				   arrows, debug_arcs);
 		  LastE=commands[i].e;
 		  break;
 		case ARC_CW:
@@ -378,12 +381,13 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		      }
 		    if(settings.Display.LuminanceShowsSpeed)
 		      Color *= luma;
-		    commands[i].draw(pos, linewidth, Color, extrwidth, arrows);
+		    commands[i].draw(pos, linewidth, Color, extrwidth,
+				     arrows, debug_arcs);
 		    LastE=commands[i].e;
 		    break;
 		  }
 		case RAPIDMOTION:
-		  commands[i].draw(pos, 1, Color, extrwidth, arrows);
+		  commands[i].draw(pos, 1, Color, extrwidth, arrows, debug_arcs);
 			break;
 		default:
 			break; // ignored GCodes

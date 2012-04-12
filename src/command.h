@@ -160,8 +160,10 @@ public:
 
 	string comment;
 	void draw(Vector3d &lastPos, guint linewidth, 
-		  Vector4f color, double extrwidth, bool arrows=true) const;
-	void draw(Vector3d &lastPos, double extrwidth, bool arrows=true) const;
+		  Vector4f color, double extrwidth, bool arrows=true,
+		  bool debug_arcs = false) const;
+	void draw(Vector3d &lastPos, double extrwidth, 
+		  bool arrows=true, bool debug_arcs = false) const;
 
 	bool hasNoEffect(const Vector3d LastPos, const double lastE, 
 			 const double lastF, const bool relativeEcode) const;

@@ -375,7 +375,8 @@ void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short
   }
 }
 
-void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const 
+void Command::draw(Vector3d &lastPos, double extrwidth, 
+		   bool arrows,  bool debug_arcs) const 
 {
   GLfloat ccol[4];
   glGetFloatv(GL_CURRENT_COLOR,&ccol[0]);
@@ -384,21 +385,23 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
   if (Code == ARC_CW || Code == ARC_CCW) {
     Vector3d center = lastPos + arcIJK;
     Vector3d P = -arcIJK, Q = where-center; // arc endpoints
-    glColor4f(0.f,1.f,0.0f,0.2f);
-    glVertex3dv(center);
-    glVertex3dv(lastPos);
-    glColor4f(1.f,0.f,0.0f,0.2f);
-    glVertex3dv(center);
-    glVertex3dv(where);
-    glColor4fv(ccol);
     bool ccw = (Code == ARC_CCW);
-    float lum = ccol[3];
-    if (where == lastPos) // full circle
-      glColor4f(1.f,0.f,1.f,lum);
-    // else if (ccw)
-    //   glColor4f(0.5f,0.5f,1.f,lum);
-    // else 
-    //   glColor4f(1.f,0.5f,0.0f,lum);
+    if (debug_arcs) {
+      glColor4f(0.f,1.f,0.0f,0.2f);
+      glVertex3dv(center);
+      glVertex3dv(lastPos);
+      glColor4f(1.f,0.f,0.0f,0.2f);
+      glVertex3dv(center);
+      glVertex3dv(where);
+      glColor4fv(ccol);
+      float lum = ccol[3];
+      if (where == lastPos) // full circle
+	glColor4f(1.f,0.f,1.f,lum);
+      else if (ccw)
+	glColor4f(0.5f,0.5f,1.f,lum);
+      else 
+	glColor4f(1.f,0.5f,0.0f,lum);
+    }
     long double angle;
     if (P==Q) angle = 2*M_PI;
     else {
@@ -486,14 +489,15 @@ void Command::draw(Vector3d &lastPos, double extrwidth, bool arrows) const
 }
 
 void Command::draw(Vector3d &lastPos, guint linewidth, 
-		   Vector4f color, double extrwidth, bool arrows) const 
+		   Vector4f color, double extrwidth, 
+		   bool arrows, bool debug_arcs) const 
 {
   if (abs_extr!=0) linewidth+=(1+abs(abs_extr));
   // if (abs_extr>0) linewidth*=abs_extr;
   // else if (abs_extr<0) linewidth/=(-abs_extr);
   glLineWidth(linewidth);
   glColor4fv(&color[0]);
-  draw(lastPos, extrwidth, arrows);
+  draw(lastPos, extrwidth, arrows, debug_arcs);
 }
 
 string Command::info() const

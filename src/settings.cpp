@@ -233,6 +233,7 @@ static struct {
   BOOL_MEMBER (Display.DisplayinFill, "DisplayinFill", false, true),
   BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, true),
   BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
+  BOOL_MEMBER (Display.DisplayDebugArcs, "DisplayDebugArcs", true, true),
   BOOL_MEMBER (Display.CommsDebug, "CommsDebug", false, true),
   BOOL_MEMBER (Display.TerminalProgress, "TerminalProgress", false, true),
   BOOL_MEMBER (Display.DisplayLayer, "DisplayLayer", false, true),
@@ -266,7 +267,8 @@ static struct {
   COLOUR_MEMBER(Display.GCodeMoveRGBA,
 		"Display.GCodeMoveColour", 1.0, 0.05, 1, 0.5, true),
   COLOUR_MEMBER(Display.GCodePrintingRGBA,
-		"Display.GCodePrintingColour", 0.1, 0.5, 0.0, 1.0, true),
+		"Display.GCodePrintingColour", 0.1, 0.5, 0.0, 1.0, true)
+
 };
 
 // Add any GtkSpinButtons to this array:
