@@ -71,11 +71,10 @@ public:
 	void newObject();
 	Gtk::TreePath addShape(TreeObject *parent, Shape *shape, std::string location);
 	void get_selected_objects(vector<Gtk::TreeModel::Path> &iter, 
-				  vector<TreeObject*> &object, vector<Shape*> &shape) ;
+				  vector<TreeObject*> &object, vector<Shape*> &shape) const;
 
 	void get_selected_shapes(vector<Gtk::TreeModel::Path> &iter, 
-				 vector<Shape*> &shape, vector<Matrix4d> &transforms);
-
+				 vector<Shape*> &shape, vector<Matrix4d> &transforms) const;
 
 	void get_all_shapes(vector<Shape*> &shapes, vector<Matrix4d> &transforms) const;
 
@@ -83,8 +82,8 @@ public:
 				  
 	Matrix4d getTransformationMatrix(int object, int shape=-1) const;
 	
-	TreeObject * getParent(const Shape *shape);
-	vector<TreeObject> Objects;
+	TreeObject * getParent(const Shape *shape) const;
+	vector<TreeObject*> Objects;
 	Transform3D transform3D;
 	float version;
 	string m_filename;

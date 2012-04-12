@@ -445,24 +445,22 @@ public:
       return;
 
     m_inhibit_update = true;
-    for (uint i = 0; i < 3; i++) {
-      Matrix4d *mat;
+    Matrix4d *mat;
+    if (shapes.size()==0) {
       if (objects.size()==0) {
 	for (uint i = 0; i < 3; i++)
 	  m_xyz[i]->set_value(0.0);
-	break;
-      }
-      else if (shapes.size()==0)
+	return;
+      } else 
 	mat = &objects.back()->transform3D.transform;
-      else
-	mat = &shapes.back()->transform3D.transform;
-      Vector3d trans;
-      mat->get_translation(trans);
-      double scale = (*mat)[3][3];
-      for (uint i = 0; i < 3; i++)
-	m_xyz[i]->set_value(trans[i]/scale);
-      break;
     }
+    else
+      mat = &shapes.back()->transform3D.transform;
+    Vector3d trans;
+    mat->get_translation(trans);
+    double scale = (*mat)[3][3];
+    for (uint i = 0; i < 3; i++)
+      m_xyz[i]->set_value(trans[i]/scale);
     m_inhibit_update = false;
   }
 

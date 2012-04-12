@@ -38,7 +38,7 @@ void ObjectsTree::clear()
 
 void ObjectsTree::newObject()
 {
-  Objects.push_back(TreeObject());
+  Objects.push_back(new TreeObject());
   update_model();
 }
 
@@ -68,6 +68,7 @@ ObjectsTree::ObjectsTree()
 
 ObjectsTree::~ObjectsTree()
 {
+  Objects.clear();
   delete m_cols;
 }
 
@@ -94,20 +95,20 @@ void ObjectsTree::update_model()
   gint index = 1; // pick/select index. matches computation in draw()
 
   for (guint i = 0; i < Objects.size(); i++) {
-    Objects[i].idx = i;
+    Objects[i]->idx = i;
 
     Gtk::TreeModel::iterator obj = m_model->append(row.children());
     Gtk::TreeModel::Row orow = *obj;
-    orow[m_cols->m_name] = Objects[i].name;
+    orow[m_cols->m_name] = Objects[i]->name;
     orow[m_cols->m_object] = i;
     orow[m_cols->m_shape] = -1;
     orow[m_cols->m_pickindex] = index++;
 
-    for (guint j = 0; j < Objects[i].shapes.size(); j++) {
-      Objects[i].shapes[j]->idx = j;
+    for (guint j = 0; j < Objects[i]->shapes.size(); j++) {
+      Objects[i]->shapes[j]->idx = j;
       Gtk::TreeModel::iterator iter = m_model->append(orow.children());
       row = *iter;
-      row[m_cols->m_name] = Objects[i].shapes[j]->filename;
+      row[m_cols->m_name] = Objects[i]->shapes[j]->filename;
       row[m_cols->m_object] = i;
       row[m_cols->m_shape] = j;
       row[m_cols->m_pickindex] = index++;
@@ -123,16 +124,16 @@ Matrix4d ObjectsTree::getTransformationMatrix(int object, int shape) const
 //	result.setTranslation(translation+PrintMargin);
 
   if(object >= 0)
-    result *= Objects[object].transform3D.transform;
+    result *= Objects[object]->transform3D.transform;
   if(shape >= 0)
-    result *= Objects[object].shapes[shape]->transform3D.transform;
+    result *= Objects[object]->shapes[shape]->transform3D.transform;
   return result;
 }
 
 
 void ObjectsTree::get_selected_objects(vector<Gtk::TreeModel::Path> &path,
 				       vector<TreeObject*> &objects,
-				       vector<Shape*> &shapes)
+				       vector<Shape*> &shapes) const
 {
   objects.clear();
   shapes.clear();
@@ -143,20 +144,22 @@ void ObjectsTree::get_selected_objects(vector<Gtk::TreeModel::Path> &path,
     int num = path[p].size();
     if (num == 1)
       for (uint i=0; i<Objects.size(); i++) {
-	objects.push_back(&Objects[i]);
+	objects.push_back(Objects[i]);
       }
     else if (num == 2) {
-      objects.push_back(&Objects[path[p][1]]);
+      objects.push_back(Objects[path[p][1]]);
     }
     else if (num == 3) { // have shapes
-      shapes.push_back(Objects[path[p][1]].shapes[path[p][2]]);
+      shapes.push_back(Objects[path[p][1]]->shapes[path[p][2]]);
     }
   }
 }
 void ObjectsTree::get_selected_shapes(vector<Gtk::TreeModel::Path> &path,
 				      vector<Shape*> &allshapes,
-				      vector<Matrix4d> &transforms)
+				      vector<Matrix4d> &transforms) const
 {
+  allshapes.clear();
+  transforms.clear();
   vector<Shape*> sel_shapes;
   vector<TreeObject*> sel_objects;
   get_selected_objects(path, sel_objects, sel_shapes);
@@ -164,7 +167,7 @@ void ObjectsTree::get_selected_shapes(vector<Gtk::TreeModel::Path> &path,
   for (uint s = 0; s < sel_shapes.size(); s++) {
     bool parent_obj_selected = false;
     for (uint o = 0; o < sel_objects.size(); o++) {
-      if (getParent(sel_shapes[s]) == &Objects[o])
+      if (getParent(sel_shapes[s]) == Objects[o])
 	parent_obj_selected = true;
     }
     if (!parent_obj_selected){
@@ -187,12 +190,14 @@ void ObjectsTree::get_selected_shapes(vector<Gtk::TreeModel::Path> &path,
 
 void ObjectsTree::get_all_shapes(vector<Shape*> &allshapes, vector<Matrix4d> &transforms) const
 {
+  allshapes.clear();
+  transforms.clear();
   for (uint o = 0; o < Objects.size(); o++) {
     Matrix4d otrans =  
-      transform3D.transform * Objects[o].transform3D.transform;
+      transform3D.transform * Objects[o]->transform3D.transform;
     allshapes.insert(allshapes.begin(),
-		     Objects[o].shapes.begin(), Objects[o].shapes.end());
-    for (uint s = 0; s < Objects[o].shapes.size(); s++) {
+		     Objects[o]->shapes.begin(), Objects[o]->shapes.end());
+    for (uint s = 0; s < Objects[o]->shapes.size(); s++) {
       transforms.push_back(otrans);
     }
   }
@@ -208,18 +213,18 @@ void ObjectsTree::DeleteSelected(vector<Gtk::TreeModel::Path> &path)
     else if (num == 2) 
       Objects.erase (Objects.begin() + path[p][1]);
     else if (num == 3) { // have shapes
-      Objects[path[p][1]].shapes.erase (Objects[path[p][1]].shapes.begin() + path[p][2]);
+      Objects[path[p][1]]->shapes.erase (Objects[path[p][1]]->shapes.begin() + path[p][2]);
     }
     update_model();
   }
 }
 
-TreeObject * ObjectsTree::getParent(const Shape *shape)
+TreeObject * ObjectsTree::getParent(const Shape *shape) const
 {
   for (uint i=0; i<Objects.size(); i++) {
-    for (uint j=0; j<Objects[i].shapes.size(); j++) {
-      if (Objects[i].shapes[j] == shape)
-	return &Objects[i];
+    for (uint j=0; j<Objects[i]->shapes.size(); j++) {
+      if (Objects[i]->shapes[j] == shape)
+	return Objects[i];
     }
   }
   return NULL;

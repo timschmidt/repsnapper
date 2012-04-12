@@ -241,9 +241,9 @@ void Model::SaveStl(Glib::RefPtr<Gio::File> file)
   stringstream sstr;
   for(uint o=0;o<objtree.Objects.size();o++)
   {
-    for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
+    for(uint f=0;f<objtree.Objects[o]->shapes.size();f++)
     {
-      Shape *shape = objtree.Objects[o].shapes[f];
+      Shape *shape = objtree.Objects[o]->shapes[f];
       sstr << shape->getSTLsolid() << endl;
     }
   }
@@ -331,9 +331,9 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
 
   for(uint o=0;o<objtree.Objects.size();o++)
   {
-    for(uint f=0;f<objtree.Objects[o].shapes.size();f++)
+    for(uint f=0;f<objtree.Objects[o]->shapes.size();f++)
     {
-      Shape *selectedShape = objtree.Objects[o].shapes[f];
+      Shape *selectedShape = objtree.Objects[o]->shapes[f];
       Vector3d p ;
       selectedShape->transform3D.transform.get_translation(p);
       Vector3d size = selectedShape->Max - selectedShape->Min;
@@ -419,7 +419,7 @@ int Model::AddShape(TreeObject *parent, Shape *shape, string filename, bool auto
   if (!parent) {
     if (objtree.Objects.size() <= 0)
       objtree.newObject();
-    parent = &objtree.Objects.back();
+    parent = objtree.Objects.back();
   }
   g_assert (parent != NULL);
   
@@ -619,10 +619,10 @@ void Model::CalcBoundingBoxAndCenter()
 
   for (uint i = 0 ; i < objtree.Objects.size(); i++) {
     Matrix4d M = objtree.getTransformationMatrix (i);
-    for (uint j = 0; j < objtree.Objects[i].shapes.size(); j++) {
-      objtree.Objects[i].shapes[j]->CalcBBox();
-      Vector3d stlMin = M * objtree.Objects[i].shapes[j]->Min;
-      Vector3d stlMax = M * objtree.Objects[i].shapes[j]->Max;
+    for (uint j = 0; j < objtree.Objects[i]->shapes.size(); j++) {
+      objtree.Objects[i]->shapes[j]->CalcBBox();
+      Vector3d stlMin = M * objtree.Objects[i]->shapes[j]->Min;
+      Vector3d stlMax = M * objtree.Objects[i]->shapes[j]->Max;
       for (uint k = 0; k < 3; k++) {
 	newMin[k] = MIN(stlMin[k], newMin[k]);
 	newMax[k] = MAX(stlMax[k], newMax[k]);
@@ -677,7 +677,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   glMultMatrixd (&objtree.transform3D.transform.array[0]);
 
   for (uint i = 0; i < objtree.Objects.size(); i++) {
-    TreeObject *object = &objtree.Objects[i];
+    TreeObject *object = objtree.Objects[i];
     index++;
 
     glPushMatrix();
@@ -690,13 +690,9 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       glMultMatrixd (&shape->transform3D.transform.array[0]);
 
       bool is_selected = false;
-      // for (uint o = 0; o < sel_objects.size(); o++)
-      // 	if (sel_objects[o] == object)
-      // 	  is_selected = true;
-      // if (!is_selected)
-	for (uint s = 0; s < sel_shapes.size(); s++) 
-	  if (sel_shapes[s] == shape)
-	    is_selected = true;
+      for (uint s = 0; s < sel_shapes.size(); s++) 
+	if (sel_shapes[s] == shape)
+	  is_selected = true;
 
       // this is slow for big shapes
       if (is_selected) {

@@ -298,6 +298,8 @@ void Model::Slice(vector<Shape*> shapes,
   for (uint i = 0; i<transforms.size(); i++)
     transforms[i] = settings.getBasicTransformation(transforms[i]);
 
+  assert(shapes.size() == transforms.size());
+
   int LayerNr = 0;
   bool varSlicing = settings.Slicing.Varslicing;
 
@@ -328,7 +330,6 @@ void Model::Slice(vector<Shape*> shapes,
     { // simple, can do multihreading
       if (progress_steps==0) progress_steps=1;
       int num_layers = (int)ceil((maxZ - minZ) / thickness);
-      vector<Layer*> omp_layers;
       layers.resize(num_layers);
       int nlayer;
       bool cont = true;
@@ -750,17 +751,16 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
   if (is_calculating) {
     return;
   }
-  // for (uint i = 0; i<transforms.size(); i++)
-  //   transforms[i] = settings.getBasicTransformation(transforms[i]);
 
-  is_calculating=true;
+  assert(shapes.size() == transforms.size());
+
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();
   string GcodeLayer = settings.GCode.getLayerText();
   string GcodeEnd   = settings.GCode.getEndText();
+  gcode.clear();
   GCodeState state(gcode);
 
-  gcode.clear();
   Infill::clearPatterns();
 
   Vector3d printOffset  = settings.Hardware.PrintMargin;
