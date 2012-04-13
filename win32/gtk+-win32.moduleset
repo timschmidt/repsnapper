@@ -76,7 +76,7 @@
 </tarball>
 
 <repository type="tarball" name="fontconfig"
-    href="http://www.fontconfig.org/release" />
+    href="http://www.freedesktop.org/software/fontconfig/release/" />
 
 <autotools id="fontconfig" autogen-sh="autogen.sh" skip-autogen="false" >
         <branch module="fontconfig-2.8.0.tar.gz" version="2.8.0" repo="fontconfig"
