@@ -86,12 +86,12 @@ void View::load_gcode ()
     return;
   }
  
-  FileChooser::ioDialog (m_model, FileChooser::OPEN, FileChooser::GCODE);
+  FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::GCODE);
 }
 
 void View::save_gcode ()
 {
-  FileChooser::ioDialog (m_model, FileChooser::SAVE, FileChooser::GCODE);
+  FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::GCODE);
 }
 
 void View::move_gcode_to_platform ()
@@ -122,7 +122,7 @@ void View::convert_to_gcode ()
 
 void View::load_stl ()
 {
-  FileChooser::ioDialog (m_model, FileChooser::OPEN, FileChooser::STL);
+  FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::STL);
 }
 
 void View::toggle_fullscreen()
@@ -139,12 +139,12 @@ void View::toggle_fullscreen()
 
 void View::save_stl ()
 {
-  FileChooser::ioDialog (m_model, FileChooser::SAVE, FileChooser::STL);
+  FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::STL);
 }
 
 void View::slice_svg ()
 {
-  FileChooser::ioDialog (m_model, FileChooser::SAVE, FileChooser::SVG);
+  FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::SVG);
 }
 
 void View::send_gcode ()
@@ -649,7 +649,7 @@ void View::home_all()
 
 void View::load_settings()
 {
-  FileChooser::ioDialog (m_model, FileChooser::OPEN, FileChooser::SETTINGS);
+  FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::SETTINGS);
 }
 
 void View::save_settings()
@@ -669,7 +669,7 @@ void View::save_settings()
 
 void View::save_settings_as()
 {
-  FileChooser::ioDialog (m_model, FileChooser::SAVE, FileChooser::SETTINGS);
+  FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::SETTINGS);
 }
 
 void View::inhibit_print_changed()

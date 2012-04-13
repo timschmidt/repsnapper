@@ -318,9 +318,9 @@ void Model::Slice(vector<Shape*> shapes,
 
   m_progress->set_terminal_output(settings.Display.TerminalProgress);
   m_progress->start (_("Slicing"), maxZ);
-  for (vector<Layer *>::iterator pIt = layers.begin();
-       pIt != layers. end(); pIt++)
-    delete *pIt;
+  // for (vector<Layer *>::iterator pIt = layers.begin();
+  //      pIt != layers. end(); pIt++)
+  //   delete *pIt;
   layers.clear();
 
   int progress_steps=(int)(maxZ/thickness/100);

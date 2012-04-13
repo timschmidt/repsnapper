@@ -42,7 +42,6 @@ class Render : public Gtk::DrawingArea
   void CenterView();
   void tree_changed();
   void selection_changed();
-  GtkWidget *get_widget();
   guint find_object_at(gdouble x, gdouble y);
   Vector3d mouse_on_plane(double x, double y, double plane_z=0) const;
 
@@ -50,6 +49,7 @@ class Render : public Gtk::DrawingArea
   Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection);
   ~Render();
 
+  GtkWidget *get_widget();
   void set_model (Model *model);
   virtual bool on_configure_event(GdkEventConfigure* event);
   virtual bool on_expose_event(GdkEventExpose* event);

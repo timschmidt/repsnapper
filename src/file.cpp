@@ -24,6 +24,7 @@
 
 #include "file.h"
 #include "model.h"
+#include "view.h"
 
 string to_lower(const string &l)
 {
@@ -40,11 +41,74 @@ string to_upper(const string &l)
   return lower;
 }
 
+
 namespace {
+
+  class FileDialog : public Gtk::FileChooserDialog
+  {
+  public:
+    //FileDialog() : Gtk::FileChooserDialog(){};
+    FileDialog(const string &title, Gtk::FileChooserAction action,
+	       View* view, string directory) 
+      : Gtk::FileChooserDialog(title, action)
+    {
+
+      add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+      if (action == Gtk::FILE_CHOOSER_ACTION_SAVE) {
+	add_button(Gtk::Stock::SAVE, Gtk::RESPONSE_ACCEPT);
+	set_do_overwrite_confirmation(true);
+      }
+      else 
+	add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_ACCEPT);
+
+      cerr << title << endl;
+      if (action == Gtk::FILE_CHOOSER_ACTION_OPEN) {
+	set_select_multiple (true);
+	this->view = view;
+	signal_update_preview().connect( sigc::mem_fun(this, &FileDialog::on_preview_update) );
+      }
+      else
+	set_select_multiple (false);
+
+      if (directory!="")
+	set_current_folder (directory);
+    }
+
+    void add_file_filters(const vector<string> &file_filters) 
+    {
+      this->file_filters = file_filters;
+      Gtk::FileFilter filter;
+      filter.set_name(_("Readable Files"));
+      for (uint i=0; i<file_filters.size(); i++) {
+	cerr << file_filters[i] << endl;
+	filter.add_pattern(to_lower(file_filters[i]));
+	filter.add_pattern(to_upper(file_filters[i]));
+      }
+      add_filter (filter);
+      // an option to open improperly named files
+      Gtk::FileFilter allfiles;
+      allfiles.add_pattern("*");
+      allfiles.set_name(_("All Files"));
+      add_filter (allfiles);
+    }
+
+    void on_preview_update() {
+      string fname = get_preview_filename() ;
+      cerr <<" preview " << fname << endl;
+      // view->previewFile(fname);
+    }
+
+  private:
+    View* view;
+    vector<string> file_filters;
+  };
+  
+
 
   const vector< Glib::RefPtr< Gio::File > > 
   openGtk(const string &directory, const vector<string> &file_filters,
-	   FileChooser::Op op, const string &title, gboolean multiple) {
+	  FileChooser::Op op, const string &title, 
+	  View * view) {
     // GSList *result = NULL;
     Gtk::FileChooserAction action;
     const char *button_text = NULL;
@@ -61,48 +125,28 @@ namespace {
       break;
     }
 
-    Gtk::FileChooserDialog dialog(title, action);
-    dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-    dialog.add_button(Gtk::Stock::OK, Gtk::RESPONSE_ACCEPT);
+    FileDialog dialog(title, action, view, directory);
+    dialog.add_file_filters(file_filters);
 
-    if (directory!="")
-      dialog.set_current_folder (directory);
+    int runresult = dialog.run();
+
+    std::vector< Glib::RefPtr < Gio::File > > result;
+    //Handle the response:
+    if (runresult == Gtk::RESPONSE_ACCEPT)
+      result = dialog.get_files();
     
-    dialog.set_select_multiple (multiple);
-
-    // essentially case-insensitive file filter
-    Gtk::FileFilter filter;
-    filter.set_name(_("Readable Files"));
-    for (uint i=0; i<file_filters.size(); i++) {
-      filter.add_pattern(to_lower(file_filters[i]));
-      filter.add_pattern(to_upper(file_filters[i]));
-    }
-    dialog.add_filter (filter);
-
-    // an option to open improperly named files
-    Gtk::FileFilter allfiles;
-    allfiles.add_pattern("*");
-    allfiles.set_name(_("All Files"));
-    dialog.add_filter (allfiles);
-
-    dialog.run();
-    
-    std::vector< Glib::RefPtr < Gio::File > > result = dialog.get_files();
-
     return result;
   }
 }
 
 // Shared file chooser logic
 // FIXME: impl. multi-selection cleanly
-void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
+void FileChooser::ioDialog (Model *model, View* view, Op o, Type t, bool dropRFO)
 {
   vector<Glib::RefPtr<Gio::File> > files;
   vector<string> filter(1);
   string directory;
   string title;
-
-  gboolean multiple = FALSE;
 
   const string dfilt[] = { "*.stl", "*.gcode", "*.wrl", "*.svg" };
   vector<string> defaultfilter(dfilt, dfilt+(sizeof(dfilt)/sizeof(string)));
@@ -117,7 +161,6 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
     filter[0] = "*.gcode" ;
     directory = model->settings.GCodePath;
     title = _("Choose GCODE filename");
-    multiple = (o == FileChooser::OPEN);
     break;
   case SVG:
     filter[0] = "*.svg" ;
@@ -127,20 +170,19 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
   case STL:
     filter = defaultfilter; //"*.stl";
     title = _("Choose filename");
-    multiple = (o == FileChooser::OPEN);
+    directory = model->settings.STLPath;
     break;
   default:
     filter = defaultfilter;
     title = _("Choose filename");
     directory = model->settings.STLPath;
-    multiple = (o == FileChooser::OPEN);
     break;
   }
 
   if (directory == "")
     directory = ".";
 
-  files = openGtk (directory, filter, o, title, multiple);
+  files = openGtk (directory, filter, o, title, view);
 
   for (uint i= 0; i < files.size(); i++) {
 
@@ -170,6 +212,7 @@ void FileChooser::ioDialog (Model *model, Op o, Type t, bool dropRFO)
 	model->ReadSVG (file);
       else
 	model->SliceToSVG (file);
+      model->settings.STLPath = directory_path;
       break;
     case STL:
     default:
