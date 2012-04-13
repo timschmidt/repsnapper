@@ -954,7 +954,7 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	draw_polys(supportInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
 		   ORANGE, 0.5);
       for(size_t s=0;s<skinFullInfills.size();s++) 
-	draw_polys(skinFullInfills[s]->infillpolys, GL_LINE_LOOP, 3, 3, 
+	draw_polys(skinFullInfills[s]->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   (skinFullInfills[s]->cached?BLUEGREEN:GREEN), 0.6);
     }
   //draw_polys(GetInnerShell(), GL_LINE_LOOP, 2, 3, WHITE,  1);

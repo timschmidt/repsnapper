@@ -101,7 +101,7 @@ class Infill
   void getLines(vector<Vector3d> &lines) const;
   
   typedef struct { Vector2d from; Vector2d to; } infillline;
-  vector<Poly> sortedpolysfromlines(const vector<infillline> &lines);
+  vector<Poly> sortedpolysfromlines(const vector<infillline> &lines, double z);
 
   void clear();
   uint size() const {return infillpolys.size();};

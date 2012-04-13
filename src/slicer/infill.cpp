@@ -135,6 +135,7 @@ void Infill::addPolys(double z, const vector<Poly> &polys,
   clipp.addPolys   (polys,         subject); 
   clipp.addPolygons(patterncpolys, clip);
   clipp.setExtrusionFactor(extrusionfactor); // set my extfactor
+  clipp.setZ(z);
   vector<Poly> result = clipp.intersect();
   if (type==PolyInfill)  // reversal from evenodd clipping
     for (uint i = 0; i<result.size(); i+=2)
@@ -434,7 +435,7 @@ bool intersectsPolys(const Vector2d &P1, const Vector2d &P2,
 // polys will later be connected by moves (as printlines)
 // that is: connect nearest lines, but when connection intersects anything,
 //          start a new path (poly)
-vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines)
+vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, double z)
 {
   vector<Poly> polys;
   uint count = lines.size();
@@ -443,7 +444,6 @@ vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines)
 
   vector<bool> done(count);
   for (uint i = 0; i < count; i++ ) done[i]==false;
-  double z = layer->getZ();
   Poly p(z, extrusionfactor); 
   p.setClosed(false);
   p.addVertex(lines[0].from);
@@ -554,8 +554,7 @@ void Infill::addInfillPolys(const vector<Poly> &polys)
   	      }
   	  }
       }
-
-      infillpolys = sortedpolysfromlines(lines);
+      infillpolys = sortedpolysfromlines(lines, polys.back().getZ());
       break;
     }
   default:
