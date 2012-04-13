@@ -20,12 +20,12 @@ fi
 GLUTVER=3.7.6
 
 cd "$CHECKOUT" && wget -c http://user.xmission.com/~nate/glut/glut-$GLUTVER-bin.zip -O glut-$GLUTVER-bin.zip &&
-unzip -f glut-$GLUTVER-bin.zip && cd .. || exit 1
+unzip -u glut-$GLUTVER-bin.zip && cd .. || exit 1
 
 mkdir -p "$TARGET"/include/GL/
-cp "$CHECKOUT"/glut-$GLUTVER-bin/glut.h "$TARGET"/include/GL/
-cp "$CHECKOUT"/glut-$GLUTVER-bin/glut32.dll "$TARGET"/bin/
-cp "$CHECKOUT"/glut-$GLUTVER-bin/glut32.lib "$TARGET"/lib/
+cp "$CHECKOUT"/glut-$GLUTVER-bin/glut.h "$TARGET"/include/GL/ || exit 1
+cp "$CHECKOUT"/glut-$GLUTVER-bin/glut32.dll "$TARGET"/bin/ || exit 1
+cp "$CHECKOUT"/glut-$GLUTVER-bin/glut32.lib "$TARGET"/lib/ || exit 1
 
 # Build repsnapper
 if [ ! -d "$CHECKOUT/repsnapper" ]; then
