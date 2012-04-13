@@ -532,6 +532,7 @@ bool sameAngle(double angle1, double angle2, double err)
 
 void Infill::addInfillPolys(const vector<Poly> &polys)
 {
+  if (polys.size() == 0) return;
 #define NEWINFILL 1
 #if NEWINFILL
   switch (type) {
