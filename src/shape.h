@@ -70,6 +70,8 @@ void checkGlutInit();
 class Shape 
 {
 public:
+  virtual short dimensions(){return 3;};
+  
 	Shape();
 	Shape(string filename, istream *text);
  	string filename; 
@@ -161,7 +163,11 @@ bool CleanupStraightLines(const vector<Vector2d> &vertices, vector<Segment> &lin
 // shape to represent a 2-dimensional Object (SVG file etc.)
 class FlatShape : public Shape
 {
+
+  
  public:
+  virtual short dimensions(){return 2;};
+  
   FlatShape();
   FlatShape(string filename);
   /* FlatShape(const FlatShape &rhs); */

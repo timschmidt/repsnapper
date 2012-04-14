@@ -42,19 +42,33 @@ void ObjectsTree::newObject()
   update_model();
 }
 
+Gtk::TreePath TreeObject::addShape(Shape *shape, std::string location)
+{
+  Gtk::TreePath path;
+  path.push_back (0); // root
+  path.push_back (idx);
+
+  shape->filename = location;
+  if (shapes.size() > 0)
+    if (dimensions != shape->dimensions()) {
+      Gtk::MessageDialog dialog (_("Cannot add a 3-dimensional Shape to a 2-dimensional Model and vice versa"), 
+				 false, Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
+      dialog.run();
+      path.push_back (shapes.size() - 1);
+      return path;
+    }
+  
+  dimensions = shape->dimensions();
+  shapes.push_back(shape);
+  path.push_back (shapes.size() - 1);
+  return path;
+}
+
 Gtk::TreePath ObjectsTree::addShape(TreeObject *parent, Shape *shape,
 				    std::string location)
 {
-  // Shape r= Shape(shape);
-  // // r.stl = stl;
-  shape->filename = location;
-  parent->shapes.push_back(shape);
+  Gtk::TreePath path = parent->addShape(shape, location);
   update_model();
-  Gtk::TreePath path;
-  path.push_back (0); // root
-  path.push_back (parent->idx);
-  path.push_back (parent->shapes.size() - 1);
-
   return path;
 }
 

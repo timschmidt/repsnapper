@@ -300,6 +300,7 @@ void Model::Slice(vector<Shape*> shapes,
 
   assert(shapes.size() == transforms.size());
 
+
   int LayerNr = 0;
   bool varSlicing = settings.Slicing.Varslicing;
 
@@ -322,6 +323,18 @@ void Model::Slice(vector<Shape*> shapes,
   //      pIt != layers. end(); pIt++)
   //   delete *pIt;
   layers.clear();
+
+  bool flatshapes = shapes.front()->dimensions() == 2;
+  if (flatshapes) {
+    layers.resize(1);
+    layers[0] = new Layer(0, thickness  , 1); 
+    layers[0]->setZ(0); // set to real z
+    for (uint nshape= 0; nshape < shapes.size(); nshape++) {
+      layers[0]->addShape(transforms[nshape], *shapes[nshape],  0, max_gradient);
+    }
+    is_calculating=false;
+    return;
+  }
 
   int progress_steps=(int)(maxZ/thickness/100);
   if (progress_steps==0) progress_steps=1;
@@ -836,6 +849,10 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
     ClearGCode();
     ClearPreview();
   }
+
+  // display whole layer if flat shapes
+  if (shapes.back()->dimensions() == 2)
+    gcode.layerchanges.push_back(0);
   
   m_progress->stop (_("Done"));
 

@@ -43,8 +43,11 @@ public:
 	string name;
 	Transform3D transform3D;
 	vector<Shape*> shapes;
+  short dimensions;
 	uint size(){return shapes.size();};
 	int idx;
+  Gtk::TreePath addShape(Shape *shape, std::string location);
+
 };
 
 

@@ -696,7 +696,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 
       // this is slow for big shapes
       if (is_selected) {
-	if (!shape->slow_drawing) {
+	if (!shape->slow_drawing && shape->dimensions()>2) {
 	  // Enable stencil buffer when we draw the selected object.
 	  glEnable(GL_STENCIL_TEST);
 	  glStencilFunc(GL_ALWAYS, 1, 1);

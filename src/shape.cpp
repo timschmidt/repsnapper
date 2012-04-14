@@ -1691,8 +1691,8 @@ void FlatShape::clear()
 
 void FlatShape::draw_geometry() {
   for (uint i = 0; i < polygons.size(); i++) {
-    //polygons[i].draw_as_surface(); // poly2tri crashes
-    polygons[i].draw(GL_LINE_LOOP,false);
+    polygons[i].draw_as_surface(); 
+    //polygons[i].draw(GL_LINE_LOOP,false);
   }
 }
 
@@ -1728,6 +1728,7 @@ void FlatShape::mirror()
 // Rotate and adjust for the user - not a pure rotation by any means
 void FlatShape::Rotate(const Vector3d & axis, const double & angle)
 {
+  CalcBBox();
   if (axis.z()==0) return; // try to only 2D-rotate
   Vector2d center(Center.x(),Center.y());
   for (size_t i=0; i<polygons.size(); i++)
@@ -1927,9 +1928,9 @@ void FlatShape::xml_handle_node(const xmlpp::Node* node)
 
     //attributes:
     const xmlpp::Element::AttributeList& attributes = nodeElement->get_attributes();
+
     for(xmlpp::Element::AttributeList::const_iterator iter = attributes.begin(); 
-	iter != attributes.end(); ++iter)
-    {
+	iter != attributes.end(); ++iter) {
       const xmlpp::Attribute* attribute = *iter;
 
       const Glib::ustring namespace_prefix = attribute->get_namespace_prefix();
@@ -1947,7 +1948,7 @@ void FlatShape::xml_handle_node(const xmlpp::Node* node)
 	    svg_prescale = 0.3527;
 	}	  
       }
-      else if (attr=="id"){
+      else if (attr=="id") {
       }
       else 
 	cerr << "unknown Attribute in " << svg_cur_name << " : " << attr << " = " <<attribute->get_value() << endl;
@@ -1958,8 +1959,7 @@ void FlatShape::xml_handle_node(const xmlpp::Node* node)
     }
 
     const xmlpp::Attribute* attribute = nodeElement->get_attribute("title");
-    if(attribute)
-    {
+    if(attribute) {
       std::cout << "title found: =" << attribute->get_value() << std::endl;
     }
   }
@@ -1969,9 +1969,11 @@ void FlatShape::xml_handle_node(const xmlpp::Node* node)
     //Recurse through child nodes:
     xmlpp::Node::NodeList list = node->get_children();
     for(xmlpp::Node::NodeList::iterator iter = list.begin(); iter != list.end(); ++iter)
-    {
-      xml_handle_node(*iter); //recursive
-    }
+      {
+	xml_handle_node(*iter); //recursive
+      }
+    // get last bit (?)
+    if (svg_cur_name!="") svg_addPolygon();
   }
 }
 
@@ -2006,6 +2008,13 @@ int FlatShape::loadSVG(string filename)
     clipp.addPolys(polygons, subject);
     polygons = clipp.unite(CL::pftNonZero,CL::pftNegative);
     CalcBBox();
+    Vector2d center2(Center.x(),Center.y());
+    for (uint i= 0; i<polygons.size(); i++) {
+      polygons[i].mirrorX(Center);
+      polygons[i].rotate(center2, M_PI);
+    }
+    CalcBBox();
+    
   #ifdef LIBXMLCPP_EXCEPTIONS_ENABLED
   }
   catch(const std::exception& ex)
