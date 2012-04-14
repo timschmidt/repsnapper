@@ -73,6 +73,7 @@ Vector3d cross2d(const Vector2d &A, const Vector2d &B, double z=0);
 double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2, 
 				 const Vector2d &p, Vector2d &onseg);
 
+void     rotate (      Vector2d &p, const Vector2d &center, double angle, bool ccw=true);
 Vector2d rotated(const Vector2d &p, const Vector2d &center, double angle, bool ccw=true);
 
 struct printline;

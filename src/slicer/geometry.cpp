@@ -360,14 +360,27 @@ Vector2d random_displaced(const Vector2d &v, double delta)
   return Vector2d(v.x()+randdelta, v.y()+randdelta);
 }
 
+void rotate(Vector2d &p, const Vector2d &center, double angle, bool ccw)
+{
+  if (p==center) return ;
+  if (!ccw) angle = -angle;
+  double cosa = cos(angle);
+  double sina = sin(angle);
+  Vector2d r(p - center);
+  p.x() = center.x() + r.x() * cosa - r.y() * sina; 
+  p.y() = center.y() + r.x() * sina + r.y() * cosa;
+}
 
 Vector2d rotated(const Vector2d &p, const Vector2d &center, double angle, bool ccw)
 {
-  Vector3d center3 (center.x(), center.y(), 0);
-  Vector3d radius3 (p.x() - center.x(), p.y() - center.y(), 0);
-  Vector3d axis(0.,0., ccw?1.:-1.);
-  Vector3d rrotated3 = radius3.rotate(angle, axis);
-  return center + Vector2d(rrotated3.x(), rrotated3.y());
+  Vector2d r(p);
+  rotate(r,center,angle,ccw);
+  return r;
+  // Vector3d center3 (center.x(), center.y(), 0);
+  // Vector3d radius3 (p.x() - center.x(), p.y() - center.y(), 0);
+  // Vector3d axis(0.,0., ccw?1.:-1.);
+  // Vector3d rrotated3 = radius3.rotate(angle, axis);
+  // return center + Vector2d(rrotated3.x(), rrotated3.y());
 }
 
 // squared minimum distance of p to segment s1--s2, onseg = resulting point on segment

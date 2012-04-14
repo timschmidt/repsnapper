@@ -176,7 +176,7 @@ Vector2d Poly::getCenter()
 void Poly::rotate(const Vector2d &rotcenter, double angle) 
 {
   for (uint i = 0; i < vertices.size();  i++) {
-    vertices[i] = rotated(vertices[i], rotcenter, angle);
+    ::rotate(vertices[i], rotcenter, angle);
   }
 }
 
