@@ -891,27 +891,31 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
   else 
     cout << ostr.str() << endl;
 
-
   is_calculating=false;
 }
 
 string Model::getSVG() const 
 {
+  Vector3d printOffset  = settings.Hardware.PrintMargin;
+  
   ostringstream ostr;
   ostr << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" <<endl
+       << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">" << endl
        << "<!-- Created by Repsnapper -->" << endl
        << "<svg " << endl
        << "\txmlns:svg=\"http://www.w3.org/2000/svg\""<< endl
        << "\txmlns=\"http://www.w3.org/2000/svg\"" << endl
-       << "\tversion=\"1.1\"" << endl
-    //<< "\twidth=\"" << Max.x()-Min.x() <<"\" height=\""<< Max.y()-Min.y() << "\""
+    //<< "\tversion=\"1.1\"" << endl
+       << "\twidth=\"" << Max.x()-Min.x()+printOffset.x() 
+       << "\" height=\""<< Max.y()-Min.y()+printOffset.y() << "\"" << endl
        << ">" << endl;
-  //Vector2d trans(Min.x(),Min.y());
+  ostr << "<g id=\"" << layers.size() << "_Layers\">" << endl;
   for (uint i = 0; i < layers.size(); i++) {
-    ostr << "\t<g id=\"Layer_"<< i << "_Z=" << layers[i]->getZ() << "\">" 
+    ostr << "\t<g id=\"Layer_"<< i << "_z:" << layers[i]->getZ() << "\">" 
 	 << "\t\t" << layers[i]->SVGpath() 
 	 << "\t</g>" << endl;
   }
+  ostr << "</g>" << endl;
   ostr << "</svg>" << endl;
   return ostr.str();
 }

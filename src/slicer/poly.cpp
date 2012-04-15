@@ -725,14 +725,14 @@ string Poly::SVGpath(const Vector2d &trans) const
   ostringstream ostr;
   Poly transpoly(*this,0);
   transpoly.move(trans);
-  ostr << "M ";
+  ostr << "m ";
   ostr  << fixed << transpoly[0].x() << " " << transpoly[0].y();
   for (uint i=1; i < transpoly.size(); i++) {
     ostr.precision(5);
-    ostr  << fixed << " L " << transpoly[i].x() << " " << transpoly[i].y();
+    ostr  << fixed << " l " << transpoly[i].x() << " " << transpoly[i].y();
     if (i < size()-1) ostr << " ";
   }
   if (closed)
-  ostr << " Z";
+  ostr << " z";
   return ostr.str();
 }

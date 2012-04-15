@@ -80,7 +80,6 @@ namespace {
       Gtk::FileFilter filter;
       filter.set_name(_("Readable Files"));
       for (uint i=0; i<file_filters.size(); i++) {
-	cerr << file_filters[i] << endl;
 	filter.add_pattern(to_lower(file_filters[i]));
 	filter.add_pattern(to_upper(file_filters[i]));
       }
