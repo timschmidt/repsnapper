@@ -78,24 +78,27 @@ void Model::MakeRaft(GCodeState &state, double &z)
   double raft_z = -totalthickness + basethickness * settings.Slicing.FirstLayerHeight;
 
   for (uint i = 0; i < basesettings.LayerCount; i++) {
-    Layer * layer = new Layer(-interfacesettings.LayerCount-basesettings.LayerCount + i, 
-			       basethickness, 1);
+    Layer * layer = new Layer(lastlayer,
+			      -interfacesettings.LayerCount-basesettings.LayerCount + i, 
+			      basethickness, 1);
     layer->setZ(raft_z);
     layer->CalcRaftInfill(raftpolys,basesettings.MaterialDistanceRatio,
 			  basesettings.Distance, rotation);
     raft_layers.push_back(layer);
+    lastlayer = layer;
     rotation += basesettings.RotationPrLayer*M_PI/180;
     raft_z += basethickness;
   }
   rotation = interfacesettings.Rotation;
   for (uint i = 0; i < interfacesettings.LayerCount; i++) {
-    Layer * layer = new Layer(-basesettings.LayerCount + i, 
+    Layer * layer = new Layer(lastlayer, -basesettings.LayerCount + i, 
 			      interthickness, 1);
     layer->setZ(raft_z);
     layer->CalcRaftInfill(raftpolys,interfacesettings.MaterialDistanceRatio,
 			  interfacesettings.Distance, rotation);
     
     raft_layers.push_back(layer);
+    lastlayer = layer;
     rotation += interfacesettings.RotationPrLayer*M_PI/180;
     raft_z += interthickness;
   }
@@ -327,7 +330,8 @@ void Model::Slice(vector<Shape*> shapes,
   bool flatshapes = shapes.front()->dimensions() == 2;
   if (flatshapes) {
     layers.resize(1);
-    layers[0] = new Layer(0, thickness  , 1); 
+    layers[0] = new Layer(lastlayer, 0, thickness  , 1); 
+    lastlayer = layers[0];
     layers[0]->setZ(0); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
       layers[0]->addShape(transforms[nshape], *shapes[nshape],  0, max_gradient);
@@ -364,14 +368,15 @@ void Model::Slice(vector<Shape*> shapes,
 #endif
 	}
 	if (!cont) continue;
-	Layer * layer = new Layer(nlayer, thickness, skins); 
+	Layer * layer = new Layer(NULL, nlayer, thickness, skins); 
 	layer->setZ(z); // set to real z
 	int new_polys=0;
 	for (uint nshape= 0; nshape < shapes.size(); nshape++) {
 	  new_polys += layer->addShape(transforms[nshape], *shapes[nshape],
 				       z, max_gradient);
 	}
-	if (cont) layers[nlayer] = layer;
+	if (cont) 
+	  layers[nlayer] = layer;
       }
 #ifdef _OPENMP
       if (cont)
@@ -379,6 +384,11 @@ void Model::Slice(vector<Shape*> shapes,
       else layers.clear();
       omp_destroy_lock(&progress_lock);
 #endif
+      for (uint nlayer = 1; nlayer < layers.size(); nlayer++) {
+	layers[nlayer]->setPrevious(layers[nlayer-1]);
+      }
+      if (layers.size()>0)
+	lastlayer = layers.back();
     }
   else 
     { // have skins and/or serial build
@@ -387,7 +397,7 @@ void Model::Slice(vector<Shape*> shapes,
       double z = minZ;
       double shape_z = z;
       double max_shape_z = z + serialheight;
-      Layer * layer = new Layer(LayerNr, thickness, skins); 
+      Layer * layer = new Layer(lastlayer, LayerNr, thickness, skins); 
       layer->setZ(shape_z);
       LayerNr = 1;
       int new_polys=0;
@@ -420,7 +430,8 @@ void Model::Slice(vector<Shape*> shapes,
 	      max_gradient = 0;
 	      if (new_polys > -1){
 		layers.push_back(layer);
-		layer = new Layer(LayerNr++, thickness, skins);
+		lastlayer = layer;
+		layer = new Layer(lastlayer, LayerNr++, thickness, skins);
 	      }
 	    }
 	  }
@@ -434,7 +445,8 @@ void Model::Slice(vector<Shape*> shapes,
 		thickness = skin_thickness*skins;
 	      }
 	      layers.push_back(layer);
-	      layer = new Layer(LayerNr++, thickness, skins);
+	      lastlayer = layer;
+	      layer = new Layer(lastlayer, LayerNr++, thickness, skins);
 	    }
 	    z = max_shape_z + thickness;
 	    currentshape = 0; // all shapes again
@@ -784,6 +796,14 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
   double   printOffsetZ = settings.Hardware.PrintMargin.z();
 
   // Make Layers
+  lastlayer = NULL;
+
+  if (settings.RaftEnable)
+    {
+      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
+      MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
+    }
+
   is_calculating=false;
   Slice(shapes, transforms);
 
@@ -809,11 +829,6 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
   CalcInfill();
 
 
-  if (settings.RaftEnable)
-    {
-      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
-      MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
-    }
   if (settings.Slicing.Skirt) 
     MakeSkirt();
 
@@ -844,6 +859,9 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
     } catch (Glib::Error e) {
       error("GCode Error:", (e.what()).c_str());
     }
+    // if (layers[p]->getPrevious() != NULL)
+    //   cerr << p << ": " <<layers[p]->LayerNo << " prev: " 
+    // 	   << layers[p]->getPrevious()->LayerNo << endl;
   }
   
   state.AppendCommands(commands, settings.Slicing.RelativeEcode);
@@ -924,6 +942,7 @@ string Model::getSVG() const
 void Model::SliceToSVG(Glib::RefPtr<Gio::File> file) 
 {
   if (is_calculating) return;
+  lastlayer = NULL;
   Slice();
   m_progress->stop (_("Done"));
   Glib::file_set_contents (file->get_path(), getSVG());
@@ -934,6 +953,7 @@ void Model::SliceToSVG(Glib::RefPtr<Gio::File> file,
 		       vector<Matrix4d> &transforms)
 {
   if (is_calculating) return;
+  lastlayer = NULL;
   Slice(shapes,transforms);
   m_progress->stop (_("Done"));
   Glib::file_set_contents (file->get_path(), getSVG());

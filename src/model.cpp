@@ -929,7 +929,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   // else 
   objtree.get_all_shapes(shapes, transforms);
 
-  Layer * layer = new Layer(LayerNr, thickness);
+  Layer * layer = new Layer(NULL, LayerNr, thickness);
   layer->setZ(z);
   for(size_t f=0;f < shapes.size();f++)
     {

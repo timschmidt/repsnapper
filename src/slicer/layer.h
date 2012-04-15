@@ -36,7 +36,7 @@ class Layer
 
 public:
   Layer();
-  Layer(int layerno=-1, double thick=0., uint skins=1);
+  Layer(Layer * previous, int layerno=-1, double thick=0., uint skins=1);
 
   ~Layer();
 
@@ -45,6 +45,9 @@ public:
   double Z;	
   double getZ(){return Z;}
   void setZ(double z){Z=z;}
+
+  Layer * getPrevious(){return previous;};
+  void setPrevious(Layer * prevlayer){previous = prevlayer;};
 
   Vector2d getMin() const {return Min;};
   Vector2d getMax() const {return Max;};
@@ -138,6 +141,8 @@ public:
   string SVGpath(const Vector2d &trans=Vector2d::ZERO) const;
 
  private:
+
+  Layer * previous;
 
   Vector2d Min, Max;  // Bounding box
 

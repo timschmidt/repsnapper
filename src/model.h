@@ -184,6 +184,7 @@ public:
 	bool is_calculating;
 	bool is_printing;
 	//GCodeIter *m_iter;
+	Layer * lastlayer;
 };
 
 #endif // MODEL_H

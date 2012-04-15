@@ -27,8 +27,8 @@
 // polygons will be simplified to thickness/CLEANFACTOR
 #define CLEANFACTOR 5
 
-Layer::Layer(int layerno, double thick, uint skins) 
-  : LayerNo(layerno), thickness(thick), skins(skins)
+Layer::Layer(Layer * prevlayer, int layerno, double thick, uint skins) 
+  : LayerNo(layerno), thickness(thick), previous(prevlayer), skins(skins)
 {
   normalInfill = NULL;
   fullInfill = NULL;
@@ -37,7 +37,6 @@ Layer::Layer(int layerno, double thick, uint skins)
   Min = Vector2d(G_MAXDOUBLE, G_MAXDOUBLE);
   Max = Vector2d(G_MINDOUBLE, G_MINDOUBLE);
 }
-
 
 Layer::~Layer()
 {
@@ -817,10 +816,9 @@ string Layer::info() const
     ostr<<", support "<<supportInfill->size() ;
   ostr <<", skinfills "<<skinFullInfills.size() ;
   
-  // if (next)
-  //   cout <<", next: "<<next->LayerNo;
-  // if (previous)
-  // cout <<", previous: "<<previous->LayerNo;
+  if (previous != NULL)
+    ostr << " prev.No=" << previous->LayerNo;
+
   return ostr.str();
 }
  
