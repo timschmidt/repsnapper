@@ -525,6 +525,7 @@ void Layer::setSupportPolygons(const vector<Poly> &polys)
 void Layer::setSkirtPolygon(const Poly &poly)
 {
   skirtPolygon = poly;
+  skirtPolygon.cleanup(thickness);
   skirtPolygon.setZ(Z);
 }
 
@@ -539,10 +540,7 @@ void Layer::MakeShells(const Settings &settings)
   double shelloffset    = settings.Slicing.ShellOffset;
   vector<Poly> shrinked = Clipping::getOffset(polygons,-distance-shelloffset);
   uint shellcount       = settings.Slicing.ShellCount;
-  double skirtdistance  = settings.Slicing.SkirtDistance;
   double infilloverlap  = settings.Slicing.InfillOverlap;
-  bool makeskirt        = ( settings.Slicing.Skirt 
-			    && (getZ() <= settings.Slicing.SkirtHeight) );
 
   for (uint i = 0; i<shrinked.size(); i++)  
     shrinked[i].cleanup(cleandist);
@@ -579,9 +577,6 @@ void Layer::MakeShells(const Settings &settings)
   //fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);
   //cerr << LayerNo << " > " << fillPolygons.size()<< endl;
   calcConvexHull();
-  if (makeskirt) {
-    MakeSkirt(skirtdistance); // skirt distance = 3 * shell distance
-  }
 
   //cerr << " .. made " << fillPolygons.size() << " offsetpolys "  << endl;
   // for (uint i =0; i<shellPolygons.size(); i++) {
@@ -595,9 +590,14 @@ void Layer::MakeShells(const Settings &settings)
 void Layer::MakeSkirt(double distance)
 {
   skirtPolygon.clear();
-  vector<Poly> skp = Clipping::getOffset(hullPolygon, distance, jround);
+  vector<Poly> all;
+  all.push_back(hullPolygon);
+  all.insert(all.end(),supportPolygons.begin(),supportPolygons.end());
+  Poly hull = convexHull2D(all);
+  vector<Poly> skp = Clipping::getOffset(hull, distance, jround);
   if (skp.size()>0){
     skirtPolygon = skp.front();
+    skirtPolygon.setZ(Z);
     skirtPolygon.cleanup(thickness);
   }
 }

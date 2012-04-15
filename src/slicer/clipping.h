@@ -80,8 +80,8 @@ public:
   
   vector<Poly>   intersect      (CL::PolyFillType sft=CL::pftEvenOdd, 
 				 CL::PolyFillType cft=CL::pftEvenOdd);
-  vector<Poly>   unite          (CL::PolyFillType sft=CL::pftEvenOdd, 
-				 CL::PolyFillType cft=CL::pftEvenOdd);
+  vector<Poly>   unite          (CL::PolyFillType sft=CL::pftNonZero, 
+				 CL::PolyFillType cft=CL::pftNonZero);
   vector<Poly>   subtract       (CL::PolyFillType sft=CL::pftEvenOdd, 
 				 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<Poly>   subtractMerged (double overlap=0.001,

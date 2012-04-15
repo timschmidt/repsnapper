@@ -955,7 +955,12 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   // }
 	  
   layer->MakeShells(settings);
-  
+
+  if (settings.Slicing.Skirt) {
+    if (layer->getZ() - layer->thickness <= settings.Slicing.SkirtHeight)
+      layer->MakeSkirt(settings.Slicing.SkirtDistance);
+  }
+
   if (calcinfill)
     layer->CalcInfill(settings);
   return layer;

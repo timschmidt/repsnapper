@@ -649,6 +649,10 @@ void Model::MakeSupportPolygons(double widen)
 
 void Model::MakeSkirt()
 {
+
+  if (!settings.Slicing.Skirt) return;
+  double skirtdistance  = settings.Slicing.SkirtDistance;
+
   Clipping clipp;
   guint count = layers.size();
   guint endindex = 0;
@@ -658,6 +662,7 @@ void Model::MakeSkirt()
     {
       if (layers[i]->getZ() > settings.Slicing.SkirtHeight)
 	break;
+      layers[i]->MakeSkirt(skirtdistance);
       Poly sp = layers[i]->GetSkirtPolygon();
       if (sp.size()>0) {
 	clipp.addPoly(sp,subject);
@@ -703,7 +708,6 @@ void Model::MakeShells()
 #ifdef _OPENMP
   omp_destroy_lock(&progress_lock);
 #endif
-  if (cont && settings.Slicing.Skirt) MakeSkirt();
   m_progress->update(count);
   //m_progress->stop (_("Done"));
 }
@@ -797,18 +801,21 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
     // easier before having multiplied uncovered bottoms
     MakeSupportPolygons(settings.Slicing.SupportWiden); 
 
+
   MakeFullSkins(); // must before multiplied uncovered bottoms
 
   MultiplyUncoveredPolygons();
 
   CalcInfill();
 
+
   if (settings.RaftEnable)
     {
       printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
       MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
     }
-  
+  if (settings.Slicing.Skirt) 
+    MakeSkirt();
 
   state.ResetLastWhere(Vector3d(0,0,0));
   uint count =  layers.size();
