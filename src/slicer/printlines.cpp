@@ -19,6 +19,7 @@
 
 #include "printlines.h"
 #include "poly.h"
+#include "layer.h"
 #include "gcodestate.h"
 
 ///////////// PLine3: single 3D printline //////////////////////
@@ -260,14 +261,16 @@ string PLine::info() const
 ///////////// Printlines //////////////////////
 
 
-Printlines::Printlines(const Settings * settings, double z_offset) :
+Printlines::Printlines(const Layer * layer, const Settings * settings, double z_offset) :
   Zoffset(z_offset), name(""), slowdownfactor(1.)
 {
   this->settings = settings;
+  this->layer = layer;
 }
 
 
-void Printlines::addLine(vector<PLine> &lines, const Vector2d &from, const Vector2d &to, 
+void Printlines::addLine(PLineArea area, vector<PLine> &lines, 
+			 const Vector2d &from, const Vector2d &to, 
 			 double speed, double movespeed, double feedrate) const
 {
   if (to==from) return;
@@ -283,10 +286,18 @@ void Printlines::addLine(vector<PLine> &lines, const Vector2d &from, const Vecto
       lfrom = lastpos;
     }
   }
+
+  // SLOW
+  // if (area == SHELL && layer->getPrevious() != NULL) {
+  //   //bool freeair_from = layer->getPrevious()->pointInPolygons(from);
+  //   bool freeair_to   = layer->getPrevious()->pointInPolygons(to);
+  //   //cerr << "free air?" << freeair_from << " - " <<freeair_to << endl;
+  // }
   lines.push_back(PLine(lfrom, to, speed, feedrate));
 }
 
-void Printlines::addPoly(vector<PLine> &lines, const Poly &poly, int startindex, 
+void Printlines::addPoly(PLineArea area, vector<PLine> &lines, 
+			 const Poly &poly, int startindex, 
 			 double speed, double movespeed)
 {
   vector<Vector2d> pvert;
@@ -294,12 +305,13 @@ void Printlines::addPoly(vector<PLine> &lines, const Poly &poly, int startindex,
   if (pvert.size() == 0) return;
   assert(pvert.size() % 2 == 0);
   for (uint i=0; i<pvert.size();i+=2){
-    addLine(lines, pvert[i], pvert[i+1], speed, movespeed, poly.getExtrusionFactor());
+    addLine(area, lines, pvert[i], pvert[i+1], speed, movespeed, poly.getExtrusionFactor());
   }
   setZ(poly.getZ());
 }
 
-void Printlines::makeLines(const vector<Poly> &polys,
+void Printlines::makeLines(PLineArea area,
+			   const vector<Poly> &polys,
 			   bool displace_startpoint, 			   
 			   Vector2d &startPoint,
 			   vector<PLine> &lines,
@@ -347,7 +359,7 @@ void Printlines::makeLines(const vector<Poly> &polys,
 	  nvindex = polys[npindex].nextVertex(nvindex);
       }
       if (npindex >= 0 && npindex >=0) {
-	addPoly(lines, polys[npindex], nvindex, maxspeed, movespeed);
+	addPoly(area, lines, polys[npindex], nvindex, maxspeed, movespeed);
 	done[npindex]=true;
 	ndone++;
       }

@@ -72,56 +72,16 @@ Poly::~Poly()
 
 void Poly::cleanup(double epsilon)
 {
-  vertices = cleaned(vertices, epsilon);
+  vertices = simplified(vertices, epsilon);
   if (!closed) return;
   uint n_vert = vertices.size();
   vector<Vector2d> invert;
   invert.insert(invert.end(),vertices.begin()+n_vert/2,vertices.end());
   invert.insert(invert.end(),vertices.begin(),vertices.begin()+n_vert/2);
-  vertices = cleaned(invert, epsilon);
+  vertices = simplified(invert, epsilon);
   calcHole();
 }
 
-// Douglas-Peucker algorithm
-vector<Vector2d> Poly::cleaned(const vector<Vector2d> &vert, double epsilon)
-{ 
-  if (epsilon == 0) return vert;
-  uint n_vert = vert.size();
-  if (n_vert<3) return vert;
-  double dmax = 0;
-  //Find the point with the maximum distance from line start-end
-  uint index = 0;
-  Vector2d normal = normalV(vert.back()-vert.front());
-  normal.normalize();
-  if( (normal.length()==0) || ((abs(normal.length())-1)>epsilon) ) return vert;
-  for (uint i = 1; i < n_vert-1 ; i++) 
-    {
-      double dist = abs((vert[i]-vert.front()).dot(normal));
-      if (dist >= epsilon && dist > dmax) {
-	index = i;
-	dmax = dist;
-      }
-    }
-  vector<Vector2d> newvert;
-  if (index > 0) // there is a point > epsilon
-    {
-      // divide at max dist point and cleanup both parts recursively 
-      vector<Vector2d> part1;
-      part1.insert(part1.end(), vert.begin(), vert.begin()+index+1);
-      vector<Vector2d> c1 = cleaned(part1, epsilon);
-      vector<Vector2d> part2;
-      part2.insert(part2.end(), vert.begin()+index, vert.end());
-      vector<Vector2d> c2 = cleaned(part2, epsilon);
-      newvert.insert(newvert.end(), c1.begin(), c1.end()-1);
-      newvert.insert(newvert.end(), c2.begin(), c2.end());
-    }
-  else 
-    { // all points are nearer than espilon
-      newvert.push_back(vert.front());
-      newvert.push_back(vert.back());
-    }
-  return newvert;
-}
 
 
 void Poly::calcHole()
@@ -576,10 +536,15 @@ int Poly::getTriangulation(vector<Triangle> &triangles)  const
 {
   if(vertices.size()<3) return 0;
   triangles.clear();
+
+  // return delaunayTriang(vertices, triangles, z);
+  
   vector<p2t::Point*> points(vertices.size());
-  // add 1000,1000 because poly2tri crashed on some negative values
+  // add offset because poly2tri crashes on some negative values?
+  const double OFF = 0;
   for (guint i=0; i<vertices.size(); i++)  {
-    points[i] = new p2t::Point(vertices[i].x()+1000,vertices[i].y()+1000);
+    points[i] = new p2t::Point(vertices[i].x()+OFF, 
+			       vertices[i].y()+OFF);
   }
   p2t::CDT cdt(points);
   cdt.Triangulate();
@@ -588,9 +553,9 @@ int Poly::getTriangulation(vector<Triangle> &triangles)  const
     const p2t::Point *tp0 = ptriangles[i]->GetPoint(0);
     const p2t::Point *tp1 = ptriangles[i]->GetPoint(1);
     const p2t::Point *tp2 = ptriangles[i]->GetPoint(2);
-    Vector3d A(tp0->x-1000, tp0->y-1000, z);
-    Vector3d B(tp1->x-1000, tp1->y-1000, z);
-    Vector3d C(tp2->x-1000, tp2->y-1000, z);
+    Vector3d A((tp0->x-OFF), (tp0->y-OFF), z);
+    Vector3d B((tp1->x-OFF), (tp1->y-OFF), z);
+    Vector3d C((tp2->x-OFF), (tp2->y-OFF), z);
     triangles.push_back(Triangle(A, B, C));
   }
   return triangles.size();

@@ -55,9 +55,7 @@ public:
 
 	// simplify douglas-peucker
 	void cleanup(double maxerror);
-	static vector<Vector2d> cleaned(const vector<Vector2d> &vertices, 
-					double maxerror);
-
+	
 	void reverse() {std::reverse(vertices.begin(),vertices.end());holecalculated = false;};
 
 	void clear(){vertices.clear(); holecalculated = false;};

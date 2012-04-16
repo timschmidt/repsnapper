@@ -1691,8 +1691,12 @@ void FlatShape::clear()
 
 void FlatShape::draw_geometry() {
   for (uint i = 0; i < polygons.size(); i++) {
-    polygons[i].draw_as_surface(); 
-    //polygons[i].draw(GL_LINE_LOOP,false);
+    polygons[i].draw(GL_LINE_LOOP,false);
+    Poly p;
+    p.vertices = simplified(polygons[i].vertices, 0.2);
+    cleandist(p.vertices, 0.2);
+    p.draw_as_surface(); 
+    //polygons[i].draw_as_surface();
   }
 }
 

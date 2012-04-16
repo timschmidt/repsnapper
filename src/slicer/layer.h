@@ -46,13 +46,17 @@ public:
   double getZ(){return Z;}
   void setZ(double z){Z=z;}
 
-  Layer * getPrevious(){return previous;};
+  Layer * getPrevious() const {return previous;};
   void setPrevious(Layer * prevlayer){previous = prevlayer;};
 
   Vector2d getMin() const {return Min;};
   Vector2d getMax() const {return Max;};
   void setMinMax(const Poly &poly);
   void setMinMax(const vector<Poly> &polys);
+
+
+  bool pointInPolygons(const Vector2d &p) const;
+  
     /* void setBBox(Vector2d min, Vector2d max); */
   /* void setBBox(vector<Vector2d> minmax); */
   /* void setBBox(Vector3d min, Vector3d max); */
@@ -126,7 +130,8 @@ public:
 
   void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 	    bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
-	    bool DrawCPVertexNumbers, bool DisplayInfill, bool DebugInfill);
+	    bool DrawCPVertexNumbers, bool DisplayInfill, 
+	    bool DebugInfill, bool showOverhang);
   void DrawMeasures(const Vector2d &point);
  
   void Clear();

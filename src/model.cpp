@@ -886,6 +886,11 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 					   settings.Hardware.LayerThickness,
 					   settings.Display.DisplayinFill, false);
 	  layer = m_previewLayer;
+	  Layer * previous = calcSingleLayer(z-settings.Hardware.LayerThickness,
+					     LayerNr-1, 
+					     settings.Hardware.LayerThickness,
+					     false, false);
+	  layer->setPrevious(previous);
 	}
 
       if (!calconly) {
@@ -895,7 +900,8 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 		    settings.Display.DrawCPLineNumbers, 
 		    settings.Display.DrawCPVertexNumbers,
 		    settings.Display.DisplayinFill,
-		    settings.Display.DisplayDebuginFill);
+		    settings.Display.DisplayDebuginFill,
+		    settings.Display.ShowLayerOverhang);
 
 	if (settings.Display.DrawMeasures)
 	  layer->DrawMeasures(measuresPoint);

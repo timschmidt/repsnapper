@@ -27,6 +27,7 @@
 
 class PLine; // see below
 
+enum PLineArea { UNDEF, SHELL, SKIN, INFILL, SUPPORT, SKIRT };
 
 
 // 3D printline for making GCode
@@ -63,6 +64,9 @@ class PLine
 {
   friend class PLine3;
   friend class Printlines;
+
+  PLineArea area;
+
   // non-arc
   Vector2d from, to;
   double speed; // mm/min (!)
@@ -109,13 +113,17 @@ class Printlines
 
   string name;
 
-  void addPoly(vector<PLine> &lines, const Poly &poly, int startindex=0, 
+  void addPoly(PLineArea area, vector<PLine> &lines, 
+	       const Poly &poly, int startindex=0, 
 	       double speed=1, double movespeed=1);
-  void addLine(vector<PLine> &lines, const Vector2d &from, const Vector2d &to, 
+  void addLine(PLineArea area, vector<PLine> &lines,
+	       const Vector2d &from, const Vector2d &to, 
 	       double speed=1, double movespeed=1, double feedrate=1.0) const;
 
+  const Layer * layer;
+
  public:
-  Printlines(const Settings *settings, double z_offset=0);
+  Printlines(const Layer * layer, const Settings *settings, double z_offset=0);
   ~Printlines(){};
 
   const Settings *settings;
@@ -124,10 +132,11 @@ class Printlines
 
   Vector2d lastPoint() const;
 
-  void makeLines(const vector<Poly> &polys, 
+  void makeLines(PLineArea area,
+		 const vector<Poly> &polys, 
 		 bool displace_startpoint, 
 		 Vector2d &startPoint,
-		 vector<PLine> &lines, 
+		 vector<PLine> &lines,
 		 double maxspeed = 0);
     
   void optimize(double linewidth,

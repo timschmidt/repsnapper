@@ -220,6 +220,7 @@ class Settings {
     bool DisplayGCodeBorders;
     bool DisplayGCodeArrows;
     bool DisplayDebugArcs;
+    bool ShowLayerOverhang;
     bool DrawVertexNumbers;
     bool DrawLineNumbers;
     bool DrawOutlineNumbers;

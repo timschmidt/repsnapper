@@ -128,6 +128,15 @@ void Layer::SetPolygons(const Matrix4d &T, const Shape &shape,
   }
 }
 
+
+bool Layer::pointInPolygons(const Vector2d &p) const 
+{ 
+  for (uint i = 0; i<polygons.size(); i++) 
+    if (!polygons[i].hole && polygons[i].vertexInside(p)) return true;
+  return false;
+}
+
+
 int Layer::addShape(const Matrix4d &T, const Shape &shape, double z, 
 		     double &max_gradient)
 {
@@ -328,14 +337,6 @@ void Layer::makeSkinPolygons()
   if (skins<2) return;
   skinFullFillPolygons = fullFillPolygons;
   fullFillPolygons.clear();
-  // vector<Poly> fp = fullFillPolygons;
-  // //double dist = thickness/skins;
-  // for (uint i=0; i<fullFillPolygons.size(); i++){
-  //   //   skinFullFillPolygons.push_back(fp[i]);
-  //   fullFillPolygons[i].clear();
-  // //   //fp.erase(fp.begin()+i);
-  // //   //i--;
-  //  }
 }
 
 // add bridge polys and subtract them from normal and full fill polys 
@@ -658,7 +659,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   const double extrf = settings.Hardware.GetExtrudeFactor(thickness);
 
   vector<PLine3> lines3;
-  Printlines printlines(&settings, offsetZ);
+  Printlines printlines(this, &settings, offsetZ);
 
   vector<PLine> lines;
 
@@ -686,7 +687,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		     skinFullInfills[s-1]->infillpolys.begin(),
 		     skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
-      printlines.makeLines(polys, (s==1), //displace at first skin
+      printlines.makeLines(SKIN, polys, (s==1), //displace at first skin
 			   startPoint, lines, settings.Hardware.MaxShellSpeed);
       if (s < skins) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
@@ -703,12 +704,12 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   // 2. Skirt
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
-  printlines.makeLines(skirts, false,
+  printlines.makeLines(SKIRT, skirts, false,
 		       startPoint, lines, settings.Hardware.MaxShellSpeed);
 
   // 3. Support
   if (supportInfill)
-    printlines.makeLines(supportInfill->infillpolys, false,
+    printlines.makeLines(SUPPORT, supportInfill->infillpolys, false,
 			 startPoint, lines);
 
   // 4. all other polygons:  
@@ -717,7 +718,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   for(int p=shellPolygons.size()-1; p>=0; p--) // inner to outer
     polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());
   // printlines.makeLines(shellPolygons[p], (p==(int)(shellPolygons.size())-1), 
-  printlines.makeLines(polys, true, //displace at beginning
+  printlines.makeLines(SHELL, polys, true, //displace at beginning
 		       startPoint, lines, settings.Hardware.MaxShellSpeed);
   // TODO:  sort inner to outer in printlines
   polys.clear();
@@ -738,7 +739,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		   bridgeInfills[b]->infillpolys.begin(),
 		   bridgeInfills[b]->infillpolys.end());
   
-  printlines.makeLines(polys, true, //displace at beginning
+  printlines.makeLines(INFILL, polys, true, //displace at beginning
 		       startPoint, lines);
   polys.clear();
 
@@ -855,6 +856,16 @@ void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int poin
     polys[p].draw(gl_type);
   }
 }
+void draw_polys_surface(vector <Poly> &polys,  double cleandist,
+			const float *rgb, float a)
+{
+  glColor4f(rgb[0],rgb[1],rgb[2], a);
+  for(size_t p=0; p<polys.size();p++) {
+    polys[p].cleanup(cleandist);
+    ::cleandist(polys[p].vertices, cleandist);
+    polys[p].draw_as_surface();
+  }
+}
 void draw_polys(const vector< vector <Poly> > &polys, int gl_type, int linewidth, int pointsize,
 		const float *rgb, float a)
 {
@@ -876,16 +887,17 @@ float const BLUE2[] = {0.5,0.5,1.0};
 float const RED[] = {1, 0, 0};
 float const RED2[] = {0.8,0.5,0.5};
 float const RED3[] = {0.8,0.3,0.1};
-float const ORANGE[] = {1, 0, 0};
+float const ORANGE[] = {1, 0.5, 0};
 float const YELLOW[] = {1, 1, 0};
 float const YELLOW2[] = {1, 1, 0.2};
 float const WHITE[] = {1, 1, 1};
 float const GREY[] = {0.5,0.5,0.5};
+float const VIOLET[] = {0.8,0.0,0.8};
 
 void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 		 bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
 		 bool DrawCPVertexNumbers, bool DisplayInfill, 
-		 bool DebugInfill) 
+		 bool DebugInfill, bool showOverhang) 
 {
   draw_polys(polygons, GL_LINE_LOOP, 1, 3, RED, 1);
   draw_polys(polygons, GL_POINTS,    1, 3, RED, 1);
@@ -977,6 +989,18 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
       for(size_t q=0; q<shellPolygons[p].size();q++)
 	shellPolygons[p][q].drawVertexNumbers();
   }
+
+  if (showOverhang)
+    if (previous!=NULL) {
+      Clipping clipp;
+      clipp.addPolys(polygons, subject);
+      vector<Poly> prevoffset = Clipping::getOffset(previous->polygons, thickness/2);
+      clipp.addPolys(prevoffset, clip);
+      clipp.setZ(Z);
+      vector<Poly> overhangs = clipp.subtract();//CL::pftNonZero,CL::pftNonZero);
+      draw_polys(overhangs, GL_LINE_LOOP, 4, 3, VIOLET, 0.8);
+      //draw_polys_surface(overhangs, thickness/3, VIOLET , 0.5); // crash
+    }
 }
 
 void Layer::DrawMeasures(const Vector2d &point)

@@ -235,6 +235,7 @@ static struct {
   BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, true),
   BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
   BOOL_MEMBER (Display.DisplayDebugArcs, "DisplayDebugArcs", true, true),
+  BOOL_MEMBER (Display.ShowLayerOverhang, "ShowLayerOverhang", true, true),
   BOOL_MEMBER (Display.CommsDebug, "CommsDebug", false, true),
   BOOL_MEMBER (Display.TerminalProgress, "TerminalProgress", false, true),
   BOOL_MEMBER (Display.DisplayLayer, "DisplayLayer", false, true),

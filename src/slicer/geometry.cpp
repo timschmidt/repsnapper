@@ -22,9 +22,11 @@
 #include "geometry.h"
 #include "poly.h"
 #include "clipping.h"
+#include "triangle.h"
 
 // limfit library for arc fitting
 #include <lmmin.h>
+
 
 ///////// Transform3D ////////////////////////////////////
 Transform3D::Transform3D()
@@ -977,3 +979,320 @@ Poly convexHull2D(const vector<Poly> &polygons)
   hullPolygon.reverse();
   return hullPolygon;
 }
+
+///////////////////// CLEANUP/SIMPILFY //////////////////////
+
+// make vertices at least epsilon apart
+int cleandist(vector<Vector2d> &vert, double epsilon)
+{
+  uint n_vert = vert.size();
+  double sqeps = epsilon * epsilon;
+  uint n_moved = 0;
+  if (vert[0].squared_distance(vert[n_vert-1]) < sqeps){
+    const Vector2d center = (vert[0]+vert[n_vert-1])/2;
+    Vector2d dir = vert[0]-center;
+    dir.normalize();
+    vert[0] = center + dir*epsilon;
+    n_moved++;
+  }
+  for (uint i = 1; i < n_vert ; i++) {
+    if (vert[i].squared_distance(vert[i-1]) < sqeps){
+      const Vector2d center = (vert[i]+vert[i-1])/2;
+      Vector2d dir = vert[i]-center;
+      dir.normalize();
+      vert[i] = center + dir*epsilon;
+      n_moved++;
+    }
+  }
+  return n_moved;
+}
+
+
+// Douglas-Peucker algorithm
+vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon)
+{ 
+  if (epsilon == 0) return vert;
+  uint n_vert = vert.size();
+  if (n_vert<3) return vert;
+  double dmax = 0;
+  //Find the point with the maximum distance from line start-end
+  uint index = 0;
+  Vector2d normal = normalV(vert.back()-vert.front());
+  normal.normalize();
+  if( (normal.length()==0) || ((abs(normal.length())-1)>epsilon) ) return vert;
+  for (uint i = 1; i < n_vert-1 ; i++) 
+    {
+      double dist = abs((vert[i]-vert.front()).dot(normal));
+      if (dist >= epsilon && dist > dmax) {
+	index = i;
+	dmax = dist;
+      }
+    }
+  vector<Vector2d> newvert;
+  if (index > 0) // there is a point > epsilon
+    {
+      // divide at max dist point and cleanup both parts recursively 
+      vector<Vector2d> part1;
+      part1.insert(part1.end(), vert.begin(), vert.begin()+index+1);
+      vector<Vector2d> c1 = simplified(part1, epsilon);
+      vector<Vector2d> part2;
+      part2.insert(part2.end(), vert.begin()+index, vert.end());
+      vector<Vector2d> c2 = simplified(part2, epsilon);
+      newvert.insert(newvert.end(), c1.begin(), c1.end()-1);
+      newvert.insert(newvert.end(), c2.begin(), c2.end());
+    }
+  else 
+    { // all points are nearer than espilon
+      newvert.push_back(vert.front());
+      newvert.push_back(vert.back());
+    }
+  return newvert;
+}
+
+
+
+///////////////////// DELAUNAY TRIANG ////////////////////
+
+#define REAL double
+//#include "triangle/triangle/triangle.h"
+
+#include "triangle/PolygonTriangulator.h"
+
+int delaunayTriang(const vector<Vector2d> &points, 
+		   vector<Triangle> &triangles, 
+		   double z)
+{  
+#define PTRIANGULATOR 0
+#if PTRIANGULATOR
+  vector<Vector2d> spoints = simplified(points, 1);
+  uint npoints = spoints.size();
+  vector<double> xpoints(npoints);
+  vector<double> ypoints(npoints);
+  for (uint i = 0; i < npoints; i++) {
+    xpoints[i] = spoints[npoints-i-1].x();
+    ypoints[i] = spoints[npoints-i-1].y();
+  }
+  
+  polytri::PolygonTriangulator pt(xpoints, ypoints);
+
+  const polytri::PolygonTriangulator::Triangles * tr = pt.triangles();
+
+  uint ntr = tr->size();
+
+  cerr << npoints << " -> " << ntr << endl;
+
+  triangles.resize(ntr);
+
+  uint itri=0;
+  for (polytri::PolygonTriangulator::Triangles::const_iterator itr = tr->begin();
+       itr != tr->end(); ++itr) {
+    
+    const polytri::PolygonTriangulator::Triangle t = *itr;
+    
+    triangles[itri] = Triangle(Vector3d(xpoints[t[0]], ypoints[t[0]], z),
+			       Vector3d(xpoints[t[1]], ypoints[t[1]], z),
+			       Vector3d(xpoints[t[2]], ypoints[t[2]], z));
+    itri++;
+  }
+
+  return ntr;
+#endif
+
+  // struct triangulateio in;
+	
+  // in.numberofpoints = npoints;
+  // in.numberofpointattributes = (int)0;
+  // in.pointlist = 
+  // in.pointattributelist = NULL;
+  // in.pointmarkerlist = (int *) NULL;
+  // in.numberofsegments = 0;
+  // in.numberofholes = 0;
+  // in.numberofregions = 0;
+  // in.regionlist = (REAL *) NULL;
+  
+  // delclass = new piyush;
+  // piyush *pdelclass = (piyush *)delclass;
+  // triswitches.push_back('\0');
+  // char *ptris = &triswitches[0];
+  
+
+  // pmesh = new piyush::__pmesh;
+  // pbehavior = new piyush::__pbehavior;
+  
+  // piyush::__pmesh     * tpmesh     = (piyush::__pmesh *)     pmesh;
+  // piyush::__pbehavior * tpbehavior = (piyush::__pbehavior *) pbehavior;
+  
+  // pdelclass->triangleinit(tpmesh);
+  // pdelclass->parsecommandline(1, &ptris, tpbehavior);
+  
+  // pdelclass->transfernodes(tpmesh, tpbehavior, in.pointlist, 
+  // 			   in.pointattributelist,
+  // 			   in.pointmarkerlist, in.numberofpoints,
+  // 			   in.numberofpointattributes);
+  // tpmesh->hullsize = pdelclass->delaunay(tpmesh, tpbehavior);
+	
+  // /* Ensure that no vertex can be mistaken for a triangular bounding */
+  // /*   box vertex in insertvertex().                                 */
+  // tpmesh->infvertex1 = (piyush::vertex) NULL;
+  // tpmesh->infvertex2 = (piyush::vertex) NULL;
+  // tpmesh->infvertex3 = (piyush::vertex) NULL;
+  
+  // 	/* Calculate the number of edges. */
+  // tpmesh->edges = (3l * tpmesh->triangles.items + tpmesh->hullsize) / 2l;
+  // pdelclass->numbernodes(tpmesh, tpbehavior);
+	
+
+
+  /////////////////////////////////////////////// triangle++ crap
+
+
+  // typedef reviver::dpoint <double, 2> Point; 
+  // vector<Point> p(points.size());
+  // for (uint i = 0; i < p.size(); i++) { 
+  //   p[i] = Point(points[i].x(),points[i].y());
+  // }
+  // tpp::Delaunay del(p);
+  // /*
+  //   -p  Triangulates a Planar Straight Line Graph (.poly file).
+  //   -r  Refines a previously generated mesh.
+  //   -q  Quality mesh generation.  A minimum angle may be specified.
+  //   -a  Applies a maximum triangle area constraint.
+  //   -u  Applies a user-defined triangle constraint.
+  //   -A  Applies attributes to identify triangles in certain regions.
+  //   -c  Encloses the convex hull with segments.
+  //   -D  Conforming Delaunay:  all triangles are truly Delaunay.
+  //   -j  Jettison unused vertices from output .node file.
+  //   -e  Generates an edge list.
+  //   -v  Generates a Voronoi diagram.
+  //   -n  Generates a list of triangle neighbors.
+  //   -g  Generates an .off file for Geomview.
+  //   -B  Suppresses output of boundary information.
+  //   -P  Suppresses output of .poly file.
+  //   -N  Suppresses output of .node file.
+  //   -E  Suppresses output of .ele file.
+  //   -I  Suppresses mesh iteration numbers.
+  //   -O  Ignores holes in .poly file.
+  //   -X  Suppresses use of exact arithmetic.
+  //   -z  Numbers all items starting from zero (rather than one).
+  //   -o2 Generates second-order subparametric elements.
+  //   -Y  Suppresses boundary segment splitting.
+  //   -S  Specifies maximum number of added Steiner points.
+  //   -i  Uses incremental method, rather than divide-and-conquer.
+  //   -F  Uses Fortune's sweepline algorithm, rather than d-and-c.
+  //   -l  Uses vertical cuts only, rather than alternating cuts.
+  //   -s  Force segments into mesh by splitting (instead of using CDT).
+  //   -C  Check consistency of final mesh.
+  //   -Q  Quiet:  No terminal output except errors.
+  // */
+  // string switches = "pq0DzQ";
+  // del.Triangulate(switches);
+  // int ntri = del.ntriangles();
+  // if (ntri>0) {
+  //   triangles.resize(ntri);
+  //   uint itri=0;
+  //   for (tpp::Delaunay::fIterator dit = del.fbegin(); dit != del.fend(); ++dit) {
+  //     Point pA = del.point_at_vertex_id(del.Org (dit));
+  //     Point pB = del.point_at_vertex_id(del.Dest(dit));
+  //     Point pC = del.point_at_vertex_id(del.Apex(dit));
+  //     triangles[itri] = Triangle(Vector3d(pA[0],pA[1],z),
+  //     				 Vector3d(pB[0],pB[1],z),
+  //     				 Vector3d(pC[0],pC[1],z));
+  //     // Vector2d vA = points[del.Org (dit)];
+  //     // Vector2d vB = points[del.Dest(dit)];
+  //     // Vector2d vC = points[del.Apex(dit)];
+  //     // triangles[itri] = Triangle(Vector3d(vA.x(),vA.y(),z),
+  //     // 				 Vector3d(vB.x(),vB.y(),z),
+  //     // 				 Vector3d(vC.x(),vC.y(),z));
+  //     itri++;
+  //   }
+  // }
+
+  // return ntri;
+  return 0;
+}
+
+
+// typedef struct {
+//   Vector2d a,b,c;
+// } triangle2;
+
+
+// bool pointInCircumcircle(const triangle2 &t, const Vector2d &p)
+// {
+//   Vector2d l1p1,l1p2;
+//   center_perpendicular(t.a, t.b, l1p1, l1p2);
+//   Vector2d l2p1,l2p2;
+//   center_perpendicular(t.a, t.c, l2p1, l2p2);
+//   Vector2d center, ip;
+//   double t0, t1;
+//   int is = intersect2D_Segments(l1p1, l1p2, l2p1, l2p2,
+//    				center, ip, t0,t1);
+
+//   if (is > 0) {
+//     if (t.a.squared_distance(center) > p.squared_distance(center))
+//       return true;
+//   }
+//   return false;
+// }
+
+// int delaunayTriang(const vector<Vector2d> &points, vector<Triangle> &triangles, 
+// 		   double z)
+// {
+//   if (points.size() < 3) return 0;
+
+//   triangles.clear();
+
+//   uint nump = points.size();
+
+//   vector<int> seq(nump,1); // 1,1,1...
+//   partial_sum(seq.begin(), seq.end(), seq.begin()); // 1,2,3,...,20
+//   srand(time(NULL)); 
+//   random_shuffle(seq.begin(), seq.end()); // shuffle  
+
+//   vector<triangle2> d_triangles;
+
+//   triangle2 t = { points[seq[0]-1], points[seq[1]-1], points[seq[2]-1] };
+//   d_triangles.push_back(t);
+  
+//   for (uint i = 3; i < nump; i+=3) {
+//     //triangle2 t = { points[seq[i]-1], points[seq[i+1]-1], points[seq[i+2]-1] };
+//     bool deleted = false;
+//     for (int ti = d_triangles.size()-1; ti >= 0 ; ti--) { 
+//       if (pointInCircumcircle( d_triangles[ti], points[seq[i]-1] )) {
+// 	d_triangles.erase(d_triangles.begin()+ti);
+// 	deleted = true;
+//       }
+//     }
+//     if (deleted) {
+//       // make new triangles in hole
+//     }
+//     else {
+//       // make new triangle from next points and new point
+//     }
+
+//   }
+  
+//   return triangles.size();
+//   // double xy[point_num*2];
+  
+//   // for (uint i=0; i < point_num; i+=2)  {
+//   //   xy[i]   = poly.vertices[i].x();
+//   //   xy[i+1] = poly.vertices[i].y();
+//   // }
+//   // int tri_num;
+//   // int tri_vert[2*point_num*3];
+//   // int tri_nabe[2*point_num*3];
+
+//   // int result = dtris2(point_num, xy, &tri_num, tri_vert, tri_nabe);
+
+//   // if (result != 0) 
+//   //   return triangles;
+
+//   // double z = poly.getZ();
+//   // for (int i=0; i<tri_num; i+=3) {
+//   //   Vector3d A(poly[tri_vert[i]].x(),   poly[tri_vert[i]].y(),   z);
+//   //   Vector3d B(poly[tri_vert[i+1]].x(), poly[tri_vert[i+1]].y(), z);
+//   //   Vector3d C(poly[tri_vert[i+2]].x(), poly[tri_vert[i+2]].y(), z);
+//   //   triangles.push_back(Triangle(A, B, C));
+//   // }
+// }

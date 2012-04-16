@@ -50,6 +50,8 @@ PKG_CHECK_MODULES(XMLPP, libxml++-2.6 >= 2.10.0)
 # AC_SUBST(XMLPP_CFLAGS)
 # AC_SUBST(XMLPP_LIBS)
 
+# PKG_CHECK_MODULES(GTS, gts >= 0.7.6)
+
 AC_OPENMP()
 
 dnl ------------------------------------------------------------------

@@ -30,7 +30,7 @@ There are currently no Repsnapper binaries pre-built for Linux.  However, instal
 
 === Windows ===
 
-There are beta versions for Windows, see the "Downloads" on github. The Windows version cannot communicate with a printer and can only calculate on a single CPU.
+There are beta versions for Windows, see the https://github.com/timschmidt/repsnapper/downloads[Downloads section on github]. The Windows version cannot communicate with a printer and can only calculate on a single CPU.
 
 Historians only: the v1 of Repsnapper for Windows is here: http://www.kulitorum.com/RepSnapperBeta.rar (Kulitorums version).
 This is even older, but should work with tonokip and FiveD: http://svn.kulitorum.com/RepSnapper/MSVC9/Release/RepSnapper.exe[here].
