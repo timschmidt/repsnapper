@@ -1033,6 +1033,7 @@ void Layer::DrawMeasures(const Vector2d &point)
   std::sort(yint.begin(),yint.end());
 
   glColor4f(1.,1.,1.,1.);
+  glLineWidth(1);
   glBegin(GL_LINES);
   // draw lines
   glVertex3d(Min.x(), x0.y(), Z);
