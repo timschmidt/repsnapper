@@ -329,33 +329,30 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
   std::vector<Vector3d> maxpos;
   std::vector<Vector3d> minpos;
 
-  for(uint o=0;o<objtree.Objects.size();o++)
-  {
-    for(uint f=0;f<objtree.Objects[o]->shapes.size();f++)
-    {
-      Shape *selectedShape = objtree.Objects[o]->shapes[f];
-      Vector3d p ;
-      selectedShape->transform3D.transform.get_translation(p);
-      Vector3d size = selectedShape->Max - selectedShape->Min;
-
-      minpos.push_back(p);
-      maxpos.push_back(p + Vector3d(size.x(), size.y(), 0));
-    }
+  vector<Shape*>   allshapes;
+  vector<Matrix4d> transforms;
+  objtree.get_all_shapes(allshapes, transforms);
+  for(uint s=0; s<allshapes.size(); s++) {
+    Vector3d p;
+    //Matrix4d strans = (transforms[s] * allshapes[s]->transform3D.transform);
+    Vector3d min = transforms[s] * allshapes[s]->Min;
+    Vector3d max = transforms[s] * allshapes[s]->Max;
+    minpos.push_back(Vector3d(min.x(), min.y(), 0));
+    maxpos.push_back(Vector3d(max.x(), max.y(), 0));
   }
 
   // Get all possible object positions
 
   double d = 5.0; // 5mm spacing between objects
   Vector3d StlDelta = (shape->Max - shape->Min);
-  //cerr << shape->Max << shape->Min << StlDelta << endl;
   vector<Vector3d> candidates;
 
-  candidates.push_back(-shape->Min);//Vector3d(0.0, 0.0, 0.0));
+  candidates.push_back(Vector3d(0.0, 0.0, 0.0));
 
   for (uint j=0; j<maxpos.size(); j++)
   {
-    candidates.push_back(maxpos[j] + Vector3d(d,0,0));
-    candidates.push_back(minpos[j] + Vector3d(0,d,0));
+    candidates.push_back(Vector3d(maxpos[j].x() + d, minpos[j].y(), 0));
+    candidates.push_back(Vector3d(minpos[j].x(), maxpos[j].y() + d, 0));
     candidates.push_back(maxpos[j] + Vector3d(d,d,0));
   }
 
@@ -371,8 +368,10 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
     {
       if (
           // check x
-          ( ( ( minpos[k].x() <= candidates[c].x() && candidates[c].x() <= maxpos[k].x() ) ||
-	      ( candidates[c].x() <= minpos[k].x() && maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
+          ( ( ( minpos[k].x()     <= candidates[c].x() &&
+		candidates[c].x() <= maxpos[k].x() ) ||
+	      ( candidates[c].x() <= minpos[k].x() 
+		&& maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
 	    ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d && candidates[c].x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
           &&
           // check y
@@ -386,18 +385,19 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
 	}
 
       // volume boundary
-      if (candidates[c].x()+StlDelta.x() > (settings.Hardware.Volume.x() - 2*settings.Hardware.PrintMargin.x()) ||
-          candidates[c].y()+StlDelta.y() > (settings.Hardware.Volume.y() - 2*settings.Hardware.PrintMargin.y()))
-      {
-        ok = false;
-        break;
-      }
+      // if (candidates[c].x()+StlDelta.x() > (settings.Hardware.Volume.x() - 2*settings.Hardware.PrintMargin.x()) ||
+      //     candidates[c].y()+StlDelta.y() > (settings.Hardware.Volume.y() - 2*settings.Hardware.PrintMargin.y()))
+      // {
+      //   ok = false;
+      //   break;
+      // }
     }
     if (ok)
     {
       result.x() = candidates[c].x();
       result.y() = candidates[c].y();
       result.z() = candidates[c].z();
+      result -= shape->Min;
       return true;
     }
   }
