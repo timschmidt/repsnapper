@@ -1056,7 +1056,7 @@ vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon)
 #define REAL double
 //#include "triangle/triangle/triangle.h"
 
-#include "triangle/PolygonTriangulator.h"
+//#include "triangle/PolygonTriangulator.h"
 
 int delaunayTriang(const vector<Vector2d> &points, 
 		   vector<Triangle> &triangles, 
