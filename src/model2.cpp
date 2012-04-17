@@ -58,7 +58,6 @@ void Model::MakeRaft(GCodeState &state, double &z)
   for (uint i = 0; i< raftpolys.size(); i++) 
     raftpolys[i].cleanup(settings.Hardware.LayerThickness/4);
 
-
   Settings::RaftSettings::PhasePropertiesType basesettings = 
     settings.Raft.Phase[0];
   Settings::RaftSettings::PhasePropertiesType interfacesettings = 
@@ -798,12 +797,6 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
   // Make Layers
   lastlayer = NULL;
 
-  if (settings.RaftEnable)
-    {
-      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
-      MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
-    }
-
   is_calculating=false;
   Slice(shapes, transforms);
 
@@ -828,9 +821,14 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
 
   CalcInfill();
 
-
   if (settings.Slicing.Skirt) 
     MakeSkirt();
+
+  if (settings.RaftEnable)
+    {
+      printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
+      MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
+    }
 
   state.ResetLastWhere(Vector3d(0,0,0));
   uint count =  layers.size();
