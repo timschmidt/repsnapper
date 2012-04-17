@@ -334,7 +334,10 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
   case SETSPEED:
     if (f != lastF) {
       ostr.precision(0);
-      ostr << "F" << f;
+      if (f<1) 
+	ostr << "F1";
+      else 
+	ostr << "F" << f;
       ostr.precision(PREC);
     }
     lastF = f;
