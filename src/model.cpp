@@ -22,6 +22,7 @@
 #include <string>
 #include <cerrno>
 #include <functional>
+#include <numeric>
 
 #include <glib/gutils.h>
 #include <libreprap/comms.h>
