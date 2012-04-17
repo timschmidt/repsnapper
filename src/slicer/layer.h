@@ -28,6 +28,8 @@
 #include "poly.h"
 #include "gcodestate.h"
 
+#include <cairomm/cairomm.h>
+
 //
 // A Layer containing and maintaining all polygons to be printed
 //
@@ -51,9 +53,8 @@ public:
 
   Vector2d getMin() const {return Min;};
   Vector2d getMax() const {return Max;};
-  void setMinMax(const Poly &poly);
-  void setMinMax(const vector<Poly> &polys);
-
+  bool setMinMax(const Poly &poly);
+  bool setMinMax(const vector<Poly> &polys);
 
   bool pointInPolygons(const Vector2d &p) const;
   
@@ -101,6 +102,9 @@ public:
   const vector<Poly> * GetInnerShell() const;
   const vector<Poly> * GetOuterShell() const;
   Poly GetHullPolygon() const {return hullPolygon;};
+
+  vector<Poly> getOverhangs() const;
+
   
   void setFullFillPolygons(const vector<Poly> &polys);  
   void addFullFillPolygons(const vector<Poly> &polys);
@@ -173,5 +177,9 @@ public:
   Poly hullPolygon;                     // convex hull around everything
   Poly skirtPolygon;                    // skirt polygon
   vector<Poly> decorPolygons;           // decoration polygons
+
+  // uses too much memory
+  /* Cairo::RefPtr<Cairo::ImageSurface> raster_surface; */
+  /* Cairo::RefPtr<Cairo::Context>      raster_context; */
 
 };

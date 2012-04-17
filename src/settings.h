@@ -155,6 +155,7 @@ class Settings {
     bool FanControl;
     int MinFanSpeed;
     int MaxFanSpeed;
+    int MaxOverhangSpeed;
 
     bool ShellOnly;
     guint ShellCount;

@@ -1690,12 +1690,15 @@ void FlatShape::clear()
 }
 
 void FlatShape::draw_geometry() {
+  Vector2d min(Min.x(),Min.y());
+  Vector2d max(Max.x(),Max.y());
+  glDrawPolySurfaceRastered(polygons, min, max, 0, 0.1);
   for (uint i = 0; i < polygons.size(); i++) {
     polygons[i].draw(GL_LINE_LOOP,false);
-    Poly p;
-    p.vertices = simplified(polygons[i].vertices, 0.2);
-    cleandist(p.vertices, 0.2);
-    p.draw_as_surface(); 
+    //Poly p;
+    //p.vertices = simplified(polygons[i].vertices, 0.2);
+    //cleandist(p.vertices, 0.2);
+    //p.draw_as_surface(); 
     //polygons[i].draw_as_surface();
   }
 }

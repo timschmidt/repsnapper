@@ -128,6 +128,8 @@ class Printlines
 
   const Settings *settings;
 
+  Cairo::RefPtr<Cairo::ImageSurface> overhangs_surface;
+
   void setName(string s){name=s;};
 
   Vector2d lastPoint() const;

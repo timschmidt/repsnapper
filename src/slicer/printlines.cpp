@@ -266,6 +266,14 @@ Printlines::Printlines(const Layer * layer, const Settings * settings, double z_
 {
   this->settings = settings;
   this->layer = layer;
+
+  // save overhang polys of layer for point-in-overhang detection
+  if (layer!=NULL) {
+    Cairo::RefPtr<Cairo::Context>      context;
+    vector<Poly> overhangs = layer->getOverhangs();
+    rasterpolys(overhangs, layer->getMin(), layer->getMax(), layer->thickness/5, 
+		overhangs_surface, context);
+  }
 }
 
 
@@ -287,12 +295,7 @@ void Printlines::addLine(PLineArea area, vector<PLine> &lines,
     }
   }
 
-  // SLOW
-  // if (area == SHELL && layer->getPrevious() != NULL) {
-  //   //bool freeair_from = layer->getPrevious()->pointInPolygons(from);
-  //   bool freeair_to   = layer->getPrevious()->pointInPolygons(to);
-  //   //cerr << "free air?" << freeair_from << " - " <<freeair_to << endl;
-  // }
+
   lines.push_back(PLine(lfrom, to, speed, feedrate));
 }
 
@@ -321,6 +324,26 @@ void Printlines::makeLines(PLineArea area,
   //double linewidth = layerthickness/linewidthratio;
   if ( maxspeed == 0 ) maxspeed = settings->Hardware.MaxPrintSpeedXY;
   double movespeed = settings->Hardware.MoveSpeed;
+
+  bool freeair = false;
+  if (area == SHELL)  {
+    for (uint i=0; i<polys.size();i++){
+      for (uint j=0; j<polys[i].size();j++){
+	if (getCairoSurfaceDatapoint(overhangs_surface, 
+				     layer->getMin(), layer->getMax(), 
+				     polys[i][j]) != 0) {
+	  freeair = true;
+	  break;
+	}
+      }
+    }
+    if (freeair) {
+      //cerr << "polys have free air point(s)" << endl;
+      // set maxspeed:
+      maxspeed = settings->Slicing.MaxOverhangSpeed;
+    }
+  }
+
 
   const uint count = polys.size();
   if (count == 0) return;

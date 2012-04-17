@@ -761,6 +761,7 @@ void Model::CalcInfill()
   //m_progress->stop (_("Done"));
 }
 
+
 void Model::ConvertToGCode()
 {
   if (is_calculating) {

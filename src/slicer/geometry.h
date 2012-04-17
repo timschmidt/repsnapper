@@ -137,3 +137,24 @@ typedef struct {
 bool fit_arc(const int m_dat, const arc_data_struct data, 
 	     const int n_par, double *par, double sq_error,
 	     Vector2d &result_center, double &result_radiussq);
+
+
+
+bool rasterpolys(const vector<Poly> &polys,
+		 const Vector2d &min, const Vector2d &max, double resolution,
+		 Cairo::RefPtr<Cairo::ImageSurface> &surface,
+		 Cairo::RefPtr<Cairo::Context> &context);
+
+void glDrawPolySurfaceRastered(const vector<Poly> &polys, 
+			       const Vector2d &min, const Vector2d &max, 
+			       const double z,
+			       const double resolution);
+
+void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
+			const Vector2d &min, const Vector2d &max, 
+			const double z);
+
+int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
+			     const Vector2d &min, const Vector2d &max, 
+			     const Vector2d &p); 
+			      

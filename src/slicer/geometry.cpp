@@ -1296,3 +1296,106 @@ int delaunayTriang(const vector<Vector2d> &points,
 //   //   triangles.push_back(Triangle(A, B, C));
 //   // }
 // }
+
+
+
+////////////////////////////// RASTER /////////////////////////////////////
+
+#include <cairomm/cairomm.h>
+
+
+bool rasterpolys(const vector<Poly> &polys,
+		 const Vector2d &min, const Vector2d &max, double resolution,
+		 Cairo::RefPtr<Cairo::ImageSurface> &surface,
+		 Cairo::RefPtr<Cairo::Context> &context) 
+{
+  Vector2d diag = max - min;
+  int width  = (int)ceil(diag.x()/resolution);
+  int height = (int)ceil(diag.y()/resolution);
+  if (height <= 0 || width <= 0)
+    return false;
+  surface = Cairo::ImageSurface::create(Cairo::FORMAT_A8, width, height);
+  context = Cairo::Context::create (surface);
+
+  context->scale(1/resolution,1/resolution);
+  context->translate(-min.x(),-min.y());
+  context->set_source_rgb (0,0,0);
+  context->set_fill_rule(Cairo::FILL_RULE_WINDING);
+  context->set_antialias(Cairo::ANTIALIAS_DEFAULT);
+  for (uint i=0; i<polys.size(); i++) {
+    Vector2d v = polys[i][0];
+    context->move_to(v.x(),v.y());
+    for (uint j=0; j<polys[i].size(); j++) {
+      Vector2d v = polys[i][j];
+      context->line_to(v.x(),v.y());
+    }
+  }
+  context->fill();
+  return true;
+}
+
+
+void glDrawPolySurfaceRastered(const vector<Poly> &polys, 
+			       const Vector2d &min, const Vector2d &max, 
+			       const double z,
+			       const double resolution) 
+{
+  
+  Cairo::RefPtr<Cairo::ImageSurface> surface;
+  Cairo::RefPtr<Cairo::Context> context; 
+  if (!rasterpolys(polys,min,max,resolution, surface, context)) return;
+  glDrawCairoSurface(surface,min,max,z);
+}
+
+
+void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
+			const Vector2d &min, const Vector2d &max, 
+			const double z)
+{
+  if (surface==0) return;
+  int w = surface->get_width();
+  int h = surface->get_height();
+  unsigned char * data = surface->get_data();
+
+  GLuint texture; glGenTextures( 1, &texture );
+  glBindTexture( GL_TEXTURE_2D, texture );
+
+  // http://www.nullterminator.net/gltexture.html
+  // select modulate to mix texture with color for shading
+  glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+  // when texture area is small, bilinear filter the closest mipmap
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+		   GL_LINEAR_MIPMAP_NEAREST );
+  // when texture area is large, bilinear filter the original
+  glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+  
+  // build our texture mipmaps
+  gluBuild2DMipmaps( GL_TEXTURE_2D, GL_ALPHA, w, h,
+		     GL_ALPHA, GL_UNSIGNED_BYTE, data );
+  
+  glEnable(GL_TEXTURE_2D);
+  glBegin(GL_QUADS); 
+  glTexCoord2d(0.0,0.0); glVertex3d(min.x(),min.y(),z);
+  glTexCoord2d(1.0,0.0); glVertex3d(max.x(),min.y(),z);
+  glTexCoord2d(1.0,1.0); glVertex3d(max.x(),max.y(),z);
+  glTexCoord2d(0.0,1.0); glVertex3d(min.x(),max.y(),z);
+  glEnd();
+  glDisable(GL_TEXTURE_2D);
+  glDeleteTextures( 1, &texture );
+}
+
+int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
+			     const Vector2d &min, const Vector2d &max, 
+			     const Vector2d &p) 
+{
+  if (surface==0) return 0;
+  const int w = surface->get_stride();
+  const int h = surface->get_height();
+  const unsigned char * data = surface->get_data();
+  const Vector2d diag = max - min;
+  const Vector2d relp = p - min;
+  const int ipx = (int)(relp.x() / diag.x() * (double)w);
+  const int ipy = (int)(relp.y() / diag.y() * (double)h);
+  int value = data[ipy*w + ipx];
+  return value;
+}

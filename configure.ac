@@ -34,7 +34,7 @@ AM_GLIB_GNU_GETTEXT
 
 PKG_PROG_PKG_CONFIG([0.22])
 dnl If your script errors here on OSX, see this URL http://myitcorner.com/blog/?p=207
-PKG_CHECK_MODULES(GTKMM, [gobject-2.0 glib-2.0 gtkmm-2.4 gtkglext-1.0 gtk+-2.0])
+PKG_CHECK_MODULES(GTKMM, [gobject-2.0 glib-2.0 gtkmm-2.4 gtkglext-1.0 gtk+-2.0 cairomm-1.0])
 dnl Set a define if we need to include gdkkeysyms-compat.h
 PKG_CHECK_MODULES(GTK_NEW_KEYSYMS, [gtk+-2.0 >= 2.21.8],
   [AC_DEFINE([HAVE_GTK_NEW_KEYSYMS], [1], [Need to include gdkkeysyms-compat.h]) ],

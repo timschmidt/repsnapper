@@ -363,7 +363,7 @@ bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path)
   srandom((unsigned long)(timeval.as_double())); 
   random_shuffle(rand_seq.begin(), rand_seq.end()); // shuffle  
 
-  for(uint s=0; s < num; s++) {
+  for(int s=0; s < num; s++) {
     int index = rand_seq[s]-1;
     // use selshapes as vector to fill up
     Vector3d trans = FindEmptyLocation(selshapes, seltransforms, unselshapes[index]);

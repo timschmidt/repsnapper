@@ -113,6 +113,8 @@ void Layer::SetPolygons(vector<Poly> &polys) {
     polygons[i].setZ(Z); 
   }
 }
+
+//not used
 void Layer::SetPolygons(const Matrix4d &T, const Shape &shape, 
 			double z) {
   cerr << "Layer::SetPolygons" << endl;
@@ -626,21 +628,29 @@ void Layer::calcConvexHull()
   setMinMax(hullPolygon);
 }
 
-void Layer::setMinMax(const vector<Poly> &polys) 
+bool Layer::setMinMax(const vector<Poly> &polys) 
 {
-  Min = Vector2d( INFTY, INFTY);
-  Max = Vector2d(-INFTY, -INFTY);
+  Vector2d NewMin = Vector2d( INFTY, INFTY);
+  Vector2d NewMax = Vector2d(-INFTY, -INFTY);
   for (uint i = 0; i< polys.size(); i++) {
     vector<Vector2d> minmax = polys[i].getMinMax();
-    Min.x() = min(Min.x(), minmax[0].x()); Min.y() = min(Min.y(), minmax[0].y());
-    Max.x() = max(Max.x(), minmax[1].x()); Max.y() = max(Max.y(), minmax[1].y());
+    NewMin.x() = min(NewMin.x(), minmax[0].x()); 
+    NewMin.y() = min(NewMin.y(), minmax[0].y());
+    NewMax.x() = max(NewMax.x(), minmax[1].x()); 
+    NewMax.y() = max(NewMax.y(), minmax[1].y());
   }
+  if (NewMin==Min && NewMax==Max) return false;
+  Min = NewMin;
+  Max = NewMax;
+  return true;
 }
-void Layer::setMinMax(const Poly &poly) 
+bool Layer::setMinMax(const Poly &poly) 
 {
   vector<Vector2d> minmax = poly.getMinMax();
+  if (minmax[0]==Min && minmax[1]==Max) return false;
   Min = minmax[0];
   Max = minmax[1];
+  return true;
 }
 
 // Convert to GCode
@@ -828,6 +838,20 @@ string Layer::info() const
 }
  
 
+vector<Poly> Layer::getOverhangs() const
+{
+  vector<Poly> overhangs;
+  if (previous!=NULL) {
+    Clipping clipp;
+    clipp.addPolys(polygons, subject);
+    vector<Poly> prevoffset = Clipping::getOffset(previous->polygons, thickness/2);
+    clipp.addPolys(prevoffset, clip);
+    clipp.setZ(Z);
+    overhangs = clipp.subtract();//CL::pftNonZero,CL::pftNonZero);
+  }
+  return overhangs;
+}
+
 string Layer::SVGpath(const Vector2d &trans) const
 {
   ostringstream ostr;
@@ -860,15 +884,21 @@ void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int poin
     polys[p].draw(gl_type, randomized);
   }
 }
-void draw_polys_surface(vector <Poly> &polys,  double cleandist,
+void draw_polys_surface(vector <Poly> &polys, Vector2d Min, Vector2d Max, 
+			double z,
+			double cleandist,
 			const float *rgb, float a)
 {
+
   glColor4f(rgb[0],rgb[1],rgb[2], a);
-  for(size_t p=0; p<polys.size();p++) {
-    polys[p].cleanup(cleandist);
-    ::cleandist(polys[p].vertices, cleandist);
-    polys[p].draw_as_surface();
-  }
+  glDrawPolySurfaceRastered(polys, Min, Max, z, cleandist);
+
+  // glColor4f(rgb[0],rgb[1],rgb[2], a);
+  // for(size_t p=0; p<polys.size();p++) {
+  //   polys[p].cleanup(cleandist);
+  //   ::cleandist(polys[p].vertices, cleandist);
+  //   polys[p].draw_as_surface();
+  // }
 }
 void draw_polys(const vector< vector <Poly> > &polys, 
 		int gl_type, int linewidth, int pointsize,
@@ -923,14 +953,14 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   draw_poly(skirtPolygon,   GL_LINE_LOOP, 3, 3, YELLOW,  1, randomized);
   draw_polys(shellPolygons, GL_LINE_LOOP, 1, 3, YELLOW2, 1, randomized);
 
-  glColor4f(0.5,0.9,1,1);
-  glLineWidth(1);
-  double zs = Z;
-  for(size_t s=0;s<skins;s++){
-    for(size_t p=0;p<skinPolygons.size();p++)
-      skinPolygons[p].draw(GL_LINE_LOOP,zs);
-    zs-=thickness/skins;
-  }
+  // glColor4f(0.5,0.9,1,1);
+  // glLineWidth(1);
+  // double zs = Z;
+  // for(size_t s=0;s<skins;s++){
+  //   for(size_t p=0;p<skinPolygons.size();p++)
+  //     skinPolygons[p].draw(GL_LINE_LOOP,zs);
+  //   zs-=thickness/skins;
+  // }
 
   draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 0.6, randomized);
   draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1,   randomized);
@@ -998,17 +1028,30 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	shellPolygons[p][q].drawVertexNumbers();
   }
 
-  if (showOverhang)
+
+  if (showOverhang) {
     if (previous!=NULL) {
-      Clipping clipp;
-      clipp.addPolys(polygons, subject);
-      vector<Poly> prevoffset = Clipping::getOffset(previous->polygons, thickness/2);
-      clipp.addPolys(prevoffset, clip);
-      clipp.setZ(Z);
-      vector<Poly> overhangs = clipp.subtract();//CL::pftNonZero,CL::pftNonZero);
-      draw_polys(overhangs, GL_LINE_LOOP, 4, 3, VIOLET, 0.8, randomized);
-      //draw_polys_surface(overhangs, thickness/3, VIOLET , 0.5); // crash
+      vector<Poly> overhangs = getOverhangs();
+      draw_polys(overhangs, GL_LINE_LOOP, 1, 3, VIOLET, 0.8, randomized);
+      //draw_polys_surface(overhangs, Min, Max, Z, thickness/5, VIOLET , 0.5);
+  
+      Cairo::RefPtr<Cairo::ImageSurface> surface;
+      Cairo::RefPtr<Cairo::Context>      context;
+      if (rasterpolys(overhangs, Min, Max, thickness/5, surface, context))
+	if(surface!=0) {
+	  glColor4f(RED[0],RED[1],RED[2], 0.5);
+	  glDrawCairoSurface(surface, Min, Max, Z);
+	  glColor4f(RED[0],RED[1],RED[2], 0.6);
+	  glPointSize(3);
+ 	  glBegin(GL_POINTS);
+	  for (double x = Min.x(); x<Max.x(); x+=thickness)
+	    for (double y = Min.y(); y<Max.y(); y+=thickness)
+	      if (getCairoSurfaceDatapoint(surface, Min, Max, Vector2d(x,y))!=0)
+	  	glVertex3d(x,y,Z);
+	  glEnd();
+	}
     }
+  }
 }
 
 void Layer::DrawMeasures(const Vector2d &point)

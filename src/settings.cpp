@@ -197,6 +197,7 @@ static struct {
   BOOL_MEMBER   (Slicing.FanControl, "FanControl", false, false),
   INT_MEMBER    (Slicing.MinFanSpeed, "MinFanSpeed", 150, false),
   INT_MEMBER    (Slicing.MaxFanSpeed, "MaxFanSpeed", 255, false),
+  INT_MEMBER    (Slicing.MaxOverhangSpeed, "MaxOverhangSpeed", 1000, false),
 
   //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
   BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, true),
@@ -329,6 +330,7 @@ static struct {
   { "Slicing.MinLayertime", 0.0, 100, 1, 10 },
   { "Slicing.MinFanSpeed", 0, 255, 5, 25 },
   { "Slicing.MaxFanSpeed", 0, 255, 5, 25 },
+  { "Slicing.MaxOverhangSpeed", 0, 10000, 10, 100 },
   //{ "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
   { "Slicing.ShellOffset", -10, 10, 0.01, 0.1 },
   { "Slicing.FirstLayersNum", 0, 1000, 1, 10 },
