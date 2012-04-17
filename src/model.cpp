@@ -57,6 +57,7 @@ Model::~Model()
 {
   ClearLayers();
   ClearGCode();
+  delete m_previewLayer;
 }
 
 void Model::alert (const char *message)
@@ -322,26 +323,73 @@ static bool ClosestToOrigin (Vector3d a, Vector3d b)
   return (a.squared_length()) < (b.squared_length());
 }
 
+// rearrange unselected shapes in random sequence
+bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path) 
+{
+  // all shapes
+  vector<Shape*>   allshapes;
+  vector<Matrix4d> transforms;
+  objtree.get_all_shapes(allshapes, transforms);
+  
+  // selected shapes
+  vector<Shape*>   selshapes;
+  vector<Matrix4d> seltransforms;
+  objtree.get_selected_shapes(path, selshapes, seltransforms);
+  
+  // get unselected shapes
+  vector<Shape*>   unselshapes;
+  vector<Matrix4d> unseltransforms;
 
-bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
+  for(uint s=0; s < allshapes.size(); s++) {
+    bool issel = false;
+    for(uint ss=0; ss < selshapes.size(); ss++) 
+      if (selshapes[ss] == allshapes[s]) {
+	issel = true; break;
+      }
+    if (!issel) {
+      unselshapes.    push_back(allshapes[s]);
+      unseltransforms.push_back(transforms[s]);
+    }
+  }
+
+  // find place for unselected shapes
+  int num = unselshapes.size();
+  vector<int> rand_seq(num,1); // 1,1,1...
+  partial_sum(rand_seq.begin(), rand_seq.end(), rand_seq.begin()); // 1,2,3,...,N
+
+  Glib::TimeVal timeval;
+  timeval.assign_current_time();
+  srandom((unsigned long)(timeval.as_double())); 
+  random_shuffle(rand_seq.begin(), rand_seq.end()); // shuffle  
+
+  for(uint s=0; s < num; s++) {
+    int index = rand_seq[s]-1;
+    // use selshapes as vector to fill up
+    Vector3d trans = FindEmptyLocation(selshapes, seltransforms, unselshapes[index]);
+    selshapes.push_back(unselshapes[index]);
+    seltransforms.push_back(unseltransforms[index]); // basic transform, not shape
+    selshapes.back()->transform3D.move(trans);
+    CalcBoundingBoxAndCenter();
+  }  
+  ModelChanged();
+  return true;
+}
+
+Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
+				  const vector<Matrix4d> &transforms,
+				  const Shape *shape)
 {
   // Get all object positions
   std::vector<Vector3d> maxpos;
   std::vector<Vector3d> minpos;
-
-  vector<Shape*>   allshapes;
-  vector<Matrix4d> transforms;
-  objtree.get_all_shapes(allshapes, transforms);
-  for(uint s=0; s<allshapes.size(); s++) {
+  for(uint s=0; s<shapes.size(); s++) {
     Vector3d p;
     //Matrix4d strans = (transforms[s] * allshapes[s]->transform3D.transform);
-    Vector3d min = transforms[s] * allshapes[s]->Min;
-    Vector3d max = transforms[s] * allshapes[s]->Max;
+    Vector3d min = transforms[s] * shapes[s]->Min;
+    Vector3d max = transforms[s] * shapes[s]->Max;
     minpos.push_back(Vector3d(min.x(), min.y(), 0));
     maxpos.push_back(Vector3d(max.x(), max.y(), 0));
   }
-
-  // Get all possible object positions
 
   double d = 5.0; // 5mm spacing between objects
   Vector3d StlDelta = (shape->Max - shape->Min);
@@ -359,6 +407,8 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
   // Prefer positions closest to origin
   sort(candidates.begin(), candidates.end(), ClosestToOrigin);
 
+
+  Vector3d result;
   // Check all candidates for collisions with existing objects
   for (uint c=0; c<candidates.size(); c++)
   {
@@ -368,16 +418,20 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
     {
       if (
           // check x
-          ( ( ( minpos[k].x()     <= candidates[c].x() &&
+          ( ( ( minpos[k].x()     <= candidates[c].x() && 
 		candidates[c].x() <= maxpos[k].x() ) ||
-	      ( candidates[c].x() <= minpos[k].x() 
-		&& maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
-	    ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d && candidates[c].x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
+	      ( candidates[c].x() <= minpos[k].x() && 
+		maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
+	    ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d && 
+		candidates[c].x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
           &&
           // check y
-          ( ( ( minpos[k].y() <= candidates[c].y() && candidates[c].y() <= maxpos[k].y() ) ||
-	      ( candidates[c].y() <= minpos[k].y() && maxpos[k].y() <= candidates[c].y()+StlDelta.y()+d ) ) ||
-	    ( ( minpos[k].y() <= candidates[c].y()+StlDelta.y()+d && candidates[c].y()+StlDelta.y()+d <= maxpos[k].y() ) ) )
+          ( ( ( minpos[k].y() <= candidates[c].y() && 
+		candidates[c].y() <= maxpos[k].y() ) ||
+	      ( candidates[c].y() <= minpos[k].y() &&
+		maxpos[k].y() <= candidates[c].y()+StlDelta.y()+d ) ) ||
+	    ( ( minpos[k].y() <= candidates[c].y()+StlDelta.y()+d &&
+		candidates[c].y()+StlDelta.y()+d <= maxpos[k].y() ) ) )
 	  )
 	{
 	  ok = false;
@@ -398,12 +452,25 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
       result.y() = candidates[c].y();
       result.z() = candidates[c].z();
       result -= shape->Min;
-      return true;
+      return result;
     }
   }
 
   // no empty spots
-  return false;
+  return result;
+}
+
+bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
+{
+  // Get all object positions
+  std::vector<Vector3d> maxpos;
+  std::vector<Vector3d> minpos;
+
+  vector<Shape*>   allshapes;
+  vector<Matrix4d> transforms;
+  objtree.get_all_shapes(allshapes, transforms);
+  result = FindEmptyLocation(allshapes, transforms, shape);
+  return true;
 }
 
 int Model::AddShape(TreeObject *parent, Shape *shape, string filename, bool autoplace)

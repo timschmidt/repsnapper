@@ -125,6 +125,12 @@ void View::load_stl ()
   FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::STL);
 }
 
+void View::autoarrange ()
+{
+  vector<Gtk::TreeModel::Path> path = m_treeview->get_selection()->get_selected_rows();
+  m_model->AutoArrange(path);
+}
+
 void View::toggle_fullscreen()
 { 
   static bool is_fullscreen = false;
@@ -943,6 +949,7 @@ View::View(BaseObjectType* cobject,
 
   // View tab
   connect_button ("m_load_stl",      sigc::mem_fun(*this, &View::load_stl) );
+  connect_button ("Misc.AutoArrange",sigc::mem_fun(*this, &View::autoarrange) );
   connect_button ("m_save_stl",      sigc::mem_fun(*this, &View::save_stl) );
   connect_button ("m_slice_svg",     sigc::mem_fun(*this, &View::slice_svg) );
   connect_button ("m_delete",        sigc::mem_fun(*this, &View::delete_selected_objects) );

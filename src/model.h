@@ -150,6 +150,10 @@ public:
 
 	void CalcBoundingBoxAndCenter();
 	Vector3d GetViewCenter();
+        bool AutoArrange(vector<Gtk::TreeModel::Path> &iter);
+	Vector3d FindEmptyLocation(const vector<Shape*> &shapes,
+				   const vector<Matrix4d> &transforms,
+				   const Shape *shape);
         bool FindEmptyLocation(Vector3d &result, const Shape *stl);
 
 	sigc::signal< void > m_model_changed;

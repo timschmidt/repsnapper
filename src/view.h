@@ -48,6 +48,7 @@ class View : public Gtk::Window
   void move_gcode_to_platform ();
   void convert_to_gcode();
   void load_stl();
+  void autoarrange();
   void save_stl();
   void slice_svg();
   void send_gcode();
