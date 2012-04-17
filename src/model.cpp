@@ -969,7 +969,8 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 		    settings.Display.DrawCPVertexNumbers,
 		    settings.Display.DisplayinFill,
 		    settings.Display.DisplayDebuginFill,
-		    settings.Display.ShowLayerOverhang);
+		    settings.Display.ShowLayerOverhang,
+		    settings.Display.RandomizedLines);
 
 	if (settings.Display.DrawMeasures)
 	  layer->DrawMeasures(measuresPoint);

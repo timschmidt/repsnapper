@@ -165,9 +165,9 @@ class View : public Gtk::Window
   void stl_added (Gtk::TreePath &path);
   void model_changed ();
 
-  Matrix4d &SelectedNodeMatrix(guint objectNr = 1);
-  void SelectedNodeMatrices(std::vector<Matrix4d *> &result );
-  void newObject();
+  /* Matrix4d &SelectedNodeMatrix(guint objectNr = 1); */
+  /* void SelectedNodeMatrices(std::vector<Matrix4d *> &result ); */
+  /* void newObject(); */
 
   // view nasties ...
   void Draw (vector<Gtk::TreeModel::Path> &selected);

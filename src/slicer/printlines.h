@@ -27,7 +27,7 @@
 
 class PLine; // see below
 
-enum PLineArea { UNDEF, SHELL, SKIN, INFILL, SUPPORT, SKIRT };
+enum PLineArea { UNDEF, SHELL, SKIN, INFILL, SUPPORT, SKIRT, BRIDGE };
 
 
 // 3D printline for making GCode

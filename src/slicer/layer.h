@@ -131,7 +131,8 @@ public:
   void Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
 	    bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
 	    bool DrawCPVertexNumbers, bool DisplayInfill, 
-	    bool DebugInfill, bool showOverhang);
+	    bool DebugInfill, bool showOverhang, 
+	    bool randomized = false);
   void DrawMeasures(const Vector2d &point);
  
   void Clear();

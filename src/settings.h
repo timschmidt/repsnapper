@@ -150,6 +150,7 @@ class Settings {
     float DecorInfillDistance;
     float DecorInfillRotation;
 
+    float MinShelltime;
     float MinLayertime;
     bool FanControl;
     int MinFanSpeed;
@@ -222,6 +223,7 @@ class Settings {
     bool DisplayDebugArcs;
     bool ShowLayerOverhang;
     bool DrawVertexNumbers;
+    bool RandomizedLines;
     bool DrawLineNumbers;
     bool DrawOutlineNumbers;
     bool DrawCPVertexNumbers;
