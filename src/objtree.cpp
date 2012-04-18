@@ -169,7 +169,7 @@ void ObjectsTree::get_selected_objects(vector<Gtk::TreeModel::Path> &path,
   }
 }
 void ObjectsTree::get_selected_shapes(vector<Gtk::TreeModel::Path> &path,
-				      vector<Shape*> &allshapes,
+				      vector<Shape*>   &allshapes,
 				      vector<Matrix4d> &transforms) const
 {
   allshapes.clear();
@@ -202,7 +202,8 @@ void ObjectsTree::get_selected_shapes(vector<Gtk::TreeModel::Path> &path,
   }
 }
 
-void ObjectsTree::get_all_shapes(vector<Shape*> &allshapes, vector<Matrix4d> &transforms) const
+void ObjectsTree::get_all_shapes(vector<Shape*>   &allshapes, 
+				 vector<Matrix4d> &transforms) const
 {
   allshapes.clear();
   transforms.clear();

@@ -151,6 +151,49 @@ int Shape::loadBinarySTL(string filename)
     return 0;
 }
 
+int Shape::saveBinarySTL(string filename) const
+{
+
+  FILE *file  = fopen(filename.c_str(),"wb");
+
+  if (file==0) {
+    cerr << _("Error: Unable to open stl file - ") << filename << endl;
+    return -1;
+  }
+
+  int num_tri = (int)triangles.size();
+
+  // Write Header
+  string tmp = "solid binary by Repsnapper                                                     "; 
+
+  fwrite(tmp.c_str(), 80, 1, file);
+
+  // write number of triangles
+  fwrite(&num_tri, 1, sizeof(int), file);
+
+  Matrix4d T = transform3D.transform;
+
+  for(int i=0; i<num_tri; i++){
+    Vector3f
+      TA = T*triangles[i].A,
+      TB = T*triangles[i].B,
+      TC = T*triangles[i].C,
+      TN = T*triangles[i].Normal; TN.normalize();
+    float N[3] = {TN.x(), TN.y(), TN.z()};
+    float P[9] = {TA.x(), TA.y(), TA.z(),
+		  TB.x(), TB.y(), TB.z(),
+		  TC.x(), TC.y(), TC.z()};
+    
+    // write the normal, the three coords and a short set to zero
+    fwrite(&N,3,sizeof(float),file);
+    for(int k=0; k<3; k++) { fwrite(&P[3*k], 3, sizeof(float), file); }
+    unsigned short attributes = 0;
+    fwrite(&attributes, 1, sizeof(short), file);
+  }
+
+  fclose(file);
+  return 0;
+}
 
 int Shape::loadASCIIVRML(std::string filename) 
 {

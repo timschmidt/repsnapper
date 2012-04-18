@@ -240,16 +240,28 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
 
 void Model::SaveStl(Glib::RefPtr<Gio::File> file)
 {
-  stringstream sstr;
-  for(uint o=0;o<objtree.Objects.size();o++)
-  {
-    for(uint f=0;f<objtree.Objects[o]->shapes.size();f++)
-    {
-      Shape *shape = objtree.Objects[o]->shapes[f];
-      sstr << shape->getSTLsolid() << endl;
-    }
+  vector<Shape*> shapes;
+  vector<Matrix4d> transforms;
+  objtree.get_all_shapes(shapes,transforms);
+
+  if(shapes.size() == 1) {
+    shapes[0]->saveBinarySTL(file->get_path());
   }
-  Glib::file_set_contents (file->get_path(), sstr.str());
+  else {
+    stringstream sstr;
+    for(uint s=0; s < shapes.size(); s++) {
+      sstr << shapes[s]->getSTLsolid() << endl;
+    }
+  // for(uint o=0;o<objtree.Objects.size();o++)
+  // {
+  //   for(uint f=0;f<objtree.Objects[o]->shapes.size();f++)
+  //   {
+  //     Shape *shape = objtree.Objects[o]->shapes[f];
+  //     sstr << shape->getSTLsolid() << endl;
+  //   }
+  // }
+    Glib::file_set_contents (file->get_path(), sstr.str());
+  }
 }
 
 void Model::Read(Glib::RefPtr<Gio::File> file)

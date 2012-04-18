@@ -137,6 +137,8 @@ public:
 
     int loadASCIIVRML(std::string filename);
 
+    int saveBinarySTL(std::string filename) const;
+
     bool slow_drawing;
     virtual string info() const;
 
