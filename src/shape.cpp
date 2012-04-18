@@ -466,9 +466,18 @@ int Shape::load(string filename)
 
 bool Shape::hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance) const
 {
-  for (uint i = 0; i < triangles.size(); i++)
-    if (triangle.isConnectedTo(triangles[i],sqdistance)) return true;
-  return false;
+  bool haveadj = false;
+  int count = (int)triangles.size();
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) 
+#endif
+  for (int i = 0; i < count; i++)
+    if (!haveadj)
+      if (triangle.isConnectedTo(triangles[i],sqdistance)) {
+	haveadj = true;
+    }
+
+  return haveadj;
 }
 void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress) 
 {
@@ -600,7 +609,11 @@ vector<Vector3d> Shape::getMostUsedNormals() const
   for(size_t i=0;i<ntr;i++)
     {
       bool havenormal = false;
-      for (uint n=0; n < normals.size(); n++) {
+      int numnorm = normals.size();
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) 
+#endif
+      for (int n = 0; n < numnorm; n++) {
 	if ((normals[n].normal - triangles[i].Normal).squared_length() < 0.000001) {
 	  havenormal = true;
 	  normals[n].area += triangles[i].area();
@@ -630,7 +643,8 @@ void Shape::OptimizeRotation()
   Vector3d N;
   Vector3d Z(0,0,-1);
   double angle=0;
-  for (uint n=0; n < normals.size(); n++) { 
+  int count = (int)normals.size();
+  for (int n=0; n < count; n++) { 
     //cerr << n << normals[n] << endl;
     N = normals[n];
     angle = acos(N.dot(Z));
@@ -694,7 +708,11 @@ void Shape::Rotate(const Vector3d & axis, const double & angle)
   CenterAroundXY();
   //transform3D.rotate(axis,angle);
   // do a real rotation because matrix transform gives errors when slicing
-  for (size_t i=0; i<triangles.size(); i++)
+  int count = (int)triangles.size();
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) 
+#endif
+  for (int i=0; i < count ; i++) 
     {
       triangles[i].rotate(axis, angle);
     }
@@ -708,7 +726,11 @@ void Shape::Twist(double angle)
   double h = Max.z()-Min.z();
   double hangle=0;
   Vector3d axis(0,0,1);
-  for (size_t i=0; i<triangles.size(); i++) {
+  int count = (int)triangles.size();
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) 
+#endif
+  for (int i=0; i<count; i++) {
     for (size_t j=0; j<3; j++) 
       {
 	hangle = angle * (triangles[i][j].z() - Min.z()) / h;
@@ -723,7 +745,11 @@ void Shape::CenterAroundXY()
 {
   CalcBBox();
   Vector3d displacement = transform3D.getTranslation() - Center;
-  for(size_t i=0; i<triangles.size() ; i++)
+  int count = (int)triangles.size();
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) 
+#endif
+  for(int i=0; i<count ; i++)
     {
       triangles[i].Translate(displacement);
     }
@@ -1008,14 +1034,17 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   Vector2d lineStart;
   Vector2d lineEnd;
   vector<Segment> lines;
-  int num_cutpoints;
   // we know our own tranform:
   Matrix4d transform = T * transform3D.transform ;
   
-  for (uint i = 0; i < triangles.size(); i++)
+  int count = (int)triangles.size();
+// #ifdef _OPENMP
+// #pragma omp parallel for schedule(dynamic) 
+// #endif
+  for (int i = 0; i < count; i++)
     {
       Segment line(-1,-1);
-      num_cutpoints = triangles[i].CutWithPlane(z, transform, lineStart, lineEnd);
+      int num_cutpoints = triangles[i].CutWithPlane(z, transform, lineStart, lineEnd);
       if (num_cutpoints>0) {
 	int havev = find_vertex(vertices, lineStart);
 	if (havev >= 0) 
