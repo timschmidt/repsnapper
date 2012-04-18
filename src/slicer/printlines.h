@@ -28,7 +28,8 @@
 class PLine; // see below
 
 enum PLineArea { UNDEF, SHELL, SKIN, INFILL, SUPPORT, SKIRT, BRIDGE };
-
+const string AreaNames[] = { _(""), _("Shell"), _("Skin"), _("Infill"),
+			     _("Support"),  _("Skirt"), _("Bridge") };
 
 // 3D printline for making GCode
 class PLine3
@@ -36,6 +37,8 @@ class PLine3
  public: 
   PLine3(const PLine &pline, double z);
   ~PLine3(){};
+
+  PLineArea area;
 
   Vector3d from, to;
   double speed;
@@ -79,10 +82,10 @@ class PLine
   double lifted; // antiooze z-lift 
 
  public: 
-  PLine(const Vector2d &from, const Vector2d &to, double speed, 
+  PLine(PLineArea area_, const Vector2d &from, const Vector2d &to, double speed, 
 	double feedrate, double lifted = 0.);
   // arc
-  PLine(const Vector2d &from, const Vector2d &to, double speed, 
+  PLine(PLineArea area_, const Vector2d &from, const Vector2d &to, double speed, 
 	double feedrate, short arc, const Vector2d &arccenter, double angle, 
 	double lifted = 0.);
 
@@ -161,6 +164,8 @@ class Printlines
 		     uint &tractstart, uint &pushend,
 		     const vector<PLine> &lines) const;
   uint makeAntioozeRetract(vector<PLine> &lines) const;
+  uint insertAntioozeHaltBefore(uint index, double amount, double speed, 
+				vector<PLine> &lines) const;
 
   // slow down to total time needed (cooling)
   double slowdownTo(double totalseconds, vector<PLine> &lines) ; // returns slowdownfactor
