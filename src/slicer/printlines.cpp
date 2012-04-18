@@ -934,11 +934,11 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
   double 
     AOmindistance = settings->Slicing.AntioozeDistance,
     AOamount      = settings->Slicing.AntioozeAmount,
-    AOspeed       = settings->Slicing.AntioozeSpeed,
-    AOonhaltratio = settings->Slicing.AntioozeHaltRatio;
+    AOspeed       = settings->Slicing.AntioozeSpeed;
+    //AOonhaltratio = settings->Slicing.AntioozeHaltRatio;
   if (lines.size() < 2 || AOmindistance <=0 || AOamount == 0) return 0;
-  const double onhalt_amount = AOamount * AOonhaltratio;
-  const double onmove_amount = AOamount - onhalt_amount;
+  // const double onhalt_amount = AOamount * AOonhaltratio;
+  // const double onmove_amount = AOamount - onhalt_amount;
 
   uint total_added = 0;
   double total_extrusionsum = 0;
@@ -961,39 +961,39 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
     
 
     double dist = 0;
-    uint newl = distribute_AntioozeAmount(onmove_amount, AOspeed,
+    uint newl = distribute_AntioozeAmount(AOamount, AOspeed,
 					  moveend+1, pushend,
 					  false, lines, dist);
     added += newl;
     double linesext = 0;
     for (uint i = moveend+1; i<=pushend+newl; i++) linesext+=lines[i].absolute_feed;
-    if (abs(linesext-onmove_amount)>0.01) cerr  << "wrong lines dist push " << linesext << endl;
+    if (abs(linesext-AOamount)>0.01) cerr  << "wrong lines dist push " << linesext << endl;
     extrusionsum += dist;
-    if (abs(dist-onmove_amount)>0.01) cerr << " wrong distrib push " << dist << endl;
+    if (abs(dist-AOamount)>0.01) cerr << " wrong distrib push " << dist << endl;
     // on-halt repush and retract 
-    if (onhalt_amount != 0) {
-      added += insertAntioozeHaltBefore(moveend+1, onhalt_amount, AOspeed, lines);
-      extrusionsum += onhalt_amount;
-      added += insertAntioozeHaltBefore(movestart, -onhalt_amount, AOspeed, lines);
-      movestart--; // inserted line before
-      extrusionsum -= onhalt_amount;
-    }
+    // if (onhalt_amount != 0) {
+    //   added += insertAntioozeHaltBefore(moveend+1, onhalt_amount, AOspeed, lines);
+    //   extrusionsum += onhalt_amount;
+    //   added += insertAntioozeHaltBefore(movestart, -onhalt_amount, AOspeed, lines);
+    //   movestart--; // inserted line before
+    //   extrusionsum -= onhalt_amount;
+    // }
     // find lines to distribute retract
     if (movestart < 1) movestart = 1;
     dist = 0;
     double linesextbefore = 0;
     for (uint i = tractstart; i<=movestart-1; i++) 
       linesextbefore += lines[i].absolute_feed;
-    newl = distribute_AntioozeAmount(-onmove_amount, AOspeed,
+    newl = distribute_AntioozeAmount(-AOamount, AOspeed,
 				     tractstart, movestart-1,
 				     true, lines, dist);
     linesext=-linesextbefore;
     for (uint i = tractstart; i<=movestart-1+newl; i++) 
       linesext += lines[i].absolute_feed;
-    if (abs(linesext+onmove_amount)>0.01) cerr  << "wrong lines dist tract " << linesext << " ("<<dist <<") != " << -onmove_amount << " - " << tractstart << "->" <<  movestart << " new: "<< newl<<endl;
+    if (abs(linesext+AOamount)>0.01) cerr  << "wrong lines dist tract " << linesext << " ("<<dist <<") != " << -AOamount << " - " << tractstart << "->" <<  movestart << " new: "<< newl<<endl;
     added += newl;
     extrusionsum += dist;
-    if (abs(dist+onmove_amount)>0.01) cerr << " wrong distrib tract " << dist << endl;
+    if (abs(dist+AOamount)>0.01) cerr << " wrong distrib tract " << dist << endl;
 
     moveend += added;
     total_added += added;

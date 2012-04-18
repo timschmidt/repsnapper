@@ -118,7 +118,7 @@ class Settings {
     float AntioozeDistance;
     float AntioozeAmount;
     float AntioozeSpeed;
-    float AntioozeHaltRatio;
+    //float AntioozeHaltRatio;
     float AntioozeZlift;
     bool ZliftAlways;
 

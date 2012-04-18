@@ -13,28 +13,6 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
-  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
-    <property name="upper">30</property>
-    <property name="value">10</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
-    <property name="upper">20</property>
-    <property name="value">8</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
   <object class="GtkAction" id="Fullscreen">
     <property name="label">Fullscreen</property>
     <property name="short_label" translatable="yes">Fullscreen</property>
@@ -44,6 +22,27 @@
     <property name="label" translatable="yes">Load Settings</property>
     <property name="short_label" translatable="yes">Load Settings</property>
     <property name="tooltip" translatable="yes">Load application settings profile</property>
+  </object>
+  <object class="GtkAction" id="Quit">
+    <property name="label" translatable="yes">_Quit</property>
+    <property name="short_label" translatable="yes">Quit</property>
+    <property name="tooltip" translatable="yes">Exit Repsnapper</property>
+    <property name="stock_id">gtk-quit</property>
+  </object>
+  <object class="GtkAction" id="SaveSettings">
+    <property name="label" translatable="yes">Save Settings</property>
+    <property name="short_label" translatable="yes">Save Settings</property>
+    <property name="tooltip" translatable="yes">Save application settings profile</property>
+  </object>
+  <object class="GtkAction" id="SaveSettingsAs">
+    <property name="label" translatable="yes">Save Settings As</property>
+    <property name="short_label" translatable="yes">Save Settings As</property>
+    <property name="tooltip" translatable="yes">Save settings in a custom file</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
   </object>
   <object class="GtkAction" id="OpenGCode">
     <property name="label" translatable="yes">Load _GCode</property>
@@ -63,21 +62,22 @@
     <property name="tooltip" translatable="yes">Open the Preferences Dialog</property>
     <property name="stock_id">gtk-preferences</property>
   </object>
-  <object class="GtkAction" id="Quit">
-    <property name="label" translatable="yes">_Quit</property>
-    <property name="short_label" translatable="yes">Quit</property>
-    <property name="tooltip" translatable="yes">Exit Repsnapper</property>
-    <property name="stock_id">gtk-quit</property>
+  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
+    <property name="upper">30</property>
+    <property name="value">10</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
   </object>
-  <object class="GtkAction" id="SaveSettings">
-    <property name="label" translatable="yes">Save Settings</property>
-    <property name="short_label" translatable="yes">Save Settings</property>
-    <property name="tooltip" translatable="yes">Save application settings profile</property>
+  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
   </object>
-  <object class="GtkAction" id="SaveSettingsAs">
-    <property name="label" translatable="yes">Save Settings As</property>
-    <property name="short_label" translatable="yes">Save Settings As</property>
-    <property name="tooltip" translatable="yes">Save settings in a custom file</property>
+  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
+    <property name="upper">20</property>
+    <property name="value">8</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
@@ -5365,8 +5365,8 @@ The head will be going down between them</property>
                               <object class="GtkTable" id="table16">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="n_rows">7</property>
-                                <property name="n_columns">6</property>
+                                <property name="n_rows">5</property>
+                                <property name="n_columns">5</property>
                                 <child>
                                   <object class="GtkLabel" id="label131">
                                     <property name="visible">True</property>
@@ -5453,8 +5453,8 @@ The head will be going down between them</property>
                                     <property name="label" translatable="yes">Distance (mm):</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">4</property>
-                                    <property name="right_attach">5</property>
+                                    <property name="left_attach">3</property>
+                                    <property name="right_attach">4</property>
                                     <property name="top_attach">1</property>
                                     <property name="bottom_attach">2</property>
                                   </packing>
@@ -5468,8 +5468,8 @@ The head will be going down between them</property>
                                     <property name="digits">1</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">5</property>
-                                    <property name="right_attach">6</property>
+                                    <property name="left_attach">4</property>
+                                    <property name="right_attach">5</property>
                                     <property name="top_attach">1</property>
                                     <property name="bottom_attach">2</property>
                                   </packing>
@@ -5525,8 +5525,6 @@ The head will be going down between them</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">3</property>
-                                    <property name="right_attach">4</property>
                                     <property name="top_attach">4</property>
                                     <property name="bottom_attach">5</property>
                                   </packing>
@@ -5540,8 +5538,8 @@ The head will be going down between them</property>
                                     <property name="digits">2</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">5</property>
-                                    <property name="right_attach">6</property>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
                                     <property name="top_attach">4</property>
                                     <property name="bottom_attach">5</property>
                                   </packing>
@@ -5553,8 +5551,8 @@ The head will be going down between them</property>
                                     <property name="label" translatable="yes">Distance</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">4</property>
-                                    <property name="right_attach">5</property>
+                                    <property name="left_attach">1</property>
+                                    <property name="right_attach">2</property>
                                     <property name="top_attach">4</property>
                                     <property name="bottom_attach">5</property>
                                   </packing>
@@ -5568,8 +5566,8 @@ The head will be going down between them</property>
                                     <property name="digits">2</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">5</property>
-                                    <property name="right_attach">6</property>
+                                    <property name="left_attach">4</property>
+                                    <property name="right_attach">5</property>
                                     <property name="top_attach">3</property>
                                     <property name="bottom_attach">4</property>
                                   </packing>
@@ -5582,49 +5580,12 @@ The head will be going down between them</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">3</property>
-                                    <property name="right_attach">5</property>
+                                    <property name="right_attach">4</property>
                                     <property name="top_attach">3</property>
                                     <property name="bottom_attach">4</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel" id="label159">
-                                    <property name="can_focus">False</property>
-                                    <property name="has_tooltip">True</property>
-                                    <property name="tooltip_text" translatable="yes">Slowdown outer lines</property>
-                                    <property name="label" translatable="yes">Minimum Shell Time (s):</property>
-                                  </object>
-                                  <packing>
-                                    <property name="right_attach">2</property>
-                                    <property name="top_attach">5</property>
-                                    <property name="bottom_attach">6</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSpinButton" id="Slicing.MinShelltime">
-                                    <property name="can_focus">True</property>
-                                    <property name="invisible_char">●</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left_attach">2</property>
-                                    <property name="right_attach">3</property>
-                                    <property name="top_attach">5</property>
-                                    <property name="bottom_attach">6</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel" id="label160">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Max. Overhang Speed (mm/min):</property>
-                                  </object>
-                                  <packing>
-                                    <property name="right_attach">2</property>
-                                    <property name="top_attach">6</property>
-                                    <property name="bottom_attach">7</property>
-                                  </packing>
-                                </child>
-                                <child>
                                   <placeholder/>
                                 </child>
                                 <child>
@@ -5647,49 +5608,6 @@ The head will be going down between them</property>
                                 </child>
                                 <child>
                                   <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <object class="GtkSpinButton" id="Slicing.MaxOverhangSpeed">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="invisible_char">●</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left_attach">2</property>
-                                    <property name="right_attach">3</property>
-                                    <property name="top_attach">6</property>
-                                    <property name="bottom_attach">7</property>
-                                  </packing>
                                 </child>
                               </object>
                               <packing>
@@ -5737,7 +5655,7 @@ The head will be going down between them</property>
                               <object class="GtkTable" id="table17">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="n_rows">2</property>
+                                <property name="n_rows">4</property>
                                 <property name="n_columns">5</property>
                                 <child>
                                   <object class="GtkLabel" id="label130">
@@ -5773,8 +5691,8 @@ The head will be going down between them</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                     <property name="x_options">GTK_EXPAND</property>
                                   </packing>
                                 </child>
@@ -5787,8 +5705,8 @@ The head will be going down between them</property>
                                   <packing>
                                     <property name="left_attach">1</property>
                                     <property name="right_attach">2</property>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -5801,8 +5719,8 @@ The head will be going down between them</property>
                                   <packing>
                                     <property name="left_attach">2</property>
                                     <property name="right_attach">3</property>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                     <property name="x_options">GTK_FILL</property>
                                   </packing>
                                 </child>
@@ -5815,8 +5733,8 @@ The head will be going down between them</property>
                                   <packing>
                                     <property name="left_attach">3</property>
                                     <property name="right_attach">4</property>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -5829,10 +5747,72 @@ The head will be going down between them</property>
                                   <packing>
                                     <property name="left_attach">4</property>
                                     <property name="right_attach">5</property>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
+                                    <property name="top_attach">3</property>
+                                    <property name="bottom_attach">4</property>
                                     <property name="x_options">GTK_FILL</property>
                                   </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="label160">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">Max. Overhang Speed (mm/min):</property>
+                                  </object>
+                                  <packing>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSpinButton" id="Slicing.MaxOverhangSpeed">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">True</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
+                                    <property name="top_attach">2</property>
+                                    <property name="bottom_attach">3</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="label159">
+                                    <property name="can_focus">False</property>
+                                    <property name="label" translatable="yes">Minimum Shell Time (s):</property>
+                                  </object>
+                                  <packing>
+                                    <property name="right_attach">2</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkSpinButton" id="Slicing.MinShelltime">
+                                    <property name="can_focus">True</property>
+                                    <property name="invisible_char">●</property>
+                                    <property name="invisible_char_set">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
+                                    <property name="top_attach">1</property>
+                                    <property name="bottom_attach">2</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -5887,7 +5867,7 @@ The head will be going down between them</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_rows">3</property>
-                                <property name="n_columns">6</property>
+                                <property name="n_columns">4</property>
                                 <child>
                                   <object class="GtkCheckButton" id="Slicing.EnableAntiooze">
                                     <property name="label" translatable="yes">Enable Antiooze Retract</property>
@@ -5909,8 +5889,8 @@ The head will be going down between them</property>
                                     <property name="label" translatable="yes">Minimum Distance (mm):</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">3</property>
-                                    <property name="right_attach">5</property>
+                                    <property name="left_attach">2</property>
+                                    <property name="right_attach">3</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -5922,8 +5902,8 @@ The head will be going down between them</property>
                                     <property name="digits">2</property>
                                   </object>
                                   <packing>
-                                    <property name="left_attach">5</property>
-                                    <property name="right_attach">6</property>
+                                    <property name="left_attach">3</property>
+                                    <property name="right_attach">4</property>
                                   </packing>
                                 </child>
                                 <child>
@@ -5980,34 +5960,6 @@ The head will be going down between them</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel" id="label146">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">On-Halt Ratio</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left_attach">4</property>
-                                    <property name="right_attach">5</property>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSpinButton" id="Slicing.AntioozeHaltRatio">
-                                    <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="invisible_char">●</property>
-                                    <property name="invisible_char_set">True</property>
-                                    <property name="digits">2</property>
-                                  </object>
-                                  <packing>
-                                    <property name="left_attach">5</property>
-                                    <property name="right_attach">6</property>
-                                    <property name="top_attach">1</property>
-                                    <property name="bottom_attach">2</property>
-                                  </packing>
-                                </child>
-                                <child>
                                   <object class="GtkLabel" id="label88">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
@@ -6048,15 +6000,6 @@ The head will be going down between them</property>
                                     <property name="top_attach">2</property>
                                     <property name="bottom_attach">3</property>
                                   </packing>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
-                                </child>
-                                <child>
-                                  <placeholder/>
                                 </child>
                               </object>
                               <packing>
