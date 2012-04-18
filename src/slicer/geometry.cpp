@@ -309,6 +309,14 @@ long double angleBetween(const Vector2d &V1, const Vector2d &V2)
   return result;
 }
 
+// return A halfway rotated around center in direction of B 
+Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B)
+{
+  double angle = angleBetween(center-A, B-center) / 2;
+  return rotated(A, center, angle);
+}
+
+
 
 // is B left of A wrt center?
 bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B)

@@ -73,6 +73,7 @@ public:
 	void nearestIndices(const Poly &p2, int &thisindex, int &otherindex) const;
 	double shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end) const;
 	double angleAtVertex(uint i) const;
+	vector<Vector2d> getCenterline() const;
 
 	void rotate(const Vector2d &center, double angle);
 	void move(const Vector2d &delta);

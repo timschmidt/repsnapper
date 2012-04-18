@@ -336,6 +336,31 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	cpolys = Clipping::getClipperPolygons(polys);
       }
       break;
+    case ThinInfill: // get centerline of polygon
+      {
+	break;
+
+	vector<Poly> opolys;
+	const uint num_div = 10;
+	double shrink = 0.5*infillDistance/num_div;
+	cerr << "shrink " << shrink << endl;
+	vector< vector<Poly> > shrinklines(tofillpolys.size());
+	for (uint i=0; i < tofillpolys.size(); i++){
+	  double parea = Clipping::Area(tofillpolys[i]);
+	  if (parea<0) shrink = -shrink;
+	  vector<Poly> shrinked  = Clipping::getOffset(tofillpolys[i],-shrink);
+	  //shrinklines[i].resize(
+	  for (uint j=0; j < num_div; j++){
+	    shrinked  = Clipping::getOffset(shrinked,-shrink);
+	    opolys.insert(opolys.end(), shrinked.begin(), shrinked.end());
+	    for (uint s = 0; s < shrinked.size(); s++) {
+	      
+	    }
+	  }
+	}
+	cpolys = Clipping::getClipperPolygons(opolys);
+      } 
+      break;
     case PolyInfill: // fill all polygons with their shrinked polys
       {
 	vector< vector<Poly> > ipolys; // all offset shells
@@ -386,7 +411,9 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   //tid = omp_get_thread_num( );
   //cerr << "thread "<<tid << " saving pattern " << endl;
   //cerr << "cpolys " << cpolys.size() << endl; 
-  if (type != PolyInfill && type != ZigzagInfill) // can't save these
+  if (type != PolyInfill && 
+      type != ZigzagInfill && 
+      type != ThinInfill ) // can't save these
     {
       struct pattern newPattern;
       newPattern.type=type;

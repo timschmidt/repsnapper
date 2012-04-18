@@ -62,6 +62,7 @@ void rotArcballTrans(Matrix4fT &transform,  const Vector3d &axis, double angle);
 /* long double angleBetween(const vmml::vector< M, T > V1, const vmml::vector< M, T > V2 ); */
 long double angleBetween(const Vector3d &V1, const Vector3d &V2);
 long double angleBetween(const Vector2d &V1, const Vector2d &V2);
+Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B);
 void center_perpendicular(const Vector2d &from, const Vector2d &to,
 			  Vector2d &p1, Vector2d &p2);
 

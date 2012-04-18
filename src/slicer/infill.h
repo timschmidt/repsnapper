@@ -30,7 +30,8 @@
 
 // user selectable have to be first
 enum InfillType {ParallelInfill, SmallZigzagInfill, HexInfill, PolyInfill, HilbertInfill, 
-		 SupportInfill, RaftInfill, BridgeInfill, ZigzagInfill, INVALIDINFILL};
+		 SupportInfill, RaftInfill, BridgeInfill, ZigzagInfill, ThinInfill,
+		 INVALIDINFILL};
 
 // these are available for user selection (order must be same as types):
 const string InfillNames[] = {_("Parallel"), _("Zigzag"), _("Hexagons"), _("Polygons"), _("Hilbert Curve")};

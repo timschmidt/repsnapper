@@ -158,20 +158,22 @@ public:
 
   Infill * normalInfill;
   Infill * fullInfill;
-  vector<Infill*> bridgeInfills; // an infill for every brigde (different angles)
+  vector<Infill*> bridgeInfills;   // an infill for every brigde (different angles)
   vector<Infill*> skinFullInfills;
   Infill * supportInfill;
   Infill * decorInfill;
+  Infill * thinInfill;             // one-line infill for thin features
   
   vector<Poly> polygons;		// original polygons directly from model
   vector< vector<Poly> > shellPolygons; // all shells except innermost
+  vector<Poly> thinPolygons;            // areas thinner than 2 extrusion lines
   vector<Poly> fillPolygons;	        // innermost shell 
   vector<Poly> fullFillPolygons;        // fully filled polygons (uncovered)
-  vector<ExPoly> bridgePolygons; // fully filled ex-polygons with holes (uncovered) for bridge
-  vector<double> bridge_angles;  // angles of each bridge ex-polygon
+  vector<ExPoly> bridgePolygons;        // fully filled ex-polygons with holes for bridges
+  vector<double> bridge_angles;         // angles of each bridge ex-polygon
   vector< vector<Poly> > bridgePillars; // bridge pillars for debugging
   vector<Poly> supportPolygons;	        // polygons to be filled with support pattern
-  uint skins; // number of skin divisions
+  uint skins;                           // number of skin divisions
   vector<Poly> skinPolygons;            // outer skin polygons
   vector<Poly> skinFullFillPolygons;    // skin polygons of fully filled areas
   Poly hullPolygon;                     // convex hull around everything

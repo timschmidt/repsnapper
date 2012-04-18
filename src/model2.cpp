@@ -849,15 +849,18 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
   for (uint p=0; p<count; p++) {
     cont = (m_progress->update(p)) ;
     if (!cont) break;
-    //cerr << "GCode layer " << (p+1) << " of " << count  << endl;;
-    try {
-      layers[p]->MakeGcode (start,
-			    commands,
-			    printOffsetZ,
-			    settings);
-    } catch (Glib::Error e) {
-      error("GCode Error:", (e.what()).c_str());
-    }
+    // cerr << "GCode layer " << (p+1) << " of " << count  
+    // 	 << " offset " << printOffsetZ 
+    // 	 << " have commands: " <<commands.size() 
+    // 	 << " start " << start <<  endl;;
+    // try {
+    layers[p]->MakeGcode (start,
+			  commands,
+			  printOffsetZ,
+			  settings);
+    // } catch (Glib::Error e) {
+    //   error("GCode Error:", (e.what()).c_str());
+    // }
     // if (layers[p]->getPrevious() != NULL)
     //   cerr << p << ": " <<layers[p]->LayerNo << " prev: " 
     // 	   << layers[p]->getPrevious()->LayerNo << endl;

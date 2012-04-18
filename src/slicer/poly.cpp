@@ -469,6 +469,24 @@ void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
     lines.insert(lines.end(),mylines.begin(),mylines.end());
 }
 
+vector<Vector2d> Poly::getCenterline() const
+{
+  vector<Vector2d> line;
+  for (uint i=0; i < vertices.size(); i++){
+    Vector2d abp = angle_bipartition(vertices[i], 
+				     getVertexCircular(i-1), getVertexCircular(i+1));
+
+    // int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
+    // 			      const Vector2d &p3, const Vector2d &p4, 
+    // 			      Vector2d &I0, Vector2d &I1, 
+    // 			      double &t0, double &t1,
+    // 			      double maxerr)
+    
+  }
+  return line;
+}
+
+
 vector<Vector2d> Poly::getPathAround(const Vector2d &from, const Vector2d &to) const
 {
   double dist;

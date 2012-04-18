@@ -25,7 +25,7 @@
 #include "printlines.h"
 
 // polygons will be simplified to thickness/CLEANFACTOR
-#define CLEANFACTOR 5
+#define CLEANFACTOR 7
 
 Layer::Layer(Layer * prevlayer, int layerno, double thick, uint skins) 
   : LayerNo(layerno), thickness(thick), previous(prevlayer), skins(skins)
@@ -34,6 +34,7 @@ Layer::Layer(Layer * prevlayer, int layerno, double thick, uint skins)
   fullInfill = NULL;
   supportInfill = NULL;
   decorInfill = NULL;
+  thinInfill = NULL;
   Min = Vector2d(G_MAXDOUBLE, G_MAXDOUBLE);
   Max = Vector2d(G_MINDOUBLE, G_MINDOUBLE);
 }
@@ -70,10 +71,12 @@ void Layer::Clear()
   delete fullInfill;
   delete supportInfill;
   delete decorInfill;
+  delete thinInfill;
   skinFullInfills.clear();
   clearpolys(polygons);
   clearpolys(shellPolygons);
   clearpolys(fillPolygons);
+  clearpolys(thinPolygons);
   clearpolys(fullFillPolygons);
   clearpolys(bridgePolygons);
   clearpolys(bridgePillars);
@@ -292,6 +295,8 @@ void Layer::CalcInfill (const Settings &settings)
   supportInfill->setName("support");
   decorInfill = new Infill(this,1.);
   decorInfill->setName("decor");
+  thinInfill = new Infill(this,1.);
+  thinInfill->setName("thin");
 
   double rot = (settings.Slicing.InfillRotation 
 		+ (double)LayerNo*settings.Slicing.InfillRotationPrLayer)/180.0*M_PI;
@@ -330,6 +335,9 @@ void Layer::CalcInfill (const Settings &settings)
   }
   supportInfill->addPolys(Z, supportPolygons, (InfillType)settings.Slicing.SupportFilltype,
 			  infillDistance, infillDistance, 0);
+
+  thinInfill->addPolys(Z, thinPolygons, ThinInfill,
+		       fullInfillDistance, fullInfillDistance, 0);
 }
 
 
@@ -540,12 +548,23 @@ void Layer::MakeShells(const Settings &settings)
   double distance       = 0.5 * extrudedWidth;
   double cleandist      = min(distance/CLEANFACTOR, thickness/CLEANFACTOR);
   double shelloffset    = settings.Slicing.ShellOffset;
-  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance-shelloffset);
   uint shellcount       = settings.Slicing.ShellCount;
   double infilloverlap  = settings.Slicing.InfillOverlap;
+  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance-shelloffset);
+
+
+  // find thin areas: expand again and see what's left, rest is thin
+  Clipping clipp; 
+  clipp.addPolys(polygons, subject);
+  vector<Poly> shrexp = Clipping::getOffset(shrinked, (distance+shelloffset)*1.1);
+  clipp.addPolys(shrexp, clip);
+  thinPolygons = clipp.subtract();
+  for (uint i = 0; i<thinPolygons.size(); i++)  
+    thinPolygons[i].cleanup(cleandist);
 
   for (uint i = 0; i<shrinked.size(); i++)  
     shrinked[i].cleanup(cleandist);
+
   //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
   // outmost shells
   if (shellcount > 0) {
@@ -738,6 +757,9 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   if (normalInfill)
     polys.insert(polys.end(),
 		 normalInfill->infillpolys.begin(), normalInfill->infillpolys.end());
+  if (thinInfill)
+    polys.insert(polys.end(),
+		 thinInfill->infillpolys.begin(), thinInfill->infillpolys.end());
   if (fullInfill)
     polys.insert(polys.end(),
 		 fullInfill->infillpolys.begin(), fullInfill->infillpolys.end());
@@ -812,7 +834,8 @@ double Layer::area() const
 string Layer::info() const 
 {
   ostringstream ostr;
-  ostr <<"Layer at Z="<<Z<<" Lno="<<LayerNo 
+  ostr <<"Layer at Z=" << Z << " No=" << LayerNo 
+       <<", thickn=" << thickness
        <<", "<<skins <<" skins"
        <<", "<<polygons.size() <<" polys"
        <<", "<<shellPolygons.size() <<" shells"
@@ -952,6 +975,7 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   draw_poly(hullPolygon,    GL_LINE_LOOP, 3, 3, ORANGE,  0.5, randomized);
   draw_poly(skirtPolygon,   GL_LINE_LOOP, 3, 3, YELLOW,  1, randomized);
   draw_polys(shellPolygons, GL_LINE_LOOP, 1, 3, YELLOW2, 1, randomized);
+  draw_polys(thinPolygons,  GL_LINE_LOOP, 2, 3, YELLOW,  1, randomized);
 
   // glColor4f(0.5,0.9,1,1);
   // glLineWidth(1);
@@ -977,6 +1001,9 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
       if(DebugInfill && normalInfill->cached)
 	draw_polys(normalInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
 		   ORANGE, 0.5, randomized);
+      if (thinInfill)
+	draw_polys(thinInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+		   GREEN, 1, randomized);
       
       if (fullInfill)
 	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
