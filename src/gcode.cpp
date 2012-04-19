@@ -431,8 +431,8 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	int progress_steps=(int)(commands.size()/100);
 	if (progress_steps==0) progress_steps=1;
 
-	double lastZ = 0;
-	Command lastlayerchange;
+	// double lastZ = 0;
+	// Command lastlayerchange;
 
 
 	for (uint i = 0; i < commands.size(); i++) {
