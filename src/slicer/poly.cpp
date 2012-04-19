@@ -261,7 +261,7 @@ double Poly::angleAtVertex(uint i) const
 		      getVertexCircular(i+1)-getVertexCircular(i));
 }
 
-bool Poly::vertexInside(const Vector2d &point, double maxoffset) const
+bool Poly::vertexInside2(const Vector2d &point, double maxoffset) const
 {
   // Shoot a ray along +X and count the number of intersections.
   // If n_intersections is even, return false, else return true
@@ -285,13 +285,40 @@ bool Poly::vertexInside(const Vector2d &point, double maxoffset) const
       if(IntersectXY(point,EndP,P1,P2,hit,maxoffset))
 	intersectcount++;
     }
-  return intersectcount%2;
+  return (intersectcount%2==0);
 }
 
 // http://paulbourke.net/geometry/insidepoly/
-// not really working?
-bool Poly::vertexInside2(const Vector2d &p, double maxoffset) const
+bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
 {
+#define POLYINSIDEVERSION 0
+#if POLYINSIDEVERSION==0
+  // this one works
+  if (size() < 1) return false;
+  uint counter = 0;
+  uint i;
+  double xinters;
+  const Vector2d *p1, *p2;
+  uint N = size();
+  p1 = &(vertices[0]);
+  for (i=1;i<=N;i++) {
+    p2 = &(vertices[i % N]);
+    if (p.y() > min(p1->y(), p2->y())) {
+      if (p.y() <= max(p1->y(), p2->y())) {
+        if (p.x() <= max(p1->x(), p2->x())) {
+          if (p1->y() != p2->y()) {
+            xinters = (p.y()-p1->y())*(p2->x()-p1->x())/(p2->y()-p1->y())+p1->x();
+            if (p1->x() == p2->x() || p.x() <= xinters)
+              counter++;
+          }
+        }
+      }
+    }
+    p1 = p2;
+  }
+  return (counter % 2 != 0);
+#else
+  // not really working?
   bool c = false;
   //Poly off = Clipping::getOffset(*this,maxoffset).front();
   for (uint i = 0; i < vertices.size();  i++) {
@@ -299,13 +326,14 @@ bool Poly::vertexInside2(const Vector2d &p, double maxoffset) const
     const Vector2d Pj = getVertexCircular(i+1);
     if ( ((Pi.y() > p.y()) != (Pj.y() > p.y())) &&
 	 (abs(p.x() - (Pj.x()-Pi.x()) 
-	      * (p.y()-Pi.y()) / (Pj.y()-Pj.y()) + Pi.x()) > maxoffset) )
+	      * (p.y()-Pi.y()) / (Pj.y()-Pi.y()) + Pi.x()) > maxoffset) )
       c = !c;
   }
   if (!c) 
     for (uint i = 0; i < vertices.size();  i++) 
       if ((vertices[i]-p).length() < maxoffset) return true; // on a vertex    
   return c;
+#endif
 }
 
 // this polys completely contained in other
