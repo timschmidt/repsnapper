@@ -456,7 +456,7 @@ void Printer::set_printing (bool pprinting)
 double Printer::getCurrentPrintingZ() {
   if (gcode_iter){
     Command command = gcode_iter->getCurrentCommand(Vector3d(0,0,0));
-    return command.where.x();
+    return command.where.z();
   } 
   return 0;
 }

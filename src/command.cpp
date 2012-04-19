@@ -138,8 +138,8 @@ Command::Command(GCodes code, double value_)
 }
 
 Command::Command(string comment_only) 
-  : Code(COMMENT), where(0,0,0), is_value(true), value(0), f(0), e(0), abs_extr(0),
-    comment(comment_only)
+  : Code(COMMENT), where(0,0,0), is_value(false), value(0), f(0), e(0), abs_extr(0),
+    comment(comment_only), not_layerchange(true) 
 {
 }
 

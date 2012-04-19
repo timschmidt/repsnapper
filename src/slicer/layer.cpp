@@ -819,7 +819,12 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   // push all lines to gcode
   // start3 = state.LastPosition();
+  PLineArea lastArea= UNDEF;
   for (uint i = 0; i < lines3.size(); i++) {
+    if (lines3[i].area != lastArea) {
+      lastArea = lines3[i].area;
+      commands.push_back(Command(AreaNames[lastArea]));
+    }
     lines3[i].getCommands(lastPos, commands, extrf, minspeed, maxspeed, movespeed, emax);
     //state.AppendCommands(cc, slicing.RelativeEcode);
   }

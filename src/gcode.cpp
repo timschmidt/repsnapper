@@ -425,28 +425,43 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 
 	GcodeTxt += GcodeStart + "\n";
 
-	double lastZ = 0;
-
 	layerchanges.clear();
 
 	progress->restart(_("Collecting GCode"),commands.size());
 	int progress_steps=(int)(commands.size()/100);
 	if (progress_steps==0) progress_steps=1;
-	
-	for(uint i = 0; i < commands.size(); i++) {
+
+	double lastZ = 0;
+	Command lastlayerchange;
+
+
+	for (uint i = 0; i < commands.size(); i++) {
 	  if (i%progress_steps==0) if (!progress->update(i)) break;
 
-	  if (i>0)
-	    if ( !commands[i].is_value && commands[i].where.z() != lastZ
-		 && !commands[i]  .not_layerchange
-		 && !commands[i-1].not_layerchange ) {
-	      layerchanges.push_back(i);
-	      lastZ = commands[i].where.z();
-	      if (lastZ<0) cerr << i << " - " <<lastZ << endl;
-	    }
+	  // if (i>0)
+	  //   if (!commands[i].not_layerchange) {
+	  //     if ( commands[i].where.z() != lastZ) {
+	  // 	layerchanges.push_back(i);
+	  // 	if (lastZ<0) cerr << i << " - " <<lastZ << endl;
+	  //     }
+	  //     int j=i;
+	  //     while (j>0 && commands[j].not_layerchange
+	  // 	     && commands[i].Code != COMMENT ) {
+	  // 	j--;
+	  // 	lastZ = commands[j].where.z();		
+	  //     }
+	  //   }
+	    
+	  // if (i>0)
+	  //   if (!commands[i].not_layerchange
+	  // 	&& )
+	  //     lastlayerchange = commands[i];
 	  
-	  if ( commands[i].Code == LAYERCHANGE ) 
+	  
+	  if ( commands[i].Code == LAYERCHANGE )  {
+	    layerchanges.push_back(i);
 	    GcodeTxt += GcodeLayer + "\n";
+	  }
 	  
 	  if ( commands[i].where.z() < 0 )  {
 	    cerr << i << " Z < 0 "  << commands[i].info() << endl;
