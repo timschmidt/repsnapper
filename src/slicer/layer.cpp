@@ -792,6 +792,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   Command comment(LAYERCHANGE, LayerNo);
   comment.comment += info();
+  comment.where = Vector3d(0.,0.,Z);
   commands.push_back(comment);
 
   float speedfactor = 1;

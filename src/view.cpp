@@ -1176,9 +1176,12 @@ void View::setModel(Model *model)
   m_treeview->set_model (m_model->objtree.m_model);
   m_treeview->append_column("Name", m_model->objtree.m_cols->m_name);
 
-  Gtk::TextView *gcodev = NULL;
-  m_builder->get_widget ("txt_gcode_result", gcodev);
-  gcodev->set_buffer (m_model->GetGCodeBuffer());
+  m_gcodetextview = NULL;
+  m_builder->get_widget ("txt_gcode_result", m_gcodetextview);
+  m_gcodetextview->set_buffer (m_model->GetGCodeBuffer());
+  m_gcodetextview->get_buffer()->signal_mark_set().
+    connect( sigc::mem_fun(this, &View::on_gcodebuffer_cursor_set) );
+
 
   // Main view progress bar
   Gtk::Box *box = NULL;
@@ -1249,6 +1252,13 @@ void View::setModel(Model *model)
   m_printer->setModel(model);
 
   showAllWidgets();
+}
+
+void View::on_gcodebuffer_cursor_set(const Gtk::TextIter &iter, 
+				     const Glib::RefPtr <Gtk::TextMark> &refMark)
+{
+  m_model->gcode.updateWhereAtCursor();
+  m_renderer->queue_draw();
 }
 
 void View::delete_selected_objects()
@@ -1617,7 +1627,11 @@ void View::Draw (vector<Gtk::TreeModel::Path> &selected)
 	glDisable (GL_POLYGON_OFFSET_FILL);
 
 	// Draw GCode, which already incorporates any print offset
-	m_model->GlDrawGCode();
+	if (m_gcodetextview->has_focus()) {
+	  double z = m_model->gcode.currentCursorWhere.z();
+	  m_model->GlDrawGCode(z);
+	}
+	else m_model->GlDrawGCode();
 
 	// Draw all objects
 	int layerdrawn = m_model->draw(selected);

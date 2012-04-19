@@ -76,6 +76,11 @@ class View : public Gtk::Window
   Gtk::Entry *m_gcode_entry;
   Render *m_renderer;
 
+
+  void on_gcodebuffer_cursor_set (const Gtk::TextIter &iter, 
+				  const Glib::RefPtr <Gtk::TextMark> &refMark);
+  Gtk::TextView * m_gcodetextview;
+
   Gtk::Button *m_print_button;
   /* Gtk::Button *m_stop_button; */
   Gtk::Button *m_continue_button;

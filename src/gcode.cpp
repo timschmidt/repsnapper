@@ -40,6 +40,7 @@ GCode::GCode()
   buffer = Gtk::TextBuffer::create();
 }
 
+
 double GCode::GetTotalExtruded(bool relativeEcode) const
 {
   if (commands.size()==0) return 0;
@@ -81,6 +82,43 @@ double GCode::GetTimeEstimation() const
 	  where = commands[i].where ;
 	}
   return time;
+}
+
+string getLineAt(  Glib::RefPtr<Gtk::TextBuffer> buffer, int lineno)
+{
+  Gtk::TextBuffer::iterator from ,to;
+  from = buffer->get_iter_at_line (lineno);
+  to   = buffer->get_iter_at_line (lineno+1);
+  return buffer->get_text (from, to);
+}
+
+void GCode::updateWhereAtCursor()
+{
+  int line = buffer->get_insert()->get_iter().get_line();
+  // Glib::RefPtr<Gtk::TextBuffer> buf = iter.get_buffer();
+  string text = getLineAt(buffer, line);
+  Command command(text, Vector3d::ZERO);
+  Vector3d where = command.where;
+  int l = line;
+  while (l>0 && where.x()==0) {
+    l--;
+    text = getLineAt(buffer, l);
+    where.x() = Command(text, Vector3d::ZERO).where.x();
+  }
+  l = line;
+  while (l>0 && where.y()==0) {
+    l--;
+    text = getLineAt(buffer, l);
+    where.y() = Command(text, Vector3d::ZERO).where.y();
+  }
+  l = line;
+  while (l>0 && where.z()==0) {
+    l--;
+    text = getLineAt(buffer, l);
+    Command c(text, Vector3d::ZERO);
+    where.z() = c.where.z();
+  }
+  currentCursorWhere = where;
 }
 
 
@@ -193,9 +231,11 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 int GCode::getLayerNo(const double z) const
 {
   if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
-    for(uint i=0;i<layerchanges.size() ;i++)
-      if (commands.size()>layerchanges[i])
-	if ( abs(commands[layerchanges[i]].where.z()-z)<0.001) return i;
+    for(uint i=0;i<layerchanges.size() ;i++) {
+      if (commands.size() > layerchanges[i]) {
+	if (commands[layerchanges[i]].where.z() >= z) return i;
+      }
+    }
   return -1;
 }
 
@@ -278,6 +318,11 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
 	drawCommands(settings, start, end, liveprinting, linewidth, 
 		     arrows && settings.Display.DisplayGCodeArrows,
 		     !liveprinting && settings.Display.DisplayGCodeBorders);
+
+	glPointSize(20);
+	glBegin(GL_POINTS);
+	glVertex3dv(currentCursorWhere);
+	glEnd();
 }
 
 
@@ -713,3 +758,4 @@ Command GCodeIter::getCurrentCommand(Vector3d defaultwhere)
   Command command(m_buffer->get_text (from, to), defaultwhere);
   return command;
 }
+

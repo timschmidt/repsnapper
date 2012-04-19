@@ -80,6 +80,9 @@ public:
   double GetTotalExtruded(bool relativeEcode) const;
   double GetTimeEstimation() const;
 
+  void updateWhereAtCursor();
+  Vector3d currentCursorWhere;
+
   vector<unsigned long> layerchanges;
   int getLayerNo(const double z) const;
   int getLayerNo(const unsigned long commandno) const;

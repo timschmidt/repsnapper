@@ -123,8 +123,9 @@ Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
 
 void Model::GlDrawGCode(int layerno)
 {
-  if (settings.Display.DisplayGCode) 
+  if (settings.Display.DisplayGCode)  {
     gcode.draw (settings, layerno, false);
+  }
   // assume that the real printing line is the one at the start of the buffer
   unsigned long printedline = currentprintingline - currentbufferedlines;
   if (printedline > 0) {
