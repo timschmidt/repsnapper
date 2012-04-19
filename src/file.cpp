@@ -110,17 +110,14 @@ namespace {
 	  View * view) {
     // GSList *result = NULL;
     Gtk::FileChooserAction action;
-    const char *button_text = NULL;
 
     switch (op) {
     case FileChooser::SAVE:
-      button_text = GTK_STOCK_SAVE;
       action = Gtk::FILE_CHOOSER_ACTION_SAVE;
       break;
     case FileChooser::OPEN:
     default:
       action = Gtk::FILE_CHOOSER_ACTION_OPEN;
-      button_text = GTK_STOCK_OPEN;
       break;
     }
 
