@@ -1634,7 +1634,10 @@ void View::Draw (vector<Gtk::TreeModel::Path> &selected)
 	  double z = m_model->gcode.currentCursorWhere.z();
 	  m_model->GlDrawGCode(z);
 	}
-	else m_model->GlDrawGCode();
+	else {
+	  m_model->gcode.currentCursorWhere = Vector3d::ZERO;
+	  m_model->GlDrawGCode();
+	}
 
 	// Draw all objects
 	int layerdrawn = m_model->draw(selected);

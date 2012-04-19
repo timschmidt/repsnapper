@@ -790,10 +790,10 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   // FINISH
 
-  Command comment(LAYERCHANGE, LayerNo);
-  comment.comment += info();
-  comment.where = Vector3d(0.,0.,Z);
-  commands.push_back(comment);
+  Command lchange(LAYERCHANGE, LayerNo);
+  lchange.comment += info();
+  lchange.where = Vector3d(0.,0.,Z);
+  commands.push_back(lchange);
 
   float speedfactor = 1;
   if ((guint)LayerNo < settings.Slicing.FirstLayersNum)

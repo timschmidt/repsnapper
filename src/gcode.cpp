@@ -206,9 +206,12 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 		if(command.where.z() > Max.z())
 		  Max.z() = command.where.z();
 		if (command.where.z() > lastZ) {
-		  lastZ=command.where.z();
-		  layerchanges.push_back(loaded_commands.size());
-		} 
+		  // if (lastZ > 0){ // don't record first layer
+		    unsigned long num = loaded_commands.size();
+		    layerchanges.push_back(num);
+		  // }
+		  lastZ = command.where.z();
+		}
 		else if (command.where.z() < lastZ) {
 		  lastZ=command.where.z();
 		  if (layerchanges.size()>0)
@@ -235,10 +238,14 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 
 int GCode::getLayerNo(const double z) const
 {
+  //cerr << z ;
   if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
     for(uint i=0;i<layerchanges.size() ;i++) {
       if (commands.size() > layerchanges[i]) {
-	if (commands[layerchanges[i]].where.z() >= z) return i;
+	if (commands[layerchanges[i]].where.z() >= z) {
+	  //cerr  << " _ " <<  i << endl;
+	  return i;
+	}
       }
     }
   return -1;
@@ -324,10 +331,13 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
 		     arrows && settings.Display.DisplayGCodeArrows,
 		     !liveprinting && settings.Display.DisplayGCodeBorders);
 
-	glPointSize(20);
-	glBegin(GL_POINTS);
-	glVertex3dv(currentCursorWhere);
-	glEnd();
+	if (currentCursorWhere!=Vector3d::ZERO) {
+	  glPointSize(20);
+	  glColor3f(1.f,0.f,1.f);
+	  glBegin(GL_POINTS);
+	  glVertex3dv(currentCursorWhere);
+	  glEnd();
+	}
 }
 
 
@@ -481,36 +491,12 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	int progress_steps=(int)(commands.size()/100);
 	if (progress_steps==0) progress_steps=1;
 
-	// double lastZ = 0;
-	// Command lastlayerchange;
-
-
 	for (uint i = 0; i < commands.size(); i++) {
 	  if (i%progress_steps==0) if (!progress->update(i)) break;
 
-	  // if (i>0)
-	  //   if (!commands[i].not_layerchange) {
-	  //     if ( commands[i].where.z() != lastZ) {
-	  // 	layerchanges.push_back(i);
-	  // 	if (lastZ<0) cerr << i << " - " <<lastZ << endl;
-	  //     }
-	  //     int j=i;
-	  //     while (j>0 && commands[j].not_layerchange
-	  // 	     && commands[i].Code != COMMENT ) {
-	  // 	j--;
-	  // 	lastZ = commands[j].where.z();		
-	  //     }
-	  //   }
-	    
-	  // if (i>0)
-	  //   if (!commands[i].not_layerchange
-	  // 	&& )
-	  //     lastlayerchange = commands[i];
-	  
-	  
-	  if ( commands[i].Code == LAYERCHANGE )  {
+	  if ( commands[i].Code == LAYERCHANGE ) {
 	    layerchanges.push_back(i);
-	    GcodeTxt += GcodeLayer + "\n";
+	    GcodeTxt += GcodeLayer + "\n"; // add every-layer-gcode
 	  }
 	  
 	  if ( commands[i].where.z() < 0 )  {
@@ -521,7 +507,8 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	  }
 	}
 
-	add_text_filter_nan(GcodeEnd + "\n", GcodeTxt);
+	GcodeTxt += GcodeEnd + "\n";
+
 	buffer->set_text (GcodeTxt);
 
 	  // 	oss.str( "" );
