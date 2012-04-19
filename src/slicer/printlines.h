@@ -173,7 +173,7 @@ class Printlines
 
   // keep movements inside polys when possible (against stringing)
   void clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
-		     double maxerr=0.0001) const;
+		     bool findnearest, double maxerr=0.0001) const;
 
   void getLines(const vector<PLine> &lines,
 		vector<Vector2d> &linespoints) const;

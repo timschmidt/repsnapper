@@ -179,12 +179,12 @@ void Poly::mirrorX(const Vector3d &center)
 void Poly::nearestIndices(const Poly &p2, int &thisindex, int &otherindex) const
 {
   double mindist = INFTY;
-  for (uint i = 0; i < vertices.size(); i++) {
-    if (!closed && i != 0 && i != vertices.size()-1) continue;
-    for (uint j = 0; j < p2.vertices.size(); j++) {
-      if (!p2.closed && j != 0 && j != p2.vertices.size()-1) continue;
-      double d = (vertices[i]-p2.vertices[j]).squared_length();
-      if (d<mindist) {
+  for (uint i = 0; i < size(); i++) {
+    if (!closed && i != 0 && i != size()-1) continue;
+    for (uint j = 0; j < p2.size(); j++) {
+      if (!p2.closed && j != 0 && j != p2.size()-1) continue;
+      double d = vertices[i].squared_distance(p2.vertices[j]);
+      if (d < mindist) {
 	mindist = d;
 	thisindex = i;
 	otherindex= j;
@@ -271,8 +271,8 @@ bool Poly::vertexInside(const Vector2d &point, double maxoffset) const
   Vector2d dummy;
   for(size_t i=0; i<vertices.size();i++)
     {
-      Vector2d P1 = getVertexCircular(i-1);
-      Vector2d P2 = vertices[i];
+      const Vector2d P1 = getVertexCircular(i-1);
+      const Vector2d P2 = vertices[i];
 
       if (point_segment_distance_Sq(point, P1, P2, dummy) <= maxoffsetSq) return true;
                    
@@ -289,16 +289,17 @@ bool Poly::vertexInside(const Vector2d &point, double maxoffset) const
 }
 
 // http://paulbourke.net/geometry/insidepoly/
-// not really working
+// not really working?
 bool Poly::vertexInside2(const Vector2d &p, double maxoffset) const
 {
-  uint c = false;
+  bool c = false;
   //Poly off = Clipping::getOffset(*this,maxoffset).front();
   for (uint i = 0; i < vertices.size();  i++) {
-    Vector2d Pi = vertices[i];
-    Vector2d Pj = getVertexCircular(i+1);
+    const Vector2d Pi = vertices[i];
+    const Vector2d Pj = getVertexCircular(i+1);
     if ( ((Pi.y() > p.y()) != (Pj.y() > p.y())) &&
-	 (abs(p.x() - (Pj.x()-Pi.x()) * (p.y()-Pi.y()) / (Pj.y()-Pj.y()) + Pi.x()) > maxoffset) )
+	 (abs(p.x() - (Pj.x()-Pi.x()) 
+	      * (p.y()-Pi.y()) / (Pj.y()-Pj.y()) + Pi.x()) > maxoffset) )
       c = !c;
   }
   if (!c) 

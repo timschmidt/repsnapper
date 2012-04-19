@@ -162,6 +162,8 @@ static struct {
   FLOAT_MEMBER (Slicing.AntioozeSpeed, "AntioozeSpeed", 1000.0, true),
   FLOAT_MEMBER (Slicing.AntioozeZlift, "AntioozeZlift", 0, true),
   BOOL_MEMBER  (Slicing.ZliftAlways, "ZliftAlways", false, true),
+  BOOL_MEMBER  (Slicing.MoveNearest, "MoveNearest", true, true),
+
 
   FLOAT_MEMBER  (Slicing.InfillPercent, "InfillPercent", 30, true),
   FLOAT_MEMBER  (Slicing.InfillRotation, "InfillRotation", 90.0, true),

@@ -683,6 +683,8 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   const double linewidth      = thickness*linewidthratio;
   const double cornerradius   = linewidth*settings.Slicing.CornerRadius;
 
+  const bool clipnearest      = settings.Slicing.MoveNearest;
+
   Vector2d startPoint(lastPos.x(),lastPos.y());
 
   const double extrf = settings.Hardware.GetExtrudeFactor(thickness);
@@ -695,6 +697,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   vector<Poly> polys; // intermediate collection
 
   // polys to keep line movements inside
+  //const vector<Poly> * clippolys = &polygons; 
   const vector<Poly> * clippolys = GetOuterShell();
 
   // 1. Skins, all but last, because they are the lowest lines, below layer Z
@@ -721,7 +724,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       if (s < skins) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
 	if (!settings.Slicing.ZliftAlways)
-	  printlines.clipMovements(*clippolys, lines, linewidth/2.);
+	  printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
 	printlines.optimize(linewidth,
 			    settings.Slicing.MinLayertime/skins, cornerradius, lines);
 	printlines.getLines(lines, lines3);
@@ -744,14 +747,20 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   // 4. all other polygons:  
 
   //  Shells
+  vector<PLine> shelllines;
   for(int p=shellPolygons.size()-1; p>=0; p--) { // inner to outer
-    printlines.makeLines(SHELL, shellPolygons[p], (p==(int)(shellPolygons.size())-1),
-			 startPoint, lines, settings.Hardware.MaxShellSpeed);
+    // no, dont' walk every single shell for all polygons:
+    //    printlines.makeLines(SHELL, shellPolygons[p], (p==(int)(shellPolygons.size())-1),
+    //                       startPoint, shelllines, settings.Hardware.MaxShellSpeed);
+    // instead, collect all shells:
+    polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());
   }
-  // polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());
-  // printlines.makeLines(SHELL, polys, true, //displace at beginning
-  // 		       startPoint, lines, settings.Hardware.MaxShellSpeed);
-  // polys.clear();
+  printlines.makeLines(SHELL, polys, true, //displace at beginning
+   		       startPoint, shelllines, settings.Hardware.MaxShellSpeed);
+  polys.clear();
+  // slow shells down
+  printlines.slowdownTo(settings.Slicing.MinShelltime*shellPolygons.size(), shelllines);
+  lines.insert(lines.end(), shelllines.begin(), shelllines.end());
 
   //  Infill
   if (normalInfill)
@@ -790,7 +799,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
     speedfactor = settings.Slicing.FirstLayersSpeed;
 
   if (!settings.Slicing.ZliftAlways)
-    printlines.clipMovements(*clippolys, lines, linewidth/2.);
+    printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
   printlines.optimize(linewidth, 
 		      settings.Slicing.MinLayertime, cornerradius, lines);
   printlines.setSpeedFactor(speedfactor, lines);

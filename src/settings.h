@@ -110,6 +110,8 @@ class Settings {
     float MinArcLength;
     bool  RoundCorners;
     float CornerRadius;
+    
+    bool MoveNearest;
 
     bool NoBridges;
     float BridgeExtrusion;
