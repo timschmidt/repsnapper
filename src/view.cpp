@@ -1078,6 +1078,7 @@ View::~View()
   delete m_cnx_view;
   delete m_progress;
   delete m_printer;
+  delete m_gcodetextview;
 }
 
 /* Recursively sets all widgets in the window to visible */
@@ -1257,8 +1258,10 @@ void View::setModel(Model *model)
 void View::on_gcodebuffer_cursor_set(const Gtk::TextIter &iter, 
 				     const Glib::RefPtr <Gtk::TextMark> &refMark)
 {
-  m_model->gcode.updateWhereAtCursor();
-  m_renderer->queue_draw();
+  if (m_model) 
+    m_model->gcode.updateWhereAtCursor();
+  if (m_renderer)
+    m_renderer->queue_draw();
 }
 
 void View::delete_selected_objects()
