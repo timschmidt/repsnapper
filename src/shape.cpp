@@ -147,7 +147,8 @@ int Shape::loadBinarySTL(string filename)
       invertNormals();
       vol = -vol;
     }
-    cout << _("Shape has volume ") << vol << " mm^3"<<endl;
+    cout << _("Shape has volume ") << vol << _(" mm^3 and ") 
+	 << triangles.size() << _(" triangles") << endl;
     return 0;
 }
 
