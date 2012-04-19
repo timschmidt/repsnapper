@@ -205,10 +205,15 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 		  Max.y() = command.where.y();
 		if(command.where.z() > Max.z())
 		  Max.z() = command.where.z();
-		if (command.where.z() != lastZ) {
+		if (command.where.z() > lastZ) {
 		  lastZ=command.where.z();
 		  layerchanges.push_back(loaded_commands.size());
 		} 
+		else if (command.where.z() < lastZ) {
+		  lastZ=command.where.z();
+		  if (layerchanges.size()>0)
+		    layerchanges.erase(layerchanges.end()-1);
+		}
 		loaded_commands.push_back(command);
 	}
 
