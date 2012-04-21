@@ -668,8 +668,8 @@ void View::save_settings()
   std::string user_config_file = Glib::build_filename (user_config_bits);
   Glib::RefPtr<Gio::File> conf = Gio::File::create_for_path(user_config_file);
 
-  m_model->settings.Misc.window_width  = getMainwindowWidth();
-  m_model->settings.Misc.window_height = getMainwindowHeight();
+  saveWindowSizeAndPosition(m_model->settings);
+
   m_model->SaveConfig (conf);
 }
 
@@ -1147,20 +1147,19 @@ void View::PrintToFile() {
   } else cerr << " no filename " << endl;
 }
 
-
-int View::getMainwindowWidth()
+bool View::saveWindowSizeAndPosition(Settings &settings) const
 {
   Gtk::Window *pWindow = NULL;
   m_builder->get_widget("main_window", pWindow);
-  if (pWindow) return pWindow->get_width();
-  return -1;
-}
-int View::getMainwindowHeight()
-{
-  Gtk::Window *pWindow = NULL;
-  m_builder->get_widget("main_window", pWindow);
-  if (pWindow) return pWindow->get_height();
-  return -1;
+  if (pWindow) {
+    settings.Misc.window_width  = pWindow->get_width();
+    settings.Misc.window_height = pWindow->get_height();
+    
+    pWindow->get_position(m_model->settings.Misc.window_posx,
+			  m_model->settings.Misc.window_posy);
+    return true;
+  }
+  return false;
 }
 
 void View::setModel(Model *model)

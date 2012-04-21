@@ -639,6 +639,13 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     Misc.window_width =-1;
     Misc.window_height=-1;
   }
+  try {
+    Misc.window_posx = cfg.get_integer ("Misc", "WindowPosX");
+    Misc.window_posy = cfg.get_integer ("Misc", "WindowPosY");
+  } catch (const Glib::KeyFileError &err) {
+    Misc.window_posx =-1;
+    Misc.window_posy=-1;
+  }
   
   try {
     vector<string> cbkeys = cfg.get_keys ("CustomButtons");
@@ -693,6 +700,11 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
   cfg.set_string("Misc", "WindowWidth", os.str());
   os.str(""); os << Misc.window_height;
   cfg.set_string("Misc", "WindowHeight", os.str());
+
+  os.str(""); os << Misc.window_posx;
+  cfg.set_string("Misc", "WindowPosX", os.str());
+  os.str(""); os << Misc.window_posy;
+  cfg.set_string("Misc", "WindowPosY", os.str());
 
   GCode.m_impl->saveSettings (cfg);
   
@@ -776,8 +788,11 @@ void Settings::set_to_gui (Builder &builder, int i)
 
   Gtk::Window *pWindow = NULL;
   builder->get_widget("main_window", pWindow);
-  if (pWindow && Misc.window_width > 0 && Misc.window_height > 0)
+  if (pWindow && Misc.window_width > 0 && Misc.window_height > 0) 
     pWindow->resize(Misc.window_width, Misc.window_height);
+  if (pWindow && Misc.window_posx > 0 && Misc.window_posy > 0) 
+    pWindow->move(Misc.window_posx,Misc.window_posy);
+  
 }
 
 

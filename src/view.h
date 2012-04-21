@@ -138,8 +138,7 @@ class View : public Gtk::Window
   void setModel (Model *model);
   void showAllWidgets();
 
-  int getMainwindowWidth();
-  int getMainwindowHeight();
+  bool saveWindowSizeAndPosition(Settings &settings) const;
 
   bool statusBarMessage(Glib::ustring message);
   void stop_progress();

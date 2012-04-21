@@ -186,6 +186,8 @@ class Settings {
     bool ClearLogfilesWhenPrintStarts;
     int window_width;
     int window_height;
+    int window_posx;
+    int window_posy;
   };
   MiscSettings Misc;
 
