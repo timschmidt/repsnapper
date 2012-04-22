@@ -77,10 +77,17 @@ bool Triangle::isConnectedTo(Triangle const &other, double maxsqerr) const
 {
   // for (uint i = 0; i < 3; i++) {
   //   Vector3d p = (Vector3d)(operator[](i));
+  // first test equal, faster
   for (uint j = 0; j < 3; j++)  {
-    if (( A - other[j]).squared_length() < maxsqerr)  return true;
-    if (( B - other[j]).squared_length() < maxsqerr)  return true;
-    if (( C - other[j]).squared_length() < maxsqerr)  return true;
+    if (( A == other[j]))  return true;
+    if (( B == other[j]))  return true;
+    if (( C == other[j]))  return true;
+  }
+  // if not, test distance
+  for (uint j = 0; j < 3; j++)  {
+    if ( A.squared_distance(other[j]) < maxsqerr)  return true;
+    if ( B.squared_distance(other[j]) < maxsqerr)  return true;
+    if ( C.squared_distance(other[j]) < maxsqerr)  return true;
   }
   return false;
 }

@@ -23,6 +23,9 @@
 #include "settings.h"
 #include "clipping.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // Constructor
 Shape::Shape()
@@ -481,51 +484,90 @@ bool Shape::hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance) c
   return haveadj;
 }
 
+
+// recursively build a list of triangles for a shape
+void addtoshape(uint i, const vector< vector<uint> > &adj,
+		vector<uint> &tr, vector<bool> &done)
+{
+  if (!done[i]) {
+    // add this index to tr
+    tr.push_back(i);
+    done[i] = true;
+    for (uint j = 0; j < adj[i].size(); j++) {
+      if (adj[i][j]!=i)
+     	addtoshape(adj[i][j], adj, tr, done);
+    }
+  }
+  // we have a complete list of adjacent triangles indices
+}
+
 void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress) 
 {
-  uint n_tr = triangles.size();
-  vector<bool> done(n_tr);
-  for (uint i = 0; i < n_tr; i++) done[i] = false;
-  uint donetriangles = 0;
+  int n_tr = (int)triangles.size();
   if (progress) progress->start(_("Split Shapes"), n_tr);
   int progress_steps = max(1,(int)(n_tr/100));
-  while (donetriangles < n_tr) 
-    {
-      bool foundadj = false;
-      for (uint i = 0; i < n_tr; i++){
-	for (uint s = 0; s < shapes.size(); s++){
-	  if (progress && donetriangles%progress_steps==0) 
-	    if(!progress->update(donetriangles)) break;
-	  if (!done[i]) {
-	    if (//shapes[s].triangles.size() == 0 ||
-		shapes[s]->hasAdjacentTriangleTo(triangles[i])) {
-	      shapes[s]->triangles.push_back(triangles[i]);
-	      done[i] = true;
-	      donetriangles++;
-	      foundadj = true;
-	    }
+  vector<bool> done(n_tr);
+  bool cont = true;
+  // make list of adjacent triangles for each triangle
+  vector< vector<uint> > adj(n_tr);
+  if (progress) progress->set_label(_("Split: Sorting Triangles ..."));
+#ifdef _OPENMP
+  omp_lock_t progress_lock;
+  omp_init_lock(&progress_lock);
+#pragma omp parallel for schedule(dynamic) 
+#endif
+  for (int i = 0; i < n_tr; i++) {
+    if (progress && i%progress_steps==0) {
+#ifdef _OPENMP
+      omp_set_lock(&progress_lock);
+#endif
+      cont = progress->update(i);
+#ifdef _OPENMP
+      omp_unset_lock(&progress_lock);
+#endif
+    }
+    vector<uint> trv;
+    for (int j = 0; j < n_tr; j++) {
+      bool add = false;
+      if (j<i)
+	for (uint k = 0; k<adj[j].size(); k++) {
+	  if ((int)adj[j][k] == i) {
+	    add = true; break;
 	  }
 	}
-      } 
-      //  have no shape any triangle attaches to
-      if (!foundadj) {
-	Shape *shape = new Shape();
-	shapes.push_back(shape);
-	// take next undone triangle for new shape
-	for (uint i = 0; i < n_tr; i++) 
-	  if (!done[i]) {
-	    shapes.back()->triangles.push_back(triangles[i]);
-	    cerr << _("shape ") << shapes.size() << endl;
-	    done[i] = true;
-	    donetriangles++;
-	    break;
-	  }
-      }
-      if (progress && donetriangles%progress_steps==0) 
-	if(!progress->update(donetriangles)) break;
-   }
-   if (progress) progress->stop("_(Done)");
-   cerr << shapes.size() << _(" shapes ") << endl;
+      else
+	add = (triangles[i].isConnectedTo(triangles[j], 0.01));
+      if (add) trv.push_back(j);
+    }
+    adj[i] = trv;
+    if (!cont) i=n_tr;
+  }
+
+  if (progress) progress->set_label(_("Split: Building shapes ..."));
+
+
+  // triangle indices of shapes
+  vector< vector<uint> > shape_tri;
+  
+  for (int i = 0; i < n_tr; i++) done[i] = false;
+  for (int i = 0; i < n_tr; i++) {
+    if (progress && i%progress_steps==0) 
+      cont = progress->update(i);
+    if (!done[i]){
+      cerr << _("Shape ") << shapes.size()+1 << endl;
+      vector<uint> current;
+      addtoshape(i, adj, current, done);
+      Shape *shape = new Shape();
+      shapes.push_back(shape);
+      shapes.back()->triangles.resize(current.size());
+      for (uint i = 0; i < current.size(); i++)
+	shapes.back()->triangles[i] = triangles[current[i]];
+      shapes.back()->CalcBBox();
+    }
+    if (!cont) i=n_tr;
+  }
+
+  if (progress) progress->stop("_(Done)");
 }
 
 void Shape::invertNormals()
