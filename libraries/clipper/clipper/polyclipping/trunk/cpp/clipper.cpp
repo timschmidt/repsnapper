@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.7.4                                                           *
-* Date      :  9 March 2012                                                    *
+* Version   :  4.7.6                                                           *
+* Date      :  11 April 2012                                                   *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -53,7 +53,6 @@ static long64 const loRange = 1518500249;            //sqrt(2^63 -1)/2
 static long64 const hiRange = 6521908912666391106LL; //sqrt(2^127 -1)/2
 static double const pi = 3.141592653589793238;
 enum Direction { dRightToLeft, dLeftToRight };
-enum RangeTest { rtLo, rtHi, rtError };
 
 #define HORIZONTAL (-1.0E+40)
 #define TOLERANCE (1.0e-20)
@@ -297,15 +296,15 @@ private:
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-RangeTest TestRange(const Polygon &pts)
+bool FullRangeNeeded(const Polygon &pts)
 {
-  RangeTest result = rtLo;
+  bool result = false;
   for (Polygon::size_type i = 0; i <  pts.size(); ++i)
   {
     if (Abs(pts[i].X) > hiRange || Abs(pts[i].Y) > hiRange)
-        return rtError;
+        throw "Coordinate exceeds range bounds.";
       else if (Abs(pts[i].X) > loRange || Abs(pts[i].Y) > loRange)
-        result = rtHi;
+        result = true;
   }
   return result;
 }
@@ -315,15 +314,10 @@ bool Orientation(const Polygon &poly)
 {
   int highI = (int)poly.size() -1;
   if (highI < 2) return false;
-  bool UseFullInt64Range = false;
 
   int j = 0, jplus, jminus;
   for (int i = 0; i <= highI; ++i)
   {
-    if (Abs(poly[i].X) > hiRange || Abs(poly[i].Y) > hiRange)
-    throw "Coordinate exceeds range bounds.";
-    if (Abs(poly[i].X) > loRange || Abs(poly[i].Y) > loRange)
-    UseFullInt64Range = true;
     if (poly[i].Y < poly[j].Y) continue;
     if ((poly[i].Y > poly[j].Y || poly[i].X < poly[j].X)) j = i;
   };
@@ -339,16 +333,18 @@ bool Orientation(const Polygon &poly)
   vec2.X = poly[jplus].X - poly[j].X;
   vec2.Y = poly[jplus].Y - poly[j].Y;
 
-  if (UseFullInt64Range)
+  if (Abs(vec1.X) > loRange || Abs(vec1.Y) > loRange ||
+    Abs(vec2.X) > loRange || Abs(vec2.Y) > loRange)
   {
+    if (Abs(vec1.X) > hiRange || Abs(vec1.Y) > hiRange ||
+      Abs(vec2.X) > hiRange || Abs(vec2.Y) > hiRange)
+        throw "Coordinate exceeds range bounds.";
     Int128 cross = Int128(vec1.X) * Int128(vec2.Y) -
       Int128(vec2.X) * Int128(vec1.Y);
     return cross > 0;
   }
   else
-  {
     return (vec1.X * vec2.Y - vec2.X * vec1.Y) > 0;
-  }
 }
 //------------------------------------------------------------------------------
 
@@ -400,20 +396,7 @@ double Area(const Polygon &poly)
 {
   int highI = (int)poly.size() -1;
   if (highI < 2) return 0;
-  bool UseFullInt64Range;
-  RangeTest rt = TestRange(poly);
-  switch (rt) {
-    case rtLo:
-      UseFullInt64Range = false;
-      break;
-    case rtHi:
-      UseFullInt64Range = true;
-      break;
-    default:
-      throw "Coordinate exceeds range bounds.";
-  }
-
-  if (UseFullInt64Range) {
+  if (FullRangeNeeded(poly)) {
     Int128 a(0);
     a = (Int128(poly[highI].X) * Int128(poly[0].Y)) -
       Int128(poly[0].X) * Int128(poly[highI].Y);
@@ -806,11 +789,9 @@ bool ClipperBase::AddPolygon( const Polygon &pg, PolyType polyType)
   {
     if (Abs(pg[i].X) > maxVal || Abs(pg[i].Y) > maxVal)
     {
-      if (m_UseFullRange)
+      if (Abs(pg[i].X) > hiRange || Abs(pg[i].Y) > hiRange)
         throw "Coordinate exceeds range bounds";
       maxVal = hiRange;
-      if (Abs(pg[i].X) > maxVal || Abs(pg[i].Y) > maxVal)
-        throw "Coordinate exceeds range bounds";
       m_UseFullRange = true;
     }
 
@@ -824,7 +805,7 @@ bool ClipperBase::AddPolygon( const Polygon &pg, PolyType polyType)
   if (j < 2) return false;
 
   len = j+1;
-  for (;;)
+  while (len > 2)
   {
     //nb: test for point equality before testing slopes ...
     if (PointsEqual(p[j], p[0])) j--;
@@ -837,9 +818,8 @@ bool ClipperBase::AddPolygon( const Polygon &pg, PolyType polyType)
       for (int i = 2; i <= j; ++i) p[i-1] = p[i];
       j--;
     }
-    //exit loop if nothing is changed or there are too few vertices ...
-    if (j == len-1 || j < 2) break;
-    len = j +1;
+    else break;
+    len--;
   }
   if (len < 3) return false;
 
@@ -1841,8 +1821,8 @@ void Clipper::IntersectEdges(TEdge *e1, TEdge *e2,
             AddLocalMinPoly(e1, e2, pt);
           break;
         case ctDifference:
-          if (e1->polyType == ptClip && e1Wc2 > 0 && e2Wc2 > 0 || 
-              e1->polyType == ptSubject && e1Wc2 <= 0 && e2Wc2 <= 0)
+          if (((e1->polyType == ptClip) && (e1Wc2 > 0) && (e2Wc2 > 0)) ||
+              ((e1->polyType == ptSubject) && (e1Wc2 <= 0) && (e2Wc2 <= 0)))
                 AddLocalMinPoly(e1, e2, pt);
           break;
         case ctXor:
@@ -2605,7 +2585,7 @@ void Clipper::ProcessEdgesAtTopOfScanbeam(const long64 topY)
       }
       else if (e->outIdx >= 0 && e->nextInAEL && e->nextInAEL->outIdx >= 0 &&
         e->nextInAEL->ycurr > e->nextInAEL->ytop &&
-        e->nextInAEL->ycurr < e->nextInAEL->ybot &&
+        e->nextInAEL->ycurr <= e->nextInAEL->ybot &&
         e->nextInAEL->xcurr == e->xbot && e->nextInAEL->ycurr == e->ybot &&
         SlopesEqual(IntPoint(e->xbot,e->ybot), IntPoint(e->xtop, e->ytop),
           IntPoint(e->xbot,e->ybot),
@@ -3000,11 +2980,11 @@ void Clipper::JoinCommonEdges(bool fixHoleLinkages)
       FixupOutPolygon(*outRec1);
 
       if (outRec1->pts)
-	{
-	  outRec1->isHole = Orientation(outRec1, m_UseFullRange);
-	  if (outRec1->isHole && !outRec1->FirstLeft) //add this 
-	    outRec1->FirstLeft = outRec2->FirstLeft; //and this line
-	}	
+      {
+        outRec1->isHole = !Orientation(outRec1, m_UseFullRange);
+        if (outRec1->isHole && !outRec1->FirstLeft)
+          outRec1->FirstLeft = outRec2->FirstLeft;
+      }
 
       //delete the obsolete pointer ...
       int OKIdx = outRec1->idx;
