@@ -396,7 +396,8 @@ int Shape::parseASCIISTL(istream *text) {
         triangles.push_back(triangle);
     }
     CenterAroundXY();
-    cout << _("Shape has volume ") << volume() << " mm^3"<<endl;
+    cout << _("Shape has volume ") << volume() << " mm^3 and"
+	 << triangles.size() << _(" triangles") << endl;
     return 0;
 }
 
@@ -477,9 +478,9 @@ bool Shape::hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance) c
       if (triangle.isConnectedTo(triangles[i],sqdistance)) {
 	haveadj = true;
     }
-
   return haveadj;
 }
+
 void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress) 
 {
   uint n_tr = triangles.size();
@@ -1170,7 +1171,7 @@ void drawString(const Vector3d &pos, void* font, const string &text)
 
 
 // called from Model::draw
-void Shape::draw(const Model *model, const Settings &settings, bool highlight) 
+void Shape::draw(const Settings &settings, bool highlight) 
 {
   //cerr << "Shape::draw" <<  endl;
 	// polygons
@@ -1763,9 +1764,9 @@ void FlatShape::clear()
 }
 
 void FlatShape::draw_geometry() {
-  Vector2d min(Min.x(),Min.y());
-  Vector2d max(Max.x(),Max.y());
-  glDrawPolySurfaceRastered(polygons, min, max, 0, 0.1);
+  Vector2d min2d(Min.x(),Min.y());
+  Vector2d max2d(Max.x(),Max.y());
+  glDrawPolySurfaceRastered(polygons, min2d, max2d, 0, 0.1);
   for (uint i = 0; i < polygons.size(); i++) {
     polygons[i].draw(GL_LINE_LOOP,false);
     //Poly p;

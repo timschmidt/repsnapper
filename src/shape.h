@@ -86,7 +86,7 @@ public:
 	virtual void clear();
 	/* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
 	/* 		      guint LayerNr, vector<int>& altInfillLayers); */
-	void draw (const Model *model, const Settings &settings, 
+	void draw (const Settings &settings, 
 		   bool highlight=false);
 	virtual void draw_geometry ();
 	void drawBBox() const; 

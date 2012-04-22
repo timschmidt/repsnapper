@@ -535,7 +535,7 @@ int Model::SplitShape(TreeObject *parent, Shape *shape, string filename)
   for (uint s = 0; s <  splitshapes.size(); s++) {
     ostringstream sfn;
     sfn << filename << "_" << (s+1) ;
-    AddShape(parent, splitshapes[s], sfn.str() ,false);
+    AddShape(parent, splitshapes[s], sfn.str(), false);
   }
   return splitshapes.size();
 }
@@ -783,7 +783,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 	  glStencilFunc(GL_ALWAYS, 1, 1);
 	  glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 
-	  shape->draw (this, settings);
+	  shape->draw (settings);
 
 	  if (!settings.Display.DisplayPolygons) {
 	    // If not drawing polygons, need to draw the geometry
@@ -819,10 +819,10 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 	  glDisable(GL_STENCIL_TEST);
 	  glDisable(GL_POLYGON_OFFSET_LINE);
 	}
-	else shape->draw (this, settings, true);
+	else shape->draw (settings, true);
       }
       else {
-	shape->draw (this, settings, false);
+	shape->draw (settings, false);
       }
       glPopMatrix();
       if(settings.Display.DisplayBBox)
