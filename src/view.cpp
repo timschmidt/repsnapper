@@ -109,15 +109,7 @@ void View::convert_to_gcode ()
 		     _("Converting to GCode while printing will abort the print"));
       return;
     }
-  if (m_model->settings.Slicing.SelectedOnly) {
-    vector<Shape*> shapes;
-    vector<Matrix4d> transforms;
-    vector<Gtk::TreeModel::Path> iter = m_treeview->get_selection()->get_selected_rows();
-    m_model->objtree.get_selected_shapes(iter, shapes, transforms);
-    m_model->ConvertToGCode(shapes,transforms);
-  }
-  else
-    m_model->ConvertToGCode();
+  m_model->ConvertToGCode();
 }
 
 void View::load_stl ()

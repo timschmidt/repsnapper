@@ -94,12 +94,8 @@ public:
 	double m_previewGCode_z;
 	// Slicing
 	void SliceToSVG(Glib::RefPtr<Gio::File> file);
-	void SliceToSVG(Glib::RefPtr<Gio::File> file,
-			vector<Shape*> shapes,
-			vector<Matrix4d> &transforms);
 	void Slice();
-	void Slice(vector<Shape*> shapes,
-		   vector<Matrix4d> &transforms);
+
 	void CleanupLayers();
 	void CalcInfill();
 	void MakeShells();
@@ -119,8 +115,6 @@ public:
 	void translateGCode(Vector3d trans);
 
 	void ConvertToGCode();
-	void ConvertToGCode(vector<Shape*> shapes,
-			    vector<Matrix4d> &transforms);
 
 	void MakeRaft(GCodeState &state, double &z);
 	void WriteGCode(Glib::RefPtr<Gio::File> file);
@@ -149,7 +143,7 @@ public:
 	Vector3d Min;
 	Vector3d Max;
 
-	void CalcBoundingBoxAndCenter();
+	void CalcBoundingBoxAndCenter(bool selected_only = false);
 	Vector3d GetViewCenter();
         bool AutoArrange(vector<Gtk::TreeModel::Path> &iter);
 	Vector3d FindEmptyLocation(const vector<Shape*> &shapes,

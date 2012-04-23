@@ -285,23 +285,22 @@ void Model::Slice()
   }
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
-  objtree.get_all_shapes(shapes,transforms);
-  Slice(shapes, transforms);
-}
 
-void Model::Slice(vector<Shape*> shapes,
-		  vector<Matrix4d> &transforms)
-{
-  if (is_calculating) {
-    return;
-  }
+  if (settings.Slicing.SelectedOnly)
+    objtree.get_selected_shapes(m_current_selectionpath, shapes, transforms);
+  else
+    objtree.get_all_shapes(shapes,transforms);
+  
+  assert(shapes.size() == transforms.size());
+
   is_calculating=true;
+
+  CalcBoundingBoxAndCenter(settings.Slicing.SelectedOnly);
 
   for (uint i = 0; i<transforms.size(); i++)
     transforms[i] = settings.getBasicTransformation(transforms[i]);
 
   assert(shapes.size() == transforms.size());
-
 
   int LayerNr = 0;
   bool varSlicing = settings.Slicing.Varslicing;
@@ -767,21 +766,6 @@ void Model::ConvertToGCode()
   if (is_calculating) {
     return;
   }
-  // get a linear collection of shapes
-  vector<Shape*> shapes;
-  vector<Matrix4d> transforms;
-  objtree.get_all_shapes(shapes,transforms);
-  ConvertToGCode(shapes, transforms);
-}
-
-void Model::ConvertToGCode(vector<Shape*> shapes,
-			   vector<Matrix4d> &transforms)
-{
-  if (is_calculating) {
-    return;
-  }
-
-  assert(shapes.size() == transforms.size());
 
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();
@@ -799,7 +783,8 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
   lastlayer = NULL;
 
   is_calculating=false;
-  Slice(shapes, transforms);
+
+  Slice();
 
   //CleanupLayers();
 
@@ -878,8 +863,8 @@ void Model::ConvertToGCode(vector<Shape*> shapes,
   }
 
   // display whole layer if flat shapes
-  if (shapes.back()->dimensions() == 2)
-    gcode.layerchanges.push_back(0);
+  // if (shapes.back()->dimensions() == 2)
+  //   gcode.layerchanges.push_back(0);
   
   m_progress->stop (_("Done"));
 
@@ -950,13 +935,3 @@ void Model::SliceToSVG(Glib::RefPtr<Gio::File> file)
   Glib::file_set_contents (file->get_path(), getSVG());
 }
 
-void Model::SliceToSVG(Glib::RefPtr<Gio::File> file,
-		       vector<Shape*> shapes,
-		       vector<Matrix4d> &transforms)
-{
-  if (is_calculating) return;
-  lastlayer = NULL;
-  Slice(shapes,transforms);
-  m_progress->stop (_("Done"));
-  Glib::file_set_contents (file->get_path(), getSVG());
-}

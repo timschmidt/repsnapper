@@ -693,23 +693,40 @@ void Model::ClearLogs()
   echolog->set_text("");
 }
 
-void Model::CalcBoundingBoxAndCenter()
+void Model::CalcBoundingBoxAndCenter(bool selected_only)
 {
   Vector3d newMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
   Vector3d newMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
 
-  for (uint i = 0 ; i < objtree.Objects.size(); i++) {
-    Matrix4d M = objtree.getTransformationMatrix (i);
-    for (uint j = 0; j < objtree.Objects[i]->shapes.size(); j++) {
-      objtree.Objects[i]->shapes[j]->CalcBBox();
-      Vector3d stlMin = M * objtree.Objects[i]->shapes[j]->Min;
-      Vector3d stlMax = M * objtree.Objects[i]->shapes[j]->Max;
-      for (uint k = 0; k < 3; k++) {
-	newMin[k] = MIN(stlMin[k], newMin[k]);
-	newMax[k] = MAX(stlMax[k], newMax[k]);
-      }
+  vector<Shape*> shapes;
+  vector<Matrix4d> transforms;
+  if (selected_only)
+    objtree.get_selected_shapes(m_current_selectionpath, shapes, transforms);
+  else 
+    objtree.get_all_shapes(shapes, transforms);
+
+  for (uint s = 0 ; s < shapes.size(); s++) {
+    shapes[s]->CalcBBox();
+    Vector3d stlMin = transforms[s] * shapes[s]->Min;
+    Vector3d stlMax = transforms[s] * shapes[s]->Max;
+    for (uint k = 0; k < 3; k++) {
+      newMin[k] = MIN(stlMin[k], newMin[k]);
+      newMax[k] = MAX(stlMax[k], newMax[k]);
     }
   }
+
+  // for (uint i = 0 ; i < objtree.Objects.size(); i++) {
+  //   Matrix4d M = objtree.getTransformationMatrix (i);
+  //   for (uint j = 0; j < objtree.Objects[i]->shapes.size(); j++) {
+  //     objtree.Objects[i]->shapes[j]->CalcBBox();
+  //     Vector3d stlMin = M * objtree.Objects[i]->shapes[j]->Min;
+  //     Vector3d stlMax = M * objtree.Objects[i]->shapes[j]->Max;
+  //     for (uint k = 0; k < 3; k++) {
+  // 	newMin[k] = MIN(stlMin[k], newMin[k]);
+  // 	newMax[k] = MAX(stlMax[k], newMax[k]);
+  //     }
+  //   }
+  // }
 
   if (newMin.x() > newMax.x()) {
     // Show the whole platform if there's no objects
