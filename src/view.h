@@ -125,6 +125,7 @@ class View : public Gtk::Window
   // rfo bits
   Gtk::TreeView *m_treeview;
   TranslationSpinRow *m_translation_row;
+  void tree_selection_changed();
   void delete_selected_objects();
   void duplicate_selected_objects();
   void split_selected_objects();

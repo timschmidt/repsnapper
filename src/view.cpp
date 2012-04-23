@@ -983,7 +983,7 @@ View::View(BaseObjectType* cobject,
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
   m_treeview->get_selection()->signal_changed().connect
-      (sigc::mem_fun(*this, &View::update_scale_value));
+      (sigc::mem_fun(*this, &View::tree_selection_changed));
   scale_value->signal_value_changed().connect
       (sigc::mem_fun(*this, &View::scale_object));
   m_builder->get_widget("scale_x", scale_value);
@@ -1270,6 +1270,14 @@ void View::delete_selected_objects()
   m_treeview->expand_all();
 }
 
+void View::tree_selection_changed()
+{
+  if (m_model) {
+    m_model->m_current_selectionpath = m_treeview->get_selection()->get_selected_rows();
+    m_model->ClearPreview();
+  }
+  update_scale_value();
+}
 bool View::get_selected_objects(vector<TreeObject*> &objects, vector<Shape*> &shapes)
 {
   vector<Gtk::TreeModel::Path> iter = m_treeview->get_selection()->get_selected_rows();

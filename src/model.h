@@ -71,6 +71,7 @@ public:
 	void SetViewProgress (ViewProgress *progress);
 
 	void DeleteObjTree(vector<Gtk::TreeModel::Path> &iter);
+	vector<Gtk::TreeModel::Path> m_current_selectionpath;
 
 	void OptimizeRotation(Shape *shape, TreeObject *object);
 	void ScaleObject(Shape *shape, TreeObject *object, double scale);

@@ -73,10 +73,10 @@ public:
 	//void draw(Settings &settings, Gtk::TreeModel::iterator &iter);
 	void newObject();
 	Gtk::TreePath addShape(TreeObject *parent, Shape *shape, std::string location);
-	void get_selected_objects(vector<Gtk::TreeModel::Path> &iter, 
+	void get_selected_objects(const vector<Gtk::TreeModel::Path> &iter, 
 				  vector<TreeObject*> &object, vector<Shape*> &shape) const;
 
-	void get_selected_shapes(vector<Gtk::TreeModel::Path> &iter, 
+	void get_selected_shapes(const vector<Gtk::TreeModel::Path> &iter, 
 				 vector<Shape*> &shape, vector<Matrix4d> &transforms) const;
 
 	void get_all_shapes(vector<Shape*> &shapes, vector<Matrix4d> &transforms) const;

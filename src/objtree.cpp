@@ -145,7 +145,7 @@ Matrix4d ObjectsTree::getTransformationMatrix(int object, int shape) const
 }
 
 
-void ObjectsTree::get_selected_objects(vector<Gtk::TreeModel::Path> &path,
+void ObjectsTree::get_selected_objects(const vector<Gtk::TreeModel::Path> &path,
 				       vector<TreeObject*> &objects,
 				       vector<Shape*> &shapes) const
 {
@@ -168,7 +168,7 @@ void ObjectsTree::get_selected_objects(vector<Gtk::TreeModel::Path> &path,
     }
   }
 }
-void ObjectsTree::get_selected_shapes(vector<Gtk::TreeModel::Path> &path,
+void ObjectsTree::get_selected_shapes(const vector<Gtk::TreeModel::Path> &path,
 				      vector<Shape*>   &allshapes,
 				      vector<Matrix4d> &transforms) const
 {

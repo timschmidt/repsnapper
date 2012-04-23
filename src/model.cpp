@@ -1004,10 +1004,10 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
   
-  // if (settings.Slicing.SelectedOnly)
-  //   objtree.get_selected_shapes(iter, shapes, transforms);
-  // else 
-  objtree.get_all_shapes(shapes, transforms);
+  if (settings.Slicing.SelectedOnly)
+    objtree.get_selected_shapes(m_current_selectionpath, shapes, transforms);
+  else 
+    objtree.get_all_shapes(shapes, transforms);
 
   Layer * layer = new Layer(NULL, LayerNr, thickness);
   layer->setZ(z);
