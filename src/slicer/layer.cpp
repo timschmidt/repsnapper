@@ -967,18 +967,15 @@ float const WHITE[] = {1, 1, 1};
 float const GREY[] = {0.5,0.5,0.5};
 float const VIOLET[] = {0.8,0.0,0.8};
 
-void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers, 
-		 bool DrawOutlineNumbers, bool DrawCPLineNumbers, 
-		 bool DrawCPVertexNumbers, bool DisplayInfill, 
-		 bool DebugInfill, bool showOverhang,
-		 bool randomized) 
+void Layer::Draw(const Settings &settings)
 {
+  bool randomized = settings.Display.RandomizedLines;
   // glEnable(GL_LINE_SMOOTH);
   // glHint(GL_LINE_SMOOTH_HINT,  GL_NICEST);
   draw_polys(polygons, GL_LINE_LOOP, 1, 3, RED, 1, randomized);
   draw_polys(polygons, GL_POINTS,    1, 3, RED, 1, randomized);
 
-  if(DrawOutlineNumbers)
+  if(settings.Display.DrawCPOutlineNumbers)
     for(size_t p=0; p<polygons.size();p++)
       {
 	ostringstream oss;
@@ -1008,8 +1005,9 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 1, GREY,  0.6, randomized);
   draw_polys(decorPolygons,        GL_LINE_LOOP, 1, 3, WHITE, 1,   randomized);
   draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  0.6, randomized);
-  if(DisplayInfill)
+  if(settings.Display.DisplayinFill)
     {
+      bool DebugInfill = settings.Display.DisplayDebuginFill;
       if (normalInfill)
 	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   (normalInfill->cached?BLUEGREEN:GREEN), 1, randomized);
@@ -1049,16 +1047,16 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
     }
   //draw_polys(GetInnerShell(), GL_LINE_LOOP, 2, 3, WHITE,  1);
   glLineWidth(1);  
-  if(DrawCPVertexNumbers) // poly vertex numbers
+  if(settings.Display.DrawCPVertexNumbers) // poly vertex numbers
     for(size_t p=0; p<polygons.size();p++)
       polygons[p].drawVertexNumbers();
       //polygons[p].drawVertexAngles();
   
-  if(DrawCPLineNumbers)  // poly line numbers
+  if(settings.Display.DrawCPLineNumbers)  // poly line numbers
     for(size_t p=0; p<polygons.size();p++)
       polygons[p].drawLineNumbers();
 
-  if(DrawVertexNumbers) { // infill vertex numbers
+  if(settings.Display.DrawVertexNumbers) { // infill vertex numbers
     for(size_t p=0; p<fillPolygons.size();p++)
       fillPolygons[p].drawVertexNumbers();
     for(size_t p=0; p<fullFillPolygons.size();p++)
@@ -1071,7 +1069,7 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
   }
 
 
-  if (showOverhang) {
+  if (settings.Display.ShowLayerOverhang) {
     if (previous!=NULL) {
       vector<Poly> overhangs = getOverhangs();
       draw_polys(overhangs, GL_LINE_LOOP, 1, 3, VIOLET, 0.8, randomized);
@@ -1086,7 +1084,7 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	  glColor4f(RED[0],RED[1],RED[2], 0.6);
 	  glPointSize(3);
  	  glBegin(GL_POINTS);
-	  for (double x = Min.x(); x<Max.x(); x+=thickness)
+ 	  for (double x = Min.x(); x<Max.x(); x+=thickness)
 	    for (double y = Min.y(); y<Max.y(); y+=thickness)
 	      if (getCairoSurfaceDatapoint(surface, Min, Max, Vector2d(x,y))!=0)
 	  	glVertex3d(x,y,Z);
@@ -1094,9 +1092,32 @@ void Layer::Draw(bool DrawVertexNumbers, bool DrawLineNumbers,
 	}
     }
   }
+
+#if 0
+  // test point-in-polygons
+  const vector<Poly> *polys = GetOuterShell();
+  glColor4f(RED[0],RED[1],RED[2], 0.6);
+  glPointSize(3);
+  glBegin(GL_POINTS);
+  for (double x = Min.x(); x<Max.x(); x+=thickness/1)
+    for (double y = Min.y(); y<Max.y(); y+=thickness/1) {
+      bool inpoly = false;
+      for (uint i=0; i<polys->size(); i++) {
+	if ((*polys)[i].vertexInside(Vector2d(x,y))){
+	  inpoly=true; break;
+	}
+      }
+      if (inpoly)
+	glVertex3d(x,y,Z);
+      // else
+      //   glColor4f(0.3,0.3,0.3, 0.6);
+    }
+  glEnd();
+#endif
+
 }
 
-void Layer::DrawMeasures(const Vector2d &point)
+void Layer::DrawRulers(const Vector2d &point)
 {
   Vector2d x0(Min.x()-10, point.y());
   Vector2d x1(Max.x()+10, point.y());

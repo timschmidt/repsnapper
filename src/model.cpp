@@ -975,18 +975,10 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 	}
 
       if (!calconly) {
-	layer->Draw(settings.Display.DrawVertexNumbers,
-		    settings.Display.DrawLineNumbers,
-		    settings.Display.DrawCPOutlineNumbers,
-		    settings.Display.DrawCPLineNumbers, 
-		    settings.Display.DrawCPVertexNumbers,
-		    settings.Display.DisplayinFill,
-		    settings.Display.DisplayDebuginFill,
-		    settings.Display.ShowLayerOverhang,
-		    settings.Display.RandomizedLines);
+	layer->Draw(settings);
 
-	if (settings.Display.DrawMeasures)
-	  layer->DrawMeasures(measuresPoint);
+	if (settings.Display.DrawRulers)
+	  layer->DrawRulers(measuresPoint);
       }
 
       // if (!have_layers)

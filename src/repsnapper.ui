@@ -3238,7 +3238,7 @@ The head will be going down between them</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkCheckButton" id="Display.DrawMeasures">
+                  <object class="GtkCheckButton" id="Display.DrawRulers">
                     <property name="label" translatable="yes">Dimensions</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
