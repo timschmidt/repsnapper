@@ -79,7 +79,7 @@ include src/slicer/Makefile.am
 repsnapper_SOURCES = $(SHARED_SRC) $(SHARED_INC) src/repsnapper.cpp
 
 src/gitversion.h: FORCE
-	sh $(top_builddir)/tools/gitversion.sh $(top_builddir)/src/gitversion.h $(top_srcdir)/src/gitversion.h
+	$(AM_V_GEN)sh $(top_builddir)/tools/gitversion.sh $(top_builddir)/src/gitversion.h $(top_srcdir)/src/gitversion.h
 FORCE:
 
 built_header_make=src/gitversion.h

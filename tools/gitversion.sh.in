@@ -16,8 +16,8 @@ if [ ! -d "${TOPSRCDIR}/.git" ]; then
         echo "Warning: Not building from git and ${TARBALL_VERSION_H} doesn't exist"
         echo const string GIT_COMMIT=\"Unknown\"\;     > $VERSION_H
         echo const string GIT_COMMIT_DATE=\"Unknown\"\; >> $VERSION_H
-    else
-        echo "Not updating ${VERSION_H} - building from tarball"
+    # else
+        # echo "Not updating ${VERSION_H} - building from tarball"
     fi
     exit 0
 fi
@@ -42,10 +42,10 @@ if [ -e $VERSION_H ]; then
     OLDCOMMIT=`$AWK -v FS="$FSEQUAL" '/const string GIT_COMMIT=/{print $2}' $VERSION_H`
 fi
 
-if [ "x\"$COMMIT\";" = "x$OLDCOMMIT" ]; then
-    echo "Commit has not changed"
-else
-    echo "Updating commit"
+if [ "x\"$COMMIT\";" != "x$OLDCOMMIT" ]; then
+    # echo "Updating commit"
     echo const string GIT_COMMIT=\"$COMMIT\"\;     > $VERSION_H
     echo const string GIT_COMMIT_DATE=\"$DATE\"\; >> $VERSION_H
+#else
+    # echo "Commit has not changed"
 fi
