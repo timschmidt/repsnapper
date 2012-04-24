@@ -25,21 +25,19 @@
 #include "model.h"
 
 
-
-void ObjectsTree::clear()
+TreeObject::~TreeObject()
 {
-  Objects.clear();
-  version = 0.0f;
-  m_filename = "";
-  transform3D.identity();
-  update_model();
+  for (uint i = 0; i<shapes.size(); i++)
+    delete shapes[i];    
+  shapes.clear();
 }
 
 
-void ObjectsTree::newObject()
+bool TreeObject::deleteShape(uint i) 
 {
-  Objects.push_back(new TreeObject());
-  update_model();
+  delete shapes[i];
+  shapes.erase (shapes.begin() + i);
+  return true;
 }
 
 Gtk::TreePath TreeObject::addShape(Shape *shape, std::string location)
@@ -63,6 +61,24 @@ Gtk::TreePath TreeObject::addShape(Shape *shape, std::string location)
   path.push_back (shapes.size() - 1);
   return path;
 }
+
+
+void ObjectsTree::clear()
+{
+  Objects.clear();
+  version = 0.0f;
+  m_filename = "";
+  transform3D.identity();
+  update_model();
+}
+
+
+void ObjectsTree::newObject()
+{
+  Objects.push_back(new TreeObject());
+  update_model();
+}
+
 
 Gtk::TreePath ObjectsTree::addShape(TreeObject *parent, Shape *shape,
 				    std::string location)
@@ -228,7 +244,7 @@ void ObjectsTree::DeleteSelected(vector<Gtk::TreeModel::Path> &path)
     else if (num == 2) 
       Objects.erase (Objects.begin() + path[p][1]);
     else if (num == 3) { // have shapes
-      Objects[path[p][1]]->shapes.erase (Objects[path[p][1]]->shapes.begin() + path[p][2]);
+      Objects[path[p][1]]->deleteShape(path[p][2]);
     }
     update_model();
   }

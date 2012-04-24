@@ -39,15 +39,16 @@ class TreeObject
 {
 public:
   TreeObject(){name = _("Unnamed object");};
-  ~TreeObject(){shapes.clear();};
+  ~TreeObject();
 	string name;
 	Transform3D transform3D;
 	vector<Shape*> shapes;
+	bool deleteShape(uint i);
   short dimensions;
 	uint size(){return shapes.size();};
 	int idx;
   Gtk::TreePath addShape(Shape *shape, std::string location);
-
+  void move(const Vector3d &delta){ transform3D.move(delta); };
 };
 
 
@@ -84,7 +85,7 @@ public:
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
 				  
 	Matrix4d getTransformationMatrix(int object, int shape=-1) const;
-	
+
 	TreeObject * getParent(const Shape *shape) const;
 	vector<TreeObject*> Objects;
 	Transform3D transform3D;
