@@ -23,9 +23,6 @@
 #include <ctype.h>
 #include <algorithm>
 
-
-#include <glib/gutils.h>
-
 #include <libreprap/comms.h>
 
 #include "stdafx.h"

@@ -22,7 +22,6 @@
 #include <string>
 #include <vector>
 
-#include <glib/gutils.h>
 #include <giomm/file.h>
 #include <gtk/gtkgl.h>
 

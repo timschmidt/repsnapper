@@ -30,7 +30,6 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-#include <glib/gutils.h>
 #include <libreprap/comms.h>
 
 #ifdef _OPENMP

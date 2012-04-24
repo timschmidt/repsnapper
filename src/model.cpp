@@ -24,7 +24,6 @@
 #include <functional>
 #include <numeric>
 
-#include <glib/gutils.h>
 #include <libreprap/comms.h>
 
 #include "stdafx.h"
