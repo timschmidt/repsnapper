@@ -529,14 +529,13 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
     vector<uint> trv;
     for (int j = 0; j < n_tr; j++) {
       bool add = false;
-      if (j<i)
+      if (j<i) // maybe(!) we have it already
 	for (uint k = 0; k<adj[j].size(); k++) {
 	  if ((int)adj[j][k] == i) {
 	    add = true; break;
 	  }
 	}
-      else
-	add = (triangles[i].isConnectedTo(triangles[j], 0.01));
+      add |= (triangles[i].isConnectedTo(triangles[j], 0.01));
       if (add) trv.push_back(j);
     }
     adj[i] = trv;
