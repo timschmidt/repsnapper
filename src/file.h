@@ -20,7 +20,6 @@
 #define FILE_H
 
 class Model;
-class Model;
 namespace FileChooser {
   enum Type {
     STL, SVG, RFO, GCODE, SETTINGS
@@ -28,6 +27,7 @@ namespace FileChooser {
   enum Op {
     OPEN, SAVE
   };
+  static bool save_multiple = false;
   void ioDialog (Model *model, View* view, Op o, Type t, bool dropRFO = false);
 };
 

@@ -102,11 +102,9 @@ namespace {
     vector<string> file_filters;
   };
   
-
-
   const vector< Glib::RefPtr< Gio::File > > 
   openGtk(const string &directory, const vector<string> &file_filters,
-	  FileChooser::Op op, const string &title, 
+	  FileChooser::Op op, FileChooser::Type t,  const string &title, 
 	  View * view) {
     // GSList *result = NULL;
     Gtk::FileChooserAction action;
@@ -122,14 +120,21 @@ namespace {
     }
 
     FileDialog dialog(title, action, view, directory);
+
+    if (t == FileChooser::SVG) 
+      dialog.add_button(_("One Layer per File"), Gtk::RESPONSE_ACCEPT+1);
+
     dialog.add_file_filters(file_filters);
 
     int runresult = dialog.run();
 
     std::vector< Glib::RefPtr < Gio::File > > result;
     //Handle the response:
-    if (runresult == Gtk::RESPONSE_ACCEPT)
+    FileChooser::save_multiple = false;
+    if (runresult != Gtk::RESPONSE_CANCEL)
       result = dialog.get_files();
+    if (runresult == Gtk::RESPONSE_ACCEPT+1)
+      FileChooser::save_multiple = true;
     
     return result;
   }
@@ -178,7 +183,7 @@ void FileChooser::ioDialog (Model *model, View* view, Op o, Type t, bool dropRFO
   if (directory == "")
     directory = ".";
 
-  files = openGtk (directory, filter, o, title, view);
+  files = openGtk (directory, filter, o, t, title, view);
 
   for (uint i= 0; i < files.size(); i++) {
 
@@ -207,7 +212,7 @@ void FileChooser::ioDialog (Model *model, View* view, Op o, Type t, bool dropRFO
       if (o == OPEN)
 	model->ReadSVG (file);
       else
-	model->SliceToSVG (file);
+	model->SliceToSVG (file, FileChooser::save_multiple);
       model->settings.STLPath = directory_path;
       break;
     case STL:

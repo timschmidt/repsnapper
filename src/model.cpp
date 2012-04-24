@@ -230,11 +230,10 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
   else if (ftype == VRML) 
     {
       Shape *shape = new Shape();
-      shape->loadASCIIVRML(path);      
+      shape->loadASCIIVRML(path);
       AddShape(NULL, shape, path,autoplace);
       ModelChanged();
     }
-
   ClearLayers();
 }
 

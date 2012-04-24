@@ -290,6 +290,8 @@ void Model::Slice()
   else
     objtree.get_all_shapes(shapes,transforms);
   
+  if (shapes.size() == 0) return;
+
   assert(shapes.size() == transforms.size());
 
   is_calculating=true;
@@ -898,7 +900,7 @@ void Model::ConvertToGCode()
   is_calculating=false;
 }
 
-string Model::getSVG() const 
+string Model::getSVG(int single_layer_no) const 
 {
   Vector3d printOffset  = settings.Hardware.PrintMargin;
   
@@ -913,24 +915,49 @@ string Model::getSVG() const
        << "\twidth=\"" << Max.x()-Min.x()+printOffset.x() 
        << "\" height=\""<< Max.y()-Min.y()+printOffset.y() << "\"" << endl
        << ">" << endl;
-  ostr << "<g id=\"" << layers.size() << "_Layers\">" << endl;
-  for (uint i = 0; i < layers.size(); i++) {
-    ostr << "\t<g id=\"Layer_"<< i << "_z:" << layers[i]->getZ() << "\">" 
-	 << "\t\t" << layers[i]->SVGpath() 
-	 << "\t</g>" << endl;
+  if (single_layer_no<0) {
+    ostr << "<g id=\"" << layers.size() << "_Layers\">" << endl;
+    for (uint i = 0; i < layers.size(); i++) {
+      ostr << "\t\t" << layers[i]->SVGpath() << endl;
+    }
+  } else {
+    ostr << "<g id=\"" << "Layer_" << single_layer_no 
+	 << "_of_" <<layers.size() << "\">" << endl;
+    ostr << "\t\t" << layers[single_layer_no]->SVGpath() << endl;
   }
   ostr << "</g>" << endl;
   ostr << "</svg>" << endl;
   return ostr.str();
 }
 
-
-void Model::SliceToSVG(Glib::RefPtr<Gio::File> file) 
+void Model::SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer) 
 {
   if (is_calculating) return;
   lastlayer = NULL;
   Slice();
   m_progress->stop (_("Done"));
-  Glib::file_set_contents (file->get_path(), getSVG());
+  if (!single_layer) {
+    Glib::file_set_contents (file->get_path(), getSVG());
+  }
+  else {
+    uint n_layers = layers.size();
+    m_progress->start (_("Saving Files"),n_layers);
+    uint digits = log10(n_layers)+1;
+    string base = file->get_path();
+    ostringstream ostr;
+    for (uint i = 0; i < n_layers; i++) {
+      ostr.str("");
+      ostr << base;
+      uint nzero = (uint)(digits - log10(i+1));
+      if (i==0) nzero = digits-1;
+      for (uint d = 0; d < nzero; d++) 
+	ostr << "0";
+      ostr << i 
+	   << ".svg";
+      if (!m_progress->update(i)) break;
+      Glib::file_set_contents (ostr.str(), getSVG(i));
+    }
+    m_progress->stop (_("Done"));
+  }
 }
 

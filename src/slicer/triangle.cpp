@@ -170,7 +170,7 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
   double dist = dist3D_Segment_to_Segment(fourpoints[0],fourpoints[2],
 					  fourpoints[1],fourpoints[3], 
 					  SMALL*SMALL);
-  if (dist < SMALL) 
+  if (dist < SMALL)
     { // found -> divide at shorter diagonal 
       if ((fourpoints[0]-fourpoints[2]).squared_length() 
 	  < (fourpoints[1]-fourpoints[3]).squared_length()) { 

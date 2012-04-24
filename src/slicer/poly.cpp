@@ -737,14 +737,20 @@ string Poly::SVGpath(const Vector2d &trans) const
   ostringstream ostr;
   Poly transpoly(*this,0);
   transpoly.move(trans);
-  ostr << "m ";
-  ostr  << fixed << transpoly[0].x() << " " << transpoly[0].y();
-  for (uint i=1; i < transpoly.size(); i++) {
-    ostr.precision(5);
-    ostr  << fixed << " l " << transpoly[i].x() << " " << transpoly[i].y();
-    if (i < size()-1) ostr << " ";
-  }
+  ostr.precision(5);
   if (closed)
-  ostr << " z";
+    if (hole) 
+      ostr << "<polygon fill=\"white\" stroke=\"black\" stroke-width=\"0px\"";
+    else 
+      ostr << "<polygon fill=\"black\" stroke=\"black\" stroke-width=\"0px\"";
+  else
+    ostr << "<polyline fill=\"white\" stroke=\"black\" stroke-width=\"1px\"";
+  ostr << " points=\"";
+  for (uint i=0; i < transpoly.size(); i++) {
+    ostr  << fixed << transpoly[i].x() << " " << transpoly[i].y();
+    if (i < size()-1) ostr << ", ";
+  }
+  //<< "fill-rule=\"evenodd\" ";
+  ostr << "\" />";
   return ostr.str();
 }

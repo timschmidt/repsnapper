@@ -893,13 +893,12 @@ vector<Poly> Layer::getOverhangs() const
 string Layer::SVGpath(const Vector2d &trans) const
 {
   ostringstream ostr;
-  ostr << "<path d=\"";
+  ostr << "\t<g id=\"Layer_"<< LayerNo 
+       << "_z:" << getZ() << "\">" << endl;
   for (uint i = 0; i<polygons.size(); i++) {
-    ostr << polygons[i].SVGpath(trans);
+    ostr << polygons[i].SVGpath(trans) << endl;
   }
-  ostr << "\" "
-       << "style=\"fill:black;fill-opacity:1;stroke:black;stroke-width:0\" "
-       << "fill-rule=\"evenodd\" />";
+  ostr << "\t</g>";
   return ostr.str();
 }
 

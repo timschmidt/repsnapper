@@ -45,7 +45,7 @@ public:
   int LayerNo;
   double thickness;
   double Z;	
-  double getZ(){return Z;}
+  double getZ() const {return Z;}
   void setZ(double z){Z=z;}
 
   Layer * getPrevious() const {return previous;};

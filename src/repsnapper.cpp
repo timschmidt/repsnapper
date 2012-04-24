@@ -41,6 +41,8 @@ public:
 	string stl_input_path;
 	string gcode_output_path;
 	string settings_path;
+  string svg_output_path;
+  bool svg_single_output;
 	std::vector<std::string> files;
 private:
 	void init ()
@@ -64,6 +66,8 @@ private:
 			     "  -o, --output [file]    if not head-less (-t),\n"
 			     "                         enter non-printing GUI mode\n"
 			     "                         only able to output gcode to [file]\n"
+			     "  --svg [file]           slice to SVG file\n"
+			     "  --ssvg [file]          slice to single layer SVG files [file]NNNN.svg\n"
 			     "  -s, --settings [file]  read render settings [file]\n"
 			     "  -h, --help             show this help\n"
 			     "\n"
@@ -93,6 +97,14 @@ public:
 			else if (!strcmp (arg, "--help") || !strcmp (arg, "-h") ||
 				 !strcmp (arg, "/?"))
 				usage();
+			else if (!strcmp (arg, "--svg")) {
+				svg_output_path = argv[++i];
+				svg_single_output = false;
+			}
+			else if (!strcmp (arg, "--ssvg")) {
+				svg_output_path = argv[++i];
+				svg_single_output = true;
+			}
 			else if (!strcmp (arg, "--version") || !strcmp (arg, "-v"))
 				version();
 			else
@@ -249,11 +261,15 @@ int main(int argc, char **argv)
       vprog.set_terminal_output(true);
       model->SetViewProgress(&vprog);
       model->statusbar=NULL;
-      model->ConvertToGCode();
-
-      if (opts.gcode_output_path.size() > 0)
+      if (opts.gcode_output_path.size() > 0) {
+	model->ConvertToGCode();
         model->WriteGCode(Gio::File::create_for_path(opts.gcode_output_path));
-      else cerr << _("No output file given (use -o)") << endl;
+      }
+      else if (opts.svg_output_path.size() > 0) {
+	model->SliceToSVG(Gio::File::create_for_path(opts.svg_output_path),
+			  opts.svg_single_output);
+      }
+      else cerr << _("No output file given") << endl;
     return 0;
   }
 

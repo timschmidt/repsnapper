@@ -93,7 +93,7 @@ public:
 	GCode m_previewGCode;
 	double m_previewGCode_z;
 	// Slicing
-	void SliceToSVG(Glib::RefPtr<Gio::File> file);
+	void SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer=false);
 	void Slice();
 
 	void CleanupLayers();
@@ -176,7 +176,7 @@ public:
 
 	void SetIsPrinting(bool printing) { is_printing = printing; };
 
-	string getSVG() const;
+	string getSVG(int single_layer_no = -1) const;
 	void ReadSVG(Glib::RefPtr<Gio::File> file);
 	
  private:
