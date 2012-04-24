@@ -103,6 +103,14 @@ void Transform3D::rotate(Vector3d center, double x, double y, double z)
   if (z!=0) transform.rotate_z(z);
   move(center);
 }
+
+Matrix4d Transform3D::getInverse() const
+{
+  Matrix4d im;
+  transform.inverse(im);
+  return im;
+}
+
 ///////////////////////////////////////////////////////
 
 

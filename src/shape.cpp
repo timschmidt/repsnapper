@@ -569,6 +569,44 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
   if (progress) progress->stop("_(Done)");
 }
 
+vector<Triangle> cube(Vector3d Min, Vector3d Max)
+{
+  vector<Triangle> c;
+  const Vector3d diag = Max-Min;
+  const Vector3d dX(diag.x(),0,0);
+  const Vector3d dY(0,diag.y(),0);
+  const Vector3d dZ(0,0,diag.z());
+  // front
+  c.push_back(Triangle(Min, Min+dX, Min+dX+dZ));
+  c.push_back(Triangle(Min, Min+dX+dZ, Min+dZ));
+  // back
+  c.push_back(Triangle(Min+dY, Min+dY+dX+dZ, Min+dY+dX));
+  c.push_back(Triangle(Min+dY, Min+dY+dZ, Min+dY+dX+dZ));
+  // left
+  c.push_back(Triangle(Min, Min+dZ, Min+dY+dZ));
+  c.push_back(Triangle(Min, Min+dY+dZ, Min+dY));
+  // right
+  c.push_back(Triangle(Min+dX, Min+dX+dY+dZ, Min+dX+dZ));
+  c.push_back(Triangle(Min+dX, Min+dX+dY, Min+dX+dY+dZ));
+  // bottom
+  c.push_back(Triangle(Min, Min+dX+dY, Min+dX));
+  c.push_back(Triangle(Min, Min+dY, Min+dX+dY));
+  // top
+  c.push_back(Triangle(Min+dZ, Min+dZ+dX, Min+dZ+dX+dY));
+  c.push_back(Triangle(Min+dZ, Min+dZ+dX+dY, Min+dZ+dY));
+  return c;
+}
+
+void Shape::makeHollow(double wallthickness)
+{
+  invertNormals();
+  const Vector3d wall(wallthickness,wallthickness,wallthickness);
+  Matrix4d invT = transform3D.getInverse();
+  vector<Triangle> cubet = cube(invT*Min-wall, invT*Max+wall);
+  triangles.insert(triangles.end(),cubet.begin(),cubet.end());
+  CenterAroundXY();
+}
+
 void Shape::invertNormals()
 {
   for (uint i = 0; i < triangles.size(); i++)

@@ -725,6 +725,17 @@ void View::invertnormals_selection ()
   queue_draw();
 }
 
+void View::hollow_selection ()
+{
+  vector<Shape*> shapes;
+  vector<Matrix4d> transforms;
+  get_selected_shapes (shapes, transforms);
+  for (uint i=0; i<shapes.size() ; i++)
+    shapes[i]->makeHollow(3);
+  m_model->ModelChanged();
+  queue_draw();
+}
+
 void View::placeonplatform_selection ()
 {
   vector<Shape*> shapes;
@@ -953,6 +964,7 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/6)));
   connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/6)));
   connect_button ("m_normals",       sigc::mem_fun(*this, &View::invertnormals_selection));
+  connect_button ("m_hollow",       sigc::mem_fun(*this, &View::hollow_selection));
   connect_button ("m_platform",       sigc::mem_fun(*this, &View::placeonplatform_selection));
   connect_button ("m_mirror",        sigc::mem_fun(*this, &View::mirror_selection));
   connect_button ("twist_neg",       sigc::bind(sigc::mem_fun(*this, &View::twist_selection), -M_PI/12));
@@ -1275,6 +1287,12 @@ bool View::get_selected_objects(vector<TreeObject*> &objects, vector<Shape*> &sh
   vector<Gtk::TreeModel::Path> iter = m_treeview->get_selection()->get_selected_rows();
   m_model->objtree.get_selected_objects(iter, objects, shapes);
   return objects.size() != 0 || shapes.size() != 0;
+}
+bool View::get_selected_shapes(vector<Shape*> &shapes, vector<Matrix4d> &transforms)
+{
+  vector<Gtk::TreeModel::Path> iter = m_treeview->get_selection()->get_selected_rows();
+  m_model->objtree.get_selected_shapes(iter, shapes, transforms);
+  return shapes.size() != 0;
 }
 
 void View::duplicate_selected_objects()

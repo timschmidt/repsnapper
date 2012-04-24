@@ -186,7 +186,7 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
   if (ftype == BINARY_STL) // only one shape per file
     {
       Shape *shape = new Shape();
-      shape->loadBinarySTL(path);      
+      shape->loadBinarySTL(path);
       AddShape(NULL, shape, path,autoplace);
       ModelChanged();
      }

@@ -37,6 +37,7 @@ public:
 	Matrix4d transform;
 	Matrix4f getFloatTransform() const;
 	Vector3d getTranslation() const;
+	Matrix4d getInverse() const;
 	void setTransform(Matrix4f matrf); 
 	void scale(double x);
 	void scale_x(double x);

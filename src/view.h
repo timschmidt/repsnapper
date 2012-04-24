@@ -152,6 +152,7 @@ class View : public Gtk::Window
   Model *get_model() { return m_model; }
   ViewProgress *get_view_progress() { return m_progress; }
   bool get_selected_objects(vector<TreeObject*> &objects, vector<Shape*> &shapes);
+  bool get_selected_shapes(vector<Shape*> &shapes, vector<Matrix4d> &transforms);
 
   View(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& builder);
   virtual ~View();
@@ -165,6 +166,7 @@ class View : public Gtk::Window
   void rotate_selection (Vector4d rotate);
   void twist_selection (double angle);
   void invertnormals_selection ();
+  void hollow_selection ();
   void mirror_selection ();
   void placeonplatform_selection ();
   void stl_added (Gtk::TreePath &path);

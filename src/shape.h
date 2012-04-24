@@ -127,6 +127,8 @@ public:
 
 	double volume() const;
 
+    void makeHollow(double wallthickness);
+
     int loadASCIISTL(std::string filename);
     int loadBinarySTL(std::string filename);
     static filetype_t getFileType(std::string filename);
