@@ -272,25 +272,23 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 	Vector3d p;
 	double t;
 
-	Vector3d P1 = T*this->A;
-	Vector3d P2 = T*this->B;
+	const Vector3d TA = T * A;
+	const Vector3d TB = T * B;
+	const Vector3d TC = T * C;
 
 	int num_cutpoints = 0;
 	// Are the points on opposite sides of the plane?
-	if ((z <= P1.z()) != (z <= P2.z()))
+	if ((z <= TA.z()) != (z <= TB.z()))
 	  {
-	    t = (z-P1.z())/(P2.z()-P1.z());
-	    p = P1+((Vector3d)(P2-P1)*t);
+	    t = (z - TA.z())/(TB.z()-TA.z());
+	    p = TA + (TB - TA) * t;
 	    lineStart = Vector2d(p.x(),p.y());
 	    num_cutpoints = 1;
 	  }
-	
-	P1 = T*this->B;
-	P2 = T*this->C;
-	if ((z <= P1.z()) != (z <= P2.z()))
+	if ((z <= TB.z()) != (z <= TC.z()))
 	  {
-	    t = (z-P1.z())/(P2.z()-P1.z());
-	    p = P1+((Vector3d)(P2-P1)*t);
+	    t = (z - TB.z())/(TC.z() - TB.z());
+	    p = TB + (TC - TB) * t;
 	    if(num_cutpoints > 0)
 	      {
 		lineEnd = Vector2d(p.x(),p.y());
@@ -302,12 +300,10 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 		num_cutpoints = 1;
 	      }
 	  }
-	P1 = T*this->C;
-	P2 = T*this->A;
-	if ((z <= P1.z()) != (z <= P2.z()))
+	if ((z <= TC.z()) != (z <= TA.z()))
 	  {
-	    t = (z-P1.z())/(P2.z()-P1.z());
-	    p = P1+((Vector3d)(P2-P1)*t);	    
+	    t = (z - TC.z())/(TA.z() - TC.z());
+	    p = TC + (TA - TC) * t;
 	    lineEnd = Vector2d(p.x(),p.y());
 	    if( lineEnd != lineStart ) num_cutpoints = 2;
 	  }
