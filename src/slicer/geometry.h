@@ -110,6 +110,8 @@ Poly convexHull2D(const vector<Poly> &polygons);
 int delaunayTriang(const vector<Vector2d> &points, vector<Triangle> &triangles,
 		   double z);
 
+int triangulate(const vector<Poly> &polys, vector< vector<Triangle> > &triangles,
+		double z = 0);
 
 void testangles();
 

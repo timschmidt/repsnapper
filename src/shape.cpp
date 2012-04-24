@@ -709,10 +709,13 @@ int Shape::divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) co
   double max_grad;
   bool ok = getPolygonsAtZ(T, z, polys, max_grad);
   if (!ok) return 0;
+  vector< vector<Triangle> > surfs;
+  triangulate(polys, surfs);
+
   vector<Triangle> surf;
-  for (guint i=0; i< polys.size(); i++) {
-    polys[i].getTriangulation(surf);
-  }
+  for (uint i=0; i<surfs.size(); i++) 
+    surf.insert(surf.end(), surfs[i].begin(), surfs[i].end());
+
   lower->triangles.insert(lower->triangles.end(),surf.begin(),surf.end());
   for (guint i=0; i<surf.size(); i++) surf[i].invertNormal();
   upper->triangles.insert(upper->triangles.end(),surf.begin(),surf.end());
@@ -749,7 +752,8 @@ void Shape::PlaceOnPlatform()
 void Shape::Rotate(const Vector3d & axis, const double & angle)
 {
   CenterAroundXY();
-  //transform3D.rotate(axis,angle);
+  // transform3D.rotate(axis,angle);
+  // return;
   // do a real rotation because matrix transform gives errors when slicing
   int count = (int)triangles.size();
 #ifdef _OPENMP

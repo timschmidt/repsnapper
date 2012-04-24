@@ -181,7 +181,7 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
 	tr[1] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
       }
     } 
-  else 
+  else
     { // take other 2
       double dist = dist3D_Segment_to_Segment(fourpoints[1],fourpoints[2],
 					      fourpoints[0],fourpoints[3], 
@@ -333,4 +333,14 @@ string Triangle::getSTLfacet(const Matrix4d &T) const
   sstr << "    endloop" << endl;
   sstr << "  endfacet" << endl;
   return sstr.str();
+}
+
+string Triangle::info() const
+{
+  ostringstream ostr;
+  ostr <<"Triangle A="<< A
+       <<", B="<< B  
+       <<", C="<< C  
+       <<", N="<< Normal ;
+  return ostr.str();
 }

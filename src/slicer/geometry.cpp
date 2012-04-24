@@ -1057,6 +1057,58 @@ vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon)
   return newvert;
 }
 
+///////////////////// POLY2TRI TRIANG ////////////////////
+
+#include <poly2tri/poly2tri/poly2tri/poly2tri.h>
+
+vector<p2t::Point*> getP2Tpoints(const Poly &poly)
+{
+  vector<p2t::Point*> points(poly.size());
+  for (uint i=0; i<poly.size(); i++)  {
+    points[i] = new p2t::Point(poly.vertices[i].x(), 
+			       poly.vertices[i].y());
+  }
+  return points;
+}
+
+Triangle getTriangle(p2t::Triangle *cdttriangle, double z)
+{
+  const p2t::Point *tp0 = cdttriangle->GetPoint(0);
+  const p2t::Point *tp1 = cdttriangle->GetPoint(1);
+  const p2t::Point *tp2 = cdttriangle->GetPoint(2);
+  const Vector3d A((tp0->x), (tp0->y), z);
+  const Vector3d B((tp1->x), (tp1->y), z);
+  const Vector3d C((tp2->x), (tp2->y), z);
+  return Triangle(A, B, C);
+}
+
+vector<Triangle> getTriangles(p2t::CDT &cdt, double z)
+{
+  vector<p2t::Triangle*> ptriangles = cdt.GetTriangles();
+  vector<Triangle> triangles(ptriangles.size());
+  for (guint i=0; i < ptriangles.size(); i++) {
+    triangles[i] = getTriangle(ptriangles[i], z);
+  }
+  return triangles;
+}
+
+int triangulate(const vector<Poly> &polys, vector< vector<Triangle> > &triangles,
+		double z)
+{
+  vector<ExPoly> expolys = Clipping::getExPolys(polys, 0, 0);
+  cerr << expolys.size() << endl;
+  for (uint i = 0; i<expolys.size(); i++) {
+    vector<p2t::Point*> outerpoints = getP2Tpoints(expolys[i].outer);
+    p2t::CDT cdt(outerpoints);
+    for (uint h = 0; h < expolys[i].holes.size(); h++) {
+      vector<p2t::Point*> holespoints = getP2Tpoints(expolys[i].holes[h]);
+      cdt.AddHole(holespoints);
+    }
+    cdt.Triangulate();
+    triangles.push_back(getTriangles(cdt, z));
+  }
+  return triangles.size();
+}
 
 
 ///////////////////// DELAUNAY TRIANG ////////////////////
