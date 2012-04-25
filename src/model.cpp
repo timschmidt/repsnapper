@@ -44,6 +44,7 @@ Model::Model() :
   currentbufferedlines(0),
   settings(),
   Min(), Max(),
+  m_inhibit_modelchange(false),
   errlog (Gtk::TextBuffer::create()),
   echolog (Gtk::TextBuffer::create()),
   is_calculating(false),
@@ -318,6 +319,7 @@ void Model::translateGCode(Vector3d trans)
 
 void Model::ModelChanged()
 {
+  if (m_inhibit_modelchange) return;
   //printer.update_temp_poll_interval(); // necessary?
   if (!is_printing) {
     CalcBoundingBoxAndCenter();

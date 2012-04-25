@@ -153,7 +153,7 @@ public:
 
 	sigc::signal< void > m_model_changed;
 	void ModelChanged();
-
+	bool m_inhibit_modelchange;
 	// Truly the model
 	ObjectsTree objtree;
 	Glib::RefPtr<Gtk::TextBuffer> errlog, echolog;

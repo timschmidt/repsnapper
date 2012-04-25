@@ -388,11 +388,12 @@ class View::TranslationSpinRow {
   // apply values to objects
   void spin_value_changed (int axis)
   {
+    if (m_inhibit_update)
+      return;
+
     vector<Shape*> shapes;
     vector<TreeObject*> objects;
 
-    if (m_inhibit_update)
-      return;
     if (!m_view->get_selected_objects(objects, shapes))
       return;
 
@@ -433,6 +434,8 @@ public:
   // Changed STL Selection - must update translation values
   void selection_changed ()
   {
+    m_inhibit_update = true;
+
     vector<Shape*> shapes;
     vector<TreeObject*> objects;
 
@@ -442,7 +445,6 @@ public:
     if (shapes.size()==0 && objects.size()==0)
       return;
 
-    m_inhibit_update = true;
     Matrix4d *mat;
     if (shapes.size()==0) {
       if (objects.size()==0) {
@@ -461,7 +463,7 @@ public:
       m_xyz[i]->set_value(trans[i]/scale);
     m_inhibit_update = false;
   }
-
+  
   TranslationSpinRow(View *view, Gtk::TreeView *treeview) :
     m_inhibit_update(false), m_view(view)
   {
@@ -1280,7 +1282,9 @@ void View::tree_selection_changed()
     m_model->m_current_selectionpath = m_treeview->get_selection()->get_selected_rows();
     m_model->ClearPreview();
   }
+  m_model->m_inhibit_modelchange = true;
   update_scale_value();
+  m_model->m_inhibit_modelchange = false;
 }
 bool View::get_selected_objects(vector<TreeObject*> &objects, vector<Shape*> &shapes)
 {
