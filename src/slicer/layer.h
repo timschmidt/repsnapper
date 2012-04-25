@@ -47,6 +47,7 @@ public:
   double Z;	
   double getZ() const {return Z;}
   void setZ(double z){Z=z;}
+  void setSkins(uint skins_){skins = skins_;}
 
   Layer * getPrevious() const {return previous;};
   void setPrevious(Layer * prevlayer){previous = prevlayer;};

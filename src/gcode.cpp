@@ -427,7 +427,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		    if( (!relativeE && commands[i].e == LastE)
 			|| (relativeE && commands[i].e == 0) )
 		      {
-			luma = speed / settings.Hardware.MaxPrintSpeedXY*0.5f;
+			luma = speed / settings.Hardware.MoveSpeed;
 			Color = settings.Display.GCodeMoveRGBA;
 			extrwidth = 0;
 		      }

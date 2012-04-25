@@ -342,7 +342,8 @@ void Model::Slice()
   int progress_steps=(int)(maxZ/thickness/100);
   if (progress_steps==0) progress_steps=1;
 
-  if (skins == 1 && (!settings.Slicing.BuildSerial || shapes.size() == 1) )
+  if ( !(varSlicing && skins > 1) &&
+       !(settings.Slicing.BuildSerial && shapes.size() > 1) )
     { // simple, can do multihreading
       if (progress_steps==0) progress_steps=1;
       int num_layers = (int)ceil((maxZ - minZ) / thickness);
@@ -391,12 +392,12 @@ void Model::Slice()
     }
   else 
     { // have skins and/or serial build
-      uint currentshape = 0;
+      uint currentshape   = 0;
       double serialheight = maxZ; // settings.Slicing.SerialBuildHeight; 
-      double z = minZ;
-      double shape_z = z;
-      double max_shape_z = z + serialheight;
-      Layer * layer = new Layer(lastlayer, LayerNr, thickness, skins); 
+      double z            = minZ;
+      double shape_z      = z;
+      double max_shape_z  = z + serialheight;
+      Layer * layer = new Layer(lastlayer, LayerNr, thickness, 1); // first layer no skins
       layer->setZ(shape_z);
       LayerNr = 1;
       int new_polys=0;
@@ -410,6 +411,7 @@ void Model::Slice()
 	    layer->setZ(shape_z); // set to real z
 	    if (shape_z == minZ) { // the layer is on the platform
 	      layer->LayerNo = 0;
+	      layer->setSkins(1);
 	      LayerNr = 1; 
 	    }
 	    new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
@@ -421,7 +423,8 @@ void Model::Slice()
 	      currentshape++; 
 	      shape_z = z;
 	    } else {  // next z, same shape
-	      if (varSlicing) { // higher gradient -> slice thinner with fewer skin divisions
+	      if (varSlicing && LayerNr!=0) { 
+		// higher gradient -> slice thinner with fewer skin divisions
 		skins = max_skins-(uint)(max_skins* max_gradient);
 		thickness = skin_thickness*skins;
 	      }
@@ -435,9 +438,9 @@ void Model::Slice()
 	    }
 	  }
 	  //thickness = max_thickness-(max_thickness-min_thickness)*max_gradient;
-	  if (currentshape < shapes.size()) { // reached max_shape_z, next shape
+	  if (currentshape < shapes.size()-1) { // reached max_shape_z, next shape
 	    currentshape++;
-	  } else {
+	  } else { // end of shapes
 	    if (new_polys > -1){ 
 	      if (varSlicing) {
 		skins = max_skins-(uint)(max_skins* max_gradient);
