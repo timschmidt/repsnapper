@@ -5722,6 +5722,7 @@ The head will be going down between them</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
                                     <property name="invisible_char_set">True</property>
+                                    <property name="digits">1</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">2</property>
@@ -5844,6 +5845,7 @@ The head will be going down between them</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
                                     <property name="invisible_char_set">True</property>
+                                    <property name="digits">1</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">2</property>
