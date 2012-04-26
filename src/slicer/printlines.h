@@ -105,31 +105,61 @@ class PLine
   string info() const;
 };
 
+class Printlines;
+class PrintPoly
+{
+  friend class Printlines;
+
+  PrintPoly(const Poly * poly, const Printlines * printlines,
+	    double speed, double overhangspeed, double min_time,
+	    bool displace_start, PLineArea area);
+  const Poly * poly;
+  const Printlines * printlines;
+  PLineArea area;
+  double speed;
+  double min_time;
+  bool displace_start;
+  int overhangingpoints;
+  // distance for next poly search will be divided by this:
+  double priority;
+ public:
+  void addToLines(vector<PLine> &lines, int startindex, 
+		  double movespeed) const;
+
+  double getPriority() const {return priority;};
+  uint getDisplacedStart(uint start) const;
+  string info() const;
+};
 
 // a bunch of printlines: lines with feedrate
 // optimize for corners etc.
 class Printlines
 {
+  friend class PrintPoly;
+
+  vector<PrintPoly> printpolys;
     
   double z;
   double Zoffset; // global offset for generated PLine3s, always added at setZ()
 
   string name;
 
-  void addPoly(PLineArea area, vector<PLine> &lines, 
-	       const Poly &poly, int startindex=0, 
-	       double speed=1, double movespeed=1);
+  /* void addPoly(PLineArea area, vector<PLine> &lines,  */
+  /* 	       const Poly &poly, int startindex=0,  */
+  /* 	       double speed=1, double movespeed=1); */
   void addLine(PLineArea area, vector<PLine> &lines,
 	       const Vector2d &from, const Vector2d &to, 
 	       double speed=1, double movespeed=1, double feedrate=1.0) const;
 
-  const Layer * layer;
 
  public:
   Printlines(const Layer * layer, const Settings *settings, double z_offset=0);
   ~Printlines(){};
 
+  void clear() {printpolys.clear();};
+
   const Settings *settings;
+  const Layer * layer;
 
   Cairo::RefPtr<Cairo::ImageSurface> overhangs_surface;
 
@@ -137,13 +167,21 @@ class Printlines
 
   Vector2d lastPoint() const;
 
-  void makeLines(PLineArea area,
-		 const vector<Poly> &polys, 
-		 bool displace_startpoint, 
-		 Vector2d &startPoint,
-		 vector<PLine> &lines,
-		 double maxspeed = 0);
-    
+  void addPolys(PLineArea area,	const vector<Poly> &polys, 
+		bool displace_start,
+		double maxspeed = 0, double min_time = 0);
+
+  void makeLines(Vector2d &startPoint, vector<PLine> &lines);
+
+#if 0
+  void oldMakeLines(PLineArea area,
+		    const vector<Poly> &polys, 
+		    bool displace_startpoint, 
+		    Vector2d &startPoint,
+		    vector<PLine> &lines,
+		    double maxspeed = 0);
+#endif
+  
   void optimize(double linewidth,
 		double slowdowntime,
 		double cornerradius,

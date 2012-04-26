@@ -272,52 +272,186 @@ void Printlines::addLine(PLineArea area, vector<PLine> &lines,
   lines.push_back(PLine(area, lfrom, to, speed, feedrate));
 }
 
-void Printlines::addPoly(PLineArea area, vector<PLine> &lines, 
-			 const Poly &poly, int startindex, 
-			 double speed, double movespeed)
+void PrintPoly::addToLines(vector<PLine> &lines, int startindex, 
+			   double movespeed) const
 {
   vector<Vector2d> pvert;
-  poly.getLines(pvert,startindex);
+  poly->getLines(pvert,startindex);
   if (pvert.size() == 0) return;
   assert(pvert.size() % 2 == 0);
   for (uint i=0; i<pvert.size();i+=2){
-    addLine(area, lines, pvert[i], pvert[i+1], speed, movespeed, poly.getExtrusionFactor());
+    printlines->addLine(area, lines, pvert[i], pvert[i+1], 
+			speed, movespeed, poly->getExtrusionFactor());
   }
-  setZ(poly.getZ());
 }
 
-void Printlines::makeLines(PLineArea area,
-			   const vector<Poly> &polys,
-			   bool displace_startpoint, 			   
-			   Vector2d &startPoint,
-			   vector<PLine> &lines,
-			   double maxspeed)
+
+PrintPoly::PrintPoly(const Poly * poly_,  
+		     const Printlines * printlines_,
+		     double speed_, double overhangspeed,
+		     double min_time_,
+		     bool displace_start_,
+		     PLineArea area_)
+  : poly(poly_), printlines(printlines_), area(area_), 
+    speed(speed_), min_time(min_time_), 
+    displace_start(displace_start_), 
+    overhangingpoints(0), priority(1.)
+{
+  if (area==SHELL || area==SKIN) {
+    priority *= 5; // may be 5 times as far away to get preferred as next poly
+    for (uint j=0; j<poly->size();j++){
+      if (getCairoSurfaceDatapoint(printlines->overhangs_surface, 
+				   printlines->layer->getMin(), 
+				   printlines->layer->getMax(), 
+				   poly->vertices[j]) != 0) {
+	overhangingpoints++;
+	priority /= 10; // must be 10 times nearer for each overhang point
+      }
+    }
+  } else if (area==SKIRT) {
+    priority *= 1000; // may be 1000 times as far away to get preferred
+  } else if (area==SUPPORT) {
+    priority *= 100;  // may be 100 times as far away to get preferred
+  }
+  if (overhangingpoints>0)
+    speed = overhangspeed;
+  if (min_time > 0 && speed > 0) {
+    const double totlength = poly->totalLineLength();
+    const double time = totlength / speed * 60;  // minutes -> seconds!
+    //cerr << AreaNames[area] << ": " << time << " - " << speed ;
+    if (time !=0 && time < min_time)
+      speed *= time / min_time;
+    //cerr << " -> "<< speed << " = " << totlength / speed * 60<< endl;
+  }
+}
+
+uint PrintPoly::getDisplacedStart(uint start) const
+{
+  if (displace_start) { 
+    // find next sharp corner (>pi/4)
+    uint oldstart = start; // if none found, stay here
+    start = poly->nextVertex(start);
+    while (start != oldstart &&
+	   abs(poly->angleAtVertex(start) < M_PI/4))
+      start = poly->nextVertex(start);
+  }
+  return start;
+}
+
+string PrintPoly::info() const
+{
+  ostringstream ostr;
+  ostr << "PrintPoly "
+       << AreaNames[area]
+       << ", " <<  poly->size() <<" vertices" 
+       << ", prio=" << priority 
+       << ", speed=" << speed
+    ;    
+  return ostr.str();
+}
+
+
+void Printlines::addPolys(PLineArea area,
+			  const vector<Poly> &polys,
+			  bool displace_start, 
+			  double maxspeed, double min_time)
+{
+  if (polys.size() == 0) return;
+  if ( maxspeed == 0 ) maxspeed = settings->Hardware.MaxPrintSpeedXY;
+  for(size_t q = 0; q < polys.size(); q++) { 
+    PrintPoly ppoly(&polys[q], this,
+		    maxspeed, settings->Slicing.MaxOverhangSpeed,
+		    min_time, displace_start, area);
+
+    printpolys.push_back(ppoly);
+  }
+  setZ(polys.back().getZ());
+}
+
+bool printpoly_sort(const PrintPoly &p1, const PrintPoly &p2)
+{
+  return (p1.getPriority() >= p2.getPriority());
+}
+
+void Printlines::makeLines(Vector2d &startPoint,
+			   vector<PLine> &lines)
+{
+  const uint count = printpolys.size();
+  if (count == 0) return;
+
+  // // sort into contiguous areas
+  // vector<ExPoly> layerexpolys = layer->GetExPolygons();
+  // vector< vector<PrintPoly> > towers(layerexpolys.size());
+
+  // for (uint q = 0; q < printpolys.size(); q++) {
+  //   bool intower = false;
+  //   for (uint i = 0; i < layerexpolys.size(); i++) {
+  //     if (layerexpolys[i].vertexInside(printpolys[q]->poly[0])) {
+  // 	towers[i].push_back(printpolys[q]);
+  // 	intower = true;
+  //     }
+  //   }
+  //   if (!intower) ;
+  // }
+
+  //std::sort(printpolys.begin(), printpolys.end(), printpoly_sort);
+
+  int nvindex=-1;
+  int npindex=-1;
+  uint nindex;
+  vector<bool> done(count); // polys not yet handled
+  for(size_t q=0; q < count; q++) done[q]=false;
+  uint ndone=0;
+  //double nlength;
+  double movespeed = settings->Hardware.MoveSpeed;
+  while (ndone < count)
+    {
+      double nstdist = INFTY;
+      double pdist;
+      for(size_t q = 0; q < count; q++) { // find nearest polygon
+	if (!done[q])
+	  { 
+	    //cerr << printpolys[q].info() << endl;
+	    if (printpolys[q].poly->size() == 0) {done[q] = true; ndone++;}
+	    else {
+	      pdist = INFTY;
+	      nindex = printpolys[q].poly->nearestDistanceSqTo(startPoint, pdist);
+	      pdist /= printpolys[q].priority;
+	      if (pdist  < nstdist){
+		npindex = q;      // index of nearest poly in polysleft
+		nstdist = pdist;  // distance of nearest poly
+		nvindex = nindex; // nearest point in nearest poly
+	      }
+	    }
+	  }
+      }
+      if (ndone==0) { // only first in layer
+	nvindex = printpolys[npindex].getDisplacedStart(nvindex);
+      }
+      if (npindex >= 0 && npindex >=0) {
+	printpolys[npindex].addToLines(lines, nvindex, movespeed);
+	done[npindex]=true;
+	ndone++;
+      }
+      if (lines.size()>0)
+	startPoint = lines.back().to;
+    }
+}
+
+#if 0
+void Printlines::oldMakeLines(PLineArea area,
+			      const vector<Poly> &polys,
+			      bool displace_startpoint, 			   
+			      Vector2d &startPoint,
+			      vector<PLine> &lines,
+			      double maxspeed)
 {
   //cerr << "makeLines " << AreaNames[area] <<  " " << layer->info() << endl;
-
   // double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
   //double linewidth = layerthickness/linewidthratio;
   if ( maxspeed == 0 ) maxspeed = settings->Hardware.MaxPrintSpeedXY;
   double movespeed = settings->Hardware.MoveSpeed;
 
-  bool freeair = false;
-  if (area == SHELL || area == SKIN)  {
-    for (uint i=0; i<polys.size();i++){
-      for (uint j=0; j<polys[i].size();j++){
-	if (getCairoSurfaceDatapoint(overhangs_surface, 
-				     layer->getMin(), layer->getMax(), 
-				     polys[i][j]) != 0) {
-	  freeair = true;
-	  break;
-	}
-      }
-    }
-    if (freeair) {
-      //cerr << "polys have free air point(s)" << endl;
-      // set maxspeed:
-      maxspeed = settings->Slicing.MaxOverhangSpeed;
-    }
-  }
 
 
   const uint count = polys.size();
@@ -333,21 +467,25 @@ void Printlines::makeLines(PLineArea area,
     {
       double nstdist = INFTY;
       double pdist;
-      for(size_t q=0; q<count; q++) { // find nearest polygon
-	if (!done[q])
-	  {
-	    if (polys[q].size() == 0) {done[q] = true; ndone++;}
-	    else {
-	      pdist = INFTY;
-	      nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
-	      if (pdist<nstdist){
-		npindex = q;      // index of nearest poly in polysleft
-		nstdist = pdist;  // distance of nearest poly
-		nvindex = nindex; // nearest point in nearest poly
+      // if (sortbyoverhang) {
+
+      // }
+      // else
+	for(size_t q=0; q<count; q++) { // find nearest polygon
+	  if (!done[q])
+	    {
+	      if (polys[q].size() == 0) {done[q] = true; ndone++;}
+	      else {
+		pdist = INFTY;
+		nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
+		if (pdist<nstdist){
+		  npindex = q;      // index of nearest poly in polysleft
+		  nstdist = pdist;  // distance of nearest poly
+		  nvindex = nindex; // nearest point in nearest poly
+		}
 	      }
 	    }
-	  }
-      }
+	}
       // displace first point to next sharp corner (>pi/4)
       if (displace_startpoint && ndone==0) { 
 	int oldnvindex = nvindex; // if none found, stay here
@@ -365,7 +503,7 @@ void Printlines::makeLines(PLineArea area,
 	startPoint = lines.back().to;
     }
 }
-
+#endif
 
 void Printlines::optimize(double linewidth,
 			  double slowdowntime,
@@ -1055,9 +1193,10 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 	if ((topoly==-1)   && polys[p].vertexInside(lines[i].to,   maxerr))
 	  topoly=(int)p;
       }
+      int div = 0;
       //cerr << frompoly << " --> "<< topoly << endl;
       if (frompoly >=0 && topoly >=0) {
-	if (0 && findnearest && frompoly != topoly) {
+	if (findnearest && frompoly != topoly) {
 	  int fromind, toind;
 	  polys[frompoly].nearestIndices(polys[topoly], fromind, toind);
 	  vector<Vector2d> path(2);
@@ -1065,28 +1204,55 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 	  path[1] = polys[topoly].  vertices[toind];
 	  // for (uint pi=0; pi < path.size(); pi++)
 	  //   cerr << path[pi] << endl;
-	  int div=(divideline(i, path, lines));
-	  cerr << frompoly<<":"<<fromind << " ==> "<< topoly<<":"<<toind 
-	       << " - " << div<< endl;
-	  i+=div;
-	  continue;
+	  div+=(divideline(i, path, lines));
+	  // cerr << i << " _ "<<  frompoly<<":"<<fromind << " ==> "<< topoly<<":"<<toind 
+	  //      << " - " << div<< endl;
+	  //i++;
+	  // continue;
 	}
       }
       //continue;
+#define FASTPATH 0
+#if FASTPATH // find shortest path through polygon
+      // faster to print but slow to calculate
+      if (frompoly >=0 && topoly >=0) {
+	// vector<Poly> allpolys;
+	// allpolys.push_back(polys[frompoly]);
+	// // add holes
+	// for (int p = 0; p < polys.size(); p++) {
+	//   if (p != frompoly && polys[p].isInside(polys[frompoly])) 
+	//     allpolys.push_back(polys[p]);
+	// }
+	// cerr << allpolys.size() << " holes" << endl;
+	vector<Vector2d> path;
+	bool ispath = shortestPath(lines[i].from, lines[i].to,
+				   polys, frompoly, path, maxerr);
+	//cerr << path.size() << " path points" << endl;
+
+	if (ispath) {
+	  div += (divideline(i,path,lines)); 
+	  if (divisions>0)
+	    cerr << divisions << " div in poly " << topoly << " - " << ispath << " path " << path.size()<<endl;
+	}
+      }
+#else // walk along perimeters
       // intersections with all polys
       for (uint p = 0; p < polys.size(); p++) {
 	vector<Intersection> pinter = 
 	  polys[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
 	if (pinter.size() > 0) {
-	  if (polys[p].hole || pinter.size()%2 == 0) {
+	  // if (pinter.size()%2 == 0) {
 	    vector<Vector2d> path = 
 	      polys[p].getPathAround(lines[i].from, lines[i].to);
 	    // after divide, skip number of added lines -> test remaining line later
-	    i += (divideline(i, path, lines)); 
-	    continue;
-	  }
+	    div += (divideline(i, path, lines)); 
+	    //continue;
+	  // }
 	}
       }
+      
+#endif
+      i += div;
     }
   }
 }

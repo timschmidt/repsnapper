@@ -464,6 +464,11 @@ const vector<Poly> * Layer::GetOuterShell() const
   return &polygons;
 }
 
+vector<ExPoly> Layer::GetExPolygons() const
+{
+  return Clipping::getExPolys(polygons,0,0);
+}
+
 // circular numbering
 vector<Poly> Layer::GetShellPolygonsCirc(int number) const
 {
@@ -719,74 +724,59 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		     skinFullInfills[s-1]->infillpolys.begin(),
 		     skinFullInfills[s-1]->infillpolys.end());
       // add all of this skin layer to lines
-      printlines.makeLines(SKIN, polys, (s==1), //displace at first skin
-			   startPoint, lines, settings.Hardware.MaxShellSpeed);
+      printlines.addPolys(SKIN, polys, (s==1), //displace at first skin
+			  settings.Hardware.MaxShellSpeed,
+			  settings.Slicing.MinShelltime);
       if (s < skins) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
+	printlines.makeLines(startPoint, lines);
 	if (!settings.Slicing.ZliftAlways)
 	  printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
 	printlines.optimize(linewidth,
-			    settings.Slicing.MinLayertime/skins, cornerradius, lines);
+			    settings.Slicing.MinShelltime, cornerradius, lines);
 	printlines.getLines(lines, lines3);
+	printlines.clear();
 	lines.clear();
       }
       polys.clear();
     }
   } // last skin layer now still in lines
+  lines.clear();
 
   // 2. Skirt
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
-  printlines.makeLines(SKIRT, skirts, false,
-		       startPoint, lines, settings.Hardware.MaxShellSpeed);
+  printlines.addPolys(SKIRT, skirts, false, 
+		      settings.Hardware.MaxShellSpeed,
+		      settings.Slicing.MinShelltime);
 
   // 3. Support
   if (supportInfill)
-    printlines.makeLines(SUPPORT, supportInfill->infillpolys, false,
-			 startPoint, lines);
+    printlines.addPolys(SUPPORT, supportInfill->infillpolys, false);
 
   // 4. all other polygons:  
 
   //  Shells
-  vector<PLine> shelllines;
   for(int p=shellPolygons.size()-1; p>=0; p--) { // inner to outer
-    // no, dont' walk every single shell for all polygons:
-    //    printlines.makeLines(SHELL, shellPolygons[p], (p==(int)(shellPolygons.size())-1),
-    //                       startPoint, shelllines, settings.Hardware.MaxShellSpeed);
-    // instead, collect all shells:
-    polys.insert(polys.end(), shellPolygons[p].begin(),shellPolygons[p].end());
+    printlines.addPolys(SHELL, shellPolygons[p],
+			(p==(int)(shellPolygons.size())-1),
+			settings.Hardware.MaxShellSpeed,
+			settings.Slicing.MinShelltime);
   }
-  printlines.makeLines(SHELL, polys, true, //displace at beginning
-   		       startPoint, shelllines, settings.Hardware.MaxShellSpeed);
-  polys.clear();
-  // slow shells down
-  printlines.slowdownTo(settings.Slicing.MinShelltime*shellPolygons.size(), shelllines);
-  lines.insert(lines.end(), shelllines.begin(), shelllines.end());
 
   //  Infill
   if (normalInfill)
-    polys.insert(polys.end(),
-		 normalInfill->infillpolys.begin(), normalInfill->infillpolys.end());
+    printlines.addPolys(INFILL, normalInfill->infillpolys, false);
   if (thinInfill)
-    polys.insert(polys.end(),
-		 thinInfill->infillpolys.begin(), thinInfill->infillpolys.end());
+    printlines.addPolys(INFILL, thinInfill->infillpolys, false);
   if (fullInfill)
-    polys.insert(polys.end(),
-		 fullInfill->infillpolys.begin(), fullInfill->infillpolys.end());
+    printlines.addPolys(INFILL, fullInfill->infillpolys, false);
   if (decorInfill)
-    polys.insert(polys.end(),
-		 decorInfill->infillpolys.begin(), decorInfill->infillpolys.end());
-  printlines.makeLines(INFILL, polys, false, //no displace at beginning
-		       startPoint, lines);
-  polys.clear();
+    printlines.addPolys(INFILL, decorInfill->infillpolys, false);
   for (uint b=0; b < bridgeInfills.size(); b++)
     if (bridgeInfills[b])
-      polys.insert(polys.end(),
-		   bridgeInfills[b]->infillpolys.begin(),
-		   bridgeInfills[b]->infillpolys.end());
-  printlines.makeLines(BRIDGE, polys, false, //no displace at beginning
-		       startPoint, lines);
-  polys.clear();
-  
+      printlines.addPolys(INFILL, bridgeInfills[b]->infillpolys, false);
+
+  printlines.makeLines(startPoint, lines);
 
   // FINISH
 
@@ -795,15 +785,12 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   lchange.where = Vector3d(0.,0.,Z);
   commands.push_back(lchange);
 
-  float speedfactor = 1;
-  if ((guint)LayerNo < settings.Slicing.FirstLayersNum)
-    speedfactor = settings.Slicing.FirstLayersSpeed;
-
   if (!settings.Slicing.ZliftAlways)
     printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
   printlines.optimize(linewidth, 
 		      settings.Slicing.MinLayertime, cornerradius, lines);
-  printlines.setSpeedFactor(speedfactor, lines);
+  if ((guint)LayerNo < settings.Slicing.FirstLayersNum)
+    printlines.setSpeedFactor(settings.Slicing.FirstLayersSpeed, lines);
   double slowdownfactor = printlines.getSlowdownFactor();
 
   if (settings.Slicing.FanControl) {
@@ -836,7 +823,6 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       commands.push_back(Command(AreaNames[lastArea]));
     }
     lines3[i].getCommands(lastPos, commands, extrf, minspeed, maxspeed, movespeed, emax);
-    //state.AppendCommands(cc, slicing.RelativeEcode);
   }
 }
 
@@ -988,14 +974,16 @@ void Layer::Draw(const Settings &settings)
   draw_polys(shellPolygons, GL_LINE_LOOP, 1, 3, YELLOW2, 1, randomized);
   draw_polys(thinPolygons,  GL_LINE_LOOP, 2, 3, YELLOW,  1, randomized);
 
-  // glColor4f(0.5,0.9,1,1);
-  // glLineWidth(1);
-  // double zs = Z;
-  // for(size_t s=0;s<skins;s++){
-  //   for(size_t p=0;p<skinPolygons.size();p++)
-  //     skinPolygons[p].draw(GL_LINE_LOOP,zs);
-  //   zs-=thickness/skins;
-  // }
+  glColor4f(0.5,0.9,1,1);
+  glLineWidth(1);
+  double zs = Z;
+  for(size_t s=0;s<skins;s++) {
+    for(size_t p=0; p < skinPolygons.size();p++) {
+      //cerr << s << ": " << p << " _ " << zs << endl;
+      skinPolygons[p].draw(GL_LINE_LOOP, zs, randomized);
+    }
+    zs-=thickness/skins;
+  }
 
   draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 0.6, randomized);
   draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1,   randomized);

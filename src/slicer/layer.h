@@ -89,6 +89,7 @@ public:
   void MakeSkirt(double distance);
 
   vector<Poly> GetPolygons() const { return polygons; };
+  vector<ExPoly>  GetExPolygons() const;
   void SetPolygons(vector<Poly> &polys) ;
   void SetPolygons(const Matrix4d &T, const Shape &shape, double z);
   vector<Poly> GetFillPolygons() const { return fillPolygons; }
