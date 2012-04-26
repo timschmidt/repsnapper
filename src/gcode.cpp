@@ -84,7 +84,7 @@ double GCode::GetTimeEstimation() const
   return time;
 }
 
-string getLineAt(  Glib::RefPtr<Gtk::TextBuffer> buffer, int lineno)
+string getLineAt(const Glib::RefPtr<Gtk::TextBuffer> buffer, int lineno)
 {
   Gtk::TextBuffer::iterator from ,to;
   from = buffer->get_iter_at_line (lineno);
@@ -96,9 +96,11 @@ void GCode::updateWhereAtCursor()
 {
   int line = buffer->get_insert()->get_iter().get_line();
   // Glib::RefPtr<Gtk::TextBuffer> buf = iter.get_buffer();
-  string text = getLineAt(buffer, line);
-  Command command(text, Vector3d::ZERO);
-  Vector3d where = command.where;
+  if (line == 0) return;
+  string text = getLineAt(buffer, line-1);
+  Command commandbefore(text, Vector3d::ZERO);
+  Vector3d where = commandbefore.where;
+  // complete position of previous line
   int l = line;
   while (l>0 && where.x()==0) {
     l--;
@@ -112,13 +114,32 @@ void GCode::updateWhereAtCursor()
     where.y() = Command(text, Vector3d::ZERO).where.y();
   }
   l = line;
+  // find last z pos fast
+  if (buffer_zpos_lines.size()>0)
+    for (uint i = buffer_zpos_lines.size()-1; i>0 ;i--)
+      {
+	if (int(buffer_zpos_lines[i]) <= l) {
+	  text = getLineAt(buffer, buffer_zpos_lines[i]);
+	  // cerr << text << endl;
+	  Command c(text, Vector3d::ZERO);
+	  where.z() = c.where.z();
+	  if (where.z()!=0) break;
+	}
+      }
   while (l>0 && where.z()==0) {
     l--;
     text = getLineAt(buffer, l);
     Command c(text, Vector3d::ZERO);
     where.z() = c.where.z();
   }
-  currentCursorWhere = where;
+  // current move:
+  text = getLineAt(buffer, line);
+  Command command(text, where);
+  Vector3d dwhere = command.where - where;
+  where.z() -= 0.0000001;
+  currentCursorWhere = where+dwhere;
+  currentCursorCommand = command;
+  currentCursorFrom = where;
 }
 
 
@@ -332,11 +353,19 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
 		     !liveprinting && settings.Display.DisplayGCodeBorders);
 
 	if (currentCursorWhere!=Vector3d::ZERO) {
-	  glPointSize(20);
-	  glColor3f(1.f,0.f,1.f);
-	  glBegin(GL_POINTS);
-	  glVertex3dv(currentCursorWhere);
-	  glEnd();
+	  // glPointSize(10);
+	  // glLineWidth(5);
+	  // glColor4f(1.f,0.f,1.f,1.f);
+	  // glBegin(GL_POINTS);
+	  // glVertex3dv(currentCursorWhere);
+	  // glEnd();
+	  // glBegin(GL_LINES);
+	  // glVertex3dv(currentCursorFrom);
+	  // glVertex3dv(currentCursorWhere);
+	  // glEnd();
+	  currentCursorCommand.draw(currentCursorFrom, 7,
+				    Vector4f(1.f,0.f,1.f,1.f), 
+				    0., true, false);
 	}
 }
 
@@ -510,6 +539,17 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	GcodeTxt += GcodeEnd + "\n";
 
 	buffer->set_text (GcodeTxt);
+
+	// save zpos line numbers for faster finding
+	buffer_zpos_lines.clear();
+	uint blines = buffer->get_line_count();
+	for (uint i = 0; i < blines; i++) {
+	  const string line = getLineAt(buffer, i);
+	  if (line.find("Z") != string::npos ||
+	      line.find("z") != string::npos)
+	    buffer_zpos_lines.push_back(i);
+	}
+
 
 	  // 	oss.str( "" );
 	// 	switch(commands[i].Code)
@@ -698,6 +738,7 @@ void GCode::clear()
   buffer->erase (buffer->begin(), buffer->end());
   commands.clear();
   layerchanges.clear();
+  buffer_zpos_lines.clear();
 }
 
 

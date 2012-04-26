@@ -82,6 +82,10 @@ public:
 
   void updateWhereAtCursor();
   Vector3d currentCursorWhere;
+  Vector3d currentCursorFrom;
+  Command currentCursorCommand;
+  vector<uint> buffer_zpos_lines; // line numbers where a z position is set
+
 
   vector<unsigned long> layerchanges;
   int getLayerNo(const double z) const;
