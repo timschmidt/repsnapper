@@ -426,8 +426,8 @@ vector<Intersection> Poly::lineIntersections(const Vector2d &P1, const Vector2d 
 // length of the line starting at startindex
 double Poly::getLinelengthSq(uint startindex) const
 {
-  double length = (getVertexCircular(startindex+1) - 
-		   getVertexCircular(startindex)).squared_length();
+  const double length = (getVertexCircular(startindex+1) - 
+			 getVertexCircular(startindex)).squared_length();
   return length;
 }
 
@@ -439,6 +439,19 @@ double Poly::averageLinelengthSq() const
   }
   return l/vertices.size();
 }
+
+double Poly::totalLineLength() const
+{
+  if (size() < 2) return 0;
+  double l=0;
+  for (uint i = 0; i<vertices.size()-1; i++){
+    l+=vertices[i].distance(vertices[i+1]);
+  }
+  if (closed)
+    l+=vertices[0].distance(vertices[vertices.size()-1]);
+  return l;
+}
+
 
 // add to lines starting with nearest point to startPoint
 void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const

@@ -120,6 +120,7 @@ public:
 
 	double getLinelengthSq(uint startindex) const;
 	double averageLinelengthSq() const;
+	double totalLineLength() const;
 
 	vector<Vector2d> getPathAround(const Vector2d &from, const Vector2d &to) const;
 
