@@ -353,6 +353,7 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
 		     !liveprinting && settings.Display.DisplayGCodeBorders);
 
 	if (currentCursorWhere!=Vector3d::ZERO) {
+	  glDisable(GL_DEPTH_TEST);
 	  // glPointSize(10);
 	  // glLineWidth(5);
 	  // glColor4f(1.f,0.f,1.f,1.f);
@@ -378,7 +379,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	// Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
 	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
 
-        glEnable(GL_BLEND);
+        glEnable(GL_BLEND);	
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
         uint n_cmds = commands.size();
