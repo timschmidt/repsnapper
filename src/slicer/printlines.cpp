@@ -295,7 +295,7 @@ PrintPoly::PrintPoly(const Poly * poly_,
   : poly(poly_), printlines(printlines_), area(area_), 
     speed(speed_), min_time(min_time_), 
     displace_start(displace_start_), 
-    overhangingpoints(0), priority(1.)
+    overhangingpoints(0), priority(1.), speedfactor(1.)
 {
   if (area==SHELL || area==SKIN) {
     priority *= 5; // may be 5 times as far away to get preferred as next poly
@@ -316,11 +316,13 @@ PrintPoly::PrintPoly(const Poly * poly_,
   if (overhangingpoints>0)
     speed = overhangspeed;
   if (min_time > 0 && speed > 0) {
-    const double totlength = poly->totalLineLength();
-    const double time = totlength / speed * 60;  // minutes -> seconds!
+    length = poly->totalLineLength();
+    const double time = length / speed * 60;  // minutes -> seconds!
     //cerr << AreaNames[area] << ": " << time << " - " << speed ;
-    if (time !=0 && time < min_time)
-      speed *= time / min_time;
+    if (time !=0 && time < min_time){
+      speedfactor = time / min_time;
+      speed *= speedfactor;
+    }
     //cerr << " -> "<< speed << " = " << totlength / speed * 60<< endl;
   }
 }
@@ -373,11 +375,13 @@ bool printpoly_sort(const PrintPoly &p1, const PrintPoly &p2)
   return (p1.getPriority() >= p2.getPriority());
 }
 
-void Printlines::makeLines(Vector2d &startPoint,
-			   vector<PLine> &lines)
+
+// return total speedfactor due to single poly slowdown
+double Printlines::makeLines(Vector2d &startPoint,
+			     vector<PLine> &lines)
 {
   const uint count = printpolys.size();
-  if (count == 0) return;
+  if (count == 0) return 1;
 
   // // sort into contiguous areas
   // vector<ExPoly> layerexpolys = layer->GetExPolygons();
@@ -404,6 +408,8 @@ void Printlines::makeLines(Vector2d &startPoint,
   uint ndone=0;
   //double nlength;
   double movespeed = settings->Hardware.MoveSpeed;
+  double totallength = 0;
+  double totalspeedfactor = 0;
   while (ndone < count)
     {
       double nstdist = INFTY;
@@ -430,12 +436,19 @@ void Printlines::makeLines(Vector2d &startPoint,
       }
       if (npindex >= 0 && npindex >=0) {
 	printpolys[npindex].addToLines(lines, nvindex, movespeed);
+	totallength += printpolys[npindex].length;
+	totalspeedfactor += printpolys[npindex].length * printpolys[npindex].speedfactor;
 	done[npindex]=true;
 	ndone++;
       }
       if (lines.size()>0)
 	startPoint = lines.back().to;
     }
+  if (totallength !=0)
+    totalspeedfactor /= totallength;
+  else 
+    totalspeedfactor = 1.;
+  return totalspeedfactor;
 }
 
 #if 0

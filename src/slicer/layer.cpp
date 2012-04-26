@@ -776,7 +776,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
     if (bridgeInfills[b])
       printlines.addPolys(INFILL, bridgeInfills[b]->infillpolys, false);
 
-  printlines.makeLines(startPoint, lines);
+  double polyspeedfactor = printlines.makeLines(startPoint, lines);
 
   // FINISH
 
@@ -791,7 +791,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		      settings.Slicing.MinLayertime, cornerradius, lines);
   if ((guint)LayerNo < settings.Slicing.FirstLayersNum)
     printlines.setSpeedFactor(settings.Slicing.FirstLayersSpeed, lines);
-  double slowdownfactor = printlines.getSlowdownFactor();
+  double slowdownfactor = printlines.getSlowdownFactor() * polyspeedfactor;
 
   if (settings.Slicing.FanControl) {
     int fanspeed = settings.Slicing.MinFanSpeed;

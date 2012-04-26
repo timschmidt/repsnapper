@@ -122,11 +122,14 @@ class PrintPoly
   int overhangingpoints;
   // distance for next poly search will be divided by this:
   double priority;
+  double length;
+  double speedfactor; // is set after slowdown
  public:
   void addToLines(vector<PLine> &lines, int startindex, 
 		  double movespeed) const;
 
   double getPriority() const {return priority;};
+  double getSpeedfactor() const {return speedfactor;};
   uint getDisplacedStart(uint start) const;
   string info() const;
 };
@@ -171,7 +174,7 @@ class Printlines
 		bool displace_start,
 		double maxspeed = 0, double min_time = 0);
 
-  void makeLines(Vector2d &startPoint, vector<PLine> &lines);
+  double makeLines(Vector2d &startPoint, vector<PLine> &lines);
 
 #if 0
   void oldMakeLines(PLineArea area,
