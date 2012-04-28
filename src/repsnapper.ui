@@ -3531,7 +3531,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment3">
                             <property name="visible">True</property>
@@ -3809,7 +3809,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment2">
                             <property name="visible">True</property>
@@ -3978,7 +3978,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment4">
                             <property name="visible">True</property>
@@ -4251,7 +4251,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment13">
                             <property name="visible">True</property>
@@ -4415,7 +4415,7 @@ The head will be going down between them</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
+                    <property name="shadow_type">out</property>
                     <child>
                       <object class="GtkAlignment" id="alignment37">
                         <property name="visible">True</property>
@@ -4482,7 +4482,7 @@ The head will be going down between them</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
+                    <property name="shadow_type">out</property>
                     <child>
                       <object class="GtkAlignment" id="alignment28">
                         <property name="visible">True</property>
@@ -5101,7 +5101,7 @@ The head will be going down between them</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
+                    <property name="shadow_type">out</property>
                     <child>
                       <object class="GtkAlignment" id="alignment32">
                         <property name="visible">True</property>
@@ -5277,7 +5277,7 @@ The head will be going down between them</property>
                   <object class="GtkFrame" id="frame17">
                     <property name="can_focus">False</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
+                    <property name="shadow_type">out</property>
                     <child>
                       <object class="GtkAlignment" id="alignment31">
                         <property name="visible">True</property>
@@ -5376,7 +5376,7 @@ The head will be going down between them</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
+                    <property name="shadow_type">out</property>
                     <child>
                       <object class="GtkAlignment" id="alignment29">
                         <property name="visible">True</property>
@@ -5612,20 +5612,18 @@ The head will be going down between them</property>
                                 </child>
                                 <child>
                                   <object class="GtkCheckButton" id="Slicing.MoveNearest">
-                                    <property name="label" translatable="yes">Move between nearest</property>
+                                    <property name="label" translatable="yes">Move between nearest points of polygons</property>
+                                    <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">False</property>
                                     <property name="use_action_appearance">False</property>
                                     <property name="draw_indicator">True</property>
                                   </object>
                                   <packing>
-                                    <property name="right_attach">2</property>
+                                    <property name="right_attach">3</property>
                                     <property name="top_attach">5</property>
                                     <property name="bottom_attach">6</property>
                                   </packing>
-                                </child>
-                                <child>
-                                  <placeholder/>
                                 </child>
                                 <child>
                                   <placeholder/>
@@ -5689,7 +5687,7 @@ The head will be going down between them</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
+                    <property name="shadow_type">out</property>
                     <child>
                       <object class="GtkAlignment" id="alignment33">
                         <property name="visible">True</property>
@@ -5904,7 +5902,7 @@ The head will be going down between them</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label_xalign">0</property>
-                    <property name="shadow_type">none</property>
+                    <property name="shadow_type">out</property>
                     <child>
                       <object class="GtkAlignment" id="alignment30">
                         <property name="visible">True</property>
@@ -6513,7 +6511,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment15">
                             <property name="visible">True</property>
@@ -6917,7 +6915,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment22">
                             <property name="visible">True</property>
@@ -7111,7 +7109,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment18">
                             <property name="visible">True</property>
@@ -7251,7 +7249,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment27">
                             <property name="visible">True</property>
@@ -7301,7 +7299,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment26">
                             <property name="visible">True</property>
@@ -7411,7 +7409,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment25">
                             <property name="visible">True</property>
@@ -7506,7 +7504,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment36">
                             <property name="visible">True</property>
@@ -7555,7 +7553,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment16">
                             <property name="visible">True</property>
@@ -7604,7 +7602,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label_xalign">0</property>
-                        <property name="shadow_type">none</property>
+                        <property name="shadow_type">out</property>
                         <child>
                           <object class="GtkAlignment" id="alignment17">
                             <property name="visible">True</property>
