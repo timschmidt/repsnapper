@@ -124,7 +124,7 @@ Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
 void Model::GlDrawGCode(int layerno)
 {
   if (settings.Display.DisplayGCode)  {
-    gcode.draw (settings, layerno, false);
+    gcode.draw (settings, Max.z(), layerno, false);
   }
   // assume that the real printing line is the one at the start of the buffer
   unsigned long printedline = currentprintingline - currentbufferedlines;
@@ -132,7 +132,7 @@ void Model::GlDrawGCode(int layerno)
     int currentlayer = gcode.getLayerNo(printedline);
     if (currentlayer>=0) {
       int start = gcode.getLayerStart(currentlayer);
-      int end = gcode.getLayerEnd(currentlayer);
+      int end   = gcode.getLayerEnd(currentlayer);
       //gcode.draw (settings, currentlayer, true, 1);
       gcode.drawCommands(settings, start, printedline, true, 4, false, 
 			 settings.Display.DisplayGCodeBorders);
@@ -893,7 +893,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 	 ( layers.size() == 0 && gcode.commands.size() == 0 ) ) { 
       Vector3d start(0,0,0);
       const double thickness = settings.Hardware.LayerThickness;
-      const double z = settings.Display.GCodeDrawStart * Max.z() + thickness/2;
+      const double z = settings.Display.GCodeDrawStart + thickness/2;
       const int LayerCount = (int)ceil(Max.z()/thickness)-1;
       const uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
       if (z != m_previewGCode_z) {

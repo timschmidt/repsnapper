@@ -54,7 +54,8 @@ public:
 
   void Read  (Model *model, ViewProgress *progress, string filename);
   //void Write (Model *model, string filename);
-  void draw  (const Settings &settings, int layer=-1, bool liveprinting=false,
+  void draw  (const Settings &settings, double maxZ,
+	      int layer=-1, bool liveprinting=false,
 	      int linewidth=3);
   void drawCommands(const Settings &settings, uint start, uint end,
 		    bool liveprinting, int linewidth, bool arrows, bool boundary=false);

@@ -295,7 +295,8 @@ unsigned long GCode::getLayerEnd(const uint layerno) const
   if (layerchanges.size()>layerno+1) return layerchanges[layerno+1]-1;
   return commands.size()-1;
 }
-void GCode::draw(const Settings &settings, int layer, bool liveprinting, int linewidth)
+void GCode::draw(const Settings &settings, double maxZ, int layer,
+		 bool liveprinting, int linewidth)
 {
 	/*--------------- Drawing -----------------*/
 
@@ -323,8 +324,8 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
 	      int eind = 0;
 
               if (n_changes > 0) {
-                sind = (uint)(settings.Display.GCodeDrawStart*(n_changes-1));
-	        eind = (uint)(settings.Display.GCodeDrawEnd*(n_changes-1));
+                sind = (uint)(settings.Display.GCodeDrawStart*(n_changes-1)/maxZ);
+	        eind = (uint)(settings.Display.GCodeDrawEnd  *(n_changes-1)/maxZ);
               }
 	      if (sind>=eind) {
 		eind = MIN(sind+1, n_changes-1);
@@ -343,8 +344,8 @@ void GCode::draw(const Settings &settings, int layer, bool liveprinting, int lin
 	}
 	else {
           if (n_cmds > 0) {
-	    start = (uint)(settings.Display.GCodeDrawStart*(n_cmds));
-	    end = (uint)(settings.Display.GCodeDrawEnd*(n_cmds));
+	    start = (uint)(settings.Display.GCodeDrawStart*(n_cmds)/maxZ);
+	    end =   (uint)(settings.Display.GCodeDrawEnd  *(n_cmds)/maxZ);
           }
 	}
 

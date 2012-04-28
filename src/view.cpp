@@ -777,10 +777,17 @@ void View::stl_added (Gtk::TreePath &path)
 void View::model_changed ()
 {
   m_translation_row->selection_changed();
+  double min = max(0.0, m_model->Min.z()), max = m_model->Max.z();
   Gtk::HScale * scale;
   m_builder->get_widget ("Display.LayerValue", scale);
   if (scale)
-    scale->set_range (max(0.0, m_model->Min.z()), m_model->Max.z());
+    scale->set_range (min, max);
+  m_builder->get_widget ("Display.GCodeDrawStart", scale);
+  if (scale)
+    scale->set_range (min, max);
+  m_builder->get_widget ("Display.GCodeDrawEnd", scale);
+  if (scale)
+    scale->set_range (min, max);
   queue_draw();
 }
 

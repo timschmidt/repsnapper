@@ -3295,7 +3295,7 @@ The head will be going down between them</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="round_digits">3</property>
-                    <property name="digits">3</property>
+                    <property name="digits">2</property>
                     <property name="value_pos">left</property>
                   </object>
                   <packing>
@@ -3396,7 +3396,7 @@ The head will be going down between them</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="round_digits">3</property>
-                        <property name="digits">3</property>
+                        <property name="digits">2</property>
                         <property name="value_pos">left</property>
                       </object>
                       <packing>
