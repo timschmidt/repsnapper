@@ -48,6 +48,9 @@ public:
 	// Something in the rfo changed
 	sigc::signal< void > signal_tree_changed() { return m_signal_tree_changed; }
 
+	sigc::signal< void > m_signal_gcode_changed;
+  
+
 	Model();
 	~Model();
 

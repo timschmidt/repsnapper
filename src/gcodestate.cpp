@@ -71,6 +71,8 @@ void GCodeState::AppendCommand(Command &command, bool relativeE)
     pImpl->LastPosition = command.where;
   }
   pImpl->code.commands.push_back(command);
+  if (command.where.z() > pImpl->code.Max.z())
+    pImpl->code.Max.z() = command.where.z();
 }
 void GCodeState::AppendCommand(GCodes code, bool relativeE, string comment)
 {

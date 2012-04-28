@@ -85,7 +85,6 @@ void View::load_gcode ()
 		   _("Reading GCode while printing will abort the print"));
     return;
   }
- 
   FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::GCODE);
 }
 
@@ -774,10 +773,9 @@ void View::stl_added (Gtk::TreePath &path)
   m_treeview->get_selection()->select (path);
 }
 
-void View::model_changed ()
+void View::set_SliderBBox(Vector3d bbmin, Vector3d bbmax) 
 {
-  m_translation_row->selection_changed();
-  double min = max(0.0, m_model->Min.z()), max = m_model->Max.z();
+  double min = max(0.0, bbmin.z()), max = bbmax.z();
   Gtk::HScale * scale;
   m_builder->get_widget ("Display.LayerValue", scale);
   if (scale)
@@ -788,7 +786,18 @@ void View::model_changed ()
   m_builder->get_widget ("Display.GCodeDrawEnd", scale);
   if (scale)
     scale->set_range (min, max);
+}
+
+void View::model_changed ()
+{
+  m_translation_row->selection_changed();
+  set_SliderBBox(m_model->Min.z(), m_model->Max.z());
   queue_draw();
+}
+
+void View::gcode_changed ()
+{
+  set_SliderBBox(m_model->gcode.Min, m_model->gcode.Max);
 }
 
 void View::auto_rotate()
@@ -1181,12 +1190,14 @@ bool View::saveWindowSizeAndPosition(Settings &settings) const
 void View::setModel(Model *model)
 {
   m_model = model;
-  m_renderer->set_model (model);
+
+  m_renderer->set_model (m_model);
 
   m_model->settings.m_signal_visual_settings_changed.connect
     (sigc::mem_fun(*this, &View::handle_ui_settings_changed));
   m_model->settings.m_signal_update_settings_gui.connect
     (sigc::mem_fun(*this, &View::update_settings_gui));
+
   m_model->settings.connect_to_ui (*((Builder *)&m_builder));
 
   m_treeview->set_model (m_model->objtree.m_model);
@@ -1258,6 +1269,7 @@ void View::setModel(Model *model)
   m_printer->get_signal_inhibit_changed().connect (sigc::mem_fun(*this, &View::inhibit_print_changed));
   m_model->m_signal_stl_added.connect (sigc::mem_fun(*this, &View::stl_added));
   m_model->m_model_changed.connect (sigc::mem_fun(*this, &View::model_changed));
+  m_model->m_signal_gcode_changed.connect (sigc::mem_fun(*this, &View::gcode_changed));
   m_model->signal_alert.connect (sigc::mem_fun(*this, &View::alert));
   m_printer->signal_alert.connect (sigc::mem_fun(*this, &View::alert));
 

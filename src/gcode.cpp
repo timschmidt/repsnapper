@@ -143,7 +143,7 @@ void GCode::updateWhereAtCursor()
 }
 
 
-void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
+void GCode::Read(Model *model, ViewProgress *progress, string filename)
 {
 	clear();
 
@@ -249,6 +249,8 @@ void GCode::Read(Model *MVC, ViewProgress *progress, string filename)
 	Center.y() = (Max.y() + Min.y() )/2;
 	Center.z() = (Max.z() + Min.z() )/2;
 	
+	model->m_signal_gcode_changed.emit();
+
 	double time = GetTimeEstimation();
 	int h = (int)time/3600;
 	int min = ((int)time%3600)/60;
@@ -295,7 +297,7 @@ unsigned long GCode::getLayerEnd(const uint layerno) const
   if (layerchanges.size()>layerno+1) return layerchanges[layerno+1]-1;
   return commands.size()-1;
 }
-void GCode::draw(const Settings &settings, double maxZ, int layer,
+void GCode::draw(const Settings &settings, int layer,
 		 bool liveprinting, int linewidth)
 {
 	/*--------------- Drawing -----------------*/
@@ -324,8 +326,8 @@ void GCode::draw(const Settings &settings, double maxZ, int layer,
 	      int eind = 0;
 
               if (n_changes > 0) {
-                sind = (uint)(settings.Display.GCodeDrawStart*(n_changes-1)/maxZ);
-	        eind = (uint)(settings.Display.GCodeDrawEnd  *(n_changes-1)/maxZ);
+                sind = (uint)ceil(settings.Display.GCodeDrawStart*(n_changes-1)/Max.z());
+	        eind = (uint)ceil(settings.Display.GCodeDrawEnd  *(n_changes-1)/Max.z());
               }
 	      if (sind>=eind) {
 		eind = MIN(sind+1, n_changes-1);
@@ -344,8 +346,8 @@ void GCode::draw(const Settings &settings, double maxZ, int layer,
 	}
 	else {
           if (n_cmds > 0) {
-	    start = (uint)(settings.Display.GCodeDrawStart*(n_cmds)/maxZ);
-	    end =   (uint)(settings.Display.GCodeDrawEnd  *(n_cmds)/maxZ);
+	    start = (uint)(settings.Display.GCodeDrawStart*(n_cmds)/Max.z());
+	    end =   (uint)(settings.Display.GCodeDrawEnd  *(n_cmds)/Max.z());
           }
 	}
 
@@ -741,6 +743,9 @@ void GCode::clear()
   commands.clear();
   layerchanges.clear();
   buffer_zpos_lines.clear();
+  Min   = Vector3d::ZERO;
+  Max   = Vector3d::ZERO;
+  Center= Vector3d::ZERO;
 }
 
 

@@ -172,6 +172,9 @@ class View : public Gtk::Window
   void stl_added (Gtk::TreePath &path);
   void model_changed ();
 
+  void gcode_changed ();
+  void set_SliderBBox(Vector3d min, Vector3d max);
+
   /* Matrix4d &SelectedNodeMatrix(guint objectNr = 1); */
   /* void SelectedNodeMatrices(std::vector<Matrix4d *> &result ); */
   /* void newObject(); */

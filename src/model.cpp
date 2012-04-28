@@ -124,7 +124,7 @@ Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
 void Model::GlDrawGCode(int layerno)
 {
   if (settings.Display.DisplayGCode)  {
-    gcode.draw (settings, Max.z(), layerno, false);
+    gcode.draw (settings, layerno, false);
   }
   // assume that the real printing line is the one at the start of the buffer
   unsigned long printedline = currentprintingline - currentbufferedlines;
@@ -298,6 +298,7 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
   gcode.Read (this, m_progress, file->get_path());
   m_progress->stop (_("Done"));
   is_calculating=false;
+  
 }
 
 
@@ -843,6 +844,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
     {
       // Draw bbox
       glDisable(GL_DEPTH_TEST);
+      glLineWidth(1);
       glColor3f(1,0,0);
       glBegin(GL_LINE_LOOP);
       glVertex3f(Min.x(), Min.y(), Min.z());
