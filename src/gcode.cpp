@@ -379,7 +379,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	// Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
 	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
 
-        glEnable(GL_BLEND);	
+        glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
         uint n_cmds = commands.size();

@@ -421,7 +421,6 @@ class View::TranslationSpinRow {
 	mat->set_translation (trans);
       } 
 
-    m_view->get_model()->CalcBoundingBoxAndCenter();
     m_view->get_model()->ModelChanged();
   }
 
@@ -778,6 +777,10 @@ void View::stl_added (Gtk::TreePath &path)
 void View::model_changed ()
 {
   m_translation_row->selection_changed();
+  Gtk::HScale * scale;
+  m_builder->get_widget ("Display.LayerValue", scale);
+  if (scale)
+    scale->set_range (max(0.0, m_model->Min.z()), m_model->Max.z());
   queue_draw();
 }
 
@@ -1410,7 +1413,6 @@ void View::scale_object()
     for (uint i=0; i<objects.size() ; i++) {
       objects[i]->transform3D.scale(scale);
     }
-  m_model->CalcBoundingBoxAndCenter();
   m_model->ModelChanged();
 }
 
@@ -1431,7 +1433,6 @@ void View::scale_object_x()
     for (uint i=0; i<objects.size() ; i++) {
       objects[i]->transform3D.scale_x(scale);
     }
-  m_model->CalcBoundingBoxAndCenter();
   m_model->ModelChanged();
 }
 void View::scale_object_y()
@@ -1451,7 +1452,6 @@ void View::scale_object_y()
     for (uint i=0; i<objects.size() ; i++) {
       objects[i]->transform3D.scale_y(scale);
     }
-  m_model->CalcBoundingBoxAndCenter();
   m_model->ModelChanged();
 }
 void View::scale_object_z()
@@ -1471,7 +1471,6 @@ void View::scale_object_z()
     for (uint i=0; i<objects.size() ; i++) {
       objects[i]->transform3D.scale_z(scale);
     }
-  m_model->CalcBoundingBoxAndCenter();
   m_model->ModelChanged();
 }
 

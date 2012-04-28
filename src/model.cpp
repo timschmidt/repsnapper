@@ -519,7 +519,6 @@ int Model::AddShape(TreeObject *parent, Shape *shape, string filename, bool auto
   retshape->PlaceOnPlatform();
 
   // Update the view to include the new object
-  CalcBoundingBoxAndCenter();
   ModelChanged();
     // Tell everyone
   m_signal_stl_added.emit (path);
@@ -571,7 +570,6 @@ void Model::ScaleObject(Shape *shape, TreeObject *object, double scale)
       object->transform3D.scale(scale);
   //}
   else return;
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 void Model::ScaleObjectX(Shape *shape, TreeObject *object, double scale)
@@ -584,7 +582,6 @@ void Model::ScaleObjectX(Shape *shape, TreeObject *object, double scale)
       object->shapes[s]->ScaleX(scale);
     }
   else return;
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 void Model::ScaleObjectY(Shape *shape, TreeObject *object, double scale)
@@ -597,7 +594,6 @@ void Model::ScaleObjectY(Shape *shape, TreeObject *object, double scale)
       object->shapes[s]->ScaleY(scale);
     }
   else return;
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
@@ -610,7 +606,6 @@ void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
       object->shapes[s]->ScaleZ(scale);
     }
   else return;
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 
@@ -620,7 +615,6 @@ void Model::RotateObject(Shape* shape, TreeObject* object, Vector4d rotate)
     return; 
   Vector3d rot(rotate.x(), rotate.y(), rotate.z());
   shape->Rotate(rot, rotate.w());
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 
@@ -629,7 +623,6 @@ void Model::TwistObject(Shape *shape, TreeObject *object, double angle)
   if (!shape)
     return; 
   shape->Twist(angle);
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 
@@ -638,7 +631,6 @@ void Model::OptimizeRotation(Shape *shape, TreeObject *object)
   if (!shape)
     return; // FIXME: rotate entire Objects ...
   shape->OptimizeRotation();
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 
@@ -648,7 +640,6 @@ void Model::InvertNormals(Shape *shape, TreeObject *object)
     shape->invertNormals();
   else // if (object) object->invertNormals();
     return; 
-  //CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 void Model::Mirror(Shape *shape, TreeObject *object)
@@ -657,7 +648,6 @@ void Model::Mirror(Shape *shape, TreeObject *object)
     shape->mirror();
   else // if (object) object->mirror();
     return; 
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 
@@ -673,7 +663,6 @@ void Model::PlaceOnPlatform(Shape *shape, TreeObject *object)
     }
   }
   else return;
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 
@@ -682,7 +671,6 @@ void Model::DeleteObjTree(vector<Gtk::TreeModel::Path> &iter)
   objtree.DeleteSelected (iter);
   ClearGCode();
   ClearLayers();
-  CalcBoundingBoxAndCenter();
   ModelChanged();
 }
 
@@ -894,38 +882,38 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       pos = Vector3d(Min.x(),Min.y(),(Max.z()+Min.z())/2.);
       drawString(pos,val.str());
     }
-    
-    if(settings.Display.DisplayLayer) {
-      drawLayers(settings.Display.LayerValue,
-		 offset, !settings.Display.DisplayLayer);
-    }
-    if(settings.Display.DisplayGCode && gcode.size() == 0) { 
-      // preview gcode if not calculated yet
-      if ( m_previewGCode.size() != 0 ||
-	   ( layers.size() == 0 && gcode.commands.size() == 0 ) ) { 
-	Vector3d start(0,0,0);
-	const double thickness = settings.Hardware.LayerThickness;
-	const double z = settings.Display.GCodeDrawStart * Max.z() + thickness/2;
-	const int LayerCount = (int)ceil(Max.z()/thickness)-1;
-	const uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
-	if (z != m_previewGCode_z) {
-	  Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
-	  if (previewGCodeLayer) {
-	    vector<Command> commands;
-	    previewGCodeLayer->MakeGcode(start, commands, 0, settings);
-	    GCodeState state(m_previewGCode);
-	    m_previewGCode.clear();
-	    state.AppendCommands(commands, settings.Slicing.RelativeEcode);
-	    m_previewGCode_z = z;
-	  }
+  int drawnlayer = -1;
+  if(settings.Display.DisplayLayer) {
+    drawnlayer = drawLayers(settings.Display.LayerValue,
+			    offset, !settings.Display.DisplayLayer);
+  }
+  if(settings.Display.DisplayGCode && gcode.size() == 0) { 
+    // preview gcode if not calculated yet
+    if ( m_previewGCode.size() != 0 ||
+	 ( layers.size() == 0 && gcode.commands.size() == 0 ) ) { 
+      Vector3d start(0,0,0);
+      const double thickness = settings.Hardware.LayerThickness;
+      const double z = settings.Display.GCodeDrawStart * Max.z() + thickness/2;
+      const int LayerCount = (int)ceil(Max.z()/thickness)-1;
+      const uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
+      if (z != m_previewGCode_z) {
+	Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
+	if (previewGCodeLayer) {
+	  vector<Command> commands;
+	  previewGCodeLayer->MakeGcode(start, commands, 0, settings);
+	  GCodeState state(m_previewGCode);
+	  m_previewGCode.clear();
+	  state.AppendCommands(commands, settings.Slicing.RelativeEcode);
+	  m_previewGCode_z = z;
 	}
-	glDisable(GL_DEPTH_TEST);
-	m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2, 
-				    settings.Display.DisplayGCodeArrows,
-				    settings.Display.DisplayGCodeBorders);
       }
+      glDisable(GL_DEPTH_TEST);
+      m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2, 
+				  settings.Display.DisplayGCodeArrows,
+				  settings.Display.DisplayGCodeBorders);
     }
-    return -1;
+  }
+  return drawnlayer;
 }
 
 // if single layer returns layerno of drawn layer 
@@ -945,12 +933,12 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   double zStep = settings.Hardware.LayerThickness;
   double zSize = (Max.z() - minZ - zStep*0.5);
   int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
-  double sel_Z = height*zSize;
+  double sel_Z = height; //*zSize;
   uint sel_Layer;
   if (have_layers) 
-      sel_Layer = (uint)ceil(height*(layers.size()-1));
+    sel_Layer = (uint)floor(height*(layers.size()-1)/zSize);
   else 
-      sel_Layer = (uint)ceil(LayerCount*(sel_Z)/zSize);
+    sel_Layer = (uint)ceil(LayerCount*(sel_Z)/zSize);
   LayerCount = sel_Layer+1;
   if(settings.Display.DisplayAllLayers)
     {
@@ -962,6 +950,8 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       LayerNr = sel_Layer;
       z= minZ + sel_Z;
     }
+  LayerNr = CLAMP(LayerNr, 0, layers.size()-1);
+  z = CLAMP(z, 0, Max.z());
   z += 0.5*zStep; // always cut in middle of layer
 
   //cerr << zStep << ";"<<Max.z()<<";"<<Min.z()<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
