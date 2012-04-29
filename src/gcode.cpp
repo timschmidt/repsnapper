@@ -460,13 +460,13 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		    if( (!relativeE && commands[i].e == LastE)
 			|| (relativeE && commands[i].e == 0) )
 		      {
-			luma = speed / settings.Hardware.MoveSpeed;
+			luma = 0.3 + 0.7 * speed / settings.Hardware.MoveSpeed;
 			Color = settings.Display.GCodeMoveRGBA;
 			extrwidth = 0;
 		      }
 		    else
 		      {
-			luma = speed / settings.Hardware.MaxPrintSpeedXY;
+			luma = 0.3 + 0.7 * speed / settings.Hardware.MaxPrintSpeedXY;
 			if (liveprinting) {
 			  Color = settings.Display.GCodePrintingRGBA;
 			} else
