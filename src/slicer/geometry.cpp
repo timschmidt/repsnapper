@@ -439,7 +439,8 @@ vector<Poly> thick_lines(const vector<Vector2d> &points,  double width)
 vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width) 
 {
   vector<Poly> p;
-  if (to==from) return p;
+  if (width < 0.001) return p;
+  if (to.squared_distance(from) < 0.001) return p;
   Poly poly;
   Vector2d dir = (to-from); dir.normalize(); dir *= width/4.;
   Vector2d dirp(-dir.y(),dir.x());
@@ -460,16 +461,22 @@ vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width)
 vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to, 
 			    double fr_width, double to_width) 
 {
+  vector<Poly> p;
+  if (fr_width < 0.001 || to_width < 0.001) return p;
+  if (to.squared_distance(from) < 0.001) return p;
+  if ((fr_width < 0) != (to_width < 0)) return p;
   Poly poly;
-  Vector2d fdir = (to-from); fdir.normalize(); fdir *= fr_width/4.;
-  Vector2d tdir = (to-from); tdir.normalize(); tdir *= to_width/4.;
+  Vector2d fdir = (to-from); fdir.normalize();
+  Vector2d tdir = fdir;  
+  fdir *= fr_width/4.;
+  tdir *= to_width/4.;
   Vector2d fr_dirp(-fdir.y(), fdir.x());
   Vector2d to_dirp(-tdir.y(), tdir.x());
   poly.addVertex(from-fdir-fr_dirp);
   poly.addVertex(from-fdir+fr_dirp);
   poly.addVertex(to+tdir+to_dirp);
   poly.addVertex(to+tdir-to_dirp);
-  vector<Poly> p; p.push_back(poly);
+  p.push_back(poly);
   return p;
   //return Clipping::getOffset(poly, distance/4, jmiter, 0);
 
