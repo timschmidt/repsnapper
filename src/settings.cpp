@@ -395,9 +395,9 @@ static struct {
   float inc, inc_page;
 } ranges[] = {
   // Display plane
-  { "Display.LayerValue", 0.0, 1.0, 0.0, 0.01 },
-  { "Display.GCodeDrawStart", 0.0, 1.0, 0.0, 0.1 },
-  { "Display.GCodeDrawEnd", 0.0, 1.0, 0.0, 0.1 },
+  { "Display.LayerValue", 0.0, 1000.0, 0.0, 0.01 },
+  { "Display.GCodeDrawStart", 0.0, 1000.0, 0.0, 0.1 },
+  { "Display.GCodeDrawEnd", 0.0, 1000.0, 0.0, 0.1 },
 };
 
 static struct {
