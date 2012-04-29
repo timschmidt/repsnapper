@@ -120,7 +120,7 @@ void GCode::updateWhereAtCursor()
       {
 	if (int(buffer_zpos_lines[i]) <= l) {
 	  text = getLineAt(buffer, buffer_zpos_lines[i]);
-	  // cerr << text << endl;
+	  //cerr << text << endl;
 	  Command c(text, Vector3d::ZERO);
 	  where.z() = c.where.z();
 	  if (where.z()!=0) break;
@@ -156,6 +156,8 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 	progress->start(_("Loading GCode"), filesize);
 	int progress_steps=(int)(filesize/1000);
 	if (progress_steps==0) progress_steps=1;
+
+	buffer_zpos_lines.clear();
 	
 
 	if(!file.good())
@@ -185,7 +187,6 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 	while(getline(file,s))
 	{
 	  alltext << s << endl;
-
 	  
 		LineNr++;
 		unsigned long fpos = file.tellg();
@@ -232,6 +233,7 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 		    layerchanges.push_back(num);
 		  // }
 		  lastZ = command.where.z();
+		  buffer_zpos_lines.push_back(LineNr-1);
 		}
 		else if (command.where.z() < lastZ) {
 		  lastZ=command.where.z();
