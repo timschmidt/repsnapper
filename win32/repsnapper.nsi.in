@@ -1006,6 +1006,7 @@ Section "MainSection" SEC01
   ${File} "${BUILD_OUTPUT_DIR}\bin\" "libasprintf-0.dll"
   ${File} "${BUILD_OUTPUT_DIR}\bin\" "libpangoft2-1.0-0.dll"
   ${File} "${BUILD_OUTPUT_DIR}\bin\" "libpng12-0.dll"
+  ${File} "${BUILD_OUTPUT_DIR}\bin\" "libxml++-2.6-2.dll"
 SectionEnd
 
 Section -AdditionalIcons
