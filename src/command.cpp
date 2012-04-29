@@ -125,9 +125,11 @@ Command::Command(GCodes code, const Vector3d position, double E, double F)
     not_layerchange(false)
 {
   //assert(where.z()>=0);
-  if (where.z()< 0) {
-    throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at "+info()));
-  }
+  if (where.z() < 0) 
+    where.z() = 0;
+//   {
+//     throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at "+info()));
+//   }
 }
 
 Command::Command(GCodes code, double value_) 
@@ -219,7 +221,8 @@ Command::Command(string gcodeline, Vector3d defaultpos)
   }
 
   if (where.z() < 0) {
-    throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at " + info()));
+    where.z() = 0;
+    //throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at " + info()));
   }
 }
 
