@@ -43,6 +43,8 @@ typedef unsigned int        uint;
 	#include <tchar.h>
         #undef interface // Undo braindead define from Windows that conflicts with glibmm DBUS binding
 typedef unsigned int        guint;
+#define random   rand
+#define srandom  srand
 #endif
 #include "platform.h"   // OpenGL, glu, glut in cross-platform way
 #include <stdio.h>
