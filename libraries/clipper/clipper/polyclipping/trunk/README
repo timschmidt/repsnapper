@@ -2,6 +2,10 @@
 Clipper Change Log
 ============================================================
 
+v4.8.0 - 30 April 2012
+* Bugfix: Occasional errors in orientation fixed. 
+* Update: Added notes on rounding to the documentation. 
+
 v4.7.6 - 11 April 2012
 * Fixed a bug in Orientation function (affecting C# translations only).
 * Minor documentation update.
