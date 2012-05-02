@@ -110,23 +110,6 @@ void View::convert_to_gcode ()
     }
   m_model->ConvertToGCode();
 
-  // show gcode result
-  Gtk::Notebook *nb;
-  m_builder->get_widget ("gcode_text_notebook", nb);
-  Gtk::Widget *gct;
-  m_builder->get_widget ("gcode_result_win", gct);
-  if (nb && gct)
-    nb->set_current_page(nb->page_num(*gct));
-  
-  // go to notebookpage with save gcode button
-  //Gtk::Widget *gct;
-  m_builder->get_widget ("controlnotebook", nb);
-  m_builder->get_widget ("gcode_tab", gct);
-  if (nb && gct) {
-    int gcpage = nb->page_num(*gct);
-    if (gcpage>=0)
-      nb->set_current_page(gcpage);
-  }
 }
 
 void View::load_stl ()
@@ -816,6 +799,24 @@ void View::model_changed ()
 void View::gcode_changed ()
 {
   set_SliderBBox(m_model->gcode.Min, m_model->gcode.Max);
+
+  // show gcode result
+  Gtk::Notebook *nb;
+  m_builder->get_widget ("gcode_text_notebook", nb);
+  Gtk::Widget *gct;
+  m_builder->get_widget ("gcode_result_win", gct);
+  if (nb && gct)
+    nb->set_current_page(nb->page_num(*gct));
+  
+  // go to notebookpage with save gcode button
+  //Gtk::Widget *gct;
+  m_builder->get_widget ("controlnotebook", nb);
+  m_builder->get_widget ("gcode_tab", gct);
+  if (nb && gct) {
+    int gcpage = nb->page_num(*gct);
+    if (gcpage>=0)
+      nb->set_current_page(gcpage);
+  }
 }
 
 void View::auto_rotate()

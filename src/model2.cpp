@@ -901,6 +901,7 @@ void Model::ConvertToGCode()
     cout << ostr.str() << endl;
 
   is_calculating=false;
+  m_signal_gcode_changed.emit();
 }
 
 string Model::getSVG(int single_layer_no) const 
