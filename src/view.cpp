@@ -109,6 +109,24 @@ void View::convert_to_gcode ()
       return;
     }
   m_model->ConvertToGCode();
+
+  // show gcode result
+  Gtk::Notebook *nb;
+  m_builder->get_widget ("gcode_text_notebook", nb);
+  Gtk::Widget *gct;
+  m_builder->get_widget ("gcode_result_win", gct);
+  if (nb && gct)
+    nb->set_current_page(nb->page_num(*gct));
+  
+  // go to notebookpage with save gcode button
+  //Gtk::Widget *gct;
+  m_builder->get_widget ("controlnotebook", nb);
+  m_builder->get_widget ("gcode_tab", gct);
+  if (nb && gct) {
+    int gcpage = nb->page_num(*gct);
+    if (gcpage>=0)
+      nb->set_current_page(gcpage);
+  }
 }
 
 void View::load_stl ()
@@ -899,33 +917,31 @@ bool View::moveSelected(float x, float y, float z)
 bool View::key_pressed_event(GdkEventKey *event)
 {
   //  cerr << "key " << event->keyval << endl;
-  if (m_treeview->get_selection()->count_selected_rows() <= 0)
-    return false;
+  // if (m_treeview->get_selection()->count_selected_rows() <= 0)
+  //   return false;
   switch (event->keyval)
     {
     case GDK_Tab:
       {
-      Glib::RefPtr<Gtk::TreeSelection> selection = m_treeview->get_selection();
-      Glib::RefPtr<Gtk::TreeStore> model = m_model->objtree.m_model;
-      Gtk::TreeModel::iterator sel = selection->get_selected();
-      if (event->state & GDK_SHIFT_MASK)
-	sel--;
-      else
-	sel++;
-      if (sel)
-      {
-	selection->select (sel);
-	return true;
+	if (event->state & GDK_CONTROL_MASK) {
+	  Gtk::Notebook *nb;
+	  m_builder->get_widget ("controlnotebook", nb);
+	  if (nb) {
+	    if (event->state & GDK_SHIFT_MASK)
+	      nb->prev_page();
+	    else
+	      nb->next_page();
+	  }
+	  return true;
+	}
       }
-      else
-	return false;
-      }
+      break;
     case GDK_Escape:
       {
-	bool has_selected = m_treeview->get_selection()->get_selected();
-	m_treeview->get_selection()->unselect_all();
-	return has_selected;
+	stop_progress();
+	return true;
       }
+      break;
     case GDK_Delete:
     case GDK_KP_Delete:
       delete_selected_objects();
@@ -941,6 +957,7 @@ bool View::key_pressed_event(GdkEventKey *event)
     default:
       return false;
     }
+  return false;
 }
 
 View::View(BaseObjectType* cobject,

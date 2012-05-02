@@ -263,7 +263,7 @@ void Layer::CalcInfill (const Settings &settings)
   double infillDistance=0; // normal fill
   double altInfillDistance=0;
   double normalInfilldist=0;
-  bool shellOnly = settings.Slicing.ShellOnly;
+  bool shellOnly = !settings.Slicing.DoInfill;
   fullInfillDistance = settings.GetInfillDistance(thickness, 100);
   if (settings.Slicing.InfillPercent == 0) 
     shellOnly = true;

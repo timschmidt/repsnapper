@@ -535,7 +535,7 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
 				 
 void Model::MultiplyUncoveredPolygons()
 {
-  if (settings.Slicing.ShellOnly && settings.Slicing.SolidThickness == 0.0) return;
+  if (!settings.Slicing.DoInfill && settings.Slicing.SolidThickness == 0.0) return;
   int shells = (int)ceil(settings.Slicing.SolidThickness/settings.Hardware.LayerThickness);
   shells = max(shells, (int)settings.Slicing.ShellCount);
   if (shells<1) return;
@@ -729,7 +729,7 @@ void Model::MakeShells()
 
 void Model::CalcInfill()
 {
-  if (settings.Slicing.ShellOnly && settings.Slicing.SolidThickness == 0.0) return;
+  if (!settings.Slicing.DoInfill && settings.Slicing.SolidThickness == 0.0) return;
 
   int count = (int)layers.size();
   m_progress->start (_("Infill"), count);
@@ -794,7 +794,7 @@ void Model::ConvertToGCode()
 
   MakeShells();
 
-  if (!settings.Slicing.ShellOnly && 
+  if (settings.Slicing.DoInfill && 
       (settings.Slicing.SolidThickness > 0 || settings.Slicing.ShellCount > 0))
     // not bridging when support
     MakeUncoveredPolygons(settings.Slicing.MakeDecor,

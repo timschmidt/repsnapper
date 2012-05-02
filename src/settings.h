@@ -124,6 +124,7 @@ class Settings {
     float AntioozeZlift;
     bool ZliftAlways;
 
+    bool DoInfill;
     float InfillPercent;
     float InfillRotation;
     float InfillRotationPrLayer;
@@ -159,7 +160,6 @@ class Settings {
     int MaxFanSpeed;
     int MaxOverhangSpeed;
 
-    bool ShellOnly;
     guint ShellCount;
     /* bool EnableAcceleration; */
     //int ShrinkQuality;
