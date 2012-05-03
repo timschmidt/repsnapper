@@ -295,7 +295,7 @@ PrintPoly::PrintPoly(const Poly * poly_,
   : poly(poly_), printlines(printlines_), area(area_), 
     speed(speed_), min_time(min_time_), 
     displace_start(displace_start_), 
-    overhangingpoints(0), priority(1.), speedfactor(1.)
+    overhangingpoints(0), priority(1.), length(0), speedfactor(1.)
 {
   if (area==SHELL || area==SKIN) {
     priority *= 5; // may be 5 times as far away to get preferred as next poly
@@ -313,10 +313,10 @@ PrintPoly::PrintPoly(const Poly * poly_,
   } else if (area==SUPPORT) {
     priority *= 100;  // may be 100 times as far away to get preferred
   }
+  length = poly->totalLineLength();
   if (overhangingpoints>0)
     speed = overhangspeed;
   if (min_time > 0 && speed > 0) {
-    length = poly->totalLineLength();
     const double time = length / speed * 60;  // minutes -> seconds!
     //cerr << AreaNames[area] << ": " << time << " - " << speed ;
     if (time !=0 && time < min_time){
@@ -359,9 +359,9 @@ void Printlines::addPolys(PLineArea area,
 			  double maxspeed, double min_time)
 {
   if (polys.size() == 0) return;
-  if ( maxspeed == 0 ) maxspeed = settings->Hardware.MaxPrintSpeedXY;
+  if (maxspeed == 0) maxspeed = settings->Hardware.MaxPrintSpeedXY;
   for(size_t q = 0; q < polys.size(); q++) { 
-    PrintPoly ppoly(&polys[q], this,
+    PrintPoly ppoly(new Poly(polys[q]), this,
 		    maxspeed, settings->Slicing.MaxOverhangSpeed,
 		    min_time, displace_start, area);
 
@@ -370,11 +370,11 @@ void Printlines::addPolys(PLineArea area,
   setZ(polys.back().getZ());
 }
 
-bool printpoly_sort(const PrintPoly &p1, const PrintPoly &p2)
-{
-  return (p1.getPriority() >= p2.getPriority());
-}
 
+// bool priority_sort(const PrintPoly &p1, const PrintPoly &p2)
+// {
+//   return (p1.getPriority() >= p2.getPriority());
+// }
 
 // return total speedfactor due to single poly slowdown
 double Printlines::makeLines(Vector2d &startPoint,
@@ -398,7 +398,7 @@ double Printlines::makeLines(Vector2d &startPoint,
   //   if (!intower) ;
   // }
 
-  //std::sort(printpolys.begin(), printpolys.end(), printpoly_sort);
+  //std::sort(printpolys.begin(), printpolys.end(), priority_sort);
 
   int nvindex=-1;
   int npindex=-1;
@@ -451,72 +451,70 @@ double Printlines::makeLines(Vector2d &startPoint,
   return totalspeedfactor;
 }
 
-#if 0
-void Printlines::oldMakeLines(PLineArea area,
-			      const vector<Poly> &polys,
-			      bool displace_startpoint, 			   
-			      Vector2d &startPoint,
-			      vector<PLine> &lines,
-			      double maxspeed)
-{
-  //cerr << "makeLines " << AreaNames[area] <<  " " << layer->info() << endl;
-  // double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
-  //double linewidth = layerthickness/linewidthratio;
-  if ( maxspeed == 0 ) maxspeed = settings->Hardware.MaxPrintSpeedXY;
-  double movespeed = settings->Hardware.MoveSpeed;
+// #if 0
+// void Printlines::oldMakeLines(PLineArea area,
+// 			      const vector<Poly> &polys,
+// 			      bool displace_startpoint, 			   
+// 			      Vector2d &startPoint,
+// 			      vector<PLine> &lines,
+// 			      double maxspeed)
+// {
+//   //cerr << "makeLines " << AreaNames[area] <<  " " << layer->info() << endl;
+//   // double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
+//   //double linewidth = layerthickness/linewidthratio;
+//   if ( maxspeed == 0 ) maxspeed = settings->Hardware.MaxPrintSpeedXY;
+//   double movespeed = settings->Hardware.MoveSpeed;
 
+//   const uint count = polys.size();
+//   if (count == 0) return;
+//   int nvindex=-1;
+//   int npindex=-1;
+//   uint nindex;
+//   vector<bool> done(count); // polys not yet handled
+//   for(size_t q=0; q < count; q++) done[q]=false;
+//   uint ndone=0;
+//   //double nlength;
+//   while (ndone < count) 
+//     {
+//       double nstdist = INFTY;
+//       double pdist;
+//       // if (sortbyoverhang) {
 
-
-  const uint count = polys.size();
-  if (count == 0) return;
-  int nvindex=-1;
-  int npindex=-1;
-  uint nindex;
-  vector<bool> done(count); // polys not yet handled
-  for(size_t q=0; q < count; q++) done[q]=false;
-  uint ndone=0;
-  //double nlength;
-  while (ndone < count) 
-    {
-      double nstdist = INFTY;
-      double pdist;
-      // if (sortbyoverhang) {
-
-      // }
-      // else
-	for(size_t q=0; q<count; q++) { // find nearest polygon
-	  if (!done[q])
-	    {
-	      if (polys[q].size() == 0) {done[q] = true; ndone++;}
-	      else {
-		pdist = INFTY;
-		nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
-		if (pdist<nstdist){
-		  npindex = q;      // index of nearest poly in polysleft
-		  nstdist = pdist;  // distance of nearest poly
-		  nvindex = nindex; // nearest point in nearest poly
-		}
-	      }
-	    }
-	}
-      // displace first point to next sharp corner (>pi/4)
-      if (displace_startpoint && ndone==0) { 
-	int oldnvindex = nvindex; // if none found, stay here
-	nvindex = polys[npindex].nextVertex(nvindex);
-	while (nvindex != oldnvindex &&
-	       abs(polys[npindex].angleAtVertex(nvindex) < M_PI/4))
-	  nvindex = polys[npindex].nextVertex(nvindex);
-      }
-      if (npindex >= 0 && npindex >=0) {
-	addPoly(area, lines, polys[npindex], nvindex, maxspeed, movespeed);
-	done[npindex]=true;
-	ndone++;
-      }
-      if (lines.size()>0)
-	startPoint = lines.back().to;
-    }
-}
-#endif
+//       // }
+//       // else
+// 	for(size_t q=0; q<count; q++) { // find nearest polygon
+// 	  if (!done[q])
+// 	    {
+// 	      if (polys[q].size() == 0) {done[q] = true; ndone++;}
+// 	      else {
+// 		pdist = INFTY;
+// 		nindex = polys[q].nearestDistanceSqTo(startPoint,pdist);
+// 		if (pdist<nstdist){
+// 		  npindex = q;      // index of nearest poly in polysleft
+// 		  nstdist = pdist;  // distance of nearest poly
+// 		  nvindex = nindex; // nearest point in nearest poly
+// 		}
+// 	      }
+// 	    }
+// 	}
+//       // displace first point to next sharp corner (>pi/4)
+//       if (displace_startpoint && ndone==0) { 
+// 	int oldnvindex = nvindex; // if none found, stay here
+// 	nvindex = polys[npindex].nextVertex(nvindex);
+// 	while (nvindex != oldnvindex &&
+// 	       abs(polys[npindex].angleAtVertex(nvindex) < M_PI/4))
+// 	  nvindex = polys[npindex].nextVertex(nvindex);
+//       }
+//       if (npindex >= 0 && npindex >=0) {
+// 	addPoly(area, lines, polys[npindex], nvindex, maxspeed, movespeed);
+// 	done[npindex]=true;
+// 	ndone++;
+//       }
+//       if (lines.size()>0)
+// 	startPoint = lines.back().to;
+//     }
+// }
+// #endif
 
 void Printlines::optimize(double linewidth,
 			  double slowdowntime,
@@ -757,7 +755,7 @@ uint Printlines::makeIntoArc(guint fromind, guint toind,
 #else
   const Vector2d &Q = lines[toind].to;
 
-  bool fullcircle = (P==Q);
+  //bool fullcircle = (P==Q);
   // get center: intersection of center perpendiculars of 2 chords
   // center perp of start -- endpoint:
   guint end1ind = toind;
