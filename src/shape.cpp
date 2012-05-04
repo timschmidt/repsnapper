@@ -857,7 +857,7 @@ void Shape::CenterAroundXY()
   CalcBBox();
 }
 
-
+/*
 Poly Shape::getOutline(const Matrix4d &T, double maxlen) const
 {
   Matrix4d transform = T * transform3D.transform ;
@@ -870,6 +870,7 @@ Poly Shape::getOutline(const Matrix4d &T, double maxlen) const
   Poly hull = concaveHull2D(points, maxlen);
   return hull;
 }
+*/
 
 bool getLineSequences(const vector<Segment> lines, vector< vector<uint> > &connectedlines)
 {

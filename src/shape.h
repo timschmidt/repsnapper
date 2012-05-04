@@ -120,7 +120,7 @@ public:
 
     Vector3d Min, Max, Center;
 
-    Poly getOutline(const Matrix4d &T, double maxlen) const;
+    /* Poly getOutline(const Matrix4d &T, double maxlen) const;*/
     vector<Triangle> trianglesSteeperThan(double angle) const;
 
 	string getSTLsolid() const;
