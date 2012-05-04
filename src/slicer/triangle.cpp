@@ -83,13 +83,24 @@ bool Triangle::isConnectedTo(Triangle const &other, double maxsqerr) const
     if (( B == other[j]))  return true;
     if (( C == other[j]))  return true;
   }
-  // if not, test distance
-  for (uint j = 0; j < 3; j++)  {
-    if ( A.squared_distance(other[j]) < maxsqerr)  return true;
-    if ( B.squared_distance(other[j]) < maxsqerr)  return true;
-    if ( C.squared_distance(other[j]) < maxsqerr)  return true;
-  }
+  if (maxsqerr>0)
+    // if not, test distance
+    for (uint j = 0; j < 3; j++)  {
+      if ( A.squared_distance(other[j]) < maxsqerr)  return true;
+      if ( B.squared_distance(other[j]) < maxsqerr)  return true;
+      if ( C.squared_distance(other[j]) < maxsqerr)  return true;
+    }
   return false;
+}
+
+double Triangle::slopeAngle(const Matrix4d &T) const
+{
+  const double scale = T(3,3);
+  Vector3d trans;
+  T.get_translation(trans); 
+  // get scaled translation out of matrix
+  const Vector3d n = T * Normal - trans/scale;
+  return asin(n.z()/n.length());
 }
 
 
@@ -263,6 +274,17 @@ int Triangle::SplitAtPlane(double z,
   uppertriangles.insert(uppertriangles.end(),uppertr.begin(),uppertr.end()); 
   lowertriangles.insert(lowertriangles.end(),lowertr.begin(),lowertr.end()); 
   return cut;
+}
+
+bool Triangle::isInZrange(double zmin, double zmax, const Matrix4d &T) const
+{
+  const Vector3d TA = T * A;
+  if (TA.z() < zmin || TA.z() > zmax) return false;
+  const Vector3d TB = T * B;
+  if (TB.z() < zmin || TB.z() > zmax) return false;
+  const Vector3d TC = T * C;
+  if (TC.z() < zmin || TC.z() > zmax) return false;
+  return true;
 }
 
 int Triangle::CutWithPlane(double z, const Matrix4d &T, 

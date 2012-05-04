@@ -433,7 +433,7 @@ vector<Poly> Clipping::getPolys(const vector<ExPoly> &expolys)
   return polys;
 }
 
-vector<ExPoly> Clipping::getExPolys(vector<Poly> &polys)
+vector<ExPoly> Clipping::getExPolys(const vector<Poly> &polys)
 {
   // return getExPolys(getExClipperPolygons(polys), 
   // 		    polys.back().getZ(),polys.back().getExtrusionFactor());
@@ -512,3 +512,8 @@ double Clipping::Area(const vector<ExPoly> &expolys){
     a += Area(expolys[i]);
   return a;
 } 
+
+void Clipping::ReversePoints(vector<Poly> &polys) {
+  for (uint i=0; i<polys.size(); i++)
+    polys[i].reverse();
+}

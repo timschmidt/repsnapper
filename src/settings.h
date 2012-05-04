@@ -135,6 +135,7 @@ class Settings {
     //int SolidLayers;
     float SolidThickness;
     bool Support;
+    float SupportAngle;
     float SupportWiden;
     bool Skirt;
     float SkirtHeight;
@@ -147,6 +148,7 @@ class Settings {
     float FullFillExtrusion;
     int SupportFilltype;
     float SupportExtrusion;
+    float SupportInfillDistance;
     bool MakeDecor;
     int DecorFilltype;
     int DecorLayers;
@@ -223,6 +225,7 @@ class Settings {
     bool DisplayDebuginFill;
     bool DisplayDebug;
     bool DisplayLayer;
+    bool DisplayFilledAreas;
     bool DisplayGCodeBorders;
     bool DisplayGCodeArrows;
     bool DisplayDebugArcs;

@@ -277,23 +277,25 @@ bool Render::on_button_release_event(GdkEventButton* event)
     queue_draw();
   }
   else {
-    guint index = find_object_at(event->x, event->y);
-    if (index) {
-      Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
-      if (iter) {
-	if (event->button == 1)  {
-	  m_selection->unselect_all();
+    if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) {// click only
+      guint index = find_object_at(event->x, event->y);
+      if (index) {
+	Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
+	if (iter) {
+	  if (event->button == 1)  {
+	    m_selection->unselect_all();
+	  }
+	  if (m_selection->is_selected(iter))
+	    m_selection->unselect(iter);
+	  else
+	    m_selection->select(iter);
 	}
-	if (m_selection->is_selected(iter))
-	  m_selection->unselect(iter);
-	else
-	  m_selection->select(iter);
       }
-    }
-    // click on no object - clear the selection:
-    else if (event->button == 1)  {
-      if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
-	m_selection->unselect_all();
+      // click on no object - clear the selection:
+      else if (event->button == 1)  {
+	//if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
+	  m_selection->unselect_all();
+      }
     }
   }
   // else
@@ -329,22 +331,19 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
     if (event->state & GDK_SHIFT_MASK) { // move object XY
-      if (false);//delta3f.x()<1 && delta3f.y()<1) redraw=false;
-      else {
-	vector<Shape*> shapes;
-	vector<TreeObject*>objects;
-	if (!m_view->get_selected_objects(objects, shapes))
-	  return true;
-	Vector3d movevec(deltamouse.x(), deltamouse.y(), 0.);
-	if (shapes.size()>0) 
-	  for (uint s=0; s<shapes.size(); s++) {
-	    shapes[s]->transform3D.move(movevec);
-	  }
-	else 
-	  for (uint o=0; o<objects.size(); o++) {
-	    objects[o]->transform3D.move(movevec);
-	  }
-      }
+      vector<Shape*> shapes;
+      vector<TreeObject*>objects;
+      if (!m_view->get_selected_objects(objects, shapes))
+	return true;
+      Vector3d movevec(deltamouse.x(), deltamouse.y(), 0.);
+      if (shapes.size()>0) 
+	for (uint s=0; s<shapes.size(); s++) {
+	  shapes[s]->transform3D.move(movevec);
+	}
+      else 
+	for (uint o=0; o<objects.size(); o++) {
+	  objects[o]->transform3D.move(movevec);
+	}
       m_downPoint = dragp;
     }
     else if (event->state & GDK_CONTROL_MASK) { // move object Z wise

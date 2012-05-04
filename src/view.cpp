@@ -332,7 +332,7 @@ void View::custombutton_pressed(string name, Gtk::ToolButton *button)
       if (m_model->settings.CustomButtonLabel[i] == name) 
 	{
 	  if (editbutton->get_active()) {
-	    cerr << "edit button " << name <<endl;
+	    //	    cerr << "edit button " << name <<endl;
 	    editbutton->set_active(false);
 	    edit_custombutton(m_model->settings.CustomButtonLabel[i],
 			      m_model->settings.CustomButtonGcode[i], button);
@@ -349,7 +349,7 @@ void View::custombutton_pressed(string name, Gtk::ToolButton *button)
 	    string item;
 	    while (getline(s,item)) {
 	      cerr << "sending command " << item<< endl;
-		m_printer->SendNow(item);
+	      m_printer->SendNow(item);
 	    }
 	  }
 	  break;
@@ -473,20 +473,20 @@ public:
     view->m_builder->get_widget ("translate_z", m_xyz[2]);
 
     for (uint i = 0; i < 3; i++) {
-    //     m_box->add (*manage(new Gtk::Label (axis_names[i])));
-    //     m_xyz[i] = manage (new Gtk::SpinButton());
-    //     m_xyz[i]->set_numeric();
-    //     m_xyz[i]->set_digits (1);
-    //     m_xyz[i]->set_increments (0.5, 10);
-    //     m_xyz[i]->set_range(-5000.0, +5000.0);
-    //     m_box->add (*m_xyz[i]);
+      //     m_box->add (*manage(new Gtk::Label (axis_names[i])));
+      //     m_xyz[i] = manage (new Gtk::SpinButton());
+      //     m_xyz[i]->set_numeric();
+      //     m_xyz[i]->set_digits (1);
+      //     m_xyz[i]->set_increments (0.5, 10);
+      //     m_xyz[i]->set_range(-5000.0, +5000.0);
+      //     m_box->add (*m_xyz[i]);
       m_xyz[i]->signal_value_changed().connect
 	(sigc::bind(sigc::mem_fun(*this, &TranslationSpinRow::spin_value_changed), (int)i));
 
-    //     /* Add statusbar message */
-    //     // stringstream oss;
-    //     // oss << "Move object in " << axis_names[i] << "-direction (mm)";
-    //     // m_view->add_statusbar_msg(m_xyz[i], oss.str().c_str());
+      //     /* Add statusbar message */
+      //     // stringstream oss;
+      //     // oss << "Move object in " << axis_names[i] << "-direction (mm)";
+      //     // m_view->add_statusbar_msg(m_xyz[i], oss.str().c_str());
     }
     selection_changed();
     // m_box->show_all();
@@ -776,7 +776,8 @@ void View::stl_added (Gtk::TreePath &path)
 
 void View::set_SliderBBox(Vector3d bbmin, Vector3d bbmax) 
 {
-  double min = max(0.0, bbmin.z()), max = bbmax.z();
+  double min = 0, //max(0.0, bbmin.z()), 
+    max = bbmax.z();
   Gtk::HScale * scale;
   m_builder->get_widget ("Display.LayerValue", scale);
   if (scale)
@@ -1026,24 +1027,24 @@ View::View(BaseObjectType* cobject,
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
   m_treeview->get_selection()->signal_changed().connect
-      (sigc::mem_fun(*this, &View::tree_selection_changed));
+    (sigc::mem_fun(*this, &View::tree_selection_changed));
   scale_value->signal_value_changed().connect
-      (sigc::mem_fun(*this, &View::scale_object));
+    (sigc::mem_fun(*this, &View::scale_object));
   m_builder->get_widget("scale_x", scale_value);
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
   scale_value->signal_value_changed().connect
-      (sigc::mem_fun(*this, &View::scale_object_x));
+    (sigc::mem_fun(*this, &View::scale_object_x));
   m_builder->get_widget("scale_y", scale_value);
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
   scale_value->signal_value_changed().connect
-      (sigc::mem_fun(*this, &View::scale_object_y));
+    (sigc::mem_fun(*this, &View::scale_object_y));
   m_builder->get_widget("scale_z", scale_value);
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
   scale_value->signal_value_changed().connect
-      (sigc::mem_fun(*this, &View::scale_object_z));
+    (sigc::mem_fun(*this, &View::scale_object_z));
 
   //add_statusbar_msg("m_scale_event_box", _("Scale the selected object"));
 
@@ -1126,10 +1127,10 @@ View::~View()
 
 /* Recursively sets all widgets in the window to visible */
 void View::showAllWidgets() {
-    Gtk::Window *pWindow = NULL;
-    m_builder->get_widget("main_window", pWindow);
-    if (pWindow)
-      pWindow->show_all();
+  Gtk::Window *pWindow = NULL;
+  m_builder->get_widget("main_window", pWindow);
+  if (pWindow)
+    pWindow->show_all();
 }
 
 // this mode will not connect to a printer

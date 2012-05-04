@@ -38,14 +38,14 @@ public:
 	Matrix4f getFloatTransform() const;
 	Vector3d getTranslation() const;
 	Matrix4d getInverse() const;
-	void setTransform(Matrix4f matrf); 
+	void setTransform(const Matrix4f &matrf); 
 	void scale(double x);
 	void scale_x(double x);
 	void scale_y(double x);
 	void scale_z(double x);
-	void move(Vector3d delta);
-	void rotate(Vector3d center, double x, double y, double z);
-	void rotate(Vector3d axis, double angle);
+	void move(const Vector3d &delta);
+	void rotate(const Vector3d &center, double x, double y, double z);
+	void rotate(const Vector3d &axis, double angle);
 	double scale_factor,scale_factor_x,scale_factor_y,scale_factor_z;
 };
 

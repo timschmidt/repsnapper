@@ -55,7 +55,8 @@ class Clipping
   static Vector2d getPoint(const CL::IntPoint &p);
 
   static CL::Polygons CLOffset(const CL::Polygons &cpolys, int cldist, 
-			       CL::JoinType cljtype, double miter_limit=1, bool reverse=false);
+			       CL::JoinType cljtype, double miter_limit=1, 
+			       bool reverse=false);
 
   bool debug;
   vector<CL::Polygons> subjpolygons; // for debugging
@@ -80,8 +81,8 @@ public:
   
   vector<Poly>   intersect      (CL::PolyFillType sft=CL::pftEvenOdd, 
 				 CL::PolyFillType cft=CL::pftEvenOdd);
-  vector<Poly>   unite          (CL::PolyFillType sft=CL::pftNonZero, 
-				 CL::PolyFillType cft=CL::pftNonZero);
+  vector<Poly>   unite          (CL::PolyFillType sft=CL::pftEvenOdd, 
+				 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<Poly>   subtract       (CL::PolyFillType sft=CL::pftEvenOdd, 
 				 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<Poly>   subtractMerged (double overlap=0.001,
@@ -122,7 +123,7 @@ public:
 
   static vector<ExPoly> getExPolys(const vector<Poly> &polys, 
 				   double z, double extrusionfactor);
-  static vector<ExPoly> getExPolys(vector<Poly> &polys);
+  static vector<ExPoly> getExPolys(const vector<Poly> &polys);
   static CL::ExPolygons getExClipperPolygons(const vector<Poly> &polys);
   
   static CL::Polygon    getClipperPolygon (const Poly &poly);
@@ -134,5 +135,7 @@ public:
   static double Area(const vector<Poly> &polys);
   static double Area(const ExPoly &expoly);
   static double Area(const vector<ExPoly> &expolys);
+
+  static void ReversePoints(vector<Poly> &polys);
 
 };

@@ -92,10 +92,11 @@ public:
 	void drawBBox() const; 
 	void CenterAroundXY();
 	virtual bool getPolygonsAtZ(const Matrix4d &T, double z, 
-			    vector<Poly> &polys, double &max_grad) const;
-	// returns maximum gradient
-	vector<Segment> getCutlines(const Matrix4d &T, double z, 
-				    vector<Vector2d> &vertices, double &max_grad) const;
+				    vector<Poly> &polys,
+				    double &max_gradient,
+				    vector<Poly> &supportpolys,
+				    double max_supportangle,
+				    double thickness = -1) const;
 	// Extract a 2D polygonset from a 3D model:
 	// void CalcLayer(const Matrix4d &T, CuttingPlane *plane) const;
 
@@ -119,6 +120,8 @@ public:
 
     Vector3d Min, Max, Center;
 
+    Poly getOutline(const Matrix4d &T, double maxlen) const;
+    vector<Triangle> trianglesSteeperThan(double angle) const;
 
 	string getSTLsolid() const;
 
@@ -151,6 +154,13 @@ private:
     vector<Triangle> triangles;
     //vector<Polygon2d>  polygons;  // surface polygons instead of triangles
     void calcPolygons();
+
+    // returns maximum gradient
+    vector<Segment> getCutlines(const Matrix4d &T, double z, 
+				vector<Vector2d> &vertices, double &max_grad,
+				vector<Triangle> &support_triangles,
+				double supportangle,
+				double thickness) const;
 
     bool hasAdjacentTriangleTo(const Triangle &triangle, 
 			       double sqdistance = 0.05) const;

@@ -84,6 +84,7 @@ void Layer::Clear()
   bridgeInfills.clear();
   clearpolys(decorPolygons);
   clearpolys(supportPolygons);
+  clearpolys(toSupportPolygons);
   clearpolys(skinPolygons);
   clearpolys(skinFullFillPolygons);
   hullPolygon.clear();
@@ -117,49 +118,51 @@ void Layer::SetPolygons(vector<Poly> &polys) {
   }
 }
 
-//not used
-void Layer::SetPolygons(const Matrix4d &T, const Shape &shape, 
-			double z) {
-  cerr << "Layer::SetPolygons" << endl;
-  double offsetZ = Z;
-  bool polys_ok=false;
-  while (!polys_ok) {
-    double max_grad;
-    polys_ok = shape.getPolygonsAtZ(T, offsetZ, polygons, max_grad);
-    offsetZ+=thickness/10.;
-  }
-  for(uint i=0;i<polygons.size();i++){
-    polygons[i].setZ(Z); 
-  }
-}
+// //not used
+// void Layer::SetPolygons(const Matrix4d &T, const Shape &shape, 
+// 			double z) {
+//   cerr << "Layer::SetPolygons" << endl;
+//   double offsetZ = Z;
+//   bool polys_ok=false;
+//   while (!polys_ok) {
+//     double max_grad;
+//     polys_ok = shape.getPolygonsAtZ(T, offsetZ, polygons, max_grad);
+//     offsetZ+=thickness/10.;
+//   }
+//   for(uint i=0;i<polygons.size();i++){
+//     polygons[i].setZ(Z); 
+//   }
+// }
 
 
 bool Layer::pointInPolygons(const Vector2d &p) const 
 { 
   for (uint i = 0; i<polygons.size(); i++) 
-    if (!polygons[i].hole && polygons[i].vertexInside(p)) return true;
+    if (!polygons[i].isHole() && polygons[i].vertexInside(p)) return true;
   return false;
 }
 
 
 int Layer::addShape(const Matrix4d &T, const Shape &shape, double z, 
-		     double &max_gradient)
+		    double &max_gradient, double max_supportangle)
 {
   double hackedZ = z;
   bool polys_ok = false;
   vector<Poly> polys;
   int num_polys=-1;
-  // try to slice all objects until polygons can be made, otherwise hack z
+  // try to slice until polygons can be made, otherwise hack z
   while (!polys_ok && hackedZ < z+thickness) {
     polys.clear();
-    polys_ok=shape.getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
-				  polys, max_gradient);
+    polys_ok = shape.getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
+				    polys, max_gradient, 
+				    toSupportPolygons, max_supportangle,
+				    thickness);
     if (polys_ok) {
       num_polys = polys.size();
       addPolygons(polys);
     } else {
       num_polys=-1;
-      cerr << "hacked Z=" << hackedZ << endl;
+      cerr << "hacked Z " << z << " -> " << hackedZ << endl;
     }
     hackedZ += thickness/10;
   }
@@ -291,7 +294,7 @@ void Layer::CalcInfill (const Settings &settings)
   fullInfill = new Infill(this,settings.Slicing.FullFillExtrusion);
   fullInfill->setName("full");
   skinFullInfills.clear();
-  supportInfill = new Infill(this,settings.Slicing.SupportExtrusion); // thinner walls for support
+  supportInfill = new Infill(this,settings.Slicing.SupportExtrusion);
   supportInfill->setName("support");
   decorInfill = new Infill(this,1.);
   decorInfill->setName("decor");
@@ -334,7 +337,8 @@ void Layer::CalcInfill (const Settings &settings)
     }
   }
   supportInfill->addPolys(Z, supportPolygons, (InfillType)settings.Slicing.SupportFilltype,
-			  infillDistance, infillDistance, 0);
+			  settings.Slicing.SupportInfillDistance, 
+			  settings.Slicing.SupportInfillDistance, 0);
 
   thinInfill->addPolys(Z, thinPolygons, ThinInfill,
 		       fullInfillDistance, fullInfillDistance, 0);
@@ -527,8 +531,13 @@ void Layer::setSupportPolygons(const vector<Poly> &polys)
 {
   clearpolys(supportPolygons);
   supportPolygons = polys;
-  for (uint i=0; i<supportPolygons.size(); i++) {
+  const double minarea = 10*thickness*thickness;
+  for (int i = supportPolygons.size()-1; i >= 0; i--) {
     supportPolygons[i].cleanup(thickness/CLEANFACTOR);
+    if (abs(Clipping::Area(supportPolygons[i])) < minarea) {
+      supportPolygons.erase(supportPolygons.begin() + i);
+      continue;
+    }
     vector<Vector2d> minmax = supportPolygons[i].getMinMax();
     Min.x() = min(minmax[0].x(),Min.x());
     Min.y() = min(minmax[0].y(),Min.y());
@@ -707,27 +716,33 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   // 1. Skins, all but last, because they are the lowest lines, below layer Z
   if (skins > 1) {
-    for(uint s = 1; s <= skins; s++) { // z offset from bottom to top
-      double skin_z = Z - thickness + (s)*thickness/skins;
+    for(uint s = 0; s < skins; s++) { 
+      // z offset from bottom to top:
+      double skin_z = Z - thickness + (s+1)*thickness/skins;
       if ( skin_z < 0 )
 	continue;
       //cerr << s << " -- " << Z << " -- "<<skin_z <<" -- " << thickness <<  endl;
-      // outlines:
-      //if (s<skins)
-      for(size_t p = 0; p < skinPolygons.size(); p++) {
-	Poly sp(skinPolygons[p], skin_z);
-	polys.push_back(sp);
-      }
+
       // skin infill polys:
-      if (skinFullInfills[s-1])
+      if (skinFullInfills[s])
 	polys.insert(polys.end(),
-		     skinFullInfills[s-1]->infillpolys.begin(),
-		     skinFullInfills[s-1]->infillpolys.end());
-      // add all of this skin layer to lines
-      printlines.addPolys(SKIN, polys, (s==1), //displace at first skin
+		     skinFullInfills[s]->infillpolys.begin(),
+		     skinFullInfills[s]->infillpolys.end());
+      // add skin infill to lines
+      printlines.addPolys(INFILL, polys, false);
+
+      polys.clear();
+
+      // make polygons at skin_z:
+      for(size_t p = 0; p < skinPolygons.size(); p++) {
+	polys.push_back(Poly(skinPolygons[p], skin_z));
+      }
+
+      // add skin to lines
+      printlines.addPolys(SKIN, polys, (s==0), //displace at first skin
 			  settings.Hardware.MaxShellSpeed,
 			  settings.Slicing.MinShelltime);
-      if (s < skins) { // not on the last layer, this handle with all other lines
+      if (s < skins-1) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
 	printlines.makeLines(startPoint, lines);
 	if (!settings.Slicing.ZliftAlways)
@@ -907,12 +922,13 @@ void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int poin
     polys[p].draw(gl_type, randomized);
   }
 }
-void draw_polys_surface(vector <Poly> &polys, Vector2d Min, Vector2d Max, 
+
+void draw_polys_surface(const vector <Poly> &polys, 
+			const Vector2d &Min, const Vector2d &Max, 
 			double z,
 			double cleandist,
 			const float *rgb, float a)
 {
-
   glColor4f(rgb[0],rgb[1],rgb[2], a);
   glDrawPolySurfaceRastered(polys, Min, Max, z, cleandist);
 
@@ -923,6 +939,16 @@ void draw_polys_surface(vector <Poly> &polys, Vector2d Min, Vector2d Max,
   //   polys[p].draw_as_surface();
   // }
 }
+void draw_polys_surface(const vector< vector<Poly> > &polys, 
+			const Vector2d &Min, const Vector2d &Max, 
+			double z,
+			double cleandist,
+			const float *rgb, float a)
+{
+  for(size_t p=0; p < polys.size();p++)
+    draw_polys_surface(polys[p], Min, Max, z, cleandist, rgb, a);
+}
+
 void draw_polys(const vector< vector <Poly> > &polys, 
 		int gl_type, int linewidth, int pointsize,
 		const float *rgb, float a, bool randomized = false)
@@ -940,6 +966,7 @@ void draw_polys(const vector <ExPoly> &expolys, int gl_type, int linewidth, int 
 }
 
 float const GREEN[] = {0.1, 1, 0.1};
+float const GREEN2[] = {0.3, 0.8, 0.3};
 float const BLUEGREEN[] = {0.1, 0.9, 0.7};
 float const BLUE2[] = {0.5,0.5,1.0};
 float const RED[] = {1, 0, 0};
@@ -955,6 +982,7 @@ float const VIOLET[] = {0.8,0.0,0.8};
 void Layer::Draw(const Settings &settings)
 {
   bool randomized = settings.Display.RandomizedLines;
+  bool filledpolygons = settings.Display.DisplayFilledAreas;
   // glEnable(GL_LINE_SMOOTH);
   // glHint(GL_LINE_SMOOTH_HINT,  GL_NICEST);
   draw_polys(polygons, GL_LINE_LOOP, 1, 3, RED, 1, randomized);
@@ -984,14 +1012,26 @@ void Layer::Draw(const Settings &settings)
     }
     zs-=thickness/skins;
   }
-
   draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 0.6, randomized);
-  draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1,   randomized);
+  if (supportPolygons.size()>0) {
+    if (filledpolygons) 
+      draw_polys_surface(supportPolygons,  Min, Max, Z, thickness/2., BLUE2, 0.4);
+    draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1,   randomized);
+    if(settings.Display.DrawVertexNumbers)
+      for(size_t p=0; p<supportPolygons.size();p++)
+	supportPolygons[p].drawVertexNumbers();
+  } // else
+    // draw_polys(toSupportPolygons,    GL_LINE_LOOP, 1, 1, BLUE2, 1,   randomized);
   draw_polys(bridgePolygons,       GL_LINE_LOOP, 3, 3, RED2,  0.7, randomized);
   draw_polys(bridgePillars,        GL_LINE_LOOP, 3, 3, YELLOW,0.7, randomized);
   draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 1, GREY,  0.6, randomized);
   draw_polys(decorPolygons,        GL_LINE_LOOP, 1, 3, WHITE, 1,   randomized);
   draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  0.6, randomized);
+  if (filledpolygons) {
+    draw_polys_surface(fullFillPolygons,  Min, Max, Z, thickness/2., GREEN, 0.5);
+    draw_polys_surface(fillPolygons,  Min, Max, Z, thickness/2., GREEN2, 0.25);
+    draw_polys_surface(decorPolygons,  Min, Max, Z, thickness/2., GREY, 0.2);
+  }
   if(settings.Display.DisplayinFill)
     {
       bool DebugInfill = settings.Display.DisplayDebuginFill;
@@ -1004,7 +1044,6 @@ void Layer::Draw(const Settings &settings)
       if (thinInfill)
 	draw_polys(thinInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   GREEN, 1, randomized);
-      
       if (fullInfill)
 	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
 		   (fullInfill->cached?BLUEGREEN:GREEN), 0.8, randomized);

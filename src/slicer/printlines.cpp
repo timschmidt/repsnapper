@@ -260,7 +260,7 @@ void Printlines::addLine(PLineArea area, vector<PLine> &lines,
   Vector2d lfrom = from;
   if (lines.size() > 0) {
     Vector2d lastpos = lines.back().to;
-    if ((lastpos - lfrom).squared_length() > 0.01) { // add moveline
+    if (lfrom.squared_distance(lastpos) > 0.01) { // add moveline
       PLine move(area, lastpos, lfrom, movespeed, 0);
       if (settings->Slicing.ZliftAlways)
 	move.lifted = settings->Slicing.AntioozeZlift;
@@ -272,18 +272,8 @@ void Printlines::addLine(PLineArea area, vector<PLine> &lines,
   lines.push_back(PLine(area, lfrom, to, speed, feedrate));
 }
 
-void PrintPoly::addToLines(vector<PLine> &lines, int startindex, 
-			   double movespeed) const
-{
-  vector<Vector2d> pvert;
-  poly->getLines(pvert,startindex);
-  if (pvert.size() == 0) return;
-  assert(pvert.size() % 2 == 0);
-  for (uint i=0; i<pvert.size();i+=2){
-    printlines->addLine(area, lines, pvert[i], pvert[i+1], 
-			speed, movespeed, poly->getExtrusionFactor());
-  }
-}
+
+// // // // // // // // // // // // PrintPoly // // // // // // // // // // // // 
 
 
 PrintPoly::PrintPoly(const Poly * poly_,  
@@ -327,6 +317,23 @@ PrintPoly::PrintPoly(const Poly * poly_,
   }
 }
 
+PrintPoly::~PrintPoly()
+{
+}
+
+void PrintPoly::addToLines(vector<PLine> &lines, int startindex, 
+			   double movespeed) const
+{
+  vector<Vector2d> pvert;
+  poly->getLines(pvert,startindex);
+  if (pvert.size() == 0) return;
+  assert(pvert.size() % 2 == 0);
+  for (uint i=0; i<pvert.size(); i+=2) {
+    printlines->addLine(area, lines, pvert[i], pvert[i+1], 
+			speed, movespeed, poly->getExtrusionFactor());
+  }
+}
+
 uint PrintPoly::getDisplacedStart(uint start) const
 {
   if (displace_start) { 
@@ -352,6 +359,9 @@ string PrintPoly::info() const
   return ostr.str();
 }
 
+// // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+
+
 
 void Printlines::addPolys(PLineArea area,
 			  const vector<Poly> &polys,
@@ -359,7 +369,7 @@ void Printlines::addPolys(PLineArea area,
 			  double maxspeed, double min_time)
 {
   if (polys.size() == 0) return;
-  if (maxspeed == 0) maxspeed = settings->Hardware.MaxPrintSpeedXY;
+  if (maxspeed == 0) maxspeed = settings->Hardware.MaxPrintSpeedXY; // default
   for(size_t q = 0; q < polys.size(); q++) { 
     PrintPoly ppoly(new Poly(polys[q]), this,
 		    maxspeed, settings->Slicing.MaxOverhangSpeed,

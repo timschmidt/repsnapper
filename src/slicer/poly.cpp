@@ -84,9 +84,9 @@ void Poly::cleanup(double epsilon)
 
 
 
-void Poly::calcHole()
+void Poly::calcHole() const // hole is mutable
 {
-  	if(vertices.size() == 0)
+  	if(vertices.size() < 3)
 	  return;	// hole is undefined
 	Vector2d p(-INFTY, -INFTY);
 	int v=0;
@@ -120,14 +120,14 @@ void Poly::calcHole()
 	holecalculated = true;
 }
 
-bool Poly::isHole() 
+bool Poly::isHole() const
 {
   if (!holecalculated)
     calcHole();
   return hole;
 }
 
-Vector2d Poly::getCenter() 
+Vector2d Poly::getCenter() const
 {
   if (!holecalculated) calcHole();
   return center;
@@ -475,11 +475,11 @@ void Poly::getLines(vector<Vector2d> &lines, Vector2d &startPoint) const
 // closed lines sequence if number of vertices > 2 and poly is closed
 void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
 {
-  vector<Vector2d> mylines;
   size_t count = vertices.size();
   if (count<2) return; // one point no line
   bool closedlines = closed;
   if (count<3) closedlines = false; // two points one line
+  vector<Vector2d> mylines;
   for(size_t i = startindex; i < count+startindex; i++)
     {
       if (!closedlines && i == count-1) continue;
@@ -766,4 +766,11 @@ string Poly::SVGpath(const Vector2d &trans) const
   //<< "fill-rule=\"evenodd\" ";
   ostr << "\" />";
   return ostr.str();
+}
+
+
+void Poly::move(vector<Poly> &polys, const Vector2d &trans) 
+{
+  for (uint i=0; i<polys.size(); i++)
+    polys[i].move(trans);
 }

@@ -28,7 +28,8 @@ class Poly
   double extrusionfactor;
 
   //	vector<Poly*> holes;
-  bool holecalculated;
+  mutable bool holecalculated;
+  mutable bool hole; // this polygon is a hole
   bool closed;
 
 public:
@@ -78,9 +79,9 @@ public:
 	void rotate(const Vector2d &center, double angle);
 	void move(const Vector2d &delta);
 
-	void calcHole(); // calc center and whether this is a hole 
-	bool isHole();
-
+	void calcHole() const; // calc center and whether this is a hole 
+	bool isHole() const;
+ 
 	vector<Vector2d> getMinMax() const;
 	vector<Intersection> lineIntersections(const Vector2d &P1, const Vector2d &P2,
 					       double maxerr=0.0001) const;
@@ -97,9 +98,10 @@ public:
 	void addVertexUnique(const Vector2d &v, bool front=false);
 	void addVertex(double x, double y, bool front=false);
 	void addVertexUnique(double x, double y, bool front=false);
-	bool hole; // this polygon is a hole
-	Vector2d center;
-	Vector2d getCenter();
+
+
+	mutable Vector2d center;
+	Vector2d getCenter() const;
 	double getZ() const {return z;} 
 	void setZ(double z) {this->z = z;};
 	double getExtrusionFactor() const{return extrusionfactor;};
@@ -138,6 +140,10 @@ public:
 
 	string SVGpolygon(string style="fill: black") const;
 	string SVGpath(const Vector2d &trans=Vector2d::ZERO) const;
+
+
+	static void move(vector<Poly> &polys, const Vector2d &trans);
+
  };
 
 

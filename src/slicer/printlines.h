@@ -106,6 +106,7 @@ class PLine
 };
 
 class Printlines;
+
 class PrintPoly
 {
   friend class Printlines;
@@ -113,24 +114,26 @@ class PrintPoly
   PrintPoly(const Poly * poly, const Printlines * printlines,
 	    double speed, double overhangspeed, double min_time,
 	    bool displace_start, PLineArea area);
+
   const Poly * poly;
   const Printlines * printlines;
   PLineArea area;
   double speed;
   double min_time;
-  bool displace_start;
-  int overhangingpoints;
-  // distance for next poly search will be divided by this:
-  double priority;
+  bool   displace_start;
+  int    overhangingpoints;
+  double priority; // distance for next poly search will be divided by this
   double length;
   double speedfactor; // is set after slowdown
+
  public:
+  ~PrintPoly();
   void addToLines(vector<PLine> &lines, int startindex, 
 		  double movespeed) const;
 
   double getPriority() const {return priority;};
   double getSpeedfactor() const {return speedfactor;};
-  uint getDisplacedStart(uint start) const;
+  uint   getDisplacedStart(uint start) const;
   string info() const;
 };
 

@@ -318,6 +318,8 @@ void Model::Slice()
   double maxZ = min(Max.z(), volume.z() - settings.Hardware.PrintMargin.z());
 
   double max_gradient = 0;
+  double supportangle = settings.Slicing.SupportAngle*M_PI/180.;
+  if (!settings.Slicing.Support) supportangle = -1;
 
   m_progress->set_terminal_output(settings.Display.TerminalProgress);
   m_progress->start (_("Slicing"), maxZ);
@@ -333,7 +335,8 @@ void Model::Slice()
     lastlayer = layers[0];
     layers[0]->setZ(0); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
-      layers[0]->addShape(transforms[nshape], *shapes[nshape],  0, max_gradient);
+      layers[0]->addShape(transforms[nshape], *shapes[nshape],  0, max_gradient, 
+			  supportangle);
     }
     is_calculating=false;
     return;
@@ -368,12 +371,12 @@ void Model::Slice()
 #endif
 	}
 	if (!cont) continue;
-	Layer * layer = new Layer(NULL, nlayer, thickness, skins); 
+	Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1); 
 	layer->setZ(z); // set to real z
 	int new_polys=0;
 	for (uint nshape= 0; nshape < shapes.size(); nshape++) {
 	  new_polys += layer->addShape(transforms[nshape], *shapes[nshape],
-				       z, max_gradient);
+				       z, max_gradient, supportangle);
 	}
 	if (cont) 
 	  layers[nlayer] = layer;
@@ -415,8 +418,7 @@ void Model::Slice()
 	      LayerNr = 1; 
 	    }
 	    new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
-					shape_z, 
-					max_gradient);
+					shape_z, max_gradient, supportangle);
 	    // cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape 
 	    //      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
 	    if (shape_z >= max_shape_z) { // next shape, reset z
@@ -612,24 +614,32 @@ void Model::MultiplyUncoveredPolygons()
 }
 
 
-void Model::MakeSupportPolygons(Layer * subjlayer, // lower -> will change
-				const Layer * cliplayer,  // upper 
+void Model::MakeSupportPolygons(Layer * layer, // lower -> will change
+				const Layer * layerabove,  // upper 
 				double widen)
 {
+  const double distance = 
+    settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
+  // vector<Poly> tosupport = Clipping::getOffset(layerabove->GetToSupportPolygons(),
+  //  					       distance/2.);
+  //vector<Poly> tosupport = Clipping::getMerged(layerabove->GetToSupportPolygons(),
+  // 					       distance);
+  vector<Poly> tosupport = layerabove->GetToSupportPolygons();
+  
   Clipping clipp;
-  clipp.clear();
-  clipp.addPolys(cliplayer->GetPolygons(),        subject);
-  clipp.addPolys(cliplayer->GetSupportPolygons(), subject); // previous 
-  clipp.addPolys(subjlayer->GetPolygons(),        clip);
-  clipp.setZ(subjlayer->getZ());
-  vector<Poly> spolys;
-  if (widen != 0)
-    // widen from layer to layer
-    spolys = clipp.getOffset(clipp.subtract(),
-			     widen * subjlayer->thickness);
-  else
-    spolys = clipp.subtractMerged();
-  subjlayer->setSupportPolygons(spolys);
+  clipp.addPolys(layerabove->GetSupportPolygons(),  subject); 
+  clipp.addPolys(tosupport,                         subject); 
+  clipp.addPolys(layer->GetPolygons(),              clip);
+  clipp.setZ(layer->getZ());
+
+  vector<Poly> spolys = clipp.subtract(CL::pftNonZero,CL::pftEvenOdd);
+
+  if (widen != 0) // widen from layer to layer
+    spolys = clipp.getOffset(spolys, widen * layer->thickness);
+
+  spolys = clipp.getMerged(spolys,distance);
+
+  layer->setSupportPolygons(spolys);
 }
 
 void Model::MakeSupportPolygons(double widen)
@@ -645,19 +655,19 @@ void Model::MakeSupportPolygons(double widen)
       if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i], widen);
     }
-  // shrink a bit
-  for (int i=0; i<count; i++) 
-    {
-      //cerr << "shrink support layer "<< i << endl;
-      //if (layers[i]->LayerNo == 0) continue;
-      double distance = 2*settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
-      if (i%progress_steps==0) if(!m_progress->update(i+count)) return;
-      // vector<Poly> merged = Clipping::getMerged(layers[i]->GetSupportPolygons());
-      // cerr << merged.size() << " polys" << endl;
-      vector<Poly> offset = 
-	Clipping::getOffset(layers[i]->GetSupportPolygons(),-distance);
-      layers[i]->setSupportPolygons(offset);
-    }
+
+  // // shrink a bit
+  // Clipping clipp;
+  // for (int i=0; i<count; i++) 
+  //   {
+  //     const double distance = 
+  // 	settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
+  //     if (i%progress_steps==0) if(!m_progress->update(i+count)) return;
+  //     vector<Poly> offset = 
+  // 	Clipping::getOffset(layers[i]->GetSupportPolygons(), -distance);
+  //     layers[i]->setSupportPolygons(offset);
+  //   }
+
   //  m_progress->stop (_("Done"));
 }
 
@@ -683,7 +693,7 @@ void Model::MakeSkirt()
 	endindex = i;
       }
     }
-  vector<Poly> skirts = clipp.unite();
+  vector<Poly> skirts = clipp.unite(CL::pftPositive,CL::pftPositive);
   // set this skirt for all skirted layers 
   if (skirts.size()>0)
     for (guint i=0; i<=endindex; i++) {
@@ -803,7 +813,6 @@ void Model::ConvertToGCode()
   if (settings.Slicing.Support)
     // easier before having multiplied uncovered bottoms
     MakeSupportPolygons(settings.Slicing.SupportWiden); 
-
 
   MakeFullSkins(); // must before multiplied uncovered bottoms
 

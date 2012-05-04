@@ -399,7 +399,7 @@ int Shape::parseASCIISTL(istream *text) {
         triangles.push_back(triangle);
     }
     CenterAroundXY();
-    cout << _("Shape has volume ") << volume() << " mm^3 and"
+    cout << _("Shape has volume ") << volume() << " mm^3 and "
 	 << triangles.size() << _(" triangles") << endl;
     return 0;
 }
@@ -528,15 +528,17 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
     }
     vector<uint> trv;
     for (int j = 0; j < n_tr; j++) {
-      bool add = false;
-      if (j<i) // maybe(!) we have it already
-	for (uint k = 0; k<adj[j].size(); k++) {
-	  if ((int)adj[j][k] == i) {
-	    add = true; break;
+      if (i!=j) {
+	bool add = false;
+	if (j<i) // maybe(!) we have it already
+	  for (uint k = 0; k<adj[j].size(); k++) {
+	    if ((int)adj[j][k] == i) {
+	      add = true; break;
+	    }
 	  }
-	}
-      add |= (triangles[i].isConnectedTo(triangles[j], 0.01));
-      if (add) trv.push_back(j);
+	add |= (triangles[i].isConnectedTo(triangles[j], 0.01));
+	if (add) trv.push_back(j);
+      }
     }
     adj[i] = trv;
     if (!cont) i=n_tr;
@@ -637,6 +639,17 @@ string Shape::getSTLsolid() const
   return sstr.str();
 }
 
+vector<Triangle> Shape::trianglesSteeperThan(double angle) const
+{
+  vector<Triangle> tr;
+  for (uint i = 0; i < triangles.size(); i++) {
+    // negative angles are triangles facing downwards
+    const double tangle = -triangles[i].slopeAngle(transform3D.transform);
+    if (tangle >= angle) 
+      tr.push_back(triangles[i]);
+  }
+  return tr;
+}
 
 void Shape::Scale(double in_scale_factor)
 {
@@ -668,9 +681,10 @@ void Shape::CalcBBox()
 {
   Min.set(INFTY,INFTY,INFTY);
   Max.set(-INFTY,-INFTY,-INFTY);
-  for(size_t i = 0; i < triangles.size(); i++)
+  for(size_t i = 0; i < triangles.size(); i++) {
     triangles[i].AccumulateMinMax (Min, Max, transform3D.transform);
-  Center = (Max + Min )/2;
+  }
+  Center = (Max + Min) / 2;
 }
 
 struct SNorm {
@@ -744,8 +758,9 @@ void Shape::OptimizeRotation()
 int Shape::divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) const
 {
   vector<Poly> polys;
+  vector<Poly> supportpolys;
   double max_grad;
-  bool ok = getPolygonsAtZ(T, z, polys, max_grad);
+  bool ok = getPolygonsAtZ(T, z, polys, max_grad, supportpolys, -1);
   if (!ok) return 0;
   vector< vector<Triangle> > surfs;
   triangulate(polys, surfs);
@@ -842,36 +857,19 @@ void Shape::CenterAroundXY()
   CalcBBox();
 }
 
-// // every 2 points denote a line
-// vector<Vector2d> Shape::getCutlines(const Matrix4d &T, double z) const
-// {
-//   Vector2d lineStart;
-//   Vector2d lineEnd;
-//   int num_cutpoints;
-//   vector<Vector2d> lines; 
-//   for (size_t i = 0; i < triangles.size(); i++)
-//     {
-//       num_cutpoints = triangles[i].CutWithPlane(z, T, lineStart, lineEnd);
-//       if (num_cutpoints>1)
-// 	{
-// 	  Vector3d Norm3 = triangles[i].Normal;
-// 	  Vector2d triangleNormal = Vector2d(Norm3.x, Norm3.y());
-// 	  Vector2d segmentNormal = (lineEnd - lineStart).normal();
-// 	  triangleNormal.normalise();
-// 	  segmentNormal.normalise();
-// 	  if( (triangleNormal-segmentNormal).lengthSquared() > 0.2)  {
-// 	    // if normals do not align, flip the segment
-// 	    lines.push_back(lineEnd); 
-// 	    lines.push_back(lineStart);
-// 	  } else {
-// 	    lines.push_back(lineStart);
-// 	    lines.push_back(lineEnd); 
-// 	  }
-// 	}
-//     }
-//   return lines;
-// }
 
+Poly Shape::getOutline(const Matrix4d &T, double maxlen) const
+{
+  Matrix4d transform = T * transform3D.transform ;
+  vector<Vector2d> points(triangles.size()*3);
+  for (uint i = 0; i<triangles.size(); i++) {
+    for (uint j = 0; j<3; j++) {
+      points[i*3 + j] = Vector2d(triangles[i][j].x(),triangles[i][j].y());
+    }
+  }
+  Poly hull = concaveHull2D(points, maxlen);
+  return hull;
+}
 
 bool getLineSequences(const vector<Segment> lines, vector< vector<uint> > &connectedlines)
 {
@@ -924,10 +922,16 @@ bool getLineSequences(const vector<Segment> lines, vector< vector<uint> > &conne
 }
 
 bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, 
-			   vector<Poly> &polys, double &max_grad) const
+			   vector<Poly> &polys,
+			   double &max_gradient,
+			   vector<Poly> &supportpolys,
+			   double max_supportangle,
+			   double thickness) const
 {
   vector<Vector2d> vertices;
-  vector<Segment> lines = getCutlines(T, z, vertices, max_grad);
+  vector<Triangle> support_triangles;
+  vector<Segment> lines = getCutlines(T, z, vertices, max_gradient, 
+				      support_triangles, max_supportangle, thickness);
   //cerr << vertices.size() << " " << lines.size() << endl;
   if (!CleanupSharedSegments(lines)) return false;
   //cerr << vertices.size() << " " << lines.size() << endl;
@@ -937,7 +941,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
   if (!getLineSequences(lines, connectedlines)) return false;
   for (uint i=0; i<connectedlines.size();i++){
     Poly poly(z);
-    for (uint j=0; j<connectedlines[i].size();j++){
+    for (uint j = 0; j < connectedlines[i].size();j++){
       poly.addVertex(vertices[lines[connectedlines[i][j]].start]);
     }
     if (lines[connectedlines[i].back()].end !=
@@ -947,160 +951,62 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
     poly.calcHole();
     polys.push_back(poly);
   }
-  //cerr << "found " << polys.size() << " polys" << endl;
+
+  for (uint i = 0; i < support_triangles.size(); i++) {
+    Poly p(z);
+    // keep only part of triangle above z
+    Vector2d lineStart;
+    Vector2d lineEnd;
+    // support_triangles are already transformed
+    int num_cutpoints = support_triangles[i].CutWithPlane(z, Matrix4d::IDENTITY,
+							  lineStart, lineEnd);
+    if (num_cutpoints == 0) {
+      for (uint j = 0; j < 3; j++) {
+	p.addVertex(Vector2d(support_triangles[i][j].x(),
+			     support_triangles[i][j].y()));
+      }
+    }
+    else if (num_cutpoints > 1) {
+      // add points of triangle above z
+      for (uint j = 0; j < 3; j++) {
+	if (support_triangles[i][j].z() > z) {
+	  p.addVertex(Vector2d(support_triangles[i][j].x(),
+			       support_triangles[i][j].y()));
+	}
+      }
+      bool reverse = false;
+      // test for order if we get 4 points (2 until now)
+      if (p.size() > 1) {
+	Vector2d i0,i1;	double t0, t1;
+	const int is = intersect2D_Segments(p[1], lineStart, lineEnd, p[0],
+					    i0, i1, t0, t1);
+	if (is > 0 && is < 3) {
+	  reverse = true;
+	}
+      }
+      // add cutline points
+      if (reverse) {
+	p.addVertex(lineEnd);
+	p.addVertex(lineStart);
+      } else {
+	p.addVertex(lineStart);
+	p.addVertex(lineEnd);
+      }
+    }
+    if (p.isHole()) p.reverse();
+    supportpolys.push_back(p);
+  }
+
+  // remove polygon areas from triangles
+  // Clipping clipp;
+  // clipp.clear();
+  // clipp.addPolys(supportpolys, subject);
+  // clipp.addPolys(polys, clip);
+  // supportpolys = clipp.subtract(CL::pftPositive,CL::pftPositive);
+  
   return true;
 }
 
-// #if 0
-// bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, 
-// 			   vector<Poly> &polys, double &max_grad) const
-// {
-//   vector<Vector2d> vertices;
-//   vector<Segment> lines = getCutlines(T, z, vertices, max_grad);
-  
-//   if (z < Min.z() || z > Max.z()) return true; // no polys, but all ok
-
-//   if (vertices.size()==0) return false; 
-//   //cerr << "vertices ok" <<endl;
-//   if (!CleanupSharedSegments(lines)) return false; 
-//   //cerr << "clean shared ok" <<endl;
-//   if (!CleanupConnectSegments(vertices,lines,true)) return false;
-//   //cerr << "clean connect ok" <<endl;
-
-// 	vector< vector<int> > planepoints;
-// 	planepoints.resize(vertices.size());
-
-// 	// all line numbers starting from every point
-// 	for (uint i = 0; i < lines.size(); i++)
-// 		planepoints[lines[i].start].push_back(i); 
-
-// 	// Build polygons
-// 	vector<bool> used;
-// 	used.resize(lines.size());
-// 	for (uint i=0;i>used.size();i++)
-// 		used[i] = false;
-	
-// 	//polys.clear();
-
-// 	for (uint current = 0; current < lines.size(); current++)
-// 	{
-// 	  //cerr << used[current]<<"linksegments " << current << " of " << lines.size()<< endl;
-// 		if (used[current])
-// 			continue; // already used
-// 		used[current] = true;
-
-// 		int startPoint = lines[current].start;
-// 		int endPoint = lines[current].end;
-
-// 		Poly poly = Poly(z);
-// 		poly.addVertex(vertices[endPoint]);
-// 		//poly.printinfo();
-// 		int count = lines.size()+100;
-// 		while (endPoint != startPoint && count != 0)	// While not closed
-// 		  {
-// 		        // lines starting at endPoint
-// 			const vector<int> &pathsfromhere = planepoints[endPoint];
-
-// 			// Find the next line.
-// 			if (pathsfromhere.size() == 0) // no where to go ...
-// 			{
-// 				// lets get to the bottom of this data set:
-// 				cout.precision (8);
-// 				cout.width (12);
-// 				cout << "\r\npolygon was cut at z " << z << " LinkSegments at vertex " << endPoint;
-// 				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\trefs\n";
-// 				for (int i = 0; i < (int)vertices.size(); i++)
-// 				{
-// 					int refs = 0, pol = 0;
-// 					for (int j = 0; j < (int)lines.size(); j++)
-// 					{
-// 						if (lines[j].start == i) { refs++; pol++; }
-// 						if (lines[j].end == i) { refs++; pol--; }
-// 					}
-// 					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y() << "\t" << refs << " pol " << pol;
-// 					if (refs % 2) // oh dear, a dangling vertex
-// 						cout << " odd, dangling vertex\n";
-// 					cout << "\n";
-// 				}
-// 				cout << "\n " << lines.size() << " lines:\nline\tstart vtx\tend vtx\n";
-// 				for (int i = 0; i < (int)lines.size(); i++)
-// 				{
-// 					if (i == endPoint)
-// 						cout << "problem line:\n";
-// 					cout << i << "\t" << lines[i].start << "\t" << lines[i].end << "\n";
-// 				}
-
-// 				cout << "\n " << vertices.size() << " vertices:\nvtx\tpos x\tpos y\tlinked to\n";
-// 				for (int i = 0; i < (int)planepoints.size(); i++)
-// 				{
-// 					if (i == endPoint)
-// 						cout << "problem vertex:\n";
-// 					cout << i << "\t" << vertices[i].x << "\t" << vertices[i].y() << "\t";
-// 					int j;
-// 					switch (planepoints[i].size()) {
-// 					case 0:
-// 						cout << "nothing - error !\n";
-// 						break;
-// 					case 1:
-// 						cout << "neighbour: " << planepoints[i][0];
-// 						break;
-// 					default:
-// 						cout << "Unusual - multiple: \n";
-// 						for (j = 0; j < (int)planepoints[i].size(); j++)
-// 							cout << planepoints[i][j] << " ";
-// 						cout << " ( " << j << " other vertices )";
-// 						break;
-// 					}
-
-// 					cout << "\n";
-// 				}
-// 				// model failure - we will get called recursivelly
-// 				// for a different z and different cutting plane.
-// 				return false;
-// 			} // endif nowhere to go
-// 			if (pathsfromhere.size() != 1)
-// 				cout << "Risky co-incident node \n";
-
-// 			// TODO: we need to do better here, some idas:
-// 			//       a) calculate the shortest path back to our start node, and
-// 			//          choose that and/or
-// 			//       b) identify all 2+ nodes and if they share start/end
-// 			//          directions eliminate them to join the polygons.
-
-// 			uint i;
-// 			// i = first unused path:
-// 			for (i = 0; i < pathsfromhere.size() && used[pathsfromhere[i]]; i++); 
-// 			if (i >= pathsfromhere.size())
-// 			{
-// 				cout << "no-where unused to go";
-// 				return false;
-// 			}
-// 			used[pathsfromhere[i]] = true;
-
-// 			const Segment &nextsegment = lines[pathsfromhere[i]];
-// 			assert( nextsegment.start == endPoint );
-// 			endPoint = nextsegment.end;
-
-// 			poly.addVertex(vertices[endPoint]);
-// 			count--;
-// 		}
-
-// 		// Check if loop is complete
-// 		if (count != 0) {
-// 		  //poly.cleanup(Optimization);
-// 		  // cout << "## POLY add ";
-// 		  // poly.printinfo();
-// 		  polys.push_back(poly);		// This is good
-// 		} else {
-// 		  // We will be called for a slightly different z
-// 		  cout << "\r\nentered loop at shape polyons Z=" << z;
-// 		  return false;
-// 		}
-// 	}
-
-//   return true;
-// }
-// #endif
 
 int find_vertex(const vector<Vector2d> &vertices,  const Vector2d &v, double delta = 0.0001)
 {
@@ -1112,10 +1018,12 @@ int find_vertex(const vector<Vector2d> &vertices,  const Vector2d &v, double del
 }
 
 vector<Segment> Shape::getCutlines(const Matrix4d &T, double z, 
-				   vector<Vector2d> &vertices, double &max_gradient) const
+				   vector<Vector2d> &vertices, 
+				   double &max_gradient,
+				   vector<Triangle> &support_triangles,
+				   double supportangle,
+				   double thickness) const
 {
-  // Vector3d min = T*Min;
-  // Vector3d max = T*Max;
   Vector2d lineStart;
   Vector2d lineEnd;
   vector<Segment> lines;
@@ -1130,7 +1038,18 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
     {
       Segment line(-1,-1);
       int num_cutpoints = triangles[i].CutWithPlane(z, transform, lineStart, lineEnd);
-      if (num_cutpoints>0) {
+      if (num_cutpoints == 0) {
+	if (supportangle >= 0 && thickness > 0) {
+	  if (triangles[i].isInZrange(z-thickness, z, transform)) {
+	    const double slope = -triangles[i].slopeAngle(transform);
+	    if (slope >= supportangle) {
+	      support_triangles.push_back(triangles[i].transformed(transform));
+	    }
+	  }
+	}
+	continue;
+      }
+      if (num_cutpoints > 0) {
 	int havev = find_vertex(vertices, lineStart);
 	if (havev >= 0) 
 	  line.start = havev;
@@ -1140,8 +1059,13 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
 	}
 	if (abs(triangles[i].Normal.z()) > max_gradient)
 	  max_gradient = abs(triangles[i].Normal.z());
+	if (supportangle >= 0) {
+	  const double slope = -triangles[i].slopeAngle(transform);
+	  if (slope >= supportangle)
+	    support_triangles.push_back(triangles[i].transformed(transform));
+	}
       }
-      if (num_cutpoints>1) {
+      if (num_cutpoints > 1) {
 	int havev = find_vertex(vertices, lineEnd);
 	if (havev >= 0) 
 	  line.end = havev;
@@ -1170,53 +1094,6 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   return lines;
 }
 
-
-// intersect lines with plane and link segments
-// add result to given CuttingPlane
-// void Shape::CalcCuttingPlane(const Matrix4d &T, CuttingPlane *plane) const
-// {
-//   double z = plane->getZ();
-// #if CUTTING_PLANE_DEBUG
-// 	cout << "intersect with z " << z << "\n";
-// #endif
-
-// 	Vector3d min = T*Min;
-// 	Vector3d max = T*Max;
-
-// 	plane->setBBox(min,max);
-
-// 	Vector2d lineStart;
-// 	Vector2d lineEnd;
-
-// 	int num_cutpoints;
-// 	for (size_t i = 0; i < triangles.size(); i++)
-// 	  {
-// 	    CuttingPlane::Segment line(-1,-1);
-// 	    num_cutpoints = triangles[i].CutWithPlane(z, T, lineStart, lineEnd);
-// 	    if (num_cutpoints>0)
-// 	      line.start = plane->RegisterPoint(lineStart);
-// 	    if (num_cutpoints>1)
-// 	      line.end = plane->RegisterPoint(lineEnd);
-	      
-// 	    // Check segment normal against triangle normal. Flip segment, as needed.
-// 	    if (line.start != -1 && line.end != -1 && line.end != line.start)	
-// 	      // if we found a intersecting triangle
-// 	      {
-// 		Vector3d Norm = triangles[i].Normal;
-// 		Vector2d triangleNormal = Vector2d(Norm.x, Norm.y());
-// 		Vector2d segmentNormal = (lineEnd - lineStart).normal();
-// 		triangleNormal.normalise();
-// 		segmentNormal.normalise();
-// 		if( (triangleNormal-segmentNormal).lengthSquared() > 0.2)
-// 		  // if normals does not align, flip the segment
-// 		  line.Swap();
-// 		// cerr << "line "<<line.start << "-"<<line.end << endl;
-// 		// cerr << " -> "<< plane->GetVertices()[line.start] << "-"<<plane->GetVertices()[line.end] << endl;
-// 		plane->AddSegment(line);
-// 	      }
-// 	  }
-// 	return ;
-// }
 
 
 
@@ -1443,34 +1320,6 @@ void Shape::draw_geometry()
 	if (usedtime.as_double() > 0.3) slow_drawing = true;
 }
 
-// we dont want this
-// bool CleanupStraightLines(const vector<Vector2d> vertices, vector<Segment> &lines)
-// {
-//   vector<int> lines_to_delete;
-//   for (uint j = 0; j < lines.size(); j++) {
-//     for (uint k = j + 1; k < lines.size(); k++) {
-//       if ( lines[j].end == lines[k].start ) {
-// 	Vector2d dirj = vertices[lines[j].end]-vertices[lines[j].start];
-// 	Vector2d dirk = vertices[lines[k].end]-vertices[lines[k].start];
-// 	dirj.normalize();
-// 	dirk.normalize();
-// 	if ((dirk-dirj).lengthSquared() < 0.1) {
-// 	  cerr << "equal direction" << endl;
-// 	  lines[j].end = lines[k].end;
-// 	  lines_to_delete.push_back(k);
-// 	}
-//       }    
-//     }
-//   }
-//   std::sort(lines_to_delete.begin(), lines_to_delete.end());
-//   for (int r = lines_to_delete.size() - 1; r >= 0; r--)
-//     lines.erase(lines.begin() + lines_to_delete[r]);
-//   return true;
-// }
-
-
-
-
 /*
  * sometimes we find adjacent polygons with shared boundary
  * points and lines; these cause grief and slowness in
@@ -1679,8 +1528,6 @@ string Shape::info() const
        << "min/max/center: "<<Min<<Max <<Center ;
   return ostr.str();
 }
-
-
 
 
 
@@ -2056,7 +1903,7 @@ void FlatShape::xml_handle_node(const xmlpp::Node* node)
   if(!nodeText && !nodeComment && !nodename.empty()) //Let's not say "name: text".
   {
     const Glib::ustring namespace_prefix = node->get_namespace_prefix();
-    if (svg_cur_name!="") svg_addPolygon();
+    if (svg_cur_name != "") svg_addPolygon();
     svg_cur_name = nodename;
     svg_cur_path = "";
     svg_cur_trans = "";
@@ -2068,22 +1915,22 @@ void FlatShape::xml_handle_node(const xmlpp::Node* node)
   }
   // else if(nodeText) //Let's say when it's text. - e.g. let's say what that white space is.
   // {
-  //   std::cout << "Text Node" << std::endl;
+  //   std::cout << "Text Node " << nodename << nodeText->get_content()<< std::endl;
   // }
 
   //Treat the various node types differently: 
-  // if(nodeText)
-  // {
-  //   std::cout << "text = \"" << nodeText->get_content() << "\"" << std::endl;
-  // }
-  // else if(nodeComment)
-  // {
-  //   std::cout << "comment = " << nodeComment->get_content() << std::endl;
-  // }
-  // else if(nodeContent)
-  // {
-  //   std::cout << "content = " << nodeContent->get_content() << std::endl;
-  // } else
+  if(nodeText)
+  {
+    ; //std::cout << "text = \"" << nodeText->get_content() << "\"" << std::endl;
+  }
+  else if(nodeComment)
+  {
+    ; //std::cout << "comment = " << nodeComment->get_content() << std::endl;
+  }
+  else if(nodeContent)
+  {
+    ; //std::cout << "content = " << nodeContent->get_content() << std::endl;
+  } else
   if (const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(node)) {
     //A normal Element node:
     
@@ -2158,6 +2005,9 @@ int FlatShape::loadSVG(string filename)
     {
       polygons.clear();
       svg_cur_name = "";
+      svg_cur_path = "";
+      svg_cur_trans = "";
+      svg_cur_style = "";
       svg_prescale = 1.;
       //Walk the tree:
       const xmlpp::Node* pNode = parser.get_document()->get_root_node(); //deleted by DomParser.

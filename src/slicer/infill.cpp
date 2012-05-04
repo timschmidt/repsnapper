@@ -710,7 +710,7 @@ void move(int direction, double infillDistance, vector<Vector2d> &v){
   Vector2d d(0,0);
   switch (direction) {
   case LEFT:  d.x()=-infillDistance;break;
-  case RIGHT: d.x()=infillDistance;break;
+  case RIGHT: d.x()= infillDistance;break;
   case UP:    d.y()=-infillDistance;break;
   case DOWN:  d.y()= infillDistance;break;
   }

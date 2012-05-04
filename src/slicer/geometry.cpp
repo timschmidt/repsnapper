@@ -46,7 +46,7 @@ Matrix4f Transform3D::getFloatTransform() const
 {
   return (Matrix4f) transform;
 }
-void Transform3D::setTransform(Matrix4f matr) 
+void Transform3D::setTransform(const Matrix4f &matr) 
 {
   transform = (Matrix4f) matr;
 }
@@ -59,7 +59,7 @@ Vector3d Transform3D::getTranslation() const
 }
 
 
-void Transform3D::move(Vector3d delta)
+void Transform3D::move(const Vector3d &delta)
 {
   Vector3d trans = getTranslation();
   transform.set_translation(trans + delta * transform[3][3]); // unscale delta
@@ -88,14 +88,18 @@ void Transform3D::scale_z(double x)
   scale_factor_z = x;
 }
 
-void Transform3D::rotate(Vector3d axis, double angle)
+void Transform3D::rotate(const Vector3d &axis, double angle)
 {
-  Matrix4d rot = Matrix4d::IDENTITY;
   Vector3d naxis = axis; naxis.normalize();
+  const Vector3d trans = getTranslation();
+  transform.set_translation(Vector3d::ZERO);
+  Matrix4d rot = Matrix4d::IDENTITY;
   rot.rotate(angle, naxis);
-  transform = rot * transform; 
+  //transform.rotate(angle, naxis);
+  transform = rot * transform;
+  // transform.set_translation(trans);
 }
-void Transform3D::rotate(Vector3d center, double x, double y, double z)
+void Transform3D::rotate(const Vector3d &center, double x, double y, double z)
 {
   move(-center);
   if (x!=0) transform.rotate_x(x);
@@ -816,10 +820,10 @@ bool pointInPolys(const Vector2d &point,  const vector<Poly> &polys)
 // will return false
 // if the line cuts any of the given polygons except excluded one
 bool lineInPolys(const Vector2d &from, const Vector2d &to, const vector<Poly> &polys, 
-		 int excludepoly, double maxerr)
+		 uint excludepoly, double maxerr)
 {
   uint ninter = 0;
-  for (int i=0; i< (int)polys.size(); i++) {
+  for (uint i=0; i< polys.size(); i++) {
     if (i != excludepoly){
       if (polys[i].vertexInside(from)) ninter++;
       if (polys[i].vertexInside(to)) ninter++;
@@ -911,9 +915,9 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
     swap(pointList[bestJ], pointList[treeCount]);
     treeCount++; 
   }
-  for (uint i = 0; i < treeCount; i++) {
-    cerr << i << " PL " << pointList[i].prev << endl;
-  }
+  // for (uint i = 0; i < treeCount; i++) {
+  //   cerr << i << " PL " << pointList[i].prev << endl;
+  // }
   int numsolutions = 0;
   int i = treeCount -1;
   while (i > 0) {
@@ -1376,7 +1380,35 @@ int delaunayTriang(const vector<Vector2d> &points,
 
 ////////////////////////////// RASTER /////////////////////////////////////
 
+
+
 #include <cairomm/cairomm.h>
+
+
+Matrix3d getMatrix(const Cairo::RefPtr<Cairo::Context> context)
+{
+  /* A #cairo_matrix_t holds an affine transformation, such as a scale,
+   * rotation, shear, or a combination of those. The transformation of
+   * a point (x, y) is given by:
+   * <programlisting>
+   *     x_new = xx * x + xy * y + x0;
+   *     y_new = yx * x + yy * y + y0;
+   * </programlisting>
+   **/
+  //   typedef struct _cairo_matrix {
+  //     double xx; double yx;
+  //     double xy; double yy;
+  //     double x0; double y0;
+  //   } cairo_matrix_t;
+  // In a cairo.matrix(1,2,3,4,5,6), 1 is a11, 2 is a21, 3 is a12, 4 is a22, 5 is a13 and 6 is a23. a31 and a32 are 0, a33 is 1.
+  Cairo::Matrix cm;
+  context->get_matrix(cm);
+  Matrix3d m;
+  m[0][0] = cm.xx; m[0][1] = cm.xy; m[0][2] = cm.x0;
+  m[1][0] = cm.yx; m[1][1] = cm.yy; m[1][2] = cm.y0;
+  m[2][0] = 0;     m[2][1] = 0;     m[2][2] = 1;
+  return m;
+}
 
 
 bool rasterpolys(const vector<Poly> &polys,
@@ -1390,13 +1422,31 @@ bool rasterpolys(const vector<Poly> &polys,
   if (height <= 0 || width <= 0)
     return false;
   surface = Cairo::ImageSurface::create(Cairo::FORMAT_A8, width, height);
+  //surface->set_device_offset(-min.x()/resolution, -min.y()/resolution);
   context = Cairo::Context::create (surface);
-
-  context->scale(1/resolution,1/resolution);
-  context->translate(-min.x(),-min.y());
-  context->set_source_rgb (0,0,0);
   context->set_fill_rule(Cairo::FILL_RULE_WINDING);
   context->set_antialias(Cairo::ANTIALIAS_DEFAULT);
+  context->scale(1/resolution, 1/resolution);
+  context->translate(-min.x(), -min.y());
+  context->set_source_rgb (0,0,0);
+  //cerr << min << endl <<getMatrix(context) << endl;
+
+  // draw boundary
+  // context->begin_new_path();
+  // context->set_line_width(0.5);
+  // context->move_to(min.x(),min.y());
+  // context->line_to(max.x(),min.y());
+  // context->line_to(max.x(),max.y());
+  // context->line_to(min.x(),max.y());
+  // // context->move_to(0,0);
+  // // context->line_to(diag.x(),0);
+  // // context->line_to(diag.x(),diag.y());
+  // // context->line_to(0,diag.y());
+  // context->close_path();
+  // context->stroke();
+
+  context->begin_new_path();
+  context->set_line_width(0);
   for (uint i=0; i<polys.size(); i++) {
     Vector2d v = polys[i][0];
     context->move_to(v.x(),v.y());
@@ -1414,12 +1464,11 @@ void glDrawPolySurfaceRastered(const vector<Poly> &polys,
 			       const Vector2d &min, const Vector2d &max, 
 			       const double z,
 			       const double resolution) 
-{
-  
+{  
   Cairo::RefPtr<Cairo::ImageSurface> surface;
   Cairo::RefPtr<Cairo::Context> context; 
-  if (!rasterpolys(polys,min,max,resolution, surface, context)) return;
-  glDrawCairoSurface(surface,min,max,z);
+  if (!rasterpolys(polys, min, max, resolution, surface, context)) return;
+  glDrawCairoSurface(surface, min, max,z);
 }
 
 

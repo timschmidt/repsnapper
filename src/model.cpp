@@ -399,9 +399,9 @@ Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
   std::vector<Vector3d> minpos;
   for(uint s=0; s<shapes.size(); s++) {
     Vector3d p;
-    //Matrix4d strans = (transforms[s] * allshapes[s]->transform3D.transform);
-    Vector3d min = transforms[s] * shapes[s]->Min;
-    Vector3d max = transforms[s] * shapes[s]->Max;
+    Matrix4d strans = transforms[s];
+    Vector3d min = strans * shapes[s]->Min;
+    Vector3d max = strans * shapes[s]->Max;
     minpos.push_back(Vector3d(min.x(), min.y(), 0));
     maxpos.push_back(Vector3d(max.x(), max.y(), 0));
   }
@@ -830,6 +830,14 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       else {
 	shape->draw (settings, false);
       }
+      // draw support triangles
+      if (settings.Slicing.Support) {
+	glColor4f(0.8f,0.f,0.f,0.5f);
+	vector<Triangle> suppTr = 
+	  shape->trianglesSteeperThan(settings.Slicing.SupportAngle*M_PI/180.);
+	for (uint i=0; i < suppTr.size(); i++) 
+	  suppTr[i].draw(GL_TRIANGLES);
+      }
       glPopMatrix();
       if(settings.Display.DisplayBBox)
 	shape->drawBBox();
@@ -930,7 +938,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 
   bool have_layers = (layers.size() > 0); // have sliced already
 
-  double minZ = max(0.0, Min.z());
+  double minZ = 0;//max(0.0, Min.z());
   double z;
   double zStep = settings.Hardware.LayerThickness;
   double zSize = (Max.z() - minZ - zStep*0.5);
@@ -940,7 +948,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   if (have_layers) 
     sel_Layer = (uint)floor(height*(layers.size()-1)/zSize);
   else 
-    sel_Layer = (uint)ceil(LayerCount*(sel_Z)/zSize);
+    sel_Layer = (uint)ceil(LayerCount*sel_Z/zSize);
   LayerCount = sel_Layer+1;
   if(settings.Display.DisplayAllLayers)
     {
@@ -952,7 +960,10 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       LayerNr = sel_Layer;
       z= minZ + sel_Z;
     }
-  LayerNr = CLAMP(LayerNr, 0, layers.size()-1);
+  if (have_layers) {
+    LayerNr = CLAMP(LayerNr, 0, (int)layers.size() - 1);
+    LayerCount = CLAMP(LayerCount, 0, (int)layers.size());
+  }
   z = CLAMP(z, 0, Max.z());
   z += 0.5*zStep; // always cut in middle of layer
 
@@ -1018,21 +1029,15 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   else 
     objtree.get_all_shapes(shapes, transforms);
 
+  double max_grad = 0;
+  double supportangle = settings.Slicing.SupportAngle*M_PI/180.;
+  if (!settings.Slicing.Support) supportangle = -1;
+  
   Layer * layer = new Layer(NULL, LayerNr, thickness, settings.Slicing.Skins);
   layer->setZ(z);
-  for(size_t f=0;f < shapes.size();f++)
-    {
-      // Vector3d t = T.getTranslation();
-      // T.setTranslation(t);
-      vector<Poly> polys;
-      double max_grad;
-      bool polys_ok = shapes[f]->getPolygonsAtZ(transforms[f], z, 
-						polys,
-						max_grad);
-      if (polys_ok){
-	layer->addPolygons(polys);
-      }
-    }
+  for(size_t f = 0; f < shapes.size(); f++) {
+    layer->addShape(transforms[f], *shapes[f], z, max_grad, supportangle);
+  }
 	  
   // vector<Poly> polys = layer->GetPolygons();
   // for (guint i=0; i<polys.size();i++){

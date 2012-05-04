@@ -13,11 +13,6 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
-  <object class="GtkAction" id="Fullscreen">
-    <property name="label">Fullscreen</property>
-    <property name="short_label" translatable="yes">Fullscreen</property>
-    <property name="tooltip">Toggle Fullscreen</property>
-  </object>
   <object class="GtkAction" id="LoadSettings">
     <property name="label" translatable="yes">Load Settings</property>
     <property name="short_label" translatable="yes">Load Settings</property>
@@ -78,6 +73,11 @@
     <property name="value">8</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAction" id="Fullscreen">
+    <property name="label">Fullscreen</property>
+    <property name="short_label" translatable="yes">Fullscreen</property>
+    <property name="tooltip">Toggle Fullscreen</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
@@ -1081,7 +1081,92 @@ and others I forgot... (needs updating)</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <child>
-                  <placeholder/>
+                  <object class="GtkHBox" id="hbox11">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkCheckButton" id="Slicing.DoInfill">
+                        <property name="label" translatable="yes">Infill</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="Slicing.Support">
+                        <property name="label" translatable="yes">_Support</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="Slicing.MakeDecor">
+                        <property name="label" translatable="yes">Decor</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="Slicing.SelectedOnly">
+                        <property name="label" translatable="yes">Selected Only</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="Slicing.BuildSerial">
+                        <property name="label" translatable="yes">Serial _Build</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="use_action_appearance">False</property>
+                        <property name="use_underline">True</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">4</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
                 </child>
                 <child>
                   <object class="GtkButton" id="g_convert_gcode">
@@ -1103,6 +1188,10 @@ and others I forgot... (needs updating)</property>
                   <object class="GtkNotebook" id="controlnotebook">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="scrollable">True</property>
+                    <property name="tab_border">3</property>
+                    <property name="tab_hborder">3</property>
+                    <property name="homogeneous">True</property>
                     <child>
                       <object class="GtkVBox" id="vbox6">
                         <property name="visible">True</property>
@@ -1960,10 +2049,8 @@ and others I forgot... (needs updating)</property>
                                                 <property name="invisible_char_set">True</property>
                                               </object>
                                               <packing>
-                                                <property name="left_attach">1</property>
-                                                <property name="right_attach">2</property>
-                                                <property name="top_attach">2</property>
-                                                <property name="bottom_attach">3</property>
+                                                <property name="left_attach">3</property>
+                                                <property name="right_attach">4</property>
                                                 <property name="x_options">GTK_FILL</property>
                                                 <property name="y_options">GTK_FILL</property>
                                               </packing>
@@ -1999,18 +2086,14 @@ and others I forgot... (needs updating)</property>
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="Slicing.DoInfill">
-                                                <property name="label" translatable="yes">Infill (%)</property>
+                                              <object class="GtkLabel" id="label163">
                                                 <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
-                                                <property name="draw_indicator">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="label" translatable="yes">Infill %</property>
                                               </object>
                                               <packing>
-                                                <property name="right_attach">2</property>
-                                                <property name="top_attach">2</property>
-                                                <property name="bottom_attach">3</property>
+                                                <property name="left_attach">2</property>
+                                                <property name="right_attach">3</property>
                                               </packing>
                                             </child>
                                             <child>
@@ -2038,60 +2121,16 @@ and others I forgot... (needs updating)</property>
                                             <property name="can_focus">False</property>
                                             <property name="n_columns">4</property>
                                             <child>
-                                              <object class="GtkCheckButton" id="Slicing.Support">
-                                                <property name="label" translatable="yes">_Support</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
-                                                <property name="use_underline">True</property>
-                                                <property name="draw_indicator">True</property>
-                                              </object>
+                                              <placeholder/>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="Slicing.MakeDecor">
-                                                <property name="label" translatable="yes">Decor</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
-                                                <property name="draw_indicator">True</property>
-                                              </object>
-                                              <packing>
-                                                <property name="left_attach">1</property>
-                                                <property name="right_attach">2</property>
-                                                <property name="x_options">GTK_FILL</property>
-                                                <property name="y_options">GTK_FILL</property>
-                                              </packing>
+                                              <placeholder/>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="Slicing.BuildSerial">
-                                                <property name="label" translatable="yes">Serial _Build</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
-                                                <property name="use_underline">True</property>
-                                                <property name="draw_indicator">True</property>
-                                              </object>
-                                              <packing>
-                                                <property name="left_attach">3</property>
-                                                <property name="right_attach">4</property>
-                                              </packing>
+                                              <placeholder/>
                                             </child>
                                             <child>
-                                              <object class="GtkCheckButton" id="Slicing.SelectedOnly">
-                                                <property name="label" translatable="yes">Selected Only</property>
-                                                <property name="visible">True</property>
-                                                <property name="can_focus">True</property>
-                                                <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
-                                                <property name="draw_indicator">True</property>
-                                              </object>
-                                              <packing>
-                                                <property name="left_attach">2</property>
-                                                <property name="right_attach">3</property>
-                                              </packing>
+                                              <placeholder/>
                                             </child>
                                           </object>
                                           <packing>
@@ -5153,6 +5192,7 @@ and others I forgot... (needs updating)</property>
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label146">
+                                    <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">Min. Angle:</property>
                                   </object>
@@ -5165,6 +5205,7 @@ and others I forgot... (needs updating)</property>
                                 </child>
                                 <child>
                                   <object class="GtkSpinButton" id="Slicing.SupportAngle">
+                                    <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
                                     <property name="invisible_char_set">True</property>
@@ -5233,6 +5274,7 @@ and others I forgot... (needs updating)</property>
                                 </child>
                                 <child>
                                   <object class="GtkSpinButton" id="Slicing.SupportInfillDistance">
+                                    <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
                                     <property name="digits">2</property>
@@ -5246,6 +5288,7 @@ and others I forgot... (needs updating)</property>
                                 </child>
                                 <child>
                                   <object class="GtkLabel" id="label161">
+                                    <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">Infill Distance:</property>
                                   </object>

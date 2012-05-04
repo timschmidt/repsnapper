@@ -91,12 +91,13 @@ public:
   vector<Poly> GetPolygons() const { return polygons; };
   vector<ExPoly>  GetExPolygons() const;
   void SetPolygons(vector<Poly> &polys) ;
-  void SetPolygons(const Matrix4d &T, const Shape &shape, double z);
+  /* void SetPolygons(const Matrix4d &T, const Shape &shape, double z); */
   vector<Poly> GetFillPolygons() const { return fillPolygons; }
   vector<Poly> GetFullFillPolygons() const { return fullFillPolygons; }
   vector<ExPoly> GetBridgePolygons() const { return bridgePolygons; }
   vector<Poly> GetSkinFullPolygons() const { return skinFullFillPolygons; }
   vector<Poly> GetSupportPolygons() const { return supportPolygons; }
+  vector<Poly> GetToSupportPolygons() const { return toSupportPolygons; }
   vector<Poly> GetDecorPolygons() const { return decorPolygons; }
   vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
   vector<Poly>  GetShellPolygonsCirc(int number) const;
@@ -143,7 +144,7 @@ public:
   void addPolygons(vector<Poly> &polys);
   void cleanupPolygons();
   int addShape(const Matrix4d &T, const Shape &shape, double z, 
-	       double &max_gradient);
+	       double &max_gradient, double max_supportangle);
 
   double area() const;
   
@@ -172,6 +173,7 @@ public:
   vector<double> bridge_angles;         // angles of each bridge ex-polygon
   vector< vector<Poly> > bridgePillars; // bridge pillars for debugging
   vector<Poly> supportPolygons;	        // polygons to be filled with support pattern
+  vector<Poly> toSupportPolygons;       // triangles that should be supported
   uint skins;                           // number of skin divisions
   vector<Poly> skinPolygons;            // outer skin polygons
   vector<Poly> skinFullFillPolygons;    // skin polygons of fully filled areas
