@@ -539,8 +539,10 @@ void Printlines::optimize(double linewidth,
   // cout << GCode(start,E,1,1000);
   //cerr << "optimize" << endl;
   makeArcs(linewidth, lines);
-  if (settings->Slicing.UseArcs && settings->Slicing.RoundCorners) 
-    roundCorners(cornerradius, settings->Slicing.MinArcLength, lines);
+  double minarclength = settings->Slicing.MinArcLength;
+  if (!settings->Slicing.UseArcs) minarclength = cornerradius; 
+  if (settings->Slicing.RoundCorners) 
+    roundCorners(cornerradius, minarclength, lines);
   slowdownTo(slowdowntime, lines);
   double totext = total_Extrusion(lines);
   makeAntioozeRetract(lines);
