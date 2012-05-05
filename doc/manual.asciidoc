@@ -87,32 +87,32 @@ sudo apt-get install git-core build-essential TODO
 
 ===== Acquire source and compile =====
 
---------------------------
-git clone git://github.com/timschmidt/repsnapper.git
 
-cd repsnapper
+      git clone git://github.com/timschmidt/repsnapper.git
 
-./autogen.sh
+      cd repsnapper
 
-make
---------------------------
+      ./autogen.sh
+
+      make
+
 
 Executable (repsnapper) will be left in the top folder. Install with "sudo make install-strip"
 
 ==== Fedora ====
 ===== Installing from yum =====
 Repsnapper was packaged by jebba for Fedora 14 at this repository: http://repos.fedorapeople.org/repos/jebba/reprap/
---------------------------
-su
 
-wget -P /etc/yum.repos.d/ http://repos.fedorapeople.org/repos/jebba/reprap/fedora-reprap.repo
+	   su
 
-yum install repsnapper-gtk2
+	   wget -P /etc/yum.repos.d/ http://repos.fedorapeople.org/repos/jebba/reprap/fedora-reprap.repo
 
-exit
+	   yum install repsnapper-gtk2
 
-repsnapper
---------------------------
+	   exit
+
+	   repsnapper
+
 
 ===== Installing from sources =====
 Install dependencies: TODO only tested with Fedora 14
@@ -125,52 +125,52 @@ yum install git gtk2-devel gcc-c++ gcc binutils make cmake gtkglextmm gtkglextmm
 --------------------------
 
 Install repsnapper:
---------------------------
-git clone git://github.com/timschmidt/repsnapper.git
 
-cd repsnapper
+	git clone git://github.com/timschmidt/repsnapper.git
 
-su
+	cd repsnapper
 
-echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
+	su
 
-ldconfig
+	echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
 
-exit
+	ldconfig
 
-./autogen.sh
+	exit
 
-make -j3
---------------------------
+	./autogen.sh
+
+	make -j3
+
 
 Run the program:
---------------------------
-./repsnapper
---------------------------
+
+    ./repsnapper
+
 
 Install and run:
---------------------------
-sudo make install-strip
 
-repsnapper
---------------------------
+	sudo make install-strip
+
+	repsnapper
+
 
 ==== OpenSuse 11.2 / SLED 11 SP1 ====
---------------------------
-sudo zypper install TODO
---------------------------
+
+     sudo zypper install TODO
+
 
 ==== Generic installation instructions ====
 
---------------------------
-git clone git://github.com/timschmidt/repsnapper.git
 
-cd repsnapper
+     git clone git://github.com/timschmidt/repsnapper.git
 
-./autogen.sh
+     cd repsnapper
 
-make -j3
---------------------------
+     ./autogen.sh
+
+     make -j3
+
 
 Executable (repsnapper) will be left in the top folder. Install with "sudo make install-strip"
 
@@ -186,18 +186,21 @@ Install http://www.macports.org/[MacPorts].
 
 Run from a terminal window:
 
---------------------------
-sudo port install intltool boost gtkmm gtkglext
---------------------------
+
+    sudo port install intltool boost gtkmm gtkglext
+
 
 Acquire source and compile:
 
---------------------------
-git clone git://github.com/timschmidt/repsnapper.git
-cd repsnapper
-./autogen.sh
-make -j3
---------------------------
+
+	git clone git://github.com/timschmidt/repsnapper.git
+
+	cd repsnapper
+
+	./autogen.sh
+
+	make -j3
+
 
 Executable (repsnapper) will be left in the top folder. Currently there is no install rule.
 
