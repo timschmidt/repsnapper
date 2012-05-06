@@ -192,7 +192,10 @@ class FlatShape : public Shape
   int loadSVG(istream *text);
 
   bool getPolygonsAtZ(const Matrix4d &T, double z,
-  		      vector<Poly> &polys, double &max_grad) const;
+  		      vector<Poly> &polys, double &max_grad,
+		      vector<Poly> &supportpolys,
+		      double max_supportangle=-1,
+		      double thickness=-1) const;
 
 
   /* int load(std::string filename); */

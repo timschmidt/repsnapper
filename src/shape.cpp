@@ -1692,12 +1692,14 @@ vector<string> REMatches(const string &regex,
 // }
 
 bool FlatShape::getPolygonsAtZ(const Matrix4d &T, double z, 
-			       vector<Poly> &polys, double &max_grad) const
+			       vector<Poly> &polys, double &max_grad,
+			       vector<Poly> &supportpolys,
+			       double max_supportangle,
+			       double thickness) const
 {
   max_grad = 0;
   polys = polygons;
   const Matrix4d trans = T * transform3D.transform;
-  //cerr << " get polys at "<< z  << " with " << endl<<trans << endl;
   for (uint i = 0; i < polys.size(); i++) {
     polys[i].setZ(0);
     polys[i].transform(trans);
