@@ -514,7 +514,8 @@ int Model::AddShape(TreeObject *parent, Shape *shape, string filename, bool auto
   if (found_location) {
     retshape->transform3D.move(trans);
   }
-  retshape->PlaceOnPlatform();
+ 
+  if (autoplace) retshape->PlaceOnPlatform();
 
   // Update the view to include the new object
   ModelChanged();
@@ -544,7 +545,7 @@ int Model::MergeShapes(TreeObject *parent, const vector<Shape*> shapes)
     vector<Triangle> str = shapes[s]->getTriangles(shapes[s]->transform3D.transform);
     shape->addTriangles(str);
   }
-  AddShape(parent, shape, "merged", false);
+  AddShape(parent, shape, "merged", true);
   return 1;
 }
 
