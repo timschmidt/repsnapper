@@ -157,6 +157,7 @@ int Layer::addShape(const Matrix4d &T, const Shape &shape, double z,
 				    polys, max_gradient, 
 				    toSupportPolygons, max_supportangle,
 				    thickness);
+    hackedZ += thickness/10;
     if (polys_ok) {
       num_polys = polys.size();
       addPolygons(polys);
@@ -164,7 +165,6 @@ int Layer::addShape(const Matrix4d &T, const Shape &shape, double z,
       num_polys=-1;
       cerr << "hacked Z " << z << " -> " << hackedZ << endl;
     }
-    hackedZ += thickness/10;
   }
   cleanupPolygons();
   return num_polys;

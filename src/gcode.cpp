@@ -41,6 +41,7 @@ GCode::GCode()
 }
 
 
+
 double GCode::GetTotalExtruded(bool relativeEcode) const
 {
   if (commands.size()==0) return 0;
@@ -518,7 +519,16 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	Vector3d LastPos(-10,-10,-10);
 	std::stringstream oss;
 
-	GcodeTxt += GcodeStart + "\n";
+	Glib::Date date;
+	date.set_time_current();
+	Glib::TimeVal time;
+	time.assign_current_time();
+	GcodeTxt += "; GCode by Repsnapper, "+
+	  date.format_string("%a, %x") +
+	  //time.as_iso8601() +
+	  "\n";
+
+	GcodeTxt += "\n; Startcode\n"+GcodeStart + "; End Startcode\n\n";
 
 	layerchanges.clear();
 
@@ -531,7 +541,9 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 
 	  if ( commands[i].Code == LAYERCHANGE ) {
 	    layerchanges.push_back(i);
-	    GcodeTxt += GcodeLayer + "\n"; // add every-layer-gcode
+	    if (GcodeLayer.length()>0)
+	      GcodeTxt += "\n; Layerchange GCode\n" + GcodeLayer + 
+		"; End Layerchange GCode\n\n"; 
 	  }
 	  
 	  if ( commands[i].where.z() < 0 )  {
@@ -542,7 +554,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	  }
 	}
 
-	GcodeTxt += GcodeEnd + "\n";
+	GcodeTxt += "\n; End GCode\n" + GcodeEnd + "\n";
 
 	buffer->set_text (GcodeTxt);
 

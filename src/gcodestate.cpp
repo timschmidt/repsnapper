@@ -28,12 +28,10 @@ struct GCodeStateImpl
   GCode &code;
   Vector3d LastPosition;
   Command lastCommand;
-  //double lastLayerZ;
 
   GCodeStateImpl(GCode &_code) :
     code(_code),
     LastPosition(0,0,0)
-    //lastLayerZ(0)
   {}
 };
 
@@ -51,6 +49,8 @@ GCodeState::~GCodeState()
 //   if (!isnan(z))
 //     pImpl->LastPosition.z = z;
 // }
+
+
 const Vector3d &GCodeState::LastPosition()
 {
   return pImpl->LastPosition;

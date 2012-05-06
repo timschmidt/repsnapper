@@ -335,8 +335,7 @@ void Model::Slice()
     lastlayer = layers[0];
     layers[0]->setZ(0); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
-      layers[0]->addShape(transforms[nshape], *shapes[nshape],  0, max_gradient, 
-			  supportangle);
+      layers[0]->addShape(transforms[nshape], *shapes[nshape],  0, max_gradient, -1);
     }
     is_calculating=false;
     return;
