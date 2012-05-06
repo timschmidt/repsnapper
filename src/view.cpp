@@ -998,6 +998,7 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_delete",        sigc::mem_fun(*this, &View::delete_selected_objects) );
   connect_button ("m_duplicate",     sigc::mem_fun(*this, &View::duplicate_selected_objects) );
   connect_button ("m_split",         sigc::mem_fun(*this, &View::split_selected_objects) );
+  connect_button ("m_merge",         sigc::mem_fun(*this, &View::merge_selected_objects) );
   connect_button ("m_divide",        sigc::mem_fun(*this, &View::divide_selected_objects) );
   connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &View::auto_rotate) );
   connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(1,0,0, M_PI/6)));
@@ -1377,6 +1378,19 @@ void View::split_selected_objects()
     queue_draw();
   }
 }
+
+void View::merge_selected_objects()
+{
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0) {
+    TreeObject* parent = m_model->objtree.getParent(shapes[0]);
+    m_model->MergeShapes(parent, shapes);
+    queue_draw();
+  }
+}
+
 void View::divide_selected_objects()
 {
   vector<Shape*> shapes;

@@ -639,6 +639,22 @@ string Shape::getSTLsolid() const
   return sstr.str();
 }
 
+void Shape::addTriangles(const vector<Triangle> &tr)
+{
+  triangles.insert(triangles.end(), tr.begin(), tr.end());
+  CalcBBox();
+}
+
+vector<Triangle> Shape::getTriangles(const Matrix4d &T) const
+{
+  vector<Triangle> tr(triangles.size());
+  for (uint i = 0; i < triangles.size(); i++) {
+    tr[i] = triangles[i].transformed(T);
+  }
+  return tr;
+}
+
+
 vector<Triangle> Shape::trianglesSteeperThan(double angle) const
 {
   vector<Triangle> tr;

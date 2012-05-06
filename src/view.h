@@ -23,15 +23,8 @@
 #include <gtkmm.h>
 
 #include "stdafx.h"
-//#include "progress.h"
 #include "printer.h"
 
-/* class Model; */
-/* class Render; */
-/* class TreeObject; */
-/* class Shape; */
-/* class ConnectView; */
-//class PrintInhibitor;
 
 class View : public Gtk::Window
 {
@@ -129,6 +122,7 @@ class View : public Gtk::Window
   void delete_selected_objects();
   void duplicate_selected_objects();
   void split_selected_objects();
+  void merge_selected_objects();
   void divide_selected_objects();
   void auto_rotate();
   void update_settings_gui();

@@ -171,7 +171,6 @@ void Model::ReadSVG(Glib::RefPtr<Gio::File> file)
   FlatShape * svgshape = new FlatShape(path);
   cerr << svgshape->info() << endl;
   AddShape(NULL, svgshape, path, autoplace);
-  ModelChanged();
   ClearLayers();
 }
 
@@ -189,7 +188,6 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
       Shape *shape = new Shape();
       shape->loadBinarySTL(path);
       AddShape(NULL, shape, path,autoplace);
-      ModelChanged();
      }
   else if (ftype == ASCII_STL) // multiple shapes per file
     {
@@ -233,7 +231,6 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
       Shape *shape = new Shape();
       shape->loadASCIIVRML(path);
       AddShape(NULL, shape, path,autoplace);
-      ModelChanged();
     }
   ClearLayers();
 }
@@ -540,6 +537,17 @@ int Model::SplitShape(TreeObject *parent, Shape *shape, string filename)
   return splitshapes.size();
 }
 
+int Model::MergeShapes(TreeObject *parent, const vector<Shape*> shapes)
+{
+  Shape * shape = new Shape();
+  for (uint s = 0; s <  shapes.size(); s++) {
+    vector<Triangle> str = shapes[s]->getTriangles(shapes[s]->transform3D.transform);
+    shape->addTriangles(str);
+  }
+  AddShape(parent, shape, "merged", false);
+  return 1;
+}
+
 int Model::DivideShape(TreeObject *parent, Shape *shape, string filename)
 {
   Shape *upper = new Shape();
@@ -551,7 +559,6 @@ int Model::DivideShape(TreeObject *parent, Shape *shape, string filename)
     AddShape(parent, upper, filename+_("_upper") ,false);
     AddShape(parent, lower, filename+_("_lower") ,false);
   }
-  ModelChanged();
   return num;
 }
 
