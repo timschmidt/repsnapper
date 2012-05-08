@@ -181,6 +181,11 @@ class Settings {
   };
   SlicingSettings Slicing;
 
+  struct MillingSettings {
+    float ToolDiameter;
+  };
+  MillingSettings Milling;
+
   struct MiscSettings {
     bool ShapeAutoplace;
     bool FileLoggingEnabled;
@@ -242,6 +247,8 @@ class Settings {
     bool LuminanceShowsSpeed;
     bool CommsDebug;
     bool TerminalProgress;
+    bool PreviewLoad;
+
 
     // Rendering
     Vector4f PolygonRGBA;

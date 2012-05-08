@@ -62,6 +62,9 @@ public:
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype=UNKNOWN_TYPE);
 	void SaveStl(Glib::RefPtr<Gio::File> file);
+	vector<Shape*> ReadShapes(Glib::RefPtr<Gio::File> file,
+				  uint max_triangles = 0,
+				  filetype_t ftype=UNKNOWN_TYPE);
 
 	int AddShape(TreeObject *parent, Shape * shape, string filename,
 		     bool autoplace = true);
@@ -96,6 +99,9 @@ public:
 	//Layer * m_previewGCodeLayer;
 	GCode m_previewGCode;
 	double m_previewGCode_z;
+
+	vector<Shape*> preview_shapes;
+
 	// Slicing
 	void SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer=false);
 	void Slice();

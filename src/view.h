@@ -25,6 +25,7 @@
 #include "stdafx.h"
 #include "printer.h"
 
+#include "filechooser.h"
 
 class View : public Gtk::Window
 {
@@ -34,6 +35,7 @@ class View : public Gtk::Window
 
   friend class PrintInhibitor;
   friend class Render;
+  friend class RSFilechooser;
 
   void toggle_fullscreen();
   void load_gcode();
@@ -43,7 +45,14 @@ class View : public Gtk::Window
   void load_stl();
   void autoarrange();
   void save_stl();
+  void do_load();
+  void do_save_stl();
+  void do_save_gcode();
+  void do_save_settings_as();
   void slice_svg();
+  void do_slice_svg(bool singlelayer=false);
+  bool test_confirm_overwrite( Glib::RefPtr < Gio::File > ) const;
+
   void send_gcode();
   void printing_changed();
   void power_toggled();
@@ -68,7 +77,9 @@ class View : public Gtk::Window
   ConnectView *m_cnx_view;
   Gtk::Entry *m_gcode_entry;
   Render *m_renderer;
-
+  
+  RSFilechooser *m_filechooser;
+  void on_controlnotebook_switch(GtkNotebookPage* page, guint page_num);
 
   void on_gcodebuffer_cursor_set (const Gtk::TextIter &iter, 
 				  const Glib::RefPtr <Gtk::TextMark> &refMark);
@@ -86,7 +97,6 @@ class View : public Gtk::Window
   virtual bool on_delete_event(GdkEventAny* event);
 
   void hide_on_response(int, Gtk::Dialog *dialog);
-  void show_dialog(const char *name);
   void about_dialog();
   void load_settings();
   void save_settings();
@@ -137,6 +147,8 @@ class View : public Gtk::Window
 
   bool statusBarMessage(Glib::ustring message);
   void stop_progress();
+
+  
   
  public:
   void setNonPrintingMode(bool noprinting=true, string filename="");
@@ -169,9 +181,18 @@ class View : public Gtk::Window
   void gcode_changed ();
   void set_SliderBBox(Vector3d min, Vector3d max);
 
+  void show_notebooktab (string name, string notebookname) const;
+  void show_widget (string name, bool visible) const;
+
+  void preview_file(Glib::RefPtr<Gio::File> file);
+
   /* Matrix4d &SelectedNodeMatrix(guint objectNr = 1); */
   /* void SelectedNodeMatrices(std::vector<Matrix4d *> &result ); */
   /* void newObject(); */
+
+  void show_dialog(const char *name);
+  Glib::RefPtr<Gtk::Builder> getBuilder() const { return m_builder; };
+
 
   // view nasties ...
   void Draw (vector<Gtk::TreeModel::Path> &selected);

@@ -75,7 +75,7 @@ static double read_double(ifstream &file) {
 
 /* Loads an binary STL file by filename
  * Returns 0 on success and -1 on failure */
-int Shape::loadBinarySTL(string filename) 
+int Shape::loadBinarySTL(string filename, uint max_triangles, bool readnormals)
 {
     triangles.clear();
 
@@ -98,12 +98,21 @@ int Shape::loadBinarySTL(string filename)
     file.read(reinterpret_cast <char *> (buffer), 4);
     // Read platform independent 32-bit little-endian int.
     num_triangles = buffer[0] | buffer[1] << 8 | buffer[2] << 16 | buffer[3] << 24;
-    triangles.reserve(num_triangles);
+
+    uint step = 1;
+    if (max_triangles > 0 && max_triangles < num_triangles) {
+      step = ceil(num_triangles/max_triangles);
+      triangles.reserve(max_triangles);
+    } else
+      triangles.reserve(num_triangles);
 
     uint i = 0;
-    for(; i < num_triangles; i++)
+    for(; i < num_triangles; i+=step)
     {
-        double a,b,c;
+      if (step>1)
+	file.seekg(84 + 50*i, ios_base::beg);
+
+      double a,b,c;
         a = read_double (file);
         b = read_double (file);
         c = read_double (file);
@@ -134,10 +143,11 @@ int Shape::loadBinarySTL(string filename)
 	// Repress unused variable warning.
 	(void)&byte_count;
 
-        Triangle T(Ax,Bx,Cx);
+	Triangle T = Triangle(Ax,Bx,Cx);
+	if (readnormals)
+	  if (T.Normal.dot(N) < 0) T.invertNormal();
 
 	// cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
-
         triangles.push_back(T);
     }
     file.close();
@@ -199,7 +209,7 @@ int Shape::saveBinarySTL(string filename) const
   return 0;
 }
 
-int Shape::loadASCIIVRML(std::string filename) 
+int Shape::loadASCIIVRML(std::string filename, uint max_triangles)
 {
   if(getFileType(filename) != VRML) {
     cerr << _("No VRML file file passed to loadASCIIVRML") << endl;
@@ -283,7 +293,7 @@ int Shape::loadASCIIVRML(std::string filename)
 
 /* Loads an ASCII STL file by filename
  * Returns 0 on success and -1 on failure */
-int Shape::loadASCIISTL(string filename) {
+int Shape::loadASCIISTL(string filename, uint max_triangles, bool readnormals) {
     // Check filetype
     if(getFileType(filename) != ASCII_STL) {
       cerr << _("None ASCII STL file passed to loadASCIIFile") << endl;
@@ -296,7 +306,7 @@ int Shape::loadASCIISTL(string filename) {
       cerr << _("Error: Unable to open stl file - ") << filename << endl;
       return -1;
     }
-    int ret = parseASCIISTL(&file);
+    int ret = parseASCIISTL(&file, max_triangles);
     if (ret < 0) {// cannot parse, try binary
       cerr << _("Could not read file in ASCII mode, trying Binary: ")<< filename << endl;
       file.close();
@@ -309,11 +319,27 @@ int Shape::loadASCIISTL(string filename) {
 } // STL::loadASCIIFile(string filename)
 
 
-int Shape::parseASCIISTL(istream *text) {
+int Shape::parseASCIISTL(istream *text, uint max_triangles, bool readnormals) {
 
     triangles.clear();
     Min.set(INFTY,INFTY,INFTY);
     Max.set(-INFTY,-INFTY,-INFTY);
+
+    // uint step = 1;
+    // if (max_triangles > 0 && max_triangles < num_triangles) {
+    //   step = ceil(num_triangles/max_triangles);
+    uint pos = text->tellg();
+    text->seekg(0, ios::end);
+    uint fsize = text->tellg();
+    text->seekg(pos, ios::beg);
+
+
+    // a rough estimation
+    uint num_triangles = fsize/30;
+
+    uint step = 1;
+    if (max_triangles > 0 && max_triangles < num_triangles) 
+      step = ceil(num_triangles/max_triangles);
 
 
     /* ASCII files start with "solid [Name_of_file]"
@@ -331,10 +357,20 @@ int Shape::parseASCIISTL(istream *text) {
     if (solid != "solid") {
       return -1;
     }
+
+    // uint itr = 0;
     while(!(*text).eof()) { // Loop around all triangles
         string facet;
         *text >> facet;
 
+	if (step > 1) {
+	  for (uint s=0; s < step; s++) {
+	    facet = "";
+	    while (facet != "facet" && facet != "endsolid")
+	      *text >> facet;
+	    if (facet == "endsolid") break;
+	  }
+	}
         // Parse possible end of text - "endsolid"
         if(facet == "endsolid") {
 	  break;
@@ -354,7 +390,12 @@ int Shape::parseASCIISTL(istream *text) {
 	  return -1;
 	}
 	
-	// forget about normals, we calculate them
+	if (readnormals)
+	  for(int i=0; i<3; i++) {
+            *text >> normal_vec.x()
+		  >> normal_vec.y()
+		  >> normal_vec.z();
+	  }
 
         // Parse "outer loop" line
         string outer, loop;
@@ -396,10 +437,13 @@ int Shape::parseASCIISTL(istream *text) {
         Triangle triangle(vertices[0],
 			  vertices[1],
 			  vertices[2]);
+	if (readnormals)
+	  if (triangle.Normal.dot(normal_vec) < 0) triangle.invertNormal();
+
         triangles.push_back(triangle);
     }
     CenterAroundXY();
-    cout << _("Shape has volume ") << volume() << " mm^3 and "
+    cout << _("Shape has volume ") << volume() << _(" mm^3 and ")
 	 << triangles.size() << _(" triangles") << endl;
     return 0;
 }
@@ -447,13 +491,13 @@ filetype_t Shape::getFileType(string filename) {
 /* Loads an stl file by filename
  * Returns -1 on error, and 0 on success
  * Error messages placed on stderr */
-int Shape::load(string filename)
+int Shape::load(string filename, uint max_triangles)
 {
     filetype_t type = getFileType (filename);
     if(type == ASCII_STL) {
-        loadASCIISTL(filename);
+      loadASCIISTL(filename, max_triangles);
     } else if (type == BINARY_STL) { // Binary
-        loadBinarySTL(filename);
+      loadBinarySTL(filename, max_triangles);
     } else {
       cerr << _("unrecognized file - ") << filename << endl;
 	return -1;
@@ -1148,7 +1192,7 @@ void drawString(const Vector3d &pos, void* font, const string &text)
 
 
 // called from Model::draw
-void Shape::draw(const Settings &settings, bool highlight) 
+void Shape::draw(const Settings &settings, bool highlight, uint max_triangles) 
 {
   //cerr << "Shape::draw" <<  endl;
 	// polygons
@@ -1171,8 +1215,15 @@ void Shape::draw(const Settings &settings, bool highlight)
 	}
 
 	if (highlight)
-	  //for (i = 0; i < 4; i++)
 	  mat_diffuse[3] += 0.3*(1.-mat_diffuse[3]);
+
+	// invert colours if partial draw (preview mode)
+	if (max_triangles > 0) {
+	  for (uint i = 0; i < 3; i++)
+	    mat_diffuse[i] = 1.-mat_diffuse[i];
+	  mat_diffuse[3] = 0.9;
+	}
+
 	  
 	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.Display.Highlight;
 
@@ -1304,13 +1355,16 @@ void Shape::drawBBox() const
 }
 
 
-void Shape::draw_geometry() 
+void Shape::draw_geometry(uint max_triangles) 
 {
 	Glib::TimeVal starttime;
 	starttime.assign_current_time();
 
+	uint step = 1;
+	if (max_triangles>0) step = floor(triangles.size()/max_triangles);
+
 	glBegin(GL_TRIANGLES);
-	for(size_t i=0;i<triangles.size();i++)
+	for(size_t i=0;i<triangles.size();i+=step)
 	{
 #if 0
 		switch(triangles[i].axis)
@@ -1334,7 +1388,7 @@ void Shape::draw_geometry()
 	Glib::TimeVal endtime;
 	endtime.assign_current_time();
 	Glib::TimeVal usedtime = endtime-starttime;
-	if (usedtime.as_double() > 0.3) slow_drawing = true;
+	if (usedtime.as_double() > 0.2) slow_drawing = true;
 }
 
 /*
@@ -1712,14 +1766,16 @@ void FlatShape::clear()
   polygons.clear();
 }
 
-void FlatShape::draw_geometry() {
+void FlatShape::draw_geometry(uint max_polygons) {
   const Matrix4d invT = transform3D.getInverse();
   const Vector3d minT = invT*Min;
   const Vector3d maxT = invT*Max;
   const Vector2d min2d(minT.x(), minT.y());
   const Vector2d max2d(maxT.x(), maxT.y());
   glDrawPolySurfaceRastered(polygons, min2d, max2d, 0, 0.1);
-  for (uint i = 0; i < polygons.size(); i++) {
+  uint step = 1;
+  if (max_polygons > 0) step = polygons.size()/max_polygons;
+  for (uint i = 0; i < polygons.size(); i+=step) {
     polygons[i].draw(GL_LINE_LOOP,false);
     // Poly p;
     // p.vertices = simplified(polygons[i].vertices, 0.2);

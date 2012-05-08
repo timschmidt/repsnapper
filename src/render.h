@@ -51,6 +51,8 @@ class Render : public Gtk::DrawingArea
 
   GtkWidget *get_widget();
   void set_model (Model *model);
+  void set_zoom (float zoom) {m_zoom=zoom;};
+  void set_transform(const Matrix4fT &transform) {m_transform=transform;};
   virtual bool on_configure_event(GdkEventConfigure* event);
   virtual bool on_expose_event(GdkEventExpose* event);
   virtual bool on_motion_notify_event(GdkEventMotion* event);

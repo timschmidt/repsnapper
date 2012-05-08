@@ -77,18 +77,18 @@ public:
  	string filename; 
 	int idx;
 
-	int parseASCIISTL(istream *text);
+	int parseASCIISTL(istream *text, uint max_triangles=0, bool readnormals=false);
 
 	Transform3D transform3D; 
 
-	int load(std::string filename);
+	int load(std::string filename, uint max_triangles=0);
 
 	virtual void clear();
 	/* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
 	/* 		      guint LayerNr, vector<int>& altInfillLayers); */
 	void draw (const Settings &settings, 
-		   bool highlight=false);
-	virtual void draw_geometry ();
+		   bool highlight=false, uint max_triangles=0);
+	virtual void draw_geometry (uint max_triangles=0);
 	void drawBBox() const; 
 	void CenterAroundXY();
 	virtual bool getPolygonsAtZ(const Matrix4d &T, double z, 
@@ -132,15 +132,15 @@ public:
 
     void makeHollow(double wallthickness);
 
-    int loadASCIISTL(std::string filename);
-    int loadBinarySTL(std::string filename);
+    int loadASCIISTL(std::string filename, uint max_triangles=0, bool readnormals=false);
+    int loadBinarySTL(std::string filename, uint max_triangles=0, bool readnormals=false);
     static filetype_t getFileType(std::string filename);
 
     virtual void splitshapes(vector<Shape*> &shapes, ViewProgress *progress=NULL);
 
     int divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) const;
 
-    int loadASCIIVRML(std::string filename);
+    int loadASCIIVRML(std::string filename, uint max_triangles=0);
 
     int saveBinarySTL(std::string filename) const;
 
@@ -207,7 +207,7 @@ class FlatShape : public Shape
   /* void draw (const Model *model, const Settings &settings, */
   /* 	     bool highlight=false); */
 
-  void draw_geometry ();
+  void draw_geometry (uint max_triangles=0);
   /* void drawBBox() const;  */
   /*void CenterAroundXY();*/
 

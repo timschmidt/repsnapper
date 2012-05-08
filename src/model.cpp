@@ -52,6 +52,7 @@ Model::Model() :
 {
   // Variable defaults
   Center.set(100.,100.,0.);
+  preview_shapes.clear();
 }
 
 Model::~Model()
@@ -59,6 +60,7 @@ Model::~Model()
   ClearLayers();
   ClearGCode();
   delete m_previewLayer;
+  preview_shapes.clear();
 }
 
 void Model::alert (const char *message)
@@ -175,26 +177,27 @@ void Model::ReadSVG(Glib::RefPtr<Gio::File> file)
 }
 
 
-
-void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
+vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file, 
+				 uint max_triangles, filetype_t ftype)
 {
-  bool autoplace = settings.Misc.ShapeAutoplace;
+  vector<Shape*> shapes;
+  if (file==0) return shapes;
   string path = file->get_path();
+  size_t found = path.find_last_of("/\\");
   if (ftype==UNKNOWN_TYPE)
     ftype =  Shape::getFileType(path);
   
   if (ftype == BINARY_STL) // only one shape per file
     {
       Shape *shape = new Shape();
-      shape->loadBinarySTL(path);
-      AddShape(NULL, shape, path,autoplace);
+      shape->loadBinarySTL(path, max_triangles);
+      shapes.push_back(shape);
      }
   else if (ftype == ASCII_STL) // multiple shapes per file
     {
       ifstream fileis;
       fileis.open(path.c_str());
-      size_t found = path.find_last_of("/\\");
-      vector<Shape*> shapes;
+      //vector<Shape*> shapes;
       while (!fileis.eof())
 	{
 	  Shape *shape = new Shape();
@@ -210,29 +213,39 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
 	  else if (shapes.size()==0) {
 	    cerr <<"Could not read STL in ASCII mode: "<< path 
 	   	 << " (bad header?), trying Binary " << endl ;
-	    ReadStl(file, BINARY_STL);
-	    return;
+	    return ReadShapes(file, max_triangles, BINARY_STL);
 	  }
 	}
-      if (shapes.size()==1){
-	shapes.front()->filename = (string)path.substr(found+1); 
-	AddShape(NULL, shapes.front(), shapes.front()->filename, autoplace);
-      }
-      else for (uint i=0;i<shapes.size();i++){
-	  // do not autoplace to keep saved positions
-	  AddShape(NULL, shapes[i], shapes[i]->filename, false);
-	}
-      shapes.clear();
-      ModelChanged();
       fileis.close();
     }
   else if (ftype == VRML) 
     {
       Shape *shape = new Shape();
       shape->loadASCIIVRML(path);
-      AddShape(NULL, shape, path,autoplace);
+      shapes.push_back(shape);
     }
-  ClearLayers();
+  if (shapes.size()==1){
+    shapes.front()->filename = (string)path.substr(found+1);
+  }
+  return shapes;
+}
+
+
+void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
+{
+  bool autoplace = settings.Misc.ShapeAutoplace;
+  string path = file->get_path();
+  vector<Shape*> shapes = ReadShapes(file, 0, ftype);
+  if (shapes.size()==1){
+    AddShape(NULL, shapes.front(), shapes.front()->filename, autoplace);
+  }
+  else for (uint i=0;i<shapes.size();i++){
+      // do not autoplace to keep saved positions
+      AddShape(NULL, shapes[i], shapes[i]->filename, false);
+    }
+  shapes.clear();
+  ModelChanged();
+  return;
 }
 
 void Model::SaveStl(Glib::RefPtr<Gio::File> file)
@@ -249,17 +262,10 @@ void Model::SaveStl(Glib::RefPtr<Gio::File> file)
     for(uint s=0; s < shapes.size(); s++) {
       sstr << shapes[s]->getSTLsolid() << endl;
     }
-  // for(uint o=0;o<objtree.Objects.size();o++)
-  // {
-  //   for(uint f=0;f<objtree.Objects[o]->shapes.size();f++)
-  //   {
-  //     Shape *shape = objtree.Objects[o]->shapes[f];
-  //     sstr << shape->getSTLsolid() << endl;
-  //   }
-  // }
     Glib::file_set_contents (file->get_path(), sstr.str());
   }
 }
+
 
 void Model::Read(Glib::RefPtr<Gio::File> file)
 {
@@ -770,6 +776,24 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 
   glPushMatrix();
   glMultMatrixd (&objtree.transform3D.transform.array[0]);
+
+  // draw preview shapes and nothing else
+  if (settings.Display.PreviewLoad)
+    if (preview_shapes.size() > 0) {
+      offset = GetViewCenter();
+      glTranslatef( offset.x(), offset.y(), offset.z());
+      for (uint i = 0; i < preview_shapes.size(); i++) {
+	glPushMatrix();
+	glMultMatrixd (&preview_shapes[i]->transform3D.transform.array[0]);
+	offset = -preview_shapes[i]->Center;
+	glTranslatef(offset.x(), offset.y(), -offset.z());
+	preview_shapes[i]->draw (settings, false, 20000);
+	glPopMatrix();
+      }
+      glPopMatrix();
+      glPopMatrix();
+      return 0;
+    }
 
   for (uint i = 0; i < objtree.Objects.size(); i++) {
     TreeObject *object = objtree.Objects[i];

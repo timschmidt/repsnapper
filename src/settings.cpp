@@ -219,6 +219,9 @@ static struct {
   BOOL_MEMBER   (Slicing.NoBridges, "NoBridges", false, true),
   FLOAT_MEMBER  (Slicing.BridgeExtrusion, "BridgeExtrusion", 1, true),
 
+  // Milling
+  FLOAT_MEMBER  (Milling.ToolDiameter, "ToolDiameter", 2, true),
+
   // Misc.
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
   //BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
@@ -261,6 +264,8 @@ static struct {
   FLOAT_MEMBER (Display.NormalsLength, "NormalsLength", 10, true),
   FLOAT_MEMBER (Display.EndPointSize, "EndPointSize", 8, true),
   FLOAT_MEMBER (Display.TempUpdateSpeed, "TempUpdateSpeed", 3, false),
+
+  BOOL_MEMBER (Display.PreviewLoad, "PreviewLoad", true, true),
 
   // Colour selectors settings
 
@@ -347,6 +352,9 @@ static struct {
   { "Slicing.ArcsMaxAngle", 0, 180, 1, 10 },
   { "Slicing.MinArcLength", 0, 10, 0.01, 0.1 },
   { "Slicing.CornerRadius", 0, 5, 0.01, 0.1 },
+
+  // Milling
+  { "Milling.ToolDiameter", 0, 5, 0.01, 0.1 },
 
   // Hardware
   { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },

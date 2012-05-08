@@ -76,22 +76,6 @@ void View::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleB
   }
 }
 
-void View::load_gcode ()
-{
-  PrintInhibitor inhibitPrint(m_printer);
-  if (m_printer->IsPrinting())
-  {
-    m_printer->error (_("Complete print before reading"),
-		   _("Reading GCode while printing will abort the print"));
-    return;
-  }
-  FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::GCODE);
-}
-
-void View::save_gcode ()
-{
-  FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::GCODE);
-}
 
 void View::move_gcode_to_platform ()
 {
@@ -112,9 +96,39 @@ void View::convert_to_gcode ()
 
 }
 
+void View::preview_file (Glib::RefPtr< Gio::File > file)
+{
+  if (!m_model) return;
+  m_model->preview_shapes.clear();
+  if (!m_model->settings.Display.PreviewLoad) return;
+  if (!file)    return;
+  //cerr << "view " <<file->get_path() << endl;
+  m_model->preview_shapes  = m_model->ReadShapes(file,10000);
+  if (m_model->preview_shapes.size()>0) {
+    Vector3d pMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
+    Vector3d pMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
+    for (uint i = 0; i < m_model->preview_shapes.size(); i++) {
+      Vector3d stlMin = m_model->preview_shapes[i]->Min;
+      Vector3d stlMax = m_model->preview_shapes[i]->Max;
+      for (uint k = 0; k < 3; k++) {
+	pMin[k] = min(stlMin[k], pMin[k]);
+	pMax[k] = max(stlMax[k], pMax[k]);
+      }
+    }
+    //cerr << pMin << pMax << endl;
+    m_renderer->set_zoom((pMax - pMin).find_max()*2);
+    // Matrix4fT tr;
+    // setArcballTrans(tr,(pMin+pMax)/2);
+    // m_renderer->set_transform(tr);
+  }
+  queue_draw();
+}
+
 void View::load_stl ()
 {
-  FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::STL);
+  m_filechooser->set_loading(RSFilechooser::MODEL);
+  show_notebooktab("file_tab", "controlnotebook");
+  // FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::STL);
 }
 
 void View::autoarrange ()
@@ -135,14 +149,115 @@ void View::toggle_fullscreen()
   }
 }
 
+void View::do_load ()
+{
+  PrintInhibitor inhibitPrint(m_printer);
+  if (m_printer->IsPrinting())
+  {
+    m_printer->error (_("Complete print before reading"),
+		   _("Reading GCode while printing will abort the print"));
+    return;
+  }
+  //FileChooser::save_multiple = false;
+  m_model->preview_shapes.clear();
+
+  vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
+  for (uint i= 0; i < files.size(); i++) {
+    if (!files[i]) continue; // should never happen
+    m_model->Read(files[i]);
+    string directory_path = files[i]->get_parent()->get_path();
+    m_model->settings.STLPath = directory_path;
+  }
+  show_notebooktab("model_tab", "controlnotebook");
+}
+
+void View::do_slice_svg (bool singlelayer)
+{
+  std::vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
+  if (files.size()>0) {
+    if (!files[0]) return; // should never happen
+    if (!test_confirm_overwrite(files[0])) return;
+    string directory_path = files[0]->get_parent()->get_path();
+    m_model->settings.STLPath = directory_path;
+    m_model->SliceToSVG(files[0], singlelayer);
+  }
+}
+
+bool View::test_confirm_overwrite( Glib::RefPtr < Gio::File > file ) const
+{
+  bool result = false;
+  if (file->query_exists()) {
+    string fname = file->get_basename();
+    Gtk::MessageDialog *dialog = new Gtk::MessageDialog("Overwrite File?");
+    dialog->set_secondary_text (fname);
+    dialog->add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+    int response = dialog->run();
+    if (response == Gtk::RESPONSE_OK)
+      result = true;
+    else
+      result = false;
+    delete dialog;
+  }
+  return result;
+}
+ 
+void View::do_save_stl ()
+{
+  std::vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
+  if (files.size()>0) {
+    if (!files[0]) return; // should never happen
+    if (!test_confirm_overwrite(files[0])) return;
+    string directory_path = files[0]->get_parent()->get_path();
+    m_model->settings.STLPath = directory_path;
+    m_model->SaveStl (files[0]);
+  }
+}
+void View::do_save_gcode ()
+{
+  std::vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
+  if (files.size()>0) {
+    if (!files[0]) return; // should never happen
+    if (!test_confirm_overwrite(files[0])) return;
+    string directory_path = files[0]->get_parent()->get_path();
+    m_model->settings.GCodePath = directory_path;
+    m_model->WriteGCode (files[0]);
+  }
+}
+
 void View::save_stl ()
 {
-  FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::STL);
+  m_filechooser->set_saving (RSFilechooser::MODEL);
+  show_notebooktab("file_tab", "controlnotebook");
+  // FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::STL);
 }
+
+void View::load_gcode ()
+{
+  PrintInhibitor inhibitPrint(m_printer);
+  if (m_printer->IsPrinting())
+  {
+    m_printer->error (_("Complete print before reading"),
+  		   _("Reading GCode while printing will abort the print"));
+    return;
+  }
+  m_filechooser->set_loading (RSFilechooser::GCODE);
+  show_notebooktab("file_tab", "controlnotebook");
+  // FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::GCODE);
+}
+
+void View::save_gcode ()
+{
+  m_filechooser->set_saving (RSFilechooser::GCODE);
+  show_notebooktab("file_tab", "controlnotebook");
+  //FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::GCODE);
+}
+
 
 void View::slice_svg ()
 {
-  FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::SVG);
+  m_filechooser->set_saving (RSFilechooser::SVG);
+  show_notebooktab("file_tab", "controlnotebook");
+  //FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::SVG);
 }
 
 void View::send_gcode ()
@@ -648,7 +763,7 @@ void View::home_all()
 
 void View::load_settings()
 {
-  FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::SETTINGS);
+  //FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::SETTINGS);
 }
 
 void View::save_settings()
@@ -668,7 +783,21 @@ void View::save_settings()
 
 void View::save_settings_as()
 {
-  FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::SETTINGS);
+  m_filechooser->set_saving (RSFilechooser::SETTINGS);
+  show_notebooktab("file_tab", "controlnotebook");
+}
+
+void View::do_save_settings_as()
+{
+  std::vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
+  if (files.size()>0) {
+    if (!files[0]) return; // should never happen
+    if (!test_confirm_overwrite(files[0])) return;
+    string directory_path = files[0]->get_parent()->get_path();
+    m_model->settings.SettingsPath = directory_path;
+    m_model->SaveConfig(files[0]);
+  }
+  //FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::SETTINGS);
 }
 
 void View::inhibit_print_changed()
@@ -794,30 +923,41 @@ void View::model_changed ()
 {
   m_translation_row->selection_changed();
   set_SliderBBox(m_model->Min.z(), m_model->Max.z());
+  show_notebooktab("model_tab", "controlnotebook");
   queue_draw();
+}
+
+void View::show_widget (string name, bool visible) const
+{
+  Gtk::Widget *w;
+  m_builder->get_widget (name, w);
+  if (w) 
+    if (visible) w->show();
+    else w->hide();
+  else cerr << "no '" << name << "' in GUI" << endl;
+}
+
+
+void View::show_notebooktab (string name, string notebookname) const
+{
+  Gtk::Notebook *nb;
+  m_builder->get_widget (notebookname, nb);
+  if (!nb) { cerr << "no notebook " << notebookname << endl; return;}
+  Gtk::Widget *w;
+  m_builder->get_widget (name, w);
+  if (!w)  { cerr << "no widget " << name << endl; return;}
+  int num = nb->page_num(*w);
+  if (num >= 0)
+    nb->set_current_page(num);
+  else cerr << "no widget " << name << endl;
 }
 
 void View::gcode_changed ()
 {
   set_SliderBBox(m_model->gcode.Min, m_model->gcode.Max);
-
   // show gcode result
-  Gtk::Notebook *nb;
-  m_builder->get_widget ("gcode_text_notebook", nb);
-  Gtk::Widget *gct;
-  m_builder->get_widget ("gcode_result_win", gct);
-  if (nb && gct)
-    nb->set_current_page(nb->page_num(*gct));
-  
-  // go to notebookpage with save gcode button
-  //Gtk::Widget *gct;
-  m_builder->get_widget ("controlnotebook", nb);
-  m_builder->get_widget ("gcode_tab", gct);
-  if (nb && gct) {
-    int gcpage = nb->page_num(*gct);
-    if (gcpage>=0)
-      nb->set_current_page(gcpage);
-  }
+  show_notebooktab("gcode_result_win", "gcode_text_notebook");
+  show_notebooktab("gcode_tab", "controlnotebook");
 }
 
 void View::auto_rotate()
@@ -980,7 +1120,7 @@ View::View(BaseObjectType* cobject,
   connect_action ("SaveSettings",    sigc::mem_fun(*this, &View::save_settings));
   connect_action ("SaveSettingsAs",  sigc::mem_fun(*this, &View::save_settings_as));
 
-
+  // pronterface-mode
   connect_button ("printtofilebutton",      sigc::mem_fun(*this, &View::PrintToFile) );
 #if 0
   // Simple tab
@@ -1005,13 +1145,14 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/6)));
   connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/6)));
   connect_button ("m_normals",       sigc::mem_fun(*this, &View::invertnormals_selection));
-  connect_button ("m_hollow",       sigc::mem_fun(*this, &View::hollow_selection));
-  connect_button ("m_platform",       sigc::mem_fun(*this, &View::placeonplatform_selection));
+  connect_button ("m_hollow",        sigc::mem_fun(*this, &View::hollow_selection));
+  connect_button ("m_platform",      sigc::mem_fun(*this, &View::placeonplatform_selection));
   connect_button ("m_mirror",        sigc::mem_fun(*this, &View::mirror_selection));
   connect_button ("twist_neg",       sigc::bind(sigc::mem_fun(*this, &View::twist_selection), -M_PI/12));
   connect_button ("twist_pos",       sigc::bind(sigc::mem_fun(*this, &View::twist_selection), M_PI/12));
 
   connect_button ("progress_stop",   sigc::mem_fun(*this, &View::stop_progress));
+
 
 
   m_builder->get_widget ("m_treeview", m_treeview);
@@ -1107,10 +1248,31 @@ View::View(BaseObjectType* cobject,
     pBox->add (*m_renderer);
   }
 
-  showAllWidgets();
+  // file chooser
+  m_filechooser = new RSFilechooser(this);
+  // show_widget("save_buttons", false);
+
+  // signal callback for notebook page-switch
+  Gtk::Notebook *cnoteb;
+  m_builder->get_widget ("controlnotebook", cnoteb);
+  if (cnoteb)
+    cnoteb->signal_switch_page().connect
+      (sigc::mem_fun(*this, &View::on_controlnotebook_switch));
+  else cerr << "no 'controlnotebook' in GUI" << endl;
 
   m_printer = NULL;
+
+  showAllWidgets();
 }
+
+//  stop file preview when leaving file tab
+void View::on_controlnotebook_switch(GtkNotebookPage* page, guint page_num)
+{
+  if (m_filechooser) m_filechooser->set_filetype();
+  if (m_model)       m_model->preview_shapes.clear();
+  if (m_renderer)    m_renderer->queue_draw();
+}
+
 
 View::~View()
 {
@@ -1124,6 +1286,7 @@ View::~View()
   delete m_progress;
   delete m_printer;
   delete m_gcodetextview;
+  delete m_filechooser;
 }
 
 /* Recursively sets all widgets in the window to visible */
@@ -1149,16 +1312,16 @@ void View::setNonPrintingMode(bool noprinting, string filename) {
     m_builder->get_widget("controlnotebook", nb);
     if (nb) {
       Gtk::VBox *vbox = NULL;
-      m_builder->get_widget("printercontrols", vbox);
+      m_builder->get_widget("printer_tab", vbox);
       if (vbox) {
 	int num = nb->page_num(*vbox);
 	nb->remove_page(num);
-      } else cerr << "No printercontrols GUI element found" << endl;
-      m_builder->get_widget("logsbox", vbox);
+      } else cerr << "No printer_tab GUI element found" << endl;
+      m_builder->get_widget("logs_tab", vbox);
       if (vbox) {
 	int num = nb->page_num(*vbox);
 	nb->remove_page(num);
-      } else cerr << "No logsbox GUI element found" << endl;
+      } else cerr << "No logs_tab GUI element found" << endl;
     } else cerr << "No controlnotebook GUI element found" << endl;
     Gtk::Label *lab = NULL;
     m_builder->get_widget("outfilelabel", lab);
@@ -1167,6 +1330,7 @@ void View::setNonPrintingMode(bool noprinting, string filename) {
       printtofile_name = filename;
     }
     else cerr << "No outfilelabel GUI element found" << endl;
+    show_notebooktab("model_tab", "controlnotebook");
   } else {
     Gtk::HBox *hbox = NULL;
     m_builder->get_widget("printtofile", hbox);
@@ -1675,8 +1839,8 @@ void View::DrawGrid()
         // glEnd();
 
         // Draw print surface
-        float mat_diffuse_white[] = {0.5f, 0.5f, 0.5f, 0.05f};
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_white);
+	float mat_diffuse_white[] = {0.5f, 0.5f, 0.5f, 0.05f};
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_white);
 
         glBegin(GL_QUADS);
 	glVertex3f (pM.x(), pM.y(), 0.0f);
