@@ -27,14 +27,12 @@
 #include "stdafx.h"
 #include "model.h"
 #include "objtree.h"
-#include "file.h"
 #include "render.h"
 #include "settings.h"
 #include "progress.h"
 #include "connectview.h"
 
 #include "gitversion.h"
-
 
 bool View::on_delete_event(GdkEventAny* event)
 {

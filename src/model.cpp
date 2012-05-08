@@ -29,7 +29,6 @@
 #include "stdafx.h"
 #include "model.h"
 #include "objtree.h"
-#include "file.h"
 #include "settings.h"
 #include "connectview.h"
 #include "layer.h"
