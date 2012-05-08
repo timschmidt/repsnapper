@@ -7,7 +7,7 @@ repsnapper.desktop.in
 src/arcball.cpp
 src/command.cpp
 src/connectview.cpp
-src/file.cpp
+src/filechooser.cpp
 src/gcode.cpp
 src/gcodestate.cpp
 src/model.cpp
