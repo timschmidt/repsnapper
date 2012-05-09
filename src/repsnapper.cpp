@@ -39,6 +39,7 @@ struct CommandLineOptions
 public:
 	bool use_gui;
 	string stl_input_path;
+	string binary_output_path;
 	string gcode_output_path;
 	string settings_path;
   string svg_output_path;
@@ -62,7 +63,8 @@ private:
 			     "Start reprap control software and load [FILES]\n"
 			     "Options:\n"
 			     "  -t, --no-gui           act as a head-less renderer\n"
-			     "  -i, --input [file]     read file gcode to [file]\n"
+			     "  -i, --input [file]     read input Model [file]\n"
+			     "  -b, --binary [file]    batch convert input file to binary STL\n"
 			     "  -o, --output [file]    if not head-less (-t),\n"
 			     "                         enter non-printing GUI mode\n"
 			     "                         only able to output gcode to [file]\n"
@@ -86,6 +88,11 @@ public:
 		        /**/ if (param && (!strcmp (arg, "-i") ||
 					   !strcmp (arg, "--input")))
 				stl_input_path = argv[++i];
+			else if (param && (!strcmp (arg, "-b") ||
+					   !strcmp (arg, "--binary"))) {
+				binary_output_path = argv[++i];
+				use_gui = false;
+			}
 			else if (param && (!strcmp (arg, "-o") ||
 					   !strcmp (arg, "--output")))
 				gcode_output_path = argv[++i];
@@ -268,6 +275,9 @@ int main(int argc, char **argv)
       else if (opts.svg_output_path.size() > 0) {
 	model->SliceToSVG(Gio::File::create_for_path(opts.svg_output_path),
 			  opts.svg_single_output);
+      }
+      else if (opts.binary_output_path.size() > 0) {
+	model->SaveStl(Gio::File::create_for_path(opts.binary_output_path));
       }
       else cerr << _("No output file given") << endl;
     return 0;
