@@ -606,11 +606,14 @@ void Layer::MakeShells(const Settings &settings)
       }
   }
   // the filling polygon
-  fillPolygons = Clipping::getOffset(shrinked,-(1.-infilloverlap)*distance);
-  for (uint i = 0; i<fillPolygons.size(); i++)  
-    fillPolygons[i].cleanup(cleandist);
-  //fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);
-  //cerr << LayerNo << " > " << fillPolygons.size()<< endl;
+  if (settings.Slicing.DoInfill) {
+    fillPolygons = Clipping::getOffset(shrinked,-(1.-infilloverlap)*distance);
+    for (uint i = 0; i<fillPolygons.size(); i++)  
+      fillPolygons[i].cleanup(cleandist);
+    //fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);
+    //cerr << LayerNo << " > " << fillPolygons.size()<< endl;
+  }
+  
   calcConvexHull();
 
   //cerr << " .. made " << fillPolygons.size() << " offsetpolys "  << endl;
@@ -1029,11 +1032,12 @@ void Layer::Draw(const Settings &settings)
   draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  0.6, randomized);
   if (filledpolygons) {
     draw_polys_surface(fullFillPolygons,  Min, Max, Z, thickness/2., GREEN, 0.5);
-    draw_polys_surface(fillPolygons,  Min, Max, Z, thickness/2., GREEN2, 0.25);
     draw_polys_surface(decorPolygons,  Min, Max, Z, thickness/2., GREY, 0.2);
   }
   if(settings.Display.DisplayinFill)
     {
+      if (filledpolygons) 
+	draw_polys_surface(fillPolygons,  Min, Max, Z, thickness/2., GREEN2, 0.25);
       bool DebugInfill = settings.Display.DisplayDebuginFill;
       if (normalInfill)
 	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
