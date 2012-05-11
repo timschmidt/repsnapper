@@ -183,7 +183,7 @@ void View::do_slice_svg (bool singlelayer)
 
 bool View::test_confirm_overwrite( Glib::RefPtr < Gio::File > file ) const
 {
-  bool result = false;
+  bool result = true;
   if (file->query_exists()) {
     string fname = file->get_basename();
     Gtk::MessageDialog *dialog = new Gtk::MessageDialog("Overwrite File?");
