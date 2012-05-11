@@ -903,18 +903,18 @@ void View::stl_added (Gtk::TreePath &path)
 
 void View::set_SliderBBox(Vector3d bbmin, Vector3d bbmax) 
 {
-  double min = 0, //max(0.0, bbmin.z()), 
-    max = bbmax.z();
+  double smin = 0, //max(0.0, bbmin.z()), 
+    smax = max(smin+0.001, bbmax.z());
   Gtk::HScale * scale;
   m_builder->get_widget ("Display.LayerValue", scale);
   if (scale)
-    scale->set_range (min, max);
+    scale->set_range (smin, smax);
   m_builder->get_widget ("Display.GCodeDrawStart", scale);
   if (scale)
-    scale->set_range (min, max);
+    scale->set_range (smin, smax);
   m_builder->get_widget ("Display.GCodeDrawEnd", scale);
   if (scale)
-    scale->set_range (min, max);
+    scale->set_range (smin, smax);
 }
 
 void View::model_changed ()
@@ -1266,6 +1266,7 @@ View::View(BaseObjectType* cobject,
 //  stop file preview when leaving file tab
 void View::on_controlnotebook_switch(GtkNotebookPage* page, guint page_num)
 {
+  if (!page) return;
   if (m_filechooser) m_filechooser->set_filetype();
   if (m_model)       m_model->preview_shapes.clear();
   if (m_renderer)    m_renderer->queue_draw();
