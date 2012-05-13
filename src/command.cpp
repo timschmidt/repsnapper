@@ -120,16 +120,12 @@ Command::Command()
 
 {}
 
-Command::Command(GCodes code, const Vector3d position, double E, double F) 
+Command::Command(GCodes code, const Vector3d &position, double E, double F) 
   : Code(code), where(position), is_value(false),  f(F), e(E), abs_extr(0),
     not_layerchange(false)
 {
-  //assert(where.z()>=0);
   if (where.z() < 0) 
     where.z() = 0;
-//   {
-//     throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at "+info()));
-//   }
 }
 
 Command::Command(GCodes code, double value_) 
@@ -168,7 +164,7 @@ Command::Command(const Command &rhs)
  * @param defaultpos
  * @param [OUT] gcodeline the unparsed portion of the string
  */
-Command::Command(string gcodeline, Vector3d defaultpos) 
+Command::Command(string gcodeline, const Vector3d &defaultpos)
   : where(defaultpos),  arcIJK(0,0,0), is_value(false),  f(0), e(0), abs_extr(0)
 {
   // Notes:
@@ -241,7 +237,7 @@ GCodes Command::getCode(const string commstr) const
 bool Command::hasNoEffect(const Vector3d LastPos, const double lastE, 
 			  const double lastF, const bool relativeEcode) const
 {
-  return ((Code == COORDINATEDMOTION || Code == COORDINATEDMOTION3D)
+  return ((Code == COORDINATEDMOTION)
 	  && where == LastPos  
 	  && ((relativeEcode && e == 0) || (!relativeEcode && e == lastE)) 
 	  && abs_extr == 0);
@@ -279,7 +275,6 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     if (arcIJK.z()!=0) ostr << "K" << arcIJK.z() << " ";
   case RAPIDMOTION:
   case COORDINATEDMOTION:
-  case COORDINATEDMOTION3D:
     { // going down? -> split xy and z movements
       Vector3d delta = where-LastPos;
       const double RETRACT_E = 2; //mm
@@ -503,6 +498,20 @@ void Command::draw(Vector3d &lastPos, guint linewidth,
   glColor4fv(&color[0]);
   draw(lastPos, extrwidth, arrows, debug_arcs);
 }
+
+void Command::addToPosition(Vector3d &from, bool relative)
+{
+  if (relative) from += where;
+  else {
+    if (where.x()!=0) 
+      from.x()  = where.x(); 
+    if (where.y()!=0) 
+      from.y()  = where.y(); 
+    if (where.z()!=0) 
+      from.z()  = where.z(); 
+  }
+}
+
 
 string Command::info() const
 {

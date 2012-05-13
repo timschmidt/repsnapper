@@ -171,6 +171,7 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 
 	string s;
 
+	bool relativePos = false;
 	Vector3d globalPos(0,0,0);
 	Min.set(99999999.0,99999999.0,99999999.0);
 	Max.set(-99999999.0,-99999999.0,-99999999.0);
@@ -184,7 +185,7 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 	bool belowzero = false;
 
 	stringstream alltext;
-
+	
 	while(getline(file,s))
 	{
 	  alltext << s << endl;
@@ -194,52 +195,101 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 		if (fpos%progress_steps==0) if (!progress->update(fpos)) break;
 
 		Command command;
-		try {
+
+		if (relativePos)
+		  command = Command(s, Vector3d::ZERO);
+		else
 		  command = Command(s, globalPos);
-		} catch (Glib::OptionError e) {
-		  if (!belowzero) // only once
-		    cerr << "GCode below zero!"<< endl;// ; //alert("GCode problem");
-		  belowzero = true;
+
+		if (command.Code == COMMENT) {
+		  continue;
 		}
-		if (command.e==0)
-		  command.e= lastE;
+		if (command.Code == UNKNOWN) {
+		  cerr << "Unknown GCode " << s << endl;
+		  continue;
+		}
+		if (command.Code == RELATIVEPOSITIONING) {
+		  cerr << "rel" << endl;
+		  relativePos = true;
+		  continue;
+		}
+		if (command.Code == ABSOLUTEPOSITIONING) {
+		  cerr << "abs" << endl;
+		  relativePos = false;
+		  continue;
+		}
+
+		// not used yet
+		// if (command.Code == ABSOLUTE_ECODE) {
+		//   relativeE = false;
+		//   continue;
+		// }
+		// if (command.Code == RELATIVE_ECODE) {
+		//   relativeE = true;
+		//   continue;
+		// }
+
+		if (command.e == 0)
+		  command.e  = lastE;
 		else
-		  lastE=command.e;
-		if (command.f==0)
-		  command.f= lastF;
+		  lastE = command.e;
+
+		if (command.f != 0)
+		  lastF = command.f;
 		else
-		  lastF=command.f;
+		  command.f = lastF;
+
 		// cout << s << endl;
 		//cerr << command.info()<< endl;
-		if(command.where.x() < -100)
+		// if(command.where.x() < -100)
+		//   continue;
+		// if(command.where.y() < -100)
+		//   continue;
+		
+		if (command.Code == SETCURRENTPOS) {
+		  continue;//if (relativePos) globalPos = command.where;
+		}
+		else {
+		  command.addToPosition(globalPos, relativePos);
+		}
+
+		if (globalPos.z() < 0){
+		  cerr << "GCode below zero!"<< endl;
+		  belowzero = true;
 		  continue;
-		if(command.where.y() < -100)
-		  continue;
-		globalPos = command.where;
-		if(command.where.x() < Min.x())
-		  Min.x() = command.where.x();
-		if(command.where.y() < Min.y())
-		  Min.y() = command.where.y();
-		if(command.where.z() < Min.z())
-		  Min.z() = command.where.z();
-		if(command.where.x() > Max.x())
-		  Max.x() = command.where.x();
-		if(command.where.y() > Max.y())
-		  Max.y() = command.where.y();
-		if(command.where.z() > Max.z())
-		  Max.z() = command.where.z();
-		if (command.where.z() > lastZ) {
-		  // if (lastZ > 0){ // don't record first layer
+		}
+
+		if ( command.Code == RAPIDMOTION ||
+		     command.Code == COORDINATEDMOTION || 
+		     command.Code == ARC_CW ||
+		     command.Code == ARC_CCW ||
+		     command.Code == GOHOME ) {
+		  
+		  if(globalPos.x() < Min.x())
+		    Min.x() = globalPos.x();
+		  if(globalPos.y() < Min.y())
+		    Min.y() = globalPos.y();
+		  if(globalPos.z() < Min.z())
+		    Min.z() = globalPos.z();
+		  if(globalPos.x() > Max.x())
+		    Max.x() = globalPos.x();
+		  if(globalPos.y() > Max.y())
+		    Max.y() = globalPos.y();
+		  if(globalPos.z() > Max.z())
+		    Max.z() = globalPos.z();
+		  if (globalPos.z() > lastZ) {
+		    // if (lastZ > 0){ // don't record first layer
 		    unsigned long num = loaded_commands.size();
 		    layerchanges.push_back(num);
-		  // }
-		  lastZ = command.where.z();
-		  buffer_zpos_lines.push_back(LineNr-1);
-		}
-		else if (command.where.z() < lastZ) {
-		  lastZ=command.where.z();
-		  if (layerchanges.size()>0)
-		    layerchanges.erase(layerchanges.end()-1);
+		    // }
+		    lastZ = globalPos.z();
+		    buffer_zpos_lines.push_back(LineNr-1);
+		  }
+		  else if (globalPos.z() < lastZ) {
+		    lastZ = globalPos.z();
+		    if (layerchanges.size()>0)
+		      layerchanges.erase(layerchanges.end()-1);
+		  }
 		}
 		loaded_commands.push_back(command);
 	}
@@ -436,21 +486,21 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		case EXTRUDEROFF:
 			extruderon = false;
 			break;
-		case COORDINATEDMOTION3D: // old 3D gcode
-		  if (extruderon) {
-		    if (liveprinting) {
-		      Color = settings.Display.GCodePrintingRGBA;
-		    } else
-		      Color = settings.Display.GCodeExtrudeRGBA;
-		  }
-		  else {
-		    Color = settings.Display.GCodeMoveRGBA;
-		    extrwidth = 0;
-		  }
-		  commands[i].draw(pos, linewidth, Color, extrwidth, 
-				   arrows, debug_arcs);
-		  LastE=commands[i].e;
-		  break;
+		// case COORDINATEDMOTION3D: // old 3D gcode
+		//   if (extruderon) {
+		//     if (liveprinting) {
+		//       Color = settings.Display.GCodePrintingRGBA;
+		//     } else
+		//       Color = settings.Display.GCodeExtrudeRGBA;
+		//   }
+		//   else {
+		//     Color = settings.Display.GCodeMoveRGBA;
+		//     extrwidth = 0;
+		//   }
+		//   commands[i].draw(pos, linewidth, Color, extrwidth, 
+		// 		   arrows, debug_arcs);
+		//   LastE=commands[i].e;
+		//   break;
 		case ARC_CW:
 		case ARC_CCW:
 		  if (i==start) {
@@ -781,12 +831,12 @@ std::string GCodeIter::next_line_stripped()
 {
   string line = next_line();
   size_t pos = line.find(";");
-  size_t newline = line.find("\n");
   if (pos!=string::npos){
     line = line.substr(0,pos);
-    if (newline!=string::npos)
-      line += "\n";
   }
+  size_t newline = line.find("\n");
+  if (newline==string::npos)
+    line += "\n";
   return line;
 }
 

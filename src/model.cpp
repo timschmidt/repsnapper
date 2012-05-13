@@ -300,7 +300,9 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
   gcode.Read (this, m_progress, file->get_path());
   m_progress->stop (_("Done"));
   is_calculating=false;
-  
+  Max = gcode.Max;
+  Min = gcode.Min;
+  Center = (Max + Min) / 2.0;
 }
 
 

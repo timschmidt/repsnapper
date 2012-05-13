@@ -102,28 +102,26 @@ Main code follows
 
 
 enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
-	    RAPIDMOTION, COORDINATEDMOTION, COORDINATEDMOTION3D, // 3 ..
-	    ARC_CW, ARC_CCW, // 6 ..
-	    EXTRUDERON, EXTRUDERONREVERSE, EXTRUDEROFF, //  8 ..
-	    ARCCLOCKWISE, ARCCOUNTERCLOCKWISE,  // 11 ..
-	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 13 ..
-	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 15 ..
-	    ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 17 ..
-	    ABSOLUTE_ECODE, RELATIVE_ECODE, // 19 ..
-	    SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 21 ..
-	    FANON, FANOFF, // 25 ..
-	    ASKTEMP, // 27
+	    RAPIDMOTION, COORDINATEDMOTION, // 3 ..
+	    ARC_CW, ARC_CCW, // 5 ..
+	    EXTRUDERON, EXTRUDERONREVERSE, EXTRUDEROFF, //  7 ..
+	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 10 ..
+	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 12 ..
+	    ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 14 ..
+	    ABSOLUTE_ECODE, RELATIVE_ECODE, // 16 ..
+	    SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 18 ..
+	    FANON, FANOFF, // 22 ..
+	    ASKTEMP, // 24
 	    EXTRUDERTEMP, BEDTEMP,
 	    COMMENT, LAYERCHANGE,
 	    UNKNOWN};
 
-const int NUM_GCODES = 33;
+const int NUM_GCODES = 30;
 
 const string MCODES[] = {"G92", "", "",
-			 "G0", "G1", "G1",
-			 "G2", "G3",
+			 "G0", "G1",
+			 "G2", "G3", //arcs
 			 "M101", "M102", "M103", // eon erev eoff
-			 "", "", // arcs
 			 "G21", "G20", // mm in
 			 "G28", "",
 			 "G90", "G91", // abs. rel. pos
@@ -142,9 +140,10 @@ class Command
 {
 public:
         Command();
-	Command(GCodes code, const Vector3d where=Vector3d(0,0,0), double E=0, double F=0);
+	Command(GCodes code, const Vector3d &where=Vector3d(0,0,0),
+		double E=0, double F=0);
 	Command(GCodes code, double value); // S value gcodes
-	Command(string gcodeline, Vector3d defaultpos);
+	Command(string gcodeline, const Vector3d &defaultpos);
 	Command(string comment);
 	Command(const Command &rhs);
 	GCodes Code;
@@ -171,6 +170,8 @@ public:
 	string GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 			    bool relativeEcode) const;
 	GCodes getCode(const string commstr) const;
+	
+	void addToPosition(Vector3d &from, bool relative);
 
 	string info() const;
 };
