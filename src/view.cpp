@@ -489,6 +489,53 @@ void View::show_dialog(const char *name)
   //  dialog->set_transient_for (*this);
 }
 
+namespace {
+
+  // Find all the .conf hardware settings templates
+  std::vector<std::string> get_settings_configs()
+  {
+    std::vector<std::string> ret;
+    std::vector<std::string> dirs = Platform::getConfigPaths();
+
+    for (std::vector<std::string>::const_iterator i = dirs.begin();
+	 i != dirs.end(); ++i) {
+      std::string settings_name = Glib::build_filename (*i, "settings");
+      Glib::RefPtr<Gio::File> dir = Gio::File::create_for_path(settings_name);
+      if(dir->query_exists()) {
+	Glib::RefPtr<Gio::FileEnumerator> entries = dir->enumerate_children();
+	if (!entries)
+	  continue;
+	Glib::RefPtr<Gio::FileInfo> info;
+	fprintf (stderr, "entries in %s\n", settings_name.c_str());
+	while (info = entries->next_file()) {
+	  if (Platform::has_extension(info->get_name(), "conf"))
+	    ret.push_back(Glib::build_filename(settings_name,info->get_name()));
+	}
+      }
+    }
+    return ret;
+  }
+}
+
+void View::show_preferences()
+{
+  show_dialog ("preferences_dlg");
+#if 1 // test a hardware selector ...
+  std::vector<std::string> configs = get_settings_configs();
+  for (std::vector<std::string>::const_iterator i = configs.begin();
+       i != configs.end(); ++i) {
+    Settings aSet;
+    fprintf (stderr, "load from %s\n", (*i).c_str());
+    try {
+      aSet.load_settings(Gio::File::create_for_path(*i));
+      fprintf(stderr, "settings '%s' icon '%s'\n", aSet.Name.c_str(), aSet.Image.c_str());
+    } catch (...) {
+      g_warning ("Error parsing '%s'", i->c_str());
+    }
+  }
+#endif
+}
+
 void View::about_dialog()
 {
   show_dialog ("about_dialog");
@@ -1111,9 +1158,8 @@ View::View(BaseObjectType* cobject,
   connect_action ("About",           sigc::mem_fun(*this, &View::about_dialog) );
 
   connect_action ("Fullscreen",        sigc::mem_fun(*this, &View::toggle_fullscreen) );
-  connect_action ("PreferencesDialog", sigc::bind(sigc::mem_fun(*this, &View::show_dialog),
-						  "preferences_dlg"));
-  
+  connect_action ("PreferencesDialog", sigc::mem_fun(*this, &View::show_preferences) );
+
   connect_action ("LoadSettings",    sigc::mem_fun(*this, &View::load_settings));
   connect_action ("SaveSettings",    sigc::mem_fun(*this, &View::save_settings));
   connect_action ("SaveSettingsAs",  sigc::mem_fun(*this, &View::save_settings_as));

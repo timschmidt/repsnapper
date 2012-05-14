@@ -37,6 +37,8 @@ public:
 class Settings {
  public:
 
+  std::string Name;
+  std::string Image;
   std::string Filename;
 
   bool   RaftEnable;
@@ -110,7 +112,7 @@ class Settings {
     float MinArcLength;
     bool  RoundCorners;
     float CornerRadius;
-    
+
     bool MoveNearest;
 
     bool NoBridges;

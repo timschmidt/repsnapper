@@ -83,8 +83,11 @@ static struct {
   gboolean triggers_redraw;
 } settings[] = {
 
+  // General
+  { OFFSET (Name), T_STRING, "SettingsName", NULL, 0, "Default Settings", false },
+  { OFFSET (Image), T_STRING, "SettingsImage", NULL, 0, "", false },
+
   // Raft:
-  
   BOOL_MEMBER  (RaftEnable, "RaftEnable", false, true),
   FLOAT_MEMBER (Raft.Size,  "RaftSize",   1.33, true),
 
@@ -97,7 +100,7 @@ static struct {
   FLOAT_PHASE_MEMBER(BASE, Base, Distance, 2.0, false),
   FLOAT_PHASE_MEMBER(BASE, Base, Thickness, 1.0, true),
   FLOAT_PHASE_MEMBER(BASE, Base, Temperature, 1.10, false),
-  
+
   // Raft Interface
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_INTERFACE].LayerCount), T_INT,
     "InterfaceLayerCount", "InterfaceLayerCount", 2, NULL, true },
@@ -442,8 +445,11 @@ public:
   {
     for (guint i = 0; i < GCODE_TEXT_TYPE_COUNT; i++)
     {
-      if (cfg.has_key ("GCode", GCodeNames[i]))
-	m_GCode[i]->set_text(cfg.get_string ("GCode", GCodeNames[i]));
+      try {
+	if (cfg.has_key ("GCode", GCodeNames[i]))
+	  m_GCode[i]->set_text(cfg.get_string ("GCode", GCodeNames[i]));
+      } catch (const Glib::KeyFileError &err) {
+      }
     }
   }
   void saveSettings(Glib::KeyFile &cfg)
@@ -659,12 +665,12 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     Misc.window_posx =-1;
     Misc.window_posy=-1;
   }
-  
+
   try {
     vector<string> cbkeys = cfg.get_keys ("CustomButtons");
     CustomButtonLabel.resize(cbkeys.size());
     CustomButtonGcode.resize(cbkeys.size());
-    for (guint i = 0; i < cbkeys.size(); i++) {  
+    for (guint i = 0; i < cbkeys.size(); i++) {
       string s = cbkeys[i];
       std::replace(s.begin(),s.end(),'_',' ');
       CustomButtonLabel[i] = s;
@@ -1227,12 +1233,11 @@ double Settings::HardwareSettings::RoundedLinewidthCorrection(double extr_width,
 {
   double factor = 1 + (M_PI/4.-1) * layerheight/extr_width;
   // assume 2 half circles at edges
-  //    /-------------------\
-  //   |                     |
-  //    \-------------------/
+  //    /-------------------\     //
+  //   |                     |    //
+  //    \-------------------/     //
   //cerr << "round factor " << factor << endl;
   return factor;
-
 }
 
 

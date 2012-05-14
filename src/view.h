@@ -191,6 +191,7 @@ class View : public Gtk::Window
   /* void newObject(); */
 
   void show_dialog(const char *name);
+  void show_preferences();
   Glib::RefPtr<Gtk::Builder> getBuilder() const { return m_builder; };
 
 

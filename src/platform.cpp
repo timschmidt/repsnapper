@@ -50,6 +50,14 @@ void Platform::setBinaryPath (const char *apparg)
   binary_path = g_strndup (apparg, p - apparg);
 }
 
+bool Platform::has_extension(const std::string &fname, const char *extn)
+{
+  if (fname.find_last_of(".") == std::string::npos)
+    return false;
+  std::string this_extn = fname.substr(fname.find_last_of(".") + 1);
+  return this_extn == extn;
+}
+
 std::vector<std::string> Platform::getConfigPaths()
 {
   const gchar * const *datadirs = g_get_system_data_dirs();
