@@ -45,6 +45,7 @@ class GCodeIter
   time_t time_started;
   double time_estimation;
   Command getCurrentCommand(Vector3d defaultwhere);
+  void set_to_lineno(long lineno);
 };
 
 class GCode

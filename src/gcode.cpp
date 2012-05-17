@@ -813,12 +813,23 @@ void GCode::clear()
 }
 
 
+
+///////////////////////////////////////////////////////////////////////////////////
+
+
+
 GCodeIter::GCodeIter (Glib::RefPtr<Gtk::TextBuffer> buffer) :
   m_buffer (buffer),
   m_it (buffer->begin()),
   m_line_count (buffer->get_line_count()),
   m_cur_line (1)
 {
+}
+
+void GCodeIter::set_to_lineno(long lineno)
+{
+  m_cur_line = lineno-1;
+  m_it = m_buffer->get_iter_at_line (m_cur_line);
 }
 
 std::string GCodeIter::next_line()
