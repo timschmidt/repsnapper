@@ -264,10 +264,13 @@ serial_init(int fd, long speed, char **detail)
     speed_t cfspeed = ntocf(speed);
     if(cfsetispeed(&attribs, cfspeed) < 0) {
 #ifdef __linux__
-      return linux_set_speed_custom(fd, speed);
+      if (linux_set_speed_custom(fd, speed) < 0){
+	*detail = "can't set input speed";
+	return -1;
+      }
 #else
       *detail = "can't set input speed";
-	return -1;
+      return -1;
 #endif
     }
     serial_set_attrib(fd, &attribs);
