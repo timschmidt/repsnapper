@@ -826,11 +826,6 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   printlines.getLines(lines, lines3);
 
-  const double 
-    minspeed  = settings.Hardware.MinPrintSpeedXY,
-    maxspeed  = settings.Hardware.MaxPrintSpeedXY,
-    movespeed = settings.Hardware.MoveSpeed,
-    emax      = settings.Hardware.EMaxSpeed;
 
   // push all lines to gcode
   // start3 = state.LastPosition();
@@ -840,7 +835,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       lastArea = lines3[i].area;
       commands.push_back(Command(AreaNames[lastArea]));
     }
-    lines3[i].getCommands(lastPos, commands, extrf, minspeed, maxspeed, movespeed, emax);
+    lines3[i].getCommands(lastPos, commands, extrf, settings);
   }
 }
 

@@ -24,6 +24,14 @@
 
 ///////////// PLine3: single 3D printline //////////////////////
 
+PLine3::PLine3(PLineArea area_, const Vector3d &from_, const Vector3d &to_, 
+	       double speed_, double extrusionfactor_)
+: area(area_), from(from_), to(to_), speed(speed_), 
+  extrusionfactor(extrusionfactor_), absolute_extrusion(0),
+  arc(0), arcangle(0)
+{
+}
+
 PLine3::PLine3(const PLine &pline, double z)
 { 
   if (pline.lifted > 0) {
@@ -38,7 +46,7 @@ PLine3::PLine3(const PLine &pline, double z)
   absolute_extrusion = pline.absolute_feed;
   arc                = pline.arc;
   arcangle           = pline.angle;
-  if (arc) {
+  if (arc != 0) {
     const Vector2d arcIJK2 = pline.arccenter - pline.from;
     arcIJK = Vector3d(arcIJK2.x(), arcIJK2.y(), 0);
   }
@@ -46,24 +54,32 @@ PLine3::PLine3(const PLine &pline, double z)
 
 int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 			double extrusion,
-			double minspeed, double maxspeed, double movespeed,
-			double maxEspeed) const
+			const Settings &settings) const
 {
-  int count=0;
+  const double 
+    minspeed  = settings.Hardware.MinPrintSpeedXY,
+    maxspeed  = settings.Hardware.MaxPrintSpeedXY,
+    movespeed = settings.Hardware.MoveSpeed,
+    minZspeed = settings.Hardware.MinPrintSpeedZ,
+    maxZspeed = settings.Hardware.MaxPrintSpeedZ,
+    maxEspeed = settings.Hardware.EMaxSpeed;
 
-  if ((lastpos-from).squared_length() > 0.005) {  // move first
-    commands.push_back( Command(COORDINATEDMOTION, from, 0, movespeed) );
+  int count=0;
+  
+  // insert move first if necessary
+  if ((lastpos-from).squared_length() > 0.005) {  
+    // get recursive ...
+    PLine3 move3(area, lastpos, from, movespeed, 0);
+    vector<Command> movecommands;
+    count += move3.getCommands(lastpos, movecommands, 0, settings);
+    commands.insert(commands.end(), movecommands.begin(), movecommands.end());
     lastpos = from;
-    count++;
   }  
 
-  double len = length();
+  const double len = length();
   double extrudedMaterial = len * extrusionfactor * extrusion;
 
   double comm_speed = this->speed;
-  if (absolute_extrusion == 0) 
-    comm_speed = max(minspeed, this->speed); // in case speed is too low
-
   double espeed = maxEspeed;
   if (len > 0)
     espeed = extrudedMaterial*comm_speed/len;
@@ -73,6 +89,19 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     if (espeed > maxEspeed)
       comm_speed *= maxEspeed/espeed;
   extrudedMaterial += absolute_extrusion; // allowed to push/pull at arbitrary speed    
+
+  if (absolute_extrusion == 0) 
+    comm_speed = max(minspeed, this->speed); // in case speed is too low
+
+  // slow down if too fast for z axis
+  const double dZ = to.z() - from.z();
+  if (dZ != 0.) {
+    const double xyztime = len / comm_speed;
+    const double zspeed = abs(dZ / xyztime);
+    if ( zspeed > maxZspeed )
+      comm_speed *= maxZspeed / zspeed;
+  }
+  comm_speed = max(minZspeed, comm_speed);
 
   Command command;
   if (arc)

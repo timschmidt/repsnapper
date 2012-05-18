@@ -35,6 +35,8 @@ const string AreaNames[] = { _(""), _("Shell"), _("Skin"), _("Infill"),
 class PLine3
 {
  public: 
+  PLine3(PLineArea area_, const Vector3d &from_, const Vector3d &to_, 
+	 double speed_, double extrusionfactor_);
   PLine3(const PLine &pline, double z);
   ~PLine3(){};
 
@@ -50,8 +52,7 @@ class PLine3
   bool lifted;
 
   int getCommands(Vector3d &lastpos, vector<Command> &commands, double extrusion,
-		  double minspeed, double maxspeed, double movespeed,
-		  double maxEspeed) const;
+		  const Settings &settings) const;
   // not used
   string GCode(Vector3d &lastpos, double &lastE, double feedrate, 
 	       double minspeed, double maxspeed, double movespeed, 
