@@ -58,7 +58,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 {
   const double 
     minspeed  = settings.Hardware.MinPrintSpeedXY,
-    maxspeed  = settings.Hardware.MaxPrintSpeedXY,
+    //maxspeed  = settings.Hardware.MaxPrintSpeedXY,
     movespeed = settings.Hardware.MoveSpeed,
     minZspeed = settings.Hardware.MinPrintSpeedZ,
     maxZspeed = settings.Hardware.MaxPrintSpeedZ,
@@ -80,6 +80,9 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
   double extrudedMaterial = len * extrusionfactor * extrusion;
 
   double comm_speed = this->speed;
+  if (absolute_extrusion == 0) 
+    comm_speed = max(minspeed, this->speed); // in case speed is too low
+
   double espeed = maxEspeed;
   if (len > 0)
     espeed = extrudedMaterial*comm_speed/len;
@@ -90,16 +93,18 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
       comm_speed *= maxEspeed/espeed;
   extrudedMaterial += absolute_extrusion; // allowed to push/pull at arbitrary speed    
 
-  if (absolute_extrusion == 0) 
-    comm_speed = max(minspeed, this->speed); // in case speed is too low
-
   // slow down if too fast for z axis
   const double dZ = to.z() - from.z();
   if (dZ != 0.) {
     const double xyztime = len / comm_speed;
     const double zspeed = abs(dZ / xyztime);
-    if ( zspeed > maxZspeed )
+    if ( zspeed > maxZspeed ) {
       comm_speed *= maxZspeed / zspeed;
+      // insert feedrate-only command to avoid deceleration on z move
+      Command preFeedrate(COORDINATEDMOTION, from, 0, comm_speed);
+      commands.push_back(preFeedrate);
+      count++;
+    }
   }
   comm_speed = max(minZspeed, comm_speed);
 
