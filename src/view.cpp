@@ -1318,7 +1318,6 @@ void View::on_controlnotebook_switch(GtkNotebookPage* page, guint page_num)
   if (m_renderer)    m_renderer->queue_draw();
 }
 
-
 View::~View()
 {
   delete m_translation_row;
@@ -1331,7 +1330,9 @@ View::~View()
   delete m_progress;
   delete m_printer;
   delete m_gcodetextview;
-  delete m_filechooser;
+  RSFilechooser *chooser = m_filechooser;
+  m_filechooser = NULL;
+  delete chooser;
 }
 
 /* Recursively sets all widgets in the window to visible */

@@ -77,7 +77,7 @@ class View : public Gtk::Window
   ConnectView *m_cnx_view;
   Gtk::Entry *m_gcode_entry;
   Render *m_renderer;
-  
+
   RSFilechooser *m_filechooser;
   void on_controlnotebook_switch(GtkNotebookPage* page, guint page_num);
 
@@ -148,8 +148,6 @@ class View : public Gtk::Window
   bool statusBarMessage(Glib::ustring message);
   void stop_progress();
 
-  
-  
  public:
   void setNonPrintingMode(bool noprinting=true, string filename="");
   void PrintToFile();
