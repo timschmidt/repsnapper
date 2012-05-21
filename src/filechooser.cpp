@@ -42,7 +42,7 @@ RSFilechooser::RSFilechooser(View * view_)
     ModelPath    = model->settings.STLPath;
     GCodePath    = model->settings.GCodePath;
     SettingsPath = model->settings.SettingsPath;
-  } else cerr << "no settings default paths" << endl;
+  } //else cerr << "no settings default paths" << endl;
   
   // file patterns
   allfiles.set_name(_("All Files"));

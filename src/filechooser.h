@@ -41,6 +41,7 @@ class RSFilechooser
   void set_saving (FileType type);
 
   void set_filetype(FileType type = UNDEF);
+  FileType get_filetype() { return filetype; };
 
   void do_action();
 
