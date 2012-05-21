@@ -59,6 +59,10 @@ class ViewProgress {
   Gtk::Label *m_label;
   double m_bar_max;
   double m_bar_cur;
+
+  Glib::TimeVal start_time;
+  string label;
+
  public:
   void start (const char *label, double max);
   bool restart (const char *label, double max);

@@ -383,7 +383,7 @@ Printer::handle_rr_reply(rr_dev dev, int type, float value, void *expansion)
   }
 }
 
-string timeleft_str(long seconds) {
+string timeleft_str_p(long seconds) {
   ostringstream ostr; 
   ostr << _("Printing (");
   int hrs = (int)seconds/3600;
@@ -419,7 +419,7 @@ void Printer::handle_rr_more (rr_dev dev)
 	if (donelines > 100) {
 	  double done = 1.*donelines/tot_lines;
 	  double timeleft = time_used/done - time_used;
-	  m_view->get_view_progress()->set_label(timeleft_str(timeleft));
+	  m_view->get_view_progress()->set_label(timeleft_str_p(timeleft));
 	  m_view->get_view_progress()->update (donelines, false);
 	}
       }

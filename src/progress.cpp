@@ -40,9 +40,11 @@ void ViewProgress::start (const char *label, double max)
   do_continue = true;
   m_box->show();
   m_bar_max = max;
+  this->label = label;
   m_label->set_label (label);
   m_bar_cur = 0.0;
   m_bar->set_fraction(0.0);
+  start_time.assign_current_time();
   //g_main_context_iteration(NULL,false);
   Gtk::Main::iteration(false);
   //GDK_THREADS_LEAVE ();
@@ -56,6 +58,7 @@ bool ViewProgress::restart (const char *label, double max)
     cerr << m_label->get_label() << " -- " << _(" done.") << "                     " << endl;  
   }
   m_bar_max = max;
+  this->label = label;
   m_label->set_label (label);
   m_bar_cur = 0.0;
   m_bar->set_fraction(0.0);
@@ -71,6 +74,7 @@ void ViewProgress::stop (const char *label)
   if (to_terminal) {
     cerr << m_label->get_label() << " -- " << _(" done.") << "                     " << endl;  
   }
+  this->label = label;
   m_label->set_label (label);
   m_bar_cur = m_bar_max;
   m_bar->set_fraction(1.0);
@@ -79,6 +83,22 @@ void ViewProgress::stop (const char *label)
   Gtk::Main::iteration(false);
   //GDK_THREADS_LEAVE ();
 }
+
+string timeleft_str(long seconds) {
+  ostringstream ostr; 
+  int hrs = (int)(seconds/3600);
+  if (hrs>0) {
+    if (hrs>1) ostr << hrs << _("h ");
+    else ostr << hrs << _("h ");
+    seconds -= 3600*hrs;
+  }
+  if (seconds > 60)
+    ostr << (int)seconds/60 << _("m ");
+  if (hrs == 0 && seconds<300)
+    ostr << (int)seconds%60 << _("s");
+  return ostr.str();
+}
+
 
 bool ViewProgress::update (double value, bool take_priority)
 {
@@ -96,6 +116,16 @@ bool ViewProgress::update (double value, bool take_priority)
     int perc = (int(m_bar->get_fraction()*100));
     cerr << m_label->get_label() << " " << o.str() << " -- " << perc << "%              \r";
   }
+
+  if (value > 0) {
+    Glib::TimeVal now;
+    now.assign_current_time();
+    const double used = (now - start_time).as_double(); // seconds
+    const double total = used * m_bar_max  / value;
+    const long left = (long)(total-used);
+    m_label->set_label(label+" ("+timeleft_str(left)+")");
+  }
+
   if (take_priority)
     while( gtk_events_pending () )
       gtk_main_iteration ();
@@ -109,6 +139,7 @@ void ViewProgress::set_label (const std::string label)
 {
   //GDK_THREADS_ENTER ();
   std::string old = m_label->get_label();
+  this->label = label;
   if (old != label)
     m_label->set_label (label);
   //g_main_context_iteration(NULL,false);
