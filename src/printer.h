@@ -25,6 +25,7 @@
 #include <time.h>
 
 #include "types.h" 
+#include "stdafx.h" 
 /* #include "config.h" */
 /* #include "settings.h" */
 /* #include "gcode.h" */
