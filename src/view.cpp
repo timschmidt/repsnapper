@@ -506,7 +506,6 @@ namespace {
 	if (!entries)
 	  continue;
 	Glib::RefPtr<Gio::FileInfo> info;
-	fprintf (stderr, "entries in %s\n", settings_name.c_str());
 	while (info = entries->next_file()) {
 	  if (Platform::has_extension(info->get_name(), "conf"))
 	    ret.push_back(Glib::build_filename(settings_name,info->get_name()));
@@ -520,7 +519,7 @@ namespace {
 void View::show_preferences()
 {
   show_dialog ("preferences_dlg");
-#if 1 // test a hardware selector ...
+#if 0 // test some GUI / hardware selector fun
   std::vector<std::string> configs = get_settings_configs();
   for (std::vector<std::string>::const_iterator i = configs.begin();
        i != configs.end(); ++i) {
