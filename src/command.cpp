@@ -263,6 +263,8 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     return ostr.str();
   }
 
+  bool moving = false; // is a move involved?
+
   const uint PREC = 4;
   ostr.precision(PREC);
   ostr << fixed ;
@@ -309,16 +311,19 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     if(where.x() != LastPos.x()) {
       ostr << "X" << where.x() << " ";
       LastPos.x() = where.x();
+      moving = true;
     }
     if(where.y() != LastPos.y()) {
       ostr << "Y" << where.y() << " ";
       LastPos.y() = where.y();
+      moving = true;
     }
   case ZMOVE:
     if(where.z() != LastPos.z()) {
       ostr << "Z" << where.z() << " ";
       LastPos.z() = where.z();
       comm += _(" Z-Change");
+      moving = true;
     }
     if((relativeEcode   && e != 0) || 
        (!relativeEcode  && e != lastE)) {
@@ -326,8 +331,9 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
       ostr << "E" << e << " ";
       ostr.precision(PREC);
       lastE = e;
-    } else {  
-      comm += _(" Move Only");
+    } else {
+      if (moving)
+	comm += _(" Move Only");
     }
   case SETSPEED:
     if (f != lastF) {
