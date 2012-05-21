@@ -80,15 +80,15 @@ bool Printer::temp_timeout_cb()
 {
   if (IsConnected() && m_model && m_model->settings.Misc.TempReadingEnabled)
     SendNow("M105");
-  update_temp_poll_interval();
+  UpdateTemperatureMonitor();
   return true;
 }
 
-void Printer::update_temp_poll_interval()
+void Printer::UpdateTemperatureMonitor()
 {
   temp_timeout.disconnect();
 
-  if (m_model) {
+  if (IsConnected() && m_model && m_model->settings.Misc.TempReadingEnabled) {
     unsigned int timeout = m_model->settings.Display.TempUpdateSpeed;
     temp_timeout = Glib::signal_timeout().connect_seconds(
         sigc::mem_fun(*this, &Printer::temp_timeout_cb), timeout);
@@ -99,7 +99,7 @@ void Printer::setModel(Model *model)
 {
   m_model = model;
 
-  update_temp_poll_interval();
+  UpdateTemperatureMonitor();
 }
 
 void Printer::Restart()
@@ -197,6 +197,7 @@ void Printer::serial_try_connect (bool connect)
     } else {
       rr_dev_reset (device);
       signal_serial_state_changed.emit (SERIAL_CONNECTED);
+      UpdateTemperatureMonitor();
     }
   } else {
     if (printing) {

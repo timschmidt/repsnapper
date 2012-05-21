@@ -103,6 +103,7 @@ class View : public Gtk::Window
   void save_settings_as();
 
   // interactive bits
+  void temp_monitor_enabled_toggled (Gtk::ToggleButton *button);
   void enable_logging_toggled (Gtk::ToggleButton *button);
   void fan_enabled_toggled (Gtk::ToggleButton *button);
   void run_extruder();

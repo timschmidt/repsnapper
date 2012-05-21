@@ -90,7 +90,6 @@ class Printer
 
 	sigc::signal< void > get_signal_inhibit_changed() { return signal_inhibit_changed; }
 	bool get_inhibit_print() { return inhibit_print; }
-	void update_temp_poll_interval();
 
 	bool IsPrinting() { return printing; }
 
@@ -122,6 +121,7 @@ class Printer
 	void EnableTempReading(bool on);
 	void SetLogFileClear(bool on);
 	void SwitchPower(bool on);
+	void UpdateTemperatureMonitor();
 
 	void Home(string axis);
 	void Move(string axis, double distance);

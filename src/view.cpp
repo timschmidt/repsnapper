@@ -348,6 +348,11 @@ void View::enable_logging_toggled (Gtk::ToggleButton *button)
   m_model->settings.Printer.Logging = button->get_active();
 }
 
+void View::temp_monitor_enabled_toggled (Gtk::ToggleButton *button)
+{
+  m_printer->UpdateTemperatureMonitor();
+}
+
 void View::fan_enabled_toggled (Gtk::ToggleButton *button)
 {
   if (!button->get_active())
@@ -1271,6 +1276,7 @@ View::View(BaseObjectType* cobject,
   // m_extruder_length->set_increments (1, 10);
   // m_extruder_length->set_value (10.0);
   // FIXME: connect i_update_interval (etc.)
+  connect_toggled ("Misc.TempReadingEnabled", sigc::mem_fun(*this, &View::temp_monitor_enabled_toggled));
   connect_toggled ("i_fan_enabled", sigc::mem_fun(*this, &View::fan_enabled_toggled));
   m_builder->get_widget ("Printer.FanVoltage", m_fan_voltage);
   // m_fan_voltage->set_range(0.0, 255.0);
