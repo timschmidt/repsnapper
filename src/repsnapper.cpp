@@ -42,6 +42,7 @@ public:
 	string binary_output_path;
 	string gcode_output_path;
 	string settings_path;
+	string printerdevice_path;
   string svg_output_path;
   bool svg_single_output;
 	std::vector<std::string> files;
@@ -93,6 +94,10 @@ public:
 				binary_output_path = argv[++i];
 				use_gui = false;
 			}
+			else if (param && (!strcmp (arg, "-p") ||
+					   !strcmp (arg, "--printnow")))
+			        printerdevice_path = argv[++i];
+
 			else if (param && (!strcmp (arg, "-o") ||
 					   !strcmp (arg, "--output")))
 				gcode_output_path = argv[++i];
@@ -252,12 +257,13 @@ int main(int argc, char **argv)
   }
 
   bool nonprintingmode = false;
-  if (opts.stl_input_path.size() > 0) {
-    model->Read(Gio::File::create_for_path(opts.stl_input_path));
-  }
 
   if (opts.gcode_output_path.size() > 0) {
     nonprintingmode = true;
+  }
+
+  if (opts.printerdevice_path.size() > 0) {
+    model->settings.Hardware.PortName = opts.printerdevice_path;
   }
 
   if (!opts.use_gui) {
@@ -268,6 +274,20 @@ int main(int argc, char **argv)
       vprog.set_terminal_output(true);
       model->SetViewProgress(&vprog);
       model->statusbar=NULL;
+
+      if (opts.stl_input_path.size() > 0) {
+	model->Read(Gio::File::create_for_path(opts.stl_input_path));
+      }
+
+      if (opts.printerdevice_path.size() > 0) {
+	Printer printer(NULL);
+	printer.setModel(model);
+	printer.serial_try_connect(true);
+	printer.Print();
+	printer.serial_try_connect(false);
+	return 0;
+      }
+
       if (opts.gcode_output_path.size() > 0) {
 	model->ConvertToGCode();
         model->WriteGCode(Gio::File::create_for_path(opts.gcode_output_path));
@@ -283,12 +303,17 @@ int main(int argc, char **argv)
     return 0;
   }
 
+
   View* mainwin = View::create(model);
 
   mainwin->setNonPrintingMode(nonprintingmode, opts.gcode_output_path);
 
   mainwin->set_icon_name("gtk-convert");
   mainwin->set_title("Repsnapper");
+
+  if (opts.stl_input_path.size() > 0) {
+    model->Read(Gio::File::create_for_path(opts.stl_input_path));
+  }
 
   for (uint i = 0; i < opts.files.size(); i++)
     model->Read(Gio::File::create_for_path(opts.files[i]));
