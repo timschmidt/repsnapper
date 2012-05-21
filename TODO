@@ -1,28 +1,57 @@
 
---- the plan ---
+-- BUGS --
 
-* Create a wizard to select a default machine to base settings on ...
+* match offset of fill patterns across all layers
+
+* fix rest amounts of antiooze
+
+* make 2D mode usable
+  + lost circles at SVG input 
+  + gcode generation
+
+* layer detection at GCode cursor position
+
+* double entries in serial speed
+
+* win32 
+  + GL window size on Win7 64bit
+
+
+-- IMPROVEMENTS --
+
+* make model have a list of selected shapes instead of treeview-path?
+
+
+-- FEATURES --
+
+
+* machine specific GCode?
+  + Create a wizard to select a default machine to base settings on ...
 	+ load a Settings object ...
 	+ have a directory-list of settings.xml
 		+ drop one in there ...
 		+ add a 'Name' field ...
 		+ add an 'Icon' field ...
+  + Make multiple machine settings pleasantly
+    configurable and selectable ...
 
-* Make multiple machine settings pleasantly
-  configurable and selectable ...
+* single layer file SVG ouput
+
+* 360° arcs / arcs least squares fit (probably)
+
+* thin polygons infill line (centreline)
+
+* file menu preview
+
+
+* win32 
+  + serial
+
+
+
+--- the plan ---
 
 * add a git hook to forbid DOS line endings [!] ...
-
-* Hack default pre-amble so it doesn't crash ...
-G92 E0
-G1 E3.0 F1200
-G1 E2.0 F1200
-G92 E0
-G1 Z1.0 F3000
-G92 E0
-G90
-G21
-G92 E0
 
 
 * Add low prio idle handler for error dialogs: can't connect to device eg.
@@ -30,42 +59,25 @@ G92 E0
 
 * Bin the two 'load' menu items - just one 'open' menu ...
 	+ with a gcode and stl filter drop-down ?
-* Add a preview widget to the file menu
-
-* add into the gnome git repo
-	- and cross-sync translations (?) [!?]
-
-* fix slicing bugs [ variously ]
-
-* libreprap:
-	+ don't write anything (particularly a re-send) while
-	  a partial read is underway [?]
-	+ add a 'comms_debug' boolean ...
 
 * Serial
+	+ libreprap:
+	  + don't write anything (particularly a re-send) while
+	    a partial read is underway [?]
+	  + add a 'comms_debug' boolean ...
+	+ replace libreprap by an IOChannel
+
+	+ add a test serial connection ...
 	+ error dialogs - "failed to connect ?"
 	+ /dev/ttyUSB0 - EACCES
 		+ group / permissions problem.
 		+ you need to tweak permissions, or add yourself
 		  to XYZ group, and re-login ...
+	+ connection button
+	  + should require confirmation before going off-line
+	    during a print ... [ and/or 'pause printing' ]
 
-* add Hardware Settings profiles:
-	+ "Mendel", "XYZ", "etc." ? :-)
-
-* win32 osc build fun ...
 
 --- older stuff ---
 
-* connection button
-	+ should require confirmation before going off-line
-	  during a print ... [ and/or 'pause printing' ]
 
-* serial connection
-	* add a test serial connection ...
-
-* Object tree re-work
-	+ encapsulate the selection concept in a clean abstract object
-	+ re-work RFO storage to use pointers not vectors with instances
-
-* bug fixing:
-	+ re-instate a non-gui mode ...
