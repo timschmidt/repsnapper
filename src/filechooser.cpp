@@ -32,18 +32,11 @@ RSFilechooser::RSFilechooser(View * view_)
     cerr << "no 'filechooser' in GUI!" << endl;
     return;
   }
+
   chooser->signal_update_preview().connect_notify
     ( sigc::bind(sigc::mem_fun
 		 (*this, &RSFilechooser::on_filechooser_preview), chooser) );
 
-  // paths
-  Model * model = view->get_model(); 
-  if (model) {
-    ModelPath    = model->settings.STLPath;
-    GCodePath    = model->settings.GCodePath;
-    SettingsPath = model->settings.SettingsPath;
-  } //else cerr << "no settings default paths" << endl;
-  
   // file patterns
   allfiles.set_name(_("All Files"));
   allfiles.add_pattern("*");
@@ -75,6 +68,7 @@ RSFilechooser::RSFilechooser(View * view_)
 
   chooser->signal_file_activated().connect
     (sigc::mem_fun(*this, &RSFilechooser::do_action));
+
   set_loading(MODEL);
 }
 
