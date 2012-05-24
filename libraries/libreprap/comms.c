@@ -388,10 +388,8 @@ rr_dev_reset (rr_dev dev)
 void
 rr_dev_reset_device (rr_dev dev)
 {
-  serial_flipDTR(dev->fd);
-  serial_flipDTR(dev->fd);
-  /* serial_setDTR(dev->fd, 1); */
-  /* serial_setDTR(dev->fd, 0); */
+  serial_setDTR(dev->fd, 1);
+  serial_setDTR(dev->fd, 0);
 }
 
 static void

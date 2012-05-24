@@ -14,6 +14,7 @@
 #include <termios.h>
 #include <errno.h>
 
+
 #ifdef __linux__
 //#ifdef HAVE_ASM_IOCTLS_H
 #include <asm/ioctls.h>
@@ -375,26 +376,13 @@ int
 serial_setDTR(Serial fd, short dtr)
 {
   /* printf("DTR %i\n",dtr); */
-  int status;
-  ioctl(fd, TIOCMGET, &status);
-  if (status<0) return;
+  char TIOCM_DTR_str[4];
+  sprintf(TIOCM_DTR_str, "%u", TIOCM_DTR);
   if (dtr==1)
-    status &= TIOCM_DTR; // DTR 1
+    ioctl(fd, TIOCMBIS, TIOCM_DTR_str);
   else if (dtr==0)
-    status &= ~TIOCM_DTR; // DTR 0
-  ioctl(fd, TIOCMSET, &status);
-}
-
-int
-serial_flipDTR(Serial fd)
-{
-  int status;
-  ioctl(fd, TIOCMGET, &status);
-  if (status<0) return;
-  if (status & TIOCM_DTR)
-    serial_setDTR(fd, 0);
-  else
-    serial_setDTR(fd, 1);
+    ioctl(fd, TIOCMBIC, TIOCM_DTR_str);
+  
 }
 
 #endif // !WIN32
