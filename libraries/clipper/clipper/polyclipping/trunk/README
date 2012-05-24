@@ -2,6 +2,13 @@
 Clipper Change Log
 ============================================================
 
+v4.8.1 - 12 May 2012
+* Bugfix: Obscure bug could cause an exception when using 
+  ExPolygon structure.
+
+v4.8.1 - 12 May 2012
+* Update: Cody tidy and minor bug fixes.
+
 v4.8.0 - 30 April 2012
 * Bugfix: Occasional errors in orientation fixed. 
 * Update: Added notes on rounding to the documentation. 
@@ -11,8 +18,8 @@ v4.7.6 - 11 April 2012
 * Minor documentation update.
 
 v4.7.5 - 28 March 2012
-Fixed a recently introduced bug that occasionally caused an 
-unhandled exception in C++ and C# translations. 
+* Bugfix: Fixed a recently introduced bug that occasionally caused an 
+  unhandled exception in C++ and C# translations. 
 
 v4.7.4 - 15 March 2012
 * Bugfix: Another minor bugfix.
