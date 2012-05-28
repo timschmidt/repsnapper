@@ -507,8 +507,6 @@ int Shape::load(string filename, uint max_triangles)
     // problem: transform matrix
     //std::sort(triangles.begin(),triangles.end(),Triangle::maxZsort());
 
-    CenterAroundXY();
-
     return 0;
 }
 
@@ -711,30 +709,32 @@ vector<Triangle> Shape::trianglesSteeperThan(double angle) const
   return tr;
 }
 
-void Shape::Scale(double in_scale_factor)
+void Shape::Scale(double in_scale_factor, bool calcbbox)
 {
+  transform3D.move(-Center);
   transform3D.scale(in_scale_factor);
-  CalcBBox();
+  transform3D.move(Center);
+  if (calcbbox)
+    CalcBBox();
 }
 
 void Shape::ScaleX(double x)
 {
+  transform3D.move(-Center);
   transform3D.scale_x(x);
-  CalcBBox();
-  return;
+  transform3D.move(Center);
 }
 void Shape::ScaleY(double x)
 {
+  transform3D.move(-Center);
   transform3D.scale_y(x);
-  CalcBBox();
-  return;
+  transform3D.move(Center);
 }
 void Shape::ScaleZ(double x)
 {
+  transform3D.move(-Center);
   transform3D.scale_z(x);
-  CalcBBox();
-  PlaceOnPlatform();
-  return;
+  transform3D.move(Center);
 }
 
 void Shape::CalcBBox()
@@ -860,9 +860,7 @@ int Shape::divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) co
 
 void Shape::PlaceOnPlatform()
 {
-  CalcBBox();
   transform3D.move(Vector3d(0,0,-Min.z()));
-  CalcBBox();
 }
 
 // Rotate and adjust for the user - not a pure rotation by any means

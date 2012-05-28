@@ -153,8 +153,8 @@ static struct {
   INT_MEMBER    (Printer.FanVoltage, "Printer.FanVoltage", 200, false),
   BOOL_MEMBER   (Printer.Logging, "Printer.Logging", false, false),
   BOOL_MEMBER   (Printer.ClearLogOnPrintStart, "Printer.ClearLogOnPrintStart", false, false),
-  FLOAT_MEMBER  (Printer.NozzleTemp, "Printer.NozzleTemp", 210, false),
-  FLOAT_MEMBER  (Printer.BedTemp, "Printer.BedTemp", 60, false),
+  { OFFSET (Printer.NozzleTemp), T_FLOAT, "Printer.NozzleTemp", NULL, 210, false },
+  { OFFSET (Printer.BedTemp)   , T_FLOAT, "Printer.BedTemp", NULL,  60, false },
 
   // Slicing
   BOOL_MEMBER  (Slicing.RelativeEcode, "RelativeEcode", false, false),
@@ -188,6 +188,7 @@ static struct {
   FLOAT_MEMBER  (Slicing.DecorInfillDistance, "DecorInfillDistance", 2.0, true),
   //INT_MEMBER    (Slicing.SolidLayers, "SolidLayers", 2, true),
   FLOAT_MEMBER  (Slicing.SolidThickness, "SolidThickness", 0.4, true),
+  BOOL_MEMBER   (Slicing.NoTopAndBottom, "NoTopAndBottom", false, true),
   BOOL_MEMBER   (Slicing.Support, "Support", true, true),
   FLOAT_MEMBER  (Slicing.SupportAngle, "SupportAngle", 0, true),
   FLOAT_MEMBER  (Slicing.SupportWiden, "SupportWiden", 0, true),
@@ -221,6 +222,8 @@ static struct {
   FLOAT_MEMBER  (Slicing.CornerRadius, "CornerRadius", 1., true),
   BOOL_MEMBER   (Slicing.NoBridges, "NoBridges", false, true),
   FLOAT_MEMBER  (Slicing.BridgeExtrusion, "BridgeExtrusion", 1, true),
+
+  STRING_MEMBER (Slicing.GCodePostprocessor, "GCodePostprocessor", "", false),
 
   // Milling
   FLOAT_MEMBER  (Milling.ToolDiameter, "ToolDiameter", 2, true),
@@ -390,11 +393,11 @@ static struct {
   { "Printer.ExtrudeAmount", 0.0, 1000.0, 1.0, 10.0 },
   { "Printer.ExtrudeSpeed", 0.0, 1000.0, 1.0, 10.0 },
   { "Printer.FanVoltage", 0, 255, 5, 25 },
-  { "Printer.NozzleTemp", 0.0, 300.0, 1.0, 10.0 },
-  { "Printer.BedTemp", 0.0, 200.0, 1.0, 10.0 },
+  // { "Printer.NozzleTemp", 0.0, 300.0, 1.0, 10.0 },
+  // { "Printer.BedTemp", 0.0, 200.0, 1.0, 10.0 },
 
   // Display pane
-  { "Display.TempUpdateSpeed", 0.1, 10.0, 0.5, 1.0 },
+  { "Display.TempUpdateSpeed", 1, 1000, 1, 5 },
   { "m_scale_value", 0.0001, 1000.0, 0.01, 0.1 },
   { "scale_x", 0.0001, 1000.0, 0.01, 0.1 },
   { "scale_y", 0.0001, 1000.0, 0.01, 0.1 },
@@ -1224,6 +1227,7 @@ void Settings::connect_to_ui (Builder &builder)
     portspeed->signal_changed().connect
       (sigc::bind(sigc::mem_fun(*this, &Settings::get_port_speed_from_gui), builder));
   }
+
 
   /* Update UI with defaults */
   m_signal_update_settings_gui.emit();

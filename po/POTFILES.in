@@ -19,6 +19,7 @@ src/printer.cpp
 src/printer2.cpp
 src/progress.cpp
 src/render.cpp
+src/reprap_serial.cpp
 src/repsnapper.cpp
 src/settings.cpp
 src/settings.h

@@ -44,6 +44,7 @@ SHARED_SRC= \
 	src/filechooser.cpp \
 	src/platform.cpp \
 	src/render.cpp \
+	src/reprap_serial.cpp \
 	src/printer.cpp \
 	src/printer2.cpp \
 	src/progress.cpp \
@@ -65,6 +66,7 @@ SHARED_INC= \
 	src/stdafx.h \
 	src/platform.h \
 	src/render.h \
+	src/reprap_serial.h \
 	src/printer.h \
 	src/progress.h \
 	src/connectview.h \

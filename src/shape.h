@@ -74,6 +74,7 @@ public:
   
 	Shape();
 	Shape(string filename, istream *text);
+	virtual ~Shape(){};
  	string filename; 
 	int idx;
 
@@ -108,7 +109,7 @@ public:
     virtual void Rotate(const Vector3d & axis, const double &angle);  
 	void Twist(double angle);
 
-	void Scale(double scale_factor);
+	void Scale(double scale_factor, bool calcbbox = true);
 	void ScaleX(double scale_factor);
 	void ScaleY(double scale_factor);
 	virtual void ScaleZ(double scale_factor);
@@ -187,6 +188,8 @@ class FlatShape : public Shape
   
   FlatShape();
   FlatShape(string filename);
+  ~FlatShape(){};
+
   /* FlatShape(const FlatShape &rhs); */
   
   int loadSVG(istream *text);

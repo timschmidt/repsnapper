@@ -1,6 +1,7 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2011 martin.dieringer@gmx.de
+    Copyright (C) 2010  Kulitorum
+    Copyright (C) 2011-12 martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -19,41 +20,49 @@
 
 // everything taken from model.h
 
+
 #pragma once
 
-#include <gtkmm.h>
-#include <time.h>
-
-#include "types.h" 
 #include "stdafx.h" 
-/* #include "config.h" */
-/* #include "settings.h" */
-/* #include "gcode.h" */
-/* #include "progress.h" */
 
 
-#include <libreprap/comms.h>
-
-
-// For libreprap callbacks
-#ifdef WIN32
-#  define RR_CALL __cdecl
-#else
-#  define RR_CALL
-#endif
-
+enum RR_logtype  { LOG_COMM, LOG_ERROR, LOG_ECHO };
 enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
 
+
+// use Glib::IOChannel instead of libreprap
+#define IOCHANNEL 0
+
+
+#if IOCHANNEL
+//#include "reprap_serial.h"
+class RRSerial;
+#else
+
+# include <libreprap/comms.h>
+
+// For libreprap callbacks
+# ifdef WIN32
+#  define RR_CALL __cdecl
+# else
+#  define RR_CALL
+# endif
+
 typedef struct rr_dev_t *rr_dev;
+
+#endif
 
 class Printer
 {
 	bool printing;
+	void run_print ();
 
 	unsigned long unconfirmed_lines;
 
 	unsigned long lastdonelines; // for live view
 	time_t lasttimeshown;
+
+	bool debug_output;
 
 	SerialState serial_state;
 	void set_printing (bool printing);
@@ -63,15 +72,32 @@ class Printer
 	sigc::connection temp_timeout;
 	bool temp_timeout_cb();
 
-	time_t print_started_time;
-	double total_time_to_print ;
+  Glib::TimeVal print_started_time;
+  Glib::TimeVal total_time_to_print ;
 
 	View *m_view;
-        //GCode *m_gcode;
 	Model *m_model;
+
+
+#if IOCHANNEL
+  sigc::connection watchprint_timeout;
+  bool watchprint_timeout_cb();
+
+  sigc::connection log_timeout;
+  bool log_timeout_cb();
+
+  RRSerial *rr_serial;
+#endif
+
  public:
-	Printer(View *view, Gtk::TextView *v_commlog=NULL);
+	Printer(View *view);
 	~Printer();
+
+
+	vector<string> find_ports() const;
+
+
+  sigc::signal< void, unsigned long > signal_now_printing;
 
 	bool inhibit_print;
 	sigc::signal< void > signal_inhibit_changed;
@@ -94,11 +120,7 @@ class Printer
 
 	bool IsPrinting() { return printing; }
 
-        //void setGCode (GCode gcode);
 	void setModel(Model *model);
-
-	// Communication
-	//void SetGcode(GCode gcode);
 
 	bool IsConnected();
 	void SimplePrint();
@@ -111,34 +133,56 @@ class Printer
 	void Restart();
 	void Reset();
 	
-	void SetTemp(TempType type, float value);
+  bool SetTemp(TempType type, float value, int extruder_no=-1);
 
-	void draw_current(Vector3d &from);
+  bool SelectExtruder(int extruder_no=-1);
+
 	double getCurrentPrintingZ();
 
-	void RunExtruder(double extruder_speed, double extruder_length, bool reverse);
-	void SendNow(string str);
+	bool RunExtruder(double extruder_speed, double extruder_length, bool reverse,
+			 int extruder_no=-1);
+  bool SendNow(string str, long lineno = -1);
+
+  void parse_response (string line);
 
 	void EnableTempReading(bool on);
 	void SetLogFileClear(bool on);
-	void SwitchPower(bool on);
+	bool SwitchPower(bool on);
 	void UpdateTemperatureMonitor();
 
-	void Home(string axis);
-	void Move(string axis, double distance);
-	void Goto(string axis, double position);
+	bool Home(string axis);
+	bool Move(string axis, double distance);
+	bool Goto(string axis, double position);
 
+  sigc::signal< void, string, RR_logtype > signal_logmessage;
+
+  string commlog_buffer, error_buffer, echo_buffer;
+
+#if IOCHANNEL
+  void log(string s, RR_logtype type);
+#else
 	rr_dev device;
 	sigc::connection devconn;
+
+	int device_fd;
+
+  void comm_log(string s);
+  void err_log(string s);
+  void echo_log(string s);
+#endif
 
 	void PrintButton();
 	void StopButton();
 	void ContinuePauseButton();
 	void ResetButton();
 
-	Glib::RefPtr<Gtk::TextView> commlog;
+
+  long get_next_line(string &line);
+
+  const Model * getModel() const {return m_model; };
 
  private:
+#if !IOCHANNEL
 	bool handle_dev_fd (Glib::IOCondition cond);
 
 	// libreprap integration
@@ -159,7 +203,7 @@ class Printer
 	void handle_rr_wait_wr (rr_dev dev, int wait);
 	void handle_rr_log (rr_dev dev, int type, const char *buffer,
             size_t len);
-
+#endif
 	GCodeIter *gcode_iter;
 };
 

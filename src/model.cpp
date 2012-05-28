@@ -40,7 +40,6 @@ Model::Model() :
   m_previewLayer(NULL),
   //m_previewGCodeLayer(NULL),
   currentprintingline(0),
-  currentbufferedlines(0),
   settings(),
   Min(), Max(),
   m_inhibit_modelchange(false),
@@ -128,16 +127,15 @@ void Model::GlDrawGCode(int layerno)
     gcode.draw (settings, layerno, false);
   }
   // assume that the real printing line is the one at the start of the buffer
-  unsigned long printedline = currentprintingline - currentbufferedlines;
-  if (printedline > 0) {
-    int currentlayer = gcode.getLayerNo(printedline);
+  if (currentprintingline > 0) {
+    int currentlayer = gcode.getLayerNo(currentprintingline);
     if (currentlayer>=0) {
       int start = gcode.getLayerStart(currentlayer);
       int end   = gcode.getLayerEnd(currentlayer);
       //gcode.draw (settings, currentlayer, true, 1);
-      gcode.drawCommands(settings, start, printedline, true, 4, false, 
+      gcode.drawCommands(settings, start, currentprintingline, true, 4, false, 
 			 settings.Display.DisplayGCodeBorders);
-      gcode.drawCommands(settings,  printedline, end,  true, 1, false, 
+      gcode.drawCommands(settings, currentprintingline,  end,  true, 1, false, 
 			 settings.Display.DisplayGCodeBorders);
     }
     // gcode.drawCommands(settings, currentprintingline-currentbufferedlines, 
@@ -185,7 +183,7 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
   size_t found = path.find_last_of("/\\");
   if (ftype==UNKNOWN_TYPE)
     ftype =  Shape::getFileType(path);
-  
+
   if (ftype == BINARY_STL) // only one shape per file
     {
       Shape *shape = new Shape();
@@ -270,9 +268,15 @@ void Model::Read(Glib::RefPtr<Gio::File> file)
 {
   std::string basename = file->get_basename();
   size_t pos = basename.rfind('.');
+  cerr << "reading " << basename<< endl;
   if (pos != std::string::npos) {
     std::string extn = basename.substr(pos);
-    if (extn == ".gcode")
+    if (extn == ".conf")
+      {
+	LoadConfig (file);
+	return;
+      }
+    else if (extn == ".gcode")
       {
 	ReadGCode (file);
 	return;
@@ -333,6 +337,7 @@ void Model::ModelChanged()
       ClearGCode();
       ClearLayers();
     }
+    setCurrentPrintingLine(0);
     m_model_changed.emit();
   }
 }

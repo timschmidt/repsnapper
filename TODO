@@ -35,13 +35,9 @@
   + Make multiple machine settings pleasantly
     configurable and selectable ...
 
-* single layer file SVG ouput
-
 * 360° arcs / arcs least squares fit (probably)
 
 * thin polygons infill line (centreline)
-
-* file menu preview
 
 
 * win32 

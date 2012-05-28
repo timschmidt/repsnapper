@@ -133,7 +133,7 @@ class Settings {
     float AltInfillPercent;
     int AltInfillLayers;
     float InfillOverlap;
-    //bool SolidTopAndBottom;
+    bool NoTopAndBottom;
     //int SolidLayers;
     float SolidThickness;
     bool Support;
@@ -180,6 +180,9 @@ class Settings {
     float FirstLayersInfillDist;
     float FirstLayerHeight;
     //void GetAltInfillLayers(std::vector<int>& layers, guint layerCount) const;
+
+    std::string GCodePostprocessor;
+
   };
   SlicingSettings Slicing;
 

@@ -209,12 +209,10 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 		  continue;
 		}
 		if (command.Code == RELATIVEPOSITIONING) {
-		  cerr << "rel" << endl;
 		  relativePos = true;
 		  continue;
 		}
 		if (command.Code == ABSOLUTEPOSITIONING) {
-		  cerr << "abs" << endl;
 		  relativePos = false;
 		  continue;
 		}
@@ -828,7 +826,7 @@ GCodeIter::GCodeIter (Glib::RefPtr<Gtk::TextBuffer> buffer) :
 
 void GCodeIter::set_to_lineno(long lineno)
 {
-  m_cur_line = lineno-1;
+  m_cur_line = max((long)0,lineno);
   m_it = m_buffer->get_iter_at_line (m_cur_line);
 }
 

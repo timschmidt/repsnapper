@@ -154,19 +154,23 @@ void View::toggle_fullscreen()
 void View::do_load ()
 {
   PrintInhibitor inhibitPrint(m_printer);
-  if (m_printer->IsPrinting())
-  {
-    m_printer->error (_("Complete print before reading"),
-		   _("Reading GCode while printing will abort the print"));
-    return;
-  }
-  //FileChooser::save_multiple = false;
+  RSFilechooser::FileType type = m_filechooser->get_filetype();
+  if (type == RSFilechooser::GCODE)
+    if (m_printer->IsPrinting())
+      {
+	m_printer->error (_("Complete print before reading"),
+			  _("Reading GCode while printing will abort the print"));
+	return;
+      }
   m_model->preview_shapes.clear();
 
   vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
   for (uint i= 0; i < files.size(); i++) {
     if (!files[i]) continue; // should never happen
-    m_model->Read(files[i]);
+    if (type == RSFilechooser::SETTINGS)
+      m_model->LoadConfig(files[i]);
+    else
+      m_model->Read(files[i]);
     string directory_path = files[i]->get_parent()->get_path();
     m_model->settings.STLPath = directory_path;
   }
@@ -175,40 +179,42 @@ void View::do_load ()
 
 void View::do_slice_svg (bool singlelayer)
 {
+  PrintInhibitor inhibitPrint(m_printer);
   std::vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
   if (files.size()>0) {
     if (!files[0]) return; // should never happen
-    if (!test_confirm_overwrite(files[0])) return;
+    if (files[0]->query_exists())
+      if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
+	return;
     string directory_path = files[0]->get_parent()->get_path();
     m_model->settings.STLPath = directory_path;
     m_model->SliceToSVG(files[0], singlelayer);
   }
 }
 
-bool View::test_confirm_overwrite( Glib::RefPtr < Gio::File > file ) const
+bool View::get_userconfirm(string maintext, string secondarytext) const
 {
-  bool result = true;
-  if (file->query_exists()) {
-    string fname = file->get_basename();
-    Gtk::MessageDialog *dialog = new Gtk::MessageDialog("Overwrite File?");
-    dialog->set_secondary_text (fname);
-    dialog->add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-    int response = dialog->run();
-    if (response == Gtk::RESPONSE_OK)
-      result = true;
-    else
-      result = false;
-    delete dialog;
-  }
+  Gtk::MessageDialog *dialog = new Gtk::MessageDialog(maintext);
+  if (secondarytext != "")
+    dialog->set_secondary_text (secondarytext);
+  dialog->add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  int response = dialog->run();
+  bool result = false;
+  if (response == Gtk::RESPONSE_OK)
+    result = true;
+  delete dialog;
   return result;
 }
- 
+
 void View::do_save_stl ()
 {
+  PrintInhibitor inhibitPrint(m_printer);
   std::vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
   if (files.size()>0) {
     if (!files[0]) return; // should never happen
-    if (!test_confirm_overwrite(files[0])) return;
+    if (files[0]->query_exists())
+      if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
+	return;
     string directory_path = files[0]->get_parent()->get_path();
     m_model->settings.STLPath = directory_path;
     m_model->SaveStl (files[0]);
@@ -216,10 +222,13 @@ void View::do_save_stl ()
 }
 void View::do_save_gcode ()
 {
+  PrintInhibitor inhibitPrint(m_printer);
   std::vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
   if (files.size()>0) {
     if (!files[0]) return; // should never happen
-    if (!test_confirm_overwrite(files[0])) return;
+    if (files[0]->query_exists())
+      if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
+	return;
     string directory_path = files[0]->get_parent()->get_path();
     m_model->settings.GCodePath = directory_path;
     m_model->WriteGCode (files[0]);
@@ -228,6 +237,7 @@ void View::do_save_gcode ()
 
 void View::save_stl ()
 {
+  PrintInhibitor inhibitPrint(m_printer);
   m_filechooser->set_saving (RSFilechooser::MODEL);
   show_notebooktab("file_tab", "controlnotebook");
   // FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::STL);
@@ -319,6 +329,7 @@ View *View::create(Model *model)
     dialog.run();
     throw ex;
   }
+
   View *view = 0;
   builder->get_widget_derived("main_window", view);
   view->setModel (model);
@@ -328,6 +339,7 @@ View *View::create(Model *model)
 
 void View::printing_changed()
 {
+  //rGlib::Mutex::Lock lock(mutex);
   m_model->SetIsPrinting(m_printer->IsPrinting());
   if (m_printer->IsPrinting()) {
     m_print_button->set_label (_("Restart"));
@@ -336,15 +348,13 @@ void View::printing_changed()
     m_print_button->set_label (_("Print"));
     m_continue_button->set_label (_("Continue"));
   }
+  // while(Gtk::Main::events_pending())
+  //   Gtk::Main::iteration();
 }
 
 void View::power_toggled()
-{ // FIXME button active???
-  if (m_printer->IsPrinting()) return;
-  if (m_power_button->get_active())
-    m_printer->SendNow ("M80");
-  else
-    m_printer->SendNow ("M81");
+{ 
+  m_printer->SwitchPower (m_power_button->get_active());
 }
 
 void View::enable_logging_toggled (Gtk::ToggleButton *button)
@@ -354,17 +364,27 @@ void View::enable_logging_toggled (Gtk::ToggleButton *button)
 
 void View::temp_monitor_enabled_toggled (Gtk::ToggleButton *button)
 {
+  m_model->settings.Misc.TempReadingEnabled = button->get_active();
   m_printer->UpdateTemperatureMonitor();
 }
 
 void View::fan_enabled_toggled (Gtk::ToggleButton *button)
 {
-  if (!button->get_active())
-    m_printer->SendNow ("M107");
-  else {
+  if (toggle_block) return;
+  if (!button->get_active()) {
+    if (!m_printer->SendNow ("M107")) {
+      toggle_block = true;
+      button->set_active(true);
+      toggle_block = false;
+    }
+  } else {
     std::stringstream oss;
     oss << "M106 S" << (int)m_fan_voltage->get_value();
-    m_printer->SendNow (oss.str());
+    if (!m_printer->SendNow (oss.str())) {
+      toggle_block = true;
+      button->set_active(false);
+      toggle_block = false;
+    }
   }
 }
 
@@ -377,7 +397,9 @@ void View::run_extruder ()
 
 void View::clear_logs()
 {
-  m_printer->commlog->get_buffer()->set_text("");
+  log_view ->get_buffer()->set_text("");
+  echo_view->get_buffer()->set_text("");
+  err_view ->get_buffer()->set_text("");
   m_model->ClearLogs();
 }
 
@@ -469,14 +491,83 @@ void View::custombutton_pressed(string name, Gtk::ToolButton *button)
 	    //cerr << "button name " << name << endl;
 	    stringstream s(m_model->settings.CustomButtonGcode[i]);
 	    string item;
-	    while (getline(s,item)) {
+	    bool ok = true;
+	    while (ok && getline(s,item)) {
 	      cerr << "sending command " << item<< endl;
-	      m_printer->SendNow(item);
+	      ok = m_printer->SendNow(item);
 	    }
 	  }
 	  break;
 	}
     }
+}
+
+
+void View::log_msg(Gtk::TextView *tview, string s)
+{
+  //Glib::Mutex::Lock lock(mutex);
+  if (!tview || s.length() == 0) return;
+  if (!m_model || !m_model->settings.Printer.Logging) return;
+
+  Glib::RefPtr<Gtk::TextBuffer> c_buffer = tview->get_buffer();
+  Gtk::TextBuffer::iterator tend = c_buffer->end();
+  c_buffer->insert (tend, s);
+  tend = c_buffer->end();
+  tview->scroll_to(tend);
+  //tview->queue_draw();
+  // while(Gtk::Main::events_pending()) 
+  //     Gtk::Main::iteration();
+}
+
+void View::err_log(string s)
+{
+  log_msg(err_view,s);
+}
+void View::comm_log(string s)
+{
+  log_msg(log_view,s);
+}
+void View::echo_log(string s)
+{
+  log_msg(echo_view,s);
+}
+
+void View::set_logging(bool logging)
+{
+  cerr << "set log " << logging<< endl;
+  if (logging) {
+    logprint_timeout = Glib::signal_timeout().connect
+      (sigc::mem_fun(*this, &View::logprint_timeout_cb), 500);
+  } else {
+    if (logprint_timeout.connected()) {
+      logprint_timeout_cb();
+      logprint_timeout.disconnect();
+    }
+  }
+}
+
+bool View::logprint_timeout_cb()
+{
+  GDK_THREADS_ENTER ();
+  cerr << "log ";
+  // while(Gtk::Main::events_pending()) 
+  //   Gtk::Main::iteration();
+  if (m_printer->error_buffer.length() > 0) {
+    err_log (m_printer->error_buffer);
+    m_printer->error_buffer = "";
+  }
+  if (m_printer->echo_buffer.length() > 0) {
+    echo_log(m_printer->echo_buffer);
+    m_printer->echo_buffer  = "";
+  }
+  if (m_printer->commlog_buffer.length() > 0) {
+    comm_log(m_printer->commlog_buffer);
+    m_printer->commlog_buffer = "";
+  }
+  // while(Gtk::Main::events_pending()) 
+  //   Gtk::Main::iteration();
+  GDK_THREADS_LEAVE ();
+  return true;
 }
 
 void View::hide_on_response(int, Gtk::Dialog *dialog)
@@ -673,58 +764,48 @@ public:
 class View::TempRow : public Gtk::HBox {
 
 public:
-  // see: http://reprap.org/wiki/RepRapGCodes for more details
-  void heat_changed (Gtk::ToggleButton *pOn)
-  {
-    float value = 0;
-    if (pOn->get_active()) 
-      value = m_target->get_value();
-    m_printer->SetTemp(m_type, value);
-  }
 
   Model *m_model;
   Printer *m_printer;
   TempType m_type;
   Gtk::Label *m_temp;
   Gtk::SpinButton *m_target;
+  Gtk::ToggleButton *m_button;
 
-  void update_temp (double value)
+  TempRow(Model *model, Printer *printer, TempType type) :
+    m_model(model), m_printer(printer), m_type(type)
   {
-    gchar *tmp = g_strdup_printf ("%3g", value);
-    m_temp->set_text(tmp);
-  }
+    static const char *names[] = { _("Nozzle:"), _("Bed:") };
+    set_homogeneous(true);
+    add(*manage(new Gtk::Label(names[type])));
 
-  TempRow(Model *model, Printer *printer, TempType type, Gtk::SpinButton *target) :
-    m_model(model), m_printer(printer), m_type(type), m_target(target)
-  {
-    // static const char *names[] = { N_("Nozzle"), N_("Bed") };
-
-    // add(*manage(new Gtk::Label(_(names[type]))));
-    Gtk::ToggleButton *pOn = manage (new Gtk::ToggleButton(_("Heat On")));
-    pOn->signal_toggled().connect
-      (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_changed), pOn));
-    add(*pOn);
-    m_target->signal_value_changed().connect
-      (sigc::bind (sigc::mem_fun (*this, &TempRow::heat_changed), pOn));
-
-    add(*manage (new Gtk::Label(_("Temp. (°C)"))));
-    m_temp = new Gtk::Label(_("<unknown>"));
+    m_temp = new Gtk::Label(_("-- °C"));
     add (*m_temp);
+    // add(*manage (new Gtk::Label(_("°C"))));
 
     add(*manage(new Gtk::Label(_("Target:"))));
-    // m_target = new Gtk::SpinButton();
-    // m_target->set_increments (1, 5);
-    // m_target->set_range(25.0, 300.0);
-    // switch (type) {
-    // case TEMP_NOZZLE:
-    // default:
-    //   m_target->set_value(m_model->settings.Printer.NozzleTemp);
-    //   break;
-    // case TEMP_BED:
-    //   m_target->set_value(m_model->settings.Printer.BedTemp);
-    //   break;
-    // }
-    // add (*m_target);
+    m_target = new Gtk::SpinButton();
+    m_target->set_increments (1, 5);
+    switch (type) {
+    case TEMP_NOZZLE:
+    default:
+      m_target->set_range(0, 350.0);
+      m_target->set_value(m_model->settings.Printer.NozzleTemp);
+      break;
+    case TEMP_BED:
+      m_target->set_range(0, 250.0);
+      m_target->set_value(m_model->settings.Printer.BedTemp);
+      break;
+    }
+    add (*m_target);
+
+    m_button = manage (new Gtk::ToggleButton(_("Off")));
+    m_button->signal_toggled().connect
+      (sigc::mem_fun (*this, &TempRow::button_toggled));
+    add(*m_button);
+
+    m_target->signal_value_changed().connect
+      (sigc::mem_fun (*this, &TempRow::heat_changed));
   }
 
   ~TempRow()
@@ -732,6 +813,48 @@ public:
     delete m_temp;
     // delete m_target;
   }
+
+  void button_toggled()
+  {
+    if (m_button->get_active()) 
+      m_button->set_label(_("On"));
+    else
+      m_button->set_label(_("Off"));
+
+    if (toggle_block) return;
+    float value = 0;
+    if (m_button->get_active()) {
+      value = m_target->get_value();
+    }
+    if (!m_printer->SetTemp(m_type, value)) {
+      toggle_block = true;
+      m_button->set_active(!m_button->get_active());
+      toggle_block = false;
+    }
+  }
+
+  void heat_changed() {
+    float value = m_target->get_value();
+    switch (m_type) {
+    case TEMP_NOZZLE:
+    default:
+      m_model->settings.Printer.NozzleTemp = value;
+	break;
+    case TEMP_BED:
+      m_model->settings.Printer.BedTemp = value;
+    }
+    if (m_button->get_active())
+      m_printer->SetTemp(m_type, value);
+  }
+
+  void update_temp (double value)
+  {
+    ostringstream oss; 
+    oss.precision(1);
+    oss << fixed << value << " °C";
+    m_temp->set_text(oss.str());
+  }
+
 };
 
 class View::AxisRow : public Gtk::HBox {
@@ -816,7 +939,8 @@ void View::home_all()
 
 void View::load_settings()
 {
-  //FileChooser::ioDialog (m_model, this, FileChooser::OPEN, FileChooser::SETTINGS);
+  m_filechooser->set_loading(RSFilechooser::SETTINGS);
+  show_notebooktab("file_tab", "controlnotebook");
 }
 
 void View::save_settings()
@@ -845,7 +969,9 @@ void View::do_save_settings_as()
   std::vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
   if (files.size()>0) {
     if (!files[0]) return; // should never happen
-    if (!test_confirm_overwrite(files[0])) return;
+    if (files[0]->query_exists())
+      if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
+	return;
     string directory_path = files[0]->get_parent()->get_path();
     m_model->settings.SettingsPath = directory_path;
     m_model->SaveConfig(files[0]);
@@ -914,14 +1040,21 @@ void View::update_rot_value()
   vector<Shape*> shapes;
   vector<TreeObject*> objects;
   get_selected_objects (objects, shapes);
-  if (shapes.size()>0)  {
+  Transform3D *trans = NULL;
+  if (objects.size()>0)  {
+    trans = &objects.back()->transform3D;
+  }
+  else if (shapes.size()>0)  {
+    trans = &shapes.back()->transform3D;
+  }
+  if (trans != NULL) {
     Gtk::SpinButton *rot_sb;
     m_builder->get_widget("rot_x", rot_sb);
-    rot_sb->set_value(shapes.back()->transform3D.getRotX()*180/M_PI);
+    rot_sb->set_value(trans->getRotX()*180/M_PI);
     m_builder->get_widget("rot_y", rot_sb);
-    rot_sb->set_value(shapes.back()->transform3D.getRotY()*180/M_PI);
+    rot_sb->set_value(trans->getRotY()*180/M_PI);
     m_builder->get_widget("rot_z", rot_sb);
-    rot_sb->set_value(shapes.back()->transform3D.getRotZ()*180/M_PI);
+    rot_sb->set_value(trans->getRotZ()*180/M_PI);
   }
   toggle_block = false;
 }
@@ -1085,6 +1218,7 @@ void View::print_clicked()
 //   m_printer->StopButton();
 //   printing_changed();
 // }
+
 void View::continue_clicked()
 {
   m_printer->ContinuePauseButton();
@@ -1092,8 +1226,10 @@ void View::continue_clicked()
 }
 void View::reset_clicked()
 {
-  m_printer->ResetButton();
-  printing_changed();
+  if (get_userconfirm(_("Reset Printer?"))) {
+    m_printer->ResetButton();
+    printing_changed();
+  }
 }
 
 void View::update_settings_gui()
@@ -1124,6 +1260,7 @@ void View::handle_ui_settings_changed()
   m_model->ClearPreview();
   queue_draw();
 }
+
 
 void View::temp_changed()
 {
@@ -1244,8 +1381,6 @@ View::View(BaseObjectType* cobject,
 
   connect_button ("progress_stop",   sigc::mem_fun(*this, &View::stop_progress));
 
-
-
   m_builder->get_widget ("m_treeview", m_treeview);
 
   // Insert our keybindings all around the place
@@ -1346,6 +1481,7 @@ View::View(BaseObjectType* cobject,
   connect_button ("i_extrude_length", sigc::mem_fun(*this, &View::run_extruder) );
 
   connect_button ("i_new_custombutton", sigc::mem_fun(*this, &View::new_custombutton) );
+
 
   // 3D preview of the bed
   Gtk::Box *pBox = NULL;
@@ -1493,8 +1629,6 @@ void View::setModel(Model *model)
   m_model->settings.m_signal_update_settings_gui.connect
     (sigc::mem_fun(*this, &View::update_settings_gui));
 
-  m_model->settings.connect_to_ui (*((Builder *)&m_builder));
-
   m_treeview->set_model (m_model->objtree.m_model);
   m_treeview->append_column("Name", m_model->objtree.m_cols->m_name);
 
@@ -1521,19 +1655,23 @@ void View::setModel(Model *model)
   m_builder->get_widget("statusbar", sbar);
   m_model->statusbar = sbar;
   
-  Gtk::TextView *log_view;
   m_builder->get_widget("i_txt_comms", log_view);
-  // log_view->set_buffer(m_printer->commlog);
-  Gtk::TextView *err_view;
+  log_view->set_buffer(Gtk::TextBuffer::create());
+  log_view->set_reallocate_redraws(false);
   m_builder->get_widget("i_txt_errs", err_view);
   err_view->set_buffer(m_model->errlog);
-  Gtk::TextView *echo_view;
+  err_view->set_reallocate_redraws(false);
   m_builder->get_widget("i_txt_echo", echo_view);
   echo_view->set_buffer(m_model->echolog);
+  echo_view->set_reallocate_redraws(false);
 
-  m_printer = new Printer(this, log_view);
+  m_printer = new Printer(this);
   m_printer->signal_temp_changed.connect
     (sigc::mem_fun(*this, &View::temp_changed));
+  m_printer->signal_now_printing.connect
+    (sigc::mem_fun(*this, &View::showCurrentPrinting));
+  // m_printer->signal_logmessage.connect
+  //   (sigc::mem_fun(*this, &View::showPrinterLog));
 
   // Connect / dis-connect button
   m_cnx_view = new ConnectView(m_printer, &m_model->settings);
@@ -1541,14 +1679,19 @@ void View::setModel(Model *model)
   m_builder->get_widget ("p_connect_button_box", connect_box);
   connect_box->add (*m_cnx_view);
 
+  // Gtk::Box *control_box;
+  // m_builder->get_widget ("printer_controls", control_box);
+  // if (control_box)
+  //   control_box->set_sensitive(false);
+
   Gtk::Box *temp_box;
   m_builder->get_widget ("i_temp_box", temp_box);
-  Gtk::SpinButton *nozzle;
-  m_builder->get_widget ("Printer.NozzleTemp", nozzle);
-  m_temps[TEMP_NOZZLE] = new TempRow(m_model, m_printer, TEMP_NOZZLE, nozzle);
-  Gtk::SpinButton *bed;
-  m_builder->get_widget ("Printer.BedTemp", bed);
-  m_temps[TEMP_BED] = new TempRow(m_model, m_printer, TEMP_BED, bed);
+  // Gtk::SpinButton *nozzle;
+  // m_builder->get_widget ("Printer.NozzleTemp", nozzle);
+  m_temps[TEMP_NOZZLE] = new TempRow(m_model, m_printer, TEMP_NOZZLE);
+  // Gtk::SpinButton *bed;
+  // m_builder->get_widget ("Printer.BedTemp", bed);
+  m_temps[TEMP_BED] = new TempRow(m_model, m_printer, TEMP_BED);
   temp_box->add (*m_temps[TEMP_NOZZLE]);
   temp_box->add (*m_temps[TEMP_BED]);
 
@@ -1559,9 +1702,9 @@ void View::setModel(Model *model)
     axis_box->add (*m_axis_rows[i]);
   }
 
-
   inhibit_print_changed();
-  m_printer->get_signal_inhibit_changed().connect (sigc::mem_fun(*this, &View::inhibit_print_changed));
+  m_printer->get_signal_inhibit_changed().
+    connect (sigc::mem_fun(*this, &View::inhibit_print_changed));
   m_model->m_signal_stl_added.connect (sigc::mem_fun(*this, &View::stl_added));
   m_model->m_model_changed.connect (sigc::mem_fun(*this, &View::model_changed));
   m_model->m_signal_gcode_changed.connect (sigc::mem_fun(*this, &View::gcode_changed));
@@ -1726,6 +1869,7 @@ void View::stop_progress()
 
 void View::scale_object()
 {
+  if (toggle_block) return;
   double scale=1;
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("m_scale_value", scale_value);
@@ -1746,6 +1890,7 @@ void View::scale_object()
 
 void View::scale_object_x()
 {
+  if (toggle_block) return;
   double scale=1;
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("scale_x", scale_value);
@@ -1765,6 +1910,7 @@ void View::scale_object_x()
 }
 void View::scale_object_y()
 {
+  if (toggle_block) return;
   double scale=1;
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("scale_y", scale_value);
@@ -1784,6 +1930,7 @@ void View::scale_object_y()
 }
 void View::scale_object_z()
 {
+  if (toggle_block) return;
   double scale=1;
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("scale_z", scale_value);
@@ -1805,7 +1952,8 @@ void View::scale_object_z()
 /* Updates the scale value when a new STL is selected,
  * giving it the new STL's current scale factor */
 void View::update_scale_value()
-{
+{ 
+  toggle_block = true;
   vector<Shape*> shapes;
   vector<TreeObject*> objects;
   get_selected_objects (objects, shapes);
@@ -1820,6 +1968,7 @@ void View::update_scale_value()
     m_builder->get_widget("scale_z", scale_sb);
     scale_sb->set_value(shapes.back()->getScaleFactorZ());
   }
+  toggle_block = false;
 }
 
 // GPL bits below from model.cpp ...
@@ -1967,6 +2116,7 @@ void View::DrawGrid()
 // called from Render::on_expose_event
 void View::Draw (vector<Gtk::TreeModel::Path> &selected)
 {
+ 
 	// Draw the grid, pushed back so it can be seen
 	// when viewed from below.
 	glEnable (GL_POLYGON_OFFSET_FILL);
@@ -1998,11 +2148,24 @@ void View::Draw (vector<Gtk::TreeModel::Path> &selected)
 	    layerlabel->set_text(s.str());
 	  }
 	}
-
 }
 
-void View::showCurrentPrinting(unsigned long fromline, unsigned long toline)
+void View::showCurrentPrinting(unsigned long lineno)
 {
-  m_model->setCurrentPrintingLine(fromline, toline);
+  //Glib::Mutex::Lock lock(mutex);
+  if (lineno == 0) {
+    m_progress->stop(_("Done"));
+    return;
+  }
+  bool cont = true;
+  cont = m_progress->update(lineno, true);
+  if (!cont) { // stop by progress bar
+    m_printer->Pause();
+    printing_changed();
+  }
+  m_model->setCurrentPrintingLine(lineno);
   queue_draw();
+  // while(Gtk::Main::events_pending()) {
+  //   Gtk::Main::iteration();
+  // }
 }

@@ -261,9 +261,13 @@ bool Render::on_button_press_event(GdkEventButton* event)
     if (index) {
       Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
       if (!m_selection->is_selected(iter)) {
+	// if (!(event->state & GDK_CONTROL_MASK))  // add to selection by CONTROL
 	m_selection->unselect_all();
 	m_selection->select(iter);
       }
+      // else 
+      // 	if ((event->state & GDK_CONTROL_MASK))  // remove from selection by CONTROL
+      // 	  m_selection->unselect(iter);
     }
   }
   return true;
@@ -386,7 +390,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  return true;
 	if (shapes.size()>0) {
 	  for (uint s=0; s<shapes.size(); s++) {
-	    shapes[s]->Scale(shapes[s]->getScaleFactor()/factor);
+	    shapes[s]->Scale(shapes[s]->getScaleFactor()/factor, false);
 	  }
 	  m_view->update_scale_value();
 	}
@@ -407,7 +411,13 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
 	if (!m_view->get_selected_objects(objects, shapes))
 	  return true;
-	if (shapes.size()>0) {
+	if (objects.size()>0) {
+	  for (uint o=0; o<objects.size(); o++) {
+	    Transform3D &transf = objects[o]->transform3D;
+	    transf.rotate(axis, -delta.length()/100.);
+	  }
+	}
+	else if (shapes.size()>0) {
 	  for (uint s=0; s<shapes.size(); s++) {
 	    shapes[s]->Rotate(axis, -delta.length()/100.);
 	  } 

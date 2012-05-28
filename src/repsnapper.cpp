@@ -143,8 +143,12 @@ Glib::RefPtr<Gio::File> find_global_config() {
 int main(int argc, char **argv)
 {
   Glib::thread_init();
-  // gdk_threads_init(); // locks everything at least on freebsd
+
+  gdk_threads_init(); 
+
+  gdk_threads_enter();
   Gtk::Main tk(argc, argv);
+  gdk_threads_leave();
 
   gchar *locale_dir;
 

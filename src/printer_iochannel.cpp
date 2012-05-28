@@ -1,8 +1,8 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2011 martin.dieringer@gmx.de
+    Copyright (C) 2012 martin.dieringer@gmx.de
 
-    This program is free software; you can redistribute it and/or modify
+    This program is frpree software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
@@ -17,42 +17,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include <cerrno>
-#include <functional>
-#include <iostream>
-#include <ctype.h>
-#include <algorithm>
+
+#include "reprap_serial.h" 
 
 
-#include "stdafx.h"
-#include "config.h"
+#define DEV_PATH "/dev/"
+#define DEV_PREFIXES {"ttyUSB", "ttyACM", "cuaU"}
 
-#include "printer.h"
-#include "view.h"
-
-#include "progress.h"
-#include "model.h"
-
-#if IOCHANNEL
-#  include "printer_iochannel.cpp"
-#else
-#  include "printer_libreprap.cpp"
-#endif
-
-
-///////////////////////////////////////////////////////////////////////
-
-
-// this is the old mangled stuff:
-#if 0
-
-#if IOCHANNEL
-#  include "reprap_serial.h" 
-#  define DEV_PATH "/dev/"
-#  define DEV_PREFIXES {"ttyUSB", "ttyACM", "cuaU"}
-#else
-#  include <libreprap/util.h>
-#endif
 
 // everything taken out of model.cpp
 
@@ -67,18 +38,12 @@ Printer::Printer(View *view) :
   gcode_iter = NULL;
   m_view = view;
 
-#if IOCHANNEL
   rr_serial = new RRSerial(this);
   // rr_serial->signal_logmessage.connect
   //   (sigc::mem_fun(*this, &Printer::log));
   commlog_buffer = "";
   error_buffer   = "";
   echo_buffer    = "";
-
-#else
-  device = NULL;
-#endif
-
 }
 
 Printer::~Printer()
@@ -86,16 +51,9 @@ Printer::~Printer()
   temp_timeout.disconnect();
   Stop();
   serial_try_connect(false);
-#if IOCHANNEL
   delete rr_serial;
-#else
-  if (device==NULL) return;
-  rr_dev_free (device);
-  device = NULL;
-#endif
 }
 
-#if IOCHANNEL
 // buffered output
 void Printer::log(string s, RR_logtype type)
 {
@@ -107,33 +65,14 @@ void Printer::log(string s, RR_logtype type)
   }
 }
 
-#else
-// direct output
-void Printer::err_log(string s)
+bool Printer::log_timeout_cb()
 {
-  m_view->err_log(s);
+  // signal_logmessage.emit(s,type);
+  if (commlog_buffer != "") m_view->comm_log(commlog_buffer); commlog_buffer  = "";
+  if (error_buffer != "")   m_view->err_log (error_buffer);   error_buffer  = ""; 
+  if (echo_buffer != "")    m_view->echo_log(echo_buffer);    echo_buffer = "";
+  return true;
 }
-void Printer::echo_log(string s)
-{
-  m_view->echo_log(s);
-}
-void Printer::comm_log(string s)
-{
-  m_view->comm_log(s);
-}
-#endif
-
-
-// #if IOCHANNEL
-// bool Printer::log_timeout_cb()
-// {
-//   signal_logmessage.emit(s,type);
-//   m_view->comm_log(log_buffer);  log_buffer  = "";
-//   m_view->err_log (err_buffer);  err_buffer  = ""; 
-//   m_view->echo_log(echo_buffer); echo_buffer = "";
-//   return true;
-// }
-// #endif
 
 void Printer::alert (const char *message)
 {
@@ -187,21 +126,13 @@ void Printer::setModel(Model *model)
 
 void Printer::Restart()
 {
-#if IOCHANNEL
   if (!IsConnected()) return;
-#else
-  if (device==NULL) return;
-#endif  
   Print();
 }
 
 void Printer::ContinuePauseButton()
 {
-#if IOCHANNEL
   if (!IsConnected()) return;
-#else
-  if (device==NULL) return;
-#endif  
   if (printing)
     Pause();
   else
@@ -211,45 +142,26 @@ void Printer::ContinuePauseButton()
 void Printer::Pause()
 {
   set_printing (false);
-#if IOCHANNEL
   if (!IsConnected()) return;
-#else
-  if (device==NULL) return;
-  rr_dev_set_paused (device, RR_PRIO_NORMAL, 1);
-#endif
 }
 
 void Printer::Continue()
 {
   set_printing (true);
-#if IOCHANNEL
   if (!IsConnected()) return;
   rr_serial->start_printing();
-#else
-  if (device==NULL) return;
-  rr_dev_set_paused (device, RR_PRIO_NORMAL, 0);
-#endif
 }
 
 void Printer::Kick()
 {
-#if IOCHANNEL
   if (!IsConnected()) return;
   cerr << "Kick" << endl;
-#else
-  if (device==NULL) return;
-  rr_dev_kick (device);
-#endif
   Continue();
 }
 
 void Printer::PrintButton()
 {
-#if IOCHANNEL
   if (!IsConnected()) return;
-#else
-  if (device==NULL) return;
-#endif
   if (printing)
     Restart();
   else
@@ -258,37 +170,20 @@ void Printer::PrintButton()
 
 void Printer::StopButton()
 {
-#if IOCHANNEL
   if (!IsConnected()) return;
-#else
-  if (device==NULL) return;
-#endif
   Stop();
 }
 
 void Printer::ResetButton()
 {
-#if IOCHANNEL
   if (!IsConnected()) return;
-#else
-  if (device==NULL) return;
-#endif
   Stop();
-#if IOCHANNEL
   rr_serial->reset_printer();
-#else
-  rr_dev_reset_device(device);
-#endif
 }
 
 bool Printer::IsConnected()
 {
-#if IOCHANNEL
   return rr_serial->connected();
-#else
-  if (device==NULL) return false;
-  return rr_dev_is_connected(device);
-#endif
 }
 
 
@@ -302,7 +197,6 @@ const Glib::RefPtr<Glib::Regex> numRE =
 
 void Printer::parse_response (string line)
 {
-#if IOCHANNEL
   size_t pos;
   pos = line.find("Resend:");
   if (pos != string::npos) {
@@ -351,7 +245,6 @@ void Printer::parse_response (string line)
   else {
     //cerr  << line << endl;
   }
-#endif
 }
 
 
@@ -359,18 +252,16 @@ void Printer::parse_response (string line)
 void Printer::serial_try_connect (bool connect)
 {
 
-#if IOCHANNEL
-
   if (connect) {
     signal_serial_state_changed.emit (SERIAL_CONNECTING);
     const char * serialname = m_model->settings.Hardware.PortName.c_str();
     bool connected = rr_serial->connect(serialname);
     if (connected) {
       signal_serial_state_changed.emit (SERIAL_CONNECTED);
-      if (m_view)
-	m_view->set_logging(true);
-      // log_timeout = Glib::signal_timeout().connect
-      //   (sigc::mem_fun(*this, &Printer::log_timeout_cb), 500);
+      // if (m_view)
+      // 	m_view->set_logging(true);
+      log_timeout = Glib::signal_timeout().connect
+        (sigc::mem_fun(*this, &Printer::log_timeout_cb), 500);
     } else 
       signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
 
@@ -383,65 +274,13 @@ void Printer::serial_try_connect (bool connect)
       signal_serial_state_changed.emit (SERIAL_DISCONNECTING);
       if (rr_serial->disconnect())
 	signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
-      if (m_view)
-	m_view->set_logging(false);
-      // if (log_timeout.connected())
-      // 	log_timeout.disconnect();
+      // if (m_view)
+      // 	m_view->set_logging(false);
+      if (log_timeout.connected())
+      	log_timeout.disconnect();
     }
   }
 
-#else // no IOChannel:
-
-  int result;
-  assert(m_model != NULL); // Need a model first
-
-  if (connect) {
-    void *cl = static_cast<void *>(this);
-    // TODO: Configurable protocol, cache size
-    device = rr_dev_create (RR_PROTO_FIVED,
-			    m_model->settings.Hardware.ReceivingBufferSize,
-			    rr_reply_fn, cl,
-			    rr_more_fn, cl,
-			    rr_error_fn, cl,
-			    rr_wait_wr_fn, cl,
-			    rr_log_fn, cl);
-
-    signal_serial_state_changed.emit (SERIAL_CONNECTING);
-
-    result = rr_dev_open (device,
-			  m_model->settings.Hardware.PortName.c_str(),
-			  m_model->settings.Hardware.SerialSpeed);
-
-    if(result < 0) {
-      signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
-      error (_("Failed to connect to device"),
-             _("an error occured while connecting"));
-    } else {
-      rr_dev_reset (device);
-      signal_serial_state_changed.emit (SERIAL_CONNECTED);
-      UpdateTemperatureMonitor();
-    }
-  } else {
-    if (printing) {
-      error (_("Cannot disconnect"),
-             _("printer is printing"));
-      signal_serial_state_changed.emit (SERIAL_CONNECTED);
-    }
-    else {
-      signal_serial_state_changed.emit (SERIAL_DISCONNECTING);
-      devconn.disconnect();
-      if (device)
-	rr_dev_close (device);
-      devconn.disconnect();
-      signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
-      Pause();
-      temp_timeout.disconnect();
-      if (device)
-	rr_dev_free (device);
-      device = NULL;
-    }
-  }
-#endif // no IOChannel
 
   if (connect) {
     UpdateTemperatureMonitor();
@@ -485,30 +324,17 @@ void Printer::SimplePrint()
   if (printing)
     alert (_("Already printing.\nCannot start printing"));
 
-#if IOCHANNEL
   if (!IsConnected())
     serial_try_connect (true);
-#else
-  if (!rr_dev_is_connected (device))
-    serial_try_connect (true);
-#endif
   Print();
 }
 
 void Printer::Print()
 {
-#if IOCHANNEL
   if (!IsConnected()) {
     alert (_("Not connected to printer.\nCannot start printing"));
     return;
   }
-#else
-  if (device==NULL) return;
-  if (!rr_dev_is_connected (device)) {
-    alert (_("Not connected to printer.\nCannot start printing"));
-    return;
-  }
-#endif
 
   assert(m_model != NULL);
 
@@ -516,17 +342,11 @@ void Printer::Print()
   gcode_iter = m_model->gcode.get_iter();
   set_printing (true);
 
-#if IOCHANNEL
   // reset printer line number
   rr_serial->start_printing(true, gcode_iter->m_line_count);
-#else
-  rr_dev_reset (device);
-  rr_dev_set_paused (device, RR_PRIO_NORMAL, 0);
-#endif
 }
 
 
-#if IOCHANNEL
 bool Printer::watchprint_timeout_cb()
 {
   if (!IsConnected()) return true;
@@ -535,11 +355,9 @@ bool Printer::watchprint_timeout_cb()
   signal_now_printing.emit(cur_line);
   return true;
 }
-#endif
 
 long Printer::get_next_line(string &line) 
 {
-#if IOCHANNEL
   if (gcode_iter && printing && !gcode_iter->finished()) {
     int cur_line = gcode_iter->m_cur_line;
     line = gcode_iter->next_line();
@@ -555,9 +373,6 @@ long Printer::get_next_line(string &line)
     }
     return -1;
   }
-#else
-  return -1;
-#endif
 }
 
 bool Printer::RunExtruder (double extruder_speed, double extruder_length,
@@ -604,9 +419,6 @@ bool Printer::SendNow(string str, long lineno)
 {
   //if (str.length() < 1) return true;
   std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-
-#if IOCHANNEL
-
   if (rr_serial) {
     RR_response resp = rr_serial->send(str, lineno);
     bool ok = (resp == SEND_OK);
@@ -614,39 +426,12 @@ bool Printer::SendNow(string str, long lineno)
     return ok;
   }
   return false;
-
-#else
-
-  if (device==NULL) return false;
-  if (rr_dev_is_connected (device)) {
-    rr_dev_enqueue_cmd (device, RR_PRIO_HIGH, str.data(), str.size());
-  } else {
-    error (_("Can't send command"), _("You must first connect to a device!"));
-    return false;
-  }
-  return true;
-#endif
 }
 
 void Printer::Stop()
 {  
-#if IOCHANNEL
   if (!IsConnected()) return;
-#else
-  if (device==NULL) return;
-#endif
-
   set_printing (false);
-  //assert(m_model != NULL);
-  
-#if IOCHANNEL
-#else
-  if (!rr_dev_is_connected (device)) {
-    alert (_("Not connected to printer.\nCannot stop printing"));
-    return;
-  }
-  rr_dev_reset (device);
-#endif
 }
 
 
@@ -655,8 +440,8 @@ void Printer::set_printing (bool pprinting)
   if (printing == pprinting)
     return;
   printing = pprinting;
-  if (m_view)
-    if (printing){
+  if (m_view) {
+    if (printing) {
       if (gcode_iter) {
 	m_view->get_view_progress()->start (_("Printing"),
 					    gcode_iter->m_line_count);
@@ -664,8 +449,8 @@ void Printer::set_printing (bool pprinting)
     } else {
       m_view->get_view_progress()->stop (_("Done"));
     }
+  }
 
-#if IOCHANNEL
   if (printing){
     watchprint_timeout = Glib::signal_timeout().connect
       (sigc::mem_fun(*this, &Printer::watchprint_timeout_cb), 700);
@@ -673,8 +458,6 @@ void Printer::set_printing (bool pprinting)
     watchprint_timeout.disconnect();
     rr_serial->stop_printing();
   }
-#endif
-
   printing_changed.emit();
 }
 
@@ -692,8 +475,6 @@ vector<string> Printer::find_ports() const
 {
   
   vector<string> ports;
-
-#if IOCHANNEL
 
   Glib::Dir dir(DEV_PATH);
   while (true) {
@@ -716,199 +497,6 @@ vector<string> Printer::find_ports() const
       cerr << "can connect device " << ports[i] << endl;
   }
   
-#else
-
-  char **rr_ports = rr_enumerate_ports();
-  if (rr_ports == NULL) {
-    return ports;
-  }
-  for(size_t i = 0; rr_ports[i] != NULL; ++i) {
-    ports.push_back((string)rr_ports[i]);
-    free(rr_ports[i]);
-  }
-  free(rr_ports);
-#endif
-
   return ports;
 }
 
-
-
-#if IOCHANNEL==0
-
-// ------------------------------ libreprap integration ------------------------------
-
-bool Printer::handle_dev_fd (Glib::IOCondition cond)
-{
-  if (device==NULL) return false;
-  int result;
-  if (cond & Glib::IO_IN) {
-    result = rr_dev_handle_readable (device);
-    if (result < 0)
-      error (_("Error reading from device!"), std::strerror (errno));
-  }
-  // try to avoid reading and writing at exactly the same time
-  else if (cond & Glib::IO_OUT) {
-    result = rr_dev_handle_writable (device);
-    if (result < 0)
-      error (_("Error writing to device!"), std::strerror (errno));
-  }
-  if (cond & (Glib::IO_ERR | Glib::IO_HUP))
-    serial_try_connect (false);
-
-  return true;
-}
-
-void RR_CALL Printer::rr_reply_fn (rr_dev dev, int type, float value,
-				 void *expansion, void *closure)
-{
-  Printer *printer = static_cast<Printer *>(closure);
-  printer->handle_rr_reply(dev, type, value, expansion);
-}
-
-void
-Printer::handle_rr_reply(rr_dev dev, int type, float value, void *expansion)
-{
-  switch (type) {
-  case RR_NOZZLE_TEMP:
-    temps[TEMP_NOZZLE] = value;
-    signal_temp_changed.emit();
-    break;
-  case RR_BED_TEMP:
-    temps[TEMP_BED] = value;
-    signal_temp_changed.emit();
-    break;
-  default:
-    break;
-  }
-}
-
-void RR_CALL Printer::rr_more_fn (rr_dev dev, void *closure)
-{
-  Printer *printer = static_cast<Printer*>(closure);
-  printer->handle_rr_more(dev);
-}
-
-
-void Printer::handle_rr_more (rr_dev dev)
-{
-  if (printing && gcode_iter) {
-    time_t time_used = time(NULL) - gcode_iter->time_started;
-    if (time_used != lasttimeshown) { // show once a second
-      int n_buffered = rr_dev_buffered_lines(device);
-      int donelines = gcode_iter->m_cur_line - n_buffered;
-      if (donelines < 100) gcode_iter->time_started = time(NULL); 
-      int tot_lines = gcode_iter->m_line_count;
-      // done by view
-      // if (tot_lines>0) { 
-      // 	if (donelines > 30) {
-      // 	  m_view->get_view_progress()->update (donelines, false);
-      // 	}
-      // }
-      if (lastdonelines > 0) // don't stop the progress bar
-	m_view->showCurrentPrinting(lastdonelines);
-      lastdonelines = donelines;
-      lasttimeshown = time_used;
-    }
-    while (rr_dev_write_more (device) && !gcode_iter->finished()) {
-      std::string line = gcode_iter->next_line_stripped();
-      if (line.length() > 0 && line[0] != ';') {
-	rr_dev_enqueue_cmd (device, RR_PRIO_NORMAL, line.data(), line.size());
-      }
-    }
-
-    if (gcode_iter->finished())
-    {
-      set_printing (false);
-      m_view->showCurrentPrinting(0);
-      //m_view->get_view_progress()->stop (_("Printed"));
-    }
-  }
-}
-
-
-void RR_CALL Printer::rr_error_fn (rr_dev dev, int error_code,
-				 const char *msg, size_t len,
-				 void *closure)
-{
-  Printer *printer = static_cast<Printer*>(closure);
-
-  printer->handle_rr_error (dev, error_code, msg, len);
-}
-
-
-void
-Printer::handle_rr_error (rr_dev dev, int error_code,
-    const char *msg, size_t len)
-{
-  err_log(msg);
-  // char *str = g_strndup (msg, len);
-  // g_warning (_("Error (%d) '%s' - user popup ?"), error_code, str);
-  // g_free (str);
-}
-
-
-void RR_CALL Printer::rr_wait_wr_fn (rr_dev dev, int wait_write, void *closure)
-{
-  Printer *printer = static_cast<Printer*>(closure);
-
-  printer->handle_rr_wait_wr (dev, wait_write);
-}
-
-void
-Printer::handle_rr_wait_wr (rr_dev dev, int wait_write)
-{
-#ifndef WIN32
-  Glib::IOCondition cond = (Glib::IO_ERR | Glib::IO_HUP |
-			    Glib::IO_PRI | Glib::IO_IN);
-  if (wait_write)
-    cond |= Glib::IO_OUT;
-
-  // FIXME: it'd be way nicer to change the existing poll record
-  devconn.disconnect();
-  devconn = Glib::signal_io().connect
-    (sigc::mem_fun (*this, &Printer::handle_dev_fd), rr_dev_fd (dev), cond);
-#else
-  /* FIXME: Handle the win32 case */
-#endif
-}
-
-void RR_CALL Printer::rr_log_fn (rr_dev dev, int type,
-			       const char *buffer,
-			       size_t len, void *closure)
-{
-  Printer *printer = static_cast<Printer*>(closure);
-  printer->handle_rr_log(dev, type, buffer, len);
-}
-
-void
-Printer::handle_rr_log (rr_dev dev, int type, const char *buffer, size_t len)
-{
-  bool recvsend = ( m_model && m_model->settings.Printer.Logging) ;
-
-  string str;
-
-  switch (type) {
-  case RR_LOG_RECV:
-    if (!recvsend) return;
-    str = "<-- ";
-    break;
-  case RR_LOG_SEND:
-    if (!recvsend) return;
-    str = "--> ";
-    break;
-  case RR_LOG_MSG:
-  default:
-    str = "; ";
-    break;
-  }
-  str += string (buffer, len);
-  comm_log(str);
-}
-
-#endif // IOCHANNEL==0
-
-
-// ------------------------------ libreprap integration above ------------------------------
-
-#endif // 0

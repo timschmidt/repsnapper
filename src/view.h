@@ -37,6 +37,8 @@ class View : public Gtk::Window
   friend class Render;
   friend class RSFilechooser;
 
+  bool get_userconfirm(string maintext, string secondarytext="") const;
+
   void toggle_fullscreen();
   void load_gcode();
   void save_gcode();
@@ -51,7 +53,6 @@ class View : public Gtk::Window
   void do_save_settings_as();
   void slice_svg();
   void do_slice_svg(bool singlelayer=false);
-  bool test_confirm_overwrite( Glib::RefPtr < Gio::File > ) const;
 
   void send_gcode();
   void printing_changed();
@@ -87,6 +88,9 @@ class View : public Gtk::Window
   void on_gcodebuffer_cursor_set (const Gtk::TextIter &iter, 
 				  const Glib::RefPtr <Gtk::TextMark> &refMark);
   Gtk::TextView * m_gcodetextview;
+
+  Gtk::TextView *log_view, *err_view, *echo_view;
+  void log_msg(Gtk::TextView *view, string s);
 
   Gtk::Button *m_print_button;
   /* Gtk::Button *m_stop_button; */
@@ -196,11 +200,21 @@ class View : public Gtk::Window
   void show_preferences();
   Glib::RefPtr<Gtk::Builder> getBuilder() const { return m_builder; };
 
+  void err_log(string s);
+  void comm_log(string s);
+  void echo_log(string s);
+
+  sigc::connection logprint_timeout;
+  void set_logging(bool);
+  bool logprint_timeout_cb();
 
   // view nasties ...
   void Draw (vector<Gtk::TreeModel::Path> &selected);
   void DrawGrid ();
-  void showCurrentPrinting(unsigned long fromline, unsigned long toline);
+  void showCurrentPrinting(unsigned long line);
+
+  Glib::Mutex mutex;
+
 };
 
 #ifdef MODEL_IMPLEMENTATION

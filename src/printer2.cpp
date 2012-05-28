@@ -24,91 +24,94 @@
 
 // everything taken out of model2.cpp
 
+bool Printer::SwitchPower(bool on) {
+  if(printing)
+    {
+      alert(_("Can't switch power while printing"));
+      return false;
+    }
+  if (on)
+    return SendNow("M80");
+  else
+    return SendNow("M81");
+}
 
 
-void Printer::Home(string axis)
+bool Printer::Home(string axis)
 {
   if(printing)
     {
       alert(_("Can't go home while printing"));
-      return;
+      return false;
     }
   if(axis == "X" || axis == "Y" || axis == "Z")
     {
-      SendNow("G28 "+axis+"0");
+      return SendNow("G28 "+axis+"0");
     }
   else if(axis == "ALL")
     {
-      SendNow("G28");
+      return SendNow("G28");
     }
-  else
-    alert(_("Home called with unknown axis"));
+
+  alert(_("Home called with unknown axis"));
+  return false;
 }
 
-void Printer::Move(string axis, double distance)
+bool Printer::Move(string axis, double distance)
 {
   assert (m_model != NULL);
   Settings *settings = &m_model->settings;
   if (printing)
     {
       alert(_("Can't move manually while printing"));
-      return;
+      return false;
     }
   if (axis == "X" || axis == "Y" || axis == "Z")
     {
-      SendNow("G91");	// relative positioning
-      string buffer="G1 F";
-      std::stringstream oss;
+      if (!SendNow("G91")) return false;	// relative positioning
+      float speed  = 0;
       if(axis == "Z")
-	oss << settings->Hardware.MaxPrintSpeedZ;
+	speed = settings->Hardware.MaxPrintSpeedZ;
       else
-	oss << settings->Hardware.MaxPrintSpeedXY;
-      buffer+= oss.str();
-      SendNow(buffer);
-      buffer="G1 ";
-      buffer += axis;
+	speed = settings->Hardware.MoveSpeed;
+
+      std::ostringstream oss;
+      oss << "G1 F" << speed;
+      if (!SendNow(oss.str())) return false;
       oss.str("");
-      oss << distance;
-      buffer+= oss.str();
-      oss.str("");
-      if(axis == "Z")
-	oss << settings->Hardware.MaxPrintSpeedZ;
-      else
-	oss << settings->Hardware.MaxPrintSpeedXY;
-      buffer+=" F"+oss.str();
-      SendNow(buffer);
-      SendNow("G90");	// absolute positioning
+      oss << "G1 " << axis << distance << " F" << speed;
+      if (!SendNow(oss.str())) return false;
+      return SendNow("G90");	// absolute positioning
     }
-  else
-    alert (_("Move called with unknown axis"));
+  alert (_("Move called with unknown axis"));
+  return false;
 }
 
-void Printer::Goto(string axis, double position)
+bool Printer::Goto(string axis, double position)
 {
   assert (m_model != NULL);
   Settings *settings = &m_model->settings;
   if (printing)
     {
       alert (_("Can't move manually while printing"));
-      return;
+      return false;
     }
   if(axis == "X" || axis == "Y" || axis == "Z")
     {
-      string buffer="G1 F";
       std::stringstream oss;
-      oss << settings->Hardware.MaxPrintSpeedXY;
-      buffer+= oss.str();
-      SendNow(buffer);
-      buffer="G1 ";
-      buffer += axis;
+      float speed  = 0;
+      if(axis == "Z")
+	speed = settings->Hardware.MaxPrintSpeedZ;
+      else
+	speed = settings->Hardware.MoveSpeed;
+
+      oss << "G1 F" << speed;
+      if (!SendNow(oss.str())) return false;
       oss.str("");
-      oss << position;
-      buffer+= oss.str();
-      oss.str("");
-      oss << settings->Hardware.MaxPrintSpeedXY;
-      buffer+=" F"+oss.str();
-      SendNow(buffer);
+      oss << "G1 " << axis << position << " F" << speed;
+      return SendNow(oss.str());
     }
-  else
-    alert (_("Goto called with unknown axis"));
+  
+  alert (_("Goto called with unknown axis"));
+  return false;
 }

@@ -22,7 +22,6 @@
 #include <string>
 
 #include <glib/gi18n.h>
-#include <libreprap/util.h>
 
 #include "settings.h"
 #include "connectview.h"
@@ -41,11 +40,13 @@ void ConnectView::serial_state_changed(SerialState state)
     sensitive = false;
     break;
   case SERIAL_DISCONNECTED:
+    m_combo.set_sensitive (true);
     id = Gtk::Stock::NO;
     label = _("Connect");
     sensitive = true;
     break;
   case SERIAL_CONNECTING:
+    m_combo.set_sensitive (false);
     id = Gtk::Stock::NO;
     label = _("Connecting...");
     sensitive = false;
@@ -82,7 +83,7 @@ void ConnectView::signal_entry_changed()
   m_settings->Hardware.PortName = entry->get_text();
 }
 
-bool ConnectView::find_ports() {
+void ConnectView::find_ports() {
   m_combo.clear();
 
 #if GTK_VERSION_GE(2, 24)
@@ -91,23 +92,17 @@ bool ConnectView::find_ports() {
   m_combo.append_text(m_settings->Hardware.PortName);
 #endif
 
-  char **ports = rr_enumerate_ports();
-  if (ports == NULL) {
-    return false;
-  }
+  vector<string> ports = m_printer->find_ports();
 
-  for(size_t i = 0; ports[i] != NULL; ++i) {
+  for(size_t i = 0; i < ports.size(); i++) {
+    if (ports[i] != m_settings->Hardware.PortName) {
 #if GTK_VERSION_GE(2, 24)
-    m_combo.append(ports[i]);
+      m_combo.append(ports[i]);
 #else
-    m_combo.append_text(ports[i]);
+      m_combo.append_text(ports[i]);
 #endif
-    free(ports[i]);
+    }
   }
-
-  free(ports);
-
-  return true;
 }
 
 ConnectView::ConnectView (Printer *printer,
