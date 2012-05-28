@@ -13,6 +13,28 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
+  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
+    <property name="upper">30</property>
+    <property name="value">10</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
+    <property name="upper">20</property>
+    <property name="value">8</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkAction" id="Fullscreen">
     <property name="label">Fullscreen</property>
     <property name="short_label" translatable="yes">Fullscreen</property>
@@ -56,28 +78,6 @@
     <property name="label" translatable="yes">Save Settings As</property>
     <property name="short_label" translatable="yes">Save Settings As</property>
     <property name="tooltip" translatable="yes">Save settings in a custom file</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
-    <property name="upper">30</property>
-    <property name="value">10</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
-    <property name="upper">20</property>
-    <property name="value">8</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
@@ -2931,7 +2931,7 @@ and others I forgot... (needs updating)</property>
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkLabel" id="label134">
+                                              <object class="GtkLabel" id="label2">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
                                                 <property name="xpad">5</property>
@@ -3406,7 +3406,7 @@ and others I forgot... (needs updating)</property>
                       </packing>
                     </child>
                     <child type="tab">
-                      <object class="GtkLabel" id="label2">
+                      <object class="GtkLabel" id="label5">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Printer</property>
@@ -4351,7 +4351,7 @@ and others I forgot... (needs updating)</property>
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel" id="label104">
+                                  <object class="GtkLabel" id="label7">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="justify">center</property>
@@ -4380,7 +4380,7 @@ and others I forgot... (needs updating)</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel" id="label106">
+                                  <object class="GtkLabel" id="label9">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">mm</property>
@@ -4640,7 +4640,7 @@ and others I forgot... (needs updating)</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel" id="label7">
+                                  <object class="GtkLabel" id="label10">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="xalign">0</property>
@@ -6014,7 +6014,7 @@ and others I forgot... (needs updating)</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel" id="label10">
+                                  <object class="GtkLabel" id="label11">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="label" translatable="yes">Height (mm):</property>
@@ -6762,7 +6762,7 @@ and others I forgot... (needs updating)</property>
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="label11">
+                      <object class="GtkLabel" id="label14">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Rotation per Layer</property>
@@ -7601,7 +7601,7 @@ and others I forgot... (needs updating)</property>
                           </object>
                         </child>
                         <child type="label">
-                          <object class="GtkLabel" id="label5">
+                          <object class="GtkLabel" id="label90">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">&lt;b&gt;STL Rendering Colors&lt;/b&gt;</property>
@@ -7794,7 +7794,7 @@ and others I forgot... (needs updating)</property>
                           </object>
                         </child>
                         <child type="label">
-                          <object class="GtkLabel" id="label90">
+                          <object class="GtkLabel" id="label92">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="yalign">0.4699999988079071</property>
@@ -7904,7 +7904,7 @@ and others I forgot... (needs updating)</property>
                           </object>
                         </child>
                         <child type="label">
-                          <object class="GtkLabel" id="label92">
+                          <object class="GtkLabel" id="label93">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">&lt;b&gt;Lighting&lt;/b&gt;</property>
@@ -7926,7 +7926,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child type="tab">
-              <object class="GtkLabel" id="label14">
+              <object class="GtkLabel" id="label110">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Display Settings</property>
@@ -7985,7 +7985,7 @@ and others I forgot... (needs updating)</property>
                           </object>
                         </child>
                         <child type="label">
-                          <object class="GtkLabel" id="label93">
+                          <object class="GtkLabel" id="label112">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">&lt;b&gt;Debugging&lt;/b&gt;</property>
@@ -8205,7 +8205,7 @@ and others I forgot... (needs updating)</property>
                           </object>
                         </child>
                         <child type="label">
-                          <object class="GtkLabel" id="label110">
+                          <object class="GtkLabel" id="label170">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">&lt;b&gt;Infill Debug&lt;/b&gt;</property>
@@ -8303,7 +8303,7 @@ and others I forgot... (needs updating)</property>
                           </object>
                         </child>
                         <child type="label">
-                          <object class="GtkLabel" id="label9">
+                          <object class="GtkLabel" id="label171">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">&lt;b&gt;Comms Debug&lt;/b&gt;</property>
@@ -8363,7 +8363,7 @@ and others I forgot... (needs updating)</property>
               </packing>
             </child>
             <child type="tab">
-              <object class="GtkLabel" id="label112">
+              <object class="GtkLabel" id="label172">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Debug</property>

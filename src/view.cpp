@@ -34,6 +34,10 @@
 
 #include "gitversion.h"
 
+
+bool toggle_block = false; // blocks signals for togglebuttons etc.
+
+
 bool View::on_delete_event(GdkEventAny* event)
 {
   Gtk::Main::quit();
