@@ -395,19 +395,24 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
       }
       m_downPoint = dragp;
     } // BUTTON 2
-    else if (event->state & GDK_BUTTON3_MASK) { // pan
-      if (event->state & GDK_SHIFT_MASK) { // rotate shape
+    else if (event->state & GDK_BUTTON3_MASK) { 
+      if (event->state & GDK_SHIFT_MASK || 
+	  event->state & GDK_CONTROL_MASK ) {  // rotate shape
 	vector<Shape*> shapes;
 	vector<TreeObject*>objects;
+	Vector3d axis;
+	if (event->state & GDK_CONTROL_MASK)  // rotate  z wise
+	  axis = Vector3d(0,0,delta.y()+delta.x());
+	else
+	  axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
 	if (!m_view->get_selected_objects(objects, shapes))
 	  return true;
-	Vector3d axis(delta.y(), delta.x(), 0);
 	if (shapes.size()>0) {
 	  for (uint s=0; s<shapes.size(); s++) {
 	    shapes[s]->Rotate(axis, -delta.length()/100.);
 	  } 
 	}
-      } else {  // move view XY
+      } else {  // move view XY  / pan
 	moveArcballTrans(m_transform, delta3f);
       }
       m_downPoint = dragp;
