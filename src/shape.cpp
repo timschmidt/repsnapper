@@ -769,14 +769,18 @@ vector<Vector3d> Shape::getMostUsedNormals() const
 #pragma omp parallel for schedule(dynamic) 
 #endif
       for (int n = 0; n < numnorm; n++) {
-	if ((normals[n].normal - triangles[i].Normal).squared_length() < 0.000001) {
+	if ( (normals[n].normal - 
+	      triangles[i].transformed(transform3D.transform).Normal)
+	     .squared_length() < 0.000001) {
 	  havenormal = true;
 	  normals[n].area += triangles[i].area();
 	  done[i] = true;
 	}
       }
       if (!havenormal){
-	SNorm n; n.normal = triangles[i].Normal; n.area = triangles[i].area();
+	SNorm n; 
+	n.normal = triangles[i].transformed(transform3D.transform).Normal;
+	n.area = triangles[i].area();
 	normals.push_back(n);
 	done[i] = true;
       }
@@ -791,7 +795,7 @@ vector<Vector3d> Shape::getMostUsedNormals() const
 
 void Shape::OptimizeRotation()
 {
-  CenterAroundXY();
+  // CenterAroundXY();
   vector<Vector3d> normals = getMostUsedNormals();
   // cycle through most-used normals?
 
@@ -811,7 +815,7 @@ void Shape::OptimizeRotation()
       }
     }
   }
-  CenterAroundXY();
+  // CenterAroundXY();
   PlaceOnPlatform();
 }
 
@@ -866,17 +870,17 @@ void Shape::Rotate(const Vector3d & axis, const double & angle)
 {
   transform3D.rotate(axis,angle);
   return;
-  CenterAroundXY();
-  // do a real rotation because matrix transform gives errors when slicing
-  int count = (int)triangles.size();
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) 
-#endif
-  for (int i=0; i < count ; i++) 
-    {
-      triangles[i].rotate(axis, angle);
-    }
-  PlaceOnPlatform();
+//   CenterAroundXY();
+//   // do a real rotation because matrix transform gives errors when slicing
+//   int count = (int)triangles.size();
+// #ifdef _OPENMP
+// #pragma omp parallel for schedule(dynamic) 
+// #endif
+//   for (int i=0; i < count ; i++) 
+//     {
+//       triangles[i].rotate(axis, angle);
+//     }
+//   PlaceOnPlatform();
 }
 
 // this is primitive, it just rotates triangle vertices

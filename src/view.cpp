@@ -898,31 +898,6 @@ void View::rot_object_xyz()
     }
   m_model->ModelChanged();
 }
-// void View::rot_object_x()
-// {
-//   double angle=0.;
-//   Gtk::SpinButton *spB;
-//   m_builder->get_widget("rot_x", spB);
-//   angle = spB->get_value()*M_PI/180.;
-//   rot_object(Vector3d(1.,0.,0.), angle);
-
-// }
-// void View::rot_object_y()
-// {
-//   double angle=0.;
-//   Gtk::SpinButton *spB;
-//   m_builder->get_widget("rot_y", spB);
-//   angle = spB->get_value()*M_PI/180.;
-//   rot_object(Vector3d(0.,1.,0.), angle);
-// }
-// void View::rot_object_z()
-// {
-//   double angle=0.;
-//   Gtk::SpinButton *spB;
-//   m_builder->get_widget("rot_z", spB);
-//   angle = spB->get_value()*M_PI/180.;
-//   rot_object(Vector3d(0.,0.,1.), angle);
-// }
 
 void View::rotate_selection (Vector4d rotate)
 {
