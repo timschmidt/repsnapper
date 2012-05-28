@@ -45,7 +45,12 @@ public:
 	void scale_z(double x);
 	void move(const Vector3d &delta);
 	void rotate(const Vector3d &center, double x, double y, double z);
+	void rotate_to(double x, double y, double z);
 	void rotate(const Vector3d &axis, double angle);
+	void rotate_to(const Vector3d &axis, double angle);
+	double getRotX() const;
+	double getRotY() const;
+	double getRotZ() const;
 	double scale_factor,scale_factor_x,scale_factor_y,scale_factor_z;
 };
 

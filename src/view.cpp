@@ -870,6 +870,56 @@ void View::alert (Gtk::MessageType t, const char *message,
   dialog.run();
 }
 
+
+void View::rot_object_xyz()
+{
+  if (toggle_block) return;
+  Gtk::SpinButton *spB;
+  m_builder->get_widget("rot_x", spB);
+  const double xangle = spB->get_value()*M_PI/180.;
+  m_builder->get_widget("rot_y", spB);
+  const double yangle = spB->get_value()*M_PI/180.;
+  m_builder->get_widget("rot_z", spB);
+  const double zangle = spB->get_value()*M_PI/180.;
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++) {
+      shapes[i]->transform3D.rotate_to(xangle, yangle, zangle);
+    }
+  else if (objects.size()>0)
+    for (uint i=0; i<objects.size() ; i++) {
+      objects[i]->transform3D.rotate_to(xangle, yangle, zangle);
+    }
+  m_model->ModelChanged();
+}
+// void View::rot_object_x()
+// {
+//   double angle=0.;
+//   Gtk::SpinButton *spB;
+//   m_builder->get_widget("rot_x", spB);
+//   angle = spB->get_value()*M_PI/180.;
+//   rot_object(Vector3d(1.,0.,0.), angle);
+
+// }
+// void View::rot_object_y()
+// {
+//   double angle=0.;
+//   Gtk::SpinButton *spB;
+//   m_builder->get_widget("rot_y", spB);
+//   angle = spB->get_value()*M_PI/180.;
+//   rot_object(Vector3d(0.,1.,0.), angle);
+// }
+// void View::rot_object_z()
+// {
+//   double angle=0.;
+//   Gtk::SpinButton *spB;
+//   m_builder->get_widget("rot_z", spB);
+//   angle = spB->get_value()*M_PI/180.;
+//   rot_object(Vector3d(0.,0.,1.), angle);
+// }
+
 void View::rotate_selection (Vector4d rotate)
 {
   vector<Shape*> shapes;
@@ -878,6 +928,23 @@ void View::rotate_selection (Vector4d rotate)
   for (uint i=0; i<shapes.size() ; i++)
     m_model->RotateObject (shapes[i], NULL, rotate);
   queue_draw();
+}
+void View::update_rot_value()
+{
+  toggle_block = true;
+  vector<Shape*> shapes;
+  vector<TreeObject*> objects;
+  get_selected_objects (objects, shapes);
+  if (shapes.size()>0)  {
+    Gtk::SpinButton *rot_sb;
+    m_builder->get_widget("rot_x", rot_sb);
+    rot_sb->set_value(shapes.back()->transform3D.getRotX()*180/M_PI);
+    m_builder->get_widget("rot_y", rot_sb);
+    rot_sb->set_value(shapes.back()->transform3D.getRotY()*180/M_PI);
+    m_builder->get_widget("rot_z", rot_sb);
+    rot_sb->set_value(shapes.back()->transform3D.getRotZ()*180/M_PI);
+  }
+  toggle_block = false;
 }
 
 void View::twist_selection (double angle)
@@ -1189,9 +1256,6 @@ View::View(BaseObjectType* cobject,
   connect_button ("m_merge",         sigc::mem_fun(*this, &View::merge_selected_objects) );
   connect_button ("m_divide",        sigc::mem_fun(*this, &View::divide_selected_objects) );
   connect_button ("m_auto_rotate",   sigc::mem_fun(*this, &View::auto_rotate) );
-  connect_button ("m_rot_x",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(1,0,0, M_PI/6)));
-  connect_button ("m_rot_y",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,1,0, M_PI/6)));
-  connect_button ("m_rot_z",         sigc::bind(sigc::mem_fun(*this, &View::rotate_selection), Vector4d(0,0,1, M_PI/6)));
   connect_button ("m_normals",       sigc::mem_fun(*this, &View::invertnormals_selection));
   connect_button ("m_hollow",        sigc::mem_fun(*this, &View::hollow_selection));
   connect_button ("m_platform",      sigc::mem_fun(*this, &View::placeonplatform_selection));
@@ -1235,6 +1299,23 @@ View::View(BaseObjectType* cobject,
   scale_value->set_value(1.0);
   scale_value->signal_value_changed().connect
     (sigc::mem_fun(*this, &View::scale_object_z));
+
+  Gtk::SpinButton *rot_value;
+  m_builder->get_widget("rot_x", rot_value);
+  rot_value->set_range(0.00, 360.0);
+  rot_value->set_value(0);
+  rot_value->signal_value_changed().connect
+    (sigc::mem_fun(*this, &View::rot_object_xyz));
+  m_builder->get_widget("rot_y", rot_value);
+  rot_value->set_range(0.00, 360.0);
+  rot_value->set_value(0);
+  rot_value->signal_value_changed().connect
+    (sigc::mem_fun(*this, &View::rot_object_xyz));
+  m_builder->get_widget("rot_z", rot_value);
+  rot_value->set_range(0.00, 360.0);
+  rot_value->set_value(0);
+  rot_value->signal_value_changed().connect
+    (sigc::mem_fun(*this, &View::rot_object_xyz));
 
   //add_statusbar_msg("m_scale_event_box", _("Scale the selected object"));
 
@@ -1541,6 +1622,7 @@ void View::tree_selection_changed()
   }
   m_model->m_inhibit_modelchange = true;
   update_scale_value();
+  update_rot_value();
   m_model->m_inhibit_modelchange = false;
 }
 bool View::get_selected_objects(vector<TreeObject*> &objects, vector<Shape*> &shapes)

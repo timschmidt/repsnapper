@@ -402,7 +402,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	vector<TreeObject*>objects;
 	Vector3d axis;
 	if (event->state & GDK_CONTROL_MASK)  // rotate  z wise
-	  axis = Vector3d(0,0,delta.y()+delta.x());
+	  axis = Vector3d(0,0,delta.x());
 	else
 	  axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
 	if (!m_view->get_selected_objects(objects, shapes))
@@ -412,10 +412,12 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	    shapes[s]->Rotate(axis, -delta.length()/100.);
 	  } 
 	}
+	m_view->update_rot_value();
+	m_downPoint = dragp;
       } else {  // move view XY  / pan
 	moveArcballTrans(m_transform, delta3f);
+	m_downPoint = dragp;
       }
-      m_downPoint = dragp;
     } // BUTTON 3
     if (redraw) queue_draw();
     return true;

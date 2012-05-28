@@ -69,6 +69,9 @@ class View : public Gtk::Window
   void scale_object_y();
   void scale_object_z();
 
+  void update_rot_value();
+  void rot_object_xyz();
+
   Printer *m_printer;
 
   Glib::RefPtr<Gtk::Builder> m_builder;

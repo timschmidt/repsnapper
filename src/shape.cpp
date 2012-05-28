@@ -864,9 +864,9 @@ void Shape::PlaceOnPlatform()
 // Rotate and adjust for the user - not a pure rotation by any means
 void Shape::Rotate(const Vector3d & axis, const double & angle)
 {
+  transform3D.rotate(axis,angle);
+  return;
   CenterAroundXY();
-  // transform3D.rotate(axis,angle);
-  // return;
   // do a real rotation because matrix transform gives errors when slicing
   int count = (int)triangles.size();
 #ifdef _OPENMP
@@ -1138,7 +1138,7 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
       // Check segment normal against triangle normal. Flip segment, as needed.
       if (line.start != -1 && line.end != -1 && line.end != line.start)	
 	{ // if we found a intersecting triangle
-	  Vector3d Norm = triangles[i].Normal;
+	  Vector3d Norm = triangles[i].transformed(transform).Normal;
 	  Vector2d triangleNormal = Vector2d(Norm.x(), Norm.y());
 	  Vector2d segment = (lineEnd - lineStart);
 	  Vector2d segmentNormal(-segment.y(),segment.x()); 
