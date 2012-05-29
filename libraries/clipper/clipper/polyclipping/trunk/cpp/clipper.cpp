@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.8.2                                                           *
-* Date      :  21 May 2012                                                     *
+* Version   :  4.8.3                                                           *
+* Date      :  27 May 2012                                                     *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -304,6 +304,20 @@ private:
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
 
+bool FullRangeNeeded(const Polygon &pts)
+{
+  bool result = false;
+  for (Polygon::size_type i = 0; i <  pts.size(); ++i)
+  {
+    if (Abs(pts[i].X) > hiRange || Abs(pts[i].Y) > hiRange)
+        throw "Coordinate exceeds range bounds.";
+      else if (Abs(pts[i].X) > loRange || Abs(pts[i].Y) > loRange)
+        result = true;
+  }
+  return result;
+}
+//------------------------------------------------------------------------------
+  
 bool Orientation(const Polygon &poly)
 {
   int highI = (int)poly.size() -1;
@@ -390,23 +404,48 @@ double Area(const Polygon &poly)
 {
   int highI = (int)poly.size() -1;
   if (highI < 2) return 0;
-  double a;
-  a = (double)poly[highI].X * poly[0].Y - (double)poly[0].X * poly[highI].Y;
-  for (int i = 0; i < highI; ++i)
-    a += (double)poly[i].X * poly[i+1].Y - (double)poly[i+1].X * poly[i].Y;
-  return a/2;
+
+  if (FullRangeNeeded(poly)) {
+    Int128 a;
+    a = (Int128(poly[highI].X) * Int128(poly[0].Y)) -
+      Int128(poly[0].X) * Int128(poly[highI].Y);
+    for (int i = 0; i < highI; ++i)
+      a += Int128(poly[i].X) * Int128(poly[i+1].Y) -
+        Int128(poly[i+1].X) * Int128(poly[i].Y);
+    return a.AsDouble() / 2;
+  }
+  else
+  {
+    double a;
+    a = (double)poly[highI].X * poly[0].Y - (double)poly[0].X * poly[highI].Y;
+    for (int i = 0; i < highI; ++i)
+      a += (double)poly[i].X * poly[i+1].Y - (double)poly[i+1].X * poly[i].Y;
+    return a/2;
+  }
 }
 //------------------------------------------------------------------------------
 
-double Area(const OutRec &outRec)
+double Area(const OutRec &outRec, bool UseFullInt64Range)
 {
   OutPt *op = outRec.pts;
-  double a = 0;
-  do {
-    a += (op->prev->pt.X * op->pt.Y) - (op->pt.X * op->prev->pt.Y);
-    op = op->next;
-  } while (op != outRec.pts);
-  return a/2;
+  if (UseFullInt64Range) {
+    Int128 a(0);
+    do {
+      a += (Int128(op->prev->pt.X) * Int128(op->pt.Y)) -
+        Int128(op->pt.X) * Int128(op->prev->pt.Y);
+      op = op->next;
+    } while (op != outRec.pts);
+    return a.AsDouble() / 2;
+  }
+  else
+  {
+    double a = 0;
+    do {
+      a += (op->prev->pt.X * op->pt.Y) - (op->pt.X * op->prev->pt.Y);
+      op = op->next;
+    } while (op != outRec.pts);
+    return a/2;
+  }
 }
 //------------------------------------------------------------------------------
 
@@ -1281,7 +1320,7 @@ bool Clipper::ExecuteInternal(bool fixHoleLinkages)
       if (outRec->isHole && fixHoleLinkages) FixHoleLinkage(outRec);
 
       if (outRec->bottomPt == outRec->bottomFlag &&
-        (Orientation(outRec, m_UseFullRange) != (Area(*outRec) > 0)))
+        (Orientation(outRec, m_UseFullRange) != (Area(*outRec, m_UseFullRange) > 0)))
       {
         DisposeBottomPt(*outRec);
         FixupOutPolygon(*outRec);
@@ -2114,7 +2153,7 @@ void Clipper::AddOutPt(TEdge *e, const IntPoint &pt)
         } else
         {
           opBot = outRec->pts->prev;
-          op2 = opBot->next; //op2 == left side
+          op2 = opBot->prev; //op2 == left side
           if (opBot->pt.Y != op2->pt.Y && opBot->pt.Y != pt.Y &&
             ((opBot->pt.X - pt.X)/(opBot->pt.Y - pt.Y) >
             (opBot->pt.X - op2->pt.X)/(opBot->pt.Y - op2->pt.Y)))

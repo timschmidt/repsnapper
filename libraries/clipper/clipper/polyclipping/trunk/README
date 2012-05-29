@@ -2,7 +2,10 @@
 Clipper Change Log
 ============================================================
 
-v4.8.1 - 12 May 2012
+v4.8.3 - 27 May 2012
+* Bugfix: Obscure bug causing incorrect removal of a vertex.
+
+v4.8.2 - 21 May 2012
 * Bugfix: Obscure bug could cause an exception when using 
   ExPolygon structure.
 
