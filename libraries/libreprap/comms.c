@@ -561,7 +561,10 @@ rr_dev_handle_readable (rr_dev dev)
       /* else - perhaps a prepended \n having sent in reaction to \r previously */
 
       size_t len = reply_span + term_span;
-      assert (dev->recvbuf_fill >= len);
+      //assert (dev->recvbuf_fill >= len);
+      if (dev->recvbuf_fill < len) {
+	return -1;
+      }
       dev->recvbuf_fill -= len;
       memmove (dev->recvbuf, dev->recvbuf + len, dev->recvbuf_fill + 1);
       continue;

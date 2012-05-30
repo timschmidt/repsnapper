@@ -481,7 +481,7 @@ void Printer::handle_rr_more (rr_dev dev)
       int n_buffered = rr_dev_buffered_lines(device);
       int donelines = gcode_iter->m_cur_line - n_buffered;
       if (donelines < 100) gcode_iter->time_started = time(NULL); 
-      int tot_lines = gcode_iter->m_line_count;
+      //int tot_lines = gcode_iter->m_line_count;
       // done by view
       // if (tot_lines>0) { 
       // 	if (donelines > 30) {
