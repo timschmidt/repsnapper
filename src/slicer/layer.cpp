@@ -640,26 +640,11 @@ void Layer::MakeSkirt(double distance)
   }
 }
 
-// 2D cross product of OA and OB vectors, i.e. z-component of their 3D cross product.
-// Returns a positive value, if OAB makes a counter-clockwise turn,
-// negative for clockwise turn, and zero if the points are collinear.
-// double cross(const Vector2d &O, const Vector2d &A, const Vector2d &B)
-// {
-//   return (A.x() - O.x()) * (B.y() - O.y()) - (A.y() - O.y()) * (B.x() - O.x());
-// }
-// struct sortable_point {
-//   Vector2d v;
-//   bool operator <(const sortable_point &p) const {
-//     return (v.x() < p.v.x()) || ((v.x() == p.v.x()) && (v.y() < p.v.y()));
-//   }
-// };
 
 // calc convex hull and Min and Max of layer
-// Monotone chain algo
-// http://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain
 void Layer::calcConvexHull() 
 {
-  hullPolygon = convexHull2D(polygons);
+  hullPolygon = convexHull2D(polygons); // see geometry.cpp
   hullPolygon.setZ(Z);
   setMinMax(hullPolygon);
 }
@@ -696,8 +681,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		      const Settings &settings) const
 {
 
-  const double linewidthratio = settings.Hardware.ExtrudedMaterialWidthRatio;
-  const double linewidth      = thickness*linewidthratio;
+  const double linewidth      = settings.Hardware.GetExtrudedMaterialWidth(thickness);
   const double cornerradius   = linewidth*settings.Slicing.CornerRadius;
 
   const bool clipnearest      = settings.Slicing.MoveNearest;

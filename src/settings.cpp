@@ -142,6 +142,7 @@ static struct {
 
   FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
   FLOAT_MEMBER  (Hardware.MinimumLineWidth, "MinimumLineWidth", 0.4, true),
+  FLOAT_MEMBER  (Hardware.MaximumLineWidth, "MaximumLineWidth", 0.7, true),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
   { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, false },
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
@@ -373,6 +374,7 @@ static struct {
   { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
   { "Hardware.ExtrudedMaterialWidthRatio", 0.0, 10.0, 0.01, 0.1 },
   { "Hardware.MinimumLineWidth", 0.0, 10.0, 0.01, 0.1 },
+  { "Hardware.MaximumLineWidth", 0.0, 10.0, 0.01, 0.1 },
   { "Hardware.LayerThickness", 0.01, 3.0, 0.01, 0.2 },
   { "Hardware.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
   { "Hardware.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
@@ -1253,8 +1255,9 @@ double Settings::HardwareSettings::RoundedLinewidthCorrection(double extr_width,
 double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) const
 {
   // ExtrudedMaterialWidthRatio is preset by user 
-  return max((double)MinimumLineWidth,
-	     ExtrudedMaterialWidthRatio * layerheight);
+  return min(max((double)MinimumLineWidth,
+		 ExtrudedMaterialWidthRatio * layerheight),
+	     (double)MaximumLineWidth);
 }
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
@@ -1264,8 +1267,8 @@ double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) 
 double Settings::HardwareSettings::GetExtrudeFactor(double layerheight) const
 {
   double f = ExtrusionFactor; // overall factor
-  double matWidth = GetExtrudedMaterialWidth(layerheight); // this is the goal
   if (CalibrateInput) {  // means we use input filament diameter
+    double matWidth = GetExtrudedMaterialWidth(layerheight); // this is the goal
     // otherwise we just work back from the extruded diameter for now.
     f *= (matWidth * matWidth) / (FilamentDiameter * FilamentDiameter);
   } // else: we work in terms of output anyway;

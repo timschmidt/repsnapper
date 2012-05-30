@@ -80,6 +80,7 @@ class Settings {
     float ExtrudedMaterialWidthRatio; // ratio of with to (layer) height
     double GetExtrudedMaterialWidth(const double layerheight) const;
     float MinimumLineWidth;
+    float MaximumLineWidth;
 
     std::string PortName;
     int SerialSpeed;
