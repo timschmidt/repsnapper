@@ -144,11 +144,11 @@ int main(int argc, char **argv)
 {
   Glib::thread_init();
 
-  gdk_threads_init(); 
+  // gdk_threads_init(); 
 
-  gdk_threads_enter();
+  // gdk_threads_enter();
   Gtk::Main tk(argc, argv);
-  gdk_threads_leave();
+  // gdk_threads_leave();
 
   gchar *locale_dir;
 
