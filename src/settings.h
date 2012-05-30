@@ -79,6 +79,7 @@ class Settings {
     vmml::vec3d	PrintMargin;
     float ExtrudedMaterialWidthRatio; // ratio of with to (layer) height
     double GetExtrudedMaterialWidth(const double layerheight) const;
+    float MinimumLineWidth;
 
     std::string PortName;
     int SerialSpeed;

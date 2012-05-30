@@ -141,6 +141,7 @@ static struct {
   { OFFSET (Hardware.PrintMargin.array[2]), T_DOUBLE, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
 
   FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
+  FLOAT_MEMBER  (Hardware.MinimumLineWidth, "MinimumLineWidth", 0.4, true),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
   { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, false },
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
@@ -370,7 +371,8 @@ static struct {
   { "Hardware.PrintMargin.Y", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.PrintMargin.Z", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
-  { "Hardware.ExtrudedMaterialWidthRatio", 0.0, 10.0, 0.01, 1.8 },
+  { "Hardware.ExtrudedMaterialWidthRatio", 0.0, 10.0, 0.01, 0.1 },
+  { "Hardware.MinimumLineWidth", 0.0, 10.0, 0.01, 0.1 },
   { "Hardware.LayerThickness", 0.01, 3.0, 0.01, 0.2 },
   { "Hardware.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
   { "Hardware.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
@@ -1251,7 +1253,8 @@ double Settings::HardwareSettings::RoundedLinewidthCorrection(double extr_width,
 double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) const
 {
   // ExtrudedMaterialWidthRatio is preset by user 
-  return ExtrudedMaterialWidthRatio * layerheight;
+  return max((double)MinimumLineWidth,
+	     ExtrudedMaterialWidthRatio * layerheight);
 }
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
