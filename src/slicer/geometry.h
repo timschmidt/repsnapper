@@ -51,7 +51,10 @@ public:
 	double getRotX() const;
 	double getRotY() const;
 	double getRotZ() const;
-	double scale_factor,scale_factor_x,scale_factor_y,scale_factor_z;
+	double get_scale()   const {return 1/transform(3,3);};
+	double get_scale_x() const {return transform(0,0);};
+	double get_scale_y() const {return transform(1,1);};
+	double get_scale_z() const {return transform(2,2);};
 };
 
 

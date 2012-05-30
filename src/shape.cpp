@@ -160,6 +160,9 @@ int Shape::loadBinarySTL(string filename, uint max_triangles, bool readnormals)
       invertNormals();
       vol = -vol;
     }
+
+    PlaceOnPlatform();
+
     cout << _("Shape has volume ") << vol << _(" mm^3 and ") 
 	 << triangles.size() << _(" triangles") << endl;
     return 0;
@@ -312,7 +315,6 @@ int Shape::loadASCIISTL(string filename, uint max_triangles, bool readnormals) {
       file.close();
       return loadBinarySTL(filename);
     }
-    CenterAroundXY();
     this->filename = filename;
     file.close();
     return ret;
@@ -443,6 +445,8 @@ int Shape::parseASCIISTL(istream *text, uint max_triangles, bool readnormals) {
         triangles.push_back(triangle);
     }
     CenterAroundXY();
+    CenterAroundXY();
+    PlaceOnPlatform();
     cout << _("Shape has volume ") << volume() << _(" mm^3 and ")
 	 << triangles.size() << _(" triangles") << endl;
     return 0;
@@ -503,8 +507,6 @@ int Shape::load(string filename, uint max_triangles)
 	return -1;
     }
     
-    PlaceOnPlatform();
-
     // somehow sort triangles by height to save time when slicing?
     // problem: transform matrix
     //std::sort(triangles.begin(),triangles.end(),Triangle::maxZsort());
@@ -607,7 +609,7 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
       shapes.back()->triangles.resize(current.size());
       for (uint i = 0; i < current.size(); i++)
 	shapes.back()->triangles[i] = triangles[current[i]];
-      shapes.back()->CalcBBox();
+      shapes.back()->CenterAroundXY();
     }
     if (!cont) i=n_tr;
   }
@@ -817,7 +819,7 @@ void Shape::OptimizeRotation()
       }
     }
   }
-  // CenterAroundXY();
+  CenterAroundXY();
   PlaceOnPlatform();
 }
 
@@ -856,7 +858,13 @@ int Shape::divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) co
 			 uppersplit.begin(),uppersplit.end());
   lower->triangles.insert(lower->triangles.end(),
 			 lowersplit.begin(),lowersplit.end());
+  upper->CenterAroundXY();
+  lower->CenterAroundXY();
   lower->Rotate(Vector3d(0,1,0),M_PI);
+  upper->move(Vector3d(10+Max.x()-Min.x(),0,0));
+  lower->move(Vector3d(2*(10+Max.x()-Min.x()),0,0));
+  upper->PlaceOnPlatform();
+  lower->PlaceOnPlatform();
   return 2;
 }
 
@@ -918,7 +926,11 @@ void Shape::CenterAroundXY()
       triangles[i].Translate(displacement);
     }
   transform3D.move(-displacement);
-  CalcBBox();
+  //cerr << "DISPL " << displacement << endl;
+  //CalcBBox();
+  // Min    -= displacement;
+  // Max    -= displacement;
+  // Center -= displacement;
 }
 
 /*

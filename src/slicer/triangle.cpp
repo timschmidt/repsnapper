@@ -219,7 +219,7 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
 	      tr[1] = Triangle(fourpoints[2],fourpoints[1],fourpoints[3]);
 	    }
 	  else  {
-	    cerr << dist << " cannot find diagonals" << endl;
+	    //cerr << dist << " cannot find diagonals" << endl;
 	    return;
 	  }
 	}

@@ -37,10 +37,10 @@ Transform3D::Transform3D()
 void Transform3D::identity()
 {
   transform=Matrix4d::IDENTITY;
-  scale_factor_x = 1;
-  scale_factor_y = 1;
-  scale_factor_z = 1;
-  scale_factor = 1;
+  // scale_factor_x = 1;
+  // scale_factor_y = 1;
+  // scale_factor_z = 1;
+  // scale_factor = 1;
 }
 Matrix4f Transform3D::getFloatTransform() const 
 {
@@ -62,37 +62,41 @@ Vector3d Transform3D::getTranslation() const
 void Transform3D::move(const Vector3d &delta)
 {
   Vector3d trans = getTranslation();
-  transform.set_translation(trans + delta * transform[3][3]); // unscale delta
+  transform.set_translation(trans + delta * transform(3,3)); // unscale delta
 }
 
 void Transform3D::scale(double x)
 {
   if (x==0) return;
   transform[3][3] = 1/x;
-  scale_factor = x;
 }
 
 void Transform3D::scale_x(double x)
 {
   transform[0][0] = x;
-  scale_factor_x = x;
 }
   void Transform3D::scale_y(double x)
 {
   transform[1][1] = x;
-  scale_factor_y = x;
 }
 void Transform3D::scale_z(double x)
 {
   transform[2][2] = x;
-  scale_factor_z = x;
 }
 
 void Transform3D::rotate_to(const Vector3d &axis, double angle)
 {
   Vector3d naxis = axis; naxis.normalize();
   const Vector3d trans = getTranslation();
+  // const double sc00 = transform(0,0);
+  // const double sc11 = transform(1,1);
+  // const double sc22 = transform(2,2);
+  // const double sc33 = transform(3,3);
   transform.rotate(angle, naxis); // this creates the matrix!
+  // transform[0][0] = sc00;
+  // transform[1][1] = sc11;
+  // transform[2][2] = sc22;
+  // transform[3][3] = sc33;
   transform.set_translation(trans);
 }
 

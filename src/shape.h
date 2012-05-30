@@ -109,14 +109,17 @@ public:
     virtual void Rotate(const Vector3d & axis, const double &angle);  
 	void Twist(double angle);
 
+	virtual void move(Vector3d delta){ transform3D.move(delta); };
+
 	void Scale(double scale_factor, bool calcbbox = true);
 	void ScaleX(double scale_factor);
 	void ScaleY(double scale_factor);
 	virtual void ScaleZ(double scale_factor);
-    double getScaleFactor(){ return transform3D.scale_factor; };
-    double getScaleFactorX(){ return transform3D.scale_factor_x; };
-    double getScaleFactorY(){ return transform3D.scale_factor_y; };
-    virtual double getScaleFactorZ(){ return transform3D.scale_factor_z; };
+	double getScaleFactor() { return transform3D.get_scale(); };
+	double getScaleFactorX(){ return transform3D.get_scale_x(); };
+	double getScaleFactorY(){ return transform3D.get_scale_y(); };
+	virtual double getScaleFactorZ(){ return transform3D.get_scale_z(); };
+
     void PlaceOnPlatform();
 
     Vector3d Min, Max, Center;
