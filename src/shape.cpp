@@ -502,6 +502,8 @@ int Shape::load(string filename, uint max_triangles)
       cerr << _("unrecognized file - ") << filename << endl;
 	return -1;
     }
+    
+    PlaceOnPlatform();
 
     // somehow sort triangles by height to save time when slicing?
     // problem: transform matrix
