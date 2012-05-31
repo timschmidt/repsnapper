@@ -33,6 +33,11 @@ enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
 // use Glib::IOChannel instead of libreprap
 #define IOCHANNEL 0
 
+// use IOCHANNEL on WIN32
+#ifdef WIN32
+#undef IOCHANNEL
+#define IOCHANNEL 1
+#endif
 
 #if IOCHANNEL
 //#include "reprap_serial.h"

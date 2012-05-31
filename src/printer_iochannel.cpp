@@ -21,9 +21,13 @@
 #include "reprap_serial.h" 
 
 
+#ifdef WIN32
+#define DEV_PATH ""
+#define DEV_PREFIXES {"COM"}
+#else
 #define DEV_PATH "/dev/"
 #define DEV_PREFIXES {"ttyUSB", "ttyACM", "cuaU"}
-
+#endif
 
 // everything taken out of model.cpp
 
@@ -473,8 +477,21 @@ double Printer::getCurrentPrintingZ() {
 
 vector<string> Printer::find_ports() const
 {
-  
   vector<string> ports;
+
+#ifdef WIN32
+  // FIXME how to find ports on windows?
+  ports.push_back("COM1");
+  ports.push_back("COM2");
+  ports.push_back("COM3");
+  ports.push_back("COM4");
+  ports.push_back("COM5");
+  ports.push_back("COM6");
+  ports.push_back("COM7");
+  ports.push_back("COM8");
+  ports.push_back("COM9");
+  return ports;
+#endif
 
   Glib::Dir dir(DEV_PATH);
   while (true) {

@@ -22,11 +22,12 @@
 //#if IOCHANNEL
 
 #include <fcntl.h>
-#include <termios.h>
 #include "model.h"
 
 #ifdef WIN32
-// ???? #include <windows.h>
+#include <windows.h>
+#else
+#include <termios.h>
 #endif
 
 
@@ -139,10 +140,31 @@ bool RRSerial::connect(const char * serialname)
 {
 
 #ifdef WIN32
+  // device_fd = open(serialname, O_RDWR);// | O_NOCTTY | O_NDELAY);
+  // if (device_fd < 0) {
+  //   printer->error(_("error opening device "), serialname);
+  //   return false;
+  // }      
+  // iochannel = IOChannel::create_from_win32_fd (device_fd);
 
-  /// ???? device_fd = open(...);  
-  
-  iochannel = IOChannel::create_from_win32_fd (device_fd);
+  HANDLE m_hCommPort = 
+    ::CreateFile(serialname,
+		 GENERIC_READ|GENERIC_WRITE,//access ( read and write)
+		 0,    //(share) 0:cannot share the COM port
+		 0,    //security  (None)                
+		 OPEN_EXISTING,// creation : open_existing
+		 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,// | FILE_FLAG_NO_BUFFERING,
+		 0// no templates file for COM port...
+		 );
+
+  if (m_hCommPort == INVALID_HANDLE_VALUE)
+    return false;
+
+
+  iochannel = IOChannel::create_from_win32_fd(m_hCommPort);
+
+  if (!iochannel) 
+    return false;
 
 #else  
 
@@ -538,10 +560,14 @@ string RRSerial::line_for_printer(string str, long lineno)
 void RRSerial::reset_printer() const
 {
   if (!device_fd) return;
+#ifndef WIN32  
   char TIOCM_DTR_str[4];
   sprintf(TIOCM_DTR_str, "%u", TIOCM_DTR);
   ioctl(device_fd, TIOCMBIS, TIOCM_DTR_str); // dtr 1
   ioctl(device_fd, TIOCMBIC, TIOCM_DTR_str); // dtr 0
+#else
+  printer->alert(_("no reset on Windows"));
+#endif
 }
 
 
@@ -557,7 +583,7 @@ bool RRSerial::test_port(const string serialname)
     //   ports.erase(ports.begin()+i);
     // }
 
-  int device_fd = open(serialname.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+  int device_fd = open(serialname.c_str(), O_RDWR );
   if (device_fd < 0) {
     return false;
   }    
