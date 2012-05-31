@@ -73,6 +73,35 @@ Vector3d const &Triangle::operator[] (const uint index) const
     return A;
 }
 
+// for 2 adjacent triangles test if normals match
+bool Triangle::wrongOrientationWith(Triangle const &other, double maxsqerr) const
+{
+  // find the 2 common vertices
+  vector<int> thisv, otherv;
+  for (uint j = 0; j < 3; j++)  {
+    if ( A == other[j] || A.squared_distance(other[j]) < maxsqerr){
+      thisv.push_back(0);  otherv.push_back(j);
+    }
+    if ( B == other[j] || B.squared_distance(other[j]) < maxsqerr) {
+      thisv.push_back(1);  otherv.push_back(j);
+    }
+    if ( C == other[j] || C.squared_distance(other[j]) < maxsqerr) {
+      thisv.push_back(2);  otherv.push_back(j);
+    }
+  }
+  if (thisv.size()!=2 || otherv.size()!=2) {
+    //cerr << "only " << thisv.size() << " common vertex! " << endl;
+    return false; // "ok" because non-adjacent
+  }
+
+  int diff = thisv[1]  - thisv[0];
+  const bool thisorient =  ( diff == 1 || diff == -2 ); 
+  diff = otherv[1] - otherv[0];
+  const bool otherorient = ( diff == 1 || diff == -2 ); 
+  // cerr << "have 2: " << thisorient <<" / " << otherorient << endl;
+  return (thisorient == otherorient); // they have different(!) orientation
+}
+
 bool Triangle::isConnectedTo(Triangle const &other, double maxsqerr) const
 {
   // for (uint i = 0; i < 3; i++) {
@@ -197,7 +226,7 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
       double dist = dist3D_Segment_to_Segment(fourpoints[1],fourpoints[2],
 					      fourpoints[0],fourpoints[3], 
 					      SMALL*SMALL);
-      if (dist < SMALL) 
+      if (dist < SMALL)
 	{
 	  if ((fourpoints[1]-fourpoints[2]).squared_length() 
 	      < (fourpoints[0]-fourpoints[3]).squared_length()) {

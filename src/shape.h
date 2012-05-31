@@ -130,6 +130,7 @@ public:
 	string getSTLsolid() const;
 
 	void invertNormals();
+	void repairNormals(double sqdistance);
 	virtual void mirror();
 
 	double volume() const;

@@ -154,7 +154,9 @@ int Shape::loadBinarySTL(string filename, uint max_triangles, bool readnormals)
 
     // cerr << "Read " << i << " triangles of " << num_triangles << " from file" << endl;
 
+    // repairNormals(0.01);
     CenterAroundXY();
+
     double vol = volume();
     if (vol < 0) {
       invertNormals();
@@ -309,11 +311,11 @@ int Shape::loadASCIISTL(string filename, uint max_triangles, bool readnormals) {
       cerr << _("Error: Unable to open stl file - ") << filename << endl;
       return -1;
     }
-    int ret = parseASCIISTL(&file, max_triangles);
+    int ret = parseASCIISTL(&file, max_triangles, readnormals);
     if (ret < 0) {// cannot parse, try binary
       cerr << _("Could not read file in ASCII mode, trying Binary: ")<< filename << endl;
       file.close();
-      return loadBinarySTL(filename);
+      return loadBinarySTL(filename, max_triangles, readnormals);
     }
     this->filename = filename;
     file.close();
@@ -392,18 +394,16 @@ int Shape::parseASCIISTL(istream *text, uint max_triangles, bool readnormals) {
 	  return -1;
 	}
 	
-	if (readnormals)
-	  for(int i=0; i<3; i++) {
-            *text >> normal_vec.x()
-		  >> normal_vec.y()
-		  >> normal_vec.z();
-	  }
+	if (readnormals){
+	  *text >> normal_vec.x()
+		>> normal_vec.y()
+		>> normal_vec.z();
+	}
 
         // Parse "outer loop" line
         string outer, loop;
 	while (outer!="outer" && !(*text).eof()) {
 	  *text >> outer;
-	  //cerr << outer<< endl;
 	}
 	*text >> loop;
 	if(outer != "outer" || loop != "loop") {
@@ -439,13 +439,21 @@ int Shape::parseASCIISTL(istream *text, uint max_triangles, bool readnormals) {
         Triangle triangle(vertices[0],
 			  vertices[1],
 			  vertices[2]);
-	if (readnormals)
+	if (readnormals){
+	  //cerr << "reading normals from file" << endl;
 	  if (triangle.Normal.dot(normal_vec) < 0) triangle.invertNormal();
+	}
 
         triangles.push_back(triangle);
     }
+    // repairNormals(0.01);
     CenterAroundXY();
-    CenterAroundXY();
+    double vol = volume();
+    if (vol < 0) {
+      invertNormals();
+      vol = -vol;
+    }
+
     PlaceOnPlatform();
     cout << _("Shape has volume ") << volume() << _(" mm^3 and ")
 	 << triangles.size() << _(" triangles") << endl;
@@ -659,6 +667,28 @@ void Shape::invertNormals()
 {
   for (uint i = 0; i < triangles.size(); i++)
     triangles[i].invertNormal();
+}
+
+// doesn't work
+void Shape::repairNormals(double sqdistance)
+{
+  for (uint i = 0; i < triangles.size(); i++) {
+    vector<uint> adjacent;
+    uint numadj=0, numwrong=0;
+    for (uint j = i+1; j < triangles.size(); j++) {
+      if (i!=j) {
+	if (triangles[i].isConnectedTo(triangles[j], sqdistance)) {
+	  numadj++;
+	  if (triangles[i].wrongOrientationWith(triangles[j], sqdistance)) {
+	    numwrong++;
+	    triangles[j].invertNormal();
+	  }
+	}
+      }
+    }
+    //cerr << i<< ": " << numadj << " - " << numwrong  << endl;
+    //if (numwrong > numadj/2) triangles[i].invertNormal();
+  }
 }
 
 void Shape::mirror()

@@ -74,6 +74,7 @@ public:
 	double projectedvolume(const Matrix4d &T=Matrix4d::IDENTITY) const;
 
 	bool isConnectedTo(Triangle const &other, double maxsqerr=0.0001) const;
+	bool wrongOrientationWith(Triangle const &other, double maxsqerr) const;
 
 	string info() const;
 };
