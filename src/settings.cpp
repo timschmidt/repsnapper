@@ -225,6 +225,7 @@ static struct {
   BOOL_MEMBER   (Slicing.NoBridges, "NoBridges", false, true),
   FLOAT_MEMBER  (Slicing.BridgeExtrusion, "BridgeExtrusion", 1, true),
 
+  BOOL_MEMBER (Slicing.GCodePostprocess, "GCodePostprocess", false, false),
   STRING_MEMBER (Slicing.GCodePostprocessor, "GCodePostprocessor", "", false),
 
   // Milling

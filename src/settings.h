@@ -183,6 +183,7 @@ class Settings {
     float FirstLayerHeight;
     //void GetAltInfillLayers(std::vector<int>& layers, guint layerCount) const;
 
+    bool GCodePostprocess;
     std::string GCodePostprocessor;
 
   };

@@ -1022,6 +1022,7 @@ void View::rot_object_xyz()
     for (uint i=0; i<objects.size() ; i++) {
       objects[i]->transform3D.rotate_to(xangle, yangle, zangle);
     }
+  update_scale_value();
   m_model->ModelChanged();
 }
 
