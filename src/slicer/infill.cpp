@@ -340,27 +340,23 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
       {
 	// just use the poly itself at half extrusion rate
 	cpolys = Clipping::getClipperPolygons(tofillpolys);
-	break;
-#if 0
-	// get sth like the centerline of polygon
-	vector<Poly> opolys;
+
+	// adjust extrusion rate - see how thin it is:
 	const uint num_div = 10;
 	double shrink = 0.5*infillDistance/num_div;
-	cerr << "shrink " << shrink << endl;
-	vector< vector<Poly> > shrinklines(tofillpolys.size());
-	for (uint i=0; i < tofillpolys.size(); i++){
-	  double parea = Clipping::Area(tofillpolys[i]);
-	  if (parea<0) shrink = -shrink;
-	  vector<Poly> shrinked  = Clipping::getOffset(tofillpolys[i],-shrink);
-	  while (true) {
-	    vector<Poly> s = Clipping::getOffset(shrinked,-shrink);
-	    if (s.size() != 1) break; // stop when poly is split
-	    shrinked = s;
-	  }
-	  opolys.insert(opolys.end(), shrinked.begin(), shrinked.end());
+	//cerr << "shrink " << shrink << endl;
+	uint count = 0;
+	uint num_polys = tofillpolys.size();
+	vector<Poly> shrinked = tofillpolys;
+	while (true) {
+	  shrinked = Clipping::getOffset(shrinked,-shrink);
+	  count++;
+	  //cerr << shrinked.size() << " - " << num_polys << endl; 
+	  if (shrinked.size() == 0) break; // stop when poly is gone
 	}
-	cpolys = Clipping::getClipperPolygons(opolys);
-#endif
+	extrusionfactor = 0.5 + 0.5/num_div * count;
+	//cerr << "ex " << extrusionfactor << endl;
+	//cpolys = Clipping::getClipperPolygons(opolys);
       } 
       break;
     case PolyInfill: // fill all polygons with their shrinked polys

@@ -298,8 +298,8 @@ void Layer::CalcInfill (const Settings &settings)
   supportInfill->setName("support");
   decorInfill = new Infill(this,1.);
   decorInfill->setName("decor");
-  thinInfill = new Infill(this, 0.5); // use half extrusion
-  thinInfill->setName("thin");       // ... because whole polygon outline 
+  thinInfill = new Infill(this, 1.);
+  thinInfill->setName("thin");
 
   double rot = (settings.Slicing.InfillRotation 
 		+ (double)LayerNo*settings.Slicing.InfillRotationPrLayer)/180.0*M_PI;
