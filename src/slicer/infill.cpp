@@ -336,10 +336,13 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	cpolys = Clipping::getClipperPolygons(polys);
       }
       break;
-    case ThinInfill: // get centerline of polygon
+    case ThinInfill:       
       {
+	// just use the poly itself at half extrusion rate
+	cpolys = Clipping::getClipperPolygons(tofillpolys);
 	break;
-
+#if 0
+	// get sth like the centerline of polygon
 	vector<Poly> opolys;
 	const uint num_div = 10;
 	double shrink = 0.5*infillDistance/num_div;
@@ -349,16 +352,15 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  double parea = Clipping::Area(tofillpolys[i]);
 	  if (parea<0) shrink = -shrink;
 	  vector<Poly> shrinked  = Clipping::getOffset(tofillpolys[i],-shrink);
-	  //shrinklines[i].resize(
-	  for (uint j=0; j < num_div; j++){
-	    shrinked  = Clipping::getOffset(shrinked,-shrink);
-	    opolys.insert(opolys.end(), shrinked.begin(), shrinked.end());
-	    for (uint s = 0; s < shrinked.size(); s++) {
-	      
-	    }
+	  while (true) {
+	    vector<Poly> s = Clipping::getOffset(shrinked,-shrink);
+	    if (s.size() != 1) break; // stop when poly is split
+	    shrinked = s;
 	  }
+	  opolys.insert(opolys.end(), shrinked.begin(), shrinked.end());
 	}
 	cpolys = Clipping::getClipperPolygons(opolys);
+#endif
       } 
       break;
     case PolyInfill: // fill all polygons with their shrinked polys

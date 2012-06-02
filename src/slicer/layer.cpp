@@ -298,8 +298,8 @@ void Layer::CalcInfill (const Settings &settings)
   supportInfill->setName("support");
   decorInfill = new Infill(this,1.);
   decorInfill->setName("decor");
-  thinInfill = new Infill(this,1.);
-  thinInfill->setName("thin");
+  thinInfill = new Infill(this, 0.5); // use half extrusion
+  thinInfill->setName("thin");       // ... because whole polygon outline 
 
   double rot = (settings.Slicing.InfillRotation 
 		+ (double)LayerNo*settings.Slicing.InfillRotationPrLayer)/180.0*M_PI;
@@ -554,6 +554,26 @@ void Layer::setSkirtPolygon(const Poly &poly)
 }
 
 
+void FindThinpolys(const vector<Poly> &polys, double extrwidth,
+		   vector<Poly> &thickpolys, vector<Poly> &thinpolys)
+{
+  // go in 
+  thickpolys = Clipping::getOffset(polys, -0.5*extrwidth);
+  // go out again, now thin polys are gone
+  thickpolys = Clipping::getOffset(thickpolys, 0.55*extrwidth); 
+  // (need overlap to really clip)
+
+  // use bigger (longer) polys for clip to avoid overlap of thin and thick extrusion lines
+  vector <Poly> bigthick = Clipping::getOffset(thickpolys, extrwidth); 
+  // difference to original are thin polys
+  Clipping clipp; 
+  clipp.addPolys(polys, subject);
+  clipp.addPolys(bigthick, clip);
+  thinpolys = clipp.subtract();
+  // remove overlap
+  thickpolys = Clipping::getOffset(thickpolys, -0.05*extrwidth); 
+}
+
 void Layer::MakeShells(const Settings &settings)
 {
   double extrudedWidth        = settings.Hardware.GetExtrudedMaterialWidth(thickness);
@@ -562,21 +582,22 @@ void Layer::MakeShells(const Settings &settings)
   double distance       = 0.5 * extrudedWidth;
   double cleandist      = min(distance/CLEANFACTOR, thickness/CLEANFACTOR);
   double shelloffset    = settings.Slicing.ShellOffset;
-  uint shellcount       = settings.Slicing.ShellCount;
+  uint   shellcount     = settings.Slicing.ShellCount;
   double infilloverlap  = settings.Slicing.InfillOverlap;
-  vector<Poly> shrinked = Clipping::getOffset(polygons,-distance-shelloffset);
 
+  // first shrink with global offset
+  vector<Poly> shrinked = Clipping::getOffset(polygons, -distance-shelloffset);
 
-  // find thin areas: expand again and see what's left, rest is thin
-  Clipping clipp; 
-  clipp.addPolys(polygons, subject);
-  vector<Poly> shrexp = Clipping::getOffset(shrinked, (distance+shelloffset)*1.1);
-  clipp.addPolys(shrexp, clip);
-  thinPolygons = clipp.subtract();
+  vector<Poly> thickPolygons;
+  FindThinpolys(shrinked, extrudedWidth, thickPolygons, thinPolygons);
+  shrinked = thickPolygons;
+
   for (uint i = 0; i<thinPolygons.size(); i++)  
     thinPolygons[i].cleanup(cleandist);
 
-  for (uint i = 0; i<shrinked.size(); i++)  
+  // // expand shrinked to get to the outer shell again
+  // shrinked = Clipping::getOffset(shrinked, 2*distance);
+  for (uint i = 0; i<shrinked.size(); i++)
     shrinked[i].cleanup(cleandist);
 
   //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
@@ -595,22 +616,25 @@ void Layer::MakeShells(const Settings &settings)
       shellPolygons.push_back(shrinked); 
     }
     // inner shells
-    distance = extrudedWidth;
     for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
       {
-	shrinked = Clipping::getOffset(shrinked,-distance);
+	shrinked = Clipping::getOffset(shrinked,-extrudedWidth);
+	vector<Poly> thinpolys;
+	FindThinpolys(shrinked, extrudedWidth, thickPolygons, thinpolys);
+	shrinked = thickPolygons;
+	thinPolygons.insert(thinPolygons.end(), thinpolys.begin(),thinpolys.end());
 	for (uint j = 0; j<shrinked.size(); j++) 
 	  shrinked[j].cleanup(cleandist);
-	//shrinked = Clipping::getShrinkedCapped(shrinked,distance); 
+	//shrinked = Clipping::getShrinkedCapped(shrinked,extrudedWidth); 
 	shellPolygons.push_back(shrinked);
       }
   }
   // the filling polygon
   if (settings.Slicing.DoInfill) {
-    fillPolygons = Clipping::getOffset(shrinked,-(1.-infilloverlap)*distance);
+    fillPolygons = Clipping::getOffset(shrinked,-(1.-infilloverlap)*extrudedWidth);
     for (uint i = 0; i<fillPolygons.size(); i++)  
       fillPolygons[i].cleanup(cleandist);
-    //fillPolygons = Clipping::getShrinkedCapped(shrinked,distance);
+    //fillPolygons = Clipping::getShrinkedCapped(shrinked,extrudedWidth);
     //cerr << LayerNo << " > " << fillPolygons.size()<< endl;
   }
   
