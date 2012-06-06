@@ -17,6 +17,8 @@ src/objtree.cpp
 src/platform.cpp
 src/printer.cpp
 src/printer2.cpp
+src/printer_iochannel.cpp
+src/printer_libreprap.cpp
 src/progress.cpp
 src/render.cpp
 src/reprap_serial.cpp
@@ -31,6 +33,7 @@ src/slicer/infill.h
 src/slicer/layer.cpp
 src/slicer/poly.cpp
 src/slicer/printlines.cpp
+src/slicer/printlines.h
 src/slicer/triangle.cpp
 
 [type: gettext/glade]src/repsnapper.ui

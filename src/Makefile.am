@@ -87,7 +87,9 @@ FORCE:
 built_header_make=src/gitversion.h
 
 BUILT_SOURCES += $(built_header_make)
-EXTRA_DIST += $(built_header_make)
+EXTRA_DIST += $(built_header_make) \
+	src/printer_libreprap.cpp \
+        src/printer_iochannel.cpp
 
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 
