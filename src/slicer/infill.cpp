@@ -506,24 +506,28 @@ vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, doubl
       if (minind < 2) conn1 = p.front();
       else            conn1 = p.back();
 
-      bool intersects = false;
       // try polygons intersect
-      if (intersectsPolys(conn1, conn2, clippolys)) {
-      	  intersects = true;
-      }
-      // try intersect with any line
+      bool intersects = intersectsPolys(conn1, conn2, clippolys);
+
       if (!intersects) {
+        // try intersect with any line
       	Intersection inter;
       	for (uint li = 0; li<lines.size(); li++) {
       	  if (IntersectXY(conn1, conn2, lines[li].from, lines[li].to, inter,
-			  infillDistance/2.)) 
-      	    if (inter.t > 0.1 && inter.t < 0.9) {
-      	      intersects = true; 
-      	      break;	    
+			  infillDistance/2.))  {
+            double t = conn2.x() - conn1.x();
+            if (t != 0)
+              t = (inter.p.x() - conn1.x()) / t;
+
+            // Accept only intersections within the middle 80% of the line, why?
+	    if (t > 0.1 && t < 0.9) {
+		intersects = true;
+		break;
       	    }
+          }
       	}
       }
-      //intersects = true;
+
       if (intersects) { // start new poly
 	if (p.size() > 0) {
 	  p.cleanup(infillDistance/2.);

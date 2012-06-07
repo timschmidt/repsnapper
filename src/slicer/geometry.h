@@ -92,15 +92,13 @@ struct Intersection
 {
 	Vector2d p;  // The intersection point
 	double d;     // Distance from the start point, used for sorting hits
-	double t;     // intersection point on first line
-  bool operator <(const Intersection &p) const { return (d<p.d); } // for std::sort
+        bool operator <(const Intersection &p) const { return (d<p.d); } // for std::sort
 };
 
 
 int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
 			  const Vector2d &p3, const Vector2d &p4, 
 			  Vector2d &I0, Vector2d &I1, 
-			  double &t0, double &t1,
 			  double maxerr=0.0001);
 bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 		 const Vector2d &p3, const Vector2d &p4, 

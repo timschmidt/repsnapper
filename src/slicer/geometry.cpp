@@ -610,12 +610,10 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
   //   }
 
   Vector2d inter2;
-  double t0, t1;
-  int is = intersect2D_Segments(p1,p2,p3,p4, hit.p, inter2, t0, t1);
+  int is = intersect2D_Segments(p1,p2,p3,p4, hit.p, inter2);
   if (is > 0 && is < 3)
     {
       hit.d = (p1-hit.p).length();
-      hit.t = t0;
       return true;
     }
   return false;
@@ -658,18 +656,18 @@ bool inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
 //    Return: 0=disjoint (no intersect)
 //            1=intersect in unique point I0
 //            2=overlap in segment from I0 to I1
-//            3=intersect outside 
+//            3=lines intersect outside the segments
 #define perp(u,v)  ((u).x() * (v).y() - (u).y() * (v).x())  // perp product (2D)
 int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
 			  const Vector2d &p3, const Vector2d &p4, 
 			  Vector2d &I0, Vector2d &I1, 
-			  double &t0, double &t1,
 			  double maxerr)
 {
   Vector2d    u = p2 - p1;
   Vector2d    v = p4 - p3;
   Vector2d    w = p1 - p3;
   double    D = perp(u,v);
+  double t0, t1; // Temp vars for parametric checks
 
   // test if they are parallel (includes either being a point)
   if (abs(D) < maxerr) {          // S1 and S2 are parallel
@@ -699,7 +697,6 @@ int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
       return 1;
     }
     // they are collinear segments - get overlap (or not)
-    //double t0, t1;                   // endpoints of S1 in eqn for S2
     Vector2d w2 = p2 - p3;
     if (v.x() != 0) {
       t0 = w.x() / v.x();

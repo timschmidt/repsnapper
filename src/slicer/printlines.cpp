@@ -700,9 +700,8 @@ Vector2d Printlines::arcCenter(const PLine &l1, const PLine &l2,
   Vector2d l2p1,l2p2;
   center_perpendicular(l2.from, l2.to, l2p1, l2p2);
   Vector2d center, ip;
-  double t0, t1;
   int is = intersect2D_Segments(l1p1, l1p2, l2p1, l2p2,
-   				center, ip, t0,t1);
+ 				center, ip);
   if (is > 0) {
     // radii match?
     if (abs(l1p1.squared_distance(center) -
@@ -816,9 +815,8 @@ uint Printlines::makeIntoArc(guint fromind, guint toind,
   center_perpendicular(lines[start2ind].from, Q, chord2p1, chord2p2);
   // intersection = center
   Vector2d center, ip;
-  double t0, t1;
   int is = intersect2D_Segments(chord1p1, chord1p2, chord2p1, chord2p2, 
-   				center, ip, t0,t1);
+   				center, ip);
   if (is > 0) {
 #endif
     return makeIntoArc(center, fromind, toind, lines);
@@ -863,11 +861,10 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   Vector2d p2   = lines[ind+1].from + normalized(dir2)*maxdistance;
   Intersection inter;
   Vector2d center, I1;
-  double t0,t1;
   // intersect perpendiculars at arc start/end
   int is = intersect2D_Segments(p1, p1 + Vector2d(-dir1.y(),dir1.x()),
 				p2, p2 + Vector2d(-dir2.y(),dir2.x()),
-   				center, I1, t0,t1);
+   				center, I1);
   if (is==0) return 0;
   double radius = center.distance(p1);
   if (radius > 10*maxdistance) return 0; // calc error(?)

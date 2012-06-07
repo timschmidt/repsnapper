@@ -1084,9 +1084,9 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
       bool reverse = false;
       // test for order if we get 4 points (2 until now)
       if (p.size() > 1) {
-	Vector2d i0,i1;	double t0, t1;
+	Vector2d i0, i1;
 	const int is = intersect2D_Segments(p[1], lineStart, lineEnd, p[0],
-					    i0, i1, t0, t1);
+					    i0, i1);
 	if (is > 0 && is < 3) {
 	  reverse = true;
 	}
