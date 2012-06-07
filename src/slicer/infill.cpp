@@ -152,8 +152,9 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 {
   ClipperLib::Polygons cpolys;
   m_tofillpolys = tofillpolys;
-  if (tofillpolys.size()==0) return cpolys;
   m_type = type;
+
+  if (tofillpolys.size()==0) return cpolys;
   cached = false;
   //cerr << "have " << savedPatterns.size()<<" saved patterns " << endl;
   // look for saved pattern for this rotation
