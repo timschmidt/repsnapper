@@ -511,7 +511,7 @@ vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, doubl
       bool intersects = intersectsPolys(conn1, conn2, clippolys);
 
       if (!intersects) {
-        // try intersect with any line
+        // detect crossings: try intersect with any line
       	Intersection inter;
       	for (uint li = 0; li<lines.size(); li++) {
       	  if (IntersectXY(conn1, conn2, lines[li].from, lines[li].to, inter,
@@ -520,7 +520,7 @@ vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, doubl
             if (t != 0)
               t = (inter.p.x() - conn1.x()) / t;
 
-            // Accept only intersections within the middle 80% of the line, why?
+	    // don't catch endpoint intersections (continuations)
 	    if (t > 0.1 && t < 0.9) {
 		intersects = true;
 		break;
