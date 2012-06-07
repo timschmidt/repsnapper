@@ -811,7 +811,8 @@ public:
   ~TempRow()
   {
     delete m_temp;
-    // delete m_target;
+    delete m_target;
+    delete m_button;
   }
 
   void button_toggled()

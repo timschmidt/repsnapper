@@ -91,12 +91,12 @@ void Transform3D::rotate_to(const Vector3d &axis, double angle)
   // const double sc00 = transform(0,0);
   // const double sc11 = transform(1,1);
   // const double sc22 = transform(2,2);
-  // const double sc33 = transform(3,3);
+  const double sc33 = transform(3,3);
   transform.rotate(angle, naxis); // this creates the matrix!
   // transform[0][0] = sc00;
   // transform[1][1] = sc11;
   // transform[2][2] = sc22;
-  // transform[3][3] = sc33;
+  transform[3][3] = sc33;
   transform.set_translation(trans);
 }
 

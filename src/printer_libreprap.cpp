@@ -375,7 +375,7 @@ void Printer::set_printing (bool pprinting)
   if (printing == pprinting)
     return;
   printing = pprinting;
-  if (m_view)
+  if (m_view) {
     if (printing){
       if (gcode_iter) {
 	m_view->get_view_progress()->start (_("Printing"),
@@ -384,6 +384,7 @@ void Printer::set_printing (bool pprinting)
     } else {
       m_view->get_view_progress()->stop (_("Done"));
     }
+  }
 
   printing_changed.emit();
 }

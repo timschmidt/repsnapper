@@ -299,12 +299,12 @@ bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
 #define POLYINSIDEVERSION 0
 #if POLYINSIDEVERSION==0
   // this one works
-  if (size() < 1) return false;
+  uint N = size();
+  if (N < 1) return false;
   uint counter = 0;
   uint i;
   double xinters;
   const Vector2d *p1, *p2;
-  uint N = size();
   p1 = &(vertices[0]);
   for (i=1;i<=N;i++) {
     p2 = &(vertices[i % N]);
