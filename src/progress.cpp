@@ -36,7 +36,6 @@ ViewProgress::ViewProgress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *lab
 
 void ViewProgress::start (const char *label, double max)
 {
-  // GDK_THREADS_ENTER ();
   do_continue = true;
   m_box->show();
   m_bar_max = max;
@@ -46,13 +45,11 @@ void ViewProgress::start (const char *label, double max)
   m_bar->set_fraction(0.0);
   start_time.assign_current_time();
   Gtk::Main::iteration(false);
-  // GDK_THREADS_LEAVE ();
 }
 bool ViewProgress::restart (const char *label, double max)
 {
   if (!do_continue) return false;
   //m_box->show();
-  // GDK_THREADS_ENTER ();
   if (to_terminal) {
     Glib::TimeVal now;
     now.assign_current_time();
@@ -67,13 +64,11 @@ bool ViewProgress::restart (const char *label, double max)
   start_time.assign_current_time();
   //g_main_context_iteration(NULL,false);
   Gtk::Main::iteration(false);
-  // GDK_THREADS_LEAVE ();
   return true;
 }
 
 void ViewProgress::stop (const char *label)
 {
-  // GDK_THREADS_ENTER ();
   if (to_terminal) {
     Glib::TimeVal now;
     now.assign_current_time();
@@ -86,7 +81,6 @@ void ViewProgress::stop (const char *label)
   m_bar->set_fraction(1.0);
   m_box->hide();
   Gtk::Main::iteration(false);
-  // GDK_THREADS_LEAVE ();
 }
 
 string timeleft_str(long seconds) {
@@ -107,7 +101,10 @@ string timeleft_str(long seconds) {
 
 bool ViewProgress::update (double value, bool take_priority)
 {
-  // GDK_THREADS_ENTER ();
+  // Don't allow progress to go backward
+  if (value < m_bar_cur)
+    return do_continue;
+
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->set_fraction(value / m_bar_max);
   ostringstream o; 
@@ -135,19 +132,16 @@ bool ViewProgress::update (double value, bool take_priority)
     while( gtk_events_pending () )
       gtk_main_iteration ();
   Gtk::Main::iteration(false);
-  // GDK_THREADS_LEAVE ();
   return do_continue;
 }
 
 void ViewProgress::set_label (const std::string label)
 {
-  // GDK_THREADS_ENTER ();
   std::string old = m_label->get_label();
   this->label = label;
   if (old != label)
     m_label->set_label (label);
   Gtk::Main::iteration(false);
-  // GDK_THREADS_LEAVE ();
 }
 
 void ViewProgress::set_terminal_output (bool terminal)
