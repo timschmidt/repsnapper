@@ -177,8 +177,6 @@ int main(int argc, char **argv)
 
   Platform::setBinaryPath (argv[0]);
 
-  Model *model = new Model();
-
   try {
     std::string user_config_dir = Glib::build_filename (Glib::get_user_config_dir(), "repsnapper");
     Gio::File::create_for_path(user_config_dir)->make_directory_with_parents();
@@ -253,6 +251,8 @@ int main(int argc, char **argv)
     }
   }
 
+  Model *model = new Model();
+
   if (opts.settings_path.size() > 0)
     model->LoadConfig(Gio::File::create_for_path(opts.settings_path));
   else {
@@ -304,6 +304,7 @@ int main(int argc, char **argv)
 	model->SaveStl(Gio::File::create_for_path(opts.binary_output_path));
       }
       else cerr << _("No output file given") << endl;
+    delete model;
     return 0;
   }
 
