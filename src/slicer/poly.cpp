@@ -83,7 +83,12 @@ void Poly::cleanup(double epsilon)
 }
 
 
-
+/*
+ * Iterate the vertices, and calculate whether this
+ * shape is a hole or enclosed, based on whether the
+ * segment normals point outward (a hole) or inward
+ * (enclosing)
+ */
 void Poly::calcHole() const // hole is mutable
 {
   	if(vertices.size() < 3)
