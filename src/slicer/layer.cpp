@@ -67,11 +67,11 @@ void clearpolys(vector< vector<Poly> > &polys){
 
 void Layer::Clear()
 {
-  delete normalInfill;
-  delete fullInfill;
-  delete supportInfill;
-  delete decorInfill;
-  delete thinInfill;
+  delete normalInfill; normalInfill = NULL;
+  delete fullInfill; fullInfill = NULL;
+  delete supportInfill; supportInfill = NULL;
+  delete decorInfill; decorInfill = NULL;
+  delete thinInfill; thinInfill = NULL;
   skinFullInfills.clear();
   clearpolys(polygons);
   clearpolys(shellPolygons);

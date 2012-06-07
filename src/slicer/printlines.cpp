@@ -285,6 +285,12 @@ Printlines::Printlines(const Layer * layer, const Settings * settings, double z_
   }
 }
 
+void Printlines::clear()
+{
+  for (vector<PrintPoly *>::iterator i = printpolys.begin(); i != printpolys.end(); i++)
+    delete *i;
+  printpolys.clear();
+};
 
 void Printlines::addLine(PLineArea area, vector<PLine> &lines, 
 			 const Vector2d &from, const Vector2d &to, 
@@ -408,9 +414,9 @@ void Printlines::addPolys(PLineArea area,
   if (polys.size() == 0) return;
   if (maxspeed == 0) maxspeed = settings->Hardware.MaxPrintSpeedXY; // default
   for(size_t q = 0; q < polys.size(); q++) { 
-    PrintPoly ppoly(polys[q], this, /* Takes a copy of the poly */
-		    maxspeed, settings->Slicing.MaxOverhangSpeed,
-		    min_time, displace_start, area);
+    PrintPoly *ppoly = new PrintPoly(polys[q], this, /* Takes a copy of the poly */
+		                    maxspeed, settings->Slicing.MaxOverhangSpeed,
+		                    min_time, displace_start, area);
 
     printpolys.push_back(ppoly);
   }
@@ -465,11 +471,11 @@ double Printlines::makeLines(Vector2d &startPoint,
 	if (!done[q])
 	  { 
 	    //cerr << printpolys[q].info() << endl;
-	    if (printpolys[q].m_poly->size() == 0) {done[q] = true; ndone++;}
+	    if (printpolys[q]->m_poly->size() == 0) {done[q] = true; ndone++;}
 	    else {
 	      pdist = INFTY;
-	      nindex = printpolys[q].m_poly->nearestDistanceSqTo(startPoint, pdist);
-	      pdist /= printpolys[q].priority;
+	      nindex = printpolys[q]->m_poly->nearestDistanceSqTo(startPoint, pdist);
+	      pdist /= printpolys[q]->priority;
 	      if (pdist  < nstdist){
 		npindex = q;      // index of nearest poly in polysleft
 		nstdist = pdist;  // distance of nearest poly
@@ -479,12 +485,12 @@ double Printlines::makeLines(Vector2d &startPoint,
 	  }
       }
       if (ndone==0) { // only first in layer
-	nvindex = printpolys[npindex].getDisplacedStart(nvindex);
+	nvindex = printpolys[npindex]->getDisplacedStart(nvindex);
       }
       if (npindex >= 0 && npindex >=0) {
-	printpolys[npindex].addToLines(lines, nvindex, movespeed);
-	totallength += printpolys[npindex].length;
-	totalspeedfactor += printpolys[npindex].length * printpolys[npindex].speedfactor;
+	printpolys[npindex]->addToLines(lines, nvindex, movespeed);
+	totallength += printpolys[npindex]->length;
+	totalspeedfactor += printpolys[npindex]->length * printpolys[npindex]->speedfactor;
 	done[npindex]=true;
 	ndone++;
       }

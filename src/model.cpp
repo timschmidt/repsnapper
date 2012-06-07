@@ -101,8 +101,10 @@ void Model::ClearGCode()
 
 void Model::ClearLayers()
 {
-  for(uint i=0;i<layers.size();i++)
-    layers[i]->Clear();
+  for(vector<Layer *>::iterator i=layers.begin(); i != layers.end(); i++) {
+    (*i)->Clear();
+    delete *i;
+  }
   layers.clear();
   Infill::clearPatterns();
   ClearPreview();
@@ -207,10 +209,13 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
 	    if (where < 0) break;
 	    fileis.seekg(where,ios::beg);
 	  }
-	  else if (shapes.size()==0) {
-	    cerr <<"Could not read STL in ASCII mode: "<< path 
-	   	 << " (bad header?), trying Binary " << endl ;
-	    return ReadShapes(file, max_triangles, BINARY_STL);
+	  else {
+            delete shape;
+            if (shapes.size()==0) {
+	        cerr <<"Could not read STL in ASCII mode: "<< path 
+	   	    << " (bad header?), trying Binary " << endl ;
+	        return ReadShapes(file, max_triangles, BINARY_STL);
+            }
 	  }
 	}
       fileis.close();

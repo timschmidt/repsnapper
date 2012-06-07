@@ -65,6 +65,8 @@ Gtk::TreePath TreeObject::addShape(Shape *shape, std::string location)
 
 void ObjectsTree::clear()
 {
+  for (vector<TreeObject*>::iterator i = Objects.begin(); i != Objects.end(); i++)
+    delete *i;
   Objects.clear();
   version = 0.0f;
   m_filename = "";
@@ -98,6 +100,8 @@ ObjectsTree::ObjectsTree()
 
 ObjectsTree::~ObjectsTree()
 {
+  for (vector<TreeObject*>::iterator i = Objects.begin(); i != Objects.end(); i++)
+    delete *i;
   Objects.clear();
   delete m_cols;
 }

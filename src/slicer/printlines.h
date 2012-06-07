@@ -144,7 +144,7 @@ class Printlines
 {
   friend class PrintPoly;
 
-  vector<PrintPoly> printpolys;
+  vector<PrintPoly *> printpolys;
     
   double z;
   double Zoffset; // global offset for generated PLine3s, always added at setZ()
@@ -161,9 +161,9 @@ class Printlines
 
  public:
   Printlines(const Layer * layer, const Settings *settings, double z_offset=0);
-  ~Printlines(){};
+  ~Printlines(){ clear(); };
 
-  void clear() {printpolys.clear();};
+  void clear();
 
   const Settings *settings;
   const Layer * layer;
