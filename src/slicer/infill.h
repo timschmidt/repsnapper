@@ -66,7 +66,7 @@ class Infill
   void addInfillPoly(const Poly &p);
   void addInfillPolys(const vector<Poly> &polys);
 
-  vector<Poly> tofillpolys;  // the polygons that are being filled
+  vector<Poly> m_tofillpolys;  // the polygons that are being filled
 
  public:
 
@@ -81,8 +81,8 @@ class Infill
   string getName(){return name;};
 
   static void clearPatterns();
-  InfillType type;
-  double angle;
+  InfillType m_type;
+  double m_angle;
   double infillDistance;
   
   vector<Poly> infillpolys;  // for clipper polygon types
