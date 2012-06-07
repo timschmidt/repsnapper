@@ -1529,12 +1529,13 @@ View::~View()
   delete m_temps[TEMP_NOZZLE];
   delete m_temps[TEMP_BED];
   delete m_cnx_view;
-  delete m_progress;
+  delete m_progress; m_progress = NULL;
   delete m_printer;
   delete m_gcodetextview;
   RSFilechooser *chooser = m_filechooser;
   m_filechooser = NULL;
   delete chooser;
+  m_renderer = NULL;
 }
 
 /* Recursively sets all widgets in the window to visible */
