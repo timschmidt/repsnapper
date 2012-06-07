@@ -309,25 +309,27 @@ void Printlines::addLine(PLineArea area, vector<PLine> &lines,
 
 // // // // // // // // // // // // PrintPoly // // // // // // // // // // // // 
 
-
-PrintPoly::PrintPoly(const Poly * poly_,  
+PrintPoly::PrintPoly(const Poly &poly,
 		     const Printlines * printlines_,
 		     double speed_, double overhangspeed,
 		     double min_time_,
 		     bool displace_start_,
 		     PLineArea area_)
-  : poly(poly_), printlines(printlines_), area(area_), 
+  : printlines(printlines_), area(area_),
     speed(speed_), min_time(min_time_), 
     displace_start(displace_start_), 
     overhangingpoints(0), priority(1.), length(0), speedfactor(1.)
 {
+  // Take a copy of the reference poly
+  m_poly = new Poly(poly);
+
   if (area==SHELL || area==SKIN) {
     priority *= 5; // may be 5 times as far away to get preferred as next poly
-    for (uint j=0; j<poly->size();j++){
+    for (uint j=0; j<m_poly->size();j++){
       if (getCairoSurfaceDatapoint(printlines->overhangs_surface, 
 				   printlines->layer->getMin(), 
 				   printlines->layer->getMax(), 
-				   poly->vertices[j]) != 0) {
+				   m_poly->vertices[j]) != 0) {
 	overhangingpoints++;
 	priority /= 10; // must be 10 times nearer for each overhang point
       }
@@ -337,7 +339,7 @@ PrintPoly::PrintPoly(const Poly * poly_,
   } else if (area==SUPPORT) {
     priority *= 100;  // may be 100 times as far away to get preferred
   }
-  length = poly->totalLineLength();
+  length = m_poly->totalLineLength();
   if (overhangingpoints>0)
     speed = overhangspeed;
   if (min_time > 0 && speed > 0) {
@@ -353,18 +355,19 @@ PrintPoly::PrintPoly(const Poly * poly_,
 
 PrintPoly::~PrintPoly()
 {
+  delete m_poly;
 }
 
 void PrintPoly::addToLines(vector<PLine> &lines, int startindex, 
 			   double movespeed) const
 {
   vector<Vector2d> pvert;
-  poly->getLines(pvert,startindex);
+  m_poly->getLines(pvert,startindex);
   if (pvert.size() == 0) return;
   assert(pvert.size() % 2 == 0);
   for (uint i=0; i<pvert.size(); i+=2) {
     printlines->addLine(area, lines, pvert[i], pvert[i+1], 
-			speed, movespeed, poly->getExtrusionFactor());
+			speed, movespeed, m_poly->getExtrusionFactor());
   }
 }
 
@@ -373,10 +376,10 @@ uint PrintPoly::getDisplacedStart(uint start) const
   if (displace_start) { 
     // find next sharp corner (>pi/4)
     uint oldstart = start; // if none found, stay here
-    start = poly->nextVertex(start);
+    start = m_poly->nextVertex(start);
     while (start != oldstart &&
-	   abs(poly->angleAtVertex(start) < M_PI/4))
-      start = poly->nextVertex(start);
+	   abs(m_poly->angleAtVertex(start) < M_PI/4))
+      start = m_poly->nextVertex(start);
   }
   return start;
 }
@@ -386,7 +389,7 @@ string PrintPoly::info() const
   ostringstream ostr;
   ostr << "PrintPoly "
        << AreaNames[area]
-       << ", " <<  poly->size() <<" vertices" 
+       << ", " <<  m_poly->size() <<" vertices"
        << ", prio=" << priority 
        << ", speed=" << speed
     ;    
@@ -405,7 +408,7 @@ void Printlines::addPolys(PLineArea area,
   if (polys.size() == 0) return;
   if (maxspeed == 0) maxspeed = settings->Hardware.MaxPrintSpeedXY; // default
   for(size_t q = 0; q < polys.size(); q++) { 
-    PrintPoly ppoly(new Poly(polys[q]), this,
+    PrintPoly ppoly(polys[q], this, /* Takes a copy of the poly */
 		    maxspeed, settings->Slicing.MaxOverhangSpeed,
 		    min_time, displace_start, area);
 
@@ -462,10 +465,10 @@ double Printlines::makeLines(Vector2d &startPoint,
 	if (!done[q])
 	  { 
 	    //cerr << printpolys[q].info() << endl;
-	    if (printpolys[q].poly->size() == 0) {done[q] = true; ndone++;}
+	    if (printpolys[q].m_poly->size() == 0) {done[q] = true; ndone++;}
 	    else {
 	      pdist = INFTY;
-	      nindex = printpolys[q].poly->nearestDistanceSqTo(startPoint, pdist);
+	      nindex = printpolys[q].m_poly->nearestDistanceSqTo(startPoint, pdist);
 	      pdist /= printpolys[q].priority;
 	      if (pdist  < nstdist){
 		npindex = q;      // index of nearest poly in polysleft

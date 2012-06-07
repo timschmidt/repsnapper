@@ -112,11 +112,11 @@ class PrintPoly
 {
   friend class Printlines;
 
-  PrintPoly(const Poly * poly, const Printlines * printlines,
+  PrintPoly(const Poly &poly, const Printlines * printlines,
 	    double speed, double overhangspeed, double min_time,
 	    bool displace_start, PLineArea area);
 
-  const Poly * poly;
+  Poly *m_poly;
   const Printlines * printlines;
   PLineArea area;
   double speed;
