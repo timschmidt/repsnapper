@@ -779,11 +779,16 @@ void Model::ConvertToGCode()
   if (is_calculating) {
     return;
   }
+  is_calculating=true;
+
+  Glib::TimeVal start_time;
+  start_time.assign_current_time();
 
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();
   string GcodeLayer = settings.GCode.getLayerText();
   string GcodeEnd   = settings.GCode.getEndText();
+
   gcode.clear();
   GCodeState state(gcode);
 
@@ -907,6 +912,13 @@ void Model::ConvertToGCode()
     statusbar->push(ostr.str());
   else 
     cout << ostr.str() << endl;
+
+  {
+    Glib::TimeVal now;
+    now.assign_current_time();
+    const int time_used = (int) round((now - start_time).as_double()); // seconds
+    cerr << "GCode generated in " << time_used << " seconds. " << GcodeTxt.size() << " bytes" << endl;
+  }
 
   is_calculating=false;
   m_signal_gcode_changed.emit();
