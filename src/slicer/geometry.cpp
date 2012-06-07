@@ -562,53 +562,14 @@ vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to,
 
 
 
-// calculates intersection and checks for parallel lines.
+// Check the segments p1-p2 and p3-p4 for intersection,
+// If the segments intersection, the intersection 
 // also checks that the intersection point is actually on
 // the line segment p1-p2
 bool IntersectXY(const Vector2d &p1, const Vector2d &p2, 
 		 const Vector2d &p3, const Vector2d &p4, 
 		 Intersection &hit, double maxoffset)
 {
-  // // BBOX test
-  // if(MIN(p1.x(),p2.x()) > MAX(p3.x(),p4.x()))
-  //   return false;
-  // if(MAX(p1.x(),p2.x()) < MIN(p3.x(),p4.x()))
-  //   return false;
-  // if(MIN(p1.y(),p2.y()) > MAX(p3.y(),p4.y()))
-  //   return false;
-  // if(MAX(p1.y(),p2.y()) < MIN(p3.y(),p4.y()))
-  //   return false;
-
-
-  // if(ABS(p1.x()-p3.x()) < maxoffset && ABS(p1.y() - p3.y()) < maxoffset)
-  //   {
-  //     hit.p = p1;
-  //     hit.d = (p1-hit.p).length();
-  //     hit.t = 0.0;
-  //     return true;
-  //   }
-  // if(ABS(p2.x()-p3.x()) < maxoffset && ABS(p2.y() - p3.y()) < maxoffset)
-  //   {
-  //     hit.p = p2;
-  //     hit.d = (p1-hit.p).length();
-  //     hit.t = 1.0;
-  //     return true;
-  //   }
-  // if(ABS(p1.x()-p4.x()) < maxoffset && ABS(p1.y() - p4.y()) < maxoffset)
-  //   {
-  //     hit.p = p1;
-  //     hit.d = (p1-hit.p).length();
-  //     hit.t = 0.0;
-  //     return true;
-  //   }
-  // if(ABS(p2.x()-p4.x()) < maxoffset && ABS(p2.y() - p4.y()) < maxoffset)
-  //   {
-  //     hit.p = p2;
-  //     hit.d = (p1-hit.p).length();
-  //     hit.t = 1.0;
-  //     return true;
-  //   }
-
   Vector2d inter2;
   int is = intersect2D_Segments(p1,p2,p3,p4, hit.p, inter2);
   if (is > 0 && is < 3)
@@ -620,7 +581,10 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 }
 
 
-// Following functions licensed as:
+// The following functions
+// (inSegment, intersect2D_Segments and dist3D_Segment_to_Segment)
+// are licensed as:
+// 
 // Copyright 2001, softSurfer (www.softsurfer.com)
 // This code may be freely used and modified for any purpose
 // providing that this copyright notice is included with it.
@@ -818,22 +782,6 @@ double dist3D_Segment_to_Segment(const Vector3d &S1P0, const Vector3d &S1P1,
 
      return dP.length();   // return the closest distance
  }
-
-void testangles(){
-  Vector2d C(0,0);
-  Vector2d P(-1,1);
-  for (double a = 0; a < 2*M_PI; a+=0.3){
-    Vector2d Q(cos(a), sin(a));
-    double an = angleBetween(P,Q);
-    double bn = angleBetween(Q,P);
-    //if(an<0) an+=2*M_PI;
-    //if(bn<0) bn+=2*M_PI;
-    cerr << a*180/M_PI << " - " << an*180/M_PI << " - " << bn*180/M_PI << endl;
-  }
-}
-
-
-
 
 /////////////////// PATH IN POLYGON //////////////////////
 
