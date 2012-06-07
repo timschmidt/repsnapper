@@ -248,27 +248,28 @@ void Model::CleanupLayers()
   bool cont = true;
 
 #ifdef _OPENMP
-  omp_lock_t progress_lock;
-  omp_init_lock(&progress_lock);
-#pragma omp parallel for schedule(dynamic) 
+  #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int i=0; i < count; i++)
-    {
+  for (int i=0; i < count; i++) {
+#ifdef _OPENMP
+      #pragma omp flush (cont)
+      if (!cont) continue;
+#else
+      if (!cont) break;
+#endif
       if (i%progress_steps==0) {
 #ifdef _OPENMP
-	omp_set_lock(&progress_lock);
-#endif
+	#pragma omp critical(updateProgress)
+	{
+	    cont = m_progress->update(i);
+	    #pragma omp flush (cont)
+	}
+#else
 	cont = m_progress->update(i);
-#ifdef _OPENMP
-	omp_unset_lock(&progress_lock);
 #endif
       }
       layers[i]->cleanupPolygons();
-      if (!cont) i=count;
-    }
-#ifdef _OPENMP
-  omp_destroy_lock(&progress_lock);
-#endif
+  }
 }
 
 
@@ -320,7 +321,7 @@ void Model::Slice()
   // for (vector<Layer *>::iterator pIt = layers.begin();
   //      pIt != layers. end(); pIt++)
   //   delete *pIt;
-  layers.clear();
+  ClearLayers();
 
   bool flatshapes = shapes.front()->dimensions() == 2;
   if (flatshapes) {
@@ -417,40 +418,45 @@ void Model::Slice()
   bool cont = true;
 
 #ifdef _OPENMP
-  omp_lock_t progress_lock;
-  omp_init_lock(&progress_lock);
-#pragma omp parallel for schedule(dynamic) 
+  #pragma omp parallel for schedule(dynamic)
 #endif
   for (nlayer = 0; nlayer < num_layers; nlayer++) {
     double z = minZ + thickness * nlayer;
     if (nlayer%progress_steps==0) {
 #ifdef _OPENMP
-      omp_set_lock(&progress_lock);
-#endif
-    cont = (m_progress->update(z));
-#ifdef _OPENMP
-      omp_unset_lock(&progress_lock);
+	#pragma omp critical(updateProgress)
+	{
+	    cont = (m_progress->update(z));
+	    #pragma omp flush (cont)
+	}
+#else
+        cont = (m_progress->update(z));
 #endif
     }
+#ifdef _OPENMP
+    #pragma omp flush (cont)
     if (!cont) continue;
+#else
+    if (!cont) break;
+#endif
     Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1); 
     layer->setZ(z); // set to real z
-    int new_polys=0;
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
-      new_polys += layer->addShape(transforms[nshape], *shapes[nshape],
+      layer->addShape(transforms[nshape], *shapes[nshape],
 				   z, max_gradient, supportangle);
     }
-    if (cont) 
-      layers[nlayer] = layer;
+    layers[nlayer] = layer;
   }
+  if (!cont)
+    ClearLayers();
+
 #ifdef _OPENMP
-  if (cont)
-    std::sort(layers.begin(), layers.end(), layersort);
-  else layers.clear();
-  omp_destroy_lock(&progress_lock);
+    //std::sort(layers.begin(), layers.end(), layersort);
 #endif
+
   for (uint nlayer = 1; nlayer < layers.size(); nlayer++) {
     layers[nlayer]->setPrevious(layers[nlayer-1]);
+    assert(layers[nlayer]->Z > layers[nlayer-1]->Z);
   }
   if (layers.size()>0)
 	lastlayer = layers.back();
