@@ -54,13 +54,18 @@ bool ViewProgress::restart (const char *label, double max)
   //m_box->show();
   // GDK_THREADS_ENTER ();
   if (to_terminal) {
-    cerr << m_label->get_label() << " -- " << _(" done.") << "                     " << endl;  
+    Glib::TimeVal now;
+    now.assign_current_time();
+    const int time_used = (int) round((now - start_time).as_double()); // seconds
+    cerr << m_label->get_label() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;  
   }
   m_bar_max = max;
   this->label = label;
   m_label->set_label (label);
   m_bar_cur = 0.0;
   m_bar->set_fraction(0.0);
+  start_time.assign_current_time();
+  //g_main_context_iteration(NULL,false);
   Gtk::Main::iteration(false);
   // GDK_THREADS_LEAVE ();
   return true;
@@ -70,7 +75,10 @@ void ViewProgress::stop (const char *label)
 {
   // GDK_THREADS_ENTER ();
   if (to_terminal) {
-    cerr << m_label->get_label() << " -- " << _(" done.") << "                     " << endl;  
+    Glib::TimeVal now;
+    now.assign_current_time();
+    const int time_used = (int) round((now - start_time).as_double()); // seconds
+    cerr << m_label->get_label() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;  
   }
   this->label = label;
   m_label->set_label (label);
