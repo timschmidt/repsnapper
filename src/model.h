@@ -104,20 +104,6 @@ public:
 
 	// Slicing
 	void SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer=false);
-	void Slice();
-
-	void CleanupLayers();
-	void CalcInfill();
-	void MakeShells();
-	void MakeUncoveredPolygons(bool make_decor, bool make_bridges=true);
-	vector<Poly> GetUncoveredPolygons(const Layer *subjlayer, 
-					  const Layer *cliplayer);
-	void MakeFullSkins();
-	void MultiplyUncoveredPolygons();
-	void MakeSupportPolygons(Layer * subjlayer, const Layer * cliplayer, 
-				 double widen=0);
-	void MakeSupportPolygons(double widen=0);
-	void MakeSkirt();
 
 	// GCode Functions
 	void init();
@@ -190,6 +176,23 @@ public:
 	bool is_printing;
 	//GCodeIter *m_iter;
 	Layer * lastlayer;
+
+        // Slicing/GCode conversion functions
+	void Slice();
+
+	void CleanupLayers();
+	void CalcInfill();
+	void MakeShells();
+	void MakeUncoveredPolygons(bool make_decor, bool make_bridges=true);
+	vector<Poly> GetUncoveredPolygons(const Layer *subjlayer,
+					  const Layer *cliplayer);
+	void MakeFullSkins();
+	void MultiplyUncoveredPolygons();
+	void MakeSupportPolygons(Layer * subjlayer, const Layer * cliplayer, 
+				 double widen=0);
+	void MakeSupportPolygons(double widen=0);
+	void MakeSkirt();
+
 };
 
 #endif // MODEL_H

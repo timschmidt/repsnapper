@@ -278,9 +278,6 @@ bool layersort(const Layer * l1, const Layer * l2){
 
 void Model::Slice() 
 {
-  if (is_calculating) {
-    return;
-  }
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
 
@@ -292,8 +289,6 @@ void Model::Slice()
   if (shapes.size() == 0) return;
 
   assert(shapes.size() == transforms.size());
-
-  is_calculating=true;
 
   CalcBoundingBoxAndCenter(settings.Slicing.SelectedOnly);
 
@@ -336,129 +331,130 @@ void Model::Slice()
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
       layers[0]->addShape(transforms[nshape], *shapes[nshape],  0, max_gradient, -1);
     }
-    is_calculating=false;
     return;
   }
 
   int progress_steps=(int)(maxZ/thickness/100);
   if (progress_steps==0) progress_steps=1;
 
-  if ( !(varSlicing && skins > 1) &&
-       !(settings.Slicing.BuildSerial && shapes.size() > 1) )
-    { // simple, can do multihreading
-      if (progress_steps==0) progress_steps=1;
-      int num_layers = (int)ceil((maxZ - minZ) / thickness);
-      layers.resize(num_layers);
-      int nlayer;
-      bool cont = true;
+  if ((varSlicing && skins > 1) ||
+      (settings.Slicing.BuildSerial && shapes.size() > 1))
+  {
+    // have skins and/or serial build, so can't parallelise
+    uint currentshape   = 0;
+    double serialheight = maxZ; // settings.Slicing.SerialBuildHeight; 
+    double z            = minZ;
+    double shape_z      = z;
+    double max_shape_z  = z + serialheight;
+    Layer * layer = new Layer(lastlayer, LayerNr, thickness, 1); // first layer no skins
+    layer->setZ(shape_z);
+    LayerNr = 1;
+    int new_polys=0;
+    bool cont = true;
+    while(cont && z < maxZ)
+      {
+        shape_z = z; 
+        max_shape_z = min(shape_z + serialheight, maxZ); 
+        while ( cont && currentshape < shapes.size() && shape_z <= max_shape_z ) {
+  	if (LayerNr%progress_steps==0) cont = m_progress->update(shape_z);
+  	layer->setZ(shape_z); // set to real z
+  	if (shape_z == minZ) { // the layer is on the platform
+  	  layer->LayerNo = 0;
+  	  layer->setSkins(1);
+  	  LayerNr = 1; 
+  	}
+  	new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
+  				    shape_z, max_gradient, supportangle);
+  	// cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape 
+  	//      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
+  	if (shape_z >= max_shape_z) { // next shape, reset z
+  	  currentshape++; 
+  	  shape_z = z;
+  	} else {  // next z, same shape
+  	  if (varSlicing && LayerNr!=0) { 
+  	    // higher gradient -> slice thinner with fewer skin divisions
+  	    skins = max_skins-(uint)(max_skins* max_gradient);
+  	    thickness = skin_thickness*skins;
+  	  }
+  	  shape_z += thickness; 
+  	  max_gradient = 0;
+  	  if (new_polys > -1){
+  	    layers.push_back(layer);
+  	    lastlayer = layer;
+  	    layer = new Layer(lastlayer, LayerNr++, thickness, skins);
+  	  }
+  	}
+        }
+        //thickness = max_thickness-(max_thickness-min_thickness)*max_gradient;
+        if (currentshape < shapes.size()-1) { // reached max_shape_z, next shape
+  	currentshape++;
+        } else { // end of shapes
+  	if (new_polys > -1){ 
+  	  if (varSlicing) {
+  	    skins = max_skins-(uint)(max_skins* max_gradient);
+  	    thickness = skin_thickness*skins;
+  	  }
+  	  layers.push_back(layer);
+  	  lastlayer = layer;
+  	  layer = new Layer(lastlayer, LayerNr++, thickness, skins);
+  	}
+  	z = max_shape_z + thickness;
+  	currentshape = 0; // all shapes again
+        }
+        max_gradient=0;
+        //cerr << "    Z="<<z << "Max.z="<<Max.z<<endl;
+      }
+    delete layer; // have made one more than needed
+    return;
+  }
+
+  // simple case, can do multihreading
+  if (progress_steps==0) progress_steps=1;
+
+  int num_layers = (int)ceil((maxZ - minZ) / thickness);
+  layers.resize(num_layers);
+  int nlayer;
+  bool cont = true;
 
 #ifdef _OPENMP
-      omp_lock_t progress_lock;
-      omp_init_lock(&progress_lock);
+  omp_lock_t progress_lock;
+  omp_init_lock(&progress_lock);
 #pragma omp parallel for schedule(dynamic) 
 #endif
-      for (nlayer = 0; nlayer < num_layers; nlayer++) {
-	double z = minZ + thickness * nlayer;
-	if (nlayer%progress_steps==0) {
+  for (nlayer = 0; nlayer < num_layers; nlayer++) {
+    double z = minZ + thickness * nlayer;
+    if (nlayer%progress_steps==0) {
 #ifdef _OPENMP
-	  omp_set_lock(&progress_lock);
+      omp_set_lock(&progress_lock);
 #endif
-	cont = (m_progress->update(z));
+    cont = (m_progress->update(z));
 #ifdef _OPENMP
-	  omp_unset_lock(&progress_lock);
+      omp_unset_lock(&progress_lock);
 #endif
-	}
-	if (!cont) continue;
-	Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1); 
-	layer->setZ(z); // set to real z
-	int new_polys=0;
-	for (uint nshape= 0; nshape < shapes.size(); nshape++) {
-	  new_polys += layer->addShape(transforms[nshape], *shapes[nshape],
-				       z, max_gradient, supportangle);
-	}
-	if (cont) 
-	  layers[nlayer] = layer;
-      }
+    }
+    if (!cont) continue;
+    Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1); 
+    layer->setZ(z); // set to real z
+    int new_polys=0;
+    for (uint nshape= 0; nshape < shapes.size(); nshape++) {
+      new_polys += layer->addShape(transforms[nshape], *shapes[nshape],
+				   z, max_gradient, supportangle);
+    }
+    if (cont) 
+      layers[nlayer] = layer;
+  }
 #ifdef _OPENMP
-      if (cont)
-	std::sort(layers.begin(), layers.end(), layersort);
-      else layers.clear();
-      omp_destroy_lock(&progress_lock);
+  if (cont)
+    std::sort(layers.begin(), layers.end(), layersort);
+  else layers.clear();
+  omp_destroy_lock(&progress_lock);
 #endif
-      for (uint nlayer = 1; nlayer < layers.size(); nlayer++) {
-	layers[nlayer]->setPrevious(layers[nlayer-1]);
-      }
-      if (layers.size()>0)
+  for (uint nlayer = 1; nlayer < layers.size(); nlayer++) {
+    layers[nlayer]->setPrevious(layers[nlayer-1]);
+  }
+  if (layers.size()>0)
 	lastlayer = layers.back();
-    }
-  else 
-    { // have skins and/or serial build
-      uint currentshape   = 0;
-      double serialheight = maxZ; // settings.Slicing.SerialBuildHeight; 
-      double z            = minZ;
-      double shape_z      = z;
-      double max_shape_z  = z + serialheight;
-      Layer * layer = new Layer(lastlayer, LayerNr, thickness, 1); // first layer no skins
-      layer->setZ(shape_z);
-      LayerNr = 1;
-      int new_polys=0;
-      bool cont = true;
-      while(cont && z < maxZ)
-	{
-	  shape_z = z; 
-	  max_shape_z = min(shape_z + serialheight, maxZ); 
-	  while ( cont && currentshape < shapes.size() && shape_z <= max_shape_z ) {
-	    if (LayerNr%progress_steps==0) cont = m_progress->update(shape_z);
-	    layer->setZ(shape_z); // set to real z
-	    if (shape_z == minZ) { // the layer is on the platform
-	      layer->LayerNo = 0;
-	      layer->setSkins(1);
-	      LayerNr = 1; 
-	    }
-	    new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
-					shape_z, max_gradient, supportangle);
-	    // cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape 
-	    //      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
-	    if (shape_z >= max_shape_z) { // next shape, reset z
-	      currentshape++; 
-	      shape_z = z;
-	    } else {  // next z, same shape
-	      if (varSlicing && LayerNr!=0) { 
-		// higher gradient -> slice thinner with fewer skin divisions
-		skins = max_skins-(uint)(max_skins* max_gradient);
-		thickness = skin_thickness*skins;
-	      }
-	      shape_z += thickness; 
-	      max_gradient = 0;
-	      if (new_polys > -1){
-		layers.push_back(layer);
-		lastlayer = layer;
-		layer = new Layer(lastlayer, LayerNr++, thickness, skins);
-	      }
-	    }
-	  }
-	  //thickness = max_thickness-(max_thickness-min_thickness)*max_gradient;
-	  if (currentshape < shapes.size()-1) { // reached max_shape_z, next shape
-	    currentshape++;
-	  } else { // end of shapes
-	    if (new_polys > -1){ 
-	      if (varSlicing) {
-		skins = max_skins-(uint)(max_skins* max_gradient);
-		thickness = skin_thickness*skins;
-	      }
-	      layers.push_back(layer);
-	      lastlayer = layer;
-	      layer = new Layer(lastlayer, LayerNr++, thickness, skins);
-	    }
-	    z = max_shape_z + thickness;
-	    currentshape = 0; // all shapes again
-	  }
-	  max_gradient=0;
-	  //cerr << "    Z="<<z << "Max.z="<<Max.z<<endl;
-	}
-      delete layer; // have made one more than needed
-    }
-  is_calculating=false;
+
   // shapes.clear();
   //m_progress->stop (_("Done"));
 }
@@ -800,7 +796,6 @@ void Model::ConvertToGCode()
   // Make Layers
   lastlayer = NULL;
 
-  is_calculating=false;
 
   Slice();
 
@@ -957,6 +952,8 @@ string Model::getSVG(int single_layer_no) const
 void Model::SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer) 
 {
   if (is_calculating) return;
+  is_calculating=true;
+
   lastlayer = NULL;
   Slice();
   m_progress->stop (_("Done"));
@@ -983,5 +980,6 @@ void Model::SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer)
     }
     m_progress->stop (_("Done"));
   }
+  is_calculating = false;
 }
 
