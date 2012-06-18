@@ -1,6 +1,6 @@
 /*
     This file is a part of the RepSnapper project.
-    Copyright (C) 2011 Michael Meeks
+    Copyright (C) 2010 Michael Meeks
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -16,44 +16,23 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+#ifndef SETTINGS_UI_H
+#define SETTINGS_UI_H
 
-/* #ifndef TYPES_H */
-/* #define TYPES_H */
-#pragma once
+#include "settings.h"
+#include <gtkmm.h>
 
-// try to avoid compile time explosion by reducing includes
+class SettingsUI {
+  Model *m_model;
+  Gtk::Dialog *m_preferences_dlg;
 
+  void handle_response(int, Gtk::Dialog *dialog);
 
-class GUI;
-class Poly;
-class View;
-class GCode;
-class GCodeState;
-class GCodeIter;
-class Printlines;
-class PLine3;
-class Model;
-class Render;
-class Command;
-class Printer;
-class Settings;
-class SettingsUI;
-class Triangle;
-class RepRapSerial;
-class Layer;
-class PrintInhibitor;
-class ProcessController;
-class ObjectsTree;
-class TreeObject;
-class Shape;
-class Transform3D;
-class Infill;
-class ViewProgress;
-class ConnectView;
-class Transform3D;
+  std::vector<Settings *> m_settings;
+ public:
+  SettingsUI(Model *model, Glib::RefPtr<Gtk::Builder> &builder);
+  ~SettingsUI();
+  void show();
+};
 
-enum SerialState { SERIAL_DISCONNECTED, SERIAL_DISCONNECTING,
-		   SERIAL_CONNECTED, SERIAL_CONNECTING };
-
-
-/* #endif // TYPES_H */
+#endif // SETTINGS_H

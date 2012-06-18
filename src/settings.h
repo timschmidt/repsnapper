@@ -24,7 +24,6 @@
 
 #include "stdafx.h"
 
-
 // Allow passing as a pointer to something to
 // avoid including glibmm in every header.
 class Builder : public Glib::RefPtr<Gtk::Builder>

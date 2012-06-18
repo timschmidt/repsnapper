@@ -56,6 +56,15 @@
 * Bin the two 'load' menu items - just one 'open' menu ...
 	+ with a gcode and stl filter drop-down ?
 
+* Add a right-click menu to the back-drop, so we can
+  change display settings & => not have them in 
+
+* Multi-model selector ...
+	+ have pre-canned settings GUI
+	+ use a simple scrolled area:
+		+ containing buttons
+		+ containing an Image - and label underneath (!?)
+
 * Serial
 	+ libreprap:
 	  + don't write anything (particularly a re-send) while

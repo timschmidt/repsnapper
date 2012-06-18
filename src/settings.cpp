@@ -818,11 +818,10 @@ void Settings::set_to_gui (Builder &builder, int i)
 
   Gtk::Window *pWindow = NULL;
   builder->get_widget("main_window", pWindow);
-  if (pWindow && Misc.window_width > 0 && Misc.window_height > 0) 
+  if (pWindow && Misc.window_width > 0 && Misc.window_height > 0)
     pWindow->resize(Misc.window_width, Misc.window_height);
-  if (pWindow && Misc.window_posx > 0 && Misc.window_posy > 0) 
+  if (pWindow && Misc.window_posx > 0 && Misc.window_posy > 0)
     pWindow->move(Misc.window_posx,Misc.window_posy);
-  
 }
 
 
@@ -1281,9 +1280,10 @@ Matrix4d Settings::getBasicTransformation(Matrix4d T) const
 {
   Vector3d t;
   T.get_translation(t);
-  t+= Vector3d(Hardware.PrintMargin.x()+Raft.Size*RaftEnable, 
-	       Hardware.PrintMargin.y()+Raft.Size*RaftEnable, 
+  t+= Vector3d(Hardware.PrintMargin.x()+Raft.Size*RaftEnable,
+	       Hardware.PrintMargin.y()+Raft.Size*RaftEnable,
 	       0);
   T.set_translation(t);
   return T;
 }
+

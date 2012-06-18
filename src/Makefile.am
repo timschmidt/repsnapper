@@ -11,7 +11,7 @@
 bin_PROGRAMS = repsnapper
 
 LIB_DIR=$(top_srcdir)/libraries
-WARNING_FLAGS = -Wall -Wsign-compare -Wno-invalid-offsetof 
+WARNING_FLAGS = -Wall -Wsign-compare -Wno-invalid-offsetof
 
 repsnapper_CPPFLAGS = \
 	-I$(LIB_DIR)/vmmlib/include \
@@ -49,7 +49,8 @@ SHARED_SRC= \
 	src/printer2.cpp \
 	src/progress.cpp \
 	src/connectview.cpp \
-	src/settings.cpp 
+	src/settings.cpp \
+	src/settings-ui.cpp
 
 SHARED_INC= \
 	src/arcball.h \
@@ -71,8 +72,9 @@ SHARED_INC= \
 	src/progress.h \
 	src/connectview.h \
 	src/settings.h \
+	src/settings-ui.h \
 	src/view.h \
-	src/types.h 
+	src/types.h
 
 include src/slicer/Makefile.am
 

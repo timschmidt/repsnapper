@@ -29,6 +29,7 @@
 #include "objtree.h"
 #include "render.h"
 #include "settings.h"
+#include "settings-ui.h"
 #include "progress.h"
 #include "connectview.h"
 
@@ -589,50 +590,9 @@ void View::show_dialog(const char *name)
   //  dialog->set_transient_for (*this);
 }
 
-namespace {
-
-  // Find all the .conf hardware settings templates
-  std::vector<std::string> get_settings_configs()
-  {
-    std::vector<std::string> ret;
-    std::vector<std::string> dirs = Platform::getConfigPaths();
-
-    for (std::vector<std::string>::const_iterator i = dirs.begin();
-	 i != dirs.end(); ++i) {
-      std::string settings_name = Glib::build_filename (*i, "settings");
-      Glib::RefPtr<Gio::File> dir = Gio::File::create_for_path(settings_name);
-      if(dir->query_exists()) {
-	Glib::RefPtr<Gio::FileEnumerator> entries = dir->enumerate_children();
-	if (!entries)
-	  continue;
-	Glib::RefPtr<Gio::FileInfo> info;
-	while (info = entries->next_file()) {
-	  if (Platform::has_extension(info->get_name(), "conf"))
-	    ret.push_back(Glib::build_filename(settings_name,info->get_name()));
-	}
-      }
-    }
-    return ret;
-  }
-}
-
 void View::show_preferences()
 {
-  show_dialog ("preferences_dlg");
-#if 0 // test some GUI / hardware selector fun
-  std::vector<std::string> configs = get_settings_configs();
-  for (std::vector<std::string>::const_iterator i = configs.begin();
-       i != configs.end(); ++i) {
-    Settings aSet;
-    fprintf (stderr, "load from %s\n", (*i).c_str());
-    try {
-      aSet.load_settings(Gio::File::create_for_path(*i));
-      fprintf(stderr, "settings '%s' icon '%s'\n", aSet.Name.c_str(), aSet.Image.c_str());
-    } catch (...) {
-      g_warning ("Error parsing '%s'", i->c_str());
-    }
-  }
-#endif
+  m_settings_ui->show();
 }
 
 void View::about_dialog()
@@ -1495,6 +1455,8 @@ View::View(BaseObjectType* cobject,
     pBox->add (*m_renderer);
   }
 
+  m_settings_ui = new SettingsUI(m_model, m_builder);
+
   // file chooser
   m_filechooser = new RSFilechooser(this);
   // show_widget("save_buttons", false);
@@ -1523,6 +1485,7 @@ void View::on_controlnotebook_switch(GtkNotebookPage* page, guint page_num)
 
 View::~View()
 {
+  delete m_settings_ui;
   delete m_translation_row;
   for (uint i = 0; i < 3; i++) {
     delete m_axis_rows[i];
