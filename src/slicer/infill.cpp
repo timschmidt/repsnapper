@@ -347,7 +347,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	double shrink = 0.5*infillDistance/num_div;
 	//cerr << "shrink " << shrink << endl;
 	uint count = 0;
-	uint num_polys = tofillpolys.size();
+//	uint num_polys = tofillpolys.size();
 	vector<Poly> shrinked = tofillpolys;
 	while (true) {
 	  shrinked = Clipping::getOffset(shrinked,-shrink);

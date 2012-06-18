@@ -182,7 +182,6 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 	double lastE=0.;
 	double lastF=0.;
 	layerchanges.clear();
-	bool belowzero = false;
 
 	stringstream alltext;
 	
@@ -243,7 +242,7 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 		//   continue;
 		// if(command.where.y() < -100)
 		//   continue;
-		
+
 		if (command.Code == SETCURRENTPOS) {
 		  continue;//if (relativePos) globalPos = command.where;
 		}
@@ -253,16 +252,15 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 
 		if (globalPos.z() < 0){
 		  cerr << "GCode below zero!"<< endl;
-		  belowzero = true;
 		  continue;
 		}
 
 		if ( command.Code == RAPIDMOTION ||
-		     command.Code == COORDINATEDMOTION || 
+		     command.Code == COORDINATEDMOTION ||
 		     command.Code == ARC_CW ||
 		     command.Code == ARC_CCW ||
 		     command.Code == GOHOME ) {
-		  
+
 		  if(globalPos.x() < Min.x())
 		    Min.x() = globalPos.x();
 		  if(globalPos.y() < Min.y())
@@ -467,9 +465,10 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	glPointSize(20);
 	glBegin(GL_POINTS);
 	//glColor4f(1.,0.1,0.1,ccol[3]);
-	glVertex3dv((GLdouble*)&pos);    
+	glVertex3dv((GLdouble*)&pos);
 	glEnd();
-	
+
+	(void) extruderon; // calm warnings
 	for(uint i=start; i <= end; i++)
 	{
 	  double extrwidth = extrusionwidth;
