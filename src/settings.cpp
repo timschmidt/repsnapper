@@ -608,6 +608,8 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
 {
   Glib::KeyFile cfg;
 
+  Filename = file->get_path();
+
   set_defaults();
 
   try {
@@ -1287,3 +1289,10 @@ Matrix4d Settings::getBasicTransformation(Matrix4d T) const
   return T;
 }
 
+
+// Locate it in relation to ourselves ...
+std::string Settings::get_image_path()
+{
+  std::string basename = Glib::path_get_dirname(Filename);
+  return Glib::build_filename (basename, Image);
+}

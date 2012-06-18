@@ -57,7 +57,8 @@
 	+ with a gcode and stl filter drop-down ?
 
 * Add a right-click menu to the back-drop, so we can
-  change display settings & => not have them in 
+  change display / object settings there.
+	+ cd. render.cpp - on_button_release_event // click only
 
 * Multi-model selector ...
 	+ have pre-canned settings GUI

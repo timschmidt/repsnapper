@@ -57,6 +57,9 @@ SettingsUI::SettingsUI(Model *model, Glib::RefPtr<Gtk::Builder> &builder)
   : m_model (model)
 {
   builder->get_widget ("preferences_dlg", m_preferences_dlg);
+  builder->get_widget ("settings_icons", m_settings_icons);
+  builder->get_widget ("settings_overview", m_settings_overview);
+  builder->get_widget ("settings_notebook", m_settings_notebook);
   m_preferences_dlg->set_icon_name("gtk-convert");
   m_preferences_dlg->signal_response().connect (
 	sigc::bind(sigc::mem_fun(*this, &SettingsUI::handle_response), m_preferences_dlg));
@@ -66,25 +69,70 @@ SettingsUI::~SettingsUI()
 {
 }
 
-void
-SettingsUI::show()
+bool
+SettingsUI::load_settings()
 {
-  m_preferences_dlg->show();
+#if 0 // test some GUI / hardware selector fun
+  if (!m_settings.empty())
+    return false;
 
-#if 1 // test some GUI / hardware selector fun
   std::vector<Settings *> m_settings;
   std::vector<std::string> configs = get_settings_configs();
   for (std::vector<std::string>::const_iterator i = configs.begin();
        i != configs.end(); ++i) {
-    Settings *pSet = new Settings();
+    Settings *set = new Settings();
     fprintf (stderr, "load from %s\n", (*i).c_str());
     try {
-      pSet->load_settings(Gio::File::create_for_path(*i));
-      fprintf(stderr, "settings '%s' icon '%s'\n", pSet->Name.c_str(), pSet->Image.c_str());
-      m_settings.push_back(pSet);
+      set->load_settings(Gio::File::create_for_path(*i));
+      fprintf(stderr, "settings '%s' icon '%s'\n", set->Name.c_str(), set->Image.c_str());
+      m_settings.push_back(set);
     } catch (...) {
       g_warning ("Error parsing '%s'", i->c_str());
     }
   }
+
+  Gtk::VBox *vbox = new Gtk::VBox();
+
+  for (std::vector<Settings *>::const_iterator set = m_settings.begin();
+       set != m_settings.end(); ++set) {
+    Glib::RefPtr<Gdk::Pixbuf> pixbuf;
+
+    try {
+      pixbuf = Gdk::Pixbuf::create_from_file((*set)->get_image_path());
+    } catch (...) {
+      g_warning ("Failed to load '%s'", (*set)->get_image_path().c_str());
+      continue;
+    }
+
+    Gtk::Button *button = new Gtk::ToggleButton();
+    Gtk::VBox *box = new Gtk::VBox();
+    Gtk::Label *label = new Gtk::Label((*set)->Name);
+    box->pack_end(*label, true, true);
+    Gtk::Image *image = new Gtk::Image(pixbuf);
+    box->pack_end(*image, true, true);
+    button->add(*box);
+
+    vbox->pack_end(*button, true, true);
+  }
+
+  m_settings_icons->add(*vbox);
+  m_settings_icons->show_all();
+#else // disable it all for now
+  static bool hidden = false;
+  if (!hidden)
+    {
+      m_settings_icons->hide();
+      m_settings_overview->hide();
+      m_settings_notebook->get_nth_page(0)->hide();
+      hidden = true;
+    }
 #endif
+  return true;
+}
+
+void
+SettingsUI::show()
+{
+  load_settings();
+  m_preferences_dlg->show();
 }

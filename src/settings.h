@@ -312,6 +312,8 @@ class Settings {
   void load_settings (Glib::RefPtr<Gio::File> file);
   void save_settings (Glib::RefPtr<Gio::File> file);
 
+  std::string get_image_path();
+
   sigc::signal< void > m_signal_visual_settings_changed;
   sigc::signal< void > m_signal_update_settings_gui;
   sigc::signal< void > m_signal_core_settings_changed;

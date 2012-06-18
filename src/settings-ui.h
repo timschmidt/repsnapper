@@ -25,10 +25,15 @@
 class SettingsUI {
   Model *m_model;
   Gtk::Dialog *m_preferences_dlg;
+  Gtk::VBox *m_settings_overview;
+  Gtk::Notebook *m_settings_notebook;
+  Gtk::ScrolledWindow *m_settings_icons;
 
   void handle_response(int, Gtk::Dialog *dialog);
 
   std::vector<Settings *> m_settings;
+  bool load_settings();
+
  public:
   SettingsUI(Model *model, Glib::RefPtr<Gtk::Builder> &builder);
   ~SettingsUI();
