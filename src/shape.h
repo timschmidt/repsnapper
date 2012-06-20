@@ -157,6 +157,8 @@ public:
 
 protected:
 
+    int gl_List;
+
 private:
 
     vector<Triangle> triangles;

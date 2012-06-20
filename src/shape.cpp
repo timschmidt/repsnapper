@@ -29,7 +29,7 @@
 
 // Constructor
 Shape::Shape()
-  : slow_drawing(false)
+  : slow_drawing(false), gl_List(-1)
 {
   Min.set(0,0,0);
   Max.set(200,200,200);
@@ -38,7 +38,7 @@ Shape::Shape()
 
 
 Shape::Shape(string filename, istream *text)
-  : slow_drawing(false)
+  : slow_drawing(false), gl_List(-1)
 {
   this->filename = filename;
   parseASCIISTL(text);
@@ -46,6 +46,7 @@ Shape::Shape(string filename, istream *text)
 
 void Shape::clear() {
   triangles.clear();
+  gl_List = -1;
 };
 
 
@@ -1291,7 +1292,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 		glEnable(GL_BLEND);
 //		glDepthMask(GL_TRUE);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  //define blending factors
-                draw_geometry();
+                draw_geometry(max_triangles);
 	}
 
 	glDisable (GL_POLYGON_OFFSET_FILL);
@@ -1401,13 +1402,32 @@ void Shape::drawBBox() const
 }
 
 
-void Shape::draw_geometry(uint max_triangles) 
+void Shape::draw_geometry(uint max_triangles)
 {
-	Glib::TimeVal starttime;
-	starttime.assign_current_time();
+
+  bool listDraw = (max_triangles == 0); // not in preview mode
+
+  if (listDraw && gl_List >= 0) { // have stored list
+    Glib::TimeVal starttime, endtime;
+    if (!slow_drawing) {
+      starttime.assign_current_time();
+    }
+    glCallList(gl_List);
+    if (!slow_drawing) {
+      endtime.assign_current_time();
+      Glib::TimeVal usedtime = endtime-starttime;
+      if (usedtime.as_double() > 0.2) slow_drawing = true;
+    }
+    return;
+  }
+  if (listDraw) {
+    gl_List = glGenLists(1);
+    glNewList(gl_List, GL_COMPILE);
+  }
 
 	uint step = 1;
 	if (max_triangles>0) step = floor(triangles.size()/max_triangles);
+	step = max((uint)1,step);
 
 	glBegin(GL_TRIANGLES);
 	for(size_t i=0;i<triangles.size();i+=step)
@@ -1431,10 +1451,9 @@ void Shape::draw_geometry(uint max_triangles)
 	}
 	glEnd();
 
-	Glib::TimeVal endtime;
-	endtime.assign_current_time();
-	Glib::TimeVal usedtime = endtime-starttime;
-	if (usedtime.as_double() > 0.2) slow_drawing = true;
+  if (listDraw) {
+    glEndList();
+  }
 }
 
 /*
