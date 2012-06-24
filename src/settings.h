@@ -34,6 +34,8 @@ public:
 };
 
 class Settings {
+  bool m_user_changed;
+
  public:
 
   std::string Name;
@@ -295,8 +297,11 @@ class Settings {
   void set_defaults ();
  public:
 
-  Settings ();
+  Settings();
   ~Settings();
+
+  bool has_user_changed() const { return m_user_changed; }
+  void assign_from(Settings *pSettings);
 
   Matrix4d getBasicTransformation(Matrix4d T) const;
 

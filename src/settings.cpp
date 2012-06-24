@@ -534,11 +534,22 @@ Settings::Settings ()
 {
   GCode.m_impl = new GCodeImpl();
   set_defaults();
+  m_user_changed = false;
 }
 
 Settings::~Settings()
 {
   delete GCode.m_impl;
+}
+
+void
+Settings::assign_from(Settings *pSettings)
+{
+  // default copy operators can be simply wonderful
+  *this = *pSettings;
+  m_user_changed = false;
+  m_signal_visual_settings_changed.emit();
+  m_signal_update_settings_gui.emit();
 }
 
 void Settings::set_defaults ()
@@ -692,6 +703,7 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
   } catch (const Glib::KeyFileError &err) {
   }
 
+  m_user_changed = false;
   m_signal_visual_settings_changed.emit();
   m_signal_update_settings_gui.emit();
 }
@@ -739,7 +751,7 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
   cfg.set_string("Misc", "WindowPosY", os.str());
 
   GCode.m_impl->saveSettings (cfg);
-  
+
   string CBgroup="CustomButtons";
   for (guint i=0; i<CustomButtonLabel.size(); i++)  {
     string s = CustomButtonLabel[i];
@@ -749,6 +761,9 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
 
   Glib::ustring contents = cfg.to_data();
   Glib::file_set_contents (file->get_path(), contents);
+
+  // all changes safely saved
+  m_user_changed = false;
 }
 
 
@@ -855,6 +870,7 @@ void Settings::set_filltypes_to_gui (Builder &builder)
 
 void Settings::get_from_gui (Builder &builder, int i)
 {
+  bool is_changed = false;
   const char *glade_name = settings[i].glade_name;
   SettingType t = settings[i].type;
 
@@ -867,8 +883,10 @@ void Settings::get_from_gui (Builder &builder, int i)
     builder->get_widget (glade_name, check);
     if (!check)
       std::cerr << _("Missing boolean config item ") << glade_name << "\n";
-    else
+    else {
+      is_changed = *PTR_BOOL(this, i) != check->get_active();
       *PTR_BOOL(this, i) = check->get_active();
+    }
     break;
   }
   case T_INT:
@@ -881,25 +899,31 @@ void Settings::get_from_gui (Builder &builder, int i)
       break;
     }
 
+    double value = 0.0;
     Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
-    if (spin) {
-      if (t == T_INT)
-          *PTR_INT(this, i) = spin->get_value();
-      else if (t == T_FLOAT)
-          *PTR_FLOAT(this, i) = spin->get_value();
-      else
-          *PTR_DOUBLE(this, i) = spin->get_value();
-      break;
-    }
-
+    if (spin)
+      value = spin->get_value();
     Gtk::Range *range = dynamic_cast<Gtk::Range *>(w);
-    if (range) {
+    if (range)
+      value = range->get_value();
+
+    if (range || spin)
+    {
       if (t == T_INT)
-          *PTR_INT(this, i) = range->get_value();
+      {
+	is_changed = *PTR_INT(this, i) != (int)value;
+	*PTR_INT(this, i) = value;
+      }
       else if (t == T_FLOAT)
-          *PTR_FLOAT(this, i) = range->get_value();
+      {
+	  is_changed = *PTR_FLOAT(this, i) != (float)value;
+          *PTR_FLOAT(this, i) = value;
+      }
       else
-          *PTR_DOUBLE(this, i) = range->get_value();
+      {
+	  is_changed = *PTR_DOUBLE(this, i) != value;
+          *PTR_DOUBLE(this, i) = value;
+      }
     }
     break;
   }
@@ -921,52 +945,55 @@ void Settings::get_from_gui (Builder &builder, int i)
     break;
   }
 
+  m_user_changed |= true; // is_changed;
+
   // bit of a hack ...
   if (!strcmp (settings[i].config_name, "CommsDebug"))
     m_signal_core_settings_changed.emit();
 
-  if (settings[i].triggers_redraw)
+  if (settings[i].triggers_redraw && is_changed)
     m_signal_visual_settings_changed.emit();
+}
+
+static bool get_filltype(Builder &builder, const char *combo_name, int *type)
+{
+  Gtk::ComboBox *combo = NULL;
+  bool is_changed = false;
+  builder->get_widget ("Slicing.NormalFilltype", combo);
+  if (combo) {
+    int value = combo->get_active_row_number ();
+    is_changed |= *type != value;
+    *type = value;
+  }
+  else
+    cerr << "no " << combo_name << "combo" << endl;
+  return is_changed;
 }
 
 void Settings::get_filltypes_from_gui (Builder &builder)
 {
+  bool is_changed = false;
   // cerr <<"Get_filltypes " << endl;
-  Gtk::ComboBox *combo = NULL;
-  builder->get_widget ("Slicing.NormalFilltype", combo);
-  if (combo) {
-    Slicing.NormalFilltype = combo->get_active_row_number ();
-  }
-  else cerr << "no Slicing.NormalFilltype combo" << endl;
-  builder->get_widget ("Slicing.FullFilltype", combo);
-  if (combo) {
-    Slicing.FullFilltype = combo->get_active_row_number ();
-  }
-  else cerr << "no Slicing.FullFilltype combo" << endl;
-  builder->get_widget ("Slicing.SupportFilltype", combo);
-  if (combo){
-    Slicing.SupportFilltype = combo->get_active_row_number ();
-  }
-  else cerr << "no Slicing.SupportFilltype combo" << endl;
-  builder->get_widget ("Slicing.DecorFilltype", combo);
-  if (combo){
-    Slicing.DecorFilltype = combo->get_active_row_number ();
-  }
-  else cerr << "no Slicing.DecorFilltype combo" << endl;
-  // cerr << "read combos: " << Slicing.NormalFilltype 
-  //      <<  " / " << Slicing.FullFilltype 
+  is_changed |= get_filltype(builder, "Slicing.NormalFilltype", &Slicing.NormalFilltype);
+  is_changed |= get_filltype(builder, "Slicing.FullFilltype", &Slicing.NormalFilltype);
+  is_changed |= get_filltype(builder, "Slicing.SupportFilltype", &Slicing.SupportFilltype);
+  is_changed |= get_filltype(builder, "Slicing.DecorFilltype", &Slicing.DecorFilltype);
+  // cerr << "read combos: " << Slicing.NormalFilltype
+  //      <<  " / " << Slicing.FullFilltype
   //      <<  " / " << Slicing.SupportFilltype << endl;
-  m_signal_visual_settings_changed.emit();
+  m_user_changed |= is_changed;
+  if (is_changed)
+    m_signal_visual_settings_changed.emit();
 }
 
 string combobox_get_active_value(Gtk::ComboBox *combo){
 #if GTK_VERSION_GE(2, 24)
-  if (combo->get_has_entry()) 
+  if (combo->get_has_entry())
     {
       Gtk::Entry *entry = combo->get_entry();
       if (entry)
 	return string(entry->get_text());
-    } else 
+    } else
 #endif
     {
       uint c = combo->get_active_row_number();
@@ -978,7 +1005,8 @@ string combobox_get_active_value(Gtk::ComboBox *combo){
   return "";
 }
 
-bool combobox_set_to(Gtk::ComboBox *combo, string value){
+bool combobox_set_to(Gtk::ComboBox *combo, string value)
+{
   Glib::ustring val(value);
   Glib::RefPtr<Gtk::TreeModel> model = combo->get_model();
   uint nch = model->children().size();
@@ -1011,7 +1039,8 @@ bool combobox_set_to(Gtk::ComboBox *combo, string value){
 
 void set_up_combobox(Gtk::ComboBox *combo, vector<string> values)
 {
-  if (combo->get_model()) return;
+  if (combo->get_model())
+    return;
   //cerr << "setup " ;
   Gtk::TreeModelColumn<Glib::ustring> column;
   Gtk::TreeModelColumnRecord record;
@@ -1037,18 +1066,21 @@ void Settings::get_port_speed_from_gui (Builder &builder)
   // Gtk::ComboBoxEntryText *tcombo = NULL;
   // builder->get_widget_derived ("Hardware.SerialSpeed", tcombo);
   builder->get_widget ("Hardware.SerialSpeed", combo);
+  int serial_speed = Hardware.SerialSpeed;
   if (combo) {
 #if GTK_VERSION_GE(2, 24)
     if (combo->get_has_entry()) {
       Gtk::Entry *entry = combo->get_entry();
       if (entry) {
-	Hardware.SerialSpeed = atoi(entry->get_text().c_str()); 
+	serial_speed = atoi(entry->get_text().c_str());
       }
     }
     else
 #endif
-      Hardware.SerialSpeed = atoi(combobox_get_active_value(combo).c_str());
+      serial_speed = atoi(combobox_get_active_value(combo).c_str());
   }
+  m_user_changed |= Hardware.SerialSpeed != serial_speed;
+  Hardware.SerialSpeed = serial_speed;
 }
 
 void Settings::get_colour_from_gui (Builder &builder, int i)
@@ -1062,6 +1094,8 @@ void Settings::get_colour_from_gui (Builder &builder, int i)
   if (!w) return;
 
   c = w->get_color();
+
+  // FIXME: detect 'changed' etc.
   dest->r() = c.get_red_p();
   dest->g() = c.get_green_p();
   dest->b() = c.get_blue_p();
@@ -1256,7 +1290,7 @@ double Settings::HardwareSettings::RoundedLinewidthCorrection(double extr_width,
 
 double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) const
 {
-  // ExtrudedMaterialWidthRatio is preset by user 
+  // ExtrudedMaterialWidthRatio is preset by user
   return min(max((double)MinimumLineWidth,
 		 ExtrudedMaterialWidthRatio * layerheight),
 	     (double)MaximumLineWidth);
@@ -1264,8 +1298,7 @@ double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) 
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
 
-
-// how much mm filament material per extruded line length mm -> E gcode 
+// how much mm filament material per extruded line length mm -> E gcode
 double Settings::HardwareSettings::GetExtrudeFactor(double layerheight) const
 {
   double f = ExtrusionFactor; // overall factor

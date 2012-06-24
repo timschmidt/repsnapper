@@ -61,10 +61,10 @@
 	+ cd. render.cpp - on_button_release_event // click only
 
 * Multi-model selector ...
-	+ have pre-canned settings GUI
-	+ use a simple scrolled area:
-		+ containing buttons
-		+ containing an Image - and label underneath (!?)
+	+ leave the single mode's "settings" object
+	+ detect changes, and show those in the existing UI
+	+ load and save new settings as we switch
+	+ prompt to save changes on selection ...
 
 * Serial
 	+ libreprap:
