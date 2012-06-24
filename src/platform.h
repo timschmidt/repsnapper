@@ -49,12 +49,4 @@ class Platform {
 	static bool has_extension(const std::string &fname, const char *extn);
 };
 
-// helper instance for easy locking
-class ToolkitLock {
-  bool m_locked;
- public:
-  ToolkitLock(bool force = false);
-  ~ToolkitLock();
-};
-
 #endif // PLATFORM_H

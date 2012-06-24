@@ -84,28 +84,3 @@ std::vector<std::string> Platform::getConfigPaths()
   return dirs;
 }
 
-/*
- * The basic idea here, is that gtk+ does not have a recursive lock
- * so - taking the GDK_THREADS_ENTER when we already own the lock is
- * fatal. Of course, we get that lock when we enter from the mainloop
- * so - check if we are already entering from that, and do not acquire
- * the lock. Sadly no glibmm binding of this yet.
- *
- * If force is true we take the lock even if we own the mainloop, this
- * is useful for eg. for idle handlers.
- */
-ToolkitLock::ToolkitLock( bool force ) :
-  m_locked(false)
-{
-  if (!force && g_main_context_is_owner (NULL))
-    return;
-  GDK_THREADS_ENTER();
-  m_locked = true;
-}
-
-ToolkitLock::~ToolkitLock()
-{
-  if (m_locked) {
-    GDK_THREADS_LEAVE();
-  }
-}

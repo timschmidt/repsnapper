@@ -39,7 +39,6 @@
 
 class Model
 {
-  
 	sigc::signal< void > m_signal_tree_changed;
 	ViewProgress *m_progress;
 
@@ -47,9 +46,7 @@ public:
 	Gtk::Statusbar *statusbar;
 	// Something in the rfo changed
 	sigc::signal< void > signal_tree_changed() { return m_signal_tree_changed; }
-
 	sigc::signal< void > m_signal_gcode_changed;
-  
 
 	Model();
 	~Model();
@@ -93,7 +90,7 @@ public:
 	void Mirror(Shape *shape, TreeObject *object);
 
 	vector<Layer*> layers;
-	
+
 	Layer * m_previewLayer;
 	double get_preview_Z();
 	//Layer * m_previewGCodeLayer;
@@ -119,14 +116,13 @@ public:
 	void ClearPreview();
 	Glib::RefPtr<Gtk::TextBuffer> GetGCodeBuffer();
 	void GlDrawGCode(int layer=-1); // should be in the view
-	void GlDrawGCode(double Z); 
+	void GlDrawGCode(double Z);
 	void setCurrentPrintingLine(long line){ currentprintingline = line; }
 	unsigned long currentprintingline;
 
 	Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
 	void SelectedNodeMatrices(vector<Matrix4d *> &result );
 	void newObject();
-
 
 	Settings settings;
 

@@ -357,7 +357,7 @@ void GCode::draw(const Settings &settings, int layer,
 	uint start = 0, end = 0;
         uint n_cmds = commands.size();
 	bool arrows = true;
-	
+
 	if (layerchanges.size()>0) {
             // have recorded layerchange indices -> draw whole layers
 	    if (layer>-1) {
@@ -385,7 +385,7 @@ void GCode::draw(const Settings &settings, int layer,
 
               sind = CLAMP(sind, 0, n_changes-1);
               eind = CLAMP(eind, 0, n_changes-1);
-	      
+
 	      if (sind == 0) start = 0;
 	      else  start = layerchanges[sind];
 	      //if (start>0) start-=1; // get one command before layer
