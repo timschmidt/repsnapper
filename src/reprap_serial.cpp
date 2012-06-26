@@ -36,7 +36,7 @@
 
 
 RRSerial::RRSerial(Printer *printer_)
-  : printer(printer_), 
+  : printer(printer_),
     iochannel(0),
     serial_thread(0),
     runthread(false),
@@ -68,7 +68,7 @@ void RRSerial::log (string s, RR_logtype type) const
 
 
 // runs as long as printer is connected
-void RRSerial::thread_run () 
+void RRSerial::thread_run ()
 {
   cerr << "run printthread" << endl;
   while (runthread) {
@@ -83,7 +83,7 @@ void RRSerial::thread_run ()
 }
 
 
-string status_str(IOStatus s) 
+string status_str(IOStatus s)
 {
   switch(s){
   case IO_STATUS_ERROR:  return "IO_STATUS_ERROR";
@@ -93,7 +93,7 @@ string status_str(IOStatus s)
   default: return "IO_STATUS_?????";
   }
 }
-string condition_str(IOCondition c) 
+string condition_str(IOCondition c)
 {
   ostringstream os;
   if (c & IO_IN)  os << "IO_IN ";
@@ -109,10 +109,10 @@ void RRSerial::connect_out_signal(bool connect)
 {
   if (connect) {
     if (!out_connection.connected()) {
-    // out_connection = 
+    // out_connection =
     //   serial_context->signal_io().connect(sigc::mem_fun(*this, &RRSerial::iochannel_out),
     // 					  iochannel, Glib::IO_OUT);
-    // out_connection = 
+    // out_connection =
     //     Glib::signal_io().connect(sigc::mem_fun(*this, &RRSerial::iochannel_out),
     // 					       iochannel, Glib::IO_OUT);
 
@@ -144,14 +144,14 @@ bool RRSerial::connect(const char * serialname)
   // if (device_fd < 0) {
   //   printer->error(_("error opening device "), serialname);
   //   return false;
-  // }      
+  // }
   // iochannel = IOChannel::create_from_win32_fd (device_fd);
 
-  HANDLE m_hCommPort = 
+  HANDLE m_hCommPort =
     ::CreateFile(serialname,
 		 GENERIC_READ|GENERIC_WRITE,//access ( read and write)
 		 0,    //(share) 0:cannot share the COM port
-		 0,    //security  (None)                
+		 0,    //security  (None)
 		 OPEN_EXISTING,// creation : open_existing
 		 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED,// | FILE_FLAG_NO_BUFFERING,
 		 0// no templates file for COM port...
@@ -163,10 +163,10 @@ bool RRSerial::connect(const char * serialname)
 
   iochannel = IOChannel::create_from_win32_fd(m_hCommPort);
 
-  if (!iochannel) 
+  if (!iochannel)
     return false;
 
-#else  
+#else
 
   if (connected()) {
     printer->alert(_("Already Connected to Printer"));
@@ -177,8 +177,8 @@ bool RRSerial::connect(const char * serialname)
   if (device_fd < 0) {
     cerr << "error opening device " << serialname << endl;
     return false;
-  }    
-  
+  }
+
   struct termios attribs;
   // Initialize attribs
   if(tcgetattr(device_fd, &attribs) >= 0) {
@@ -193,7 +193,7 @@ bool RRSerial::connect(const char * serialname)
     //   cerr << "error setting speed" << endl;
     //   return;
     // }
-    
+
     cfmakeraw(&attribs);
     // this is cfmakeraw:
     // attribs.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP
@@ -264,7 +264,7 @@ bool RRSerial::connect(const char * serialname)
 
   iochannel->flush();
   iochannel->set_close_on_unref(true);
-  
+
   try {
     runthread = true;
     serial_thread = Glib::Thread::create(sigc::mem_fun(*this, &RRSerial::thread_run),
@@ -276,7 +276,7 @@ bool RRSerial::connect(const char * serialname)
 
   ostringstream oss;
   oss << "connected to " << serialname << endl;
-  if (printer) 
+  if (printer)
     log(oss.str());
   else
     cerr << oss.str() ;
@@ -321,7 +321,7 @@ bool RRSerial::disconnect()
   }
 #endif
 
-  if (printer) 
+  if (printer)
     log("disconnected\n");
   else
     cerr << "disconnected" << endl;
@@ -336,11 +336,11 @@ bool RRSerial::connected() const
     if(flags & IO_FLAG_IS_WRITEABLE)
       return true;
   }
-  return false;  
+  return false;
 }
 
 
-bool RRSerial::iochannel_in(IOCondition cond) 
+bool RRSerial::iochannel_in(IOCondition cond)
 {
   Glib::Mutex::Lock lock (io_mutex);
 
@@ -363,9 +363,9 @@ bool RRSerial::iochannel_in(IOCondition cond)
   if (printer) {
     log("<-- " + line);
   }
-  
+
   if (line.find("Error") == string::npos &&
-      line.find("echo") == string::npos) { 
+      line.find("echo") == string::npos) {
     wait_for_oks--;
   }
 
@@ -390,7 +390,7 @@ bool RRSerial::iochannel_out(IOCondition cond)
     waited++;
     return true;
   }
-    
+
   // send previous line again?
   if (last_response == SEND_REPEAT) {
     //cerr << "REPEATING " << last_line_sent ;
@@ -403,14 +403,14 @@ bool RRSerial::iochannel_out(IOCondition cond)
     if (buf_lineno >= 0) {
       //cerr << buf_lineno << " - " << printer_lineno << endl;
       last_response = send(line, printer_lineno+1);
-      last_line_sent = line; 
+      last_line_sent = line;
       resend_gcodelines[printer_lineno+1] = buf_lineno;
     }
   }
 
   if (last_response == SEND_ERROR)
     stop_printing();
-    
+
   // cerr << "done" << endl;
 
   return true;
@@ -434,7 +434,7 @@ void RRSerial::start_printing(bool from_begin, unsigned long gcodelines)
     }
   }
   connect_out_signal(true);
-    
+
   wait_for_oks = 0;
 }
 
@@ -452,24 +452,24 @@ RR_response RRSerial::send(string str, long lineno)
     return SEND_ERROR;
   }
 
-  if (lineno >=0  && 
-      str.find("M110") == string::npos && 
+  if (lineno >=0  &&
+      str.find("M110") == string::npos &&
       lineno != printer_lineno + 1) {
     printer->error (_("Printing error"), _("Wrong line number"));
     cerr << "WRONG LINE NUMBER " << lineno << " - EXPECTED " << (printer_lineno + 1) << endl;
     return SEND_REPEAT;
   }
-  
+
   if (str.length() == 0 || str == "\n")
     return SEND_OK;
-  
+
 
   const string line = line_for_printer(str, lineno);
 
 
   //cerr << " SEND " << line ;
 
-  // try to send 
+  // try to send
   try {
     IOStatus status = IO_STATUS_AGAIN;
     while (status == IO_STATUS_AGAIN) {
@@ -481,7 +481,7 @@ RR_response RRSerial::send(string str, long lineno)
     }
     if (status != IO_STATUS_NORMAL) {
       log("ERROR " + status_str(status), LOG_ERROR);
-      //cerr << "ERROR "<< status_str(status) << endl; 
+      //cerr << "ERROR "<< status_str(status) << endl;
       return SEND_ERROR;
     }
   } catch (Glib::IOChannelError e) {
@@ -550,8 +550,9 @@ string RRSerial::line_for_printer(string str, long lineno)
 
 #ifdef __linux__
 //#ifdef HAVE_ASM_IOCTLS_H
-#include <asm/ioctls.h>
-#include <stropts.h>
+#include <sys/ioctl.h>
+// #include <asm/ioctls.h>
+// #include <stropts.h>
 //#include <termios.h>
 #define TIOCM_DTR 0x002
 #endif
@@ -560,7 +561,7 @@ string RRSerial::line_for_printer(string str, long lineno)
 void RRSerial::reset_printer() const
 {
   if (!device_fd) return;
-#ifndef WIN32  
+#ifndef WIN32
   char TIOCM_DTR_str[4];
   sprintf(TIOCM_DTR_str, "%u", TIOCM_DTR);
   ioctl(device_fd, TIOCMBIS, TIOCM_DTR_str); // dtr 1
@@ -574,7 +575,7 @@ void RRSerial::reset_printer() const
 bool RRSerial::test_port(const string serialname)
 {
     // try {
-    //   Glib::RefPtr<Glib::IOChannel> ioc = 
+    //   Glib::RefPtr<Glib::IOChannel> ioc =
     // 	Glib::IOChannel::create_from_fd(ports[i], "w+");
     //   ioc->close(false);
     //   cerr << "device " << ports[i] << " is connectable" << endl;
@@ -586,7 +587,7 @@ bool RRSerial::test_port(const string serialname)
   int device_fd = open(serialname.c_str(), O_RDWR );
   if (device_fd < 0) {
     return false;
-  }    
+  }
   close(device_fd);
   return true;
 }
