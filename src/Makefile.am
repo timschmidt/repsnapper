@@ -41,6 +41,8 @@ SHARED_SRC= \
 	src/arcball.cpp \
 	src/objtree.cpp \
 	src/shape.cpp \
+	src/flatshape.cpp \
+	src/files.cpp \
 	src/filechooser.cpp \
 	src/platform.cpp \
 	src/render.cpp \
@@ -63,6 +65,8 @@ SHARED_INC= \
 	src/model.h \
 	src/objtree.h \
 	src/shape.h \
+	src/flatshape.h \
+	src/files.h \
 	src/filechooser.h \
 	src/stdafx.h \
 	src/platform.h \

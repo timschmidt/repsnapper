@@ -35,6 +35,7 @@
 #include "infill.h"
 #include "progress.h"
 #include "shape.h"
+#include "flatshape.h"
 
 Model::Model() :
   m_previewLayer(NULL),
@@ -135,13 +136,13 @@ void Model::GlDrawGCode(int layerno)
       int start = gcode.getLayerStart(currentlayer);
       int end   = gcode.getLayerEnd(currentlayer);
       //gcode.draw (settings, currentlayer, true, 1);
-      gcode.drawCommands(settings, start, currentprintingline, true, 4, false, 
+      gcode.drawCommands(settings, start, currentprintingline, true, 4, false,
 			 settings.Display.DisplayGCodeBorders);
-      gcode.drawCommands(settings, currentprintingline,  end,  true, 1, false, 
+      gcode.drawCommands(settings, currentprintingline,  end,  true, 1, false,
 			 settings.Display.DisplayGCodeBorders);
     }
-    // gcode.drawCommands(settings, currentprintingline-currentbufferedlines, 
-    // 		       currentprintingline, false, 3, true, 
+    // gcode.drawCommands(settings, currentprintingline-currentbufferedlines,
+    // 		       currentprintingline, false, 3, true,
     // 		       settings.Display.DisplayGCodeBorders);
   }
 }
@@ -176,7 +177,7 @@ void Model::ReadSVG(Glib::RefPtr<Gio::File> file)
 }
 
 
-vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file, 
+vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
 				 uint max_triangles, filetype_t ftype)
 {
   vector<Shape*> shapes;
@@ -184,7 +185,7 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
   string path = file->get_path();
   size_t found = path.find_last_of("/\\");
   if (ftype==UNKNOWN_TYPE)
-    ftype =  Shape::getFileType(path);
+    ftype =  File::getFileType(path);
 
   if (ftype == BINARY_STL) // only one shape per file
     {
@@ -212,7 +213,7 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
 	  else {
             delete shape;
             if (shapes.size()==0) {
-	        cerr <<"Could not read STL in ASCII mode: "<< path 
+	        cerr <<"Could not read STL in ASCII mode: "<< path
 	   	    << " (bad header?), trying Binary " << endl ;
 	        return ReadShapes(file, max_triangles, BINARY_STL);
             }
@@ -220,7 +221,7 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
 	}
       fileis.close();
     }
-  else if (ftype == VRML) 
+  else if (ftype == VRML)
     {
       Shape *shape = new Shape();
       shape->loadASCIIVRML(path);
@@ -315,7 +316,7 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
 }
 
 
-void Model::translateGCode(Vector3d trans) 
+void Model::translateGCode(Vector3d trans)
 {
   gcode.translate(trans);
   string GcodeTxt;
@@ -353,25 +354,25 @@ static bool ClosestToOrigin (Vector3d a, Vector3d b)
 }
 
 // rearrange unselected shapes in random sequence
-bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path) 
+bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path)
 {
   // all shapes
   vector<Shape*>   allshapes;
   vector<Matrix4d> transforms;
   objtree.get_all_shapes(allshapes, transforms);
-  
+
   // selected shapes
   vector<Shape*>   selshapes;
   vector<Matrix4d> seltransforms;
   objtree.get_selected_shapes(path, selshapes, seltransforms);
-  
+
   // get unselected shapes
   vector<Shape*>   unselshapes;
   vector<Matrix4d> unseltransforms;
 
   for(uint s=0; s < allshapes.size(); s++) {
     bool issel = false;
-    for(uint ss=0; ss < selshapes.size(); ss++) 
+    for(uint ss=0; ss < selshapes.size(); ss++)
       if (selshapes[ss] == allshapes[s]) {
 	issel = true; break;
       }
@@ -388,8 +389,8 @@ bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path)
 
   Glib::TimeVal timeval;
   timeval.assign_current_time();
-  srandom((unsigned long)(timeval.as_double())); 
-  random_shuffle(rand_seq.begin(), rand_seq.end()); // shuffle  
+  srandom((unsigned long)(timeval.as_double()));
+  random_shuffle(rand_seq.begin(), rand_seq.end()); // shuffle
 
   for(int s=0; s < num; s++) {
     int index = rand_seq[s]-1;
@@ -399,7 +400,7 @@ bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path)
     seltransforms.push_back(unseltransforms[index]); // basic transform, not shape
     selshapes.back()->transform3D.move(trans);
     CalcBoundingBoxAndCenter();
-  }  
+  }
   ModelChanged();
   return true;
 }
@@ -447,15 +448,15 @@ Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
     {
       if (
           // check x
-          ( ( ( minpos[k].x()     <= candidates[c].x() && 
+          ( ( ( minpos[k].x()     <= candidates[c].x() &&
 		candidates[c].x() <= maxpos[k].x() ) ||
-	      ( candidates[c].x() <= minpos[k].x() && 
+	      ( candidates[c].x() <= minpos[k].x() &&
 		maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
-	    ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d && 
+	    ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d &&
 		candidates[c].x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
           &&
           // check y
-          ( ( ( minpos[k].y() <= candidates[c].y() && 
+          ( ( ( minpos[k].y() <= candidates[c].y() &&
 		candidates[c].y() <= maxpos[k].y() ) ||
 	      ( candidates[c].y() <= minpos[k].y() &&
 		maxpos[k].y() <= candidates[c].y()+StlDelta.y()+d ) ) ||
@@ -518,7 +519,7 @@ int Model::AddShape(TreeObject *parent, Shape *shape, string filename, bool auto
     parent = objtree.Objects.back();
   }
   g_assert (parent != NULL);
-  
+
   // Decide where it's going
   Vector3d trans = Vector3d(0,0,0);
   if (autoplace) found_location = FindEmptyLocation(trans, shape);
@@ -526,19 +527,19 @@ int Model::AddShape(TreeObject *parent, Shape *shape, string filename, bool auto
   size_t found = filename.find_last_of("/\\");
   Gtk::TreePath path = objtree.addShape(parent, shape, filename.substr(found+1));
   Shape *retshape = parent->shapes.back();
-  
+
   // Move it, if we found a suitable place
   if (found_location) {
     retshape->transform3D.move(trans);
   }
- 
+
   if (autoplace) retshape->PlaceOnPlatform();
 
   // Update the view to include the new object
   ModelChanged();
     // Tell everyone
   m_signal_stl_added.emit (path);
-  
+
   return 0;
 }
 
@@ -638,7 +639,7 @@ void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
 void Model::RotateObject(Shape* shape, TreeObject* object, Vector4d rotate)
 {
   if (!shape)
-    return; 
+    return;
   Vector3d rot(rotate.x(), rotate.y(), rotate.z());
   shape->Rotate(rot, rotate.w());
   ModelChanged();
@@ -647,7 +648,7 @@ void Model::RotateObject(Shape* shape, TreeObject* object, Vector4d rotate)
 void Model::TwistObject(Shape *shape, TreeObject *object, double angle)
 {
   if (!shape)
-    return; 
+    return;
   shape->Twist(angle);
   ModelChanged();
 }
@@ -665,7 +666,7 @@ void Model::InvertNormals(Shape *shape, TreeObject *object)
   if (shape)
     shape->invertNormals();
   else // if (object) object->invertNormals();
-    return; 
+    return;
   ModelChanged();
 }
 void Model::Mirror(Shape *shape, TreeObject *object)
@@ -673,7 +674,7 @@ void Model::Mirror(Shape *shape, TreeObject *object)
   if (shape)
     shape->mirror();
   else // if (object) object->mirror();
-    return; 
+    return;
   ModelChanged();
 }
 
@@ -716,7 +717,7 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
   vector<Matrix4d> transforms;
   if (selected_only)
     objtree.get_selected_shapes(m_current_selectionpath, shapes, transforms);
-  else 
+  else
     objtree.get_all_shapes(shapes, transforms);
 
   for (uint s = 0 ; s < shapes.size(); s++) {
@@ -781,7 +782,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
     printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
   Vector3d translation = objtree.transform3D.getTranslation();
   Vector3d offset = printOffset + translation;
-  
+
   // Add the print offset to the drawing location of the STL objects.
   glTranslatef(offset.x(),offset.y(),offset.z());
 
@@ -820,7 +821,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       glMultMatrixd (&shape->transform3D.transform.array[0]);
 
       bool is_selected = false;
-      for (uint s = 0; s < sel_shapes.size(); s++) 
+      for (uint s = 0; s < sel_shapes.size(); s++)
 	if (sel_shapes[s] == shape)
 	  is_selected = true;
 
@@ -876,9 +877,9 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       // draw support triangles
       if (settings.Slicing.Support) {
 	glColor4f(0.8f,0.f,0.f,0.5f);
-	vector<Triangle> suppTr = 
+	vector<Triangle> suppTr =
 	  shape->trianglesSteeperThan(settings.Slicing.SupportAngle*M_PI/180.);
-	for (uint i=0; i < suppTr.size(); i++) 
+	for (uint i=0; i < suppTr.size(); i++)
 	  suppTr[i].draw(GL_TRIANGLES);
       }
       glPopMatrix();
@@ -940,10 +941,10 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
     drawnlayer = drawLayers(settings.Display.LayerValue,
 			    offset, !settings.Display.DisplayLayer);
   }
-  if(settings.Display.DisplayGCode && gcode.size() == 0) { 
+  if(settings.Display.DisplayGCode && gcode.size() == 0) {
     // preview gcode if not calculated yet
     if ( m_previewGCode.size() != 0 ||
-	 ( layers.size() == 0 && gcode.commands.size() == 0 ) ) { 
+	 ( layers.size() == 0 && gcode.commands.size() == 0 ) ) {
       Vector3d start(0,0,0);
       const double thickness = settings.Hardware.LayerThickness;
       const double z = settings.Display.GCodeDrawStart + thickness/2;
@@ -961,7 +962,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 	}
       }
       glDisable(GL_DEPTH_TEST);
-      m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2, 
+      m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2,
 				  settings.Display.DisplayGCodeArrows,
 				  settings.Display.DisplayGCodeBorders);
     }
@@ -969,9 +970,9 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   return drawnlayer;
 }
 
-// if single layer returns layerno of drawn layer 
+// if single layer returns layerno of drawn layer
 // else returns -1
-int Model::drawLayers(double height, const Vector3d &offset, bool calconly) 
+int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 {
   if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
 
@@ -988,9 +989,9 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
   double sel_Z = height; //*zSize;
   uint sel_Layer;
-  if (have_layers) 
+  if (have_layers)
     sel_Layer = (uint)floor(height*(layers.size()-1)/zSize);
-  else 
+  else
     sel_Layer = (uint)ceil(LayerCount*sel_Z/zSize);
   LayerCount = sel_Layer+1;
   if(settings.Display.DisplayAllLayers)
@@ -998,7 +999,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       LayerNr = 0;
       z=minZ;
     }
-  else 
+  else
     {
       LayerNr = sel_Layer;
       z= minZ + sel_Z;
@@ -1013,7 +1014,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   //cerr << zStep << ";"<<Max.z()<<";"<<Min.z()<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
 
   Layer* layer=NULL;
-  if (have_layers) 
+  if (have_layers)
     glTranslatef(-offset.x(), -offset.y(), -offset.z());
 
   while(LayerNr < LayerCount)
@@ -1026,12 +1027,12 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 	}
       else
 	{
-	  m_previewLayer = calcSingleLayer(z, LayerNr, 
+	  m_previewLayer = calcSingleLayer(z, LayerNr,
 					   settings.Hardware.LayerThickness,
 					   settings.Display.DisplayinFill, false);
 	  layer = m_previewLayer;
 	  Layer * previous = calcSingleLayer(z-settings.Hardware.LayerThickness,
-					     LayerNr-1, 
+					     LayerNr-1,
 					     settings.Hardware.LayerThickness,
 					     false, false);
 	  layer->setPrevious(previous);
@@ -1049,7 +1050,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       //       // need to delete the temporary  layer
       //       delete layer;
       // }
-      LayerNr++; 
+      LayerNr++;
       z+=zStep;
     }// while
   return drawn;
@@ -1062,26 +1063,26 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   if (is_calculating) return NULL; // infill calculation (saved patterns) would be disturbed
   if (!for_gcode) {
     if (m_previewLayer && m_previewLayer->getZ() == z
-	&& m_previewLayer->thickness) return m_previewLayer; 
+	&& m_previewLayer->thickness) return m_previewLayer;
   }
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
-  
+
   if (settings.Slicing.SelectedOnly)
     objtree.get_selected_shapes(m_current_selectionpath, shapes, transforms);
-  else 
+  else
     objtree.get_all_shapes(shapes, transforms);
 
   double max_grad = 0;
   double supportangle = settings.Slicing.SupportAngle*M_PI/180.;
   if (!settings.Slicing.Support) supportangle = -1;
-  
+
   Layer * layer = new Layer(NULL, LayerNr, thickness, settings.Slicing.Skins);
   layer->setZ(z);
   for(size_t f = 0; f < shapes.size(); f++) {
     layer->addShape(transforms[f], *shapes[f], z, max_grad, supportangle);
   }
-	  
+
   // vector<Poly> polys = layer->GetPolygons();
   // for (guint i=0; i<polys.size();i++){
   //   vector<Triangle> tri;
@@ -1090,7 +1091,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   //     tri[j].draw(GL_LINE_LOOP);
   //   }
   // }
-	  
+
   layer->MakeShells(settings);
 
   if (settings.Slicing.Skirt) {
@@ -1110,7 +1111,7 @@ double Model::get_preview_Z()
   return 0;
 }
 
-void Model::setMeasuresPoint(const Vector3d &point) 
+void Model::setMeasuresPoint(const Vector3d &point)
 {
   measuresPoint = Vector2d(point.x(), point.y()) ;
 }

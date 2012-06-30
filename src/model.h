@@ -25,8 +25,11 @@
 
 #include "stdafx.h"
 
-#include "objtree.h" 
-#include "gcode.h" 
+#include "files.h"
+
+
+#include "objtree.h"
+#include "gcode.h"
 /* #include "gcodestate.h" */
 #include "settings.h"
 /* #include "progress.h" */
@@ -151,7 +154,7 @@ public:
 	void setMeasuresPoint(const Vector3d &point);
 	Vector2d measuresPoint;
 
-	Layer * calcSingleLayer(double z, uint LayerNr, double thickness, 
+	Layer * calcSingleLayer(double z, uint LayerNr, double thickness,
 				bool calcinfill, bool for_gcode=false) const ;
 
 	sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
@@ -166,7 +169,7 @@ public:
 
 	string getSVG(int single_layer_no = -1) const;
 	void ReadSVG(Glib::RefPtr<Gio::File> file);
-	
+
  private:
 	bool is_calculating;
 	bool is_printing;
@@ -184,7 +187,7 @@ public:
 					  const Layer *cliplayer);
 	void MakeFullSkins();
 	void MultiplyUncoveredPolygons();
-	void MakeSupportPolygons(Layer * subjlayer, const Layer * cliplayer, 
+	void MakeSupportPolygons(Layer * subjlayer, const Layer * cliplayer,
 				 double widen=0);
 	void MakeSupportPolygons(double widen=0);
 	void MakeSkirt();

@@ -24,9 +24,9 @@
 #endif
 
 #include "view.h"
-#include "stdafx.h"
 #include "model.h"
 #include "objtree.h"
+#include "flatshape.h"
 #include "render.h"
 #include "settings.h"
 #include "settings-ui.h"
@@ -82,7 +82,7 @@ void View::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleB
 
 void View::move_gcode_to_platform ()
 {
-  m_model->translateGCode(- m_model->gcode.Min 
+  m_model->translateGCode(- m_model->gcode.Min
 			  + m_model->settings.Hardware.PrintMargin);
 }
 
@@ -141,7 +141,7 @@ void View::autoarrange ()
 }
 
 void View::toggle_fullscreen()
-{ 
+{
   static bool is_fullscreen = false;
   if (is_fullscreen) {
     unfullscreen();
@@ -354,7 +354,7 @@ void View::printing_changed()
 }
 
 void View::power_toggled()
-{ 
+{
   m_printer->SwitchPower (m_power_button->get_active());
 }
 
@@ -428,7 +428,7 @@ void View::hide_custombutton_dlg(int code, Gtk::Dialog *dialog)
   string gcode = tview->get_buffer()->get_text();
   bool have_name=false;
   if (code==1) {  // OK clicked
-    for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++) 
+    for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++)
       {
 	if (m_model->settings.CustomButtonLabel[i] == name){
 	  m_model->settings.CustomButtonGcode[i] = gcode;
@@ -445,7 +445,7 @@ void View::hide_custombutton_dlg(int code, Gtk::Dialog *dialog)
   dialog->hide();
 }
 
-void View::add_custombutton(string name, string gcode)  
+void View::add_custombutton(string name, string gcode)
 {
   Gtk::Toolbar *toolbar;
   m_builder->get_widget ("i_custom_toolbar", toolbar);
@@ -453,7 +453,7 @@ void View::add_custombutton(string name, string gcode)
     //cerr << toolbar->get_n_items() << " items" << endl;
     Gtk::ToolButton *button = new Gtk::ToolButton(name);
     button->set_is_important(true);
-    toolbar->append(*button, 
+    toolbar->append(*button,
 		    sigc::bind(sigc::mem_fun(*this,
 					     &View::custombutton_pressed), name, button));
     button->set_tooltip_text(gcode);
@@ -472,9 +472,9 @@ void View::custombutton_pressed(string name, Gtk::ToolButton *button)
   Gtk::Toolbar *toolbar;
   m_builder->get_widget ("i_custom_toolbar", toolbar);
   if (!toolbar) return;
-  for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++) 
+  for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++)
     {
-      if (m_model->settings.CustomButtonLabel[i] == name) 
+      if (m_model->settings.CustomButtonLabel[i] == name)
 	{
 	  if (editbutton->get_active()) {
 	    //	    cerr << "edit button " << name <<endl;
@@ -516,7 +516,7 @@ void View::log_msg(Gtk::TextView *tview, string s)
   tend = c_buffer->end();
   tview->scroll_to(tend);
   //tview->queue_draw();
-  // while(Gtk::Main::events_pending()) 
+  // while(Gtk::Main::events_pending())
   //     Gtk::Main::iteration();
 }
 
@@ -551,7 +551,7 @@ bool View::logprint_timeout_cb()
 {
   GDK_THREADS_ENTER ();
   cerr << "log ";
-  // while(Gtk::Main::events_pending()) 
+  // while(Gtk::Main::events_pending())
   //   Gtk::Main::iteration();
   if (m_printer->error_buffer.length() > 0) {
     err_log (m_printer->error_buffer);
@@ -565,7 +565,7 @@ bool View::logprint_timeout_cb()
     comm_log(m_printer->commlog_buffer);
     m_printer->commlog_buffer = "";
   }
-  // while(Gtk::Main::events_pending()) 
+  // while(Gtk::Main::events_pending())
   //   Gtk::Main::iteration();
   GDK_THREADS_LEAVE ();
   return true;
@@ -618,7 +618,7 @@ class View::TranslationSpinRow {
 
     if (shapes.size()==0 && objects.size()==0)
       return;
-  
+
     double val = m_xyz[axis]->get_value();
     Matrix4d *mat;
     if (shapes.size()!=0)
@@ -629,7 +629,7 @@ class View::TranslationSpinRow {
 	mat->get_translation(trans);
 	trans[axis] = val*scale;
 	mat->set_translation (trans);
-      } 
+      }
     else
       for (uint o=0; o<objects.size(); o++) {
 	mat = &objects[o]->transform3D.transform;
@@ -638,7 +638,7 @@ class View::TranslationSpinRow {
 	mat->get_translation(trans);
 	trans[axis] = val*scale;
 	mat->set_translation (trans);
-      } 
+      }
 
     m_view->get_model()->ModelChanged();
   }
@@ -669,7 +669,7 @@ public:
 	for (uint i = 0; i < 3; i++)
 	  m_xyz[i]->set_value(0.0);
 	return;
-      } else 
+      } else
 	mat = &objects.back()->transform3D.transform;
     }
     else
@@ -681,7 +681,7 @@ public:
       m_xyz[i]->set_value(trans[i]/scale);
     m_inhibit_update = false;
   }
-  
+
   TranslationSpinRow(View *view, Gtk::TreeView *treeview) :
     m_inhibit_update(false), m_view(view)
   {
@@ -777,7 +777,7 @@ public:
 
   void button_toggled()
   {
-    if (m_button->get_active()) 
+    if (m_button->get_active())
       m_button->set_label(_("On"));
     else
       m_button->set_label(_("Off"));
@@ -810,7 +810,7 @@ public:
 
   void update_temp (double value)
   {
-    ostringstream oss; 
+    ostringstream oss;
     oss.precision(1);
     oss << fixed << value << " °C";
     m_temp->set_text(oss.str());
@@ -1093,9 +1093,9 @@ void View::stl_added (Gtk::TreePath &path)
   m_treeview->get_selection()->select (path);
 }
 
-void View::set_SliderBBox(Vector3d bbmin, Vector3d bbmax) 
+void View::set_SliderBBox(Vector3d bbmin, Vector3d bbmax)
 {
-  double smin = 0, //max(0.0, bbmin.z()), 
+  double smin = 0, //max(0.0, bbmin.z()),
     smax = max(smin+0.001, bbmax.z());
   Gtk::HScale * scale;
   m_builder->get_widget ("Display.LayerValue", scale);
@@ -1121,7 +1121,7 @@ void View::show_widget (string name, bool visible) const
 {
   Gtk::Widget *w;
   m_builder->get_widget (name, w);
-  if (w) 
+  if (w)
     if (visible) w->show();
     else w->hide();
   else cerr << "no '" << name << "' in GUI" << endl;
@@ -1211,7 +1211,7 @@ void View::update_settings_gui()
     for (guint i=buts.size(); i>0; i--) {
       toolbar->remove(*buts[i-1]);
     }
-    for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++) 
+    for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++)
       add_custombutton(m_model->settings.CustomButtonLabel[i],
 		       m_model->settings.CustomButtonGcode[i]);
   }
@@ -1235,7 +1235,7 @@ bool View::moveSelected(float x, float y, float z)
   vector<Shape*> shapes;
   vector<TreeObject*> objects;
   get_selected_objects (objects, shapes);
-  if (shapes.size()>0) 
+  if (shapes.size()>0)
     for (uint s=0; s<shapes.size(); s++) {
       shapes[s]->transform3D.move(Vector3d(x,y,z));
     }
@@ -1511,9 +1511,9 @@ void View::showAllWidgets() {
 }
 
 // this mode will not connect to a printer
-// instead shows a "save gcode" button 
+// instead shows a "save gcode" button
 // for use with pronterface
-// call repsnapper with -i and -o filenames 
+// call repsnapper with -i and -o filenames
 void View::setNonPrintingMode(bool noprinting, string filename) {
   if (noprinting) {
     Gtk::HBox *hbox = NULL;
@@ -1576,7 +1576,7 @@ bool View::saveWindowSizeAndPosition(Settings &settings) const
   if (pWindow) {
     settings.Misc.window_width  = pWindow->get_width();
     settings.Misc.window_height = pWindow->get_height();
-    
+
     pWindow->get_position(m_model->settings.Misc.window_posx,
 			  m_model->settings.Misc.window_posy);
     return true;
@@ -1620,7 +1620,7 @@ void View::setModel(Model *model)
   Gtk::Statusbar *sbar = NULL;
   m_builder->get_widget("statusbar", sbar);
   m_model->statusbar = sbar;
-  
+
   m_builder->get_widget("i_txt_comms", log_view);
   log_view->set_buffer(Gtk::TextBuffer::create());
   log_view->set_reallocate_redraws(false);
@@ -1686,10 +1686,10 @@ void View::setModel(Model *model)
   showAllWidgets();
 }
 
-void View::on_gcodebuffer_cursor_set(const Gtk::TextIter &iter, 
+void View::on_gcodebuffer_cursor_set(const Gtk::TextIter &iter,
 				     const Glib::RefPtr <Gtk::TextMark> &refMark)
 {
-  if (m_model) 
+  if (m_model)
     m_model->gcode.updateWhereAtCursor();
   if (m_renderer)
     m_renderer->queue_draw();
@@ -1918,7 +1918,7 @@ void View::scale_object_z()
 /* Updates the scale value when a new STL is selected,
  * giving it the new STL's current scale factor */
 void View::update_scale_value()
-{ 
+{
   toggle_block = true;
   vector<Shape*> shapes;
   vector<TreeObject*> objects;
@@ -1969,7 +1969,7 @@ void View::DrawGrid()
 	glVertex3f (0.0f, volume.y(), 0.0f);
 	glVertex3f (volume.x(), volume.y(), 0.0f);
 
-	// top 
+	// top
 	glColor4f (0.5f, 0.5f, 0.5f, 0.5f);
         // left edge
 	glVertex3f (0.0f, 0.0f, volume.z());
@@ -1983,7 +1983,7 @@ void View::DrawGrid()
         // far edge
 	glVertex3f (0.0f, volume.y(), volume.z());
 	glVertex3f (volume.x(), volume.y(), volume.z());
-	
+
 	// verticals at rear
 	glVertex3f (0.0f, volume.y(), 0);
 	glVertex3f (0.0f, volume.y(), volume.z());
@@ -2082,7 +2082,7 @@ void View::DrawGrid()
 // called from Render::on_expose_event
 void View::Draw (vector<Gtk::TreeModel::Path> &selected)
 {
- 
+
 	// Draw the grid, pushed back so it can be seen
 	// when viewed from below.
 	glEnable (GL_POLYGON_OFFSET_FILL);
@@ -2109,7 +2109,7 @@ void View::Draw (vector<Gtk::TreeModel::Path> &selected)
 	  Gtk::Label *layerlabel;
 	  m_builder->get_widget("layerno_label", layerlabel);
 	  if (layerlabel){
-	    stringstream s; 
+	    stringstream s;
 	    s << layerdrawn ;
 	    layerlabel->set_text(s.str());
 	  }

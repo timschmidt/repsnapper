@@ -46,6 +46,7 @@ class ProcessController;
 class ObjectsTree;
 class TreeObject;
 class Shape;
+class FlatShape;
 class Transform3D;
 class Infill;
 class ViewProgress;

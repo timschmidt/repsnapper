@@ -19,6 +19,7 @@
 */
 
 #include "shape.h"
+#include "files.h"
 #include "progress.h"
 #include "settings.h"
 #include "clipping.h"
@@ -50,25 +51,6 @@ void Shape::clear() {
 };
 
 
-static float read_float(ifstream &file) {
-	// Read platform independent 32 bit ieee 754 little-endian float.
-	union ieee_union {
-		char buffer[4];
-		struct ieee_struct {
-			unsigned int mantissa:23;
-			unsigned int exponent:8;
-			unsigned int negative:1;
-		} ieee;
-	} ieee;
-	file.read (ieee.buffer, 4);
-
-	GFloatIEEE754 ret;
-	ret.mpn.mantissa = ieee.ieee.mantissa;
-	ret.mpn.biased_exponent = ieee.ieee.exponent;
-	ret.mpn.sign = ieee.ieee.negative;
-
-	return ret.v_float;
-}
 
 static double read_double(ifstream &file) {
   return double(read_float(file));
@@ -78,82 +60,12 @@ static double read_double(ifstream &file) {
  * Returns 0 on success and -1 on failure */
 int Shape::loadBinarySTL(string filename, uint max_triangles, bool readnormals)
 {
-    triangles.clear();
-
     Min.set(INFTY,INFTY,INFTY);
     Max.set(-INFTY,-INFTY,-INFTY);
+    triangles.clear();
 
-    ifstream file;
-    file.open(filename.c_str(), ifstream::in | ifstream::binary);
-
-    if(file.fail()) {
-      cerr << _("Error: Unable to open stl file - ") << filename << endl;
+    if (!File::loadSTLtriangles_binary(filename, max_triangles, readnormals, triangles))
       return -1;
-    }
-
-    /* Binary STL files have a meaningless 80 byte header
-     * followed by the number of triangles */
-    file.seekg(80, ios_base::beg);
-    unsigned int num_triangles;
-    unsigned char buffer[4];
-    file.read(reinterpret_cast <char *> (buffer), 4);
-    // Read platform independent 32-bit little-endian int.
-    num_triangles = buffer[0] | buffer[1] << 8 | buffer[2] << 16 | buffer[3] << 24;
-
-    uint step = 1;
-    if (max_triangles > 0 && max_triangles < num_triangles) {
-      step = ceil(num_triangles/max_triangles);
-      triangles.reserve(max_triangles);
-    } else
-      triangles.reserve(num_triangles);
-
-    uint i = 0;
-    for(; i < num_triangles; i+=step)
-    {
-      if (step>1)
-	file.seekg(84 + 50*i, ios_base::beg);
-
-      double a,b,c;
-        a = read_double (file);
-        b = read_double (file);
-        c = read_double (file);
-        Vector3d N(a,b,c);
-        a = read_double (file);
-        b = read_double (file);
-        c = read_double (file);
-        Vector3d Ax(a,b,c);
-        a = read_double (file);
-        b = read_double (file);
-        c = read_double (file);
-        Vector3d Bx(a,b,c);
-        a = read_double (file);
-        b = read_double (file);
-        c = read_double (file);
-        Vector3d Cx(a,b,c);
-
-        if (file.eof()) {
-            cerr << _("Unexpected EOF reading STL file - ") << filename << endl;
-            break;
-        }
-
-        /* attribute byte count - sometimes contains face color
-            information but is useless for our purposes */
-        unsigned short byte_count;
-        file.read(reinterpret_cast <char *> (buffer), 2);
-	byte_count = buffer[0] | buffer[1] << 8;
-	// Repress unused variable warning.
-	(void)&byte_count;
-
-	Triangle T = Triangle(Ax,Bx,Cx);
-	if (readnormals)
-	  if (T.Normal.dot(N) < 0) T.invertNormal();
-
-	// cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
-        triangles.push_back(T);
-    }
-    file.close();
-
-    // cerr << "Read " << i << " triangles of " << num_triangles << " from file" << endl;
 
     // repairNormals(0.01);
     CenterAroundXY();
@@ -166,7 +78,7 @@ int Shape::loadBinarySTL(string filename, uint max_triangles, bool readnormals)
 
     PlaceOnPlatform();
 
-    cout << _("Shape has volume ") << vol << _(" mm^3 and ") 
+    cout << _("Shape has volume ") << vol << _(" mm^3 and ")
 	 << triangles.size() << _(" triangles") << endl;
     return 0;
 }
@@ -174,124 +86,25 @@ int Shape::loadBinarySTL(string filename, uint max_triangles, bool readnormals)
 int Shape::saveBinarySTL(string filename) const
 {
 
-  FILE *file  = fopen(filename.c_str(),"wb");
-
-  if (file==0) {
-    cerr << _("Error: Unable to open stl file - ") << filename << endl;
+  if (!File::saveBinarySTL(filename, triangles, transform3D.transform))
     return -1;
-  }
-
-  int num_tri = (int)triangles.size();
-
-  // Write Header
-  string tmp = "solid binary by Repsnapper                                                     "; 
-
-  fwrite(tmp.c_str(), 80, 1, file);
-
-  // write number of triangles
-  fwrite(&num_tri, 1, sizeof(int), file);
-
-  Matrix4d T = transform3D.transform;
-
-  for(int i=0; i<num_tri; i++){
-    Vector3f
-      TA = T*triangles[i].A,
-      TB = T*triangles[i].B,
-      TC = T*triangles[i].C,
-      TN = T*triangles[i].Normal; TN.normalize();
-    float N[3] = {TN.x(), TN.y(), TN.z()};
-    float P[9] = {TA.x(), TA.y(), TA.z(),
-		  TB.x(), TB.y(), TB.z(),
-		  TC.x(), TC.y(), TC.z()};
-    
-    // write the normal, the three coords and a short set to zero
-    fwrite(&N,3,sizeof(float),file);
-    for(int k=0; k<3; k++) { fwrite(&P[3*k], 3, sizeof(float), file); }
-    unsigned short attributes = 0;
-    fwrite(&attributes, 1, sizeof(short), file);
-  }
-
-  fclose(file);
   return 0;
+
 }
 
 int Shape::loadASCIIVRML(std::string filename, uint max_triangles)
 {
-  if(getFileType(filename) != VRML) {
+  if(File::getFileType(filename) != VRML) {
     cerr << _("No VRML file file passed to loadASCIIVRML") << endl;
     return -1;
   }
+
     triangles.clear();
     Min.set(INFTY,INFTY,INFTY);
     Max.set(-INFTY,-INFTY,-INFTY);
-  
-    ifstream file;
-    file.open(filename.c_str());
 
-    if(file.fail()) {
-      cerr << _("Error: Unable to open vrml file - ") << filename << endl;
+    if (!File::loadVRMLtriangles(filename, max_triangles, triangles))
       return -1;
-    }
-    string word;
-    std::vector<float> vertices;
-    std::vector<int> indices;
-    bool finished = false;
-    while(!file.eof() && !finished) { 
-      // while (word!="Shape"  && !file.eof())
-      // 	file >> word;
-      // while (word!="Appearance" && !file.eof())
-      // 	file >> word;
-      // while (word!="Coordinate" && !file.eof())
-      // 	file >> word;
-
-      while (word!="point" && !file.eof())
-	file >> word;
-      file >> word; 
-      if (word=="[") {
-	float f;
-	while (word!="]" && !file.eof()){
-	  file >> word;
-	  if (word!="]")
-	    if (word.find("#")!=0) {
-	      std::istringstream iss(word);
-	      iss >> f;
-	      vertices.push_back(f);
-	      //cerr << f << ", ";
-	    }
-	}
-	//cerr << endl;
-      }
-      while (word!="coordIndex"  && !file.eof())
-	file >> word;
-      file >> word; 
-      if (word=="[") {
-	int c;
-	while (word!="]" && !file.eof()){
-	  file >> word;
-	  if (word!="]")
-	    if (word.find("#")!=0) {
-	      std::istringstream iss(word);
-	      iss >> c;
-	      indices.push_back(c);
-	      //cerr << c << ", ";
-	    }
-	}
-	//cerr << endl;
-      }
-    }
-    file.close();
-
-    if (indices.size()%4!=0) return -1;
-    if (vertices.size()%3!=0) return -1;
-    vector<Vector3d> vert;
-    for (uint i=0; i<vertices.size();i+=3)
-      vert.push_back(Vector3d(vertices[i],
-			      vertices[i+1],
-			      vertices[i+2]));
-    for (uint i=0; i<indices.size();i+=4){
-      Triangle T(vert[indices[i]],vert[indices[i+1]],vert[indices[i+2]]);
-      triangles.push_back(T);
-    }
 
     CenterAroundXY();
     return 0;
@@ -301,7 +114,7 @@ int Shape::loadASCIIVRML(std::string filename, uint max_triangles)
  * Returns 0 on success and -1 on failure */
 int Shape::loadASCIISTL(string filename, uint max_triangles, bool readnormals) {
     // Check filetype
-    if(getFileType(filename) != ASCII_STL) {
+    if(File::getFileType(filename) != ASCII_STL) {
       cerr << _("None ASCII STL file passed to loadASCIIFile") << endl;
       return -1;
     }
@@ -330,124 +143,16 @@ int Shape::parseASCIISTL(istream *text, uint max_triangles, bool readnormals) {
     Min.set(INFTY,INFTY,INFTY);
     Max.set(-INFTY,-INFTY,-INFTY);
 
-    // uint step = 1;
-    // if (max_triangles > 0 && max_triangles < num_triangles) {
-    //   step = ceil(num_triangles/max_triangles);
-    uint pos = text->tellg();
-    text->seekg(0, ios::end);
-    uint fsize = text->tellg();
-    text->seekg(pos, ios::beg);
-
-
-    // a rough estimation
-    uint num_triangles = fsize/30;
-
-    uint step = 1;
-    if (max_triangles > 0 && max_triangles < num_triangles) 
-      step = ceil(num_triangles/max_triangles);
-
-
-    /* ASCII files start with "solid [Name_of_file]"
-     * so get rid of them to access the data */
-    string solid;
-    //getline (text, solid);
-
-    while(!(*text).eof()) { // Find next solid
-      *text >> solid;
-      if (solid == "solid") {
-	getline(*text,filename);
-      }
-      break;
-    }
-    if (solid != "solid") {
+    string name = File::parseSTLtriangles_ascii(text, max_triangles,
+						readnormals, triangles);
+    if (name == "")
       return -1;
-    }
 
-    // uint itr = 0;
-    while(!(*text).eof()) { // Loop around all triangles
-        string facet;
-        *text >> facet;
+    filename = name;
 
-	if (step > 1) {
-	  for (uint s=0; s < step; s++) {
-	    facet = "";
-	    while (facet != "facet" && facet != "endsolid")
-	      *text >> facet;
-	    if (facet == "endsolid") break;
-	  }
-	}
-        // Parse possible end of text - "endsolid"
-        if(facet == "endsolid") {
-	  break;
-        }
-
-        if(facet != "facet") {
-	  cerr << _("Error: Facet keyword not found in STL text!") << endl;
-	  return -1;
-        }
-
-        // Parse Face Normal - "normal %f %f %f"
-        string normal;
-        Vector3d normal_vec;
-        *text >> normal;
-        if(normal != "normal") {
-	  cerr << _("Error: normal keyword not found in STL text!") << endl;
-	  return -1;
-	}
-	
-	if (readnormals){
-	  *text >> normal_vec.x()
-		>> normal_vec.y()
-		>> normal_vec.z();
-	}
-
-        // Parse "outer loop" line
-        string outer, loop;
-	while (outer!="outer" && !(*text).eof()) {
-	  *text >> outer;
-	}
-	*text >> loop;
-	if(outer != "outer" || loop != "loop") {
-	  cerr << _("Error: Outer/Loop keywords not found!") << endl;
-	  return -1;
-	}
-
-        // Grab the 3 vertices - each one of the form "vertex %f %f %f"
-        Vector3d vertices[3];
-        for(int i=0; i<3; i++) {
-            string vertex;
-            *text >> vertex
-		  >> vertices[i].x()
-		  >> vertices[i].y()
-		  >> vertices[i].z();
-
-            if(vertex != "vertex") {
-	      cerr << _("Error: Vertex keyword not found") << endl;
-	      return -1;
-            }
-        }
-
-        // Parse end of vertices loop - "endloop endfacet"
-        string endloop, endfacet;
-        *text >> endloop >> endfacet;
-
-        if(endloop != "endloop" || endfacet != "endfacet") {
-	  cerr << _("Error: Endloop or endfacet keyword not found") << endl;
-	  return -1;
-        }
-
-        // Create triangle object and push onto the vector
-        Triangle triangle(vertices[0],
-			  vertices[1],
-			  vertices[2]);
-	if (readnormals){
-	  //cerr << "reading normals from file" << endl;
-	  if (triangle.Normal.dot(normal_vec) < 0) triangle.invertNormal();
-	}
-
-        triangles.push_back(triangle);
-    }
     // repairNormals(0.01);
+
+
     CenterAroundXY();
     double vol = volume();
     if (vol < 0) {
@@ -461,52 +166,13 @@ int Shape::parseASCIISTL(istream *text, uint max_triangles, bool readnormals) {
     return 0;
 }
 
-/* Returns the filetype of the given file */
-filetype_t Shape::getFileType(string filename) {
-
-    // Extract file extension (i.e. "stl")
-    string extension = filename.substr(filename.find_last_of(".")+1);
-
-    if(extension == "wrl" || extension == "WRL") {
-        return VRML;
-    }
-
-    if(extension != "stl" && extension != "STL") {
-        return NONE_STL;
-    }
-
-    ifstream file;
-    file.open(filename.c_str());
-
-    if(file.fail()) {
-      cerr << _("Error: Unable to open file - ") << filename << endl;
-      return NONE_STL;
-    }
-
-    // ASCII files start with "solid [Name_of_file]"
-    string first_word;
-    file >> first_word;
-
-    // Find bad Solid Works STL header
-    // 'solid binary STL from Solid Edge, Unigraphics Solutions Inc.'
-    string second_word;
-    if(first_word == "solid")
-      file >> second_word;      
-
-    file.close();
-    if(first_word == "solid" && second_word != "binary") { // ASCII
-      return ASCII_STL;
-    } else {
-      return BINARY_STL;
-    }
-}
 
 /* Loads an stl file by filename
  * Returns -1 on error, and 0 on success
  * Error messages placed on stderr */
 int Shape::load(string filename, uint max_triangles)
 {
-    filetype_t type = getFileType (filename);
+  filetype_t type = File::getFileType (filename);
     if(type == ASCII_STL) {
       loadASCIISTL(filename, max_triangles);
     } else if (type == BINARY_STL) { // Binary
@@ -515,7 +181,7 @@ int Shape::load(string filename, uint max_triangles)
       cerr << _("unrecognized file - ") << filename << endl;
 	return -1;
     }
-    
+
     // somehow sort triangles by height to save time when slicing?
     // problem: transform matrix
     //std::sort(triangles.begin(),triangles.end(),Triangle::maxZsort());
@@ -529,7 +195,7 @@ bool Shape::hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance) c
   bool haveadj = false;
   int count = (int)triangles.size();
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) 
+#pragma omp parallel for schedule(dynamic)
 #endif
   for (int i = 0; i < count; i++)
     if (!haveadj)
@@ -556,7 +222,7 @@ void addtoshape(uint i, const vector< vector<uint> > &adj,
   // we have a complete list of adjacent triangles indices
 }
 
-void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress) 
+void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
 {
   int n_tr = (int)triangles.size();
   if (progress) progress->start(_("Split Shapes"), n_tr);
@@ -569,7 +235,7 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
 #ifdef _OPENMP
   omp_lock_t progress_lock;
   omp_init_lock(&progress_lock);
-#pragma omp parallel for schedule(dynamic) 
+#pragma omp parallel for schedule(dynamic)
 #endif
   for (int i = 0; i < n_tr; i++) {
     if (progress && i%progress_steps==0) {
@@ -604,10 +270,10 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
 
   // triangle indices of shapes
   vector< vector<uint> > shape_tri;
-  
+
   for (int i = 0; i < n_tr; i++) done[i] = false;
   for (int i = 0; i < n_tr; i++) {
-    if (progress && i%progress_steps==0) 
+    if (progress && i%progress_steps==0)
       cont = progress->update(i);
     if (!done[i]){
       cerr << _("Shape ") << shapes.size()+1 << endl;
@@ -738,7 +404,7 @@ vector<Triangle> Shape::trianglesSteeperThan(double angle) const
   for (uint i = 0; i < triangles.size(); i++) {
     // negative angles are triangles facing downwards
     const double tangle = -triangles[i].slopeAngle(transform3D.transform);
-    if (tangle >= angle) 
+    if (tangle >= angle)
       tr.push_back(triangles[i]);
   }
   return tr;
@@ -787,10 +453,10 @@ struct SNorm {
   double area;
   bool operator<(const SNorm &other) const {return (area<other.area);};
 } ;
- 
+
 vector<Vector3d> Shape::getMostUsedNormals() const
 {
-  vector<struct SNorm> normals; 
+  vector<struct SNorm> normals;
   // vector<Vector3d> normals;
   // vector<double> area;
   uint ntr = triangles.size();
@@ -801,10 +467,10 @@ vector<Vector3d> Shape::getMostUsedNormals() const
       bool havenormal = false;
       int numnorm = normals.size();
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) 
+#pragma omp parallel for schedule(dynamic)
 #endif
       for (int n = 0; n < numnorm; n++) {
-	if ( (normals[n].normal - 
+	if ( (normals[n].normal -
 	      triangles[i].transformed(transform3D.transform).Normal)
 	     .squared_length() < 0.000001) {
 	  havenormal = true;
@@ -813,7 +479,7 @@ vector<Vector3d> Shape::getMostUsedNormals() const
 	}
       }
       if (!havenormal){
-	SNorm n; 
+	SNorm n;
 	n.normal = triangles[i].transformed(transform3D.transform).Normal;
 	n.area = triangles[i].area();
 	normals.push_back(n);
@@ -838,7 +504,7 @@ void Shape::OptimizeRotation()
   Vector3d Z(0,0,-1);
   double angle=0;
   int count = (int)normals.size();
-  for (int n=0; n < count; n++) { 
+  for (int n=0; n < count; n++) {
     //cerr << n << normals[n] << endl;
     N = normals[n];
     angle = acos(N.dot(Z));
@@ -865,7 +531,7 @@ int Shape::divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) co
   triangulate(polys, surfs);
 
   vector<Triangle> surf;
-  for (uint i=0; i<surfs.size(); i++) 
+  for (uint i=0; i<surfs.size(); i++)
     surf.insert(surf.end(), surfs[i].begin(), surfs[i].end());
 
   lower->triangles.insert(lower->triangles.end(),surf.begin(),surf.end());
@@ -913,9 +579,9 @@ void Shape::Rotate(const Vector3d & axis, const double & angle)
 //   // do a real rotation because matrix transform gives errors when slicing
 //   int count = (int)triangles.size();
 // #ifdef _OPENMP
-// #pragma omp parallel for schedule(dynamic) 
+// #pragma omp parallel for schedule(dynamic)
 // #endif
-//   for (int i=0; i < count ; i++) 
+//   for (int i=0; i < count ; i++)
 //     {
 //       triangles[i].rotate(axis, angle);
 //     }
@@ -931,10 +597,10 @@ void Shape::Twist(double angle)
   Vector3d axis(0,0,1);
   int count = (int)triangles.size();
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) 
+#pragma omp parallel for schedule(dynamic)
 #endif
   for (int i=0; i<count; i++) {
-    for (size_t j=0; j<3; j++) 
+    for (size_t j=0; j<3; j++)
       {
 	hangle = angle * (triangles[i][j].z() - Min.z()) / h;
 	triangles[i][j] = triangles[i][j].rotate(hangle,axis);
@@ -950,7 +616,7 @@ void Shape::CenterAroundXY()
   Vector3d displacement = transform3D.getTranslation() - Center;
   int count = (int)triangles.size();
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) 
+#pragma omp parallel for schedule(dynamic)
 #endif
   for(int i=0; i<count ; i++)
     {
@@ -992,8 +658,8 @@ bool getLineSequences(const vector<Segment> lines, vector< vector<uint> > &conne
   while (donelines < nlines) {
     connections.clear();
     for (uint l=0; l < nlines; l++) { // add next connecting line
-      if ( !linedone[l] && 
-	   ( (sequence.size()==0) || 
+      if ( !linedone[l] &&
+	   ( (sequence.size()==0) ||
 	     (lines[l].start == lines[sequence.back()].end) ) ) {
 	connections.push_back(l);
 	//cerr << "found connection" << endl;
@@ -1029,7 +695,7 @@ bool getLineSequences(const vector<Segment> lines, vector< vector<uint> > &conne
   return true;
 }
 
-bool Shape::getPolygonsAtZ(const Matrix4d &T, double z, 
+bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 			   vector<Poly> &polys,
 			   double &max_gradient,
 			   vector<Poly> &supportpolys,
@@ -1038,7 +704,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 {
   vector<Vector2d> vertices;
   vector<Triangle> support_triangles;
-  vector<Segment> lines = getCutlines(T, z, vertices, max_gradient, 
+  vector<Segment> lines = getCutlines(T, z, vertices, max_gradient,
 				      support_triangles, max_supportangle, thickness);
   //cerr << vertices.size() << " " << lines.size() << endl;
   if (!CleanupSharedSegments(lines)) return false;
@@ -1111,7 +777,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
   // clipp.addPolys(supportpolys, subject);
   // clipp.addPolys(polys, clip);
   // supportpolys = clipp.subtract(CL::pftPositive,CL::pftPositive);
-  
+
   return true;
 }
 
@@ -1119,14 +785,14 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 int find_vertex(const vector<Vector2d> &vertices,  const Vector2d &v, double delta = 0.0001)
 {
   for (uint i = 0; i<vertices.size(); i++) {
-    if ( (v-vertices[i]).squared_length() < delta ) 
+    if ( (v-vertices[i]).squared_length() < delta )
       return i;
   }
   return -1;
 }
 
-vector<Segment> Shape::getCutlines(const Matrix4d &T, double z, 
-				   vector<Vector2d> &vertices, 
+vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
+				   vector<Vector2d> &vertices,
 				   double &max_gradient,
 				   vector<Triangle> &support_triangles,
 				   double supportangle,
@@ -1137,10 +803,10 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   vector<Segment> lines;
   // we know our own tranform:
   Matrix4d transform = T * transform3D.transform ;
-  
+
   int count = (int)triangles.size();
 // #ifdef _OPENMP
-// #pragma omp parallel for schedule(dynamic) 
+// #pragma omp parallel for schedule(dynamic)
 // #endif
   for (int i = 0; i < count; i++)
     {
@@ -1159,7 +825,7 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
       }
       if (num_cutpoints > 0) {
 	int havev = find_vertex(vertices, lineStart);
-	if (havev >= 0) 
+	if (havev >= 0)
 	  line.start = havev;
 	else {
 	  line.start = vertices.size();
@@ -1175,7 +841,7 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
       }
       if (num_cutpoints > 1) {
 	int havev = find_vertex(vertices, lineEnd);
-	if (havev >= 0) 
+	if (havev >= 0)
 	  line.end = havev;
 	else {
 	  line.end = vertices.size();
@@ -1183,12 +849,12 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
 	}
       }
       // Check segment normal against triangle normal. Flip segment, as needed.
-      if (line.start != -1 && line.end != -1 && line.end != line.start)	
+      if (line.start != -1 && line.end != -1 && line.end != line.start)
 	{ // if we found a intersecting triangle
 	  Vector3d Norm = triangles[i].transformed(transform).Normal;
 	  Vector2d triangleNormal = Vector2d(Norm.x(), Norm.y());
 	  Vector2d segment = (lineEnd - lineStart);
-	  Vector2d segmentNormal(-segment.y(),segment.x()); 
+	  Vector2d segmentNormal(-segment.y(),segment.x());
 	  triangleNormal.normalize();
 	  segmentNormal.normalize();
 	  if( (triangleNormal-segmentNormal).squared_length() > 0.2){
@@ -1239,8 +905,9 @@ void drawString(const Vector3d &pos, void* font, const string &text)
 
 
 // called from Model::draw
-void Shape::draw(const Settings &settings, bool highlight, uint max_triangles) 
+void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 {
+
   //cerr << "Shape::draw" <<  endl;
 	// polygons
 	glEnable(GL_LIGHTING);
@@ -1271,7 +938,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 	  mat_diffuse[3] = 0.9;
 	}
 
-	  
+
 	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.Display.Highlight;
 
 	/* draw sphere in first row, first column
@@ -1356,7 +1023,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 }
 
 // the bounding box is in real coordinates (not transformed)
-void Shape::drawBBox() const 
+void Shape::drawBBox() const
 {
 		// Draw bbox
 		glColor3f(1,0.2,0.2);
@@ -1498,13 +1165,13 @@ bool CleanupSharedSegments(vector<Segment> &lines)
 #if 0
   vector<int> vertex_counts; // how many lines have each point
   vertex_counts.resize (vertices.size());
-  
+
   for (uint i = 0; i < lines.size(); i++)
     {
-      vertex_counts[lines[i].start]++; 
+      vertex_counts[lines[i].start]++;
       vertex_counts[lines[i].end]++;
     }
-  
+
   // ideally all points have an entrance and
   // an exit, if we have co-incident lines, then
   // we have more than one; do we ?
@@ -1512,22 +1179,22 @@ bool CleanupSharedSegments(vector<Segment> &lines)
   for (uint i = 0; i < vertex_counts.size(); i++)
     if (vertex_counts[i] > 2) // no more than 2 lines should share a point
       duplicate_points.push_back (i);
-  
+
   if (duplicate_points.size() == 0)
     return true; // all sane
-  
+
   for (uint i = 0; i < duplicate_points.size(); i++)
     {
       std::vector<int> dup_lines;
-      
-      // find all line segments with this point in use 
+
+      // find all line segments with this point in use
       for (uint j = 0; j < lines.size(); j++)
 	{
 	  if (lines[j].start == duplicate_points[i] ||
 	      lines[j].end == duplicate_points[i])
 	    dup_lines.push_back (j);
 	}
-      
+
       // identify and eliminate identical line segments
       // NB. hopefully by here dup_lines.size is small.
       std::vector<int> lines_to_delete;
@@ -1615,12 +1282,12 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 		for (uint j = i + 1; j < detached_points.size(); j++)
 		{
 		        int pt = detached_points[j];
-			if (pt < 0) 
+			if (pt < 0)
 			  continue; // already connected
 
 			// don't connect a start to a start, or end to end
 			if (vertex_types[n] == vertex_types[pt])
-			        continue; 
+			        continue;
 
 			const Vector2d &q = vertices[pt];  // the real other point
 			double dist_sq = (p-q).squared_length(); //pow (p.x() - q.x(), 2) + pow (p.y() - q.y(), 2);
@@ -1638,7 +1305,7 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 			cout << "oh dear - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - not connecting\n";
 			continue; //return false;
 		}
-		// warning above 1mm apart 
+		// warning above 1mm apart
 		if (!connect_all && nearest_dist_sq > 1.0) {
 			cout << "warning - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - connecting anyway\n";
 		}
@@ -1666,522 +1333,5 @@ string Shape::info() const
 }
 
 
-
-
-
-
-////////////////////////////// FlatShape /////////////////////////
-
-FlatShape::FlatShape()
-{
-  slow_drawing = false;
-  Min.set(0,0,0);
-  Max.set(200,200,0);
-  CalcBBox();
-}
-
-
-FlatShape::FlatShape(string filename) 
-{
-  slow_drawing = false;
-  this->filename = filename;
-  loadSVG(filename);
-}
-  
-// FlatShape::FlatShape(const FlatShape &rhs) 
-// {
-//   slow_drawing = false;
-//   polygons = rhs.polygons;
-//   scale_factor_x = rhs.scale_factor_x;
-//   scale_factor_y = rhs.scale_factor_y;
-//   scale_factor = rhs.scale_factor;
-//   Min = rhs.Min;
-//   Max = rhs.Max;
-//   Center = rhs.Center;
-// }
-
-vector<string> REMatches(const Glib::RefPtr<Glib::Regex> &RE,
-			 const string &input,
-			 const string &name)
-{
-  Glib::MatchInfo match_info;
-  vector<string> matches;
-  if (RE->match(input, match_info)) {
-    matches.push_back(match_info.fetch_named(name).c_str());
-    while (match_info.next()){
-      matches.push_back(match_info.fetch_named(name).c_str());
-    }
-  }
-  return matches;
-}
-vector<string> REMatches(const string &regex, 
-			 const string &input,
-			 const string &name)
-{
-  Glib::RefPtr<Glib::Regex> RE = Glib::Regex::create(regex);
-  return REMatches(RE, input,name);
-}
-
-// int loadSVGold(string filename)
-// {
-//   Min=Vector3d(1000000,1000000,0);
-//   Max=Vector3d(-1000000,-1000000,0);
-
-//   polygons.clear();
-  
-//   ifstream file;
-//   file.open(filename.c_str());
-    
-  
-//   string lines;  
-//   string line;
-//   if (file.is_open()) {
-//     while ( file.good() ) {
-//       getline (file,line);
-//       lines += line;
-//     }
-//     file.close();
-
-//     Glib::RefPtr<Glib::Regex> polyregex = 
-//       Glib::Regex::create ("(?ims)<path.*?stroke\\:none.*?\\sd\\=\"(?<POLY>.*?(Z|\"/\\>))");
-//     Glib::RefPtr<Glib::Regex> strokeregex = 
-//       Glib::Regex::create ("(?ims)<path.*?(?<STROKE>fill\\:none.*?\\sd\\=\".*?\"/\\>)");
-//     Glib::RefPtr<Glib::Regex> strwidthregex =
-//       Glib::Regex::create ("stroke\\-width\\:(?<STRWIDTH>[\\-\\.\\d]+)");
-//     Glib::RefPtr<Glib::Regex> pointregex =
-//       Glib::Regex::create ("(?<POINT>[LM](\\s+[\\-\\.\\d]+){2})");
-//     Glib::RefPtr<Glib::Regex> transregex =
-//       Glib::Regex::create ("transform=\"(?<TRANS>.*?)\"");
-//     Glib::RefPtr<Glib::Regex> matrixregex =
-//       Glib::Regex::create ("matrix\\((?<MATR>([\\-\\.\\d]*?(\\,|\\))){6})");
-
-//     vector<string> strokes = REMatches(strokeregex, lines, "STROKE");
-//     for (uint i = 0; i < strokes.size(); i++) {
-//       cerr << i << ": "<<strokes[i] << endl;
-//       vector<string> strwidth = REMatches(strwidthregex,strokes[i],"STRWIDTH");
-//       for (uint j = 0; j < strwidth.size(); j++) {
-// 	cerr << "STRW " << strwidth[j] << endl;
-//       }
-//       vector<string> points = REMatches(pointregex,strokes[i],"POINT");
-//       for (uint j = 0; j < points.size(); j++) {
-// 	cerr << j << ":: "<<points[j]<< endl;
-//       }
-//       vector<string> trans = REMatches(transregex,strokes[i],"TRANS");
-//       for (uint j = 0; j < trans.size(); j++) {
-// 	cerr << j << "trans: "<<trans[j]<< endl;
-// 	vector<string> matrix = REMatches(matrixregex,trans[j],"MATR");
-// 	for (uint k = 0; k < matrix.size(); k++) 
-// 	  cerr << k << " matr: "<<matrix[k]<< endl;	  
-//       }
-//     }
-//     vector<string> polys = REMatches(polyregex, lines, "POLY");
-//     for (uint i = 0; i < polys.size(); i++) {
-//       vector<string> points = REMatches(pointregex, polys[i], "POINT");
-//       Poly poly;
-//       //cout << i << ": ";
-//       //cout << polys[i] << endl;
-//       for (uint j = 0; j < points.size(); j++) {
-// 	//cout << j << " - " << points[j]  << endl ;
-// 	istringstream is(points[j]);
-// 	string type;
-// 	is >> type;
-// 	//cerr << type<< endl;
-// 	if (type=="M" || type == "L") {
-// 	  double x,y;
-// 	  is >> x;
-// 	  is >> y;
-// 	  //cout << x << "," << y << endl;
-// 	  poly.addVertex(x,y);
-// 	  if (x<Min.x()) Min.x() = x;
-// 	  if (y<Min.y()) Min.y() = y;
-// 	  if (x>Max.x()) Max.x() = x;
-// 	  if (y>Max.y()) Max.y() = y;
-// 	}
-//       }
-//       if (poly.size()>0) {
-// 	poly.setZ(0);
-// 	//cerr << poly.info() << endl;
-// 	polygons.push_back(poly);
-//       }
-//       cout << endl;
-//     }
-//   }
-//   else cerr << _("Error: Unable to open SVG file - ") << filename << endl;
-//   Center = (Min+Max)/2;
-// }
-
-bool FlatShape::getPolygonsAtZ(const Matrix4d &T, double z, 
-			       vector<Poly> &polys, double &max_grad,
-			       vector<Poly> &supportpolys,
-			       double max_supportangle,
-			       double thickness) const
-{
-  max_grad = 0;
-  polys = polygons;
-  const Matrix4d trans = T * transform3D.transform;
-  for (uint i = 0; i < polys.size(); i++) {
-    polys[i].setZ(0);
-    polys[i].transform(trans);
-  }
-  return true;
-}
-
-void FlatShape::clear()
-{
-  polygons.clear();
-}
-
-void FlatShape::draw_geometry(uint max_polygons) {
-  const Matrix4d invT = transform3D.getInverse();
-  const Vector3d minT = invT*Min;
-  const Vector3d maxT = invT*Max;
-  const Vector2d min2d(minT.x(), minT.y());
-  const Vector2d max2d(maxT.x(), maxT.y());
-  glDrawPolySurfaceRastered(polygons, min2d, max2d, 0, 0.1);
-  uint step = 1;
-  if (max_polygons > 0) step = polygons.size()/max_polygons;
-  for (uint i = 0; i < polygons.size(); i+=step) {
-    polygons[i].draw(GL_LINE_LOOP,false);
-    // Poly p;
-    // p.vertices = simplified(polygons[i].vertices, 0.2);
-    // cleandist(p.vertices, 0.2);
-    // p.draw_as_surface(); 
-
-    //polygons[i].draw_as_surface();
-  }
-}
-
-void FlatShape::CalcBBox()
-{
-  Min.set(INFTY,INFTY,0);
-  Max.set(-INFTY,-INFTY,0);
-  for(size_t i = 0; i < polygons.size(); i++)
-    for(size_t j = 0; j < polygons[i].size(); j++){
-      if ( polygons[i][j].x() < Min.x() ) Min.x() = polygons[i][j].x();
-      if ( polygons[i][j].y() < Min.y() ) Min.y() = polygons[i][j].y();
-      if ( polygons[i][j].x() > Max.x() ) Max.x() = polygons[i][j].x();
-      if ( polygons[i][j].y() > Max.y() ) Max.y() = polygons[i][j].y();
-    }
-  Min = transform3D.transform*Min;
-  Max = transform3D.transform*Max;
-  Center = (Max + Min )/2;
-}
-
-
-void FlatShape::invertNormals()
-{
-  for (uint i = 0; i < polygons.size(); i++)
-    polygons[i].reverse();
-}
-
-void FlatShape::mirror()
-{
-  for (uint i = 0; i < polygons.size(); i++)
-    polygons[i].mirrorX(Center);
-}
-
-// Rotate and adjust for the user - not a pure rotation by any means
-void FlatShape::Rotate(const Vector3d & axis, const double & angle)
-{
-  CalcBBox();
-  if (axis.z()==0) return; // try to only 2D-rotate
-  Vector2d center(Center.x(),Center.y());
-  for (size_t i=0; i<polygons.size(); i++)
-    {
-      polygons[i].rotate(center, angle);
-    }
-  PlaceOnPlatform();
-}
-
-void FlatShape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress) 
-{
-  uint count = polygons.size();
-  if (progress) progress->start(_("Split Polygons"), count);
-  int progress_steps = max(1,(int)(count/100));
-
-  for (uint i = 0; i < count; i++) {
-    FlatShape *fs  = new FlatShape();
-    fs->polygons.push_back(polygons[i]);
-    if (progress && i%progress_steps==0 && !progress->update(count)) break;
-    shapes.push_back(fs);
-  }
-  progress->stop("_(Done)");
-}
-
-
-string FlatShape::info() const
-{
-  ostringstream ostr;
-  ostr <<"FlatShape with "<<polygons.size() << " polygons "
-       << "min/max/center: "<<Min<<Max <<Center ;
-  return ostr.str();
-}
-
-////////////////////////////// XML //////////////////////////////////////////
-
-inline double ToDouble(string s)
-{
-	std::istringstream i(s);
-	double x;
-	if (!(i >> x))
-		return -1;
-	return x;
-}
-
-const Glib::RefPtr<Glib::Regex> polyregex = 
-    Glib::Regex::create ("(?ims)<path.*?stroke\\:none.*?\\sd\\=\"(?<POLY>.*?(Z|\"/\\>))");
-const Glib::RefPtr<Glib::Regex> strokeregex = 
-    Glib::Regex::create ("(?ims)<path.*?(?<STROKE>fill\\:none.*?\\sd\\=\".*?\"/\\>)");
-const Glib::RefPtr<Glib::Regex> strwidthregex =
-    Glib::Regex::create ("stroke\\-width\\:(?<STRWIDTH>[\\-\\.\\d]+)");
-const Glib::RefPtr<Glib::Regex> pointregex =
-    Glib::Regex::create ("(?<POINT>[LM](\\s+[\\-\\.\\d]+){2})");
-const Glib::RefPtr<Glib::Regex> transregex =
-    Glib::Regex::create ("transform=\"(?<TRANS>.*?)\"");
-const Glib::RefPtr<Glib::Regex> matrixregex =
-    Glib::Regex::create ("matrix\\((?<MATR>([\\-\\.\\d]*?(\\,|\\))){6})");
-
-
-Matrix3d svg_trans(const string &line)
-{
-  Matrix3d mat;
-  vector<string> val = REMatches(matrixregex, line, "MATR");
-  if (val.size()>0) {
-    vector<string> vals = Glib::Regex::split_simple("[\\,\\)]",val[0]);
-    if (vals.size()>5) {
-      mat.set_row(0,Vector3d(ToDouble(vals[0]),ToDouble(vals[2]),ToDouble(vals[4])));
-      mat.set_row(1,Vector3d(ToDouble(vals[1]),ToDouble(vals[3]),ToDouble(vals[5])));
-      mat.set_row(2,Vector3d(0,0,1));
-    }
-  }
-  return mat;
-}
-
-string get_attr(const string &line, const string &attrname)
-{
-  vector<string> parts = Glib::Regex::split_simple(";",line);
-  for (uint p = 0; p < parts.size(); p++) {
-    vector<string> lr = Glib::Regex::split_simple(":",parts[p]);
-    if (lr.size()==2){
-      if (lr[0] == attrname) return lr[1];
-    } else return "";
-  }
-  return "";
-}
-
-vector<Vector2d> ToVertices(const string &line)
-{
-  vector<string> points = REMatches(pointregex, line, "POINT");
-  vector<Vector2d> v;
-  for (uint j = 0; j < points.size(); j++) {
-    //cout << j << " - " << points[j]  << endl ;
-    istringstream is(points[j]);
-    string type;
-    is >> type;
-    //cerr << type<< endl;
-    if (type=="M" || type == "L") {
-      double x,y;
-      if (is >> x && is >> y) 
-	//cout << x << "," << y << endl;
-	v.push_back(Vector2d(x,y));
-    }
-  }
-  return v;
-}
-
-int FlatShape::svg_addPolygon()
-{ 
-  
-  vector<Poly> polys;
-  if (svg_cur_style.find("stroke:none") != string::npos) { // polygon
-    Poly poly;
-    poly.vertices = ToVertices(svg_cur_path);
-    poly.setZ(0);
-    poly.reverse();
-    polys.push_back(poly);
-  }
-  else if (svg_cur_style.find("fill:none") != string::npos) { // stroke
-    // cerr << "stroke " << svg_cur_path << endl;
-    // cerr << "\t" << svg_cur_style << endl;
-    string wstr = get_attr(svg_cur_style,"stroke-width");
-    double width = ToDouble(wstr);
-    // cerr << "\t width " << wstr << " = " << width << endl;
-    vector<Vector2d> vertices = ToVertices(svg_cur_path);
-    polys = thick_lines(vertices, width);
-    // cerr <<"thick "<< polys.size()<<" of " << vertices.size() << endl;
-  }
-  else if (svg_cur_style!="") { 
-    cerr << "unknown " << svg_cur_path << " in " << svg_cur_name << endl;
-    cerr << "\t style: " << svg_cur_style << endl;
-  }
-
-  if (polys.size()>0) {
-    if (svg_cur_trans!="") {
-      // cerr << svg_cur_trans << endl;
-      Matrix3d  mat = svg_trans(svg_cur_trans);
-      // cerr << mat << endl;
-      for (uint i=0; i < polys.size(); i++) {
-	polys[i].setZ(0);
-	polys[i].transform(mat);
-      }
-    }
-    polygons.insert(polygons.begin(),polys.begin(),polys.end());
-  }
-  return polys.size();
-} 
-
-
-void FlatShape::xml_handle_node(const xmlpp::Node* node)
-{
-  //std::cout << std::endl; //Separate nodes by an empty line.
-  
-  const xmlpp::ContentNode* nodeContent = dynamic_cast<const xmlpp::ContentNode*>(node);
-  const xmlpp::TextNode*       nodeText = dynamic_cast<const xmlpp::TextNode*>(node);
-  const xmlpp::CommentNode* nodeComment = dynamic_cast<const xmlpp::CommentNode*>(node);
-
-  // if(nodeText && nodeText->is_white_space()) //Let's ignore the indenting - you don't always want to do this.
-  //   return;
-    
-  const Glib::ustring nodename = node->get_name();
-
-  if(!nodeText && !nodeComment && !nodename.empty()) //Let's not say "name: text".
-  {
-    const Glib::ustring namespace_prefix = node->get_namespace_prefix();
-    if (svg_cur_name != "") svg_addPolygon();
-    svg_cur_name = nodename;
-    svg_cur_path = "";
-    svg_cur_trans = "";
-    svg_cur_style = "";
-    // if(namespace_prefix.empty()) 
-    //   std::cout << "Node name = " << nodename << std::endl;
-    // else
-    //   std::cout << "Node name = " << namespace_prefix << ":" << nodename << std::endl;
-  }
-  // else if(nodeText) //Let's say when it's text. - e.g. let's say what that white space is.
-  // {
-  //   std::cout << "Text Node " << nodename << nodeText->get_content()<< std::endl;
-  // }
-
-  //Treat the various node types differently: 
-  if(nodeText)
-  {
-    ; //std::cout << "text = \"" << nodeText->get_content() << "\"" << std::endl;
-  }
-  else if(nodeComment)
-  {
-    ; //std::cout << "comment = " << nodeComment->get_content() << std::endl;
-  }
-  else if(nodeContent)
-  {
-    ; //std::cout << "content = " << nodeContent->get_content() << std::endl;
-  } else
-  if (const xmlpp::Element* nodeElement = dynamic_cast<const xmlpp::Element*>(node)) {
-    //A normal Element node:
-    
-    //line() works only for ElementNodes.
-    // std::cout << "     line = " << node->get_line() << std::endl;
-
-    //attributes:
-    const xmlpp::Element::AttributeList& attributes = nodeElement->get_attributes();
-
-    for(xmlpp::Element::AttributeList::const_iterator iter = attributes.begin(); 
-	iter != attributes.end(); ++iter) {
-      const xmlpp::Attribute* attribute = *iter;
-
-      const Glib::ustring namespace_prefix = attribute->get_namespace_prefix();
-      string attr = attribute->get_name();
-      if (attr=="d")
-	svg_cur_path  = attribute->get_value();
-      else if (attr == "style")
-	svg_cur_style = attribute->get_value();
-      else if (attr == "transform")
-	svg_cur_trans = attribute->get_value();
-      else if (svg_cur_name == "svg" ){
-	if (attr == "width" || attr == "height") {
-	  string val = attribute->get_value();
-	  if (val.find("pt") != string::npos)
-	    svg_prescale = 0.3527;
-	}	  
-      }
-      else if (attr=="id") {
-      }
-      else 
-	cerr << "unknown Attribute in " << svg_cur_name << " : " << attr << " = " <<attribute->get_value() << endl;
-      // if(namespace_prefix.empty()) 
-      //   std::cout << "  Attribute " << attribute->get_name() << " = " <<  << std::endl; 
-      // else
-      //   std::cout << "  Attribute " << namespace_prefix  << ":" << attribute->get_name() << " = " << attribute->get_value() << std::endl;
-    }
-
-    const xmlpp::Attribute* attribute = nodeElement->get_attribute("title");
-    if(attribute) {
-      std::cout << "title found: =" << attribute->get_value() << std::endl;
-    }
-  }
-  
-  if(!nodeContent)
-  {
-    //Recurse through child nodes:
-    xmlpp::Node::NodeList list = node->get_children();
-    for(xmlpp::Node::NodeList::iterator iter = list.begin(); iter != list.end(); ++iter)
-      {
-	xml_handle_node(*iter); //recursive
-      }
-    // get last bit (?)
-    if (svg_cur_name!="") svg_addPolygon();
-  }
-}
-
-
-int FlatShape::loadSVG(string filename) 
-{  // Set the global C++ locale to the user-configured locale,
-  // so we can use std::cout with UTF-8, via Glib::ustring, without exceptions.
-
-  #ifdef LIBXMLCPP_EXCEPTIONS_ENABLED
-  try
-  {
-  #endif //LIBXMLCPP_EXCEPTIONS_ENABLED 
-    xmlpp::DomParser parser;
-    //parser.set_validate();
-    parser.set_substitute_entities(); //We just want the text to be resolved/unescaped automatically.
-    parser.parse_file(filename);
-    if(parser)
-    {
-      polygons.clear();
-      svg_cur_name = "";
-      svg_cur_path = "";
-      svg_cur_trans = "";
-      svg_cur_style = "";
-      svg_prescale = 1.;
-      //Walk the tree:
-      const xmlpp::Node* pNode = parser.get_document()->get_root_node(); //deleted by DomParser.
-      xml_handle_node(pNode);
-    }
-
-    if (svg_prescale!=1)
-      for (uint i= 0; i<polygons.size(); i++) 
-	for (uint j= 0; j<polygons[i].size(); j++) 
-	  polygons[i].vertices[j] *= svg_prescale;
-    Clipping clipp;
-    clipp.addPolys(polygons, subject);
-    polygons = clipp.unite(CL::pftNonZero,CL::pftNegative);
-    CalcBBox();
-    Vector2d center2(Center.x(),Center.y());
-    for (uint i= 0; i<polygons.size(); i++) {
-      polygons[i].mirrorX(Center);
-      polygons[i].rotate(center2, M_PI);
-    }
-    CalcBBox();
-    
-  #ifdef LIBXMLCPP_EXCEPTIONS_ENABLED
-  }
-  catch(const std::exception& ex)
-  {
-    std::cerr << "Exception caught: " << ex.what() << std::endl;
-  }
-  #endif //LIBXMLCPP_EXCEPTIONS_ENABLED 
-
-  return 0;
-}
 
 
