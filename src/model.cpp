@@ -469,25 +469,28 @@ Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
 	}
 
       // volume boundary
-      // if (candidates[c].x()+StlDelta.x() > (settings.Hardware.Volume.x() - 2*settings.Hardware.PrintMargin.x()) ||
-      //     candidates[c].y()+StlDelta.y() > (settings.Hardware.Volume.y() - 2*settings.Hardware.PrintMargin.y()))
-      // {
-      //   ok = false;
-      //   break;
-      // }
+      if (candidates[c].x()+StlDelta.x() >
+	  (settings.Hardware.Volume.x() - 2*settings.Hardware.PrintMargin.x())
+	  || candidates[c].y()+StlDelta.y() >
+	  (settings.Hardware.Volume.y() - 2*settings.Hardware.PrintMargin.y()))
+	{
+	  ok = false;
+	  break;
+	}
     }
-    if (ok)
-    {
+    if (ok) {
       result.x() = candidates[c].x();
       result.y() = candidates[c].y();
       result.z() = candidates[c].z();
-      result -= shape->Min;
+      // keep z
+      result.x() -= shape->Min.x();
+      result.y() -= shape->Min.y();
       return result;
     }
   }
 
   // no empty spots
-  return result;
+  return Vector3d(100,100,0);
 }
 
 bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
@@ -533,7 +536,7 @@ int Model::AddShape(TreeObject *parent, Shape *shape, string filename, bool auto
     retshape->transform3D.move(trans);
   }
 
-  if (autoplace) retshape->PlaceOnPlatform();
+  //if (autoplace) retshape->PlaceOnPlatform();
 
   // Update the view to include the new object
   ModelChanged();
