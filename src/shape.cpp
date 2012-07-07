@@ -52,10 +52,6 @@ void Shape::clear() {
 
 
 
-static double read_double(ifstream &file) {
-  return double(read_float(file));
-}
-
 /* Loads an binary STL file by filename
  * Returns 0 on success and -1 on failure */
 int Shape::loadBinarySTL(string filename, uint max_triangles, bool readnormals)

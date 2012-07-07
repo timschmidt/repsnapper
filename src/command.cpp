@@ -115,36 +115,36 @@ inline double ToDouble(GcodeFeed &f)
 
 
 
-Command::Command() 
+Command::Command()
   : where(0,0,0), is_value(false), f(0.0), e(0.0), not_layerchange(false)
 
 {}
 
-Command::Command(GCodes code, const Vector3d &position, double E, double F) 
+Command::Command(GCodes code, const Vector3d &position, double E, double F)
   : Code(code), where(position), is_value(false),  f(F), e(E), abs_extr(0),
     not_layerchange(false)
 {
-  if (where.z() < 0) 
+  if (where.z() < 0)
     where.z() = 0;
 }
 
-Command::Command(GCodes code, double value_) 
-  : Code(code), where(0,0,0), is_value(true), value(value_), 
+Command::Command(GCodes code, double value_)
+  : Code(code), where(0,0,0), is_value(true), value(value_),
     f(0), e(0), abs_extr(0),
     not_layerchange(false)
 {
 }
 
-Command::Command(string comment_only) 
+Command::Command(string comment_only)
   : Code(COMMENT), where(0,0,0), is_value(true), value(0), f(0), e(0), abs_extr(0),
     not_layerchange(true), comment(comment_only)
 {
 }
 
 Command::Command(const Command &rhs)
-  : Code(rhs.Code), where(rhs.where), 
-    arcIJK (rhs.arcIJK), 
-    is_value(rhs.is_value), value(rhs.value), 
+  : Code(rhs.Code), where(rhs.where),
+    arcIJK (rhs.arcIJK),
+    is_value(rhs.is_value), value(rhs.value),
     f(rhs.f), e(rhs.e),
     abs_extr(rhs.abs_extr),
     not_layerchange(rhs.not_layerchange),
@@ -175,14 +175,14 @@ Command::Command(string gcodeline, const Vector3d &defaultpos)
 
   GcodeFeed buffer(gcodeline) ;
   //default:
-  Code = COMMENT; 
+  Code = COMMENT;
   comment = gcodeline;
 
   for (char ch = buffer.get(); ch; ch = buffer.get()) {
     // GCode is always <LETTER> <NUMBER>
     ch=toupper(ch);
     float num = ToFloat(buffer) ;
-    
+
     stringstream commss; commss << ch << num;
 
     switch (ch)
@@ -191,10 +191,10 @@ Command::Command(string gcodeline, const Vector3d &defaultpos)
       Code = getCode(commss.str());
       comment = "";
       break;
-    case 'M':           // M commands     
-      is_value = true;  
+    case 'M':           // M commands
+      is_value = true;
       Code = getCode(commss.str());
-      comment = ""; 
+      comment = "";
       break;
     case 'S':  value      = num; break;
     case 'E':  e          = num; break;
@@ -234,18 +234,18 @@ GCodes Command::getCode(const string commstr) const
   return code;
 }
 
-bool Command::hasNoEffect(const Vector3d LastPos, const double lastE, 
+bool Command::hasNoEffect(const Vector3d LastPos, const double lastE,
 			  const double lastF, const bool relativeEcode) const
 {
   return ((Code == COORDINATEDMOTION)
-	  && where == LastPos  
-	  && ((relativeEcode && e == 0) || (!relativeEcode && e == lastE)) 
+	  && where == LastPos
+	  && ((relativeEcode && e == 0) || (!relativeEcode && e == lastE))
 	  && abs_extr == 0);
-} 
-string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF, 
+}
+string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 			     bool relativeEcode) const
 {
-  ostringstream ostr; 
+  ostringstream ostr;
   if (Code > NUM_GCODES || MCODES[Code]=="") {
     cerr << "Don't know GCode for Command type "<< Code <<endl;
     ostr << "; Unknown GCode for " << info() <<endl;
@@ -280,18 +280,18 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     { // going down? -> split xy and z movements
       Vector3d delta = where-LastPos;
       const double RETRACT_E = 2; //mm
-      if ( (where.z() < 0 || delta.z() < 0) && (delta.x()!=0 || delta.y()!=0) ) { 
+      if ( (where.z() < 0 || delta.z() < 0) && (delta.x()!=0 || delta.y()!=0) ) {
 	Command xycommand(*this); // copy
 	xycommand.comment = comment +  _(" xy part");
 	Command zcommand(*this); // copy
 	zcommand.comment = comment + _(" z part");
 	if (where.z() < 0) { // z<0 cannot be absolute -> positions are relative
-	  xycommand.where.z() = 0.; 
+	  xycommand.where.z() = 0.;
 	  zcommand.where.x()  = zcommand.where.y() = 0.; // this command will be z-only
 	} else {
 	  xycommand.where.z() = LastPos.z();
 	}
-	if (relativeEcode) { 
+	if (relativeEcode) {
 	  xycommand.e = -RETRACT_E; // retract filament at xy move
 	  zcommand.e  = 0;         // all extrusion done in xy
 	}
@@ -325,7 +325,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
       comm += _(" Z-Change");
       moving = true;
     }
-    if((relativeEcode   && e != 0) || 
+    if((relativeEcode   && e != 0) ||
        (!relativeEcode  && e != lastE)) {
       ostr.precision(5);
       ostr << "E" << e << " ";
@@ -337,7 +337,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     }
   case SETSPEED:
     if (f != lastF) {
-      if (f>10) 
+      if (f>10)
 	ostr.precision(0);
       ostr << "F" << f;
       ostr.precision(PREC);
@@ -353,9 +353,9 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     if (Code!=COMMENT) ostr << " ; " ;
     ostr << comm;
   }
-  if(abs_extr != 0) 
+  if(abs_extr != 0)
     ostr << "; AbsE " << abs_extr;
-    
+
   // ostr << "; "<< info(); // show Command on line
   return ostr.str();
 }
@@ -380,8 +380,8 @@ void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short
   }
 }
 
-void Command::draw(Vector3d &lastPos, double extrwidth, 
-		   bool arrows,  bool debug_arcs) const 
+void Command::draw(Vector3d &lastPos, double extrwidth,
+		   bool arrows,  bool debug_arcs) const
 {
   GLfloat ccol[4];
   glGetFloatv(GL_CURRENT_COLOR,&ccol[0]);
@@ -404,7 +404,7 @@ void Command::draw(Vector3d &lastPos, double extrwidth,
 	glColor4f(1.f,0.f,1.f,lum);
       else if (ccw)
 	glColor4f(0.5f,0.5f,1.f,lum);
-      else 
+      else
 	glColor4f(1.f,0.5f,0.0f,lum);
     }
     long double angle;
@@ -438,14 +438,14 @@ void Command::draw(Vector3d &lastPos, double extrwidth,
       draw_arc(offstart, center, angle, dz, ccw);
       //glEnd();
     }
-  }
+  } // end ARCs
   if (lastPos==where) {
     glEnd();
     if (arrows) {
       glPointSize(10);
       glBegin(GL_POINTS);
       //glColor4f(1.,0.1,0.1,ccol[3]);
-      glVertex3dv(where);    
+      glVertex3dv(where);
       glEnd();
     }
   } else {
@@ -458,7 +458,7 @@ void Command::draw(Vector3d &lastPos, double extrwidth,
       if (extrwidth > 0) alen = 1.2*extrwidth ;
       Vector3d normdir = normalized(where-lastPos);
       if (normdir.x() != 0 || normdir.y() != 0 ) {
-	Vector3d arrdir = normdir * alen; 
+	Vector3d arrdir = normdir * alen;
 	Vector3d arrdir2(-0.5*alen*normdir.y(), 0.5*alen*normdir.x(), arrdir.z());
 	glVertex3dv(where);
 	Vector3d arr1 = where-arrdir+arrdir2;
@@ -478,11 +478,11 @@ void Command::draw(Vector3d &lastPos, double extrwidth,
 	double fr_extr = extrwidth / (1+abs_extr);
 	double to_extr = extrwidth * (1+abs_extr);
 	thickpoly = dir_thick_line(Vector2d(lastPos.x(),lastPos.y()),
-				   Vector2d(where.x(),where.y()), 
+				   Vector2d(where.x(),where.y()),
 				   fr_extr, to_extr);
       } else
 	thickpoly = thick_line(Vector2d(lastPos.x(),lastPos.y()),
-			       Vector2d(where.x(),where.y()), 
+			       Vector2d(where.x(),where.y()),
 			       extrwidth);
       for (uint i=0; i<thickpoly.size();i++) {
 	thickpoly[i].cleanup(0.01);
@@ -493,9 +493,9 @@ void Command::draw(Vector3d &lastPos, double extrwidth,
   lastPos = where;
 }
 
-void Command::draw(Vector3d &lastPos, guint linewidth, 
-		   Vector4f color, double extrwidth, 
-		   bool arrows, bool debug_arcs) const 
+void Command::draw(Vector3d &lastPos, guint linewidth,
+		   Vector4f color, double extrwidth,
+		   bool arrows, bool debug_arcs) const
 {
   if (abs_extr!=0) linewidth+=(1+abs(abs_extr));
   // if (abs_extr>0) linewidth*=abs_extr;
@@ -509,12 +509,12 @@ void Command::addToPosition(Vector3d &from, bool relative)
 {
   if (relative) from += where;
   else {
-    if (where.x()!=0) 
-      from.x()  = where.x(); 
-    if (where.y()!=0) 
-      from.y()  = where.y(); 
-    if (where.z()!=0) 
-      from.z()  = where.z(); 
+    if (where.x()!=0)
+      from.x()  = where.x();
+    if (where.y()!=0)
+      from.y()  = where.y();
+    if (where.z()!=0)
+      from.z()  = where.z();
   }
 }
 
