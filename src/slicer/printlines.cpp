@@ -65,37 +65,37 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     maxEspeed = settings.Hardware.EMaxSpeed;
 
   int count=0;
-  
+
   // insert move first if necessary
-  if ((lastpos-from).squared_length() > 0.005) {  
+  if ((lastpos-from).squared_length() > 0.005) {
     // get recursive ...
     PLine3 move3(area, lastpos, from, movespeed, 0);
     vector<Command> movecommands;
     count += move3.getCommands(lastpos, movecommands, 0, settings);
     commands.insert(commands.end(), movecommands.begin(), movecommands.end());
     lastpos = from;
-  }  
+  }
 
   const double len = length();
   double extrudedMaterial = len * extrusionfactor * extrusion;
 
   double comm_speed = this->speed;
-  if (absolute_extrusion == 0) 
+  if (abs(absolute_extrusion) < 0.00001)
     comm_speed = max(minspeed, this->speed); // in case speed is too low
 
   double espeed = maxEspeed;
-  if (len > 0)
+  if (len > 0.00001)
     espeed = extrudedMaterial*comm_speed/len;
-  if (extrudedMaterial == 0) // no matter what additional absolute_extrusion
+  if (abs(extrudedMaterial) < 0.00001) // no matter what additional absolute_extrusion
     comm_speed = movespeed;
-  else 
+  else
     if (espeed > maxEspeed)
       comm_speed *= maxEspeed/espeed;
-  extrudedMaterial += absolute_extrusion; // allowed to push/pull at arbitrary speed    
+  extrudedMaterial += absolute_extrusion; // allowed to push/pull at arbitrary speed
 
   // slow down if too fast for z axis
   const double dZ = to.z() - from.z();
-  if (dZ != 0.) {
+  if (abs(dZ) > 0.00001) {
     const double xyztime = len / comm_speed;
     const double zspeed = abs(dZ / xyztime);
     if ( zspeed > maxZspeed ) {
