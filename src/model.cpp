@@ -894,8 +894,8 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   glPopMatrix();
   glLoadName(0); // Clear selection name to avoid selecting last object with later rendering.
 
-  // draw total bounding box if more than 1 object
-  if(settings.Display.DisplayBBox && objtree.Objects.size() > 1)
+  // draw total bounding box
+  if(settings.Display.DisplayBBox)
     {
       // Draw bbox
       glDisable(GL_DEPTH_TEST);
