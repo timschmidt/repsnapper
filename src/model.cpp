@@ -894,8 +894,8 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   glPopMatrix();
   glLoadName(0); // Clear selection name to avoid selecting last object with later rendering.
 
-  // draw total bounding box
-  if(settings.Display.DisplayBBox)
+  // draw total bounding box if more than 1 object
+  if(settings.Display.DisplayBBox && objtree.Objects.size() > 1)
     {
       // Draw bbox
       glDisable(GL_DEPTH_TEST);
@@ -942,7 +942,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   int drawnlayer = -1;
   if(settings.Display.DisplayLayer) {
     drawnlayer = drawLayers(settings.Display.LayerValue,
-			    offset, !settings.Display.DisplayLayer);
+			    offset, false);
   }
   if(settings.Display.DisplayGCode && gcode.size() == 0) {
     // preview gcode if not calculated yet
@@ -1030,17 +1030,19 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 	}
       else
 	{
-	  m_previewLayer = calcSingleLayer(z, LayerNr,
-					   settings.Hardware.LayerThickness,
-					   settings.Display.DisplayinFill, false);
-	  layer = m_previewLayer;
-	  Layer * previous = calcSingleLayer(z-settings.Hardware.LayerThickness,
-					     LayerNr-1,
+	  if (!m_previewLayer || m_previewLayer->getZ() != z) {
+	    m_previewLayer = calcSingleLayer(z, LayerNr,
 					     settings.Hardware.LayerThickness,
-					     false, false);
-	  layer->setPrevious(previous);
+					     settings.Display.DisplayinFill, false);
+	    layer = m_previewLayer;
+	    Layer * previous = calcSingleLayer(z-settings.Hardware.LayerThickness,
+					       LayerNr-1,
+					       settings.Hardware.LayerThickness,
+					       false, false);
+	    layer->setPrevious(previous);
+	  }
+	  layer = m_previewLayer;
 	}
-
       if (!calconly) {
 	layer->Draw(settings);
 
