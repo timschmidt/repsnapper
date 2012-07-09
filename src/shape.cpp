@@ -896,7 +896,7 @@ void drawString(const Vector3d &pos, const string &text)
 }
 void drawString(const Vector3d &pos, void* font, const string &text)
 {
-  // checkGlutInit(); // ???
+        checkGlutInit();
 	glRasterPos3d(pos.x(), pos.y(), pos.z());
 	for (uint c=0;c<text.length();c++)
 		glutBitmapCharacter(font, text[c]);
