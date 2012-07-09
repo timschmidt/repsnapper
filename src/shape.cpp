@@ -356,8 +356,10 @@ void Shape::repairNormals(double sqdistance)
 
 void Shape::mirror()
 {
+  const Vector3d mCenter = transform3D.getInverse() * Center;
   for (uint i = 0; i < triangles.size(); i++)
-    triangles[i].mirrorX(Center);
+    triangles[i].mirrorX(mCenter);
+  CalcBBox();
 }
 
 double Shape::volume() const
@@ -442,6 +444,7 @@ void Shape::CalcBBox()
     triangles[i].AccumulateMinMax (Min, Max, transform3D.transform);
   }
   Center = (Max + Min) / 2;
+  gl_List = -1;
 }
 
 struct SNorm {
@@ -893,7 +896,7 @@ void drawString(const Vector3d &pos, const string &text)
 }
 void drawString(const Vector3d &pos, void* font, const string &text)
 {
-	checkGlutInit();
+  // checkGlutInit(); // ???
 	glRasterPos3d(pos.x(), pos.y(), pos.z());
 	for (uint c=0;c<text.length();c++)
 		glutBitmapCharacter(font, text[c]);
@@ -1069,6 +1072,31 @@ void Shape::draw_geometry(uint max_triangles)
 {
 
   bool listDraw = (max_triangles == 0); // not in preview mode
+  bool haveList = gl_List >= 0;
+
+  if (listDraw && !haveList) {
+    gl_List = glGenLists(1);
+    glNewList(gl_List, GL_COMPILE);
+  }
+  if (!listDraw || !haveList) {
+	uint step = 1;
+	if (max_triangles>0) step = floor(triangles.size()/max_triangles);
+	step = max((uint)1,step);
+
+	glBegin(GL_TRIANGLES);
+	for(size_t i=0;i<triangles.size();i+=step)
+	{
+		glNormal3dv((GLdouble*)&(triangles[i].Normal));
+		glVertex3dv((GLdouble*)&(triangles[i].A));
+		glVertex3dv((GLdouble*)&(triangles[i].B));
+		glVertex3dv((GLdouble*)&(triangles[i].C));
+	}
+	glEnd();
+  }
+  if (listDraw && !haveList) {
+    glEndList();
+  }
+
 
   if (listDraw && gl_List >= 0) { // have stored list
     Glib::TimeVal starttime, endtime;
@@ -1083,40 +1111,9 @@ void Shape::draw_geometry(uint max_triangles)
     }
     return;
   }
-  if (listDraw) {
-    gl_List = glGenLists(1);
-    glNewList(gl_List, GL_COMPILE);
-  }
 
-	uint step = 1;
-	if (max_triangles>0) step = floor(triangles.size()/max_triangles);
-	step = max((uint)1,step);
 
-	glBegin(GL_TRIANGLES);
-	for(size_t i=0;i<triangles.size();i+=step)
-	{
-#if 0
-		switch(triangles[i].axis)
-			{
-			case NEGX:	glColor4f(1,0,0,opacity); break;
-			case POSX:	glColor4f(0.5f,0,0,opacity); break;
-			case NEGY:	glColor4f(0,1,0,opacity); break;
-			case POSY:	glColor4f(0,0.5f,0,opacity); break;
-			case NEGZ:	glColor4f(0,0,1,opacity); break;
-			case POSZ:	glColor4f(0,0,0.3f,opacity); break;
-			default: glColor4f(0.2f,0.2f,0.2f,opacity); break;
-			}
-#endif
-		glNormal3dv((GLdouble*)&(triangles[i].Normal));
-		glVertex3dv((GLdouble*)&(triangles[i].A));
-		glVertex3dv((GLdouble*)&(triangles[i].B));
-		glVertex3dv((GLdouble*)&(triangles[i].C));
-	}
-	glEnd();
 
-  if (listDraw) {
-    glEndList();
-  }
 }
 
 /*
