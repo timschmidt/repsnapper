@@ -47,7 +47,7 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
 	      Gdk::BUTTON2_MOTION_MASK |
 	      Gdk::BUTTON3_MOTION_MASK |
 	      Gdk::KEY_PRESS_MASK |
-	      Gdk::KEY_RELEASE_MASK 
+	      Gdk::KEY_RELEASE_MASK
 	      );
 
   GdkGLConfig *glconfig;
@@ -140,7 +140,7 @@ bool Render::on_configure_event(GdkEventConfigure* event)
   gluPerspective (45.0f, (float)get_width()/(float)get_height(),1.0f, 1000000.0f);
   glMatrixMode (GL_MODELVIEW);
   glLoadIdentity ();
-  
+
   if (w > 1 && h > 1) // Limit arcball minimum size or it asserts
     m_arcBall->setBounds(w, h);
   glEnable(GL_LIGHTING);
@@ -245,7 +245,7 @@ bool Render::on_key_release_event(GdkEventKey* event) {
     case GDK_Right: case GDK_KP_Right:
       m_view->get_model()->ModelChanged();
       return false;
-    }  
+    }
   return true;
 }
 
@@ -253,7 +253,10 @@ bool Render::on_key_release_event(GdkEventKey* event) {
 bool Render::on_button_press_event(GdkEventButton* event)
 {
   grab_focus();
+  // real mouse-down:
   m_downPoint = Vector2f(event->x, event->y);
+  // "moving" mouse-down, updated with dragpoint on mouse move:
+  m_dragStart = Vector2f(event->x, event->y);
   if (event->button == 1) {
     // on button 1, if there is an object, select it (easier dragging)
     m_arcBall->click (event->x, event->y, &m_transform);
@@ -265,7 +268,7 @@ bool Render::on_button_press_event(GdkEventButton* event)
 	m_selection->unselect_all();
 	m_selection->select(iter);
       }
-      // else 
+      // else
       // 	if ((event->state & GDK_CONTROL_MASK))  // remove from selection by CONTROL
       // 	  m_selection->unselect(iter);
     }
@@ -282,28 +285,30 @@ bool Render::on_button_release_event(GdkEventButton* event)
   }
   else {
     if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) {// click only
-      guint index = find_object_at(event->x, event->y);
-      if (index) {
-	Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
-	if (iter) {
-	  if (event->button == 1)  {
-	    m_selection->unselect_all();
+      if (event-> button == 3) { // right button -> popup menu?
+	//cerr << "menu" << endl;
+      } else {
+	guint index = find_object_at(event->x, event->y);
+	if (index) {
+	  Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
+	  if (iter) {
+	    if (event->button == 1)  {
+	      m_selection->unselect_all();
+	    }
+	    if (m_selection->is_selected(iter))
+	      m_selection->unselect(iter);
+	    else
+	      m_selection->select(iter);
 	  }
-	  if (m_selection->is_selected(iter))
-	    m_selection->unselect(iter);
-	  else
-	    m_selection->select(iter);
 	}
-      }
-      // click on no object - clear the selection:
-      else if (event->button == 1)  {
-	//if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
+	// click on no object -> clear the selection:
+	else if (event->button == 1)  {
+	  //if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
 	  m_selection->unselect_all();
+	}
       }
     }
   }
-  // else
-  //   return Gtk::DrawingArea::on_button_release_event (event);
   return true;
 }
 
@@ -318,19 +323,17 @@ bool Render::on_scroll_event(GdkEventScroll* event)
   return true;
 }
 
+const double drag_factor = 0.3;
+
 bool Render::on_motion_notify_event(GdkEventMotion* event)
 {
   bool redraw=true;
-  Vector2f dragp(event->x, event->y);
-  Vector2f delta = m_downPoint - dragp;
-  double factor = 0.3;
-  Vector3d delta3f(-delta.x()*factor, delta.y()*factor, 0);
-  Vector3d mouse_down_plat = mouse_on_plane(m_downPoint.x(), m_downPoint.y());
-  Vector3d mousePlat  = mouse_on_plane(event->x, event->y);
-  Vector2d mouse_xy   = Vector2d(mousePlat.x(), mousePlat.y());
-  Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x(), mouse_down_plat.y());
-  Vector3d mouse_preview = mouse_on_plane(event->x, event->y,
-					  get_model()->get_preview_Z());
+  const Vector2f dragp(event->x, event->y);
+  const Vector2f delta = dragp - m_dragStart;
+  const Vector3d delta3f(delta.x()*drag_factor, -delta.y()*drag_factor, 0);
+
+  const Vector3d mouse_preview = mouse_on_plane(event->x, event->y,
+						get_model()->get_preview_Z());
   get_model()->setMeasuresPoint(mouse_preview);
 
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
@@ -339,38 +342,42 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
       vector<TreeObject*>objects;
       if (!m_view->get_selected_objects(objects, shapes))
 	return true;
-      Vector3d movevec(deltamouse.x(), deltamouse.y(), 0.);
-      if (shapes.size()>0) 
+      const Vector3d mouse_down_plat = mouse_on_plane(m_dragStart.x(), m_dragStart.y());
+      const Vector3d mousePlat  = mouse_on_plane(event->x, event->y);
+      const Vector2d mouse_xy   = Vector2d(mousePlat.x(), mousePlat.y());
+      const Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x(), mouse_down_plat.y());
+      const Vector3d movevec(deltamouse.x(), deltamouse.y(), 0.);
+      if (shapes.size()>0)
 	for (uint s=0; s<shapes.size(); s++) {
 	  shapes[s]->transform3D.move(movevec);
 	}
-      else 
+      else
 	for (uint o=0; o<objects.size(); o++) {
 	  objects[o]->transform3D.move(movevec);
 	}
-      m_downPoint = dragp;
+      m_dragStart = dragp;
     }
     else if (event->state & GDK_CONTROL_MASK) { // move object Z wise
-      Vector3d delta3fz(0, 0, delta.y()*factor);
+      const Vector3d delta3fz(0, 0, -delta.y()*drag_factor);
       vector<Shape*> shapes;
       vector<TreeObject*>objects;
       if (!m_view->get_selected_objects(objects, shapes))
 	return true;
-      if (shapes.size()>0) 
+      if (shapes.size()>0)
 	for (uint s=0; s<shapes.size(); s++) {
 	  Transform3D &transf = shapes[s]->transform3D;
 	  double scale = transf.transform[3][3];
 	  Vector3d movevec = delta3fz*scale;
 	  transf.move(movevec);
 	}
-      else 
+      else
 	for (uint o=0; o<objects.size(); o++) {
 	  Transform3D &transf = objects[o]->transform3D;
-	  double scale = transf.transform[3][3];
-	  Vector3d movevec = delta3fz*scale;
+	  const double scale = transf.transform[3][3];
+	  const Vector3d movevec = delta3fz*scale;
 	  transf.move(movevec);
 	}
-      m_downPoint = dragp;
+      m_dragStart = dragp;
     }
     else { // rotate view
       //Vector3d axis(delta.y(), delta.x(), 0);
@@ -382,7 +389,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   } // BUTTON 1
   else {
     if (event->state & GDK_BUTTON2_MASK) { // zoom
-      double factor = 1.0 + 0.01 * (delta.x() - delta.y());
+      const double factor = 1.0 + 0.01 * (delta.y() - delta.x());
       if (event->state & GDK_SHIFT_MASK) { // scale shape
 	vector<Shape*> shapes;
 	vector<TreeObject*>objects;
@@ -397,10 +404,10 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
       } else { // zoom view
 	m_zoom *= factor;
       }
-      m_downPoint = dragp;
+      m_dragStart = dragp;
     } // BUTTON 2
-    else if (event->state & GDK_BUTTON3_MASK) { 
-      if (event->state & GDK_SHIFT_MASK || 
+    else if (event->state & GDK_BUTTON3_MASK) {
+      if (event->state & GDK_SHIFT_MASK ||
 	  event->state & GDK_CONTROL_MASK ) {  // rotate shape
 	vector<Shape*> shapes;
 	vector<TreeObject*>objects;
@@ -420,13 +427,14 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	else if (shapes.size()>0) {
 	  for (uint s=0; s<shapes.size(); s++) {
 	    shapes[s]->Rotate(axis, -delta.length()/100.);
-	  } 
+	  }
 	}
 	m_view->update_rot_value();
-	m_downPoint = dragp;
+	m_dragStart = dragp;
       } else {  // move view XY  / pan
 	moveArcballTrans(m_transform, delta3f);
-	m_downPoint = dragp;
+	m_dragStart = dragp;
+	//setArcballTrans(m_transform, delta3f);
       }
     } // BUTTON 3
     if (redraw) queue_draw();
@@ -536,19 +544,19 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
   double mvmatrix[16];
   double projmatrix[16];
   int viewport[4];
-  double dX, dY, dZ, dClickY; // glUnProject uses doubles, 
-	
-  glGetIntegerv(GL_VIEWPORT, viewport);	
+  double dX, dY, dZ, dClickY; // glUnProject uses doubles,
+
+  glGetIntegerv(GL_VIEWPORT, viewport);
   glGetDoublev (GL_MODELVIEW_MATRIX, mvmatrix);
   glGetDoublev (GL_PROJECTION_MATRIX, projmatrix);
   dClickY = double ((double)get_height() - y); // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
-	
+
   gluUnProject ((double) x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
   Vector3d rayP1( dX, dY, dZ );
   gluUnProject ((double) x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
-  Vector3d rayP2( dX, dY,dZ );
+  Vector3d rayP2( dX, dY, dZ );
 
-  // intersect with z=0;
+  // intersect with z=plane_z;
   if (rayP2.z() != rayP1.z()) {
     double t = (plane_z-rayP1.z())/(rayP2.z()-rayP1.z());
     Vector3d downP = rayP1 +  (rayP2-rayP1) * t;

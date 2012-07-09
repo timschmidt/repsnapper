@@ -31,6 +31,7 @@ class Render : public Gtk::DrawingArea
   ArcBall  *m_arcBall;
   Matrix4fT m_transform;
   Vector2f  m_downPoint;
+  Vector2f  m_dragStart;
   View *m_view;
   Model *get_model() const;
   Glib::RefPtr<Gtk::TreeSelection> m_selection;
