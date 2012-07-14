@@ -306,6 +306,7 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
   if (is_calculating) return;
   if (is_printing) return;
   is_calculating=true;
+  settings.Display.DisplayGCode = true;
   m_progress->start (_("Reading GCode"), 100.0);
   gcode.Read (this, m_progress, file->get_path());
   m_progress->stop (_("Done"));

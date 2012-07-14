@@ -76,6 +76,7 @@ public:
 inline std::string ParseNumber(GcodeFeed & f) {
   std::string str;
   for (char ch = f.get(); ch; ch = f.get()) {
+    if (ch == ',') ch = '.'; // some program's wrong output with decimal comma in some language(s)
     if (!isdigit(ch) && ch != '.' && ch != '+' && ch != '-') { // Non-number part
       f.unget(); // We read something that doesn't belong to us
       break;
