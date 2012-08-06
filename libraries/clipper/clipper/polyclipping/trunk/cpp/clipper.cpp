@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.8.4                                                           *
-* Date      :  1 June 2012                                                     *
+* Version   :  4.8.5                                                           *
+* Date      :  15 July 2012                                                    *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -3137,12 +3137,13 @@ struct DoublePoint
 Polygon BuildArc(const IntPoint &pt,
   const double a1, const double a2, const double r)
 {
-  int steps = std::max(6, int(std::sqrt(std::fabs(r)) * std::fabs(a2 - a1)));
-  Polygon result(steps);
-  int n = steps - 1;
-  double da = (a2 - a1) / n;
+  long64 steps = std::max(6, int(std::sqrt(std::fabs(r)) * std::fabs(a2 - a1)));
+  if (steps > 0x100000) steps = 0x100000;
+  int n = (unsigned)steps;
+  Polygon result(n);
+  double da = (a2 - a1) / (n -1);
   double a = a1;
-  for (int i = 0; i <= n; ++i)
+  for (int i = 0; i < n; ++i)
   {
     result[i].X = pt.X + Round(std::cos(a)*r);
     result[i].Y = pt.Y + Round(std::sin(a)*r);
@@ -3295,19 +3296,18 @@ void DoSquare(double mul = 1.0)
         (long64)Round(m_p[m_i][m_j].Y + normals[m_k].Y * m_delta));
     IntPoint pt2 = IntPoint((long64)Round(m_p[m_i][m_j].X + normals[m_j].X * m_delta),
         (long64)Round(m_p[m_i][m_j].Y + normals[m_j].Y * m_delta));
-    if ((normals[m_k].X * normals[m_j].Y - normals[m_j].X * normals[m_k].Y) * m_delta >= 0)
+    double sinAngle = normals[m_k].X * normals[m_j].Y - normals[m_j].X * normals[m_k].Y;
+    if (sinAngle * m_delta >= 0)
     {
-        double a1 = std::atan2(normals[m_k].Y, normals[m_k].X);
-        double a2 = std::atan2(-normals[m_j].Y, -normals[m_j].X);
-        a1 = std::fabs(a2 - a1);
-        if (a1 > pi) a1 = pi * 2 - a1;
-        double dx = std::tan((pi - a1)/4) * std::fabs(m_delta * mul);
-        pt1 = IntPoint((long64)(pt1.X -normals[m_k].Y * dx),
-          (long64)(pt1.Y + normals[m_k].X * dx));
-        AddPoint(pt1);
-        pt2 = IntPoint((long64)(pt2.X + normals[m_j].Y * dx),
-          (long64)(pt2.Y -normals[m_j].X * dx));
-        AddPoint(pt2);
+      //occasionally (due to floating point math) sinAngle can be > 1 so ...
+      if (sinAngle > 1) sinAngle = 1; else if (sinAngle < -1) sinAngle = -1;
+      double dx = tan((pi - asin(sinAngle))/4) * abs(m_delta*mul);
+      pt1 = IntPoint((long64)(pt1.X -normals[m_k].Y * dx),
+        (long64)(pt1.Y + normals[m_k].X * dx));
+      AddPoint(pt1);
+      pt2 = IntPoint((long64)(pt2.X + normals[m_j].Y * dx),
+        (long64)(pt2.Y -normals[m_j].X * dx));
+      AddPoint(pt2);
     }
     else
     {
