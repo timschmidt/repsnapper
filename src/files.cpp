@@ -101,6 +101,7 @@ bool File::loadSTLtriangles_binary(string filename,
       cerr << _("Error: Unable to open stl file - ") << filename << endl;
       return false;
     }
+    cerr << "loading bin " << filename << endl;
 
     /* Binary STL files have a meaningless 80 byte header
      * followed by the number of triangles */
@@ -169,19 +170,20 @@ bool File::loadSTLtriangles_binary(string filename,
 }
 
 // returns "filename" of the shape found in text
-string File::parseSTLtriangles_ascii (istream *text,
+string File::parseSTLtriangles_ascii (istream &text,
 				      uint max_triangles, bool readnormals,
 				      vector<Triangle> &triangles)
 {
-  string filename = "";
+    cerr << "loading ascii " << endl;
+
+    string filename = "";
     // uint step = 1;
     // if (max_triangles > 0 && max_triangles < num_triangles) {
     //   step = ceil(num_triangles/max_triangles);
-    uint pos = text->tellg();
-    text->seekg(0, ios::end);
-    uint fsize = text->tellg();
-    text->seekg(pos, ios::beg);
-
+    uint pos = text.tellg();
+    text.seekg(0, ios::end);
+    uint fsize = text.tellg();
+    text.seekg(pos, ios::beg);
 
     // a rough estimation
     uint num_triangles = fsize/30;
@@ -190,16 +192,17 @@ string File::parseSTLtriangles_ascii (istream *text,
     if (max_triangles > 0 && max_triangles < num_triangles)
       step = ceil(num_triangles/max_triangles);
 
+    cerr << "step " << step << endl;
 
     /* ASCII files start with "solid [Name_of_file]"
      * so get rid of them to access the data */
     string solid;
     //getline (text, solid);
 
-    while(!(*text).eof()) { // Find next solid
-      *text >> solid;
+    while(!text.eof()) { // Find next solid
+      text >> solid;
       if (solid == "solid") {
-	getline(*text,filename);
+	getline(text,filename);
       }
       break;
     }
@@ -208,15 +211,15 @@ string File::parseSTLtriangles_ascii (istream *text,
     }
 
     // uint itr = 0;
-    while(!(*text).eof()) { // Loop around all triangles
+    while(!(text).eof()) { // Loop around all triangles
         string facet;
-        *text >> facet;
-
+        text >> facet;
+	//cerr << text.tellg() << " - " << fsize << " - " <<facet << endl;
 	if (step > 1) {
 	  for (uint s=0; s < step; s++) {
 	    facet = "";
 	    while (facet != "facet" && facet != "endsolid")
-	      *text >> facet;
+	      text >> facet;
 	    if (facet == "endsolid") break;
 	  }
 	}
@@ -233,24 +236,24 @@ string File::parseSTLtriangles_ascii (istream *text,
         // Parse Face Normal - "normal %f %f %f"
         string normal;
         Vector3d normal_vec;
-        *text >> normal;
+        text >> normal;
         if(normal != "normal") {
 	  cerr << _("Error: normal keyword not found in STL text!") << endl;
 	  return "";
 	}
 
 	if (readnormals){
-	  *text >> normal_vec.x()
-		>> normal_vec.y()
-		>> normal_vec.z();
+	  text >> normal_vec.x()
+	       >> normal_vec.y()
+	       >> normal_vec.z();
 	}
 
         // Parse "outer loop" line
         string outer, loop;
-	while (outer!="outer" && !(*text).eof()) {
-	  *text >> outer;
+	while (outer!="outer" && !(text).eof()) {
+	  text >> outer;
 	}
-	*text >> loop;
+	text >> loop;
 	if(outer != "outer" || loop != "loop") {
 	  cerr << _("Error: Outer/Loop keywords not found!") << endl;
 	  return "";
@@ -260,10 +263,10 @@ string File::parseSTLtriangles_ascii (istream *text,
         Vector3d vertices[3];
         for(int i=0; i<3; i++) {
             string vertex;
-            *text >> vertex
-		  >> vertices[i].x()
-		  >> vertices[i].y()
-		  >> vertices[i].z();
+            text >> vertex
+		 >> vertices[i].x()
+		 >> vertices[i].y()
+		 >> vertices[i].z();
 
             if(vertex != "vertex") {
 	      cerr << _("Error: Vertex keyword not found") << endl;
@@ -273,7 +276,7 @@ string File::parseSTLtriangles_ascii (istream *text,
 
         // Parse end of vertices loop - "endloop endfacet"
         string endloop, endfacet;
-        *text >> endloop >> endfacet;
+        text >> endloop >> endfacet;
 
         if(endloop != "endloop" || endfacet != "endfacet") {
 	  cerr << _("Error: Endloop or endfacet keyword not found") << endl;
@@ -291,6 +294,7 @@ string File::parseSTLtriangles_ascii (istream *text,
 
         triangles.push_back(triangle);
     }
+    cerr << "loaded " << filename << endl;
     return filename;
 }
 
@@ -372,7 +376,6 @@ bool File::loadVRMLtriangles(string filename,
 
 
 
-
 bool File::saveBinarySTL(string filename, const vector<Triangle> &triangles,
 			 const Matrix4d &T)
 {
@@ -393,8 +396,6 @@ bool File::saveBinarySTL(string filename, const vector<Triangle> &triangles,
 
   // write number of triangles
   fwrite(&num_tri, 1, sizeof(int), file);
-
-
 
   for(int i=0; i<num_tri; i++){
     Vector3f

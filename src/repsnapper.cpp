@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 {
   Glib::thread_init();
 
-  // gdk_threads_init(); 
+  // gdk_threads_init();
 
   // gdk_threads_enter();
   Gtk::Main tk(argc, argv);
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
       dialog.run();
       return 1;
     }
-    
+
     global->copy(conf);
   } catch(Gio::Error e) {
     switch(e.code()) {

@@ -49,7 +49,7 @@ public:
 				      uint max_triangles, bool readnormals,
 				      vector<Triangle> &triangles);
 
-  static string parseSTLtriangles_ascii(istream *text,
+  static string parseSTLtriangles_ascii(istream &text,
 					uint max_triangles, bool readnormals,
 					vector<Triangle> &triangles);
 

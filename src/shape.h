@@ -64,12 +64,12 @@ public:
   virtual short dimensions(){return 3;};
 
 	Shape();
-	Shape(string filename, istream *text);
+	Shape(string filename, istream &text);
 	virtual ~Shape(){};
- 	string filename; 
+ 	string filename;
 	int idx;
 
-	int parseASCIISTL(istream *text, uint max_triangles=0, bool readnormals=false);
+	int parseASCIISTL(istream &text, uint max_triangles=0, bool readnormals=false);
 
 	Transform3D transform3D;
 

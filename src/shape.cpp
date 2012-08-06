@@ -38,7 +38,7 @@ Shape::Shape()
 }
 
 
-Shape::Shape(string filename, istream *text)
+Shape::Shape(string filename, istream &text)
   : slow_drawing(false), gl_List(-1)
 {
   this->filename = filename;
@@ -121,7 +121,7 @@ int Shape::loadASCIISTL(string filename, uint max_triangles, bool readnormals) {
       cerr << _("Error: Unable to open stl file - ") << filename << endl;
       return -1;
     }
-    int ret = parseASCIISTL(&file, max_triangles, readnormals);
+    int ret = parseASCIISTL(file, max_triangles, readnormals);
     if (ret < 0) {// cannot parse, try binary
       cerr << _("Could not read file in ASCII mode, trying Binary: ")<< filename << endl;
       file.close();
@@ -133,7 +133,7 @@ int Shape::loadASCIISTL(string filename, uint max_triangles, bool readnormals) {
 } // STL::loadASCIIFile(string filename)
 
 
-int Shape::parseASCIISTL(istream *text, uint max_triangles, bool readnormals) {
+int Shape::parseASCIISTL(istream &text, uint max_triangles, bool readnormals) {
 
     triangles.clear();
     Min.set(INFTY,INFTY,INFTY);

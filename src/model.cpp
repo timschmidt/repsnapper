@@ -201,7 +201,7 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
       while (!fileis.eof())
 	{
 	  Shape *shape = new Shape();
-	  int ok = shape->parseASCIISTL(&fileis);
+	  int ok = shape->parseASCIISTL(fileis);
 	  if (ok>=0) {
 	    shapes.push_back(shape);
 	    // go back to get "solid " keyword again
