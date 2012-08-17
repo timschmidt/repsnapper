@@ -48,11 +48,11 @@ static double read_double(ifstream &file) {
 
 
 
-filetype_t File::getFileType(string filename)
+filetype_t File::getFileType(ustring filename)
 {
 
     // Extract file extension (i.e. "stl")
-    string extension = filename.substr(filename.find_last_of(".")+1);
+  ustring extension = filename.substr(filename.find_last_of(".")+1);
 
     if(extension == "wrl" || extension == "WRL") {
         return VRML;
@@ -71,26 +71,31 @@ filetype_t File::getFileType(string filename)
     }
 
     // ASCII files start with "solid [Name_of_file]"
-    string first_word;
-    file >> first_word;
+    ustring first_word;
+    try {
+      file >> first_word;
 
-    // Find bad Solid Works STL header
-    // 'solid binary STL from Solid Edge, Unigraphics Solutions Inc.'
-    string second_word;
-    if(first_word == "solid")
-      file >> second_word;
+      // Find bad Solid Works STL header
+      // 'solid binary STL from Solid Edge, Unigraphics Solutions Inc.'
+      ustring second_word;
+      if(first_word == "solid")
+	file >> second_word;
 
-    file.close();
-    if(first_word == "solid" && second_word != "binary") { // ASCII
-      return ASCII_STL;
-    } else {
-      return BINARY_STL;
+      file.close();
+      if(first_word == "solid" && second_word != "binary") { // ASCII
+	return ASCII_STL;
+      } else {
+	return BINARY_STL;
+      }
+    } catch (Glib::ConvertError e) {
+      cerr << _("Error: Unable to decode file - ") << filename << endl;
+      return NONE_STL;
     }
 
 }
 
 
-bool File::loadSTLtriangles_binary(string filename,
+bool File::loadSTLtriangles_binary(ustring filename,
 				   uint max_triangles, bool readnormals,
 				   vector<Triangle> &triangles)
 {
@@ -170,11 +175,12 @@ bool File::loadSTLtriangles_binary(string filename,
 }
 
 // returns "filename" of the shape found in text
-string File::parseSTLtriangles_ascii (istream &text,
-				      uint max_triangles, bool readnormals,
-				      vector<Triangle> &triangles)
+ustring File::parseSTLtriangles_ascii (istream &text,
+				       uint max_triangles, bool readnormals,
+				       vector<Triangle> &triangles)
 {
-    cerr << "loading ascii " << endl;
+  //cerr << "loading ascii " << endl;
+  //cerr << " locale " << std::locale().name() << endl;
 
     string filename = "";
     // uint step = 1;
@@ -212,7 +218,7 @@ string File::parseSTLtriangles_ascii (istream &text,
 
     // uint itr = 0;
     while(!(text).eof()) { // Loop around all triangles
-        string facet;
+      string facet;
         text >> facet;
 	//cerr << text.tellg() << " - " << fsize << " - " <<facet << endl;
 	if (step > 1) {
@@ -262,7 +268,7 @@ string File::parseSTLtriangles_ascii (istream &text,
         // Grab the 3 vertices - each one of the form "vertex %f %f %f"
         Vector3d vertices[3];
         for(int i=0; i<3; i++) {
-            string vertex;
+	    string vertex;
             text >> vertex
 		 >> vertices[i].x()
 		 >> vertices[i].y()
@@ -294,12 +300,12 @@ string File::parseSTLtriangles_ascii (istream &text,
 
         triangles.push_back(triangle);
     }
-    cerr << "loaded " << filename << endl;
-    return filename;
+    //cerr << "loaded " << filename << endl;
+    return ustring(filename);
 }
 
 
-bool File::loadVRMLtriangles(string filename,
+bool File::loadVRMLtriangles(ustring filename,
 			     uint max_triangles,
 			     vector<Triangle> &triangles)
 
@@ -311,7 +317,7 @@ bool File::loadVRMLtriangles(string filename,
       cerr << _("Error: Unable to open vrml file - ") << filename << endl;
       return false;
     }
-    string word;
+    ustring word;
     std::vector<float> vertices;
     std::vector<int> indices;
     bool finished = false;
@@ -376,7 +382,7 @@ bool File::loadVRMLtriangles(string filename,
 
 
 
-bool File::saveBinarySTL(string filename, const vector<Triangle> &triangles,
+bool File::saveBinarySTL(ustring filename, const vector<Triangle> &triangles,
 			 const Matrix4d &T)
 {
 

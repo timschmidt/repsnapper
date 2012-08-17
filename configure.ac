@@ -90,7 +90,7 @@ dnl AC_SUBST(LIBREPRAP_CFLAGS)
 dnl AC_SUBST(LIBREPRAP_LIBS)
 
 AC_SUBST(DISTCHECK_LIBREPRAP_FLAGS)
- 
+
 case "$host_os" in
 mingw*)
   GL_LIBS="-lopengl32 -lglu32 -lglut32"

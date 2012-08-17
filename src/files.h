@@ -24,6 +24,7 @@
 
 #include "triangle.h"
 
+using namespace Glib;
 
 enum filetype_t{
     ASCII_STL,
@@ -42,25 +43,25 @@ public:
   File(){};
   virtual ~File(){};
 
-  static filetype_t getFileType(string filename);
+  static filetype_t getFileType(ustring filename);
 
 
-  static bool loadSTLtriangles_binary(string filename,
+  static bool loadSTLtriangles_binary(ustring filename,
 				      uint max_triangles, bool readnormals,
 				      vector<Triangle> &triangles);
 
-  static string parseSTLtriangles_ascii(istream &text,
-					uint max_triangles, bool readnormals,
-					vector<Triangle> &triangles);
+  static ustring parseSTLtriangles_ascii(istream &text,
+					 uint max_triangles, bool readnormals,
+					 vector<Triangle> &triangles);
 
 
-  static bool loadVRMLtriangles(string filename,
+  static bool loadVRMLtriangles(ustring filename,
 				uint max_triangles,
 				vector<Triangle> &triangles);
 
 
 
-  static bool saveBinarySTL(string filename, const vector<Triangle> &triangles,
+  static bool saveBinarySTL(ustring filename, const vector<Triangle> &triangles,
 			    const Matrix4d &T);
 
 };
