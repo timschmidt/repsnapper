@@ -88,8 +88,7 @@ filetype_t File::getFileType(ustring filename)
 	return BINARY_STL;
       }
     } catch (Glib::ConvertError e) {
-      cerr << _("Error: Unable to decode file - ") << filename << endl;
-      return NONE_STL;
+      return BINARY_STL; // no keyword -> binary
     }
 
 }
@@ -198,7 +197,7 @@ ustring File::parseSTLtriangles_ascii (istream &text,
     if (max_triangles > 0 && max_triangles < num_triangles)
       step = ceil(num_triangles/max_triangles);
 
-    cerr << "step " << step << endl;
+    // cerr << "step " << step << endl;
 
     /* ASCII files start with "solid [Name_of_file]"
      * so get rid of them to access the data */
