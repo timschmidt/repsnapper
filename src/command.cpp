@@ -304,9 +304,11 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 	// cerr << info() << endl;
 	// cerr << xycommand.info() << endl;
 	// cerr << zcommand.info() << endl<< endl;
-	ostr << xycommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) << endl;
-	ostr <<  zcommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) ;
-	return ostr.str();
+	ostringstream splstr;
+	splstr << xycommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) << endl;
+	splstr <<  zcommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) ;
+	//cerr << splstr.str() << endl;
+	return splstr.str();
       }
     }
     if(where.x() != LastPos.x()) {
