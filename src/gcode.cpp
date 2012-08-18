@@ -47,11 +47,11 @@ double GCode::GetTotalExtruded(bool relativeEcode) const
   if (commands.size()==0) return 0;
   if (relativeEcode) {
     double E=0;
-    for (uint i=0; i<commands.size(); i++) 
+    for (uint i=0; i<commands.size(); i++)
       E += commands[i].e;
     return E;
   } else {
-    for (uint i=commands.size()-1; i>0; i--) 
+    for (uint i=commands.size()-1; i>0; i--)
       if (commands[i].e>0)
 	return commands[i].e;
   }
@@ -60,8 +60,8 @@ double GCode::GetTotalExtruded(bool relativeEcode) const
 
 void GCode::translate(Vector3d trans)
 {
-  for (uint i=0; i<commands.size(); i++) 
-    commands[i].where += trans;  
+  for (uint i=0; i<commands.size(); i++)
+    commands[i].where += trans;
   Min+=trans;
   Max+=trans;
   Center+=trans;
@@ -159,7 +159,7 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 	if (progress_steps==0) progress_steps=1;
 
 	buffer_zpos_lines.clear();
-	
+
 
 	if(!file.good())
 	{
@@ -184,11 +184,11 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 	layerchanges.clear();
 
 	stringstream alltext;
-	
+
 	while(getline(file,s))
 	{
 	  alltext << s << endl;
-	  
+
 		LineNr++;
 		unsigned long fpos = file.tellg();
 		if (fpos%progress_steps==0) if (!progress->update(fpos)) break;
@@ -293,18 +293,18 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 	commands = loaded_commands;
 
 	buffer->set_text(alltext.str());
-	
+
 	Center.x() = (Max.x() + Min.x() )/2;
 	Center.y() = (Max.y() + Min.y() )/2;
 	Center.z() = (Max.z() + Min.z() )/2;
-	
+
 	model->m_signal_gcode_changed.emit();
 
 	double time = GetTimeEstimation();
 	int h = (int)time/3600;
 	int min = ((int)time%3600)/60;
 	int sec = ((int)time-3600*h-60*min);
-	cout << "GCode Time Estimation "<< h <<"h "<<min <<"m " <<sec <<"s" <<endl; 
+	cout << "GCode Time Estimation "<< h <<"h "<<min <<"m " <<sec <<"s" <<endl;
 	//??? to statusbar or where else?
 }
 
@@ -366,7 +366,7 @@ void GCode::draw(const Settings &settings, int layer,
 
 	      if (layer < (int)layerchanges.size()-1)
 		end = layerchanges[layer+1];
-	      else 
+	      else
 		end = commands.size();
 	    }
 	    else {
@@ -391,6 +391,7 @@ void GCode::draw(const Settings &settings, int layer,
 	      //if (start>0) start-=1; // get one command before layer
 	      end = layerchanges[eind];
 	      if (sind == n_changes-1) end = commands.size(); // get last layer
+	      if (eind == n_changes-1) end = commands.size(); // get last layer
 	    }
 	}
 	else {
@@ -400,7 +401,7 @@ void GCode::draw(const Settings &settings, int layer,
           }
 	}
 
-	drawCommands(settings, start, end, liveprinting, linewidth, 
+	drawCommands(settings, start, end, liveprinting, linewidth,
 		     arrows && settings.Display.DisplayGCodeArrows,
 		     !liveprinting && settings.Display.DisplayGCodeBorders);
 
@@ -417,7 +418,7 @@ void GCode::draw(const Settings &settings, int layer,
 	  // glVertex3dv(currentCursorWhere);
 	  // glEnd();
 	  currentCursorCommand.draw(currentCursorFrom, 7,
-				    Vector4f(1.f,0.f,1.f,1.f), 
+				    Vector4f(1.f,0.f,1.f,1.f),
 				    0., true, false);
 	}
 }
@@ -438,22 +439,22 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	if (n_cmds==0) return;
 	Vector3d defaultpos(0,0,0);
 	Vector3d pos(0,0,0);
-	
+
 	bool relativeE = settings.Slicing.RelativeEcode;
 
 	bool debug_arcs = settings.Display.DisplayDebugArcs;
 
 	double extrusionwidth = 0;
 	if (boundary)
-	  extrusionwidth = 
+	  extrusionwidth =
 	    settings.Hardware.GetExtrudedMaterialWidth(settings.Hardware.LayerThickness);
 
 	start = CLAMP (start, 0, n_cmds-1);
 	end = CLAMP (end, 0, n_cmds-1);
-	
+
 	if (end<=start) return;
 
-	// get starting point 
+	// get starting point
 	if (start>0) {
 	  uint i = start;
 	  while ((commands[i].is_value || commands[i].where == defaultpos) && i < end)
@@ -494,7 +495,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		//     Color = settings.Display.GCodeMoveRGBA;
 		//     extrwidth = 0;
 		//   }
-		//   commands[i].draw(pos, linewidth, Color, extrwidth, 
+		//   commands[i].draw(pos, linewidth, Color, extrwidth,
 		// 		   arrows, debug_arcs);
 		//   LastE=commands[i].e;
 		//   break;
@@ -550,14 +551,14 @@ bool add_text_filter_nan(string str, string &GcodeTxt)
     //cerr << "find: " << str.find("nan") << endl;
     return false;
   }
-  return true;  
+  return true;
 }
 
 
 
-void GCode::MakeText(string &GcodeTxt, const string &GcodeStart, 
+void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 		     const string &GcodeLayer, const string &GcodeEnd,
-		     bool RelativeEcode, 
+		     bool RelativeEcode,
 		     ViewProgress * progress)
 {
 	double lastE = -10;
@@ -589,10 +590,10 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	  if ( commands[i].Code == LAYERCHANGE ) {
 	    layerchanges.push_back(i);
 	    if (GcodeLayer.length()>0)
-	      GcodeTxt += "\n; Layerchange GCode\n" + GcodeLayer + 
-		"; End Layerchange GCode\n\n"; 
+	      GcodeTxt += "\n; Layerchange GCode\n" + GcodeLayer +
+		"; End Layerchange GCode\n\n";
 	  }
-	  
+
 	  if ( commands[i].where.z() < 0 )  {
 	    cerr << i << " Z < 0 "  << commands[i].info() << endl;
 	  }
@@ -631,7 +632,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 		commands[i].where.x() = LastPos.x();
 	// 		commands[i].where.y() = LastPos.y();
 	// 	case COORDINATEDMOTION:
-	// 		if ((commands[i].where.x() != LastPos.x()) + 
+	// 		if ((commands[i].where.x() != LastPos.x()) +
 	// 		    (commands[i].where.y() != LastPos.y()) +
 	// 		    (commands[i].where.z() != LastPos.z()) != 0 &&
 	// 		    AntioozeDistance != 0 && commands[i].e == lastE &&
@@ -671,11 +672,11 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 			oss << " ;" << commands[i].comment << "\n";
 	// 		else
 	// 			oss <<  "\n";
-	// 		if ((commands[i].where.x() != LastPos.x()) + 
+	// 		if ((commands[i].where.x() != LastPos.x()) +
 	// 		    (commands[i].where.y() != LastPos.y()) +
 	// 		    (commands[i].where.z() != LastPos.z()) != 0 &&
 	// 		    AntioozeDistance != 0 &&
-	// 		    commands[i].e == lastE  && 
+	// 		    commands[i].e == lastE  &&
 	// 		    !Use3DGcode && AntioozeDistance != 0)
 	// 		{
 	// 			if (UseIncrementalEcode)
@@ -706,11 +707,11 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	// 		break;
 	// 	case EXTRUDEROFF:
 	// 	  // Dont switch extruder on/off right after eachother
-	// 		if(i != 0 && (i+1) < commands.size() && 
-	// 		   commands[i+1].Code == EXTRUDERON) continue;	
+	// 		if(i != 0 && (i+1) < commands.size() &&
+	// 		   commands[i+1].Code == EXTRUDERON) continue;
 	// 		// don't switch extruder off twize
-	// 		if(i != 0 && (i+1) < commands.size() && 
-	// 		   commands[i+1].Code == EXTRUDEROFF) continue;	
+	// 		if(i != 0 && (i+1) < commands.size() &&
+	// 		   commands[i+1].Code == EXTRUDEROFF) continue;
 	// 		oss  << "M103\n";
 	// 		add_text_filter_nan(oss.str(), GcodeTxt);
 	// 		//GcodeTxt += oss.str();
@@ -776,7 +777,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 //     model->alert (_("failed to open file"));
 //   else {
 //     fprintf (file, "%s", buffer->get_text().c_str());
-//     fclose (file);    
+//     fclose (file);
 //   }
 // }
 
