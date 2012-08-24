@@ -730,9 +730,10 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
     for(uint s = 0; s < skins; s++) {
       // z offset from bottom to top:
       double skin_z = Z - thickness + (s+1)*thickness/skins;
-      if ( skin_z < 0 )
+      if ( skin_z < 0 ){
+	cerr << "Skin Z<0! " << s << " -- " << Z << " -- "<<skin_z <<" -- " << thickness <<  endl;
 	continue;
-      //cerr << s << " -- " << Z << " -- "<<skin_z <<" -- " << thickness <<  endl;
+      }
 
       // skin infill polys:
       if (skinFullInfills[s])

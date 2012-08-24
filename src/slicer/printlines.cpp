@@ -396,31 +396,32 @@ string PrintPoly::info() const
   ostr << "PrintPoly "
        << AreaNames[area]
        << ", " <<  m_poly->size() <<" vertices"
-       << ", prio=" << priority 
+       << ", prio=" << priority
        << ", speed=" << speed
-    ;    
+    ;
   return ostr.str();
 }
 
-// // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+// // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
 
 
 void Printlines::addPolys(PLineArea area,
 			  const vector<Poly> &polys,
-			  bool displace_start, 
+			  bool displace_start,
 			  double maxspeed, double min_time)
 {
   if (polys.size() == 0) return;
   if (maxspeed == 0) maxspeed = settings->Hardware.MaxPrintSpeedXY; // default
-  for(size_t q = 0; q < polys.size(); q++) { 
-    PrintPoly *ppoly = new PrintPoly(polys[q], this, /* Takes a copy of the poly */
-		                    maxspeed, settings->Slicing.MaxOverhangSpeed,
-		                    min_time, displace_start, area);
-
-    printpolys.push_back(ppoly);
+  for(size_t q = 0; q < polys.size(); q++) {
+    if (polys[q].size() > 0) {
+      PrintPoly *ppoly = new PrintPoly(polys[q], this, /* Takes a copy of the poly */
+				       maxspeed, settings->Slicing.MaxOverhangSpeed,
+				       min_time, displace_start, area);
+      printpolys.push_back(ppoly);
+      setZ(polys[q].getZ());
+    }
   }
-  setZ(polys.back().getZ());
 }
 
 
