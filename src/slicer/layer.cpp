@@ -27,7 +27,7 @@
 // polygons will be simplified to thickness/CLEANFACTOR
 #define CLEANFACTOR 7
 
-Layer::Layer(Layer * prevlayer, int layerno, double thick, uint skins) 
+Layer::Layer(Layer * prevlayer, int layerno, double thick, uint skins)
   : LayerNo(layerno), thickness(thick), previous(prevlayer), skins(skins)
 {
   normalInfill = NULL;
@@ -91,35 +91,35 @@ void Layer::Clear()
   skirtPolygon.clear();
 }
 
-// void Layer::setBBox(Vector2d min, Vector2d max) 
+// void Layer::setBBox(Vector2d min, Vector2d max)
 // {
 //   Min.x() = MIN(Min.x(),min.x());
 //   Min.y = MIN(Min.y,min.y);
 //   Max.x() = MAX(Max.x(),max.x());
 //   Max.y = MAX(Max.y,max.y);
-// }	
-// void Layer::setBBox(vector<Vector2d> minmax) 
+// }
+// void Layer::setBBox(vector<Vector2d> minmax)
 // {
 //   setBBox(minmax[0],minmax[1]);
 // }
-// void Layer::setBBox(Vector3d min, Vector3d max) 
+// void Layer::setBBox(Vector3d min, Vector3d max)
 // {
 //   Min.x() = MIN(Min.x(),min.x());
 //   Min.y = MIN(Min.y,min.y);
 //   Max.x() = MAX(Max.x(),max.x());
 //   Max.y = MAX(Max.y,max.y);
-// }	
+// }
 
 
 void Layer::SetPolygons(vector<Poly> &polys) {
   this->polygons = polys;
   for(uint i=0;i<polygons.size();i++){
-    polygons[i].setZ(Z); 
+    polygons[i].setZ(Z);
   }
 }
 
 // //not used
-// void Layer::SetPolygons(const Matrix4d &T, const Shape &shape, 
+// void Layer::SetPolygons(const Matrix4d &T, const Shape &shape,
 // 			double z) {
 //   cerr << "Layer::SetPolygons" << endl;
 //   double offsetZ = Z;
@@ -130,20 +130,20 @@ void Layer::SetPolygons(vector<Poly> &polys) {
 //     offsetZ+=thickness/10.;
 //   }
 //   for(uint i=0;i<polygons.size();i++){
-//     polygons[i].setZ(Z); 
+//     polygons[i].setZ(Z);
 //   }
 // }
 
 
-bool Layer::pointInPolygons(const Vector2d &p) const 
-{ 
-  for (uint i = 0; i<polygons.size(); i++) 
+bool Layer::pointInPolygons(const Vector2d &p) const
+{
+  for (uint i = 0; i<polygons.size(); i++)
     if (!polygons[i].isHole() && polygons[i].vertexInside(p)) return true;
   return false;
 }
 
 
-int Layer::addShape(const Matrix4d &T, const Shape &shape, double z, 
+int Layer::addShape(const Matrix4d &T, const Shape &shape, double z,
 		    double &max_gradient, double max_supportangle)
 {
   double hackedZ = z;
@@ -154,7 +154,7 @@ int Layer::addShape(const Matrix4d &T, const Shape &shape, double z,
   while (!polys_ok && hackedZ < z+thickness) {
     polys.clear();
     polys_ok = shape.getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
-				    polys, max_gradient, 
+				    polys, max_gradient,
 				    toSupportPolygons, max_supportangle,
 				    thickness);
     hackedZ += thickness/10;
@@ -181,7 +181,7 @@ void Layer::cleanupPolygons()
 void Layer::addPolygons(vector<Poly> &polys)
 {
   for(uint i=0;i<polys.size();i++){
-    polys[i].setZ(Z); 
+    polys[i].setZ(Z);
   }
   polygons.insert(polygons.end(),polys.begin(),polys.end());
 }
@@ -192,21 +192,21 @@ void Layer::calcBridgeAngles(const Layer *layerbelow) {
   Clipping clipp;
   vector<Poly> polysbelow = *(layerbelow->GetInnerShell());//clipp.getOffset(polygons,3*thickness);
   bridgePillars.resize(bridgePolygons.size());
-  for (uint i=0; i<bridgePolygons.size(); i++) 
+  for (uint i=0; i<bridgePolygons.size(); i++)
     {
       // intersect bridge poly with polygons below (=pillars of bridge)
       clipp.clear();
-      clipp.addPolys(polysbelow,subject); 
-      clipp.addPolys(clipp.getOffset(bridgePolygons[i].outer,thickness),clip); 
+      clipp.addPolys(polysbelow,subject);
+      clipp.addPolys(clipp.getOffset(bridgePolygons[i].outer,thickness),clip);
       bridgePillars[i] = clipp.intersect();
-      
+
       // TODO detect circular bridges -> rotating infill?
 
       // get average direction of the mutual connections of all the intersections
       Vector2d dir(0,0);
       for (uint p=0; p<bridgePillars[i].size(); p++){
 	for (uint q=p+1; q<bridgePillars[i].size(); q++){
-	  // Vector2d p1,p2; 
+	  // Vector2d p1,p2;
 	  // bridgePillars[i][q].shortestConnectionSq(bridgePillars[i][p], p1,p2);
 	  // dir += (p2-p1);
 	  dir += bridgePillars[i][q].center - bridgePillars[i][p].center;
@@ -218,19 +218,19 @@ void Layer::calcBridgeAngles(const Layer *layerbelow) {
     }
 }
 
-// these are used for the bridge polys of the layer above 
+// these are used for the bridge polys of the layer above
 // NOT USED, NOT TESTED, using calcBridgeAngles
 vector <double> Layer::getBridgeRotations(const vector<Poly> &polys) const{
   cerr << "Layer::getBridgeRotations" << endl;
   vector<double> angles; angles.resize(polys.size());
   Clipping clipp;
   vector<Poly> offset = polygons;//clipp.getOffset(polygons,3*thickness);
-  for (uint i=0; i<polys.size(); i++) 
+  for (uint i=0; i<polys.size(); i++)
     {
       // intersect bridge poly with polygons below (=pillars of bridge)
       clipp.clear();
-      clipp.addPolys(offset,subject); 
-      clipp.addPolys(clipp.getOffset(polys[i],2*thickness),clip); 
+      clipp.addPolys(offset,subject);
+      clipp.addPolys(clipp.getOffset(polys[i],2*thickness),clip);
       vector<Poly> pillars = clipp.intersect();
       // get average direction of the connection lines of all the intersections
       Vector2d dir(0,0);
@@ -247,14 +247,14 @@ vector <double> Layer::getBridgeRotations(const vector<Poly> &polys) const{
 
 // fills polys with raft type infill
 // so this layer will have the raft as normal infill
-void Layer::CalcRaftInfill (const vector<Poly> &polys, 
+void Layer::CalcRaftInfill (const vector<Poly> &polys,
 			    double extrusionfactor, double infilldistance,
 			    double rotation)
 {
   setMinMax(polys);
   normalInfill = new Infill(this, extrusionfactor);
   normalInfill->setName("Raft");
-  normalInfill->addPolys(Z, polys, RaftInfill, 
+  normalInfill->addPolys(Z, polys, RaftInfill,
 			 infilldistance, infilldistance, rotation);
 }
 
@@ -268,27 +268,27 @@ void Layer::CalcInfill (const Settings &settings)
   double normalInfilldist=0;
   bool shellOnly = !settings.Slicing.DoInfill;
   fullInfillDistance = settings.GetInfillDistance(thickness, 100);
-  if (settings.Slicing.InfillPercent == 0) 
+  if (settings.Slicing.InfillPercent == 0)
     shellOnly = true;
-  else 
+  else
     infillDistance = settings.GetInfillDistance(thickness,
 						settings.Slicing.InfillPercent);
-  if (settings.Slicing.AltInfillPercent != 0) 
+  if (settings.Slicing.AltInfillPercent != 0)
     altInfillDistance = settings.GetInfillDistance(thickness,
 						   settings.Slicing.AltInfillPercent);
-  if (settings.Slicing.AltInfillLayers != 0 
-      && LayerNo % settings.Slicing.AltInfillLayers == 0) 
+  if (settings.Slicing.AltInfillLayers != 0
+      && LayerNo % settings.Slicing.AltInfillLayers == 0)
     normalInfilldist = altInfillDistance;
   else
     normalInfilldist = infillDistance;
   if (LayerNo < (int)settings.Slicing.FirstLayersNum) {
-    double first_infdist = 
+    double first_infdist =
       fullInfillDistance * (1+(double)settings.Slicing.FirstLayersInfillDist);
     normalInfilldist   = max(normalInfilldist,   first_infdist);
     fullInfillDistance = max(fullInfillDistance, first_infdist);
   }
   // relative extrusion for skins:
-  double skinfillextrf = settings.Slicing.FullFillExtrusion/skins/skins; 
+  double skinfillextrf = settings.Slicing.FullFillExtrusion/skins/skins;
   normalInfill = new Infill(this,settings.Slicing.NormalFillExtrusion);
   normalInfill->setName("normal");
   fullInfill = new Infill(this,settings.Slicing.FullFillExtrusion);
@@ -301,25 +301,25 @@ void Layer::CalcInfill (const Settings &settings)
   thinInfill = new Infill(this, 1.);
   thinInfill->setName("thin");
 
-  double rot = (settings.Slicing.InfillRotation 
+  double rot = (settings.Slicing.InfillRotation
 		+ (double)LayerNo*settings.Slicing.InfillRotationPrLayer)/180.0*M_PI;
   if (!shellOnly)
-    normalInfill->addPolys(Z, fillPolygons, (InfillType)settings.Slicing.NormalFilltype, 
+    normalInfill->addPolys(Z, fillPolygons, (InfillType)settings.Slicing.NormalFilltype,
 			   normalInfilldist, fullInfillDistance, rot);
-  
+
   fullInfill->addPolys(Z, fullFillPolygons, (InfillType)settings.Slicing.FullFilltype,
 		       fullInfillDistance, fullInfillDistance, rot);
-  
+
   decorInfill->addPolys(Z, decorPolygons, (InfillType)settings.Slicing.DecorFilltype,
 			settings.Slicing.DecorInfillDistance,
 			settings.Slicing.DecorInfillDistance,
 			settings.Slicing.DecorInfillRotation/180.0*M_PI);
-  
+
   assert(bridge_angles.size() >= bridgePolygons.size());
   bridgeInfills.resize(bridgePolygons.size());
-  for (uint b=0; b < bridgePolygons.size(); b++){  
+  for (uint b=0; b < bridgePolygons.size(); b++){
     bridgeInfills[b] = new Infill(this, settings.Slicing.BridgeExtrusion);
-    bridgeInfills[b]->addPoly(Z, bridgePolygons[b], BridgeInfill, 
+    bridgeInfills[b]->addPoly(Z, bridgePolygons[b], BridgeInfill,
 			      fullInfillDistance, fullInfillDistance,
 			      bridge_angles[b]+M_PI/2);
   }
@@ -337,7 +337,7 @@ void Layer::CalcInfill (const Settings &settings)
     }
   }
   supportInfill->addPolys(Z, supportPolygons, (InfillType)settings.Slicing.SupportFilltype,
-			  settings.Slicing.SupportInfillDistance, 
+			  settings.Slicing.SupportInfillDistance,
 			  settings.Slicing.SupportInfillDistance, 0);
 
   thinInfill->addPolys(Z, thinPolygons, ThinInfill,
@@ -346,16 +346,16 @@ void Layer::CalcInfill (const Settings &settings)
 
 
 // call before full fill areas are multiplied
-void Layer::makeSkinPolygons() 
+void Layer::makeSkinPolygons()
 {
   if (skins<2) return;
   skinFullFillPolygons = fullFillPolygons;
   fullFillPolygons.clear();
 }
 
-// add bridge polys and subtract them from normal and full fill polys 
+// add bridge polys and subtract them from normal and full fill polys
 // each given ExPoly is a single bridge with its holes
-void Layer::addBridgePolygons(const vector<ExPoly> &newexpolys) 
+void Layer::addBridgePolygons(const vector<ExPoly> &newexpolys)
 {
   // clip against normal fill and make these areas into bridges:
   Clipping clipp;
@@ -366,14 +366,14 @@ void Layer::addBridgePolygons(const vector<ExPoly> &newexpolys)
   for (uint i=0; i < num_bridges; i++){
     vector<Poly> newpolys = Clipping::getPolys(newexpolys[i]);
     clipp.clear();
-    clipp.addPolys(fillPolygons,subject); 
+    clipp.addPolys(fillPolygons,subject);
     clipp.addPolys(newpolys, clip);
     vector<ExPoly> exbridges = clipp.ext_intersect();
     bridgePolygons.insert(bridgePolygons.end(),exbridges.begin(),exbridges.end());
   }
   // subtract from normal fill
   clipp.clear();
-  clipp.addPolys(fillPolygons,subject); 
+  clipp.addPolys(fillPolygons,subject);
   clipp.addPolys(newexpolys, clip);
   setNormalFillPolygons(clipp.subtract());
 }
@@ -383,15 +383,15 @@ void Layer::addFullPolygons(const vector<ExPoly> &newpolys, bool decor)
   addFullPolygons(Clipping::getPolys(newpolys),decor);
 }
 
-// add full fill and subtract them from normal fill polys 
-void Layer::addFullPolygons(const vector<Poly> &newpolys, bool decor) 
+// add full fill and subtract them from normal fill polys
+void Layer::addFullPolygons(const vector<Poly> &newpolys, bool decor)
 {
   if (newpolys.size()==0) return;
   Clipping clipp;
   clipp.clear();
   // full fill only where already normal fill
-  clipp.addPolys(fillPolygons,subject); 
-  if (decor) clipp.addPolys(fullFillPolygons,subject); 
+  clipp.addPolys(fillPolygons,subject);
+  if (decor) clipp.addPolys(fullFillPolygons,subject);
   clipp.addPolys(newpolys,clip);
   clipp.setZ(Z);
   vector<Poly> inter = clipp.intersect();
@@ -418,13 +418,13 @@ void cleanup(vector<Poly> &polys, double error)
     polys[i].cleanup(error);
 }
 
-void Layer::mergeFullPolygons(bool bridge) 
+void Layer::mergeFullPolygons(bool bridge)
 {
   // if (bridge) {
   //   // setBridgePolygons(Clipping::getMerged(bridgePolygons, thickness));
   //   // clipp.addPolys(bridgePolygons,clip);
   // } else {
-  //subtract decor from full 
+  //subtract decor from full
   Clipping clipp;
   // clipp.addPolys(fullFillPolygons,subject);
   // clipp.addPolys(decorPolygons,clip);
@@ -435,7 +435,7 @@ void Layer::mergeFullPolygons(bool bridge)
   //subtract from normal fills
   clipp.clear();
   cleanup(fillPolygons, thickness/CLEANFACTOR);
-  clipp.addPolys(fillPolygons,subject);  
+  clipp.addPolys(fillPolygons,subject);
   clipp.addPolys(fullFillPolygons,clip);
   clipp.addPolys(decorPolygons,clip);
   vector<Poly> normals = clipp.subtractMerged();
@@ -516,9 +516,9 @@ void Layer::setBridgePolygons(const vector<ExPoly> &expolys)
   // }
   clearpolys(bridgePolygons);
   bridgePolygons = expolys;
-  for (uint i=0; i<count; i++) { 
+  for (uint i=0; i<count; i++) {
     bridgePolygons[i].outer.setZ(Z);
-    for (uint h = 0; h < bridgePolygons[i].holes.size(); h++) 
+    for (uint h = 0; h < bridgePolygons[i].holes.size(); h++)
       bridgePolygons[i].holes[h].setZ(Z);
   }
 }
@@ -557,27 +557,27 @@ void Layer::setSkirtPolygon(const Poly &poly)
 void FindThinpolys(const vector<Poly> &polys, double extrwidth,
 		   vector<Poly> &thickpolys, vector<Poly> &thinpolys)
 {
-  // go in 
+  // go in
   thickpolys = Clipping::getOffset(polys, -0.5*extrwidth);
   // go out again, now thin polys are gone
-  thickpolys = Clipping::getOffset(thickpolys, 0.55*extrwidth); 
+  thickpolys = Clipping::getOffset(thickpolys, 0.55*extrwidth);
   // (need overlap to really clip)
 
   // use bigger (longer) polys for clip to avoid overlap of thin and thick extrusion lines
-  vector <Poly> bigthick = Clipping::getOffset(thickpolys, extrwidth); 
+  vector <Poly> bigthick = Clipping::getOffset(thickpolys, extrwidth);
   // difference to original are thin polys
-  Clipping clipp; 
+  Clipping clipp;
   clipp.addPolys(polys, subject);
   clipp.addPolys(bigthick, clip);
   thinpolys = clipp.subtract();
   // remove overlap
-  thickpolys = Clipping::getOffset(thickpolys, -0.05*extrwidth); 
+  thickpolys = Clipping::getOffset(thickpolys, -0.05*extrwidth);
 }
 
 void Layer::MakeShells(const Settings &settings)
 {
   double extrudedWidth        = settings.Hardware.GetExtrudedMaterialWidth(thickness);
-  double roundline_extrfactor = 
+  double roundline_extrfactor =
     settings.Hardware.RoundedLinewidthCorrection(extrudedWidth,thickness);
   double distance       = 0.5 * extrudedWidth;
   double cleandist      = min(distance/CLEANFACTOR, thickness/CLEANFACTOR);
@@ -592,7 +592,7 @@ void Layer::MakeShells(const Settings &settings)
   FindThinpolys(shrinked, extrudedWidth, thickPolygons, thinPolygons);
   shrinked = thickPolygons;
 
-  for (uint i = 0; i<thinPolygons.size(); i++)  
+  for (uint i = 0; i<thinPolygons.size(); i++)
     thinPolygons[i].cleanup(cleandist);
 
   // // expand shrinked to get to the outer shell again
@@ -603,17 +603,17 @@ void Layer::MakeShells(const Settings &settings)
   //vector<Poly> shrinked = Clipping::getShrinkedCapped(polygons,distance);
   // outmost shells
   if (shellcount > 0) {
-    if (skins>1) { // either skins 
+    if (skins>1) { // either skins
       for (uint i = 0; i<shrinked.size(); i++)  {
 	shrinked[i].setExtrusionFactor(1./skins*roundline_extrfactor);
       }
-      skinPolygons = shrinked; 
+      skinPolygons = shrinked;
     } else {  // or normal shell
       clearpolys(shellPolygons);
       for (uint i = 0; i<shrinked.size(); i++)  {
 	shrinked[i].setExtrusionFactor(roundline_extrfactor);
       }
-      shellPolygons.push_back(shrinked); 
+      shellPolygons.push_back(shrinked);
     }
     // inner shells
     for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
@@ -623,21 +623,21 @@ void Layer::MakeShells(const Settings &settings)
 	FindThinpolys(shrinked, extrudedWidth, thickPolygons, thinpolys);
 	shrinked = thickPolygons;
 	thinPolygons.insert(thinPolygons.end(), thinpolys.begin(),thinpolys.end());
-	for (uint j = 0; j<shrinked.size(); j++) 
+	for (uint j = 0; j<shrinked.size(); j++)
 	  shrinked[j].cleanup(cleandist);
-	//shrinked = Clipping::getShrinkedCapped(shrinked,extrudedWidth); 
+	//shrinked = Clipping::getShrinkedCapped(shrinked,extrudedWidth);
 	shellPolygons.push_back(shrinked);
       }
   }
   // the filling polygon
   if (settings.Slicing.DoInfill) {
     fillPolygons = Clipping::getOffset(shrinked,-(1.-infilloverlap)*extrudedWidth);
-    for (uint i = 0; i<fillPolygons.size(); i++)  
+    for (uint i = 0; i<fillPolygons.size(); i++)
       fillPolygons[i].cleanup(cleandist);
     //fillPolygons = Clipping::getShrinkedCapped(shrinked,extrudedWidth);
     //cerr << LayerNo << " > " << fillPolygons.size()<< endl;
   }
-  
+
   calcConvexHull();
 
   //cerr << " .. made " << fillPolygons.size() << " offsetpolys "  << endl;
@@ -666,22 +666,22 @@ void Layer::MakeSkirt(double distance)
 
 
 // calc convex hull and Min and Max of layer
-void Layer::calcConvexHull() 
+void Layer::calcConvexHull()
 {
   hullPolygon = convexHull2D(polygons); // see geometry.cpp
   hullPolygon.setZ(Z);
   setMinMax(hullPolygon);
 }
 
-bool Layer::setMinMax(const vector<Poly> &polys) 
+bool Layer::setMinMax(const vector<Poly> &polys)
 {
   Vector2d NewMin = Vector2d( INFTY, INFTY);
   Vector2d NewMax = Vector2d(-INFTY, -INFTY);
   for (uint i = 0; i< polys.size(); i++) {
     vector<Vector2d> minmax = polys[i].getMinMax();
-    NewMin.x() = min(NewMin.x(), minmax[0].x()); 
+    NewMin.x() = min(NewMin.x(), minmax[0].x());
     NewMin.y() = min(NewMin.y(), minmax[0].y());
-    NewMax.x() = max(NewMax.x(), minmax[1].x()); 
+    NewMax.x() = max(NewMax.x(), minmax[1].x());
     NewMax.y() = max(NewMax.y(), minmax[1].y());
   }
   if (NewMin==Min && NewMax==Max) return false;
@@ -689,7 +689,7 @@ bool Layer::setMinMax(const vector<Poly> &polys)
   Max = NewMax;
   return true;
 }
-bool Layer::setMinMax(const Poly &poly) 
+bool Layer::setMinMax(const Poly &poly)
 {
   vector<Vector2d> minmax = poly.getMinMax();
   if (minmax[0]==Min && minmax[1]==Max) return false;
@@ -722,12 +722,12 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   vector<Poly> polys; // intermediate collection
 
   // polys to keep line movements inside
-  //const vector<Poly> * clippolys = &polygons; 
+  //const vector<Poly> * clippolys = &polygons;
   const vector<Poly> * clippolys = GetOuterShell();
 
   // 1. Skins, all but last, because they are the lowest lines, below layer Z
   if (skins > 1) {
-    for(uint s = 0; s < skins; s++) { 
+    for(uint s = 0; s < skins; s++) {
       // z offset from bottom to top:
       double skin_z = Z - thickness + (s+1)*thickness/skins;
       if ( skin_z < 0 )
@@ -750,7 +750,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       }
 
       // add skin to lines
-      printlines.addPolys(SKIN, polys, (s==0), //displace at first skin
+      printlines.addPolys(SKIN, polys, (s==0), // displace at first skin
 			  settings.Hardware.MaxShellSpeed,
 			  settings.Slicing.MinShelltime);
       if (s < skins-1) { // not on the last layer, this handle with all other lines
@@ -771,7 +771,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   // 2. Skirt
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
-  printlines.addPolys(SKIRT, skirts, false, 
+  printlines.addPolys(SKIRT, skirts, false,
 		      settings.Hardware.MaxShellSpeed,
 		      settings.Slicing.MinShelltime);
 
@@ -779,7 +779,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   if (supportInfill)
     printlines.addPolys(SUPPORT, supportInfill->infillpolys, false);
 
-  // 4. all other polygons:  
+  // 4. all other polygons:
 
   //  Shells
   for(int p=shellPolygons.size()-1; p>=0; p--) { // inner to outer
@@ -813,7 +813,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   if (!settings.Slicing.ZliftAlways)
     printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
-  printlines.optimize(linewidth, 
+  printlines.optimize(linewidth,
 		      settings.Slicing.MinLayertime, cornerradius, lines);
   if ((guint)LayerNo < settings.Slicing.FirstLayersNum)
     printlines.setSpeedFactor(settings.Slicing.FirstLayersSpeed, lines);
@@ -821,13 +821,13 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   if (settings.Slicing.FanControl) {
     int fanspeed = settings.Slicing.MinFanSpeed;
-    if (slowdownfactor < 1 && slowdownfactor > 0) { 
-      double fanfactor = 1-slowdownfactor; 
-      fanspeed += 
+    if (slowdownfactor < 1 && slowdownfactor > 0) {
+      double fanfactor = 1-slowdownfactor;
+      fanspeed +=
 	int(fanfactor * (settings.Slicing.MaxFanSpeed-settings.Slicing.MinFanSpeed));
       fanspeed = CLAMP(fanspeed, settings.Slicing.MinFanSpeed, settings.Slicing.MaxFanSpeed);
       //cerr << slowdownfactor << " - " << fanfactor << " - " << fanspeed << " - " << endl;
-    } 
+    }
     Command fancommand(FANON, fanspeed);
     commands.push_back(fancommand);
   }
@@ -853,10 +853,10 @@ double Layer::area() const
   return Clipping::Area(polygons);
 }
 
-string Layer::info() const 
+string Layer::info() const
 {
   ostringstream ostr;
-  ostr <<"Layer at Z=" << Z << " No=" << LayerNo 
+  ostr <<"Layer at Z=" << Z << " No=" << LayerNo
        <<", thickn=" << thickness
        <<", "<<skins <<" skins"
        <<", "<<polygons.size() <<" polys"
@@ -875,13 +875,13 @@ string Layer::info() const
   if (supportInfill)
     ostr<<", support "<<supportInfill->size() ;
   ostr <<", skinfills "<<skinFullInfills.size() ;
-  
+
   if (previous != NULL)
     ostr << " prev.No=" << previous->LayerNo;
 
   return ostr.str();
 }
- 
+
 
 vector<Poly> Layer::getOverhangs() const
 {
@@ -900,7 +900,7 @@ vector<Poly> Layer::getOverhangs() const
 string Layer::SVGpath(const Vector2d &trans) const
 {
   ostringstream ostr;
-  ostr << "\t<g id=\"Layer_"<< LayerNo 
+  ostr << "\t<g id=\"Layer_"<< LayerNo
        << "_z:" << getZ() << "\">" << endl;
   for (uint i = 0; i<polygons.size(); i++) {
     ostr << polygons[i].SVGpath(trans) << endl;
@@ -929,8 +929,8 @@ void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int poin
   }
 }
 
-void draw_polys_surface(const vector <Poly> &polys, 
-			const Vector2d &Min, const Vector2d &Max, 
+void draw_polys_surface(const vector <Poly> &polys,
+			const Vector2d &Min, const Vector2d &Max,
 			double z,
 			double cleandist,
 			const float *rgb, float a)
@@ -945,8 +945,8 @@ void draw_polys_surface(const vector <Poly> &polys,
   //   polys[p].draw_as_surface();
   // }
 }
-void draw_polys_surface(const vector< vector<Poly> > &polys, 
-			const Vector2d &Min, const Vector2d &Max, 
+void draw_polys_surface(const vector< vector<Poly> > &polys,
+			const Vector2d &Min, const Vector2d &Max,
 			double z,
 			double cleandist,
 			const float *rgb, float a)
@@ -955,7 +955,7 @@ void draw_polys_surface(const vector< vector<Poly> > &polys,
     draw_polys_surface(polys[p], Min, Max, z, cleandist, rgb, a);
 }
 
-void draw_polys(const vector< vector <Poly> > &polys, 
+void draw_polys(const vector< vector <Poly> > &polys,
 		int gl_type, int linewidth, int pointsize,
 		const float *rgb, float a, bool randomized = false)
 {
@@ -1020,7 +1020,7 @@ void Layer::Draw(const Settings &settings)
   }
   draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 0.6, randomized);
   if (supportPolygons.size()>0) {
-    if (filledpolygons) 
+    if (filledpolygons)
       draw_polys_surface(supportPolygons,  Min, Max, Z, thickness/2., BLUE2, 0.4);
     draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1,   randomized);
     if(settings.Display.DrawVertexNumbers)
@@ -1039,52 +1039,52 @@ void Layer::Draw(const Settings &settings)
   }
   if(settings.Display.DisplayinFill)
     {
-      if (filledpolygons) 
+      if (filledpolygons)
 	draw_polys_surface(fillPolygons,  Min, Max, Z, thickness/2., GREEN2, 0.25);
       bool DebugInfill = settings.Display.DisplayDebuginFill;
       if (normalInfill)
-	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+	draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3,
 		   (normalInfill->cached?BLUEGREEN:GREEN), 1, randomized);
       if(DebugInfill && normalInfill->cached)
-	draw_polys(normalInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
+	draw_polys(normalInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3,
 		   ORANGE, 0.5, randomized);
       if (thinInfill)
-	draw_polys(thinInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+	draw_polys(thinInfill->infillpolys, GL_LINE_LOOP, 1, 3,
 		   GREEN, 1, randomized);
       if (fullInfill)
-	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3,
 		   (fullInfill->cached?BLUEGREEN:GREEN), 0.8, randomized);
       if(DebugInfill && fullInfill->cached)
-	draw_polys(fullInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
+	draw_polys(fullInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3,
 		   ORANGE, 0.5, randomized);
       if (decorInfill)
-	draw_polys(decorInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+	draw_polys(decorInfill->infillpolys, GL_LINE_LOOP, 1, 3,
 		   (decorInfill->cached?BLUEGREEN:GREEN), 0.8, randomized);
       if(DebugInfill && decorInfill->cached)
-	draw_polys(decorInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
+	draw_polys(decorInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3,
 		   ORANGE, 0.5, randomized);
       uint bridgecount = bridgeInfills.size();
       if (bridgecount>0)
 	for (uint i = 0; i<bridgecount; i++)
-	  draw_polys(bridgeInfills[i]->infillpolys, GL_LINE_LOOP, 2, 3, 
+	  draw_polys(bridgeInfills[i]->infillpolys, GL_LINE_LOOP, 2, 3,
 		     RED3,0.9, randomized);
       if (supportInfill)
-	draw_polys(supportInfill->infillpolys, GL_LINE_LOOP, 1, 3, 
+	draw_polys(supportInfill->infillpolys, GL_LINE_LOOP, 1, 3,
 		   (supportInfill->cached?BLUEGREEN:GREEN), 0.8, randomized);
       if(DebugInfill && supportInfill->cached)
-	draw_polys(supportInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3, 
+	draw_polys(supportInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3,
 		   ORANGE, 0.5, randomized);
-      for(size_t s=0;s<skinFullInfills.size();s++) 
-	draw_polys(skinFullInfills[s]->infillpolys, GL_LINE_LOOP, 1, 3, 
+      for(size_t s=0;s<skinFullInfills.size();s++)
+	draw_polys(skinFullInfills[s]->infillpolys, GL_LINE_LOOP, 1, 3,
 		   (skinFullInfills[s]->cached?BLUEGREEN:GREEN), 0.6, randomized);
     }
   //draw_polys(GetInnerShell(), GL_LINE_LOOP, 2, 3, WHITE,  1);
-  glLineWidth(1);  
+  glLineWidth(1);
   if(settings.Display.DrawCPVertexNumbers) // poly vertex numbers
     for(size_t p=0; p<polygons.size();p++)
       polygons[p].drawVertexNumbers();
       //polygons[p].drawVertexAngles();
-  
+
   if(settings.Display.DrawCPLineNumbers)  // poly line numbers
     for(size_t p=0; p<polygons.size();p++)
       polygons[p].drawLineNumbers();
@@ -1107,7 +1107,7 @@ void Layer::Draw(const Settings &settings)
       vector<Poly> overhangs = getOverhangs();
       draw_polys(overhangs, GL_LINE_LOOP, 1, 3, VIOLET, 0.8, randomized);
       //draw_polys_surface(overhangs, Min, Max, Z, thickness/5, VIOLET , 0.5);
-  
+
       Cairo::RefPtr<Cairo::ImageSurface> surface;
       Cairo::RefPtr<Cairo::Context>      context;
       if (rasterpolys(overhangs, Min, Max, thickness/5, surface, context))
@@ -1190,12 +1190,12 @@ void Layer::DrawRulers(const Vector2d &point)
   // draw ticks
   double ticksize=2;
   for(guint i = 0; i<xint.size(); i++) {
-    glVertex3d(xint[i].p.x(), xint[i].p.y()-ticksize, Z);    
-    glVertex3d(xint[i].p.x(), xint[i].p.y()+ticksize, Z);    
+    glVertex3d(xint[i].p.x(), xint[i].p.y()-ticksize, Z);
+    glVertex3d(xint[i].p.x(), xint[i].p.y()+ticksize, Z);
   }
   for(guint i = 0; i<yint.size(); i++) {
-    glVertex3d(yint[i].p.x()-ticksize, yint[i].p.y(), Z);    
-    glVertex3d(yint[i].p.x()+ticksize, yint[i].p.y(), Z);    
+    glVertex3d(yint[i].p.x()-ticksize, yint[i].p.y(), Z);
+    glVertex3d(yint[i].p.x()+ticksize, yint[i].p.y(), Z);
   }
   // draw BBox
   glVertex3d(Min.x(), Min.y(), Z);

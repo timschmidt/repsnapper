@@ -24,16 +24,16 @@
 
 ///////////// PLine3: single 3D printline //////////////////////
 
-PLine3::PLine3(PLineArea area_, const Vector3d &from_, const Vector3d &to_, 
+PLine3::PLine3(PLineArea area_, const Vector3d &from_, const Vector3d &to_,
 	       double speed_, double extrusionfactor_)
-: area(area_), from(from_), to(to_), speed(speed_), 
+: area(area_), from(from_), to(to_), speed(speed_),
   extrusionfactor(extrusionfactor_), absolute_extrusion(0),
   arc(0), arcangle(0)
 {
 }
 
 PLine3::PLine3(const PLine &pline, double z)
-{ 
+{
   if (pline.lifted > 0) {
     z += pline.lifted;
     lifted = true;
@@ -56,7 +56,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 			double extrusion,
 			const Settings &settings) const
 {
-  const double 
+  const double
     minspeed  = settings.Hardware.MinPrintSpeedXY,
     //maxspeed  = settings.Hardware.MaxPrintSpeedXY,
     movespeed = settings.Hardware.MoveSpeed,
@@ -142,7 +142,7 @@ double PLine3::time() const
 
 double PLine3::length() const
 {
-  if (!arc) 
+  if (!arc)
     return (to-from).length();
   else {
     double radius = arcIJK.length();
@@ -156,7 +156,7 @@ string PLine3::info() const
   ostr << "line "<< AreaNames[area]
        << " " << from;
   if (to!=from) ostr << to;
-  ostr << " speed=" << speed 
+  ostr << " speed=" << speed
        << " extrf=" << extrusionfactor << " arc=" << arc;
   if (absolute_extrusion!=0)
     ostr << " abs_extr="<<absolute_extrusion;
@@ -172,9 +172,9 @@ string PLine3::info() const
 
 ///////////// PLine: single 2D printline //////////////////////
 
-PLine::PLine(PLineArea area_, const Vector2d &from_, const Vector2d &to_, double speed_, 
+PLine::PLine(PLineArea area_, const Vector2d &from_, const Vector2d &to_, double speed_,
 	     double feedrate_, double lifted_)
-  : area(area_), from(from_), to(to_), speed(speed_), 
+  : area(area_), from(from_), to(to_), speed(speed_),
     feedrate(feedrate_), absolute_feed(0),
     arc(0), lifted(lifted_)
 {
@@ -182,7 +182,7 @@ PLine::PLine(PLineArea area_, const Vector2d &from_, const Vector2d &to_, double
 }
 
 // for arc line
-PLine::PLine(PLineArea area_, const Vector2d &from_, const Vector2d &to_, double speed_, 
+PLine::PLine(PLineArea area_, const Vector2d &from_, const Vector2d &to_, double speed_,
 	     double feedrate_, short arc_, const Vector2d &arccenter_, double angle_,
 	     double lifted_)
   : area(area_), from(from_), to(to_), speed(speed_), feedrate(feedrate_), absolute_feed(0),
@@ -202,14 +202,14 @@ double PLine::calcangle(const PLine rhs) const
 
 double PLine::lengthSq() const
 {
-  if (!arc) 
+  if (!arc)
     return (to-from).squared_length();
   else
     return pow(length(),2);
 }
 double PLine::length() const
 {
-  if (!arc) 
+  if (!arc)
     return sqrt(lengthSq());
   else {
     double radius = (from-arccenter).length();
@@ -232,14 +232,14 @@ void PLine::addAbsoluteExtrusionAmount(double amount, double max_absspeed)
   absolute_feed += amount;
   // slowdown if max speed given and not enough time for absolute feed:
   if (max_absspeed > 0) { // is given
-    const double t = time(); 
+    const double t = time();
     const double feedt = absolute_feed/max_absspeed;
     if ( feedt > t ) // too fast
       speed *= t / feedt;
   }
 }
 
-bool PLine::is_noop() const 
+bool PLine::is_noop() const
 {
   return (from == to && feedrate == 0 && absolute_feed == 0);
 }
@@ -255,7 +255,7 @@ string PLine::info() const
   ostr << from;
   if (to!=from) ostr << to;
   ostr << " angle="<< (int)(angle*180/M_PI)<<"°"
-       << " length="<< length() << " speed=" << speed 
+       << " length="<< length() << " speed=" << speed
        << " feedr=" << feedrate;
   if (arc!=0)
     ostr << " center=" << arccenter;
@@ -280,7 +280,7 @@ Printlines::Printlines(const Layer * layer, const Settings * settings, double z_
   if (layer!=NULL) {
     Cairo::RefPtr<Cairo::Context>      context;
     vector<Poly> overhangs = layer->getOverhangs();
-    rasterpolys(overhangs, layer->getMin(), layer->getMax(), layer->thickness/5, 
+    rasterpolys(overhangs, layer->getMin(), layer->getMax(), layer->thickness/5,
 		overhangs_surface, context);
   }
 }
@@ -292,8 +292,8 @@ void Printlines::clear()
   printpolys.clear();
 };
 
-void Printlines::addLine(PLineArea area, vector<PLine> &lines, 
-			 const Vector2d &from, const Vector2d &to, 
+void Printlines::addLine(PLineArea area, vector<PLine> &lines,
+			 const Vector2d &from, const Vector2d &to,
 			 double speed, double movespeed, double feedrate) const
 {
   if (to==from) return;
@@ -313,7 +313,7 @@ void Printlines::addLine(PLineArea area, vector<PLine> &lines,
 }
 
 
-// // // // // // // // // // // // PrintPoly // // // // // // // // // // // // 
+// // // // // // // // // // // // PrintPoly // // // // // // // // // // // //
 
 PrintPoly::PrintPoly(const Poly &poly,
 		     const Printlines * printlines_,
@@ -322,8 +322,8 @@ PrintPoly::PrintPoly(const Poly &poly,
 		     bool displace_start_,
 		     PLineArea area_)
   : printlines(printlines_), area(area_),
-    speed(speed_), min_time(min_time_), 
-    displace_start(displace_start_), 
+    speed(speed_), min_time(min_time_),
+    displace_start(displace_start_),
     overhangingpoints(0), priority(1.), length(0), speedfactor(1.)
 {
   // Take a copy of the reference poly
@@ -332,9 +332,9 @@ PrintPoly::PrintPoly(const Poly &poly,
   if (area==SHELL || area==SKIN) {
     priority *= 5; // may be 5 times as far away to get preferred as next poly
     for (uint j=0; j<m_poly->size();j++){
-      if (getCairoSurfaceDatapoint(printlines->overhangs_surface, 
-				   printlines->layer->getMin(), 
-				   printlines->layer->getMax(), 
+      if (getCairoSurfaceDatapoint(printlines->overhangs_surface,
+				   printlines->layer->getMin(),
+				   printlines->layer->getMax(),
 				   m_poly->vertices[j]) != 0) {
 	overhangingpoints++;
 	priority /= 10; // must be 10 times nearer for each overhang point
@@ -364,7 +364,7 @@ PrintPoly::~PrintPoly()
   delete m_poly;
 }
 
-void PrintPoly::addToLines(vector<PLine> &lines, int startindex, 
+void PrintPoly::addToLines(vector<PLine> &lines, int startindex,
 			   double movespeed) const
 {
   vector<Vector2d> pvert;
@@ -372,14 +372,14 @@ void PrintPoly::addToLines(vector<PLine> &lines, int startindex,
   if (pvert.size() == 0) return;
   assert(pvert.size() % 2 == 0);
   for (uint i=0; i<pvert.size(); i+=2) {
-    printlines->addLine(area, lines, pvert[i], pvert[i+1], 
+    printlines->addLine(area, lines, pvert[i], pvert[i+1],
 			speed, movespeed, m_poly->getExtrusionFactor());
   }
 }
 
 uint PrintPoly::getDisplacedStart(uint start) const
 {
-  if (displace_start) { 
+  if (displace_start) {
     // find next sharp corner (>pi/4)
     uint oldstart = start; // if none found, stay here
     start = m_poly->nextVertex(start);
@@ -469,7 +469,7 @@ double Printlines::makeLines(Vector2d &startPoint,
       double pdist;
       for(size_t q = 0; q < count; q++) { // find nearest polygon
 	if (!done[q])
-	  { 
+	  {
 	    //cerr << printpolys[q].info() << endl;
 	    if (printpolys[q]->m_poly->size() == 0) {done[q] = true; ndone++;}
 	    else {
@@ -499,7 +499,7 @@ double Printlines::makeLines(Vector2d &startPoint,
     }
   if (totallength !=0)
     totalspeedfactor /= totallength;
-  else 
+  else
     totalspeedfactor = 1.;
   return totalspeedfactor;
 }
@@ -507,7 +507,7 @@ double Printlines::makeLines(Vector2d &startPoint,
 // #if 0
 // void Printlines::oldMakeLines(PLineArea area,
 // 			      const vector<Poly> &polys,
-// 			      bool displace_startpoint, 			   
+// 			      bool displace_startpoint,
 // 			      Vector2d &startPoint,
 // 			      vector<PLine> &lines,
 // 			      double maxspeed)
@@ -527,7 +527,7 @@ double Printlines::makeLines(Vector2d &startPoint,
 //   for(size_t q=0; q < count; q++) done[q]=false;
 //   uint ndone=0;
 //   //double nlength;
-//   while (ndone < count) 
+//   while (ndone < count)
 //     {
 //       double nstdist = INFTY;
 //       double pdist;
@@ -551,7 +551,7 @@ double Printlines::makeLines(Vector2d &startPoint,
 // 	    }
 // 	}
 //       // displace first point to next sharp corner (>pi/4)
-//       if (displace_startpoint && ndone==0) { 
+//       if (displace_startpoint && ndone==0) {
 // 	int oldnvindex = nvindex; // if none found, stay here
 // 	nvindex = polys[npindex].nextVertex(nvindex);
 // 	while (nvindex != oldnvindex &&
@@ -583,14 +583,14 @@ void Printlines::optimize(double linewidth,
   //cerr << "optimize" << endl;
   makeArcs(linewidth, lines);
   double minarclength = settings->Slicing.MinArcLength;
-  if (!settings->Slicing.UseArcs) minarclength = cornerradius; 
-  if (settings->Slicing.RoundCorners) 
+  if (!settings->Slicing.UseArcs) minarclength = cornerradius;
+  if (settings->Slicing.RoundCorners)
     roundCorners(cornerradius, minarclength, lines);
   slowdownTo(slowdowntime, lines);
   double totext = total_Extrusion(lines);
   makeAntioozeRetract(lines);
   double totext2 = total_Extrusion(lines);
-  if (abs(totext-totext2)>0.01) 
+  if (abs(totext-totext2)>0.01)
     cerr << "extrusion difference after antiooze " << totext2-totext << endl;
   // else
   //   cerr << " ok" << endl;
@@ -602,7 +602,7 @@ void Printlines::optimize(double linewidth,
 
 // find center for best fit of arclines
 bool fit_arc(const vector<PLine> &lines, uint fromind, uint toind,
-	     double sq_error, 
+	     double sq_error,
 	     Vector2d &result_center, double &result_radiussq)
 {
   if (toind-fromind < 2) return false;
@@ -639,14 +639,14 @@ double arc_offset(const Vector2d &center, const PLine &line)
   return off;
 }
 
-bool continues_arc(const Vector2d &center, 
+bool continues_arc(const Vector2d &center,
 		   uint index, double maxAngle,
 		   const vector<PLine> &lines)
 {
   if (index < 2 || index >= lines.size()) return false;
-  const PLine &l1 = lines[index-2]; 
-  const PLine &l2 = lines[index-1]; 
-  const PLine &l3 = lines[index]; 
+  const PLine &l1 = lines[index-2];
+  const PLine &l2 = lines[index-1];
+  const PLine &l3 = lines[index];
   const double angle1 = l1.calcangle(l2);
   const double angle2 = l2.calcangle(l3);
   if (abs(angle1) < 0.001) return false;
@@ -655,7 +655,7 @@ bool continues_arc(const Vector2d &center,
   const double len3 = l3.length();
   if (abs(len2) < 0.001) return false;
   if (abs(len3) < 0.001) return false;
-  return ( angle1 < maxAngle && angle2 < maxAngle 
+  return ( angle1 < maxAngle && angle2 < maxAngle
 	   && abs(angle1/angle2-1) < 0.3
 	   && abs(len2/len3-1) < 0.3 );
 }
@@ -671,7 +671,7 @@ uint Printlines::makeArcs(double linewidth,
   const double maxAngle = settings->Slicing.ArcsMaxAngle * M_PI/180;
   const double linewidth_sq = linewidth*linewidth;
   if (maxAngle <= 0) return 0;
-  double arcRadiusSq = 0;  
+  double arcRadiusSq = 0;
   Vector2d arccenter(1000000,1000000);
   guint arcstart = 0;
   Vector2d newcenter;
@@ -682,8 +682,8 @@ uint Printlines::makeArcs(double linewidth,
     i = arcstart+2;
     arcend = arcstart;
     while ( continues_arc(arccenter, i, maxAngle, lines) ) {
-      if ( fit_arc (lines, arcstart, i, linewidth_sq, newcenter, newradiusSq) 
-	   //&&  arc_offset(newcenter, lines[i]) < 5*linewidth 
+      if ( fit_arc (lines, arcstart, i, linewidth_sq, newcenter, newradiusSq)
+	   //&&  arc_offset(newcenter, lines[i]) < 5*linewidth
 	   ) {
 	arccenter = newcenter;
 	arcend = i;
@@ -692,9 +692,9 @@ uint Printlines::makeArcs(double linewidth,
     }
     if (arcend > arcstart + 2) {
       cerr << "found arc from " << arcstart << " to " << arcend << endl;
-      i -= makeIntoArc(arccenter, arcstart, arcend, lines); 
+      i -= makeIntoArc(arccenter, arcstart, arcend, lines);
     }
-    arcstart = i+1; 
+    arcstart = i+1;
   }
 }
 
@@ -727,7 +727,7 @@ uint Printlines::makeArcs(double linewidth,
   if (lines.size() < 2) return 0;
   double maxAngle = settings->Slicing.ArcsMaxAngle * M_PI/180;
   if (maxAngle < 0) return 0;
-  double arcRadiusSq = 0;  
+  double arcRadiusSq = 0;
   Vector2d arccenter(1000000,1000000);
   guint arcstart = 0;
   for (uint i=1; i < lines.size(); i++) {
@@ -751,20 +751,20 @@ uint Printlines::makeArcs(double linewidth,
 	arcRadiusSq = radiusSq;
 	// this one doesn't fit, so i-1 is last line of the arc
 	if (arcstart+2 < i-1) // at least three lines to make an arc
-	  i -= makeIntoArc(arcstart, i-1, lines); 
+	  i -= makeIntoArc(arcstart, i-1, lines);
 	// set start for potential next arc
 	arcstart = i;
       }
   }
   // remaining
-  if (arcstart+2 < lines.size()-1) 
-    makeIntoArc(arcstart, lines.size()-1, lines); 
+  if (arcstart+2 < lines.size()-1)
+    makeIntoArc(arcstart, lines.size()-1, lines);
   return 0;
 }
 #endif
 
 
-uint Printlines::makeIntoArc(const Vector2d &center, 
+uint Printlines::makeIntoArc(const Vector2d &center,
 			     guint fromind, guint toind,
 			     vector<PLine> &lines) const
 {
@@ -778,8 +778,8 @@ uint Printlines::makeIntoArc(const Vector2d &center,
   bool ccw = isleftof(center, lines[fromind].from, lines[fromind].to);
   if (!ccw) angle = -angle;
   if (angle<=0) angle+=2*M_PI;
-  short arctype = ccw ? -1 : 1; 
-  PLine newline(lines[fromind].area, P, Q, 
+  short arctype = ccw ? -1 : 1;
+  PLine newline(lines[fromind].area, P, Q,
 		lines[fromind].speed, lines[fromind].feedrate,
 		arctype, center, angle, lines[fromind].lifted);
   lines[fromind] = newline;
@@ -787,7 +787,7 @@ uint Printlines::makeIntoArc(const Vector2d &center,
   return toind-fromind;
 }
 
-// return how many lines are removed 
+// return how many lines are removed
 uint Printlines::makeIntoArc(guint fromind, guint toind,
 			     vector<PLine> &lines) const
 {
@@ -817,14 +817,14 @@ uint Printlines::makeIntoArc(guint fromind, guint toind,
     end1ind = fromind + (toind-fromind)/2;
     //}
   Vector2d chord1p1, chord1p2;
-  center_perpendicular(P, lines[end1ind].to, chord1p1, chord1p2);  
+  center_perpendicular(P, lines[end1ind].to, chord1p1, chord1p2);
   // center perp of midpoint -- endpoint:
   guint start2ind =  fromind + (toind-fromind)/2;
   Vector2d chord2p1, chord2p2;
   center_perpendicular(lines[start2ind].from, Q, chord2p1, chord2p2);
   // intersection = center
   Vector2d center, ip;
-  int is = intersect2D_Segments(chord1p1, chord1p2, chord2p1, chord2p2, 
+  int is = intersect2D_Segments(chord1p1, chord1p2, chord2p1, chord2p2,
    				center, ip);
   if (is > 0) {
 #endif
@@ -833,7 +833,7 @@ uint Printlines::makeIntoArc(guint fromind, guint toind,
   return 0;
 }
 
-uint Printlines::roundCorners(double maxdistance, double minarclength, 
+uint Printlines::roundCorners(double maxdistance, double minarclength,
 			      vector<PLine> &lines) const
 {
   if (lines.size() < 2) return 0;
@@ -848,15 +848,15 @@ uint Printlines::roundCorners(double maxdistance, double minarclength,
 
 // make corner of lines[ind], lines[ind+1] into arc
 // maxdistance is distance of arc begin from corner
-uint Printlines::makeCornerArc(double maxdistance, double minarclength, 
-			       uint ind, 
+uint Printlines::makeCornerArc(double maxdistance, double minarclength,
+			       uint ind,
 			       vector<PLine> &lines) const
 {
   if (ind > lines.size()-2) return 0;
   if (lines[ind].arc != 0 || lines[ind+1].arc != 0) return 0;
   // movement in between?
   if ((lines[ind].to - lines[ind+1].from).squared_length() > 0.01) return 0;
-  // if ((lines[ind].from - lines[ind+1].to).squared_length() 
+  // if ((lines[ind].from - lines[ind+1].to).squared_length()
   //     < maxdistance*maxdistance) return 0;
   double l1 = lines[ind].length();
   double l2 = lines[ind+1].length();
@@ -880,7 +880,7 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   bool ccw = isleftof(center, p1, p2);
   if (!ccw) angle = -angle;
   if (angle <= 0) angle += 2*M_PI;
-  short arctype = ccw ? -1 : 1; 
+  short arctype = ccw ? -1 : 1;
   // need 2 half arcs?
   bool split = (lines[ind].feedrate != lines[ind+1].feedrate);
   // too small arc, replace by 2 straight lines
@@ -892,14 +892,14 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   vector<PLine> newlines;
   uint numnew = 0;
   if (p1 != lines[ind].from) { // straight line 1
-    newlines.push_back(PLine(lines[ind].area, lines[ind].from, p1, 
+    newlines.push_back(PLine(lines[ind].area, lines[ind].from, p1,
 			     lines[ind].speed, lines[ind].feedrate, lines[ind].lifted));
     numnew++;
   }
   if (p2 != p1)  {
     if (toosmallfortwo) { // 1 line
       const double feedr = ( lines[ind].feedrate + lines[ind+1].feedrate ) / 2;
-      newlines.push_back(PLine(lines[ind].area, p1, p2, lines[ind].speed, feedr, 
+      newlines.push_back(PLine(lines[ind].area, p1, p2, lines[ind].speed, feedr,
 			       feedr!=0?lines[ind].lifted:0));
       numnew++;
     }
@@ -912,32 +912,32 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
 				 lines[ind+1].feedrate, lines[ind+1].lifted));
       }
       else if (split) { // 2 arcs
-	newlines.push_back(PLine(lines[ind].area, p1, splitp, 
+	newlines.push_back(PLine(lines[ind].area, p1, splitp,
 				 lines[ind].speed,   lines[ind].feedrate,
 				 arctype, center, angle/2, lines[ind].lifted));
-	newlines.push_back(PLine(lines[ind+1].area, splitp, p2, 
+	newlines.push_back(PLine(lines[ind+1].area, splitp, p2,
 				 lines[ind+1].speed, lines[ind+1].feedrate,
 				 arctype, center, angle/2, lines[ind+1].lifted));
       }
       numnew+=2;
     } else { // 1 arc
-      newlines.push_back(PLine(lines[ind].area, p1, p2, 
+      newlines.push_back(PLine(lines[ind].area, p1, p2,
 			       lines[ind].speed, lines[ind].feedrate,
 			       arctype, center, angle, lines[ind].lifted));
       numnew++;
     }
   }
   if (p2 != lines[ind+1].to) { // straight line 2
-    newlines.push_back(PLine(lines[ind].area, p2, 
+    newlines.push_back(PLine(lines[ind].area, p2,
 			     lines[ind+1].to, lines[ind+1].speed,
 			     lines[ind+1].feedrate, lines[ind+1].lifted));
     numnew++;
   }
-  if (numnew>0) 
+  if (numnew>0)
     lines[ind] = newlines[0];
-  if (numnew>1) 
+  if (numnew>1)
     lines[ind+1] = newlines[1];
-  if (numnew>2) 
+  if (numnew>2)
     lines.insert(lines.begin()+ind+2, newlines.begin()+2, newlines.end());
   return max(0, (int)numnew - 2);
 }
@@ -947,8 +947,8 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
 // #if NEW_ANTIOOZE
 
 // find ranges for retract and repush
-bool Printlines::find_nextmove(double minlength, uint startindex, 
-			       uint &movestart,  uint &moveend, 
+bool Printlines::find_nextmove(double minlength, uint startindex,
+			       uint &movestart,  uint &moveend,
 			       uint &tractstart, uint &pushend,
 			       const vector<PLine> &lines) const
 {
@@ -956,7 +956,7 @@ bool Printlines::find_nextmove(double minlength, uint startindex,
   while (i < lines.size()-2) {
     // find move start
     while (i < lines.size() && lines[i].feedrate != 0 ) {
-      i++; movestart = i; 
+      i++; movestart = i;
     }
     if (lines[movestart].feedrate != 0) return false;
     if (i == lines.size()-1) return false;
@@ -977,7 +977,7 @@ bool Printlines::find_nextmove(double minlength, uint startindex,
       else {
 	i = movestart-1;
 	while (i > 0 && lines[i].feedrate != 0 ) {
-	  tractstart = i; i--; 
+	  tractstart = i; i--;
 	}
       }
       if (moveend == lines.size()-1) pushend = moveend;
@@ -987,7 +987,7 @@ bool Printlines::find_nextmove(double minlength, uint startindex,
 	  pushend = i; i++;
 	}
       }
-      // cerr << "found move " << tractstart << "..." <<movestart 
+      // cerr << "found move " << tractstart << "..." <<movestart
       // 	   << "--"<<moveend<< "..."<< pushend <<  " length " << totaldistance << endl;
       return true;
     }
@@ -995,10 +995,10 @@ bool Printlines::find_nextmove(double minlength, uint startindex,
   return false;
 }
 
-uint Printlines::insertAntioozeHaltBefore(uint index, double amount, double speed, 
+uint Printlines::insertAntioozeHaltBefore(uint index, double amount, double speed,
 					  vector<PLine> &lines) const
 {
-  Vector2d where; 
+  Vector2d where;
   if (index > lines.size()) return 0;
   if (index == lines.size()) where = lines.back().getTo();
   else where = lines[index].getFrom();
@@ -1008,8 +1008,8 @@ uint Printlines::insertAntioozeHaltBefore(uint index, double amount, double spee
   return 1;
 }
 
-int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed, 
-					  uint fromline, uint toline, 
+int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
+					  uint fromline, uint toline,
 					  bool at_end,  // add to end of range (retract)
 					  vector<PLine> &lines,
 					  double &havedistributed) const
@@ -1018,7 +1018,7 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
     uint added = 0;
     if (at_end) {  // add retracting halt after toline
       added = insertAntioozeHaltBefore(toline+1, AOamount, AOspeed, lines);
-      havedistributed += AOamount;  
+      havedistributed += AOamount;
       //cerr << "halt tract "<< AOamount << " inserted after " << toline << endl;
     } else {       // add repushing halt before fromline
       added = insertAntioozeHaltBefore(fromline, AOamount, AOspeed, lines);
@@ -1034,7 +1034,7 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
     // slow down lines to get enough time for AOamount
     double speedfactor = linestime / AOtime;
     //cerr << "slow down factor "<< speedfactor<< endl;
-    for (uint i=fromline; i<=toline; i++) 
+    for (uint i=fromline; i<=toline; i++)
       lines[i].speed *= speedfactor;
   }
   bool negative = (AOamount < 0);
@@ -1042,7 +1042,7 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
   double restamount = AOamount; // +-
   uint   iline = fromline; if (at_end) iline = toline; // start here
   double dist = 0;
-  while ( abs(restamount) > 0.01 
+  while ( abs(restamount) > 0.01
 	  && (restamount < 0) == (AOamount < 0) ) { // while same sign
     double lineamount = lines[iline].time() * AOspeed; // max. possible amount at line
     if (negative) lineamount = -lineamount;
@@ -1075,7 +1075,7 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
 	restamount -= lineamount;
       }
     if (at_end) {
-      iline--; 
+      iline--;
       if (iline < fromline) break; // finished
     } else {
       iline++;
@@ -1093,7 +1093,7 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
 uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
 {
   if (!settings->Slicing.EnableAntiooze) return 0;
-  double 
+  double
     AOmindistance = settings->Slicing.AntioozeDistance,
     AOamount      = settings->Slicing.AntioozeAmount,
     AOspeed       = settings->Slicing.AntioozeSpeed;
@@ -1104,11 +1104,11 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
 
   uint total_added = 0;
   double total_extrusionsum = 0;
-  uint 
+  uint
     movestart  = 0, moveend = 0,
     tractstart = 0, pushend = 0;
-  while ( find_nextmove(AOmindistance, moveend+1, 
-			movestart,  moveend, 
+  while ( find_nextmove(AOmindistance, moveend+1,
+			movestart,  moveend,
 			tractstart, pushend,
 			lines) ) {
     double extrusionsum = 0;
@@ -1117,10 +1117,10 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
     // find lines to distribute repush
     if (moveend > lines.size()-2) moveend = lines.size()-2;
     if (settings->Slicing.AntioozeZlift > 0)
-      for (uint i = movestart; i <= moveend; i++) 
+      for (uint i = movestart; i <= moveend; i++)
 	lines[i].lifted = settings->Slicing.AntioozeZlift;
 
-    
+
 
     double dist = 0;
     uint newl = distribute_AntioozeAmount(AOamount, AOspeed,
@@ -1132,7 +1132,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
     if (abs(linesext-AOamount)>0.01) cerr  << "wrong lines dist push " << linesext << endl;
     extrusionsum += dist;
     if (abs(dist-AOamount)>0.01) cerr << " wrong distrib push " << dist << endl;
-    // on-halt repush and retract 
+    // on-halt repush and retract
     // if (onhalt_amount != 0) {
     //   added += insertAntioozeHaltBefore(moveend+1, onhalt_amount, AOspeed, lines);
     //   extrusionsum += onhalt_amount;
@@ -1144,13 +1144,13 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
     if (movestart < 1) movestart = 1;
     dist = 0;
     double linesextbefore = 0;
-    for (uint i = tractstart; i<=movestart-1; i++) 
+    for (uint i = tractstart; i<=movestart-1; i++)
       linesextbefore += lines[i].absolute_feed;
     newl = distribute_AntioozeAmount(-AOamount, AOspeed,
 				     tractstart, movestart-1,
 				     true, lines, dist);
     linesext=-linesextbefore;
-    for (uint i = tractstart; i<=movestart-1+newl; i++) 
+    for (uint i = tractstart; i<=movestart-1+newl; i++)
       linesext += lines[i].absolute_feed;
     if (abs(linesext+AOamount)>0.01) cerr  << "wrong lines dist tract " << linesext << " ("<<dist <<") != " << -AOamount << " - " << tractstart << "->" <<  movestart << " new: "<< newl<<endl;
     added += newl;
@@ -1167,7 +1167,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
 }
 
 
-// split line at given length 
+// split line at given length
 uint Printlines::divideline(uint lineindex, const double length, vector<PLine> &lines) const
 {
   PLine *l = &lines[lineindex];
@@ -1182,11 +1182,11 @@ uint Printlines::divideline(uint lineindex, const double length, vector<PLine> &
   } else {
     double angle = l->angle * length/linelen;
     Vector2d arcpoint = rotated(l->from, l->arccenter, angle, (l->arc < 0));
-    PLine line1(l->area, l->from, arcpoint, l->speed, l->feedrate, 
+    PLine line1(l->area, l->from, arcpoint, l->speed, l->feedrate,
 		l->arc, l->arccenter, angle, l->lifted);
-    PLine line2(l->area, arcpoint, l->to,   l->speed, l->feedrate, 
+    PLine line2(l->area, arcpoint, l->to,   l->speed, l->feedrate,
 		l->arc, l->arccenter, l->angle-angle, l->lifted);
-    if (l->absolute_feed != 0) { // distribute absolute extrusion 
+    if (l->absolute_feed != 0) { // distribute absolute extrusion
       double totlength = line1.length() + line2.length();
       line1.absolute_feed = l->absolute_feed * line1.length()/totlength;
       line2.absolute_feed = l->absolute_feed * line2.length()/totlength;
@@ -1210,15 +1210,15 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> &points,
   if (npoints == 0) return 0;
   vector<PLine> newlines;
   PLine *l = &lines[lineindex];
-  newlines.push_back(PLine(l->area, l->from, points[0], 
+  newlines.push_back(PLine(l->area, l->from, points[0],
 			   l->speed, l->feedrate, l->lifted));
   for (uint i = 0; i < npoints-1; i++) {
-    newlines.push_back(PLine(l->area, points[i], points[i+1], 
+    newlines.push_back(PLine(l->area, points[i], points[i+1],
 			     l->speed, l->feedrate, l->lifted));
   }
-  newlines.push_back(PLine(l->area, points[npoints-1], 
+  newlines.push_back(PLine(l->area, points[npoints-1],
 			   l->to, l->speed, l->feedrate, l->lifted));
-  if (l->absolute_feed != 0) { // distribute absolute extrusion 
+  if (l->absolute_feed != 0) { // distribute absolute extrusion
     double totlength = 0;
     for (uint i = 0; i < newlines.size(); i++){
       totlength += newlines[i].length();
@@ -1232,7 +1232,7 @@ uint Printlines::divideline(uint lineindex, const vector<Vector2d> &points,
     lines[lineindex] = newlines[0];
     if (newlines.size() > 1)
       lines.insert(lines.begin()+lineindex+1, newlines.begin()+1, newlines.end());
-    return newlines.size()-1; // return how many more lines now 
+    return newlines.size()-1; // return how many more lines now
   }
   return 0;
 }
@@ -1268,7 +1268,7 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 	  // for (uint pi=0; pi < path.size(); pi++)
 	  //   cerr << path[pi] << endl;
 	  div+=(divideline(i, path, lines));
-	  // cerr << i << " _ "<<  frompoly<<":"<<fromind << " ==> "<< topoly<<":"<<toind 
+	  // cerr << i << " _ "<<  frompoly<<":"<<fromind << " ==> "<< topoly<<":"<<toind
 	  //      << " - " << div<< endl;
 	  //i++;
 	  // continue;
@@ -1283,7 +1283,7 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 	// allpolys.push_back(polys[frompoly]);
 	// // add holes
 	// for (int p = 0; p < polys.size(); p++) {
-	//   if (p != frompoly && polys[p].isInside(polys[frompoly])) 
+	//   if (p != frompoly && polys[p].isInside(polys[frompoly]))
 	//     allpolys.push_back(polys[p]);
 	// }
 	// cerr << allpolys.size() << " holes" << endl;
@@ -1293,7 +1293,7 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 	//cerr << path.size() << " path points" << endl;
 
 	if (ispath) {
-	  div += (divideline(i,path,lines)); 
+	  div += (divideline(i,path,lines));
 	  if (divisions>0)
 	    cerr << divisions << " div in poly " << topoly << " - " << ispath << " path " << path.size()<<endl;
 	}
@@ -1301,19 +1301,19 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 #else // walk along perimeters
       // intersections with all polys
       for (uint p = 0; p < polys.size(); p++) {
-	vector<Intersection> pinter = 
+	vector<Intersection> pinter =
 	  polys[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
 	if (pinter.size() > 0) {
 	  // if (pinter.size()%2 == 0) {
-	    vector<Vector2d> path = 
+	    vector<Vector2d> path =
 	      polys[p].getPathAround(lines[i].from, lines[i].to);
 	    // after divide, skip number of added lines -> test remaining line later
-	    div += (divideline(i, path, lines)); 
+	    div += (divideline(i, path, lines));
 	    //continue;
 	  // }
 	}
       }
-      
+
 #endif
       i += div;
     }
@@ -1336,12 +1336,12 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
       }
       if ((frompoly == -1) || (topoly == -1)) {
 	//cerr <<frompoly << " -- " << topoly << endl;
-	continue; 
+	continue;
       }
-      // if (frompoly != topoly && polys[frompoly].hole) { // walk out of hole 
+      // if (frompoly != topoly && polys[frompoly].hole) { // walk out of hole
       // 	double dist;
       // 	uint nearest = polys[frompoly].nearestDistanceSqTo(lines[i].from, dist);
-      // 	i += divideline(i,polys[frompoly][nearest],lines); 
+      // 	i += divideline(i,polys[frompoly][nearest],lines);
       // 	continue;
       // }
       // line outside polys - ?
@@ -1353,14 +1353,14 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 	//holes.push_back((*polys)[frompoly]);
 	for (uint p = 0; p < polys->size(); p++) {
 	  //   //if ((*polys)[p].isHole())
-	  if (polys[frompoly].polyInside(polys[p])) 
+	  if (polys[frompoly].polyInside(polys[p]))
 	    holes.push_back(polys[p]);
 	}
 	vector<Vector2d> path;
 	bool ispath = shortestPath(lines[i].from,lines[i].to,
 				   holes, frompoly, path, maxerr);
 	if (ispath) {
-	  int divisions = (divideline(i,path,lines)); 
+	  int divisions = (divideline(i,path,lines));
 	  i += divisions;
 	  if (divisions>0)
 	    cerr << divisions << " div in poly " << topoly << " - " << ispath << " path " << path.size()<<endl;
@@ -1368,30 +1368,30 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
 	continue; // next line
 #else // walk along perimeters
 	for (uint p = 0; p < polys.size(); p++) {
- 	  vector<Intersection> pinter = 
+ 	  vector<Intersection> pinter =
 	    polys[p].lineIntersections(lines[i].from,lines[i].to, maxerr);
 	  if (pinter.size() > 0) {
 	    if (pinter.size()%2 == 0) { // holes
 	      std::sort(pinter.begin(), pinter.end());
-	      vector<Vector2d> path = 
+	      vector<Vector2d> path =
 		polys[p].getPathAround(pinter.front().p, pinter.back().p);
 	      // after divide, skip number of added lines -> test remaining line later
-	      i += (divideline(i, path, lines)); 
+	      i += (divideline(i, path, lines));
 	    }
 	  }
 	}
 #endif
       }
       else if (frompoly != -1 && topoly != -1 && frompoly != topoly) {
-	cerr << i << " : "<<frompoly << " p>> " << topoly << endl;	
-	// vector<Intersection> frominter = 
+	cerr << i << " : "<<frompoly << " p>> " << topoly << endl;
+	// vector<Intersection> frominter =
 	//   polys[frompoly].lineIntersections(lines[i].from,lines[i].to, maxerr);
-	// vector<Intersection> tointer = 
+	// vector<Intersection> tointer =
 	//   polys[topoly].lineIntersections(lines[i].from,lines[i].to, maxerr);
 	// cerr << frominter.size() << " -- " << tointer.size() << endl;
-	// vector<Vector2d> frompath = 
+	// vector<Vector2d> frompath =
 	//   polys[frompoly].getPathAround(lines[i].from, lines[i].to);
-	// vector<Vector2d> topath = 
+	// vector<Vector2d> topath =
 	//   polys[topoly].getPathAround(lines[i].from, lines[i].to);
 	// cerr << frompath.size() << " -- " << topath.size() << endl;
 	int fromind, toind;
@@ -1410,7 +1410,7 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine> &lines,
     }
   }
 }
-#endif // NEWCLIP=0 
+#endif // NEWCLIP=0
 
 
 void Printlines::setSpeedFactor(double speedfactor, vector<PLine> &lines) const
@@ -1421,7 +1421,7 @@ void Printlines::setSpeedFactor(double speedfactor, vector<PLine> &lines) const
       lines[i].speed *= speedfactor;
   }
 }
-double Printlines::slowdownTo(double totalseconds, vector<PLine> &lines) 
+double Printlines::slowdownTo(double totalseconds, vector<PLine> &lines)
 {
   double totalnow = totalSecondsExtruding(lines);
   if (totalseconds == 0 || totalnow == 0) return 1;
@@ -1439,7 +1439,7 @@ void Printlines::mergelines(PLine &l1, PLine &l2, double maxdist) const
   Vector2d d2 = l2.to - l2.from;
   double len2 = d2.length();
   if (len2==0) return;
-  double dist2 = abs(cross2d(d2,l1.from-l2.from).length()) / len2 ; // by area of parallelogram 
+  double dist2 = abs(cross2d(d2,l1.from-l2.from).length()) / len2 ; // by area of parallelogram
   //cerr << len2 << " - " << len2b << endl;
   // Vector2d dp = l1.to - l2.from;
   // double l = dot(dp,d2);
@@ -1462,7 +1462,7 @@ void Printlines::optimizeLinedistances(double maxdist, vector<PLine> &lines) con
    for (uint j=i+1; i<count; i++){
      if (abs(lines[i].calcangle(lines[j]))<0.1){ // parallel
 	 mergelines(lines[i],lines[j],maxdist);
-	 
+
        // if (distance(lines[i].from, lines[j]) < maxdist){
        // 	 lines[i].to = lines[i].from;
        // 	 cerr<< "removed "<<i<< endl;
@@ -1472,8 +1472,8 @@ void Printlines::optimizeLinedistances(double maxdist, vector<PLine> &lines) con
  }
 }
 
-bool Printlines::capCorner(PLine &l1, PLine &l2, 
-			   double linewidth, double linewidthratio, 
+bool Printlines::capCorner(PLine &l1, PLine &l2,
+			   double linewidth, double linewidthratio,
 			   double optratio) const
 {
   double MINLEN = 4; // minimum line length to handle
@@ -1503,7 +1503,7 @@ bool Printlines::capCorner(PLine &l1, PLine &l2,
     double lenfact2 = 1-cutlength/d2l;
     l2.from = l2.to + d2*lenfact2;
     done = true;
-  } //else l2.to=l2.from; // delete line if too short 
+  } //else l2.to=l2.from; // delete line if too short
   return done;
 }
 
@@ -1532,7 +1532,7 @@ void Printlines::optimizeCorners(double linewidth, double linewidthratio, double
 // }
 
 
-void Printlines::getLines(const vector<PLine> &lines, 
+void Printlines::getLines(const vector<PLine> &lines,
 			  vector<Vector2d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
@@ -1541,7 +1541,7 @@ void Printlines::getLines(const vector<PLine> &lines,
     olines.push_back(lIt->to);
   }
 }
-void Printlines::getLines(const vector<PLine> &lines, 
+void Printlines::getLines(const vector<PLine> &lines,
 			  vector<Vector3d> &olines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
@@ -1551,7 +1551,7 @@ void Printlines::getLines(const vector<PLine> &lines,
   }
 }
 
-void Printlines::getLines(const vector<PLine> &lines, 
+void Printlines::getLines(const vector<PLine> &lines,
 			  vector<PLine3> &plines) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
@@ -1560,7 +1560,7 @@ void Printlines::getLines(const vector<PLine> &lines,
   }
 }
 
-double Printlines::totalLength(const vector<PLine> &lines) const 
+double Printlines::totalLength(const vector<PLine> &lines) const
 {
   double l = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1569,7 +1569,7 @@ double Printlines::totalLength(const vector<PLine> &lines) const
   return l;
 }
 
-double Printlines::total_rel_Extrusion(const vector<PLine> &lines) const 
+double Printlines::total_rel_Extrusion(const vector<PLine> &lines) const
 {
   double l = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1578,7 +1578,7 @@ double Printlines::total_rel_Extrusion(const vector<PLine> &lines) const
   return l;
 }
 
-double Printlines::total_Extrusion(const vector<PLine> &lines) const 
+double Printlines::total_Extrusion(const vector<PLine> &lines) const
 {
   double l = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1587,7 +1587,7 @@ double Printlines::total_Extrusion(const vector<PLine> &lines) const
   return l + total_rel_Extrusion(lines);;
 }
 
-double Printlines::totalSeconds(const vector<PLine> &lines) const 
+double Printlines::totalSeconds(const vector<PLine> &lines) const
 {
   double t = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1595,7 +1595,7 @@ double Printlines::totalSeconds(const vector<PLine> &lines) const
   }
   return t * 60;
 }
-double Printlines::totalSecondsExtruding(const vector<PLine> &lines) const 
+double Printlines::totalSecondsExtruding(const vector<PLine> &lines) const
 {
   double t = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1606,8 +1606,8 @@ double Printlines::totalSecondsExtruding(const vector<PLine> &lines) const
 }
 
 // not used
-// string Printlines::GCode(Vector3d &lastpos, double &E, double feedrate, 
-// 			 double minspeed, double maxspeed, double movespeed, 
+// string Printlines::GCode(Vector3d &lastpos, double &E, double feedrate,
+// 			 double minspeed, double maxspeed, double movespeed,
 // 			 bool relativeE) const
 // {
 //   ostringstream o;
