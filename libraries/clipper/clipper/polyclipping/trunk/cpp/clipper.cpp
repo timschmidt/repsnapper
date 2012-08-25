@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.8.6                                                           *
-* Date      :  11 August 2012                                                  *
+* Version   :  4.8.7                                                           *
+* Date      :  24 August 2012                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -1326,10 +1326,7 @@ bool Clipper::ExecuteInternal(bool fixHoleLinkages)
 
       if (outRec->bottomPt == outRec->bottomFlag &&
         (Orientation(outRec, m_UseFullRange) != (Area(*outRec, m_UseFullRange) > 0)))
-      {
-        DisposeBottomPt(*outRec);
-        FixupOutPolygon(*outRec);
-      };
+          DisposeBottomPt(*outRec);
 
       if (outRec->isHole ==
         (m_ReverseOutput ^ Orientation(outRec, m_UseFullRange)))
@@ -2107,6 +2104,7 @@ void Clipper::DisposeBottomPt(OutRec &outRec)
   next->prev = prev;
   prev->next = next;
   outRec.bottomPt = next;
+  FixupOutPolygon(outRec);
 }
 //------------------------------------------------------------------------------
 
@@ -3057,8 +3055,9 @@ void Clipper::JoinCommonEdges(bool fixHoleLinkages)
         //outRec2 is contained by outRec1 ...
         outRec2->isHole = !outRec1->isHole;
         outRec2->FirstLeft = outRec1;
-        if (outRec2->isHole == Orientation(outRec2, m_UseFullRange))
-          ReversePolyPtLinks(*outRec2->pts);
+        if (outRec2->isHole ==
+          (m_ReverseOutput ^ Orientation(outRec2, m_UseFullRange)))
+            ReversePolyPtLinks(*outRec2->pts);
       } else if (PointInPolygon(outRec1->pts->pt, outRec2->pts, m_UseFullRange))
       {
         //outRec1 is contained by outRec2 ...
@@ -3066,8 +3065,9 @@ void Clipper::JoinCommonEdges(bool fixHoleLinkages)
         outRec1->isHole = !outRec2->isHole;
         outRec2->FirstLeft = outRec1->FirstLeft;
         outRec1->FirstLeft = outRec2;
-        if (outRec1->isHole == Orientation(outRec1, m_UseFullRange))
-          ReversePolyPtLinks(*outRec1->pts);
+        if (outRec1->isHole ==
+          (m_ReverseOutput ^ Orientation(outRec1, m_UseFullRange)))
+            ReversePolyPtLinks(*outRec1->pts);
         //make sure any contained holes now link to the correct polygon ...
         if (fixHoleLinkages) CheckHoleLinkages1(outRec1, outRec2);
       } else
@@ -3091,6 +3091,12 @@ void Clipper::JoinCommonEdges(bool fixHoleLinkages)
       //now cleanup redundant edges too ...
       FixupOutPolygon(*outRec1);
       FixupOutPolygon(*outRec2);
+
+      if (Orientation(outRec1, m_UseFullRange) != (Area(*outRec1, m_UseFullRange) > 0))
+          DisposeBottomPt(*outRec1);
+      if (Orientation(outRec2, m_UseFullRange) != (Area(*outRec2, m_UseFullRange) > 0))
+          DisposeBottomPt(*outRec2);
+
     } else
     {
       //joined 2 polygons together ...
@@ -3127,7 +3133,7 @@ void Clipper::JoinCommonEdges(bool fixHoleLinkages)
 }
 //------------------------------------------------------------------------------
 
-void ReversePolygons(Polygon& p)
+void ReversePolygon(Polygon& p)
 {
   std::reverse(p.begin(), p.end());
 }
@@ -3136,7 +3142,7 @@ void ReversePolygons(Polygon& p)
 void ReversePolygons(Polygons& p)
 {
   for (Polygons::size_type i = 0; i < p.size(); ++i)
-    ReversePolygons(p[i]);
+    ReversePolygon(p[i]);
 }
 
 //------------------------------------------------------------------------------

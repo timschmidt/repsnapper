@@ -2,6 +2,10 @@
 Clipper Change Log
 ============================================================
 
+v4.8.7 - 24 August 2012
+* Bugfix: ReversePolygon function in C++ translation was broken.
+* Bugfix: Two obscure bugs affecting orientation fixed too.
+
 v4.8.6 - 11 August 2012
 * Bugfix: Potential for memory overflow errors when using 
   ExPolygons structure.
