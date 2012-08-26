@@ -2,21 +2,6 @@
 Clipper Change Log
 ============================================================
 
-v4.8.7 - 24 August 2012
-* Bugfix: ReversePolygon function in C++ translation was broken.
-* Bugfix: Two obscure bugs affecting orientation fixed too.
-
-v4.8.6 - 11 August 2012
-* Bugfix: Potential for memory overflow errors when using 
-  ExPolygons structure.
-* Bugfix: The polygon coordinate range has been reduced to 
-          +/- 0x3FFFFFFFFFFFFFFF (4.6e18).
-* Update: ReversePolygons function was misnamed ReversePoints in C++.
-* Update: SimplifyPolygon function now takes a PolyFillType parameter.
-          
-v4.8.5 - 15 July 2012
-* Bugfix: Potential for memory overflow errors in OffsetPolygons().
-
 v4.8.4 - 1 June 2012
 * Bugfix: Another obscure bug affecting ExPolygons structure.
 
