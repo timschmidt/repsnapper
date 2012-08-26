@@ -204,6 +204,8 @@ class Settings {
     int window_height;
     int window_posx;
     int window_posy;
+    bool ExpandLayerDisplay;
+    bool ExpandModelDisplay;
   };
   MiscSettings Misc;
 

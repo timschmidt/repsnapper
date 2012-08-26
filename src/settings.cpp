@@ -506,10 +506,10 @@ std::string Settings::GCodeType::getText(GCodeTextType t)
 // return infill distance in mm
 double Settings::GetInfillDistance(double layerthickness, float percent) const
 {
-  double fullInfillDistance = 
+  double fullInfillDistance =
     Hardware.GetExtrudedMaterialWidth(layerthickness);
   if (percent == 0) return 10000000;
-  return fullInfillDistance * (100./percent);  
+  return fullInfillDistance * (100./percent);
 }
 // void Settings::SlicingSettings::GetAltInfillLayers(std::vector<int>& layers, uint layerCount) const
 // {
@@ -689,6 +689,13 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     Misc.window_posx =-1;
     Misc.window_posy=-1;
   }
+  try {
+    Misc.ExpandLayerDisplay = cfg.get_boolean ("Misc", "ExpandLayerDisplay");
+    Misc.ExpandModelDisplay = cfg.get_boolean ("Misc", "ExpandModelDisplay");
+  } catch (const Glib::KeyFileError &err) {
+    Misc.ExpandLayerDisplay = false;
+    Misc.ExpandModelDisplay = false;
+  }
 
   try {
     vector<string> cbkeys = cfg.get_keys ("CustomButtons");
@@ -749,6 +756,9 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
   cfg.set_string("Misc", "WindowPosX", os.str());
   os.str(""); os << Misc.window_posy;
   cfg.set_string("Misc", "WindowPosY", os.str());
+
+  cfg.set_boolean("Misc", "ExpandLayerDisplay", Misc.ExpandLayerDisplay);
+  cfg.set_boolean("Misc", "ExpandModelDisplay", Misc.ExpandModelDisplay);
 
   GCode.m_impl->saveSettings (cfg);
 
@@ -827,7 +837,7 @@ void Settings::set_to_gui (Builder &builder, int i)
     break;
   }
   case T_COLOUR_MEMBER:
-    break; // Ignore, Colour members are special 
+    break; // Ignore, Colour members are special
   default:
     std::cerr << _("corrupt setting type\n") << glade_name <<endl;;
     break;
@@ -839,6 +849,14 @@ void Settings::set_to_gui (Builder &builder, int i)
     pWindow->resize(Misc.window_width, Misc.window_height);
   if (pWindow && Misc.window_posx > 0 && Misc.window_posy > 0)
     pWindow->move(Misc.window_posx,Misc.window_posy);
+
+  Gtk::Expander *exp = NULL;
+  builder->get_widget ("layer_expander", exp);
+  if (exp)
+    exp->set_expanded(Misc.ExpandLayerDisplay);
+  builder->get_widget ("model_expander", exp);
+  if (exp)
+    exp->set_expanded(Misc.ExpandModelDisplay);
 }
 
 

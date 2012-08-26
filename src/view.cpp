@@ -944,6 +944,13 @@ void View::save_settings_to(Glib::RefPtr < Gio::File > file)
 {
   m_model->settings.SettingsPath = file->get_parent()->get_path();
   saveWindowSizeAndPosition(m_model->settings);
+  Gtk::Expander *exp = NULL;
+  m_builder->get_widget ("layer_expander", exp);
+  if (exp)
+    m_model->settings.Misc.ExpandLayerDisplay = exp->get_expanded();
+  m_builder->get_widget ("model_expander", exp);
+  if (exp)
+    m_model->settings.Misc.ExpandModelDisplay = exp->get_expanded();
   m_model->SaveConfig(file);
 }
 
