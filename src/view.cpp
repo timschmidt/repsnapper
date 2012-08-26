@@ -904,6 +904,7 @@ void View::load_settings()
   show_notebooktab("file_tab", "controlnotebook");
 }
 
+// save to standard config file
 void View::save_settings()
 {
   std::vector<std::string> user_config_bits(3);
@@ -912,19 +913,19 @@ void View::save_settings()
   user_config_bits[2] = "repsnapper.conf";
 
   std::string user_config_file = Glib::build_filename (user_config_bits);
-  Glib::RefPtr<Gio::File> conf = Gio::File::create_for_path(user_config_file);
+  Glib::RefPtr<Gio::File> conffile = Gio::File::create_for_path(user_config_file);
 
-  saveWindowSizeAndPosition(m_model->settings);
-
-  m_model->SaveConfig (conf);
+  save_settings_to(conffile);
 }
 
+// gets config file from user
 void View::save_settings_as()
 {
   m_filechooser->set_saving (RSFilechooser::SETTINGS);
   show_notebooktab("file_tab", "controlnotebook");
 }
 
+// callback from m_filechooser for settings file
 void View::do_save_settings_as()
 {
   std::vector< Glib::RefPtr < Gio::File > > files = m_filechooser->get_files();
@@ -933,12 +934,19 @@ void View::do_save_settings_as()
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
 	return;
-    string directory_path = files[0]->get_parent()->get_path();
-    m_model->settings.SettingsPath = directory_path;
-    m_model->SaveConfig(files[0]);
+    save_settings_to(files[0]);
   }
   //FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::SETTINGS);
 }
+
+// save to given config file
+void View::save_settings_to(Glib::RefPtr < Gio::File > file)
+{
+  m_model->settings.SettingsPath = file->get_parent()->get_path();
+  saveWindowSizeAndPosition(m_model->settings);
+  m_model->SaveConfig(file);
+}
+
 
 void View::inhibit_print_changed()
 {

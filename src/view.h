@@ -86,7 +86,7 @@ class View : public Gtk::Window
   RSFilechooser *m_filechooser;
   void on_controlnotebook_switch(GtkNotebookPage* page, guint page_num);
 
-  void on_gcodebuffer_cursor_set (const Gtk::TextIter &iter, 
+  void on_gcodebuffer_cursor_set (const Gtk::TextIter &iter,
 				  const Glib::RefPtr <Gtk::TextMark> &refMark);
   Gtk::TextView * m_gcodetextview;
 
@@ -109,6 +109,7 @@ class View : public Gtk::Window
   void load_settings();
   void save_settings();
   void save_settings_as();
+  void save_settings_to(Glib::RefPtr < Gio::File > file);
 
   // interactive bits
   void temp_monitor_enabled_toggled (Gtk::ToggleButton *button);
