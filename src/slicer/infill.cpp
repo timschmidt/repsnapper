@@ -30,14 +30,14 @@ omp_lock_t Infill::save_lock;
 void hilbert(int level,int direction, double infillDistance, vector<Vector2d> &v);
 
 
-Infill::Infill() 
+Infill::Infill()
   : extrusionfactor(1), cached(false)
 {
   m_tofillpolys.clear();
 }
 
 
-Infill::Infill (Layer *mlayer, double extrfactor) 
+Infill::Infill (Layer *mlayer, double extrfactor)
   : cached(false)
 {
   layer = mlayer;
@@ -74,13 +74,13 @@ void Infill::clearPatterns() {
 
 
 // fill polys with type etc.
-void Infill::addPoly(double z, const Poly &poly, InfillType type, 
+void Infill::addPoly(double z, const Poly &poly, InfillType type,
 		     double infillDistance, double offsetDistance, double rotation)
 {
   vector<Poly> polys; polys.push_back(poly);
   addPolys(z, polys, type, infillDistance, offsetDistance, rotation);
 }
-void Infill::addPolys(double z, const vector<Poly> &polys, InfillType type, 
+void Infill::addPolys(double z, const vector<Poly> &polys, InfillType type,
 		      double infillDistance, double offsetDistance, double rotation)
 {
   this->infillDistance = infillDistance;
@@ -88,7 +88,7 @@ void Infill::addPolys(double z, const vector<Poly> &polys, InfillType type,
 #ifdef _OPENMP
   omp_set_lock(&save_lock);
 #endif
-  ClipperLib::Polygons patterncpolys = 
+  ClipperLib::Polygons patterncpolys =
     makeInfillPattern(type, polys, infillDistance, offsetDistance, rotation);
 #ifdef _OPENMP
   omp_unset_lock(&save_lock);
@@ -96,7 +96,7 @@ void Infill::addPolys(double z, const vector<Poly> &polys, InfillType type,
   addPolys(z, polys, patterncpolys, offsetDistance);
 }
 
-void Infill::addPoly(double z, const ExPoly &expoly, InfillType type, 
+void Infill::addPoly(double z, const ExPoly &expoly, InfillType type,
 		     double infillDistance, double offsetDistance, double rotation)
 {
   vector<Poly> polys = Clipping::getPolys(expoly);
@@ -105,21 +105,21 @@ void Infill::addPoly(double z, const ExPoly &expoly, InfillType type,
 
 // calculates angles for bridges
 // void Infill::addBridgeInfill(double z, const vector<Poly> polys,
-// 			     double infillDistance, double offsetDistance, 
+// 			     double infillDistance, double offsetDistance,
 // 			     vector<polys> bridgepillars)
 // {
 //   type = BridgeInfill;
 //   this->infillDistance = infillDistance;
 
 //   omp_set_lock(&save_lock);
-//   ClipperLib::Polygons patterncpolys = 
+//   ClipperLib::Polygons patterncpolys =
 //     makeInfillPattern(type, polys, infillDistance, offsetDistance, rotation);
 //   addPolys(z, polys, patterncpolys, offsetDistance);
 //   omp_unset_lock(&save_lock);
 // }
 
 // fill polys with fillpolys
-void Infill::addPolys(double z, const vector<Poly> &polys, 
+void Infill::addPolys(double z, const vector<Poly> &polys,
 		      const vector<Poly> &fillpolys,
 		      double offsetDistance)
 {
@@ -127,12 +127,12 @@ void Infill::addPolys(double z, const vector<Poly> &polys,
 }
 
 // clip infill pattern polys against polys
-void Infill::addPolys(double z, const vector<Poly> &polys, 
+void Infill::addPolys(double z, const vector<Poly> &polys,
 		      const ClipperLib::Polygons &patterncpolys,
 		      double offsetDistance)
 {
   Clipping clipp;
-  clipp.addPolys   (polys,         subject); 
+  clipp.addPolys   (polys,         subject);
   clipp.addPolygons(patterncpolys, clip);
   clipp.setExtrusionFactor(extrusionfactor); // set my extfactor
   clipp.setZ(z);
@@ -140,15 +140,15 @@ void Infill::addPolys(double z, const vector<Poly> &polys,
   if (m_type==PolyInfill)  // reversal from evenodd clipping
     for (uint i = 0; i<result.size(); i+=2)
       result[i].reverse();
-  addInfillPolys(result);  
+  addInfillPolys(result);
 }
 
 // generate infill pattern as a vector of polygons
-ClipperLib::Polygons Infill::makeInfillPattern(InfillType type, 
+ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 					       const vector<Poly> &tofillpolys,
 					       double infillDistance,
 					       double offsetDistance,
-					       double rotation) 
+					       double rotation)
 {
   ClipperLib::Polygons cpolys;
   m_tofillpolys = tofillpolys;
@@ -164,8 +164,8 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   while (rotation < 0) rotation += 2*M_PI;
   m_angle = rotation;
 
-  if (type == HexInfill) { 
-    if (layer->LayerNo%2 != 0) 
+  if (type == HexInfill) {
+    if (layer->LayerNo%2 != 0)
       m_angle = M_PI/2;
     else
       m_angle = 0.;
@@ -184,8 +184,8 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  {
 	    //cerr << name << " found saved pattern no " << sIt-savedPatterns.begin() << " with " << sIt->cpolys.size() <<" polys"<< endl << "type "<< sIt->type << sIt->Min << sIt->Max << endl;
 	    // is it too small for this layer?
-	    if (sIt->Min.x() > Min.x() || sIt->Min.y() > Min.y() || 
-		sIt->Max.x() < Max.x() || sIt->Max.y() < Max.y()) 
+	    if (sIt->Min.x() > Min.x() || sIt->Min.y() > Min.y() ||
+		sIt->Max.x() < Max.x() || sIt->Max.y() < Max.y())
 	      {
 		too_small.push_back(sIt-savedPatterns.begin());
 		//break; // there is no other match
@@ -207,7 +207,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
   bool zigzag = false;
   switch (type)
     {
-    case HexInfill: 
+    case HexInfill:
       {
 	Vector2d pMin=Vector2d::ZERO, pMax=Max*1.1;
 	double hexd = infillDistance;// /(1+sqrt(3.)/4.);
@@ -239,7 +239,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  }
 	  poly.addVertex(pMax.x(), pMin.y()-infillDistance);
 	  poly.addVertex(pMin.x(), pMin.y()-infillDistance);
-	} else { 
+	} else {
 	  double xmax = pMax.x();;
 	  for (double y = pMin.y(); y < pMax.y(); y += 3*hexd) {
 	    for (double x = pMin.x(); x < pMax.x(); ) {
@@ -312,7 +312,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	poly.addVertex(pMax.x(), pMin.y()-infillDistance);
 	poly.addVertex(pMin.x(), pMin.y()-infillDistance);
 	// Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
-	if (!zigzag) 
+	if (!zigzag)
 	  poly.rotate(center,m_angle);
 	// poly2.rotate(center,rotation);
 	vector<Poly> polys(1);
@@ -321,7 +321,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	cpolys = Clipping::getClipperPolygons(polys);
       }
       break;
-    case HilbertInfill:  
+    case HilbertInfill:
       {
 	Poly poly(this->layer->getZ());
 	double square = MAX(Max.x()-Min.x(),Max.y()-Min.y());
@@ -337,7 +337,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	cpolys = Clipping::getClipperPolygons(polys);
       }
       break;
-    case ThinInfill:       
+    case ThinInfill:
       {
 	// just use the poly itself at half extrusion rate
 	cpolys = Clipping::getClipperPolygons(tofillpolys);
@@ -352,13 +352,13 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	while (true) {
 	  shrinked = Clipping::getOffset(shrinked,-shrink);
 	  count++;
-	  //cerr << shrinked.size() << " - " << num_polys << endl; 
+	  //cerr << shrinked.size() << " - " << num_polys << endl;
 	  if (shrinked.size() == 0) break; // stop when poly is gone
 	}
 	extrusionfactor = 0.5 + 0.5/num_div * count;
 	//cerr << "ex " << extrusionfactor << endl;
 	//cpolys = Clipping::getClipperPolygons(opolys);
-      } 
+      }
       break;
     case PolyInfill: // fill all polygons with their shrinked polys
       {
@@ -377,7 +377,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  //cerr << "shr " << parea << " - " <<area<< " - " << " : " <<endl;
 	  // int lastnumpolys=0;
 	  // int shrcount=0;
-	  while (shrinked.size()>0){ 
+	  while (shrinked.size()>0){
 	    if (area*parea < 0)  break; // went beyond zero size
 	    // cerr << "shr " <<parea << " - " <<area<< " - " << shrcount << " : " <<endl;
 	    shrinked2 = Clipping::getOffset(shrinked, 0.5*infillDistance);
@@ -400,18 +400,18 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	}
 	//cerr << "opolys " << opolys.size() << endl;
 	cpolys = Clipping::getClipperPolygons(opolys);
-	//cerr << "cpolys " << cpolys.size() << endl; 
+	//cerr << "cpolys " << cpolys.size() << endl;
       }
       break;
     default:
       cerr << "infill type " << type << " unknown "<< endl;
     }
-  // save 
+  // save
   //tid = omp_get_thread_num( );
   //cerr << "thread "<<tid << " saving pattern " << endl;
-  //cerr << "cpolys " << cpolys.size() << endl; 
-  if (type != PolyInfill && 
-      type != ZigzagInfill && 
+  //cerr << "cpolys " << cpolys.size() << endl;
+  if (type != PolyInfill &&
+      type != ZigzagInfill &&
       type != ThinInfill ) // can't save these
     {
       struct pattern newPattern;
@@ -441,7 +441,7 @@ int smallest(const vector<double> &nums, double &minimum)
   return minind;
 }
 
-bool intersectsPolys(const Vector2d &P1, const Vector2d &P2, 
+bool intersectsPolys(const Vector2d &P1, const Vector2d &P2,
 		     const vector<Poly> &polys, double err=0.01)
 {
   Intersection inter;
@@ -457,7 +457,7 @@ bool intersectsPolys(const Vector2d &P1, const Vector2d &P2,
   return false;
 }
 
-// sort (parallel) lines into polys so that each poly can be an extrusion path 
+// sort (parallel) lines into polys so that each poly can be an extrusion path
 // polys will later be connected by moves (as printlines)
 // that is: connect nearest lines, but when connection intersects anything,
 //          start a new path (poly)
@@ -470,7 +470,7 @@ vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, doubl
 
   vector<bool> done(count);
   for (uint i = 0; i < count; i++ ) done[i]==false;
-  Poly p(z, extrusionfactor); 
+  Poly p(z, extrusionfactor);
   p.setClosed(false);
   p.addVertex(lines[0].from);
   p.addVertex(lines[0].to);
@@ -575,9 +575,9 @@ void Infill::addInfillPolys(const vector<Poly> &polys)
       for (uint j = 0; j < polys.size(); j++) {
   	for (uint i = 0; i < polys[j].size() ; i++ )
   	  {
-	    Vector2d l = (polys[j][i+1] - polys[j][i]);     
+	    Vector2d l = (polys[j][i+1] - polys[j][i]);
 	    double langle = angleBetween(UNITX, l) + M_PI/2;
-	    if (sameAngle(langle,      m_angle, 0.2) || 
+	    if (sameAngle(langle,      m_angle, 0.2) ||
 		sameAngle(langle+M_PI, m_angle, 0.2))
   	      {
 		infillline il = { polys[j][i], polys[j][i+1] };
@@ -619,9 +619,9 @@ void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
       //uint counter = 0;
       for (uint i=0; i < p.size() ; i+=1 )
   	{
-  	  l = (p[i+1] - p[i]);     
+  	  l = (p[i+1] - p[i]);
 	  // rotate with neg. infill angle and see whether it's 90° as infill lines
-	  rotl = Vector2d(l.x()*cosa-l.y()*sina, 
+	  rotl = Vector2d(l.x()*cosa-l.y()*sina,
 			  l.y()*cosa+l.x()*sina);
 	  if (abs(rotl.x()) < 0.1 && abs(rotl.y()) > 0.1)
   	    {
@@ -638,7 +638,7 @@ void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
   	    }
 	  // else
 	  //   if (zigzagpoly) {
-	  //     zigzagpoly->addVertex(p.getVertexCircular(i));	      
+	  //     zigzagpoly->addVertex(p.getVertexCircular(i));
 	  //   }
   	}
       // if (zigzagpoly) {
@@ -648,7 +648,7 @@ void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
       // 	else delete zigzagpoly;
       // 	cerr << infillpolys.size()<< endl;
       // }
-    } 
+    }
     break;
   default:
     {
@@ -689,12 +689,12 @@ vector<Poly> Infill::getCachedPattern(double z) {
 
 
 string Infill::info() const
-{ 
+{
   ostringstream ostr;
-  ostr << "Infill " << name 
+  ostr << "Infill " << name
        << ": type=" << m_type
-       << ", extrf=" << extrusionfactor 
-       << ", polygons: " << infillpolys.size() 
+       << ", extrf=" << extrusionfactor
+       << ", polygons: " << infillpolys.size()
        << ", vertices: " << infillvertices.size();
   return ostr.str();
 }
