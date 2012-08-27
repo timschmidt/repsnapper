@@ -114,14 +114,14 @@ void Poly::calcHole() const // hole is mutable
 	}
 	center /= vertices.size();
 
-	// we have the x-most vertex (with the highest y if there was a contest), v 
+	// we have the x-most vertex (with the highest y if there was a contest), v
 	Vector2d V1 = getVertexCircular(v-1);
 	Vector2d V2 = getVertexCircular(v);
 	Vector2d V3 = getVertexCircular(v+1);
 
 	// Vector2d Va=V2-V1;
 	// Vector2d Vb=V3-V2;
-	hole = isleftof(V2, V3, V1); //cross(Vb,Va) > 0; 
+	hole = isleftof(V2, V3, V1); //cross(Vb,Va) > 0;
 	holecalculated = true;
 }
 
@@ -138,14 +138,14 @@ Vector2d Poly::getCenter() const
   return center;
 }
 
-void Poly::rotate(const Vector2d &rotcenter, double angle) 
+void Poly::rotate(const Vector2d &rotcenter, double angle)
 {
   for (uint i = 0; i < vertices.size();  i++) {
     ::rotate(vertices[i], rotcenter, angle);
   }
 }
 
-void Poly::move(const Vector2d &delta) 
+void Poly::move(const Vector2d &delta)
 {
   for (uint i = 0; i < vertices.size();  i++) {
     vertices[i] += delta;
@@ -156,7 +156,7 @@ void Poly::move(const Vector2d &delta)
 void Poly::transform(const Matrix4d &T) {
   for (uint i = 0; i < vertices.size();  i++) {
     const Vector3d v = T * getVertexCircular3(i) ;
-    vertices[i].set(v.x(),v.y()); 
+    vertices[i].set(v.x(),v.y());
   }
   setZ((T * Vector3d(0,0,z)).z());
   calcHole();
@@ -179,7 +179,7 @@ void Poly::mirrorX(const Vector3d &center)
 }
 
 
-// nearest connection point indices of this and other poly 
+// nearest connection point indices of this and other poly
 // if poly is not closed, only test first and last point
 void Poly::nearestIndices(const Poly &p2, int &thisindex, int &otherindex) const
 {
@@ -228,7 +228,7 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
     for (uint j = 0; j < p2.vertices.size(); j++) {
       Vector2d onpoint; // on p2
       // dist from point i to lines on p2
-      const double mindist = 
+      const double mindist =
 	point_segment_distance_Sq(p2.vertices[j], p2.getVertexCircular(j+1),
 				  vertices[i], onpoint);
       if (mindist < min1) {
@@ -236,12 +236,12 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
       }
     }
   }
-  // test p2 vertices  
+  // test p2 vertices
   for (uint i = 0; i < p2.vertices.size(); i++) {
     for (uint j = 0; j < vertices.size(); j++) {
       Vector2d onpoint; // on this
       // dist from p2 point i to lines on this
-      const double mindist = 
+      const double mindist =
 	point_segment_distance_Sq(vertices[j], getVertexCircular(j+1),
 				  p2.vertices[i], onpoint);
       if (mindist < min2) {
@@ -260,7 +260,7 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
 }
 
 
-double Poly::angleAtVertex(uint i) const 
+double Poly::angleAtVertex(uint i) const
 {
   return angleBetween(getVertexCircular(i)-getVertexCircular(i-1),
 		      getVertexCircular(i+1)-getVertexCircular(i));
@@ -280,12 +280,12 @@ bool Poly::vertexInside2(const Vector2d &point, double maxoffset) const
       const Vector2d P2 = vertices[i];
 
       if (point_segment_distance_Sq(point, P1, P2, dummy) <= maxoffsetSq) return true;
-                   
-      // Skip horizontal lines, we can't intersect with them, 
+
+      // Skip horizontal lines, we can't intersect with them,
       // because the test line is horizontal
-      if(P1.y() == P2.y())      
+      if(P1.y() == P2.y())
 	continue;
-      
+
       Intersection hit;
       if(IntersectXY(point,EndP,P1,P2,hit,maxoffset))
 	intersectcount++;
@@ -330,13 +330,13 @@ bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
     const Vector2d Pi = vertices[i];
     const Vector2d Pj = getVertexCircular(i+1);
     if ( ((Pi.y() > p.y()) != (Pj.y() > p.y())) &&
-	 (abs(p.x() - (Pj.x()-Pi.x()) 
+	 (abs(p.x() - (Pj.x()-Pi.x())
 	      * (p.y()-Pi.y()) / (Pj.y()-Pi.y()) + Pi.x()) > maxoffset) )
       c = !c;
   }
-  if (!c) 
-    for (uint i = 0; i < vertices.size();  i++) 
-      if ((vertices[i]-p).length() < maxoffset) return true; // on a vertex    
+  if (!c)
+    for (uint i = 0; i < vertices.size();  i++)
+      if ((vertices[i]-p).length() < maxoffset) return true; // on a vertex
   return c;
 #endif
 }
@@ -398,7 +398,7 @@ vector<Vector2d> Poly::getVertexRangeCircular(int from, int to) const
 {
   vector<Vector2d> v;
   int size = vertices.size();
-  for (int i = from; i<=to; i++) 
+  for (int i = from; i<=to; i++)
     v.push_back(vertices[(i+size)%size]);
   return v;
 }
@@ -410,7 +410,7 @@ vector<Intersection> Poly::lineIntersections(const Vector2d &P1, const Vector2d 
   vector<Intersection> HitsBuffer;
   Vector2d P3,P4;
   for(size_t i = 0; i < vertices.size(); i++)
-    {  
+    {
       P3 = getVertexCircular(i);
       P4 = getVertexCircular(i+1);
       Intersection hit;
@@ -431,7 +431,7 @@ vector<Intersection> Poly::lineIntersections(const Vector2d &P1, const Vector2d 
 // length of the line starting at startindex
 double Poly::getLinelengthSq(uint startindex) const
 {
-  const double length = (getVertexCircular(startindex+1) - 
+  const double length = (getVertexCircular(startindex+1) -
 			 getVertexCircular(startindex)).squared_length();
   return length;
 }
@@ -524,9 +524,9 @@ vector<Vector2d> Poly::getCenterline() const
     Vector2d abp = angle_bipartition(vertices[i],
 				     getVertexCircular(i-1), getVertexCircular(i+1));
 
-    // int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
-    // 			      const Vector2d &p3, const Vector2d &p4, 
-    // 			      Vector2d &I0, Vector2d &I1, 
+    // int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
+    // 			      const Vector2d &p3, const Vector2d &p4,
+    // 			      Vector2d &I0, Vector2d &I1,
     // 			      double &t0, double &t1,
     // 			      double maxerr)
   }
@@ -562,9 +562,9 @@ vector<Vector2d> Poly::getPathAround(const Vector2d &from, const Vector2d &to) c
   }
   // find shorter one
   double len1=0,len2=0;
-  for (uint i=1; i<path1.size(); i++) 
+  for (uint i=1; i<path1.size(); i++)
     len1+=(path1[i]-path1[i-1]).squared_length();
-  for (uint i=1; i<path2.size(); i++) 
+  for (uint i=1; i<path2.size(); i++)
     len2+=(path2[i]-path2[i-1]).squared_length();
   if (len1 < len2) {
      // path1.insert(path1.begin(),from);
@@ -597,18 +597,18 @@ vector<Vector2d> Poly::getMinMax() const{
   return range;
 }
 
-int Poly::getTriangulation(vector<Triangle> &triangles)  const 
+int Poly::getTriangulation(vector<Triangle> &triangles)  const
 {
   if(vertices.size()<3) return 0;
   triangles.clear();
 
   // return delaunayTriang(vertices, triangles, z);
-  
+
   vector<p2t::Point*> points(vertices.size());
   // add offset because poly2tri crashes on some negative values?
   const double OFF = 0;
   for (guint i=0; i<vertices.size(); i++)  {
-    points[i] = new p2t::Point(vertices[i].x()+OFF, 
+    points[i] = new p2t::Point(vertices[i].x()+OFF,
 			       vertices[i].y()+OFF);
   }
   p2t::CDT cdt(points);
@@ -628,7 +628,7 @@ int Poly::getTriangulation(vector<Triangle> &triangles)  const
 
 
 
-Vector3d rotatedZ(Vector3d v, double angle) 
+Vector3d rotatedZ(Vector3d v, double angle)
 {
   double sina = sin(angle);
   double cosa = cos(angle);
@@ -707,7 +707,7 @@ void Poly::drawVertexAngles() const
     v = getVertexCircular3(i);
     glVertex3f(v.x(),v.y(),v.z());
     double angle = angleAtVertex(i);
-    ostringstream oss; 
+    ostringstream oss;
     oss << (int)(angle*180/M_PI);
     drawString(v, oss.str());
   }
@@ -757,9 +757,9 @@ string Poly::SVGpath(const Vector2d &trans) const
   transpoly.move(trans);
   ostr.precision(5);
   if (closed)
-    if (hole) 
+    if (hole)
       ostr << "<polygon fill=\"white\" stroke=\"black\" stroke-width=\"0px\"";
-    else 
+    else
       ostr << "<polygon fill=\"black\" stroke=\"black\" stroke-width=\"0px\"";
   else
     ostr << "<polyline fill=\"white\" stroke=\"black\" stroke-width=\"1px\"";
@@ -791,7 +791,7 @@ string Poly::gnuplot_path(const Vector2d &trans) const
 }
 
 
-void Poly::move(vector<Poly> &polys, const Vector2d &trans) 
+void Poly::move(vector<Poly> &polys, const Vector2d &trans)
 {
   for (uint i=0; i<polys.size(); i++)
     polys[i].move(trans);

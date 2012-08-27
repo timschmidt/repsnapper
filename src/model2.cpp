@@ -51,32 +51,32 @@
 void Model::MakeRaft(GCodeState &state, double &z)
 {
   if (layers.size() == 0) return;
-  vector<Poly> raftpolys = 
+  vector<Poly> raftpolys =
     Clipping::getOffset(layers[0]->GetHullPolygon(), settings.Raft.Size, jround);
-  for (uint i = 0; i< raftpolys.size(); i++) 
+  for (uint i = 0; i< raftpolys.size(); i++)
     raftpolys[i].cleanup(settings.Hardware.LayerThickness/4);
 
-  Settings::RaftSettings::PhasePropertiesType basesettings = 
+  Settings::RaftSettings::PhasePropertiesType basesettings =
     settings.Raft.Phase[0];
-  Settings::RaftSettings::PhasePropertiesType interfacesettings = 
+  Settings::RaftSettings::PhasePropertiesType interfacesettings =
     settings.Raft.Phase[1];
 
   vector<Layer*> raft_layers;
 
   double rotation = basesettings.Rotation;
-  double basethickness = settings.Hardware.LayerThickness 
+  double basethickness = settings.Hardware.LayerThickness
     * basesettings.Thickness;
-  double interthickness = settings.Hardware.LayerThickness 
+  double interthickness = settings.Hardware.LayerThickness
     * interfacesettings.Thickness;
 
-  double totalthickness = basesettings.LayerCount * basethickness 
+  double totalthickness = basesettings.LayerCount * basethickness
     + interfacesettings.LayerCount * interthickness;
 
   double raft_z = -totalthickness + basethickness * settings.Slicing.FirstLayerHeight;
 
   for (uint i = 0; i < basesettings.LayerCount; i++) {
     Layer * layer = new Layer(lastlayer,
-			      -interfacesettings.LayerCount-basesettings.LayerCount + i, 
+			      -interfacesettings.LayerCount-basesettings.LayerCount + i,
 			      basethickness, 1);
     layer->setZ(raft_z);
     layer->CalcRaftInfill(raftpolys,basesettings.MaterialDistanceRatio,
@@ -88,12 +88,12 @@ void Model::MakeRaft(GCodeState &state, double &z)
   }
   rotation = interfacesettings.Rotation;
   for (uint i = 0; i < interfacesettings.LayerCount; i++) {
-    Layer * layer = new Layer(lastlayer, -basesettings.LayerCount + i, 
+    Layer * layer = new Layer(lastlayer, -basesettings.LayerCount + i,
 			      interthickness, 1);
     layer->setZ(raft_z);
     layer->CalcRaftInfill(raftpolys,interfacesettings.MaterialDistanceRatio,
 			  interfacesettings.Distance, rotation);
-    
+
     raft_layers.push_back(layer);
     lastlayer = layer;
     rotation += interfacesettings.RotationPrLayer*M_PI/180;
@@ -198,7 +198,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 	  P1 = HitsBuffer[0].p;
 	  P2 = HitsBuffer[1].p;
 
-	  state.MakeGCodeLine (Vector3d(P1.x,P1.y,z), 
+	  state.MakeGCodeLine (Vector3d(P1.x,P1.y,z),
 			       Vector3d(P2.x,P2.y,z),
 			       Vector3d(0,0,0), 0,
 			       settings.Hardware.MaxPrintSpeedXY,
@@ -277,7 +277,7 @@ bool layersort(const Layer * l1, const Layer * l2){
   return (l1->Z < l2->Z);
 }
 
-void Model::Slice() 
+void Model::Slice()
 {
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
@@ -286,7 +286,7 @@ void Model::Slice()
     objtree.get_selected_shapes(m_current_selectionpath, shapes, transforms);
   else
     objtree.get_all_shapes(shapes,transforms);
-  
+
   if (shapes.size() == 0) return;
 
   assert(shapes.size() == transforms.size());
@@ -304,11 +304,11 @@ void Model::Slice()
   uint max_skins = max(1, settings.Slicing.Skins);
   double thickness = (double)settings.Hardware.LayerThickness;
   double skin_thickness = thickness / max_skins;
-  uint skins = max_skins; // probably variable 
+  uint skins = max_skins; // probably variable
 
   // - Start at z~=0, cut off everything below
   // - Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
-  double minZ = thickness * settings.Slicing.FirstLayerHeight;// + Min.z; 
+  double minZ = thickness * settings.Slicing.FirstLayerHeight;// + Min.z;
   Vector3d volume = settings.Hardware.Volume;
   double maxZ = min(Max.z(), volume.z() - settings.Hardware.PrintMargin.z());
 
@@ -326,7 +326,7 @@ void Model::Slice()
   bool flatshapes = shapes.front()->dimensions() == 2;
   if (flatshapes) {
     layers.resize(1);
-    layers[0] = new Layer(lastlayer, 0, thickness  , 1); 
+    layers[0] = new Layer(lastlayer, 0, thickness  , 1);
     lastlayer = layers[0];
     layers[0]->setZ(0); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
@@ -343,7 +343,7 @@ void Model::Slice()
   {
     // have skins and/or serial build, so can't parallelise
     uint currentshape   = 0;
-    double serialheight = maxZ; // settings.Slicing.SerialBuildHeight; 
+    double serialheight = maxZ; // settings.Slicing.SerialBuildHeight;
     double z            = minZ;
     double shape_z      = z;
     double max_shape_z  = z + serialheight;
@@ -354,30 +354,30 @@ void Model::Slice()
     bool cont = true;
     while(cont && z < maxZ)
       {
-        shape_z = z; 
-        max_shape_z = min(shape_z + serialheight, maxZ); 
+        shape_z = z;
+        max_shape_z = min(shape_z + serialheight, maxZ);
         while ( cont && currentshape < shapes.size() && shape_z <= max_shape_z ) {
   	if (LayerNr%progress_steps==0) cont = m_progress->update(shape_z);
   	layer->setZ(shape_z); // set to real z
   	if (shape_z == minZ) { // the layer is on the platform
   	  layer->LayerNo = 0;
   	  layer->setSkins(1);
-  	  LayerNr = 1; 
+  	  LayerNr = 1;
   	}
   	new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
   				    shape_z, max_gradient, supportangle);
-  	// cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape 
+  	// cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape
   	//      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
   	if (shape_z >= max_shape_z) { // next shape, reset z
-  	  currentshape++; 
+  	  currentshape++;
   	  shape_z = z;
   	} else {  // next z, same shape
-  	  if (varSlicing && LayerNr!=0) { 
+  	  if (varSlicing && LayerNr!=0) {
   	    // higher gradient -> slice thinner with fewer skin divisions
   	    skins = max_skins-(uint)(max_skins* max_gradient);
   	    thickness = skin_thickness*skins;
   	  }
-  	  shape_z += thickness; 
+  	  shape_z += thickness;
   	  max_gradient = 0;
   	  if (new_polys > -1){
   	    layers.push_back(layer);
@@ -390,7 +390,7 @@ void Model::Slice()
         if (currentshape < shapes.size()-1) { // reached max_shape_z, next shape
   	currentshape++;
         } else { // end of shapes
-  	if (new_polys > -1){ 
+  	if (new_polys > -1){
   	  if (varSlicing) {
   	    skins = max_skins-(uint)(max_skins* max_gradient);
   	    thickness = skin_thickness*skins;
@@ -439,7 +439,7 @@ void Model::Slice()
 #else
     if (!cont) break;
 #endif
-    Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1); 
+    Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1);
     layer->setZ(z); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
       layer->addShape(transforms[nshape], *shapes[nshape],
@@ -489,19 +489,19 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
   int progress_steps=(int)((2*count+2)/100);
   if (progress_steps==0) progress_steps=1;
   // bottom to top: uncovered from above -> top polys
-  for (int i = 0; i < count-1; i++) 
+  for (int i = 0; i < count-1; i++)
     {
       if (i%progress_steps==0) if(!m_progress->update(i)) return ;
       layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]), make_decor);
-    }  
+    }
   // top to bottom: uncovered from below -> bridge polys
-  for (uint i = count-1; i > 0; i--) 
+  for (uint i = count-1; i > 0; i--)
     {
       //cerr << "layer " << i << endl;
       if (i%progress_steps==0) if(!m_progress->update(count + count - i)) return;
       //make_bridges = false;
       // no bridge on marked layers (serial build)
-      bool mbridge = make_bridges && (layers[i]->LayerNo != 0); 
+      bool mbridge = make_bridges && (layers[i]->LayerNo != 0);
       if (mbridge) {
 	vector<Poly> uncovered = GetUncoveredPolygons(layers[i],layers[i-1]);
 	layers[i]->addBridgePolygons(Clipping::getExPolys(uncovered));
@@ -525,16 +525,16 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
 {
   Clipping clipp;
   clipp.clear();
-  clipp.addPolys(subjlayer->GetFillPolygons(),     subject); 
-  clipp.addPolys(subjlayer->GetFullFillPolygons(), subject); 
-  clipp.addPolys(subjlayer->GetBridgePolygons(),   subject); 
-  clipp.addPolys(subjlayer->GetDecorPolygons(),    subject); 
+  clipp.addPolys(subjlayer->GetFillPolygons(),     subject);
+  clipp.addPolys(subjlayer->GetFullFillPolygons(), subject);
+  clipp.addPolys(subjlayer->GetBridgePolygons(),   subject);
+  clipp.addPolys(subjlayer->GetDecorPolygons(),    subject);
   //clipp.addPolys(cliplayer->GetOuterShell(),       clip); // have some overlap
   clipp.addPolys(*(cliplayer->GetInnerShell()),       clip); // have some more overlap
   vector<Poly> uncovered = clipp.subtractMerged();
-  return uncovered; 
-}				 
-				 
+  return uncovered;
+}
+
 void Model::MultiplyUncoveredPolygons()
 {
   if (!settings.Slicing.DoInfill && settings.Slicing.SolidThickness == 0.0) return;
@@ -543,10 +543,10 @@ void Model::MultiplyUncoveredPolygons()
   shells = max(shells, (int)settings.Slicing.ShellCount);
   if (shells<1) return;
   int count = (int)layers.size();
-  
+
   int numdecor = 0;
   // add another full layer if making decor
-  if (settings.Slicing.MakeDecor) 
+  if (settings.Slicing.MakeDecor)
     numdecor = settings.Slicing.DecorLayers;
   shells += numdecor;
 
@@ -555,14 +555,14 @@ void Model::MultiplyUncoveredPolygons()
   if (progress_steps==0) progress_steps=1;
   // bottom-up: mulitply downwards
   int i,s;
-  for (i=0; i < count; i++) 
+  for (i=0; i < count; i++)
     {
       if (i%progress_steps==0) if(!m_progress->update(i)) return;
       // (brigdepolys are not multiplied downwards)
       const vector<Poly> &fullpolys     = layers[i]->GetFullFillPolygons();
       const vector<Poly> &skinfullpolys = layers[i]->GetSkinFullPolygons();
       const vector<Poly> &decorpolys    = layers[i]->GetDecorPolygons();
-      for (s=1; s < shells; s++) 
+      for (s=1; s < shells; s++)
 	if (i-s > 1) {
 	  layers[i-s]->addFullPolygons (fullpolys,     false);
 	  layers[i-s]->addFullPolygons (skinfullpolys, false);
@@ -570,14 +570,14 @@ void Model::MultiplyUncoveredPolygons()
 	}
     }
   // top-down: mulitply upwards
-  for (int i=count-1; i>=0; i--) 
+  for (int i=count-1; i>=0; i--)
     {
       if (i%progress_steps==0) if (!m_progress->update(count + count -i)) return;
       const vector<Poly>   &fullpolys     = layers[i]->GetFullFillPolygons();
       const vector<ExPoly> &bridgepolys   = layers[i]->GetBridgePolygons();
       const vector<Poly>   &skinfullpolys = layers[i]->GetSkinFullPolygons();
       const vector<Poly>   &decorpolys    = layers[i]->GetDecorPolygons();
-      for (int s=1; s < shells; s++) 
+      for (int s=1; s < shells; s++)
 	if (i+s < count){
 	  layers[i+s]->addFullPolygons (fullpolys,     false);
 	  layers[i+s]->addFullPolygons (bridgepolys,   false);
@@ -589,13 +589,12 @@ void Model::MultiplyUncoveredPolygons()
   m_progress->set_label(_("Merging Full Polygons"));
   // merge results
   bool cont = true;
-
 #ifdef _OPENMP
   omp_lock_t progress_lock;
   omp_init_lock(&progress_lock);
-#pragma omp parallel for schedule(dynamic) 
+#pragma omp parallel for schedule(dynamic)
 #endif
-  for (i=0; i < count; i++) 
+  for (i=0; i < count; i++)
     {
       if (i%progress_steps==0) {
 #ifdef _OPENMP
@@ -616,20 +615,20 @@ void Model::MultiplyUncoveredPolygons()
 
 
 void Model::MakeSupportPolygons(Layer * layer, // lower -> will change
-				const Layer * layerabove,  // upper 
+				const Layer * layerabove,  // upper
 				double widen)
 {
-  const double distance = 
+  const double distance =
     settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
   // vector<Poly> tosupport = Clipping::getOffset(layerabove->GetToSupportPolygons(),
   //  					       distance/2.);
   //vector<Poly> tosupport = Clipping::getMerged(layerabove->GetToSupportPolygons(),
   // 					       distance);
   vector<Poly> tosupport = layerabove->GetToSupportPolygons();
-  
+
   Clipping clipp;
-  clipp.addPolys(layerabove->GetSupportPolygons(),  subject); 
-  clipp.addPolys(tosupport,                         subject); 
+  clipp.addPolys(layerabove->GetSupportPolygons(),  subject);
+  clipp.addPolys(tosupport,                         subject);
   clipp.addPolys(layer->GetPolygons(),              clip);
   clipp.setZ(layer->getZ());
 
@@ -644,13 +643,13 @@ void Model::MakeSupportPolygons(Layer * layer, // lower -> will change
 }
 
 void Model::MakeSupportPolygons(double widen)
-{ 
+{
   int count = layers.size();
   if (!m_progress->restart (_("Support"), count*2)) return;
   int progress_steps=(int)(count*2/100);
   if (progress_steps==0) progress_steps=1;
 
-  for (int i=count-1; i>0; i--) 
+  for (int i=count-1; i>0; i--)
     {
       if (i%progress_steps==0) if(! m_progress->update(count-i)) return;
       if (layers[i]->LayerNo == 0) continue;
@@ -659,12 +658,12 @@ void Model::MakeSupportPolygons(double widen)
 
   // // shrink a bit
   // Clipping clipp;
-  // for (int i=0; i<count; i++) 
+  // for (int i=0; i<count; i++)
   //   {
-  //     const double distance = 
+  //     const double distance =
   // 	settings.Hardware.GetExtrudedMaterialWidth(layers[i]->thickness);
   //     if (i%progress_steps==0) if(!m_progress->update(i+count)) return;
-  //     vector<Poly> offset = 
+  //     vector<Poly> offset =
   // 	Clipping::getOffset(layers[i]->GetSupportPolygons(), -distance);
   //     layers[i]->setSupportPolygons(offset);
   //   }
@@ -683,7 +682,7 @@ void Model::MakeSkirt()
   guint endindex = 0;
   // find maximum of all calculated skirts
   clipp.clear();
-  for (guint i=0; i < count; i++) 
+  for (guint i=0; i < count; i++)
     {
       if (layers[i]->getZ() > settings.Slicing.SkirtHeight)
 	break;
@@ -695,7 +694,7 @@ void Model::MakeSkirt()
       }
     }
   vector<Poly> skirts = clipp.unite(CL::pftPositive,CL::pftPositive);
-  // set this skirt for all skirted layers 
+  // set this skirt for all skirted layers
   if (skirts.size()>0)
     for (guint i=0; i<=endindex; i++) {
       layers[i]->setSkirtPolygon(skirts.front());
@@ -710,13 +709,12 @@ void Model::MakeShells()
   int progress_steps=(int)(count/100);
   if (progress_steps==0) progress_steps=1;
   bool cont = true;
-
 #ifdef _OPENMP
   omp_lock_t progress_lock;
   omp_init_lock(&progress_lock);
-#pragma omp parallel for schedule(dynamic) 
+#pragma omp parallel for schedule(dynamic)
 #endif
-  for (int i=0;  i < count; i++) 
+  for (int i=0;  i < count; i++)
     {
       if (i%progress_steps==0) {
 #ifdef _OPENMP
@@ -747,14 +745,13 @@ void Model::CalcInfill()
   int progress_steps=(count/100);
   if (progress_steps==0) progress_steps=1;
   bool cont = true;
-
   //cerr << "make infill"<< endl;
 #ifdef _OPENMP
   omp_lock_t progress_lock;
   omp_init_lock(&progress_lock);
-#pragma omp parallel for schedule(dynamic) 
+#pragma omp parallel for schedule(dynamic)
 #endif
-  for (int i=0; i < count ; i++) 
+  for (int i=0; i < count ; i++)
     {
       //cerr << "thread " << omp_get_thread_num() << endl;
       if (i%progress_steps==0){
@@ -817,7 +814,7 @@ void Model::ConvertToGCode()
 
   if (settings.Slicing.Support)
     // easier before having multiplied uncovered bottoms
-    MakeSupportPolygons(settings.Slicing.SupportWiden); 
+    MakeSupportPolygons(settings.Slicing.SupportWiden);
 
   MakeFullSkins(); // must before multiplied uncovered bottoms
 
@@ -825,7 +822,7 @@ void Model::ConvertToGCode()
 
   CalcInfill();
 
-  if (settings.Slicing.Skirt) 
+  if (settings.Slicing.Skirt)
     MakeSkirt();
 
   if (settings.RaftEnable)
@@ -838,10 +835,10 @@ void Model::ConvertToGCode()
   uint count =  layers.size();
 
   m_progress->start (_("Making GCode"), count+1);
-  
+
   state.AppendCommand(MILLIMETERSASUNITS,  false, _("Millimeters"));
   state.AppendCommand(ABSOLUTEPOSITIONING, false, _("Absolute Pos"));
-  if (settings.Slicing.RelativeEcode)  
+  if (settings.Slicing.RelativeEcode)
     state.AppendCommand(RELATIVE_ECODE, false, _("Relative E Code"));
   else
     state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
@@ -852,9 +849,9 @@ void Model::ConvertToGCode()
   for (uint p=0; p<count; p++) {
     cont = (m_progress->update(p)) ;
     if (!cont) break;
-    // cerr << "GCode layer " << (p+1) << " of " << count  
-    // 	 << " offset " << printOffsetZ 
-    // 	 << " have commands: " <<commands.size() 
+    // cerr << "GCode layer " << (p+1) << " of " << count
+    // 	 << " offset " << printOffsetZ
+    // 	 << " have commands: " <<commands.size()
     // 	 << " start " << start <<  endl;;
     // try {
     layers[p]->MakeGcode (start,
@@ -865,10 +862,10 @@ void Model::ConvertToGCode()
     //   error("GCode Error:", (e.what()).c_str());
     // }
     // if (layers[p]->getPrevious() != NULL)
-    //   cerr << p << ": " <<layers[p]->LayerNo << " prev: " 
+    //   cerr << p << ": " <<layers[p]->LayerNo << " prev: "
     // 	   << layers[p]->getPrevious()->LayerNo << endl;
   }
-  
+
   state.AppendCommands(commands, settings.Slicing.RelativeEcode);
   if (cont)
     gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
@@ -883,7 +880,7 @@ void Model::ConvertToGCode()
   // display whole layer if flat shapes
   // if (shapes.back()->dimensions() == 2)
   //   gcode.layerchanges.push_back(0);
-  
+
   m_progress->stop (_("Done"));
 
   int h = (int)state.timeused/3600;
@@ -908,10 +905,10 @@ void Model::ConvertToGCode()
   ostr << _(" - total extruded: ") << totlength << "mm";
   double ccm = totlength*settings.Hardware.FilamentDiameter*settings.Hardware.FilamentDiameter/4.*M_PI/1000 ;
   ostr << " = " << ccm << "cm^3 ";
-  ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)"; 
+  ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)";
   if (statusbar)
     statusbar->push(ostr.str());
-  else 
+  else
     cout << ostr.str() << endl;
 
   {
@@ -925,10 +922,10 @@ void Model::ConvertToGCode()
   m_signal_gcode_changed.emit();
 }
 
-string Model::getSVG(int single_layer_no) const 
+string Model::getSVG(int single_layer_no) const
 {
   Vector3d printOffset  = settings.Hardware.PrintMargin;
-  
+
   ostringstream ostr;
   ostr << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" <<endl
        << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.0//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">" << endl
@@ -937,7 +934,7 @@ string Model::getSVG(int single_layer_no) const
        << "\txmlns:svg=\"http://www.w3.org/2000/svg\""<< endl
        << "\txmlns=\"http://www.w3.org/2000/svg\"" << endl
     //<< "\tversion=\"1.1\"" << endl
-       << "\twidth=\"" << Max.x()-Min.x()+printOffset.x() 
+       << "\twidth=\"" << Max.x()-Min.x()+printOffset.x()
        << "\" height=\""<< Max.y()-Min.y()+printOffset.y() << "\"" << endl
        << ">" << endl;
   if (single_layer_no<0) {
@@ -946,7 +943,7 @@ string Model::getSVG(int single_layer_no) const
       ostr << "\t\t" << layers[i]->SVGpath() << endl;
     }
   } else {
-    ostr << "<g id=\"" << "Layer_" << single_layer_no 
+    ostr << "<g id=\"" << "Layer_" << single_layer_no
 	 << "_of_" <<layers.size() << "\">" << endl;
     ostr << "\t\t" << layers[single_layer_no]->SVGpath() << endl;
   }
@@ -955,7 +952,7 @@ string Model::getSVG(int single_layer_no) const
   return ostr.str();
 }
 
-void Model::SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer) 
+void Model::SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer)
 {
   if (is_calculating) return;
   is_calculating=true;
@@ -977,9 +974,9 @@ void Model::SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer)
       ostr << base;
       uint nzero = (uint)(digits - log10(i+1));
       if (i==0) nzero = digits-1;
-      for (uint d = 0; d < nzero; d++) 
+      for (uint d = 0; d < nzero; d++)
 	ostr << "0";
-      ostr << i 
+      ostr << i
 	   << ".svg";
       if (!m_progress->update(i)) break;
       Glib::file_set_contents (ostr.str(), getSVG(i));

@@ -39,7 +39,7 @@ public:
 	/* Poly(double z, */
 	/*      const ClipperLib::Polygon cpoly, bool reverse=false); */
         ~Poly();
-	
+
 	void setClosed(bool c) { closed = c; };
 	bool isClosed() const { return closed; };
 
@@ -56,7 +56,7 @@ public:
 
 	// simplify douglas-peucker
 	void cleanup(double maxerror);
-	
+
 	void reverse() {std::reverse(vertices.begin(),vertices.end());holecalculated = false;};
 
 	void clear(){vertices.clear(); holecalculated = false;};
@@ -79,18 +79,18 @@ public:
 	void rotate(const Vector2d &center, double angle);
 	void move(const Vector2d &delta);
 
-	void calcHole() const; // calc center and whether this is a hole 
+	void calcHole() const; // calc center and whether this is a hole
 	bool isHole() const;
- 
+
 	vector<Vector2d> getMinMax() const;
 	vector<Intersection> lineIntersections(const Vector2d &P1, const Vector2d &P2,
 					       double maxerr=0.0001) const;
 
 	// ClipperLib::Polygons getOffsetClipperPolygons(double dist) const ;
 	// ClipperLib::Polygon getClipperPolygon(bool reverse=false) const;
-	
-	Vector2d const &getVertexCircular(int pointindex) const;  // 2d point at index 
-	Vector3d getVertexCircular3(int pointindex) const; // 3d point at index 
+
+	Vector2d const &getVertexCircular(int pointindex) const;  // 2d point at index
+	Vector3d getVertexCircular3(int pointindex) const; // 3d point at index
 	vector<Vector2d> getVertexRangeCircular(int from, int to) const;
 
 	vector<Vector2d> vertices; // vertices
@@ -102,19 +102,19 @@ public:
 
 	mutable Vector2d center;
 	Vector2d getCenter() const;
-	double getZ() const {return z;} 
+	double getZ() const {return z;}
 	void setZ(double z) {this->z = z;};
 	double getExtrusionFactor() const{return extrusionfactor;};
 	void setExtrusionFactor(double e){extrusionfactor = e;};
 	double getLayerNo() const;
 
-	void draw(int gl_type, bool randomized=true) const; 
+	void draw(int gl_type, bool randomized=true) const;
 	void draw(int gl_type, double z, bool randomized=true) const; // draw at given z
-	void drawVertexNumbers() const; 
-	void drawVertexAngles() const; 
+	void drawVertexNumbers() const;
+	void drawVertexAngles() const;
 	void drawLineNumbers() const;
 	void draw_as_surface() const;
-  
+
 	void getLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
 	void getLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
 	void getLines(vector<Vector2d> &lines,uint startindex=0) const;
