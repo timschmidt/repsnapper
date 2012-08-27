@@ -994,7 +994,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   double sel_Z = height; //*zSize;
   uint sel_Layer;
   if (have_layers)
-    sel_Layer = (uint)floor(height*(layers.size()-1)/zSize);
+    sel_Layer = (uint)floor(height*(layers.size())/zSize);
   else
     sel_Layer = (uint)ceil(LayerCount*sel_Z/zSize);
   LayerCount = sel_Layer+1;
@@ -1107,6 +1107,23 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 
   if (calcinfill)
     layer->CalcInfill(settings);
+
+#define DEBUGPOLYS 0
+#if DEBUGPOLYS
+  vector<Poly> polys = layer->GetPolygons();
+  vector< vector<Poly> > offs = layer->GetShellPolygons();
+  cout << "# polygons "<< endl;
+  for (guint i=0; i<polys.size();i++){
+    cout << polys[i].gnuplot_path() << endl;
+  }
+  for (guint s=0; s<offs.size();s++){
+    cout << "# offset polygons " << s << endl;
+    for (guint i=0; i<offs[s].size();i++){
+      cout << offs[s][i].gnuplot_path() << endl;
+    }
+  }
+#endif
+
   return layer;
 }
 
