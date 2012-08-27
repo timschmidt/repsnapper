@@ -74,7 +74,7 @@ int Shape::loadBinarySTL(string filename, uint max_triangles, bool readnormals)
 
     PlaceOnPlatform();
 
-    cout << _("Shape has volume ") << vol << _(" mm^3 and ")
+    cerr << _("Shape has volume ") << vol << _(" mm^3 and ")
 	 << triangles.size() << _(" triangles") << endl;
     return 0;
 }
@@ -157,7 +157,7 @@ int Shape::parseASCIISTL(istream &text, uint max_triangles, bool readnormals) {
     }
 
     PlaceOnPlatform();
-    cout << _("Shape has volume ") << volume() << _(" mm^3 and ")
+    cerr << _("Shape has volume ") << volume() << _(" mm^3 and ")
 	 << triangles.size() << _(" triangles") << endl;
     return 0;
 }

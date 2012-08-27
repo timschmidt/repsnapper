@@ -633,7 +633,7 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     return;
   }
 
-  std::cout << _("parsing config from '") << file->get_path() << "\n";
+  std::cerr << _("Parsing config from '") << file->get_path() << "\n";
 
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
 
