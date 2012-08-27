@@ -1036,10 +1036,12 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 					     settings.Hardware.LayerThickness,
 					     settings.Display.DisplayinFill, false);
 	    layer = m_previewLayer;
-	    Layer * previous = calcSingleLayer(z-settings.Hardware.LayerThickness,
-					       LayerNr-1,
-					       settings.Hardware.LayerThickness,
-					       false, false);
+	    Layer * previous = NULL;
+	    if (LayerNr>0 && z >= settings.Hardware.LayerThickness)
+	      previous = calcSingleLayer(z-settings.Hardware.LayerThickness,
+					 LayerNr-1,
+					 settings.Hardware.LayerThickness,
+					 false, false);
 	    layer->setPrevious(previous);
 	  }
 	  layer = m_previewLayer;
