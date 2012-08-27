@@ -773,6 +773,23 @@ string Poly::SVGpath(const Vector2d &trans) const
   return ostr.str();
 }
 
+string Poly::gnuplot_path(const Vector2d &trans) const
+{
+  ostringstream ostr;
+  ostr.precision(5);
+  Poly transpoly(*this,0);
+  transpoly.move(trans);
+  ostr << "# " << size() << endl;
+  for (uint i=0; i<size(); i++) {
+    CL::IntPoint cp = Clipping::ClipperPoint(transpoly[i]);
+    ostr  << fixed << cp.X << ", " << cp.Y;
+    //if (i < size()-1) ostr << "," ;
+    ostr << endl;
+  }
+  ostr << endl;
+  return ostr.str();
+}
+
 
 void Poly::move(vector<Poly> &polys, const Vector2d &trans) 
 {
