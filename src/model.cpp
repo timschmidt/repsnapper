@@ -1002,7 +1002,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   else
     sel_Layer = (uint)ceil(LayerCount*sel_Z/zSize);
   LayerCount = sel_Layer+1;
-  if(settings.Display.DisplayAllLayers)
+  if(have_layers && settings.Display.DisplayAllLayers)
     {
       LayerNr = 0;
       z=minZ;
