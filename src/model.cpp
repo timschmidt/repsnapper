@@ -984,7 +984,11 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   int drawn = -1;
   int LayerNr;
 
+ ;
+
   bool have_layers = (layers.size() > 0); // have sliced already
+
+  bool fillAreas = settings.Display.DisplayFilledAreas;
 
   double minZ = 0;//max(0.0, Min.z());
   double z;
@@ -1002,6 +1006,8 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
     {
       LayerNr = 0;
       z=minZ;
+      // don't fill areas if multiple layers
+      settings.Display.DisplayFilledAreas = false;
     }
   else
     {
@@ -1061,6 +1067,8 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       LayerNr++;
       z+=zStep;
     }// while
+
+  settings.Display.DisplayFilledAreas = fillAreas; // set to value before
   return drawn;
 }
 
