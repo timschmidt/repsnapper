@@ -336,7 +336,8 @@ void Layer::CalcInfill (const Settings &settings)
       skinFullInfills.push_back(inf);
     }
   }
-  supportInfill->addPolys(Z, supportPolygons, (InfillType)settings.Slicing.SupportFilltype,
+  supportInfill->addPolys(Z, supportPolygons,
+			  (InfillType)settings.Slicing.SupportFilltype,
 			  settings.Slicing.SupportInfillDistance,
 			  settings.Slicing.SupportInfillDistance, 0);
 
@@ -557,6 +558,8 @@ void Layer::setSkirtPolygon(const Poly &poly)
 void FindThinpolys(const vector<Poly> &polys, double extrwidth,
 		   vector<Poly> &thickpolys, vector<Poly> &thinpolys)
 {
+#define THINPOLYS 1
+#if THINPOLYS
   // go in
   thickpolys = Clipping::getOffset(polys, -0.5*extrwidth);
   // go out again, now thin polys are gone
@@ -572,6 +575,9 @@ void FindThinpolys(const vector<Poly> &polys, double extrwidth,
   thinpolys = clipp.subtract();
   // remove overlap
   thickpolys = Clipping::getOffset(thickpolys, -0.05*extrwidth);
+#else
+  thickpolys = polys;
+#endif
 }
 
 void Layer::MakeShells(const Settings &settings)

@@ -866,10 +866,10 @@ void Settings::set_filltypes_to_gui (Builder &builder)
   //      << " ! " << Slicing.SupportFilltype<< endl;
   Gtk::ComboBox *combo = NULL;
   // avoid getting overwritten by callback
-  uint norm = Slicing.NormalFilltype;
-  uint full = Slicing.FullFilltype;
+  uint norm    = Slicing.NormalFilltype;
+  uint full    = Slicing.FullFilltype;
   uint support = Slicing.SupportFilltype;
-  uint decor = Slicing.DecorFilltype;
+  uint decor   = Slicing.DecorFilltype;
   builder->get_widget ("Slicing.NormalFilltype", combo);
   if (combo)
     combo->set_active (norm);
@@ -977,7 +977,7 @@ static bool get_filltype(Builder &builder, const char *combo_name, int *type)
 {
   Gtk::ComboBox *combo = NULL;
   bool is_changed = false;
-  builder->get_widget ("Slicing.NormalFilltype", combo);
+  builder->get_widget (combo_name, combo);
   if (combo) {
     int value = combo->get_active_row_number ();
     is_changed |= *type != value;
@@ -992,10 +992,10 @@ void Settings::get_filltypes_from_gui (Builder &builder)
 {
   bool is_changed = false;
   // cerr <<"Get_filltypes " << endl;
-  is_changed |= get_filltype(builder, "Slicing.NormalFilltype", &Slicing.NormalFilltype);
-  is_changed |= get_filltype(builder, "Slicing.FullFilltype", &Slicing.NormalFilltype);
+  is_changed |= get_filltype(builder, "Slicing.NormalFilltype",  &Slicing.NormalFilltype);
+  is_changed |= get_filltype(builder, "Slicing.FullFilltype",    &Slicing.FullFilltype);
   is_changed |= get_filltype(builder, "Slicing.SupportFilltype", &Slicing.SupportFilltype);
-  is_changed |= get_filltype(builder, "Slicing.DecorFilltype", &Slicing.DecorFilltype);
+  is_changed |= get_filltype(builder, "Slicing.DecorFilltype",   &Slicing.DecorFilltype);
   // cerr << "read combos: " << Slicing.NormalFilltype
   //      <<  " / " << Slicing.FullFilltype
   //      <<  " / " << Slicing.SupportFilltype << endl;
