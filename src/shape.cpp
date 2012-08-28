@@ -37,47 +37,27 @@ Shape::Shape()
   CalcBBox();
 }
 
-
-Shape::Shape(string filename, istream &text)
-  : slow_drawing(false), gl_List(-1)
-{
-  this->filename = filename;
-  parseASCIISTL(text);
-}
-
 void Shape::clear() {
   triangles.clear();
   gl_List = -1;
 };
 
-
-
-/* Loads an binary STL file by filename
- * Returns 0 on success and -1 on failure */
-int Shape::loadBinarySTL(string filename, uint max_triangles, bool readnormals)
+void Shape::setTriangles(const vector<Triangle> &triangles_)
 {
-    Min.set(INFTY,INFTY,INFTY);
-    Max.set(-INFTY,-INFTY,-INFTY);
-    triangles.clear();
+  triangles = triangles_;
 
-    if (!File::loadSTLtriangles_binary(filename, max_triangles, readnormals, triangles))
-      return -1;
+  CenterAroundXY();
+  double vol = volume();
+  if (vol < 0) {
+    invertNormals();
+    vol = -vol;
+  }
 
-    // repairNormals(0.01);
-    CenterAroundXY();
-
-    double vol = volume();
-    if (vol < 0) {
-      invertNormals();
-      vol = -vol;
-    }
-
-    PlaceOnPlatform();
-
-    cerr << _("Shape has volume ") << vol << _(" mm^3 and ")
-	 << triangles.size() << _(" triangles") << endl;
-    return 0;
+  PlaceOnPlatform();
+  cerr << _("Shape has volume ") << volume() << _(" mm^3 and ")
+       << triangles.size() << _(" triangles") << endl;
 }
+
 
 int Shape::saveBinarySTL(string filename) const
 {
@@ -87,104 +67,6 @@ int Shape::saveBinarySTL(string filename) const
   return 0;
 
 }
-
-int Shape::loadASCIIVRML(std::string filename, uint max_triangles)
-{
-  if(File::getFileType(filename) != VRML) {
-    cerr << _("No VRML file file passed to loadASCIIVRML") << endl;
-    return -1;
-  }
-
-    triangles.clear();
-    Min.set(INFTY,INFTY,INFTY);
-    Max.set(-INFTY,-INFTY,-INFTY);
-
-    if (!File::loadVRMLtriangles(filename, max_triangles, triangles))
-      return -1;
-
-    CenterAroundXY();
-    return 0;
-}
-
-/* Loads an ASCII STL file by filename
- * Returns 0 on success and -1 on failure */
-int Shape::loadASCIISTL(string filename, uint max_triangles, bool readnormals) {
-    // Check filetype
-    if(File::getFileType(filename) != ASCII_STL) {
-      cerr << _("None ASCII STL file passed to loadASCIIFile") << endl;
-      return -1;
-    }
-    ifstream file;
-    file.open(filename.c_str());
-
-    if(file.fail()) {
-      cerr << _("Error: Unable to open stl file - ") << filename << endl;
-      return -1;
-    }
-    int ret = parseASCIISTL(file, max_triangles, readnormals);
-    if (ret < 0) {// cannot parse, try binary
-      cerr << _("Could not read file in ASCII mode, trying Binary: ")<< filename << endl;
-      file.close();
-      return loadBinarySTL(filename, max_triangles, readnormals);
-    }
-    this->filename = filename;
-    file.close();
-    return ret;
-} // STL::loadASCIIFile(string filename)
-
-
-int Shape::parseASCIISTL(istream &text, uint max_triangles, bool readnormals) {
-
-    triangles.clear();
-    Min.set(INFTY,INFTY,INFTY);
-    Max.set(-INFTY,-INFTY,-INFTY);
-
-    string name = File::parseSTLtriangles_ascii(text, max_triangles,
-						readnormals, triangles);
-    if (name == "")
-      return -1;
-
-    filename = name;
-
-    // repairNormals(0.01);
-
-
-    CenterAroundXY();
-    double vol = volume();
-    if (vol < 0) {
-      invertNormals();
-      vol = -vol;
-    }
-
-    PlaceOnPlatform();
-    cerr << _("Shape has volume ") << volume() << _(" mm^3 and ")
-	 << triangles.size() << _(" triangles") << endl;
-    return 0;
-}
-
-
-/* Loads an stl file by filename
- * Returns -1 on error, and 0 on success
- * Error messages placed on stderr */
-int Shape::load(string filename, uint max_triangles)
-{
-  filetype_t type = File::getFileType (filename);
-    if(type == ASCII_STL) {
-      loadASCIISTL(filename, max_triangles);
-    } else if (type == BINARY_STL) { // Binary
-      loadBinarySTL(filename, max_triangles);
-    } else {
-      cerr << _("unrecognized file - ") << filename << endl;
-	return -1;
-    }
-
-    // somehow sort triangles by height to save time when slicing?
-    // problem: transform matrix
-    //std::sort(triangles.begin(),triangles.end(),Triangle::maxZsort());
-
-    return 0;
-}
-
 
 bool Shape::hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance) const
 {
@@ -406,6 +288,18 @@ vector<Triangle> Shape::trianglesSteeperThan(double angle) const
       tr.push_back(triangles[i]);
   }
   return tr;
+}
+
+
+void Shape::FitToVolume(const Vector3d &vol)
+{
+  Vector3d diag = Max-Min;
+  const double sc_x = diag.x() / vol.x();
+  const double sc_y = diag.y() / vol.y();
+  const double sc_z = diag.z() / vol.z();
+  double max_sc = max(max(sc_x, sc_y),sc_z);
+  if (max_sc > 1.)
+    Scale(1./max_sc, true);
 }
 
 void Shape::Scale(double in_scale_factor, bool calcbbox)
@@ -781,13 +675,24 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
 }
 
 
-int find_vertex(const vector<Vector2d> &vertices,  const Vector2d &v, double delta = 0.0001)
+int find_vertex(const vector<Vector2d> &vertices,
+		const Vector2d &v, double delta = 0.0001)
 {
-  for (uint i = 0; i<vertices.size(); i++) {
-    if ( (v-vertices[i]).squared_length() < delta )
-      return i;
+  int found = -1;
+  int count = (int)vertices.size();
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+  for (int i=0; i<count; i++) {
+    if (found != -1) continue;
+    if ( (v-vertices[i]).squared_length() < delta ) {
+      found = i;
+#ifndef _OPENMP
+      break;
+#endif
+    }
   }
-  return -1;
+  return found;
 }
 
 vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
@@ -1128,8 +1033,11 @@ bool CleanupSharedSegments(vector<Segment> &lines)
 {
 #if 1 // just remove coincident lines
   vector<int> lines_to_delete;
-
-  for (uint j = 0; j < lines.size(); j++) {
+  int count = (int)lines.size();
+#ifdef _OPENMP
+  //#pragma omp parallel for schedule(dynamic)
+#endif
+  for (int j = 0; j < count; j++) {
     const Segment &jr = lines[j];
     for (uint k = j + 1; k < lines.size(); k++)
       {
@@ -1232,7 +1140,8 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 	// vertex_counts.resize (vertices.size());
 
 	// which vertices are referred to, and how much:
-	for (uint i = 0; i < lines.size(); i++)
+	int count = lines.size();
+	for (int i = 0; i < count; i++)
 	{
 		vertex_types[lines[i].start]++;
 		vertex_types[lines[i].end]--;
@@ -1244,7 +1153,11 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 	// positive for those ending no-where, and negative for
 	// those starting no-where.
 	std::vector<int> detached_points; // points with only one line
-	for (uint i = 0; i < vertex_types.size(); i++)
+	count = vertex_types.size();
+// #ifdef _OPENMP
+// #pragma omp parallel for schedule(dynamic)
+// #endif
+	for (int i = 0; i < count; i++)
 	{
 		if (vertex_types[i])
 		{
@@ -1262,7 +1175,11 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 	}
 
 	// pair them nicely to their matching type
-	for (uint i = 0; i < detached_points.size(); i++)
+	count = detached_points.size();
+// #ifdef _OPENMP
+// #pragma omp parallel for schedule(dynamic)
+// #endif
+	for (int i = 0; i < count; i++)
 	{
 		double nearest_dist_sq = (std::numeric_limits<double>::max)();
 		uint   nearest = 0;
@@ -1272,7 +1189,7 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 
 		const Vector2d &p = vertices[n]; // the real detached point
 		// find nearest other detached point to the detached point n:
-		for (uint j = i + 1; j < detached_points.size(); j++)
+		for (int j = i + 1; j < count; j++)
 		{
 		        int pt = detached_points[j];
 			if (pt < 0)

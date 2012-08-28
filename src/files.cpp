@@ -47,6 +47,41 @@ static double read_double(ifstream &file) {
 }
 
 
+File::File(Glib::RefPtr<Gio::File> file)
+ : _file(file)
+{
+  _path = _file->get_path();
+  _type = getFileType(_path);
+}
+
+void File::loadTriangles(vector< vector<Triangle> > &triangles,
+			 vector<ustring> &names,
+			 uint max_triangles)
+{
+  if(_type == ASCII_STL) {
+    // multiple shapes per file
+    load_asciiSTL(triangles, names, max_triangles);
+  } else {
+    // single shape per file
+    triangles.resize(1);
+    names.resize(1);
+    names[0] = _file->get_basename();
+    size_t found = names[0].find_last_of(".");
+    names[0] = (ustring)names[0].substr(0,found);
+    if (_type == BINARY_STL) {
+      load_binarySTL(triangles[0], max_triangles);
+    } else if (_type == VRML) {
+      load_VRML(triangles[0], max_triangles);
+    } else if (_type == AMF) {
+      load_AMF(triangles[0], max_triangles);
+    } else {
+      cerr << _("Unrecognized file - ") << _file->get_parse_name() << endl;
+      cerr << _("Known extensions: ") << "STL, WRL, AMF." << endl;
+    }
+  }
+}
+
+
 
 filetype_t File::getFileType(ustring filename)
 {
@@ -54,8 +89,13 @@ filetype_t File::getFileType(ustring filename)
     // Extract file extension (i.e. "stl")
   ustring extension = filename.substr(filename.find_last_of(".")+1);
 
+
     if(extension == "wrl" || extension == "WRL") {
         return VRML;
+    }
+
+    if(extension == "amf" || extension == "AMF") {
+        return AMF;
     }
 
     if(extension != "stl" && extension != "STL") {
@@ -94,18 +134,18 @@ filetype_t File::getFileType(ustring filename)
 }
 
 
-bool File::loadSTLtriangles_binary(ustring filename,
-				   uint max_triangles, bool readnormals,
-				   vector<Triangle> &triangles)
+bool File::load_binarySTL(vector<Triangle> &triangles,
+			  uint max_triangles, bool readnormals)
 {
     ifstream file;
+    ustring filename = _file->get_path();
     file.open(filename.c_str(), ifstream::in | ifstream::binary);
 
     if(file.fail()) {
       cerr << _("Error: Unable to open stl file - ") << filename << endl;
       return false;
     }
-    cerr << "loading bin " << filename << endl;
+    // cerr << "loading bin " << filename << endl;
 
     /* Binary STL files have a meaningless 80 byte header
      * followed by the number of triangles */
@@ -173,31 +213,73 @@ bool File::loadSTLtriangles_binary(ustring filename,
     // cerr << "Read " << i << " triangles of " << num_triangles << " from file" << endl;
 }
 
-// returns "filename" of the shape found in text
-ustring File::parseSTLtriangles_ascii (istream &text,
-				       uint max_triangles, bool readnormals,
-				       vector<Triangle> &triangles)
+
+bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
+			 vector<ustring> &names,
+			 uint max_triangles, bool readnormals)
+{
+  ustring filename = _file->get_path();
+  ifstream file;
+  file.open(filename.c_str(), ifstream::in);
+  if(file.fail()) {
+    cerr << _("Error: Unable to open stl file - ") << filename << endl;
+    return false;
+  }
+  // fileis.imbue(std::locale::classic());
+
+  // get as many shapes as found in file
+  while (true) {
+    vector<Triangle> tr;
+    ustring name;
+    if (!File::parseSTLtriangles_ascii(file, max_triangles, readnormals,
+				       tr, name))
+      break;
+
+    triangles.push_back(tr);
+    names.push_back(name);
+    // go back to get "solid " keyword again
+    streampos where = file.tellg();
+    where-=100;
+    if (where < 0) break;
+    file.seekg(where,ios::beg);
+  }
+
+  //     if (ret < 0) {// cannot parse, try binary
+  //       cerr << _("Could not read file in ASCII mode, trying Binary: ")<< filename << endl;
+  //       file.close();
+  //       return loadBinarySTL(filename, max_triangles, readnormals);
+  //     }
+
+  file.close();
+  return true;
+}
+
+
+bool File::parseSTLtriangles_ascii (istream &text,
+				    uint max_triangles, bool readnormals,
+				    vector<Triangle> &triangles,
+				    ustring &shapename)
 {
   //cerr << "loading ascii " << endl;
   //cerr << " locale " << std::locale().name() << endl;
 
-    string filename = "";
+  shapename = _("Unnamed");
     // uint step = 1;
     // if (max_triangles > 0 && max_triangles < num_triangles) {
     //   step = ceil(num_triangles/max_triangles);
-    uint pos = text.tellg();
+    streampos pos = text.tellg();
     text.seekg(0, ios::end);
-    uint fsize = text.tellg();
+    streampos fsize = text.tellg();
     text.seekg(pos, ios::beg);
 
     // a rough estimation
-    uint num_triangles = fsize/30;
+    uint num_triangles = (fsize-pos)/30;
 
     uint step = 1;
     if (max_triangles > 0 && max_triangles < num_triangles)
       step = ceil(num_triangles/max_triangles);
 
-    // cerr << "step " << step << endl;
+    //cerr << "step " << step << endl;
 
     /* ASCII files start with "solid [Name_of_file]"
      * so get rid of them to access the data */
@@ -207,16 +289,18 @@ ustring File::parseSTLtriangles_ascii (istream &text,
     while(!text.eof()) { // Find next solid
       text >> solid;
       if (solid == "solid") {
-	getline(text,filename);
+	string name;
+	getline(text,name);
+	shapename = (ustring)name;
+	break;
       }
-      break;
     }
     if (solid != "solid") {
-      return "";
+      return false;
     }
 
     // uint itr = 0;
-    while(!(text).eof()) { // Loop around all triangles
+    while(!text.eof()) { // Loop around all triangles
       string facet;
         text >> facet;
 	//cerr << text.tellg() << " - " << fsize << " - " <<facet << endl;
@@ -225,17 +309,18 @@ ustring File::parseSTLtriangles_ascii (istream &text,
 	    facet = "";
 	    while (facet != "facet" && facet != "endsolid")
 	      text >> facet;
-	    if (facet == "endsolid") break;
+	    if (facet == "endsolid") {
+	      break;
+	    }
 	  }
 	}
         // Parse possible end of text - "endsolid"
         if(facet == "endsolid") {
 	  break;
         }
-
         if(facet != "facet") {
 	  cerr << _("Error: Facet keyword not found in STL text!") << endl;
-	  return "";
+	  return false;
         }
 
         // Parse Face Normal - "normal %f %f %f"
@@ -244,7 +329,7 @@ ustring File::parseSTLtriangles_ascii (istream &text,
         text >> normal;
         if(normal != "normal") {
 	  cerr << _("Error: normal keyword not found in STL text!") << endl;
-	  return "";
+	  return false;
 	}
 
 	if (readnormals){
@@ -261,7 +346,7 @@ ustring File::parseSTLtriangles_ascii (istream &text,
 	text >> loop;
 	if(outer != "outer" || loop != "loop") {
 	  cerr << _("Error: Outer/Loop keywords not found!") << endl;
-	  return "";
+	  return false;
 	}
 
         // Grab the 3 vertices - each one of the form "vertex %f %f %f"
@@ -275,7 +360,7 @@ ustring File::parseSTLtriangles_ascii (istream &text,
 
             if(vertex != "vertex") {
 	      cerr << _("Error: Vertex keyword not found") << endl;
-	      return "";
+	      return false;
             }
         }
 
@@ -285,7 +370,7 @@ ustring File::parseSTLtriangles_ascii (istream &text,
 
         if(endloop != "endloop" || endfacet != "endfacet") {
 	  cerr << _("Error: Endloop or endfacet keyword not found") << endl;
-	  return "";
+	  return false;
         }
 
         // Create triangle object and push onto the vector
@@ -300,15 +385,15 @@ ustring File::parseSTLtriangles_ascii (istream &text,
         triangles.push_back(triangle);
     }
     //cerr << "loaded " << filename << endl;
-    return ustring(filename);
+    return true;
 }
 
 
-bool File::loadVRMLtriangles(ustring filename,
-			     uint max_triangles,
-			     vector<Triangle> &triangles)
+bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
 
 {
+  triangles.clear();
+  ustring filename = _file->get_path();
     ifstream file;
     file.open(filename.c_str());
 
@@ -379,6 +464,11 @@ bool File::loadVRMLtriangles(ustring filename,
     return true;
 }
 
+
+bool File::load_AMF(vector<Triangle> &triangles, uint max_triangles)
+{
+  return false;
+}
 
 
 bool File::saveBinarySTL(ustring filename, const vector<Triangle> &triangles,

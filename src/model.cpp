@@ -182,53 +182,16 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
 {
   vector<Shape*> shapes;
   if (file==0) return shapes;
-  string path = file->get_path();
-  size_t found = path.find_last_of("/\\");
-  if (ftype==UNKNOWN_TYPE)
-    ftype =  File::getFileType(path);
-
-  if (ftype == BINARY_STL) // only one shape per file
-    {
-      Shape *shape = new Shape();
-      shape->loadBinarySTL(path, max_triangles);
-      shapes.push_back(shape);
-     }
-  else if (ftype == ASCII_STL) // multiple shapes per file
-    {
-      ifstream fileis;
-      fileis.open(path.c_str());
-      //vector<Shape*> shapes;
-      while (!fileis.eof())
-	{
-	  Shape *shape = new Shape();
-	  int ok = shape->parseASCIISTL(fileis);
-	  if (ok>=0) {
-	    shapes.push_back(shape);
-	    // go back to get "solid " keyword again
-	    streampos where = fileis.tellg();
-	    where-=100;
-	    if (where < 0) break;
-	    fileis.seekg(where,ios::beg);
-	  }
-	  else {
-            delete shape;
-            if (shapes.size()==0) {
-	        cerr <<"Could not read STL in ASCII mode: "<< path
-	   	    << " (bad header?), trying Binary " << endl ;
-	        return ReadShapes(file, max_triangles, BINARY_STL);
-            }
-	  }
-	}
-      fileis.close();
-    }
-  else if (ftype == VRML)
-    {
-      Shape *shape = new Shape();
-      shape->loadASCIIVRML(path);
-      shapes.push_back(shape);
-    }
-  if (shapes.size()==1){
-    shapes.front()->filename = (string)path.substr(found+1);
+  File sfile(file);
+  vector< vector<Triangle> > triangles;
+  vector<ustring> shapenames;
+  sfile.loadTriangles(triangles, shapenames, max_triangles);
+  for (uint i = 0; i < triangles.size(); i++) {
+    Shape *shape = new Shape();
+    shape->setTriangles(triangles[i]);
+    shape->filename = shapenames[i];
+    shape->FitToVolume(settings.Hardware.Volume - 2.*settings.Hardware.PrintMargin);
+    shapes.push_back(shape);
   }
   return shapes;
 }

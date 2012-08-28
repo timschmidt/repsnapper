@@ -64,7 +64,7 @@ public:
   virtual short dimensions(){return 3;};
 
 	Shape();
-	Shape(string filename, istream &text);
+	/* Shape(string filename, istream &text); */
 	virtual ~Shape(){};
  	string filename;
 	int idx;
@@ -72,8 +72,6 @@ public:
 	int parseASCIISTL(istream &text, uint max_triangles=0, bool readnormals=false);
 
 	Transform3D transform3D;
-
-	int load(std::string filename, uint max_triangles=0);
 
 	virtual void clear();
 	/* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
@@ -111,39 +109,42 @@ public:
 	double getScaleFactorY(){ return transform3D.get_scale_y(); };
 	virtual double getScaleFactorZ(){ return transform3D.get_scale_z(); };
 
+
+	void FitToVolume(const Vector3d &vol);
+
     void PlaceOnPlatform();
 
     Vector3d Min, Max, Center;
 
+
     /* Poly getOutline(const Matrix4d &T, double maxlen) const;*/
     vector<Triangle> trianglesSteeperThan(double angle) const;
 
-	string getSTLsolid() const;
+    string getSTLsolid() const;
+    double volume() const;
 
-	void invertNormals();
-	void repairNormals(double sqdistance);
-	virtual void mirror();
-
-	double volume() const;
-
+    void invertNormals();
+    void repairNormals(double sqdistance);
+    virtual void mirror();
     void makeHollow(double wallthickness);
-
-    int loadASCIISTL(std::string filename, uint max_triangles=0, bool readnormals=false);
-    int loadBinarySTL(std::string filename, uint max_triangles=0, bool readnormals=false);
-
     virtual void splitshapes(vector<Shape*> &shapes, ViewProgress *progress=NULL);
-
     int divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) const;
 
-    int loadASCIIVRML(std::string filename, uint max_triangles=0);
 
+    /* int load(std::string filename, uint max_triangles=0); */
+    /* int loadASCIISTL(std::string filename, uint max_triangles=0, bool readnormals=false); */
+    /* int loadBinarySTL(std::string filename, uint max_triangles=0, bool readnormals=false); */
+    /* int loadASCIIVRML(std::string filename, uint max_triangles=0); */
     int saveBinarySTL(std::string filename) const;
+
 
     bool slow_drawing;
     virtual string info() const;
 
     vector<Triangle> getTriangles(const Matrix4d &T) const;
     void addTriangles(const vector<Triangle> &tr);
+
+    void setTriangles(const vector<Triangle> &triangles_);
 
 protected:
 

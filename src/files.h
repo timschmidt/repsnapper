@@ -32,6 +32,7 @@ enum filetype_t{
     NONE_STL,
     VRML,
     SVG,
+    AMF,
     UNKNOWN_TYPE
 };
 
@@ -41,23 +42,40 @@ class File
 
 public:
   File(){};
+  File(Glib::RefPtr<Gio::File> file);
   virtual ~File(){};
 
-  static filetype_t getFileType(ustring filename);
+  Glib::RefPtr<Gio::File> _file;
+  ustring _path;
+  filetype_t _type;
+
+  static filetype_t getFileType(ustring path);
+
+  void loadTriangles(vector< vector<Triangle> > &triangles,
+		     vector<ustring> &names,
+		     uint max_triangles=0);
 
 
-  static bool loadSTLtriangles_binary(ustring filename,
+  bool load_asciiSTL(vector< vector<Triangle> > &triangles,
+		     vector<ustring> &names,
+		     uint max_triangles=0, bool readnormals=false);
+
+  bool load_binarySTL(vector<Triangle> &triangles,
+		      uint max_triangles=0, bool readnormals=false);
+
+  bool load_VRML(vector<Triangle> &triangles, uint max_triangles=0);
+  bool load_AMF (vector<Triangle> &triangles, uint max_triangles=0);
+
+
+  static bool parseSTLtriangles_ascii(istream &text,
 				      uint max_triangles, bool readnormals,
-				      vector<Triangle> &triangles);
-
-  static ustring parseSTLtriangles_ascii(istream &text,
-					 uint max_triangles, bool readnormals,
-					 vector<Triangle> &triangles);
+				      vector<Triangle> &triangles,
+				      ustring &name);
 
 
-  static bool loadVRMLtriangles(ustring filename,
-				uint max_triangles,
-				vector<Triangle> &triangles);
+  /* static bool loadVRMLtriangles(ustring filename, */
+  /* 				uint max_triangles, */
+  /* 				vector<Triangle> &triangles); */
 
 
 
