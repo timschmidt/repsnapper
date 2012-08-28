@@ -8,6 +8,8 @@ src/arcball.cpp
 src/command.cpp
 src/connectview.cpp
 src/filechooser.cpp
+src/files.cpp
+src/flatshape.cpp
 src/gcode.cpp
 src/gcodestate.cpp
 src/model.cpp
