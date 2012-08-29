@@ -202,16 +202,13 @@ void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
   bool autoplace = settings.Misc.ShapeAutoplace;
   string path = file->get_path();
   vector<Shape*> shapes = ReadShapes(file, 0, ftype);
-  if (shapes.size()==1){
-    AddShape(NULL, shapes.front(), shapes.front()->filename, autoplace);
+  // do not autoplace in multishape files
+  if (shapes.size() > 1)  autoplace = false;
+  for (uint i = 0; i < shapes.size(); i++){
+    AddShape(NULL, shapes[i], shapes[i]->filename, autoplace);
   }
-  else for (uint i=0;i<shapes.size();i++){
-      // do not autoplace to keep saved positions
-      AddShape(NULL, shapes[i], shapes[i]->filename, false);
-    }
   shapes.clear();
   ModelChanged();
-  return;
 }
 
 void Model::SaveStl(Glib::RefPtr<Gio::File> file)
@@ -277,6 +274,7 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
   Max = gcode.Max;
   Min = gcode.Min;
   Center = (Max + Min) / 2.0;
+  m_signal_zoom.emit();
 }
 
 
@@ -723,7 +721,7 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
   }
 
   Center = (Max + Min) / 2.0;
-  m_signal_tree_changed.emit();
+  m_signal_zoom.emit();
 }
 
 Vector3d Model::GetViewCenter()

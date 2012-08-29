@@ -100,8 +100,8 @@ Render::~Render()
 
 void Render::set_model(Model *model)
 {
-  model->signal_tree_changed().connect (sigc::mem_fun(*this, &Render::tree_changed));
-  tree_changed();
+  model->signal_zoom().connect (sigc::mem_fun(*this, &Render::zoom_to_model));
+  zoom_to_model();
 }
 
 void Render::selection_changed()
@@ -109,7 +109,7 @@ void Render::selection_changed()
   queue_draw();
 }
 
-void Render::tree_changed()
+void Render::zoom_to_model()
 {
   if (!get_model())
     return;

@@ -41,7 +41,7 @@ class Render : public Gtk::DrawingArea
 
   void SetEnableLight(unsigned int lightNr, bool on);
   void CenterView();
-  void tree_changed();
+  void zoom_to_model();
   void selection_changed();
   guint find_object_at(gdouble x, gdouble y);
   Vector3d mouse_on_plane(double x, double y, double plane_z=0) const;

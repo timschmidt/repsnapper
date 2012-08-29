@@ -304,7 +304,7 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 	int h = (int)time/3600;
 	int min = ((int)time%3600)/60;
 	int sec = ((int)time-3600*h-60*min);
-	cout << "GCode Time Estimation "<< h <<"h "<<min <<"m " <<sec <<"s" <<endl;
+	cerr << "GCode Time Estimation "<< h <<"h "<<min <<"m " <<sec <<"s" <<endl;
 	//??? to statusbar or where else?
 }
 
