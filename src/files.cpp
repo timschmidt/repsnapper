@@ -58,6 +58,11 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
 			 vector<ustring> &names,
 			 uint max_triangles)
 {
+  Gio::FileType type = _file->query_file_type();
+  if (type != Gio::FILE_TYPE_REGULAR &&
+      type != Gio::FILE_TYPE_SYMBOLIC_LINK)
+    return;
+
   char * numlocale   = setlocale(LC_NUMERIC, NULL);
   char * colllocale  = setlocale(LC_COLLATE, NULL);
   char * ctypelocale = setlocale(LC_CTYPE,   NULL);
@@ -94,7 +99,6 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
 
 filetype_t File::getFileType(ustring filename)
 {
-
     // Extract file extension (i.e. "stl")
   ustring extension = filename.substr(filename.find_last_of(".")+1);
 
