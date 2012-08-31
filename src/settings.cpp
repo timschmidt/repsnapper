@@ -144,7 +144,7 @@ static struct {
   FLOAT_MEMBER  (Hardware.MinimumLineWidth, "MinimumLineWidth", 0.4, true),
   FLOAT_MEMBER  (Hardware.MaximumLineWidth, "MaximumLineWidth", 0.7, true),
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
-  { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, false },
+  { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, NULL, false },
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
   INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4, false),
@@ -155,8 +155,8 @@ static struct {
   INT_MEMBER    (Printer.FanVoltage, "Printer.FanVoltage", 200, false),
   BOOL_MEMBER   (Printer.Logging, "Printer.Logging", false, false),
   BOOL_MEMBER   (Printer.ClearLogOnPrintStart, "Printer.ClearLogOnPrintStart", false, false),
-  { OFFSET (Printer.NozzleTemp), T_FLOAT, "Printer.NozzleTemp", NULL, 210, false },
-  { OFFSET (Printer.BedTemp)   , T_FLOAT, "Printer.BedTemp", NULL,  60, false },
+  { OFFSET (Printer.NozzleTemp), T_FLOAT, "Printer.NozzleTemp", NULL, 210, NULL, false },
+  { OFFSET (Printer.BedTemp)   , T_FLOAT, "Printer.BedTemp", NULL,  60, NULL, false },
 
   // Slicing
   BOOL_MEMBER  (Slicing.RelativeEcode, "RelativeEcode", false, false),
