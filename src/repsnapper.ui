@@ -13,16 +13,6 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
-  <object class="GtkAction" id="Fullscreen">
-    <property name="label">Fullscreen</property>
-    <property name="short_label" translatable="yes">Fullscreen</property>
-    <property name="tooltip">Toggle Fullscreen</property>
-  </object>
-  <object class="GtkAction" id="LoadSettings">
-    <property name="label" translatable="yes">Load Settings</property>
-    <property name="short_label" translatable="yes">Load Settings</property>
-    <property name="tooltip" translatable="yes">Load application settings profile</property>
-  </object>
   <object class="GtkAction" id="OpenGCode">
     <property name="label" translatable="yes">Load _GCode</property>
     <property name="short_label" translatable="yes">Load GCode</property>
@@ -78,6 +68,16 @@
     <property name="value">8</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAction" id="Fullscreen">
+    <property name="label">Fullscreen</property>
+    <property name="short_label" translatable="yes">Fullscreen</property>
+    <property name="tooltip">Toggle Fullscreen</property>
+  </object>
+  <object class="GtkAction" id="LoadSettings">
+    <property name="label" translatable="yes">Load Settings</property>
+    <property name="short_label" translatable="yes">Load Settings</property>
+    <property name="tooltip" translatable="yes">Load application settings profile</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
@@ -2738,10 +2738,9 @@ and others I forgot... (needs updating)</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkExpander" id="expander1">
+                          <object class="GtkExpander" id="printeraxis_expander">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="expanded">True</property>
                             <child>
                               <object class="GtkVBox" id="i_axis_controls">
                                 <property name="visible">True</property>

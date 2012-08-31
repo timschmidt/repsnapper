@@ -692,9 +692,11 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
   try {
     Misc.ExpandLayerDisplay = cfg.get_boolean ("Misc", "ExpandLayerDisplay");
     Misc.ExpandModelDisplay = cfg.get_boolean ("Misc", "ExpandModelDisplay");
+    Misc.ExpandPAxisDisplay = cfg.get_boolean ("Misc", "ExpandPAxisDisplay");
   } catch (const Glib::KeyFileError &err) {
     Misc.ExpandLayerDisplay = false;
     Misc.ExpandModelDisplay = false;
+    Misc.ExpandPAxisDisplay = false;
   }
 
   try {
@@ -759,6 +761,7 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
 
   cfg.set_boolean("Misc", "ExpandLayerDisplay", Misc.ExpandLayerDisplay);
   cfg.set_boolean("Misc", "ExpandModelDisplay", Misc.ExpandModelDisplay);
+  cfg.set_boolean("Misc", "ExpandPAxisDisplay", Misc.ExpandPAxisDisplay);
 
   GCode.m_impl->saveSettings (cfg);
 
@@ -857,6 +860,9 @@ void Settings::set_to_gui (Builder &builder, int i)
   builder->get_widget ("model_expander", exp);
   if (exp)
     exp->set_expanded(Misc.ExpandModelDisplay);
+  builder->get_widget ("printeraxis_expander", exp);
+  if (exp)
+    exp->set_expanded(Misc.ExpandPAxisDisplay);
 }
 
 

@@ -206,6 +206,7 @@ class Settings {
     int window_posy;
     bool ExpandLayerDisplay;
     bool ExpandModelDisplay;
+    bool ExpandPAxisDisplay;
   };
   MiscSettings Misc;
 

@@ -951,6 +951,9 @@ void View::save_settings_to(Glib::RefPtr < Gio::File > file)
   m_builder->get_widget ("model_expander", exp);
   if (exp)
     m_model->settings.Misc.ExpandModelDisplay = exp->get_expanded();
+  m_builder->get_widget ("printeraxis_expander", exp);
+  if (exp)
+    m_model->settings.Misc.ExpandPAxisDisplay = exp->get_expanded();
   m_model->SaveConfig(file);
 }
 
@@ -1696,7 +1699,7 @@ void View::setModel(Model *model)
   // FIXME: better have settings here and delegate to model AND printer
   m_model->settings.connect_to_ui (*((Builder *)&m_builder));
 
-  m_printer->setModel(model);
+  m_printer->setModel(m_model);
 
   showAllWidgets();
 }
