@@ -58,6 +58,12 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
 			 vector<ustring> &names,
 			 uint max_triangles)
 {
+  char * numlocale   = setlocale(LC_NUMERIC, NULL);
+  char * colllocale  = setlocale(LC_COLLATE, NULL);
+  char * ctypelocale = setlocale(LC_CTYPE,   NULL);
+  setlocale(LC_NUMERIC, "C");
+  setlocale(LC_COLLATE, "C");
+  setlocale(LC_CTYPE,   "C");
   if(_type == ASCII_STL) {
     // multiple shapes per file
     load_asciiSTL(triangles, names, max_triangles);
@@ -79,6 +85,9 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
       cerr << _("Known extensions: ") << "STL, WRL, AMF." << endl;
     }
   }
+  setlocale(LC_NUMERIC, numlocale);
+  setlocale(LC_COLLATE, colllocale);
+  setlocale(LC_CTYPE, ctypelocale);
 }
 
 
@@ -306,18 +315,22 @@ bool File::parseSTLtriangles_ascii (istream &text,
 	//cerr << text.tellg() << " - " << fsize << " - " <<facet << endl;
 	if (step > 1) {
 	  for (uint s=0; s < step; s++) {
+	    if (text.eof()) break;
 	    facet = "";
-	    while (facet != "facet" && facet != "endsolid")
+	    while (facet != "facet" && facet != "endsolid"){
+	      if (text.eof()) break;
 	      text >> facet;
+	    }
 	    if (facet == "endsolid") {
 	      break;
 	    }
 	  }
 	}
         // Parse possible end of text - "endsolid"
-        if(facet == "endsolid") {
+        if(text.eof() || facet == "endsolid" ) {
 	  break;
         }
+
         if(facet != "facet") {
 	  cerr << _("Error: Facet keyword not found in STL text!") << endl;
 	  return false;
@@ -327,7 +340,7 @@ bool File::parseSTLtriangles_ascii (istream &text,
         string normal;
         Vector3d normal_vec;
         text >> normal;
-        if(normal != "normal") {
+        if(readnormals && normal != "normal") {
 	  cerr << _("Error: normal keyword not found in STL text!") << endl;
 	  return false;
 	}
@@ -340,7 +353,7 @@ bool File::parseSTLtriangles_ascii (istream &text,
 
         // Parse "outer loop" line
         string outer, loop;
-	while (outer!="outer" && !(text).eof()) {
+	while (outer!="outer" && !text.eof()) {
 	  text >> outer;
 	}
 	text >> loop;

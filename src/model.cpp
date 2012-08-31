@@ -178,7 +178,7 @@ void Model::ReadSVG(Glib::RefPtr<Gio::File> file)
 
 
 vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
-				 uint max_triangles, filetype_t ftype)
+				 uint max_triangles)
 {
   vector<Shape*> shapes;
   if (file==0) return shapes;
@@ -197,11 +197,10 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
 }
 
 
-void Model::ReadStl(Glib::RefPtr<Gio::File> file, filetype_t ftype)
+void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 {
   bool autoplace = settings.Misc.ShapeAutoplace;
-  string path = file->get_path();
-  vector<Shape*> shapes = ReadShapes(file, 0, ftype);
+  vector<Shape*> shapes = ReadShapes(file, 0);
   // do not autoplace in multishape files
   if (shapes.size() > 1)  autoplace = false;
   for (uint i = 0; i < shapes.size(); i++){
@@ -221,14 +220,22 @@ void Model::SaveStl(Glib::RefPtr<Gio::File> file)
     shapes[0]->saveBinarySTL(file->get_path());
   }
   else {
+    char * numlocale   = setlocale(LC_NUMERIC, NULL);
+    char * colllocale  = setlocale(LC_COLLATE, NULL);
+    char * ctypelocale = setlocale(LC_CTYPE,   NULL);
+    setlocale(LC_NUMERIC, "C");
+    setlocale(LC_COLLATE, "C");
+    setlocale(LC_CTYPE,   "C");
     stringstream sstr;
     for(uint s=0; s < shapes.size(); s++) {
       sstr << shapes[s]->getSTLsolid() << endl;
     }
     Glib::file_set_contents (file->get_path(), sstr.str());
+    setlocale(LC_NUMERIC, numlocale);
+    setlocale(LC_COLLATE, colllocale);
+    setlocale(LC_CTYPE, ctypelocale);
   }
 }
-
 
 void Model::Read(Glib::RefPtr<Gio::File> file)
 {
