@@ -172,8 +172,6 @@ void View::do_load ()
       m_model->LoadConfig(files[i]);
     else
       m_model->Read(files[i]);
-    string directory_path = files[i]->get_parent()->get_path();
-    m_model->settings.STLPath = directory_path;
   }
   show_notebooktab("model_tab", "controlnotebook");
 }
@@ -187,8 +185,6 @@ void View::do_slice_svg (bool singlelayer)
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
 	return;
-    string directory_path = files[0]->get_parent()->get_path();
-    m_model->settings.STLPath = directory_path;
     m_model->SliceToSVG(files[0], singlelayer);
   }
 }

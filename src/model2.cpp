@@ -997,6 +997,8 @@ void Model::SliceToSVG(Glib::RefPtr<Gio::File> file, bool single_layer)
     }
     m_progress->stop (_("Done"));
   }
+  string directory_path = file->get_parent()->get_path();
+  settings.STLPath = directory_path;
   is_calculating = false;
 }
 

@@ -242,30 +242,36 @@ void Model::Read(Glib::RefPtr<Gio::File> file)
   std::string basename = file->get_basename();
   size_t pos = basename.rfind('.');
   cerr << "reading " << basename<< endl;
+  string directory_path = file->get_parent()->get_path();
   if (pos != std::string::npos) {
     std::string extn = basename.substr(pos);
     if (extn == ".conf")
       {
 	LoadConfig (file);
+	settings.SettingsPath = directory_path;
 	return;
       }
     else if (extn == ".gcode")
       {
 	ReadGCode (file);
+	settings.GCodePath = directory_path;
 	return;
       }
     else if (extn == ".svg")
       {
 	ReadSVG (file);
+	settings.STLPath = directory_path;
 	return;
       }
     else if (extn == ".rfo")
       {
 	//      ReadRFO (file);
+	settings.STLPath = directory_path;
 	return;
       }
   }
   ReadStl (file);
+  settings.STLPath = directory_path;
 }
 
 void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
