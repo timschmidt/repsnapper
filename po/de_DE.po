@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: repsnapper 1.9.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-08-26 03:28+0200\n"
-"PO-Revision-Date: 2012-08-26 03:29+0200\n"
+"POT-Creation-Date: 2012-08-31 13:41+0200\n"
+"PO-Revision-Date: 2012-08-31 13:43+0200\n"
 "Last-Translator: martin.dieringer@gmx.de\n"
 "Language-Team:  <gb@li.org>\n"
 "Language: de_DE\n"
@@ -77,30 +77,84 @@ msgstr "Alle Dateien"
 msgid "Models"
 msgstr "Modelle"
 
-#: ../src/filechooser.cpp:52 ../src/filechooser.cpp:99
+#: ../src/filechooser.cpp:54 ../src/filechooser.cpp:101
 #: ../src/repsnapper.ui.h:119
 msgid "GCode"
 msgstr "GCode"
 
-#: ../src/filechooser.cpp:58 ../src/filechooser.cpp:105
+#: ../src/filechooser.cpp:60 ../src/filechooser.cpp:107
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: ../src/filechooser.cpp:111
+#: ../src/filechooser.cpp:113
 msgid "SVG"
 msgstr ""
 
-#: ../src/filechooser.cpp:117 ../src/repsnapper.ui.h:174
+#: ../src/filechooser.cpp:119 ../src/repsnapper.ui.h:174
 msgid "Model"
 msgstr "Modell"
 
-#: ../src/filechooser.cpp:132
+#: ../src/filechooser.cpp:134
 msgid "Load"
 msgstr "Lade"
 
-#: ../src/filechooser.cpp:146
+#: ../src/filechooser.cpp:148
 msgid "Save"
 msgstr "Speichere"
+
+#: ../src/files.cpp:81
+msgid "Unrecognized file - "
+msgstr "unbekannte Datei: "
+
+#: ../src/files.cpp:82
+msgid "Known extensions: "
+msgstr "Bekannte Erw.: "
+
+#: ../src/files.cpp:113
+msgid "Error: Unable to open file - "
+msgstr "Fehler: Kann Datei nicht öffnen: "
+
+#: ../src/files.cpp:149 ../src/files.cpp:229 ../src/files.cpp:553
+msgid "Error: Unable to open stl file - "
+msgstr "Fehler: Kann STL-Datei nicht öffnen: "
+
+#: ../src/files.cpp:195
+msgid "Unexpected EOF reading STL file - "
+msgstr "Dateiende beim Lesen der STL-Datei - "
+
+#. cerr << "loading ascii " << endl;
+#. cerr << " locale " << std::locale().name() << endl;
+#: ../src/files.cpp:270 ../src/files.cpp:510
+msgid "Unnamed"
+msgstr "Unbenannt"
+
+#: ../src/files.cpp:326
+msgid "Error: Facet keyword not found in STL text!"
+msgstr "Fehler: kein \"Facet\" in STL"
+
+#: ../src/files.cpp:335
+msgid "Error: normal keyword not found in STL text!"
+msgstr "Fehler: kein \"normal\" in STL"
+
+#: ../src/files.cpp:352
+msgid "Error: Outer/Loop keywords not found!"
+msgstr "Fehler: Kein \"outer/loop\" gefunden"
+
+#: ../src/files.cpp:366
+msgid "Error: Vertex keyword not found"
+msgstr "Fehler: kein \"Vertex\""
+
+#: ../src/files.cpp:376
+msgid "Error: Endloop or endfacet keyword not found"
+msgstr "Fehler: Kein \"Endloop\" oder \"endfacet\""
+
+#: ../src/files.cpp:405
+msgid "Error: Unable to open vrml file - "
+msgstr "Fehler: kann VRML-Datei nich laden: "
+
+#: ../src/flatshape.cpp:254
+msgid "Split Polygons"
+msgstr "Polygone teilen"
 
 #: ../src/gcode.cpp:157
 msgid "Loading GCode"
@@ -123,29 +177,29 @@ msgstr "Absoluter E-Code"
 msgid "not yet implemented\n"
 msgstr "noch nicht implementiert\n"
 
-#: ../src/model.cpp:311
+#: ../src/model.cpp:272
 msgid "Reading GCode"
 msgstr "Lade GCode"
 
 #. display whole layer if flat shapes
 #. if (shapes.back()->dimensions() == 2)
 #. gcode.layerchanges.push_back(0);
-#: ../src/model.cpp:313 ../src/model2.cpp:898 ../src/model2.cpp:976
+#: ../src/model.cpp:274 ../src/model2.cpp:898 ../src/model2.cpp:976
 #: ../src/model2.cpp:998 ../src/printer.cpp:665
 #: ../src/printer_iochannel.cpp:454 ../src/printer_libreprap.cpp:385
 #: ../src/view.cpp:2138
 msgid "Done"
 msgstr "Fertig"
 
-#: ../src/model.cpp:328
+#: ../src/model.cpp:290
 msgid "Moving GCode"
 msgstr "GCode versetzen"
 
-#: ../src/model.cpp:583
+#: ../src/model.cpp:545
 msgid "_upper"
 msgstr "_oben"
 
-#: ../src/model.cpp:584
+#: ../src/model.cpp:546
 msgid "_lower"
 msgstr "_unten"
 
@@ -339,7 +393,6 @@ msgstr "Ziel angegeben ohne Achse"
 
 #. seconds
 #: ../src/progress.cpp:57 ../src/progress.cpp:76
-#, fuzzy
 msgid " done in "
 msgstr " fertig "
 
@@ -468,7 +521,7 @@ msgid " loading settings from file '"
 msgstr " beim einlesen der Datei '"
 
 #: ../src/settings.cpp:636
-msgid "parsing config from '"
+msgid "Parsing config from '"
 msgstr "Lese Einstellungen von '"
 
 #: ../src/settings.cpp:671 ../src/settings.cpp:962
@@ -491,52 +544,31 @@ msgstr "Defekte Einstellung\n"
 msgid "Missing GUI element "
 msgstr "GUI-Element fehlt: "
 
-#: ../src/shape.cpp:77 ../src/shape.cpp:160
+#: ../src/shape.cpp:57
 msgid "Shape has volume "
 msgstr "Teil hat ein Volumen von "
 
-#: ../src/shape.cpp:77 ../src/shape.cpp:160
+#: ../src/shape.cpp:57
 msgid " mm^3 and "
 msgstr "mm^3 und "
 
-#: ../src/shape.cpp:78 ../src/shape.cpp:161
+#: ../src/shape.cpp:58
 msgid " triangles"
 msgstr " Dreiecke"
 
-#: ../src/shape.cpp:94
-msgid "No VRML file file passed to loadASCIIVRML"
-msgstr "Keine VRML-Datei an loadASCIIVRML gegeben"
-
-#: ../src/shape.cpp:114
-msgid "None ASCII STL file passed to loadASCIIFile"
-msgstr "Keine ASCII-Datei in loadASCIIFile"
-
-#: ../src/shape.cpp:121
-msgid "Error: Unable to open stl file - "
-msgstr "Fehler: Kann STL-Datei nicht öffnen: "
-
-#. cannot parse, try binary
-#: ../src/shape.cpp:126
-msgid "Could not read file in ASCII mode, trying Binary: "
-msgstr "Kann nicht als ASCII laden, versuche binär:"
-
-#: ../src/shape.cpp:177
-msgid "unrecognized file - "
-msgstr "unbekannte Datei: "
-
-#: ../src/shape.cpp:224
+#: ../src/shape.cpp:106
 msgid "Split Shapes"
 msgstr "Teilen"
 
-#: ../src/shape.cpp:230
+#: ../src/shape.cpp:112
 msgid "Split: Sorting Triangles ..."
 msgstr "Dreicke sortieren ..."
 
-#: ../src/shape.cpp:264
+#: ../src/shape.cpp:146
 msgid "Split: Building shapes ..."
 msgstr "Zerlegen ..."
 
-#: ../src/shape.cpp:275
+#: ../src/shape.cpp:157
 msgid "Shape "
 msgstr "Teil "
 
@@ -756,9 +788,8 @@ msgid "<b>First Layer(s)</b>"
 msgstr "<b>Erste Schicht(en)</b>"
 
 #: ../src/repsnapper.ui.h:23
-#, fuzzy
 msgid "<b>GCode Postprocessor</b>"
-msgstr "<b>GCode-Darstellung</b>"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:24
 msgid "<b>GCode Rendering</b>"
@@ -925,7 +956,6 @@ msgid "Choose Wireframe Colour"
 msgstr "Drahtmodellfarbe"
 
 #: ../src/repsnapper.ui.h:65
-#, fuzzy
 msgid "Clear Now"
 msgstr "Alles Löschen"
 
@@ -934,7 +964,6 @@ msgid "Clear on Print Start"
 msgstr "Vor Drucken löschen"
 
 #: ../src/repsnapper.ui.h:67
-#, fuzzy
 msgid "Clone Settings"
 msgstr "Einstellungen speichern"
 
@@ -1264,9 +1293,8 @@ msgid "Load application settings profile"
 msgstr "Konfigurationsdatei laden"
 
 #: ../src/repsnapper.ui.h:152
-#, fuzzy
 msgid "Logging"
-msgstr "Komm. Loggen"
+msgstr ""
 
 #: ../src/repsnapper.ui.h:153
 msgid "Logs"
@@ -1379,7 +1407,6 @@ msgid "Next Layer"
 msgstr "Schichtwechsel"
 
 #: ../src/repsnapper.ui.h:181
-#, fuzzy
 msgid "No Covers"
 msgstr "Ohne Abdeckung"
 
@@ -1568,7 +1595,6 @@ msgid "Serial comms debug"
 msgstr "Schittstelle debuggen"
 
 #: ../src/repsnapper.ui.h:230
-#, fuzzy
 msgid "Settings set"
 msgstr "Einstellungen"
 
@@ -1633,7 +1659,6 @@ msgid "Summary"
 msgstr "Zusammenfassung"
 
 #: ../src/repsnapper.ui.h:248
-#, fuzzy
 msgid "Summary of Hardware Settings"
 msgstr "Gerät"
 
@@ -1876,38 +1901,20 @@ msgstr ""
 msgid "repsnapper Preferences"
 msgstr "repsnapper-Einstellungen"
 
+#~ msgid "No VRML file file passed to loadASCIIVRML"
+#~ msgstr "Keine VRML-Datei an loadASCIIVRML gegeben"
+
+#~ msgid "None ASCII STL file passed to loadASCIIFile"
+#~ msgstr "Keine ASCII-Datei in loadASCIIFile"
+
+#~ msgid "Could not read file in ASCII mode, trying Binary: "
+#~ msgstr "Kann nicht als ASCII laden, versuche binär:"
+
 #~ msgid "Printed"
 #~ msgstr "Gedruckt"
 
 #~ msgid "Error (%d) '%s' - user popup ?"
 #~ msgstr "Fehler (%d) '%s' - Fenster?"
-
-#~ msgid "Unexpected EOF reading STL file - "
-#~ msgstr "Dateiende beim Lesen der STL-Datei - "
-
-#~ msgid "Error: Unable to open vrml file - "
-#~ msgstr "Fehler: kann VRML-Datei nich laden: "
-
-#~ msgid "Error: Facet keyword not found in STL text!"
-#~ msgstr "Fehler: kein \"Facet\" in STL"
-
-#~ msgid "Error: normal keyword not found in STL text!"
-#~ msgstr "Fehler: kein \"normal\" in STL"
-
-#~ msgid "Error: Outer/Loop keywords not found!"
-#~ msgstr "Fehler: Kein \"outer/loop\" gefunden"
-
-#~ msgid "Error: Vertex keyword not found"
-#~ msgstr "Fehler: kein \"Vertex\""
-
-#~ msgid "Error: Endloop or endfacet keyword not found"
-#~ msgstr "Fehler: Kein \"Endloop\" oder \"endfacet\""
-
-#~ msgid "Error: Unable to open file - "
-#~ msgstr "Fehler: Kann Datei nicht öffnen: "
-
-#~ msgid "Split Polygons"
-#~ msgstr "Polygone teilen"
 
 #~ msgid "GCode Postprocessor Command (must handle stdin and stdout):"
 #~ msgstr ""
