@@ -472,9 +472,23 @@ void Model::MakeFullSkins()
   if(!m_progress->restart (_("Skins"), layers.size())) return;
   int progress_steps=(int)(layers.size()/100);
   if (progress_steps==0) progress_steps=1;
-  // #pragma omp parallel for schedule(dynamic) ordered
-  for (int i=1; i < (int)layers.size(); i++) {
-    if (i%progress_steps==0) if(!m_progress->update(i)) break;
+  int count = (int)layers.size();
+#ifdef _OPENMP
+  omp_lock_t progress_lock;
+  omp_init_lock(&progress_lock);
+#pragma omp parallel for schedule(dynamic) //ordered
+#endif
+  for (int i=1; i < count; i++) {
+#ifdef _OPENMP
+	omp_set_lock(&progress_lock);
+#endif
+	if (i%progress_steps==0 && !m_progress->update(i))
+#ifndef _OPENMP
+	  break;
+#else
+	  continue;
+	omp_unset_lock(&progress_lock);
+#endif
     layers[i]->makeSkinPolygons();
   }
   //m_progress->stop (_("Done"));

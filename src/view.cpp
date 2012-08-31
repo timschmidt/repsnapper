@@ -1154,7 +1154,7 @@ void View::show_notebooktab (string name, string notebookname) const
   int num = nb->page_num(*w);
   if (num >= 0)
     nb->set_current_page(num);
-  else cerr << "no widget " << name << endl;
+  else cerr << "no page " << num << endl;
 }
 
 void View::gcode_changed ()
@@ -1495,7 +1495,7 @@ void View::on_controlnotebook_switch(GtkNotebookPage* page, guint page_num)
   if (!page) return;
   if (m_filechooser) m_filechooser->set_filetype();
   if (m_model)       m_model->preview_shapes.clear();
-  if (m_renderer)    m_renderer->queue_draw();
+  if (m_renderer)    m_renderer->zoom_to_model();
 }
 
 View::~View()

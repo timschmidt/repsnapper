@@ -307,7 +307,6 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 	ostringstream splstr;
 	splstr << xycommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) << endl;
 	splstr <<  zcommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) ;
-	//cerr << splstr.str() << endl;
 	return splstr.str();
       }
     }

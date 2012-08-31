@@ -740,8 +740,8 @@ string Poly::SVGpolygon(string style) const
 {
   ostringstream ostr;
   ostr << "  <polygon points=\"";
+  ostr.precision(5);
   for (uint i=0; i<size(); i++) {
-    ostr.precision(5);
     ostr  << fixed << vertices[i].x() << "," << vertices[i].y();
     if (i < size()-1) ostr << " ";
   }

@@ -41,7 +41,6 @@ class Render : public Gtk::DrawingArea
 
   void SetEnableLight(unsigned int lightNr, bool on);
   void CenterView();
-  void zoom_to_model();
   void selection_changed();
   guint find_object_at(gdouble x, gdouble y);
   Vector3d mouse_on_plane(double x, double y, double plane_z=0) const;
@@ -53,6 +52,7 @@ class Render : public Gtk::DrawingArea
   GtkWidget *get_widget();
   void set_model (Model *model);
   void set_zoom (float zoom) {m_zoom=zoom;};
+  void zoom_to_model();
   void set_transform(const Matrix4fT &transform) {m_transform=transform;};
   virtual bool on_configure_event(GdkEventConfigure* event);
   virtual bool on_expose_event(GdkEventExpose* event);
