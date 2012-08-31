@@ -346,7 +346,8 @@ vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> &polys, double dista
 {
   CL::Polygons opolys;
   if (reverse)
-    CL::ReversePoints(opolys);
+    //CL::ReversePoints(opolys);
+    CL::ReversePolygons(opolys); // newer clipperlib
   CL::OffsetPolygons(cpolys, opolys, cldist, cljtype, miter_limit);
   CL::SimplifyPolygons(opolys);//, CL::pftNonZero);
   return opolys;

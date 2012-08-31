@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.8.4                                                           *
-* Date      :  1 June 2012                                                     *
+* Version   :  4.8.8                                                           *
+* Date      :  30 August 2012                                                  *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -79,12 +79,12 @@ bool Orientation(const Polygon &poly);
 double Area(const Polygon &poly);
 void OffsetPolygons(const Polygons &in_polys, Polygons &out_polys,
   double delta, JoinType jointype = jtSquare, double MiterLimit = 2);
-void SimplifyPolygon(const Polygon &in_poly, Polygons &out_polys);
-void SimplifyPolygons(const Polygons &in_polys, Polygons &out_polys);
-void SimplifyPolygons(Polygons &polys);
+void SimplifyPolygon(const Polygon &in_poly, Polygons &out_polys, PolyFillType fillType = pftEvenOdd);
+void SimplifyPolygons(const Polygons &in_polys, Polygons &out_polys, PolyFillType fillType = pftEvenOdd);
+void SimplifyPolygons(Polygons &polys, PolyFillType fillType = pftEvenOdd);
 
-void ReversePoints(Polygon& p);
-void ReversePoints(Polygons& p);
+void ReversePolygon(Polygon& p);
+void ReversePolygons(Polygons& p);
 
 //used internally ...
 enum EdgeSide { esNeither = 0, esLeft = 1, esRight = 2, esBoth = 3 };
