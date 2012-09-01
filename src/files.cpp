@@ -63,6 +63,10 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
       type != Gio::FILE_TYPE_SYMBOLIC_LINK)
     return;
 
+  ustring name_by_file = _file->get_basename();
+  size_t found = name_by_file.find_last_of(".");
+  name_by_file = (ustring)name_by_file.substr(0,found);
+
   char * numlocale   = setlocale(LC_NUMERIC, NULL);
   char * colllocale  = setlocale(LC_COLLATE, NULL);
   char * ctypelocale = setlocale(LC_CTYPE,   NULL);
@@ -72,13 +76,13 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
   if(_type == ASCII_STL) {
     // multiple shapes per file
     load_asciiSTL(triangles, names, max_triangles);
+    if (names.size() == 1) // if single shape name by filename
+      names[0] = name_by_file;
   } else {
     // single shape per file
     triangles.resize(1);
     names.resize(1);
-    names[0] = _file->get_basename();
-    size_t found = names[0].find_last_of(".");
-    names[0] = (ustring)names[0].substr(0,found);
+    names[0] = name_by_file;
     if (_type == BINARY_STL) {
       load_binarySTL(triangles[0], max_triangles);
     } else if (_type == VRML) {
