@@ -59,7 +59,7 @@ void Shape::setTriangles(const vector<Triangle> &triangles_)
 }
 
 
-int Shape::saveBinarySTL(string filename) const
+int Shape::saveBinarySTL(Glib::ustring filename) const
 {
 
   if (!File::saveBinarySTL(filename, triangles, transform3D.transform))

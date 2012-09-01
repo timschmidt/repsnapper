@@ -66,7 +66,7 @@ public:
 	Shape();
 	/* Shape(string filename, istream &text); */
 	virtual ~Shape(){};
- 	string filename;
+	Glib::ustring filename;
 	int idx;
 
 	int parseASCIISTL(istream &text, uint max_triangles=0, bool readnormals=false);
@@ -131,11 +131,7 @@ public:
     int divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) const;
 
 
-    /* int load(std::string filename, uint max_triangles=0); */
-    /* int loadASCIISTL(std::string filename, uint max_triangles=0, bool readnormals=false); */
-    /* int loadBinarySTL(std::string filename, uint max_triangles=0, bool readnormals=false); */
-    /* int loadASCIIVRML(std::string filename, uint max_triangles=0); */
-    int saveBinarySTL(std::string filename) const;
+    int saveBinarySTL(Glib::ustring filename) const;
 
 
     bool slow_drawing;

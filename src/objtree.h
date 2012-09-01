@@ -55,6 +55,11 @@ public:
 class ObjectsTree
 {
 	void update_model();
+	bool inhibit_row_changed;
+	void update_shapenames(Gtk::TreeModel::Children children);
+	void on_row_changed(const Gtk::TreeModel::Path& path,
+			    const Gtk::TreeModel::iterator& iter);
+
 public:
 	class ModelColumns : public Gtk::TreeModelColumnRecord
 	{
@@ -74,16 +79,16 @@ public:
 	//void draw(Settings &settings, Gtk::TreeModel::iterator &iter);
 	void newObject();
 	Gtk::TreePath addShape(TreeObject *parent, Shape *shape, std::string location);
-	void get_selected_objects(const vector<Gtk::TreeModel::Path> &iter, 
+	void get_selected_objects(const vector<Gtk::TreeModel::Path> &iter,
 				  vector<TreeObject*> &object, vector<Shape*> &shape) const;
 
-	void get_selected_shapes(const vector<Gtk::TreeModel::Path> &iter, 
+	void get_selected_shapes(const vector<Gtk::TreeModel::Path> &iter,
 				 vector<Shape*> &shape, vector<Matrix4d> &transforms) const;
 
 	void get_all_shapes(vector<Shape*> &shapes, vector<Matrix4d> &transforms) const;
 
         Gtk::TreeModel::iterator find_stl_by_index(guint pickindex);
-				  
+
 	Matrix4d getTransformationMatrix(int object, int shape=-1) const;
 
 	TreeObject * getParent(const Shape *shape) const;
@@ -94,6 +99,6 @@ public:
 	Glib::RefPtr<Gtk::TreeStore> m_model;
 	ModelColumns   *m_cols;
 private:
-        Gtk::TreeModel::iterator find_stl_in_children(Gtk::TreeModel::Children children, 
+        Gtk::TreeModel::iterator find_stl_in_children(Gtk::TreeModel::Children children,
 						      guint pickindex);
 };
