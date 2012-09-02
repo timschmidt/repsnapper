@@ -494,8 +494,9 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
 #include "amf/amftools-code/include/AMF_File.h"
  class AMFLoader : public AmfFile
  {
+   double _scale;
  public:
-   AMFLoader() {};
+   AMFLoader() : _scale(1.) {};
    ~AMFLoader(){};
    bool open(ustring path) {
      bool ok = Load(path);
@@ -506,9 +507,9 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
    Vector3d getVertex(const nMesh &mesh, uint i) const
    {
      nCoordinates c = mesh.Vertices.VertexList[i].Coordinates;
-     return Vector3d(c.X, c.Y, c.Z);
+     return Vector3d(_scale * c.X, _scale * c.Y, _scale * c.Z);
    }
-   Triangle getTriangle(const nMesh &mesh, const nTriangle &t) const
+   Triangle getTriangle(const nMesh &mesh, const nTriangle &t)
    {
      return Triangle(getVertex(mesh, t.v1),
 		     getVertex(mesh, t.v2),
@@ -517,19 +518,28 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
 
    bool getObjectTriangles(uint onum, vector<Triangle> &triangles)
    {
-    nObject* object = GetObject(onum);
-    uint nmeshes = object->Meshes.size();
-    for (uint m = 0; m < nmeshes; m++) {
-      const nMesh mesh = object->Meshes[m];
-      uint nvolumes = mesh.Volumes.size();
-      for (uint v = 0; v < nvolumes; v++) {
-	uint ntria = mesh.Volumes[v].Triangles.size();
-	for (uint t = 0; t < ntria; t++) {
-	  triangles.push_back( getTriangle(mesh, mesh.Volumes[v].Triangles[t]) );
-	}
-      }
-    }
-    return true;
+     nObject* object = GetObject(onum);
+     uint nmeshes = object->Meshes.size();
+     for (uint m = 0; m < nmeshes; m++) {
+       const nMesh mesh = object->Meshes[m];
+       //cerr << "Units "<<  GetUnitsString() << endl;
+       switch (aUnit) {
+       case UNIT_M:  _scale = 1000.; break;
+       case UNIT_IN: _scale = 25.4;  break;
+       case UNIT_FT: _scale = 304.8; break;
+       case UNIT_UM: _scale = 0.001; break;
+       case UNIT_MM:
+       default: _scale = 1.; break;
+       }
+       uint nvolumes = mesh.Volumes.size();
+       for (uint v = 0; v < nvolumes; v++) {
+	 uint ntria = mesh.Volumes[v].Triangles.size();
+	 for (uint t = 0; t < ntria; t++) {
+	   triangles.push_back( getTriangle(mesh, mesh.Volumes[v].Triangles[t]) );
+	 }
+       }
+     }
+     return true;
    }
 
  };
@@ -544,7 +554,7 @@ bool File::load_AMF(vector< vector<Triangle> > &triangles,
   if (!amf.open(_file->get_path()))
     return false;
   uint nobjs = amf.GetObjectCount();
-  cerr << nobjs << " objs" << endl;
+  //cerr << nobjs << " objs" << endl;
   for (uint o = 0; o < nobjs; o++) {
     vector<Triangle> otr;
     amf.getObjectTriangles(o,otr);
