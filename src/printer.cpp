@@ -47,7 +47,7 @@
 #if 0
 
 #if IOCHANNEL
-#  include "reprap_serial.h" 
+#  include "reprap_serial.h"
 #  define DEV_PATH "/dev/"
 #  define DEV_PREFIXES {"ttyUSB", "ttyACM", "cuaU"}
 #else
@@ -129,7 +129,7 @@ void Printer::comm_log(string s)
 // {
 //   signal_logmessage.emit(s,type);
 //   m_view->comm_log(log_buffer);  log_buffer  = "";
-//   m_view->err_log (err_buffer);  err_buffer  = ""; 
+//   m_view->err_log (err_buffer);  err_buffer  = "";
 //   m_view->echo_log(echo_buffer); echo_buffer = "";
 //   return true;
 // }
@@ -191,7 +191,7 @@ void Printer::Restart()
   if (!IsConnected()) return;
 #else
   if (device==NULL) return;
-#endif  
+#endif
   Print();
 }
 
@@ -201,7 +201,7 @@ void Printer::ContinuePauseButton()
   if (!IsConnected()) return;
 #else
   if (device==NULL) return;
-#endif  
+#endif
   if (printing)
     Pause();
   else
@@ -292,11 +292,11 @@ bool Printer::IsConnected()
 }
 
 
-const Glib::RefPtr<Glib::Regex> templineRE_T = 
+const Glib::RefPtr<Glib::Regex> templineRE_T =
 			    Glib::Regex::create("(?ims)T\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
-const Glib::RefPtr<Glib::Regex> templineRE_B = 
+const Glib::RefPtr<Glib::Regex> templineRE_B =
 			    Glib::Regex::create("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
-const Glib::RefPtr<Glib::Regex> numRE = 
+const Glib::RefPtr<Glib::Regex> numRE =
 			    Glib::Regex::create("(?ims)\\:(?<num>[\\-\\.\\d]+)");
 
 
@@ -371,7 +371,7 @@ void Printer::serial_try_connect (bool connect)
 	m_view->set_logging(true);
       // log_timeout = Glib::signal_timeout().connect
       //   (sigc::mem_fun(*this, &Printer::log_timeout_cb), 500);
-    } else 
+    } else
       signal_serial_state_changed.emit (SERIAL_DISCONNECTED);
 
   } else {
@@ -459,8 +459,8 @@ bool Printer::SelectExtruder(int extruder_no)
   return true; // do nothing
 }
 
-bool Printer::SetTemp(TempType type, float value, int extruder_no) 
-{  
+bool Printer::SetTemp(TempType type, float value, int extruder_no)
+{
   ostringstream os;
   switch (type) {
   case TEMP_NOZZLE:
@@ -530,14 +530,14 @@ void Printer::Print()
 bool Printer::watchprint_timeout_cb()
 {
   if (!IsConnected()) return true;
-  int cur_line = gcode_iter->m_cur_line;    
+  int cur_line = gcode_iter->m_cur_line;
   //cerr << "watch "<< cur_line << endl;
   signal_now_printing.emit(cur_line);
   return true;
 }
 #endif
 
-long Printer::get_next_line(string &line) 
+long Printer::get_next_line(string &line)
 {
 #if IOCHANNEL
   if (gcode_iter && printing && !gcode_iter->finished()) {
@@ -545,7 +545,7 @@ long Printer::get_next_line(string &line)
     line = gcode_iter->next_line();
     if (line.length() > 0 && line[0] != ';' && line != "\n") {
       return cur_line; // return gcode line number
-    } else 
+    } else
       return -1; // don't print this line
   }
   else {
@@ -599,7 +599,7 @@ bool Printer::RunExtruder (double extruder_speed, double extruder_length,
   return SendNow("G92 E0");	// set extruder zero
 }
 
- 
+
 bool Printer::SendNow(string str, long lineno)
 {
   //if (str.length() < 1) return true;
@@ -610,7 +610,7 @@ bool Printer::SendNow(string str, long lineno)
   if (rr_serial) {
     RR_response resp = rr_serial->send(str, lineno);
     bool ok = (resp == SEND_OK);
-    //if (!ok) error (_("Can't send command"), _("You must first connect to a device!"));    
+    //if (!ok) error (_("Can't send command"), _("You must first connect to a device!"));
     return ok;
   }
   return false;
@@ -629,7 +629,7 @@ bool Printer::SendNow(string str, long lineno)
 }
 
 void Printer::Stop()
-{  
+{
 #if IOCHANNEL
   if (!IsConnected()) return;
 #else
@@ -638,7 +638,7 @@ void Printer::Stop()
 
   set_printing (false);
   //assert(m_model != NULL);
-  
+
 #if IOCHANNEL
 #else
   if (!rr_dev_is_connected (device)) {
@@ -682,7 +682,7 @@ double Printer::getCurrentPrintingZ() {
   if (gcode_iter){
     Command command = gcode_iter->getCurrentCommand(Vector3d(0,0,0));
     return command.where.z();
-  } 
+  }
   return 0;
 }
 
@@ -690,7 +690,7 @@ double Printer::getCurrentPrintingZ() {
 
 vector<string> Printer::find_ports() const
 {
-  
+
   vector<string> ports;
 
 #if IOCHANNEL
@@ -712,10 +712,10 @@ vector<string> Printer::find_ports() const
   for (int i = ports.size()-1; i >= 0; i--) {
     if (!RRSerial::test_port(ports[i]))
       ; //ports.erase(ports.begin()+i);
-    else 
+    else
       cerr << "can connect device " << ports[i] << endl;
   }
-  
+
 #else
 
   char **rr_ports = rr_enumerate_ports();
@@ -797,10 +797,10 @@ void Printer::handle_rr_more (rr_dev dev)
     if (time_used != lasttimeshown) { // show once a second
       int n_buffered = rr_dev_buffered_lines(device);
       int donelines = gcode_iter->m_cur_line - n_buffered;
-      if (donelines < 100) gcode_iter->time_started = time(NULL); 
+      if (donelines < 100) gcode_iter->time_started = time(NULL);
       int tot_lines = gcode_iter->m_line_count;
       // done by view
-      // if (tot_lines>0) { 
+      // if (tot_lines>0) {
       // 	if (donelines > 30) {
       // 	  m_view->get_view_progress()->update (donelines, false);
       // 	}

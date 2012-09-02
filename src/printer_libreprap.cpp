@@ -245,8 +245,8 @@ bool Printer::SelectExtruder(int extruder_no)
   return true; // do nothing
 }
 
-bool Printer::SetTemp(TempType type, float value, int extruder_no) 
-{  
+bool Printer::SetTemp(TempType type, float value, int extruder_no)
+{
   ostringstream os;
   switch (type) {
   case TEMP_NOZZLE:
@@ -295,7 +295,7 @@ void Printer::Print()
 }
 
 
-long Printer::get_next_line(string &line) 
+long Printer::get_next_line(string &line)
 {
   return -1;
 }
@@ -339,7 +339,7 @@ bool Printer::RunExtruder (double extruder_speed, double extruder_length,
   return SendNow("G92 E0");	// set extruder zero
 }
 
- 
+
 bool Printer::SendNow(string str, long lineno)
 {
   //if (str.length() < 1) return true;
@@ -356,12 +356,12 @@ bool Printer::SendNow(string str, long lineno)
 }
 
 void Printer::Stop()
-{  
+{
   if (device==NULL) return;
 
   set_printing (false);
   //assert(m_model != NULL);
-  
+
   if (!rr_dev_is_connected (device)) {
     alert (_("Not connected to printer.\nCannot stop printing"));
     return;
@@ -393,7 +393,7 @@ double Printer::getCurrentPrintingZ() {
   if (gcode_iter){
     Command command = gcode_iter->getCurrentCommand(Vector3d(0,0,0));
     return command.where.z();
-  } 
+  }
   return 0;
 }
 
@@ -401,7 +401,7 @@ double Printer::getCurrentPrintingZ() {
 
 vector<string> Printer::find_ports() const
 {
-  
+
   vector<string> ports;
 
   char **rr_ports = rr_enumerate_ports();
@@ -481,10 +481,10 @@ void Printer::handle_rr_more (rr_dev dev)
     if (time_used != lasttimeshown) { // show once a second
       int n_buffered = rr_dev_buffered_lines(device);
       int donelines = gcode_iter->m_cur_line - n_buffered;
-      if (donelines < 100) gcode_iter->time_started = time(NULL); 
+      if (donelines < 100) gcode_iter->time_started = time(NULL);
       //int tot_lines = gcode_iter->m_line_count;
       // done by view
-      // if (tot_lines>0) { 
+      // if (tot_lines>0) {
       // 	if (donelines > 30) {
       // 	  m_view->get_view_progress()->update (donelines, false);
       // 	}

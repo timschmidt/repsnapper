@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "stdafx.h" 
+#include "stdafx.h"
 
 
 enum RR_logtype  { LOG_COMM, LOG_ERROR, LOG_ECHO };
@@ -137,7 +137,7 @@ class Printer
 	void Kick();
 	void Restart();
 	void Reset();
-	
+
   bool SetTemp(TempType type, float value, int extruder_no=-1);
 
   bool SelectExtruder(int extruder_no=-1);
@@ -215,7 +215,7 @@ class Printer
 
 // Exception safe guard to stop people printing
 // GCode while loading it / converting etc.
-struct PrintInhibitor 
+struct PrintInhibitor
 {
   Printer *printer;
 public:
