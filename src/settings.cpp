@@ -114,22 +114,13 @@ static struct {
 #undef FLOAT_PHASE_MEMBER
 
   // Hardware
-  BOOL_MEMBER  (Hardware.CalibrateInput,  "CalibrateInput",  false, true),
   FLOAT_MEMBER (Hardware.MinPrintSpeedXY, "MinPrintSpeedXY", 1000, true),
   FLOAT_MEMBER (Hardware.MaxPrintSpeedXY, "MaxPrintSpeedXY", 4000, true),
   FLOAT_MEMBER (Hardware.MoveSpeed,       "MoveSpeed",  4000, true),
   FLOAT_MEMBER (Hardware.MinPrintSpeedZ,  "MinPrintSpeedZ",  50, true),
   FLOAT_MEMBER (Hardware.MaxPrintSpeedZ,  "MaxPrintSpeedZ",  150, true),
-  FLOAT_MEMBER (Hardware.EMaxSpeed,       "EMaxSpeed",  100, true),
-  FLOAT_MEMBER (Hardware.MaxShellSpeed,   "MaxShellSpeed",  3000, true),
 
   // FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5, false),
-  FLOAT_MEMBER (Hardware.ExtrusionFactor, "ExtrusionFactor", 1.0, true),
-  FLOAT_MEMBER (Hardware.FilamentDiameter, "FilamentDiameter", 3.0, true),
-  FLOAT_MEMBER (Hardware.LayerThickness, "LayerThickness", 0.4, true),
-  FLOAT_MEMBER (Hardware.DownstreamMultiplier, "DownstreamMultiplier", 1.0, true),
-  FLOAT_MEMBER (Hardware.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0, true),
-
   // Volume.
   { OFFSET (Hardware.Volume.array[0]), T_DOUBLE, "mfVolumeX", "Hardware.Volume.X", 200, NULL, true },
   { OFFSET (Hardware.Volume.array[1]), T_DOUBLE, "mfVolumeY", "Hardware.Volume.Y", 200, NULL, true },
@@ -140,14 +131,24 @@ static struct {
   { OFFSET (Hardware.PrintMargin.array[1]), T_DOUBLE, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
   { OFFSET (Hardware.PrintMargin.array[2]), T_DOUBLE, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
 
-  FLOAT_MEMBER  (Hardware.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
-  FLOAT_MEMBER  (Hardware.MinimumLineWidth, "MinimumLineWidth", 0.4, true),
-  FLOAT_MEMBER  (Hardware.MaximumLineWidth, "MaximumLineWidth", 0.7, true),
+
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
   { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, NULL, false },
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
   INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4, false),
+
+  // Extruder
+  BOOL_MEMBER  (Extruder.CalibrateInput,  "CalibrateInput",  false, true),
+  FLOAT_MEMBER (Extruder.ExtrusionFactor, "ExtrusionFactor", 1.0, true),
+  FLOAT_MEMBER (Extruder.FilamentDiameter, "FilamentDiameter", 3.0, true),
+  FLOAT_MEMBER (Extruder.DownstreamMultiplier, "DownstreamMultiplier", 1.0, true),
+  FLOAT_MEMBER (Extruder.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0, true),
+  FLOAT_MEMBER (Extruder.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
+  FLOAT_MEMBER (Extruder.MinimumLineWidth, "MinimumLineWidth", 0.4, true),
+  FLOAT_MEMBER (Extruder.MaximumLineWidth, "MaximumLineWidth", 0.7, true),
+  FLOAT_MEMBER (Extruder.EMaxSpeed,       "EMaxSpeed",  100, true),
+  FLOAT_MEMBER (Extruder.MaxShellSpeed,   "MaxShellSpeed",  3000, true),
 
   // Printer
   FLOAT_MEMBER  (Printer.ExtrudeAmount, "Printer.ExtrudeAmount", 5, false),
@@ -159,6 +160,7 @@ static struct {
   { OFFSET (Printer.BedTemp)   , T_FLOAT, "Printer.BedTemp", NULL,  60, NULL, false },
 
   // Slicing
+  FLOAT_MEMBER (Slicing.LayerThickness, "LayerThickness", 0.4, true),
   BOOL_MEMBER  (Slicing.RelativeEcode, "RelativeEcode", false, false),
   BOOL_MEMBER  (Slicing.EnableAntiooze, "EnableAntiooze", false, true),
   FLOAT_MEMBER (Slicing.AntioozeDistance, "AntioozeDistance", 4.5, true),
@@ -319,6 +321,7 @@ static struct {
   { "InterfaceTemperature", 0.9, 1.2, 0.01, 0.1 },
 
   // Slicing
+  { "Slicing.LayerThickness", 0.01, 3.0, 0.01, 0.2 },
   { "Slicing.ShellCount", 0, 100, 1, 5 },
   // { "Slicing.SolidLayers", 0, 100, 1, 5 },
   { "Slicing.SolidThickness", 0, 10, 0.01, 0.1 },
@@ -372,27 +375,25 @@ static struct {
   { "Hardware.PrintMargin.X", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.PrintMargin.Y", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.PrintMargin.Z", 0.0, 100.0, 1.0, 5.0 },
-  { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
-  { "Hardware.ExtrudedMaterialWidthRatio", 0.0, 10.0, 0.01, 0.1 },
-  { "Hardware.MinimumLineWidth", 0.0, 10.0, 0.01, 0.1 },
-  { "Hardware.MaximumLineWidth", 0.0, 10.0, 0.01, 0.1 },
-  { "Hardware.LayerThickness", 0.01, 3.0, 0.01, 0.2 },
-  { "Hardware.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
-  { "Hardware.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
-
   { "Hardware.MinPrintSpeedXY", 1.0, 20000.0, 10.0, 100.0 },
   { "Hardware.MaxPrintSpeedXY", 1.0, 20000.0, 10.0, 100.0 },
   { "Hardware.MoveSpeed", 1.0, 20000.0, 10.0, 100.0 },
   { "Hardware.MinPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
   { "Hardware.MaxPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
-  { "Hardware.EMaxSpeed", 1.0, 20000.0, 10.0, 100.0 },
-  { "Hardware.MaxShellSpeed", 1.0, 20000.0, 10.0, 100.0 },
-
   { "Hardware.ReceivingBufferSize", 1.0, 100.0, 1.0, 5.0 },
   { "Hardware.KeepLines", 100.0, 100000.0, 1.0, 500.0 },
 
-  { "Hardware.DownstreamMultiplier", 0.01, 25.0, 0.01, 0.1 },
-  { "Hardware.DownstreamExtrusionMultiplier", 0.01, 25.0, 0.01, 0.1 },
+  // Extruder
+  { "Extruder.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
+  { "Extruder.ExtrudedMaterialWidthRatio", 0.0, 10.0, 0.01, 0.1 },
+  { "Extruder.MinimumLineWidth", 0.0, 10.0, 0.01, 0.1 },
+  { "Extruder.MaximumLineWidth", 0.0, 10.0, 0.01, 0.1 },
+  { "Extruder.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
+  { "Extruder.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
+  { "Extruder.EMaxSpeed", 1.0, 20000.0, 10.0, 100.0 },
+  { "Extruder.MaxShellSpeed", 1.0, 20000.0, 10.0, 100.0 },
+  // { "Extruder.DownstreamMultiplier", 0.01, 25.0, 0.01, 0.1 },
+  // { "Extruder.DownstreamExtrusionMultiplier", 0.01, 25.0, 0.01, 0.1 },
 
   //Printer
   { "Printer.ExtrudeAmount", 0.0, 1000.0, 1.0, 10.0 },
@@ -507,7 +508,7 @@ std::string Settings::GCodeType::getText(GCodeTextType t)
 double Settings::GetInfillDistance(double layerthickness, float percent) const
 {
   double fullInfillDistance =
-    Hardware.GetExtrudedMaterialWidth(layerthickness);
+    Extruder.GetExtrudedMaterialWidth(layerthickness);
   if (percent == 0) return 10000000;
   return fullInfillDistance * (100./percent);
 }
@@ -1299,7 +1300,7 @@ void Settings::connect_to_ui (Builder &builder)
 
 
 // extrusion ratio for round-edge lines
-double Settings::HardwareSettings::RoundedLinewidthCorrection(double extr_width,
+double Settings::ExtruderSettings::RoundedLinewidthCorrection(double extr_width,
 							      double layerheight)
 {
   double factor = 1 + (M_PI/4.-1) * layerheight/extr_width;
@@ -1312,7 +1313,7 @@ double Settings::HardwareSettings::RoundedLinewidthCorrection(double extr_width,
 }
 
 
-double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) const
+double Settings::ExtruderSettings::GetExtrudedMaterialWidth(double layerheight) const
 {
   // ExtrudedMaterialWidthRatio is preset by user
   return min(max((double)MinimumLineWidth,
@@ -1323,7 +1324,7 @@ double Settings::HardwareSettings::GetExtrudedMaterialWidth(double layerheight) 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
 
 // how much mm filament material per extruded line length mm -> E gcode
-double Settings::HardwareSettings::GetExtrudeFactor(double layerheight) const
+double Settings::ExtruderSettings::GetExtrudeFactor(double layerheight) const
 {
   double f = ExtrusionFactor; // overall factor
   if (CalibrateInput) {  // means we use input filament diameter

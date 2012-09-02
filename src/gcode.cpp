@@ -447,7 +447,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	double extrusionwidth = 0;
 	if (boundary)
 	  extrusionwidth =
-	    settings.Hardware.GetExtrudedMaterialWidth(settings.Hardware.LayerThickness);
+	    settings.Extruder.GetExtrudedMaterialWidth(settings.Slicing.LayerThickness);
 
 	start = CLAMP (start, 0, n_cmds-1);
 	end = CLAMP (end, 0, n_cmds-1);

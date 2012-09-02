@@ -54,7 +54,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
   vector<Poly> raftpolys =
     Clipping::getOffset(layers[0]->GetHullPolygon(), settings.Raft.Size, jround);
   for (uint i = 0; i< raftpolys.size(); i++)
-    raftpolys[i].cleanup(settings.Hardware.LayerThickness/4);
+    raftpolys[i].cleanup(settings.Slicing.LayerThickness/4);
 
   Settings::RaftSettings::PhasePropertiesType basesettings =
     settings.Raft.Phase[0];
@@ -64,9 +64,9 @@ void Model::MakeRaft(GCodeState &state, double &z)
   vector<Layer*> raft_layers;
 
   double rotation = basesettings.Rotation;
-  double basethickness = settings.Hardware.LayerThickness
+  double basethickness = settings.Slicing.LayerThickness
     * basesettings.Thickness;
-  double interthickness = settings.Hardware.LayerThickness
+  double interthickness = settings.Slicing.LayerThickness
     * interfacesettings.Thickness;
 
   double totalthickness = basesettings.LayerCount * basethickness
@@ -302,7 +302,7 @@ void Model::Slice()
   bool varSlicing = settings.Slicing.Varslicing;
 
   uint max_skins = max(1, settings.Slicing.Skins);
-  double thickness = (double)settings.Hardware.LayerThickness;
+  double thickness = (double)settings.Slicing.LayerThickness;
   double skin_thickness = thickness / max_skins;
   uint skins = max_skins; // probably variable
 
@@ -553,7 +553,7 @@ void Model::MultiplyUncoveredPolygons()
 {
   if (!settings.Slicing.DoInfill && settings.Slicing.SolidThickness == 0.0) return;
   if (settings.Slicing.NoTopAndBottom) return;
-  int shells = (int)ceil(settings.Slicing.SolidThickness/settings.Hardware.LayerThickness);
+  int shells = (int)ceil(settings.Slicing.SolidThickness/settings.Slicing.LayerThickness);
   shells = max(shells, (int)settings.Slicing.ShellCount);
   if (shells<1) return;
   int count = (int)layers.size();
@@ -633,7 +633,7 @@ void Model::MakeSupportPolygons(Layer * layer, // lower -> will change
 				double widen)
 {
   const double distance =
-    settings.Hardware.GetExtrudedMaterialWidth(layer->thickness);
+    settings.Extruder.GetExtrudedMaterialWidth(layer->thickness);
   // vector<Poly> tosupport = Clipping::getOffset(layerabove->GetToSupportPolygons(),
   //  					       distance/2.);
   //vector<Poly> tosupport = Clipping::getMerged(layerabove->GetToSupportPolygons(),
@@ -917,7 +917,7 @@ void Model::ConvertToGCode()
 
   double totlength = gcode.GetTotalExtruded(settings.Slicing.RelativeEcode);
   ostr << _(" - total extruded: ") << totlength << "mm";
-  double ccm = totlength*settings.Hardware.FilamentDiameter*settings.Hardware.FilamentDiameter/4.*M_PI/1000 ;
+  double ccm = totlength*settings.Extruder.FilamentDiameter*settings.Extruder.FilamentDiameter/4.*M_PI/1000 ;
   ostr << " = " << ccm << "cm^3 ";
   ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)";
   if (statusbar)

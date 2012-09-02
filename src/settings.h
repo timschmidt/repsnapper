@@ -59,44 +59,6 @@ class Settings {
   };
   RaftSettings Raft;
 
-  struct HardwareSettings {
-    float MinPrintSpeedXY;
-    float MaxPrintSpeedXY;
-    float MoveSpeed;
-    float MinPrintSpeedZ;
-    float MaxPrintSpeedZ;
-    float EMaxSpeed;
-
-    float MaxShellSpeed;
-
-    bool  CalibrateInput; // hardware treats 'mm' as filament input mm not of nozzle output.
-    float DistanceToReachFullSpeed;
-    float ExtrusionFactor;
-    float FilamentDiameter;
-
-    float LayerThickness;
-
-    vmml::vec3d	Volume;      // Print volume
-    vmml::vec3d	PrintMargin;
-    float ExtrudedMaterialWidthRatio; // ratio of with to (layer) height
-    double GetExtrudedMaterialWidth(const double layerheight) const;
-    float MinimumLineWidth;
-    float MaximumLineWidth;
-
-    std::string PortName;
-    int SerialSpeed;
-    bool ValidateConnection;
-    int KeepLines;
-
-    int ReceivingBufferSize;
-
-    float DownstreamMultiplier;
-    float DownstreamExtrusionMultiplier;
-    static double RoundedLinewidthCorrection(double extr_width, double layerheight);
-    double GetExtrudeFactor(double layerheight) const;
-  };
-  HardwareSettings Hardware;
-
   struct PrinterSettings {
     float ExtrudeAmount;
     float ExtrudeSpeed;
@@ -108,7 +70,50 @@ class Settings {
   };
   PrinterSettings Printer;
 
+
+  struct HardwareSettings {
+    float MinPrintSpeedXY;
+    float MaxPrintSpeedXY;
+    float MoveSpeed;
+    float MinPrintSpeedZ;
+    float MaxPrintSpeedZ;
+
+    float DistanceToReachFullSpeed;
+
+    vmml::vec3d	Volume;      // Print volume
+    vmml::vec3d	PrintMargin;
+
+    std::string PortName;
+    int SerialSpeed;
+    bool ValidateConnection;
+    int KeepLines;
+
+    int ReceivingBufferSize;
+
+    int NumExtruders;
+  };
+  HardwareSettings Hardware;
+
+  struct ExtruderSettings {
+    bool  CalibrateInput; // hardware treats 'mm' as filament input mm not of nozzle output.
+    float EMaxSpeed;
+    float MaxShellSpeed;
+    float ExtrusionFactor;
+    float FilamentDiameter;
+    float ExtrudedMaterialWidthRatio; // ratio of with to (layer) height
+    double GetExtrudedMaterialWidth(const double layerheight) const;
+    float MinimumLineWidth;
+    float MaximumLineWidth;
+    float DownstreamMultiplier;
+    float DownstreamExtrusionMultiplier;
+    static double RoundedLinewidthCorrection(double extr_width, double layerheight);
+    double GetExtrudeFactor(double layerheight) const;
+  };
+  ExtruderSettings Extruder;
+
   struct SlicingSettings {
+    float LayerThickness;
+
     bool  RelativeEcode;
     bool  UseArcs;
     float ArcsMaxAngle;

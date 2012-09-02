@@ -582,9 +582,9 @@ void FindThinpolys(const vector<Poly> &polys, double extrwidth,
 
 void Layer::MakeShells(const Settings &settings)
 {
-  double extrudedWidth        = settings.Hardware.GetExtrudedMaterialWidth(thickness);
+  double extrudedWidth        = settings.Extruder.GetExtrudedMaterialWidth(thickness);
   double roundline_extrfactor =
-    settings.Hardware.RoundedLinewidthCorrection(extrudedWidth,thickness);
+    settings.Extruder.RoundedLinewidthCorrection(extrudedWidth,thickness);
   double distance       = 0.5 * extrudedWidth;
   double cleandist      = min(distance/CLEANFACTOR, thickness/CLEANFACTOR);
   double shelloffset    = settings.Slicing.ShellOffset;
@@ -711,14 +711,14 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		      const Settings &settings) const
 {
 
-  const double linewidth      = settings.Hardware.GetExtrudedMaterialWidth(thickness);
+  const double linewidth      = settings.Extruder.GetExtrudedMaterialWidth(thickness);
   const double cornerradius   = linewidth*settings.Slicing.CornerRadius;
 
   const bool clipnearest      = settings.Slicing.MoveNearest;
 
   Vector2d startPoint(lastPos.x(),lastPos.y());
 
-  const double extrf = settings.Hardware.GetExtrudeFactor(thickness);
+  const double extrf = settings.Extruder.GetExtrudeFactor(thickness);
 
   vector<PLine3> lines3;
   Printlines printlines(this, &settings, offsetZ);
@@ -758,7 +758,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
       // add skin to lines
       printlines.addPolys(SKIN, polys, (s==0), // displace at first skin
-			  settings.Hardware.MaxShellSpeed,
+			  settings.Extruder.MaxShellSpeed,
 			  settings.Slicing.MinShelltime);
       if (s < skins-1) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
@@ -779,7 +779,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   // 2. Skirt
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
   printlines.addPolys(SKIRT, skirts, false,
-		      settings.Hardware.MaxShellSpeed,
+		      settings.Extruder.MaxShellSpeed,
 		      settings.Slicing.MinShelltime);
 
   // 3. Support
@@ -792,7 +792,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   for(int p=shellPolygons.size()-1; p>=0; p--) { // inner to outer
     printlines.addPolys(SHELL, shellPolygons[p],
 			(p==(int)(shellPolygons.size())-1),
-			settings.Hardware.MaxShellSpeed,
+			settings.Extruder.MaxShellSpeed,
 			settings.Slicing.MinShelltime);
   }
 

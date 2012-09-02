@@ -924,7 +924,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
     if ( m_previewGCode.size() != 0 ||
 	 ( layers.size() == 0 && gcode.commands.size() == 0 ) ) {
       Vector3d start(0,0,0);
-      const double thickness = settings.Hardware.LayerThickness;
+      const double thickness = settings.Slicing.LayerThickness;
       const double z = settings.Display.GCodeDrawStart + thickness/2;
       const int LayerCount = (int)ceil(Max.z()/thickness)-1;
       const uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
@@ -966,7 +966,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 
   double minZ = 0;//max(0.0, Min.z());
   double z;
-  double zStep = settings.Hardware.LayerThickness;
+  double zStep = settings.Slicing.LayerThickness;
   double zSize = (Max.z() - minZ - zStep*0.5);
   int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
   double sel_Z = height; //*zSize;
@@ -1011,16 +1011,14 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 	}
       else
 	{
+	  const float lthickness = settings.Slicing.LayerThickness;
 	  if (!m_previewLayer || m_previewLayer->getZ() != z) {
-	    m_previewLayer = calcSingleLayer(z, LayerNr,
-					     settings.Hardware.LayerThickness,
+	    m_previewLayer = calcSingleLayer(z, LayerNr, lthickness,
 					     settings.Display.DisplayinFill, false);
 	    layer = m_previewLayer;
 	    Layer * previous = NULL;
-	    if (LayerNr>0 && z >= settings.Hardware.LayerThickness)
-	      previous = calcSingleLayer(z-settings.Hardware.LayerThickness,
-					 LayerNr-1,
-					 settings.Hardware.LayerThickness,
+	    if (LayerNr>0 && z >= lthickness)
+	      previous = calcSingleLayer(z-lthickness, LayerNr-1, lthickness,
 					 false, false);
 	    layer->setPrevious(previous);
 	  }
