@@ -133,6 +133,7 @@ void ObjectsTree::update_model()
   row[m_cols->m_object] = -1;
   row[m_cols->m_shape] = -1;
   row[m_cols->m_pickindex] = 0;
+  row[m_cols->m_material] = 0;
 
   gint index = 1; // pick/select index. matches computation in draw()
 
@@ -145,6 +146,7 @@ void ObjectsTree::update_model()
     orow[m_cols->m_object] = i;
     orow[m_cols->m_shape] = -1;
     orow[m_cols->m_pickindex] = index++;
+    orow[m_cols->m_material] = 0;
 
     for (guint j = 0; j < Objects[i]->shapes.size(); j++) {
       Objects[i]->shapes[j]->idx = j;
@@ -154,6 +156,7 @@ void ObjectsTree::update_model()
       row[m_cols->m_object] = i;
       row[m_cols->m_shape] = j;
       row[m_cols->m_pickindex] = index++;
+      row[m_cols->m_material] = 0;
     }
   }
   inhibit_row_changed = false;
