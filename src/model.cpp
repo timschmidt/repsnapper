@@ -187,11 +187,13 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
   vector<ustring> shapenames;
   sfile.loadTriangles(triangles, shapenames, max_triangles);
   for (uint i = 0; i < triangles.size(); i++) {
-    Shape *shape = new Shape();
-    shape->setTriangles(triangles[i]);
-    shape->filename = shapenames[i];
-    shape->FitToVolume(settings.Hardware.Volume - 2.*settings.Hardware.PrintMargin);
-    shapes.push_back(shape);
+    if (triangles[i].size() > 0) {
+      Shape *shape = new Shape();
+      shape->setTriangles(triangles[i]);
+      shape->filename = shapenames[i];
+      shape->FitToVolume(settings.Hardware.Volume - 2.*settings.Hardware.PrintMargin);
+      shapes.push_back(shape);
+    }
   }
   return shapes;
 }
