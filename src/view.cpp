@@ -1960,7 +1960,7 @@ void View::update_scale_value()
   vector<Shape*> shapes;
   vector<TreeObject*> objects;
   get_selected_objects (objects, shapes);
-  if (shapes.size()>0)  {
+  if (shapes.size()>0) {
     Gtk::SpinButton *scale_sb;
     m_builder->get_widget("m_scale_value", scale_sb);
     scale_sb->set_value(shapes.back()->getScaleFactor());
@@ -1970,6 +1970,17 @@ void View::update_scale_value()
     scale_sb->set_value(shapes.back()->getScaleFactorY());
     m_builder->get_widget("scale_z", scale_sb);
     scale_sb->set_value(shapes.back()->getScaleFactorZ());
+  }
+  else if (objects.size()>0) {
+    Gtk::SpinButton *scale_sb;
+    m_builder->get_widget("m_scale_value", scale_sb);
+    scale_sb->set_value(objects.back()->transform3D.get_scale());
+    m_builder->get_widget("scale_x", scale_sb);
+    scale_sb->set_value(objects.back()->transform3D.get_scale_x());
+    m_builder->get_widget("scale_y", scale_sb);
+    scale_sb->set_value(objects.back()->transform3D.get_scale_y());
+    m_builder->get_widget("scale_z", scale_sb);
+    scale_sb->set_value(objects.back()->transform3D.get_scale_z());
   }
   toggle_block = false;
 }
