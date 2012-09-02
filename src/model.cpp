@@ -103,7 +103,7 @@ void Model::ClearGCode()
 void Model::ClearLayers()
 {
   for(vector<Layer *>::iterator i=layers.begin(); i != layers.end(); i++) {
-    (*i)->Clear();
+    if ((*i)) (*i)->Clear();
     delete *i;
   }
   layers.clear();
