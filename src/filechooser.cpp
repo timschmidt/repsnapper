@@ -42,6 +42,8 @@ RSFilechooser::RSFilechooser(View * view_)
   allfiles.add_pattern("*");
 
   modelfiles.set_name(_("Models"));
+  modelfiles.add_pattern("*.amf");
+  modelfiles.add_pattern("*.AMF");
   modelfiles.add_pattern("*.stl");
   modelfiles.add_pattern("*.STL");
   modelfiles.add_pattern("*.svg");
