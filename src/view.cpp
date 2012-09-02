@@ -78,7 +78,7 @@ void View::connect_action(const char *name, const sigc::slot<void> &slot)
 
 void View::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleButton *> &slot)
 {
-  Gtk::ToggleButton *button;
+  Gtk::ToggleButton *button = NULL;
   m_builder->get_widget (name, button);
   if (button)
     button->signal_toggled().connect (sigc::bind(slot, button));
@@ -89,7 +89,7 @@ void View::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleB
 
 void View::connect_tooltoggled(const char *name, const sigc::slot<void, Gtk::ToggleToolButton *> &slot)
 {
-  Gtk::ToggleToolButton *button;
+  Gtk::ToggleToolButton *button = NULL;
   m_builder->get_widget (name, button);
   if (button)
     button->signal_toggled().connect (sigc::bind(slot, button));
