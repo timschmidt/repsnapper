@@ -134,10 +134,10 @@ void Printer::Restart()
   Print();
 }
 
-void Printer::ContinuePauseButton()
+void Printer::ContinuePauseButton(bool paused)
 {
   if (!IsConnected()) return;
-  if (printing)
+  if (paused)
     Pause();
   else
     Continue();

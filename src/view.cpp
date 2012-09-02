@@ -47,12 +47,20 @@ bool View::on_delete_event(GdkEventAny* event)
 
 void View::connect_button(const char *name, const sigc::slot<void> &slot)
 {
-  Gtk::Button *button = NULL;
-  m_builder->get_widget (name, button);
+  Gtk::Widget *bw = NULL;
+  m_builder->get_widget (name, bw);
+  // try Button
+  Gtk::Button *button  = dynamic_cast<Gtk::Button*>(bw);
   if (button)
     button->signal_clicked().connect (slot);
   else {
-    std::cerr << "missing button " << name << "\n";
+    // try ToolButton
+    Gtk::ToolButton *button  = dynamic_cast<Gtk::ToolButton*>(bw);
+    if (button)
+      button->signal_clicked().connect (slot);
+    else {
+      std::cerr << "missing button " << name << "\n";
+    }
   }
 }
 
@@ -70,7 +78,18 @@ void View::connect_action(const char *name, const sigc::slot<void> &slot)
 
 void View::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleButton *> &slot)
 {
-  Gtk::ToggleButton *button = NULL;
+  Gtk::ToggleButton *button;
+  m_builder->get_widget (name, button);
+  if (button)
+    button->signal_toggled().connect (sigc::bind(slot, button));
+  else {
+    std::cerr << "missing toggle button " << name << "\n";
+  }
+}
+
+void View::connect_tooltoggled(const char *name, const sigc::slot<void, Gtk::ToggleToolButton *> &slot)
+{
+  Gtk::ToggleToolButton *button;
   m_builder->get_widget (name, button);
   if (button)
     button->signal_toggled().connect (sigc::bind(slot, button));
@@ -336,22 +355,13 @@ View *View::create(Model *model)
 
 void View::printing_changed()
 {
+  bool printing = m_printer->IsPrinting();
   //rGlib::Mutex::Lock lock(mutex);
-  m_model->SetIsPrinting(m_printer->IsPrinting());
-  if (m_printer->IsPrinting()) {
-    m_print_button->set_label (_("Restart"));
-    m_continue_button->set_label (_("Pause"));
-  } else {
-    m_print_button->set_label (_("Print"));
-    m_continue_button->set_label (_("Continue"));
-  }
+  m_model->SetIsPrinting(printing);
+  //m_print_button->set_active(printing);
+  // m_pause_button->set_active(!printing);
   // while(Gtk::Main::events_pending())
   //   Gtk::Main::iteration();
-}
-
-void View::power_toggled()
-{
-  m_printer->SwitchPower (m_power_button->get_active());
 }
 
 void View::enable_logging_toggled (Gtk::ToggleButton *button)
@@ -886,14 +896,6 @@ public:
   }
 };
 
-void View::home_all()
-{
-  if (m_printer->IsPrinting()) return;
-  m_printer->SendNow ("G28");
-  for (uint i = 0; i < 3; i++)
-    m_axis_rows[i]->notify_homed();
-}
-
 void View::load_settings()
 {
   m_filechooser->set_loading(RSFilechooser::SETTINGS);
@@ -957,10 +959,10 @@ void View::save_settings_to(Glib::RefPtr < Gio::File > file)
 void View::inhibit_print_changed()
 {
   if (m_printer->get_inhibit_print()) {
-    m_continue_button->set_sensitive (false);
+    m_pause_button->set_sensitive (false);
     m_print_button->set_sensitive (false);
   } else {
-    m_continue_button->set_sensitive (true);
+    m_pause_button->set_sensitive (true);
     m_print_button->set_sensitive (true);
   }
 }
@@ -1177,6 +1179,11 @@ void View::auto_rotate()
       m_model->OptimizeRotation(NULL, objects[i]);
 }
 
+void View::power_toggled(Gtk::ToggleToolButton *button)
+{
+  m_printer->SwitchPower (button->get_active());
+}
+
 void View::kick_clicked()
 {
   m_printer->Kick();
@@ -1195,11 +1202,12 @@ void View::print_clicked()
 //   printing_changed();
 // }
 
-void View::continue_clicked()
+void View::pause_toggled(Gtk::ToggleToolButton *button)
 {
-  m_printer->ContinuePauseButton();
+  m_printer->ContinuePauseButton(button->get_active());
   printing_changed();
 }
+
 void View::reset_clicked()
 {
   if (get_userconfirm(_("Reset Printer?"))) {
@@ -1207,6 +1215,15 @@ void View::reset_clicked()
     printing_changed();
   }
 }
+
+void View::home_all()
+{
+  if (m_printer->IsPrinting()) return;
+  m_printer->SendNow ("G28");
+  for (uint i = 0; i < 3; i++)
+    m_axis_rows[i]->notify_homed();
+}
+
 
 void View::update_settings_gui()
 {
@@ -1421,20 +1438,18 @@ View::View(BaseObjectType* cobject,
   connect_button ("g_platform",      sigc::mem_fun(*this, &View::move_gcode_to_platform) );
 
   // Print tab
-  connect_button ("p_kick",          sigc::mem_fun(*this, &View::kick_clicked) );
-  m_builder->get_widget ("p_power", m_power_button);
-  m_power_button->signal_toggled().connect    (sigc::mem_fun(*this, &View::power_toggled));
   m_builder->get_widget ("p_print", m_print_button);
-  m_print_button->signal_clicked().connect    (sigc::mem_fun(*this, &View::print_clicked) );
+  connect_button ("p_print",         sigc::mem_fun(*this, &View::print_clicked) );
+  m_builder->get_widget ("p_pause", m_pause_button);
+  connect_tooltoggled("p_pause",     sigc::mem_fun(*this, &View::pause_toggled));
   // m_builder->get_widget ("p_stop", m_stop_button);
   // m_stop_button->signal_clicked().connect    (sigc::mem_fun(*this, &View::stop_clicked) );
-  m_builder->get_widget ("p_pause", m_continue_button);
-  m_continue_button->signal_clicked().connect (sigc::mem_fun(*this, &View::continue_clicked));
-  m_builder->get_widget ("p_reset", m_reset_button);
-  m_reset_button->signal_clicked().connect (sigc::mem_fun(*this, &View::reset_clicked));
+  connect_button ("p_kick",          sigc::mem_fun(*this, &View::kick_clicked) );
+  connect_button ("p_home",          sigc::mem_fun(*this, &View::home_all));
+  connect_button ("p_reset",         sigc::mem_fun(*this, &View::reset_clicked));
+  connect_tooltoggled("p_power",     sigc::mem_fun(*this, &View::power_toggled) );
 
   // Interactive tab
-  connect_button ("i_home_all",        sigc::mem_fun(*this, &View::home_all));
   connect_toggled ("Printer.Logging", sigc::mem_fun(*this, &View::enable_logging_toggled));
   connect_button ("Printer.ClearLog",      sigc::mem_fun(*this, &View::clear_logs) );
   m_builder->get_widget ("i_reverse", m_extruder_reverse);

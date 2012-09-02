@@ -178,7 +178,7 @@ class Printer
 
 	void PrintButton();
 	void StopButton();
-	void ContinuePauseButton();
+	void ContinuePauseButton(bool paused);
 	void ResetButton();
 
 

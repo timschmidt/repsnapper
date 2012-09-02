@@ -195,14 +195,14 @@ void Printer::Restart()
   Print();
 }
 
-void Printer::ContinuePauseButton()
+void Printer::ContinuePauseButton(bool paused)
 {
 #if IOCHANNEL
   if (!IsConnected()) return;
 #else
   if (device==NULL) return;
 #endif
-  if (printing)
+  if (paused)
     Pause();
   else
     Continue();

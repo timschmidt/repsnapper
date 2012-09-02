@@ -56,11 +56,11 @@ class View : public Gtk::Window
 
   void send_gcode();
   void printing_changed();
-  void power_toggled();
+  void power_toggled(Gtk::ToggleToolButton *button);
   void kick_clicked();
   void print_clicked();
   /* void stop_clicked(); */
-  void continue_clicked();
+  void pause_toggled(Gtk::ToggleToolButton *button);
   void reset_clicked();
   /* void add_statusbar_msg(const char *name, const char *message); */
   /* void add_statusbar_msg(Gtk::Widget *widget, const char *message); */
@@ -93,15 +93,15 @@ class View : public Gtk::Window
   Gtk::TextView *log_view, *err_view, *echo_view;
   void log_msg(Gtk::TextView *view, string s);
 
-  Gtk::Button *m_print_button;
-  /* Gtk::Button *m_stop_button; */
-  Gtk::Button *m_continue_button;
-  Gtk::Button *m_reset_button;
-  Gtk::ToggleButton *m_power_button;
+  Gtk::ToolButton *m_print_button;
+  Gtk::ToggleToolButton *m_pause_button;
 
   void connect_button(const char *name, const sigc::slot<void> &slot);
   void connect_action(const char *name, const sigc::slot<void> &slot);
-  void connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleButton *> &slot);
+  void connect_toggled(const char *name, const sigc::slot<void,
+		       Gtk::ToggleButton *> &slot);
+  void connect_tooltoggled(const char *name, const sigc::slot<void,
+			   Gtk::ToggleToolButton *> &slot);
   virtual bool on_delete_event(GdkEventAny* event);
 
   void hide_on_response(int, Gtk::Dialog *dialog);
