@@ -142,6 +142,8 @@ public:
 
     void setTriangles(const vector<Triangle> &triangles_);
 
+    uint size() const {return triangles.size();}
+
 protected:
 
     int gl_List;

@@ -1736,11 +1736,19 @@ void View::tree_selection_changed()
   if (m_model) {
     m_model->m_current_selectionpath = m_treeview->get_selection()->get_selected_rows();
     m_model->ClearPreview();
+    vector<Shape*> shapes;
+    vector<TreeObject*> objects;
+    get_selected_objects (objects, shapes);
+    if (shapes.size() > 0) {
+      ostringstream ostr;
+      ostr << shapes.back()->filename << ": " << shapes.back()->size() << " triangles" ;
+      statusBarMessage(ostr.str());
+    }
+    m_model->m_inhibit_modelchange = true;
+    update_scale_value();
+    update_rot_value();
+    m_model->m_inhibit_modelchange = false;
   }
-  m_model->m_inhibit_modelchange = true;
-  update_scale_value();
-  update_rot_value();
-  m_model->m_inhibit_modelchange = false;
 }
 bool View::get_selected_objects(vector<TreeObject*> &objects, vector<Shape*> &shapes)
 {
