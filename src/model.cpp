@@ -538,7 +538,7 @@ int Model::MergeShapes(TreeObject *parent, const vector<Shape*> shapes)
 {
   Shape * shape = new Shape();
   for (uint s = 0; s <  shapes.size(); s++) {
-    vector<Triangle> str = shapes[s]->getTriangles(shapes[s]->transform3D.transform);
+    vector<Triangle> str = shapes[s]->getTriangles();
     shape->addTriangles(str);
   }
   AddShape(parent, shape, "merged", true);

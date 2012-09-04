@@ -272,7 +272,7 @@ vector<Triangle> Shape::getTriangles(const Matrix4d &T) const
 {
   vector<Triangle> tr(triangles.size());
   for (uint i = 0; i < triangles.size(); i++) {
-    tr[i] = triangles[i].transformed(T);
+    tr[i] = triangles[i].transformed(T*transform3D.transform);
   }
   return tr;
 }

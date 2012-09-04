@@ -137,7 +137,7 @@ public:
     bool slow_drawing;
     virtual string info() const;
 
-    vector<Triangle> getTriangles(const Matrix4d &T) const;
+    vector<Triangle> getTriangles(const Matrix4d &T=Matrix4d::IDENTITY) const;
     void addTriangles(const vector<Triangle> &tr);
 
     void setTriangles(const vector<Triangle> &triangles_);
