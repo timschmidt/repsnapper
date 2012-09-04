@@ -31,7 +31,7 @@ class Triangle
 {
 public:
 	Triangle(const Vector3d &Norml, const Vector3d &Point1,
-		 const Vector3d &Point2, const Vector3d &Point3) 
+		 const Vector3d &Point2, const Vector3d &Point3)
 		{ Normal = Norml ; A=Point1;B=Point2;C=Point3;}
 	Triangle(const Vector3d &Point1,
 		 const Vector3d &Point2, const Vector3d &Point3);
@@ -57,14 +57,14 @@ public:
 	Vector3d A,B,C,Normal;	// p1,p2,p3, Normal
 	Vector3d GetMax(const Matrix4d &T=Matrix4d::IDENTITY) const;
 	Vector3d GetMin(const Matrix4d &T=Matrix4d::IDENTITY) const;
-  
-	void AccumulateMinMax(Vector3d &min, Vector3d &max, 
+
+	void AccumulateMinMax(Vector3d &min, Vector3d &max,
 			      const Matrix4d &T=Matrix4d::IDENTITY);
 	void Translate(const Vector3d &vector);
-	int CutWithPlane(double z, const Matrix4d &T, 
+	int CutWithPlane(double z, const Matrix4d &T,
 			 Vector2d &lineStart, Vector2d &lineEnd) const;
 	bool isInZrange(double zmin, double zmax, const Matrix4d &T) const;
-	int SplitAtPlane(double z, 
+	int SplitAtPlane(double z,
 			 vector<Triangle> &uppertriangles,
 			 vector<Triangle> &lowertriangles,
 			 const Matrix4d &T=Matrix4d::IDENTITY) const;
