@@ -162,6 +162,7 @@ void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
 {
   Glib::ustring contents = gcode.get_text();
   Glib::file_set_contents (file->get_path(), contents);
+  settings.GCodePath = file->get_parent()->get_path();
 }
 
 void Model::ReadSVG(Glib::RefPtr<Gio::File> file)
@@ -235,6 +236,21 @@ void Model::SaveStl(Glib::RefPtr<Gio::File> file)
     setlocale(LC_COLLATE, colllocale);
     setlocale(LC_CTYPE, ctypelocale);
   }
+  settings.STLPath = file->get_parent()->get_path();
+}
+
+void Model::SaveAMF(Glib::RefPtr<Gio::File> file)
+{
+  vector<Shape*> shapes;
+  vector<Matrix4d> transforms;
+  objtree.get_all_shapes(shapes,transforms);
+  vector< vector<Triangle> > triangles;
+  vector<ustring> names;
+  for(uint s = 0; s < shapes.size(); s++) {
+    triangles.push_back(shapes[s]->getTriangles(transforms[s]));
+    names.push_back(shapes[s]->filename);
+  }
+  File::save_AMF(file->get_path(), triangles, names);
 }
 
 void Model::Read(Glib::RefPtr<Gio::File> file)

@@ -543,6 +543,42 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
    }
 
  };
+ class AMFWriter : public AmfFile
+ {
+ public:
+   AMFWriter() {};
+   ~AMFWriter() {};
+
+   nVertex vertex(const Vector3d &v) const {
+     return nVertex(v.x(), v.y(), v.z());
+   }
+
+   bool AddObject(const vector<Triangle> &triangles,
+		  const ustring name)
+   {
+     int num = AmfFile::AddObject(string(name));
+     if (num<0) return false;
+     nObject* object = GetObject(num, true);
+     if (!object) return false;
+     nMesh mesh;
+     for (uint t = 0; t <  triangles.size(); t++) {
+       nVertex A = vertex(triangles[t].A);
+       mesh.AddVertex(A);
+       nVertex B = vertex(triangles[t].B);
+       mesh.AddVertex(B);
+       nVertex C = vertex(triangles[t].C);
+       mesh.AddVertex(C);
+     }
+     nVolume* vol = mesh.NewVolume(name);
+     for (uint t = 0; t <  triangles.size(); t++) {
+       nTriangle tr(3*t, 3*t+1, 3*t+2);
+       vol->AddTriangle(tr);
+     }
+     object->Meshes.push_back(mesh);
+     return true;
+   }
+
+ };
 #endif
 
 bool File::load_AMF(vector< vector<Triangle> > &triangles,
@@ -561,6 +597,26 @@ bool File::load_AMF(vector< vector<Triangle> > &triangles,
     triangles.push_back(otr);
     names.push_back(ustring(amf.GetObjectName(o)));
   }
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool File::save_AMF (ustring filename,
+		     const vector< vector<Triangle> > &triangles,
+		     const vector<ustring> &names,
+		     bool compressed)
+{
+#if ENABLE_AMF
+  AMFWriter amf;
+  amf.SetUnits(UNIT_MM);
+  uint nobjs = triangles.size();
+  for (uint o = 0; o < nobjs; o++) {
+    bool ok = amf.AddObject(triangles[o],names[o]);
+    if (!ok) return false;
+  }
+  amf.Save(filename, compressed);
   return true;
 #else
   return false;

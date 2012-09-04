@@ -69,6 +69,10 @@ public:
 		 vector<ustring> &names,
 		 uint max_triangles=0);
 
+  static bool save_AMF (ustring filename,
+			const vector< vector<Triangle> > &triangles,
+			const vector<ustring> &names,
+			bool compressed = true);
 
   static bool parseSTLtriangles_ascii(istream &text,
 				      uint max_triangles, bool readnormals,

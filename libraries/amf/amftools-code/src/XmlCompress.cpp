@@ -54,9 +54,11 @@ bool CompressFiles(std::string ZipName, std::vector<std::string>* pFilePaths, st
 	return true;
 #else
 	//Mac/Linux Zip write code
+	remove(ZipName.c_str());
 	int err;
 	struct zip * hz = zip_open(ZipName.c_str(), ZIP_CREATE, &err);
 	if (!hz){if (pError) *pError += "Could not create ZIP archive. Aborting\n"; return false;}
+
 	int NumFiles = pFilePaths->size();
 	for (int i=0; i<NumFiles; i++){
 		std::string ThisFilePath = (*pFilePaths)[i];
@@ -73,7 +75,7 @@ bool CompressFiles(std::string ZipName, std::vector<std::string>* pFilePaths, st
 		struct zip_source * source =
 		  zip_source_file(hz, ThisFilePath.c_str(), 0, 0);
 
-		if(source == NULL || zip_add(hz, Name.c_str(), source) != -1){if (pError) *pError += ("Could not add file to ZIP archive. Aborting.\n"); return false;}
+		if(source == NULL || zip_add(hz, Name.c_str(), source) == -1){if (pError) *pError += ("Could not add file to ZIP archive. Aborting.\n"); return false;}
 	}
 	if (zip_close(hz) != 0) {if(pError) *pError += "Error closing ZIP file.\n"; return false;}
 	return true;

@@ -231,11 +231,16 @@ void View::do_save_stl ()
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
 	return;
-    string directory_path = files[0]->get_parent()->get_path();
-    m_model->settings.STLPath = directory_path;
-    m_model->SaveStl (files[0]);
+
+    string file_path = files[0]->get_path();
+    uint len = file_path.length();
+    if (file_path.find(".amf") == len-4 || file_path.find(".AMF") == len-4)
+      m_model->SaveAMF (files[0]);
+    else
+      m_model->SaveStl (files[0]);
   }
 }
+
 void View::do_save_gcode ()
 {
   PrintInhibitor inhibitPrint(m_printer);
@@ -245,8 +250,6 @@ void View::do_save_gcode ()
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
 	return;
-    string directory_path = files[0]->get_parent()->get_path();
-    m_model->settings.GCodePath = directory_path;
     m_model->WriteGCode (files[0]);
   }
 }
