@@ -8,7 +8,7 @@ See <http://www.opensource.org/licenses/lgpl-3.0.html> for license details.
 *******************************************************************************/
 
 #include "X3D_File.h"
-#include <string>
+#include <string.h>
 //#include "QOpenGL.h"
 
 #include "XmlStream.h"

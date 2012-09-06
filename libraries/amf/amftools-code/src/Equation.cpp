@@ -14,7 +14,7 @@ See <http://www.opensource.org/licenses/lgpl-3.0.html> for license details.
 #ifdef WIN32
 //for UINT_MAX (windows finds automagically)
 #else
-#include <sys/limits.h> //for UINT_MAX
+#include <limits.h> //for UINT_MAX
 #endif
 
 nAmf* CEquation::pAmfStatic = NULL;
