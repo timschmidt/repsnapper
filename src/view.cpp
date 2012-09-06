@@ -1629,8 +1629,8 @@ void View::setModel(Model *model)
 
   m_treeview->set_model (m_model->objtree.m_model);
   m_treeview->append_column_editable("Name", m_model->objtree.m_cols->m_name);
-  m_treeview->append_column_editable("Extruder", m_model->objtree.m_cols->m_material);
-  m_treeview->set_headers_visible(true);
+  // m_treeview->append_column_editable("Extruder", m_model->objtree.m_cols->m_material);
+  // m_treeview->set_headers_visible(true);
 
   m_gcodetextview = NULL;
   m_builder->get_widget ("txt_gcode_result", m_gcodetextview);
