@@ -33,12 +33,11 @@ void Triangle::calcNormal()
   Normal = normalized(AA.cross(BB));
 }
 
-
-
 Triangle Triangle::transformed(const Matrix4d &T) const
 {
   return Triangle(T*A,T*B,T*C);
 }
+
 
 void Triangle::invertNormal()
 {
@@ -49,7 +48,7 @@ void Triangle::invertNormal()
 
 void Triangle::mirrorX(const Vector3d &center)
 {
-  for (uint i = 0; i < 3; i++) 
+  for (uint i = 0; i < 3; i++)
     operator[](i).x() = center.x()-operator[](i).x();
   invertNormal();
 }
@@ -95,9 +94,9 @@ bool Triangle::wrongOrientationWith(Triangle const &other, double maxsqerr) cons
   }
 
   int diff = thisv[1]  - thisv[0];
-  const bool thisorient =  ( diff == 1 || diff == -2 ); 
+  const bool thisorient =  ( diff == 1 || diff == -2 );
   diff = otherv[1] - otherv[0];
-  const bool otherorient = ( diff == 1 || diff == -2 ); 
+  const bool otherorient = ( diff == 1 || diff == -2 );
   // cerr << "have 2: " << thisorient <<" / " << otherorient << endl;
   return (thisorient == otherorient); // they have different(!) orientation
 }
@@ -126,7 +125,7 @@ double Triangle::slopeAngle(const Matrix4d &T) const
 {
   const double scale = T(3,3);
   Vector3d trans;
-  T.get_translation(trans); 
+  T.get_translation(trans);
   // get scaled translation out of matrix
   const Vector3d n = T * Normal - trans/scale;
   return asin(n.z()/n.length());
@@ -148,7 +147,7 @@ double Triangle::projectedvolume(const Matrix4d &T) const
   Vector3d min = GetMin(T);
   Vector3d max = GetMax(T);
   double vol =  xyproj.area()*0.5*(max.z()+min.z());
-  if (Normal.z()<0) vol=-vol; 
+  if (Normal.z()<0) vol=-vol;
   return vol;
 }
 
@@ -193,7 +192,7 @@ void Triangle::Translate(const Vector3d &vector)
 	C += vector;
 }
 
-void Triangle::rotate(const Vector3d &axis, double angle) 
+void Triangle::rotate(const Vector3d &axis, double angle)
 {
   A = A.rotate(angle, axis);
   B = B.rotate(angle, axis);
@@ -208,41 +207,41 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
   double SMALL = 0.01;
   // find diagonals
   double dist = dist3D_Segment_to_Segment(fourpoints[0],fourpoints[2],
-					  fourpoints[1],fourpoints[3], 
+					  fourpoints[1],fourpoints[3],
 					  SMALL*SMALL);
   if (dist < SMALL)
-    { // found -> divide at shorter diagonal 
-      if ((fourpoints[0]-fourpoints[2]).squared_length() 
-	  < (fourpoints[1]-fourpoints[3]).squared_length()) { 
+    { // found -> divide at shorter diagonal
+      if ((fourpoints[0]-fourpoints[2]).squared_length()
+	  < (fourpoints[1]-fourpoints[3]).squared_length()) {
 	  tr[0] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
 	  tr[1] = Triangle(fourpoints[2],fourpoints[3],fourpoints[0]);
       } else {
 	tr[0] = Triangle(fourpoints[0],fourpoints[1],fourpoints[3]);
 	tr[1] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
       }
-    } 
+    }
   else
     { // take other 2
       double dist = dist3D_Segment_to_Segment(fourpoints[1],fourpoints[2],
-					      fourpoints[0],fourpoints[3], 
+					      fourpoints[0],fourpoints[3],
 					      SMALL*SMALL);
       if (dist < SMALL)
 	{
-	  if ((fourpoints[1]-fourpoints[2]).squared_length() 
+	  if ((fourpoints[1]-fourpoints[2]).squared_length()
 	      < (fourpoints[0]-fourpoints[3]).squared_length()) {
 	    tr[0] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
   	    tr[1] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
 	  } else {
 	    tr[0] = Triangle(fourpoints[1],fourpoints[0],fourpoints[3]);
 	    tr[1] = Triangle(fourpoints[0],fourpoints[2],fourpoints[3]);
-	  }   
-	} 
-      else 
+	  }
+	}
+      else
 	{ // take 3rd possibility, not the case here, because 2-3 is cut line
 	  double dist = dist3D_Segment_to_Segment(fourpoints[0],fourpoints[1],
 						  fourpoints[2],fourpoints[3],
 						  SMALL*SMALL);
-	  if (dist < SMALL) 
+	  if (dist < SMALL)
 	    {
 	      tr[0] = Triangle(fourpoints[0],fourpoints[2],fourpoints[3]);
 	      tr[1] = Triangle(fourpoints[2],fourpoints[1],fourpoints[3]);
@@ -256,7 +255,7 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
   triangles.insert(triangles.end(), tr.begin(), tr.end());
 }
 
-int Triangle::SplitAtPlane(double z, 
+int Triangle::SplitAtPlane(double z,
 			   vector<Triangle> &uppertriangles,
 			   vector<Triangle> &lowertriangles,
 			   const Matrix4d &T) const
@@ -268,7 +267,7 @@ int Triangle::SplitAtPlane(double z,
   Vector2d lstart,lend;
   int cut = CutWithPlane(z,T,lstart,lend);
   if (cut==0) return 0;
-  else if (cut==1) { // cut at a triangle point 
+  else if (cut==1) { // cut at a triangle point
     if (upper.size()>lower.size())
       upper.push_back(Vector3d(lstart.x(),lstart.y(),z));
     else
@@ -296,12 +295,12 @@ int Triangle::SplitAtPlane(double z,
   }
   else cerr << "lower size " << lower.size() << endl;
   Vector3d TN = T*Normal; TN.normalize();
-  for (guint i=0; i < uppertr.size(); i++) 
+  for (guint i=0; i < uppertr.size(); i++)
     if ((uppertr[i].Normal + TN).length()<0.1) uppertr[i].invertNormal();
-  for (guint i=0; i < lowertr.size(); i++) 
+  for (guint i=0; i < lowertr.size(); i++)
     if ((lowertr[i].Normal + TN).length()<0.1) lowertr[i].invertNormal();
-  uppertriangles.insert(uppertriangles.end(),uppertr.begin(),uppertr.end()); 
-  lowertriangles.insert(lowertriangles.end(),lowertr.begin(),lowertr.end()); 
+  uppertriangles.insert(uppertriangles.end(),uppertr.begin(),uppertr.end());
+  lowertriangles.insert(lowertriangles.end(),lowertr.begin(),lowertr.end());
   return cut;
 }
 
@@ -316,7 +315,7 @@ bool Triangle::isInZrange(double zmin, double zmax, const Matrix4d &T) const
   return true;
 }
 
-int Triangle::CutWithPlane(double z, const Matrix4d &T, 
+int Triangle::CutWithPlane(double z, const Matrix4d &T,
 			   Vector2d &lineStart,
 			   Vector2d &lineEnd) const
 {
@@ -358,13 +357,13 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 	    lineEnd = Vector2d(p.x(),p.y());
 	    if( lineEnd != lineStart ) num_cutpoints = 2;
 	  }
-	
+
 	return num_cutpoints;
 }
 
 void Triangle::draw(int gl_type) const
 {
-  glBegin(gl_type);	  
+  glBegin(gl_type);
   glVertex3f(A.x(),A.y(),A.z());
   glVertex3f(B.x(),B.y(),B.z());
   glVertex3f(C.x(),C.y(),C.z());
@@ -390,8 +389,8 @@ string Triangle::info() const
 {
   ostringstream ostr;
   ostr <<"Triangle A="<< A
-       <<", B="<< B  
-       <<", C="<< C  
+       <<", B="<< B
+       <<", C="<< C
        <<", N="<< Normal ;
   return ostr.str();
 }

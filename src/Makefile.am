@@ -28,6 +28,7 @@ repsnapper_CPPFLAGS = \
 	-DLOCALEDIR='"$(localedir)"' \
 	$(XMLPP_CFLAGS) \
 	$(OPENMP_CFLAGS) \
+	$(LIBZIP_CFLAGS) \
 	-g -O3 $(WARNING_FLAGS)
 
 SHARED_SRC= \
@@ -99,7 +100,7 @@ EXTRA_DIST += $(built_header_make) \
 
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 
-repsnapper_LDADD = libreprap.la libclipper.la libpoly2tri.la liblmfit.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(XMLPP_LIBS) $(BOOST_LDFLAGS)
+repsnapper_LDADD = libreprap.la libclipper.la libpoly2tri.la liblmfit.la libamf.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(XMLPP_LIBS) $(LIBZIP_LIBS) $(BOOST_LDFLAGS)
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
 dist_repsnapperdata_DATA = src/repsnapper.ui

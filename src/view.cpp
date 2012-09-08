@@ -78,7 +78,7 @@ void View::connect_action(const char *name, const sigc::slot<void> &slot)
 
 void View::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleButton *> &slot)
 {
-  Gtk::ToggleButton *button;
+  Gtk::ToggleButton *button = NULL;
   m_builder->get_widget (name, button);
   if (button)
     button->signal_toggled().connect (sigc::bind(slot, button));
@@ -89,7 +89,7 @@ void View::connect_toggled(const char *name, const sigc::slot<void, Gtk::ToggleB
 
 void View::connect_tooltoggled(const char *name, const sigc::slot<void, Gtk::ToggleToolButton *> &slot)
 {
-  Gtk::ToggleToolButton *button;
+  Gtk::ToggleToolButton *button = NULL;
   m_builder->get_widget (name, button);
   if (button)
     button->signal_toggled().connect (sigc::bind(slot, button));
@@ -231,11 +231,16 @@ void View::do_save_stl ()
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
 	return;
-    string directory_path = files[0]->get_parent()->get_path();
-    m_model->settings.STLPath = directory_path;
-    m_model->SaveStl (files[0]);
+
+    string file_path = files[0]->get_path();
+    uint len = file_path.length();
+    if (file_path.find(".amf") == len-4 || file_path.find(".AMF") == len-4)
+      m_model->SaveAMF (files[0]);
+    else
+      m_model->SaveStl (files[0]);
   }
 }
+
 void View::do_save_gcode ()
 {
   PrintInhibitor inhibitPrint(m_printer);
@@ -245,8 +250,6 @@ void View::do_save_gcode ()
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
 	return;
-    string directory_path = files[0]->get_parent()->get_path();
-    m_model->settings.GCodePath = directory_path;
     m_model->WriteGCode (files[0]);
   }
 }
@@ -1626,6 +1629,8 @@ void View::setModel(Model *model)
 
   m_treeview->set_model (m_model->objtree.m_model);
   m_treeview->append_column_editable("Name", m_model->objtree.m_cols->m_name);
+  // m_treeview->append_column_editable("Extruder", m_model->objtree.m_cols->m_material);
+  // m_treeview->set_headers_visible(true);
 
   m_gcodetextview = NULL;
   m_builder->get_widget ("txt_gcode_result", m_gcodetextview);

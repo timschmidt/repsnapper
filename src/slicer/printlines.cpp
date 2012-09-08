@@ -62,7 +62,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     movespeed = settings.Hardware.MoveSpeed,
     minZspeed = settings.Hardware.MinPrintSpeedZ,
     maxZspeed = settings.Hardware.MaxPrintSpeedZ,
-    maxEspeed = settings.Hardware.EMaxSpeed;
+    maxEspeed = settings.Extruder.EMaxSpeed;
 
   int count=0;
 

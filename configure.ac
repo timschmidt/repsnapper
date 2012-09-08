@@ -54,6 +54,9 @@ PKG_CHECK_MODULES(XMLPP, libxml++-2.6 >= 2.10.0)
 
 AC_OPENMP()
 
+PKG_CHECK_MODULES(LIBZIP, libzip)
+
+
 dnl ------------------------------------------------------------------
 dnl libreprap is (for now) built in from a copy in libraries/libreprap
 dnl thus avoiding cmake, and user confusion.

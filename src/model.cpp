@@ -162,6 +162,7 @@ void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
 {
   Glib::ustring contents = gcode.get_text();
   Glib::file_set_contents (file->get_path(), contents);
+  settings.GCodePath = file->get_parent()->get_path();
 }
 
 void Model::ReadSVG(Glib::RefPtr<Gio::File> file)
@@ -237,6 +238,21 @@ void Model::SaveStl(Glib::RefPtr<Gio::File> file)
     setlocale(LC_COLLATE, colllocale);
     setlocale(LC_CTYPE, ctypelocale);
   }
+  settings.STLPath = file->get_parent()->get_path();
+}
+
+void Model::SaveAMF(Glib::RefPtr<Gio::File> file)
+{
+  vector<Shape*> shapes;
+  vector<Matrix4d> transforms;
+  objtree.get_all_shapes(shapes,transforms);
+  vector< vector<Triangle> > triangles;
+  vector<ustring> names;
+  for(uint s = 0; s < shapes.size(); s++) {
+    triangles.push_back(shapes[s]->getTriangles(transforms[s]));
+    names.push_back(shapes[s]->filename);
+  }
+  File::save_AMF(file->get_path(), triangles, names);
 }
 
 void Model::Read(Glib::RefPtr<Gio::File> file)
@@ -540,7 +556,7 @@ int Model::MergeShapes(TreeObject *parent, const vector<Shape*> shapes)
 {
   Shape * shape = new Shape();
   for (uint s = 0; s <  shapes.size(); s++) {
-    vector<Triangle> str = shapes[s]->getTriangles(shapes[s]->transform3D.transform);
+    vector<Triangle> str = shapes[s]->getTriangles();
     shape->addTriangles(str);
   }
   AddShape(parent, shape, "merged", true);
@@ -926,7 +942,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
     if ( m_previewGCode.size() != 0 ||
 	 ( layers.size() == 0 && gcode.commands.size() == 0 ) ) {
       Vector3d start(0,0,0);
-      const double thickness = settings.Hardware.LayerThickness;
+      const double thickness = settings.Slicing.LayerThickness;
       const double z = settings.Display.GCodeDrawStart + thickness/2;
       const int LayerCount = (int)ceil(Max.z()/thickness)-1;
       const uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
@@ -968,7 +984,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 
   double minZ = 0;//max(0.0, Min.z());
   double z;
-  double zStep = settings.Hardware.LayerThickness;
+  double zStep = settings.Slicing.LayerThickness;
   double zSize = (Max.z() - minZ - zStep*0.5);
   int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
   double sel_Z = height; //*zSize;
@@ -1013,16 +1029,14 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 	}
       else
 	{
+	  const float lthickness = settings.Slicing.LayerThickness;
 	  if (!m_previewLayer || m_previewLayer->getZ() != z) {
-	    m_previewLayer = calcSingleLayer(z, LayerNr,
-					     settings.Hardware.LayerThickness,
+	    m_previewLayer = calcSingleLayer(z, LayerNr, lthickness,
 					     settings.Display.DisplayinFill, false);
 	    layer = m_previewLayer;
 	    Layer * previous = NULL;
-	    if (LayerNr>0 && z >= settings.Hardware.LayerThickness)
-	      previous = calcSingleLayer(z-settings.Hardware.LayerThickness,
-					 LayerNr-1,
-					 settings.Hardware.LayerThickness,
+	    if (LayerNr>0 && z >= lthickness)
+	      previous = calcSingleLayer(z-lthickness, LayerNr-1, lthickness,
 					 false, false);
 	    layer->setPrevious(previous);
 	  }

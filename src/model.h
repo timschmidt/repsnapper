@@ -61,9 +61,10 @@ public:
 
 	// STL Functions
 	void ReadStl(Glib::RefPtr<Gio::File> file);
-	void SaveStl(Glib::RefPtr<Gio::File> file);
 	vector<Shape*> ReadShapes(Glib::RefPtr<Gio::File> file,
 				  uint max_triangles = 0);
+	void SaveStl(Glib::RefPtr<Gio::File> file);
+	void SaveAMF(Glib::RefPtr<Gio::File> file);
 
 	int AddShape(TreeObject *parent, Shape * shape, string filename,
 		     bool autoplace = true);

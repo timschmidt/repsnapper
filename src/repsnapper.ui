@@ -13,6 +13,11 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
+  <object class="GtkAction" id="Fullscreen">
+    <property name="label">Fullscreen</property>
+    <property name="short_label" translatable="yes">Fullscreen</property>
+    <property name="tooltip">Toggle Fullscreen</property>
+  </object>
   <object class="GtkAction" id="LoadSettings">
     <property name="label" translatable="yes">Load Settings</property>
     <property name="short_label" translatable="yes">Load Settings</property>
@@ -73,11 +78,6 @@
     <property name="value">8</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAction" id="Fullscreen">
-    <property name="label">Fullscreen</property>
-    <property name="short_label" translatable="yes">Fullscreen</property>
-    <property name="tooltip">Toggle Fullscreen</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
@@ -1503,7 +1503,7 @@ and others I forgot... (needs updating)</property>
                             <property name="can_focus">False</property>
                             <child>
                               <object class="GtkButton" id="m_save_stl">
-                                <property name="label" translatable="yes">Save Model as STL</property>
+                                <property name="label" translatable="yes">Save as STL/AMF</property>
                                 <property name="use_action_appearance">False</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
@@ -1988,6 +1988,12 @@ and others I forgot... (needs updating)</property>
                                         <child>
                                           <placeholder/>
                                         </child>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2302,7 +2308,7 @@ and others I forgot... (needs updating)</property>
                                               </object>
                                             </child>
                                             <child>
-                                              <object class="GtkSpinButton" id="Hardware.LayerThickness">
+                                              <object class="GtkSpinButton" id="Slicing.LayerThickness">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="invisible_char">•</property>
@@ -2426,6 +2432,30 @@ and others I forgot... (needs updating)</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="n_columns">4</property>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -3344,6 +3374,24 @@ and others I forgot... (needs updating)</property>
                                               <placeholder/>
                                             </child>
                                             <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
                                               <object class="GtkVBox" id="i_temp_box">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
@@ -3615,7 +3663,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="Hardware.DownstreamExtrusionMultiplier">
+                                      <object class="GtkSpinButton" id="Extruder.DownstreamExtrusionMultiplier">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">•</property>
@@ -3633,7 +3681,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="Hardware.DownstreamMultiplier">
+                                      <object class="GtkSpinButton" id="Extruder.DownstreamMultiplier">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">•</property>
@@ -4921,7 +4969,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="Hardware.FilamentDiameter">
+                                      <object class="GtkSpinButton" id="Extruder.FilamentDiameter">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="tooltip_text" translatable="yes">Manual tweak-able to increase or decrease the flow rate beyond what is specified above.</property>
@@ -4953,7 +5001,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="Hardware.ExtrusionFactor">
+                                      <object class="GtkSpinButton" id="Extruder.ExtrusionFactor">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="tooltip_text" translatable="yes">Manual tweak-able to increase or decrease the flow rate beyond what is specified above.</property>
@@ -4972,7 +5020,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkCheckButton" id="Hardware.CalibrateInput">
+                                      <object class="GtkCheckButton" id="Extruder.CalibrateInput">
                                         <property name="label" translatable="yes">Calibrate mm as input</property>
                                         <property name="use_action_appearance">False</property>
                                         <property name="visible">True</property>
@@ -5041,7 +5089,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="Hardware.MinimumLineWidth">
+                                      <object class="GtkSpinButton" id="Extruder.MinimumLineWidth">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">●</property>
@@ -5059,7 +5107,7 @@ and others I forgot... (needs updating)</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="Hardware.MaximumLineWidth">
+                                      <object class="GtkSpinButton" id="Extruder.MaximumLineWidth">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="invisible_char">●</property>
@@ -5736,6 +5784,48 @@ and others I forgot... (needs updating)</property>
                                   <placeholder/>
                                 </child>
                                 <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
                                   <object class="GtkLabel" id="label38">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
@@ -5750,7 +5840,7 @@ and others I forgot... (needs updating)</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSpinButton" id="Hardware.ExtrudedMaterialWidthRatio">
+                                  <object class="GtkSpinButton" id="Extruder.ExtrudedMaterialWidthRatio">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">•</property>
@@ -5858,7 +5948,7 @@ and others I forgot... (needs updating)</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSpinButton" id="Hardware.MaxShellSpeed">
+                                  <object class="GtkSpinButton" id="Extruder.MaxShellSpeed">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
@@ -5885,7 +5975,7 @@ and others I forgot... (needs updating)</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSpinButton" id="Hardware.EMaxSpeed">
+                                  <object class="GtkSpinButton" id="Extruder.EMaxSpeed">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="has_tooltip">True</property>
@@ -6918,7 +7008,7 @@ and others I forgot... (needs updating)</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkSpinButton" id="Hardware.DistanceToReachFullSpeed">
+                                  <object class="GtkSpinButton" id="Extruder.DistanceToReachFullSpeed">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="invisible_char">●</property>
@@ -8299,6 +8389,12 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <placeholder/>
                         </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -8349,6 +8445,48 @@ and others I forgot... (needs updating)</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_rows">3</property>
                                 <property name="n_columns">4</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
