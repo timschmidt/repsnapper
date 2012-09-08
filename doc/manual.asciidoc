@@ -57,6 +57,7 @@ Although RepSnapper is not generally tested outside of windows/linux/mac you may
     * libgtkmm-2.4-dev
     * libgktglext1-dev
     * libxml++-2.6
+    * libzip
 
 =====
 
@@ -67,22 +68,22 @@ Although RepSnapper is not generally tested outside of windows/linux/mac you may
 
 Ubuntu 11.10:
 --------------------------
-sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev gtk2-engines-pixbuf freeglut3-dev libxml++ libcairomm-1.0
+sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev gtk2-engines-pixbuf freeglut3-dev libxml++ libcairomm-1.0 libzip
 --------------------------
 
 Ubuntu 11.04:
 --------------------------
-sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev libglut3-dev libxml++ libcairomm-1.0
+sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev libglut3-dev libxml++ libcairomm-1.0 libzip
 --------------------------
 
 Ubuntu 10.10:
 --------------------------
-sudo apt-get install git-core build-essential automake intltool libtool libgtkmm-2.4-dev libgtkglext1-dev libglut3-dev libxml++ libcairomm-1.0
+sudo apt-get install git-core build-essential automake intltool libtool libgtkmm-2.4-dev libgtkglext1-dev libglut3-dev libxml++ libcairomm-1.0 libzip
 --------------------------
 
 Ubuntu 10.04:
 --------------------------
-sudo apt-get install git-core build-essential TODO 
+sudo apt-get install git-core build-essential TODO
 --------------------------
 
 ===== Acquire source and compile =====
@@ -100,6 +101,9 @@ sudo apt-get install git-core build-essential TODO
 Executable (repsnapper) will be left in the top folder. Install with "sudo make install-strip"
 
 ==== Fedora ====
+
+(most probably extremely outdated)
+
 ===== Installing from yum =====
 Repsnapper was packaged by jebba for Fedora 14 at this repository: http://repos.fedorapeople.org/repos/jebba/reprap/
 
@@ -224,7 +228,7 @@ Port::
     Manually selects the serial communication port that you want to talk across.
 
 Speed::
-    The serial communications baud rate. Typically 115200 - must however match the setting in your firmware. 
+    The serial communications baud rate. Typically 115200 - must however match the setting in your firmware.
 
 Load STL::
     Loads an STL file
@@ -598,7 +602,7 @@ To load an STL into the 3D view
 The 3D view should now display your STL. Use this button to pull in a facet file to process into Gcode.
 
 [TIP]
-If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using meshlab or similar. 
+If repsnapper crashes at this point you might have an STL file that is "Bad Input" try converting it to binary using meshlab or similar.
 
 === Viewing the STL ===
 
@@ -616,9 +620,9 @@ Working with STL
 Once an STL is loaded, you can move it to further onto the build platform, rotate it and scale it. You can also duplicate it and load additional STL files onto the build platform.
 
     * To move around individual objects or a group of objects use Shift and the left mouse button.
-    * Or tab to the translate box and enter absolute values into the X and Y fields. 
+    * Or tab to the translate box and enter absolute values into the X and Y fields.
     * If the object is not on the Platform, you can also try rotating it about the Z axis to automatically make it touch the Z=0 plane.
-    * Everything below the Z=0 plane will not be sliced, so you will not get negative Z values in youe GCode. 
+    * Everything below the Z=0 plane will not be sliced, so you will not get negative Z values in youe GCode.
 
     * Duplicate adds another copy of the STL beside the first.
 
