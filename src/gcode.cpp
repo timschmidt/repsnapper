@@ -160,12 +160,18 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 
 	buffer_zpos_lines.clear();
 
-
 	if(!file.good())
 	{
 //		MessageBrowser->add(str(boost::format("Error opening file %s") % Filename).c_str());
 		return;
 	}
+
+	char * numlocale   = setlocale(LC_NUMERIC, NULL);
+	char * colllocale  = setlocale(LC_COLLATE, NULL);
+	char * ctypelocale = setlocale(LC_CTYPE,   NULL);
+	setlocale(LC_NUMERIC, "C");
+	setlocale(LC_COLLATE, "C");
+	setlocale(LC_CTYPE,   "C");
 
 	uint LineNr = 0;
 
@@ -289,6 +295,11 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 		}
 		loaded_commands.push_back(command);
 	}
+
+	file.close();
+	setlocale(LC_NUMERIC, numlocale);
+	setlocale(LC_COLLATE, colllocale);
+	setlocale(LC_CTYPE, ctypelocale);
 
 	commands = loaded_commands;
 
