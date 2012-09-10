@@ -7,5 +7,5 @@ Exec=repsnapper %F_OR_U
 # Icon=repsnapper
 Terminal=false
 Type=Application
-Categories=GTK;Utility;
+Categories=GTK;Utility;Engineering;
 StartupNotify=true
