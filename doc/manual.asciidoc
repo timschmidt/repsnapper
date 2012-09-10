@@ -191,7 +191,7 @@ Install http://www.macports.org/[MacPorts].
 Run from a terminal window:
 
 
-    sudo port install intltool boost gtkmm gtkglext
+    sudo port install intltool gtkmm gtkglext
 
 
 Acquire source and compile:
