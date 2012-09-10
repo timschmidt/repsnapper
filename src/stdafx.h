@@ -74,7 +74,12 @@ typedef vmml::mat3d Matrix3d;
 //assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits
 # define Epsilon 1.0e-5
 
-const double INFTY = numeric_limits<double>::infinity();
+#ifdef __GNUC__
+#define UNUSED __attribute__ ((unused))
+#else
+#define UNUSED
+#endif
 
+const double UNUSED INFTY = numeric_limits<double>::infinity();
 
 #endif // STDAFX_H
