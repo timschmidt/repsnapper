@@ -22,6 +22,27 @@
 
 #include <iostream>
 
+
+static string numlocale   = "";
+static string colllocale  = "";
+static string ctypelocale = "";
+void save_locales() {
+  numlocale   = string(setlocale(LC_NUMERIC, NULL));
+  colllocale  = string(setlocale(LC_COLLATE, NULL));
+  ctypelocale = string(setlocale(LC_CTYPE,   NULL));
+}
+void set_locales(const char * loc) {
+  setlocale(LC_NUMERIC, loc);
+  setlocale(LC_COLLATE, loc);
+  setlocale(LC_CTYPE,   loc);
+}
+void reset_locales() {
+  setlocale(LC_NUMERIC, numlocale.c_str());
+  setlocale(LC_COLLATE, colllocale.c_str());
+  setlocale(LC_CTYPE,   ctypelocale.c_str());
+}
+
+
 static float read_float(ifstream &file) {
 	// Read platform independent 32 bit ieee 754 little-endian float.
 	union ieee_union {
@@ -67,17 +88,17 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
   size_t found = name_by_file.find_last_of(".");
   name_by_file = (ustring)name_by_file.substr(0,found);
 
-  char * numlocale   = setlocale(LC_NUMERIC, NULL);
-  char * colllocale  = setlocale(LC_COLLATE, NULL);
-  char * ctypelocale = setlocale(LC_CTYPE,   NULL);
-  setlocale(LC_NUMERIC, "C");
-  setlocale(LC_COLLATE, "C");
-  setlocale(LC_CTYPE,   "C");
+  set_locales("C");
   if(_type == ASCII_STL) {
     // multiple shapes per file
     load_asciiSTL(triangles, names, max_triangles);
     if (names.size() == 1) // if single shape name by file
       names[0] = name_by_file;
+    if (triangles.size() == 0) {// if no success, try binary mode
+      _type = BINARY_STL;
+      loadTriangles(triangles, names, max_triangles);
+      return;
+    }
   } else if (_type == AMF) {
     // multiple shapes per file
     load_AMF(triangles, names, max_triangles);
@@ -97,10 +118,7 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
       cerr << _("Known extensions: ") << "STL, WRL, AMF." << endl;
     }
   }
-
-  setlocale(LC_NUMERIC, numlocale);
-  setlocale(LC_COLLATE, colllocale);
-  setlocale(LC_CTYPE, ctypelocale);
+  reset_locales();
 }
 
 

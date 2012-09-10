@@ -54,7 +54,7 @@ bool ViewProgress::restart (const char *label, double max)
     Glib::TimeVal now;
     now.assign_current_time();
     const int time_used = (int) round((now - start_time).as_double()); // seconds
-    cerr << m_label->get_label() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;  
+    cerr << m_label->get_label() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   m_bar_max = max;
   this->label = label;
@@ -73,7 +73,7 @@ void ViewProgress::stop (const char *label)
     Glib::TimeVal now;
     now.assign_current_time();
     const int time_used = (int) round((now - start_time).as_double()); // seconds
-    cerr << m_label->get_label() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;  
+    cerr << m_label->get_label() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   this->label = label;
   m_label->set_label (label);
@@ -84,7 +84,7 @@ void ViewProgress::stop (const char *label)
 }
 
 string timeleft_str(long seconds) {
-  ostringstream ostr; 
+  ostringstream ostr;
   int hrs = (int)(seconds/3600);
   if (hrs>0) {
     if (hrs>1) ostr << hrs << _("h ");
@@ -107,8 +107,8 @@ bool ViewProgress::update (double value, bool take_priority)
 
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->set_fraction(value / m_bar_max);
-  ostringstream o; 
-  if(floor(value) != value && floor(m_bar_max) != m_bar_max) 
+  ostringstream o;
+  if(floor(value) != value && floor(m_bar_max) != m_bar_max)
     o.precision(1);
   else
     o.precision(0);

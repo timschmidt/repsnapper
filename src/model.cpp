@@ -223,20 +223,13 @@ void Model::SaveStl(Glib::RefPtr<Gio::File> file)
     shapes[0]->saveBinarySTL(file->get_path());
   }
   else {
-    char * numlocale   = setlocale(LC_NUMERIC, NULL);
-    char * colllocale  = setlocale(LC_COLLATE, NULL);
-    char * ctypelocale = setlocale(LC_CTYPE,   NULL);
-    setlocale(LC_NUMERIC, "C");
-    setlocale(LC_COLLATE, "C");
-    setlocale(LC_CTYPE,   "C");
+    set_locales("C");
     stringstream sstr;
     for(uint s=0; s < shapes.size(); s++) {
       sstr << shapes[s]->getSTLsolid() << endl;
     }
     Glib::file_set_contents (file->get_path(), sstr.str());
-    setlocale(LC_NUMERIC, numlocale);
-    setlocale(LC_COLLATE, colllocale);
-    setlocale(LC_CTYPE, ctypelocale);
+    reset_locales();
   }
   settings.STLPath = file->get_parent()->get_path();
 }

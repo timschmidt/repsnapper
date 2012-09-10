@@ -24,6 +24,12 @@
 
 #include "triangle.h"
 
+
+void save_locales();
+void set_locales(const char * loc);
+void reset_locales();
+
+
 using namespace Glib;
 
 enum filetype_t{
@@ -39,7 +45,6 @@ enum filetype_t{
 
 class File
 {
-
 public:
   File(){};
   File(Glib::RefPtr<Gio::File> file);

@@ -173,6 +173,8 @@ int main(int argc, char **argv)
     return 1;
   }
 
+  save_locales();
+
   CommandLineOptions opts (argc, argv);
 
   Platform::setBinaryPath (argv[0]);
