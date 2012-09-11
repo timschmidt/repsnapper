@@ -585,6 +585,8 @@ void Settings::set_defaults ()
   // The vectors map each to 3 spin boxes, one per dimension
   Hardware.Volume = Vector3d (200,200,140);
   Hardware.PrintMargin = Vector3d (10,10,0);
+
+  Misc.SpeedsAreMMperSec = true;
 }
 
 bool Settings::get_group_and_key (int i, Glib::ustring &group, Glib::ustring &key)
@@ -632,6 +634,7 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
 
   std::cerr << _("Parsing config from '") << file->get_path() << "\n";
 
+  Misc.SpeedsAreMMperSec = false;
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
 
     Glib::ustring group, key;
@@ -725,7 +728,6 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     Slicing.MaxOverhangSpeed /= 60.0;
   }
   Misc.SpeedsAreMMperSec = true;
-
 
   m_user_changed = false;
   m_signal_visual_settings_changed.emit();
