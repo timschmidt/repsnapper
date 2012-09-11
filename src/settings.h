@@ -170,7 +170,7 @@ class Settings {
     bool FanControl;
     int MinFanSpeed;
     int MaxFanSpeed;
-    int MaxOverhangSpeed;
+    float MaxOverhangSpeed;
 
     guint ShellCount;
     /* bool EnableAcceleration; */
@@ -201,6 +201,7 @@ class Settings {
   MillingSettings Milling;
 
   struct MiscSettings {
+    bool SpeedsAreMMperSec;
     bool ShapeAutoplace;
     bool FileLoggingEnabled;
     bool TempReadingEnabled;

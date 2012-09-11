@@ -62,7 +62,7 @@ void GCodeState::SetLastPosition(const Vector3d &v)
 void GCodeState::AppendCommand(Command &command, bool relativeE)
 {
   if (!command.is_value) {
-    if (!relativeE) 
+    if (!relativeE)
       command.e += pImpl->lastCommand.e;
     if (command.f!=0) {
       timeused += (command.where - pImpl->lastCommand.where).length()/command.f*60;
@@ -116,7 +116,7 @@ double GCodeState::LastCommandF()
 // // dont use -- commands are generated in PLine3 printlines.cpp
 // void GCodeState::AddLines (vector<PLine3> plines,
 // 			   double extrusionfactor,
-// 			   double offsetZ, 
+// 			   double offsetZ,
 // 			   const Settings::SlicingSettings &slicing,
 // 			   const Settings::HardwareSettings &hardware)
 // {
@@ -128,23 +128,23 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
 			   double extrusionFactor,
 			   double maxspeed,
 			   double maxmovespeed,
-			   double offsetZ, 
+			   double offsetZ,
 			   const Settings::SlicingSettings &slicing,
 			   const Settings::HardwareSettings &hardware)
 {
   for (uint i=0; i < linespoints.size(); i+=2)
     {
       // MOVE to start of next line
-      if(LastPosition() != linespoints[i]) 
+      if(LastPosition() != linespoints[i])
 	{
 	  MakeGCodeLine (LastPosition(), linespoints[i],
 			 Vector3d(0,0,0),0, 0, 0, maxmovespeed,
 			 offsetZ, slicing, hardware);
 	  SetLastPosition (linespoints[i]);
-	} 
-      // PLOT to endpoint of line 
-      MakeGCodeLine (LastPosition(), linespoints[i+1], 
-		     Vector3d(0,0,0),0, extrusionFactor, 0, maxspeed, 
+	}
+      // PLOT to endpoint of line
+      MakeGCodeLine (LastPosition(), linespoints[i+1],
+		     Vector3d(0,0,0),0, extrusionFactor, 0, maxspeed,
 		     offsetZ, slicing, hardware);
     SetLastPosition(linespoints[i+1]);
     }
@@ -153,16 +153,17 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
 
 
 // // dont use -- commands are generated in PLine3 printlines.cpp
+// // (speeds are in mm/min which is obsolete)
 // void GCodeState::MakeGCodeLine (PLine3 pline,
 // 				double extrusionfactor,
-// 				double offsetZ, 
+// 				double offsetZ,
 // 				const Settings::SlicingSettings &slicing,
 // 				const Settings::HardwareSettings &hardware)
 // {
 //   bool relativeE = slicing.RelativeEcode;
 //   double minspeed = hardware.MinPrintSpeedXY;
 //   double maxspeed = hardware.MaxPrintSpeedXY;
-//   cerr << "dont use GCodeState::MakeGCodeLine (PLine3 pline..." << endl; 
+//   cerr << "dont use GCodeState::MakeGCodeLine (PLine3 pline..." << endl;
 
 //   if(LastPosition() != pline.from) { // then first move to pline.from
 //     maxspeed = max(minspeed, (double)hardware.MoveSpeed); // in case maxspeed is too low
@@ -177,24 +178,24 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
 //     Command command(COORDINATEDMOTION, pline.to, extrudedMaterial, maxspeed);
 //     if (pline.from==pline.to) command.comment = _("Extrusion only ");
 //   } else { // make arc
-//     cerr << "no arc in GCodeState::MakeGCodeLine (PLine3 pline..." 
+//     cerr << "no arc in GCodeState::MakeGCodeLine (PLine3 pline..."
 // 	 << "   dont use this function" << endl;
-    
+
 //   }
 //   MakeGCodeLine(pline.from, pline.to, pline.arcIJK, pline.arc,
 // 	       pline.extrusionfactor * extrusionfactor,
 // 	       pline.absolute_extrusion,
-// 	       pline.speed, 
+// 	       pline.speed,
 // 	       offsetZ, slicing, hardware);
 //   //SetLastPosition(pline.to);
 // }
 
 void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
 				Vector3d arcIJK, short arc,
-				double extrusionFactor, 
+				double extrusionFactor,
 				double absolute_extrusion,
 				double maxspeed,
-				double offsetZ, 
+				double offsetZ,
 				const Settings::SlicingSettings &slicing,
 				const Settings::HardwareSettings &hardware)
 {
@@ -206,13 +207,13 @@ void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
 
   bool relativeE = slicing.RelativeEcode;
 
-  double minspeed = hardware.MinPrintSpeedXY;
+  double minspeed = hardware.MinPrintSpeedXY * 60;
   maxspeed = max(minspeed,maxspeed); // in case maxspeed is too low
   ResetLastWhere (start);
   command.where = end;
   if (start==end)  { // pure extrusions
     command.comment = _("Extrusion only ");
-  } 
+  }
   double extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 
   if (absolute_extrusion!=0) {

@@ -57,12 +57,12 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 			const Settings &settings) const
 {
   const double
-    minspeed  = settings.Hardware.MinPrintSpeedXY,
+    minspeed  = settings.Hardware.MinPrintSpeedXY * 60,
     //maxspeed  = settings.Hardware.MaxPrintSpeedXY,
-    movespeed = settings.Hardware.MoveSpeed,
-    minZspeed = settings.Hardware.MinPrintSpeedZ,
-    maxZspeed = settings.Hardware.MaxPrintSpeedZ,
-    maxEspeed = settings.Extruder.EMaxSpeed;
+    movespeed = settings.Hardware.MoveSpeed * 60,
+    minZspeed = settings.Hardware.MinPrintSpeedZ * 60,
+    maxZspeed = settings.Hardware.MaxPrintSpeedZ * 60,
+    maxEspeed = settings.Extruder.EMaxSpeed * 60;
 
   int count=0;
 
@@ -412,11 +412,11 @@ void Printlines::addPolys(PLineArea area,
 			  double maxspeed, double min_time)
 {
   if (polys.size() == 0) return;
-  if (maxspeed == 0) maxspeed = settings->Hardware.MaxPrintSpeedXY; // default
+  if (maxspeed == 0) maxspeed = settings->Hardware.MaxPrintSpeedXY * 60; // default
   for(size_t q = 0; q < polys.size(); q++) {
     if (polys[q].size() > 0) {
       PrintPoly *ppoly = new PrintPoly(polys[q], this, /* Takes a copy of the poly */
-				       maxspeed, settings->Slicing.MaxOverhangSpeed,
+				       maxspeed, settings->Slicing.MaxOverhangSpeed * 60,
 				       min_time, displace_start, area);
       printpolys.push_back(ppoly);
       setZ(polys[q].getZ());
@@ -461,7 +461,7 @@ double Printlines::makeLines(Vector2d &startPoint,
   for(size_t q=0; q < count; q++) done[q]=false;
   uint ndone=0;
   //double nlength;
-  double movespeed = settings->Hardware.MoveSpeed;
+  double movespeed = settings->Hardware.MoveSpeed * 60;
   double totallength = 0;
   double totalspeedfactor = 0;
   while (ndone < count)
@@ -516,8 +516,8 @@ double Printlines::makeLines(Vector2d &startPoint,
 //   //cerr << "makeLines " << AreaNames[area] <<  " " << layer->info() << endl;
 //   // double linewidthratio = hardware.ExtrudedMaterialWidthRatio;
 //   //double linewidth = layerthickness/linewidthratio;
-//   if ( maxspeed == 0 ) maxspeed = settings->Hardware.MaxPrintSpeedXY;
-//   double movespeed = settings->Hardware.MoveSpeed;
+//   if ( maxspeed == 0 ) maxspeed = settings->Hardware.MaxPrintSpeedXY * 60;
+//   double movespeed = settings->Hardware.MoveSpeed * 60;
 
 //   const uint count = polys.size();
 //   if (count == 0) return;
@@ -1097,7 +1097,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
   double
     AOmindistance = settings->Slicing.AntioozeDistance,
     AOamount      = settings->Slicing.AntioozeAmount,
-    AOspeed       = settings->Slicing.AntioozeSpeed;
+    AOspeed       = settings->Slicing.AntioozeSpeed * 60;
     //AOonhaltratio = settings->Slicing.AntioozeHaltRatio;
   if (lines.size() < 2 || AOmindistance <=0 || AOamount == 0) return 0;
   // const double onhalt_amount = AOamount * AOonhaltratio;

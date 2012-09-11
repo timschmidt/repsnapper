@@ -758,7 +758,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
       // add skin to lines
       printlines.addPolys(SKIN, polys, (s==0), // displace at first skin
-			  settings.Extruder.MaxShellSpeed,
+			  settings.Extruder.MaxShellSpeed * 60,
 			  settings.Slicing.MinShelltime);
       if (s < skins-1) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
@@ -779,7 +779,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   // 2. Skirt
   vector <Poly> skirts(1); skirts[0] = skirtPolygon;
   printlines.addPolys(SKIRT, skirts, false,
-		      settings.Extruder.MaxShellSpeed,
+		      settings.Extruder.MaxShellSpeed * 60,
 		      settings.Slicing.MinShelltime);
 
   // 3. Support
@@ -792,7 +792,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   for(int p=shellPolygons.size()-1; p>=0; p--) { // inner to outer
     printlines.addPolys(SHELL, shellPolygons[p],
 			(p==(int)(shellPolygons.size())-1),
-			settings.Extruder.MaxShellSpeed,
+			settings.Extruder.MaxShellSpeed * 60,
 			settings.Slicing.MinShelltime);
   }
 

@@ -71,9 +71,9 @@ bool Printer::Move(string axis, double distance)
       if (!SendNow("G91")) return false;	// relative positioning
       float speed  = 0;
       if(axis == "Z")
-	speed = settings->Hardware.MaxPrintSpeedZ;
+	speed = settings->Hardware.MaxPrintSpeedZ * 60;
       else
-	speed = settings->Hardware.MoveSpeed;
+	speed = settings->Hardware.MoveSpeed * 60;
 
       std::ostringstream oss;
       oss << "G1 F" << speed;
@@ -101,9 +101,9 @@ bool Printer::Goto(string axis, double position)
       std::stringstream oss;
       float speed  = 0;
       if(axis == "Z")
-	speed = settings->Hardware.MaxPrintSpeedZ;
+	speed = settings->Hardware.MaxPrintSpeedZ * 60;
       else
-	speed = settings->Hardware.MoveSpeed;
+	speed = settings->Hardware.MoveSpeed * 60;
 
       oss << "G1 F" << speed;
       if (!SendNow(oss.str())) return false;
@@ -111,7 +111,7 @@ bool Printer::Goto(string axis, double position)
       oss << "G1 " << axis << position << " F" << speed;
       return SendNow(oss.str());
     }
-  
+
   alert (_("Goto called with unknown axis"));
   return false;
 }

@@ -114,11 +114,11 @@ static struct {
 #undef FLOAT_PHASE_MEMBER
 
   // Hardware
-  FLOAT_MEMBER (Hardware.MinPrintSpeedXY, "MinPrintSpeedXY", 1000, true),
-  FLOAT_MEMBER (Hardware.MaxPrintSpeedXY, "MaxPrintSpeedXY", 4000, true),
-  FLOAT_MEMBER (Hardware.MoveSpeed,       "MoveSpeed",  4000, true),
-  FLOAT_MEMBER (Hardware.MinPrintSpeedZ,  "MinPrintSpeedZ",  50, true),
-  FLOAT_MEMBER (Hardware.MaxPrintSpeedZ,  "MaxPrintSpeedZ",  150, true),
+  FLOAT_MEMBER (Hardware.MinPrintSpeedXY, "MinPrintSpeedXY", 20, true),
+  FLOAT_MEMBER (Hardware.MaxPrintSpeedXY, "MaxPrintSpeedXY", 180, true),
+  FLOAT_MEMBER (Hardware.MoveSpeed,       "MoveSpeed",  180, true),
+  FLOAT_MEMBER (Hardware.MinPrintSpeedZ,  "MinPrintSpeedZ",  1, true),
+  FLOAT_MEMBER (Hardware.MaxPrintSpeedZ,  "MaxPrintSpeedZ",  3, true),
 
   // FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5, false),
   // Volume.
@@ -139,7 +139,7 @@ static struct {
   INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4, false),
 
   // Extruder
-  BOOL_MEMBER  (Extruder.CalibrateInput,  "CalibrateInput",  false, true),
+  BOOL_MEMBER  (Extruder.CalibrateInput,  "CalibrateInput",  true, true),
   FLOAT_MEMBER (Extruder.ExtrusionFactor, "ExtrusionFactor", 1.0, true),
   FLOAT_MEMBER (Extruder.FilamentDiameter, "FilamentDiameter", 3.0, true),
   FLOAT_MEMBER (Extruder.DownstreamMultiplier, "DownstreamMultiplier", 1.0, true),
@@ -147,12 +147,12 @@ static struct {
   FLOAT_MEMBER (Extruder.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
   FLOAT_MEMBER (Extruder.MinimumLineWidth, "MinimumLineWidth", 0.4, true),
   FLOAT_MEMBER (Extruder.MaximumLineWidth, "MaximumLineWidth", 0.7, true),
-  FLOAT_MEMBER (Extruder.EMaxSpeed,       "EMaxSpeed",  100, true),
-  FLOAT_MEMBER (Extruder.MaxShellSpeed,   "MaxShellSpeed",  3000, true),
+  FLOAT_MEMBER (Extruder.EMaxSpeed,       "EMaxSpeed",  1.5, true),
+  FLOAT_MEMBER (Extruder.MaxShellSpeed,   "MaxShellSpeed",  150, true),
 
   // Printer
   FLOAT_MEMBER  (Printer.ExtrudeAmount, "Printer.ExtrudeAmount", 5, false),
-  FLOAT_MEMBER  (Printer.ExtrudeSpeed, "Printer.ExtrudeSpeed", 100, false),
+  FLOAT_MEMBER  (Printer.ExtrudeSpeed, "Printer.ExtrudeSpeed", 1.5, false),
   INT_MEMBER    (Printer.FanVoltage, "Printer.FanVoltage", 200, false),
   BOOL_MEMBER   (Printer.Logging, "Printer.Logging", false, false),
   BOOL_MEMBER   (Printer.ClearLogOnPrintStart, "Printer.ClearLogOnPrintStart", false, false),
@@ -160,13 +160,13 @@ static struct {
   { OFFSET (Printer.BedTemp)   , T_FLOAT, "Printer.BedTemp", NULL,  60, NULL, false },
 
   // Slicing
-  FLOAT_MEMBER (Slicing.LayerThickness, "LayerThickness", 0.4, true),
+  FLOAT_MEMBER (Slicing.LayerThickness, "LayerThickness", 0.3, true),
   BOOL_MEMBER  (Slicing.RelativeEcode, "RelativeEcode", false, false),
   BOOL_MEMBER  (Slicing.EnableAntiooze, "EnableAntiooze", false, true),
   FLOAT_MEMBER (Slicing.AntioozeDistance, "AntioozeDistance", 4.5, true),
   FLOAT_MEMBER (Slicing.AntioozeAmount, "AntioozeAmount", 1, true),
   //FLOAT_MEMBER (Slicing.AntioozeHaltRatio, "AntioozeHaltRatio", 0.2, true),
-  FLOAT_MEMBER (Slicing.AntioozeSpeed, "AntioozeSpeed", 1000.0, true),
+  FLOAT_MEMBER (Slicing.AntioozeSpeed, "AntioozeSpeed", 20.0, true),
   FLOAT_MEMBER (Slicing.AntioozeZlift, "AntioozeZlift", 0, true),
   BOOL_MEMBER  (Slicing.ZliftAlways, "ZliftAlways", false, true),
   BOOL_MEMBER  (Slicing.MoveNearest, "MoveNearest", true, true),
@@ -209,7 +209,7 @@ static struct {
   BOOL_MEMBER   (Slicing.FanControl, "FanControl", false, false),
   INT_MEMBER    (Slicing.MinFanSpeed, "MinFanSpeed", 150, false),
   INT_MEMBER    (Slicing.MaxFanSpeed, "MaxFanSpeed", 255, false),
-  INT_MEMBER    (Slicing.MaxOverhangSpeed, "MaxOverhangSpeed", 1000, false),
+  FLOAT_MEMBER    (Slicing.MaxOverhangSpeed, "MaxOverhangSpeed", 20, false),
 
   //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
   BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, true),
@@ -234,6 +234,7 @@ static struct {
   FLOAT_MEMBER  (Milling.ToolDiameter, "ToolDiameter", 2, true),
 
   // Misc.
+  BOOL_MEMBER (Misc.SpeedsAreMMperSec, "SpeedsAreMMperSec", false, false),
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
   //BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
   BOOL_MEMBER (Misc.TempReadingEnabled, "TempReadingEnabled", true, false),
@@ -344,7 +345,7 @@ static struct {
   //{ "Slicing.Optimization", 0.0, 10.0, 0.01, 0.1 },
   { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
   { "Slicing.AntioozeAmount", 0.0, 25.0, 0.1, 1 },
-  { "Slicing.AntioozeSpeed", 0.0, 10000.0, 25.0, 100.0 },
+  { "Slicing.AntioozeSpeed", 0.0, 1000.0, 1.0, 5.0 },
   //{ "Slicing.AntioozeHaltRatio", 0.0, 1.0, 0.01, 0.1 },
   { "Slicing.AntioozeZlift", 0.0, 10, 0.01, 0.1 },
   { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },
@@ -354,7 +355,7 @@ static struct {
   { "Slicing.MinLayertime", 0.0, 100, 0.1, 1 },
   { "Slicing.MinFanSpeed", 0, 255, 5, 25 },
   { "Slicing.MaxFanSpeed", 0, 255, 5, 25 },
-  { "Slicing.MaxOverhangSpeed", 0, 10000, 10, 100 },
+  { "Slicing.MaxOverhangSpeed", 0, 1000, 1, 10 },
   //{ "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
   { "Slicing.ShellOffset", -10, 10, 0.01, 0.1 },
   { "Slicing.FirstLayersNum", 0, 1000, 1, 10 },
@@ -375,11 +376,11 @@ static struct {
   { "Hardware.PrintMargin.X", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.PrintMargin.Y", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.PrintMargin.Z", 0.0, 100.0, 1.0, 5.0 },
-  { "Hardware.MinPrintSpeedXY", 1.0, 20000.0, 10.0, 100.0 },
-  { "Hardware.MaxPrintSpeedXY", 1.0, 20000.0, 10.0, 100.0 },
-  { "Hardware.MoveSpeed", 1.0, 20000.0, 10.0, 100.0 },
-  { "Hardware.MinPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
-  { "Hardware.MaxPrintSpeedZ", 1.0, 2500.0, 10.0, 100.0 },
+  { "Hardware.MinPrintSpeedXY", 0.1, 2000.0, 1.0, 10.0 },
+  { "Hardware.MaxPrintSpeedXY", 0.1, 2000.0, 1.0, 10.0 },
+  { "Hardware.MoveSpeed", 0.1, 2000.0, 1.0, 10.0 },
+  { "Hardware.MinPrintSpeedZ", 0.1, 250.0, 1.0, 10.0 },
+  { "Hardware.MaxPrintSpeedZ", 0.1, 250.0, 1.0, 10.0 },
   { "Hardware.ReceivingBufferSize", 1.0, 100.0, 1.0, 5.0 },
   { "Hardware.KeepLines", 100.0, 100000.0, 1.0, 500.0 },
 
@@ -390,14 +391,14 @@ static struct {
   { "Extruder.MaximumLineWidth", 0.0, 10.0, 0.01, 0.1 },
   { "Extruder.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
   { "Extruder.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
-  { "Extruder.EMaxSpeed", 1.0, 20000.0, 10.0, 100.0 },
-  { "Extruder.MaxShellSpeed", 1.0, 20000.0, 10.0, 100.0 },
+  { "Extruder.EMaxSpeed", 0.01, 2000.0, 0.1, 1.0 },
+  { "Extruder.MaxShellSpeed", 0.1, 2000.0, 1.0, 10.0 },
   // { "Extruder.DownstreamMultiplier", 0.01, 25.0, 0.01, 0.1 },
   // { "Extruder.DownstreamExtrusionMultiplier", 0.01, 25.0, 0.01, 0.1 },
 
   //Printer
   { "Printer.ExtrudeAmount", 0.0, 1000.0, 1.0, 10.0 },
-  { "Printer.ExtrudeSpeed", 0.0, 1000.0, 1.0, 10.0 },
+  { "Printer.ExtrudeSpeed", 0.0, 100.0, 0.1, 1.0 },
   { "Printer.FanVoltage", 0, 255, 5, 25 },
   // { "Printer.NozzleTemp", 0.0, 300.0, 1.0, 10.0 },
   // { "Printer.BedTemp", 0.0, 200.0, 1.0, 10.0 },
@@ -579,11 +580,6 @@ void Settings::set_defaults ()
     }
   }
 
-  //Slicing.ShrinkQuality = SHRINK_FAST;
-  // Slicing.NormalFilltype = ParallelInfill;
-  // Slicing.FullFilltype = ParallelInfill;
-  // Slicing.SupportFilltype = PolyInfill;
-
   GCode.m_impl->setDefaults();
 
   // The vectors map each to 3 spin boxes, one per dimension
@@ -712,6 +708,24 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     }
   } catch (const Glib::KeyFileError &err) {
   }
+
+
+  // if loading old settings with mm/min instead of mm/sec, recalc:
+  if (!Misc.SpeedsAreMMperSec) {
+    cerr << "Feedrates to mm/sec" << endl;
+    Hardware.MinPrintSpeedXY /= 60.0;
+    Hardware.MaxPrintSpeedXY /= 60.0;
+    Hardware.MoveSpeed /= 60.0;
+    Hardware.MinPrintSpeedZ /= 60.0;
+    Hardware.MaxPrintSpeedZ /= 60.0;
+    Extruder.EMaxSpeed /= 60.0;
+    Extruder.MaxShellSpeed /= 60.0;
+    Printer.ExtrudeSpeed /= 60.0;
+    Slicing.AntioozeSpeed /= 60.0;
+    Slicing.MaxOverhangSpeed /= 60.0;
+  }
+  Misc.SpeedsAreMMperSec = true;
+
 
   m_user_changed = false;
   m_signal_visual_settings_changed.emit();

@@ -201,7 +201,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
 	  state.MakeGCodeLine (Vector3d(P1.x,P1.y,z),
 			       Vector3d(P2.x,P2.y,z),
 			       Vector3d(0,0,0), 0,
-			       settings.Hardware.MaxPrintSpeedXY,
+			       settings.Hardware.MaxPrintSpeedXY * 60,
 			       extrusionfactor, 0,
 			       z,
 			       settings.Slicing, settings.Hardware);
@@ -211,7 +211,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
       Command g;
       g.Code = SETSPEED;
       g.where = Vector3d(P2.x, P2.y, z);
-      g.f=settings.Hardware.MinPrintSpeedZ;
+      g.f=settings.Hardware.MinPrintSpeedZ * 60;
       g.comment = "Move Z";
       g.e = 0;
       gcode.commands.push_back(g);
@@ -220,7 +220,7 @@ void Model::MakeRaft(GCodeState &state, double &z)
       // Move Z
       g.Code = ZMOVE;
       g.where = Vector3d(P2.x, P2.y, z);
-      g.f = settings.Hardware.MinPrintSpeedZ;
+      g.f = settings.Hardware.MinPrintSpeedZ * 60;
       g.comment = "Move Z";
       g.e = 0;
       gcode.commands.push_back(g);

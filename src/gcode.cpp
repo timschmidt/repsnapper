@@ -515,19 +515,19 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		    if( (!relativeE && commands[i].e == LastE)
 			|| (relativeE && commands[i].e == 0) )
 		      {
-			luma = 0.3 + 0.7 * speed / settings.Hardware.MoveSpeed;
+			luma = 0.3 + 0.7 * speed / settings.Hardware.MoveSpeed * 60;
 			Color = settings.Display.GCodeMoveRGBA;
 			extrwidth = 0;
 		      }
 		    else
 		      {
-			luma = 0.3 + 0.7 * speed / settings.Hardware.MaxPrintSpeedXY;
+			luma = 0.3 + 0.7 * speed / settings.Hardware.MaxPrintSpeedXY * 60;
 			if (liveprinting) {
 			  Color = settings.Display.GCodePrintingRGBA;
 			} else
 			  Color = settings.Display.GCodeExtrudeRGBA;
 		      }
-		    if(settings.Display.LuminanceShowsSpeed)
+		    if(settings.Display.LuminanceShowsSpeed * 60)
 		      Color *= luma;
 		    commands[i].draw(pos, linewidth, Color, extrwidth,
 				     arrows, debug_arcs);

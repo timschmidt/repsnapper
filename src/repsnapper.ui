@@ -13,28 +13,6 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
-  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
-    <property name="upper">30</property>
-    <property name="value">10</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
-    <property name="upper">20</property>
-    <property name="value">8</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
   <object class="GtkAction" id="Fullscreen">
     <property name="label">Fullscreen</property>
     <property name="short_label" translatable="yes">Fullscreen</property>
@@ -78,6 +56,28 @@
     <property name="label" translatable="yes">Save Settings As</property>
     <property name="short_label" translatable="yes">Save Settings As</property>
     <property name="tooltip" translatable="yes">Save settings in a custom file</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
+    <property name="upper">30</property>
+    <property name="value">10</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
+    <property name="upper">20</property>
+    <property name="value">8</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
@@ -1285,9 +1285,8 @@ and others I forgot... (needs updating)</property>
                     <property name="use_underline">True</property>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
-                    <property name="padding">5</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
@@ -2289,10 +2288,7 @@ and others I forgot... (needs updating)</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
                                             <property name="n_rows">3</property>
-                                            <property name="n_columns">4</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
+                                            <property name="n_columns">5</property>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -2309,6 +2305,10 @@ and others I forgot... (needs updating)</property>
                                                 <property name="xalign">0.40000000596046448</property>
                                                 <property name="label" translatable="yes">Layer Height:</property>
                                               </object>
+                                              <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="right_attach">2</property>
+                                              </packing>
                                             </child>
                                             <child>
                                               <object class="GtkSpinButton" id="Slicing.LayerThickness">
@@ -2323,8 +2323,8 @@ and others I forgot... (needs updating)</property>
                                                 <property name="digits">2</property>
                                               </object>
                                               <packing>
-                                                <property name="left_attach">1</property>
-                                                <property name="right_attach">2</property>
+                                                <property name="left_attach">2</property>
+                                                <property name="right_attach">3</property>
                                                 <property name="x_options">GTK_FILL</property>
                                                 <property name="y_options">GTK_FILL</property>
                                               </packing>
@@ -2341,8 +2341,8 @@ and others I forgot... (needs updating)</property>
                                                 <property name="secondary_icon_sensitive">True</property>
                                               </object>
                                               <packing>
-                                                <property name="left_attach">1</property>
-                                                <property name="right_attach">2</property>
+                                                <property name="left_attach">2</property>
+                                                <property name="right_attach">3</property>
                                                 <property name="top_attach">1</property>
                                                 <property name="bottom_attach">2</property>
                                                 <property name="x_options">GTK_FILL</property>
@@ -2356,6 +2356,8 @@ and others I forgot... (needs updating)</property>
                                                 <property name="label" translatable="yes">Shells:</property>
                                               </object>
                                               <packing>
+                                                <property name="left_attach">1</property>
+                                                <property name="right_attach">2</property>
                                                 <property name="top_attach">1</property>
                                                 <property name="bottom_attach">2</property>
                                               </packing>
@@ -2372,8 +2374,8 @@ and others I forgot... (needs updating)</property>
                                                 <property name="secondary_icon_sensitive">True</property>
                                               </object>
                                               <packing>
-                                                <property name="left_attach">3</property>
-                                                <property name="right_attach">4</property>
+                                                <property name="left_attach">4</property>
+                                                <property name="right_attach">5</property>
                                                 <property name="x_options">GTK_FILL</property>
                                                 <property name="y_options">GTK_FILL</property>
                                               </packing>
@@ -2385,8 +2387,8 @@ and others I forgot... (needs updating)</property>
                                                 <property name="label" translatable="yes">Skins:</property>
                                               </object>
                                               <packing>
-                                                <property name="left_attach">2</property>
-                                                <property name="right_attach">3</property>
+                                                <property name="left_attach">3</property>
+                                                <property name="right_attach">4</property>
                                                 <property name="top_attach">1</property>
                                                 <property name="bottom_attach">2</property>
                                               </packing>
@@ -2404,8 +2406,8 @@ and others I forgot... (needs updating)</property>
                                                 <property name="secondary_icon_sensitive">True</property>
                                               </object>
                                               <packing>
-                                                <property name="left_attach">3</property>
-                                                <property name="right_attach">4</property>
+                                                <property name="left_attach">4</property>
+                                                <property name="right_attach">5</property>
                                                 <property name="top_attach">1</property>
                                                 <property name="bottom_attach">2</property>
                                                 <property name="x_options">GTK_FILL</property>
@@ -2419,9 +2421,21 @@ and others I forgot... (needs updating)</property>
                                                 <property name="label" translatable="yes">Infill %</property>
                                               </object>
                                               <packing>
-                                                <property name="left_attach">2</property>
-                                                <property name="right_attach">3</property>
+                                                <property name="left_attach">3</property>
+                                                <property name="right_attach">4</property>
                                               </packing>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
                                             </child>
                                           </object>
                                           <packing>
@@ -2431,196 +2445,7 @@ and others I forgot... (needs updating)</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkTable" id="table21">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">False</property>
-                                            <property name="n_columns">4</property>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                            <child>
-                                              <placeholder/>
-                                            </child>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">True</property>
-                                            <property name="position">1</property>
-                                          </packing>
+                                          <placeholder/>
                                         </child>
                                       </object>
                                     </child>
@@ -5251,6 +5076,7 @@ and others I forgot... (needs updating)</property>
                                         <property name="secondary_icon_activatable">False</property>
                                         <property name="primary_icon_sensitive">True</property>
                                         <property name="secondary_icon_sensitive">True</property>
+                                        <property name="digits">1</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">4</property>
@@ -5268,6 +5094,7 @@ and others I forgot... (needs updating)</property>
                                         <property name="secondary_icon_activatable">False</property>
                                         <property name="primary_icon_sensitive">True</property>
                                         <property name="secondary_icon_sensitive">True</property>
+                                        <property name="digits">1</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">2</property>
@@ -5283,6 +5110,7 @@ and others I forgot... (needs updating)</property>
                                         <property name="secondary_icon_activatable">False</property>
                                         <property name="primary_icon_sensitive">True</property>
                                         <property name="secondary_icon_sensitive">True</property>
+                                        <property name="digits">1</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">2</property>
@@ -5300,6 +5128,7 @@ and others I forgot... (needs updating)</property>
                                         <property name="secondary_icon_activatable">False</property>
                                         <property name="primary_icon_sensitive">True</property>
                                         <property name="secondary_icon_sensitive">True</property>
+                                        <property name="digits">1</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">4</property>
@@ -5363,7 +5192,7 @@ and others I forgot... (needs updating)</property>
                               <object class="GtkLabel" id="label37">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">&lt;b&gt;Axis Moving Speeds (mm/min)&lt;/b&gt;</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Axis Moving Speeds (mm/sec)&lt;/b&gt;</property>
                                 <property name="use_markup">True</property>
                               </object>
                             </child>
@@ -5975,6 +5804,7 @@ and others I forgot... (needs updating)</property>
                                     <property name="secondary_icon_activatable">False</property>
                                     <property name="primary_icon_sensitive">True</property>
                                     <property name="secondary_icon_sensitive">True</property>
+                                    <property name="digits">1</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">1</property>
@@ -6002,6 +5832,7 @@ and others I forgot... (needs updating)</property>
                                     <property name="secondary_icon_activatable">False</property>
                                     <property name="primary_icon_sensitive">True</property>
                                     <property name="secondary_icon_sensitive">True</property>
+                                    <property name="digits">1</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">3</property>
@@ -6031,6 +5862,7 @@ and others I forgot... (needs updating)</property>
                                     <property name="secondary_icon_activatable">False</property>
                                     <property name="primary_icon_sensitive">True</property>
                                     <property name="secondary_icon_sensitive">True</property>
+                                    <property name="digits">2</property>
                                   </object>
                                   <packing>
                                     <property name="left_attach">5</property>
@@ -6045,7 +5877,7 @@ and others I forgot... (needs updating)</property>
                           <object class="GtkLabel" id="label157">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">&lt;b&gt;Speeds (mm/min)&lt;/b&gt;</property>
+                            <property name="label" translatable="yes">&lt;b&gt;Speeds (mm/sec)&lt;/b&gt;</property>
                             <property name="use_markup">True</property>
                           </object>
                         </child>
@@ -7611,7 +7443,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label160">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Max. Overhang Speed (mm/min):</property>
+                                        <property name="label" translatable="yes">Max. Overhang Speed (mm/sec):</property>
                                       </object>
                                       <packing>
                                         <property name="right_attach">2</property>
@@ -7629,6 +7461,7 @@ and others I forgot... (needs updating)</property>
                                         <property name="secondary_icon_activatable">False</property>
                                         <property name="primary_icon_sensitive">True</property>
                                         <property name="secondary_icon_sensitive">True</property>
+                                        <property name="digits">1</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">2</property>
@@ -7762,7 +7595,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label48">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Speed (mm/min):</property>
+                                        <property name="label" translatable="yes">Speed (mm/sec):</property>
                                       </object>
                                       <packing>
                                         <property name="top_attach">1</property>
@@ -7779,6 +7612,7 @@ and others I forgot... (needs updating)</property>
                                         <property name="secondary_icon_activatable">False</property>
                                         <property name="primary_icon_sensitive">True</property>
                                         <property name="secondary_icon_sensitive">True</property>
+                                        <property name="digits">1</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">1</property>
@@ -9661,6 +9495,22 @@ and others I forgot... (needs updating)</property>
                                         <property name="expand">False</property>
                                         <property name="fill">True</property>
                                         <property name="position">0</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkCheckButton" id="Misc.SpeedsAreMMperSec">
+                                        <property name="label" translatable="yes">Speeds are handled as mm/sec</property>
+                                        <property name="use_action_appearance">False</property>
+                                        <property name="visible">True</property>
+                                        <property name="sensitive">False</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="receives_default">False</property>
+                                        <property name="draw_indicator">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                        <property name="fill">True</property>
+                                        <property name="position">1</property>
                                       </packing>
                                     </child>
                                   </object>
