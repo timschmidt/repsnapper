@@ -177,7 +177,7 @@ class View : public Gtk::Window
   void inhibit_print_changed();
   void alert (Gtk::MessageType t, const char *message,
 	      const char *secondary);
-  void rotate_selection (Vector4d rotate);
+  bool rotate_selection (Vector3d axis, double angle);
   void twist_selection (double angle);
   void invertnormals_selection ();
   void hollow_selection ();

@@ -1003,18 +1003,27 @@ void View::rot_object_xyz()
       objects[i]->transform3D.rotate_to(xangle, yangle, zangle);
     }
   update_scale_value();
+  update_rot_value();
   m_model->ModelChanged();
 }
 
-void View::rotate_selection (Vector4d rotate)
+bool View::rotate_selection (Vector3d axis, double angle)
 {
   vector<Shape*> shapes;
   vector<TreeObject*> objects;
   get_selected_objects (objects, shapes);
-  for (uint i=0; i<shapes.size() ; i++)
-    m_model->RotateObject (shapes[i], NULL, rotate);
-  queue_draw();
+  if (objects.size()>0)
+    for (uint o=0; o<objects.size(); o++) {
+      Transform3D &transf = objects[o]->transform3D;
+      transf.rotate(axis, angle);
+    }
+  else if (shapes.size()>0)
+    for (uint i=0; i<shapes.size() ; i++)
+      shapes[i]->Rotate(axis, angle);
+  update_rot_value();
+  return true;
 }
+
 void View::update_rot_value()
 {
   toggle_block = true;
@@ -1279,7 +1288,6 @@ bool View::moveSelected(float x, float y, float z)
     }
   else {
     m_model->translateGCode(Vector3d(10*x,10*y,z));
-    return true;
   }
   return true;
 }

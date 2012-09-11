@@ -214,22 +214,29 @@ bool Render::on_expose_event(GdkEventExpose* event)
 bool Render::on_key_press_event(GdkEventKey* event) {
   // cerr << "key " << event->keyval << endl;
   bool moveZ = (event->state & GDK_SHIFT_MASK);
+  bool rotate = (event->state & GDK_CONTROL_MASK);
+  double tendeg = M_PI/18.;
+
   bool ret = false;
   switch (event->keyval)
     {
     case GDK_Up: case GDK_KP_Up:
-      if (moveZ) ret = m_view->moveSelected( 0.0,  0.0, 1.0 );
-      else ret = m_view->moveSelected( 0.0,  1.0 );
+      if (rotate)     ret = m_view->rotate_selection(Vector3d(1.,0.,0.), tendeg);
+      else if (moveZ) ret = m_view->moveSelected( 0.0,  0.0, 1.0 );
+      else            ret = m_view->moveSelected( 0.0,  1.0 );
       break;
     case GDK_Down: case GDK_KP_Down:
-      if (moveZ) ret = m_view->moveSelected( 0.0,  0.0, -1.0 );
-      else ret = m_view->moveSelected( 0.0, -1.0 );
+      if (rotate)     ret = m_view->rotate_selection(Vector3d(1.,0.,0.), -tendeg);
+      else if (moveZ) ret = m_view->moveSelected( 0.0,  0.0, -1.0 );
+      else            ret = m_view->moveSelected( 0.0, -1.0 );
       break;
     case GDK_Left: case GDK_KP_Left:
-      ret = m_view->moveSelected( -1.0, 0.0 );
+      if (rotate)     ret = m_view->rotate_selection(Vector3d(0.,0.,1.), tendeg);
+      else            ret = m_view->moveSelected( -1.0, 0.0 );
       break;
     case GDK_Right: case GDK_KP_Right:
-      ret = m_view->moveSelected(  1.0, 0.0 );
+      if (rotate)     ret = m_view->rotate_selection(Vector3d(0.,0.,1.), -tendeg);
+      else            ret = m_view->moveSelected(  1.0, 0.0 );
       break;
     }
   queue_draw();
@@ -416,20 +423,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  axis = Vector3d(0,0,delta.x());
 	else
 	  axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
-	if (!m_view->get_selected_objects(objects, shapes))
-	  return true;
-	if (objects.size()>0) {
-	  for (uint o=0; o<objects.size(); o++) {
-	    Transform3D &transf = objects[o]->transform3D;
-	    transf.rotate(axis, -delta.length()/100.);
-	  }
-	}
-	else if (shapes.size()>0) {
-	  for (uint s=0; s<shapes.size(); s++) {
-	    shapes[s]->Rotate(axis, -delta.length()/100.);
-	  }
-	}
-	m_view->update_rot_value();
+	m_view->rotate_selection(axis, -delta.length()/100.);
 	m_dragStart = dragp;
       } else {  // move view XY  / pan
 	moveArcballTrans(m_transform, delta3f);
