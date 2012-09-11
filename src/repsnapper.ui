@@ -3444,7 +3444,7 @@ and others I forgot... (needs updating)</property>
                                       <object class="GtkLabel" id="label27">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Speed (mm/min)</property>
+                                        <property name="label" translatable="yes">Speed (mm/s)</property>
                                       </object>
                                       <packing>
                                         <property name="top_attach">1</property>
@@ -3502,6 +3502,7 @@ and others I forgot... (needs updating)</property>
                                         <property name="secondary_icon_activatable">False</property>
                                         <property name="primary_icon_sensitive">True</property>
                                         <property name="secondary_icon_sensitive">True</property>
+                                        <property name="digits">1</property>
                                       </object>
                                       <packing>
                                         <property name="left_attach">1</property>
