@@ -26,7 +26,7 @@
 #include <iostream>
 
 #include "poly.h"
-#include "gcodestate.h"
+#include "gcode/gcodestate.h"
 
 #include <cairomm/cairomm.h>
 
@@ -44,7 +44,7 @@ public:
 
   int LayerNo;
   double thickness;
-  double Z;	
+  double Z;
   double getZ() const {return Z;}
   void setZ(double z){Z=z;}
   void setSkins(uint skins_){skins = skins_;}
@@ -58,7 +58,7 @@ public:
   bool setMinMax(const vector<Poly> &polys);
 
   bool pointInPolygons(const Vector2d &p) const;
-  
+
     /* void setBBox(Vector2d min, Vector2d max); */
   /* void setBBox(vector<Vector2d> minmax); */
   /* void setBBox(Vector3d min, Vector3d max); */
@@ -72,14 +72,14 @@ public:
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
   void CalcInfill (const Settings &settings);
-  void CalcRaftInfill (const vector<Poly> &polys, 
+  void CalcRaftInfill (const vector<Poly> &polys,
 		       double extrusionfactor, double infilldistance,
 		       double rotation);
 
   vector<double> getBridgeRotations(const vector<Poly> &poly) const;
   void calcBridgeAngles(const Layer *layerbelow);
-  
-  void MakeShells(const Settings &settings); 
+
+  void MakeShells(const Settings &settings);
   // uint shellcount, double extrudedWidth, double shelloffset,
   // bool makeskirt, double skirtdistance, double infilloverlap);
   /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */
@@ -108,15 +108,15 @@ public:
 
   vector<Poly> getOverhangs() const;
 
-  
-  void setFullFillPolygons(const vector<Poly> &polys);  
+
+  void setFullFillPolygons(const vector<Poly> &polys);
   void addFullFillPolygons(const vector<Poly> &polys);
   void addFullPolygons(const vector<Poly> &fullpolys, bool decor=false);
   void addFullPolygons(const vector<ExPoly> &expolys, bool decor=false);
   void setBridgePolygons(const vector<ExPoly> &polys);
   void addBridgePolygons(const vector<ExPoly> &polys);
   void setBridgeAngles(const vector<double> &angles);
-  void makeSkinPolygons(); 
+  void makeSkinPolygons();
   void setNormalFillPolygons(const vector<Poly> &polys);
   void setSupportPolygons(const vector<Poly> &polys);
   void setSkirtPolygon(const Poly &poly);
@@ -126,11 +126,11 @@ public:
   /* 			    Vector2d &startPoint, */
   /* 			    vector<printline> &lines, */
   /* 			    double linewidth,double linewidthratio,double optratio) const; */
-  
+
 
   void MakeGcode (Vector3d &start,
 		  vector<Command> &commands,
-  		  double offsetZ, 
+  		  double offsetZ,
   		  const Settings &settings) const;
 
   string info() const ;
@@ -138,16 +138,16 @@ public:
   void Draw(const Settings &settings);
 
   void DrawRulers(const Vector2d &point);
- 
+
   void Clear();
 
   void addPolygons(vector<Poly> &polys);
   void cleanupPolygons();
-  int addShape(const Matrix4d &T, const Shape &shape, double z, 
+  int addShape(const Matrix4d &T, const Shape &shape, double z,
 	       double &max_gradient, double max_supportangle);
 
   double area() const;
-  
+
   string SVGpath(const Vector2d &trans=Vector2d::ZERO) const;
 
  private:
@@ -163,11 +163,11 @@ public:
   Infill * supportInfill;
   Infill * decorInfill;
   Infill * thinInfill;             // one-line infill for thin features
-  
+
   vector<Poly> polygons;		// original polygons directly from model
   vector< vector<Poly> > shellPolygons; // all shells except innermost
   vector<Poly> thinPolygons;            // areas thinner than 2 extrusion lines
-  vector<Poly> fillPolygons;	        // innermost shell 
+  vector<Poly> fillPolygons;	        // innermost shell
   vector<Poly> fullFillPolygons;        // fully filled polygons (uncovered)
   vector<ExPoly> bridgePolygons;        // fully filled ex-polygons with holes for bridges
   vector<double> bridge_angles;         // angles of each bridge ex-polygon

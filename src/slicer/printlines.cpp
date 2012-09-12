@@ -20,7 +20,7 @@
 #include "printlines.h"
 #include "poly.h"
 #include "layer.h"
-#include "gcodestate.h"
+#include "gcode/gcodestate.h"
 
 ///////////// PLine3: single 3D printline //////////////////////
 

@@ -36,12 +36,10 @@ SHARED_SRC= \
 	src/model2.cpp \
 	src/view.cpp \
 	src/gllight.cpp \
-	src/gcode.cpp \
-	src/gcodestate.cpp \
-	src/command.cpp \
 	src/arcball.cpp \
 	src/objtree.cpp \
 	src/shape.cpp \
+	src/triangle.cpp \
 	src/flatshape.cpp \
 	src/files.cpp \
 	src/filechooser.cpp \
@@ -58,14 +56,12 @@ SHARED_SRC= \
 SHARED_INC= \
 	src/arcball.h \
 	src/convert.h \
-	src/gcode.h \
-	src/gcodestate.h \
-	src/command.h \
 	src/gllight.h \
 	src/miniball.h \
 	src/model.h \
 	src/objtree.h \
 	src/shape.h \
+	src/triangle.h \
 	src/flatshape.h \
 	src/files.h \
 	src/filechooser.h \
@@ -82,6 +78,7 @@ SHARED_INC= \
 	src/types.h
 
 include src/slicer/Makefile.am
+include src/gcode/Makefile.am
 
 # TEST_SOURCES=unittest.cpp
 

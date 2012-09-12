@@ -29,7 +29,7 @@
 
 
 #include "objtree.h"
-#include "gcode.h"
+#include "gcode/gcode.h"
 /* #include "gcodestate.h" */
 #include "settings.h"
 /* #include "progress.h" */
