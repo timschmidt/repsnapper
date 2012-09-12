@@ -99,7 +99,7 @@ string timeleft_str(long seconds) {
 }
 
 
-bool ViewProgress::update (double value, bool take_priority)
+bool ViewProgress::update (const double value, bool take_priority)
 {
   // Don't allow progress to go backward
   if (value < m_bar_cur)

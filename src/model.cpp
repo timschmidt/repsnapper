@@ -304,16 +304,21 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
 
 void Model::translateGCode(Vector3d trans)
 {
+  if (is_calculating) return;
+  if (is_printing) return;
+  is_calculating=true;
   gcode.translate(trans);
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();
   string GcodeLayer = settings.GCode.getLayerText();
   string GcodeEnd   = settings.GCode.getEndText();
-  m_progress->start(_("Moving GCode"),gcode.commands.size());
   gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
 		  settings.Slicing.RelativeEcode,
 		  m_progress);
-  m_progress->stop();
+  Max = gcode.Max;
+  Min = gcode.Min;
+  Center = (Max + Min) / 2.0;
+  is_calculating=false;
 }
 
 
@@ -321,6 +326,7 @@ void Model::translateGCode(Vector3d trans)
 void Model::ModelChanged()
 {
   if (m_inhibit_modelchange) return;
+  if (objtree.empty()) return;
   //printer.update_temp_poll_interval(); // necessary?
   if (!is_printing) {
     CalcBoundingBoxAndCenter();

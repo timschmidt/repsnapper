@@ -65,7 +65,6 @@ class View : public Gtk::Window
   /* void add_statusbar_msg(const char *name, const char *message); */
   /* void add_statusbar_msg(Gtk::Widget *widget, const char *message); */
   void update_scale_value();
-  void scale_object();
   void scale_object_x();
   void scale_object_y();
   void scale_object_z();
@@ -148,7 +147,6 @@ class View : public Gtk::Window
   void update_settings_gui();
   void handle_ui_settings_changed();
   bool key_pressed_event(GdkEventKey *event);
-  bool moveSelected( float x, float y, float z=0);
 
   void setModel (Model *model);
   void showAllWidgets();
@@ -177,7 +175,10 @@ class View : public Gtk::Window
   void inhibit_print_changed();
   void alert (Gtk::MessageType t, const char *message,
 	      const char *secondary);
+  bool move_selection( float x, float y, float z=0);
   bool rotate_selection (Vector3d axis, double angle);
+  void scale_selection();
+  void scale_selection_to(const double factor);
   void twist_selection (double angle);
   void invertnormals_selection ();
   void hollow_selection ();

@@ -80,6 +80,8 @@ public:
 	~ObjectsTree();
 
 	void clear();
+	bool empty() const {return Objects.size()==0; }
+
 	void DeleteSelected(vector<Gtk::TreeModel::Path> &iter);
 	//void draw(Settings &settings, Gtk::TreeModel::iterator &iter);
 	void newObject();

@@ -60,8 +60,9 @@ double GCode::GetTotalExtruded(bool relativeEcode) const
 
 void GCode::translate(Vector3d trans)
 {
-  for (uint i=0; i<commands.size(); i++)
+  for (uint i=0; i<commands.size(); i++) {
     commands[i].where += trans;
+  }
   Min+=trans;
   Max+=trans;
   Center+=trans;
@@ -278,6 +279,7 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 		    // if (lastZ > 0){ // don't record first layer
 		    unsigned long num = loaded_commands.size();
 		    layerchanges.push_back(num);
+		    loaded_commands.push_back(Command(LAYERCHANGE, layerchanges.size()));
 		    // }
 		    lastZ = globalPos.z();
 		    buffer_zpos_lines.push_back(LineNr-1);
@@ -298,9 +300,7 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 
 	buffer->set_text(alltext.str());
 
-	Center.x() = (Max.x() + Min.x() )/2;
-	Center.y() = (Max.y() + Min.y() )/2;
-	Center.z() = (Max.z() + Min.z() )/2;
+	Center = (Max + Min)/2;
 
 	model->m_signal_gcode_changed.emit();
 
@@ -583,13 +583,12 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	GcodeTxt += "\n; Startcode\n"+GcodeStart + "; End Startcode\n\n";
 
 	layerchanges.clear();
-
-	progress->restart(_("Collecting GCode"),commands.size());
+	if (progress) progress->restart(_("Collecting GCode"), commands.size());
 	int progress_steps=(int)(commands.size()/100);
 	if (progress_steps==0) progress_steps=1;
 
 	for (uint i = 0; i < commands.size(); i++) {
-	  if (i%progress_steps==0) if (!progress->update(i)) break;
+	  if (progress && i%progress_steps==0 && !progress->update(i)) break;
 
 	  if ( commands[i].Code == LAYERCHANGE ) {
 	    layerchanges.push_back(i);
@@ -620,6 +619,7 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	    buffer_zpos_lines.push_back(i);
 	}
 
+	if (progress) progress->stop();
 
 	  // 	oss.str( "" );
 	// 	switch(commands[i].Code)

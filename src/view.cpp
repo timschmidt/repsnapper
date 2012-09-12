@@ -1004,7 +1004,6 @@ void View::rot_object_xyz()
     }
   update_scale_value();
   update_rot_value();
-  m_model->ModelChanged();
 }
 
 bool View::rotate_selection (Vector3d axis, double angle)
@@ -1020,6 +1019,7 @@ bool View::rotate_selection (Vector3d axis, double angle)
   else if (shapes.size()>0)
     for (uint i=0; i<shapes.size() ; i++)
       shapes[i]->Rotate(axis, angle);
+  update_scale_value();
   update_rot_value();
   return true;
 }
@@ -1273,20 +1273,20 @@ void View::temp_changed()
     m_temps[i]->update_temp (m_printer->get_temp((TempType) i));
 }
 
-bool View::moveSelected(float x, float y, float z)
+bool View::move_selection(float x, float y, float z)
 {
   vector<Shape*> shapes;
   vector<TreeObject*> objects;
   get_selected_objects (objects, shapes);
-  if (shapes.size()>0)
+  if (shapes.size()>0) {
     for (uint s=0; s<shapes.size(); s++) {
-      shapes[s]->transform3D.move(Vector3d(x,y,z));
+      shapes[s]->move(Vector3d(x,y,z));
     }
-  else if (objects.size()>0)
+  } else if (objects.size()>0) {
     for (uint o=0; o<objects.size(); o++) {
       objects[o]->transform3D.move(Vector3d(x,y,z));
     }
-  else {
+  } else {
     m_model->translateGCode(Vector3d(10*x,10*y,z));
   }
   return true;
@@ -1324,14 +1324,6 @@ bool View::key_pressed_event(GdkEventKey *event)
     case GDK_KP_Delete:
       delete_selected_objects();
       return true;
-    case GDK_Up: case GDK_KP_Up:
-      return moveSelected( 0.0,  1.0 );
-    case GDK_Down: case GDK_KP_Down:
-      return moveSelected( 0.0, -1.0 );
-    case GDK_Left: case GDK_KP_Left:
-      return moveSelected( -1.0, 0.0 );
-    case GDK_Right: case GDK_KP_Right:
-      return moveSelected(  1.0, 0.0 );
     default:
       return false;
     }
@@ -1401,7 +1393,7 @@ View::View(BaseObjectType* cobject,
   m_treeview->get_selection()->signal_changed().connect
     (sigc::mem_fun(*this, &View::tree_selection_changed));
   scale_value->signal_value_changed().connect
-    (sigc::mem_fun(*this, &View::scale_object));
+    (sigc::mem_fun(*this, &View::scale_selection));
   m_builder->get_widget("scale_x", scale_value);
   scale_value->set_range(0.01, 10.0);
   scale_value->set_value(1.0);
@@ -1883,23 +1875,28 @@ void View::stop_progress()
 }
 
 
-void View::scale_object()
+void View::scale_selection()
 {
   if (toggle_block) return;
   double scale=1;
   Gtk::SpinButton *scale_value;
   m_builder->get_widget("m_scale_value", scale_value);
   scale = scale_value->get_value();
+  scale_selection_to(scale);
+}
+
+void View::scale_selection_to(const double factor)
+{
   vector<Shape*> shapes;
   vector<TreeObject*> objects;
   get_selected_objects (objects, shapes);
   if (shapes.size()>0)
     for (uint i=0; i<shapes.size() ; i++) {
-      shapes[i]->transform3D.scale(scale);
+      shapes[i]->transform3D.scale(factor);
     }
   else if (objects.size()>0)
     for (uint i=0; i<objects.size() ; i++) {
-      objects[i]->transform3D.scale(scale);
+      objects[i]->transform3D.scale(factor);
     }
   m_model->ModelChanged();
 }

@@ -222,24 +222,28 @@ bool Render::on_key_press_event(GdkEventKey* event) {
     {
     case GDK_Up: case GDK_KP_Up:
       if (rotate)     ret = m_view->rotate_selection(Vector3d(1.,0.,0.), tendeg);
-      else if (moveZ) ret = m_view->moveSelected( 0.0,  0.0, 1.0 );
-      else            ret = m_view->moveSelected( 0.0,  1.0 );
+      else if (moveZ) ret = m_view->move_selection( 0.0,  0.0, 1.0 );
+      else            ret = m_view->move_selection( 0.0,  1.0 );
       break;
     case GDK_Down: case GDK_KP_Down:
       if (rotate)     ret = m_view->rotate_selection(Vector3d(1.,0.,0.), -tendeg);
-      else if (moveZ) ret = m_view->moveSelected( 0.0,  0.0, -1.0 );
-      else            ret = m_view->moveSelected( 0.0, -1.0 );
+      else if (moveZ) ret = m_view->move_selection( 0.0,  0.0, -1.0 );
+      else            ret = m_view->move_selection( 0.0, -1.0 );
       break;
     case GDK_Left: case GDK_KP_Left:
       if (rotate)     ret = m_view->rotate_selection(Vector3d(0.,0.,1.), tendeg);
-      else            ret = m_view->moveSelected( -1.0, 0.0 );
+      else            ret = m_view->move_selection( -1.0, 0.0 );
       break;
     case GDK_Right: case GDK_KP_Right:
       if (rotate)     ret = m_view->rotate_selection(Vector3d(0.,0.,1.), -tendeg);
-      else            ret = m_view->moveSelected(  1.0, 0.0 );
+      else            ret = m_view->move_selection(  1.0, 0.0 );
       break;
     }
-  queue_draw();
+  if (ret) {
+    m_view->get_model()->ModelChanged();
+    queue_draw();
+  }
+  grab_focus();
   return ret;
 }
 
@@ -250,7 +254,7 @@ bool Render::on_key_release_event(GdkEventKey* event) {
     case GDK_Down: case GDK_KP_Down:
     case GDK_Left: case GDK_KP_Left:
     case GDK_Right: case GDK_KP_Right:
-      m_view->get_model()->ModelChanged();
+      //m_view->get_model()->ModelChanged(); // interrupts key_press_event actions!
       return false;
     }
   return true;
