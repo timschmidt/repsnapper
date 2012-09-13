@@ -801,6 +801,7 @@ void Model::ConvertToGCode()
   string GcodeEnd   = settings.GCode.getEndText();
 
   gcode.clear();
+  gcode.set_E_letter(settings.Extruder.GCLetter[0]);
   GCodeState state(gcode);
 
   Infill::clearPatterns();

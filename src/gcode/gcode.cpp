@@ -32,7 +32,8 @@
 #include "settings.h"
 
 
-GCode::GCode()
+GCode::GCode(const char e_letter)
+ : E_letter(e_letter)
 {
   Min.set(99999999.0,99999999.0,99999999.0);
   Max.set(-99999999.0,-99999999.0,-99999999.0);
@@ -100,20 +101,20 @@ void GCode::updateWhereAtCursor()
   // Glib::RefPtr<Gtk::TextBuffer> buf = iter.get_buffer();
   if (line == 0) return;
   string text = getLineAt(buffer, line-1);
-  Command commandbefore(text, Vector3d::ZERO);
+  Command commandbefore(text, Vector3d::ZERO, E_letter);
   Vector3d where = commandbefore.where;
   // complete position of previous line
   int l = line;
   while (l>0 && where.x()==0) {
     l--;
     text = getLineAt(buffer, l);
-    where.x() = Command(text, Vector3d::ZERO).where.x();
+    where.x() = Command(text, Vector3d::ZERO, E_letter).where.x();
   }
   l = line;
   while (l>0 && where.y()==0) {
     l--;
     text = getLineAt(buffer, l);
-    where.y() = Command(text, Vector3d::ZERO).where.y();
+    where.y() = Command(text, Vector3d::ZERO, E_letter).where.y();
   }
   l = line;
   // find last z pos fast
@@ -123,7 +124,7 @@ void GCode::updateWhereAtCursor()
 	if (int(buffer_zpos_lines[i]) <= l) {
 	  text = getLineAt(buffer, buffer_zpos_lines[i]);
 	  //cerr << text << endl;
-	  Command c(text, Vector3d::ZERO);
+	  Command c(text, Vector3d::ZERO, E_letter);
 	  where.z() = c.where.z();
 	  if (where.z()!=0) break;
 	}
@@ -131,12 +132,12 @@ void GCode::updateWhereAtCursor()
   while (l>0 && where.z()==0) {
     l--;
     text = getLineAt(buffer, l);
-    Command c(text, Vector3d::ZERO);
+    Command c(text, Vector3d::ZERO, E_letter);
     where.z() = c.where.z();
   }
   // current move:
   text = getLineAt(buffer, line);
-  Command command(text, where);
+  Command command(text, where, E_letter);
   Vector3d dwhere = command.where - where;
   where.z() -= 0.0000001;
   currentCursorWhere = where+dwhere;
@@ -198,9 +199,9 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 		Command command;
 
 		if (relativePos)
-		  command = Command(s, Vector3d::ZERO);
+		  command = Command(s, Vector3d::ZERO, E_letter);
 		else
-		  command = Command(s, globalPos);
+		  command = Command(s, globalPos, E_letter);
 
 		if (command.Code == COMMENT) {
 		  continue;
@@ -601,7 +602,8 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	    cerr << i << " Z < 0 "  << commands[i].info() << endl;
 	  }
 	  else {
-	    GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, lastF, RelativeEcode) + "\n";
+	    GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, lastF,
+						 RelativeEcode, E_letter) + "\n";
 	  }
 	}
 

@@ -161,7 +161,7 @@ bool RRSerial::connect(const char * serialname)
     return false;
 
 
-  iochannel = IOChannel::create_from_win32_fd(m_hCommPort);
+  // iochannel = IOChannel::create_from_win32_fd(m_hCommPort);
 
   if (!iochannel)
     return false;

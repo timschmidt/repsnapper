@@ -307,6 +307,8 @@ void Model::translateGCode(Vector3d trans)
   if (is_printing) return;
   is_calculating=true;
   gcode.translate(trans);
+  gcode.set_E_letter(settings.Extruder.GCLetter[0]);
+
   string GcodeTxt;
   string GcodeStart = settings.GCode.getStartText();
   string GcodeLayer = settings.GCode.getLayerText();

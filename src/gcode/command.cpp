@@ -165,7 +165,7 @@ Command::Command(const Command &rhs)
  * @param defaultpos
  * @param [OUT] gcodeline the unparsed portion of the string
  */
-Command::Command(string gcodeline, const Vector3d &defaultpos)
+Command::Command(string gcodeline, const Vector3d &defaultpos, const char E_letter)
   : where(defaultpos),  arcIJK(0,0,0), is_value(false),  f(0), e(0), abs_extr(0)
 {
   // Notes:
@@ -198,7 +198,6 @@ Command::Command(string gcodeline, const Vector3d &defaultpos)
       comment = "";
       break;
     case 'S':  value      = num; break;
-    case 'E':  e          = num; break;
     case 'F':  f          = num; break;
     case 'X':  where.x()  = num; break;
     case 'Y':  where.y()  = num; break;
@@ -212,7 +211,9 @@ Command::Command(string gcodeline, const Vector3d &defaultpos)
       cerr << "cannot handle ARC R command (yet?)!" << endl;
       break;
     default:
-      cerr << "cannot parse GCode line " << gcodeline << endl;
+      if  (ch == E_letter) e = num;
+      else
+	cerr << "cannot parse GCode line " << gcodeline << endl;
       break;
     }
   }
@@ -244,7 +245,7 @@ bool Command::hasNoEffect(const Vector3d LastPos, const double lastE,
 	  && abs_extr == 0);
 }
 string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
-			     bool relativeEcode) const
+			     bool relativeEcode, const char E_letter) const
 {
   ostringstream ostr;
   if (Code > NUM_GCODES || MCODES[Code]=="") {
@@ -305,8 +306,8 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 	// cerr << xycommand.info() << endl;
 	// cerr << zcommand.info() << endl<< endl;
 	ostringstream splstr;
-	splstr << xycommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) << endl;
-	splstr <<  zcommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode) ;
+	splstr << xycommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode, E_letter) << endl;
+	splstr <<  zcommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode, E_letter) ;
 	return splstr.str();
       }
     }
@@ -330,7 +331,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     if((relativeEcode   && e != 0) ||
        (!relativeEcode  && e != lastE)) {
       ostr.precision(5);
-      ostr << "E" << e << " ";
+      ostr << E_letter << e << " ";
       ostr.precision(PREC);
       lastE = e;
     } else {

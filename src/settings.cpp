@@ -149,6 +149,7 @@ static struct {
   FLOAT_MEMBER (Extruder.MaximumLineWidth, "MaximumLineWidth", 0.7, true),
   FLOAT_MEMBER (Extruder.EMaxSpeed,       "EMaxSpeed",  1.5, true),
   FLOAT_MEMBER (Extruder.MaxShellSpeed,   "MaxShellSpeed",  150, true),
+  STRING_MEMBER(Extruder.GCLetter,        "Extruder.GCLetter", "E", false),
 
   // Printer
   FLOAT_MEMBER  (Printer.ExtrudeAmount, "Printer.ExtrudeAmount", 5, false),
@@ -1251,8 +1252,17 @@ void Settings::connect_to_ui (Builder &builder)
       }
       break;
     }
-    case T_STRING: // unimplemented
+    case T_STRING: {
+      Gtk::Entry *e = NULL;
+      builder->get_widget (glade_name, e);
+      if (!e) {
+	std::cerr << _("Missing user interface item ") << glade_name << "\n";
+	break;
+      }
+      e->signal_changed().connect
+	(sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
       break;
+    }
     default:
       break;
     }

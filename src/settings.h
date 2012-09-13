@@ -95,6 +95,7 @@ class Settings {
   HardwareSettings Hardware;
 
   struct ExtruderSettings {
+    string GCLetter;
     bool  CalibrateInput; // hardware treats 'mm' as filament input mm not of nozzle output.
     float EMaxSpeed;
     float MaxShellSpeed;

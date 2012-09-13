@@ -50,8 +50,13 @@ class GCodeIter
 
 class GCode
 {
+
+  char E_letter; // letter to use for "E" command (extruder)
+
 public:
-  GCode();
+  GCode(const char e_letter='E');
+
+  void set_E_letter(const char e_letter) {E_letter = e_letter;}
 
   void Read  (Model *model, ViewProgress *progress, string filename);
   //void Write (Model *model, string filename);
@@ -64,7 +69,7 @@ public:
 		const string &GcodeLayer, const string &GcodeEnd,
 		bool RelativeEcode,
 		ViewProgress * progress);
-  
+
   bool append_text (const std::string &line);
   std::string get_text() const;
   void clear();
@@ -94,7 +99,7 @@ public:
   int getLayerNo(const unsigned long commandno) const;
   unsigned long getLayerStart(const uint layerno) const;
   unsigned long getLayerEnd(const uint layerno) const;
-  
+
 private:
   unsigned long unconfirmed_blocks;
 };

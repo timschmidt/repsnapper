@@ -128,7 +128,7 @@ const string MCODES[] = {"G92", "", "",
 			 "M82", "M83", // abs. E, relative E
 			 "G92", "T0", "G1", "G1" ,
 			 "M106", "M107",
-			 "M105", // temp? 
+			 "M105", // temp?
 			 "M104", "M140",
 			 "; ", "; Layer",
 			 "; UNKNOWN"};
@@ -143,12 +143,12 @@ public:
 	Command(GCodes code, const Vector3d &where=Vector3d(0,0,0),
 		double E=0, double F=0);
 	Command(GCodes code, double value); // S value gcodes
-	Command(string gcodeline, const Vector3d &defaultpos);
+	Command(string gcodeline, const Vector3d &defaultpos, const char E_letter='E');
 	Command(string comment);
 	Command(const Command &rhs);
 	GCodes Code;
 	Vector3d where;
-	Vector3d arcIJK; // I,J,K (dx, dy, dz) 
+	Vector3d arcIJK; // I,J,K (dx, dy, dz)
 	bool is_value; // M commands
 	double value; // M commands S value code
 	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
@@ -158,19 +158,19 @@ public:
 	bool not_layerchange; // don't record as layerchange for lifted moves
 
 	string comment;
-	void draw(Vector3d &lastPos, guint linewidth, 
+	void draw(Vector3d &lastPos, guint linewidth,
 		  Vector4f color, double extrwidth, bool arrows=true,
 		  bool debug_arcs = false) const;
-	void draw(Vector3d &lastPos, double extrwidth, 
+	void draw(Vector3d &lastPos, double extrwidth,
 		  bool arrows=true, bool debug_arcs = false) const;
 
-	bool hasNoEffect(const Vector3d LastPos, const double lastE, 
+	bool hasNoEffect(const Vector3d LastPos, const double lastE,
 			 const double lastF, const bool relativeEcode) const;
 
 	string GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
-			    bool relativeEcode) const;
+			    bool relativeEcode, const char E_letter='E') const;
 	GCodes getCode(const string commstr) const;
-	
+
 	void addToPosition(Vector3d &from, bool relative);
 
 	string info() const;

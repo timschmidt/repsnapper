@@ -13,11 +13,6 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
-  <object class="GtkAction" id="Fullscreen">
-    <property name="label">Fullscreen</property>
-    <property name="short_label" translatable="yes">Fullscreen</property>
-    <property name="tooltip">Toggle Fullscreen</property>
-  </object>
   <object class="GtkAction" id="LoadSettings">
     <property name="label" translatable="yes">Load Settings</property>
     <property name="short_label" translatable="yes">Load Settings</property>
@@ -78,6 +73,11 @@
     <property name="value">8</property>
     <property name="step_increment">0.10000000000000001</property>
     <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAction" id="Fullscreen">
+    <property name="label">Fullscreen</property>
+    <property name="short_label" translatable="yes">Fullscreen</property>
+    <property name="tooltip">Toggle Fullscreen</property>
   </object>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
@@ -1996,6 +1996,9 @@ and others I forgot... (needs updating)</property>
                                         <child>
                                           <placeholder/>
                                         </child>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2299,6 +2302,15 @@ and others I forgot... (needs updating)</property>
                                               <placeholder/>
                                             </child>
                                             <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
                                               <object class="GtkLabel" id="label68">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">False</property>
@@ -2424,6 +2436,9 @@ and others I forgot... (needs updating)</property>
                                                 <property name="left_attach">3</property>
                                                 <property name="right_attach">4</property>
                                               </packing>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
                                             </child>
                                             <child>
                                               <placeholder/>
@@ -3114,6 +3129,15 @@ and others I forgot... (needs updating)</property>
                                             <property name="can_focus">False</property>
                                             <property name="n_rows">2</property>
                                             <property name="n_columns">4</property>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -4798,10 +4822,13 @@ and others I forgot... (needs updating)</property>
                                   <object class="GtkTable" id="table8">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="n_rows">5</property>
+                                    <property name="n_rows">6</property>
                                     <property name="n_columns">3</property>
                                     <property name="column_spacing">6</property>
                                     <property name="row_spacing">6</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -5004,6 +5031,37 @@ and others I forgot... (needs updating)</property>
                                     </child>
                                     <child>
                                       <placeholder/>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="label124">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="xalign">0</property>
+                                        <property name="label" translatable="yes">GCode Letter</property>
+                                      </object>
+                                      <packing>
+                                        <property name="top_attach">5</property>
+                                        <property name="bottom_attach">6</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkEntry" id="Extruder.GCLetter">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">True</property>
+                                        <property name="tooltip_text" translatable="yes">Letter assigned in GCode (usually E for repraps)</property>
+                                        <property name="max_length">1</property>
+                                        <property name="invisible_char">●</property>
+                                        <property name="primary_icon_activatable">False</property>
+                                        <property name="secondary_icon_activatable">False</property>
+                                        <property name="primary_icon_sensitive">True</property>
+                                        <property name="secondary_icon_sensitive">True</property>
+                                      </object>
+                                      <packing>
+                                        <property name="left_attach">1</property>
+                                        <property name="right_attach">2</property>
+                                        <property name="top_attach">5</property>
+                                        <property name="bottom_attach">6</property>
+                                      </packing>
                                     </child>
                                   </object>
                                 </child>
@@ -5397,6 +5455,27 @@ and others I forgot... (needs updating)</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_rows">2</property>
                                 <property name="n_columns">6</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
@@ -8278,6 +8357,9 @@ and others I forgot... (needs updating)</property>
                         <child>
                           <placeholder/>
                         </child>
+                        <child>
+                          <placeholder/>
+                        </child>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -8328,6 +8410,27 @@ and others I forgot... (needs updating)</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_rows">3</property>
                                 <property name="n_columns">4</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
