@@ -28,9 +28,9 @@
 #include "config.h"
 
 #include "printer.h"
-#include "view.h"
+#include "ui/view.h"
 
-#include "progress.h"
+#include "ui/progress.h"
 #include "model.h"
 
 #if IOCHANNEL

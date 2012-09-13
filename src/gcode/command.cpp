@@ -27,7 +27,7 @@
 #include <sstream>
 
 #include "model.h"
-#include "progress.h"
+#include "ui/progress.h"
 #include "geometry.h"
 #include "ctype.h"
 

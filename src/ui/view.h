@@ -23,7 +23,7 @@
 #include <gtkmm.h>
 
 #include "stdafx.h"
-#include "printer.h"
+#include "printer/printer.h"
 
 #include "filechooser.h"
 

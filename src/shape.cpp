@@ -20,7 +20,7 @@
 
 #include "shape.h"
 #include "files.h"
-#include "progress.h"
+#include "ui/progress.h"
 #include "settings.h"
 #include "clipping.h"
 

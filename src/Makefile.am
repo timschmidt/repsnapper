@@ -32,24 +32,17 @@ repsnapper_CPPFLAGS = \
 	-g -O3 $(WARNING_FLAGS)
 
 SHARED_SRC= \
+	src/platform.cpp \
+	src/objtree.cpp \
 	src/model.cpp \
 	src/model2.cpp \
-	src/view.cpp \
+	src/shape.cpp \
+	src/flatshape.cpp \
+	src/triangle.cpp \
 	src/gllight.cpp \
 	src/arcball.cpp \
-	src/objtree.cpp \
-	src/shape.cpp \
-	src/triangle.cpp \
-	src/flatshape.cpp \
-	src/files.cpp \
-	src/filechooser.cpp \
-	src/platform.cpp \
 	src/render.cpp \
-	src/reprap_serial.cpp \
-	src/printer.cpp \
-	src/printer2.cpp \
-	src/progress.cpp \
-	src/connectview.cpp \
+	src/files.cpp \
 	src/settings.cpp \
 	src/settings-ui.cpp
 
@@ -64,21 +57,17 @@ SHARED_INC= \
 	src/triangle.h \
 	src/flatshape.h \
 	src/files.h \
-	src/filechooser.h \
 	src/stdafx.h \
 	src/platform.h \
 	src/render.h \
-	src/reprap_serial.h \
-	src/printer.h \
-	src/progress.h \
-	src/connectview.h \
 	src/settings.h \
 	src/settings-ui.h \
-	src/view.h \
 	src/types.h
 
+include src/ui/Makefile.am
 include src/slicer/Makefile.am
 include src/gcode/Makefile.am
+include src/printer/Makefile.am
 
 # TEST_SOURCES=unittest.cpp
 

@@ -18,7 +18,7 @@
 */
 
 #include "flatshape.h"
-#include "progress.h"
+#include "ui/progress.h"
 // #include "settings.h"
 #include "clipping.h"
 

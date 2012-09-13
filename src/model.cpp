@@ -30,10 +30,9 @@
 #include "model.h"
 #include "objtree.h"
 #include "settings.h"
-#include "connectview.h"
 #include "layer.h"
 #include "infill.h"
-#include "progress.h"
+#include "ui/progress.h"
 #include "shape.h"
 #include "flatshape.h"
 

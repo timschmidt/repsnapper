@@ -23,7 +23,7 @@
 #include "arcball.h"
 #include "gllight.h"
 #include "settings.h"
-#include "view.h"
+#include "ui/view.h"
 #include "model.h"
 #include "slicer/geometry.h"
 

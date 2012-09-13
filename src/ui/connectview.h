@@ -22,7 +22,7 @@
 #include <gtkmm.h>
 #include "types.h"
 
-#include "printer.h"
+#include "printer/printer.h"
 
 class ConnectView : public Gtk::VBox {
   Gtk::HBox	     m_hbox;

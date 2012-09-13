@@ -25,10 +25,10 @@
 #include <giomm/file.h>
 #include <gtk/gtkgl.h>
 
-#include "view.h"
-#include "model.h"
+#include "ui/view.h"
+#include "ui/progress.h"
 #include "gcode/gcode.h"
-#include "progress.h"
+#include "model.h"
 
 using namespace std;
 

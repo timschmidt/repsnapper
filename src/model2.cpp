@@ -40,9 +40,7 @@
 #include "model.h"
 #include "objtree.h"
 #include "settings.h"
-#include "connectview.h"
-#include "progress.h"
-
+#include "ui/progress.h"
 #include "slicer/layer.h"
 #include "slicer/infill.h"
 #include "slicer/clipping.h"
