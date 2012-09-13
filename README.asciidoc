@@ -2,13 +2,17 @@ RepSnapper is an alternative host software for controlling the RepRap (http://re
 
 == Getting it ==
 
-newest source to compile on unix/linux/mac:
+   * newest source to compile on unix/linux/mac:
 
    git clone https://github.com/timschmidt/repsnapper.git
 
-source tarball of latest tag: https://github.com/timschmidt/repsnapper/tags
+       ** get newest patches later by
 
-windows builds: https://github.com/timschmidt/repsnapper/downloads
+   git pull
+
+   * source tarball of latest tag: https://github.com/timschmidt/repsnapper/tags
+
+   * windows builds: https://github.com/timschmidt/repsnapper/downloads
 
 
 == Compilation ==
@@ -21,7 +25,7 @@ To build and run repsnapper do:
 
    ./repsnapper
 
-For more details on prerequisites see manual.asciidoc in the doc subdirectory.
+For more details on prerequisites see the manual: https://github.com/timschmidt/repsnapper/blob/master/doc/manual.asciidoc
 
 == Documentation ==
 
