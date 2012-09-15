@@ -1004,6 +1004,7 @@ void View::rot_object_xyz()
     }
   update_scale_value();
   update_rot_value();
+  queue_draw();
 }
 
 bool View::rotate_selection (Vector3d axis, double angle)
