@@ -207,7 +207,7 @@ void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
 
   bool relativeE = slicing.RelativeEcode;
 
-  double minspeed = hardware.MinPrintSpeedXY * 60;
+  double minspeed = hardware.MinMoveSpeedXY * 60;
   maxspeed = max(minspeed,maxspeed); // in case maxspeed is too low
   ResetLastWhere (start);
   command.where = end;

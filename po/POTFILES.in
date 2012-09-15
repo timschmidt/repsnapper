@@ -5,30 +5,31 @@
 [encoding: UTF-8]
 repsnapper.desktop.in
 src/arcball.cpp
-src/command.cpp
-src/connectview.cpp
-src/filechooser.cpp
 src/files.cpp
 src/flatshape.cpp
-src/gcode.cpp
-src/gcodestate.cpp
 src/model.cpp
 src/model2.cpp
 src/objtree.h
 src/objtree.cpp
 src/platform.cpp
-src/printer.cpp
-src/printer2.cpp
-src/printer_iochannel.cpp
-src/printer_libreprap.cpp
-src/progress.cpp
 src/render.cpp
-src/reprap_serial.cpp
 src/repsnapper.cpp
 src/settings.cpp
 src/settings.h
 src/shape.cpp
-src/view.cpp
+src/triangle.cpp
+src/gcode/command.cpp
+src/gcode/gcode.cpp
+src/gcode/gcodestate.cpp
+src/ui/connectview.cpp
+src/ui/filechooser.cpp
+src/ui/progress.cpp
+src/ui/view.cpp
+src/printer/printer.cpp
+src/printer/printer2.cpp
+src/printer/printer_iochannel.cpp
+src/printer/printer_libreprap.cpp
+src/printer/reprap_serial.cpp
 src/slicer/clipping.cpp
 src/slicer/infill.cpp
 src/slicer/infill.h
@@ -36,6 +37,5 @@ src/slicer/layer.cpp
 src/slicer/poly.cpp
 src/slicer/printlines.cpp
 src/slicer/printlines.h
-src/slicer/triangle.cpp
 
 [type: gettext/glade]src/repsnapper.ui

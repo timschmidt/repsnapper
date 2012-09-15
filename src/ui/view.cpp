@@ -1258,6 +1258,7 @@ void View::update_settings_gui()
       add_custombutton(m_model->settings.CustomButtonLabel[i],
 		       m_model->settings.CustomButtonGcode[i]);
   }
+  update_extruderlist();
 }
 
 void View::handle_ui_settings_changed()
@@ -1332,7 +1333,7 @@ bool View::key_pressed_event(GdkEventKey *event)
 
 View::View(BaseObjectType* cobject,
 	   const Glib::RefPtr<Gtk::Builder>& builder)
-  : Gtk::Window(cobject), m_builder(builder), printtofile_name("")
+  : Gtk::Window(cobject), m_builder(builder), m_model(NULL), printtofile_name("")
 {
   // Menus
   connect_action ("OpenStl",         sigc::mem_fun(*this, &View::load_stl) );
@@ -1377,8 +1378,10 @@ View::View(BaseObjectType* cobject,
 
   connect_button ("progress_stop",   sigc::mem_fun(*this, &View::stop_progress));
 
-  m_builder->get_widget ("m_treeview", m_treeview);
+  connect_button ("copy_extruder",   sigc::mem_fun(*this, &View::copy_extruder));
+  connect_button ("remove_extruder",   sigc::mem_fun(*this, &View::remove_extruder));
 
+  m_builder->get_widget ("m_treeview", m_treeview);
   // Insert our keybindings all around the place
   signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
   m_treeview->signal_key_press_event().connect (sigc::mem_fun(*this, &View::key_pressed_event) );
@@ -1487,6 +1490,7 @@ View::View(BaseObjectType* cobject,
     pBox->add (*m_renderer);
   }
 
+
   m_settings_ui = new SettingsUI(m_model, m_builder);
 
   // file chooser
@@ -1503,7 +1507,69 @@ View::View(BaseObjectType* cobject,
 
   m_printer = NULL;
 
+
+  m_builder->get_widget ("extruder_treeview", extruder_treeview);
+  if (extruder_treeview) {
+    extruder_treeview->signal_cursor_changed().connect (sigc::mem_fun(*this, &View::extruder_selected) );
+    Gtk::TreeModel::ColumnRecord colrec;
+    colrec.add(extrudername);
+    extruder_liststore = Gtk::ListStore::create(colrec);
+    extruder_treeview->set_model(extruder_liststore);
+    Gtk::TreeModel::Row row = *(extruder_liststore->append());
+    row[extrudername] = "Extruder 1";
+    extruder_treeview->append_column("Extruder",extrudername);
+    extruder_treeview->set_headers_visible(false);
+    extruder_treeview->get_selection()->select(row);
+    // extruder_treeview->set_reorderable(true);
+  }
+
   showAllWidgets();
+}
+
+void View::extruder_selected()
+{
+  std::vector< Gtk::TreeModel::Path > path =
+    extruder_treeview->get_selection()->get_selected_rows();
+  if(path.size()>0 && path[0].size()>0) {
+    // copy selected extruder from Extruders to Extruder
+    m_model->settings.SelectExtruder(path[0][0]);
+    // show Extruder settings on gui
+    m_model->settings.set_to_gui((*((Builder *)&m_builder)),"Extruder");
+  }
+}
+void View::copy_extruder()
+{
+  if (!m_model) return;
+  std::vector< Gtk::TreeModel::Path > path =
+    extruder_treeview->get_selection()->get_selected_rows();
+  if(path.size()>0 && path[0].size()>0) {
+    m_model->settings.CopyExtruder(path[0][0]);
+  }
+  update_extruderlist();
+}
+void View::remove_extruder()
+{
+  if (!m_model) return;
+  std::vector< Gtk::TreeModel::Path > path =
+    extruder_treeview->get_selection()->get_selected_rows();
+  if (path.size()>0 && path[0].size()>0) {
+    m_model->settings.RemoveExtruder(path[0][0]);
+  }
+  update_extruderlist();
+  extruder_selected();
+}
+void View::update_extruderlist()
+{
+  if (!m_model) return;
+  if (!extruder_liststore) return;
+  extruder_liststore->clear();
+  Gtk::TreeModel::Row row;
+  for (uint i = 0; i < m_model->settings.Extruders.size(); i++) {
+    row = *(extruder_liststore->append());
+    ostringstream o; o << "Extruder " << i+1;
+    row[extrudername] = o.str();
+  }
+  extruder_treeview->get_selection()->select(row);
 }
 
 //  stop file preview when leaving file tab
@@ -1629,8 +1695,10 @@ void View::setModel(Model *model)
 
   m_treeview->set_model (m_model->objtree.m_model);
   m_treeview->append_column_editable("Name", m_model->objtree.m_cols->m_name);
+
   // m_treeview->append_column_editable("Extruder", m_model->objtree.m_cols->m_material);
-  // m_treeview->set_headers_visible(true);
+  //m_treeview->append_column("Extruder", m_model->objtree.m_cols->m_extruder);
+  //  m_treeview->set_headers_visible(true);
 
   m_gcodetextview = NULL;
   m_builder->get_widget ("txt_gcode_result", m_gcodetextview);

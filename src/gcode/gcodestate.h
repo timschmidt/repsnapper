@@ -48,7 +48,7 @@ class GCodeState {
 		 double extrusionFactor,
 		 double maxspeed,
 		 double movespeed,
-		 double offsetZ, 
+		 double offsetZ,
 		 const Settings::SlicingSettings &slicing,
 		 const Settings::HardwareSettings &hardware);
   /* void MakeGCodeLine (PLine3 line, */
@@ -61,7 +61,7 @@ class GCodeState {
 		      double extrusionFactor,
 		      double absolute_extrusion,
 		      double maxspeed,
-		      double offsetZ, 
+		      double offsetZ,
 		      const Settings::SlicingSettings &slicing,
 		      const Settings::HardwareSettings &hardware);
   /* double GetLastLayerZ(double curZ); */

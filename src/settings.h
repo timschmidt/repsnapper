@@ -21,8 +21,10 @@
 
 #include <string>
 #include <giomm/file.h>
+#include <glibmm/keyfile.h>
 
 #include "stdafx.h"
+
 
 // Allow passing as a pointer to something to
 // avoid including glibmm in every header.
@@ -42,8 +44,8 @@ class Settings {
   std::string Image;
   std::string Filename;
 
-  bool   RaftEnable;
   struct RaftSettings {
+    bool Enable;
     float Size;
     struct PhasePropertiesType {
       guint  LayerCount;
@@ -72,11 +74,10 @@ class Settings {
 
 
   struct HardwareSettings {
-    float MinPrintSpeedXY;
-    float MaxPrintSpeedXY;
-    float MoveSpeed;
-    float MinPrintSpeedZ;
-    float MaxPrintSpeedZ;
+    float MinMoveSpeedXY;
+    float MaxMoveSpeedXY;
+    float MinMoveSpeedZ;
+    float MaxMoveSpeedZ;
 
     float DistanceToReachFullSpeed;
 
@@ -89,33 +90,53 @@ class Settings {
     int KeepLines;
 
     int ReceivingBufferSize;
-
-    int NumExtruders;
   };
   HardwareSettings Hardware;
 
   struct ExtruderSettings {
+    string name;
+
     string GCLetter;
-    bool  CalibrateInput; // hardware treats 'mm' as filament input mm not of nozzle output.
+
+    float OffsetX;
+    float OffsetY;
+    bool  CalibrateInput; // treat 'mm' as filament input mm not of nozzle output.
     float EMaxSpeed;
+    float MaxLineSpeed;
     float MaxShellSpeed;
     float ExtrusionFactor;
     float FilamentDiameter;
-    float ExtrudedMaterialWidthRatio; // ratio of with to (layer) height
+    float ExtrudedMaterialWidthRatio; // ratio of extruded width to (layer) height
     double GetExtrudedMaterialWidth(const double layerheight) const;
     float MinimumLineWidth;
     float MaximumLineWidth;
-    float DownstreamMultiplier;
-    float DownstreamExtrusionMultiplier;
+    /* float DownstreamMultiplier; */
+    /* float DownstreamExtrusionMultiplier; */
     static double RoundedLinewidthCorrection(double extr_width, double layerheight);
     double GetExtrudeFactor(double layerheight) const;
+
+    bool  EnableAntiooze;
+    float AntioozeDistance;
+    float AntioozeAmount;
+    float AntioozeSpeed;
+    //float AntioozeHaltRatio;
+    float AntioozeZlift;
+    bool ZliftAlways;
+    Vector4f DisplayRGBA;
   };
-  ExtruderSettings Extruder;
+  ExtruderSettings Extruder; // to exchange settings with GUI
+  std::vector<ExtruderSettings> Extruders; // all Extruders
+  void CopyExtruder(uint num);
+  void RemoveExtruder(uint num);
+  uint selectedExtruder;
+  void SelectExtruder(uint num);
 
   struct SlicingSettings {
+    bool  RelativeEcode;
+    bool UseTCommand;
+
     float LayerThickness;
 
-    bool  RelativeEcode;
     bool  UseArcs;
     float ArcsMaxAngle;
     float MinArcLength;
@@ -126,14 +147,6 @@ class Settings {
 
     bool NoBridges;
     float BridgeExtrusion;
-
-    bool  EnableAntiooze;
-    float AntioozeDistance;
-    float AntioozeAmount;
-    float AntioozeSpeed;
-    //float AntioozeHaltRatio;
-    float AntioozeZlift;
-    bool ZliftAlways;
 
     bool DoInfill;
     float InfillPercent;
@@ -274,7 +287,7 @@ class Settings {
     Vector4f WireframeRGBA;
     Vector4f NormalsRGBA;
     Vector4f EndpointsRGBA;
-    Vector4f GCodeExtrudeRGBA;
+    // Vector4f GCodeExtrudeRGBA; // now in Extruder
     Vector4f GCodePrintingRGBA;
     Vector4f GCodeMoveRGBA;
     float    Highlight;
@@ -319,13 +332,19 @@ class Settings {
   double GetInfillDistance(double layerthickness, float percent) const;
 
   // sync changed settings with the GUI eg. used post load
-  void set_to_gui (Builder &builder);
+  void set_to_gui (Builder &builder, const string filter="");
 
   // connect settings to relevant GUI widgets
   void connect_to_ui (Builder &builder);
 
   void load_settings (Glib::RefPtr<Gio::File> file);
+  void load_settings_as (const Glib::KeyFile &cfg,
+			 const Glib::ustring onlygroup = "",
+			 const Glib::ustring as_group = "");
   void save_settings (Glib::RefPtr<Gio::File> file);
+  void save_settings_as (Glib::KeyFile &cfg,
+			 const Glib::ustring onlygroup = "",
+			 const Glib::ustring as_group = "");
 
   std::string get_image_path();
 

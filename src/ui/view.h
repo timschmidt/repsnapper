@@ -134,6 +134,15 @@ class View : public Gtk::Window
   void add_custombutton(string name, string gcode);
   void custombutton_pressed(string name, Gtk::ToolButton *button);
 
+
+  Gtk::TreeView * extruder_treeview;
+  Glib::RefPtr< Gtk::ListStore > extruder_liststore;
+  Gtk::TreeModelColumn<Glib::ustring> extrudername;
+  void copy_extruder();
+  void remove_extruder();
+  void extruder_selected();
+  void update_extruderlist();
+
   // rfo bits
   Gtk::TreeView *m_treeview;
   TranslationSpinRow *m_translation_row;

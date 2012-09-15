@@ -758,7 +758,7 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
 Vector3d Model::GetViewCenter()
 {
   Vector3d printOffset = settings.Hardware.PrintMargin;
-  if(settings.RaftEnable)
+  if(settings.Raft.Enable)
     printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
 
   return printOffset + Center;
@@ -774,7 +774,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   gint index = 1; // pick/select index. matches computation in update_model()
 
   Vector3d printOffset = settings.Hardware.PrintMargin;
-  if(settings.RaftEnable)
+  if(settings.Raft.Enable)
     printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
   Vector3d translation = objtree.transform3D.getTranslation();
   Vector3d offset = printOffset + translation;

@@ -792,6 +792,9 @@ void Model::ConvertToGCode()
   }
   is_calculating=true;
 
+  // default:
+  settings.SelectExtruder(0);
+
   Glib::TimeVal start_time;
   start_time.assign_current_time();
 
@@ -838,7 +841,7 @@ void Model::ConvertToGCode()
   if (settings.Slicing.Skirt)
     MakeSkirt();
 
-  if (settings.RaftEnable)
+  if (settings.Raft.Enable)
     {
       printOffset += Vector3d (settings.Raft.Size, settings.Raft.Size, 0);
       MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
@@ -916,7 +919,8 @@ void Model::ConvertToGCode()
 
   double totlength = gcode.GetTotalExtruded(settings.Slicing.RelativeEcode);
   ostr << _(" - total extruded: ") << totlength << "mm";
-  double ccm = totlength*settings.Extruder.FilamentDiameter*settings.Extruder.FilamentDiameter/4.*M_PI/1000 ;
+  double ccm = totlength * settings.Extruder.FilamentDiameter *
+    settings.Extruder.FilamentDiameter/4.*M_PI/1000 ;
   ostr << " = " << ccm << "cm^3 ";
   ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)";
   if (statusbar)

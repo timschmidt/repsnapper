@@ -763,7 +763,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       if (s < skins-1) { // not on the last layer, this handle with all other lines
 	// have to get all these separately because z changes
 	printlines.makeLines(startPoint, lines);
-	if (!settings.Slicing.ZliftAlways)
+	if (!settings.Extruder.ZliftAlways)
 	  printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
 	printlines.optimize(linewidth,
 			    settings.Slicing.MinShelltime, cornerradius, lines);
@@ -818,7 +818,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   lchange.where = Vector3d(0.,0.,Z);
   commands.push_back(lchange);
 
-  if (!settings.Slicing.ZliftAlways)
+  if (!settings.Extruder.ZliftAlways)
     printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
   printlines.optimize(linewidth,
 		      settings.Slicing.MinLayertime, cornerradius, lines);

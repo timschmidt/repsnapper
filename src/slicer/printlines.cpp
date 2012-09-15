@@ -57,11 +57,11 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 			const Settings &settings) const
 {
   const double
-    minspeed  = settings.Hardware.MinPrintSpeedXY * 60,
-    //maxspeed  = settings.Hardware.MaxPrintSpeedXY,
-    movespeed = settings.Hardware.MoveSpeed * 60,
-    minZspeed = settings.Hardware.MinPrintSpeedZ * 60,
-    maxZspeed = settings.Hardware.MaxPrintSpeedZ * 60,
+    minspeed  = settings.Hardware.MinMoveSpeedXY * 60,
+    //maxspeed  = settings.Extruder.MaxLineSpeed * 60,
+    movespeed = settings.Hardware.MaxMoveSpeedXY * 60,
+    minZspeed = settings.Hardware.MinMoveSpeedZ * 60,
+    maxZspeed = settings.Hardware.MaxMoveSpeedZ * 60,
     maxEspeed = settings.Extruder.EMaxSpeed * 60;
 
   int count=0;
@@ -302,8 +302,8 @@ void Printlines::addLine(PLineArea area, vector<PLine> &lines,
     Vector2d lastpos = lines.back().to;
     if (lfrom.squared_distance(lastpos) > 0.01) { // add moveline
       PLine move(area, lastpos, lfrom, movespeed, 0);
-      if (settings->Slicing.ZliftAlways)
-	move.lifted = settings->Slicing.AntioozeZlift;
+      if (settings->Extruder.ZliftAlways)
+	move.lifted = settings->Extruder.AntioozeZlift;
       lines.push_back(move);
     } else {
       lfrom = lastpos;
@@ -412,7 +412,7 @@ void Printlines::addPolys(PLineArea area,
 			  double maxspeed, double min_time)
 {
   if (polys.size() == 0) return;
-  if (maxspeed == 0) maxspeed = settings->Hardware.MaxPrintSpeedXY * 60; // default
+  if (maxspeed == 0) maxspeed = settings->Extruder.MaxLineSpeed * 60; // default
   for(size_t q = 0; q < polys.size(); q++) {
     if (polys[q].size() > 0) {
       PrintPoly *ppoly = new PrintPoly(polys[q], this, /* Takes a copy of the poly */
@@ -461,7 +461,7 @@ double Printlines::makeLines(Vector2d &startPoint,
   for(size_t q=0; q < count; q++) done[q]=false;
   uint ndone=0;
   //double nlength;
-  double movespeed = settings->Hardware.MoveSpeed * 60;
+  double movespeed = settings->Hardware.MaxMoveSpeedXY * 60;
   double totallength = 0;
   double totalspeedfactor = 0;
   while (ndone < count)
@@ -1093,11 +1093,11 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
 // call after lines have been slowed down!
 uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
 {
-  if (!settings->Slicing.EnableAntiooze) return 0;
+  if (!settings->Extruder.EnableAntiooze) return 0;
   double
-    AOmindistance = settings->Slicing.AntioozeDistance,
-    AOamount      = settings->Slicing.AntioozeAmount,
-    AOspeed       = settings->Slicing.AntioozeSpeed * 60;
+    AOmindistance = settings->Extruder.AntioozeDistance,
+    AOamount      = settings->Extruder.AntioozeAmount,
+    AOspeed       = settings->Extruder.AntioozeSpeed * 60;
     //AOonhaltratio = settings->Slicing.AntioozeHaltRatio;
   if (lines.size() < 2 || AOmindistance <=0 || AOamount == 0) return 0;
   // const double onhalt_amount = AOamount * AOonhaltratio;
@@ -1117,9 +1117,9 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
     // do all from behind to keep indices right
     // find lines to distribute repush
     if (moveend > lines.size()-2) moveend = lines.size()-2;
-    if (settings->Slicing.AntioozeZlift > 0)
+    if (settings->Extruder.AntioozeZlift > 0)
       for (uint i = movestart; i <= moveend; i++)
-	lines[i].lifted = settings->Slicing.AntioozeZlift;
+	lines[i].lifted = settings->Extruder.AntioozeZlift;
 
 
 

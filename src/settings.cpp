@@ -33,7 +33,6 @@
  * XML widget name, with which the setting should be associated.
  */
 
-
 #ifdef WIN32
 #  define DEFAULT_COM_PORT "COM0"
 #else
@@ -60,7 +59,7 @@
 
 #define FLOAT_PHASE_MEMBER(phase, phasestd, member, def_value, redraw) \
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_##phase].member), T_FLOAT, \
-    #phasestd #member, #phasestd #member, def_value, NULL, redraw }
+      #phasestd #member, #phasestd #member, def_value, NULL, redraw }
 
 // converting our offsets into type pointers
 #define PTR_OFFSET(obj, offset)  (((guchar *)obj) + offset)
@@ -88,37 +87,36 @@ static struct {
   { OFFSET (Image), T_STRING, "SettingsImage", NULL, 0, "", false },
 
   // Raft:
-  BOOL_MEMBER  (RaftEnable, "RaftEnable", false, true),
-  FLOAT_MEMBER (Raft.Size,  "RaftSize",   1.33, true),
+  BOOL_MEMBER  (Raft.Enable, "Raft.Enable", false, true),
+  FLOAT_MEMBER (Raft.Size,  "Raft.Size",   1.33, true),
 
   // Raft Base
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_BASE].LayerCount), T_INT,
-    "BaseLayerCount", "BaseLayerCount", 1, NULL, true },
-  FLOAT_PHASE_MEMBER(BASE, Base, MaterialDistanceRatio, 1.8, true),
-  FLOAT_PHASE_MEMBER(BASE, Base, Rotation, 0.0, false),
-  FLOAT_PHASE_MEMBER(BASE, Base, RotationPrLayer, 90.0, false),
-  FLOAT_PHASE_MEMBER(BASE, Base, Distance, 2.0, false),
-  FLOAT_PHASE_MEMBER(BASE, Base, Thickness, 1.0, true),
-  FLOAT_PHASE_MEMBER(BASE, Base, Temperature, 1.10, false),
+    "Raft.Base.LayerCount", "Raft.Base.LayerCount", 1, NULL, true },
+  FLOAT_PHASE_MEMBER(BASE, Raft.Base., MaterialDistanceRatio, 1.8, true),
+  FLOAT_PHASE_MEMBER(BASE, Raft.Base., Rotation, 0.0, false),
+  FLOAT_PHASE_MEMBER(BASE, Raft.Base., RotationPrLayer, 90.0, false),
+  FLOAT_PHASE_MEMBER(BASE, Raft.Base., Distance, 2.0, false),
+  FLOAT_PHASE_MEMBER(BASE, Raft.Base., Thickness, 1.0, true),
+  FLOAT_PHASE_MEMBER(BASE, Raft.Base., Temperature, 1.10, false),
 
   // Raft Interface
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_INTERFACE].LayerCount), T_INT,
-    "InterfaceLayerCount", "InterfaceLayerCount", 2, NULL, true },
-  FLOAT_PHASE_MEMBER(INTERFACE, Interface, MaterialDistanceRatio, 1.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Interface, Rotation, 90.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Interface, RotationPrLayer, 90.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Interface, Distance, 2.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Interface, Thickness, 1.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Interface, Temperature, 1.0, false),
+    "Raft.Interface.LayerCount", "Raft.Interface.LayerCount", 2, NULL, true },
+  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., MaterialDistanceRatio, 1.0, true),
+  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., Rotation, 90.0, true),
+  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., RotationPrLayer, 90.0, true),
+  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., Distance, 2.0, true),
+  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., Thickness, 1.0, true),
+  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., Temperature, 1.0, false),
 
 #undef FLOAT_PHASE_MEMBER
 
   // Hardware
-  FLOAT_MEMBER (Hardware.MinPrintSpeedXY, "MinPrintSpeedXY", 20, true),
-  FLOAT_MEMBER (Hardware.MaxPrintSpeedXY, "MaxPrintSpeedXY", 180, true),
-  FLOAT_MEMBER (Hardware.MoveSpeed,       "MoveSpeed",  180, true),
-  FLOAT_MEMBER (Hardware.MinPrintSpeedZ,  "MinPrintSpeedZ",  1, true),
-  FLOAT_MEMBER (Hardware.MaxPrintSpeedZ,  "MaxPrintSpeedZ",  3, true),
+  FLOAT_MEMBER (Hardware.MinMoveSpeedXY, "MinMoveSpeedXY", 20, true),
+  FLOAT_MEMBER (Hardware.MaxMoveSpeedXY, "MaxMoveSpeedXY", 180, true),
+  FLOAT_MEMBER (Hardware.MinMoveSpeedZ,  "MinMoveSpeedZ",  1, true),
+  FLOAT_MEMBER (Hardware.MaxMoveSpeedZ,  "MaxMoveSpeedZ",  3, true),
 
   // FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5, false),
   // Volume.
@@ -140,16 +138,30 @@ static struct {
 
   // Extruder
   BOOL_MEMBER  (Extruder.CalibrateInput,  "CalibrateInput",  true, true),
-  FLOAT_MEMBER (Extruder.ExtrusionFactor, "ExtrusionFactor", 1.0, true),
+  FLOAT_MEMBER (Extruder.OffsetX, "Extruder.OffsetX", 0.0, false),
+  FLOAT_MEMBER (Extruder.OffsetY, "Extruder.OffsetY", 0.0, false),
   FLOAT_MEMBER (Extruder.FilamentDiameter, "FilamentDiameter", 3.0, true),
-  FLOAT_MEMBER (Extruder.DownstreamMultiplier, "DownstreamMultiplier", 1.0, true),
-  FLOAT_MEMBER (Extruder.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier", 1.0, true),
+  FLOAT_MEMBER (Extruder.ExtrusionFactor, "Extruder.ExtrusionFactor", 1.0, true),
+  /* FLOAT_MEMBER (Extruder.DownstreamMultiplier, "DownstreamMultiplier", 1.0, true), */
+  /* FLOAT_MEMBER (Extruder.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier",  1.0, true),*/
   FLOAT_MEMBER (Extruder.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
   FLOAT_MEMBER (Extruder.MinimumLineWidth, "MinimumLineWidth", 0.4, true),
   FLOAT_MEMBER (Extruder.MaximumLineWidth, "MaximumLineWidth", 0.7, true),
-  FLOAT_MEMBER (Extruder.EMaxSpeed,       "EMaxSpeed",  1.5, true),
-  FLOAT_MEMBER (Extruder.MaxShellSpeed,   "MaxShellSpeed",  150, true),
-  STRING_MEMBER(Extruder.GCLetter,        "Extruder.GCLetter", "E", false),
+  FLOAT_MEMBER (Extruder.MaxLineSpeed,     "MaxLineSpeed",  180, true),
+  FLOAT_MEMBER (Extruder.EMaxSpeed,        "EMaxSpeed",  1.5, true),
+  FLOAT_MEMBER (Extruder.MaxShellSpeed,    "MaxShellSpeed",  150, true),
+  STRING_MEMBER(Extruder.GCLetter,         "Extruder.GCLetter", "E", false),
+  { OFFSET (Extruder.name), T_STRING, "Extruder.name", NULL, 0, "Extruder", false },
+
+  BOOL_MEMBER  (Extruder.EnableAntiooze, "EnableAntiooze", false, true),
+  FLOAT_MEMBER (Extruder.AntioozeDistance, "AntioozeDistance", 4.5, true),
+  FLOAT_MEMBER (Extruder.AntioozeAmount, "AntioozeAmount", 1, true),
+  //FLOAT_MEMBER (Extruder.AntioozeHaltRatio, "AntioozeHaltRatio", 0.2, true),
+  FLOAT_MEMBER (Extruder.AntioozeSpeed, "AntioozeSpeed", 15.0, true),
+  FLOAT_MEMBER (Extruder.AntioozeZlift, "AntioozeZlift", 0, true),
+  BOOL_MEMBER  (Extruder.ZliftAlways, "ZliftAlways", false, true),
+  COLOUR_MEMBER(Extruder.DisplayRGBA,
+		"Extruder.DisplayRGBA", 1.0, 1.0, 0.0, 1.0, true),
 
   // Printer
   FLOAT_MEMBER  (Printer.ExtrudeAmount, "Printer.ExtrudeAmount", 5, false),
@@ -161,18 +173,10 @@ static struct {
   { OFFSET (Printer.BedTemp)   , T_FLOAT, "Printer.BedTemp", NULL,  60, NULL, false },
 
   // Slicing
-  FLOAT_MEMBER (Slicing.LayerThickness, "LayerThickness", 0.3, true),
-  BOOL_MEMBER  (Slicing.RelativeEcode, "RelativeEcode", false, false),
-  BOOL_MEMBER  (Slicing.EnableAntiooze, "EnableAntiooze", false, true),
-  FLOAT_MEMBER (Slicing.AntioozeDistance, "AntioozeDistance", 4.5, true),
-  FLOAT_MEMBER (Slicing.AntioozeAmount, "AntioozeAmount", 1, true),
-  //FLOAT_MEMBER (Slicing.AntioozeHaltRatio, "AntioozeHaltRatio", 0.2, true),
-  FLOAT_MEMBER (Slicing.AntioozeSpeed, "AntioozeSpeed", 20.0, true),
-  FLOAT_MEMBER (Slicing.AntioozeZlift, "AntioozeZlift", 0, true),
-  BOOL_MEMBER  (Slicing.ZliftAlways, "ZliftAlways", false, true),
-  BOOL_MEMBER  (Slicing.MoveNearest, "MoveNearest", true, true),
-
-
+  BOOL_MEMBER   (Slicing.RelativeEcode, "RelativeEcode", false, false),
+  BOOL_MEMBER   (Slicing.UseTCommand, "UseTCommand", true, false),
+  FLOAT_MEMBER  (Slicing.LayerThickness, "LayerThickness", 0.3, true),
+  BOOL_MEMBER   (Slicing.MoveNearest, "MoveNearest", true, true),
   FLOAT_MEMBER  (Slicing.InfillPercent, "InfillPercent", 30, true),
   FLOAT_MEMBER  (Slicing.InfillRotation, "InfillRotation", 90.0, true),
   FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, "InfillRotationPrLayer", 60.0, true),
@@ -288,10 +292,8 @@ static struct {
 		"Display.WireframeColour", 1.0, 0.48, 0, 0.5, true),
   COLOUR_MEMBER(Display.NormalsRGBA,
 		"Display.NormalsColour", 0.62, 1.0, 0, 1.0, true),
-  COLOUR_MEMBER(Display.EndpointsRGBA,
-		"Display.EndpointsColour", 0, 1.0, 0.7, 1.0, true),
-  COLOUR_MEMBER(Display.GCodeExtrudeRGBA,
-		"Display.GCodeExtrudeColour", 1.0, 1.0, 0.0, 1.0, true),
+  /* COLOUR_MEMBER(Display.GCodeExtrudeRGBA, */
+  /* 		"Display.GCodeExtrudeColour", 1.0, 1.0, 0.0, 1.0, true), */
   COLOUR_MEMBER(Display.GCodeMoveRGBA,
 		"Display.GCodeMoveColour", 1.0, 0.05, 1, 0.5, true),
   COLOUR_MEMBER(Display.GCodePrintingRGBA,
@@ -307,20 +309,20 @@ static struct {
 } spin_ranges[] = {
   // Raft
   { "Raft.Size", 0, 50, 1, 3 },
-  { "BaseLayerCount",      0, 8, 1, 2 },
-  { "InterfaceLayerCount", 0, 8, 1, 2 },
-  { "BaseMaterialDistanceRatio",      0.1, 4.0, 0.1, 1 },
-  { "InterfaceMaterialDistanceRatio", 0.1, 4.0, 0.1, 1 },
-  { "BaseRotation",             -360.0, 360.0, 45, 90 },
-  { "InterfaceRotation",        -360.0, 360.0, 45, 90 },
-  { "BaseRotationPrLayer",      -360.0, 360.0, 45, 90 },
-  { "InterfaceRotationPrLayer", -360.0, 360.0, 45, 90 },
-  { "BaseDistance",      0.1, 8.0, 0.1, 1 },
-  { "InterfaceDistance", 0.1, 8.0, 0.1, 1 },
-  { "BaseThickness",      0.1, 4.0, 0.1, 1 },
-  { "InterfaceThickness", 0.1, 4.0, 0.1, 1 },
-  { "BaseTemperature",      0.9, 1.2, 0.01, 0.1 },
-  { "InterfaceTemperature", 0.9, 1.2, 0.01, 0.1 },
+  { "Raft.Base.LayerCount",      0, 8, 1, 2 },
+  { "Raft.Interface.LayerCount", 0, 8, 1, 2 },
+  { "Raft.Base.MaterialDistanceRatio",      0.1, 4.0, 0.1, 1 },
+  { "Raft.Interface.MaterialDistanceRatio", 0.1, 4.0, 0.1, 1 },
+  { "Raft.Base.Rotation",             -360.0, 360.0, 45, 90 },
+  { "Raft.Interface.Rotation",        -360.0, 360.0, 45, 90 },
+  { "Raft.Base.RotationPrLayer",      -360.0, 360.0, 45, 90 },
+  { "Raft.Interface.RotationPrLayer", -360.0, 360.0, 45, 90 },
+  { "Raft.Base.Distance",      0.1, 8.0, 0.1, 1 },
+  { "Raft.Interface.Distance", 0.1, 8.0, 0.1, 1 },
+  { "Raft.Base.Thickness",      0.1, 4.0, 0.1, 1 },
+  { "Raft.Interface.Thickness", 0.1, 4.0, 0.1, 1 },
+  { "Raft.Base.Temperature",      0.9, 1.2, 0.01, 0.1 },
+  { "Raft.Interface.Temperature", 0.9, 1.2, 0.01, 0.1 },
 
   // Slicing
   { "Slicing.LayerThickness", 0.01, 3.0, 0.01, 0.2 },
@@ -344,11 +346,6 @@ static struct {
   { "Slicing.SupportWiden", -5, 5, 0.01, 0.1},
   { "Slicing.SupportAngle", 0, 90, 1, 10},
   //{ "Slicing.Optimization", 0.0, 10.0, 0.01, 0.1 },
-  { "Slicing.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
-  { "Slicing.AntioozeAmount", 0.0, 25.0, 0.1, 1 },
-  { "Slicing.AntioozeSpeed", 0.0, 1000.0, 1.0, 5.0 },
-  //{ "Slicing.AntioozeHaltRatio", 0.0, 1.0, 0.01, 0.1 },
-  { "Slicing.AntioozeZlift", 0.0, 10, 0.01, 0.1 },
   { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },
   { "Slicing.SkirtDistance", 0.0, 100, 0.1, 1 },
   { "Slicing.Skins", 1, 5, 1, 1 },
@@ -377,25 +374,32 @@ static struct {
   { "Hardware.PrintMargin.X", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.PrintMargin.Y", 0.0, 100.0, 1.0, 5.0 },
   { "Hardware.PrintMargin.Z", 0.0, 100.0, 1.0, 5.0 },
-  { "Hardware.MinPrintSpeedXY", 0.1, 2000.0, 1.0, 10.0 },
-  { "Hardware.MaxPrintSpeedXY", 0.1, 2000.0, 1.0, 10.0 },
-  { "Hardware.MoveSpeed", 0.1, 2000.0, 1.0, 10.0 },
-  { "Hardware.MinPrintSpeedZ", 0.1, 250.0, 1.0, 10.0 },
-  { "Hardware.MaxPrintSpeedZ", 0.1, 250.0, 1.0, 10.0 },
+  { "Hardware.MinMoveSpeedXY", 0.1, 2000.0, 1.0, 10.0 },
+  { "Hardware.MaxMoveSpeedXY", 0.1, 2000.0, 1.0, 10.0 },
+  { "Hardware.MinMoveSpeedZ", 0.1, 250.0, 1.0, 10.0 },
+  { "Hardware.MaxMoveSpeedZ", 0.1, 250.0, 1.0, 10.0 },
   { "Hardware.ReceivingBufferSize", 1.0, 100.0, 1.0, 5.0 },
   { "Hardware.KeepLines", 100.0, 100000.0, 1.0, 500.0 },
+  // { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
 
   // Extruder
-  { "Extruder.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
+  { "Extruder.OffsetX", 0.0, 5000.0, 0.1, 1.0 },
+  { "Extruder.OffsetY", 0.0, 5000.0, 0.1, 1.0 },
   { "Extruder.ExtrudedMaterialWidthRatio", 0.0, 10.0, 0.01, 0.1 },
   { "Extruder.MinimumLineWidth", 0.0, 10.0, 0.01, 0.1 },
   { "Extruder.MaximumLineWidth", 0.0, 10.0, 0.01, 0.1 },
-  { "Extruder.ExtrusionFactor", 0.0, 2.0, 0.1, 0.2 },
+  { "Extruder.ExtrusionFactor", 0.0, 10.0, 0.1, 0.5 },
   { "Extruder.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
-  { "Extruder.EMaxSpeed", 0.01, 2000.0, 0.1, 1.0 },
+  { "Extruder.MaxLineSpeed", 0.1, 2000.0, 1.0, 10.0 },
   { "Extruder.MaxShellSpeed", 0.1, 2000.0, 1.0, 10.0 },
+  { "Extruder.EMaxSpeed", 0.01, 2000.0, 0.1, 1.0 },
   // { "Extruder.DownstreamMultiplier", 0.01, 25.0, 0.01, 0.1 },
   // { "Extruder.DownstreamExtrusionMultiplier", 0.01, 25.0, 0.01, 0.1 },
+  { "Extruder.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
+  { "Extruder.AntioozeAmount", 0.0, 25.0, 0.1, 1 },
+  { "Extruder.AntioozeSpeed", 0.0, 1000.0, 1.0, 5.0 },
+  //{ "Extruder.AntioozeHaltRatio", 0.0, 1.0, 0.01, 0.1 },
+  { "Extruder.AntioozeZlift", 0.0, 10, 0.01, 0.1 },
 
   //Printer
   { "Printer.ExtrudeAmount", 0.0, 1000.0, 1.0, 10.0 },
@@ -435,11 +439,12 @@ static struct {
   const char *glade_name;
 }
 colour_selectors[] = {
+  { OFFSET(Extruder.DisplayRGBA), "Extruder.DisplayRGBA" },
   { OFFSET(Display.PolygonRGBA), "Display.PolygonRGBA" },
   { OFFSET(Display.WireframeRGBA), "Display.WireframeRGBA" },
   { OFFSET(Display.NormalsRGBA), "Display.NormalsRGBA" },
   { OFFSET(Display.EndpointsRGBA), "Display.EndpointsRGBA" },
-  { OFFSET(Display.GCodeExtrudeRGBA), "Display.GCodeExtrudeRGBA" },
+  /* { OFFSET(Display.GCodeExtrudeRGBA), "Display.GCodeExtrudeRGBA" }, */
   { OFFSET(Display.GCodePrintingRGBA), "Display.GCodePrintingRGBA" },
   { OFFSET(Display.GCodeMoveRGBA), "Display.GCodeMoveRGBA" }
 };
@@ -583,6 +588,9 @@ void Settings::set_defaults ()
 
   GCode.m_impl->setDefaults();
 
+  Extruders.clear();
+  Extruders.push_back(Extruder);
+
   // The vectors map each to 3 spin boxes, one per dimension
   Hardware.Volume = Vector3d (200,200,140);
   Hardware.PrintMargin = Vector3d (10,10,0);
@@ -615,33 +623,28 @@ bool Settings::get_group_and_key (int i, Glib::ustring &group, Glib::ustring &ke
   return true;
 }
 
-void Settings::load_settings (Glib::RefPtr<Gio::File> file)
+
+// load settings of group onlygroup into setting group as_group
+// (if given)
+// as_group must have same settings as onlygroup (Extruders)
+void Settings::load_settings_as (const Glib::KeyFile &cfg,
+				 const Glib::ustring onlygroup,
+				 const Glib::ustring as_group)
 {
-  Glib::KeyFile cfg;
-
-  Filename = file->get_path();
-
-  set_defaults();
-
-  try {
-    if (!cfg.load_from_file (file->get_path())) {
-      std::cout << _("Failed to load settings from file '") << file->get_path() << "\n";
-      return;
-    }
-  } catch (const Glib::KeyFileError &err) {
-    std::cout << _("Exception ") << err.what() << _(" loading settings from file '") << file->get_path() << "\n";
-    return;
-  }
-
-  std::cerr << _("Parsing config from '") << file->get_path() << "\n";
-
-  Misc.SpeedsAreMMperSec = false;
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
 
     Glib::ustring group, key;
 
     if (!get_group_and_key (i, group, key))
       continue;
+
+    if (as_group != "") { // if as_group given
+      if (as_group != group.substr(0,as_group.length()))
+	continue;         // don't load other settings
+    }
+
+    if (onlygroup != "") // if onlygroup given
+      group = onlygroup; // load setting from onlygroup
 
     try {
       if (!cfg.has_key (group, key))
@@ -671,6 +674,48 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     default:
       std::cerr << _("corrupt setting type") << group << " : " << key << endl;;
       break;
+    }
+  }
+
+}
+void Settings::load_settings (Glib::RefPtr<Gio::File> file)
+{
+
+  Glib::KeyFile cfg;
+
+  Filename = file->get_path();
+
+  set_defaults();
+
+  try {
+    if (!cfg.load_from_file (file->get_path())) {
+      std::cout << _("Failed to load settings from file '") << file->get_path() << "\n";
+      return;
+    }
+  } catch (const Glib::KeyFileError &err) {
+    std::cout << _("Exception ") << err.what() << _(" loading settings from file '") << file->get_path() << "\n";
+    return;
+  }
+
+  std::cerr << _("Parsing config from '") << file->get_path() << "\n";
+
+  Misc.SpeedsAreMMperSec = false;
+
+  load_settings_as(cfg);
+
+  // first extruder is the loaded "Extruder"
+  if (Extruders.size()==0)
+    Extruders.push_back(Extruder);
+  else
+    Extruders[0] = Extruder;
+  // Load other extruders "ExtruderN" (N=2..)
+  std::vector< Glib::ustring > all_groups = cfg.get_groups();
+  for (uint i = 0; i<all_groups.size(); i++) {
+    if (all_groups[i].substr(0,8) == "Extruder") {
+      if (all_groups[i].length() > 8) {
+	load_settings_as(cfg, all_groups[i], "Extruder");
+	Extruders.push_back(Extruder);
+      }
     }
   }
 
@@ -717,15 +762,15 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
   // if loading old settings with mm/min instead of mm/sec, recalc:
   if (!Misc.SpeedsAreMMperSec) {
     cerr << "Feedrates to mm/sec" << endl;
-    Hardware.MinPrintSpeedXY /= 60.0;
-    Hardware.MaxPrintSpeedXY /= 60.0;
-    Hardware.MoveSpeed /= 60.0;
-    Hardware.MinPrintSpeedZ /= 60.0;
-    Hardware.MaxPrintSpeedZ /= 60.0;
+    Hardware.MinMoveSpeedXY /= 60.0;
+    Hardware.MaxMoveSpeedXY /= 60.0;
+    Hardware.MinMoveSpeedZ /= 60.0;
+    Hardware.MaxMoveSpeedZ /= 60.0;
     Extruder.EMaxSpeed /= 60.0;
+    Extruder.MaxLineSpeed /= 60.0;
     Extruder.MaxShellSpeed /= 60.0;
     Printer.ExtrudeSpeed /= 60.0;
-    Slicing.AntioozeSpeed /= 60.0;
+    Extruder.AntioozeSpeed /= 60.0;
     Slicing.MaxOverhangSpeed /= 60.0;
   }
   Misc.SpeedsAreMMperSec = true;
@@ -735,15 +780,22 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
   m_signal_update_settings_gui.emit();
 }
 
-void Settings::save_settings(Glib::RefPtr<Gio::File> file)
+void Settings::save_settings_as(Glib::KeyFile &cfg,
+				const Glib::ustring onlygroup,
+				const Glib::ustring as_group)
 {
-  Glib::KeyFile cfg;
-
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
     Glib::ustring group, key;
 
     if (!get_group_and_key (i, group, key))
       continue;
+
+    if (onlygroup != "") { // if onlygroup given
+      if (onlygroup != group.substr(0,onlygroup.length()))
+	continue;          // only save onlygroup
+      if (as_group != "")  // and use name as_group if given
+	group = as_group;
+    }
 
     switch (settings[i].type) {
     case T_BOOL:
@@ -767,6 +819,16 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
       break;
     };
   }
+}
+
+void Settings::save_settings(Glib::RefPtr<Gio::File> file)
+{
+  Glib::KeyFile cfg;
+
+  Extruder = Extruders[0]; // save first extruder as "Extruder"
+
+  save_settings_as(cfg); // all settings
+
   ostringstream os; os << Misc.window_width;
   cfg.set_string("Misc", "WindowWidth", os.str());
   os.str(""); os << Misc.window_height;
@@ -789,6 +851,14 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
     std::replace(s.begin(),s.end(),' ','_');
     cfg.set_string(CBgroup, s, CustomButtonGcode[i]);
   }
+
+  // save extruders 2.. as ExtruderN
+  for (uint e = 1; e < Extruders.size(); e++) {
+    Extruder = Extruders[e];
+    ostringstream o; o << "Extruder" << e+1 ;
+    save_settings_as(cfg, "Extruder", o.str());
+  }
+
 
   Glib::ustring contents = cfg.to_data();
   Glib::file_set_contents (file->get_path(), contents);
@@ -980,7 +1050,7 @@ void Settings::get_from_gui (Builder &builder, int i)
     break;
   }
   case T_COLOUR_MEMBER:
-    // Ignore, colour members are special
+    // Ignore, colour members are special -> get_colour_from_gui
     break;
   default:
     std::cerr << _("corrupt setting type") << glade_name << endl;;
@@ -988,6 +1058,14 @@ void Settings::get_from_gui (Builder &builder, int i)
   }
 
   m_user_changed |= true; // is_changed;
+
+
+  if (string(glade_name).substr(0,8) == "Extruder") {
+    // copy settings to selected Extruder
+    if (selectedExtruder < Extruders.size())
+      Extruders[selectedExtruder] = Extruder;
+  }
+
 
   // bit of a hack ...
   if (!strcmp (settings[i].config_name, "CommsDebug"))
@@ -1143,15 +1221,22 @@ void Settings::get_colour_from_gui (Builder &builder, int i)
   dest->b() = c.get_blue_p();
   dest->a() = (float) (w->get_alpha()) / 65535.0;
 
+  if (string(glade_name).substr(0,8) == "Extruder") {
+    // copy settings to selected Extruder
+    if (selectedExtruder < Extruders.size())
+      Extruders[selectedExtruder] = Extruder;
+  }
   m_signal_visual_settings_changed.emit();
 }
 
-void Settings::set_to_gui (Builder &builder)
+void Settings::set_to_gui (Builder &builder, const string filter)
 {
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
     const char *glade_name = settings[i].glade_name;
 
     if (!glade_name)
+      continue;
+    if (filter != "" && string(glade_name).substr(0,filter.length()) != filter)
       continue;
     set_to_gui (builder, i);
   }
@@ -1160,6 +1245,8 @@ void Settings::set_to_gui (Builder &builder)
 
   for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
       const char *glade_name = colour_selectors[i].glade_name;
+      if (filter != "" && string(glade_name).substr(0,filter.length()) != filter)
+	continue;
       Vector4f *src =
         (Vector4f *) PTR_OFFSET(this, colour_selectors[i].member_offset);
       Gdk::Color c;
@@ -1362,12 +1449,37 @@ double Settings::ExtruderSettings::GetExtrudeFactor(double layerheight) const
   return f;
 }
 
+
+void Settings::CopyExtruder(uint num)
+{
+  if (num >= Extruders.size()) return;
+  ExtruderSettings newsettings;
+  if (Extruders.size() == 0)
+    newsettings = Extruder;
+  else
+    newsettings = Extruders[num];
+  Extruders.push_back(newsettings);
+}
+void Settings::RemoveExtruder(uint num)
+{
+  if (num >= Extruders.size()) return;
+  if (Extruders.size() == 0) return;
+  Extruders.erase(Extruders.begin()+num);
+}
+void Settings::SelectExtruder(uint num)
+{
+  if (num < Extruders.size()) {
+    selectedExtruder = num;
+    Extruder = Extruders[num];
+  }
+}
+
 Matrix4d Settings::getBasicTransformation(Matrix4d T) const
 {
   Vector3d t;
   T.get_translation(t);
-  t+= Vector3d(Hardware.PrintMargin.x()+Raft.Size*RaftEnable,
-	       Hardware.PrintMargin.y()+Raft.Size*RaftEnable,
+  t+= Vector3d(Hardware.PrintMargin.x()+Raft.Size*Raft.Enable,
+	       Hardware.PrintMargin.y()+Raft.Size*Raft.Enable,
 	       0);
   T.set_translation(t);
   return T;

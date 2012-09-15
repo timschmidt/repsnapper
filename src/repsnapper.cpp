@@ -256,11 +256,10 @@ int main(int argc, char **argv)
   Model *model = new Model();
 
   if (opts.settings_path.size() > 0)
-    model->LoadConfig(Gio::File::create_for_path(opts.settings_path));
-  else {
-      // TODO: Error detection
+    conf = Gio::File::create_for_path(opts.settings_path);
+
+  if (conf->query_exists())
     model->LoadConfig(conf);
-  }
 
   bool nonprintingmode = false;
 

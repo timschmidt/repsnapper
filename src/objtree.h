@@ -68,12 +68,14 @@ public:
 	    add (m_name); add (m_object);
 	    add (m_shape); add(m_pickindex);
 	    add (m_material);
+	    //add (m_extruder);
 	  }
 	  Gtk::TreeModelColumn<Glib::ustring> m_name;
 	  Gtk::TreeModelColumn<int>           m_object;
 	  Gtk::TreeModelColumn<int>           m_shape;
 	  Gtk::TreeModelColumn<int>           m_pickindex;
 	  Gtk::TreeModelColumn<int>           m_material;
+	  //Gtk::TreeModelColumn<Gtk::ComboBox*> m_extruder;
 	};
 
 	ObjectsTree();
