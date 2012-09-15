@@ -42,11 +42,11 @@ void Transform3D::identity()
   // scale_factor_z = 1;
   // scale_factor = 1;
 }
-Matrix4f Transform3D::getFloatTransform() const 
+Matrix4f Transform3D::getFloatTransform() const
 {
   return (Matrix4f) transform;
 }
-void Transform3D::setTransform(const Matrix4f &matr) 
+void Transform3D::setTransform(const Matrix4f &matr)
 {
   transform = (Matrix4f) matr;
 }
@@ -173,7 +173,7 @@ void evaluate_arcfit( const double *par, int m_dat, const void *data,
   }
 }
 
-bool fit_arc(const int m_dat, const arc_data_struct data, 
+bool fit_arc(const int m_dat, const arc_data_struct data,
 	     const int n_par, double *par, double sq_error,
 	     Vector2d &result_center, double &result_radiussq)
 {
@@ -197,13 +197,13 @@ bool fit_arc(const int m_dat, const arc_data_struct data,
   evaluate_arcfit(par, m_dat, (const void*) &data, fvec, &info);
   double totres = 0;
   for (int i=0; i<m_dat; ++i ) totres+=fvec[i];
-  
+
   return  (totres < sq_error);
 
   printf( "\nResults:\n" );
   printf( "status after %d function evaluations:\n  %s\n",
 	  status.nfev, lm_infmsg[status.info] );
-  
+
   printf("obtained parameters:\n");
   int i;
   for ( i=0; i<n_par; ++i )
@@ -222,7 +222,7 @@ bool fit_arc(const int m_dat, const arc_data_struct data,
 }
 
 // find center for best fit of arcpoints
-bool fit_arc(const vector<Vector2d> &points, double sq_error, 
+bool fit_arc(const vector<Vector2d> &points, double sq_error,
 	     Vector2d &result_center, double &result_radiussq)
 {
   if (points.size() < 3) return false;
@@ -273,7 +273,7 @@ void moveArcballTrans(Matrix4fT &matfT, const Vector3d &delta) {
     uint i = it - matf.begin();
     *it = matfT.M[i];
   }
-  move(delta,matf);  
+  move(delta,matf);
   for (mIt it = matf.begin(); it!=matf.end(); ++it){
     uint i = it - matf.begin();
     matfT.M[i] = *it;
@@ -312,15 +312,15 @@ void rotArcballTrans(Matrix4fT &matfT,  const Vector3d &axis, double angle)
 
 // // from V1 to V2
 // template< size_t M, typename T >
-// long double angleBetween(const vmml::vector< M, T > V1, const vmml::vector< M, T > V2 ) 
+// long double angleBetween(const vmml::vector< M, T > V1, const vmml::vector< M, T > V2 )
 // {
 //   long double dotproduct =  V1.dot(V2);
 //   long double length = V1.length() * V2.length();
 //   long double quot = dotproduct / length;
 //   if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
 //   if (quot < -1 && quot > -1.0001) quot = -1;
-//   long double result = acosl( quot ); // 0 .. pi 
-//   if (isleftof(T(), V2, V1)) 
+//   long double result = acosl( quot ); // 0 .. pi
+//   if (isleftof(T(), V2, V1))
 //       result = -result;
 //   return result;
 // }
@@ -334,8 +334,8 @@ long double angleBetween(const Vector3d &V1, const Vector3d &V2)
   long double quot = dotproduct / length;
   if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
   if (quot < -1 && quot > -1.0001) quot = -1;
-  long double result = acosl( quot ); // 0 .. pi 
-  if (isleftof(Vector3d(0,0,0), V2, V1)) 
+  long double result = acosl( quot ); // 0 .. pi
+  if (isleftof(Vector3d(0,0,0), V2, V1))
       result = -result;
   return result;
 }
@@ -348,13 +348,13 @@ long double angleBetween(const Vector2d &V1, const Vector2d &V2)
   long double quot = dotproduct / length;
   if (quot > 1  && quot < 1.0001) quot = 1;
   if (quot < -1 && quot > -1.0001) quot = -1;
-  long double result = acosl( quot ); // 0 .. pi 
-  if (isleftof(Vector2d(0,0), V2, V1)) 
+  long double result = acosl( quot ); // 0 .. pi
+  if (isleftof(Vector2d(0,0), V2, V1))
       result = -result;
   return result;
 }
 
-// return A halfway rotated around center in direction of B 
+// return A halfway rotated around center in direction of B
 Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B)
 {
   double angle = angleBetween(center-A, B-center) / 2;
@@ -371,7 +371,7 @@ bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B)
 }
 bool isleftof(const  Vector3d &center, const Vector3d &A, const Vector3d &B)
 {
-  return ((B-A).cross(center-A).z() > 0); 
+  return ((B-A).cross(center-A).z() > 0);
 }
 // // http://www.cs.uwaterloo.ca/~tmchan/ch3d/ch3dquad.cc
 // double turn(Point p, Point q, Point r) {  // <0 iff cw
@@ -383,7 +383,7 @@ void center_perpendicular(const Vector2d &from, const Vector2d &to,
 {
   Vector2d center = (from+to)/2.;
   Vector2d dir = Vector2d(from.y()-to.y(), to.x()-from.x());
-  p1 = center; 
+  p1 = center;
   p2 = center + dir;
 }
 
@@ -422,7 +422,7 @@ void rotate(Vector2d &p, const Vector2d &center, double angle, bool ccw)
   double cosa = cos(angle);
   double sina = sin(angle);
   Vector2d r(p - center);
-  p.x() = center.x() + r.x() * cosa - r.y() * sina; 
+  p.x() = center.x() + r.x() * cosa - r.y() * sina;
   p.y() = center.y() + r.x() * sina + r.y() * cosa;
 }
 
@@ -440,15 +440,15 @@ Vector2d rotated(const Vector2d &p, const Vector2d &center, double angle, bool c
 
 // squared minimum distance of p to segment s1--s2, onseg = resulting point on segment
 // http://stackoverflow.com/a/1501725
-double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2, 
+double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2,
 				 const Vector2d &p, Vector2d &onseg) {
   const double l2 = (s2-s1).squared_length();  // i.e. |w-v|^2 -  avoid a sqrt
   if (l2 == 0.0) { // s1 == s2 case
     onseg = s1;
-    return (p-s1).squared_length();   
-  } 
+    return (p-s1).squared_length();
+  }
   // Consider the line extending the segment, parameterized as s1 + t (s2 - s1).
-  // We find projection of point p onto the line. 
+  // We find projection of point p onto the line.
   // It falls where t = [(p-s1) . (s2-s1)] / |s2-s1|^2
   const double t = (p-s1).dot(s2-s1) / l2;
   if (t < 0.0) {
@@ -463,7 +463,7 @@ double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2,
   return (onseg-p).squared_length();
 }
 
-vector<Poly> thick_lines(const vector<Vector2d> &points,  double width) 
+vector<Poly> thick_lines(const vector<Vector2d> &points,  double width)
 {
   vector<Poly> poly;
   for (uint i = 0; i<points.size()-1; i++) {
@@ -473,7 +473,7 @@ vector<Poly> thick_lines(const vector<Vector2d> &points,  double width)
   return poly;
 }
 
-vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width) 
+vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width)
 {
   vector<Poly> p;
   if (width < 0.001) return p;
@@ -495,8 +495,8 @@ vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width)
 }
 
 // directed (one end is wider than the other)
-vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to, 
-			    double fr_width, double to_width) 
+vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to,
+			    double fr_width, double to_width)
 {
   vector<Poly> p;
   if (fr_width < 0.001 || to_width < 0.001) return p;
@@ -504,7 +504,7 @@ vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to,
   if ((fr_width < 0) != (to_width < 0)) return p;
   Poly poly;
   Vector2d fdir = (to-from); fdir.normalize();
-  Vector2d tdir = fdir;  
+  Vector2d tdir = fdir;
   fdir *= fr_width/4.;
   tdir *= to_width/4.;
   Vector2d fr_dirp(-fdir.y(), fdir.x());
@@ -530,11 +530,11 @@ vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to,
 
 // Line Segment Intersection
 // http://wiki.processing.org/w/Line-Line_intersection
-// bool segIntersection(const Vector2d &p1, const Vector2d &p2, 
-// 		     const Vector2d &p3, const Vector2d &p4, 
+// bool segIntersection(const Vector2d &p1, const Vector2d &p2,
+// 		     const Vector2d &p3, const Vector2d &p4,
 // 		     Intersection &hit,
-// 		     double maxoffset) 
-// { 
+// 		     double maxoffset)
+// {
 //   double bx = p2.x() - p1.x();
 //   double by = p2.y() - p1.y();
 //   double dx = p4.x() - p3.x();
@@ -550,7 +550,7 @@ vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to,
 //     return false;
 //   }
 //   double u = (cx * by - cy * bx) / b_dot_d_perp;
-//   if (u < maxoffset || u > 1-maxoffset) { 
+//   if (u < maxoffset || u > 1-maxoffset) {
 //     return false;
 //   }
 //   hit.p = Vector2d(p1.x() + t*bx, p2.y() + t*by);
@@ -563,11 +563,11 @@ vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to,
 
 
 // Check the segments p1-p2 and p3-p4 for intersection,
-// If the segments intersection, the intersection 
+// If the segments intersection, the intersection
 // also checks that the intersection point is actually on
 // the line segment p1-p2
-bool IntersectXY(const Vector2d &p1, const Vector2d &p2, 
-		 const Vector2d &p3, const Vector2d &p4, 
+bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
+		 const Vector2d &p3, const Vector2d &p4,
 		 Intersection &hit, double maxoffset)
 {
   Vector2d inter2;
@@ -584,7 +584,7 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 // The following functions
 // (inSegment, intersect2D_Segments and dist3D_Segment_to_Segment)
 // are licensed as:
-// 
+//
 // Copyright 2001, softSurfer (www.softsurfer.com)
 // This code may be freely used and modified for any purpose
 // providing that this copyright notice is included with it.
@@ -622,9 +622,9 @@ bool inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
 //            2=overlap in segment from I0 to I1
 //            3=lines intersect outside the segments
 #define perp(u,v)  ((u).x() * (v).y() - (u).y() * (v).x())  // perp product (2D)
-int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
-			  const Vector2d &p3, const Vector2d &p4, 
-			  Vector2d &I0, Vector2d &I1, 
+int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
+			  const Vector2d &p3, const Vector2d &p4,
+			  Vector2d &I0, Vector2d &I1,
 			  double maxerr)
 {
   Vector2d    u = p2 - p1;
@@ -712,7 +712,7 @@ int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
 // dist3D_Segment_to_Segment():
 //    Input:  two 3D line segments S1 and S2
 //    Return: the shortest distance between S1 and S2
-double dist3D_Segment_to_Segment(const Vector3d &S1P0, const Vector3d &S1P1, 
+double dist3D_Segment_to_Segment(const Vector3d &S1P0, const Vector3d &S1P1,
 				 const Vector3d &S2P0, const Vector3d &S2P1, double SMALL_NUM)
 {
      Vector3d   u = S1P1 - S1P0;
@@ -797,7 +797,7 @@ bool pointInPolys(const Vector2d &point,  const vector<Poly> &polys)
 
 // will return false
 // if the line cuts any of the given polygons except excluded one
-bool lineInPolys(const Vector2d &from, const Vector2d &to, const vector<Poly> &polys, 
+bool lineInPolys(const Vector2d &from, const Vector2d &to, const vector<Poly> &polys,
 		 uint excludepoly, double maxerr)
 {
   uint ninter = 0;
@@ -811,7 +811,7 @@ bool lineInPolys(const Vector2d &from, const Vector2d &to, const vector<Poly> &p
   }
   return (ninter != 0);
 }
-      
+
 //  Finds the shortest path from from to to that stays within the polygon set.
 //
 //  Note:  To be safe, the solutionX and solutionY arrays should be large enough
@@ -829,18 +829,18 @@ struct pathpoint {
   int prev;
 };
 // excludepoly: poly not to test, contains from and to vectors.
-bool shortestPath(const Vector2d &from, const Vector2d &to, 
-		  const vector<Poly> &polys, int excludepoly, 
+bool shortestPath(const Vector2d &from, const Vector2d &to,
+		  const vector<Poly> &polys, int excludepoly,
 		  vector<Vector2d> &path, double maxerr)
 {
   //  Fail if either the startpoint or endpoint is outside the polygon set.
   if (!pointInPolys(from, polys)
       ||  !pointInPolys(to, polys))
-    return false; 
-  
+    return false;
+
   //  If there is a straight-line solution, no path vertices added
-  if (lineInPolys(from, to, polys, excludepoly, maxerr)) 
-    return true; 
+  if (lineInPolys(from, to, polys, excludepoly, maxerr))
+    return true;
 
   const double INF = 9999999.;     //  (larger than total solution dist could ever be)
   double  bestDist, newDist ;
@@ -857,22 +857,22 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
   uint pointCount = pointList.size();
 
   //  Initialize the shortest-path tree to include just the startpoint.
-  uint treeCount=1; 
+  uint treeCount=1;
 
   //  Iteratively grow the shortest-path tree until it reaches the endpoint
   //  -- or until it becomes unable to grow, in which case exit with failure.
   uint bestI = 0, bestJ = 0;
   while (bestJ < pointCount-1) { // until the to-point is arrived
     bestDist = INF;
-    // for every path point so far find another with minimal total path length 
+    // for every path point so far find another with minimal total path length
     for (uint i = 0; i < treeCount; i++) {
       for (uint j = treeCount; j < pointCount; j++) {
-	if (lineInPolys(pointList[i].v, pointList[j].v, 
+	if (lineInPolys(pointList[i].v, pointList[j].v,
 			polys, -1, maxerr)) { // line does not intersect
 	  // take point into account
-	  newDist = pointList[i].totalDist + 
+	  newDist = pointList[i].totalDist +
 	    (pointList[i].v - pointList[j].v).length();
-	  if (newDist < bestDist) { // if shortest total path 
+	  if (newDist < bestDist) { // if shortest total path
 	    //cerr << i << " found " << j << " - " << newDist << " - " <<pointList[j].v <<endl;
 	    bestDist = newDist;
 	    bestI = i;
@@ -891,7 +891,7 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
     // pointList[treeCount] = pointList[bestJ];
     // pointList[bestJ] = SWAP;
     swap(pointList[bestJ], pointList[treeCount]);
-    treeCount++; 
+    treeCount++;
   }
   // for (uint i = 0; i < treeCount; i++) {
   //   cerr << i << " PL " << pointList[i].prev << endl;
@@ -905,7 +905,7 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
     cerr << treeCount << " - " << numsolutions << " - " << i << endl;
   }
   return true;
-  
+
   int j = numsolutions-1;
   if (j > 0) {
     int psize = path.size();
@@ -918,9 +918,9 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
     }
   }
   //  Success.
-  return true; 
+  return true;
 }
-  
+
 
 
 /////////////////////////// CONVEX HULL /////////////////////////
@@ -945,23 +945,23 @@ struct sortable_point {
 
 // calc convex hull and Min and Max of layer
 // Monotone chain algo
-Poly convexHull2D(const vector<Poly> &polygons) 
+Poly convexHull2D(const vector<Poly> &polygons)
 {
   Poly hullPolygon;
   vector<struct sortable_point> P;
-  for (uint i = 0; i<polygons.size(); i++) 
+  for (uint i = 0; i<polygons.size(); i++)
     for (uint j = 0; j<polygons[i].size(); j++) {
       struct sortable_point point;
       point.v = polygons[i].vertices[j];
       P.push_back(point);
     }
-  
+
   int n = P.size();
   vector<Vector2d> H(2*n);
 
   if (n<2) return hullPolygon;
   if (n<4) {
-    for (int i = 0; i < n; i++) 
+    for (int i = 0; i < n; i++)
       hullPolygon.addVertex(P[i].v);
     return hullPolygon;
   }
@@ -973,7 +973,7 @@ Poly convexHull2D(const vector<Poly> &polygons)
     while (k >= 2 && cross_2(H[k-2], H[k-1], P[i].v) <= 0) k--;
     H[k++] = P[i].v;
   }
- 
+
   // Build upper hull
   for (int i = n-2, t = k+1; i >= 0; i--) {
     while (k >= t && cross_2(H[k-2], H[k-1], P[i].v) <= 0) k--;
@@ -1015,7 +1015,7 @@ int cleandist(vector<Vector2d> &vert, double epsilon)
 
 // Douglas-Peucker algorithm
 vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon)
-{ 
+{
   if (epsilon == 0) return vert;
   uint n_vert = vert.size();
   if (n_vert<3) return vert;
@@ -1025,7 +1025,7 @@ vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon)
   Vector2d normal = normalV(vert.back()-vert.front());
   normal.normalize();
   if( (normal.length()==0) || ((abs(normal.length())-1)>epsilon) ) return vert;
-  for (uint i = 1; i < n_vert-1 ; i++) 
+  for (uint i = 1; i < n_vert-1 ; i++)
     {
       double dist = abs((vert[i]-vert.front()).dot(normal));
       if (dist >= epsilon && dist > dmax) {
@@ -1036,7 +1036,7 @@ vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon)
   vector<Vector2d> newvert;
   if (index > 0) // there is a point > epsilon
     {
-      // divide at max dist point and cleanup both parts recursively 
+      // divide at max dist point and cleanup both parts recursively
       vector<Vector2d> part1;
       part1.insert(part1.end(), vert.begin(), vert.begin()+index+1);
       vector<Vector2d> c1 = simplified(part1, epsilon);
@@ -1046,7 +1046,7 @@ vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon)
       newvert.insert(newvert.end(), c1.begin(), c1.end()-1);
       newvert.insert(newvert.end(), c2.begin(), c2.end());
     }
-  else 
+  else
     { // all points are nearer than espilon
       newvert.push_back(vert.front());
       newvert.push_back(vert.back());
@@ -1062,7 +1062,7 @@ vector<p2t::Point*> getP2Tpoints(const Poly &poly)
 {
   vector<p2t::Point*> points(poly.size());
   for (uint i=0; i<poly.size(); i++)  {
-    points[i] = new p2t::Point(poly.vertices[i].x(), 
+    points[i] = new p2t::Point(poly.vertices[i].x(),
 			       poly.vertices[i].y());
   }
   return points;
@@ -1115,10 +1115,10 @@ int triangulate(const vector<Poly> &polys, vector< vector<Triangle> > &triangles
 
 //#include "triangle/PolygonTriangulator.h"
 
-int delaunayTriang(const vector<Vector2d> &points, 
-		   vector<Triangle> &triangles, 
+int delaunayTriang(const vector<Vector2d> &points,
+		   vector<Triangle> &triangles,
 		   double z)
-{  
+{
 #define PTRIANGULATOR 0
 #if PTRIANGULATOR
   vector<Vector2d> spoints = simplified(points, 1);
@@ -1129,7 +1129,7 @@ int delaunayTriang(const vector<Vector2d> &points,
     xpoints[i] = spoints[npoints-i-1].x();
     ypoints[i] = spoints[npoints-i-1].y();
   }
-  
+
   polytri::PolygonTriangulator pt(xpoints, ypoints);
 
   const polytri::PolygonTriangulator::Triangles * tr = pt.triangles();
@@ -1143,9 +1143,9 @@ int delaunayTriang(const vector<Vector2d> &points,
   uint itri=0;
   for (polytri::PolygonTriangulator::Triangles::const_iterator itr = tr->begin();
        itr != tr->end(); ++itr) {
-    
+
     const polytri::PolygonTriangulator::Triangle t = *itr;
-    
+
     triangles[itri] = Triangle(Vector3d(xpoints[t[0]], ypoints[t[0]], z),
 			       Vector3d(xpoints[t[1]], ypoints[t[1]], z),
 			       Vector3d(xpoints[t[2]], ypoints[t[2]], z));
@@ -1156,56 +1156,56 @@ int delaunayTriang(const vector<Vector2d> &points,
 #endif
 
   // struct triangulateio in;
-	
+
   // in.numberofpoints = npoints;
   // in.numberofpointattributes = (int)0;
-  // in.pointlist = 
+  // in.pointlist =
   // in.pointattributelist = NULL;
   // in.pointmarkerlist = (int *) NULL;
   // in.numberofsegments = 0;
   // in.numberofholes = 0;
   // in.numberofregions = 0;
   // in.regionlist = (REAL *) NULL;
-  
+
   // delclass = new piyush;
   // piyush *pdelclass = (piyush *)delclass;
   // triswitches.push_back('\0');
   // char *ptris = &triswitches[0];
-  
+
 
   // pmesh = new piyush::__pmesh;
   // pbehavior = new piyush::__pbehavior;
-  
+
   // piyush::__pmesh     * tpmesh     = (piyush::__pmesh *)     pmesh;
   // piyush::__pbehavior * tpbehavior = (piyush::__pbehavior *) pbehavior;
-  
+
   // pdelclass->triangleinit(tpmesh);
   // pdelclass->parsecommandline(1, &ptris, tpbehavior);
-  
-  // pdelclass->transfernodes(tpmesh, tpbehavior, in.pointlist, 
+
+  // pdelclass->transfernodes(tpmesh, tpbehavior, in.pointlist,
   // 			   in.pointattributelist,
   // 			   in.pointmarkerlist, in.numberofpoints,
   // 			   in.numberofpointattributes);
   // tpmesh->hullsize = pdelclass->delaunay(tpmesh, tpbehavior);
-	
+
   // /* Ensure that no vertex can be mistaken for a triangular bounding */
   // /*   box vertex in insertvertex().                                 */
   // tpmesh->infvertex1 = (piyush::vertex) NULL;
   // tpmesh->infvertex2 = (piyush::vertex) NULL;
   // tpmesh->infvertex3 = (piyush::vertex) NULL;
-  
+
   // 	/* Calculate the number of edges. */
   // tpmesh->edges = (3l * tpmesh->triangles.items + tpmesh->hullsize) / 2l;
   // pdelclass->numbernodes(tpmesh, tpbehavior);
-	
+
 
 
   /////////////////////////////////////////////// triangle++ crap
 
 
-  // typedef reviver::dpoint <double, 2> Point; 
+  // typedef reviver::dpoint <double, 2> Point;
   // vector<Point> p(points.size());
-  // for (uint i = 0; i < p.size(); i++) { 
+  // for (uint i = 0; i < p.size(); i++) {
   //   p[i] = Point(points[i].x(),points[i].y());
   // }
   // tpp::Delaunay del(p);
@@ -1292,7 +1292,7 @@ int delaunayTriang(const vector<Vector2d> &points,
 //   return false;
 // }
 
-// int delaunayTriang(const vector<Vector2d> &points, vector<Triangle> &triangles, 
+// int delaunayTriang(const vector<Vector2d> &points, vector<Triangle> &triangles,
 // 		   double z)
 // {
 //   if (points.size() < 3) return 0;
@@ -1303,18 +1303,18 @@ int delaunayTriang(const vector<Vector2d> &points,
 
 //   vector<int> seq(nump,1); // 1,1,1...
 //   partial_sum(seq.begin(), seq.end(), seq.begin()); // 1,2,3,...,20
-//   srand(time(NULL)); 
-//   random_shuffle(seq.begin(), seq.end()); // shuffle  
+//   srand(time(NULL));
+//   random_shuffle(seq.begin(), seq.end()); // shuffle
 
 //   vector<triangle2> d_triangles;
 
 //   triangle2 t = { points[seq[0]-1], points[seq[1]-1], points[seq[2]-1] };
 //   d_triangles.push_back(t);
-  
+
 //   for (uint i = 3; i < nump; i+=3) {
 //     //triangle2 t = { points[seq[i]-1], points[seq[i+1]-1], points[seq[i+2]-1] };
 //     bool deleted = false;
-//     for (int ti = d_triangles.size()-1; ti >= 0 ; ti--) { 
+//     for (int ti = d_triangles.size()-1; ti >= 0 ; ti--) {
 //       if (pointInCircumcircle( d_triangles[ti], points[seq[i]-1] )) {
 // 	d_triangles.erase(d_triangles.begin()+ti);
 // 	deleted = true;
@@ -1328,10 +1328,10 @@ int delaunayTriang(const vector<Vector2d> &points,
 //     }
 
 //   }
-  
+
 //   return triangles.size();
 //   // double xy[point_num*2];
-  
+
 //   // for (uint i=0; i < point_num; i+=2)  {
 //   //   xy[i]   = poly.vertices[i].x();
 //   //   xy[i+1] = poly.vertices[i].y();
@@ -1342,7 +1342,7 @@ int delaunayTriang(const vector<Vector2d> &points,
 
 //   // int result = dtris2(point_num, xy, &tri_num, tri_vert, tri_nabe);
 
-//   // if (result != 0) 
+//   // if (result != 0)
 //   //   return triangles;
 
 //   // double z = poly.getZ();
@@ -1392,7 +1392,7 @@ Matrix3d getMatrix(const Cairo::RefPtr<Cairo::Context> context)
 bool rasterpolys(const vector<Poly> &polys,
 		 const Vector2d &min, const Vector2d &max, double resolution,
 		 Cairo::RefPtr<Cairo::ImageSurface> &surface,
-		 Cairo::RefPtr<Cairo::Context> &context) 
+		 Cairo::RefPtr<Cairo::Context> &context)
 {
   Vector2d diag = max - min;
   int width  = (int)ceil(diag.x()/resolution);
@@ -1438,20 +1438,20 @@ bool rasterpolys(const vector<Poly> &polys,
 }
 
 
-void glDrawPolySurfaceRastered(const vector<Poly> &polys, 
-			       const Vector2d &min, const Vector2d &max, 
+void glDrawPolySurfaceRastered(const vector<Poly> &polys,
+			       const Vector2d &min, const Vector2d &max,
 			       const double z,
-			       const double resolution) 
-{  
+			       const double resolution)
+{
   Cairo::RefPtr<Cairo::ImageSurface> surface;
-  Cairo::RefPtr<Cairo::Context> context; 
+  Cairo::RefPtr<Cairo::Context> context;
   if (!rasterpolys(polys, min, max, resolution, surface, context)) return;
   glDrawCairoSurface(surface, min, max,z);
 }
 
 
 void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
-			const Vector2d &min, const Vector2d &max, 
+			const Vector2d &min, const Vector2d &max,
 			const double z)
 {
   if (surface==0) return;
@@ -1470,13 +1470,13 @@ void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
 		   GL_LINEAR_MIPMAP_NEAREST );
   // when texture area is large, bilinear filter the original
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-  
+
   // build our texture mipmaps
   gluBuild2DMipmaps( GL_TEXTURE_2D, GL_ALPHA, w, h,
 		     GL_ALPHA, GL_UNSIGNED_BYTE, data );
-  
+
   glEnable(GL_TEXTURE_2D);
-  glBegin(GL_QUADS); 
+  glBegin(GL_QUADS);
   glTexCoord2d(0.0,0.0); glVertex3d(min.x(),min.y(),z);
   glTexCoord2d(1.0,0.0); glVertex3d(max.x(),min.y(),z);
   glTexCoord2d(1.0,1.0); glVertex3d(max.x(),max.y(),z);
@@ -1487,8 +1487,8 @@ void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
 }
 
 int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
-			     const Vector2d &min, const Vector2d &max, 
-			     const Vector2d &p) 
+			     const Vector2d &min, const Vector2d &max,
+			     const Vector2d &p)
 {
   if (surface==0) return 0;
   const int w = surface->get_stride();
