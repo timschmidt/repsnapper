@@ -268,9 +268,10 @@ bool Render::on_button_press_event(GdkEventButton* event)
   m_downPoint = Vector2f(event->x, event->y);
   // "moving" mouse-down, updated with dragpoint on mouse move:
   m_dragStart = Vector2f(event->x, event->y);
-  if (event->button == 1) {
-    // on button 1, if there is an object, select it (easier dragging)
-    m_arcBall->click (event->x, event->y, &m_transform);
+  m_arcBall->click (event->x, event->y, &m_transform);
+  // on button 1 with shift/ctrl, if there is an object, select it (for dragging)
+  if ( event->button == 1 &&
+       (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK) )  {
     guint index = find_object_at(event->x, event->y);
     if (index) {
       Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
@@ -493,7 +494,7 @@ guint Render::find_object_at(gdouble x, gdouble y)
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
 
   vector<Gtk::TreeModel::Path> no_object;
-  m_view->Draw (no_object);
+  m_view->Draw (no_object, true);
 
   // restor projection and model matrices
   glMatrixMode(GL_PROJECTION);

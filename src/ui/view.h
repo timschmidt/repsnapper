@@ -212,7 +212,7 @@ class View : public Gtk::Window
   bool logprint_timeout_cb();
 
   // view nasties ...
-  void Draw (vector<Gtk::TreeModel::Path> &selected);
+  void Draw (vector<Gtk::TreeModel::Path> &selected, bool objects_only=false);
   void DrawGrid ();
   void showCurrentPrinting(unsigned long line);
 

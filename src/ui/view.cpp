@@ -2138,27 +2138,30 @@ void View::DrawGrid()
 }
 
 // called from Render::on_expose_event
-void View::Draw (vector<Gtk::TreeModel::Path> &selected)
+void View::Draw (vector<Gtk::TreeModel::Path> &selected, bool objects_only)
 {
 
 	// Draw the grid, pushed back so it can be seen
 	// when viewed from below.
-	glEnable (GL_POLYGON_OFFSET_FILL);
-	glPolygonOffset (1.0f, 1.0f);
-
-	DrawGrid();
+        if (!objects_only) {
+	  glEnable (GL_POLYGON_OFFSET_FILL);
+	  glPolygonOffset (1.0f, 1.0f);
+    	  DrawGrid();
+	}
 
 	glPolygonOffset (-0.5f, -0.5f);
 	glDisable (GL_POLYGON_OFFSET_FILL);
 
 	// Draw GCode, which already incorporates any print offset
-	if (m_gcodetextview->has_focus()) {
-	  double z = m_model->gcode.currentCursorWhere.z();
-	  m_model->GlDrawGCode(z);
-	}
-	else {
-	  m_model->gcode.currentCursorWhere = Vector3d::ZERO;
-	  m_model->GlDrawGCode();
+        if (!objects_only) {
+	  if (m_gcodetextview->has_focus()) {
+	    double z = m_model->gcode.currentCursorWhere.z();
+	    m_model->GlDrawGCode(z);
+	  }
+	  else {
+	    m_model->gcode.currentCursorWhere = Vector3d::ZERO;
+	    m_model->GlDrawGCode();
+	  }
 	}
 
 	// Draw all objects
