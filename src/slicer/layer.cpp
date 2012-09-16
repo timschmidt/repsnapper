@@ -32,6 +32,7 @@ Layer::Layer(Layer * prevlayer, int layerno, double thick, uint skins)
 {
   normalInfill = NULL;
   fullInfill = NULL;
+  skirtInfill = NULL;
   supportInfill = NULL;
   decorInfill = NULL;
   thinInfill = NULL;
@@ -1085,6 +1086,9 @@ void Layer::Draw(const Settings &settings)
       if (fullInfill)
 	draw_polys(fullInfill->infillpolys, GL_LINE_LOOP, 1, 3,
 		   (fullInfill->cached?BLUEGREEN:GREEN), 0.8, randomized);
+      if (skirtInfill)
+	draw_polys(skirtInfill->infillpolys, GL_LINE_LOOP, 1, 3,
+		   YELLOW, 0.6, randomized);
       if(DebugInfill && fullInfill->cached)
 	draw_polys(fullInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3,
 		   ORANGE, 0.5, randomized);
