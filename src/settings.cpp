@@ -1465,7 +1465,7 @@ void Settings::CopyExtruder(uint num)
 void Settings::RemoveExtruder(uint num)
 {
   if (num >= Extruders.size()) return;
-  if (Extruders.size() == 0) return;
+  if (Extruders.size() < 2) return;
   Extruders.erase(Extruders.begin()+num);
 }
 void Settings::SelectExtruder(uint num)

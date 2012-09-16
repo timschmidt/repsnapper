@@ -5198,6 +5198,7 @@ and others I forgot... (needs updating)</property>
                                     <property name="label" translatable="yes">Copy</property>
                                     <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
+                                    <property name="sensitive">False</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                   </object>
@@ -5212,6 +5213,7 @@ and others I forgot... (needs updating)</property>
                                     <property name="label" translatable="yes">Remove</property>
                                     <property name="use_action_appearance">False</property>
                                     <property name="visible">True</property>
+                                    <property name="sensitive">False</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                   </object>
