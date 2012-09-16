@@ -29,7 +29,7 @@
 #include "flatshape.h"
 #include "render.h"
 #include "settings.h"
-#include "settings-ui.h"
+#include "prefs_dlg.h"
 #include "progress.h"
 #include "connectview.h"
 
@@ -1492,7 +1492,7 @@ View::View(BaseObjectType* cobject,
   }
 
 
-  m_settings_ui = new SettingsUI(m_model, m_builder);
+  m_settings_ui = new PrefsDlg(m_model, m_builder);
 
   // file chooser
   m_filechooser = new RSFilechooser(this);

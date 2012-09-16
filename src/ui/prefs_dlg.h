@@ -22,7 +22,7 @@
 #include "settings.h"
 #include <gtkmm.h>
 
-class SettingsUI {
+class PrefsDlg {
   Model *m_model;
   Gtk::Dialog *m_preferences_dlg;
   Gtk::VBox *m_settings_overview;
@@ -35,8 +35,8 @@ class SettingsUI {
   bool load_settings();
 
  public:
-  SettingsUI(Model *model, Glib::RefPtr<Gtk::Builder> &builder);
-  ~SettingsUI();
+  PrefsDlg(Model *model, Glib::RefPtr<Gtk::Builder> &builder);
+  ~PrefsDlg();
   void show();
 };
 

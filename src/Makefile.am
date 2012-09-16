@@ -43,8 +43,7 @@ SHARED_SRC= \
 	src/arcball.cpp \
 	src/render.cpp \
 	src/files.cpp \
-	src/settings.cpp \
-	src/settings-ui.cpp
+	src/settings.cpp
 
 SHARED_INC= \
 	src/arcball.h \
@@ -61,7 +60,6 @@ SHARED_INC= \
 	src/platform.h \
 	src/render.h \
 	src/settings.h \
-	src/settings-ui.h \
 	src/types.h
 
 include src/ui/Makefile.am

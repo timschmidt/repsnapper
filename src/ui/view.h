@@ -73,7 +73,7 @@ class View : public Gtk::Window
   void rot_object_xyz();
 
   Printer *m_printer;
-  SettingsUI *m_settings_ui;
+  PrefsDlg *m_settings_ui;
 
   Glib::RefPtr<Gtk::Builder> m_builder;
   Model *m_model;

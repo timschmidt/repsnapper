@@ -19,7 +19,7 @@
 #include "config.h"
 #include <cstdlib>
 #include <gtkmm.h>
-#include "settings-ui.h"
+#include "prefs_dlg.h"
 
 namespace {
 
@@ -48,12 +48,12 @@ namespace {
   }
 }
 
-void SettingsUI::handle_response(int, Gtk::Dialog *dialog)
+void PrefsDlg::handle_response(int, Gtk::Dialog *dialog)
 {
   dialog->hide();
 }
 
-SettingsUI::SettingsUI(Model *model, Glib::RefPtr<Gtk::Builder> &builder)
+PrefsDlg::PrefsDlg(Model *model, Glib::RefPtr<Gtk::Builder> &builder)
   : m_model (model)
 {
   builder->get_widget ("preferences_dlg", m_preferences_dlg);
@@ -62,15 +62,15 @@ SettingsUI::SettingsUI(Model *model, Glib::RefPtr<Gtk::Builder> &builder)
   builder->get_widget ("settings_notebook", m_settings_notebook);
   m_preferences_dlg->set_icon_name("gtk-convert");
   m_preferences_dlg->signal_response().connect (
-	sigc::bind(sigc::mem_fun(*this, &SettingsUI::handle_response), m_preferences_dlg));
+	sigc::bind(sigc::mem_fun(*this, &PrefsDlg::handle_response), m_preferences_dlg));
 }
 
-SettingsUI::~SettingsUI()
+PrefsDlg::~PrefsDlg()
 {
 }
 
 bool
-SettingsUI::load_settings()
+PrefsDlg::load_settings()
 {
 #if 0 // test some GUI / hardware selector fun
   if (!m_settings.empty())
@@ -131,8 +131,9 @@ SettingsUI::load_settings()
 }
 
 void
-SettingsUI::show()
+PrefsDlg::show()
 {
   load_settings();
   m_preferences_dlg->show();
+  m_preferences_dlg->raise();
 }

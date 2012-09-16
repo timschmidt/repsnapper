@@ -37,7 +37,7 @@ class Render;
 class Command;
 class Printer;
 class Settings;
-class SettingsUI;
+class PrefsDlg;
 class Triangle;
 class RepRapSerial;
 class Layer;
