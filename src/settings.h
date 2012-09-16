@@ -162,8 +162,10 @@ class Settings {
     float SupportAngle;
     float SupportWiden;
     bool Skirt;
+    bool SingleSkirt;
     float SkirtHeight;
     float SkirtDistance;
+    bool FillSkirt;
     int Skins;
     bool Varslicing;
     int NormalFilltype;

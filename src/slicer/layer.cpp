@@ -69,6 +69,7 @@ void Layer::Clear()
 {
   delete normalInfill; normalInfill = NULL;
   delete fullInfill; fullInfill = NULL;
+  delete skirtInfill; skirtInfill = NULL;
   delete supportInfill; supportInfill = NULL;
   delete decorInfill; decorInfill = NULL;
   delete thinInfill; thinInfill = NULL;
@@ -88,7 +89,7 @@ void Layer::Clear()
   clearpolys(skinPolygons);
   clearpolys(skinFullFillPolygons);
   hullPolygon.clear();
-  skirtPolygon.clear();
+  clearpolys(skirtPolygons);
 }
 
 // void Layer::setBBox(Vector2d min, Vector2d max)
@@ -281,6 +282,7 @@ void Layer::CalcInfill (const Settings &settings)
     normalInfilldist = altInfillDistance;
   else
     normalInfilldist = infillDistance;
+  // first layers:
   if (LayerNo < (int)settings.Slicing.FirstLayersNum) {
     double first_infdist =
       fullInfillDistance * (1+(double)settings.Slicing.FirstLayersInfillDist);
@@ -293,6 +295,8 @@ void Layer::CalcInfill (const Settings &settings)
   normalInfill->setName("normal");
   fullInfill = new Infill(this,settings.Slicing.FullFillExtrusion);
   fullInfill->setName("full");
+  skirtInfill = new Infill(this,settings.Slicing.FullFillExtrusion);
+  skirtInfill->setName("skirt");
   skinFullInfills.clear();
   supportInfill = new Infill(this,settings.Slicing.SupportExtrusion);
   supportInfill->setName("support");
@@ -306,6 +310,18 @@ void Layer::CalcInfill (const Settings &settings)
   if (!shellOnly)
     normalInfill->addPolys(Z, fillPolygons, (InfillType)settings.Slicing.NormalFilltype,
 			   normalInfilldist, fullInfillDistance, rot);
+
+  if (settings.Slicing.FillSkirt) {
+    vector<Poly> skirtFill;
+    Clipping clipp;
+    clipp.addPolys(skirtPolygons, subject);
+    clipp.addPolys(*GetOuterShell(), clip);
+    clipp.addPolys(supportPolygons, clip);
+    skirtFill = clipp.subtract();
+    skirtFill = Clipping::getOffset(skirtFill, -fullInfillDistance);
+    skirtInfill->addPolys(Z, skirtFill, (InfillType)settings.Slicing.FullFilltype,
+			  fullInfillDistance, fullInfillDistance, rot);
+  }
 
   fullInfill->addPolys(Z, fullFillPolygons, (InfillType)settings.Slicing.FullFilltype,
 		       fullInfillDistance, fullInfillDistance, rot);
@@ -547,11 +563,14 @@ void Layer::setSupportPolygons(const vector<Poly> &polys)
   }
 }
 
-void Layer::setSkirtPolygon(const Poly &poly)
+void Layer::setSkirtPolygons(const vector<Poly> &poly)
 {
-  skirtPolygon = poly;
-  skirtPolygon.cleanup(thickness);
-  skirtPolygon.setZ(Z);
+  clearpolys(skirtPolygons);
+  skirtPolygons = poly;
+  for (uint i=0; i<skirtPolygons.size(); i++) {
+    skirtPolygons[i].cleanup(thickness);
+    skirtPolygons[i].setZ(Z);
+  }
 }
 
 
@@ -655,18 +674,22 @@ void Layer::MakeShells(const Settings &settings)
   // }
 }
 
-void Layer::MakeSkirt(double distance)
+void Layer::MakeSkirt(double distance, bool single)
 {
-  skirtPolygon.clear();
+  clearpolys(skirtPolygons);
   vector<Poly> all;
-  all.push_back(hullPolygon);
-  all.insert(all.end(),supportPolygons.begin(),supportPolygons.end());
-  Poly hull = convexHull2D(all);
-  vector<Poly> skp = Clipping::getOffset(hull, distance, jround);
-  if (skp.size()>0){
-    skirtPolygon = skp.front();
-    skirtPolygon.setZ(Z);
-    skirtPolygon.cleanup(thickness);
+  if (single) { // single skirt
+    all.push_back(hullPolygon);
+    all.insert(all.end(),supportPolygons.begin(),supportPolygons.end());
+    Poly hull = convexHull2D(all);
+    vector<Poly> skp = Clipping::getOffset(hull, distance, jround);
+    if (skp.size()>0){
+      skirtPolygons.push_back(skp.front());
+      skirtPolygons[0].setZ(Z);
+      skirtPolygons[0].cleanup(thickness);
+    }
+  } else { // skirt for each shape
+    skirtPolygons = Clipping::getOffset(*GetOuterShell(), distance, jround);
   }
 }
 
@@ -777,8 +800,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   lines.clear();
 
   // 2. Skirt
-  vector <Poly> skirts(1); skirts[0] = skirtPolygon;
-  printlines.addPolys(SKIRT, skirts, false,
+  printlines.addPolys(SKIRT, skirtPolygons, false,
 		      settings.Extruder.MaxShellSpeed * 60,
 		      settings.Slicing.MinShelltime);
 
@@ -803,6 +825,8 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
     printlines.addPolys(INFILL, thinInfill->infillpolys, false);
   if (fullInfill)
     printlines.addPolys(INFILL, fullInfill->infillpolys, false);
+  if (skirtInfill)
+    printlines.addPolys(INFILL, skirtInfill->infillpolys, false);
   if (decorInfill)
     printlines.addPolys(INFILL, decorInfill->infillpolys, false);
   for (uint b=0; b < bridgeInfills.size(); b++)
@@ -1011,7 +1035,7 @@ void Layer::Draw(const Settings &settings)
       }
 
   draw_poly(hullPolygon,    GL_LINE_LOOP, 3, 3, ORANGE,  0.5, randomized);
-  draw_poly(skirtPolygon,   GL_LINE_LOOP, 3, 3, YELLOW,  1, randomized);
+  draw_polys(skirtPolygons, GL_LINE_LOOP, 3, 3, YELLOW,  1, randomized);
   draw_polys(shellPolygons, GL_LINE_LOOP, 1, 3, YELLOW2, 1, randomized);
   draw_polys(thinPolygons,  GL_LINE_LOOP, 2, 3, YELLOW,  1, randomized);
 

@@ -698,18 +698,17 @@ void Model::MakeSkirt()
     {
       if (layers[i]->getZ() > settings.Slicing.SkirtHeight)
 	break;
-      layers[i]->MakeSkirt(skirtdistance);
-      Poly sp = layers[i]->GetSkirtPolygon();
-      if (sp.size()>0) {
-	clipp.addPoly(sp,subject);
-	endindex = i;
-      }
+      layers[i]->MakeSkirt(skirtdistance,
+			   settings.Slicing.SingleSkirt && !settings.Slicing.Support);
+      vector<Poly> sp = layers[i]->GetSkirtPolygons();
+      clipp.addPolys(sp,subject);
+      endindex = i;
     }
   vector<Poly> skirts = clipp.unite(CL::pftPositive,CL::pftPositive);
   // set this skirt for all skirted layers
   if (skirts.size()>0)
     for (guint i=0; i<=endindex; i++) {
-      layers[i]->setSkirtPolygon(skirts.front());
+      layers[i]->setSkirtPolygons(skirts);
   }
 }
 
@@ -836,10 +835,10 @@ void Model::ConvertToGCode()
 
   MultiplyUncoveredPolygons();
 
-  CalcInfill();
-
   if (settings.Slicing.Skirt)
     MakeSkirt();
+
+  CalcInfill();
 
   if (settings.Raft.Enable)
     {

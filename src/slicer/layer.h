@@ -86,7 +86,7 @@ public:
   /* 			     double distance,  */
   /* 			     ClipperLib::JoinType join_type = ClipperLib::jtMiter); */
   void calcConvexHull();
-  void MakeSkirt(double distance);
+  void MakeSkirt(double distance, bool single=true);
 
   vector<Poly> GetPolygons() const { return polygons; };
   vector<ExPoly>  GetExPolygons() const;
@@ -101,7 +101,7 @@ public:
   vector<Poly> GetDecorPolygons() const { return decorPolygons; }
   vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
   vector<Poly>  GetShellPolygonsCirc(int number) const;
-  Poly  GetSkirtPolygon() const {return skirtPolygon; };
+  vector<Poly>  GetSkirtPolygons() const {return skirtPolygons; };
   const vector<Poly> * GetInnerShell() const;
   const vector<Poly> * GetOuterShell() const;
   Poly GetHullPolygon() const {return hullPolygon;};
@@ -119,7 +119,7 @@ public:
   void makeSkinPolygons();
   void setNormalFillPolygons(const vector<Poly> &polys);
   void setSupportPolygons(const vector<Poly> &polys);
-  void setSkirtPolygon(const Poly &poly);
+  void setSkirtPolygons(const vector<Poly> &poly);
   void setDecorPolygons(const vector<Poly> &polys);
 
   /* void getOrderedPrintLines(const vector<Poly> polys,  */
@@ -158,6 +158,7 @@ public:
 
   Infill * normalInfill;
   Infill * fullInfill;
+  Infill * skirtInfill;
   vector<Infill*> bridgeInfills;   // an infill for every brigde (different angles)
   vector<Infill*> skinFullInfills;
   Infill * supportInfill;
@@ -178,7 +179,7 @@ public:
   vector<Poly> skinPolygons;            // outer skin polygons
   vector<Poly> skinFullFillPolygons;    // skin polygons of fully filled areas
   Poly hullPolygon;                     // convex hull around everything
-  Poly skirtPolygon;                    // skirt polygon
+  vector<Poly> skirtPolygons;           // skirt polygon
   vector<Poly> decorPolygons;           // decoration polygons
 
   // uses too much memory
