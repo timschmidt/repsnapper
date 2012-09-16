@@ -106,7 +106,13 @@ public:
 	inline void SetElAttD(std::string Att, double Value) {if(fp) fprintf(fp," %s=\"%g\"", Att.c_str(), Value);}
 	inline void SetElAttF(std::string Att, float Value) {if(fp) fprintf(fp," %s=\"%g\"", Att.c_str(), Value);}
 	inline void SetElAttI(std::string Att, int Value) {if(fp) fprintf(fp," %s=\"%d\"", Att.c_str(), Value);}
-	inline void SetElAttB(std::string Att, bool Value) {if(fp) if(Value) fprintf(fp," %s=\"1\"", Att.c_str()); else fprintf(fp," %s=\"0\"", Att.c_str());}
+	  inline void SetElAttB(std::string Att, bool Value) {
+	    if(fp) {
+	      if(Value)
+		fprintf(fp," %s=\"1\"", Att.c_str());
+	      else fprintf(fp," %s=\"0\"", Att.c_str());
+	    }
+	  }
 
 	//should be only called directly after OpenElement() and any SetElAttribute()'s! Must be followed directly by CloseElement()!
 	inline void SetElDataS(std::string Value, bool CDATA = false) {if(fp){if (CDATA) fprintf(fp,"><![CDATA[%s]]>", Value.c_str()); else fprintf(fp,">%s", Value.c_str()); AnyToWrite = false; IndentNextClose = false;}}
