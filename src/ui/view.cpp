@@ -981,7 +981,7 @@ void View::alert (Gtk::MessageType t, const char *message,
 }
 
 
-void View::rot_object_xyz()
+void View::rot_object_from_spinbutton()
 {
   if (toggle_block) return;
   Gtk::SpinButton *spB;
@@ -995,15 +995,15 @@ void View::rot_object_xyz()
   vector<TreeObject*> objects;
   get_selected_objects (objects, shapes);
   if (shapes.size()>0)
-    for (uint i=0; i<shapes.size() ; i++) {
-      shapes[i]->transform3D.rotate_to(xangle, yangle, zangle);
+    for (uint i=0; i<shapes.size(); i++) {
+      shapes[i]->transform3D.rotate_to(shapes[i]->Center, xangle, yangle, zangle);
     }
   else if (objects.size()>0)
-    for (uint i=0; i<objects.size() ; i++) {
-      objects[i]->transform3D.rotate_to(xangle, yangle, zangle);
+    for (uint i=0; i<objects.size(); i++) {
+      objects[i]->transform3D.rotate_to(objects[i]->center(), xangle, yangle, zangle);
     }
   update_scale_value();
-  update_rot_value();
+  m_model->ModelChanged();
   queue_draw();
 }
 
@@ -1015,11 +1015,12 @@ bool View::rotate_selection (Vector3d axis, double angle)
   if (objects.size()>0)
     for (uint o=0; o<objects.size(); o++) {
       Transform3D &transf = objects[o]->transform3D;
-      transf.rotate(axis, angle);
+      transf.rotate(objects[o]->center(),axis, angle);
     }
-  else if (shapes.size()>0)
+  else if (shapes.size()>0) {
     for (uint i=0; i<shapes.size() ; i++)
       shapes[i]->Rotate(axis, angle);
+  }
   update_scale_value();
   update_rot_value();
   return true;
@@ -1419,17 +1420,17 @@ View::View(BaseObjectType* cobject,
   rot_value->set_range(0.00, 360.0);
   rot_value->set_value(0);
   rot_value->signal_value_changed().connect
-    (sigc::mem_fun(*this, &View::rot_object_xyz));
+    (sigc::mem_fun(*this, &View::rot_object_from_spinbutton));
   m_builder->get_widget("rot_y", rot_value);
   rot_value->set_range(0.00, 360.0);
   rot_value->set_value(0);
   rot_value->signal_value_changed().connect
-    (sigc::mem_fun(*this, &View::rot_object_xyz));
+    (sigc::mem_fun(*this, &View::rot_object_from_spinbutton));
   m_builder->get_widget("rot_z", rot_value);
   rot_value->set_range(0.00, 360.0);
   rot_value->set_value(0);
   rot_value->signal_value_changed().connect
-    (sigc::mem_fun(*this, &View::rot_object_xyz));
+    (sigc::mem_fun(*this, &View::rot_object_from_spinbutton));
 
   //add_statusbar_msg("m_scale_event_box", _("Scale the selected object"));
 

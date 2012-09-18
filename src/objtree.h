@@ -49,6 +49,7 @@ public:
 	int idx;
   Gtk::TreePath addShape(Shape *shape, std::string location);
   void move(const Vector3d &delta){ transform3D.move(delta); };
+  Vector3d center() const;
 };
 
 

@@ -291,7 +291,8 @@ bool Render::on_button_press_event(GdkEventButton* event)
 bool Render::on_button_release_event(GdkEventButton* event)
 {
   //dragging = false;
-  if (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK)  { // move object
+  if (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK)  {
+    // move/rotate object
     get_model()->ModelChanged();
     queue_draw();
   }
@@ -428,7 +429,7 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
 	  axis = Vector3d(0,0,delta.x());
 	else
 	  axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
-	m_view->rotate_selection(axis, -delta.length()/100.);
+	m_view->rotate_selection(axis, delta.length()/100.);
 	m_dragStart = dragp;
       } else {  // move view XY  / pan
 	moveArcballTrans(m_transform, delta3f);

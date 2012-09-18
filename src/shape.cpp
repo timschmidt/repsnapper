@@ -46,14 +46,14 @@ void Shape::setTriangles(const vector<Triangle> &triangles_)
 {
   triangles = triangles_;
 
-  CenterAroundXY();
+  CalcBBox();
   double vol = volume();
   if (vol < 0) {
     invertNormals();
     vol = -vol;
   }
 
-  PlaceOnPlatform();
+  //PlaceOnPlatform();
   cerr << _("Shape has volume ") << volume() << _(" mm^3 and ")
        << triangles.size() << _(" triangles") << endl;
 }
@@ -162,7 +162,7 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
       shapes.back()->triangles.resize(current.size());
       for (uint i = 0; i < current.size(); i++)
 	shapes.back()->triangles[i] = triangles[current[i]];
-      shapes.back()->CenterAroundXY();
+      shapes.back()->CalcBBox();
     }
     if (!cont) i=n_tr;
   }
@@ -205,7 +205,7 @@ void Shape::makeHollow(double wallthickness)
   Matrix4d invT = transform3D.getInverse();
   vector<Triangle> cubet = cube(invT*Min-wall, invT*Max+wall);
   triangles.insert(triangles.end(),cubet.begin(),cubet.end());
-  CenterAroundXY();
+  CalcBBox();
 }
 
 void Shape::invertNormals()
@@ -341,6 +341,11 @@ void Shape::CalcBBox()
   gl_List = -1;
 }
 
+Vector3d Shape::scaledCenter() const
+{
+  return Center * transform3D.get_scale();
+}
+
 struct SNorm {
   Vector3d normal;
   double area;
@@ -409,7 +414,7 @@ void Shape::OptimizeRotation()
       }
     }
   }
-  CenterAroundXY();
+  CalcBBox();
   PlaceOnPlatform();
 }
 
@@ -448,8 +453,8 @@ int Shape::divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) co
 			 uppersplit.begin(),uppersplit.end());
   lower->triangles.insert(lower->triangles.end(),
 			 lowersplit.begin(),lowersplit.end());
-  upper->CenterAroundXY();
-  lower->CenterAroundXY();
+  upper->CalcBBox();
+  lower->CalcBBox();
   lower->Rotate(Vector3d(0,1,0),M_PI);
   upper->move(Vector3d(10+Max.x()-Min.x(),0,0));
   lower->move(Vector3d(2*(10+Max.x()-Min.x()),0,0));
@@ -466,7 +471,7 @@ void Shape::PlaceOnPlatform()
 // Rotate and adjust for the user - not a pure rotation by any means
 void Shape::Rotate(const Vector3d & axis, const double & angle)
 {
-  transform3D.rotate(axis,angle);
+  transform3D.rotate(Center, axis, angle);
   return;
 //   CenterAroundXY();
 //   // do a real rotation because matrix transform gives errors when slicing
@@ -484,7 +489,7 @@ void Shape::Rotate(const Vector3d & axis, const double & angle)
 // this is primitive, it just rotates triangle vertices
 void Shape::Twist(double angle)
 {
-  CenterAroundXY();
+  CalcBBox();
   double h = Max.z()-Min.z();
   double hangle=0;
   Vector3d axis(0,0,1);
@@ -503,25 +508,30 @@ void Shape::Twist(double angle)
   CalcBBox();
 }
 
-void Shape::CenterAroundXY()
-{
-  CalcBBox();
-  Vector3d displacement = transform3D.getTranslation() - Center;
-  int count = (int)triangles.size();
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-  for(int i=0; i<count ; i++)
-    {
-      triangles[i].Translate(displacement);
-    }
-  transform3D.move(-displacement);
-  //cerr << "DISPL " << displacement << endl;
-  //CalcBBox();
-  // Min    -= displacement;
-  // Max    -= displacement;
-  // Center -= displacement;
-}
+// void Shape::CenterAroundXY()
+// {
+//   CalcBBox();
+//   return;
+
+//   /* // this moves all triangles
+//   Vector3d displacement = transform3D.getTranslation() - Center;
+//   int count = (int)triangles.size();
+// #ifdef _OPENMP
+// #pragma omp parallel for schedule(dynamic)
+// #endif
+//   for(int i=0; i<count ; i++)
+//     {
+//       triangles[i].Translate(displacement);
+//     }
+//   transform3D.move(-displacement);
+//   */
+
+//   //cerr << "DISPL " << displacement << endl;
+//   //CalcBBox();
+//   // Min    -= displacement;
+//   // Max    -= displacement;
+//   // Center -= displacement;
+// }
 
 /*
 Poly Shape::getOutline(const Matrix4d &T, double maxlen) const
@@ -954,6 +964,18 @@ void Shape::drawBBox() const
 		glVertex3f(Max.x(), Min.y(), Min.z());
 		glVertex3f(Max.x(), Min.y(), Max.z());
 		glEnd();
+		/*// show center:
+		glBegin(GL_LINES);
+		glVertex3f(Min.x(), Min.y(), Min.z());
+		glVertex3f(Max.x(), Max.y(), Max.z());
+		glVertex3f(Max.x(), Min.y(), Min.z());
+		glVertex3f(Min.x(), Max.y(), Max.z());
+		glEnd();
+		glPointSize(10);
+		glBegin(GL_POINTS);
+		glVertex3dv(Center);
+		glEnd();
+		*/
 
   glColor3f(1,0.6,0.6);
   ostringstream val;

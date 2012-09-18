@@ -40,6 +40,19 @@ bool TreeObject::deleteShape(uint i)
   return true;
 }
 
+
+Vector3d TreeObject::center() const
+{
+  Vector3d center(0.,0.,0.);
+  if (shapes.size()>0) {
+    for (uint i = 0; i<shapes.size(); i++) {
+      center += shapes[i]->Center;
+    }
+    center /= shapes.size();
+  }
+  return center;
+}
+
 Gtk::TreePath TreeObject::addShape(Shape *shape, std::string location)
 {
   Gtk::TreePath path;

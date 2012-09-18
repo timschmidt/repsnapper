@@ -70,7 +70,7 @@ class View : public Gtk::Window
   void scale_object_z();
 
   void update_rot_value();
-  void rot_object_xyz();
+  void rot_object_from_spinbutton();
 
   Printer *m_printer;
   PrefsDlg *m_settings_ui;

@@ -32,6 +32,7 @@ repsnapper_CPPFLAGS = \
 	-g -O3 $(WARNING_FLAGS)
 
 SHARED_SRC= \
+	src/transform3d.cpp \
 	src/platform.cpp \
 	src/objtree.cpp \
 	src/model.cpp \
@@ -46,6 +47,7 @@ SHARED_SRC= \
 	src/settings.cpp
 
 SHARED_INC= \
+	src/transform3d.h \
 	src/arcball.h \
 	src/convert.h \
 	src/gllight.h \

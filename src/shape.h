@@ -30,6 +30,7 @@
 #include <limits>
 #include <algorithm>
 #include "stdafx.h"
+#include "transform3d.h"
 //#include "settings.h"
 #include "triangle.h"
 #include "slicer/geometry.h"
@@ -80,7 +81,6 @@ public:
 		   bool highlight=false, uint max_triangles=0);
 	virtual void draw_geometry (uint max_triangles=0);
 	void drawBBox() const;
-	void CenterAroundXY();
 	virtual bool getPolygonsAtZ(const Matrix4d &T, double z,
 				    vector<Poly> &polys,
 				    double &max_gradient,
@@ -116,6 +116,7 @@ public:
 
     Vector3d Min, Max, Center;
 
+    Vector3d scaledCenter() const;
 
     /* Poly getOutline(const Matrix4d &T, double maxlen) const;*/
     vector<Triangle> trianglesSteeperThan(double angle) const;
