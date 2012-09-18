@@ -52,7 +52,7 @@ bool isleftof(const Vector3d &center, const Vector3d &A, const Vector3d &B);
 
 Vector3d cross2d(const Vector2d &A, const Vector2d &B, double z=0);
 
-double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2, 
+double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2,
 				 const Vector2d &p, Vector2d &onseg);
 
 void     rotate (      Vector2d &p, const Vector2d &center, double angle, bool ccw=true);
@@ -68,17 +68,17 @@ struct Intersection
 };
 
 
-int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2, 
-			  const Vector2d &p3, const Vector2d &p4, 
-			  Vector2d &I0, Vector2d &I1, 
+int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
+			  const Vector2d &p3, const Vector2d &p4,
+			  Vector2d &I0, Vector2d &I1,
 			  double maxerr=0.0001);
 bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
-		 const Vector2d &p3, const Vector2d &p4, 
+		 const Vector2d &p3, const Vector2d &p4,
 		 Intersection &hit, double maxoffset=0.0001);
 
 
 
-double dist3D_Segment_to_Segment(const Vector3d &S1P0, const Vector3d &S1P1, 
+double dist3D_Segment_to_Segment(const Vector3d &S1P0, const Vector3d &S1P1,
 				 const Vector3d &S2P0, const Vector3d &S2P1, double SMALL_NUM);
 
 vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon);
@@ -99,24 +99,24 @@ Vector3d random_displaced(const Vector3d &v, double delta=0.05);
 Vector2d random_displaced(const Vector2d &v, double delta=0.05);
 
 
-bool shortestPath(const Vector2d &from, const Vector2d &to, 
-		  const vector<Poly> &polys, int excludepoly, 
+bool shortestPath(const Vector2d &from, const Vector2d &to,
+		  const vector<Poly> &polys, int excludepoly,
 		  vector<Vector2d> &path, double maxerr);
 
 vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width);
 vector<Poly> thick_lines(const vector<Vector2d> &points,  double width);
-vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to, 
+vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to,
 			    double fr_width, double to_width);
 
 
-bool fit_arc(const vector<Vector2d> &points, double sq_error, 
+bool fit_arc(const vector<Vector2d> &points, double sq_error,
 	     Vector2d &result_center, double &result_radius);
 
 typedef struct {
   double *px, *py; // arc points
 } arc_data_struct;
 
-bool fit_arc(const int m_dat, const arc_data_struct data, 
+bool fit_arc(const int m_dat, const arc_data_struct data,
 	     const int n_par, double *par, double sq_error,
 	     Vector2d &result_center, double &result_radiussq);
 
@@ -127,16 +127,16 @@ bool rasterpolys(const vector<Poly> &polys,
 		 Cairo::RefPtr<Cairo::ImageSurface> &surface,
 		 Cairo::RefPtr<Cairo::Context> &context);
 
-void glDrawPolySurfaceRastered(const vector<Poly> &polys, 
-			       const Vector2d &min, const Vector2d &max, 
+void glDrawPolySurfaceRastered(const vector<Poly> &polys,
+			       const Vector2d &min, const Vector2d &max,
 			       const double z,
 			       const double resolution);
 
 void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
-			const Vector2d &min, const Vector2d &max, 
+			const Vector2d &min, const Vector2d &max,
 			const double z);
 
 int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
-			     const Vector2d &min, const Vector2d &max, 
-			     const Vector2d &p); 
-			      
+			     const Vector2d &min, const Vector2d &max,
+			     const Vector2d &p);
+
