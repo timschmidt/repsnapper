@@ -3,15 +3,9 @@ Segments of the code fall under other licenses, as detailed below.
 
 VMMLib is licensed under a revised 3-clause BSD license as detailed in the file licenses/vmmlib-license.txt
 
-asyncserial.cpp and asyncserial.h are licensed under the Boost Software License, Version 1.0 as detailed in the file licenses/BSL-1.0.txt
+arcball.cpp and arcball.h are (C) 1999-2003 Tatewake.com and licensed under the MIT license as noted in the file licenses/MIT.txt
 
-flu_dnd.cpp, flu_dnd.h, flu_enumerations.h, flu_export.h, flu_pixmaps.cpp, flu_pixmaps.h, flu_simplestring.cpp, flu_simplestring.h, flu_tree_browser.cpp, and flu_tree_browser.h are licensed under the LGPL version 2.0 as noted in file licenses/LGPL-2.0.txt with several exceptions as noted in file licenses/FLTK.txt
-
-ivcon.cpp and convert.h are licensed under the LGPL version 2.0 as noted in the file licenses/LGPL-2.0.txt
-
-Arcball.cpp and Arcball.h are (C) 1999-2003 Tatewake.com and licensed under the MIT license as noted in the file licenses/MIT.txt
-
-Several functions in libraries/polylib/GeometryBase.cpp are licensed as follows:
+Several functions in slicer/geometry.cpp are licensed as follows:
 	Copyright 2001, softSurfer (www.softsurfer.com)
 	This code may be freely used and modified for any purpose
 	providing that this copyright notice is included with it.
