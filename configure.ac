@@ -54,7 +54,7 @@ PKG_CHECK_MODULES(XMLPP, libxml++-2.6 >= 2.10.0)
 
 AC_OPENMP()
 
-PKG_CHECK_MODULES(LIBZIP, libzip >= 0.10.1)
+PKG_CHECK_MODULES(LIBZIP, libzip >= 0.10)
 
 
 dnl ------------------------------------------------------------------
