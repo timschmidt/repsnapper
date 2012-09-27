@@ -30,6 +30,11 @@
 #endif
 
 
+void drawString(const Vector3d &pos, void* font, const string &text);
+void drawString(const Vector3d &pos, const string &text);
+void checkGlutInit();
+
+
 void move(const Vector3f &delta, Matrix4f &mat);
 Vector3d normalized(const Vector3d &v);
 Vector2d normalized(const Vector2d &v);

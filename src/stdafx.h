@@ -70,6 +70,20 @@ typedef vmml::mat4f Matrix4f;
 typedef vmml::mat3d Matrix3d;
 
 
+float const GREEN[] = {0.1, 1, 0.1};
+float const GREEN2[] = {0.3, 0.8, 0.3};
+float const BLUEGREEN[] = {0.1, 0.9, 0.7};
+float const BLUE2[] = {0.5,0.5,1.0};
+float const RED[] = {1, 0, 0};
+float const RED2[] = {0.8,0.5,0.5};
+float const RED3[] = {0.8,0.3,0.1};
+float const ORANGE[] = {1, 0.5, 0};
+float const YELLOW[] = {1, 1, 0};
+float const YELLOW2[] = {1, 1, 0.2};
+float const WHITE[] = {1, 1, 1};
+float const GREY[] = {0.5,0.5,0.5};
+float const VIOLET[] = {0.8,0.0,0.8};
+
 //utility macros
 //assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits
 # define Epsilon 1.0e-5

@@ -450,8 +450,11 @@ vector<ExPoly> Clipping::getExPolys(const vector<Poly> &polys)
   }
   for (uint j = 0; j<expolys.size(); j++)
     for (uint i = 0; i<holes.size(); i++)
-      if (holes[i].isInside(expolys[j].outer))
-	expolys[j].holes.push_back(holes[i]);
+      // just test one point
+      if (holes[i].size()>0)
+	if (expolys[j].outer.vertexInside(holes[i].vertices[0]))
+	  //if (holes[i].isInside(expolys[j].outer)) // test all
+	  expolys[j].holes.push_back(holes[i]);
   return expolys;
 }
 

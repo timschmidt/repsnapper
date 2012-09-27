@@ -92,7 +92,6 @@ void RSFilechooser::set_filetype(FileType type)
   else {
     builder->get_widget ("load_save_button", button);
   }
-  view->show_widget("save_multiple", false);
   string labeltext = "";
   switch(type) {
   case GCODE:
@@ -110,7 +109,6 @@ void RSFilechooser::set_filetype(FileType type)
   case SVG:
     chooser->set_current_folder (ModelPath);
     chooser->set_filter(modelfiles);
-    view->show_widget("save_multiple", true);
     labeltext += _("SVG");
     break;
   case MODEL:
@@ -126,8 +124,8 @@ void RSFilechooser::set_filetype(FileType type)
 
 void RSFilechooser::set_loading(FileType type)
 {
-  chooser->set_select_multiple (true);
   chooser->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
+  chooser->set_select_multiple (true);
   view->show_widget("load_buttons", true);
   view->show_widget("save_buttons", false);
   Gtk::Button *button = NULL;
@@ -164,7 +162,7 @@ void RSFilechooser::do_action()
       {
 	bool singlelayer = false;
 	Gtk::CheckButton *mult;
-	builder->get_widget("save_multiple", mult);
+	builder->get_widget("save_multiple_svg", mult);
 	if (mult)
 	  singlelayer = mult->get_state();
 	view->do_slice_svg(singlelayer);

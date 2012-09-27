@@ -138,8 +138,8 @@ static struct {
 
   // Extruder
   BOOL_MEMBER  (Extruder.CalibrateInput,  "CalibrateInput",  true, true),
-  FLOAT_MEMBER (Extruder.OffsetX, "Extruder.OffsetX", 0.0, false),
-  FLOAT_MEMBER (Extruder.OffsetY, "Extruder.OffsetY", 0.0, false),
+  FLOAT_MEMBER (Extruder.OffsetX, "Extruder.OffsetX", 0.0, true),
+  FLOAT_MEMBER (Extruder.OffsetY, "Extruder.OffsetY", 0.0, true),
   FLOAT_MEMBER (Extruder.FilamentDiameter, "FilamentDiameter", 3.0, true),
   FLOAT_MEMBER (Extruder.ExtrusionFactor, "Extruder.ExtrusionFactor", 1.0, true),
   /* FLOAT_MEMBER (Extruder.DownstreamMultiplier, "DownstreamMultiplier", 1.0, true), */
@@ -151,6 +151,7 @@ static struct {
   FLOAT_MEMBER (Extruder.EMaxSpeed,        "EMaxSpeed",  1.5, true),
   FLOAT_MEMBER (Extruder.MaxShellSpeed,    "MaxShellSpeed",  150, true),
   STRING_MEMBER(Extruder.GCLetter,         "Extruder.GCLetter", "E", false),
+  BOOL_MEMBER  (Extruder.UseForSupport,    "Extruder.UseForSupport",  false, true),
   { OFFSET (Extruder.name), T_STRING, "Extruder.name", NULL, 0, "Extruder", false },
 
   BOOL_MEMBER  (Extruder.EnableAntiooze, "EnableAntiooze", false, true),
@@ -245,12 +246,14 @@ static struct {
   BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
   //BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
   BOOL_MEMBER (Misc.TempReadingEnabled, "TempReadingEnabled", true, false),
+  BOOL_MEMBER (Misc.SaveSingleShapeSTL, "Misc.SaveSingleShapeSTL", false, false),
 
   // GCode - handled by GCodeImpl
   BOOL_MEMBER (Display.DisplayGCode, "DisplayGCode", true, true),
   FLOAT_MEMBER (Display.GCodeDrawStart, "GCodeDrawStart", 0.0, true),
   FLOAT_MEMBER (Display.GCodeDrawEnd, "GCodeDrawEnd", 1.0, true),
   BOOL_MEMBER (Display.DisplayGCodeBorders, "DisplayGCodeBorders", true, true),
+  BOOL_MEMBER (Display.DisplayGCodeMoves, "DisplayGCodeMoves", true, true),
   BOOL_MEMBER (Display.DisplayGCodeArrows, "DisplayGCodeArrows", true, true),
   BOOL_MEMBER (Display.DisplayEndpoints, "DisplayEndpoints", false, true),
   BOOL_MEMBER (Display.DisplayNormals, "DisplayNormals", false, true),
@@ -263,6 +266,8 @@ static struct {
   BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, true),
   BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
   BOOL_MEMBER (Display.DisplayDebugArcs, "DisplayDebugArcs", true, true),
+  BOOL_MEMBER (Display.DebugGCodeExtruders, "Display.DebugGCodeExtruders", false, true),
+  BOOL_MEMBER (Display.DebugGCodeOffset, "Display.DebugGCodeOffset", true, true),
   BOOL_MEMBER (Display.DisplayFilledAreas, "DisplayFilledAreas", true, true),
   BOOL_MEMBER (Display.ShowLayerOverhang, "ShowLayerOverhang", true, true),
   BOOL_MEMBER (Display.CommsDebug, "CommsDebug", false, true),
@@ -361,7 +366,7 @@ static struct {
   { "Slicing.FirstLayersNum", 0, 1000, 1, 10 },
   { "Slicing.FirstLayersSpeed", 0.01, 3, 0.01, 0.1 },
   { "Slicing.FirstLayersInfillDist", 0.0, 100, 0.01, 0.1 },
-  { "Slicing.FirstLayerHeight", 0.0, 1., 0.01, 0.1 },
+  { "Slicing.FirstLayerHeight", 0.0, 100., 0.01, 0.1 },
   { "Slicing.ArcsMaxAngle", 0, 180, 1, 10 },
   { "Slicing.MinArcLength", 0, 10, 0.01, 0.1 },
   { "Slicing.CornerRadius", 0, 5, 0.01, 0.1 },
@@ -385,8 +390,8 @@ static struct {
   // { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
 
   // Extruder
-  { "Extruder.OffsetX", 0.0, 5000.0, 0.1, 1.0 },
-  { "Extruder.OffsetY", 0.0, 5000.0, 0.1, 1.0 },
+  { "Extruder.OffsetX", -5000.0, 5000.0, 0.1, 1.0 },
+  { "Extruder.OffsetY", -5000.0, 5000.0, 0.1, 1.0 },
   { "Extruder.ExtrudedMaterialWidthRatio", 0.0, 10.0, 0.01, 0.1 },
   { "Extruder.MinimumLineWidth", 0.0, 10.0, 0.01, 0.1 },
   { "Extruder.MaximumLineWidth", 0.0, 10.0, 0.01, 0.1 },
@@ -508,7 +513,7 @@ public:
   }
 };
 
-std::string Settings::GCodeType::getText(GCodeTextType t)
+std::string Settings::GCodeType::getText(GCodeTextType t) const
 {
   return m_impl->m_GCode[t]->get_text();
 }
@@ -710,16 +715,19 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     Extruders.push_back(Extruder);
   else
     Extruders[0] = Extruder;
+  if (Extruder.UseForSupport) Slicing.SupportExtruderNo = Extruders.size()-1;
   // Load other extruders "ExtruderN" (N=2..)
   std::vector< Glib::ustring > all_groups = cfg.get_groups();
   for (uint i = 0; i<all_groups.size(); i++) {
     if (all_groups[i].substr(0,8) == "Extruder") {
       if (all_groups[i].length() > 8) {
 	load_settings_as(cfg, all_groups[i], "Extruder");
+	if (Extruder.UseForSupport) Slicing.SupportExtruderNo = Extruders.size();
 	Extruders.push_back(Extruder);
       }
     }
   }
+  if (Extruders.size() == 1) Slicing.SupportExtruderNo = 0;
 
   GCode.m_impl->loadSettings (cfg);
 
@@ -935,24 +943,6 @@ void Settings::set_to_gui (Builder &builder, int i)
     std::cerr << _("corrupt setting type\n") << glade_name <<endl;;
     break;
   }
-
-  Gtk::Window *pWindow = NULL;
-  builder->get_widget("main_window", pWindow);
-  if (pWindow && Misc.window_width > 0 && Misc.window_height > 0)
-    pWindow->resize(Misc.window_width, Misc.window_height);
-  if (pWindow && Misc.window_posx > 0 && Misc.window_posy > 0)
-    pWindow->move(Misc.window_posx,Misc.window_posy);
-
-  Gtk::Expander *exp = NULL;
-  builder->get_widget ("layer_expander", exp);
-  if (exp)
-    exp->set_expanded(Misc.ExpandLayerDisplay);
-  builder->get_widget ("model_expander", exp);
-  if (exp)
-    exp->set_expanded(Misc.ExpandModelDisplay);
-  builder->get_widget ("printeraxis_expander", exp);
-  if (exp)
-    exp->set_expanded(Misc.ExpandPAxisDisplay);
 }
 
 
@@ -1030,13 +1020,13 @@ void Settings::get_from_gui (Builder &builder, int i)
       }
       else if (t == T_FLOAT)
       {
-	  is_changed = *PTR_FLOAT(this, i) != (float)value;
-          *PTR_FLOAT(this, i) = value;
+	is_changed = *PTR_FLOAT(this, i) != (float)value;
+	*PTR_FLOAT(this, i) = value;
       }
       else
       {
-	  is_changed = *PTR_DOUBLE(this, i) != value;
-          *PTR_DOUBLE(this, i) = value;
+	is_changed = *PTR_DOUBLE(this, i) != value;
+	*PTR_DOUBLE(this, i) = value;
       }
     }
     break;
@@ -1238,8 +1228,9 @@ void Settings::set_to_gui (Builder &builder, const string filter)
 
     if (!glade_name)
       continue;
-    if (filter != "" && string(glade_name).substr(0,filter.length()) != filter)
+    if (filter != "" && string(glade_name).substr(0,filter.length()) != filter) {
       continue;
+    }
     set_to_gui (builder, i);
   }
 
@@ -1263,12 +1254,33 @@ void Settings::set_to_gui (Builder &builder, const string filter)
   }
 
   // Set serial speed. Find the row that holds this value
-  Gtk::ComboBox *portspeed = NULL;
-  builder->get_widget ("Hardware.SerialSpeed", portspeed);
-  if (portspeed) {
-    std::ostringstream ostr;
-    ostr << Hardware.SerialSpeed;
-    combobox_set_to(portspeed, ostr.str());
+  if (filter == "" || filter == "Hardware") {
+    Gtk::ComboBox *portspeed = NULL;
+    builder->get_widget ("Hardware.SerialSpeed", portspeed);
+    if (portspeed) {
+      std::ostringstream ostr;
+      ostr << Hardware.SerialSpeed;
+      combobox_set_to(portspeed, ostr.str());
+    }
+  }
+
+  if (filter == "" || filter == "Misc") {
+    Gtk::Window *pWindow = NULL;
+    builder->get_widget("main_window", pWindow);
+    if (pWindow && Misc.window_width > 0 && Misc.window_height > 0)
+      pWindow->resize(Misc.window_width, Misc.window_height);
+    if (pWindow && Misc.window_posx > 0 && Misc.window_posy > 0)
+      pWindow->move(Misc.window_posx,Misc.window_posy);
+    Gtk::Expander *exp = NULL;
+    builder->get_widget ("layer_expander", exp);
+    if (exp)
+      exp->set_expanded(Misc.ExpandLayerDisplay);
+    builder->get_widget ("model_expander", exp);
+    if (exp)
+      exp->set_expanded(Misc.ExpandModelDisplay);
+    builder->get_widget ("printeraxis_expander", exp);
+    if (exp)
+      exp->set_expanded(Misc.ExpandPAxisDisplay);
   }
 }
 
@@ -1451,6 +1463,18 @@ double Settings::ExtruderSettings::GetExtrudeFactor(double layerheight) const
   return f;
 }
 
+std::vector<char> Settings::get_extruder_letters() const
+{
+  std::vector<char> letters(Extruders.size());
+  for (uint i = 0; i< Extruders.size(); i++)
+    letters[i] = Extruders[i].GCLetter[0];
+  return letters;
+}
+
+Vector3d Settings::get_extruder_offset(uint num) const
+{
+  return Vector3d(Extruders[num].OffsetX, Extruders[num].OffsetY, 0.);
+}
 
 void Settings::CopyExtruder(uint num)
 {
@@ -1470,21 +1494,58 @@ void Settings::RemoveExtruder(uint num)
 }
 void Settings::SelectExtruder(uint num)
 {
+  if (Extruder.UseForSupport) { // user has set previous extruder for support
+    if (selectedExtruder < Extruders.size())
+      Slicing.SupportExtruderNo = selectedExtruder;
+  }
+  for (uint i = 0; i< Extruders.size(); i++)  // deselect others
+    Extruders[i].UseForSupport = (i == Slicing.SupportExtruderNo);
   if (num < Extruders.size()) {
     selectedExtruder = num;
-    Extruder = Extruders[num];
   }
+  Extruder = Extruders[selectedExtruder];
+  // if (Slicing.UseTCommand) // use letter of first extruder
+  //   Extruder.GCLetter = Extruders[0].GCLetter;
 }
 
 Matrix4d Settings::getBasicTransformation(Matrix4d T) const
 {
   Vector3d t;
   T.get_translation(t);
-  t+= Vector3d(Hardware.PrintMargin.x()+Raft.Size*Raft.Enable,
-	       Hardware.PrintMargin.y()+Raft.Size*Raft.Enable,
+  const Vector3d margin = getPrintMargin();
+  t+= Vector3d(margin.x()+Raft.Size*Raft.Enable,
+	       margin.y()+Raft.Size*Raft.Enable,
 	       0);
   T.set_translation(t);
   return T;
+}
+
+Vector3d Settings::getPrintVolume() const
+{
+  return Hardware.Volume;
+  // Vector3d maxoff = Vector3d::ZERO;
+  // for (uint i = 0; i< Extruders.size(); i++) {
+  //   if (abs(Extruders[i].OffsetX) > abs(maxoff.x()))
+  //     maxoff.x() = Extruders[i].OffsetX;
+  //   if (abs(Extruders[i].OffsetY) > abs(maxoff.y()))
+  //     maxoff.y() = Extruders[i].OffsetY;
+  // }
+  // return vol - maxoff;
+}
+Vector3d Settings::getPrintMargin() const
+{
+  const Vector3d margin = Hardware.PrintMargin;
+  Vector3d maxoff = Vector3d::ZERO;
+  for (uint i = 0; i< Extruders.size(); i++) {
+    if (abs(Extruders[i].OffsetX) > abs(maxoff.x()))
+      maxoff.x() = abs(Extruders[i].OffsetX);
+    if (abs(Extruders[i].OffsetY) > abs(maxoff.y()))
+      maxoff.y() = abs(Extruders[i].OffsetY);
+  }
+  if (Slicing.Skirt) {
+    maxoff += Vector3d(Slicing.SkirtDistance,Slicing.SkirtDistance,0);
+  }
+  return margin + maxoff;
 }
 
 
@@ -1494,3 +1555,5 @@ std::string Settings::get_image_path()
   std::string basename = Glib::path_get_dirname(Filename);
   return Glib::build_filename (basename, Image);
 }
+
+

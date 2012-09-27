@@ -115,10 +115,10 @@ public:
 	void drawLineNumbers() const;
 	void draw_as_surface() const;
 
-	void getLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
-	void getLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
-	void getLines(vector<Vector2d> &lines,uint startindex=0) const;
-	void getLines(vector<Vector3d> &lines,uint startindex=0) const;
+	void makeLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
+	void makeLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
+	void makeLines(vector<Vector2d> &lines,uint startindex=0) const;
+	void makeLines(vector<Vector3d> &lines,uint startindex=0) const;
 
 	double getLinelengthSq(uint startindex) const;
 	double averageLinelengthSq() const;
@@ -146,12 +146,62 @@ public:
 
 	static void move(vector<Poly> &polys, const Vector2d &trans);
 
- };
+};
 
 
-typedef struct {
+////////////////////////////////////////////////////////////////////
+
+class ExPoly
+{
+ public:
+  ExPoly(){};
+  ~ExPoly(){};
   Poly outer;
   vector<Poly> holes;
-} ExPoly;
+
+  void clear();
+  double getZ() const {return outer.getZ();}
+
+  void draw(int gl_type, bool randomized=false) const;
+  void draw(int gl_type, double z, bool randomized=false) const; // draw at given z
+  void drawVertexNumbers() const;
+  void drawLineNumbers() const;
+
+  void cleanup(double maxerror);
+
+};
 
 
+////////////////////////////////////////////////////////////////////
+
+void draw_poly (const Poly &poly, int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a, bool randomized = false);
+void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a, bool randomized = false);
+void draw_polys(const vector< vector <Poly> > &polys,
+		int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a, bool randomized = false);
+void draw_poly (const ExPoly &expoly, int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a, bool randomized = false);
+void draw_polys(const vector <ExPoly> &expolys, int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a, bool randomized = false);
+
+void draw_polys_surface(const vector <Poly> &polys,
+			const Vector2d &Min, const Vector2d &Max,
+			double z,
+			double cleandist,
+			const float *rgb, float a);
+void draw_polys_surface(const vector< vector<Poly> > &polys,
+			const Vector2d &Min, const Vector2d &Max,
+			double z,
+			double cleandist,
+			const float *rgb, float a);
+void draw_polys_surface(const vector <ExPoly> &expolys,
+			const Vector2d &Min, const Vector2d &Max,
+			double z,
+			double cleandist,
+			const float *rgb, float a);
+
+void clearpolys(vector<Poly> &polys);
+void clearpolys(vector<ExPoly> &polys);
+void clearpolys(vector< vector<Poly> > &polys);

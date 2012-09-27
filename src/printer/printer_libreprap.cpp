@@ -389,13 +389,13 @@ void Printer::set_printing (bool pprinting)
   printing_changed.emit();
 }
 
-double Printer::getCurrentPrintingZ() {
-  if (gcode_iter){
-    Command command = gcode_iter->getCurrentCommand(Vector3d(0,0,0));
-    return command.where.z();
-  }
-  return 0;
-}
+// double Printer::getCurrentPrintingZ() {
+//   if (gcode_iter){
+//     Command command = gcode_iter->getCurrentCommand(Vector3d(0,0,0));
+//     return command.where.z();
+//   }
+//   return 0;
+// }
 
 
 

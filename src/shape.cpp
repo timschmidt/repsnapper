@@ -39,6 +39,8 @@ Shape::Shape()
 
 void Shape::clear() {
   triangles.clear();
+  if (gl_List>=0)
+    glDeleteLists(gl_List,1);
   gl_List = -1;
 };
 
@@ -61,7 +63,6 @@ void Shape::setTriangles(const vector<Triangle> &triangles_)
 
 int Shape::saveBinarySTL(Glib::ustring filename) const
 {
-
   if (!File::saveBinarySTL(filename, triangles, transform3D.transform))
     return -1;
   return 0;
@@ -338,6 +339,8 @@ void Shape::CalcBBox()
     triangles[i].AccumulateMinMax (Min, Max, transform3D.transform);
   }
   Center = (Max + Min) / 2;
+  if (gl_List>=0)
+    glDeleteLists(gl_List,1);
   gl_List = -1;
 }
 
@@ -783,45 +786,9 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
 }
 
 
-
-
-#ifdef WIN32
-#  include <GL/glut.h>	// Header GLUT Library
-#endif
-
-#ifdef _MSC_VER
-#  pragma warning( disable : 4018 4267)
-#endif
-
-/* call me before glutting */
-void checkGlutInit()
-{
-	static bool inited = false;
-	if (inited)
-		return;
-	inited = true;
-	int argc = 1;
-	char *argv[] = { (char *) "repsnapper" };
-	glutInit (&argc, argv);
-}
-
-void drawString(const Vector3d &pos, const string &text)
-{
-  drawString(pos,GLUT_BITMAP_HELVETICA_12,text);
-}
-void drawString(const Vector3d &pos, void* font, const string &text)
-{
-        checkGlutInit();
-	glRasterPos3d(pos.x(), pos.y(), pos.z());
-	for (uint c=0;c<text.length();c++)
-		glutBitmapCharacter(font, text[c]);
-}
-
-
 // called from Model::draw
 void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 {
-
   //cerr << "Shape::draw" <<  endl;
 	// polygons
 	glEnable(GL_LIGHTING);
@@ -934,6 +901,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 		glEnd();
 	}
 	glDisable(GL_DEPTH_TEST);
+
 }
 
 // the bounding box is in real coordinates (not transformed)
@@ -992,6 +960,7 @@ void Shape::drawBBox() const
   val << fixed << (Max.z()-Min.z());
   pos = Vector3d(Min.x(),Min.y(),(Max.z()+Min.z())/2.);
   drawString(pos,val.str());
+
 }
 
 
@@ -1001,6 +970,12 @@ void Shape::draw_geometry(uint max_triangles)
   bool listDraw = (max_triangles == 0); // not in preview mode
   bool haveList = gl_List >= 0;
 
+  if (!listDraw && haveList) {
+    if (gl_List>=0)
+      glDeleteLists(gl_List,1);
+    gl_List = -1;
+    haveList = false;
+  }
   if (listDraw && !haveList) {
     gl_List = glGenLists(1);
     glNewList(gl_List, GL_COMPILE);
@@ -1024,7 +999,6 @@ void Shape::draw_geometry(uint max_triangles)
     glEndList();
   }
 
-
   if (listDraw && gl_List >= 0) { // have stored list
     Glib::TimeVal starttime, endtime;
     if (!slow_drawing) {
@@ -1038,9 +1012,6 @@ void Shape::draw_geometry(uint max_triangles)
     }
     return;
   }
-
-
-
 }
 
 /*

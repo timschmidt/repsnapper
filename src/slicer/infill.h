@@ -17,7 +17,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#pragma once 
+#pragma once
 
 /* #include <glib/gi18n.h> */
 #ifdef _OPENMP
@@ -29,7 +29,7 @@
 
 
 // user selectable have to be first
-enum InfillType {ParallelInfill, SmallZigzagInfill, HexInfill, PolyInfill, HilbertInfill, 
+enum InfillType {ParallelInfill, SmallZigzagInfill, HexInfill, PolyInfill, HilbertInfill,
 		 SupportInfill, RaftInfill, BridgeInfill, ZigzagInfill, ThinInfill,
 		 INVALIDINFILL};
 
@@ -41,12 +41,12 @@ class Infill
 {
   Layer *layer;
 
-  struct pattern 
+  struct pattern
   {
     InfillType type;
     double angle;
     double distance;
-    Vector2d Min,Max; 
+    Vector2d Min,Max;
     ClipperLib::Polygons cpolys;
   } ;
 
@@ -55,13 +55,13 @@ class Infill
   static omp_lock_t save_lock;
 #endif
 
-  ClipperLib::Polygons makeInfillPattern(InfillType type, 
+  ClipperLib::Polygons makeInfillPattern(InfillType type,
 					 const vector<Poly> &tofillpolys,
 					 double infillDistance,
 					 double offsetDistance,
 					 double rotation) ;
 
-  Infill(); 
+  Infill();
 
   void addInfillPoly(const Poly &p);
   void addInfillPolys(const vector<Poly> &polys);
@@ -71,10 +71,10 @@ class Infill
  public:
 
   Infill(Layer *layer, double extrfactor);
-  ~Infill(); 
+  ~Infill();
 
   double extrusionfactor;
-  string name; 
+  string name;
   bool cached; // if this pattern comes from savedPatterns
 
   void setName(string s){name=s;};
@@ -84,29 +84,32 @@ class Infill
   InfillType m_type;
   double m_angle;
   double infillDistance;
-  
+
   vector<Poly> infillpolys;  // for clipper polygon types
   vector<Vector2d> infillvertices; // for lines types
-  
-  void addPoly (double z, const Poly &poly, InfillType type, double infillDistance, 
+
+  void addPoly (double z, const Poly &poly, InfillType type, double infillDistance,
 	       double offsetDistance, double rotation);
-  void addPolys(double z, const vector<Poly> &polys, InfillType type, double infillDistance, 
-		double offsetDistance, double rotation);
-  void addPoly (double z, const ExPoly &expoly, InfillType type, double infillDistance, 
-	       double offsetDistance, double rotation);
+  void addPolys(double z, const vector<Poly> &polys, InfillType type,
+		double infillDistance, double offsetDistance, double rotation);
   void addPolys(double z, const vector<Poly> &polys, const vector<Poly> &fillpolys,
 		double offsetDistance);
   void addPolys(double z, const vector<Poly> &polys, const ClipperLib::Polygons &ifcpolys,
 		double offsetDistance);
 
+  void addPoly (double z, const ExPoly &expoly, InfillType type, double infillDistance,
+	       double offsetDistance, double rotation);
+  void addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
+		double infillDistance, double offsetDistance, double rotation);
+
   void getLines(vector<Vector3d> &lines) const;
-  
+
   typedef struct { Vector2d from; Vector2d to; } infillline;
   vector<Poly> sortedpolysfromlines(const vector<infillline> &lines, double z);
 
   void clear();
   uint size() const {return infillpolys.size();};
-  
+
   vector<Poly> getCachedPattern(double z);
 
   string info() const;

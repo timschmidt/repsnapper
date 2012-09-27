@@ -32,8 +32,8 @@
 #include "settings.h"
 
 
-GCode::GCode(const char e_letter)
- : E_letter(e_letter)
+GCode::GCode()
+  : gl_List(-1)
 {
   Min.set(99999999.0,99999999.0,99999999.0);
   Max.set(-99999999.0,-99999999.0,-99999999.0);
@@ -41,6 +41,20 @@ GCode::GCode(const char e_letter)
   buffer = Gtk::TextBuffer::create();
 }
 
+
+void GCode::clear()
+{
+  buffer->erase (buffer->begin(), buffer->end());
+  commands.clear();
+  layerchanges.clear();
+  buffer_zpos_lines.clear();
+  Min   = Vector3d::ZERO;
+  Max   = Vector3d::ZERO;
+  Center= Vector3d::ZERO;
+  if (gl_List>=0)
+    glDeleteLists(gl_List,1);
+  gl_List = -1;
+}
 
 
 double GCode::GetTotalExtruded(bool relativeEcode) const
@@ -95,26 +109,26 @@ string getLineAt(const Glib::RefPtr<Gtk::TextBuffer> buffer, int lineno)
   return buffer->get_text (from, to);
 }
 
-void GCode::updateWhereAtCursor()
+void GCode::updateWhereAtCursor(const vector<char> &E_letters)
 {
   int line = buffer->get_insert()->get_iter().get_line();
   // Glib::RefPtr<Gtk::TextBuffer> buf = iter.get_buffer();
   if (line == 0) return;
   string text = getLineAt(buffer, line-1);
-  Command commandbefore(text, Vector3d::ZERO, E_letter);
+  Command commandbefore(text, Vector3d::ZERO, E_letters);
   Vector3d where = commandbefore.where;
   // complete position of previous line
   int l = line;
   while (l>0 && where.x()==0) {
     l--;
     text = getLineAt(buffer, l);
-    where.x() = Command(text, Vector3d::ZERO, E_letter).where.x();
+    where.x() = Command(text, Vector3d::ZERO, E_letters).where.x();
   }
   l = line;
   while (l>0 && where.y()==0) {
     l--;
     text = getLineAt(buffer, l);
-    where.y() = Command(text, Vector3d::ZERO, E_letter).where.y();
+    where.y() = Command(text, Vector3d::ZERO, E_letters).where.y();
   }
   l = line;
   // find last z pos fast
@@ -124,7 +138,7 @@ void GCode::updateWhereAtCursor()
 	if (int(buffer_zpos_lines[i]) <= l) {
 	  text = getLineAt(buffer, buffer_zpos_lines[i]);
 	  //cerr << text << endl;
-	  Command c(text, Vector3d::ZERO, E_letter);
+	  Command c(text, Vector3d::ZERO, E_letters);
 	  where.z() = c.where.z();
 	  if (where.z()!=0) break;
 	}
@@ -132,12 +146,12 @@ void GCode::updateWhereAtCursor()
   while (l>0 && where.z()==0) {
     l--;
     text = getLineAt(buffer, l);
-    Command c(text, Vector3d::ZERO, E_letter);
+    Command c(text, Vector3d::ZERO, E_letters);
     where.z() = c.where.z();
   }
   // current move:
   text = getLineAt(buffer, line);
-  Command command(text, where, E_letter);
+  Command command(text, where, E_letters);
   Vector3d dwhere = command.where - where;
   where.z() -= 0.0000001;
   currentCursorWhere = where+dwhere;
@@ -146,7 +160,8 @@ void GCode::updateWhereAtCursor()
 }
 
 
-void GCode::Read(Model *model, ViewProgress *progress, string filename)
+void GCode::Read(Model *model, const vector<char> E_letters,
+		 ViewProgress *progress, string filename)
 {
 	clear();
 
@@ -199,9 +214,9 @@ void GCode::Read(Model *model, ViewProgress *progress, string filename)
 		Command command;
 
 		if (relativePos)
-		  command = Command(s, Vector3d::ZERO, E_letter);
+		  command = Command(s, Vector3d::ZERO, E_letters);
 		else
-		  command = Command(s, globalPos, E_letter);
+		  command = Command(s, globalPos, E_letters);
 
 		if (command.Code == COMMENT) {
 		  continue;
@@ -422,7 +437,10 @@ void GCode::draw(const Settings &settings, int layer,
 	  // glVertex3dv(currentCursorFrom);
 	  // glVertex3dv(currentCursorWhere);
 	  // glEnd();
-	  currentCursorCommand.draw(currentCursorFrom, 7,
+	  const Vector3d offset =
+	    Vector3d(settings.Extruders[currentCursorCommand.extruder_no].OffsetX,
+		     settings.Extruders[currentCursorCommand.extruder_no].OffsetY, 0.);
+	  currentCursorCommand.draw(currentCursorFrom, offset, 7,
 				    Vector4f(1.f,0.f,1.f,1.f),
 				    0., true, false);
 	}
@@ -432,6 +450,11 @@ void GCode::draw(const Settings &settings, int layer,
 void GCode::drawCommands(const Settings &settings, uint start, uint end,
 			 bool liveprinting, int linewidth, bool arrows, bool boundary)
 {
+  // if (gl_List < 0) {
+  //   gl_List = glGenLists(1);
+  //   glNewList(gl_List, GL_COMPILE);
+  //   cerr << "list " << gl_List << endl;
+
 	double LastE=0.0;
 	bool extruderon = false;
 	// Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
@@ -474,11 +497,22 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	glVertex3dv((GLdouble*)&pos);
 	glEnd();
 
+	Vector3d last_extruder_offset = Vector3d::ZERO;
+
 	(void) extruderon; // calm warnings
 	for(uint i=start; i <= end; i++)
 	{
-	  double extrwidth = extrusionwidth;
-	  if (commands[i].is_value) continue;
+	        Vector3d extruder_offset = Vector3d::ZERO;
+	        //Vector3d next_extruder_offset = Vector3d::ZERO;
+
+		// TO BE FIXED:
+		if (!settings.Display.DebugGCodeOffset) { // show all together
+		  extruder_offset = settings.get_extruder_offset(commands[i].extruder_no);
+		  pos -= extruder_offset - last_extruder_offset;
+		  last_extruder_offset = extruder_offset;
+		}
+		double extrwidth = extrusionwidth;
+	        if (commands[i].is_value) continue;
 		switch(commands[i].Code)
 		{
 		case SETSPEED:
@@ -514,11 +548,16 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		    double speed = commands[i].f;
 		    double luma = 1.;
 		    if( (!relativeE && commands[i].e == LastE)
-			|| (relativeE && commands[i].e == 0) )
+			|| (relativeE && commands[i].e == 0) ) // move only
 		      {
-			luma = 0.3 + 0.7 * speed / settings.Hardware.MaxMoveSpeedXY / 60;
-			Color = settings.Display.GCodeMoveRGBA;
-			extrwidth = 0;
+			if (settings.Display.DisplayGCodeMoves) {
+			  luma = 0.3 + 0.7 * speed / settings.Hardware.MaxMoveSpeedXY / 60;
+			  Color = settings.Display.GCodeMoveRGBA;
+			  extrwidth = 0;
+			} else {
+			   pos = commands[i].where;
+			   break;
+			}
 		      }
 		    else
 		      {
@@ -526,25 +565,37 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 			if (liveprinting) {
 			  Color = settings.Display.GCodePrintingRGBA;
 			} else
-			  Color = settings.Extruder.DisplayRGBA;
+			  Color = settings.Extruders[commands[i].extruder_no].DisplayRGBA;
+			if (settings.Display.DebugGCodeExtruders) {
+			  ostringstream o; o << commands[i].extruder_no+1;
+			  drawString( (pos + commands[i].where) / 2. + extruder_offset,
+				      o.str());
+			}
 		      }
 		    if (settings.Display.LuminanceShowsSpeed)
 		      Color *= luma;
-		    commands[i].draw(pos, linewidth, Color, extrwidth,
-				     arrows, debug_arcs);
+		    commands[i].draw(pos, extruder_offset, linewidth,
+				     Color, extrwidth, arrows, debug_arcs);
 		    LastE=commands[i].e;
 		    break;
 		  }
 		case RAPIDMOTION:
-		  commands[i].draw(pos, 1, Color, extrwidth, arrows, debug_arcs);
-			break;
+		  {
+		    Color = settings.Display.GCodeMoveRGBA;
+		    commands[i].draw(pos, extruder_offset, 1, Color,
+				     extrwidth, arrows, debug_arcs);
+		    break;
+		  }
 		default:
 			break; // ignored GCodes
 		}
-		if(commands[i].Code != EXTRUDERON && commands[i].Code != EXTRUDEROFF)
-		  pos = commands[i].where;
+		//if(commands[i].Code != EXTRUDERON && commands[i].Code != EXTRUDEROFF)
+		//pos = commands[i].where;
 	}
 	glLineWidth(1);
+  //   glEndList();
+  // }
+  // glCallList(gl_List);
 }
 
 bool add_text_filter_nan(string str, string &GcodeTxt)
@@ -561,11 +612,14 @@ bool add_text_filter_nan(string str, string &GcodeTxt)
 
 
 
-void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
-		     const string &GcodeLayer, const string &GcodeEnd,
-		     bool RelativeEcode,
+void GCode::MakeText(string &GcodeTxt,
+		     const Settings &settings,
 		     ViewProgress * progress)
 {
+  string GcodeStart = settings.GCode.getStartText();
+  string GcodeLayer = settings.GCode.getLayerText();
+  string GcodeEnd   = settings.GCode.getEndText();
+
 	double lastE = -10;
 	double lastF = 0; // last Feedrate (can be omitted when same)
 	Vector3d pos(0,0,0);
@@ -589,6 +643,11 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	if (progress_steps==0) progress_steps=1;
 
 	for (uint i = 0; i < commands.size(); i++) {
+	  char E_letter;
+	  if (settings.Slicing.UseTCommand) // use first extruder's code for all extuders
+	    E_letter = settings.Extruders[0].GCLetter[0];
+	  else
+	    E_letter = settings.Extruders[commands[i].extruder_no].GCLetter[0];
 	  if (progress && i%progress_steps==0 && !progress->update(i)) break;
 
 	  if ( commands[i].Code == LAYERCHANGE ) {
@@ -603,7 +662,8 @@ void GCode::MakeText(string &GcodeTxt, const string &GcodeStart,
 	  }
 	  else {
 	    GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, lastF,
-						 RelativeEcode, E_letter) + "\n";
+						 settings.Slicing.RelativeEcode,
+						 E_letter) + "\n";
 	  }
 	}
 
@@ -805,17 +865,6 @@ std::string GCode::get_text () const
   return buffer->get_text();
 }
 
-void GCode::clear()
-{
-  buffer->erase (buffer->begin(), buffer->end());
-  commands.clear();
-  layerchanges.clear();
-  buffer_zpos_lines.clear();
-  Min   = Vector3d::ZERO;
-  Max   = Vector3d::ZERO;
-  Center= Vector3d::ZERO;
-}
-
 
 
 ///////////////////////////////////////////////////////////////////////////////////
@@ -867,14 +916,15 @@ GCodeIter *GCode::get_iter ()
   return iter;
 }
 
-Command GCodeIter::getCurrentCommand(Vector3d defaultwhere)
+Command GCodeIter::getCurrentCommand(Vector3d defaultwhere,
+				     const vector<char> &E_letters)
 {
   Gtk::TextBuffer::iterator from ,to;
   // cerr <<"currline" << defaultwhere << endl;
   // cerr <<"currline" << (int) m_cur_line << endl;
   from = m_buffer->get_iter_at_line (m_cur_line);
   to   = m_buffer->get_iter_at_line (m_cur_line+1);
-  Command command(m_buffer->get_text (from, to), defaultwhere);
+  Command command(m_buffer->get_text (from, to), defaultwhere, E_letters);
   return command;
 }
 

@@ -13,9 +13,9 @@ SHARED_SRC += \
 	src/slicer/geometry.cpp \
 	src/slicer/printlines.cpp \
 	src/slicer/clipping.cpp \
+	src/slicer/layer.cpp \
 	src/slicer/infill.cpp \
-	src/slicer/poly.cpp \
-	src/slicer/layer.cpp
+	src/slicer/poly.cpp
 
 SHARED_INC += \
 	src/slicer/geometry.h \

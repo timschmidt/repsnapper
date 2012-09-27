@@ -28,6 +28,38 @@
 #include <lmmin.h>
 
 
+#ifdef WIN32
+#  include <GL/glut.h>	// Header GLUT Library
+#endif
+
+#ifdef _MSC_VER
+#  pragma warning( disable : 4018 4267)
+#endif
+
+/* call me before glutting */
+void checkGlutInit()
+{
+	static bool inited = false;
+	if (inited)
+		return;
+	inited = true;
+	int argc = 1;
+	char *argv[] = { (char *) "repsnapper" };
+	glutInit (&argc, argv);
+}
+
+void drawString(const Vector3d &pos, const string &text)
+{
+  drawString(pos,GLUT_BITMAP_HELVETICA_12,text);
+}
+void drawString(const Vector3d &pos, void* font, const string &text)
+{
+        checkGlutInit();
+	glRasterPos3d(pos.x(), pos.y(), pos.z());
+	for (uint c=0;c<text.length();c++)
+		glutBitmapCharacter(font, text[c]);
+}
+
 
 //////////////////////////// ARC FITTING //////////////////////////
 

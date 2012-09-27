@@ -191,7 +191,7 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
       Shape *shape = new Shape();
       shape->setTriangles(triangles[i]);
       shape->filename = shapenames[i];
-      shape->FitToVolume(settings.Hardware.Volume - 2.*settings.Hardware.PrintMargin);
+      shape->FitToVolume(settings.getPrintVolume() - 2.*settings.getPrintMargin());
       shapes.push_back(shape);
     }
   }
@@ -222,15 +222,34 @@ void Model::SaveStl(Glib::RefPtr<Gio::File> file)
     shapes[0]->saveBinarySTL(file->get_path());
   }
   else {
-    set_locales("C");
-    stringstream sstr;
-    for(uint s=0; s < shapes.size(); s++) {
-      sstr << shapes[s]->getSTLsolid() << endl;
+    if (settings.Misc.SaveSingleShapeSTL) {
+      Shape single = GetCombinedShape();
+      single.saveBinarySTL(file->get_path());
+    } else {
+      set_locales("C");
+      stringstream sstr;
+      for(uint s=0; s < shapes.size(); s++) {
+	sstr << shapes[s]->getSTLsolid() << endl;
+      }
+      Glib::file_set_contents (file->get_path(), sstr.str());
+      reset_locales();
     }
-    Glib::file_set_contents (file->get_path(), sstr.str());
-    reset_locales();
   }
   settings.STLPath = file->get_parent()->get_path();
+}
+
+// everything in one shape
+Shape Model::GetCombinedShape() const
+{
+  Shape shape;
+  for (uint o = 0; o<objtree.Objects.size(); o++) {
+    for (uint s = 0; s<objtree.Objects[o]->shapes.size(); s++) {
+      vector<Triangle> tr =
+	objtree.Objects[o]->shapes[s]->getTriangles(objtree.Objects[o]->transform3D.transform);
+      shape.addTriangles(tr);
+    }
+  }
+  return shape;
 }
 
 void Model::SaveAMF(Glib::RefPtr<Gio::File> file)
@@ -291,7 +310,7 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
   is_calculating=true;
   settings.Display.DisplayGCode = true;
   m_progress->start (_("Reading GCode"), 100.0);
-  gcode.Read (this, m_progress, file->get_path());
+  gcode.Read (this, settings.get_extruder_letters(), m_progress, file->get_path());
   m_progress->stop (_("Done"));
   is_calculating=false;
   Max = gcode.Max;
@@ -307,15 +326,9 @@ void Model::translateGCode(Vector3d trans)
   if (is_printing) return;
   is_calculating=true;
   gcode.translate(trans);
-  gcode.set_E_letter(settings.Extruder.GCLetter[0]);
 
   string GcodeTxt;
-  string GcodeStart = settings.GCode.getStartText();
-  string GcodeLayer = settings.GCode.getLayerText();
-  string GcodeEnd   = settings.GCode.getEndText();
-  gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
-		  settings.Slicing.RelativeEcode,
-		  m_progress);
+  gcode.MakeText (GcodeTxt, settings, m_progress);
   Max = gcode.Max;
   Min = gcode.Min;
   Center = (Max + Min) / 2.0;
@@ -463,9 +476,9 @@ Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
 
       // volume boundary
       if (candidates[c].x()+StlDelta.x() >
-	  (settings.Hardware.Volume.x() - 2*settings.Hardware.PrintMargin.x())
+	  (settings.getPrintVolume().x() - 2*settings.getPrintMargin().x())
 	  || candidates[c].y()+StlDelta.y() >
-	  (settings.Hardware.Volume.y() - 2*settings.Hardware.PrintMargin.y()))
+	  (settings.getPrintVolume().y() - 2*settings.getPrintMargin().y()))
 	{
 	  ok = false;
 	  break;
@@ -742,8 +755,8 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
   if (newMin.x() > newMax.x()) {
     // Show the whole platform if there's no objects
     Min = Vector3d(0,0,0);
-    Vector3d pM = settings.Hardware.PrintMargin;
-    Max = settings.Hardware.Volume - pM - pM;
+    Vector3d pM = settings.getPrintMargin();
+    Max = settings.getPrintVolume() - pM - pM;
     Max.z() = 0;
   }
   else {
@@ -757,7 +770,7 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
 
 Vector3d Model::GetViewCenter()
 {
-  Vector3d printOffset = settings.Hardware.PrintMargin;
+  Vector3d printOffset = settings.getPrintMargin();
   if(settings.Raft.Enable)
     printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
 
@@ -773,14 +786,14 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 
   gint index = 1; // pick/select index. matches computation in update_model()
 
-  Vector3d printOffset = settings.Hardware.PrintMargin;
+  Vector3d printOffset = settings.getPrintMargin();
   if(settings.Raft.Enable)
     printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
   Vector3d translation = objtree.transform3D.getTranslation();
   Vector3d offset = printOffset + translation;
 
   // Add the print offset to the drawing location of the STL objects.
-  glTranslatef(offset.x(),offset.y(),offset.z());
+  glTranslated(offset.x(),offset.y(),offset.z());
 
   glPushMatrix();
   glMultMatrixd (&objtree.transform3D.transform.array[0]);
@@ -788,15 +801,16 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   // draw preview shapes and nothing else
   if (settings.Display.PreviewLoad)
     if (preview_shapes.size() > 0) {
-      offset = GetViewCenter();
-      glTranslatef( offset.x(), offset.y(), offset.z());
+      Vector3d v_center = GetViewCenter() - offset;
+      glTranslated( v_center.x(), v_center.y(), v_center.z());
       for (uint i = 0; i < preview_shapes.size(); i++) {
-	glPushMatrix();
-	glMultMatrixd (&preview_shapes[i]->transform3D.transform.array[0]);
-	offset = -preview_shapes[i]->Center;
-	glTranslatef(offset.x(), offset.y(), -offset.z());
+	offset = preview_shapes[i]->t_Center();
+	glTranslated(offset.x(), offset.y(), offset.z());
+	// glPushMatrix();
+	// glMultMatrixd (&preview_shapes[i]->transform3D.transform.array[0]);
 	preview_shapes[i]->draw (settings, false, 20000);
-	glPopMatrix();
+	preview_shapes[i]->drawBBox ();
+	// glPopMatrix();
       }
       glPopMatrix();
       glPopMatrix();
@@ -947,15 +961,18 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       const int LayerCount = (int)ceil(Max.z()/thickness)-1;
       const uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
       if (z != m_previewGCode_z) {
+	uint prevext = settings.selectedExtruder;
+	settings.SelectExtruder(0);
 	Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
 	if (previewGCodeLayer) {
+	  m_previewGCode.clear();
 	  vector<Command> commands;
 	  previewGCodeLayer->MakeGcode(start, commands, 0, settings);
 	  GCodeState state(m_previewGCode);
-	  m_previewGCode.clear();
 	  state.AppendCommands(commands, settings.Slicing.RelativeEcode);
 	  m_previewGCode_z = z;
 	}
+	settings.SelectExtruder(prevext);
       }
       glDisable(GL_DEPTH_TEST);
       m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2,
@@ -1111,6 +1128,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 
 #define DEBUGPOLYS 0
 #if DEBUGPOLYS
+  // write out polygons for gnuplot
   vector<Poly> polys = layer->GetPolygons();
   vector< vector<Poly> > offs = layer->GetShellPolygons();
   cout << "# polygons "<< endl;

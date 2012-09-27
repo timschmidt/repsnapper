@@ -27,6 +27,9 @@
 
 #include "filechooser.h"
 
+static bool UNUSED toggle_block = false; // blocks signals for togglebuttons etc.
+
+
 class View : public Gtk::Window
 {
   class TempRow;

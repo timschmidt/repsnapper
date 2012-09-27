@@ -32,11 +32,10 @@
 #include "prefs_dlg.h"
 #include "progress.h"
 #include "connectview.h"
+#include "widgets.h"
 
 #include "gitversion.h"
 
-
-bool toggle_block = false; // blocks signals for togglebuttons etc.
 
 
 bool View::on_delete_event(GdkEventAny* event)
@@ -102,11 +101,12 @@ void View::connect_tooltoggled(const char *name, const sigc::slot<void, Gtk::Tog
 void View::move_gcode_to_platform ()
 {
   m_model->translateGCode(- m_model->gcode.Min
-			  + m_model->settings.Hardware.PrintMargin);
+			  + m_model->settings.getPrintMargin());
 }
 
 void View::convert_to_gcode ()
 {
+  extruder_selected(); // be sure to get extruder settings from gui
   PrintInhibitor inhibitPrint(m_printer);
   if (m_printer->IsPrinting())
     {
@@ -126,12 +126,15 @@ void View::preview_file (Glib::RefPtr< Gio::File > file)
   if (!file)    return;
   //cerr << "view " <<file->get_path() << endl;
   m_model->preview_shapes  = m_model->ReadShapes(file,10000);
+  bool display_poly = m_model->settings.Display.DisplayPolygons;
+  m_model->settings.Display.DisplayPolygons = true;
   if (m_model->preview_shapes.size()>0) {
     Vector3d pMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
     Vector3d pMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
     for (uint i = 0; i < m_model->preview_shapes.size(); i++) {
-      Vector3d stlMin = m_model->preview_shapes[i]->Min;
-      Vector3d stlMax = m_model->preview_shapes[i]->Max;
+      m_model->preview_shapes[i]->PlaceOnPlatform();
+      Vector3d stlMin = m_model->preview_shapes[i]->t_Min();
+      Vector3d stlMax = m_model->preview_shapes[i]->t_Max();
       for (uint k = 0; k < 3; k++) {
 	pMin[k] = min(stlMin[k], pMin[k]);
 	pMax[k] = max(stlMax[k], pMax[k]);
@@ -144,6 +147,7 @@ void View::preview_file (Glib::RefPtr< Gio::File > file)
     // m_renderer->set_transform(tr);
   }
   queue_draw();
+  m_model->settings.Display.DisplayPolygons = display_poly;
 }
 
 void View::load_stl ()
@@ -609,295 +613,6 @@ void View::about_dialog()
   show_dialog ("about_dialog");
 }
 
-static const char *axis_names[] = { "X", "Y", "Z" };
-
-class View::TranslationSpinRow {
-
-  // apply values to objects
-  void spin_value_changed (int axis)
-  {
-    if (m_inhibit_update)
-      return;
-
-    vector<Shape*> shapes;
-    vector<TreeObject*> objects;
-
-    if (!m_view->get_selected_objects(objects, shapes))
-      return;
-
-    if (shapes.size()==0 && objects.size()==0)
-      return;
-
-    double val = m_xyz[axis]->get_value();
-    Matrix4d *mat;
-    if (shapes.size()!=0)
-      for (uint s=0; s<shapes.size(); s++) {
-	mat = &shapes[s]->transform3D.transform;
-	double scale = (*mat)[3][3];
-	Vector3d trans;
-	mat->get_translation(trans);
-	trans[axis] = val*scale;
-	mat->set_translation (trans);
-      }
-    else
-      for (uint o=0; o<objects.size(); o++) {
-	mat = &objects[o]->transform3D.transform;
-	double scale = (*mat)[3][3];
-	Vector3d trans;
-	mat->get_translation(trans);
-	trans[axis] = val*scale;
-	mat->set_translation (trans);
-      }
-
-    m_view->get_model()->ModelChanged();
-  }
-
-public:
-  bool m_inhibit_update;
-  View *m_view;
-  Gtk::Box *m_box;
-  Gtk::SpinButton *m_xyz[3];
-
-  // Changed STL Selection - must update translation values
-  void selection_changed ()
-  {
-    m_inhibit_update = true;
-
-    vector<Shape*> shapes;
-    vector<TreeObject*> objects;
-
-    if (!m_view->get_selected_objects(objects, shapes))
-      return;
-
-    if (shapes.size()==0 && objects.size()==0)
-      return;
-
-    Matrix4d *mat;
-    if (shapes.size()==0) {
-      if (objects.size()==0) {
-	for (uint i = 0; i < 3; i++)
-	  m_xyz[i]->set_value(0.0);
-	return;
-      } else
-	mat = &objects.back()->transform3D.transform;
-    }
-    else
-      mat = &shapes.back()->transform3D.transform;
-    Vector3d trans;
-    mat->get_translation(trans);
-    double scale = (*mat)[3][3];
-    for (uint i = 0; i < 3; i++)
-      m_xyz[i]->set_value(trans[i]/scale);
-    m_inhibit_update = false;
-  }
-
-  TranslationSpinRow(View *view, Gtk::TreeView *treeview) :
-    m_inhibit_update(false), m_view(view)
-  {
-    // view->m_builder->get_widget (box_name, m_box);
-
-    view->m_builder->get_widget ("translate_x", m_xyz[0]);
-    view->m_builder->get_widget ("translate_y", m_xyz[1]);
-    view->m_builder->get_widget ("translate_z", m_xyz[2]);
-
-    for (uint i = 0; i < 3; i++) {
-      //     m_box->add (*manage(new Gtk::Label (axis_names[i])));
-      //     m_xyz[i] = manage (new Gtk::SpinButton());
-      //     m_xyz[i]->set_numeric();
-      //     m_xyz[i]->set_digits (1);
-      //     m_xyz[i]->set_increments (0.5, 10);
-      //     m_xyz[i]->set_range(-5000.0, +5000.0);
-      //     m_box->add (*m_xyz[i]);
-      m_xyz[i]->signal_value_changed().connect
-	(sigc::bind(sigc::mem_fun(*this, &TranslationSpinRow::spin_value_changed), (int)i));
-
-      //     /* Add statusbar message */
-      //     // stringstream oss;
-      //     // oss << "Move object in " << axis_names[i] << "-direction (mm)";
-      //     // m_view->add_statusbar_msg(m_xyz[i], oss.str().c_str());
-    }
-    selection_changed();
-    // m_box->show_all();
-
-    treeview->get_selection()->signal_changed().connect
-      (sigc::mem_fun(*this, &TranslationSpinRow::selection_changed));
-  }
-
-  ~TranslationSpinRow()
-  {
-    for (uint i = 0; i < 3; i++)
-      delete m_xyz[i];
-  }
-};
-
-class View::TempRow : public Gtk::HBox {
-
-public:
-
-  Model *m_model;
-  Printer *m_printer;
-  TempType m_type;
-  Gtk::Label *m_temp;
-  Gtk::SpinButton *m_target;
-  Gtk::ToggleButton *m_button;
-
-  TempRow(Model *model, Printer *printer, TempType type) :
-    m_model(model), m_printer(printer), m_type(type)
-  {
-    static const char *names[] = { _("Nozzle:"), _("Bed:") };
-    set_homogeneous(true);
-    add(*manage(new Gtk::Label(names[type])));
-
-    m_temp = new Gtk::Label(_("-- °C"));
-    add (*m_temp);
-    // add(*manage (new Gtk::Label(_("°C"))));
-
-    add(*manage(new Gtk::Label(_("Target:"))));
-    m_target = new Gtk::SpinButton();
-    m_target->set_increments (1, 5);
-    switch (type) {
-    case TEMP_NOZZLE:
-    default:
-      m_target->set_range(0, 350.0);
-      m_target->set_value(m_model->settings.Printer.NozzleTemp);
-      break;
-    case TEMP_BED:
-      m_target->set_range(0, 250.0);
-      m_target->set_value(m_model->settings.Printer.BedTemp);
-      break;
-    }
-    add (*m_target);
-
-    m_button = manage (new Gtk::ToggleButton(_("Off")));
-    m_button->signal_toggled().connect
-      (sigc::mem_fun (*this, &TempRow::button_toggled));
-    add(*m_button);
-
-    m_target->signal_value_changed().connect
-      (sigc::mem_fun (*this, &TempRow::heat_changed));
-  }
-
-  ~TempRow()
-  {
-    delete m_temp;
-    delete m_target;
-    delete m_button;
-  }
-
-  void button_toggled()
-  {
-    if (m_button->get_active())
-      m_button->set_label(_("On"));
-    else
-      m_button->set_label(_("Off"));
-
-    if (toggle_block) return;
-    float value = 0;
-    if (m_button->get_active()) {
-      value = m_target->get_value();
-    }
-    if (!m_printer->SetTemp(m_type, value)) {
-      toggle_block = true;
-      m_button->set_active(!m_button->get_active());
-      toggle_block = false;
-    }
-  }
-
-  void heat_changed() {
-    float value = m_target->get_value();
-    switch (m_type) {
-    case TEMP_NOZZLE:
-    default:
-      m_model->settings.Printer.NozzleTemp = value;
-	break;
-    case TEMP_BED:
-      m_model->settings.Printer.BedTemp = value;
-    }
-    if (m_button->get_active())
-      m_printer->SetTemp(m_type, value);
-  }
-
-  void update_temp (double value)
-  {
-    ostringstream oss;
-    oss.precision(1);
-    oss << fixed << value << " °C";
-    m_temp->set_text(oss.str());
-  }
-
-};
-
-class View::AxisRow : public Gtk::HBox {
-
-public:
-  void home_clicked()
-  {
-    m_printer->Home(std::string (axis_names[m_axis]));
-    m_target->set_value(0.0);
-  }
-  void spin_value_changed ()
-  {
-    if (m_inhibit_update)
-      return;
-    m_printer->Goto (std::string (axis_names[m_axis]), m_target->get_value());
-  }
-  void nudge_clicked (double nudge)
-  {
-    m_inhibit_update = true;
-    m_target->set_value (MAX (m_target->get_value () + nudge, 0.0));
-    m_printer->Move (std::string (axis_names[m_axis]), nudge);
-    m_inhibit_update = false;
-  }
-  void add_nudge_button (double nudge)
-  {
-    std::stringstream label;
-    if (nudge > 0)
-      label << "+";
-    label << nudge;
-    Gtk::Button *button = new Gtk::Button(label.str());
-    add(*button);
-    button->signal_clicked().connect
-      (sigc::bind(sigc::mem_fun (*this, &AxisRow::nudge_clicked), nudge));
-  }
-  bool m_inhibit_update;
-  Model *m_model;
-  Printer *m_printer;
-  Gtk::SpinButton *m_target;
-  int m_axis;
-
-public:
-  void notify_homed()
-  {
-    m_inhibit_update = true;
-    m_target->set_value(0.0);
-    m_inhibit_update = false;
-  }
-  AxisRow(Model *model, Printer *printer, int axis) :
-    m_inhibit_update(false), m_model(model), m_printer(printer), m_axis(axis)
-  {
-    add(*manage(new Gtk::Label(axis_names[axis])));
-    Gtk::Button *home = new Gtk::Button(_("Home"));
-    home->signal_clicked().connect
-      (sigc::mem_fun (*this, &AxisRow::home_clicked));
-    add (*home);
-
-    add_nudge_button (-10.0);
-    add_nudge_button (-1.0);
-    add_nudge_button (-0.1);
-    m_target = manage (new Gtk::SpinButton());
-    m_target->set_digits (1);
-    m_target->set_increments (0.1, 1);
-    m_target->set_range(-200.0, +200.0);
-    m_target->set_value(0.0);
-    add (*m_target);
-    m_target->signal_value_changed().connect
-      (sigc::mem_fun(*this, &AxisRow::spin_value_changed));
-
-    add_nudge_button (+0.1);
-    add_nudge_button (+1.0);
-    add_nudge_button (+10.0);
-  }
-};
 
 void View::load_settings()
 {
@@ -1191,6 +906,8 @@ void View::auto_rotate()
   else
     for (uint i=0; i<objects.size() ; i++)
       m_model->OptimizeRotation(NULL, objects[i]);
+  update_scale_value();
+  update_rot_value();
 }
 
 void View::power_toggled(Gtk::ToggleToolButton *button)
@@ -1335,8 +1052,11 @@ bool View::key_pressed_event(GdkEventKey *event)
 
 View::View(BaseObjectType* cobject,
 	   const Glib::RefPtr<Gtk::Builder>& builder)
-  : Gtk::Window(cobject), m_builder(builder), m_model(NULL), printtofile_name("")
+  : Gtk::Window(cobject),
+    m_builder(builder), m_model(NULL), printtofile_name("")
 {
+  toggle_block = false;
+
   // Menus
   connect_action ("OpenStl",         sigc::mem_fun(*this, &View::load_stl) );
   connect_action ("OpenGCode",       sigc::mem_fun(*this, &View::load_gcode) );
@@ -1517,15 +1237,16 @@ View::View(BaseObjectType* cobject,
     colrec.add(extrudername);
     extruder_liststore = Gtk::ListStore::create(colrec);
     extruder_treeview->set_model(extruder_liststore);
-    Gtk::TreeModel::Row row = *(extruder_liststore->append());
-    row[extrudername] = "Extruder 1";
-    extruder_treeview->append_column("Extruder",extrudername);
     extruder_treeview->set_headers_visible(false);
-    extruder_treeview->get_selection()->select(row);
+    extruder_treeview->append_column("Extruder",extrudername);
+    // Gtk::TreeModel::Row row = *(extruder_liststore->append());
+    // row[extrudername] = "Extruder 1";
+    // extruder_treeview->get_selection()->select(row);
     // extruder_treeview->set_reorderable(true);
   }
 
   showAllWidgets();
+  update_extruderlist();
 }
 
 void View::extruder_selected()
@@ -1533,11 +1254,12 @@ void View::extruder_selected()
   std::vector< Gtk::TreeModel::Path > path =
     extruder_treeview->get_selection()->get_selected_rows();
   if(path.size()>0 && path[0].size()>0) {
-    // copy selected extruder from Extruders to Extruder
+    // copy selected extruder from Extruders to current Extruder
     m_model->settings.SelectExtruder(path[0][0]);
     // show Extruder settings on gui
     m_model->settings.set_to_gui((*((Builder *)&m_builder)),"Extruder");
   }
+  queue_draw();
 }
 void View::copy_extruder()
 {
@@ -1558,7 +1280,6 @@ void View::remove_extruder()
     m_model->settings.RemoveExtruder(path[0][0]);
   }
   update_extruderlist();
-  extruder_selected();
 }
 void View::update_extruderlist()
 {
@@ -1569,9 +1290,12 @@ void View::update_extruderlist()
   for (uint i = 0; i < m_model->settings.Extruders.size(); i++) {
     row = *(extruder_liststore->append());
     ostringstream o; o << "Extruder " << i+1;
+    //cerr << o.str() << m_model->settings.Extruders[i].UseForSupport<< endl;
     row[extrudername] = o.str();
+    //row[extrudername] = m_model->settings.Extruders[i].name;
   }
   extruder_treeview->get_selection()->select(row);
+  extruder_selected();
 }
 
 //  stop file preview when leaving file tab
@@ -1794,7 +1518,7 @@ void View::on_gcodebuffer_cursor_set(const Gtk::TextIter &iter,
 				     const Glib::RefPtr <Gtk::TextMark> &refMark)
 {
   if (m_model)
-    m_model->gcode.updateWhereAtCursor();
+    m_model->gcode.updateWhereAtCursor(m_model->settings.get_extruder_letters());
   if (m_renderer)
     m_renderer->queue_draw();
 }
@@ -2068,7 +1792,7 @@ void View::update_scale_value()
 // GPL bits below from model.cpp ...
 void View::DrawGrid()
 {
-	Vector3d volume = m_model->settings.Hardware.Volume;
+        Vector3d volume = m_model->settings.getPrintVolume();
 
 	glEnable (GL_BLEND);
 	glEnable (GL_DEPTH_TEST);
@@ -2143,7 +1867,7 @@ void View::DrawGrid()
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         // Draw print margin in faint red
-	Vector3d pM = m_model->settings.Hardware.PrintMargin;
+	Vector3d pM = m_model->settings.getPrintMargin();
 
         float no_mat[] = {0.0f, 0.0f, 0.0f, 0.5f};
         float mat_diffuse[] = {1.0f, 0.1f, 0.1f, 0.2f};
@@ -2194,7 +1918,7 @@ void View::DrawGrid()
         // glEnd();
 
         // Draw print surface
-	float mat_diffuse_white[] = {0.5f, 0.5f, 0.5f, 0.05f};
+	float mat_diffuse_white[] = {0.2f, 0.2f, 0.2f, 0.2f};
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_white);
 
         glBegin(GL_QUADS);

@@ -81,8 +81,8 @@ class Settings {
 
     float DistanceToReachFullSpeed;
 
-    vmml::vec3d	Volume;      // Print volume
-    vmml::vec3d	PrintMargin;
+    vmml::vec3d Volume;      // Print volume
+    vmml::vec3d PrintMargin;
 
     std::string PortName;
     int SerialSpeed;
@@ -92,6 +92,9 @@ class Settings {
     int ReceivingBufferSize;
   };
   HardwareSettings Hardware;
+
+  vmml::vec3d getPrintVolume() const;
+  vmml::vec3d getPrintMargin() const;
 
   struct ExtruderSettings {
     string name;
@@ -123,12 +126,16 @@ class Settings {
     float AntioozeZlift;
     bool ZliftAlways;
     Vector4f DisplayRGBA;
+
+    bool UseForSupport;
   };
   ExtruderSettings Extruder; // to exchange settings with GUI
   std::vector<ExtruderSettings> Extruders; // all Extruders
+  std::vector<char> get_extruder_letters() const;
+  Vector3d get_extruder_offset(uint num) const;
+  uint selectedExtruder;
   void CopyExtruder(uint num);
   void RemoveExtruder(uint num);
-  uint selectedExtruder;
   void SelectExtruder(uint num);
 
   struct SlicingSettings {
@@ -175,6 +182,8 @@ class Settings {
     int SupportFilltype;
     float SupportExtrusion;
     float SupportInfillDistance;
+    uint SupportExtruderNo;
+
     bool MakeDecor;
     int DecorFilltype;
     int DecorLayers;
@@ -207,7 +216,6 @@ class Settings {
 
     bool GCodePostprocess;
     std::string GCodePostprocessor;
-
   };
   SlicingSettings Slicing;
 
@@ -229,6 +237,7 @@ class Settings {
     bool ExpandLayerDisplay;
     bool ExpandModelDisplay;
     bool ExpandPAxisDisplay;
+    bool SaveSingleShapeSTL;
   };
   MiscSettings Misc;
 
@@ -241,10 +250,10 @@ class Settings {
   };
   struct GCodeType {
     GCodeImpl *m_impl;
-    std::string getText(GCodeTextType t);
-    std::string getStartText() { return getText (GCODE_TEXT_START); }
-    std::string getLayerText() { return getText (GCODE_TEXT_LAYER); }
-    std::string getEndText()   { return getText (GCODE_TEXT_END);   }
+    std::string getText(GCodeTextType t) const ;
+    std::string getStartText() const { return getText (GCODE_TEXT_START); }
+    std::string getLayerText() const { return getText (GCODE_TEXT_LAYER); }
+    std::string getEndText()   const { return getText (GCODE_TEXT_END);   }
   };
   GCodeType GCode;
 
@@ -266,8 +275,11 @@ class Settings {
     bool DisplayLayer;
     bool DisplayFilledAreas;
     bool DisplayGCodeBorders;
+    bool DisplayGCodeMoves;
     bool DisplayGCodeArrows;
     bool DisplayDebugArcs;
+    bool DebugGCodeExtruders;
+    bool DebugGCodeOffset;
     bool ShowLayerOverhang;
     bool DrawVertexNumbers;
     bool RandomizedLines;

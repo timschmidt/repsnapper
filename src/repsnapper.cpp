@@ -324,6 +324,8 @@ int main(int argc, char **argv)
   for (uint i = 0; i < opts.files.size(); i++)
     model->Read(Gio::File::create_for_path(opts.files[i]));
 
+  model->ModelChanged();
+
   tk.run();
 
   delete mainwin;

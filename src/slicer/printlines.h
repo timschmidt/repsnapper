@@ -34,8 +34,9 @@ const string AreaNames[] = { _(""), _("Shell"), _("Skin"), _("Infill"),
 // 3D printline for making GCode
 class PLine3
 {
- public: 
-  PLine3(PLineArea area_, const Vector3d &from_, const Vector3d &to_, 
+ public:
+  PLine3(PLineArea area_,  const uint extruder_no,
+	 const Vector3d &from_, const Vector3d &to_,
 	 double speed_, double extrusionfactor_);
   PLine3(const PLine &pline, double z);
   ~PLine3(){};
@@ -44,18 +45,19 @@ class PLine3
 
   Vector3d from, to;
   double speed;
-  double extrusionfactor; 
+  double extrusionfactor;
   double absolute_extrusion; // additional absolute extrusion /mm (retract/repush f.e.)
   Vector3d arcIJK;  // if is an arc
   short arc; // -1: ccw arc, 1: cw arc, 0: not an arc
   double arcangle;
   bool lifted;
+  uint extruder_no;
 
   int getCommands(Vector3d &lastpos, vector<Command> &commands, double extrusion,
 		  const Settings &settings) const;
   // not used
-  string GCode(Vector3d &lastpos, double &lastE, double feedrate, 
-	       double minspeed, double maxspeed, double movespeed, 
+  string GCode(Vector3d &lastpos, double &lastE, double feedrate,
+	       double minspeed, double maxspeed, double movespeed,
 	       bool relativeE) const;
   double length() const;
   double time() const;
@@ -74,20 +76,23 @@ class PLine
   // non-arc
   Vector2d from, to;
   double speed; // mm/min (!)
-  double feedrate; // relative extrusion feedrate 
+  double feedrate; // relative extrusion feedrate
   double absolute_feed; // additional absolute feed /mm (retract/repush f.e.)
   double angle; // angle of line
   Vector2d arccenter;
   short arc;  // -1: ccw arc, 1: cw arc, 0: not an arcx
 
-  double lifted; // antiooze z-lift 
+  double lifted; // antiooze z-lift
+  uint extruder_no;
 
- public: 
-  PLine(PLineArea area_, const Vector2d &from, const Vector2d &to, double speed, 
+ public:
+  PLine(PLineArea area_, const uint extruder_no,
+	const Vector2d &from, const Vector2d &to, double speed,
 	double feedrate, double lifted = 0.);
   // arc
-  PLine(PLineArea area_, const Vector2d &from, const Vector2d &to, double speed, 
-	double feedrate, short arc, const Vector2d &arccenter, double angle, 
+  PLine(PLineArea area_, const uint extruder_no,
+	const Vector2d &from, const Vector2d &to, double speed,
+	double feedrate, short arc, const Vector2d &arccenter, double angle,
 	double lifted = 0.);
 
   ~PLine(){};
@@ -103,6 +108,7 @@ class PLine
   double time() const;  // time in minutes
   PLine3 getPrintline(double z) const;
   bool is_noop() const;
+  bool is_move() const {return (feedrate==0.);}
   string info() const;
 };
 
@@ -126,15 +132,17 @@ class PrintPoly
   double priority; // distance for next poly search will be divided by this
   double length;
   double speedfactor; // is set after slowdown
+  uint   extruder_no;
 
  public:
   ~PrintPoly();
-  void addToLines(vector<PLine> &lines, int startindex, 
+  void getLinesTo(vector<PLine> &lines, int startindex,
 		  double movespeed) const;
 
   double getPriority() const {return priority;};
   double getSpeedfactor() const {return speedfactor;};
   uint   getDisplacedStart(uint start) const;
+  uint   getExtruderNo() const {return  extruder_no;};
   string info() const;
 };
 
@@ -145,7 +153,7 @@ class Printlines
   friend class PrintPoly;
 
   vector<PrintPoly *> printpolys;
-    
+
   double z;
   double Zoffset; // global offset for generated PLine3s, always added at setZ()
 
@@ -154,8 +162,8 @@ class Printlines
   /* void addPoly(PLineArea area, vector<PLine> &lines,  */
   /* 	       const Poly &poly, int startindex=0,  */
   /* 	       double speed=1, double movespeed=1); */
-  void addLine(PLineArea area, vector<PLine> &lines,
-	       const Vector2d &from, const Vector2d &to, 
+  void addLine(PLineArea area, uint extruder_no, vector<PLine> &lines,
+	       const Vector2d &from, const Vector2d &to,
 	       double speed=1, double movespeed=1, double feedrate=1.0) const;
 
 
@@ -174,7 +182,7 @@ class Printlines
 
   Vector2d lastPoint() const;
 
-  void addPolys(PLineArea area,	const vector<Poly> &polys, 
+  void addPolys(PLineArea area,	const vector<Poly> &polys,
 		bool displace_start,
 		double maxspeed = 0, double min_time = 0);
 
@@ -182,19 +190,19 @@ class Printlines
 
 #if 0
   void oldMakeLines(PLineArea area,
-		    const vector<Poly> &polys, 
-		    bool displace_startpoint, 
+		    const vector<Poly> &polys,
+		    bool displace_startpoint,
 		    Vector2d &startPoint,
 		    vector<PLine> &lines,
 		    double maxspeed = 0);
 #endif
-  
+
   void optimize(double linewidth,
 		double slowdowntime,
 		double cornerradius,
 		vector<PLine> &lines);
 
-  uint makeArcs(double linewidth, 
+  uint makeArcs(double linewidth,
 		vector<PLine> &lines) const;
   uint makeIntoArc(guint fromind, guint toind, vector<PLine> &lines) const;
   uint makeIntoArc(const Vector2d &center, guint fromind, guint toind,
@@ -204,12 +212,12 @@ class Printlines
   uint makeCornerArc(double maxdistance, double minarclength,
 		     uint ind, vector<PLine> &lines) const;
 
-  bool find_nextmove(double minlength, uint startindex, 
-		     uint &movestart, uint &moveend, 
+  bool find_nextmove(double minlength, uint startindex,
+		     uint &movestart, uint &moveend,
 		     uint &tractstart, uint &pushend,
 		     const vector<PLine> &lines) const;
   uint makeAntioozeRetract(vector<PLine> &lines) const;
-  uint insertAntioozeHaltBefore(uint index, double amount, double speed, 
+  uint insertAntioozeHaltBefore(uint index, double amount, double speed,
 				vector<PLine> &lines) const;
 
   // slow down to total time needed (cooling)
@@ -232,7 +240,7 @@ class Printlines
   double totalSecondsExtruding(const vector<PLine> &lines) const;
 
   double total_Extrusion(const vector<PLine> &lines) const;
-  double total_rel_Extrusion(const vector<PLine> &lines) const; 
+  double total_rel_Extrusion(const vector<PLine> &lines) const;
 
   // every added poly will set this
   void setZ(double z) {this->z = z + Zoffset;};
@@ -252,7 +260,7 @@ class Printlines
   double distance(const Vector2d &p, const PLine &l2) const;
   void optimizeCorners(double linewidth, double linewidthratio, double optratio,
 		       vector<PLine> &lines) const;
-  bool capCorner(PLine &l1, PLine &l2, double linewidth, double linewidthratio, 
+  bool capCorner(PLine &l1, PLine &l2, double linewidth, double linewidthratio,
 		 double optratio) const;
 
   uint divideline(uint lineindex, const Vector2d &point,
@@ -261,17 +269,17 @@ class Printlines
 		  vector<PLine> &lines) const;
   uint divideline(uint lineindex, const double length, vector<PLine> &lines) const;
 
-  int distribute_AntioozeAmount(double AOamount, double AOspeed, 
-				uint fromline, uint toline,  
+  int distribute_AntioozeAmount(double AOamount, double AOspeed,
+				uint fromline, uint toline,
 				bool at_end,   // add to end of range (retract)
 				vector<PLine> &lines,
 				double &havedistributed) const;
 
-  Vector2d arcCenter(const PLine &l1, const PLine &l2, 
+  Vector2d arcCenter(const PLine &l1, const PLine &l2,
 		     double maxerr) const;
 
   double slowdownfactor; // result of slowdown/setspeedfactor. not used here.
-  
+
   /* string GCode(PLine l, Vector3d &lastpos, double &E, double feedrate,  */
   /* 	       double minspeed, double maxspeed, double movespeed,  */
   /* 	       bool relativeE) const; */

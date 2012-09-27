@@ -10,6 +10,7 @@
 # option, any later version, incorporated herein by reference.
 
 SHARED_SRC += \
+	src/ui/widgets.cpp \
 	src/ui/view.cpp \
 	src/ui/prefs_dlg.cpp \
 	src/ui/connectview.cpp \
@@ -17,6 +18,7 @@ SHARED_SRC += \
 	src/ui/progress.cpp
 
 SHARED_INC += \
+	src/ui/widgets.h \
 	src/ui/view.h \
 	src/ui/prefs_dlg.h \
 	src/ui/connectview.h \

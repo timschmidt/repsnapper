@@ -111,13 +111,21 @@ void Render::selection_changed()
 
 void Render::zoom_to_model()
 {
-  if (!get_model())
+  Model *model = get_model();
+  if (!model)
     return;
 
   // reset the zoom to cover the entire model
-  m_zoom = (get_model()->Max - get_model()->Min).find_max();
+  m_zoom = (model->Max - model->Min).find_max();
   // reset the pan to center
   setArcballTrans(m_transform, Vector3d::ZERO);
+  // zoom to platform if model has zero size
+  // if (m_zoom == 0) {
+  //   m_zoom = model->settings.Hardware.Volume.find_max();
+  //   setArcballTrans(m_transform,
+  // 		    model->settings.getPrintMargin() +
+  // 		    model->settings.getPrintVolume()/2.);
+  // }
   queue_draw();
 }
 
@@ -200,7 +208,6 @@ bool Render::on_expose_event(GdkEventExpose* event)
   m_view->Draw (selpath);
 
   glPopMatrix();
-
   if (gdk_gl_drawable_is_double_buffered(gldrawable))
     gdk_gl_drawable_swap_buffers (gldrawable);
   else
@@ -538,7 +545,7 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
 {
   Vector3d margin;
   Model *m = get_model();
-  if (m!=NULL) margin = m->settings.Hardware.PrintMargin;
+  if (m!=NULL) margin = m->settings.getPrintMargin();
 
  // This function will find 2 points in world space that are on the line into the screen defined by screen-space( ie. window-space ) point (x,y)
   double mvmatrix[16];

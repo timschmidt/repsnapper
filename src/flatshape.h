@@ -18,7 +18,6 @@
 */
 
 #pragma once
-#include "config.h"
 
 #include "shape.h"
 #include "files.h"

@@ -79,7 +79,7 @@ void Poly::cleanup(double epsilon)
   invert.insert(invert.end(),vertices.begin()+n_vert/2,vertices.end());
   invert.insert(invert.end(),vertices.begin(),vertices.begin()+n_vert/2);
   vertices = simplified(invert, epsilon);
-  calcHole();
+  //calcHole();
 }
 
 
@@ -300,7 +300,7 @@ bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
 #if POLYINSIDEVERSION==0
   // this one works
   uint N = size();
-  if (N < 1) return false;
+  if (N < 2) return false;
   uint counter = 0;
   uint i;
   double xinters;
@@ -459,26 +459,26 @@ double Poly::totalLineLength() const
 
 
 // add to lines starting with nearest point to startPoint
-void Poly::getLines(vector<Vector3d> &lines, Vector2d &startPoint) const
+void Poly::makeLines(vector<Vector3d> &lines, Vector2d &startPoint) const
 {
   if (size()<2) return;
   double mindist = INFTY;
   uint index = nearestDistanceSqTo(startPoint, mindist);
-  getLines(lines,index);
+  makeLines(lines,index);
   startPoint = Vector2d(lines.back().x(),lines.back().y());
 }
-void Poly::getLines(vector<Vector2d> &lines, Vector2d &startPoint) const
+void Poly::makeLines(vector<Vector2d> &lines, Vector2d &startPoint) const
 {
   if (size()<2) return;
   double mindist = INFTY;
   uint index = nearestDistanceSqTo(startPoint, mindist);
-  getLines(lines,index);
+  makeLines(lines,index);
   startPoint = Vector2d(lines.back());
 }
 
 // add to lines starting with given index
 // closed lines sequence if number of vertices > 2 and poly is closed
-void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
+void Poly::makeLines(vector<Vector2d> &lines, uint startindex) const
 {
   size_t count = vertices.size();
   if (count<2) return; // one point no line
@@ -497,7 +497,7 @@ void Poly::getLines(vector<Vector2d> &lines, uint startindex) const
     lines.insert(lines.end(),mylines.begin(),mylines.end());
 }
 
-void Poly::getLines(vector<Vector3d> &lines, uint startindex) const
+void Poly::makeLines(vector<Vector3d> &lines, uint startindex) const
 {
   vector<Vector3d> mylines;
   size_t count = vertices.size();
@@ -795,4 +795,158 @@ void Poly::move(vector<Poly> &polys, const Vector2d &trans)
 {
   for (uint i=0; i<polys.size(); i++)
     polys[i].move(trans);
+}
+
+
+
+///////////////////////////  ExPoly  /////////////////////////////////////////////
+
+void ExPoly::clear()
+{
+  outer.clear();
+  for (uint i=0; i < holes.size(); i++)
+    holes[i].clear();
+}
+
+void ExPoly::draw(int gl_type, double z, bool randomized) const
+{
+  outer.draw(gl_type, z, randomized);
+  for (uint i=0; i < holes.size(); i++)
+    holes[i].draw(gl_type, z, randomized);
+}
+
+void ExPoly::draw(int gl_type, bool randomized) const
+{
+  outer.draw(gl_type, randomized);
+  for (uint i=0; i < holes.size(); i++)
+    holes[i].draw(gl_type, randomized);
+}
+
+
+void ExPoly::cleanup(double epsilon)
+{
+  outer.vertices = simplified(outer.vertices, epsilon);
+  for (uint i=0; i < holes.size(); i++)
+    holes[i].vertices = simplified(holes[i].vertices, epsilon);
+}
+
+void ExPoly::drawVertexNumbers() const
+{
+  outer.drawVertexNumbers();
+  for (uint i=0; i < holes.size(); i++)
+    holes[i].drawVertexNumbers();
+}
+
+void ExPoly::drawLineNumbers() const
+{
+  outer.drawLineNumbers();
+  for (uint i=0; i < holes.size(); i++)
+    holes[i].drawLineNumbers();
+}
+
+
+///////////////////////// poly drawing  /////////////////////////////////////////
+
+
+void draw_poly(const Poly &poly, int gl_type, int linewidth, int pointsize,
+	       const float *rgb, float a, bool randomized)
+{
+  glColor4f(rgb[0],rgb[1],rgb[2],a);
+  glLineWidth(linewidth);
+  glPointSize(pointsize);
+  poly.draw(gl_type, randomized);
+}
+
+void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a, bool randomized)
+{
+  glColor4f(rgb[0],rgb[1],rgb[2], a);
+  glLineWidth(linewidth);
+  glPointSize(pointsize);
+  for(size_t p=0; p<polys.size();p++) {
+    polys[p].draw(gl_type, randomized);
+  }
+}
+
+void draw_polys(const vector< vector <Poly> > &polys,
+		int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a, bool randomized)
+{
+  for(size_t p=0; p<polys.size();p++)
+    draw_polys(polys[p], gl_type, linewidth, pointsize, rgb, a, randomized);
+}
+
+void draw_poly (const ExPoly &expoly, int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a, bool randomized)
+{
+  draw_poly(expoly.outer,  gl_type, linewidth, pointsize, rgb, a, randomized);
+  for(size_t p=0; p < expoly.holes.size();p++)
+    draw_poly(expoly.holes[p],  gl_type, linewidth, pointsize, rgb, a, randomized);
+}
+
+void draw_polys(const vector <ExPoly> &expolys, int gl_type, int linewidth, int pointsize,
+		const float *rgb, float a, bool randomized)
+{
+  for(size_t p=0; p < expolys.size();p++) {
+    draw_poly(expolys[p],  gl_type, linewidth, pointsize, rgb, a, randomized);
+  }
+}
+
+
+void draw_polys_surface(const vector <Poly> &polys,
+			const Vector2d &Min, const Vector2d &Max,
+			double z,
+			double cleandist,
+			const float *rgb, float a)
+{
+  glColor4f(rgb[0],rgb[1],rgb[2], a);
+  glDrawPolySurfaceRastered(polys, Min, Max, z, cleandist);
+
+  // glColor4f(rgb[0],rgb[1],rgb[2], a);
+  // for(size_t p=0; p<polys.size();p++) {
+  //   polys[p].cleanup(cleandist);
+  //   ::cleandist(polys[p].vertices, cleandist);
+  //   polys[p].draw_as_surface();
+  // }
+}
+void draw_polys_surface(const vector< vector<Poly> > &polys,
+			const Vector2d &Min, const Vector2d &Max,
+			double z,
+			double cleandist,
+			const float *rgb, float a)
+{
+  for(size_t p=0; p < polys.size();p++)
+    draw_polys_surface(polys[p], Min, Max, z, cleandist, rgb, a);
+}
+
+void draw_polys_surface(const vector< ExPoly > &expolys,
+			const Vector2d &Min, const Vector2d &Max,
+			double z,
+			double cleandist,
+			const float *rgb, float a)
+{
+  for(size_t p=0; p < expolys.size();p++)
+    draw_polys_surface(Clipping::getPolys(expolys[p]), Min, Max, z, cleandist, rgb, a);
+}
+
+
+
+void clearpolys(vector<Poly> &polys){
+  for (uint i=0; i<polys.size();i++)
+    polys[i].clear();
+  polys.clear();
+}
+void clearpolys(vector<ExPoly> &polys){
+  for (uint i=0; i<polys.size();i++) {
+    polys[i].outer.clear();
+    for (uint j=0; j<polys[i].holes.size();j++) {
+      polys[i].holes[j].clear();
+    }
+  }
+  polys.clear();
+}
+void clearpolys(vector< vector<Poly> > &polys){
+  for (uint i=0; i<polys.size();i++)
+    clearpolys(polys[i]);
+  polys.clear();
 }

@@ -71,6 +71,7 @@ public:
 	int SplitShape(TreeObject *parent, Shape *shape, string filename);
 	int MergeShapes(TreeObject *parent, const vector<Shape*> shapes);
 	int DivideShape(TreeObject *parent, Shape *shape, string filename);
+	Shape GetCombinedShape() const;
 
 	sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 

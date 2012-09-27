@@ -44,30 +44,28 @@ class GCodeIter
   double time_used;
   time_t time_started;
   double time_estimation;
-  Command getCurrentCommand(Vector3d defaultwhere);
+  Command getCurrentCommand(Vector3d defaultwhere,
+			    const vector<char> &E_letters);
   void set_to_lineno(long lineno);
 };
 
 class GCode
 {
 
-  char E_letter; // letter to use for "E" command (extruder)
+    int gl_List;
 
 public:
-  GCode(const char e_letter='E');
+  GCode();
 
-  void set_E_letter(const char e_letter) {E_letter = e_letter;}
-
-  void Read  (Model *model, ViewProgress *progress, string filename);
+  void Read  (Model *model, const vector<char> E_letters,
+	      ViewProgress *progress, string filename);
   //void Write (Model *model, string filename);
   void draw  (const Settings &settings,
 	      int layer=-1, bool liveprinting=false,
 	      int linewidth=3);
   void drawCommands(const Settings &settings, uint start, uint end,
 		    bool liveprinting, int linewidth, bool arrows, bool boundary=false);
-  void MakeText(string &GcodeTxt, const string &GcodeStart,
-		const string &GcodeLayer, const string &GcodeEnd,
-		bool RelativeEcode,
+  void MakeText(string &GcodeTxt, const Settings &settings,
 		ViewProgress * progress);
 
   bool append_text (const std::string &line);
@@ -87,7 +85,7 @@ public:
   double GetTotalExtruded(bool relativeEcode) const;
   double GetTimeEstimation() const;
 
-  void updateWhereAtCursor();
+  void updateWhereAtCursor(const vector<char> &E_letters);
   Vector3d currentCursorWhere;
   Vector3d currentCursorFrom;
   Command currentCursorCommand;

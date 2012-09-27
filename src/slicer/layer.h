@@ -79,6 +79,9 @@ public:
   vector<double> getBridgeRotations(const vector<Poly> &poly) const;
   void calcBridgeAngles(const Layer *layerbelow);
 
+  static void FindThinpolys(const vector<Poly> &polys, double extrwidth,
+			    vector<Poly> &thickpolys, vector<Poly> &thinpolys);
+
   void MakeShells(const Settings &settings);
   // uint shellcount, double extrudedWidth, double shelloffset,
   // bool makeskirt, double skirtdistance, double infilloverlap);
@@ -131,7 +134,7 @@ public:
   void MakeGcode (Vector3d &start,
 		  vector<Command> &commands,
   		  double offsetZ,
-  		  const Settings &settings) const;
+  		  Settings &settings) const;
 
   string info() const ;
 

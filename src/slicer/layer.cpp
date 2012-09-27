@@ -46,26 +46,6 @@ Layer::~Layer()
 }
 
 
-void clearpolys(vector<Poly> &polys){
-  for (uint i=0; i<polys.size();i++)
-    polys[i].clear();
-  polys.clear();
-}
-void clearpolys(vector<ExPoly> &polys){
-  for (uint i=0; i<polys.size();i++) {
-    polys[i].outer.clear();
-    for (uint j=0; j<polys[i].holes.size();j++) {
-      polys[i].holes[j].clear();
-    }
-  }
-  polys.clear();
-}
-void clearpolys(vector< vector<Poly> > &polys){
-  for (uint i=0; i<polys.size();i++)
-    clearpolys(polys[i]);
-  polys.clear();
-}
-
 void Layer::Clear()
 {
   delete normalInfill; normalInfill = NULL;
@@ -575,8 +555,8 @@ void Layer::setSkirtPolygons(const vector<Poly> &poly)
 }
 
 
-void FindThinpolys(const vector<Poly> &polys, double extrwidth,
-		   vector<Poly> &thickpolys, vector<Poly> &thinpolys)
+void Layer::FindThinpolys(const vector<Poly> &polys, double extrwidth,
+			  vector<Poly> &thickpolys, vector<Poly> &thinpolys)
 {
 #define THINPOLYS 1
 #if THINPOLYS
@@ -732,7 +712,7 @@ bool Layer::setMinMax(const Poly &poly)
 void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		      vector<Command> &commands,
 		      double offsetZ,
-		      const Settings &settings) const
+		      Settings &settings) const
 {
 
   const double linewidth      = settings.Extruder.GetExtrudedMaterialWidth(thickness);
@@ -806,9 +786,12 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 		      settings.Slicing.MinShelltime);
 
   // 3. Support
-  if (supportInfill)
+  if (supportInfill) {
+    uint extruderbefore = settings.selectedExtruder;
+    settings.SelectExtruder(settings.Slicing.SupportExtruderNo);
     printlines.addPolys(SUPPORT, supportInfill->infillpolys, false);
-
+    settings.SelectExtruder(extruderbefore);
+  }
   // 4. all other polygons:
 
   //  Shells
@@ -942,83 +925,27 @@ string Layer::SVGpath(const Vector2d &trans) const
 }
 
 
-void draw_poly(const Poly &poly, int gl_type, int linewidth, int pointsize,
-	       const float *rgb, float a, bool randomized = false)
-{
-  glColor4f(rgb[0],rgb[1],rgb[2],a);
-  glLineWidth(linewidth);
-  glPointSize(pointsize);
-  poly.draw(gl_type, randomized);
-}
-void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int pointsize,
-		const float *rgb, float a, bool randomized = false)
-{
-  glColor4f(rgb[0],rgb[1],rgb[2], a);
-  glLineWidth(linewidth);
-  glPointSize(pointsize);
-  for(size_t p=0; p<polys.size();p++) {
-    polys[p].draw(gl_type, randomized);
-  }
-}
-
-void draw_polys_surface(const vector <Poly> &polys,
-			const Vector2d &Min, const Vector2d &Max,
-			double z,
-			double cleandist,
-			const float *rgb, float a)
-{
-  glColor4f(rgb[0],rgb[1],rgb[2], a);
-  glDrawPolySurfaceRastered(polys, Min, Max, z, cleandist);
-
-  // glColor4f(rgb[0],rgb[1],rgb[2], a);
-  // for(size_t p=0; p<polys.size();p++) {
-  //   polys[p].cleanup(cleandist);
-  //   ::cleandist(polys[p].vertices, cleandist);
-  //   polys[p].draw_as_surface();
-  // }
-}
-void draw_polys_surface(const vector< vector<Poly> > &polys,
-			const Vector2d &Min, const Vector2d &Max,
-			double z,
-			double cleandist,
-			const float *rgb, float a)
-{
-  for(size_t p=0; p < polys.size();p++)
-    draw_polys_surface(polys[p], Min, Max, z, cleandist, rgb, a);
-}
-
-void draw_polys(const vector< vector <Poly> > &polys,
-		int gl_type, int linewidth, int pointsize,
-		const float *rgb, float a, bool randomized = false)
-{
-  for(size_t p=0; p<polys.size();p++)
-    draw_polys(polys[p], gl_type, linewidth, pointsize, rgb, a, randomized);
-}
-void draw_polys(const vector <ExPoly> &expolys, int gl_type, int linewidth, int pointsize,
-		const float *rgb, float a, bool randomized = false)
-{
-  for(size_t p=0; p < expolys.size();p++) {
-    draw_poly(expolys[p].outer,  gl_type, linewidth, pointsize, rgb, a, randomized);
-    draw_polys(expolys[p].holes, gl_type, linewidth, pointsize, rgb, a, randomized);
-  }
-}
-
-float const GREEN[] = {0.1, 1, 0.1};
-float const GREEN2[] = {0.3, 0.8, 0.3};
-float const BLUEGREEN[] = {0.1, 0.9, 0.7};
-float const BLUE2[] = {0.5,0.5,1.0};
-float const RED[] = {1, 0, 0};
-float const RED2[] = {0.8,0.5,0.5};
-float const RED3[] = {0.8,0.3,0.1};
-float const ORANGE[] = {1, 0.5, 0};
-float const YELLOW[] = {1, 1, 0};
-float const YELLOW2[] = {1, 1, 0.2};
-float const WHITE[] = {1, 1, 1};
-float const GREY[] = {0.5,0.5,0.5};
-float const VIOLET[] = {0.8,0.0,0.8};
-
 void Layer::Draw(const Settings &settings)
 {
+
+#if 0
+  // test single area expolys
+  vector<ExPoly> expolys = Clipping::getExPolys(polygons);
+  draw_polys(expolys, GL_LINE_LOOP, 1, 3, RED, 1);
+  cerr << expolys.size() << endl;
+
+  Infill exinf(this, 1.);
+  exinf.setName("infill");
+  double infilldistance = settings.GetInfillDistance(thickness,
+						     settings.Slicing.InfillPercent);
+
+  exinf.addPolys(Z, expolys, HexInfill,
+		 infilldistance, infilldistance, 0.4);
+  draw_polys(exinf.infillpolys, GL_LINE_LOOP, 1, 3,
+	     (exinf.cached?BLUEGREEN:GREEN), 1);
+  return;
+#endif
+
   bool randomized = settings.Display.RandomizedLines;
   bool filledpolygons = settings.Display.DisplayFilledAreas;
   // glEnable(GL_LINE_SMOOTH);

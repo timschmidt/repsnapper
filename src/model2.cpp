@@ -307,8 +307,8 @@ void Model::Slice()
   // - Start at z~=0, cut off everything below
   // - Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
   double minZ = thickness * settings.Slicing.FirstLayerHeight;// + Min.z;
-  Vector3d volume = settings.Hardware.Volume;
-  double maxZ = min(Max.z(), volume.z() - settings.Hardware.PrintMargin.z());
+  Vector3d volume = settings.getPrintVolume();
+  double maxZ = min(Max.z(), volume.z() - settings.getPrintMargin().z());
 
   double max_gradient = 0;
   double supportangle = settings.Slicing.SupportAngle*M_PI/180.;
@@ -797,19 +797,14 @@ void Model::ConvertToGCode()
   Glib::TimeVal start_time;
   start_time.assign_current_time();
 
-  string GcodeTxt;
-  string GcodeStart = settings.GCode.getStartText();
-  string GcodeLayer = settings.GCode.getLayerText();
-  string GcodeEnd   = settings.GCode.getEndText();
-
   gcode.clear();
-  gcode.set_E_letter(settings.Extruder.GCLetter[0]);
+
   GCodeState state(gcode);
 
   Infill::clearPatterns();
 
-  Vector3d printOffset  = settings.Hardware.PrintMargin;
-  double   printOffsetZ = settings.Hardware.PrintMargin.z();
+  Vector3d printOffset  = settings.getPrintMargin();
+  double   printOffsetZ = printOffset.z();
 
   // Make Layers
   lastlayer = NULL;
@@ -882,10 +877,9 @@ void Model::ConvertToGCode()
   }
 
   state.AppendCommands(commands, settings.Slicing.RelativeEcode);
+  string GcodeTxt;
   if (cont)
-    gcode.MakeText (GcodeTxt, GcodeStart, GcodeLayer, GcodeEnd,
-		    settings.Slicing.RelativeEcode,
-		    m_progress);
+    gcode.MakeText (GcodeTxt, settings, m_progress);
   else {
     ClearLayers();
     ClearGCode();
@@ -940,7 +934,7 @@ void Model::ConvertToGCode()
 
 string Model::getSVG(int single_layer_no) const
 {
-  Vector3d printOffset  = settings.Hardware.PrintMargin;
+  Vector3d printOffset  = settings.getPrintMargin();
 
   ostringstream ostr;
   ostr << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" <<endl

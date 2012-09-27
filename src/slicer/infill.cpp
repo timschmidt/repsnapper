@@ -103,6 +103,13 @@ void Infill::addPoly(double z, const ExPoly &expoly, InfillType type,
   addPolys (z, polys, type, infillDistance, offsetDistance, rotation);
 }
 
+void Infill::addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
+		      double infillDistance, double offsetDistance, double rotation)
+{
+  vector<Poly> polys = Clipping::getPolys(expolys);
+  addPolys (z, polys, type, infillDistance, offsetDistance, rotation);
+}
+
 // calculates angles for bridges
 // void Infill::addBridgeInfill(double z, const vector<Poly> polys,
 // 			     double infillDistance, double offsetDistance,
@@ -667,7 +674,7 @@ void Infill::getLines(vector<Vector3d> &lines) const
   cerr << "infill getlines" << endl;
   for (uint i=0; i<infillpolys.size(); i++)
     {
-      infillpolys[i].getLines(lines);
+      infillpolys[i].makeLines(lines);
     }
 }
 

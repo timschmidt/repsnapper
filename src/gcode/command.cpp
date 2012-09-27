@@ -115,15 +115,34 @@ inline double ToDouble(GcodeFeed &f)
 
 
 
-
 Command::Command()
-  : where(0,0,0), is_value(false), f(0.0), e(0.0), not_layerchange(false)
+{
+  init();
+}
 
-{}
+
+void Command::init()
+{
+  where=Vector3d::ZERO;
+  is_value = false;
+  f = 0.0;
+  e = 0.0;
+  extruder_no = 0;
+  explicit_arg = "";
+  comment = "";
+  not_layerchange = false;
+}
+
+Command::Command(GCodes code, const string explicit_arg_)
+  : Code(code)
+{
+  init();
+  explicit_arg = explicit_arg_;
+}
 
 Command::Command(GCodes code, const Vector3d &position, double E, double F)
-  : Code(code), where(position), is_value(false),  f(F), e(E), abs_extr(0),
-    not_layerchange(false)
+  : Code(code), where(position), is_value(false),  f(F), e(E),
+    extruder_no(0), abs_extr(0), not_layerchange(false)
 {
   if (where.z() < 0)
     where.z() = 0;
@@ -131,14 +150,17 @@ Command::Command(GCodes code, const Vector3d &position, double E, double F)
 
 Command::Command(GCodes code, double value_)
   : Code(code), where(0,0,0), is_value(true), value(value_),
-    f(0), e(0), abs_extr(0),
-    not_layerchange(false)
+    f(0), e(0), extruder_no(0),  abs_extr(0), not_layerchange(false)
 {
+  // for letter-without-number codes like "T"
+  // the value is not an "S" value, it belongs to the command
+  if ( MCODES[code].length() == 1 )
+    is_value = false;
 }
 
 Command::Command(string comment_only)
-  : Code(COMMENT), where(0,0,0), is_value(true), value(0), f(0), e(0), abs_extr(0),
-    not_layerchange(true), comment(comment_only)
+  : Code(COMMENT), where(0,0,0), is_value(true), value(0), f(0), e(0),
+    extruder_no(0), abs_extr(0), not_layerchange(true), comment(comment_only)
 {
 }
 
@@ -147,8 +169,10 @@ Command::Command(const Command &rhs)
     arcIJK (rhs.arcIJK),
     is_value(rhs.is_value), value(rhs.value),
     f(rhs.f), e(rhs.e),
+    extruder_no(rhs.extruder_no),
     abs_extr(rhs.abs_extr),
     not_layerchange(rhs.not_layerchange),
+    explicit_arg(rhs.explicit_arg),
     comment(rhs.comment)
 {
 }
@@ -165,8 +189,10 @@ Command::Command(const Command &rhs)
  * @param defaultpos
  * @param [OUT] gcodeline the unparsed portion of the string
  */
-Command::Command(string gcodeline, const Vector3d &defaultpos, const char E_letter)
-  : where(defaultpos),  arcIJK(0,0,0), is_value(false),  f(0), e(0), abs_extr(0)
+Command::Command(string gcodeline, const Vector3d &defaultpos,
+		 const vector<char> &E_letters)
+  : where(defaultpos),  arcIJK(0,0,0), is_value(false),  f(0), e(0),
+    extruder_no(0), abs_extr(0)
 {
   // Notes:
   //   Spaces are not significant in GCode
@@ -210,11 +236,20 @@ Command::Command(string gcodeline, const Vector3d &defaultpos, const char E_lett
     case 'R':
       cerr << "cannot handle ARC R command (yet?)!" << endl;
       break;
+    case 'T':  extruder_no = num; break;
     default:
-      if  (ch == E_letter) e = num;
-      else
-	cerr << "cannot parse GCode line " << gcodeline << endl;
-      break;
+      {
+	bool foundExtr = false;
+	for (uint ie = 0; ie < E_letters.size(); ie++)
+	  if  (ch == E_letters[ie]) {
+	    extruder_no = ie;
+	    e = num;
+	    foundExtr = true;
+	}
+	if (!foundExtr)
+	  cerr << "cannot parse GCode line " << gcodeline << endl;
+	break;
+      }
     }
   }
 
@@ -256,10 +291,10 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 
   string comm = comment;
 
-  ostr << MCODES[Code] << " ";
+  ostr << MCODES[Code];
 
   if (is_value && Code!=COMMENT){
-    ostr << "S"<<value;
+    ostr << " S"<<value;
     if(comm.length() != 0)
       ostr << " ; " << comm;
     return ostr.str();
@@ -274,9 +309,9 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
   switch (Code) {
   case ARC_CW:
   case ARC_CCW:
-    if (arcIJK.x()!=0) ostr << "I" << arcIJK.x() << " ";
-    if (arcIJK.y()!=0) ostr << "J" << arcIJK.y() << " ";
-    if (arcIJK.z()!=0) ostr << "K" << arcIJK.z() << " ";
+    if (arcIJK.x()!=0) ostr << " I" << arcIJK.x();
+    if (arcIJK.y()!=0) ostr << " J" << arcIJK.y();
+    if (arcIJK.z()!=0) ostr << " K" << arcIJK.z();
   case RAPIDMOTION:
   case COORDINATEDMOTION:
     { // going down? -> split xy and z movements
@@ -312,18 +347,18 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
       }
     }
     if(where.x() != LastPos.x()) {
-      ostr << "X" << where.x() << " ";
+      ostr << " X" << where.x();
       LastPos.x() = where.x();
       moving = true;
     }
     if(where.y() != LastPos.y()) {
-      ostr << "Y" << where.y() << " ";
+      ostr << " Y" << where.y();
       LastPos.y() = where.y();
       moving = true;
     }
   case ZMOVE:
     if(where.z() != LastPos.z()) {
-      ostr << "Z" << where.z() << " ";
+      ostr << " Z" << where.z();
       LastPos.z() = where.z();
       comm += _(" Z-Change");
       moving = true;
@@ -331,7 +366,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     if((relativeEcode   && e != 0) ||
        (!relativeEcode  && e != lastE)) {
       ostr.precision(5);
-      ostr << E_letter << e << " ";
+      ostr << " " << E_letter << e;
       ostr.precision(PREC);
       lastE = e;
     } else {
@@ -342,22 +377,37 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     if (f != lastF) {
       if (f>10)
 	ostr.precision(0);
-      ostr << "F" << f;
+      ostr << " F" << f;
       ostr.precision(PREC);
     }
     lastF = f;
     break;
+  case SELECTEXTRUDER:
+    ostr.precision(0);
+    ostr << value;
+    ostr.precision(PREC);
+    comm += _(" Select Extruder");
+    break;
+  case RESET_E:
+    ostr << " " << E_letter << "0" ;
+    comm += _(" Reset Extrusion");
+    lastE = 0;
+    break;
   case UNKNOWN:
     cerr << "unknown GCode " << info() << endl;
     break;
-  default:;
+  default:
+    //cerr << "unhandled GCode " << info() << endl;
+    break;
   }
+  if(explicit_arg.length() != 0)
+    ostr << " " << explicit_arg;
   if(comm.length() != 0) {
     if (Code!=COMMENT) ostr << " ; " ;
     ostr << comm;
   }
   if(abs_extr != 0)
-    ostr << "; AbsE " << abs_extr;
+    ostr << " ; AbsE " << abs_extr;
 
   // ostr << "; "<< info(); // show Command on line
   return ostr.str();
@@ -383,27 +433,30 @@ void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short
   }
 }
 
-void Command::draw(Vector3d &lastPos, double extrwidth,
+void Command::draw(Vector3d &lastPos, const Vector3d &offset,
+		   double extrwidth,
 		   bool arrows,  bool debug_arcs) const
 {
+  Vector3d off_where = where + offset;
+  Vector3d off_lastPos = lastPos + offset;
   GLfloat ccol[4];
   glGetFloatv(GL_CURRENT_COLOR,&ccol[0]);
   glBegin(GL_LINES);
   // arc:
   if (Code == ARC_CW || Code == ARC_CCW) {
-    Vector3d center = lastPos + arcIJK;
-    Vector3d P = -arcIJK, Q = where-center; // arc endpoints
+    Vector3d center = off_lastPos + arcIJK;
+    Vector3d P = -arcIJK, Q = off_where-center; // arc endpoints
     bool ccw = (Code == ARC_CCW);
     if (debug_arcs) {
       glColor4f(0.f,1.f,0.0f,0.2f);
       glVertex3dv(center);
-      glVertex3dv(lastPos);
+      glVertex3dv(off_lastPos);
       glColor4f(1.f,0.f,0.0f,0.2f);
       glVertex3dv(center);
-      glVertex3dv(where);
+      glVertex3dv(off_where);
       glColor4fv(ccol);
       float lum = ccol[3];
-      if (where == lastPos) // full circle
+      if (off_where == off_lastPos) // full circle
 	glColor4f(1.f,0.f,1.f,lum);
       else if (ccw)
 	glColor4f(0.5f,0.5f,1.f,lum);
@@ -424,9 +477,9 @@ void Command::draw(Vector3d &lastPos, double extrwidth,
 #endif
     }
     //if (abs(angle) < 0.00001) angle = 0;
-    double dz = where.z()-lastPos.z(); // z move with arc
-    Vector3d arcstart = lastPos;
-    draw_arc(lastPos, center, angle, dz, ccw);
+    double dz = off_where.z()-(off_lastPos).z(); // z move with arc
+    Vector3d arcstart = off_lastPos;
+    draw_arc(off_lastPos, center, angle, dz, ccw);
     // extrusion boundary for arc:
     if (extrwidth > 0) {
       glEnd();
@@ -442,32 +495,32 @@ void Command::draw(Vector3d &lastPos, double extrwidth,
       //glEnd();
     }
   } // end ARCs
-  if (lastPos==where) {
+  if (off_lastPos==off_where) {
     glEnd();
     if (arrows) {
       glPointSize(10);
       glBegin(GL_POINTS);
       //glColor4f(1.,0.1,0.1,ccol[3]);
-      glVertex3dv(where);
+      glVertex3dv(off_where);
       glEnd();
     }
   } else {
-    glVertex3dv(lastPos);
-    glVertex3dv(where);
+    glVertex3dv(off_lastPos);
+    glVertex3dv(off_where);
     if (arrows) {
       glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
       // 0.3mm long arrows if no boundary
       double alen = 0.3;
       if (extrwidth > 0) alen = 1.2*extrwidth ;
-      Vector3d normdir = normalized(where-lastPos);
+      Vector3d normdir = normalized(off_where-off_lastPos);
       if (normdir.x() != 0 || normdir.y() != 0 ) {
 	Vector3d arrdir = normdir * alen;
 	Vector3d arrdir2(-0.5*alen*normdir.y(), 0.5*alen*normdir.x(), arrdir.z());
-	glVertex3dv(where);
-	Vector3d arr1 = where-arrdir+arrdir2;
+	glVertex3dv(off_where);
+	Vector3d arr1 = off_where-arrdir+arrdir2;
 	glVertex3dv(arr1);
-	glVertex3dv(where);
-	Vector3d arr2 = where-arrdir-arrdir2;
+	glVertex3dv(off_where);
+	Vector3d arr2 = off_where-arrdir-arrdir2;
 	glVertex3dv(arr2);
       }
     }
@@ -480,23 +533,24 @@ void Command::draw(Vector3d &lastPos, double extrwidth,
       if (abs_extr != 0) {
 	double fr_extr = extrwidth / (1+abs_extr);
 	double to_extr = extrwidth * (1+abs_extr);
-	thickpoly = dir_thick_line(Vector2d(lastPos.x(),lastPos.y()),
-				   Vector2d(where.x(),where.y()),
+	thickpoly = dir_thick_line(Vector2d(off_lastPos.x(),off_lastPos.y()),
+				   Vector2d(off_where.x(),off_where.y()),
 				   fr_extr, to_extr);
       } else
-	thickpoly = thick_line(Vector2d(lastPos.x(),lastPos.y()),
-			       Vector2d(where.x(),where.y()),
+	thickpoly = thick_line(Vector2d(off_lastPos.x(),off_lastPos.y()),
+			       Vector2d(off_where.x(),off_where.y()),
 			       extrwidth);
       for (uint i=0; i<thickpoly.size();i++) {
 	thickpoly[i].cleanup(0.01);
-	thickpoly[i].draw(GL_LINE_LOOP, where.z(), false);
+	thickpoly[i].draw(GL_LINE_LOOP, off_where.z(), false);
       }
     }
   }
   lastPos = where;
 }
 
-void Command::draw(Vector3d &lastPos, guint linewidth,
+void Command::draw(Vector3d &lastPos, const Vector3d &offset,
+		   guint linewidth,
 		   Vector4f color, double extrwidth,
 		   bool arrows, bool debug_arcs) const
 {
@@ -505,7 +559,7 @@ void Command::draw(Vector3d &lastPos, guint linewidth,
   // else if (abs_extr<0) linewidth/=(-abs_extr);
   glLineWidth(linewidth);
   glColor4fv(&color[0]);
-  draw(lastPos, extrwidth, arrows, debug_arcs);
+  draw(lastPos, offset, extrwidth, arrows, debug_arcs);
 }
 
 void Command::addToPosition(Vector3d &from, bool relative)
@@ -527,7 +581,9 @@ string Command::info() const
   ostringstream ostr;
   ostr << "Command";
   if (comment!="") ostr << " '" << comment << "'";
-  ostr << ": Code="<<Code<<", where="  <<where << ", f="<<f<<", e="<<e;
+  ostr << ": Extr="<<extruder_no<<", Code="<<Code<<", where="  <<where << ", f="<<f<<", e="<<e;
+  if (explicit_arg != "")
+    ostr << " Explicit: " << explicit_arg;
   return ostr.str();
 }
 
