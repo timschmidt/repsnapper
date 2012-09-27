@@ -909,6 +909,7 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   short arctype = ccw ? -1 : 1;
   // need 2 half arcs?
   bool split = (lines[ind].feedrate != lines[ind+1].feedrate);
+  split |= (lines[ind].extruder_no != lines[ind+1].extruder_no);
   // too small arc, replace by 2 straight lines
   bool toosmall = ((radius * angle) < (split?minarclength:(minarclength*2)));
   // too small to make 2 lines, just make 1 line
@@ -942,7 +943,7 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
       }
       else if (split) { // 2 arcs
 	newlines.push_back(PLine(lines[ind].area, lines[ind].extruder_no,  p1, splitp,
-				 lines[ind].speed,   lines[ind].feedrate,
+				 lines[ind].speed, lines[ind].feedrate,
 				 arctype, center, angle/2, lines[ind].lifted));
 	newlines.push_back(PLine(lines[ind+1].area, lines[ind+1].extruder_no, splitp, p2,
 				 lines[ind+1].speed, lines[ind+1].feedrate,
@@ -957,7 +958,7 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
     }
   }
   if (p2 != lines[ind+1].to) { // straight line 2
-    newlines.push_back(PLine(lines[ind].area, lines[ind].extruder_no, p2,
+    newlines.push_back(PLine(lines[ind+1].area, lines[ind+1].extruder_no, p2,
 			     lines[ind+1].to, lines[ind+1].speed,
 			     lines[ind+1].feedrate, lines[ind+1].lifted));
     numnew++;
