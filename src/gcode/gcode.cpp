@@ -203,6 +203,8 @@ void GCode::Read(Model *model, const vector<char> E_letters,
 
 	stringstream alltext;
 
+	int current_extruder = 0;
+
 	while(getline(file,s))
 	{
 	  alltext << s << endl;
@@ -233,6 +235,11 @@ void GCode::Read(Model *model, const vector<char> E_letters,
 		  relativePos = false;
 		  continue;
 		}
+		if (command.Code == SELECTEXTRUDER) {
+		  current_extruder = command.extruder_no;
+		  continue;
+		}
+		command.extruder_no = current_extruder;
 
 		// not used yet
 		// if (command.Code == ABSOLUTE_ECODE) {

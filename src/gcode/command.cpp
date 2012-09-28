@@ -236,7 +236,11 @@ Command::Command(string gcodeline, const Vector3d &defaultpos,
     case 'R':
       cerr << "cannot handle ARC R command (yet?)!" << endl;
       break;
-    case 'T':  extruder_no = num; break;
+    case 'T':
+      Code = getCode("T");
+      comment = "";
+      extruder_no = num;
+      break;
     default:
       {
 	bool foundExtr = false;
