@@ -133,6 +133,7 @@ class Settings {
   std::vector<ExtruderSettings> Extruders; // all Extruders
   std::vector<char> get_extruder_letters() const;
   Vector3d get_extruder_offset(uint num) const;
+  uint GetSupportExtruder() const;
   uint selectedExtruder;
   void CopyExtruder(uint num);
   void RemoveExtruder(uint num);
@@ -182,7 +183,6 @@ class Settings {
     int SupportFilltype;
     float SupportExtrusion;
     float SupportInfillDistance;
-    uint SupportExtruderNo;
 
     bool MakeDecor;
     int DecorFilltype;

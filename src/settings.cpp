@@ -715,19 +715,16 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
     Extruders.push_back(Extruder);
   else
     Extruders[0] = Extruder;
-  if (Extruder.UseForSupport) Slicing.SupportExtruderNo = Extruders.size()-1;
   // Load other extruders "ExtruderN" (N=2..)
   std::vector< Glib::ustring > all_groups = cfg.get_groups();
   for (uint i = 0; i<all_groups.size(); i++) {
     if (all_groups[i].substr(0,8) == "Extruder") {
       if (all_groups[i].length() > 8) {
 	load_settings_as(cfg, all_groups[i], "Extruder");
-	if (Extruder.UseForSupport) Slicing.SupportExtruderNo = Extruders.size();
 	Extruders.push_back(Extruder);
       }
     }
   }
-  if (Extruders.size() == 1) Slicing.SupportExtruderNo = 0;
 
   GCode.m_impl->loadSettings (cfg);
 
@@ -1054,8 +1051,16 @@ void Settings::get_from_gui (Builder &builder, int i)
 
   if (string(glade_name).substr(0,8) == "Extruder") {
     // copy settings to selected Extruder
-    if (selectedExtruder < Extruders.size())
+    if (selectedExtruder < Extruders.size()) {
       Extruders[selectedExtruder] = Extruder;
+      // only one extruders must be selected for support
+      if (Extruder.UseForSupport) {
+	for (uint i = 0; i < Extruders.size(); i++)
+	  if (i != selectedExtruder)
+	    Extruders[i].UseForSupport = false;
+      } else
+	Extruders[0].UseForSupport = true;
+    }
   }
 
 
@@ -1471,6 +1476,13 @@ std::vector<char> Settings::get_extruder_letters() const
   return letters;
 }
 
+uint Settings::GetSupportExtruder() const
+{
+  for (uint i = 0; i< Extruders.size(); i++)
+    if (Extruders[i].UseForSupport) return i;
+  return 0;
+}
+
 Vector3d Settings::get_extruder_offset(uint num) const
 {
   return Vector3d(Extruders[num].OffsetX, Extruders[num].OffsetY, 0.);
@@ -1494,12 +1506,6 @@ void Settings::RemoveExtruder(uint num)
 }
 void Settings::SelectExtruder(uint num)
 {
-  if (Extruder.UseForSupport) { // user has set previous extruder for support
-    if (selectedExtruder < Extruders.size())
-      Slicing.SupportExtruderNo = selectedExtruder;
-  }
-  for (uint i = 0; i< Extruders.size(); i++)  // deselect others
-    Extruders[i].UseForSupport = (i == Slicing.SupportExtruderNo);
   if (num < Extruders.size()) {
     selectedExtruder = num;
   }

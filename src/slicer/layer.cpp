@@ -720,6 +720,8 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   const bool clipnearest      = settings.Slicing.MoveNearest;
 
+  const uint supportExtruder   = settings.GetSupportExtruder();
+
   Vector2d startPoint(lastPos.x(),lastPos.y());
 
   const double extrf = settings.Extruder.GetExtrudeFactor(thickness);
@@ -788,7 +790,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   // 3. Support
   if (supportInfill) {
     uint extruderbefore = settings.selectedExtruder;
-    settings.SelectExtruder(settings.Slicing.SupportExtruderNo);
+    settings.SelectExtruder(supportExtruder);
     printlines.addPolys(SUPPORT, supportInfill->infillpolys, false);
     settings.SelectExtruder(extruderbefore);
   }
