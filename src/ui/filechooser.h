@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include "config.h"
 #include "stdafx.h"
 #include <string>
 #include <giomm/file.h>

@@ -21,7 +21,6 @@
 #include "poly.h"
 
 #include "layer.h"
-#include "config.h"
 #include "shape.h"
 #include "printlines.h"
 #include "clipping.h"

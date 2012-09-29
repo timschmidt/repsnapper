@@ -20,7 +20,6 @@
 
 #pragma once
 
-#include "config.h"
 #include <vector>
 #include <list>
 #include <iostream>

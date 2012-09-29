@@ -25,7 +25,6 @@
 
 
 #include "stdafx.h"
-#include "config.h"
 
 #include "printer.h"
 #include "ui/view.h"
