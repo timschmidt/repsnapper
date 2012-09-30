@@ -49,7 +49,6 @@ SHARED_SRC= \
 SHARED_INC= \
 	src/transform3d.h \
 	src/arcball.h \
-	src/convert.h \
 	src/gllight.h \
 	src/miniball.h \
 	src/model.h \
@@ -81,8 +80,8 @@ built_header_make=src/gitversion.h
 
 BUILT_SOURCES += $(built_header_make)
 EXTRA_DIST += $(built_header_make) \
-	src/printer_libreprap.cpp \
-        src/printer_iochannel.cpp
+	src/printer/printer_libreprap.cpp \
+        src/printer/printer_iochannel.cpp
 
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 

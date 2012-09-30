@@ -24,6 +24,7 @@ src/gcode/gcodestate.cpp
 src/ui/connectview.cpp
 src/ui/filechooser.cpp
 src/ui/progress.cpp
+src/ui/widgets.cpp
 src/ui/view.cpp
 src/printer/printer.cpp
 src/printer/printer2.cpp
