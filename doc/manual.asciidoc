@@ -66,12 +66,14 @@ Although RepSnapper is not generally tested outside of windows/linux/mac you may
 ==== Arch Linux ====
 
 There is an AUR package:
+
 --------------------------
-yaourt -Sy repsnapper
+	yaourt -Sy repsnapper
 --------------------------
 
 
 ==== Ubuntu ====
+
 =====  Install dependencies =====
 
 Ubuntu:
