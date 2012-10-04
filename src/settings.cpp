@@ -165,7 +165,7 @@ static struct {
 		"Extruder.DisplayRGBA", 1.0, 1.0, 0.0, 1.0, true),
 
   // Printer
-  FLOAT_MEMBER  (Printer.ExtrudeAmount, "Printer.ExtrudeAmount", 5, false),
+  FLOAT_MEMBER  (Printer.ExtrudeAmount, "Printer.ExtrudeAmount", 1, false),
   FLOAT_MEMBER  (Printer.ExtrudeSpeed, "Printer.ExtrudeSpeed", 1.5, false),
   INT_MEMBER    (Printer.FanVoltage, "Printer.FanVoltage", 200, false),
   BOOL_MEMBER   (Printer.Logging, "Printer.Logging", false, false),
@@ -409,7 +409,7 @@ static struct {
   { "Extruder.AntioozeZlift", 0.0, 10, 0.01, 0.1 },
 
   //Printer
-  { "Printer.ExtrudeAmount", 0.0, 1000.0, 1.0, 10.0 },
+  { "Printer.ExtrudeAmount", -1000.0, 1000.0, 0.1, 1.0 },
   { "Printer.ExtrudeSpeed", 0.0, 100.0, 0.1, 1.0 },
   { "Printer.FanVoltage", 0, 255, 5, 25 },
   // { "Printer.NozzleTemp", 0.0, 300.0, 1.0, 10.0 },

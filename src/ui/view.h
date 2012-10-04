@@ -35,6 +35,7 @@ class View : public Gtk::Window
   class TempRow;
   class AxisRow;
   class TranslationSpinRow;
+  class ExtruderRow;
 
   friend class PrintInhibitor;
   friend class Render;
@@ -76,7 +77,9 @@ class View : public Gtk::Window
   void rot_object_from_spinbutton();
 
   Printer *m_printer;
+  ExtruderRow *m_extruder_row;
   PrefsDlg *m_settings_ui;
+
 
   Glib::RefPtr<Gtk::Builder> m_builder;
   Model *m_model;
@@ -120,7 +123,7 @@ class View : public Gtk::Window
   void run_extruder();
   void clear_logs();
   void home_all();
-  Gtk::CheckButton *m_extruder_reverse;
+  /* Gtk::CheckButton *m_extruder_reverse; */
   Gtk::SpinButton *m_extruder_speed;
   Gtk::SpinButton *m_extruder_length;
   Gtk::SpinButton *m_extruder_speed_mult;

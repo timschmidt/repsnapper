@@ -404,9 +404,11 @@ void View::fan_enabled_toggled (Gtk::ToggleButton *button)
 
 void View::run_extruder ()
 {
-  m_printer->RunExtruder (m_extruder_speed->get_value(),
-			  m_extruder_length->get_value(),
-			  m_extruder_reverse->get_active());
+  double amount = m_extruder_length->get_value();
+  m_printer->RunExtruder (m_extruder_speed->get_value() * 60,
+			  amount,
+			  false,
+			  m_extruder_row->get_selected());
 }
 
 void View::clear_logs()
@@ -1180,7 +1182,7 @@ View::View(BaseObjectType* cobject,
   // Interactive tab
   connect_toggled ("Printer.Logging", sigc::mem_fun(*this, &View::enable_logging_toggled));
   connect_button ("Printer.ClearLog",      sigc::mem_fun(*this, &View::clear_logs) );
-  m_builder->get_widget ("i_reverse", m_extruder_reverse);
+  //m_builder->get_widget ("i_reverse", m_extruder_reverse);
   m_builder->get_widget ("Printer.ExtrudeSpeed", m_extruder_speed);
   // m_extruder_speed->set_range(10.0, 10000.0);
   // m_extruder_speed->set_increments (10, 100);
@@ -1296,6 +1298,7 @@ void View::update_extruderlist()
   }
   extruder_treeview->get_selection()->select(row);
   extruder_selected();
+  m_extruder_row->set_number(m_model->settings.Extruders.size());
 }
 
 //  stop file preview when leaving file tab
@@ -1314,6 +1317,7 @@ View::~View()
   for (uint i = 0; i < 3; i++) {
     delete m_axis_rows[i];
   }
+  delete m_extruder_row;
   delete m_temps[TEMP_NOZZLE];
   delete m_temps[TEMP_BED];
   delete m_cnx_view;
@@ -1495,6 +1499,11 @@ void View::setModel(Model *model)
     m_axis_rows[i] = new AxisRow (m_model, m_printer, i);
     axis_box->add (*m_axis_rows[i]);
   }
+
+  Gtk::Box *extruder_box;
+  m_builder->get_widget ("i_extruder_box", extruder_box);
+  m_extruder_row = new ExtruderRow(m_printer);
+  extruder_box->add(*m_extruder_row);
 
   inhibit_print_changed();
   m_printer->get_signal_inhibit_changed().

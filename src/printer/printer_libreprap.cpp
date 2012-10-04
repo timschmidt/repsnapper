@@ -237,6 +237,7 @@ void Printer::serial_try_connect (bool connect)
 
 bool Printer::SelectExtruder(int extruder_no)
 {
+  cerr << "extr " << extruder_no<< endl;
   if (extruder_no >= 0){
     ostringstream os;
     os << "T" << extruder_no;

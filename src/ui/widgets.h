@@ -44,6 +44,8 @@ class View::TempRow : public Gtk::HBox
 {
 
  public:
+  TempRow(Model *model, Printer *printer, TempType type);
+  ~TempRow();
 
   Model *m_model;
   Printer *m_printer;
@@ -51,10 +53,6 @@ class View::TempRow : public Gtk::HBox
   Gtk::Label *m_temp;
   Gtk::SpinButton *m_target;
   Gtk::ToggleButton *m_button;
-
-  TempRow(Model *model, Printer *printer, TempType type);
-
-  ~TempRow();
 
   void button_toggled();
 
@@ -68,7 +66,10 @@ class View::AxisRow : public Gtk::HBox
 {
 
  public:
+  AxisRow(Model *model, Printer *printer, int axis);
+
   void home_clicked();
+  void notify_homed();
   void spin_value_changed ();
   void nudge_clicked (double nudge);
   void add_nudge_button (double nudge);
@@ -78,7 +79,23 @@ class View::AxisRow : public Gtk::HBox
   Gtk::SpinButton *m_target;
   int m_axis;
 
-public:
-  void notify_homed();
-  AxisRow(Model *model, Printer *printer, int axis);
+};
+
+
+
+class View::ExtruderRow : public Gtk::HBox
+{
+ public:
+  ExtruderRow(Printer *printer);
+  ~ExtruderRow();
+
+  Printer *m_printer;
+
+  vector<Gtk::RadioButton*> m_buttons;
+  Gtk::RadioButtonGroup m_group;
+
+  void set_number(uint num);
+  uint get_selected() const;
+
+  void button_selected();
 };

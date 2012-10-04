@@ -283,3 +283,54 @@ View::AxisRow::AxisRow(Model *model, Printer *printer, int axis) :
     add_nudge_button (+1.0);
     add_nudge_button (+10.0);
 }
+
+
+
+
+View::ExtruderRow::ExtruderRow(Printer *printer)
+: m_printer(printer)
+{
+  set_homogeneous (true);
+}
+
+View::ExtruderRow::~ExtruderRow()
+{
+  m_buttons.clear();
+}
+
+void View::ExtruderRow::set_number(uint num)
+{
+  vector< Widget* > ch = get_children();
+  for (uint i = 0; i< ch.size(); i++){
+    remove(*ch[i]);
+  }
+  m_buttons.clear();
+
+  for (uint i = 0; i< num; i++){
+    ostringstream o; o << i+1;
+    cerr << o.str() << endl;
+    m_buttons.push_back(new Gtk::RadioButton(m_group,o.str()));
+    m_buttons[i]->signal_toggled().connect
+      (sigc::mem_fun(*this, &ExtruderRow::button_selected));
+    add(*manage(m_buttons[i]));
+  }
+  if (num>0)
+    m_buttons[0]->set_active();
+  show_all();
+  check_resize();
+}
+
+uint View::ExtruderRow::get_selected() const
+{
+  vector< const Widget* > ch = get_children();
+  for (uint i = 0; i< ch.size(); i++){
+    const Gtk::RadioButton *but = dynamic_cast<const Gtk::RadioButton*>(ch[i]);
+    if (but->get_active()) return  i;
+  }
+  return 0;
+}
+
+void View::ExtruderRow::button_selected()
+{
+  m_printer->SelectExtruder(get_selected());
+}
