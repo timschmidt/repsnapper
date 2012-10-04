@@ -988,10 +988,10 @@ void Shape::draw_geometry(uint max_triangles)
 	glBegin(GL_TRIANGLES);
 	for(size_t i=0;i<triangles.size();i+=step)
 	{
-		glNormal3dv((GLdouble*)&(triangles[i].Normal));
-		glVertex3dv((GLdouble*)&(triangles[i].A));
-		glVertex3dv((GLdouble*)&(triangles[i].B));
-		glVertex3dv((GLdouble*)&(triangles[i].C));
+		glNormal3dv(triangles[i].Normal);
+		glVertex3dv(triangles[i].A);
+		glVertex3dv(triangles[i].B);
+		glVertex3dv(triangles[i].C);
 	}
 	glEnd();
   }
