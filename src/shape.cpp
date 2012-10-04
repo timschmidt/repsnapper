@@ -794,18 +794,18 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 	glEnable(GL_LIGHTING);
 
 	float no_mat[] = {0.0f, 0.0f, 0.0f, 1.0f};
+	float low_mat[] = {0.2f, 0.2f, 0.2f, 1.0f};
 //	float mat_ambient[] = {0.7f, 0.7f, 0.7f, 1.0f};
 //	float mat_ambient_color[] = {0.8f, 0.8f, 0.2f, 1.0f};
 	float mat_diffuse[] = {0.1f, 0.5f, 0.8f, 1.0f};
 	float mat_specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
 //	float no_shininess = 0.0f;
 //	float low_shininess = 5.0f;
-	float high_shininess = 100.0f;
+//	float high_shininess = 100.0f;
 //	float mat_emission[] = {0.3f, 0.2f, 0.2f, 0.0f};
-        int i;
 
 
-        for (i = 0; i < 4; i++) {
+        for (uint i = 0; i < 4; i++) {
 	  mat_diffuse[i] = settings.Display.PolygonRGBA[i];
 	}
 
@@ -819,16 +819,15 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 	  mat_diffuse[3] = 0.9;
 	}
 
-
 	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.Display.Highlight;
 
 	/* draw sphere in first row, first column
 	* diffuse reflection only; no ambient or specular
 	*/
-	glMaterialfv(GL_FRONT, GL_AMBIENT, no_mat);
+	glMaterialfv(GL_FRONT, GL_AMBIENT, low_mat);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-	glMaterialf(GL_FRONT, GL_SHININESS, high_shininess);
+	glMaterialf(GL_FRONT, GL_SHININESS, 90); // 0..128
 	glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
 
 	// glEnable (GL_POLYGON_OFFSET_FILL);
@@ -852,7 +851,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 			glDisable(GL_LIGHTING);
 
 
-                for (i = 0; i < 4; i++)
+                for (uint i = 0; i < 4; i++)
                         mat_diffuse[i] = settings.Display.WireframeRGBA[i];
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
