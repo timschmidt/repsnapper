@@ -108,7 +108,7 @@ class PLine
   double time() const;  // time in minutes
   PLine3 getPrintline(double z) const;
   bool is_noop() const;
-  bool is_move() const {return (feedrate==0.);}
+  bool is_move() const {return (abs(feedrate) < 0.0001);}
   string info() const;
 };
 

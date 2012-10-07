@@ -982,7 +982,9 @@ bool Printlines::find_nextmove(double minlength, uint startindex,
 			       uint &tractstart, uint &pushend,
 			       const vector<PLine> &lines) const
 {
-  uint i = startindex;
+  uint i = startindex; // begin search here
+  // cerr << "FM " << i << " - " <<lines.size() << "  : "
+  //      << movestart << " - " <<moveend<< endl;
   while (i < lines.size()-2) {
     // find move start
     while (i < lines.size() && !lines[i].is_move() ) {
@@ -991,7 +993,7 @@ bool Printlines::find_nextmove(double minlength, uint startindex,
     if (!lines[movestart].is_move()) return false;
     if (i == lines.size()-1) return false;
     // find move end
-    while (i < lines.size() && !lines[i].is_move() ) {
+    while (i < lines.size() && lines[i].is_move() ) {
       moveend = i; i++;
     }
     if (!lines[moveend].is_move()) return false;
@@ -1019,6 +1021,7 @@ bool Printlines::find_nextmove(double minlength, uint startindex,
       }
       // cerr << "found move " << tractstart << "..." <<movestart
       // 	   << "--"<<moveend<< "..."<< pushend <<  " length " << totaldistance << endl;
+
       return true;
     }
   }
@@ -1137,9 +1140,10 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
   uint
     movestart  = 0, moveend = 0,
     tractstart = 0, pushend = 0;
-  while ( find_nextmove(AOmindistance, moveend+1,
-			movestart,  moveend,
-			tractstart, pushend,
+  while ( find_nextmove(AOmindistance,
+			moveend+1, // set
+			movestart,  moveend, // get
+			tractstart, pushend, // get
 			lines) ) {
     double extrusionsum = 0;
     uint   added = 0;
@@ -1193,6 +1197,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine> &lines) const
     total_extrusionsum += extrusionsum;
   }
   if (abs(total_extrusionsum) > 0.01) cerr << "wrong total AO extr.: " << total_extrusionsum << endl;
+
   return total_added;
 }
 
