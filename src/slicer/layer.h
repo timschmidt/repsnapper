@@ -27,6 +27,7 @@
 
 #include "poly.h"
 #include "gcode/gcodestate.h"
+#include "printlines.h"
 
 #include <cairomm/cairomm.h>
 
@@ -131,10 +132,15 @@ public:
   /* 			    double linewidth,double linewidthratio,double optratio) const; */
 
 
-  void MakeGcode (Vector3d &start,
-		  vector<Command> &commands,
-  		  double offsetZ,
-  		  Settings &settings) const;
+  void MakePrintlines (Vector3d &start,
+		       vector<PLine3> &plines,
+		       double offsetZ,
+		       Settings &settings) const;
+
+  void MakeGCode (Vector3d &start,
+		  GCodeState &gc_state,
+		  double offsetZ,
+		  Settings &settings) const;
 
   string info() const ;
 

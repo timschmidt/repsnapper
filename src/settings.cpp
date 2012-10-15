@@ -135,6 +135,7 @@ static struct {
   BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
   INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4, false),
+  BOOL_MEMBER   (Hardware.SpeedAlways, "SpeedAlways", false, false),
 
   // Extruder
   BOOL_MEMBER  (Extruder.CalibrateInput,  "CalibrateInput",  true, true),
@@ -1456,7 +1457,7 @@ double Settings::ExtruderSettings::GetExtrudedMaterialWidth(double layerheight) 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
 
 // how much mm filament material per extruded line length mm -> E gcode
-double Settings::ExtruderSettings::GetExtrudeFactor(double layerheight) const
+double Settings::ExtruderSettings::GetExtrusionPerMM(double layerheight) const
 {
   double f = ExtrusionFactor; // overall factor
   if (CalibrateInput) {  // means we use input filament diameter

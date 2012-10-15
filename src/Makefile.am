@@ -36,7 +36,7 @@ SHARED_SRC= \
 	src/platform.cpp \
 	src/objtree.cpp \
 	src/model.cpp \
-	src/model2.cpp \
+	src/model_slice.cpp \
 	src/shape.cpp \
 	src/flatshape.cpp \
 	src/triangle.cpp \

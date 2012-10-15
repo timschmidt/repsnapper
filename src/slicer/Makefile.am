@@ -12,6 +12,7 @@
 SHARED_SRC += \
 	src/slicer/geometry.cpp \
 	src/slicer/printlines.cpp \
+	src/slicer/printlines_antiooze.cpp \
 	src/slicer/clipping.cpp \
 	src/slicer/layer.cpp \
 	src/slicer/infill.cpp \

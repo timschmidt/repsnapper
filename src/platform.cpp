@@ -84,3 +84,11 @@ std::vector<std::string> Platform::getConfigPaths()
   return dirs;
 }
 
+
+
+std::string str(double r, int prec) {
+  ostringstream o;
+  if (prec>=0) o.precision(prec);
+  o<<r;
+  return o.str();
+}

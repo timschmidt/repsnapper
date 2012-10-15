@@ -337,7 +337,6 @@ void GCode::Read(Model *model, const vector<char> E_letters,
 
 int GCode::getLayerNo(const double z) const
 {
-  //cerr << z ;
   if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
     for(uint i=0;i<layerchanges.size() ;i++) {
       if (commands.size() > layerchanges[i]) {
@@ -571,8 +570,9 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 			luma = 0.3 + 0.7 * speed / settings.Extruder.MaxLineSpeed / 60;
 			if (liveprinting) {
 			  Color = settings.Display.GCodePrintingRGBA;
-			} else
+			} else {
 			  Color = settings.Extruders[commands[i].extruder_no].DisplayRGBA;
+			}
 			if (settings.Display.DebugGCodeExtruders) {
 			  ostringstream o; o << commands[i].extruder_no+1;
 			  drawString( (pos + commands[i].where) / 2. + extruder_offset,
@@ -670,7 +670,8 @@ void GCode::MakeText(string &GcodeTxt,
 	  else {
 	    GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, lastF,
 						 settings.Slicing.RelativeEcode,
-						 E_letter) + "\n";
+						 E_letter,
+						 settings.Hardware.SpeedAlways) + "\n";
 	  }
 	}
 

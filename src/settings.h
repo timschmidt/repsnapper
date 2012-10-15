@@ -90,6 +90,8 @@ class Settings {
     int KeepLines;
 
     int ReceivingBufferSize;
+
+    bool SpeedAlways;
   };
   HardwareSettings Hardware;
 
@@ -116,7 +118,7 @@ class Settings {
     /* float DownstreamMultiplier; */
     /* float DownstreamExtrusionMultiplier; */
     static double RoundedLinewidthCorrection(double extr_width, double layerheight);
-    double GetExtrudeFactor(double layerheight) const;
+    double GetExtrusionPerMM(double layerheight) const;
 
     bool  EnableAntiooze;
     float AntioozeDistance;
@@ -142,7 +144,6 @@ class Settings {
   struct SlicingSettings {
     bool  RelativeEcode;
     bool UseTCommand;
-
     float LayerThickness;
 
     bool  UseArcs;

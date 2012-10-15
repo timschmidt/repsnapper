@@ -1945,7 +1945,6 @@ void View::DrawGrid()
 // called from Render::on_expose_event
 void View::Draw (vector<Gtk::TreeModel::Path> &selected, bool objects_only)
 {
-
 	// Draw the grid, pushed back so it can be seen
 	// when viewed from below.
         if (!objects_only) {

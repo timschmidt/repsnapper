@@ -844,7 +844,7 @@ void Model::ConvertToGCode()
   state.ResetLastWhere(Vector3d(0,0,0));
   uint count =  layers.size();
 
-  m_progress->start (_("Making GCode"), count+1);
+  m_progress->start (_("Making Lines"), count+1);
 
   state.AppendCommand(MILLIMETERSASUNITS,  false, _("Millimeters"));
   state.AppendCommand(ABSOLUTEPOSITIONING, false, _("Absolute Pos"));
@@ -854,7 +854,7 @@ void Model::ConvertToGCode()
     state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
 
   bool cont = true;
-  vector<Command> commands;
+  vector<PLine3> plines;
   Vector3d start = state.LastPosition();
   for (uint p=0; p<count; p++) {
     cont = (m_progress->update(p)) ;
@@ -864,10 +864,10 @@ void Model::ConvertToGCode()
     // 	 << " have commands: " <<commands.size()
     // 	 << " start " << start <<  endl;;
     // try {
-    layers[p]->MakeGcode (start,
-			  commands,
-			  printOffsetZ,
-			  settings);
+    layers[p]->MakePrintlines(start,
+			      plines,
+			      printOffsetZ,
+			      settings);
     // } catch (Glib::Error e) {
     //   error("GCode Error:", (e.what()).c_str());
     // }
@@ -875,8 +875,14 @@ void Model::ConvertToGCode()
     //   cerr << p << ": " <<layers[p]->LayerNo << " prev: "
     // 	   << layers[p]->getPrevious()->LayerNo << endl;
   }
+  // do antiooze retract for all lines:
+  Printlines::makeAntioozeRetract(plines, settings, m_progress);
+  vector<Command> commands;
+  //Printlines::getCommands(plines, settings, commands, m_progress);
+  Printlines::getCommands(plines, settings, state, m_progress);
 
-  state.AppendCommands(commands, settings.Slicing.RelativeEcode);
+  //state.AppendCommands(commands, settings.Slicing.RelativeEcode);
+
   string GcodeTxt;
   if (cont)
     gcode.MakeText (GcodeTxt, settings, m_progress);

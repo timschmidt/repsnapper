@@ -22,7 +22,6 @@
 #include "poly.h"
 #include "shape.h"
 #include "infill.h"
-#include "printlines.h"
 
 // polygons will be simplified to thickness/CLEANFACTOR
 #define CLEANFACTOR 7
@@ -708,13 +707,25 @@ bool Layer::setMinMax(const Poly &poly)
   return true;
 }
 
-// Convert to GCode
-void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
-		      vector<Command> &commands,
-		      double offsetZ,
-		      Settings &settings) const
-{
 
+// Convert to GCode
+void Layer::MakeGCode (Vector3d &start,
+		       GCodeState &gc_state,
+		       double offsetZ,
+		       Settings &settings) const
+{
+  vector<PLine3> plines;
+  MakePrintlines(start, plines, offsetZ, settings);
+  Printlines::makeAntioozeRetract(plines, settings);
+  Printlines::getCommands(plines, settings, gc_state);
+}
+
+// Convert to Printlines
+void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
+			   vector<PLine3> &lines3,
+			   double offsetZ,
+			   Settings &settings) const
+{
   const double linewidth      = settings.Extruder.GetExtrudedMaterialWidth(thickness);
   const double cornerradius   = linewidth*settings.Slicing.CornerRadius;
 
@@ -724,12 +735,12 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 
   Vector2d startPoint(lastPos.x(),lastPos.y());
 
-  const double extrf = settings.Extruder.GetExtrudeFactor(thickness);
+  const double extr_per_mm = settings.Extruder.GetExtrusionPerMM(thickness);
 
-  vector<PLine3> lines3;
+  //vector<PLine3> lines3;
   Printlines printlines(this, &settings, offsetZ);
 
-  vector<PLine> lines;
+  vector<PLine2> lines;
 
   vector<Poly> polys; // intermediate collection
 
@@ -773,7 +784,7 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
 	  printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
 	printlines.optimize(linewidth,
 			    settings.Slicing.MinShelltime, cornerradius, lines);
-	printlines.getLines(lines, lines3);
+	printlines.getLines(lines, lines3, extr_per_mm);
 	printlines.clear();
 	lines.clear();
       }
@@ -824,9 +835,9 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
   // FINISH
 
   Command lchange(LAYERCHANGE, LayerNo);
-  lchange.comment += info();
   lchange.where = Vector3d(0.,0.,Z);
-  commands.push_back(lchange);
+  lchange.comment += info();
+  lines3.push_back(PLine3(lchange));
 
   if (!settings.Extruder.ZliftAlways)
     printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
@@ -846,22 +857,12 @@ void Layer::MakeGcode(Vector3d &lastPos, //GCodeState &state,
       //cerr << slowdownfactor << " - " << fanfactor << " - " << fanspeed << " - " << endl;
     }
     Command fancommand(FANON, fanspeed);
-    commands.push_back(fancommand);
+    lines3.push_back(PLine3(fancommand));
   }
 
-  printlines.getLines(lines, lines3);
-
-
-  // push all lines to gcode
-  // start3 = state.LastPosition();
-  PLineArea lastArea= UNDEF;
-  for (uint i = 0; i < lines3.size(); i++) {
-    if (lines3[i].area != lastArea) {
-      lastArea = lines3[i].area;
-      commands.push_back(Command(AreaNames[lastArea]));
-    }
-    lines3[i].getCommands(lastPos, commands, extrf, settings);
-  }
+  printlines.getLines(lines, lines3, extr_per_mm);
+  if (lines3.size()>0)
+    lastPos = lines3.back().to;
 }
 
 

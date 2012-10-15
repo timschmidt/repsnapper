@@ -308,7 +308,7 @@ void View::ExtruderRow::set_number(uint num)
 
   for (uint i = 0; i< num; i++){
     ostringstream o; o << i+1;
-    cerr << o.str() << endl;
+    // cerr << o.str() << endl;
     m_buttons.push_back(new Gtk::RadioButton(m_group,o.str()));
     m_buttons[i]->signal_toggled().connect
       (sigc::mem_fun(*this, &ExtruderRow::button_selected));

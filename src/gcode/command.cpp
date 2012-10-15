@@ -117,6 +117,7 @@ inline double ToDouble(GcodeFeed &f)
 
 Command::Command()
 {
+  Code = UNKNOWN;
   init();
 }
 
@@ -131,6 +132,8 @@ void Command::init()
   explicit_arg = "";
   comment = "";
   not_layerchange = false;
+  abs_extr = 0;
+  travel_length = 0;
 }
 
 Command::Command(GCodes code, const string explicit_arg_)
@@ -142,7 +145,7 @@ Command::Command(GCodes code, const string explicit_arg_)
 
 Command::Command(GCodes code, const Vector3d &position, double E, double F)
   : Code(code), where(position), is_value(false),  f(F), e(E),
-    extruder_no(0), abs_extr(0), not_layerchange(false)
+    extruder_no(0), abs_extr(0), travel_length(0), not_layerchange(false)
 {
   if (where.z() < 0)
     where.z() = 0;
@@ -150,7 +153,8 @@ Command::Command(GCodes code, const Vector3d &position, double E, double F)
 
 Command::Command(GCodes code, double value_)
   : Code(code), where(0,0,0), is_value(true), value(value_),
-    f(0), e(0), extruder_no(0),  abs_extr(0), not_layerchange(false)
+    f(0), e(0), extruder_no(0),  abs_extr(0), travel_length(0),
+    not_layerchange(false)
 {
   // for letter-without-number codes like "T"
   // the value is not an "S" value, it belongs to the command
@@ -160,7 +164,8 @@ Command::Command(GCodes code, double value_)
 
 Command::Command(string comment_only)
   : Code(COMMENT), where(0,0,0), is_value(true), value(0), f(0), e(0),
-    extruder_no(0), abs_extr(0), not_layerchange(true), comment(comment_only)
+    extruder_no(0), abs_extr(0), travel_length(0),
+    not_layerchange(true), comment(comment_only)
 {
 }
 
@@ -171,6 +176,7 @@ Command::Command(const Command &rhs)
     f(rhs.f), e(rhs.e),
     extruder_no(rhs.extruder_no),
     abs_extr(rhs.abs_extr),
+    travel_length(rhs.travel_length),
     not_layerchange(rhs.not_layerchange),
     explicit_arg(rhs.explicit_arg),
     comment(rhs.comment)
@@ -192,7 +198,7 @@ Command::Command(const Command &rhs)
 Command::Command(string gcodeline, const Vector3d &defaultpos,
 		 const vector<char> &E_letters)
   : where(defaultpos),  arcIJK(0,0,0), is_value(false),  f(0), e(0),
-    extruder_no(0), abs_extr(0)
+    extruder_no(0), abs_extr(0), travel_length(0)
 {
   // Notes:
   //   Spaces are not significant in GCode
@@ -278,13 +284,15 @@ GCodes Command::getCode(const string commstr) const
 bool Command::hasNoEffect(const Vector3d LastPos, const double lastE,
 			  const double lastF, const bool relativeEcode) const
 {
-  return ((Code == COORDINATEDMOTION)
-	  && where == LastPos
-	  && ((relativeEcode && e == 0) || (!relativeEcode && e == lastE))
-	  && abs_extr == 0);
+  return ((Code == COORDINATEDMOTION || Code == RAPIDMOTION)
+	  && where.squared_distance(LastPos) < 0.000001
+	  && ((relativeEcode && abs(e) < 0.00001)
+	      || (!relativeEcode && abs(e-lastE) < 0.00001))
+	  && abs(abs_extr) < 0.00001);
 }
 string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
-			     bool relativeEcode, const char E_letter) const
+			     bool relativeEcode, const char E_letter,
+			     bool speedAlways) const
 {
   ostringstream ostr;
   if (Code > NUM_GCODES || MCODES[Code]=="") {
@@ -305,6 +313,8 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
   }
 
   bool moving = false; // is a move involved?
+  double thisE = lastE - e; // extraction of this command amount only
+  double length = where.distance(LastPos);
 
   const uint PREC = 4;
   ostr.precision(PREC);
@@ -374,11 +384,13 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
       ostr.precision(PREC);
       lastE = e;
     } else {
-      if (moving)
+      if (moving) {
 	comm += _(" Move Only");
+	comm += " (" + str(length,2)+" mm)";
+      }
     }
   case SETSPEED:
-    if (f != lastF) {
+    if (speedAlways || (abs(f-lastF) > 0.1)) {
       if (f>10)
 	ostr.precision(0);
       ostr << " F" << f;
@@ -410,8 +422,22 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     if (Code!=COMMENT) ostr << " ; " ;
     ostr << comm;
   }
-  if(abs_extr != 0)
+  if(abs_extr != 0) {
     ostr << " ; AbsE " << abs_extr;
+    if (travel_length != 0) {
+      const double espeed = abs_extr / travel_length * f / 60;
+      ostr.precision(2);
+      ostr << " ("<< espeed;
+      if (thisE != 0) {
+	const double espeed_tot = (thisE + abs_extr) / travel_length * f / 60;
+	ostr << "/" << espeed_tot ;
+      }
+      ostr << " mm/s) ";
+      ostr.precision(PREC);
+    } else {
+      //  cerr << ostr.str() << endl;
+    }
+  }
 
   // ostr << "; "<< info(); // show Command on line
   return ostr.str();

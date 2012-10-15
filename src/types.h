@@ -31,6 +31,7 @@ class GCode;
 class GCodeState;
 class GCodeIter;
 class Printlines;
+class PLine2;
 class PLine3;
 class Model;
 class Render;

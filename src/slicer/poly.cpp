@@ -22,7 +22,6 @@
 
 #include "layer.h"
 #include "shape.h"
-#include "printlines.h"
 #include "clipping.h"
 
 

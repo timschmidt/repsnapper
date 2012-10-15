@@ -967,9 +967,9 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 	if (previewGCodeLayer) {
 	  m_previewGCode.clear();
 	  vector<Command> commands;
-	  previewGCodeLayer->MakeGcode(start, commands, 0, settings);
 	  GCodeState state(m_previewGCode);
-	  state.AppendCommands(commands, settings.Slicing.RelativeEcode);
+	  previewGCodeLayer->MakeGCode(start, state, 0, settings);
+	  // state.AppendCommands(commands, settings.Slicing.RelativeEcode);
 	  m_previewGCode_z = z;
 	}
 	settings.SelectExtruder(prevext);

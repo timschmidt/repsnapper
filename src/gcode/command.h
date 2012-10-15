@@ -157,10 +157,11 @@ public:
 	Vector3d arcIJK; // I,J,K (dx, dy, dz)
 	bool is_value; // M commands
 	double value; // M commands S value code
-	double f,e; // Feedrates f=speed, e=extrusion to preform while moving (Pythagoras)
+	double f,e; // Feedrate f=speed, e=extrusion to perform while moving (Pythagoras)
 	uint extruder_no;
 
 	double abs_extr; // for debugging/painting
+	double travel_length;  // for debugging
 
 	bool not_layerchange; // don't record as layerchange for lifted moves
 
@@ -177,7 +178,8 @@ public:
 			 const double lastF, const bool relativeEcode) const;
 
 	string GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
-			    bool relativeEcode, const char E_letter='E') const;
+			    bool relativeEcode, const char E_letter='E',
+			    bool speedAlways = false) const;
 	GCodes getCode(const string commstr) const;
 
 	void addToPosition(Vector3d &from, bool relative);

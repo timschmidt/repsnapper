@@ -49,4 +49,6 @@ class Platform {
 	static bool has_extension(const std::string &fname, const char *extn);
 };
 
+std::string str(double r, int prec = -1);
+
 #endif // PLATFORM_H
