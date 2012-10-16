@@ -28,12 +28,8 @@
 
 // Allow passing as a pointer to something to
 // avoid including glibmm in every header.
-class Builder : public Glib::RefPtr<Gtk::Builder>
-{
-public:
-  Builder() {}
-  ~Builder() {}
-};
+typedef Glib::RefPtr<Gtk::Builder> Builder;
+
 
 class Settings {
   bool m_user_changed;
@@ -139,7 +135,7 @@ class Settings {
   uint selectedExtruder;
   void CopyExtruder(uint num);
   void RemoveExtruder(uint num);
-  void SelectExtruder(uint num);
+  void SelectExtruder(uint num, Builder *builder=NULL);
 
   struct SlicingSettings {
     bool  RelativeEcode;
@@ -326,8 +322,8 @@ class Settings {
   void get_from_gui            (Builder &builder, int i);
   //void set_shrink_to_gui       (Builder &builder);
   //void get_shrink_from_gui     (Builder &builder);
-  void set_filltypes_to_gui       (Builder &builder);
-  void get_filltypes_from_gui       (Builder &builder);
+  void set_filltypes_to_gui    (Builder &builder);
+  void get_filltypes_from_gui  (Builder &builder);
   void get_port_speed_from_gui (Builder &builder);
   bool get_group_and_key       (int i, Glib::ustring &group, Glib::ustring &key);
   void get_colour_from_gui     (Builder &builder, int i);

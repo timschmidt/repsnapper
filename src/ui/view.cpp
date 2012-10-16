@@ -961,7 +961,7 @@ void View::home_all()
 void View::update_settings_gui()
 {
   // awful cast-ness to avoid having glibmm headers everywhere.
-  m_model->settings.set_to_gui (*((Builder *)&m_builder));
+  m_model->settings.set_to_gui (m_builder);
 
   Gtk::AboutDialog *about;
   m_builder->get_widget ("about_dialog", about);
@@ -1257,9 +1257,7 @@ void View::extruder_selected()
     extruder_treeview->get_selection()->get_selected_rows();
   if(path.size()>0 && path[0].size()>0) {
     // copy selected extruder from Extruders to current Extruder
-    m_model->settings.SelectExtruder(path[0][0]);
-    // show Extruder settings on gui
-    m_model->settings.set_to_gui((*((Builder *)&m_builder)),"Extruder");
+    m_model->settings.SelectExtruder(path[0][0], &m_builder);
   }
   m_model->ClearPreview();
   queue_draw();
@@ -1524,7 +1522,7 @@ void View::setModel(Model *model)
 
   // connect settings
   // FIXME: better have settings here and delegate to model AND printer
-  m_model->settings.connect_to_ui (*((Builder *)&m_builder));
+  m_model->settings.connect_to_ui (m_builder);
 
   m_printer->setModel(m_model);
 

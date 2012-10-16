@@ -1054,12 +1054,12 @@ void Settings::get_from_gui (Builder &builder, int i)
     // copy settings to selected Extruder
     if (selectedExtruder < Extruders.size()) {
       Extruders[selectedExtruder] = Extruder;
-      // only one extruders must be selected for support
+      // only one extruder must be selected for support
       if (Extruder.UseForSupport) {
 	for (uint i = 0; i < Extruders.size(); i++)
 	  if (i != selectedExtruder)
 	    Extruders[i].UseForSupport = false;
-      } else
+      } else if (selectedExtruder!=0)
 	Extruders[0].UseForSupport = true;
     }
   }
@@ -1505,7 +1505,7 @@ void Settings::RemoveExtruder(uint num)
   if (Extruders.size() < 2) return;
   Extruders.erase(Extruders.begin()+num);
 }
-void Settings::SelectExtruder(uint num)
+void Settings::SelectExtruder(uint num, Builder *builder)
 {
   if (num < Extruders.size()) {
     selectedExtruder = num;
@@ -1513,6 +1513,10 @@ void Settings::SelectExtruder(uint num)
   Extruder = Extruders[selectedExtruder];
   // if (Slicing.UseTCommand) // use letter of first extruder
   //   Extruder.GCLetter = Extruders[0].GCLetter;
+
+  // show Extruder settings on gui
+  if (builder)
+    set_to_gui(*builder, "Extruder");
 }
 
 Matrix4d Settings::getBasicTransformation(Matrix4d T) const
