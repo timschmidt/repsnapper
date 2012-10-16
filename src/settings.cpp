@@ -551,6 +551,7 @@ Settings::Settings ()
   GCode.m_impl = new GCodeImpl();
   set_defaults();
   m_user_changed = false;
+  inhibit_callback = false;
 }
 
 Settings::~Settings()
@@ -878,6 +879,7 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
 
 void Settings::set_to_gui (Builder &builder, int i)
 {
+  inhibit_callback = true;
   const char *glade_name = settings[i].glade_name;
   SettingType t = settings[i].type;
 
@@ -941,11 +943,13 @@ void Settings::set_to_gui (Builder &builder, int i)
     std::cerr << _("corrupt setting type\n") << glade_name <<endl;;
     break;
   }
+  inhibit_callback = false;
 }
 
 
 void Settings::set_filltypes_to_gui (Builder &builder)
 {
+  inhibit_callback = true;
   // cerr << Slicing.NormalFilltype << " ! " << Slicing.FullFilltype
   //      << " ! " << Slicing.SupportFilltype<< endl;
   Gtk::ComboBox *combo = NULL;
@@ -968,10 +972,12 @@ void Settings::set_filltypes_to_gui (Builder &builder)
   builder->get_widget ("Slicing.DecorFilltype", combo);
   if (combo)
     combo->set_active (decor);
+  inhibit_callback = false;
 }
 
 void Settings::get_from_gui (Builder &builder, int i)
 {
+  if (inhibit_callback) return;
   bool is_changed = false;
   const char *glade_name = settings[i].glade_name;
   SettingType t = settings[i].type;
@@ -1229,6 +1235,7 @@ void Settings::get_colour_from_gui (Builder &builder, int i)
 
 void Settings::set_to_gui (Builder &builder, const string filter)
 {
+  inhibit_callback = true;
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
     const char *glade_name = settings[i].glade_name;
 
@@ -1288,6 +1295,7 @@ void Settings::set_to_gui (Builder &builder, const string filter)
     if (exp)
       exp->set_expanded(Misc.ExpandPAxisDisplay);
   }
+  inhibit_callback = false;
 }
 
 

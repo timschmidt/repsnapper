@@ -33,6 +33,7 @@ typedef Glib::RefPtr<Gtk::Builder> Builder;
 
 class Settings {
   bool m_user_changed;
+  bool inhibit_callback; // don't update settings from gui while setting to gui
 
  public:
 
