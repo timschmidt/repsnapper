@@ -605,17 +605,17 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
   // glCallList(gl_List);
 }
 
-bool add_text_filter_nan(string str, string &GcodeTxt)
-{
-  if (int(str.find("nan"))<0)
-    GcodeTxt += str;
-  else {
-    cerr << "not appending " << str << endl;
-    //cerr << "find: " << str.find("nan") << endl;
-    return false;
-  }
-  return true;
-}
+// bool add_text_filter_nan(string str, string &GcodeTxt)
+// {
+//   if (int(str.find("nan"))<0)
+//     GcodeTxt += str;
+//   else {
+//     cerr << "not appending " << str << endl;
+//     //cerr << "find: " << str.find("nan") << endl;
+//     return false;
+//   }
+//   return true;
+// }
 
 
 
@@ -691,155 +691,6 @@ void GCode::MakeText(string &GcodeTxt,
 
 	if (progress) progress->stop();
 
-	  // 	oss.str( "" );
-	// 	switch(commands[i].Code)
-	// 	{
-	// 	case SELECTEXTRUDER:
-	// 		oss  << "T0\n";
-	// 		add_text_filter_nan(oss.str(), GcodeTxt);
-	// 		//GcodeTxt += oss.str();
-	// 		break;
-	// 	case SETSPEED:
-	// 		commands[i].where.z() = LastPos.z();
-	// 		commands[i].e = lastE;
-	// 	case ZMOVE:
-	// 		commands[i].where.x() = LastPos.x();
-	// 		commands[i].where.y() = LastPos.y();
-	// 	case COORDINATEDMOTION:
-	// 		if ((commands[i].where.x() != LastPos.x()) +
-	// 		    (commands[i].where.y() != LastPos.y()) +
-	// 		    (commands[i].where.z() != LastPos.z()) != 0 &&
-	// 		    AntioozeDistance != 0 && commands[i].e == lastE &&
-	// 		    !Use3DGcode && AntioozeDistance != 0)
-	// 		{
-	// 			if (UseIncrementalEcode)
-	// 			{
-	// 				oss << "G1 E" << (lastE - AntioozeDistance) << "  F" << AntioozeSpeed << " ;antiooze retract\n";
-	// 			}
-	// 			else
-	// 			{
-	// 				oss << "G1 E" << -(AntioozeDistance) << "  F" << AntioozeSpeed << " ;antiooze retract\n";
-	// 			}
-	// 		}
-	// 		oss  << "G1 ";
-	// 		if(commands[i].where.x() != LastPos.x())
-	// 			oss << "X" << commands[i].where.x() << " ";
-	// 		if(commands[i].where.y() != LastPos.y())
-	// 			oss << "Y" << commands[i].where.y() << " ";
-	// 		if(commands[i].where.z() != LastPos.z())
-	// 			oss << "Z" << commands[i].where.z() << " ";
-	// 		if(commands[i].e != lastE)
-	// 		{
-	// 			if(UseIncrementalEcode)	// in incremental mode, the same is nothing
-	// 				{
-	// 				if(commands[i].e != lastE)
-	// 					oss << "E" << commands[i].e << " ";
-	// 				}
-	// 			else
-	// 				{
-	// 				if(commands[i].e >= 0.0)
-	// 					oss << "E" << commands[i].e << " ";
-	// 				}
-	// 		}
-	// 		oss << "F" << commands[i].f;
-	// 		if(commands[i].comment.length() != 0)
-	// 			oss << " ;" << commands[i].comment << "\n";
-	// 		else
-	// 			oss <<  "\n";
-	// 		if ((commands[i].where.x() != LastPos.x()) +
-	// 		    (commands[i].where.y() != LastPos.y()) +
-	// 		    (commands[i].where.z() != LastPos.z()) != 0 &&
-	// 		    AntioozeDistance != 0 &&
-	// 		    commands[i].e == lastE  &&
-	// 		    !Use3DGcode && AntioozeDistance != 0)
-	// 		{
-	// 			if (UseIncrementalEcode)
-	// 			{
-	// 				oss << "G1 E" << lastE << "  F" << AntioozeSpeed << " ;antiooze return\n";
-	// 			}
-	// 			else
-	// 			{
-	// 				oss << "G1 E" << AntioozeDistance << "  F" << AntioozeSpeed << " ;antiooze return\n";
-	// 			}
-	// 		}
-	// 		add_text_filter_nan(oss.str(), GcodeTxt);
-	// 		//GcodeTxt += oss.str();
-	// 		if(commands[i].Code == ZMOVE && commands[i].where.z() != LastPos.z())
-	// 		  add_text_filter_nan(GcodeLayer + "\n", GcodeTxt);
-	// 		  //GcodeTxt += GcodeLayer + "\n";
-
-	// 		LastPos = commands[i].where;
-	// 		if( commands[i].e >= 0.0)
-	// 			lastE = commands[i].e;
-	// 		break;
-	// 	case EXTRUDERON:
-	// 	  // Dont switch extruder on/off right after eachother
-	// 		if(i != 0 && commands[i-1].Code == EXTRUDEROFF) continue;
-	// 		oss  << "M101\n";
-	// 		add_text_filter_nan(oss.str(), GcodeTxt);
-	// 		//GcodeTxt += oss.str();
-	// 		break;
-	// 	case EXTRUDEROFF:
-	// 	  // Dont switch extruder on/off right after eachother
-	// 		if(i != 0 && (i+1) < commands.size() &&
-	// 		   commands[i+1].Code == EXTRUDERON) continue;
-	// 		// don't switch extruder off twize
-	// 		if(i != 0 && (i+1) < commands.size() &&
-	// 		   commands[i+1].Code == EXTRUDEROFF) continue;
-	// 		oss  << "M103\n";
-	// 		add_text_filter_nan(oss.str(), GcodeTxt);
-	// 		//GcodeTxt += oss.str();
-	// 		break;
-	// 	case COORDINATEDMOTION3D:
-	// 		oss  << "G1 X" << commands[i].where.x() << " Y" << commands[i].where.y() << " Z" << commands[i].where.z();
-	// 		oss << " F" << commands[i].f;
-	// 		if(commands[i].comment.length() != 0)
-	// 			oss << " ;" << commands[i].comment << "\n";
-	// 		else
-	// 			oss <<  "\n";
-	// 		add_text_filter_nan(oss.str(), GcodeTxt);
-	// 		//GcodeTxt += oss.str();
-	// 		LastPos = commands[i].where;
-	// 		break;
-	// 	case RAPIDMOTION:
-	// 		oss  << "G0 X" << commands[i].where.x() << " Y" << commands[i].where.y() << " Z" << commands[i].where.z()  << "\n";
-	// 		add_text_filter_nan(oss.str(), GcodeTxt);
-	// 		//GcodeTxt += oss.str();
-	// 		LastPos = commands[i].where;
-	// 		break;
-	// 	case GOTO:
-	// 		oss  << "G92";
-	// 		if(commands[i].where.x() != LastPos.x() && commands[i].where.x() >= 0)
-	// 		{
-	// 			LastPos.x() = commands[i].where.x();
-	// 			oss << " X" << commands[i].where.x();
-	// 		}
-	// 		if(commands[i].where.y() != LastPos.y() && commands[i].where.y() >= 0)
-	// 		{
-	// 			LastPos.y() = commands[i].where.y();
-	// 			oss << " Y" << commands[i].where.y();
-	// 		}
-	// 		if(commands[i].where.z() != LastPos.z() && commands[i].where.z() >= 0)
-	// 		{
-	// 			LastPos.z() = commands[i].where.z();
-	// 			oss << " Z" << commands[i].where.z();
-	// 		}
-	// 		if(commands[i].e != lastE && commands[i].e >= 0.0)
-	// 		{
-	// 			lastE = commands[i].e;
-	// 			oss << " E" << commands[i].e;
-	// 		}
-	// 		oss <<  "\n";
-	// 		add_text_filter_nan(oss.str(), GcodeTxt);
-	// 		//GcodeTxt += oss.str();
-	// 		break;
-	// 	default:
-	// 		break; // ignored CGCode
-	// 	}
-	// 	pos = commands[i].where;
-	// cerr<< oss.str()<< endl;
-	//}
-
 }
 
 // void GCode::Write (Model *model, string filename)
@@ -855,17 +706,17 @@ void GCode::MakeText(string &GcodeTxt,
 //   }
 // }
 
-bool GCode::append_text (const std::string &line)
-{
-  if (int(line.find("nan"))<0){
-    buffer->insert (buffer->end(), line);
-    return true;
-  }
-  else {
-    cerr << "not appending line \"" << line << "\"" << endl;
-    return false;
-  }
-}
+// bool GCode::append_text (const std::string &line)
+// {
+//   if (int(line.find("nan"))<0{)
+//     buffer->insert (buffer->end(), line);
+//     return true;
+//   }
+//   else {
+//     cerr << "not appending line \"" << line << "\"" << endl;
+//     return false;
+//   }
+// }
 
 
 std::string GCode::get_text () const

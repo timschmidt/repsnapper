@@ -68,7 +68,7 @@ public:
   void MakeText(string &GcodeTxt, const Settings &settings,
 		ViewProgress * progress);
 
-  bool append_text (const std::string &line);
+  //bool append_text (const std::string &line);
   std::string get_text() const;
   void clear();
 
