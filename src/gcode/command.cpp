@@ -584,7 +584,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
 		   Vector4f color, double extrwidth,
 		   bool arrows, bool debug_arcs) const
 {
-  if (abs_extr!=0) linewidth+=(1+abs(abs_extr));
+  if (abs_extr!=0) linewidth*=2;
   // if (abs_extr>0) linewidth*=abs_extr;
   // else if (abs_extr<0) linewidth/=(-abs_extr);
   glLineWidth(linewidth);
