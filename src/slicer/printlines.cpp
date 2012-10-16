@@ -624,8 +624,9 @@ void PrintPoly::getLinesTo(vector<PLine2> &lines, int startindex,
   if (pvert.size() == 0) return;
   assert(pvert.size() % 2 == 0);
   for (uint i=0; i<pvert.size(); i+=2) {
-    printlines->addLine(area, extruder_no, lines, pvert[i], pvert[i+1],
-			speed, movespeed, m_poly->getExtrusionFactor());
+    if (pvert[i+1].squared_distance(pvert[i]) > 0.001)
+      printlines->addLine(area, extruder_no, lines, pvert[i], pvert[i+1],
+			  speed, movespeed, m_poly->getExtrusionFactor());
   }
 }
 
@@ -1092,12 +1093,14 @@ uint Printlines::roundCorners(double maxdistance, double minarclength,
   for (uint i=0; i < lines.size()-1; i++) {
     uint n = makeCornerArc(maxdistance, minarclength, i, lines);
     i+=n;
+    if (n>0) i--;
     num+=n;
   }
   return num;
 }
 
 // make corner of lines[ind], lines[ind+1] into arc
+// or rounded sequence of lines
 // maxdistance is distance of arc begin from corner
 uint Printlines::makeCornerArc(double maxdistance, double minarclength,
 			       uint ind,
@@ -1109,58 +1112,57 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   if ((lines[ind].to - lines[ind+1].from).squared_length() > 0.01) return 0;
   // if ((lines[ind].from - lines[ind+1].to).squared_length()
   //     < maxdistance*maxdistance) return 0;
-  double l1 = lines[ind].length();
-  double l2 = lines[ind+1].length();
-  maxdistance   = min(maxdistance, l1); // ok to eat up line 1
-  maxdistance   = min(maxdistance, l2 / 2.1); // only eat up less than half of second line
-  Vector2d dir1 = lines[ind].to - lines[ind].from;
-  Vector2d dir2 = lines[ind+1].to - lines[ind+1].from;
+  const double len1 = lines[ind].length();
+  const double len2 = lines[ind+1].length();
+  maxdistance   = min(maxdistance, len1); // ok to eat up line 1
+  maxdistance   = min(maxdistance, len2 / 2.1); // only eat up less than half of second line
+  const Vector2d dir1 = lines[ind].to   - lines[ind].from;
+  const Vector2d dir2 = lines[ind+1].to - lines[ind+1].from;
   double angle  = angleBetween(dir1, dir2);
   // arc start and end point:
-  Vector2d p1   = lines[ind].to     - normalized(dir1)*maxdistance;
-  Vector2d p2   = lines[ind+1].from + normalized(dir2)*maxdistance;
-  Intersection inter;
-  Vector2d center, I1;
+  const Vector2d p1   = lines[ind].to     - normalized(dir1)*maxdistance;
+  const Vector2d p2   = lines[ind+1].from + normalized(dir2)*maxdistance;
   // intersect perpendiculars at arc start/end
+  Vector2d center, I1;
   int is = intersect2D_Segments(p1, p1 + Vector2d(-dir1.y(),dir1.x()),
 				p2, p2 + Vector2d(-dir2.y(),dir2.x()),
    				center, I1);
   if (is==0) return 0;
-  double radius = center.distance(p1);
+  const double radius = center.distance(p1);
   if (radius > 10*maxdistance) return 0; // calc error(?)
-  bool ccw = isleftof(center, p1, p2);
+  const bool ccw = isleftof(center, p1, p2);
   if (!ccw) angle = -angle;
   if (angle <= 0) angle += 2*M_PI;
-  short arctype = ccw ? -1 : 1;
+  const short arctype = ccw ? -1 : 1;
   // need 2 half arcs?
-  bool split = (lines[ind].feedratio != lines[ind+1].feedratio);
-  split |= (lines[ind].extruder_no != lines[ind+1].extruder_no);
-  // too small arc, replace by 2 straight lines
-  bool toosmall =
+  const bool split =
+    (lines[ind].feedratio != lines[ind+1].feedratio)
+    || (lines[ind].extruder_no != lines[ind+1].extruder_no);
+  const double arc_len = radius * angle;
+  // too small for arc, replace by 2 straight lines
+  const bool not_arc =
     !settings->Slicing.UseArcs
-    || ((radius * angle) < (split?minarclength:(minarclength*2)));
+    || (arc_len < (split?minarclength:(minarclength*2)));
   // too small to make 2 lines, just make 1 line
-  bool toosmallfortwo  =  ((radius * angle) < (split?(minarclength/2):minarclength));
+  const bool toosmallfortwo  =
+    (arc_len < (split?(minarclength/2):minarclength));
   // if (toosmallfortwo) return 0;
 
   vector<PLine2> newlines;
-  uint numnew = 0;
   if (p1 != lines[ind].from) { // straight line 1
     newlines.push_back(lines[ind]);
     newlines.back().move_to(lines[ind].from, p1);
-    numnew++;
   }
   if (p2 != p1)  {
     if (toosmallfortwo) { // 1 line
       const double feedr = ( lines[ind].feedratio + lines[ind+1].feedratio ) / 2;
       newlines.push_back(PLine2(lines[ind].area, lines[ind].extruder_no,
-			       p1, p2, lines[ind].speed, feedr,
-			       feedr!=0?lines[ind].lifted:0));
-      numnew++;
+				p1, p2, lines[ind].speed, feedr,
+				(feedr!=0)?lines[ind].lifted:0));
     }
-    else if (split || toosmall) { // calc arc midpoint
+    else if (split || not_arc) { // calc arc midpoint
       const Vector2d splitp = rotated(p1, center, angle/2, ccw);
-      if (toosmall) { // 2 straight lines
+      if (not_arc) { // 2 straight lines
 	newlines.push_back(lines[ind]);
 	newlines.back().move_to(p1, splitp);
 	newlines.push_back(lines[ind+1]);
@@ -1174,19 +1176,17 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
 				 lines[ind+1].speed, lines[ind+1].feedratio,
 				 arctype, center, angle/2, lines[ind+1].lifted));
       }
-      numnew+=2;
     } else { // 1 arc
       newlines.push_back(PLine2(lines[ind].area, lines[ind].extruder_no, p1, p2,
 			       lines[ind].speed, lines[ind].feedratio,
 			       arctype, center, angle, lines[ind].lifted));
-      numnew++;
     }
   }
   if (p2 != lines[ind+1].to) { // straight line 2
     newlines.push_back(lines[ind+1]);
     newlines.back().move_to(p2, lines[ind+1].to);
-    numnew++;
   }
+  const uint numnew = newlines.size();
   if (numnew>0)
     lines[ind] = newlines[0];
   if (numnew>1)

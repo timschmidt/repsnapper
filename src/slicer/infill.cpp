@@ -246,7 +246,7 @@ ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
 	  }
 	  poly.addVertex(pMax.x(), pMin.y()-infillDistance);
 	  poly.addVertex(pMin.x(), pMin.y()-infillDistance);
-	} else {
+	} else { // other layer, simpler
 	  double xmax = pMax.x();;
 	  for (double y = pMin.y(); y < pMax.y(); y += 3*hexd) {
 	    for (double x = pMin.x(); x < pMax.x(); ) {
