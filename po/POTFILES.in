@@ -8,7 +8,7 @@ src/arcball.cpp
 src/files.cpp
 src/flatshape.cpp
 src/model.cpp
-src/model2.cpp
+src/model_slice.cpp
 src/objtree.h
 src/objtree.cpp
 src/platform.cpp
@@ -38,5 +38,6 @@ src/slicer/layer.cpp
 src/slicer/poly.cpp
 src/slicer/printlines.cpp
 src/slicer/printlines.h
+src/slicer/printlines_antiooze.cpp
 
 [type: gettext/glade]src/repsnapper.ui
