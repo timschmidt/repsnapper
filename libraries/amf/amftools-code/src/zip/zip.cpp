@@ -2151,7 +2151,7 @@ bool HasZipSuffix(const TCHAR *fn)
 
 lutime_t filetime2timet(const FILETIME ft)
 { __int64 i = *(__int64*)&ft;
-  return (lutime_t)((i-116444736000000000)/10000000);
+  return (lutime_t)((i-116444736000000000LL)/10000000);
 }
 
 void filetime2dosdatetime(const FILETIME ft, WORD *dosdate,WORD *dostime)

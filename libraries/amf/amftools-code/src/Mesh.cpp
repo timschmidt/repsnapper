@@ -12,7 +12,7 @@ See <http://www.opensource.org/licenses/lgpl-3.0.html> for license details.
 #include <algorithm>
 
 #ifdef USE_OPEN_GL
-#ifdef WIN32
+#ifdef XX_WIN32
 	#include <windows.h>
 #endif
 
@@ -254,7 +254,7 @@ bool CMesh::LoadSTL(std::string filename)
 {
 	FILE *fp;
 	bool binary=false;
-#ifdef WIN32
+#ifdef XX_WIN32
 	fopen_s(&fp, filename.c_str(), "r"); //secure version. preferred on windows platforms...
 #else
 	fp = fopen(filename.c_str(), "r");
@@ -295,7 +295,7 @@ bool CMesh::LoadBinarySTL(std::string filename)
 {
 	FILE *fp;
 	
-#ifdef WIN32
+#ifdef XX_WIN32
 	fopen_s(&fp, filename.c_str(), "rb"); //secure version. preferred on windows platforms...
 #else
 	fp = fopen(filename.c_str(), "rb");
@@ -332,7 +332,7 @@ bool CMesh::LoadAsciiSTL(std::string filename)
 {
 	FILE *fp;
 
-#ifdef WIN32
+#ifdef XX_WIN32
 	fopen_s(&fp, filename.c_str(), "r"); //secure version. preferred on windows platforms...
 #else
 	fp = fopen(filename.c_str(), "r");
@@ -395,7 +395,7 @@ bool CMesh::SaveSTL(std::string filename, bool Binary) const { //writes ascii st
 
 	FILE *fp;
 
-#ifdef WIN32
+#ifdef XX_WIN32
 	if (Binary) fopen_s (&fp, filename.c_str(),"wb"); //secure version. preferred on windows platforms...
 	else fopen_s(&fp, filename.c_str(),"w");
 #else

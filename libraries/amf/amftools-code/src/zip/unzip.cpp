@@ -3727,7 +3727,7 @@ int unzCloseCurrentFile (unzFile file);
 typedef unsigned __int32 lutime_t;       // define it ourselves since we don't include time.h
 
 FILETIME timet2filetime(const lutime_t t)
-{ LONGLONG i = Int32x32To64(t,10000000) + 116444736000000000;
+{ LONGLONG i = Int32x32To64(t,10000000) + 116444736000000000LL;
   FILETIME ft;
   ft.dwLowDateTime = (DWORD) i;
   ft.dwHighDateTime = (DWORD)(i >>32);
