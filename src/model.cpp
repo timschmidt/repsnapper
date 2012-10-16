@@ -961,8 +961,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       const int LayerCount = (int)ceil(Max.z()/thickness)-1;
       const uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
       if (z != m_previewGCode_z) {
-	uint prevext = settings.selectedExtruder;
-	settings.SelectExtruder(0);
+	//uint prevext = settings.selectedExtruder;
 	Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
 	if (previewGCodeLayer) {
 	  m_previewGCode.clear();
@@ -972,7 +971,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 	  // state.AppendCommands(commands, settings.Slicing.RelativeEcode);
 	  m_previewGCode_z = z;
 	}
-	settings.SelectExtruder(prevext);
+	//settings.SelectExtruder(prevext);
       }
       glDisable(GL_DEPTH_TEST);
       m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2,
@@ -1086,7 +1085,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   if (is_calculating) return NULL; // infill calculation (saved patterns) would be disturbed
   if (!for_gcode) {
     if (m_previewLayer && m_previewLayer->getZ() == z
-	&& m_previewLayer->thickness) return m_previewLayer;
+	&& m_previewLayer->thickness == thickness) return m_previewLayer;
   }
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;

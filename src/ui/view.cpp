@@ -1261,6 +1261,7 @@ void View::extruder_selected()
     // show Extruder settings on gui
     m_model->settings.set_to_gui((*((Builder *)&m_builder)),"Extruder");
   }
+  m_model->ClearPreview();
   queue_draw();
 }
 void View::copy_extruder()
@@ -1272,6 +1273,10 @@ void View::copy_extruder()
     m_model->settings.CopyExtruder(path[0][0]);
   }
   update_extruderlist();
+  Gtk::TreeNodeChildren ch = extruder_treeview->get_model()->children();
+  Gtk::TreeIter row = ch[ch.size()-1];
+  extruder_treeview->get_selection()->select(row);
+  extruder_selected();
 }
 void View::remove_extruder()
 {
@@ -1288,15 +1293,18 @@ void View::update_extruderlist()
   if (!m_model) return;
   if (!extruder_liststore) return;
   extruder_liststore->clear();
+  uint num = m_model->settings.Extruders.size();
+  if (num==0) return;
   Gtk::TreeModel::Row row;
-  for (uint i = 0; i < m_model->settings.Extruders.size(); i++) {
+  for (uint i = 0; i < num ; i++) {
     row = *(extruder_liststore->append());
     ostringstream o; o << "Extruder " << i+1;
     //cerr << o.str() << m_model->settings.Extruders[i].UseForSupport<< endl;
     row[extrudername] = o.str();
     //row[extrudername] = m_model->settings.Extruders[i].name;
   }
-  extruder_treeview->get_selection()->select(row);
+  Gtk::TreeModel::Row firstrow = extruder_treeview->get_model()->children()[0];
+  extruder_treeview->get_selection()->select(firstrow);
   extruder_selected();
   m_extruder_row->set_number(m_model->settings.Extruders.size());
 }
