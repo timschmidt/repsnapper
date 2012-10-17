@@ -106,7 +106,7 @@ class PLine3 : public PLine<3>
 
   double calcangle() const {return angle;}
 
-  void addAbsoluteExtrusionAmount(double amount, double max_absspeed);
+  void addAbsoluteExtrusionAmount(double amount, double max_absspeed, double time=0);
   double addMaxAbsoluteExtrusionAmount(double max_absspeed);
 
   double max_abs_speed(double max_espeed, double max_absspeed) const;
@@ -191,6 +191,15 @@ class PrintPoly
   string info() const;
 };
 
+
+typedef struct {
+  uint movestart, moveend, tractstart, pushend;
+  void add(uint a) {
+    movestart+=a, moveend+=a; tractstart+=a; pushend+=a;
+  }
+} AORange;
+
+
 // a bunch of printlines: lines with feedrate
 // optimize for corners etc.
 class Printlines
@@ -258,8 +267,7 @@ class Printlines
 		     uint ind, vector<PLine2> &lines) const;
 
   static bool find_nextmoves(double minlength, uint startindex,
-			     uint &movestart, uint &moveend,
-			     uint &tractstart, uint &pushend,
+			     AORange &range,
 			     const vector< PLine3 > &lines);
   static uint makeAntioozeRetract(vector< PLine3 > &lines,
 				  const Settings &settings,

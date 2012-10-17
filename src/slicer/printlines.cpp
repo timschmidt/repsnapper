@@ -365,15 +365,15 @@ vector<PLine3> PLine3::division(const vector<Vector3d> &points) const
 }
 
 
-void PLine3::addAbsoluteExtrusionAmount(double amount, double max_absspeed)
+void PLine3::addAbsoluteExtrusionAmount(double amount, double max_absspeed, double ltime)
 {
   if (area == COMMAND) return;
   absolute_extrusion += amount;
   // slowdown if max speed given and not enough time for absolute feed:
-  const double t = time();
   const double feedt = abs(absolute_extrusion/max_absspeed);
-  if ( feedt > t ) // too fast
-    speed *= t / feedt;
+  if (ltime == 0) ltime = time();
+  if (ltime>0 && feedt > ltime ) // too fast
+    speed *= ltime / feedt;
   //cerr << "added abs at speed " << ( absolute_extrusion)/time() << endl;
 }
 double PLine3::addMaxAbsoluteExtrusionAmount(double max_absspeed)
