@@ -23,7 +23,7 @@
 #include <vector>
 
 #include <giomm/file.h>
-#include <gtk/gtkgl.h>
+#include <gtkglmm.h>
 
 #include "ui/view.h"
 #include "ui/progress.h"
@@ -167,12 +167,6 @@ int main(int argc, char **argv)
   g_free(locale_dir);
   locale_dir = NULL;
 
-  if (!gtk_gl_init_check (&argc, &argv) ||
-      !gdk_gl_init_check (&argc, &argv) ) {
-    std::cerr << "Failed to initialize GL\n";
-    return 1;
-  }
-
   save_locales();
 
   CommandLineOptions opts (argc, argv);
@@ -309,6 +303,7 @@ int main(int argc, char **argv)
     return 0;
   }
 
+  Gdk::GL::init(argc, argv);
 
   View* mainwin = View::create(model);
 

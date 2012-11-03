@@ -20,13 +20,14 @@
 #define RENDER_H
 
 #include "arcball.h"
+#include <gtkglmm.h>
 
 class View;
 class Model;
 class gllight;
 class Settings;
 
-class Render : public Gtk::DrawingArea
+class Render : public Gtk::GL::DrawingArea
 {
   ArcBall  *m_arcBall;
   Matrix4fT m_transform;

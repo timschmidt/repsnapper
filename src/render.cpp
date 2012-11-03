@@ -17,7 +17,6 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "config.h"
-#include <gtk/gtkgl.h>
 #include "stdafx.h"
 #include "render.h"
 #include "arcball.h"
@@ -39,6 +38,7 @@ inline Model *Render::get_model() const { return m_view->get_model(); }
 Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
   m_arcBall(new ArcBall()), m_view (view), m_selection(selection)
 {
+
   set_events (Gdk::POINTER_MOTION_MASK |
 	      Gdk::BUTTON_MOTION_MASK |
 	      Gdk::BUTTON_PRESS_MASK |
@@ -50,26 +50,30 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
 	      Gdk::KEY_RELEASE_MASK
 	      );
 
-  GdkGLConfig *glconfig;
-  set_can_focus (true);
+  Glib::RefPtr<Gdk::GL::Config> glconfig;
 
+  glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGBA |
+				     Gdk::GL::MODE_DEPTH |
+				     Gdk::GL::MODE_ALPHA |
+				     Gdk::GL::MODE_STENCIL |
+				     Gdk::GL::MODE_DOUBLE);
+  if (!glconfig) { // try single buffered
+    std::cerr << "*** Cannot find the double-buffered visual."
+	      << " Trying single-buffered visual.\n";
+    glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGBA |
+				       Gdk::GL::MODE_DEPTH |
+				       Gdk::GL::MODE_ALPHA |
+				       Gdk::GL::MODE_STENCIL
+				       );
+  }
 
-  // glconfig is leaked at program exit
-  glconfig = gdk_gl_config_new_by_mode
-		    ((GdkGLConfigMode) (GDK_GL_MODE_RGBA |
-					GDK_GL_MODE_ALPHA |
-					GDK_GL_MODE_STENCIL |
-					GDK_GL_MODE_DEPTH |
-					GDK_GL_MODE_DOUBLE));
-  if (!glconfig) // try single buffered
-    glconfig = gdk_gl_config_new_by_mode
-		      ((GdkGLConfigMode) (GDK_GL_MODE_RGBA |
-					  GDK_GL_MODE_ALPHA |
-					  GDK_GL_MODE_STENCIL |
-					  GDK_GL_MODE_DEPTH));
-  if (!gtk_widget_set_gl_capability (get_widget(), glconfig,
-				     NULL, TRUE, GDK_GL_RGBA_TYPE))
+  if (!glconfig) {
     g_error (_("failed to init gl area\n"));
+  }
+
+  set_gl_capability(glconfig);
+
+  set_can_focus (true);
 
   memset (&m_transform.M, 0, sizeof (m_transform.M));
 
@@ -131,15 +135,11 @@ void Render::zoom_to_model()
 
 bool Render::on_configure_event(GdkEventConfigure* event)
 {
-  GdkGLContext *glcontext = gtk_widget_get_gl_context (get_widget());
-  GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (get_widget());
-  int w, h;
-
-  if (!gldrawable || !gdk_gl_drawable_gl_begin (gldrawable, glcontext))
+  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
+  if (!gldrawable->gl_begin(get_gl_context()))
     return false;
 
-  w = get_width();
-  h = get_height();
+  const int w = get_width(), h = get_height();
 
   glLoadIdentity();
   glViewport (0, 0, w, h);
@@ -179,17 +179,16 @@ bool Render::on_configure_event(GdkEventConfigure* event)
   glEnable (GL_DEPTH_TEST);
   glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-  gdk_gl_drawable_gl_end (gldrawable);
+  gldrawable->gl_end();
 
   return true;
 }
 
 bool Render::on_expose_event(GdkEventExpose* event)
 {
-  GdkGLContext *glcontext = gtk_widget_get_gl_context (get_widget());
-  GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (get_widget());
+  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
 
-  if (!gldrawable || !gdk_gl_drawable_gl_begin (gldrawable, glcontext))
+  if (!gldrawable || !gldrawable->gl_begin(get_gl_context()))
     return false;
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -208,12 +207,13 @@ bool Render::on_expose_event(GdkEventExpose* event)
   m_view->Draw (selpath);
 
   glPopMatrix();
-  if (gdk_gl_drawable_is_double_buffered(gldrawable))
-    gdk_gl_drawable_swap_buffers (gldrawable);
-  else
-    glFlush();
 
-  gdk_gl_drawable_gl_end (gldrawable);
+  if (gldrawable->is_double_buffered()) {
+    gldrawable->swap_buffers();
+  } else {
+    glFlush();
+  }
+  gldrawable->gl_end();
 
   return true;
 }
@@ -468,14 +468,12 @@ void Render::CenterView()
 guint Render::find_object_at(gdouble x, gdouble y)
 {
   // Render everything in selection mode
-  GdkGLContext *glcontext = gtk_widget_get_gl_context (get_widget());
-  GdkGLDrawable *gldrawable = gtk_widget_get_gl_drawable (get_widget());
+  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
+  if (!gldrawable->gl_begin(get_gl_context()))
+    return false;
 
   const GLsizei BUFSIZE = 256;
   GLuint select_buffer[BUFSIZE];
-
-  if (!gldrawable || !gdk_gl_drawable_gl_begin (gldrawable, glcontext))
-    return 0;
 
   glSelectBuffer(BUFSIZE, select_buffer);
   (void)glRenderMode(GL_SELECT);
@@ -512,12 +510,11 @@ guint Render::find_object_at(gdouble x, gdouble y)
   // restore rendering mode
   GLint hits = glRenderMode(GL_RENDER);
 
-  if (gdk_gl_drawable_is_double_buffered(gldrawable))
-    gdk_gl_drawable_swap_buffers (gldrawable);
+  if (gldrawable->is_double_buffered())
+    gldrawable->swap_buffers();
   else
     glFlush();
-
-  gdk_gl_drawable_gl_end (gldrawable);
+  gldrawable->gl_end();
 
   // Process the selection hits
   GLuint *ptr = select_buffer;
