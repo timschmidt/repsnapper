@@ -620,9 +620,12 @@ bool IntersectPoint(TEdge &edge1, TEdge &edge2,
   {
     b1 = edge1.xbot - edge1.ybot * edge1.dx;
     b2 = edge2.xbot - edge2.ybot * edge2.dx;
-    b2 = (b2-b1)/(edge1.dx - edge2.dx);
-    ip.Y = Round(b2);
-    ip.X = Round(edge1.dx * b2 + b1);
+    const double q = (b2-b1)/(edge1.dx - edge2.dx);
+    ip.Y = Round(q);
+    if (std::fabs(edge1.dx) < std::fabs(edge2.dx))
+      ip.X = Round(edge1.dx * q + b1);
+    else
+      ip.X = Round(edge2.dx * q + b2);
   }
 
   if (ip.Y < edge1.ytop || ip.Y < edge2.ytop) 
