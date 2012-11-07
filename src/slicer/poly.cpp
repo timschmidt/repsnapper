@@ -23,6 +23,7 @@
 #include "layer.h"
 #include "shape.h"
 #include "clipping.h"
+#include "render.h"
 
 
 #include <poly2tri/poly2tri/poly2tri/poly2tri.h>
@@ -694,7 +695,7 @@ void Poly::drawVertexNumbers() const
     glVertex3f(v.x(),v.y(),v.z());
     ostringstream oss;
     oss << i;
-    drawString(v, oss.str());
+    Render::draw_string(v, oss.str());
   }
 }
 
@@ -707,7 +708,7 @@ void Poly::drawVertexAngles() const
     double angle = angleAtVertex(i);
     ostringstream oss;
     oss << (int)(angle*180/M_PI);
-    drawString(v, oss.str());
+    Render::draw_string(v, oss.str());
   }
 }
 
@@ -719,7 +720,7 @@ void Poly::drawLineNumbers() const
     v2 = getVertexCircular3(i+1);
     ostringstream oss;
     oss << i;
-    drawString((v+v2)/2., oss.str());
+    Render::draw_string((v+v2)/2., oss.str());
   }
 }
 

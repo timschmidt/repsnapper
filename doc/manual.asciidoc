@@ -101,7 +101,7 @@ or
 =====  Install dependencies =====
 
 --------------------------
-sudo apt-get install git-core build-essential intltool libtool libgtkglext1-dev libgtkmm-2.4-dev gtk2-engines-pixbuf freeglut3-dev libxml++ libcairomm-1.0 libzip-dev
+sudo apt-get install git-core build-essential intltool libtool libgtkglextmm-x11-1.2 libgtkmm-2.4-dev gtk2-engines-pixbuf libxml++ libcairomm-1.0 libzip-dev
 --------------------------
 
 
@@ -144,7 +144,7 @@ yum install git gtk2-devel gcc-c++ gcc binutils make cmake gtkglextmm gtkglextmm
 --------------------------
 For Fedora 15 (tested on x86_64)
 --------------------------
-yum install git gtk2-devel gcc-c++ gcc binutils make cmake gtkglextmm gtkglextmm-devel freeglut-devel libusb1-devel intltool gtkmm*
+yum install git gtk2-devel gcc-c++ gcc binutils make cmake gtkglextmm gtkglextmm-devel libusb1-devel intltool gtkmm*
 --------------------------
 
 Install repsnapper:
@@ -210,7 +210,7 @@ Install http://www.macports.org/[MacPorts].
 Run from a terminal window:
 
 
-    sudo port install intltool gtkmm gtkglext
+    sudo port install intltool gtkmm gtkglextmm
 
 
 Acquire source and compile:

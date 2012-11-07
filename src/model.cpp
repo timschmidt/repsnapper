@@ -35,6 +35,7 @@
 #include "ui/progress.h"
 #include "shape.h"
 #include "flatshape.h"
+#include "render.h"
 
 Model::Model() :
   m_previewLayer(NULL),
@@ -936,15 +937,15 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       Vector3d pos;
       val << fixed << (Max.x()-Min.x());
       pos = Vector3d((Max.x()+Min.x())/2.,Min.y(),Max.z());
-      drawString(pos,val.str());
+      Render::draw_string(pos,val.str());
       val.str("");
       val << fixed << (Max.y()-Min.y());
       pos = Vector3d(Min.x(),(Max.y()+Min.y())/2.,Max.z());
-      drawString(pos,val.str());
+      Render::draw_string(pos,val.str());
       val.str("");
       val << fixed << (Max.z()-Min.z());
       pos = Vector3d(Min.x(),Min.y(),(Max.z()+Min.z())/2.);
-      drawString(pos,val.str());
+      Render::draw_string(pos,val.str());
     }
   int drawnlayer = -1;
   if(settings.Display.DisplayLayer) {

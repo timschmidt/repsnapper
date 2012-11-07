@@ -28,6 +28,11 @@
 
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
+
+const Glib::ustring Render::fontstring = "helvetica 8";
+GLuint Render::fontlistbase = 0;
+int Render::fontheight = 0;
+
 inline GtkWidget *Render::get_widget()
 {
   return GTK_WIDGET (gobj());
@@ -124,14 +129,48 @@ void Render::zoom_to_model()
   // reset the pan to center
   setArcballTrans(m_transform, Vector3d::ZERO);
   // zoom to platform if model has zero size
-  // if (m_zoom == 0) {
-  //   m_zoom = model->settings.Hardware.Volume.find_max();
-  //   setArcballTrans(m_transform,
-  // 		    model->settings.getPrintMargin() +
-  // 		    model->settings.getPrintVolume()/2.);
-  // }
+  if (m_zoom == 0) {
+    m_zoom = model->settings.Hardware.Volume.find_max();
+    setArcballTrans(m_transform,
+   		    model->settings.getPrintMargin() );
+    //model->settings.getPrintVolume()/2.);
+  }
   queue_draw();
 }
+
+void Render::draw_string(const Vector3d &pos, const string s)
+{
+  if (fontheight == 0) return;
+  glRasterPos3dv(pos);
+  glListBase(fontlistbase);
+  glCallLists(s.length(), GL_UNSIGNED_BYTE, s.c_str());
+}
+
+void Render::on_realize()
+{
+  cerr << "realize" << endl;
+  Gtk::GL::DrawingArea::on_realize();
+
+  fontlistbase = glGenLists (128);
+
+  Pango::FontDescription font_desc(fontstring);
+
+  Glib::RefPtr<Pango::Font> font =
+    Gdk::GL::Font::use_pango_font(font_desc, 0, 128, fontlistbase);
+  if (!font)
+    {
+      std::cerr << "*** Can't load font "
+                << fontstring
+                << std::endl;
+      Gtk::Main::quit();
+    }
+  Pango::FontMetrics font_metrics = font->get_metrics();
+
+  fontheight = font_metrics.get_ascent() + font_metrics.get_descent();
+  fontheight = PANGO_PIXELS(fontheight);
+
+}
+
 
 bool Render::on_configure_event(GdkEventConfigure* event)
 {

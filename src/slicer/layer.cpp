@@ -22,6 +22,7 @@
 #include "poly.h"
 #include "shape.h"
 #include "infill.h"
+#include "render.h"
 
 // polygons will be simplified to thickness/CLEANFACTOR
 #define CLEANFACTOR 7
@@ -962,7 +963,7 @@ void Layer::Draw(const Settings &settings)
 	ostringstream oss;
 	oss << p;
 	Vector2d center = polygons[p].getCenter();
-	drawString(Vector3d(center.x(), center.y(), Z), oss.str());
+	Render::draw_string(Vector3d(center.x(), center.y(), Z), oss.str());
       }
 
   draw_poly(hullPolygon,    GL_LINE_LOOP, 3, 3, ORANGE,  0.5, randomized);
@@ -1179,13 +1180,16 @@ void Layer::DrawRulers(const Vector2d &point)
     val.str("");
     double v = xint[i].p.x()-xint[i-1].p.x();
     val << fixed << v;
-    drawString(Vector3d((xint[i].p.x()+xint[i-1].p.x())/2.,xint[i].p.y()+1,Z),val.str());
+    Render::draw_string(Vector3d((xint[i].p.x()+xint[i-1].p.x())/2.,
+				 xint[i].p.y()+1,Z),
+			val.str());
   }
   for(guint i = 1; i<yint.size(); i++) {
     val.str("");
     double v = yint[i].p.y()-yint[i-1].p.y();
     val << fixed << v;
-    drawString(Vector3d(yint[i].p.x()+1,(yint[i].p.y()+yint[i-1].p.y())/2.,Z),val.str());
+    Render::draw_string(Vector3d(yint[i].p.x()+1,(yint[i].p.y()+yint[i-1].p.y())/2.,Z),
+			val.str());
   }
 
 }

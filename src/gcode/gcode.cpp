@@ -30,6 +30,7 @@
 #include "geometry.h"
 #include "ctype.h"
 #include "settings.h"
+#include "render.h"
 
 
 GCode::GCode()
@@ -575,8 +576,8 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 			}
 			if (settings.Display.DebugGCodeExtruders) {
 			  ostringstream o; o << commands[i].extruder_no+1;
-			  drawString( (pos + commands[i].where) / 2. + extruder_offset,
-				      o.str());
+			  Render::draw_string( (pos + commands[i].where) / 2. + extruder_offset,
+					       o.str());
 			}
 		      }
 		    if (settings.Display.LuminanceShowsSpeed)

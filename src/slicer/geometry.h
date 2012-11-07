@@ -30,9 +30,9 @@
 #endif
 
 
-void drawString(const Vector3d &pos, void* font, const string &text);
-void drawString(const Vector3d &pos, const string &text);
-void checkGlutInit();
+/* void drawString(const Vector3d &pos, void* font, const string &text); */
+/* void drawString(const Vector3d &pos, const string &text); */
+/* void checkGlutInit(); */
 
 
 void move(const Vector3f &delta, Matrix4f &mat);

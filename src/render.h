@@ -37,6 +37,11 @@ class Render : public Gtk::GL::DrawingArea
   Model *get_model() const;
   Glib::RefPtr<Gtk::TreeSelection> m_selection;
 
+  // font rendering:
+  static const Glib::ustring fontstring;
+  static GLuint fontlistbase;
+  static int fontheight;
+
   float m_zoom;
   gllight *m_lights[4];
 
@@ -55,6 +60,10 @@ class Render : public Gtk::GL::DrawingArea
   void set_zoom (float zoom) {m_zoom=zoom;};
   void zoom_to_model();
   void set_transform(const Matrix4fT &transform) {m_transform=transform;};
+
+  static void draw_string(const Vector3d &pos, const string s);
+
+  virtual void on_realize();
   virtual bool on_configure_event(GdkEventConfigure* event);
   virtual bool on_expose_event(GdkEventExpose* event);
   virtual bool on_motion_notify_event(GdkEventMotion* event);

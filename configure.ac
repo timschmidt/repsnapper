@@ -96,33 +96,37 @@ AC_SUBST(DISTCHECK_LIBREPRAP_FLAGS)
 
 case "$host_os" in
 mingw*)
-  GL_LIBS="-lopengl32 -lglu32 -lglut32"
+  GL_LIBS="-lopengl32"
+# -lglu32 -lglut32"
   EXTRA_LDFLAGS="-Wl,-subsystem,windows -shared-libgcc"
   EXTRA_CFLAGS="-fexceptions -mthreads"
-  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
+# AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   WIN32_BUILD=yes
   ;;
 freebsd*)
-  GL_LIBS="-L/usr/local/lib -lGLU -lGL -lglut"
+  GL_LIBS="-L/usr/local/lib"
+# -lGLU -lGL -lglut"
   EXTRA_LDFLAGS="-L/usr/local/lib"
   CFLAGS="$CFLAGS -I/usr/local/include"
   CXXFLAGS="$CXXFLAGS -I/usr/local/include"
   CPPFLAGS="$CPPFLAGS -I/usr/local/include"
-  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
+#  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 Darwin*)
-  GL_LIBS="-L/usr/local/lib -lGLU -lOpenGL -lGLUT -lglut"
+  GL_LIBS="-L/usr/local/lib"
+# -lGLU -lOpenGL -lGLUT -lglut"
   EXTRA_LDFLAGS="-L/usr/local/lib -L/opt/homebrew/lib"
   CFLAGS="$CFLAGS -I/usr/local/include -I/opt/homebrew/include"
   CXXFLAGS="$CXXFLAGS -I/usr/local/include -I/opt/homebrew/include"
   CPPFLAGS="$CPPFLAGS -I/usr/local/include -I/opt/homebrew/include"
-  AC_CHECK_HEADER(GLUT/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
+#  AC_CHECK_HEADER(GLUT/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 *)
-  GL_LIBS="-L/usr/lib -lGLU -lGL -lglut"
+  GL_LIBS="-L/usr/lib"
+# -lGLU -lGL -lglut"
   EXTRA_LDFLAGS=
   EXTRA_CFLAGS=
-  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
+#  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 esac
 

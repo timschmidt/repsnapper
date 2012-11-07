@@ -23,6 +23,7 @@
 #include "ui/progress.h"
 #include "settings.h"
 #include "clipping.h"
+#include "render.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -950,15 +951,15 @@ void Shape::drawBBox() const
   Vector3d pos;
   val << fixed << (Max.x()-Min.x());
   pos = Vector3d((Max.x()+Min.x())/2.,Min.y(),Max.z());
-  drawString(pos,val.str());
+  Render::draw_string(pos,val.str());
   val.str("");
   val << fixed << (Max.y()-Min.y());
   pos = Vector3d(Min.x(),(Max.y()+Min.y())/2.,Max.z());
-  drawString(pos,val.str());
+  Render::draw_string(pos,val.str());
   val.str("");
   val << fixed << (Max.z()-Min.z());
   pos = Vector3d(Min.x(),Min.y(),(Max.z()+Min.z())/2.);
-  drawString(pos,val.str());
+  Render::draw_string(pos,val.str());
 
 }
 
