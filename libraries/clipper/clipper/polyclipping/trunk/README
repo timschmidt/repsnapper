@@ -2,10 +2,13 @@
 Clipper Change Log
 ============================================================
 
+v4.8.9 - 25 September 2012
+* Bugfix: Obscure bug related to precision of intersections.
+          
 v4.8.8 - 30 August 2012
 * Bugfix: Fixed bug in OffsetPolygons function introduced in 
           version 4.8.5.
-          
+
 v4.8.7 - 24 August 2012
 * Bugfix: ReversePolygon function in C++ translation was broken.
 * Bugfix: Two obscure bugs affecting orientation fixed too.

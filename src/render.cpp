@@ -148,7 +148,6 @@ void Render::draw_string(const Vector3d &pos, const string s)
 
 void Render::on_realize()
 {
-  cerr << "realize" << endl;
   Gtk::GL::DrawingArea::on_realize();
 
   fontlistbase = glGenLists (128);

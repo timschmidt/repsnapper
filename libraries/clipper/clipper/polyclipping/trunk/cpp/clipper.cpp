@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.8.8                                                           *
-* Date      :  30 August 2012                                                  *
+* Version   :  4.8.9                                                           *
+* Date      :  25 September 2012                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2012                                         *
 *                                                                              *
@@ -625,11 +625,22 @@ bool IntersectPoint(TEdge &edge1, TEdge &edge2,
     ip.X = Round(edge1.dx * b2 + b1);
   }
 
-  return
-    //can be *so close* to the top of one edge that the rounded Y equals one ytop ...
-    (ip.Y == edge1.ytop && ip.Y >= edge2.ytop && edge1.tmpX > edge2.tmpX) ||
-    (ip.Y == edge2.ytop && ip.Y >= edge1.ytop && edge1.tmpX > edge2.tmpX) ||
-    (ip.Y > edge1.ytop && ip.Y > edge2.ytop);
+  if (ip.Y < edge1.ytop || ip.Y < edge2.ytop) 
+  {
+    if (edge1.ytop > edge2.ytop)
+    {
+      ip.X = edge1.xtop;
+      ip.Y = edge1.ytop;
+      return TopX(edge2, edge1.ytop) < edge1.xtop;
+    } else
+    {
+      ip.X = edge2.xtop;
+      ip.Y = edge2.ytop;
+      return TopX(edge1, edge2.ytop) > edge2.xtop;
+    }
+  } 
+  else 
+    return true;
 }
 //------------------------------------------------------------------------------
 
