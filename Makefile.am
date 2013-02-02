@@ -3,7 +3,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 CLEANFILES = repsnapper.desktop
 
-DISTCHECK_CONFIGURE_FLAGS = @DISTCHECK_LIBREPRAP_FLAGS@
 DISTCLEANFILES = tools/gitversion.sh
 BUILT_SOURCES = tools/gitversion.sh
 
