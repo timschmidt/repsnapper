@@ -297,7 +297,7 @@ void View::slice_svg ()
 
 void View::send_gcode ()
 {
-  m_printer->SendNow (m_gcode_entry->get_text());
+  m_printer->Send (m_gcode_entry->get_text());
   m_gcode_entry->select_region(0,-1);
   //m_gcode_entry->set_text("");
 }
@@ -366,7 +366,8 @@ void View::printing_changed()
   //rGlib::Mutex::Lock lock(mutex);
   m_model->SetIsPrinting(printing);
   //m_print_button->set_active(printing);
-  // m_pause_button->set_active(!printing);
+  if ( printing )
+    m_pause_button->set_active( false );
   // while(Gtk::Main::events_pending())
   //   Gtk::Main::iteration();
 }
@@ -386,7 +387,7 @@ void View::fan_enabled_toggled (Gtk::ToggleButton *button)
 {
   if (toggle_block) return;
   if (!button->get_active()) {
-    if (!m_printer->SendNow ("M107")) {
+    if (!m_printer->Send ("M107")) {
       toggle_block = true;
       button->set_active(true);
       toggle_block = false;
@@ -394,7 +395,7 @@ void View::fan_enabled_toggled (Gtk::ToggleButton *button)
   } else {
     std::stringstream oss;
     oss << "M106 S" << (int)m_fan_voltage->get_value();
-    if (!m_printer->SendNow (oss.str())) {
+    if (!m_printer->Send (oss.str())) {
       toggle_block = true;
       button->set_active(false);
       toggle_block = false;
@@ -505,13 +506,7 @@ void View::custombutton_pressed(string name, Gtk::ToolButton *button)
 	      erase(m_model->settings.CustomButtonLabel.begin()+i);
 	  } else {
 	    //cerr << "button name " << name << endl;
-	    stringstream s(m_model->settings.CustomButtonGcode[i]);
-	    string item;
-	    bool ok = true;
-	    while (ok && getline(s,item)) {
-	      cerr << "sending command " << item<< endl;
-	      ok = m_printer->SendNow(item);
-	    }
+	    m_printer->Send(m_model->settings.CustomButtonGcode[i]);
 	  }
 	  break;
 	}
@@ -550,39 +545,39 @@ void View::echo_log(string s)
 
 void View::set_logging(bool logging)
 {
-  cerr << "set log " << logging<< endl;
-  if (logging) {
-    logprint_timeout = Glib::signal_timeout().connect
-      (sigc::mem_fun(*this, &View::logprint_timeout_cb), 500);
-  } else {
-    if (logprint_timeout.connected()) {
-      logprint_timeout_cb();
-      logprint_timeout.disconnect();
-    }
-  }
+  // cerr << "set log " << logging<< endl;
+  // if (logging) {
+  //   logprint_timeout = Glib::signal_timeout().connect
+  //     (sigc::mem_fun(*this, &View::logprint_timeout_cb), 500);
+  // } else {
+  //   if (logprint_timeout.connected()) {
+  //     logprint_timeout_cb();
+  //     logprint_timeout.disconnect();
+  //   }
+  // }
 }
 
 bool View::logprint_timeout_cb()
 {
-  GDK_THREADS_ENTER ();
-  cerr << "log ";
-  // while(Gtk::Main::events_pending())
-  //   Gtk::Main::iteration();
-  if (m_printer->error_buffer.length() > 0) {
-    err_log (m_printer->error_buffer);
-    m_printer->error_buffer = "";
-  }
-  if (m_printer->echo_buffer.length() > 0) {
-    echo_log(m_printer->echo_buffer);
-    m_printer->echo_buffer  = "";
-  }
-  if (m_printer->commlog_buffer.length() > 0) {
-    comm_log(m_printer->commlog_buffer);
-    m_printer->commlog_buffer = "";
-  }
-  // while(Gtk::Main::events_pending())
-  //   Gtk::Main::iteration();
-  GDK_THREADS_LEAVE ();
+  // GDK_THREADS_ENTER ();
+  // cerr << "log ";
+  // // while(Gtk::Main::events_pending())
+  // //   Gtk::Main::iteration();
+  // if (m_printer->error_buffer.length() > 0) {
+  //   err_log (m_printer->error_buffer);
+  //   m_printer->error_buffer = "";
+  // }
+  // if (m_printer->echo_buffer.length() > 0) {
+  //   echo_log(m_printer->echo_buffer);
+  //   m_printer->echo_buffer  = "";
+  // }
+  // if (m_printer->commlog_buffer.length() > 0) {
+  //   comm_log(m_printer->commlog_buffer);
+  //   m_printer->commlog_buffer = "";
+  // }
+  // // while(Gtk::Main::events_pending())
+  // //   Gtk::Main::iteration();
+  // GDK_THREADS_LEAVE ();
   return true;
 }
 
@@ -925,7 +920,7 @@ void View::kick_clicked()
 
 void View::print_clicked()
 {
-  m_printer->PrintButton();
+  m_printer->StartPrinting();
   printing_changed();
 }
 
@@ -937,8 +932,10 @@ void View::print_clicked()
 
 void View::pause_toggled(Gtk::ToggleToolButton *button)
 {
-  m_printer->ContinuePauseButton(button->get_active());
-  printing_changed();
+  if (button->get_active())
+    m_printer->StopPrinting();
+  else
+    m_printer->ContinuePrinting();
 }
 
 void View::reset_clicked()
@@ -952,7 +949,7 @@ void View::reset_clicked()
 void View::home_all()
 {
   if (m_printer->IsPrinting()) return;
-  m_printer->SendNow ("G28");
+  m_printer->Send ("G28");
   for (uint i = 0; i < 3; i++)
     m_axis_rows[i]->notify_homed();
 }
@@ -1512,7 +1509,7 @@ void View::setModel(Model *model)
   extruder_box->add(*m_extruder_row);
 
   inhibit_print_changed();
-  m_printer->get_signal_inhibit_changed().
+  m_printer->signal_inhibit_changed.
     connect (sigc::mem_fun(*this, &View::inhibit_print_changed));
   m_model->m_signal_stl_added.connect (sigc::mem_fun(*this, &View::stl_added));
   m_model->m_model_changed.connect (sigc::mem_fun(*this, &View::model_changed));

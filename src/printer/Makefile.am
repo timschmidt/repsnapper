@@ -10,11 +10,13 @@
 # option, any later version, incorporated herein by reference.
 
 SHARED_SRC += \
-	src/printer/reprap_serial.cpp \
-	src/printer/printer.cpp \
-	src/printer/printer2.cpp
+	src/printer/printer_serial.cpp \
+	src/printer/thread_buffer.cpp \
+	src/printer/threaded_printer_serial.cpp \
+	src/printer/printer.cpp
 
 SHARED_INC += \
-	src/printer/reprap_serial.h \
+	src/printer/printer_serial.h \
+	src/printer/thread_buffer.h \
+	src/printer/threaded_printer_serial.h \
 	src/printer/printer.h
-
