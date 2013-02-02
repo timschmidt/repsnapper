@@ -147,13 +147,20 @@ bool PrinterSerial::Connect( string device, int baudrate ) {
 			      OPEN_EXISTING,
 			      FILE_ATTRIBUTE_NORMAL,
 			      NULL );
-  if ( device_handle == INVALID_HANDLE_VALUE )
+  if ( device_handle == INVALID_HANDLE_VALUE ) {
+    ostringstream os;
+    os << "Could not open port " << device << " (" << GetLastError() << ")"<< endl;
+    LogError( os.str().c_str() );
     return false;
-
+  }
+  
   DCB dcb;
   if ( ! GetCommState( device_handle, &dcb ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
+    ostringstream os;
+    os << "Could not get port state " << device << " (" << GetLastError() << ")"<< endl;
+    LogError( os.str().c_str() );
     return false;
   }
   
@@ -171,10 +178,14 @@ bool PrinterSerial::Connect( string device, int baudrate ) {
   dcb.ByteSize = 8;
   dcb.Parity = NOPARITY;
   dcb.StopBits = ONESTOPBIT;
+  dcb.EvtChar = '\n';
   
   if ( ! SetCommState( device_handle, &dcb ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
+    ostringstream os;
+    os << "Could not configure port " << device << " (" << GetLastError() << ")"<< endl;
+    LogError( os.str().c_str() );
     return false;
   }
   
@@ -183,18 +194,24 @@ bool PrinterSerial::Connect( string device, int baudrate ) {
   if ( ! GetCommTimeouts( device_handle, &ct ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
+    ostringstream os;
+    os << "Could not get port timeouts " << device << " (" << GetLastError() << ")"<< endl;
+    LogError( os.str().c_str() );
     return false;
   }
   
-  ct.ReadIntervalTimeout = 50;
-  ct.ReadTotalTimeoutConstant = 50;
-  ct.ReadTotalTimeoutMultiplier = 10;
-  ct.WriteTotalTimeoutConstant = 50;
-  ct.WriteTotalTimeoutMultiplier= 10;
+  ct.ReadIntervalTimeout = 2;
+  ct.ReadTotalTimeoutConstant = max_recv_block_ms;
+  ct.ReadTotalTimeoutMultiplier = 0;
+  ct.WriteTotalTimeoutConstant = max_recv_block_ms;
+  ct.WriteTotalTimeoutMultiplier= 0;
   
   if ( ! SetCommTimeouts( device_handle, &ct ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
+    ostringstream os;
+    os << "Could not set port timeouts " << device << " (" << GetLastError() << ")"<< endl;
+    LogError( os.str().c_str() );
     return false;
   }
   
@@ -253,6 +270,8 @@ bool PrinterSerial::Connect( string device, int baudrate ) {
     return false;
   }
   
+  // Use RAW settings, except add ICANON.  ICANON makes the port line buffered
+  // and read will return immediately when a newline is received.
   cfmakeraw( &attribs );
   attribs.c_lflag |= ICANON;
   
@@ -425,20 +444,32 @@ char *PrinterSerial::FormatLine( void ) {
 bool PrinterSerial::SendText( char *text ) {
   memcpy( text - 4, "<-- ", 4 );
   LogLine( text - 4 );
-  
+
   size_t len = strlen( text );
+  
+#ifdef WIN32
+  DWORD num;
+  while ( len > 0 ) {
+    if ( ! WriteFile( device_handle, &text, len, &num, NULL ) ) == 0 ) {
+      LogLine( "*** Error Writing to port ***\n" );
+      return false;
+    } len -= num;
+    text += num;
+  }
+#else
   ssize_t num;
   while ( len > 0 ) {
     if ( ( num = write( device_fd, text, len ) ) == -1 ) {
       int err = errno;
-      LogLine( "*** Error Reading from port: " );
+      LogLine( "*** Error Writing to port: " );
       LogLine( strerror( err ) );
       LogLine( " ***\n" );
       return false;
     } len -= num;
     text += num;
   }
-  
+#endif
+
   return true;
 }
 
@@ -448,8 +479,28 @@ char *PrinterSerial::RecvLine( void ) {
   char *buf = recvd;
   bool done = false;
   size_t tot_size = 0;
-  ssize_t num;
   
+#ifdef WIN32
+  DWORD num;
+  
+  while ( ! done ) {
+    if ( ! ReadFile( device_handle, buf, max_command_size - tot_size - 20, &num, NULL ) ) {
+      LogLine( "*** Error Reading from port ***\n" );
+      return NULL;
+    }
+    tot_size += num;
+    buf += num;
+    
+    if ( num > 0 && ( buf[-1] == '\n' || buf[-1] == '\r' ) ) {
+      done = true;
+    } else {
+      RecvTimeout();
+    }
+  }
+  *buf = '\0';
+  
+#else
+  ssize_t num;
   struct timeval timeout;
   fd_set set;
   
@@ -461,13 +512,11 @@ char *PrinterSerial::RecvLine( void ) {
     timeout.tv_usec = max_recv_block_ms * 1000;
     FD_ZERO( &set );
     FD_SET( device_fd, &set );
-    //cout << "Starting select" << endl;
     select( device_fd + 1,
 	    &set,
 	    NULL,
 	    NULL,
 	    max_recv_block_ms == 0 ? NULL : &timeout );
-    //cout << "After select" << endl;
     
     if ( FD_ISSET( device_fd, &set ) ) {
       // Read the data.  Use a loop since Posix does not guarentee that an
@@ -487,11 +536,11 @@ char *PrinterSerial::RecvLine( void ) {
 	done = true;
       }
     } else {
-      //cout << "RecvTimeout" << endl;
       RecvTimeout();
     }
   }
   *buf = '\0';
+#endif
   
   // Ignore inital whitespace
   while ( isspace( *recvd ) ) {
