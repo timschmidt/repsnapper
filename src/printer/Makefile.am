@@ -17,6 +17,7 @@ SHARED_SRC += \
 
 SHARED_INC += \
 	src/printer/printer_serial.h \
+	src/printer/thread.h \
 	src/printer/thread_buffer.h \
 	src/printer/threaded_printer_serial.h \
 	src/printer/printer.h

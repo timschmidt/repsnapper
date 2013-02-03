@@ -17,12 +17,12 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-
 #pragma once
 
-#include <pthread.h>
 #include <time.h>
 #include <string>
+
+#include "thread.h"
 
 using namespace std;
 
@@ -32,8 +32,9 @@ using namespace std;
 // Options exist to drop write data if buffer is full or to read the
 // empty string if no data is available.
 
-// Also, the mutex can be skipped if it can be proved that only one thread
-// is reading (or writing).
+// The additional write mutex is usefull if multple threads are writting
+// to the buffer continuiously because it tends to make the write operations
+// more fair.  The code is fully thread-safe without this parameter.
 
 class ThreadBuffer {
 protected:
@@ -42,8 +43,8 @@ protected:
   char *buff;
   char *read_ptr;
   char *write_ptr;
-  pthread_mutex_t mutex;
-  pthread_mutex_t write_mutex;
+  mutex_t mutex;
+  mutex_t write_mutex;
   
   const string overflow;
   bool last_write_overflowed;
@@ -58,6 +59,7 @@ protected:
   virtual void WroteToEmpty( void );
   
   char *ReadRawData( string *str, char *data, char *read_start, unsigned long length, bool null_terminate = true );
+  // Copys data from circular buffer, wrapping when necessary.
   
   size_t Read( string *str, char *data, size_t max_len, bool wait, char *line_start = NULL );
   // Generic function, returns value in str, unless it is NULL, then returns value into data.
@@ -75,7 +77,7 @@ public:
 
 class SignalingThreadBuffer : public ThreadBuffer {
 protected:
-  pthread_cond_t signal_cond;
+  cond_t signal_cond;
   
   virtual void WaitOnRead( void );
   virtual void WroteToEmpty( void );
@@ -89,14 +91,14 @@ class ThreadBufferReturnData : public ThreadBuffer {
 public:
   class ReturnData {
   private:
-    pthread_mutex_t write_mutex;
-    pthread_cond_t *return_cond;
-    pthread_mutex_t *return_mutex;
+    mutex_t write_mutex;
+    cond_t *return_cond;
+    mutex_t *return_mutex;
     unsigned long lines_remaining;
     string data;
     
   public:
-    ReturnData( pthread_cond_t *return_cond, pthread_mutex_t *return_mutex, bool use_write_mutex = true );
+    ReturnData( cond_t *return_cond, mutex_t *return_mutex, bool use_write_mutex = true );
     ~ReturnData();
     void SetLineCount( unsigned long line_count );
     unsigned long LinesRemaining( void );
@@ -105,8 +107,8 @@ public:
   };
   
 protected:
-  pthread_cond_t return_cond;
-  pthread_mutex_t return_mutex;
+  cond_t return_cond;
+  mutex_t return_mutex;
   
 public:
   ThreadBufferReturnData( size_t buffer_size, const struct timespec &nanosleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true );

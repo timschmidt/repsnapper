@@ -29,9 +29,9 @@ ThreadBuffer::ThreadBuffer( size_t buffer_size, bool is_line_buffered, const str
   min_line_len( min_line_len ) {
   
   read_ptr = write_ptr = buff = new char[ size + 10 ];
-  pthread_mutex_init( &mutex, NULL );
+  mutex_init( &mutex );
   if ( use_write_mutex )
-    pthread_mutex_init( &write_mutex, NULL );
+    mutex_init( &write_mutex );
   
   sleep_time = nanosleep_time;
   
@@ -40,9 +40,9 @@ ThreadBuffer::ThreadBuffer( size_t buffer_size, bool is_line_buffered, const str
 
 ThreadBuffer::~ThreadBuffer() {
   delete [] buff;
-  pthread_mutex_destroy( &mutex );
+  mutex_destroy( &mutex );
   if ( use_write_mutex )
-    pthread_mutex_destroy( &write_mutex );
+    mutex_destroy( &write_mutex );
 }
 
 ssize_t ThreadBuffer::SpaceAvailable( void ) {
@@ -63,11 +63,11 @@ bool ThreadBuffer::Write( const char *data, bool wait, ssize_t datalen ) {
   
   // Lock mutex(es)
   if ( use_write_mutex )
-    if ( pthread_mutex_lock( &write_mutex ) != 0 )
+    if ( mutex_lock( &write_mutex ) != 0 )
       return false;
-  if ( pthread_mutex_lock( &mutex ) != 0 ) {
+  if ( mutex_lock( &mutex ) != 0 ) {
     if ( use_write_mutex )
-      pthread_mutex_unlock( &write_mutex );
+      mutex_unlock( &write_mutex );
     return false;
   }
 
@@ -84,15 +84,15 @@ bool ThreadBuffer::Write( const char *data, bool wait, ssize_t datalen ) {
     if ( wait ) {
       // Wait until enough space is available
       while ( fulldatalen > SpaceAvailable() ) {
-	pthread_mutex_unlock( &mutex );
+	mutex_unlock( &mutex );
 	nanosleep( &sleep_time, NULL );
-	pthread_mutex_lock( &mutex );
+	mutex_lock( &mutex );
       }
     } else if ( last_write_overflowed || overflow.length() == 0 ) {
       // Wrote overflow string last time, don't write it again, just give up
-      pthread_mutex_unlock( &mutex );
+      mutex_unlock( &mutex );
       if ( use_write_mutex )
-	pthread_mutex_unlock( &write_mutex );
+	mutex_unlock( &write_mutex );
       return false;
     } else {
       // Write the overflow string
@@ -148,9 +148,9 @@ bool ThreadBuffer::Write( const char *data, bool wait, ssize_t datalen ) {
     WroteToEmpty();
   
   // Unlock mutex(es)
-  pthread_mutex_unlock( &mutex );
+  mutex_unlock( &mutex );
   if ( use_write_mutex )
-    pthread_mutex_unlock( &write_mutex );
+    mutex_unlock( &write_mutex );
   
   return true;
 }
@@ -188,7 +188,7 @@ char *ThreadBuffer::ReadRawData( string *str, char *data, char *read_start, unsi
       str->append( buff, length - split );
     }
     catch (...) {
-      pthread_mutex_unlock( &mutex );
+      mutex_unlock( &mutex );
       throw;
     }
   }
@@ -198,7 +198,7 @@ char *ThreadBuffer::ReadRawData( string *str, char *data, char *read_start, unsi
 
 size_t ThreadBuffer::Read( string *str, char *data, size_t max_len, bool wait, char *line_start ) {
   // Lock mutex
-  if ( pthread_mutex_lock( &mutex ) != 0 )
+  if ( mutex_lock( &mutex ) != 0 )
     return false;
   
   // Determine if data is available
@@ -206,7 +206,7 @@ size_t ThreadBuffer::Read( string *str, char *data, size_t max_len, bool wait, c
     if ( wait ) {
       WaitOnRead();
     } else {
-      pthread_mutex_unlock( &mutex );
+      mutex_unlock( &mutex );
       return 0;
     }
   }
@@ -273,7 +273,7 @@ size_t ThreadBuffer::Read( string *str, char *data, size_t max_len, bool wait, c
   }
   
   // Unlock mutex
-  pthread_mutex_unlock( &mutex );
+  mutex_unlock( &mutex );
   
   return bytes_to_read;
 }
@@ -292,9 +292,9 @@ string ThreadBuffer::Read( bool wait ) {
 
 void ThreadBuffer::WaitOnRead( void ) {
   while ( read_ptr == write_ptr ) {
-    pthread_mutex_unlock( &mutex );
+    mutex_unlock( &mutex );
     nanosleep( &sleep_time, NULL );
-    pthread_mutex_lock( &mutex );
+    mutex_lock( &mutex );
   }
 }
 
@@ -302,41 +302,41 @@ void ThreadBuffer::WroteToEmpty( void ) {
 }
 
 void ThreadBuffer::Flush( void ) {
-  pthread_mutex_lock( &mutex );
+  mutex_lock( &mutex );
   
   read_ptr = write_ptr;
   
-  pthread_mutex_unlock( &mutex );
+  mutex_unlock( &mutex );
 }
 
 SignalingThreadBuffer::SignalingThreadBuffer( size_t buffer_size, bool is_line_buffered, const struct timespec &nanosleep_time, string overflow_indicator, bool use_read_mutex, bool use_write_mutex, unsigned long min_line_length ) :
   ThreadBuffer( buffer_size, is_line_buffered, nanosleep_time, overflow_indicator, use_read_mutex, use_write_mutex, min_line_length ) {
-  pthread_cond_init( &signal_cond, NULL );
+  cond_init( &signal_cond );
 }
 
 SignalingThreadBuffer::~SignalingThreadBuffer() {
-  pthread_cond_destroy( &signal_cond );
+  cond_destroy( &signal_cond );
 }
 
 void SignalingThreadBuffer::WaitOnRead( void ) {
   while ( read_ptr == write_ptr ) {
-    pthread_cond_wait( &signal_cond, &mutex );
+    cond_wait( &signal_cond, &mutex );
   }
 }
 
 void SignalingThreadBuffer::WroteToEmpty( void ) {
-  pthread_cond_broadcast( &signal_cond );
+  cond_broadcast( &signal_cond );
 }
 
 ThreadBufferReturnData::ThreadBufferReturnData( size_t buffer_size, const struct timespec &nanosleep_time, string overflow_indicator, bool use_read_mutex, bool use_write_mutex ) :
   ThreadBuffer( buffer_size, true, nanosleep_time, overflow_indicator, use_read_mutex, use_write_mutex, sizeof( ReturnData * ) ) {
-  pthread_mutex_init( &return_mutex, NULL );
-  pthread_cond_init( &return_cond, NULL );
+  mutex_init( &return_mutex );
+  cond_init( &return_cond );
 }
 
 ThreadBufferReturnData::~ThreadBufferReturnData() {
-  pthread_mutex_destroy( &return_mutex );
-  pthread_cond_destroy( &return_cond );
+  mutex_destroy( &return_mutex );
+  cond_destroy( &return_cond );
 }
 
 bool ThreadBufferReturnData::Write( const char *data, bool wait, ssize_t datalen, ReturnData **return_data ) {
@@ -405,7 +405,7 @@ string ThreadBufferReturnData::Read( bool wait, ReturnData **return_data ) {
 
 void ThreadBufferReturnData::Flush( void ) {
   // Need to all the ReturnData elements in the buffer by returning blank lines
-  pthread_mutex_lock( &mutex );
+  mutex_lock( &mutex );
   
   char *init_write_ptr = write_ptr;
   char *read_start = read_ptr;
@@ -443,27 +443,27 @@ void ThreadBufferReturnData::Flush( void ) {
   
   read_ptr = init_write_ptr;
   
-  pthread_mutex_unlock( &mutex );
+  mutex_unlock( &mutex );
 }
 
 bool ThreadBufferReturnData::WaitForReturnData( ReturnData &return_data ) {
-  if ( pthread_mutex_lock( &return_mutex ) != 0 )
+  if ( mutex_lock( &return_mutex ) != 0 )
     return false;
   
   while ( return_data.LinesRemaining() > 0 ) {
-    pthread_cond_wait( &return_cond, &return_mutex );
+    cond_wait( &return_cond, &return_mutex );
   }
   
-  pthread_mutex_unlock( &return_mutex );
+  mutex_unlock( &return_mutex );
   return true;
 }
 
-ThreadBufferReturnData::ReturnData::ReturnData( pthread_cond_t *return_cond, pthread_mutex_t *return_mutex, bool use_write_mutex ) : return_cond( return_cond ), return_mutex( return_mutex ) {
-  pthread_mutex_init( &write_mutex, NULL );
+ThreadBufferReturnData::ReturnData::ReturnData( cond_t *return_cond, mutex_t *return_mutex, bool use_write_mutex ) : return_cond( return_cond ), return_mutex( return_mutex ) {
+  mutex_init( &write_mutex );
 }
 
 ThreadBufferReturnData::ReturnData::~ReturnData() {
-  pthread_mutex_destroy( &write_mutex );
+  mutex_destroy( &write_mutex );
 }
 
 void ThreadBufferReturnData::ReturnData::SetLineCount( unsigned long line_count ) {
@@ -475,23 +475,23 @@ unsigned long ThreadBufferReturnData::ReturnData::LinesRemaining( void ) {
 }
 
 void ThreadBufferReturnData::ReturnData::AddLine( const char *line ) {
-  pthread_mutex_lock( &write_mutex );
+  mutex_lock( &write_mutex );
   
   try {
     data.append( line );
   }
   catch (...) {
-    pthread_mutex_unlock( &write_mutex );
+    mutex_unlock( &write_mutex );
     throw;
   }
   
-  pthread_mutex_lock( return_mutex );
+  mutex_lock( return_mutex );
   lines_remaining--;
   if ( lines_remaining == 0 )
-    pthread_cond_broadcast( return_cond );
-  pthread_mutex_unlock( return_mutex );
+    cond_broadcast( return_cond );
+  mutex_unlock( return_mutex );
   
-  pthread_mutex_unlock( &write_mutex );
+  mutex_unlock( &write_mutex );
 }
 
 string ThreadBufferReturnData::ReturnData::GetData( void ) {

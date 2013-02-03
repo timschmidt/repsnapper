@@ -71,12 +71,12 @@ void *Reader( void * ) {
 
 int main( void ) {
   char line[ 1024 + 10 ];
-  pthread_t thread;
+  thread_t thread;
 #ifdef USE_RET_DATA
   ThreadBufferReturnData::ReturnData *ret_data;
 #endif  
 
-  pthread_create( &thread, NULL, Reader, NULL );
+  thread_create( &thread, Reader, NULL );
   
   while ( 1 ) {
 #ifndef USE_RET_DATA

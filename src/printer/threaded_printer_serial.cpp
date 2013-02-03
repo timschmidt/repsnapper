@@ -45,23 +45,32 @@ ThreadedPrinterSerial::ThreadedPrinterSerial() :
   pc_bytes_printed = 0;
   pc_stop_line = 0;
   
-  pthread_mutex_init( &pc_mutex, NULL );
-  pthread_mutex_init( &pc_cond_mutex, NULL );
-  pthread_cond_init( &pc_cond, NULL );
+  mutex_init( &pc_mutex );
+  mutex_init( &pc_cond_mutex );
+  cond_init( &pc_cond );
   
   helper_active = false;
+#ifndef HAS_THREAD_CANCEL
+  helper_cancel = false;
+#endif
 }
 
 ThreadedPrinterSerial::~ThreadedPrinterSerial() {
   if ( helper_active ) {
-    pthread_cancel( helper_thread );
-    pthread_join( helper_thread, NULL );
+#ifdef HAS_THREAD_CANCEL
+    thread_cancel( helper_thread );
+#else
+    mutex_lock( &pc_cond_mutex );
+    helper_cancel = true;
+    mutex_unlock( &pc_cond_mutex );
+#endif
+    thread_join( helper_thread );
     helper_active = false;
   }
   
-  pthread_mutex_destroy( &pc_mutex );
-  pthread_mutex_destroy( &pc_cond_mutex );
-  pthread_cond_destroy( &pc_cond );
+  mutex_destroy( &pc_mutex );
+  mutex_destroy( &pc_cond_mutex );
+  cond_destroy( &pc_cond );
   
   if ( printer_commands != NULL )
     delete [] printer_commands;
@@ -82,9 +91,13 @@ bool ThreadedPrinterSerial::Connect( string device, int baudrate ) {
   command_buffer.Flush();
   response_buffer.Flush();
   
+#ifndef HAS_THREAD_CANCEL
+  helper_cancel = false;
+#endif
+  
   // Start thread
   int rc;
-  if ( ( rc = pthread_create( &helper_thread, NULL, HelperMainStatic, this ) ) != 0 ) {
+  if ( ( rc = thread_create( &helper_thread, HelperMainStatic, this ) ) != 0 ) {
     close( device_fd );
     device_fd = -1;
     ostringstream os;
@@ -108,8 +121,14 @@ void ThreadedPrinterSerial::Disconnect( void ) {
   StopPrinting( true );
   
   if ( helper_active ) {
-    pthread_cancel( helper_thread );
-    pthread_join( helper_thread, NULL );
+#ifdef HAS_THREAD_CANCEL
+    thread_cancel( helper_thread );
+#else
+    mutex_lock( &pc_cond_mutex );
+    helper_cancel = true;
+    mutex_unlock( &pc_cond_mutex );
+#endif
+    thread_join( helper_thread );
     helper_active = false;
   }
   
@@ -155,7 +174,7 @@ bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_
   }
   
   // Lock pc_mutex
-  if ( ( rc = pthread_mutex_lock( &pc_mutex ) ) != 0 ) {
+  if ( ( rc = mutex_lock( &pc_mutex ) ) != 0 ) {
     delete [] commands_copy;
     ostringstream os;
     os << "Could not lock mutex to start printing: " << strerror( rc ) << endl;
@@ -164,9 +183,9 @@ bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_
   }
   
   // Lock the cond mutex
-  if ( ( rc = pthread_mutex_lock( &pc_cond_mutex ) ) != 0 ) {
+  if ( ( rc = mutex_lock( &pc_cond_mutex ) ) != 0 ) {
     delete [] commands_copy;
-    pthread_mutex_unlock( &pc_mutex );
+    mutex_unlock( &pc_mutex );
     ostringstream os;
     os << "Could not lock condition mutex to start printing: " << strerror( rc ) << endl;
     LogError( os.str().c_str() );
@@ -177,10 +196,10 @@ bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_
   if ( is_printing ) {
     request_print = false;
     
-    if ( ( rc = pthread_cond_wait( &pc_cond, &pc_cond_mutex ) ) !=0 ) {
+    if ( ( rc = cond_wait( &pc_cond, &pc_cond_mutex ) ) !=0 ) {
       delete [] commands_copy;
-      pthread_mutex_unlock( &pc_cond_mutex );
-      pthread_mutex_unlock( &pc_mutex );
+      mutex_unlock( &pc_cond_mutex );
+      mutex_unlock( &pc_mutex );
       ostringstream os;
       os << "Could not wait on signal to stop previous printing: " << strerror( rc ) << endl;
       LogError( os.str().c_str() );
@@ -200,10 +219,10 @@ bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_
   // Request printing
   request_print = true;
   
-  if ( ( rc = pthread_cond_wait( &pc_cond, &pc_cond_mutex ) ) !=0 ) {
+  if ( ( rc = cond_wait( &pc_cond, &pc_cond_mutex ) ) !=0 ) {
     delete [] commands_copy;
-    pthread_mutex_unlock( &pc_cond_mutex );
-    pthread_mutex_unlock( &pc_mutex );
+    mutex_unlock( &pc_cond_mutex );
+    mutex_unlock( &pc_mutex );
     ostringstream os;
     os << "Could not wait on signal to start printing: " << strerror( rc ) << endl;
     LogError( os.str().c_str() );
@@ -211,8 +230,8 @@ bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_
   }
   
   // Unlock mutexes
-  pthread_mutex_unlock( &pc_cond_mutex );
-  pthread_mutex_unlock( &pc_mutex );
+  mutex_unlock( &pc_cond_mutex );
+  mutex_unlock( &pc_mutex );
   
   return true;
 }
@@ -228,15 +247,15 @@ bool ThreadedPrinterSerial::StopPrinting( bool wait ) {
     return true;
   }
   
-  if ( ( rc = pthread_mutex_lock( &pc_mutex ) ) != 0 ) {
+  if ( ( rc = mutex_lock( &pc_mutex ) ) != 0 ) {
     ostringstream os;
     os << "Could not lock mutex to stop printing: " << strerror( rc ) << endl;
     LogError( os.str().c_str() );
     return false;
   }
   
-  if ( ( rc = pthread_mutex_lock( &pc_cond_mutex ) ) != 0 ) {
-    pthread_mutex_unlock( &pc_mutex );
+  if ( ( rc = mutex_lock( &pc_cond_mutex ) ) != 0 ) {
+    mutex_unlock( &pc_mutex );
     ostringstream os;
     os << "Could not lock cond mutex to stop printing: " << strerror( rc ) << endl;
     LogError( os.str().c_str() );
@@ -246,9 +265,9 @@ bool ThreadedPrinterSerial::StopPrinting( bool wait ) {
   request_print = false;
   
   if ( wait && is_printing ) {
-    if ( ( rc = pthread_cond_wait( &pc_cond, &pc_cond_mutex ) ) !=0 ) {
-      pthread_mutex_unlock( &pc_cond_mutex );
-      pthread_mutex_unlock( &pc_mutex );
+    if ( ( rc = cond_wait( &pc_cond, &pc_cond_mutex ) ) !=0 ) {
+      mutex_unlock( &pc_cond_mutex );
+      mutex_unlock( &pc_mutex );
       ostringstream os;
       os << "Could not wait on signal to stop printing: " << strerror( rc ) << endl;
       LogError( os.str().c_str() );
@@ -256,8 +275,8 @@ bool ThreadedPrinterSerial::StopPrinting( bool wait ) {
     }
   }
   
-  pthread_mutex_unlock( &pc_cond_mutex );
-  pthread_mutex_unlock( &pc_mutex );
+  mutex_unlock( &pc_cond_mutex );
+  mutex_unlock( &pc_mutex );
   return true;
 }
 
@@ -271,7 +290,7 @@ bool ThreadedPrinterSerial::ContinuePrinting( bool wait ) {
     return false;
   }
   
-  if ( ( rc = pthread_mutex_lock( &pc_mutex ) ) != 0 ) {
+  if ( ( rc = mutex_lock( &pc_mutex ) ) != 0 ) {
     ostringstream os;
     os << "Could not lock mutex to continue printing: " << strerror( rc ) << endl;
     LogError( os.str().c_str() );
@@ -279,12 +298,12 @@ bool ThreadedPrinterSerial::ContinuePrinting( bool wait ) {
   }
   
   if ( ! IsConnected() ) {
-    pthread_mutex_unlock( &pc_mutex );
+    mutex_unlock( &pc_mutex );
     return false;
   }
   
-  if ( ( rc = pthread_mutex_lock( &pc_cond_mutex ) ) != 0 ) {
-    pthread_mutex_unlock( &pc_mutex );
+  if ( ( rc = mutex_lock( &pc_cond_mutex ) ) != 0 ) {
+    mutex_unlock( &pc_mutex );
     ostringstream os;
     os << "Could not lock cond mutex to continue printing: " << strerror( rc ) << endl;
     LogError( os.str().c_str() );
@@ -294,9 +313,9 @@ bool ThreadedPrinterSerial::ContinuePrinting( bool wait ) {
   request_print = true;
   
   if ( wait && ! is_printing ) {
-    if ( ( rc = pthread_cond_wait( &pc_cond, &pc_cond_mutex ) ) !=0 ) {
-      pthread_mutex_unlock( &pc_cond_mutex );
-      pthread_mutex_unlock( &pc_mutex );
+    if ( ( rc = cond_wait( &pc_cond, &pc_cond_mutex ) ) !=0 ) {
+      mutex_unlock( &pc_cond_mutex );
+      mutex_unlock( &pc_mutex );
       ostringstream os;
       os << "Could not wait on signal to stop printing: " << strerror( rc ) << endl;
       LogError( os.str().c_str() );
@@ -304,8 +323,8 @@ bool ThreadedPrinterSerial::ContinuePrinting( bool wait ) {
     }
   }
   
-  pthread_mutex_unlock( &pc_cond_mutex );
-  pthread_mutex_unlock( &pc_mutex );
+  mutex_unlock( &pc_cond_mutex );
+  mutex_unlock( &pc_mutex );
   return true;
 }
 
@@ -313,12 +332,12 @@ unsigned long ThreadedPrinterSerial::GetPrintingProgress( unsigned long *bytes_p
   unsigned long lines;
   unsigned long bytes;
   
-  pthread_mutex_lock( &pc_cond_mutex );
+  mutex_lock( &pc_cond_mutex );
   
   lines = pc_lines_printed;
   bytes = pc_bytes_printed;
   
-  pthread_mutex_unlock( &pc_cond_mutex );
+  mutex_unlock( &pc_cond_mutex );
   
   if ( bytes_printed != NULL )
     *bytes_printed = bytes;
@@ -391,22 +410,27 @@ void *ThreadedPrinterSerial::HelperMain( void ) {
 }
 
 void ThreadedPrinterSerial::CheckPrintingState( void ) {
-  pthread_mutex_lock( &pc_cond_mutex );
-    
+  mutex_lock( &pc_cond_mutex );
+  
+#ifndef HAS_THREAD_CANCEL
+  if ( helper_cancel )
+    thread_exit();
+#endif
+  
   if ( request_print != is_printing ) {
     is_printing = request_print;
     printing_complete = false;
-    pthread_cond_broadcast( &pc_cond );
+    cond_broadcast( &pc_cond );
   }
   
-  pthread_mutex_unlock( &pc_cond_mutex );
+  mutex_unlock( &pc_cond_mutex );
 }
 
 void ThreadedPrinterSerial::SendNextPrinterCommand( void ) {
   unsigned long datalen;
   bool truncated = false;
   
-  pthread_mutex_lock( &pc_cond_mutex );
+  mutex_lock( &pc_cond_mutex );
   
   // Find the bounds of the next command
   const char *start = printer_commands + pc_bytes_printed;
@@ -435,7 +459,7 @@ void ThreadedPrinterSerial::SendNextPrinterCommand( void ) {
   if ( *stop == '\0' || pc_lines_printed >= pc_stop_line )
     printing_complete = true;
   
-  pthread_mutex_unlock( &pc_cond_mutex );
+  mutex_unlock( &pc_cond_mutex );
   
   if ( truncated ) {
     char warn[ 100 ];
@@ -464,7 +488,7 @@ void ThreadedPrinterSerial::SendCommand( bool buffer_response, ThreadBufferRetur
     response_buffer.Write( recvd, true );
     helper_active = false;
     Disconnect(); // This is safe.  With helper active false, no mutexes are needed and no threads are killed.
-    pthread_exit( NULL );
+    thread_exit();
   }
   
   if ( return_data != NULL ) {

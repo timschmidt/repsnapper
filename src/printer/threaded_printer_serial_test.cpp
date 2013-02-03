@@ -23,6 +23,7 @@
 #include <fstream>
 #include <string.h>
 #include <vector>
+#include <stdlib.h>
 
 using namespace std;
 
@@ -58,8 +59,8 @@ void *ErrorReader( void *arg ) {
 int main( void ) {
   ThreadedPrinterSerial tps;
   char command[ 1024 + 10 ];
-  pthread_t log_reader;
-  pthread_t error_reader;
+  thread_t log_reader;
+  thread_t error_reader;
   bool is_printing;
   
   vector<string> ports = PrinterSerial::FindPorts();
@@ -68,8 +69,8 @@ int main( void ) {
     cout << "Testing: " << PrinterSerial::TestPort( ports[ind] ) << endl;
   }
   
-  pthread_create( &log_reader, NULL, LogReader, &tps );
-  pthread_create( &error_reader, NULL, ErrorReader, &tps );
+  thread_create( &log_reader, LogReader, &tps );
+  thread_create( &error_reader, ErrorReader, &tps );
   
   tps.Connect( ports[0], 115200 );
   
@@ -108,10 +109,12 @@ int main( void ) {
   
   tps.Disconnect();
   
-  pthread_cancel( log_reader );
-  pthread_cancel( error_reader );
-  pthread_join( log_reader, NULL );
-  pthread_join( error_reader, NULL );
+#ifdef HAS_THREAD_CANCEL
+  thread_cancel( log_reader );
+  thread_cancel( error_reader );
+  thread_join( log_reader );
+  thread_join( error_reader );
+#endif
   
-  return 0;
+  exit( 0 );
 }

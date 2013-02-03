@@ -20,10 +20,10 @@
 
 #pragma once
 
-#include <pthread.h>
 #include <limits.h>
 #include <time.h>
 
+#include "thread.h"
 #include "thread_buffer.h"
 #include "printer_serial.h"
 
@@ -61,12 +61,12 @@ class ThreadedPrinterSerial : protected PrinterSerial
   //   if is_printing, send the next command from printer_commands.  Do NOT
   //     need to lock the mutex.
   
-  pthread_mutex_t pc_mutex;
+  mutex_t pc_mutex;
   bool request_print; // set by main thread(s), pc_mutex required
   bool is_printing; // set by helper, pc_cond_mutex required
   bool printing_complete; // set by helper, no mutex required
-  pthread_cond_t pc_cond; // signaled by helper, pc_mutex and pc_cond_mutex required
-  pthread_mutex_t pc_cond_mutex;
+  cond_t pc_cond; // signaled by helper, pc_mutex and pc_cond_mutex required
+  mutex_t pc_cond_mutex;
   const char *printer_commands; // set by main thread(s), pc_mutex required
   unsigned long pc_lines_printed; // when is_printing is false, set by main thread(s), pc_mutex required.  When is_printing is true, set by helper, pc_mutex requried
   unsigned long pc_bytes_printed; // when is_printing is false, set by main thread(s), pc_mutex required.  When is_printing is true, set by helper, pc_mutex required
@@ -78,7 +78,10 @@ class ThreadedPrinterSerial : protected PrinterSerial
   ThreadBuffer error_buffer;
   
   bool helper_active;
-  pthread_t helper_thread;
+  thread_t helper_thread;
+#ifndef HAS_THREAD_CANCEL
+  bool helper_cancel;
+#endif
   
   void CheckPrintingState( void ); // Check if main thread is requesting printing and set helper thread switches accordingly
   
