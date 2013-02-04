@@ -19,7 +19,11 @@
 
 #pragma once
 
-#ifdef USE_PTHREADS
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef HAVE_POSIX_THREADS
 #include <pthread.h>
 typedef pthread_t thread_t;
 typedef pthread_mutex_t mutex_t;
