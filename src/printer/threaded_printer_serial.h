@@ -79,9 +79,7 @@ class ThreadedPrinterSerial : protected PrinterSerial
   
   bool helper_active;
   thread_t helper_thread;
-#ifndef HAS_THREAD_CANCEL
   bool helper_cancel;
-#endif
   
   void CheckPrintingState( void ); // Check if main thread is requesting printing and set helper thread switches accordingly
   

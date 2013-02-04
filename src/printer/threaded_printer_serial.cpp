@@ -50,20 +50,15 @@ ThreadedPrinterSerial::ThreadedPrinterSerial() :
   cond_init( &pc_cond );
   
   helper_active = false;
-#ifndef HAS_THREAD_CANCEL
   helper_cancel = false;
-#endif
 }
 
 ThreadedPrinterSerial::~ThreadedPrinterSerial() {
   if ( helper_active ) {
-#ifdef HAS_THREAD_CANCEL
-    thread_cancel( helper_thread );
-#else
     mutex_lock( &pc_cond_mutex );
     helper_cancel = true;
     mutex_unlock( &pc_cond_mutex );
-#endif
+    
     thread_join( helper_thread );
     helper_active = false;
   }
@@ -91,9 +86,7 @@ bool ThreadedPrinterSerial::Connect( string device, int baudrate ) {
   command_buffer.Flush();
   response_buffer.Flush();
   
-#ifndef HAS_THREAD_CANCEL
   helper_cancel = false;
-#endif
   
   // Start thread
   int rc;
@@ -121,13 +114,10 @@ void ThreadedPrinterSerial::Disconnect( void ) {
   StopPrinting( true );
   
   if ( helper_active ) {
-#ifdef HAS_THREAD_CANCEL
-    thread_cancel( helper_thread );
-#else
     mutex_lock( &pc_cond_mutex );
     helper_cancel = true;
     mutex_unlock( &pc_cond_mutex );
-#endif
+    
     thread_join( helper_thread );
     helper_active = false;
   }
@@ -412,10 +402,11 @@ void *ThreadedPrinterSerial::HelperMain( void ) {
 void ThreadedPrinterSerial::CheckPrintingState( void ) {
   mutex_lock( &pc_cond_mutex );
   
-#ifndef HAS_THREAD_CANCEL
-  if ( helper_cancel )
+  if ( helper_cancel ) {
+    helper_cancel = false;
+    mutex_unlock( &pc_cond_mutex );
     thread_exit();
-#endif
+  }
   
   if ( request_print != is_printing ) {
     is_printing = request_print;
