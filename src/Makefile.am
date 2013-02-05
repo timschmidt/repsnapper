@@ -91,4 +91,4 @@ repsnapperdatadir = $(datadir)/@PACKAGE@
 dist_repsnapperdata_DATA = src/repsnapper.ui
 
 repsnapperconfdir = $(sysconfdir)/xdg/@PACKAGE@
-dist_repsnapperconf_DATA = src/repsnapper.conf
+dist_repsnapperconf_DATA = src/repsnapper.conf src/repsnapper-icon.svg

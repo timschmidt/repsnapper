@@ -309,7 +309,8 @@ int main(int argc, char **argv)
 
   mainwin->setNonPrintingMode(nonprintingmode, opts.gcode_output_path);
 
-  mainwin->set_icon_name("gtk-convert");
+  mainwin->set_icon_from_file("repsnapper-icon.svg");
+  // mainwin->set_icon_name("gtk-convert");
   mainwin->set_title("Repsnapper");
 
   if (opts.stl_input_path.size() > 0) {
