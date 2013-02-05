@@ -127,6 +127,47 @@ bool ThreadedPrinterSerial::IsConnected( void ) {
   return helper_active && PrinterSerial::IsConnected();
 }
 
+bool ThreadedPrinterSerial::Reset( void ) {
+  StopPrinting( true );
+
+  if ( helper_active ) {
+    mutex_lock( &pc_cond_mutex );
+    helper_cancel = true;
+    mutex_unlock( &pc_cond_mutex );
+    
+    thread_join( helper_thread );
+    helper_active = false;
+  }
+  
+  command_buffer.Flush();
+  response_buffer.Flush();
+  
+  PrinterSerial::Reset();
+  
+  helper_cancel = false;
+  
+  // Start thread
+  int rc;
+  if ( ( rc = thread_create( &helper_thread, HelperMainStatic, this ) ) != 0 ) {
+    close( device_fd );
+    device_fd = -1;
+    ostringstream os;
+    os << "Could not create serial helper thread: " << strerror( rc ) << endl;
+    LogError( os.str().c_str() );
+    return false;
+  }
+  helper_active = true;
+  
+  // Sleep for 10 ms
+  ntime_t nts = { 0, 10 * 1000 * 1000 };
+  nsleep( &nts );
+  
+  // Send version request command
+  SendAndWaitResponse( "M115" );
+  
+  return true;
+}
+
 bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_line, unsigned long stop_line ) {
   char *commands_copy;
   int rc;

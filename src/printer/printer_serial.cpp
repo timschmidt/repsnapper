@@ -33,6 +33,8 @@
 #include <termios.h>
 #include <dirent.h>
 #include <sys/select.h>
+#include <sys/ioctl.h>
+#include <linux/usbdevice_fs.h>
 #endif
 
 #include "printer_serial.h"
@@ -169,7 +171,7 @@ bool PrinterSerial::Connect( string device, int baudrate ) {
   dcb.fParity = 0;
   dcb.fOutxCtsFlow = 0;
   dcb.fOutxDsrFlow = 0;
-  dcb.fDtrControl = DTR_CONTROL_DISABLE;
+  dcb.fDtrControl = DTR_CONTROL_ENABLE;
   dcb.fDsrSenseitivity = 0;
   dcb.OutX = 0;
   dcb.fInX = 0;
@@ -272,8 +274,10 @@ bool PrinterSerial::Connect( string device, int baudrate ) {
   
   // Use RAW settings, except add ICANON.  ICANON makes the port line buffered
   // and read will return immediately when a newline is received.
+  // HUPCL lowers the modem control lines (hang up) when the port is closed
   cfmakeraw( &attribs );
   attribs.c_lflag |= ICANON;
+  attribs.c_cflag |= HUPCL;
   
   if( tcsetattr(device_fd, TCSANOW, &attribs ) < 0 ) {
     close( device_fd );
@@ -302,7 +306,7 @@ bool PrinterSerial::Connect( string device, int baudrate ) {
     return false;
   }
 #endif
-
+  
   // Reset line number
   prev_cmd_line_number = 0;
   
@@ -334,6 +338,60 @@ bool PrinterSerial::IsConnected( void ) {
 #else
   return device_fd >= 0;
 #endif
+}
+
+bool PrinterSerial::Reset( void ) {
+#ifdef WIN32
+  if ( device_handle == INVALID_HANDLE_VALUE )
+    return false;
+  
+  if ( ! EscapeCommFunction( device_handle, CLRDTR ) )
+    return false;
+  
+  if ( ! EscapeCommFunction( device_handle, SETDTR ) )
+    return false;
+#else
+  if ( device_fd < 0 )
+    return false;
+  
+  // First try usb reset
+  if ( ioctl( device_fd, USBDEVFS_RESET, 0 ) != 0 ) {
+    
+    // Next try clear/set DTR
+    if ( ioctl( device_fd, TIOCMBIC, TIOCM_DTR ) ||
+	 ioctl( device_fd, TIOCMBIS, TIOCM_DTR ) ) {
+      
+      // Finally try setting baud rate to zero
+      struct termios attribs;
+      
+      if ( tcgetattr( device_fd, &attribs ) != 0 )
+	return false;
+      
+      speed_t orig_speed = cfgetispeed( &attribs );
+      cfsetispeed( &attribs, B0 );
+      cfsetospeed( &attribs, B0 );
+      
+      if ( tcsetattr( device_fd, TCSANOW, &attribs ) != 0 )
+	return false;
+      
+      cfsetispeed( &attribs, orig_speed );
+      cfsetospeed( &attribs, orig_speed );
+      
+      if ( tcsetattr( device_fd, TCSANOW, &attribs ) != 0 )
+	return false;      
+    }
+  }
+#endif
+  
+  // Reset line number
+  prev_cmd_line_number = 0;
+  
+  // Read start line before returning
+  // The printer seems to lock up if it recvs a command before the start
+  // line has been sent
+  RecvLine();
+  
+  return true;
 }
 
 char *PrinterSerial::Send( const char *command ) {

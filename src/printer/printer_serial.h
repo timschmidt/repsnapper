@@ -74,6 +74,8 @@ public:
   virtual bool Connect( string device, int baudrate );
   virtual void Disconnect( void );
   virtual bool IsConnected( void );
+
+  virtual bool Reset( void );
   
   virtual char *Send( const char *command );
 };

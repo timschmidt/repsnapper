@@ -941,7 +941,7 @@ void View::pause_toggled(Gtk::ToggleToolButton *button)
 void View::reset_clicked()
 {
   if (get_userconfirm(_("Reset Printer?"))) {
-    m_printer->ResetButton();
+    m_printer->Reset();
     printing_changed();
   }
 }

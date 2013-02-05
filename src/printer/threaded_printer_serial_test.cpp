@@ -97,6 +97,8 @@ int main( void ) {
       tps.StopPrinting( true );
     } else if ( strncasecmp( command, "cont", 4 ) == 0 ) {
       tps.ContinuePrinting( true );
+    } else if ( strncasecmp( command, "reset", 5 ) == 0 ) {
+      tps.Reset();
     } else if ( strncasecmp( command, "quit", 1024 ) == 0 )
       break;
     

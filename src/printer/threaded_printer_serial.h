@@ -100,6 +100,8 @@ class ThreadedPrinterSerial : protected PrinterSerial
   virtual void Disconnect( void );
   bool IsConnected( void );
   
+  virtual bool Reset( void );
+  
   // Start printing gcode
   // Commands are sent one at a time in the background
   // Send and SendAndWaitResponse can safely be sent

@@ -34,10 +34,17 @@ int main( void ) {
   
   while ( 1 ) {
     cin.getline( command, 1024 );
-    if ( strncasecmp( command, "quit", 1024 ) == 0 )
+    if ( strncasecmp( command, "reset", 1024 ) == 0 ) {
+      if ( ps.Reset() )
+	cout << "Sucess" << endl;
+      else
+	cout << "Failure" << endl;
+      continue;
+    } else if ( strncasecmp( command, "quit", 1024 ) == 0 )
       break;
     cout << ps.Send( command );
   }
   
   ps.Disconnect();
 }
+

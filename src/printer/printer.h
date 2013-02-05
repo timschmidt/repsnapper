@@ -71,7 +71,6 @@ public:
   
   void Pause( void ) { StopPrinting(); }
   void Kick( void ) {}; // this does nothing
-  void ResetButton( void ) {}; // This does nothing
   bool SwitchPower( bool on );
   bool SelectExtruder( int extruder_no=-1 );
   bool SetTemp( TempType type, float value, int extruder_no=-1 );
