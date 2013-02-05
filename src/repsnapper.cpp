@@ -126,12 +126,12 @@ public:
 	// add more options above
 };
 
-Glib::RefPtr<Gio::File> find_global_config() {
+Glib::RefPtr<Gio::File> find_global_config(const std::string filename) {
   std::vector<std::string> dirs = Platform::getConfigPaths();
   Glib::RefPtr<Gio::File> f;
   for (std::vector<std::string>::const_iterator i = dirs.begin();
        i != dirs.end(); ++i) {
-    std::string f_name = Glib::build_filename (*i, "repsnapper.conf");
+    std::string f_name = Glib::build_filename (*i, filename);
     f = Gio::File::create_for_path(f_name);
     if(f->query_exists()) {
       return f;
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
   Glib::RefPtr<Gio::File> conf = Gio::File::create_for_path(user_config_file);
 
   try {
-    Glib::RefPtr<Gio::File> global = find_global_config();
+    Glib::RefPtr<Gio::File> global = find_global_config("repsnapper.conf");
     if(!global) {
       // Don't leave an empty config file behind
       conf->remove();
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
                                 Gtk::MESSAGE_WARNING, Gtk::BUTTONS_CLOSE);
       dialog.set_secondary_text(e.what() + _("\nFalling back to global config. Settings will not be saved."));
       dialog.run();
-      conf = find_global_config();
+      conf = find_global_config("repsnapper.conf");
       if(!conf) {
         Gtk::MessageDialog dialog (_("Couldn't find global configuration!"), false,
                                   Gtk::MESSAGE_ERROR, Gtk::BUTTONS_CLOSE);
@@ -309,8 +309,11 @@ int main(int argc, char **argv)
 
   mainwin->setNonPrintingMode(nonprintingmode, opts.gcode_output_path);
 
-  mainwin->set_icon_from_file("repsnapper-icon.svg");
-  // mainwin->set_icon_name("gtk-convert");
+  Glib::RefPtr<Gio::File> iconfile = find_global_config("repsnapper-icon.svg");
+  if (iconfile)
+    mainwin->set_icon_from_file(iconfile->get_path());
+  else
+    mainwin->set_icon_name("gtk-convert");
   mainwin->set_title("Repsnapper");
 
   if (opts.stl_input_path.size() > 0) {
