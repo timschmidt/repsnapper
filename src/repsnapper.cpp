@@ -309,7 +309,7 @@ int main(int argc, char **argv)
 
   mainwin->setNonPrintingMode(nonprintingmode, opts.gcode_output_path);
 
-  Glib::RefPtr<Gio::File> iconfile = find_global_config("repsnapper-icon.svg");
+  Glib::RefPtr<Gio::File> iconfile = find_global_config("repsnapper.svg");
   mainwin->set_icon_file(iconfile);
   mainwin->set_title("Repsnapper");
 
