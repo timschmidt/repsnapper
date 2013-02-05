@@ -62,3 +62,16 @@ inline int cond_wait( cond_t *c, mutex_t *m ) { g_cond_wait( c, m ); return 0; }
 inline int cond_signal( cond_t *c ) { g_cond_signal( c ); return 0; };
 inline int cond_broadcast( cond_t *c ) { g_cond_broadcast( c ); return 0; };
 #endif
+
+#if _POSIX_C_SOURCE >= 199309L
+#include <time.h>
+typedef struct timespec ntime_t;
+inline int nsleep( const ntime_t *req ) { return nanosleep( req, NULL ); };
+#else
+typedef struct timespec {
+  unsigned long tv_sec;
+  long tv_nsec;
+} ntime_t;
+
+inline int nsleep( const ntime_t *req ) { Sleep( req->tv_sec * 1000 + ( tv_nsec + 999999 ) / 1000000 ); return 0; };
+#endif

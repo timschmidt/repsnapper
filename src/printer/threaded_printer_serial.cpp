@@ -20,18 +20,14 @@
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <string.h>
-#include <errno.h>
 
 #include "threaded_printer_serial.h"
 
-const struct timespec ThreadedPrinterSerial::command_buffer_sleep = { 0, 100 * 1000 * 1000 };
-const struct timespec ThreadedPrinterSerial::response_buffer_sleep = { 0, 10 * 1000 * 1000 };
-const struct timespec ThreadedPrinterSerial::log_buffer_sleep = { 0, 10 * 1000 * 1000 };
-const struct timespec ThreadedPrinterSerial::helper_thread_sleep = { 0, 100 * 1000 * 1000 };
+const ntime_t ThreadedPrinterSerial::command_buffer_sleep = { 0, 100 * 1000 * 1000 };
+const ntime_t ThreadedPrinterSerial::response_buffer_sleep = { 0, 10 * 1000 * 1000 };
+const ntime_t ThreadedPrinterSerial::log_buffer_sleep = { 0, 10 * 1000 * 1000 };
+const ntime_t ThreadedPrinterSerial::helper_thread_sleep = { 0, 100 * 1000 * 1000 };
 
 ThreadedPrinterSerial::ThreadedPrinterSerial() :
   PrinterSerial( helper_thread_sleep.tv_nsec / 1000 / 1000 ),
@@ -101,8 +97,8 @@ bool ThreadedPrinterSerial::Connect( string device, int baudrate ) {
   helper_active = true;
   
   // Sleep for 10 ms
-  struct timespec nts = { 0, 10 * 1000 * 1000 };
-  nanosleep( &nts, NULL );
+  ntime_t nts = { 0, 10 * 1000 * 1000 };
+  nsleep( &nts );
   
   // Send version request command
   SendAndWaitResponse( "M115" );
@@ -392,7 +388,7 @@ void *ThreadedPrinterSerial::HelperMain( void ) {
     } else if ( IsPrinting() ) {
       SendNextPrinterCommand();
     } else {
-      nanosleep( &helper_thread_sleep, NULL );
+      nsleep( &helper_thread_sleep );
     }
   }
   

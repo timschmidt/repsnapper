@@ -17,11 +17,11 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "thread_buffer.h"
-
 #include <string.h>
 
-ThreadBuffer::ThreadBuffer( size_t buffer_size, bool is_line_buffered, const struct timespec &nanosleep_time, string overflow_indicator, bool use_read_mutex, bool use_write_mutex, unsigned long min_line_len ) :
+#include "thread_buffer.h"
+
+ThreadBuffer::ThreadBuffer( size_t buffer_size, bool is_line_buffered, const ntime_t &nsleep_time, string overflow_indicator, bool use_read_mutex, bool use_write_mutex, unsigned long min_line_len ) :
   size( buffer_size + 10 + overflow_indicator.length() ),
   use_write_mutex( use_write_mutex ),
   overflow( overflow_indicator ),
@@ -33,7 +33,7 @@ ThreadBuffer::ThreadBuffer( size_t buffer_size, bool is_line_buffered, const str
   if ( use_write_mutex )
     mutex_init( &write_mutex );
   
-  sleep_time = nanosleep_time;
+  sleep_time = nsleep_time;
   
   last_write_overflowed = false;
 }
@@ -85,7 +85,7 @@ bool ThreadBuffer::Write( const char *data, bool wait, ssize_t datalen ) {
       // Wait until enough space is available
       while ( fulldatalen > SpaceAvailable() ) {
 	mutex_unlock( &mutex );
-	nanosleep( &sleep_time, NULL );
+	nsleep( &sleep_time );
 	mutex_lock( &mutex );
       }
     } else if ( last_write_overflowed || overflow.length() == 0 ) {
@@ -293,7 +293,7 @@ string ThreadBuffer::Read( bool wait ) {
 void ThreadBuffer::WaitOnRead( void ) {
   while ( read_ptr == write_ptr ) {
     mutex_unlock( &mutex );
-    nanosleep( &sleep_time, NULL );
+    nsleep( &sleep_time );
     mutex_lock( &mutex );
   }
 }
@@ -309,8 +309,8 @@ void ThreadBuffer::Flush( void ) {
   mutex_unlock( &mutex );
 }
 
-SignalingThreadBuffer::SignalingThreadBuffer( size_t buffer_size, bool is_line_buffered, const struct timespec &nanosleep_time, string overflow_indicator, bool use_read_mutex, bool use_write_mutex, unsigned long min_line_length ) :
-  ThreadBuffer( buffer_size, is_line_buffered, nanosleep_time, overflow_indicator, use_read_mutex, use_write_mutex, min_line_length ) {
+SignalingThreadBuffer::SignalingThreadBuffer( size_t buffer_size, bool is_line_buffered, const ntime_t &nsleep_time, string overflow_indicator, bool use_read_mutex, bool use_write_mutex, unsigned long min_line_length ) :
+  ThreadBuffer( buffer_size, is_line_buffered, nsleep_time, overflow_indicator, use_read_mutex, use_write_mutex, min_line_length ) {
   cond_init( &signal_cond );
 }
 
@@ -328,8 +328,8 @@ void SignalingThreadBuffer::WroteToEmpty( void ) {
   cond_broadcast( &signal_cond );
 }
 
-ThreadBufferReturnData::ThreadBufferReturnData( size_t buffer_size, const struct timespec &nanosleep_time, string overflow_indicator, bool use_read_mutex, bool use_write_mutex ) :
-  ThreadBuffer( buffer_size, true, nanosleep_time, overflow_indicator, use_read_mutex, use_write_mutex, sizeof( ReturnData * ) ) {
+ThreadBufferReturnData::ThreadBufferReturnData( size_t buffer_size, const ntime_t &nsleep_time, string overflow_indicator, bool use_read_mutex, bool use_write_mutex ) :
+  ThreadBuffer( buffer_size, true, nsleep_time, overflow_indicator, use_read_mutex, use_write_mutex, sizeof( ReturnData * ) ) {
   mutex_init( &return_mutex );
   cond_init( &return_cond );
 }

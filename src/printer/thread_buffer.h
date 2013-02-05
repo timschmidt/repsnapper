@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include <time.h>
 #include <string>
 
 #include "thread.h"
@@ -49,7 +48,7 @@ protected:
   const string overflow;
   bool last_write_overflowed;
   
-  struct timespec sleep_time;
+  ntime_t sleep_time;
   
   const bool line_buffered;
   const unsigned long min_line_len;
@@ -66,7 +65,7 @@ protected:
   // max_len applies only to data, if used.  str can return unlimited length.
   
 public:
-  ThreadBuffer( size_t buffer_size, bool is_line_buffered, const struct timespec &nanosleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true, unsigned long min_line_len = 0 );
+  ThreadBuffer( size_t buffer_size, bool is_line_buffered, const ntime_t &nsleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true, unsigned long min_line_len = 0 );
   virtual ~ThreadBuffer();
   virtual bool Write( const char *data, bool wait, ssize_t datalen = -1 );
   virtual size_t Read( char *data, size_t max_len, bool wait );
@@ -83,7 +82,7 @@ protected:
   virtual void WroteToEmpty( void );
 
 public:
-  SignalingThreadBuffer( size_t buffer_size, bool is_line_buffered, const struct timespec &nanosleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true, unsigned long min_line_len = 0 );
+  SignalingThreadBuffer( size_t buffer_size, bool is_line_buffered, const ntime_t &nsleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true, unsigned long min_line_len = 0 );
   virtual ~SignalingThreadBuffer();
 };
 
@@ -111,7 +110,7 @@ protected:
   mutex_t return_mutex;
   
 public:
-  ThreadBufferReturnData( size_t buffer_size, const struct timespec &nanosleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true );
+  ThreadBufferReturnData( size_t buffer_size, const ntime_t &nsleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true );
   virtual ~ThreadBufferReturnData();
   
   virtual bool Write( const char *data, bool wait, ssize_t datalen = -1, ReturnData **return_data = NULL );

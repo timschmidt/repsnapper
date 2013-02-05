@@ -22,9 +22,6 @@
 
 #include <iostream>
 #include <vector>
-#include <pthread.h>
-#include <limits.h>
-#include <time.h>
 
 using namespace std;
 

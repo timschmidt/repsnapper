@@ -17,11 +17,9 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-
 #pragma once
 
 #include <limits.h>
-#include <time.h>
 
 #include "thread.h"
 #include "thread_buffer.h"
@@ -35,10 +33,10 @@ class ThreadedPrinterSerial : protected PrinterSerial
   static const unsigned long response_buffer_size = 4096;
   static const unsigned long log_buffer_size = 8192;
   
-  static const struct timespec command_buffer_sleep;
-  static const struct timespec response_buffer_sleep;
-  static const struct timespec log_buffer_sleep;
-  static const struct timespec helper_thread_sleep;
+  static const ntime_t command_buffer_sleep;
+  static const ntime_t response_buffer_sleep;
+  static const ntime_t log_buffer_sleep;
+  static const ntime_t helper_thread_sleep;
   
   // Rules:
   // request_print, is_printing, and printer_commands are initialized to NULL
