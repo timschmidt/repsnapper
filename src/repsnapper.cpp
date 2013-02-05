@@ -310,10 +310,7 @@ int main(int argc, char **argv)
   mainwin->setNonPrintingMode(nonprintingmode, opts.gcode_output_path);
 
   Glib::RefPtr<Gio::File> iconfile = find_global_config("repsnapper-icon.svg");
-  if (iconfile)
-    mainwin->set_icon_from_file(iconfile->get_path());
-  else
-    mainwin->set_icon_name("gtk-convert");
+  mainwin->set_icon_file(iconfile);
   mainwin->set_title("Repsnapper");
 
   if (opts.stl_input_path.size() > 0) {
