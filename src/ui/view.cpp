@@ -1993,10 +1993,10 @@ void View::showCurrentPrinting(unsigned long lineno)
   }
   bool cont = true;
   cont = m_progress->update(lineno, true);
-  if (!cont) { // stop by progress bar
-    m_printer->Pause();
-    printing_changed();
-  }
+  //if (!cont) { // stop by progress bar // broken, fix me
+  //  m_printer->Pause();
+  //  printing_changed();
+  //}
   m_model->setCurrentPrintingLine(lineno);
   queue_draw();
   // while(Gtk::Main::events_pending()) {

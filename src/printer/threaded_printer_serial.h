@@ -79,10 +79,12 @@ class ThreadedPrinterSerial : protected PrinterSerial
   thread_t helper_thread;
   bool helper_cancel;
   
+  ThreadBufferReturnData::ReturnData *return_data;
+  
   void CheckPrintingState( void ); // Check if main thread is requesting printing and set helper thread switches accordingly
   
   void SendNextPrinterCommand( void );
-  void SendCommand( bool buffer_response, ThreadBufferReturnData::ReturnData *return_data = NULL );
+  void SendCommand( bool buffer_response );
   
   void RecvTimeout( void );
   void LogLine( const char *line ); // Log the line.  The provided line should end in a newline character.

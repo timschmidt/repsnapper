@@ -381,7 +381,7 @@ bool ThreadBufferReturnData::Write( const char *data, bool wait, ssize_t datalen
 }
 
 size_t ThreadBufferReturnData::Read( char *data, size_t max_len, bool wait, ReturnData **return_data ) {
-  ReturnData *ret_data;
+  ReturnData *ret_data = NULL;
   
   ssize_t ret = ThreadBuffer::Read( NULL, data, max_len, wait, (char *) &ret_data );
   

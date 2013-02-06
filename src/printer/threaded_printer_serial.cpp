@@ -47,6 +47,7 @@ ThreadedPrinterSerial::ThreadedPrinterSerial() :
   
   helper_active = false;
   helper_cancel = false;
+  return_data = NULL;
 }
 
 ThreadedPrinterSerial::~ThreadedPrinterSerial() {
@@ -377,21 +378,21 @@ bool ThreadedPrinterSerial::Send( string command ) {
 }
 
 string ThreadedPrinterSerial::SendAndWaitResponse( string command ) {
-  ThreadBufferReturnData::ReturnData *return_data = NULL;
+  ThreadBufferReturnData::ReturnData *ret_data = NULL;
   
-  if ( ! command_buffer.Write( command.c_str(), true, -1, &return_data ) )
+  if ( ! command_buffer.Write( command.c_str(), true, -1, &ret_data ) )
     return "";
   
-  if ( return_data == NULL )
+  if ( ret_data == NULL )
     return "";
   
-  if ( ! command_buffer.WaitForReturnData( *return_data ) ) {
+  if ( ! command_buffer.WaitForReturnData( *ret_data ) ) {
     delete return_data;
     return "";
   }
   
-  string str = return_data->GetData();
-  delete return_data;
+  string str = ret_data->GetData();
+  delete ret_data;
   
   return str;
 }
@@ -419,13 +420,15 @@ void *ThreadedPrinterSerial::HelperMainStatic( void *arg ) {
 }
 
 void *ThreadedPrinterSerial::HelperMain( void ) {
-  ThreadBufferReturnData::ReturnData *return_data;
-  
   while ( true ) {
+    if ( return_data != NULL )
+      return_data->AddLine( "**Internal Error\n" );
+    return_data = NULL;
+    
     CheckPrintingState();
     
     if ( command_buffer.Read( command_scratch, max_command_size, false, &return_data ) > 0 ) {
-      SendCommand( true, return_data );
+      SendCommand( true );
     } else if ( IsPrinting() ) {
       SendNextPrinterCommand();
     } else {
@@ -442,6 +445,9 @@ void ThreadedPrinterSerial::CheckPrintingState( void ) {
   if ( helper_cancel ) {
     helper_cancel = false;
     mutex_unlock( &pc_cond_mutex );
+    if ( return_data != NULL )
+      return_data->AddLine( "**Connection closed\n" );
+    return_data = NULL;
     thread_exit();
   }
   
@@ -496,24 +502,30 @@ void ThreadedPrinterSerial::SendNextPrinterCommand( void ) {
       warn[ 98 ] = '\n';
     warn[ 99 ] = '\0';
     LogLine( warn );
+    LogError( warn );
   }
   
   // Send the command and wait for response
   SendCommand( false );
 }
 
-void ThreadedPrinterSerial::SendCommand( bool buffer_response, ThreadBufferReturnData::ReturnData *return_data ) {
+void ThreadedPrinterSerial::SendCommand( bool buffer_response ) {
   // Don't send blank lines
   char *recvd = PrinterSerial::SendCommand();
   
   if ( recvd == NULL ) {
     if ( return_data != NULL )
-      return_data->AddLine( "ok Error sending line\n" );
+      return_data->AddLine( "**Error sending line\n" );
+    return_data = NULL;
+    return;
   }
   
   if ( strncasecmp( recvd, "!!", 2 ) == 0 ) {
     // !! Fatal Error
     response_buffer.Write( recvd, true );
+    if ( return_data != NULL )
+      return_data->AddLine( "**Fatal Error\n" );
+    return_data = NULL;
     helper_active = false;
     Disconnect(); // This is safe.  With helper active false, no mutexes are needed and no threads are killed.
     thread_exit();
@@ -521,6 +533,7 @@ void ThreadedPrinterSerial::SendCommand( bool buffer_response, ThreadBufferRetur
   
   if ( return_data != NULL ) {
     return_data->AddLine( recvd );
+    return_data = NULL;
   } else if ( buffer_response ) {
     // buffer resposne if it is "interesting", that is if it is more than
     // just the two letter "ok" reply followed by white space.

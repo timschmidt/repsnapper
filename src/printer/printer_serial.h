@@ -17,7 +17,6 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-
 #pragma once
 
 #include <iostream>
@@ -74,7 +73,7 @@ public:
   virtual bool Connect( string device, int baudrate );
   virtual void Disconnect( void );
   virtual bool IsConnected( void );
-
+  
   virtual bool Reset( void );
   
   virtual char *Send( const char *command );

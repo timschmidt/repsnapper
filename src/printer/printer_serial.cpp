@@ -510,6 +510,7 @@ bool PrinterSerial::SendText( char *text ) {
   while ( len > 0 ) {
     if ( ! WriteFile( device_handle, &text, len, &num, NULL ) ) == 0 ) {
       LogLine( "*** Error Writing to port ***\n" );
+      LogError( "*** Error Writing to port ***\n" );
       return false;
     } len -= num;
     text += num;
@@ -519,9 +520,14 @@ bool PrinterSerial::SendText( char *text ) {
   while ( len > 0 ) {
     if ( ( num = write( device_fd, text, len ) ) == -1 ) {
       int err = errno;
-      LogLine( "*** Error Writing to port: " );
-      LogLine( strerror( err ) );
-      LogLine( " ***\n" );
+      char msg[ 256 ];
+      LogLine( "*** Error Writing to port ***\n" );
+      snprintf( msg, 250, "*** Error Writing to port: %s ***\n", strerror( err ) );
+      if ( msg[ 248 ] != '\0' )
+	msg[ 248 ] = '\n';
+      msg[ 249 ] = '\0';
+      
+      LogError( msg );
       return false;
     } len -= num;
     text += num;
@@ -542,8 +548,15 @@ char *PrinterSerial::RecvLine( void ) {
   DWORD num;
   
   while ( ! done ) {
+    if ( tot_size + 20 >= max_command_size ) {
+      LogLine( "*** Error: Received line too long ***\n" );
+      LogError( "*** Error: Received line too long ***\n" );
+      *buf++ = '\n';
+      break;
+    }
     if ( ! ReadFile( device_handle, buf, max_command_size - tot_size - 20, &num, NULL ) ) {
       LogLine( "*** Error Reading from port ***\n" );
+      LogError( "*** Error Reading from port ***\n" );
       return NULL;
     }
     tot_size += num;
@@ -556,7 +569,6 @@ char *PrinterSerial::RecvLine( void ) {
     }
   }
   *buf = '\0';
-  
 #else
   ssize_t num;
   struct timeval timeout;
@@ -564,6 +576,13 @@ char *PrinterSerial::RecvLine( void ) {
   
   // Read the data
   while ( ! done ) {
+    // Make sure line is not too long
+    if ( tot_size + 20 >= max_command_size ) {
+      LogLine( "*** Error: Received line too long ***\n" );
+      LogError( "*** Error: Received line too long ***\n" );
+      *buf++ = '\n';
+      break;
+    }
     // Use select to allow a read timeout.
     // If the timeout is reached, call RecvTimeout
     timeout.tv_sec = 0;
@@ -582,9 +601,14 @@ char *PrinterSerial::RecvLine( void ) {
       //cout << "Reading" << endl;
       if ( ( num = read( device_fd, buf, max_command_size - tot_size - 20 ) ) == -1 ) {
 	int err = errno;
-	LogLine( "*** Error Reading from port: " );
-	LogLine( strerror( err ) );
-	LogLine( " ***\n" );
+	char msg[ 256 ];
+	LogLine( "*** Error reading from port ***\n" );
+	snprintf( msg, 250, "*** Error reading from port: %s ***\n", strerror( err ) );
+	if ( msg[ 248 ] != '\0' )
+	  msg[ 248 ] = '\n';
+	msg[ 249 ] = '\0';
+	
+	LogError( msg );
 	return NULL;
       }
       tot_size += num;
