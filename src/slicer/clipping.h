@@ -20,12 +20,10 @@
 #pragma once
 #include "types.h"
 
-#include <clipper/clipper/polyclipping/trunk/cpp/clipper.hpp>
-// see http://angusj.com/delphi/clipper.php
-
+// ClipperLib: see http://angusj.com/delphi/clipper.php
+#include <clipper/clipper/polyclipping-code/cpp/clipper.hpp>
 
 #include "poly.h"
-
 
 
 // Clipper uses non-negative long long integers, so we transform by:

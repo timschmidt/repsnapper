@@ -2,12 +2,47 @@
 Clipper Change Log
 ============================================================
 
+v5.0.2 - 30 December 2012
+* Bugfix: Significant fixes in and tidy of the internal 
+  Int128 class (which is used only when polygon coordinate 
+  values are greater than ±0x3FFFFFFF (~1.07e9)). 
+* Update: The Area algorithm has been updated and is faster. 
+* Update: Documentation updates. The newish but undocumented 
+  'CheckInputs' parameter of the OffsetPolygons function has been 
+  renamed 'AutoFix' and documented too. The comments on rounding 
+  have also been improved (ie clearer and expanded).
+
+v4.10.0 - 25 December 2012
+* Bugfix: Orientation bugs should now be resolved (finally!).
+* Bugfix: Bug in Int128 class
+
+v4.9.8 - 2 December 2012
+* Bugfix: Further fixes to rare Orientation bug.
+
+v4.9.7 - 29 November 2012
+* Bugfix: Bug that very rarely returned the wrong polygon 
+  orientation.
+* Bugfix: Obscure bug affecting OffsetPolygons when using 
+  jtRound for the JoinType parameter and when polygons also
+  contain very large coordinate values (> +/-100000000000).
+
+v4.9.6 - 9 November 2012
+* Bugfix: Another obscure bug related to joining polygons.
+
+v4.9.4 - 2 November 2012
+* Bugfix: Bugs in Int128 class occasionally causing 
+  wrong orientations.
+* Bugfix: Further fixes related to joining polygons.
+
+v4.9.0 - 9 October 2012
+* Bugfix: Obscure bug related to joining polygons.
+
 v4.8.9 - 25 September 2012
 * Bugfix: Obscure bug related to precision of intersections.
           
 v4.8.8 - 30 August 2012
 * Bugfix: Fixed bug in OffsetPolygons function introduced in 
-          version 4.8.5.
+  version 4.8.5.
 
 v4.8.7 - 24 August 2012
 * Bugfix: ReversePolygon function in C++ translation was broken.
@@ -17,7 +52,7 @@ v4.8.6 - 11 August 2012
 * Bugfix: Potential for memory overflow errors when using 
   ExPolygons structure.
 * Bugfix: The polygon coordinate range has been reduced to 
-          +/- 0x3FFFFFFFFFFFFFFF (4.6e18).
+  +/- 0x3FFFFFFFFFFFFFFF (4.6e18).
 * Update: ReversePolygons function was misnamed ReversePoints in C++.
 * Update: SimplifyPolygon function now takes a PolyFillType parameter.
           
@@ -156,21 +191,21 @@ v4.2.6 - 1 May 2011
   has been significantly inproved
 
 v4.2.4 - 26 April 2011
-Input polygon coordinates can now contain the full range of 
-signed 64bit integers (ie +/-9,223,372,036,854,775,807). This 
-means that floating point values can be converted to and from 
-Clipper's 64bit integer coordinates structure (IntPoint) and  
-still retain a precision of up to 18 decimal places. However, 
-since the large-integer math that supports this expanded range 
-imposes a small cost on performance (~15%), a new property 
-UseFullCoordinateRange has been added to the Clipper class to 
-allow users the choice of whether or not to use this expanded 
-coordinate range. If this property is disabled, coordinate values 
-are restricted to +/-1,500,000,000.
+  Input polygon coordinates can now contain the full range of 
+  signed 64bit integers (ie +/-9,223,372,036,854,775,807). This 
+  means that floating point values can be converted to and from 
+  Clipper's 64bit integer coordinates structure (IntPoint) and  
+  still retain a precision of up to 18 decimal places. However, 
+  since the large-integer math that supports this expanded range 
+  imposes a small cost on performance (~15%), a new property 
+  UseFullCoordinateRange has been added to the Clipper class to 
+  allow users the choice of whether or not to use this expanded 
+  coordinate range. If this property is disabled, coordinate values 
+  are restricted to +/-1,500,000,000.
 
 v4.2 - 12 April 2011
-JoinCommonEdges() code significantly improved plus other minor 
-improvements.
+  JoinCommonEdges() code significantly improved plus other minor 
+  improvements.
 
 v4.1.2 - 9 April 2011
 * Update: Minor code tidy. 

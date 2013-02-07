@@ -1,10 +1,10 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  4.8.9                                                           *
-* Date      :  25 September 2012                                               *
+* Version   :  5.1.0                                                           *
+* Date      :  1 January 2012                                                  *
 * Website   :  http://www.angusj.com                                           *
-* Copyright :  Angus Johnson 2010-2012                                         *
+* Copyright :  Angus Johnson 2010-2013                                         *
 *                                                                              *
 * License:                                                                     *
 * Use, modification & distribution is subject to Boost Software License Ver 1. *
@@ -78,7 +78,7 @@ enum JoinType { jtSquare, jtRound, jtMiter };
 bool Orientation(const Polygon &poly);
 double Area(const Polygon &poly);
 void OffsetPolygons(const Polygons &in_polys, Polygons &out_polys,
-  double delta, JoinType jointype = jtSquare, double MiterLimit = 2);
+  double delta, JoinType jointype = jtSquare, double MiterLimit = 2, bool AutoFix = true);
 void SimplifyPolygon(const Polygon &in_poly, Polygons &out_polys, PolyFillType fillType = pftEvenOdd);
 void SimplifyPolygons(const Polygons &in_polys, Polygons &out_polys, PolyFillType fillType = pftEvenOdd);
 void SimplifyPolygons(Polygons &polys, PolyFillType fillType = pftEvenOdd);
@@ -87,7 +87,7 @@ void ReversePolygon(Polygon& p);
 void ReversePolygons(Polygons& p);
 
 //used internally ...
-enum EdgeSide { esNeither = 0, esLeft = 1, esRight = 2, esBoth = 3 };
+enum EdgeSide { esLeft = 1, esRight = 2};
 enum IntersectProtects { ipNone = 0, ipLeft = 1, ipRight = 2, ipBoth = 3 };
 
 struct TEdge {
@@ -98,6 +98,8 @@ struct TEdge {
   long64 xtop;
   long64 ytop;
   double dx;
+  long64 deltaX;
+  long64 deltaY;
   long64 tmpX;
   PolyType polyType;
   EdgeSide side;
@@ -138,12 +140,9 @@ struct OutPt; //forward declaration
 struct OutRec {
   int     idx;
   bool    isHole;
-  OutRec *FirstLeft;
-  OutRec *AppendLink;
+  OutRec *FirstLeft; //see comments in clipper.pas
   OutPt  *pts;
   OutPt  *bottomPt;
-  OutPt  *bottomFlag;
-  EdgeSide sides;
 };
 
 struct OutPt {
@@ -216,7 +215,7 @@ public:
   void ReverseSolution(bool value) {m_ReverseOutput = value;};
 protected:
   void Reset();
-  virtual bool ExecuteInternal(bool fixHoleLinkages);
+  virtual bool ExecuteInternal();
 private:
   PolyOutList       m_PolyOuts;
   JoinList          m_Joins;
@@ -230,6 +229,7 @@ private:
   PolyFillType      m_ClipFillType;
   PolyFillType      m_SubjFillType;
   bool              m_ReverseOutput;
+  bool              m_UsingExPolygons;
   void DisposeScanbeamList();
   void SetWindingCount(TEdge& edge);
   bool IsEvenOddFillType(const TEdge& edge) const;
@@ -257,10 +257,9 @@ private:
   void DoEdge2(TEdge *edge1, TEdge *edge2, const IntPoint &pt);
   void DoBothEdges(TEdge *edge1, TEdge *edge2, const IntPoint &pt);
   void IntersectEdges(TEdge *e1, TEdge *e2,
-    const IntPoint &pt, IntersectProtects protects);
+    const IntPoint &pt, const IntersectProtects protects);
   OutRec* CreateOutRec();
   void AddOutPt(TEdge *e, const IntPoint &pt);
-  void DisposeBottomPt(OutRec &outRec);
   void DisposeAllPolyPts();
   void DisposeOutRec(PolyOutList::size_type index);
   bool ProcessIntersections(const long64 botY, const long64 topY);
@@ -275,14 +274,14 @@ private:
   bool FixupIntersections();
   void FixupOutPolygon(OutRec &outRec);
   bool IsHole(TEdge *e);
-  void FixHoleLinkage(OutRec *outRec);
-  void CheckHoleLinkages1(OutRec *outRec1, OutRec *outRec2);
-  void CheckHoleLinkages2(OutRec *outRec1, OutRec *outRec2);
+  void FixHoleLinkage(OutRec &outRec);
   void AddJoin(TEdge *e1, TEdge *e2, int e1OutIdx = -1, int e2OutIdx = -1);
   void ClearJoins();
   void AddHorzJoin(TEdge *e, int idx);
   void ClearHorzJoins();
-  void JoinCommonEdges(bool fixHoleLinkages);
+  bool JoinPoints(const JoinRec *j, OutPt *&p1, OutPt *&p2);
+  void FixupJoinRecs(JoinRec *j, OutPt *pt, unsigned startIdx);
+  void JoinCommonEdges();
 };
 
 //------------------------------------------------------------------------------
