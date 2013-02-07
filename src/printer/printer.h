@@ -34,8 +34,6 @@ private:
   View *m_view;
   Model *m_model;
   
-  bool isInhibited;
-  
   bool was_connected;
   unsigned long prev_line;
   bool waiting_temp;
@@ -55,8 +53,6 @@ public:
   ~Printer();
   
   void setModel( Model *model );
-  void Inhibit( bool value = true );
-  bool get_inhibit_print();
   
   bool Connect( bool connect = true );
   bool Connect( string device, int baudrate );
@@ -65,6 +61,7 @@ public:
   bool StartPrinting( string commands, unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
   bool StopPrinting( bool wait = true );
   bool ContinuePrinting( bool wait = true );
+  void Inhibit( bool value = true );
   
   void UpdateTemperatureMonitor( void );
   double get_temp( TempType t ) { return temps[(int)t]; }

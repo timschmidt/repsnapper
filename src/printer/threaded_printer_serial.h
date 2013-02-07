@@ -69,6 +69,7 @@ class ThreadedPrinterSerial : protected PrinterSerial
   unsigned long pc_lines_printed; // when is_printing is false, set by main thread(s), pc_mutex required.  When is_printing is true, set by helper, pc_mutex requried
   unsigned long pc_bytes_printed; // when is_printing is false, set by main thread(s), pc_mutex required.  When is_printing is true, set by helper, pc_mutex required
   unsigned long pc_stop_line; // set by main thread(s), pc_mutex required
+  int inhibit_count; // set by main thread(s), pc_cond_mutex required
   
   ThreadBufferReturnData command_buffer;
   SignalingThreadBuffer response_buffer;
@@ -100,8 +101,7 @@ class ThreadedPrinterSerial : protected PrinterSerial
   // Connect to or disconnect from a printer
   virtual bool Connect( string device, int baudrate );
   virtual void Disconnect( void );
-  bool IsConnected( void );
-  
+  virtual bool IsConnected( void );
   virtual bool Reset( void );
   
   // Start printing gcode
@@ -112,6 +112,8 @@ class ThreadedPrinterSerial : protected PrinterSerial
   virtual bool IsPrinting( void );
   virtual bool StopPrinting( bool wait = true );
   virtual bool ContinuePrinting( bool wait = true );
+  virtual void Inhibit( bool value = true );
+  virtual bool IsInhibited( void );
   
   unsigned long GetPrintingProgress( unsigned long *bytes_printed = NULL );
   // Returns last line number ok'd by the printer

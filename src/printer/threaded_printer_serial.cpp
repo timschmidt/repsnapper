@@ -40,6 +40,7 @@ ThreadedPrinterSerial::ThreadedPrinterSerial() :
   pc_lines_printed = 0;
   pc_bytes_printed = 0;
   pc_stop_line = 0;
+  inhibit_count = 0;
   
   mutex_init( &pc_mutex );
   mutex_init( &pc_cond_mutex );
@@ -220,6 +221,13 @@ bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_
     return false;
   }
   
+  if ( inhibit_count > 0 ) {
+    delete [] commands_copy;
+    mutex_unlock( &pc_cond_mutex );
+    mutex_unlock( &pc_mutex );
+    return false;
+  }
+  
   // Make sure we are not already printing
   if ( is_printing ) {
     request_print = false;
@@ -338,6 +346,12 @@ bool ThreadedPrinterSerial::ContinuePrinting( bool wait ) {
     return false;
   }
   
+  if ( inhibit_count > 0 ) {
+    mutex_unlock( &pc_cond_mutex );
+    mutex_unlock( &pc_mutex );
+    return false;
+  }
+  
   request_print = true;
   
   if ( wait && ! is_printing ) {
@@ -354,6 +368,24 @@ bool ThreadedPrinterSerial::ContinuePrinting( bool wait ) {
   mutex_unlock( &pc_cond_mutex );
   mutex_unlock( &pc_mutex );
   return true;
+}
+
+void ThreadedPrinterSerial::Inhibit( bool value ) {
+  mutex_lock( &pc_cond_mutex );
+
+  if ( value )
+    inhibit_count++;
+  else if ( inhibit_count > 0 )
+    inhibit_count--;
+
+  mutex_unlock( &pc_cond_mutex );
+}
+
+bool ThreadedPrinterSerial::IsInhibited( void ) {
+  mutex_unlock( &pc_cond_mutex );
+  bool inhib = inhibit_count > 0;
+  mutex_unlock( &pc_cond_mutex );
+  return inhib;
 }
 
 unsigned long ThreadedPrinterSerial::GetPrintingProgress( unsigned long *bytes_printed ) {

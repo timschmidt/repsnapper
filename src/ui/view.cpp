@@ -673,8 +673,9 @@ void View::save_settings_to(Glib::RefPtr < Gio::File > file)
 
 void View::inhibit_print_changed()
 {
-  if (m_printer->get_inhibit_print()) {
-    m_pause_button->set_sensitive (false);
+  if (m_printer->IsInhibited()) {
+    if (!m_printer->IsPrinting())
+      m_pause_button->set_sensitive (false);
     m_print_button->set_sensitive (false);
   } else {
     m_pause_button->set_sensitive (true);

@@ -27,7 +27,6 @@ Printer::Printer( View *view ) {
   m_view = view;
   
   m_model = NULL;
-  isInhibited = false;
   was_connected = false;
   prev_line = 0;
   waiting_temp = false;
@@ -53,15 +52,6 @@ void Printer::setModel( Model *model ) {
   m_model = model;
   
   UpdateTemperatureMonitor();
-}
-
-bool Printer::get_inhibit_print() {
-  return isInhibited;
-}
-
-void Printer::Inhibit( bool value ) {
-  isInhibited = value;
-  signal_inhibit_changed.emit();
 }
 
 bool Printer::Connect( bool connect ) {
@@ -99,9 +89,6 @@ bool Printer::StartPrinting( unsigned long start_line, unsigned long stop_line )
 }
 
 bool Printer::StartPrinting( string commands, unsigned long start_line, unsigned long stop_line ) {
-  if ( get_inhibit_print() )
-    return false;
-  
   bool ret = ThreadedPrinterSerial::StartPrinting( commands, start_line, stop_line );
   if ( ret ) {
     prev_line = start_line;
@@ -123,9 +110,6 @@ bool Printer::StopPrinting( bool wait ) {
 }
 
 bool Printer::ContinuePrinting( bool wait ) {
-  if ( get_inhibit_print() )
-    return false;
-  
   bool ret = ThreadedPrinterSerial::ContinuePrinting( wait );
   
   if ( ret && wait ) {
@@ -134,6 +118,11 @@ bool Printer::ContinuePrinting( bool wait ) {
   }
   
   return ret;
+}
+
+void Printer::Inhibit( bool value ) {
+  ThreadedPrinterSerial::Inhibit( value );
+  signal_inhibit_changed.emit();
 }
 
 bool Printer::SwitchPower( bool on ) {
@@ -177,9 +166,9 @@ bool Printer::Move(string axis, double distance, bool relative )
   float speed = 0.0;
   
   if ( axis == "X" || axis == "Y" )
-    speed = settings->Hardware.MaxMoveSpeedZ * 60;
-  else if(axis == "Z")
     speed = settings->Hardware.MaxMoveSpeedXY * 60;
+  else if(axis == "Z")
+    speed = settings->Hardware.MaxMoveSpeedZ * 60;
   else
     alert (_("Move called with unknown axis"));
   
