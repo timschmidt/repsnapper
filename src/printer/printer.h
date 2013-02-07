@@ -35,6 +35,7 @@ private:
   Model *m_model;
   
   bool was_connected;
+  bool was_printing;
   unsigned long prev_line;
   bool waiting_temp;
   int temp_countdown;
@@ -57,6 +58,8 @@ public:
   bool Connect( bool connect = true );
   bool Connect( string device, int baudrate );
   void Disconnect( void );
+  bool Reset( void );
+  
   bool StartPrinting( unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
   bool StartPrinting( string commands, unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
   bool StopPrinting( bool wait = true );
@@ -80,6 +83,7 @@ public:
   void alert( const char *message );
   void error( const char *message, const char *secondary = NULL );
   
+  sigc::signal< void > signal_printing_changed;
   sigc::signal< void, unsigned long > signal_now_printing;
   sigc::signal< void > signal_inhibit_changed;
   sigc::signal< void > signal_temp_changed;

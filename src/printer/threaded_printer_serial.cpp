@@ -179,7 +179,7 @@ bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_
   unsigned long bytes_printed;
   
   for ( pos = -1, count = 1; count < start_line; count++ ) {
-    if ( ( pos = commands.find( '\n', pos + 1) ) == string::npos ) {
+    if ( ( pos = commands.find( '\n', pos + 1 ) ) == string::npos ) {
       ostringstream os;
       os << "Reached end of printer commands at line " << count << " before finding line " << start_line << endl;
       LogError( os.str().c_str() );
@@ -189,6 +189,16 @@ bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_
   
   bytes_printed = pos + 1;
   lines_printed = start_line > 0 ? start_line - 1 : 0;
+  
+  while ( count < stop_line ) {
+    if ( ( pos = commands.find( '\n', pos + 1 ) ) == string::npos ) {
+      if ( commands[ commands.length() - 1 ] != '\n' )
+	count++;
+      break;
+    }
+    count++;
+  }
+  stop_line = count;
   
   // Allocate memory for commands
   size_t len;
@@ -401,6 +411,16 @@ unsigned long ThreadedPrinterSerial::GetPrintingProgress( unsigned long *bytes_p
   
   if ( bytes_printed != NULL )
     *bytes_printed = bytes;
+  
+  return lines;
+}
+
+unsigned long ThreadedPrinterSerial::GetTotalPrintingLines( void ) {
+  unsigned long lines;
+
+  mutex_lock( &pc_cond_mutex );
+  lines = pc_stop_line; 
+  mutex_unlock( &pc_cond_mutex );
   
   return lines;
 }

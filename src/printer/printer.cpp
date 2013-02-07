@@ -28,6 +28,7 @@ Printer::Printer( View *view ) {
   
   m_model = NULL;
   was_connected = false;
+  was_printing = false;
   prev_line = 0;
   waiting_temp = false;
   temp_countdown = 100;
@@ -82,6 +83,17 @@ void Printer::Disconnect( void ) {
   signal_serial_state_changed.emit( SERIAL_DISCONNECTED );  
 }
 
+bool Printer::Reset( void ) {
+  bool ret = ThreadedPrinterSerial::Reset();
+  
+  if ( ret && was_printing ) {
+    was_printing = false;
+    signal_printing_changed.emit();
+  }
+  
+  return ret;
+}
+
 bool Printer::StartPrinting( unsigned long start_line, unsigned long stop_line ) {
   string commands = m_model->GetGCodeBuffer()->get_text();
   
@@ -90,9 +102,16 @@ bool Printer::StartPrinting( unsigned long start_line, unsigned long stop_line )
 
 bool Printer::StartPrinting( string commands, unsigned long start_line, unsigned long stop_line ) {
   bool ret = ThreadedPrinterSerial::StartPrinting( commands, start_line, stop_line );
+  
   if ( ret ) {
     prev_line = start_line;
-    signal_now_printing.emit( start_line );
+    
+    was_printing = IsPrinting();
+    if ( m_view )
+      signal_printing_changed.emit();
+    
+    if ( start_line > 0 )
+      signal_now_printing.emit( start_line );
   }
   
   return ret;
@@ -103,7 +122,10 @@ bool Printer::StopPrinting( bool wait ) {
   
   if ( ret && wait ) {
     prev_line = 0;
-    signal_now_printing.emit( 0 );
+    was_printing = IsPrinting();
+    
+    if ( m_view )
+      signal_printing_changed.emit();
   }
   
   return ret;
@@ -113,8 +135,13 @@ bool Printer::ContinuePrinting( bool wait ) {
   bool ret = ThreadedPrinterSerial::ContinuePrinting( wait );
   
   if ( ret && wait ) {
-    prev_line = GetPrintingProgress() + 1;
-    signal_now_printing.emit( prev_line );
+    prev_line = GetPrintingProgress();
+
+    if ( m_view )
+      signal_printing_changed.emit();
+    
+    if ( prev_line > 0 )
+      signal_now_printing.emit( prev_line );
   }
   
   return ret;
@@ -291,17 +318,17 @@ bool Printer::Idle( void ) {
 }
 
 bool Printer::CheckPrintingProgress( void ) {
-  bool is_printing;
-  unsigned long line;
-
-  is_printing = IsPrinting();
-  if ( is_printing && ( line = GetPrintingProgress() + 1 ) != prev_line ) {
+  bool is_printing = IsPrinting();
+  unsigned long line = GetPrintingProgress();
+  
+  if ( m_view && is_printing != was_printing ) {
     prev_line = line;
-    signal_now_printing.emit( line );
-  }
-  if ( ! is_printing && prev_line != 0 ) {
-    prev_line = 0;
-    signal_now_printing.emit( 0 );
+    signal_printing_changed.emit();
+    was_printing = is_printing;
+  } else if ( is_printing && line != prev_line ) {
+    prev_line = line;
+    if ( line > 0 )
+      signal_now_printing.emit( line );
   }
   
   return true;

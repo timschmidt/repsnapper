@@ -363,6 +363,12 @@ View *View::create(Model *model)
 void View::printing_changed()
 {
   bool printing = m_printer->IsPrinting();
+
+  if ( printing )
+    m_progress->start (_("Printing"), m_printer->GetTotalPrintingLines() );
+  else
+    m_progress->stop (_("Done"));
+
   //rGlib::Mutex::Lock lock(mutex);
   m_model->SetIsPrinting(printing);
   //m_print_button->set_active(printing);
@@ -916,13 +922,13 @@ void View::power_toggled(Gtk::ToggleToolButton *button)
 void View::kick_clicked()
 {
   m_printer->Kick();
-  printing_changed();
+  //printing_changed();
 }
 
 void View::print_clicked()
 {
   m_printer->StartPrinting();
-  printing_changed();
+  //printing_changed();
 }
 
 // void View::stop_clicked()
@@ -943,7 +949,7 @@ void View::reset_clicked()
 {
   if (get_userconfirm(_("Reset Printer?"))) {
     m_printer->Reset();
-    printing_changed();
+    //printing_changed();
   }
 }
 
@@ -1470,6 +1476,8 @@ void View::setModel(Model *model)
   m_printer = new Printer(this);
   m_printer->signal_temp_changed.connect
     (sigc::mem_fun(*this, &View::temp_changed));
+  m_printer->signal_printing_changed.connect
+    (sigc::mem_fun(*this, &View::printing_changed));
   m_printer->signal_now_printing.connect
     (sigc::mem_fun(*this, &View::showCurrentPrinting));
   // m_printer->signal_logmessage.connect
@@ -1994,10 +2002,10 @@ void View::showCurrentPrinting(unsigned long lineno)
   }
   bool cont = true;
   cont = m_progress->update(lineno, true);
-  //if (!cont) { // stop by progress bar // broken, fix me
-  //  m_printer->Pause();
+  if (!cont) { // stop by progress bar
+    m_printer->Pause();
   //  printing_changed();
-  //}
+  }
   m_model->setCurrentPrintingLine(lineno);
   queue_draw();
   // while(Gtk::Main::events_pending()) {

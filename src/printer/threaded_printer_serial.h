@@ -120,8 +120,8 @@ class ThreadedPrinterSerial : protected PrinterSerial
   // If printing is stopped, returns last line number of previous print
   // If bytes_printed is non-null, sets that value as well.
   
-  //bool StartPeriodic( string commands, unsigned long interval_ms );
-  //void StopPeriodic( void );
+  unsigned long GetTotalPrintingLines( void );
+  // Return the ending line of the current print
   
   bool Send( string command );
   // Command may be multiple commands separated by newlines (\n).
