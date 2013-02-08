@@ -233,6 +233,9 @@ class View : public Gtk::Window
 
   Glib::Mutex mutex;
 
+  Glib::RefPtr<Gio::File> iconfile;
+  void set_icon_file(Glib::RefPtr<Gio::File> iconfile);
+
 };
 
 #ifdef MODEL_IMPLEMENTATION

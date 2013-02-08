@@ -592,6 +592,17 @@ void View::hide_on_response(int, Gtk::Dialog *dialog)
   dialog->hide();
 }
 
+void View::set_icon_file(Glib::RefPtr<Gio::File> file)
+{
+  iconfile = file;
+  if (iconfile) {
+    set_icon_from_file(iconfile->get_path());
+    m_settings_ui->set_icon_from_file(iconfile->get_path());
+  } else
+    set_icon_name("gtk-convert");
+}
+
+
 void View::show_dialog(const char *name)
 {
   Gtk::Dialog *dialog;
@@ -600,7 +611,10 @@ void View::show_dialog(const char *name)
     cerr << "no such dialog " << name << "\n";
     return;
   }
-  dialog->set_icon_name("gtk-convert");
+  if (iconfile)
+    dialog->set_icon_from_file(iconfile->get_path());
+  else
+    dialog->set_icon_name("gtk-convert");
   dialog->signal_response().connect (sigc::bind(sigc::mem_fun(*this, &View::hide_on_response), dialog));
   dialog->show();
   //  dialog->set_transient_for (*this);

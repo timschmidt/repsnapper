@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="256"
+   height="256"
+   id="svg10139"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="repsnapper-icon16.svg"
+   inkscape:export-filename="/home/churchyard/Obrázky/repsnapper/repsnapper16.png"
+   inkscape:export-xdpi="5.625"
+   inkscape:export-ydpi="5.625">
+  <defs
+     id="defs10141">
+    <filter
+       inkscape:collect="always"
+       id="filter10953"
+       color-interpolation-filters="sRGB">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="1.1336322"
+         id="feGaussianBlur10955" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.2374369"
+     inkscape:cx="20.428754"
+     inkscape:cy="118.36859"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     inkscape:grid-bbox="true"
+     inkscape:document-units="px"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-width="1302"
+     inkscape:window-height="744"
+     inkscape:window-x="64"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata10144">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Miroslav Hrončok &lt;miro@hroncok.cz&gt;</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <cc:license
+           rdf:resource="http://creativecommons.org/licenses/by/3.0/" />
+      </cc:Work>
+      <cc:License
+         rdf:about="http://creativecommons.org/licenses/by/3.0/">
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Reproduction" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#Distribution" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Notice" />
+        <cc:requires
+           rdf:resource="http://creativecommons.org/ns#Attribution" />
+        <cc:permits
+           rdf:resource="http://creativecommons.org/ns#DerivativeWorks" />
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     transform="translate(0,208)">
+    <g
+       id="g10167"
+       transform="matrix(5.3729942,0,0,5.3729942,-0.95185979,-208.99005)">
+      <path
+         inkscape:connector-curvature="0"
+         id="path10978"
+         d="M 24.102368,5.0688278 C 20.096533,8.5857864 16.015108,11.87584 12.910184,15.169091 9.2356954,19.066453 7.0411124,22.757962 7.0411124,27.248459 c 0,9.411974 7.5469156,16.958889 16.9588876,16.958889 9.411974,0 16.958888,-7.546915 16.958888,-16.958889 0,-4.494969 -2.188527,-8.214902 -5.834949,-12.11349 C 32.053885,11.852607 28.038885,8.5759384 24.102368,5.0688278 z"
+         style="fill:#8ae234;fill-opacity:0;stroke:#4e9a06;stroke-width:7.3253417;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+      <path
+         sodipodi:nodetypes="cccccc"
+         inkscape:connector-curvature="0"
+         id="path10981"
+         d="M 32.863411,39.748474 32.661381,24.426028 24.013759,15.385167 24.114774,37.009638 15.167112,30.407572 14.962676,13.437018"
+         style="fill:none;stroke:#4e9a06;stroke-width:6.94106817;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    </g>
+    <path
+       style="fill:none;stroke:#73d216;stroke-width:15.26467705;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 177.25132,15.481429 -1.62827,-93.230576 -47.54913,-48.576493 0.54276,116.7309096 -48.075735,-35.4728626 -3.26945,-91.725447"
+       id="path10999"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccccc" />
+    <path
+       style="fill:#8ae234;fill-opacity:0;stroke:#73d216;stroke-width:16.79060555;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       d="m 128.55003,-181.75527 c -21.52333,18.89659 -43.452807,36.57403 -60.135546,54.26866 -19.743005,20.94049 -31.534488,40.774954 -31.534488,64.902368 0,50.570482 40.549534,91.120012 91.120004,91.120012 50.57048,0 91.12001,-40.54953 91.12001,-91.120012 0,-24.151443 -11.75895,-44.138618 -31.35115,-65.085718 -16.49538,-17.63611 -38.06795,-35.24163 -59.21883,-54.08531 z"
+       id="path10997"
+       inkscape:connector-curvature="0" />
+  </g>
+</svg>

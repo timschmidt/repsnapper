@@ -13,12 +13,6 @@ bin_PROGRAMS = repsnapper
 LIB_DIR=$(top_srcdir)/libraries
 WARNING_FLAGS = -Wall -Wsign-compare -Wno-invalid-offsetof
 
-repsnapperdatadir = $(datadir)/@PACKAGE@
-dist_repsnapperdata_DATA = src/repsnapper.ui
-
-repsnapperconfdir = $(sysconfdir)/xdg/@PACKAGE@
-dist_repsnapperconf_DATA = src/repsnapper.conf
-
 repsnapper_CPPFLAGS = \
 	-I$(LIB_DIR)/vmmlib/include \
 	-I$(LIB_DIR)/lmfit/lmfit-3.2/lib \
@@ -89,3 +83,12 @@ EXTRA_DIST += $(built_header_make)
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 
 repsnapper_LDADD = libclipper.la libpoly2tri.la liblmfit.la libamf.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(XMLPP_LIBS) $(LIBZIP_LIBS) $(BOOST_LDFLAGS)
+
+repsnapperdatadir = $(datadir)/@PACKAGE@
+dist_repsnapperdata_DATA = src/repsnapper.ui
+
+repsnapperconfdir = $(sysconfdir)/xdg/@PACKAGE@
+dist_repsnapperconf_DATA = src/repsnapper.conf
+
+repsnappericondir = $(datadir)/icons/hicolor/scalable/apps/
+dist_repsnappericon_DATA = src/repsnapper.svg
