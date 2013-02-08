@@ -27,7 +27,13 @@ int main( void ) {
   PrinterSerial ps( 100 );
   char command[ 1024 ];
   
-  ps.Connect( "/dev/ttyACM0", 115200 );
+  vector<string> ports = PrinterSerial::FindPorts();
+  for ( unsigned int ind = 0; ind < ports.size(); ind++ ) {
+    cout << "Found port: " << ports[ind] << endl;
+    cout << "Testing: " << PrinterSerial::TestPort( ports[ind] ) << endl;
+  }
+  
+  ps.Connect( ports[0], 115200 );
   
   //sleep( 1 );
   cout << ps.Send( "M115" );

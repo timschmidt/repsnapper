@@ -78,7 +78,6 @@ bool PrinterSerial::TestPort( const string device ) {
   HANDLE h;
   h = CreateFile( device.c_str(),
 		  GENERIC_READ | GENERIC_WRITE,
-		  NULL,
 		  0,
 		  NULL,
 		  OPEN_EXISTING,
@@ -86,7 +85,9 @@ bool PrinterSerial::TestPort( const string device ) {
 		  NULL );
   if ( h == INVALID_HANDLE_VALUE )
     return false;
-
+  
+  CloseHandle( h );
+  
   return true;
 #else
   int fd;
@@ -103,7 +104,8 @@ vector<string> PrinterSerial::FindPorts() {
   vector<string> ports;
   
 #ifdef WIN32
-  char *name = "COMx";
+  char name[5];
+  strncpy( name, "COMx", 5 );
   for ( int i = 0; i <= 9; i++ ) {
     name[3] = i + '0';
     if ( TestPort( name ) )
@@ -143,7 +145,6 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   
   device_handle = CreateFile( device.c_str(),
 			      GENERIC_READ | GENERIC_WRITE,
-			      NULL,
 			      0,
 			      NULL,
 			      OPEN_EXISTING,
@@ -166,14 +167,14 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     return false;
   }
   
-  dcb.Baudrate = baudrate;
+  dcb.BaudRate = baudrate;
   dcb.fBinary = 1;
   dcb.fParity = 0;
   dcb.fOutxCtsFlow = 0;
   dcb.fOutxDsrFlow = 0;
   dcb.fDtrControl = DTR_CONTROL_ENABLE;
-  dcb.fDsrSenseitivity = 0;
-  dcb.OutX = 0;
+  dcb.fDsrSensitivity = 0;
+  dcb.fOutX = 0;
   dcb.fInX = 0;
   dcb.fNull = 0;
   dcb.fRtsControl = RTS_CONTROL_ENABLE;
@@ -522,7 +523,7 @@ bool PrinterSerial::SendText( char *text ) {
 #ifdef WIN32
   DWORD num;
   while ( len > 0 ) {
-    if ( ! WriteFile( device_handle, &text, len, &num, NULL ) ) == 0 ) {
+    if ( ! WriteFile( device_handle, &text, len, &num, NULL ) ) {
       LogLine( "*** Error Writing to port ***\n" );
       LogError( "*** Error Writing to port ***\n" );
       return false;
