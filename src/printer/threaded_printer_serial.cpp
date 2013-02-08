@@ -71,7 +71,7 @@ ThreadedPrinterSerial::~ThreadedPrinterSerial() {
 
 bool ThreadedPrinterSerial::Connect( string device, int baudrate ) {
   // Open Serial Port
-  if ( ! PrinterSerial::Connect( device, baudrate ) )
+  if ( ! PrinterSerial::RawConnect( device, baudrate ) )
     return false;
   
   // Clear printer_commands
@@ -97,13 +97,6 @@ bool ThreadedPrinterSerial::Connect( string device, int baudrate ) {
     return false;
   }
   helper_active = true;
-  
-  // Sleep for 10 ms
-  ntime_t nts = { 0, 10 * 1000 * 1000 };
-  nsleep( &nts );
-  
-  // Send version request command
-  SendAndWaitResponse( "M115" );
   
   return true;
 }
@@ -144,7 +137,7 @@ bool ThreadedPrinterSerial::Reset( void ) {
   command_buffer.Flush();
   response_buffer.Flush();
   
-  PrinterSerial::Reset();
+  PrinterSerial::RawReset();
   
   helper_cancel = false;
   
@@ -159,13 +152,6 @@ bool ThreadedPrinterSerial::Reset( void ) {
     return false;
   }
   helper_active = true;
-  
-  // Sleep for 10 ms
-  ntime_t nts = { 0, 10 * 1000 * 1000 };
-  nsleep( &nts );
-  
-  // Send version request command
-  SendAndWaitResponse( "M115" );
   
   return true;
 }
@@ -472,6 +458,19 @@ void *ThreadedPrinterSerial::HelperMainStatic( void *arg ) {
 }
 
 void *ThreadedPrinterSerial::HelperMain( void ) {
+  // Read start line before continuing
+  // The printer seems to lock up if it recvs a command before the start
+  // line has been sent
+  RecvLine();
+  
+  // Sleep for 10 ms
+  ntime_t nts = { 0, 10 * 1000 * 1000 };
+  nsleep( &nts );
+  
+  // Send version request command
+  strncpy( command_scratch, "M115\n", 6 );
+  SendCommand( false );
+  
   while ( true ) {
     if ( return_data != NULL )
       return_data->AddLine( "**Internal Error\n" );

@@ -63,6 +63,14 @@ protected:
   //   !! <- fatal error, printer is shutting down, disconnect
   //   // comments
   
+  // The following commands connect and reset without
+  // caling RecvLine() at the end.  Calling RecvLine()
+  // is necessary.  The ONLY reason to use these functions
+  // is in a derived class that will call RecvLine later
+  // after performing other initalization tasks.
+  bool RawConnect( string device, int baudrate );
+  bool RawReset( void );
+  
 public:
   PrinterSerial( unsigned long max_recv_block_ms );
   virtual ~PrinterSerial();

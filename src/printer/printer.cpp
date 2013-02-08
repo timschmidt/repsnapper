@@ -107,8 +107,7 @@ bool Printer::StartPrinting( string commands, unsigned long start_line, unsigned
     prev_line = start_line;
     
     was_printing = IsPrinting();
-    if ( m_view )
-      signal_printing_changed.emit();
+    signal_printing_changed.emit();
     
     if ( start_line > 0 )
       signal_now_printing.emit( start_line );
@@ -124,8 +123,7 @@ bool Printer::StopPrinting( bool wait ) {
     prev_line = 0;
     was_printing = IsPrinting();
     
-    if ( m_view )
-      signal_printing_changed.emit();
+    signal_printing_changed.emit();
   }
   
   return ret;
@@ -137,8 +135,7 @@ bool Printer::ContinuePrinting( bool wait ) {
   if ( ret && wait ) {
     prev_line = GetPrintingProgress();
 
-    if ( m_view )
-      signal_printing_changed.emit();
+    signal_printing_changed.emit();
     
     if ( prev_line > 0 )
       signal_now_printing.emit( prev_line );
@@ -321,7 +318,7 @@ bool Printer::CheckPrintingProgress( void ) {
   bool is_printing = IsPrinting();
   unsigned long line = GetPrintingProgress();
   
-  if ( m_view && is_printing != was_printing ) {
+  if ( is_printing != was_printing ) {
     prev_line = line;
     signal_printing_changed.emit();
     was_printing = is_printing;

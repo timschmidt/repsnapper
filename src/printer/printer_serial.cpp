@@ -133,7 +133,7 @@ vector<string> PrinterSerial::FindPorts() {
 #endif
 }
 
-bool PrinterSerial::Connect( string device, int baudrate ) {
+bool PrinterSerial::RawConnect( string device, int baudrate ) {
 #ifdef WIN32
   if ( IsConnected() || device_handle != INVALID_HANDLE_VALUE ) {
     Disconnect();
@@ -310,6 +310,13 @@ bool PrinterSerial::Connect( string device, int baudrate ) {
   // Reset line number
   prev_cmd_line_number = 0;
   
+  return true;
+}
+
+bool PrinterSerial::Connect( string device, int baudrate ) {
+  if ( ! RawConnect( device, baudrate ) )
+    return false;
+  
   // Read start line before returning
   // The printer seems to lock up if it recvs a command before the start
   // line has been sent
@@ -340,7 +347,7 @@ bool PrinterSerial::IsConnected( void ) {
 #endif
 }
 
-bool PrinterSerial::Reset( void ) {
+bool PrinterSerial::RawReset( void ) {
 #ifdef WIN32
   if ( device_handle == INVALID_HANDLE_VALUE )
     return false;
@@ -384,8 +391,15 @@ bool PrinterSerial::Reset( void ) {
 #endif
   
   // Reset line number
-  prev_cmd_line_number = 0;
+  prev_cmd_line_number = 0;  
   
+  return true;
+}
+
+bool PrinterSerial::Reset( void ) {
+  if ( ! Reset() )
+    return false;
+
   // Read start line before returning
   // The printer seems to lock up if it recvs a command before the start
   // line has been sent
