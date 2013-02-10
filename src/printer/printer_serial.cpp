@@ -47,9 +47,11 @@ PrinterSerial::PrinterSerial( unsigned long max_recv_block_ms ) :
   
   full_recv_buffer = new char[ max_command_size + max_command_prefix + 10 ];
   recv_buffer = full_recv_buffer + max_command_prefix;
-
+  
 #ifdef WIN32
   device_handle = INVALID_HANDLE_VALUE;
+  raw_recv = new char[ max_command_siez + max_command_prefix + 10 ];
+  *raw_recv = '\0';
 #else
   device_fd = -1;
 #endif
@@ -217,6 +219,8 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     LogError( os.str().c_str() );
     return false;
   }
+  
+  *raw_recv = '\0';
   
 #else
   // Verify speed is valid and convert to posix value
@@ -554,37 +558,47 @@ bool PrinterSerial::SendText( char *text ) {
 
 // Waits for a complete line from the port and receives that line into recv_buffer (but not at the start of recv_buffer to make logging easier).  Returns pointer to start of recv'd data.  Performs logging.
 char *PrinterSerial::RecvLine( void ) {
-  char *recvd = recv_buffer;
-  char *buf = recvd;
-  bool done = false;
   size_t tot_size = 0;
   
 #ifdef WIN32
+  char *raw_loc = raw_recv;
   DWORD num;
   
-  while ( ! done ) {
+  while ( true ) {
+    while ( *raw_loc != '\0' && *raw_loc != '\n' )
+      raw_loc++;
+    tot_size = raw_loc - raw_recv;
+    
+    if ( *raw_loc == '\n' ) {
+      raw_loc++;
+      tot_size++;
+      break;
+    }
+    
     if ( tot_size + 20 >= max_command_size ) {
       LogLine( "*** Error: Received line too long ***\n" );
       LogError( "*** Error: Received line too long ***\n" );
-      *buf++ = '\n';
+      *raw_loc++ = '\n';
       break;
     }
-    if ( ! ReadFile( device_handle, buf, max_command_size - tot_size - 20, &num, NULL ) ) {
+    
+    if ( ! ReadFile( device_handle, raw_loc, max_command_size - tot_size - 20, &num, NULL ) ) {
       LogLine( "*** Error Reading from port ***\n" );
       LogError( "*** Error Reading from port ***\n" );
       return NULL;
     }
-    tot_size += num;
-    buf += num;
+    raw_loc[ num ] = '\0';
     
-    if ( num > 0 && ( buf[-1] == '\n' || buf[-1] == '\r' ) ) {
-      done = true;
-    } else {
+    if ( num == 0 )
       RecvTimeout();
-    }
   }
-  *buf = '\0';
+  
+  memcpy( recv_buffer, raw_recv, tot_size );
+  recv_buffer[ tot_size ] = '\0';
+  memmove( raw_recv, raw_recv + tot_size, strlen( raw_recv + tot_size ) + 1 );
 #else
+  char *buf = recvd;
+  bool done = false;
   ssize_t num;
   struct timeval timeout;
   fd_set set;
@@ -638,6 +652,8 @@ char *PrinterSerial::RecvLine( void ) {
   }
   *buf = '\0';
 #endif
+	   
+  char *recvd = recv_buffer;
   
   // Ignore inital whitespace
   while ( isspace( *recvd ) ) {

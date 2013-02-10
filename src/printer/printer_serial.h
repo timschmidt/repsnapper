@@ -49,6 +49,10 @@ protected:
   char *full_recv_buffer;
   char *recv_buffer;
   
+#ifdef WIN32
+  char *raw_recv;
+#endif
+  
   char *SendCommand( void ); // Sends gcode command.  Performs formating and waits for reply.  The line starts at command_scratch + max_command_prefix.  If buffer_response, the reply is entered into the response_buffer.
   
   char *FormatLine( void ); // Formats line of gcode in command_scratch and returns a pointer to the starting character
