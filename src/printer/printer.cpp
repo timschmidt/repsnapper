@@ -295,8 +295,10 @@ bool Printer::Idle( void ) {
     while ( ( str = ReadLog() ) != "" )
       m_view->comm_log( str );
     
-    while ( ( str = ReadErrorLog() ) != "" )
+    while ( ( str = ReadErrorLog() ) != "" ) {
+      alert( str.c_str() );
       m_view->err_log( str );
+    }
   }
   
   if ( ( is_connected = IsConnected() ) != was_connected ) {

@@ -70,7 +70,6 @@ public:
   double get_temp( TempType t ) { return temps[(int)t]; }
   
   void Pause( void ) { StopPrinting(); }
-  void Kick( void ) {}; // this does nothing
   bool SwitchPower( bool on );
   bool SelectExtruder( int extruder_no=-1 );
   bool SetTemp( TempType type, float value, int extruder_no=-1 );

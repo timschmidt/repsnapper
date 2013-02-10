@@ -2659,21 +2659,6 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkToolButton" id="p_kick">
-                                            <property name="visible">True</property>
-                                            <property name="can_focus">False</property>
-                                            <property name="tooltip_text" translatable="yes">Kick</property>
-                                            <property name="use_action_appearance">False</property>
-                                            <property name="label" translatable="yes">Kick</property>
-                                            <property name="use_underline">True</property>
-                                            <property name="stock_id">gtk-media-forward</property>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="homogeneous">True</property>
-                                          </packing>
-                                        </child>
-                                        <child>
                                           <object class="GtkToolButton" id="p_home">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
@@ -4652,33 +4637,6 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                     <property name="column_spacing">6</property>
                                     <property name="row_spacing">6</property>
                                     <child>
-                                      <object class="GtkSpinButton" id="Hardware.ReceivingBufferSize">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="tooltip_text" translatable="yes">Recommended value for FiveD is 4</property>
-                                        <property name="invisible_char">•</property>
-                                      </object>
-                                      <packing>
-                                        <property name="left_attach">1</property>
-                                        <property name="right_attach">3</property>
-                                        <property name="top_attach">1</property>
-                                        <property name="bottom_attach">2</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkLabel" id="label46">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="xalign">0</property>
-                                        <property name="label" translatable="yes">Printer Buffer Size (Lines of GCode)</property>
-                                      </object>
-                                      <packing>
-                                        <property name="top_attach">1</property>
-                                        <property name="bottom_attach">2</property>
-                                        <property name="x_options">GTK_FILL</property>
-                                      </packing>
-                                    </child>
-                                    <child>
                                       <object class="GtkLabel" id="label13">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
@@ -4729,21 +4687,6 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                         <property name="top_attach">2</property>
                                         <property name="bottom_attach">3</property>
                                         <property name="x_options">GTK_FILL</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkCheckButton" id="Hardware.ValidateConnection">
-                                        <property name="label" translatable="yes">Validate Connection</property>
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">True</property>
-                                        <property name="receives_default">False</property>
-                                        <property name="use_action_appearance">False</property>
-                                        <property name="draw_indicator">True</property>
-                                      </object>
-                                      <packing>
-                                        <property name="right_attach">3</property>
-                                        <property name="top_attach">3</property>
-                                        <property name="bottom_attach">4</property>
                                       </packing>
                                     </child>
                                     <child>

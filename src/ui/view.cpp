@@ -933,12 +933,6 @@ void View::power_toggled(Gtk::ToggleToolButton *button)
   m_printer->SwitchPower (button->get_active());
 }
 
-void View::kick_clicked()
-{
-  m_printer->Kick();
-  //printing_changed();
-}
-
 void View::print_clicked()
 {
   m_printer->StartPrinting();
@@ -1192,7 +1186,6 @@ View::View(BaseObjectType* cobject,
   connect_tooltoggled("p_pause",     sigc::mem_fun(*this, &View::pause_toggled));
   // m_builder->get_widget ("p_stop", m_stop_button);
   // m_stop_button->signal_clicked().connect    (sigc::mem_fun(*this, &View::stop_clicked) );
-  connect_button ("p_kick",          sigc::mem_fun(*this, &View::kick_clicked) );
   connect_button ("p_home",          sigc::mem_fun(*this, &View::home_all));
   connect_button ("p_reset",         sigc::mem_fun(*this, &View::reset_clicked));
   connect_tooltoggled("p_power",     sigc::mem_fun(*this, &View::power_toggled) );

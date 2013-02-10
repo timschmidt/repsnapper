@@ -73,7 +73,9 @@ PrinterSerial::~PrinterSerial() {
   
   delete [] full_command_scratch;
   delete [] full_recv_buffer;
+#ifdef WIN32
   delete [] raw_recv;
+#endif
 }
 
 bool PrinterSerial::TestPort( const string device ) {
@@ -261,7 +263,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   // Open file
   if ( ( device_fd = open( device.c_str(), O_RDWR | O_NOCTTY ) ) < 0 ) {
     ostringstream os;
-    os << "Could not open serial device: \"" << device << "\"" << strerror( errno ) << endl;
+    os << "Could not open serial device: \"" << device << "\": " << strerror( errno ) << endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -598,7 +600,7 @@ char *PrinterSerial::RecvLine( void ) {
   recv_buffer[ tot_size ] = '\0';
   memmove( raw_recv, raw_recv + tot_size, strlen( raw_recv + tot_size ) + 1 );
 #else
-  char *buf = recvd;
+  char *buf = recv_buffer;
   bool done = false;
   ssize_t num;
   struct timeval timeout;

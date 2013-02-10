@@ -34,7 +34,7 @@ ThreadedPrinterSerial::ThreadedPrinterSerial() :
   command_buffer( command_buffer_size, command_buffer_sleep, "", false, true ),
   response_buffer( response_buffer_size, true, response_buffer_sleep, "", true, false ),
   log_buffer( log_buffer_size, false, log_buffer_sleep, "\n*** Log overflow ***\n\n", true, false ),
-  error_buffer( log_buffer_size, false, log_buffer_sleep, "\n*** Error Log overflow ***\n\n", true, false ) {
+  error_buffer( log_buffer_size, true, log_buffer_sleep, "\n*** Error Log overflow ***\n\n", true, false ) {
   request_print = is_printing = printing_complete = false;
   printer_commands = NULL;
   pc_lines_printed = 0;
