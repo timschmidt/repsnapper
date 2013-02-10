@@ -185,6 +185,11 @@ bool Printer::Move(string axis, double distance, bool relative )
   if ( m_model == NULL )
     return false;
   
+  if ( IsPrinting() ) {
+    alert(_("Can't move while printing"));
+    return false;
+  }
+  
   Settings *settings = &m_model->settings;
   
   float speed = 0.0;
@@ -228,9 +233,11 @@ bool Printer::SetTemp( TempType type, float value, int extruder_no ) {
   case TEMP_BED:
     os << "M140 S";
     break;
-
+    
   default:
-    cerr << "No such Temptype: " << type << endl;
+    ostringstream ose;
+    ose << "No such Temptype: " << type;
+    alert( ose.str().c_str() );
     return false;
   }
   
@@ -245,6 +252,11 @@ bool Printer::SetTemp( TempType type, float value, int extruder_no ) {
 
 bool Printer::RunExtruder( double extruder_speed, double extruder_length,
 			   bool reverse, int extruder_no ) {
+  if ( IsPrinting() ) {
+    alert(_("Can't manually extrude while printing"));
+    return false;
+  }
+  
   if ( extruder_no >= 0 )
     if ( !SelectExtruder(extruder_no ) )
       return false;
