@@ -73,6 +73,7 @@ PrinterSerial::~PrinterSerial() {
   
   delete [] full_command_scratch;
   delete [] full_recv_buffer;
+  delete [] raw_recv;
 }
 
 bool PrinterSerial::TestPort( const string device ) {
