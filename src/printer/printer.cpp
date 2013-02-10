@@ -91,6 +91,9 @@ bool Printer::Reset( void ) {
     signal_printing_changed.emit();
   }
   
+  if ( !ret )
+    alert( _("Error: Unable to reset printer") );
+  
   return ret;
 }
 

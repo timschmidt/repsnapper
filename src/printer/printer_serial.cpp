@@ -17,6 +17,12 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
+#ifdef HAVE_CONFIG_H
+#include "stdafx.h"
+#else
+#define _( t ) t
+#endif
+
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
@@ -141,6 +147,10 @@ vector<string> PrinterSerial::FindPorts() {
 }
 
 bool PrinterSerial::RawConnect( string device, int baudrate ) {
+  char err_str[ 1024 ];
+  snprintf( err_str, 1024, _("Error connecting to printer using port %s at baudrate %d"), device.c_str(), baudrate );
+  err_str[ 1023 ] = '\0';
+  
 #ifdef WIN32
   if ( IsConnected() || device_handle != INVALID_HANDLE_VALUE ) {
     Disconnect();
@@ -157,7 +167,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
 			      NULL );
   if ( device_handle == INVALID_HANDLE_VALUE ) {
     ostringstream os;
-    os << "Could not open port " << device << " (" << GetLastError() << ")"<< endl;
+    os << err_str << ": " << _("Error opening port") << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -167,7 +177,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
     ostringstream os;
-    os << "Could not get port state " << device << " (" << GetLastError() << ")"<< endl;
+    os << err_str << ": " << _("Error getting port state") << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -192,7 +202,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
     ostringstream os;
-    os << "Could not configure port " << device << " (" << GetLastError() << ")"<< endl;
+    os << err_str << ": " << _("Error setting port state") << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -203,7 +213,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
     ostringstream os;
-    os << "Could not get port timeouts " << device << " (" << GetLastError() << ")"<< endl;
+    os << err_str << ": " << _("Error getting port timeouts") << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -218,7 +228,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
     ostringstream os;
-    os << "Could not set port timeouts " << device << " (" << GetLastError() << ")"<< endl;
+    os << err_str << ": " << _("Error setting port timeouts") << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -249,7 +259,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   case 230400: speed = B230400; break;
   default:
     ostringstream os;
-    os << "Unknown baudrate " << baudrate << endl;
+    os << err_str << ": " << _("Unknown baudrate") << endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -262,8 +272,9 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   
   // Open file
   if ( ( device_fd = open( device.c_str(), O_RDWR | O_NOCTTY ) ) < 0 ) {
+    int err = errno;
     ostringstream os;
-    os << "Could not open serial device: \"" << device << "\": " << strerror( errno ) << endl;
+    os << err_str << ": " << _("Error opening port") << ": " << strerror( err ) << endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -275,7 +286,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     close( device_fd );
     device_fd = -1;
     ostringstream os;
-    os << "Could not get terminal attributes of serial port " << device << ": " << strerror( err ) << endl;
+    os << err_str << ": " << _("Error getting port state") << ": " << strerror( err ) << endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -290,7 +301,9 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   if( tcsetattr(device_fd, TCSANOW, &attribs ) < 0 ) {
     close( device_fd );
     device_fd = -1;
-    LogError( "Error enabling raw mode\n" );
+    ostringstream os;
+    os << err_str << ": " << _("Error enabling port raw mode") << endl;
+    LogError( os.str().c_str() );
     return false;
   }
   
@@ -300,16 +313,16 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     close( device_fd );
     device_fd = -1;
     ostringstream os;
-    os << "Error setting port speed to " << baudrate << endl;
+    os << err_str << ": " << _("Error setting baudrate") << endl;
     LogError( os.str().c_str() );
     return false;
   }
-
+  
   if( tcsetattr(device_fd, TCSANOW, &attribs ) < 0) {
     close( device_fd );
     device_fd = -1;
     ostringstream os;
-    os << "Error setting port baud rate to " << baudrate << endl;
+    os << err_str << ": " << _("Error setting baudrate") << endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -407,7 +420,7 @@ bool PrinterSerial::RawReset( void ) {
 bool PrinterSerial::Reset( void ) {
   if ( ! Reset() )
     return false;
-
+  
   // Read start line before returning
   // The printer seems to lock up if it recvs a command before the start
   // line has been sent
@@ -531,8 +544,8 @@ bool PrinterSerial::SendText( char *text ) {
   DWORD num;
   while ( len > 0 ) {
     if ( ! WriteFile( device_handle, &text, len, &num, NULL ) ) {
-      LogLine( "*** Error Writing to port ***\n" );
-      LogError( "*** Error Writing to port ***\n" );
+      LogLine( _("*** Error Writing to port ***\n") );
+      LogError( _("*** Error Writing to port ***\n") );
       return false;
     } len -= num;
     text += num;
@@ -543,8 +556,8 @@ bool PrinterSerial::SendText( char *text ) {
     if ( ( num = write( device_fd, text, len ) ) == -1 ) {
       int err = errno;
       char msg[ 256 ];
-      LogLine( "*** Error Writing to port ***\n" );
-      snprintf( msg, 250, "*** Error Writing to port: %s ***\n", strerror( err ) );
+      LogLine( _("*** Error Writing to port ***\n") );
+      snprintf( msg, 250, _("*** Error Writing to port: %s ***\n"), strerror( err ) );
       if ( msg[ 248 ] != '\0' )
 	msg[ 248 ] = '\n';
       msg[ 249 ] = '\0';
@@ -579,15 +592,15 @@ char *PrinterSerial::RecvLine( void ) {
     }
     
     if ( tot_size + 20 >= max_command_size ) {
-      LogLine( "*** Error: Received line too long ***\n" );
-      LogError( "*** Error: Received line too long ***\n" );
+      LogLine( _("*** Error: Received line too long ***\n") );
+      LogError( _("*** Error: Received line too long ***\n") );
       *raw_loc++ = '\n';
       break;
     }
     
     if ( ! ReadFile( device_handle, raw_loc, max_command_size - tot_size - 20, &num, NULL ) ) {
-      LogLine( "*** Error Reading from port ***\n" );
-      LogError( "*** Error Reading from port ***\n" );
+      LogLine( _("*** Error Reading from port ***\n") );
+      LogError( _("*** Error Reading from port ***\n") );
       return NULL;
     }
     raw_loc[ num ] = '\0';
@@ -610,8 +623,8 @@ char *PrinterSerial::RecvLine( void ) {
   while ( ! done ) {
     // Make sure line is not too long
     if ( tot_size + 20 >= max_command_size ) {
-      LogLine( "*** Error: Received line too long ***\n" );
-      LogError( "*** Error: Received line too long ***\n" );
+      LogLine( _("*** Error: Received line too long ***\n") );
+      LogError( _("*** Error: Received line too long ***\n") );
       *buf++ = '\n';
       break;
     }
@@ -634,8 +647,8 @@ char *PrinterSerial::RecvLine( void ) {
       if ( ( num = read( device_fd, buf, max_command_size - tot_size - 20 ) ) == -1 ) {
 	int err = errno;
 	char msg[ 256 ];
-	LogLine( "*** Error reading from port ***\n" );
-	snprintf( msg, 250, "*** Error reading from port: %s ***\n", strerror( err ) );
+	LogLine( _("*** Error reading from port ***\n") );
+	snprintf( msg, 250, _("*** Error reading from port: %s ***\n"), strerror( err ) );
 	if ( msg[ 248 ] != '\0' )
 	  msg[ 248 ] = '\n';
 	msg[ 249 ] = '\0';
