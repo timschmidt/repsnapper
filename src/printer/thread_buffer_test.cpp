@@ -24,11 +24,11 @@
 
 //#define USE_RET_DATA
 
-const struct timespec ns = { 10, 100 * 1000 * 1000 };
+const ntime_t ns = { 10, 100 * 1000 * 1000 };
 #ifndef USE_RET_DATA
 //ThreadBuffer tb( 50, 1, ns, "*overflow*", false, false );
-ThreadBuffer tb( 20, false, ns, "\n*** Log overflow ***\n\n", true, false );
-//SignalingThreadBuffer tb( 50, 1, ns, "*overflow*", false, false );
+//ThreadBuffer tb( 20, false, ns, "\n*** Log overflow ***\n\n", true, false );
+SignalingThreadBuffer tb( 50, 1, ns, "*overflow*", false, false );
 #else
 ThreadBufferReturnData tb( 50, ns, "*overflow*", true, true );
 #endif
@@ -63,7 +63,8 @@ void *Reader( void * ) {
       ret_data->AddLine( ret );
     }
 #endif
-    sleep( 1 );
+    ntime_t nt = { 1, 0 };
+    nsleep( &nt );
   }
   
   return NULL;

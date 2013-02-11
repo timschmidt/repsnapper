@@ -56,7 +56,7 @@ void *ErrorReader( void *arg ) {
   return NULL;
 }
 
-int main( void ) {
+int main( int argc, char *argv[] ) {
   ThreadedPrinterSerial tps;
   char command[ 1024 + 10 ];
   thread_t log_reader;
@@ -72,7 +72,10 @@ int main( void ) {
   thread_create( &log_reader, LogReader, &tps );
   thread_create( &error_reader, ErrorReader, &tps );
   
-  tps.Connect( ports[0], 115200 );
+  if ( argc >= 2 )
+    tps.Connect( argv[1], 115200 );
+  else
+    tps.Connect( ports[0], 115200 );
   
   while ( 1 ) {
     cin.getline( command, 1024 );
@@ -110,6 +113,8 @@ int main( void ) {
   }
   
   tps.Disconnect();
+
+  cout << "Disconnected" << endl;
   
 #ifdef HAS_THREAD_CANCEL
   thread_cancel( log_reader );

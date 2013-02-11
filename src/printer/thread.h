@@ -68,10 +68,10 @@ inline int cond_broadcast( cond_t *c ) { g_cond_broadcast( c ); return 0; };
 typedef struct timespec ntime_t;
 inline int nsleep( const ntime_t *req ) { return nanosleep( req, NULL ); };
 #else
-typedef struct timespec {
+typedef struct {
   unsigned long tv_sec;
   long tv_nsec;
 } ntime_t;
 
-inline int nsleep( const ntime_t *req ) { Sleep( req->tv_sec * 1000 + ( tv_nsec + 999999 ) / 1000000 ); return 0; };
+inline int nsleep( const ntime_t *req ) { Sleep( req->tv_sec * 1000 + ( req->tv_nsec + 999999 ) / 1000000 ); return 0; };
 #endif

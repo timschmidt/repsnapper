@@ -95,8 +95,7 @@ bool ThreadedPrinterSerial::Connect( string device, int baudrate ) {
   // Start thread
   int rc;
   if ( ( rc = thread_create( &helper_thread, HelperMainStatic, this ) ) != 0 ) {
-    close( device_fd );
-    device_fd = -1;
+    PrinterSerial::Disconnect();
     ostringstream os;
     os << _("Error connecting to printer") << ": ";
     os << _("Error creating serial helper thread") << ": ";
@@ -152,8 +151,7 @@ bool ThreadedPrinterSerial::Reset( void ) {
   // Start thread
   int rc;
   if ( ( rc = thread_create( &helper_thread, HelperMainStatic, this ) ) != 0 ) {
-    close( device_fd );
-    device_fd = -1;
+    PrinterSerial::Disconnect();
     ostringstream os;
     os << _("Error reseting printer") << ": ";
     os << _("Error creating serial helper thread") << ": ";

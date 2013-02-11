@@ -56,7 +56,7 @@ PrinterSerial::PrinterSerial( unsigned long max_recv_block_ms ) :
   
 #ifdef WIN32
   device_handle = INVALID_HANDLE_VALUE;
-  raw_recv = new char[ max_command_siez + max_command_prefix + 10 ];
+  raw_recv = new char[ max_command_size + max_command_prefix + 10 ];
   *raw_recv = '\0';
 #else
   device_fd = -1;
@@ -172,7 +172,9 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     return false;
   }
   
-  DCB dcb;
+  DCB dcb = { 0 };
+  dcb.DCBlength = sizeof( dcb );
+  
   if ( ! GetCommState( device_handle, &dcb ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
@@ -196,7 +198,6 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   dcb.ByteSize = 8;
   dcb.Parity = NOPARITY;
   dcb.StopBits = ONESTOPBIT;
-  dcb.EvtChar = '\n';
   
   if ( ! SetCommState( device_handle, &dcb ) ) {
     CloseHandle( device_handle );
@@ -218,7 +219,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     return false;
   }
   
-  ct.ReadIntervalTimeout = 2;
+  ct.ReadIntervalTimeout = 5;
   ct.ReadTotalTimeoutConstant = max_recv_block_ms;
   ct.ReadTotalTimeoutMultiplier = 0;
   ct.WriteTotalTimeoutConstant = max_recv_block_ms;
@@ -418,7 +419,7 @@ bool PrinterSerial::RawReset( void ) {
 }
 
 bool PrinterSerial::Reset( void ) {
-  if ( ! Reset() )
+  if ( ! RawReset() )
     return false;
   
   // Read start line before returning
@@ -537,17 +538,18 @@ char *PrinterSerial::FormatLine( void ) {
 bool PrinterSerial::SendText( char *text ) {
   memcpy( text - 4, "<-- ", 4 );
   LogLine( text - 4 );
-
+  
   size_t len = strlen( text );
   
 #ifdef WIN32
   DWORD num;
   while ( len > 0 ) {
-    if ( ! WriteFile( device_handle, &text, len, &num, NULL ) ) {
+    if ( ! WriteFile( device_handle, text, len, &num, NULL ) ) {
       LogLine( _("*** Error Writing to port ***\n") );
       LogError( _("*** Error Writing to port ***\n") );
       return false;
-    } len -= num;
+    }
+    len  -= num;
     text += num;
   }
 #else
@@ -564,7 +566,8 @@ bool PrinterSerial::SendText( char *text ) {
       
       LogError( msg );
       return false;
-    } len -= num;
+    }
+    len -= num;
     text += num;
   }
 #endif
@@ -606,7 +609,7 @@ char *PrinterSerial::RecvLine( void ) {
     raw_loc[ num ] = '\0';
     
     if ( num == 0 )
-      RecvTimeout();
+      RecvTimeout();    
   }
   
   memcpy( recv_buffer, raw_recv, tot_size );

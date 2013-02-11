@@ -23,7 +23,7 @@
 
 using namespace std;
 
-int main( void ) {
+int main( int argc, char *argv[] ) {
   PrinterSerial ps( 100 );
   char command[ 1024 ];
   
@@ -33,16 +33,28 @@ int main( void ) {
     cout << "Testing: " << PrinterSerial::TestPort( ports[ind] ) << endl;
   }
   
-  ps.Connect( ports[0], 115200 );
+  if ( argc >= 2 )
+    ps.Connect( argv[1], 115200 );
+  else
+    ps.Connect( ports[0], 115200 );
   
-  //sleep( 1 );
+  cout << "Connected" << endl;
+  
+  /*  
+#ifdef WIN32
+  Sleep( 1000 );
+#else
+  sleep( 1 );
+#endif
+  */
+
   cout << ps.Send( "M115" );
   
   while ( 1 ) {
     cin.getline( command, 1024 );
     if ( strncasecmp( command, "reset", 1024 ) == 0 ) {
       if ( ps.Reset() )
-	cout << "Sucess" << endl;
+	cout << "Success" << endl;
       else
 	cout << "Failure" << endl;
       continue;
@@ -53,4 +65,3 @@ int main( void ) {
   
   ps.Disconnect();
 }
-
