@@ -35,7 +35,9 @@ void *LogReader( void *arg ) {
     str = tps->ReadLog( true );
     if ( str.length() > 0 ) {
       //if ( ! tps->IsPrinting() )
-      cout << str;
+      cerr << str;
+      // Use cerr instead of cerr.  Wine seams to have a concurancy issue with
+      // This thread and the main thread both using cout.
     }
   }
   
@@ -49,7 +51,9 @@ void *ErrorReader( void *arg ) {
   while ( 1 ) {
     str = tps->ReadErrorLog( true );
     if ( str.length() > 0 ) {
-      cout << str;
+      cerr << str;
+      // Use cerr instead of cerr.  Wine seams to have a concurancy issue with
+      // This thread and the main thread both using cout.
     }
   }
   
@@ -72,7 +76,9 @@ int main( int argc, char *argv[] ) {
   thread_create( &log_reader, LogReader, &tps );
   thread_create( &error_reader, ErrorReader, &tps );
   
-  if ( argc >= 2 )
+  if ( argc >= 3 )
+    tps.Connect( argv[1], strtol( argv[2], NULL, 10 ) );
+  else if ( argc >= 2 )
     tps.Connect( argv[1], 115200 );
   else
     tps.Connect( ports[0], 115200 );
@@ -117,10 +123,12 @@ int main( int argc, char *argv[] ) {
   cout << "Disconnected" << endl;
   
 #ifdef HAS_THREAD_CANCEL
+#ifndef WIN32
   thread_cancel( log_reader );
   thread_cancel( error_reader );
   thread_join( log_reader );
   thread_join( error_reader );
+#endif
 #endif
   
   exit( 0 );

@@ -19,6 +19,7 @@
 
 #include "printer_serial.h"
 
+#include <stdlib.h>
 #include <string.h>
 
 using namespace std;
@@ -33,6 +34,8 @@ int main( int argc, char *argv[] ) {
     cout << "Testing: " << PrinterSerial::TestPort( ports[ind] ) << endl;
   }
   
+  if ( argc >= 3 )
+    ps.Connect( argv[1], strtol( argv[2], NULL, 10 ) );
   if ( argc >= 2 )
     ps.Connect( argv[1], 115200 );
   else
@@ -40,14 +43,6 @@ int main( int argc, char *argv[] ) {
   
   cout << "Connected" << endl;
   
-  /*  
-#ifdef WIN32
-  Sleep( 1000 );
-#else
-  sleep( 1 );
-#endif
-  */
-
   cout << ps.Send( "M115" );
   
   while ( 1 ) {
