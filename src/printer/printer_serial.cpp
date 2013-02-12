@@ -147,10 +147,6 @@ vector<string> PrinterSerial::FindPorts() {
 }
 
 bool PrinterSerial::RawConnect( string device, int baudrate ) {
-  char err_str[ 1024 ];
-  snprintf( err_str, 1024, _("Error connecting to printer using port %s at baudrate %d"), device.c_str(), baudrate );
-  err_str[ 1023 ] = '\0';
-  
 #ifdef WIN32
   if ( IsConnected() || device_handle != INVALID_HANDLE_VALUE ) {
     Disconnect();
@@ -166,8 +162,12 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
 			      FILE_ATTRIBUTE_NORMAL,
 			      NULL );
   if ( device_handle == INVALID_HANDLE_VALUE ) {
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error opening port %s"), device.c_str() );
+    err_str[ 256 ] = '\0';
+    
     ostringstream os;
-    os << err_str << ": " << _("Error opening port") << " (" << GetLastError() << ")"<< endl;
+    os << err_str << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -178,8 +178,12 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   if ( ! GetCommState( device_handle, &dcb ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error getting port %s state"), device.c_str() );
+    err_str[ 255 ] = '\0';
+    
     ostringstream os;
-    os << err_str << ": " << _("Error getting port state") << " (" << GetLastError() << ")"<< endl;
+    os << err_str << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -202,8 +206,12 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   if ( ! SetCommState( device_handle, &dcb ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error setting port %s state"), device.c_str() );
+    err_str[ 255 ] = '\0';
+
     ostringstream os;
-    os << err_str << ": " << _("Error setting port state") << " (" << GetLastError() << ")"<< endl;
+    os << err_str << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -213,8 +221,12 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   if ( ! GetCommTimeouts( device_handle, &ct ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error getting port %s timeouts"), device.c_str() );
+    err_str[ 255 ] = '\0';
+
     ostringstream os;
-    os << err_str << ": " << _("Error getting port timeouts") << " (" << GetLastError() << ")"<< endl;
+    os << err_str << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -228,8 +240,11 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   if ( ! SetCommTimeouts( device_handle, &ct ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error setting port %s timeouts"), device.c_str() );
+    err_str[ 255 ] = '\0';
     ostringstream os;
-    os << err_str << ": " << _("Error setting port timeouts") << " (" << GetLastError() << ")"<< endl;
+    os << err_str << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -259,9 +274,13 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   case 115200: speed = B115200; break;
   case 230400: speed = B230400; break;
   default:
-    ostringstream os;
-    os << err_str << ": " << _("Unknown baudrate") << endl;
-    LogError( os.str().c_str() );
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Unknown baudrate %d\n"), baudrate );
+    if ( err_str[ 254 ] != '\0' )
+      err_str[ 254 ] = '\n';
+    err_str[ 255 ] = '\0';
+    
+    LogError( err_str );
     return false;
   }
   
@@ -274,8 +293,12 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   // Open file
   if ( ( device_fd = open( device.c_str(), O_RDWR | O_NOCTTY ) ) < 0 ) {
     int err = errno;
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error opening port %s"), device.c_str() );
+    err_str[ 255 ] = '\0';
+    
     ostringstream os;
-    os << err_str << ": " << _("Error opening port") << ": " << strerror( err ) << endl;
+    os << err_str << ": " << strerror( err ) << endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -286,8 +309,13 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     int err = errno;
     close( device_fd );
     device_fd = -1;
+    
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error getting port %s state"), device.c_str() );
+    err_str[ 255 ] = '\0';
+
     ostringstream os;
-    os << err_str << ": " << _("Error getting port state") << ": " << strerror( err ) << endl;
+    os << err_str << ": " << strerror( err ) << endl;
     LogError( os.str().c_str() );
     return false;
   }
@@ -302,9 +330,14 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   if( tcsetattr(device_fd, TCSANOW, &attribs ) < 0 ) {
     close( device_fd );
     device_fd = -1;
-    ostringstream os;
-    os << err_str << ": " << _("Error enabling port raw mode") << endl;
-    LogError( os.str().c_str() );
+
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error enabling port %s raw mode\n"), device.c_str() );
+    if ( err_str[ 254 ] != '\0' )
+      err_str[ 254 ] = '\n';
+    err_str[ 255 ] = '\0';
+    
+    LogError( err_str );
     return false;
   }
   
@@ -313,21 +346,37 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
        cfsetospeed( &attribs, speed ) < 0 ) {
     close( device_fd );
     device_fd = -1;
-    ostringstream os;
-    os << err_str << ": " << _("Error setting baudrate") << endl;
-    LogError( os.str().c_str() );
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error setting port %s baudrate to %d\n"), device.c_str(), baudrate );
+    if ( err_str[ 254 ] != '\0' )
+      err_str[ 254 ] = '\n';
+    err_str[ 255 ] = '\0';
+    
+    LogError( err_str );
     return false;
   }
   
   if( tcsetattr(device_fd, TCSANOW, &attribs ) < 0) {
     close( device_fd );
     device_fd = -1;
-    ostringstream os;
-    os << err_str << ": " << _("Error setting baudrate") << endl;
-    LogError( os.str().c_str() );
+    char err_str[ 256 ];
+    snprintf( err_str, 256, _("Error setting port %s baudrate to %d\n"), device.c_str(), baudrate );
+    if ( err_str[ 254 ] != '\0' )
+      err_str[ 254 ] = '\n';
+    err_str[ 255 ] = '\0';
+    
+    LogError( err_str );
     return false;
   }
 #endif
+  
+  char msg[ 256 ];
+  memcpy( msg, "--- ", 4 );
+  snprintf( msg + 4, 256 - 4, _("Connected to port %s at %d baud\n"), device.c_str(), baudrate );
+  if ( msg[ 254 ] != '\0' )
+    msg[ 254 ] = '\n';
+  msg[ 255 ] = '\0';
+  LogLine( msg );
   
   // Reset line number
   prev_cmd_line_number = 0;
