@@ -40,7 +40,6 @@
 #include <dirent.h>
 #include <sys/select.h>
 #include <sys/ioctl.h>
-#include <linux/usbdevice_fs.h>
 #endif
 
 #include "printer_serial.h"
@@ -432,32 +431,28 @@ bool PrinterSerial::RawReset( void ) {
   if ( device_fd < 0 )
     return false;
   
-  // First try usb reset
-  if ( ioctl( device_fd, USBDEVFS_RESET, 0 ) != 0 ) {
+  // First try clear/set DTR
+  if ( ioctl( device_fd, TIOCMBIC, TIOCM_DTR ) ||
+       ioctl( device_fd, TIOCMBIS, TIOCM_DTR ) ) {
     
-    // Next try clear/set DTR
-    if ( ioctl( device_fd, TIOCMBIC, TIOCM_DTR ) ||
-	 ioctl( device_fd, TIOCMBIS, TIOCM_DTR ) ) {
+    // Finally try setting baud rate to zero
+    struct termios attribs;
       
-      // Finally try setting baud rate to zero
-      struct termios attribs;
+    if ( tcgetattr( device_fd, &attribs ) != 0 )
+      return false;
       
-      if ( tcgetattr( device_fd, &attribs ) != 0 )
-	return false;
+    speed_t orig_speed = cfgetispeed( &attribs );
+    cfsetispeed( &attribs, B0 );
+    cfsetospeed( &attribs, B0 );
       
-      speed_t orig_speed = cfgetispeed( &attribs );
-      cfsetispeed( &attribs, B0 );
-      cfsetospeed( &attribs, B0 );
+    if ( tcsetattr( device_fd, TCSANOW, &attribs ) != 0 )
+      return false;
       
-      if ( tcsetattr( device_fd, TCSANOW, &attribs ) != 0 )
-	return false;
+    cfsetispeed( &attribs, orig_speed );
+    cfsetospeed( &attribs, orig_speed );
       
-      cfsetispeed( &attribs, orig_speed );
-      cfsetospeed( &attribs, orig_speed );
-      
-      if ( tcsetattr( device_fd, TCSANOW, &attribs ) != 0 )
-	return false;      
-    }
+    if ( tcsetattr( device_fd, TCSANOW, &attribs ) != 0 )
+      return false;      
   }
 #endif
   
