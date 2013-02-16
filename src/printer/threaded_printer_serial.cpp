@@ -131,7 +131,10 @@ bool ThreadedPrinterSerial::IsConnected( void ) {
 
 bool ThreadedPrinterSerial::Reset( void ) {
   StopPrinting( true );
-
+  
+  if ( ! IsConnected() )
+    return false;
+  
   if ( helper_active ) {
     mutex_lock( &pc_cond_mutex );
     helper_cancel = true;
@@ -144,7 +147,7 @@ bool ThreadedPrinterSerial::Reset( void ) {
   command_buffer.Flush();
   response_buffer.Flush();
   
-  PrinterSerial::RawReset();
+  bool ret = PrinterSerial::RawReset();
   
   helper_cancel = false;
   
@@ -161,7 +164,7 @@ bool ThreadedPrinterSerial::Reset( void ) {
   }
   helper_active = true;
   
-  return true;
+  return ret;
 }
 
 bool ThreadedPrinterSerial::StartPrinting( string commands, unsigned long start_line, unsigned long stop_line ) {

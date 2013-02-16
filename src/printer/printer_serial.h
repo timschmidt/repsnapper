@@ -23,7 +23,7 @@
 #include <vector>
 
 #ifdef WIN32
-#include "windows.h"
+#include <windows.h>
 #endif
 
 using namespace std;

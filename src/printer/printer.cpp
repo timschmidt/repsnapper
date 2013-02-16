@@ -160,11 +160,9 @@ bool Printer::SwitchPower( bool on ) {
   
   string resp;
   if ( on )
-    resp = SendAndWaitResponse( "M80" );
-  else
-    resp = SendAndWaitResponse( "M81" );
-  
-  return resp.length() > 0;
+    return Send( "M80" );
+
+  return Send( "M81" );
 }
 
 bool Printer::Home( string axis ) {
@@ -312,7 +310,6 @@ bool Printer::Idle( void ) {
     
     while ( ( str = ReadErrorLog() ) != "" ) {
       alert( str.c_str() );
-      m_view->err_log( str );
     }
   }
   
