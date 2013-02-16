@@ -154,7 +154,7 @@
     href="http://downloads.sourceforge.net/gtkglext/" />
 
 <autotools id="gtkglext" version="1.2.0" autogen-sh="autogen.sh" skip-autogen="false" >
-        <branch module="gtkglext-1.2.0.tar.gz" version="1.2.0" repo="gtkglext" 
+        <branch module="gtkglext-1.2.0.tar.gz" version="1.2.0" repo="gtkglext"
            hash="sha256:e5073f3c6b816e7fa67d359d9745a5bb5de94a628ac85f624c992925a46844f9">
           <patch file="gtkglext-pangox-configure.patch" strip="1" />
           <patch file="gtkglext-fixups.patch" strip="1" />
@@ -164,11 +164,25 @@
         </dependencies>
 </autotools>
 
+
+<repository type="tarball" name="gtkglextmm"
+    href="http://downloads.sourceforge.net/gtkglext/" />
+
+<autotools id="gtkglextmm" version="1.2.0" autogen-sh="autogen.sh" skip-autogen="false" >
+        <branch module="gtkglextmm-1.2.0.tar.gz" version="1.2.0" repo="gtkglext"
+           hash="sha256:8f499c1f95678c56cce908c10bf2c1d0f2267b87e0c480385fa4b128c75bdf7b">
+          <patch file="gdkspanfunc.patch" strip="1" />
+        </branch>
+        <dependencies>
+                <dep package="gtkglext" />
+        </dependencies>
+</autotools>
+
 <repository type="tarball" name="ftpgnome"
     href="http://ftp.gnome.org/pub/GNOME/sources/" />
 
 <autotools id="libxml++">
-        <branch module="libxml++/2.35/libxml++-2.35.2.tar.xz" version="2.35.2" repo="ftpgnome" 
+        <branch module="libxml++/2.35/libxml++-2.35.2.tar.xz" version="2.35.2" repo="ftpgnome"
            hash="sha256:12da8044979f66134be3802a2227b089c62e197a66d5002a1f9e3f343acd272e">
         </branch>
         <dependencies>
