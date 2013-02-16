@@ -12,7 +12,7 @@ RepSnapper is an alternative host software for controlling the RepRap (http://re
 
    * source tarball of latest tag: https://github.com/timschmidt/repsnapper/tags
 
-   * windows builds: https://github.com/timschmidt/repsnapper/downloads
+   * windows builds: see here: http://reprap.org/wiki/RepSnapper_Manual:Introduction#Downloading or here: https://sourceforge.net/projects/repsnapper/files/
 
 
 == Compilation ==

@@ -506,7 +506,13 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
     return true;
 }
 
+
+// does not cross-compile ....
+#ifndef WIN32
 #define ENABLE_AMF 1
+#else
+#define ENABLE_AMF 0
+#endif
 
 #if ENABLE_AMF
 #include "amf/amftools-code/include/AMF_File.h"

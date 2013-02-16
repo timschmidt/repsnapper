@@ -2,6 +2,13 @@
 <moduleset>
 	<repository type="svn" name="svn.gnome.org" default="yes" href="http://svn.gnome.org/svn/"/>
 
+<tarball id="libzip" version="0.10">
+	<source href="http://www.nih.at/libzip/libzip-0.10.1.tar.bz2" md5sum="d3e933ae049204badccf605f20aaecde"/>
+	<dependencies>
+		<dep package="zlib"/>
+	</dependencies>
+</tarball>
+
 <tarball id="iconv" version="1.12">
 	<source href="http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.12.tar.gz" md5sum="c2be282595751535a618ae0edeb8f648"/>
 </tarball>
@@ -48,7 +55,7 @@
     href="http://ftp.acc.umu.se/pub/gnome/sources/" />
 
 <autotools id="glibmm" autogen-sh="autogen.sh" skip-autogen="false" >
-        <branch module="glibmm/2.27/glibmm-2.27.5.1.tar.bz2" version="2.27.5.1" repo="gnome" 
+        <branch module="glibmm/2.27/glibmm-2.27.5.1.tar.bz2" version="2.27.5.1" repo="gnome"
            hash="sha256:6d66ec215bf6cd34edc46d90339c4535ad0b4507427868d3cf9e4c5b281a5fd4">
         </branch>
         <dependencies>

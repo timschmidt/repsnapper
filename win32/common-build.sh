@@ -16,16 +16,6 @@ fi
 #   wine "$TARGET/bin/gdk-pixbuf-query-loaders.exe" > "$TARGET/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
 # fi
 
-# Copy GLUT files into place
-GLUTVER=3.7.6
-
-cd "$CHECKOUT" && wget -c http://user.xmission.com/~nate/glut/glut-$GLUTVER-bin.zip -O glut-$GLUTVER-bin.zip &&
-unzip -u glut-$GLUTVER-bin.zip && cd .. || exit 1
-
-mkdir -p "$TARGET"/include/GL/
-cp "$CHECKOUT"/glut-$GLUTVER-bin/glut.h "$TARGET"/include/GL/ || exit 1
-cp "$CHECKOUT"/glut-$GLUTVER-bin/glut32.dll "$TARGET"/bin/ || exit 1
-cp "$CHECKOUT"/glut-$GLUTVER-bin/glut32.lib "$TARGET"/lib/ || exit 1
 
 # Build repsnapper
 if [ ! -d "$CHECKOUT/repsnapper" ]; then

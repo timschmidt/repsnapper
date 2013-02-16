@@ -8,11 +8,11 @@
 # Author:      Alberto Ruiz <aruiz@gnome.org>
 #
 # modified by: Rolf Gebhardt <rg@klige.de>
-# 
+#
 
 moduleset = os.environ['PWD']+'/gtk+-win32.moduleset'
 
-modules = ['gtkmm', 'libglade', 'gtkglext', 'libxml++' ]
+modules = ['libzip', 'gtkmm', 'libglade', 'gtkglext', 'gtkglextmm', 'libxml++' ]
 
 flavour = os.environ['BUILD_FLAVOUR']
 
