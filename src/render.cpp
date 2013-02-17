@@ -29,7 +29,7 @@
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
 
-const Glib::ustring Render::fontstring = "helvetica 8";
+const Glib::ustring Render::fontstring = "sans 8";
 GLuint Render::fontlistbase = 0;
 int Render::fontheight = 0;
 

@@ -19,7 +19,8 @@ and provides libgcc_sjlj_1.dll.
 
 Even better, is to rebuild mingw32 to use DWARF style exception handling, as
 well as shared libgcc (in which case, you'll have libgcc_dw2_1.dll instead of
-libgcc_sjlj_1.dll) (TBD: Expand these instructions)
+libgcc_sjlj_1.dll
+(TBD: Expand these instructions)
 
 3) make distclean in the toplevel directory to unconfigure it, if you've been
 building there already. It needs to be unconfigured for the cross compile done by
@@ -30,4 +31,7 @@ cross-build-repsnapper-dbg (Debug)
 Hopefully, it all runs succesfully - at which point there should be a usable tree in
 win32/checkout.rls (or checkout.dbg)
 
-TODO: Wrap it all up into installer with NSIS script.
+The result executable should be in win32/target.dbg/bin/repsnapper.exe
+
+In case of rls an installer exe (repsnapper-$VERSION.exe) will be built in the win32 directory.
+

@@ -1,5 +1,5 @@
 --- win32/Makefile.gcc	2012-01-30 03:53:53.000000000 +1100
-+++ win32/Makefile.gcc.new	2012-03-12 08:42:16.077999243 +1100
++++ win32/Makefile.gcc.new	2013-02-17 16:49:02.732054937 +1100
 @@ -23,14 +23,14 @@
  # If the platform is *not* MinGW (e.g. it is Cygwin or UWIN),
  # the DLL name should be changed from "zlib1.dll".
@@ -27,3 +27,37 @@
  
  OBJS = adler32.o compress.o crc32.o deflate.o gzclose.o gzlib.o gzread.o \
         gzwrite.o infback.o inffast.o inflate.o inftrees.o trees.o uncompr.o zutil.o
+@@ -127,16 +127,16 @@
+ 		echo INCLUDE_PATH, LIBRARY_PATH, and BINARY_PATH must be specified; \
+ 		exit 1; \
+ 	fi
+-	-@mkdir -p $(INCLUDE_PATH)
+-	-@mkdir -p $(LIBRARY_PATH) $(LIBRARY_PATH)/pkgconfig
++	-@mkdir -p $(DESTDIR)/$(INCLUDE_PATH)
++	-@mkdir -p $(DESTDIR)/$(LIBRARY_PATH) $(DESTDIR)/$(LIBRARY_PATH)/pkgconfig
+ 	-if [ "$(SHARED_MODE)" = "1" ]; then \
+-		mkdir -p $(BINARY_PATH); \
+-		$(INSTALL) $(SHAREDLIB) $(BINARY_PATH); \
+-		$(INSTALL) $(IMPLIB) $(LIBRARY_PATH); \
++		mkdir -p $(DESTDIR)/$(BINARY_PATH); \
++		$(INSTALL) $(SHAREDLIB) $(DESTDIR)/$(BINARY_PATH); \
++		$(INSTALL) $(IMPLIB) $(DESTDIR)/$(LIBRARY_PATH); \
+ 	fi
+-	-$(INSTALL) zlib.h $(INCLUDE_PATH)
+-	-$(INSTALL) zconf.h $(INCLUDE_PATH)
+-	-$(INSTALL) $(STATICLIB) $(LIBRARY_PATH)
++	-$(INSTALL) zlib.h $(DESTDIR)/$(INCLUDE_PATH)
++	-$(INSTALL) zconf.h $(DESTDIR)/$(INCLUDE_PATH)
++	-$(INSTALL) $(STATICLIB) $(DESTDIR)/$(LIBRARY_PATH)
+ 	sed \
+ 		-e 's|@prefix@|${prefix}|g' \
+ 		-e 's|@exec_prefix@|${exec_prefix}|g' \
+@@ -144,7 +144,7 @@
+ 		-e 's|@sharedlibdir@|$(LIBRARY_PATH)|g' \
+ 		-e 's|@includedir@|$(INCLUDE_PATH)|g' \
+ 		-e 's|@VERSION@|'`sed -n -e '/VERSION "/s/.*"\(.*\)".*/\1/p' zlib.h`'|g' \
+-		zlib.pc.in > $(LIBRARY_PATH)/pkgconfig/zlib.pc
++		zlib.pc.in > $(DESTDIR)/$(LIBRARY_PATH)/pkgconfig/zlib.pc
+ 
+ uninstall:
+ 	-if [ "$(SHARED_MODE)" = "1" ]; then \

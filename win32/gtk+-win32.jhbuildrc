@@ -113,6 +113,7 @@ module_autogenargs['gettext']    = autogenargs + """ --without-emacs \
                                                      --enable-relocatable"""
 
 module_autogenargs['glib']       = autogenargs + """ --enable-explicit-deps=no \
+                                                     --disable-rebuilds \
                                                      --disable-gtk-doc"""
 
 module_autogenargs['cairo']      = autogenargs + """ --enable-explicit-deps=no \
@@ -142,6 +143,7 @@ module_autogenargs['gdk-pixbuf']       = autogenargs + """ --disable-glibtest \
 module_autogenargs['gtk+']       = autogenargs + """ --disable-glibtest \
                                                      --disable-scrollkeeper \
                                                      --disable-gtk-doc \
+                                                     --disable-cups \
                                                      --enable-introspection=no"""
 
 module_autogenargs['fontconfig'] = autogenargs + """ --with-arch=i686"""
