@@ -989,7 +989,7 @@ Section "MainSection" SEC01
   ${File} "${BUILD_OUTPUT_DIR}\bin\" "libcairo-script-interpreter-2.dll"
   ${File} "${BUILD_OUTPUT_DIR}\bin\" "libglib-2.0-0.dll"
   ${File} "${BUILD_OUTPUT_DIR}\bin\" "libglibmm-2.4-1.dll"
-  ${File} "${BUILD_OUTPUT_DIR}\bin\" "libgcc_sjlj_1.dll"
+  ${File} "${BUILD_OUTPUT_DIR}\bin\" "${LIBGCC_FILE}"
   ${File} "${BUILD_OUTPUT_DIR}\bin\" "libgailutil-18.dll"
   ${File} "${BUILD_OUTPUT_DIR}\bin\" "libgdkglext-win32-1.0-0.dll"
   ${File} "${BUILD_OUTPUT_DIR}\bin\" "libgdkglextmm-win32-1.2-0.dll"

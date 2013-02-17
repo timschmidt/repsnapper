@@ -19,11 +19,7 @@ and provides libgcc_sjlj_1.dll.
 
 Even better, is to rebuild mingw32 to use DWARF style exception handling, as
 well as shared libgcc (in which case, you'll have libgcc_dw2_1.dll instead of
-libgcc_sjlj_1.dll and you have to replace the line
-  ${File} "${BUILD_OUTPUT_DIR}\bin\" "libgcc_sjlj_1.dll"
-by
-  ${File} "${BUILD_OUTPUT_DIR}\bin\" "libgcc_dw2_1.dll"
-in repsnapper.nsi.in (win32 dir)
+libgcc_sjlj_1.dll
 (TBD: Expand these instructions)
 
 3) make distclean in the toplevel directory to unconfigure it, if you've been
@@ -37,5 +33,5 @@ win32/checkout.rls (or checkout.dbg)
 
 The result executable should be in win32/target.dbg/bin/repsnapper.exe
 
-In case of rls an installer exe will be built in the win32 directory.
+In case of rls an installer exe (repsnapper-$VERSION.exe) will be built in the win32 directory.
 
