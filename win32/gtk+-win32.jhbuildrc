@@ -113,6 +113,7 @@ module_autogenargs['gettext']    = autogenargs + """ --without-emacs \
                                                      --enable-relocatable"""
 
 module_autogenargs['glib']       = autogenargs + """ --enable-explicit-deps=no \
+                                                     --disable-rebuilds \
                                                      --disable-gtk-doc"""
 
 module_autogenargs['cairo']      = autogenargs + """ --enable-explicit-deps=no \
