@@ -142,6 +142,7 @@ module_autogenargs['gdk-pixbuf']       = autogenargs + """ --disable-glibtest \
 module_autogenargs['gtk+']       = autogenargs + """ --disable-glibtest \
                                                      --disable-scrollkeeper \
                                                      --disable-gtk-doc \
+                                                     --disable-cups \
                                                      --enable-introspection=no"""
 
 module_autogenargs['fontconfig'] = autogenargs + """ --with-arch=i686"""
