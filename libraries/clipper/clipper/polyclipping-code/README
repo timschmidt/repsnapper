@@ -1,6 +1,12 @@
 ============================================================
 Clipper Change Log
 ============================================================
+v5.1.0 (17 February 2013)
+* Update: ExPolygons has been replaced with the PolyTree & 
+  PolyNode classes to more fully represent the parent-child 
+  relationships of the polygons returned by Clipper. 
+* Added: New CleanPolygon and CleanPolygons functions. 
+* Bugfix: Another orientation bug fixed.
 
 v5.0.2 - 30 December 2012
 * Bugfix: Significant fixes in and tidy of the internal 

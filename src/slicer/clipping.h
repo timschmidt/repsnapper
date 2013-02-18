@@ -116,18 +116,20 @@ public:
   static vector<Poly>   getPolys(const ExPoly &expoly);
   static vector<Poly>   getPolys(const vector<ExPoly> &expolys);
   static vector<Poly>   getPolys(const CL::Polygons &cpoly, double z, double extrusionfactor);
-  static vector<ExPoly> getExPolys(const CL::ExPolygons &excpolys, double z,
+  static ExPoly         getExPoly(const CL::PolyNode *cnode, double z,
+				  double extrusionfactor);
+  static vector<ExPoly> getExPolys(CL::PolyTree &ctree, double z,
 				   double extrusionfactor);
 
   static vector<ExPoly> getExPolys(const vector<Poly> &polys,
 				   double z, double extrusionfactor);
   static vector<ExPoly> getExPolys(const vector<Poly> &polys);
-  static CL::ExPolygons getExClipperPolygons(const vector<Poly> &polys);
+  static CL::PolyTree   getClipperTree(const vector<Poly> &polys);
 
   static CL::Polygon    getClipperPolygon (const Poly &poly);
   static CL::Polygons   getClipperPolygons(const vector<Poly> &polys);
   static CL::Polygons   getClipperPolygons(const ExPoly &expoly);
-  static CL::ExPolygons getClipperPolygons(const vector<ExPoly> &expolys);
+  //static CL::PolyTree   getClipperTree(const vector<ExPoly> &expolys);
 
   static double Area(const Poly &poly);
   static double Area(const vector<Poly> &polys);

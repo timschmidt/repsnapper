@@ -91,16 +91,23 @@ CL::Polygons Clipping::getClipperPolygons(const ExPoly &expoly)
   return getClipperPolygons(getPolys(expoly));
 }
 
-CL::ExPolygons Clipping::getClipperPolygons(const vector<ExPoly> &expolys)
+/*  // not used
+CL::PolyTree Clipping::getClipperTree(const vector<ExPoly> &expolys)
 {
-  ClipperLib::ExPolygons excpolys(expolys.size());
-  for (uint i=0; i<expolys.size(); i++)     {
-    excpolys[i].outer = getClipperPolygon(expolys[i].outer);
-    for (uint h=0; h<expolys.size(); h++)
-      excpolys[i].holes[h] = getClipperPolygon(expolys[i].holes[h]);
-    }
-  return excpolys;
+  CL::PolyTree polytree;
+  // for (uint i=0; i<expolys.size(); i++)     {
+  //   CL::PolyNode expoly;
+  //   polytree[i].Contour = getClipperPolygon(expolys[i].outer);
+  //   for (uint h=0; h<expolys[i].holes.size(); h++) {
+  //     CL::PolyNode hole;
+  //     hole.Contour = getClipperPolygon(expolys[i].holes[h]);
+  //     hole.Parent  = &polytrees[i];
+  //     polytrees[i].Childs.push_back(&hole);
+  //   }
+  // }
+  return polytree;
 }
+*/
 
 CL::JoinType Clipping::CLType(JoinType type)
 {
@@ -195,7 +202,7 @@ vector<Poly> Clipping::intersect(CL::PolyFillType sft,
 vector<ExPoly> Clipping::ext_intersect(CL::PolyFillType sft,
 				       CL::PolyFillType cft)
 {
-  CL::ExPolygons inter;
+  CL::PolyTree inter;
   clpr.Execute(CL::ctIntersection, inter, sft, cft);
   return getExPolys(inter, lastZ, lastExtrF);
 }
@@ -211,7 +218,7 @@ vector<Poly> Clipping::unite(CL::PolyFillType sft,
 vector<ExPoly> Clipping::ext_unite(CL::PolyFillType sft,
 				   CL::PolyFillType cft)
 {
-  CL::ExPolygons inter;
+  CL::PolyTree inter;
   clpr.Execute(CL::ctUnion, inter, sft, cft);
   return getExPolys(inter, lastZ, lastExtrF);
 }
@@ -228,25 +235,24 @@ vector<Poly> Clipping::subtract(CL::PolyFillType sft,
 vector<ExPoly> Clipping::ext_subtract(CL::PolyFillType sft,
 				      CL::PolyFillType cft)
 {
-  CL::ExPolygons diff;
-  if (debug) {
-    try {
-      clpr.Execute(CL::ctDifference, diff, sft, cft);
-    } catch (int e){
-      cerr << lastZ<<" - " << lastExtrF<< endl;
-      if (e == 22){
-	cout << "Subject" << endl;
-	printCLpolygons(subjpolygons);
-	cout << "Clip" << endl;
-	printCLpolygons(clippolygons);
-	// vector<ExPoly> empty;
-	// return empty;
-      }
-    }
-  }
-  else
-    clpr.Execute(CL::ctDifference, diff,
-		 CL::pftEvenOdd, CL::pftEvenOdd);
+  CL::PolyTree diff;
+  // if (debug) {
+  //   try {
+  //     clpr.Execute(CL::ctDifference, diff, sft, cft);
+  //   } catch (int e){
+  //     cerr << lastZ<<" - " << lastExtrF<< endl;
+  //     if (e == 22){
+  // 	cout << "Subject" << endl;
+  // 	printCLpolygons(subjpolygons);
+  // 	cout << "Clip" << endl;
+  // 	printCLpolygons(clippolygons);
+  // 	// vector<ExPoly> empty;
+  // 	// return empty;
+  //     }
+  //   }
+  // }
+  // else
+  clpr.Execute(CL::ctDifference, diff, sft, cft);//CL::pftEvenOdd, CL::pftEvenOdd);
   return getExPolys(diff, lastZ, lastExtrF);
 }
 vector<Poly> Clipping::subtractMerged(double dist,
@@ -404,14 +410,27 @@ vector<Poly> Clipping::getPolys(const CL::Polygons &cpolys, double z, double ext
     polys[i] = getPoly(cpolys[i], z, extrusionfactor);
   return polys;
 }
-vector<ExPoly> Clipping::getExPolys(const CL::ExPolygons &excpolys, double z,
+
+ExPoly Clipping::getExPoly(const CL::PolyNode *cnode, double z, double extrusionfactor)
+{
+  ExPoly expoly;
+  expoly.outer = getPoly(cnode->Contour, z, extrusionfactor);
+  uint count = cnode->Childs.size();
+  expoly.holes.resize(count);
+  for (uint i = 0 ; i < count; i++) {
+    expoly.holes[i] = getPoly(cnode->Childs[i]->Contour, z, extrusionfactor);
+  }
+  return expoly;
+}
+
+vector<ExPoly> Clipping::getExPolys(CL::PolyTree &ctree, double z,
 				    double extrusionfactor)
 {
-  uint count = excpolys.size();
-  vector<ExPoly> polys(count);
-  for (uint i = 0 ; i < count; i++) {
-    polys[i].outer = getPoly(excpolys[i].outer, z, extrusionfactor);
-    polys[i].holes = getPolys(excpolys[i].holes, z, extrusionfactor);
+  vector<ExPoly> polys;
+  CL::PolyNode *node = ctree.GetFirst();
+  while (node != NULL) {
+    polys.push_back(getExPoly(node, z, extrusionfactor));
+    node = node->GetNext();
   }
   return polys;
 }
@@ -481,14 +500,14 @@ vector<ExPoly> Clipping::getExPolys(const vector<Poly> &polys,
 //   return expolys;
 // }
 
-CL::ExPolygons Clipping::getExClipperPolygons(const vector<Poly> &polys)
+CL::PolyTree Clipping::getClipperTree(const vector<Poly> &polys)
 {
   CL::Polygons cpolys = getClipperPolygons(polys);
   CL::Clipper clpr;
   clpr.AddPolygons(cpolys, CL::ptSubject);
-  CL::ExPolygons cexpolys;
-  clpr.Execute(CL::ctUnion, cexpolys, CL::pftEvenOdd, CL::pftEvenOdd);
-  return cexpolys;
+  CL::PolyTree ctree;
+  clpr.Execute(CL::ctUnion, ctree, CL::pftEvenOdd, CL::pftEvenOdd);
+  return ctree;
 }
 
 double Clipping::Area(const Poly &poly){
