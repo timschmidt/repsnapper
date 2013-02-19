@@ -18,10 +18,15 @@
 */
 
 #pragma once
+#include "config.h"
 #include "types.h"
 
 // ClipperLib: see http://angusj.com/delphi/clipper.php
-#include <clipper/clipper/polyclipping-code/cpp/clipper.hpp>
+#if HAVE_CLIPPERLIB==1
+  #include <polyclipping/clipper.hpp>
+#else
+  #include <clipper/clipper/polyclipping-code/cpp/clipper.hpp>
+#endif
 
 #include "poly.h"
 

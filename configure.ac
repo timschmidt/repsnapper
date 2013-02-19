@@ -33,6 +33,18 @@ IT_PROG_INTLTOOL(0.26)
 AM_GLIB_GNU_GETTEXT
 
 PKG_PROG_PKG_CONFIG([0.22])
+
+AC_LANG_CPLUSPLUS
+
+dnl check for installed clipperlib newer than 5.1.0 (has PolyNode)
+AC_DEFINE([HAVE_CLIPPERLIB],[0],[Have external clipper])
+CLIPPER_LIBS="libclipper.la"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <polyclipping/clipper.hpp>], [ClipperLib::PolyNode cnode])],
+    [AC_DEFINE([HAVE_CLIPPERLIB],[1]) CLIPPER_LIBS="-lpolyclipping"],
+    [AC_MSG_WARN([libclipper is not installed. Using internal copy.])])
+AC_SUBST(CLIPPER_LIBS)
+
+
 dnl If your script errors here on OSX, see this URL http://myitcorner.com/blog/?p=207
 PKG_CHECK_MODULES(GTKMM, [gobject-2.0 glib-2.0 gtkmm-2.4 gtkglextmm-1.2 gtk+-2.0 cairomm-1.0 glibmm-2.4 >= 2.27])
 dnl Set a define if we need to include gdkkeysyms-compat.h
