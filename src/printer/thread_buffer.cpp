@@ -18,6 +18,7 @@
 */
 
 #include <string.h>
+#include <sys/types.h>
 
 #include "thread_buffer.h"
 
