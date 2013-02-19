@@ -132,9 +132,7 @@ static struct {
 
   { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
   { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, NULL, false },
-  BOOL_MEMBER   (Hardware.ValidateConnection, "ValidateConnection", true, false),
   INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
-  INT_MEMBER    (Hardware.ReceivingBufferSize, "ReceivingBufferSize", 4, false),
   BOOL_MEMBER   (Hardware.SpeedAlways, "SpeedAlways", false, false),
 
   // Extruder
@@ -386,7 +384,6 @@ static struct {
   { "Hardware.MaxMoveSpeedXY", 0.1, 2000.0, 1.0, 10.0 },
   { "Hardware.MinMoveSpeedZ", 0.1, 250.0, 1.0, 10.0 },
   { "Hardware.MaxMoveSpeedZ", 0.1, 250.0, 1.0, 10.0 },
-  { "Hardware.ReceivingBufferSize", 1.0, 100.0, 1.0, 5.0 },
   { "Hardware.KeepLines", 100.0, 100000.0, 1.0, 500.0 },
   // { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
 

@@ -30,8 +30,6 @@
 #include <sys/types.h>
 #include <dirent.h>
 
-#include <libreprap/comms.h>
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif

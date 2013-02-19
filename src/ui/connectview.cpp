@@ -72,7 +72,7 @@ void ConnectView::serial_state_changed(SerialState state)
 void ConnectView::connect_toggled()
 {
   if (!m_setting_state)
-    m_printer->serial_try_connect (m_connect.get_active ());
+    m_printer->Connect (m_connect.get_active ());
 }
 
 void ConnectView::signal_entry_changed()
@@ -92,7 +92,7 @@ void ConnectView::find_ports() {
   m_combo.append_text(m_settings->Hardware.PortName);
 #endif
 
-  vector<string> ports = m_printer->find_ports();
+  vector<string> ports = PrinterSerial::FindPorts();
 
   for(size_t i = 0; i < ports.size(); i++) {
     if (ports[i] != m_settings->Hardware.PortName) {

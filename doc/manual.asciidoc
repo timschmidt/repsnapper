@@ -397,17 +397,11 @@ Enable Acceleration::
 Distance used to read full speed::
     Distance to accelerate over, measured in millimeters.
 
-Buffer size on printer::
-    Number of commands the printer is able to buffer in it's memory.
-
 Port::
     Manually selects the serial communication port that you want to talk across.
 
 Speed::
     The serial communications baud rate. Typically 19200 - must however match the setting in your firmware. For example in the latest svn firmware the baud is 57600 by default in configuration.h the value in repsnapper must match this value.
-
-Validate connection::
-    unknown
 
 === GCode tab ===
 
@@ -504,9 +498,6 @@ Print::
 
 Pause::
     Pauses communication with the printer.
-
-Kick::
-    unknown
 
 Fan on::
     Sends the M106 / M107 codes to the printer to toggle the fan on / off respectively.

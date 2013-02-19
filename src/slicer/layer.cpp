@@ -592,7 +592,7 @@ void Layer::MakeShells(const Settings &settings)
   double infilloverlap  = settings.Slicing.InfillOverlap;
 
   // first shrink with global offset
-  vector<Poly> shrinked = Clipping::getOffset(polygons, -distance-shelloffset);
+  vector<Poly> shrinked = Clipping::getOffset(polygons, -2.0/M_PI*extrudedWidth-shelloffset);
 
   vector<Poly> thickPolygons;
   FindThinpolys(shrinked, extrudedWidth, thickPolygons, thinPolygons);

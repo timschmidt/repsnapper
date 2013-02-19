@@ -56,44 +56,6 @@ AC_OPENMP()
 
 PKG_CHECK_MODULES(LIBZIP, libzip >= 0.10)
 
-
-dnl ------------------------------------------------------------------
-dnl libreprap is (for now) built in from a copy in libraries/libreprap
-dnl thus avoiding cmake, and user confusion.
-dnl ------------------------------------------------------------------
-dnl
-dnl Empty flags to be substituted below.
-DISTCHECK_LIBREPRAP_FLAGS=
-dnl Look for libreprap, either in the system paths or in the path
-dnl provided (defaults to --prefix)
-dnl AC_ARG_WITH(libreprap,
-dnl    AS_HELP_STRING([--with-libreprap],
-dnl       [Extra prefix in which to look for libreprap. (default is $prefix)]),
-dnl    [ LIBREPRAP_PREFIX="$withval" ], [ LIBREPRAP_PREFIX="$prefix" ])
-dnl
-dnl if test "x${LIBREPRAP_PREFIX}" != xNONE; then
-dnl  xLIBREPRAP_CFLAGS="-I${LIBREPRAP_PREFIX}/include"
-dnl  xLIBREPRAP_LIBS="-L${LIBREPRAP_PREFIX}/lib -lreprap"
-dnl  DISTCHECK_LIBREPRAP_FLAGS="--with-libreprap=$LIBREPRAP_PREFIX"
-dnl else
-dnl  xLIBREPRAP_LIBS="-lreprap"
-dnl fi
-dnl
-dnl OLD_CPPFLAGS="$CPPFLAGS"; CPPFLAGS="${xLIBREPRAP_CFLAGS} $CPPFLAGS"
-dnl OLD_LIBS="$LIBS"; LIBS="${xLIBREPRAP_LIBS} $LIBS"
-dnl AC_CHECK_HEADER(reprap/comms.h,
-dnl     [LIBREPRAP_CFLAGS="${xLIBREPRAP_CFLAGS}"],
-dnl     AC_MSG_ERROR([cannot find headers for libreprap]))
-dnl dnl we require the 'meeks' branch of libreprap
-dnl AC_CHECK_LIB(reprap, rr_dev_create,
-dnl     [LIBREPRAP_LIBS="${xLIBREPRAP_LIBS}"],
-dnl     AC_MSG_ERROR([cannot find binary for libreprap - check out the README]))
-dnl CPPFLAGS="$OLD_CPPFLAGS"; LIBS="$OLD_LIBS"
-dnl AC_SUBST(LIBREPRAP_CFLAGS)
-dnl AC_SUBST(LIBREPRAP_LIBS)
-
-AC_SUBST(DISTCHECK_LIBREPRAP_FLAGS)
-
 case "$host_os" in
 mingw*)
   GL_LIBS="-lopengl32"

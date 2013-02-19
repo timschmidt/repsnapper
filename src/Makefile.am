@@ -22,7 +22,6 @@ repsnapper_CPPFLAGS = \
 	-I$(top_builddir)/src \
 	-I$(LIB_DIR) \
 	-DHAVE_GTK $(CFLAGS) $(EXTRA_CFLAGS) -I$(LIB_DIR) $(GTKMM_CFLAGS) \
-	$(LIBREPRAP_CFLAGS) \
         -DRSDATADIR='$(repsnapperdatadir)' \
         -DSYSCONFDIR='$(repsnapperconfdir)' \
 	-DLOCALEDIR='"$(localedir)"' \
@@ -79,13 +78,11 @@ FORCE:
 built_header_make=src/gitversion.h
 
 BUILT_SOURCES += $(built_header_make)
-EXTRA_DIST += $(built_header_make) \
-	src/printer/printer_libreprap.cpp \
-        src/printer/printer_iochannel.cpp
+EXTRA_DIST += $(built_header_make)
 
 repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 
-repsnapper_LDADD = libreprap.la libclipper.la libpoly2tri.la liblmfit.la libamf.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(XMLPP_LIBS) $(LIBZIP_LIBS) $(BOOST_LDFLAGS)
+repsnapper_LDADD = libclipper.la libpoly2tri.la liblmfit.la libamf.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(XMLPP_LIBS) $(LIBZIP_LIBS) $(BOOST_LDFLAGS)
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
 dist_repsnapperdata_DATA = src/repsnapper.ui

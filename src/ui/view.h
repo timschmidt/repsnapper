@@ -61,7 +61,6 @@ class View : public Gtk::Window
   void send_gcode();
   void printing_changed();
   void power_toggled(Gtk::ToggleToolButton *button);
-  void kick_clicked();
   void print_clicked();
   /* void stop_clicked(); */
   void pause_toggled(Gtk::ToggleToolButton *button);

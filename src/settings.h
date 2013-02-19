@@ -83,10 +83,7 @@ class Settings {
 
     std::string PortName;
     int SerialSpeed;
-    bool ValidateConnection;
     int KeepLines;
-
-    int ReceivingBufferSize;
 
     bool SpeedAlways;
   };

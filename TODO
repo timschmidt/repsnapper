@@ -67,12 +67,6 @@
 	+ prompt to save changes on selection ...
 
 * Serial
-	+ libreprap:
-	  + don't write anything (particularly a re-send) while
-	    a partial read is underway [?]
-	  + add a 'comms_debug' boolean ...
-	+ replace libreprap by an IOChannel
-
 	+ add a test serial connection ...
 	+ error dialogs - "failed to connect ?"
 	+ /dev/ttyUSB0 - EACCES

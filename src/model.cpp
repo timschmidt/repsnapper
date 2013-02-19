@@ -24,8 +24,6 @@
 #include <functional>
 #include <numeric>
 
-#include <libreprap/comms.h>
-
 #include "stdafx.h"
 #include "model.h"
 #include "objtree.h"

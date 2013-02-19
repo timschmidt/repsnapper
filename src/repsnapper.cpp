@@ -281,9 +281,9 @@ int main(int argc, char **argv)
       if (opts.printerdevice_path.size() > 0) {
 	Printer printer(NULL);
 	printer.setModel(model);
-	printer.serial_try_connect(true);
-	printer.Print();
-	printer.serial_try_connect(false);
+	printer.Connect();
+	printer.StartPrinting();
+	printer.Disconnect();
 	return 0;
       }
 
