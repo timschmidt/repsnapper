@@ -8,19 +8,26 @@ jhbuild needs to be at least version 2.30.2 for .tar.xz file support.
 
 2) Mingw32 compiler
 
-You need the right version of mingw32 (mingw32, not gcc-mingw32 in Ubuntu natty is built
-with --disable-shared, which breaks C++ exception handling. See
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625778). I haven't tried
-OpenSuse's mingw32 to see if it has the same problem.
-As of 10 Mar 2012, Debian's mingw32 package doesn't have the required shared
-version of libgcc_s, and needs rebuilding with a patch to provide it.
+You need the right version of mingw32, which supports shared libgcc, or else
+exceptions don't work and everything breaks. There are 2 packages in Debian distributions:
+mingw32, and gcc-mingw32. In the past gcc-mingw32 in Ubuntu Natty and Debian (at least)
+was built with --disable-shared, which breaks C++ exception handling. See
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625778). As of the middle of 2012,
+this is no longer the case.
+
 Basically, check that the version of mingw32 you have installs a libgcc_s.a
 and provides libgcc_sjlj_1.dll.
 
-Even better, is to rebuild mingw32 to use DWARF style exception handling, as
+Also possible is to rebuild mingw32 to use DWARF style exception handling, as
 well as shared libgcc (in which case, you'll have libgcc_dw2_1.dll instead of
-libgcc_sjlj_1.dll
-(TBD: Expand these instructions)
+libgcc_sjlj_1.dll. This provides a slightly larger but faster library, and can be done
+because we build all our dependencies and can be sure we'll never throw an exception
+across a foreign library (which doesn't work with DWARF style exceptions).
+
+-- OpenMP support --
+As of Feb 2013, neither the mingw32 nor gcc-mingw32 packages provide OpenMP support. mingw32
+because it's too old, gcc-mingw32 apparently because the pthreads library isn't stable enough
+for them (see http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625779)
 
 3) make distclean in the toplevel directory to unconfigure it, if you've been
 building there already. It needs to be unconfigured for the cross compile done by
@@ -33,5 +40,6 @@ win32/checkout.rls (or checkout.dbg)
 
 The result executable should be in win32/target.dbg/bin/repsnapper.exe
 
-In case of rls an installer exe (repsnapper-$VERSION.exe) will be built in the win32 directory.
+In case of the release build, an installer exe (repsnapper-$VERSION.exe) will be built
+in the win32 directory.
 
