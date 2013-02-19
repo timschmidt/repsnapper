@@ -11,9 +11,8 @@ See <http://www.opensource.org/licenses/lgpl-3.0.html> for license details.
 
 #ifdef WIN32
 	#include <windows.h>
-#else
-        #include <stdio.h>
 #endif
+#include <stdio.h>
 
 #include <GL/gl.h> 
 //#include <qgl.h>
