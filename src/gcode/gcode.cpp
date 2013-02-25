@@ -533,12 +533,12 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		// case COORDINATEDMOTION3D: // old 3D gcode
 		//   if (extruderon) {
 		//     if (liveprinting) {
-		//       Color = settings.Display.GCodePrintingRGBA;
+		//       Color = settings.Display.GCodePrintingColour;
 		//     } else
-		//       Color = settings.Display.GCodeExtrudeRGBA;
+		//       Color = settings.Display.GCodeExtrudeColour;
 		//   }
 		//   else {
-		//     Color = settings.Display.GCodeMoveRGBA;
+		//     Color = settings.Display.GCodeMoveColour;
 		//     extrwidth = 0;
 		//   }
 		//   commands[i].draw(pos, linewidth, Color, extrwidth,
@@ -559,7 +559,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		      {
 			if (settings.Display.DisplayGCodeMoves) {
 			  luma = 0.3 + 0.7 * speed / settings.Hardware.MaxMoveSpeedXY / 60;
-			  Color = settings.Display.GCodeMoveRGBA;
+			  Color = settings.Display.GCodeMoveColour;
 			  extrwidth = 0;
 			} else {
 			   pos = commands[i].where;
@@ -570,9 +570,9 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		      {
 			luma = 0.3 + 0.7 * speed / settings.Extruder.MaxLineSpeed / 60;
 			if (liveprinting) {
-			  Color = settings.Display.GCodePrintingRGBA;
+			  Color = settings.Display.GCodePrintingColour;
 			} else {
-			  Color = settings.Extruders[commands[i].extruder_no].DisplayRGBA;
+			  Color = settings.Extruders[commands[i].extruder_no].DisplayColour;
 			}
 			if (settings.Display.DebugGCodeExtruders) {
 			  ostringstream o; o << commands[i].extruder_no+1;
@@ -589,7 +589,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		  }
 		case RAPIDMOTION:
 		  {
-		    Color = settings.Display.GCodeMoveRGBA;
+		    Color = settings.Display.GCodeMoveColour;
 		    commands[i].draw(pos, extruder_offset, 1, Color,
 				     extrwidth, arrows, debug_arcs);
 		    break;

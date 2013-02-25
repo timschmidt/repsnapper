@@ -5198,7 +5198,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                               </packing>
                                             </child>
                                             <child>
-                                              <object class="GtkColorButton" id="Extruder.DisplayRGBA">
+                                              <object class="GtkColorButton" id="Extruder.DisplayColour">
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">True</property>
@@ -7900,7 +7900,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkColorButton" id="Display.WireframeRGBA">
+                                          <object class="GtkColorButton" id="Display.WireframeColour">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -7943,7 +7943,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkColorButton" id="Display.NormalsRGBA">
+                                          <object class="GtkColorButton" id="Display.NormalsColour">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -7986,7 +7986,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkColorButton" id="Display.EndpointsRGBA">
+                                          <object class="GtkColorButton" id="Display.EndpointsColour">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -8028,7 +8028,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkColorButton" id="Display.PolygonRGBA">
+                                          <object class="GtkColorButton" id="Display.PolygonColour">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -8338,7 +8338,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkColorButton" id="Display.GCodeMoveRGBA">
+                                          <object class="GtkColorButton" id="Display.GCodeMoveColour">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
@@ -8378,7 +8378,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkColorButton" id="Display.GCodePrintingRGBA">
+                                          <object class="GtkColorButton" id="Display.GCodePrintingColour">
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>

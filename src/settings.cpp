@@ -29,8 +29,8 @@
  *
  * The large table below provides pointers into a settings instance, and
  * some simple (POD) type information for the common settings. It also
- * provides the configuration name for each setting, and a Gtk::Builder
- * XML widget name, with which the setting should be associated.
+ * provides the configuration name for each setting, which is also used
+ * as Gtk::Builder widget name.
  */
 
 #ifdef WIN32
@@ -40,34 +40,34 @@
 #endif
 
 #define OFFSET(field) offsetof (class Settings, field)
-#define BOOL_MEMBER(field, config_name, def_value, redraw ) \
-  { OFFSET (field), T_BOOL, config_name, #field, def_value, NULL, redraw }
-#define INT_MEMBER(field, config_name, def_value, redraw) \
-  { OFFSET (field), T_INT, config_name, #field, def_value, NULL, redraw }
-#define FLOAT_MEMBER(field, config_name, def_value, redraw) \
-  { OFFSET (field), T_FLOAT, config_name, #field, def_value, NULL, redraw }
-#define STRING_MEMBER(field, config_name, def_value, redraw) \
-  { OFFSET (field), T_STRING, config_name, #field, 0.0, def_value, redraw }
+#define BOOL_MEMBER(field, def_value, redraw ) \
+  { OFFSET (field), T_BOOL,   #field, def_value, NULL, redraw }
+#define INT_MEMBER(field, def_value, redraw) \
+  { OFFSET (field), T_INT,    #field, def_value, NULL, redraw }
+#define FLOAT_MEMBER(field, def_value, redraw) \
+  { OFFSET (field), T_FLOAT,  #field, def_value, NULL, redraw }
+#define STRING_MEMBER(field, def_value, redraw) \
+  { OFFSET (field), T_STRING, #field, 0.0,  def_value, redraw }
 
 
-#define COLOUR_MEMBER(field, config_name, def_valueR, def_valueG, def_valueB, def_valueA, redraw) \
-  { OFFSET (field.array[0]), T_COLOUR_MEMBER, config_name "R", NULL, def_valueR, NULL, redraw }, \
-  { OFFSET (field.array[1]), T_COLOUR_MEMBER, config_name "G", NULL, def_valueG, NULL, redraw }, \
-  { OFFSET (field.array[2]), T_COLOUR_MEMBER, config_name "B", NULL, def_valueB, NULL, redraw }, \
-  { OFFSET (field.array[3]), T_COLOUR_MEMBER, config_name "A", NULL, def_valueA, NULL, redraw }
+#define COLOUR_MEMBER(field, def_valueR, def_valueG, def_valueB, def_valueA, redraw) \
+  { OFFSET (field.array[0]), T_COLOUR_MEMBER, #field "R", def_valueR, NULL, redraw }, \
+  { OFFSET (field.array[1]), T_COLOUR_MEMBER, #field "G", def_valueG, NULL, redraw }, \
+  { OFFSET (field.array[2]), T_COLOUR_MEMBER, #field "B", def_valueB, NULL, redraw }, \
+  { OFFSET (field.array[3]), T_COLOUR_MEMBER, #field "A", def_valueA, NULL, redraw }
 
 
 #define FLOAT_PHASE_MEMBER(phase, phasestd, member, def_value, redraw) \
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_##phase].member), T_FLOAT, \
-      #phasestd #member, #phasestd #member, def_value, NULL, redraw }
+      #phasestd #member, def_value, NULL, redraw }
 
 // converting our offsets into type pointers
-#define PTR_OFFSET(obj, offset)  (((guchar *)obj) + offset)
+#define PTR_OFFSET(obj, offset) (((guchar *)obj) + offset)
 #define PTR_BOOL(obj, idx)      ((bool *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_INT(obj, idx)       ((int *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_UINT(obj, idx)      ((uint *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_FLOAT(obj, idx)     ((float *)PTR_OFFSET (obj, settings[idx].member_offset))
-#define PTR_DOUBLE(obj, idx)     ((double *)PTR_OFFSET (obj, settings[idx].member_offset))
+#define PTR_DOUBLE(obj, idx)    ((double *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_STRING(obj, idx)    ((std::string *)PTR_OFFSET (obj, settings[idx].member_offset))
 #define PTR_COLOUR(obj, idx)    ((Vector4f *)PTR_OFFSET (obj, settings[idx].member_offset))
 
@@ -75,24 +75,23 @@ enum SettingType { T_BOOL, T_INT, T_FLOAT, T_DOUBLE, T_STRING, T_COLOUR_MEMBER }
 static struct {
   uint  member_offset;
   SettingType type;
-  const char *config_name; // This is obsolete - we split and re-use the glade_name
-  const char *glade_name;
+  const char *config_name;
   float def_float;
   const char *def_string;
   gboolean triggers_redraw;
 } settings[] = {
 
   // General
-  { OFFSET (Name), T_STRING, "SettingsName", NULL, 0, "Default Settings", false },
-  { OFFSET (Image), T_STRING, "SettingsImage", NULL, 0, "", false },
+  { OFFSET (Name),  T_STRING, "SettingsName",  0, "Default Settings", false },
+  { OFFSET (Image), T_STRING, "SettingsImage", 0, "", false },
 
   // Raft:
-  BOOL_MEMBER  (Raft.Enable, "Raft.Enable", false, true),
-  FLOAT_MEMBER (Raft.Size,  "Raft.Size",   1.33, true),
+  BOOL_MEMBER  (Raft.Enable, false, true),
+  FLOAT_MEMBER (Raft.Size,   1.33,  true),
 
   // Raft Base
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_BASE].LayerCount), T_INT,
-    "Raft.Base.LayerCount", "Raft.Base.LayerCount", 1, NULL, true },
+    "Raft.Base.LayerCount", 1, NULL, true },
   FLOAT_PHASE_MEMBER(BASE, Raft.Base., MaterialDistanceRatio, 1.8, true),
   FLOAT_PHASE_MEMBER(BASE, Raft.Base., Rotation, 0.0, false),
   FLOAT_PHASE_MEMBER(BASE, Raft.Base., RotationPrLayer, 90.0, false),
@@ -102,7 +101,7 @@ static struct {
 
   // Raft Interface
   { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_INTERFACE].LayerCount), T_INT,
-    "Raft.Interface.LayerCount", "Raft.Interface.LayerCount", 2, NULL, true },
+    "Raft.Interface.LayerCount", 2, NULL, true },
   FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., MaterialDistanceRatio, 1.0, true),
   FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., Rotation, 90.0, true),
   FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., RotationPrLayer, 90.0, true),
@@ -113,197 +112,191 @@ static struct {
 #undef FLOAT_PHASE_MEMBER
 
   // Hardware
-  FLOAT_MEMBER (Hardware.MinMoveSpeedXY, "MinMoveSpeedXY", 20, true),
-  FLOAT_MEMBER (Hardware.MaxMoveSpeedXY, "MaxMoveSpeedXY", 180, true),
-  FLOAT_MEMBER (Hardware.MinMoveSpeedZ,  "MinMoveSpeedZ",  1, true),
-  FLOAT_MEMBER (Hardware.MaxMoveSpeedZ,  "MaxMoveSpeedZ",  3, true),
+  FLOAT_MEMBER (Hardware.MinMoveSpeedXY, 20, true),
+  FLOAT_MEMBER (Hardware.MaxMoveSpeedXY, 180, true),
+  FLOAT_MEMBER (Hardware.MinMoveSpeedZ,  1, true),
+  FLOAT_MEMBER (Hardware.MaxMoveSpeedZ,  3, true),
 
   // FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5, false),
   // Volume.
-  { OFFSET (Hardware.Volume.array[0]), T_DOUBLE, "mfVolumeX", "Hardware.Volume.X", 200, NULL, true },
-  { OFFSET (Hardware.Volume.array[1]), T_DOUBLE, "mfVolumeY", "Hardware.Volume.Y", 200, NULL, true },
-  { OFFSET (Hardware.Volume.array[2]), T_DOUBLE, "mfVolumeZ", "Hardware.Volume.Z", 140, NULL, true },
+  { OFFSET (Hardware.Volume.array[0]), T_DOUBLE, "Hardware.Volume.X", 200, NULL, true },
+  { OFFSET (Hardware.Volume.array[1]), T_DOUBLE, "Hardware.Volume.Y", 200, NULL, true },
+  { OFFSET (Hardware.Volume.array[2]), T_DOUBLE, "Hardware.Volume.Z", 140, NULL, true },
 
   // PrintMargin
-  { OFFSET (Hardware.PrintMargin.array[0]), T_DOUBLE, "PrintMarginX", "Hardware.PrintMargin.X", 10, NULL, true },
-  { OFFSET (Hardware.PrintMargin.array[1]), T_DOUBLE, "PrintMarginY", "Hardware.PrintMargin.Y", 10, NULL, true },
-  { OFFSET (Hardware.PrintMargin.array[2]), T_DOUBLE, "PrintMarginZ", "Hardware.PrintMargin.Z", 0, NULL, true },
+  { OFFSET (Hardware.PrintMargin.array[0]), T_DOUBLE, "Hardware.PrintMargin.X", 10, NULL, true },
+  { OFFSET (Hardware.PrintMargin.array[1]), T_DOUBLE, "Hardware.PrintMargin.Y", 10, NULL, true },
+  { OFFSET (Hardware.PrintMargin.array[2]), T_DOUBLE, "Hardware.PrintMargin.Z", 0, NULL, true },
 
 
-  { OFFSET (Hardware.PortName), T_STRING, "Hardware.PortName", NULL, 0, DEFAULT_COM_PORT, false },
-  { OFFSET (Hardware.SerialSpeed), T_INT, "Hardware.SerialSpeed", NULL, 115200, NULL, false },
-  INT_MEMBER    (Hardware.KeepLines, "KeepLines", 1000, false),
-  BOOL_MEMBER   (Hardware.SpeedAlways, "SpeedAlways", false, false),
+  STRING_MEMBER (Hardware.PortName,       DEFAULT_COM_PORT, false),
+  INT_MEMBER    (Hardware.SerialSpeed,    115200, false),
+  INT_MEMBER    (Hardware.KeepLines, 1000, false),
+  BOOL_MEMBER   (Hardware.SpeedAlways, false, false),
 
   // Extruder
-  BOOL_MEMBER  (Extruder.CalibrateInput,  "CalibrateInput",  true, true),
-  FLOAT_MEMBER (Extruder.OffsetX, "Extruder.OffsetX", 0.0, true),
-  FLOAT_MEMBER (Extruder.OffsetY, "Extruder.OffsetY", 0.0, true),
-  FLOAT_MEMBER (Extruder.FilamentDiameter, "FilamentDiameter", 3.0, true),
-  FLOAT_MEMBER (Extruder.ExtrusionFactor, "Extruder.ExtrusionFactor", 1.0, true),
-  /* FLOAT_MEMBER (Extruder.DownstreamMultiplier, "DownstreamMultiplier", 1.0, true), */
-  /* FLOAT_MEMBER (Extruder.DownstreamExtrusionMultiplier, "DownstreamExtrusionMultiplier",  1.0, true),*/
-  FLOAT_MEMBER (Extruder.ExtrudedMaterialWidthRatio, "ExtrudedMaterialWidthRatio", 1.8, true),
-  FLOAT_MEMBER (Extruder.MinimumLineWidth, "MinimumLineWidth", 0.4, true),
-  FLOAT_MEMBER (Extruder.MaximumLineWidth, "MaximumLineWidth", 0.7, true),
-  FLOAT_MEMBER (Extruder.MaxLineSpeed,     "MaxLineSpeed",  180, true),
-  FLOAT_MEMBER (Extruder.EMaxSpeed,        "EMaxSpeed",  1.5, true),
-  FLOAT_MEMBER (Extruder.MaxShellSpeed,    "MaxShellSpeed",  150, true),
-  STRING_MEMBER(Extruder.GCLetter,         "Extruder.GCLetter", "E", false),
-  BOOL_MEMBER  (Extruder.UseForSupport,    "Extruder.UseForSupport",  false, true),
-  { OFFSET (Extruder.name), T_STRING, "Extruder.name", NULL, 0, "Extruder", false },
+  BOOL_MEMBER  (Extruder.CalibrateInput,  true, true),
+  FLOAT_MEMBER (Extruder.OffsetX,  0.0, true),
+  FLOAT_MEMBER (Extruder.OffsetY,  0.0, true),
+  FLOAT_MEMBER (Extruder.FilamentDiameter,  3.0, true),
+  FLOAT_MEMBER (Extruder.ExtrusionFactor,  1.0, true),
+  /* FLOAT_MEMBER (Extruder.DownstreamMultiplier,  1.0, true), */
+  /* FLOAT_MEMBER (Extruder.DownstreamExtrusionMultiplier,  1.0, true),*/
+  FLOAT_MEMBER (Extruder.ExtrudedMaterialWidthRatio, 1.8, true),
+  FLOAT_MEMBER (Extruder.MinimumLineWidth,  0.4, true),
+  FLOAT_MEMBER (Extruder.MaximumLineWidth,  0.7, true),
+  FLOAT_MEMBER (Extruder.MaxLineSpeed,      180, true),
+  FLOAT_MEMBER (Extruder.EMaxSpeed,         1.5, true),
+  FLOAT_MEMBER (Extruder.MaxShellSpeed,     150, true),
+  STRING_MEMBER(Extruder.GCLetter,          "E", false),
+  BOOL_MEMBER  (Extruder.UseForSupport,   false, true),
+  STRING_MEMBER(Extruder.name,       "Extruder", false),
 
-  BOOL_MEMBER  (Extruder.EnableAntiooze, "EnableAntiooze", false, true),
-  FLOAT_MEMBER (Extruder.AntioozeDistance, "AntioozeDistance", 4.5, true),
-  FLOAT_MEMBER (Extruder.AntioozeAmount, "AntioozeAmount", 1, true),
-  //FLOAT_MEMBER (Extruder.AntioozeHaltRatio, "AntioozeHaltRatio", 0.2, true),
-  FLOAT_MEMBER (Extruder.AntioozeSpeed, "AntioozeSpeed", 15.0, true),
-  FLOAT_MEMBER (Extruder.AntioozeZlift, "AntioozeZlift", 0, true),
-  BOOL_MEMBER  (Extruder.ZliftAlways, "ZliftAlways", false, true),
-  COLOUR_MEMBER(Extruder.DisplayRGBA,
-		"Extruder.DisplayRGBA", 1.0, 1.0, 0.0, 1.0, true),
+  BOOL_MEMBER  (Extruder.EnableAntiooze, false, true),
+  FLOAT_MEMBER (Extruder.AntioozeDistance,  4.5, true),
+  FLOAT_MEMBER (Extruder.AntioozeAmount, 1, true),
+  //FLOAT_MEMBER (Extruder.AntioozeHaltRatio, 0.2, true),
+  FLOAT_MEMBER (Extruder.AntioozeSpeed,  15.0, true),
+  FLOAT_MEMBER (Extruder.AntioozeZlift,  0, true),
+  BOOL_MEMBER  (Extruder.ZliftAlways, false, true),
+  COLOUR_MEMBER(Extruder.DisplayColour, 1.0, 1.0, 0.0, 1.0, true),
 
   // Printer
-  FLOAT_MEMBER  (Printer.ExtrudeAmount, "Printer.ExtrudeAmount", 1, false),
-  FLOAT_MEMBER  (Printer.ExtrudeSpeed, "Printer.ExtrudeSpeed", 1.5, false),
-  INT_MEMBER    (Printer.FanVoltage, "Printer.FanVoltage", 200, false),
-  BOOL_MEMBER   (Printer.Logging, "Printer.Logging", false, false),
-  BOOL_MEMBER   (Printer.ClearLogOnPrintStart, "Printer.ClearLogOnPrintStart", false, false),
-  { OFFSET (Printer.NozzleTemp), T_FLOAT, "Printer.NozzleTemp", NULL, 210, NULL, false },
-  { OFFSET (Printer.BedTemp)   , T_FLOAT, "Printer.BedTemp", NULL,  60, NULL, false },
+  FLOAT_MEMBER  (Printer.ExtrudeAmount, 1, false),
+  FLOAT_MEMBER  (Printer.ExtrudeSpeed,  1.5, false),
+  INT_MEMBER    (Printer.FanVoltage,    200, false),
+  BOOL_MEMBER   (Printer.Logging, false, false),
+  BOOL_MEMBER   (Printer.ClearLogOnPrintStart, false, false),
+  FLOAT_MEMBER  (Printer.ExtrudeSpeed,  1.5, false),
+  FLOAT_MEMBER  (Printer.NozzleTemp, 210, false),
+  FLOAT_MEMBER  (Printer.BedTemp, 60, false),
 
   // Slicing
-  BOOL_MEMBER   (Slicing.RelativeEcode, "RelativeEcode", false, false),
-  BOOL_MEMBER   (Slicing.UseTCommand, "UseTCommand", true, false),
-  FLOAT_MEMBER  (Slicing.LayerThickness, "LayerThickness", 0.3, true),
-  BOOL_MEMBER   (Slicing.MoveNearest, "MoveNearest", true, true),
-  FLOAT_MEMBER  (Slicing.InfillPercent, "InfillPercent", 30, true),
-  FLOAT_MEMBER  (Slicing.InfillRotation, "InfillRotation", 90.0, true),
-  FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, "InfillRotationPrLayer", 60.0, true),
-  FLOAT_MEMBER  (Slicing.AltInfillPercent, "AltInfillPercent", 80, true),
-  FLOAT_MEMBER  (Slicing.InfillOverlap, "InfillOverlap", 0.2, true),
-  INT_MEMBER    (Slicing.AltInfillLayers, "AltInfillLayers", 0, true),
-  INT_MEMBER    (Slicing.NormalFilltype, "NormalFilltype", 0, true),
-  FLOAT_MEMBER  (Slicing.NormalFillExtrusion, "NormalFillExtrusion", 1, true),
-  INT_MEMBER    (Slicing.FullFilltype, "FullFilltype", 0, true),
-  FLOAT_MEMBER  (Slicing.FullFillExtrusion, "FullFillExtrusion", 1, true),
-  INT_MEMBER    (Slicing.SupportFilltype, "SupportFilltype", 0, true),
-  FLOAT_MEMBER  (Slicing.SupportExtrusion, "SupportExtrusion", 0.5, true),
-  FLOAT_MEMBER  (Slicing.SupportInfillDistance, "SupportInfillDistance", 3.0, true),
-  BOOL_MEMBER   (Slicing.MakeDecor, "MakeDecor", true, true),
-  INT_MEMBER    (Slicing.DecorFilltype, "DecorFilltype", 0, true),
-  INT_MEMBER    (Slicing.DecorLayers, "DecorLayers", 0, true),
-  FLOAT_MEMBER  (Slicing.DecorInfillRotation, "DecorInfillRotation", 0, true),
-  FLOAT_MEMBER  (Slicing.DecorInfillDistance, "DecorInfillDistance", 2.0, true),
-  //INT_MEMBER    (Slicing.SolidLayers, "SolidLayers", 2, true),
-  FLOAT_MEMBER  (Slicing.SolidThickness, "SolidThickness", 0.4, true),
-  BOOL_MEMBER   (Slicing.NoTopAndBottom, "NoTopAndBottom", false, true),
-  BOOL_MEMBER   (Slicing.Support, "Support", true, true),
-  FLOAT_MEMBER  (Slicing.SupportAngle, "SupportAngle", 0, true),
-  FLOAT_MEMBER  (Slicing.SupportWiden, "SupportWiden", 0, true),
-  BOOL_MEMBER   (Slicing.Skirt, "Skirt", false, true),
-  BOOL_MEMBER   (Slicing.SingleSkirt, "SingleSkirt", true, true),
-  FLOAT_MEMBER  (Slicing.SkirtHeight, "SkirtHeight", 0.0, true),
-  FLOAT_MEMBER  (Slicing.SkirtDistance, "SkirtDistance", 3, true),
-  BOOL_MEMBER   (Slicing.FillSkirt, "FillSkirt", false, true),
-  INT_MEMBER    (Slicing.Skins, "Skins", 1, true),
-  BOOL_MEMBER   (Slicing.Varslicing, "Varslicing", false, true),
-  BOOL_MEMBER   (Slicing.DoInfill, "DoInfill", true, true),
-  INT_MEMBER    (Slicing.ShellCount, "ShellCount", 1, true),
-  // BOOL_MEMBER   (Slicing.EnableAcceleration, "EnableAcceleration", true, false),
-  FLOAT_MEMBER  (Slicing.MinShelltime, "MinShelltime", 5, true),
-  FLOAT_MEMBER  (Slicing.MinLayertime, "MinLayertime", 5, true),
-  BOOL_MEMBER   (Slicing.FanControl, "FanControl", false, false),
-  INT_MEMBER    (Slicing.MinFanSpeed, "MinFanSpeed", 150, false),
-  INT_MEMBER    (Slicing.MaxFanSpeed, "MaxFanSpeed", 255, false),
-  FLOAT_MEMBER    (Slicing.MaxOverhangSpeed, "MaxOverhangSpeed", 20, false),
+  BOOL_MEMBER   (Slicing.RelativeEcode, false, false),
+  BOOL_MEMBER   (Slicing.UseTCommand, true, false),
+  FLOAT_MEMBER  (Slicing.LayerThickness,  0.3, true),
+  BOOL_MEMBER   (Slicing.MoveNearest, true, true),
+  FLOAT_MEMBER  (Slicing.InfillPercent,  30, true),
+  FLOAT_MEMBER  (Slicing.InfillRotation, 90.0, true),
+  FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, 60.0, true),
+  FLOAT_MEMBER  (Slicing.AltInfillPercent,  80, true),
+  FLOAT_MEMBER  (Slicing.InfillOverlap,  0.2, true),
+  INT_MEMBER    (Slicing.AltInfillLayers,  0, true),
+  INT_MEMBER    (Slicing.NormalFilltype,  0, true),
+  FLOAT_MEMBER  (Slicing.NormalFillExtrusion,  1, true),
+  INT_MEMBER    (Slicing.FullFilltype,  0, true),
+  FLOAT_MEMBER  (Slicing.FullFillExtrusion, 1, true),
+  INT_MEMBER    (Slicing.SupportFilltype,  0, true),
+  FLOAT_MEMBER  (Slicing.SupportExtrusion,  0.5, true),
+  FLOAT_MEMBER  (Slicing.SupportInfillDistance,  3.0, true),
+  BOOL_MEMBER   (Slicing.MakeDecor, true, true),
+  INT_MEMBER    (Slicing.DecorFilltype, 0, true),
+  INT_MEMBER    (Slicing.DecorLayers,   0, true),
+  FLOAT_MEMBER  (Slicing.DecorInfillRotation, 0, true),
+  FLOAT_MEMBER  (Slicing.DecorInfillDistance, 2.0, true),
+  //INT_MEMBER    (Slicing.SolidLayers,  2, true),
+  FLOAT_MEMBER  (Slicing.SolidThickness,  0.4, true),
+  BOOL_MEMBER   (Slicing.NoTopAndBottom, false, true),
+  BOOL_MEMBER   (Slicing.Support, true, true),
+  FLOAT_MEMBER  (Slicing.SupportAngle,  0, true),
+  FLOAT_MEMBER  (Slicing.SupportWiden,  0, true),
+  BOOL_MEMBER   (Slicing.Skirt, false, true),
+  BOOL_MEMBER   (Slicing.SingleSkirt, true, true),
+  FLOAT_MEMBER  (Slicing.SkirtHeight,  0.0, true),
+  FLOAT_MEMBER  (Slicing.SkirtDistance,  3, true),
+  BOOL_MEMBER   (Slicing.FillSkirt, false, true),
+  INT_MEMBER    (Slicing.Skins, 1, true),
+  BOOL_MEMBER   (Slicing.Varslicing, false, true),
+  BOOL_MEMBER   (Slicing.DoInfill, true, true),
+  INT_MEMBER    (Slicing.ShellCount, 1, true),
+  // BOOL_MEMBER   (Slicing.EnableAcceleration, true, false),
+  FLOAT_MEMBER  (Slicing.MinShelltime,  5, true),
+  FLOAT_MEMBER  (Slicing.MinLayertime,  5, true),
+  BOOL_MEMBER   (Slicing.FanControl, false, false),
+  INT_MEMBER    (Slicing.MinFanSpeed,  150, false),
+  INT_MEMBER    (Slicing.MaxFanSpeed,  255, false),
+  FLOAT_MEMBER    (Slicing.MaxOverhangSpeed, 20, false),
 
   //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
-  BOOL_MEMBER   (Slicing.BuildSerial, "BuildSerial", false, true),
-  BOOL_MEMBER   (Slicing.SelectedOnly, "SelectedOnly", false, true),
-  FLOAT_MEMBER  (Slicing.ShellOffset, "ShellOffset", 0.1, true),
-  INT_MEMBER    (Slicing.FirstLayersNum, "FirstLayersNum", 1, true),
-  FLOAT_MEMBER  (Slicing.FirstLayersSpeed, "FirstLayersSpeed", 0.5, true),
-  FLOAT_MEMBER  (Slicing.FirstLayersInfillDist, "FirstLayersInfillDist", 0.8, true),
-  FLOAT_MEMBER  (Slicing.FirstLayerHeight, "FirstLayerHeight", 0.7, true),
-  BOOL_MEMBER   (Slicing.UseArcs, "UseArcs", false, true),
-  FLOAT_MEMBER  (Slicing.ArcsMaxAngle, "ArcsMaxAngle", 20, true),
-  FLOAT_MEMBER  (Slicing.MinArcLength, "MinArcLength", 1, true),
-  BOOL_MEMBER   (Slicing.RoundCorners, "RoundCorners", true, true),
-  FLOAT_MEMBER  (Slicing.CornerRadius, "CornerRadius", 1., true),
-  BOOL_MEMBER   (Slicing.NoBridges, "NoBridges", false, true),
-  FLOAT_MEMBER  (Slicing.BridgeExtrusion, "BridgeExtrusion", 1, true),
+  BOOL_MEMBER   (Slicing.BuildSerial, false, true),
+  BOOL_MEMBER   (Slicing.SelectedOnly, false, true),
+  FLOAT_MEMBER  (Slicing.ShellOffset, 0.1, true),
+  INT_MEMBER    (Slicing.FirstLayersNum,  1, true),
+  FLOAT_MEMBER  (Slicing.FirstLayersSpeed, 0.5, true),
+  FLOAT_MEMBER  (Slicing.FirstLayersInfillDist, 0.8, true),
+  FLOAT_MEMBER  (Slicing.FirstLayerHeight,  0.7, true),
+  BOOL_MEMBER   (Slicing.UseArcs, false, true),
+  FLOAT_MEMBER  (Slicing.ArcsMaxAngle,  20, true),
+  FLOAT_MEMBER  (Slicing.MinArcLength,  1, true),
+  BOOL_MEMBER   (Slicing.RoundCorners, true, true),
+  FLOAT_MEMBER  (Slicing.CornerRadius,  1., true),
+  BOOL_MEMBER   (Slicing.NoBridges, false, true),
+  FLOAT_MEMBER  (Slicing.BridgeExtrusion, 1, true),
 
-  BOOL_MEMBER (Slicing.GCodePostprocess, "GCodePostprocess", false, false),
-  STRING_MEMBER (Slicing.GCodePostprocessor, "GCodePostprocessor", "", false),
+  BOOL_MEMBER (Slicing.GCodePostprocess, false, false),
+  STRING_MEMBER (Slicing.GCodePostprocessor, "", false),
 
   // Milling
-  FLOAT_MEMBER  (Milling.ToolDiameter, "ToolDiameter", 2, true),
+  FLOAT_MEMBER  (Milling.ToolDiameter, 2, true),
 
   // Misc.
-  BOOL_MEMBER (Misc.SpeedsAreMMperSec, "SpeedsAreMMperSec", false, false),
-  BOOL_MEMBER (Misc.ShapeAutoplace, "ShapeAutoplace", true, false),
-  //BOOL_MEMBER (Misc.FileLoggingEnabled, "FileLoggingEnabled", true, false),
-  BOOL_MEMBER (Misc.TempReadingEnabled, "TempReadingEnabled", true, false),
-  BOOL_MEMBER (Misc.SaveSingleShapeSTL, "Misc.SaveSingleShapeSTL", false, false),
+  BOOL_MEMBER (Misc.SpeedsAreMMperSec,  false, false),
+  BOOL_MEMBER (Misc.ShapeAutoplace,     true,  false),
+  //BOOL_MEMBER (Misc.FileLoggingEnabled,  true, false),
+  BOOL_MEMBER (Misc.TempReadingEnabled, true,  false),
+  BOOL_MEMBER (Misc.SaveSingleShapeSTL, false, false),
 
   // GCode - handled by GCodeImpl
-  BOOL_MEMBER (Display.DisplayGCode, "DisplayGCode", true, true),
-  FLOAT_MEMBER (Display.GCodeDrawStart, "GCodeDrawStart", 0.0, true),
-  FLOAT_MEMBER (Display.GCodeDrawEnd, "GCodeDrawEnd", 1.0, true),
-  BOOL_MEMBER (Display.DisplayGCodeBorders, "DisplayGCodeBorders", true, true),
-  BOOL_MEMBER (Display.DisplayGCodeMoves, "DisplayGCodeMoves", true, true),
-  BOOL_MEMBER (Display.DisplayGCodeArrows, "DisplayGCodeArrows", true, true),
-  BOOL_MEMBER (Display.DisplayEndpoints, "DisplayEndpoints", false, true),
-  BOOL_MEMBER (Display.DisplayNormals, "DisplayNormals", false, true),
-  BOOL_MEMBER (Display.DisplayBBox, "DisplayBBox", false, true),
-  BOOL_MEMBER (Display.DisplayWireframe, "DisplayWireframe", false, true),
-  BOOL_MEMBER (Display.DisplayWireframeShaded, "DisplayWireframeShaded", true, true),
-  BOOL_MEMBER (Display.DisplayPolygons, "DisplayPolygons", true, true),
-  BOOL_MEMBER (Display.DisplayAllLayers, "DisplayAllLayers", false, true),
-  BOOL_MEMBER (Display.DisplayinFill, "DisplayinFill", false, true),
-  BOOL_MEMBER (Display.DisplayDebuginFill, "DisplayDebuginFill", false, true),
-  BOOL_MEMBER (Display.DisplayDebug, "DisplayDebug", false, true),
-  BOOL_MEMBER (Display.DisplayDebugArcs, "DisplayDebugArcs", true, true),
-  BOOL_MEMBER (Display.DebugGCodeExtruders, "Display.DebugGCodeExtruders", false, true),
-  BOOL_MEMBER (Display.DebugGCodeOffset, "Display.DebugGCodeOffset", true, true),
-  BOOL_MEMBER (Display.DisplayFilledAreas, "DisplayFilledAreas", true, true),
-  BOOL_MEMBER (Display.ShowLayerOverhang, "ShowLayerOverhang", true, true),
-  BOOL_MEMBER (Display.CommsDebug, "CommsDebug", false, true),
-  BOOL_MEMBER (Display.TerminalProgress, "TerminalProgress", false, true),
-  BOOL_MEMBER (Display.DisplayLayer, "DisplayLayer", false, true),
-  BOOL_MEMBER (Display.RandomizedLines, "RandomizedLines", false, true),
-  BOOL_MEMBER (Display.DrawVertexNumbers, "DrawVertexNumbers", false, true),
-  BOOL_MEMBER (Display.DrawLineNumbers, "DrawLineNumbers", false, true),
-  BOOL_MEMBER (Display.DrawOutlineNumbers, "DrawOutlineNumbers", false, true),
-  BOOL_MEMBER (Display.DrawCPVertexNumbers, "DrawCPVertexNumbers", false, true),
-  BOOL_MEMBER (Display.DrawCPLineNumbers, "DrawCPLineNumbers", false, true),
-  BOOL_MEMBER (Display.DrawCPOutlineNumbers, "DrawCPOutlineNumbers", false, true),
-  BOOL_MEMBER (Display.DrawRulers, "DrawRulers", true, true),
+  BOOL_MEMBER (Display.DisplayGCode, true, true),
+  FLOAT_MEMBER (Display.GCodeDrawStart,  0.0, true),
+  FLOAT_MEMBER (Display.GCodeDrawEnd, 1.0, true),
+  BOOL_MEMBER (Display.DisplayGCodeBorders,  true, true),
+  BOOL_MEMBER (Display.DisplayGCodeMoves,  true, true),
+  BOOL_MEMBER (Display.DisplayGCodeArrows, true, true),
+  BOOL_MEMBER (Display.DisplayEndpoints,  false, true),
+  BOOL_MEMBER (Display.DisplayNormals,  false, true),
+  BOOL_MEMBER (Display.DisplayBBox,  false, true),
+  BOOL_MEMBER (Display.DisplayWireframe,  false, true),
+  BOOL_MEMBER (Display.DisplayWireframeShaded,  true, true),
+  BOOL_MEMBER (Display.DisplayPolygons,  true, true),
+  BOOL_MEMBER (Display.DisplayAllLayers,  false, true),
+  BOOL_MEMBER (Display.DisplayinFill, false, true),
+  BOOL_MEMBER (Display.DisplayDebuginFill,  false, true),
+  BOOL_MEMBER (Display.DisplayDebug, false, true),
+  BOOL_MEMBER (Display.DisplayDebugArcs,  true, true),
+  BOOL_MEMBER (Display.DebugGCodeExtruders, false, true),
+  BOOL_MEMBER (Display.DebugGCodeOffset, true, true),
+  BOOL_MEMBER (Display.DisplayFilledAreas,  true, true),
+  BOOL_MEMBER (Display.ShowLayerOverhang,  true, true),
+  BOOL_MEMBER (Display.CommsDebug,  false, true),
+  BOOL_MEMBER (Display.TerminalProgress,  false, true),
+  BOOL_MEMBER (Display.DisplayLayer,  false, true),
+  BOOL_MEMBER (Display.RandomizedLines,  false, true),
+  BOOL_MEMBER (Display.DrawVertexNumbers, false, true),
+  BOOL_MEMBER (Display.DrawLineNumbers,  false, true),
+  BOOL_MEMBER (Display.DrawOutlineNumbers, false, true),
+  BOOL_MEMBER (Display.DrawCPVertexNumbers,  false, true),
+  BOOL_MEMBER (Display.DrawCPLineNumbers,  false, true),
+  BOOL_MEMBER (Display.DrawCPOutlineNumbers, false, true),
+  BOOL_MEMBER (Display.DrawRulers,  true, true),
 
-  FLOAT_MEMBER (Display.LayerValue, "LayerValue", 0, true),
-  BOOL_MEMBER  (Display.LuminanceShowsSpeed, "LuminanceShowsSpeed", false, true),
-  FLOAT_MEMBER (Display.Highlight, "Highlight", 0.7, true),
-  FLOAT_MEMBER (Display.NormalsLength, "NormalsLength", 10, true),
-  FLOAT_MEMBER (Display.EndPointSize, "EndPointSize", 8, true),
-  FLOAT_MEMBER (Display.TempUpdateSpeed, "TempUpdateSpeed", 3, false),
+  FLOAT_MEMBER (Display.LayerValue,  0, true),
+  BOOL_MEMBER  (Display.LuminanceShowsSpeed,  false, true),
+  FLOAT_MEMBER (Display.Highlight,  0.7, true),
+  FLOAT_MEMBER (Display.NormalsLength, 10, true),
+  FLOAT_MEMBER (Display.EndPointSize,  8, true),
+  FLOAT_MEMBER (Display.TempUpdateSpeed,  3, false),
 
-  BOOL_MEMBER (Display.PreviewLoad, "PreviewLoad", true, true),
+  BOOL_MEMBER (Display.PreviewLoad,  true, true),
 
   // Colour selectors settings
 
-  COLOUR_MEMBER(Display.PolygonRGBA,
-		"Display.PolygonColour", 0, 1.0, 1.0, 0.5, true),
-  COLOUR_MEMBER(Display.WireframeRGBA,
-		"Display.WireframeColour", 1.0, 0.48, 0, 0.5, true),
-  COLOUR_MEMBER(Display.NormalsRGBA,
-		"Display.NormalsColour", 0.62, 1.0, 0, 1.0, true),
-  /* COLOUR_MEMBER(Display.GCodeExtrudeRGBA, */
-  /* 		"Display.GCodeExtrudeColour", 1.0, 1.0, 0.0, 1.0, true), */
-  COLOUR_MEMBER(Display.GCodeMoveRGBA,
-		"Display.GCodeMoveColour", 1.0, 0.05, 1, 0.5, true),
-  COLOUR_MEMBER(Display.GCodePrintingRGBA,
-		"Display.GCodePrintingColour", 0.1, 0.5, 0.0, 1.0, true)
+  COLOUR_MEMBER(Display.PolygonColour, 0, 1.0, 1.0, 0.5, true),
+  COLOUR_MEMBER(Display.WireframeColour, 1.0, 0.48, 0, 0.5, true),
+  COLOUR_MEMBER(Display.NormalsColour, 0.62, 1.0, 0, 1.0, true),
+  /* COLOUR_MEMBER(Display.GCodeExtrudeColour, 1.0, 1.0, 0.0, 1.0, true), */
+  COLOUR_MEMBER(Display.GCodeMoveColour, 1.0, 0.05, 1, 0.5, true),
+  COLOUR_MEMBER(Display.GCodePrintingColour, 0.1, 0.5, 0.0, 1.0, true)
 
 };
 
@@ -441,17 +434,17 @@ static struct {
 
 static struct {
   uint  member_offset;
-  const char *glade_name;
+  const char *config_name;
 }
 colour_selectors[] = {
-  { OFFSET(Extruder.DisplayRGBA), "Extruder.DisplayRGBA" },
-  { OFFSET(Display.PolygonRGBA), "Display.PolygonRGBA" },
-  { OFFSET(Display.WireframeRGBA), "Display.WireframeRGBA" },
-  { OFFSET(Display.NormalsRGBA), "Display.NormalsRGBA" },
-  { OFFSET(Display.EndpointsRGBA), "Display.EndpointsRGBA" },
-  /* { OFFSET(Display.GCodeExtrudeRGBA), "Display.GCodeExtrudeRGBA" }, */
-  { OFFSET(Display.GCodePrintingRGBA), "Display.GCodePrintingRGBA" },
-  { OFFSET(Display.GCodeMoveRGBA), "Display.GCodeMoveRGBA" }
+  { OFFSET(Extruder.DisplayColour), "Extruder.DisplayColour" },
+  { OFFSET(Display.PolygonColour), "Display.PolygonColour" },
+  { OFFSET(Display.WireframeColour), "Display.WireframeColour" },
+  { OFFSET(Display.NormalsColour), "Display.NormalsColour" },
+  { OFFSET(Display.EndpointsColour), "Display.EndpointsColour" },
+  /* { OFFSET(Display.GCodeExtrudeColour), "Display.GCodeExtrudeColour" }, */
+  { OFFSET(Display.GCodePrintingColour), "Display.GCodePrintingColour" },
+  { OFFSET(Display.GCodeMoveColour), "Display.GCodeMoveColour" }
 };
 
 static const char *GCodeNames[] = { "Start", "Layer", "End" };
@@ -612,9 +605,7 @@ bool Settings::get_group_and_key (int i, Glib::ustring &group, Glib::ustring &ke
     return false;
   }
   // re-use the display name
-  char *field = g_strdup (settings[i].glade_name);
-  if (!field)
-    field = g_strdup (settings[i].config_name);
+  char *field = g_strdup (settings[i].config_name);
   char *p = strchr (field, '.');
   if (!p) {
     group = "Global";
@@ -877,11 +868,11 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
 void Settings::set_to_gui (Builder &builder, int i)
 {
   inhibit_callback = true;
-  const char *glade_name = settings[i].glade_name;
+  const char *glade_name = settings[i].config_name;
   SettingType t = settings[i].type;
 
-  if (!glade_name)
-        return;
+  // inhibit warning for settings not defined in glade UI:
+  if (!glade_name || !builder->get_object (glade_name)) return;
 
   switch (t) {
   case T_BOOL: {
@@ -976,11 +967,11 @@ void Settings::get_from_gui (Builder &builder, int i)
 {
   if (inhibit_callback) return;
   bool is_changed = false;
-  const char *glade_name = settings[i].glade_name;
+  const char *glade_name = settings[i].config_name;
   SettingType t = settings[i].type;
 
-  if (glade_name == NULL)
-        return; /* Not an automatically connected setting */
+  // inhibit warning for settings not defined in glade UI:
+  if (!glade_name || !builder->get_object (glade_name)) return;
 
   switch (t) {
   case T_BOOL: {
@@ -1206,7 +1197,7 @@ void Settings::get_port_speed_from_gui (Builder &builder)
 
 void Settings::get_colour_from_gui (Builder &builder, int i)
 {
-  const char *glade_name = colour_selectors[i].glade_name;
+  const char *glade_name = colour_selectors[i].config_name;
   Vector4f *dest =
       (Vector4f *)PTR_OFFSET(this, colour_selectors[i].member_offset);
   Gdk::Color c;
@@ -1234,7 +1225,7 @@ void Settings::set_to_gui (Builder &builder, const string filter)
 {
   inhibit_callback = true;
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
-    const char *glade_name = settings[i].glade_name;
+    const char *glade_name = settings[i].config_name;
 
     if (!glade_name)
       continue;
@@ -1247,7 +1238,7 @@ void Settings::set_to_gui (Builder &builder, const string filter)
   set_filltypes_to_gui (builder);
 
   for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
-      const char *glade_name = colour_selectors[i].glade_name;
+      const char *glade_name = colour_selectors[i].config_name;
       if (filter != "" && string(glade_name).substr(0,filter.length()) != filter)
 	continue;
       Vector4f *src =
@@ -1327,10 +1318,10 @@ void Settings::connect_to_ui (Builder &builder)
 
   // connect widget / values from our table
   for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
-    const char *glade_name = settings[i].glade_name;
+    const char *glade_name = settings[i].config_name;
 
-    if (!glade_name)
-      continue;
+    // inhibit warning for settings not defined in glade UI:
+    if (!glade_name || !builder->get_object (glade_name)) continue;
 
     switch (settings[i].type) {
     case T_BOOL: {
@@ -1403,7 +1394,7 @@ void Settings::connect_to_ui (Builder &builder)
 
   // Colour selectors
   for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
-    const char *glade_name = colour_selectors[i].glade_name;
+    const char *glade_name = colour_selectors[i].config_name;
     Gdk::Color c;
     Gtk::ColorButton *w = NULL;
 

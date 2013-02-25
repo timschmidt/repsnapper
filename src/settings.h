@@ -121,7 +121,7 @@ class Settings {
     //float AntioozeHaltRatio;
     float AntioozeZlift;
     bool ZliftAlways;
-    Vector4f DisplayRGBA;
+    Vector4f DisplayColour;
 
     bool UseForSupport;
   };
@@ -292,13 +292,13 @@ class Settings {
 
 
     // Rendering
-    Vector4f PolygonRGBA;
-    Vector4f WireframeRGBA;
-    Vector4f NormalsRGBA;
-    Vector4f EndpointsRGBA;
-    // Vector4f GCodeExtrudeRGBA; // now in Extruder
-    Vector4f GCodePrintingRGBA;
-    Vector4f GCodeMoveRGBA;
+    Vector4f PolygonColour;
+    Vector4f WireframeColour;
+    Vector4f NormalsColour;
+    Vector4f EndpointsColour;
+    // Vector4f GCodeExtrudeColour; // now in Extruder
+    Vector4f GCodePrintingColour;
+    Vector4f GCodeMoveColour;
     float    Highlight;
     float    NormalsLength;
     float    EndPointSize;

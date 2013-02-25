@@ -807,7 +807,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 
 
         for (uint i = 0; i < 4; i++) {
-	  mat_diffuse[i] = settings.Display.PolygonRGBA[i];
+	  mat_diffuse[i] = settings.Display.PolygonColour[i];
 	}
 
 	if (highlight)
@@ -853,10 +853,10 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 
 
                 for (uint i = 0; i < 4; i++)
-                        mat_diffuse[i] = settings.Display.WireframeRGBA[i];
+                        mat_diffuse[i] = settings.Display.WireframeColour[i];
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
-		glColor4fv(settings.Display.WireframeRGBA);
+		glColor4fv(settings.Display.WireframeColour);
 		for(size_t i=0;i<triangles.size();i++)
 		{
 			glBegin(GL_LINE_LOOP);
@@ -874,7 +874,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 	// normals
 	if(settings.Display.DisplayNormals)
 	{
-		glColor4fv(settings.Display.NormalsRGBA);
+		glColor4fv(settings.Display.NormalsColour);
 		glBegin(GL_LINES);
 		for(size_t i=0;i<triangles.size();i++)
 		{
@@ -889,7 +889,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 	// Endpoints
 	if(settings.Display.DisplayEndpoints)
 	{
-		glColor4fv(settings.Display.EndpointsRGBA);
+		glColor4fv(settings.Display.EndpointsColour);
 		glPointSize(settings.Display.EndPointSize);
 		glBegin(GL_POINTS);
 		for(size_t i=0;i<triangles.size();i++)
