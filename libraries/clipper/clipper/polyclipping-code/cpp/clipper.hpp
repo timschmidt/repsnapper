@@ -74,6 +74,7 @@ typedef std::vector< PolyNode* > PolyNodes;
 class PolyNode 
 { 
 public:
+    PolyNode() : Childs(), Parent(NULL), Index(0) {};
     Polygon Contour;
     PolyNodes Childs;
     PolyNode* Parent;
