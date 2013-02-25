@@ -110,6 +110,7 @@ bool fit_arc(const int m_dat, const arc_data_struct data,
 
   return  (totres < sq_error);
 
+#if 0
   printf( "\nResults:\n" );
   printf( "status after %d function evaluations:\n  %s\n",
 	  status.nfev, lm_infmsg[status.info] );
@@ -119,6 +120,7 @@ bool fit_arc(const int m_dat, const arc_data_struct data,
   for ( i=0; i<n_par; ++i )
     printf("  par[%i] = %12g\n", i, par[i]);
   printf("obtained norm:\n  %12g\n", status.fnorm );
+#endif
 
   // printf("fitting data as follows:\n");
   // double ff;
