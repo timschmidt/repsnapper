@@ -20,6 +20,41 @@
 
 #include "clipping.h"
 
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+// old API compatibility
+// polytree to expolygons
+// http://www.angusj.com/delphi/clipper/documentation/Docs/Overview/Compatibility%20with%20Prior%20Versions.htm
+
+void Clipping::AddOuterPolyNodeToExPolygons(const CL::PolyNode * polynode,
+					    ExPolygons& expolygons)
+{
+  size_t cnt = expolygons.size();
+  expolygons.resize(cnt + 1);
+  expolygons[cnt].outer = polynode->Contour;
+  expolygons[cnt].holes.resize(polynode->ChildCount());
+  for (int i = 0; i < polynode->ChildCount(); ++i)
+  {
+    expolygons[cnt].holes[i] = polynode->Childs[i]->Contour;
+    //Add outer polygons contained by (nested within) holes ...
+    for (int j = 0; j < polynode->Childs[i]->ChildCount(); ++j)
+      AddOuterPolyNodeToExPolygons(polynode->Childs[i]->Childs[j], expolygons);
+  }
+}
+
+void Clipping::PolyTreeToExPolygons(const CL::PolyTree * polytree, ExPolygons& expolygons)
+{
+  expolygons.clear();
+  for (int i = 0; i < polytree->ChildCount(); ++i)
+    AddOuterPolyNodeToExPolygons(polytree->Childs[i], expolygons);
+}
+
+//
+//////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 //CL::Clipper Clipping::clpr; // not static
 
 void printCLpolygons(vector<CL::Polygons> &p) {
@@ -411,28 +446,18 @@ vector<Poly> Clipping::getPolys(const CL::Polygons &cpolys, double z, double ext
   return polys;
 }
 
-ExPoly Clipping::getExPoly(const CL::PolyNode *cnode, double z, double extrusionfactor)
-{
-  ExPoly expoly;
-  expoly.outer = getPoly(cnode->Contour, z, extrusionfactor);
-  uint count = cnode->Childs.size();
-  expoly.holes.resize(count);
-  for (uint i = 0 ; i < count; i++) {
-    expoly.holes[i] = getPoly(cnode->Childs[i]->Contour, z, extrusionfactor);
-  }
-  return expoly;
-}
-
-vector<ExPoly> Clipping::getExPolys(CL::PolyTree &ctree, double z,
+vector<ExPoly> Clipping::getExPolys(const CL::PolyTree &ctree, double z,
 				    double extrusionfactor)
 {
-  vector<ExPoly> polys;
-  CL::PolyNode *node = ctree.GetFirst();
-  while (node != NULL) {
-    polys.push_back(getExPoly(node, z, extrusionfactor));
-    node = node->GetNext();
+  ExPolygons cexpolys;
+  PolyTreeToExPolygons(&ctree, cexpolys);
+  vector<ExPoly> expolys(cexpolys.size());
+  for (uint j = 0 ; j < cexpolys.size(); j++) {
+    expolys[j].outer = getPoly(cexpolys[0].outer, z, extrusionfactor);
+    for (uint i = 0 ; i < cexpolys[j].holes.size(); i++)
+      expolys[j].holes.push_back(getPoly(cexpolys[j].holes[i], z, extrusionfactor));
   }
-  return polys;
+  return expolys;
 }
 vector<Poly> Clipping::getPolys(const ExPoly &expoly)
 {
@@ -454,8 +479,10 @@ vector<Poly> Clipping::getPolys(const vector<ExPoly> &expolys)
 
 vector<ExPoly> Clipping::getExPolys(const vector<Poly> &polys)
 {
-  // return getExPolys(getExClipperPolygons(polys),
-  // 		    polys.back().getZ(),polys.back().getExtrusionFactor());
+  /*
+  CL::PolyTree tree = getClipperTree(polys);
+  return getExPolys(tree, polys.back().getZ(), polys.back().getExtrusionFactor());
+  */
   vector<ExPoly> expolys;
   vector<Poly> holes;
   for (uint i = 0; i<polys.size(); i++) {
@@ -467,11 +494,10 @@ vector<ExPoly> Clipping::getExPolys(const vector<Poly> &polys)
       expolys.push_back(expoly);
     }
   }
-  for (uint j = 0; j<expolys.size(); j++)
-    for (uint i = 0; i<holes.size(); i++)
-      // just test one point
+  for (uint i = 0; i<holes.size(); i++)
+    for (uint j = 0; j<expolys.size(); j++)
       if (holes[i].size()>0)
-	if (expolys[j].outer.vertexInside(holes[i].vertices[0]))
+	if (expolys[j].outer.vertexInside(holes[i].vertices[0])) // just test one point
 	  //if (holes[i].isInside(expolys[j].outer)) // test all
 	  expolys[j].holes.push_back(holes[i]);
   return expolys;
@@ -487,18 +513,6 @@ vector<ExPoly> Clipping::getExPolys(const vector<Poly> &polys,
   }
   return getExPolys(ppolys);
 }
-//   CL::ExPolygons excpolys = getExClipperPolygons(polys);
-//   uint count = excpolys.size();
-//   vector<ExPoly> expolys(count);
-//   for (uint i = 0 ; i < count;  i++)  {
-//     expolys[i].outer = getPoly(excpolys[i].outer, z, extrusionfactor);
-//     expolys[i].holes.resize(excpolys[i].holes.size());
-//     for (uint j = 0 ; j < excpolys[i].holes.size();  i++) {
-//       expolys[i].holes[j] = getPoly(excpolys[i].holes[j], z, extrusionfactor);
-//     }
-//   }
-//   return expolys;
-// }
 
 CL::PolyTree Clipping::getClipperTree(const vector<Poly> &polys)
 {
@@ -539,3 +553,7 @@ void Clipping::ReversePoints(vector<Poly> &polys) {
   for (uint i=0; i<polys.size(); i++)
     polys[i].reverse();
 }
+
+
+
+

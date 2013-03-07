@@ -121,9 +121,7 @@ public:
   static vector<Poly>   getPolys(const ExPoly &expoly);
   static vector<Poly>   getPolys(const vector<ExPoly> &expolys);
   static vector<Poly>   getPolys(const CL::Polygons &cpoly, double z, double extrusionfactor);
-  static ExPoly         getExPoly(const CL::PolyNode *cnode, double z,
-				  double extrusionfactor);
-  static vector<ExPoly> getExPolys(CL::PolyTree &ctree, double z,
+  static vector<ExPoly> getExPolys(const CL::PolyTree &ctree, double z,
 				   double extrusionfactor);
 
   static vector<ExPoly> getExPolys(const vector<Poly> &polys,
@@ -142,5 +140,17 @@ public:
   static double Area(const vector<ExPoly> &expolys);
 
   static void ReversePoints(vector<Poly> &polys);
+
+ protected:
+  // old API compatibility
+  // polytree to expolygons
+  struct ExPolygon {
+    CL::Polygon outer;
+    CL::Polygons holes;
+  };
+  typedef std::vector< ExPolygon > ExPolygons;
+  static void AddOuterPolyNodeToExPolygons(const CL::PolyNode *polynode,
+					   ExPolygons& expolygons);
+  static void PolyTreeToExPolygons(const CL::PolyTree * polytree, ExPolygons& expolygons);
 
 };
