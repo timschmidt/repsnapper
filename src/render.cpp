@@ -29,7 +29,8 @@
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
 
-const Glib::ustring Render::fontstring = "sans 8";
+const Glib::ustring Render::fontstring = "helvetica,arial,sans";
+#define FONTSIZE 8
 GLuint Render::fontlistbase = 0;
 int Render::fontheight = 0;
 
@@ -152,21 +153,53 @@ void Render::on_realize()
 
   fontlistbase = glGenLists (128);
 
-  Pango::FontDescription font_desc(fontstring);
+  Glib::RefPtr<Pango::Context> pcontext = get_pango_context();
 
-  Glib::RefPtr<Pango::Font> font =
-    Gdk::GL::Font::use_pango_font(font_desc, 0, 128, fontlistbase);
-  if (!font)
-    {
-      std::cerr << "*** Can't load font "
-                << fontstring
-                << std::endl;
-      Gtk::Main::quit();
+  Pango::FontDescription font_desc;
+
+  vector < Glib::RefPtr< Pango::FontFamily > > families = pcontext->list_families();
+  bool found_font = false;
+  vector<Glib::ustring> fonts = Glib::Regex::split_simple(",", fontstring);
+  for (uint i = 0; !found_font && i < families.size(); i++) {
+    Glib::ustring famname = families[i]->get_name().lowercase();
+    // cerr <<"Family: " << famname << endl;
+    for (uint k = 0; !found_font && k < fonts.size(); k++) {
+      if ((int)famname.find(fonts[k])!=-1) {
+	// found_font family, now get normal style and weight
+	vector< Glib::RefPtr< Pango::FontFace > > faces = families[i]->list_faces();
+	for (uint j = 0; !found_font && j < faces.size(); j++) {
+	  font_desc = faces[j]->describe();
+	  if (font_desc.get_style() == Pango::STYLE_NORMAL
+	      && font_desc.get_weight() == Pango::WEIGHT_NORMAL ) {
+	    found_font = true;
+	    font_desc.set_size(Pango::SCALE * FONTSIZE);
+	    //cerr <<"Using " << font_desc.to_string() << endl;
+	  }
+	}
+      }
     }
-  Pango::FontMetrics font_metrics = font->get_metrics();
+  }
 
-  fontheight = font_metrics.get_ascent() + font_metrics.get_descent();
-  fontheight = PANGO_PIXELS(fontheight);
+  if (found_font) {
+    Glib::RefPtr<Pango::Font> font =
+    Gdk::GL::Font::use_pango_font(font_desc, 0, 128, fontlistbase);
+    if (!font) {
+      std::cerr << "*** Can't load font "  << font_desc.to_string() << std::endl;
+      found_font = false;
+    } else {
+      Pango::FontMetrics font_metrics = font->get_metrics();
+      fontheight = font_metrics.get_ascent() + font_metrics.get_descent();
+      fontheight = PANGO_PIXELS(fontheight);
+    }
+  }
+
+  if (!found_font) {
+    cerr << "Did not find any font matching \"" << fontstring << "\""
+	 << " on your system!" << endl
+	 << "Cannot display any numbers"
+	 << endl;
+    fontheight = 0;
+  }
 
 }
 
