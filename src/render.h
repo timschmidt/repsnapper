@@ -38,7 +38,6 @@ class Render : public Gtk::GL::DrawingArea
   Glib::RefPtr<Gtk::TreeSelection> m_selection;
 
   // font rendering:
-  static const Glib::ustring fontstring;
   static GLuint fontlistbase;
   static int fontheight;
 

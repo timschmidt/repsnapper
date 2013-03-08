@@ -29,7 +29,7 @@
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
 
-const Glib::ustring Render::fontstring = "helvetica,arial,sans";
+#define TRYFONTS "helvetica,arial,dejavu sans,sans,courier"
 #define FONTSIZE 8
 GLuint Render::fontlistbase = 0;
 int Render::fontheight = 0;
@@ -159,7 +159,7 @@ void Render::on_realize()
 
   vector < Glib::RefPtr< Pango::FontFamily > > families = pcontext->list_families();
   bool found_font = false;
-  vector<Glib::ustring> fonts = Glib::Regex::split_simple(",", fontstring);
+  vector<Glib::ustring> fonts = Glib::Regex::split_simple(",", TRYFONTS);
   for (uint i = 0; !found_font && i < families.size(); i++) {
     Glib::ustring famname = families[i]->get_name().lowercase();
     // cerr <<"Family: " << famname << endl;
@@ -171,30 +171,29 @@ void Render::on_realize()
 	  font_desc = faces[j]->describe();
 	  if (font_desc.get_style() == Pango::STYLE_NORMAL
 	      && font_desc.get_weight() == Pango::WEIGHT_NORMAL ) {
-	    found_font = true;
 	    font_desc.set_size(Pango::SCALE * FONTSIZE);
-	    //cerr <<"Using " << font_desc.to_string() << endl;
+	    //cerr <<"Trying " << font_desc.to_string() << endl;
+	    Glib::RefPtr<Pango::Font> font =
+	      Gdk::GL::Font::use_pango_font(font_desc, 0, 128, fontlistbase);
+	    if (font) {
+	      //cerr <<"Using " << font_desc.to_string() << endl;
+	      found_font = true;
+	      Pango::FontMetrics font_metrics = font->get_metrics();
+	      fontheight = font_metrics.get_ascent() + font_metrics.get_descent();
+	      fontheight = PANGO_PIXELS(fontheight);
+	    } else {
+	      std::cerr << "*** Can't load font \""
+			<< font_desc.to_string() << "\"" << std::endl;
+	      found_font = false;
+	    }
 	  }
 	}
       }
     }
   }
 
-  if (found_font) {
-    Glib::RefPtr<Pango::Font> font =
-    Gdk::GL::Font::use_pango_font(font_desc, 0, 128, fontlistbase);
-    if (!font) {
-      std::cerr << "*** Can't load font "  << font_desc.to_string() << std::endl;
-      found_font = false;
-    } else {
-      Pango::FontMetrics font_metrics = font->get_metrics();
-      fontheight = font_metrics.get_ascent() + font_metrics.get_descent();
-      fontheight = PANGO_PIXELS(fontheight);
-    }
-  }
-
   if (!found_font) {
-    cerr << "Did not find any font matching \"" << fontstring << "\""
+    cerr << "Did not find any working font matching \"" << TRYFONTS << "\""
 	 << " on your system!" << endl
 	 << "Cannot display any numbers"
 	 << endl;
