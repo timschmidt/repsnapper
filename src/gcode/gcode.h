@@ -65,6 +65,11 @@ public:
 	      int linewidth=3);
   void drawCommands(const Settings &settings, uint start, uint end,
 		    bool liveprinting, int linewidth, bool arrows, bool boundary=false);
+
+  void drawSequence(const Settings &settings, bool moveonly,
+		    int from, int to,
+		    double width, double height) const;
+
   void MakeText(string &GcodeTxt, const Settings &settings,
 		ViewProgress * progress);
 

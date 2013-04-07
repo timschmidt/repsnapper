@@ -444,36 +444,220 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 }
 
 
-void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short ccw)
+void renderLineSimple(const Vector3d &v1, const Vector3d &v2,
+		      double radius, bool ends=true)
 {
-  Vector3d arcpoint;
-  Vector3d radiusv = lastPos-center;
+  Vector3d dir = v2-v1;
+  dir.normalize();
+  Vector3d perp_xy_n(dir.y(), -dir.x(), 0.);
+  perp_xy_n.normalize();
+  Vector3d perp_z_n = perp_xy_n.cross(dir);
+  perp_z_n.normalize();
+  const Vector3d perp_xy = perp_xy_n * radius;
+  const Vector3d perp_z  = perp_z_n * radius;
+  const Vector3d from1 = v1 - dir*radius/2. - perp_z - perp_xy;
+  const Vector3d from2 = from1 + perp_xy*2;
+  const Vector3d from3 = from2 + perp_z*2;
+  const Vector3d from4 = from1 + perp_z*2;
+  const Vector3d to1   = v2 + dir*radius/2. - perp_z - perp_xy;
+  const Vector3d to2   = to1 + perp_xy*2;
+  const Vector3d to3   = to2 + perp_z*2;
+  const Vector3d to4   = to1 + perp_z*2;
+  glBegin(GL_TRIANGLE_STRIP);
+  glNormal3dv(-perp_z_n);
+  glVertex3dv(from1);
+  glVertex3dv(to1);
+
+  glVertex3dv(from2);
+  glVertex3dv(to2);
+
+  glNormal3dv(perp_xy_n);
+  glVertex3dv(from3);
+  glVertex3dv(to3);
+
+  glNormal3dv(perp_z_n);
+  glVertex3dv(from4);
+  glVertex3dv(to4);
+
+  glNormal3dv(-perp_xy_n);
+  glVertex3dv(from1);
+  glVertex3dv(to1);
+  glEnd();
+  if (ends) {
+    glBegin(GL_QUADS);
+    glNormal3dv(-dir);
+    glVertex3dv(from1);
+    glVertex3dv(from2);
+    glVertex3dv(from3);
+    glVertex3dv(from4);
+    glNormal3dv(dir);
+    glVertex3dv(to1);
+    glVertex3dv(to2);
+    glVertex3dv(to3);
+    glVertex3dv(to4);
+    glEnd();
+  }
+  return;
+
+
+#if 0
+    double dx = v2.x() - v1.x();
+    double dy = v2.y() - v1.y();
+    double perp_x = dy;
+    double perp_y= -dx;
+    double len = sqrt( perp_x*perp_x + perp_y*perp_y );
+    perp_x /= len;
+    perp_y /= len;
+    perp_x *= radius;
+    perp_y *= radius;
+    const Vector3d normal_left =
+      Triangle(v1,v2,Vector3d(v1.x(),v1.y(),v1.z()+radius)).Normal;
+
+    glBegin(GL_TRIANGLE_STRIP);
+    glNormal3d( 0.0f, 0.0, -1.0f);
+    glVertex3d( v1.x(), v1.y(), v1.z());  // V0
+    glVertex3d( v2.x(), v2.y(), v1.z());  // V1
+    glVertex3d( v1.x()+perp_x, v1.y()+perp_y, v1.z());  // V2
+    glVertex3d( v2.x()+perp_x, v2.y()+perp_y, v1.z());
+
+    glNormal3d( -normal_left.x(), -normal_left.y(), normal_left.z());
+    glVertex3d( v1.x()+perp_x,  v1.y()+perp_y, v1.z()+radius);  // V2
+    glVertex3d( v2.x()+perp_x, v2.y()+perp_y, v1.z()+radius);
+
+    glNormal3d( 0.0f, 0.0, 1.0f);
+    glVertex3d( v1.x(),  v1.y(), v1.z()+radius);        // V0
+    glVertex3d( v2.x(), v2.y(), v1.z()+radius);  // V1
+
+    glNormal3d( normal_left.x(), normal_left.y(), normal_left.z());
+    glVertex3d( v1.x(),  v1.y(), v1.z());        // V0
+    glVertex3d( v2.x(), v2.y(), v1.z());  // V1
+    glEnd();
+    // glBegin(GL_QUADS);
+    // glVertex3d( v1.x()+perp_x, v1.y()+perp_y, v1.z());  // V2
+
+
+    // glEnd();
+#endif
+}
+
+
+#include "gle/gle-3.1.0/src/gle.h"
+
+void renderLine(const Vector3d &v1, const Vector3d &v2,
+		double radius, bool ends=true)
+{
+  if (v1==v2) return;
+  GLfloat ccol[4];
+  glGetFloatv(GL_CURRENT_COLOR,&ccol[0]);
+  gleColor4f colors[4];
+
+  for (uint i=0; i<4; i++) {
+    colors[0][i] = ccol[i];
+    colors[1][i] = ccol[i];
+    colors[2][i] = ccol[i];
+    colors[3][i] = ccol[i];
+  }
+  const Vector3d dir = v2-v1;
+  const Vector3d before = v1-dir;
+  const Vector3d after = v2+dir;
+  gleDouble points[4][3];
+  for (uint i=0; i<3; i++) {
+    points[0][i] = before.array[i];
+    points[1][i] = v1.array[i];
+    points[2][i] = v2.array[i];
+    points[3][i] = after.array[i];
+  }
+  glePolyCylinder_c4f(4, points, colors, radius);
+
+  //glePolyCone(2, points, colors3, radii);
+}
+
+
+uint Command::point_sequence(const Vector3d &lastPos,
+			     vector<Vector3d> &points) const
+{
+  if (!is_arc()) {
+    if (points.size() > 0 && points.back() == where) {
+      return 0;
+    } else {
+      points.push_back(where);
+      return 1;
+    }
+  }
+  uint before = points.size();
+  bool ccw = (Code == ARC_CCW);
+  const Vector3d center  = lastPos + arcIJK;
+  Vector3d radiusv = -arcIJK;
   radiusv.z() = 0;
+  double angle = get_arcangle(lastPos);
   double astep = angle/radiusv.length()/30.;
   if (angle/astep > 10000) astep = angle/10000;
   if (angle<0) ccw=!ccw;
-  Vector3d axis(0.,0.,ccw?1.:-1.);
+  Vector3d axis(0., 0., ccw?1.:-1.);
   double startZ = lastPos.z();
+  double dz = where.z()-lastPos.z();
+  Vector3d arcpoint = lastPos;
   for (long double a = 0; abs(a) < abs(angle); a+=astep){
     arcpoint = center + radiusv.rotate(a, axis);
     if (dz!=0 && angle!=0) arcpoint.z() = startZ + dz*a/angle;
-    glVertex3dv(lastPos);
-    glVertex3dv(arcpoint);
-    lastPos = arcpoint;
+    if ( ! (points.size() > 0 && points.back() == arcpoint))
+      points.push_back(arcpoint);
   }
+  return points.size() - before;
 }
+
+void draw_sequence(Vector3d &lastPos, const vector<Vector3d> &points)
+{
+  glVertex3dv(lastPos);
+  for (uint i = 0; i<points.size()-1; i++) {
+    glVertex3dv(points[i]);
+    glVertex3dv(points[i]);
+  }
+  glVertex3dv(points.back());
+  lastPos = points.back();
+}
+
+long double Command::get_arcangle(const Vector3d &lastPos) const
+{
+  const Vector3d center = lastPos + arcIJK;
+  const Vector3d P3 = lastPos-center, Q3 = where-center; // arc endpoints from center
+  // only 2d component is relevant:
+  const Vector2d P(P3.x(),P3.y()), Q(Q3.x(),Q3.y());
+  if (P==Q) return 2*M_PI;
+  long double angle = angleBetween(P,Q); // ccw angle
+  if (Code == ARC_CW) angle=-angle;
+  if (angle < 0) angle += 2*M_PI;
+  return angle;
+}
+
 
 void Command::draw(Vector3d &lastPos, const Vector3d &offset,
 		   double extrwidth,
 		   bool arrows,  bool debug_arcs) const
 {
+  if (is_value) return;
   Vector3d off_where = where + offset;
   Vector3d off_lastPos = lastPos + offset;
   GLfloat ccol[4];
   glGetFloatv(GL_CURRENT_COLOR,&ccol[0]);
+
+  if (extrwidth > 0) {
+    //renderLine(Vector3d(0,0,0), Vector3d(200,200,200), 10);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_DEPTH_TEST);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, ccol);
+    gleSetJoinStyle (TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP);
+    renderLine(off_lastPos, off_where, extrwidth/2.);
+    lastPos = where;
+    return;
+  }
+
+  glDisable(GL_LIGHTING);
+  glDisable(GL_DEPTH_TEST);
+
   glBegin(GL_LINES);
   // arc:
-  if (Code == ARC_CW || Code == ARC_CCW) {
+  if (is_arc()) {
     Vector3d center = off_lastPos + arcIJK;
     Vector3d P = -arcIJK, Q = off_where-center; // arc endpoints
     bool ccw = (Code == ARC_CCW);
@@ -493,7 +677,8 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
       else
 	glColor4f(1.f,0.5f,0.0f,lum);
     }
-    long double angle;
+    //long double angle = get_arcangle(lastPos);
+    /*
     if (P==Q) angle = 2*M_PI;
     else {
 #if 0  // marlin calculation (motion_control.cpp)
@@ -506,10 +691,13 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
       if (angle < 0) angle += 2*M_PI;  // alway positive, ccw determines rotation
 #endif
     }
+    */
     //if (abs(angle) < 0.00001) angle = 0;
-    double dz = off_where.z()-(off_lastPos).z(); // z move with arc
+    // double dz = off_where.z()-(off_lastPos).z(); // z move with arc
     Vector3d arcstart = off_lastPos;
-    draw_arc(off_lastPos, center, angle, dz, ccw);
+    vector<Vector3d> points;
+    point_sequence(off_lastPos, points);
+    draw_sequence(off_lastPos, points);
     // extrusion boundary for arc:
     if (extrwidth > 0) {
       glEnd();
@@ -519,12 +707,17 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
       Vector3d dradius = normarcIJK*extrwidth/2;
       glBegin(GL_LINES);
       Vector3d offstart = arcstart+dradius;
-      draw_arc(offstart, center, angle, dz, ccw);
+      points.clear();
+      point_sequence(offstart, points);
+      draw_sequence(offstart, points);
       offstart = arcstart-dradius;
-      draw_arc(offstart, center, angle, dz, ccw);
+      points.clear();
+      point_sequence(offstart, points);
+      draw_sequence(offstart, points);
       //glEnd();
     }
   } // end ARCs
+
   if (off_lastPos==off_where) {
     glEnd();
     if (arrows) {

@@ -828,7 +828,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 	glMaterialfv(GL_FRONT, GL_AMBIENT, low_mat);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-	glMaterialf(GL_FRONT, GL_SHININESS, 90); // 0..128
+	glMaterialf (GL_FRONT, GL_SHININESS, 90); // 0..128
 	glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
 
 	// glEnable (GL_POLYGON_OFFSET_FILL);
@@ -968,7 +968,7 @@ void Shape::draw_geometry(uint max_triangles)
 {
 
   bool listDraw = (max_triangles == 0); // not in preview mode
-  bool haveList = gl_List >= 0;
+  bool haveList = ((gl_List >= 0) && (glIsList(gl_List)==GL_TRUE));
 
   if (!listDraw && haveList) {
     if (gl_List>=0)
@@ -1004,6 +1004,7 @@ void Shape::draw_geometry(uint max_triangles)
     if (!slow_drawing) {
       starttime.assign_current_time();
     }
+    //cerr <<" shape islist? "<< gl_List <<((glIsList(gl_List)==GL_TRUE)?"Y":"N" ) << endl;
     glCallList(gl_List);
     if (!slow_drawing) {
       endtime.assign_current_time();

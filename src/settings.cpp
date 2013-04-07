@@ -1268,10 +1268,10 @@ void Settings::set_to_gui (Builder &builder, const string filter)
   if (filter == "" || filter == "Misc") {
     Gtk::Window *pWindow = NULL;
     builder->get_widget("main_window", pWindow);
-    if (pWindow && Misc.window_width > 0 && Misc.window_height > 0)
-      pWindow->resize(Misc.window_width, Misc.window_height);
     if (pWindow && Misc.window_posx > 0 && Misc.window_posy > 0)
       pWindow->move(Misc.window_posx,Misc.window_posy);
+    if (pWindow && Misc.window_width > 0 && Misc.window_height > 0)
+      pWindow->resize(Misc.window_width, Misc.window_height);
     Gtk::Expander *exp = NULL;
     builder->get_widget ("layer_expander", exp);
     if (exp)
@@ -1442,7 +1442,7 @@ double Settings::ExtruderSettings::RoundedLinewidthCorrection(double extr_width,
 }
 
 
-double Settings::ExtruderSettings::GetExtrudedMaterialWidth(double layerheight) const
+double Settings::ExtruderSettings::GetExtrudedMaterialWidth(const double layerheight) const
 {
   // ExtrudedMaterialWidthRatio is preset by user
   return min(max((double)MinimumLineWidth,
@@ -1452,17 +1452,28 @@ double Settings::ExtruderSettings::GetExtrudedMaterialWidth(double layerheight) 
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
 
-// how much mm filament material per extruded line length mm -> E gcode
-double Settings::ExtruderSettings::GetExtrusionPerMM(double layerheight) const
+// how much mm filament material wanted per extruded line length mm -> E gcode
+double Settings::ExtruderSettings::GetExtrusionPerMM(const double layerheight) const
 {
   double f = ExtrusionFactor; // overall factor
   if (CalibrateInput) {  // means we use input filament diameter
-    double matWidth = GetExtrudedMaterialWidth(layerheight); // this is the goal
+    const double matWidth = GetExtrudedMaterialWidth(layerheight);// this is the goal
     // otherwise we just work back from the extruded diameter for now.
     f *= (matWidth * matWidth) / (FilamentDiameter * FilamentDiameter);
   } // else: we work in terms of output anyway;
 
   return f;
+}
+
+// input: E-mm per travel-mm of Command
+// output: Volume per Command's travel-length
+// -> determine thickness of line printed by command
+double Settings::ExtruderSettings::GetExtrusionWidth(const double e_per_travel,
+						     const double layerheight) const
+{
+  const double vol_per_travel = // = cross section
+    e_per_travel * M_PI * (FilamentDiameter * FilamentDiameter) / 4.;
+  return vol_per_travel / layerheight; // rectangular simplification
 }
 
 std::vector<char> Settings::get_extruder_letters() const

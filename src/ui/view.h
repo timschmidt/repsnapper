@@ -32,6 +32,8 @@ static bool UNUSED toggle_block = false; // blocks signals for togglebuttons etc
 
 class View : public Gtk::Window
 {
+  int gl_List;
+
   class TempRow;
   class AxisRow;
   class TranslationSpinRow;

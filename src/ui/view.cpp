@@ -997,6 +997,9 @@ void View::update_settings_gui()
 void View::handle_ui_settings_changed()
 {
   m_model->ClearPreview();
+  if (gl_List>=0)
+    glDeleteLists(gl_List,1);
+  gl_List = -1;
   queue_draw();
 }
 
@@ -1067,6 +1070,7 @@ bool View::key_pressed_event(GdkEventKey *event)
 View::View(BaseObjectType* cobject,
 	   const Glib::RefPtr<Gtk::Builder>& builder)
   : Gtk::Window(cobject),
+    gl_List(-1),
     m_builder(builder), m_model(NULL), printtofile_name("")
 {
   toggle_block = false;
@@ -1271,6 +1275,9 @@ void View::extruder_selected()
     m_model->settings.SelectExtruder(path[0][0], &m_builder);
   }
   m_model->ClearPreview();
+  if (gl_List>=0)
+    glDeleteLists(gl_List,1);
+  gl_List = -1;
   queue_draw();
 }
 void View::copy_extruder()
@@ -1563,6 +1570,9 @@ void View::tree_selection_changed()
   if (m_model) {
     m_model->m_current_selectionpath = m_treeview->get_selection()->get_selected_rows();
     m_model->ClearPreview();
+    if (gl_List>=0)
+      glDeleteLists(gl_List,1);
+    gl_List = -1;
     vector<Shape*> shapes;
     vector<TreeObject*> objects;
     get_selected_objects (objects, shapes);
@@ -1964,40 +1974,61 @@ void View::DrawGrid()
 // called from Render::on_expose_event
 void View::Draw (vector<Gtk::TreeModel::Path> &selected, bool objects_only)
 {
-	// Draw the grid, pushed back so it can be seen
-	// when viewed from below.
-        if (!objects_only) {
-	  glEnable (GL_POLYGON_OFFSET_FILL);
-	  glPolygonOffset (1.0f, 1.0f);
-    	  DrawGrid();
-	}
 
-	glPolygonOffset (-0.5f, -0.5f);
-	glDisable (GL_POLYGON_OFFSET_FILL);
+  // Draw the grid, pushed back so it can be seen
+  // when viewed from below.
+  if (!objects_only) {
+    glEnable (GL_POLYGON_OFFSET_FILL);
+    glPolygonOffset (1.0f, 1.0f);
+    DrawGrid();
+  }
 
-	// Draw GCode, which already incorporates any print offset
-        if (!objects_only) {
-	  if (m_gcodetextview->has_focus()) {
-	    double z = m_model->gcode.currentCursorWhere.z();
-	    m_model->GlDrawGCode(z);
-	  }
-	  else {
-	    m_model->gcode.currentCursorWhere = Vector3d::ZERO;
-	    m_model->GlDrawGCode();
-	  }
-	}
+  glPolygonOffset (-0.5f, -0.5f);
+  glDisable (GL_POLYGON_OFFSET_FILL);
 
-	// Draw all objects
-	int layerdrawn = m_model->draw(selected);
-	if (layerdrawn > -1) {
-	  Gtk::Label *layerlabel;
-	  m_builder->get_widget("layerno_label", layerlabel);
-	  if (layerlabel){
-	    stringstream s;
-	    s << layerdrawn ;
-	    layerlabel->set_text(s.str());
-	  }
-	}
+
+#define GLLIST 1
+#if GLLIST
+  if (glIsList(gl_List) != GL_TRUE) {
+    glDeleteLists(gl_List,1);
+    gl_List = -1;
+  }
+
+  if ((gl_List < 0)  ) {
+    gl_List = glGenLists(1);
+    glNewList(gl_List, GL_COMPILE);
+    cerr << "new list " << gl_List << endl;
+#endif
+
+    // Draw GCode, which already incorporates any print offset
+    if (!objects_only) {
+      if (m_gcodetextview->has_focus()) {
+	double z = m_model->gcode.currentCursorWhere.z();
+	m_model->GlDrawGCode(z);
+      }
+      else {
+	m_model->gcode.currentCursorWhere = Vector3d::ZERO;
+	m_model->GlDrawGCode();
+      }
+    }
+#if GLLIST
+    glEndList();
+  }
+  // cerr <<" islist? "<< gl_List << ((glIsList(gl_List)==GL_TRUE)?"Y":"N" ) << endl;
+  glCallList(gl_List);
+#endif
+
+  // Draw all objects
+  int layerdrawn = m_model->draw(selected);
+  if (layerdrawn > -1) {
+    Gtk::Label *layerlabel;
+    m_builder->get_widget("layerno_label", layerlabel);
+    if (layerlabel){
+      stringstream s;
+      s << layerdrawn ;
+      layerlabel->set_text(s.str());
+    }
+  }
 }
 
 void View::showCurrentPrinting(unsigned long lineno)

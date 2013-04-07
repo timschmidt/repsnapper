@@ -79,7 +79,6 @@ mingw*)
   ;;
 freebsd*)
   GL_LIBS="-L/usr/local/lib"
-# -lGLU -lGL -lglut"
   EXTRA_LDFLAGS="-L/usr/local/lib"
   CFLAGS="$CFLAGS -I/usr/local/include"
   CXXFLAGS="$CXXFLAGS -I/usr/local/include"

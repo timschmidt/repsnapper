@@ -45,6 +45,8 @@ class Model
 	sigc::signal< void > m_signal_zoom;
 	ViewProgress *m_progress;
 
+	int gl_List;
+
 public:
 	Gtk::Statusbar *statusbar;
 	// Something in the rfo changed

@@ -111,8 +111,10 @@ class Settings {
     float MaximumLineWidth;
     /* float DownstreamMultiplier; */
     /* float DownstreamExtrusionMultiplier; */
-    static double RoundedLinewidthCorrection(double extr_width, double layerheight);
-    double GetExtrusionPerMM(double layerheight) const;
+    static double RoundedLinewidthCorrection(const double extr_width,
+					     const double layerheight);
+    double GetExtrusionPerMM(const double layerheight) const;
+    double GetExtrusionWidth(const double e_per_travel, const double layerheight) const;
 
     bool  EnableAntiooze;
     float AntioozeDistance;

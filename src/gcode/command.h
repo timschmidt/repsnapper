@@ -168,6 +168,11 @@ public:
 	string explicit_arg;
 	string comment;
 
+	bool is_arc() const {return (Code==ARC_CW || Code==ARC_CCW); }
+	long double get_arcangle(const Vector3d &lastPos) const;
+
+	uint point_sequence(const Vector3d &lastPos, vector<Vector3d> &points) const;
+
 	void draw(Vector3d &lastPos, const Vector3d &offset, guint linewidth,
 		  Vector4f color, double extrwidth, bool arrows=true,
 		  bool debug_arcs = false) const;

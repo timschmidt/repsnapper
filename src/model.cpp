@@ -36,6 +36,7 @@
 #include "render.h"
 
 Model::Model() :
+  gl_List(-1),
   m_previewLayer(NULL),
   //m_previewGCodeLayer(NULL),
   currentprintingline(0),

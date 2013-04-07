@@ -373,9 +373,22 @@ unsigned long GCode::getLayerEnd(const uint layerno) const
   if (layerchanges.size()>layerno+1) return layerchanges[layerno+1]-1;
   return commands.size()-1;
 }
+
 void GCode::draw(const Settings &settings, int layer,
 		 bool liveprinting, int linewidth)
 {
+#define GLLIST 0
+#if GLLIST
+  if (glIsList(gl_List) != GL_TRUE) {
+    glDeleteLists(gl_List,1);
+    gl_List = -1;
+  }
+
+  if ((gl_List < 0)  ) {
+    gl_List = glGenLists(1);
+    glNewList(gl_List, GL_COMPILE);
+    cerr << "list " << gl_List << endl;
+#endif
 	/*--------------- Drawing -----------------*/
 
   //cerr << "gc draw "<<layer << " - " <<liveprinting << endl;
@@ -451,9 +464,485 @@ void GCode::draw(const Settings &settings, int layer,
 				    Vector4f(1.f,0.f,1.f,1.f),
 				    0., true, false);
 	}
+#if GLLIST
+    glEndList();
+  }
+  cerr <<" islist? "<< gl_List << ((glIsList(gl_List)==GL_TRUE)?"Y":"N" ) << endl;
+  glCallList(gl_List);
+#endif
+}
+
+#include "gle/gle-3.1.0/src/gle.h"
+
+void GCode::drawCommands(const Settings &settings, uint start, uint end,
+			 bool liveprinting, int linewidth, bool arrows,
+			 bool boundary)
+{
+
+  // Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
+  // Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
+
+  glDisable(GL_BLEND);
+  glDisable(GL_CULL_FACE);
+  if (boundary) {
+  //   glEnable(GL_LIGHTING);
+  //   //glEnable(GL_DEPTH_TEST);
+  //   gleSetJoinStyle (TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP);
+  }
+
+  uint n_cmds = commands.size();
+  if (n_cmds==0) return;
+  Vector3d defaultpos(0,0,0);
+  Vector3d pos(0,0,0);
+
+  bool relativeE  = settings.Slicing.RelativeEcode;
+  bool debug_arcs = settings.Display.DisplayDebugArcs;
+
+  double extrusionheight = settings.Slicing.LayerThickness;
+  double extrusionwidth = 0;
+  if (boundary)
+    extrusionwidth =
+      settings.Extruder.GetExtrudedMaterialWidth(extrusionheight);
+
+  start = CLAMP (start, 0, n_cmds-1);
+  end   = CLAMP (end,   0, n_cmds-1);
+
+  if (end<=start) return;
+
+  // get starting point
+  // if (start>0) {
+  //   uint i = start;
+  //   while ((commands[i].is_value || commands[i].where == defaultpos) && i < end)
+  //     i++;
+  //   pos = commands[i].where;
+  // }
+
+  // draw start point
+  glPointSize(20);
+  glBegin(GL_POINTS);
+  //glColor4f(1.,0.1,0.1,ccol[3]);
+  glVertex3dv(pos);
+  glEnd();
+
+  //double LastE=0.0;
+  Vector3d last_extruder_offset = Vector3d::ZERO;
+  uint last_extruder_num = 0;
+  Vector4f color;
+  uint seq_from = start;
+  bool last_isvalue   = false;
+  bool last_moveonly  = false;
+  bool moveonly = false;
+  bool last_arc  = false;
+  double last_extrwidth = extrusionwidth;
+  Vector3d last_where = Vector3d::ZERO;
+  Vector3d dir,last_dir = Vector3d::ZERO;
+  double angle=0.;
+  double last_E = 0.;
+  if (start>0) last_E = commands[start-1].e;
+
+  for(uint i=start; i <= end; i++) {
+    moveonly =
+      (!relativeE && i > 0 && commands[i].e == commands[i-1].e)
+      || (relativeE && commands[i].e == 0);
+
+    extrusionwidth = last_extrwidth;
+    /*
+    if (commands[i].travel_length > 0)
+      extrusionwidth =
+	settings.Extruders[commands[i].extruder_no]. GetExtrusionWidth
+	((commands[i].e-last_E)/commands[i].travel_length, extrusionheight);
+    cerr << extrusionwidth << endl;
+    */
+
+    if (!commands[i].is_value) {
+      dir = commands[i].where - last_where;
+      angle = angleBetween(dir, last_dir);
+    }
+
+    bool new_sequence =
+      moveonly != last_moveonly ||  // extrusion or not
+      last_extruder_num != commands[i].extruder_no || //extruder
+      last_isvalue != commands[i].is_value ||  // toolpath or not
+      extrusionwidth != last_extrwidth || // width
+      commands[i].where.z() != last_where.z() || // layerchange
+      !last_arc && abs(angle) > M_PI/2; // sharp angle
+
+    if (new_sequence) {
+      //if (i-seq_from >= 0) {
+      if (!last_isvalue) { // it's an isvalue sequence
+	if (last_moveonly) { // it's a moveonly sequence
+	  color = settings.Display.GCodeMoveColour;
+	} else
+	  color = settings.Extruders[commands[seq_from].extruder_no].DisplayColour;
+	if (!last_moveonly || settings.Display.DisplayGCodeMoves)
+	  drawSequence(settings, last_moveonly,
+		       seq_from, i-1, extrusionwidth, extrusionheight);
+	//LastE = commands[i].e;
+	last_extruder_num = commands[seq_from].extruder_no;
+	last_moveonly = moveonly;
+	last_dir = dir;
+      }
+      last_isvalue = commands[i].is_value;
+      last_extrwidth = extrusionwidth;
+      last_E = commands[i].e;
+      seq_from = i;
+	//}
+    }
+    last_arc = commands[i].is_arc();
+    last_where = commands[i].where;
+    //if (!moveonly)
+    //LastE = commands[i].e;
+  }
+  // remains
+  drawSequence(settings, last_moveonly, seq_from, end, extrusionwidth, extrusionheight);
 }
 
 
+inline void toGle(gleColor4f &col, const Vector4f &v) {
+  for (uint j = 0; j < 4; j++) col[j] = v.array[j];
+}
+inline void toGle(gleDouble * gd, const Vector3d &v) {
+  for (uint j = 0; j < 3; j++) gd[j] = v.array[j];
+}
+inline void toGle(gleDouble * gd, const Vector3d &v, const Vector3d &offset) {
+  for (uint j = 0; j < 3; j++) gd[j] = v.array[j] + offset.array[j];
+}
+inline void toGle(gleDouble * gd, const Vector2f &v) {
+  for (uint j = 0; j < 2; j++) gd[j] = v.array[j];
+}
+
+
+void drawGleTube(const vector<Vector3d> &points,
+		 Vector3d * before,
+		 Vector3d * after,
+		 const Vector4f &color,
+		 double width, double height,
+		 const vector<double> *lumas)
+{
+  int num = points.size()+2;
+  if (num < 4) return;
+
+  // prolongate end directions
+  if (before == NULL) {
+    before = new Vector3d(points[1]);//new Vector3d(points[0] + points[0] - points[1]);
+  }
+  //const Vector3d before2 = before + before - commands[from].where;
+  //if (before.squared_distance(commands[from-1].where) < 0.00001) return;
+
+  if (after == NULL) {
+    after = new Vector3d(points[points.size()-2]);//   new Vector3d(points[points.size()-1] + points[points.size()-1] - points[points.size()-2]);
+  //const Vector3d after2 = after + (after - commands[to].where);
+  //if (after.squared_distance(commands[to].where) < 0.00001) return;
+  }
+  const Vector3d offset(0., 0., -0.5*height);
+  gleColor4f colors[num];
+  gleDouble glepoints[num][3];
+  toGle(glepoints[0], *before, offset);
+  toGle(colors[0], color);
+  uint skipped = 0;
+  uint igle = 0;
+  for(uint i = 0; i < num-2; i++)  {
+    igle = i+1;
+    // position
+    toGle(glepoints[igle], points[i], offset);
+    // color
+    if (lumas != NULL) {
+      toGle(colors[igle], color * (*lumas)[i]);
+    } else
+      toGle(colors[igle], color);
+  }
+  toGle(glepoints[num-1], *after, offset);
+  toGle(colors[num-1], color);
+
+  glEnable(GL_LIGHTING);
+  glEnable(GL_DEPTH_TEST);
+
+  //glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
+  gleSetJoinStyle (TUBE_NORM_FACET | TUBE_JN_ANGLE | TUBE_JN_CAP);
+  //gleSetJoinStyle (TUBE_NORM_FACET | TUBE_JN_CUT );
+  glEnable(GL_COLOR_MATERIAL);
+  glColorMaterial(GL_FRONT_AND_BACK,  GL_DIFFUSE);
+  glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10); // 0..128
+  //  glColor4fv(color);
+
+#define RECTANGLE 1  // oval tubes
+#if RECTANGLE
+  uint iaft = 1;
+  gleSetJoinStyle (TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP);
+  width *=0.5;
+  height*=0.5;
+  const uint num_cont = 9;
+  // edge rounding
+  const double dw = 0.4 * width;
+  const double dh = 0.4 * height;
+  gleDouble contour[num_cont][2];     /* 2D contour */
+  /*contour[0][1] = - width;  contour[0][0] = 0;
+    contour[1][1] =  0 ;      contour[1][0] = - height;
+    contour[2][1] =   width;  contour[2][0] = 0;
+    contour[3][1] =  0;  contour[3][0] = height;
+    contour[4][1] = contour[0][1];     contour[4][0] = contour[0][0];
+  */
+  // (x and y are interchanged)
+  contour[0][1] = - width;     contour[0][0] = - height+dh;
+  contour[1][1] = - width+dw;  contour[1][0] = - height;
+  contour[2][1] =   width-dw;  contour[2][0] = - height;
+  contour[3][1] =   width;     contour[3][0] = - height+dh;
+  contour[4][1] =   width;     contour[4][0] =   height-dh;
+  contour[5][1] =   width-dw;  contour[5][0] =   height;
+  contour[6][1] = - width+dw;  contour[6][0] =   height;
+  contour[7][1] = - width;     contour[7][0] =   height-dh;
+  contour[8][1] = contour[0][1];     contour[8][0] = contour[0][0];
+  gleDouble cont_normal[num_cont][2]; /* 2D contour normals */
+  //const double s = sqrt(2);
+  /*
+    cont_normal[0][1] =  -1;  cont_normal[0][0] = -0.5;
+    cont_normal[1][1] =  0.5; cont_normal[1][0] =-1.;
+    cont_normal[2][1] =  1 ;  cont_normal[2][0] = 0.5;
+    cont_normal[3][1] =  -1.; cont_normal[3][0] = 0.5;
+    cont_normal[4][1] = cont_normal[0][1];  cont_normal[4][0] = cont_normal[0][0];
+  */
+  cont_normal[0][1] = -1.;  cont_normal[0][0] = -1.;
+  cont_normal[1][1] =  0.;  cont_normal[1][0] = -1.;
+  cont_normal[2][1] =  1.;  cont_normal[2][0] = -1.;
+  cont_normal[3][1] =  1.;  cont_normal[3][0] =  0.;
+  cont_normal[4][1] =  1.;  cont_normal[4][0] =  1.;
+  cont_normal[5][1] =  1.;  cont_normal[5][0] =  0.;
+  cont_normal[6][1] = -1.;  cont_normal[6][0] =  1.;
+  cont_normal[7][1] = -1.;  cont_normal[7][0] =  0.;
+  cont_normal[8][1] = cont_normal[0][1];  cont_normal[8][0] = cont_normal[0][0];
+
+  gleDouble up[3]={1,0,0};    /* dir of contour y-axis in 3d space */
+  // Vector3d updir = points[iaft]-points[0];
+  // if (updir.squared_length() < 0.0001) return;
+  // toGle(up, updir);
+  gleExtrusion_c4f(num_cont, contour, cont_normal, up , num, glepoints, colors);
+#else
+  gleSetNumSides(12); // faster than 20
+  glePolyCylinder_c4f(num, glepoints, colors, width/2.);
+#endif
+
+  glDisable(GL_COLOR_MATERIAL);
+
+  return;
+
+  //////// DEBUG
+
+  // glBegin(GL_POINTS);
+  // for (uint i = 0; i<points.size(); i++)
+  //   glVertex3dv(points[i]);
+  // glEnd();
+
+  glBegin(GL_LINES);
+  //glVertex3dv(*before);
+  glVertex3dv(points[0]);
+  for (uint i = 1; i<points.size()-1; i++) {
+    glVertex3dv(points[i]);
+    glVertex3dv(points[i]);
+  }
+  glVertex3dv(points.back());
+  // glVertex3dv(points.back());
+  // glVertex3dv(*after);
+  glEnd();
+
+}
+
+
+// draw a contiguous sequence of commands
+// including first and last
+void GCode::drawSequence(const Settings &settings, bool moveonly,
+			 int from, int to, double width, double height) const
+{
+  if (from<1) from = 1;
+  if (to >= (int)commands.size()) to = (int)commands.size()-1;
+  // remove non-movements from ends
+  while(commands[from].is_value && from < to) from++;
+  while(commands[to].is_value   && to > from) to--;
+  if (to < 1) return;
+
+  // where do we come from?
+  Vector3d startpos = Vector3d::ZERO;
+  int l = from-1;
+  while (l > 0 && (commands[l].is_value
+		   || commands[l].where==commands[from].where)) l--;
+  if (l > 0) startpos = commands[l].where;
+
+  bool relativeE = settings.Slicing.RelativeEcode;
+  Vector4f color = settings.Extruders[commands[from].extruder_no].DisplayColour;
+  double speed = commands[from].f;
+
+  if (moveonly || !settings.Display.DisplayGCodeBorders) { // simple lines
+    if (moveonly)
+      color = settings.Display.GCodeMoveColour;
+    Vector3d extruder_offset = Vector3d::ZERO;
+    double luma = 1.;
+    for(int i = from; i <= to; i++)  {
+      if (!settings.Display.DebugGCodeOffset) // show all together
+	extruder_offset = settings.get_extruder_offset(commands[i].extruder_no);
+      //if (commands[i].where == Vector3d::ZERO) continue;
+      if (settings.Display.LuminanceShowsSpeed)
+	luma = (0.3 + 0.7 * commands[i].f / settings.Hardware.MaxMoveSpeedXY / 60);
+      commands[i].draw(startpos, extruder_offset, 2, color*luma, 0.,
+		       settings.Display.DisplayGCodeArrows,
+		       settings.Display.DisplayDebugArcs);
+    }
+    return;
+  }
+
+  //cerr  << from << " - " << to << " : " <<num << endl;
+  //if (num==1) cerr << commands[from].info() << endl;
+
+  vector<Vector3d> drawpoints;
+  vector<double> lumas;
+
+  // prolongate end directions
+  while (l > 0 && commands[l].is_value) l--;
+  Vector3d before = commands[l].where;
+  //const Vector3d before2 = before + before - commands[from].where;
+  //if (before.squared_distance(commands[from-1].where) < 0.00001) return;
+
+  l = to+1;
+  while (l < commands.size()-1 && commands[l].is_value) l++;
+  Vector3d after = commands[l].where;
+    //const Vector3d after2 = after + (after - commands[to].where);
+    //if (after.squared_distance(commands[to].where) < 0.00001) return;
+
+  drawpoints.push_back(startpos);
+  lumas.push_back(0.3 + 0.7 * commands[from].f / settings.Hardware.MaxMoveSpeedXY / 60);
+  for (int i = from; i <= to; i++) {
+    if (!commands[i].is_value) {
+      uint anum = commands[i].point_sequence(drawpoints.back(), drawpoints);
+      if (settings.Display.LuminanceShowsSpeed)
+	for (uint i = 0; i<anum; i++)
+	  lumas.push_back(0.3 + 0.7 * speed / settings.Hardware.MaxMoveSpeedXY / 60);
+    }
+  }
+  //cerr << drawpoints[1] - drawpoints[0] << " - " << drawpoints.size() << " - " << from << endl;
+  vector<double> *drawlumas = NULL;
+  if (lumas.size()==drawpoints.size()) drawlumas = &lumas;
+
+  //drawGleTube(drawpoints, &before, &after, color, width, height, drawlumas);
+  drawGleTube(drawpoints, NULL, NULL, color, width, height, drawlumas);
+  return;
+
+
+
+  int num = to - from + 4;
+
+  if (num < 4) return;
+  if (num == 4 && commands[from].travel_length<0.001) return;
+
+
+  // de-count non-moving commands
+  for(int i = from; i < to; i++)
+    if (commands[i].is_value)
+      //|| i > from && i < to && commands[i].travel_length<0.1)
+      num--;
+
+  gleColor4f colors[num];
+  gleDouble points[num][3];
+  double luma = 1.0;
+  toGle(points[0], before);
+  toGle(points[1], startpos);
+  uint skipped = 0;
+  for(int i = 2; i < num-1; i++)  {
+    int cnum = from + i - 2 + skipped;
+    if (cnum > to) break;
+    if (commands[cnum].is_value ) {
+      //|| cnum > from && cnum < to && commands[cnum].travel_length<0.1) {
+      skipped ++;
+      i--;
+      continue;
+    }
+
+    // color
+    if (settings.Display.LuminanceShowsSpeed){
+      luma = 0.3 + 0.7 * commands[cnum].f / settings.Hardware.MaxMoveSpeedXY / 60;
+    //toGle(colors[i], luma * settings.Extruders[commands[cnum].extruder_no].DisplayRGBA);
+    }
+    for (uint j = 0; j < 3; j++) {
+      colors[i][j] = luma;
+    }
+
+    // position
+    Vector3d where = commands[cnum].where;
+    if (!settings.Display.DebugGCodeOffset) { // show all together
+      where += settings.get_extruder_offset(commands[cnum].extruder_no);
+    }
+    toGle(points[i], where);
+  }
+  toGle(points[num-1], after);
+
+  glEnable(GL_LIGHTING);
+  glDisable(GL_DEPTH_TEST);
+
+  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
+  gleSetJoinStyle (TUBE_NORM_FACET | TUBE_JN_ANGLE | TUBE_JN_CAP);
+  //gleSetJoinStyle (TUBE_NORM_FACET | TUBE_JN_CUT );
+  glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20); // 0..128
+
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //???
+
+#define RECTANGLE 1  // oval tubes
+#if RECTANGLE
+  uint iaft = from+1;
+  while(commands[iaft].is_value && iaft<to) iaft++;
+  Vector3d updir = commands[iaft].where-commands[from].where;
+  if (updir.squared_length() < 0.0001) return;
+  gleSetJoinStyle (TUBE_NORM_EDGE | TUBE_JN_ANGLE | TUBE_JN_CAP);
+  width *=0.5;
+  height*=0.5;
+  const uint num_cont = 9;
+  const double dw = 0.4 * width;
+  const double dh = 0.4 * height;
+  gleDouble contour[num_cont][2];     /* 2D contour */
+  /* // simple
+    contour[0][1] = - width;  contour[0][0] = 0;
+    contour[1][1] =  0 ;      contour[1][0] = - height;
+    contour[2][1] =   width;  contour[2][0] = 0;
+    contour[3][1] =  0;  contour[3][0] = height;
+    contour[4][1] = contour[0][1];     contour[4][0] = contour[0][0];
+  */
+  contour[0][1] = - width;     contour[0][0] = - height+dh;
+  contour[1][1] = - width+dw;  contour[1][0] = - height;
+  contour[2][1] =   width-dw;  contour[2][0] = - height;
+  contour[3][1] =   width;     contour[3][0] = - height+dh;
+  contour[4][1] =   width;     contour[4][0] =   height-dh;
+  contour[5][1] =   width-dw;  contour[5][0] =   height;
+  contour[6][1] = - width+dw;  contour[6][0] =   height;
+  contour[7][1] = - width;     contour[7][0] =   height-dh;
+  contour[8][1] = contour[0][1];     contour[8][0] = contour[0][0];
+  gleDouble cont_normal[num_cont][2]; /* 2D contour normals */
+  const double s = sqrt(2);
+  /*// simple
+    cont_normal[0][1] =  -1;  cont_normal[0][0] = -0.5;
+    cont_normal[1][1] =  0.5;  cont_normal[1][0] =-1.;
+    cont_normal[2][1] =  1 ;  cont_normal[2][0] = 0.5;
+    cont_normal[3][1] =  -1.;  cont_normal[3][0] = 0.5;
+    cont_normal[4][1] = cont_normal[0][1];  cont_normal[4][0] = cont_normal[0][0];
+  */
+  cont_normal[0][1] =  -1;  cont_normal[0][0] = -1;
+  cont_normal[1][1] =  0.;  cont_normal[1][0] =  -1.;
+  cont_normal[2][1] =  1 ;  cont_normal[2][0] =  -1;
+  cont_normal[3][1] =  1.;  cont_normal[3][0] =  0.;
+  cont_normal[4][1] =  1 ;  cont_normal[4][0] =  1 ;
+  cont_normal[5][1] =  1.;  cont_normal[5][0] =  0.;
+  cont_normal[6][1] = -1 ;  cont_normal[6][0] =  1 ;
+  cont_normal[7][1] = -1.;  cont_normal[7][0] = 0.;
+  cont_normal[8][1] = cont_normal[0][1];  cont_normal[8][0] = cont_normal[0][0];
+
+  gleDouble up[3];         /* up vector for contour */
+  toGle(up, updir);
+  gleExtrusion_c4f(num_cont, contour, cont_normal, up , num, points, colors);
+#else
+  gleSetNumSides(12); // faster than 20
+  glePolyCylinder_c4f(num, points, colors, width/2.);
+#endif
+
+  glDisable(GL_DEPTH_TEST);
+}
+
+
+#if 0
 void GCode::drawCommands(const Settings &settings, uint start, uint end,
 			 bool liveprinting, int linewidth, bool arrows, bool boundary)
 {
@@ -467,9 +956,14 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	// Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);
 	Vector4f Color = Vector4f(0.0f,0.0f,0.0f,1.0f);
 
-        glEnable(GL_BLEND);
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_LIGHTING);
+	glDisable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+
+	if (boundary) {
+	  glEnable(GL_LIGHTING);
+	  glEnable(GL_DEPTH_TEST);
+	}
+
         uint n_cmds = commands.size();
 	if (n_cmds==0) return;
 	Vector3d defaultpos(0,0,0);
@@ -506,11 +1000,17 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 
 	Vector3d last_extruder_offset = Vector3d::ZERO;
 
+	uint cont_from = start;
+
 	(void) extruderon; // calm warnings
 	for(uint i=start; i <= end; i++)
 	{
 	        Vector3d extruder_offset = Vector3d::ZERO;
 	        //Vector3d next_extruder_offset = Vector3d::ZERO;
+
+		bool moveonly =
+		  (!relativeE && commands[i].e == LastE)
+		  || (relativeE && commands[i].e == 0);
 
 		// TO BE FIXED:
 		if (!settings.Display.DebugGCodeOffset) { // show all together
@@ -519,6 +1019,17 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		  last_extruder_offset = extruder_offset;
 		}
 		double extrwidth = extrusionwidth;
+
+
+		if (boundary &&
+		    (moveonly || commands[i].is_value
+		     || commands[i].extruder_no != commands[i-1].extruder_no) ) {
+		  if (i-1 > cont_from)
+		    drawSequence(settings, cont_from, i+1, extrwidth/2.);
+		  cont_from = i-1;
+		  continue;
+		}
+
 	        if (commands[i].is_value) continue;
 		switch(commands[i].Code)
 		{
@@ -554,16 +1065,15 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		  {
 		    double speed = commands[i].f;
 		    double luma = 1.;
-		    if( (!relativeE && commands[i].e == LastE)
-			|| (relativeE && commands[i].e == 0) ) // move only
+		    if( moveonly ) // move only
 		      {
 			if (settings.Display.DisplayGCodeMoves) {
 			  luma = 0.3 + 0.7 * speed / settings.Hardware.MaxMoveSpeedXY / 60;
 			  Color = settings.Display.GCodeMoveColour;
 			  extrwidth = 0;
 			} else {
-			   pos = commands[i].where;
-			   break;
+			  pos = commands[i].where;
+			  break;
 			}
 		      }
 		    else
@@ -582,8 +1092,9 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		      }
 		    if (settings.Display.LuminanceShowsSpeed)
 		      Color *= luma;
-		    commands[i].draw(pos, extruder_offset, linewidth,
-				     Color, extrwidth, arrows, debug_arcs);
+		    if (!boundary)
+		      commands[i].draw(pos, extruder_offset, linewidth,
+				       Color, extrwidth, arrows, debug_arcs);
 		    LastE=commands[i].e;
 		    break;
 		  }
@@ -605,6 +1116,8 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
   // }
   // glCallList(gl_List);
 }
+#endif
+
 
 // bool add_text_filter_nan(string str, string &GcodeTxt)
 // {
@@ -691,7 +1204,6 @@ void GCode::MakeText(string &GcodeTxt,
 	}
 
 	if (progress) progress->stop();
-
 }
 
 // void GCode::Write (Model *model, string filename)
