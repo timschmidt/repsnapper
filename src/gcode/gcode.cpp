@@ -826,6 +826,8 @@ void GCode::drawSequence(const Settings &settings, bool moveonly,
 
 
 
+#if 0 // old
+
   int num = to - from + 4;
 
   if (num < 4) return;
@@ -939,6 +941,9 @@ void GCode::drawSequence(const Settings &settings, bool moveonly,
 #endif
 
   glDisable(GL_DEPTH_TEST);
+
+#endif // 0
+
 }
 
 
