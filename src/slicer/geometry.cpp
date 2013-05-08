@@ -1,7 +1,7 @@
 /*
     This file is a part of the RepSnapper project.
     Copyright (C) 2010 Kulitorum
-    Copyright (C) 2012 martin.dieringer@gmx.de
+    Copyright (C) 2013 martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -497,9 +497,9 @@ bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
 // (inSegment, intersect2D_Segments and dist3D_Segment_to_Segment)
 // are licensed as:
 //
-// Copyright 2001, softSurfer (www.softsurfer.com)
-// This code may be freely used and modified for any purpose
-// providing that this copyright notice is included with it.
+// Copyright 2001 softSurfer, 2012-13 Dan Sunday
+// This code may be freely used, distributed and modified for any
+// purpose providing that this copyright notice is included with it.
 // SoftSurfer makes no warranty for this code, and cannot be held
 // liable for any real or imagined damage resulting from its use.
 // Users of this code must verify correctness for their application.
