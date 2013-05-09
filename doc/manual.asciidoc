@@ -131,7 +131,7 @@ Sometimes you can get fresher version (but not very tested) by enabling testing 
 
 	   yum install repsnapper --enablerepo updates-testing
 
-After the installation, you shoud see Repsnapper in Applications (Graphics), or you can run `repsnapper` command.
+After the installation, you should see Repsnapper in Applications (Graphics), or you can run `repsnapper` command.
 
 ====== Older Fedora versions ======
 (most probably extremely outdated)
