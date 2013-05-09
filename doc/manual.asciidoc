@@ -121,9 +121,21 @@ Executable (repsnapper) will be left in the top folder. Install with "sudo make 
 
 ==== Fedora ====
 
+===== Installing from yum =====
+====== Fedora 17 and above ======
+Repsanpper is in official Fedora 17 and above repositories, so you can just simply run:
+
+	   yum install repsnapper
+
+Sometimes you can get fresher version (but not very tested) by enabling testing updates:
+
+	   yum install repsnapper --enablerepo updates-testing
+
+After the installation, you should see Repsnapper in Applications (Graphics), or you can run `repsnapper` command.
+
+====== Older Fedora versions ======
 (most probably extremely outdated)
 
-===== Installing from yum =====
 Repsnapper was packaged by jebba for Fedora 14 at this repository: http://repos.fedorapeople.org/repos/jebba/reprap/
 
 	   su
