@@ -122,8 +122,8 @@ Executable (repsnapper) will be left in the top folder. Install with "sudo make 
 ==== Fedora ====
 
 ===== Installing from yum =====
-====== Fedora 19 and above ======
-Repsanpper is in official Fedora 19 and above repositories, so you can just simply run:
+====== Fedora 17 and above ======
+Repsanpper is in official Fedora 17 and above repositories, so you can just simply run:
 
 	   yum install repsnapper
 
