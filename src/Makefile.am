@@ -85,7 +85,7 @@ repsnapper_LDFLAGS = $(EXTRA_LDFLAGS)
 repsnapper_LDADD = $(CLIPPER_LIBS) libpoly2tri.la liblmfit.la libamf.la $(OPENMP_CFLAGS) $(OPENVRML_LIBS) $(GTKMM_LIBS) $(GL_LIBS) $(XMLPP_LIBS) $(LIBZIP_LIBS) $(BOOST_LDFLAGS)
 
 repsnapperdatadir = $(datadir)/@PACKAGE@
-dist_repsnapperdata_DATA = src/repsnapper.ui
+dist_repsnapperdata_DATA = src/repsnapper.ui src/repsnapper.svg
 
 repsnapperconfdir = $(sysconfdir)/xdg/@PACKAGE@
 dist_repsnapperconf_DATA = src/repsnapper.conf
