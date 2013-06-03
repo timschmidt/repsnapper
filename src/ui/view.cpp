@@ -978,7 +978,8 @@ void View::update_settings_gui()
   Gtk::AboutDialog *about;
   m_builder->get_widget ("about_dialog", about);
   about->set_version(VERSION);
-  about->set_comments("git version:\n"+GIT_COMMIT + "\nDate:\n" + GIT_COMMIT_DATE);
+  if (GIT_COMMIT != "Unknown")
+    about->set_comments("git version:\n"+GIT_COMMIT + "\nDate:\n" + GIT_COMMIT_DATE);
 
   Gtk::Toolbar *toolbar;
   m_builder->get_widget ("i_custom_toolbar", toolbar);
