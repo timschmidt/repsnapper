@@ -565,7 +565,7 @@
     <property name="border_width">5</property>
     <property name="type_hint">normal</property>
     <property name="program_name">RepSnapper</property>
-    <property name="copyright" translatable="yes">(C) 2008-2012 its contributors </property>
+    <property name="copyright" translatable="yes">(C) 2008-2013 its contributors </property>
     <property name="website">http://reprap.org/wiki/RepSnapper_Manual:Introduction</property>
     <property name="website_label" translatable="yes">Website</property>
     <property name="license" translatable="yes">LGPLv2+, GPLv2+, and other licenses, see licenses.txt</property>
