@@ -34,8 +34,15 @@ double PLine<M>::length() const
   if (!arc)
     return from.distance(to);
   else {
-    double radius = from.distance(arccenter);
-    return radius * angle;
+    const double radius = from.distance(arccenter);
+    const double arclen = radius * angle;
+    if (M == 3) {
+      // length of helix
+      const Vector2d from2d(from.x(), from.y());
+      const double dz = to.z()-from.z();
+      return sqrt ( pow(arclen,2) + pow(dz,2) );
+    } else
+      return arclen;
   }
 }
 
