@@ -2,9 +2,18 @@
 Clipper Change Log
 ============================================================
 
+v5.1.6 (23 May 2014)
+* BugFix: CleanPolygon function was buggy.
+* Changed: The behaviour of the 'miter' JoinType has been 
+  changed so that when squaring occurs, it's no longer 
+  extended up to the miter limit but is squared off at 
+  exactly 'delta' units. (This improves the look of mitering 
+  with larger limits at acute angles.) 
+* Added: New OffsetPolyLines function
+* Update: Minor code refactoring and optimisations
+
 v5.1.5 (5 May 2014)
 * Added: ForceSimple property to Clipper class
-* Update: Minor code optimisations and trivial bug fixes
 * Update: Improved documentation  
 
 v5.1.4 (24 March 2013)
