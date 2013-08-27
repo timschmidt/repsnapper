@@ -89,13 +89,11 @@ bool fit_arc(const int m_dat, const arc_data_struct data,
 {
   lm_status_struct status;
   lm_control_struct control = lm_control_double;
-  control.printflags = 0; // 3 = monitor status (+1) and parameters (+2)
-  control.maxcall = 200;
   control.ftol = sq_error; // max square error sum
 
   // printf( "Fitting:\n" );
   lmmin( n_par, par, m_dat, (const void*) &data,
-	 evaluate_arcfit, &control, &status, lm_printout_std );
+	 evaluate_arcfit, &control, &status);
 
   result_center.x() = par[0];
   result_center.y() = par[1];
