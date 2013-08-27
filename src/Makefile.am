@@ -15,7 +15,7 @@ WARNING_FLAGS = -Wall -Wsign-compare -Wno-invalid-offsetof
 
 repsnapper_CPPFLAGS = \
 	-I$(LIB_DIR)/vmmlib/include \
-	-I$(LIB_DIR)/lmfit/lmfit-3.2/lib \
+	-I$(LIB_DIR)/lmfit/lmfit-5.0/lib \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/src/slicer \
