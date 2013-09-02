@@ -80,22 +80,24 @@ void ConnectView::signal_entry_changed()
   // Use the value of the entry widget, rather than the
   // active text, so the user can enter other values.
   Gtk::Entry *entry = m_combo.get_entry();
-  m_settings->Hardware.PortName = entry->get_text();
+  m_settings->set_string("Hardware","PortName", entry->get_text());
 }
 
 void ConnectView::find_ports() {
   m_combo.clear();
 
+  string port_setting = m_settings->get_string("Hardware","PortName");
+
 #if GTK_VERSION_GE(2, 24)
-  m_combo.append(m_settings->Hardware.PortName);
+  m_combo.append(port_setting);
 #else
-  m_combo.append_text(m_settings->Hardware.PortName);
+  m_combo.append_text(port_setting);
 #endif
 
   vector<string> ports = PrinterSerial::FindPorts();
 
   for(size_t i = 0; i < ports.size(); i++) {
-    if (ports[i] != m_settings->Hardware.PortName) {
+    if (ports[i] != port_setting) {
 #if GTK_VERSION_GE(2, 24)
       m_combo.append(ports[i]);
 #else

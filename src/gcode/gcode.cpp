@@ -402,8 +402,8 @@ void GCode::draw(const Settings &settings, int layer,
 	      int eind = 0;
 
               if (n_changes > 0) {
-                sind = (uint)ceil(settings.Display.GCodeDrawStart*(n_changes-1)/Max.z());
-	        eind = (uint)ceil(settings.Display.GCodeDrawEnd  *(n_changes-1)/Max.z());
+                sind = (uint)ceil(settings.get_double("Display","GCodeDrawStart")*(n_changes-1)/Max.z());
+	        eind = (uint)ceil(settings.get_double("Display","GCodeDrawEnd") *(n_changes-1)/Max.z());
               }
 	      if (sind>=eind) {
 		eind = MIN(sind+1, n_changes-1);
@@ -423,14 +423,14 @@ void GCode::draw(const Settings &settings, int layer,
 	}
 	else {
           if (n_cmds > 0) {
-	    start = (uint)(settings.Display.GCodeDrawStart*(n_cmds)/Max.z());
-	    end =   (uint)(settings.Display.GCodeDrawEnd  *(n_cmds)/Max.z());
+	    start = (uint)(settings.get_double("Display","GCodeDrawStart")*(n_cmds)/Max.z());
+	    end =   (uint)(settings.get_double("Display","GCodeDrawEnd")  *(n_cmds)/Max.z());
           }
 	}
 
 	drawCommands(settings, start, end, liveprinting, linewidth,
-		     arrows && settings.Display.DisplayGCodeArrows,
-		     !liveprinting && settings.Display.DisplayGCodeBorders);
+		     arrows && settings.get_boolean("Display","DisplayGCodeArrows"),
+		     !liveprinting && settings.get_boolean("Display","DisplayGCodeBorders"));
 
 	if (currentCursorWhere!=Vector3d::ZERO) {
 	  glDisable(GL_DEPTH_TEST);
@@ -445,8 +445,7 @@ void GCode::draw(const Settings &settings, int layer,
 	  // glVertex3dv(currentCursorWhere);
 	  // glEnd();
 	  const Vector3d offset =
-	    Vector3d(settings.Extruders[currentCursorCommand.extruder_no].OffsetX,
-		     settings.Extruders[currentCursorCommand.extruder_no].OffsetY, 0.);
+	    settings.get_extruder_offset(currentCursorCommand.extruder_no);
 	  currentCursorCommand.draw(currentCursorFrom, offset, 7,
 				    Vector4f(1.f,0.f,1.f,1.f),
 				    0., true, false);
@@ -475,14 +474,14 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	Vector3d defaultpos(0,0,0);
 	Vector3d pos(0,0,0);
 
-	bool relativeE = settings.Slicing.RelativeEcode;
+	bool relativeE = settings.get_boolean("Slicing","RelativeEcode");
 
-	bool debug_arcs = settings.Display.DisplayDebugArcs;
+	bool debug_arcs = settings.get_boolean("Display","DisplayDebugArcs");
 
 	double extrusionwidth = 0;
 	if (boundary)
 	  extrusionwidth =
-	    settings.Extruder.GetExtrudedMaterialWidth(settings.Slicing.LayerThickness);
+	    settings.GetExtrudedMaterialWidth(settings.get_double("Slicing","LayerThickness"));
 
 	start = CLAMP (start, 0, n_cmds-1);
 	end = CLAMP (end, 0, n_cmds-1);
@@ -507,13 +506,23 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 	Vector3d last_extruder_offset = Vector3d::ZERO;
 
 	(void) extruderon; // calm warnings
+	double maxmove_xy = settings.get_double("Hardware","MaxMoveSpeedXY");
+	bool debuggcodeoffset = settings.get_boolean("Display","DebugGCodeOffset");
+	bool displaygcodemoves = settings.get_boolean("Display","DisplayGCodeMoves");
+	bool debuggcodeextruders = settings.get_boolean("Display","DebugGCodeExtruders");
+	bool luminanceshowsspeed = settings.get_boolean("Display","LuminanceShowsSpeed");
+	Vector4f gcodemovecolour = settings.get_colour("Display","GCodeMoveColour");
+	Vector4f gcodeprintingcolour = settings.get_colour("Display","GCodePrintingColour");
+
 	for(uint i=start; i <= end; i++)
 	{
 	        Vector3d extruder_offset = Vector3d::ZERO;
 	        //Vector3d next_extruder_offset = Vector3d::ZERO;
+		string extrudername =
+		  settings.numberedExtruder("Extruder", commands[i].extruder_no);
 
 		// TO BE FIXED:
-		if (!settings.Display.DebugGCodeOffset) { // show all together
+		if (!debuggcodeoffset) { // show all together
 		  extruder_offset = settings.get_extruder_offset(commands[i].extruder_no);
 		  pos -= extruder_offset - last_extruder_offset;
 		  last_extruder_offset = extruder_offset;
@@ -557,9 +566,9 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		    if( (!relativeE && commands[i].e == LastE)
 			|| (relativeE && commands[i].e == 0) ) // move only
 		      {
-			if (settings.Display.DisplayGCodeMoves) {
-			  luma = 0.3 + 0.7 * speed / settings.Hardware.MaxMoveSpeedXY / 60;
-			  Color = settings.Display.GCodeMoveColour;
+			if (displaygcodemoves) {
+			  luma = 0.3 + 0.7 * speed / maxmove_xy / 60;
+			  Color = gcodemovecolour;
 			  extrwidth = 0;
 			} else {
 			   pos = commands[i].where;
@@ -568,19 +577,19 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		      }
 		    else
 		      {
-			luma = 0.3 + 0.7 * speed / settings.Extruder.MaxLineSpeed / 60;
+			luma = 0.3 + 0.7 * speed / settings.get_double(extrudername,"MaxLineSpeed") / 60;
 			if (liveprinting) {
-			  Color = settings.Display.GCodePrintingColour;
+			  Color = gcodeprintingcolour;
 			} else {
-			  Color = settings.Extruders[commands[i].extruder_no].DisplayColour;
+			  Color = settings.get_colour(extrudername,"DisplayColour");
 			}
-			if (settings.Display.DebugGCodeExtruders) {
+			if (debuggcodeextruders) {
 			  ostringstream o; o << commands[i].extruder_no+1;
 			  Render::draw_string( (pos + commands[i].where) / 2. + extruder_offset,
 					       o.str());
 			}
 		      }
-		    if (settings.Display.LuminanceShowsSpeed)
+		    if (luminanceshowsspeed)
 		      Color *= luma;
 		    commands[i].draw(pos, extruder_offset, linewidth,
 				     Color, extrwidth, arrows, debug_arcs);
@@ -589,7 +598,7 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		  }
 		case RAPIDMOTION:
 		  {
-		    Color = settings.Display.GCodeMoveColour;
+		    Color = gcodemovecolour;
 		    commands[i].draw(pos, extruder_offset, 1, Color,
 				     extrwidth, arrows, debug_arcs);
 		    break;
@@ -624,9 +633,9 @@ void GCode::MakeText(string &GcodeTxt,
 		     const Settings &settings,
 		     ViewProgress * progress)
 {
-  string GcodeStart = settings.GCode.getStartText();
-  string GcodeLayer = settings.GCode.getLayerText();
-  string GcodeEnd   = settings.GCode.getEndText();
+  string GcodeStart = settings.get_string("GCode","Start");
+  string GcodeLayer = settings.get_string("GCode","Layer");
+  string GcodeEnd   = settings.get_string("GCode","End");
 
 	double lastE = -10;
 	double lastF = 0; // last Feedrate (can be omitted when same)
@@ -650,12 +659,26 @@ void GCode::MakeText(string &GcodeTxt,
 	int progress_steps=(int)(commands.size()/100);
 	if (progress_steps==0) progress_steps=1;
 
+	double speedalways = settings.get_boolean("Hardware","SpeedAlways");
+	bool useTcommand = settings.get_boolean("Slicing","UseTCommand");
+
+	const bool relativeecode = settings.get_boolean("Slicing","RelativeEcode");
+	uint currextruder = 0;
+	const uint numExt = settings.getNumExtruders();
+	string extLetters="";
+	for (uint i = 0;i<numExt;i++)
+	  extLetters+=settings.get_string(settings.numberedExtruder("Extruder",i),
+					  "GCLetter")[0];
 	for (uint i = 0; i < commands.size(); i++) {
 	  char E_letter;
-	  if (settings.Slicing.UseTCommand) // use first extruder's code for all extuders
-	    E_letter = settings.Extruders[0].GCLetter[0];
-	  else
-	    E_letter = settings.Extruders[commands[i].extruder_no].GCLetter[0];
+	  if (useTcommand) // use first extruder's code for all extuders
+	    E_letter = extLetters[0];
+	  else {
+	    // extruder change?
+	    if (i==0 || commands[i].extruder_no != commands[i-1].extruder_no)
+	      currextruder = commands[i].extruder_no;
+	    E_letter = extLetters[currextruder];
+	  }
 	  if (progress && i%progress_steps==0 && !progress->update(i)) break;
 
 	  if ( commands[i].Code == LAYERCHANGE ) {
@@ -670,9 +693,9 @@ void GCode::MakeText(string &GcodeTxt,
 	  }
 	  else {
 	    GcodeTxt += commands[i].GetGCodeText(LastPos, lastE, lastF,
-						 settings.Slicing.RelativeEcode,
+						 relativeecode,
 						 E_letter,
-						 settings.Hardware.SpeedAlways) + "\n";
+						 speedalways) + "\n";
 	  }
 	}
 

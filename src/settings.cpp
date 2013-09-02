@@ -1,6 +1,7 @@
 /*
     This file is a part of the RepSnapper project.
     Copyright (C) 2010 Michael Meeks
+    Copyright (C) 2013  martin.dieringer@gmx.de
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -27,10 +28,15 @@
 /*
  * How settings are intended to work:
  *
- * The large table below provides pointers into a settings instance, and
- * some simple (POD) type information for the common settings. It also
- * provides the configuration name for each setting, which is also used
- * as Gtk::Builder widget name.
+ * Settings is a subclass of Glib::KeyFile.
+ *
+ * Glade Builder Widgets are named as <Group>.<Key>, so automatically
+ * converted to KeyFile settings.  This works for most settings, but
+ * there are exceptions...
+ *
+ * All default setting values have to be at least in the default .conf file
+ *
+ * A redraw is done on every change made by the GUI.
  */
 
 #ifdef WIN32
@@ -39,1067 +45,38 @@
 #  define DEFAULT_COM_PORT "/dev/ttyUSB0"
 #endif
 
-#define OFFSET(field) offsetof (class Settings, field)
-#define BOOL_MEMBER(field, def_value, redraw ) \
-  { OFFSET (field), T_BOOL,   #field, def_value, NULL, redraw }
-#define INT_MEMBER(field, def_value, redraw) \
-  { OFFSET (field), T_INT,    #field, def_value, NULL, redraw }
-#define FLOAT_MEMBER(field, def_value, redraw) \
-  { OFFSET (field), T_FLOAT,  #field, def_value, NULL, redraw }
-#define STRING_MEMBER(field, def_value, redraw) \
-  { OFFSET (field), T_STRING, #field, 0.0,  def_value, redraw }
+const string serialspeeds[] = { "9600", "19200", "38400", "57600", "115200", "230400", "250000", "500000", "576000", "1000000" };
 
 
-#define COLOUR_MEMBER(field, def_valueR, def_valueG, def_valueB, def_valueA, redraw) \
-  { OFFSET (field.array[0]), T_COLOUR_MEMBER, #field "R", def_valueR, NULL, redraw }, \
-  { OFFSET (field.array[1]), T_COLOUR_MEMBER, #field "G", def_valueG, NULL, redraw }, \
-  { OFFSET (field.array[2]), T_COLOUR_MEMBER, #field "B", def_valueB, NULL, redraw }, \
-  { OFFSET (field.array[3]), T_COLOUR_MEMBER, #field "A", def_valueA, NULL, redraw }
-
-
-#define FLOAT_PHASE_MEMBER(phase, phasestd, member, def_value, redraw) \
-  { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_##phase].member), T_FLOAT, \
-      #phasestd #member, def_value, NULL, redraw }
-
-// converting our offsets into type pointers
-#define PTR_OFFSET(obj, offset) (((guchar *)obj) + offset)
-#define PTR_BOOL(obj, idx)      ((bool *)PTR_OFFSET (obj, settings[idx].member_offset))
-#define PTR_INT(obj, idx)       ((int *)PTR_OFFSET (obj, settings[idx].member_offset))
-#define PTR_UINT(obj, idx)      ((uint *)PTR_OFFSET (obj, settings[idx].member_offset))
-#define PTR_FLOAT(obj, idx)     ((float *)PTR_OFFSET (obj, settings[idx].member_offset))
-#define PTR_DOUBLE(obj, idx)    ((double *)PTR_OFFSET (obj, settings[idx].member_offset))
-#define PTR_STRING(obj, idx)    ((std::string *)PTR_OFFSET (obj, settings[idx].member_offset))
-#define PTR_COLOUR(obj, idx)    ((Vector4f *)PTR_OFFSET (obj, settings[idx].member_offset))
-
-enum SettingType { T_BOOL, T_INT, T_FLOAT, T_DOUBLE, T_STRING, T_COLOUR_MEMBER };
-static struct {
-  uint  member_offset;
-  SettingType type;
-  const char *config_name;
-  float def_float;
-  const char *def_string;
-  gboolean triggers_redraw;
-} settings[] = {
-
-  // General
-  { OFFSET (Name),  T_STRING, "SettingsName",  0, "Default Settings", false },
-  { OFFSET (Image), T_STRING, "SettingsImage", 0, "", false },
-
-  // Raft:
-  BOOL_MEMBER  (Raft.Enable, false, true),
-  FLOAT_MEMBER (Raft.Size,   1.33,  true),
-
-  // Raft Base
-  { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_BASE].LayerCount), T_INT,
-    "Raft.Base.LayerCount", 1, NULL, true },
-  FLOAT_PHASE_MEMBER(BASE, Raft.Base., MaterialDistanceRatio, 1.8, true),
-  FLOAT_PHASE_MEMBER(BASE, Raft.Base., Rotation, 0.0, false),
-  FLOAT_PHASE_MEMBER(BASE, Raft.Base., RotationPrLayer, 90.0, false),
-  FLOAT_PHASE_MEMBER(BASE, Raft.Base., Distance, 2.0, false),
-  FLOAT_PHASE_MEMBER(BASE, Raft.Base., Thickness, 1.0, true),
-  FLOAT_PHASE_MEMBER(BASE, Raft.Base., Temperature, 1.10, false),
-
-  // Raft Interface
-  { OFFSET (Raft.Phase[Settings::RaftSettings::PHASE_INTERFACE].LayerCount), T_INT,
-    "Raft.Interface.LayerCount", 2, NULL, true },
-  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., MaterialDistanceRatio, 1.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., Rotation, 90.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., RotationPrLayer, 90.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., Distance, 2.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., Thickness, 1.0, true),
-  FLOAT_PHASE_MEMBER(INTERFACE, Raft.Interface., Temperature, 1.0, false),
-
-#undef FLOAT_PHASE_MEMBER
-
-  // Hardware
-  FLOAT_MEMBER (Hardware.MinMoveSpeedXY, 20, true),
-  FLOAT_MEMBER (Hardware.MaxMoveSpeedXY, 180, true),
-  FLOAT_MEMBER (Hardware.MinMoveSpeedZ,  1, true),
-  FLOAT_MEMBER (Hardware.MaxMoveSpeedZ,  3, true),
-
-  // FLOAT_MEMBER (Hardware.DistanceToReachFullSpeed, "DistanceToReachFullSpeed", 1.5, false),
-  // Volume.
-  { OFFSET (Hardware.Volume.array[0]), T_DOUBLE, "Hardware.Volume.X", 200, NULL, true },
-  { OFFSET (Hardware.Volume.array[1]), T_DOUBLE, "Hardware.Volume.Y", 200, NULL, true },
-  { OFFSET (Hardware.Volume.array[2]), T_DOUBLE, "Hardware.Volume.Z", 140, NULL, true },
-
-  // PrintMargin
-  { OFFSET (Hardware.PrintMargin.array[0]), T_DOUBLE, "Hardware.PrintMargin.X", 10, NULL, true },
-  { OFFSET (Hardware.PrintMargin.array[1]), T_DOUBLE, "Hardware.PrintMargin.Y", 10, NULL, true },
-  { OFFSET (Hardware.PrintMargin.array[2]), T_DOUBLE, "Hardware.PrintMargin.Z", 0, NULL, true },
-
-
-  STRING_MEMBER (Hardware.PortName,       DEFAULT_COM_PORT, false),
-  INT_MEMBER    (Hardware.SerialSpeed,    115200, false),
-  INT_MEMBER    (Hardware.KeepLines, 1000, false),
-  BOOL_MEMBER   (Hardware.SpeedAlways, false, false),
-
-  // Extruder
-  BOOL_MEMBER  (Extruder.CalibrateInput,  true, true),
-  FLOAT_MEMBER (Extruder.OffsetX,  0.0, true),
-  FLOAT_MEMBER (Extruder.OffsetY,  0.0, true),
-  FLOAT_MEMBER (Extruder.FilamentDiameter,  3.0, true),
-  FLOAT_MEMBER (Extruder.ExtrusionFactor,  1.0, true),
-  /* FLOAT_MEMBER (Extruder.DownstreamMultiplier,  1.0, true), */
-  /* FLOAT_MEMBER (Extruder.DownstreamExtrusionMultiplier,  1.0, true),*/
-  FLOAT_MEMBER (Extruder.ExtrudedMaterialWidthRatio, 1.8, true),
-  FLOAT_MEMBER (Extruder.MinimumLineWidth,  0.4, true),
-  FLOAT_MEMBER (Extruder.MaximumLineWidth,  0.7, true),
-  FLOAT_MEMBER (Extruder.MaxLineSpeed,      180, true),
-  FLOAT_MEMBER (Extruder.EMaxSpeed,         1.5, true),
-  FLOAT_MEMBER (Extruder.MaxShellSpeed,     150, true),
-  STRING_MEMBER(Extruder.GCLetter,          "E", false),
-  BOOL_MEMBER  (Extruder.UseForSupport,   false, true),
-  STRING_MEMBER(Extruder.name,       "Extruder", false),
-
-  BOOL_MEMBER  (Extruder.EnableAntiooze, false, true),
-  FLOAT_MEMBER (Extruder.AntioozeDistance,  4.5, true),
-  FLOAT_MEMBER (Extruder.AntioozeAmount, 1, true),
-  //FLOAT_MEMBER (Extruder.AntioozeHaltRatio, 0.2, true),
-  FLOAT_MEMBER (Extruder.AntioozeSpeed,  15.0, true),
-  FLOAT_MEMBER (Extruder.AntioozeZlift,  0, true),
-  BOOL_MEMBER  (Extruder.ZliftAlways, false, true),
-  COLOUR_MEMBER(Extruder.DisplayColour, 1.0, 1.0, 0.0, 1.0, true),
-
-  // Printer
-  FLOAT_MEMBER  (Printer.ExtrudeAmount, 1, false),
-  FLOAT_MEMBER  (Printer.ExtrudeSpeed,  1.5, false),
-  INT_MEMBER    (Printer.FanVoltage,    200, false),
-  BOOL_MEMBER   (Printer.Logging, false, false),
-  BOOL_MEMBER   (Printer.ClearLogOnPrintStart, false, false),
-  FLOAT_MEMBER  (Printer.ExtrudeSpeed,  1.5, false),
-  FLOAT_MEMBER  (Printer.NozzleTemp, 210, false),
-  FLOAT_MEMBER  (Printer.BedTemp, 60, false),
-
-  // Slicing
-  BOOL_MEMBER   (Slicing.RelativeEcode, false, false),
-  BOOL_MEMBER   (Slicing.UseTCommand, true, false),
-  FLOAT_MEMBER  (Slicing.LayerThickness,  0.3, true),
-  BOOL_MEMBER   (Slicing.MoveNearest, true, true),
-  FLOAT_MEMBER  (Slicing.InfillPercent,  30, true),
-  FLOAT_MEMBER  (Slicing.InfillRotation, 90.0, true),
-  FLOAT_MEMBER  (Slicing.InfillRotationPrLayer, 60.0, true),
-  FLOAT_MEMBER  (Slicing.AltInfillPercent,  80, true),
-  FLOAT_MEMBER  (Slicing.InfillOverlap,  0.2, true),
-  INT_MEMBER    (Slicing.AltInfillLayers,  0, true),
-  INT_MEMBER    (Slicing.NormalFilltype,  0, true),
-  FLOAT_MEMBER  (Slicing.NormalFillExtrusion,  1, true),
-  INT_MEMBER    (Slicing.FullFilltype,  0, true),
-  FLOAT_MEMBER  (Slicing.FullFillExtrusion, 1, true),
-  INT_MEMBER    (Slicing.SupportFilltype,  0, true),
-  FLOAT_MEMBER  (Slicing.SupportExtrusion,  0.5, true),
-  FLOAT_MEMBER  (Slicing.SupportInfillDistance,  3.0, true),
-  BOOL_MEMBER   (Slicing.MakeDecor, true, true),
-  INT_MEMBER    (Slicing.DecorFilltype, 0, true),
-  INT_MEMBER    (Slicing.DecorLayers,   0, true),
-  FLOAT_MEMBER  (Slicing.DecorInfillRotation, 0, true),
-  FLOAT_MEMBER  (Slicing.DecorInfillDistance, 2.0, true),
-  //INT_MEMBER    (Slicing.SolidLayers,  2, true),
-  FLOAT_MEMBER  (Slicing.SolidThickness,  0.4, true),
-  BOOL_MEMBER   (Slicing.NoTopAndBottom, false, true),
-  BOOL_MEMBER   (Slicing.Support, true, true),
-  FLOAT_MEMBER  (Slicing.SupportAngle,  0, true),
-  FLOAT_MEMBER  (Slicing.SupportWiden,  0, true),
-  BOOL_MEMBER   (Slicing.Skirt, false, true),
-  BOOL_MEMBER   (Slicing.SingleSkirt, true, true),
-  FLOAT_MEMBER  (Slicing.SkirtHeight,  0.0, true),
-  FLOAT_MEMBER  (Slicing.SkirtDistance,  3, true),
-  BOOL_MEMBER   (Slicing.FillSkirt, false, true),
-  INT_MEMBER    (Slicing.Skins, 1, true),
-  BOOL_MEMBER   (Slicing.Varslicing, false, true),
-  BOOL_MEMBER   (Slicing.DoInfill, true, true),
-  INT_MEMBER    (Slicing.ShellCount, 1, true),
-  // BOOL_MEMBER   (Slicing.EnableAcceleration, true, false),
-  FLOAT_MEMBER  (Slicing.MinShelltime,  5, true),
-  FLOAT_MEMBER  (Slicing.MinLayertime,  5, true),
-  BOOL_MEMBER   (Slicing.FanControl, false, false),
-  INT_MEMBER    (Slicing.MinFanSpeed,  150, false),
-  INT_MEMBER    (Slicing.MaxFanSpeed,  255, false),
-  FLOAT_MEMBER    (Slicing.MaxOverhangSpeed, 20, false),
-
-  //FLOAT_MEMBER  (Slicing.Optimization, "Optimization", 0.01, true),
-  BOOL_MEMBER   (Slicing.BuildSerial, false, true),
-  BOOL_MEMBER   (Slicing.SelectedOnly, false, true),
-  FLOAT_MEMBER  (Slicing.ShellOffset, 0.1, true),
-  INT_MEMBER    (Slicing.FirstLayersNum,  1, true),
-  FLOAT_MEMBER  (Slicing.FirstLayersSpeed, 0.5, true),
-  FLOAT_MEMBER  (Slicing.FirstLayersInfillDist, 0.8, true),
-  FLOAT_MEMBER  (Slicing.FirstLayerHeight,  0.7, true),
-  BOOL_MEMBER   (Slicing.UseArcs, false, true),
-  FLOAT_MEMBER  (Slicing.ArcsMaxAngle,  20, true),
-  FLOAT_MEMBER  (Slicing.MinArcLength,  1, true),
-  BOOL_MEMBER   (Slicing.RoundCorners, true, true),
-  FLOAT_MEMBER  (Slicing.CornerRadius,  1., true),
-  BOOL_MEMBER   (Slicing.NoBridges, false, true),
-  FLOAT_MEMBER  (Slicing.BridgeExtrusion, 1, true),
-
-  BOOL_MEMBER (Slicing.GCodePostprocess, false, false),
-  STRING_MEMBER (Slicing.GCodePostprocessor, "", false),
-
-  // Milling
-  FLOAT_MEMBER  (Milling.ToolDiameter, 2, true),
-
-  // Misc.
-  BOOL_MEMBER (Misc.SpeedsAreMMperSec,  false, false),
-  BOOL_MEMBER (Misc.ShapeAutoplace,     true,  false),
-  //BOOL_MEMBER (Misc.FileLoggingEnabled,  true, false),
-  BOOL_MEMBER (Misc.TempReadingEnabled, true,  false),
-  BOOL_MEMBER (Misc.SaveSingleShapeSTL, false, false),
-
-  // GCode - handled by GCodeImpl
-  BOOL_MEMBER (Display.DisplayGCode, true, true),
-  FLOAT_MEMBER (Display.GCodeDrawStart,  0.0, true),
-  FLOAT_MEMBER (Display.GCodeDrawEnd, 1.0, true),
-  BOOL_MEMBER (Display.DisplayGCodeBorders,  true, true),
-  BOOL_MEMBER (Display.DisplayGCodeMoves,  true, true),
-  BOOL_MEMBER (Display.DisplayGCodeArrows, true, true),
-  BOOL_MEMBER (Display.DisplayEndpoints,  false, true),
-  BOOL_MEMBER (Display.DisplayNormals,  false, true),
-  BOOL_MEMBER (Display.DisplayBBox,  false, true),
-  BOOL_MEMBER (Display.DisplayWireframe,  false, true),
-  BOOL_MEMBER (Display.DisplayWireframeShaded,  true, true),
-  BOOL_MEMBER (Display.DisplayPolygons,  true, true),
-  BOOL_MEMBER (Display.DisplayAllLayers,  false, true),
-  BOOL_MEMBER (Display.DisplayinFill, false, true),
-  BOOL_MEMBER (Display.DisplayDebuginFill,  false, true),
-  BOOL_MEMBER (Display.DisplayDebug, false, true),
-  BOOL_MEMBER (Display.DisplayDebugArcs,  true, true),
-  BOOL_MEMBER (Display.DebugGCodeExtruders, false, true),
-  BOOL_MEMBER (Display.DebugGCodeOffset, true, true),
-  BOOL_MEMBER (Display.DisplayFilledAreas,  true, true),
-  BOOL_MEMBER (Display.ShowLayerOverhang,  true, true),
-  BOOL_MEMBER (Display.CommsDebug,  false, true),
-  BOOL_MEMBER (Display.TerminalProgress,  false, true),
-  BOOL_MEMBER (Display.DisplayLayer,  false, true),
-  BOOL_MEMBER (Display.RandomizedLines,  false, true),
-  BOOL_MEMBER (Display.DrawVertexNumbers, false, true),
-  BOOL_MEMBER (Display.DrawLineNumbers,  false, true),
-  BOOL_MEMBER (Display.DrawOutlineNumbers, false, true),
-  BOOL_MEMBER (Display.DrawCPVertexNumbers,  false, true),
-  BOOL_MEMBER (Display.DrawCPLineNumbers,  false, true),
-  BOOL_MEMBER (Display.DrawCPOutlineNumbers, false, true),
-  BOOL_MEMBER (Display.DrawRulers,  true, true),
-
-  FLOAT_MEMBER (Display.LayerValue,  0, true),
-  BOOL_MEMBER  (Display.LuminanceShowsSpeed,  false, true),
-  FLOAT_MEMBER (Display.Highlight,  0.7, true),
-  FLOAT_MEMBER (Display.NormalsLength, 10, true),
-  FLOAT_MEMBER (Display.EndPointSize,  8, true),
-  FLOAT_MEMBER (Display.TempUpdateSpeed,  3, false),
-
-  BOOL_MEMBER (Display.PreviewLoad,  true, true),
-
-  // Colour selectors settings
-
-  COLOUR_MEMBER(Display.PolygonColour, 0, 1.0, 1.0, 0.5, true),
-  COLOUR_MEMBER(Display.WireframeColour, 1.0, 0.48, 0, 0.5, true),
-  COLOUR_MEMBER(Display.NormalsColour, 0.62, 1.0, 0, 1.0, true),
-  /* COLOUR_MEMBER(Display.GCodeExtrudeColour, 1.0, 1.0, 0.0, 1.0, true), */
-  COLOUR_MEMBER(Display.GCodeMoveColour, 1.0, 0.05, 1, 0.5, true),
-  COLOUR_MEMBER(Display.GCodePrintingColour, 0.1, 0.5, 0.0, 1.0, true)
-
-};
-
-// Add any GtkSpinButtons to this array:
-static struct {
-  const char *widget;
-  float min, max;
-  float inc, inc_page;
-} spin_ranges[] = {
-  // Raft
-  { "Raft.Size", 0, 50, 1, 3 },
-  { "Raft.Base.LayerCount",      0, 8, 1, 2 },
-  { "Raft.Interface.LayerCount", 0, 8, 1, 2 },
-  { "Raft.Base.MaterialDistanceRatio",      0.1, 4.0, 0.1, 1 },
-  { "Raft.Interface.MaterialDistanceRatio", 0.1, 4.0, 0.1, 1 },
-  { "Raft.Base.Rotation",             -360.0, 360.0, 45, 90 },
-  { "Raft.Interface.Rotation",        -360.0, 360.0, 45, 90 },
-  { "Raft.Base.RotationPrLayer",      -360.0, 360.0, 45, 90 },
-  { "Raft.Interface.RotationPrLayer", -360.0, 360.0, 45, 90 },
-  { "Raft.Base.Distance",      0.1, 8.0, 0.1, 1 },
-  { "Raft.Interface.Distance", 0.1, 8.0, 0.1, 1 },
-  { "Raft.Base.Thickness",      0.1, 4.0, 0.1, 1 },
-  { "Raft.Interface.Thickness", 0.1, 4.0, 0.1, 1 },
-  { "Raft.Base.Temperature",      0.9, 1.2, 0.01, 0.1 },
-  { "Raft.Interface.Temperature", 0.9, 1.2, 0.01, 0.1 },
-
-  // Slicing
-  { "Slicing.LayerThickness", 0.01, 3.0, 0.01, 0.2 },
-  { "Slicing.ShellCount", 0, 100, 1, 5 },
-  // { "Slicing.SolidLayers", 0, 100, 1, 5 },
-  { "Slicing.SolidThickness", 0, 10, 0.01, 0.1 },
-  { "Slicing.InfillRotation", -360, 360, 5, 45 },
-  { "Slicing.InfillRotationPrLayer", -360, 360, 5, 90 },
-  { "Slicing.InfillPercent", 0.0, 100.0, 1, 10.0 },
-  { "Slicing.AltInfillPercent", 0.0, 100.0, 1, 10.0 },
-  { "Slicing.AltInfillLayers", 0, 10000, 10, 100 },
-  { "Slicing.DecorLayers", 1, 100, 1, 5 },
-  { "Slicing.DecorInfillDistance", 0.0, 10, 0.1, 1 },
-  { "Slicing.DecorInfillRotation", -360, 360, 5, 45 },
-  { "Slicing.InfillOverlap", 0, 1.0 , 0.01, 0.1},
-  { "Slicing.NormalFillExtrusion", 0.01, 3, 0.01, 0.1},
-  { "Slicing.FullFillExtrusion", 0.01, 3, 0.01, 0.1},
-  { "Slicing.BridgeExtrusion", 0.01, 3, 0.01, 0.1},
-  { "Slicing.SupportExtrusion", 0.01, 3, 0.01, 0.1},
-  { "Slicing.SupportInfillDistance", 0.0, 10, 0.1, 1 },
-  { "Slicing.SupportWiden", -5, 5, 0.01, 0.1},
-  { "Slicing.SupportAngle", 0, 90, 1, 10},
-  //{ "Slicing.Optimization", 0.0, 10.0, 0.01, 0.1 },
-  { "Slicing.SkirtHeight", 0.0, 1000, 0.1, 1 },
-  { "Slicing.SkirtDistance", 0.0, 100, 0.1, 1 },
-  { "Slicing.Skins", 1, 5, 1, 1 },
-  { "Slicing.MinShelltime", 0.0, 100, 0.1, 1 },
-  { "Slicing.MinLayertime", 0.0, 100, 0.1, 1 },
-  { "Slicing.MinFanSpeed", 0, 255, 5, 25 },
-  { "Slicing.MaxFanSpeed", 0, 255, 5, 25 },
-  { "Slicing.MaxOverhangSpeed", 0, 1000, 1, 10 },
-  //{ "Slicing.SerialBuildHeight", 0.0, 1000.0, 0.1, 1 },
-  { "Slicing.ShellOffset", -10, 10, 0.01, 0.1 },
-  { "Slicing.FirstLayersNum", 0, 1000, 1, 10 },
-  { "Slicing.FirstLayersSpeed", 0.01, 3, 0.01, 0.1 },
-  { "Slicing.FirstLayersInfillDist", 0.0, 100, 0.01, 0.1 },
-  { "Slicing.FirstLayerHeight", 0.0, 100., 0.01, 0.1 },
-  { "Slicing.ArcsMaxAngle", 0, 180, 1, 10 },
-  { "Slicing.MinArcLength", 0, 10, 0.01, 0.1 },
-  { "Slicing.CornerRadius", 0, 5, 0.01, 0.1 },
-
-  // Milling
-  { "Milling.ToolDiameter", 0, 5, 0.01, 0.1 },
-
-  // Hardware
-  { "Hardware.Volume.X", 0.0, 1000.0, 5.0, 25.0 },
-  { "Hardware.Volume.Y", 0.0, 1000.0, 5.0, 25.0 },
-  { "Hardware.Volume.Z", 0.0, 1000.0, 5.0, 25.0 },
-  { "Hardware.PrintMargin.X", 0.0, 100.0, 1.0, 5.0 },
-  { "Hardware.PrintMargin.Y", 0.0, 100.0, 1.0, 5.0 },
-  { "Hardware.PrintMargin.Z", 0.0, 100.0, 1.0, 5.0 },
-  { "Hardware.MinMoveSpeedXY", 0.1, 2000.0, 1.0, 10.0 },
-  { "Hardware.MaxMoveSpeedXY", 0.1, 2000.0, 1.0, 10.0 },
-  { "Hardware.MinMoveSpeedZ", 0.1, 250.0, 1.0, 10.0 },
-  { "Hardware.MaxMoveSpeedZ", 0.1, 250.0, 1.0, 10.0 },
-  { "Hardware.KeepLines", 100.0, 100000.0, 1.0, 500.0 },
-  // { "Hardware.DistanceToReachFullSpeed", 0.0, 10.0, 0.1, 1.0 },
-
-  // Extruder
-  { "Extruder.OffsetX", -5000.0, 5000.0, 0.1, 1.0 },
-  { "Extruder.OffsetY", -5000.0, 5000.0, 0.1, 1.0 },
-  { "Extruder.ExtrudedMaterialWidthRatio", 0.0, 10.0, 0.01, 0.1 },
-  { "Extruder.MinimumLineWidth", 0.0, 10.0, 0.01, 0.1 },
-  { "Extruder.MaximumLineWidth", 0.0, 10.0, 0.01, 0.1 },
-  { "Extruder.ExtrusionFactor", 0.0, 10.0, 0.1, 0.5 },
-  { "Extruder.FilamentDiameter", 0.5, 5.0, 0.01, 0.05 },
-  { "Extruder.MaxLineSpeed", 0.1, 2000.0, 1.0, 10.0 },
-  { "Extruder.MaxShellSpeed", 0.1, 2000.0, 1.0, 10.0 },
-  { "Extruder.EMaxSpeed", 0.01, 2000.0, 0.1, 1.0 },
-  // { "Extruder.DownstreamMultiplier", 0.01, 25.0, 0.01, 0.1 },
-  // { "Extruder.DownstreamExtrusionMultiplier", 0.01, 25.0, 0.01, 0.1 },
-  { "Extruder.AntioozeDistance", 0.0, 25.0, 0.1, 1 },
-  { "Extruder.AntioozeAmount", 0.0, 25.0, 0.1, 1 },
-  { "Extruder.AntioozeSpeed", 0.0, 1000.0, 1.0, 5.0 },
-  //{ "Extruder.AntioozeHaltRatio", 0.0, 1.0, 0.01, 0.1 },
-  { "Extruder.AntioozeZlift", 0.0, 10, 0.01, 0.1 },
-
-  //Printer
-  { "Printer.ExtrudeAmount", -1000.0, 1000.0, 0.1, 1.0 },
-  { "Printer.ExtrudeSpeed", 0.0, 100.0, 0.1, 1.0 },
-  { "Printer.FanVoltage", 0, 255, 5, 25 },
-  // { "Printer.NozzleTemp", 0.0, 300.0, 1.0, 10.0 },
-  // { "Printer.BedTemp", 0.0, 200.0, 1.0, 10.0 },
-
-  // Display pane
-  { "Display.TempUpdateSpeed", 1, 1000, 1, 5 },
-  { "m_scale_value", 0.0001, 1000.0, 0.01, 0.1 },
-  { "scale_x", 0.0001, 1000.0, 0.01, 0.1 },
-  { "scale_y", 0.0001, 1000.0, 0.01, 0.1 },
-  { "scale_z", 0.0001, 1000.0, 0.01, 0.1 },
-  { "translate_x", -5000, 5000.0, 1, 10 },
-  { "translate_y", -5000, 5000.0, 1, 10 },
-  { "translate_z", -5000, 5000.0, 0.1, 1 },
-  { "rot_x", -360.0, 360.0, 1, 10 },
-  { "rot_y", -360.0, 360.0, 1, 10 },
-  { "rot_z", -360.0, 360.0, 1, 10 },
-};
-
-// Add any [HV]Ranges to this array:
-static struct {
-  const char *widget;
-  float min, max;
-  float inc, inc_page;
-} ranges[] = {
-  // Display plane
-  { "Display.LayerValue", 0.0, 1000.0, 0.0, 0.01 },
-  { "Display.GCodeDrawStart", 0.0, 1000.0, 0.0, 0.1 },
-  { "Display.GCodeDrawEnd", 0.0, 1000.0, 0.0, 0.1 },
-};
-
-static struct {
-  uint  member_offset;
-  const char *config_name;
-}
-colour_selectors[] = {
-  { OFFSET(Extruder.DisplayColour), "Extruder.DisplayColour" },
-  { OFFSET(Display.PolygonColour), "Display.PolygonColour" },
-  { OFFSET(Display.WireframeColour), "Display.WireframeColour" },
-  { OFFSET(Display.NormalsColour), "Display.NormalsColour" },
-  { OFFSET(Display.EndpointsColour), "Display.EndpointsColour" },
-  /* { OFFSET(Display.GCodeExtrudeColour), "Display.GCodeExtrudeColour" }, */
-  { OFFSET(Display.GCodePrintingColour), "Display.GCodePrintingColour" },
-  { OFFSET(Display.GCodeMoveColour), "Display.GCodeMoveColour" }
-};
-
-static const char *GCodeNames[] = { "Start", "Layer", "End" };
-
-class Settings::GCodeImpl {
-public:
-  Glib::RefPtr<Gtk::TextBuffer> m_GCode[GCODE_TEXT_TYPE_COUNT];
-
-  GCodeImpl()
-  {
-    for (guint i = 0; i < GCODE_TEXT_TYPE_COUNT; i++)
-      m_GCode[i] = Gtk::TextBuffer::create();
-  }
-  void loadSettings(Glib::KeyFile &cfg)
-  {
-    for (guint i = 0; i < GCODE_TEXT_TYPE_COUNT; i++)
-    {
-      try {
-	if (cfg.has_key ("GCode", GCodeNames[i]))
-	  m_GCode[i]->set_text(cfg.get_string ("GCode", GCodeNames[i]));
-      } catch (const Glib::KeyFileError &err) {
-      }
-    }
-  }
-  void saveSettings(Glib::KeyFile &cfg)
-  {
-    for (guint i = 0; i < GCODE_TEXT_TYPE_COUNT; i++)
-      cfg.set_string ("GCode", GCodeNames[i], m_GCode[i]->get_text());
-  }
-  void connectToUI(Builder &builder)
-  {
-    static const char *ui_names[] =
-      { "txt_gcode_start", "txt_gcode_next_layer", "txt_gcode_end" };
-    for (guint i = 0; i < GCODE_TEXT_TYPE_COUNT; i++) {
-      Gtk::TextView *textv = NULL;
-      builder->get_widget (ui_names [i], textv);
-      if (textv)
-	textv->set_buffer (m_GCode[i]);
-    }
-  }
-  void setDefaults()
-  {
-    m_GCode[GCODE_TEXT_START]->set_text
-      ("; This code is sent to the printer at the beginning.\n"
-       "; Adjust it to your needs.\n"
-       "; \n"
-       "; GCode generated by RepSnapper:\n"
-       "; http://reprap.org/wiki/RepSnapper_Manual:Introduction\n"
-       "G21             ; metric coordinates\n"
-       "G90             ; absolute positioning\n"
-       "T0              ; select new extruder\n"
-       "G28             ; go home\n"
-       "G92 E0          ; set extruder home\n"
-       "G1 X5 Y5 F500 ; move away 5 mm from 0.0, to use the same reset for each layer\n\n");
-    m_GCode[GCODE_TEXT_LAYER]->set_text ("");
-    m_GCode[GCODE_TEXT_END]->set_text
-      ("; This code is sent to the printer after the print.\n"
-       "; Adjust it to your needs.\n"
-       "G1 X0 Y0 F2000.0 ; feed for start of next move\n"
-       "M104 S0.0        ; heater off\n");
-  }
-};
-
-std::string Settings::GCodeType::getText(GCodeTextType t) const
-{
-  return m_impl->m_GCode[t]->get_text();
-}
-
-// return infill distance in mm
-double Settings::GetInfillDistance(double layerthickness, float percent) const
-{
-  double fullInfillDistance =
-    Extruder.GetExtrudedMaterialWidth(layerthickness);
-  if (percent == 0) return 10000000;
-  return fullInfillDistance * (100./percent);
-}
-// void Settings::SlicingSettings::GetAltInfillLayers(std::vector<int>& layers, uint layerCount) const
-// {
-//   size_t start = 0, end = AltInfillLayersText.find(',');
-
-//   if (AltInfillLayersText == "")
-//     return;
-
-//   while(start != std::string::npos) {
-//     int num = atoi(AltInfillLayersText.data() + start);
-//     if(num < 0) {
-//       num += layerCount;
-//     }
-//     layers.push_back (num);
-
-//     start = end;
-//     end = AltInfillLayersText.find(',', start+1);
-//   }
-// }
-
-Settings::Settings ()
-{
-  GCode.m_impl = new GCodeImpl();
-  set_defaults();
-  m_user_changed = false;
-  inhibit_callback = false;
-}
-
-Settings::~Settings()
-{
-  delete GCode.m_impl;
-}
-
-void
-Settings::assign_from(Settings *pSettings)
-{
-  // default copy operators can be simply wonderful
-  *this = *pSettings;
-  m_user_changed = false;
-  m_signal_visual_settings_changed.emit();
-  m_signal_update_settings_gui.emit();
-}
-
-void Settings::set_defaults ()
-{
-  for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
-    switch (settings[i].type) {
-    case T_BOOL:
-      *PTR_BOOL(this, i) = settings[i].def_float != 0.0;
-      break;
-    case T_INT:
-      *PTR_INT(this, i) = settings[i].def_float;
-      break;
-    case T_FLOAT:
-    case T_COLOUR_MEMBER:
-      *PTR_FLOAT(this, i) = settings[i].def_float;
-      break;
-    case T_DOUBLE:
-      *PTR_DOUBLE(this, i) = settings[i].def_float;
-      break;
-    case T_STRING:
-      *PTR_STRING(this, i) = std::string (settings[i].def_string);
-      break;
-    default:
-      std::cerr << "corrupt setting type " << endl;
-      break;
-    }
-  }
-
-  GCode.m_impl->setDefaults();
-
-  Extruders.clear();
-  Extruders.push_back(Extruder);
-
-  // The vectors map each to 3 spin boxes, one per dimension
-  Hardware.Volume = Vector3d (200,200,140);
-  Hardware.PrintMargin = Vector3d (10,10,0);
-
-  Misc.SpeedsAreMMperSec = true;
-}
-
-bool Settings::get_group_and_key (int i, Glib::ustring &group, Glib::ustring &key)
-{
-  const char *name = settings[i].config_name;
-  if (!name) {
-    std::cerr << "Odd - some useful use of this field for setting " << i << "\n";
-    return false;
-  }
-  // re-use the display name
-  char *field = g_strdup (settings[i].config_name);
-  char *p = strchr (field, '.');
-  if (!p) {
-    group = "Global";
-    key = field;
-  } else {
-    *p = '\0';
-    group = field;
-    key = p + 1;
-  }
-  g_free (field);
-
+// convert GUI name to group/key
+bool splitpoint(const string &glade_name, string &group, string &key) {
+  int pos = glade_name.find(".");
+  if (pos==(int)std::string::npos) return false;
+  group = glade_name.substr(0,pos);
+  key = glade_name.substr(pos+1);
   return true;
 }
 
 
-// load settings of group onlygroup into setting group as_group
-// (if given)
-// as_group must have same settings as onlygroup (Extruders)
-void Settings::load_settings_as (const Glib::KeyFile &cfg,
-				 const Glib::ustring onlygroup,
-				 const Glib::ustring as_group)
+void set_up_combobox(Gtk::ComboBox *combo, vector<string> values)
 {
-  for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
-
-    Glib::ustring group, key;
-
-    if (!get_group_and_key (i, group, key))
-      continue;
-
-    if (as_group != "") { // if as_group given
-      if (as_group != group.substr(0,as_group.length()))
-	continue;         // don't load other settings
-    }
-
-    if (onlygroup != "") // if onlygroup given
-      group = onlygroup; // load setting from onlygroup
-
-    try {
-      if (!cfg.has_key (group, key))
-	continue;
-    } catch (const Glib::KeyFileError &err) {
-      continue;
-    }
-
-    // group & string ...
-    switch (settings[i].type) {
-    case T_BOOL:
-      *PTR_BOOL(this, i) = cfg.get_boolean (group, key);
-      break;
-    case T_INT:
-      *PTR_INT(this, i) = cfg.get_integer (group, key);
-      break;
-    case T_FLOAT:
-    case T_COLOUR_MEMBER:
-      *PTR_FLOAT(this, i) = cfg.get_double (group, key);
-      break;
-    case T_DOUBLE:
-      *PTR_DOUBLE(this, i) = cfg.get_double (group, key);
-      break;
-    case T_STRING:
-      *PTR_STRING(this, i) = cfg.get_string (group, key);
-      break;
-    default:
-      std::cerr << _("corrupt setting type") << group << " : " << key << endl;;
-      break;
-    }
-  }
-
-}
-void Settings::load_settings (Glib::RefPtr<Gio::File> file)
-{
-
-  Glib::KeyFile cfg;
-
-  Filename = file->get_path();
-
-  set_defaults();
-
-  try {
-    if (!cfg.load_from_file (file->get_path())) {
-      std::cout << _("Failed to load settings from file '") << file->get_path() << "\n";
-      return;
-    }
-  } catch (const Glib::KeyFileError &err) {
-    std::cout << _("Exception ") << err.what() << _(" loading settings from file '") << file->get_path() << "\n";
+  if (combo->get_model())
     return;
+  Gtk::TreeModelColumn<Glib::ustring> column;
+  Gtk::TreeModelColumnRecord record;
+  record.add(column);
+  Glib::RefPtr<Gtk::ListStore> store = Gtk::ListStore::create(record);
+  combo->pack_start (column);
+  combo->set_model(store);
+  for (uint i=0; i<values.size(); i++) {
+    //cerr << " adding " << values[i] << endl;
+    store->append()->set_value(0, Glib::ustring(values[i].c_str()));
   }
-
-  std::cerr << _("Parsing config from '") << file->get_path() << "\n";
-
-  Misc.SpeedsAreMMperSec = false;
-
-  load_settings_as(cfg);
-
-  // first extruder is the loaded "Extruder"
-  if (Extruders.size()==0)
-    Extruders.push_back(Extruder);
-  else
-    Extruders[0] = Extruder;
-  // Load other extruders "ExtruderN" (N=2..)
-  std::vector< Glib::ustring > all_groups = cfg.get_groups();
-  for (uint i = 0; i<all_groups.size(); i++) {
-    if (all_groups[i].substr(0,8) == "Extruder") {
-      if (all_groups[i].length() > 8) {
-	load_settings_as(cfg, all_groups[i], "Extruder");
-	Extruders.push_back(Extruder);
-      }
-    }
-  }
-
-  GCode.m_impl->loadSettings (cfg);
-
-  try {
-    Misc.window_width = cfg.get_integer ("Misc", "WindowWidth");
-    Misc.window_height = cfg.get_integer ("Misc", "WindowHeight");
-  } catch (const Glib::KeyFileError &err) {
-    Misc.window_width =-1;
-    Misc.window_height=-1;
-  }
-  try {
-    Misc.window_posx = cfg.get_integer ("Misc", "WindowPosX");
-    Misc.window_posy = cfg.get_integer ("Misc", "WindowPosY");
-  } catch (const Glib::KeyFileError &err) {
-    Misc.window_posx =-1;
-    Misc.window_posy=-1;
-  }
-  try {
-    Misc.ExpandLayerDisplay = cfg.get_boolean ("Misc", "ExpandLayerDisplay");
-    Misc.ExpandModelDisplay = cfg.get_boolean ("Misc", "ExpandModelDisplay");
-    Misc.ExpandPAxisDisplay = cfg.get_boolean ("Misc", "ExpandPAxisDisplay");
-  } catch (const Glib::KeyFileError &err) {
-    Misc.ExpandLayerDisplay = false;
-    Misc.ExpandModelDisplay = false;
-    Misc.ExpandPAxisDisplay = false;
-  }
-
-  try {
-    vector<string> cbkeys = cfg.get_keys ("CustomButtons");
-    CustomButtonLabel.resize(cbkeys.size());
-    CustomButtonGcode.resize(cbkeys.size());
-    for (guint i = 0; i < cbkeys.size(); i++) {
-      string s = cbkeys[i];
-      std::replace(s.begin(),s.end(),'_',' ');
-      CustomButtonLabel[i] = s;
-      CustomButtonGcode[i] = cfg.get_string("CustomButtons", cbkeys[i]);
-    }
-  } catch (const Glib::KeyFileError &err) {
-  }
-
-
-  // if loading old settings with mm/min instead of mm/sec, recalc:
-  if (!Misc.SpeedsAreMMperSec) {
-    cerr << "Feedrates to mm/sec" << endl;
-    Hardware.MinMoveSpeedXY /= 60.0;
-    Hardware.MaxMoveSpeedXY /= 60.0;
-    Hardware.MinMoveSpeedZ /= 60.0;
-    Hardware.MaxMoveSpeedZ /= 60.0;
-    Extruder.EMaxSpeed /= 60.0;
-    Extruder.MaxLineSpeed /= 60.0;
-    Extruder.MaxShellSpeed /= 60.0;
-    Printer.ExtrudeSpeed /= 60.0;
-    Extruder.AntioozeSpeed /= 60.0;
-    Slicing.MaxOverhangSpeed /= 60.0;
-  }
-  Misc.SpeedsAreMMperSec = true;
-
-  m_user_changed = false;
-  m_signal_visual_settings_changed.emit();
-  m_signal_update_settings_gui.emit();
-}
-
-void Settings::save_settings_as(Glib::KeyFile &cfg,
-				const Glib::ustring onlygroup,
-				const Glib::ustring as_group)
-{
-  for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
-    Glib::ustring group, key;
-
-    if (!get_group_and_key (i, group, key))
-      continue;
-
-    if (onlygroup != "") { // if onlygroup given
-      if (onlygroup != group.substr(0,onlygroup.length()))
-	continue;          // only save onlygroup
-      if (as_group != "")  // and use name as_group if given
-	group = as_group;
-    }
-
-    switch (settings[i].type) {
-    case T_BOOL:
-      cfg.set_boolean (group, key, *PTR_BOOL(this, i));
-      break;
-    case T_INT:
-      cfg.set_integer (group, key, *PTR_INT(this, i));
-      break;
-    case T_FLOAT:
-    case T_COLOUR_MEMBER:
-      cfg.set_double (group, key, *PTR_FLOAT(this, i));
-      break;
-    case T_DOUBLE:
-      cfg.set_double (group, key, *PTR_DOUBLE(this, i));
-      break;
-    case T_STRING:
-      cfg.set_string (group, key, *PTR_STRING(this, i));
-      break;
-    default:
-      std::cerr << "Can't save setting of unknown type\n";
-      break;
-    };
-  }
-}
-
-void Settings::save_settings(Glib::RefPtr<Gio::File> file)
-{
-  Glib::KeyFile cfg;
-
-  Extruder = Extruders[0]; // save first extruder as "Extruder"
-
-  save_settings_as(cfg); // all settings
-
-  ostringstream os; os << Misc.window_width;
-  cfg.set_string("Misc", "WindowWidth", os.str());
-  os.str(""); os << Misc.window_height;
-  cfg.set_string("Misc", "WindowHeight", os.str());
-
-  os.str(""); os << Misc.window_posx;
-  cfg.set_string("Misc", "WindowPosX", os.str());
-  os.str(""); os << Misc.window_posy;
-  cfg.set_string("Misc", "WindowPosY", os.str());
-
-  cfg.set_boolean("Misc", "ExpandLayerDisplay", Misc.ExpandLayerDisplay);
-  cfg.set_boolean("Misc", "ExpandModelDisplay", Misc.ExpandModelDisplay);
-  cfg.set_boolean("Misc", "ExpandPAxisDisplay", Misc.ExpandPAxisDisplay);
-
-  GCode.m_impl->saveSettings (cfg);
-
-  string CBgroup="CustomButtons";
-  for (guint i=0; i<CustomButtonLabel.size(); i++)  {
-    string s = CustomButtonLabel[i];
-    std::replace(s.begin(),s.end(),' ','_');
-    cfg.set_string(CBgroup, s, CustomButtonGcode[i]);
-  }
-
-  // save extruders 2.. as ExtruderN
-  for (uint e = 1; e < Extruders.size(); e++) {
-    Extruder = Extruders[e];
-    ostringstream o; o << "Extruder" << e+1 ;
-    save_settings_as(cfg, "Extruder", o.str());
-  }
-
-
-  Glib::ustring contents = cfg.to_data();
-  Glib::file_set_contents (file->get_path(), contents);
-
-  // all changes safely saved
-  m_user_changed = false;
-}
-
-
-void Settings::set_to_gui (Builder &builder, int i)
-{
-  inhibit_callback = true;
-  const char *glade_name = settings[i].config_name;
-  SettingType t = settings[i].type;
-
-  // inhibit warning for settings not defined in glade UI:
-  if (!glade_name || !builder->get_object (glade_name)) return;
-
-  switch (t) {
-  case T_BOOL: {
-    Gtk::CheckButton *check = NULL;
-    builder->get_widget (glade_name, check);
-    if (!check)
-      std::cerr << _("Missing boolean config item ") << glade_name << "\n";
-    else
-      check->set_active (*PTR_BOOL(this, i));
-    break;
-  }
-  case T_INT:
-  case T_FLOAT:
-  case T_DOUBLE: {
-    Gtk::Widget *w = NULL;
-    builder->get_widget (glade_name, w);
-    if (!w) {
-      std::cerr << _("Missing user interface item ") << glade_name << "\n";
-      break;
-    }
-
-    Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
-    if (spin) {
-      if (t == T_INT)
-          spin->set_value (*PTR_INT(this, i));
-      else if (t == T_FLOAT)
-          spin->set_value (*PTR_FLOAT(this, i));
-      else
-          spin->set_value (*PTR_DOUBLE(this, i));
-      break;
-    }
-    Gtk::Range *range = dynamic_cast<Gtk::Range *>(w);
-    if (range) {
-      if (t == T_INT)
-        range->set_value (*PTR_INT(this, i));
-      else if (t == T_FLOAT)
-        range->set_value (*PTR_FLOAT(this, i));
-      else
-        range->set_value (*PTR_DOUBLE(this, i));
-    }
-    break;
-  }
-  case T_STRING: {
-    Gtk::Entry *e = NULL;
-    builder->get_widget (glade_name, e);
-    if (!e) {
-      std::cerr << _("Missing user interface item ") << glade_name << "\n";
-      break;
-    }
-    e->set_text(*PTR_STRING(this, i));
-    break;
-  }
-  case T_COLOUR_MEMBER:
-    break; // Ignore, Colour members are special
-  default:
-    std::cerr << _("corrupt setting type\n") << glade_name <<endl;;
-    break;
-  }
-  inhibit_callback = false;
-}
-
-
-void Settings::set_filltypes_to_gui (Builder &builder)
-{
-  inhibit_callback = true;
-  // cerr << Slicing.NormalFilltype << " ! " << Slicing.FullFilltype
-  //      << " ! " << Slicing.SupportFilltype<< endl;
-  Gtk::ComboBox *combo = NULL;
-  // avoid getting overwritten by callback
-  uint norm    = Slicing.NormalFilltype;
-  uint full    = Slicing.FullFilltype;
-  uint support = Slicing.SupportFilltype;
-  uint decor   = Slicing.DecorFilltype;
-  builder->get_widget ("Slicing.NormalFilltype", combo);
-  if (combo)
-    combo->set_active (norm);
-  combo = NULL;
-  builder->get_widget ("Slicing.FullFilltype", combo);
-  if (combo)
-    combo->set_active (full);
-  combo = NULL;
-  builder->get_widget ("Slicing.SupportFilltype", combo);
-  if (combo)
-    combo->set_active (support);
-  builder->get_widget ("Slicing.DecorFilltype", combo);
-  if (combo)
-    combo->set_active (decor);
-  inhibit_callback = false;
-}
-
-void Settings::get_from_gui (Builder &builder, int i)
-{
-  if (inhibit_callback) return;
-  bool is_changed = false;
-  const char *glade_name = settings[i].config_name;
-  SettingType t = settings[i].type;
-
-  // inhibit warning for settings not defined in glade UI:
-  if (!glade_name || !builder->get_object (glade_name)) return;
-
-  switch (t) {
-  case T_BOOL: {
-    Gtk::CheckButton *check = NULL;
-    builder->get_widget (glade_name, check);
-    if (!check)
-      std::cerr << _("Missing boolean config item ") << glade_name << "\n";
-    else {
-      is_changed = *PTR_BOOL(this, i) != check->get_active();
-      *PTR_BOOL(this, i) = check->get_active();
-    }
-    break;
-  }
-  case T_INT:
-  case T_FLOAT:
-  case T_DOUBLE: {
-    Gtk::Widget *w = NULL;
-    builder->get_widget (glade_name, w);
-    if (!w) {
-      std::cerr << _("Missing GUI element ") << glade_name << "\n";
-      break;
-    }
-
-    double value = 0.0;
-    Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
-    if (spin)
-      value = spin->get_value();
-    Gtk::Range *range = dynamic_cast<Gtk::Range *>(w);
-    if (range)
-      value = range->get_value();
-
-    if (range || spin)
-    {
-      if (t == T_INT)
-      {
-	is_changed = *PTR_INT(this, i) != (int)value;
-	*PTR_INT(this, i) = value;
-      }
-      else if (t == T_FLOAT)
-      {
-	is_changed = *PTR_FLOAT(this, i) != (float)value;
-	*PTR_FLOAT(this, i) = value;
-      }
-      else
-      {
-	is_changed = *PTR_DOUBLE(this, i) != value;
-	*PTR_DOUBLE(this, i) = value;
-      }
-    }
-    break;
-  }
-  case T_STRING: {
-    Gtk::Entry *e = NULL;
-    builder->get_widget (glade_name, e);
-    if (!e) {
-      std::cerr << _("Missing user interface item ") << glade_name << "\n";
-      break;
-    }
-    *PTR_STRING(this, i) = std::string(e->get_text());
-    break;
-  }
-  case T_COLOUR_MEMBER:
-    // Ignore, colour members are special -> get_colour_from_gui
-    break;
-  default:
-    std::cerr << _("corrupt setting type") << glade_name << endl;;
-    break;
-  }
-
-  m_user_changed |= true; // is_changed;
-
-
-  if (string(glade_name).substr(0,8) == "Extruder") {
-    // copy settings to selected Extruder
-    if (selectedExtruder < Extruders.size()) {
-      Extruders[selectedExtruder] = Extruder;
-      // only one extruder must be selected for support
-      if (Extruder.UseForSupport) {
-	for (uint i = 0; i < Extruders.size(); i++)
-	  if (i != selectedExtruder)
-	    Extruders[i].UseForSupport = false;
-      } else if (selectedExtruder!=0)
-	Extruders[0].UseForSupport = true;
-    }
-  }
-
-
-  // bit of a hack ...
-  if (!strcmp (settings[i].config_name, "CommsDebug"))
-    m_signal_core_settings_changed.emit();
-
-  if (settings[i].triggers_redraw && is_changed)
-    m_signal_visual_settings_changed.emit();
-}
-
-static bool get_filltype(Builder &builder, const char *combo_name, int *type)
-{
-  Gtk::ComboBox *combo = NULL;
-  bool is_changed = false;
-  builder->get_widget (combo_name, combo);
-  if (combo) {
-    int value = combo->get_active_row_number ();
-    is_changed |= *type != value;
-    *type = value;
-  }
-  else
-    cerr << "no " << combo_name << "combo" << endl;
-  return is_changed;
-}
-
-void Settings::get_filltypes_from_gui (Builder &builder)
-{
-  bool is_changed = false;
-  // cerr <<"Get_filltypes " << endl;
-  is_changed |= get_filltype(builder, "Slicing.NormalFilltype",  &Slicing.NormalFilltype);
-  is_changed |= get_filltype(builder, "Slicing.FullFilltype",    &Slicing.FullFilltype);
-  is_changed |= get_filltype(builder, "Slicing.SupportFilltype", &Slicing.SupportFilltype);
-  is_changed |= get_filltype(builder, "Slicing.DecorFilltype",   &Slicing.DecorFilltype);
-  // cerr << "read combos: " << Slicing.NormalFilltype
-  //      <<  " / " << Slicing.FullFilltype
-  //      <<  " / " << Slicing.SupportFilltype << endl;
-  m_user_changed |= is_changed;
-  if (is_changed)
-    m_signal_visual_settings_changed.emit();
+#if GTK_VERSION_GE(2, 24)
+  if (!combo->get_has_entry())
+#endif
+    combo->set_active(0);
+  //cerr << "ok" << endl;
 }
 
 string combobox_get_active_value(Gtk::ComboBox *combo){
@@ -1153,57 +130,407 @@ bool combobox_set_to(Gtk::ComboBox *combo, string value)
   return false;
 }
 
-void set_up_combobox(Gtk::ComboBox *combo, vector<string> values)
+
+
+/////////////////////////////////////////////////////////////////
+
+
+
+Settings::Settings ()
 {
-  if (combo->get_model())
-    return;
-  //cerr << "setup " ;
-  Gtk::TreeModelColumn<Glib::ustring> column;
-  Gtk::TreeModelColumnRecord record;
-  record.add(column);
-  Glib::RefPtr<Gtk::ListStore> store = Gtk::ListStore::create(record);
-  combo->pack_start (column);
-  combo->set_model(store);
-  for (uint i=0; i<values.size(); i++) {
-    //cerr << " adding " << values[i] << endl;
-    store->append()->set_value(0, Glib::ustring(values[i].c_str()));
+  set_defaults();
+  m_user_changed = false;
+  inhibit_callback = false;
+}
+
+Settings::~Settings()
+{
+}
+
+// merge into current settings
+void Settings::merge (const Glib::KeyFile &keyfile)
+{
+  vector< Glib::ustring > groups = keyfile.get_groups();
+  for (uint g = 0; g < groups.size(); g++) {
+    vector< Glib::ustring > keys = keyfile.get_keys(groups[g]);
+    for (uint k = 0; k < keys.size(); k++) {
+      set_value(groups[g], keys[k], keyfile.get_value(groups[g], keys[k]));
+    }
   }
-#if GTK_VERSION_GE(2, 24)
-  if (!combo->get_has_entry())
-#endif
-    combo->set_active(0);
-  //cerr << "ok" << endl;
+}
+// always merge when loading settings
+bool Settings::load_from_file (string file) {
+  Glib::KeyFile k;
+  if (!k.load_from_file(file)) return false;
+  merge(k);
+  return true;
+}
+bool Settings::load_from_data (string data) {
+  Glib::KeyFile k;
+  if (!k.load_from_file(data)) return false;
+  merge(k);
+  return true;
 }
 
 
-void Settings::get_port_speed_from_gui (Builder &builder)
+
+// make "ExtruderN" group, if i<0 (not given), use current selected Extruder number
+string Settings::numberedExtruder(const string &group, int num) const {
+  if (group == "Extruder") {
+    ostringstream oss; oss << "Extruder" << num;
+    //cerr << "call for " << oss.str() << endl;
+    return oss.str();
+  }
+  return group;
+}
+
+Vector4f Settings::get_colour(const string &group, const string &name) const {
+  vector<double> s = get_double_list(group, name);
+  return Vector4f(s[0],s[1],s[2],s[3]);
+}
+
+void Settings::set_colour  (const string &group, const string &name,
+			    const Vector4f &value) {
+  Glib::KeyFile::set_double_list(group, name, value);
+}
+
+
+void
+Settings::assign_from(Settings *pSettings)
 {
-  Gtk::ComboBox *combo = NULL;
-  // Gtk::ComboBoxEntryText *tcombo = NULL;
-  // builder->get_widget_derived ("Hardware.SerialSpeed", tcombo);
-  builder->get_widget ("Hardware.SerialSpeed", combo);
-  int serial_speed = Hardware.SerialSpeed;
-  if (combo) {
-#if GTK_VERSION_GE(2, 24)
-    if (combo->get_has_entry()) {
-      Gtk::Entry *entry = combo->get_entry();
-      if (entry) {
-	serial_speed = atoi(entry->get_text().c_str());
+  this->load_from_data(pSettings->to_data());
+  m_user_changed = false;
+  m_signal_visual_settings_changed.emit();
+  m_signal_update_settings_gui.emit();
+}
+
+void Settings::set_defaults ()
+{
+
+  filename = "";
+
+  set_string("Global","SettingsName","Default Settings");
+  set_string("Global","SettingsImage","");
+
+  set_string("Global","Version",VERSION);
+
+  set_string("GCode","Start",
+	     "; This code is sent to the printer at the beginning.\n"
+	     "; Adjust it to your needs.\n"
+	     "; \n"
+	     "; GCode generated by RepSnapper:\n"
+	     "; http://reprap.org/wiki/RepSnapper_Manual:Introduction\n"
+	     "G21             ; metric coordinates\n"
+	     "G90             ; absolute positioning\n"
+	     "T0              ; select new extruder\n"
+	     "G28             ; go home\n"
+	     "G92 E0          ; set extruder home\n"
+	     "G1 X5 Y5 F500 ; move away 5 mm from 0.0, to use the same reset for each layer\n\n");
+  set_string("GCode","Layer","");
+  set_string("GCode","End",
+	     "; This code is sent to the printer after the print.\n"
+	     "; Adjust it to your needs.\n"
+	     "G1 X0 Y0 F2000.0 ; feed for start of next move\n"
+	     "M104 S0.0        ; heater off\n");
+
+
+
+  // Extruders.clear();
+  // Extruders.push_back(Extruder);
+
+  // The vectors map each to 3 spin boxes, one per dimension
+  set_double("Hardware","Volume.X", 200);
+  set_double("Hardware","Volume.Y", 200);
+  set_double("Hardware","Volume.Z", 140);
+  set_double("Hardware","PrintMargin.X", 10);
+  set_double("Hardware","PrintMargin.Y", 10);
+  set_double("Hardware","PrintMargin.Z", 0);
+
+  set_boolean("Misc","SpeedsAreMMperSec",true);
+}
+
+
+// make old single coordinate colours to lists
+void Settings::convert_old_colour  (const string &group, const string &key) {
+  try {
+    cerr << "converting  "<< group << "." <<key <<endl;
+    const double c[5] = { get_double(group, key+"R"),
+			  get_double(group, key+"G"),
+			  get_double(group, key+"B"),
+			  get_double(group, key+"A"),0};
+    set_double_list(group,key,c);
+    remove_key(group, key+"R");
+    remove_key(group, key+"G");
+    remove_key(group, key+"B");
+    remove_key(group, key+"A");
+  } catch (const Glib::KeyFileError &err) {
+  }
+}
+
+void Settings::load_settings (Glib::RefPtr<Gio::File> file)
+{
+  inhibit_callback = true;
+  filename = file->get_path();
+
+  // set_defaults();
+
+  if (has_group("Extruder"))
+    remove_group("Extruder"); // avoid converting old if merging new file
+
+  try {
+    if (!load_from_file (filename)) {
+      std::cout << _("Failed to load settings from file '") << filename << "\n";
+      return;
+    }
+  } catch (const Glib::KeyFileError &err) {
+    std::cout << _("Exception ") << err.what() << _(" loading settings from file '") << filename << "\n";
+    return;
+  }
+
+  std::cerr << _("Parsing config from '") << filename << "\n";
+
+  // convert old colour handling:
+  vector< Glib::ustring > groups = get_groups();
+  for (uint g = 0; g < groups.size(); g++) {
+    //cerr << "["<<groups[g] << "] " ;
+    vector< Glib::ustring > keys = get_keys(groups[g]);
+    for (uint k = 0; k < keys.size(); k++) {
+      int n = keys[k].length();
+      int c = keys[k].find("Colour");
+      if (c >= 0 && c < n-6 && keys[k].substr(c+6,1) == "R")
+	convert_old_colour(groups[g],keys[k].substr(0,c+6));
+    }
+  }
+
+  // convert old user buttons:
+  std::vector<std::string> CustomButtonLabels;
+  std::vector<std::string> CustomButtonGCodes;
+  if (has_group("UserButtons")) {
+    CustomButtonLabels = get_string_list("UserButtons","Labels");
+    CustomButtonGCodes = get_string_list("UserButtons","GCodes");
+  }
+  try {
+    vector< Glib::ustring > keys = get_keys("CustomButtons");
+    for (uint k = 0; k < keys.size(); k++) {
+      bool havekey = false;
+      for (uint o = 0; o < CustomButtonLabels.size(); o++) {
+	if (CustomButtonLabels[o] == keys[k]) {
+	  CustomButtonGCodes[o] = get_string("CustomButtons",keys[k]);
+	  havekey = true;
+	  break;
+	}
+      }
+      if (!havekey) {
+	CustomButtonLabels.push_back(keys[k]);
+	CustomButtonGCodes.push_back(get_string("CustomButtons",keys[k]));
       }
     }
-    else
-#endif
-      serial_speed = atoi(combobox_get_active_value(combo).c_str());
+    remove_group("CustomButtons");
+  } catch (Glib::KeyFileError &err) {}
+  if (!has_group("UserButtons")) {
+    set_string_list("UserButtons","Labels",CustomButtonLabels);
+    set_string_list("UserButtons","GCodes",CustomButtonGCodes);
   }
-  m_user_changed |= Hardware.SerialSpeed != serial_speed;
-  Hardware.SerialSpeed = serial_speed;
+
+  // convert old extruders, now we count "Extruder0", "Extruder1" ...
+  // instead of "Extruder", "Extruder2" ...
+  if (has_group("Extruder")) { // have old Extruders
+    uint ne = getNumExtruders() + 1; // +1 because "Extruder" is not counted
+    if (has_group("Extruder0")) ne--; // already have "new" Extruders
+    copyGroup("Extruder","Extruder0");
+    if (ne > 1) {
+      for (uint k = 2; k < ne+1; k++) // copy 2,3,4,... to 1,2,3,...
+	copyGroup(numberedExtruder("Extruder",k),
+		  numberedExtruder("Extruder",k-1));
+      remove_group(numberedExtruder("Extruder",ne));
+    }
+    remove_group("Extruder");
+  }
+  uint ne = getNumExtruders();
+  for (uint k = 0; k < ne; k++) {
+    if (!has_key(numberedExtruder("Extruder",k), "OffsetX"))
+      set_double(numberedExtruder("Extruder",k), "OffsetX", 0);
+    if (!has_key(numberedExtruder("Extruder",k), "OffsetY"))
+      set_double(numberedExtruder("Extruder",k), "OffsetY", 0);
+  }
+  SelectExtruder(0);
+
+  if (has_group("Misc") &&
+      !has_key("Misc","SpeedsAreMMperSec") ||
+      !get_boolean("Misc","SpeedsAreMMperSec"))
+    cout << "!!!" << endl <<  _("\tThe config file has old speed settings (mm/min).\n\t Adjust them to mm/sec\n\t or use RepSnapper from 2.0 to 2.2 to convert them automatically.") << "!!!" <<  endl;
+  set_boolean("Misc","SpeedsAreMMperSec",true);
+
+  inhibit_callback = false;
+  m_user_changed = false;
+  m_signal_visual_settings_changed.emit();
+  m_signal_update_settings_gui.emit();
 }
 
-void Settings::get_colour_from_gui (Builder &builder, int i)
+
+void Settings::save_settings(Glib::RefPtr<Gio::File> file)
 {
-  const char *glade_name = colour_selectors[i].config_name;
-  Vector4f *dest =
-      (Vector4f *)PTR_OFFSET(this, colour_selectors[i].member_offset);
+  inhibit_callback = true;
+  set_string("Global","Version",VERSION);
+
+  remove_group("Extruder"); // is only temporary
+
+  Glib::ustring contents = to_data();
+  // cerr << contents << endl;
+  Glib::file_set_contents (file->get_path(), contents);
+
+  SelectExtruder(selectedExtruder); // reload default extruder
+
+  inhibit_callback = true;
+  // all changes safely saved
+  m_user_changed = false;
+}
+
+void Settings::set_to_gui (Builder &builder,
+			   const string &group, const string &key)
+{
+  inhibit_callback = true;
+  Glib::ustring glade_name = group + "." + key;
+  // inhibit warning for settings not defined in glade UI:
+  if (!builder->get_object (glade_name)) {
+    //cerr << glade_name << _(" not defined in GUI!")<< endl;
+    return;
+  }
+
+  Gtk::Widget *w = NULL;
+  builder->get_widget (glade_name, w);
+  if (!w) {
+    std::cerr << _("Missing user interface item ") << glade_name << "\n";
+    return;
+  }
+  Gtk::CheckButton *check = dynamic_cast<Gtk::CheckButton *>(w);
+  if (check) {
+    check->set_active (get_boolean(group,key));
+    return;
+  }
+  Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
+  if (spin) {
+    spin->set_value (get_double(group,key));
+    return;
+  }
+  Gtk::Range *range = dynamic_cast<Gtk::Range *>(w);
+  if (range) {
+    range->set_value (get_double(group,key));
+    return;
+  }
+  Gtk::ComboBox *combo = dynamic_cast<Gtk::ComboBox *>(w);
+  if (combo) {
+    if (glade_name == "Hardware.SerialSpeed") // has real value
+      combobox_set_to(combo, get_string(group,key));
+    else // has index
+      combo->set_active(get_integer(group,key));
+    return;
+  }
+  Gtk::Entry *entry = dynamic_cast<Gtk::Entry *>(w);
+  if (entry) {
+    entry->set_text (get_string(group,key));
+    return;
+  }
+  Gtk::Expander *exp = dynamic_cast<Gtk::Expander *>(w);
+  if (exp) {
+    exp->set_expanded (get_boolean(group,key));
+    return;
+  }
+  Gtk::ColorButton *col = dynamic_cast<Gtk::ColorButton *>(w);
+  if(col) {
+    vector<double> c = get_double_list(group,key);
+    Gdk::Color co; co.set_rgb_p(c[0],c[1],c[2]);
+    col->set_use_alpha(true);
+    col->set_color(co);
+    col->set_alpha(c[3] * 65535.0);
+    return;
+  }
+  Gtk::TextView *tv = dynamic_cast<Gtk::TextView *>(w);
+  if (tv) {
+    tv->get_buffer()->set_text(get_string(group,key));
+    return;
+  }
+
+  cerr << "set_to_gui of "<< glade_name << " not done!" << endl;
+}
+
+
+void Settings::get_from_gui (Builder &builder, const string &glade_name)
+{
+  if (inhibit_callback) return;
+  if (!builder->get_object (glade_name)) {
+    cerr << "no such object " << glade_name << endl;
+    return;
+  }
+  Gtk::Widget *w = NULL;
+  builder->get_widget (glade_name, w);
+  while (w) { // for using break ...
+    string group, key;
+    if (!splitpoint(glade_name, group, key)) return;
+    //cerr << "get " << group  << "." << key << " from gui"<< endl;
+    m_user_changed = true; // is_changed;
+    Gtk::CheckButton *check = dynamic_cast<Gtk::CheckButton *>(w);
+    if (check) {
+      set_boolean(group, key, check->get_active());
+      break;
+    }
+    Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
+    if (spin) {
+      set_double(group, key, spin->get_value());
+      break;
+    }
+    Gtk::Range *range = dynamic_cast<Gtk::Range *>(w);
+    if (range) {
+      set_double(group, key, range->get_value());
+      break;
+    }
+    Gtk::ComboBox *combo = dynamic_cast<Gtk::ComboBox *>(w);
+    if (combo) {
+      if (glade_name == "Hardware.SerialSpeed") // has real value
+	set_string(group,key,combobox_get_active_value(combo));
+      else
+	set_integer(group,key,combo->get_active_row_number ());
+      break;
+    }
+    Gtk::Entry *e = dynamic_cast<Gtk::Entry *>(w);
+    if (e) {
+      set_string(group,key,e->get_text());
+      break;
+    }
+    Gtk::Expander *exp = dynamic_cast<Gtk::Expander *>(w);
+    if (exp) {
+      set_boolean(group,key,exp->get_expanded());
+      break;
+    }
+    Gtk::ColorButton *cb = dynamic_cast<Gtk::ColorButton *>(w);
+    if (cb) {
+      get_colour_from_gui(builder, glade_name);
+      break;
+    }
+    Gtk::TextView *tv = dynamic_cast<Gtk::TextView *>(w);
+    if (tv) {
+      set_string(group,key,tv->get_buffer()->get_text());
+      break;
+    }
+    cerr << _("Did not get setting from  ") << glade_name << endl;
+    m_user_changed = false;
+    break;
+  }
+  if (m_user_changed) {
+    // update currently edited extruder
+    if (glade_name.substr(0,8) == "Extruder") {
+      copyGroup("Extruder",numberedExtruder("Extruder", selectedExtruder));
+    }
+    m_signal_visual_settings_changed.emit();
+  }
+}
+
+
+
+void Settings::get_colour_from_gui (Builder &builder, const string &glade_name)
+{
+  string group,key;
+  if (!splitpoint(glade_name, group,key)) return;
   Gdk::Color c;
   Gtk::ColorButton *w = NULL;
   builder->get_widget (glade_name, w);
@@ -1212,50 +539,45 @@ void Settings::get_colour_from_gui (Builder &builder, int i)
   c = w->get_color();
 
   // FIXME: detect 'changed' etc.
-  dest->r() = c.get_red_p();
-  dest->g() = c.get_green_p();
-  dest->b() = c.get_blue_p();
-  dest->a() = (float) (w->get_alpha()) / 65535.0;
+  vector<double> d(4);
+  d[0] = c.get_red_p();
+  d[1] = c.get_green_p();
+  d[2] = c.get_blue_p();
+  d[3] = (float) (w->get_alpha()) / 65535.0;
 
-  if (string(glade_name).substr(0,8) == "Extruder") {
-    // copy settings to selected Extruder
-    if (selectedExtruder < Extruders.size())
-      Extruders[selectedExtruder] = Extruder;
-  }
+  set_double_list(group, key, d);
+
   m_signal_visual_settings_changed.emit();
 }
 
+
+// whole group or all groups
 void Settings::set_to_gui (Builder &builder, const string filter)
 {
   inhibit_callback = true;
-  for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
-    const char *glade_name = settings[i].config_name;
-
-    if (!glade_name)
-      continue;
-    if (filter != "" && string(glade_name).substr(0,filter.length()) != filter) {
-      continue;
+  vector< Glib::ustring > groups = get_groups();
+  for (uint g = 0; g < groups.size(); g++) {
+    vector< Glib::ustring > keys = get_keys(groups[g]);
+    for (uint k = 0; k < keys.size(); k++) {
+      set_to_gui(builder, groups[g], keys[k]);
     }
-    set_to_gui (builder, i);
   }
 
-  set_filltypes_to_gui (builder);
+  //set_filltypes_to_gui (builder);
 
-  for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
-      const char *glade_name = colour_selectors[i].config_name;
-      if (filter != "" && string(glade_name).substr(0,filter.length()) != filter)
-	continue;
-      Vector4f *src =
-        (Vector4f *) PTR_OFFSET(this, colour_selectors[i].member_offset);
-      Gdk::Color c;
-      Gtk::ColorButton *w = NULL;
-      builder->get_widget (glade_name, w);
-      if (w) {
-        w->set_use_alpha(true);
-        c.set_rgb_p(src->r(), src->g(), src->b());
-        w->set_color(c);
-        w->set_alpha(src->a() * 65535.0);
-      }
+  if (filter == "" || filter == "Misc") {
+    Gtk::Window *pWindow = NULL;
+    builder->get_widget("main_window", pWindow);
+    try {
+      int w = get_integer("Misc","WindowWidth");
+      int h = get_integer("Misc","WindowHeight");
+      if (pWindow && w > 0 && h > 0) pWindow->resize(w,h);
+      int x = get_integer("Misc","WindowPosX");
+      int y = get_integer("Misc","WindowPosY");
+      if (pWindow && x > 0 && y > 0) pWindow->move(x,y);
+    } catch (const Glib::KeyFileError &err) {
+      std::cout << _("Exception ") << err.what() << _(" loading setting\n");
+    }
   }
 
   // Set serial speed. Find the row that holds this value
@@ -1264,166 +586,122 @@ void Settings::set_to_gui (Builder &builder, const string filter)
     builder->get_widget ("Hardware.SerialSpeed", portspeed);
     if (portspeed) {
       std::ostringstream ostr;
-      ostr << Hardware.SerialSpeed;
+      ostr << get_integer("Hardware","SerialSpeed");
+      //cerr << "portspeed " << get_integer("Hardware","SerialSpeed") << endl;
       combobox_set_to(portspeed, ostr.str());
     }
-  }
-
-  if (filter == "" || filter == "Misc") {
-    Gtk::Window *pWindow = NULL;
-    builder->get_widget("main_window", pWindow);
-    if (pWindow && Misc.window_width > 0 && Misc.window_height > 0)
-      pWindow->resize(Misc.window_width, Misc.window_height);
-    if (pWindow && Misc.window_posx > 0 && Misc.window_posy > 0)
-      pWindow->move(Misc.window_posx,Misc.window_posy);
-    Gtk::Expander *exp = NULL;
-    builder->get_widget ("layer_expander", exp);
-    if (exp)
-      exp->set_expanded(Misc.ExpandLayerDisplay);
-    builder->get_widget ("model_expander", exp);
-    if (exp)
-      exp->set_expanded(Misc.ExpandModelDisplay);
-    builder->get_widget ("printeraxis_expander", exp);
-    if (exp)
-      exp->set_expanded(Misc.ExpandPAxisDisplay);
   }
   inhibit_callback = false;
 }
 
 
-
 void Settings::connect_to_ui (Builder &builder)
 {
-  // connect gcode configurable text sections
-  GCode.m_impl->connectToUI (builder);
-
-  // first setup ranges on spinbuttons ...
-  for (uint i = 0; i < G_N_ELEMENTS (spin_ranges); i++) {
-    Gtk::SpinButton *spin = NULL;
-    builder->get_widget (spin_ranges[i].widget, spin);
-    if (!spin)
-      std::cerr << "missing spin button of name '" << spin_ranges[i].widget << "'\n";
-    else {
-      spin->set_range (spin_ranges[i].min, spin_ranges[i].max);
-      spin->set_increments (spin_ranges[i].inc, spin_ranges[i].inc_page);
-    }
-  }
-  // Ranges on [HV]Range widgets
-  for (uint i = 0; i < G_N_ELEMENTS (ranges); i++) {
-    Gtk::Range *range = NULL;
-    builder->get_widget (ranges[i].widget, range);
-    if (!range)
-      std::cerr << "missing range slider of name '" << ranges[i].widget << "'\n";
-    else {
-      range->set_range (ranges[i].min, ranges[i].max);
-      range->set_increments (ranges[i].inc, ranges[i].inc_page);
-    }
-  }
-
-  // connect widget / values from our table
-  for (uint i = 0; i < G_N_ELEMENTS (settings); i++) {
-    const char *glade_name = settings[i].config_name;
-
-    // inhibit warning for settings not defined in glade UI:
-    if (!glade_name || !builder->get_object (glade_name)) continue;
-
-    switch (settings[i].type) {
-    case T_BOOL: {
-      Gtk::CheckButton *check = NULL;
-      builder->get_widget (glade_name, check);
-      if (check)
-	check->signal_toggled().connect
-          (sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
-      break;
-    }
-    case T_INT:
-    case T_FLOAT:
-    case T_DOUBLE: {
+  if (has_group("Ranges")) {
+    vector<string> ranges = get_keys("Ranges");
+    for (uint i = 0; i < ranges.size(); i++) {
+      // get min, max, increment, page-incr.
+      vector<double> vals = get_double_list("Ranges", ranges[i]);
       Gtk::Widget *w = NULL;
-      builder->get_widget (glade_name, w);
-      if (!w) {
-        std::cerr << "Missing user interface item " << glade_name << "\n";
-        break;
+      try {
+	builder->get_widget (ranges[i], w);
+	if (!w) {
+	  std::cerr << "Missing user interface item " << ranges[i] << "\n";
+	  continue;
+	}
+	Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
+	if (spin) {
+	  spin->set_range (vals[0],vals[1]);
+	  spin->set_increments (vals[2],vals[3]);
+	  continue;
+	}
+	Gtk::Range *range = dynamic_cast<Gtk::Range *>(w); // sliders etc.
+	if (range) {
+	  range->set_range (vals[0],vals[1]);
+	  range->set_increments (vals[2],vals[3]);
+	  continue;
+	}
+      } catch (Glib::Exception &ex) {
       }
-      Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
-      if (spin) {
-        spin->signal_value_changed().connect
-          (sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
-        break;
-      }
-      Gtk::Range *range = dynamic_cast<Gtk::Range *>(w);
-      if (range) {
-        range->signal_value_changed().connect
-          (sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
-        break;
-      }
-      break;
-    }
-    case T_STRING: {
-      Gtk::Entry *e = NULL;
-      builder->get_widget (glade_name, e);
-      if (!e) {
-	std::cerr << _("Missing user interface item ") << glade_name << "\n";
-	break;
-      }
-      e->signal_changed().connect
-	(sigc::bind(sigc::bind(sigc::mem_fun(*this, &Settings::get_from_gui), i), builder));
-      break;
-    }
-    default:
-      break;
     }
   }
 
-  // Slicing.*Filltype
-  Gtk::ComboBox *combo = NULL;
-  uint nfills = sizeof(InfillNames)/sizeof(string);
-  vector<string> infills(InfillNames,InfillNames+nfills);
-  builder->get_widget ("Slicing.NormalFilltype", combo);
-  set_up_combobox(combo,infills);
-  combo->signal_changed().connect
-    (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
-  builder->get_widget ("Slicing.FullFilltype", combo);
-  set_up_combobox(combo,infills);
-  combo->signal_changed().connect
-    (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
-  builder->get_widget ("Slicing.SupportFilltype", combo);
-  set_up_combobox(combo,infills);
-  combo->signal_changed().connect
-    (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
-  builder->get_widget ("Slicing.DecorFilltype", combo);
-  set_up_combobox(combo,infills);
-  combo->signal_changed().connect
-    (sigc::bind(sigc::mem_fun(*this, &Settings::get_filltypes_from_gui), builder));
-
-  // Colour selectors
-  for (uint i = 0; i < G_N_ELEMENTS (colour_selectors); i++) {
-    const char *glade_name = colour_selectors[i].config_name;
-    Gdk::Color c;
-    Gtk::ColorButton *w = NULL;
-
-    if (!glade_name)
-      continue;
-
-    builder->get_widget (glade_name, w);
-    if (!w) continue;
-
-    w->signal_color_set().connect
-          (sigc::bind(sigc::bind(sigc::mem_fun(*this,
-            &Settings::get_colour_from_gui), i), builder));
-  }
-
-  // Serial port speed
-  Gtk::ComboBox *portspeed = NULL;
-  builder->get_widget ("Hardware.SerialSpeed",portspeed);
-  if (portspeed) {
-    const char *speeds[] = {
-      "9600", "19200", "38400", "57600", "115200", "230400", "250000", "500000", "576000", "1000000"
-    };
-    vector<string> speedstr(speeds, speeds+sizeof(speeds)/sizeof(string));
-    set_up_combobox(portspeed, speedstr);
-    portspeed->signal_changed().connect
-      (sigc::bind(sigc::mem_fun(*this, &Settings::get_port_speed_from_gui), builder));
+  // add signal callbacks to GUI elements
+  vector< Glib::ustring > groups = get_groups();
+  for (uint g = 0; g < groups.size(); g++) {
+    if (groups[g] == "Ranges") continue; // done that above
+    vector< Glib::ustring > keys = get_keys(groups[g]);
+    for (uint k = 0; k < keys.size(); k++) {
+      string glade_name = groups[g] + "." + keys[k];
+      if (!builder->get_object (glade_name))
+	continue;
+      Gtk::Widget *w = NULL;
+      try {
+	builder->get_widget (glade_name, w);
+	if (!w) {
+	  std::cerr << "Missing user interface item " << glade_name << "\n";
+	  continue;
+	}
+	Gtk::CheckButton *check = dynamic_cast<Gtk::CheckButton *>(w);
+	if (check) {
+	  check->signal_toggled().connect
+	    (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), glade_name), builder));
+	  continue;
+	}
+	Gtk::SpinButton *spin = dynamic_cast<Gtk::SpinButton *>(w);
+	if (spin) {
+	  spin->signal_value_changed().connect
+	    (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), glade_name), builder)) ;
+	  continue;
+	}
+	Gtk::Range *range = dynamic_cast<Gtk::Range *>(w);
+	if (range) {
+	  range->signal_value_changed().connect
+	    (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), glade_name), builder));
+	  continue;
+	}
+	Gtk::ComboBox *combo = dynamic_cast<Gtk::ComboBox *>(w);
+	if (combo) {
+	  if (glade_name == "Hardware.SerialSpeed") { // Serial port speed
+	    vector<string> speeds(serialspeeds,
+				  serialspeeds+sizeof(serialspeeds)/sizeof(string));
+	    set_up_combobox(combo, speeds);
+	  } else if (glade_name.find("Filltype")!=std::string::npos) { // Infill types
+	    uint nfills = sizeof(InfillNames)/sizeof(string);
+	    vector<string> infills(InfillNames,InfillNames+nfills);
+	    set_up_combobox(combo,infills);
+	  }
+	  combo->signal_changed().connect
+	    (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), glade_name), builder));
+	  continue;
+	}
+	Gtk::Entry *e = dynamic_cast<Gtk::Entry *>(w);
+	if (e) {
+	  e->signal_changed().connect
+	    (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), glade_name), builder));
+	  continue;
+	}
+	Gtk::Expander *exp = dynamic_cast<Gtk::Expander *>(w);
+	if (exp) {
+	  exp->property_expanded().signal_changed().connect
+	    (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), glade_name), builder));
+	  continue;
+	}
+	Gtk::ColorButton *cb = dynamic_cast<Gtk::ColorButton *>(w);
+	if (cb) {
+	  cb->signal_color_set().connect
+	    (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), glade_name), builder));
+	  continue;
+	}
+	Gtk::TextView *tv = dynamic_cast<Gtk::TextView *>(w);
+	if (tv) {
+	  tv->get_buffer()->signal_changed().connect
+	    (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), glade_name), builder));
+	  continue;
+	}
+      } catch (Glib::Exception &ex) {
+      }
+    }
   }
 
 
@@ -1433,8 +711,8 @@ void Settings::connect_to_ui (Builder &builder)
 
 
 // extrusion ratio for round-edge lines
-double Settings::ExtruderSettings::RoundedLinewidthCorrection(double extr_width,
-							      double layerheight)
+double Settings::RoundedLinewidthCorrection(double extr_width,
+					    double layerheight)
 {
   double factor = 1 + (M_PI/4.-1) * layerheight/extr_width;
   // assume 2 half circles at edges
@@ -1445,78 +723,104 @@ double Settings::ExtruderSettings::RoundedLinewidthCorrection(double extr_width,
   return factor;
 }
 
-
-double Settings::ExtruderSettings::GetExtrudedMaterialWidth(double layerheight) const
+double Settings::GetExtrudedMaterialWidth(double layerheight) const
 {
   // ExtrudedMaterialWidthRatio is preset by user
-  return min(max((double)MinimumLineWidth,
-		 ExtrudedMaterialWidthRatio * layerheight),
-	     (double)MaximumLineWidth);
+  return min(max(get_double("Extruder","MinimumLineWidth"),
+		 get_double("Extruder","ExtrudedMaterialWidthRatio") * layerheight),
+	     get_double("Extruder","MaximumLineWidth"));
 }
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
 
 // how much mm filament material per extruded line length mm -> E gcode
-double Settings::ExtruderSettings::GetExtrusionPerMM(double layerheight) const
+double Settings::GetExtrusionPerMM(double layerheight) const
 {
-  double f = ExtrusionFactor; // overall factor
-  if (CalibrateInput) {  // means we use input filament diameter
-    double matWidth = GetExtrudedMaterialWidth(layerheight); // this is the goal
+  double f = get_double("Extruder","ExtrusionFactor"); // overall factor
+  if (get_boolean("Extruder","CalibrateInput")) {  // means we use input filament diameter
+    const double matWidth = GetExtrudedMaterialWidth(layerheight); // this is the goal
     // otherwise we just work back from the extruded diameter for now.
-    f *= (matWidth * matWidth) / (FilamentDiameter * FilamentDiameter);
+    const double filamentdiameter = get_double("Extruder","FilamentDiameter");
+    f *= (matWidth * matWidth) / (filamentdiameter * filamentdiameter);
   } // else: we work in terms of output anyway;
 
   return f;
 }
 
+// return infill distance in mm
+double Settings::GetInfillDistance(double layerthickness, float percent) const
+{
+  double fullInfillDistance = GetExtrudedMaterialWidth(layerthickness);
+  if (percent == 0) return 10000000;
+  return fullInfillDistance * (100./percent);
+}
+
+uint Settings::getNumExtruders() const
+{
+  vector< Glib::ustring > groups = get_groups();
+  uint num=0;
+  for (uint g = 0; g < groups.size(); g++)
+    if (groups[g].substr(0,8) == "Extruder"
+	&& groups[g].length() > 8 ) // count only numbered
+      num++;
+  return num;
+}
+
 std::vector<char> Settings::get_extruder_letters() const
 {
-  std::vector<char> letters(Extruders.size());
-  for (uint i = 0; i< Extruders.size(); i++)
-    letters[i] = Extruders[i].GCLetter[0];
+  uint num = getNumExtruders();
+  std::vector<char> letters(num);
+  for (uint i = 0; i < num; i++)
+    letters[i] = get_string(numberedExtruder("Extruder",i),"GCLetter")[0];
   return letters;
 }
 
 uint Settings::GetSupportExtruder() const
 {
-  for (uint i = 0; i< Extruders.size(); i++)
-    if (Extruders[i].UseForSupport) return i;
+  uint num = getNumExtruders();
+  for (uint i = 0; i < num; i++)
+    if (get_boolean(numberedExtruder("Extruder",i),"UseForSupport"))
+      return i;
   return 0;
 }
 
 Vector3d Settings::get_extruder_offset(uint num) const
 {
-  return Vector3d(Extruders[num].OffsetX, Extruders[num].OffsetY, 0.);
+  string ext = numberedExtruder("Extruder",num);
+  return Vector3d(get_double(ext, "OffsetX"),
+		  get_double(ext, "OffsetY"), 0.);
 }
 
+
+void Settings::copyGroup(const string &from, const string &to)
+{
+  vector<string> keys = get_keys(from);
+  for (uint i = 0; i < keys.size(); i++)
+    set_value(to, keys[i], get_value(from, keys[i]));
+}
+
+// create new
 void Settings::CopyExtruder(uint num)
 {
-  if (num >= Extruders.size()) return;
-  ExtruderSettings newsettings;
-  if (Extruders.size() == 0)
-    newsettings = Extruder;
-  else
-    newsettings = Extruders[num];
-  Extruders.push_back(newsettings);
+  uint total = getNumExtruders();
+  string from = numberedExtruder("Extruder",num);
+  string to   = numberedExtruder("Extruder",total);
+  copyGroup(from, to);
 }
 void Settings::RemoveExtruder(uint num)
 {
-  if (num >= Extruders.size()) return;
-  if (Extruders.size() < 2) return;
-  Extruders.erase(Extruders.begin()+num);
+  ostringstream oss; oss << "Extruder"<<num;
+  remove_group(oss.str());
 }
 void Settings::SelectExtruder(uint num, Builder *builder)
 {
-  if (num < Extruders.size()) {
-    selectedExtruder = num;
-  }
-  Extruder = Extruders[selectedExtruder];
-  // if (Slicing.UseTCommand) // use letter of first extruder
-  //   Extruder.GCLetter = Extruders[0].GCLetter;
-
+  if (num >= getNumExtruders()) return;
+  selectedExtruder = num;
+  copyGroup(numberedExtruder("Extruder",num),"Extruder");
   // show Extruder settings on gui
-  if (builder)
+  if (builder) {
     set_to_gui(*builder, "Extruder");
+  }
 }
 
 Matrix4d Settings::getBasicTransformation(Matrix4d T) const
@@ -1524,37 +828,41 @@ Matrix4d Settings::getBasicTransformation(Matrix4d T) const
   Vector3d t;
   T.get_translation(t);
   const Vector3d margin = getPrintMargin();
-  t+= Vector3d(margin.x()+Raft.Size*Raft.Enable,
-	       margin.y()+Raft.Size*Raft.Enable,
-	       0);
+  double rsize = get_double("Raft","Size") * (get_boolean("Raft","Enable")?1:0);
+  t+= Vector3d(margin.x() + rsize, margin.y() + rsize, 0);
   T.set_translation(t);
   return T;
 }
 
+
 Vector3d Settings::getPrintVolume() const
 {
-  return Hardware.Volume;
-  // Vector3d maxoff = Vector3d::ZERO;
-  // for (uint i = 0; i< Extruders.size(); i++) {
-  //   if (abs(Extruders[i].OffsetX) > abs(maxoff.x()))
-  //     maxoff.x() = Extruders[i].OffsetX;
-  //   if (abs(Extruders[i].OffsetY) > abs(maxoff.y()))
-  //     maxoff.y() = Extruders[i].OffsetY;
-  // }
-  // return vol - maxoff;
+  return Vector3d (get_double("Hardware","Volume.X"),
+		   get_double("Hardware","Volume.Y"),
+		   get_double("Hardware","Volume.Z"));
+
 }
 Vector3d Settings::getPrintMargin() const
 {
-  const Vector3d margin = Hardware.PrintMargin;
+  Vector3d margin(get_double("Hardware","PrintMargin.X"),
+		  get_double("Hardware","PrintMargin.Y"),
+		  get_double("Hardware","PrintMargin.Z"));
   Vector3d maxoff = Vector3d::ZERO;
-  for (uint i = 0; i< Extruders.size(); i++) {
-    if (abs(Extruders[i].OffsetX) > abs(maxoff.x()))
-      maxoff.x() = abs(Extruders[i].OffsetX);
-    if (abs(Extruders[i].OffsetY) > abs(maxoff.y()))
-      maxoff.y() = abs(Extruders[i].OffsetY);
+  uint num = getNumExtruders();
+  for (uint i = 0; i < num ; i++) {
+    string ext = numberedExtruder("Extruder",i);
+    double offx = 0, offy = 0;
+    try {
+      offx = abs(get_double(ext, "OffsetX"));
+      offy = abs(get_double(ext, "OffsetY"));
+    } catch (const Glib::KeyFileError &err) {
+    }
+    if (offx > abs(maxoff.x())) maxoff.x() = offx;
+    if (offy > abs(maxoff.y())) maxoff.y() = offy;
   }
-  if (Slicing.Skirt) {
-    maxoff += Vector3d(Slicing.SkirtDistance,Slicing.SkirtDistance,0);
+  if (get_boolean("Slicing","Skirt")) {
+    double distance = get_double("Slicing","SkirtDistance");
+    maxoff += Vector3d(distance, distance, 0);
   }
   return margin + maxoff;
 }
@@ -1563,8 +871,60 @@ Vector3d Settings::getPrintMargin() const
 // Locate it in relation to ourselves ...
 std::string Settings::get_image_path()
 {
-  std::string basename = Glib::path_get_dirname(Filename);
-  return Glib::build_filename (basename, Image);
+  std::string basename = Glib::path_get_dirname(filename);
+  return Glib::build_filename (basename, get_string("Global","Image"));
 }
 
+
+
+bool Settings::set_user_button(const string &name, const string &gcode) {
+  try {
+    vector<string> buttonlabels = get_string_list("UserButtons","Labels");
+    vector<string> buttongcodes = get_string_list("UserButtons","GCodes");
+    for (uint i = 0; i < buttonlabels.size(); i++){
+      if (buttonlabels[i] == name) {
+	// change button
+	buttongcodes[i] = gcode;
+	set_string_list("UserButtons","GCodes",buttongcodes);
+      } else {
+	// add button
+	buttonlabels.push_back(name);
+	buttongcodes.push_back(gcode);
+	set_string_list("UserButtons","Labels",buttonlabels);
+	set_string_list("UserButtons","GCodes",buttongcodes);
+      }
+    }
+  } catch (const Glib::KeyFileError &err) {
+  }
+  return true;
+}
+
+string Settings::get_user_gcode(const string &name) {
+  try {
+    vector<string> buttonlabels = get_string_list("UserButtons","Labels");
+    vector<string> buttongcodes = get_string_list("UserButtons","GCodes");
+    for (uint i = 0; i < buttonlabels.size(); i++){
+      if (buttonlabels[i] == name)
+	return buttongcodes[i];
+    }
+  } catch (const Glib::KeyFileError &err) {
+  }
+  return "";
+}
+
+bool Settings::del_user_button(const string &name) {
+  try {
+    vector<string> buttonlabels = get_string_list("UserButtons","Labels");
+    vector<string> buttongcodes = get_string_list("UserButtons","GCodes");
+    for (uint i = 0; i < buttonlabels.size(); i++){
+      if (buttonlabels[i] == name) {
+	buttonlabels.erase(buttonlabels.begin()+i);
+	buttongcodes.erase(buttongcodes.begin()+i);
+	return true;
+      }
+    }
+  } catch (const Glib::KeyFileError &err) {
+  }
+  return false;
+}
 

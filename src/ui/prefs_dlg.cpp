@@ -84,7 +84,8 @@ PrefsDlg::load_settings()
     fprintf (stderr, "load from %s\n", (*i).c_str());
     try {
       set->load_settings(Gio::File::create_for_path(*i));
-      fprintf(stderr, "settings '%s' icon '%s'\n", set->Name.c_str(), set->Image.c_str());
+      cerr << "settings '" << set->get_string("Global","SettingsName")
+	   << "' icon '"   << set->get_string("Global","SettingsImage") << "'\n";
       m_settings.push_back(set);
     } catch (...) {
       g_warning ("Error parsing '%s'", i->c_str());
@@ -106,7 +107,7 @@ PrefsDlg::load_settings()
 
     Gtk::Button *button = new Gtk::ToggleButton();
     Gtk::VBox *box = new Gtk::VBox();
-    Gtk::Label *label = new Gtk::Label((*set)->Name);
+    Gtk::Label *label = new Gtk::Label((*set)->get_string("Global","SettingsName"));
     box->pack_end(*label, true, true);
     Gtk::Image *image = new Gtk::Image(pixbuf);
     box->pack_end(*image, true, true);

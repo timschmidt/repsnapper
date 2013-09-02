@@ -97,7 +97,9 @@ class PLine3 : public PLine<3>
   Vector3d arcIJK() const;  // if is an arc
 
   int getCommands(Vector3d &lastpos, vector<Command> &commands,
-		  const Settings &settings) const;
+		  const double &minspeed, const double &movespeed,
+		  const double &minZspeed, const double &minZspeed,
+		  const double &maxAOspeed, bool useTCommand) const;
 
   // // not used
   // string GCode(Vector3d &lastpos, double &lastE, double feedrate,

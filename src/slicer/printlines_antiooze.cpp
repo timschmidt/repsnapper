@@ -286,13 +286,13 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
 				     const Settings &settings,
 				     ViewProgress * progress)
 {
-  if (!settings.Extruder.EnableAntiooze) return 0;
+  if (!settings.get_boolean("Extruder","EnableAntiooze")) return 0;
 
 
   double
-    AOmindistance = settings.Extruder.AntioozeDistance,
-    AOamount      = settings.Extruder.AntioozeAmount,
-    AOspeed       = settings.Extruder.AntioozeSpeed * 60;
+    AOmindistance = settings.get_double("Extruder","AntioozeDistance"),
+    AOamount      = settings.get_double("Extruder","AntioozeAmount"),
+    AOspeed       = settings.get_double("Extruder","AntioozeSpeed") * 60;
     //AOonhaltratio = settings.Slicing.AntioozeHaltRatio;
   if (lines.size() < 2 || AOmindistance <=0 || AOamount == 0) return 0;
   // const double onhalt_amount = AOamount * AOonhaltratio;
@@ -356,9 +356,10 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
     if (ranges[r].moveend > newlines.size()-2) ranges[r].moveend = newlines.size()-2;
 
     // lift move-only range
-    if (settings.Extruder.AntioozeZlift > 0)
+    const double zlift = settings.get_double("Extruder","AntioozeZlift");
+    if (zlift > 0)
       for (uint i = ranges[r].movestart; i <= ranges[r].moveend; i++) {
-	newlines[i].lifted = settings.Extruder.AntioozeZlift;
+	newlines[i].lifted = zlift;
       }
 
     // do repush first to keep indices before right

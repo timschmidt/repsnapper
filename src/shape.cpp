@@ -794,33 +794,33 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 	// polygons
 	glEnable(GL_LIGHTING);
 
-	float no_mat[] = {0.0f, 0.0f, 0.0f, 1.0f};
-	float low_mat[] = {0.2f, 0.2f, 0.2f, 1.0f};
+	Vector4f no_mat(0.0f, 0.0f, 0.0f, 1.0f);
+	Vector4f low_mat(0.2f, 0.2f, 0.2f, 1.0f);
 //	float mat_ambient[] = {0.7f, 0.7f, 0.7f, 1.0f};
 //	float mat_ambient_color[] = {0.8f, 0.8f, 0.2f, 1.0f};
-	float mat_diffuse[] = {0.1f, 0.5f, 0.8f, 1.0f};
-	float mat_specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
+	Vector4f mat_diffuse(0.1f, 0.5f, 0.8f, 1.0f);
+        Vector4f mat_specular(1.0f, 1.0f, 1.0f, 1.0f);
 //	float no_shininess = 0.0f;
 //	float low_shininess = 5.0f;
 //	float high_shininess = 100.0f;
 //	float mat_emission[] = {0.3f, 0.2f, 0.2f, 0.0f};
 
 
-        for (uint i = 0; i < 4; i++) {
-	  mat_diffuse[i] = settings.Display.PolygonColour[i];
-	}
+        //for (uint i = 0; i < 4; i++) {
+	mat_diffuse = settings.get_colour("Display","PolygonColour");
+	//}
 
 	if (highlight)
-	  mat_diffuse[3] += 0.3*(1.-mat_diffuse[3]);
+	  mat_diffuse.array[3] += 0.3*(1.-mat_diffuse.array[3]);
 
 	// invert colours if partial draw (preview mode)
 	if (max_triangles > 0) {
 	  for (uint i = 0; i < 3; i++)
-	    mat_diffuse[i] = 1.-mat_diffuse[i];
+	    mat_diffuse.array[i] = 1.-mat_diffuse.array[i];
 	  mat_diffuse[3] = 0.9;
 	}
 
-	mat_specular[0] = mat_specular[1] = mat_specular[2] = settings.Display.Highlight;
+	mat_specular.array[0] = mat_specular.array[1] = mat_specular.array[2] = settings.get_double("Display","Highlight");;
 
 	/* draw sphere in first row, first column
 	* diffuse reflection only; no ambient or specular
@@ -833,7 +833,7 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 
 	// glEnable (GL_POLYGON_OFFSET_FILL);
 
-	if(settings.Display.DisplayPolygons)
+	if(settings.get_boolean("Display","DisplayPolygons"))
 	{
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
@@ -846,17 +846,17 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 	glDisable (GL_POLYGON_OFFSET_FILL);
 
 	// WireFrame
-	if(settings.Display.DisplayWireframe)
+	if(settings.get_boolean("Display","DisplayWireframe"))
 	{
-		if(!settings.Display.DisplayWireframeShaded)
+	  if(!settings.get_boolean("Display","DisplayWireframeShaded"))
 			glDisable(GL_LIGHTING);
 
 
-                for (uint i = 0; i < 4; i++)
-                        mat_diffuse[i] = settings.Display.WireframeColour[i];
+	  //for (uint i = 0; i < 4; i++)
+	  mat_diffuse = settings.get_colour("Display","WireframeColour");
 		glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
-		glColor4fv(settings.Display.WireframeColour);
+		glColor4fv(mat_diffuse);
 		for(size_t i=0;i<triangles.size();i++)
 		{
 			glBegin(GL_LINE_LOOP);
@@ -872,25 +872,26 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 	glDisable(GL_LIGHTING);
 
 	// normals
-	if(settings.Display.DisplayNormals)
+	if(settings.get_boolean("Display","DisplayNormals"))
 	{
-		glColor4fv(settings.Display.NormalsColour);
+	        glColor4fv(settings.get_colour("Display","NormalsColour"));
 		glBegin(GL_LINES);
+		double nlength = settings.get_double("Display","NormalsLength");
 		for(size_t i=0;i<triangles.size();i++)
 		{
 			Vector3d center = (triangles[i].A+triangles[i].B+triangles[i].C)/3.0;
 			glVertex3dv((GLdouble*)&center);
-			Vector3d N = center + (triangles[i].Normal*settings.Display.NormalsLength);
+			Vector3d N = center + (triangles[i].Normal*nlength);
 			glVertex3dv((GLdouble*)&N);
 		}
 		glEnd();
 	}
 
 	// Endpoints
-	if(settings.Display.DisplayEndpoints)
+	if(settings.get_boolean("Display","DisplayEndpoints"))
 	{
-		glColor4fv(settings.Display.EndpointsColour);
-		glPointSize(settings.Display.EndPointSize);
+      	        glColor4fv(settings.get_colour("Display","EndpointsColour"));
+		glPointSize(settings.get_double("Display","EndPointSize"));
 		glBegin(GL_POINTS);
 		for(size_t i=0;i<triangles.size();i++)
 		{

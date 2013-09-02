@@ -28,9 +28,6 @@
 
 #include "command.h"
 
-class GCodeImpl;
-class RepRapSerial;
-
 class GCodeIter
 {
   Glib::RefPtr<Gtk::TextBuffer> m_buffer;

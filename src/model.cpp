@@ -124,7 +124,7 @@ Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
 
 void Model::GlDrawGCode(int layerno)
 {
-  if (settings.Display.DisplayGCode)  {
+  if (settings.get_boolean("Display","DisplayGCode"))  {
     gcode.draw (settings, layerno, false);
   }
   // assume that the real printing line is the one at the start of the buffer
@@ -134,10 +134,11 @@ void Model::GlDrawGCode(int layerno)
       int start = gcode.getLayerStart(currentlayer);
       int end   = gcode.getLayerEnd(currentlayer);
       //gcode.draw (settings, currentlayer, true, 1);
+      bool displaygcodeborders = settings.get_boolean("Display","DisplayGCodeBorders");
       gcode.drawCommands(settings, start, currentprintingline, true, 4, false,
-			 settings.Display.DisplayGCodeBorders);
+			 displaygcodeborders);
       gcode.drawCommands(settings, currentprintingline,  end,  true, 1, false,
-			 settings.Display.DisplayGCodeBorders);
+			 displaygcodeborders);
     }
     // gcode.drawCommands(settings, currentprintingline-currentbufferedlines,
     // 		       currentprintingline, false, 3, true,
@@ -147,7 +148,7 @@ void Model::GlDrawGCode(int layerno)
 
 void Model::GlDrawGCode(double layerz)
 {
-  if (!settings.Display.DisplayGCode) return;
+  if (!settings.get_boolean("Display","DisplayGCode")) return;
   int layer = gcode.getLayerNo(layerz);
   if (layer>=0)
     GlDrawGCode(layer);
@@ -167,7 +168,7 @@ void Model::ReadSVG(Glib::RefPtr<Gio::File> file)
 {
   if (is_calculating) return;
   if (is_printing) return;
-  bool autoplace = settings.Misc.ShapeAutoplace;
+  bool autoplace = settings.get_boolean("Misc","ShapeAutoplace");
   string path = file->get_path();
   FlatShape * svgshape = new FlatShape(path);
   cerr << svgshape->info() << endl;
@@ -200,7 +201,7 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
 
 void Model::ReadStl(Glib::RefPtr<Gio::File> file)
 {
-  bool autoplace = settings.Misc.ShapeAutoplace;
+  bool autoplace = settings.get_boolean("Misc","ShapeAutoplace");
   vector<Shape*> shapes = ReadShapes(file, 0);
   // do not autoplace in multishape files
   if (shapes.size() > 1)  autoplace = false;
@@ -221,7 +222,7 @@ void Model::SaveStl(Glib::RefPtr<Gio::File> file)
     shapes[0]->saveBinarySTL(file->get_path());
   }
   else {
-    if (settings.Misc.SaveSingleShapeSTL) {
+    if (settings.get_boolean("Misc","SaveSingleShapeSTL")) {
       Shape single = GetCombinedShape();
       single.saveBinarySTL(file->get_path());
     } else {
@@ -307,7 +308,7 @@ void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
   if (is_calculating) return;
   if (is_printing) return;
   is_calculating=true;
-  settings.Display.DisplayGCode = true;
+  settings.set_boolean("Display","DisplayGCode",true);
   m_progress->start (_("Reading GCode"), 100.0);
   gcode.Read (this, settings.get_extruder_letters(), m_progress, file->get_path());
   m_progress->stop (_("Done"));
@@ -770,9 +771,10 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
 Vector3d Model::GetViewCenter()
 {
   Vector3d printOffset = settings.getPrintMargin();
-  if(settings.Raft.Enable)
-    printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
-
+  if(settings.get_boolean("Raft","Enable")){
+    const double rsize = settings.get_double("Raft","Size");
+    printOffset += Vector3d(rsize, rsize, 0);
+  }
   return printOffset + Center;
 }
 
@@ -786,8 +788,10 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   gint index = 1; // pick/select index. matches computation in update_model()
 
   Vector3d printOffset = settings.getPrintMargin();
-  if(settings.Raft.Enable)
-    printOffset += Vector3d(settings.Raft.Size, settings.Raft.Size, 0);
+  if(settings.get_boolean("Raft","Enable")) {
+    const double rsize = settings.get_double("Raft","Size");
+    printOffset += Vector3d(rsize, rsize, 0);
+  }
   Vector3d translation = objtree.transform3D.getTranslation();
   Vector3d offset = printOffset + translation;
 
@@ -798,7 +802,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   glMultMatrixd (&objtree.transform3D.transform.array[0]);
 
   // draw preview shapes and nothing else
-  if (settings.Display.PreviewLoad)
+  if (settings.get_boolean("Display","PreviewLoad"))
     if (preview_shapes.size() > 0) {
       Vector3d v_center = GetViewCenter() - offset;
       glTranslated( v_center.x(), v_center.y(), v_center.z());
@@ -815,7 +819,10 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       glPopMatrix();
       return 0;
     }
-
+  bool support = settings.get_boolean("Slicing","Support");
+  double supportangle = settings.get_double("Slicing","SupportAngle");
+  bool displaypolygons = settings.get_boolean("Display","DisplayPolygons");
+  bool displaybbox = settings.get_boolean("Display","DisplayBBox");
   for (uint i = 0; i < objtree.Objects.size(); i++) {
     TreeObject *object = objtree.Objects[i];
     index++;
@@ -844,7 +851,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 
 	  shape->draw (settings);
 
-	  if (!settings.Display.DisplayPolygons) {
+	  if (!displaypolygons) {
 	    // If not drawing polygons, need to draw the geometry
 	    // manually, but invisible, to set up the stencil buffer
 	    glEnable(GL_CULL_FACE);
@@ -884,15 +891,15 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 	shape->draw (settings, false);
       }
       // draw support triangles
-      if (settings.Slicing.Support) {
+      if (support) {
 	glColor4f(0.8f,0.f,0.f,0.5f);
 	vector<Triangle> suppTr =
-	  shape->trianglesSteeperThan(settings.Slicing.SupportAngle*M_PI/180.);
+	  shape->trianglesSteeperThan(supportangle*M_PI/180.);
 	for (uint i=0; i < suppTr.size(); i++)
 	  suppTr[i].draw(GL_TRIANGLES);
       }
       glPopMatrix();
-      if(settings.Display.DisplayBBox)
+      if(displaybbox)
 	shape->drawBBox();
      }
     glPopMatrix();
@@ -901,7 +908,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   glLoadName(0); // Clear selection name to avoid selecting last object with later rendering.
 
   // draw total bounding box
-  if(settings.Display.DisplayBBox)
+  if(displaybbox)
     {
       const double minz = max(0., Min.z()); // above xy plane only
       // Draw bbox
@@ -947,19 +954,20 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       Render::draw_string(pos,val.str());
     }
   int drawnlayer = -1;
-  if(settings.Display.DisplayLayer) {
-    drawnlayer = drawLayers(settings.Display.LayerValue,
+  if(settings.get_boolean("Display","DisplayLayer")) {
+    drawnlayer = drawLayers(settings.get_double("Display","LayerValue"),
 			    offset, false);
   }
-  if(settings.Display.DisplayGCode && gcode.size() == 0) {
+  if(settings.get_boolean("Display","DisplayGCode") && gcode.size() == 0) {
     // preview gcode if not calculated yet
     if ( m_previewGCode.size() != 0 ||
 	 ( layers.size() == 0 && gcode.commands.size() == 0 ) ) {
       Vector3d start(0,0,0);
-      const double thickness = settings.Slicing.LayerThickness;
-      const double z = settings.Display.GCodeDrawStart + thickness/2;
+      const double thickness = settings.get_double("Slicing","LayerThickness");
+      const double gcodedrawstart = settings.get_double("Display","GCodeDrawStart");
+      const double z = gcodedrawstart + thickness/2;
       const int LayerCount = (int)ceil(Max.z()/thickness)-1;
-      const uint LayerNo = (uint)ceil(settings.Display.GCodeDrawStart*(LayerCount-1));
+      const uint LayerNo = (uint)ceil(gcodedrawstart*(LayerCount-1));
       if (z != m_previewGCode_z) {
 	//uint prevext = settings.selectedExtruder;
 	Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
@@ -975,8 +983,8 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       }
       glDisable(GL_DEPTH_TEST);
       m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2,
-				  settings.Display.DisplayGCodeArrows,
-				  settings.Display.DisplayGCodeBorders);
+				  settings.get_boolean("Display","DisplayGCodeArrows"),
+				  settings.get_boolean("Display","DisplayGCodeBorders"));
     }
   }
   return drawnlayer;
@@ -996,11 +1004,11 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 
   bool have_layers = (layers.size() > 0); // have sliced already
 
-  bool fillAreas = settings.Display.DisplayFilledAreas;
+  bool fillAreas = settings.get_boolean("Display","DisplayFilledAreas");
 
   double minZ = 0;//max(0.0, Min.z());
   double z;
-  double zStep = settings.Slicing.LayerThickness;
+  double zStep = settings.get_double("Slicing","LayerThickness");
   double zSize = (Max.z() - minZ - zStep*0.5);
   int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
   double sel_Z = height; //*zSize;
@@ -1010,12 +1018,12 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   else
     sel_Layer = (uint)ceil(LayerCount*sel_Z/zSize);
   LayerCount = sel_Layer+1;
-  if(have_layers && settings.Display.DisplayAllLayers)
+  if(have_layers && settings.get_boolean("Display","DisplayAllLayers"))
     {
       LayerNr = 0;
       z=minZ;
       // don't fill areas if multiple layers
-      settings.Display.DisplayFilledAreas = false;
+      settings.set_boolean("Display","DisplayFilledAreas",false);
     }
   else
     {
@@ -1035,6 +1043,9 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   if (have_layers)
     glTranslatef(-offset.x(), -offset.y(), -offset.z());
 
+  const float lthickness = settings.get_double("Slicing","LayerThickness");
+  bool displayinfill = settings.get_boolean("Display","DisplayinFill");
+  bool drawrulers = settings.get_boolean("Display","DrawRulers");
   while(LayerNr < LayerCount)
     {
       if (have_layers)
@@ -1045,10 +1056,9 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 	}
       else
 	{
-	  const float lthickness = settings.Slicing.LayerThickness;
 	  if (!m_previewLayer || m_previewLayer->getZ() != z) {
 	    m_previewLayer = calcSingleLayer(z, LayerNr, lthickness,
-					     settings.Display.DisplayinFill, false);
+					     displayinfill, false);
 	    layer = m_previewLayer;
 	    Layer * previous = NULL;
 	    if (LayerNr>0 && z >= lthickness)
@@ -1061,7 +1071,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       if (!calconly) {
 	layer->Draw(settings);
 
-	if (settings.Display.DrawRulers)
+	if (drawrulers)
 	  layer->DrawRulers(measuresPoint);
       }
 
@@ -1074,7 +1084,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       z+=zStep;
     }// while
 
-  settings.Display.DisplayFilledAreas = fillAreas; // set to value before
+  settings.set_boolean("Display","DisplayFilledAreas", fillAreas); // set to value before
   return drawn;
 }
 
@@ -1090,16 +1100,17 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
 
-  if (settings.Slicing.SelectedOnly)
+  if (settings.get_boolean("Slicing","SelectedOnly"))
     objtree.get_selected_shapes(m_current_selectionpath, shapes, transforms);
   else
     objtree.get_all_shapes(shapes, transforms);
 
   double max_grad = 0;
-  double supportangle = settings.Slicing.SupportAngle*M_PI/180.;
-  if (!settings.Slicing.Support) supportangle = -1;
+  double supportangle = settings.get_double("Slicing","SupportAngle")*M_PI/180.;
+  if (!settings.get_boolean("Slicing","Support")) supportangle = -1;
 
-  Layer * layer = new Layer(NULL, LayerNr, thickness, settings.Slicing.Skins);
+  Layer * layer = new Layer(NULL, LayerNr, thickness,
+			    settings.get_integer("Slicing","Skins"));
   layer->setZ(z);
   for(size_t f = 0; f < shapes.size(); f++) {
     layer->addShape(transforms[f], *shapes[f], z, max_grad, supportangle);
@@ -1116,10 +1127,11 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 
   layer->MakeShells(settings);
 
-  if (settings.Slicing.Skirt) {
-    if (layer->getZ() - layer->thickness <= settings.Slicing.SkirtHeight)
-      layer->MakeSkirt(settings.Slicing.SkirtDistance,
-		       settings.Slicing.SingleSkirt && !settings.Slicing.Support);
+  if (settings.get_boolean("Slicing","Skirt")) {
+    if (layer->getZ() - layer->thickness <= settings.get_double("Slicing","SkirtHeight"))
+      layer->MakeSkirt(settings.get_double("Slicing","SkirtDistance"),
+		       settings.get_boolean("Slicing","SingleSkirt") &&
+		       !settings.get_boolean("Slicing","Support"));
   }
 
   if (calcinfill)

@@ -13,28 +13,6 @@
     <property name="short_label">Calibrate</property>
     <property name="tooltip">An interactive calibration routine</property>
   </object>
-  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
-    <property name="upper">30</property>
-    <property name="value">10</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
-  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
-    <property name="upper">1</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">0.25</property>
-  </object>
-  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
-    <property name="upper">20</property>
-    <property name="value">8</property>
-    <property name="step_increment">0.10000000000000001</property>
-    <property name="page_increment">10</property>
-  </object>
   <object class="GtkAction" id="Fullscreen">
     <property name="label">Fullscreen</property>
     <property name="short_label" translatable="yes">Fullscreen</property>
@@ -79,6 +57,73 @@
     <property name="short_label" translatable="yes">Save Settings As</property>
     <property name="tooltip" translatable="yes">Save settings in a custom file</property>
   </object>
+  <object class="GtkAdjustment" id="Display.HighlightAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.NormalsLengthAdjustment">
+    <property name="upper">30</property>
+    <property name="value">10</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="Display.PolygonOpacityAdjustment">
+    <property name="upper">1</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">0.25</property>
+  </object>
+  <object class="GtkAdjustment" id="DisplayEndPointSizeAdjustment">
+    <property name="upper">20</property>
+    <property name="value">8</property>
+    <property name="step_increment">0.10000000000000001</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAboutDialog" id="about_dialog">
+    <property name="can_focus">False</property>
+    <property name="border_width">5</property>
+    <property name="type_hint">normal</property>
+    <property name="program_name">RepSnapper</property>
+    <property name="copyright" translatable="yes">(C) 2008-2013 its contributors </property>
+    <property name="website">http://reprap.org/wiki/RepSnapper_Manual:Introduction</property>
+    <property name="website_label" translatable="yes">Website</property>
+    <property name="license" translatable="yes">LGPLv2+, GPLv2+, and other licenses, see licenses.txt</property>
+    <property name="authors">Michael Meeks &lt;michael@gnome.org&gt;
+Kulitorum &lt;repsnapper@kulitorum.com&gt;
+Palomides &lt;nave.notnilc@gmail.com&gt;
+Joachim Glauche &lt;info@gli-concept.de&gt;
+Timothy Schmidt &lt;timschmidt@gmail.com&gt;
+Rick Kimball &lt;rick@kimballsoftware.com&gt;
+Jan Schmidt &lt;thaytan@noraisin.net&gt;
+Harry Eakins &lt;harry.eakins@googlemail.com&gt;
+Martin Dieringer &lt;martin.dieringer@gmx.de&gt;
+and others I forgot... (needs updating)</property>
+    <property name="wrap_license">True</property>
+    <child internal-child="vbox">
+      <object class="GtkVBox" id="dialog-vbox1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkHButtonBox" id="dialog-action_area1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="pack_type">end</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkTextBuffer" id="textbuffer1"/>
   <object class="GtkWindow" id="PrinterControlWindowTest">
     <property name="can_focus">False</property>
     <property name="default_width">200</property>
@@ -546,50 +591,8 @@
       </object>
     </child>
   </object>
-  <object class="GtkAboutDialog" id="about_dialog">
-    <property name="can_focus">False</property>
-    <property name="border_width">5</property>
-    <property name="type_hint">normal</property>
-    <property name="program_name">RepSnapper</property>
-    <property name="copyright" translatable="yes">(C) 2008-2013 its contributors </property>
-    <property name="website">http://reprap.org/wiki/RepSnapper_Manual:Introduction</property>
-    <property name="website_label" translatable="yes">Website</property>
-    <property name="license" translatable="yes">LGPLv2+, GPLv2+, and other licenses, see licenses.txt</property>
-    <property name="authors">Michael Meeks &lt;michael@gnome.org&gt;
-Kulitorum &lt;repsnapper@kulitorum.com&gt;
-Palomides &lt;nave.notnilc@gmail.com&gt;
-Joachim Glauche &lt;info@gli-concept.de&gt;
-Timothy Schmidt &lt;timschmidt@gmail.com&gt;
-Rick Kimball &lt;rick@kimballsoftware.com&gt;
-Jan Schmidt &lt;thaytan@noraisin.net&gt;
-Harry Eakins &lt;harry.eakins@googlemail.com&gt;
-Martin Dieringer &lt;martin.dieringer@gmx.de&gt;
-and others I forgot... (needs updating)</property>
-    <property name="wrap_license">True</property>
-    <child internal-child="vbox">
-      <object class="GtkVBox" id="dialog-vbox1">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkHButtonBox" id="dialog-action_area1">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="layout_style">end</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="pack_type">end</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-      </object>
-    </child>
-  </object>
+  <object class="GtkTextBuffer" id="textbuffer2"/>
+  <object class="GtkTextBuffer" id="textbuffer3"/>
   <object class="GtkDialog" id="custom_button_dialog">
     <property name="can_focus">False</property>
     <property name="border_width">5</property>
@@ -1924,6 +1927,12 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                         <child>
                                           <placeholder/>
                                         </child>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
+                                        <child>
+                                          <placeholder/>
+                                        </child>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2065,7 +2074,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkExpander" id="model_expander">
+                          <object class="GtkExpander" id="Misc.ExpandModelDisplay">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <child>
@@ -2265,6 +2274,8 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                                 <property name="secondary_icon_activatable">False</property>
                                                 <property name="primary_icon_sensitive">True</property>
                                                 <property name="secondary_icon_sensitive">True</property>
+                                                <property name="climb_rate">1</property>
+                                                <property name="numeric">True</property>
                                               </object>
                                               <packing>
                                                 <property name="left_attach">2</property>
@@ -2350,6 +2361,12 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                                 <property name="left_attach">3</property>
                                                 <property name="right_attach">4</property>
                                               </packing>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
                                             </child>
                                             <child>
                                               <placeholder/>
@@ -2497,9 +2514,10 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <child>
-                                  <object class="GtkTextView" id="txt_gcode_start">
+                                  <object class="GtkTextView" id="GCode.Start">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="buffer">textbuffer1</property>
                                   </object>
                                 </child>
                               </object>
@@ -2519,9 +2537,10 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <child>
-                                  <object class="GtkTextView" id="txt_gcode_next_layer">
+                                  <object class="GtkTextView" id="GCode.Layer">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="buffer">textbuffer2</property>
                                   </object>
                                 </child>
                               </object>
@@ -2545,9 +2564,10 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <child>
-                                  <object class="GtkTextView" id="txt_gcode_end">
+                                  <object class="GtkTextView" id="GCode.End">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="buffer">textbuffer3</property>
                                   </object>
                                 </child>
                               </object>
@@ -2571,9 +2591,10 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <child>
-                                  <object class="GtkTextView" id="txt_gcode_result">
+                                  <object class="GtkTextView" id="GCode.Result">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="buffer">textbuffer1</property>
                                   </object>
                                 </child>
                               </object>
@@ -2758,7 +2779,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkExpander" id="printeraxis_expander">
+                          <object class="GtkExpander" id="Misc.ExpandPAxisDisplay">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <child>
@@ -3062,6 +3083,24 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                             <property name="can_focus">False</property>
                                             <property name="n_rows">2</property>
                                             <property name="n_columns">4</property>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
+                                            <child>
+                                              <placeholder/>
+                                            </child>
                                             <child>
                                               <placeholder/>
                                             </child>
@@ -3703,7 +3742,7 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
           </packing>
         </child>
         <child>
-          <object class="GtkExpander" id="layer_expander">
+          <object class="GtkExpander" id="Misc.ExpandLayerDisplay">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <child>
@@ -8006,6 +8045,12 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -8070,6 +8115,48 @@ Otherwise the STL will contain separate Objects and it will be in ASCII mode (so
                                 <property name="can_focus">False</property>
                                 <property name="n_rows">3</property>
                                 <property name="n_columns">4</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>

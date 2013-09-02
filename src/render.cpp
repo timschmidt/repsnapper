@@ -131,7 +131,7 @@ void Render::zoom_to_model()
   setArcballTrans(m_transform, Vector3d::ZERO);
   // zoom to platform if model has zero size
   if (m_zoom == 0) {
-    m_zoom = model->settings.Hardware.Volume.find_max();
+    m_zoom = model->settings.getPrintVolume().find_max();
     setArcballTrans(m_transform,
    		    model->settings.getPrintMargin() );
     //model->settings.getPrintVolume()/2.);

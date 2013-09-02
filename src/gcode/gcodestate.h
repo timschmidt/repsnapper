@@ -49,8 +49,7 @@ class GCodeState {
 		 double maxspeed,
 		 double movespeed,
 		 double offsetZ,
-		 const Settings::SlicingSettings &slicing,
-		 const Settings::HardwareSettings &hardware);
+		 const Settings &settings);
   /* void MakeGCodeLine (PLine3 line, */
   /* 		      double extrusionfactor, */
   /* 		      double offsetZ,  */
@@ -60,10 +59,10 @@ class GCodeState {
 		      Vector3d arcIJK, short arc,
 		      double extrusionFactor,
 		      double absolute_extrusion,
+		      double minspeed,
 		      double maxspeed,
 		      double offsetZ,
-		      const Settings::SlicingSettings &slicing,
-		      const Settings::HardwareSettings &hardware);
+		      bool relativeE);
   /* double GetLastLayerZ(double curZ); */
   /* void  SetLastLayerZ(double z); */
   const Vector3d &LastPosition();

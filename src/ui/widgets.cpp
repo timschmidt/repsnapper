@@ -154,11 +154,11 @@ View::TempRow::TempRow(Model *model, Printer *printer, TempType type) :
     case TEMP_NOZZLE:
     default:
       m_target->set_range(0, 350.0);
-      m_target->set_value(m_model->settings.Printer.NozzleTemp);
+      m_target->set_value(m_model->settings.get_double("Printer","NozzleTemp"));
       break;
     case TEMP_BED:
       m_target->set_range(0, 250.0);
-      m_target->set_value(m_model->settings.Printer.BedTemp);
+      m_target->set_value(m_model->settings.get_double("Printer","BedTemp"));
       break;
     }
     add (*m_target);
@@ -204,10 +204,10 @@ void View::TempRow::heat_changed()
     switch (m_type) {
     case TEMP_NOZZLE:
     default:
-      m_model->settings.Printer.NozzleTemp = value;
+      m_model->settings.set_double("Printer","NozzleTemp", value);
 	break;
     case TEMP_BED:
-      m_model->settings.Printer.BedTemp = value;
+      m_model->settings.set_double("Printer","BedTemp", value);
     }
     if (m_button->get_active())
       m_printer->SetTemp(m_type, value);

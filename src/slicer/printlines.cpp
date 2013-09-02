@@ -34,16 +34,8 @@ double PLine<M>::length() const
   if (!arc)
     return from.distance(to);
   else {
-    if (M == 3) {
-      // length of helix
-      const Vector2d from2d(from.x(), from.y());
-      const double radius = from2d.distance(arccenter);
-      const double dz = to.z()-from.z();
-      return sqrt ( pow(radius * angle,2) + pow(dz,2) );
-    } else {
-      const double radius = from.distance(arccenter);
-      return radius * angle;
-    }
+    double radius = from.distance(arccenter);
+    return radius * angle;
   }
 }
 
@@ -195,21 +187,16 @@ double PLine3::max_abs_speed(double max_Espeed, double max_AOspeed) const
 }
 
 int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
-			const Settings &settings) const
+			const double &minspeed, const double &movespeed,
+			const double &minZspeed, const double &maxZspeed,
+			const double &maxAOspeed,
+			bool useTCommand) const
 {
   if (area == COMMAND) { // it is an explicit command line
     commands.push_back(command);
     return 1;
   }
 
-  const double
-    minspeed   = settings.Hardware.MinMoveSpeedXY * 60,
-    movespeed  = settings.Hardware.MaxMoveSpeedXY * 60,
-    //maxspeed   = min(movespeed, (double)settings.Extruder.MaxLineSpeed * 60),
-    minZspeed  = settings.Hardware.MinMoveSpeedZ * 60,
-    maxZspeed  = settings.Hardware.MaxMoveSpeedZ * 60,
-    //maxEspeed  = settings.Extruder.EMaxSpeed * 60,
-    maxAOspeed = settings.Extruder.AntioozeSpeed * 60;
 
   const Vector3d lift (0,0,lifted);
   const Vector3d lifted_from = from + lift;
@@ -225,13 +212,16 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     PLine3 move3(area, extruder, lastpos, lifted_from, movespeed, 0);
     // get recursive ...
     vector<Command> movecommands;
-    command_count += move3.getCommands(lastpos, movecommands, settings);
+    command_count += move3.getCommands(lastpos, movecommands,
+				       minspeed, movespeed,
+				       minZspeed, maxZspeed,
+				       maxAOspeed, useTCommand);
     commands.insert(commands.end(), movecommands.begin(), movecommands.end());
     lastpos = lifted_from;
   }
 
   // insert extruder change command
-  if (settings.Slicing.UseTCommand)
+  if (useTCommand)
     if (commands.size()>0 &&  commands.back().extruder_no != extruder_no) {
       Command extr_change(SELECTEXTRUDER, extruder_no);
       commands.push_back(extr_change);
@@ -573,8 +563,8 @@ void Printlines::addLine(PLineArea area, uint extruder_no, vector<PLine2> &lines
 	lfrom.squared_distance(lastpos) > 0.01) { // add moveline
       // use last extruder for move
       PLine2 move(area, lines.back().extruder_no, lastpos, lfrom, movespeed, 0);
-      if (extruder_change || settings->Extruder.ZliftAlways) {
-	move.lifted = settings->Extruder.AntioozeZlift;
+      if (extruder_change || settings->get_boolean("Extruder","ZliftAlways")) {
+	move.lifted = settings->get_double("Extruder","AntioozeZlift");
       }
       lines.push_back(move);
     } else {
@@ -601,8 +591,8 @@ PrintPoly::PrintPoly(const Poly &poly,
   extruder_no = printlines->settings->selectedExtruder;
   // Take a copy of the reference poly
   m_poly = new Poly(poly);
-  m_poly->move(Vector2d(-printlines->settings->Extruder.OffsetX,
-			-printlines->settings->Extruder.OffsetY));
+  m_poly->move(Vector2d(-printlines->settings->get_double("Extruder","OffsetX"),
+			-printlines->settings->get_double("Extruder","OffsetY")));
 
   if (area==SHELL || area==SKIN) {
     priority *= 5; // may be 5 times as far away to get preferred as next poly
@@ -688,11 +678,13 @@ void Printlines::addPolys(PLineArea area,
 			  double maxspeed, double min_time)
 {
   if (polys.size() == 0) return;
-  if (maxspeed == 0) maxspeed = settings->Extruder.MaxLineSpeed * 60; // default
+  if (maxspeed == 0)
+    maxspeed = settings->get_double("Extruder","MaxLineSpeed") * 60; // default
+  double maxoverhangspeed = settings->get_double("Slicing","MaxOverhangSpeed");
   for(size_t q = 0; q < polys.size(); q++) {
     if (polys[q].size() > 0) {
       PrintPoly *ppoly = new PrintPoly(polys[q], this, /* Takes a copy of the poly */
-				       maxspeed, settings->Slicing.MaxOverhangSpeed * 60,
+				       maxspeed, maxoverhangspeed * 60,
 				       min_time, displace_start, area);
       printpolys.push_back(ppoly);
       setZ(polys[q].getZ());
@@ -737,7 +729,7 @@ double Printlines::makeLines(Vector2d &startPoint,
   for(size_t q=0; q < count; q++) done[q]=false;
   uint ndone=0;
   //double nlength;
-  double movespeed = settings->Hardware.MaxMoveSpeedXY * 60;
+  double movespeed = settings->get_double("Hardware","MaxMoveSpeedXY") * 60;
   double totallength = 0;
   double totalspeedfactor = 0;
   while (ndone < count)
@@ -859,9 +851,9 @@ void Printlines::optimize(double linewidth,
   // cout << GCode(start,E,1,1000);
   //cerr << "optimize" << endl;
   makeArcs(linewidth, lines);
-  double minarclength = settings->Slicing.MinArcLength;
-  if (!settings->Slicing.UseArcs) minarclength = cornerradius;
-  if (settings->Slicing.RoundCorners)
+  double minarclength = settings->get_double("Slicing","MinArcLength");
+  if (!settings->get_boolean("Slicing","UseArcs")) minarclength = cornerradius;
+  if (settings->get_boolean("Slicing","RoundCorners"))
     roundCorners(cornerradius, minarclength, lines);
   slowdownTo(slowdowntime, lines);
   //double totext = total_Extrusion(lines);
@@ -998,9 +990,9 @@ Vector2d Printlines::arcCenter(const PLine2 &l1, const PLine2 &l2,
 uint Printlines::makeArcs(double linewidth,
 			  vector<PLine2> &lines) const
 {
-  if (!settings->Slicing.UseArcs) return 0;
+  if (!settings->get_boolean("Slicing","UseArcs")) return 0;
   if (lines.size() < 2) return 0;
-  double maxAngle = settings->Slicing.ArcsMaxAngle * M_PI/180;
+  double maxAngle = settings->get_double("Slicing","ArcsMaxAngle") * M_PI/180;
   if (maxAngle < 0) return 0;
   double arcRadiusSq = 0;
   Vector2d arccenter(1000000,1000000);
@@ -1164,7 +1156,7 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   const double arc_len = radius * angle;
   // too small for arc, replace by 2 straight lines
   const bool not_arc =
-    !settings->Slicing.UseArcs
+    !settings->get_boolean("Slicing","UseArcs")
     || (arc_len < (split?minarclength:(minarclength*2)));
   // too small to make 2 lines, just make 1 line
   const bool toosmallfortwo  =
@@ -1691,6 +1683,15 @@ void Printlines::getCommands(const vector<PLine3> &plines,
   if (progress_steps==0) progress_steps=1;
   bool cont = true;
   vector<Command> commands;
+  const double
+    minspeed   = settings.get_double("Hardware","MinMoveSpeedXY") * 60,
+    movespeed  = settings.get_double("Hardware","MaxMoveSpeedXY") * 60,
+    //maxspeed   = min(movespeed, (double)settings.Extruder.MaxLineSpeed * 60),
+    minZspeed  = settings.get_double("Hardware","MinMoveSpeedZ") * 60,
+    maxZspeed  = settings.get_double("Hardware","MaxMoveSpeedZ") * 60,
+    //maxEspeed  = settings.Extruder.EMaxSpeed * 60,
+    maxAOspeed = settings.get_double("Extruder","AntioozeSpeed") * 60;
+  const bool useTCommand = settings.get_boolean("Slicing","UseTCommand");
   for (uint i = 0; i < plines.size(); i++) {
     if (progress && i%progress_steps==0){
       cont = (progress->update(i)) ;
@@ -1700,9 +1701,11 @@ void Printlines::getCommands(const vector<PLine3> &plines,
       lastArea = plines[i].area;
       commands.push_back(Command(AreaNames[lastArea]));
     }
-    plines[i].getCommands(lastPos, commands, settings);
+    plines[i].getCommands(lastPos, commands,
+			  minspeed, movespeed, minZspeed, maxZspeed,
+			  maxAOspeed, useTCommand);
   }
-  gc_state.AppendCommands(commands, settings.Slicing.RelativeEcode);
+  gc_state.AppendCommands(commands, settings.get_boolean("Slicing","RelativeEcode"));
 }
 
 

@@ -129,23 +129,25 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
 			   double maxspeed,
 			   double maxmovespeed,
 			   double offsetZ,
-			   const Settings::SlicingSettings &slicing,
-			   const Settings::HardwareSettings &hardware)
+			   const Settings &settings)
 {
+  bool relEcode = settings.get_boolean("Slicing","RelativeEcode");
+  double minmovespeed = settings.get_double("Hardware","MinMoveSpeedXY") * 60;
+
   for (uint i=0; i < linespoints.size(); i+=2)
     {
       // MOVE to start of next line
       if(LastPosition() != linespoints[i])
 	{
 	  MakeGCodeLine (LastPosition(), linespoints[i],
-			 Vector3d(0,0,0),0, 0, 0, maxmovespeed,
-			 offsetZ, slicing, hardware);
+			 Vector3d(0,0,0),0, 0, 0, minmovespeed, maxmovespeed,
+			 offsetZ, relEcode);
 	  SetLastPosition (linespoints[i]);
 	}
       // PLOT to endpoint of line
       MakeGCodeLine (LastPosition(), linespoints[i+1],
-		     Vector3d(0,0,0),0, extrusionFactor, 0, maxspeed,
-		     offsetZ, slicing, hardware);
+		     Vector3d(0,0,0),0, extrusionFactor, 0, minmovespeed, maxspeed,
+		     offsetZ, relEcode);
     SetLastPosition(linespoints[i+1]);
     }
   //SetLastLayerZ(z);
@@ -194,10 +196,10 @@ void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
 				Vector3d arcIJK, short arc,
 				double extrusionFactor,
 				double absolute_extrusion,
+				double minspeed,
 				double maxspeed,
 				double offsetZ,
-				const Settings::SlicingSettings &slicing,
-				const Settings::HardwareSettings &hardware)
+				bool relativeE)
 {
    // if ((end-start).length() < 0.05)	// ignore micro moves
    //  return;
@@ -205,9 +207,6 @@ void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
   Command command;
   command.is_value = false;
 
-  bool relativeE = slicing.RelativeEcode;
-
-  double minspeed = hardware.MinMoveSpeedXY * 60;
   maxspeed = max(minspeed,maxspeed); // in case maxspeed is too low
   ResetLastWhere (start);
   command.where = end;

@@ -122,12 +122,12 @@ void View::preview_file (Glib::RefPtr< Gio::File > file)
 {
   if (!m_model) return;
   m_model->preview_shapes.clear();
-  if (!m_model->settings.Display.PreviewLoad) return;
+  if (!m_model->settings.get_boolean("Display","PreviewLoad")) return;
   if (!file)    return;
   //cerr << "view " <<file->get_path() << endl;
   m_model->preview_shapes  = m_model->ReadShapes(file,10000);
-  bool display_poly = m_model->settings.Display.DisplayPolygons;
-  m_model->settings.Display.DisplayPolygons = true;
+  bool display_poly = m_model->settings.get_boolean("Display","DisplayPolygons");
+  m_model->settings.set_boolean("Display","DisplayPolygons", true);
   if (m_model->preview_shapes.size()>0) {
     Vector3d pMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
     Vector3d pMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
@@ -147,7 +147,7 @@ void View::preview_file (Glib::RefPtr< Gio::File > file)
     // m_renderer->set_transform(tr);
   }
   queue_draw();
-  m_model->settings.Display.DisplayPolygons = display_poly;
+  m_model->settings.set_boolean("Display","DisplayPolygons",display_poly);
 }
 
 void View::load_stl ()
@@ -380,12 +380,12 @@ void View::printing_changed()
 
 void View::enable_logging_toggled (Gtk::ToggleButton *button)
 {
-  m_model->settings.Printer.Logging = button->get_active();
+  m_model->settings.set_boolean("Printer","Logging", button->get_active());
 }
 
 void View::temp_monitor_enabled_toggled (Gtk::ToggleButton *button)
 {
-  m_model->settings.Misc.TempReadingEnabled = button->get_active();
+  m_model->settings.set_boolean("Misc","TempReadingEnabled", button->get_active());
   m_printer->UpdateTemperatureMonitor();
 }
 
@@ -426,6 +426,7 @@ void View::clear_logs()
   m_model->ClearLogs();
 }
 
+// open dialog to edit user gcode button
 void View::edit_custombutton(string name, string code, Gtk::ToolButton *button)
 {
   Gtk::Dialog *dialog;
@@ -438,6 +439,7 @@ void View::edit_custombutton(string name, string code, Gtk::ToolButton *button)
   m_builder->get_widget ("custom_gcode", tview);
   tview->get_buffer()->set_text(code);
   dialog->show();
+  // send result:
   dialog->signal_response().connect (sigc::bind(sigc::mem_fun(*this, &View::hide_custombutton_dlg), dialog));
 }
 void View::hide_custombutton_dlg(int code, Gtk::Dialog *dialog)
@@ -448,21 +450,9 @@ void View::hide_custombutton_dlg(int code, Gtk::Dialog *dialog)
   Gtk::TextView *tview;
   m_builder->get_widget ("custom_gcode", tview);
   string gcode = tview->get_buffer()->get_text();
-  bool have_name=false;
   if (code==1) {  // OK clicked
-    for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++)
-      {
-	if (m_model->settings.CustomButtonLabel[i] == name){
-	  m_model->settings.CustomButtonGcode[i] = gcode;
-	  have_name = true;
-	  break;
-	}
-      }
-    if (!have_name){
-      m_model->settings.CustomButtonLabel.push_back(name);
-      m_model->settings.CustomButtonGcode.push_back(gcode);
-      add_custombutton(name, gcode);
-    }
+    // save in settings:
+    m_model->settings.set_user_button(name, gcode);
   }
   dialog->hide();
 }
@@ -494,29 +484,17 @@ void View::custombutton_pressed(string name, Gtk::ToolButton *button)
   Gtk::Toolbar *toolbar;
   m_builder->get_widget ("i_custom_toolbar", toolbar);
   if (!toolbar) return;
-  for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++)
-    {
-      if (m_model->settings.CustomButtonLabel[i] == name)
-	{
-	  if (editbutton->get_active()) {
-	    //	    cerr << "edit button " << name <<endl;
-	    editbutton->set_active(false);
-	    edit_custombutton(m_model->settings.CustomButtonLabel[i],
-			      m_model->settings.CustomButtonGcode[i], button);
-	  } else if (rembutton->get_active()) {
-	    rembutton->set_active(false);
-	    toolbar->remove(*button);
-	    m_model->settings.CustomButtonGcode.
-	      erase(m_model->settings.CustomButtonGcode.begin()+i);
-	    m_model->settings.CustomButtonLabel.
-	      erase(m_model->settings.CustomButtonLabel.begin()+i);
-	  } else {
-	    //cerr << "button name " << name << endl;
-	    m_printer->Send(m_model->settings.CustomButtonGcode[i]);
-	  }
-	  break;
-	}
+  if (rembutton->get_active()) {
+    rembutton->set_active(false);
+    if (m_model->settings.del_user_button(name)) {
+      toolbar->remove(*button);
     }
+  } else if (editbutton->get_active()) {
+    editbutton->set_active(false);
+    edit_custombutton(name, m_model->settings.get_user_gcode(name), button);
+  } else {
+    m_printer->Send(m_model->settings.get_user_gcode(name));
+  }
 }
 
 
@@ -524,7 +502,8 @@ void View::log_msg(Gtk::TextView *tview, string s)
 {
   //Glib::Mutex::Lock lock(mutex);
   if (!tview || s.length() == 0) return;
-  if (!m_model || !m_model->settings.Printer.Logging) return;
+  if (!m_model || !m_model->settings.get_boolean("Printer","Logging"))
+    return;
 
   Glib::RefPtr<Gtk::TextBuffer> c_buffer = tview->get_buffer();
   Gtk::TextBuffer::iterator tend = c_buffer->end();
@@ -677,16 +656,6 @@ void View::save_settings_to(Glib::RefPtr < Gio::File > file)
 {
   m_model->settings.SettingsPath = file->get_parent()->get_path();
   saveWindowSizeAndPosition(m_model->settings);
-  Gtk::Expander *exp = NULL;
-  m_builder->get_widget ("layer_expander", exp);
-  if (exp)
-    m_model->settings.Misc.ExpandLayerDisplay = exp->get_expanded();
-  m_builder->get_widget ("model_expander", exp);
-  if (exp)
-    m_model->settings.Misc.ExpandModelDisplay = exp->get_expanded();
-  m_builder->get_widget ("printeraxis_expander", exp);
-  if (exp)
-    m_model->settings.Misc.ExpandPAxisDisplay = exp->get_expanded();
   m_model->SaveConfig(file);
 }
 
@@ -988,9 +957,12 @@ void View::update_settings_gui()
     for (guint i=buts.size(); i>0; i--) {
       toolbar->remove(*buts[i-1]);
     }
-    for (guint i=0; i<m_model->settings.CustomButtonLabel.size(); i++)
-      add_custombutton(m_model->settings.CustomButtonLabel[i],
-		       m_model->settings.CustomButtonGcode[i]);
+    vector<string> buttonlabels =
+      m_model->settings.get_string_list("UserButtons","Labels");
+    for (guint i=0; i< buttonlabels.size(); i++) {
+      add_custombutton(buttonlabels[i],
+		       m_model->settings.get_user_gcode(buttonlabels[i]));
+    }
   }
   update_extruderlist();
 }
@@ -1303,7 +1275,7 @@ void View::update_extruderlist()
   if (!m_model) return;
   if (!extruder_liststore) return;
   extruder_liststore->clear();
-  uint num = m_model->settings.Extruders.size();
+  uint num = m_model->settings.getNumExtruders();
   if (num==0) return;
   Gtk::TreeModel::Row row;
   for (uint i = 0; i < num ; i++) {
@@ -1316,7 +1288,7 @@ void View::update_extruderlist()
   Gtk::TreeModel::Row firstrow = extruder_treeview->get_model()->children()[0];
   extruder_treeview->get_selection()->select(firstrow);
   extruder_selected();
-  m_extruder_row->set_number(m_model->settings.Extruders.size());
+  m_extruder_row->set_number(num);
 }
 
 //  stop file preview when leaving file tab
@@ -1420,11 +1392,12 @@ bool View::saveWindowSizeAndPosition(Settings &settings) const
   Gtk::Window *pWindow = NULL;
   m_builder->get_widget("main_window", pWindow);
   if (pWindow) {
-    settings.Misc.window_width  = pWindow->get_width();
-    settings.Misc.window_height = pWindow->get_height();
-
-    pWindow->get_position(m_model->settings.Misc.window_posx,
-			  m_model->settings.Misc.window_posy);
+    settings.set_integer("Misc","WindowWidth", pWindow->get_width());
+    settings.set_integer("Misc","WindowHeight", pWindow->get_height());
+    int x,y;
+    pWindow->get_position(x,y);
+    settings.set_integer("Misc","WindowPosX", x);
+    settings.set_integer("Misc","WindowPosY", y);
     return true;
   }
   return false;
@@ -1449,7 +1422,7 @@ void View::setModel(Model *model)
   //  m_treeview->set_headers_visible(true);
 
   m_gcodetextview = NULL;
-  m_builder->get_widget ("txt_gcode_result", m_gcodetextview);
+  m_builder->get_widget ("GCode.Result", m_gcodetextview);
   m_gcodetextview->set_buffer (m_model->GetGCodeBuffer());
   m_gcodetextview->get_buffer()->signal_mark_set().
     connect( sigc::mem_fun(this, &View::on_gcodebuffer_cursor_set) );
