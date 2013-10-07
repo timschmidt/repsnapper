@@ -14,8 +14,14 @@
 #include <fstream>   // file I/O
 #include <vmmlib/tensor3_iterator.hpp>
 #include <vmmlib/enable_if.hpp>
-#include <vmmlib/blas_dgemm.hpp>
 #include <vmmlib/blas_dot.hpp>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <omp.h>
+#include <limits>
+#undef min
+#undef max
+
 
 namespace vmml
 {
@@ -39,7 +45,7 @@ public:
     typedef typename vmml::tensor3_iterator< tensor3< I1, I2, I3, T > >          reverse_iterator;
     typedef typename vmml::tensor3_iterator< tensor3< I1, I2, I3, T > >          const_reverse_iterator;
     
-    typedef matrix< I1, I2, T >        front_slice_type; //fwd: forward cylcling (after kiers et al., 2000)
+    typedef matrix< I1, I2, T >        front_slice_type; //fwd: forward cylcling (after kiers, 2000)
     typedef matrix< I3, I1, T >        lat_slice_type;
     typedef matrix< I2, I3, T >        horiz_slice_type;
 
@@ -87,6 +93,9 @@ public:
     
     // ctors
     tensor3();
+	
+	//allocate memory mapped file
+    tensor3( const std::string& dir_, const std::string& filename_, const bool prot_read_);
         
     tensor3( const tensor3& source );
     
@@ -196,6 +205,8 @@ public:
 	template< typename TT  >
 		void quantize( tensor3< I1, I2, I3, TT >& quantized_, T& min_value_, T& max_value_ ) const;
 	template< typename TT  >
+		void quantize_to( tensor3< I1, I2, I3, TT >& quantized_, tensor3< I1, I2, I3, char >& signs_, T& min_value_, T& max_value_, const TT& tt_range_ ) const;
+	template< typename TT  >
 		void quantize_to( tensor3< I1, I2, I3, TT >& quantized_, const T& min_value_, const T& max_value_ ) const;
 	template< typename TT  >
 		void quantize_log( tensor3< I1, I2, I3, TT >& quantized_, tensor3< I1, I2, I3, char >& signs_, T& min_value_, T& max_value_, const TT& tt_range_ ) const;
@@ -203,6 +214,8 @@ public:
 		void dequantize( tensor3< I1, I2, I3, TT >& dequantized_, const TT& min_value_, const TT& max_value_ ) const;
 	template< typename TT  >
 		void dequantize_log( tensor3< I1, I2, I3, TT >& dequantized_, const tensor3< I1, I2, I3, char >& signs_, const TT& min_value_, const TT& max_value_ ) const;
+	template< typename TT  >
+		void dequantize( tensor3< I1, I2, I3, TT >& dequantized_, const tensor3< I1, I2, I3, char >& signs_, const TT& min_value_, const TT& max_value_ ) const;
 	
     bool operator==( const tensor3& other ) const;
     bool operator!=( const tensor3& other ) const;
@@ -216,28 +229,13 @@ public:
     bool equals( const tensor3& other, compare_t& cmp ) const;
 	 
 	
-    //tensor times matrix multiplication along different modes
-    template< size_t J1, size_t J2, size_t J3 > 
-    void multiply_horizontal_bwd( const tensor3< J1, J2, J3, T >& other, const matrix< I3, J3, T >& other_slice_ ); //output: tensor3< J1, J2, I3, T >  
+	//NOTE: moved tensor times matrix multiplications (TTM) to t3_ttm
 	
-    template< size_t J1, size_t J2, size_t J3 > 
-    void multiply_lateral_bwd( const tensor3< J1, J2, J3, T >& other, const matrix< I1, J1, T >& other_slice_ ); //output: tensor3< I1, J2, J3, T > 
-	
-    template< size_t J1, size_t J2, size_t J3 > 
-    void multiply_frontal_bwd( const tensor3< J1, J2, J3, T >& other, const matrix< I2, J2, T >& other_slice_ ); //output: tensor3< J1, I2, J3, T >
-
 	//apply spherical weights
 	template< typename float_t>
     void apply_spherical_weights( tensor3< I1, I2, I3, float_t >& other );
 	void get_sphere();
 
-	
-    //backward cyclic matricization/unfolding (after Lathauwer et al., 2000a)
-    template< size_t J1, size_t J2, size_t J3 > 
-    void full_tensor3_matrix_multiplication( const tensor3< J1, J2, J3, T >& core, const matrix< I1, J1, T >& U1, const matrix< I2, J2, T >& U2, const matrix< I3, J3, T >& U3 );
-    template< size_t J1, size_t J2, size_t J3 > 
-    void full_tensor3_matrix_kronecker_mult( const tensor3< J1, J2, J3, T >& core, const matrix< I1, J1, T >& U1, const matrix< I2, J2, T >& U2, const matrix< I3, J3, T >& U3 );
-    
     void horizontal_unfolding_bwd( bwd_horiz_unfolding_type& unfolding) const;
     void horizontal_unfolding_fwd( fwd_horiz_unfolding_type& unfolding) const;
     void lateral_unfolding_bwd( bwd_lat_unfolding_type& unfolding) const;
@@ -245,7 +243,11 @@ public:
     void frontal_unfolding_bwd( bwd_front_unfolding_type& unfolding) const;
     void frontal_unfolding_fwd( fwd_front_unfolding_type& unfolding) const;
 
-
+    void horizontal_folding_bwd( const bwd_horiz_unfolding_type& unfolding);
+    void lateral_folding_bwd( const bwd_lat_unfolding_type& unfolding);
+    void frontal_folding_bwd( const bwd_front_unfolding_type& unfolding);
+	
+	
     // reconstruction of a Kruskal tensor => inversion of CP (Candecomp/Parafac)
     // please note that the parameter U will be overwritten
     // temp is simply a required workspace matrix, it can be empty or uninitialized
@@ -258,8 +260,9 @@ public:
         vmml::matrix< R, I2 * I3, T >& temp
         ); //-> tensor outer product
     	
+	
 	template< size_t R, typename TT >
-	T tensor_inner_product(
+	double tensor_inner_product(
         const vmml::vector< R, TT>& lambda,
         const vmml::matrix< I1, R, TT >& U,
         const vmml::matrix< I2, R, TT >& V,
@@ -269,11 +272,20 @@ public:
     double frobenius_norm() const;
     double frobenius_norm( const tensor3< I1, I2, I3, T >& other ) const;
 	double avg_frobenius_norm() const;
+    double mse( const tensor3< I1, I2, I3, T >& other ) const; // mean-squared error
     double rmse( const tensor3< I1, I2, I3, T >& other ) const; //root mean-squared error
     double compute_psnr( const tensor3< I1, I2, I3, T >& other, const T& max_value_ ) const; //peak signal-to-noise ratio
-    
+    void mean( T& mean_ ) const; 
+    double mean() const; 
+    double variance() const; 
+	double stdev() const; 
+   
     template< typename TT >
     void cast_from( const tensor3< I1, I2, I3, TT >& other );
+
+    template< size_t J1, size_t J2, size_t  J3, typename TT >
+	void cast_from( const tensor3< J1, J2, J3, TT >& other, const long& slice_idx_start_ = 0 );
+
 	
     template< typename TT >
     void float_t_to_uint_t( const tensor3< I1, I2, I3, TT >& other );
@@ -285,7 +297,9 @@ public:
 	void write_datfile( const std::string& dir_, const std::string& filename_ ) const;
 	void write_to_csv( const std::string& dir_, const std::string& filename_ ) const;
 	void remove_normals_from_raw( const std::string& dir_, const std::string& filename_ ) ;
-	void remove_uct_cylinder( const size_t radius_offset_ ) ;
+	
+	//note: moved to t3_converter
+	//void remove_uct_cylinder( const size_t radius_offset_, int seed_ = 0 ) ;
 	    
     inline tensor3 operator+( T scalar ) const;
     inline tensor3 operator-( T scalar ) const;
@@ -296,6 +310,10 @@ public:
     inline tensor3 operator+( const tensor3& other ) const;
     inline tensor3 operator-( const tensor3& other ) const;
     
+	template< size_t J1, size_t J2, size_t J3>
+	typename enable_if< J1 < I1 && J2 < I2 && J3 < I3 >::type*
+	operator+=( const tensor3< J1, J2, J3, T>& other );
+	
     void operator+=( const tensor3& other );
     void operator-=( const tensor3& other );
 
@@ -305,7 +323,10 @@ public:
     tensor3 operator*( T scalar );
     void operator*=( T scalar );
 	
-    //
+	tensor3 operator/( T scalar );
+    void operator/=( T scalar );
+	
+	//
     // matrix-vector operations
     //
     // transform column vector by matrix ( vec = matrix * vec )
@@ -333,6 +354,8 @@ public:
     // static members
     static void     tensor3_allocate_data( T*& array_ );
     static void     tensor3_deallocate_data( T*& array_ );
+    static void     t3_allocate_rd_mmap( const std::string& dir_, const std::string& filename_, T*& array_, int& fd_ );
+    static void     t3_allocate_wr_mmap( const std::string& dir_, const std::string& filename_, T*& array_, int& fd_ );
 
     static const tensor3< I1, I2, I3, T > ZERO;
 
@@ -342,12 +365,17 @@ public:
     // computes the array index for direct access 
     inline size_t compute_index( size_t i1, size_t i2, size_t i3 ) const;
 
+	bool is_mmapped() const { return _is_mmapped; };
 
 protected:
     front_slice_type&                   _get_slice( size_t index_ );
     const front_slice_type&             _get_slice( size_t index_ ) const;
 
 	T*                      _array;
+	
+	bool _is_mmapped;
+	int _fd;
+	
 }; // class tensor3
 
 #define VMML_TEMPLATE_STRING    template< size_t I1, size_t I2, size_t I3, typename T >
@@ -355,8 +383,19 @@ protected:
 
 
 VMML_TEMPLATE_STRING
+VMML_TEMPLATE_CLASSNAME::tensor3( const std::string& dir_, const std::string& filename_, const bool prot_read_ )
+: _array(), _is_mmapped(1), _fd(-1)
+{
+	if ( prot_read_ ) {
+		t3_allocate_rd_mmap( dir_, filename_, _array, _fd );
+	} else {
+		t3_allocate_wr_mmap( dir_, filename_, _array, _fd );
+	}
+}	
+	
+VMML_TEMPLATE_STRING
 VMML_TEMPLATE_CLASSNAME::tensor3()
-	: _array()
+	: _array(), _is_mmapped(0), _fd(0)
 {
     tensor3_allocate_data( _array );
 }
@@ -364,30 +403,48 @@ VMML_TEMPLATE_CLASSNAME::tensor3()
 	
 VMML_TEMPLATE_STRING
 VMML_TEMPLATE_CLASSNAME::tensor3( const tensor3& source_ )
-    : _array()
+    : _array(), _is_mmapped(0), _fd(-1)
 {
-    tensor3_allocate_data( _array );
-    (*this) = source_;
+ 	_is_mmapped = source_.is_mmapped();
+	if (_is_mmapped ) {
+		//t3_allocate_copy_mmp( _array );
+		std::cout << "not yet implemented check tensor3 copy construtor" << std::endl;
+	} 
+	else 
+	{
+		tensor3_allocate_data( _array );
+		(*this) = source_;
+	}
 }
 
 
 VMML_TEMPLATE_STRING
 template< typename U >
 VMML_TEMPLATE_CLASSNAME::tensor3( const tensor3< I1, I2, I3, U >& source_ )
+	: _is_mmapped(0), _fd(-1)
 {
-    tensor3_allocate_data( _array );
 	const U* s_array = source_.get_array_ptr();
-    for( size_t index = 0; index < I1 * I2 * I3; ++index )
-    {
-        _array[ index ] = static_cast< T >( s_array[ index ] );
-        //_array[ index ] = static_cast< T >( source_._array[ index ] );
-    }
+
+	_is_mmapped = source_.is_mmapped();
+	if (_is_mmapped ) {
+		//t3_allocate_copy_mmp( _array, s_array );
+		std::cout << "not yet implemented check tensor3 copy construtor" << std::endl;
+	} 
+	else 
+	{
+		tensor3_allocate_data( _array );
+		for( size_t index = 0; index < I1 * I2 * I3; ++index )
+		{
+			_array[ index ] = static_cast< T >( s_array[ index ] );
+		}
+	}
 }
 	
 
 VMML_TEMPLATE_STRING
 template< size_t J1, size_t J2, size_t J3 >
 VMML_TEMPLATE_CLASSNAME::tensor3( const tensor3< J1, J2, J3, T >& source_ )
+: _is_mmapped(0), _fd(-1)
 {
 	const size_t minL =  J1 < I1 ? J1 : I1;
 	const size_t minC =  J2 < I2 ? J2 : I2;
@@ -395,22 +452,39 @@ VMML_TEMPLATE_CLASSNAME::tensor3( const tensor3< J1, J2, J3, T >& source_ )
 	
 	zero();
 	
-	for ( size_t i = 0 ; i < minL ; i++ ) {
-		for ( size_t j = 0 ; j < minC ; j++ ) {
-			for ( size_t k = 0 ; k < minS ; k++ )
-			{
-				at( i,j, k ) = source_( i, j, k ); 
+	_is_mmapped = source_.is_mmapped();
+	if (_is_mmapped ) 
+	{
+		//t3_allocate_copy_mmp( _array, s_array );
+		std::cout << "not yet implemented check tensor3 copy construtor" << std::endl;
+	} 
+	else 
+	{
+		for ( size_t i = 0 ; i < minL ; i++ ) {
+			for ( size_t j = 0 ; j < minC ; j++ ) {
+				for ( size_t k = 0 ; k < minS ; k++ )
+				{
+					at( i,j, k ) = source_( i, j, k ); 
+				}
 			}
 		}
 	}
 }
-
+	
 
 
 VMML_TEMPLATE_STRING
 VMML_TEMPLATE_CLASSNAME::~tensor3()
 {
-    tensor3_deallocate_data( _array );
+	if (_is_mmapped )
+	{
+		munmap( _array, sizeof(T) * SIZE ); //get error
+		close( _fd );
+	} 
+	else 
+	{
+		tensor3_deallocate_data( _array );
+	}
 }
 
 	
@@ -685,7 +759,7 @@ get_frontal_slice_bwd( size_t i3, bwd_front_slice_type& data ) const
 	
 	front_slice_type* data_t = new front_slice_type();
 	*data_t = _get_slice( i3 );
-	data = transpose( *data_t );
+	data_t->transpose_to( data );
 	delete data_t;
 }
 
@@ -704,7 +778,7 @@ get_lateral_slice_fwd( size_t i2, lat_slice_type& data ) const
 	{
 		data_t->set_column( i3, _get_slice( i3 ).get_column( i2 ));
 	}
-	data = transpose( *data_t );
+	data_t->transpose_to( data );
 	delete data_t;
 }
 
@@ -722,7 +796,7 @@ get_horizontal_slice_bwd( size_t i1, bwd_horiz_slice_type& data ) const
 	{
 		data_t->set_column( i3, _get_slice( i3 ).get_row( i1 )); //or for every i2 get/set column
 	}
-	data = transpose( *data_t );
+	data_t->transpose_to( data );
 	delete data_t;
 }
 	
@@ -787,7 +861,7 @@ set_frontal_slice_bwd( size_t i3, const bwd_front_slice_type& data )
 		VMMLIB_ERROR( "set_frontal_slice_bwd() - index out of bounds.", VMMLIB_HERE );
 #endif
 	front_slice_type* data_t  = new front_slice_type();
-	*data_t = transpose( data );
+	data.transpose_to( *data_t );
 	_get_slice( i3 ) = *data_t;
 	delete data_t;
 }
@@ -802,7 +876,7 @@ set_lateral_slice_fwd( size_t i2, const lat_slice_type& data )
 		VMMLIB_ERROR( "set_lateral_slice_fwd() - index out of bounds.", VMMLIB_HERE );
 #endif
 	bwd_lat_slice_type* data_t = new bwd_lat_slice_type();
-	*data_t = transpose( data );
+	data.transpose_to( *data_t );
 	for( size_t i3 = 0; i3 < I3; ++i3 )
 	{
 		_get_slice( i3 ).set_column(i2, data_t->get_column( i3 ));
@@ -821,7 +895,7 @@ set_horizontal_slice_bwd( size_t i1, const bwd_horiz_slice_type& data )
 		VMMLIB_ERROR( "set_horizontal_slice_bwd() - index out of bounds.", VMMLIB_HERE );
 #endif
 	horiz_slice_type* data_t = new horiz_slice_type();
-	*data_t = transpose( data );
+	data.transpose_to( *data_t );
 	
 	for( size_t i3 = 0; i3 < I3; ++i3 )
 	{
@@ -1244,6 +1318,25 @@ VMML_TEMPLATE_CLASSNAME::operator+( const tensor3< I1, I2, I3, T >& other ) cons
 
 
 VMML_TEMPLATE_STRING
+template< size_t J1, size_t J2, size_t J3>
+typename enable_if< J1 < I1 && J2 < I2 && J3 < I3 >::type*
+VMML_TEMPLATE_CLASSNAME::operator+=( const tensor3< J1, J2, J3, T >& other )
+{
+	for( size_t i3 = 0; i3 < J3; ++i3 )
+	{
+		for( size_t i1 = 0; i1 < J1; ++i1 )
+		{
+			for( size_t i2 = 0; i2 < J2; ++i2 )
+			{
+				at( i1, i2, i3 ) += other.at(i1, i2, i3);
+			}		
+		}
+	}
+	return 0;
+}
+	
+	
+VMML_TEMPLATE_STRING
 void
 VMML_TEMPLATE_CLASSNAME::operator+=( const tensor3< I1, I2, I3, T >& other )
 {
@@ -1329,171 +1422,6 @@ VMML_TEMPLATE_CLASSNAME::operator-=( T scalar )
         *it -= scalar;
     }
 }
-
-
-
-
-//tensor matrix multiplications
-
-VMML_TEMPLATE_STRING
-template< size_t J1, size_t J2, size_t J3 > 
-void
-VMML_TEMPLATE_CLASSNAME::multiply_horizontal_bwd( const tensor3< J1, J2, J3, T >& other, const matrix< I3, J3, T >& other_slice_ )
-{
-	matrix< J3, J2, T >* slice = new matrix< J3, J2, T >;
-	matrix< I3, J2, T >* slice_new = new matrix< I3, J2, T >;
-	
-	blas_dgemm< I3, J3, J2, T_blas >* blas_dgemm1 = new blas_dgemm< I3, J3, J2, T_blas >;
-	matrix< J3, J2, T_blas >* slice_blas = new matrix< J3, J2, T_blas >;
-	matrix< I3, J2, T_blas >* slice_new_blas = new matrix< I3, J2, T_blas >;
-	matrix< I3, J3, T_blas >* other_slice_blas = new matrix< I3, J3, T_blas >;
-	other_slice_blas->cast_from( other_slice_ );
-	
-	for ( size_t i1 = 0; i1 < J1; ++i1 )
-	{
-		other.get_horizontal_slice_bwd( i1, *slice );
-		
-		slice_blas->cast_from( *slice );
-		blas_dgemm1->compute( *other_slice_blas, *slice_blas, *slice_new_blas );
-		slice_new->cast_from( *slice_new_blas );
-		//slice_new->multiply( other_slice_, *slice );
-		
-		set_horizontal_slice_bwd( i1, *slice_new );		
-	}
-	
-	delete blas_dgemm1;	
-	delete slice;
-	delete slice_new;
-	delete slice_blas;
-	delete slice_new_blas;
-	delete other_slice_blas;
-}
-
-VMML_TEMPLATE_STRING
-template< size_t J1, size_t J2, size_t J3 > 
-void
-VMML_TEMPLATE_CLASSNAME::multiply_lateral_bwd( const tensor3< J1, J2, J3, T >& other, const matrix< I1, J1, T >& other_slice_ )
-{
-	matrix< J1, J3, T>* slice = new matrix< J1, J3, T>();
-	matrix< I1, J3, T>* slice_new = new matrix< I1, J3, T>();
-	
-	blas_dgemm< I1, J1, J3, T_blas >* blas_dgemm1 = new blas_dgemm< I1, J1, J3, T_blas >;
-	matrix< J1, J3, T_blas >* slice_blas = new matrix< J1, J3, T_blas >;
-	matrix< I1, J3, T_blas >* slice_new_blas = new matrix< I1, J3, T_blas >;
-	matrix< I1, J1, T_blas >* other_slice_blas = new matrix< I1, J1, T_blas >;
-	other_slice_blas->cast_from( other_slice_ );
-	
-	for ( size_t i2 = 0; i2 < J2; ++i2 )
-	{
-		other.get_lateral_slice_bwd( i2, *slice );
-		
-		slice_blas->cast_from( *slice );
-		blas_dgemm1->compute( *other_slice_blas, *slice_blas, *slice_new_blas );
-		slice_new->cast_from( *slice_new_blas );
-		
-		//slice_new->multiply( other_slice_, *slice );
-		set_lateral_slice_bwd( i2, *slice_new );		
-	}
-	delete blas_dgemm1;	
-	delete slice;
-	delete slice_new;
-	delete slice_blas;
-	delete slice_new_blas;
-	delete other_slice_blas;
-}
- 
- 
-VMML_TEMPLATE_STRING
-template< size_t J1, size_t J2, size_t J3 > 
-void
-VMML_TEMPLATE_CLASSNAME::multiply_frontal_bwd( const tensor3< J1, J2, J3, T >& other, const matrix< I2, J2, T >& other_slice_ )
-{
-	 matrix< J2, J1, T>* slice = new matrix< J2, J1, T>();
-	 matrix< I2, J1, T>* slice_new = new matrix< I2, J1, T>();
-
-	blas_dgemm< I2, J2, J1, T_blas >* blas_dgemm1 = new blas_dgemm< I2, J2, J1, T_blas >;
-	matrix< J2, J1, T_blas >* slice_blas = new matrix< J2, J1, T_blas >;
-	matrix< I2, J1, T_blas >* slice_new_blas = new matrix< I2, J1, T_blas >;
-	matrix< I2, J2, T_blas >* other_slice_blas = new matrix< I2, J2, T_blas >;
-	other_slice_blas->cast_from( other_slice_ );
-	
-	for ( size_t i3 = 0; i3 < J3; ++i3 )
-	 {
-		 other.get_frontal_slice_bwd( i3, *slice );
-		 
-		 slice_blas->cast_from( *slice );
-		 blas_dgemm1->compute( *other_slice_blas, *slice_blas, *slice_new_blas );
-		 slice_new->cast_from( *slice_new_blas );
-		 
-		 //slice_new->multiply( other_slice_, *slice );
-		 set_frontal_slice_bwd( i3, *slice_new );		
-	 }
-	delete blas_dgemm1;	
-	delete slice;
-	delete slice_new;
-	delete slice_blas;
-	delete slice_new_blas;
-	delete other_slice_blas;
-}
- 
- 
- 
-VMML_TEMPLATE_STRING
-template< size_t J1, size_t J2, size_t J3 > 
-void
-VMML_TEMPLATE_CLASSNAME::full_tensor3_matrix_multiplication(  const tensor3< J1, J2, J3, T >& core, 
-														   const matrix< I1, J1, T >& U1, 
-														   const matrix< I2, J2, T >& U2, 
-														   const matrix< I3, J3, T >& U3 )
-{
-	tensor3< I1, J2, J3, T> t3_result_1;
-	tensor3< I1, I2, J3, T> t3_result_2;
- 
-	//backward cyclic matricization/unfolding (after Lathauwer et al., 2000a)
-	t3_result_1.multiply_lateral_bwd( core, U1 );
-	t3_result_2.multiply_frontal_bwd( t3_result_1, U2 );
-	multiply_horizontal_bwd( t3_result_2, U3 );
-}
-	
-VMML_TEMPLATE_STRING
-template< size_t J1, size_t J2, size_t J3 > 
-void
-VMML_TEMPLATE_CLASSNAME::full_tensor3_matrix_kronecker_mult(  const tensor3< J1, J2, J3, T >& core, 
-															const matrix< I1, J1, T >& U1, 
-															const matrix< I2, J2, T >& U2, 
-															const matrix< I3, J3, T >& U3 )
-{
-	matrix< J1, J2*J3, T>* core_unfolded = new matrix< J1, J2*J3, T>();
-	core.lateral_unfolding_bwd( *core_unfolded );
-	matrix< I1, J2*J3, T>* tmp1 = new matrix< I1, J2*J3, T>();
-	tmp1->multiply( U1, *core_unfolded );
-
-	matrix< I2*I3, J2*J3, T>* kron_prod = new matrix< I2*I3, J2*J3, T>();
-	U2.kronecker_product( U3, *kron_prod );
-	
-	matrix< I1, I2*I3, T>* res_unfolded = new matrix< I1, I2*I3, T>();
-	res_unfolded->multiply( *tmp1, transpose(*kron_prod) );
-	
-	//std::cout << "reco2 result (matricized): " << std::endl << *res_unfolded << std::endl;
-	
-	//set this from res_unfolded
-	size_t i2 = 0;
-	for( size_t i = 0; i < (I2*I3); ++i, ++i2 )
-	{
-		if (i2 >= I2) {
-			i2 = 0;
-		}
-	
-		size_t i3 = i % I3;
-		set_column( i2, i3, res_unfolded->get_column(i));
-	}
-	
-	delete core_unfolded;
-	delete kron_prod;
-	delete tmp1;
-	delete res_unfolded;
-}
-
 	
 VMML_TEMPLATE_STRING
 void 
@@ -1591,6 +1519,56 @@ VMML_TEMPLATE_CLASSNAME::frontal_unfolding_fwd( fwd_front_unfolding_type& unfold
 	delete frontal_slice;
 }
 
+VMML_TEMPLATE_STRING
+void 
+VMML_TEMPLATE_CLASSNAME::horizontal_folding_bwd( const bwd_horiz_unfolding_type& unfolding)
+{
+	bwd_horiz_slice_type* horizontal_slice = new bwd_horiz_slice_type;
+	for( size_t i = 0; i < I1; ++i )
+	{
+		for( size_t col = 0; col < I2; ++col )
+		{
+			horizontal_slice->set_column(col, unfolding.get_column( i*I2+col ));
+		} 
+		set_horizontal_slice_bwd(i, *horizontal_slice );
+	}
+	delete horizontal_slice;
+}
+	
+	
+VMML_TEMPLATE_STRING
+void 
+VMML_TEMPLATE_CLASSNAME::frontal_folding_bwd( const bwd_front_unfolding_type& unfolding) 
+{
+	bwd_front_slice_type* frontal_slice = new bwd_front_slice_type();
+	for( size_t i = 0; i < I3; ++i )
+	{
+		for( size_t col = 0; col < I1; ++col )
+		{
+			frontal_slice->set_column(col, unfolding.get_column( i*I1+col));
+		} 
+		set_frontal_slice_bwd(i, *frontal_slice );
+	}
+	delete frontal_slice;
+}
+
+	
+VMML_TEMPLATE_STRING
+void 
+VMML_TEMPLATE_CLASSNAME::lateral_folding_bwd( const bwd_lat_unfolding_type& unfolding) 
+{
+	bwd_lat_slice_type* lateral_slice = new bwd_lat_slice_type();
+	for( size_t i = 0; i < I2; ++i )
+	{
+		for( size_t col = 0; col < I3; ++col )
+		{
+			lateral_slice->set_column(col, unfolding.get_column( i*I3+col ));
+		} 
+		set_lateral_slice_bwd(i, *lateral_slice );
+	}
+	delete lateral_slice;
+}
+
 
 VMML_TEMPLATE_STRING
 tensor3< I1, I2, I3, T >
@@ -1632,7 +1610,43 @@ VMML_TEMPLATE_CLASSNAME::operator*=( T scalar )
 #endif	
 }
 
+VMML_TEMPLATE_STRING
+tensor3< I1, I2, I3, T >
+VMML_TEMPLATE_CLASSNAME::operator/( T scalar )
+{
+	tensor3< I1, I2, I3, T > result;
+	
+	for( size_t slice_idx = 0; slice_idx < I3; ++ slice_idx )
+	{
+		for( size_t row_index = 0; row_index < I1; ++row_index )
+		{
+			for( size_t col_index = 0; col_index < I2; ++col_index )
+			{
+				result.at( row_index, col_index, slice_idx ) = at( row_index, col_index, slice_idx ) / scalar;
+			}
+		}
+	}
+	return result;
+}
 
+
+
+VMML_TEMPLATE_STRING
+void
+VMML_TEMPLATE_CLASSNAME::operator/=( T scalar )
+{
+	for( size_t slice_idx = 0; slice_idx < I3; ++ slice_idx )
+	{
+		for( size_t row_index = 0; row_index < I1; ++row_index )
+		{
+			for( size_t col_index = 0; col_index < I2; ++col_index )
+			{
+				at( row_index, col_index, slice_idx ) /= scalar;
+			}
+		}
+	}
+}
+	
 
 VMML_TEMPLATE_STRING
 inline tensor3< I1, I2, I3, T >
@@ -1673,9 +1687,24 @@ double
 VMML_TEMPLATE_CLASSNAME::frobenius_norm( ) const
 {
     double f_norm = 0.0;
-    const_iterator it = begin(), it_end = end(); 
+#if 0   
+	const_iterator it = begin(), it_end = end(); 
     for( ; it != it_end; ++it )
          f_norm += *it * *it;
+#else
+	for( long i3 = 0; i3 < long(I3); ++i3 )
+	{
+		for( long i1 = 0; i1 < long(I1); ++i1 )
+		{
+			long i2 = 0;
+			for( i2 = 0; i2 < long(I2); ++i2 )
+			{
+				f_norm += at(i1, i2, i3 ) * at(i1, i2, i3 );
+			}
+		}
+	}
+	
+#endif
 
     return sqrt(f_norm);
 }
@@ -1695,19 +1724,74 @@ VMML_TEMPLATE_CLASSNAME::avg_frobenius_norm( ) const
 
 VMML_TEMPLATE_STRING
 double 
-VMML_TEMPLATE_CLASSNAME::rmse( const tensor3< I1, I2, I3, T >& other ) const
+VMML_TEMPLATE_CLASSNAME::mse( const tensor3< I1, I2, I3, T >& other ) const
 {
-	double mse = 0.0;
+	double mse_val = 0.0;
 	double diff = 0.0;
 	const_iterator it = begin(), it_end = end(); 
-	const_iterator other_it = other.begin(), other_it_end = other.end(); 
+	const_iterator other_it = other.begin(); 
 	for( ; it != it_end; ++it, ++other_it ){
 		diff = abs( *it ) - abs( *other_it );
-		mse += diff * diff;
+		mse_val += diff * diff;
 	}
 	
-	return sqrt(mse/size());
+	mse_val /= (double)size();
+	
+	return mse_val;
 }	
+	
+	
+VMML_TEMPLATE_STRING
+double 
+VMML_TEMPLATE_CLASSNAME::rmse( const tensor3< I1, I2, I3, T >& other ) const
+{
+	return sqrt(mse( other ));
+}	
+	
+VMML_TEMPLATE_STRING
+double
+VMML_TEMPLATE_CLASSNAME::mean() const
+{
+	double val = 0;
+	const_iterator it = begin(), it_end = end(); 
+	for( ; it != it_end; ++it ){
+		val += double(abs( *it ));
+	}
+	
+	return ( val/size());
+}	
+	
+	
+VMML_TEMPLATE_STRING
+void 
+VMML_TEMPLATE_CLASSNAME::mean( T& mean_ ) const
+{
+	mean_ = static_cast< T >( mean() );
+}	
+	
+VMML_TEMPLATE_STRING
+double
+VMML_TEMPLATE_CLASSNAME::variance() const
+{
+	double val = 0.0;
+	double sum_val = 0.0;
+	double mean_val = mean();
+	const_iterator it = begin(), it_end = end(); 
+	for( ; it != it_end; ++it ){
+		val = double(*it) - mean_val;
+		val *= val;
+		sum_val += val;
+	}
+	
+	return double(sum_val/(size()-1));
+}	
+
+VMML_TEMPLATE_STRING
+double
+VMML_TEMPLATE_CLASSNAME::stdev() const
+{
+	return sqrt(variance());
+}		
 
 VMML_TEMPLATE_STRING
 double 
@@ -1725,7 +1809,8 @@ template< typename TT >
 void
 VMML_TEMPLATE_CLASSNAME::cast_from( const tensor3< I1, I2, I3, TT >& other )
 {
-    typedef tensor3< I1, I2, I3, TT > t3_tt_type ;
+#if 0
+   typedef tensor3< I1, I2, I3, TT > t3_tt_type ;
     typedef typename t3_tt_type::const_iterator tt_const_iterator;
     
     iterator it = begin(), it_end = end();
@@ -1734,7 +1819,45 @@ VMML_TEMPLATE_CLASSNAME::cast_from( const tensor3< I1, I2, I3, TT >& other )
     {
         *it = static_cast< T >( *other_it );
     }
+#else
+#pragma omp parallel for
+	for( long slice_idx = 0; slice_idx < (long)I3; ++ slice_idx )
+	{
+#pragma omp parallel for
+		for( long row_index = 0; row_index < (long)I1; ++row_index )
+		{
+#pragma omp parallel for
+			for( long col_index = 0; col_index < (long)I2; ++col_index )
+			{
+				at( row_index, col_index, slice_idx ) =  static_cast< T >(other.at( row_index, col_index, slice_idx ));
+			}
+		}
+	}
+
+#endif
 }
+	
+VMML_TEMPLATE_STRING
+template< size_t J1, size_t J2, size_t  J3, typename TT >
+void
+VMML_TEMPLATE_CLASSNAME::cast_from( const tensor3< J1, J2, J3, TT >& other, const long& slice_idx_start_ )
+{
+#pragma omp parallel for
+	for( long slice_idx = slice_idx_start_; slice_idx < (long)J3; ++ slice_idx )
+	{
+#pragma omp parallel for
+		for( long row_index = 0; row_index < (long)J1; ++row_index )
+		{
+#pragma omp parallel for
+			for( long col_index = 0; col_index < (long)J2; ++col_index )
+			{
+				at( row_index, col_index, slice_idx ) =  static_cast< T >(other.at( row_index, col_index, slice_idx ));
+			}
+		}
+	}
+}
+	
+	
 
 VMML_TEMPLATE_STRING
 template< typename TT >
@@ -1914,13 +2037,16 @@ VMML_TEMPLATE_CLASSNAME::threshold( const T& threshold_value_ )
 VMML_TEMPLATE_STRING
 template< typename TT  >
 void
-VMML_TEMPLATE_CLASSNAME::quantize_to( tensor3< I1, I2, I3, TT >& quantized_, const T& min_value_, const T& max_value_ ) const
+VMML_TEMPLATE_CLASSNAME::quantize_to( tensor3< I1, I2, I3, TT >& quantized_, 
+									 const T& min_value_, const T& max_value_ ) const
 {
-	long max_tt_range = long(std::numeric_limits< TT >::max());
-	long min_tt_range = long(std::numeric_limits< TT >::min());
-	long tt_range = (max_tt_range - min_tt_range);
+	double max_tt_range = double(std::numeric_limits< TT >::max());
+	double min_tt_range = double(std::numeric_limits< TT >::min());
+	double tt_range = max_tt_range - min_tt_range;
+	double t_range = max_value_ - min_value_;
 	
-	T t_range = max_value_ - min_value_;
+	//std::cout << "tt min= " << min_tt_range << ", tt max= " << max_tt_range << ", t min= " << min_value_ << ", t max= " << max_value_ << std::endl;
+	//std::cout << "tt range=" << tt_range << ", t range= " << t_range << std::endl;
 	
 	typedef tensor3< I1, I2, I3, TT > t3_tt_type ;
 	typedef typename t3_tt_type::iterator tt_iterator;
@@ -1930,10 +2056,11 @@ VMML_TEMPLATE_CLASSNAME::quantize_to( tensor3< I1, I2, I3, TT >& quantized_, con
 	for( ; it != it_end; ++it, ++it_quant )
 	{
 		if (std::numeric_limits<TT>::is_signed ) {
-			*it_quant = TT( std::min( std::max( min_tt_range, long(( *it * tt_range / t_range ) + 0.5)), max_tt_range ));
+			*it_quant = TT( std::min( std::max( min_tt_range, double(( *it * tt_range / t_range ) + 0.5)), max_tt_range ));
 		} else {
-			*it_quant = TT( std::min( std::max( min_tt_range, long(((*it - min_value_ ) * tt_range / t_range) + 0.5)), max_tt_range ));
+			*it_quant = TT( std::min( std::max( min_tt_range, double(((*it - min_value_ ) * tt_range / t_range) + 0.5)), max_tt_range ));
 		}
+		//std::cout << "original value= " << double(*it) << ", converted value= " << double(*it_quant ) << std::endl;
 	}
 }
 	
@@ -1955,12 +2082,12 @@ template< typename TT  >
 void
 	VMML_TEMPLATE_CLASSNAME::quantize_log( tensor3< I1, I2, I3, TT >& quantized_, tensor3< I1, I2, I3, char >& signs_, T& min_value_, T& max_value_, const TT& tt_range_ ) const
 {
-	long max_tt_range = long(tt_range_);
-	long min_tt_range = 0;
+	double max_tt_range = double(tt_range_);
+	double min_tt_range = 0;
 	
 	min_value_ = get_abs_min();
 	max_value_ = get_abs_max();
-	T t_range = max_value_ - min_value_;
+	double t_range = max_value_ - min_value_;
 	
 	typedef tensor3< I1, I2, I3, TT > t3_tt_type ;
 	typedef typename t3_tt_type::iterator tt_iterator;
@@ -1978,14 +2105,86 @@ void
 		T quant_value = 0;
 		if (std::numeric_limits<TT>::is_signed ) {
 			quant_value = log2( 1 + value) / log2(1 + t_range ) * tt_range_;
-			*it_quant = TT( std::min( std::max( min_tt_range, long(quant_value + 0.5)), max_tt_range ));
+			*it_quant = TT( std::min( std::max( min_tt_range, double(quant_value + 0.5)), max_tt_range ));
 		} else {
 			quant_value = log2( 1 + (value - min_value_ )) / log2(1 + t_range ) * tt_range_;
-			*it_quant = TT(std::min( std::max( min_tt_range, long(quant_value + 0.5)), max_tt_range ));
+			*it_quant = TT(std::min( std::max( min_tt_range, double(quant_value + 0.5)), max_tt_range ));
 		}
 	}
 }		
 
+VMML_TEMPLATE_STRING
+template< typename TT  >
+void
+VMML_TEMPLATE_CLASSNAME::quantize_to( tensor3< I1, I2, I3, TT >& quantized_, 
+								  tensor3< I1, I2, I3, char >& signs_, 
+								  T& min_value_, T& max_value_, 
+								  const TT& tt_range_ ) const
+{
+	double max_tt_range = double(tt_range_);
+	double min_tt_range = 0;
+	
+	min_value_ = get_abs_min();
+	max_value_ = get_abs_max();
+	double t_range = max_value_ - min_value_;
+	
+	typedef tensor3< I1, I2, I3, TT > t3_tt_type ;
+	typedef typename t3_tt_type::iterator tt_iterator;
+	tt_iterator it_quant = quantized_.begin();
+	const_iterator it = begin(), it_end = end();
+	
+	typedef tensor3< I1, I2, I3, char > t3_sign_type ;
+	typedef typename t3_sign_type::iterator sign_iterator;
+	sign_iterator it_sign = signs_.begin();
+	
+	for( ; it != it_end; ++it, ++it_quant, ++it_sign )
+	{
+		T value = fabs(*it);
+		*it_sign  = ((*it) < 0.f) ? 0 : 1;
+		if (std::numeric_limits<TT>::is_signed ) {
+			*it_quant = TT( std::min( std::max( min_tt_range, double(( value * tt_range_ / t_range ) + 0.5)), max_tt_range ));
+		} else {
+			*it_quant = TT( std::min( std::max( min_tt_range, double((( value - min_value_ ) * tt_range_ / t_range) + 0.5)), max_tt_range ));
+		}
+	}
+}		
+	
+	
+VMML_TEMPLATE_STRING
+template< typename TT  >
+void
+VMML_TEMPLATE_CLASSNAME::dequantize( tensor3< I1, I2, I3, TT >& dequantized_, 
+										const tensor3< I1, I2, I3, char >& signs_, 
+										const TT& min_value_, const TT& max_value_ ) const
+{
+	T max_t_range = get_max();
+	T min_t_range = get_min();
+	long t_range = long(max_t_range) - long(min_t_range);
+	
+	TT tt_range = max_value_ - min_value_;
+	
+	typedef tensor3< I1, I2, I3, TT > t3_tt_type ;
+	typedef typename t3_tt_type::iterator tt_iterator;
+	tt_iterator it_dequant = dequantized_.begin();
+	const_iterator it = begin(), it_end = end();
+	
+	typedef tensor3< I1, I2, I3, char > t3_sign_type ;
+	typedef typename t3_sign_type::const_iterator sign_iterator;
+	sign_iterator it_sign = signs_.begin();
+	
+	float sign = 0;
+	for( ; it != it_end; ++it, ++it_dequant, ++it_sign )
+	{
+		sign  = ((*it_sign) == 0) ? -1 : 1;
+		if (std::numeric_limits<T>::is_signed ) {
+			*it_dequant = sign * std::min( std::max( min_value_, TT((TT(*it) / t_range) * tt_range)), max_value_ );
+		} else {
+			*it_dequant = sign * std::min( std::max( min_value_, TT((((TT(*it) / t_range)) * tt_range ) + min_value_ )), max_value_ );
+		}
+	}
+}	
+	
+	
 VMML_TEMPLATE_STRING
 template< typename TT  >
 void
@@ -2182,7 +2381,7 @@ VMML_TEMPLATE_CLASSNAME::write_datfile( const std::string& dir_, const std::stri
 	
 	FILE* datfile = fopen(path_dat.c_str(), "w");
 	fprintf(datfile, "ObjectFileName:\t%s.raw\n", filename.c_str());
-	fprintf(datfile, "TaggedFileName:\t---\nResolution:\t%i %i %i\n", I1, I2, I3);
+	fprintf(datfile, "TaggedFileName:\t---\nResolution:\t%i %i %i\n", int(I1), int(I2), int(I3));
 	fprintf(datfile, "SliceThickness:\t1.0 1.0 1.0\n");
 	fprintf(datfile, "Format:\t%s\nNbrTags:\t0\n", format);
 	fprintf(datfile, "ObjectType:\tTEXTURE_VOLUME_OBJECT\nObjectModel:\tI\nGridType:\tEQUIDISTANT\n");
@@ -2300,32 +2499,6 @@ VMML_TEMPLATE_CLASSNAME::remove_normals_from_raw( const std::string& dir_, const
 	write_to_raw( ".", filename );
 }	
 
-VMML_TEMPLATE_STRING
-void
-VMML_TEMPLATE_CLASSNAME::remove_uct_cylinder( const size_t radius_offset_ ) 
-{	
-	double length = 0;
-	double radius = (I1-1.0)/2.0 - radius_offset_;
-	radius *= radius;
-	double k1 = 0;
-	double k2 = 0;
-	for( size_t i3 = 0; i3 < I3; ++i3 )
-	{
-		for( size_t i1 = 0; i1 < I1; i1++ )
-		{
-			k1 = i1 - (I1-1.0)/2.0;
-			for( size_t i2 = 0; i2 < I2; i2++ )
-			{
-				k2 = i2 - (I2-1.0)/2.0;
-				length = k1*k1 + k2*k2 ;
-				if ( length >= radius )
-				{
-					at( i1, i2, i3 ) = static_cast<T> ( 0.0 );
-				}
-			}			
-		}
-	}
-}		
 	
 
 VMML_TEMPLATE_STRING
@@ -2354,6 +2527,86 @@ VMML_TEMPLATE_CLASSNAME::
 tensor3_allocate_data( T*& array_ )
 {
     array_ = new T[ I1 * I2 * I3];
+}
+	
+
+VMML_TEMPLATE_STRING
+void
+VMML_TEMPLATE_CLASSNAME::
+t3_allocate_rd_mmap(  const std::string& dir_, const std::string& filename_, T*& array_, int& fd_ )
+{
+	//void * mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
+	
+	int dir_length = dir_.size() -1;
+	int last_separator = dir_.find_last_of( "/");
+	std::string path = dir_;
+	if (last_separator < dir_length ) {
+		path.append( "/" );
+	}
+	path.append( filename_ );
+	
+	fd_ = open( path.c_str(), O_RDONLY, 0 );
+	if ( fd_ == -1 )
+	{
+		{
+			close(fd_);
+			std::cout << "no file open for memory mapping" << std::endl;
+		}
+	}
+	
+	
+	size_t len = sizeof(T) * SIZE;
+	off_t offset = 0;
+	
+	array_ = (T*)mmap( 0, len, PROT_READ, MAP_FILE | MAP_SHARED, fd_, offset ); //cast to void*? //MAP_FILE|MAP_SHARED
+	
+	if( array_ == MAP_FAILED)
+	{
+		std::cout << "mmap failed" << std::endl;
+	}
+}
+	
+VMML_TEMPLATE_STRING
+void
+VMML_TEMPLATE_CLASSNAME::
+t3_allocate_wr_mmap(  const std::string& dir_, const std::string& filename_, T*& array_, int& fd_ )
+{
+	//void * mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
+	
+	int dir_length = dir_.size() -1;
+	int last_separator = dir_.find_last_of( "/");
+	std::string path = dir_;
+	if (last_separator < dir_length ) {
+		path.append( "/" );
+	}
+	path.append( filename_ );
+
+	fd_ = open( path.c_str(), O_RDWR, 0 ); //O_RDONLY
+	if ( fd_ == -1 )
+	{
+		tensor3<I1, I2, I3, T> tmp; tmp.zero();
+		tmp.write_to_raw( dir_, filename_ );
+		
+		//std::cout << "created file for memory mapping" << std::endl;
+		
+		fd_ = open( path.c_str(), O_RDWR, 0 ); //O_RDONLY
+		if ( fd_ == -1 )
+		{
+			close(fd_);
+			std::cout << "no file open for memory mapping" << std::endl;
+		}
+	}
+	
+	
+	size_t len = sizeof(T) * SIZE;
+	off_t offset = 0;
+	
+	array_ = (T*)mmap( 0, len, PROT_WRITE, MAP_FILE | MAP_SHARED, fd_, offset ); //cast to void*? //MAP_FILE|MAP_SHARED
+	
+	if( array_ == MAP_FAILED)
+	{
+		std::cout << "mmap failed" << std::endl;
+	}
 }
 
 
@@ -2494,14 +2747,14 @@ get_sphere()
 
 VMML_TEMPLATE_STRING
 template< size_t R, typename TT >
-T
+double
 VMML_TEMPLATE_CLASSNAME::tensor_inner_product(
 		const vmml::vector< R, TT>& lambda,
         const vmml::matrix< I1, R, TT >& U,
         const vmml::matrix< I2, R, TT >& V,
         const vmml::matrix< I3, R, TT >& W ) const
 {
-	T inner_prod;
+	T inner_prod( 0 );
 	for (size_t r = 0; r < R; ++r)
 	{
 		for (size_t k = 0; k < I3; ++k)
@@ -2510,7 +2763,7 @@ VMML_TEMPLATE_CLASSNAME::tensor_inner_product(
 			{
 				for (size_t i = 0; i < I1; ++i)
 				{
-					inner_prod += at(i, j, k) * static_cast<T> ( U(i, r) * V( j, r) * W( k, r ) * lambda.at(r));
+					inner_prod += at(i, j, k) * U(i, r) * V( j, r) * W( k, r ) * lambda.at(r);
 				}
 			}
 		}

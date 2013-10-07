@@ -3,6 +3,7 @@
 
 
 #include <vmmlib/matrix.hpp>
+#include <vmmlib/tensor3.hpp>
 #include <vmmlib/exception.hpp>
 #include <vmmlib/blas_includes.hpp>
 #include <vmmlib/blas_types.hpp>
@@ -177,6 +178,15 @@ namespace vmml
 		
 		bool compute( const matrix_left_t& A_, const matrix_right_t& B_, matrix_out_t& C_ );
 		bool compute( const matrix_left_t& A_, matrix_out_t& C_ );
+		
+		// dgemms with tensor3 input works for frontal tensor unfolding
+		//I2*I3 = K; 
+		template< size_t I2, size_t I3 >
+		bool compute( const tensor3< M, I2, I3, float_t >& A_, const matrix_right_t& B_, matrix_out_t& C_ );
+		//I2*I3 = K;
+		template< size_t I2, size_t I3 >
+		bool compute( const tensor3< M, I2, I3, float_t >& A_, matrix_out_t& C_ );
+		
 		bool compute_t( const matrix_right_t& B_, matrix_out_t& C_ );
 		bool compute_bt( const matrix_left_t& A_, const matrix_right_t_t& Bt_, matrix_out_t& C_ );
 		bool compute_t( const matrix_left_t_t& A_, const matrix_right_t_t& B_, matrix_out_t& C_ );
@@ -205,7 +215,7 @@ namespace vmml
 		p.lda        = M;
 		p.b          = 0;
 		p.ldb        = K; //no transpose
-		p.beta       = 1;
+		p.beta       = 0;
 		p.c          = 0;
 		p.ldc        = M;
 	}
@@ -239,6 +249,33 @@ namespace vmml
 		return true;
 	}	
 
+	template< size_t M, size_t K, size_t N, typename float_t >
+	template< size_t I2, size_t I3 >
+	bool
+	blas_dgemm< M, K, N, float_t >::compute( 
+											const tensor3< M, I2, I3, float_t >& A_, 
+											const matrix_right_t& B_,
+											matrix_out_t& C_ 
+											)
+	{
+		// blas needs non-const data
+		tensor3< M, I2, I3, float_t > AA( A_ );
+		matrix_right_t* BB = new matrix_right_t( B_ );
+		C_.zero();
+		
+		p.a         = AA.get_array_ptr();
+		p.b         = BB->array;
+		p.c         = C_.array;
+		
+		blas::dgemm_call< float_t >( p );
+		
+		//std::cout << p << std::endl; //debug
+
+		delete BB;
+	
+		return true;
+	}	
+	
 	
 	template< size_t M, size_t K, size_t N, typename float_t >
 	bool
@@ -257,8 +294,30 @@ namespace vmml
 		blas::dgemm_call< float_t >( p );
 		
 		//std::cout << p << std::endl; //debug
-
+		
 		delete AA;
+		
+		return true;
+	}	
+
+	template< size_t M, size_t K, size_t N, typename float_t >
+	template< size_t I2, size_t I3 >
+	bool
+	blas_dgemm< M, K, N, float_t >::compute( const tensor3< M, I2, I3, float_t >& A_, matrix_out_t& C_ )
+	{
+		// blas needs non-const data
+		tensor3< M, I2, I3, float_t > AA( A_ ) ;
+		C_.zero();
+		
+		p.trans_b   = CblasTrans;
+		p.a         = AA.get_array_ptr();
+		p.b         = AA.get_array_ptr();
+		p.ldb       = N; 
+		p.c         = C_.array;
+		
+		blas::dgemm_call< float_t >( p );
+		
+		//std::cout << p << std::endl; //debug
 		
 		return true;
 	}	

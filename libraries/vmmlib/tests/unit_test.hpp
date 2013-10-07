@@ -11,6 +11,7 @@ class unit_test
 {
 public:
 	unit_test( const std::string& test_name );
+    virtual ~unit_test() {}
 
 	virtual bool run() = 0;
 	

@@ -188,8 +188,10 @@ namespace vmml
 	
 VMML_TEMPLATE_STRING
 VMML_TEMPLATE_CLASSNAME::qtucker3_tensor( )
-: _is_quantify_hot( false ), _hottest_core_value( 0 )
-, _is_quantify_linear( false ), _is_quantify_log( false )
+  : _hottest_core_value( 0 )
+  , _is_quantify_hot( false )
+  , _is_quantify_log( false )
+  , _is_quantify_linear( false )
 {
 	_core.zero();
 	_u1 = new u1_type(); _u1->zero();
@@ -205,8 +207,10 @@ VMML_TEMPLATE_CLASSNAME::qtucker3_tensor( )
 
 VMML_TEMPLATE_STRING
 VMML_TEMPLATE_CLASSNAME::qtucker3_tensor( t3_core_type& core )
-: _is_quantify_hot( false ), _hottest_core_value( 0 )
-, _is_quantify_linear( false ), _is_quantify_log( false )
+  : _hottest_core_value( 0 )
+  , _is_quantify_hot( false )
+  , _is_quantify_log( false )
+  , _is_quantify_linear( false )
 {
 	_core = core;
 	_u1 = new u1_type(); _u1->zero();
@@ -222,8 +226,10 @@ VMML_TEMPLATE_CLASSNAME::qtucker3_tensor( t3_core_type& core )
 
 VMML_TEMPLATE_STRING
 VMML_TEMPLATE_CLASSNAME::qtucker3_tensor( t3_core_type& core, u1_type& U1, u2_type& U2, u3_type& U3 )
-:  _is_quantify_hot( false ), _hottest_core_value( 0 )
-, _is_quantify_linear( false ), _is_quantify_log( false )
+  : _hottest_core_value( 0 )
+  , _is_quantify_hot( false )
+  , _is_quantify_log( false )
+  , _is_quantify_linear( false )
 {
 	_core = core;
 	_u1 = new u1_type( U1 );
@@ -239,8 +245,10 @@ VMML_TEMPLATE_CLASSNAME::qtucker3_tensor( t3_core_type& core, u1_type& U1, u2_ty
 
 VMML_TEMPLATE_STRING
 VMML_TEMPLATE_CLASSNAME::qtucker3_tensor( const t3_type& data_, u1_type& U1, u2_type& U2, u3_type& U3 )
-: _is_quantify_hot( false ), _hottest_core_value( 0 )
-, _is_quantify_linear( false ), _is_quantify_log( false )
+  : _hottest_core_value( 0 )
+  , _is_quantify_hot( false )
+  , _is_quantify_log( false )
+  , _is_quantify_linear( false )
 {
 	_u1 = new u1_type( U1 );
 	_u2 = new u2_type( U2 );
@@ -258,8 +266,10 @@ VMML_TEMPLATE_CLASSNAME::qtucker3_tensor( const t3_type& data_, u1_type& U1, u2_
 
 VMML_TEMPLATE_STRING
 VMML_TEMPLATE_CLASSNAME::qtucker3_tensor( const tucker3_type& other )
-: _is_quantify_hot( false ), _hottest_core_value( 0 )
-, _is_quantify_linear( false ), _is_quantify_log( false )
+  : _hottest_core_value( 0 )
+  , _is_quantify_hot( false )
+  , _is_quantify_log( false )
+  , _is_quantify_linear( false )
 {
 	_u1 = new u1_type();
 	_u2 = new u2_type();
@@ -473,7 +483,7 @@ VMML_TEMPLATE_CLASSNAME::reconstruct( t3_type& data_ )
 {
 	t3_comp_type data;
 	data.cast_from( data_ );
-	data.full_tensor3_matrix_multiplication( _core_comp, *_u1_comp, *_u2_comp, *_u3_comp );
+	t3_ttm::full_tensor3_matrix_multiplication( _core_comp, *_u1_comp, *_u2_comp, *_u3_comp, data );
 	
 	//convert reconstructed data, which is in type T_internal (double, float) to T_value (uint8 or uint16)
 	if( (sizeof(T_value) == 1) || (sizeof(T_value) == 2) ){

@@ -21,6 +21,7 @@
 #include <vmmlib/matrix_pseudoinverse.hpp>
 #include <vmmlib/blas_dgemm.hpp>
 #include <vmmlib/blas_dot.hpp>
+#include <vmmlib/validator.hpp>
 
 namespace vmml
 {
@@ -154,8 +155,8 @@ VMML_TEMPLATE_CLASSNAME::als( const t3_type& data_,
 	//inital guess not needed for u1 since it will be computed in the first optimization step
 	init( data_, u2_, u3_ );
 
-    assert( u2_.is_valid() && u3_.is_valid() );
-    assert( lambdas_.is_valid() );
+    assert( validator::is_valid( u2_) && validator::is_valid( u3_ ) );
+    assert( validator::is_valid( lambdas_ ) );
 
 #if CP_LOG
 	std::cout << "CP ALS: HOPM (for tensor3) " << std::endl;
@@ -215,7 +216,7 @@ VMML_TEMPLATE_CLASSNAME::optimize_mode1( const t3_type& data_, u1_type& u1_, con
 	//data_.horizontal_unfolding_bwd( *unfolding ); //lathauwer
 	data_.frontal_unfolding_fwd( *unfolding ); 
     
-    assert( u2_.is_valid() && u3_.is_valid() );
+    assert( validator::is_valid( u2_ ) && validator::is_valid( u3_ ) );
 	
 	optimize( *unfolding, u1_, u2_, u3_, lambdas_ );
 	
@@ -231,7 +232,7 @@ VMML_TEMPLATE_CLASSNAME::optimize_mode2( const t3_type& data_, const u1_type& u1
 	data_.frontal_unfolding_bwd( *unfolding ); //lathauwer
 	//data_.horizontal_unfolding_fwd( *unfolding );
 
-    assert( u1_.is_valid() && u3_.is_valid() );
+    assert( validator::is_valid( u1_ ) && validator::is_valid( u3_ ) );
 	
 	optimize( *unfolding, u2_, u1_, u3_, lambdas_ );
 	
@@ -247,7 +248,7 @@ VMML_TEMPLATE_CLASSNAME::optimize_mode3( const t3_type& data_, const u1_type& u1
 	//data_.horizontal_unfolding_bwd( *unfolding );//lathauwer
 	data_.lateral_unfolding_fwd( *unfolding );
 
-    assert( u1_.is_valid() && u2_.is_valid() );
+    assert( validator::is_valid( u1_ ) && validator::is_valid( u2_ ) );
 	
 	optimize( *unfolding, u3_, u1_, u2_, lambdas_ );
 	
@@ -266,7 +267,7 @@ VMML_TEMPLATE_CLASSNAME::optimize(
 {
     typedef matrix< K*L, R, T > krp_matrix_type;
 	krp_matrix_type* krp_prod   = new krp_matrix_type;
-	assert( uk_.is_valid() && ul_.is_valid() );
+	assert( validator::is_valid( uk_ ) && validator::is_valid( ul_ ) );
     
 	ul_.khatri_rao_product( uk_, *krp_prod );	
 
@@ -281,14 +282,14 @@ VMML_TEMPLATE_CLASSNAME::optimize(
 
 	blas_dgemm< R, K, R, T> blas_dgemm2;
 	blas_dgemm2.compute_t( uk_, *uk_r );
-    assert( uk_r->is_valid() );
+    assert( validator::is_valid( *uk_r ) );
 
 	blas_dgemm< R, L, R, T> blas_dgemm3;
 	blas_dgemm3.compute_t( ul_, *ul_r );
-    assert( ul_r->is_valid() );
+    assert( validator::is_valid( *ul_r ) );
 
 	uk_r->multiply_piecewise( *ul_r );
-    assert( uk_r->is_valid() );
+    assert( validator::is_valid( *uk_r ) );
     
 	m_r2_type* pinv_t = new m_r2_type;
 	compute_pseudoinverse< m_r2_type > compute_pinv;
@@ -296,20 +297,20 @@ VMML_TEMPLATE_CLASSNAME::optimize(
 	
 	blas_dgemm< J, R, R, T> blas_dgemm4;
 	blas_dgemm4.compute_bt( *u_new, *pinv_t, uj_ );
-    assert( uj_.is_valid() );
+    assert( validator::is_valid( uj_ ) );
 	
 	*u_new = uj_;
 	u_new->multiply_piecewise( *u_new ); //2 norm
 	u_new->columnwise_sum( lambdas_ );
     
-    assert( lambdas_.is_valid() );
+    assert( validator::is_valid( lambdas_ ) );
     
 	lambdas_.sqrt_elementwise();
 	lambda_type* tmp = new lambda_type;
 	*tmp = lambdas_;
 	tmp->reciprocal_safe();
 
-    assert( tmp->is_valid() );
+    assert( validator::is_valid( *tmp ) );
 
 	m_r2_type* diag_lambdas = new m_r2_type;
 	diag_lambdas->diag( *tmp );
@@ -317,7 +318,7 @@ VMML_TEMPLATE_CLASSNAME::optimize(
     matrix< J, R, T >* tmp_uj = new matrix< J, R, T >( uj_ );
 	blas_dgemm4.compute( *tmp_uj, *diag_lambdas, uj_ );
 
-    assert( uj_.is_valid() );
+    assert( validator::is_valid( uj_ ) );
 	
 	delete krp_prod;
 	delete uk_r;
@@ -352,6 +353,8 @@ VMML_TEMPLATE_CLASSNAME::reconstruct( t3_type& data_, const u1_type& u1_, const 
 	delete u2_t;
 	delete u3_t;
 }
+	
+	
 
 VMML_TEMPLATE_STRING
 double 

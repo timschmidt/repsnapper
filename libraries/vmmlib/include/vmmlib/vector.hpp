@@ -293,7 +293,7 @@ public:
 	size_t nnz() const;
 
     // test each component of the vector for isnan and isinf
-    inline bool is_valid() const;
+	//  inline bool is_valid() const; -> moved to class validator
     
     friend std::ostream& operator<< ( std::ostream& os, const vector& vector_ )
     {
@@ -323,9 +323,8 @@ public:
         
 
 
-        // storage
-        VMMLIB_ALIGN( T array[ M ] );
-    ;
+	// storage
+	VMMLIB_ALIGN( T array[ M ] );
 
     // Vector3 defaults
     static const vector FORWARD;
@@ -1737,29 +1736,6 @@ vector< M, T >::nnz() const
 	}
 	
 	return counter;
-}
-
-
-
-template< size_t M, typename T >
-bool
-vector< M, T >::is_valid() const
-{
-    bool valid = true;
-    for( const_iterator it = begin(); valid && it != end(); ++it )
-    {
-        if ( std::isnan( *it ) )
-            valid = false;
-        if ( std::isinf( *it ) )
-            valid = false;
-    }
-
-    #ifdef VMMLIB_THROW_EXCEPTIONS
-    if ( ! valid )
-        VMMLIB_ERROR( "matrix contains nan or inf.", VMMLIB_HERE );
-    #endif
-
-    return valid;
 }
 
 	

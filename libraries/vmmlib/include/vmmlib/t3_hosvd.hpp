@@ -19,6 +19,7 @@
 #include <vmmlib/lapack_svd.hpp>
 #include <vmmlib/lapack_sym_eigs.hpp>
 #include <vmmlib/blas_dgemm.hpp>
+#include <vmmlib/blas_daxpy.hpp>
 
 enum hosvd_method {
 	eigs_e,
@@ -222,8 +223,13 @@ VMML_TEMPLATE_CLASSNAME::eigs_mode1( const t3_type& data_, u1_type& u1_ )
 	
 	//covariance matrix of unfolded data
 	u1_cov_type* cov  = new u1_cov_type;
+#if 1
 	blas_dgemm< I1, I2*I3, I1, T>* blas_cov = new blas_dgemm< I1, I2*I3, I1, T>;
 	blas_cov->compute( *m_lateral, *cov );
+#else
+	blas_daxpy< I1, T>* blas_cov = new blas_daxpy< I1, T>;
+	blas_cov->compute_mmm( *m_lateral, *cov );
+#endif
 	delete blas_cov;
 	delete m_lateral;
 
@@ -243,8 +249,14 @@ VMML_TEMPLATE_CLASSNAME::eigs_mode2( const t3_type& data_, u2_type& u2_ )
 	
 	//covariance matrix of unfolded data
 	u2_cov_type* cov  = new u2_cov_type;
+#if 1
 	blas_dgemm< I2, I1*I3, I2, T>* blas_cov = new blas_dgemm< I2, I1*I3, I2, T>;
 	blas_cov->compute( *m_frontal, *cov );
+#else
+	blas_daxpy< I2, T>* blas_cov = new blas_daxpy< I2, T>;
+	blas_cov->compute_mmm( *m_frontal, *cov );
+#endif
+	
 	delete blas_cov;
 	delete m_frontal;
 	
@@ -264,8 +276,14 @@ VMML_TEMPLATE_CLASSNAME::eigs_mode3( const t3_type& data_, u3_type& u3_)
 	
 	//covariance matrix of unfolded data
 	u3_cov_type* cov  = new u3_cov_type;
+#if 1
 	blas_dgemm< I3, I1*I2, I3, T>* blas_cov = new blas_dgemm< I3, I1*I2, I3, T>;
 	blas_cov->compute( *m_horizontal, *cov );
+#else
+	blas_daxpy< I3, T>* blas_cov = new blas_daxpy< I3, T>;
+	blas_cov->compute_mmm( *m_horizontal, *cov );
+#endif	
+	
 	delete blas_cov;
 	delete m_horizontal;
 	

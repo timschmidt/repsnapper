@@ -71,7 +71,7 @@ vector_test::run()
 		}
 
         v = data;
-        v_result = v + 2;
+        v_result = v + 2.;
 		for( size_t index = 0; ok && index < 4; ++index )
 		{
             ok = v_result.at( index ) == index + 3;

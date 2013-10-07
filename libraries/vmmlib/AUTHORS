@@ -2,7 +2,7 @@ VMMLib - Vector & Matrix Math Lib - AUTHORS
 
 Susanne Suter (susuter@ifi.uzh.ch) 
 Jonas Boesch (boesch@ifi.uzh.ch)
-Stefan Eilemann (eile@gmail.com)
+Stefan Eilemann (eile@eyescale.ch)
 Renato Pajarola (pajarola@ifi.uzh.ch)
 Philip Schlegel (schlegel@ifi.uzh.ch)
 
@@ -15,4 +15,3 @@ see ACKNOWLEDGEMENTS
 - Parts of the source code of VMMLib were inspired by David Eberly's 
 Wild Magic and Andrew Willmott's VL.
 - enable_if was inspired by Boost (http://www.boost.org/doc/libs/1_39_0/libs/utility/enable_if.html)
-

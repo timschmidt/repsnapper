@@ -11,7 +11,7 @@ namespace vmml
 class performance_test
 {
 public:
-
+    virtual ~performance_test() {}
     virtual void run() = 0;
 
     void new_test( const std::string& name );

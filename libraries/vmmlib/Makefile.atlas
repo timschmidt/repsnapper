@@ -51,7 +51,7 @@ endif
 LDFLAGS += -L$(LIBDIR)/atlas -u MAIN__
 
 
-CXXFLAGS +=
+CXXFLAGS += -DVMMLIB_USE_LAPACK
 LDFLAGS +=
 
 # adjust libs depending on your LAPACK and BLAS distribution

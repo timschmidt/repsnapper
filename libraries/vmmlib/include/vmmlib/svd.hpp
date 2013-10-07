@@ -26,7 +26,7 @@ void svdecompose(
 {
     int m = M;
     int n = N;
-    int flag, i, its, j, jj, k, l, nm;
+    int flag, i, its, j, jj, k, l, nm = 0;
     T anorm, c, f, g, h, s, scale, x, y, z;
 
     //T* rv1 = (T*)calloc( n, sizeof(T));   // vector(1,n);
