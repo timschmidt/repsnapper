@@ -907,14 +907,16 @@ void Shape::draw(const Settings &settings, bool highlight, uint max_triangles)
 // the bounding box is in real coordinates (not transformed)
 void Shape::drawBBox() const
 {
+  const double minz = max(0.,Min.z()); // draw above zero plane only
+
 		// Draw bbox
 		glColor3f(1,0.2,0.2);
 		glLineWidth(1);
 		glBegin(GL_LINE_LOOP);
-		glVertex3f(Min.x(), Min.y(), Min.z());
-		glVertex3f(Min.x(), Max.y(), Min.z());
-		glVertex3f(Max.x(), Max.y(), Min.z());
-		glVertex3f(Max.x(), Min.y(), Min.z());
+		glVertex3f(Min.x(), Min.y(), minz);
+		glVertex3f(Min.x(), Max.y(), minz);
+		glVertex3f(Max.x(), Max.y(), minz);
+		glVertex3f(Max.x(), Min.y(), minz);
 		glEnd();
 		glBegin(GL_LINE_LOOP);
 		glVertex3f(Min.x(), Min.y(), Max.z());
@@ -923,20 +925,20 @@ void Shape::drawBBox() const
 		glVertex3f(Max.x(), Min.y(), Max.z());
 		glEnd();
 		glBegin(GL_LINES);
-		glVertex3f(Min.x(), Min.y(), Min.z());
+		glVertex3f(Min.x(), Min.y(), minz);
 		glVertex3f(Min.x(), Min.y(), Max.z());
-		glVertex3f(Min.x(), Max.y(), Min.z());
+		glVertex3f(Min.x(), Max.y(), minz);
 		glVertex3f(Min.x(), Max.y(), Max.z());
-		glVertex3f(Max.x(), Max.y(), Min.z());
+		glVertex3f(Max.x(), Max.y(), minz);
 		glVertex3f(Max.x(), Max.y(), Max.z());
-		glVertex3f(Max.x(), Min.y(), Min.z());
+		glVertex3f(Max.x(), Min.y(), minz);
 		glVertex3f(Max.x(), Min.y(), Max.z());
 		glEnd();
 		/*// show center:
 		glBegin(GL_LINES);
-		glVertex3f(Min.x(), Min.y(), Min.z());
+		glVertex3f(Min.x(), Min.y(), minz);
 		glVertex3f(Max.x(), Max.y(), Max.z());
-		glVertex3f(Max.x(), Min.y(), Min.z());
+		glVertex3f(Max.x(), Min.y(), minz);
 		glVertex3f(Min.x(), Max.y(), Max.z());
 		glEnd();
 		glPointSize(10);
@@ -957,8 +959,8 @@ void Shape::drawBBox() const
   pos = Vector3d(Min.x(),(Max.y()+Min.y())/2.,Max.z());
   Render::draw_string(pos,val.str());
   val.str("");
-  val << fixed << (Max.z()-Min.z());
-  pos = Vector3d(Min.x(),Min.y(),(Max.z()+Min.z())/2.);
+  val << fixed << (Max.z()-minz);
+  pos = Vector3d(Min.x(),Min.y(),(Max.z()+minz)/2.);
   Render::draw_string(pos,val.str());
 
 }

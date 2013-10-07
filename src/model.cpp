@@ -903,15 +903,16 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   // draw total bounding box
   if(settings.Display.DisplayBBox)
     {
+      const double minz = max(0., Min.z()); // above xy plane only
       // Draw bbox
       glDisable(GL_DEPTH_TEST);
       glLineWidth(1);
       glColor3f(1,0,0);
       glBegin(GL_LINE_LOOP);
-      glVertex3f(Min.x(), Min.y(), Min.z());
-      glVertex3f(Min.x(), Max.y(), Min.z());
-      glVertex3f(Max.x(), Max.y(), Min.z());
-      glVertex3f(Max.x(), Min.y(), Min.z());
+      glVertex3f(Min.x(), Min.y(), minz);
+      glVertex3f(Min.x(), Max.y(), minz);
+      glVertex3f(Max.x(), Max.y(), minz);
+      glVertex3f(Max.x(), Min.y(), minz);
       glEnd();
       glBegin(GL_LINE_LOOP);
       glVertex3f(Min.x(), Min.y(), Max.z());
@@ -920,13 +921,13 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       glVertex3f(Max.x(), Min.y(), Max.z());
       glEnd();
       glBegin(GL_LINES);
-      glVertex3f(Min.x(), Min.y(), Min.z());
+      glVertex3f(Min.x(), Min.y(), minz);
       glVertex3f(Min.x(), Min.y(), Max.z());
-      glVertex3f(Min.x(), Max.y(), Min.z());
+      glVertex3f(Min.x(), Max.y(), minz);
       glVertex3f(Min.x(), Max.y(), Max.z());
-      glVertex3f(Max.x(), Max.y(), Min.z());
+      glVertex3f(Max.x(), Max.y(), minz);
       glVertex3f(Max.x(), Max.y(), Max.z());
-      glVertex3f(Max.x(), Min.y(), Min.z());
+      glVertex3f(Max.x(), Min.y(), minz);
       glVertex3f(Max.x(), Min.y(), Max.z());
       glEnd();
       glColor3f(1,0.6,0.6);
@@ -941,8 +942,8 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       pos = Vector3d(Min.x(),(Max.y()+Min.y())/2.,Max.z());
       Render::draw_string(pos,val.str());
       val.str("");
-      val << fixed << (Max.z()-Min.z());
-      pos = Vector3d(Min.x(),Min.y(),(Max.z()+Min.z())/2.);
+      val << fixed << (Max.z()-minz);
+      pos = Vector3d(Min.x(),Min.y(),(Max.z()+minz)/2.);
       Render::draw_string(pos,val.str());
     }
   int drawnlayer = -1;
