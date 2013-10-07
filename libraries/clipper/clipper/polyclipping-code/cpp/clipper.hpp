@@ -2,7 +2,7 @@
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
 * Version   :  6.0.0                                                           *
-* Date      :  22 August 2013                                                  *
+* Date      :  11 September 2013                                               *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2013                                         *
 *                                                                              *
@@ -80,8 +80,10 @@ struct IntPoint {
 #ifdef use_xyz
   cInt Z;
   IntPoint(cInt x = 0, cInt y = 0, cInt z = 0): X(x), Y(y), Z(z) {};
+  IntPoint(double x, double y, double z = 0):X((cInt)x), Y((cInt)y), Z((cInt)z) {};
 #else
   IntPoint(cInt x = 0, cInt y = 0): X(x), Y(y) {};
+  IntPoint(double x, double y, double z = 0):X((cInt)x), Y((cInt)y){};
 #endif
 
   friend inline bool operator== (const IntPoint& a, const IntPoint& b)
@@ -120,22 +122,8 @@ struct DoublePoint
 };
 //------------------------------------------------------------------------------
 
-//ClipperConvert: converts IntPoint to and from DoublePoint based on "scaling_factor"
-class ClipperConvert
-{
-private:
-  const double scale;
-public:
-  IntPoint operator()(const DoublePoint& v);
-  void ToIntPoints(const std::vector<DoublePoint>& dps, std::vector<IntPoint>& ips);
-  DoublePoint operator()(const IntPoint& v);
-  void ToDoublePoints(const std::vector<IntPoint>& ips, std::vector<DoublePoint>& dps);
-  ClipperConvert(const double scaling_factor);
-};
-
-
 #ifdef use_xyz
-typedef void (*TZFillCallback)(cInt z1, cInt z2, IntPoint& pt);
+typedef void (*TZFillCallback)(IntPoint& z1, IntPoint& z2, IntPoint& pt);
 #endif
 
 class PolyNode;
@@ -358,7 +346,7 @@ private:
   void FixupFirstLefts1(OutRec* OldOutRec, OutRec* NewOutRec);
   void FixupFirstLefts2(OutRec* OldOutRec, OutRec* NewOutRec);
 #ifdef use_xyz
-  void SetZ(IntPoint& pt, TEdge& e, TEdge& eNext);
+  void SetZ(IntPoint& pt, TEdge& e);
 #endif
 };
 //------------------------------------------------------------------------------
