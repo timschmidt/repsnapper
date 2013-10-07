@@ -57,13 +57,13 @@ class Clipping
   static CL::IntPoint ClipperPoint(const Vector2d &v);
   static Vector2d getPoint(const CL::IntPoint &p);
 
-  static CL::Polygons CLOffset(const CL::Polygons &cpolys, int cldist,
-			       CL::JoinType cljtype, double miter_limit=1,
-			       bool reverse=false);
+  static CL::Paths CLOffset(const CL::Paths &cpolys, int cldist,
+			    CL::JoinType cljtype, double miter_limit=1,
+			    bool reverse=false);
 
   bool debug;
-  vector<CL::Polygons> subjpolygons; // for debugging
-  vector<CL::Polygons> clippolygons;
+  vector<CL::Paths> subjpolygons; // for debugging
+  vector<CL::Paths> clippolygons;
 
 public:
   Clipping(bool debugclipper=false){debug = debugclipper;};
@@ -75,7 +75,7 @@ public:
   void addPolys   (const vector<Poly> &poly, PolyType type);
   void addPolys   (const vector<ExPoly> &expolys, PolyType type);
   void addPolys   (const ExPoly &poly, PolyType type);
-  void addPolygons(const CL::Polygons &cp, PolyType type);
+  void addPolygons(const CL::Paths &cp, PolyType type);
 
   // do after addPoly... and before clipping/results
   void setZ(double z) {lastZ = z;};
@@ -101,7 +101,7 @@ public:
 				 CL::PolyFillType cft=CL::pftEvenOdd);
 
   static vector<Poly> getMerged(const vector<Poly> &polys, double overlap=0.001);
-  static CL::Polygons getMerged(const CL::Polygons &cpolys, int overlap=3);
+  static CL::Paths    getMerged(const CL::Paths &cpolys, int overlap=3);
 
   static vector<Poly> getOffset(const Poly &poly, double distance,
 				JoinType jtype=jmiter, double miterdist=1);
@@ -117,10 +117,10 @@ public:
 
   //vector< vector<Vector2d> > intersect(const Poly poly1, const Poly poly2) const;
 
-  static Poly           getPoly(const CL::Polygon &cpoly, double z, double extrusionfactor);
+  static Poly           getPoly(const CL::Path &cpoly, double z, double extrusionfactor);
   static vector<Poly>   getPolys(const ExPoly &expoly);
   static vector<Poly>   getPolys(const vector<ExPoly> &expolys);
-  static vector<Poly>   getPolys(const CL::Polygons &cpoly, double z, double extrusionfactor);
+  static vector<Poly>   getPolys(const CL::Paths &cpoly, double z, double extrusionfactor);
   static vector<ExPoly> getExPolys(const CL::PolyTree &ctree, double z,
 				   double extrusionfactor);
 
@@ -129,9 +129,9 @@ public:
   static vector<ExPoly> getExPolys(const vector<Poly> &polys);
   static CL::PolyTree   getClipperTree(const vector<Poly> &polys);
 
-  static CL::Polygon    getClipperPolygon (const Poly &poly);
-  static CL::Polygons   getClipperPolygons(const vector<Poly> &polys);
-  static CL::Polygons   getClipperPolygons(const ExPoly &expoly);
+  static CL::Path    getClipperPolygon (const Poly &poly);
+  static CL::Paths   getClipperPolygons(const vector<Poly> &polys);
+  static CL::Paths   getClipperPolygons(const ExPoly &expoly);
   //static CL::PolyTree   getClipperTree(const vector<ExPoly> &expolys);
 
   static double Area(const Poly &poly);
@@ -145,8 +145,8 @@ public:
   // old API compatibility
   // polytree to expolygons
   struct ExPolygon {
-    CL::Polygon outer;
-    CL::Polygons holes;
+    CL::Path outer;
+    CL::Paths holes;
   };
   typedef std::vector< ExPolygon > ExPolygons;
   static void AddOuterPolyNodeToExPolygons(const CL::PolyNode *polynode,

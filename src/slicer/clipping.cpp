@@ -55,20 +55,26 @@ void Clipping::PolyTreeToExPolygons(const CL::PolyTree * polytree, ExPolygons& e
 
 
 
-//CL::Clipper Clipping::clpr; // not static
+void printCLpolygon(CL::Path &p) {
+    cout << p.size() << endl;
+    for (uint k = 0; k < p.size(); k++) {
+      cout << p[k].X <<", " << p[k].Y << "," << endl;
+    }
+    cout << endl;
+}
 
-void printCLpolygons(vector<CL::Polygons> &p) {
+void printCLpolygons(CL::Paths &p) {
+  for (uint j = 0; j < p.size(); j++) {
+    printCLpolygon(p[j]);
+    cout << endl;
+  }
+}
+void printCLpolygons(vector<CL::Paths> &p) {
   uint numpolys = 0;
   for (uint i = 0; i < p.size(); i++) numpolys += p[i].size();
   cout << numpolys << endl;
   for (uint i = 0; i < p.size(); i++) {
-    for (uint j = 0; j < p[i].size(); j++) {
-      cout << p[i][j].size() << endl;
-      for (uint k = 0; k < p[i][j].size(); k++) {
-	cout << p[i][j][k].X <<", " << p[i][j][k].Y << "," << endl;
-      }
-      cout << endl;
-    }
+    printCLpolygons(p[i]);
   }
 }
 
@@ -93,9 +99,9 @@ Vector2d Clipping::getPoint(const CL::IntPoint &p)
 		  p.Y/CL_FACTOR-CL_OFFSET);
 }
 
-CL::Polygon Clipping::getClipperPolygon(const Poly &poly)
+CL::Path Clipping::getClipperPolygon(const Poly &poly)
 {
-  CL::Polygon cpoly(poly.vertices.size());
+  CL::Path cpoly(poly.vertices.size());
   for(size_t i=0; i<poly.vertices.size();i++){
     Vector2d P1;
     // if (reverse)
@@ -112,7 +118,7 @@ CL::Polygon Clipping::getClipperPolygon(const Poly &poly)
   return cpoly;
 }
 
-CL::Polygons Clipping::getClipperPolygons(const vector<Poly> &polys)
+CL::Paths Clipping::getClipperPolygons(const vector<Poly> &polys)
 {
   ClipperLib::Polygons cpolys(polys.size());
   for (uint i=0; i<polys.size(); i++)
@@ -121,7 +127,7 @@ CL::Polygons Clipping::getClipperPolygons(const vector<Poly> &polys)
     }
   return cpolys;
 }
-CL::Polygons Clipping::getClipperPolygons(const ExPoly &expoly)
+CL::Paths Clipping::getClipperPolygons(const ExPoly &expoly)
 {
   return getClipperPolygons(getPolys(expoly));
 }
@@ -166,21 +172,34 @@ CL::PolyType Clipping::CLType(PolyType type)
 
 void Clipping::addPoly(const Poly &poly, PolyType type)
 {
-  clpr.AddPolygon(getClipperPolygon(poly),CLType(type));
+  clpr.AddPath(getClipperPolygon(poly), CLType(type), true);
   lastZ = poly.getZ();
   lastExtrF = poly.getExtrusionFactor();
 }
 
 void Clipping::addPolys(const vector<Poly> &polys, PolyType type)
 {
-  CL::Polygons cp = getClipperPolygons(polys);
+  CL::Paths cp = getClipperPolygons(polys);
   if(debug) {
     if (type==clip)
       clippolygons.push_back(cp);
     else  if (type==subject)
       subjpolygons.push_back(cp);
   }
-  clpr.AddPolygons(cp,CLType(type));
+  // try {
+    clpr.AddPaths(cp, CLType(type), true);
+  // } catch (...) {
+  //   vector<CL::Paths> vcp;
+  //   vcp.push_back(cp);
+  //   printCLpolygons(vcp);
+  //   for (uint i = 0; i < cp.size(); i++) {
+  //     cerr << "try polygon "<< i << endl;
+  //     clpr.Clear();
+  //     printCLpolygon(cp[i]);
+  //     clpr.AddPath(cp[i],CLType(type), true);
+  //   }
+  //   throw("end");
+  // }
   if (polys.size()>0) {
     lastZ = polys.back().getZ();
     lastExtrF = polys.back().getExtrusionFactor();
@@ -196,28 +215,29 @@ void Clipping::addPolys(const vector<ExPoly> &expolys, PolyType type)
   for (uint i = 0; i < expolys.size(); i++)
     addPolys(expolys[i], type);
 }
-void Clipping::addPolygons(const CL::Polygons &cp, PolyType type)
+void Clipping::addPolygons(const CL::Paths &cp, PolyType type)
 {
-  clpr.AddPolygons(cp, CLType(type));
+  clpr.AddPaths(cp, CLType(type), true);
 }
+
 
 
 // // return intersection polys
 // vector< vector<Vector2d> > Clipping::intersect(const Poly poly1, const Poly poly2)
 // {
-//   CL::Polygon cpoly1 = getClipperPolygon(poly1),
+//   CL::Path cpoly1 = getClipperPolygon(poly1),
 //     cpoly2 =  getClipperPolygon(poly2);
 //   clpr.Clear();
-//   CL::Polygons sol;
-//   clpr.AddPolygon(cpoly1,CL::ptSubject);
-//   clpr.AddPolygon(cpoly2,CL::ptClip);
+//   CL::Paths sol;
+//   clpr.AddPath(cpoly1,CL::ptSubject);
+//   clpr.AddPath(cpoly2,CL::ptClip);
 //   clpr.Execute(CL::ctIntersection, sol, CL::pftEvenOdd, CL::pftEvenOdd);
 
 //   vector< vector<Vector2d> > result;
 //   for(size_t i=0; i<sol.size();i++)
 //     {
 //       vector<Vector2d> polypoints;
-//       CL::Polygon cpoly = sol[i];
+//       CL::Path cpoly = sol[i];
 //       for(size_t j=0; j<cpoly.size();j++){
 // 	polypoints.push_back(Vector2d(cpoly[j].X,cpoly[j].Y));
 //       }
@@ -230,7 +250,7 @@ void Clipping::addPolygons(const CL::Polygons &cp, PolyType type)
 vector<Poly> Clipping::intersect(CL::PolyFillType sft,
 				 CL::PolyFillType cft)
 {
-  CL::Polygons inter;
+  CL::Paths inter;
   clpr.Execute(CL::ctIntersection, inter, sft, cft);
   return getPolys(inter, lastZ, lastExtrF);
 }
@@ -246,7 +266,7 @@ vector<ExPoly> Clipping::ext_intersect(CL::PolyFillType sft,
 vector<Poly> Clipping::unite(CL::PolyFillType sft,
 			     CL::PolyFillType cft)
 {
-  CL::Polygons united;
+  CL::Paths united;
   clpr.Execute(CL::ctUnion, united, sft, cft);
   return getPolys(united, lastZ, lastExtrF);
 }
@@ -263,7 +283,7 @@ vector<ExPoly> Clipping::ext_unite(CL::PolyFillType sft,
 vector<Poly> Clipping::subtract(CL::PolyFillType sft,
 				CL::PolyFillType cft)
 {
-  CL::Polygons diff;
+  CL::Paths diff;
   clpr.Execute(CL::ctDifference, diff, sft, cft);
   return getPolys(diff, lastZ, lastExtrF);
 }
@@ -294,7 +314,7 @@ vector<Poly> Clipping::subtractMerged(double dist,
 				      CL::PolyFillType sft,
 				      CL::PolyFillType cft)
 {
-  CL::Polygons diff;
+  CL::Paths diff;
   clpr.Execute(CL::ctDifference, diff, sft, cft);
   return getPolys(getMerged(diff, dist), lastZ, lastExtrF);
 }
@@ -302,7 +322,7 @@ vector<Poly> Clipping::subtractMerged(double dist,
 vector<Poly> Clipping::Xor(CL::PolyFillType sft,
 			   CL::PolyFillType cft)
 {
-  CL::Polygons xored;
+  CL::Paths xored;
   clpr.Execute(CL::ctXor, xored, sft, cft);
   return getPolys(xored, lastZ, lastExtrF);
 }
@@ -310,15 +330,15 @@ vector<Poly> Clipping::Xor(CL::PolyFillType sft,
 vector<Poly> Clipping::getOffset(const Poly &poly, double distance,
 				 JoinType jtype, double miterdist)
 {
-  CL::Polygons cpolys(1); cpolys[0]=getClipperPolygon(poly);
-  CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
+  CL::Paths cpolys(1); cpolys[0]=getClipperPolygon(poly);
+  CL::Paths offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
   return getPolys(offset, poly.getZ(), poly.getExtrusionFactor());
 }
 vector<Poly> Clipping::getOffset(const vector<Poly> &polys, double distance,
 				 JoinType jtype, double miterdist)
 {
-  CL::Polygons cpolys = getClipperPolygons(polys);
-  CL::Polygons offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
+  CL::Paths cpolys = getClipperPolygons(polys);
+  CL::Paths offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
   double z=0, extrf=1.;;
   if (polys.size()>0) {
     z = polys.back().getZ();
@@ -351,12 +371,12 @@ vector<Poly> Clipping::getOffset(const vector<ExPoly> &expolys, double distance,
 //     extrf = expolys.back().outer.getExtrusionFactor();
 //   }
 //  for (uint i = 0 ; i < expolys.size(); i++) {
-//     CL::Polygons outer = CLOffset(excpolys[i].outer,
+//     CL::Paths outer = CLOffset(excpolys[i].outer,
 // 				  CL_FACTOR*distance, CLType(jtype), miterdist);
 //     polys[i].outer = getPoly(outer, z, extrusionfactor);
 //     vector<Poly> polys[i].holes;
 //     for (uint h = 0 ; h < polys[i].holes.size(); h++) {
-//       CL::Polygons holes = CLOffset(excpolys[i].holes[h],
+//       CL::Paths holes = CLOffset(excpolys[i].holes[h],
 // 				    CL_FACTOR*distance, CLType(jtype), miterdist);
 //       vector<Poly> hpolys = CL:getPolys(holes, z, extrusionfactor);
 //       polys[i].holes.insert(polys[i].holes.end(),hpolys.begin(),hpolys.end());
@@ -369,9 +389,9 @@ vector<Poly> Clipping::getOffset(const vector<ExPoly> &expolys, double distance,
 vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> &polys, double distance,
 					 JoinType jtype, double miterdist)
 {
-  CL::Polygons cpolys = getClipperPolygons(polys);
-  CL::Polygons offset1 = CLOffset(cpolys, -2*CL_FACTOR*distance, CLType(jtype), 0);// CL::jtRound);
-  CL::Polygons offset = CLOffset(offset1, 1*CL_FACTOR*distance, CLType(jtype), 0);
+  CL::Paths cpolys = getClipperPolygons(polys);
+  CL::Paths offset1 = CLOffset(cpolys, -2*CL_FACTOR*distance, CLType(jtype), 0);// CL::jtRound);
+  CL::Paths offset = CLOffset(offset1, 1*CL_FACTOR*distance, CLType(jtype), 0);
   double z=0, extrf=1.;;
   if (polys.size()>0) {
     z= polys.back().getZ();
@@ -382,10 +402,10 @@ vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> &polys, double dista
 
 
 // offset with reverse test
- CL::Polygons Clipping::CLOffset(const CL::Polygons &cpolys, int cldist,
+ CL::Paths Clipping::CLOffset(const CL::Paths &cpolys, int cldist,
 				 CL::JoinType cljtype, double miter_limit, bool reverse)
 {
-  CL::Polygons opolys;
+  CL::Paths opolys;
   if (reverse)
     CL::ReversePolygons(opolys);
   CL::OffsetPolygons(cpolys, opolys, cldist, cljtype, miter_limit);
@@ -396,8 +416,8 @@ vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> &polys, double dista
 // overlap a bit and unite to merge adjacent polys
 vector<Poly> Clipping::getMerged(const vector<Poly> &polys, double overlap)
 {
-  CL::Polygons cpolys = getClipperPolygons(polys);
-  CL::Polygons merged = getMerged(cpolys, CL_FACTOR*overlap);
+  CL::Paths cpolys = getClipperPolygons(polys);
+  CL::Paths merged = getMerged(cpolys, CL_FACTOR*overlap);
   double z=0, extrf = 1.;
   if (polys.size()>0) {
     z= polys.back().getZ();
@@ -406,24 +426,24 @@ vector<Poly> Clipping::getMerged(const vector<Poly> &polys, double overlap)
   return getPolys(merged, z, extrf);
 }
 // overlap a bit and unite to merge adjacent polys
-CL::Polygons Clipping::getMerged(const CL::Polygons &cpolys, int overlap)
+CL::Paths Clipping::getMerged(const CL::Paths &cpolys, int overlap)
 {
   CL::Clipper clpr;
   //  return polys;
   // make wider to get overlap
-  CL::Polygons offset;
+  CL::Paths offset;
   offset = CLOffset(cpolys, overlap, CL::jtMiter, 1);
   //CL::OffsetPolygons(cpolys, offset, 10, ClipperLib::jtMiter, 1);
   // return getPolys(offset, polys.back().getZ(),polys.back().getExtrusionFactor());
-  clpr.AddPolygons(offset, CL::ptSubject);
-  CL::Polygons cpolys3;
+  clpr.AddPaths(offset, CL::ptSubject, true);
+  CL::Paths cpolys3;
   clpr.Execute(CL::ctUnion, cpolys3, CL::pftEvenOdd, CL::pftEvenOdd);
   //cerr << cpolys3.size() << " - "<<offset.size() << endl;
   // shrink the result
   return CLOffset(cpolys3, -overlap, CL::jtMiter, 1);
 }
 
-Poly Clipping::getPoly(const CL::Polygon &cpoly, double z, double extrusionfactor)
+Poly Clipping::getPoly(const CL::Path &cpoly, double z, double extrusionfactor)
 {
   Poly p(z, extrusionfactor);
   p.vertices.clear();
@@ -437,7 +457,7 @@ Poly Clipping::getPoly(const CL::Polygon &cpoly, double z, double extrusionfacto
   return p;
 }
 
-vector<Poly> Clipping::getPolys(const CL::Polygons &cpolys, double z, double extrusionfactor)
+vector<Poly> Clipping::getPolys(const CL::Paths &cpolys, double z, double extrusionfactor)
 {
   uint count = cpolys.size();
   vector<Poly> polys(count);
@@ -516,16 +536,16 @@ vector<ExPoly> Clipping::getExPolys(const vector<Poly> &polys,
 
 CL::PolyTree Clipping::getClipperTree(const vector<Poly> &polys)
 {
-  CL::Polygons cpolys = getClipperPolygons(polys);
+  CL::Paths cpolys = getClipperPolygons(polys);
   CL::Clipper clpr;
-  clpr.AddPolygons(cpolys, CL::ptSubject);
+  clpr.AddPaths(cpolys, CL::ptSubject, true);
   CL::PolyTree ctree;
   clpr.Execute(CL::ctUnion, ctree, CL::pftEvenOdd, CL::pftEvenOdd);
   return ctree;
 }
 
 double Clipping::Area(const Poly &poly){
-  CL::Polygon cp = getClipperPolygon(poly);
+  CL::Path cp = getClipperPolygon(poly);
   return (double)((long double)(CL::Area(cp))/CL_FACTOR/CL_FACTOR);
 }
 double Clipping::Area(const vector<Poly> &polys){
