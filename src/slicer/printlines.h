@@ -98,7 +98,7 @@ class PLine3 : public PLine<3>
 
   int getCommands(Vector3d &lastpos, vector<Command> &commands,
 		  const double &minspeed, const double &movespeed,
-		  const double &minZspeed, const double &minZspeed,
+		  const double &minZspeed, const double &maxZspeed,
 		  const double &maxAOspeed, bool useTCommand) const;
 
   // // not used
