@@ -25,9 +25,14 @@ fi
 AWK=@AWK@
 
 FSEQUAL="="
-# test for BSD awk which needs a blackslash:
-if [ "X`${AWK} --version | head -n 1 | grep BSD`" != "X" ] ; then
-    FSEQUAL="\="
+# if the --version argument of awk is supported try and determine
+# if BSD awk is used
+AWK_VERSION=$(${AWK} --version 2>/dev/null)
+if [ $? -ne 0 ] ; then
+	# test for BSD awk which needs a blackslash:
+	if [ "X`$AWK_VERSION  | head -n 1 | grep BSD`" != "X" ] ; then
+	    FSEQUAL="\="
+	fi
 fi
 
 GIT_DIR="${TOPSRCDIR}/.git"
