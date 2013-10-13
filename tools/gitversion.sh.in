@@ -26,7 +26,8 @@ AWK=@AWK@
 
 FSEQUAL="="
 # test for BSD awk which needs a blackslash:
-if [ "X`${AWK} --version | head -n 1 | grep BSD`" != "X" ] ; then
+FSERROR=$(${AWK} -v FS== '' 2>&1)
+if [ "X$FSERROR" != "X" ] ; then
     FSEQUAL="\="
 fi
 
