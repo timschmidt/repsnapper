@@ -12,10 +12,10 @@ See <http://www.opensource.org/licenses/lgpl-3.0.html> for license details.
 
 //Possible Linux portability issues: min, max
 
-#define __isnand(x) isnan(x)
+#define __isnand(x) std::isnan(x)
 
 
-#include <math.h>
+#include <cmath>
 #include <float.h>
 
 class CQuat;
