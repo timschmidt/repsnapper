@@ -2,7 +2,7 @@
 Clipper Change Log
 ============================================================
 
-v5.1.6 (23 May 2014)
+v5.1.6 (23 May 2013)
 * BugFix: CleanPolygon function was buggy.
 * Changed: The behaviour of the 'miter' JoinType has been 
   changed so that when squaring occurs, it's no longer 
@@ -12,7 +12,7 @@ v5.1.6 (23 May 2014)
 * Added: New OffsetPolyLines function
 * Update: Minor code refactoring and optimisations
 
-v5.1.5 (5 May 2014)
+v5.1.5 (5 May 2013)
 * Added: ForceSimple property to Clipper class
 * Update: Improved documentation  
 

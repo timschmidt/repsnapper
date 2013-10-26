@@ -2,7 +2,7 @@
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
 * Version   :  6.0.0                                                           *
-* Date      :  11 September 2013                                               *
+* Date      :  26 October 2013                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2013                                         *
 *                                                                              *
@@ -34,6 +34,8 @@
 #ifndef clipper_hpp
 #define clipper_hpp
 
+#define CLIPPER_VERSION "6.0.0"
+
 //use_int32: When enabled 32bit ints are used instead of 64bit ints. This
 //improve performance but coordinate values are limited to the range +/- 46340
 //#define use_int32
@@ -55,6 +57,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <ostream>
+#include <functional>
 
 namespace ClipperLib {
 
@@ -80,10 +83,8 @@ struct IntPoint {
 #ifdef use_xyz
   cInt Z;
   IntPoint(cInt x = 0, cInt y = 0, cInt z = 0): X(x), Y(y), Z(z) {};
-  IntPoint(double x, double y, double z = 0):X((cInt)x), Y((cInt)y), Z((cInt)z) {};
 #else
   IntPoint(cInt x = 0, cInt y = 0): X(x), Y(y) {};
-  IntPoint(double x, double y, double z = 0):X((cInt)x), Y((cInt)y){};
 #endif
 
   friend inline bool operator== (const IntPoint& a, const IntPoint& b)
@@ -183,7 +184,9 @@ void SimplifyPolygons(const Paths &in_polys, Paths &out_polys, PolyFillType fill
 void SimplifyPolygons(Paths &polys, PolyFillType fillType = pftEvenOdd);
 
 void CleanPolygon(const Path& in_poly, Path& out_poly, double distance = 1.415);
+void CleanPolygon(Path& poly, double distance = 1.415);
 void CleanPolygons(const Paths& in_polys, Paths& out_polys, double distance = 1.415);
+void CleanPolygons(Paths& polys, double distance = 1.415);
 
 void PolyTreeToPaths(const PolyTree& polytree, Paths& paths);
 void ClosedPathsFromPolyTree(const PolyTree& polytree, Paths& paths);

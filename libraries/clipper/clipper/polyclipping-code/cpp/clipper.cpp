@@ -2,7 +2,7 @@
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
 * Version   :  6.0.0                                                           *
-* Date      :  11 September 2013                                               *
+* Date      :  26 October 2013                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2013                                         *
 *                                                                              *
@@ -46,6 +46,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <ostream>
+#include <functional>
 
 namespace ClipperLib {
 
@@ -531,9 +532,8 @@ bool PointInPolygon(const IntPoint &Pt, OutPt *pp, bool UseFullInt64Range)
     {
       if ((((Pt.Y >= pp2->Pt.Y) && (Pt.Y < pp2->Prev->Pt.Y)) ||
           ((Pt.Y >= pp2->Prev->Pt.Y) && (Pt.Y < pp2->Pt.Y))) &&
-          Int128(Pt.X - pp2->Pt.X) < 
-          Int128Mul(pp2->Prev->Pt.X - pp2->Pt.X, Pt.Y - pp2->Pt.Y) / 
-          Int128(pp2->Prev->Pt.Y - pp2->Pt.Y))
+          Int128Mul(Pt.X - pp2->Pt.X, pp2->Prev->Pt.Y - pp2->Pt.Y) < 
+          Int128Mul(pp2->Prev->Pt.X - pp2->Pt.X, Pt.Y - pp2->Pt.Y))
             result = !result;
       pp2 = pp2->Next;
     }
@@ -545,8 +545,9 @@ bool PointInPolygon(const IntPoint &Pt, OutPt *pp, bool UseFullInt64Range)
   {
     if ((((pp2->Pt.Y <= Pt.Y) && (Pt.Y < pp2->Prev->Pt.Y)) ||
       ((pp2->Prev->Pt.Y <= Pt.Y) && (Pt.Y < pp2->Pt.Y))) &&
-      (Pt.X < (pp2->Prev->Pt.X - pp2->Pt.X) * (Pt.Y - pp2->Pt.Y) /
-      (pp2->Prev->Pt.Y - pp2->Pt.Y) + pp2->Pt.X )) result = !result;
+      ((Pt.X - pp2->Pt.X) * (pp2->Prev->Pt.Y - pp2->Pt.Y) < 
+      (pp2->Prev->Pt.X - pp2->Pt.X) * (Pt.Y - pp2->Pt.Y))) 
+        result = !result;
     pp2 = pp2->Next;
   }
   while (pp2 != pp);
@@ -642,7 +643,9 @@ bool IntersectPoint(TEdge &Edge1, TEdge &Edge2,
   ip.Z = 0;
 #endif
   double b1, b2;
-  if (SlopesEqual(Edge1, Edge2, UseFullInt64Range))
+  //nb: with very large coordinate values, it's possible for SlopesEqual() to 
+  //return false but for the edge.Dx value be equal due to double precision rounding.
+  if (SlopesEqual(Edge1, Edge2, UseFullInt64Range) || Edge1.Dx == Edge2.Dx)
   {
     if (Edge2.Bot.Y > Edge1.Bot.Y) ip.Y = Edge2.Bot.Y;
     else ip.Y = Edge1.Bot.Y;
@@ -4201,7 +4204,9 @@ private:
 void OffsetPoint(JoinType jointype)
 {
   m_sinA = (normals[m_k].X * normals[m_j].Y - normals[m_j].X * normals[m_k].Y);
-  if (m_sinA > 1.0) m_sinA = 1.0; else if (m_sinA < -1.0) m_sinA = -1.0;
+  if (std::fabs(m_sinA) < 0.00005) return; //ie collinear
+  else if (m_sinA > 1.0) m_sinA = 1.0; 
+  else if (m_sinA < -1.0) m_sinA = -1.0;
 
   if (m_sinA * m_delta < 0)
   {
@@ -4426,10 +4431,22 @@ void CleanPolygon(const Path& in_poly, Path& out_poly, double distance)
 }
 //------------------------------------------------------------------------------
 
+void CleanPolygon(Path& poly, double distance)
+{
+  CleanPolygon(poly, poly, distance);
+}
+//------------------------------------------------------------------------------
+
 void CleanPolygons(const Paths& in_polys, Paths& out_polys, double distance)
 {
   for (Paths::size_type i = 0; i < in_polys.size(); ++i)
     CleanPolygon(in_polys[i], out_polys[i], distance);
+}
+//------------------------------------------------------------------------------
+
+void CleanPolygons(Paths& polys, double distance)
+{
+  CleanPolygons(polys, polys, distance);
 }
 //------------------------------------------------------------------------------
 
