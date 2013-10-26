@@ -132,7 +132,6 @@ Glib::RefPtr<Gio::File> find_global_config(const std::string filename) {
   for (std::vector<std::string>::const_iterator i = dirs.begin();
        i != dirs.end(); ++i) {
     std::string f_name = Glib::build_filename (*i, filename);
-    cerr << f_name <<  endl;
     f = Gio::File::create_for_path(f_name);
     if(f->query_exists()) {
       return f;

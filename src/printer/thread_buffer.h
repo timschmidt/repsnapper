@@ -44,26 +44,26 @@ protected:
   char *write_ptr;
   mutex_t mutex;
   mutex_t write_mutex;
-  
+
   const string overflow;
   bool last_write_overflowed;
-  
+
   ntime_t sleep_time;
-  
+
   const bool line_buffered;
   const unsigned long min_line_len;
-  
+
   ssize_t SpaceAvailable( void );
   virtual void WaitOnRead( void );
   virtual void WroteToEmpty( void );
-  
+
   char *ReadRawData( string *str, char *data, char *read_start, unsigned long length, bool null_terminate = true );
   // Copys data from circular buffer, wrapping when necessary.
-  
+
   size_t Read( string *str, char *data, size_t max_len, bool wait, char *line_start = NULL );
   // Generic function, returns value in str, unless it is NULL, then returns value into data.
   // max_len applies only to data, if used.  str can return unlimited length.
-  
+
 public:
   ThreadBuffer( size_t buffer_size, bool is_line_buffered, const ntime_t &nsleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true, unsigned long min_line_len = 0 );
   virtual ~ThreadBuffer();
@@ -77,7 +77,7 @@ public:
 class SignalingThreadBuffer : public ThreadBuffer {
 protected:
   cond_t signal_cond;
-  
+
   virtual void WaitOnRead( void );
   virtual void WroteToEmpty( void );
 
@@ -95,7 +95,7 @@ public:
     mutex_t *return_mutex;
     unsigned long lines_remaining;
     string data;
-    
+
   public:
     ReturnData( cond_t *return_cond, mutex_t *return_mutex, bool use_write_mutex = true );
     ~ReturnData();
@@ -104,19 +104,20 @@ public:
     void AddLine( const char *line );
     string GetData( void );
   };
-  
+
 protected:
   cond_t return_cond;
   mutex_t return_mutex;
-  
+
 public:
   ThreadBufferReturnData( size_t buffer_size, const ntime_t &nsleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true );
   virtual ~ThreadBufferReturnData();
-  
+
   virtual bool Write( const char *data, bool wait, ssize_t datalen = -1, ReturnData **return_data = NULL );
+
   virtual size_t Read( char *data, size_t max_len, bool wait, ReturnData **return_data = NULL );
   virtual string Read( bool wait, ReturnData **return_data = NULL );
   virtual void Flush( void );
-  
+
   virtual bool WaitForReturnData( ReturnData &return_data );
 };

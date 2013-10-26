@@ -61,9 +61,9 @@ public:
   vmml::vector<M, double> dir() const { return to - from; }
   vmml::vector<M, double> splitpoint(double at_length) const;
 
-  double time() const;
-  double lengthSq() const;
-  double length() const;
+  virtual double time() const;
+  virtual double lengthSq() const;
+  virtual double length() const;
 
   bool is_command() const {return (area == COMMAND);}
 
@@ -281,7 +281,7 @@ class Printlines
   {
     double totaldistance = 0;
     for (uint j = from; j <= to; j++)
-    totaldistance += lines[j].length();
+      totaldistance += lines[j].length();
     return totaldistance;
   }
 

@@ -411,7 +411,6 @@ void Model::Slice()
   }
 
   // simple case, can do multihreading
-  if (progress_steps==0) progress_steps=1;
 
   int num_layers = (int)ceil((maxZ - minZ) / thickness);
   layers.resize(num_layers);
@@ -444,7 +443,7 @@ void Model::Slice()
     layer->setZ(z); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
       layer->addShape(transforms[nshape], *shapes[nshape],
-				   z, max_gradient, supportangle);
+		      z, max_gradient, supportangle);
     }
     layers[nlayer] = layer;
   }

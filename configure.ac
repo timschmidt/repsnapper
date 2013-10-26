@@ -10,11 +10,13 @@ AM_INIT_AUTOMAKE
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
 # Needed for per-target cflags, like in gnomeshell-taskpanel
 AM_PROG_CC_C_O
+
 
 # Initialize libtool
 LT_PREREQ([2.2.6])
@@ -25,6 +27,14 @@ AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",[The prefix for our gettext translation domains.])
 case "$host_os" in
 freebsd*)
+# Using clang: (no OpenMP)
+  CC=cc
+  CPP=cpp
+  CXX=c++
+# or gcc46:
+#  CC=gcc46
+#  CPP=cpp46
+#  CXX=g++46
   dnl FreeBSD specific hack to search for libintl.h in /usr/local/include
   CPPFLAGS="$CPPFLAGS -I/usr/local/include"
   ;;

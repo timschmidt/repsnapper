@@ -21,6 +21,9 @@
 #include <gtkmm.h>
 #include "prefs_dlg.h"
 
+#define MULTI_SETTINGS 0 // test some GUI / hardware selector fun
+
+#if MULTI_SETTINGS
 namespace {
 
   // Find all the .conf hardware settings templates
@@ -38,7 +41,7 @@ namespace {
 	if (!entries)
 	  continue;
 	Glib::RefPtr<Gio::FileInfo> info;
-	while (info = entries->next_file()) {
+	while ( (info = entries->next_file()) ) {
 	  if (Platform::has_extension(info->get_name(), "conf"))
 	    ret.push_back(Glib::build_filename(settings_name,info->get_name()));
 	}
@@ -47,6 +50,7 @@ namespace {
     return ret;
   }
 }
+#endif
 
 void PrefsDlg::handle_response(int, Gtk::Dialog *dialog)
 {
@@ -72,7 +76,7 @@ PrefsDlg::~PrefsDlg()
 bool
 PrefsDlg::load_settings()
 {
-#if 0 // test some GUI / hardware selector fun
+#if MULTI_SETTINGS
   if (!m_settings.empty())
     return false;
 

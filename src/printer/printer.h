@@ -33,42 +33,42 @@ private:
   double temps[ TEMP_LAST ];
   View *m_view;
   Model *m_model;
-  
+
   bool was_connected;
   bool was_printing;
   unsigned long prev_line;
   bool waiting_temp;
   int temp_countdown;
-  
+
   sigc::connection idle_timeout;
   sigc::connection print_timeout;
   sigc::connection temp_timeout;
-  
+
   bool Idle( void );
   bool QueryTemp( void );
   bool CheckPrintingProgress( void );
-  void ParseResponse( string line );  
-  
+  void ParseResponse( string line );
+
 public:
   Printer( View *view );
   ~Printer();
-  
+
   void setModel( Model *model );
-  
+
   bool Connect( bool connect = true );
   bool Connect( string device, int baudrate );
   void Disconnect( void );
   bool Reset( void );
-  
+
   bool StartPrinting( unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
   bool StartPrinting( string commands, unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
   bool StopPrinting( bool wait = true );
   bool ContinuePrinting( bool wait = true );
   void Inhibit( bool value = true );
-  
+
   void UpdateTemperatureMonitor( void );
   double get_temp( TempType t ) { return temps[(int)t]; }
-  
+
   void Pause( void ) { StopPrinting(); }
   bool SwitchPower( bool on );
   bool SelectExtruder( int extruder_no=-1 );
@@ -78,29 +78,29 @@ public:
   bool Home( string axis );
   bool Move( string axis, double distance, bool relative = true );
   bool Goto( string axis, double position );
-  
+
   void alert( const char *message );
   void error( const char *message, const char *secondary = NULL );
-  
+
   sigc::signal< void > signal_printing_changed;
   sigc::signal< void, unsigned long > signal_now_printing;
   sigc::signal< void > signal_inhibit_changed;
   sigc::signal< void > signal_temp_changed;
   //sigc::signal< void, string, RR_logtype > signal_logmessage;
   sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
-  sigc::signal< void, SerialState > signal_serial_state_changed;  
+  sigc::signal< void, SerialState > signal_serial_state_changed;
 };
 
 // Exception safe guard to stop people printing
 // GCode while loading it / converting etc.
-struct PrintInhibitor
+class PrintInhibitor
 {
   Printer *printer;
 public:
   PrintInhibitor( Printer *p ) : printer ( p ) {
     printer->Inhibit();
   }
-  
+
   ~PrintInhibitor() {
     printer->Inhibit( false );
   }

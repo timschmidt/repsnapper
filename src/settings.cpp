@@ -355,9 +355,9 @@ void Settings::load_settings (Glib::RefPtr<Gio::File> file)
   }
   SelectExtruder(0);
 
-  if (has_group("Misc") &&
-      !has_key("Misc","SpeedsAreMMperSec") ||
-      !get_boolean("Misc","SpeedsAreMMperSec"))
+  if ( ( has_group("Misc") &&
+	 !has_key("Misc","SpeedsAreMMperSec") ) ||
+       !get_boolean("Misc","SpeedsAreMMperSec") )
     cout << "!!!" << endl <<  _("\tThe config file has old speed settings (mm/min).\n\t Adjust them to mm/sec\n\t or use RepSnapper from 2.0 to 2.2 to convert them automatically.") << "!!!" <<  endl;
   set_boolean("Misc","SpeedsAreMMperSec",true);
 
