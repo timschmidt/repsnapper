@@ -476,7 +476,7 @@ vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, doubl
   vector<Poly> clippolys = Clipping::getOffset(m_tofillpolys,0.1);
 
   vector<bool> done(count);
-  for (uint i = 0; i < count; i++ ) done[i]==false;
+  for (uint i = 0; i < count; i++ ) done[i] = false;
   Poly p(z, extrusionfactor);
   p.setClosed(false);
   p.addVertex(lines[0].from);
