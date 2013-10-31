@@ -2,7 +2,7 @@
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
 * Version   :  6.0.0                                                           *
-* Date      :  26 October 2013                                                 *
+* Date      :  30 October 2013                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2013                                         *
 *                                                                              *
@@ -530,11 +530,10 @@ bool PointInPolygon(const IntPoint &Pt, OutPt *pp, bool UseFullInt64Range)
   if (UseFullInt64Range) {
     do
     {
-      if ((((Pt.Y >= pp2->Pt.Y) && (Pt.Y < pp2->Prev->Pt.Y)) ||
-          ((Pt.Y >= pp2->Prev->Pt.Y) && (Pt.Y < pp2->Pt.Y))) &&
-          Int128Mul(Pt.X - pp2->Pt.X, pp2->Prev->Pt.Y - pp2->Pt.Y) < 
-          Int128Mul(pp2->Prev->Pt.X - pp2->Pt.X, Pt.Y - pp2->Pt.Y))
-            result = !result;
+      if (((pp2->Pt.Y > Pt.Y) != (pp2->Prev->Pt.Y > Pt.Y)) &&                     
+        (Int128(Pt.X - pp2->Pt.X) < 
+        Int128Mul(pp2->Prev->Pt.X - pp2->Pt.X, Pt.Y - pp2->Pt.Y) / 
+        Int128(pp2->Prev->Pt.Y - pp2->Pt.Y))) result = !result;
       pp2 = pp2->Next;
     }
     while (pp2 != pp);
@@ -543,11 +542,10 @@ bool PointInPolygon(const IntPoint &Pt, OutPt *pp, bool UseFullInt64Range)
 #endif
   do
   {
-    if ((((pp2->Pt.Y <= Pt.Y) && (Pt.Y < pp2->Prev->Pt.Y)) ||
-      ((pp2->Prev->Pt.Y <= Pt.Y) && (Pt.Y < pp2->Pt.Y))) &&
-      ((Pt.X - pp2->Pt.X) * (pp2->Prev->Pt.Y - pp2->Pt.Y) < 
-      (pp2->Prev->Pt.X - pp2->Pt.X) * (Pt.Y - pp2->Pt.Y))) 
-        result = !result;
+    //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+    if (((pp2->Pt.Y > Pt.Y) != (pp2->Prev->Pt.Y > Pt.Y)) &&                     
+      ((Pt.X - pp2->Pt.X) < (pp2->Prev->Pt.X - pp2->Pt.X) * (Pt.Y - pp2->Pt.Y) / 
+      (pp2->Prev->Pt.Y - pp2->Pt.Y))) result = !result;
     pp2 = pp2->Next;
   }
   while (pp2 != pp);
@@ -4447,6 +4445,66 @@ void CleanPolygons(const Paths& in_polys, Paths& out_polys, double distance)
 void CleanPolygons(Paths& polys, double distance)
 {
   CleanPolygons(polys, polys, distance);
+}
+//------------------------------------------------------------------------------
+
+void Minkowki(const Path& poly, const Path& path, 
+  Paths& solution, bool isSum, bool isClosed)
+{
+  int delta = (isClosed ? 1 : 0);
+  size_t polyCnt = poly.size();
+  size_t pathCnt = path.size();
+  Paths pp;
+  pp.reserve(pathCnt);
+  if (isSum)
+    for (size_t i = 0; i < pathCnt; ++i)
+    {
+      Path p;
+      p.reserve(polyCnt);
+      for (size_t j = 0; j < poly.size(); ++j)
+        p.push_back(IntPoint(path[i].X + poly[j].X, path[i].Y + poly[j].Y));
+      pp.push_back(p);
+    }
+  else
+    for (size_t i = 0; i < pathCnt; ++i)
+    {
+      Path p;
+      p.reserve(polyCnt);
+      for (size_t j = 0; j < poly.size(); ++j)
+        p.push_back(IntPoint(path[i].X - poly[j].X, path[i].Y - poly[j].Y));
+      pp.push_back(p);
+    }
+
+  Paths quads; 
+  quads.reserve((pathCnt + delta) * (polyCnt + 1));
+  for (size_t i = 0; i <= pathCnt - 2 + delta; ++i)
+    for (size_t j = 0; j <= polyCnt - 1; ++j)
+    {
+      Path quad;
+      quad.reserve(4);
+      quad.push_back(pp[i % pathCnt][j % polyCnt]);
+      quad.push_back(pp[(i + 1) % pathCnt][j % polyCnt]);
+      quad.push_back(pp[(i + 1) % pathCnt][(j + 1) % polyCnt]);
+      quad.push_back(pp[i % pathCnt][(j + 1) % polyCnt]);
+      if (!Orientation(quad)) ReversePath(quad);
+      quads.push_back(quad);
+    }
+
+  Clipper c;
+  c.AddPaths(quads, ptSubject, true);
+  c.Execute(ctUnion, solution, pftNonZero, pftNonZero);
+}
+//------------------------------------------------------------------------------
+
+void MinkowkiSum(const Path& poly, const Path& path, Paths& solution, bool isClosed)
+{
+  Minkowki(poly, path, solution, true, isClosed);
+}
+//------------------------------------------------------------------------------
+
+void MinkowkiDiff(const Path& poly, const Path& path, Paths& solution, bool isClosed)
+{
+  Minkowki(poly, path, solution, false, isClosed);
 }
 //------------------------------------------------------------------------------
 

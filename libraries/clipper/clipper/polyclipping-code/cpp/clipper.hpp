@@ -2,7 +2,7 @@
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
 * Version   :  6.0.0                                                           *
-* Date      :  26 October 2013                                                 *
+* Date      :  30 October 2013                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2013                                         *
 *                                                                              *
@@ -187,6 +187,9 @@ void CleanPolygon(const Path& in_poly, Path& out_poly, double distance = 1.415);
 void CleanPolygon(Path& poly, double distance = 1.415);
 void CleanPolygons(const Paths& in_polys, Paths& out_polys, double distance = 1.415);
 void CleanPolygons(Paths& polys, double distance = 1.415);
+
+void MinkowkiSum(const Path& poly, const Path& path, Paths& solution, bool isClosed);
+void MinkowkiDiff(const Path& poly, const Path& path, Paths& solution, bool isClosed);
 
 void PolyTreeToPaths(const PolyTree& polytree, Paths& paths);
 void ClosedPathsFromPolyTree(const PolyTree& polytree, Paths& paths);
