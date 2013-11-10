@@ -22,11 +22,14 @@ if [ ! -d "$CHECKOUT/repsnapper" ]; then
   mkdir "$CHECKOUT"/repsnapper || exit 1
 fi
 cd "$CHECKOUT"/repsnapper
-CPPFLAGS=-I../../"$TARGET"/include PKG_CONFIG_PATH=../../"$TARGET"/lib/pkgconfig ../../../configure --prefix="`pwd`/../../$TARGET" --host=i586-mingw32msvc && make -j4 && make install || exit 1
+CPPFLAGS=-I../../"$TARGET"/include PKG_CONFIG_PATH=../../"$TARGET"/lib/pkgconfig ../../../configure --prefix="`pwd`/../../$TARGET" --host=i686-w64-mingw32 && make -j4 && make install || exit 1
 cd ../..
 
-# Finally, copy appropriate libgcc into place
-GCCPATH=`i586-mingw32msvc-gcc -print-libgcc-file-name`
+MINGW_CPP=i686-w64-mingw32-cpp
+
+# Copy appropriate libgcc into place
+#GCCPATH=`i586-mingw32msvc-gcc -print-libgcc-file-name`
+GCCPATH=`$MINGW_CPP -print-libgcc-file-name`
 GCCPATH=`dirname "$GCCPATH"`
 for f in $GCCPATH/libgcc*dll; do
   LIBGCC_FILE=`basename "$f"`
@@ -37,6 +40,12 @@ if [ -z "$LIBGCC_FILE" ]; then
     exit 1
 fi
 cp "$GCCPATH/$LIBGCC_FILE" "$TARGET/bin"
+
+#Copy libwinpthread-1.dll
+LIBWINPTHREAD=`$MINGW_CPP -print-file-name=libwinpthread-1.dll`
+cp "$LIBWINPTHREAD" "$TARGET/bin"
+LIBSTDCPP=`$MINGW_CPP -print-file-name=libstdc++-6.dll`
+cp "$LIBSTDCPP" "$TARGET/bin"
 
 if [ "$BUILD_FLAVOUR" = "rls" ]; then
   echo "Building installer..."

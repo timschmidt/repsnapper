@@ -57,14 +57,21 @@ void lm_qrsolv( int n, double *r, int ldr, int *ipvt, double *diag,
  LM_SQRT_GIANT 1.304e19
  LM_USER_TOL   1.e-14
 */
-
+#ifndef WIN32
 const lm_control_struct lm_control_double = {
     LM_USERTOL, LM_USERTOL, LM_USERTOL, LM_USERTOL, 100., 100, 1, 
     &stdout, 0, -1, -1 };
 const lm_control_struct lm_control_float = {
     1.e-7,      1.e-7,      1.e-7,      1.e-7,      100., 100, 1,
     &stdout, 0, -1, -1 };
-
+#else
+const lm_control_struct lm_control_double = {
+    LM_USERTOL, LM_USERTOL, LM_USERTOL, LM_USERTOL, 100., 100, 1, 
+    NULL, 0, -1, -1 };
+const lm_control_struct lm_control_float = {
+    1.e-7,      1.e-7,      1.e-7,      1.e-7,      100., 100, 1,
+    NULL, 0, -1, -1 };
+#endif
 
 /*****************************************************************************/
 /*  Message texts (indexed by status.info)                                   */

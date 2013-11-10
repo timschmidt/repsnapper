@@ -45,7 +45,7 @@ addpath('PKG_CONFIG_PATH', os.path.join(os.sep, prefix, 'lib64', 'pkgconfig'))
 # addpath('PKG_CONFIG_PATH', os.path.join(os.sep, 'usr', 'share', 'pkgconfig'))
 
 #Prefix for all the tools
-mingw_tool_prefix = '/usr/bin/i586-mingw32msvc-'
+mingw_tool_prefix = '/usr/bin/i686-w64-mingw32-'
 
 mingw_tools = {'ADDR2LINE': 'addr2line',
 	'AS': 'as', 'CC': 'gcc', 'CPP': 'cpp',
