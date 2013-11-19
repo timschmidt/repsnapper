@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  6.0.0                                                           *
-* Date      :  30 October 2013                                                 *
+* Version   :  6.1.0                                                           *
+* Date      :  19 November 2013                                                *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2013                                         *
 *                                                                              *
@@ -34,7 +34,7 @@
 #ifndef clipper_hpp
 #define clipper_hpp
 
-#define CLIPPER_VERSION "6.0.0"
+#define CLIPPER_VERSION "6.1.0"
 
 //use_int32: When enabled 32bit ints are used instead of 64bit ints. This
 //improve performance but coordinate values are limited to the range +/- 46340
@@ -44,7 +44,7 @@
 //#define use_xyz
 
 //use_lines: Enables line clipping. Adds a very minor cost to performance.
-//#define use_lines
+#define use_lines
   
 //When enabled, code developed with earlier versions of Clipper 
 //(ie prior to ver 6) should compile without changes. 
@@ -142,9 +142,9 @@ public:
     bool IsOpen() const;
     int ChildCount() const;
 private:
+    unsigned Index; //node index in Parent.Childs
     bool m_IsOpen;
     PolyNode* GetNextSiblingUp() const;
-    unsigned Index; //node index in Parent.Childs
     void AddChild(PolyNode& child);
     friend class Clipper; //to access Index
 };
@@ -188,8 +188,8 @@ void CleanPolygon(Path& poly, double distance = 1.415);
 void CleanPolygons(const Paths& in_polys, Paths& out_polys, double distance = 1.415);
 void CleanPolygons(Paths& polys, double distance = 1.415);
 
-void MinkowkiSum(const Path& poly, const Path& path, Paths& solution, bool isClosed);
-void MinkowkiDiff(const Path& poly, const Path& path, Paths& solution, bool isClosed);
+void MinkowskiSum(const Path& poly, const Path& path, Paths& solution, bool isClosed);
+void MinkowskiDiff(const Path& poly, const Path& path, Paths& solution, bool isClosed);
 
 void PolyTreeToPaths(const PolyTree& polytree, Paths& paths);
 void ClosedPathsFromPolyTree(const PolyTree& polytree, Paths& paths);
@@ -215,6 +215,8 @@ struct Join;
 typedef std::vector < OutRec* > PolyOutList;
 typedef std::vector < TEdge* > EdgeList;
 typedef std::vector < Join* > JoinList;
+typedef std::vector < IntersectNode* > IntersectList;
+
 
 //------------------------------------------------------------------------------
 
@@ -243,6 +245,7 @@ protected:
   TEdge* AddBoundsToLML(TEdge *e, bool IsClosed);
   void PopLocalMinima();
   virtual void Reset();
+  TEdge* ProcessBound(TEdge* E, bool IsClockwise);
   void InsertLocalMinima(LocalMinima *newLm);
   void DoMinimaLML(TEdge* E1, TEdge* E2, bool IsClosed);
   TEdge* DescendToMin(TEdge *&E);
@@ -285,11 +288,11 @@ private:
   PolyOutList       m_PolyOuts;
   JoinList          m_Joins;
   JoinList          m_GhostJoins;
+  IntersectList     m_IntersectList;
   ClipType          m_ClipType;
   std::set< cInt, std::greater<cInt> > m_Scanbeam;
   TEdge           *m_ActiveEdges;
   TEdge           *m_SortedEdges;
-  IntersectNode   *m_IntersectNodes;
   bool             m_ExecuteLocked;
   PolyFillType     m_ClipFillType;
   PolyFillType     m_SubjFillType;
@@ -330,7 +333,6 @@ private:
   void DisposeAllOutRecs();
   void DisposeOutRec(PolyOutList::size_type index);
   bool ProcessIntersections(const cInt botY, const cInt topY);
-  void InsertIntersectNode(TEdge *e1, TEdge *e2, const IntPoint &pt);
   void BuildIntersectList(const cInt botY, const cInt topY);
   void ProcessIntersectList();
   void ProcessEdgesAtTopOfScanbeam(const cInt topY);
@@ -341,6 +343,7 @@ private:
   bool FixupIntersectionOrder();
   void FixupOutPolygon(OutRec &outrec);
   bool IsHole(TEdge *e);
+  bool FindOwnerFromSplitRecs(OutRec &outRec, OutRec *&currOrfl);
   void FixHoleLinkage(OutRec &outrec);
   void AddJoin(OutPt *op1, OutPt *op2, const IntPoint offPt);
   void ClearJoins();
