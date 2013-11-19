@@ -87,7 +87,7 @@ public:
         if ( _matrix_it != _matrix_it_end )
             ++_matrix_it;
 
-		if ( _matrix_it == _matrix_it_end && _matrix_index < T::SLICES - 1 )
+		if ( _matrix_it == _matrix_it_end && _matrix_index + 1 < T::SLICES )
 		{
             ++_matrix_index;
             //slice_type& slice_  = _tensor3->get_frontal_slice( _matrix_index );
@@ -173,7 +173,7 @@ public:
         if ( _matrix_it != _matrix_it_end )
             ++_matrix_it;
 
-		if ( _matrix_it == _matrix_it_end && _matrix_index < T::SLICES - 1 )
+		if ( _matrix_it == _matrix_it_end && _matrix_index + 1 < T::SLICES )
 		{
             ++_matrix_index;
             //const slice_type& slice_  = _tensor3->get_frontal_slice( _matrix_index );

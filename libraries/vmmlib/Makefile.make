@@ -22,9 +22,15 @@ VMMLIB_UNIT_TESTS =\
     tests/t3_hooi_test.cpp \
     tests/t3_hopm_test.cpp \
     tests/t3_ihopm_test.cpp \
+    tests/t3_ihooi_test.cpp \
+    tests/t3_ttm_test.cpp \
+    tests/t3_padder_test.cpp \
     tests/matrix_pseudoinverse_test.cpp \
     tests/blas_dgemm_test.cpp \
     tests/blas_dot_test.cpp \
+    tests/blas_daxpy_test.cpp \
+    tests/tensor4_test.cpp \
+    tests/t4_converter_test.cpp \
 
 VMMLIB_UNIT_TESTS_OBJECTS = ${VMMLIB_UNIT_TESTS:%.cpp=%.o}  
 
@@ -34,8 +40,8 @@ CXXFLAGS += -I. -Iinclude -Itests -include stdint.h
 # on mac we want to use the frameworks, not the unix style libs 
 ARCH = $(shell uname)
 ifeq "$(ARCH)" "Darwin"
-CXXFLAGS += -framework Accelerate
-LDFLAGS += -framework Accelerate
+CXXFLAGS += -DVMMLIB_USE_LAPACK
+LDFLAGS += -framework Accelerate -fopenmp
 
 else
 # Linux specific stuff
@@ -49,15 +55,11 @@ else
   LIBDIR=$(DESTDIR)/usr/lib
 endif
 
-LDFLAGS += -L$(LIBDIR)/atlas -u MAIN__
-
-
 CXXFLAGS += -DVMMLIB_USE_LAPACK
-LDFLAGS +=
+LDFLAGS +=  -fopenmp
 
 # adjust libs depending on your LAPACK and BLAS distribution
-LIBS += -lclapack -lf2c -lcblas -llapack
-# LIBS += -llapack -lblas
+LIBS += -lblas -llapack -lf2c
 
 
 

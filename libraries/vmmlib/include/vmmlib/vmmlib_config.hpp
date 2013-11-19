@@ -3,7 +3,13 @@
 
 // #define VMMLIB_NO_SFINAE 
 
-
+#ifdef _MSC_VER
+#  ifndef HAVE_SSIZE_T
+#    include <basetsd.h>
+typedef SSIZE_T ssize_t;
+#    define HAVE_SSIZE_T
+#  endif
+#endif
 
 // enabling this switch will have the following effect:
 // operator T* will not be compiled, but for vectors, 

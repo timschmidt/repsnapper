@@ -1,0 +1,3 @@
+
+
+2012-02-21: validator class instead of matrix.is_valid(), vector.is_valid()

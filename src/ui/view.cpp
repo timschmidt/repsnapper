@@ -844,7 +844,7 @@ void View::set_SliderBBox(Vector3d bbmin, Vector3d bbmax)
 void View::model_changed ()
 {
   m_translation_row->selection_changed();
-  set_SliderBBox(m_model->Min.z(), m_model->Max.z());
+  set_SliderBBox(m_model->Min, m_model->Max);
   show_notebooktab("model_tab", "controlnotebook");
   queue_draw();
 }

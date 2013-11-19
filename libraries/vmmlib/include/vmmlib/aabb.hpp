@@ -14,33 +14,34 @@ public:
     AxisAlignedBoundingBox( const vector< 3, T >& pMin, const vector< 3, T >& pMax );
     AxisAlignedBoundingBox( const vector< 4, T >& sphere );
     AxisAlignedBoundingBox( T cx, T cy, T cz, T size );
-    
+
     inline bool isIn( const vector< 3, T >& pos );
     inline bool isIn2d( const vector< 3, T >& pos ); // only x and y components are checked
     inline bool isIn( const vector< 4, T >& sphere );
 
     inline void set( const vector< 3, T >& pMin, const vector< 3, T >& pMax );
     inline void set( T cx, T cy, T cz, T size );
-	inline void setMin( const vector< 3, T >& pMin );
-	inline void setMax( const vector< 3, T >& pMax );
+    inline void setMin( const vector< 3, T >& pMin );
+    inline void setMax( const vector< 3, T >& pMax );
     inline const vector< 3, T >& getMin() const;
     inline const vector< 3, T >& getMax() const;
-    
+
     inline void merge( const AxisAlignedBoundingBox< T >& aabb );
-    
+
     inline void setEmpty( bool empty = true );
     inline bool isEmpty() const;
     inline void setDirty( bool dirty = true );
     inline bool isDirty() const;
-    
+
     vector< 3, T > getCenter() const;
+    vector< 3, T > getDimension() const;
 
 protected:
-	vector< 3, T > _min;
-	vector< 3, T > _max;
+    vector< 3, T > _min;
+    vector< 3, T > _max;
     bool _dirty;
     bool _empty;
-    
+
 };
 
 
@@ -80,7 +81,7 @@ AxisAlignedBoundingBox< T >::AxisAlignedBoundingBox( T cx, T cy, T cz, T size )
     : _dirty( false )
     , _empty( false )
 {
-    _max = _min = Vector3f( cx, cy, cz );
+    _max = _min = vector< 3, T >( cx, cy, cz );
     _max += size;
     _min -= size;
 }
@@ -90,7 +91,7 @@ AxisAlignedBoundingBox< T >::AxisAlignedBoundingBox( T cx, T cy, T cz, T size )
 template< typename T >
 inline bool AxisAlignedBoundingBox< T >::isIn( const vector< 4, T >& sphere )
 {
-    if ( _empty ) 
+    if ( _empty )
         return false;
     vector< 3, T > sv ( sphere.getCenter() );
     sv += sphere.getRadius();
@@ -107,9 +108,9 @@ inline bool AxisAlignedBoundingBox< T >::isIn( const vector< 4, T >& sphere )
 template< typename T >
 inline bool AxisAlignedBoundingBox< T >::isIn( const vector< 3, T >& pos )
 {
-    if ( _empty ) 
+    if ( _empty )
         return false;
-    if ( pos.x() > _max.x() || pos.y() > _max.y() || pos.z() > _max.z() 
+    if ( pos.x() > _max.x() || pos.y() > _max.y() || pos.z() > _max.z()
             || pos.x() < _min.x() || pos.y() < _min.y() || pos.z() < _min.z() )
     {
         return false;
@@ -122,9 +123,9 @@ inline bool AxisAlignedBoundingBox< T >::isIn( const vector< 3, T >& pos )
 template< typename T >
 inline bool AxisAlignedBoundingBox< T >::isIn2d( const vector< 3, T >& pos )
 {
-    if ( _empty ) 
+    if ( _empty )
         return false;
-    if ( pos.x() > _max.x() || pos.y() > _max.y() || pos.x() < _min.x() 
+    if ( pos.x() > _max.x() || pos.y() > _max.y() || pos.x() < _min.x()
         || pos.y() < _min.y() )
     {
         return false;
@@ -135,7 +136,7 @@ inline bool AxisAlignedBoundingBox< T >::isIn2d( const vector< 3, T >& pos )
 
 
 template< typename T >
-inline void AxisAlignedBoundingBox< T >::set( const vector< 3, T >& pMin, 
+inline void AxisAlignedBoundingBox< T >::set( const vector< 3, T >& pMin,
     const vector< 3, T >& pMax )
 {
     _min = pMin;
@@ -157,39 +158,39 @@ inline void AxisAlignedBoundingBox< T >::set( T cx, T cy, T cz, T size )
 
 
 template< typename T >
-inline void AxisAlignedBoundingBox< T >::setMin( const vector< 3, T >& pMin ) 
-{ 
-    _min = pMin; 
+inline void AxisAlignedBoundingBox< T >::setMin( const vector< 3, T >& pMin )
+{
+    _min = pMin;
 }
 
 
 
 template< typename T >
-inline void AxisAlignedBoundingBox< T >::setMax( const vector< 3, T >& pMax ) 
-{ 
-    _max = pMax; 
+inline void AxisAlignedBoundingBox< T >::setMax( const vector< 3, T >& pMax )
+{
+    _max = pMax;
 }
 
 
 
 template< typename T >
-inline const vector< 3, T >& AxisAlignedBoundingBox< T >::getMin() const 
-{   
-    return _min; 
+inline const vector< 3, T >& AxisAlignedBoundingBox< T >::getMin() const
+{
+    return _min;
 }
 
 
 
 template< typename T >
 inline const vector< 3, T >& AxisAlignedBoundingBox< T >::getMax() const
-{ 
-    return _max; 
+{
+    return _max;
 }
 
 
 
 template< typename T >
-vector< 3, T > 
+vector< 3, T >
 AxisAlignedBoundingBox< T >::getCenter() const
 {
     return _min + ( ( _max - _min ) * 0.5f );
@@ -198,7 +199,16 @@ AxisAlignedBoundingBox< T >::getCenter() const
 
 
 template< typename T >
-void 
+vector< 3, T >
+AxisAlignedBoundingBox< T >::getDimension() const
+{
+    return _max - _min;
+}
+
+
+
+template< typename T >
+void
 AxisAlignedBoundingBox< T >::merge( const AxisAlignedBoundingBox< T >& aabb )
 {
     if ( aabb._empty )
@@ -212,11 +222,11 @@ AxisAlignedBoundingBox< T >::merge( const AxisAlignedBoundingBox< T >& aabb )
         _empty = _dirty = false;
         return;
     }
-    
+
     // else merge the two aabbs
     const vector< 3, T >& min = aabb.getMin();
     const vector< 3, T >& max = aabb.getMax();
-    
+
     if ( min.x() < _min.x() )
         _min.x() = min.x();
     if ( min.y() < _min.y() )
@@ -235,7 +245,7 @@ AxisAlignedBoundingBox< T >::merge( const AxisAlignedBoundingBox< T >& aabb )
 
 
 template< typename T >
-inline void  
+inline void
 AxisAlignedBoundingBox< T >::setEmpty( bool empty )
 {
     _empty = empty;
@@ -244,7 +254,7 @@ AxisAlignedBoundingBox< T >::setEmpty( bool empty )
 
 
 template< typename T >
-inline bool 
+inline bool
 AxisAlignedBoundingBox< T >::isEmpty() const
 {
     return _empty;
@@ -253,7 +263,7 @@ AxisAlignedBoundingBox< T >::isEmpty() const
 
 
 template< typename T >
-inline void  
+inline void
 AxisAlignedBoundingBox< T >::setDirty( bool dirty )
 {
     _dirty = dirty;
@@ -262,7 +272,7 @@ AxisAlignedBoundingBox< T >::setDirty( bool dirty )
 
 
 template< typename T >
-inline bool 
+inline bool
 AxisAlignedBoundingBox< T >::isDirty() const
 {
     return _dirty;
