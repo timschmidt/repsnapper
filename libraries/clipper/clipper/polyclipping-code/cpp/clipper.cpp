@@ -1164,6 +1164,7 @@ bool ClipperBase::AddPath(const Path &pg, PolyType PolyTyp, bool Closed)
   {
     if ((E->Curr == E->Next->Curr))
     {
+	  if (E == E->Next) break;
       if (E == eStart) eStart = E->Next;
       E = RemoveEdge(E);
       eLoopStop = E;
