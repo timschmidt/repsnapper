@@ -46,13 +46,13 @@
 
 PrinterSerial::PrinterSerial( unsigned long max_recv_block_ms ) :
   max_recv_block_ms( max_recv_block_ms ) {
-  
+
   full_command_scratch = new char[ max_command_size + max_command_prefix + max_command_postfix + 10 ];
   command_scratch = full_command_scratch + max_command_prefix;
-  
+
   full_recv_buffer = new char[ max_command_size + max_command_prefix + 10 ];
   recv_buffer = full_recv_buffer + max_command_prefix;
-  
+
 #ifdef WIN32
   device_handle = INVALID_HANDLE_VALUE;
   raw_recv = new char[ max_command_size + max_command_prefix + 10 ];
@@ -75,7 +75,7 @@ PrinterSerial::~PrinterSerial() {
     device_fd = -1;
   }
 #endif
-  
+
   delete [] full_command_scratch;
   delete [] full_recv_buffer;
 #ifdef WIN32
@@ -95,16 +95,16 @@ bool PrinterSerial::TestPort( const string device ) {
 		  NULL );
   if ( h == INVALID_HANDLE_VALUE )
     return false;
-  
+
   CloseHandle( h );
-  
+
   return true;
 #else
   int fd;
-  
+
   if ( ( fd = open( device.c_str(), O_RDWR | O_NOCTTY ) ) < 0 )
     return false;
-  
+
   close( fd );
   return true;
 #endif
@@ -112,7 +112,7 @@ bool PrinterSerial::TestPort( const string device ) {
 
 vector<string> PrinterSerial::FindPorts() {
   vector<string> ports;
-  
+
 #ifdef WIN32
   char name[5];
   strncpy( name, "COMx", 5 );
@@ -121,15 +121,15 @@ vector<string> PrinterSerial::FindPorts() {
     if ( TestPort( name ) )
       ports.push_back( name );
   }
-  
+
   return ports;
 #else
   DIR *dir;
   struct dirent *de;
-  
+
   if ( ( dir = opendir( "/dev" ) ) == NULL )
     return ports;
-  
+
   while ( ( de = readdir( dir ) ) ) {
     if ( strncmp( de->d_name, "ttyUSB", 6 ) == 0 )
       ports.push_back( string( "/dev/" ) + de->d_name );
@@ -138,9 +138,9 @@ vector<string> PrinterSerial::FindPorts() {
     else if ( strncmp( de->d_name, "cuaU", 4 ) == 0 )
       ports.push_back( string( "/dev/" ) + de->d_name );
   }
-  
+
   closedir( dir );
-  
+
   return ports;
 #endif
 }
@@ -152,7 +152,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     if ( device_handle != INVALID_HANDLE_VALUE )
       return false;
   }
-  
+
   device_handle = CreateFile( device.c_str(),
 			      GENERIC_READ | GENERIC_WRITE,
 			      0,
@@ -164,29 +164,29 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     char err_str[ 256 ];
     snprintf( err_str, 256, _("Error opening port %s"), device.c_str() );
     err_str[ 256 ] = '\0';
-    
+
     ostringstream os;
     os << err_str << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
-  
+
   DCB dcb = { 0 };
   dcb.DCBlength = sizeof( dcb );
-  
+
   if ( ! GetCommState( device_handle, &dcb ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
     char err_str[ 256 ];
     snprintf( err_str, 256, _("Error getting port %s state"), device.c_str() );
     err_str[ 255 ] = '\0';
-    
+
     ostringstream os;
     os << err_str << " (" << GetLastError() << ")"<< endl;
     LogError( os.str().c_str() );
     return false;
   }
-  
+
   dcb.BaudRate = baudrate;
   dcb.fBinary = 1;
   dcb.fParity = 0;
@@ -201,7 +201,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   dcb.ByteSize = 8;
   dcb.Parity = NOPARITY;
   dcb.StopBits = ONESTOPBIT;
-  
+
   if ( ! SetCommState( device_handle, &dcb ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
@@ -214,9 +214,9 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     LogError( os.str().c_str() );
     return false;
   }
-  
+
   COMMTIMEOUTS ct;
-  
+
   if ( ! GetCommTimeouts( device_handle, &ct ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
@@ -229,13 +229,13 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     LogError( os.str().c_str() );
     return false;
   }
-  
+
   ct.ReadIntervalTimeout = 5;
   ct.ReadTotalTimeoutConstant = max_recv_block_ms;
   ct.ReadTotalTimeoutMultiplier = 0;
   ct.WriteTotalTimeoutConstant = max_recv_block_ms;
   ct.WriteTotalTimeoutMultiplier= 0;
-  
+
   if ( ! SetCommTimeouts( device_handle, &ct ) ) {
     CloseHandle( device_handle );
     device_handle = INVALID_HANDLE_VALUE;
@@ -247,9 +247,9 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     LogError( os.str().c_str() );
     return false;
   }
-  
+
   *raw_recv = '\0';
-  
+
 #else
   // Verify speed is valid and convert to posix value
   speed_t speed = B0;
@@ -273,42 +273,45 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   case 115200: speed = B115200; break;
   case 230400: speed = B230400; break;
   default:
-    char err_str[ 256 ];
-    snprintf( err_str, 256, _("Unknown baudrate %d\n"), baudrate );
-    if ( err_str[ 254 ] != '\0' )
-      err_str[ 254 ] = '\n';
-    err_str[ 255 ] = '\0';
-    
-    LogError( err_str );
-    return false;
+	ostringstream ostr;
+	ostr << "Nonstandard baudrate " << baudrate << endl;
+	LogLine( ostr.str().c_str() );
+	speed = baudrate;
+    // char err_str[ 256 ];
+    // snprintf( err_str, 256, _( %d\n"), baudrate );
+    // if ( err_str[ 254 ] != '\0' )
+    //   err_str[ 254 ] = '\n';
+    // err_str[ 255 ] = '\0';
+    //LogError( err_str );
+    // return false;
   }
-  
+
   if ( IsConnected() || device_fd >= 0 ) {
     Disconnect();
     if ( device_fd >= 0 )
       return false;
   }
-  
+
   // Open file
   if ( ( device_fd = open( device.c_str(), O_RDWR | O_NOCTTY ) ) < 0 ) {
     int err = errno;
     char err_str[ 256 ];
     snprintf( err_str, 256, _("Error opening port %s"), device.c_str() );
     err_str[ 255 ] = '\0';
-    
+
     ostringstream os;
     os << err_str << ": " << strerror( err ) << endl;
     LogError( os.str().c_str() );
     return false;
   }
-  
+
   // Configure port
   struct termios attribs;
   if ( tcgetattr( device_fd, &attribs ) < 0 ) {
     int err = errno;
     close( device_fd );
     device_fd = -1;
-    
+
     char err_str[ 256 ];
     snprintf( err_str, 256, _("Error getting port %s state"), device.c_str() );
     err_str[ 255 ] = '\0';
@@ -318,14 +321,14 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     LogError( os.str().c_str() );
     return false;
   }
-  
+
   // Use RAW settings, except add ICANON.  ICANON makes the port line buffered
   // and read will return immediately when a newline is received.
   // HUPCL lowers the modem control lines (hang up) when the port is closed
   cfmakeraw( &attribs );
   attribs.c_lflag |= ICANON;
   attribs.c_cflag |= HUPCL;
-  
+
   if( tcsetattr(device_fd, TCSANOW, &attribs ) < 0 ) {
     close( device_fd );
     device_fd = -1;
@@ -335,11 +338,11 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     if ( err_str[ 254 ] != '\0' )
       err_str[ 254 ] = '\n';
     err_str[ 255 ] = '\0';
-    
+
     LogError( err_str );
     return false;
   }
-  
+
   // Set port speed
   if ( cfsetispeed( &attribs, speed ) < 0 ||
        cfsetospeed( &attribs, speed ) < 0 ) {
@@ -350,11 +353,11 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     if ( err_str[ 254 ] != '\0' )
       err_str[ 254 ] = '\n';
     err_str[ 255 ] = '\0';
-    
+
     LogError( err_str );
     return false;
   }
-  
+
   if( tcsetattr(device_fd, TCSANOW, &attribs ) < 0) {
     close( device_fd );
     device_fd = -1;
@@ -363,12 +366,12 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     if ( err_str[ 254 ] != '\0' )
       err_str[ 254 ] = '\n';
     err_str[ 255 ] = '\0';
-    
+
     LogError( err_str );
     return false;
   }
 #endif
-  
+
   char msg[ 256 ];
   memcpy( msg, "--- ", 4 );
   snprintf( msg + 4, 256 - 4, _("Connected to port %s at %d baud\n"), device.c_str(), baudrate );
@@ -376,22 +379,22 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     msg[ 254 ] = '\n';
   msg[ 255 ] = '\0';
   LogLine( msg );
-  
+
   // Reset line number
   prev_cmd_line_number = 0;
-  
+
   return true;
 }
 
 bool PrinterSerial::Connect( string device, int baudrate ) {
   if ( ! RawConnect( device, baudrate ) )
     return false;
-  
+
   // Read start line before returning
   // The printer seems to lock up if it recvs a command before the start
   // line has been sent
   RecvLine();
-  
+
   return true;
 }
 
@@ -421,56 +424,56 @@ bool PrinterSerial::RawReset( void ) {
 #ifdef WIN32
   if ( device_handle == INVALID_HANDLE_VALUE )
     return false;
-  
+
   if ( ! EscapeCommFunction( device_handle, CLRDTR ) )
     return false;
-  
+
   if ( ! EscapeCommFunction( device_handle, SETDTR ) )
     return false;
 #else
   if ( device_fd < 0 )
     return false;
-  
+
   // First try clear/set DTR
   if ( ioctl( device_fd, TIOCMBIC, TIOCM_DTR ) ||
        ioctl( device_fd, TIOCMBIS, TIOCM_DTR ) ) {
-    
+
     // Finally try setting baud rate to zero
     struct termios attribs;
-      
+
     if ( tcgetattr( device_fd, &attribs ) != 0 )
       return false;
-      
+
     speed_t orig_speed = cfgetispeed( &attribs );
     cfsetispeed( &attribs, B0 );
     cfsetospeed( &attribs, B0 );
-      
+
     if ( tcsetattr( device_fd, TCSANOW, &attribs ) != 0 )
       return false;
-      
+
     cfsetispeed( &attribs, orig_speed );
     cfsetospeed( &attribs, orig_speed );
-      
+
     if ( tcsetattr( device_fd, TCSANOW, &attribs ) != 0 )
-      return false;      
+      return false;
   }
 #endif
-  
+
   // Reset line number
-  prev_cmd_line_number = 0;  
-  
+  prev_cmd_line_number = 0;
+
   return true;
 }
 
 bool PrinterSerial::Reset( void ) {
   if ( ! RawReset() )
     return false;
-  
+
   // Read start line before returning
   // The printer seems to lock up if it recvs a command before the start
   // line has been sent
   RecvLine();
-  
+
   return true;
 }
 
@@ -484,7 +487,7 @@ char *PrinterSerial::SendCommand( void ) {
   char *formated;
   char *recvd;
   bool send_text = true;
-  
+
   if ( ( formated = FormatLine() ) == NULL ) {
     // Printer can't handle blank lines
     // Don't send them, just return an "ok" response
@@ -496,20 +499,20 @@ char *PrinterSerial::SendCommand( void ) {
     *loc++ = '\0';
     return recv_buffer;
   }
-  
+
   while ( true ) {
     if ( send_text ) {
       if ( ! SendText( formated ) )
 	return NULL;
     }
-    
+
     if ( ( recvd = RecvLine() ) == NULL )
       return NULL;
-    
+
     if ( strncasecmp( recvd, "ok", 2 ) == 0 || strncasecmp( recvd, "!!", 2 ) == 0 ) {
       return recvd;
     }
-    
+
     if ( strncasecmp( recvd, "rs", 2 ) == 0 || strncasecmp( recvd, "resend:", 7 ) == 0 ) {
       // Checksum error, resend the line
       send_text = true;
@@ -522,13 +525,13 @@ char *PrinterSerial::SendCommand( void ) {
 // Formats line of gcode in command_scratch and returns a pointer to the starting character
 char *PrinterSerial::FormatLine( void ) {
   char *start = command_scratch;
-  
+
   // Add prefix
   start--;
   *start = ' ';
-  
+
   unsigned long this_line = prev_cmd_line_number + 1;
-  
+
   if ( this_line == 0 ) {
     start--;
     *start = '0';
@@ -541,7 +544,7 @@ char *PrinterSerial::FormatLine( void ) {
   }
   start--;
   *start = 'N';
-  
+
   // Calculate checksum
   unsigned char cksum = 0;
   char *loc;
@@ -552,12 +555,12 @@ char *PrinterSerial::FormatLine( void ) {
     loc--;
     cksum ^= *loc;
   }
-  
+
   if ( loc <= command_scratch ) {
     // Line was all whitespace and/or comment, nothing to send
     return NULL;
   }
-  
+
   // Write checksum
   *loc++ = '*';
   if ( cksum >= 100 ) {
@@ -567,13 +570,13 @@ char *PrinterSerial::FormatLine( void ) {
     *loc++ = ( cksum / 10 ) % 10 + '0';
   }
   *loc++ = cksum % 10 + '0';
-  
+
   // Terminate line
   *loc++ = '\n';
   *loc++ = '\0';
-  
+
   prev_cmd_line_number++;
-  
+
   return start;
 }
 
@@ -582,9 +585,9 @@ char *PrinterSerial::FormatLine( void ) {
 bool PrinterSerial::SendText( char *text ) {
   memcpy( text - 4, "<-- ", 4 );
   LogLine( text - 4 );
-  
+
   size_t len = strlen( text );
-  
+
 #ifdef WIN32
   DWORD num;
   while ( len > 0 ) {
@@ -607,7 +610,7 @@ bool PrinterSerial::SendText( char *text ) {
       if ( msg[ 248 ] != '\0' )
 	msg[ 248 ] = '\n';
       msg[ 249 ] = '\0';
-      
+
       LogError( msg );
       return false;
     }
@@ -622,40 +625,40 @@ bool PrinterSerial::SendText( char *text ) {
 // Waits for a complete line from the port and receives that line into recv_buffer (but not at the start of recv_buffer to make logging easier).  Returns pointer to start of recv'd data.  Performs logging.
 char *PrinterSerial::RecvLine( void ) {
   size_t tot_size = 0;
-  
+
 #ifdef WIN32
   char *raw_loc = raw_recv;
   DWORD num;
-  
+
   while ( true ) {
     while ( *raw_loc != '\0' && *raw_loc != '\n' )
       raw_loc++;
     tot_size = raw_loc - raw_recv;
-    
+
     if ( *raw_loc == '\n' ) {
       raw_loc++;
       tot_size++;
       break;
     }
-    
+
     if ( tot_size + 20 >= max_command_size ) {
       LogLine( _("*** Error: Received line too long ***\n") );
       LogError( _("*** Error: Received line too long ***\n") );
       *raw_loc++ = '\n';
       break;
     }
-    
+
     if ( ! ReadFile( device_handle, raw_loc, max_command_size - tot_size - 20, &num, NULL ) ) {
       LogLine( _("*** Error Reading from port ***\n") );
       LogError( _("*** Error Reading from port ***\n") );
       return NULL;
     }
     raw_loc[ num ] = '\0';
-    
+
     if ( num == 0 )
-      RecvTimeout();    
+      RecvTimeout();
   }
-  
+
   memcpy( recv_buffer, raw_recv, tot_size );
   recv_buffer[ tot_size ] = '\0';
   memmove( raw_recv, raw_recv + tot_size, strlen( raw_recv + tot_size ) + 1 );
@@ -665,7 +668,7 @@ char *PrinterSerial::RecvLine( void ) {
   ssize_t num;
   struct timeval timeout;
   fd_set set;
-  
+
   // Read the data
   while ( ! done ) {
     // Make sure line is not too long
@@ -686,7 +689,7 @@ char *PrinterSerial::RecvLine( void ) {
 	    NULL,
 	    NULL,
 	    max_recv_block_ms == 0 ? NULL : &timeout );
-    
+
     if ( FD_ISSET( device_fd, &set ) ) {
       // Read the data.  Use a loop since Posix does not guarentee that an
       // entire line will be read at once.
@@ -699,13 +702,13 @@ char *PrinterSerial::RecvLine( void ) {
 	if ( msg[ 248 ] != '\0' )
 	  msg[ 248 ] = '\n';
 	msg[ 249 ] = '\0';
-	
+
 	LogError( msg );
 	return NULL;
       }
       tot_size += num;
       buf += num;
-      
+
       if ( num > 0 && ( buf[-1] == '\n' || buf[-1] == '\r' ) ) {
 	done = true;
       }
@@ -715,18 +718,18 @@ char *PrinterSerial::RecvLine( void ) {
   }
   *buf = '\0';
 #endif
-	   
+
   char *recvd = recv_buffer;
-  
+
   // Ignore inital whitespace
   while ( isspace( *recvd ) ) {
     recvd++;
   }
-  
+
   // Log the line
   memcpy( recvd - 4, "--> ", 4 );
   LogLine( recvd - 4 );
-  
+
   return recvd;
 }
 

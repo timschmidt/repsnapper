@@ -45,7 +45,7 @@
 #  define DEFAULT_COM_PORT "/dev/ttyUSB0"
 #endif
 
-const string serialspeeds[] = { "9600", "19200", "38400", "57600", "115200", "230400" };
+const string serialspeeds[] = { "9600", "19200", "38400", "57600", "115200", "230400", "250000" };
 
 
 // convert GUI name to group/key
