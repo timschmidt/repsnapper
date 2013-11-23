@@ -647,11 +647,16 @@ uint PrintPoly::getDisplacedStart(uint start) const
 {
   if (displace_start) {
     // find next sharp corner (>pi/4)
-    uint oldstart = start; // if none found, stay here
+    uint oldstart = start; // save start position
     start = m_poly->nextVertex(start);
     while (start != oldstart &&
-	   abs(m_poly->angleAtVertex(start) < M_PI/4))
+	   abs(m_poly->angleAtVertex(start) < M_PI/4)) {
       start = m_poly->nextVertex(start);
+    }
+    if (start == oldstart) { // no sharp corner found
+      // randomize
+      start = rand()%m_poly->size();
+    }
   }
   return start;
 }
