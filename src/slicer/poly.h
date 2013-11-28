@@ -77,6 +77,7 @@ public:
 	vector<Vector2d> getCenterline() const;
 
 	uint getFarthestIndex(uint &thisindex) const;
+	uint getFarthestIndex(const Vector2d &from) const;
 
 	void rotate(const Vector2d &center, double angle);
 	void move(const Vector2d &delta);

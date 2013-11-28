@@ -430,7 +430,8 @@ void GCode::draw(const Settings &settings, int layer,
 
 	drawCommands(settings, start, end, liveprinting, linewidth,
 		     arrows && settings.get_boolean("Display","DisplayGCodeArrows"),
-		     !liveprinting && settings.get_boolean("Display","DisplayGCodeBorders"));
+		     !liveprinting && settings.get_boolean("Display","DisplayGCodeBorders"),
+                     settings.get_boolean("Display","DebugGCodeOnlyZChange"));
 
 	if (currentCursorWhere!=Vector3d::ZERO) {
 	  glDisable(GL_DEPTH_TEST);
@@ -454,7 +455,8 @@ void GCode::draw(const Settings &settings, int layer,
 
 
 void GCode::drawCommands(const Settings &settings, uint start, uint end,
-			 bool liveprinting, int linewidth, bool arrows, bool boundary)
+			 bool liveprinting, int linewidth, bool arrows, bool boundary,
+                         bool onlyZChange)
 {
   // if (gl_List < 0) {
   //   gl_List = glGenLists(1);
@@ -529,6 +531,13 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		}
 		double extrwidth = extrusionwidth;
 	        if (commands[i].is_value) continue;
+                if (onlyZChange && commands[i].where.z() == pos.z()) {
+                  pos = commands[i].where;
+                  LastE=commands[i].e;
+                  continue;
+                }
+
+
 		switch(commands[i].Code)
 		{
 		case SETSPEED:
@@ -591,16 +600,16 @@ void GCode::drawCommands(const Settings &settings, uint start, uint end,
 		      }
 		    if (luminanceshowsspeed)
 		      Color *= luma;
-		    commands[i].draw(pos, extruder_offset, linewidth,
-				     Color, extrwidth, arrows, debug_arcs);
+                    commands[i].draw(pos, extruder_offset, linewidth,
+                                     Color, extrwidth, arrows, debug_arcs);
 		    LastE=commands[i].e;
 		    break;
 		  }
 		case RAPIDMOTION:
 		  {
 		    Color = gcodemovecolour;
-		    commands[i].draw(pos, extruder_offset, 1, Color,
-				     extrwidth, arrows, debug_arcs);
+                    commands[i].draw(pos, extruder_offset, 1, Color,
+                                     extrwidth, arrows, debug_arcs);
 		    break;
 		  }
 		default:

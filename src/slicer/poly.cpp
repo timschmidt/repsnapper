@@ -180,19 +180,23 @@ void Poly::mirrorX(const Vector3d &center)
 
 uint Poly::getFarthestIndex(uint &thisindex) const
 {
-  int findex = thisindex;
+  return getFarthestIndex(vertices[thisindex]);
+}
+
+uint Poly::getFarthestIndex(const Vector2d &from) const
+{
+  uint findex = 0;
   double maxdist = 0.;
   for (uint i = 0; i < size(); i++) {
-    if (i != thisindex) {
-      double d = vertices[thisindex].squared_distance(vertices[i]);
-      if (d > maxdist) {
-        maxdist = d;
-        findex = i;
-      }
+    double d = from.squared_distance(vertices[i]);
+    if (d > maxdist) {
+      maxdist = d;
+      findex = i;
     }
   }
   return findex;
 }
+
 
 // nearest connection point indices of this and other poly
 // if poly is not closed, only test first and last point

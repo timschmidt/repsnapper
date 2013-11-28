@@ -647,7 +647,7 @@ uint PrintPoly::getDisplacedStart(uint start) const
 {
   //cerr << start << " --> ";
   if (displace_start) {
-#if 1
+#if 0
     // find next sharp corner (>pi/4)
     uint oldstart = start; // save start position
     start = m_poly->nextVertex(start);
@@ -658,7 +658,7 @@ uint PrintPoly::getDisplacedStart(uint start) const
     // no sharp corner found:
     if (start == oldstart)
 #endif
-      start = rand()%m_poly->size(); // randomize
+    // start = rand()%m_poly->size(); // randomize
     //start = m_poly->getFarthestIndex(start); // take farthest point
   }
   //cerr << start << endl;

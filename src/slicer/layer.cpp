@@ -121,6 +121,21 @@ Vector2d Layer::getRandomPolygonPoint() const
   Poly p = polygons[rand()%polygons.size()];
   return p.vertices[rand()%p.size()];
 }
+Vector2d Layer::getFarthestPolygonPoint(const Vector2d &from) const
+{
+  uint pindex = 0, pvindex = 0;
+  double maxdist = 0.;
+  for (uint i = 0; i<polygons.size(); i++) {
+    uint fi = polygons[i].getFarthestIndex(from);
+    double pdist = from.squared_distance(polygons[i][fi]);
+    if (pdist > maxdist) {
+      maxdist = pdist;
+      pindex = i;
+      pvindex = fi;
+    }
+  }
+  return polygons[pindex][pvindex];
+}
 
 bool Layer::pointInPolygons(const Vector2d &p) const
 {

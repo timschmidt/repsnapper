@@ -61,6 +61,7 @@ public:
   bool pointInPolygons(const Vector2d &p) const;
 
   Vector2d getRandomPolygonPoint() const;
+  Vector2d getFarthestPolygonPoint(const Vector2d &from) const;
     /* void setBBox(Vector2d min, Vector2d max); */
   /* void setBBox(vector<Vector2d> minmax); */
   /* void setBBox(Vector3d min, Vector3d max); */

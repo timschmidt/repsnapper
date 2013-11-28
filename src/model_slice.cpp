@@ -864,7 +864,7 @@ void Model::ConvertToGCode()
 
   bool cont = true;
   vector<PLine3> plines;
-  bool randomizeStart = settings.get_boolean("Slicing","RandomizeLayerStart");
+  bool farthestStart = settings.get_boolean("Slicing","FarthestLayerStart");
   Vector3d start = state.LastPosition();
   for (uint p=0; p<count; p++) {
     cont = (m_progress->update(p)) ;
@@ -874,9 +874,11 @@ void Model::ConvertToGCode()
     // 	 << " have commands: " <<commands.size()
     // 	 << " start " << start <<  endl;;
     // try {
-    if (randomizeStart) {
-      Vector2d randstart = layers[p]->getRandomPolygonPoint();
-      start.set(randstart.x(), randstart.y());
+    if (farthestStart) {
+      // Vector2d randstart = layers[p]->getRandomPolygonPoint();
+      // start.set(randstart.x(), randstart.y());
+      Vector2d fartheststart = layers[p]->getFarthestPolygonPoint(start);
+      start.set(fartheststart.x(), fartheststart.y());
     }
     layers[p]->MakePrintlines(start,
 			      plines,
