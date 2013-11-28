@@ -76,6 +76,8 @@ public:
 	double angleAtVertex(uint i) const;
 	vector<Vector2d> getCenterline() const;
 
+	uint getFarthestIndex(uint &thisindex) const;
+
 	void rotate(const Vector2d &center, double angle);
 	void move(const Vector2d &delta);
 

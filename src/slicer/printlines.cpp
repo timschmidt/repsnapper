@@ -646,6 +646,7 @@ void PrintPoly::getLinesTo(vector<PLine2> &lines, int startindex,
 uint PrintPoly::getDisplacedStart(uint start) const
 {
   if (displace_start) {
+#if 0
     // find next sharp corner (>pi/4)
     uint oldstart = start; // save start position
     start = m_poly->nextVertex(start);
@@ -653,10 +654,12 @@ uint PrintPoly::getDisplacedStart(uint start) const
 	   abs(m_poly->angleAtVertex(start) < M_PI/4)) {
       start = m_poly->nextVertex(start);
     }
-    if (start == oldstart) { // no sharp corner found
-      // randomize
-      start = rand()%m_poly->size();
-    }
+    // no sharp corner found:
+    if (start == oldstart)
+#endif
+      // start = rand()%m_poly->size(); // randomize
+      start = m_poly->getFarthestIndex(start); // take farthest point
+
   }
   return start;
 }
