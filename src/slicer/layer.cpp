@@ -118,6 +118,7 @@ void Layer::SetPolygons(vector<Poly> &polys) {
 
 Vector2d Layer::getRandomPolygonPoint() const
 {
+  if (polygons.size() == 0) return Vector2d(0.,0.);
   Poly p = polygons[rand()%polygons.size()];
   return p.vertices[rand()%p.size()];
 }
