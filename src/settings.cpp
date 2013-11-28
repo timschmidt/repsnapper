@@ -381,7 +381,7 @@ void Settings::save_settings(Glib::RefPtr<Gio::File> file)
 
   SelectExtruder(selectedExtruder); // reload default extruder
 
-  inhibit_callback = true;
+  inhibit_callback = false;
   // all changes safely saved
   m_user_changed = false;
 }
