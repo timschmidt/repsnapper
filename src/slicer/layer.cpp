@@ -116,6 +116,11 @@ void Layer::SetPolygons(vector<Poly> &polys) {
 //   }
 // }
 
+Vector2d Layer::getRandomPolygonPoint() const
+{
+  Poly p = polygons[rand()%polygons.size()];
+  return p.vertices[rand()%p.size()];
+}
 
 bool Layer::pointInPolygons(const Vector2d &p) const
 {
@@ -813,6 +818,7 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 
   //  Shells
   for(int p=shellPolygons.size()-1; p>=0; p--) { // inner to outer
+    //cerr << "displace " << p << endl;
     printlines.addPolys(SHELL, shellPolygons[p],
 			(p==(int)(shellPolygons.size())-1),
 			maxshellspeed * 60,
