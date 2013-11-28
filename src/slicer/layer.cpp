@@ -123,6 +123,7 @@ Vector2d Layer::getRandomPolygonPoint() const
 }
 Vector2d Layer::getFarthestPolygonPoint(const Vector2d &from) const
 {
+  if (polygons.size() == 0) return from;
   uint pindex = 0, pvindex = 0;
   double maxdist = 0.;
   for (uint i = 0; i<polygons.size(); i++) {

@@ -877,7 +877,7 @@ void Model::ConvertToGCode()
     if (farthestStart) {
       // Vector2d randstart = layers[p]->getRandomPolygonPoint();
       // start.set(randstart.x(), randstart.y());
-      Vector2d fartheststart = layers[p]->getFarthestPolygonPoint(start);
+      const Vector2d fartheststart = layers[p]->getFarthestPolygonPoint(start);
       start.set(fartheststart.x(), fartheststart.y());
     }
     layers[p]->MakePrintlines(start,
