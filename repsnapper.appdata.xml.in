@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2013 Richard Hughes <richard@hughsie.com> -->
+<application>
+  <id type="desktop">repsnapper.desktop</id>
+  <licence>CC0</licence>
+  <name>Repsnapper</name>
+  <description>
+    <_p>
+      RepSnapper is an alternative host software for controlling the RepRap
+      open source 3D printer.
+    </_p>
+    <_p>
+      TODO: Please add a longer description here describing what RepSnapper does
+      and why people should install it from an AppStore. There are guidelines on
+      what to say here: http://people.freedesktop.org/~hughsient/appdata/ -- tnx!
+    </_p>
+  </description>
+  <screenshots>
+    <screenshot type="default">https://link-to-16:9-screenshot/of-repsnapper.png</screenshot>
+  </screenshots>
+  <url type="homepage">https://github.com/timschmidt/repsnapper</url>
+</application>

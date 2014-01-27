@@ -41,3 +41,4 @@ repsnapper
 debian
 intltool-*.in
 src/gitversion.h
+repsnapper.appdata.xml

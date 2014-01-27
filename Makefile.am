@@ -32,6 +32,16 @@ win32extras_DATA = $(WIN32_FILES)
 
 @INTLTOOL_DESKTOP_RULE@
 
+# AppData support
+@INTLTOOL_XML_RULE@
+appdatadir = $(datadir)/appdata
+appdata_DATA = $(appdata_in_files:.xml.in=.xml)
+appdata_in_files = repsnapper.appdata.xml.in
+EXTRA_DIST += $(appdata_in_files)
+CLEANFILES += $(appdata_DATA)
+
+-include $(top_srcdir)/git.mk
+
 noinst_LTLIBRARIES =
 
 include libraries/Makefile.am
