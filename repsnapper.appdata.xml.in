@@ -10,13 +10,12 @@
       open source 3D printer.
     </_p>
     <_p>
-      TODO: Please add a longer description here describing what RepSnapper does
-      and why people should install it from an AppStore. There are guidelines on
-      what to say here: http://people.freedesktop.org/~hughsient/appdata/ -- tnx!
+      OpenGL User Interface (GTK), Slicer and Toolpath Generator written in C++.
+      See also http://reprap.org/wiki/RepSnapper_Manual:Introduction
     </_p>
   </description>
   <screenshots>
-    <screenshot type="default">https://link-to-16:9-screenshot/of-repsnapper.png</screenshot>
+    <screenshot type="default">http://reprap.org/mediawiki/images/6/6b/Repsnapper.png</screenshot>
   </screenshots>
   <url type="homepage">https://github.com/timschmidt/repsnapper</url>
 </application>
