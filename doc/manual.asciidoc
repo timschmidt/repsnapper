@@ -645,7 +645,7 @@ Once an STL is loaded, you can move it to further onto the build platform, rotat
     * To move around individual objects or a group of objects use Shift and the left mouse button.
     * Or tab to the translate box and enter absolute values into the X and Y fields.
     * If the object is not on the Platform, you can also try rotating it about the Z axis to automatically make it touch the Z=0 plane.
-    * Everything below the Z=0 plane will not be sliced, so you will not get negative Z values in youe GCode.
+    * Everything below the Z=0 plane will not be sliced, so you will not get negative Z values in your GCode.
 
     * Duplicate adds another copy of the STL beside the first.
 
