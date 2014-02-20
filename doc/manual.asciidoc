@@ -507,7 +507,7 @@ Connect to printer::
 Power on::
 
 Print::
-    Starts sending the GCode from the "Result" tab under the "GCode" tab to the ptiner.
+    Starts sending the GCode from the "Result" tab under the "GCode" tab to the printer.
 
 Pause::
     Pauses communication with the printer.
