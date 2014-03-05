@@ -47,7 +47,7 @@ class Infill
     double angle;
     double distance;
     Vector2d Min,Max;
-    ClipperLib::Polygons cpolys;
+    ClipperLib::Paths cpolys;
   } ;
 
   static vector<struct pattern> savedPatterns;
@@ -55,7 +55,7 @@ class Infill
   static omp_lock_t save_lock;
 #endif
 
-  ClipperLib::Polygons makeInfillPattern(InfillType type,
+  ClipperLib::Paths makeInfillPattern(InfillType type,
 					 const vector<Poly> &tofillpolys,
 					 double infillDistance,
 					 double offsetDistance,
@@ -94,7 +94,7 @@ class Infill
 		double infillDistance, double offsetDistance, double rotation);
   void addPolys(double z, const vector<Poly> &polys, const vector<Poly> &fillpolys,
 		double offsetDistance);
-  void addPolys(double z, const vector<Poly> &polys, const ClipperLib::Polygons &ifcpolys,
+  void addPolys(double z, const vector<Poly> &polys, const ClipperLib::Paths &ifcpolys,
 		double offsetDistance);
 
   void addPoly (double z, const ExPoly &expoly, InfillType type, double infillDistance,

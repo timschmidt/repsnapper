@@ -66,10 +66,10 @@ public:
   /* void setBBox(vector<Vector2d> minmax); */
   /* void setBBox(Vector3d min, Vector3d max); */
 
-  // ClipperLib::Polygons getClipperPolygons(const vector<Poly> polygons,
+  // ClipperLib::Paths getClipperPolygons(const vector<Poly> polygons,
   // 					  bool reverse=true) const;
   vector<Poly> getMergedPolygons(const vector<Poly> &polys);
-  //ClipperLib::Polygons getMergedPolygons(const ClipperLib::Polygons cpolys) const;
+  //ClipperLib::Paths getMergedPolygons(const ClipperLib::Paths cpolys) const;
   void mergeFullPolygons(bool bridge);
   void mergeSupportPolygons();
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;

@@ -88,7 +88,7 @@ void Infill::addPolys(double z, const vector<Poly> &polys, InfillType type,
 #ifdef _OPENMP
   omp_set_lock(&save_lock);
 #endif
-  ClipperLib::Polygons patterncpolys =
+  ClipperLib::Paths patterncpolys =
     makeInfillPattern(type, polys, infillDistance, offsetDistance, rotation);
 #ifdef _OPENMP
   omp_unset_lock(&save_lock);
@@ -119,7 +119,7 @@ void Infill::addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
 //   this->infillDistance = infillDistance;
 
 //   omp_set_lock(&save_lock);
-//   ClipperLib::Polygons patterncpolys =
+//   ClipperLib::Paths patterncpolys =
 //     makeInfillPattern(type, polys, infillDistance, offsetDistance, rotation);
 //   addPolys(z, polys, patterncpolys, offsetDistance);
 //   omp_unset_lock(&save_lock);
@@ -135,7 +135,7 @@ void Infill::addPolys(double z, const vector<Poly> &polys,
 
 // clip infill pattern polys against polys
 void Infill::addPolys(double z, const vector<Poly> &polys,
-		      const ClipperLib::Polygons &patterncpolys,
+		      const ClipperLib::Paths &patterncpolys,
 		      double offsetDistance)
 {
   Clipping clipp;
@@ -151,13 +151,13 @@ void Infill::addPolys(double z, const vector<Poly> &polys,
 }
 
 // generate infill pattern as a vector of polygons
-ClipperLib::Polygons Infill::makeInfillPattern(InfillType type,
+ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
 					       const vector<Poly> &tofillpolys,
 					       double infillDistance,
 					       double offsetDistance,
 					       double rotation)
 {
-  ClipperLib::Polygons cpolys;
+  ClipperLib::Paths cpolys;
   m_tofillpolys = tofillpolys;
   m_type = type;
 

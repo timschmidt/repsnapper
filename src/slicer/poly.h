@@ -37,7 +37,7 @@ public:
 	Poly(double z, double extrusionfactor=1.);
         Poly(const Poly &p, double z);
 	/* Poly(double z, */
-	/*      const ClipperLib::Polygon cpoly, bool reverse=false); */
+	/*      const ClipperLib::Path cpoly, bool reverse=false); */
         ~Poly();
 
 	void setClosed(bool c) { closed = c; };
@@ -89,8 +89,8 @@ public:
 	vector<Intersection> lineIntersections(const Vector2d &P1, const Vector2d &P2,
 					       double maxerr=0.0001) const;
 
-	// ClipperLib::Polygons getOffsetClipperPolygons(double dist) const ;
-	// ClipperLib::Polygon getClipperPolygon(bool reverse=false) const;
+	// ClipperLib::Paths getOffsetClipperPolygons(double dist) const ;
+	// ClipperLib::Path getClipperPolygon(bool reverse=false) const;
 
 	Vector2d const &getVertexCircular(int pointindex) const;  // 2d point at index
 	Vector3d getVertexCircular3(int pointindex) const; // 3d point at index
