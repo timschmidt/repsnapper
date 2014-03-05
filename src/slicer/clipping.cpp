@@ -120,7 +120,7 @@ CL::Path Clipping::getClipperPolygon(const Poly &poly)
 
 CL::Paths Clipping::getClipperPolygons(const vector<Poly> &polys)
 {
-  ClipperLib::Polygons cpolys(polys.size());
+  ClipperLib::Paths cpolys(polys.size());
   for (uint i=0; i<polys.size(); i++)
     {
       cpolys[i] = getClipperPolygon(polys[i]);
@@ -407,8 +407,8 @@ vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> &polys, double dista
 {
   CL::Paths opolys;
   if (reverse)
-    CL::ReversePolygons(opolys);
-  CL::OffsetPolygons(cpolys, opolys, cldist, cljtype, miter_limit);
+    CL::ReversePaths(opolys);
+  CL::OffsetPaths(cpolys, opolys, cldist, cljtype, CL::etClosed, miter_limit);
   CL::SimplifyPolygons(opolys);//, CL::pftNonZero);
   return opolys;
 }
