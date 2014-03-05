@@ -234,6 +234,10 @@ uint Poly::nearestDistanceSqTo(const Vector2d &p, double &mindist) const
       nindex = i;
     }
   }
+  if (isnan(mindist)) { // for infinity startPoint return point 0 and distance 0
+    nindex = 0;
+    mindist = 0.;
+  }
   return nindex;
 }
 // returns length and two points

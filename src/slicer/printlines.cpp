@@ -753,7 +753,7 @@ double Printlines::makeLines(Vector2d &startPoint,
 	    else {
 	      pdist = INFTY;
 	      nindex = printpolys[q]->m_poly->nearestDistanceSqTo(startPoint, pdist);
-	      pdist /= printpolys[q]->priority;
+              pdist /= printpolys[q]->priority;
 	      if (pdist  < nstdist){
 		npindex = q;      // index of nearest poly in polysleft
 		nstdist = pdist;  // distance of nearest poly
@@ -765,7 +765,7 @@ double Printlines::makeLines(Vector2d &startPoint,
       if (ndone==0) { // only first in layer
 	nvindex = printpolys[npindex]->getDisplacedStart(nvindex);
       }
-      if (npindex >= 0 && npindex >=0) {
+      if (npindex >= 0 && nvindex >= 0) {
 	printpolys[npindex]->getLinesTo(lines, nvindex, movespeed);
 	totallength += printpolys[npindex]->length;
 	totalspeedfactor += printpolys[npindex]->length * printpolys[npindex]->speedfactor;
