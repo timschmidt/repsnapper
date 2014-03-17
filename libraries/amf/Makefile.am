@@ -4,6 +4,7 @@ libamf_la_CPPFLAGS = \
 	-I$(srcdir) \
 	-I$(top_srcdir)/libraries/amf/amftools-code/include/ \
 	-I$(top_srcdir)/libraries/amf/amftools-code/include/muparser \
+	$(LIBZIP_CFLAGS) \
         $(EXTRA_CFLAGS)
 
 libamf_la_SOURCES = \
