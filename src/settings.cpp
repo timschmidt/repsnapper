@@ -464,9 +464,9 @@ void Settings::get_from_gui (Builder &builder, const string &glade_name)
   }
   Gtk::Widget *w = NULL;
   builder->get_widget (glade_name, w);
+  string group, key;
+  if (!splitpoint(glade_name, group, key)) return;
   while (w) { // for using break ...
-    string group, key;
-    if (!splitpoint(glade_name, group, key)) return;
     //cerr << "get " << group  << "." << key << " from gui"<< endl;
     m_user_changed = true; // is_changed;
     Gtk::CheckButton *check = dynamic_cast<Gtk::CheckButton *>(w);
@@ -520,6 +520,14 @@ void Settings::get_from_gui (Builder &builder, const string &glade_name)
     // update currently edited extruder
     if (glade_name.substr(0,8) == "Extruder") {
       copyGroup("Extruder",numberedExtruder("Extruder", selectedExtruder));
+      // if selected for support, disable support for other extruders
+      if (key == "UseForSupport" && get_boolean(group,key) ) {
+        for (uint i = 0; i < getNumExtruders(); i++) {
+          if (i != selectedExtruder) {
+            set_boolean(numberedExtruder("Extruder", i), key, false);
+          }
+        }
+      }
     }
     m_signal_visual_settings_changed.emit();
   }
