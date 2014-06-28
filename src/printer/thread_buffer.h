@@ -20,6 +20,7 @@
 #pragma once
 
 #include <string>
+#include <sys/types.h>
 
 #include "thread.h"
 

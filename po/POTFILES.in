@@ -28,6 +28,7 @@ src/ui/widgets.cpp
 src/ui/view.cpp
 src/printer/printer.cpp
 src/printer/printer_serial.cpp
+src/printer/thread_buffer.cpp
 src/printer/threaded_printer_serial.cpp
 src/slicer/clipping.cpp
 src/slicer/infill.cpp

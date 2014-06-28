@@ -9,4 +9,5 @@ liblmfit_la_SOURCES = \
 	libraries/lmfit/lmfit-5.0/lib/lmmin.c \
 	libraries/lmfit/lmfit-5.0/lib/lmmin.h \
 	libraries/lmfit/lmfit-5.0/lib/lmcurve.c \
-	libraries/lmfit/lmfit-5.0/lib/lmcurve.h
+	libraries/lmfit/lmfit-5.0/lib/lmcurve.h \
+	libraries/lmfit/lmfit-5.0/lib/lmstruct.h

@@ -45,6 +45,7 @@ AM_GLIB_GNU_GETTEXT
 PKG_PROG_PKG_CONFIG([0.22])
 
 AC_LANG_CPLUSPLUS
+AC_TYPE_SSIZE_T
 
 dnl check for installed clipperlib newer than 5.1.0 (has PolyNode)
 AC_DEFINE([HAVE_CLIPPERLIB],[0],[Have external clipper])
