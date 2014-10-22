@@ -68,9 +68,9 @@ protected:
 public:
   ThreadBuffer( size_t buffer_size, bool is_line_buffered, const ntime_t &nsleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true, unsigned long min_line_len = 0 );
   virtual ~ThreadBuffer();
-  virtual bool Write( const char *data, bool wait, ssize_t datalen = -1 );
-  virtual size_t Read( char *data, size_t max_len, bool wait );
-  virtual string Read( bool wait );
+  bool Write( const char *data, bool wait, ssize_t datalen = -1 );
+  size_t Read( char *data, size_t max_len, bool wait );
+  string Read( bool wait );
   virtual bool DataAvailable( void );
   virtual void Flush( void );
 };
@@ -114,10 +114,10 @@ public:
   ThreadBufferReturnData( size_t buffer_size, const ntime_t &nsleep_time, string overflow_indicator = "", bool use_read_mutex = true, bool use_write_mutex = true );
   virtual ~ThreadBufferReturnData();
 
-  virtual bool Write( const char *data, bool wait, ssize_t datalen = -1, ReturnData **return_data = NULL );
+  bool Write( const char *data, bool wait, ssize_t datalen = -1, ReturnData **return_data = NULL );
 
-  virtual size_t Read( char *data, size_t max_len, bool wait, ReturnData **return_data = NULL );
-  virtual string Read( bool wait, ReturnData **return_data = NULL );
+  size_t Read( char *data, size_t max_len, bool wait, ReturnData **return_data = NULL );
+  string Read( bool wait, ReturnData **return_data = NULL );
   virtual void Flush( void );
 
   virtual bool WaitForReturnData( ReturnData &return_data );
