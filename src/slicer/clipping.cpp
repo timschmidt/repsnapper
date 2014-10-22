@@ -408,7 +408,9 @@ vector<Poly> Clipping::getShrinkedCapped(const vector<Poly> &polys, double dista
   CL::Paths opolys;
   if (reverse)
     CL::ReversePaths(opolys);
-  CL::OffsetPaths(cpolys, opolys, cldist, cljtype, CL::etClosed, miter_limit);
+  CL::ClipperOffset co;
+  co.AddPaths(cpolys, cljtype, CL::etClosedPolygon);
+  co.Execute(opolys, miter_limit);
   CL::SimplifyPolygons(opolys);//, CL::pftNonZero);
   return opolys;
 }
