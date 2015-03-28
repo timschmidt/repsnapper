@@ -92,5 +92,5 @@ class PrinterSerial {
 
   virtual bool Reset( void );
 
-  virtual char *Send( const char *command );
+  char *Send( const char *command );
 };
