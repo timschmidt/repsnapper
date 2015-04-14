@@ -21,6 +21,7 @@
 #include "files.h"
 
 #include <iostream>
+#include <stdlib.h>
 
 
 static string numlocale   = "";
@@ -432,21 +433,25 @@ bool File::parseSTLtriangles_ascii (istream &text,
 }
 
 bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
-
 {
+
   triangles.clear();
   ustring filename = _file->get_path();
     ifstream file;
+
     file.open(filename.c_str());
 
     if(file.fail()) {
       cerr << _("Error: Unable to open vrml file - ") << filename << endl;
       return false;
     }
+
+    file.imbue(std::locale("C"));
     ustring word;
     std::vector<float> vertices;
     std::vector<int> indices;
     bool finished = false;
+    vector<Vector3d> points;
     while(!file.eof() && !finished) {
       // while (word!="Shape"  && !file.eof())
       // 	file >> word;
@@ -454,24 +459,34 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
       // 	file >> word;
       // while (word!="Coordinate" && !file.eof())
       // 	file >> word;
-
+      points.clear();
+      vertices.clear();
+      while (word!="coord" && !file.eof()) // only use coord points
+	file >> word;
       while (word!="point" && !file.eof())
 	file >> word;
       file >> word;
       if (word=="[") {
-	float f;
+	double f;
 	while (word!="]" && !file.eof()){
 	  file >> word;
+          if (word.find(",") == word.length()-1) { // remove comma
+            word = word.substr(0,word.length()-1);
+          }
 	  if (word!="]")
-	    if (word.find("#")!=0) {
-	      std::istringstream iss(word);
-	      iss >> f;
+	    if (word.find("#") != 0) { // comment
+              f = atof(word.c_str());
 	      vertices.push_back(f);
-	      //cerr << f << ", ";
-	    }
+	    } else { // skip rest of line
+              file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            }
 	}
+        if (vertices.size() % 3 == 0)
+          for (uint i = 0; i < vertices.size(); i += 3)
+            points.push_back(Vector3d(vertices[i], vertices[i+1], vertices[i+2]));
 	//cerr << endl;
       }
+      indices.clear();
       while (word!="coordIndex"  && !file.eof())
 	file >> word;
       file >> word;
@@ -482,27 +497,22 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
 	  if (word!="]")
 	    if (word.find("#")!=0) {
 	      std::istringstream iss(word);
+              iss.precision(20);
 	      iss >> c;
 	      indices.push_back(c);
-	      //cerr << c << ", ";
+	      //cerr << word << "=="<< c << ", ";
 	    }
 	}
-	//cerr << endl;
+        if (indices.size()%4 == 0)
+          for (uint i=0; i<indices.size();i+=4) {
+            Triangle T(points[indices[i]],points[indices[i+1]],points[indices[i+2]]);
+            triangles.push_back(T);
+          }
       }
+      if (triangles.size()%1000 == 0)
+        cerr << "\rread " << triangles.size() << " triangles " ;
     }
     file.close();
-
-    if (indices.size()%4!=0) return false;
-    if (vertices.size()%3!=0) return false;
-    vector<Vector3d> vert;
-    for (uint i=0; i<vertices.size();i+=3)
-      vert.push_back(Vector3d(vertices[i],
-			      vertices[i+1],
-			      vertices[i+2]));
-    for (uint i=0; i<indices.size();i+=4){
-      Triangle T(vert[indices[i]],vert[indices[i+1]],vert[indices[i+2]]);
-      triangles.push_back(T);
-    }
     return true;
 }
 
