@@ -43,6 +43,7 @@
 #endif
 
 #include "printer_serial.h"
+#include "custom_baud.h"
 
 PrinterSerial::PrinterSerial( unsigned long max_recv_block_ms ) :
   max_recv_block_ms( max_recv_block_ms ) {
@@ -253,6 +254,8 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
 #else
   // Verify speed is valid and convert to posix value
   speed_t speed = B0;
+  bool custom_baud = false;
+
   switch ( baudrate ) {
   case 50: speed = B50; break;
   case 75: speed = B75; break;
@@ -273,10 +276,11 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   case 115200: speed = B115200; break;
   case 230400: speed = B230400; break;
   default:
-	ostringstream ostr;
-	ostr << "Nonstandard baudrate " << baudrate << endl;
-	LogLine( ostr.str().c_str() );
-	speed = baudrate;
+    ostringstream ostr;
+    ostr << "Nonstandard baudrate " << baudrate << endl;
+    LogLine( ostr.str().c_str() );
+    speed = baudrate;
+    custom_baud = true;
     // char err_str[ 256 ];
     // snprintf( err_str, 256, _( %d\n"), baudrate );
     // if ( err_str[ 254 ] != '\0' )
@@ -344,8 +348,17 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   }
 
   // Set port speed
-  if ( cfsetispeed( &attribs, speed ) < 0 ||
-       cfsetospeed( &attribs, speed ) < 0 ) {
+  bool baudrate_succeeded = false;
+  if ( custom_baud ) {
+    // non-standard baud rate
+    baudrate_succeeded = set_custom_baudrate(device_fd, speed);
+  } else {
+    baudrate_succeeded = cfsetispeed( &attribs, speed ) >= 0 
+                      && cfsetospeed( &attribs, speed ) >= 0
+                      && tcsetattr(device_fd, TCSANOW, &attribs )  >= 0;
+  }
+
+  if ( !baudrate_succeeded ) {
     close( device_fd );
     device_fd = -1;
     char err_str[ 256 ];
@@ -358,18 +371,6 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     return false;
   }
 
-  if( tcsetattr(device_fd, TCSANOW, &attribs ) < 0) {
-    close( device_fd );
-    device_fd = -1;
-    char err_str[ 256 ];
-    snprintf( err_str, 256, _("Error setting port %s baudrate to %d\n"), device.c_str(), baudrate );
-    if ( err_str[ 254 ] != '\0' )
-      err_str[ 254 ] = '\n';
-    err_str[ 255 ] = '\0';
-
-    LogError( err_str );
-    return false;
-  }
 #endif
 
   char msg[ 256 ];
