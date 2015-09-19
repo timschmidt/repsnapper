@@ -18,7 +18,7 @@ bool set_custom_baudrate(int device_fd, int baudrate) {
     return false;
   }
 
-  options.c_cflag &= CBAUD;
+  options.c_cflag &= ~CBAUD;
   options.c_cflag |= BOTHER;
 
   options.c_ispeed = baudrate;
