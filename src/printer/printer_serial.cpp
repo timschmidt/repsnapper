@@ -333,7 +333,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
   attribs.c_lflag |= ICANON;
   attribs.c_cflag |= HUPCL;
 
-  if( tcsetattr(device_fd, TCSANOW, &attribs ) < 0 ) {
+  if( tcsetattr( device_fd, TCSANOW, &attribs ) < 0 ) {
     close( device_fd );
     device_fd = -1;
 
@@ -353,19 +353,19 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
 #if HAVE_ASM_TERMBITS_H
   if ( custom_baud ) {
     // non-standard baud rate
-    baudrate_succeeded = set_custom_baudrate(device_fd, speed);
+    baudrate_succeeded = set_custom_baudrate( device_fd, speed );
   } else {
     baudrate_succeeded = cfsetispeed( &attribs, speed ) >= 0 
                       && cfsetospeed( &attribs, speed ) >= 0
-                      && tcsetattr(device_fd, TCSANOW, &attribs )  >= 0;
+                      && tcsetattr( device_fd, TCSANOW, &attribs )  >= 0;
   }
 #else
   baudrate_succeeded = cfsetispeed( &attribs, speed ) >= 0 
                     && cfsetospeed( &attribs, speed ) >= 0
-                    && tcsetattr(device_fd, TCSANOW, &attribs )  >= 0;
+                    && tcsetattr( device_fd, TCSANOW, &attribs )  >= 0;
 #endif
 
-  if ( !baudrate_succeeded ) {
+  if ( ! baudrate_succeeded ) {
     close( device_fd );
     device_fd = -1;
     char err_str[ 256 ];
