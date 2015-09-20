@@ -349,6 +349,8 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
 
   // Set port speed
   bool baudrate_succeeded = false;
+
+#if HAVE_ASM_TERMBITS_H
   if ( custom_baud ) {
     // non-standard baud rate
     baudrate_succeeded = set_custom_baudrate(device_fd, speed);
@@ -357,6 +359,11 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
                       && cfsetospeed( &attribs, speed ) >= 0
                       && tcsetattr(device_fd, TCSANOW, &attribs )  >= 0;
   }
+#else
+  baudrate_succeeded = cfsetispeed( &attribs, speed ) >= 0 
+                    && cfsetospeed( &attribs, speed ) >= 0
+                    && tcsetattr(device_fd, TCSANOW, &attribs )  >= 0;
+#endif
 
   if ( !baudrate_succeeded ) {
     close( device_fd );
