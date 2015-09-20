@@ -13,14 +13,16 @@ SHARED_SRC += \
 	src/printer/printer_serial.cpp \
 	src/printer/thread_buffer.cpp \
 	src/printer/threaded_printer_serial.cpp \
-	src/printer/printer.cpp
+	src/printer/printer.cpp \
+	src/printer/custom_baud.cpp
 
 SHARED_INC += \
 	src/printer/printer_serial.h \
 	src/printer/thread.h \
 	src/printer/thread_buffer.h \
 	src/printer/threaded_printer_serial.h \
-	src/printer/printer.h
+	src/printer/printer.h \
+	src/printer/custom_baud.h
 
 EXTRA_DIST += \
 	src/printer/printer_serial_test.cpp \

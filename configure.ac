@@ -6,6 +6,8 @@ AC_CONFIG_SRCDIR([src/repsnapper.cpp])
 AC_CONFIG_MACRO_DIR([m4])
 dnl AC_CONFIG_AUX_DIR([config])
 
+AC_CHECK_HEADERS([fcntl.h float.h limits.h memory.h stdlib.h string.h sys/ioctl.h sys/time.h termios.h unistd.h asm/termbits.h])
+
 AM_INIT_AUTOMAKE
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
