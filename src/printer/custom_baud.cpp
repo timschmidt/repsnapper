@@ -9,12 +9,12 @@
 #include <asm/termbits.h>
 #endif
 
-bool set_custom_baudrate(int device_fd, int baudrate) {
+bool set_custom_baudrate( int device_fd, int baudrate ) {
 #if HAVE_ASM_TERMBITS_H
 
   struct termios2 options;
 
-  if (ioctl(device_fd, TCGETS2, &options) < 0) {
+  if ( ioctl( device_fd, TCGETS2, &options ) < 0 ) {
     return false;
   }
 
@@ -24,7 +24,7 @@ bool set_custom_baudrate(int device_fd, int baudrate) {
   options.c_ispeed = baudrate;
   options.c_ospeed = baudrate;
 
-  if (ioctl(device_fd, TCSETS2, &options) < 0) {
+  if ( ioctl( device_fd, TCSETS2, &options ) < 0 ) {
     return false;
   }
 
