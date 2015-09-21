@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  6.2.0                                                           *
-* Date      :  2 October 2014                                                  *
+* Version   :  6.2.1                                                           *
+* Date      :  31 October 2014                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2014                                         *
 *                                                                              *
@@ -318,8 +318,8 @@ private:
   OutPt* AddOutPt(TEdge *e, const IntPoint &pt);
   void DisposeAllOutRecs();
   void DisposeOutRec(PolyOutList::size_type index);
-  bool ProcessIntersections(const cInt botY, const cInt topY);
-  void BuildIntersectList(const cInt botY, const cInt topY);
+  bool ProcessIntersections(const cInt topY);
+  void BuildIntersectList(const cInt topY);
   void ProcessIntersectList();
   void ProcessEdgesAtTopOfScanbeam(const cInt topY);
   void BuildResult(Paths& polys);

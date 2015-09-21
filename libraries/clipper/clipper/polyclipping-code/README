@@ -1,10 +1,15 @@
 =====================================================================
 Clipper Change Log
 =====================================================================
+v6.2.1 (31 October 2014) Rev 482
+* Bugfix in ClipperOffset.Execute where the Polytree.IsHole property 
+  was returning incorrect values with negative offsets
+* Very minor improvement to join rounding in ClipperOffset
+* Fixed CPP OpenGL demo.
 
 v6.2.0 (17 October 2014) Rev 477
-* Numerous bugfixes - too many to list. 
-  See revisions 454-475 in Sourceforge Repository.
+* Numerous minor bugfixes, too many to list. 
+  (See revisions 454-475 in Sourceforge Repository)
 * The ZFillFunction (custom callback function) has had its parameters 
   changed. 
 * Curves demo removed (temporarily).

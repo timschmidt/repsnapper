@@ -1,8 +1,8 @@
 /*******************************************************************************
 *                                                                              *
 * Author    :  Angus Johnson                                                   *
-* Version   :  6.2.0                                                           *
-* Date      :  2 October 2014                                                  *
+* Version   :  6.2.1                                                           *
+* Date      :  31 October 2014                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2014                                         *
 *                                                                              *
@@ -168,7 +168,10 @@ PolyNode* PolyTree::GetFirst() const
 
 int PolyTree::Total() const
 {
-  return (int)AllNodes.size();
+  int result = (int)AllNodes.size();
+  //with negative offsets, ignore the hidden outer polygon ...
+  if (result > 0 && Childs[0] != AllNodes[0]) result--;
+  return result;
 }
 
 //------------------------------------------------------------------------------
@@ -1440,7 +1443,7 @@ bool Clipper::ExecuteInternal()
       ProcessHorizontals(false);
       if (m_Scanbeam.empty()) break;
       cInt topY = PopScanbeam();
-      succeeded = ProcessIntersections(botY, topY);
+      succeeded = ProcessIntersections(topY);
       if (!succeeded) break;
       ProcessEdgesAtTopOfScanbeam(topY);
       botY = topY;
@@ -2705,11 +2708,11 @@ void Clipper::UpdateEdgeIntoAEL(TEdge *&e)
 }
 //------------------------------------------------------------------------------
 
-bool Clipper::ProcessIntersections(const cInt botY, const cInt topY)
+bool Clipper::ProcessIntersections(const cInt topY)
 {
   if( !m_ActiveEdges ) return true;
   try {
-    BuildIntersectList(botY, topY);
+    BuildIntersectList(topY);
     size_t IlSize = m_IntersectList.size();
     if (IlSize == 0) return true;
     if (IlSize == 1 || FixupIntersectionOrder()) ProcessIntersectList();
@@ -2734,7 +2737,7 @@ void Clipper::DisposeIntersectNodes()
 }
 //------------------------------------------------------------------------------
 
-void Clipper::BuildIntersectList(const cInt botY, const cInt topY)
+void Clipper::BuildIntersectList(const cInt topY)
 {
   if ( !m_ActiveEdges ) return;
 
@@ -3778,6 +3781,7 @@ void ClipperOffset::Execute(PolyTree& solution, double delta)
       PolyNode* outerNode = solution.Childs[0];
       solution.Childs.reserve(outerNode->ChildCount());
       solution.Childs[0] = outerNode->Childs[0];
+      solution.Childs[0]->Parent = outerNode->Parent;
       for (int i = 1; i < outerNode->ChildCount(); ++i)
         solution.AddChild(*outerNode->Childs[i]);
     }
@@ -4029,7 +4033,7 @@ void ClipperOffset::DoRound(int j, int k)
 {
   double a = std::atan2(m_sinA,
   m_normals[k].X * m_normals[j].X + m_normals[k].Y * m_normals[j].Y);
-  int steps = (int)Round(m_StepsPerRad * std::fabs(a));
+  int steps = std::max((int)Round(m_StepsPerRad * std::fabs(a)), 1);
 
   double X = m_normals[k].X, Y = m_normals[k].Y, X2;
   for (int i = 0; i < steps; ++i)
