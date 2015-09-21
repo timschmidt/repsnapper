@@ -350,7 +350,7 @@ bool Printer::QueryTemp( void ) {
     temp_timeout.disconnect();
 
   if ( IsConnected() && m_model && m_model->settings.get_boolean("Misc","TempReadingEnabled") ) {
-    Send( "M105" );
+    SendAsync( "M105" );
     waiting_temp = true;
   }
 
