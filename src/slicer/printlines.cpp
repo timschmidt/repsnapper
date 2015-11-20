@@ -240,7 +240,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
   if (abs(absolute_extrusion) < 0.00001)
     travel_speed = max(minspeed, speed); // in case speed is too low
 
-  if (!isnan(absolute_extrusion))
+  if (!std::isnan(absolute_extrusion))
     // allowed to push/pull at arbitrary speed
     extrudedMaterial += absolute_extrusion;
   else
@@ -335,7 +335,7 @@ vector<PLine2> PLine2::division(const vector<Vector2d> &points) const
     else
       factor = 1./newlines.size();
     newlines[i].absolute_extrusion *= factor;
-    assert(!isnan(newlines[i].absolute_extrusion));
+    assert(!std::isnan(newlines[i].absolute_extrusion));
 
   }
   return newlines;

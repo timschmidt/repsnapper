@@ -225,7 +225,7 @@ uint Poly::nearestDistanceSqTo(const Vector2d &p, double &mindist) const
   // Start with first vertex as closest
   uint nindex = 0;
   mindist = (vertices[0]-p).squared_length();
-  if (isnan(mindist)) { // for infinity point p return point 0 and distance 0
+  if (std::isnan(mindist)) { // for infinity point p return point 0 and distance 0
     mindist = 0.;
     return 0;
   }
