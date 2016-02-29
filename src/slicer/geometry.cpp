@@ -1406,8 +1406,10 @@ int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
   const unsigned char * data = surface->get_data();
   const Vector2d diag = max - min;
   const Vector2d relp = p - min;
-  const int ipx = (int)(relp.x() / diag.x() * (double)w);
-  const int ipy = (int)(relp.y() / diag.y() * (double)h);
+  int ipx = (int)(relp.x() / diag.x() * (double)w);
+  int ipy = (int)(relp.y() / diag.y() * (double)h);
+  if (ipx < 0) ipx = 0;
+  if (ipy < 0) ipy = 0;
   int value = data[ipy*w + ipx];
   return value;
 }
