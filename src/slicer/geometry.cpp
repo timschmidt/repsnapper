@@ -1410,6 +1410,8 @@ int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
   int ipy = (int)(relp.y() / diag.y() * (double)h);
   if (ipx < 0) ipx = 0;
   if (ipy < 0) ipy = 0;
+  if (ipx >= w) ipx = w-1;
+  if (ipy >= h) ipy = h-1;
   int value = data[ipy*w + ipx];
   return value;
 }
