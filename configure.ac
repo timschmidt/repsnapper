@@ -112,7 +112,7 @@ Darwin*)
   GL_LIBS="-L/usr/lib"
 # -lGLU -lGL -lglut"
   EXTRA_LDFLAGS=
-  EXTRA_CFLAGS=
+  EXTRA_CFLAGS=--std=c++11
 #  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
 esac
