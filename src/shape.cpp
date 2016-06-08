@@ -363,6 +363,7 @@ vector<Vector3d> Shape::getMostUsedNormals() const
   // vector<double> area;
   uint ntr = triangles.size();
   vector<bool> done(ntr);
+  normals.reserve(ntr);
   for(size_t i=0;i<ntr;i++) done[i] = false;
   for(size_t i=0;i<ntr;i++)
     {
