@@ -89,7 +89,7 @@ public:
 	Vec3D v;
 	int OrigIndex;
 
-	static inline bool IsSoftLessThan(const aWeldVertex& v1, const aWeldVertex& v2){if(abs(v1.v.z - v2.v.z) <= WeldThresh){ if(abs(v1.v.y - v2.v.y) <= WeldThresh){ return v1.v.x < v2.v.x-WeldThresh;}else return (v1.v.y < v2.v.y-WeldThresh);} else return (v1.v.z < v2.v.z-WeldThresh); } //Is less then (generates a "hash" for sorting vertices by z for set
+	static inline bool IsSoftLessThan(const aWeldVertex& v1, const aWeldVertex& v2){if(std::abs(v1.v.z - v2.v.z) <= WeldThresh){ if(std::abs(v1.v.y - v2.v.y) <= WeldThresh){ return v1.v.x < v2.v.x-WeldThresh;}else return (v1.v.y < v2.v.y-WeldThresh);} else return (v1.v.z < v2.v.z-WeldThresh); } //Is less then (generates a "hash" for sorting vertices by z for set
 	static double WeldThresh; //weld threshold for importing from STL
 };
 
