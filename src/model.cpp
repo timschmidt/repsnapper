@@ -181,7 +181,7 @@ vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
 				 uint max_triangles)
 {
   vector<Shape*> shapes;
-  if (file==0) return shapes;
+  if (!file) return shapes;
   File sfile(file);
   vector< vector<Triangle> > triangles;
   vector<ustring> shapenames;
