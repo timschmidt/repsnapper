@@ -29,14 +29,14 @@ AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE",[The prefix for our gettext translation domains.])
 case "$host_os" in
 freebsd*)
-# Using clang: (no OpenMP)
-  CC=cc
-  CPP=cpp
-  CXX=c++
-# or gcc46:
-#  CC=gcc46
-#  CPP=cpp46
-#  CXX=g++46
+# Using clang:
+  CC=clang40
+  CPP=clang-cpp40
+  CXX=clang++40
+# or gcc5:
+#  CC=gcc5
+#  CPP=cpp5
+#  CXX=g++5
   dnl FreeBSD specific hack to search for libintl.h in /usr/local/include
   CPPFLAGS="$CPPFLAGS -I/usr/local/include"
   ;;
@@ -95,7 +95,7 @@ freebsd*)
 # -lGLU -lGL -lglut"
   EXTRA_LDFLAGS="-L/usr/local/lib"
   CFLAGS="$CFLAGS -I/usr/local/include"
-  CXXFLAGS="$CXXFLAGS -I/usr/local/include"
+  CXXFLAGS="$CXXFLAGS --std=c++11 -I/usr/local/include"
   CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 #  AC_CHECK_HEADER(GL/glut.h, , AC_MSG_ERROR([cannot find headers for freeglut]))
   ;;
