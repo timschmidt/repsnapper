@@ -1105,7 +1105,7 @@ void Layer::Draw(const Settings &settings)
       Cairo::RefPtr<Cairo::ImageSurface> surface;
       Cairo::RefPtr<Cairo::Context>      context;
       if (rasterpolys(overhangs, Min, Max, thickness/5, surface, context))
-	if(surface!=0) {
+	if (surface) {
 	  glColor4f(RED[0],RED[1],RED[2], 0.5);
 	  glDrawCairoSurface(surface, Min, Max, Z);
 	  glColor4f(RED[0],RED[1],RED[2], 0.6);

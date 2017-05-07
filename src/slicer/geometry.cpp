@@ -1364,7 +1364,7 @@ void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
 			const Vector2d &min, const Vector2d &max,
 			const double z)
 {
-  if (surface==0) return;
+  if (!surface) return;
   int w = surface->get_width();
   int h = surface->get_height();
   unsigned char * data = surface->get_data();
@@ -1400,7 +1400,7 @@ int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
 			     const Vector2d &min, const Vector2d &max,
 			     const Vector2d &p)
 {
-  if (surface==0) return 0;
+  if (!surface) return 0;
   const int w = surface->get_stride();
   const int h = surface->get_height();
   const unsigned char * data = surface->get_data();
