@@ -239,7 +239,7 @@ void rotArcballTrans(Matrix4fT &matfT,  const Vector3d &axis, double angle)
 long double angleBetween(const Vector3d &V1, const Vector3d &V2)
 {
   long double dotproduct =  V1.dot(V2);
-  long double length = V1.length() * V2.length();
+  long double length = sqrt(V1.squared_length() * V2.squared_length());
   if (length==0) return 0;
   long double quot = dotproduct / length;
   if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
@@ -253,7 +253,7 @@ long double angleBetween(const Vector3d &V1, const Vector3d &V2)
 long double angleBetween(const Vector2d &V1, const Vector2d &V2)
 {
   long double dotproduct =  V1.dot(V2);
-  long double length = V1.length() * V2.length();
+  long double length = sqrt(V1.squared_length() * V2.squared_length());
   if (length==0) return 0;
   long double quot = dotproduct / length;
   if (quot > 1  && quot < 1.0001) quot = 1;
