@@ -825,7 +825,7 @@ void View::stl_added (Gtk::TreePath &path)
   m_treeview->get_selection()->select (path);
 }
 
-void View::set_SliderBBox(Vector3d bbmin, Vector3d bbmax)
+void View::set_SliderBBox(const Vector3d& bbmin, const Vector3d& bbmax)
 {
   double smin = 0, //max(0.0, bbmin.z()),
     smax = max(smin+0.001, bbmax.z());

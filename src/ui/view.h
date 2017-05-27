@@ -202,7 +202,7 @@ class View : public Gtk::Window
   void model_changed ();
 
   void gcode_changed ();
-  void set_SliderBBox(Vector3d min, Vector3d max);
+  void set_SliderBBox(const Vector3d& min, const Vector3d& max);
 
   void show_notebooktab (string name, string notebookname) const;
   void show_widget (string name, bool visible) const;
