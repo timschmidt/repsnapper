@@ -244,8 +244,7 @@ void Model::CleanupLayers()
   int count = (int)layers.size();
   if (count == 0) return;
   if(!m_progress->restart (_("Cleanup"), count)) return;
-  int progress_steps=(int)(count/100);
-  if (progress_steps==0) progress_steps=1;
+  int progress_steps=max(1,(int)(count/100));
   bool cont = true;
 
 #ifdef _OPENMP
@@ -336,8 +335,7 @@ void Model::Slice()
     return;
   }
 
-  int progress_steps=(int)(maxZ/thickness/100);
-  if (progress_steps==0) progress_steps=1;
+  int progress_steps=max(1,(int)(maxZ/thickness/100.));
 
   if ((varSlicing && skins > 1) ||
       (settings.get_boolean("Slicing","BuildSerial") && shapes.size() > 1))
@@ -470,8 +468,7 @@ void Model::MakeFullSkins()
   // not bottom layer
 
   if(!m_progress->restart (_("Skins"), layers.size())) return;
-  int progress_steps=(int)(layers.size()/100);
-  if (progress_steps==0) progress_steps=1;
+  int progress_steps=max(1,(int)(layers.size()/100));
   int count = (int)layers.size();
 #ifdef _OPENMP
   omp_lock_t progress_lock;
@@ -500,8 +497,7 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
   int count = (int)layers.size();
   if (count == 0 ) return;
   if (!m_progress->restart (_("Find Uncovered"), 2*count+2)) return;
-  int progress_steps=(int)((2*count+2)/100);
-  if (progress_steps==0) progress_steps=1;
+  int progress_steps=max(1,(int)((2*count+2)/100));
   // bottom to top: uncovered from above -> top polys
   for (int i = 0; i < count-1; i++)
     {
@@ -566,8 +562,7 @@ void Model::MultiplyUncoveredPolygons()
   shells += numdecor;
 
   if (!m_progress->restart (_("Uncovered Shells"), count*3)) return;
-  int progress_steps=(int)(count*3/100);
-  if (progress_steps==0) progress_steps=1;
+  int progress_steps=max(1,(int)(count*3/100));
   // bottom-up: mulitply downwards
   int i,s;
   for (i=0; i < count; i++)
@@ -661,8 +656,7 @@ void Model::MakeSupportPolygons(double widen)
 {
   int count = layers.size();
   if (!m_progress->restart (_("Support"), count*2)) return;
-  int progress_steps=(int)(count*2/100);
-  if (progress_steps==0) progress_steps=1;
+  int progress_steps=max(1,(int)(count*2/100));
 
   for (int i=count-1; i>0; i--)
     {
@@ -722,8 +716,7 @@ void Model::MakeShells()
   int count = (int)layers.size();
   if (count == 0) return;
   if (!m_progress->restart (_("Shells"), count)) return;
-  int progress_steps=(int)(count/100);
-  if (progress_steps==0) progress_steps=1;
+  int progress_steps=max(1,(int)(count/100));
   bool cont = true;
 #ifdef _OPENMP
   omp_lock_t progress_lock;
@@ -759,8 +752,7 @@ void Model::CalcInfill()
 
   int count = (int)layers.size();
   m_progress->start (_("Infill"), count);
-  int progress_steps=(count/100);
-  if (progress_steps==0) progress_steps=1;
+  int progress_steps=max(1,(count/100));
   bool cont = true;
   //cerr << "make infill"<< endl;
 #ifdef _OPENMP
