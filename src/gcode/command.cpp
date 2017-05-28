@@ -475,7 +475,6 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
   // arc:
   if (Code == ARC_CW || Code == ARC_CCW) {
     Vector3d center = off_lastPos + arcIJK;
-    Vector3d P = -arcIJK, Q = off_where-center; // arc endpoints
     bool ccw = (Code == ARC_CCW);
     if (debug_arcs) {
       glColor4f(0.f,1.f,0.0f,0.2f);
@@ -493,19 +492,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
       else
 	glColor4f(1.f,0.5f,0.0f,lum);
     }
-    long double angle;
-    if (P==Q) angle = 2*M_PI;
-    else {
-#if 0  // marlin calculation (motion_control.cpp)
-      angle = atan2(P.x()*Q.y()-P.y()*Q.x(), P.x()*Q.x()+P.y()*Q.y());
-      if (angle < 0) angle += 2*M_PI;
-      if (!ccw) angle-=2*M_PI; // angle sign determines rotation
-#else
-      angle = angleBetween(P,Q); // ccw angle
-      if (!ccw) angle=-angle;
-      if (angle < 0) angle += 2*M_PI;  // alway positive, ccw determines rotation
-#endif
-    }
+    long double angle = calcAngle(-arcIJK, off_where - center, ccw);
     //if (abs(angle) < 0.00001) angle = 0;
     double dz = off_where.z()-(off_lastPos).z(); // z move with arc
     Vector3d arcstart = off_lastPos;

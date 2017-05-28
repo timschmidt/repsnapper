@@ -35,7 +35,7 @@ double PLine<M>::length() const
     return from.distance(to);
   else {
     double radius = from.distance(arccenter);
-    return radius * angle;
+    return radius * abs(angle);
   }
 }
 
@@ -81,26 +81,23 @@ vmml::vector<M, double> PLine<M>::splitpoint(double at_length) const
 
 template <size_t M>
 void PLine<M>::move_to(const vmml::vector<M, double> &from_,
-		       const vmml::vector<M, double> &to_,
-		       const double angle_)
+		       const vmml::vector<M, double> &to_)
 {
   if (area == COMMAND) return;
   from = from_;
   to   = to_;
-  if (!arc)
-    angle = calcangle();
-  else
-    angle = angle_;
+  calcangle();
 }
 
-
-
 template <size_t M>
-double PLine<M>::calcangle() const
+void PLine<M>::calcangle()
 {
-  if (area == COMMAND) return 0;
-  if (M==3) return angle;
-  else return angleBetween(Vector2d(1,0), (Vector2d)dir());
+  if (area == COMMAND) return;
+  if (arc == 0){
+    angle = angleBetween(Vector2d(1,0), Vector2d(dir()));
+  } else {
+    angle = Command::calcAngle(from - arccenter, to - arccenter, arc == -1);
+  }
 }
 
 
@@ -444,10 +441,10 @@ PLine2::PLine2(PLineArea area_, const uint extruder_no_,
   from = from_;
   to = to_;
   speed = speed_;
-  angle = calcangle();
+  arc = 0;
+  calcangle();
   extruder_no = extruder_no_;
   lifted = lifted_;
-  arc = 0;
   absolute_extrusion = 0;
 }
 
@@ -455,7 +452,7 @@ PLine2::PLine2(PLineArea area_, const uint extruder_no_,
 // for arc line
 PLine2::PLine2(PLineArea area_, const uint extruder_no_,
 	       const Vector2d &from_, const Vector2d &to_, double speed_,
-	       double feedratio_, short arc_, const Vector2d &arccenter_, double angle_,
+	       double feedratio_, const Vector2d &arccenter_, bool ccw,
 	       double lifted_)
 : feedratio(feedratio_)
 {
@@ -463,9 +460,9 @@ PLine2::PLine2(PLineArea area_, const uint extruder_no_,
   from = from_;
   to   = to_;
   speed = speed_;
-  arc = arc_;
-  angle = angle_;
   arccenter = arccenter_;
+  arc = ccw ? -1 : 1;
+  calcangle();
   absolute_extrusion = 0;
   lifted = lifted_;
   extruder_no = extruder_no_;
@@ -1045,20 +1042,12 @@ uint Printlines::makeIntoArc(const Vector2d &center,
 			     vector<PLine2> &lines) const
 {
   if (toind < fromind+1 || toind+1 > lines.size()) return 0;
-  const Vector2d &P = lines[fromind].from;
-  const Vector2d &Q = lines[toind].to;
-  bool fullcircle = (P==Q);
-  double angle;
-  if (fullcircle) angle = 2*M_PI;
-  else            angle = angleBetween(P-center, Q-center);
   bool ccw = isleftof(center, lines[fromind].from, lines[fromind].to);
-  if (!ccw) angle = -angle;
-  if (angle<=0) angle+=2*M_PI;
-  short arctype = ccw ? -1 : 1;
-  PLine2 newline(lines[fromind].area, lines[fromind].extruder_no, P, Q,
-		lines[fromind].speed, lines[fromind].feedratio,
-		arctype, center, angle, lines[fromind].lifted);
-  lines[fromind] = newline;
+  //cerr << "makeIntoArc ccw " << ccw << endl;
+  lines[fromind] = PLine2(lines[fromind].area, lines[fromind].extruder_no,
+        lines[fromind].from, lines[toind].to,
+        lines[fromind].speed, lines[fromind].feedratio,
+        center, ccw, lines[fromind].lifted );
   lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
   return toind-fromind;
 }
@@ -1157,7 +1146,6 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   const bool ccw = isleftof(center, p1, p2);
   if (!ccw) angle = -angle;
   if (angle <= 0) angle += 2*M_PI;
-  const short arctype = ccw ? -1 : 1;
   // need 2 half arcs?
   const bool split =
     (lines[ind].feedratio != lines[ind+1].feedratio)
@@ -1194,16 +1182,13 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
       }
       else if (split) { // 2 arcs
 	newlines.push_back(PLine2(lines[ind].area, lines[ind].extruder_no,  p1, splitp,
-				 lines[ind].speed, lines[ind].feedratio,
-				 arctype, center, angle/2, lines[ind].lifted));
+				 lines[ind].speed, lines[ind].feedratio, center, ccw, lines[ind].lifted));
 	newlines.push_back(PLine2(lines[ind+1].area, lines[ind+1].extruder_no, splitp, p2,
-				 lines[ind+1].speed, lines[ind+1].feedratio,
-				 arctype, center, angle/2, lines[ind+1].lifted));
+				 lines[ind+1].speed, lines[ind+1].feedratio, center, ccw, lines[ind+1].lifted));
       }
     } else { // 1 arc
       newlines.push_back(PLine2(lines[ind].area, lines[ind].extruder_no, p1, p2,
-			       lines[ind].speed, lines[ind].feedratio,
-			       arctype, center, angle, lines[ind].lifted));
+			       lines[ind].speed, lines[ind].feedratio, center, ccw, lines[ind].lifted));
     }
   }
   if (p2 != lines[ind+1].to) { // straight line 2

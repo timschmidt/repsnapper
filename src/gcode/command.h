@@ -27,6 +27,7 @@
 #include <string>
 #include <sstream>
 
+#include "geometry.h"
 
 /*
 
@@ -185,4 +186,23 @@ public:
 	void addToPosition(Vector3d &from, bool relative);
 
 	string info() const;
+
+    template <size_t M>
+    static long double calcAngle(const vmml::vector<M, double> &rel_from,
+                      const vmml::vector<M, double> &rel_to,
+                      const bool ccw) {
+        if (rel_from == rel_to) return 2*M_PI;
+#define MARLIN_ARC 0
+#if MARLIN_ARC
+        long double angle = atan2(rel_from.x()*rel_to.y() - rel_from.y()*rel_to.x(),
+                                  rel_from.x()*rel_to.x() + rel_from.y()*rel_to.y());
+        if (angle < 0) angle += 2*M_PI;
+        if (!ccw) angle -= 2*M_PI; // angle sign determines rotation
+#else
+        long double angle = angleBetween(rel_from, rel_to);
+        if (!ccw) angle = -angle; // clockwise
+        if (angle < 0) angle += 2*M_PI;
+#endif
+        return angle;
+    }
 };
