@@ -473,13 +473,14 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
           if (word.find(",") == word.length()-1) { // remove comma
             word = word.substr(0,word.length()-1);
           }
-	  if (word!="]")
+	  if (word!="]") {
 	    if (word.find("#") != 0) { // comment
               f = atof(word.c_str());
 	      vertices.push_back(f);
 	    } else { // skip rest of line
               file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             }
+          }
 	}
         if (vertices.size() % 3 == 0)
           for (uint i = 0; i < vertices.size(); i += 3)
