@@ -209,7 +209,8 @@ int main(int argc, char **argv)
 
   try {
     // try to copy to user config, if it doesn't exist ...
-    global_conf->copy(conf);
+    if (!conf->query_exists())
+        global_conf->copy(conf);
   } catch(Gio::Error e) {
     switch(e.code()) {
     case Gio::Error::EXISTS:
