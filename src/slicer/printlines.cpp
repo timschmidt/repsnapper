@@ -1578,21 +1578,21 @@ void Printlines::optimizeCorners(double linewidth, double linewidthratio, double
 
 
 void Printlines::getLines(const vector<PLine2> &lines,
-			  vector<Vector2d> &olines) const
+			  vector<Vector2d> &olinespoints) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
     if (lIt->is_noop()) continue;
-    olines.push_back(lIt->from);
-    olines.push_back(lIt->to);
+    olinespoints.push_back(lIt->from);
+    olinespoints.push_back(lIt->to);
   }
 }
 void Printlines::getLines(const vector<PLine2> &lines,
-			  vector<Vector3d> &olines) const
+			  vector<Vector3d> &olinespoints) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
     if (lIt->is_noop()) continue;
-    olines.push_back(Vector3d(lIt->from.x(),lIt->from.y(),z));
-    olines.push_back(Vector3d(lIt->to.x(),lIt->to.y(),z));
+    olinespoints.push_back(Vector3d(lIt->from.x(),lIt->from.y(),z));
+    olinespoints.push_back(Vector3d(lIt->to.x(),lIt->to.y(),z));
   }
 }
 
