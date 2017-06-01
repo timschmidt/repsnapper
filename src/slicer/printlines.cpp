@@ -67,11 +67,11 @@ vmml::vector<M, double> PLine<M>::splitpoint(double at_length) const
     const double rangle = angle * lratio;
     if (M == 3) {
       Vector2d from_rot(from.x(), from.y());
-      rotate(from_rot, arccenter, rangle, (arc < 0));
+      rotate(from_rot, Vector2d(arccenter.x(), arccenter.y()), rangle, (arc < 0));
       double dz = to.z()-from.z();
       point.set(from_rot.x(), from_rot.y(), from.z() + dz*lratio);
     } else {
-      point = rotated(from, arccenter, rangle, (arc < 0));
+      point = rotated(from, Vector2d(arccenter.x(), arccenter.y()), rangle, (arc < 0));
     }
     return point;
   }
