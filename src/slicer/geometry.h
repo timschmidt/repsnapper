@@ -44,26 +44,16 @@ void moveArcballTrans(Matrix4fT &matfT, const Vector3d &delta);
 void setArcballTrans(Matrix4fT &matfT, const Vector3d &trans);
 void rotArcballTrans(Matrix4fT &transform,  const Vector3d &axis, double angle);
 
-bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B);
-bool isleftof(const Vector3d &center, const Vector3d &A, const Vector3d &B);
-
-template<size_t M>
-long double angleBetween(const vmml::vector<M, double> &V1, const vmml::vector<M, double> &V2) {
-  long double dotproduct =  V1.dot(V2);
-  long double length = sqrt(V1.squared_length() * V2.squared_length());
-  if (length==0) return 0;
-  long double quot = dotproduct / length;
-  if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
-  if (quot < -1 && quot > -1.0001) quot = -1;
-  long double result = acosl( quot ); // 0 .. pi
-  if (isleftof(vmml::vector<M, double>(), V2, V1))
-      result = -result;
-  return result;
-}
-
+/* template< size_t M, typename T > */
+/* long double angleBetween(const vmml::vector< M, T > V1, const vmml::vector< M, T > V2 ); */
+long double angleBetween(const Vector3d &V1, const Vector3d &V2);
+long double angleBetween(const Vector2d &V1, const Vector2d &V2);
 Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B);
 void center_perpendicular(const Vector2d &from, const Vector2d &to,
 			  Vector2d &p1, Vector2d &p2);
+
+bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B);
+bool isleftof(const Vector3d &center, const Vector3d &A, const Vector3d &B);
 
 Vector3d cross2d(const Vector2d &A, const Vector2d &B, double z=0);
 
