@@ -49,7 +49,7 @@ public:
 
   short arc; // -1: ccw arc, 1: cw arc, 0: not an arc
   double angle; // angle of line (in 2d lines), or arc angle
-  Vector2d arccenter; // always 2d, the arc is a 2d rotation
+  vmml::vector<M, double> arccenter;
 
 
   double absolute_extrusion; // additional absolute extrusion /mm (retract/repush f.e.)

@@ -33,10 +33,8 @@ double PLine<M>::length() const
   if (area == COMMAND) return 0;
   if (!arc)
     return from.distance(to);
-  else {
-    double radius = from.distance(arccenter);
-    return radius * abs(angle);
-  }
+  else
+    return from.distance(arccenter) * abs(angle);
 }
 
 template <size_t M>
@@ -46,7 +44,7 @@ double PLine<M>::lengthSq() const
   if (!arc)
     return from.squared_distance(to);
   else
-    return pow(length(),2);
+    return from.squared_distance(arccenter) * angle*angle;
 }
 
 template <size_t M>
@@ -145,7 +143,7 @@ PLine3::PLine3(const PLine2 &pline, double z, double extrusion_per_mm)
   speed              = pline.speed;
   absolute_extrusion = pline.absolute_extrusion;
   arc                = pline.arc;
-  arccenter          = pline.arccenter;
+  arccenter          = Vector3d(pline.arccenter.x(), pline.arccenter.y(), z);
   angle              = pline.angle;
   extruder_no        = pline.extruder_no;
   extrusion          = pline.feedratio * extrusion_per_mm * length();
