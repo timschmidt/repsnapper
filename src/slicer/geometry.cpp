@@ -220,57 +220,26 @@ void rotArcballTrans(Matrix4fT &matfT,  const Vector3d &axis, double angle)
   }
 }
 
-// // from V1 to V2
-// template< size_t M, typename T >
-// long double angleBetween(const vmml::vector< M, T > V1, const vmml::vector< M, T > V2 )
-// {
-//   long double dotproduct =  V1.dot(V2);
-//   long double length = V1.length() * V2.length();
-//   long double quot = dotproduct / length;
-//   if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
-//   if (quot < -1 && quot > -1.0001) quot = -1;
-//   long double result = acosl( quot ); // 0 .. pi
-//   if (isleftof(T(), V2, V1))
-//       result = -result;
-//   return result;
-// }
-
-// from V1 to V2
-long double angleBetween(const Vector3d &V1, const Vector3d &V2)
-{
-  long double dotproduct =  V1.dot(V2);
-  long double length = sqrt(V1.squared_length() * V2.squared_length());
-  if (length==0) return 0;
-  long double quot = dotproduct / length;
-  if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
-  if (quot < -1 && quot > -1.0001) quot = -1;
-  long double result = acosl( quot ); // 0 .. pi
-  if (isleftof(Vector2d(0,0), Vector2d(V2.x(), V2.y()), Vector2d(V1.x(), V1.y())))
-      result = -result;
-  return result;
-}
-
-long double angleBetween(const Vector2d &V1, const Vector2d &V2)
-{
-  long double dotproduct =  V1.dot(V2);
-  long double length = sqrt(V1.squared_length() * V2.squared_length());
-  if (length==0) return 0;
-  long double quot = dotproduct / length;
-  if (quot > 1  && quot < 1.0001) quot = 1;
-  if (quot < -1 && quot > -1.0001) quot = -1;
-  long double result = acosl( quot ); // 0 .. pi
-  if (isleftof(Vector2d(0,0), V2, V1))
-      result = -result;
-  return result;
-}
 
 // return A halfway rotated around center in direction of B
 Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B)
 {
-  double angle = angleBetween(center-A, B-center) / 2;
+  double angle = planeAngleBetween(center-A, B-center) / 2;
   return rotated(A, center, angle);
 }
 
+long double planeAngleBetween(const Vector2d &V1, const Vector2d &V2)
+{
+    long double dotproduct =  V1.dot(V2);
+    long double length = V1.length() * V2.length();
+    long double quot = dotproduct / length;
+    if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
+    if (quot < -1 && quot > -1.0001) quot = -1;
+    long double result = acosl( quot ); // 0 .. pi
+    if (isleftof(Vector2d(0,0), V2, V1))
+        result = -result;
+    return result;
+}
 
 
 // is B left of A wrt center?

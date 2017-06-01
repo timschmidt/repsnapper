@@ -285,7 +285,7 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
 
 double Poly::angleAtVertex(uint i) const
 {
-  return angleBetween(getVertexCircular(i)-getVertexCircular(i-1),
+  return planeAngleBetween(getVertexCircular(i)-getVertexCircular(i-1),
 		      getVertexCircular(i+1)-getVertexCircular(i));
 }
 

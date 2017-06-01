@@ -583,7 +583,7 @@ void Infill::addInfillPolys(const vector<Poly> &polys)
   	for (uint i = 0; i < polys[j].size() ; i++ )
   	  {
 	    Vector2d l = (polys[j][i+1] - polys[j][i]);
-	    double langle = angleBetween(UNITX, l) + M_PI/2;
+	    double langle = planeAngleBetween(UNITX, l) + M_PI/2;
 	    if (sameAngle(langle,      m_angle, 0.2) ||
 		sameAngle(langle+M_PI, m_angle, 0.2))
   	      {

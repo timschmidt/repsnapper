@@ -199,7 +199,8 @@ public:
         if (angle < 0) angle += 2*M_PI;
         if (!ccw) angle -= 2*M_PI; // angle sign determines rotation
 #else
-        long double angle = angleBetween(rel_from, rel_to);
+        long double angle = planeAngleBetween(Vector2d(rel_from.x(), rel_from.y()),
+                                              Vector2d(rel_to.x(), rel_to.y()));
         if (!ccw) angle = -angle; // clockwise
         if (angle < 0) angle += 2*M_PI;
 #endif

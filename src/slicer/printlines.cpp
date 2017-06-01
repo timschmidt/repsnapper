@@ -92,7 +92,7 @@ void PLine<M>::calcangle()
 {
   if (area == COMMAND) return;
   if (arc == 0){
-    angle = angleBetween(Vector2d(1,0), Vector2d(dir()));
+    angle = planeAngleBetween(Vector2d(1,0), Vector2d(dir()));
   } else {
     angle = Command::calcAngle(from - arccenter, to - arccenter, arc == -1);
   }
@@ -488,7 +488,7 @@ PLine2::PLine2(const PLine2 &rhs)
 // }
 double PLine2::angle_to(const PLine2 rhs) const
 {
-  return angleBetween( dir(), rhs.dir() );
+  return planeAngleBetween( dir(), rhs.dir() );
 }
 
 
@@ -906,7 +906,7 @@ bool fit_arc(const vector<PLine2> &lines, uint fromind, uint toind,
 double arc_offset(const Vector2d &center, const PLine2 &line)
 {
   const double r = center.distance(line.getFrom());
-  const double angle = abs(angleBetween(line.getFrom()-center, line.getTo()-center));
+  const double angle = abs(planeAngleBetween(line.from-center, line.to-center));
   const double off =  r - r*sin(angle/2);
   //cerr << "offset " << off << endl;
   return off;
@@ -1133,7 +1133,7 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   //for (uint i = 0; i<=ind + 1; i++){
   //    lenbefore += lines[i].length();
   //}
-  double angle  = angleBetween(dir1, dir2);
+  double angle  = planeAngleBetween(dir1, dir2);
   // arc start and end point:
   const Vector2d p1   = lines[ind].to     - normalized(dir1)*maxdistance;
   const Vector2d p2   = lines[ind+1].from + normalized(dir2)*maxdistance;

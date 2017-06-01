@@ -44,15 +44,14 @@ void moveArcballTrans(Matrix4fT &matfT, const Vector3d &delta);
 void setArcballTrans(Matrix4fT &matfT, const Vector3d &trans);
 void rotArcballTrans(Matrix4fT &transform,  const Vector3d &axis, double angle);
 
-/* template< size_t M, typename T > */
-/* long double angleBetween(const vmml::vector< M, T > V1, const vmml::vector< M, T > V2 ); */
-long double angleBetween(const Vector3d &V1, const Vector3d &V2);
-long double angleBetween(const Vector2d &V1, const Vector2d &V2);
+bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B);
+
+
+long double planeAngleBetween(const Vector2d &V1, const Vector2d &V2);
+
 Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B);
 void center_perpendicular(const Vector2d &from, const Vector2d &to,
 			  Vector2d &p1, Vector2d &p2);
-
-bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B);
 
 Vector3d cross2d(const Vector2d &A, const Vector2d &B, double z=0);
 
