@@ -58,7 +58,9 @@ public:
 
   // virtual vector< PLine > division(double length) const;
 
-  vmml::vector<M, double> dir() const { return to - from; }
+  vmml::vector<M, double> dir() const {
+      return vmml::vector<M, double>(to) - vmml::vector<M, double>(from);
+  }
   vmml::vector<M, double> splitpoint(double at_length) const;
 
   double time() const;
