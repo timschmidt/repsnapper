@@ -198,7 +198,7 @@ void nMaterial::GetColorAt(double xIn, double yIn, double zIn, double* rOut, dou
 
 int nMaterial::AddCompositeInstance(int InstanceMaterialID, std::string AmfEquationIn, std::string* pMessage) //returns the index. Can't set a id here since we need top level access to make sure we can't create a recursive situation
 {
-	if (aID == 0) -1; //protect the void material
+	if (aID == 0) return -1; //protect the void material
 
 //	nMaterial* pCurMat = GetMaterialByID(MaterialID);
 	if (InstanceMaterialID != 0){
