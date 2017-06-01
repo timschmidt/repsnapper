@@ -1127,8 +1127,12 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   const double len2 = lines[ind+1].length();
   maxdistance   = min(maxdistance, len1); // ok to eat up line 1
   maxdistance   = min(maxdistance, len2 / 2.1); // only eat up less than half of second line
-  const Vector2d dir1 = lines[ind].to   - lines[ind].from;
-  const Vector2d dir2 = lines[ind+1].to - lines[ind+1].from;
+  const  Vector2d dir1 = lines[ind].dir();
+  const  Vector2d dir2 = lines[ind+1].dir();
+  //double lenbefore = 0;
+  //for (uint i = 0; i<=ind + 1; i++){
+  //    lenbefore += lines[i].length();
+  //}
   double angle  = angleBetween(dir1, dir2);
   // arc start and end point:
   const Vector2d p1   = lines[ind].to     - normalized(dir1)*maxdistance;
@@ -1148,7 +1152,7 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   const bool split =
     (lines[ind].feedratio != lines[ind+1].feedratio)
     || (lines[ind].extruder_no != lines[ind+1].extruder_no);
-  const double arc_len = radius * angle;
+  const double arc_len = abs(radius * angle);
   // too small for arc, replace by 2 straight lines
   const bool not_arc =
     !settings->get_boolean("Slicing","UseArcs")
@@ -1158,10 +1162,17 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
     (arc_len < (split?(minarclength/2):minarclength));
   // if (toosmallfortwo) return 0;
 
-  vector<PLine2> newlines;
+  vector<PLine2> newlines; // all lines replacing lines[ind] and lines[ind+1]
+  uint insertbefore = ind+1;
+  if (p2 != lines[ind+1].to) { // straight line 2
+    lines[ind+1].move_to(p2, lines[ind+1].to);
+  } else
+      lines.erase(lines.begin() + ind+1);
   if (p1 != lines[ind].from) { // straight line 1
-    newlines.push_back(lines[ind]);
-    newlines.back().move_to(lines[ind].from, p1);
+    lines[ind].move_to(lines[ind].from, p1);
+  } else {
+      lines.erase(lines.begin() + ind);
+      insertbefore--;
   }
   if (p2 != p1)  {
     if (toosmallfortwo) { // 1 line
@@ -1173,12 +1184,11 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
     else if (split || not_arc) { // calc arc midpoint
       const Vector2d splitp = rotated(p1, center, angle/2, ccw);
       if (not_arc) { // 2 straight lines
-	newlines.push_back(lines[ind]);
+        newlines.push_back(lines[ind]);
 	newlines.back().move_to(p1, splitp);
-	newlines.push_back(lines[ind+1]);
+        newlines.push_back(lines[ind+1]);
 	newlines.back().move_to(splitp, p2);
-      }
-      else if (split) { // 2 arcs
+      } else if (split) { // 2 arcs
 	newlines.push_back(PLine2(lines[ind].area, lines[ind].extruder_no,  p1, splitp,
 				 lines[ind].speed, lines[ind].feedratio, center, ccw, lines[ind].lifted));
 	newlines.push_back(PLine2(lines[ind+1].area, lines[ind+1].extruder_no, splitp, p2,
@@ -1189,18 +1199,15 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
 			       lines[ind].speed, lines[ind].feedratio, center, ccw, lines[ind].lifted));
     }
   }
-  if (p2 != lines[ind+1].to) { // straight line 2
-    newlines.push_back(lines[ind+1]);
-    newlines.back().move_to(p2, lines[ind+1].to);
-  }
+
   const uint numnew = newlines.size();
-  if (numnew>0)
-    lines[ind] = newlines[0];
-  if (numnew>1)
-    lines[ind+1] = newlines[1];
-  if (numnew>2)
-    lines.insert(lines.begin()+ind+2, newlines.begin()+2, newlines.end());
-  return max(0, (int)numnew - 2);
+  lines.insert(lines.begin() + insertbefore, newlines.begin(), newlines.end());
+  //double lenafter = 0;
+  //for (uint i = 0; i<=insertbefore + numnew; i++){
+  //    lenafter += lines[i].length();
+  //}
+  //cerr << " len "<< lenbefore << " -> " << lenafter << endl;
+  return max(0, (int)numnew);
 }
 
 
