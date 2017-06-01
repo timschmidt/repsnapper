@@ -61,9 +61,9 @@ public:
   vmml::vector<M, double> dir() const { return to - from; }
   vmml::vector<M, double> splitpoint(double at_length) const;
 
-  virtual double time() const;
-  virtual double lengthSq() const;
-  virtual double length() const;
+  double time() const;
+  double lengthSq() const;
+  double length() const;
 
   bool is_command() const {return (area == COMMAND);}
 
@@ -304,9 +304,10 @@ class Printlines
   void getLines(const vector<PLine2> &lines,
 		vector<PLine3> &plines, double extrusion_per_mm) const;
 
-  double totalLength(const vector<PLine2> &lines) const;
-  double totalSeconds(const vector<PLine2> &lines) const;
-  double totalSecondsExtruding(const vector<PLine2> &lines) const;
+  static double totalLength(const vector<PLine2> &lines);
+  static double totalLength(const vector<PLine3> &lines);
+  static double totalSeconds(const vector<PLine2> &lines);
+  static double totalSecondsExtruding(const vector<PLine2> &lines);
 
   static double total_Extrusion(const vector< PLine3 > &lines);
   static double total_rel_Extrusion(const vector< PLine3 > &lines);

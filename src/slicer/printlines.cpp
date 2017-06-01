@@ -1606,10 +1606,18 @@ void Printlines::getLines(const vector<PLine2> &lines,
   }
 }
 
-double Printlines::totalLength(const vector<PLine2> &lines) const
+double Printlines::totalLength(const vector<PLine2> &lines)
 {
   double l = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
+    l += lIt->length();
+  }
+  return l;
+}
+double Printlines::totalLength(const vector<PLine3> &lines)
+{
+  double l = 0;
+  for (line3CIt lIt = lines.begin(); lIt!=lines.end();++lIt){
     l += lIt->length();
   }
   return l;
@@ -1643,7 +1651,7 @@ double Printlines::total_Extrusion(const vector< PLine3 > &lines)
   return l;
 }
 
-double Printlines::totalSeconds(const vector<PLine2> &lines) const
+double Printlines::totalSeconds(const vector<PLine2> &lines)
 {
   double t = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1651,7 +1659,7 @@ double Printlines::totalSeconds(const vector<PLine2> &lines) const
   }
   return t * 60;
 }
-double Printlines::totalSecondsExtruding(const vector<PLine2> &lines) const
+double Printlines::totalSecondsExtruding(const vector<PLine2> &lines)
 {
   double t = 0;
   for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
@@ -1673,8 +1681,7 @@ void Printlines::getCommands(const vector<PLine3> &plines,
   if (count==0) return;
   if (progress) progress->restart (_("Making GCode"), count);
   Vector3d lastPos = plines[0].from;
-  int progress_steps=(int)(count/100);
-  if (progress_steps==0) progress_steps=1;
+  int progress_steps = max(1,(int)(count/100));
   bool cont = true;
   vector<Command> commands;
   const double
@@ -1689,7 +1696,8 @@ void Printlines::getCommands(const vector<PLine3> &plines,
   for (uint i = 0; i < plines.size(); i++) {
     if (progress && i%progress_steps==0){
       cont = (progress->update(i)) ;
-      if (!cont) break;
+      if (!cont)
+          break;
     }
     if (plines[i].area != COMMAND && plines[i].area != lastArea) {
       lastArea = plines[i].area;
