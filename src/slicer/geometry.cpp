@@ -245,7 +245,7 @@ long double angleBetween(const Vector3d &V1, const Vector3d &V2)
   if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
   if (quot < -1 && quot > -1.0001) quot = -1;
   long double result = acosl( quot ); // 0 .. pi
-  if (isleftof(Vector3d(0,0,0), V2, V1))
+  if (isleftof(Vector2d(0,0), Vector2d(V2.x(), V2.y()), Vector2d(V1.x(), V1.y())))
       result = -result;
   return result;
 }
@@ -278,10 +278,6 @@ bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B)
 {
   double position = (B.x()-A.x())*(center.y()-A.y()) - (B.y()-A.y())*(center.x()-A.x());
   return (position >= 0);
-}
-bool isleftof(const  Vector3d &center, const Vector3d &A, const Vector3d &B)
-{
-  return ((B-A).cross(center-A).z() > 0);
 }
 // // http://www.cs.uwaterloo.ca/~tmchan/ch3d/ch3dquad.cc
 // double turn(Point p, Point q, Point r) {  // <0 iff cw

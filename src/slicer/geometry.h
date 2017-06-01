@@ -53,7 +53,6 @@ void center_perpendicular(const Vector2d &from, const Vector2d &to,
 			  Vector2d &p1, Vector2d &p2);
 
 bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B);
-bool isleftof(const Vector3d &center, const Vector3d &A, const Vector3d &B);
 
 Vector3d cross2d(const Vector2d &A, const Vector2d &B, double z=0);
 
