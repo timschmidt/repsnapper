@@ -149,7 +149,7 @@ class PLine2 : public PLine<2>
   vector< PLine2 > division(const Vector2d &point) const;
   vector< PLine2 > division(const vector<Vector2d> &points) const;
 
-  double angle_to(const PLine2 rhs) const;
+  double angle_to(const PLine2 &rhs) const;
   bool is_noop() const;
   bool is_move() const {return (abs(feedratio) < 0.00001);}
   string info() const;

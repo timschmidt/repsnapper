@@ -486,7 +486,7 @@ PLine2::PLine2(const PLine2 &rhs)
 //   assert(!arc);
 //   return angleBetween(Vector2d(1,0), to-from);
 // }
-double PLine2::angle_to(const PLine2 rhs) const
+double PLine2::angle_to(const PLine2 &rhs) const
 {
   return planeAngleBetween( dir(), rhs.dir() );
 }
