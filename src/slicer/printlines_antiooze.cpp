@@ -427,6 +427,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
     cerr << "total extrusion difference after antiooze " << total_ext2 << endl;
 #endif
   //cerr << lines.size() << " - " << newlines.size() <<  "- " <<total_added << endl;
+  newlines.insert(newlines.end(), lines.begin()+lastend, lines.end());
   lines = newlines;
   return total_added;
 }
