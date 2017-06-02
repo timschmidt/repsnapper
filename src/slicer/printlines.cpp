@@ -882,8 +882,8 @@ bool fit_arc(const vector<PLine2> &lines, uint fromind, uint toind,
   if (toind > lines.size()) return false;
   const int n_par = 3; // center x,y and arc radius_sq
   // start values:
-  const Vector2d &P = lines[fromind].getFrom();
-  const Vector2d &Q = lines[toind].getTo();
+  const Vector2d &P = lines[fromind].from;
+  const Vector2d &Q = lines[toind].to;
   const Vector2d startxy = (P+Q)/2.;
   double par[3] = { startxy.x(), startxy.y(), P.squared_distance(Q) };
 
@@ -894,8 +894,8 @@ bool fit_arc(const vector<PLine2> &lines, uint fromind, uint toind,
   data.px[0] = P.x();
   data.py[0] = P.y();
   for (int i = 0; i < m_dat; i++) {
-    data.px[i] = lines[fromind+i].getTo().x();
-    data.py[i] = lines[fromind+i].getTo().y();
+    data.px[i] = lines[fromind+i].to.x();
+    data.py[i] = lines[fromind+i].to.y();
   }
   return fit_arc(m_dat, data, n_par, par, sq_error,
 		 result_center, result_radiussq);
@@ -905,7 +905,7 @@ bool fit_arc(const vector<PLine2> &lines, uint fromind, uint toind,
 // max offset of the arc from the line
 double arc_offset(const Vector2d &center, const PLine2 &line)
 {
-  const double r = center.distance(line.getFrom());
+  const double r = center.distance(line.from);
   const double angle = abs(planeAngleBetween(line.from-center, line.to-center));
   const double off =  r - r*sin(angle/2);
   //cerr << "offset " << off << endl;
@@ -937,9 +937,9 @@ bool continues_arc(const Vector2d &center,
 uint Printlines::makeArcs(double linewidth,
 			  vector<PLine2> &lines) const
 {
-  if (!slicing.UseArcs) return 0;
+  if (!settings->get_boolean("Slicing","UseArcs")) return 0;
   if (lines.size() < 3) return 0;
-  const double maxAngle = settings->Slicing.ArcsMaxAngle * M_PI/180;
+  const double maxAngle = settings->get_double("Slicing","ArcsMaxAngle") * M_PI/180;
   const double linewidth_sq = linewidth*linewidth;
   if (maxAngle <= 0) return 0;
   double arcRadiusSq = 0;
