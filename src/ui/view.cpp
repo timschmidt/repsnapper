@@ -1199,7 +1199,7 @@ View::View(BaseObjectType* cobject,
   }
 
 
-  m_settings_ui = new PrefsDlg(m_model, m_builder);
+  m_settings_ui = new PrefsDlg(m_builder);
 
   // file chooser
   m_filechooser = new RSFilechooser(this);

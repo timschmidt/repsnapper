@@ -57,8 +57,7 @@ void PrefsDlg::handle_response(int, Gtk::Dialog *dialog)
   dialog->hide();
 }
 
-PrefsDlg::PrefsDlg(Model *model, Glib::RefPtr<Gtk::Builder> &builder)
-  : m_model (model)
+PrefsDlg::PrefsDlg(Glib::RefPtr<Gtk::Builder> &builder)
 {
   builder->get_widget ("preferences_dlg", m_preferences_dlg);
   builder->get_widget ("settings_icons", m_settings_icons);

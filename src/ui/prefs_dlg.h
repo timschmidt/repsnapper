@@ -23,7 +23,6 @@
 #include <gtkmm.h>
 
 class PrefsDlg {
-  Model *m_model;
   Gtk::Dialog *m_preferences_dlg;
   Gtk::VBox *m_settings_overview;
   Gtk::Notebook *m_settings_notebook;
@@ -35,7 +34,7 @@ class PrefsDlg {
   bool load_settings();
 
  public:
-  PrefsDlg(Model *model, Glib::RefPtr<Gtk::Builder> &builder);
+  PrefsDlg(Glib::RefPtr<Gtk::Builder> &builder);
   ~PrefsDlg();
   void show();
   void set_icon_from_file(const string path) {m_preferences_dlg->set_icon_from_file(path);}
