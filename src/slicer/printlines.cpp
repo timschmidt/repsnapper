@@ -142,7 +142,8 @@ PLine3::PLine3(const PLine2 &pline, double z, double extrusion_per_mm)
   to                 = Vector3d(pline.to.x(),   pline.to.y(),   z);
   speed              = pline.speed;
   absolute_extrusion = pline.absolute_extrusion;
-  arc                = pline.arc;
+  arc                = (pline.is_noop() || pline.is_move() || pline.is_command())
+                          ? 0 : pline.arc;
   arccenter          = Vector3d(pline.arccenter.x(), pline.arccenter.y(), z);
   angle              = pline.angle;
   extruder_no        = pline.extruder_no;
@@ -458,8 +459,12 @@ PLine2::PLine2(PLineArea area_, const uint extruder_no_,
   from = from_;
   to   = to_;
   speed = speed_;
-  arccenter = arccenter_;
-  arc = ccw ? -1 : 1;
+  if (feedratio == 0)
+    arc = 0;
+  else {
+    arccenter = arccenter_;
+    arc = ccw ? -1 : 1;
+  }
   calcangle();
   absolute_extrusion = 0;
   lifted = lifted_;
