@@ -352,7 +352,6 @@ int GCode::getLayerNo(const double z) const
 
 int GCode::getLayerNo(const unsigned long commandno) const
 {
-  if (commandno<0) return commandno;
   if (layerchanges.size()>0) {// have recorded layerchange indices -> draw whole layers
     if (commandno > layerchanges.back()  && commandno < commands.size()) // last layer?
       return layerchanges.size()-1;
