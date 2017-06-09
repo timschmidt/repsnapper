@@ -171,6 +171,7 @@ public:
 	string getSVG(int single_layer_no = -1) const;
 	void ReadSVG(Glib::RefPtr<Gio::File> file);
 
+        bool isCalculating() const { return is_calculating; };
  private:
 	bool is_calculating;
 	bool is_printing;

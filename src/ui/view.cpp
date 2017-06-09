@@ -1950,7 +1950,7 @@ void View::Draw (vector<Gtk::TreeModel::Path> &selected, bool objects_only)
 	glDisable (GL_POLYGON_OFFSET_FILL);
 
 	// Draw GCode, which already incorporates any print offset
-        if (!objects_only) {
+        if (!objects_only && !m_model->isCalculating()) {
 	  if (m_gcodetextview->has_focus()) {
 	    double z = m_model->gcode.currentCursorWhere.z();
 	    m_model->GlDrawGCode(z);
