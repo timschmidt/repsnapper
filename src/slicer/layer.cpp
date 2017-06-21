@@ -308,8 +308,8 @@ void Layer::CalcInfill (const Settings &settings)
   thinInfill = new Infill(this, 1.);
   thinInfill->setName("thin");
 
-  double rot = (settings.get_double("Slicing","InfillRotation"),
-		+ (double)LayerNo*settings.get_double("Slicing","InfillRotationPrLayer"))/180.0*M_PI;
+  double rot = (settings.get_double("Slicing","InfillRotation")
+		+ (double)LayerNo * settings.get_double("Slicing","InfillRotationPrLayer"))/180.0*M_PI;
   if (!shellOnly)
     normalInfill->addPolys(Z, fillPolygons, (InfillType)settings.get_integer("Slicing","NormalFilltype"),
 			   normalInfilldist, fullInfillDistance, rot);
