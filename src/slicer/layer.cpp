@@ -1146,6 +1146,7 @@ void Layer::Draw(const Settings &settings)
 
 void Layer::DrawRulers(const Vector2d &point)
 {
+  if (polygons.size() == 0) return;
   Vector2d x0(Min.x()-10, point.y());
   Vector2d x1(Max.x()+10, point.y());
   Vector2d y0(point.x(), Min.y()-10);
