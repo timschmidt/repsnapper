@@ -194,7 +194,7 @@ void Layer::addPolygons(vector<Poly> &polys)
 void Layer::calcBridgeAngles(const Layer *layerbelow) {
   bridge_angles.resize(bridgePolygons.size());
   Clipping clipp;
-  vector<Poly> polysbelow = *(layerbelow->GetInnerShell());//clipp.getOffset(polygons,3*thickness);
+  vector<Poly> polysbelow = layerbelow->GetInnerShell();//clipp.getOffset(polygons,3*thickness);
   bridgePillars.resize(bridgePolygons.size());
   for (uint i=0; i<bridgePolygons.size(); i++)
     {
@@ -318,7 +318,7 @@ void Layer::CalcInfill (const Settings &settings)
     vector<Poly> skirtFill;
     Clipping clipp;
     clipp.addPolys(skirtPolygons, subject);
-    clipp.addPolys(*GetOuterShell(), clip);
+    clipp.addPolys(GetOuterShell(), clip);
     clipp.addPolys(supportPolygons, clip);
     skirtFill = clipp.subtract();
     skirtFill = Clipping::getOffset(skirtFill, -fullInfillDistance);
@@ -467,25 +467,25 @@ void Layer::mergeSupportPolygons()
   setSupportPolygons(Clipping::getMerged(GetSupportPolygons()));
 }
 
-const vector<Poly> * Layer::GetInnerShell() const
+const vector<Poly> &Layer::GetInnerShell() const
 {
   // if (fillPolygons.size()>0) return fillPolygons;
   // // no offset
-  if (shellPolygons.size()>0) return &(shellPolygons.back());
+  if (shellPolygons.size()>0) return (shellPolygons.back());
   // no shells:
-  if (skinPolygons.size()>0) return &skinPolygons;
+  if (skinPolygons.size()>0) return skinPolygons;
   // no skins
-  return &polygons;
+  return polygons;
 }
-const vector<Poly> * Layer::GetOuterShell() const
+const vector<Poly> &Layer::GetOuterShell() const
 {
-  if (skinPolygons.size()>0) return &skinPolygons;
+  if (skinPolygons.size()>0) return skinPolygons;
   // no skins
-  if (shellPolygons.size()>0) return &(shellPolygons.front());
+  if (shellPolygons.size()>0) return (shellPolygons.front());
   // no shells:
-  if (fillPolygons.size()>0) return &fillPolygons;
+  if (fillPolygons.size()>0) return fillPolygons;
   // no offset
-  return &polygons;
+  return polygons;
 }
 
 vector<ExPoly> Layer::GetExPolygons() const
@@ -692,7 +692,7 @@ void Layer::MakeSkirt(double distance, bool single)
       skirtPolygons[0].cleanup(thickness);
     }
   } else { // skirt for each shape
-    skirtPolygons = Clipping::getOffset(*GetOuterShell(), distance, jround);
+    skirtPolygons = Clipping::getOffset(GetOuterShell(), distance, jround);
   }
 }
 
@@ -773,7 +773,7 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 
   // polys to keep line movements inside
   //const vector<Poly> * clippolys = &polygons;
-  const vector<Poly> * clippolys = GetOuterShell();
+  const vector<Poly> clippolys = GetOuterShell();
 
   // 1. Skins, all but last, because they are the lowest lines, below layer Z
   if (skins > 1) {
@@ -807,7 +807,7 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 	// have to get all these separately because z changes
 	printlines.makeLines(startPoint, lines);
 	if (!ZliftAlways)
-	  printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
+	  printlines.clipMovements(clippolys, lines, clipnearest, linewidth);
 	printlines.optimize(linewidth,
 			    minshelltime, cornerradius, lines);
 	printlines.getLines(lines, lines3, extr_per_mm);
@@ -867,7 +867,7 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
   lines3.push_back(PLine3(lchange));
 
   if (!ZliftAlways)
-    printlines.clipMovements(*clippolys, lines, clipnearest, linewidth);
+    printlines.clipMovements(clippolys, lines, clipnearest, linewidth);
   printlines.optimize(linewidth,
 		      settings.get_double("Slicing","MinLayertime"),
 		      cornerradius, lines);

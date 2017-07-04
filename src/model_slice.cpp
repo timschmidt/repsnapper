@@ -540,7 +540,7 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
   clipp.addPolys(subjlayer->GetBridgePolygons(),   subject);
   clipp.addPolys(subjlayer->GetDecorPolygons(),    subject);
   //clipp.addPolys(cliplayer->GetOuterShell(),       clip); // have some overlap
-  clipp.addPolys(*(cliplayer->GetInnerShell()),       clip); // have some more overlap
+  clipp.addPolys(cliplayer->GetInnerShell(),       clip); // have some more overlap
   vector<Poly> uncovered = clipp.subtractMerged();
   return uncovered;
 }
