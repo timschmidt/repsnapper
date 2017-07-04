@@ -967,17 +967,19 @@ vector<Triangle> getTriangles(p2t::CDT &cdt, double z)
 int triangulate(const vector<Poly> &polys, vector< vector<Triangle> > &triangles,
 		double z)
 {
-  vector<ExPoly> expolys = Clipping::getExPolys(polys, 0, 0);
+  vector<ExPoly> expolys = Clipping::getExPolys(polys, z, 0);
   cerr << expolys.size() << endl;
   for (uint i = 0; i<expolys.size(); i++) {
     vector<p2t::Point*> outerpoints = getP2Tpoints(expolys[i].outer);
-    p2t::CDT cdt(outerpoints);
-    for (uint h = 0; h < expolys[i].holes.size(); h++) {
-      vector<p2t::Point*> holespoints = getP2Tpoints(expolys[i].holes[h]);
-      cdt.AddHole(holespoints);
+    if(outerpoints.size() > 0) {
+      p2t::CDT cdt(outerpoints);
+      for (uint h = 0; h < expolys[i].holes.size(); h++) {
+        vector<p2t::Point*> holespoints = getP2Tpoints(expolys[i].holes[h]);
+        cdt.AddHole(holespoints);
+      }
+      cdt.Triangulate();
+      triangles.push_back(getTriangles(cdt, z));
     }
-    cdt.Triangulate();
-    triangles.push_back(getTriangles(cdt, z));
   }
   return triangles.size();
 }
