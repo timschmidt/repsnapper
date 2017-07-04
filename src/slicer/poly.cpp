@@ -405,7 +405,7 @@ void Poly::addVertexUnique(double x, double y, bool front)
 
 Vector2d const &Poly::getVertexCircular(int index) const
 {
-  int size = vertices.size();
+  uint size = vertices.size();
   index = (index + size) % size;
   //cerr << vertices->size() <<" >  "<< points[pointindex] << endl;
   return vertices[index];
@@ -677,13 +677,13 @@ void Poly::draw_as_surface() const
 void Poly::draw(int gl_type, double z, bool randomized) const
 {
   Vector2d v;
-  uint count = vertices.size();
+  int count = vertices.size();
   if (!closed && gl_type == GL_LINE_LOOP) {
     gl_type = GL_LINES;
     count--;
   }
   glBegin(gl_type);
-  for (uint i=0; i < count; i++){
+  for (int i=0; i < count; i++){
     v = getVertexCircular(i);
     if (randomized) v = random_displaced(v);
     glVertex3f(v.x(),v.y(),z);
