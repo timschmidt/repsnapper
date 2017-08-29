@@ -2161,12 +2161,12 @@ bool nObjectExt::RenderMesh(nAmf* pAmfIn, nObject* pObj, std::vector<int>* pInde
 					}
 
 					try{CurMesh->AddFacet(v[0], v[1], v[2], TexMap(MeshTexIndex, pMap->uTex1, pMap->uTex2, pMap->uTex3, pMap->vTex1, pMap->vTex2, pMap->vTex3));}
-					catch(std::bad_alloc){return false;}
+					catch(std::bad_alloc&){return false;}
 				}
 
 				else { //otherwise
 					try{CurMesh->AddFacet(v[0], v[1], v[2]);}
-					catch(std::bad_alloc){return false;}
+					catch(std::bad_alloc&){return false;}
 
 				}
 

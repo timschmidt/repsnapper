@@ -176,7 +176,7 @@ int main(int argc, char **argv)
   try {
     std::string user_config_dir = Glib::build_filename (Glib::get_user_config_dir(), "repsnapper");
     Gio::File::create_for_path(user_config_dir)->make_directory_with_parents();
-  } catch(Gio::Error e) {
+  } catch(Gio::Error &e) {
     switch(e.code()) {
     case Gio::Error::EXISTS:
       // Directory has already been created.  Normal.
@@ -211,7 +211,7 @@ int main(int argc, char **argv)
     // try to copy to user config, if it doesn't exist ...
     if (!conf->query_exists())
         global_conf->copy(conf);
-  } catch(Gio::Error e) {
+  } catch(Gio::Error &e) {
     switch(e.code()) {
     case Gio::Error::EXISTS:
       // Forget about it, the user already has a config.  This is the normal case.

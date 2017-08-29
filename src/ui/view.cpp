@@ -317,7 +317,7 @@ View *View::create(Model *model)
       ui = Glib::ustring(ptr);
       g_free(ptr);
       break;
-    } catch(Gio::Error e) {
+    } catch(Gio::Error &e) {
       switch(e.code()) {
       case Gio::Error::NOT_FOUND:
         continue;

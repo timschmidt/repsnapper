@@ -876,7 +876,7 @@ void Model::ConvertToGCode()
 			      plines,
 			      printOffsetZ,
 			      settings);
-    // } catch (Glib::Error e) {
+    // } catch (Glib::Error &e) {
     //   error("GCode Error:", (e.what()).c_str());
     // }
     // if (layers[p]->getPrevious() != NULL)

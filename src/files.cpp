@@ -167,7 +167,7 @@ filetype_t File::getFileType(ustring filename)
       } else {
 	return BINARY_STL;
       }
-    } catch (Glib::ConvertError e) {
+    } catch (Glib::ConvertError& e) {
       return BINARY_STL; // no keyword -> binary
     }
 
