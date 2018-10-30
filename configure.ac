@@ -52,7 +52,7 @@ AC_TYPE_SSIZE_T
 dnl check for installed clipperlib newer than 5.1.0 (has PolyNode)
 AC_DEFINE([HAVE_CLIPPERLIB],[0],[Have external clipper])
 CLIPPER_LIBS="libclipper.la"
-AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <polyclipping/clipper.hpp>], [ClipperLib::PolyNode cnode])],
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <polyclipping/clipper.hpp>], [ClipperLib::PolyNode cnode;])],
     [AC_DEFINE([HAVE_CLIPPERLIB],[1]) CLIPPER_LIBS="-lpolyclipping"],
     [AC_MSG_WARN([libclipper is not installed. Using internal copy.])])
 AC_SUBST(CLIPPER_LIBS)
