@@ -34,7 +34,7 @@ win32extras_DATA = $(WIN32_FILES)
 
 # AppData support
 @INTLTOOL_XML_RULE@
-appdatadir = $(datadir)/appdata
+appdatadir = $(datadir)/metainfo
 appdata_DATA = $(appdata_in_files:.xml.in=.xml)
 appdata_in_files = repsnapper.appdata.xml.in
 EXTRA_DIST += $(appdata_in_files)
