@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Copyright 2013 Richard Hughes <richard@hughsie.com> -->
-<application>
+<component type="desktop-application">
   <id type="desktop">repsnapper.desktop</id>
   <licence>CC0</licence>
   <name>Repsnapper</name>
@@ -18,4 +18,4 @@
     <screenshot type="default">http://reprap.org/mediawiki/images/6/6b/Repsnapper.png</screenshot>
   </screenshots>
   <url type="homepage">https://github.com/timschmidt/repsnapper</url>
-</application>
+</component>
