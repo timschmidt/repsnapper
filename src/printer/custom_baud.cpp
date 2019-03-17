@@ -6,7 +6,8 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <asm/termbits.h>
+#include <asm-generic/ioctls.h>
+#include <asm-generic/termbits.h>
 #endif
 
 bool set_custom_baudrate( int device_fd, int baudrate ) {
