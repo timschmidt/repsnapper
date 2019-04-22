@@ -65,6 +65,48 @@ Poly::Poly(const Poly &p, double z_)
     calcHole();
 }
 
+Poly::Poly(Poly &&p){
+  this->closed = p.closed;
+  this->z = p.z;
+  this->extrusionfactor = p.extrusionfactor;
+  //uint count = p.vertices.size();
+  // vertices.resize(count);
+  this->vertices = p.vertices;
+     cerr << "vert " << vertices.size() << endl;
+  //p.vertices.clear();
+  holecalculated = p.holecalculated;
+  if (holecalculated) {
+    this->hole = std::move(p.hole);
+    this->center = std::move(p.center);
+  }
+}
+
+Poly& Poly::operator=(const Poly& p){
+  this->closed = p.closed;
+  this->z = p.z;
+  this->extrusionfactor = p.extrusionfactor;
+  this->vertices = p.vertices;
+  this->holecalculated = p.holecalculated;
+  if (holecalculated) {
+    this->hole = p.hole;
+    this->center = p.center;
+  }
+  return *this;
+}
+
+Poly& Poly::operator=(Poly&& p){
+  this->closed = p.closed;
+  this->z = p.z;
+  this->extrusionfactor = p.extrusionfactor;
+  this->vertices = std::move(p.vertices);
+  this->holecalculated = p.holecalculated;
+  if (holecalculated) {
+    this->hole = std::move(p.hole);
+    this->center = std::move(p.center);
+  }
+  return *this;
+}
+
 Poly::~Poly()
 {
 }

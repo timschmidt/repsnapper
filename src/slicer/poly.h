@@ -36,6 +36,10 @@ public:
         Poly();
 	Poly(double z, double extrusionfactor=1.);
         Poly(const Poly &p, double z);
+        Poly(const Poly &p) : Poly(p, p.z) {};
+        Poly(Poly &&p);
+        Poly& operator=(Poly&& p);
+        Poly& operator=(const Poly& p);
 	/* Poly(double z, */
 	/*      const ClipperLib::Path cpoly, bool reverse=false); */
         ~Poly();
