@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "../src/ui/prefs_dlg.h"
+
 #include <QDebug>
 #include <QFileDialog>
 #include <QCheckBox>
@@ -11,11 +13,14 @@ using namespace std;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui_main(new Ui::MainWindow)
 {
-    ui->setupUi(this);
-    ui->progressBarArea->setVisible(false);
-    ui->mainsplitter->setSizes(QList<int>({INT_MAX, INT_MAX}));
+    ui_main->setupUi(this);
+    ui_main->progressBarArea->setVisible(false);
+    ui_main->mainsplitter->setSizes(QList<int>({INT_MAX, INT_MAX}));
+
+    prefs_dialog = new PrefsDlg(this);
+    m_settings->connect_to_ui(prefs_dialog);
 
     m_settings = new Settings();
     m_settings->connect_to_ui(this);
@@ -29,12 +34,17 @@ const std::string fromQString(QString qstring){
 
 MainWindow::~MainWindow()
 {
-    delete ui;
+    delete ui_main;
 }
 
 void MainWindow::on_actionQuit_triggered()
 {
     close();
+}
+
+void MainWindow::on_actionSettings_triggered()
+{
+    prefs_dialog->open();
 }
 
 void MainWindow::on_actionOpen_triggered()

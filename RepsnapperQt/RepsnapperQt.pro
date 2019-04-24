@@ -35,7 +35,7 @@ SOURCES += \
         ../src/glshader.cpp \
         ../src/model.cpp \
         ../src/model_slice.cpp \
-        ../src/objtree.cpp \
+        ../src/objlist.cpp \
         ../src/platform.cpp \
         ../src/pretty-print-vrml.cpp \
         ../src/printer/custom_baud.cpp \
@@ -49,10 +49,8 @@ SOURCES += \
         ../src/printer/threaded_printer_serial_test.cpp \
         ../src/render.cpp \
         ../src/repsnapper.cpp \
-        ../src/rfo.cpp \
         ../src/settings.cpp \
         ../src/shape.cpp \
-        ../src/slicer/area.cpp \
         ../src/slicer/clipping.cpp \
         ../src/slicer/geometry.cpp \
         ../src/slicer/infill.cpp \
@@ -60,7 +58,6 @@ SOURCES += \
         ../src/slicer/poly.cpp \
         ../src/slicer/printlines.cpp \
         ../src/slicer/printlines_antiooze.cpp \
-        ../src/slicer/slicer_logick.cpp \
         ../src/transform3d.cpp \
         ../src/triangle.cpp \
         ../src/ui/connectview.cpp \
@@ -97,7 +94,7 @@ HEADERS += \
         ../src/linked_ptr.h \
         ../src/miniball.h \
         ../src/model.h \
-        ../src/objtree.h \
+        ../src/objlist.h \
         ../src/platform.h \
         ../src/printer/custom_baud.h \
         ../src/printer/printer.h \
@@ -107,18 +104,14 @@ HEADERS += \
         ../src/printer/thread_buffer.h \
         ../src/printer/threaded_printer_serial.h \
         ../src/render.h \
-        ../src/repsnapper.ui.h \
         ../src/settings.h \
         ../src/shape.h \
-        ../src/slicer/area.h \
         ../src/slicer/clipping.h \
         ../src/slicer/geometry.h \
         ../src/slicer/infill.h \
         ../src/slicer/layer.h \
         ../src/slicer/poly.h \
-        ../src/slicer/poly.h.orig \
         ../src/slicer/printlines.h \
-        ../src/slicer/slicer_logick.h \
         ../src/stdafx.h \
         ../src/transform3d.h \
         ../src/triangle.h \
@@ -134,10 +127,12 @@ HEADERS += \
         mainwindow.h
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+        preferences_dlg.ui
 
 INCLUDEPATH += ../
 INCLUDEPATH += ../libraries/vmmlib/include/
+INCLUDEPATH += ../libraries/
 
 INCLUDEPATH += /usr/local/include
 INCLUDEPATH += /usr/local/include/giomm-2.4/

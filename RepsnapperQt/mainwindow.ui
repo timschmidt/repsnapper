@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>789</width>
-    <height>454</height>
+    <width>813</width>
+    <height>490</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -272,16 +272,19 @@
            <attribute name="title">
             <string>Model</string>
            </attribute>
-           <widget class="QWidget" name="modelModWidget" native="true">
+           <widget class="QWidget" name="">
             <property name="geometry">
              <rect>
               <x>10</x>
-              <y>150</y>
-              <width>223</width>
-              <height>143</height>
+              <y>10</y>
+              <width>258</width>
+              <height>297</height>
              </rect>
             </property>
-            <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <layout class="QVBoxLayout" name="verticalLayout_5">
+             <item>
+              <widget class="QListView" name="modelListView"/>
+             </item>
              <item>
               <widget class="QGroupBox" name="groupBox">
                <property name="title">
@@ -346,16 +349,6 @@
              </item>
             </layout>
            </widget>
-           <widget class="QTreeView" name="modelTreeView">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>10</y>
-              <width>256</width>
-              <height>71</height>
-             </rect>
-            </property>
-           </widget>
           </widget>
           <widget class="QWidget" name="tabGCode">
            <attribute name="title">
@@ -398,11 +391,31 @@
            <attribute name="title">
             <string>Print</string>
            </attribute>
+           <widget class="QTextEdit" name="textEdit">
+            <property name="geometry">
+             <rect>
+              <x>70</x>
+              <y>130</y>
+              <width>104</width>
+              <height>75</height>
+             </rect>
+            </property>
+           </widget>
           </widget>
           <widget class="QWidget" name="tabLogs">
            <attribute name="title">
             <string>Logs</string>
            </attribute>
+           <widget class="QTextBrowser" name="textBrowser">
+            <property name="geometry">
+             <rect>
+              <x>0</x>
+              <y>100</y>
+              <width>256</width>
+              <height>192</height>
+             </rect>
+            </property>
+           </widget>
           </widget>
          </widget>
         </item>
@@ -463,7 +476,7 @@
        <item>
         <widget class="QPushButton" name="progresCancel">
          <property name="text">
-          <string>X</string>
+          <string>Cancel</string>
          </property>
         </widget>
        </item>
@@ -477,7 +490,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>789</width>
+     <width>813</width>
      <height>22</height>
     </rect>
    </property>

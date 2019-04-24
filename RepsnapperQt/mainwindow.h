@@ -4,7 +4,6 @@
 #include <QMainWindow>
 #include <QCheckBox>
 
-
 #include "src/model.h"
 
 namespace Ui {
@@ -20,7 +19,9 @@ public:
     ~MainWindow();
 
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow *ui_main;
+
+    PrefsDlg *prefs_dialog;
 
     Settings* m_settings;
     Model* m_model;
@@ -28,6 +29,7 @@ private:
 private slots:
     void on_actionOpen_triggered();
     void on_actionQuit_triggered();
+    void on_actionSettings_triggered();
 
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);
