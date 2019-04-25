@@ -25,7 +25,6 @@
 #ifndef WIN32
 #  include <sys/time.h>
 #endif
-#include <gdkmm.h>
 
 unsigned long Platform::getTickCount()
 {

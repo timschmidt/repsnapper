@@ -21,59 +21,87 @@
 #pragma once
 
 #include <string>
-#include <giomm/file.h>
-#include <glibmm/keyfile.h>
+//#include <glibmm/keyfile.h>
+#include <glib.h>
+#include <glibmm/ustring.h>
+
 
 #include "stdafx.h"
 
+#include <QSettings>
+#include <QCoreApplication>
+#include <QString>
+#include <QFile>
+#include <QtUiTools/QUiLoader>
+#include <QMainWindow>
+#include <QPushButton>
 
-// Allow passing as a pointer to something to
-// avoid including glibmm in every header.
-typedef Glib::RefPtr<Gtk::Builder> Builder;
+class ColorButton : public QPushButton {
+    QColor color;
+public:
+    void set_color (QColor c) {
+        color = c;
+        QPalette pal;
+        pal.setColor(QPalette::Background, color);
+        setPalette(pal);
+    }
+    void set_color (float r, float g, float b, float alpha = 1.) {
+        set_color(QColor(255*r,255*g,255*b,255*alpha));
+    }
+    QColor get_color(){return color;}
+};
 
+class Settings : public QSettings {
+    Q_OBJECT
 
-class Settings : public Glib::KeyFile {
-
-  Glib::ustring filename; // where it's loaded from
+  QString filename; // where it's loaded from
 
   bool m_user_changed;
   bool inhibit_callback; // don't update settings from gui while setting to gui
 
  public:
 
-  void copyGroup(const string &from, const string &to);
+  void copyGroup(const QString &from, const QString &to);
 
-  // overwrite to get the chance to make multiple extruder manipulations
+  // overwrite to get the chance to make multiple extruder manipulation
 
-  /* int      get_integer (const string &group, const string &name) const; */
-  /* double   get_double  (const string &group, const string &name) const; */
-  /* bool     get_boolean (const string &group, const string &name) const; */
-  /* string   get_string  (const string &group, const string &name) const; */
-  Vector4f get_colour  (const string &group, const string &name) const;
+  int      get_integer (const QString &group, const QString &name);
+  double   get_double  (const QString &group, const QString &name);
+  bool     get_boolean (const QString &group, const QString &name);
+  QString  get_string  (const QString &group, const QString &name);
+  Vector4f get_colour  (const QString &group, const QString &name);
+  //QStringList get_string_list(const QString &group, const QString &name);
+  vector<double>   get_double_list  (const QString &group, const QString &name);
+
+  using QSettings::value;
+  QVariant value(const QString &group, const QString &key,
+                 const QVariant &defaultValue = QVariant());
+  QStringList get_keys(const QString &group);
 
   /* void set_integer (const string &group, const string &name, const int value); */
   /* void set_double  (const string &group, const string &name, const double value); */
   /* void set_boolean (const string &group, const string &name, const bool value); */
   /* void set_string  (const string &group, const string &name, const string &value); */
-  void set_colour  (const string &group, const string &name, const Vector4f &value);
+  void set_colour  (const QString &group, const QString &name, const Vector4f &value);
+  void set_double_list  (const QString &group, const QString &name, const vector<double> &values);
 
-  string numberedExtruder(const string &group, int num=-1) const;
+  QString numberedExtruder(const QString &group, int num=-1) const;
 
 
-  vmml::vec3d getPrintVolume() const;
-  vmml::vec3d getPrintMargin() const;
+  vmml::vec3d getPrintVolume();
+  vmml::vec3d getPrintMargin();
 
 
   static double RoundedLinewidthCorrection(double extr_width,
-					   double layerheight);
-  double GetExtrudedMaterialWidth(const double layerheight) const;
-  double GetExtrusionPerMM(double layerheight) const;
-  std::vector<char> get_extruder_letters() const;
-  Vector3d get_extruder_offset(uint num) const;
-  uint GetSupportExtruder() const;
+                       double layerheight);
+  double GetExtrudedMaterialWidth(const double layerheight);
+  double GetExtrusionPerMM(double layerheight);
+  std::vector<QChar> get_extruder_letters();
+  Vector3d get_extruder_offset(uint num);
+  uint GetSupportExtruder();
   void CopyExtruder(uint num);
   void RemoveExtruder(uint num);
-  void SelectExtruder(uint num, Builder *builder=NULL);
+  void SelectExtruder(uint num, QWidget *widget = nullptr);
   uint selectedExtruder;
   uint getNumExtruders() const;
 
@@ -103,55 +131,64 @@ class Settings : public Glib::KeyFile {
 
 
  private:
-  void set_to_gui              (Builder &builder, int i);
-  void set_to_gui              (Builder &builder,
-				const string &group, const string &key);
-  void get_from_gui_old        (Builder &builder, int i);
-  void get_from_gui            (Builder &builder, const string &glade_name);
-  bool get_group_and_key       (int i, Glib::ustring &group, Glib::ustring &key);
-  void get_colour_from_gui     (Builder &builder, const string &glade_name);
-  void convert_old_colour      (const string &group, const string &key);
+  void set_to_gui              (int i);
+  void set_to_gui              (QWidget *widget, const QString &group, const QString &key);
+  void get_colour_from_gui     (ColorButton * colorButton,
+                                const QString &group, const QString &key);
+  void convert_old_colour      (const QString &group, const QString &key);
   void set_defaults ();
+  QWidget* get_widget_and_setting(QWidget *widget, const QObject* qobject, QString &group, QString &key);
 
  public:
-
   Settings();
   ~Settings();
 
   bool has_user_changed() const { return m_user_changed; }
-  void assign_from(Settings *pSettings);
 
-  bool set_user_button(const string &name, const string &gcode);
-  bool del_user_button(const string &name);
-  string get_user_gcode(const string &name);
+  bool set_user_button(const QString &name, const QString &gcode);
+  bool del_user_button(const QString &name);
+  QString get_user_gcode(const QString &name);
 
-  Matrix4d getBasicTransformation(Matrix4d T) const;
+  Matrix4d getBasicTransformation(Matrix4d T);
 
   // return real mm depending on hardware extrusion width setting
-  double GetInfillDistance(double layerthickness, float percent) const;
+  double GetInfillDistance(double layerthickness, float percent);
 
   // sync changed settings with the GUI eg. used post load
-  void set_to_gui (Builder &builder, const string filter="");
+  void set_to_gui (QWidget *widget, const string filter="");
 
   // connect settings to relevant GUI widgets
-  void connect_to_ui (Builder &builder);
+  void connect_to_ui (QWidget *widget);
 
 
-  void merge (const Glib::KeyFile &keyfile);
-  bool load_from_file (string file);
-  bool load_from_data (string data);
+  void merge (const QSettings &settings);
+  int mergeGlibKeyfile (const Glib::ustring keyfile);
+  bool load_from_file (QString filename);
+  bool load_from_data (QString data);
 
-  void load_settings (Glib::RefPtr<Gio::File> file);
+  void load_settings (QString filename);
   void load_settings_as (const Glib::ustring onlygroup = "",
-			 const Glib::ustring as_group = "");
-  void save_settings (Glib::RefPtr<Gio::File> file);
+             const QString as_group = "");
+//  void save_settings (QString filename);
   void save_settings_as (const Glib::ustring onlygroup = "",
-			 const Glib::ustring as_group = "");
+             const Glib::ustring as_group = "");
 
   std::string get_image_path();
 
-  sigc::signal< void > m_signal_visual_settings_changed;
-  sigc::signal< void > m_signal_update_settings_gui;
-  sigc::signal< void > m_signal_core_settings_changed;
+  using QSettings::setValue;
+  void setValue(const QString &group, const QString &key,
+                const QVariant &value);
+  using QSettings::remove;
+  void remove(const QString &group, const QString &key);
+  //sigc::signal< void > m_signal_visual_settings_changed;
+//  sigc::signal< void > m_signal_update_settings_gui;
+//  sigc::signal< void > m_signal_core_settings_changed;
+
+
+  QString info();
+private slots:
+  void get_from_gui(QWidget *widget);
+  void get_int_from_gui(QWidget *widget, int value);
+
 };
 

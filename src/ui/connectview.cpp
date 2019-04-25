@@ -23,9 +23,9 @@
 
 #include <glib/gi18n.h>
 
-#include "settings.h"
+#include "../settings.h"
 #include "connectview.h"
-#include "model.h"
+#include "../model.h"
 
 void ConnectView::serial_state_changed(SerialState state)
 {
@@ -109,7 +109,7 @@ void ConnectView::find_ports() {
 
 ConnectView::ConnectView (Printer *printer,
                           Settings *settings,
-			  bool show_connect)
+              bool show_connect)
   : Gtk::VBox(), m_connect(), m_port_label(_("Port:")),
     m_settings(settings), m_printer(printer)
 {

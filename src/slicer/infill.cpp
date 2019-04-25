@@ -75,13 +75,13 @@ void Infill::clearPatterns() {
 
 // fill polys with type etc.
 void Infill::addPoly(double z, const Poly &poly, InfillType type,
-		     double infillDistance, double offsetDistance, double rotation)
+             double infillDistance, double offsetDistance, double rotation)
 {
   vector<Poly> polys; polys.push_back(poly);
   addPolys(z, polys, type, infillDistance, offsetDistance, rotation);
 }
 void Infill::addPolys(double z, const vector<Poly> &polys, InfillType type,
-		      double infillDistance, double offsetDistance, double rotation)
+              double infillDistance, double offsetDistance, double rotation)
 {
   this->infillDistance = infillDistance;
 
@@ -97,14 +97,14 @@ void Infill::addPolys(double z, const vector<Poly> &polys, InfillType type,
 }
 
 void Infill::addPoly(double z, const ExPoly &expoly, InfillType type,
-		     double infillDistance, double offsetDistance, double rotation)
+             double infillDistance, double offsetDistance, double rotation)
 {
   vector<Poly> polys = Clipping::getPolys(expoly);
   addPolys (z, polys, type, infillDistance, offsetDistance, rotation);
 }
 
 void Infill::addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
-		      double infillDistance, double offsetDistance, double rotation)
+              double infillDistance, double offsetDistance, double rotation)
 {
   vector<Poly> polys = Clipping::getPolys(expolys);
   addPolys (z, polys, type, infillDistance, offsetDistance, rotation);
@@ -127,16 +127,16 @@ void Infill::addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
 
 // fill polys with fillpolys
 void Infill::addPolys(double z, const vector<Poly> &polys,
-		      const vector<Poly> &fillpolys,
-		      double offsetDistance)
+              const vector<Poly> &fillpolys,
+              double offsetDistance)
 {
   addPolys(z, polys, Clipping::getClipperPolygons(fillpolys), offsetDistance);
 }
 
 // clip infill pattern polys against polys
 void Infill::addPolys(double z, const vector<Poly> &polys,
-		      const ClipperLib::Paths &patterncpolys,
-		      double offsetDistance)
+              const ClipperLib::Paths &patterncpolys,
+              double offsetDistance)
 {
   Clipping clipp;
   clipp.addPolys   (polys,         subject);
@@ -152,10 +152,10 @@ void Infill::addPolys(double z, const vector<Poly> &polys,
 
 // generate infill pattern as a vector of polygons
 ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
-					       const vector<Poly> &tofillpolys,
-					       double infillDistance,
-					       double offsetDistance,
-					       double rotation)
+                           const vector<Poly> &tofillpolys,
+                           double infillDistance,
+                           double offsetDistance,
+                           double rotation)
 {
   ClipperLib::Paths cpolys;
   m_tofillpolys = tofillpolys;
@@ -184,28 +184,28 @@ ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
     if (savedPatterns.size()>0){
       vector<uint> too_small;
       for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
-      	   sIt != savedPatterns.end(); sIt++){
-	if (sIt->type == type &&
-	    abs((sIt->distance-infillDistance)/infillDistance) < 0.01 &&
-	    abs((sIt->angle-m_angle)/m_angle) < 0.01 )
-	  {
-	    //cerr << name << " found saved pattern no " << sIt-savedPatterns.begin() << " with " << sIt->cpolys.size() <<" polys"<< endl << "type "<< sIt->type << sIt->Min << sIt->Max << endl;
-	    // is it too small for this layer?
-	    if (sIt->Min.x() > Min.x() || sIt->Min.y() > Min.y() ||
-		sIt->Max.x() < Max.x() || sIt->Max.y() < Max.y())
-	      {
-		too_small.push_back(sIt-savedPatterns.begin());
-		//break; // there is no other match
-	      }
-	    else {
-	      cached = true;
-	      return sIt->cpolys;
-	    }
-	  }
+           sIt != savedPatterns.end(); sIt++){
+    if (sIt->type == type &&
+        abs((sIt->distance-infillDistance)/infillDistance) < 0.01 &&
+        abs((sIt->angle-m_angle)/m_angle) < 0.01 )
+      {
+        //cerr << name << " found saved pattern no " << sIt-savedPatterns.begin() << " with " << sIt->cpolys.size() <<" polys"<< endl << "type "<< sIt->type << sIt->Min << sIt->Max << endl;
+        // is it too small for this layer?
+        if (sIt->Min.x() > Min.x() || sIt->Min.y() > Min.y() ||
+        sIt->Max.x() < Max.x() || sIt->Max.y() < Max.y())
+          {
+        too_small.push_back(sIt-savedPatterns.begin());
+        //break; // there is no other match
+          }
+        else {
+          cached = true;
+          return sIt->cpolys;
+        }
+      }
       }
       sort(too_small.rbegin(), too_small.rend());
       for (uint i = 0; i < too_small.size(); i++) {
-	savedPatterns.erase(savedPatterns.begin()+too_small[i]);
+    savedPatterns.erase(savedPatterns.begin()+too_small[i]);
       }
     }
   }
@@ -216,59 +216,59 @@ ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
     {
     case HexInfill:
       {
-	Vector2d pMin=Vector2d::ZERO, pMax=Max*1.1;
-	double hexd = infillDistance;// /(1+sqrt(3.)/4.);
-	double hexa = hexd*sqrt(3.)/2.;
-	// the two parts have to fit
-	Poly poly(this->layer->getZ());
-	if (layer->LayerNo%2 != 0) { // two alternating parts
-	  double ymax = pMax.y();;
-	  for (double x = pMin.x(); x < pMax.x(); x += 2*hexa) {
-	    poly.addVertex(x, pMin.y());
-	    for (double y = pMin.y(); y < pMax.y(); ) {
-	      poly.addVertex(x, y);
-	      poly.addVertex(x+hexa, y+hexd/2);
-	      y+=1.5*hexd;
-	      poly.addVertex(x+hexa, y);
-	      poly.addVertex(x, y+hexd/2);
-	      y+=1.5*hexd;
-	      ymax = y;
-	    }
-	    for (double y = ymax; y > pMin.y(); y-=2*hexd) {
-	      double x2 = x+hexa+layer->thickness/10.; // offset to not combine polys
-	      y+=0.5*hexd;
-	      poly.addVertex(x2, y);
-	      poly.addVertex(x2+hexa, y-hexd/2);
-	      y-=1.5*hexd;
-	      poly.addVertex(x2+hexa, y);
-	      poly.addVertex(x2, y-hexd/2);
-	    }
-	  }
-	  poly.addVertex(pMax.x(), pMin.y()-infillDistance);
-	  poly.addVertex(pMin.x(), pMin.y()-infillDistance);
-	} else { // other layer, simpler
-	  double xmax = pMax.x();;
-	  for (double y = pMin.y(); y < pMax.y(); y += 3*hexd) {
-	    for (double x = pMin.x(); x < pMax.x(); ) {
-	      poly.addVertex(x, y);
-	      poly.addVertex(x+hexa, y+hexd/2.);
-	      x += 2*hexa;
-	      xmax = x;
-	    }
-	    for (double x = xmax; x > pMin.y(); x -= 2*hexa) {
-	      double y2 = y+1.5*hexd;
-	      poly.addVertex(x+hexa,  y2);
-	      poly.addVertex(x, y2+hexd/2);
-	    }
-	  }
-	  poly.addVertex(pMin.x(), pMax.y()-infillDistance);
-	  poly.addVertex(pMin.x(), pMin.y()-infillDistance);
-	}
-	// Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
-	vector<Poly> polys(1);
-	polys[0] = poly;
-	// polys[1] = poly2;
-	cpolys = Clipping::getClipperPolygons(polys);
+    Vector2d pMin=Vector2d::ZERO, pMax=Max*1.1;
+    double hexd = infillDistance;// /(1+sqrt(3.)/4.);
+    double hexa = hexd*sqrt(3.)/2.;
+    // the two parts have to fit
+    Poly poly(this->layer->getZ());
+    if (layer->LayerNo%2 != 0) { // two alternating parts
+      double ymax = pMax.y();
+      for (double x = pMin.x(); x < pMax.x(); x += 2*hexa) {
+        poly.addVertex(x, pMin.y());
+        for (double y = pMin.y(); y < pMax.y(); ) {
+          poly.addVertex(x, y);
+          poly.addVertex(x+hexa, y+hexd/2);
+          y+=1.5*hexd;
+          poly.addVertex(x+hexa, y);
+          poly.addVertex(x, y+hexd/2);
+          y+=1.5*hexd;
+          ymax = y;
+        }
+        for (double y = ymax; y > pMin.y(); y-=2*hexd) {
+          double x2 = x+hexa+layer->thickness/10.; // offset to not combine polys
+          y+=0.5*hexd;
+          poly.addVertex(x2, y);
+          poly.addVertex(x2+hexa, y-hexd/2);
+          y-=1.5*hexd;
+          poly.addVertex(x2+hexa, y);
+          poly.addVertex(x2, y-hexd/2);
+        }
+      }
+      poly.addVertex(pMax.x(), pMin.y()-infillDistance);
+      poly.addVertex(pMin.x(), pMin.y()-infillDistance);
+    } else { // other layer, simpler
+      double xmax = pMax.x();
+      for (double y = pMin.y(); y < pMax.y(); y += 3*hexd) {
+        for (double x = pMin.x(); x < pMax.x(); ) {
+          poly.addVertex(x, y);
+          poly.addVertex(x+hexa, y+hexd/2.);
+          x += 2*hexa;
+          xmax = x;
+        }
+        for (double x = xmax; x > pMin.y(); x -= 2*hexa) {
+          double y2 = y+1.5*hexd;
+          poly.addVertex(x+hexa,  y2);
+          poly.addVertex(x, y2+hexd/2);
+        }
+      }
+      poly.addVertex(pMin.x(), pMax.y()-infillDistance);
+      poly.addVertex(pMin.x(), pMin.y()-infillDistance);
+    }
+    // Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
+    vector<Poly> polys(1);
+    polys[0] = poly;
+    // polys[1] = poly2;
+    cpolys = Clipping::getClipperPolygons(polys);
       }
       break;
     case SmallZigzagInfill: // small zigzag lines -> square pattern
@@ -279,135 +279,135 @@ ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
     case BridgeInfill:
     case ParallelInfill:
       {
-	Vector2d center = (Min+Max)/2.;
-	// make square that masks everything even when rotated
-	Vector2d diag = Max-Min;
-	double square = max(diag.x(),diag.y());
-	Vector2d sqdiag(square*2/3,square*2/3);
-	Vector2d pMin=center-sqdiag, pMax=center+sqdiag;
-	if (zigzag) pMin=Vector2d::ZERO; // fixed position
-	// cerr << pMin << "--"<<pMax<< "::"<< center << endl;
-	Poly poly(this->layer->getZ());
-	uint count = 0;
-	for (double x = pMin.x(); x < pMax.x(); ) {
-	  double x2 = x+infillDistance;
-	  poly.addVertex(x, pMin.y());
-	  if (zigzag) { // zigzag -> squares
-	    double ymax=pMax.y();;
-	    for (double y = pMin.y(); y < pMax.y(); y += 2*infillDistance) {
-	      poly.addVertex(x, y);
-	      poly.addVertex(x2, y+infillDistance);
-	      ymax = y;
-	    }
-	    for (double y = ymax; y > pMin.y(); y -= 2*infillDistance) {
-	      poly.addVertex(x2, y+infillDistance);
-	      poly.addVertex(x2+infillDistance, y);
-	    }
-	    x += 2*infillDistance;
-	  } else {      // normal line infill
-	    if (count%2){
-	      poly.addVertex(x,  pMin.y());
-	      poly.addVertex(x2, pMin.y());
-	    } else {
-	      poly.addVertex(x,  pMax.y());
-	      poly.addVertex(x2, pMax.y());
-	    }
-	    x += infillDistance;
-	  }
-	  count ++;
-	}
-	poly.addVertex(pMax.x(), pMin.y()-infillDistance);
-	poly.addVertex(pMin.x(), pMin.y()-infillDistance);
-	// Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
-	if (!zigzag)
-	  poly.rotate(center,m_angle);
-	// poly2.rotate(center,rotation);
-	vector<Poly> polys(1);
-	polys[0] = poly;
-	// polys[1] = poly2;
-	cpolys = Clipping::getClipperPolygons(polys);
+    Vector2d center = (Min+Max)/2.;
+    // make square that masks everything even when rotated
+    Vector2d diag = Max-Min;
+    double square = max(diag.x(),diag.y());
+    Vector2d sqdiag(square*2/3,square*2/3);
+    Vector2d pMin=center-sqdiag, pMax=center+sqdiag;
+    if (zigzag) pMin=Vector2d::ZERO; // fixed position
+    // cerr << pMin << "--"<<pMax<< "::"<< center << endl;
+    Poly poly(this->layer->getZ());
+    uint count = 0;
+    for (double x = pMin.x(); x < pMax.x(); ) {
+      double x2 = x+infillDistance;
+      poly.addVertex(x, pMin.y());
+      if (zigzag) { // zigzag -> squares
+        double ymax=pMax.y();
+        for (double y = pMin.y(); y < pMax.y(); y += 2*infillDistance) {
+          poly.addVertex(x, y);
+          poly.addVertex(x2, y+infillDistance);
+          ymax = y;
+        }
+        for (double y = ymax; y > pMin.y(); y -= 2*infillDistance) {
+          poly.addVertex(x2, y+infillDistance);
+          poly.addVertex(x2+infillDistance, y);
+        }
+        x += 2*infillDistance;
+      } else {      // normal line infill
+        if (count%2){
+          poly.addVertex(x,  pMin.y());
+          poly.addVertex(x2, pMin.y());
+        } else {
+          poly.addVertex(x,  pMax.y());
+          poly.addVertex(x2, pMax.y());
+        }
+        x += infillDistance;
+      }
+      count ++;
+    }
+    poly.addVertex(pMax.x(), pMin.y()-infillDistance);
+    poly.addVertex(pMin.x(), pMin.y()-infillDistance);
+    // Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
+    if (!zigzag)
+      poly.rotate(center,m_angle);
+    // poly2.rotate(center,rotation);
+    vector<Poly> polys(1);
+    polys[0] = poly;
+    // polys[1] = poly2;
+    cpolys = Clipping::getClipperPolygons(polys);
       }
       break;
     case HilbertInfill:
       {
-	Poly poly(this->layer->getZ());
-	double square = MAX(Max.x()-Min.x(),Max.y()-Min.y());
-	if (infillDistance<=0) break;
-	int level = (int)ceil(log2(2*square/infillDistance));
-	if (level<0) break;
-	//cerr << "level " << level;
-	// start at 0,0 to get the same location for all layers
-	poly.addVertex(0,0);
-	hilbert(level, 0, infillDistance,  poly.vertices);
-	vector<Poly> polys(1);
-	polys[0] = poly;
-	cpolys = Clipping::getClipperPolygons(polys);
+    Poly poly(this->layer->getZ());
+    double square = MAX(Max.x()-Min.x(),Max.y()-Min.y());
+    if (infillDistance<=0) break;
+    int level = (int)ceil(log2(2*square/infillDistance));
+    if (level<0) break;
+    //cerr << "level " << level;
+    // start at 0,0 to get the same location for all layers
+    poly.addVertex(0,0);
+    hilbert(level, 0, infillDistance,  poly.vertices);
+    vector<Poly> polys(1);
+    polys[0] = poly;
+    cpolys = Clipping::getClipperPolygons(polys);
       }
       break;
     case ThinInfill:
       {
-	// just use the poly itself at half extrusion rate
-	cpolys = Clipping::getClipperPolygons(tofillpolys);
+    // just use the poly itself at half extrusion rate
+    cpolys = Clipping::getClipperPolygons(tofillpolys);
 
-	// adjust extrusion rate - see how thin it is:
-	const uint num_div = 10;
-	double shrink = 0.5*infillDistance/num_div;
-	//cerr << "shrink " << shrink << endl;
-	uint count = 0;
+    // adjust extrusion rate - see how thin it is:
+    const uint num_div = 10;
+    double shrink = 0.5*infillDistance/num_div;
+    //cerr << "shrink " << shrink << endl;
+    uint count = 0;
 //	uint num_polys = tofillpolys.size();
-	vector<Poly> shrinked = tofillpolys;
-	while (true) {
-	  shrinked = Clipping::getOffset(shrinked,-shrink);
-	  count++;
-	  //cerr << shrinked.size() << " - " << num_polys << endl;
-	  if (shrinked.size() == 0) break; // stop when poly is gone
-	}
-	extrusionfactor = 0.5 + 0.5/num_div * count;
-	//cerr << "ex " << extrusionfactor << endl;
-	//cpolys = Clipping::getClipperPolygons(opolys);
+    vector<Poly> shrinked = tofillpolys;
+    while (true) {
+      shrinked = Clipping::getOffset(shrinked,-shrink);
+      count++;
+      //cerr << shrinked.size() << " - " << num_polys << endl;
+      if (shrinked.size() == 0) break; // stop when poly is gone
+    }
+    extrusionfactor = 0.5 + 0.5/num_div * count;
+    //cerr << "ex " << extrusionfactor << endl;
+    //cpolys = Clipping::getClipperPolygons(opolys);
       }
       break;
     case PolyInfill: // fill all polygons with their shrinked polys
       {
-	vector< vector<Poly> > ipolys; // all offset shells
-	for (uint i=0; i < tofillpolys.size(); i++){
-	  double parea = Clipping::Area(tofillpolys[i]);
-	  // make first larger to get clip overlap
-	  double firstshrink = 0.5*infillDistance;
-	  if (parea<0) firstshrink = -firstshrink;
-	  vector<Poly> shrinked  = Clipping::getOffset(tofillpolys[i], firstshrink);
-	  vector<Poly> shrinked2 = Clipping::getOffset(shrinked, 0.5*infillDistance);
-	  for (uint i=0;i<shrinked2.size();i++)
-	    shrinked2[i].cleanup(0.1*infillDistance);
-	  ipolys.push_back(shrinked2);
-	  double area = Clipping::Area(shrinked);
-	  //cerr << "shr " << parea << " - " <<area<< " - " << " : " <<endl;
-	  // int lastnumpolys=0;
-	  // int shrcount=0;
-	  while (shrinked.size()>0){
-	    if (area*parea < 0)  break; // went beyond zero size
-	    // cerr << "shr " <<parea << " - " <<area<< " - " << shrcount << " : " <<endl;
-	    shrinked2 = Clipping::getOffset(shrinked, 0.5*infillDistance);
-	    for (uint i=0;i<shrinked2.size();i++)
-	      shrinked2[i].cleanup(0.1*infillDistance);
-	    ipolys.push_back(shrinked2);
-	    //lastnumpolys = shrinked.size();
-	    shrinked = Clipping::getOffset(shrinked,-infillDistance);
-	    for (uint i=0;i<shrinked.size();i++)
-	      shrinked[i].cleanup(0.1*infillDistance);
-	    // cerr << "shr2 " <<parea << " - " <<area<< " - " << shrcount << " : " <<
-	    //   shrinked.size()<<endl;
-	    // shrcount++;
-	    area = Clipping::Area(shrinked);
-	  }
-	}
-	vector<Poly> opolys;
-	for (uint i=0;i<ipolys.size();i++){
-	  opolys.insert(opolys.end(),ipolys[i].begin(),ipolys[i].end());
-	}
-	//cerr << "opolys " << opolys.size() << endl;
-	cpolys = Clipping::getClipperPolygons(opolys);
-	//cerr << "cpolys " << cpolys.size() << endl;
+    vector< vector<Poly> > ipolys; // all offset shells
+    for (uint i=0; i < tofillpolys.size(); i++){
+      double parea = Clipping::Area(tofillpolys[i]);
+      // make first larger to get clip overlap
+      double firstshrink = 0.5*infillDistance;
+      if (parea<0) firstshrink = -firstshrink;
+      vector<Poly> shrinked  = Clipping::getOffset(tofillpolys[i], firstshrink);
+      vector<Poly> shrinked2 = Clipping::getOffset(shrinked, 0.5*infillDistance);
+      for (uint i=0;i<shrinked2.size();i++)
+        shrinked2[i].cleanup(0.1*infillDistance);
+      ipolys.push_back(shrinked2);
+      double area = Clipping::Area(shrinked);
+      //cerr << "shr " << parea << " - " <<area<< " - " << " : " <<endl;
+      // int lastnumpolys=0;
+      // int shrcount=0;
+      while (shrinked.size()>0){
+        if (area*parea < 0)  break; // went beyond zero size
+        // cerr << "shr " <<parea << " - " <<area<< " - " << shrcount << " : " <<endl;
+        shrinked2 = Clipping::getOffset(shrinked, 0.5*infillDistance);
+        for (uint i=0;i<shrinked2.size();i++)
+          shrinked2[i].cleanup(0.1*infillDistance);
+        ipolys.push_back(shrinked2);
+        //lastnumpolys = shrinked.size();
+        shrinked = Clipping::getOffset(shrinked,-infillDistance);
+        for (uint i=0;i<shrinked.size();i++)
+          shrinked[i].cleanup(0.1*infillDistance);
+        // cerr << "shr2 " <<parea << " - " <<area<< " - " << shrcount << " : " <<
+        //   shrinked.size()<<endl;
+        // shrcount++;
+        area = Clipping::Area(shrinked);
+      }
+    }
+    vector<Poly> opolys;
+    for (uint i=0;i<ipolys.size();i++){
+      opolys.insert(opolys.end(),ipolys[i].begin(),ipolys[i].end());
+    }
+    //cerr << "opolys " << opolys.size() << endl;
+    cpolys = Clipping::getClipperPolygons(opolys);
+    //cerr << "cpolys " << cpolys.size() << endl;
       }
       break;
     default:
@@ -449,7 +449,7 @@ int smallest(const vector<double> &nums, double &minimum)
 }
 
 bool intersectsPolys(const Vector2d &P1, const Vector2d &P2,
-		     const vector<Poly> &polys, double err=0.01)
+             const vector<Poly> &polys, double err=0.01)
 {
   Intersection inter;
   for (size_t ci = 0; ci < polys.size(); ci++) {
@@ -492,18 +492,18 @@ vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, doubl
       double mindist = INFTY;
       // find nearest line for current p endpoints:
       for (uint j = 1; j < count; j++)
-	if (!done[j]) {
-	  dist[0] = (p.front()-lines[j].from).squared_length();
-	  dist[1] = (p.front()-lines[j].to  ).squared_length();
-	  dist[2] = (p.back() -lines[j].from).squared_length();
-	  dist[3] = (p.back() -lines[j].to  ).squared_length();
-	  uint mind = smallest(dist, mindist);
-	  if (mindist < mindistline) {
-	    minindline = j;
-	    mindistline = mindist;
-	    minind = mind;
-	  }
-	}
+    if (!done[j]) {
+      dist[0] = (p.front()-lines[j].from).squared_length();
+      dist[1] = (p.front()-lines[j].to  ).squared_length();
+      dist[2] = (p.back() -lines[j].from).squared_length();
+      dist[3] = (p.back() -lines[j].to  ).squared_length();
+      int mind = smallest(dist, mindist);
+      if (mindist < mindistline) {
+        minindline = j;
+        mindistline = mindist;
+        minind = mind;
+      }
+    }
       uint i = minindline;
       // make new line l1--l2:
       if (minind % 2 == 0) { l1 = lines[i].from; l2 = lines[i].to; }
@@ -519,30 +519,30 @@ vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, doubl
 
       if (!intersects) {
         // detect crossings: try intersect with any line
-      	Intersection inter;
-      	for (uint li = 0; li<lines.size(); li++) {
-      	  if (IntersectXY(conn1, conn2, lines[li].from, lines[li].to, inter,
-			  infillDistance/2.))  {
+        Intersection inter;
+        for (uint li = 0; li<lines.size(); li++) {
+          if (IntersectXY(conn1, conn2, lines[li].from, lines[li].to, inter,
+              infillDistance/2.))  {
             double t = conn2.x() - conn1.x();
-            if (t != 0)
+            if (t != 0.)
               t = (inter.p.x() - conn1.x()) / t;
 
-	    // don't catch endpoint intersections (continuations)
-	    if (t > 0.1 && t < 0.9) {
-		intersects = true;
-		break;
-      	    }
+        // don't catch endpoint intersections (continuations)
+        if (t > 0.1 && t < 0.9) {
+        intersects = true;
+        break;
+            }
           }
-      	}
+        }
       }
 
       if (intersects) { // start new poly
-	if (p.size() > 0) {
-	  p.cleanup(infillDistance/2.);
-	  polys.push_back(p);
-	}
-	p = Poly(z, extrusionfactor);
-	p.setClosed(false);
+    if (p.size() > 0) {
+      p.cleanup(infillDistance/2.);
+      polys.push_back(p);
+    }
+    p = Poly(z, extrusionfactor);
+    p.setClosed(false);
       }
       // add new line to current p
       if (minind < 2) { p.push_front(l1); p.push_front(l2); }
@@ -580,17 +580,17 @@ void Infill::addInfillPolys(const vector<Poly> &polys)
       vector<infillline> lines;
       const Vector2d UNITX(1,0);
       for (uint j = 0; j < polys.size(); j++) {
-  	for (uint i = 0; i < polys[j].size() ; i++ )
-  	  {
-	    Vector2d l = (polys[j][i+1] - polys[j][i]);
-	    double langle = planeAngleBetween(UNITX, l) + M_PI/2;
-	    if (sameAngle(langle,      m_angle, 0.2) ||
-		sameAngle(langle+M_PI, m_angle, 0.2))
-  	      {
-		infillline il = { polys[j][i], polys[j][i+1] };
-  		lines.push_back( il );;
-  	      }
-  	  }
+    for (uint i = 0; i < polys[j].size() ; i++ )
+      {
+        Vector2d l = (polys[j][i+1] - polys[j][i]);
+        double langle = planeAngleBetween(UNITX, l) + M_PI/2;
+        if (sameAngle(langle,      m_angle, 0.2) ||
+        sameAngle(langle+M_PI, m_angle, 0.2))
+          {
+        infillline il = { polys[j][i], polys[j][i+1] };
+        lines.push_back( il );;
+          }
+      }
       }
       infillpolys = sortedpolysfromlines(lines, polys.back().getZ());
       break;
@@ -625,29 +625,29 @@ void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
       // use the lines that have the angle of this Infill
       //uint counter = 0;
       for (uint i=0; i < p.size() ; i+=1 )
-  	{
-  	  l = (p[i+1] - p[i]);
-	  // rotate with neg. infill angle and see whether it's 90° as infill lines
-	  rotl = Vector2d(l.x()*cosa-l.y()*sina,
-			  l.y()*cosa+l.x()*sina);
-	  if (abs(rotl.x()) < 0.1 && abs(rotl.y()) > 0.1)
-  	    {
-	      // if (zigzagpoly) {
-	      // 	zigzagpoly->addVertex(p.getVertexCircular(i+i%2));
-	      // 	zigzagpoly->addVertex(p.getVertexCircular(i+1+i%2));
-	      // } else
-	      {
-		Poly newpoly(p.getZ(), extrusionfactor);
-		newpoly.vertices.push_back(p[i]);
-		newpoly.vertices.push_back(p[i+1]);
-		infillpolys.push_back(newpoly);
-	      }
-  	    }
-	  // else
-	  //   if (zigzagpoly) {
-	  //     zigzagpoly->addVertex(p.getVertexCircular(i));
-	  //   }
-  	}
+    {
+      l = (p[i+1] - p[i]);
+      // rotate with neg. infill angle and see whether it's 90° as infill lines
+      rotl = Vector2d(l.x()*cosa-l.y()*sina,
+              l.y()*cosa+l.x()*sina);
+      if (abs(rotl.x()) < 0.1 && abs(rotl.y()) > 0.1)
+        {
+          // if (zigzagpoly) {
+          // 	zigzagpoly->addVertex(p.getVertexCircular(i+i%2));
+          // 	zigzagpoly->addVertex(p.getVertexCircular(i+1+i%2));
+          // } else
+          {
+        Poly newpoly(p.getZ(), extrusionfactor);
+        newpoly.vertices.push_back(p[i]);
+        newpoly.vertices.push_back(p[i+1]);
+        infillpolys.push_back(newpoly);
+          }
+        }
+      // else
+      //   if (zigzagpoly) {
+      //     zigzagpoly->addVertex(p.getVertexCircular(i));
+      //   }
+    }
       // if (zigzagpoly) {
       // 	cerr << zigzagpoly->size()<< endl;
       // 	if (zigzagpoly->size()>0)
@@ -683,14 +683,14 @@ vector<Poly> Infill::getCachedPattern(double z) {
   if (m_type != PolyInfill) // can't save PolyInfill
     if (savedPatterns.size()>0)
       for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
-      	   sIt != savedPatterns.end(); sIt++)
-	if (sIt->type == m_type &&
-	    abs(sIt->distance-infillDistance) < 0.01 &&
-	    abs(sIt->angle-m_angle) < 0.01 )
-	  {
-	    cached = Clipping::getPolys(sIt->cpolys,z,extrusionfactor);
-	    break;
-	  }
+           sIt != savedPatterns.end(); sIt++)
+    if (sIt->type == m_type &&
+        abs(sIt->distance-infillDistance) < 0.01 &&
+        abs(sIt->angle-m_angle) < 0.01 )
+      {
+        cached = Clipping::getPolys(sIt->cpolys,z,extrusionfactor);
+        break;
+      }
   return cached;
 };
 

@@ -17,11 +17,11 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #include "triangle.h"
-#include "geometry.h"
+#include "slicer/geometry.h"
 
 
 Triangle::Triangle(const Vector3d &Point1,
-		   const Vector3d &Point2, const Vector3d &Point3)
+           const Vector3d &Point2, const Vector3d &Point3)
 { A=Point1;B=Point2;C=Point3;
   calcNormal();
 }
@@ -134,7 +134,7 @@ double Triangle::slopeAngle(const Matrix4d &T) const
 
 double Triangle::area() const
 {
-	return 0.5* ((C-A).cross(B-A)).length() ;
+    return 0.5* ((C-A).cross(B-A)).length() ;
 }
 
 // add all these to get shape volume
@@ -142,8 +142,8 @@ double Triangle::projectedvolume(const Matrix4d &T) const
 {
   if (Normal.z()==0) return 0;
   Triangle xyproj = Triangle(Vector3d(A.x(),A.y(),0),
-			     Vector3d(B.x(),B.y(),0),
-			     Vector3d(C.x(),C.y(),0));
+                 Vector3d(B.x(),B.y(),0),
+                 Vector3d(C.x(),C.y(),0));
   Vector3d min = GetMin(T);
   Vector3d max = GetMax(T);
   double vol =  xyproj.area()*0.5*(max.z()+min.z());
@@ -153,43 +153,43 @@ double Triangle::projectedvolume(const Matrix4d &T) const
 
 Vector3d Triangle::GetMax(const Matrix4d &T) const
 {
-	Vector3d max(-99999999.0, -99999999.0, -99999999.0);
-	Vector3d TA=T*A,TB=T*B,TC=T*C;
-	for (uint i = 0; i < 3; i++) {
-		max[i] = MAX(max[i], TA[i]);
-		max[i] = MAX(max[i], TB[i]);
-		max[i] = MAX(max[i], TC[i]);
-	}
-	return max;
+    Vector3d max(-99999999.0, -99999999.0, -99999999.0);
+    Vector3d TA=T*A,TB=T*B,TC=T*C;
+    for (uint i = 0; i < 3; i++) {
+        max[i] = MAX(max[i], TA[i]);
+        max[i] = MAX(max[i], TB[i]);
+        max[i] = MAX(max[i], TC[i]);
+    }
+    return max;
 }
 
 Vector3d Triangle::GetMin(const Matrix4d &T) const
 {
-	Vector3d min(99999999.0, 99999999.0, 99999999.0);
-	Vector3d TA=T*A,TB=T*B,TC=T*C;
-	for (uint i = 0; i < 3; i++) {
-		min[i] = MIN(min[i], TA[i]);
-		min[i] = MIN(min[i], TB[i]);
-		min[i] = MIN(min[i], TC[i]);
-	}
-	return min;
+    Vector3d min(99999999.0, 99999999.0, 99999999.0);
+    Vector3d TA=T*A,TB=T*B,TC=T*C;
+    for (uint i = 0; i < 3; i++) {
+        min[i] = MIN(min[i], TA[i]);
+        min[i] = MIN(min[i], TB[i]);
+        min[i] = MIN(min[i], TC[i]);
+    }
+    return min;
 }
 
 void Triangle::AccumulateMinMax(Vector3d &min, Vector3d &max, const Matrix4d &T)
 {
-	Vector3d tmin = GetMin(T);
-	Vector3d tmax = GetMax(T);
-	for (uint i = 0; i < 3; i++) {
-		min[i] = MIN(tmin[i], min[i]);
-		max[i] = MAX(tmax[i], max[i]);
-	}
+    Vector3d tmin = GetMin(T);
+    Vector3d tmax = GetMax(T);
+    for (uint i = 0; i < 3; i++) {
+        min[i] = MIN(tmin[i], min[i]);
+        max[i] = MAX(tmax[i], max[i]);
+    }
 }
 
 void Triangle::Translate(const Vector3d &vector)
 {
-	A += vector;
-	B += vector;
-	C += vector;
+    A += vector;
+    B += vector;
+    C += vector;
 }
 
 void Triangle::rotate(const Vector3d &axis, double angle)
@@ -207,58 +207,58 @@ void triangulateQuadrilateral(vector<Vector3d> fourpoints, vector<Triangle> &tri
   double SMALL = 0.01;
   // find diagonals
   double dist = dist3D_Segment_to_Segment(fourpoints[0],fourpoints[2],
-					  fourpoints[1],fourpoints[3],
-					  SMALL*SMALL);
+                      fourpoints[1],fourpoints[3],
+                      SMALL*SMALL);
   if (dist < SMALL)
     { // found -> divide at shorter diagonal
       if ((fourpoints[0]-fourpoints[2]).squared_length()
-	  < (fourpoints[1]-fourpoints[3]).squared_length()) {
-	  tr[0] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
-	  tr[1] = Triangle(fourpoints[2],fourpoints[3],fourpoints[0]);
+      < (fourpoints[1]-fourpoints[3]).squared_length()) {
+      tr[0] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
+      tr[1] = Triangle(fourpoints[2],fourpoints[3],fourpoints[0]);
       } else {
-	tr[0] = Triangle(fourpoints[0],fourpoints[1],fourpoints[3]);
-	tr[1] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
+    tr[0] = Triangle(fourpoints[0],fourpoints[1],fourpoints[3]);
+    tr[1] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
       }
     }
   else
     { // take other 2
       double dist = dist3D_Segment_to_Segment(fourpoints[1],fourpoints[2],
-					      fourpoints[0],fourpoints[3],
-					      SMALL*SMALL);
+                          fourpoints[0],fourpoints[3],
+                          SMALL*SMALL);
       if (dist < SMALL)
-	{
-	  if ((fourpoints[1]-fourpoints[2]).squared_length()
-	      < (fourpoints[0]-fourpoints[3]).squared_length()) {
-	    tr[0] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
-  	    tr[1] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
-	  } else {
-	    tr[0] = Triangle(fourpoints[1],fourpoints[0],fourpoints[3]);
-	    tr[1] = Triangle(fourpoints[0],fourpoints[2],fourpoints[3]);
-	  }
-	}
+    {
+      if ((fourpoints[1]-fourpoints[2]).squared_length()
+          < (fourpoints[0]-fourpoints[3]).squared_length()) {
+        tr[0] = Triangle(fourpoints[1],fourpoints[2],fourpoints[3]);
+        tr[1] = Triangle(fourpoints[0],fourpoints[1],fourpoints[2]);
+      } else {
+        tr[0] = Triangle(fourpoints[1],fourpoints[0],fourpoints[3]);
+        tr[1] = Triangle(fourpoints[0],fourpoints[2],fourpoints[3]);
+      }
+    }
       else
-	{ // take 3rd possibility, not the case here, because 2-3 is cut line
-	  double dist = dist3D_Segment_to_Segment(fourpoints[0],fourpoints[1],
-						  fourpoints[2],fourpoints[3],
-						  SMALL*SMALL);
-	  if (dist < SMALL)
-	    {
-	      tr[0] = Triangle(fourpoints[0],fourpoints[2],fourpoints[3]);
-	      tr[1] = Triangle(fourpoints[2],fourpoints[1],fourpoints[3]);
-	    }
-	  else  {
-	    //cerr << dist << " cannot find diagonals" << endl;
-	    return;
-	  }
-	}
+    { // take 3rd possibility, not the case here, because 2-3 is cut line
+      double dist = dist3D_Segment_to_Segment(fourpoints[0],fourpoints[1],
+                          fourpoints[2],fourpoints[3],
+                          SMALL*SMALL);
+      if (dist < SMALL)
+        {
+          tr[0] = Triangle(fourpoints[0],fourpoints[2],fourpoints[3]);
+          tr[1] = Triangle(fourpoints[2],fourpoints[1],fourpoints[3]);
+        }
+      else  {
+        //cerr << dist << " cannot find diagonals" << endl;
+        return;
+      }
+    }
     }
   triangles.insert(triangles.end(), tr.begin(), tr.end());
 }
 
 int Triangle::SplitAtPlane(double z,
-			   vector<Triangle> &uppertriangles,
-			   vector<Triangle> &lowertriangles,
-			   const Matrix4d &T) const
+               vector<Triangle> &uppertriangles,
+               vector<Triangle> &lowertriangles,
+               const Matrix4d &T) const
 {
   vector<Vector3d> upper, lower;
   if  ((T*A).z()>z) upper.push_back(T*A); else lower.push_back(T*A);
@@ -316,49 +316,49 @@ bool Triangle::isInZrange(double zmin, double zmax, const Matrix4d &T) const
 }
 
 int Triangle::CutWithPlane(double z, const Matrix4d &T,
-			   Vector2d &lineStart,
-			   Vector2d &lineEnd) const
+               Vector2d &lineStart,
+               Vector2d &lineEnd) const
 {
-	Vector3d p;
-	double t;
+    Vector3d p;
+    double t;
 
-	const Vector3d TA = T * A;
-	const Vector3d TB = T * B;
-	const Vector3d TC = T * C;
+    const Vector3d TA = T * A;
+    const Vector3d TB = T * B;
+    const Vector3d TC = T * C;
 
-	int num_cutpoints = 0;
-	// Are the points on opposite sides of the plane?
-	if ((z <= TA.z()) != (z <= TB.z()))
-	  {
-	    t = (z - TA.z())/(TB.z()-TA.z());
-	    p = TA + (TB - TA) * t;
-	    lineStart = Vector2d(p.x(),p.y());
-	    num_cutpoints = 1;
-	  }
-	if ((z <= TB.z()) != (z <= TC.z()))
-	  {
-	    t = (z - TB.z())/(TC.z() - TB.z());
-	    p = TB + (TC - TB) * t;
-	    if(num_cutpoints > 0)
-	      {
-		lineEnd = Vector2d(p.x(),p.y());
-		num_cutpoints = 2;
-	      }
-	    else
-	      {
-		lineStart = Vector2d(p.x(),p.y());
-		num_cutpoints = 1;
-	      }
-	  }
-	if ((z <= TC.z()) != (z <= TA.z()))
-	  {
-	    t = (z - TC.z())/(TA.z() - TC.z());
-	    p = TC + (TA - TC) * t;
-	    lineEnd = Vector2d(p.x(),p.y());
-	    if( lineEnd != lineStart ) num_cutpoints = 2;
-	  }
+    int num_cutpoints = 0;
+    // Are the points on opposite sides of the plane?
+    if ((z <= TA.z()) != (z <= TB.z()))
+      {
+        t = (z - TA.z())/(TB.z()-TA.z());
+        p = TA + (TB - TA) * t;
+        lineStart = Vector2d(p.x(),p.y());
+        num_cutpoints = 1;
+      }
+    if ((z <= TB.z()) != (z <= TC.z()))
+      {
+        t = (z - TB.z())/(TC.z() - TB.z());
+        p = TB + (TC - TB) * t;
+        if(num_cutpoints > 0)
+          {
+        lineEnd = Vector2d(p.x(),p.y());
+        num_cutpoints = 2;
+          }
+        else
+          {
+        lineStart = Vector2d(p.x(),p.y());
+        num_cutpoints = 1;
+          }
+      }
+    if ((z <= TC.z()) != (z <= TA.z()))
+      {
+        t = (z - TC.z())/(TA.z() - TC.z());
+        p = TC + (TA - TC) * t;
+        lineEnd = Vector2d(p.x(),p.y());
+        if( lineEnd != lineStart ) num_cutpoints = 2;
+      }
 
-	return num_cutpoints;
+    return num_cutpoints;
 }
 
 void Triangle::draw(int gl_type) const

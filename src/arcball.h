@@ -40,6 +40,9 @@ THE SOFTWARE.
 #ifndef _ArcBall_h
 #define _ArcBall_h
 
+
+#include "stdafx.h"
+
 #ifdef _MSC_VER // Visual C++ compiler
 #  pragma comment( lib, "opengl32.lib" )								// Search For OpenGL32.lib While Linking
 #  pragma comment( lib, "glu32.lib" )									// Search For GLu32.lib While Linking
@@ -51,9 +54,9 @@ THE SOFTWARE.
 #ifdef _DEBUG
 # include "assert.h"
 #else
-	#ifndef assert
-		# define assert(x) { }
-	#endif
+    #ifndef assert
+        # define assert(x) { }
+    #endif
 #endif
 
 //Math types derived from the KempoApi tMath library
@@ -65,7 +68,7 @@ THE SOFTWARE.
         } s;
 
         GLfloat T[2];
-    } Tuple2fT;      //A generic 2-element tuple that is represented by single-precision floating point x,y coordinates. 
+    } Tuple2fT;      //A generic 2-element tuple that is represented by single-precision floating point x,y coordinates.
 
     typedef union Tuple3f_t
     {
@@ -75,7 +78,7 @@ THE SOFTWARE.
         } s;
 
         GLfloat T[3];
-    } Tuple3fT;      //A generic 3-element tuple that is represented by single precision-floating point x,y,z coordinates. 
+    } Tuple3fT;      //A generic 3-element tuple that is represented by single precision-floating point x,y,z coordinates.
 
     typedef union Tuple4f_t
     {
@@ -85,7 +88,7 @@ THE SOFTWARE.
         } s;
 
         GLfloat T[4];
-    } Tuple4fT;      //A 4-element tuple represented by single-precision floating point x,y,z,w coordinates. 
+    } Tuple4fT;      //A 4-element tuple represented by single-precision floating point x,y,z,w coordinates.
 
     typedef union Matrix3f_t
     {
@@ -157,12 +160,12 @@ THE SOFTWARE.
 
 
 //"Inherited" types
-#define Point2fT    Tuple2fT   //A 2 element point that is represented by single precision floating point x,y coordinates. 
+#define Point2fT    Tuple2fT   //A 2 element point that is represented by single precision floating point x,y coordinates.
 
-#define Quat4fT     Tuple4fT   //A 4 element unit quaternion represented by single precision floating point x,y,z,w coordinates. 
+#define Quat4fT     Tuple4fT   //A 4 element unit quaternion represented by single precision floating point x,y,z,w coordinates.
 
-#define Vector2fT   Tuple2fT   //A 2-element vector that is represented by single-precision floating point x,y coordinates. 
-#define Vector3fT   Tuple3fT   //A 3-element vector that is represented by single-precision floating point x,y,z coordinates. 
+#define Vector2fT   Tuple2fT   //A 2-element vector that is represented by single-precision floating point x,y coordinates.
+#define Vector3fT   Tuple3fT   //A 3-element vector that is represented by single-precision floating point x,y,z coordinates.
 
 //Custom math, or speed overrides
 #define FuncSqrt    sqrtf
@@ -339,7 +342,7 @@ THE SOFTWARE.
         // See comment in Matrix3d.
 
         s = FuncSqrt(
-                ( (NewObj->s.XX * NewObj->s.XX) + (NewObj->s.XY * NewObj->s.XY) + (NewObj->s.XZ * NewObj->s.XZ) + 
+                ( (NewObj->s.XX * NewObj->s.XX) + (NewObj->s.XY * NewObj->s.XY) + (NewObj->s.XZ * NewObj->s.XZ) +
                   (NewObj->s.YX * NewObj->s.YX) + (NewObj->s.YY * NewObj->s.YY) + (NewObj->s.YZ * NewObj->s.YZ) +
                   (NewObj->s.ZX * NewObj->s.ZX) + (NewObj->s.ZY * NewObj->s.ZY) + (NewObj->s.ZZ * NewObj->s.ZZ) ) / 3.0f );
 
@@ -505,7 +508,7 @@ THE SOFTWARE.
         public:
             //Create/Destroy
                     ArcBall(GLfloat NewWidth = 2.0, GLfloat NewHeight = 2.0);
-                   ~ArcBall() { /* nothing to do */ };
+                   ~ArcBall() { /* nothing to do */ }
 
             //Set new bounds
             inline

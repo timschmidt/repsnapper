@@ -21,16 +21,20 @@
 #pragma once
 
 #include "stdafx.h"
+#include <glibmm/stringutils.h>
 
 #include "triangle.h"
+#include <QFile>
+#include <QFileInfo>
 
+#define ENABLE_AMF 0
 
 void save_locales();
 void set_locales(const char * loc);
 void reset_locales();
 
 
-using namespace Glib;
+//using namespace Glib;
 
 enum filetype_t{
     ASCII_STL,
@@ -46,43 +50,51 @@ enum filetype_t{
 class File
 {
 public:
-  File(){};
-  File(Glib::RefPtr<Gio::File> file);
-  virtual ~File(){};
+  File(){}
+  File(QFile *file);
+  virtual ~File(){}
 
-  Glib::RefPtr<Gio::File> _file;
-  ustring _path;
-  filetype_t _type;
+  QFile *_file;
+  QFileInfo _fileInfo;
 
-  static filetype_t getFileType(ustring path);
+  filetype_t getFileType();
 
   void loadTriangles(vector< vector<Triangle> > &triangles,
-		     vector<ustring> &names,
-		     uint max_triangles=0);
+                     vector<Glib::ustring> &names,
+                     uint max_triangles=0);
 
 
   bool load_asciiSTL(vector< vector<Triangle> > &triangles,
-		     vector<ustring> &names,
-		     uint max_triangles=0, bool readnormals=false);
+                     vector<Glib::ustring> &names,
+                     uint max_triangles=0, bool readnormals=false);
 
   bool load_binarySTL(vector<Triangle> &triangles,
-		      uint max_triangles=0, bool readnormals=false);
+                      uint max_triangles=0, bool readnormals=false);
 
   bool load_VRML(vector<Triangle> &triangles, uint max_triangles=0);
 
-  bool load_AMF (vector< vector<Triangle> > &triangles,
-		 vector<ustring> &names,
-		 uint max_triangles=0);
+// does not cross-compile ....
+#ifdef WIN32
+#define ENABLE_AMF 0
+#else
+#define ENABLE_AMF 0
+#endif
 
-  static bool save_AMF (ustring filename,
-			const vector< vector<Triangle> > &triangles,
-			const vector<ustring> &names,
-			bool compressed = true);
+#if ENABLE_AMF
+  bool load_AMF (vector< vector<Triangle> > &triangles,
+                 vector<Glib::ustring> &names,
+                 uint max_triangles=0);
+
+  static bool save_AMF (QString filename,
+                        const vector< vector<Triangle> > &triangles,
+                        const vector<Glib::ustring> &names,
+                        bool compressed = true);
+#endif
 
   static bool parseSTLtriangles_ascii(istream &text,
-				      uint max_triangles, bool readnormals,
-				      vector<Triangle> &triangles,
-				      ustring &name);
+                                      uint max_triangles, bool readnormals,
+                                      vector<Triangle> &triangles,
+                                      Glib::ustring &name);
 
 
   /* static bool loadVRMLtriangles(ustring filename, */
@@ -91,7 +103,7 @@ public:
 
 
 
-  static bool saveBinarySTL(ustring filename, const vector<Triangle> &triangles,
-			    const Matrix4d &T);
+  static bool saveBinarySTL(QString filename, const vector<Triangle> &triangles,
+                            const Matrix4d &T);
 
 };

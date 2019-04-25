@@ -24,26 +24,31 @@
 #include <functional>
 #include <numeric>
 
+#include <QFileInfo>
+#include <QDir>
+
+#include <src/gcode/gcodestate.h>
+
 #include "stdafx.h"
 #include "model.h"
-#include "objtree.h"
 #include "settings.h"
-#include "layer.h"
-#include "infill.h"
+#include "slicer/layer.h"
+#include "slicer/infill.h"
 #include "ui/progress.h"
 #include "shape.h"
 #include "flatshape.h"
 #include "render.h"
 
-Model::Model() :
+Model::Model(MainWindow *main) :
   m_previewLayer(NULL),
   //m_previewGCodeLayer(NULL),
   currentprintingline(0),
-  settings(),
+  main(main),
+  settings(main->get_settings()),
   Min(), Max(),
   m_inhibit_modelchange(false),
-  errlog (Gtk::TextBuffer::create()),
-  echolog (Gtk::TextBuffer::create()),
+  errlog(),
+  echolog(),
   is_calculating(false),
   is_printing(false)
 {
@@ -62,22 +67,22 @@ Model::~Model()
 
 void Model::alert (const char *message)
 {
-  signal_alert.emit (Gtk::MESSAGE_INFO, message, NULL);
+//  signal_alert.emit (Gtk::MESSAGE_INFO, message, NULL);
 }
 
 void Model::error (const char *message, const char *secondary)
 {
-  signal_alert.emit (Gtk::MESSAGE_ERROR, message, secondary);
+//  signal_alert.emit (Gtk::MESSAGE_ERROR, message, secondary);
 }
 
-void Model::SaveConfig(Glib::RefPtr<Gio::File> file)
-{
-  settings.save_settings(file);
-}
+//void Model::SaveConfig(QString filename)
+//{
+//  settings->save_settings(filename);
+//}
 
-void Model::LoadConfig(Glib::RefPtr<Gio::File> file)
+void Model::LoadConfig(QString filename)
 {
-  settings.load_settings(file);
+  settings->mergeGlibKeyfile(filename.toStdString());
   ModelChanged();
 }
 
@@ -117,14 +122,14 @@ void Model::ClearPreview()
   m_previewGCode_z = -100000;
 }
 
-Glib::RefPtr<Gtk::TextBuffer> Model::GetGCodeBuffer()
+QTextDocument *Model::GetGCodeBuffer()
 {
   return gcode.buffer;
 }
 
 void Model::GlDrawGCode(int layerno)
 {
-  if (settings.get_boolean("Display","DisplayGCode"))  {
+  if (settings->get_boolean("Display","DisplayGCode"))  {
     gcode.draw (settings, layerno, false);
   }
   // assume that the real printing line is the one at the start of the buffer
@@ -134,21 +139,21 @@ void Model::GlDrawGCode(int layerno)
       int start = gcode.getLayerStart(currentlayer);
       int end   = gcode.getLayerEnd(currentlayer);
       //gcode.draw (settings, currentlayer, true, 1);
-      bool displaygcodeborders = settings.get_boolean("Display","DisplayGCodeBorders");
+      bool displaygcodeborders = settings->get_boolean("Display","DisplayGCodeBorders");
       gcode.drawCommands(settings, start, currentprintingline, true, 4, false,
-			 displaygcodeborders);
+             displaygcodeborders);
       gcode.drawCommands(settings, currentprintingline,  end,  true, 1, false,
-			 displaygcodeborders);
+             displaygcodeborders);
     }
     // gcode.drawCommands(settings, currentprintingline-currentbufferedlines,
     // 		       currentprintingline, false, 3, true,
-    // 		       settings.Display.DisplayGCodeBorders);
+    // 		       settings->Display.DisplayGCodeBorders);
   }
 }
 
 void Model::GlDrawGCode(double layerz)
 {
-  if (!settings.get_boolean("Display","DisplayGCode")) return;
+  if (!settings->get_boolean("Display","DisplayGCode")) return;
   int layer = gcode.getLayerNo(layerz);
   if (layer>=0)
     GlDrawGCode(layer);
@@ -157,166 +162,174 @@ void Model::GlDrawGCode(double layerz)
 
 void Model::init() {}
 
-void Model::WriteGCode(Glib::RefPtr<Gio::File> file)
+void Model::WriteGCode(QFile *file)
 {
   Glib::ustring contents = gcode.get_text();
-  Glib::file_set_contents (file->get_path(), contents);
-  settings.GCodePath = file->get_parent()->get_path();
+  QTextStream fstream(file);
+  fstream << QString::fromStdString(contents) << endl;
+  file->close();
+  settings->GCodePath =  QFileInfo(*file).dir().path().toStdString();
 }
 
-void Model::ReadSVG(Glib::RefPtr<Gio::File> file)
+void Model::ReadSVG(QFile *file)
 {
   if (is_calculating) return;
   if (is_printing) return;
-  bool autoplace = settings.get_boolean("Misc","ShapeAutoplace");
-  string path = file->get_path();
+  bool autoplace = settings->get_boolean("Misc","ShapeAutoplace");
+  string path = QFileInfo(*file).absolutePath().toUtf8().constData();
   FlatShape * svgshape = new FlatShape(path);
   cerr << svgshape->info() << endl;
-  AddShape(NULL, svgshape, path, autoplace);
+  AddShape(nullptr, (Shape*)svgshape, path, autoplace);
   ClearLayers();
 }
 
 
-vector<Shape*> Model::ReadShapes(Glib::RefPtr<Gio::File> file,
-				 uint max_triangles)
+vector<Shape*> Model::ReadShapes(QFile *file,
+                                 uint max_triangles)
 {
   vector<Shape*> shapes;
   if (!file) return shapes;
   File sfile(file);
   vector< vector<Triangle> > triangles;
-  vector<ustring> shapenames;
+  vector<Glib::ustring> shapenames;
   sfile.loadTriangles(triangles, shapenames, max_triangles);
   for (uint i = 0; i < triangles.size(); i++) {
     if (triangles[i].size() > 0) {
       Shape *shape = new Shape();
       shape->setTriangles(triangles[i]);
       shape->filename = shapenames[i];
-      shape->FitToVolume(settings.getPrintVolume() - 2.*settings.getPrintMargin());
+      shape->FitToVolume(settings->getPrintVolume() - 2.*settings->getPrintMargin());
       shapes.push_back(shape);
     }
   }
+  cerr << shapes.size() << " shapes"<< endl;
   return shapes;
 }
 
 
-void Model::ReadStl(Glib::RefPtr<Gio::File> file)
+void Model::ReadStl(QFile *file)
 {
-  bool autoplace = settings.get_boolean("Misc","ShapeAutoplace");
   vector<Shape*> shapes = ReadShapes(file, 0);
   // do not autoplace in multishape files
-  if (shapes.size() > 1)  autoplace = false;
-  for (uint i = 0; i < shapes.size(); i++){
-    AddShape(NULL, shapes[i], shapes[i]->filename, autoplace);
+  bool autoplace = settings->get_boolean("Misc","ShapeAutoplace")
+          && shapes.size() == 1;
+  for (Shape *s : shapes){
+    AddShape(NULL, s, s->filename, autoplace);
   }
   shapes.clear();
   ModelChanged();
 }
 
-void Model::SaveStl(Glib::RefPtr<Gio::File> file)
+void Model::SaveStl(QFile *file)
 {
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
-  objtree.get_all_shapes(shapes,transforms);
+  objectList.get_all_shapes(shapes,transforms);
 
   if(shapes.size() == 1) {
-    shapes[0]->saveBinarySTL(file->get_path());
+    shapes[0]->saveBinarySTL(QFileInfo(*file).absolutePath());
   }
   else {
-    if (settings.get_boolean("Misc","SaveSingleShapeSTL")) {
+    if (settings->get_boolean("Misc","SaveSingleShapeSTL")) {
       Shape single = GetCombinedShape();
-      single.saveBinarySTL(file->get_path());
+      single.saveBinarySTL(QFileInfo(*file).absolutePath());
     } else {
-      set_locales("C");
+//      set_locales("C");
       stringstream sstr;
+      QTextStream fstream(file);
       for(uint s=0; s < shapes.size(); s++) {
-	sstr << shapes[s]->getSTLsolid() << endl;
+          fstream << QString::fromStdString(shapes[s]->getSTLsolid()) << endl;
       }
-      Glib::file_set_contents (file->get_path(), sstr.str());
-      reset_locales();
+      file->close();
+//      reset_locales();
     }
   }
-  settings.STLPath = file->get_parent()->get_path();
+  settings->STLPath = QFileInfo(*file).dir().path().toUtf8().constData();
 }
 
 // everything in one shape
 Shape Model::GetCombinedShape() const
 {
   Shape shape;
-  for (uint o = 0; o<objtree.Objects.size(); o++) {
-    for (uint s = 0; s<objtree.Objects[o]->shapes.size(); s++) {
-      vector<Triangle> tr =
-	objtree.Objects[o]->shapes[s]->getTriangles(objtree.Objects[o]->transform3D.transform);
+  for (uint o = 0; o<objectList.objects.size(); o++) {
+    for (uint s = 0; s<objectList.objects[o]->shapes.size(); s++) {
+      vector<Triangle> tr = objectList.objects[o]->shapes[s]
+              ->getTriangles(objectList.objects[o]->transform3D.transform);
       shape.addTriangles(tr);
     }
   }
   return shape;
 }
 
-void Model::SaveAMF(Glib::RefPtr<Gio::File> file)
+#if ENABLE_AMF
+void Model::SaveAMF(QFile *file)
 {
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
-  objtree.get_all_shapes(shapes,transforms);
+  objects.get_all_shapes(shapes,transforms);
   vector< vector<Triangle> > triangles;
-  vector<ustring> names;
+  vector<Glib::ustring> names;
   for(uint s = 0; s < shapes.size(); s++) {
     triangles.push_back(shapes[s]->getTriangles(transforms[s]));
     names.push_back(shapes[s]->filename);
   }
-  File::save_AMF(file->get_path(), triangles, names);
+  File::save_AMF(QFileInfo(*file).absolutePath(), triangles, names);
 }
+#endif
 
-void Model::Read(Glib::RefPtr<Gio::File> file)
+void Model::Read(QFile *file)
 {
-  std::string basename = file->get_basename();
-  size_t pos = basename.rfind('.');
-  cerr << "reading " << basename<< endl;
-  string directory_path = file->get_parent()->get_path();
-  if (pos != std::string::npos) {
-    std::string extn = basename.substr(pos);
-    if (extn == ".conf")
+    QFileInfo finfo(*file);
+    QString extn = finfo.suffix().toLower();
+//    cerr << "extension " << extn.toUtf8().constData()<<  endl;
+    string directory_path = finfo.absoluteDir().path().toUtf8().constData();
+    if (extn == "conf")
       {
-	LoadConfig (file);
-	settings.SettingsPath = directory_path;
-	return;
+    LoadConfig (finfo.absoluteFilePath());
+    settings->SettingsPath = directory_path;
+    return;
       }
-    else if (extn == ".gcode")
+    else if (extn == "gcode")
       {
-	ReadGCode (file);
-	settings.GCodePath = directory_path;
-	return;
+    ReadGCode (file);
+    settings->GCodePath = directory_path;
+    return;
       }
-    else if (extn == ".svg")
+    else if (extn == "svg")
       {
-	ReadSVG (file);
-	settings.STLPath = directory_path;
-	return;
+    ReadSVG (file);
+    settings->STLPath = directory_path;
+    return;
       }
-    else if (extn == ".rfo")
+    else if (extn == "rfo")
       {
-	//      ReadRFO (file);
-	settings.STLPath = directory_path;
-	return;
+    //      ReadRFO (file);
+    settings->STLPath = directory_path;
+    return;
       }
-  }
-  ReadStl (file);
-  settings.STLPath = directory_path;
+    else if (extn == "stl")
+    {
+        ReadStl (file);
+        settings->STLPath = directory_path;
+    }
+    cerr << objectList.info() << endl;
 }
 
-void Model::ReadGCode(Glib::RefPtr<Gio::File> file)
+void Model::ReadGCode(QFile *file)
 {
   if (is_calculating) return;
   if (is_printing) return;
   is_calculating=true;
-  settings.set_boolean("Display","DisplayGCode",true);
+  settings->setValue("Display","DisplayGCode",true);
   m_progress->start (_("Reading GCode"), 100.0);
-  gcode.Read (this, settings.get_extruder_letters(), m_progress, file->get_path());
+  gcode.Read (this, settings->get_extruder_letters(), m_progress,
+              QFileInfo(*file).absolutePath().toUtf8().constData());
   m_progress->stop (_("Done"));
   is_calculating=false;
   Max = gcode.Max;
   Min = gcode.Min;
   Center = (Max + Min) / 2.0;
-  m_signal_zoom.emit();
+//  m_signal_zoom.emit();
 }
 
 
@@ -327,7 +340,7 @@ void Model::translateGCode(Vector3d trans)
   is_calculating=true;
   gcode.translate(trans);
 
-  string GcodeTxt;
+  QString GcodeTxt;
   gcode.MakeText (GcodeTxt, settings, m_progress);
   Max = gcode.Max;
   Min = gcode.Min;
@@ -340,7 +353,8 @@ void Model::translateGCode(Vector3d trans)
 void Model::ModelChanged()
 {
   if (m_inhibit_modelchange) return;
-  if (objtree.empty()) return;
+  main->updatedModel(&objectList);
+  if (objectList.empty()) return;
   //printer.update_temp_poll_interval(); // necessary?
   if (!is_printing) {
     CalcBoundingBoxAndCenter();
@@ -350,7 +364,7 @@ void Model::ModelChanged()
       ClearLayers();
     }
     setCurrentPrintingLine(0);
-    m_model_changed.emit();
+//    m_model_changed.emit();
   }
 }
 
@@ -360,17 +374,17 @@ static bool ClosestToOrigin (Vector3d a, Vector3d b)
 }
 
 // rearrange unselected shapes in random sequence
-bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path)
+bool Model::AutoArrange(QModelIndexList *selected)
 {
   // all shapes
   vector<Shape*>   allshapes;
   vector<Matrix4d> transforms;
-  objtree.get_all_shapes(allshapes, transforms);
+  objectList.get_all_shapes(allshapes, transforms);
 
   // selected shapes
   vector<Shape*>   selshapes;
   vector<Matrix4d> seltransforms;
-  objtree.get_selected_shapes(path, selshapes, seltransforms);
+  objectList.get_selected_shapes(selected, selshapes, seltransforms);
 
   // get unselected shapes
   vector<Shape*>   unselshapes;
@@ -380,7 +394,7 @@ bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path)
     bool issel = false;
     for(uint ss=0; ss < selshapes.size(); ss++)
       if (selshapes[ss] == allshapes[s]) {
-	issel = true; break;
+    issel = true; break;
       }
     if (!issel) {
       unselshapes.    push_back(allshapes[s]);
@@ -393,13 +407,11 @@ bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path)
   vector<int> rand_seq(num,1); // 1,1,1...
   partial_sum(rand_seq.begin(), rand_seq.end(), rand_seq.begin()); // 1,2,3,...,N
 
-  Glib::TimeVal timeval;
-  timeval.assign_current_time();
-  srandom((unsigned long)(timeval.as_double()));
+  srandom(QDateTime::currentMSecsSinceEpoch());
   random_shuffle(rand_seq.begin(), rand_seq.end()); // shuffle
 
   for(int s=0; s < num; s++) {
-    int index = rand_seq[s]-1;
+    uint index = rand_seq[s]-1;
     // use selshapes as vector to fill up
     Vector3d trans = FindEmptyLocation(selshapes, seltransforms, unselshapes[index]);
     selshapes.push_back(unselshapes[index]);
@@ -412,8 +424,8 @@ bool Model::AutoArrange(vector<Gtk::TreeModel::Path> &path)
 }
 
 Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
-				  const vector<Matrix4d> &transforms,
-				  const Shape *shape)
+                  const vector<Matrix4d> &transforms,
+                  const Shape *shape)
 {
   // Get all object positions
   std::vector<Vector3d> maxpos;
@@ -455,34 +467,34 @@ Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
       if (
           // check x
           ( ( ( minpos[k].x()     <= candidates[c].x() &&
-		candidates[c].x() <= maxpos[k].x() ) ||
-	      ( candidates[c].x() <= minpos[k].x() &&
-		maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
-	    ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d &&
-		candidates[c].x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
+        candidates[c].x() <= maxpos[k].x() ) ||
+          ( candidates[c].x() <= minpos[k].x() &&
+        maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
+        ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d &&
+        candidates[c].x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
           &&
           // check y
           ( ( ( minpos[k].y() <= candidates[c].y() &&
-		candidates[c].y() <= maxpos[k].y() ) ||
-	      ( candidates[c].y() <= minpos[k].y() &&
-		maxpos[k].y() <= candidates[c].y()+StlDelta.y()+d ) ) ||
-	    ( ( minpos[k].y() <= candidates[c].y()+StlDelta.y()+d &&
-		candidates[c].y()+StlDelta.y()+d <= maxpos[k].y() ) ) )
-	  )
-	{
-	  ok = false;
-	  break;
-	}
+        candidates[c].y() <= maxpos[k].y() ) ||
+          ( candidates[c].y() <= minpos[k].y() &&
+        maxpos[k].y() <= candidates[c].y()+StlDelta.y()+d ) ) ||
+        ( ( minpos[k].y() <= candidates[c].y()+StlDelta.y()+d &&
+        candidates[c].y()+StlDelta.y()+d <= maxpos[k].y() ) ) )
+      )
+    {
+      ok = false;
+      break;
+    }
 
       // volume boundary
       if (candidates[c].x()+StlDelta.x() >
-	  (settings.getPrintVolume().x() - 2*settings.getPrintMargin().x())
-	  || candidates[c].y()+StlDelta.y() >
-	  (settings.getPrintVolume().y() - 2*settings.getPrintMargin().y()))
-	{
-	  ok = false;
-	  break;
-	}
+      (settings->getPrintVolume().x() - 2*settings->getPrintMargin().x())
+      || candidates[c].y()+StlDelta.y() >
+      (settings->getPrintVolume().y() - 2*settings->getPrintMargin().y()))
+    {
+      ok = false;
+      break;
+    }
     }
     if (ok) {
       result.x() = candidates[c].x();
@@ -507,52 +519,43 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
 
   vector<Shape*>   allshapes;
   vector<Matrix4d> transforms;
-  objtree.get_all_shapes(allshapes, transforms);
+  objectList.get_all_shapes(allshapes, transforms);
   result = FindEmptyLocation(allshapes, transforms, shape);
   return true;
 }
 
-int Model::AddShape(TreeObject *parent, Shape *shape, string filename, bool autoplace)
+int Model::AddShape(ListObject *parentLO, Shape *shape, string filename, bool autoplace)
 {
   //Shape *retshape;
   bool found_location=false;
 
-
   FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
-  if (flatshape != NULL)
-    shape = flatshape;
+  if (flatshape != nullptr)
+      shape = (Shape*)(flatshape);
 
-  if (!parent) {
-    if (objtree.Objects.size() <= 0)
-      objtree.newObject();
-    parent = objtree.Objects.back();
+  if (parentLO == nullptr) {
+       parentLO = objectList.newObject(_("Unnamed Object"));
   }
-  g_assert (parent != NULL);
-
-  // Decide where it's going
-  Vector3d trans = Vector3d(0,0,0);
-  if (autoplace) found_location = FindEmptyLocation(trans, shape);
-  // Add it to the set
-  size_t found = filename.find_last_of("/\\");
-  Gtk::TreePath path = objtree.addShape(parent, shape, filename.substr(found+1));
-  Shape *retshape = parent->shapes.back();
-
-  // Move it, if we found a suitable place
-  if (found_location) {
-    retshape->transform3D.move(trans);
+  if (autoplace){
+      // Decide where it's going
+      Vector3d trans;
+      if (FindEmptyLocation(trans, shape)) {
+          shape->transform3D.move(trans);
+      }
+      shape->PlaceOnPlatform();
   }
-
-  //if (autoplace) retshape->PlaceOnPlatform();
-
+  // Add it to the parent LO
+  cerr << "adding shape " << filename << endl;
+  parentLO->addShape(shape, filename);
   // Update the view to include the new object
   ModelChanged();
     // Tell everyone
-  m_signal_stl_added.emit (path);
+//  m_signal_stl_added.emit (path);
 
   return 0;
 }
 
-int Model::SplitShape(TreeObject *parent, Shape *shape, string filename)
+int Model::SplitShape(ListObject *parent, Shape *shape, string filename)
 {
   vector<Shape*> splitshapes;
   shape->splitshapes(splitshapes, m_progress);
@@ -565,7 +568,7 @@ int Model::SplitShape(TreeObject *parent, Shape *shape, string filename)
   return splitshapes.size();
 }
 
-int Model::MergeShapes(TreeObject *parent, const vector<Shape*> shapes)
+int Model::MergeShapes(ListObject *parent, const vector<Shape*> shapes)
 {
   Shape * shape = new Shape();
   for (uint s = 0; s <  shapes.size(); s++) {
@@ -576,7 +579,7 @@ int Model::MergeShapes(TreeObject *parent, const vector<Shape*> shapes)
   return 1;
 }
 
-int Model::DivideShape(TreeObject *parent, Shape *shape, string filename)
+int Model::DivideShape(ListObject *parent, Shape *shape, string filename)
 {
   Shape *upper = new Shape();
   Shape *lower = new Shape();
@@ -590,13 +593,13 @@ int Model::DivideShape(TreeObject *parent, Shape *shape, string filename)
   return num;
 }
 
-void Model::newObject()
+ListObject *Model::newObject()
 {
-  objtree.newObject();
+    return objectList.newObject(_("Unnamed Object"));
 }
 
 /* Scales the object on changes of the scale slider */
-void Model::ScaleObject(Shape *shape, TreeObject *object, double scale)
+void Model::ScaleObject(Shape *shape, ListObject *object, double scale)
 {
   if (shape)
     shape->Scale(scale);
@@ -608,7 +611,7 @@ void Model::ScaleObject(Shape *shape, TreeObject *object, double scale)
   else return;
   ModelChanged();
 }
-void Model::ScaleObjectX(Shape *shape, TreeObject *object, double scale)
+void Model::ScaleObjectX(Shape *shape, ListObject *object, double scale)
 {
   if (shape)
     shape->ScaleX(scale);
@@ -620,7 +623,7 @@ void Model::ScaleObjectX(Shape *shape, TreeObject *object, double scale)
   else return;
   ModelChanged();
 }
-void Model::ScaleObjectY(Shape *shape, TreeObject *object, double scale)
+void Model::ScaleObjectY(Shape *shape, ListObject *object, double scale)
 {
   if (shape)
     shape->ScaleY(scale);
@@ -632,7 +635,7 @@ void Model::ScaleObjectY(Shape *shape, TreeObject *object, double scale)
   else return;
   ModelChanged();
 }
-void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
+void Model::ScaleObjectZ(Shape *shape, ListObject *object, double scale)
 {
   if (shape)
     shape->ScaleZ(scale);
@@ -645,7 +648,7 @@ void Model::ScaleObjectZ(Shape *shape, TreeObject *object, double scale)
   ModelChanged();
 }
 
-void Model::RotateObject(Shape* shape, TreeObject* object, Vector4d rotate)
+void Model::RotateObject(Shape* shape, ListObject* object, Vector4d rotate)
 {
   if (!shape)
     return;
@@ -654,7 +657,7 @@ void Model::RotateObject(Shape* shape, TreeObject* object, Vector4d rotate)
   ModelChanged();
 }
 
-void Model::TwistObject(Shape *shape, TreeObject *object, double angle)
+void Model::TwistObject(Shape *shape, ListObject *object, double angle)
 {
   if (!shape)
     return;
@@ -662,7 +665,7 @@ void Model::TwistObject(Shape *shape, TreeObject *object, double angle)
   ModelChanged();
 }
 
-void Model::OptimizeRotation(Shape *shape, TreeObject *object)
+void Model::OptimizeRotation(Shape *shape, ListObject *object)
 {
   if (!shape)
     return; // FIXME: rotate entire Objects ...
@@ -670,7 +673,7 @@ void Model::OptimizeRotation(Shape *shape, TreeObject *object)
   ModelChanged();
 }
 
-void Model::InvertNormals(Shape *shape, TreeObject *object)
+void Model::InvertNormals(Shape *shape, ListObject *object)
 {
   if (shape)
     shape->invertNormals();
@@ -678,7 +681,7 @@ void Model::InvertNormals(Shape *shape, TreeObject *object)
     return;
   ModelChanged();
 }
-void Model::Mirror(Shape *shape, TreeObject *object)
+void Model::Mirror(Shape *shape, ListObject *object)
 {
   if (shape)
     shape->mirror();
@@ -687,7 +690,7 @@ void Model::Mirror(Shape *shape, TreeObject *object)
   ModelChanged();
 }
 
-void Model::PlaceOnPlatform(Shape *shape, TreeObject *object)
+void Model::PlaceOnPlatform(Shape *shape, ListObject *object)
 {
   if (shape)
     shape->PlaceOnPlatform();
@@ -702,9 +705,9 @@ void Model::PlaceOnPlatform(Shape *shape, TreeObject *object)
   ModelChanged();
 }
 
-void Model::DeleteObjTree(vector<Gtk::TreeModel::Path> &iter)
+void Model::DeleteSelectedObjects(QModelIndexList *selected)
 {
-  objtree.DeleteSelected (iter);
+  objectList.DeleteSelected(selected);
   ClearGCode();
   ClearLayers();
   ModelChanged();
@@ -713,8 +716,8 @@ void Model::DeleteObjTree(vector<Gtk::TreeModel::Path> &iter)
 
 void Model::ClearLogs()
 {
-  errlog->set_text("");
-  echolog->set_text("");
+  errlog.setString(nullptr);
+  echolog.setString(nullptr);
 }
 
 void Model::CalcBoundingBoxAndCenter(bool selected_only)
@@ -725,9 +728,9 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
   if (selected_only)
-    objtree.get_selected_shapes(m_current_selectionpath, shapes, transforms);
+    objectList.get_selected_shapes(&m_current_selectionpath, shapes, transforms);
   else
-    objtree.get_all_shapes(shapes, transforms);
+    objectList.get_all_shapes(shapes, transforms);
 
   for (uint s = 0 ; s < shapes.size(); s++) {
     shapes[s]->CalcBBox();
@@ -755,8 +758,8 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
   if (newMin.x() > newMax.x()) {
     // Show the whole platform if there's no objects
     Min = Vector3d(0,0,0);
-    Vector3d pM = settings.getPrintMargin();
-    Max = settings.getPrintVolume() - pM - pM;
+    Vector3d pM = settings->getPrintMargin();
+    Max = settings->getPrintVolume() - pM - pM;
     Max.z() = 0;
   }
   else {
@@ -765,70 +768,70 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
   }
 
   Center = (Max + Min) / 2.0;
-  m_signal_zoom.emit();
+//  m_signal_zoom.emit();
 }
 
 Vector3d Model::GetViewCenter()
 {
-  Vector3d printOffset = settings.getPrintMargin();
-  if(settings.get_boolean("Raft","Enable")){
-    const double rsize = settings.get_double("Raft","Size");
+  Vector3d printOffset = settings->getPrintMargin();
+  if(settings->get_boolean("Raft","Enable")){
+    const double rsize = settings->get_double("Raft","Size");
     printOffset += Vector3d(rsize, rsize, 0);
   }
   return printOffset + Center;
 }
 
 // called from View::Draw
-int Model::draw (vector<Gtk::TreeModel::Path> &iter)
+int Model::draw (QModelIndexList *selected)
 {
   vector<Shape*> sel_shapes;
   vector<Matrix4d> transforms;
-  objtree.get_selected_shapes(iter, sel_shapes, transforms);
+  objectList.get_selected_shapes(selected, sel_shapes, transforms);
 
   gint index = 1; // pick/select index. matches computation in update_model()
 
-  Vector3d printOffset = settings.getPrintMargin();
-  if(settings.get_boolean("Raft","Enable")) {
-    const double rsize = settings.get_double("Raft","Size");
+  Vector3d printOffset = settings->getPrintMargin();
+  if(settings->get_boolean("Raft","Enable")) {
+    const double rsize = settings->get_double("Raft","Size");
     printOffset += Vector3d(rsize, rsize, 0);
   }
-  Vector3d translation = objtree.transform3D.getTranslation();
+  Vector3d translation = objectList.transform3D.getTranslation();
   Vector3d offset = printOffset + translation;
 
   // Add the print offset to the drawing location of the STL objects.
   glTranslated(offset.x(),offset.y(),offset.z());
 
   glPushMatrix();
-  glMultMatrixd (&objtree.transform3D.transform.array[0]);
+  glMultMatrixd (&objectList.transform3D.transform.array[0]);
 
   // draw preview shapes and nothing else
-  if (settings.get_boolean("Display","PreviewLoad"))
+  if (settings->get_boolean("Display","PreviewLoad"))
     if (preview_shapes.size() > 0) {
       Vector3d v_center = GetViewCenter() - offset;
       glTranslated( v_center.x(), v_center.y(), v_center.z());
       for (uint i = 0; i < preview_shapes.size(); i++) {
-	offset = preview_shapes[i]->t_Center();
-	glTranslated(offset.x(), offset.y(), offset.z());
-	// glPushMatrix();
-	// glMultMatrixd (&preview_shapes[i]->transform3D.transform.array[0]);
-	preview_shapes[i]->draw (settings, false, 20000);
-	preview_shapes[i]->drawBBox ();
-	// glPopMatrix();
+    offset = preview_shapes[i]->t_Center();
+    glTranslated(offset.x(), offset.y(), offset.z());
+    // glPushMatrix();
+    // glMultMatrixd (&preview_shapes[i]->transform3D.transform.array[0]);
+    preview_shapes[i]->draw (settings, false, 20000);
+    preview_shapes[i]->drawBBox ();
+    // glPopMatrix();
       }
       glPopMatrix();
       glPopMatrix();
       return 0;
     }
-  bool support = settings.get_boolean("Slicing","Support");
-  double supportangle = settings.get_double("Slicing","SupportAngle");
-  bool displaypolygons = settings.get_boolean("Display","DisplayPolygons");
-  bool displaybbox = settings.get_boolean("Display","DisplayBBox");
-  for (uint i = 0; i < objtree.Objects.size(); i++) {
-    TreeObject *object = objtree.Objects[i];
+  bool support = settings->get_boolean("Slicing","Support");
+  double supportangle = settings->get_double("Slicing","SupportAngle");
+  bool displaypolygons = settings->get_boolean("Display","DisplayPolygons");
+  bool displaybbox = settings->get_boolean("Display","DisplayBBox");
+  for (uint i = 0; i < objectList.objects.size(); i++) {
+    ListObject *object = objectList.objects[i];
     index++;
 
     glPushMatrix();
-    glMultMatrixd (&object->transform3D.transform.array[0]);
+    glMultMatrixd (object->transform3D.transform.array);
     for (uint j = 0; j < object->shapes.size(); j++) {
       Shape *shape = object->shapes[j];
       glLoadName(index); // Load select/pick index
@@ -838,69 +841,69 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 
       bool is_selected = false;
       for (uint s = 0; s < sel_shapes.size(); s++)
-	if (sel_shapes[s] == shape)
-	  is_selected = true;
+    if (sel_shapes[s] == shape)
+      is_selected = true;
 
       // this is slow for big shapes
       if (is_selected) {
-	if (!shape->slow_drawing && shape->dimensions()>2) {
-	  // Enable stencil buffer when we draw the selected object.
-	  glEnable(GL_STENCIL_TEST);
-	  glStencilFunc(GL_ALWAYS, 1, 1);
-	  glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+    if (!shape->slow_drawing && shape->dimensions()>2) {
+      // Enable stencil buffer when we draw the selected object.
+      glEnable(GL_STENCIL_TEST);
+      glStencilFunc(GL_ALWAYS, 1, 1);
+      glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 
-	  shape->draw (settings);
+      shape->draw (settings);
 
-	  if (!displaypolygons) {
-	    // If not drawing polygons, need to draw the geometry
-	    // manually, but invisible, to set up the stencil buffer
-	    glEnable(GL_CULL_FACE);
-	    glEnable(GL_DEPTH_TEST);
-	    glEnable(GL_BLEND);
-	    // Set to not draw anything, and not update depth buffer
-	    glDepthMask(GL_FALSE);
-	    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+      if (!displaypolygons) {
+        // If not drawing polygons, need to draw the geometry
+        // manually, but invisible, to set up the stencil buffer
+        glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        // Set to not draw anything, and not update depth buffer
+        glDepthMask(GL_FALSE);
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-	    shape->draw_geometry();
+        shape->draw_geometry();
 
-	    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-	    glDepthMask(GL_TRUE);
-	  }
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glDepthMask(GL_TRUE);
+      }
 
-	  // draw highlight around selected object
-	  glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
-	  glLineWidth(3.0);
-	  glEnable (GL_POLYGON_OFFSET_LINE);
+      // draw highlight around selected object
+      glColor4f( 1.0f, 1.0f, 1.0f, 1.0f );
+      glLineWidth(3.0);
+      glEnable (GL_POLYGON_OFFSET_LINE);
 
-	  glDisable (GL_CULL_FACE);
-	  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-	  glStencilFunc(GL_NOTEQUAL, 1, 1);
-	  glEnable(GL_DEPTH_TEST);
+      glDisable (GL_CULL_FACE);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+      glStencilFunc(GL_NOTEQUAL, 1, 1);
+      glEnable(GL_DEPTH_TEST);
 
-	  shape->draw_geometry();
+      shape->draw_geometry();
 
-	  glEnable (GL_CULL_FACE);
-	  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	  glDisable(GL_STENCIL_TEST);
-	  glDisable(GL_POLYGON_OFFSET_LINE);
-	}
-	else shape->draw (settings, true);
+      glEnable (GL_CULL_FACE);
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      glDisable(GL_STENCIL_TEST);
+      glDisable(GL_POLYGON_OFFSET_LINE);
+    }
+    else shape->draw (settings, true);
       }
       else {
-	shape->draw (settings, false);
+    shape->draw (settings, false);
       }
       // draw support triangles
       if (support) {
-	glColor4f(0.8f,0.f,0.f,0.5f);
-	vector<Triangle> suppTr =
-	  shape->trianglesSteeperThan(supportangle*M_PI/180.);
-	for (uint i=0; i < suppTr.size(); i++)
-	  suppTr[i].draw(GL_TRIANGLES);
+    glColor4f(0.8f,0.f,0.f,0.5f);
+    vector<Triangle> suppTr =
+      shape->trianglesSteeperThan(supportangle*M_PI/180.);
+    for (uint i=0; i < suppTr.size(); i++)
+      suppTr[i].draw(GL_TRIANGLES);
       }
       glPopMatrix();
       if(displaybbox)
-	shape->drawBBox();
+    shape->drawBBox();
      }
     glPopMatrix();
   }
@@ -910,7 +913,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
   // draw total bounding box
   if(displaybbox)
     {
-      const double minz = max(0., Min.z()); // above xy plane only
+      const float minz = max(0., Min.z()); // above xy plane only
       // Draw bbox
       glDisable(GL_DEPTH_TEST);
       glLineWidth(1);
@@ -937,54 +940,54 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
       glVertex3f(Max.x(), Min.y(), minz);
       glVertex3f(Max.x(), Min.y(), Max.z());
       glEnd();
-      glColor3f(1,0.6,0.6);
+      glColor3f(1.f,0.6f,0.6f);
       ostringstream val;
       val.precision(1);
-      Vector3d pos;
+      Vector3f pos;
       val << fixed << (Max.x()-Min.x());
-      pos = Vector3d((Max.x()+Min.x())/2.,Min.y(),Max.z());
+      pos = Vector3f((Max.x()+Min.x())/2.f,Min.y(),Max.z());
       Render::draw_string(pos,val.str());
       val.str("");
       val << fixed << (Max.y()-Min.y());
-      pos = Vector3d(Min.x(),(Max.y()+Min.y())/2.,Max.z());
+      pos = Vector3f(Min.x(),(Max.y()+Min.y())/2.f,Max.z());
       Render::draw_string(pos,val.str());
       val.str("");
       val << fixed << (Max.z()-minz);
-      pos = Vector3d(Min.x(),Min.y(),(Max.z()+minz)/2.);
+      pos = Vector3f(Min.x(),Min.y(),(Max.z()+minz)/2.f);
       Render::draw_string(pos,val.str());
     }
   int drawnlayer = -1;
-  if(settings.get_boolean("Display","DisplayLayer")) {
-    drawnlayer = drawLayers(settings.get_double("Display","LayerValue"),
-			    offset, false);
+  if(settings->get_boolean("Display","DisplayLayer")) {
+    drawnlayer = drawLayers(settings->get_double("Display","LayerValue"),
+                offset, false);
   }
-  if(settings.get_boolean("Display","DisplayGCode") && gcode.size() == 0) {
+  if(settings->get_boolean("Display","DisplayGCode") && gcode.size() == 0) {
     // preview gcode if not calculated yet
     if ( m_previewGCode.size() != 0 ||
-	 ( layers.size() == 0 && gcode.commands.size() == 0 ) ) {
+     ( layers.size() == 0 && gcode.commands.size() == 0 ) ) {
       Vector3d start(0,0,0);
-      const double thickness = settings.get_double("Slicing","LayerThickness");
-      const double gcodedrawstart = settings.get_double("Display","GCodeDrawStart");
+      const double thickness = settings->get_double("Slicing","LayerThickness");
+      const double gcodedrawstart = settings->get_double("Display","GCodeDrawStart");
       const double z = gcodedrawstart + thickness/2;
-      const int LayerCount = (int)ceil(Max.z()/thickness)-1;
-      const uint LayerNo = (uint)ceil(gcodedrawstart*(LayerCount-1));
+      const int LayerCount = int(ceil(Max.z()/thickness))-1;
+      const uint LayerNo = uint(ceil(gcodedrawstart*(LayerCount-1)));
       if (z != m_previewGCode_z) {
-	//uint prevext = settings.selectedExtruder;
-	Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
-	if (previewGCodeLayer) {
-	  m_previewGCode.clear();
-	  vector<Command> commands;
-	  GCodeState state(m_previewGCode);
-	  previewGCodeLayer->MakeGCode(start, state, 0, settings);
-	  // state.AppendCommands(commands, settings.Slicing.RelativeEcode);
-	  m_previewGCode_z = z;
-	}
-	//settings.SelectExtruder(prevext);
+    //uint prevext = settings->selectedExtruder;
+    Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
+    if (previewGCodeLayer) {
+      m_previewGCode.clear();
+      vector<Command> commands;
+      GCodeState state(m_previewGCode);
+      previewGCodeLayer->MakeGCode(start, state, 0, settings);
+      // state.AppendCommands(commands, settings->Slicing.RelativeEcode);
+      m_previewGCode_z = z;
+    }
+    //settings->SelectExtruder(prevext);
       }
       glDisable(GL_DEPTH_TEST);
       m_previewGCode.drawCommands(settings, 1, m_previewGCode.commands.size(), true, 2,
-				  settings.get_boolean("Display","DisplayGCodeArrows"),
-				  settings.get_boolean("Display","DisplayGCodeBorders"));
+                  settings->get_boolean("Display","DisplayGCodeArrows"),
+                  settings->get_boolean("Display","DisplayGCodeBorders"));
     }
   }
   return drawnlayer;
@@ -992,7 +995,7 @@ int Model::draw (vector<Gtk::TreeModel::Path> &iter)
 
 // if single layer returns layerno of drawn layer
 // else returns -1
-int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
+int Model::drawLayers(float height, const Vector3d &offset, bool calconly)
 {
   if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
 
@@ -1000,30 +1003,28 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   int drawn = -1;
   int LayerNr;
 
- ;
-
   bool have_layers = (layers.size() > 0); // have sliced already
 
-  bool fillAreas = settings.get_boolean("Display","DisplayFilledAreas");
+  bool fillAreas = settings->get_boolean("Display","DisplayFilledAreas");
 
-  double minZ = 0;//max(0.0, Min.z());
-  double z;
-  double zStep = settings.get_double("Slicing","LayerThickness");
-  double zSize = (Max.z() - minZ - zStep*0.5);
-  int LayerCount = (int)ceil((zSize - zStep*0.5)/zStep)-1;
-  double sel_Z = height; //*zSize;
+  float minZ = 0.f;//max(0.0, Min.z());
+  float z;
+  float zStep = settings->get_double("Slicing","LayerThickness");
+  float zSize = (Max.z() - minZ - zStep*0.5f);
+  int LayerCount = int(ceil((zSize - zStep*0.5f)/zStep))-1;
+  float sel_Z = height; //*zSize;
   uint sel_Layer;
   if (have_layers)
     sel_Layer = (uint)floor(height*(layers.size())/zSize);
   else
     sel_Layer = (uint)ceil(LayerCount*sel_Z/zSize);
   LayerCount = sel_Layer+1;
-  if(have_layers && settings.get_boolean("Display","DisplayAllLayers"))
+  if(have_layers && settings->get_boolean("Display","DisplayAllLayers"))
     {
       LayerNr = 0;
       z=minZ;
       // don't fill areas if multiple layers
-      settings.set_boolean("Display","DisplayFilledAreas",false);
+      settings->setValue("Display","DisplayFilledAreas",false);
     }
   else
     {
@@ -1034,8 +1035,8 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
     LayerNr = CLAMP(LayerNr, 0, (int)layers.size() - 1);
     LayerCount = CLAMP(LayerCount, 0, (int)layers.size());
   }
-  z = CLAMP(z, 0, Max.z());
-  z += 0.5*zStep; // always cut in middle of layer
+  z = CLAMP(z, 0.f, Max.z());
+  z += 0.5f*zStep; // always cut in middle of layer
 
   //cerr << zStep << ";"<<Max.z()<<";"<<Min.z()<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
 
@@ -1043,36 +1044,36 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   if (have_layers)
     glTranslatef(-offset.x(), -offset.y(), -offset.z());
 
-  const float lthickness = settings.get_double("Slicing","LayerThickness");
-  bool displayinfill = settings.get_boolean("Display","DisplayinFill");
-  bool drawrulers = settings.get_boolean("Display","DrawRulers");
+  const float lthickness = settings->get_double("Slicing","LayerThickness");
+  bool displayinfill = settings->get_boolean("Display","DisplayinFill");
+  bool drawrulers = settings->get_boolean("Display","DrawRulers");
   while(LayerNr < LayerCount)
     {
       if (have_layers)
-	{
-	  layer = layers[LayerNr];
-	  z = layer->getZ();
-	  drawn = layer->LayerNo;
-	}
+    {
+      layer = layers[LayerNr];
+      z = layer->getZ();
+      drawn = layer->LayerNo;
+    }
       else
-	{
-	  if (!m_previewLayer || m_previewLayer->getZ() != z) {
-	    m_previewLayer = calcSingleLayer(z, LayerNr, lthickness,
-					     displayinfill, false);
-	    layer = m_previewLayer;
-	    Layer * previous = NULL;
-	    if (LayerNr>0 && z >= lthickness)
-	      previous = calcSingleLayer(z-lthickness, LayerNr-1, lthickness,
-					 false, false);
-	    layer->setPrevious(previous);
-	  }
-	  layer = m_previewLayer;
-	}
+    {
+      if (!m_previewLayer || m_previewLayer->getZ() != z) {
+        m_previewLayer = calcSingleLayer(z, LayerNr, lthickness,
+                         displayinfill, false);
+        layer = m_previewLayer;
+        Layer * previous = NULL;
+        if (LayerNr>0 && z >= lthickness)
+          previous = calcSingleLayer(z-lthickness, LayerNr-1, lthickness,
+                     false, false);
+        layer->setPrevious(previous);
+      }
+      layer = m_previewLayer;
+    }
       if (!calconly) {
-	layer->Draw(settings);
+    layer->Draw(*settings);
 
-	if (drawrulers)
-	  layer->DrawRulers(measuresPoint);
+    if (drawrulers)
+      layer->DrawRulers(measuresPoint);
       }
 
       // if (!have_layers)
@@ -1084,33 +1085,33 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       z+=zStep;
     }// while
 
-  settings.set_boolean("Display","DisplayFilledAreas", fillAreas); // set to value before
+  settings->setValue("Display","DisplayFilledAreas", fillAreas); // set to value before
   return drawn;
 }
 
 
 Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
-			       bool calcinfill, bool for_gcode) const
+                               bool calcinfill, bool for_gcode)
 {
   if (is_calculating) return NULL; // infill calculation (saved patterns) would be disturbed
   if (!for_gcode) {
     if (m_previewLayer && m_previewLayer->getZ() == z
-	&& m_previewLayer->thickness == thickness) return m_previewLayer;
+    && m_previewLayer->thickness == thickness) return m_previewLayer;
   }
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
 
-  if (settings.get_boolean("Slicing","SelectedOnly"))
-    objtree.get_selected_shapes(m_current_selectionpath, shapes, transforms);
+  if (settings->value("Slicing","SelectedOnly").toBool())
+    objectList.get_selected_shapes(&m_current_selectionpath, shapes, transforms);
   else
-    objtree.get_all_shapes(shapes, transforms);
+    objectList.get_all_shapes(shapes, transforms);
 
   double max_grad = 0;
-  double supportangle = settings.get_double("Slicing","SupportAngle")*M_PI/180.;
-  if (!settings.get_boolean("Slicing","Support")) supportangle = -1;
+  double supportangle = settings->value("Slicing","SupportAngle").toDouble()*M_PI/180.;
+  if (!settings->value("Slicing","Support").toBool()) supportangle = -1;
 
   Layer * layer = new Layer(NULL, LayerNr, thickness,
-			    settings.get_integer("Slicing","Skins"));
+                settings->value("Slicing","Skins").toInt());
   layer->setZ(z);
   for(size_t f = 0; f < shapes.size(); f++) {
     layer->addShape(transforms[f], *shapes[f], z, max_grad, supportangle);
@@ -1125,17 +1126,17 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   //   }
   // }
 
-  layer->MakeShells(settings);
+  layer->MakeShells(*settings);
 
-  if (settings.get_boolean("Slicing","Skirt")) {
-    if (layer->getZ() - layer->thickness <= settings.get_double("Slicing","SkirtHeight"))
-      layer->MakeSkirt(settings.get_double("Slicing","SkirtDistance"),
-		       settings.get_boolean("Slicing","SingleSkirt") &&
-		       !settings.get_boolean("Slicing","Support"));
+  if (settings->value("Slicing","Skirt").toBool()) {
+    if (layer->getZ() - layer->thickness <= settings->get_double("Slicing","SkirtHeight"))
+      layer->MakeSkirt(settings->get_double("Slicing","SkirtDistance"),
+               settings->get_boolean("Slicing","SingleSkirt") &&
+               !settings->get_boolean("Slicing","Support"));
   }
 
   if (calcinfill)
-    layer->CalcInfill(settings);
+    layer->CalcInfill(*settings);
 
 #define DEBUGPOLYS 0
 #if DEBUGPOLYS

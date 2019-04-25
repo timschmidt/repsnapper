@@ -22,55 +22,45 @@
 #include "arcball.h"
 #include "gllight.h"
 #include "settings.h"
-#include "ui/view.h"
 #include "model.h"
 #include "slicer/geometry.h"
 
-#define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
+#include <QOpenGLShaderProgram>
 
+#define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
 #define TRYFONTS "helvetica,arial,dejavu sans,sans,courier"
 #define FONTSIZE 8
 GLuint Render::fontlistbase = 0;
 int Render::fontheight = 0;
 
-inline GtkWidget *Render::get_widget()
+Render::Render (QWidget *parent, MainWindow *main)
+    : QOpenGLWidget(parent),
+      m_xRot(0),
+      m_yRot(0),
+      m_zRot(0),
+      m_program(nullptr),
+      m_arcBall(new ArcBall()),
+      m_main(main)
 {
-  return GTK_WIDGET (gobj());
-}
+    m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
 
-inline Model *Render::get_model() const { return m_view->get_model(); }
-
-Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
-  m_arcBall(new ArcBall()), m_view (view), m_selection(selection)
-{
-
-  set_events (Gdk::POINTER_MOTION_MASK |
-	      Gdk::BUTTON_MOTION_MASK |
-	      Gdk::BUTTON_PRESS_MASK |
-	      Gdk::BUTTON_RELEASE_MASK |
-	      Gdk::BUTTON1_MOTION_MASK |
-	      Gdk::BUTTON2_MOTION_MASK |
-	      Gdk::BUTTON3_MOTION_MASK |
-	      Gdk::KEY_PRESS_MASK |
-	      Gdk::KEY_RELEASE_MASK
-	      );
-
+/*
   Glib::RefPtr<Gdk::GL::Config> glconfig;
 
   glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGBA |
-				     Gdk::GL::MODE_DEPTH |
-				     Gdk::GL::MODE_ALPHA |
-				     Gdk::GL::MODE_STENCIL |
-				     Gdk::GL::MODE_DOUBLE);
+                     Gdk::GL::MODE_DEPTH |
+                     Gdk::GL::MODE_ALPHA |
+                     Gdk::GL::MODE_STENCIL |
+                     Gdk::GL::MODE_DOUBLE);
   if (!glconfig) { // try single buffered
     std::cerr << "*** Cannot find the double-buffered visual."
-	      << " Trying single-buffered visual.\n";
+          << " Trying single-buffered visual.\n";
     glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGBA |
-				       Gdk::GL::MODE_DEPTH |
-				       Gdk::GL::MODE_ALPHA |
-				       Gdk::GL::MODE_STENCIL
-				       );
+                       Gdk::GL::MODE_DEPTH |
+                       Gdk::GL::MODE_ALPHA |
+                       Gdk::GL::MODE_STENCIL
+                       );
   }
 
   if (!glconfig) {
@@ -78,8 +68,8 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
   }
 
   set_gl_capability(glconfig);
-
-  set_can_focus (true);
+*/
+  setFocus();
 
   memset (&m_transform.M, 0, sizeof (m_transform.M));
 
@@ -87,9 +77,9 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
   Matrix3fSetIdentity(&identity);
 
   // set initial rotation 30 degrees around Y axis
-  identity.s.M11 = identity.s.M22 = 0.5253; // cos -45
-  identity.s.M12 = 0.851; // -sin -45
-  identity.s.M21 = -0.851; // sin -45
+  identity.s.M11 = identity.s.M22 = 0.5253f; // cos -45
+  identity.s.M12 = 0.851f; // -sin -45
+  identity.s.M21 = -0.851f; // sin -45
 
   Matrix4fSetRotationScaleFromMatrix3f(&m_transform, &identity);
   m_transform.s.SW = 1.0;
@@ -98,45 +88,94 @@ Render::Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection) :
   for (uint i = 0; i < N_LIGHTS; i++)
     m_lights[i] = NULL;
 
-  m_selection->signal_changed().connect (sigc::mem_fun(*this, &Render::selection_changed));
+//  m_selection->signal_changed().connect (sigc::mem_fun(*this, &Render::selection_changed));
 }
 
 Render::~Render()
 {
-  delete m_arcBall;
-  for (uint i = 0; i < N_LIGHTS; i++)
-    delete (m_lights[i]);
+    cleanup();
+}
+
+void Render::cleanup(){
+    if(m_program == nullptr)
+        return;
+    makeCurrent();
+    m_logoVbo.destroy();
+    delete m_program;
+    m_program = nullptr;
+    doneCurrent();
+    delete m_arcBall;
+    for (uint i = 0; i < N_LIGHTS; i++)
+        delete (m_lights[i]);
+}
+
+static void qNormalizeAngle(int &angle)
+{
+    while (angle < 0)
+        angle += 360 * 16;
+    while (angle > 360 * 16)
+        angle -= 360 * 16;
+}
+
+void Render::setXRotation(int angle)
+{
+    qNormalizeAngle(angle);
+    if (angle != m_xRot) {
+        m_xRot = angle;
+        emit xRotationChanged(angle);
+        update();
+    }
+}
+void Render::setYRotation(int angle)
+{
+    qNormalizeAngle(angle);
+    if (angle != m_yRot) {
+        m_yRot = angle;
+        emit yRotationChanged(angle);
+        update();
+    }
+}
+
+void Render::setZRotation(int angle)
+{
+    qNormalizeAngle(angle);
+    if (angle != m_zRot) {
+        m_zRot = angle;
+        emit zRotationChanged(angle);
+        update();
+    }
 }
 
 void Render::set_model(Model *model)
 {
-  model->signal_zoom().connect (sigc::mem_fun(*this, &Render::zoom_to_model));
+//  model->signal_zoom().connect (sigc::mem_fun(*this, &Render::zoom_to_model));
   zoom_to_model();
 }
 
 void Render::selection_changed()
 {
-  queue_draw();
+    update();
+//  queue_draw();
 }
 
 void Render::zoom_to_model()
 {
-  Model *model = get_model();
-  if (!model)
-    return;
+    const Model *model = get_model();
+    if (!model)
+        return;
 
   // reset the zoom to cover the entire model
   m_zoom = (model->Max - model->Min).find_max();
   // reset the pan to center
   setArcballTrans(m_transform, Vector3d::ZERO);
   // zoom to platform if model has zero size
-  if (m_zoom == 0) {
-    m_zoom = model->settings.getPrintVolume().find_max();
-    setArcballTrans(m_transform,
-   		    model->settings.getPrintMargin() );
+  if (m_zoom == 0.f) {
+    m_zoom = model->settings->getPrintVolume().find_max();
+    setArcballTrans(m_transform, model->settings->getPrintMargin() );
     //model->settings.getPrintVolume()/2.);
   }
-  queue_draw();
+  update();
+  //queue_draw();
 }
 
 void Render::draw_string(const Vector3d &pos, const string s)
@@ -147,15 +186,12 @@ void Render::draw_string(const Vector3d &pos, const string s)
   glCallLists(s.length(), GL_UNSIGNED_BYTE, s.c_str());
 }
 
-void Render::on_realize()
-{
-  Gtk::GL::DrawingArea::on_realize();
 
-  fontlistbase = glGenLists (128);
 
-  Glib::RefPtr<Pango::Context> pcontext = get_pango_context();
+void Render::find_font(){
+/*   fontlistbase = glGenLists (128);
 
-  Pango::FontDescription font_desc;
+    //  Pango::FontDescription font_desc;
 
   vector < Glib::RefPtr< Pango::FontFamily > > families = pcontext->list_families();
   bool found_font = false;
@@ -165,95 +201,44 @@ void Render::on_realize()
     // cerr <<"Family: " << famname << endl;
     for (uint k = 0; !found_font && k < fonts.size(); k++) {
       if ((int)famname.find(fonts[k])!=-1) {
-	// found_font family, now get normal style and weight
-	vector< Glib::RefPtr< Pango::FontFace > > faces = families[i]->list_faces();
-	for (uint j = 0; !found_font && j < faces.size(); j++) {
-	  font_desc = faces[j]->describe();
-	  if (font_desc.get_style() == Pango::STYLE_NORMAL
-	      && font_desc.get_weight() == Pango::WEIGHT_NORMAL ) {
-	    font_desc.set_size(Pango::SCALE * FONTSIZE);
-	    //cerr <<"Trying " << font_desc.to_string() << endl;
-	    Glib::RefPtr<Pango::Font> font =
-	      Gdk::GL::Font::use_pango_font(font_desc, 0, 128, fontlistbase);
-	    if (font) {
-	      //cerr <<"Using " << font_desc.to_string() << endl;
-	      found_font = true;
-	      Pango::FontMetrics font_metrics = font->get_metrics();
-	      fontheight = font_metrics.get_ascent() + font_metrics.get_descent();
-	      fontheight = PANGO_PIXELS(fontheight);
-	    } else {
-	      std::cerr << "*** Can't load font \""
-			<< font_desc.to_string() << "\"" << std::endl;
-	      found_font = false;
-	    }
-	  }
-	}
+    // found_font family, now get normal style and weight
+    vector< Glib::RefPtr< Pango::FontFace > > faces = families[i]->list_faces();
+    for (uint j = 0; !found_font && j < faces.size(); j++) {
+      font_desc = faces[j]->describe();
+      if (font_desc.get_style() == Pango::STYLE_NORMAL
+          && font_desc.get_weight() == Pango::WEIGHT_NORMAL ) {
+        font_desc.set_size(Pango::SCALE * FONTSIZE);
+        //cerr <<"Trying " << font_desc.to_string() << endl;
+        Glib::RefPtr<Pango::Font> font =
+          Gdk::GL::Font::use_pango_font(font_desc, 0, 128, fontlistbase);
+        if (font) {
+          //cerr <<"Using " << font_desc.to_string() << endl;
+          found_font = true;
+          Pango::FontMetrics font_metrics = font->get_metrics();
+          fontheight = font_metrics.get_ascent() + font_metrics.get_descent();
+          fontheight = PANGO_PIXELS(fontheight);
+        } else {
+          std::cerr << "*** Can't load font \""
+            << font_desc.to_string() << "\"" << std::endl;
+          found_font = false;
+        }
+      }
+    }
       }
     }
   }
 
   if (!found_font) {
     cerr << "Did not find any working font matching \"" << TRYFONTS << "\""
-	 << " on your system!" << endl
-	 << "Cannot display any numbers"
-	 << endl;
+     << " on your system!" << endl
+     << "Cannot display any numbers"
+     << endl;
     fontheight = 0;
   }
-
+*/
 }
 
-
-bool Render::on_configure_event(GdkEventConfigure* event)
-{
-  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
-  if (!gldrawable->gl_begin(get_gl_context()))
-    return false;
-
-  const int w = get_width(), h = get_height();
-
-  glLoadIdentity();
-  glViewport (0, 0, w, h);
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
-  gluPerspective (45.0f, (float)get_width()/(float)get_height(),1.0f, 1000000.0f);
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
-
-  if (w > 1 && h > 1) // Limit arcball minimum size or it asserts
-    m_arcBall->setBounds(w, h);
-  glEnable(GL_LIGHTING);
-
-  struct { GLfloat x; GLfloat y; GLfloat z; } light_locations[] = {
-    { -100,  100, 200 },
-    {  100,  100, 200 },
-    {  100, -100, 200 },
-    {  100, -100, 200 }
-  };
-  for (uint i = 0; i < N_LIGHTS; i++) {
-    delete (m_lights[i]);
-    m_lights[i] = new gllight();
-    m_lights[i]->Init((GLenum)(GL_LIGHT0+i));
-    m_lights[i]->SetAmbient(0.2f, 0.2f, 0.2f, 1.0f);
-    m_lights[i]->SetDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
-    m_lights[i]->SetSpecular(1.0f, 1.0f, 1.0f, 1.0f);
-    m_lights[i]->Enable(false);
-    m_lights[i]->SetLocation(light_locations[i].x,
-			     light_locations[i].y,
-			     light_locations[i].z, 0);
-  }
-  m_lights[0]->Enable(true);
-  m_lights[3]->Enable(true);
-
-  glDisable ( GL_LIGHTING);
-  glDepthFunc (GL_LEQUAL);
-  glEnable (GL_DEPTH_TEST);
-  glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-
-  gldrawable->gl_end();
-
-  return true;
-}
-
+/*
 bool Render::on_expose_event(GdkEventExpose* event)
 {
   Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
@@ -272,9 +257,7 @@ bool Render::on_expose_event(GdkEventExpose* event)
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
   // Gtk::TreeModel::iterator iter = m_selection->get_selected();
 
-  vector<Gtk::TreeModel::Path> selpath = m_selection->get_selected_rows();
-
-  m_view->Draw (selpath);
+  m_main->Draw (m_selection);
 
   glPopMatrix();
 
@@ -287,7 +270,8 @@ bool Render::on_expose_event(GdkEventExpose* event)
 
   return true;
 }
-
+*/
+/*
 bool Render::on_key_press_event(GdkEventKey* event) {
   // cerr << "key " << event->keyval << endl;
   bool moveZ = (event->state & GDK_SHIFT_MASK);
@@ -323,7 +307,8 @@ bool Render::on_key_press_event(GdkEventKey* event) {
   grab_focus();
   return ret;
 }
-
+*/
+/*
 bool Render::on_key_release_event(GdkEventKey* event) {
   switch (event->keyval)
     {
@@ -336,8 +321,9 @@ bool Render::on_key_release_event(GdkEventKey* event) {
     }
   return true;
 }
+*/
 
-
+/*
 bool Render::on_button_press_event(GdkEventButton* event)
 {
   grab_focus();
@@ -351,11 +337,11 @@ bool Render::on_button_press_event(GdkEventButton* event)
        (event->state & GDK_SHIFT_MASK || event->state & GDK_CONTROL_MASK) )  {
     guint index = find_object_at(event->x, event->y);
     if (index) {
-      Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
+      Gtk::TreeModel::iterator iter = get_model()->objects.find_stl_by_index(index);
       if (!m_selection->is_selected(iter)) {
-	// if (!(event->state & GDK_CONTROL_MASK))  // add to selection by CONTROL
-	m_selection->unselect_all();
-	m_selection->select(iter);
+    // if (!(event->state & GDK_CONTROL_MASK))  // add to selection by CONTROL
+    m_selection->unselect_all();
+    m_selection->select(iter);
       }
       // else
       // 	if ((event->state & GDK_CONTROL_MASK))  // remove from selection by CONTROL
@@ -376,26 +362,26 @@ bool Render::on_button_release_event(GdkEventButton* event)
   else {
     if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) {// click only
       if (event-> button == 3) { // right button -> popup menu?
-	//cerr << "menu" << endl;
+    //cerr << "menu" << endl;
       } else {
-	guint index = find_object_at(event->x, event->y);
-	if (index) {
-	  Gtk::TreeModel::iterator iter = get_model()->objtree.find_stl_by_index(index);
-	  if (iter) {
-	    if (event->button == 1)  {
-	      m_selection->unselect_all();
-	    }
-	    if (m_selection->is_selected(iter))
-	      m_selection->unselect(iter);
-	    else
-	      m_selection->select(iter);
-	  }
-	}
-	// click on no object -> clear the selection:
-	else if (event->button == 1)  {
-	  //if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
-	  m_selection->unselect_all();
-	}
+    guint index = find_object_at(event->x, event->y);
+    if (index) {
+      Gtk::TreeModel::iterator iter = get_model()->objects.find_stl_by_index(index);
+      if (iter) {
+        if (event->button == 1)  {
+          m_selection->unselect_all();
+        }
+        if (m_selection->is_selected(iter))
+          m_selection->unselect(iter);
+        else
+          m_selection->select(iter);
+      }
+    }
+    // click on no object -> clear the selection:
+    else if (event->button == 1)  {
+      //if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
+      m_selection->unselect_all();
+    }
       }
     }
   }
@@ -423,50 +409,50 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   const Vector3d delta3f(delta.x()*drag_factor, -delta.y()*drag_factor, 0);
 
   const Vector3d mouse_preview = mouse_on_plane(event->x, event->y,
-						get_model()->get_preview_Z());
+                        get_model()->get_preview_Z());
   get_model()->setMeasuresPoint(mouse_preview);
 
   if (event->state & GDK_BUTTON1_MASK) { // move or rotate
     if (event->state & GDK_SHIFT_MASK) { // move object XY
       vector<Shape*> shapes;
-      vector<TreeObject*>objects;
+      vector<ListObject*>objects;
       if (!m_view->get_selected_objects(objects, shapes))
-	return true;
+    return true;
       const Vector3d mouse_down_plat = mouse_on_plane(m_dragStart.x(), m_dragStart.y());
       const Vector3d mousePlat  = mouse_on_plane(event->x, event->y);
       const Vector2d mouse_xy   = Vector2d(mousePlat.x(), mousePlat.y());
       const Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x(), mouse_down_plat.y());
       const Vector3d movevec(deltamouse.x(), deltamouse.y(), 0.);
       if (shapes.size()>0)
-	for (uint s=0; s<shapes.size(); s++) {
-	  shapes[s]->transform3D.move(movevec);
-	}
+    for (uint s=0; s<shapes.size(); s++) {
+      shapes[s]->transform3D.move(movevec);
+    }
       else
-	for (uint o=0; o<objects.size(); o++) {
-	  objects[o]->transform3D.move(movevec);
-	}
+    for (uint o=0; o<objects.size(); o++) {
+      objects[o]->transform3D.move(movevec);
+    }
       m_dragStart = dragp;
     }
     else if (event->state & GDK_CONTROL_MASK) { // move object Z wise
       const Vector3d delta3fz(0, 0, -delta.y()*drag_factor);
       vector<Shape*> shapes;
-      vector<TreeObject*>objects;
+      vector<ListObject*>objects;
       if (!m_view->get_selected_objects(objects, shapes))
-	return true;
+    return true;
       if (shapes.size()>0)
-	for (uint s=0; s<shapes.size(); s++) {
-	  Transform3D &transf = shapes[s]->transform3D;
-	  double scale = transf.transform[3][3];
-	  Vector3d movevec = delta3fz*scale;
-	  transf.move(movevec);
-	}
+    for (uint s=0; s<shapes.size(); s++) {
+      Transform3D &transf = shapes[s]->transform3D;
+      double scale = transf.transform[3][3];
+      Vector3d movevec = delta3fz*scale;
+      transf.move(movevec);
+    }
       else
-	for (uint o=0; o<objects.size(); o++) {
-	  Transform3D &transf = objects[o]->transform3D;
-	  const double scale = transf.transform[3][3];
-	  const Vector3d movevec = delta3fz*scale;
-	  transf.move(movevec);
-	}
+    for (uint o=0; o<objects.size(); o++) {
+      Transform3D &transf = objects[o]->transform3D;
+      const double scale = transf.transform[3][3];
+      const Vector3d movevec = delta3fz*scale;
+      transf.move(movevec);
+    }
       m_dragStart = dragp;
     }
     else { // rotate view
@@ -481,37 +467,37 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
     if (event->state & GDK_BUTTON2_MASK) { // zoom
       const double factor = 1.0 + 0.01 * (delta.y() - delta.x());
       if (event->state & GDK_SHIFT_MASK) { // scale shape
-	vector<Shape*> shapes;
-	vector<TreeObject*>objects;
-	if (!m_view->get_selected_objects(objects, shapes))
-	  return true;
-	if (shapes.size()>0) {
-	  for (uint s=0; s<shapes.size(); s++) {
-	    shapes[s]->Scale(shapes[s]->getScaleFactor()/factor, false);
-	  }
-	  m_view->update_scale_value();
-	}
+    vector<Shape*> shapes;
+    vector<ListObject*>objects;
+    if (!m_view->get_selected_objects(objects, shapes))
+      return true;
+    if (shapes.size()>0) {
+      for (uint s=0; s<shapes.size(); s++) {
+        shapes[s]->Scale(shapes[s]->getScaleFactor()/factor, false);
+      }
+      m_view->update_scale_value();
+    }
       } else { // zoom view
-	m_zoom *= factor;
+    m_zoom *= factor;
       }
       m_dragStart = dragp;
     } // BUTTON 2
     else if (event->state & GDK_BUTTON3_MASK) {
       if (event->state & GDK_SHIFT_MASK ||
-	  event->state & GDK_CONTROL_MASK ) {  // rotate shape
-	vector<Shape*> shapes;
-	vector<TreeObject*>objects;
-	Vector3d axis;
-	if (event->state & GDK_CONTROL_MASK)  // rotate  z wise
-	  axis = Vector3d(0,0,delta.x());
-	else
-	  axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
-	m_view->rotate_selection(axis, delta.length()/100.);
-	m_dragStart = dragp;
+      event->state & GDK_CONTROL_MASK ) {  // rotate shape
+    vector<Shape*> shapes;
+    vector<ListObject*>objects;
+    Vector3d axis;
+    if (event->state & GDK_CONTROL_MASK)  // rotate  z wise
+      axis = Vector3d(0,0,delta.x());
+    else
+      axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
+    m_view->rotate_selection(axis, delta.length()/100.);
+    m_dragStart = dragp;
       } else {  // move view XY  / pan
-	moveArcballTrans(m_transform, delta3f);
-	m_dragStart = dragp;
-	//setArcballTrans(m_transform, delta3f);
+    moveArcballTrans(m_transform, delta3f);
+    m_dragStart = dragp;
+    //setArcballTrans(m_transform, delta3f);
       }
     } // BUTTON 3
     if (redraw) queue_draw();
@@ -520,12 +506,12 @@ bool Render::on_motion_notify_event(GdkEventMotion* event)
   if (redraw) queue_draw();
   return Gtk::DrawingArea::on_motion_notify_event (event);
 }
-
+*/
 void Render::SetEnableLight(unsigned int i, bool on)
 {
   assert (i < N_LIGHTS);
   m_lights[i]->Enable(on);
-  queue_draw();
+  update();
 }
 
 void Render::CenterView()
@@ -538,9 +524,10 @@ void Render::CenterView()
 guint Render::find_object_at(gdouble x, gdouble y)
 {
   // Render everything in selection mode
-  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
-  if (!gldrawable->gl_begin(get_gl_context()))
-    return false;
+
+//  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
+//  if (!gldrawable->gl_begin(get_gl_context()))
+//    return false;
 
   const GLsizei BUFSIZE = 256;
   GLuint select_buffer[BUFSIZE];
@@ -555,13 +542,13 @@ guint Render::find_object_at(gdouble x, gdouble y)
   glLoadIdentity ();
   glGetIntegerv(GL_VIEWPORT,viewport);
   gluPickMatrix(x,viewport[3]-y,2,2,viewport); // 2x2 pixels around the cursor
-  gluPerspective (45.0f, (float)get_width()/(float)get_height(),1.0f, 1000000.0f);
+  gluPerspective (45.0, double(width()/height()), 1.0, 1000000.0);
   glMatrixMode (GL_MODELVIEW);
   glInitNames();
   glPushName(0);
   glLoadIdentity ();
 
-  glTranslatef (0.0, 0.0, -2.0 * m_zoom);
+  glTranslatef (0.0f, 0.0f, -2.0f * m_zoom);
   glMultMatrixf (m_transform.M);
   CenterView();
   glPushMatrix();
@@ -569,8 +556,8 @@ guint Render::find_object_at(gdouble x, gdouble y)
 
   glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
 
-  vector<Gtk::TreeModel::Path> no_object;
-  m_view->Draw (no_object, true);
+  QModelIndexList no_object;
+  m_main->Draw (&no_object, true);
 
   // restor projection and model matrices
   glMatrixMode(GL_PROJECTION);
@@ -580,11 +567,11 @@ guint Render::find_object_at(gdouble x, gdouble y)
   // restore rendering mode
   GLint hits = glRenderMode(GL_RENDER);
 
-  if (gldrawable->is_double_buffered())
-    gldrawable->swap_buffers();
-  else
+//  if (gldrawable->is_double_buffered())
+//    gldrawable->swap_buffers();
+//  else
     glFlush();
-  gldrawable->gl_end();
+//  gldrawable->gl_end();
 
   // Process the selection hits
   GLuint *ptr = select_buffer;
@@ -606,13 +593,12 @@ guint Render::find_object_at(gdouble x, gdouble y)
   return name;
 }
 
-
 // http://www.3dkingdoms.com/selection.html
-Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
+Vector3d Render::mouse_on_plane(double x, double y, double plane_z)
 {
   Vector3d margin;
-  Model *m = get_model();
-  if (m!=NULL) margin = m->settings.getPrintMargin();
+  const Model *m = get_model();
+  if (m!=NULL) margin = m->settings->getPrintMargin();
 
  // This function will find 2 points in world space that are on the line into the screen defined by screen-space( ie. window-space ) point (x,y)
   double mvmatrix[16];
@@ -623,7 +609,7 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
   glGetIntegerv(GL_VIEWPORT, viewport);
   glGetDoublev (GL_MODELVIEW_MATRIX, mvmatrix);
   glGetDoublev (GL_PROJECTION_MATRIX, projmatrix);
-  dClickY = double ((double)get_height() - y); // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
+  dClickY = double ((double)height() - y); // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
 
   gluUnProject ((double) x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
   Vector3d rayP1( dX, dY, dZ );
@@ -637,4 +623,179 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z) const
     return downP - margin;
   }
   else return rayP1 - margin;
+}
+
+/*
+static const char *vertexShaderSourceCore =
+    "#version 150\n"
+    "in vec4 vertex;\n"
+    "in vec3 normal;\n"
+    "out vec3 vert;\n"
+    "out vec3 vertNormal;\n"
+    "uniform mat4 projMatrix;\n"
+    "uniform mat4 mvMatrix;\n"
+    "uniform mat3 normalMatrix;\n"
+    "void main() {\n"
+    "   vert = vertex.xyz;\n"
+    "   vertNormal = normalMatrix * normal;\n"
+    "   gl_Position = projMatrix * mvMatrix * vertex;\n"
+    "}\n";
+
+static const char *fragmentShaderSourceCore =
+    "#version 150\n"
+    "in highp vec3 vert;\n"
+    "in highp vec3 vertNormal;\n"
+    "out highp vec4 fragColor;\n"
+    "uniform highp vec3 lightPos;\n"
+    "void main() {\n"
+    "   highp vec3 L = normalize(lightPos - vert);\n"
+    "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
+    "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
+    "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
+    "   fragColor = vec4(col, 1.0);\n"
+    "}\n";
+
+static const char *vertexShaderSource =
+    "attribute vec4 vertex;\n"
+    "attribute vec3 normal;\n"
+    "varying vec3 vert;\n"
+    "varying vec3 vertNormal;\n"
+    "uniform mat4 projMatrix;\n"
+    "uniform mat4 mvMatrix;\n"
+    "uniform mat3 normalMatrix;\n"
+    "void main() {\n"
+    "   vert = vertex.xyz;\n"
+    "   vertNormal = normalMatrix * normal;\n"
+    "   gl_Position = projMatrix * mvMatrix * vertex;\n"
+    "}\n";
+
+static const char *fragmentShaderSource =
+    "varying highp vec3 vert;\n"
+    "varying highp vec3 vertNormal;\n"
+    "uniform highp vec3 lightPos;\n"
+    "void main() {\n"
+    "   highp vec3 L = normalize(lightPos - vert);\n"
+    "   highp float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
+    "   highp vec3 color = vec3(0.39, 1.0, 0.0);\n"
+    "   highp vec3 col = clamp(color * 0.2 + color * 0.8 * NL, 0.0, 1.0);\n"
+    "   gl_FragColor = vec4(col, 1.0);\n"
+    "}\n";
+*/
+
+void Render::initializeGL()
+{
+    //  QOpenGLWidget::initializeGL();
+    connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &Render::cleanup);
+    initializeOpenGLFunctions();
+    glClearColor(0, 0, 0, 0);
+
+
+
+    //============================
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
+    static GLfloat lightPosition[4] = { 0, 0, 10, 1.0 };
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+    //=============================
+
+    const int w = width(), h = height();
+    glLoadIdentity();
+    glViewport (0, 0, w, h);
+    glMatrixMode (GL_PROJECTION);
+    glLoadIdentity ();
+    gluPerspective (45.0, 1.*w/h, 1.0, 1000000.0);
+    glMatrixMode (GL_MODELVIEW);
+    glLoadIdentity ();
+
+    if (w > 1 && h > 1) // Limit arcball minimum size or it asserts
+      m_arcBall->setBounds(w, h);
+    glEnable(GL_LIGHTING);
+
+    struct { GLfloat x; GLfloat y; GLfloat z; } light_locations[] = {
+      { -100,  100, 200 },
+      {  100,  100, 200 },
+      {  100, -100, 200 },
+      {  100, -100, 200 }
+    };
+    for (uint i = 0; i < N_LIGHTS; i++) {
+      delete (m_lights[i]);
+      m_lights[i] = new GlLight();
+      m_lights[i]->Init(GLenum(GL_LIGHT0+i));
+      m_lights[i]->SetAmbient(0.2f, 0.2f, 0.2f, 1.0f);
+      m_lights[i]->SetDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
+      m_lights[i]->SetSpecular(1.0f, 1.0f, 1.0f, 1.0f);
+      m_lights[i]->Enable(false);
+      m_lights[i]->SetLocation(light_locations[i].x,
+                   light_locations[i].y,
+                   light_locations[i].z, 0);
+    }
+    m_lights[0]->Enable(true);
+    m_lights[3]->Enable(true);
+
+    glDisable ( GL_LIGHTING);
+    glDepthFunc (GL_LEQUAL);
+    glEnable (GL_DEPTH_TEST);
+    glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+/*
+    m_program = new QOpenGLShaderProgram;
+    m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_core ? vertexShaderSourceCore : vertexShaderSource);
+    m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, m_core ? fragmentShaderSourceCore : fragmentShaderSource);
+    m_program->bindAttributeLocation("vertex", 0);
+    m_program->bindAttributeLocation("normal", 1);
+    m_program->link();
+
+    m_program->bind();
+
+    m_projMatrixLoc = m_program->uniformLocation("projMatrix");
+    m_mvMatrixLoc = m_program->uniformLocation("mvMatrix");
+    m_normalMatrixLoc = m_program->uniformLocation("normalMatrix");
+    m_lightPosLoc = m_program->uniformLocation("lightPos");
+    */
+
+//    find_font();
+}
+
+QSize Render::minimumSizeHint() const
+{
+    return QSize(50, 50);
+}
+
+QSize Render::sizeHint() const
+{
+    return QSize(400, 400);
+}
+
+void Render::resizeGL(int width, int height)
+{
+    int side = qMin(width, height);
+    glViewport((width - side) / 2, (height - side) / 2, side, side);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+#ifdef QT_OPENGL_ES_1
+    glOrthof(-2, +2, -2, +2, 1.0, 15.0);
+#else
+    glOrtho(-2, +2, -2, +2, 1.0, 15.0);
+#endif
+    glMatrixMode(GL_MODELVIEW);
+}
+
+void Render::paintGL()
+{
+
+}
+
+void Render::mousePressEvent(QMouseEvent *event)
+{
+
+}
+
+void Render::mouseMoveEvent(QMouseEvent *event)
+{
+
 }

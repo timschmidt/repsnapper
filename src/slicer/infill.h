@@ -24,14 +24,14 @@
 #include <omp.h>
 #endif
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include "clipping.h"
 
 
 // user selectable have to be first
 enum InfillType {ParallelInfill, SmallZigzagInfill, HexInfill, PolyInfill, HilbertInfill,
-		 SupportInfill, RaftInfill, BridgeInfill, ZigzagInfill, ThinInfill,
-		 INVALIDINFILL};
+         SupportInfill, RaftInfill, BridgeInfill, ZigzagInfill, ThinInfill,
+         INVALIDINFILL};
 
 // these are available for user selection (order must be same as types):
 const string InfillNames[] = {_("Parallel"), _("Zigzag"), _("Hexagons"), _("Polygons"), _("Hilbert Curve")};
@@ -56,10 +56,10 @@ class Infill
 #endif
 
   ClipperLib::Paths makeInfillPattern(InfillType type,
-					 const vector<Poly> &tofillpolys,
-					 double infillDistance,
-					 double offsetDistance,
-					 double rotation) ;
+                     const vector<Poly> &tofillpolys,
+                     double infillDistance,
+                     double offsetDistance,
+                     double rotation) ;
 
   Infill();
 
@@ -77,8 +77,8 @@ class Infill
   string name;
   bool cached; // if this pattern comes from savedPatterns
 
-  void setName(string s){name=s;};
-  string getName(){return name;};
+  void setName(string s){name=s;}
+  string getName(){return name;}
 
   static void clearPatterns();
   InfillType m_type;
@@ -89,18 +89,18 @@ class Infill
   vector<Vector2d> infillvertices; // for lines types
 
   void addPoly (double z, const Poly &poly, InfillType type, double infillDistance,
-	       double offsetDistance, double rotation);
+           double offsetDistance, double rotation);
   void addPolys(double z, const vector<Poly> &polys, InfillType type,
-		double infillDistance, double offsetDistance, double rotation);
+        double infillDistance, double offsetDistance, double rotation);
   void addPolys(double z, const vector<Poly> &polys, const vector<Poly> &fillpolys,
-		double offsetDistance);
+        double offsetDistance);
   void addPolys(double z, const vector<Poly> &polys, const ClipperLib::Paths &ifcpolys,
-		double offsetDistance);
+        double offsetDistance);
 
   void addPoly (double z, const ExPoly &expoly, InfillType type, double infillDistance,
-	       double offsetDistance, double rotation);
+           double offsetDistance, double rotation);
   void addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
-		double infillDistance, double offsetDistance, double rotation);
+        double infillDistance, double offsetDistance, double rotation);
 
   void getLines(vector<Vector3d> &lines) const;
 
@@ -108,7 +108,7 @@ class Infill
   vector<Poly> sortedpolysfromlines(const vector<infillline> &lines, double z);
 
   void clear();
-  uint size() const {return infillpolys.size();};
+  size_t size() const {return infillpolys.size();}
 
   vector<Poly> getCachedPattern(double z);
 

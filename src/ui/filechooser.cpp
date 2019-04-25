@@ -17,7 +17,7 @@
 
 */
 
-#include "filechooser.h"
+//#include "filechooser.h"
 
 #include "view.h"
 #include "model.h"
@@ -35,7 +35,7 @@ RSFilechooser::RSFilechooser(View * view_)
 
   chooser->signal_update_preview().connect_notify
     ( sigc::bind(sigc::mem_fun
-		 (*this, &RSFilechooser::on_filechooser_preview), chooser) );
+         (*this, &RSFilechooser::on_filechooser_preview), chooser) );
 
   // file patterns
   allfiles.set_name(_("All Files"));
@@ -66,7 +66,7 @@ RSFilechooser::RSFilechooser(View * view_)
   chooser->add_filter(settingsfiles);
 
   view->connect_button ("load_save_button",
-			sigc::mem_fun(*this, &RSFilechooser::do_action));
+            sigc::mem_fun(*this, &RSFilechooser::do_action));
 
   chooser->signal_file_activated().connect
     (sigc::mem_fun(*this, &RSFilechooser::do_action));
@@ -160,12 +160,12 @@ void RSFilechooser::do_action()
     case SETTINGS: view->do_save_settings_as(); break;
     case SVG:
       {
-	bool singlelayer = false;
-	Gtk::CheckButton *mult;
-	builder->get_widget("save_multiple_svg", mult);
-	if (mult)
-	  singlelayer = mult->get_state();
-	view->do_slice_svg(singlelayer);
+    bool singlelayer = false;
+    Gtk::CheckButton *mult;
+    builder->get_widget("save_multiple_svg", mult);
+    if (mult)
+      singlelayer = mult->get_state();
+    view->do_slice_svg(singlelayer);
       }
       break;
     default: break;

@@ -21,10 +21,11 @@
 #include "poly.h"
 
 #include "layer.h"
-#include "shape.h"
+#include "../shape.h"
 #include "clipping.h"
-#include "render.h"
+#include "../render.h"
 
+#include "../ui/draw.h"
 
 #include <poly2tri/poly2tri/poly2tri/poly2tri.h>
 
@@ -115,7 +116,7 @@ void Poly::cleanup(double epsilon)
 {
   vertices = simplified(vertices, epsilon);
   if (!closed) return;
-  uint n_vert = vertices.size();
+  size_t n_vert = vertices.size();
   vector<Vector2d> invert;
   invert.insert(invert.end(),vertices.begin()+n_vert/2,vertices.end());
   invert.insert(invert.end(),vertices.begin(),vertices.begin()+n_vert/2);
@@ -132,38 +133,38 @@ void Poly::cleanup(double epsilon)
  */
 void Poly::calcHole() const // hole is mutable
 {
-  	if(vertices.size() < 3)
-	  return;	// hole is undefined
-	Vector2d p(-INFTY, -INFTY);
-	int v=0;
-	center = Vector2d(0,0);
-	Vector2d q;
-	for(size_t vert=0;vert<vertices.size();vert++)
-	{
-	  q = vertices[vert];
-	  center += q;
-	  if(q.x() > p.x())
-	    {
-	      p = q;
-	      v=vert;
-	    }
-	  else if(q.x() == p.x() && q.y() > p.y())
-	    {
-	      p.y() = q.y();
-	      v=vert;
-	    }
-	}
-	center /= vertices.size();
+    if(vertices.size() < 3)
+      return;	// hole is undefined
+    Vector2d p(-INFTY, -INFTY);
+    size_t v=0;
+    center = Vector2d(0,0);
+    Vector2d q;
+    for(size_t vert=0;vert<vertices.size();vert++)
+    {
+      q = vertices[vert];
+      center += q;
+      if(q.x() > p.x())
+        {
+          p = q;
+          v=vert;
+        }
+      else if(q.x() == p.x() && q.y() > p.y())
+        {
+          p.y() = q.y();
+          v=vert;
+        }
+    }
+    center /= vertices.size();
 
-	// we have the x-most vertex (with the highest y if there was a contest), v
-	Vector2d V1 = getVertexCircular(v-1);
-	Vector2d V2 = getVertexCircular(v);
-	Vector2d V3 = getVertexCircular(v+1);
+    // we have the x-most vertex (with the highest y if there was a contest), v
+    Vector2d V1 = getVertexCircular(v-1);
+    Vector2d V2 = getVertexCircular(v);
+    Vector2d V3 = getVertexCircular(v+1);
 
-	// Vector2d Va=V2-V1;
-	// Vector2d Vb=V3-V2;
-	hole = isleftof(V2, V3, V1); //cross(Vb,Va) > 0;
-	holecalculated = true;
+    // Vector2d Va=V2-V1;
+    // Vector2d Vb=V3-V2;
+    hole = isleftof(V2, V3, V1); //cross(Vb,Va) > 0;
+    holecalculated = true;
 }
 
 bool Poly::isHole() const
@@ -251,9 +252,9 @@ void Poly::nearestIndices(const Poly &p2, int &thisindex, int &otherindex) const
       if (!p2.closed && j != 0 && j != p2.size()-1) continue;
       double d = vertices[i].squared_distance(p2.vertices[j]);
       if (d < mindist) {
-	mindist = d;
-	thisindex = i;
-	otherindex= j;
+    mindist = d;
+    thisindex = i;
+    otherindex= j;
       }
     }
   }
@@ -294,10 +295,10 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
       Vector2d onpoint; // on p2
       // dist from point i to lines on p2
       const double mindist =
-	point_segment_distance_Sq(p2.vertices[j], p2.getVertexCircular(j+1),
-				  vertices[i], onpoint);
+    point_segment_distance_Sq(p2.vertices[j], p2.getVertexCircular(j+1),
+                  vertices[i], onpoint);
       if (mindist < min1) {
-	min1 = mindist; onpoint1 = onpoint; minindex1 = i;
+    min1 = mindist; onpoint1 = onpoint; minindex1 = i;
       }
     }
   }
@@ -307,10 +308,10 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
       Vector2d onpoint; // on this
       // dist from p2 point i to lines on this
       const double mindist =
-	point_segment_distance_Sq(vertices[j], getVertexCircular(j+1),
-				  p2.vertices[i], onpoint);
+    point_segment_distance_Sq(vertices[j], getVertexCircular(j+1),
+                  p2.vertices[i], onpoint);
       if (mindist < min2) {
-	min2 = mindist; onpoint2 = onpoint; minindex2 = i;
+    min2 = mindist; onpoint2 = onpoint; minindex2 = i;
       }
     }
   }
@@ -328,7 +329,7 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
 double Poly::angleAtVertex(uint i) const
 {
   return planeAngleBetween(getVertexCircular(i)-getVertexCircular(i-1),
-		      getVertexCircular(i+1)-getVertexCircular(i));
+              getVertexCircular(i+1)-getVertexCircular(i));
 }
 
 bool Poly::vertexInside2(const Vector2d &point, double maxoffset) const
@@ -349,11 +350,11 @@ bool Poly::vertexInside2(const Vector2d &point, double maxoffset) const
       // Skip horizontal lines, we can't intersect with them,
       // because the test line is horizontal
       if(P1.y() == P2.y())
-	continue;
+    continue;
 
       Intersection hit;
       if(IntersectXY(point,EndP,P1,P2,hit,maxoffset))
-	intersectcount++;
+    intersectcount++;
     }
   return (intersectcount%2==0);
 }
@@ -395,8 +396,8 @@ bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
     const Vector2d Pi = vertices[i];
     const Vector2d Pj = getVertexCircular(i+1);
     if ( ((Pi.y() > p.y()) != (Pj.y() > p.y())) &&
-	 (abs(p.x() - (Pj.x()-Pi.x())
-	      * (p.y()-Pi.y()) / (Pj.y()-Pi.y()) + Pi.x()) > maxoffset) )
+     (abs(p.x() - (Pj.x()-Pi.x())
+          * (p.y()-Pi.y()) / (Pj.y()-Pi.y()) + Pi.x()) > maxoffset) )
       c = !c;
   }
   if (!c)
@@ -470,7 +471,7 @@ vector<Vector2d> Poly::getVertexRangeCircular(int from, int to) const
 
 
 vector<Intersection> Poly::lineIntersections(const Vector2d &P1, const Vector2d &P2,
-					     double maxerr) const
+                         double maxerr) const
 {
   vector<Intersection> HitsBuffer;
   Vector2d P3,P4;
@@ -480,7 +481,7 @@ vector<Intersection> Poly::lineIntersections(const Vector2d &P1, const Vector2d 
       P4 = getVertexCircular(i+1);
       Intersection hit;
       if (IntersectXY(P1,P2,P3,P4,hit,maxerr)) {
-	HitsBuffer.push_back(hit);
+    HitsBuffer.push_back(hit);
       }
     }
   // std::sort(HitsBuffer.begin(),HitsBuffer.end());
@@ -497,7 +498,7 @@ vector<Intersection> Poly::lineIntersections(const Vector2d &P1, const Vector2d 
 double Poly::getLinelengthSq(uint startindex) const
 {
   const double length = (getVertexCircular(startindex+1) -
-			 getVertexCircular(startindex)).squared_length();
+             getVertexCircular(startindex)).squared_length();
   return length;
 }
 
@@ -587,7 +588,7 @@ vector<Vector2d> Poly::getCenterline() const
   vector<Vector2d> line;
   for (uint i=0; i < vertices.size(); i++){
     Vector2d abp = angle_bipartition(vertices[i],
-				     getVertexCircular(i-1), getVertexCircular(i+1));
+                     getVertexCircular(i-1), getVertexCircular(i+1));
 
     // int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
     // 			      const Vector2d &p3, const Vector2d &p4,
@@ -674,7 +675,7 @@ int Poly::getTriangulation(vector<Triangle> &triangles)  const
   const double OFF = 0;
   for (guint i=0; i<vertices.size(); i++)  {
     points[i] = new p2t::Point(vertices[i].x()+OFF,
-			       vertices[i].y()+OFF);
+                   vertices[i].y()+OFF);
   }
   p2t::CDT cdt(points);
   cdt.Triangulate();
@@ -698,7 +699,7 @@ Vector3d rotatedZ(Vector3d v, double angle)
   double sina = sin(angle);
   double cosa = cos(angle);
   return Vector3d(v.x()*cosa-v.y()*sina,
-		  v.y()*cosa+v.x()*sina, v.z());
+          v.y()*cosa+v.x()*sina, v.z());
 }
 
 void Poly::draw_as_surface() const
@@ -914,7 +915,7 @@ void ExPoly::drawLineNumbers() const
 
 
 void draw_poly(const Poly &poly, int gl_type, int linewidth, int pointsize,
-	       const float *rgb, float a, bool randomized)
+           const float *rgb, float a, bool randomized)
 {
   glColor4f(rgb[0],rgb[1],rgb[2],a);
   glLineWidth(linewidth);
@@ -923,7 +924,7 @@ void draw_poly(const Poly &poly, int gl_type, int linewidth, int pointsize,
 }
 
 void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int pointsize,
-		const float *rgb, float a, bool randomized)
+        const float *rgb, float a, bool randomized)
 {
   glColor4f(rgb[0],rgb[1],rgb[2], a);
   glLineWidth(linewidth);
@@ -934,15 +935,15 @@ void draw_polys(const vector <Poly> &polys, int gl_type, int linewidth, int poin
 }
 
 void draw_polys(const vector< vector <Poly> > &polys,
-		int gl_type, int linewidth, int pointsize,
-		const float *rgb, float a, bool randomized)
+        int gl_type, int linewidth, int pointsize,
+        const float *rgb, float a, bool randomized)
 {
   for(size_t p=0; p<polys.size();p++)
     draw_polys(polys[p], gl_type, linewidth, pointsize, rgb, a, randomized);
 }
 
 void draw_poly (const ExPoly &expoly, int gl_type, int linewidth, int pointsize,
-		const float *rgb, float a, bool randomized)
+        const float *rgb, float a, bool randomized)
 {
   draw_poly(expoly.outer,  gl_type, linewidth, pointsize, rgb, a, randomized);
   for(size_t p=0; p < expoly.holes.size();p++)
@@ -950,7 +951,7 @@ void draw_poly (const ExPoly &expoly, int gl_type, int linewidth, int pointsize,
 }
 
 void draw_polys(const vector <ExPoly> &expolys, int gl_type, int linewidth, int pointsize,
-		const float *rgb, float a, bool randomized)
+        const float *rgb, float a, bool randomized)
 {
   for(size_t p=0; p < expolys.size();p++) {
     draw_poly(expolys[p],  gl_type, linewidth, pointsize, rgb, a, randomized);
@@ -959,10 +960,10 @@ void draw_polys(const vector <ExPoly> &expolys, int gl_type, int linewidth, int 
 
 
 void draw_polys_surface(const vector <Poly> &polys,
-			const Vector2d &Min, const Vector2d &Max,
-			double z,
-			double cleandist,
-			const float *rgb, float a)
+            const Vector2d &Min, const Vector2d &Max,
+            double z,
+            double cleandist,
+            const float *rgb, float a)
 {
   glColor4f(rgb[0],rgb[1],rgb[2], a);
   glDrawPolySurfaceRastered(polys, Min, Max, z, cleandist);
@@ -975,20 +976,20 @@ void draw_polys_surface(const vector <Poly> &polys,
   // }
 }
 void draw_polys_surface(const vector< vector<Poly> > &polys,
-			const Vector2d &Min, const Vector2d &Max,
-			double z,
-			double cleandist,
-			const float *rgb, float a)
+            const Vector2d &Min, const Vector2d &Max,
+            double z,
+            double cleandist,
+            const float *rgb, float a)
 {
   for(size_t p=0; p < polys.size();p++)
     draw_polys_surface(polys[p], Min, Max, z, cleandist, rgb, a);
 }
 
 void draw_polys_surface(const vector< ExPoly > &expolys,
-			const Vector2d &Min, const Vector2d &Max,
-			double z,
-			double cleandist,
-			const float *rgb, float a)
+            const Vector2d &Min, const Vector2d &Max,
+            double z,
+            double cleandist,
+            const float *rgb, float a)
 {
   for(size_t p=0; p < expolys.size();p++)
     draw_polys_surface(Clipping::getPolys(expolys[p]), Min, Max, z, cleandist, rgb, a);

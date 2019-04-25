@@ -18,7 +18,6 @@
 */
 
 #include <cstdlib>
-#include <gtkmm.h>
 #include "prefs_dlg.h"
 
 #define MULTI_SETTINGS 0 // test some GUI / hardware selector fun
@@ -33,18 +32,18 @@ namespace {
     std::vector<std::string> dirs = Platform::getConfigPaths();
 
     for (std::vector<std::string>::const_iterator i = dirs.begin();
-	 i != dirs.end(); ++i) {
+     i != dirs.end(); ++i) {
       std::string settings_name = Glib::build_filename (*i, "settings");
       Glib::RefPtr<Gio::File> dir = Gio::File::create_for_path(settings_name);
       if(dir->query_exists()) {
-	Glib::RefPtr<Gio::FileEnumerator> entries = dir->enumerate_children();
-	if (!entries)
-	  continue;
-	Glib::RefPtr<Gio::FileInfo> info;
-	while ( (info = entries->next_file()) ) {
-	  if (Platform::has_extension(info->get_name(), "conf"))
-	    ret.push_back(Glib::build_filename(settings_name,info->get_name()));
-	}
+    Glib::RefPtr<Gio::FileEnumerator> entries = dir->enumerate_children();
+    if (!entries)
+      continue;
+    Glib::RefPtr<Gio::FileInfo> info;
+    while ( (info = entries->next_file()) ) {
+      if (Platform::has_extension(info->get_name(), "conf"))
+        ret.push_back(Glib::build_filename(settings_name,info->get_name()));
+    }
       }
     }
     return ret;
@@ -52,20 +51,21 @@ namespace {
 }
 #endif
 
-void PrefsDlg::handle_response(int, Gtk::Dialog *dialog)
-{
-  dialog->hide();
-}
+//void PrefsDlg::handle_response(int, Gtk::Dialog *dialog)
+//{
+//  dialog->hide();
+//}
 
-PrefsDlg::PrefsDlg(Glib::RefPtr<Gtk::Builder> &builder)
+PrefsDlg::PrefsDlg(QWidget *parent):
+    ui_dialog(new Ui::PreferencesDialog)
 {
-  builder->get_widget ("preferences_dlg", m_preferences_dlg);
-  builder->get_widget ("settings_icons", m_settings_icons);
-  builder->get_widget ("settings_overview", m_settings_overview);
-  builder->get_widget ("settings_notebook", m_settings_notebook);
-  m_preferences_dlg->set_icon_name("gtk-convert");
-  m_preferences_dlg->signal_response().connect (
-	sigc::bind(sigc::mem_fun(*this, &PrefsDlg::handle_response), m_preferences_dlg));
+    ui_dialog->setupUi(this);
+
+//  builder->get_widget ("settings_overview", m_settings_overview);
+//  builder->get_widget ("settings_notebook", m_settings_tab);
+//  m_preferences_dlg->set_icon_name("gtk-convert");
+//  m_preferences_dlg->signal_response().connect (
+//    sigc::bind(sigc::mem_fun(*this, &PrefsDlg::handle_response), m_preferences_dlg));
 }
 
 PrefsDlg::~PrefsDlg()
@@ -88,7 +88,7 @@ PrefsDlg::load_settings()
     try {
       set->load_settings(Gio::File::create_for_path(*i));
       cerr << "settings '" << set->get_string("Global","SettingsName")
-	   << "' icon '"   << set->get_string("Global","SettingsImage") << "'\n";
+       << "' icon '"   << set->get_string("Global","SettingsImage") << "'\n";
       m_settings.push_back(set);
     } catch (...) {
       g_warning ("Error parsing '%s'", i->c_str());
@@ -125,10 +125,10 @@ PrefsDlg::load_settings()
   static bool hidden = false;
   if (!hidden)
     {
-      m_settings_icons->hide();
-      m_settings_overview->hide();
-      m_settings_notebook->get_nth_page(0)->hide();
-      hidden = true;
+//      m_settings_icons->hide();
+//      m_settings_overview->hide();
+//      m_settings_tab->get_nth_page(0)->hide();
+ //     hidden = true;
     }
 #endif
   return true;
@@ -138,6 +138,5 @@ void
 PrefsDlg::show()
 {
   load_settings();
-  m_preferences_dlg->show();
-  m_preferences_dlg->raise();
+  QDialog::show();
 }

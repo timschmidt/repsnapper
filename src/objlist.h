@@ -28,7 +28,8 @@
 class ListObject
 {
 public:
-    ListObject(){name = _("Unnamed object");}
+    ListObject(const string name);
+    ListObject() : ListObject(_("Unnamed object")){}
     ~ListObject();
 
     string name;
@@ -36,7 +37,7 @@ public:
     vector<Shape*> shapes;
 
     bool deleteShape(uint i);
-    short dimensions;
+    ushort dimensions;
     size_t size(){return shapes.size();}
     size_t addShape(Shape *shape, std::string location);
     void move(const Vector3d &delta){ transform3D.move(delta); }
@@ -52,12 +53,12 @@ public:
     ObjectsList();
     ~ObjectsList();
 
-    void clear();
-    void newObject();
+    void clear() {objects.clear();}
+    ListObject *newObject(string name);
     size_t addShape(ListObject *parent, Shape *shape, std::string location);
 
-
     void DeleteSelected(const QModelIndexList *indexes);
+    void get_all_shapes(vector<Shape*> &shapes) const;
     void get_all_shapes(vector<Shape*> &shapes, vector<Matrix4d> &transforms) const;
     void get_selected_objects(const QModelIndexList *indexes,
                               vector<ListObject*> &objects, vector<Shape*> &shapes) const;
@@ -73,6 +74,8 @@ public:
     Transform3D transform3D;
     float version;
     string m_filename;
+
+    string info() const;
 };
 
 #endif // OBJLIST_H

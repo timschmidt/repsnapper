@@ -16,28 +16,33 @@
     with this program; if not, write to the Free Software Foundation, Inc.,
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
+
 #ifndef SETTINGS_UI_H
 #define SETTINGS_UI_H
 
-#include "settings.h"
-#include <gtkmm.h>
+#include "../settings.h"
 
-class PrefsDlg {
-  Gtk::Dialog *m_preferences_dlg;
-  Gtk::VBox *m_settings_overview;
-  Gtk::Notebook *m_settings_notebook;
-  Gtk::ScrolledWindow *m_settings_icons;
+#include <ui_preferences_dlg.h>
 
-  void handle_response(int, Gtk::Dialog *dialog);
+class PrefsDlg : public QDialog {
+
+    Q_OBJECT
+
+    Ui::PreferencesDialog *ui_dialog;
+
+//  QWidget *m_settings_overview;
+//  QTabWidget *m_settings_tab;
+
+//  void handle_response(int, QDialog *dialog);
 
   std::vector<Settings *> m_settings;
   bool load_settings();
 
  public:
-  PrefsDlg(Glib::RefPtr<Gtk::Builder> &builder);
-  ~PrefsDlg();
+  PrefsDlg(QWidget *parent);
+    ~PrefsDlg();
   void show();
-  void set_icon_from_file(const string path) {m_preferences_dlg->set_icon_from_file(path);}
+//  void set_icon_from_file(const string path) {m_preferences_dlg->set_icon_from_file(path);}
 };
 
 #endif // SETTINGS_H

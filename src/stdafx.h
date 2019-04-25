@@ -41,8 +41,8 @@ typedef unsigned int        uint;
 #define DEBUG_INFO (1<<1)
 #define DEBUG_ERRORS (1<<2)
 #ifdef WIN32
-	#include <windows.h>   // Header File For Windows
-	#include <tchar.h>
+        #include <windows.h>   // Header File For Windows
+        #include <tchar.h>
         #undef interface // Undo braindead define from Windows that conflicts with glibmm DBUS binding
 typedef unsigned int        guint;
 #define random   rand
@@ -51,7 +51,7 @@ typedef unsigned int        guint;
 #include "platform.h"   // OpenGL, glu, glut in cross-platform way
 #include <stdio.h>
 #include <glib/gi18n.h>
-#include <gtkmm.h>
+//#include <gtkmm.h>
 #include "math.h" // Needed for sqrtf
 #include "types.h"
 

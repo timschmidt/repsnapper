@@ -19,14 +19,14 @@
 */
 
 #pragma once
-#include "stdafx.h"
+#include "../stdafx.h"
 
 #include <vector>
 #include <list>
 #include <iostream>
 
 #include "poly.h"
-#include "gcode/gcodestate.h"
+#include "../gcode/gcodestate.h"
 #include "printlines.h"
 
 #include <cairomm/cairomm.h>
@@ -50,11 +50,11 @@ public:
   void setZ(double z){Z=z;}
   void setSkins(uint skins_){skins = skins_;}
 
-  Layer * getPrevious() const {return previous;};
-  void setPrevious(Layer * prevlayer){previous = prevlayer;};
+  Layer * getPrevious() const {return previous;}
+  void setPrevious(Layer * prevlayer){previous = prevlayer;}
 
-  Vector2d getMin() const {return Min;};
-  Vector2d getMax() const {return Max;};
+  Vector2d getMin() const {return Min;}
+  Vector2d getMax() const {return Max;}
   bool setMinMax(const Poly &poly);
   bool setMinMax(const vector<Poly> &polys);
 
@@ -74,18 +74,18 @@ public:
   void mergeSupportPolygons();
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
-  void CalcInfill (const Settings &settings);
+  void CalcInfill (Settings &settings);
   void CalcRaftInfill (const vector<Poly> &polys,
-		       double extrusionfactor, double infilldistance,
-		       double rotation);
+               double extrusionfactor, double infilldistance,
+               double rotation);
 
   vector<double> getBridgeRotations(const vector<Poly> &poly) const;
   void calcBridgeAngles(const Layer *layerbelow);
 
   static void FindThinpolys(const vector<Poly> &polys, double extrwidth,
-			    vector<Poly> &thickpolys, vector<Poly> &thinpolys);
+                vector<Poly> &thickpolys, vector<Poly> &thinpolys);
 
-  void MakeShells(const Settings &settings);
+  void MakeShells(Settings &settings);
   // uint shellcount, double extrudedWidth, double shelloffset,
   // bool makeskirt, double skirtdistance, double infilloverlap);
   /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */
@@ -94,7 +94,7 @@ public:
   void calcConvexHull();
   void MakeSkirt(double distance, bool single=true);
 
-  vector<Poly> GetPolygons() const { return polygons; };
+  vector<Poly> GetPolygons() const { return polygons; }
   vector<ExPoly>  GetExPolygons() const;
   void SetPolygons(vector<Poly> &polys) ;
   /* void SetPolygons(const Matrix4d &T, const Shape &shape, double z); */
@@ -107,10 +107,10 @@ public:
   vector<Poly> GetDecorPolygons() const { return decorPolygons; }
   vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
   vector<Poly>  GetShellPolygonsCirc(int number) const;
-  vector<Poly>  GetSkirtPolygons() const {return skirtPolygons; };
+  vector<Poly>  GetSkirtPolygons() const {return skirtPolygons; }
   const vector<Poly> &GetInnerShell() const;
   const vector<Poly> &GetOuterShell() const;
-  const Poly &GetHullPolygon() const {return hullPolygon;};
+  const Poly &GetHullPolygon() const {return hullPolygon;}
 
   vector<Poly> getOverhangs() const;
 
@@ -135,18 +135,18 @@ public:
 
 
   void MakePrintlines (Vector3d &start,
-		       vector<PLine3> &plines,
-		       double offsetZ,
-		       Settings &settings) const;
+               vector<PLine3> &plines,
+               double offsetZ,
+               Settings &settings) const;
 
   void MakeGCode (Vector3d &start,
-		  GCodeState &gc_state,
-		  double offsetZ,
-		  Settings &settings) const;
+          GCodeState &gc_state,
+          double offsetZ,
+          Settings *settings) const;
 
   string info() const ;
 
-  void Draw(const Settings &settings);
+  void Draw(Settings &settings);
 
   void DrawRulers(const Vector2d &point);
 
@@ -155,7 +155,7 @@ public:
   void addPolygons(vector<Poly> &polys);
   void cleanupPolygons();
   int addShape(const Matrix4d &T, const Shape &shape, double z,
-	       double &max_gradient, double max_supportangle);
+           double &max_gradient, double max_supportangle);
 
   double area() const;
 

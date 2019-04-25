@@ -20,57 +20,103 @@
 #define RENDER_H
 
 #include "arcball.h"
-#include <gtkglmm.h>
+
+#include <QOpenGLWidget>
+#include <QOpenGLFunctions>
+#include <QOpenGLVertexArrayObject>
+#include <QModelIndexList>
+#include <QOpenGLBuffer>
+#include <QMatrix4x4>
+
+QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
+
+#include <mainwindow.h>
 
 class View;
 class Model;
-class gllight;
+class GlLight;
 class Settings;
 
-class Render : public Gtk::GL::DrawingArea
+class Render : public QOpenGLWidget, protected QOpenGLFunctions
 {
+    Q_OBJECT
   ArcBall  *m_arcBall;
   Matrix4fT m_transform;
   Vector2f  m_downPoint;
   Vector2f  m_dragStart;
-  View *m_view;
-  Model *get_model() const;
-  Glib::RefPtr<Gtk::TreeSelection> m_selection;
+  MainWindow *m_main;
+  Model *get_model() const { return m_main->get_model(); }
+  QModelIndexList *m_selection;
 
   // font rendering:
   static GLuint fontlistbase;
   static int fontheight;
 
   float m_zoom;
-  gllight *m_lights[4];
+  GlLight *m_lights[4];
 
   void SetEnableLight(unsigned int lightNr, bool on);
   void CenterView();
   void selection_changed();
+
+
   guint find_object_at(gdouble x, gdouble y);
-  Vector3d mouse_on_plane(double x, double y, double plane_z=0) const;
+  Vector3d mouse_on_plane(double x, double y, double plane_z=0);
+protected:
+  void initializeGL() override;
+  void resizeGL(int w, int h) override;
+  void paintGL() override;
+  void mousePressEvent(QMouseEvent *event) override;
+  void mouseMoveEvent(QMouseEvent *event) override;
+  QSize minimumSizeHint() const override;
+  QSize sizeHint() const override;
 
- public:
-  Render (View *view, Glib::RefPtr<Gtk::TreeSelection> selection);
-  ~Render();
+public:
+  Render (QWidget *parent, MainWindow *view);
+  ~Render() override;
 
-  GtkWidget *get_widget();
+  QWidget *get_widget();
   void set_model (Model *model);
-  void set_zoom (float zoom) {m_zoom=zoom;};
+  void set_zoom (float zoom) {m_zoom=zoom;}
   void zoom_to_model();
-  void set_transform(const Matrix4fT &transform) {m_transform=transform;};
+  void set_transform(const Matrix4fT &transform) {m_transform=transform;}
 
   static void draw_string(const Vector3d &pos, const string s);
 
-  virtual void on_realize();
-  virtual bool on_configure_event(GdkEventConfigure* event);
-  virtual bool on_expose_event(GdkEventExpose* event);
-  virtual bool on_motion_notify_event(GdkEventMotion* event);
-  virtual bool on_button_press_event(GdkEventButton* event);
-  virtual bool on_button_release_event(GdkEventButton* event);
-  virtual bool on_scroll_event(GdkEventScroll* event);
-  virtual bool on_key_press_event(GdkEventKey* event);
-  virtual bool on_key_release_event(GdkEventKey* event);
+//  virtual void on_realize();
+
+public slots:
+  void setXRotation(int angle);
+  void setYRotation(int angle);
+  void setZRotation(int angle);
+  void cleanup();
+
+signals:
+  void xRotationChanged(int angle);
+  void yRotationChanged(int angle);
+  void zRotationChanged(int angle);
+
+private:
+  void setupVertexAttribs();
+  bool m_core;
+  int m_xRot;
+  int m_yRot;
+  int m_zRot;
+  QPoint m_lastPos;
+  QOpenGLVertexArrayObject m_vao;
+  QOpenGLBuffer m_logoVbo;
+  QOpenGLShaderProgram *m_program;
+  QMatrix4x4 m_proj;
+  QMatrix4x4 m_camera;
+  QMatrix4x4 m_world;
+//  virtual bool on_expose_event(GdkEventExpose* event);
+//  virtual bool on_motion_notify_event(GdkEventMotion* event);
+//  virtual bool on_button_press_event(GdkEventButton* event);
+//  virtual bool on_button_release_event(GdkEventButton* event);
+//  virtual bool on_scroll_event(GdkEventScroll* event);
+//  virtual bool on_key_press_event(GdkEventKey* event);
+  //  virtual bool on_key_release_event(GdkEventKey* event);
+  void find_font();
 };
 
 #endif // RENDER_H

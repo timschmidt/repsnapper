@@ -17,7 +17,6 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #pragma once
-#include <gtkmm.h>
 
 #include <vector>
 
@@ -26,64 +25,73 @@
 #include <string>
 #include <sstream>
 
+#include <QTextDocument>
+#include <QTextCursor>
+
+#include <glibmm/ustring.h>
+
 #include "command.h"
 
 class GCodeIter
 {
-  Glib::RefPtr<Gtk::TextBuffer> m_buffer;
-  Gtk::TextBuffer::iterator m_it;
+  QTextDocument *m_buffer;
+  QTextCursor m_cursor;
+  int m_line_count;
+
  public:
-  unsigned long m_line_count, m_cur_line;
-  GCodeIter (Glib::RefPtr<Gtk::TextBuffer> buffer);
-  std::string next_line ();
+  GCodeIter (QTextDocument *buffer);
+  std::string next_line();
   std::string next_line_stripped();
   bool finished();
   double time_used;
   time_t time_started;
   double time_estimation;
   Command getCurrentCommand(Vector3d defaultwhere,
-			    const vector<char> &E_letters);
-  void set_to_lineno(long lineno);
+                const vector<QChar> &E_letters);
+  void set_to_lineno(int lineno);
+  int get_current_lineno();
+private:
+  std::string get_current_line();
+  QTextCursor cursor_at_line(int lineno);
 };
 
 class GCode
 {
-
     int gl_List;
 
 public:
   GCode();
 
-  void Read  (Model *model, const vector<char> E_letters,
-	      ViewProgress *progress, string filename);
+  void Read  (Model *model, const vector<QChar> E_letters,
+          ViewProgress *progress, string filename);
   //void Write (Model *model, string filename);
-  void draw  (const Settings &settings,
-	      int layer=-1, bool liveprinting=false,
-	      int linewidth=3);
-  void drawCommands(const Settings &settings, uint start, uint end,
-		    bool liveprinting, int linewidth, bool arrows, bool boundary=false,
+  void draw  (Settings *settings,
+              int layer=-1, bool liveprinting=false,
+              int linewidth=3);
+  void drawCommands(Settings *settings, uint start, uint end,
+                    bool liveprinting, int linewidth, bool arrows, bool boundary=false,
                     bool onlyZChange = false);
-  void MakeText(string &GcodeTxt, const Settings &settings,
-		ViewProgress * progress);
+  void MakeText(QString &GcodeTxt, Settings *settings,
+                ViewProgress * progress);
 
   //bool append_text (const std::string &line);
   std::string get_text() const;
   void clear();
 
   std::vector<Command> commands;
-  uint size() { return commands.size(); };
+  uint size() { return uint(commands.size()); }
 
   Vector3d Min, Max, Center;
 
   void translate(Vector3d trans);
 
-  Glib::RefPtr<Gtk::TextBuffer> buffer;
+  QTextDocument *buffer;
   GCodeIter *get_iter ();
 
   double GetTotalExtruded(bool relativeEcode) const;
   double GetTimeEstimation() const;
 
-  void updateWhereAtCursor(const vector<char> &E_letters);
+  void updateWhereAtCursor(const vector<QChar> &E_letters);
   Vector3d currentCursorWhere;
   Vector3d currentCursorFrom;
   Command currentCursorCommand;

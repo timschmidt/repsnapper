@@ -101,7 +101,7 @@ void View::connect_tooltoggled(const char *name, const sigc::slot<void, Gtk::Tog
 void View::move_gcode_to_platform ()
 {
   m_model->translateGCode(- m_model->gcode.Min
-			  + m_model->settings.getPrintMargin());
+                          + m_model->settings.getPrintMargin());
 }
 
 void View::convert_to_gcode ()
@@ -111,7 +111,7 @@ void View::convert_to_gcode ()
   if (m_printer->IsPrinting())
     {
       m_printer->error (_("Complete print before converting"),
-		     _("Converting to GCode while printing will abort the print"));
+                     _("Converting to GCode while printing will abort the print"));
       return;
     }
   m_model->ConvertToGCode();
@@ -136,8 +136,8 @@ void View::preview_file (Glib::RefPtr< Gio::File > file)
       Vector3d stlMin = m_model->preview_shapes[i]->t_Min();
       Vector3d stlMax = m_model->preview_shapes[i]->t_Max();
       for (uint k = 0; k < 3; k++) {
-	pMin[k] = min(stlMin[k], pMin[k]);
-	pMax[k] = max(stlMax[k], pMax[k]);
+        pMin[k] = min(stlMin[k], pMin[k]);
+        pMax[k] = max(stlMax[k], pMax[k]);
       }
     }
     //cerr << pMin << pMax << endl;
@@ -182,9 +182,9 @@ void View::do_load ()
   if (type == RSFilechooser::GCODE)
     if (m_printer->IsPrinting())
       {
-	m_printer->error (_("Complete print before reading"),
-			  _("Reading GCode while printing will abort the print"));
-	return;
+        m_printer->error (_("Complete print before reading"),
+                          _("Reading GCode while printing will abort the print"));
+        return;
       }
   m_model->preview_shapes.clear();
 
@@ -207,7 +207,7 @@ void View::do_slice_svg (bool singlelayer)
     if (!files[0]) return; // should never happen
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
-	return;
+        return;
     m_model->SliceToSVG(files[0], singlelayer);
   }
 }
@@ -234,7 +234,7 @@ void View::do_save_stl ()
     if (!files[0]) return; // should never happen
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
-	return;
+        return;
 
     string file_path = files[0]->get_path();
     uint len = file_path.length();
@@ -253,7 +253,7 @@ void View::do_save_gcode ()
     if (!files[0]) return; // should never happen
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
-	return;
+        return;
     m_model->WriteGCode (files[0]);
   }
 }
@@ -272,7 +272,7 @@ void View::load_gcode ()
   if (m_printer->IsPrinting())
   {
     m_printer->error (_("Complete print before reading"),
-  		   _("Reading GCode while printing will abort the print"));
+                   _("Reading GCode while printing will abort the print"));
     return;
   }
   m_filechooser->set_loading (RSFilechooser::GCODE);
@@ -413,9 +413,9 @@ void View::run_extruder ()
 {
   double amount = m_extruder_length->get_value();
   m_printer->RunExtruder (m_extruder_speed->get_value() * 60,
-			  amount,
-			  false,
-			  m_extruder_row->get_selected());
+                          amount,
+                          false,
+                          m_extruder_row->get_selected());
 }
 
 void View::clear_logs()
@@ -466,8 +466,8 @@ void View::add_custombutton(string name, string gcode)
     Gtk::ToolButton *button = new Gtk::ToolButton(name);
     button->set_is_important(true);
     toolbar->append(*button,
-		    sigc::bind(sigc::mem_fun(*this,
-					     &View::custombutton_pressed), name, button));
+                    sigc::bind(sigc::mem_fun(*this,
+                                             &View::custombutton_pressed), name, button));
     button->set_tooltip_text(gcode);
     button->set_sensitive(true);
     toolbar->set_sensitive(true);
@@ -645,7 +645,7 @@ void View::do_save_settings_as()
     if (!files[0]) return; // should never happen
     if (files[0]->query_exists())
       if (!get_userconfirm(_("Overwrite File?"), files[0]->get_basename()))
-	return;
+        return;
     save_settings_to(files[0]);
   }
   //FileChooser::ioDialog (m_model, this, FileChooser::SAVE, FileChooser::SETTINGS);
@@ -673,10 +673,10 @@ void View::inhibit_print_changed()
 }
 
 void View::alert (Gtk::MessageType t, const char *message,
-		  const char *secondary)
+                  const char *secondary)
 {
   Gtk::MessageDialog dialog (*this, message, false /* markup */,
-			     t, Gtk::BUTTONS_CLOSE, true);
+                             t, Gtk::BUTTONS_CLOSE, true);
   if (secondary)
     dialog.set_secondary_text (secondary);
   dialog.run();
@@ -961,7 +961,7 @@ void View::update_settings_gui()
       m_model->settings.get_string_list("UserButtons","Labels");
     for (guint i=0; i< buttonlabels.size(); i++) {
       add_custombutton(buttonlabels[i],
-		       m_model->settings.get_user_gcode(buttonlabels[i]));
+                       m_model->settings.get_user_gcode(buttonlabels[i]));
     }
   }
   update_extruderlist();
@@ -1008,23 +1008,23 @@ bool View::key_pressed_event(GdkEventKey *event)
     {
     case GDK_Tab:
       {
-	if (event->state & GDK_CONTROL_MASK) {
-	  Gtk::Notebook *nb;
-	  m_builder->get_widget ("controlnotebook", nb);
-	  if (nb) {
-	    if (event->state & GDK_SHIFT_MASK)
-	      nb->prev_page();
-	    else
-	      nb->next_page();
-	  }
-	  return true;
-	}
+        if (event->state & GDK_CONTROL_MASK) {
+          Gtk::Notebook *nb;
+          m_builder->get_widget ("controlnotebook", nb);
+          if (nb) {
+            if (event->state & GDK_SHIFT_MASK)
+              nb->prev_page();
+            else
+              nb->next_page();
+          }
+          return true;
+        }
       }
       break;
     case GDK_Escape:
       {
-	stop_progress();
-	return true;
+        stop_progress();
+        return true;
       }
       break;
     case GDK_Delete:
@@ -1038,7 +1038,7 @@ bool View::key_pressed_event(GdkEventKey *event)
 }
 
 View::View(BaseObjectType* cobject,
-	   const Glib::RefPtr<Gtk::Builder>& builder)
+           const Glib::RefPtr<Gtk::Builder>& builder)
   : Gtk::Window(cobject),
     m_builder(builder), m_model(NULL), printtofile_name("")
 {
@@ -1345,13 +1345,13 @@ void View::setNonPrintingMode(bool noprinting, string filename) {
       Gtk::VBox *vbox = NULL;
       m_builder->get_widget("printer_tab", vbox);
       if (vbox) {
-	int num = nb->page_num(*vbox);
-	nb->remove_page(num);
+        int num = nb->page_num(*vbox);
+        nb->remove_page(num);
       } else cerr << "No printer_tab GUI element found" << endl;
       m_builder->get_widget("logs_tab", vbox);
       if (vbox) {
-	int num = nb->page_num(*vbox);
-	nb->remove_page(num);
+        int num = nb->page_num(*vbox);
+        nb->remove_page(num);
       } else cerr << "No logs_tab GUI element found" << endl;
     } else cerr << "No controlnotebook GUI element found" << endl;
     Gtk::Label *lab = NULL;
@@ -1375,8 +1375,8 @@ void View::PrintToFile() {
   if (printtofile_name != "") {
     if (m_model) {
       if (m_model->gcode.commands.size() == 0) {
-	alert(Gtk::MESSAGE_WARNING,"No GCode","Generate GCode first");
-	return;
+        alert(Gtk::MESSAGE_WARNING,"No GCode","Generate GCode first");
+        return;
       }
       Glib::RefPtr<Gio::File> file = Gio::File::create_for_path(printtofile_name);
       m_model->WriteGCode(file);
@@ -1517,7 +1517,7 @@ void View::setModel(Model *model)
 }
 
 void View::on_gcodebuffer_cursor_set(const Gtk::TextIter &iter,
-				     const Glib::RefPtr <Gtk::TextMark> &refMark)
+                                     const Glib::RefPtr <Gtk::TextMark> &refMark)
 {
   if (m_model)
     m_model->gcode.updateWhereAtCursor(m_model->settings.get_extruder_letters());
@@ -1574,13 +1574,13 @@ void View::duplicate_selected_objects()
       Shape * newshape;
       FlatShape* flatshape = dynamic_cast<FlatShape*>(shapes[i]);
       if (flatshape != NULL)
-	newshape = new FlatShape(*flatshape);
+        newshape = new FlatShape(*flatshape);
       else
-	newshape = new Shape(*shapes[i]);
+        newshape = new Shape(*shapes[i]);
       // duplicate
       TreeObject* object = m_model->objtree.getParent(shapes[i]);
       if (object !=NULL)
-	m_model->AddShape (object, newshape, shapes[i]->filename);
+        m_model->AddShape (object, newshape, shapes[i]->filename);
       queue_draw();
     }
 }
@@ -1594,8 +1594,8 @@ void View::split_selected_objects()
     for (uint i=0; i<shapes.size() ; i++) {
       TreeObject* object = m_model->objtree.getParent(shapes[i]);
       if (object !=NULL)
-	if (m_model->SplitShape (object, shapes[i], shapes[i]->filename) > 1) {
-	// delete shape?
+        if (m_model->SplitShape (object, shapes[i], shapes[i]->filename) > 1) {
+        // delete shape?
       }
     }
     queue_draw();
@@ -1623,8 +1623,8 @@ void View::divide_selected_objects()
     for (uint i=0; i<shapes.size() ; i++) {
       TreeObject* object = m_model->objtree.getParent(shapes[i]);
       if (object !=NULL)
-	if (m_model->DivideShape (object, shapes[i], shapes[i]->filename) > 1) {
-	// delete shape?
+        if (m_model->DivideShape (object, shapes[i], shapes[i]->filename) > 1) {
+        // delete shape?
       }
     }
     queue_draw();
@@ -1796,80 +1796,80 @@ void View::DrawGrid()
 {
         Vector3d volume = m_model->settings.getPrintVolume();
 
-	glEnable (GL_BLEND);
-	glEnable (GL_DEPTH_TEST);
-	glDisable (GL_LIGHTING);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // define blending factors
+        glEnable (GL_BLEND);
+        glEnable (GL_DEPTH_TEST);
+        glDisable (GL_LIGHTING);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // define blending factors
 
-	glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
+        glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
 
         // Draw outer border double width
-	glLineWidth (2.0);
+        glLineWidth (2.0);
 
-	glBegin(GL_LINES);
-	//glColor4f (0.8f, 0.8f, 0.8f, 1.0f);
+        glBegin(GL_LINES);
+        //glColor4f (0.8f, 0.8f, 0.8f, 1.0f);
         // left edge
-	glVertex3f (0.0f, 0.0f, 0.0f);
-	glVertex3f (0.0f, volume.y(), 0.0f);
+        glVertex3f (0.0f, 0.0f, 0.0f);
+        glVertex3f (0.0f, volume.y(), 0.0f);
         // near edge
-	glVertex3f (0.0f, 0.0f, 0.0f);
-	glVertex3f (volume.x(), 0.0f, 0.0f);
+        glVertex3f (0.0f, 0.0f, 0.0f);
+        glVertex3f (volume.x(), 0.0f, 0.0f);
 
-	glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
+        glColor4f (0.5f, 0.5f, 0.5f, 1.0f);
         // right edge
-	glVertex3f (volume.x(), 0.0f, 0.0f);
-	glVertex3f (volume.x(), volume.y(), 0.0f);
+        glVertex3f (volume.x(), 0.0f, 0.0f);
+        glVertex3f (volume.x(), volume.y(), 0.0f);
         // far edge
-	glVertex3f (0.0f, volume.y(), 0.0f);
-	glVertex3f (volume.x(), volume.y(), 0.0f);
+        glVertex3f (0.0f, volume.y(), 0.0f);
+        glVertex3f (volume.x(), volume.y(), 0.0f);
 
-	// top
-	glColor4f (0.5f, 0.5f, 0.5f, 0.5f);
+        // top
+        glColor4f (0.5f, 0.5f, 0.5f, 0.5f);
         // left edge
-	glVertex3f (0.0f, 0.0f, volume.z());
-	glVertex3f (0.0f, volume.y(), volume.z());
+        glVertex3f (0.0f, 0.0f, volume.z());
+        glVertex3f (0.0f, volume.y(), volume.z());
         // near edge
-	glVertex3f (0.0f, 0.0f, volume.z());
-	glVertex3f (volume.x(), 0.0f, volume.z());
+        glVertex3f (0.0f, 0.0f, volume.z());
+        glVertex3f (volume.x(), 0.0f, volume.z());
         // right edge
-	glVertex3f (volume.x(), 0.0f, volume.z());
-	glVertex3f (volume.x(), volume.y(), volume.z());
+        glVertex3f (volume.x(), 0.0f, volume.z());
+        glVertex3f (volume.x(), volume.y(), volume.z());
         // far edge
-	glVertex3f (0.0f, volume.y(), volume.z());
-	glVertex3f (volume.x(), volume.y(), volume.z());
+        glVertex3f (0.0f, volume.y(), volume.z());
+        glVertex3f (volume.x(), volume.y(), volume.z());
 
-	// verticals at rear
-	glVertex3f (0.0f, volume.y(), 0);
-	glVertex3f (0.0f, volume.y(), volume.z());
-	glVertex3f (volume.x(), volume.y(), 0);
-	glVertex3f (volume.x(), volume.y(), volume.z());
+        // verticals at rear
+        glVertex3f (0.0f, volume.y(), 0);
+        glVertex3f (0.0f, volume.y(), volume.z());
+        glVertex3f (volume.x(), volume.y(), 0);
+        glVertex3f (volume.x(), volume.y(), volume.z());
 
-	glEnd();
+        glEnd();
 
 
 
         // Draw thin internal lines
-	glLineWidth (1.0);
+        glLineWidth (1.0);
 
-	glBegin(GL_LINES);
-	for (uint x = 10; x < volume.x(); x += 10) {
-		glVertex3f (x, 0.0f, 0.0f);
-		glVertex3f (x, volume.y(), 0.0f);
-	}
+        glBegin(GL_LINES);
+        for (uint x = 10; x < volume.x(); x += 10) {
+                glVertex3f (x, 0.0f, 0.0f);
+                glVertex3f (x, volume.y(), 0.0f);
+        }
 
-	for (uint y = 10; y < volume.y(); y += 10) {
-		glVertex3f (0.0f, y, 0.0f);
-		glVertex3f (volume.x(), y, 0.0f);
-	}
+        for (uint y = 10; y < volume.y(); y += 10) {
+                glVertex3f (0.0f, y, 0.0f);
+                glVertex3f (volume.x(), y, 0.0f);
+        }
 
-	glEnd();
+        glEnd();
 
-	glEnable (GL_LIGHTING);
+        glEnable (GL_LIGHTING);
         glEnable (GL_CULL_FACE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         // Draw print margin in faint red
-	Vector3d pM = m_model->settings.getPrintMargin();
+        Vector3d pM = m_model->settings.getPrintMargin();
 
         float no_mat[] = {0.0f, 0.0f, 0.0f, 0.5f};
         float mat_diffuse[] = {1.0f, 0.1f, 0.1f, 0.2f};
@@ -1881,97 +1881,97 @@ void View::DrawGrid()
         glMaterialf(GL_FRONT, GL_SHININESS, 0.5f);
         glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
 
-	// bottom
+        // bottom
         glBegin(GL_TRIANGLE_STRIP);
         glNormal3f (0.0f, 0.0f, 1.0f);
-	glVertex3f (pM.x(), pM.y(), 0.0f);
-	glVertex3f (0.0f, 0.0f, 0.0f);
-	glVertex3f (volume.x() - pM.x(), pM.y(), 0.0f);
-	glVertex3f (volume.x(), 0.0f, 0.0f);
-	glVertex3f (volume.x() - pM.x(), volume.y() - pM.y(), 0.0f);
-	glVertex3f (volume.x(), volume.y(), 0.0f);
-	glVertex3f (pM.x(), volume.y() - pM.y(), 0.0f);
-	glVertex3f (0.0f, volume.y(), 0.0f);
-	glVertex3f (pM.x(), pM.y(), 0.0f);
-	glVertex3f (0.0f, 0.0f, 0.0f);
+        glVertex3f (pM.x(), pM.y(), 0.0f);
+        glVertex3f (0.0f, 0.0f, 0.0f);
+        glVertex3f (volume.x() - pM.x(), pM.y(), 0.0f);
+        glVertex3f (volume.x(), 0.0f, 0.0f);
+        glVertex3f (volume.x() - pM.x(), volume.y() - pM.y(), 0.0f);
+        glVertex3f (volume.x(), volume.y(), 0.0f);
+        glVertex3f (pM.x(), volume.y() - pM.y(), 0.0f);
+        glVertex3f (0.0f, volume.y(), 0.0f);
+        glVertex3f (pM.x(), pM.y(), 0.0f);
+        glVertex3f (0.0f, 0.0f, 0.0f);
         glEnd();
 
-	glDisable (GL_DEPTH_TEST);
-	// top
+        glDisable (GL_DEPTH_TEST);
+        // top
         glBegin(GL_TRIANGLE_STRIP);
         glNormal3f (0.0f, 0.0f, 1.0f);
-	glVertex3f (pM.x(), pM.y(), volume.z());
-	glVertex3f (0.0f, 0.0f, volume.z());
-	glVertex3f (volume.x() - pM.x(), pM.y(), volume.z());
-	glVertex3f (volume.x(), 0.0f, volume.z());
-	glVertex3f (volume.x() - pM.x(), volume.y() - pM.y(), volume.z());
-	glVertex3f (volume.x(), volume.y(), volume.z());
-	glVertex3f (pM.x(), volume.y() - pM.y(), volume.z());
-	glVertex3f (0.0f, volume.y(), volume.z());
-	glVertex3f (pM.x(), pM.y(), volume.z());
-	glVertex3f (0.0f, 0.0f, volume.z());
+        glVertex3f (pM.x(), pM.y(), volume.z());
+        glVertex3f (0.0f, 0.0f, volume.z());
+        glVertex3f (volume.x() - pM.x(), pM.y(), volume.z());
+        glVertex3f (volume.x(), 0.0f, volume.z());
+        glVertex3f (volume.x() - pM.x(), volume.y() - pM.y(), volume.z());
+        glVertex3f (volume.x(), volume.y(), volume.z());
+        glVertex3f (pM.x(), volume.y() - pM.y(), volume.z());
+        glVertex3f (0.0f, volume.y(), volume.z());
+        glVertex3f (pM.x(), pM.y(), volume.z());
+        glVertex3f (0.0f, 0.0f, volume.z());
         glEnd();
 
-	// mark front left
+        // mark front left
         // glBegin(GL_TRIANGLES);
         // glNormal3f (0.0f, 0.0f, 1.0f);
-	// glVertex3f (pM.x(), pM.y(), 0.0f);
-	// glVertex3f (pM.x()+10.0f, pM.y(), 0.0f);
-	// glVertex3f (pM.x(), pM.y()+10.0f, 0.0f);
+        // glVertex3f (pM.x(), pM.y(), 0.0f);
+        // glVertex3f (pM.x()+10.0f, pM.y(), 0.0f);
+        // glVertex3f (pM.x(), pM.y()+10.0f, 0.0f);
         // glEnd();
 
-	glEnable (GL_DEPTH_TEST);
+        glEnable (GL_DEPTH_TEST);
         // Draw print surface
-	float mat_diffuse_white[] = {0.2f, 0.2f, 0.2f, 0.2f};
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_white);
+        float mat_diffuse_white[] = {0.2f, 0.2f, 0.2f, 0.2f};
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse_white);
 
         glBegin(GL_QUADS);
-	glVertex3f (pM.x(), pM.y(), 0.0f);
-	glVertex3f (volume.x() - pM.x(), pM.y(), 0.0f);
-	glVertex3f (volume.x() - pM.x(), volume.y() - pM.y(), 0.0f);
-	glVertex3f (pM.x(), volume.y() - pM.y(), 0.0f);
+        glVertex3f (pM.x(), pM.y(), 0.0f);
+        glVertex3f (volume.x() - pM.x(), pM.y(), 0.0f);
+        glVertex3f (volume.x() - pM.x(), volume.y() - pM.y(), 0.0f);
+        glVertex3f (pM.x(), volume.y() - pM.y(), 0.0f);
         glEnd();
 
-	glDisable (GL_LIGHTING);
+        glDisable (GL_LIGHTING);
 }
 
 // called from Render::on_expose_event
 void View::Draw (vector<Gtk::TreeModel::Path> &selected, bool objects_only)
 {
-	// Draw the grid, pushed back so it can be seen
-	// when viewed from below.
+        // Draw the grid, pushed back so it can be seen
+        // when viewed from below.
         if (!objects_only) {
-	  glEnable (GL_POLYGON_OFFSET_FILL);
-	  glPolygonOffset (1.0f, 1.0f);
-    	  DrawGrid();
-	}
+          glEnable (GL_POLYGON_OFFSET_FILL);
+          glPolygonOffset (1.0f, 1.0f);
+          DrawGrid();
+        }
 
-	glPolygonOffset (-0.5f, -0.5f);
-	glDisable (GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset (-0.5f, -0.5f);
+        glDisable (GL_POLYGON_OFFSET_FILL);
 
-	// Draw GCode, which already incorporates any print offset
+        // Draw GCode, which already incorporates any print offset
         if (!objects_only && !m_model->isCalculating()) {
-	  if (m_gcodetextview->has_focus()) {
-	    double z = m_model->gcode.currentCursorWhere.z();
-	    m_model->GlDrawGCode(z);
-	  }
-	  else {
-	    m_model->gcode.currentCursorWhere = Vector3d::ZERO;
-	    m_model->GlDrawGCode();
-	  }
-	}
+          if (m_gcodetextview->has_focus()) {
+            double z = m_model->gcode.currentCursorWhere.z();
+            m_model->GlDrawGCode(z);
+          }
+          else {
+            m_model->gcode.currentCursorWhere = Vector3d::ZERO;
+            m_model->GlDrawGCode();
+          }
+        }
 
-	// Draw all objects
-	int layerdrawn = m_model->draw(selected);
-	if (layerdrawn > -1) {
-	  Gtk::Label *layerlabel;
-	  m_builder->get_widget("layerno_label", layerlabel);
-	  if (layerlabel){
-	    stringstream s;
-	    s << layerdrawn ;
-	    layerlabel->set_text(s.str());
-	  }
-	}
+        // Draw all objects
+        int layerdrawn = m_model->draw(selected);
+        if (layerdrawn > -1) {
+          Gtk::Label *layerlabel;
+          m_builder->get_widget("layerno_label", layerlabel);
+          if (layerlabel){
+            stringstream s;
+            s << layerdrawn ;
+            layerlabel->set_text(s.str());
+          }
+        }
 }
 
 void View::showCurrentPrinting(unsigned long lineno)

@@ -22,7 +22,11 @@
 
 #pragma once
 
-#include "stdafx.h"
+#include <sigc++/sigc++.h>
+
+#include <mainwindow.h>
+
+#include "../stdafx.h"
 #include "threaded_printer_serial.h"
 
 enum RR_logtype  { LOG_COMM, LOG_ERROR, LOG_ECHO };
@@ -31,7 +35,7 @@ enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
 class Printer : public ThreadedPrinterSerial {
 private:
   double temps[ TEMP_LAST ];
-  View *m_view;
+  MainWindow *main;
   Model *m_model;
 
   bool was_connected;
@@ -40,9 +44,9 @@ private:
   bool waiting_temp;
   int temp_countdown;
 
-  sigc::connection idle_timeout;
-  sigc::connection print_timeout;
-  sigc::connection temp_timeout;
+//  sigc::connection idle_timeout;
+//  sigc::connection print_timeout;
+//  sigc::connection temp_timeout;
 
   bool Idle( void );
   bool QueryTemp( void );
@@ -50,7 +54,7 @@ private:
   void ParseResponse( string line );
 
 public:
-  Printer( View *view );
+  Printer( MainWindow *main );
   ~Printer();
 
   void setModel( Model *model );
@@ -67,14 +71,14 @@ public:
   void Inhibit( bool value = true );
 
   void UpdateTemperatureMonitor( void );
-  double get_temp( TempType t ) { return temps[(int)t]; }
+  double get_temp( TempType t ) { return temps[int(t)]; }
 
   void Pause( void ) { StopPrinting(); }
   bool SwitchPower( bool on );
   bool SelectExtruder( int extruder_no=-1 );
   bool SetTemp( TempType type, float value, int extruder_no=-1 );
   bool RunExtruder(double extruder_speed, double extruder_length, bool reverse,
-		   int extruder_no=-1 );
+           int extruder_no=-1 );
   bool Home( string axis );
   bool Move( string axis, double distance, bool relative = true );
   bool Goto( string axis, double position );
@@ -82,13 +86,13 @@ public:
   void alert( const char *message );
   void error( const char *message, const char *secondary = NULL );
 
-  sigc::signal< void > signal_printing_changed;
-  sigc::signal< void, unsigned long > signal_now_printing;
-  sigc::signal< void > signal_inhibit_changed;
-  sigc::signal< void > signal_temp_changed;
+//  sigc::signal< void > signal_printing_changed;
+//  sigc::signal< void, unsigned long > signal_now_printing;
+//  sigc::signal< void > signal_inhibit_changed;
+//  sigc::signal< void > signal_temp_changed;
   //sigc::signal< void, string, RR_logtype > signal_logmessage;
-  sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
-  sigc::signal< void, SerialState > signal_serial_state_changed;
+//  sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
+//  sigc::signal< SerialState > signal_serial_state_changed;
 };
 
 // Exception safe guard to stop people printing

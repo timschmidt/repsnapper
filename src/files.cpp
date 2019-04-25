@@ -23,6 +23,8 @@
 #include <iostream>
 #include <stdlib.h>
 
+#include <glibmm/exception.h>
+#include <glibmm/ustring.h>
 
 static string numlocale   = "";
 static string colllocale  = "";
@@ -45,23 +47,23 @@ void reset_locales() {
 
 
 static float read_float(ifstream &file) {
-	// Read platform independent 32 bit ieee 754 little-endian float.
-	union ieee_union {
-		char buffer[4];
-		struct ieee_struct {
-			unsigned int mantissa:23;
-			unsigned int exponent:8;
-			unsigned int negative:1;
-		} ieee;
-	} ieee;
-	file.read (ieee.buffer, 4);
+    // Read platform independent 32 bit ieee 754 little-endian float.
+    union ieee_union {
+        char buffer[4];
+        struct ieee_struct {
+            unsigned int mantissa:23;
+            unsigned int exponent:8;
+            unsigned int negative:1;
+        } ieee;
+    } ieee;
+    file.read (ieee.buffer, 4);
 
-	GFloatIEEE754 ret;
-	ret.mpn.mantissa = ieee.ieee.mantissa;
-	ret.mpn.biased_exponent = ieee.ieee.exponent;
-	ret.mpn.sign = ieee.ieee.negative;
+    GFloatIEEE754 ret;
+    ret.mpn.mantissa = ieee.ieee.mantissa;
+    ret.mpn.biased_exponent = ieee.ieee.exponent;
+    ret.mpn.sign = ieee.ieee.negative;
 
-	return ret.v_float;
+    return ret.v_float;
 }
 
 static double read_double(ifstream &file) {
@@ -69,25 +71,23 @@ static double read_double(ifstream &file) {
 }
 
 
-File::File(Glib::RefPtr<Gio::File> file)
- : _file(file)
+File::File(QFile *file)
+ : _file(file), _fileInfo(*_file)
 {
-  _path = _file->get_path();
-  _type = getFileType(_path);
+    cerr << "File " //<< file->fileName().toUtf8().constData() << ": "
+         << _fileInfo.absoluteFilePath().toUtf8().constData() << endl;
 }
 
 void File::loadTriangles(vector< vector<Triangle> > &triangles,
-			 vector<ustring> &names,
-			 uint max_triangles)
+                         vector<Glib::ustring> &names,
+                         uint max_triangles)
 {
-  Gio::FileType type = _file->query_file_type();
-  if (type != Gio::FILE_TYPE_REGULAR &&
-      type != Gio::FILE_TYPE_SYMBOLIC_LINK)
+  if (_fileInfo.isDir() || _fileInfo.isSymLink())
     return;
 
-  ustring name_by_file = _file->get_basename();
-  size_t found = name_by_file.find_last_of(".");
-  name_by_file = (ustring)name_by_file.substr(0,found);
+  string name_by_file = _fileInfo.fileName().toUtf8().constData();
+
+  filetype_t _type = getFileType();
 
   set_locales("C");
   if(_type == ASCII_STL) {
@@ -100,11 +100,13 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
       loadTriangles(triangles, names, max_triangles);
       return;
     }
+#if ENABLE_AMF
   } else if (_type == AMF) {
     // multiple shapes per file
     load_AMF(triangles, names, max_triangles);
     if (names.size() == 1) // if single shape name by file
       names[0] = name_by_file;
+#endif
   } else {
     // single shape per file
     triangles.resize(1);
@@ -115,7 +117,7 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
     } else if (_type == VRML) {
       load_VRML(triangles[0], max_triangles);
     } else {
-      cerr << _("Unrecognized file - ") << _file->get_parse_name() << endl;
+      cerr << "Unrecognized file - " << _fileInfo.path().toUtf8().constData()<< endl;
       cerr << _("Known extensions: ") << "STL, WRL, AMF." << endl;
     }
   }
@@ -124,65 +126,63 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
 
 
 
-filetype_t File::getFileType(ustring filename)
+filetype_t File::getFileType()
 {
-    // Extract file extension (i.e. "stl")
-  ustring extension = filename.substr(filename.find_last_of(".")+1);
+    QString extension = _fileInfo.suffix().toLower();
 
-
-    if(extension == "wrl" || extension == "WRL") {
+    if(extension == "wrl") {
         return VRML;
     }
 
-    if(extension == "amf" || extension == "AMF") {
+    if(extension == "amf") {
         return AMF;
     }
 
-    if(extension != "stl" && extension != "STL") {
+    if(extension != "stl") {
         return NONE_STL;
     }
 
     ifstream file;
-    file.open(filename.c_str());
+    string filename =_fileInfo.absoluteFilePath().toUtf8().constData();
+    file.open(filename);
 
     if(file.fail()) {
-      cerr << _("Error: Unable to open file - ") << filename << endl;
+      cerr << "Error: Unable to open file - " << filename << endl;
       return NONE_STL;
     }
 
     // ASCII files start with "solid [Name_of_file]"
-    ustring first_word;
+    string first_word;
     try {
       file >> first_word;
 
       // Find bad Solid Works STL header
       // 'solid binary STL from Solid Edge, Unigraphics Solutions Inc.'
-      ustring second_word;
+      string second_word;
       if(first_word == "solid")
-	file >> second_word;
+    file >> second_word;
 
       file.close();
       if(first_word == "solid" && second_word != "binary") { // ASCII
-	return ASCII_STL;
+    return ASCII_STL;
       } else {
-	return BINARY_STL;
+    return BINARY_STL;
       }
-    } catch (Glib::ConvertError& e) {
+    } catch (Glib::Exception &e) {
       return BINARY_STL; // no keyword -> binary
     }
-
 }
 
 
 bool File::load_binarySTL(vector<Triangle> &triangles,
-			  uint max_triangles, bool readnormals)
+                          uint max_triangles, bool readnormals)
 {
     ifstream file;
-    ustring filename = _file->get_path();
-    file.open(filename.c_str(), ifstream::in | ifstream::binary);
+    QString filename = _fileInfo.absoluteFilePath().toUtf8().constData();
+    file.open(filename.toStdString(), ifstream::in | ifstream::binary);
 
     if(file.fail()) {
-      cerr << _("Error: Unable to open stl file - ") << filename << endl;
+      cerr << _("Error: Unable to open stl file - ") << filename.toStdString() << endl;
       return false;
     }
     // cerr << "loading bin " << filename << endl;
@@ -207,7 +207,7 @@ bool File::load_binarySTL(vector<Triangle> &triangles,
     for(; i < num_triangles; i+=step)
     {
       if (step>1)
-	file.seekg(84 + 50*i, ios_base::beg);
+    file.seekg(84 + 50*i, ios_base::beg);
 
       double a,b,c;
         a = read_double (file);
@@ -228,7 +228,7 @@ bool File::load_binarySTL(vector<Triangle> &triangles,
         Vector3d Cx(a,b,c);
 
         if (file.eof()) {
-            cerr << _("Unexpected EOF reading STL file - ") << filename << endl;
+            cerr << _("Unexpected EOF reading STL file - ") << filename.toStdString() << endl;
             break;
         }
 
@@ -236,15 +236,15 @@ bool File::load_binarySTL(vector<Triangle> &triangles,
             information but is useless for our purposes */
         unsigned short byte_count;
         file.read(reinterpret_cast <char *> (buffer), 2);
-	byte_count = buffer[0] | buffer[1] << 8;
-	// Repress unused variable warning.
-	(void)&byte_count;
+    byte_count = buffer[0] | buffer[1] << 8;
+    // Repress unused variable warning.
+    (void)&byte_count;
 
-	Triangle T = Triangle(Ax,Bx,Cx);
-	if (readnormals)
-	  if (T.Normal.dot(N) < 0) T.invertNormal();
+    Triangle T = Triangle(Ax,Bx,Cx);
+    if (readnormals)
+      if (T.Normal.dot(N) < 0) T.invertNormal();
 
-	// cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
+    // cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
         triangles.push_back(T);
     }
     file.close();
@@ -255,10 +255,10 @@ bool File::load_binarySTL(vector<Triangle> &triangles,
 
 
 bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
-			 vector<ustring> &names,
-			 uint max_triangles, bool readnormals)
+             vector<Glib::ustring> &names,
+             uint max_triangles, bool readnormals)
 {
-  ustring filename = _file->get_path();
+  string filename = _fileInfo.absoluteFilePath().toUtf8().constData();
   ifstream file;
   file.open(filename.c_str(), ifstream::in);
   if(file.fail()) {
@@ -270,9 +270,9 @@ bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
   // get as many shapes as found in file
   while (true) {
     vector<Triangle> tr;
-    ustring name;
+    Glib::ustring name;
     if (!File::parseSTLtriangles_ascii(file, max_triangles, readnormals,
-				       tr, name))
+                       tr, name))
       break;
 
     triangles.push_back(tr);
@@ -280,7 +280,7 @@ bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
     // go back to get "solid " keyword again
     streampos where = file.tellg();
     where-=100;
-    if (where < 0) break;
+    if (where < 0) break; // was at end of file already
     file.seekg(where,ios::beg);
   }
 
@@ -296,9 +296,9 @@ bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
 
 
 bool File::parseSTLtriangles_ascii (istream &text,
-				    uint max_triangles, bool readnormals,
-				    vector<Triangle> &triangles,
-				    ustring &shapename)
+                    uint max_triangles, bool readnormals,
+                    vector<Triangle> &triangles,
+                    Glib::ustring &shapename)
 {
   //cerr << "loading ascii " << endl;
   //cerr << " locale " << std::locale().name() << endl;
@@ -329,10 +329,10 @@ bool File::parseSTLtriangles_ascii (istream &text,
     while(!text.eof()) { // Find next solid
       text >> solid;
       if (solid == "solid") {
-	string name;
-	getline(text,name);
-	shapename = (ustring)name;
-	break;
+    string name;
+    getline(text,name);
+    shapename = name;
+    break;
       }
     }
     if (solid != "solid") {
@@ -343,28 +343,28 @@ bool File::parseSTLtriangles_ascii (istream &text,
     while(!text.eof()) { // Loop around all triangles
       string facet;
         text >> facet;
-	//cerr << text.tellg() << " - " << fsize << " - " <<facet << endl;
-	if (step > 1) {
-	  for (uint s=0; s < step; s++) {
-	    if (text.eof()) break;
-	    facet = "";
-	    while (facet != "facet" && facet != "endsolid"){
-	      if (text.eof()) break;
-	      text >> facet;
-	    }
-	    if (facet == "endsolid") {
-	      break;
-	    }
-	  }
-	}
+    //cerr << text.tellg() << " - " << fsize << " - " <<facet << endl;
+    if (step > 1) {
+      for (uint s=0; s < step; s++) {
+        if (text.eof()) break;
+        facet = "";
+        while (facet != "facet" && facet != "endsolid"){
+          if (text.eof()) break;
+          text >> facet;
+        }
+        if (facet == "endsolid") {
+          break;
+        }
+      }
+    }
         // Parse possible end of text - "endsolid"
         if(text.eof() || facet == "endsolid" ) {
-	  break;
+      break;
         }
 
         if(facet != "facet") {
-	  cerr << _("Error: Facet keyword not found in STL text!") << endl;
-	  return false;
+      cerr << _("Error: Facet keyword not found in STL text!") << endl;
+      return false;
         }
 
         // Parse Face Normal - "normal %f %f %f"
@@ -372,39 +372,39 @@ bool File::parseSTLtriangles_ascii (istream &text,
         Vector3d normal_vec;
         text >> normal;
         if(readnormals && normal != "normal") {
-	  cerr << _("Error: normal keyword not found in STL text!") << endl;
-	  return false;
-	}
+      cerr << _("Error: normal keyword not found in STL text!") << endl;
+      return false;
+    }
 
-	if (readnormals){
-	  text >> normal_vec.x()
-	       >> normal_vec.y()
-	       >> normal_vec.z();
-	}
+    if (readnormals){
+      text >> normal_vec.x()
+           >> normal_vec.y()
+           >> normal_vec.z();
+    }
 
         // Parse "outer loop" line
         string outer, loop;
-	while (outer!="outer" && !text.eof()) {
-	  text >> outer;
-	}
-	text >> loop;
-	if(outer != "outer" || loop != "loop") {
-	  cerr << _("Error: Outer/Loop keywords not found!") << endl;
-	  return false;
-	}
+    while (outer!="outer" && !text.eof()) {
+      text >> outer;
+    }
+    text >> loop;
+    if(outer != "outer" || loop != "loop") {
+      cerr << _("Error: Outer/Loop keywords not found!") << endl;
+      return false;
+    }
 
         // Grab the 3 vertices - each one of the form "vertex %f %f %f"
         Vector3d vertices[3];
         for(int i=0; i<3; i++) {
-	    string vertex;
+        string vertex;
             text >> vertex
-		 >> vertices[i].x()
-		 >> vertices[i].y()
-		 >> vertices[i].z();
+         >> vertices[i].x()
+         >> vertices[i].y()
+         >> vertices[i].z();
 
             if(vertex != "vertex") {
-	      cerr << _("Error: Vertex keyword not found") << endl;
-	      return false;
+          cerr << _("Error: Vertex keyword not found") << endl;
+          return false;
             }
         }
 
@@ -413,18 +413,18 @@ bool File::parseSTLtriangles_ascii (istream &text,
         text >> endloop >> endfacet;
 
         if(endloop != "endloop" || endfacet != "endfacet") {
-	  cerr << _("Error: Endloop or endfacet keyword not found") << endl;
-	  return false;
+      cerr << _("Error: Endloop or endfacet keyword not found") << endl;
+      return false;
         }
 
         // Create triangle object and push onto the vector
         Triangle triangle(vertices[0],
-			  vertices[1],
-			  vertices[2]);
-	if (readnormals){
-	  //cerr << "reading normals from file" << endl;
-	  if (triangle.Normal.dot(normal_vec) < 0) triangle.invertNormal();
-	}
+              vertices[1],
+              vertices[2]);
+    if (readnormals){
+      //cerr << "reading normals from file" << endl;
+      if (triangle.Normal.dot(normal_vec) < 0) triangle.invertNormal();
+    }
 
         triangles.push_back(triangle);
     }
@@ -436,7 +436,7 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
 {
 
   triangles.clear();
-  ustring filename = _file->get_path();
+  string filename = _fileInfo.path().toUtf8().constData();
     ifstream file;
 
     file.open(filename.c_str());
@@ -447,7 +447,7 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
     }
 
     file.imbue(std::locale("C"));
-    ustring word;
+    string word;
     std::vector<float> vertices;
     std::vector<int> indices;
     bool finished = false;
@@ -462,48 +462,48 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
       points.clear();
       vertices.clear();
       while (word!="coord" && !file.eof()) // only use coord points
-	file >> word;
+    file >> word;
       while (word!="point" && !file.eof())
-	file >> word;
+    file >> word;
       file >> word;
       if (word=="[") {
-	double f;
-	while (word!="]" && !file.eof()){
-	  file >> word;
+    double f;
+    while (word!="]" && !file.eof()){
+      file >> word;
           if (word.find(",") == word.length()-1) { // remove comma
             word = word.substr(0,word.length()-1);
           }
-	  if (word!="]") {
-	    if (word.find("#") != 0) { // comment
+      if (word!="]") {
+        if (word.find("#") != 0) { // comment
               f = atof(word.c_str());
-	      vertices.push_back(f);
-	    } else { // skip rest of line
+          vertices.push_back(f);
+        } else { // skip rest of line
               file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             }
           }
-	}
+    }
         if (vertices.size() % 3 == 0)
           for (uint i = 0; i < vertices.size(); i += 3)
             points.push_back(Vector3d(vertices[i], vertices[i+1], vertices[i+2]));
-	//cerr << endl;
+    //cerr << endl;
       }
       indices.clear();
       while (word!="coordIndex"  && !file.eof())
-	file >> word;
+    file >> word;
       file >> word;
       if (word=="[") {
-	int c;
-	while (word!="]" && !file.eof()){
-	  file >> word;
-	  if (word!="]")
-	    if (word.find("#")!=0) {
-	      std::istringstream iss(word);
+    int c;
+    while (word!="]" && !file.eof()){
+      file >> word;
+      if (word!="]")
+        if (word.find("#")!=0) {
+          std::istringstream iss(word);
               iss.precision(20);
-	      iss >> c;
-	      indices.push_back(c);
-	      //cerr << word << "=="<< c << ", ";
-	    }
-	}
+          iss >> c;
+          indices.push_back(c);
+          //cerr << word << "=="<< c << ", ";
+        }
+    }
         if (indices.size()%4 == 0)
           for (uint i=0; i<indices.size();i+=4) {
             Triangle T(points[indices[i]],points[indices[i+1]],points[indices[i+2]]);
@@ -518,23 +518,16 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
 }
 
 
-// does not cross-compile ....
-#ifndef WIN32
-#define ENABLE_AMF 1
-#else
-#define ENABLE_AMF 0
-#endif
-
 #if ENABLE_AMF
-#include "amf/amftools-code/include/AMF_File.h"
+#include "../libraries/amf/amftools-code/include/AMF_File.h"
  class AMFLoader : public AmfFile
  {
    double _scale;
  public:
-   AMFLoader() : _scale(1.) {};
-   ~AMFLoader(){};
-   bool open(ustring path) {
-     bool ok = Load(path);
+   AMFLoader() : _scale(1.) {}
+   ~AMFLoader(){}
+   bool open(QString path) {
+     bool ok = Load(path.toUtf8().constData());
      if (!ok)
        cerr << "AMF Error: " << GetLastErrorMsg() << endl;
      return ok;
@@ -547,8 +540,8 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
    Triangle getTriangle(const nMesh &mesh, const nTriangle &t)
    {
      return Triangle(getVertex(mesh, t.v1),
-		     getVertex(mesh, t.v2),
-		     getVertex(mesh, t.v3));
+             getVertex(mesh, t.v2),
+             getVertex(mesh, t.v3));
    }
 
    bool getObjectTriangles(uint onum, vector<Triangle> &triangles)
@@ -568,10 +561,10 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
        }
        uint nvolumes = mesh.Volumes.size();
        for (uint v = 0; v < nvolumes; v++) {
-	 uint ntria = mesh.Volumes[v].Triangles.size();
-	 for (uint t = 0; t < ntria; t++) {
-	   triangles.push_back( getTriangle(mesh, mesh.Volumes[v].Triangles[t]) );
-	 }
+     uint ntria = mesh.Volumes[v].Triangles.size();
+     for (uint t = 0; t < ntria; t++) {
+       triangles.push_back( getTriangle(mesh, mesh.Volumes[v].Triangles[t]) );
+     }
        }
      }
      return true;
@@ -581,17 +574,17 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
  class AMFWriter : public AmfFile
  {
  public:
-   AMFWriter() {};
-   ~AMFWriter() {};
+   AMFWriter() {}
+   ~AMFWriter() {}
 
    nVertex vertex(const Vector3d &v) const {
      return nVertex(v.x(), v.y(), v.z());
    }
 
    bool AddObject(const vector<Triangle> &triangles,
-		  const ustring name)
+          const string name)
    {
-     int num = AmfFile::AddObject(string(name));
+     int num = AmfFile::AddObject(name);
      if (num<0) return false;
      nObject* object = GetObject(num, true);
      if (!object) return false;
@@ -614,15 +607,13 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
    }
 
  };
-#endif
 
-bool File::load_AMF(vector< vector<Triangle> > &triangles,
-		    vector<ustring> &names,
-		    uint max_triangles)
+ bool File::load_AMF(vector< vector<Triangle> > &triangles,
+            vector<Glib::ustring> &names,
+            uint max_triangles)
 {
-#if ENABLE_AMF
   AMFLoader amf;
-  if (!amf.open(_file->get_path()))
+  if (!amf.open(_fileInfo.path()))
     return false;
   uint nobjs = amf.GetObjectCount();
   //cerr << nobjs << " objs" << endl;
@@ -630,43 +621,36 @@ bool File::load_AMF(vector< vector<Triangle> > &triangles,
     vector<Triangle> otr;
     amf.getObjectTriangles(o,otr);
     triangles.push_back(otr);
-    names.push_back(ustring(amf.GetObjectName(o)));
+    names.push_back(amf.GetObjectName(o));
   }
   return true;
-#else
-  return false;
-#endif
 }
 
-bool File::save_AMF (ustring filename,
-		     const vector< vector<Triangle> > &triangles,
-		     const vector<ustring> &names,
-		     bool compressed)
+bool File::save_AMF (QString filename,
+             const vector< vector<Triangle> > &triangles,
+             const vector<Glib::ustring> &names,
+             bool compressed)
 {
-#if ENABLE_AMF
   AMFWriter amf;
   amf.SetUnits(UNIT_MM);
   uint nobjs = triangles.size();
   for (uint o = 0; o < nobjs; o++) {
-    bool ok = amf.AddObject(triangles[o],names[o]);
+    bool ok = amf.AddObject(triangles[o], names[o]);
     if (!ok) return false;
   }
-  amf.Save(filename, compressed);
+  amf.Save(filename.toUtf8().constData(), compressed);
   return true;
-#else
-  return false;
-#endif
 }
+#endif
 
-
-bool File::saveBinarySTL(ustring filename, const vector<Triangle> &triangles,
-			 const Matrix4d &T)
+bool File::saveBinarySTL(QString filename, const vector<Triangle> &triangles,
+             const Matrix4d &T)
 {
 
-  FILE *file  = fopen(filename.c_str(),"wb");
+  FILE *file  = fopen(filename.toUtf8().constData(),"wb");
 
   if (file==0) {
-    cerr << _("Error: Unable to open stl file - ") << filename << endl;
+    cerr << "Error: Unable to open stl file - " << filename.toUtf8().constData() << endl;
     return false;
   }
 
@@ -688,8 +672,8 @@ bool File::saveBinarySTL(ustring filename, const vector<Triangle> &triangles,
       TN = T*triangles[i].Normal; TN.normalize();
     float N[3] = {TN.x(), TN.y(), TN.z()};
     float P[9] = {TA.x(), TA.y(), TA.z(),
-		  TB.x(), TB.y(), TB.z(),
-		  TC.x(), TC.y(), TC.z()};
+          TB.x(), TB.y(), TB.z(),
+          TC.x(), TC.y(), TC.z()};
 
     // write the normal, the three coords and a short set to zero
     fwrite(&N,3,sizeof(float),file);

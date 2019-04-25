@@ -22,10 +22,10 @@
 #include "geometry.h"
 #include "poly.h"
 #include "clipping.h"
-#include "triangle.h"
+#include "../triangle.h"
 
 // limfit library for arc fitting
-#include <lmmin.h>
+#include <lmfit/lmfit-5.0/lib/lmmin.h>
 
 
 // #ifdef WIN32
@@ -40,13 +40,13 @@
 // call me before glutting
 void checkGlutInit()
 {
-	static bool inited = false;
-	if (inited)
-		return;
-	inited = true;
-	int argc = 1;
-	char *argv[] = { (char *) "repsnapper" };
-	//glutInit (&argc, argv);
+    static bool inited = false;
+    if (inited)
+        return;
+    inited = true;
+    int argc = 1;
+    char *argv[] = { (char *) "repsnapper" };
+    //glutInit (&argc, argv);
 }
 
 void drawString(const Vector3d &pos, const string &text)
@@ -56,9 +56,9 @@ void drawString(const Vector3d &pos, const string &text)
 void drawString(const Vector3d &pos, void* font, const string &text)
 {
         checkGlutInit();
-	//glRasterPos3d(pos.x(), pos.y(), pos.z());
-	//for (uint c=0;c<text.length();c++)
-	  //glutBitmapCharacter(font, text[c]);
+    //glRasterPos3d(pos.x(), pos.y(), pos.z());
+    //for (uint c=0;c<text.length();c++)
+      //glutBitmapCharacter(font, text[c]);
 }
 */
 
@@ -68,7 +68,7 @@ void drawString(const Vector3d &pos, void* font, const string &text)
 /* function evaluation, determination of residues */
 // residue is difference between radius parameter and distance of point to center
 void evaluate_arcfit( const double *par, int m_dat, const void *data,
-		      double *fvec, int *info )
+              double *fvec, int *info )
 {
   /* for readability, perform explicit type conversion */
   arc_data_struct *arcdata;
@@ -84,8 +84,8 @@ void evaluate_arcfit( const double *par, int m_dat, const void *data,
 }
 
 bool fit_arc(const int m_dat, const arc_data_struct data,
-	     const int n_par, double *par, double sq_error,
-	     Vector2d &result_center, double &result_radiussq)
+         const int n_par, double *par, double sq_error,
+         Vector2d &result_center, double &result_radiussq)
 {
   lm_status_struct status;
   lm_control_struct control = lm_control_double;
@@ -93,7 +93,7 @@ bool fit_arc(const int m_dat, const arc_data_struct data,
 
   // printf( "Fitting:\n" );
   lmmin( n_par, par, m_dat, (const void*) &data,
-	 evaluate_arcfit, &control, &status);
+     evaluate_arcfit, &control, &status);
 
   result_center.x() = par[0];
   result_center.y() = par[1];
@@ -111,7 +111,7 @@ bool fit_arc(const int m_dat, const arc_data_struct data,
 #if 0
   printf( "\nResults:\n" );
   printf( "status after %d function evaluations:\n  %s\n",
-	  status.nfev, lm_infmsg[status.info] );
+      status.nfev, lm_infmsg[status.info] );
 
   printf("obtained parameters:\n");
   int i;
@@ -133,7 +133,7 @@ bool fit_arc(const int m_dat, const arc_data_struct data,
 
 // find center for best fit of arcpoints
 bool fit_arc(const vector<Vector2d> &points, double sq_error,
-	     Vector2d &result_center, double &result_radiussq)
+         Vector2d &result_center, double &result_radiussq)
 {
   if (points.size() < 3) return false;
   const int n_par = 3; // center x,y and arc radius_sq
@@ -152,7 +152,7 @@ bool fit_arc(const vector<Vector2d> &points, double sq_error,
     data.py[i] = points[i].y();
   }
   return fit_arc(m_dat, data, n_par, par, sq_error,
-		 result_center, result_radiussq);
+         result_center, result_radiussq);
 }
 
 
@@ -254,7 +254,7 @@ bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B)
 // }
 
 void center_perpendicular(const Vector2d &from, const Vector2d &to,
-			  Vector2d &p1, Vector2d &p2)
+              Vector2d &p1, Vector2d &p2)
 {
   Vector2d center = (from+to)/2.;
   Vector2d dir = Vector2d(from.y()-to.y(), to.x()-from.x());
@@ -316,7 +316,7 @@ Vector2d rotated(const Vector2d &p, const Vector2d &center, double angle, bool c
 // squared minimum distance of p to segment s1--s2, onseg = resulting point on segment
 // http://stackoverflow.com/a/1501725
 double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2,
-				 const Vector2d &p, Vector2d &onseg) {
+                 const Vector2d &p, Vector2d &onseg) {
   const double l2 = (s2-s1).squared_length();  // i.e. |w-v|^2 -  avoid a sqrt
   if (l2 == 0.0) { // s1 == s2 case
     onseg = s1;
@@ -371,7 +371,7 @@ vector<Poly> thick_line(const Vector2d &from, const Vector2d &to, double width)
 
 // directed (one end is wider than the other)
 vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to,
-			    double fr_width, double to_width)
+                double fr_width, double to_width)
 {
   vector<Poly> p;
   if (fr_width < 0.001 || to_width < 0.001) return p;
@@ -442,8 +442,8 @@ vector<Poly> dir_thick_line(const Vector2d &from, const Vector2d &to,
 // also checks that the intersection point is actually on
 // the line segment p1-p2
 bool IntersectXY(const Vector2d &p1, const Vector2d &p2,
-		 const Vector2d &p3, const Vector2d &p4,
-		 Intersection &hit, double maxoffset)
+         const Vector2d &p3, const Vector2d &p4,
+         Intersection &hit, double maxoffset)
 {
   Vector2d inter2;
   int is = intersect2D_Segments(p1,p2,p3,p4, hit.p, inter2);
@@ -498,9 +498,9 @@ bool inSegment( const Vector2d &P, const Vector2d &p1, const Vector2d &p2)
 //            3=lines intersect outside the segments
 #define perp(u,v)  ((u).x() * (v).y() - (u).y() * (v).x())  // perp product (2D)
 int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
-			  const Vector2d &p3, const Vector2d &p4,
-			  Vector2d &I0, Vector2d &I1,
-			  double maxerr)
+              const Vector2d &p3, const Vector2d &p4,
+              Vector2d &I0, Vector2d &I1,
+              double maxerr)
 {
   Vector2d    u = p2 - p1;
   Vector2d    v = p4 - p3;
@@ -519,19 +519,19 @@ int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
     double dv = v.dot(v);
     if (du==0 && dv==0) {           // both segments are points
       if (p1 != p3)         // they are distinct points
-	return 0;
+    return 0;
       I0 = p1;                // they are the same point
       return 1;
     }
     if (du==0) {                    // S1 is a single point
       if (!inSegment(p1, p3, p4))  // but is not in S2
-	return 0;
+    return 0;
       I0 = p1;
       return 1;
     }
     if (dv==0) {                    // S2 a single point
       if (!inSegment(p3, p1,p2))  // but is not in S1
-	return 0;
+    return 0;
       I0 = p3;
       return 1;
     }
@@ -588,7 +588,7 @@ int intersect2D_Segments( const Vector2d &p1, const Vector2d &p2,
 //    Input:  two 3D line segments S1 and S2
 //    Return: the shortest distance between S1 and S2
 double dist3D_Segment_to_Segment(const Vector3d &S1P0, const Vector3d &S1P1,
-				 const Vector3d &S2P0, const Vector3d &S2P1, double SMALL_NUM)
+                 const Vector3d &S2P0, const Vector3d &S2P1, double SMALL_NUM)
 {
      Vector3d   u = S1P1 - S1P0;
      Vector3d   v = S2P1 - S2P0;
@@ -673,7 +673,7 @@ bool pointInPolys(const Vector2d &point,  const vector<Poly> &polys)
 // will return false
 // if the line cuts any of the given polygons except excluded one
 bool lineInPolys(const Vector2d &from, const Vector2d &to, const vector<Poly> &polys,
-		 uint excludepoly, double maxerr)
+         uint excludepoly, double maxerr)
 {
   uint ninter = 0;
   for (uint i=0; i< polys.size(); i++) {
@@ -705,8 +705,8 @@ struct pathpoint {
 };
 // excludepoly: poly not to test, contains from and to vectors.
 bool shortestPath(const Vector2d &from, const Vector2d &to,
-		  const vector<Poly> &polys, int excludepoly,
-		  vector<Vector2d> &path, double maxerr)
+          const vector<Poly> &polys, int excludepoly,
+          vector<Vector2d> &path, double maxerr)
 {
   //  Fail if either the startpoint or endpoint is outside the polygon set.
   if (!pointInPolys(from, polys)
@@ -742,18 +742,18 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
     // for every path point so far find another with minimal total path length
     for (uint i = 0; i < treeCount; i++) {
       for (uint j = treeCount; j < pointCount; j++) {
-	if (lineInPolys(pointList[i].v, pointList[j].v,
-			polys, -1, maxerr)) { // line does not intersect
-	  // take point into account
-	  newDist = pointList[i].totalDist +
-	    (pointList[i].v - pointList[j].v).length();
-	  if (newDist < bestDist) { // if shortest total path
-	    //cerr << i << " found " << j << " - " << newDist << " - " <<pointList[j].v <<endl;
-	    bestDist = newDist;
-	    bestI = i;
-	    bestJ = j;
-	  }
-	}
+    if (lineInPolys(pointList[i].v, pointList[j].v,
+            polys, -1, maxerr)) { // line does not intersect
+      // take point into account
+      newDist = pointList[i].totalDist +
+        (pointList[i].v - pointList[j].v).length();
+      if (newDist < bestDist) { // if shortest total path
+        //cerr << i << " found " << j << " - " << newDist << " - " <<pointList[j].v <<endl;
+        bestDist = newDist;
+        bestI = i;
+        bestJ = j;
+      }
+    }
       }
     }
     if (bestDist==INF) return false;   //  (no solution)
@@ -904,8 +904,8 @@ vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon)
     {
       double dist = abs((vert[i]-vert.front()).dot(normal));
       if (dist >= epsilon && dist > dmax) {
-	index = i;
-	dmax = dist;
+    index = i;
+    dmax = dist;
       }
     }
   vector<Vector2d> newvert;
@@ -938,7 +938,7 @@ vector<p2t::Point*> getP2Tpoints(const Poly &poly)
   vector<p2t::Point*> points(poly.size());
   for (uint i=0; i<poly.size(); i++)  {
     points[i] = new p2t::Point(poly.vertices[i].x(),
-			       poly.vertices[i].y());
+                   poly.vertices[i].y());
   }
   return points;
 }
@@ -965,7 +965,7 @@ vector<Triangle> getTriangles(p2t::CDT &cdt, double z)
 }
 
 int triangulate(const vector<Poly> &polys, vector< vector<Triangle> > &triangles,
-		double z)
+        double z)
 {
   vector<ExPoly> expolys = Clipping::getExPolys(polys, z, 0);
   cerr << expolys.size() << endl;
@@ -993,8 +993,8 @@ int triangulate(const vector<Poly> &polys, vector< vector<Triangle> > &triangles
 //#include "triangle/PolygonTriangulator.h"
 
 int delaunayTriang(const vector<Vector2d> &points,
-		   vector<Triangle> &triangles,
-		   double z)
+           vector<Triangle> &triangles,
+           double z)
 {
 #define PTRIANGULATOR 0
 #if PTRIANGULATOR
@@ -1024,8 +1024,8 @@ int delaunayTriang(const vector<Vector2d> &points,
     const polytri::PolygonTriangulator::Triangle t = *itr;
 
     triangles[itri] = Triangle(Vector3d(xpoints[t[0]], ypoints[t[0]], z),
-			       Vector3d(xpoints[t[1]], ypoints[t[1]], z),
-			       Vector3d(xpoints[t[2]], ypoints[t[2]], z));
+                   Vector3d(xpoints[t[1]], ypoints[t[1]], z),
+                   Vector3d(xpoints[t[2]], ypoints[t[2]], z));
     itri++;
   }
 
@@ -1267,9 +1267,9 @@ Matrix3d getMatrix(const Cairo::RefPtr<Cairo::Context> context)
 
 
 bool rasterpolys(const vector<Poly> &polys,
-		 const Vector2d &min, const Vector2d &max, double resolution,
-		 Cairo::RefPtr<Cairo::ImageSurface> &surface,
-		 Cairo::RefPtr<Cairo::Context> &context)
+         const Vector2d &min, const Vector2d &max, double resolution,
+         Cairo::RefPtr<Cairo::ImageSurface> &surface,
+         Cairo::RefPtr<Cairo::Context> &context)
 {
   Vector2d diag = max - min;
   int width  = (int)ceil(diag.x()/resolution);
@@ -1316,20 +1316,20 @@ bool rasterpolys(const vector<Poly> &polys,
 
 
 void glDrawPolySurfaceRastered(const vector<Poly> &polys,
-			       const Vector2d &min, const Vector2d &max,
-			       const double z,
-			       const double resolution)
+                   const Vector2d &min, const Vector2d &max,
+                   const double z,
+                   const double resolution)
 {
   Cairo::RefPtr<Cairo::ImageSurface> surface;
   Cairo::RefPtr<Cairo::Context> context;
   if (!rasterpolys(polys, min, max, resolution, surface, context)) return;
-  glDrawCairoSurface(surface, min, max,z);
+//  glDrawCairoSurface(surface, min, max,z);
 }
 
 
 void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
-			const Vector2d &min, const Vector2d &max,
-			const double z)
+            const Vector2d &min, const Vector2d &max,
+            const double z)
 {
   if (!surface) return;
   int w = surface->get_width();
@@ -1344,13 +1344,13 @@ void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
   // when texture area is small, bilinear filter the closest mipmap
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-		   GL_LINEAR_MIPMAP_NEAREST );
+           GL_LINEAR_MIPMAP_NEAREST );
   // when texture area is large, bilinear filter the original
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 
   // build our texture mipmaps
   gluBuild2DMipmaps( GL_TEXTURE_2D, GL_ALPHA, w, h,
-		     GL_ALPHA, GL_UNSIGNED_BYTE, data );
+             GL_ALPHA, GL_UNSIGNED_BYTE, data );
 
   glEnable(GL_TEXTURE_2D);
   glBegin(GL_QUADS);
@@ -1364,8 +1364,8 @@ void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
 }
 
 int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
-			     const Vector2d &min, const Vector2d &max,
-			     const Vector2d &p)
+                 const Vector2d &min, const Vector2d &max,
+                 const Vector2d &p)
 {
   if (!surface) return 0;
   const int w = surface->get_stride();

@@ -44,8 +44,8 @@ class RepRapSerial;
 class Layer;
 class PrintInhibitor;
 class ProcessController;
-class ObjectsTree;
-class TreeObject;
+class ObjectsList;
+class ListObject;
 class Shape;
 class FlatShape;
 class Transform3D;
@@ -55,7 +55,7 @@ class ConnectView;
 class Transform3D;
 
 enum SerialState { SERIAL_DISCONNECTED, SERIAL_DISCONNECTING,
-		   SERIAL_CONNECTED, SERIAL_CONNECTING };
+           SERIAL_CONNECTED, SERIAL_CONNECTING };
 
 
 /* #endif // TYPES_H */

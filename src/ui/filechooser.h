@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "stdafx.h"
+#include "../stdafx.h"
 #include <string>
 #include <giomm/file.h>
 

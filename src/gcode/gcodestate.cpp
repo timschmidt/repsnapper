@@ -17,10 +17,10 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "shape.h"
+#include "../shape.h"
 
 #include "gcodestate.h"
-#include "printlines.h"
+#include "../slicer/printlines.h"
 
 
 struct GCodeStateImpl
@@ -64,7 +64,7 @@ void GCodeState::AppendCommand(Command &command, bool relativeE)
   if (!command.is_value) {
     if (!relativeE)
       command.e += pImpl->lastCommand.e;
-    if (command.f!=0) {
+    if (command.f!=0.) {
       timeused += (command.where - pImpl->lastCommand.where).length()/command.f*60;
     }
     pImpl->lastCommand = command;
@@ -125,11 +125,11 @@ double GCodeState::LastCommandF()
 // }
 
 void GCodeState::AddLines (vector<Vector3d> linespoints,
-			   double extrusionFactor,
-			   double maxspeed,
-			   double maxmovespeed,
-			   double offsetZ,
-			   const Settings &settings)
+                           double extrusionFactor,
+                           double maxspeed,
+                           double maxmovespeed,
+                           double offsetZ,
+                           Settings &settings)
 {
   bool relEcode = settings.get_boolean("Slicing","RelativeEcode");
   double minmovespeed = settings.get_double("Hardware","MinMoveSpeedXY") * 60;
@@ -138,16 +138,16 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
     {
       // MOVE to start of next line
       if(LastPosition() != linespoints[i])
-	{
-	  MakeGCodeLine (LastPosition(), linespoints[i],
-			 Vector3d(0,0,0),0, 0, 0, minmovespeed, maxmovespeed,
-			 offsetZ, relEcode);
-	  SetLastPosition (linespoints[i]);
-	}
+    {
+      MakeGCodeLine (LastPosition(), linespoints[i],
+             Vector3d(0,0,0),0, 0, 0, minmovespeed, maxmovespeed,
+             offsetZ, relEcode);
+      SetLastPosition (linespoints[i]);
+    }
       // PLOT to endpoint of line
       MakeGCodeLine (LastPosition(), linespoints[i+1],
-		     Vector3d(0,0,0),0, extrusionFactor, 0, minmovespeed, maxspeed,
-		     offsetZ, relEcode);
+             Vector3d(0,0,0),0, extrusionFactor, 0, minmovespeed, maxspeed,
+             offsetZ, relEcode);
     SetLastPosition(linespoints[i+1]);
     }
   //SetLastLayerZ(z);
@@ -193,13 +193,13 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
 // }
 
 void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
-				Vector3d arcIJK, short arc,
-				double extrusionFactor,
-				double absolute_extrusion,
-				double minspeed,
-				double maxspeed,
-				double offsetZ,
-				bool relativeE)
+                Vector3d arcIJK, short arc,
+                double extrusionFactor,
+                double absolute_extrusion,
+                double minspeed,
+                double maxspeed,
+                double offsetZ,
+                bool relativeE)
 {
    // if ((end-start).length() < 0.05)	// ignore micro moves
    //  return;
@@ -215,7 +215,7 @@ void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
   }
   double extrudedMaterial = DistanceFromLastTo(command.where)*extrusionFactor;
 
-  if (absolute_extrusion!=0) {
+  if (absolute_extrusion!=0.) {
     command.comment += _("Absolute Extrusion");
   }
   extrudedMaterial += absolute_extrusion;

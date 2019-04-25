@@ -20,48 +20,48 @@
 #include "stdafx.h"
 #include "gllight.h"
 
-gllight::gllight()
+GlLight::GlLight()
 {
-	Init(GL_LIGHT0);
+    Init(GL_LIGHT0);
 }
 
-gllight::~gllight()
+GlLight::~GlLight()
 {
 }
 
-void gllight::Init(int position)
+void GlLight::Init(int position)
 {
-	offset = position;
+    offset = position;
 }
 
-void gllight::Enable(bool on)
+void GlLight::Enable(bool on)
 {
-	if (on)
-		glEnable(offset);
-	else
-		glDisable(offset);
+    if (on)
+        glEnable(offset);
+    else
+        glDisable(offset);
 }
 
-void gllight::SetAmbient(float r, float g, float b, float a)
+void GlLight::SetAmbient(float r, float g, float b, float a)
 {
-	float ambient[] = {r,g,b,a};
-	glLightfv(offset, GL_AMBIENT, ambient);
+    float ambient[] = {r,g,b,a};
+    glLightfv(offset, GL_AMBIENT, ambient);
 }
 
-void gllight::SetDiffuse(float r, float g, float b, float a)
+void GlLight::SetDiffuse(float r, float g, float b, float a)
 {
-	float diffuse[] = {r,g,b,a};
-	glLightfv(offset, GL_DIFFUSE, diffuse);
+    float diffuse[] = {r,g,b,a};
+    glLightfv(offset, GL_DIFFUSE, diffuse);
 }
 
-void gllight::SetLocation(float x, float y, float z, float w)
+void GlLight::SetLocation(float x, float y, float z, float w)
 {
-	float position[] = {x,y,z,w};
-	glLightfv(offset, GL_POSITION, position);
+    float position[] = {x,y,z,w};
+    glLightfv(offset, GL_POSITION, position);
 }
 
-void gllight::SetSpecular(float r, float g, float b, float a)
+void GlLight::SetSpecular(float r, float g, float b, float a)
 {
-	float specular[] = {r,g,b,a};
-	glLightfv ( offset, GL_SPECULAR, specular );
+    float specular[] = {r,g,b,a};
+    glLightfv ( offset, GL_SPECULAR, specular );
 }

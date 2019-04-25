@@ -28,18 +28,19 @@
 #include <sstream>
 #include <limits>
 #include <algorithm>
-#include "stdafx.h"
+//#include "stdafx.h"
 #include "transform3d.h"
 //#include "settings.h"
 #include "triangle.h"
 #include "slicer/geometry.h"
-#include "poly.h"
+#include "slicer/poly.h"
 
 //#define ABS(a)	   (((a) < 0) ? -(a) : (a))
 
+#include <QString>
 
 struct Segment {
-  Segment(guint s, guint e) { start = s; end = e; }
+  Segment(int s, int e) { start = s; end = e; }
   int start;		// Vertex index of start point
     int end;		// Vertex index of end point
   void Swap() {
@@ -57,55 +58,55 @@ struct Segment {
 class Shape
 {
 public:
-  virtual short dimensions(){return 3;};
+  virtual short dimensions(){return 3;}
 
-	Shape();
-	/* Shape(string filename, istream &text); */
-	virtual ~Shape(){};
-	Glib::ustring filename;
-	int idx;
+        Shape();
+        /* Shape(string filename, istream &text); */
+        virtual ~Shape(){}
+        string filename;
+        int idx;
 
-	int parseASCIISTL(istream &text, uint max_triangles=0, bool readnormals=false);
+        int parseASCIISTL(istream &text, uint max_triangles=0, bool readnormals=false);
 
-	Transform3D transform3D;
+        Transform3D transform3D;
 
-	virtual void clear();
-	/* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
-	/* 		      guint LayerNr, vector<int>& altInfillLayers); */
-	void draw (const Settings &settings,
-		   bool highlight=false, uint max_triangles=0);
-	virtual void draw_geometry (uint max_triangles=0);
-	void drawBBox() const;
-	virtual bool getPolygonsAtZ(const Matrix4d &T, double z,
-				    vector<Poly> &polys,
-				    double &max_gradient,
-				    vector<Poly> &supportpolys,
-				    double max_supportangle,
-				    double thickness = -1) const;
-	// Extract a 2D polygonset from a 3D model:
-	// void CalcLayer(const Matrix4d &T, CuttingPlane *plane) const;
+        virtual void clear();
+        /* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
+        /* 		      uint LayerNr, vector<int>& altInfillLayers); */
+        void draw (Settings *settings,
+                   bool highlight=false, uint max_triangles=0);
+        virtual void draw_geometry (uint max_triangles=0);
+        void drawBBox() const;
+        virtual bool getPolygonsAtZ(const Matrix4d &T, double z,
+                                    vector<Poly> &polys,
+                                    double &max_gradient,
+                                    vector<Poly> &supportpolys,
+                                    double max_supportangle,
+                                    double thickness = -1) const;
+        // Extract a 2D polygonset from a 3D model:
+        // void CalcLayer(const Matrix4d &T, CuttingPlane *plane) const;
 
     virtual vector<Vector3d> getMostUsedNormals() const;
-	// Auto-Rotate object to have the largest area surface down for printing:
+        // Auto-Rotate object to have the largest area surface down for printing:
     virtual void OptimizeRotation();
     virtual void CalcBBox();
-	// Rotation for manual rotate and used by OptimizeRotation:
+        // Rotation for manual rotate and used by OptimizeRotation:
     virtual void Rotate(const Vector3d & axis, const double &angle);
-	void Twist(double angle);
+        void Twist(double angle);
 
-	virtual void move(Vector3d delta){ transform3D.move(delta); };
+        virtual void move(Vector3d delta){ transform3D.move(delta); }
 
-	void Scale(double scale_factor, bool calcbbox = true);
-	void ScaleX(double scale_factor);
-	void ScaleY(double scale_factor);
-	virtual void ScaleZ(double scale_factor);
-	double getScaleFactor() { return transform3D.get_scale(); };
-	double getScaleFactorX(){ return transform3D.get_scale_x(); };
-	double getScaleFactorY(){ return transform3D.get_scale_y(); };
-	virtual double getScaleFactorZ(){ return transform3D.get_scale_z(); };
+        void Scale(double scale_factor, bool calcbbox = true);
+        void ScaleX(double scale_factor);
+        void ScaleY(double scale_factor);
+        virtual void ScaleZ(double scale_factor);
+        double getScaleFactor() { return transform3D.get_scale(); }
+        double getScaleFactorX(){ return transform3D.get_scale_x(); }
+        double getScaleFactorY(){ return transform3D.get_scale_y(); }
+        virtual double getScaleFactorZ(){ return transform3D.get_scale_z(); }
 
 
-	void FitToVolume(const Vector3d &vol);
+        void FitToVolume(const Vector3d &vol);
 
     void PlaceOnPlatform();
 
@@ -132,7 +133,7 @@ public:
     int divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) const;
 
 
-    int saveBinarySTL(Glib::ustring filename) const;
+    int saveBinarySTL(QString filename) const;
 
 
     bool slow_drawing;
@@ -157,19 +158,19 @@ private:
 
     // returns maximum gradient
     vector<Segment> getCutlines(const Matrix4d &T, double z,
-				vector<Vector2d> &vertices, double &max_grad,
-				vector<Triangle> &support_triangles,
-				double supportangle,
-				double thickness) const;
+                                vector<Vector2d> &vertices, double &max_grad,
+                                vector<Triangle> &support_triangles,
+                                double supportangle,
+                                double thickness) const;
 
     bool hasAdjacentTriangleTo(const Triangle &triangle,
-			       double sqdistance = 0.05) const;
+                               double sqdistance = 0.05) const;
 };
 
 
 
 bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &lines,
-			    bool connect_all=false);
+                            bool connect_all=false);
 bool CleanupSharedSegments(vector<Segment> &lines);
 bool CleanupStraightLines(const vector<Vector2d> &vertices, vector<Segment> &lines);
 

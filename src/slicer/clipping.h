@@ -19,7 +19,7 @@
 
 #pragma once
 #include "config.h"
-#include "types.h"
+#include "../types.h"
 
 // ClipperLib: see http://angusj.com/delphi/clipper.php
 #if HAVE_CLIPPERLIB==1
@@ -58,8 +58,8 @@ class Clipping
   static Vector2d getPoint(const CL::IntPoint &p);
 
   static CL::Paths CLOffset(const CL::Paths &cpolys, int cldist,
-			    CL::JoinType cljtype, double miter_limit=1,
-			    bool reverse=false);
+                CL::JoinType cljtype, double miter_limit=1,
+                bool reverse=false);
 
   bool debug;
   vector<CL::Paths> subjpolygons; // for debugging
@@ -83,37 +83,37 @@ public:
   void setExtrusionFactor(double e) {lastExtrF = e;};
 
   vector<Poly>   intersect      (CL::PolyFillType sft=CL::pftEvenOdd,
-				 CL::PolyFillType cft=CL::pftEvenOdd);
+                 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<Poly>   unite          (CL::PolyFillType sft=CL::pftEvenOdd,
-				 CL::PolyFillType cft=CL::pftEvenOdd);
+                 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<Poly>   subtract       (CL::PolyFillType sft=CL::pftEvenOdd,
-				 CL::PolyFillType cft=CL::pftEvenOdd);
+                 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<Poly>   subtractMerged (double overlap=0.001,
-				 CL::PolyFillType sft=CL::pftEvenOdd,
-				 CL::PolyFillType cft=CL::pftEvenOdd);
+                 CL::PolyFillType sft=CL::pftEvenOdd,
+                 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<Poly>   Xor            (CL::PolyFillType sft=CL::pftEvenOdd,
-				 CL::PolyFillType cft=CL::pftEvenOdd);
+                 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<ExPoly> ext_intersect  (CL::PolyFillType sft=CL::pftEvenOdd,
-				 CL::PolyFillType cft=CL::pftEvenOdd);
+                 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<ExPoly> ext_unite      (CL::PolyFillType sft=CL::pftEvenOdd,
-				 CL::PolyFillType cft=CL::pftEvenOdd);
+                 CL::PolyFillType cft=CL::pftEvenOdd);
   vector<ExPoly> ext_subtract   (CL::PolyFillType sft=CL::pftEvenOdd,
-				 CL::PolyFillType cft=CL::pftEvenOdd);
+                 CL::PolyFillType cft=CL::pftEvenOdd);
 
   static vector<Poly> getMerged(const vector<Poly> &polys, double overlap=0.001);
   static CL::Paths    getMerged(const CL::Paths &cpolys, int overlap=3);
 
   static vector<Poly> getOffset(const Poly &poly, double distance,
-				JoinType jtype=jmiter, double miterdist=1);
+                JoinType jtype=jmiter, double miterdist=1);
   static vector<Poly> getOffset(const vector<Poly> &polys, double distance,
-				JoinType jtype=jmiter,double miterdist=1);
+                JoinType jtype=jmiter,double miterdist=1);
   static vector<Poly> getOffset(const ExPoly &expoly, double distance,
-				JoinType jtype=jmiter, double miterdist=1);
+                JoinType jtype=jmiter, double miterdist=1);
   static vector<Poly> getOffset(const vector<ExPoly> &expolys, double distance,
-				JoinType jtype=jmiter, double miterdist=1);
+                JoinType jtype=jmiter, double miterdist=1);
 
   static vector<Poly> getShrinkedCapped(const vector<Poly> &polys, double distance,
-					JoinType jtype=jmiter,double miterdist=1);
+                    JoinType jtype=jmiter,double miterdist=1);
 
   //vector< vector<Vector2d> > intersect(const Poly poly1, const Poly poly2) const;
 
@@ -122,10 +122,10 @@ public:
   static vector<Poly>   getPolys(const vector<ExPoly> &expolys);
   static vector<Poly>   getPolys(const CL::Paths &cpoly, double z, double extrusionfactor);
   static vector<ExPoly> getExPolys(const CL::PolyTree &ctree, double z,
-				   double extrusionfactor);
+                   double extrusionfactor);
 
   static vector<ExPoly> getExPolys(const vector<Poly> &polys,
-				   double z, double extrusionfactor);
+                   double z, double extrusionfactor);
   static vector<ExPoly> getExPolys(const vector<Poly> &polys);
   static CL::PolyTree   getClipperTree(const vector<Poly> &polys);
 
@@ -150,7 +150,7 @@ public:
   };
   typedef std::vector< ExPolygon > ExPolygons;
   static void AddOuterPolyNodeToExPolygons(const CL::PolyNode *polynode,
-					   ExPolygons& expolygons);
+                       ExPolygons& expolygons);
   static void PolyTreeToExPolygons(const CL::PolyTree * polytree, ExPolygons& expolygons);
 
 };

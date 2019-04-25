@@ -17,13 +17,12 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include <gtkmm.h>
 
-#include "model.h"
+#include "../model.h"
 #include "progress.h"
 
 //ViewProgress::ViewProgress(Progress *progress, Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
-ViewProgress::ViewProgress(Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
+ViewProgress::ViewProgress(QFrame *box, QProgressBar *bar, QLabel *label) :
   m_box (box), m_bar(bar), m_label(label), to_terminal(true)
 {
   m_bar_max = 0.0;
@@ -40,62 +39,62 @@ void ViewProgress::start (const char *label, double max)
   m_box->show();
   m_bar_max = max;
   this->label = label;
-  m_label->set_label (label);
+  m_label->setText(label);
   m_bar_cur = 0.0;
-  m_bar->set_fraction(0.0);
-  start_time.assign_current_time();
-  Gtk::Main::iteration(false);
+  m_bar->setMaximum(max);
+  m_bar->setValue(0);
+  start_time = QTime();
+  start_time.start();
+//  Gtk::Main::iteration(false);
 }
 bool ViewProgress::restart (const char *label, double max)
 {
   if (!do_continue) return false;
   //m_box->show();
   if (to_terminal) {
-    Glib::TimeVal now;
-    now.assign_current_time();
-    const int time_used = (int) round((now - start_time).as_double()); // seconds
-    cerr << m_label->get_label() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
+   const int time_used =  start_time.elapsed()/1000;
+   QTextStream(stderr) << m_label->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   m_bar_max = max;
   this->label = label;
-  m_label->set_label (label);
+  m_label->setText(label);
   m_bar_cur = 0.0;
-  m_bar->set_fraction(0.0);
-  start_time.assign_current_time();
+  m_bar->setMaximum(max);
+  m_bar->setValue(0);
+  start_time.restart();
   //g_main_context_iteration(NULL,false);
-  Gtk::Main::iteration(false);
+//  Gtk::Main::iteration(false);
   return true;
 }
 
 void ViewProgress::stop (const char *label)
 {
   if (to_terminal) {
-    Glib::TimeVal now;
-    now.assign_current_time();
-    const int time_used = (int) round((now - start_time).as_double()); // seconds
-    cerr << m_label->get_label() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
+    const int time_used = start_time.elapsed()/1000; // seconds
+    QTextStream(stderr)  << m_label->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   this->label = label;
-  m_label->set_label (label);
+  m_label->setText(label);
   m_bar_cur = m_bar_max;
-  m_bar->set_fraction(1.0);
+  m_bar->setValue(0);
   m_box->hide();
-  Gtk::Main::iteration(false);
+//  Gtk::Main::iteration(false);
 }
 
-string timeleft_str(long seconds) {
-  ostringstream ostr;
-  int hrs = (int)(seconds/3600);
+QString timeleft_str(long seconds) {
+  QString s;
+  QTextStream ostr(&s);
+  int hrs = int(seconds/3600);
   if (hrs>0) {
     if (hrs>1) ostr << hrs << _("h ");
     else ostr << hrs << _("h ");
     seconds -= 3600*hrs;
   }
   if (seconds > 60)
-    ostr << (int)seconds/60 << _("m ");
+    ostr << seconds/60 << _("m ");
   if (hrs == 0 && seconds<300)
-    ostr << (int)seconds%60 << _("s");
-  return ostr.str();
+    ostr << seconds%60 << _("s");
+  return s;
 }
 
 
@@ -106,42 +105,41 @@ bool ViewProgress::update (const double value, bool take_priority)
     return do_continue;
 
   m_bar_cur = CLAMP(value, 0, 1.0);
-  m_bar->set_fraction(value / m_bar_max);
-  ostringstream o;
-  if(floor(value) != value && floor(m_bar_max) != m_bar_max)
-    o.precision(1);
-  else
-    o.precision(0);
+  m_bar->setMaximum(m_bar_max);
+  m_bar->setValue(value);
+  QString s;
+  QTextStream o(&s);
   o << fixed << value <<"/"<< m_bar_max;
-  m_bar->set_text(o.str());
+  m_bar->setFormat(s);
   if (to_terminal) {
-    int perc = (int(m_bar->get_fraction()*100));
-    cerr << m_label->get_label() << " " << o.str() << " -- " << perc << "%              \r";
+    int perc = (int(100.*m_bar->value()/m_bar->maximum()));
+    QTextStream(stderr) << m_label->text() << " " << o.string() << " -- "
+                        << perc << "%              \r";
   }
 
   if (value > 0) {
-    Glib::TimeVal now;
-    now.assign_current_time();
-    const double used = (now - start_time).as_double(); // seconds
+    const double used = start_time.elapsed()/1000; // seconds
     const double total = used * m_bar_max  / value;
     const long left = (long)(total-used);
-    m_label->set_label(label+" ("+timeleft_str(left)+")");
+    s.clear();
+    o << label <<" (" << timeleft_str(left) << ")";
+    m_label->setText(s);
   }
 
-  if (take_priority)
-    while( gtk_events_pending () )
-      gtk_main_iteration ();
-  Gtk::Main::iteration(false);
+//  if (take_priority)
+//    while( gtk_events_pending () )
+//      gtk_main_iteration ();
+//  Gtk::Main::iteration(false);
   return do_continue;
 }
 
-void ViewProgress::set_label (const std::string label)
+void ViewProgress::set_label (const QString label)
 {
-  std::string old = m_label->get_label();
+  QString old = m_label->text();
   this->label = label;
   if (old != label)
-    m_label->set_label (label);
-  Gtk::Main::iteration(false);
+    m_label->setText (label);
+//  Gtk::Main::iteration(false);
 }
 
 void ViewProgress::set_terminal_output (bool terminal)

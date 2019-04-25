@@ -19,22 +19,22 @@
 #ifndef GL_LIGHT_H
 #define GL_LIGHT_H
 
-class gllight
+class GlLight
 {
-	public:
-		gllight();
-		~gllight();
+    public:
+        GlLight();
+        ~GlLight();
 
-		void Init (int position);
-		void Enable(bool on);
+        void Init (int position);
+        void Enable(bool on);
 
-		void SetAmbient(float r, float g, float b, float a);
-		void SetDiffuse(float r, float g, float b, float a);
-		void SetLocation(float x, float y, float z, float w);
-		void SetSpecular(float r, float g, float b, float a);
+        void SetAmbient(float r, float g, float b, float a);
+        void SetDiffuse(float r, float g, float b, float a);
+        void SetLocation(float x, float y, float z, float w);
+        void SetSpecular(float r, float g, float b, float a);
 
-	private:
-		int offset;
+    private:
+        int offset;
 };
 
 #endif // GL_LIGHT_H

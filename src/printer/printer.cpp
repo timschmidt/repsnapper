@@ -17,15 +17,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#include "stdafx.h"
-
 #include "printer.h"
-#include "model.h"
-#include "../ui/view.h"
+#include "../model.h"
 
-Printer::Printer( View *view ) {
-  m_view = view;
+#include <glibmm/regex.h>
 
+Printer::Printer( MainWindow *main ) {
+  this->main = main;
   m_model = NULL;
   was_connected = false;
   was_printing = false;
@@ -36,17 +34,17 @@ Printer::Printer( View *view ) {
   temps[ TEMP_NOZZLE ] = 0;
   temps[ TEMP_BED ] = 0;
 
-  idle_timeout = Glib::signal_timeout().connect
-    ( sigc::mem_fun(*this, &Printer::Idle), 100 );
-  print_timeout = Glib::signal_timeout().connect
-    ( sigc::mem_fun(*this, &Printer::CheckPrintingProgress), 700 );
+//  idle_timeout = Glib::signal_timeout().connect
+//    ( sigc::mem_fun(*this, &Printer::Idle), 100 );
+//  print_timeout = Glib::signal_timeout().connect
+//    ( sigc::mem_fun(*this, &Printer::CheckPrintingProgress), 700 );
 }
 
 Printer::~Printer() {
-  idle_timeout.disconnect();
-  print_timeout.disconnect();
-  if ( temp_timeout.connected() )
-    temp_timeout.disconnect();
+//  idle_timeout.disconnect();
+//  print_timeout.disconnect();
+//  if ( temp_timeout.connected() )
+//    temp_timeout.disconnect();
 }
 
 void Printer::setModel( Model *model ) {
@@ -64,23 +62,22 @@ bool Printer::Connect( bool connect ) {
   if ( m_model == NULL )
     return false;
 
-  return Connect( m_model->settings.get_string("Hardware","PortName"),
-		  m_model->settings.get_integer("Hardware","SerialSpeed") );
+  return Connect(m_model->settings->get_string("Hardware","PortName").toUtf8().data(),
+                 m_model->settings->get_integer("Hardware","SerialSpeed") );
 }
 
 bool Printer::Connect( string device, int baudrate ) {
-  signal_serial_state_changed.emit( SERIAL_CONNECTING );
+//  signal_serial_state_changed.emit( SERIAL_CONNECTING );
   bool ret = ThreadedPrinterSerial::Connect( device, baudrate );
-  signal_serial_state_changed.emit( ret ? SERIAL_CONNECTED : SERIAL_DISCONNECTED );
+//  signal_serial_state_changed.emit( ret ? SERIAL_CONNECTED : SERIAL_DISCONNECTED );
   UpdateTemperatureMonitor();
-
   return ret;
 }
 
 void Printer::Disconnect( void ) {
-  signal_serial_state_changed.emit( SERIAL_DISCONNECTING );
+//  signal_serial_state_changed.emit(SERIAL_DISCONNECTING);
   ThreadedPrinterSerial::Disconnect();
-  signal_serial_state_changed.emit( SERIAL_DISCONNECTED );
+//  signal_serial_state_changed.emit( SERIAL_DISCONNECTED );
 }
 
 bool Printer::Reset( void ) {
@@ -88,7 +85,7 @@ bool Printer::Reset( void ) {
 
   if ( ret && was_printing ) {
     was_printing = false;
-    signal_printing_changed.emit();
+//    signal_printing_changed.emit();
   }
 
   if ( !ret )
@@ -98,9 +95,8 @@ bool Printer::Reset( void ) {
 }
 
 bool Printer::StartPrinting( unsigned long start_line, unsigned long stop_line ) {
-  string commands = m_model->GetGCodeBuffer()->get_text();
-
-  return Printer::StartPrinting( commands, start_line, stop_line );
+  string gcode = m_model->GetGCodeBuffer()->toPlainText().toUtf8().constData();
+  return Printer::StartPrinting( gcode, start_line, stop_line );
 }
 
 bool Printer::StartPrinting( string commands, unsigned long start_line, unsigned long stop_line ) {
@@ -110,10 +106,10 @@ bool Printer::StartPrinting( string commands, unsigned long start_line, unsigned
     prev_line = start_line;
 
     was_printing = IsPrinting();
-    signal_printing_changed.emit();
+//    signal_printing_changed.emit();
 
-    if ( start_line > 0 )
-      signal_now_printing.emit( start_line );
+//    if ( start_line > 0 )
+//      signal_now_printing.emit( start_line );
   }
 
   return ret;
@@ -126,7 +122,7 @@ bool Printer::StopPrinting( bool wait ) {
     prev_line = 0;
     was_printing = IsPrinting();
 
-    signal_printing_changed.emit();
+//    signal_printing_changed.emit();
   }
 
   return ret;
@@ -138,10 +134,10 @@ bool Printer::ContinuePrinting( bool wait ) {
   if ( ret && wait ) {
     prev_line = GetPrintingProgress();
 
-    signal_printing_changed.emit();
+//    signal_printing_changed.emit();
 
-    if ( prev_line > 0 )
-      signal_now_printing.emit( prev_line );
+//    if ( prev_line > 0 )
+//      signal_now_printing.emit( prev_line );
   }
 
   return ret;
@@ -149,7 +145,7 @@ bool Printer::ContinuePrinting( bool wait ) {
 
 void Printer::Inhibit( bool value ) {
   ThreadedPrinterSerial::Inhibit( value );
-  signal_inhibit_changed.emit();
+//  signal_inhibit_changed.emit();
 }
 
 bool Printer::SwitchPower( bool on ) {
@@ -191,7 +187,7 @@ bool Printer::Move(string axis, double distance, bool relative )
     return false;
   }
 
-  Settings *settings = &m_model->settings;
+  Settings *settings = m_model->settings;
 
   float speed = 0.0;
 
@@ -252,7 +248,7 @@ bool Printer::SetTemp( TempType type, float value, int extruder_no ) {
 }
 
 bool Printer::RunExtruder( double extruder_speed, double extruder_length,
-			   bool reverse, int extruder_no ) {
+               bool reverse, int extruder_no ) {
   if ( IsPrinting() ) {
     alert(_("Can't manually extrude while printing"));
     return false;
@@ -273,28 +269,28 @@ bool Printer::RunExtruder( double extruder_speed, double extruder_length,
 }
 
 void Printer::alert( const char *message ) {
-  if ( m_view )
-    m_view->err_log( string(message) + "\n" );
+  if ( main )
+    main->err_log( string(message) + "\n" );
 
-  signal_alert.emit( Gtk::MESSAGE_INFO, message, NULL );
+//  signal_alert.emit( Gtk::MESSAGE_INFO, message, NULL );
 }
 
 void Printer::error( const char *message, const char *secondary ) {
-  if ( m_view )
-    m_view->err_log( string(message)  + " - " + string(secondary) + "\n" );
+  if ( main )
+    main->err_log( string(message)  + " - " + string(secondary) + "\n" );
 
-  signal_alert.emit( Gtk::MESSAGE_ERROR, message, secondary );
+//  signal_alert.emit( Gtk::MESSAGE_ERROR, message, secondary );
 }
 
 void Printer::UpdateTemperatureMonitor( void ) {
-  if ( temp_timeout.connected() )
-    temp_timeout.disconnect();
+//  if ( temp_timeout.connected() )
+//    temp_timeout.disconnect();
 
-  if ( IsConnected() && m_model && m_model->settings.get_boolean("Misc","TempReadingEnabled") ) {
-    const unsigned int timeout = m_model->settings.get_double("Display","TempUpdateSpeed");
-    temp_timeout = Glib::signal_timeout().connect_seconds
-      ( sigc::mem_fun(*this, &Printer::QueryTemp), timeout );
-  }
+//  if ( IsConnected() && m_model && m_model->settings->get_boolean("Misc","TempReadingEnabled") ) {
+//    const unsigned int timeout = m_model->settings->get_double("Display","TempUpdateSpeed");
+//    temp_timeout = Glib::signal_timeout().connect_seconds
+//      ( sigc::mem_fun(*this, &Printer::QueryTemp), timeout );
+//  }
 }
 
 bool Printer::Idle( void ) {
@@ -304,9 +300,9 @@ bool Printer::Idle( void ) {
   while ( ( str = ReadResponse() ) != "" )
     ParseResponse( str );
 
-  if ( m_view ) {
+  if ( main ) {
     while ( ( str = ReadLog() ) != "" )
-      m_view->comm_log( str );
+      main->comm_log( str );
 
     while ( ( str = ReadErrorLog() ) != "" ) {
       alert( str.c_str() );
@@ -315,11 +311,11 @@ bool Printer::Idle( void ) {
 
   if ( ( is_connected = IsConnected() ) != was_connected ) {
     was_connected = is_connected;
-    signal_serial_state_changed.emit( is_connected ? SERIAL_CONNECTED : SERIAL_DISCONNECTED );
+//    signal_serial_state_changed.emit( is_connected ? SERIAL_CONNECTED : SERIAL_DISCONNECTED );
   }
 
   if ( waiting_temp && --temp_countdown == 0 &&
-       m_model && m_model->settings.get_boolean("Misc","TempReadingEnabled") ) {
+       m_model && m_model->settings->get_boolean("Misc","TempReadingEnabled") ) {
     UpdateTemperatureMonitor();
     temp_countdown = 100;
     waiting_temp = false;
@@ -334,22 +330,22 @@ bool Printer::CheckPrintingProgress( void ) {
 
   if ( is_printing != was_printing ) {
     prev_line = line;
-    signal_printing_changed.emit();
+//    signal_printing_changed.emit();
     was_printing = is_printing;
   } else if ( is_printing && line != prev_line ) {
     prev_line = line;
-    if ( line > 0 )
-      signal_now_printing.emit( line );
+//    if ( line > 0 )
+//      signal_now_printing.emit( line );
   }
 
   return true;
 }
 
 bool Printer::QueryTemp( void ) {
-  if ( temp_timeout.connected() )
-    temp_timeout.disconnect();
+//  if ( temp_timeout.connected() )
+//    temp_timeout.disconnect();
 
-  if ( IsConnected() && m_model && m_model->settings.get_boolean("Misc","TempReadingEnabled") ) {
+  if ( IsConnected() && m_model && m_model->settings->get_boolean("Misc","TempReadingEnabled") ) {
     SendAsync( "M105" );
     waiting_temp = true;
   }
@@ -358,9 +354,13 @@ bool Printer::QueryTemp( void ) {
 }
 
 const Glib::RefPtr<Glib::Regex> templineRE_T =
-	Glib::Regex::create("(?ims)T\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
+    Glib::Regex::create("(?ims)T\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
 const Glib::RefPtr<Glib::Regex> templineRE_B =
-	Glib::Regex::create("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
+    Glib::Regex::create("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
+
+// TODO:
+//const QRegExp templineRE_T("(?ims)T\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
+//const QRegExp templineRE_B("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
 
 void Printer::ParseResponse( string line ) {
   if (line.find("T:") != string::npos) {
@@ -379,6 +379,6 @@ void Printer::ParseResponse( string line ) {
     }
     waiting_temp = false;
     UpdateTemperatureMonitor();
-    signal_temp_changed.emit();
+//    signal_temp_changed.emit();
   }
 }

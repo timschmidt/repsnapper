@@ -92,6 +92,9 @@ void MainWindow::updatedModel(const ObjectsList *objList)
     for (Shape * s: shapes)
         slist << QString::fromStdString(s->filename);
     objListModel.setStringList(slist);
+
+    m_settings->set_to_gui(this);
+    m_settings->set_to_gui(prefs_dialog);
 }
 
 void MainWindow::Draw(QModelIndexList *selected, bool objects_only)

@@ -17,17 +17,17 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 #pragma once
-#include <gtkmm.h>
 
 #include <vector>
-#include "stdafx.h"
+#include "../stdafx.h"
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <QString>
 
-#include "geometry.h"
+#include "../slicer/geometry.h"
 
 /*
 
@@ -103,38 +103,38 @@ Main code follows
 
 
 enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
-	    RAPIDMOTION, COORDINATEDMOTION, // 3 ..
-	    ARC_CW, ARC_CCW, // 5 ..
-	    EXTRUDERON, EXTRUDERONREVERSE, EXTRUDEROFF, //  7 ..
-	    MILLIMETERSASUNITS,	INCHESASUNITS,    // 10 ..
-	    GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 12 ..
-	    ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 14 ..
-	    ABSOLUTE_ECODE, RELATIVE_ECODE, // 16 ..
-	    SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 18 ..
-	    FANON, FANOFF, // 22 ..
-	    ASKTEMP, // 24
-	    EXTRUDERTEMP, BEDTEMP,
-	    RESET_E,
-	    COMMENT, LAYERCHANGE,
-	    UNKNOWN};
+        RAPIDMOTION, COORDINATEDMOTION, // 3 ..
+        ARC_CW, ARC_CCW, // 5 ..
+        EXTRUDERON, EXTRUDERONREVERSE, EXTRUDEROFF, //  7 ..
+        MILLIMETERSASUNITS,	INCHESASUNITS,    // 10 ..
+        GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 12 ..
+        ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 14 ..
+        ABSOLUTE_ECODE, RELATIVE_ECODE, // 16 ..
+        SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 18 ..
+        FANON, FANOFF, // 22 ..
+        ASKTEMP, // 24
+        EXTRUDERTEMP, BEDTEMP,
+        RESET_E,
+        COMMENT, LAYERCHANGE,
+        UNKNOWN};
 
 const int NUM_GCODES = 31;
 
 const string MCODES[] = {"G92", "", "",
-			 "G0", "G1",
-			 "G2", "G3", //arcs
-			 "M101", "M102", "M103", // eon erev eoff
-			 "G21", "G20", // mm in
-			 "G28", "",
-			 "G90", "G91", // abs. rel. pos
-			 "M82", "M83", // abs. E, relative E
-			 "G92", "T", "G1", "G1" ,
-			 "M106", "M107",
-			 "M105", // temp?
-			 "M104", "M140",
-			 "G92",
-			 "; ", "; Layer",
-			 "; UNKNOWN"};
+             "G0", "G1",
+             "G2", "G3", //arcs
+             "M101", "M102", "M103", // eon erev eoff
+             "G21", "G20", // mm in
+             "G28", "",
+             "G90", "G91", // abs. rel. pos
+             "M82", "M83", // abs. E, relative E
+             "G92", "T", "G1", "G1" ,
+             "M106", "M107",
+             "M105", // temp?
+             "M104", "M140",
+             "G92",
+             "; ", "; Layer",
+             "; UNKNOWN"};
 
 
 class Model;
@@ -145,47 +145,47 @@ class Command
 public:
         void init();
         Command();
-  	Command(GCodes code, const Vector3d &where=Vector3d::ZERO,
-		double E=0, double F=0);
-	Command(GCodes code, const string explicit_arg); // explicit string arguments to command
-	Command(GCodes code, double value); // S value gcodes and letter/number codes
-	Command(string gcodeline, const Vector3d &defaultpos,
-		const vector<char> &E_letters);
-	Command(string comment);
-	Command(const Command &rhs);
-	GCodes Code;
-	Vector3d where;
-	Vector3d arcIJK; // I,J,K (dx, dy, dz)
-	bool is_value; // M commands
-	double value; // M commands S value code
-	double f,e; // Feedrate f=speed, e=extrusion to perform while moving (Pythagoras)
-	uint extruder_no;
+    Command(GCodes code, const Vector3d &where=Vector3d::ZERO,
+        double E=0, double F=0);
+    Command(GCodes code, const string explicit_arg); // explicit string arguments to command
+    Command(GCodes code, double value); // S value gcodes and letter/number codes
+    Command(string gcodeline, const Vector3d &defaultpos,
+        const vector<QChar> &E_letters);
+    Command(string comment);
+    Command(const Command &rhs);
+    GCodes Code;
+    Vector3d where;
+    Vector3d arcIJK; // I,J,K (dx, dy, dz)
+    bool is_value; // M commands
+    double value; // M commands S value code
+    double f,e; // Feedrate f=speed, e=extrusion to perform while moving (Pythagoras)
+    uint extruder_no;
 
-	double abs_extr; // for debugging/painting
-	double travel_length;  // for debugging
+    double abs_extr; // for debugging/painting
+    double travel_length;  // for debugging
 
-	bool not_layerchange; // don't record as layerchange for lifted moves
+    bool not_layerchange; // don't record as layerchange for lifted moves
 
-	string explicit_arg;
-	string comment;
+    string explicit_arg;
+    string comment;
 
-	void draw(Vector3d &lastPos, const Vector3d &offset, guint linewidth,
-		  Vector4f color, double extrwidth, bool arrows=true,
-		  bool debug_arcs = false) const;
-	void draw(Vector3d &lastPos, const Vector3d &offset, double extrwidth,
-		  bool arrows=true, bool debug_arcs = false) const;
+    void draw(Vector3d &lastPos, const Vector3d &offset, guint linewidth,
+          Vector4f color, double extrwidth, bool arrows=true,
+          bool debug_arcs = false) const;
+    void draw(Vector3d &lastPos, const Vector3d &offset, double extrwidth,
+          bool arrows=true, bool debug_arcs = false) const;
 
-	bool hasNoEffect(const Vector3d LastPos, const double lastE,
-			 const double lastF, const bool relativeEcode) const;
+    bool hasNoEffect(const Vector3d LastPos, const double lastE,
+                     const double lastF, const bool relativeEcode) const;
 
-	string GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
-			    bool relativeEcode, const char E_letter='E',
-			    bool speedAlways = false) const;
-	GCodes getCode(const string commstr) const;
+    string GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
+                         bool relativeEcode, const char E_letter='E',
+                         bool speedAlways = false) const;
+    GCodes getCode(const string commstr) const;
 
-	void addToPosition(Vector3d &from, bool relative);
+    void addToPosition(Vector3d &from, bool relative);
 
-	string info() const;
+    string info() const;
 
     template <size_t M>
     static long double calcAngle(const vmml::vector<M, double> &rel_from,

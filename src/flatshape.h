@@ -28,22 +28,23 @@
 class FlatShape : public Shape
 {
 
+    Glib::ustring filename;
  public:
-  virtual short dimensions(){return 2;};
+  virtual short dimensions(){return 2;}
 
   FlatShape();
-  FlatShape(string filename);
-  ~FlatShape(){};
+  FlatShape(Glib::ustring filename);
+  ~FlatShape(){}
 
   /* FlatShape(const FlatShape &rhs); */
 
   int loadSVG(istream *text);
 
   bool getPolygonsAtZ(const Matrix4d &T, double z,
-  		      vector<Poly> &polys, double &max_grad,
-		      vector<Poly> &supportpolys,
-		      double max_supportangle=-1,
-		      double thickness=-1) const;
+              vector<Poly> &polys, double &max_grad,
+              vector<Poly> &supportpolys,
+              double max_supportangle=-1,
+              double thickness=-1) const;
 
 
   /* int load(std::string filename); */
@@ -97,7 +98,7 @@ class FlatShape : public Shape
   int svg_addPolygon();
 
 
-  static filetype_t getFileType(std::string filename) {return SVG;};
+  static filetype_t getFileType(std::string filename) {return SVG;}
 
   void splitshapes(vector<Shape*> &shapes, ViewProgress *progress=NULL);
 

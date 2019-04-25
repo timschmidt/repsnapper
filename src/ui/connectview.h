@@ -19,7 +19,6 @@
 #ifndef CONNECT_VIEW_H
 #define CONNECT_VIEW_H
 
-#include <gtkmm.h>
 #include "types.h"
 
 #include "printer/printer.h"
