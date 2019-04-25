@@ -63,13 +63,13 @@ const string serialspeeds[] = { "9600", "19200", "38400", "57600", "115200", "23
 
 // convert GUI name to group/key
 bool splitpoint(const QString &widget_name, QString &group, QString &key) {
-    QStringList list = widget_name.split("_");
-    if (list.size()<2)
-        list = widget_name.split(".");
-    if (list.size()<2)
+    int index = widget_name.indexOf('_');
+    if (index < 0)
+        index = widget_name.indexOf('.');
+    if (index < 0)
          return false;
-  group = list[0];
-  key = list[1];
+  group = widget_name.left(index);
+  key = widget_name.mid(index+1);
   return true;
 }
 
@@ -787,17 +787,17 @@ void Settings::copyGroup(const QString &from, const QString &to)
 
 int Settings::get_integer(const QString &group, const QString &name)
 {
-    return value(group, name).Int;
+    return value(group, name).toInt();
 }
 
 double Settings::get_double(const QString &group, const QString &name)
 {
-    return value(group, name).Double;
+    return value(group, name).toDouble();
 }
 
 bool Settings::get_boolean(const QString &group, const QString &name)
 {
-    return value(group, name).Bool;
+    return value(group, name).toBool();
 }
 
 QString Settings::get_string(const QString &group, const QString &name)

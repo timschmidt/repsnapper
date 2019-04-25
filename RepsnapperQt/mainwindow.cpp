@@ -81,6 +81,7 @@ const std::string fromQString(QString qstring){
 MainWindow::~MainWindow()
 {
     delete m_model;
+    delete m_progress;
     delete m_printer;
     delete ui_main;
 }

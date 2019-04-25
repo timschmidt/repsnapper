@@ -62,6 +62,7 @@ private:
     Render * m_render;
 
     Printer *m_printer;
+    ViewProgress *m_progress;
 
     QStringListModel objListModel;
 
@@ -74,6 +75,7 @@ private slots:
     void on_actionGenerateCode_triggered();
     void on_actionSettings_triggered();
     void handleButtonClick();
+
 
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);
