@@ -17,13 +17,13 @@ RepSnapper is an alternative host software for controlling the RepRap (http://re
 
 == Compilation ==
 
-To build and run repsnapper do:
+To build and run the QT version of repsnapper do:
 
-   ./autogen.sh
+   git checkout QT
 
-   make
+   cd RepsnapperQt && qmake && make
 
-   ./repsnapper
+   ./RepsnapperQT
 
 For more details on prerequisites see the manual: https://github.com/timschmidt/repsnapper/blob/master/doc/manual.asciidoc
 
