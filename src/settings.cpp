@@ -31,6 +31,7 @@
 #include <QTextEdit>
 
 #include "settings.h"
+#include "settings.h"
 #include "stdafx.h"
 
 #include "slicer/infill.h"
@@ -974,23 +975,23 @@ void Settings::get_from_gui () // no params
       set_boolean(group,key,exp->get_expanded());
       break;
     }*/
-    ColorButton *cb = dynamic_cast<ColorButton *>(w);
-    if (cb) {
-      get_colour_from_gui(cb, group, key);
-      break;
+        ColorButton *cb = dynamic_cast<ColorButton *>(w);
+        if (cb) {
+            get_colour_from_gui(cb, group, key);
+            break;
+        }
+        QTextEdit *tv = dynamic_cast<QTextEdit *>(w);
+        if (tv) {
+            setValue(group, key, tv->document()->toPlainText());
+            break;
+        }
+        QTextStream(stderr) << tr("Did not get setting from  ")
+                            << QString(group + "_" + key) << endl;
+        m_user_changed = false;
+        break;
     }
-    QTextEdit *tv = dynamic_cast<QTextEdit *>(w);
-    if (tv) {
-      setValue(group, key, tv->document()->toPlainText());
-      break;
-    }
-    QTextStream(stderr) << tr("Did not get setting from  ")
-                        << QString(group + "_" + key) << endl;
-    m_user_changed = false;
-    break;
-  }
-  if (m_user_changed) {
-    // update currently edited extruder
+    if (m_user_changed) {
+        // update currently edited extruder
     if (group == "Extruder") {
       copyGroup("Extruder",numberedExtruder("Extruder", selectedExtruder));
       // if selected for support, disable support for other extruders

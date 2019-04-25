@@ -140,7 +140,8 @@ class Settings : public QSettings {
   void set_defaults ();
   QWidget* get_widget_and_setting(QWidget *widget, const QObject* qobject, QString &group, QString &key);
 
- public:
+
+public:
   Settings();
   ~Settings();
 

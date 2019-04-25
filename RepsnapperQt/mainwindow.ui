@@ -270,7 +270,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="tabModel">
            <attribute name="title">
@@ -278,7 +278,234 @@
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_5">
             <item>
+             <widget class="QPushButton" name="m_load_stl">
+              <property name="text">
+               <string>Load File</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QListView" name="modelListView"/>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_3" native="true">
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <item>
+                <widget class="QPushButton" name="m_save_stl">
+                 <property name="text">
+                  <string>Save File</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="m_autoarrange">
+                 <property name="text">
+                  <string>Autoplace</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="Misc_ShapeAutoplace">
+                 <property name="text">
+                  <string>Use Autoplace</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox_2">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="title">
+               <string>Object</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_6">
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QWidget" name="widget" native="true">
+                 <layout class="QGridLayout" name="gridLayout_2">
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="spacing">
+                   <number>2</number>
+                  </property>
+                  <item row="4" column="4">
+                   <widget class="QDoubleSpinBox" name="scale_z"/>
+                  </item>
+                  <item row="1" column="3">
+                   <widget class="QLabel" name="label_6">
+                    <property name="text">
+                     <string>Y</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="3">
+                   <widget class="QDoubleSpinBox" name="scale_y"/>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="QLabel" name="label_4">
+                    <property name="text">
+                     <string>Scale</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="2">
+                   <widget class="QDoubleSpinBox" name="rot_x"/>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="QDoubleSpinBox" name="m_scale_value"/>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QPushButton" name="m_split">
+                    <property name="text">
+                     <string>Split</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_3">
+                    <property name="text">
+                     <string>Rotate:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="QLabel" name="label_2">
+                    <property name="text">
+                     <string>Translate</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="2">
+                   <widget class="QDoubleSpinBox" name="translate_x"/>
+                  </item>
+                  <item row="2" column="3">
+                   <widget class="QDoubleSpinBox" name="rot_y"/>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QPushButton" name="m_duplicate">
+                    <property name="text">
+                     <string>Duplicate</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="4">
+                   <widget class="QDoubleSpinBox" name="rot_z"/>
+                  </item>
+                  <item row="0" column="4">
+                   <widget class="QPushButton" name="m_divide">
+                    <property name="text">
+                     <string>Divide</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="3">
+                   <widget class="QPushButton" name="m_merge">
+                    <property name="text">
+                     <string>Merge</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="3">
+                   <widget class="QDoubleSpinBox" name="translate_y"/>
+                  </item>
+                  <item row="4" column="2">
+                   <widget class="QDoubleSpinBox" name="scale_x"/>
+                  </item>
+                  <item row="1" column="4">
+                   <widget class="QLabel" name="label_7">
+                    <property name="text">
+                     <string>Z</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="QPushButton" name="m_autorot">
+                    <property name="text">
+                     <string>Auto</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="2">
+                   <widget class="QLabel" name="label_5">
+                    <property name="text">
+                     <string>X</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="4">
+                   <widget class="QDoubleSpinBox" name="translate_z"/>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QPushButton" name="m_delete">
+                    <property name="text">
+                     <string>Delete</string>
+                    </property>
+                    <property name="autoDefault">
+                     <bool>false</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1">
+                   <widget class="QPushButton" name="m_mirror">
+                    <property name="text">
+                     <string>Mirror</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="QPushButton" name="m_platform">
+                    <property name="text">
+                     <string>On Platform</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="2">
+                   <widget class="QPushButton" name="m_hollow">
+                    <property name="text">
+                     <string>Hollow</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="3">
+                   <widget class="QPushButton" name="m_normals">
+                    <property name="text">
+                     <string>Invert</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
             </item>
             <item>
              <widget class="QGroupBox" name="groupBox">
@@ -286,6 +513,21 @@
                <string>Display</string>
               </property>
               <layout class="QGridLayout" name="gridLayout">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <property name="spacing">
+                <number>2</number>
+               </property>
                <item row="0" column="0">
                 <widget class="QCheckBox" name="Display_DisplayPolygons">
                  <property name="text">
@@ -294,7 +536,7 @@
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QCheckBox" name="Display_DisplayWireframes">
+                <widget class="QCheckBox" name="Display_DisplayWireframe">
                  <property name="text">
                   <string>Wireframe</string>
                  </property>
@@ -330,32 +572,223 @@
            <attribute name="title">
             <string>GCode</string>
            </attribute>
-           <widget class="QCheckBox" name="Slicing_DoInfill">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>20</y>
-              <width>91</width>
-              <height>23</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Infill</string>
-            </property>
-           </widget>
-           <widget class="QCheckBox" name="Slicing_Support">
-            <property name="geometry">
-             <rect>
-              <x>150</x>
-              <y>20</y>
-              <width>91</width>
-              <height>23</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Support</string>
-            </property>
-           </widget>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_7">
+              <item>
+               <widget class="QPushButton" name="m_gcode">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Generate GCode</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="widget_4" native="true">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_4">
+                 <item row="0" column="1">
+                  <widget class="QCheckBox" name="Slicing_Support">
+                   <property name="text">
+                    <string>Support</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QCheckBox" name="Slicing_DoInfill">
+                   <property name="text">
+                    <string>Infill</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QCheckBox" name="Slicing_NoTopAndBottom">
+                   <property name="text">
+                    <string>No Covers</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QCheckBox" name="Slicing_SelectedOnly">
+                   <property name="text">
+                    <string>Selected Only</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QCheckBox" name="Slicing_Decor">
+                   <property name="text">
+                    <string>Decor</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QCheckBox" name="Slicing_BuildSerial">
+                   <property name="text">
+                    <string>Serial Build</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_3">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="title">
+                 <string>Parameters</string>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_3">
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <item row="0" column="1">
+                  <widget class="QDoubleSpinBox" name="Slicing_LayerThickness"/>
+                 </item>
+                 <item row="1" column="1">
+                  <widget class="QSpinBox" name="Slicing_ShellCount"/>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QLabel" name="label_11">
+                   <property name="text">
+                    <string>Infill %:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="3">
+                  <widget class="QSpinBox" name="Slicing_Skins"/>
+                 </item>
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="label_8">
+                   <property name="text">
+                    <string>Layer Height:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_9">
+                   <property name="text">
+                    <string>Shells</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="2">
+                  <widget class="QLabel" name="label_10">
+                   <property name="text">
+                    <string>Skins:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="3">
+                  <widget class="QSpinBox" name="Slicing_InfillPercent"/>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="widget_5" native="true">
+                <layout class="QHBoxLayout" name="horizontalLayout_6">
+                 <item>
+                  <widget class="QPushButton" name="g_load_gcode">
+                   <property name="text">
+                    <string>Load GCode</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="g_platform">
+                   <property name="text">
+                    <string>To Platform</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="g_save_gcode">
+                   <property name="text">
+                    <string>Save GCode</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTabWidget" name="tabWidget_2">
+                <property name="currentIndex">
+                 <number>3</number>
+                </property>
+                <widget class="QWidget" name="tab">
+                 <attribute name="title">
+                  <string>Start</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="verticalLayout_9">
+                  <item>
+                   <widget class="QTextEdit" name="GCode_Start"/>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="tab_3">
+                 <attribute name="title">
+                  <string>Next Layer</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="verticalLayout_10">
+                  <item>
+                   <widget class="QTextEdit" name="GCode_Layer"/>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="tab_4">
+                 <attribute name="title">
+                  <string>End</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="verticalLayout_11">
+                  <item>
+                   <widget class="QTextEdit" name="GCode_End"/>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="tab_2">
+                 <attribute name="title">
+                  <string>Result</string>
+                 </attribute>
+                 <layout class="QVBoxLayout" name="verticalLayout_8">
+                  <item>
+                   <widget class="QTextEdit" name="GCode_Result"/>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </widget>
           <widget class="QWidget" name="tabPrint">
            <property name="whatsThis">
@@ -394,6 +827,19 @@
            </widget>
           </widget>
          </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
         </item>
        </layout>
       </widget>
@@ -435,6 +881,12 @@
        </item>
        <item>
         <widget class="QProgressBar" name="progressBar">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="maximum">
           <number>222</number>
          </property>
@@ -450,7 +902,13 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="progresCancel">
+        <widget class="QPushButton" name="progres_Cancel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Cancel</string>
          </property>
@@ -498,7 +956,7 @@
     <bool>true</bool>
    </property>
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
@@ -507,9 +965,8 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>false</bool>
+    <bool>true</bool>
    </attribute>
-   <addaction name="actionOpen"/>
    <addaction name="separator"/>
    <addaction name="actionGenerate_GCode"/>
   </widget>

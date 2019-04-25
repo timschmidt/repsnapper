@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <sigc++/sigc++.h>
+//#include <sigc++/sigc++.h>
 
 #include <mainwindow.h>
 

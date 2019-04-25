@@ -32,6 +32,10 @@
 #include <iostream>
 
 #include <src/objlist.h>
+
+#include <src/printer/printer.h>
+
+#include <src/ui/progress.h>
 using namespace std;
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -42,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QCoreApplication::setApplicationName("Repsnapper");
 
     ui_main->setupUi(this);
-    ui_main->progressBarArea->setVisible(false);
+    ui_main->mainToolBar->hide();
     ui_main->mainsplitter->setSizes(QList<int>({INT_MAX, INT_MAX}));
     ui_main->modelListView->
             setEditTriggers(QAbstractItemView::AnyKeyPressed |
@@ -51,12 +55,21 @@ MainWindow::MainWindow(QWidget *parent) :
 
     prefs_dialog = new PrefsDlg(this);
 
+    connectButtons(this);
+    connectButtons(prefs_dialog);
+
     m_settings = new Settings();
     m_settings->connect_to_ui(this);
     m_settings->connect_to_ui(prefs_dialog);
 
     m_model = new Model(this);
+    m_progress = new ViewProgress(ui_main->progressBarArea,
+                                  ui_main->progressBar,
+                                  ui_main->progressLabel);
+    m_model->SetViewProgress(m_progress);
     updatedModel();
+
+    m_printer = new Printer(this);
 
     m_render = new Render(this, this);
 }
@@ -67,6 +80,8 @@ const std::string fromQString(QString qstring){
 
 MainWindow::~MainWindow()
 {
+    delete m_model;
+    delete m_printer;
     delete ui_main;
 }
 
@@ -112,9 +127,75 @@ void MainWindow::openFile(const QString &path)
     m_model->Read(new QFile(path));
 }
 
+void MainWindow::connectButtons(QWidget *widget)
+{
+    QList<QWidget*> widgets_with_setting =
+            widget->findChildren<QWidget*>(QRegularExpression(".+_.+"));
+    for (int i=0; i< widgets_with_setting.size(); i++){
+        QWidget *w = (widgets_with_setting[i]);
+        QPushButton *b = dynamic_cast<QPushButton *>(w);
+        if (b) {
+            cerr<< "connect button " << w->objectName().toStdString() << endl;
+            widget->connect(b, SIGNAL(clicked()), this, SLOT(handleButtonClick()));
+        }
+    }
+}
+
+void MainWindow::handleButtonClick()
+{
+    QAbstractButton *button = (QAbstractButton*)sender();
+    if (!button)
+        return;
+    QString name= button->objectName();
+    cerr<< "button " << name.toStdString() << endl;
+    if(name == "m_delete"){
+    } else if(name == "cancel_progress"){
+    } else if(name == "m_load_stl"){
+        on_actionOpen_triggered();
+    } else if(name == "m_gcode"){
+        on_actionGenerateCode_triggered();
+    } else if(name == ""){
+    } else if(name == ""){
+    } else if(name == ""){
+    } else if(name == ""){
+    } else if(name == ""){
+    } else if(name == ""){
+    } else if(name == ""){
+    } else if(name == ""){
+    }
+}
+
 void MainWindow::on_actionQuit_triggered()
 {
     close();
+}
+
+
+
+void MainWindow::extruder_selected()
+{/*TODO
+  std::vector< Gtk::TreeModel::Path > path =
+    extruder_treeview->get_selection()->get_selected_rows();
+  if(path.size()>0 && path[0].size()>0) {
+    // copy selected extruder from Extruders to current Extruder
+    m_model->settings.SelectExtruder(path[0][0], &m_builder);
+  }
+  m_model->ClearPreview();
+  queue_draw();
+  */
+}
+
+void MainWindow::on_actionGenerateCode_triggered()
+{
+    extruder_selected(); // be sure to get extruder settings from gui
+    PrintInhibitor inhibitPrint(m_printer);
+    if (m_printer->IsPrinting())
+      {
+        m_printer->error (_("Complete print before converting"),
+                          _("Converting to GCode while printing will abort the print"));
+        return;
+      }
+    m_model->ConvertToGCode();
 }
 
 void MainWindow::on_actionSettings_triggered()

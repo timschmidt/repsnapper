@@ -26,7 +26,7 @@
 #include <QTime>
 
 class ViewProgress {
-  QFrame *m_box;
+  QWidget *m_box;
   QProgressBar *m_bar;
   QLabel *m_label;
   double m_bar_max;
@@ -42,7 +42,7 @@ class ViewProgress {
   void stop (const char *label = "");
   bool update (const double value, bool take_priority=true);
   ViewProgress(){}
-  ViewProgress(QFrame *box, QProgressBar *bar, QLabel *label);
+  ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label);
   void set_label (QString label);
   double maximum() { return m_bar_max; }
   double value() { return m_bar_cur; }

@@ -61,11 +61,19 @@ private:
     Model* m_model;
     Render * m_render;
 
+    Printer *m_printer;
+
     QStringListModel objListModel;
+
+    void connectButtons(QWidget *widget);
+
+    void extruder_selected();
 private slots:
     void on_actionOpen_triggered();
     void on_actionQuit_triggered();
+    void on_actionGenerateCode_triggered();
     void on_actionSettings_triggered();
+    void handleButtonClick();
 
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);

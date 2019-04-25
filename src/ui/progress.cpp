@@ -22,11 +22,11 @@
 #include "progress.h"
 
 //ViewProgress::ViewProgress(Progress *progress, Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
-ViewProgress::ViewProgress(QFrame *box, QProgressBar *bar, QLabel *label) :
+ViewProgress::ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label) :
   m_box (box), m_bar(bar), m_label(label), to_terminal(true)
 {
   m_bar_max = 0.0;
-  box->hide();
+  m_box->hide();
   // progress->m_signal_progress_start.connect  (sigc::mem_fun(*this, &ViewProgress::start));
   // progress->m_signal_progress_update.connect (sigc::mem_fun(*this, &ViewProgress::update));
   // progress->m_signal_progress_stop.connect   (sigc::mem_fun(*this, &ViewProgress::stop));
@@ -50,7 +50,7 @@ void ViewProgress::start (const char *label, double max)
 bool ViewProgress::restart (const char *label, double max)
 {
   if (!do_continue) return false;
-  //m_box->show();
+  m_box->show();
   if (to_terminal) {
    const int time_used =  start_time.elapsed()/1000;
    QTextStream(stderr) << m_label->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;

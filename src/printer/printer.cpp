@@ -20,7 +20,7 @@
 #include "printer.h"
 #include "../model.h"
 
-#include <glibmm/regex.h>
+//#include <glibmm/regex.h>
 
 Printer::Printer( MainWindow *main ) {
   this->main = main;
@@ -353,32 +353,25 @@ bool Printer::QueryTemp( void ) {
   return true;
 }
 
-const Glib::RefPtr<Glib::Regex> templineRE_T =
-    Glib::Regex::create("(?ims)T\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
-const Glib::RefPtr<Glib::Regex> templineRE_B =
-    Glib::Regex::create("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
-
-// TODO:
-//const QRegExp templineRE_T("(?ims)T\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
-//const QRegExp templineRE_B("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?");
+static const QRegularExpression templineRE_T("(?ims)T\\:(?<temp>[\\-\\.\\d]+?)\\s+?");// "T:-234"
+static const QRegularExpression templineRE_B("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?");// "B:-123"
 
 void Printer::ParseResponse( string line ) {
-  if (line.find("T:") != string::npos) {
-    Glib::MatchInfo match_info;
-    vector<string> matches;
-    string name;
-    if (templineRE_T->match(line, match_info)) {
-      std::istringstream iss(match_info.fetch_named("temp").c_str());
-      double temp; iss >> temp;
-      temps[TEMP_NOZZLE] = temp;
+    QString qs = QString::fromStdString(line);
+    if (qs.contains("T:")) {
+        QRegularExpressionMatch match = templineRE_T.match(qs);
+        if(match.hasMatch()){
+            temps[TEMP_NOZZLE]= match.captured("temp").toInt();
+        }
     }
-    if (templineRE_B->match(line, match_info)) {
-      std::istringstream iss(match_info.fetch_named("temp").c_str());
-      double temp; iss >> temp;
-      temps[TEMP_BED] = temp;
+    if (qs.contains("B:")) {
+        QRegularExpressionMatch match = templineRE_B.match(qs);
+        if(match.hasMatch()){
+            temps[TEMP_BED]= match.captured("temp").toInt();
+        }
     }
     waiting_temp = false;
     UpdateTemperatureMonitor();
 //    signal_temp_changed.emit();
-  }
 }
+
