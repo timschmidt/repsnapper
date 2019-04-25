@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>489</width>
+    <width>462</width>
     <height>453</height>
    </rect>
   </property>
@@ -80,6 +80,12 @@
                 <property name="decimals">
                  <number>0</number>
                 </property>
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>2.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="0" column="1">
@@ -100,6 +106,12 @@
                <widget class="QDoubleSpinBox" name="Hardware_Volume_Y">
                 <property name="decimals">
                  <number>0</number>
+                </property>
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>5.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -136,12 +148,24 @@
                 <property name="decimals">
                  <number>0</number>
                 </property>
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>5.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="2" column="4">
                <widget class="QDoubleSpinBox" name="Hardware_PrintMargin_Y">
                 <property name="decimals">
                  <number>0</number>
+                </property>
+                <property name="maximum">
+                 <double>100.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>1.000000000000000</double>
                 </property>
                </widget>
               </item>

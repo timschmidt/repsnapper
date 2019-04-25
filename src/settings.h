@@ -84,6 +84,7 @@ class Settings : public QSettings {
   /* void set_string  (const string &group, const string &name, const string &value); */
   void set_colour  (const QString &group, const QString &name, const Vector4f &value);
   void set_double_list  (const QString &group, const QString &name, const vector<double> &values);
+  void set_to_gui              (QWidget *widget, const string filter="");
 
   QString numberedExtruder(const QString &group, int num=-1) const;
 
@@ -131,8 +132,8 @@ class Settings : public QSettings {
 
 
  private:
-  void set_to_gui              (int i);
-  void set_to_gui              (QWidget *widget, const QString &group, const QString &key);
+
+  bool set_to_gui              (QWidget *widget, const QString &group, const QString &key);
   void get_colour_from_gui     (ColorButton * colorButton,
                                 const QString &group, const QString &key);
   void convert_old_colour      (const QString &group, const QString &key);
@@ -154,8 +155,6 @@ class Settings : public QSettings {
   // return real mm depending on hardware extrusion width setting
   double GetInfillDistance(double layerthickness, float percent);
 
-  // sync changed settings with the GUI eg. used post load
-  void set_to_gui (QWidget *widget, const string filter="");
 
   // connect settings to relevant GUI widgets
   void connect_to_ui (QWidget *widget);
@@ -189,6 +188,7 @@ class Settings : public QSettings {
 private slots:
   void get_from_gui(QWidget *widget);
   void get_int_from_gui(QWidget *widget, int value);
+  void get_double_from_gui(QWidget *widget, double value);
 
 };
 

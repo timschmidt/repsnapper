@@ -61,10 +61,10 @@ const string serialspeeds[] = { "9600", "19200", "38400", "57600", "115200", "23
 
 
 // convert GUI name to group/key
-bool splitpoint(const QString &glade_name, QString &group, QString &key) {
-    QStringList list = glade_name.split("_");
+bool splitpoint(const QString &widget_name, QString &group, QString &key) {
+    QStringList list = widget_name.split("_");
     if (list.size()<2)
-        list = glade_name.split(".");
+        list = widget_name.split(".");
     if (list.size()<2)
          return false;
   group = list[0];
@@ -461,7 +461,7 @@ void Settings::save_settings(QString filename)
   m_user_changed = false;
 }*/
 
-void Settings::set_to_gui (QWidget *widget, const QString &group,
+bool Settings::set_to_gui (QWidget *widget, const QString &group,
                            const QString &key)
 {
   inhibit_callback = true;
@@ -469,26 +469,30 @@ void Settings::set_to_gui (QWidget *widget, const QString &group,
   QString widget_name = group + "_" + ks.replace('.','_');
   QWidget *w = widget->findChild<QWidget*>(widget_name);
   if (!w) {
-      QTextStream(stderr) << widget_name << tr(" not defined in GUI!")<< endl;
-      return;
+      QTextStream(stderr) << "    " << widget_name << tr(" not defined in GUI!")<< endl;
+      return false;
   }
   cerr << "setting to gui: " << widget_name.toStdString()
        << " = " << value(group, key).toString().toStdString() << endl;
   QCheckBox *check = dynamic_cast<QCheckBox *>(w);
   if (check) {
-    check->setCheckState(Qt::CheckState(get_boolean(group,key)));
-    return;
+    check->setChecked(get_boolean(group,key));
+    return true;
   }
   QSpinBox *spin = dynamic_cast<QSpinBox *>(w);
   if (spin) {
-      //TODO double
     spin->setValue(get_double(group,key));
-    return;
+    return true;
+  }
+  QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
+  if (dspin) {
+    dspin->setValue(get_double(group,key));
+    return true;
   }
   QSlider *range = dynamic_cast<QSlider *>(w);
   if (range) {
     range->setValue(get_double(group,key));
-    return;
+    return true;
   }
   QComboBox *combo = dynamic_cast<QComboBox *>(w);
   if (combo) {
@@ -496,12 +500,12 @@ void Settings::set_to_gui (QWidget *widget, const QString &group,
       combobox_set_to(combo, get_string(group, key));
     else // has index
       combo->setCurrentIndex(get_integer(group,key));
-    return;
+    return true;
   }
   QLineEdit *entry = dynamic_cast<QLineEdit *>(w);
   if (entry) {
     entry->setText(get_string(group,key));
-    return;
+    return true;
   }
   /*Gtk::Expander *exp = dynamic_cast<Gtk::Expander *>(w);
   if (exp) {
@@ -512,16 +516,16 @@ void Settings::set_to_gui (QWidget *widget, const QString &group,
   if(col) {
     vector<double> c = get_double_list(group,key);
     col->set_color(c[0],c[1],c[2],c[3]);
-    return;
+    return true;
   }
   QTextEdit *tv = dynamic_cast<QTextEdit *>(w);
   if (tv) {
     tv->setText(get_string(group,key));
-    return;
+    return true;
   }
 
-  QTextStream(stderr) << tr("set_to_gui of ") << widget_name << " not done!"
-                      << endl;
+  QTextStream(stderr) << tr("set_to_gui of ") << widget_name << " not done!" << endl;
+  return false;
 }
 
 
@@ -611,6 +615,12 @@ void Settings::connect_to_ui (QWidget *widget)
               //TODO   spin->set_increments (vals[2],vals[3]);
               continue;
           }
+          QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
+          if (dspin) {
+              dspin->setRange(vals[0],vals[1]);
+              //TODO   spin->set_increments (vals[2],vals[3]);
+              continue;
+          }
           QAbstractSlider *range = dynamic_cast<QAbstractSlider *>(w); // sliders etc.
           if (range) {
               range->setRange(vals[0],vals[1]);
@@ -642,6 +652,11 @@ void Settings::connect_to_ui (QWidget *widget)
           widget->connect(spin, SIGNAL(valueChanged(int)), this, SLOT(get_int_from_gui(int)));
           continue;
       }
+      QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
+      if (dspin) {
+          widget->connect(dspin, SIGNAL(valueChanged(double)), this, SLOT(get_double_from_gui(double)));
+          continue;
+      }
       QAbstractSlider *range = dynamic_cast<QAbstractSlider *>(w); // sliders etc.
       if (range) {
           widget->connect(range, SIGNAL(valueChanged(int)), this, SLOT(get_int_from_gui(int)));
@@ -669,7 +684,7 @@ void Settings::connect_to_ui (QWidget *widget)
       /* Gtk::Expander *exp = dynamic_cast<Gtk::Expander *>(w);
     if (exp) {
       exp->property_expanded().signal_changed().connect
-        (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), glade_name), QUiLoader));
+        (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), widget_name), QUiLoader));
       continue;
     }*/
       ColorButton *cb = dynamic_cast<ColorButton *>(w);
@@ -880,6 +895,7 @@ std::string Settings::get_image_path()
 void Settings::setValue(const QString &group, const QString &key, const QVariant &value)
 {
     beginGroup(group);
+    QTextStream(stderr) << "setting " << group << "_" << key << " = " << value.toString() << endl;
     QSettings::setValue(key, value);
     endGroup();
 }
@@ -940,13 +956,13 @@ bool Settings::del_user_button(const QString &name) {
 QWidget* Settings::get_widget_and_setting(QWidget *widget, const QObject* qobject,
                                           QString &group, QString &key){
     if (inhibit_callback) return nullptr;
-    QString glade_name = qobject->objectName();
-    QWidget *w = widget->findChild<QWidget*>(glade_name);
+    QString widget_name = qobject->objectName();
+    QWidget *w = widget->findChild<QWidget*>(widget_name);
     if (!w) {
-        QTextStream(stderr) << glade_name << tr(" not defined in GUI!")<< endl;
+        QTextStream(stderr) << "    " << widget_name << tr(" not defined in GUI!")<< endl;
         return nullptr;
     }
-    return splitpoint(glade_name, group, key) ? w : nullptr;
+    return splitpoint(widget_name, group, key) ? w : nullptr;
 }
 
 void Settings::get_from_gui (QWidget *widget) // no params
@@ -1024,6 +1040,18 @@ void Settings::get_int_from_gui(QWidget *widget, int value)
               setValue(group,key,combobox_get_active_value(combo).toUtf8().constData());
           else
               setValue(group,key,combo->currentIndex());
+          break;
+        }
+    }
+}
+void Settings::get_double_from_gui(QWidget *widget, double value)
+{
+    QString group, key;
+    QWidget *w = get_widget_and_setting(widget, sender(), group, key);
+    while (w) {
+        QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
+        if (dspin) {
+          setValue(group, key, value);
           break;
         }
     }
