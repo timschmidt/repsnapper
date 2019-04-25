@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>813</width>
-    <height>490</height>
+    <width>757</width>
+    <height>517</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -17,7 +17,11 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Repsnapper</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../src/repsnapper.svg</normaloff>../src/repsnapper.svg</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="enabled">
@@ -272,83 +276,55 @@
            <attribute name="title">
             <string>Model</string>
            </attribute>
-           <widget class="QWidget" name="">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>10</y>
-              <width>258</width>
-              <height>297</height>
-             </rect>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_5">
-             <item>
-              <widget class="QListView" name="modelListView"/>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="groupBox">
-               <property name="title">
-                <string>Display</string>
-               </property>
-               <layout class="QGridLayout" name="gridLayout">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <property name="horizontalSpacing">
-                 <number>0</number>
-                </property>
-                <property name="verticalSpacing">
-                 <number>1</number>
-                </property>
-                <item row="0" column="0">
-                 <widget class="QCheckBox" name="Display_DisplayPolygons">
-                  <property name="text">
-                   <string>Surface</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QCheckBox" name="Display_DisplayWireframes">
-                  <property name="text">
-                   <string>Wireframe</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="0">
-                 <widget class="QCheckBox" name="Display_DisplayNormals">
-                  <property name="text">
-                   <string>Normals</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="1" column="1">
-                 <widget class="QCheckBox" name="Display_DisplayEndpoints">
-                  <property name="text">
-                   <string>Endpoints</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="1">
-                 <widget class="QCheckBox" name="Display_DisplayBBox">
-                  <property name="text">
-                   <string>BBoxes</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-            </layout>
-           </widget>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <widget class="QListView" name="modelListView"/>
+            </item>
+            <item>
+             <widget class="QGroupBox" name="groupBox">
+              <property name="title">
+               <string>Display</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout">
+               <item row="0" column="0">
+                <widget class="QCheckBox" name="Display_DisplayPolygons">
+                 <property name="text">
+                  <string>Surface</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QCheckBox" name="Display_DisplayWireframes">
+                 <property name="text">
+                  <string>Wireframe</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QCheckBox" name="Display_DisplayNormals">
+                 <property name="text">
+                  <string>Normals</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QCheckBox" name="Display_DisplayEndpoints">
+                 <property name="text">
+                  <string>Endpoints</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QCheckBox" name="Display_DisplayBBox">
+                 <property name="text">
+                  <string>BBoxes</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
           </widget>
           <widget class="QWidget" name="tabGCode">
            <attribute name="title">
@@ -451,7 +427,7 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLabel" name="progressStop">
+        <widget class="QLabel" name="progressLabel">
          <property name="text">
           <string>Progress:</string>
          </property>
@@ -490,7 +466,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>813</width>
+     <width>757</width>
      <height>22</height>
     </rect>
    </property>
@@ -538,17 +514,6 @@
    <addaction name="actionGenerate_GCode"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-  </widget>
   <action name="actionOpen">
    <property name="text">
     <string>&amp;Open</string>

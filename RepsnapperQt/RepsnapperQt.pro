@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -25,6 +25,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+    ../libraries/clipper/clipper/polyclipping-code/cpp/clipper.cpp \
+    ../libraries/lmfit/lmfit-5.0/lib/lmcurve.c \
+    ../libraries/lmfit/lmfit-5.0/lib/lmmin.c \
+    ../libraries/poly2tri/poly2tri/poly2tri/common/shapes.cc \
+    ../libraries/poly2tri/poly2tri/poly2tri/sweep/advancing_front.cc \
+    ../libraries/poly2tri/poly2tri/poly2tri/sweep/cdt.cc \
+    ../libraries/poly2tri/poly2tri/poly2tri/sweep/sweep.cc \
+    ../libraries/poly2tri/poly2tri/poly2tri/sweep/sweep_context.cc \
         ../src/arcball.cpp \
         ../src/files.cpp \
         ../src/flatshape.cpp \
@@ -32,23 +40,16 @@ SOURCES += \
         ../src/gcode/gcode.cpp \
         ../src/gcode/gcodestate.cpp \
         ../src/gllight.cpp \
-        ../src/glshader.cpp \
         ../src/model.cpp \
         ../src/model_slice.cpp \
         ../src/objlist.cpp \
         ../src/platform.cpp \
-        ../src/pretty-print-vrml.cpp \
         ../src/printer/custom_baud.cpp \
         ../src/printer/printer.cpp \
         ../src/printer/printer_serial.cpp \
-        ../src/printer/printer_serial_test.cpp \
-        ../src/printer/printrun.cpp \
         ../src/printer/thread_buffer.cpp \
-        ../src/printer/thread_buffer_test.cpp \
         ../src/printer/threaded_printer_serial.cpp \
-        ../src/printer/threaded_printer_serial_test.cpp \
         ../src/render.cpp \
-        ../src/repsnapper.cpp \
         ../src/settings.cpp \
         ../src/shape.cpp \
         ../src/slicer/clipping.cpp \
@@ -60,19 +61,24 @@ SOURCES += \
         ../src/slicer/printlines_antiooze.cpp \
         ../src/transform3d.cpp \
         ../src/triangle.cpp \
-        ../src/ui/connectview.cpp \
-        ../src/ui/draw.cpp \
-        ../src/ui/filechooser.cpp \
+#        ../src/ui/connectview.cpp \
         ../src/ui/prefs_dlg.cpp \
         ../src/ui/progress.cpp \
-        ../src/ui/view.cpp \
-        ../src/ui/widgets.cpp \
-        ../src/unittest.cpp \
-        ../src/vrml.cpp \
         main.cpp \
         mainwindow.cpp
 
 HEADERS += \
+    ../libraries/clipper/clipper/polyclipping-code/cpp/clipper.hpp \
+    ../libraries/lmfit/lmfit-5.0/lib/lmcurve.h \
+    ../libraries/lmfit/lmfit-5.0/lib/lmmin.h \
+    ../libraries/lmfit/lmfit-5.0/lib/lmstruct.h \
+    ../libraries/poly2tri/poly2tri/poly2tri/common/shapes.h \
+    ../libraries/poly2tri/poly2tri/poly2tri/common/utils.h \
+    ../libraries/poly2tri/poly2tri/poly2tri/poly2tri.h \
+    ../libraries/poly2tri/poly2tri/poly2tri/sweep/advancing_front.h \
+    ../libraries/poly2tri/poly2tri/poly2tri/sweep/cdt.h \
+    ../libraries/poly2tri/poly2tri/poly2tri/sweep/sweep.h \
+    ../libraries/poly2tri/poly2tri/poly2tri/sweep/sweep_context.h \
         ../src/arcball.h \
         ../src/files.h \
         ../src/flatshape.h \
@@ -81,7 +87,6 @@ HEADERS += \
         ../src/gcode/gcodestate.h \
         ../src/gitversion.h \
         ../src/gllight.h \
-        ../src/glshader.h \
         ../src/librepsnapper/vmmlib/include/vmmlib/blas_daxpy.hpp \
         ../src/librepsnapper/vmmlib/include/vmmlib/cublas_includes.hpp \
         ../src/librepsnapper/vmmlib/include/vmmlib/cublas_types.hpp \
@@ -99,7 +104,6 @@ HEADERS += \
         ../src/printer/custom_baud.h \
         ../src/printer/printer.h \
         ../src/printer/printer_serial.h \
-        ../src/printer/printrun.h \
         ../src/printer/thread.h \
         ../src/printer/thread_buffer.h \
         ../src/printer/threaded_printer_serial.h \
@@ -116,12 +120,9 @@ HEADERS += \
         ../src/transform3d.h \
         ../src/triangle.h \
         ../src/types.h \
-        ../src/ui/connectview.h \
-        ../src/ui/draw.h \
-        ../src/ui/filechooser.h \
+ #       ../src/ui/connectview.h \
         ../src/ui/prefs_dlg.h \
         ../src/ui/progress.h \
-        ../src/ui/view.h \
         ../src/ui/widgets.h \
         ../src/vrml.h \
         mainwindow.h
@@ -154,3 +155,10 @@ INCLUDEPATH += /usr/local/include/libxml++-2.6/include/
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+unix|win32: LIBS += -lintl
+unix|win32: LIBS += -lglib-2.0
+unix|win32: LIBS += -lglibmm-2.4
+unix|win32: LIBS += -lxml++-2.6
+unix|win32: LIBS += -lGLU
+unix|win32: LIBS += -lcairomm-1.0
