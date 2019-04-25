@@ -56,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings->connect_to_ui(prefs_dialog);
 
     m_model = new Model(this);
+    updatedModel();
 
     m_render = new Render(this, this);
 }
@@ -86,15 +87,17 @@ void MainWindow::echo_log(string s)
 
 void MainWindow::updatedModel(const ObjectsList *objList)
 {
-    vector<Shape *> shapes;
-    objList->get_all_shapes(shapes);
-    QStringList slist;
-    for (Shape * s: shapes)
-        slist << QString::fromStdString(s->filename);
-    objListModel.setStringList(slist);
+    if (objList){
+        vector<Shape *> shapes;
+        objList->get_all_shapes(shapes);
+        QStringList slist;
+        for (Shape * s: shapes)
+            slist << QString::fromStdString(s->filename);
+        objListModel.setStringList(slist);
+    }
 
     m_settings->set_to_gui(this);
-    m_settings->set_to_gui(prefs_dialog);
+    m_settings->set_to_gui(prefs_dialog, "Hardware");
 }
 
 void MainWindow::Draw(QModelIndexList *selected, bool objects_only)

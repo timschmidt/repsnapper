@@ -46,7 +46,7 @@ public:
     Model * get_model() const {return m_model;}
     Settings * get_settings() const {return m_settings;}
 
-    void updatedModel(const ObjectsList *objList);
+    void updatedModel(const ObjectsList *objList = nullptr);
     void Draw (QModelIndexList *selected, bool objects_only=false);
     void DrawGrid ();
 

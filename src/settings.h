@@ -185,10 +185,11 @@ class Settings : public QSettings {
 
 
   QString info();
-private slots:
-  void get_from_gui(QWidget *widget);
-  void get_int_from_gui(QWidget *widget, int value);
-  void get_double_from_gui(QWidget *widget, double value);
+
+public slots:
+  void get_from_gui();
+  void get_int_from_gui(int value);
+  void get_double_from_gui(double value);
 
 };
 

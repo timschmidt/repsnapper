@@ -469,7 +469,7 @@ bool Settings::set_to_gui (QWidget *widget, const QString &group,
   QString widget_name = group + "_" + ks.replace('.','_');
   QWidget *w = widget->findChild<QWidget*>(widget_name);
   if (!w) {
-      QTextStream(stderr) << "    " << widget_name << tr(" not defined in GUI!")<< endl;
+//      QTextStream(stderr) << "    " << widget_name << tr(" not defined in GUI!")<< endl;
       return false;
   }
   cerr << "setting to gui: " << widget_name.toStdString()
@@ -563,16 +563,12 @@ void Settings::set_to_gui (QWidget *widget, const string filter)
 
   if (filter == "" || filter == "Misc") {
       beginGroup("Misc");
-      try {
-          int w = value("WindowWidth").toInt();
-          int h = value("WindowHeight").toInt();
-          if (widget && w > 0 && h > 0) widget->resize(w,h);
-          int x = value("WindowPosX").toInt();
-          int y = value("WindowPosY").toInt();
-          if (widget && x > 0 && y > 0) widget->move(x,y);
-      } catch (const Glib::Exception &err) {
-          std::cout << _("Exception ") << err.what() << _(" loading setting\n");
-      }
+      int w = value("WindowWidth").toInt();
+      int h = value("WindowHeight").toInt();
+      if (widget && w > 0 && h > 0) widget->resize(w,h);
+      int x = value("WindowPosX").toInt();
+      int y = value("WindowPosY").toInt();
+      if (widget && x > 0 && y > 0) widget->move(x,y);
       endGroup();
   }
 
@@ -631,17 +627,13 @@ void Settings::connect_to_ui (QWidget *widget)
     }
   }
 
-  // add signal callbacks to GUI elements
-  for (QString g : childGroups()) {
-    if (g == "Ranges") continue; // done that above
-    beginGroup(g);
-    for (QString k: childKeys()) {
-      QString widget_name = g + "_" + k.replace('.','_');
-      QWidget *w = widget->findChild<QWidget*> (widget_name);
-      if (!w) {
-          QTextStream(stderr) << "Missing user interface item " << widget_name << "\n";
-          continue;
-      }
+  // add signal callbacks to all GUI elements with "_"
+  QList<QWidget*> widgets_with_setting =
+          widget->findChildren<QWidget*>(QRegularExpression(".+_.+"));
+  for (int i=0; i< widgets_with_setting.size(); i++){
+      QWidget *w = (widgets_with_setting[i]);
+      QString group,key;
+      splitpoint(w->objectName(), group, key);
       QCheckBox *check = dynamic_cast<QCheckBox *>(w);
       if (check) {
           widget->connect(check, SIGNAL(stateChanged(int)), this, SLOT(get_int_from_gui(int)));
@@ -664,17 +656,17 @@ void Settings::connect_to_ui (QWidget *widget)
       }
       QComboBox *combo = dynamic_cast<QComboBox *>(w);
       if (combo) {
-          if (widget_name == "Hardware.SerialSpeed") { // Serial port speed
+          if (w->objectName() == "Hardware.SerialSpeed") { // Serial port speed
               vector<string> speeds(serialspeeds,
                                     serialspeeds+sizeof(serialspeeds)/sizeof(string));
               set_up_combobox(combo, speeds);
-              } else if (widget_name.indexOf("Filltype")!=-1) { // Infill types
+          } else if (w->objectName().contains("Filltype")) { // Infill types
               uint nfills = sizeof(InfillNames)/sizeof(string);
               vector<string> infills(InfillNames,InfillNames+nfills);
               set_up_combobox(combo,infills);
           }
           widget->connect(combo, SIGNAL(currentIndexChanged(int)), this, SLOT(get_int_from_gui(int)));
-              continue;
+          continue;
       }
       QLineEdit *e = dynamic_cast<QLineEdit *>(w);
       if (e) {
@@ -682,11 +674,11 @@ void Settings::connect_to_ui (QWidget *widget)
           continue;
       }
       /* Gtk::Expander *exp = dynamic_cast<Gtk::Expander *>(w);
-    if (exp) {
-      exp->property_expanded().signal_changed().connect
-        (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), widget_name), QUiLoader));
-      continue;
-    }*/
+      if (exp) {
+        exp->property_expanded().signal_changed().connect
+          (sigc::bind(sigc::bind<string>(sigc::mem_fun(*this, &Settings::get_from_gui), widget_name), QUiLoader));
+        continue;
+      }*/
       ColorButton *cb = dynamic_cast<ColorButton *>(w);
       if (cb) {
           widget->connect(cb, SIGNAL(clicked()), this, SLOT(get_from_gui()));
@@ -697,8 +689,6 @@ void Settings::connect_to_ui (QWidget *widget)
           widget->connect(tv, SIGNAL(textChanged()), this, SLOT(get_from_gui()));
           continue;
       }
-    }
-    endGroup();
   }
 
   /* Update UI with defaults */
@@ -895,7 +885,7 @@ std::string Settings::get_image_path()
 void Settings::setValue(const QString &group, const QString &key, const QVariant &value)
 {
     beginGroup(group);
-    QTextStream(stderr) << "setting " << group << "_" << key << " = " << value.toString() << endl;
+    QTextStream(stderr) << "setting " << group << " -- " << key << "\t = " << value.toString() << endl;
     QSettings::setValue(key, value);
     endGroup();
 }
@@ -965,10 +955,12 @@ QWidget* Settings::get_widget_and_setting(QWidget *widget, const QObject* qobjec
     return splitpoint(widget_name, group, key) ? w : nullptr;
 }
 
-void Settings::get_from_gui (QWidget *widget) // no params
+void Settings::get_from_gui () // no params
 {
     QString group, key;
-    QWidget *w = get_widget_and_setting(widget, sender(), group, key);
+    QWidget *w = (QWidget*)sender();
+//    cerr << "get " << w->objectName().toStdString() << endl;
+    splitpoint(w->objectName(),group,key);
     while (w) { // for using break ...
         //cerr << "get " << group  << "." << key << " from gui"<< endl;
         m_user_changed = true; // is_changed;
@@ -1014,10 +1006,12 @@ void Settings::get_from_gui (QWidget *widget) // no params
   }
 }
 
-void Settings::get_int_from_gui(QWidget *widget, int value)
+void Settings::get_int_from_gui(int value)
 {
     QString group, key;
-    QWidget *w = get_widget_and_setting(widget, sender(), group, key);
+    QWidget *w = (QWidget*)sender();
+//    cerr << "get " << w->objectName().toStdString() << " int " << value << endl;    splitpoint(w->objectName(),group,key);
+    splitpoint(w->objectName(),group,key);
     while (w) { // for using break ...
         QCheckBox *check = dynamic_cast<QCheckBox *>(w);
         if (check) {
@@ -1044,10 +1038,12 @@ void Settings::get_int_from_gui(QWidget *widget, int value)
         }
     }
 }
-void Settings::get_double_from_gui(QWidget *widget, double value)
+void Settings::get_double_from_gui(double value)
 {
     QString group, key;
-    QWidget *w = get_widget_and_setting(widget, sender(), group, key);
+    QWidget *w = (QWidget*)sender();
+//    cerr << "get " << w->objectName().toStdString() << " double " << value <<endl;
+    splitpoint(w->objectName(),group,key);
     while (w) {
         QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
         if (dspin) {
