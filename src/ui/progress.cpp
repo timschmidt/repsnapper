@@ -109,7 +109,7 @@ bool ViewProgress::update (const double value, bool take_priority)
   m_bar->setValue(value);
   QString s;
   QTextStream o(&s);
-  o << fixed << value <<"/"<< m_bar_max;
+  o << int(value) <<" / "<< int(m_bar_max);
   m_bar->setFormat(s);
   if (to_terminal) {
     int perc = (int(100.*m_bar->value()/m_bar->maximum()));

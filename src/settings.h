@@ -39,15 +39,9 @@
 class ColorButton : public QPushButton {
     QColor color;
 public:
-    void set_color (QColor c) {
-        color = c;
-        QPalette pal;
-        pal.setColor(QPalette::Background, color);
-        setPalette(pal);
-    }
-    void set_color (float r, float g, float b, float alpha = 1.) {
-        set_color(QColor(255*r,255*g,255*b,255*alpha));
-    }
+    ColorButton(QWidget* widget);
+    void set_color (QColor c);
+    void set_color (float r, float g, float b, float alpha = 1.);
     QColor get_color(){return color;}
 };
 
@@ -65,26 +59,28 @@ class Settings : public QSettings {
 
   // overwrite to get the chance to make multiple extruder manipulation
 
-  int      get_integer (const QString &group, const QString &name);
-  double   get_double  (const QString &group, const QString &name);
-  bool     get_boolean (const QString &group, const QString &name);
-  QString  get_string  (const QString &group, const QString &name);
-  Vector4f get_colour  (const QString &group, const QString &name);
-  //QStringList get_string_list(const QString &group, const QString &name);
-  vector<double>   get_double_list  (const QString &group, const QString &name);
+  QString grouped(const QString &name);
+  QVariant groupedValue(const QString &name, const QVariant &deflt = QVariant());
+
+  int      get_integer (const QString &name);
+  double   get_double  (const QString &name);
+  bool     get_boolean (const QString &name);
+  QString  get_string  (const QString &name);
+  Vector4f get_Vector4f  (const QString &name);
+  vector<float> get_array(const QString &name);
 
   using QSettings::value;
-  QVariant value(const QString &group, const QString &key,
-                 const QVariant &defaultValue = QVariant());
   QStringList get_keys(const QString &group);
+  QStringList get_keys_and_values(const QString &group, QList<QVariant> &values);
 
   /* void set_integer (const string &group, const string &name, const int value); */
   /* void set_double  (const string &group, const string &name, const double value); */
   /* void set_boolean (const string &group, const string &name, const bool value); */
   /* void set_string  (const string &group, const string &name, const string &value); */
-  void set_colour  (const QString &group, const QString &name, const Vector4f &value);
-  void set_double_list  (const QString &group, const QString &name, const vector<double> &values);
-  void set_to_gui              (QWidget *widget, const string filter="");
+  void set_array  (const QString &key, const QColor &qcolor);
+  void set_array  (const QString &name, const Vector4f &value);
+  void set_array  (const QString &name, const vector<float> &values);
+  void set_all_to_gui (QWidget *widget, const string filter="");
 
   QString numberedExtruder(const QString &group, int num=-1) const;
 
@@ -133,9 +129,8 @@ class Settings : public QSettings {
 
  private:
 
-  bool set_to_gui              (QWidget *widget, const QString &group, const QString &key);
-  void get_colour_from_gui     (ColorButton * colorButton,
-                                const QString &group, const QString &key);
+  bool set_to_gui              (QWidget *widget, const QString &key);
+  void get_colour_from_gui     (ColorButton * colorButton, const QString &key);
   void convert_old_colour      (const QString &group, const QString &key);
   void set_defaults ();
   QWidget* get_widget_and_setting(QWidget *widget, const QObject* qobject, QString &group, QString &key);
@@ -158,10 +153,10 @@ public:
 
 
   // connect settings to relevant GUI widgets
-  void connect_to_ui (QWidget *widget);
+  void connect_to_gui (QWidget *widget);
 
 
-  void merge (const QSettings &settings);
+  void merge (QSettings &settings);
   int mergeGlibKeyfile (const Glib::ustring keyfile);
   bool load_from_file (QString filename);
   bool load_from_data (QString data);
@@ -176,8 +171,7 @@ public:
   std::string get_image_path();
 
   using QSettings::setValue;
-  void setValue(const QString &group, const QString &key,
-                const QVariant &value);
+  void setValue(const QString &group, const QString &key, const QVariant &value);
   using QSettings::remove;
   void remove(const QString &group, const QString &key);
   //sigc::signal< void > m_signal_visual_settings_changed;

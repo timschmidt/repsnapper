@@ -27,13 +27,13 @@
 
 
 #include "objlist.h"
-#include "gcode/gcode.h"
 #include "settings.h"
 
 #include <QStatusBar>
 #include <QTextStream>
 #include <mainwindow.h>
 
+class GCode;
 #ifdef _MSC_VER // Visual C++ compiler
 #  pragma warning( disable : 4244 4267)
 #endif
@@ -99,7 +99,7 @@ public:
         Layer * m_previewLayer;
         double get_preview_Z();
         //Layer * m_previewGCodeLayer;
-        GCode m_previewGCode;
+        GCode *m_previewGCode;
         double m_previewGCode_z;
 
         vector<Shape*> preview_shapes;
@@ -108,7 +108,6 @@ public:
         void SliceToSVG(QFile *file, bool single_layer=false);
 
         // GCode Functions
-        void init();
         void ReadGCode(QFile *file);
         void translateGCode(Vector3d trans);
 
@@ -165,7 +164,7 @@ public:
 
         void ClearLogs();
 
-        GCode gcode;
+        GCode *gcode;
 
         void SetIsPrinting(bool printing) { is_printing = printing; }
 

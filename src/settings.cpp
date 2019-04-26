@@ -62,7 +62,7 @@ const string serialspeeds[] = { "9600", "19200", "38400", "57600", "115200", "23
 
 
 // convert GUI name to group/key
-bool splitpoint(const QString &widget_name, QString &group, QString &key) {
+static bool group_key_split(const QString &widget_name, QString &group, QString &key) {
     int index = widget_name.indexOf('_');
     if (index < 0)
         index = widget_name.indexOf('.');
@@ -73,22 +73,38 @@ bool splitpoint(const QString &widget_name, QString &group, QString &key) {
   return true;
 }
 
+static vector<float> toFloats(QColor c)
+{
+    vector<float> d(4);
+    d[0] = c.red()/255.f;
+    d[1] = c.green()/255.f;
+    d[2] = c.blue()/255.f;
+    d[3] = c.alpha()/255.f;
+    return d;
+}
+
+static vector<float> toFloats(QStringList &slist)
+{
+    vector<float> f;
+    for (QString &s : slist)
+        if (s.length() > 0)
+            f.push_back(s.toFloat());
+    return f;
+}
+
 
 void set_up_combobox(QComboBox *combo, vector<string> values)
 {
-  if (combo->model())
-    return;
+//    cerr << "setup combo " + combo->objectName().toStdString() << " " ;
+//    for (auto &v:values) cerr << v << " ";
+//    cerr << endl;
   combo->clear();
   for (uint i=0; i<values.size(); i++) {
-    //cerr << " adding " << values[i] << endl;
       combo->addItem(QString(values[i].c_str()), QVariant());
   }
   combo->setCurrentIndex(0);
 }
 
-QString combobox_get_active_value(QComboBox *combo){
-    return combo->currentText();
-}
 
 bool combobox_set_to(QComboBox *combo, QString value)
 {
@@ -118,16 +134,19 @@ Settings::~Settings()
 }
 
 // merge into current settings
-void Settings::merge (const QSettings &settings)
+void Settings::merge (QSettings &settings)
 {
     for (QString group : settings.childGroups()) {
         beginGroup(group);
-        for (QString key : settings.allKeys()){
+        settings.beginGroup(group);
+        for (QString key : settings.childKeys()){
             setValue(key, settings.value(key));
         }
+        settings.endGroup();
         endGroup();
     }
 }
+
 
 
 int Settings::mergeGlibKeyfile (const Glib::ustring keyfile)
@@ -141,12 +160,20 @@ int Settings::mergeGlibKeyfile (const Glib::ustring keyfile)
     gsize ngroups;
     gchar ** groups = g_key_file_get_groups(gkf, &ngroups);
     for (uint g = 0; g < ngroups; g++) {
-        beginGroup(QString(groups[g]));
+        const QString group(groups[g]);
+        beginGroup(group);
         gsize nkeys;
         gchar ** keys = g_key_file_get_keys (gkf, groups[g], &nkeys, &error);
         for (uint k = 0; k < nkeys; k++) {
-            gchar * v = g_key_file_get_value (gkf, groups[g], keys[k], &error);
-            setValue(QString(keys[k]).replace('.','_'), QString(v));
+            QString key = grouped(keys[k]);
+            //key.replace('.','_');
+            QString v(g_key_file_get_value (gkf, groups[g], keys[k], &error));
+            if (group == "Ranges" || key.endsWith("Colour")) {
+                QStringList vsplit = v.split(";");
+                set_array(key, toFloats(vsplit));
+            } else {
+                setValue(key, v.replace("\\n","\n"));
+            }
         }
         endGroup();
     }
@@ -159,8 +186,8 @@ QString Settings::info(){
     QTextStream s(&str);
     for (QString g : childGroups()){
         beginGroup(g);
-        for (QString k : childKeys()){
-            s << g << "_" << k << "\t = " << value(k).toString() << endl;
+        for (QString k : allKeys()){
+            s << "Info: " << g << "--" << k << "\t = " << value(k).toString() << endl;
         }
         endGroup();
     }
@@ -169,11 +196,12 @@ QString Settings::info(){
 
 // always merge when loading settings
 bool Settings::load_from_file (QString filename) {
-  merge(QSettings(filename, Format::NativeFormat));
-  return true;
+    QSettings filesettings(filename, Format::NativeFormat);
+    merge(filesettings);
+    return true;
 }
 bool Settings::load_from_data (QString data) {
-  merge(QSettings());
+ //TODO merge(QSettings());
   return true;
 }
 
@@ -182,35 +210,27 @@ bool Settings::load_from_data (QString data) {
 // make "ExtruderN" group, if i<0 (not given), use current selected Extruder number
 QString Settings::numberedExtruder(const QString &group, int num) const {
   if (num >= 0 && group == "Extruder") {
-      return QString("Extruder").append(num);
+      QString ns;
+      ns.setNum(num);
+      return QString("Extruder")+ns;
   }
   return group;
 }
 
-Vector4f Settings::get_colour(const QString &group, const QString &name) {
-    beginGroup(group);
-    int size = beginReadArray(name);
-    vector<float> s;
-    for (int i=0; i<size; i++){
-        setArrayIndex(i);
-        s.push_back(value("rgba").toFloat());
-    }
-    endArray();
-    endGroup();
-    return Vector4f(float(s[0]),float(s[1]),float(s[2]),float(s[3]));
+Vector4f Settings::get_Vector4f(const QString &key) {
+    vector<float> s = get_array(key);
+    return Vector4f(s[0],s[1],s[2],s[3]);
 }
 
-vector<double> Settings::get_double_list(const QString &group, const QString &name)
+vector<float> Settings::get_array(const QString &name)
 {
-    beginGroup(group);
     int size = beginReadArray(name);
-    vector<double> s;
-    for (int i=0; i<size; i++){
+    vector<float> s;
+    for (int i=0; i<size; ++i){
         setArrayIndex(i);
-        s.push_back(value("double").toDouble());
+        s.push_back(value("float").toFloat());
     }
     endArray();
-    endGroup();
     return s;
 }
 
@@ -227,48 +247,52 @@ vector<double> Settings::get_double_list(const QString &group, const QString &na
     return list;
 }*/
 
-void Settings::set_colour(const QString &group, const QString &name,
-                          const Vector4f &value) {
-   beginGroup(group);
+void Settings::set_array(const QString &key, const QColor &qcolor)
+{
+    set_array(key, toFloats(qcolor));
+}
+
+void Settings::set_array(const QString &name,
+                         const Vector4f &value) {
    beginWriteArray(name);
-   for (int i=0; i<4; i++){
+   for (int i=0; i<4; ++i){
        setArrayIndex(i);
-       setValue("rgba",value[i]);
+       setValue("float",value[i]);
    }
    endArray();
-   endGroup();
 }
 
-void Settings::set_double_list(const QString &group, const QString &name, const vector<double> &values)
+void Settings::set_array(const QString &name,
+                         const vector<float> &values)
 {
-    beginGroup(group);
-    beginWriteArray(name);
-    for (int i=0; i<values.size(); i++){
+    beginWriteArray(name, values.size());
+    for (int i=0; i<values.size(); ++i){
         setArrayIndex(i);
-        setValue("double",values[i]);
+        setValue("float",values[i]);
     }
     endArray();
-    endGroup();
 }
 
-
-QVariant Settings::value(const QString &group, const QString &key,
-                            const QVariant &defaultValue)
-{
-    beginGroup(group);
-    QVariant v = value(key, defaultValue);
-    endGroup();
-    return v;
-}
 
 QStringList Settings::get_keys(const QString &group)
 {
     beginGroup(group);
-    QStringList keys = allKeys();
+    QStringList keys = childKeys();
     endGroup();
     return keys;
 }
 
+
+QStringList Settings::get_keys_and_values(const QString &group, QList<QVariant> &values)
+{
+    beginGroup(group);
+    QStringList keys = childKeys();
+    for (QString k : keys){
+        values.append(value(k));
+    }
+    endGroup();
+    return keys;
+}
 
 void Settings::set_defaults ()
 {
@@ -306,33 +330,35 @@ void Settings::set_defaults ()
 
   beginGroup("Hardware");
   // The vectors map each to 3 spin boxes, one per dimension
-  setValue("Volume.X", 200);
-  setValue("Volume.Y", 200);
-  setValue("Volume.Z", 140);
-  setValue("PrintMargin.X", 10);
-  setValue("PrintMargin.Y", 10);
-  setValue("PrintMargin.Z", 0);
+  setValue("Volume_X", 200);
+  setValue("Volume_Y", 200);
+  setValue("Volume_Z", 140);
+  setValue("PrintMargin_X", 10);
+  setValue("PrintMargin_Y", 10);
+  setValue("PrintMargin_Z", 0);
   endGroup();
-  setValue("Misc","SpeedsAreMMperSec",true);
+  setValue("Misc/SpeedsAreMMperSec",true);
+
+  selectedExtruder = 99;
+  SelectExtruder(0); // force copy
 }
 
 
 // make old single coordinate colours to lists
-void Settings::convert_old_colour  (const QString &group, const QString &key) {
-  try {
-    QTextStream(stderr) << "converting  "<< group << "_" <<key <<endl;
-    const Vector4f color(get_double(group, key+"R"),
-                         get_double(group, key+"G"),
-                         get_double(group, key+"B"),
-                         get_double(group, key+"A"));
-    set_colour(group, key, color);
-    remove(group, key+"R");
-    remove(group, key+"G");
-    remove(group, key+"B");
-    remove(group, key+"A");
-    } catch (const Glib::Exception &err) {
-        cerr << err.what() << endl;
-    }
+void Settings::convert_old_colour  (const QString &group, const QString &key)
+{
+    QTextStream(stderr) << "converting old "<< group << "_" << key <<endl;
+    beginGroup(group);
+    const Vector4f color(get_double(key+"R"),
+                         get_double(key+"G"),
+                         get_double(key+"B"),
+                         get_double(key+"A"));
+    set_array(key, color);
+    remove(key+"R");
+    remove(key+"G");
+    remove(key+"B");
+    remove(key+"A");
+    endGroup();
 }
 
 void Settings::load_settings (QString filename)
@@ -374,22 +400,22 @@ void Settings::load_settings (QString filename)
   QStringList CustomButtonLabels;
   QStringList CustomButtonGCodes;
   if (childGroups().contains("UserButtons")) {
-    CustomButtonLabels = value("UserButtons","Labels").toStringList();
-    CustomButtonGCodes = value("UserButtons","GCodes").toStringList();
+    CustomButtonLabels = value("UserButtons/Labels").toStringList();
+    CustomButtonGCodes = value("UserButtons/GCodes").toStringList();
   }
   try {
       for (QString k : get_keys("CustomButtons")) {
           bool havekey = false;
           for (int o = 0; o < CustomButtonLabels.size(); o++) {
               if (CustomButtonLabels[o] == k) {
-                  CustomButtonGCodes[o] = get_string("CustomButtons",k);
+                  CustomButtonGCodes[o] = get_string("CustomButtons/"+k);
                   havekey = true;
                   break;
               }
           }
           if (!havekey) {
               CustomButtonLabels.push_back(k);
-              CustomButtonGCodes.push_back(get_string("CustomButtons",k));
+              CustomButtonGCodes.push_back(get_string("CustomButtons/"+k));
           }
       }
       remove("CustomButtons");
@@ -462,50 +488,50 @@ void Settings::save_settings(QString filename)
   m_user_changed = false;
 }*/
 
-bool Settings::set_to_gui (QWidget *widget, const QString &group,
-                           const QString &key)
+bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
 {
   inhibit_callback = true;
-  QString ks(key);
-  QString widget_name = group + "_" + ks.replace('.','_');
-  QWidget *w = widget->findChild<QWidget*>(widget_name);
+  QString real_widget_name(widget_name);
+  if (widget_name.endsWith("_size"))
+      real_widget_name = real_widget_name.chopped(5);
+  QWidget *w = parentwidget->findChild<QWidget*>(real_widget_name);
   if (!w) {
 //      QTextStream(stderr) << "    " << widget_name << tr(" not defined in GUI!")<< endl;
       return false;
   }
-  cerr << "setting to gui: " << widget_name.toStdString()
-       << " = " << value(group, key).toString().toStdString() << endl;
+  cerr << "setting to gui in " << parentwidget->objectName().toStdString() << ": " << widget_name.toStdString()
+       << " = " << value(grouped(real_widget_name)).toString().toStdString() << endl;
   QCheckBox *check = dynamic_cast<QCheckBox *>(w);
   if (check) {
-    check->setChecked(get_boolean(group,key));
+    check->setChecked(get_boolean(real_widget_name));
     return true;
   }
   QSpinBox *spin = dynamic_cast<QSpinBox *>(w);
   if (spin) {
-    spin->setValue(get_double(group,key));
+    spin->setValue(get_double(real_widget_name));
     return true;
   }
   QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
   if (dspin) {
-    dspin->setValue(get_double(group,key));
+    dspin->setValue(get_double(real_widget_name));
     return true;
   }
   QSlider *range = dynamic_cast<QSlider *>(w);
   if (range) {
-    range->setValue(get_double(group,key));
+    range->setValue(get_double(real_widget_name));
     return true;
   }
   QComboBox *combo = dynamic_cast<QComboBox *>(w);
   if (combo) {
     if (widget_name == "Hardware_SerialSpeed") // has real value
-      combobox_set_to(combo, get_string(group, key));
+      combobox_set_to(combo, get_string(real_widget_name));
     else // has index
-      combo->setCurrentIndex(get_integer(group,key));
+      combo->setCurrentIndex(get_integer(real_widget_name));
     return true;
   }
   QLineEdit *entry = dynamic_cast<QLineEdit *>(w);
   if (entry) {
-    entry->setText(get_string(group,key));
+    entry->setText(get_string(real_widget_name));
     return true;
   }
   /*Gtk::Expander *exp = dynamic_cast<Gtk::Expander *>(w);
@@ -515,71 +541,100 @@ bool Settings::set_to_gui (QWidget *widget, const QString &group,
   }*/
   ColorButton *col = dynamic_cast<ColorButton *>(w);
   if(col) {
-    vector<double> c = get_double_list(group,key);
+    vector<float> c = get_array(real_widget_name);
     col->set_color(c[0],c[1],c[2],c[3]);
     return true;
   }
   QTextEdit *tv = dynamic_cast<QTextEdit *>(w);
   if (tv) {
-    tv->setText(get_string(group,key));
+    tv->setText(get_string(real_widget_name));
     return true;
   }
 
-  QTextStream(stderr) << tr("set_to_gui of ") << widget_name << " not done!" << endl;
+  QTextStream(stderr) << tr("set_to_gui of ") << real_widget_name << " not done!" << endl;
   return false;
 }
 
-
-void Settings::get_colour_from_gui (ColorButton * colorButton,
-                                    const QString &group, const QString &key)
+void Settings::get_colour_from_gui (ColorButton * colorButton, const QString &key)
 {
   QColor c = colorButton->get_color();
-
-  // FIXME: detect 'changed' etc.
-  vector<double> d(4);
-  d[0] = c.red()/255.;
-  d[1] = c.green()/255.;
-  d[2] = c.blue()/255.;
-  d[3] = c.alpha() / 255.0;
-
-  set_double_list(group, key, d);
-
-//  m_signal_visual_settings_changed.emit();
+  set_array(grouped(key), toFloats(c));
 }
 
 
 // whole group or all groups
-void Settings::set_to_gui (QWidget *widget, const string filter)
+void Settings::set_all_to_gui (QWidget *parent_widget, const string filter)
 {
   inhibit_callback = true;
-  for (QString g : childGroups()) {
-      beginGroup(g);
-      for (QString k: get_keys(g)) {
-          set_to_gui(widget, g, k);
+  for (QString k : allKeys()) {
+      if (filter.empty() || k.startsWith(QString::fromStdString(filter))) {
+          cerr << "setting to gui (filter " << filter << "): "
+               << k.toStdString() << endl;
+          QString widget_name(k.replace('/','_'));
+          if (k.startsWith("Ranges")){
+              vector<float> vals = get_array(k);
+              if (vals.size() >= 2) {
+                  QWidget *w = parent_widget->findChild<QWidget*>
+                          (widget_name.replace("Ranges/",""));
+                  if (!w) {
+                      QTextStream(stderr) << "Missing user interface item " << widget_name << "_" << k << "\n";
+                      continue;
+                  }
+                  QSpinBox *spin = dynamic_cast<QSpinBox *>(w);
+                  if (spin) {
+                      spin->setRange(vals[0],vals[1]);
+                      spin->setSingleStep(vals[2]);
+                          // TODO page incr?    spin->set(vals[3]);
+                      continue;
+                  }
+                  QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
+                  if (dspin) {
+                      dspin->setRange(vals[0],vals[1]);
+                      dspin->setSingleStep(vals[2]);
+                          // TODO page incr?    dspin->set(vals[3]);
+                      continue;
+                  }
+                  QAbstractSlider *range = dynamic_cast<QAbstractSlider *>(w); // sliders etc.
+                  if (range) {
+                      range->setRange(vals[0],vals[1]);
+                      range->setSingleStep(vals[2]);
+                      range->setPageStep(vals[3]);
+                      continue;
+                  }
+              }
+          } else { // not "Ranges"
+              set_to_gui(parent_widget, widget_name);
+          }
       }
-      endGroup();
   }
 
   //set_filltypes_to_gui (QUiLoader);
+  if (filter == "" || filter == "GCode") {
+      beginGroup("GCode");
+      set_to_gui(parent_widget,"Start");
+      set_to_gui(parent_widget,"Layer");
+      set_to_gui(parent_widget,"End");
+      endGroup();
+  }
 
   if (filter == "" || filter == "Misc") {
       beginGroup("Misc");
       int w = value("WindowWidth").toInt();
       int h = value("WindowHeight").toInt();
-      if (widget && w > 0 && h > 0) widget->resize(w,h);
+      if (parent_widget && w > 0 && h > 0) parent_widget->resize(w,h);
       int x = value("WindowPosX").toInt();
       int y = value("WindowPosY").toInt();
-      if (widget && x > 0 && y > 0) widget->move(x,y);
+      if (parent_widget && x > 0 && y > 0) parent_widget->move(x,y);
       endGroup();
   }
 
   // Set serial speed. Find the row that holds this value
   if (filter == "" || filter == "Hardware") {
-    QComboBox *portspeed = widget->findChild<QComboBox*>("Hardware_SerialSpeed");
+    QComboBox *portspeed = parent_widget->findChild<QComboBox*>("Hardware_SerialSpeed");
     if (portspeed) {
         QString s;
         QTextStream ostr(&s);
-        ostr << get_integer("Hardware","SerialSpeed");
+        ostr << get_integer("Hardware/SerialSpeed");
         //cerr << "portspeed " << get_integer("Hardware","SerialSpeed") << endl;
         combobox_set_to(portspeed, s);
     }
@@ -593,40 +648,8 @@ template<typename Base, typename T>
 }
 
 
-void Settings::connect_to_ui (QWidget *widget)
+void Settings::connect_to_gui (QWidget *widget)
 {
-  if (childGroups().contains("Ranges")) {
-    QStringList ranges = get_keys("Ranges");
-    for (uint i = 0; i < ranges.size(); i++) {
-      // get min, max, increment, page-incr.
-      vector<double> vals = get_double_list("Ranges", ranges[i]);
-      if (vals.size() >= 2) {
-          QWidget *w = widget->findChild<QWidget*>(ranges[i]);
-          if (!w) {
-              QTextStream(stderr) << "Missing user interface item " << ranges[i] << "\n";
-              continue;
-          }
-          QSpinBox *spin = dynamic_cast<QSpinBox *>(w);
-          if (spin) {
-              spin->setRange(vals[0],vals[1]);
-              //TODO   spin->set_increments (vals[2],vals[3]);
-              continue;
-          }
-          QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
-          if (dspin) {
-              dspin->setRange(vals[0],vals[1]);
-              //TODO   spin->set_increments (vals[2],vals[3]);
-              continue;
-          }
-          QAbstractSlider *range = dynamic_cast<QAbstractSlider *>(w); // sliders etc.
-          if (range) {
-              range->setRange(vals[0],vals[1]);
-              //TODO range->set_increments (vals[2],vals[3]);
-              continue;
-          }
-      }
-    }
-  }
 
   // add signal callbacks to all GUI elements with "_"
   QList<QWidget*> widgets_with_setting =
@@ -634,7 +657,7 @@ void Settings::connect_to_ui (QWidget *widget)
   for (int i=0; i< widgets_with_setting.size(); i++){
       QWidget *w = (widgets_with_setting[i]);
       QString group,key;
-      splitpoint(w->objectName(), group, key);
+      group_key_split(w->objectName(), group, key);
       QCheckBox *check = dynamic_cast<QCheckBox *>(w);
       if (check) {
           widget->connect(check, SIGNAL(stateChanged(int)), this, SLOT(get_int_from_gui(int)));
@@ -657,7 +680,7 @@ void Settings::connect_to_ui (QWidget *widget)
       }
       QComboBox *combo = dynamic_cast<QComboBox *>(w);
       if (combo) {
-          if (w->objectName() == "Hardware.SerialSpeed") { // Serial port speed
+          if (w->objectName() == "Hardware_SerialSpeed") { // Serial port speed
               vector<string> speeds(serialspeeds,
                                     serialspeeds+sizeof(serialspeeds)/sizeof(string));
               set_up_combobox(combo, speeds);
@@ -713,9 +736,9 @@ double Settings::RoundedLinewidthCorrection(double extr_width,
 double Settings::GetExtrudedMaterialWidth(double layerheight)
 {
   // ExtrudedMaterialWidthRatio is preset by user
-  return min(max(get_double("Extruder","MinimumLineWidth"),
-         get_double("Extruder","ExtrudedMaterialWidthRatio") * layerheight),
-         get_double("Extruder","MaximumLineWidth"));
+  return min(max(get_double("Extruder/MinimumLineWidth"),
+         get_double("Extruder/ExtrudedMaterialWidthRatio") * layerheight),
+         get_double("Extruder/MaximumLineWidth"));
 }
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
@@ -723,11 +746,11 @@ double Settings::GetExtrudedMaterialWidth(double layerheight)
 // how much mm filament material per extruded line length mm -> E gcode
 double Settings::GetExtrusionPerMM(double layerheight)
 {
-  double f = get_double("Extruder","ExtrusionFactor"); // overall factor
-  if (get_boolean("Extruder","CalibrateInput")) {  // means we use input filament diameter
+  double f = get_double("Extruder/ExtrusionFactor"); // overall factor
+  if (get_boolean("Extruder/CalibrateInput")) {  // means we use input filament diameter
     const double matWidth = GetExtrudedMaterialWidth(layerheight); // this is the goal
     // otherwise we just work back from the extruded diameter for now.
-    const double filamentdiameter = get_double("Extruder","FilamentDiameter");
+    const double filamentdiameter = get_double("Extruder/FilamentDiameter");
     f *= (matWidth * matWidth) / (filamentdiameter * filamentdiameter);
   } // else: we work in terms of output anyway;
 
@@ -757,7 +780,7 @@ std::vector<QChar> Settings::get_extruder_letters()
   uint num = getNumExtruders();
   std::vector<QChar> letters(num);
   for (uint i = 0; i < num; i++)
-    letters[i] = get_string(numberedExtruder("Extruder",i),"GCLetter")[0];
+    letters[i] = get_string(numberedExtruder("Extruder",i)+"/GCLetter")[0];
   return letters;
 }
 
@@ -765,46 +788,59 @@ uint Settings::GetSupportExtruder()
 {
   uint num = getNumExtruders();
   for (uint i = 0; i < num; i++)
-    if (get_boolean(numberedExtruder("Extruder",i),"UseForSupport"))
-      return i;
+      if (get_boolean(numberedExtruder("Extruder",i)+"/UseForSupport"))
+          return i;
   return 0;
 }
 
 Vector3d Settings::get_extruder_offset(uint num)
 {
   QString ext = numberedExtruder("Extruder",num);
-  return Vector3d(get_double(ext, "OffsetX"),
-          get_double(ext, "OffsetY"), 0.);
+  return Vector3d(get_double(ext+"/OffsetX"),
+                  get_double(ext+"/OffsetY"), 0.);
 }
 
 
 void Settings::copyGroup(const QString &from, const QString &to)
 {
-  QStringList keys = get_keys(from);
-  for (uint i = 0; i < keys.size(); i++)
-      setValue(to, keys[i], value(from, keys[i]));
+    QList<QVariant> values;
+    QStringList keys = get_keys_and_values(from, values);
+    beginGroup(to);
+    for (int i = 0; i < keys.size(); i++){
+        setValue(keys[i], values[i]);
+    }
+    endGroup();
 }
 
-int Settings::get_integer(const QString &group, const QString &name)
+QString Settings::grouped(const QString &name)
 {
-    return value(group, name).toInt();
+    return QString(name).replace('.','/').replace('_','/');
 }
 
-double Settings::get_double(const QString &group, const QString &name)
+QVariant Settings::groupedValue(const QString &name, const QVariant &deflt)
 {
-    return value(group, name).toDouble();
+    return value(grouped(name), deflt);
 }
 
-bool Settings::get_boolean(const QString &group, const QString &name)
+int Settings::get_integer(const QString &name)
 {
-    return value(group, name).toBool();
+    return groupedValue(name, 0).toInt();
 }
 
-QString Settings::get_string(const QString &group, const QString &name)
+double Settings::get_double(const QString &name)
 {
-    return value(group, name).toString();
+    return groupedValue(name, 0.).toDouble();
 }
 
+bool Settings::get_boolean(const QString &name)
+{
+    return groupedValue(name, false).toBool();
+}
+
+QString Settings::get_string(const QString &name)
+{
+    return groupedValue(name, "").toString();
+}
 
 // create new
 void Settings::CopyExtruder(uint num)
@@ -823,8 +859,10 @@ void Settings::RemoveExtruder(uint num)
 void Settings::SelectExtruder(uint num, QWidget *widget)
 {
   if (num >= getNumExtruders()) return;
-  selectedExtruder = num;
-  copyGroup(numberedExtruder("Extruder",num),"Extruder");
+  if (num != selectedExtruder){
+      selectedExtruder = num;
+      copyGroup(numberedExtruder("Extruder",num),"Extruder");
+  }
   // show Extruder settings on gui
   if (widget) {
     set_to_gui(widget, "Extruder" "");
@@ -836,7 +874,7 @@ Matrix4d Settings::getBasicTransformation(Matrix4d T)
   Vector3d t;
   T.get_translation(t);
   const Vector3d margin = getPrintMargin();
-  double rsize = get_double("Raft","Size") * (get_boolean("Raft","Enable")?1:0);
+  double rsize = get_double("Raft/Size") * (get_boolean("Raft/Enable")?1:0);
   t+= Vector3d(margin.x() + rsize, margin.y() + rsize, 0);
   T.set_translation(t);
   return T;
@@ -845,31 +883,31 @@ Matrix4d Settings::getBasicTransformation(Matrix4d T)
 
 Vector3d Settings::getPrintVolume()
 {
-  return Vector3d (get_double("Hardware","Volume.X"),
-                   get_double("Hardware","Volume.Y"),
-                   get_double("Hardware","Volume.Z"));
+  return Vector3d (get_double("Hardware/Volume.X"),
+                   get_double("Hardware/Volume.Y"),
+                   get_double("Hardware/Volume.Z"));
 
 }
 Vector3d Settings::getPrintMargin()
 {
-  Vector3d margin(get_double("Hardware","PrintMargin.X"),
-          get_double("Hardware","PrintMargin.Y"),
-          get_double("Hardware","PrintMargin.Z"));
+  Vector3d margin(get_double("Hardware/PrintMargin.X"),
+          get_double("Hardware/PrintMargin.Y"),
+          get_double("Hardware/PrintMargin.Z"));
   Vector3d maxoff = Vector3d::ZERO;
   uint num = getNumExtruders();
   for (uint i = 0; i < num ; i++) {
     QString ext = numberedExtruder("Extruder",i);
     double offx = 0, offy = 0;
     try {
-      offx = abs(get_double(ext, "OffsetX"));
-      offy = abs(get_double(ext, "OffsetY"));
+      offx = abs(get_double(ext+"/OffsetX"));
+      offy = abs(get_double(ext+"/OffsetY"));
     } catch (const Glib::Exception &err) {
     }
     if (offx > abs(maxoff.x())) maxoff.x() = offx;
     if (offy > abs(maxoff.y())) maxoff.y() = offy;
   }
-  if (get_boolean("Slicing","Skirt")) {
-    double distance = get_double("Slicing","SkirtDistance");
+  if (get_boolean("Slicing/Skirt")) {
+    double distance = get_double("Slicing/SkirtDistance");
     maxoff += Vector3d(distance, distance, 0);
   }
   return margin + maxoff;
@@ -880,13 +918,14 @@ Vector3d Settings::getPrintMargin()
 std::string Settings::get_image_path()
 {
   std::string basename = Glib::path_get_dirname(filename.toUtf8().constData());
-  return Glib::build_filename (basename, get_string("Global","Image").toUtf8().data());
+  return Glib::build_filename (basename, get_string("Global/Image").toUtf8().data());
 }
 
 void Settings::setValue(const QString &group, const QString &key, const QVariant &value)
 {
     beginGroup(group);
-    QTextStream(stderr) << "setting " << group << " -- " << key << "\t = " << value.toString() << endl;
+//    if (group.startsWith("Extrud"))
+//        QTextStream(stderr) << "setting " << group << " -- " << key << "\t = " << value.toString() << endl;
     QSettings::setValue(key, value);
     endGroup();
 }
@@ -903,7 +942,7 @@ bool Settings::set_user_button(const QString &name, const QString &gcode) {
     beginGroup("UserButtons");
     QStringList buttonlabels = value("Labels").toStringList();
     QStringList buttongcodes = value("GCodes").toStringList();
-    for (uint i = 0; i < buttonlabels.size(); i++){
+    for (int i = 0; i < buttonlabels.size(); i++){
         if (buttonlabels[i] == name) {
             // change button
             buttongcodes[i] = gcode;
@@ -921,9 +960,9 @@ bool Settings::set_user_button(const QString &name, const QString &gcode) {
 }
 
 QString Settings::get_user_gcode(const QString &name) {
-    QStringList buttonlabels = value("UserButtons","Labels").toStringList();
-    QStringList buttongcodes = value("UserButtons","GCodes").toStringList();
-    for (uint i = 0; i < buttonlabels.size(); i++){
+    QStringList buttonlabels = value("UserButtons/Labels").toStringList();
+    QStringList buttongcodes = value("UserButtons/GCodes").toStringList();
+    for (int i = 0; i < buttonlabels.size(); i++){
         if (buttonlabels[i] == name)
             return buttongcodes[i];
     }
@@ -931,9 +970,9 @@ QString Settings::get_user_gcode(const QString &name) {
 }
 
 bool Settings::del_user_button(const QString &name) {
-    QStringList buttonlabels = value("UserButtons","Labels").toStringList();
-    QStringList buttongcodes = value("UserButtons","GCodes").toStringList();
-    for (uint i = 0; i < buttonlabels.size(); i++){
+    QStringList buttonlabels = value("UserButtons/Labels").toStringList();
+    QStringList buttongcodes = value("UserButtons/GCodes").toStringList();
+    for (int i = 0; i < buttonlabels.size(); i++){
         if (buttonlabels[i] == name) {
             buttonlabels.erase(buttonlabels.begin()+i);
             buttongcodes.erase(buttongcodes.begin()+i);
@@ -953,15 +992,16 @@ QWidget* Settings::get_widget_and_setting(QWidget *widget, const QObject* qobjec
         QTextStream(stderr) << "    " << widget_name << tr(" not defined in GUI!")<< endl;
         return nullptr;
     }
-    return splitpoint(widget_name, group, key) ? w : nullptr;
+    return group_key_split(widget_name, group, key) ? w : nullptr;
 }
 
 void Settings::get_from_gui () // no params
 {
+    if (inhibit_callback) return;
     QString group, key;
-    QWidget *w = (QWidget*)sender();
+    QWidget *w = dynamic_cast<QWidget*>(sender());
 //    cerr << "get " << w->objectName().toStdString() << endl;
-    splitpoint(w->objectName(),group,key);
+    group_key_split(w->objectName(),group,key);
     while (w) { // for using break ...
         //cerr << "get " << group  << "." << key << " from gui"<< endl;
         m_user_changed = true; // is_changed;
@@ -977,7 +1017,7 @@ void Settings::get_from_gui () // no params
     }*/
         ColorButton *cb = dynamic_cast<ColorButton *>(w);
         if (cb) {
-            get_colour_from_gui(cb, group, key);
+            get_colour_from_gui(cb, group+"/"+key);
             break;
         }
         QTextEdit *tv = dynamic_cast<QTextEdit *>(w);
@@ -995,7 +1035,7 @@ void Settings::get_from_gui () // no params
     if (group == "Extruder") {
       copyGroup("Extruder",numberedExtruder("Extruder", selectedExtruder));
       // if selected for support, disable support for other extruders
-      if (key == "UseForSupport" && get_boolean(group,key) ) {
+      if (key == "UseForSupport" && get_boolean(group+"/"+key) ) {
         for (uint i = 0; i < getNumExtruders(); i++) {
           if (i != selectedExtruder) {
             setValue(numberedExtruder("Extruder", i), key, false);
@@ -1009,10 +1049,11 @@ void Settings::get_from_gui () // no params
 
 void Settings::get_int_from_gui(int value)
 {
+    if (inhibit_callback) return;
     QString group, key;
     QWidget *w = (QWidget*)sender();
 //    cerr << "get " << w->objectName().toStdString() << " int " << value << endl;    splitpoint(w->objectName(),group,key);
-    splitpoint(w->objectName(),group,key);
+    group_key_split(w->objectName(),group,key);
     while (w) { // for using break ...
         QCheckBox *check = dynamic_cast<QCheckBox *>(w);
         if (check) {
@@ -1032,7 +1073,7 @@ void Settings::get_int_from_gui(int value)
         QComboBox *combo = dynamic_cast<QComboBox *>(w);
         if (combo) {
           if (group == "Hardware" && key == "SerialSpeed") // has real value
-              setValue(group,key,combobox_get_active_value(combo).toUtf8().constData());
+              setValue(group,key,combo->currentText().toUtf8().constData());
           else
               setValue(group,key,combo->currentIndex());
           break;
@@ -1041,10 +1082,11 @@ void Settings::get_int_from_gui(int value)
 }
 void Settings::get_double_from_gui(double value)
 {
+    if (inhibit_callback) return;
     QString group, key;
     QWidget *w = (QWidget*)sender();
 //    cerr << "get " << w->objectName().toStdString() << " double " << value <<endl;
-    splitpoint(w->objectName(),group,key);
+    group_key_split(w->objectName(),group,key);
     while (w) {
         QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
         if (dspin) {
@@ -1052,4 +1094,19 @@ void Settings::get_double_from_gui(double value)
           break;
         }
     }
+}
+
+ColorButton::ColorButton(QWidget *widget) : QPushButton(widget){}
+
+void ColorButton::set_color(QColor c) {
+    color = c;
+    QPalette pal(c);
+//    pal.setColor(QPalette::Background, c);
+    setPalette(pal);
+    setAutoFillBackground(true);
+    repaint();
+}
+
+void ColorButton::set_color(float r, float g, float b, float alpha) {
+    set_color(QColor(255*r,255*g,255*b,255*alpha));
 }

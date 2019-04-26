@@ -19,6 +19,7 @@
 
 #include "printer.h"
 #include "../model.h"
+#include <QTextDocument>
 
 //#include <glibmm/regex.h>
 
@@ -62,8 +63,8 @@ bool Printer::Connect( bool connect ) {
   if ( m_model == NULL )
     return false;
 
-  return Connect(m_model->settings->get_string("Hardware","PortName").toUtf8().data(),
-                 m_model->settings->get_integer("Hardware","SerialSpeed") );
+  return Connect(m_model->settings->get_string("Hardware/PortName").toUtf8().data(),
+                 m_model->settings->get_integer("Hardware/SerialSpeed") );
 }
 
 bool Printer::Connect( string device, int baudrate ) {
@@ -189,12 +190,12 @@ bool Printer::Move(string axis, double distance, bool relative )
 
   Settings *settings = m_model->settings;
 
-  float speed = 0.0;
+  double speed = 0.0;
 
   if ( axis == "X" || axis == "Y" )
-    speed = settings->get_double("Hardware","MaxMoveSpeedXY") * 60;
+    speed = settings->get_double("Hardware/MaxMoveSpeedXY") * 60;
   else if(axis == "Z")
-    speed = settings->get_double("Hardware","MaxMoveSpeedZ") * 60;
+    speed = settings->get_double("Hardware/MaxMoveSpeedZ") * 60;
   else
     alert (_("Move called with unknown axis"));
 
@@ -286,8 +287,8 @@ void Printer::UpdateTemperatureMonitor( void ) {
 //  if ( temp_timeout.connected() )
 //    temp_timeout.disconnect();
 
-//  if ( IsConnected() && m_model && m_model->settings->get_boolean("Misc","TempReadingEnabled") ) {
-//    const unsigned int timeout = m_model->settings->get_double("Display","TempUpdateSpeed");
+//  if ( IsConnected() && m_model && m_model->settings->get_boolean("Misc/TempReadingEnabled") ) {
+//    const unsigned int timeout = m_model->settings->get_double("Display/TempUpdateSpeed");
 //    temp_timeout = Glib::signal_timeout().connect_seconds
 //      ( sigc::mem_fun(*this, &Printer::QueryTemp), timeout );
 //  }
@@ -315,7 +316,7 @@ bool Printer::Idle( void ) {
   }
 
   if ( waiting_temp && --temp_countdown == 0 &&
-       m_model && m_model->settings->get_boolean("Misc","TempReadingEnabled") ) {
+       m_model && m_model->settings->get_boolean("Misc/TempReadingEnabled") ) {
     UpdateTemperatureMonitor();
     temp_countdown = 100;
     waiting_temp = false;
@@ -345,7 +346,7 @@ bool Printer::QueryTemp( void ) {
 //  if ( temp_timeout.connected() )
 //    temp_timeout.disconnect();
 
-  if ( IsConnected() && m_model && m_model->settings->get_boolean("Misc","TempReadingEnabled") ) {
+  if ( IsConnected() && m_model && m_model->settings->get_boolean("Misc/TempReadingEnabled") ) {
     SendAsync( "M105" );
     waiting_temp = true;
   }

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>566</width>
-    <height>453</height>
+    <width>669</width>
+    <height>689</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="device_tab">
       <attribute name="title">
@@ -182,7 +182,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QGroupBox" name="groupBox_2">
+          <widget class="QGroupBox" name="groupBox_axmov">
            <property name="title">
             <string>Axis Moving Speeds (mm/s)</string>
            </property>
@@ -203,7 +203,11 @@
             <item>
              <layout class="QGridLayout" name="gridLayout_2">
               <item row="0" column="5">
-               <widget class="QDoubleSpinBox" name="Harware_MaxMoveSpeedXY"/>
+               <widget class="QDoubleSpinBox" name="Hardware_MaxMoveSpeedXY">
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+               </widget>
               </item>
               <item row="0" column="2">
                <widget class="QLabel" name="label_11">
@@ -226,10 +230,18 @@
                </widget>
               </item>
               <item row="0" column="3">
-               <widget class="QDoubleSpinBox" name="Harware_MinMoveSpeedXY"/>
+               <widget class="QDoubleSpinBox" name="Hardware_MinMoveSpeedXY">
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+               </widget>
               </item>
               <item row="1" column="5">
-               <widget class="QDoubleSpinBox" name="Harware_MaxMoveSpeedZ"/>
+               <widget class="QDoubleSpinBox" name="Hardware_MaxMoveSpeedZ">
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+               </widget>
               </item>
               <item row="0" column="1">
                <widget class="QLabel" name="label_9">
@@ -259,7 +271,11 @@
                </widget>
               </item>
               <item row="1" column="3">
-               <widget class="QDoubleSpinBox" name="Harware_MinMoveSpeedZ"/>
+               <widget class="QDoubleSpinBox" name="Hardware_MinMoveSpeedZ">
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+               </widget>
               </item>
               <item row="1" column="4">
                <widget class="QLabel" name="label_14">
@@ -312,7 +328,11 @@
                </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QSpinBox" name="Hardware_KeepLines"/>
+               <widget class="QSpinBox" name="Hardware_KeepLines">
+                <property name="maximum">
+                 <number>100000</number>
+                </property>
+               </widget>
               </item>
              </layout>
             </item>
@@ -328,22 +348,1143 @@
          </item>
         </layout>
        </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="extruder_tab">
       <attribute name="title">
        <string>Extruder</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_6">
+       <item>
+        <widget class="QGroupBox" name="exgeneral">
+         <property name="title">
+          <string>General</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="Slicing_RelativeEcode">
+            <property name="text">
+             <string>Relative E-Code</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="Slicing_UseTCommand">
+            <property name="text">
+             <string>Use T Command to Change Extruder</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QWidget" name="widget" native="true">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QGroupBox" name="groupBox_2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>Extruders</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_8">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QWidget" name="widget_4" native="true">
+               <layout class="QHBoxLayout" name="horizontalLayout_8">
+                <property name="spacing">
+                 <number>2</number>
+                </property>
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QPushButton" name="copy_extruder">
+                  <property name="text">
+                   <string>Copy</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="remove_extruder">
+                  <property name="text">
+                   <string>Remove</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QListView" name="extruder_listview"/>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QWidget" name="widget_3" native="true">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_7">
+             <item>
+              <widget class="QGroupBox" name="groupBox_10">
+               <property name="title">
+                <string>Extruder Settings</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_9">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <property name="spacing">
+                 <number>2</number>
+                </property>
+                <item row="10" column="3">
+                 <widget class="QLineEdit" name="Extruder_GCLetter">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="0" colspan="3">
+                 <widget class="QLabel" name="label_63">
+                  <property name="text">
+                   <string>FIlament Diameter</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0" colspan="3">
+                 <widget class="QCheckBox" name="checkBox_2">
+                  <property name="text">
+                   <string> mm means Filament Input</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_61">
+                  <property name="text">
+                   <string>X Offset (mm)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="5" column="3">
+                 <widget class="QDoubleSpinBox" name="Extruder_FilamentDiameter"/>
+                </item>
+                <item row="7" column="0" colspan="3">
+                 <widget class="QLabel" name="label_65">
+                  <property name="text">
+                   <string>Min Line Width (~Nozzle Diam.)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="6" column="3">
+                 <widget class="QDoubleSpinBox" name="Extruder_ExtrudedMaterialWidthRatio"/>
+                </item>
+                <item row="3" column="0" colspan="3">
+                 <widget class="QCheckBox" name="checkBox">
+                  <property name="text">
+                   <string>Use this Extruder for Support</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="0" colspan="3">
+                 <widget class="QLabel" name="label_66">
+                  <property name="text">
+                   <string>Max Line Width (~Nozzle Diam.)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QDoubleSpinBox" name="Extruder_OffsetX"/>
+                </item>
+                <item row="7" column="3">
+                 <widget class="QDoubleSpinBox" name="Extruder_MinimumLineWidth"/>
+                </item>
+                <item row="6" column="0" colspan="3">
+                 <widget class="QLabel" name="label_64">
+                  <property name="text">
+                   <string>Desired Line Width/Heigth Ratio</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="3">
+                 <widget class="QDoubleSpinBox" name="Extruder_OffsetY"/>
+                </item>
+                <item row="1" column="2">
+                 <widget class="QLabel" name="label_62">
+                  <property name="text">
+                   <string>Y Offset(mm)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="8" column="3">
+                 <widget class="QDoubleSpinBox" name="Extruder_MaximumLineWidth"/>
+                </item>
+                <item row="9" column="3">
+                 <widget class="QDoubleSpinBox" name="Extruder_ExtrusionFactor"/>
+                </item>
+                <item row="9" column="0" colspan="3">
+                 <widget class="QLabel" name="label_67">
+                  <property name="text">
+                   <string>Extrusion Multiplier</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="0">
+                 <widget class="ColorButton" name="Extruder_DisplayColour">
+                  <property name="text">
+                   <string>Colour</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="1" colspan="2">
+                 <widget class="QLabel" name="label_68">
+                  <property name="text">
+                   <string>GCode Letter:</string>
+                  </property>
+                  <property name="buddy">
+                   <cstring>label_68</cstring>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_11">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Speeds (mm/s)</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QLabel" name="label_54">
+            <property name="text">
+             <string>Extruded Lines</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="Extruder_MaxLineSpeed">
+            <property name="maximum">
+             <double>1000.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_55">
+            <property name="text">
+             <string>Shells</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="Extruder_MaxShellSpeed">
+            <property name="maximum">
+             <double>1000.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_56">
+            <property name="text">
+             <string>E-max</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="Extruder_EmaxSpeed">
+            <property name="maximum">
+             <double>1000.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_12">
+         <property name="title">
+          <string>Antiooze Retract (Experimental)</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="Extruder_EnableAntiooze">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="Extruder_AntioozeSpeed">
+            <property name="maximum">
+             <double>1000.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_60">
+            <property name="text">
+             <string>Amount (mm)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_57">
+            <property name="text">
+             <string>Speed (mm/s)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_59">
+            <property name="text">
+             <string>Min Distance:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_58">
+            <property name="text">
+             <string>Z Lift On Move:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QDoubleSpinBox" name="Extruder_AntioozeDistance">
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QDoubleSpinBox" name="Extruder_AntioozeAmount">
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QDoubleSpinBox" name="Extruder_AntioozeZlift">
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2" colspan="2">
+           <widget class="QCheckBox" name="Extruder_ZliftAlways">
+            <property name="text">
+             <string>Lift Z on All Moves</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="infill_tab">
       <attribute name="title">
        <string>Infill</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="5" column="1">
+          <widget class="QComboBox" name="Slicing_DecorFilltype"/>
+         </item>
+         <item row="0" column="3">
+          <widget class="QSpinBox" name="Slicing_InfillRotation">
+           <property name="maximum">
+            <number>359</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="label_23">
+           <property name="text">
+            <string>Infill Overlap:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_28">
+           <property name="text">
+            <string>Infill Dist.:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_26">
+           <property name="text">
+            <string>Extr. Factor:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_17">
+           <property name="text">
+            <string>Rotation/Layer (°):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_20">
+           <property name="text">
+            <string>Support:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_25">
+           <property name="text">
+            <string>Extr. Factor:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_27">
+           <property name="text">
+            <string>Infill Dist.:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_21">
+           <property name="text">
+            <string>Decoration:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_24">
+           <property name="text">
+            <string>Extr. Factor:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QComboBox" name="Slicing_SupportFilltype"/>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="Slicing_FullFilltype"/>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="Slicing_InfillRotationPrLayer">
+           <property name="maximum">
+            <number>369</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QComboBox" name="Slicing_NormalFilltype"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_19">
+           <property name="text">
+            <string>Solid Fill:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="4">
+          <widget class="QLabel" name="label_30">
+           <property name="text">
+            <string>Decor Layers:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="4">
+          <widget class="QLabel" name="label_29">
+           <property name="text">
+            <string>Rotation:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="5">
+          <widget class="QDoubleSpinBox" name="Slicing_InfillOverlap">
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_22">
+           <property name="text">
+            <string>Base Rot (°):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_18">
+           <property name="text">
+            <string>Normal Fill:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QCheckBox" name="Slicing_NoBridges">
+           <property name="text">
+            <string>Disable Bridges</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_32">
+           <property name="text">
+            <string>Alter Infill Every:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="2">
+          <widget class="QLabel" name="label_33">
+           <property name="text">
+            <string>th Layer</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QSpinBox" name="Slicing_AltInfillLayers"/>
+         </item>
+         <item row="7" column="3" colspan="2" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_34">
+           <property name="text">
+            <string>Alter Infill Percent:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="3">
+          <widget class="QDoubleSpinBox" name="Slicing_BridgeExtrusion">
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1" colspan="2" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_31">
+           <property name="text">
+            <string>Bridges Extrusion Factor:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="5">
+          <widget class="QSpinBox" name="Slicing_AltInfillPercent"/>
+         </item>
+         <item row="6" column="5">
+          <widget class="QSpinBox" name="Slicing_DecorLayers"/>
+         </item>
+         <item row="5" column="5">
+          <widget class="QSpinBox" name="Slicing_DecorInfillRotation"/>
+         </item>
+         <item row="4" column="5">
+          <widget class="QSpinBox" name="Slicing_SupportAngle_2"/>
+         </item>
+         <item row="3" column="5">
+          <widget class="QDoubleSpinBox" name="Slicing_SupportWiden">
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="5">
+          <widget class="QDoubleSpinBox" name="Slicing_SolidThickness">
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="4">
+          <widget class="QLabel" name="label_35">
+           <property name="text">
+            <string>Solid Thick:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="4">
+          <widget class="QLabel" name="label_36">
+           <property name="text">
+            <string>Widen:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="4">
+          <widget class="QLabel" name="label_37">
+           <property name="text">
+            <string>Min Angle:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="3">
+          <widget class="QDoubleSpinBox" name="Slicing_DecorInfillDistance">
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3">
+          <widget class="QDoubleSpinBox" name="Slicing_SupportInfillDistance">
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QDoubleSpinBox" name="Slicing_SupportExtrusion">
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="3">
+          <widget class="QDoubleSpinBox" name="Slicing_FullFillExtrusion">
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QDoubleSpinBox" name="Slicing_NormalFillExtrusion"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="opt_tab">
       <attribute name="title">
        <string>Optimize</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="title">
+          <string>General</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <item row="2" column="7">
+           <widget class="QCheckBox" name="Slicing_FillSkirt">
+            <property name="text">
+             <string>Fill Area</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="Slicing_Skirt">
+            <property name="text">
+             <string>Skirt</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="6">
+           <widget class="QCheckBox" name="Slicing_SingleSkirt">
+            <property name="text">
+             <string>Around All</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="6">
+           <widget class="QLabel" name="label_43">
+            <property name="text">
+             <string>Min Arc Len:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QDoubleSpinBox" name="Slicing_SkirtHeight">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QCheckBox" name="Slicing_UseArcs">
+            <property name="text">
+             <string>Arcs GCode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="5">
+           <widget class="QDoubleSpinBox" name="Slicing_SkirtDistance">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="4">
+           <widget class="QLabel" name="label_42">
+            <property name="text">
+             <string>Max. Angle:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="4">
+           <widget class="QLabel" name="label_44">
+            <property name="text">
+             <string>Distance:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLabel" name="label_40">
+            <property name="text">
+             <string>Height (mm):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0" colspan="2">
+           <widget class="QCheckBox" name="Slicing_RoundCorners">
+            <property name="text">
+             <string>Round Corners</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="5">
+           <widget class="QDoubleSpinBox" name="Slicing_CornerRadius">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QCheckBox" name="Slicing_VarSlicing">
+            <property name="text">
+             <string>Variable Slicing</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="3">
+           <widget class="QCheckBox" name="Slicing_MoveNearest">
+            <property name="text">
+             <string>Move between nearest Points</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="7">
+           <widget class="QDoubleSpinBox" name="Slicing_MinArcLength">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="4">
+           <widget class="QLabel" name="label_41">
+            <property name="text">
+             <string>Dist. (mm):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" rowspan="2" colspan="2">
+           <widget class="QLabel" name="label_39">
+            <property name="text">
+             <string>Offset Outer Shells (mm):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QDoubleSpinBox" name="Slicing_ShellOffset">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="5">
+           <widget class="QSpinBox" name="Slicing_ArcsMaxAngle">
+            <property name="maximum">
+             <number>359</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_5">
+         <property name="title">
+          <string>Cooling</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_45">
+            <property name="text">
+             <string>Min Time / Layer:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QDoubleSpinBox" name="Slicing_MinLayertime"/>
+          </item>
+          <item row="0" column="4">
+           <widget class="QDoubleSpinBox" name="Slicing_MinShelltime"/>
+          </item>
+          <item row="3" column="1">
+           <widget class="QLabel" name="label_48">
+            <property name="text">
+             <string>Min. Speed:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="label_46">
+            <property name="text">
+             <string>Min Shell Time:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QCheckBox" name="Slicing_FanControl">
+            <property name="text">
+             <string>Fan Control</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="3">
+           <widget class="QLabel" name="label_49">
+            <property name="text">
+             <string>Max Speed:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="3">
+           <widget class="QCheckBox" name="Slicing_FarthestLayerStart">
+            <property name="text">
+             <string>Move to Farthes Point on Layer Start</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QDoubleSpinBox" name="Slicing_MaxOverhangSpeed"/>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QLabel" name="label_47">
+            <property name="text">
+             <string>Max Overhang Speed (mm/s):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QSpinBox" name="Slicing_MinFanSpeed">
+            <property name="maximum">
+             <number>1000</number>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="4">
+           <widget class="QSpinBox" name="Slicing_MaxFanSpeed">
+            <property name="maximum">
+             <number>1000</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_7">
+         <property name="title">
+          <string>First Layer(s)</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_7">
+          <item row="0" column="3">
+           <widget class="QDoubleSpinBox" name="Slicing_FirstLayersSpeed">
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QSpinBox" name="Slicing_FirstLayersNum"/>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_51">
+            <property name="text">
+             <string>Speed Ratio:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_50">
+            <property name="text">
+             <string>Number of First Layers:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_52">
+            <property name="text">
+             <string>Min. Infill Dist. (Line Wd):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QDoubleSpinBox" name="Slicing_FirstLayersInfillDist">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_53">
+            <property name="text">
+             <string>Very First Layer Ht Ratio:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QDoubleSpinBox" name="Slicing_FirstLayerHeight">
+            <property name="maximum">
+             <double>10.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="acceleration_group">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="title">
+          <string>Acceleration</string>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QCheckBox" name="Slicing_EnableAcceleration">
+            <property name="text">
+             <string>Enable</string>
+            </property>
+           </widget>
+          </item>
+          <item alignment="Qt::AlignRight">
+           <widget class="QLabel" name="label_38">
+            <property name="text">
+             <string>Distance:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QDoubleSpinBox" name="Extruder_DistanceToReachFullSpeed">
+            <property name="maximum">
+             <double>1000.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="postproc_group">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="title">
+          <string>GCode Postprocessor</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="QCheckBox" name="Slicing_GCodePostprocess">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="Slicing_GCodePostprocessor"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="raft_tab">
       <attribute name="title">
@@ -362,6 +1503,100 @@
       <attribute name="title">
        <string>Display</string>
       </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_9">
+       <item>
+        <widget class="QGroupBox" name="groupBox_6">
+         <property name="title">
+          <string>STL Rendering Colours</string>
+         </property>
+         <widget class="ColorButton" name="Display_PolygonColour">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>50</y>
+            <width>83</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Polygons</string>
+          </property>
+         </widget>
+         <widget class="ColorButton" name="Display_WireframeColour">
+          <property name="geometry">
+           <rect>
+            <x>170</x>
+            <y>50</y>
+            <width>83</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Wireframe</string>
+          </property>
+         </widget>
+         <widget class="ColorButton" name="Display_NormalsColour">
+          <property name="geometry">
+           <rect>
+            <x>270</x>
+            <y>50</y>
+            <width>83</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Normals</string>
+          </property>
+         </widget>
+         <widget class="ColorButton" name="Display_EndpointsColour">
+          <property name="geometry">
+           <rect>
+            <x>110</x>
+            <y>100</y>
+            <width>83</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Endpoints</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_8">
+         <property name="title">
+          <string>GCode Rendering</string>
+         </property>
+         <widget class="ColorButton" name="Display_GCodeMoveColour">
+          <property name="geometry">
+           <rect>
+            <x>50</x>
+            <y>50</y>
+            <width>111</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Move Head</string>
+          </property>
+         </widget>
+         <widget class="ColorButton" name="Display_GCodePrintingColour">
+          <property name="geometry">
+           <rect>
+            <x>250</x>
+            <y>50</y>
+            <width>191</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Preview/Live Extrude</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="debug_tab">
       <attribute name="title">
@@ -382,6 +1617,101 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ColorButton</class>
+   <extends>QPushButton</extends>
+   <header>../src/settings.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>Hardware_Volume_X</tabstop>
+  <tabstop>Hardware_Volume_Y</tabstop>
+  <tabstop>Hardware_Volume_Z</tabstop>
+  <tabstop>Hardware_PrintMargin_X</tabstop>
+  <tabstop>Hardware_PrintMargin_Y</tabstop>
+  <tabstop>Hardware_PrintMargin_Z</tabstop>
+  <tabstop>Hardware_MinMoveSpeedXY</tabstop>
+  <tabstop>Hardware_MaxMoveSpeedXY</tabstop>
+  <tabstop>Hardware_MinMoveSpeedZ</tabstop>
+  <tabstop>Hardware_MaxMoveSpeedZ</tabstop>
+  <tabstop>Hardware_SerialSpeed</tabstop>
+  <tabstop>Hardware_KeepLines</tabstop>
+  <tabstop>Hardware_SpeedAlways</tabstop>
+  <tabstop>Slicing_MinShelltime</tabstop>
+  <tabstop>Slicing_MaxOverhangSpeed</tabstop>
+  <tabstop>Slicing_FarthestLayerStart</tabstop>
+  <tabstop>Slicing_FanControl</tabstop>
+  <tabstop>Slicing_MinFanSpeed</tabstop>
+  <tabstop>Slicing_MaxFanSpeed</tabstop>
+  <tabstop>Slicing_EnableAcceleration</tabstop>
+  <tabstop>Extruder_DistanceToReachFullSpeed</tabstop>
+  <tabstop>Slicing_GCodePostprocess</tabstop>
+  <tabstop>Slicing_GCodePostprocessor</tabstop>
+  <tabstop>Slicing_SupportWiden</tabstop>
+  <tabstop>Slicing_SupportInfillDistance</tabstop>
+  <tabstop>Slicing_SupportAngle_2</tabstop>
+  <tabstop>Slicing_DecorFilltype</tabstop>
+  <tabstop>Slicing_DecorInfillDistance</tabstop>
+  <tabstop>Slicing_DecorInfillRotation</tabstop>
+  <tabstop>Slicing_DecorLayers</tabstop>
+  <tabstop>Slicing_AltInfillLayers</tabstop>
+  <tabstop>Slicing_AltInfillPercent</tabstop>
+  <tabstop>Slicing_NoBridges</tabstop>
+  <tabstop>Slicing_BridgeExtrusion</tabstop>
+  <tabstop>Slicing_SupportFilltype</tabstop>
+  <tabstop>Slicing_SupportExtrusion</tabstop>
+  <tabstop>Slicing_FullFillExtrusion</tabstop>
+  <tabstop>Slicing_SolidThickness</tabstop>
+  <tabstop>Slicing_InfillOverlap</tabstop>
+  <tabstop>Slicing_NormalFilltype</tabstop>
+  <tabstop>Slicing_NormalFillExtrusion</tabstop>
+  <tabstop>Slicing_FullFilltype</tabstop>
+  <tabstop>Slicing_SingleSkirt</tabstop>
+  <tabstop>Slicing_FillSkirt</tabstop>
+  <tabstop>Slicing_VarSlicing</tabstop>
+  <tabstop>Slicing_UseArcs</tabstop>
+  <tabstop>Slicing_ArcsMaxAngle</tabstop>
+  <tabstop>Slicing_MinArcLength</tabstop>
+  <tabstop>Slicing_RoundCorners</tabstop>
+  <tabstop>Slicing_CornerRadius</tabstop>
+  <tabstop>Slicing_MoveNearest</tabstop>
+  <tabstop>Slicing_InfillRotationPrLayer</tabstop>
+  <tabstop>Slicing_InfillRotation</tabstop>
+  <tabstop>Slicing_Skirt</tabstop>
+  <tabstop>Slicing_ShellOffset</tabstop>
+  <tabstop>Slicing_SkirtDistance</tabstop>
+  <tabstop>Slicing_SkirtHeight</tabstop>
+  <tabstop>Slicing_MinLayertime</tabstop>
+  <tabstop>Slicing_RelativeEcode</tabstop>
+  <tabstop>Slicing_UseTCommand</tabstop>
+  <tabstop>copy_extruder</tabstop>
+  <tabstop>remove_extruder</tabstop>
+  <tabstop>extruder_listview</tabstop>
+  <tabstop>Extruder_ExtrusionFactor</tabstop>
+  <tabstop>Extruder_ExtrudedMaterialWidthRatio</tabstop>
+  <tabstop>checkBox_2</tabstop>
+  <tabstop>Extruder_OffsetX</tabstop>
+  <tabstop>Extruder_FilamentDiameter</tabstop>
+  <tabstop>checkBox</tabstop>
+  <tabstop>Extruder_GCLetter</tabstop>
+  <tabstop>Extruder_MaximumLineWidth</tabstop>
+  <tabstop>Extruder_MinimumLineWidth</tabstop>
+  <tabstop>Extruder_OffsetY</tabstop>
+  <tabstop>Extruder_MaxLineSpeed</tabstop>
+  <tabstop>Extruder_MaxShellSpeed</tabstop>
+  <tabstop>Extruder_EmaxSpeed</tabstop>
+  <tabstop>Extruder_EnableAntiooze</tabstop>
+  <tabstop>Extruder_AntioozeSpeed</tabstop>
+  <tabstop>Extruder_AntioozeDistance</tabstop>
+  <tabstop>Extruder_AntioozeAmount</tabstop>
+  <tabstop>Extruder_AntioozeZlift</tabstop>
+  <tabstop>Extruder_ZliftAlways</tabstop>
+  <tabstop>Slicing_FirstLayersSpeed</tabstop>
+  <tabstop>Slicing_FirstLayersNum</tabstop>
+  <tabstop>Slicing_FirstLayersInfillDist</tabstop>
+  <tabstop>Slicing_FirstLayerHeight</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -391,8 +1721,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>227</x>
-     <y>523</y>
+     <x>236</x>
+     <y>673</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -407,8 +1737,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>295</x>
-     <y>529</y>
+     <x>304</x>
+     <y>673</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

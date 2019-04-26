@@ -23,6 +23,7 @@
 #include <QMainWindow>
 #include <QCheckBox>
 #include <QStringListModel>
+#include <QColorDialog>
 
 #include "src/ui/prefs_dlg.h"
 
@@ -54,6 +55,7 @@ public:
 
 private:
     Ui::MainWindow *ui_main;
+    Ui::PreferencesDialog *ui_prefs;
 
     PrefsDlg *prefs_dialog;
 
@@ -68,14 +70,13 @@ private:
 
     void connectButtons(QWidget *widget);
 
-    void extruder_selected();
 private slots:
     void on_actionOpen_triggered();
     void on_actionQuit_triggered();
     void on_actionGenerateCode_triggered();
     void on_actionSettings_triggered();
     void handleButtonClick();
-
+    void gcodeChanged();
 
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);

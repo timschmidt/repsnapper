@@ -162,3 +162,5 @@ unix|win32: LIBS += -lglibmm-2.4
 unix|win32: LIBS += -lxml++-2.6
 unix|win32: LIBS += -lGLU
 unix|win32: LIBS += -lcairomm-1.0
+
+QMAKE_CXX="ccache clang++80"

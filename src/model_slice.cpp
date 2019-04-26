@@ -50,55 +50,55 @@ void Model::MakeRaft(GCodeState &state, double &z)
   if (layers.size() == 0) return;
   vector<Poly> raftpolys =
     Clipping::getOffset(layers[0]->GetHullPolygon(),
-            settings->get_double("Raft","Size"), jround);
-  double layerthickness =settings->get_double("Slicing","LayerThickness");
+            settings->get_double("Raft/Size"), jround);
+  double layerthickness =settings->get_double("Slicing/LayerThickness");
 
   for (uint i = 0; i< raftpolys.size(); i++)
     raftpolys[i].cleanup(layerthickness/4);
 
   vector<Layer*> raft_layers;
 
-  double rotation = settings->get_double("Raft","Base.Rotation");
+  double rotation = settings->get_double("Raft/Base_Rotation");
   double basethickness =
-    layerthickness * settings->get_double("Raft","Base.Thickness");
+    layerthickness * settings->get_double("Raft/Base_Thickness");
   double interthickness =
-    layerthickness * settings->get_double("Raft","Interface.Thickness");
+    layerthickness * settings->get_double("Raft/Interface.Thickness");
 
-  double totalthickness = settings->get_integer("Raft","Base.LayerCount") * basethickness
-    + settings->get_double("Raft","Interface.LayerCount") * interthickness;
+  double totalthickness = settings->get_integer("Raft/Base.LayerCount") * basethickness
+    + settings->get_double("Raft/Interface.LayerCount") * interthickness;
 
   double raft_z = -totalthickness + basethickness
-    * settings->get_double("Slicing","FirstLayerHeight");
+    * settings->get_double("Slicing/FirstLayerHeight");
 
-  for (int i = 0; i < settings->get_integer("Raft","Base.LayerCount"); i++) {
+  for (int i = 0; i < settings->get_integer("Raft/Base.LayerCount"); i++) {
     Layer * layer = new Layer(lastlayer,
-                  -settings->get_integer("Raft","Interface.LayerCount")
-                  -settings->get_integer("Raft","Base.LayerCount") + i,
+                  -settings->get_integer("Raft/Interface.LayerCount")
+                  -settings->get_integer("Raft/Base.LayerCount") + i,
                   basethickness, 1);
     layer->setZ(raft_z);
     layer->CalcRaftInfill(raftpolys,
-              settings->get_double("Raft","Base.MaterialDistanceRatio"),
-              settings->get_double("Raft","Base.Distance"), rotation);
+              settings->get_double("Raft/Base.MaterialDistanceRatio"),
+              settings->get_double("Raft/Base.Distance"), rotation);
     raft_layers.push_back(layer);
     lastlayer = layer;
-    rotation += settings->get_double("Raft","Base.RotationPrLayer")*M_PI/180;
+    rotation += settings->get_double("Raft/Base.RotationPrLayer")*M_PI/180;
     raft_z += basethickness;
   }
-  rotation = settings->get_double("Raft","Interface.Rotation");
-  int if_layers = settings->get_integer("Raft","Interface.LayerCount");
+  rotation = settings->get_double("Raft/Interface.Rotation");
+  int if_layers = settings->get_integer("Raft/Interface.LayerCount");
   for (int i = 0; i < if_layers; i++) {
     Layer * layer = new Layer(lastlayer,
-                  -settings->get_integer("Raft","Base.LayerCount") + i,
+                  -settings->get_integer("Raft/Base.LayerCount") + i,
                   interthickness, 1);
     layer->setZ(raft_z);
     layer->CalcRaftInfill(raftpolys,
-              settings->get_double("Raft","Interface.MaterialDistanceRatio"),
-              settings->get_double("Raft","Interface.Distance"),
+              settings->get_double("Raft/Interface.MaterialDistanceRatio"),
+              settings->get_double("Raft/Interface.Distance"),
               rotation);
 
     raft_layers.push_back(layer);
     lastlayer = layer;
-    rotation += settings->get_double("Raft","Interface.RotationPrLayer")*M_PI/180;
+    rotation += settings->get_double("Raft/Interface.RotationPrLayer")*M_PI/180;
     raft_z += interthickness;
   }
   layers.insert(layers.begin(),raft_layers.begin(),raft_layers.end());
@@ -283,7 +283,7 @@ void Model::Slice()
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
 
-  if (settings->get_boolean("Slicing","SelectedOnly"))
+  if (settings->get_boolean("Slicing/SelectedOnly"))
     objectList.get_selected_shapes(&m_current_selectionpath, shapes, transforms);
   else
     objectList.get_all_shapes(shapes,transforms);
@@ -292,32 +292,30 @@ void Model::Slice()
 
   assert(shapes.size() == transforms.size());
 
-  CalcBoundingBoxAndCenter(settings->get_boolean("Slicing","SelectedOnly"));
+  CalcBoundingBoxAndCenter(settings->get_boolean("Slicing/SelectedOnly"));
 
   for (uint i = 0; i<transforms.size(); i++)
     transforms[i] = settings->getBasicTransformation(transforms[i]);
 
-  assert(shapes.size() == transforms.size());
-
   int LayerNr = 0;
-  bool varSlicing = settings->get_boolean("Slicing","Varslicing");
+  bool varSlicing = settings->get_boolean("Slicing/Varslicing");
 
-  uint max_skins = max(1, settings->get_integer("Slicing","Skins"));
-  double thickness = (double)settings->get_double("Slicing","LayerThickness");
+  uint max_skins = max(1, settings->get_integer("Slicing/Skins"));
+  double thickness = (double)settings->get_double("Slicing/LayerThickness");
   double skin_thickness = thickness / max_skins;
   uint skins = max_skins; // probably variable
 
   // - Start at z~=0, cut off everything below
   // - Offset it a bit in Z, z = 0 gives a empty slice because no triangle crosses this Z value
-  double minZ = thickness * settings->get_double("Slicing","FirstLayerHeight");// + Min.z;
+  double minZ = thickness * settings->get_double("Slicing/FirstLayerHeight");// + Min.z;
   Vector3d volume = settings->getPrintVolume();
   double maxZ = min(Max.z(), volume.z() - settings->getPrintMargin().z());
 
   double max_gradient = 0;
-  double supportangle = settings->get_double("Slicing","SupportAngle")*M_PI/180.;
-  if (!settings->get_boolean("Slicing","Support")) supportangle = -1;
+  double supportangle = settings->get_double("Slicing/SupportAngle")*M_PI/180.;
+  if (!settings->get_boolean("Slicing/Support")) supportangle = -1;
 
-  m_progress->set_terminal_output(settings->get_boolean("Display","TerminalProgress"));
+  m_progress->set_terminal_output(settings->get_boolean("Display/TerminalProgress"));
   m_progress->start (_("Slicing"), maxZ);
   // for (vector<Layer *>::iterator pIt = layers.begin();
   //      pIt != layers. end(); pIt++)
@@ -339,7 +337,7 @@ void Model::Slice()
   int progress_steps=max(1,(int)(maxZ/thickness/100.));
 
   if ((varSlicing && skins > 1) ||
-      (settings->get_boolean("Slicing","BuildSerial") && shapes.size() > 1))
+      (settings->get_boolean("Slicing/BuildSerial") && shapes.size() > 1))
   {
     // have skins and/or serial build, so can't parallelise
     uint currentshape   = 0;
@@ -548,18 +546,18 @@ vector<Poly> Model::GetUncoveredPolygons(const Layer * subjlayer,
 
 void Model::MultiplyUncoveredPolygons()
 {
-  if (!settings->get_boolean("Slicing","DoInfill") &&
-      settings->get_double("Slicing","SolidThickness") == 0.0) return;
-  if (settings->get_boolean("Slicing","NoTopAndBottom")) return;
-  int shells = (int)ceil(settings->get_double("Slicing","SolidThickness")/settings->get_double("Slicing","LayerThickness"));
-  shells = max(shells, (int)settings->get_integer("Slicing","ShellCount"));
+  if (!settings->get_boolean("Slicing/DoInfill") &&
+      settings->get_double("Slicing/SolidThickness") == 0.0) return;
+  if (settings->get_boolean("Slicing/NoTopAndBottom")) return;
+  int shells = (int)ceil(settings->get_double("Slicing/SolidThickness")/settings->get_double("Slicing/LayerThickness"));
+  shells = max(shells, (int)settings->get_integer("Slicing/ShellCount"));
   if (shells<1) return;
   int count = (int)layers.size();
 
   int numdecor = 0;
   // add another full layer if making decor
-  if (settings->get_boolean("Slicing","MakeDecor"))
-    numdecor = settings->get_integer("Slicing","DecorLayers");
+  if (settings->get_boolean("Slicing/MakeDecor"))
+    numdecor = settings->get_integer("Slicing/DecorLayers");
   shells += numdecor;
 
   if (!m_progress->restart (_("Uncovered Shells"), count*3)) return;
@@ -684,17 +682,17 @@ void Model::MakeSupportPolygons(double widen)
 void Model::MakeSkirt()
 {
 
-  if (!settings->get_boolean("Slicing","Skirt")) return;
-  double skirtdistance  = settings->get_double("Slicing","SkirtDistance");
+  if (!settings->get_boolean("Slicing/Skirt")) return;
+  double skirtdistance  = settings->get_double("Slicing/SkirtDistance");
 
   Clipping clipp;
   guint count = layers.size();
   guint endindex = 0;
   // find maximum of all calculated skirts
   clipp.clear();
-  double skirtheight = settings->get_double("Slicing","SkirtHeight");
-  bool singleskirt   = settings->get_boolean("Slicing","SingleSkirt");
-  bool support       = settings->get_boolean("Slicing","Support");
+  double skirtheight = settings->get_double("Slicing/SkirtHeight");
+  bool singleskirt   = settings->get_boolean("Slicing/SingleSkirt");
+  bool support       = settings->get_boolean("Slicing/Support");
   for (guint i=0; i < count; i++)
     {
       if (layers[i]->getZ() > skirtheight)
@@ -748,8 +746,8 @@ void Model::MakeShells()
 
 void Model::CalcInfill()
 {
-  if (!settings->get_boolean("Slicing","DoInfill") &&
-      settings->get_double("Slicing","SolidThickness") == 0.0) return;
+  if (!settings->get_boolean("Slicing/DoInfill") &&
+      settings->get_double("Slicing/SolidThickness") == 0.0) return;
 
   int count = (int)layers.size();
   m_progress->start (_("Infill"), count);
@@ -791,14 +789,14 @@ void Model::ConvertToGCode()
   is_calculating=true;
 
   // default:
-  settings->SelectExtruder(0);
+  //settings->SelectExtruder(0);
 
   QTime start_time;
   start_time.start();
 
-  gcode.clear();
+  gcode->clear();
 
-  GCodeState state(gcode);
+  GCodeState state(*gcode);
 
   Infill::clearPatterns();
 
@@ -815,31 +813,31 @@ void Model::ConvertToGCode()
 
   MakeShells();
 
-  if (settings->get_boolean("Slicing","DoInfill") &&
-      !settings->get_boolean("Slicing","NoTopAndBottom") &&
-      (settings->get_double("Slicing","SolidThickness") > 0 ||
-       settings->get_integer("Slicing","ShellCount") > 0))
+  if (settings->get_boolean("Slicing/DoInfill") &&
+      !settings->get_boolean("Slicing/NoTopAndBottom") &&
+      (settings->get_double("Slicing/SolidThickness") > 0 ||
+       settings->get_integer("Slicing/ShellCount") > 0))
     // not bridging when support
-    MakeUncoveredPolygons( settings->get_boolean("Slicing","MakeDecor"),
-               !settings->get_boolean("Slicing","NoBridges") &&
-               !settings->get_boolean("Slicing","Support") );
+    MakeUncoveredPolygons( settings->get_boolean("Slicing/MakeDecor"),
+               !settings->get_boolean("Slicing/NoBridges") &&
+               !settings->get_boolean("Slicing/Support") );
 
-  if (settings->get_boolean("Slicing","Support"))
+  if (settings->get_boolean("Slicing/Support"))
     // easier before having multiplied uncovered bottoms
-    MakeSupportPolygons(settings->get_double("Slicing","SupportWiden"));
+    MakeSupportPolygons(settings->get_double("Slicing/SupportWiden"));
 
   MakeFullSkins(); // must before multiplied uncovered bottoms
 
   MultiplyUncoveredPolygons();
 
-  if (settings->get_boolean("Slicing","Skirt"))
+  if (settings->get_boolean("Slicing/Skirt"))
     MakeSkirt();
 
   CalcInfill();
 
-  if (settings->get_boolean("Raft","Enable"))
+  if (settings->get_boolean("Raft/Enable"))
     {
-      printOffset += Vector3d (settings->get_double("Raft","Size"), 0);
+      printOffset += Vector3d (settings->get_double("Raft/Size"), 0);
       MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
     }
 
@@ -850,14 +848,14 @@ void Model::ConvertToGCode()
 
   state.AppendCommand(MILLIMETERSASUNITS,  false, _("Millimeters"));
   state.AppendCommand(ABSOLUTEPOSITIONING, false, _("Absolute Pos"));
-  if (settings->get_boolean("Slicing","RelativeEcode"))
+  if (settings->get_boolean("Slicing/RelativeEcode"))
     state.AppendCommand(RELATIVE_ECODE, false, _("Relative E Code"));
   else
     state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
 
   bool cont = true;
   vector<PLine3> plines;
-  bool farthestStart = settings->get_boolean("Slicing","FarthestLayerStart");
+  bool farthestStart = settings->get_boolean("Slicing/FarthestLayerStart");
   Vector3d start = state.LastPosition();
   for (uint p=0; p<count; p++) {
     cont = (m_progress->update(p)) ;
@@ -894,7 +892,7 @@ void Model::ConvertToGCode()
 
   QString GcodeTxt;
   if (cont)
-    gcode.MakeText (GcodeTxt, settings, m_progress);
+    gcode->MakeText (GcodeTxt, settings, m_progress);
   else {
     ClearLayers();
     ClearGCode();
@@ -915,7 +913,7 @@ void Model::ConvertToGCode()
   if (h>0) ostr << h <<_("h") ;
   ostr <<m <<_("m") <<s <<_("s") ;
 
-  double gctime = gcode.GetTimeEstimation();
+  double gctime = gcode->GetTimeEstimation();
   if (abs(state.timeused - gctime) > 10) {
     h = (int)(gctime/3600);
     m = ((int)gctime)%3600/60;
@@ -925,10 +923,10 @@ void Model::ConvertToGCode()
     ostr<< m <<_("m") << s <<_("s") ;
   }
 
-  double totlength = gcode.GetTotalExtruded(settings->get_boolean("Slicing","RelativeEcode"));
+  double totlength = gcode->GetTotalExtruded(settings->get_boolean("Slicing/RelativeEcode"));
   ostr << _(" - total extruded: ") << totlength << "mm";
   // TODO: ths assumes all extruders use the same filament diameter
-  const double diam = settings->get_double("Extruder","FilamentDiameter");
+  const double diam = settings->get_double("Extruder/FilamentDiameter");
   const double ccm = totlength * diam * diam / 4. * M_PI / 1000 ;
   ostr << " = " << ccm << "cm^3 ";
   ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)";
@@ -941,9 +939,10 @@ void Model::ConvertToGCode()
     const int time_used = start_time.elapsed()/1000; // seconds
     cerr << "GCode generated in " << time_used << " seconds. " << GcodeTxt.size() << " bytes" << endl;
   }
+  gcode->emit gcode_changed();
 
   is_calculating=false;
-//  m_signal_gcode_changed.emit();
+  //  m_signal_gcode_changed.emit();
 }
 
 string Model::getSVG(int single_layer_no)

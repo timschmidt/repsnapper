@@ -25,6 +25,7 @@
 #include "model.h"
 #include "slicer/geometry.h"
 
+#include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
@@ -34,16 +35,16 @@
 GLuint Render::fontlistbase = 0;
 int Render::fontheight = 0;
 
-Render::Render (QWidget *parent, MainWindow *main)
-    : QOpenGLWidget(parent),
+Render::Render (QWidget *widget)
+    : QOpenGLWidget(widget),
       m_xRot(0),
       m_yRot(0),
       m_zRot(0),
       m_program(nullptr),
-      m_arcBall(new ArcBall()),
-      m_main(main)
+      m_arcBall(new ArcBall())
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
+    setMouseTracking(true);
 
 /*
   Glib::RefPtr<Gdk::GL::Config> glconfig;
@@ -146,11 +147,11 @@ void Render::setZRotation(int angle)
     }
 }
 
-void Render::set_model(Model *model)
-{
-//  model->signal_zoom().connect (sigc::mem_fun(*this, &Render::zoom_to_model));
-  zoom_to_model();
-}
+//void Render::set_model(Model *model)
+//{
+////  model->signal_zoom().connect (sigc::mem_fun(*this, &Render::zoom_to_model));
+//  zoom_to_model();
+//}
 
 void Render::selection_changed()
 {
@@ -687,9 +688,7 @@ void Render::initializeGL()
     //  QOpenGLWidget::initializeGL();
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &Render::cleanup);
     initializeOpenGLFunctions();
-    glClearColor(0, 0, 0, 0);
-
-
+    glClearColor(0, 0, 0, 255);
 
     //============================
     glEnable(GL_DEPTH_TEST);
@@ -697,6 +696,8 @@ void Render::initializeGL()
     glShadeModel(GL_SMOOTH);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+    glDisable(GL_BLEND);
+//    glEnable(GL_POLYGON_SMOOTH);
 
     static GLfloat lightPosition[4] = { 0, 0, 10, 1.0 };
     glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
@@ -772,6 +773,8 @@ QSize Render::sizeHint() const
 
 void Render::resizeGL(int width, int height)
 {
+    cerr << "resizeGL "<<  width << " x " << height<< endl;
+
     int side = qMin(width, height);
     glViewport((width - side) / 2, (height - side) / 2, side, side);
 
@@ -787,15 +790,19 @@ void Render::resizeGL(int width, int height)
 
 void Render::paintGL()
 {
-
+    Model *model = m_main->get_model();
+    cerr << "paintGL "<<  width() << "x" << height() << endl;
+    model->draw(nullptr);
 }
 
 void Render::mousePressEvent(QMouseEvent *event)
 {
-
+    cerr << "mouse press " << event->x() << ","<< event->y() <<
+            " button " << event->button() << endl;
 }
 
 void Render::mouseMoveEvent(QMouseEvent *event)
 {
+//    cerr << "mouse move " << event->x() << ","<< event->y() << endl;
 
 }

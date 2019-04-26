@@ -22,6 +22,7 @@
 
 #include "../settings.h"
 
+#include <QStringListModel>
 #include <ui_preferences_dlg.h>
 
 class PrefsDlg : public QDialog {
@@ -30,19 +31,24 @@ class PrefsDlg : public QDialog {
 
     Ui::PreferencesDialog *ui_dialog;
 
-//  QWidget *m_settings_overview;
-//  QTabWidget *m_settings_tab;
+    //  QWidget *m_settings_overview;
+    //  QTabWidget *m_settings_tab;
+    QStringListModel stringListModel;
+    //  void handle_response(int, QDialog *dialog);
 
-//  void handle_response(int, QDialog *dialog);
+    std::vector<Settings *> m_settings;
+    bool load_settings();
 
-  std::vector<Settings *> m_settings;
-  bool load_settings();
-
- public:
-  PrefsDlg(QWidget *parent);
+public:
+    PrefsDlg(QWidget *parent);
     ~PrefsDlg();
-  void show();
-//  void set_icon_from_file(const string path) {m_preferences_dlg->set_icon_from_file(path);}
+    void show();
+    //  void set_icon_from_file(const string path) {m_preferences_dlg->set_icon_from_file(path);}
+    Ui::PreferencesDialog *getUi_dialog() const;
+
+    int selected_extruder;
+private slots:
+    void listView(QModelIndex);
 };
 
 #endif // SETTINGS_H

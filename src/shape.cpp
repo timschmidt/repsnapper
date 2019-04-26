@@ -809,7 +809,7 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles)
 
 
         //for (uint i = 0; i < 4; i++) {
-        mat_diffuse = settings->get_colour("Display","PolygonColour");
+        mat_diffuse = settings->get_Vector4f("Display/PolygonColour");
         //}
 
         if (highlight)
@@ -823,7 +823,7 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles)
         }
 
         mat_specular.array[0] = mat_specular.array[1] = mat_specular.array[2]
-                = settings->get_double("Display","Highlight");
+                = settings->get_double("Display/Highlight");
 
         /* draw sphere in first row, first column
         * diffuse reflection only; no ambient or specular
@@ -836,7 +836,7 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles)
 
         // glEnable (GL_POLYGON_OFFSET_FILL);
 
-        if(settings->get_boolean("Display","DisplayPolygons"))
+        if(settings->get_boolean("Display/DisplayPolygons"))
         {
                 glEnable(GL_CULL_FACE);
                 glEnable(GL_DEPTH_TEST);
@@ -849,14 +849,14 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles)
         glDisable (GL_POLYGON_OFFSET_FILL);
 
         // WireFrame
-        if(settings->get_boolean("Display","DisplayWireframe"))
+        if(settings->get_boolean("Display/DisplayWireframe"))
         {
-          if(!settings->get_boolean("Display","DisplayWireframeShaded"))
+          if(!settings->get_boolean("Display/DisplayWireframeShaded"))
                         glDisable(GL_LIGHTING);
 
 
           //for (uint i = 0; i < 4; i++)
-          mat_diffuse = settings->get_colour("Display","WireframeColour");
+          mat_diffuse = settings->get_Vector4f("Display/WireframeColour");
                 glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 
                 glColor4fv(mat_diffuse);
@@ -875,11 +875,11 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles)
         glDisable(GL_LIGHTING);
 
         // normals
-        if(settings->get_boolean("Display","DisplayNormals"))
+        if(settings->get_boolean("Display/DisplayNormals"))
         {
-                glColor4fv(settings->get_colour("Display","NormalsColour"));
+                glColor4fv(settings->get_Vector4f("Display/NormalsColour"));
                 glBegin(GL_LINES);
-                double nlength = settings->get_double("Display","NormalsLength");
+                double nlength = settings->get_double("Display/NormalsLength");
                 for(size_t i=0;i<triangles.size();i++)
                 {
                         Vector3d center = (triangles[i].A+triangles[i].B+triangles[i].C)/3.0;
@@ -891,10 +891,10 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles)
         }
 
         // Endpoints
-        if(settings->get_boolean("Display","DisplayEndpoints"))
+        if(settings->get_boolean("Display/DisplayEndpoints"))
         {
-                glColor4fv(settings->get_colour("Display","EndpointsColour"));
-                glPointSize(settings->get_double("Display","EndPointSize"));
+                glColor4fv(settings->get_Vector4f("Display/EndpointsColour"));
+                glPointSize(settings->get_double("Display/EndPointSize"));
                 glBegin(GL_POINTS);
                 for(size_t i=0;i<triangles.size();i++)
                 {

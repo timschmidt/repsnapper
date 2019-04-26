@@ -72,11 +72,11 @@ protected:
   QSize sizeHint() const override;
 
 public:
-  Render (QWidget *parent, MainWindow *view);
+  Render (QWidget *widget);
   ~Render() override;
 
   QWidget *get_widget();
-  void set_model (Model *model);
+//  void set_model (Model *model);
   void set_zoom (float zoom) {m_zoom=zoom;}
   void zoom_to_model();
   void set_transform(const Matrix4fT &transform) {m_transform=transform;}
@@ -84,6 +84,8 @@ public:
   static void draw_string(const Vector3d &pos, const string s);
 
 //  virtual void on_realize();
+
+  void setMain(MainWindow *main){ m_main = main;}
 
 public slots:
   void setXRotation(int angle);

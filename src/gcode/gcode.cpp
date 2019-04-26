@@ -35,18 +35,22 @@
 #include<QTextBlock>
 
 GCode::GCode()
-  : gl_List(-1)
 {
+  gl_List=-1;
   Min.set(99999999.0,99999999.0,99999999.0);
   Max.set(-99999999.0,-99999999.0,-99999999.0);
   Center.set(0,0,0);
-  buffer = new QTextDocument();
+  QTextDocument buffer("");
+}
+
+GCode::~GCode()
+{
 }
 
 
 void GCode::clear()
 {
-  buffer->clear();
+    buffer.setPlainText("");
   commands.clear();
   layerchanges.clear();
   buffer_zpos_lines.clear();
@@ -114,27 +118,27 @@ void GCode::updateWhereAtCursor(const vector<QChar> &E_letters)
 //    int line = buffer->get_insert()->get_iter().get_line();
   int line = get_iter()->get_current_lineno();
   if (line == 0) return;
-  string text = getLineAt(buffer, line-1);
+  string text = getLineAt(&buffer, line-1);
   Command commandbefore(text, Vector3d::ZERO, E_letters);
   Vector3d where = commandbefore.where;
   // complete position of previous line
   int l = line;
   while (l>0 && where.x()==0.) {
     l--;
-    text = getLineAt(buffer, l);
+    text = getLineAt(&buffer, l);
     where.x() = Command(text, Vector3d::ZERO, E_letters).where.x();
   }
   l = line;
   while (l>0 && where.y()==0.) {
     l--;
-    text = getLineAt(buffer, l);
+    text = getLineAt(&buffer, l);
     where.y() = Command(text, Vector3d::ZERO, E_letters).where.y();
   }
   l = line;
   // find last z pos fast
   for (size_t i = buffer_zpos_lines.size()-1; i > 0 ; i--) {
       if (int(buffer_zpos_lines[i]) <= l) {
-          text = getLineAt(buffer, buffer_zpos_lines[i]);
+          text = getLineAt(&buffer, buffer_zpos_lines[i]);
           //cerr << text << endl;
           Command c(text, Vector3d::ZERO, E_letters);
           where.z() = c.where.z();
@@ -143,12 +147,12 @@ void GCode::updateWhereAtCursor(const vector<QChar> &E_letters)
   }
   while (l > 0 && where.z() == 0.) {
     l--;
-    text = getLineAt(buffer, l);
+    text = getLineAt(&buffer, l);
     Command c(text, Vector3d::ZERO, E_letters);
     where.z() = c.where.z();
   }
   // current move:
-  text = getLineAt(buffer, line);
+  text = getLineAt(&buffer, line);
   Command command(text, where, E_letters);
   Vector3d dwhere = command.where - where;
   where.z() -= 0.0000001;
@@ -319,11 +323,11 @@ void GCode::Read(Model *model, const vector<QChar> E_letters,
 
     commands = loaded_commands;
 
-    buffer->setPlainText(QString::fromStdString(alltext.str()));
+    buffer.setPlainText(QString::fromStdString(alltext.str()));
 
     Center = (Max + Min)/2;
 
-//    model->m_signal_gcode_changed.emit();
+    emit gcode_changed();
 
     double time = GetTimeEstimation();
     int h = int(time / 3600.);
@@ -398,8 +402,8 @@ void GCode::draw(Settings *settings, int layer,
           int eind = 0;
 
               if (n_changes > 0) {
-                sind = (uint)ceil(settings->get_double("Display","GCodeDrawStart")*(n_changes-1)/Max.z());
-            eind = (uint)ceil(settings->get_double("Display","GCodeDrawEnd") *(n_changes-1)/Max.z());
+                sind = (uint)ceil(settings->get_double("Display/GCodeDrawStart")*(n_changes-1)/Max.z());
+            eind = (uint)ceil(settings->get_double("Display/GCodeDrawEnd") *(n_changes-1)/Max.z());
               }
           if (sind>=eind) {
         eind = MIN(sind+1, n_changes-1);
@@ -419,15 +423,15 @@ void GCode::draw(Settings *settings, int layer,
     }
     else {
           if (n_cmds > 0) {
-        start = uint(settings->get_double("Display","GCodeDrawStart")*(n_cmds)/Max.z());
-        end =   uint(settings->get_double("Display","GCodeDrawEnd")  *(n_cmds)/Max.z());
+        start = uint(settings->get_double("Display/GCodeDrawStart")*(n_cmds)/Max.z());
+        end =   uint(settings->get_double("Display/GCodeDrawEnd")  *(n_cmds)/Max.z());
           }
     }
 
     drawCommands(settings, start, end, liveprinting, linewidth,
-             arrows && settings->get_boolean("Display","DisplayGCodeArrows"),
-             !liveprinting && settings->get_boolean("Display","DisplayGCodeBorders"),
-                     settings->get_boolean("Display","DebugGCodeOnlyZChange"));
+             arrows && settings->get_boolean("Display/DisplayGCodeArrows"),
+             !liveprinting && settings->get_boolean("Display/DisplayGCodeBorders"),
+                     settings->get_boolean("Display/DebugGCodeOnlyZChange"));
 
     if (currentCursorWhere!=Vector3d::ZERO) {
       glDisable(GL_DEPTH_TEST);
@@ -472,14 +476,14 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
     Vector3d defaultpos(0,0,0);
     Vector3d pos(0,0,0);
 
-    bool relativeE = settings->get_boolean("Slicing","RelativeEcode");
+    bool relativeE = settings->get_boolean("Slicing/RelativeEcode");
 
-    bool debug_arcs = settings->get_boolean("Display","DisplayDebugArcs");
+    bool debug_arcs = settings->get_boolean("Display/DisplayDebugArcs");
 
     double extrusionwidth = 0;
     if (boundary)
       extrusionwidth =
-        settings->GetExtrudedMaterialWidth(settings->get_double("Slicing","LayerThickness"));
+        settings->GetExtrudedMaterialWidth(settings->get_double("Slicing/LayerThickness"));
 
     start = CLAMP (start, 0, n_cmds-1);
     end = CLAMP (end, 0, n_cmds-1);
@@ -504,13 +508,13 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
     Vector3d last_extruder_offset = Vector3d::ZERO;
 
     (void) extruderon; // calm warnings
-    double maxmove_xy = settings->get_double("Hardware","MaxMoveSpeedXY");
-    bool debuggcodeoffset = settings->get_boolean("Display","DebugGCodeOffset");
-    bool displaygcodemoves = settings->get_boolean("Display","DisplayGCodeMoves");
-    bool debuggcodeextruders = settings->get_boolean("Display","DebugGCodeExtruders");
-    bool luminanceshowsspeed = settings->get_boolean("Display","LuminanceShowsSpeed");
-    Vector4f gcodemovecolour = settings->get_colour("Display","GCodeMoveColour");
-    Vector4f gcodeprintingcolour = settings->get_colour("Display","GCodePrintingColour");
+    double maxmove_xy = settings->get_double("Hardware/MaxMoveSpeedXY");
+    bool debuggcodeoffset = settings->get_boolean("Display/DebugGCodeOffset");
+    bool displaygcodemoves = settings->get_boolean("Display/DisplayGCodeMoves");
+    bool debuggcodeextruders = settings->get_boolean("Display/DebugGCodeExtruders");
+    bool luminanceshowsspeed = settings->get_boolean("Display/LuminanceShowsSpeed");
+    Vector4f gcodemovecolour = settings->get_Vector4f("Display/GCodeMoveColour");
+    Vector4f gcodeprintingcolour = settings->get_Vector4f("Display/GCodePrintingColour");
 
     for(uint i=start; i <= end; i++)
     {
@@ -582,11 +586,11 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
               }
             else
               {
-            luma = 0.3 + 0.7 * speed / settings->get_double(extrudername,"MaxLineSpeed") / 60;
+            luma = 0.3 + 0.7 * speed / settings->get_double(extrudername+"/MaxLineSpeed") / 60;
             if (liveprinting) {
               Color = gcodeprintingcolour;
             } else {
-              Color = settings->get_colour(extrudername,"DisplayColour");
+              Color = settings->get_Vector4f(extrudername+"/DisplayColour");
             }
             if (debuggcodeextruders) {
               ostringstream o; o << commands[i].extruder_no+1;
@@ -638,9 +642,9 @@ void GCode::MakeText(QString &GcodeTxt,
                      Settings *settings,
                      ViewProgress * progress)
 {
-  QString GcodeStart = settings->get_string("GCode","Start");
-  QString GcodeLayer = settings->get_string("GCode","Layer");
-  QString GcodeEnd   = settings->get_string("GCode","End");
+  QString GcodeStart = settings->get_string("GCode/Start");
+  QString GcodeLayer = settings->get_string("GCode/Layer");
+  QString GcodeEnd   = settings->get_string("GCode/End");
 
     double lastE = -10;
     double lastF = 0; // last Feedrate (can be omitted when same)
@@ -661,16 +665,16 @@ void GCode::MakeText(QString &GcodeTxt,
     int progress_steps=(int)(commands.size()/100);
     if (progress_steps==0) progress_steps=1;
 
-    double speedalways = settings->get_boolean("Hardware","SpeedAlways");
-    bool useTcommand = settings->get_boolean("Slicing","UseTCommand");
+    double speedalways = settings->get_boolean("Hardware/SpeedAlways");
+    bool useTcommand = settings->get_boolean("Slicing/UseTCommand");
 
-    const bool relativeecode = settings->get_boolean("Slicing","RelativeEcode");
+    const bool relativeecode = settings->get_boolean("Slicing/RelativeEcode");
     uint currextruder = 0;
     const uint numExt = settings->getNumExtruders();
     QString extLetters="";
     for (uint i = 0;i<numExt;i++)
-      extLetters+=settings->get_string(settings->numberedExtruder("Extruder",i),
-                      "GCLetter")[0];
+      extLetters+=settings->get_string(settings->numberedExtruder("Extruder",i)+
+                      "/GCLetter")[0];
     for (uint i = 0; i < commands.size(); i++) {
       QChar E_letter;
       if (useTcommand) // use first extruder's code for all extuders
@@ -704,13 +708,13 @@ void GCode::MakeText(QString &GcodeTxt,
 
     GcodeTxt += "\n; End GCode\n" + GcodeEnd + "\n";
 
-    buffer->setPlainText(GcodeTxt);
+    buffer.setPlainText(GcodeTxt);
 
     // save zpos line numbers for faster finding
     buffer_zpos_lines.clear();
-    uint blines = buffer->lineCount();
+    uint blines = buffer.lineCount();
     for (uint i = 0; i < blines; i++) {
-      const string line = getLineAt(buffer, i);
+      const string line = getLineAt(&buffer, i);
       if (line.find("Z") != string::npos ||
           line.find("z") != string::npos)
         buffer_zpos_lines.push_back(i);
@@ -748,7 +752,7 @@ void GCode::MakeText(QString &GcodeTxt,
 
 std::string GCode::get_text () const
 {
-  return buffer->toRawText().toUtf8().constData();
+  return buffer.toRawText().toUtf8().constData();
 }
 
 
@@ -814,7 +818,7 @@ bool GCodeIter::finished()
 
 GCodeIter *GCode::get_iter ()
 {
-  GCodeIter *iter = new GCodeIter (buffer);
+  GCodeIter *iter = new GCodeIter (&buffer);
   iter->time_estimation = GetTimeEstimation();
   return iter;
 }

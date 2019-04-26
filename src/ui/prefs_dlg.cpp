@@ -56,10 +56,18 @@ namespace {
 //  dialog->hide();
 //}
 
-PrefsDlg::PrefsDlg(QWidget *parent):
-    ui_dialog(new Ui::PreferencesDialog)
+PrefsDlg::PrefsDlg(QWidget *parent) :
+    ui_dialog(new Ui::PreferencesDialog),
+    selected_extruder(0)
 {
     ui_dialog->setupUi(this);
+
+    ui_dialog->postproc_group->hide();
+    ui_dialog->acceleration_group->hide();
+
+    ui_dialog->extruder_listview->setModel(&stringListModel);
+    connect(ui_dialog->extruder_listview, SIGNAL(activated(QModelIndex)),
+            this, SLOT(listView(QModelIndex)));
 
 //  builder->get_widget ("settings_overview", m_settings_overview);
 //  builder->get_widget ("settings_notebook", m_settings_tab);
@@ -72,11 +80,16 @@ PrefsDlg::~PrefsDlg()
 {
 }
 
+Ui::PreferencesDialog *PrefsDlg::getUi_dialog() const
+{
+    return ui_dialog;
+}
+
 bool
 PrefsDlg::load_settings()
 {
 #if MULTI_SETTINGS
-  if (!m_settings.empty())
+    if (!m_settings.empty())
     return false;
 
   std::vector<Settings *> m_settings;
@@ -139,4 +152,10 @@ PrefsDlg::show()
 {
   load_settings();
   QDialog::show();
+}
+
+
+void PrefsDlg::listView(QModelIndex index){
+    cerr << "LV " << index.row() << endl;
+    selected_extruder = index.row();
 }

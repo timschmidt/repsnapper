@@ -1,3 +1,23 @@
+/*
+    This file is a part of the RepSnapper project.
+    Copyright (C) 2019 hurzl
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
+
+#include <set>
 #include "objlist.h"
 
 #include <QMessageBox>
@@ -43,11 +63,10 @@ void ObjectsList::get_all_shapes(vector<Shape *> &allshapes, vector<Matrix4d> &t
     allshapes.clear();
     transforms.clear();
     for (ListObject *o : objects) {
-      Matrix4d otrans = transform3D.transform * o->transform3D.transform;
-      allshapes.insert(allshapes.begin(), o->shapes.begin(), o->shapes.end());
-      for (uint s = 0; s < o->shapes.size(); s++) {
-        transforms.push_back(otrans);
-      }
+        Matrix4d otrans = transform3D.transform * o->transform3D.transform;
+        allshapes.insert(allshapes.begin(), o->shapes.begin(), o->shapes.end());
+        for (uint s = 0; s < o->shapes.size(); s++)
+            transforms.push_back(otrans);
     }
 }
 
@@ -58,7 +77,21 @@ void ObjectsList::get_selected_objects(const QModelIndexList *indexes, vector<Li
 
 void ObjectsList::get_selected_shapes(const QModelIndexList *indexes, vector<Shape *> &shapes, vector<Matrix4d> &transforms) const
 {
+    if (indexes){
+        vector<Shape*> allshapes;
+        vector<Matrix4d> alltransforms;
+        get_all_shapes(allshapes, alltransforms);
+        shapes.clear();
+        transforms.clear();
 
+        for (QModelIndex index : *indexes){
+            uint i = uint(index.row());
+            shapes.push_back(allshapes[i]);
+            transforms.push_back(alltransforms[i]);
+        }
+    } else {
+        get_all_shapes(shapes, transforms);
+    }
 }
 
 Matrix4d ObjectsList::getTransformationMatrix(int object, int shape) const

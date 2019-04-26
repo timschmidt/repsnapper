@@ -131,8 +131,8 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
                            double offsetZ,
                            Settings &settings)
 {
-  bool relEcode = settings.get_boolean("Slicing","RelativeEcode");
-  double minmovespeed = settings.get_double("Hardware","MinMoveSpeedXY") * 60;
+  bool relEcode = settings.get_boolean("Slicing/RelativeEcode");
+  double minmovespeed = settings.get_double("Hardware/MinMoveSpeedXY") * 60;
 
   for (uint i=0; i < linespoints.size(); i+=2)
     {

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>937</width>
-    <height>642</height>
+    <width>912</width>
+    <height>705</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -69,7 +69,7 @@
          <number>2</number>
         </property>
         <item>
-         <widget class="QOpenGLWidget" name="openGLWidget">
+         <widget class="Render" name="openGLWidget">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -107,12 +107,18 @@
              <property name="text">
               <string>Layers</string>
              </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
            <item>
             <widget class="QCheckBox" name="Display_Displayinfill">
              <property name="text">
               <string>Infill</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -121,12 +127,15 @@
              <property name="text">
               <string>Dimensions</string>
              </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
            <item>
             <widget class="QLabel" name="label">
              <property name="text">
-              <string>Height:</string>
+              <string>Layer:</string>
              </property>
             </widget>
            </item>
@@ -143,11 +152,24 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QLabel" name="LayerLabel">
+             <property name="text">
+              <string>000</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
         <item>
          <widget class="QWidget" name="gcodeControl" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <property name="spacing">
             <number>2</number>
@@ -169,12 +191,18 @@
              <property name="text">
               <string>GCode</string>
              </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
            <item>
             <widget class="QCheckBox" name="Display_DisplayGCodeMoves">
              <property name="text">
               <string>Moves</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
@@ -195,15 +223,12 @@
            <item>
             <widget class="QWidget" name="widget_2" native="true">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_2">
-              <property name="spacing">
-               <number>2</number>
-              </property>
+             <layout class="QGridLayout" name="gridLayout_5">
               <property name="leftMargin">
                <number>0</number>
               </property>
@@ -216,8 +241,21 @@
               <property name="bottomMargin">
                <number>0</number>
               </property>
-              <item>
-               <widget class="QSlider" name="Displey_GCodeDrawStart">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_12">
+                <property name="text">
+                 <string>from</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QSlider" name="Display_GCodeDrawStart">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="mouseTracking">
                  <bool>true</bool>
                 </property>
@@ -226,8 +264,21 @@
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QSlider" name="Displey_GCodeDrawEnd">
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_13">
+                <property name="text">
+                 <string>to</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QSlider" name="Display_GCodeDrawEnd">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="mouseTracking">
                  <bool>true</bool>
                 </property>
@@ -278,37 +329,104 @@
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_5">
             <item>
-             <widget class="QPushButton" name="m_load_stl">
-              <property name="text">
-               <string>Load File</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QListView" name="modelListView"/>
-            </item>
-            <item>
              <widget class="QWidget" name="widget_3" native="true">
               <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
                <item>
-                <widget class="QPushButton" name="m_save_stl">
-                 <property name="text">
-                  <string>Save File</string>
+                <widget class="QListView" name="modelListView">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="m_autoarrange">
-                 <property name="text">
-                  <string>Autoplace</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="Misc_ShapeAutoplace">
-                 <property name="text">
-                  <string>Use Autoplace</string>
-                 </property>
+                <widget class="QWidget" name="widget_6" native="true">
+                 <layout class="QVBoxLayout" name="verticalLayout_12">
+                  <property name="spacing">
+                   <number>2</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>1</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>1</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>2</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>2</number>
+                  </property>
+                  <item>
+                   <widget class="QPushButton" name="m_load_stl">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Load File</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="m_save_stl">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Save File</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="m_autoarrange">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Autoplace</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="Misc_ShapeAutoplace">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Use Autoplace</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </widget>
                </item>
               </layout>
@@ -357,7 +475,14 @@
                    <number>2</number>
                   </property>
                   <item row="4" column="4">
-                   <widget class="QDoubleSpinBox" name="scale_z"/>
+                   <widget class="QDoubleSpinBox" name="scale_z">
+                    <property name="singleStep">
+                     <double>0.100000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>1.000000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="1" column="3">
                    <widget class="QLabel" name="label_6">
@@ -367,12 +492,19 @@
                    </widget>
                   </item>
                   <item row="4" column="3">
-                   <widget class="QDoubleSpinBox" name="scale_y"/>
+                   <widget class="QDoubleSpinBox" name="scale_y">
+                    <property name="singleStep">
+                     <double>0.100000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>1.000000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="4" column="0">
                    <widget class="QLabel" name="label_4">
                     <property name="text">
-                     <string>Scale</string>
+                     <string>Scale:</string>
                     </property>
                    </widget>
                   </item>
@@ -380,7 +512,14 @@
                    <widget class="QDoubleSpinBox" name="rot_x"/>
                   </item>
                   <item row="4" column="1">
-                   <widget class="QDoubleSpinBox" name="m_scale_value"/>
+                   <widget class="QDoubleSpinBox" name="m_scale_value">
+                    <property name="decimals">
+                     <number>3</number>
+                    </property>
+                    <property name="value">
+                     <double>1.000000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="0" column="2">
                    <widget class="QPushButton" name="m_split">
@@ -399,7 +538,7 @@
                   <item row="3" column="0">
                    <widget class="QLabel" name="label_2">
                     <property name="text">
-                     <string>Translate</string>
+                     <string>Translate:</string>
                     </property>
                    </widget>
                   </item>
@@ -437,7 +576,14 @@
                    <widget class="QDoubleSpinBox" name="translate_y"/>
                   </item>
                   <item row="4" column="2">
-                   <widget class="QDoubleSpinBox" name="scale_x"/>
+                   <widget class="QDoubleSpinBox" name="scale_x">
+                    <property name="singleStep">
+                     <double>0.100000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>1.000000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="1" column="4">
                    <widget class="QLabel" name="label_7">
@@ -528,13 +674,6 @@
                <property name="spacing">
                 <number>2</number>
                </property>
-               <item row="0" column="0">
-                <widget class="QCheckBox" name="Display_DisplayPolygons">
-                 <property name="text">
-                  <string>Surface</string>
-                 </property>
-                </widget>
-               </item>
                <item row="0" column="1">
                 <widget class="QCheckBox" name="Display_DisplayWireframe">
                  <property name="text">
@@ -542,24 +681,37 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="0">
+               <item row="0" column="0">
+                <widget class="QCheckBox" name="Display_DisplayPolygons">
+                 <property name="text">
+                  <string>Surface</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
                 <widget class="QCheckBox" name="Display_DisplayNormals">
                  <property name="text">
                   <string>Normals</string>
                  </property>
                 </widget>
                </item>
-               <item row="1" column="1">
+               <item row="1" column="0">
                 <widget class="QCheckBox" name="Display_DisplayEndpoints">
                  <property name="text">
                   <string>Endpoints</string>
                  </property>
                 </widget>
                </item>
-               <item row="2" column="1">
+               <item row="1" column="1">
                 <widget class="QCheckBox" name="Display_DisplayBBox">
                  <property name="text">
                   <string>BBoxes</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -576,16 +728,234 @@
             <item>
              <layout class="QVBoxLayout" name="verticalLayout_7">
               <item>
-               <widget class="QPushButton" name="m_gcode">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Generate GCode</string>
-                </property>
+               <widget class="QWidget" name="widget_7" native="true">
+                <layout class="QHBoxLayout" name="horizontalLayout_7">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>1</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>1</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>1</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>1</number>
+                 </property>
+                 <item>
+                  <widget class="QWidget" name="widget_9" native="true">
+                   <layout class="QFormLayout" name="formLayout">
+                    <property name="horizontalSpacing">
+                     <number>2</number>
+                    </property>
+                    <property name="verticalSpacing">
+                     <number>2</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item row="0" column="0">
+                     <widget class="QLabel" name="label_8">
+                      <property name="text">
+                       <string>Layer Height:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="QDoubleSpinBox" name="Slicing_LayerThickness">
+                      <property name="singleStep">
+                       <double>0.010000000000000</double>
+                      </property>
+                      <property name="value">
+                       <double>0.200000000000000</double>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="0">
+                     <widget class="QLabel" name="label_11">
+                      <property name="text">
+                       <string>Infill %:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QSpinBox" name="Slicing_InfillPercent">
+                      <property name="value">
+                       <number>15</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="0">
+                     <widget class="QLabel" name="label_9">
+                      <property name="text">
+                       <string>Shells</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="1">
+                     <widget class="QSpinBox" name="Slicing_ShellCount">
+                      <property name="value">
+                       <number>2</number>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="0">
+                     <widget class="QLabel" name="label_10">
+                      <property name="text">
+                       <string>Skins:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="1">
+                     <widget class="QSpinBox" name="Slicing_Skins">
+                      <property name="value">
+                       <number>2</number>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QWidget" name="widget_8" native="true">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <layout class="QVBoxLayout" name="verticalLayout_13">
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QCheckBox" name="Slicing_DoInfill">
+                      <property name="text">
+                       <string>Infill</string>
+                      </property>
+                      <property name="checked">
+                       <bool>true</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="Slicing_Support">
+                      <property name="text">
+                       <string>Support</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="Slicing_Decor">
+                      <property name="text">
+                       <string>Decor</string>
+                      </property>
+                      <property name="checked">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="Slicing_NoTopAndBottom">
+                      <property name="text">
+                       <string>No Covers</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="Slicing_BuildSerial">
+                      <property name="text">
+                       <string>Serial Build</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QCheckBox" name="Slicing_SelectedOnly">
+                      <property name="text">
+                       <string>Selected Only</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QWidget" name="widget_10" native="true">
+                   <layout class="QVBoxLayout" name="verticalLayout_2">
+                    <property name="spacing">
+                     <number>2</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QPushButton" name="m_gcode">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Generate GCode</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="g_load_gcode">
+                      <property name="text">
+                       <string>Load GCode</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="g_platform">
+                      <property name="text">
+                       <string>To Platform</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="g_save_gcode">
+                      <property name="text">
+                       <string>Save GCode</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                </layout>
                </widget>
               </item>
               <item>
@@ -597,63 +967,6 @@
                  </sizepolicy>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_4">
-                 <item row="0" column="1">
-                  <widget class="QCheckBox" name="Slicing_Support">
-                   <property name="text">
-                    <string>Support</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QCheckBox" name="Slicing_DoInfill">
-                   <property name="text">
-                    <string>Infill</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QCheckBox" name="Slicing_NoTopAndBottom">
-                   <property name="text">
-                    <string>No Covers</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QCheckBox" name="Slicing_SelectedOnly">
-                   <property name="text">
-                    <string>Selected Only</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QCheckBox" name="Slicing_Decor">
-                   <property name="text">
-                    <string>Decor</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QCheckBox" name="Slicing_BuildSerial">
-                   <property name="text">
-                    <string>Serial Build</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBox_3">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="title">
-                 <string>Parameters</string>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_3">
                  <property name="leftMargin">
                   <number>0</number>
                  </property>
@@ -666,81 +979,23 @@
                  <property name="bottomMargin">
                   <number>0</number>
                  </property>
-                 <property name="spacing">
+                 <property name="horizontalSpacing">
+                  <number>0</number>
+                 </property>
+                 <property name="verticalSpacing">
                   <number>2</number>
                  </property>
-                 <item row="0" column="1">
-                  <widget class="QDoubleSpinBox" name="Slicing_LayerThickness"/>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QSpinBox" name="Slicing_ShellCount"/>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QLabel" name="label_11">
-                   <property name="text">
-                    <string>Infill %:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="3">
-                  <widget class="QSpinBox" name="Slicing_Skins"/>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="label_8">
-                   <property name="text">
-                    <string>Layer Height:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QLabel" name="label_9">
-                   <property name="text">
-                    <string>Shells</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QLabel" name="label_10">
-                   <property name="text">
-                    <string>Skins:</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="3">
-                  <widget class="QSpinBox" name="Slicing_InfillPercent"/>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QWidget" name="widget_5" native="true">
-                <layout class="QHBoxLayout" name="horizontalLayout_6">
-                 <item>
-                  <widget class="QPushButton" name="g_load_gcode">
-                   <property name="text">
-                    <string>Load GCode</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="g_platform">
-                   <property name="text">
-                    <string>To Platform</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="g_save_gcode">
-                   <property name="text">
-                    <string>Save GCode</string>
-                   </property>
-                  </widget>
-                 </item>
                 </layout>
                </widget>
               </item>
               <item>
                <widget class="QTabWidget" name="tabWidget_2">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
                 <property name="currentIndex">
                  <number>3</number>
                 </property>
@@ -780,10 +1035,38 @@
                  </attribute>
                  <layout class="QVBoxLayout" name="verticalLayout_8">
                   <item>
-                   <widget class="QTextEdit" name="GCode_Result"/>
+                   <widget class="QTextEdit" name="GCode_Result">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
                 </widget>
+               </widget>
+              </item>
+              <item>
+               <widget class="QWidget" name="widget_5" native="true">
+                <layout class="QHBoxLayout" name="horizontalLayout_6">
+                 <property name="spacing">
+                  <number>2</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>0</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>0</number>
+                 </property>
+                </layout>
                </widget>
               </item>
              </layout>
@@ -828,19 +1111,6 @@
           </widget>
          </widget>
         </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
        </layout>
       </widget>
      </widget>
@@ -874,6 +1144,12 @@
        </property>
        <item>
         <widget class="QLabel" name="progressLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Progress:</string>
          </property>
@@ -924,7 +1200,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>937</width>
+     <width>912</width>
      <height>22</height>
     </rect>
    </property>
@@ -965,12 +1241,16 @@
     <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
-    <bool>true</bool>
+    <bool>false</bool>
    </attribute>
    <addaction name="separator"/>
    <addaction name="actionGenerate_GCode"/>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QStatusBar" name="statusBar">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+  </widget>
   <action name="actionOpen">
    <property name="text">
     <string>&amp;Open</string>
@@ -1013,6 +1293,30 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>Render</class>
+   <extends>QOpenGLWidget</extends>
+   <header location="global">../src/render.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>Display_LayerValue</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>LayerLabel</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>377</x>
+     <y>530</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>450</x>
+     <y>535</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

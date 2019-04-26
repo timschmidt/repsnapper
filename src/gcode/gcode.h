@@ -28,8 +28,6 @@
 #include <QTextDocument>
 #include <QTextCursor>
 
-#include <glibmm/ustring.h>
-
 #include "command.h"
 
 class GCodeIter
@@ -43,8 +41,6 @@ class GCodeIter
   std::string next_line();
   std::string next_line_stripped();
   bool finished();
-  double time_used;
-  time_t time_started;
   double time_estimation;
   Command getCurrentCommand(Vector3d defaultwhere,
                 const vector<QChar> &E_letters);
@@ -55,12 +51,13 @@ private:
   QTextCursor cursor_at_line(int lineno);
 };
 
-class GCode
+class GCode : public QObject
 {
-    int gl_List;
+    Q_OBJECT
 
 public:
-  GCode();
+    GCode();
+    ~GCode();
 
   void Read  (Model *model, const vector<QChar> E_letters,
           ViewProgress *progress, string filename);
@@ -85,7 +82,7 @@ public:
 
   void translate(Vector3d trans);
 
-  QTextDocument *buffer;
+  QTextDocument buffer;
   GCodeIter *get_iter ();
 
   double GetTotalExtruded(bool relativeEcode) const;
@@ -95,7 +92,7 @@ public:
   Vector3d currentCursorWhere;
   Vector3d currentCursorFrom;
   Command currentCursorCommand;
-  vector<uint> buffer_zpos_lines; // line numbers where a z position is set
+  vector<int> buffer_zpos_lines; // line numbers where a z position is set
 
 
   vector<unsigned long> layerchanges;
@@ -105,5 +102,11 @@ public:
   unsigned long getLayerEnd(const uint layerno) const;
 
 private:
+  int gl_List;
   unsigned long unconfirmed_blocks;
+
+signals:
+  void gcode_changed();
+
+
 };
