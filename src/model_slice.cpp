@@ -789,7 +789,7 @@ void Model::ConvertToGCode()
   is_calculating=true;
 
   // default:
-  //settings->SelectExtruder(0);
+  settings->SelectExtruder(0);
 
   QTime start_time;
   start_time.start();

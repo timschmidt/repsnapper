@@ -68,9 +68,12 @@ protected:
   void paintGL() override;
   void mousePressEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
+  void mouseReleaseEvent(QMouseEvent *event) override;
+
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
 
+  Qt::KeyboardModifiers mousePressedModifiers;
 public:
   Render (QWidget *widget);
   ~Render() override;
@@ -78,7 +81,7 @@ public:
   QWidget *get_widget();
 //  void set_model (Model *model);
   void set_zoom (float zoom) {m_zoom=zoom;}
-  void zoom_to_model();
+  void zoom_to_model(Model *model);
   void set_transform(const Matrix4fT &transform) {m_transform=transform;}
 
   static void draw_string(const Vector3d &pos, const string s);
@@ -87,6 +90,7 @@ public:
 
   void setMain(MainWindow *main){ m_main = main;}
 
+  Qt::MouseButton mousePressed;
 public slots:
   void setXRotation(int angle);
   void setYRotation(int angle);

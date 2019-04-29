@@ -1309,12 +1309,12 @@
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>377</x>
-     <y>530</y>
+     <x>411</x>
+     <y>594</y>
     </hint>
     <hint type="destinationlabel">
-     <x>450</x>
-     <y>535</y>
+     <x>438</x>
+     <y>598</y>
     </hint>
    </hints>
   </connection>

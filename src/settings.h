@@ -57,8 +57,6 @@ class Settings : public QSettings {
 
   void copyGroup(const QString &from, const QString &to);
 
-  // overwrite to get the chance to make multiple extruder manipulation
-
   QString grouped(const QString &name);
   QVariant groupedValue(const QString &name, const QVariant &deflt = QVariant());
 
@@ -82,9 +80,6 @@ class Settings : public QSettings {
   void set_array  (const QString &name, const vector<float> &values);
   void set_all_to_gui (QWidget *widget, const string filter="");
 
-  QString numberedExtruder(const QString &group, int num=-1) const;
-
-
   vmml::vec3d getPrintVolume();
   vmml::vec3d getPrintMargin();
 
@@ -96,11 +91,11 @@ class Settings : public QSettings {
   std::vector<QChar> get_extruder_letters();
   Vector3d get_extruder_offset(uint num);
   uint GetSupportExtruder();
-  void CopyExtruder(uint num);
-  void RemoveExtruder(uint num);
+  uint CopyExtruder();
+  void RemoveExtruder();
   void SelectExtruder(uint num, QWidget *widget = nullptr);
   uint selectedExtruder;
-  uint getNumExtruders() const;
+  int getNumExtruders() const;
 
 
   /* class GCodeImpl; */
@@ -133,7 +128,6 @@ class Settings : public QSettings {
   void get_colour_from_gui     (ColorButton * colorButton, const QString &key);
   void convert_old_colour      (const QString &group, const QString &key);
   void set_defaults ();
-  QWidget* get_widget_and_setting(QWidget *widget, const QObject* qobject, QString &group, QString &key);
 
 
 public:
@@ -178,9 +172,15 @@ public:
 //  sigc::signal< void > m_signal_update_settings_gui;
 //  sigc::signal< void > m_signal_core_settings_changed;
 
+  void setMaxLayers(QWidget *parent, const int num);
 
   QString info();
 
+  static QString numbered(const QString &qstring, int num);
+
+
+signals:
+  void settings_changed();
 public slots:
   void get_from_gui();
   void get_int_from_gui(int value);

@@ -352,7 +352,6 @@ void Model::translateGCode(Vector3d trans)
 void Model::ModelChanged()
 {
   if (m_inhibit_modelchange) return;
-  main->updatedModel(&objectList);
   if (objectList.empty()) return;
   //printer.update_temp_poll_interval(); // necessary?
   if (!is_printing) {
@@ -364,6 +363,7 @@ void Model::ModelChanged()
     }
     setCurrentPrintingLine(0);
     gcode->emit gcode_changed();
+ //   emit model_changed(&objectList);
   }
 }
 
@@ -780,12 +780,13 @@ Vector3d Model::GetViewCenter()
   return printOffset + Center;
 }
 
-int Model::draw (QModelIndexList *selected)
+int Model::draw (const QModelIndexList *selected)
 {
     vector<int> selectedshapes;
     if (selected)
-        for (QModelIndex i: *selected) {
-            selectedshapes.push_back(i.row());
+        if ((*selected).size()>0)
+        for(int i = 0; i < selected->size(); i++) {
+            selectedshapes.push_back((*selected)[i].row());
         }
   gint index = 1; // pick/select index. matches computation in update_model()
 
@@ -827,7 +828,7 @@ int Model::draw (QModelIndexList *selected)
   bool displaypolygons = settings->get_boolean("Display/DisplayPolygons");
   bool displaybbox = settings->get_boolean("Display/DisplayBBox");
   gint shapeindex=0;
-  cerr << "drawing "<< objectList.objects.size() << " objects"<< endl;
+//  cerr << "drawing "<< objectList.objects.size() << " objects"<< endl;
   for (uint i = 0; i < objectList.objects.size(); i++) {
       ListObject *object = objectList.objects[i];
       index++;

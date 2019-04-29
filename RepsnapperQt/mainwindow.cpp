@@ -63,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings = new Settings();
     m_settings->connect_to_gui(this);
     m_settings->connect_to_gui(prefs_dialog);
+//    connect(m_settings, SIGNAL(settings_changed()), this, SLOT(settingsChanged()));
 
     m_model = new Model(this);
     m_progress = new ViewProgress(ui_main->progressBarArea,
@@ -70,8 +71,9 @@ MainWindow::MainWindow(QWidget *parent) :
                                   ui_main->progressLabel);
     m_model->SetViewProgress(m_progress);
     m_model->statusbar = ui_main->statusBar;
+//    connect(m_model, SIGNAL(model_changed(const ObjectsList*)), this,
+//            SLOT(updatedModel(const ObjectsList*)));
     connect(m_model->gcode, SIGNAL(gcode_changed()), this, SLOT(gcodeChanged()));
-    updatedModel();
 
     m_printer = new Printer(this);
 
@@ -126,10 +128,10 @@ void MainWindow::updatedModel(const ObjectsList *objList)
     m_settings->set_all_to_gui(prefs_dialog, "Hardware");
     m_settings->set_all_to_gui(prefs_dialog, "Slicing");
     m_settings->set_all_to_gui(prefs_dialog, "Extruder");
-    m_render;
+    m_settings->setMaxLayers(this, m_model->layers.size());
 }
 
-void MainWindow::Draw(QModelIndexList *selected, bool objects_only)
+void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
 {
     // Draw the grid, pushed back so it can be seen
     // when viewed from below.
@@ -333,11 +335,12 @@ void MainWindow::handleButtonClick()
     QString name = button->objectName();
 
     if(name == "m_delete"){
+
     } else if(name == "cancel_progress"){
     } else if(name == "m_load_stl"){
         on_actionOpen_triggered();
     } else if(name == "m_gcode"){
-        on_actionGenerateCode_triggered();
+        generateGCode();
     } else if(name.endsWith("Colour")){
         ColorButton *cbutton = dynamic_cast<ColorButton*>(button);
         QColor current = cbutton->get_color();
@@ -350,8 +353,14 @@ void MainWindow::handleButtonClick()
         QString fileName = QFileDialog::getOpenFileName(this,tr("Open GCode"),"",
                                                         tr("GCode (*.gcode);;All Files (*)"));
         openFile(fileName);
-    } else if(name == ""){
-    } else if(name == ""){
+    } else if(name == "copy_extruder"){
+        int newEx = m_settings->CopyExtruder();
+        m_settings->SelectExtruder(newEx, prefs_dialog);
+    } else if(name == "remove_extruder"){
+        m_settings->RemoveExtruder();
+        uint prev = m_settings->selectedExtruder;
+        m_settings->selectedExtruder = 99;
+        m_settings->SelectExtruder(prev, prefs_dialog);
     } else if(name == ""){
     } else if(name == ""){
     } else if(name == ""){
@@ -368,6 +377,13 @@ void MainWindow::gcodeChanged()
     ui_main->GCode_Layer->setPlainText(m_settings->get_string("GCode/Layer"));
     ui_main->GCode_End->setPlainText(m_settings->get_string("GCode/End"));
     ui_main->GCode_Result->setDocument(&m_model->gcode->buffer);
+    m_render->update();
+}
+
+void MainWindow::settingsChanged()
+{
+    cerr<< "settings changed"<< endl;
+    m_render->update();
 }
 
 void MainWindow::on_actionQuit_triggered()
@@ -375,9 +391,8 @@ void MainWindow::on_actionQuit_triggered()
     QApplication::quit();
 }
 
-void MainWindow::on_actionGenerateCode_triggered()
+void MainWindow::generateGCode()
 {
-    m_model->settings->SelectExtruder(prefs_dialog->selected_extruder);
     m_model->ClearPreview();
 
     PrintInhibitor inhibitPrint(m_printer);
@@ -403,3 +418,6 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 
+void MainWindow::extruderSelected(const QModelIndex &index){
+    m_settings->SelectExtruder(index.row(), prefs_dialog);
+}

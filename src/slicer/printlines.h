@@ -90,6 +90,7 @@ class PLine3 : public PLine<3>
   PLine3(const PLine3 &rhs);
   PLine3(const PLine2 &pline, double z, double extrusion_per_mm_);
   PLine3(const Command &command);
+  virtual ~PLine3(){}
 
   Command command;
 
@@ -140,6 +141,7 @@ class PLine2 : public PLine<2>
   PLine2(PLineArea area_, const uint extruder_no,
     const Vector2d &from, const Vector2d &to, double speed,
     double feedratio, const Vector2d &arccenter, bool ccw, double lifted = 0.);
+  virtual ~PLine2(){}
 
   vector< PLine2 > division(double length) const;
   vector< PLine2 > division(const Vector2d &point) const;
@@ -271,21 +273,9 @@ class Printlines
   static uint insertAntioozeHaltBefore(uint index, double amount, double speed,
                        vector< PLine3 > &lines);
 
-  inline static double length(const vector< PLine3 > &lines, uint from, uint to)
-  {
-    double totaldistance = 0;
-    for (uint j = from; j <= to; j++)
-      totaldistance += lines[j].length();
-    return totaldistance;
-  }
+  static double length(const vector< PLine3 > &lines, uint from, uint to);
 
-  inline static double time  (const vector< PLine3 > &lines, uint from, uint to)
-  {
-    double totaltime= 0;
-    for (uint j = from; j <= to; j++)
-      totaltime += lines[j].time();
-    return totaltime;
-  }
+  static double time  (const vector< PLine3 > &lines, uint from, uint to);
 
   // slow down to total time needed (cooling)
   double slowdownTo(double totalseconds, vector<PLine2> &lines) ; // returns slowdownfactor
@@ -337,18 +327,10 @@ class Printlines
 
   static void replace(vector< PLine2 > &lines,
               uint lineindex,
-              const vector< PLine2 > &newlines){
-    lines[lineindex] = newlines[0];
-    if (newlines.size() > 1)
-      lines.insert(lines.begin() + lineindex+1, newlines.begin()+1, newlines.end());
-  }
+              const vector< PLine2 > &newlines);
   static void replace(vector< PLine3 > &lines,
               uint lineindex,
-              const vector< PLine3 > &newlines){
-    lines[lineindex] = newlines[0];
-    if (newlines.size() > 1)
-      lines.insert(lines.begin() + lineindex+1, newlines.begin()+1, newlines.end());
-  }
+              const vector< PLine3 > &newlines);
 
   // insert single point
   static uint divideline(uint lineindex,

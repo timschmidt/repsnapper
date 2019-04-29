@@ -39,33 +39,31 @@ class GCode;
 #endif
 
 
-class Model
+class Model : public QObject
 {
-//        sigc::signal< void > m_signal_zoom;
+//    Q_OBJECT
+
         ViewProgress *m_progress;
 
 public:
-        QStatusBar *statusbar;
-
-        // Something in the rfo changed
-//        sigc::signal< void > signal_zoom() { return m_signal_zoom; }
-//        sigc::signal< void > m_signal_gcode_changed;
-
         Model(MainWindow *main);
         ~Model();
 
+        QStatusBar *statusbar;
+
         void SimpleAdvancedToggle();
-//        void SaveConfig(QString filename);
-        void LoadConfig() { LoadConfig(QString::fromStdString("repsnapper.conf")); }
+
+// //        void SaveConfig(QString filename);
+//        void LoadConfig() { LoadConfig(QString::fromStdString("repsnapper.conf")); }
         void LoadConfig(QString filename);
 
-        // STL Functions
+//        // STL Functions
         void ReadStl(QFile *file);
         vector<Shape*> ReadShapes(QFile *file,
                                   uint max_triangles = 0);
-        void SaveStl(QFile *file);
+        void SaveStl(QFile *Readfile);
 #if ENABLE_AMF
-        void SaveAMF(QFile *file);
+//        void SaveAMF(QFile *file);
 #endif
         int AddShape(ListObject *parent, Shape * shape, string filename,
                      bool autoplace = true);
@@ -74,7 +72,7 @@ public:
         int DivideShape(ListObject *parent, Shape *shape, string filename);
         Shape GetCombinedShape() const;
 
-//        sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
+////        sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
 
         void Read(QFile *file);
         void SetViewProgress (ViewProgress *progress);
@@ -90,7 +88,7 @@ public:
         void RotateObject(Shape *shape, ListObject *object, Vector4d rotate);
         void TwistObject(Shape *shape, ListObject *object, double angle);
         void PlaceOnPlatform(Shape *shape, ListObject *object);
-//        bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
+////        bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
         void InvertNormals(Shape *shape, ListObject *object);
         void Mirror(Shape *shape, ListObject *object);
 
@@ -98,16 +96,16 @@ public:
 
         Layer * m_previewLayer;
         double get_preview_Z();
-        //Layer * m_previewGCodeLayer;
+//        //Layer * m_previewGCodeLayer;
         GCode *m_previewGCode;
         double m_previewGCode_z;
 
         vector<Shape*> preview_shapes;
 
-        // Slicing
+//        // Slicing
         void SliceToSVG(QFile *file, bool single_layer=false);
 
-        // GCode Functions
+//        // GCode Functions
         void ReadGCode(QFile *file);
         void translateGCode(Vector3d trans);
 
@@ -124,11 +122,11 @@ public:
         void setCurrentPrintingLine(ulong line){ currentprintingline = line; }
         unsigned long currentprintingline;
 
-        Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
-        void SelectedNodeMatrices(vector<Matrix4d *> &result );
+//        Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
+//        void SelectedNodeMatrices(vector<Matrix4d *> &result );
         ListObject *newObject();
 
-        // Model derived: Bounding box info
+//        // Model derived: Bounding box info
         Vector3d Center;
         Vector3d Min;
         Vector3d Max;
@@ -141,16 +139,16 @@ public:
                                    const Shape *shape);
         bool FindEmptyLocation(Vector3d &result, const Shape *stl);
 
-//        sigc::signal< void > m_model_changed;
+        ////        sigc::signal< void > m_model_changed;
         void ModelChanged();
         bool m_inhibit_modelchange;
 
-        // Truly the model
+//        // Truly the model
         ObjectsList objectList;
 
         QTextStream errlog, echolog;
 
-        int draw(QModelIndexList *selected);
+        int draw(const QModelIndexList *selected);
         int drawLayers(float height, const Vector3d &offset, bool calconly = false);
         void setMeasuresPoint(const Vector3d &point);
         Vector2d measuresPoint;
@@ -158,7 +156,7 @@ public:
         Layer * calcSingleLayer(double z, uint LayerNr, double thickness,
                                 bool calcinfill, bool for_gcode=false);
 
-//        sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
+////        sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
         void alert (const char *message);
         void error (const char *message, const char *secondary);
 
@@ -166,7 +164,7 @@ public:
 
         GCode *gcode;
 
-        void SetIsPrinting(bool printing) { is_printing = printing; }
+//        void SetIsPrinting(bool printing) { is_printing = printing; }
 
         string getSVG(int single_layer_no = -1);
         void ReadSVG(QFile *file);
@@ -178,10 +176,10 @@ public:
  private:
         bool is_calculating;
         bool is_printing;
-        //GCodeIter *m_iter;
+//        //GCodeIter *m_iter;
         Layer * lastlayer;
 
-        // Slicing/GCode conversion functions
+//        // Slicing/GCode conversion functions
         void Slice();
 
         void CleanupLayers();
@@ -198,6 +196,14 @@ public:
         void MakeSkirt();
 
         MainWindow * main;
+
+
+        // Something in the rfo changed
+//        sigc::signal< void > signal_zoom() { return m_signal_zoom; }
+//        sigc::signal< void > m_signal_gcode_changed;
+
+//signals:
+//        void model_changed(const ObjectsList * objlist);
 };
 
 #endif // MODEL_H

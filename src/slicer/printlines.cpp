@@ -1216,17 +1216,33 @@ uint Printlines::makeCornerArc(double maxdistance, double minarclength,
   return max(0, int(numnew));
 }
 
+double Printlines::length(const vector<PLine3> &lines, uint from, uint to)
+{
+    double totaldistance = 0;
+    for (uint j = from; j <= to; j++)
+        totaldistance += lines[j].length();
+    return totaldistance;
+}
+
+double Printlines::time(const vector<PLine3> &lines, uint from, uint to)
+{
+    double totaltime= 0;
+    for (uint j = from; j <= to; j++)
+        totaltime += lines[j].time();
+    return totaltime;
+}
+
 
 
 // split line at given length
 
 
 uint Printlines::divideline(uint lineindex,
-                const double length,
-                vector< PLine3 > &lines)
+                            const double length,
+                            vector< PLine3 > &lines)
 {
-  typedef Vector3d vec;
-  PLine3 *l = &lines[lineindex];
+    typedef Vector3d vec;
+    PLine3 *l = &lines[lineindex];
   double linelen = l->length();
   if (length > linelen) return 0;
   vec splitp = l->splitpoint(length);
@@ -1563,14 +1579,26 @@ bool Printlines::capCorner(PLine2 &l1, PLine2 &l2,
   return done;
 }
 
+void Printlines::replace(vector<PLine2> &lines, uint lineindex, const vector<PLine2> &newlines){
+    lines[lineindex] = newlines[0];
+    if (newlines.size() > 1)
+        lines.insert(lines.begin() + lineindex+1, newlines.begin()+1, newlines.end());
+}
+
+void Printlines::replace(vector<PLine3> &lines, uint lineindex, const vector<PLine3> &newlines){
+    lines[lineindex] = newlines[0];
+    if (newlines.size() > 1)
+        lines.insert(lines.begin() + lineindex+1, newlines.begin()+1, newlines.end());
+}
+
 void Printlines::optimizeCorners(double linewidth, double linewidthratio, double optratio,
-                 vector<PLine2> &lines) const
+                                 vector<PLine2> &lines) const
 {
-  //cout << "optimizecorners " ; printinfo();
- uint count = lines.size();
- uint j;
- uint done = 1;
- while (done>0) {
+    //cout << "optimizecorners " ; printinfo();
+    uint count = lines.size();
+    uint j;
+    uint done = 1;
+    while (done>0) {
    done=0;
    for (uint i=0; i<count; i++){
      j = i+1 % count;

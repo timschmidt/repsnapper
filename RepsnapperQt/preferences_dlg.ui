@@ -24,7 +24,7 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="device_tab">
       <attribute name="title">
@@ -441,6 +441,12 @@
             <property name="title">
              <string>Extruders</string>
             </property>
+            <property name="flat">
+             <bool>false</bool>
+            </property>
+            <property name="checkable">
+             <bool>false</bool>
+            </property>
             <layout class="QVBoxLayout" name="verticalLayout_8">
              <property name="spacing">
               <number>2</number>
@@ -512,6 +518,9 @@
                <property name="title">
                 <string>Extruder Settings</string>
                </property>
+               <property name="flat">
+                <bool>false</bool>
+               </property>
                <layout class="QGridLayout" name="gridLayout_9">
                 <property name="leftMargin">
                  <number>0</number>
@@ -543,7 +552,7 @@
                  </widget>
                 </item>
                 <item row="4" column="0" colspan="3">
-                 <widget class="QCheckBox" name="checkBox_2">
+                 <widget class="QCheckBox" name="Extruder_CalibrateInput">
                   <property name="text">
                    <string> mm means Filament Input</string>
                   </property>
@@ -573,7 +582,7 @@
                  <widget class="QDoubleSpinBox" name="Extruder_ExtrudedMaterialWidthRatio"/>
                 </item>
                 <item row="3" column="0" colspan="3">
-                 <widget class="QCheckBox" name="checkBox">
+                 <widget class="QCheckBox" name="Extruder_UseForSupport">
                   <property name="text">
                    <string>Use this Extruder for Support</string>
                   </property>
@@ -629,7 +638,7 @@
                   </property>
                  </widget>
                 </item>
-                <item row="10" column="1" colspan="2">
+                <item row="10" column="1" colspan="2" alignment="Qt::AlignRight">
                  <widget class="QLabel" name="label_68">
                   <property name="text">
                    <string>GCode Letter:</string>
@@ -675,7 +684,7 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <item>
+          <item alignment="Qt::AlignRight">
            <widget class="QLabel" name="label_54">
             <property name="text">
              <string>Extruded Lines</string>
@@ -692,10 +701,10 @@
             </property>
            </widget>
           </item>
-          <item>
+          <item alignment="Qt::AlignRight">
            <widget class="QLabel" name="label_55">
             <property name="text">
-             <string>Shells</string>
+             <string>Shells:</string>
             </property>
            </widget>
           </item>
@@ -709,10 +718,10 @@
             </property>
            </widget>
           </item>
-          <item>
+          <item alignment="Qt::AlignRight">
            <widget class="QLabel" name="label_56">
             <property name="text">
-             <string>E-max</string>
+             <string>E-max:</string>
             </property>
            </widget>
           </item>
@@ -1625,31 +1634,31 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>Hardware_Volume_X</tabstop>
-  <tabstop>Hardware_Volume_Y</tabstop>
-  <tabstop>Hardware_Volume_Z</tabstop>
-  <tabstop>Hardware_PrintMargin_X</tabstop>
-  <tabstop>Hardware_PrintMargin_Y</tabstop>
-  <tabstop>Hardware_PrintMargin_Z</tabstop>
-  <tabstop>Hardware_MinMoveSpeedXY</tabstop>
-  <tabstop>Hardware_MaxMoveSpeedXY</tabstop>
-  <tabstop>Hardware_MinMoveSpeedZ</tabstop>
-  <tabstop>Hardware_MaxMoveSpeedZ</tabstop>
-  <tabstop>Hardware_SerialSpeed</tabstop>
-  <tabstop>Hardware_KeepLines</tabstop>
-  <tabstop>Hardware_SpeedAlways</tabstop>
-  <tabstop>Slicing_MinShelltime</tabstop>
-  <tabstop>Slicing_MaxOverhangSpeed</tabstop>
-  <tabstop>Slicing_FarthestLayerStart</tabstop>
-  <tabstop>Slicing_FanControl</tabstop>
-  <tabstop>Slicing_MinFanSpeed</tabstop>
-  <tabstop>Slicing_MaxFanSpeed</tabstop>
-  <tabstop>Slicing_EnableAcceleration</tabstop>
-  <tabstop>Extruder_DistanceToReachFullSpeed</tabstop>
-  <tabstop>Slicing_GCodePostprocess</tabstop>
-  <tabstop>Slicing_GCodePostprocessor</tabstop>
-  <tabstop>Slicing_SupportWiden</tabstop>
-  <tabstop>Slicing_SupportInfillDistance</tabstop>
+  <tabstop>Slicing_RelativeEcode</tabstop>
+  <tabstop>Slicing_UseTCommand</tabstop>
+  <tabstop>copy_extruder</tabstop>
+  <tabstop>remove_extruder</tabstop>
+  <tabstop>extruder_listview</tabstop>
+  <tabstop>Extruder_OffsetX</tabstop>
+  <tabstop>Extruder_OffsetY</tabstop>
+  <tabstop>Extruder_UseForSupport</tabstop>
+  <tabstop>Extruder_CalibrateInput</tabstop>
+  <tabstop>Extruder_FilamentDiameter</tabstop>
+  <tabstop>Extruder_ExtrudedMaterialWidthRatio</tabstop>
+  <tabstop>Extruder_MinimumLineWidth</tabstop>
+  <tabstop>Extruder_MaximumLineWidth</tabstop>
+  <tabstop>Extruder_ExtrusionFactor</tabstop>
+  <tabstop>Extruder_GCLetter</tabstop>
+  <tabstop>Extruder_DisplayColour</tabstop>
+  <tabstop>Extruder_MaxLineSpeed</tabstop>
+  <tabstop>Extruder_MaxShellSpeed</tabstop>
+  <tabstop>Extruder_EmaxSpeed</tabstop>
+  <tabstop>Extruder_EnableAntiooze</tabstop>
+  <tabstop>Extruder_AntioozeDistance</tabstop>
+  <tabstop>Extruder_AntioozeSpeed</tabstop>
+  <tabstop>Extruder_AntioozeAmount</tabstop>
+  <tabstop>Extruder_AntioozeZlift</tabstop>
+  <tabstop>Extruder_ZliftAlways</tabstop>
   <tabstop>Slicing_SupportAngle_2</tabstop>
   <tabstop>Slicing_DecorFilltype</tabstop>
   <tabstop>Slicing_DecorInfillDistance</tabstop>
@@ -1683,34 +1692,42 @@
   <tabstop>Slicing_SkirtDistance</tabstop>
   <tabstop>Slicing_SkirtHeight</tabstop>
   <tabstop>Slicing_MinLayertime</tabstop>
-  <tabstop>Slicing_RelativeEcode</tabstop>
-  <tabstop>Slicing_UseTCommand</tabstop>
-  <tabstop>copy_extruder</tabstop>
-  <tabstop>remove_extruder</tabstop>
-  <tabstop>extruder_listview</tabstop>
-  <tabstop>Extruder_ExtrusionFactor</tabstop>
-  <tabstop>Extruder_ExtrudedMaterialWidthRatio</tabstop>
-  <tabstop>checkBox_2</tabstop>
-  <tabstop>Extruder_OffsetX</tabstop>
-  <tabstop>Extruder_FilamentDiameter</tabstop>
-  <tabstop>checkBox</tabstop>
-  <tabstop>Extruder_GCLetter</tabstop>
-  <tabstop>Extruder_MaximumLineWidth</tabstop>
-  <tabstop>Extruder_MinimumLineWidth</tabstop>
-  <tabstop>Extruder_OffsetY</tabstop>
-  <tabstop>Extruder_MaxLineSpeed</tabstop>
-  <tabstop>Extruder_MaxShellSpeed</tabstop>
-  <tabstop>Extruder_EmaxSpeed</tabstop>
-  <tabstop>Extruder_EnableAntiooze</tabstop>
-  <tabstop>Extruder_AntioozeSpeed</tabstop>
-  <tabstop>Extruder_AntioozeDistance</tabstop>
-  <tabstop>Extruder_AntioozeAmount</tabstop>
-  <tabstop>Extruder_AntioozeZlift</tabstop>
-  <tabstop>Extruder_ZliftAlways</tabstop>
+  <tabstop>Hardware_Volume_X</tabstop>
+  <tabstop>Hardware_Volume_Y</tabstop>
+  <tabstop>Hardware_Volume_Z</tabstop>
+  <tabstop>Hardware_PrintMargin_X</tabstop>
+  <tabstop>Hardware_PrintMargin_Y</tabstop>
+  <tabstop>Slicing_MinShelltime</tabstop>
+  <tabstop>Hardware_SerialSpeed</tabstop>
+  <tabstop>Hardware_MinMoveSpeedZ</tabstop>
+  <tabstop>Hardware_PrintMargin_Z</tabstop>
+  <tabstop>Hardware_MaxMoveSpeedZ</tabstop>
+  <tabstop>Hardware_MaxMoveSpeedXY</tabstop>
+  <tabstop>Slicing_MaxOverhangSpeed</tabstop>
+  <tabstop>Hardware_SpeedAlways</tabstop>
+  <tabstop>Hardware_KeepLines</tabstop>
+  <tabstop>Hardware_MinMoveSpeedXY</tabstop>
+  <tabstop>Slicing_FanControl</tabstop>
+  <tabstop>Slicing_MinFanSpeed</tabstop>
+  <tabstop>Slicing_MaxFanSpeed</tabstop>
+  <tabstop>Slicing_EnableAcceleration</tabstop>
+  <tabstop>Slicing_GCodePostprocess</tabstop>
+  <tabstop>Extruder_DistanceToReachFullSpeed</tabstop>
+  <tabstop>Slicing_GCodePostprocessor</tabstop>
+  <tabstop>Slicing_SupportWiden</tabstop>
+  <tabstop>Slicing_SupportInfillDistance</tabstop>
   <tabstop>Slicing_FirstLayersSpeed</tabstop>
   <tabstop>Slicing_FirstLayersNum</tabstop>
   <tabstop>Slicing_FirstLayersInfillDist</tabstop>
   <tabstop>Slicing_FirstLayerHeight</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>Slicing_FarthestLayerStart</tabstop>
+  <tabstop>Display_PolygonColour</tabstop>
+  <tabstop>Display_WireframeColour</tabstop>
+  <tabstop>Display_NormalsColour</tabstop>
+  <tabstop>Display_EndpointsColour</tabstop>
+  <tabstop>Display_GCodeMoveColour</tabstop>
+  <tabstop>Display_GCodePrintingColour</tabstop>
  </tabstops>
  <resources/>
  <connections>

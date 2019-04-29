@@ -66,8 +66,8 @@ PrefsDlg::PrefsDlg(QWidget *parent) :
     ui_dialog->acceleration_group->hide();
 
     ui_dialog->extruder_listview->setModel(&stringListModel);
-    connect(ui_dialog->extruder_listview, SIGNAL(activated(QModelIndex)),
-            this, SLOT(listView(QModelIndex)));
+    connect(ui_dialog->extruder_listview, SIGNAL(clicked(QModelIndex)),
+            parent, SLOT(extruderSelected(QModelIndex)));
 
 //  builder->get_widget ("settings_overview", m_settings_overview);
 //  builder->get_widget ("settings_notebook", m_settings_tab);
@@ -83,6 +83,13 @@ PrefsDlg::~PrefsDlg()
 Ui::PreferencesDialog *PrefsDlg::getUi_dialog() const
 {
     return ui_dialog;
+}
+
+void PrefsDlg::selectExtruder(uint num)
+{
+    QListView *listview = ui_dialog->extruder_listview;
+    QModelIndex index = listview->model()->index(int(num),0);
+    listview->setCurrentIndex(index);
 }
 
 bool
@@ -154,8 +161,3 @@ PrefsDlg::show()
   QDialog::show();
 }
 
-
-void PrefsDlg::listView(QModelIndex index){
-    cerr << "LV " << index.row() << endl;
-    selected_extruder = index.row();
-}

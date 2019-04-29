@@ -35,8 +35,8 @@
 #include<QTextBlock>
 
 GCode::GCode()
+    : gl_List(-1)
 {
-  gl_List=-1;
   Min.set(99999999.0,99999999.0,99999999.0);
   Max.set(-99999999.0,-99999999.0,-99999999.0);
   Center.set(0,0,0);
@@ -521,7 +521,7 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
             Vector3d extruder_offset = Vector3d::ZERO;
             //Vector3d next_extruder_offset = Vector3d::ZERO;
         QString extrudername =
-          settings->numberedExtruder("Extruder", commands[i].extruder_no);
+          Settings::numbered("Extruder",commands[i].extruder_no);
 
         // TO BE FIXED:
         if (!debuggcodeoffset) { // show all together
@@ -673,8 +673,7 @@ void GCode::MakeText(QString &GcodeTxt,
     const uint numExt = settings->getNumExtruders();
     QString extLetters="";
     for (uint i = 0;i<numExt;i++)
-      extLetters+=settings->get_string(settings->numberedExtruder("Extruder",i)+
-                      "/GCLetter")[0];
+      extLetters+=settings->get_string(Settings::numbered("Extruder",i)+"/GCLetter")[0];
     for (uint i = 0; i < commands.size(); i++) {
       QChar E_letter;
       if (useTcommand) // use first extruder's code for all extuders

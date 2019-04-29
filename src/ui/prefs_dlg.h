@@ -46,9 +46,8 @@ public:
     //  void set_icon_from_file(const string path) {m_preferences_dlg->set_icon_from_file(path);}
     Ui::PreferencesDialog *getUi_dialog() const;
 
+    void selectExtruder(uint num);
     int selected_extruder;
-private slots:
-    void listView(QModelIndex);
 };
 
 #endif // SETTINGS_H
