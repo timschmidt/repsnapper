@@ -60,10 +60,9 @@ public:
     void DeleteSelected(const QModelIndexList *indexes);
     void get_all_shapes(vector<Shape*> &shapes) const;
     void get_all_shapes(vector<Shape*> &shapes, vector<Matrix4d> &transforms) const;
-    void get_selected_objects(const QModelIndexList *indexes,
-                              vector<ListObject*> &objects, vector<Shape*> &shapes) const;
     void get_selected_shapes(const QModelIndexList *indexes,
                              vector<Shape*> &shapes, vector<Matrix4d> &transforms) const;
+    void get_selected_objects(const QModelIndexList *indexes, vector<ListObject*> &objects) const;
 
     bool empty() const {return objects.size()==0; }
     Matrix4d getTransformationMatrix(int object, int shape=-1) const;

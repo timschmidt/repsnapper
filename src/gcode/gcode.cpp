@@ -34,13 +34,13 @@
 
 #include<QTextBlock>
 
-GCode::GCode()
-    : gl_List(-1)
+GCode::GCode() :
+    buffer(""),
+    gl_List(-1)
 {
   Min.set(99999999.0,99999999.0,99999999.0);
   Max.set(-99999999.0,-99999999.0,-99999999.0);
   Center.set(0,0,0);
-  QTextDocument buffer("");
 }
 
 GCode::~GCode()
@@ -402,8 +402,8 @@ void GCode::draw(Settings *settings, int layer,
           int eind = 0;
 
               if (n_changes > 0) {
-                sind = (uint)ceil(settings->get_double("Display/GCodeDrawStart")*(n_changes-1)/Max.z());
-            eind = (uint)ceil(settings->get_double("Display/GCodeDrawEnd") *(n_changes-1)/Max.z());
+                sind = (uint)ceil(settings->get_slider_fraction("Display/GCodeDrawStart")*(n_changes-1));
+                eind = (uint)ceil(settings->get_slider_fraction("Display/GCodeDrawEnd") *(n_changes-1));
               }
           if (sind>=eind) {
         eind = MIN(sind+1, n_changes-1);
@@ -423,8 +423,8 @@ void GCode::draw(Settings *settings, int layer,
     }
     else {
           if (n_cmds > 0) {
-        start = uint(settings->get_double("Display/GCodeDrawStart")*(n_cmds)/Max.z());
-        end =   uint(settings->get_double("Display/GCodeDrawEnd")  *(n_cmds)/Max.z());
+        start = uint(settings->get_slider_fraction("Display/GCodeDrawStart")*(n_cmds));
+        end =   uint(settings->get_slider_fraction("Display/GCodeDrawEnd")  *(n_cmds));
           }
     }
 

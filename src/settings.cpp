@@ -230,6 +230,16 @@ vector<float> Settings::get_array(const QString &name)
     endArray();
     return s;
 }
+vector<float> Settings::get_ranges(const QString &name)
+{
+    return get_array("Ranges/"+name);
+}
+
+double Settings::get_slider_fraction(const QString &name)
+{
+    vector<float> ranges = get_ranges(name);
+    return double(ranges[0]) + double(get_integer(name) / (ranges[1]-ranges[0]));
+}
 
 /*QStringList Settings::get_string_list(const QString &group, const QString &name)
 {
@@ -269,7 +279,10 @@ void Settings::set_array(const QString &name,
     }
     endArray();
 }
-
+void Settings::set_ranges(const QString &name, const vector<float> &values)
+{
+    set_array("Ranges/"+name, values);
+}
 
 QStringList Settings::get_keys(const QString &group)
 {
@@ -670,8 +683,9 @@ void Settings::connect_to_gui (QWidget *widget)
       }
       QAbstractSlider *range = dynamic_cast<QAbstractSlider *>(w); // sliders etc.
       if (range) {
-//          cerr << "connecing " << range->objectName().toStdString() << endl;
+//          cerr << "connecting " << range->objectName().toStdString() << endl;
           widget->connect(range, SIGNAL(valueChanged(int)), this, SLOT(get_int_from_gui(int)));
+          widget->connect(range, SIGNAL(rangeChanged(int,int)), this, SLOT(get_range_from_gui(int,int)));
           continue;
       }
       QComboBox *combo = dynamic_cast<QComboBox *>(w);
@@ -1089,11 +1103,29 @@ void Settings::get_double_from_gui(double value)
     QString group, key;
     QWidget *w = (QWidget*)sender();
 //    cerr << "get " << w->objectName().toStdString() << " double " << value <<endl;
-    group_key_split(w->objectName(),group,key);
     while (w) {
+        group_key_split(w->objectName(),group,key);
         QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
         if (dspin) {
           setValue(group, key, value);
+          break;
+        }
+    }
+}
+
+void Settings::get_range_from_gui(int min, int max)
+{
+    if (inhibit_callback) return;
+    QString group, key;
+    QWidget *w = (QWidget*)sender();
+    while(w) {
+        QAbstractSlider *slider = dynamic_cast<QAbstractSlider *>(w);
+        if (slider) {
+            QString key=w->objectName().replace("_","/");
+            vector<float> ranges = get_ranges(key);
+            ranges[0] = float(min);
+            ranges[1] = float(max);
+            set_ranges(key, ranges);
           break;
         }
     }

@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings = new Settings();
     m_settings->connect_to_gui(this);
     m_settings->connect_to_gui(prefs_dialog);
-//    connect(m_settings, SIGNAL(settings_changed()), this, SLOT(settingsChanged()));
+    connect(m_settings, SIGNAL(settings_changed()), this, SLOT(settingsChanged()));
 
     m_model = new Model(this);
     m_progress = new ViewProgress(ui_main->progressBarArea,
@@ -71,8 +71,8 @@ MainWindow::MainWindow(QWidget *parent) :
                                   ui_main->progressLabel);
     m_model->SetViewProgress(m_progress);
     m_model->statusbar = ui_main->statusBar;
-//    connect(m_model, SIGNAL(model_changed(const ObjectsList*)), this,
-//            SLOT(updatedModel(const ObjectsList*)));
+    connect(m_model, SIGNAL(model_changed(const ObjectsList*)), this,
+            SLOT(updatedModel(const ObjectsList*)));
     connect(m_model->gcode, SIGNAL(gcode_changed()), this, SLOT(gcodeChanged()));
 
     m_printer = new Printer(this);
@@ -128,7 +128,8 @@ void MainWindow::updatedModel(const ObjectsList *objList)
     m_settings->set_all_to_gui(prefs_dialog, "Hardware");
     m_settings->set_all_to_gui(prefs_dialog, "Slicing");
     m_settings->set_all_to_gui(prefs_dialog, "Extruder");
-    m_settings->setMaxLayers(this, m_model->layers.size());
+    m_settings->setMaxLayers(this, int(m_model->Max.z()
+                                 / m_settings->getLayerHeight()));
 }
 
 void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
@@ -361,7 +362,8 @@ void MainWindow::handleButtonClick()
         uint prev = m_settings->selectedExtruder;
         m_settings->selectedExtruder = 99;
         m_settings->SelectExtruder(prev, prefs_dialog);
-    } else if(name == ""){
+    } else if(name == "m_autoarrange"){
+        m_model->AutoArrange(nullptr);
     } else if(name == ""){
     } else if(name == ""){
     } else if(name == ""){
@@ -382,7 +384,10 @@ void MainWindow::gcodeChanged()
 
 void MainWindow::settingsChanged()
 {
-    cerr<< "settings changed"<< endl;
+//    cerr<< "settings changed"<< endl;
+    m_model->ClearPreview();
+    m_settings->setMaxLayers(this, int(m_model->Max.z()
+                                 / m_settings->getLayerHeight()));
     m_render->update();
 }
 

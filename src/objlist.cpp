@@ -70,12 +70,23 @@ void ObjectsList::get_all_shapes(vector<Shape *> &allshapes, vector<Matrix4d> &t
     }
 }
 
-void ObjectsList::get_selected_objects(const QModelIndexList *indexes, vector<ListObject *> &objects, vector<Shape *> &shapes) const
+void ObjectsList::get_selected_objects(const QModelIndexList *indexes,
+                                       vector<ListObject *> &selobjects) const
 {
-
+    selobjects.clear();
+    if (indexes){
+        for (QModelIndex index : *indexes){
+            uint i = uint(index.row());
+            selobjects.push_back(objects[i]);
+        }
+    } else {
+       selobjects = objects;
+    }
 }
 
-void ObjectsList::get_selected_shapes(const QModelIndexList *indexes, vector<Shape *> &shapes, vector<Matrix4d> &transforms) const
+void ObjectsList::get_selected_shapes(const QModelIndexList *indexes,
+                                      vector<Shape *> &shapes,
+                                      vector<Matrix4d> &transforms) const
 {
     if (indexes){
         vector<Shape*> allshapes;

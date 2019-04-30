@@ -40,7 +40,7 @@
 #include "render.h"
 
 Model::Model(MainWindow *main) :
-  m_previewLayer(NULL),
+  m_previewLayer(nullptr),
   //m_previewGCodeLayer(NULL),
   currentprintingline(0),
   Min(), Max(),
@@ -120,7 +120,12 @@ void Model::ClearLayers()
 
 void Model::ClearPreview()
 {
-  m_previewGCode->clear();
+    if (m_previewGCode) {
+        m_previewGCode->clear();
+    }
+    if (m_previewLayer){
+        m_previewLayer->Clear();
+    }
   m_previewGCode_z = -100000;
 }
 
@@ -363,7 +368,7 @@ void Model::ModelChanged()
     }
     setCurrentPrintingLine(0);
     gcode->emit gcode_changed();
- //   emit model_changed(&objectList);
+    emit model_changed(&objectList);
   }
 }
 
@@ -783,8 +788,7 @@ Vector3d Model::GetViewCenter()
 int Model::draw (const QModelIndexList *selected)
 {
     vector<int> selectedshapes;
-    if (selected)
-        if ((*selected).size()>0)
+    if (selected && selected->size()>0)
         for(int i = 0; i < selected->size(); i++) {
             selectedshapes.push_back((*selected)[i].row());
         }
@@ -960,8 +964,8 @@ int Model::draw (const QModelIndexList *selected)
     }
   int drawnlayer = -1;
   if(settings->get_boolean("Display/DisplayLayer")) {
-    drawnlayer = drawLayers(settings->get_double("Display/LayerValue"),
-                offset, false);
+       float z = Max.z() * settings->get_slider_fraction("Display/LayerValue");
+       drawnlayer = drawLayers(z, offset, false);
   }
   if(settings->get_boolean("Display/DisplayGCode") && gcode->size() == 0) {
     // preview gcode if not calculated yet
@@ -969,10 +973,10 @@ int Model::draw (const QModelIndexList *selected)
      ( layers.size() == 0 && gcode->commands.size() == 0 ) ) {
       Vector3d start(0,0,0);
       const double thickness = settings->get_double("Slicing/LayerThickness");
-      const double gcodedrawstart = settings->get_double("Display/GCodeDrawStart");
-      const double z = gcodedrawstart + thickness/2;
+      const double zFrac =settings->get_slider_fraction("Display/GCodeDrawStart");
       const int LayerCount = int(ceil(Max.z()/thickness))-1;
-      const uint LayerNo = uint(ceil(gcodedrawstart*(LayerCount-1)));
+      const uint LayerNo = uint(ceil(zFrac * (LayerCount-1)));
+      const double z = LayerNo * thickness;
       if (z != m_previewGCode_z) {
     //uint prevext = settings->selectedExtruder;
     Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
@@ -999,7 +1003,7 @@ int Model::draw (const QModelIndexList *selected)
 // else returns -1
 int Model::drawLayers(float height, const Vector3d &offset, bool calconly)
 {
-  if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
+ if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
 
   glDisable(GL_DEPTH_TEST);
   int drawn = -1;
@@ -1047,7 +1051,7 @@ int Model::drawLayers(float height, const Vector3d &offset, bool calconly)
     glTranslatef(-offset.x(), -offset.y(), -offset.z());
 
   const float lthickness = settings->get_double("Slicing/LayerThickness");
-  bool displayinfill = settings->get_boolean("Display/DisplayinFill");
+  bool displayinfill = settings->get_boolean("Display/DisplayInfill");
   bool drawrulers = settings->get_boolean("Display/DrawRulers");
   while(LayerNr < LayerCount)
     {

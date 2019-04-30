@@ -48,30 +48,6 @@ Render::Render (QWidget *widget)
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     setMouseTracking(true);
 
-/*
-  Glib::RefPtr<Gdk::GL::Config> glconfig;
-
-  glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGBA |
-                     Gdk::GL::MODE_DEPTH |
-                     Gdk::GL::MODE_ALPHA |
-                     Gdk::GL::MODE_STENCIL |
-                     Gdk::GL::MODE_DOUBLE);
-  if (!glconfig) { // try single buffered
-    std::cerr << "*** Cannot find the double-buffered visual."
-          << " Trying single-buffered visual.\n";
-    glconfig = Gdk::GL::Config::create(Gdk::GL::MODE_RGBA |
-                       Gdk::GL::MODE_DEPTH |
-                       Gdk::GL::MODE_ALPHA |
-                       Gdk::GL::MODE_STENCIL
-                       );
-  }
-
-  if (!glconfig) {
-    g_error (_("failed to init gl area\n"));
-  }
-
-  set_gl_capability(glconfig);
-*/
   setFocus();
 
   memset (&m_transform.M, 0, sizeof (m_transform.M));
@@ -191,7 +167,7 @@ void Render::draw_string(const Vector3d &pos, const string s)
 
 
 void Render::find_font(){
-/*   fontlistbase = glGenLists (128);
+  /* fontlistbase = glGenLists (128);
 
     //  Pango::FontDescription font_desc;
 
@@ -577,10 +553,6 @@ void Render::mousePressEvent(QMouseEvent *event)
     m_arcBall->click (m_downPoint.x(), m_downPoint.y(), &m_transform);
 
     mousePressed = event->button();
-
-    cerr << "mouse press " << event->x() << ","<< event->y() <<
-            " button " << event->button() << " " << m_downPoint << endl;
-
     if(mousePressed == Qt::LeftButton) {
         // on button 1 with shift/ctrl, if there is an object, select it (for dragging)
         if (mousePressedModifiers == Qt::ShiftModifier
@@ -618,51 +590,44 @@ void Render::mouseMoveEvent(QMouseEvent *event)
     if (mousePressed == Qt::LeftButton) {
         if (mousePressedModifiers == Qt::ShiftModifier) {//move object XY
             vector<Shape*> shapes;
-          vector<ListObject*>objects;
-          /*
-          if (!m_view->get_selected_objects(objects, shapes))
-        return true;
-          const Vector3d mouse_down_plat = mouse_on_plane(m_dragStart.x(), m_dragStart.y());
-          const Vector3d mousePlat  = mouse_on_plane(event->x, event->y);
-          const Vector2d mouse_xy   = Vector2d(mousePlat.x(), mousePlat.y());
-          const Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x(), mouse_down_plat.y());
-          const Vector3d movevec(deltamouse.x(), deltamouse.y(), 0.);
-          if (shapes.size()>0)
-        for (uint s=0; s<shapes.size(); s++) {
-          shapes[s]->transform3D.move(movevec);
-        }
-          else
-        for (uint o=0; o<objects.size(); o++) {
-          objects[o]->transform3D.move(movevec);
-        }
-          m_dragStart = dragp;
-        }
-        }
-        */
+            vector<ListObject*>objects;
+//            if (!get_model()->get_selected_shapes(objects))
+//                return true;
+            const Vector3d mouse_down_plat = mouse_on_plane(m_dragStart.x(), m_dragStart.y());
+            const Vector3d mousePlat  = mouse_on_plane(event->pos().x(), event->pos().y());
+            const Vector2d mouse_xy   = Vector2d(mousePlat.x(), mousePlat.y());
+            const Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x(), mouse_down_plat.y());
+            const Vector3d movevec(deltamouse.x(), deltamouse.y(), 0.);
+            if (shapes.size()>0)
+                for (uint s=0; s<shapes.size(); s++) {
+                    shapes[s]->transform3D.move(movevec);
+                }
+            else
+                for (uint o=0; o<objects.size(); o++) {
+                    objects[o]->transform3D.move(movevec);
+                }
+            m_dragStart = dragp;
         } else if (mousePressedModifiers == Qt::ControlModifier) { // move object Z wise
-            /*
-           const Vector3d delta3fz(0, 0, -delta.y()*drag_factor);
-          vector<Shape*> shapes;
-          vector<ListObject*>objects;
-          if (!m_view->get_selected_objects(objects, shapes))
-        return true;
-          if (shapes.size()>0)
-        for (uint s=0; s<shapes.size(); s++) {
-          Transform3D &transf = shapes[s]->transform3D;
-          double scale = transf.transform[3][3];
-          Vector3d movevec = delta3fz*scale;
-          transf.move(movevec);
-        }
-          else
-        for (uint o=0; o<objects.size(); o++) {
-          Transform3D &transf = objects[o]->transform3D;
-          const double scale = transf.transform[3][3];
-          const Vector3d movevec = delta3fz*scale;
-          transf.move(movevec);
-        }
-          m_dragStart = dragp;
-        }
-       */
+            const Vector3d delta3fz(0, 0, -delta.y()*drag_factor);
+            vector<Shape*> shapes;
+            vector<ListObject*>objects;
+//            if (!m_view->get_selected_objects(objects, shapes))
+//                return true;
+            if (shapes.size()>0)
+                for (uint s=0; s<shapes.size(); s++) {
+                    Transform3D &transf = shapes[s]->transform3D;
+                    double scale = transf.transform[3][3];
+                    Vector3d movevec = delta3fz*scale;
+                    transf.move(movevec);
+                }
+            else
+                for (uint o=0; o<objects.size(); o++) {
+                    Transform3D &transf = objects[o]->transform3D;
+                    const double scale = transf.transform[3][3];
+                    const Vector3d movevec = delta3fz*scale;
+                    transf.move(movevec);
+                }
+            m_dragStart = dragp;
         } else if (mousePressedModifiers == Qt::NoModifier) { // rotate
 //            Vector3d axis(delta.y(), delta.x(), 0);
 //            cerr << "rotate "<< delta << " " << axis << endl;
@@ -674,16 +639,14 @@ void Render::mouseMoveEvent(QMouseEvent *event)
         if (mousePressedModifiers == Qt::ShiftModifier) { // scale shape
             vector<Shape*> shapes;
             vector<ListObject*>objects;
-            /*
-            if (!m_main->get_selected_objects(objects, shapes))
-                return;
+//            if (!m_main->get_selected_objects(objects, shapes))
+//                return;
             if (shapes.size()>0) {
                 for (uint s=0; s<shapes.size(); s++) {
                     shapes[s]->Scale(shapes[s]->getScaleFactor()/factor, false);
                 }
-                m_view->update_scale_value();
+//                m_view->update_scale_value();
             }
-            */
         } else { // zoom view
             m_zoom *= float(factor);
 //            cerr << "zoom "<< m_zoom << endl;
@@ -695,13 +658,12 @@ void Render::mouseMoveEvent(QMouseEvent *event)
             vector<Shape*> shapes;
             vector<ListObject*>objects;
             Vector3d axis;
-/*            if (event->state & GDK_CONTROL_MASK)  // rotate  z wise
+            if (mousePressedModifiers == Qt::ControlModifier)// rotate  z wise
                 axis = Vector3d(0,0,delta.x());
             else
                 axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
-            m_view->rotate_selection(axis, delta.length()/100.);
+            //m_view->rotate_selection(axis, delta.length()/100.);
             m_dragStart = dragp;
-            */
         } else {  // move view XY  / pan
             moveArcballTrans(m_transform, delta3f);
             m_dragStart = dragp;
@@ -743,7 +705,8 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
                 // click on no object -> clear the selection:
                 else if (event->button() == Qt::LeftButton)  {
                     //if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
-                    m_selection->clear();
+                    if (m_selection)
+                        m_selection->clear();
                 }
             }
         }

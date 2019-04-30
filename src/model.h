@@ -41,7 +41,7 @@ class GCode;
 
 class Model : public QObject
 {
-//    Q_OBJECT
+    Q_OBJECT
 
         ViewProgress *m_progress;
 
@@ -148,6 +148,8 @@ public:
 
         QTextStream errlog, echolog;
 
+        int getLayerNo(float height) const;
+
         int draw(const QModelIndexList *selected);
         int drawLayers(float height, const Vector3d &offset, bool calconly = false);
         void setMeasuresPoint(const Vector3d &point);
@@ -202,8 +204,8 @@ public:
 //        sigc::signal< void > signal_zoom() { return m_signal_zoom; }
 //        sigc::signal< void > m_signal_gcode_changed;
 
-//signals:
-//        void model_changed(const ObjectsList * objlist);
+signals:
+        void model_changed(const ObjectsList * objlist);
 };
 
 #endif // MODEL_H

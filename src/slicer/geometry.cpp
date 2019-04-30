@@ -1272,8 +1272,8 @@ bool rasterpolys(const vector<Poly> &polys,
          Cairo::RefPtr<Cairo::Context> &context)
 {
   Vector2d diag = max - min;
-  int width  = (int)ceil(diag.x()/resolution);
-  int height = (int)ceil(diag.y()/resolution);
+  int width  = int(ceil(diag.x()/resolution));
+  int height = int(ceil(diag.y()/resolution));
   if (height <= 0 || width <= 0)
     return false;
   surface = Cairo::ImageSurface::create(Cairo::FORMAT_A8, width, height);
@@ -1373,8 +1373,8 @@ int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
   const unsigned char * data = surface->get_data();
   const Vector2d diag = max - min;
   const Vector2d relp = p - min;
-  int ipx = (int)(relp.x() / diag.x() * (double)w);
-  int ipy = (int)(relp.y() / diag.y() * (double)h);
+  int ipx = int(relp.x() / diag.x() * w);
+  int ipy = int(relp.y() / diag.y() * h);
   if (ipx < 0) ipx = 0;
   if (ipy < 0) ipy = 0;
   if (ipx >= w) ipx = w-1;

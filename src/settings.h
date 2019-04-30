@@ -66,6 +66,8 @@ class Settings : public QSettings {
   QString  get_string  (const QString &name);
   Vector4f get_Vector4f  (const QString &name);
   vector<float> get_array(const QString &name);
+  vector<float> get_ranges(const QString &name);
+  double   get_slider_fraction(const QString &name);
 
   using QSettings::value;
   QStringList get_keys(const QString &group);
@@ -78,6 +80,7 @@ class Settings : public QSettings {
   void set_array  (const QString &key, const QColor &qcolor);
   void set_array  (const QString &name, const Vector4f &value);
   void set_array  (const QString &name, const vector<float> &values);
+  void set_ranges(const QString &name, const vector<float> &values);
   void set_all_to_gui (QWidget *widget, const string filter="");
 
   vmml::vec3d getPrintVolume();
@@ -96,6 +99,9 @@ class Settings : public QSettings {
   void SelectExtruder(uint num, QWidget *widget = nullptr);
   uint selectedExtruder;
   int getNumExtruders() const;
+
+  double getLayerHeight() { return get_double("Slicing/LayerThickness");}
+
 
 
   /* class GCodeImpl; */
@@ -185,6 +191,7 @@ public slots:
   void get_from_gui();
   void get_int_from_gui(int value);
   void get_double_from_gui(double value);
+  void get_range_from_gui(int min, int max);
 
 };
 

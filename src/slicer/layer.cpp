@@ -72,6 +72,7 @@ void Layer::Clear()
   clearpolys(skinFullFillPolygons);
   hullPolygon.clear();
   clearpolys(skirtPolygons);
+  Z=-999999;
 }
 
 // void Layer::setBBox(Vector2d min, Vector2d max)
@@ -309,11 +310,15 @@ void Layer::CalcInfill (Settings &settings)
   thinInfill = new Infill(this, 1.);
   thinInfill->setName("thin");
 
-  double rot = (settings.get_double("Slicing/InfillRotation")
-        + double(LayerNo) * settings.get_double("Slicing/InfillRotationPrLayer"))/180.0*M_PI;
+  InfillType infillType = InfillType(settings.get_integer("Slicing/NormalFilltype"));
+  double rotPerLayer = (infillType == InfillType::HexInfill)
+          ? M_PI/2
+          : settings.get_double("Slicing/InfillRotationPrLayer")/180.*M_PI;
+  double rot = (settings.get_double("Slicing/InfillRotation")/180.*M_PI
+                + LayerNo * rotPerLayer);
   if (!shellOnly)
-    normalInfill->addPolys(Z, fillPolygons, InfillType(settings.get_integer("Slicing/NormalFilltype")),
-               normalInfilldist, fullInfillDistance, rot);
+    normalInfill->addPolys(Z, fillPolygons, infillType,
+                           normalInfilldist, fullInfillDistance, rot);
 
   if (settings.get_boolean("Slicing/FillSkirt")) {
     vector<Poly> skirtFill;
@@ -1028,7 +1033,7 @@ void Layer::Draw(Settings &settings)
     draw_polys_surface(fullFillPolygons,  Min, Max, Z, thickness/2., GREEN, 0.5);
     draw_polys_surface(decorPolygons,  Min, Max, Z, thickness/2., GREY, 0.2);
   }
-  if(settings.get_boolean("Display/DisplayinFill"))
+  if(settings.get_boolean("Display/DisplayInfill"))
     {
       if (filledpolygons)
     draw_polys_surface(fillPolygons,  Min, Max, Z, thickness/2., GREEN2, 0.25);
