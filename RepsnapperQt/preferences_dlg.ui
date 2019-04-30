@@ -17,14 +17,14 @@
    <iconset>
     <normaloff>../src/repsnapper.svg</normaloff>../src/repsnapper.svg</iconset>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
+  <layout class="QGridLayout" name="gridLayout_14">
+   <item row="0" column="0">
     <widget class="QTabWidget" name="tabWidget">
      <property name="enabled">
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>6</number>
      </property>
      <widget class="QWidget" name="device_tab">
       <attribute name="title">
@@ -832,13 +832,6 @@
          <item row="5" column="1">
           <widget class="QComboBox" name="Slicing_DecorFilltype"/>
          </item>
-         <item row="0" column="3">
-          <widget class="QSpinBox" name="Slicing_InfillRotation">
-           <property name="maximum">
-            <number>359</number>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="4">
           <widget class="QLabel" name="label_23">
            <property name="text">
@@ -857,13 +850,6 @@
           <widget class="QLabel" name="label_26">
            <property name="text">
             <string>Extr. Factor:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_17">
-           <property name="text">
-            <string>Rotation/Layer (°):</string>
            </property>
           </widget>
          </item>
@@ -895,25 +881,11 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="2" alignment="Qt::AlignRight">
-          <widget class="QLabel" name="label_24">
-           <property name="text">
-            <string>Extr. Factor:</string>
-           </property>
-          </widget>
-         </item>
          <item row="3" column="1">
           <widget class="QComboBox" name="Slicing_SupportFilltype"/>
          </item>
          <item row="2" column="1">
           <widget class="QComboBox" name="Slicing_FullFilltype"/>
-         </item>
-         <item row="0" column="1">
-          <widget class="QSpinBox" name="Slicing_InfillRotationPrLayer">
-           <property name="maximum">
-            <number>369</number>
-           </property>
-          </widget>
          </item>
          <item row="1" column="1">
           <widget class="QComboBox" name="Slicing_NormalFilltype"/>
@@ -943,13 +915,6 @@
           <widget class="QDoubleSpinBox" name="Slicing_InfillOverlap">
            <property name="singleStep">
             <double>0.100000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLabel" name="label_22">
-           <property name="text">
-            <string>Base Rot (°):</string>
            </property>
           </widget>
          </item>
@@ -1080,8 +1045,46 @@
            </property>
           </widget>
          </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="Slicing_InfillRotation">
+           <property name="maximum">
+            <number>359</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2" alignment="Qt::AlignRight">
+          <widget class="QLabel" name="label_24">
+           <property name="text">
+            <string>Extr. Factor:</string>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="3">
           <widget class="QDoubleSpinBox" name="Slicing_NormalFillExtrusion"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_22">
+           <property name="text">
+            <string>Base Rot (°):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="label_17">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only for Parallel Infill&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>Rotation/Layer (°):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QSpinBox" name="Slicing_InfillRotationPrLayer">
+           <property name="maximum">
+            <number>369</number>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>
@@ -1512,97 +1515,65 @@
       <attribute name="title">
        <string>Display</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_9">
-       <item>
+      <layout class="QFormLayout" name="formLayout_2">
+       <item row="0" column="0">
         <widget class="QGroupBox" name="groupBox_6">
          <property name="title">
           <string>STL Rendering Colours</string>
          </property>
-         <widget class="ColorButton" name="Display_PolygonColour">
-          <property name="geometry">
-           <rect>
-            <x>50</x>
-            <y>50</y>
-            <width>83</width>
-            <height>25</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Polygons</string>
-          </property>
-         </widget>
-         <widget class="ColorButton" name="Display_WireframeColour">
-          <property name="geometry">
-           <rect>
-            <x>170</x>
-            <y>50</y>
-            <width>83</width>
-            <height>25</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Wireframe</string>
-          </property>
-         </widget>
-         <widget class="ColorButton" name="Display_NormalsColour">
-          <property name="geometry">
-           <rect>
-            <x>270</x>
-            <y>50</y>
-            <width>83</width>
-            <height>25</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Normals</string>
-          </property>
-         </widget>
-         <widget class="ColorButton" name="Display_EndpointsColour">
-          <property name="geometry">
-           <rect>
-            <x>110</x>
-            <y>100</y>
-            <width>83</width>
-            <height>25</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Endpoints</string>
-          </property>
-         </widget>
+         <layout class="QGridLayout" name="gridLayout_15">
+          <item row="0" column="0">
+           <widget class="ColorButton" name="Display_PolygonColour">
+            <property name="text">
+             <string>Polygons</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="ColorButton" name="Display_WireframeColour">
+            <property name="text">
+             <string>Wireframe</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="ColorButton" name="Display_EndpointsColour">
+            <property name="text">
+             <string>Endpoints</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="ColorButton" name="Display_NormalsColour">
+            <property name="text">
+             <string>Normals</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
-       <item>
+       <item row="1" column="0">
         <widget class="QGroupBox" name="groupBox_8">
          <property name="title">
           <string>GCode Rendering</string>
          </property>
-         <widget class="ColorButton" name="Display_GCodeMoveColour">
-          <property name="geometry">
-           <rect>
-            <x>50</x>
-            <y>50</y>
-            <width>111</width>
-            <height>25</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Move Head</string>
-          </property>
-         </widget>
-         <widget class="ColorButton" name="Display_GCodePrintingColour">
-          <property name="geometry">
-           <rect>
-            <x>250</x>
-            <y>50</y>
-            <width>191</width>
-            <height>25</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Preview/Live Extrude</string>
-          </property>
-         </widget>
+         <layout class="QGridLayout" name="gridLayout_16">
+          <item row="0" column="0">
+           <widget class="ColorButton" name="Display_GCodeMoveColour">
+            <property name="text">
+             <string>Move Head</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="ColorButton" name="Display_GCodePrintingColour">
+            <property name="text">
+             <string>Preview/Live Extrude</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </widget>
        </item>
       </layout>
@@ -1611,10 +1582,264 @@
       <attribute name="title">
        <string>Debug</string>
       </attribute>
+      <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0">
+        <widget class="QGroupBox" name="groupBox_9">
+         <property name="title">
+          <string>Debugging</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="Display_DisplayDebug">
+            <property name="text">
+             <string>Enable Debug</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="Misc_SpeedsAreMMperSec">
+            <property name="text">
+             <string>Speeds are in mm/sec</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QGroupBox" name="groupBox_13">
+         <property name="title">
+          <string>Layer</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_10">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="horizontalSpacing">
+           <number>2</number>
+          </property>
+          <property name="verticalSpacing">
+           <number>0</number>
+          </property>
+          <item row="2" column="2">
+           <widget class="QCheckBox" name="Display_RandomizedLines">
+            <property name="text">
+             <string>Randomize Lines</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="Display_DrawCPOutlineNumbers">
+            <property name="text">
+             <string>Polygon Numbers</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QCheckBox" name="Display_DrawCPLineNumbers">
+            <property name="text">
+             <string>Line Numbers</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="Display_ShowLayerOverhang">
+            <property name="text">
+             <string>Show Layer Overhang Areas</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QCheckBox" name="Display_DrawCPVertexNumbers">
+            <property name="text">
+             <string>Vertex Numbers</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="Display_DisplayFilledAreas">
+            <property name="text">
+             <string>Fill Layer Areas</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QGroupBox" name="groupBox_14">
+         <property name="title">
+          <string>Infill</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="Display_DebugInfill">
+            <property name="text">
+             <string>Debug Infill</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" rowspan="2">
+           <widget class="QCheckBox" name="Display_DrawLineNumbers">
+            <property name="text">
+             <string>Line Numbers</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" rowspan="2">
+           <widget class="QCheckBox" name="Display_DrawOutlineNumbers">
+            <property name="text">
+             <string>Polygon Numbers</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QCheckBox" name="Display_DrawVertexNumbers">
+            <property name="text">
+             <string>Vertex Numbers</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QGroupBox" name="groupBox_15">
+         <property name="title">
+          <string>GCode</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_12">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <item row="0" column="3">
+           <widget class="QCheckBox" name="Display_DebugGCodeOffset">
+            <property name="text">
+             <string>Show GCode with Extruder Offset</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="Display_DisplayDebugArcs">
+            <property name="text">
+             <string>Debug Arcs</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="Display_DebugGCodeExtruders">
+            <property name="text">
+             <string>Show Extruder Number on GCode</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QCheckBox" name="Display_DebugGCodeOnlyZChange">
+            <property name="text">
+             <string>Show only GCode with Z Offset</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QGroupBox" name="groupBox_16">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="title">
+          <string>Comms</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_11">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="Display_CommsDebug">
+            <property name="text">
+             <string>Serial Comms Debug</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QGroupBox" name="groupBox_17">
+         <property name="title">
+          <string>Output</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <item>
+           <widget class="QCheckBox" name="Display_TerminalProgress">
+            <property name="text">
+             <string>Ouput Progess to Terminal</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
-   <item>
+   <item row="1" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -1674,7 +1899,6 @@
   <tabstop>Slicing_SolidThickness</tabstop>
   <tabstop>Slicing_InfillOverlap</tabstop>
   <tabstop>Slicing_NormalFilltype</tabstop>
-  <tabstop>Slicing_NormalFillExtrusion</tabstop>
   <tabstop>Slicing_FullFilltype</tabstop>
   <tabstop>Slicing_SingleSkirt</tabstop>
   <tabstop>Slicing_FillSkirt</tabstop>
@@ -1685,8 +1909,6 @@
   <tabstop>Slicing_RoundCorners</tabstop>
   <tabstop>Slicing_CornerRadius</tabstop>
   <tabstop>Slicing_MoveNearest</tabstop>
-  <tabstop>Slicing_InfillRotationPrLayer</tabstop>
-  <tabstop>Slicing_InfillRotation</tabstop>
   <tabstop>Slicing_Skirt</tabstop>
   <tabstop>Slicing_ShellOffset</tabstop>
   <tabstop>Slicing_SkirtDistance</tabstop>
@@ -1720,10 +1942,8 @@
   <tabstop>Slicing_FirstLayersNum</tabstop>
   <tabstop>Slicing_FirstLayersInfillDist</tabstop>
   <tabstop>Slicing_FirstLayerHeight</tabstop>
-  <tabstop>tabWidget</tabstop>
   <tabstop>Slicing_FarthestLayerStart</tabstop>
   <tabstop>Display_PolygonColour</tabstop>
-  <tabstop>Display_WireframeColour</tabstop>
   <tabstop>Display_NormalsColour</tabstop>
   <tabstop>Display_EndpointsColour</tabstop>
   <tabstop>Display_GCodeMoveColour</tabstop>

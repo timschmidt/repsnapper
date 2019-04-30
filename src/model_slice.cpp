@@ -1012,7 +1012,7 @@ void Model::SliceToSVG(QFile *file, bool single_layer)
         }
     m_progress->stop (_("Done"));
   }
-  string directory_path = finfo.dir().absolutePath().toUtf8().constData();
+  QString directory_path = finfo.dir().absolutePath();
   settings->STLPath = directory_path;
   is_calculating = false;
 }

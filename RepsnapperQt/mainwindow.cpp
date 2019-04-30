@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings = new Settings();
     m_settings->connect_to_gui(this);
     m_settings->connect_to_gui(prefs_dialog);
-    connect(m_settings, SIGNAL(settings_changed()), this, SLOT(settingsChanged()));
+    connect(m_settings, SIGNAL(settings_changed(const QString&)), this, SLOT(settingsChanged(const QString&)));
 
     m_model = new Model(this);
     m_progress = new ViewProgress(ui_main->progressBarArea,
@@ -340,20 +340,31 @@ void MainWindow::handleButtonClick()
     } else if(name == "cancel_progress"){
     } else if(name == "m_load_stl"){
         on_actionOpen_triggered();
+    } else if(name == "g_load_gcode"){
+        QString fileName = QFileDialog::getOpenFileName(this,tr("Open GCode"),
+                                                        m_settings->GCodePath,
+                                                        tr("GCode (*.gcode);;All Files (*)"));
+        openFile(fileName);
+    } else if(name == "g_save_gcode"){
+        QString fileName = QFileDialog::getSaveFileName(this,tr("Save GCode"),
+                                                        m_settings->GCodePath,
+                                                        tr("GCode (*.gcode);;All Files (*)"));
+        if (!fileName.isEmpty())
+            m_model->WriteGCode (new QFile(fileName));
     } else if(name == "m_gcode"){
         generateGCode();
+    } else if(name == "m_clear_gcode"){
+        m_model->ClearGCode();
+        m_model->ClearLayers();
     } else if(name.endsWith("Colour")){
         ColorButton *cbutton = dynamic_cast<ColorButton*>(button);
         QColor current = cbutton->get_color();
-        QColor color = QColorDialog::getColor(current,button,"Pick Colour");
+        QColor color = QColorDialog::getColor(current,button,"Pick Colour",
+                                              QColorDialog::ShowAlphaChannel);
         if (color.isValid()) {
             cbutton->set_color(color);
             m_settings->set_array(name, color);
         }
-    } else if(name == "g_load_gcode"){
-        QString fileName = QFileDialog::getOpenFileName(this,tr("Open GCode"),"",
-                                                        tr("GCode (*.gcode);;All Files (*)"));
-        openFile(fileName);
     } else if(name == "copy_extruder"){
         int newEx = m_settings->CopyExtruder();
         m_settings->SelectExtruder(newEx, prefs_dialog);
@@ -364,6 +375,9 @@ void MainWindow::handleButtonClick()
         m_settings->SelectExtruder(prev, prefs_dialog);
     } else if(name == "m_autoarrange"){
         m_model->AutoArrange(nullptr);
+    } else if(name == ""){
+    } else if(name == ""){
+    } else if(name == ""){
     } else if(name == ""){
     } else if(name == ""){
     } else if(name == ""){
@@ -382,9 +396,9 @@ void MainWindow::gcodeChanged()
     m_render->update();
 }
 
-void MainWindow::settingsChanged()
+void MainWindow::settingsChanged(const QString &group)
 {
-//    cerr<< "settings changed"<< endl;
+    cerr << group.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();
     m_settings->setMaxLayers(this, int(m_model->Max.z()
                                  / m_settings->getLayerHeight()));

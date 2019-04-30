@@ -311,9 +311,10 @@ void Layer::CalcInfill (Settings &settings)
   thinInfill->setName("thin");
 
   InfillType infillType = InfillType(settings.get_integer("Slicing/NormalFilltype"));
-  double rotPerLayer = (infillType == InfillType::HexInfill)
-          ? M_PI/2
-          : settings.get_double("Slicing/InfillRotationPrLayer")/180.*M_PI;
+
+  double rotPerLayer = (infillType == InfillType::ParallelInfill)
+          ? settings.get_double("Slicing/InfillRotationPrLayer")/180.*M_PI
+          : 0.;
   double rot = (settings.get_double("Slicing/InfillRotation")/180.*M_PI
                 + LayerNo * rotPerLayer);
   if (!shellOnly)
@@ -1037,7 +1038,7 @@ void Layer::Draw(Settings &settings)
     {
       if (filledpolygons)
     draw_polys_surface(fillPolygons,  Min, Max, Z, thickness/2., GREEN2, 0.25);
-      bool DebugInfill = settings.get_boolean("Display/DisplayDebuginFill");
+      bool DebugInfill = settings.get_boolean("Display/DisplayDebugInfill");
       if (normalInfill)
     draw_polys(normalInfill->infillpolys, GL_LINE_LOOP, 1, 3,
            (normalInfill->cached?BLUEGREEN:GREEN), 1, randomized);

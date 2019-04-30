@@ -72,7 +72,7 @@ public:
                 ViewProgress * progress);
 
   //bool append_text (const std::string &line);
-  std::string get_text() const;
+  QString get_text() const;
   void clear();
 
   std::vector<Command> commands;

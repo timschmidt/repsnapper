@@ -122,10 +122,10 @@ class Settings : public QSettings {
 
 
   // Paths we loaded / saved things to last time
-  std::string STLPath;
-  std::string RFOPath;
-  std::string GCodePath;
-  std::string SettingsPath;
+  QString STLPath;
+  QString RFOPath;
+  QString GCodePath;
+  QString SettingsPath;
 
 
  private:
@@ -186,7 +186,7 @@ public:
 
 
 signals:
-  void settings_changed();
+  void settings_changed(const QString &group);
 public slots:
   void get_from_gui();
   void get_int_from_gui(int value);

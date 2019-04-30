@@ -943,7 +943,7 @@ void Settings::setValue(const QString &group, const QString &key, const QVariant
     QSettings::setValue(key, value);
     endGroup();
     if (!inhibit_callback)
-        emit settings_changed();
+        emit settings_changed(group);
 }
 
 void Settings::remove(const QString &group, const QString &key)
@@ -1060,6 +1060,7 @@ void Settings::get_from_gui () // no params
                 }
             }
         }
+        emit settings_changed("Extruder");
 //    m_signal_visual_settings_changed.emit();
     }
 }

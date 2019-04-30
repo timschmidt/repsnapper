@@ -76,7 +76,7 @@ private slots:
     void on_actionSettings_triggered();
     void handleButtonClick();
     void gcodeChanged();
-    void settingsChanged();
+    void settingsChanged(const QString &group);
     void extruderSelected(const QModelIndex &index);
     void updatedModel(const ObjectsList *objList = nullptr);
 

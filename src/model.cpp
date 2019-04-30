@@ -168,11 +168,12 @@ void Model::GlDrawGCode(double layerz)
 
 void Model::WriteGCode(QFile *file)
 {
-  Glib::ustring contents = gcode->get_text();
+  QString contents = gcode->get_text();
   QTextStream fstream(file);
-  fstream << QString::fromStdString(contents) << endl;
+  file->open(QIODevice::WriteOnly);
+  fstream << contents << endl;
   file->close();
-  settings->GCodePath =  QFileInfo(*file).dir().path().toStdString();
+  settings->GCodePath =  QFileInfo(*file).dir().absolutePath();
 }
 
 void Model::ReadSVG(QFile *file)
@@ -286,7 +287,7 @@ void Model::Read(QFile *file)
     QFileInfo finfo(*file);
     QString extn = finfo.suffix().toLower();
 //    cerr << "extension " << extn.toUtf8().constData()<<  endl;
-    string directory_path = finfo.absoluteDir().path().toUtf8().constData();
+    QString directory_path = finfo.absoluteDir().path();
     if (extn == "conf")
       {
     LoadConfig (finfo.absoluteFilePath());

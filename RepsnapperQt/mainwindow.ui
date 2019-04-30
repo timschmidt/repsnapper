@@ -952,6 +952,13 @@
                       </property>
                      </widget>
                     </item>
+                    <item>
+                     <widget class="QPushButton" name="m_clear_gcode">
+                      <property name="text">
+                       <string>Delete GCode</string>
+                      </property>
+                     </widget>
+                    </item>
                    </layout>
                   </widget>
                  </item>
@@ -1130,6 +1137,9 @@
        <property name="spacing">
         <number>2</number>
        </property>
+       <property name="sizeConstraint">
+        <enum>QLayout::SetMinimumSize</enum>
+       </property>
        <property name="leftMargin">
         <number>0</number>
        </property>
@@ -1149,6 +1159,12 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="sizeIncrement">
+          <size>
+           <width>200</width>
+           <height>0</height>
+          </size>
          </property>
          <property name="text">
           <string>Progress:</string>

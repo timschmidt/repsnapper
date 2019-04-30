@@ -47,6 +47,7 @@ class Infill
     double angle;
     double distance;
     Vector2d Min,Max;
+    uint layerNo;
     ClipperLib::Paths cpolys;
   } ;
 

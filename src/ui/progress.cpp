@@ -27,6 +27,7 @@ ViewProgress::ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label) :
 {
   m_bar_max = 0.0;
   m_box->hide();
+  m_label->hide();
   // progress->m_signal_progress_start.connect  (sigc::mem_fun(*this, &ViewProgress::start));
   // progress->m_signal_progress_update.connect (sigc::mem_fun(*this, &ViewProgress::update));
   // progress->m_signal_progress_stop.connect   (sigc::mem_fun(*this, &ViewProgress::stop));
@@ -109,21 +110,16 @@ bool ViewProgress::update (const double value, bool take_priority)
   m_bar->setValue(value);
   QString s;
   QTextStream o(&s);
-  o << int(value) <<" / "<< int(m_bar_max);
+  const double used = start_time.elapsed()/1000; // seconds
+  const double total = used * m_bar_max  / value;
+  const long left = (long)(total-used);
+  o << label<< " (" << timeleft_str(left) << ") : "
+    << int(value) <<"/"<< int(m_bar_max);
   m_bar->setFormat(s);
   if (to_terminal) {
     int perc = (int(100.*m_bar->value()/m_bar->maximum()));
     QTextStream(stderr) << m_label->text() << " " << o.string() << " -- "
                         << perc << "%              \r";
-  }
-
-  if (value > 0) {
-    const double used = start_time.elapsed()/1000; // seconds
-    const double total = used * m_bar_max  / value;
-    const long left = (long)(total-used);
-    s.clear();
-    o << label <<" (" << timeleft_str(left) << ")";
-    m_label->setText(s);
   }
 
 //  if (take_priority)
@@ -139,6 +135,7 @@ void ViewProgress::set_label (const QString label)
   this->label = label;
   if (old != label)
     m_label->setText (label);
+  m_label->adjustSize();
 //  Gtk::Main::iteration(false);
 }
 

@@ -749,9 +749,9 @@ void GCode::MakeText(QString &GcodeTxt,
 // }
 
 
-std::string GCode::get_text () const
+QString GCode::get_text () const
 {
-  return buffer.toRawText().toUtf8().constData();
+  return buffer.toPlainText();
 }
 
 
