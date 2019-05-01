@@ -778,6 +778,20 @@ int Settings::getNumExtruders() const
   return num;
 }
 
+vector<ExtruderSettings> Settings::getExtruderSettings()
+{
+    vector<ExtruderSettings> settings;
+    for (int i=0; i< getNumExtruders(); i++){
+        ExtruderSettings extruder;
+        extruder.name = numbered("Extruder",i);
+        extruder.offset = get_extruder_offset(i);
+        extruder.maxLineSpeed = get_double(extruder.name+"/MaxLineSpeed");
+        extruder.displayColor = get_Vector4f(extruder.name+"/DisplayColour");
+        settings.push_back(extruder);
+    }
+    return settings;
+}
+
 std::vector<QChar> Settings::get_extruder_letters()
 {
   uint num = getNumExtruders();
@@ -956,14 +970,23 @@ void Settings::remove(const QString &group, const QString &key)
 void Settings::setMaxLayers(QWidget *parent, const int numLayers)
 {
     QSlider* slider = parent->findChild<QSlider*>("Display_LayerValue");
-    if (slider)
+    if (slider) {
+        float fraction = (1.f*slider->value())/slider->maximum();
         slider->setMaximum(numLayers);
+        slider->setValue(int(fraction * numLayers + 0.5));
+    }
     slider = parent->findChild<QSlider*>("Display_GCodeDrawStart");
-    if (slider)
+    if (slider) {
+        float fraction = 1.f*slider->value()/slider->maximum();
         slider->setMaximum(numLayers);
+        slider->setValue(int(fraction * numLayers + 0.5));
+    }
     slider = parent->findChild<QSlider*>("Display_GCodeDrawEnd");
-    if (slider)
+    if (slider) {
+        float fraction = 1.f*slider->value()/slider->maximum();
         slider->setMaximum(numLayers);
+        slider->setValue(int(fraction * numLayers + 0.5));
+    }
 }
 
 

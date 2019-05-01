@@ -28,6 +28,7 @@ ViewProgress::ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label) :
   m_bar_max = 0.0;
   m_box->hide();
   m_label->hide();
+  time = QTime();
   // progress->m_signal_progress_start.connect  (sigc::mem_fun(*this, &ViewProgress::start));
   // progress->m_signal_progress_update.connect (sigc::mem_fun(*this, &ViewProgress::update));
   // progress->m_signal_progress_stop.connect   (sigc::mem_fun(*this, &ViewProgress::stop));
@@ -44,8 +45,7 @@ void ViewProgress::start (const char *label, double max)
   m_bar_cur = 0.0;
   m_bar->setMaximum(max);
   m_bar->setValue(0);
-  start_time = QTime();
-  start_time.start();
+  time.start();
 //  Gtk::Main::iteration(false);
 }
 bool ViewProgress::restart (const char *label, double max)
@@ -53,7 +53,7 @@ bool ViewProgress::restart (const char *label, double max)
   if (!do_continue) return false;
   m_box->show();
   if (to_terminal) {
-   const int time_used =  start_time.elapsed()/1000;
+   const int time_used =  time.elapsed()/1000;
    QTextStream(stderr) << m_label->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   m_bar_max = max;
@@ -62,7 +62,7 @@ bool ViewProgress::restart (const char *label, double max)
   m_bar_cur = 0.0;
   m_bar->setMaximum(max);
   m_bar->setValue(0);
-  start_time.restart();
+  time.restart();
   //g_main_context_iteration(NULL,false);
 //  Gtk::Main::iteration(false);
   return true;
@@ -71,7 +71,7 @@ bool ViewProgress::restart (const char *label, double max)
 void ViewProgress::stop (const char *label)
 {
   if (to_terminal) {
-    const int time_used = start_time.elapsed()/1000; // seconds
+    const int time_used = time.elapsed()/1000; // seconds
     QTextStream(stderr)  << m_label->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   this->label = label;
@@ -110,7 +110,7 @@ bool ViewProgress::update (const double value, bool take_priority)
   m_bar->setValue(value);
   QString s;
   QTextStream o(&s);
-  const double used = start_time.elapsed()/1000; // seconds
+  const double used = time.elapsed()/1000; // seconds
   const double total = used * m_bar_max  / value;
   const long left = (long)(total-used);
   o << label<< " (" << timeleft_str(left) << ") : "

@@ -31,6 +31,7 @@
 #include <QTextStream>
 
 #include <iostream>
+#include <algorithm>
 
 #include <src/objlist.h>
 
@@ -128,8 +129,9 @@ void MainWindow::updatedModel(const ObjectsList *objList)
     m_settings->set_all_to_gui(prefs_dialog, "Hardware");
     m_settings->set_all_to_gui(prefs_dialog, "Slicing");
     m_settings->set_all_to_gui(prefs_dialog, "Extruder");
-    m_settings->setMaxLayers(this, int(m_model->Max.z()
-                                 / m_settings->getLayerHeight()));
+    int layers = std::max(m_model->gcode->Max.z(),
+                          m_model->Max.z()) / m_settings->getLayerHeight();
+    m_settings->setMaxLayers(this, layers);
 }
 
 void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)

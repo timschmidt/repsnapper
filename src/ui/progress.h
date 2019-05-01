@@ -32,7 +32,7 @@ class ViewProgress {
   double m_bar_max;
   double m_bar_cur;
 
-  QTime start_time;
+  QTime time;
 
   QString label;
 

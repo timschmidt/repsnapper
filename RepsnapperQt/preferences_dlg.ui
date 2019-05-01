@@ -24,7 +24,7 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>6</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="device_tab">
       <attribute name="title">
@@ -1081,6 +1081,9 @@
          </item>
          <item row="0" column="3">
           <widget class="QSpinBox" name="Slicing_InfillRotationPrLayer">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only for Parallel Infill&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="maximum">
             <number>369</number>
            </property>

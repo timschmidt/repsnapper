@@ -516,16 +516,19 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
     Vector4f gcodemovecolour = settings->get_Vector4f("Display/GCodeMoveColour");
     Vector4f gcodeprintingcolour = settings->get_Vector4f("Display/GCodePrintingColour");
 
+
+    vector<ExtruderSettings> extruders = settings->getExtruderSettings();
+
+
     for(uint i=start; i <= end; i++)
     {
             Vector3d extruder_offset = Vector3d::ZERO;
             //Vector3d next_extruder_offset = Vector3d::ZERO;
-        QString extrudername =
-          Settings::numbered("Extruder",commands[i].extruder_no);
+        QString extrudername = extruders[commands[i].extruder_no].name;
 
         // TO BE FIXED:
         if (!debuggcodeoffset) { // show all together
-          extruder_offset = settings->get_extruder_offset(commands[i].extruder_no);
+          extruder_offset = extruders[commands[i].extruder_no].offset;
           pos -= extruder_offset - last_extruder_offset;
           last_extruder_offset = extruder_offset;
         }
@@ -586,11 +589,11 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
               }
             else
               {
-            luma = 0.3 + 0.7 * speed / settings->get_double(extrudername+"/MaxLineSpeed") / 60;
+            luma = 0.3 + 0.7 * speed / extruders[commands[i].extruder_no].maxLineSpeed / 60;
             if (liveprinting) {
               Color = gcodeprintingcolour;
             } else {
-              Color = settings->get_Vector4f(extrudername+"/DisplayColour");
+              Color = extruders[commands[i].extruder_no].displayColor;
             }
             if (debuggcodeextruders) {
               ostringstream o; o << commands[i].extruder_no+1;

@@ -806,7 +806,6 @@ void Model::ConvertToGCode()
   // Make Layers
   lastlayer = NULL;
 
-
   Slice();
 
   //CleanupLayers();

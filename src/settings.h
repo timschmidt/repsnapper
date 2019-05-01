@@ -45,6 +45,13 @@ public:
     QColor get_color(){return color;}
 };
 
+typedef struct {
+    QString name;
+    Vector3d offset;
+    float maxLineSpeed;
+    Vector4f displayColor;
+} ExtruderSettings;
+
 class Settings : public QSettings {
     Q_OBJECT
 
@@ -102,7 +109,7 @@ class Settings : public QSettings {
 
   double getLayerHeight() { return get_double("Slicing/LayerThickness");}
 
-
+  vector<ExtruderSettings> getExtruderSettings();
 
   /* class GCodeImpl; */
   /* enum GCodeTextType { */

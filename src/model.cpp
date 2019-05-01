@@ -334,6 +334,7 @@ void Model::ReadGCode(QFile *file)
   Max = gcode->Max;
   Min = gcode->Min;
   Center = (Max + Min) / 2.0;
+  emit model_changed(nullptr);
 //  m_signal_zoom.emit();
 }
 
