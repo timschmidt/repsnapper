@@ -90,6 +90,9 @@ public:
 
   void setMain(MainWindow *main){ m_main = main;}
 
+  void setSelectedIndex(const QModelIndex &index);
+  QModelIndexList &getSelection() const {return *m_selection;}
+
   Qt::MouseButton mousePressed;
 public slots:
   void setXRotation(int angle);

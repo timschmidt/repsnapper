@@ -45,16 +45,23 @@ size_t ObjectsList::addShape(ListObject *parent, Shape *shape, QString location)
     return parent->size();
 }
 
-void ObjectsList::DeleteSelected(const QModelIndexList *indexes)
+void ObjectsList::DeleteSelected(const QModelIndex *index)
 {
-
+    uint i = 0;
+    for (ListObject *o : objects) {
+        for (uint s = 0; s < o->shapes.size(); s++) {
+            if (i == index->row())
+                o->deleteShape(s);
+            i++;
+        }
+    }
 }
 
 void ObjectsList::get_all_shapes(vector<Shape *> &allshapes) const
 {
     allshapes.clear();
     for (ListObject *o : objects) {
-      allshapes.insert(allshapes.begin(), o->shapes.begin(), o->shapes.end());
+      allshapes.insert(allshapes.end(), o->shapes.begin(), o->shapes.end());
     }
 }
 
@@ -82,6 +89,19 @@ void ObjectsList::get_selected_objects(const QModelIndexList *indexes,
     } else {
        selobjects = objects;
     }
+}
+
+Shape *ObjectsList::findShape(int index) const
+{
+    uint i = 0;
+    for (ListObject *o : objects) {
+        for (uint s = 0; s < o->shapes.size(); s++) {
+            if (i == index)
+                return o->shapes[i];
+            i++;
+        }
+    }
+    return nullptr;
 }
 
 void ObjectsList::get_selected_shapes(const QModelIndexList *indexes,

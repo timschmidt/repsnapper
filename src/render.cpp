@@ -164,6 +164,18 @@ void Render::draw_string(const Vector3d &pos, const string s)
   glCallLists(s.length(), GL_UNSIGNED_BYTE, s.c_str());
 }
 
+void Render::setSelectedIndex(const QModelIndex &index)
+{
+    if (!m_selection)
+        m_selection = new QModelIndexList();
+    else
+        m_selection->clear();
+    m_selection->append(index);
+//    cerr << "sel " << m_selection->first().row() << endl;
+    update();
+}
+
+
 
 
 void Render::find_font(){
@@ -572,7 +584,7 @@ void Render::mousePressEvent(QMouseEvent *event)
     }
 }
 
-const double drag_factor = 0.3;
+const double drag_factor = 0.1;
 
 void Render::mouseMoveEvent(QMouseEvent *event)
 {
@@ -687,10 +699,12 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
         if (m_downPoint.x() == event->pos().x() && m_downPoint.y() == event->pos().y()) {// click only
             if (event->button() == Qt::RightButton) { // -> popup menu?
                 //cerr << "menu" << endl;
-            } else {
+            } else if (event->button() == Qt::LeftButton)  {
                 guint index = find_object_at(event->pos().x(), event->pos().y());
                 if (index) {
-    /*                Gtk::TreeModel::iterator iter = get_model()->objects.find_stl_by_index(index);
+                    Shape *selected = get_model()->objectList.findShape(index);
+                    cerr << "selected " << selected->filename.toStdString() << endl;
+                    /* Gtk::TreeModel::iterator iter = get_model()->objects.find_stl_by_index(index);
                     if (iter) {
                         if (event->button == 1)  {
                             m_selection->unselect_all();
@@ -701,9 +715,8 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
                             m_selection->select(iter);
                     }
                     */
-                }
-                // click on no object -> clear the selection:
-                else if (event->button() == Qt::LeftButton)  {
+                } else {
+                    // click on no object -> clear the selection:
                     //if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
                     if (m_selection)
                         m_selection->clear();

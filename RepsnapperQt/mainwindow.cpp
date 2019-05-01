@@ -76,6 +76,9 @@ MainWindow::MainWindow(QWidget *parent) :
             SLOT(updatedModel(const ObjectsList*)));
     connect(m_model->gcode, SIGNAL(gcode_changed()), this, SLOT(gcodeChanged()));
 
+    connect(ui_main->modelListView, SIGNAL(clicked(QModelIndex)),
+            this, SLOT(shapeSelected(QModelIndex)));
+
     m_printer = new Printer(this);
 
     m_render = ui_main->openGLWidget;
@@ -120,8 +123,9 @@ void MainWindow::updatedModel(const ObjectsList *objList)
         vector<Shape *> shapes;
         objList->get_all_shapes(shapes);
         QStringList slist;
-        for (Shape * s: shapes)
+        for (Shape * s: shapes) {
             slist << s->filename;
+        }
         objListModel.setStringList(slist);
     }
 
@@ -132,6 +136,11 @@ void MainWindow::updatedModel(const ObjectsList *objList)
     int layers = std::max(m_model->gcode->Max.z(),
                           m_model->Max.z()) / m_settings->getLayerHeight();
     m_settings->setMaxLayers(this, layers);
+}
+
+void MainWindow::shapeSelected(const QModelIndex &index)
+{
+    m_render->setSelectedIndex(index);
 }
 
 void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
@@ -337,8 +346,8 @@ void MainWindow::handleButtonClick()
         return;
     QString name = button->objectName();
 
-    if(name == "m_delete"){
-
+    if (name == "m_delete"){
+        m_model->DeleteSelectedObjects(&m_render->getSelection());
     } else if(name == "cancel_progress"){
     } else if(name == "m_load_stl"){
         on_actionOpen_triggered();
@@ -400,6 +409,9 @@ void MainWindow::gcodeChanged()
 
 void MainWindow::settingsChanged(const QString &group)
 {
+    if (group == "scale"){
+
+    }
     cerr << group.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();
     m_settings->setMaxLayers(this, int(m_model->Max.z()

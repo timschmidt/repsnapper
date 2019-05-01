@@ -321,7 +321,7 @@
            <enum>Qt::LeftToRight</enum>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tabModel">
            <attribute name="title">
@@ -509,12 +509,28 @@
                    </widget>
                   </item>
                   <item row="2" column="2">
-                   <widget class="QDoubleSpinBox" name="rot_x"/>
+                   <widget class="QDoubleSpinBox" name="rot_x">
+                    <property name="maximum">
+                     <double>360.000000000000000</double>
+                    </property>
+                    <property name="singleStep">
+                     <double>0.100000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="4" column="1">
-                   <widget class="QDoubleSpinBox" name="m_scale_value">
+                   <widget class="QDoubleSpinBox" name="scale_value">
                     <property name="decimals">
                      <number>3</number>
+                    </property>
+                    <property name="minimum">
+                     <double>0.000000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>1000.000000000000000</double>
+                    </property>
+                    <property name="singleStep">
+                     <double>0.001000000000000</double>
                     </property>
                     <property name="value">
                      <double>1.000000000000000</double>
@@ -543,10 +559,21 @@
                    </widget>
                   </item>
                   <item row="3" column="2">
-                   <widget class="QDoubleSpinBox" name="translate_x"/>
+                   <widget class="QDoubleSpinBox" name="translate_x">
+                    <property name="maximum">
+                     <double>999.000000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="2" column="3">
-                   <widget class="QDoubleSpinBox" name="rot_y"/>
+                   <widget class="QDoubleSpinBox" name="rot_y">
+                    <property name="maximum">
+                     <double>360.000000000000000</double>
+                    </property>
+                    <property name="singleStep">
+                     <double>0.100000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="0" column="1">
                    <widget class="QPushButton" name="m_duplicate">
@@ -556,7 +583,14 @@
                    </widget>
                   </item>
                   <item row="2" column="4">
-                   <widget class="QDoubleSpinBox" name="rot_z"/>
+                   <widget class="QDoubleSpinBox" name="rot_z">
+                    <property name="maximum">
+                     <double>360.000000000000000</double>
+                    </property>
+                    <property name="singleStep">
+                     <double>0.100000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="0" column="4">
                    <widget class="QPushButton" name="m_divide">
@@ -573,7 +607,11 @@
                    </widget>
                   </item>
                   <item row="3" column="3">
-                   <widget class="QDoubleSpinBox" name="translate_y"/>
+                   <widget class="QDoubleSpinBox" name="translate_y">
+                    <property name="maximum">
+                     <double>999.000000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="4" column="2">
                    <widget class="QDoubleSpinBox" name="scale_x">
@@ -607,7 +645,11 @@
                    </widget>
                   </item>
                   <item row="3" column="4">
-                   <widget class="QDoubleSpinBox" name="translate_z"/>
+                   <widget class="QDoubleSpinBox" name="translate_z">
+                    <property name="maximum">
+                     <double>999.000000000000000</double>
+                    </property>
+                   </widget>
                   </item>
                   <item row="0" column="0">
                    <widget class="QPushButton" name="m_delete">
@@ -1316,6 +1358,72 @@
    <header location="global">../src/render.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>modelListView</tabstop>
+  <tabstop>m_load_stl</tabstop>
+  <tabstop>m_save_stl</tabstop>
+  <tabstop>m_autoarrange</tabstop>
+  <tabstop>Misc_ShapeAutoplace</tabstop>
+  <tabstop>m_delete</tabstop>
+  <tabstop>m_duplicate</tabstop>
+  <tabstop>m_split</tabstop>
+  <tabstop>m_merge</tabstop>
+  <tabstop>m_divide</tabstop>
+  <tabstop>m_autorot</tabstop>
+  <tabstop>rot_x</tabstop>
+  <tabstop>rot_y</tabstop>
+  <tabstop>rot_z</tabstop>
+  <tabstop>translate_x</tabstop>
+  <tabstop>translate_y</tabstop>
+  <tabstop>translate_z</tabstop>
+  <tabstop>scale_value</tabstop>
+  <tabstop>scale_x</tabstop>
+  <tabstop>scale_y</tabstop>
+  <tabstop>scale_z</tabstop>
+  <tabstop>m_platform</tabstop>
+  <tabstop>m_mirror</tabstop>
+  <tabstop>m_hollow</tabstop>
+  <tabstop>m_normals</tabstop>
+  <tabstop>Display_DisplayLayer</tabstop>
+  <tabstop>Display_DisplayInfill</tabstop>
+  <tabstop>Display_DrawRulers</tabstop>
+  <tabstop>Display_LayerValue</tabstop>
+  <tabstop>Display_DisplayGCode</tabstop>
+  <tabstop>Display_DisplayGCodeMoves</tabstop>
+  <tabstop>Display_DisplayGCodeArrows</tabstop>
+  <tabstop>Display_DisplayGCodeBorders</tabstop>
+  <tabstop>Display_GCodeDrawStart</tabstop>
+  <tabstop>Display_GCodeDrawEnd</tabstop>
+  <tabstop>Display_DisplayPolygons</tabstop>
+  <tabstop>Display_DisplayWireframe</tabstop>
+  <tabstop>Display_DisplayNormals</tabstop>
+  <tabstop>Display_DisplayEndpoints</tabstop>
+  <tabstop>Display_DisplayBBox</tabstop>
+  <tabstop>progres_Cancel</tabstop>
+  <tabstop>Slicing_LayerThickness</tabstop>
+  <tabstop>Slicing_InfillPercent</tabstop>
+  <tabstop>Slicing_ShellCount</tabstop>
+  <tabstop>Slicing_Skins</tabstop>
+  <tabstop>Slicing_DoInfill</tabstop>
+  <tabstop>Slicing_Support</tabstop>
+  <tabstop>Slicing_Decor</tabstop>
+  <tabstop>Slicing_NoTopAndBottom</tabstop>
+  <tabstop>Slicing_BuildSerial</tabstop>
+  <tabstop>Slicing_SelectedOnly</tabstop>
+  <tabstop>m_gcode</tabstop>
+  <tabstop>g_load_gcode</tabstop>
+  <tabstop>g_platform</tabstop>
+  <tabstop>g_save_gcode</tabstop>
+  <tabstop>m_clear_gcode</tabstop>
+  <tabstop>tabWidget_2</tabstop>
+  <tabstop>GCode_Start</tabstop>
+  <tabstop>GCode_Layer</tabstop>
+  <tabstop>GCode_End</tabstop>
+  <tabstop>GCode_Result</tabstop>
+  <tabstop>textEdit</tabstop>
+  <tabstop>textBrowser</tabstop>
+  <tabstop>tabWidget</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

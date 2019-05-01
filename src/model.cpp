@@ -713,10 +713,11 @@ void Model::PlaceOnPlatform(Shape *shape, ListObject *object)
 
 void Model::DeleteSelectedObjects(QModelIndexList *selected)
 {
-  objectList.DeleteSelected(selected);
-  ClearGCode();
-  ClearLayers();
-  ModelChanged();
+    for (QModelIndex i : *selected)
+        objectList.DeleteSelected(&i);
+    ClearGCode();
+    ClearLayers();
+    ModelChanged();
 }
 
 
@@ -837,7 +838,7 @@ int Model::draw (const QModelIndexList *selected)
 //  cerr << "drawing "<< objectList.objects.size() << " objects"<< endl;
   for (uint i = 0; i < objectList.objects.size(); i++) {
       ListObject *object = objectList.objects[i];
-      index++;
+//      index++; // only count inner shapes
 
       glPushMatrix();
       glMultMatrixd (object->transform3D.transform.array);

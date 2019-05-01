@@ -57,12 +57,13 @@ public:
     ListObject *newObject(QString name);
     size_t addShape(ListObject *parent, Shape *shape, QString location);
 
-    void DeleteSelected(const QModelIndexList *indexes);
+    void DeleteSelected(const QModelIndex *indexes);
     void get_all_shapes(vector<Shape*> &shapes) const;
     void get_all_shapes(vector<Shape*> &shapes, vector<Matrix4d> &transforms) const;
     void get_selected_shapes(const QModelIndexList *indexes,
                              vector<Shape*> &shapes, vector<Matrix4d> &transforms) const;
     void get_selected_objects(const QModelIndexList *indexes, vector<ListObject*> &objects) const;
+    Shape *findShape(int index) const;
 
     bool empty() const {return objects.size()==0; }
     Matrix4d getTransformationMatrix(int object, int shape=-1) const;
