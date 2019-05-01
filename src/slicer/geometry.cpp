@@ -1236,7 +1236,7 @@ int delaunayTriang(const vector<Vector2d> &points,
 ////////////////////////////// RASTER /////////////////////////////////////
 
 
-
+#ifdef USECAIRO
 #include <cairomm/cairomm.h>
 
 
@@ -1314,7 +1314,6 @@ bool rasterpolys(const vector<Poly> &polys,
   return true;
 }
 
-
 void glDrawPolySurfaceRastered(const vector<Poly> &polys,
                    const Vector2d &min, const Vector2d &max,
                    const double z,
@@ -1382,3 +1381,4 @@ int getCairoSurfaceDatapoint(const Cairo::RefPtr<Cairo::ImageSurface> surface,
   int value = data[ipy*w + ipx];
   return value;
 }
+#endif

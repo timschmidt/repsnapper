@@ -1107,8 +1107,8 @@ void Layer::Draw(Settings &settings)
     if (previous!=NULL) {
       vector<Poly> overhangs = getOverhangs();
       draw_polys(overhangs, GL_LINE_LOOP, 1, 3, VIOLET, 0.8, randomized);
+#ifdef USECAIRO
       //draw_polys_surface(overhangs, Min, Max, Z, thickness/5, VIOLET , 0.5);
-
       Cairo::RefPtr<Cairo::ImageSurface> surface;
       Cairo::RefPtr<Cairo::Context>      context;
       if (rasterpolys(overhangs, Min, Max, thickness/5, surface, context))
@@ -1124,6 +1124,7 @@ void Layer::Draw(Settings &settings)
         glVertex3d(x,y,Z);
       glEnd();
     }
+#endif
     }
   }
 

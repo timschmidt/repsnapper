@@ -24,7 +24,7 @@
 #include "ui/draw.h"
 
 #include <QRegularExpressionMatch>
-//#include "glibmm.h"
+
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -40,11 +40,11 @@ FlatShape::FlatShape()
 }
 
 
-FlatShape::FlatShape(Glib::ustring filename)
+FlatShape::FlatShape(QString filename)
 {
   slow_drawing = false;
   this->filename = filename;
-  loadSVG(filename);
+  loadSVG(filename.toStdString());
 }
 
 // FlatShape::FlatShape(const FlatShape &rhs)
@@ -192,7 +192,9 @@ void FlatShape::draw_geometry(uint max_polygons) {
   const Vector3d maxT = invT*Max;
   const Vector2d min2d(minT.x(), minT.y());
   const Vector2d max2d(maxT.x(), maxT.y());
+#ifdef USE_CAIRO
   glDrawPolySurfaceRastered(polygons, min2d, max2d, 0, 0.1);
+#endif
   uint step = 1;
   if (max_polygons > 0) step = polygons.size()/max_polygons;
   for (uint i = 0; i < polygons.size(); i+=step) {
@@ -484,7 +486,7 @@ void FlatShape::xml_handle_node(const xmlpp::Node* node)
 
 int FlatShape::loadSVG(string filename)
 {  // Set the global C++ locale to the user-configured locale,
-  // so we can use std::cout with UTF-8, via Glib::ustring, without exceptions.
+  // so we can use std::cout with UTF-8, via QString, without exceptions.
 
   #ifdef LIBXMLCPP_EXCEPTIONS_ENABLED
   try

@@ -84,7 +84,7 @@ void Model::error (const char *message, const char *secondary)
 
 void Model::LoadConfig(QString filename)
 {
-  settings->mergeGlibKeyfile(filename.toStdString());
+  settings->mergeGlibKeyfile(filename);
   ModelChanged();
 }
 
@@ -181,7 +181,7 @@ void Model::ReadSVG(QFile *file)
   if (is_calculating) return;
   if (is_printing) return;
   bool autoplace = settings->get_boolean("Misc/ShapeAutoplace");
-  string path = QFileInfo(*file).absolutePath().toUtf8().constData();
+  QString path = QFileInfo(*file).absolutePath();
   FlatShape * svgshape = new FlatShape(path);
   cerr << svgshape->info() << endl;
   AddShape(nullptr, (Shape*)svgshape, path, autoplace);
@@ -196,7 +196,7 @@ vector<Shape*> Model::ReadShapes(QFile *file,
   if (!file) return shapes;
   File sfile(file);
   vector< vector<Triangle> > triangles;
-  vector<Glib::ustring> shapenames;
+  vector<QString> shapenames;
   sfile.loadTriangles(triangles, shapenames, max_triangles);
   for (uint i = 0; i < triangles.size(); i++) {
     if (triangles[i].size() > 0) {
@@ -273,7 +273,7 @@ void Model::SaveAMF(QFile *file)
   vector<Matrix4d> transforms;
   objects.get_all_shapes(shapes,transforms);
   vector< vector<Triangle> > triangles;
-  vector<Glib::ustring> names;
+  vector<QString> names;
   for(uint s = 0; s < shapes.size(); s++) {
     triangles.push_back(shapes[s]->getTriangles(transforms[s]));
     names.push_back(shapes[s]->filename);
@@ -530,7 +530,7 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
   return true;
 }
 
-int Model::AddShape(ListObject *parentLO, Shape *shape, string filename, bool autoplace)
+int Model::AddShape(ListObject *parentLO, Shape *shape, QString filename, bool autoplace)
 {
   //Shape *retshape;
   bool found_location=false;
@@ -551,7 +551,7 @@ int Model::AddShape(ListObject *parentLO, Shape *shape, string filename, bool au
       shape->PlaceOnPlatform();
   }
   // Add it to the parent LO
-  cerr << "adding shape " << filename << endl;
+  cerr << "adding shape " << filename.toStdString() << endl;
   parentLO->addShape(shape, filename);
   // Update the view to include the new object
   ModelChanged();
@@ -561,15 +561,15 @@ int Model::AddShape(ListObject *parentLO, Shape *shape, string filename, bool au
   return 0;
 }
 
-int Model::SplitShape(ListObject *parent, Shape *shape, string filename)
+int Model::SplitShape(ListObject *parent, Shape *shape, QString filename)
 {
   vector<Shape*> splitshapes;
   shape->splitshapes(splitshapes, m_progress);
   if (splitshapes.size()<2) return splitshapes.size();
   for (uint s = 0; s <  splitshapes.size(); s++) {
-    ostringstream sfn;
-    sfn << filename << "_" << (s+1) ;
-    AddShape(parent, splitshapes[s], sfn.str(), false);
+      QString sf;
+      QTextStream (&sf) << filename << "_" << (s+1) ;
+      AddShape(parent, splitshapes[s], sf, false);
   }
   return splitshapes.size();
 }
@@ -585,7 +585,7 @@ int Model::MergeShapes(ListObject *parent, const vector<Shape*> shapes)
   return 1;
 }
 
-int Model::DivideShape(ListObject *parent, Shape *shape, string filename)
+int Model::DivideShape(ListObject *parent, Shape *shape, QString filename)
 {
   Shape *upper = new Shape();
   Shape *lower = new Shape();

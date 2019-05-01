@@ -63,7 +63,7 @@ public:
         Shape();
         /* Shape(string filename, istream &text); */
         virtual ~Shape(){}
-        string filename;
+        QString filename;
         int idx;
 
         int parseASCIISTL(istream &text, uint max_triangles=0, bool readnormals=false);

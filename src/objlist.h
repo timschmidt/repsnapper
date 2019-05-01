@@ -28,18 +28,18 @@
 class ListObject
 {
 public:
-    ListObject(const string name);
+    ListObject(const QString name);
     ListObject() : ListObject(_("Unnamed object")){}
     ~ListObject();
 
-    string name;
+    QString name;
     Transform3D transform3D;
     vector<Shape*> shapes;
 
     bool deleteShape(uint i);
     ushort dimensions;
     size_t size(){return shapes.size();}
-    size_t addShape(Shape *shape, std::string location);
+    size_t addShape(Shape *shape, QString location);
     void move(const Vector3d &delta){ transform3D.move(delta); }
     Vector3d center() const;
 };
@@ -54,8 +54,8 @@ public:
     ~ObjectsList();
 
     void clear() {objects.clear();}
-    ListObject *newObject(string name);
-    size_t addShape(ListObject *parent, Shape *shape, std::string location);
+    ListObject *newObject(QString name);
+    size_t addShape(ListObject *parent, Shape *shape, QString location);
 
     void DeleteSelected(const QModelIndexList *indexes);
     void get_all_shapes(vector<Shape*> &shapes) const;

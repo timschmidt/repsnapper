@@ -173,9 +173,9 @@ void Render::find_font(){
 
   vector < Glib::RefPtr< Pango::FontFamily > > families = pcontext->list_families();
   bool found_font = false;
-  vector<Glib::ustring> fonts = Glib::Regex::split_simple(",", TRYFONTS);
+  vector<QString> fonts = Glib::Regex::split_simple(",", TRYFONTS);
   for (uint i = 0; !found_font && i < families.size(); i++) {
-    Glib::ustring famname = families[i]->get_name().lowercase();
+    QString famname = families[i]->get_name().lowercase();
     // cerr <<"Family: " << famname << endl;
     for (uint k = 0; !found_font && k < fonts.size(); k++) {
       if ((int)famname.find(fonts[k])!=-1) {

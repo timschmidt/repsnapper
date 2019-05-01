@@ -29,7 +29,9 @@
 #include "../gcode/gcodestate.h"
 #include "printlines.h"
 
+#ifdef USECAIRO
 #include <cairomm/cairomm.h>
+#endif
 
 //
 // A Layer containing and maintaining all polygons to be printed

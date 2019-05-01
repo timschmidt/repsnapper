@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <glib.h>
 //#include <glibmm/fileutils.h>
-#include <glibmm/miscutils.h>
+//#include <glibmm/miscutils.h>
 
 #include <QComboBox>
 #include <QSpinBox>
@@ -30,6 +30,8 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QStringLiteral>
+#include <QFileInfo>
+#include <QDir>
 
 #include <src/ui/prefs_dlg.h>
 
@@ -155,10 +157,10 @@ void Settings::merge (QSettings &settings)
 
 
 
-int Settings::mergeGlibKeyfile (const Glib::ustring keyfile)
+int Settings::mergeGlibKeyfile (const QString keyfile)
 {
     GKeyFile * gkf = g_key_file_new();
-    if (!g_key_file_load_from_file(gkf, keyfile.data(), G_KEY_FILE_NONE, NULL)){
+    if (!g_key_file_load_from_file(gkf, keyfile.toStdString().c_str(), G_KEY_FILE_NONE, NULL)){
         fprintf (stderr, "Could not read config file %s\n", keyfile.data());
         return EXIT_FAILURE;
     }
@@ -380,15 +382,9 @@ void Settings::load_settings (QString filename)
   if (childGroups().contains("Extruder"))
     remove("Extruder"); // avoid converting old if merging new file
 
-  try {
-    if (!load_from_file (filename)) {
+  if (!load_from_file (filename)) {
       QTextStream(stdout) << tr("Failed to load settings from file '") << filename << "'\n";
       return;
-    }
-  } catch (const Glib::Exception &err) {
-      QTextStream(stdout) << tr("Exception ") << err.what().c_str()
-              << tr(" loading settings from file '") << filename << "'\n";
-    return;
   }
 
   QTextStream(stderr) << tr("Parsing config from '") << filename << "'\n";
@@ -413,27 +409,22 @@ void Settings::load_settings (QString filename)
     CustomButtonLabels = value("UserButtons/Labels").toStringList();
     CustomButtonGCodes = value("UserButtons/GCodes").toStringList();
   }
-  try {
-      for (QString k : get_keys("CustomButtons")) {
-          bool havekey = false;
-          for (int o = 0; o < CustomButtonLabels.size(); o++) {
-              if (CustomButtonLabels[o] == k) {
-                  CustomButtonGCodes[o] = get_string("CustomButtons/"+k);
-                  havekey = true;
-                  break;
-              }
-          }
-          if (!havekey) {
-              CustomButtonLabels.push_back(k);
-              CustomButtonGCodes.push_back(get_string("CustomButtons/"+k));
+  for (QString k : get_keys("CustomButtons")) {
+      bool havekey = false;
+      for (int o = 0; o < CustomButtonLabels.size(); o++) {
+          if (CustomButtonLabels[o] == k) {
+              CustomButtonGCodes[o] = get_string("CustomButtons/"+k);
+              havekey = true;
+              break;
           }
       }
-      remove("CustomButtons");
-  } catch (Glib::Exception &err) {}
-  if (!childGroups().contains("UserButtons")) {
-    setValue("UserButtons","Labels",CustomButtonLabels);
-    setValue("UserButtons","GCodes",CustomButtonGCodes);
+      if (!havekey) {
+          CustomButtonLabels.push_back(k);
+          CustomButtonGCodes.push_back(get_string("CustomButtons/"+k));
+      }
   }
+  remove("CustomButtons");
+
 
   // convert old extruders, now we count "Extruder0", "Extruder1" ...
   // instead of "Extruder", "Extruder2" ...
@@ -486,7 +477,7 @@ void Settings::save_settings(QString filename)
   remove("Extruder"); // is only temporary
 
 
-  Glib::ustring contents = to_data();
+  QString contents = to_data();
   // cerr << contents << endl;
   Glib::file_set_contents(filename.toUtf8().constData(), contents);
 
@@ -926,11 +917,8 @@ Vector3d Settings::getPrintMargin()
   for (uint i = 0; i < num ; i++) {
     QString ext = numbered("Extruder",i);
     double offx = 0, offy = 0;
-    try {
-      offx = abs(get_double(ext+"/OffsetX"));
-      offy = abs(get_double(ext+"/OffsetY"));
-    } catch (const Glib::Exception &err) {
-    }
+    offx = abs(get_double(ext+"/OffsetX"));
+    offy = abs(get_double(ext+"/OffsetY"));
     if (offx > abs(maxoff.x())) maxoff.x() = offx;
     if (offy > abs(maxoff.y())) maxoff.y() = offy;
   }
@@ -943,10 +931,9 @@ Vector3d Settings::getPrintMargin()
 
 
 // Locate it in relation to ourselves ...
-std::string Settings::get_image_path()
+QString Settings::get_image_path()
 {
-  std::string basename = Glib::path_get_dirname(filename.toUtf8().constData());
-  return Glib::build_filename (basename, get_string("Global/Image").toUtf8().data());
+    return QFileInfo(QFile(filename)).absoluteDir().absolutePath() + "/"+ get_string("Global/Image");
 }
 
 void Settings::setValue(const QString &group, const QString &key, const QVariant &value)

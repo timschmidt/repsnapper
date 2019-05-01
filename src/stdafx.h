@@ -55,8 +55,11 @@ typedef unsigned int        guint;
 #include "math.h" // Needed for sqrtf
 #include "types.h"
 
+
 #define VMMLIB_BASIC_ONLY
 #include <vmmlib/vmmlib.hpp>
+
+
 // Unpleasant needs un-winding ...
 using namespace std;
 //using namespace vmml;
@@ -85,6 +88,8 @@ float const YELLOW2[] = {1, 1, 0.2};
 float const WHITE[] = {1, 1, 1};
 float const GREY[] = {0.5,0.5,0.5};
 float const VIOLET[] = {0.8,0.0,0.8};
+
+//#define USECAIRO
 
 //utility macros
 //assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits

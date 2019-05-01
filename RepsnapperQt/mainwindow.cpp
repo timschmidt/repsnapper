@@ -121,7 +121,7 @@ void MainWindow::updatedModel(const ObjectsList *objList)
         objList->get_all_shapes(shapes);
         QStringList slist;
         for (Shape * s: shapes)
-            slist << QString::fromStdString(s->filename);
+            slist << s->filename;
         objListModel.setStringList(slist);
     }
 

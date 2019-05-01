@@ -65,11 +65,11 @@ public:
 #if ENABLE_AMF
 //        void SaveAMF(QFile *file);
 #endif
-        int AddShape(ListObject *parent, Shape * shape, string filename,
+        int AddShape(ListObject *parent, Shape * shape, QString filename,
                      bool autoplace = true);
-        int SplitShape(ListObject *parent, Shape *shape, string filename);
+        int SplitShape(ListObject *parent, Shape *shape, QString filename);
         int MergeShapes(ListObject *parent, const vector<Shape*> shapes);
-        int DivideShape(ListObject *parent, Shape *shape, string filename);
+        int DivideShape(ListObject *parent, Shape *shape, QString filename);
         Shape GetCombinedShape() const;
 
 ////        sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
@@ -88,7 +88,7 @@ public:
         void RotateObject(Shape *shape, ListObject *object, Vector4d rotate);
         void TwistObject(Shape *shape, ListObject *object, double angle);
         void PlaceOnPlatform(Shape *shape, ListObject *object);
-////        bool updateStatusBar(GdkEventCrossing *event, Glib::ustring = "");
+////        bool updateStatusBar(GdkEventCrossing *event, QString = "");
         void InvertNormals(Shape *shape, ListObject *object);
         void Mirror(Shape *shape, ListObject *object);
 

@@ -23,8 +23,8 @@
 #include <iostream>
 #include <stdlib.h>
 
-#include <glibmm/exception.h>
-#include <glibmm/ustring.h>
+//#include <glibmm/exception.h>
+//#include <glibmm/ustring.h>
 
 static string numlocale   = "";
 static string colllocale  = "";
@@ -79,13 +79,13 @@ File::File(QFile *file)
 }
 
 void File::loadTriangles(vector< vector<Triangle> > &triangles,
-                         vector<Glib::ustring> &names,
+                         vector<QString> &names,
                          uint max_triangles)
 {
   if (_fileInfo.isDir() || _fileInfo.isSymLink())
     return;
 
-  string name_by_file = _fileInfo.fileName().toUtf8().constData();
+  QString name_by_file = _fileInfo.fileName();
 
   filetype_t _type = getFileType();
 
@@ -153,24 +153,19 @@ filetype_t File::getFileType()
 
     // ASCII files start with "solid [Name_of_file]"
     string first_word;
-    try {
-      file >> first_word;
+    file >> first_word;
 
-      // Find bad Solid Works STL header
-      // 'solid binary STL from Solid Edge, Unigraphics Solutions Inc.'
-      string second_word;
-      if(first_word == "solid")
-    file >> second_word;
+    // Find bad Solid Works STL header
+    // 'solid binary STL from Solid Edge, Unigraphics Solutions Inc.'
+    string second_word;
+    if(first_word == "solid")
+        file >> second_word;
 
-      file.close();
-      if(first_word == "solid" && second_word != "binary") { // ASCII
-    return ASCII_STL;
-      } else {
-    return BINARY_STL;
-      }
-    } catch (Glib::Exception &e) {
-      return BINARY_STL; // no keyword -> binary
+    file.close();
+    if(first_word == "solid" && second_word != "binary") { // ASCII
+        return ASCII_STL;
     }
+    return BINARY_STL;
 }
 
 
@@ -255,7 +250,7 @@ bool File::load_binarySTL(vector<Triangle> &triangles,
 
 
 bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
-             vector<Glib::ustring> &names,
+             vector<QString> &names,
              uint max_triangles, bool readnormals)
 {
   string filename = _fileInfo.absoluteFilePath().toUtf8().constData();
@@ -270,7 +265,7 @@ bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
   // get as many shapes as found in file
   while (true) {
     vector<Triangle> tr;
-    Glib::ustring name;
+    QString name;
     if (!File::parseSTLtriangles_ascii(file, max_triangles, readnormals,
                        tr, name))
       break;
@@ -298,7 +293,7 @@ bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
 bool File::parseSTLtriangles_ascii (istream &text,
                     uint max_triangles, bool readnormals,
                     vector<Triangle> &triangles,
-                    Glib::ustring &shapename)
+                    QString &shapename)
 {
   //cerr << "loading ascii " << endl;
   //cerr << " locale " << std::locale().name() << endl;
@@ -331,7 +326,7 @@ bool File::parseSTLtriangles_ascii (istream &text,
       if (solid == "solid") {
     string name;
     getline(text,name);
-    shapename = name;
+    shapename = QString::fromStdString(name);
     break;
       }
     }
@@ -609,7 +604,7 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
  };
 
  bool File::load_AMF(vector< vector<Triangle> > &triangles,
-            vector<Glib::ustring> &names,
+            vector<QString> &names,
             uint max_triangles)
 {
   AMFLoader amf;
@@ -628,7 +623,7 @@ bool File::load_VRML(vector<Triangle> &triangles, uint max_triangles)
 
 bool File::save_AMF (QString filename,
              const vector< vector<Triangle> > &triangles,
-             const vector<Glib::ustring> &names,
+             const vector<QString> &names,
              bool compressed)
 {
   AMFWriter amf;

@@ -23,7 +23,7 @@
 #include <string>
 //#include <glibmm/keyfile.h>
 #include <glib.h>
-#include <glibmm/ustring.h>
+//#include <glibmm/ustring.h>
 
 
 #include "stdafx.h"
@@ -164,18 +164,18 @@ public:
 
 
   void merge (QSettings &settings);
-  int mergeGlibKeyfile (const Glib::ustring keyfile);
+  int mergeGlibKeyfile (const QString keyfile);
   bool load_from_file (QString filename);
   bool load_from_data (QString data);
 
   void load_settings (QString filename);
-  void load_settings_as (const Glib::ustring onlygroup = "",
+  void load_settings_as (const QString onlygroup = "",
              const QString as_group = "");
 //  void save_settings (QString filename);
-  void save_settings_as (const Glib::ustring onlygroup = "",
-             const Glib::ustring as_group = "");
+  void save_settings_as (const QString onlygroup = "",
+             const QString as_group = "");
 
-  std::string get_image_path();
+  QString get_image_path();
 
   using QSettings::setValue;
   void setValue(const QString &group, const QString &key, const QVariant &value);

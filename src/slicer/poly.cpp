@@ -66,7 +66,7 @@ Poly::Poly(const Poly &p, double z_)
     calcHole();
 }
 
-Poly::Poly(Poly &&p){
+Poly::Poly(const Poly &&p){
   this->closed = p.closed;
   this->z = p.z;
   this->extrusionfactor = p.extrusionfactor;
@@ -965,15 +965,18 @@ void draw_polys_surface(const vector <Poly> &polys,
             double cleandist,
             const float *rgb, float a)
 {
+#ifdef USECAIRO
   glColor4f(rgb[0],rgb[1],rgb[2], a);
   glDrawPolySurfaceRastered(polys, Min, Max, z, cleandist);
-
-  // glColor4f(rgb[0],rgb[1],rgb[2], a);
-  // for(size_t p=0; p<polys.size();p++) {
-  //   polys[p].cleanup(cleandist);
-  //   ::cleandist(polys[p].vertices, cleandist);
-  //   polys[p].draw_as_surface();
-  // }
+#else
+  glColor4f(rgb[0],rgb[1],rgb[2], a);
+  for(size_t p=0; p<polys.size();p++) {
+      Poly pcopy(polys[p]);
+      pcopy.cleanup(cleandist);
+//      ::cleandist(pcopy.vertices, cleandist);
+      pcopy.draw_as_surface();
+  }
+#endif
 }
 void draw_polys_surface(const vector< vector<Poly> > &polys,
             const Vector2d &Min, const Vector2d &Max,

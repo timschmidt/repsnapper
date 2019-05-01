@@ -22,8 +22,9 @@
 #include "../stdafx.h"
 #include "../arcball.h"
 
+#ifdef USECAIRO
 #include <cairomm/cairomm.h>
-
+#endif
 
 #define PI 3.141592653589793238462643383279502884197169399375105820974944592308
 
@@ -125,6 +126,7 @@ bool fit_arc(const int m_dat, const arc_data_struct data,
              const int n_par, double *par, double sq_error,
              Vector2d &result_center, double &result_radiussq);
 
+#ifdef USECAIRO
 void glDrawCairoSurface(const Cairo::RefPtr<Cairo::ImageSurface> surface,
                         const Vector2d &min, const Vector2d &max,
                         const double z);
@@ -137,3 +139,4 @@ bool rasterpolys(const vector<Poly> &polys,
          const Vector2d &min, const Vector2d &max, double resolution,
          Cairo::RefPtr<Cairo::ImageSurface> &surface,
          Cairo::RefPtr<Cairo::Context> &context);
+#endif

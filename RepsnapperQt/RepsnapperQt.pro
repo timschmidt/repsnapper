@@ -61,7 +61,6 @@ SOURCES += \
         ../src/slicer/printlines_antiooze.cpp \
         ../src/transform3d.cpp \
         ../src/triangle.cpp \
-#        ../src/ui/connectview.cpp \
         ../src/ui/prefs_dlg.cpp \
         ../src/ui/progress.cpp \
         main.cpp \
@@ -87,15 +86,6 @@ HEADERS += \
         ../src/gcode/gcodestate.h \
         ../src/gitversion.h \
         ../src/gllight.h \
-        ../src/librepsnapper/vmmlib/include/vmmlib/blas_daxpy.hpp \
-        ../src/librepsnapper/vmmlib/include/vmmlib/cublas_includes.hpp \
-        ../src/librepsnapper/vmmlib/include/vmmlib/cublas_types.hpp \
-        ../src/librepsnapper/vmmlib/include/vmmlib/t3_converter.hpp \
-        ../src/librepsnapper/vmmlib/include/vmmlib/t3_cublas_hooi.hpp \
-        ../src/librepsnapper/vmmlib/include/vmmlib/t3_cublas_hosvd.hpp \
-        ../src/librepsnapper/vmmlib/include/vmmlib/t3_cublas_ttm.hpp \
-        ../src/librepsnapper/vmmlib/include/vmmlib/t3_ttm.hpp \
-        ../src/librepsnapper/vmmlib/include/vmmlib/validator.hpp \
         ../src/linked_ptr.h \
         ../src/miniball.h \
         ../src/model.h \
@@ -120,7 +110,6 @@ HEADERS += \
         ../src/transform3d.h \
         ../src/triangle.h \
         ../src/types.h \
- #       ../src/ui/connectview.h \
         ../src/ui/prefs_dlg.h \
         ../src/ui/progress.h \
         ../src/ui/widgets.h \
@@ -136,20 +125,19 @@ INCLUDEPATH += ../libraries/vmmlib/include/
 INCLUDEPATH += ../libraries/
 
 INCLUDEPATH += /usr/local/include
-INCLUDEPATH += /usr/local/include/giomm-2.4/
 INCLUDEPATH += /usr/local/include/glibmm-2.4/
 INCLUDEPATH += /usr/local/lib/glibmm-2.4/include
 INCLUDEPATH += /usr/local/include/glib-2.0/
 INCLUDEPATH += /usr/local/lib/glib-2.0/include
-INCLUDEPATH += /usr/local/include/gtkmm-2.4/
-INCLUDEPATH += /usr/local/include/sigc++-2.0/
-INCLUDEPATH += /usr/local/lib/sigc++-2.0/include/
-INCLUDEPATH += /usr/local/include/cairomm-1.0/
-INCLUDEPATH += /usr/local/lib/cairomm-1.0/include/
-INCLUDEPATH += /usr/local/include/cairo/
-INCLUDEPATH += /usr/local/include/freetype2/
 INCLUDEPATH += /usr/local/include/libxml++-2.6/
 INCLUDEPATH += /usr/local/include/libxml++-2.6/include/
+
+INCLUDEPATH += /usr/include/glibmm-2.4/
+INCLUDEPATH += /usr/lib/glibmm-2.4/include
+INCLUDEPATH += /usr/include/glib-2.0/
+INCLUDEPATH += /usr/lib/glib-2.0/include
+INCLUDEPATH += /usr/include/libxml++-2.6/
+INCLUDEPATH += /usr/include/libxml++-2.6/include
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -161,6 +149,5 @@ unix|win32: LIBS += -lglib-2.0
 unix|win32: LIBS += -lglibmm-2.4
 unix|win32: LIBS += -lxml++-2.6
 unix|win32: LIBS += -lGLU
-unix|win32: LIBS += -lcairomm-1.0
 
 QMAKE_CXX="ccache clang++80"

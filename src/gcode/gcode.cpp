@@ -107,7 +107,7 @@ double GCode::GetTimeEstimation() const
   return time;
 }
 
-Glib::ustring getLineAt(QTextDocument *doc, int lineno)
+string getLineAt(QTextDocument *doc, int lineno)
 {
   QTextBlock tb = doc->findBlockByLineNumber(lineno);
   return tb.text().toUtf8().constData();

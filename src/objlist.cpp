@@ -32,14 +32,14 @@ ObjectsList::~ObjectsList()
 
 }
 
-ListObject *ObjectsList::newObject(string name)
+ListObject *ObjectsList::newObject(QString name)
 {
     ListObject *listObj = new ListObject(name);
     objects.push_back(listObj);
     return listObj;
 }
 
-size_t ObjectsList::addShape(ListObject *parent, Shape *shape, string location)
+size_t ObjectsList::addShape(ListObject *parent, Shape *shape, QString location)
 {
     parent->addShape(shape, location);
     return parent->size();
@@ -120,16 +120,16 @@ string ObjectsList::info() const
     ostringstream oss;
     oss  << objects.size() <<" Objects:" << endl;
     for (const ListObject *o : objects){
-        oss << " Obj. '" << o->name << "' ("
+        oss << " Obj. '" << o->name.toStdString() << "' ("
             << o->dimensions << " dimensions): " << o->shapes.size() << " shapes: " << endl;
         for (Shape *s: o->shapes){
-                 oss << "   Shape " << s->filename  << endl;
+                 oss << "   Shape " << s->filename.toStdString()  << endl;
         }
     }
     return oss.str();
 }
 
-ListObject::ListObject(const string name) :
+ListObject::ListObject(const QString name) :
     name(name), dimensions(0)
 {
 }
@@ -148,7 +148,7 @@ bool ListObject::deleteShape(uint i)
     return true;
 }
 
-size_t ListObject::addShape(Shape *shape, string location)
+size_t ListObject::addShape(Shape *shape, QString location)
 {
     shape->filename = location;
     if (shapes.size() == 0 || dimensions == 0)

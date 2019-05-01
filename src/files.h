@@ -21,7 +21,7 @@
 #pragma once
 
 #include "stdafx.h"
-#include <glibmm/stringutils.h>
+//#include <glibmm/stringutils.h>
 
 #include "triangle.h"
 #include <QFile>
@@ -60,12 +60,12 @@ public:
   filetype_t getFileType();
 
   void loadTriangles(vector< vector<Triangle> > &triangles,
-                     vector<Glib::ustring> &names,
+                     vector<QString> &names,
                      uint max_triangles=0);
 
 
   bool load_asciiSTL(vector< vector<Triangle> > &triangles,
-                     vector<Glib::ustring> &names,
+                     vector<QString> &names,
                      uint max_triangles=0, bool readnormals=false);
 
   bool load_binarySTL(vector<Triangle> &triangles,
@@ -82,19 +82,19 @@ public:
 
 #if ENABLE_AMF
   bool load_AMF (vector< vector<Triangle> > &triangles,
-                 vector<Glib::ustring> &names,
+                 vector<QString> &names,
                  uint max_triangles=0);
 
   static bool save_AMF (QString filename,
                         const vector< vector<Triangle> > &triangles,
-                        const vector<Glib::ustring> &names,
+                        const vector<QString> &names,
                         bool compressed = true);
 #endif
 
   static bool parseSTLtriangles_ascii(istream &text,
                                       uint max_triangles, bool readnormals,
                                       vector<Triangle> &triangles,
-                                      Glib::ustring &name);
+                                      QString &name);
 
 
   /* static bool loadVRMLtriangles(ustring filename, */

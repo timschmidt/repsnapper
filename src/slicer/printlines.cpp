@@ -536,12 +536,14 @@ Printlines::Printlines(const Layer * layer, Settings * settings, double z_offset
   this->layer = layer;
 
   // save overhang polys of layer for point-in-overhang detection
+#ifdef USECAIRO
   if (layer!=NULL) {
     Cairo::RefPtr<Cairo::Context>      context;
     vector<Poly> overhangs = layer->getOverhangs();
     rasterpolys(overhangs, layer->getMin(), layer->getMax(), layer->thickness/5,
                 overhangs_surface, context);
   }
+#endif
 }
 
 void Printlines::clear()
@@ -596,6 +598,7 @@ PrintPoly::PrintPoly(const Poly &poly,
             -printlines->settings->get_double("Extruder/OffsetY")));
 
   if (area==SHELL || area==SKIN) {
+#ifdef USECAIRO
     priority *= 5; // may be 5 times as far away to get preferred as next poly
     for (uint j=0; j<m_poly->size();j++){
       if (getCairoSurfaceDatapoint(printlines->overhangs_surface,
@@ -606,6 +609,7 @@ PrintPoly::PrintPoly(const Poly &poly,
     priority /= 10; // must be 10 times nearer for each overhang point
       }
     }
+#endif
   } else if (area==SKIRT) {
     priority *= 1000; // may be 1000 times as far away to get preferred
   } else if (area==SUPPORT) {

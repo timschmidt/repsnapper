@@ -257,10 +257,10 @@ double Shape::volume() const
 string Shape::getSTLsolid() const
 {
   stringstream sstr;
-  sstr << "solid " << filename <<endl;
+  sstr << "solid " << filename.toStdString() <<endl;
   for (uint i = 0; i < triangles.size(); i++)
     sstr << triangles[i].getSTLfacet(transform3D.transform);
-  sstr << "endsolid " << filename <<endl;
+  sstr << "endsolid " << filename.toStdString()<<endl;
   return sstr.str();
 }
 

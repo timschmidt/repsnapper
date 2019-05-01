@@ -28,12 +28,12 @@
 class FlatShape : public Shape
 {
 
-    Glib::ustring filename;
+    QString filename;
  public:
   virtual short dimensions(){return 2;}
 
   FlatShape();
-  FlatShape(Glib::ustring filename);
+  FlatShape(QString filename);
   ~FlatShape(){}
 
   /* FlatShape(const FlatShape &rhs); */

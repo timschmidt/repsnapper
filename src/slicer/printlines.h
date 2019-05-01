@@ -228,7 +228,9 @@ class Printlines
   Settings *settings;
   const Layer * layer;
 
+#ifdef USECAIRO
   Cairo::RefPtr<Cairo::ImageSurface> overhangs_surface;
+#endif
 
   void setName(string s){name=s;}
 

@@ -21,7 +21,7 @@ To build and run the QT version of repsnapper do:
 
    git checkout QT
 
-   cd RepsnapperQt && qmake && make
+   cd repsnapper/RepsnapperQt && qmake && make
 
    ./RepsnapperQT
 
