@@ -84,9 +84,7 @@ HEADERS += \
         ../src/gcode/command.h \
         ../src/gcode/gcode.h \
         ../src/gcode/gcodestate.h \
-        ../src/gitversion.h \
         ../src/gllight.h \
-        ../src/linked_ptr.h \
         ../src/miniball.h \
         ../src/model.h \
         ../src/objlist.h \
@@ -113,7 +111,6 @@ HEADERS += \
         ../src/ui/prefs_dlg.h \
         ../src/ui/progress.h \
         ../src/ui/widgets.h \
-        ../src/vrml.h \
         mainwindow.h
 
 FORMS += \
@@ -124,30 +121,14 @@ INCLUDEPATH += ../
 INCLUDEPATH += ../libraries/vmmlib/include/
 INCLUDEPATH += ../libraries/
 
-INCLUDEPATH += /usr/local/include
-INCLUDEPATH += /usr/local/include/glibmm-2.4/
-INCLUDEPATH += /usr/local/lib/glibmm-2.4/include
-INCLUDEPATH += /usr/local/include/glib-2.0/
-INCLUDEPATH += /usr/local/lib/glib-2.0/include
-INCLUDEPATH += /usr/local/include/libxml++-2.6/
-INCLUDEPATH += /usr/local/include/libxml++-2.6/include/
 
-INCLUDEPATH += /usr/include/glibmm-2.4/
-INCLUDEPATH += /usr/lib/glibmm-2.4/include
-INCLUDEPATH += /usr/include/glib-2.0/
-INCLUDEPATH += /usr/lib/glib-2.0/include
-INCLUDEPATH += /usr/include/libxml++-2.6/
-INCLUDEPATH += /usr/include/libxml++-2.6/include
+CONFIG += link_pkgconfig
+
+PKGCONFIG += glu glibmm-2.4 glib-2.0 gstreamer-1.0 libxml++-2.6
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-unix|win32: LIBS += -lintl
-unix|win32: LIBS += -lglib-2.0
-unix|win32: LIBS += -lglibmm-2.4
-unix|win32: LIBS += -lxml++-2.6
-unix|win32: LIBS += -lGLU
-
-QMAKE_CXX="ccache clang++80"
+#QMAKE_CXX="ccache clang++80"
