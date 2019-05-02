@@ -232,7 +232,10 @@ vector<float> Settings::get_array(const QString &name)
 }
 vector<float> Settings::get_ranges(const QString &name)
 {
-    return get_array("Ranges/"+name);
+    vector<float> ranges = get_array("Ranges/"+name);
+    while (ranges.size()<4)
+        ranges.push_back(0.f);
+    return ranges;
 }
 
 double Settings::get_slider_fraction(const QString &name)
