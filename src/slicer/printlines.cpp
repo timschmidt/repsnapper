@@ -22,9 +22,6 @@
 #include "layer.h"
 #include "../gcode/gcodestate.h"
 #include "../ui/progress.h"
-#include "../ui/draw.h"
-
-
 
 //////// Generic PLine functions
 

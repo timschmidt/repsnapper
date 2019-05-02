@@ -23,7 +23,6 @@
 #include "../shape.h"
 #include "infill.h"
 #include "../render.h"
-#include "../ui/draw.h"
 
 // polygons will be simplified to thickness/CLEANFACTOR
 #define CLEANFACTOR 7

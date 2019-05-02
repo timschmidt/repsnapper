@@ -21,7 +21,6 @@
 #include "ui/progress.h"
 //#include "settings.h"
 #include "slicer/clipping.h"
-#include "ui/draw.h"
 
 #include <QRegularExpressionMatch>
 

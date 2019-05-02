@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui opengl
+QT       += core gui opengl uitools
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -124,7 +124,9 @@ INCLUDEPATH += ../libraries/
 
 CONFIG += link_pkgconfig
 
-PKGCONFIG += glu glibmm-2.4 glib-2.0 gstreamer-1.0 libxml++-2.6
+PKGCONFIG += glu glibmm-2.4 glib-2.0 libxml++-2.6 
+#gstreamer-1.0 
+
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

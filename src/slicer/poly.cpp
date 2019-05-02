@@ -25,8 +25,6 @@
 #include "clipping.h"
 #include "../render.h"
 
-#include "../ui/draw.h"
-
 #include <poly2tri/poly2tri/poly2tri/poly2tri.h>
 
 

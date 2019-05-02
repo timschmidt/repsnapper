@@ -18,7 +18,6 @@
 */
 
 #pragma once
-#include "config.h"
 #include "../types.h"
 
 // ClipperLib: see http://angusj.com/delphi/clipper.php

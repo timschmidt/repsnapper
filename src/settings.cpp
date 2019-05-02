@@ -29,16 +29,14 @@
 #include <QTextStream>
 #include <QLineEdit>
 #include <QTextEdit>
-#include <QStringLiteral>
 #include <QFileInfo>
 #include <QDir>
 
 #include <src/ui/prefs_dlg.h>
 
-#include "settings.h"
+#include "../version.h"
 #include "settings.h"
 #include "stdafx.h"
-
 #include "slicer/infill.h"
 /*
  * How settings are intended to work:
@@ -492,7 +490,7 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
 {
   QString real_widget_name(widget_name);
   if (widget_name.endsWith("_size"))
-      real_widget_name = real_widget_name.chopped(5);
+      real_widget_name.chop(5);
   QWidget *w = parentwidget->findChild<QWidget*>(real_widget_name);
   if (widget_name.startsWith("Extruder")){ // only check for number of Extruders in list
       if (widget_name[8]!='_'){
