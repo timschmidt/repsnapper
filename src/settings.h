@@ -52,6 +52,7 @@ typedef struct {
     Vector4f displayColor;
 } ExtruderSettings;
 
+
 class Settings : public QSettings {
     Q_OBJECT
 
@@ -189,11 +190,8 @@ public:
 
   QString info();
 
-  static QString numbered(const QString &qstring, int num);
-
-
 signals:
-  void settings_changed(const QString &group);
+  void settings_changed(const QString &name);
 public slots:
   void get_from_gui();
   void get_int_from_gui(int value);

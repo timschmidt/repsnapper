@@ -328,10 +328,6 @@ guint Render::find_object_at(gdouble x, gdouble y)
 {
   // Render everything in selection mode
 
-//  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
-//  if (!gldrawable->gl_begin(get_gl_context()))
-//    return false;
-
   const GLsizei BUFSIZE = 256;
   GLuint select_buffer[BUFSIZE];
 
@@ -379,7 +375,7 @@ guint Render::find_object_at(gdouble x, gdouble y)
   GLuint *ptr = select_buffer;
   GLuint name = 0;
   GLuint minZ = G_MAXUINT;
-
+  cerr << hits << " hits"<< endl;
   for (GLint i = 0; i < hits; i++) { //  for each hit
      GLuint n = *ptr++; // number of hits in this record
      GLuint z1 = *ptr++; // Minimum Z in the hit record
@@ -538,7 +534,7 @@ void Render::paintGL()
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glLoadIdentity();
-    glTranslatef (0.0, 0.0, -2.0 * m_zoom);
+    glTranslatef (0.0f, 0.0f, -2.0f * m_zoom);
     glMultMatrixf (m_transform.M);
     CenterView();
     glPushMatrix();
@@ -565,11 +561,12 @@ void Render::mousePressEvent(QMouseEvent *event)
 
     mousePressed = event->button();
     if(mousePressed == Qt::LeftButton) {
+        mousePickedObject = 0;//find_object_at(event->pos().x(), event->pos().y());
         // on button 1 with shift/ctrl, if there is an object, select it (for dragging)
         if (mousePressedModifiers == Qt::ShiftModifier
                || mousePressedModifiers == Qt::ControlModifier) {
-            guint index = find_object_at(event->pos().x(), event->pos().y());
-            if (index) {
+            if (mousePickedObject) {
+                cerr << "drag " << mousePickedObject << endl;
               /*  Gtk::TreeModel::iterator iter = get_model()->objects.find_stl_by_index(index);
                 if (!m_selection->is_selected(iter)) {
                     if (mousePressedModifiers != Qt::ControlModifier){  // add to selection by CONTROL
@@ -583,7 +580,7 @@ void Render::mousePressEvent(QMouseEvent *event)
     }
 }
 
-const double drag_factor = 0.1;
+const double drag_factor = 0.3;
 
 void Render::mouseMoveEvent(QMouseEvent *event)
 {
@@ -699,10 +696,11 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
             if (event->button() == Qt::RightButton) { // -> popup menu?
                 //cerr << "menu" << endl;
             } else if (event->button() == Qt::LeftButton)  {
-                guint index = find_object_at(event->pos().x(), event->pos().y());
-                if (index) {
-                    Shape *selected = get_model()->objectList.findShape(index);
-                    cerr << "selected " << selected->filename.toStdString() << endl;
+                if (mousePickedObject) { // from mousePressEvent
+                    Shape *selected = get_model()->objectList.findShape(mousePickedObject);
+                    if (selected){
+                        cerr << "selected " << selected->filename.toStdString() << endl;
+                    }
                     /* Gtk::TreeModel::iterator iter = get_model()->objects.find_stl_by_index(index);
                     if (iter) {
                         if (event->button == 1)  {

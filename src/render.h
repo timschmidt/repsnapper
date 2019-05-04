@@ -94,6 +94,7 @@ public:
   QModelIndexList &getSelection() const {return *m_selection;}
 
   Qt::MouseButton mousePressed;
+  uint mousePickedObject;
 public slots:
   void setXRotation(int angle);
   void setYRotation(int angle);

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>669</width>
+    <width>651</width>
     <height>689</height>
    </rect>
   </property>
@@ -23,8 +23,26 @@
      <property name="enabled">
       <bool>true</bool>
      </property>
+     <property name="tabShape">
+      <enum>QTabWidget::Rounded</enum>
+     </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
+     </property>
+     <property name="elideMode">
+      <enum>Qt::ElideNone</enum>
+     </property>
+     <property name="usesScrollButtons">
+      <bool>false</bool>
+     </property>
+     <property name="documentMode">
+      <bool>false</bool>
+     </property>
+     <property name="tabsClosable">
+      <bool>false</bool>
+     </property>
+     <property name="tabBarAutoHide">
+      <bool>false</bool>
      </property>
      <widget class="QWidget" name="device_tab">
       <attribute name="title">
@@ -86,6 +104,9 @@
                 <property name="singleStep">
                  <double>2.000000000000000</double>
                 </property>
+                <property name="value">
+                 <double>150.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="0" column="1">
@@ -113,6 +134,9 @@
                 <property name="singleStep">
                  <double>5.000000000000000</double>
                 </property>
+                <property name="value">
+                 <double>200.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="2" column="5">
@@ -134,6 +158,9 @@
                 <property name="decimals">
                  <number>0</number>
                 </property>
+                <property name="value">
+                 <double>10.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="0" column="5">
@@ -154,6 +181,9 @@
                 <property name="singleStep">
                  <double>5.000000000000000</double>
                 </property>
+                <property name="value">
+                 <double>200.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="2" column="4">
@@ -166,6 +196,12 @@
                 </property>
                 <property name="singleStep">
                  <double>1.000000000000000</double>
+                </property>
+                <property name="stepType">
+                 <enum>QAbstractSpinBox::DefaultStepType</enum>
+                </property>
+                <property name="value">
+                 <double>10.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -207,6 +243,9 @@
                 <property name="maximum">
                  <double>1000.000000000000000</double>
                 </property>
+                <property name="value">
+                 <double>150.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="0" column="2">
@@ -234,12 +273,18 @@
                 <property name="maximum">
                  <double>1000.000000000000000</double>
                 </property>
+                <property name="value">
+                 <double>0.000000000000000</double>
+                </property>
                </widget>
               </item>
               <item row="1" column="5">
                <widget class="QDoubleSpinBox" name="Hardware_MaxMoveSpeedZ">
                 <property name="maximum">
                  <double>1000.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>3.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -332,6 +377,9 @@
                 <property name="maximum">
                  <number>100000</number>
                 </property>
+                <property name="singleStep">
+                 <number>1000</number>
+                </property>
                </widget>
               </item>
              </layout>
@@ -343,6 +391,9 @@
           <widget class="QCheckBox" name="Hardware_SpeedAlways">
            <property name="text">
             <string>Send Speed on Every GCode Command</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -400,6 +451,9 @@
            <widget class="QCheckBox" name="Slicing_UseTCommand">
             <property name="text">
              <string>Use T Command to Change Extruder</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -540,7 +594,10 @@
                 <item row="10" column="3">
                  <widget class="QLineEdit" name="Extruder_GCLetter">
                   <property name="text">
-                   <string/>
+                   <string>E</string>
+                  </property>
+                  <property name="placeholderText">
+                   <string notr="true">E</string>
                   </property>
                  </widget>
                 </item>
@@ -569,7 +626,14 @@
                  </widget>
                 </item>
                 <item row="5" column="3">
-                 <widget class="QDoubleSpinBox" name="Extruder_FilamentDiameter"/>
+                 <widget class="QDoubleSpinBox" name="Extruder_FilamentDiameter">
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.750000000000000</double>
+                  </property>
+                 </widget>
                 </item>
                 <item row="7" column="0" colspan="3">
                  <widget class="QLabel" name="label_65">
@@ -579,12 +643,28 @@
                  </widget>
                 </item>
                 <item row="6" column="3">
-                 <widget class="QDoubleSpinBox" name="Extruder_ExtrudedMaterialWidthRatio"/>
+                 <widget class="QDoubleSpinBox" name="Extruder_ExtrudedMaterialWidthRatio">
+                  <property name="minimum">
+                   <double>0.500000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>5.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.100000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.800000000000000</double>
+                  </property>
+                 </widget>
                 </item>
                 <item row="3" column="0" colspan="3">
                  <widget class="QCheckBox" name="Extruder_UseForSupport">
                   <property name="text">
                    <string>Use this Extruder for Support</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -599,7 +679,14 @@
                  <widget class="QDoubleSpinBox" name="Extruder_OffsetX"/>
                 </item>
                 <item row="7" column="3">
-                 <widget class="QDoubleSpinBox" name="Extruder_MinimumLineWidth"/>
+                 <widget class="QDoubleSpinBox" name="Extruder_MinimumLineWidth">
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>0.400000000000000</double>
+                  </property>
+                 </widget>
                 </item>
                 <item row="6" column="0" colspan="3">
                  <widget class="QLabel" name="label_64">
@@ -619,10 +706,24 @@
                  </widget>
                 </item>
                 <item row="8" column="3">
-                 <widget class="QDoubleSpinBox" name="Extruder_MaximumLineWidth"/>
+                 <widget class="QDoubleSpinBox" name="Extruder_MaximumLineWidth">
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>0.600000000000000</double>
+                  </property>
+                 </widget>
                 </item>
                 <item row="9" column="3">
-                 <widget class="QDoubleSpinBox" name="Extruder_ExtrusionFactor"/>
+                 <widget class="QDoubleSpinBox" name="Extruder_ExtrusionFactor">
+                  <property name="singleStep">
+                   <double>0.010000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>1.000000000000000</double>
+                  </property>
+                 </widget>
                 </item>
                 <item row="9" column="0" colspan="3">
                  <widget class="QLabel" name="label_67">
@@ -697,7 +798,10 @@
              <double>1000.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.100000000000000</double>
+             <double>1.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>180.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -714,7 +818,10 @@
              <double>1000.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.100000000000000</double>
+             <double>1.000000000000000</double>
+            </property>
+            <property name="value">
+             <double>150.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -732,6 +839,9 @@
             </property>
             <property name="singleStep">
              <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.500000000000000</double>
             </property>
            </widget>
           </item>
@@ -758,6 +868,9 @@
             </property>
             <property name="singleStep">
              <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>10.000000000000000</double>
             </property>
            </widget>
           </item>
@@ -794,6 +907,9 @@
             <property name="singleStep">
              <double>0.100000000000000</double>
             </property>
+            <property name="value">
+             <double>8.500000000000000</double>
+            </property>
            </widget>
           </item>
           <item row="1" column="3">
@@ -801,11 +917,17 @@
             <property name="singleStep">
              <double>0.100000000000000</double>
             </property>
+            <property name="value">
+             <double>0.900000000000000</double>
+            </property>
            </widget>
           </item>
           <item row="2" column="1">
            <widget class="QDoubleSpinBox" name="Extruder_AntioozeZlift">
             <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
              <double>0.100000000000000</double>
             </property>
            </widget>
@@ -824,7 +946,7 @@
      </widget>
      <widget class="QWidget" name="infill_tab">
       <attribute name="title">
-       <string>Infill</string>
+       <string>Infill &amp;&amp; Raft</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
@@ -932,10 +1054,10 @@
            </property>
           </widget>
          </item>
-         <item row="7" column="0">
+         <item row="7" column="0" alignment="Qt::AlignRight">
           <widget class="QLabel" name="label_32">
            <property name="text">
-            <string>Alter Infill Every:</string>
+            <string>Alter Infill Every</string>
            </property>
           </widget>
          </item>
@@ -1036,12 +1158,21 @@
            <property name="singleStep">
             <double>0.100000000000000</double>
            </property>
+           <property name="stepType">
+            <enum>QAbstractSpinBox::DefaultStepType</enum>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
           </widget>
          </item>
          <item row="2" column="3">
           <widget class="QDoubleSpinBox" name="Slicing_FullFillExtrusion">
            <property name="singleStep">
             <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
            </property>
           </widget>
          </item>
@@ -1060,7 +1191,14 @@
           </widget>
          </item>
          <item row="1" column="3">
-          <widget class="QDoubleSpinBox" name="Slicing_NormalFillExtrusion"/>
+          <widget class="QDoubleSpinBox" name="Slicing_NormalFillExtrusion">
+           <property name="singleStep">
+            <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>1.000000000000000</double>
+           </property>
+          </widget>
          </item>
          <item row="0" column="0">
           <widget class="QLabel" name="label_22">
@@ -1087,9 +1225,272 @@
            <property name="maximum">
             <number>369</number>
            </property>
+           <property name="value">
+            <number>60</number>
+           </property>
           </widget>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_18">
+         <property name="font">
+          <font>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="title">
+          <string>Raft</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_17">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <item row="6" column="2">
+           <widget class="QDoubleSpinBox" name="Raft_Interface_Distance">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>2.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="0">
+           <widget class="QLabel" name="label_75">
+            <property name="text">
+             <string>Thickness Ratio</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QDoubleSpinBox" name="Raft_Size">
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="2">
+           <widget class="QDoubleSpinBox" name="Raft_Interface_MaterialDistanceRatio">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="0">
+           <widget class="QLabel" name="label_76">
+            <property name="text">
+             <string>Temperature Ratio</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QSpinBox" name="Raft_Base_Rotation">
+            <property name="maximum">
+             <number>360</number>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="1">
+           <widget class="QDoubleSpinBox" name="Raft_Base_Thickness">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_71">
+            <property name="text">
+             <string>Extrusion Ratio</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_70">
+            <property name="text">
+             <string>Number of Layers</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QSpinBox" name="Raft_Base_LayerCount">
+            <property name="value">
+             <number>1</number>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="0">
+           <widget class="QLabel" name="label_73">
+            <property name="text">
+             <string>Rotation per Layer</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QSpinBox" name="Raft_Interface_Rotation">
+            <property name="maximum">
+             <number>360</number>
+            </property>
+            <property name="value">
+             <number>90</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QSpinBox" name="Raft_Interface_LayerCount">
+            <property name="value">
+             <number>2</number>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QDoubleSpinBox" name="Raft_Base_Distance">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>2.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" alignment="Qt::AlignHCenter">
+           <widget class="QLabel" name="label_77">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Base</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="Raft_Enable">
+            <property name="text">
+             <string>Enable Raft</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_69">
+            <property name="text">
+             <string>Larger Than Object (mm)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_72">
+            <property name="text">
+             <string>Rotation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0">
+           <widget class="QLabel" name="label_74">
+            <property name="text">
+             <string>Distance between Lines</string>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="2">
+           <widget class="QSpinBox" name="Raft_Interface_RotationPrLayer">
+            <property name="maximum">
+             <number>360</number>
+            </property>
+            <property name="value">
+             <number>90</number>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="1">
+           <widget class="QSpinBox" name="Raft_Base_RotationPrLayer">
+            <property name="maximum">
+             <number>360</number>
+            </property>
+            <property name="value">
+             <number>90</number>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="2">
+           <widget class="QDoubleSpinBox" name="Raft_Interface_Thickness">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="2">
+           <widget class="QDoubleSpinBox" name="Raft_Interface_Temperature">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" alignment="Qt::AlignHCenter">
+           <widget class="QLabel" name="label_78">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Interface</string>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QDoubleSpinBox" name="Raft_Base_Temperature">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.000000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QDoubleSpinBox" name="Raft_Base_MaterialDistanceRatio">
+            <property name="singleStep">
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>1.800000000000000</double>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">
@@ -1151,6 +1552,9 @@
             <property name="text">
              <string>Around All</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item row="4" column="6">
@@ -1164,6 +1568,9 @@
            <widget class="QDoubleSpinBox" name="Slicing_SkirtHeight">
             <property name="singleStep">
              <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.300000000000000</double>
             </property>
            </widget>
           </item>
@@ -1179,6 +1586,9 @@
             <property name="singleStep">
              <double>0.010000000000000</double>
             </property>
+            <property name="value">
+             <double>3.500000000000000</double>
+            </property>
            </widget>
           </item>
           <item row="4" column="4">
@@ -1191,7 +1601,7 @@
           <item row="5" column="4">
            <widget class="QLabel" name="label_44">
             <property name="text">
-             <string>Distance:</string>
+             <string>Radius:</string>
             </property>
            </widget>
           </item>
@@ -1214,6 +1624,9 @@
             <property name="singleStep">
              <double>0.010000000000000</double>
             </property>
+            <property name="value">
+             <double>0.800000000000000</double>
+            </property>
            </widget>
           </item>
           <item row="3" column="0" colspan="2">
@@ -1223,17 +1636,13 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="0" colspan="3">
-           <widget class="QCheckBox" name="Slicing_MoveNearest">
-            <property name="text">
-             <string>Move between nearest Points</string>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="7">
            <widget class="QDoubleSpinBox" name="Slicing_MinArcLength">
             <property name="singleStep">
              <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.150000000000000</double>
             </property>
            </widget>
           </item>
@@ -1262,6 +1671,22 @@
            <widget class="QSpinBox" name="Slicing_ArcsMaxAngle">
             <property name="maximum">
              <number>359</number>
+            </property>
+            <property name="value">
+             <number>28</number>
+            </property>
+            <property name="displayIntegerBase">
+             <number>10</number>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="0" colspan="3">
+           <widget class="QCheckBox" name="Slicing_MoveNearest">
+            <property name="text">
+             <string>Move between nearest Points</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -1297,10 +1722,18 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QDoubleSpinBox" name="Slicing_MinLayertime"/>
+           <widget class="QDoubleSpinBox" name="Slicing_MinLayertime">
+            <property name="value">
+             <double>10.000000000000000</double>
+            </property>
+           </widget>
           </item>
           <item row="0" column="4">
-           <widget class="QDoubleSpinBox" name="Slicing_MinShelltime"/>
+           <widget class="QDoubleSpinBox" name="Slicing_MinShelltime">
+            <property name="value">
+             <double>5.000000000000000</double>
+            </property>
+           </widget>
           </item>
           <item row="3" column="1">
            <widget class="QLabel" name="label_48">
@@ -1321,6 +1754,9 @@
             <property name="text">
              <string>Fan Control</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item row="3" column="3">
@@ -1338,7 +1774,11 @@
            </widget>
           </item>
           <item row="1" column="2">
-           <widget class="QDoubleSpinBox" name="Slicing_MaxOverhangSpeed"/>
+           <widget class="QDoubleSpinBox" name="Slicing_MaxOverhangSpeed">
+            <property name="value">
+             <double>30.000000000000000</double>
+            </property>
+           </widget>
           </item>
           <item row="1" column="0" colspan="2">
            <widget class="QLabel" name="label_47">
@@ -1350,14 +1790,20 @@
           <item row="3" column="2">
            <widget class="QSpinBox" name="Slicing_MinFanSpeed">
             <property name="maximum">
-             <number>1000</number>
+             <number>255</number>
+            </property>
+            <property name="value">
+             <number>30</number>
             </property>
            </widget>
           </item>
           <item row="3" column="4">
            <widget class="QSpinBox" name="Slicing_MaxFanSpeed">
             <property name="maximum">
-             <number>1000</number>
+             <number>255</number>
+            </property>
+            <property name="value">
+             <number>255</number>
             </property>
            </widget>
           </item>
@@ -1373,12 +1819,19 @@
           <item row="0" column="3">
            <widget class="QDoubleSpinBox" name="Slicing_FirstLayersSpeed">
             <property name="singleStep">
-             <double>0.100000000000000</double>
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.700000000000000</double>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QSpinBox" name="Slicing_FirstLayersNum"/>
+           <widget class="QSpinBox" name="Slicing_FirstLayersNum">
+            <property name="value">
+             <number>1</number>
+            </property>
+           </widget>
           </item>
           <item row="0" column="2">
            <widget class="QLabel" name="label_51">
@@ -1406,6 +1859,9 @@
             <property name="singleStep">
              <double>0.010000000000000</double>
             </property>
+            <property name="value">
+             <double>0.700000000000000</double>
+            </property>
            </widget>
           </item>
           <item row="1" column="2">
@@ -1421,7 +1877,10 @@
              <double>10.000000000000000</double>
             </property>
             <property name="singleStep">
-             <double>0.100000000000000</double>
+             <double>0.010000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.700000000000000</double>
             </property>
            </widget>
           </item>
@@ -1500,19 +1959,6 @@
         </spacer>
        </item>
       </layout>
-     </widget>
-     <widget class="QWidget" name="raft_tab">
-      <attribute name="title">
-       <string>Raft</string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="milling_tab">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <attribute name="title">
-       <string>Milling</string>
-      </attribute>
      </widget>
      <widget class="QWidget" name="display_tab">
       <attribute name="title">

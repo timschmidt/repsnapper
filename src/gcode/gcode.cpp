@@ -60,6 +60,7 @@ void GCode::clear()
   if (gl_List >= 0)
     glDeleteLists(gl_List,1);
   gl_List = -1;
+  emit gcode_changed();
 }
 
 
@@ -673,10 +674,7 @@ void GCode::MakeText(QString &GcodeTxt,
 
     const bool relativeecode = settings->get_boolean("Slicing/RelativeEcode");
     uint currextruder = 0;
-    const uint numExt = settings->getNumExtruders();
-    QString extLetters="";
-    for (uint i = 0;i<numExt;i++)
-      extLetters+=settings->get_string(Settings::numbered("Extruder",i)+"/GCLetter")[0];
+    vector<QChar> extLetters = settings->get_extruder_letters();
     for (uint i = 0; i < commands.size(); i++) {
       QChar E_letter;
       if (useTcommand) // use first extruder's code for all extuders

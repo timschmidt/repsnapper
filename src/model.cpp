@@ -186,6 +186,7 @@ void Model::ReadSVG(QFile *file)
   cerr << svgshape->info() << endl;
   AddShape(nullptr, (Shape*)svgshape, path, autoplace);
   ClearLayers();
+  emit model_changed(&objectList);
 }
 
 
@@ -208,6 +209,7 @@ vector<Shape*> Model::ReadShapes(QFile *file,
     }
   }
   cerr << shapes.size() << " shapes"<< endl;
+  emit model_changed(&objectList);
   return shapes;
 }
 
@@ -222,7 +224,7 @@ void Model::ReadStl(QFile *file)
     AddShape(NULL, s, s->filename, autoplace);
   }
   shapes.clear();
-  ModelChanged();
+  emit model_changed(&objectList);
 }
 
 void Model::SaveStl(QFile *file)
@@ -553,8 +555,6 @@ int Model::AddShape(ListObject *parentLO, Shape *shape, QString filename, bool a
   // Add it to the parent LO
   cerr << "adding shape " << filename.toStdString() << endl;
   parentLO->addShape(shape, filename);
-  // Update the view to include the new object
-  ModelChanged();
     // Tell everyone
 //  m_signal_stl_added.emit (path);
 
@@ -571,6 +571,7 @@ int Model::SplitShape(ListObject *parent, Shape *shape, QString filename)
       QTextStream (&sf) << filename << "_" << (s+1) ;
       AddShape(parent, splitshapes[s], sf, false);
   }
+  emit model_changed(&objectList);
   return splitshapes.size();
 }
 
@@ -582,6 +583,7 @@ int Model::MergeShapes(ListObject *parent, const vector<Shape*> shapes)
     shape->addTriangles(str);
   }
   AddShape(parent, shape, "merged", true);
+  emit model_changed(&objectList);
   return 1;
 }
 
@@ -596,6 +598,7 @@ int Model::DivideShape(ListObject *parent, Shape *shape, QString filename)
     AddShape(parent, upper, filename+_("_upper") ,false);
     AddShape(parent, lower, filename+_("_lower") ,false);
   }
+  emit model_changed(&objectList);
   return num;
 }
 

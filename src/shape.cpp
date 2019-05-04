@@ -31,11 +31,14 @@
 
 // Constructor
 Shape::Shape()
-  : slow_drawing(false), gl_List(-1)
+  : filename(""),
+    slow_drawing(false),
+    gl_List(-1)
 {
   Min.set(0,0,0);
   Max.set(200,200,200);
   CalcBBox();
+
 }
 
 void Shape::clear() {
@@ -43,6 +46,7 @@ void Shape::clear() {
   if (gl_List>=0)
     glDeleteLists(gl_List,1);
   gl_List = -1;
+  filename = "";
 };
 
 void Shape::setTriangles(const vector<Triangle> &triangles_)

@@ -64,6 +64,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings = new Settings();
     m_settings->connect_to_gui(this);
     m_settings->connect_to_gui(prefs_dialog);
+
+    cerr << m_settings->info().toStdString() << endl;
+
     connect(m_settings, SIGNAL(settings_changed(const QString&)), this, SLOT(settingsChanged(const QString&)));
 
     m_model = new Model(this);
@@ -118,6 +121,8 @@ void MainWindow::echo_log(string s)
 
 void MainWindow::updatedModel(const ObjectsList *objList)
 {
+    m_model->CalcBoundingBoxAndCenter();
+
     if (objList){
         cerr << objList->info() << endl;
         vector<Shape *> shapes;
@@ -133,9 +138,14 @@ void MainWindow::updatedModel(const ObjectsList *objList)
     m_settings->set_all_to_gui(prefs_dialog, "Hardware");
     m_settings->set_all_to_gui(prefs_dialog, "Slicing");
     m_settings->set_all_to_gui(prefs_dialog, "Extruder");
-    int layers = std::max(m_model->gcode->Max.z(),
-                          m_model->Max.z()) / m_settings->getLayerHeight();
-    m_settings->setMaxLayers(this, layers);
+
+
+    const double layerH = m_settings->getLayerHeight();
+    if (layerH > 0.){
+        int layers = std::max(m_model->gcode->Max.z(),
+                              m_model->Max.z()) / layerH;
+        m_settings->setMaxLayers(this, layers);
+    }
 }
 
 void MainWindow::shapeSelected(const QModelIndex &index)
@@ -159,7 +169,7 @@ void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
     // Draw GCode, which already incorporates any print offset
     if (!objects_only && !m_model->isCalculating()) {
       if (ui_main->tabGCode->focusWidget()
-              == ui_main->GCode_Result) {
+              == ui_main->GCodeResult) {
         double z = m_model->gcode->currentCursorWhere.z();
         m_model->GlDrawGCode(z);
       }
@@ -341,7 +351,7 @@ void MainWindow::connectButtons(QWidget *widget)
 
 void MainWindow::handleButtonClick()
 {
-    QAbstractButton *button = (QAbstractButton*)sender();
+    QAbstractButton *button = dynamic_cast<QAbstractButton*>(sender());
     if (!button)
         return;
     QString name = button->objectName();
@@ -403,19 +413,20 @@ void MainWindow::gcodeChanged()
     ui_main->GCode_Start->setPlainText(m_settings->get_string("GCode/Start"));
     ui_main->GCode_Layer->setPlainText(m_settings->get_string("GCode/Layer"));
     ui_main->GCode_End->setPlainText(m_settings->get_string("GCode/End"));
-    ui_main->GCode_Result->setDocument(&m_model->gcode->buffer);
+    ui_main->GCodeResult->setPlainText(m_model->gcode->buffer.toPlainText());
     m_render->update();
 }
 
-void MainWindow::settingsChanged(const QString &group)
+void MainWindow::settingsChanged(const QString &name)
 {
-    if (group == "scale"){
+    if (name.startsWith("scale")){
 
     }
-    cerr << group.toStdString() << " settings changed "<<  endl;
+//    cerr << name.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();
-    m_settings->setMaxLayers(this, int(m_model->Max.z()
-                                 / m_settings->getLayerHeight()));
+    double layerH = m_settings->getLayerHeight();
+    if (layerH > 0)
+        m_settings->setMaxLayers(this, int(m_model->Max.z() / layerH));
     m_render->update();
 }
 

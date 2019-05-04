@@ -71,7 +71,7 @@ void ObjectsList::get_all_shapes(vector<Shape *> &allshapes, vector<Matrix4d> &t
     transforms.clear();
     for (ListObject *o : objects) {
         Matrix4d otrans = transform3D.transform * o->transform3D.transform;
-        allshapes.insert(allshapes.begin(), o->shapes.begin(), o->shapes.end());
+        allshapes.insert(allshapes.end(), o->shapes.begin(), o->shapes.end());
         for (uint s = 0; s < o->shapes.size(); s++)
             transforms.push_back(otrans);
     }
@@ -91,13 +91,13 @@ void ObjectsList::get_selected_objects(const QModelIndexList *indexes,
     }
 }
 
-Shape *ObjectsList::findShape(int index) const
+Shape *ObjectsList::findShape(uint index) const
 {
     uint i = 0;
-    for (ListObject *o : objects) {
-        for (uint s = 0; s < o->shapes.size(); s++) {
+    for (int oi = 0; oi < objects.size(); oi++) {
+        for (uint s = 0; s < objects[oi]->shapes.size(); s++) {
             if (i == index)
-                return o->shapes[i];
+                return objects[oi]->shapes[s];
             i++;
         }
     }
