@@ -6,7 +6,8 @@
 
 QT       += core gui opengl uitools
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+lessThan(QT_MAJOR_VERSION, 5): error("requires Qt 5.12")
+lessThan(QT_MINOR_VERSION, 12): error("requires Qt 5.12")
 
 TARGET = RepsnapperQt
 TEMPLATE = app
