@@ -913,12 +913,12 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles)
 }
 
 // the bounding box is in real coordinates (not transformed)
-void Shape::drawBBox() const
+void Shape::drawBBox(Render * render) const
 {
   const double minz = max(0.,Min.z()); // draw above zero plane only
 
                 // Draw bbox
-                glColor3f(1,0.2,0.2);
+                glColor3f(1.f,0.2f,0.2f);
                 glLineWidth(1);
                 glBegin(GL_LINE_LOOP);
                 glVertex3f(Min.x(), Min.y(), minz);
@@ -955,21 +955,21 @@ void Shape::drawBBox() const
                 glEnd();
                 */
 
-  glColor3f(1,0.6,0.6);
+  glColor3f(1.f,0.6f,0.6f);
   ostringstream val;
   val.precision(1);
   Vector3d pos;
   val << fixed << (Max.x()-Min.x());
   pos = Vector3d((Max.x()+Min.x())/2.,Min.y(),Max.z());
-  Render::draw_string(pos,val.str());
+  render->draw_string(pos,val.str());
   val.str("");
   val << fixed << (Max.y()-Min.y());
   pos = Vector3d(Min.x(),(Max.y()+Min.y())/2.,Max.z());
-  Render::draw_string(pos,val.str());
+  render->draw_string(pos,val.str());
   val.str("");
   val << fixed << (Max.z()-minz);
   pos = Vector3d(Min.x(),Min.y(),(Max.z()+minz)/2.);
-  Render::draw_string(pos,val.str());
+  render->draw_string(pos,val.str());
 
 }
 

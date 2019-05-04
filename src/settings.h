@@ -165,7 +165,7 @@ public:
 
 
   void merge (QSettings &settings);
-  int mergeGlibKeyfile (const QString keyfile);
+  bool mergeGlibKeyfile (const QString keyfile);
   bool load_from_file (QString filename);
   bool load_from_data (QString data);
 

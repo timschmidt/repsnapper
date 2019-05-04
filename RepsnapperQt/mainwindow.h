@@ -46,6 +46,7 @@ public:
 
     Model * get_model() const {return m_model;}
     Settings * get_settings() const {return m_settings;}
+    Render * get_render() const {return m_render;}
 
     void Draw (const QModelIndexList *selected, bool objects_only=false);
     void DrawGrid ();

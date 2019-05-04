@@ -963,7 +963,7 @@ string Layer::SVGpath(const Vector2d &trans) const
 }
 
 
-void Layer::Draw(Settings &settings)
+void Layer::Draw(Settings &settings, Render *render)
 {
 
 #if 0
@@ -991,13 +991,13 @@ void Layer::Draw(Settings &settings)
   draw_polys(polygons, GL_LINE_LOOP, 1, 3, RED, 1, randomized);
   draw_polys(polygons, GL_POINTS,    1, 3, RED, 1, randomized);
 
-  if(settings.get_boolean("Display/DrawCPOutlineNumbers"))
+  if(render != nullptr && settings.get_boolean("Display/DrawCPOutlineNumbers"))
     for(size_t p=0; p<polygons.size();p++)
       {
     ostringstream oss;
     oss << p;
     Vector2d center = polygons[p].getCenter();
-    Render::draw_string(Vector3d(center.x(), center.y(), Z), oss.str());
+    render->draw_string(Vector3d(center.x(), center.y(), Z), oss.str());
       }
 
   draw_poly(hullPolygon,    GL_LINE_LOOP, 3, 3, ORANGE,  0.5, randomized);
@@ -1022,7 +1022,7 @@ void Layer::Draw(Settings &settings)
     draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1,   randomized);
     if(settings.get_boolean("Display/DrawVertexNumbers"))
       for(size_t p=0; p<supportPolygons.size();p++)
-    supportPolygons[p].drawVertexNumbers();
+    supportPolygons[p].drawVertexNumbers(render);
   } // else
     // draw_polys(toSupportPolygons,    GL_LINE_LOOP, 1, 1, BLUE2, 1,   randomized);
   draw_polys(bridgePolygons,       GL_LINE_LOOP, 3, 3, RED2,  0.7, randomized);
@@ -1081,23 +1081,23 @@ void Layer::Draw(Settings &settings)
   glLineWidth(1);
   if(settings.get_boolean("Display/DrawCPVertexNumbers")) // poly vertex numbers
     for(size_t p=0; p<polygons.size();p++)
-      polygons[p].drawVertexNumbers();
+      polygons[p].drawVertexNumbers(render);
       //polygons[p].drawVertexAngles();
 
   if(settings.get_boolean("Display/DrawCPLineNumbers"))  // poly line numbers
     for(size_t p=0; p<polygons.size();p++)
-      polygons[p].drawLineNumbers();
+      polygons[p].drawLineNumbers(render);
 
   if(settings.get_boolean("Display/DrawVertexNumbers")) { // infill vertex numbers
     for(size_t p=0; p<fillPolygons.size();p++)
-      fillPolygons[p].drawVertexNumbers();
+      fillPolygons[p].drawVertexNumbers(render);
     for(size_t p=0; p<fullFillPolygons.size();p++)
-      fullFillPolygons[p].drawVertexNumbers();
+      fullFillPolygons[p].drawVertexNumbers(render);
     for(size_t p=0; p<decorPolygons.size();p++)
-      decorPolygons[p].drawVertexNumbers();
+      decorPolygons[p].drawVertexNumbers(render);
     for(size_t p=0; p<shellPolygons.size();p++)
       for(size_t q=0; q<shellPolygons[p].size();q++)
-    shellPolygons[p][q].drawVertexNumbers();
+    shellPolygons[p][q].drawVertexNumbers(render);
   }
 
 
@@ -1151,7 +1151,7 @@ void Layer::Draw(Settings &settings)
 
 }
 
-void Layer::DrawRulers(const Vector2d &point)
+void Layer::DrawRulers(const Vector2d &point, Render *render)
 {
   if (polygons.size() == 0) return;
   Vector2d x0(Min.x()-10, point.y());
@@ -1216,7 +1216,7 @@ void Layer::DrawRulers(const Vector2d &point)
     val.str("");
     double v = xint[i].p.x()-xint[i-1].p.x();
     val << fixed << v;
-    Render::draw_string(Vector3d((xint[i].p.x()+xint[i-1].p.x())/2.,
+    render->draw_string(Vector3d((xint[i].p.x()+xint[i-1].p.x())/2.,
                  xint[i].p.y()+1,Z),
             val.str());
   }
@@ -1224,7 +1224,7 @@ void Layer::DrawRulers(const Vector2d &point)
     val.str("");
     double v = yint[i].p.y()-yint[i-1].p.y();
     val << fixed << v;
-    Render::draw_string(Vector3d(yint[i].p.x()+1,(yint[i].p.y()+yint[i-1].p.y())/2.,Z),
+    render->draw_string(Vector3d(yint[i].p.x()+1,(yint[i].p.y()+yint[i-1].p.y())/2.,Z),
             val.str());
   }
 

@@ -456,7 +456,7 @@ void GCode::draw(Settings *settings, int layer,
 
 
 void GCode::drawCommands(Settings *settings, uint start, uint end,
-             bool liveprinting, int linewidth, bool arrows, bool boundary,
+                         bool liveprinting, int linewidth, bool arrows, bool boundary,
                          bool onlyZChange)
 {
   // if (gl_List < 0) {
@@ -596,11 +596,12 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
             } else {
               Color = extruders[commands[i].extruder_no].displayColor;
             }
+            /* TODO
             if (debuggcodeextruders) {
               ostringstream o; o << commands[i].extruder_no+1;
               Render::draw_string( (pos + commands[i].where) / 2. + extruder_offset,
                            o.str());
-            }
+            }*/
               }
             if (luminanceshowsspeed)
               Color *= luma;

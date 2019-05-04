@@ -251,7 +251,7 @@ Command::Command(string gcodeline, const Vector3d &defaultpos,
         foundExtr = true;
     }
     if (!foundExtr)
-      cerr << "cannot parse GCode line " << gcodeline << endl;
+      cerr << "no Extruder found in GCode line " << gcodeline << endl;
     break;
       }
     }

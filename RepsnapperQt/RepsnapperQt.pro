@@ -124,8 +124,8 @@ INCLUDEPATH += ../libraries/
 
 CONFIG += link_pkgconfig
 
-PKGCONFIG += glu glibmm-2.4 glib-2.0 libxml++-2.6 
-#gstreamer-1.0 
+PKGCONFIG += glu glibmm-2.4 glib-2.0 libxml++-2.6
+#gstreamer-1.0
 
 
 # Default rules for deployment.

@@ -27,7 +27,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -996,13 +996,6 @@
            </property>
           </widget>
          </item>
-         <item row="5" column="0" alignment="Qt::AlignRight">
-          <widget class="QLabel" name="label_21">
-           <property name="text">
-            <string>Decoration:</string>
-           </property>
-          </widget>
-         </item>
          <item row="3" column="1">
           <widget class="QComboBox" name="Slicing_SupportFilltype"/>
          </item>
@@ -1227,6 +1220,13 @@
            </property>
            <property name="value">
             <number>60</number>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_21">
+           <property name="text">
+            <string>Decoration:</string>
            </property>
           </widget>
          </item>

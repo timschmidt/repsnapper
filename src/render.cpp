@@ -26,13 +26,11 @@
 
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
+#include <QPainter>
 
 #define N_LIGHTS (sizeof (m_lights) / sizeof(m_lights[0]))
 
-#define TRYFONTS "helvetica,arial,dejavu sans,sans,courier"
-#define FONTSIZE 8
-GLuint Render::fontlistbase = 0;
-int Render::fontheight = 0;
+#define FONTSIZE 9
 
 Render::Render (QWidget *widget)
     : QOpenGLWidget(widget),
@@ -42,7 +40,8 @@ Render::Render (QWidget *widget)
       m_xRot(0),
       m_yRot(0),
       m_zRot(0),
-      m_program(nullptr)
+      m_program(nullptr),
+      textFont("SansSerif", FONTSIZE)
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     setMouseTracking(true);
@@ -155,14 +154,6 @@ void Render::zoom_to_model(Model *model)
   update();
 }
 
-void Render::draw_string(const Vector3d &pos, const string s)
-{
-  if (fontheight == 0) return;
-  glRasterPos3dv(pos);
-  glListBase(fontlistbase);
-  glCallLists(s.length(), GL_UNSIGNED_BYTE, s.c_str());
-}
-
 void Render::setSelectedIndex(const QModelIndex &index)
 {
     if (!m_selection)
@@ -174,78 +165,6 @@ void Render::setSelectedIndex(const QModelIndex &index)
     update();
 }
 
-
-
-
-void Render::find_font(){
-  /* fontlistbase = glGenLists (128);
-
-    //  Pango::FontDescription font_desc;
-
-  vector < Glib::RefPtr< Pango::FontFamily > > families = pcontext->list_families();
-  bool found_font = false;
-  vector<QString> fonts = Glib::Regex::split_simple(",", TRYFONTS);
-  for (uint i = 0; !found_font && i < families.size(); i++) {
-    QString famname = families[i]->get_name().lowercase();
-    // cerr <<"Family: " << famname << endl;
-    for (uint k = 0; !found_font && k < fonts.size(); k++) {
-      if ((int)famname.find(fonts[k])!=-1) {
-    // found_font family, now get normal style and weight
-    vector< Glib::RefPtr< Pango::FontFace > > faces = families[i]->list_faces();
-    for (uint j = 0; !found_font && j < faces.size(); j++) {
-      font_desc = faces[j]->describe();
-      if (font_desc.get_style() == Pango::STYLE_NORMAL
-          && font_desc.get_weight() == Pango::WEIGHT_NORMAL ) {
-        font_desc.set_size(Pango::SCALE * FONTSIZE);
-        //cerr <<"Trying " << font_desc.to_string() << endl;
-        Glib::RefPtr<Pango::Font> font =
-          Gdk::GL::Font::use_pango_font(font_desc, 0, 128, fontlistbase);
-        if (font) {
-          //cerr <<"Using " << font_desc.to_string() << endl;
-          found_font = true;
-          Pango::FontMetrics font_metrics = font->get_metrics();
-          fontheight = font_metrics.get_ascent() + font_metrics.get_descent();
-          fontheight = PANGO_PIXELS(fontheight);
-        } else {
-          std::cerr << "*** Can't load font \""
-            << font_desc.to_string() << "\"" << std::endl;
-          found_font = false;
-        }
-      }
-    }
-      }
-    }
-  }
-
-  if (!found_font) {
-    cerr << "Did not find any working font matching \"" << TRYFONTS << "\""
-     << " on your system!" << endl
-     << "Cannot display any numbers"
-     << endl;
-    fontheight = 0;
-  }
-*/
-}
-
-/*
-bool Render::on_expose_event(GdkEventExpose* event)
-{
-  Glib::RefPtr<Gdk::GL::Drawable> gldrawable = get_gl_drawable();
-
-  if (!gldrawable || !gldrawable->gl_begin(get_gl_context()))
-    return false;
-
-
-  if (gldrawable->is_double_buffered()) {
-    gldrawable->swap_buffers();
-  } else {
-    glFlush();
-  }
-  gldrawable->gl_end();
-
-  return true;
-}
-*/
 /*
 bool Render::on_key_press_event(GdkEventKey* event) {
   // cerr << "key " << event->keyval << endl;
@@ -483,7 +402,6 @@ void Render::initializeGL()
     glEnable (GL_DEPTH_TEST);
     glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-
 /* // GLES2.0
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_core ? vertexShaderSourceCore : vertexShaderSource);
@@ -500,7 +418,6 @@ void Render::initializeGL()
     m_lightPosLoc = m_program->uniformLocation("lightPos");
     */
 
-//    find_font();
 }
 
 QSize Render::minimumSizeHint() const
@@ -515,8 +432,6 @@ QSize Render::sizeHint() const
 
 void Render::resizeGL(int width, int height)
 {
-
-//    cerr << "resizeGL "<<  width << " x " << height<< endl;
     int side = qMin(width, height);
     glViewport((width - side) / 2, (height - side) / 2, side, side);
     glMatrixMode(GL_PROJECTION);
@@ -527,11 +442,84 @@ void Render::resizeGL(int width, int height)
     glLoadIdentity();
 }
 
+void Render::draw_string(const Vector3d &pos, const string s)
+{
+    // from https://stackoverflow.com/a/33674071/1712200
+    int width = this->width();
+    int height = this->height();
+
+    GLdouble model[4][4], proj[4][4];
+    GLint view[4];
+    glGetDoublev(GL_MODELVIEW_MATRIX, &model[0][0]);
+    glGetDoublev(GL_PROJECTION_MATRIX, &proj[0][0]);
+    glGetIntegerv(GL_VIEWPORT, &view[0]);
+    GLdouble textPosX = 0, textPosY = 0, textPosZ = 0;
+
+    project(pos.x(), pos.y(), pos.z(),
+            &model[0][0], &proj[0][0], &view[0],
+            &textPosX, &textPosY, &textPosZ);
+
+    textPosY = height - textPosY; // y is inverted
+
+    // Retrieve last OpenGL color to use as a font color
+    GLdouble glColor[4];
+    glGetDoublev(GL_CURRENT_COLOR, glColor);
+    QColor fontColor = QColor(255*glColor[0], 255*glColor[1], 255*glColor[2], 255*glColor[3]);
+
+    // Render text
+    QPainter painter(this);
+    painter.setPen(fontColor);
+    painter.setFont(textFont);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+    painter.drawText(textPosX, textPosY, QString::fromStdString(s).left(12));
+    painter.end();
+}
+
+void transformPoint(GLdouble out[4], const GLdouble m[16], const GLdouble in[4])
+{
+#define M(row,col)  m[col*4+row]
+    out[0] =
+        M(0, 0) * in[0] + M(0, 1) * in[1] + M(0, 2) * in[2] + M(0, 3) * in[3];
+    out[1] =
+        M(1, 0) * in[0] + M(1, 1) * in[1] + M(1, 2) * in[2] + M(1, 3) * in[3];
+    out[2] =
+        M(2, 0) * in[0] + M(2, 1) * in[1] + M(2, 2) * in[2] + M(2, 3) * in[3];
+    out[3] =
+        M(3, 0) * in[0] + M(3, 1) * in[1] + M(3, 2) * in[2] + M(3, 3) * in[3];
+#undef M
+}
+
+inline GLint Render::project(GLdouble objx, GLdouble objy, GLdouble objz,
+                             const GLdouble model[16], const GLdouble proj[16],
+const GLint viewport[4],
+GLdouble * winx, GLdouble * winy, GLdouble * winz)
+{
+    GLdouble in[4], out[4];
+
+    in[0] = objx;
+    in[1] = objy;
+    in[2] = objz;
+    in[3] = 1.0;
+    transformPoint(out, model, in);
+    transformPoint(in, proj, out);
+
+    if (in[3] == 0.0)
+        return GL_FALSE;
+
+    in[0] /= in[3];
+    in[1] /= in[3];
+    in[2] /= in[3];
+
+    *winx = viewport[0] + (1 + in[0]) * viewport[2] / 2;
+    *winy = viewport[1] + (1 + in[1]) * viewport[3] / 2;
+
+    *winz = (1 + in[2]) / 2;
+    return GL_TRUE;
+}
+
 void Render::paintGL()
 {
-//    Model *model = m_main->get_model();
 //    cerr << "paintGL "<<  width() << "x" << height() << endl;
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glLoadIdentity();
     glTranslatef (0.0f, 0.0f, -2.0f * m_zoom);
@@ -541,12 +529,10 @@ void Render::paintGL()
     glColor3f(0.75f,0.75f,1.0f);
 
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
-    // Gtk::TreeModel::iterator iter = m_selection->get_selected();
 
     m_main->Draw (m_selection);
 
     glPopMatrix();
-
 }
 
 void Render::mousePressEvent(QMouseEvent *event)

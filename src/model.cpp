@@ -82,12 +82,6 @@ void Model::error (const char *message, const char *secondary)
 //  settings->save_settings(filename);
 //}
 
-void Model::LoadConfig(QString filename)
-{
-  settings->mergeGlibKeyfile(filename);
-  ModelChanged();
-}
-
 void Model::SimpleAdvancedToggle()
 {
   cout << _("not yet implemented\n");
@@ -290,13 +284,7 @@ void Model::Read(QFile *file)
     QString extn = finfo.suffix().toLower();
 //    cerr << "extension " << extn.toUtf8().constData()<<  endl;
     QString directory_path = finfo.absoluteDir().path();
-    if (extn == "conf")
-      {
-    LoadConfig (finfo.absoluteFilePath());
-    settings->SettingsPath = directory_path;
-    return;
-      }
-    else if (extn == "gcode")
+    if (extn == "gcode")
       {
     ReadGCode (file);
     settings->GCodePath = directory_path;
@@ -800,6 +788,8 @@ int Model::draw (const QModelIndexList *selected)
         }
   gint index = 1; // pick/select index. matches computation in update_model()
 
+  Render *render = main->get_render();
+
   Vector3d printOffset = settings->getPrintMargin();
   if(settings->get_boolean("Raft/Enable")) {
     const double rsize = settings->get_double("Raft/Size");
@@ -825,7 +815,7 @@ int Model::draw (const QModelIndexList *selected)
     // glPushMatrix();
     // glMultMatrixd (&preview_shapes[i]->transform3D.transform.array[0]);
     preview_shapes[i]->draw (settings, false, 20000);
-    preview_shapes[i]->drawBBox ();
+    preview_shapes[i]->drawBBox (render);
     // glPopMatrix();
       }
       glPopMatrix();
@@ -914,7 +904,7 @@ int Model::draw (const QModelIndexList *selected)
           }
           glPopMatrix();
           if(displaybbox)
-              shape->drawBBox();
+              shape->drawBBox(render);
           shapeindex++;
       }
       glPopMatrix();
@@ -958,15 +948,15 @@ int Model::draw (const QModelIndexList *selected)
       Vector3f pos;
       val << fixed << (Max.x()-Min.x());
       pos = Vector3f((Max.x()+Min.x())/2.f,Min.y(),Max.z());
-      Render::draw_string(pos,val.str());
+      render->draw_string(pos,val.str());
       val.str("");
       val << fixed << (Max.y()-Min.y());
       pos = Vector3f(Min.x(),(Max.y()+Min.y())/2.f,Max.z());
-      Render::draw_string(pos,val.str());
+      render->draw_string(pos,val.str());
       val.str("");
       val << fixed << (Max.z()-minz);
       pos = Vector3f(Min.x(),Min.y(),(Max.z()+minz)/2.f);
-      Render::draw_string(pos,val.str());
+      render->draw_string(pos,val.str());
     }
   int drawnlayer = -1;
   if(settings->get_boolean("Display/DisplayLayer")) {
@@ -1082,10 +1072,10 @@ int Model::drawLayers(float height, const Vector3d &offset, bool calconly)
       layer = m_previewLayer;
     }
       if (!calconly) {
-    layer->Draw(*settings);
+    layer->Draw(*settings, main->get_render());
 
     if (drawrulers)
-      layer->DrawRulers(measuresPoint);
+      layer->DrawRulers(measuresPoint, main->get_render());
       }
 
       // if (!have_layers)

@@ -134,6 +134,7 @@ void MainWindow::updatedModel(const ObjectsList *objList)
         objListModel.setStringList(slist);
     }
 
+    m_settings->set_all_to_gui(this, "Window");
     m_settings->set_all_to_gui(this);
     m_settings->set_all_to_gui(prefs_dialog, "Hardware");
     m_settings->set_all_to_gui(prefs_dialog, "Slicing");
@@ -328,11 +329,27 @@ void MainWindow::DrawGrid()
     glDisable (GL_LIGHTING);
 }
 
+
 void MainWindow::openFile(const QString &path)
 {
     if (path.isEmpty()) return;
+    QFile file(path);
+    QFileInfo finfo(file);
+    QString extn = finfo.suffix().toLower();
     QTextStream(stdout) << "opening " << path << endl;
-    m_model->Read(new QFile(path));
+    QString directory_path = finfo.absoluteDir().path();
+    if (extn == "conf") {
+        if (m_settings->mergeGlibKeyfile(path)) {
+            m_settings->set_all_to_gui(this);
+            m_settings->set_all_to_gui(prefs_dialog);
+        } else {
+            // load extern QSettings file?
+            // m_settings->SettingsPath = directory_path;
+        }
+        return;
+    }
+    else
+        m_model->Read(&file);
 }
 
 void MainWindow::connectButtons(QWidget *widget)

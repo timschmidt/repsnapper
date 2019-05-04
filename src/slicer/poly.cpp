@@ -752,7 +752,7 @@ void Poly::draw(int gl_type, bool randomized) const
   draw(gl_type, getZ(), randomized);
 }
 
-void Poly::drawVertexNumbers() const
+void Poly::drawVertexNumbers(Render *render) const
 {
   Vector3d v;
   for (uint i=0;i < vertices.size();i++){
@@ -760,11 +760,11 @@ void Poly::drawVertexNumbers() const
     glVertex3f(v.x(),v.y(),v.z());
     ostringstream oss;
     oss << i;
-    Render::draw_string(v, oss.str());
+    render->draw_string(v, oss.str());
   }
 }
 
-void Poly::drawVertexAngles() const
+void Poly::drawVertexAngles(Render *render) const
 {
   Vector3d v;
   for (uint i=0;i < vertices.size();i++){
@@ -773,11 +773,11 @@ void Poly::drawVertexAngles() const
     double angle = angleAtVertex(i);
     ostringstream oss;
     oss << (int)(angle*180/M_PI);
-    Render::draw_string(v, oss.str());
+    render->draw_string(v, oss.str());
   }
 }
 
-void Poly::drawLineNumbers() const
+void Poly::drawLineNumbers(Render *render) const
 {
   Vector3d v,v2;
   for (uint i=0;i < vertices.size();i++){
@@ -785,7 +785,7 @@ void Poly::drawLineNumbers() const
     v2 = getVertexCircular3(i+1);
     ostringstream oss;
     oss << i;
-    Render::draw_string((v+v2)/2., oss.str());
+    render->draw_string((v+v2)/2., oss.str());
   }
 }
 
@@ -894,18 +894,18 @@ void ExPoly::cleanup(double epsilon)
     holes[i].vertices = simplified(holes[i].vertices, epsilon);
 }
 
-void ExPoly::drawVertexNumbers() const
+void ExPoly::drawVertexNumbers(Render *render) const
 {
-  outer.drawVertexNumbers();
+  outer.drawVertexNumbers(render);
   for (uint i=0; i < holes.size(); i++)
-    holes[i].drawVertexNumbers();
+    holes[i].drawVertexNumbers(render);
 }
 
-void ExPoly::drawLineNumbers() const
+void ExPoly::drawLineNumbers(Render *render) const
 {
-  outer.drawLineNumbers();
+  outer.drawLineNumbers(render);
   for (uint i=0; i < holes.size(); i++)
-    holes[i].drawLineNumbers();
+    holes[i].drawLineNumbers(render);
 }
 
 

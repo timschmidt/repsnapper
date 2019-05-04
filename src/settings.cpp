@@ -152,22 +152,22 @@ void Settings::merge (QSettings &settings)
     }
 }
 
-int Settings::mergeGlibKeyfile (const QString keyfile)
+bool Settings::mergeGlibKeyfile (const QString keyfile)
 {
     GKeyFile * gkf = g_key_file_new();
     if (!g_key_file_load_from_file(gkf, keyfile.toStdString().c_str(), G_KEY_FILE_NONE, NULL)){
         fprintf (stderr, "Could not read config file %s\n", keyfile.data());
-        return EXIT_FAILURE;
+        return false;
     }
     GError *error;
     gsize ngroups;
     gchar ** groups = g_key_file_get_groups(gkf, &ngroups);
     bool isRange = false;
     for (uint g = 0; g < ngroups; g++) {
-        const QString group(groups[g]);
-        if (group == "Extruder") continue;
+        QString group = groups[g];
+//        cerr << "GROUP "<< groups[g] << endl;
         if (group == "Ranges") {
-            isRange == true;
+            isRange = true;
         }
         if (!isRange)
             beginGroup(group);
@@ -188,8 +188,10 @@ int Settings::mergeGlibKeyfile (const QString keyfile)
         if (!isRange)
             endGroup();
     }
+    remove("Ranges");
+    SelectExtruder(0);
     QTextStream(stderr) << info() << endl;
-    return ngroups;
+    return true;
 }
 
 QString Settings::info(){
@@ -499,54 +501,56 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
 //      QTextStream(stderr) << "    " << widget_name << tr(" not defined in GUI!")<< endl;
       cerr << "setting to gui in " << parentwidget->objectName().toStdString() << ": " << real_widget_name.toStdString()
            << " = " << value(grouped(real_widget_name)).toString().toStdString() << endl;
+      QString name = grouped(real_widget_name);
       QCheckBox *check = dynamic_cast<QCheckBox *>(w);
       if (check) {
-          check->setChecked(get_boolean(real_widget_name));
+          check->setChecked(get_boolean(name));
            break;
       }
       QSpinBox *spin = dynamic_cast<QSpinBox *>(w);
       if (spin) {
-          spin->setValue(get_double(real_widget_name));
+          spin->setValue(get_double(name));
           break;
       }
       QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
       if (dspin) {
-          dspin->setValue(get_double(real_widget_name));
+          dspin->setValue(get_double(name));
           break;
       }
       QAbstractSlider *slider = dynamic_cast<QAbstractSlider *>(w);
       if (slider) {
-          if (real_widget_name.endsWith("_Range")){
-              vector<float> vals = get_array(real_widget_name);
+          if (name.endsWith("/Range")){
+              vector<float> vals = get_array(name);
               slider->setRange(vals[0],vals[1]);
               slider->setSingleStep(vals[2]);
               slider->setPageStep(vals[3]);
           } else
-              slider->setValue(get_double(real_widget_name));
+              slider->setValue(get_double(name));
           break;
       }
       QComboBox *combo = dynamic_cast<QComboBox *>(w);
       if (combo) {
           if (widget_name == "Hardware_SerialSpeed") // has real value
-              combobox_set_to(combo, get_string(real_widget_name));
+              combobox_set_to(combo, get_string(name));
           else // has index
-              combo->setCurrentIndex(get_integer(real_widget_name));
+              combo->setCurrentIndex(get_integer(name));
           break;
       }
       QLineEdit *entry = dynamic_cast<QLineEdit *>(w);
       if (entry) {
-          entry->setText(get_string(real_widget_name));
+          entry->setText(get_string(name));
           break;
       }
       ColorButton *col = dynamic_cast<ColorButton *>(w);
       if(col) {
-          vector<float> c = get_array(real_widget_name);
-          col->set_color(c[0],c[1],c[2],c[3]);
+          vector<float> c = get_array(name);
+          if (c.size() == 4)
+              col->set_color(c[0],c[1],c[2],c[3]);
           break;
       }
       QPlainTextEdit *tv = dynamic_cast<QPlainTextEdit *>(w);
       if (tv) {
-          tv->setPlainText(get_string(real_widget_name));
+          tv->setPlainText(get_string(name));
           break;
       }
       QTextStream(stderr) << tr("set_to_gui of ") << real_widget_name << " not done!" << endl;
@@ -569,7 +573,7 @@ void Settings::set_all_to_gui (QWidget *parent_widget, const string filter)
           set_to_gui(parent_widget, widget_name);
       }
   }
-  if (filter.empty() || filter == "Misc") {
+  if (filter == "Window") {
     beginGroup("Misc");
     int w = value("WindowWidth").toInt();
     int h = value("WindowHeight").toInt();

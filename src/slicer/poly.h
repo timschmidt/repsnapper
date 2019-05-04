@@ -117,9 +117,9 @@ public:
 
         void draw(int gl_type, bool randomized=true) const;
         void draw(int gl_type, double z, bool randomized=true) const; // draw at given z
-        void drawVertexNumbers() const;
-        void drawVertexAngles() const;
-        void drawLineNumbers() const;
+        void drawVertexNumbers(Render *render) const;
+        void drawVertexAngles(Render *render) const;
+        void drawLineNumbers(Render *render) const;
         void draw_as_surface() const;
 
         void makeLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
@@ -171,8 +171,8 @@ class ExPoly
 
   void draw(int gl_type, bool randomized=false) const;
   void draw(int gl_type, double z, bool randomized=false) const; // draw at given z
-  void drawVertexNumbers() const;
-  void drawLineNumbers() const;
+  void drawVertexNumbers(Render *render) const;
+  void drawLineNumbers(Render *render) const;
 
   void cleanup(double maxerror);
 

@@ -148,9 +148,9 @@ public:
 
   string info() const ;
 
-  void Draw(Settings &settings);
+  void Draw(Settings &settings, Render *render=nullptr);
 
-  void DrawRulers(const Vector2d &point);
+  void DrawRulers(const Vector2d &point, Render *render);
 
   void Clear();
 

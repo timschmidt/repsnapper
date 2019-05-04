@@ -48,10 +48,6 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
   Model *get_model() const { return m_main->get_model(); }
   QModelIndexList *m_selection;
 
-  // font rendering:
-  static GLuint fontlistbase;
-  static int fontheight;
-
   float m_zoom;
   GlLight *m_lights[4];
 
@@ -84,7 +80,7 @@ public:
   void zoom_to_model(Model *model);
   void set_transform(const Matrix4fT &transform) {m_transform=transform;}
 
-  static void draw_string(const Vector3d &pos, const string s);
+  void draw_string(const Vector3d &pos, const string s);
 
 //  virtual void on_realize();
 
@@ -95,6 +91,8 @@ public:
 
   Qt::MouseButton mousePressed;
   uint mousePickedObject;
+
+
 public slots:
   void setXRotation(int angle);
   void setYRotation(int angle);
@@ -126,7 +124,11 @@ private:
 //  virtual bool on_scroll_event(GdkEventScroll* event);
 //  virtual bool on_key_press_event(GdkEventKey* event);
   //  virtual bool on_key_release_event(GdkEventKey* event);
-  void find_font();
+  QFont textFont;
+  GLint project(GLdouble objx, GLdouble objy, GLdouble objz,
+                const GLdouble model[], const GLdouble proj[],
+                const GLint viewport[],
+                GLdouble *winx, GLdouble *winy, GLdouble *winz);
 };
 
 #endif // RENDER_H
