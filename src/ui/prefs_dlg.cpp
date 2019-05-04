@@ -61,6 +61,7 @@ PrefsDlg::PrefsDlg(QWidget *parent) :
     selected_extruder(0)
 {
     ui_dialog->setupUi(this);
+    setDefaults();
 
     ui_dialog->postproc_group->hide();
     ui_dialog->acceleration_group->hide();
@@ -68,12 +69,15 @@ PrefsDlg::PrefsDlg(QWidget *parent) :
     ui_dialog->extruder_listview->setModel(&stringListModel);
     connect(ui_dialog->extruder_listview, SIGNAL(clicked(QModelIndex)),
             parent, SLOT(extruderSelected(QModelIndex)));
+}
 
-//  builder->get_widget ("settings_overview", m_settings_overview);
-//  builder->get_widget ("settings_notebook", m_settings_tab);
-//  m_preferences_dlg->set_icon_name("gtk-convert");
-//  m_preferences_dlg->signal_response().connect (
-//    sigc::bind(sigc::mem_fun(*this, &PrefsDlg::handle_response), m_preferences_dlg));
+void PrefsDlg::setDefaults() {
+    ui_dialog->Display_PolygonColour->set_color(0.5f,0.65f,0.7f,0.4f);
+    ui_dialog->Display_WireframeColour->set_color(1,0.5,0,0.5f);
+    ui_dialog->Display_NormalsColour->set_color(0.6f,1,0,1);
+    ui_dialog->Display_GCodeMoveColour->set_color(1,0,1,1);
+    ui_dialog->Display_GCodePrintingColour->set_color(1,1,1,1);
+    ui_dialog->Display_EndpointsColour->set_color(1,0.0,0,1);
 }
 
 PrefsDlg::~PrefsDlg()

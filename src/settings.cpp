@@ -130,12 +130,19 @@ Settings::Settings ()
 //  set_defaults(); // done in GUI
   m_user_changed = false;
   inhibit_callback = false;
-  bool haveSettings = !allKeys().empty();
-  if (!haveSettings) set_defaults();
+  set_defaults();
+  cleanup();
 }
 
 Settings::~Settings()
 {
+}
+
+void Settings::cleanup(){
+    for (QString k : allKeys()) {
+        if (k.contains("Range/") || k.startsWith("Ranges/"))
+            remove(k);
+    }
 }
 
 // merge into current settings
@@ -162,33 +169,27 @@ bool Settings::mergeGlibKeyfile (const QString keyfile)
     GError *error;
     gsize ngroups;
     gchar ** groups = g_key_file_get_groups(gkf, &ngroups);
-    bool isRange = false;
     for (uint g = 0; g < ngroups; g++) {
         QString group = groups[g];
 //        cerr << "GROUP "<< groups[g] << endl;
-        if (group == "Ranges") {
-            isRange = true;
-        }
-        if (!isRange)
-            beginGroup(group);
+        if (group == "Ranges")
+            continue;
+        beginGroup(group);
         gsize nkeys;
         gchar ** keys = g_key_file_get_keys (gkf, groups[g], &nkeys, &error);
         for (uint k = 0; k < nkeys; k++) {
             QString key = grouped(keys[k]);
             QString v(g_key_file_get_value (gkf, groups[g], keys[k], &error));
-            if (isRange)
-                key = key+"/Range";
-            if (isRange || key.endsWith("Colour")) {
+            if (key.endsWith("Colour")) {
                 QStringList vsplit = v.split(";");
                 set_array(key, toFloats(vsplit));
             } else {
                 setValue(key, v.replace("\\n","\n"));
             }
         }
-        if (!isRange)
-            endGroup();
+        endGroup();
     }
-    remove("Ranges");
+    cleanup();
     SelectExtruder(0);
     QTextStream(stderr) << info() << endl;
     return true;
@@ -239,20 +240,6 @@ vector<float> Settings::get_array(const QString &name)
     return s;
 }
 
-vector<float> Settings::get_ranges(const QString &name)
-{
-    vector<float> ranges = get_array(name+"/Range");
-    while (ranges.size()<4)
-        ranges.push_back(0.f);
-    return ranges;
-}
-
-double Settings::get_slider_fraction(const QString &name)
-{
-    vector<float> ranges = get_ranges(name);
-    return double(ranges[0]) + double(get_integer(name) / (ranges[1]-ranges[0]));
-}
-
 /*QStringList Settings::get_string_list(const QString &group, const QString &name)
 {
     beginGroup(group);
@@ -266,12 +253,14 @@ double Settings::get_slider_fraction(const QString &name)
     return list;
 }*/
 
-void Settings::set_array(const QString &key, const QColor &qcolor)
+void Settings::set_array(const QString &key, const QColor &qcolor, bool overwrite)
 {
-    set_array(key, toFloats(qcolor));
+    set_array(key, toFloats(qcolor), overwrite);
 }
 void Settings::set_array(const QString &name,
-                         const Vector4f &value) {
+                         const Vector4f &value, bool overwrite) {
+   if (!overwrite && contains(name))
+       return;
    beginWriteArray(name);
    for (int i=0; i<4; ++i){
        setArrayIndex(i);
@@ -280,18 +269,16 @@ void Settings::set_array(const QString &name,
    endArray();
 }
 void Settings::set_array(const QString &name,
-                         const vector<float> &values)
+                         const vector<float> &values, bool overwrite)
 {
+    if (!overwrite && contains(name))
+        return;
     beginWriteArray(name, values.size());
     for (int i=0; i<values.size(); ++i){
         setArrayIndex(i);
         setValue("float",values[i]);
     }
     endArray();
-}
-void Settings::set_ranges(const QString &name, const vector<float> &values)
-{
-    set_array(name+"/Range", values);
 }
 
 QStringList Settings::get_keys(const QString &group)
@@ -317,24 +304,14 @@ QStringList Settings::get_keys_and_values(const QString &group, QList<QVariant> 
  */
 void Settings::set_defaults ()
 {
-  filename = "";
-
   beginGroup("Global");
-  setValue("SettingsName","Default Settings");
-  setValue("SettingsImage","");
-  setValue("Version",VERSION);
+  setValue("SettingsName","Default Settings", false);
+  setValue("SettingsImage","", false);
+  setValue("Version",VERSION, false);
   endGroup();
 
   // Extruders.clear();
   // Extruders.push_back(Extruder);
-
-  beginGroup("Display");
-  set_array("PolygonColour", vector<float>{0.7f,1.f,1.f,0.5f});
-  set_array("WireframeColour", vector<float>{1,0.5,0,0.5});
-  set_array("NormalsColour", vector<float>{0.6,1,0,1});
-  set_array("GCodeMoveColour", vector<float>{1,0,1,1});
-  set_array("GCodePrintingColour", vector<float>{1,1,1,1});
-  endGroup();
 }
 
 // make old single coordinate colours to lists
@@ -342,7 +319,7 @@ void Settings::convert_old_colour  (const QString &group, const QString &key)
 {
     QTextStream(stderr) << "converting old "<< group << "_" << key <<endl;
     beginGroup(group);
-    const Vector4f color(get_double(key+"R"),
+    const Vector4d color(get_double(key+"R"),
                          get_double(key+"G"),
                          get_double(key+"B"),
                          get_double(key+"A"));
@@ -354,6 +331,7 @@ void Settings::convert_old_colour  (const QString &group, const QString &key)
     endGroup();
 }
 
+/*
 void Settings::load_settings (QString filename)
 {
   inhibit_callback = true;
@@ -448,6 +426,8 @@ void Settings::load_settings (QString filename)
 //  m_signal_visual_settings_changed.emit();
 //  m_signal_update_settings_gui.emit();
 }
+*/
+
 /*
 void Settings::save_settings(QString filename)
 {
@@ -498,9 +478,8 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
   }
   inhibit_callback = true;
   while (w) {
-//      QTextStream(stderr) << "    " << widget_name << tr(" not defined in GUI!")<< endl;
-      cerr << "setting to gui in " << parentwidget->objectName().toStdString() << ": " << real_widget_name.toStdString()
-           << " = " << value(grouped(real_widget_name)).toString().toStdString() << endl;
+//      cerr << "setting to gui in " << parentwidget->objectName().toStdString() << ": " << real_widget_name.toStdString()
+//           << " = " << value(grouped(real_widget_name)).toString().toStdString() << endl;
       QString name = grouped(real_widget_name);
       QCheckBox *check = dynamic_cast<QCheckBox *>(w);
       if (check) {
@@ -519,13 +498,7 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
       }
       QAbstractSlider *slider = dynamic_cast<QAbstractSlider *>(w);
       if (slider) {
-          if (name.endsWith("/Range")){
-              vector<float> vals = get_array(name);
-              slider->setRange(vals[0],vals[1]);
-              slider->setSingleStep(vals[2]);
-              slider->setPageStep(vals[3]);
-          } else
-              slider->setValue(get_double(name));
+          slider->setValue(get_double(name));
           break;
       }
       QComboBox *combo = dynamic_cast<QComboBox *>(w);
@@ -542,8 +515,9 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
           break;
       }
       ColorButton *col = dynamic_cast<ColorButton *>(w);
-      if(col) {
+      if (col) {
           vector<float> c = get_array(name);
+          cerr << "set color to gui " <<  name.toStdString()  << endl;
           if (c.size() == 4)
               col->set_color(c[0],c[1],c[2],c[3]);
           break;
@@ -584,6 +558,15 @@ void Settings::set_all_to_gui (QWidget *parent_widget, const string filter)
     endGroup();
   }
   inhibit_callback = false;
+}
+
+void Settings::set_windowsize_from_gui(QWidget *window){
+    beginGroup("Misc");
+    setValue("WindowWidth", window->width());
+    setValue("WindowHeight", window->height());
+    setValue("WindowPosX", window->pos().x());
+    setValue("WindowPosY", window->pos().y());
+    endGroup();
 }
 
 template<typename Base, typename T>
@@ -629,11 +612,8 @@ void Settings::connect_to_gui (QWidget *widget)
       }
       QAbstractSlider *range = dynamic_cast<QAbstractSlider *>(w); // sliders etc.
       if (range) {
-//          cerr << "connecting " << range->objectName().toStdString() << endl;
-          widget->connect(range, SIGNAL(rangeChanged(int, int)), this, SLOT(get_range_from_gui(int,int)));
           widget->connect(range, SIGNAL(valueChanged(int)), this, SLOT(get_int_from_gui(int)));
           if (readFromGUI) {
-              emit range->rangeChanged(range->minimum(), range->maximum());
               emit range->valueChanged(range->value());
           }
           continue;
@@ -915,27 +895,25 @@ void Settings::remove(const QString &group, const QString &key)
     endGroup();
 }
 
-void Settings::setMaxLayers(QWidget *parent, const int numLayers)
+void Settings::setMaxHeight(QWidget *parent, const double h)
 {
+    this->numLayers = numLayers;
     if (inhibit_callback) return;
     inhibit_callback=true;
     QSlider* slider = parent->findChild<QSlider*>("Display_LayerValue");
     if (slider) {
-        float fraction = (1.f*slider->value())/slider->maximum();
-        slider->setMaximum(numLayers);
-        slider->setValue(int(fraction * numLayers + 0.5));
+        slider->setMaximum(int(1000*h));
+        slider->setPageStep(h*100);
     }
     slider = parent->findChild<QSlider*>("Display_GCodeDrawStart");
     if (slider) {
-        float fraction = 1.f*slider->value()/slider->maximum();
-        slider->setMaximum(numLayers);
-        slider->setValue(int(fraction * numLayers + 0.5));
+        slider->setMaximum(int(1000*h));
+        slider->setPageStep(h*100);
     }
     slider = parent->findChild<QSlider*>("Display_GCodeDrawEnd");
     if (slider) {
-        float fraction = 1.f*slider->value()/slider->maximum();
-        slider->setMaximum(numLayers);
-        slider->setValue(int(fraction * numLayers + 0.5));
+        slider->setMaximum(int(1000*h));
+        slider->setPageStep(h*100);
     }
     inhibit_callback=false;
 }
@@ -1078,23 +1056,7 @@ void Settings::get_double_from_gui(double value)
             break;
         }
     }
-}
-
-void Settings::get_range_from_gui(int min, int max)
-{
-    if (inhibit_callback) return;
-    QWidget * w = (QWidget*) sender();
-    while(w) {
-        QAbstractSlider *slider = dynamic_cast<QAbstractSlider *>(w);
-        if (slider) {
-            const QString key = grouped(w->objectName());
-            const vector<float> ranges = {float(min), float(max),
-                                          float(slider->singleStep()),
-                                          float(slider->pageStep())};
-            set_ranges(key, ranges);
-          break;
-        }
-    }
+    if (w && !inhibit_callback) emit settings_changed(w->objectName());
 }
 
 void Settings::get_colour_from_gui (ColorButton * colorButton, const QString &key)

@@ -175,7 +175,9 @@ public:
 
         Settings * settings;
 
- private:
+        void rotate_selection(QModelIndexList * selection, const Vector4d rotate);
+        void move_selection(QModelIndexList * selection, const Vector3d move);
+private:
         bool is_calculating;
         bool is_printing;
 //        //GCodeIter *m_iter;

@@ -403,8 +403,8 @@ void GCode::draw(Settings *settings, int layer,
           int eind = 0;
 
               if (n_changes > 0) {
-                sind = (uint)ceil(settings->get_slider_fraction("Display/GCodeDrawStart")*(n_changes-1));
-                eind = (uint)ceil(settings->get_slider_fraction("Display/GCodeDrawEnd") *(n_changes-1));
+                sind = (uint)ceil(settings->get_integer("Display/GCodeDrawStart")/1000./Max.z()*(n_changes-1.));
+                eind = (uint)ceil(settings->get_integer("Display/GCodeDrawEnd")/1000./Max.z()*(n_changes-1.));
               }
           if (sind>=eind) {
         eind = MIN(sind+1, n_changes-1);
@@ -424,8 +424,8 @@ void GCode::draw(Settings *settings, int layer,
     }
     else {
           if (n_cmds > 0) {
-        start = uint(settings->get_slider_fraction("Display/GCodeDrawStart")*(n_cmds));
-        end =   uint(settings->get_slider_fraction("Display/GCodeDrawEnd")  *(n_cmds));
+        start = uint(settings->get_integer("Display/GCodeDrawStart")*(n_cmds) / 1000.);
+        end =   uint(settings->get_integer("Display/GCodeDrawEnd")  *(n_cmds) / 1000.);
           }
     }
 
@@ -517,9 +517,7 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
     Vector4f gcodemovecolour = settings->get_Vector4f("Display/GCodeMoveColour");
     Vector4f gcodeprintingcolour = settings->get_Vector4f("Display/GCodePrintingColour");
 
-
     vector<ExtruderSettings> extruders = settings->getExtruderSettings();
-
 
     for(uint i=start; i <= end; i++)
     {
@@ -577,44 +575,44 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
             double speed = commands[i].f;
             double luma = 1.;
             if( (!relativeE && commands[i].e == LastE)
-            || (relativeE && commands[i].e == 0) ) // move only
-              {
-            if (displaygcodemoves) {
-              luma = 0.3 + 0.7 * speed / maxmove_xy / 60;
-              Color = gcodemovecolour;
-              extrwidth = 0;
-            } else {
-               pos = commands[i].where;
-               break;
+                    || (relativeE && commands[i].e == 0) ) // move only
+            {
+                if (displaygcodemoves) {
+                    luma = 0.3 + 0.7 * speed / maxmove_xy / 60;
+                    Color = gcodemovecolour;
+                    extrwidth = 0;
+                } else {
+                    pos = commands[i].where;
+                    break;
+                }
             }
-              }
             else
-              {
-            luma = 0.3 + 0.7 * speed / extruders[commands[i].extruder_no].maxLineSpeed / 60;
-            if (liveprinting) {
-              Color = gcodeprintingcolour;
-            } else {
-              Color = extruders[commands[i].extruder_no].displayColor;
-            }
-            /* TODO
+            {
+                luma = 0.3 + 0.7 * speed / extruders[commands[i].extruder_no].maxLineSpeed / 60;
+                if (liveprinting) {
+                    Color = gcodeprintingcolour;
+                } else {
+                    Color = extruders[commands[i].extruder_no].displayColor;
+                }
+                /* TODO
             if (debuggcodeextruders) {
               ostringstream o; o << commands[i].extruder_no+1;
               Render::draw_string( (pos + commands[i].where) / 2. + extruder_offset,
                            o.str());
             }*/
-              }
+            }
             if (luminanceshowsspeed)
-              Color *= luma;
-                    commands[i].draw(pos, extruder_offset, linewidth,
-                                     Color, extrwidth, arrows, debug_arcs);
+                Color *= luma;
+            commands[i].draw(pos, extruder_offset, linewidth,
+                             Color, extrwidth, arrows, debug_arcs);
             LastE=commands[i].e;
             break;
-          }
+        }
         case RAPIDMOTION:
           {
             Color = gcodemovecolour;
-                    commands[i].draw(pos, extruder_offset, 1, Color,
-                                     extrwidth, arrows, debug_arcs);
+            commands[i].draw(pos, extruder_offset, 1, Color,
+                             extrwidth, arrows, debug_arcs);
             break;
           }
         default:

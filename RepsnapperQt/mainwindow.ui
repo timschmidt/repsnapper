@@ -141,12 +141,18 @@
            <item>
             <widget class="QLabel" name="label">
              <property name="text">
-              <string>Layer:</string>
+              <string>Height:</string>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QSlider" name="Display_LayerValue">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="mouseTracking">
               <bool>true</bool>
              </property>
@@ -160,8 +166,14 @@
            </item>
            <item>
             <widget class="QLabel" name="LayerLabel">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
-              <string>000</string>
+              <string>0</string>
              </property>
             </widget>
            </item>
@@ -1537,22 +1549,5 @@ M104 S0.0        ; heater off
   <tabstop>progres_Cancel</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>Display_LayerValue</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>LayerLabel</receiver>
-   <slot>setNum(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>375</x>
-     <y>488</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>414</x>
-     <y>496</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

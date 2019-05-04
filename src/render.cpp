@@ -46,7 +46,7 @@ Render::Render (QWidget *widget)
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
     setMouseTracking(true);
 
-  setFocus();
+  setFocusPolicy(Qt::ClickFocus);
 
   memset (&m_transform.M, 0, sizeof (m_transform.M));
 
@@ -124,12 +124,6 @@ void Render::setZRotation(int angle)
     }
 }
 
-//void Render::set_model(Model *model)
-//{
-////  model->signal_zoom().connect (sigc::mem_fun(*this, &Render::zoom_to_model));
-//  zoom_to_model();
-//}
-
 void Render::selection_changed()
 {
     repaint();
@@ -165,58 +159,48 @@ void Render::setSelectedIndex(const QModelIndex &index)
     update();
 }
 
-/*
-bool Render::on_key_press_event(GdkEventKey* event) {
-  // cerr << "key " << event->keyval << endl;
-  bool moveZ = (event->state & GDK_SHIFT_MASK);
-  bool rotate = (event->state & GDK_CONTROL_MASK);
+void Render::keyPressEvent(QKeyEvent *event){
+//    cerr << "key " << event->key() << endl;
+  bool moveZ = (event->modifiers() == Qt::ShiftModifier);
+  bool rotate = (event->modifiers() == Qt::ControlModifier);
   double tendeg = M_PI/18.;
-
-  bool ret = false;
-  switch (event->keyval)
+  switch (event->key())
     {
-    case GDK_Up: case GDK_KP_Up:
-      if (rotate)     ret = m_view->rotate_selection(Vector3d(1.,0.,0.), tendeg);
-      else if (moveZ) ret = m_view->move_selection( 0.0,  0.0, 1.0 );
-      else            ret = m_view->move_selection( 0.0,  1.0 );
+    case Qt::Key::Key_Up:
+      if (rotate)     get_model()->rotate_selection(m_selection, Vector4d(1.,0.,0., tendeg));
+      else if (moveZ) get_model()->move_selection(m_selection, Vector3d( 0.0,  0.0, 1.0 ));
+      else            get_model()->move_selection(m_selection, Vector3d( 0.0, 1.0, 0.0 ));
       break;
-    case GDK_Down: case GDK_KP_Down:
-      if (rotate)     ret = m_view->rotate_selection(Vector3d(1.,0.,0.), -tendeg);
-      else if (moveZ) ret = m_view->move_selection( 0.0,  0.0, -1.0 );
-      else            ret = m_view->move_selection( 0.0, -1.0 );
+    case Qt::Key::Key_Down:
+      if (rotate)     get_model()->rotate_selection(m_selection, Vector4d(1.,0.,0., -tendeg));
+      else if (moveZ) get_model()->move_selection(m_selection, Vector3d( 0.0, 0.0, -1.0 ));
+      else            get_model()->move_selection(m_selection, Vector3d( 0.0, -1.0, 0.0 ));
       break;
-    case GDK_Left: case GDK_KP_Left:
-      if (rotate)     ret = m_view->rotate_selection(Vector3d(0.,0.,1.), tendeg);
-      else            ret = m_view->move_selection( -1.0, 0.0 );
+    case Qt::Key::Key_Left:
+      if (rotate)     get_model()->rotate_selection(m_selection, Vector4d(0.,0.,1., tendeg));
+      else            get_model()->move_selection(m_selection, Vector3d( -1.0, 0.0, 0.0 ));
       break;
-    case GDK_Right: case GDK_KP_Right:
-      if (rotate)     ret = m_view->rotate_selection(Vector3d(0.,0.,1.), -tendeg);
-      else            ret = m_view->move_selection(  1.0, 0.0 );
+    case Qt::Key::Key_Right:
+      if (rotate)     get_model()->rotate_selection(m_selection, Vector4d(0.,0.,1., -tendeg));
+      else            get_model()->move_selection(m_selection, Vector3d( 1.0, 0.0, 0.0 ));
       break;
-    }
-  if (ret) {
-    m_view->get_model()->ModelChanged();
-    queue_draw();
+  default:
+      return;
   }
-  grab_focus();
-  return ret;
+  repaint();
+  setFocus();
 }
-*/
-/*
-bool Render::on_key_release_event(GdkEventKey* event) {
-  switch (event->keyval)
+void Render::keyReleaseEvent(QKeyEvent *event)
+{
+    switch (event->key())
     {
-    case GDK_Up: case GDK_KP_Up:
-    case GDK_Down: case GDK_KP_Down:
-    case GDK_Left: case GDK_KP_Left:
-    case GDK_Right: case GDK_KP_Right:
-      //m_view->get_model()->ModelChanged(); // interrupts key_press_event actions!
-      return false;
+    case Qt::Key::Key_Up:
+    case Qt::Key::Key_Down:
+    case Qt::Key::Key_Left:
+    case Qt::Key::Key_Right:
+        get_model()->ModelChanged();
     }
-  return true;
 }
-*/
-
 /*
 bool Render::on_scroll_event(GdkEventScroll* event)
 {
@@ -327,11 +311,11 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z)
   glGetDoublev (GL_MODELVIEW_MATRIX, mvmatrix);
   glGetDoublev (GL_PROJECTION_MATRIX, projmatrix);
   dClickY = double ((double)height() - y); // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
-
   gluUnProject ((double) x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
   Vector3d rayP1( dX, dY, dZ );
   gluUnProject ((double) x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
   Vector3d rayP2( dX, dY, dZ );
+//  cerr << rayP1 <<  " - " << rayP2<<endl;
 
   // intersect with z=plane_z;
   if (rayP2.z() != rayP1.z()) {
@@ -437,7 +421,7 @@ void Render::resizeGL(int width, int height)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 //    gluOrtho2D(0, width, 0, height); // set origin to bottom left corner
-    gluPerspective(45.0, double(width)/double(height), 1, 1000000);
+    gluPerspective(45.0, double(width)/double(height), 1, 1000000.);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 }
@@ -478,14 +462,10 @@ void Render::draw_string(const Vector3d &pos, const string s)
 void transformPoint(GLdouble out[4], const GLdouble m[16], const GLdouble in[4])
 {
 #define M(row,col)  m[col*4+row]
-    out[0] =
-        M(0, 0) * in[0] + M(0, 1) * in[1] + M(0, 2) * in[2] + M(0, 3) * in[3];
-    out[1] =
-        M(1, 0) * in[0] + M(1, 1) * in[1] + M(1, 2) * in[2] + M(1, 3) * in[3];
-    out[2] =
-        M(2, 0) * in[0] + M(2, 1) * in[1] + M(2, 2) * in[2] + M(2, 3) * in[3];
-    out[3] =
-        M(3, 0) * in[0] + M(3, 1) * in[1] + M(3, 2) * in[2] + M(3, 3) * in[3];
+    out[0] = M(0, 0) * in[0] + M(0, 1) * in[1] + M(0, 2) * in[2] + M(0, 3) * in[3];
+    out[1] = M(1, 0) * in[0] + M(1, 1) * in[1] + M(1, 2) * in[2] + M(1, 3) * in[3];
+    out[2] = M(2, 0) * in[0] + M(2, 1) * in[1] + M(2, 2) * in[2] + M(2, 3) * in[3];
+    out[3] = M(3, 0) * in[0] + M(3, 1) * in[1] + M(3, 2) * in[2] + M(3, 3) * in[3];
 #undef M
 }
 
@@ -533,12 +513,12 @@ void Render::paintGL()
     m_main->Draw (m_selection);
 
     glPopMatrix();
+    glEnd();
 }
 
 void Render::mousePressEvent(QMouseEvent *event)
 {
     mousePressedModifiers = QGuiApplication::keyboardModifiers();
-
     // real mouse-down:
     m_downPoint = Vector2f(event->pos().x(), event->pos().y());
     // "moving" mouse-down, updated with dragpoint on mouse move:
@@ -570,17 +550,21 @@ const double drag_factor = 0.3;
 
 void Render::mouseMoveEvent(QMouseEvent *event)
 {
-    if (mousePressed == Qt::NoButton)
-        return;
     bool redraw=true;
     const Vector2d dragp(event->pos().x(), event->pos().y());
+    if (mousePressed == Qt::NoButton) {
+        const Vector3d mouse_preview = mouse_on_plane(dragp.x(), dragp.y(),
+                                                      get_model()->get_preview_Z());
+//        cerr << dragp << " - " << mouse_preview << endl;
+        get_model()->setMeasuresPoint(mouse_preview);
+        repaint();
+        return;
+    }
+
     const Vector2d delta = dragp - m_dragStart;
     const Vector3d delta3f(delta.x()*drag_factor, -delta.y()*drag_factor, 0);
-    const Vector3d mouse_preview = mouse_on_plane(dragp.x(), dragp.y(),
-                          get_model()->get_preview_Z());
-    get_model()->setMeasuresPoint(mouse_preview);
-//    cerr << "drag " << mousePressed << endl;
 
+    //    cerr << "drag " << mousePressed << endl;
     if (mousePressed == Qt::LeftButton) {
         if (mousePressedModifiers == Qt::ShiftModifier) {//move object XY
             vector<Shape*> shapes;

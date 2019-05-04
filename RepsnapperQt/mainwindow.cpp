@@ -62,10 +62,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connectButtons(prefs_dialog);
 
     m_settings = new Settings();
+    m_settings->set_all_to_gui(this,"Window");
+    m_settings->set_all_to_gui(this);
+    m_settings->set_all_to_gui(prefs_dialog);
     m_settings->connect_to_gui(this);
     m_settings->connect_to_gui(prefs_dialog);
 
-    cerr << m_settings->info().toStdString() << endl;
+//    cerr << m_settings->info().toStdString() << endl;
 
     connect(m_settings, SIGNAL(settings_changed(const QString&)), this, SLOT(settingsChanged(const QString&)));
 
@@ -94,6 +97,7 @@ const std::string fromQString(QString qstring){
 
 MainWindow::~MainWindow()
 {
+    m_settings->set_windowsize_from_gui(this);
     delete m_model;
     delete m_progress;
     delete m_printer;
@@ -134,19 +138,13 @@ void MainWindow::updatedModel(const ObjectsList *objList)
         objListModel.setStringList(slist);
     }
 
-    m_settings->set_all_to_gui(this, "Window");
     m_settings->set_all_to_gui(this);
     m_settings->set_all_to_gui(prefs_dialog, "Hardware");
     m_settings->set_all_to_gui(prefs_dialog, "Slicing");
     m_settings->set_all_to_gui(prefs_dialog, "Extruder");
 
-
-    const double layerH = m_settings->getLayerHeight();
-    if (layerH > 0.){
-        int layers = std::max(m_model->gcode->Max.z(),
-                              m_model->Max.z()) / layerH;
-        m_settings->setMaxLayers(this, layers);
-    }
+    m_settings->setMaxHeight(this,
+                             std::max(m_model->gcode->Max.z(), m_model->Max.z()));
 }
 
 void MainWindow::shapeSelected(const QModelIndex &index)
@@ -401,7 +399,8 @@ void MainWindow::handleButtonClick()
                                               QColorDialog::ShowAlphaChannel);
         if (color.isValid()) {
             cbutton->set_color(color);
-            m_settings->set_array(name, color);
+            m_settings->set_array(Settings::grouped(name), color);
+            m_render->update();
         }
     } else if(name == "copy_extruder"){
         int newEx = m_settings->CopyExtruder();
@@ -437,13 +436,17 @@ void MainWindow::gcodeChanged()
 void MainWindow::settingsChanged(const QString &name)
 {
     if (name.startsWith("scale")){
-
     }
 //    cerr << name.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();
-    double layerH = m_settings->getLayerHeight();
-    if (layerH > 0)
-        m_settings->setMaxLayers(this, int(m_model->Max.z() / layerH));
+    m_settings->setMaxHeight(this,
+                             std::max(m_model->gcode->Max.z(), m_model->Max.z()));
+    QString l;
+    QTextStream s(&l);
+    s.setRealNumberNotation(QTextStream::FixedNotation);
+    s.setRealNumberPrecision(2);
+    s << m_settings->get_integer("Display/LayerValue")/1000.;
+    ui_main->LayerLabel->setText(l);
     m_render->update();
 }
 

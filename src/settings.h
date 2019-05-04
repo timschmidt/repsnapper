@@ -36,7 +36,8 @@
 #include <QMainWindow>
 #include <QPushButton>
 
-class ColorButton : public QPushButton {
+class ColorButton : public QPushButton{
+    Q_OBJECT
     QColor color;
 public:
     ColorButton(QWidget* widget);
@@ -65,7 +66,7 @@ class Settings : public QSettings {
 
   void copyGroup(const QString &from, const QString &to);
 
-  QString grouped(const QString &name);
+  static QString grouped(const QString &name);
   QVariant groupedValue(const QString &name, const QVariant &deflt = QVariant());
 
   int      get_integer (const QString &name);
@@ -74,8 +75,6 @@ class Settings : public QSettings {
   QString  get_string  (const QString &name);
   Vector4f get_Vector4f  (const QString &name);
   vector<float> get_array(const QString &name);
-  vector<float> get_ranges(const QString &name);
-  double   get_slider_fraction(const QString &name);
 
   using QSettings::value;
   QStringList get_keys(const QString &group);
@@ -85,11 +84,12 @@ class Settings : public QSettings {
   /* void set_double  (const string &group, const string &name, const double value); */
   /* void set_boolean (const string &group, const string &name, const bool value); */
   /* void set_string  (const string &group, const string &name, const string &value); */
-  void set_array  (const QString &key, const QColor &qcolor);
-  void set_array  (const QString &name, const Vector4f &value);
-  void set_array  (const QString &name, const vector<float> &values);
+  void set_array  (const QString &key, const QColor &qcolor, bool overwrite=true);
+  void set_array  (const QString &name, const Vector4f &value, bool overwrite=true);
+  void set_array  (const QString &name, const vector<float> &values, bool overwrite=true);
   void set_ranges(const QString &name, const vector<float> &values);
   void set_all_to_gui (QWidget *widget, const string filter="");
+  void set_windowsize_from_gui(QWidget *window);
 
   vmml::vec3d getPrintVolume();
   vmml::vec3d getPrintMargin();
@@ -142,7 +142,8 @@ class Settings : public QSettings {
   void get_colour_from_gui     (ColorButton * colorButton, const QString &key);
   void convert_old_colour      (const QString &group, const QString &key);
   void set_defaults ();
-
+  int numLayers;
+  void cleanup();
 
 public:
   Settings();
@@ -169,9 +170,9 @@ public:
   bool load_from_file (QString filename);
   bool load_from_data (QString data);
 
-  void load_settings (QString filename);
-  void load_settings_as (const QString onlygroup = "",
-             const QString as_group = "");
+//  void load_settings (QString filename);
+//  void load_settings_as (const QString onlygroup = "",
+//             const QString as_group = "");
 //  void save_settings (QString filename);
   void save_settings_as (const QString onlygroup = "",
              const QString as_group = "");
@@ -186,9 +187,11 @@ public:
 //  sigc::signal< void > m_signal_update_settings_gui;
 //  sigc::signal< void > m_signal_core_settings_changed;
 
-  void setMaxLayers(QWidget *parent, const int num);
+  void setMaxHeight(QWidget *parent, const double h);
 
   QString info();
+
+  int getNumLayers() const { return numLayers; }
 
 signals:
   void settings_changed(const QString &name);
@@ -196,7 +199,6 @@ public slots:
   void get_from_gui();
   void get_int_from_gui(int value);
   void get_double_from_gui(double value);
-  void get_range_from_gui(int min, int max);
 
 };
 

@@ -468,96 +468,97 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
   GLfloat ccol[4];
   glGetFloatv(GL_CURRENT_COLOR,&ccol[0]);
   glBegin(GL_LINES);
+  glColor4fv(ccol);
   // arc:
   if (Code == ARC_CW || Code == ARC_CCW) {
-    Vector3d center = off_lastPos + arcIJK;
-    bool ccw = (Code == ARC_CCW);
-    if (debug_arcs) {
-      glColor4f(0.f,1.f,0.0f,0.2f);
-      glVertex3dv(center);
-      glVertex3dv(off_lastPos);
-      glColor4f(1.f,0.f,0.0f,0.2f);
-      glVertex3dv(center);
-      glVertex3dv(off_where);
-      glColor4fv(ccol);
-      float lum = ccol[3];
-      if (off_where == off_lastPos) // full circle
-    glColor4f(1.f,0.f,1.f,lum);
-      else if (ccw)
-    glColor4f(0.5f,0.5f,1.f,lum);
-      else
-    glColor4f(1.f,0.5f,0.0f,lum);
-    }
-    long double angle = calcAngle(-arcIJK, off_where - center, ccw);
-    //if (abs(angle) < 0.00001) angle = 0;
-    double dz = off_where.z()-(off_lastPos).z(); // z move with arc
-    Vector3d arcstart = off_lastPos;
-    draw_arc(off_lastPos, center, angle, dz, ccw);
-    // extrusion boundary for arc:
-    if (extrwidth > 0) {
-      glEnd();
-      glLineWidth(1);
-      glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
-      Vector3d normarcIJK(arcIJK); normarcIJK.normalize();
-      Vector3d dradius = normarcIJK*extrwidth/2;
-      glBegin(GL_LINES);
-      Vector3d offstart = arcstart+dradius;
-      draw_arc(offstart, center, angle, dz, ccw);
-      offstart = arcstart-dradius;
-      draw_arc(offstart, center, angle, dz, ccw);
-      //glEnd();
-    }
+      Vector3d center = off_lastPos + arcIJK;
+      bool ccw = (Code == ARC_CCW);
+      if (debug_arcs) {
+          glColor4f(0.f,1.f,0.0f,0.2f);
+          glVertex3dv(center);
+          glVertex3dv(off_lastPos);
+          glColor4f(1.f,0.f,0.0f,0.2f);
+          glVertex3dv(center);
+          glVertex3dv(off_where);
+          glColor4fv(ccol);
+          float lum = ccol[3];
+          if (off_where == off_lastPos) // full circle
+              glColor4f(1.f,0.f,1.f,lum);
+          else if (ccw)
+              glColor4f(0.5f,0.5f,1.f,lum);
+          else
+              glColor4f(1.f,0.5f,0.0f,lum);
+      }
+      long double angle = calcAngle(-arcIJK, off_where - center, ccw);
+      //if (abs(angle) < 0.00001) angle = 0;
+      double dz = off_where.z()-(off_lastPos).z(); // z move with arc
+      Vector3d arcstart = off_lastPos;
+      draw_arc(off_lastPos, center, angle, dz, ccw);
+      // extrusion boundary for arc:
+      if (extrwidth > 0) {
+          glEnd();
+          glLineWidth(1);
+          glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
+          Vector3d normarcIJK(arcIJK); normarcIJK.normalize();
+          Vector3d dradius = normarcIJK*extrwidth/2;
+          glBegin(GL_LINES);
+          Vector3d offstart = arcstart+dradius;
+          draw_arc(offstart, center, angle, dz, ccw);
+          offstart = arcstart-dradius;
+          draw_arc(offstart, center, angle, dz, ccw);
+          //glEnd();
+      }
   } // end ARCs
   if (off_lastPos==off_where) {
-    glEnd();
-    if (arrows) {
-      glPointSize(10);
-      glBegin(GL_POINTS);
-      //glColor4f(1.,0.1,0.1,ccol[3]);
-      glVertex3dv(off_where);
       glEnd();
-    }
+      if (arrows) {
+          glPointSize(10);
+          glBegin(GL_POINTS);
+          //glColor4f(1.,0.1,0.1,ccol[3]);
+          glVertex3dv(off_where);
+          glEnd();
+      }
   } else {
-    glVertex3dv(off_lastPos);
-    glVertex3dv(off_where);
-    if (arrows) {
-      glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
-      // 0.3mm long arrows if no boundary
-      double alen = 0.3;
-      if (extrwidth > 0) alen = 1.2*extrwidth ;
-      Vector3d normdir = normalized(off_where-off_lastPos);
-      if (normdir.x() != 0 || normdir.y() != 0 ) {
-    Vector3d arrdir = normdir * alen;
-    Vector3d arrdir2(-0.5*alen*normdir.y(), 0.5*alen*normdir.x(), arrdir.z());
-    glVertex3dv(off_where);
-    Vector3d arr1 = off_where-arrdir+arrdir2;
-    glVertex3dv(arr1);
-    glVertex3dv(off_where);
-    Vector3d arr2 = off_where-arrdir-arrdir2;
-    glVertex3dv(arr2);
+      glVertex3dv(off_lastPos);
+      glVertex3dv(off_where);
+      if (arrows) {
+          glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
+          // 0.3mm long arrows if no boundary
+          double alen = 0.3;
+          if (extrwidth > 0) alen = 1.2*extrwidth ;
+          Vector3d normdir = normalized(off_where-off_lastPos);
+          if (normdir.x() != 0 || normdir.y() != 0 ) {
+              Vector3d arrdir = normdir * alen;
+              Vector3d arrdir2(-0.5*alen*normdir.y(), 0.5*alen*normdir.x(), arrdir.z());
+              glVertex3dv(off_where);
+              Vector3d arr1 = off_where-arrdir+arrdir2;
+              glVertex3dv(arr1);
+              glVertex3dv(off_where);
+              Vector3d arr2 = off_where-arrdir-arrdir2;
+              glVertex3dv(arr2);
+          }
       }
-    }
-    glEnd();
-    // extrusion boundary for straight line:
-    if (extrwidth > 0) {
-      glLineWidth(1);
-      glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
-      vector<Poly> thickpoly;
-      if (abs_extr != 0) {
-    double fr_extr = extrwidth / (1+abs_extr);
-    double to_extr = extrwidth * (1+abs_extr);
-    thickpoly = dir_thick_line(Vector2d(off_lastPos.x(),off_lastPos.y()),
-                   Vector2d(off_where.x(),off_where.y()),
-                   fr_extr, to_extr);
-      } else
-    thickpoly = thick_line(Vector2d(off_lastPos.x(),off_lastPos.y()),
-                   Vector2d(off_where.x(),off_where.y()),
-                   extrwidth);
-      for (uint i=0; i<thickpoly.size();i++) {
-    thickpoly[i].cleanup(0.01);
-    thickpoly[i].draw(GL_LINE_LOOP, off_where.z(), false);
+      glEnd();
+      // extrusion boundary for straight line:
+      if (extrwidth > 0) {
+          glLineWidth(1);
+          glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
+          vector<Poly> thickpoly;
+          if (abs_extr != 0) {
+              double fr_extr = extrwidth / (1+abs_extr);
+              double to_extr = extrwidth * (1+abs_extr);
+              thickpoly = dir_thick_line(Vector2d(off_lastPos.x(),off_lastPos.y()),
+                                         Vector2d(off_where.x(),off_where.y()),
+                                         fr_extr, to_extr);
+          } else
+              thickpoly = thick_line(Vector2d(off_lastPos.x(),off_lastPos.y()),
+                                     Vector2d(off_where.x(),off_where.y()),
+                                     extrwidth);
+          for (uint i=0; i<thickpoly.size();i++) {
+              thickpoly[i].cleanup(0.01);
+              thickpoly[i].draw(GL_LINE_LOOP, off_where.z(), false);
+          }
       }
-    }
   }
   lastPos = where;
 }

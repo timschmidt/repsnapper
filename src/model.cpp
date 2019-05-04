@@ -645,6 +645,25 @@ void Model::ScaleObjectZ(Shape *shape, ListObject *object, double scale)
   ModelChanged();
 }
 
+void Model::rotate_selection(QModelIndexList * selected, const Vector4d rotate)
+{
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selected, selshapes, seltransforms);
+    for (Shape * shape: selshapes) {
+        shape->Rotate(Vector3d(rotate.x(), rotate.y(), rotate.z()), rotate[4]);
+    }
+}
+
+void Model::move_selection(QModelIndexList *selected, const Vector3d move)
+{
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selected, selshapes, seltransforms);
+    for (Shape * shape: selshapes){
+        shape->move(move);
+    }
+}
 void Model::RotateObject(Shape* shape, ListObject* object, Vector4d rotate)
 {
   if (!shape)
@@ -959,8 +978,9 @@ int Model::draw (const QModelIndexList *selected)
       render->draw_string(pos,val.str());
     }
   int drawnlayer = -1;
+  int numLayers = settings->getNumLayers();
   if(settings->get_boolean("Display/DisplayLayer")) {
-       float z = Max.z() * settings->get_slider_fraction("Display/LayerValue");
+       float z = settings->get_integer("Display/LayerValue")/1000.;
        drawnlayer = drawLayers(z, offset, false);
   }
   if(settings->get_boolean("Display/DisplayGCode") && gcode->size() == 0) {
@@ -969,16 +989,14 @@ int Model::draw (const QModelIndexList *selected)
      ( layers.size() == 0 && gcode->commands.size() == 0 ) ) {
       Vector3d start(0,0,0);
       const double thickness = settings->get_double("Slicing/LayerThickness");
-      const double zFrac =settings->get_slider_fraction("Display/GCodeDrawStart");
-      const int LayerCount = int(ceil(Max.z()/thickness))-1;
-      const uint LayerNo = uint(ceil(zFrac * (LayerCount-1)));
-      const double z = LayerNo * thickness;
+      const double z = settings->get_integer("Display/GCodeDrawStart")/1000.;
+      const int LayerNo = int(ceil(z/thickness))-1;
       if (z != m_previewGCode_z) {
     //uint prevext = settings->selectedExtruder;
     Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
     if (previewGCodeLayer) {
       m_previewGCode->clear();
-      vector<Command> commands;
+//      vector<Command> commands;
       GCodeState state(*m_previewGCode);
       previewGCodeLayer->MakeGCode(start, state, 0, settings);
       // state.AppendCommands(commands, settings->Slicing.RelativeEcode);

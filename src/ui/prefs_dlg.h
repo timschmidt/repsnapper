@@ -39,6 +39,7 @@ class PrefsDlg : public QDialog {
     std::vector<Settings *> m_settings;
     bool load_settings();
 
+    void setDefaults();
 public:
     PrefsDlg(QWidget *parent);
     ~PrefsDlg();
