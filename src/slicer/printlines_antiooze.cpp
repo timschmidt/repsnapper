@@ -286,13 +286,14 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
                                      Settings *settings,
                                      ViewProgress * progress)
 {
-  if (!settings->get_boolean("Extruder/EnableAntiooze")) return 0;
+  const QString extruder = Settings::numbered("Extruder",lines[0].extruder_no);
+  if (!settings->get_boolean(extruder+"/EnableAntiooze")) return 0;
 
 
   double
-    AOmindistance = settings->get_double("Extruder/AntioozeDistance"),
-    AOamount      = settings->get_double("Extruder/AntioozeAmount"),
-    AOspeed       = settings->get_double("Extruder/AntioozeSpeed") * 60;
+    AOmindistance = settings->get_double(extruder+"/AntioozeDistance"),
+    AOamount      = settings->get_double(extruder+"/AntioozeAmount"),
+    AOspeed       = settings->get_double(extruder+"/AntioozeSpeed") * 60;
     //AOonhaltratio = settings->Slicing.AntioozeHaltRatio;
   if (lines.size() < 2 || AOmindistance <=0 || AOamount == 0) return 0;
   // const double onhalt_amount = AOamount * AOonhaltratio;
@@ -356,7 +357,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
     if (ranges[r].moveend > newlines.size()-2) ranges[r].moveend = newlines.size()-2;
 
     // lift move-only range
-    const double zlift = settings->get_double("Extruder/AntioozeZlift");
+    const double zlift = settings->get_double(extruder+"/AntioozeZlift");
     if (zlift > 0)
       for (uint i = ranges[r].movestart; i <= ranges[r].moveend; i++) {
     newlines[i].lifted = zlift;

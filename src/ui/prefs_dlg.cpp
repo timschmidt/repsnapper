@@ -57,8 +57,7 @@ namespace {
 //}
 
 PrefsDlg::PrefsDlg(QWidget *parent) :
-    ui_dialog(new Ui::PreferencesDialog),
-    selected_extruder(0)
+    ui_dialog(new Ui::PreferencesDialog)
 {
     ui_dialog->setupUi(this);
     setDefaults();
@@ -66,7 +65,7 @@ PrefsDlg::PrefsDlg(QWidget *parent) :
     ui_dialog->postproc_group->hide();
     ui_dialog->acceleration_group->hide();
 
-    ui_dialog->extruder_listview->setModel(&stringListModel);
+    ui_dialog->extruder_listview->setModel(&listModel);
     connect(ui_dialog->extruder_listview, SIGNAL(clicked(QModelIndex)),
             parent, SLOT(extruderSelected(QModelIndex)));
 }
@@ -89,11 +88,35 @@ Ui::PreferencesDialog *PrefsDlg::getUi_dialog() const
     return ui_dialog;
 }
 
+void PrefsDlg::checkForExtruders(int numExtruders)
+{
+    while (numExtruders > listModel.rowCount()){
+        cerr << "add Extruder "<< numExtruders << endl;
+        int row = listModel.rowCount();
+        listModel.insertRow(row);
+        QModelIndex index = listModel.index(row, 0);
+        listModel.setData(index, Settings::numbered("Extruder",row+1));
+        emit ui_dialog->extruder_listview->clicked(index);
+    }
+/*    while (haveEx < extrNum+1) {
+      listModel.removeRow(haveEx-1);
+        exList->update();
+        QModelIndex index = listModel.index(haveEx-2,0);
+        emit ui_dialog->extruder_listview->clicked(index);
+    }
+  */
+}
+
 void PrefsDlg::selectExtruder(uint num)
 {
     QListView *listview = ui_dialog->extruder_listview;
     QModelIndex index = listview->model()->index(int(num),0);
     listview->setCurrentIndex(index);
+}
+
+int PrefsDlg::getSelectedExtruder() const
+{
+    return ui_dialog->extruder_listview->currentIndex().row();
 }
 
 bool

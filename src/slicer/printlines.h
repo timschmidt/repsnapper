@@ -238,7 +238,7 @@ class Printlines
 
   void addPolys(PLineArea area,	const vector<Poly> &polys,
         bool displace_start,
-        double maxspeed = 0, double min_time = 0);
+        double maxspeed, double min_time = 0);
 
   double makeLines(Vector2d &startPoint, vector<PLine2> &lines);
 

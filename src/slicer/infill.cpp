@@ -161,6 +161,8 @@ ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
   m_tofillpolys = tofillpolys;
   m_type = type;
 
+  assert(infillDistance > 0.);
+
   if (tofillpolys.size()==0) return cpolys;
   cached = false;
   //cerr << "have " << savedPatterns.size()<<" saved patterns " << endl;

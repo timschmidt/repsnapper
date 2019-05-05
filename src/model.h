@@ -195,8 +195,8 @@ private:
         void MakeFullSkins();
         void MultiplyUncoveredPolygons();
         void MakeSupportPolygons(Layer * subjlayer, const Layer * cliplayer,
-                                 double widen=0);
-        void MakeSupportPolygons(double widen=0);
+                                 int extruder, double widen=0);
+        void MakeSupportPolygons(int extruder, double widen=0);
         void MakeSkirt();
 
         MainWindow * main;

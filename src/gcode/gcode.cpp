@@ -484,7 +484,8 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
     double extrusionwidth = 0;
     if (boundary)
       extrusionwidth =
-        settings->GetExtrudedMaterialWidth(settings->get_double("Slicing/LayerThickness"));
+        settings->GetExtrudedMaterialWidth(settings->get_double("Slicing/LayerThickness"),
+                                           commands[0].extruder_no);
 
     start = CLAMP (start, 0, n_cmds-1);
     end = CLAMP (end, 0, n_cmds-1);

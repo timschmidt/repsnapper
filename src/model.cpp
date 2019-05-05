@@ -1145,8 +1145,8 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   //     tri[j].draw(GL_LINE_LOOP);
   //   }
   // }
-
-  layer->MakeShells(*settings);
+  int extruder = 0;
+  layer->MakeShells(*settings, extruder);
 
   if (settings->value("Slicing/Skirt").toBool()) {
     if (layer->getZ() - layer->thickness <= settings->get_double("Slicing/SkirtHeight"))

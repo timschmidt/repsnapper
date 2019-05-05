@@ -87,7 +87,7 @@ public:
   static void FindThinpolys(const vector<Poly> &polys, double extrwidth,
                 vector<Poly> &thickpolys, vector<Poly> &thinpolys);
 
-  void MakeShells(Settings &settings);
+  void MakeShells(Settings &settings, int extruder);
   // uint shellcount, double extrudedWidth, double shelloffset,
   // bool makeskirt, double skirtdistance, double infilloverlap);
   /* vector<Poly> ShrinkedPolys(const vector<Poly> poly, */

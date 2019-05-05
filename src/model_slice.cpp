@@ -626,10 +626,10 @@ void Model::MultiplyUncoveredPolygons()
 
 void Model::MakeSupportPolygons(Layer * layer, // lower -> will change
                 const Layer * layerabove,  // upper
-                double widen)
+                int extruder, double widen)
 {
   const double distance =
-    settings->GetExtrudedMaterialWidth(layer->thickness);
+    settings->GetExtrudedMaterialWidth(layer->thickness, extruder);
   // vector<Poly> tosupport = Clipping::getOffset(layerabove->GetToSupportPolygons(),
   //  					       distance/2.);
   //vector<Poly> tosupport = Clipping::getMerged(layerabove->GetToSupportPolygons(),
@@ -652,7 +652,7 @@ void Model::MakeSupportPolygons(Layer * layer, // lower -> will change
   layer->setSupportPolygons(spolys);
 }
 
-void Model::MakeSupportPolygons(double widen)
+void Model::MakeSupportPolygons(int extruder, double widen)
 {
   int count = layers.size();
   if (!m_progress->restart (_("Support"), count*2)) return;
@@ -662,7 +662,7 @@ void Model::MakeSupportPolygons(double widen)
     {
       if (i%progress_steps==0) if(! m_progress->update(count-i)) return;
       if (layers[i]->LayerNo == 0) continue;
-      MakeSupportPolygons(layers[i-1], layers[i], widen);
+      MakeSupportPolygons(layers[i-1], layers[i], extruder, widen);
     }
 
   // // shrink a bit
@@ -736,7 +736,7 @@ void Model::MakeShells()
 #endif
       }
       if (!cont) continue;
-      layers[i]->MakeShells(*settings);
+      layers[i]->MakeShells(*settings, 0);
     }
 #ifdef _OPENMP
   omp_destroy_lock(&progress_lock);
@@ -791,8 +791,7 @@ void Model::ConvertToGCode()
   }
   is_calculating=true;
 
-  // default:
-  settings->SelectExtruder(0);
+  int currentExtruder = 0;
 
   QTime start_time;
   start_time.start();
@@ -939,7 +938,8 @@ void Model::ConvertToGCode()
   double totlength = gcode->GetTotalExtruded(settings->get_boolean("Slicing/RelativeEcode"));
   ostr << _(" - total extruded: ") << totlength << "mm";
   // TODO: ths assumes all extruders use the same filament diameter
-  const double diam = settings->get_double("Extruder/FilamentDiameter");
+  const double diam = settings->get_double(Settings::numbered("Extruder",currentExtruder)+
+                                           "/FilamentDiameter");
   const double ccm = totlength * diam * diam / 4. * M_PI / 1000 ;
   ostr << " = " << ccm << "cm^3 ";
   ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)";

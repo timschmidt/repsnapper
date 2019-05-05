@@ -273,17 +273,18 @@ void Layer::CalcInfill (Settings &settings)
   double altInfillPercent=settings.get_double("Slicing/InfillPercent");
   double normalInfilldist=0;
   bool shellOnly = !settings.get_boolean("Slicing/DoInfill");
-  fullInfillDistance = settings.GetInfillDistance(thickness, 100);
+  int extruder = 0;
+  fullInfillDistance = settings.GetInfillDistance(thickness, 100, extruder);
 
   if (settings.get_double("Slicing/InfillPercent") == 0)
     shellOnly = true;
   else
-    infillDistance = settings.GetInfillDistance(thickness,altInfillPercent);
+    infillDistance = settings.GetInfillDistance(thickness,altInfillPercent, extruder);
   int altinfill = settings.get_integer("Slicing/AltInfillLayers");
   normalInfilldist = infillDistance;
   if ( altinfill != 0  && LayerNo % altinfill == 0 && altInfillPercent != 0) {
     altInfillDistance = settings.GetInfillDistance(thickness,
-                           settings.get_double("Slicing/AltInfillPercent"));
+                           settings.get_double("Slicing/AltInfillPercent"), extruder);
     normalInfilldist = altInfillDistance;
   }
   // first layers:
@@ -608,9 +609,9 @@ void Layer::FindThinpolys(const vector<Poly> &polys, double extrwidth,
 #endif
 }
 
-void Layer::MakeShells(Settings &settings)
+void Layer::MakeShells(Settings &settings, int extruder)
 {
-  double extrudedWidth        = settings.GetExtrudedMaterialWidth(thickness);
+  double extrudedWidth        = settings.GetExtrudedMaterialWidth(thickness, extruder);
   double roundline_extrfactor =
     settings.RoundedLinewidthCorrection(extrudedWidth,thickness);
   double distance       = 0.5 * extrudedWidth;
@@ -755,7 +756,9 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
                double offsetZ,
                Settings &settings) const
 {
-  const double linewidth      = settings.GetExtrudedMaterialWidth(thickness);
+  int currentExtruder = 0;
+
+  const double linewidth      = settings.GetExtrudedMaterialWidth(thickness, currentExtruder);
   const double cornerradius   = linewidth*settings.get_double("Slicing/CornerRadius");
 
   const bool clipnearest      = settings.get_boolean("Slicing/MoveNearest");
@@ -763,12 +766,14 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
   const uint supportExtruder  = settings.GetSupportExtruder();
   const double minshelltime   = settings.get_double("Slicing/MinShelltime");
 
-  const double maxshellspeed  = settings.get_double("Extruder/MaxShellSpeed");
-  const bool ZliftAlways      = settings.get_boolean("Extruder/ZliftAlways");
+  const double maxshellspeed  = settings.get_double(
+              Settings::numbered("Extruder",currentExtruder)+"/MaxShellSpeed") * 60;
+  const bool ZliftAlways      = settings.get_boolean(
+              Settings::numbered("Extruder",currentExtruder)+"/ZliftAlways");
 
   Vector2d startPoint(lastPos.x(),lastPos.y());
 
-  const double extr_per_mm = settings.GetExtrusionPerMM(thickness);
+  const double extr_per_mm = settings.GetExtrusionPerMM(thickness, currentExtruder);
 
   //vector<PLine3> lines3;
   Printlines printlines(this, &settings, offsetZ);
@@ -777,9 +782,13 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 
   vector<Poly> polys; // intermediate collection
 
+
   // polys to keep line movements inside
   //const vector<Poly> * clippolys = &polygons;
   const vector<Poly> clippolys = GetOuterShell();
+
+  double maxlinespeed = settings.get_double(
+              Settings::numbered("Extruder",currentExtruder)+"/MaxLineSpeed") * 60; // default
 
   // 1. Skins, all but last, because they are the lowest lines, below layer Z
   if (skins > 1) {
@@ -793,11 +802,11 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 
       // skin infill polys:
       if (skinFullInfills[s])
-    polys.insert(polys.end(),
-             skinFullInfills[s]->infillpolys.begin(),
-             skinFullInfills[s]->infillpolys.end());
+          polys.insert(polys.end(),
+                       skinFullInfills[s]->infillpolys.begin(),
+                       skinFullInfills[s]->infillpolys.end());
       // add skin infill to lines
-      printlines.addPolys(INFILL, polys, false);
+      printlines.addPolys(INFILL, polys, false, maxlinespeed);
 
       polys.clear();
 
@@ -807,7 +816,7 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
       }
       // add skin to lines
       printlines.addPolys(SKIN, polys, (s==0), // displace at first skin
-              maxshellspeed * 60,
+              maxshellspeed,
               minshelltime);
       if (s < skins-1) { // not on the last layer, this handle with all other lines
     // have to get all these separately because z changes
@@ -827,15 +836,14 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 
   // 2. Skirt
   printlines.addPolys(SKIRT, skirtPolygons, false,
-              maxshellspeed * 60,
+              maxshellspeed,
               minshelltime);
 
   // 3. Support
   if (supportInfill) {
-    uint extruderbefore = settings.selectedExtruder;
-    settings.SelectExtruder(supportExtruder);
-    printlines.addPolys(SUPPORT, supportInfill->infillpolys, false);
-    settings.SelectExtruder(extruderbefore);
+      const double maxsupportspeed = settings.get_double(
+                  Settings::numbered("Extruder", supportExtruder)+"/MaxShellSpeed");
+      printlines.addPolys(SUPPORT, supportInfill->infillpolys, false, maxsupportspeed);
   }
   // 4. all other polygons:
 
@@ -850,18 +858,18 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 
   //  Infill
   if (normalInfill)
-    printlines.addPolys(INFILL, normalInfill->infillpolys, false);
+    printlines.addPolys(INFILL, normalInfill->infillpolys, false, maxlinespeed);
   if (thinInfill)
-    printlines.addPolys(INFILL, thinInfill->infillpolys, false);
+    printlines.addPolys(INFILL, thinInfill->infillpolys, false, maxlinespeed);
   if (fullInfill)
-    printlines.addPolys(INFILL, fullInfill->infillpolys, false);
+    printlines.addPolys(INFILL, fullInfill->infillpolys, false, maxlinespeed);
   if (skirtInfill)
-    printlines.addPolys(INFILL, skirtInfill->infillpolys, false);
+    printlines.addPolys(INFILL, skirtInfill->infillpolys, false, maxlinespeed);
   if (decorInfill)
-    printlines.addPolys(INFILL, decorInfill->infillpolys, false);
+    printlines.addPolys(INFILL, decorInfill->infillpolys, false, maxlinespeed);
   for (uint b=0; b < bridgeInfills.size(); b++)
     if (bridgeInfills[b])
-      printlines.addPolys(INFILL, bridgeInfills[b]->infillpolys, false);
+      printlines.addPolys(INFILL, bridgeInfills[b]->infillpolys, false, maxlinespeed);
 
   double polyspeedfactor = printlines.makeLines(startPoint, lines);
 

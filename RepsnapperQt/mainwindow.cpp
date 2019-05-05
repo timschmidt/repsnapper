@@ -68,9 +68,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings->connect_to_gui(this);
     m_settings->connect_to_gui(prefs_dialog);
 
-//    cerr << m_settings->info().toStdString() << endl;
-
     connect(m_settings, SIGNAL(settings_changed(const QString&)), this, SLOT(settingsChanged(const QString&)));
+
+    cerr << m_settings->info().toStdString() << endl;
 
     m_model = new Model(this);
     m_progress = new ViewProgress(ui_main->progressBarArea,
@@ -399,17 +399,15 @@ void MainWindow::handleButtonClick()
                                               QColorDialog::ShowAlphaChannel);
         if (color.isValid()) {
             cbutton->set_color(color);
-            m_settings->set_array(Settings::grouped(name), color);
+            m_settings->set_array(m_settings->grouped(name), color);
             m_render->update();
         }
     } else if(name == "copy_extruder"){
-        int newEx = m_settings->CopyExtruder();
-        m_settings->SelectExtruder(newEx, prefs_dialog);
+        int newEx = m_settings->CopyExtruder(prefs_dialog->getSelectedExtruder());
+        prefs_dialog->selectExtruder(newEx);
     } else if(name == "remove_extruder"){
-        m_settings->RemoveExtruder();
-        uint prev = m_settings->selectedExtruder;
-        m_settings->selectedExtruder = 99;
-        m_settings->SelectExtruder(prev, prefs_dialog);
+        m_settings->RemoveExtruder(prefs_dialog->getSelectedExtruder());
+//        m_settings->SelectExtruder(prefs_dialog->getSelectedExtruder(), prefs_dialog, true);
     } else if(name == "m_autoarrange"){
         m_model->AutoArrange(nullptr);
     } else if(name == ""){
@@ -436,6 +434,9 @@ void MainWindow::gcodeChanged()
 void MainWindow::settingsChanged(const QString &name)
 {
     if (name.startsWith("scale")){
+    }
+    if (name.startsWith("Extruder")){
+
     }
 //    cerr << name.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();
@@ -483,5 +484,5 @@ void MainWindow::on_actionOpen_triggered()
 
 
 void MainWindow::extruderSelected(const QModelIndex &index){
-    m_settings->SelectExtruder(index.row(), prefs_dialog);
+    m_settings->currentExtruder = index.row();
 }

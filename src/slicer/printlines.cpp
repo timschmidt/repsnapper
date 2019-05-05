@@ -560,13 +560,15 @@ void Printlines::addLine(PLineArea area, uint extruder_no, vector<PLine2> &lines
     const Vector2d lastpos = lines.back().to;
     const bool extruder_change = (lines.back().extruder_no != extruder_no);
     if (extruder_change ||
-    lfrom.squared_distance(lastpos) > 0.01) { // add moveline
-      // use last extruder for move
-      PLine2 move(area, lines.back().extruder_no, lastpos, lfrom, movespeed, 0);
-      if (extruder_change || settings->get_boolean("Extruder/ZliftAlways")) {
-          move.lifted = settings->get_double("Extruder/AntioozeZlift");
-      }
-      lines.push_back(move);
+            lfrom.squared_distance(lastpos) > 0.01) { // add moveline
+        // use last extruder for move
+        PLine2 move(area, lines.back().extruder_no, lastpos, lfrom, movespeed, 0);
+        if (extruder_change || settings->get_boolean(
+                    Settings::numbered("Extruder",extruder_no)+"/ZliftAlways")) {
+            move.lifted = settings->get_double(
+                        Settings::numbered("Extruder",extruder_no)+"/AntioozeZlift");
+        }
+        lines.push_back(move);
     } else {
       lfrom = lastpos;
     }
@@ -588,11 +590,12 @@ PrintPoly::PrintPoly(const Poly &poly,
     displace_start(displace_start_),
     overhangingpoints(0), priority(1.), length(0), speedfactor(1.)
 {
-  extruder_no = printlines->settings->selectedExtruder;
+  extruder_no = printlines->settings->currentExtruder;
+  QString numberedExtruder = Settings::numbered("Extruder", extruder_no);
   // Take a copy of the reference poly
   m_poly = new Poly(poly);
-  m_poly->move(Vector2d(-printlines->settings->get_double("Extruder/OffsetX"),
-            -printlines->settings->get_double("Extruder/OffsetY")));
+  m_poly->move(Vector2d(-printlines->settings->get_double(numberedExtruder+"/OffsetX"),
+            -printlines->settings->get_double(numberedExtruder+"/OffsetY")));
 
   if (area==SHELL || area==SKIN) {
 #ifdef USECAIRO
@@ -689,8 +692,6 @@ void Printlines::addPolys(PLineArea area,
               double maxspeed, double min_time)
 {
   if (polys.size() == 0) return;
-  if (maxspeed == 0.)
-    maxspeed = settings->get_double("Extruder/MaxLineSpeed") * 60; // default
   double maxoverhangspeed = settings->get_double("Slicing/MaxOverhangSpeed");
   for(size_t q = 0; q < polys.size(); q++) {
     if (polys[q].size() > 0) {
@@ -1721,6 +1722,7 @@ void Printlines::getCommands(const vector<PLine3> &plines,
   if (count==0) return;
   if (progress) progress->restart (_("Making GCode"), count);
   Vector3d lastPos = plines[0].from;
+  int extruder = plines[0].extruder_no;
   int progress_steps = max(1,(int)(count/100));
   bool cont = true;
   vector<Command> commands;
@@ -1731,7 +1733,8 @@ void Printlines::getCommands(const vector<PLine3> &plines,
     minZspeed  = settings->get_double("Hardware/MinMoveSpeedZ") * 60,
     maxZspeed  = settings->get_double("Hardware/MaxMoveSpeedZ") * 60,
     //maxEspeed  = settings.Extruder.EMaxSpeed * 60,
-    maxAOspeed = settings->get_double("Extruder/AntioozeSpeed") * 60;
+    maxAOspeed = settings->get_double(
+              Settings::numbered("Extruder",extruder)+"/AntioozeSpeed") * 60;
   const bool useTCommand = settings->get_boolean("Slicing/UseTCommand");
   for (uint i = 0; i < plines.size(); i++) {
     if (progress && i%progress_steps==0){

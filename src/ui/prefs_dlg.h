@@ -33,7 +33,7 @@ class PrefsDlg : public QDialog {
 
     //  QWidget *m_settings_overview;
     //  QTabWidget *m_settings_tab;
-    QStringListModel stringListModel;
+    QStringListModel listModel;
     //  void handle_response(int, QDialog *dialog);
 
     std::vector<Settings *> m_settings;
@@ -47,8 +47,9 @@ public:
     //  void set_icon_from_file(const string path) {m_preferences_dlg->set_icon_from_file(path);}
     Ui::PreferencesDialog *getUi_dialog() const;
 
+    void checkForExtruders(int numExtruders);
     void selectExtruder(uint num);
-    int selected_extruder;
+    int getSelectedExtruder() const;
 };
 
 #endif // SETTINGS_H

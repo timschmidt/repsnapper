@@ -94,7 +94,7 @@ static vector<float> toFloats(QStringList &slist)
     return f;
 }
 
-static QString numbered(const QString &qstring, int num){
+QString Settings::numbered(const QString &qstring, int num){
     return qstring + QString::number(num);
 }
 
@@ -130,6 +130,7 @@ Settings::Settings ()
 //  set_defaults(); // done in GUI
   m_user_changed = false;
   inhibit_callback = false;
+  currentExtruder = 0;
   set_defaults();
   cleanup();
 }
@@ -140,7 +141,8 @@ Settings::~Settings()
 
 void Settings::cleanup(){
     for (QString k : allKeys()) {
-        if (k.contains("Range/") || k.startsWith("Ranges/"))
+        if (k.contains("Range/") || k.startsWith("Ranges/")
+                || k.startsWith("Extruder/"))
             remove(k);
     }
 }
@@ -190,7 +192,6 @@ bool Settings::mergeGlibKeyfile (const QString keyfile)
         endGroup();
     }
     cleanup();
-    SelectExtruder(0);
     QTextStream(stderr) << info() << endl;
     return true;
 }
@@ -455,23 +456,11 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
       real_widget_name.chop(5);
   QWidget *w = parentwidget->findChild<QWidget*>(real_widget_name);
   if (widget_name.startsWith("Extruder")){ // only check for number of Extruders in list
-      if (widget_name[8] != '_'){
-          QListView *exList = parentwidget->findChild<QListView*>("extruder_listview");
-          if (exList) {
+      if (widget_name[8] != '_') {
+          PrefsDlg *prefs_dlg = dynamic_cast<PrefsDlg*>(parentwidget);
+          if (prefs_dlg) {
               int extrNum = widget_name.mid(8,1).toInt();
-              int haveEx = exList->model()->rowCount();
-              if (getNumExtruders() < haveEx){
-                  exList->model()->removeRow(haveEx-1);
-                  exList->update();
-                  QModelIndex index = exList->model()->index(haveEx-2,0);
-                  exList->clicked(index);
-              } else if (haveEx < extrNum+1) {
-                  cerr << "add Extruder "<< extrNum << endl;
-                  exList->model()->insertRow(haveEx);
-                  QModelIndex index = exList->model()->index(haveEx,0);
-                  exList->model()->setData(index, numbered("Extruder ",extrNum+1));
-                  exList->clicked(index);
-              }
+              prefs_dlg->checkForExtruders(extrNum+1);
           }
           return true; // only "Extruder" settings without number are set to gui
       }
@@ -584,14 +573,17 @@ void Settings::connect_to_gui (QWidget *widget)
   QWidget *w;
   for (int i=0; i < widgets_with_setting.size(); i++){
       w = (widgets_with_setting[i]);
-      const QString widget_name = w->objectName();
+      QString widget_name = w->objectName();
       if (widget_name.startsWith("qt_") || widget_name.startsWith("widget_")
               || widget_name.startsWith("tab")
               || widget_name.startsWith("label_")
               || widget_name.startsWith("i_txt_"))
           continue;
+      if (widget_name.startsWith("Extruder_"))
+          widget_name.replace("Extruder", numbered("Extruder", currentExtruder));
       bool readFromGUI = !contains(grouped(widget_name)); // don't have setting yet
-      if (dynamic_cast<QPushButton *>(w)) continue;
+      if (widget_name.endsWith("Colour")|| widget_name.startsWith("Extruder"))
+          cerr << widget_name.toStdString()<< endl;
       QCheckBox *check = dynamic_cast<QCheckBox *>(w);
       if (check) {
           widget->connect(check, SIGNAL(stateChanged(int)), this, SLOT(get_int_from_gui(int)));
@@ -613,9 +605,7 @@ void Settings::connect_to_gui (QWidget *widget)
       QAbstractSlider *range = dynamic_cast<QAbstractSlider *>(w); // sliders etc.
       if (range) {
           widget->connect(range, SIGNAL(valueChanged(int)), this, SLOT(get_int_from_gui(int)));
-          if (readFromGUI) {
-              emit range->valueChanged(range->value());
-          }
+          if (readFromGUI) emit range->valueChanged(range->value());
           continue;
       }
       QComboBox *combo = dynamic_cast<QComboBox *>(w);
@@ -630,6 +620,7 @@ void Settings::connect_to_gui (QWidget *widget)
               set_up_combobox(combo,infills);
           }
           widget->connect(combo, SIGNAL(currentIndexChanged(int)), this, SLOT(get_int_from_gui(int)));
+          if (readFromGUI) emit combo->currentIndexChanged(combo->currentIndex());
           continue;
       }
       QLineEdit *e = dynamic_cast<QLineEdit *>(w);
@@ -641,6 +632,8 @@ void Settings::connect_to_gui (QWidget *widget)
       ColorButton *cb = dynamic_cast<ColorButton *>(w);
       if (cb) {
           widget->connect(cb, SIGNAL(clicked()), this, SLOT(get_from_gui()));
+          if (readFromGUI)
+                set_array(grouped(widget_name), cb->get_color());
           continue;
       }
       QPlainTextEdit *tv = dynamic_cast<QPlainTextEdit*>(w);
@@ -667,24 +660,26 @@ double Settings::RoundedLinewidthCorrection(double extr_width,
   return factor;
 }
 
-double Settings::GetExtrudedMaterialWidth(double layerheight)
+double Settings::GetExtrudedMaterialWidth(double layerheight, int extruderNo)
 {
   // ExtrudedMaterialWidthRatio is preset by user
-  return min(max(get_double("Extruder/MinimumLineWidth"),
-         get_double("Extruder/ExtrudedMaterialWidthRatio") * layerheight),
-         get_double("Extruder/MaximumLineWidth"));
+  const QString extruder = numbered("Extruder", extruderNo);
+  return min(max(get_double(extruder+"/MinimumLineWidth"),
+                 get_double(extruder+"/ExtrudedMaterialWidthRatio") * layerheight),
+             get_double(extruder+"/MaximumLineWidth"));
 }
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
 
 // how much mm filament material per extruded line length mm -> E gcode
-double Settings::GetExtrusionPerMM(double layerheight)
+double Settings::GetExtrusionPerMM(double layerheight, int extruderNo)
 {
-  double f = get_double("Extruder/ExtrusionFactor"); // overall factor
-  if (get_boolean("Extruder/CalibrateInput")) {  // means we use input filament diameter
-    const double matWidth = GetExtrudedMaterialWidth(layerheight); // this is the goal
+  const QString extruder = numbered("Extruder", extruderNo);
+  double f = get_double(extruder+"/ExtrusionFactor"); // overall factor
+  if (get_boolean(extruder+"/CalibrateInput")) {  // means we use input filament diameter
+    const double matWidth = GetExtrudedMaterialWidth(layerheight, extruderNo); // this is the goal
     // otherwise we just work back from the extruded diameter for now.
-    const double filamentdiameter = get_double("Extruder/FilamentDiameter");
+    const double filamentdiameter = get_double(extruder+"/FilamentDiameter");
     f *= (matWidth * matWidth) / (filamentdiameter * filamentdiameter);
   } // else: we work in terms of output anyway;
 
@@ -692,9 +687,10 @@ double Settings::GetExtrusionPerMM(double layerheight)
 }
 
 // return infill distance in mm
-double Settings::GetInfillDistance(double layerthickness, float percent)
+double Settings::GetInfillDistance(double layerthickness, float percent, int extruderNo)
 {
-  double fullInfillDistance = GetExtrudedMaterialWidth(layerthickness);
+  double fullInfillDistance = GetExtrudedMaterialWidth(layerthickness, extruderNo);
+  if (fullInfillDistance == 0.) throw new exception();
   if (percent == 0) return 10000000;
   return fullInfillDistance * (100./percent);
 }
@@ -729,6 +725,7 @@ std::vector<QChar> Settings::get_extruder_letters()
   std::vector<QChar> letters(num);
   for (uint i = 0; i < num; i++)
     letters[i] = get_string(numbered("Extruder",i)+"/GCLetter")[0];
+  if (letters.size()==0) letters.push_back('E');
   return letters;
 }
 
@@ -763,7 +760,10 @@ void Settings::copyGroup(const QString &from, const QString &to)
 
 QString Settings::grouped(const QString &name)
 {
-    return QString(name).replace('.','/').replace('_','/');
+    QString g = QString(name).replace('.','/').replace('_','/');
+    if (g.startsWith("Extruder/"))
+        g.replace("Extruder", numbered("Extruder",currentExtruder));
+    return g;
 }
 
 QVariant Settings::groupedValue(const QString &name, const QVariant &deflt)
@@ -792,34 +792,34 @@ QString Settings::get_string(const QString &name)
 }
 
 // create new
-uint Settings::CopyExtruder()
+int Settings::CopyExtruder(int num)
 {
   int total = getNumExtruders();
-  copyGroup(numbered("Extruder", selectedExtruder),
+  copyGroup(numbered("Extruder", num),
             numbered("Extruder", total));
   return total;
 }
 
-void Settings::RemoveExtruder()
+void Settings::RemoveExtruder(int num)
 {
     int total = getNumExtruders();
     if (total < 2) return;
-    for (int n = selectedExtruder + 1; n < total; n++){
+    for (int n = num + 1; n < total; n++){
         copyGroup(numbered("Extruder",n), numbered("Extruder",n-1));
     }
     remove(numbered("Extruder", total-1));
 }
 
-void Settings::SelectExtruder(uint num, QWidget *widget)
+/*
+void Settings::SelectExtruder(uint num, QWidget *widget, bool force)
 {
   int have = getNumExtruders();
   if (num >= have) return;
-  if (num != selectedExtruder) {
+  if (force || num != PrefsDlg) {
       // save current settings to previous selected
-      if (selectedExtruder < have)
+      if (num < have)
           copyGroup("Extruder", numbered("Extruder",selectedExtruder));
       selectedExtruder = num;
-      copyGroup(numbered("Extruder",num),"Extruder");
   }
   // if given widget show Extruder settings on gui
   PrefsDlg * prefsDlg = (PrefsDlg*) widget;
@@ -828,7 +828,7 @@ void Settings::SelectExtruder(uint num, QWidget *widget)
       //set_all_to_gui(prefsDlg, "Extruder");
   }
 }
-
+*/
 Matrix4d Settings::getBasicTransformation(Matrix4d T)
 {
   Vector3d t;
@@ -963,13 +963,16 @@ bool Settings::del_user_button(const QString &name) {
   return false;
 }
 
-
 void Settings::get_from_gui () // no params
 {
     if (inhibit_callback) return;
     QObject *w = dynamic_cast<QObject*>(sender());
     //    cerr << "get " << w->objectName().toStdString() << endl;
     QString name = w!=nullptr ? grouped(w->objectName()) : "";
+    if (name.startsWith("Extruder/")){ // from gui
+        name.replace("Extruder", numbered("Extruder", currentExtruder)); // to current
+        cerr << "get f g " << name.toStdString() << endl;
+    }
     while (w) { // for using break ...
         m_user_changed = true; // is_changed;
         QLineEdit *e = dynamic_cast<QLineEdit *>(w);
@@ -993,13 +996,11 @@ void Settings::get_from_gui () // no params
         break;
     }
     if (m_user_changed) {
-        // update currently edited extruder
-        if (name.startsWith("Extruder/")) {
-            copyGroup("Extruder",numbered("Extruder",selectedExtruder));
+        if (name.startsWith("Extruder"))  {
             // if selected for support, disable support for other extruders
             if (name.endsWith("UseForSupport") && get_boolean(name) ) {
                 for (uint i = 0; i < getNumExtruders(); i++) {
-                    if (i != selectedExtruder) {
+                    if (i != currentExtruder) {
                         setValue(numbered("Extruder",i)+"/UseForSupport", false);
                     }
                 }
@@ -1043,6 +1044,7 @@ void Settings::get_int_from_gui(int value)
     }
     if (w && !inhibit_callback) emit settings_changed(w->objectName());
 }
+
 void Settings::get_double_from_gui(double value)
 {
     if (inhibit_callback) return;

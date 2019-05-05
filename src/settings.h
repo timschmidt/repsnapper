@@ -66,7 +66,7 @@ class Settings : public QSettings {
 
   void copyGroup(const QString &from, const QString &to);
 
-  static QString grouped(const QString &name);
+  QString grouped(const QString &name);
   QVariant groupedValue(const QString &name, const QVariant &deflt = QVariant());
 
   int      get_integer (const QString &name);
@@ -97,15 +97,13 @@ class Settings : public QSettings {
 
   static double RoundedLinewidthCorrection(double extr_width,
                        double layerheight);
-  double GetExtrudedMaterialWidth(const double layerheight);
-  double GetExtrusionPerMM(double layerheight);
+  double GetExtrudedMaterialWidth(const double layerheight, int extruder);
+  double GetExtrusionPerMM(double layerheight, int extruder);
   std::vector<QChar> get_extruder_letters();
   Vector3d get_extruder_offset(uint num);
   uint GetSupportExtruder();
-  uint CopyExtruder();
-  void RemoveExtruder();
-  void SelectExtruder(uint num, QWidget *widget = nullptr);
-  uint selectedExtruder;
+  int CopyExtruder(int num);
+  void RemoveExtruder(int num);
   int getNumExtruders() const;
 
   double getLayerHeight() { return get_double("Slicing/LayerThickness");}
@@ -158,7 +156,7 @@ public:
   Matrix4d getBasicTransformation(Matrix4d T);
 
   // return real mm depending on hardware extrusion width setting
-  double GetInfillDistance(double layerthickness, float percent);
+  double GetInfillDistance(double layerthickness, float percent, int extruderNo);
 
 
   // connect settings to relevant GUI widgets
@@ -192,6 +190,9 @@ public:
   QString info();
 
   int getNumLayers() const { return numLayers; }
+
+  static QString numbered(const QString &qstring, int num);
+  int currentExtruder; // the extruder currently on GUI
 
 signals:
   void settings_changed(const QString &name);
