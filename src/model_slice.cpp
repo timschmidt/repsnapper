@@ -427,6 +427,7 @@ void Model::Slice()
         #pragma omp flush (cont)
     }
 #else
+        QCoreApplication::processEvents();
         cont = (m_progress->update(z));
 #endif
     }
@@ -729,6 +730,7 @@ void Model::MakeShells()
     omp_set_lock(&progress_lock);
 #endif
     cont = (m_progress->update(i));
+    QCoreApplication::processEvents();
 #ifdef _OPENMP
     omp_unset_lock(&progress_lock);
 #endif
@@ -767,6 +769,7 @@ void Model::CalcInfill()
     omp_set_lock(&progress_lock);
 #endif
     cont = (m_progress->update(i));
+    QCoreApplication::processEvents();
 #ifdef _OPENMP
     omp_unset_lock(&progress_lock);
 #endif
@@ -807,10 +810,12 @@ void Model::ConvertToGCode()
   lastlayer = NULL;
 
   Slice();
+  QCoreApplication::processEvents();
 
   //CleanupLayers();
 
   MakeShells();
+  QCoreApplication::processEvents();
 
   if (settings->get_boolean("Slicing/DoInfill") &&
       !settings->get_boolean("Slicing/NoTopAndBottom") &&
@@ -826,19 +831,24 @@ void Model::ConvertToGCode()
     MakeSupportPolygons(settings->get_double("Slicing/SupportWiden"));
 
   MakeFullSkins(); // must before multiplied uncovered bottoms
+  QCoreApplication::processEvents();
 
   MultiplyUncoveredPolygons();
+  QCoreApplication::processEvents();
 
   if (settings->get_boolean("Slicing/Skirt"))
     MakeSkirt();
+  QCoreApplication::processEvents();
 
   CalcInfill();
+  QCoreApplication::processEvents();
 
   if (settings->get_boolean("Raft/Enable"))
     {
       printOffset += Vector3d (settings->get_double("Raft/Size"), 0);
       MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
     }
+  QCoreApplication::processEvents();
 
   state.ResetLastWhere(Vector3d(0,0,0));
   uint count =  layers.size();
@@ -858,6 +868,7 @@ void Model::ConvertToGCode()
   Vector3d start = state.LastPosition();
   for (uint p=0; p<count; p++) {
     cont = (m_progress->update(p)) ;
+    QCoreApplication::processEvents();
     if (!cont) break;
     // cerr << "GCode layer " << (p+1) << " of " << count
     // 	 << " offset " << printOffsetZ
@@ -880,6 +891,7 @@ void Model::ConvertToGCode()
     // if (layers[p]->getPrevious() != NULL)
     //   cerr << p << ": " <<layers[p]->LayerNo << " prev: "
     // 	   << layers[p]->getPrevious()->LayerNo << endl;
+    QCoreApplication::processEvents();
   }
   // do antiooze retract for all lines:
   Printlines::makeAntioozeRetract(plines, settings, m_progress);
@@ -889,6 +901,7 @@ void Model::ConvertToGCode()
 
   //state.AppendCommands(commands, settings.Slicing.RelativeEcode);
 
+  QCoreApplication::processEvents();
   QString GcodeTxt;
   if (cont)
     gcode->MakeText (GcodeTxt, settings, m_progress);
@@ -903,6 +916,7 @@ void Model::ConvertToGCode()
   //   gcode.layerchanges.push_back(0);
 
   m_progress->stop (_("Done"));
+  QCoreApplication::processEvents();
 
   int h = (int)state.timeused/3600;
   int m = ((int)state.timeused%3600)/60;
@@ -1005,6 +1019,7 @@ void Model::SliceToSVG(QFile *file, bool single_layer)
         ostr << i
              << ".svg";
         if (!m_progress->update(i)) break;
+        QCoreApplication::processEvents();
         QFile sfile(QString::fromStdString(ostr.str()));
         QTextStream(&sfile) << QString::fromStdString(getSVG(i));
         sfile.close();
