@@ -310,12 +310,11 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z)
   glGetIntegerv(GL_VIEWPORT, viewport);
   glGetDoublev (GL_MODELVIEW_MATRIX, mvmatrix);
   glGetDoublev (GL_PROJECTION_MATRIX, projmatrix);
-  dClickY = double ((double)height() - y); // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
-  gluUnProject ((double) x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
+  dClickY = height() - y; // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
+  gluUnProject (x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
   Vector3d rayP1( dX, dY, dZ );
-  gluUnProject ((double) x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
+  gluUnProject (x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
   Vector3d rayP2( dX, dY, dZ );
-//  cerr << rayP1 <<  " - " << rayP2<<endl;
 
   // intersect with z=plane_z;
   if (rayP2.z() != rayP1.z()) {

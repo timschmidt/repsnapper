@@ -30,6 +30,8 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QPlainTextEdit>
+#include <QSerialPortInfo>
+#include <QRadioButton>
 
 #include <src/ui/prefs_dlg.h>
 
@@ -60,7 +62,7 @@
 #  define DEFAULT_COM_PORT "/dev/ttyUSB0"
 #endif
 
-const string serialspeeds[] = { "9600", "19200", "38400", "57600", "115200", "230400", "250000" };
+//const string serialspeeds[] = { "9600", "19200", "38400", "57600", "115200", "230400", "250000" };
 
 
 // convert GUI name to group/key
@@ -610,10 +612,14 @@ void Settings::connect_to_gui (QWidget *widget)
       }
       QComboBox *combo = dynamic_cast<QComboBox *>(w);
       if (combo) {
-          if (w->objectName() == "Hardware_SerialSpeed") { // Serial port speed
-              vector<string> speeds(serialspeeds,
-                                    serialspeeds+sizeof(serialspeeds)/sizeof(string));
-              set_up_combobox(combo, speeds);
+          if (w->objectName() == "Hardware_SerialSpeed") {
+              // Serial port speeds
+              combo->clear();
+              for (qint32 speed : QSerialPortInfo::standardBaudRates()) {
+                  if (speed >= 9600 &&  speed <= 250000) {
+                      combo->addItem(QString::number(speed), speed);
+                  }
+              }
           } else if (w->objectName().contains("Filltype")) { // Infill types
               uint nfills = sizeof(InfillNames)/sizeof(string);
               vector<string> infills(InfillNames,InfillNames+nfills);
@@ -645,7 +651,6 @@ void Settings::connect_to_gui (QWidget *widget)
       }
   }
 }
-
 
 // extrusion ratio for round-edge lines
 double Settings::RoundedLinewidthCorrection(double extr_width,
@@ -1034,8 +1039,9 @@ void Settings::get_int_from_gui(int value)
         }
         QComboBox *combo = dynamic_cast<QComboBox *>(w);
         if (combo) {
-          if (name == "Hardware/SerialSpeed") // has real value
-              setValue(name,combo->currentText().toUtf8().constData());
+          if (name == "Hardware/SerialSpeed"
+                   || name == "Hardware/Portname") // has real value
+              setValue(name,combo->currentData());
           else
               setValue(name,combo->currentIndex());
           break;

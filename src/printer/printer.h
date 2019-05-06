@@ -24,6 +24,8 @@
 
 //#include <sigc++/sigc++.h>
 
+#include <QSerialPortInfo>
+
 #include <mainwindow.h>
 
 #include "../stdafx.h"
@@ -32,11 +34,12 @@
 enum RR_logtype  { LOG_COMM, LOG_ERROR, LOG_ECHO };
 enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
 
-class Printer : public ThreadedPrinterSerial {
+class Printer : public QObject, public ThreadedPrinterSerial {
+    Q_OBJECT
+
 private:
   double temps[ TEMP_LAST ];
   MainWindow *main;
-  Model *m_model;
 
   bool was_connected;
   bool was_printing;
@@ -52,15 +55,16 @@ private:
   bool QueryTemp( void );
   bool CheckPrintingProgress( void );
   void ParseResponse( string line );
+  QSerialPort *serialPort;
 
 public:
   Printer( MainWindow *main );
   ~Printer();
 
-  void setModel( Model *model );
+  static vector<QSerialPortInfo> findPrinterPorts();
 
   bool Connect( bool connect = true );
-  bool Connect( string device, int baudrate );
+  bool Connect( QString device, int baudrate );
   void Disconnect( void );
   bool Reset( void );
 
@@ -86,6 +90,8 @@ public:
   void alert( const char *message );
   void error( const char *message, const char *secondary = NULL );
 
+signals:
+  void serial_state_changed(int state);
 //  sigc::signal< void > signal_printing_changed;
 //  sigc::signal< void, unsigned long > signal_now_printing;
 //  sigc::signal< void > signal_inhibit_changed;

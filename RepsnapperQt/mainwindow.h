@@ -82,6 +82,7 @@ private slots:
     void extruderSelected(const QModelIndex &index);
     void updatedModel(const ObjectsList *objList = nullptr);
     void shapeSelected(const QModelIndex &index);
+    void printerConnection(int state);
 
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);

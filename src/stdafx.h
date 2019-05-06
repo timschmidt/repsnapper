@@ -33,6 +33,9 @@
 #  pragma warning( disable : 4311 4312 4244 4267 4800)
 #endif
 
+
+#include <QDebug>
+
 typedef unsigned int        uint;
 
 #define DEBUG_ECHO (1<<0)

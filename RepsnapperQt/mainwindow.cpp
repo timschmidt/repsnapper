@@ -47,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     QCoreApplication::setApplicationName("Repsnapper");
 
+
+
     ui_main->setupUi(this);
     ui_main->mainToolBar->hide();
 //    ui_main->mainsplitter->setSizes(QList<int>({INT_MAX, INT_MAX}));
@@ -62,13 +64,33 @@ MainWindow::MainWindow(QWidget *parent) :
     connectButtons(prefs_dialog);
 
     m_settings = new Settings();
+    ui_main->Hardware_Portname->clear();
+    int settingsPort = -1;
+    vector<QSerialPortInfo> ports=Printer::findPrinterPorts();
+    for (uint i = 0; i < ports.size(); i++) {
+        ui_main->Hardware_Portname->addItem(
+                    ports[i].portName()+": "+ports[i].description(),
+                    ports[i].portName());
+        if (m_settings->get_string("Hardware/PortName") == ports[i].portName()) {
+            settingsPort = int(i);
+        }
+    }
+    ui_main->Hardware_Portname->setCurrentIndex(max(0,settingsPort));
+
     m_settings->set_all_to_gui(this,"Window");
     m_settings->set_all_to_gui(this);
     m_settings->set_all_to_gui(prefs_dialog);
     m_settings->connect_to_gui(this);
     m_settings->connect_to_gui(prefs_dialog);
 
-    connect(m_settings, SIGNAL(settings_changed(const QString&)), this, SLOT(settingsChanged(const QString&)));
+    m_printer = new Printer(this);
+    emit ui_main->Hardware_Portname->currentIndexChanged(settingsPort);
+
+    connect(m_printer, SIGNAL(serial_state_changed(int)),
+            this, SLOT(printerConnection(int)));
+
+    connect(m_settings, SIGNAL(settings_changed(const QString&)),
+            this, SLOT(settingsChanged(const QString&)));
 
     cerr << m_settings->info().toStdString() << endl;
 
@@ -84,8 +106,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui_main->modelListView, SIGNAL(clicked(QModelIndex)),
             this, SLOT(shapeSelected(QModelIndex)));
-
-    m_printer = new Printer(this);
 
     m_render = ui_main->openGLWidget;
     m_render->setMain(this);
@@ -152,6 +172,11 @@ void MainWindow::updatedModel(const ObjectsList *objList)
 void MainWindow::shapeSelected(const QModelIndex &index)
 {
     m_render->setSelectedIndex(index);
+}
+
+void MainWindow::printerConnection(int state)
+{
+    ui_main->p_connect->setChecked(state==SERIAL_CONNECTED);
 }
 
 void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
@@ -359,7 +384,7 @@ void MainWindow::connectButtons(QWidget *widget)
             widget->findChildren<QWidget*>(QRegularExpression(".+_.+"));
     for (int i=0; i< widgets_with_setting.size(); i++){
         QWidget *w = (widgets_with_setting[i]);
-        QPushButton *b = dynamic_cast<QPushButton *>(w);
+        QAbstractButton *b = dynamic_cast<QAbstractButton *>(w);
         if (b) {
 //            cerr<< "connect button " << w->objectName().toStdString() << endl;
             widget->connect(b, SIGNAL(clicked()), this, SLOT(handleButtonClick()));
@@ -413,7 +438,8 @@ void MainWindow::handleButtonClick()
 //        m_settings->SelectExtruder(prefs_dialog->getSelectedExtruder(), prefs_dialog, true);
     } else if(name == "m_autoarrange"){
         m_model->AutoArrange(nullptr);
-    } else if(name == ""){
+    } else if(name == "p_connect"){
+        m_printer->Connect(ui_main->p_connect->isChecked());
     } else if(name == ""){
     } else if(name == ""){
     } else if(name == ""){
@@ -439,7 +465,6 @@ void MainWindow::settingsChanged(const QString &name)
     if (name.startsWith("scale")){
     }
     if (name.startsWith("Extruder")){
-
     }
 //    cerr << name.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();

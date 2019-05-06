@@ -19,13 +19,14 @@
 
 #include "printer.h"
 #include "../model.h"
+
 #include <QTextDocument>
 
-//#include <glibmm/regex.h>
+#include <QSerialPort>
+
 
 Printer::Printer( MainWindow *main ) {
   this->main = main;
-  m_model = NULL;
   was_connected = false;
   was_printing = false;
   prev_line = 0;
@@ -34,6 +35,8 @@ Printer::Printer( MainWindow *main ) {
 
   temps[ TEMP_NOZZLE ] = 0;
   temps[ TEMP_BED ] = 0;
+
+  serialPort = nullptr;
 
 //  idle_timeout = Glib::signal_timeout().connect
 //    ( sigc::mem_fun(*this, &Printer::Idle), 100 );
@@ -45,13 +48,34 @@ Printer::~Printer() {
 //  idle_timeout.disconnect();
 //  print_timeout.disconnect();
 //  if ( temp_timeout.connected() )
-//    temp_timeout.disconnect();
+    //    temp_timeout.disconnect();
+
+    Disconnect();
+    delete serialPort;
 }
 
-void Printer::setModel( Model *model ) {
-  m_model = model;
+vector<QSerialPortInfo> Printer::findPrinterPorts()
+{
+    vector<QSerialPortInfo> infos;
 
-  UpdateTemperatureMonitor();
+    // Example use QSerialPortInfo
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+        qDebug() << "Name : " << info.portName();
+        qDebug() << "Description : " << info.description();
+        qDebug() << "Manufacturer: " << info.manufacturer();
+
+        // Example use QSerialPort
+        QSerialPort serial;
+        serial.setPort(info);
+        if (serial.open(QIODevice::ReadWrite)) {
+            serial.close();
+            qDebug() << info.portName() << " ok! "<< endl;
+            infos.push_back(info);
+        } else {
+            qDebug() << info.portName() << " not connectable "<< endl;
+        }
+    }
+    return infos;
 }
 
 bool Printer::Connect( bool connect ) {
@@ -60,24 +84,45 @@ bool Printer::Connect( bool connect ) {
     return true;
   }
 
-  if ( m_model == NULL )
-    return false;
-
-  return Connect(m_model->settings->get_string("Hardware/PortName").toUtf8().data(),
-                 m_model->settings->get_integer("Hardware/SerialSpeed") );
+  return Connect(main->get_settings()->get_string("Hardware/Portname"),
+                 main->get_settings()->get_integer("Hardware/SerialSpeed") );
 }
 
-bool Printer::Connect( string device, int baudrate ) {
+bool Printer::Connect( QString device, int baudrate ) {
+    QSerialPortInfo portInfo(device);
+    qDebug() << "connecting to " << portInfo.description()
+             << " at port " << portInfo.portName() << " with speed " << baudrate << endl;
+
+    emit serial_state_changed(SERIAL_CONNECTING);
+
+    serialPort = new QSerialPort(portInfo);
+    bool ok = serialPort->open(QIODevice::ReadWrite);
+    if (ok){
+        ok = serialPort->setBaudRate(baudrate);
+        if (ok){
+            UpdateTemperatureMonitor();
+        } else
+            cerr << "Error setting baudrate to "<<baudrate << endl;
+    } else {
+        qDebug() << "Error  connecting to "<< device << endl;
+    }
+    emit serial_state_changed(ok ? SERIAL_CONNECTED : SERIAL_DISCONNECTED);
+    return ok;
+
 //  signal_serial_state_changed.emit( SERIAL_CONNECTING );
-  bool ret = ThreadedPrinterSerial::Connect( device, baudrate );
+  //bool ret = ThreadedPrinterSerial::Connect( device, baudrate );
 //  signal_serial_state_changed.emit( ret ? SERIAL_CONNECTED : SERIAL_DISCONNECTED );
-  UpdateTemperatureMonitor();
-  return ret;
 }
 
 void Printer::Disconnect( void ) {
+    emit serial_state_changed(SERIAL_DISCONNECTING);
+    if (serialPort && serialPort->isOpen()){
+        serialPort->close();
+        emit serial_state_changed(SERIAL_DISCONNECTED);
+    }
+
 //  signal_serial_state_changed.emit(SERIAL_DISCONNECTING);
-  ThreadedPrinterSerial::Disconnect();
+ // ThreadedPrinterSerial::Disconnect();
 //  signal_serial_state_changed.emit( SERIAL_DISCONNECTED );
 }
 
@@ -96,7 +141,7 @@ bool Printer::Reset( void ) {
 }
 
 bool Printer::StartPrinting( unsigned long start_line, unsigned long stop_line ) {
-  string gcode = m_model->GetGCodeBuffer()->toPlainText().toUtf8().constData();
+  string gcode = main->get_model()->GetGCodeBuffer()->toPlainText().toUtf8().constData();
   return Printer::StartPrinting( gcode, start_line, stop_line );
 }
 
@@ -180,22 +225,18 @@ bool Printer::Home( string axis ) {
 
 bool Printer::Move(string axis, double distance, bool relative )
 {
-  if ( m_model == NULL )
-    return false;
 
   if ( IsPrinting() ) {
     alert(_("Can't move while printing"));
     return false;
   }
 
-  Settings *settings = m_model->settings;
-
   double speed = 0.0;
 
   if ( axis == "X" || axis == "Y" )
-    speed = settings->get_double("Hardware/MaxMoveSpeedXY") * 60;
+    speed = main->get_settings()->get_double("Hardware/MaxMoveSpeedXY") * 60;
   else if(axis == "Z")
-    speed = settings->get_double("Hardware/MaxMoveSpeedZ") * 60;
+    speed = main->get_settings()->get_double("Hardware/MaxMoveSpeedZ") * 60;
   else
     alert (_("Move called with unknown axis"));
 
@@ -316,7 +357,7 @@ bool Printer::Idle( void ) {
   }
 
   if ( waiting_temp && --temp_countdown == 0 &&
-       m_model && m_model->settings->get_boolean("Misc/TempReadingEnabled") ) {
+       main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
     UpdateTemperatureMonitor();
     temp_countdown = 100;
     waiting_temp = false;
@@ -346,7 +387,7 @@ bool Printer::QueryTemp( void ) {
 //  if ( temp_timeout.connected() )
 //    temp_timeout.disconnect();
 
-  if ( IsConnected() && m_model && m_model->settings->get_boolean("Misc/TempReadingEnabled") ) {
+  if ( IsConnected() && main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
     SendAsync( "M105" );
     waiting_temp = true;
   }

@@ -33,36 +33,36 @@ protected:
   static const unsigned long max_command_size = 1024;
   static const unsigned long max_command_prefix = 32;
   static const unsigned long max_command_postfix = 32;
-  
+
   const unsigned long max_recv_block_ms;
-  
+
 #ifdef WIN32
   HANDLE device_handle;
 #else
   int device_fd;
 #endif
-  
+
   unsigned long prev_cmd_line_number;
-  
+
   char *full_command_scratch;
   char *command_scratch;
   char *full_recv_buffer;
   char *recv_buffer;
-  
+
 #ifdef WIN32
   char *raw_recv;
 #endif
-  
+
   char *SendCommand( void ); // Sends gcode command.  Performs formating and waits for reply.  The line starts at command_scratch + max_command_prefix.  If buffer_response, the reply is entered into the response_buffer.
-  
+
   char *FormatLine( void ); // Formats line of gcode in command_scratch and returns a pointer to the starting character
   bool SendText( char *text ); // Sends indicated text exactly.  Does not wait for reply.  Performs logging.
-  char *RecvLine( void ); // Waits for a complete line from the port and receives that line into recv_buffer (but not at the start of recv_buffer to make logging easier).  Returns pointer to start of recv'd data.  Performs logging.  
-  
+  char *RecvLine( void ); // Waits for a complete line from the port and receives that line into recv_buffer (but not at the start of recv_buffer to make logging easier).  Returns pointer to start of recv'd data.  Performs logging.
+
   virtual void RecvTimeout( void );
   virtual void LogLine( const char *line );
   virtual void LogError( const char *error_line );
-  
+
   // Gcodes return:
   //   ok
   //   ok T:xx.x Bxx.x
@@ -70,7 +70,7 @@ protected:
   //   rs line_num <- resend this line number
   //   !! <- fatal error, printer is shutting down, disconnect
   //   // comments
-  
+
   // The following commands connect and reset without
   // caling RecvLine() at the end.  Calling RecvLine()
   // is necessary.  The ONLY reason to use these functions
@@ -78,19 +78,19 @@ protected:
   // after performing other initalization tasks.
   bool RawConnect( string device, int baudrate );
   bool RawReset( void );
-  
+
 public:
   PrinterSerial( unsigned long max_recv_block_ms );
   virtual ~PrinterSerial();
-  
+
   static bool TestPort( const string device );
   static vector<string> FindPorts( void );
-  
+
   virtual bool Connect( string device, int baudrate );
   virtual void Disconnect( void );
   virtual bool IsConnected( void );
-  
+
   virtual bool Reset( void );
-  
+
   virtual char *Send( const char *command );
 };

@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui opengl uitools
+QT       += core gui opengl uitools serialport
 
 lessThan(QT_MAJOR_VERSION, 5): error("requires Qt 5.12")
 lessThan(QT_MINOR_VERSION, 12): error("requires Qt 5.12")
