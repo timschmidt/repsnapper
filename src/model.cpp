@@ -214,8 +214,10 @@ void Model::ReadStl(QFile *file)
   // do not autoplace in multishape files
   bool autoplace = settings->get_boolean("Misc/ShapeAutoplace")
           && shapes.size() == 1;
+  // add all shapes to the same new ListObject
+  ListObject *listObj = objectList.newObject(file->fileName());
   for (Shape *s : shapes){
-    AddShape(NULL, s, s->filename, autoplace);
+      AddShape(listObj, s, s->filename, autoplace);
   }
   shapes.clear();
   emit model_changed(&objectList);
@@ -307,7 +309,6 @@ void Model::Read(QFile *file)
         ReadStl (file);
         settings->STLPath = directory_path;
     }
-    cerr << objectList.info() << endl;
 }
 
 void Model::ReadGCode(QFile *file)
@@ -324,7 +325,7 @@ void Model::ReadGCode(QFile *file)
   Max = gcode->Max;
   Min = gcode->Min;
   Center = (Max + Min) / 2.0;
-  emit model_changed(nullptr);
+  emit model_changed();
 //  m_signal_zoom.emit();
 }
 
@@ -344,9 +345,7 @@ void Model::translateGCode(Vector3d trans)
   is_calculating=false;
 }
 
-
-
-void Model::ModelChanged()
+void Model::ModelChanged(bool objectsAddedOrRemoved)
 {
   if (m_inhibit_modelchange) return;
   if (objectList.empty()) return;
@@ -360,7 +359,7 @@ void Model::ModelChanged()
     }
     setCurrentPrintingLine(0);
     gcode->emit gcode_changed();
-    emit model_changed(&objectList);
+    emit model_changed(objectsAddedOrRemoved ? &objectList : nullptr);
   }
 }
 
@@ -520,9 +519,8 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
   return true;
 }
 
-int Model::AddShape(ListObject *parentLO, Shape *shape, QString filename, bool autoplace)
+ListObject * Model::AddShape(ListObject *parentLO, Shape *shape, QString filename, bool autoplace)
 {
-  //Shape *retshape;
   bool found_location=false;
 
   FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
@@ -543,10 +541,7 @@ int Model::AddShape(ListObject *parentLO, Shape *shape, QString filename, bool a
   // Add it to the parent LO
   cerr << "adding shape " << filename.toStdString() << endl;
   parentLO->addShape(shape, filename);
-    // Tell everyone
-//  m_signal_stl_added.emit (path);
-
-  return 0;
+  return parentLO;
 }
 
 int Model::SplitShape(ListObject *parent, Shape *shape, QString filename)
@@ -727,7 +722,7 @@ void Model::DeleteSelectedObjects(QModelIndexList *selected)
         objectList.DeleteSelected(&i);
     ClearGCode();
     ClearLayers();
-    ModelChanged();
+    ModelChanged(true);
 }
 
 
@@ -745,7 +740,7 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
   vector<Shape*> shapes;
   vector<Matrix4d> transforms;
   if (selected_only)
-    objectList.get_selected_shapes(&m_current_selectionpath, shapes, transforms);
+    objectList.get_selected_shapes(main->getSelectedShapes(), shapes, transforms);
   else
     objectList.get_all_shapes(shapes, transforms);
 
@@ -978,7 +973,6 @@ int Model::draw (const QModelIndexList *selected)
       render->draw_string(pos,val.str());
     }
   int drawnlayer = -1;
-  int numLayers = settings->getNumLayers();
   if(settings->get_boolean("Display/DisplayLayer")) {
        float z = settings->get_integer("Display/LayerValue")/1000.;
        drawnlayer = drawLayers(z, offset, false);
@@ -1109,7 +1103,6 @@ int Model::drawLayers(float height, const Vector3d &offset, bool calconly)
   return drawn;
 }
 
-
 Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
                                bool calcinfill, bool for_gcode)
 {
@@ -1122,7 +1115,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   vector<Matrix4d> transforms;
 
   if (settings->value("Slicing/SelectedOnly").toBool())
-    objectList.get_selected_shapes(&m_current_selectionpath, shapes, transforms);
+    objectList.get_selected_shapes(main->getSelectedShapes(), shapes, transforms);
   else
     objectList.get_all_shapes(shapes, transforms);
 

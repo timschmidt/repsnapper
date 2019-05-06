@@ -328,7 +328,6 @@ Vector3d Render::mouse_on_plane(double x, double y, double plane_z)
 
 void Render::initializeGL()
 {
-    //  QOpenGLWidget::initializeGL();
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &Render::cleanup);
     initializeOpenGLFunctions();
     glClearColor(0, 0, 0, 255);
@@ -386,6 +385,8 @@ void Render::initializeGL()
     glEnable (GL_DEPTH_TEST);
     glHint (GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
+
+
 /* // GLES2.0
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_core ? vertexShaderSourceCore : vertexShaderSource);
@@ -428,6 +429,7 @@ void Render::resizeGL(int width, int height)
 
 void Render::draw_string(const Vector3d &pos, const string s)
 {
+    GlText glText;
     // from https://stackoverflow.com/a/33674071/1712200
     int width = this->width();
     int height = this->height();
@@ -437,26 +439,21 @@ void Render::draw_string(const Vector3d &pos, const string s)
     glGetDoublev(GL_MODELVIEW_MATRIX, &model[0][0]);
     glGetDoublev(GL_PROJECTION_MATRIX, &proj[0][0]);
     glGetIntegerv(GL_VIEWPORT, &view[0]);
-    GLdouble textPosX = 0, textPosY = 0, textPosZ = 0;
+    GLdouble textPosZ = 0;
 
     project(pos.x(), pos.y(), pos.z(),
             &model[0][0], &proj[0][0], &view[0],
-            &textPosX, &textPosY, &textPosZ);
+            &glText.posX, &glText.posY, &textPosZ);
 
-    textPosY = height - textPosY; // y is inverted
+    glText.posY = height - glText.posY; // y is inverted
 
     // Retrieve last OpenGL color to use as a font color
-    GLdouble glColor[4];
-    glGetDoublev(GL_CURRENT_COLOR, glColor);
-    QColor fontColor = QColor(255*glColor[0], 255*glColor[1], 255*glColor[2], 255*glColor[3]);
+    GLfloat glColor[4];
+    glGetFloatv(GL_CURRENT_COLOR, glColor);
+    glText.color = QColor(255*glColor[0], 255*glColor[1], 255*glColor[2], 255*glColor[3]);
 
-    // Render text
-    QPainter painter(this);
-    painter.setPen(fontColor);
-    painter.setFont(textFont);
-    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-    painter.drawText(textPosX, textPosY, QString::fromStdString(s).left(12));
-    painter.end();
+    glText.text= QString::fromStdString(s).left(12);
+    allText.push_back(glText);
 }
 
 void transformPoint(GLdouble out[4], const GLdouble m[16], const GLdouble in[4])
@@ -500,6 +497,7 @@ GLdouble * winx, GLdouble * winy, GLdouble * winz)
 void Render::paintGL()
 {
 //    cerr << "paintGL "<<  width() << "x" << height() << endl;
+    allText.clear();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     glLoadIdentity();
     glTranslatef (0.0f, 0.0f, -2.0f * m_zoom);
@@ -514,6 +512,16 @@ void Render::paintGL()
 
     glPopMatrix();
     glEnd();
+
+    QPainter painter(this);
+    painter.setFont(textFont);
+    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+    for (GlText text: allText){
+        painter.setPen(text.color);
+        painter.drawText(text.posX, text.posY, text.text);
+    }
+    painter.end();
+
 }
 
 void Render::mousePressEvent(QMouseEvent *event)

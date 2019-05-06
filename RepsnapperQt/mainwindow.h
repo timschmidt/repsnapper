@@ -53,6 +53,7 @@ public:
 
     void openFile(const QString &path);
 
+    QModelIndexList * getSelectedShapes() const;
 private:
     Ui::MainWindow *ui_main;
     Ui::PreferencesDialog *ui_prefs;

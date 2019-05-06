@@ -37,6 +37,15 @@ class Model;
 class GlLight;
 class Settings;
 
+
+typedef struct {
+    GLdouble posX, posY;
+    QColor color;
+    QString text;
+} GlText;
+
+
+
 class Render : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
@@ -89,7 +98,7 @@ public:
   void setMain(MainWindow *main){ m_main = main;}
 
   void setSelectedIndex(const QModelIndex &index);
-  QModelIndexList &getSelection() const {return *m_selection;}
+  QModelIndexList *getSelection() const {return m_selection;}
 
   Qt::MouseButton mousePressed;
   uint mousePickedObject;
@@ -126,6 +135,7 @@ private:
 //  virtual bool on_scroll_event(GdkEventScroll* event);
 //  virtual bool on_key_press_event(GdkEventKey* event);
   //  virtual bool on_key_release_event(GdkEventKey* event);
+  vector<GlText> allText;
   QFont textFont;
   GLint project(GLdouble objx, GLdouble objy, GLdouble objz,
                 const GLdouble model[], const GLdouble proj[],

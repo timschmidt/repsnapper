@@ -65,7 +65,7 @@ public:
 #if ENABLE_AMF
 //        void SaveAMF(QFile *file);
 #endif
-        int AddShape(ListObject *parent, Shape * shape, QString filename,
+        ListObject * AddShape(ListObject *parent, Shape * shape, QString filename,
                      bool autoplace = true);
         int SplitShape(ListObject *parent, Shape *shape, QString filename);
         int MergeShapes(ListObject *parent, const vector<Shape*> shapes);
@@ -78,7 +78,6 @@ public:
         void SetViewProgress (ViewProgress *progress);
 
         void DeleteSelectedObjects(QModelIndexList *objectList);
-        QModelIndexList m_current_selectionpath;
 
         void OptimizeRotation(Shape *shape, ListObject *object);
         void ScaleObject(Shape *shape, ListObject *object, double scale);
@@ -140,7 +139,7 @@ public:
         bool FindEmptyLocation(Vector3d &result, const Shape *stl);
 
         ////        sigc::signal< void > m_model_changed;
-        void ModelChanged();
+        void ModelChanged(bool objectsAddedOrRemoved = false);
         bool m_inhibit_modelchange;
 
 //        // Truly the model
@@ -207,7 +206,7 @@ private:
 //        sigc::signal< void > m_signal_gcode_changed;
 
 signals:
-        void model_changed(const ObjectsList * objlist);
+        void model_changed(const ObjectsList * objlist = nullptr);
 };
 
 #endif // MODEL_H

@@ -140,7 +140,6 @@ class Settings : public QSettings {
   void get_colour_from_gui     (ColorButton * colorButton, const QString &key);
   void convert_old_colour      (const QString &group, const QString &key);
   void set_defaults ();
-  int numLayers;
   void cleanup();
 
 public:
@@ -188,8 +187,6 @@ public:
   void setMaxHeight(QWidget *parent, const double h);
 
   QString info();
-
-  int getNumLayers() const { return numLayers; }
 
   static QString numbered(const QString &qstring, int num);
   int currentExtruder; // the extruder currently on GUI

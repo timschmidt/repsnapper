@@ -126,6 +126,7 @@ void MainWindow::echo_log(string s)
 void MainWindow::updatedModel(const ObjectsList *objList)
 {
     m_model->CalcBoundingBoxAndCenter();
+    m_model->ClearPreview();
 
     if (objList){
         cerr << objList->info() << endl;
@@ -145,6 +146,7 @@ void MainWindow::updatedModel(const ObjectsList *objList)
 
     m_settings->setMaxHeight(this,
                              std::max(m_model->gcode->Max.z(), m_model->Max.z()));
+//    cerr << " updated Model"<< endl;
 }
 
 void MainWindow::shapeSelected(const QModelIndex &index)
@@ -180,10 +182,6 @@ void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
 
     // Draw all objects
     int layerdrawn = m_model->draw(selected);
-
-    if (layerdrawn > -1) {
-        ui_main->LayerLabel->setNum(layerdrawn);
-    }
 }
 
 void MainWindow::DrawGrid()
@@ -350,6 +348,11 @@ void MainWindow::openFile(const QString &path)
         m_model->Read(&file);
 }
 
+QModelIndexList *MainWindow::getSelectedShapes() const
+{
+    return m_render->getSelection();
+}
+
 void MainWindow::connectButtons(QWidget *widget)
 {
     QList<QWidget*> widgets_with_setting =
@@ -372,7 +375,7 @@ void MainWindow::handleButtonClick()
     QString name = button->objectName();
 
     if (name == "m_delete"){
-        m_model->DeleteSelectedObjects(&m_render->getSelection());
+        m_model->DeleteSelectedObjects(m_render->getSelection());
     } else if(name == "cancel_progress"){
     } else if(name == "m_load_stl"){
         on_actionOpen_triggered();

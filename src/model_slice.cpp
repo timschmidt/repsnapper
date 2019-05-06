@@ -284,7 +284,7 @@ void Model::Slice()
   vector<Matrix4d> transforms;
 
   if (settings->get_boolean("Slicing/SelectedOnly"))
-    objectList.get_selected_shapes(&m_current_selectionpath, shapes, transforms);
+    objectList.get_selected_shapes(main->getSelectedShapes(), shapes, transforms);
   else
     objectList.get_all_shapes(shapes,transforms);
 

@@ -897,7 +897,6 @@ void Settings::remove(const QString &group, const QString &key)
 
 void Settings::setMaxHeight(QWidget *parent, const double h)
 {
-    this->numLayers = numLayers;
     if (inhibit_callback) return;
     inhibit_callback=true;
     QSlider* slider = parent->findChild<QSlider*>("Display_LayerValue");

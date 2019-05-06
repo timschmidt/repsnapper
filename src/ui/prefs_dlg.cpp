@@ -77,6 +77,7 @@ void PrefsDlg::setDefaults() {
     ui_dialog->Display_GCodeMoveColour->set_color(1,0,1,1);
     ui_dialog->Display_GCodePrintingColour->set_color(1,1,1,1);
     ui_dialog->Display_EndpointsColour->set_color(1,0.0,0,1);
+    ui_dialog->Extruder_DisplayColour->set_color(1,1,0,1);
 }
 
 PrefsDlg::~PrefsDlg()

@@ -572,7 +572,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
   // if (abs_extr>0) linewidth*=abs_extr;
   // else if (abs_extr<0) linewidth/=(-abs_extr);
   glLineWidth(linewidth);
-  glColor4fv(&color[0]);
+  glColor4fv(color);
   draw(lastPos, offset, extrwidth, arrows, debug_arcs);
 }
 
