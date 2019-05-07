@@ -55,12 +55,16 @@ Printer::~Printer() {
     delete serialPort;
 }
 
-vector<QSerialPortInfo> Printer::findPrinterPorts()
+vector<QSerialPortInfo> Printer::findPrinterPorts(QList<QSerialPortInfo> additionalPorts)
 {
     vector<QSerialPortInfo> infos;
 
+    QList<QSerialPortInfo> testPorts = QSerialPortInfo::availablePorts();
+    testPorts.append(additionalPorts);
+
+
     // Example use QSerialPortInfo
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+    foreach (const QSerialPortInfo &info, testPorts) {
         qDebug() << "Name : " << info.portName();
         qDebug() << "Description : " << info.description();
         qDebug() << "Manufacturer: " << info.manufacturer();
@@ -79,6 +83,16 @@ vector<QSerialPortInfo> Printer::findPrinterPorts()
     return infos;
 }
 
+QString Printer::getSerialPortName() const
+{
+    return serialPort->portName();
+}
+
+int Printer::getSerialSpeed() const
+{
+    return serialPort->baudRate();
+}
+
 bool Printer::Connect( bool connect ) {
   if ( ! connect ) {
     Disconnect();
@@ -91,32 +105,39 @@ bool Printer::Connect( bool connect ) {
 
 bool Printer::Connect( QString device, int baudrate ) {
     QSerialPortInfo portInfo(device);
-    qDebug() << "connecting to " << portInfo.description()
+       emit serial_state_changed(SERIAL_CONNECTING);
+
+    if (!portInfo.isNull())
+        serialPort = new QSerialPort(portInfo);
+    else
+        serialPort = new QSerialPort(device);
+    qDebug() << "connecting to " << device
              << " at port " << portInfo.portName() << " with speed " << baudrate << endl;
 
-    emit serial_state_changed(SERIAL_CONNECTING);
-
-    serialPort = new QSerialPort(portInfo);
     bool ok = serialPort->open(QIODevice::ReadWrite);
     if (ok){
         ok = serialPort->setBaudRate(baudrate)
                 && serialPort->setDataBits(QSerialPort::Data8)
                 &&  serialPort->setParity(QSerialPort::NoParity)
                 && serialPort->setStopBits(QSerialPort::OneStop)
-                && serialPort->setFlowControl(QSerialPort::NoFlowControl);
+                && serialPort->setFlowControl(QSerialPort::NoFlowControl)
+                && serialPort->setDataTerminalReady(false);
         if (ok){
             UpdateTemperatureMonitor();
         } else
             cerr << "Error setting baudrate to "<<baudrate << endl;
     } else {
-        qDebug() << "Error  connecting to "<< device << endl;
+        qDebug() << "Error opening port to "<< device << endl;
+    }
+    if(ok) {
+        Send("M114");
+        connect(serialPort,SIGNAL(readyRead()),this,SLOT(serialReceived()));
+    } else {
+        serialPort->close();
     }
     emit serial_state_changed(ok ? SERIAL_CONNECTED : SERIAL_DISCONNECTED);
+    emit printing_changed();
     return ok;
-
-//  signal_serial_state_changed.emit( SERIAL_CONNECTING );
-  //bool ret = ThreadedPrinterSerial::Connect( device, baudrate );
-//  signal_serial_state_changed.emit( ret ? SERIAL_CONNECTED : SERIAL_DISCONNECTED );
 }
 
 void Printer::Disconnect( void ) {
@@ -133,11 +154,11 @@ void Printer::Disconnect( void ) {
 
 bool Printer::Reset( void ) {
   StopPrinting( true );
-
   if ( ! serialPort->isOpen() )
     return false;
 
-  bool ret = serialPort->reset();
+  bool ret =serialPort->setDataTerminalReady(true) &&
+          serialPort->setDataTerminalReady(false);
 
   if ( ret && was_printing ) {
     was_printing = false;
@@ -150,10 +171,18 @@ bool Printer::Reset( void ) {
 
 
 bool Printer::Send(string s) {
-    if (serialPort->isOpen()) {
-        return serialPort->write(s.c_str()) == long(s.length());
+    bool ok=false;
+    if (serialPort && serialPort->isOpen() && serialPort->isWritable()) {
+       cerr << "sending " << s << endl;
+        ok = serialPort->write((s+'\n').c_str()) == 1+long(s.length());
+//       QStringList lines = QString::fromStdString(s).split('\n');
+//       for (QString line : lines){
+//           QByteArray l8 = (line.trimmed()+'\n').toLocal8Bit();
+//           ok = serialPort->write(l8) == long(l8.length());
+//           serialPort->flush();
+//       }
     }
-    return false;
+    return ok;
 }
 
 bool Printer::StartPrinting( unsigned long start_line, unsigned long stop_line ) {
@@ -341,7 +370,18 @@ void Printer::error( const char *message, const char *secondary ) {
   if ( main )
     main->err_log( string(message)  + " - " + string(secondary) + "\n" );
 
-//  signal_alert.emit( Gtk::MESSAGE_ERROR, message, secondary );
+  //  signal_alert.emit( Gtk::MESSAGE_ERROR, message, secondary );
+}
+
+void Printer::serialReceived()
+{
+    QByteArray received = serialPort->readAll();
+    QList<QByteArray> lines = received.split(13);
+    for (QString line  : lines){
+           qDebug() << "received line " << line.trimmed();
+    }
+
+
 }
 
 void Printer::UpdateTemperatureMonitor( void ) {

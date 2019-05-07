@@ -1296,7 +1296,11 @@ M104 S0.0        ; heater off
              <widget class="QWidget" name="widget_9" native="true">
               <layout class="QGridLayout" name="gridLayout_6">
                <item row="0" column="0">
-                <widget class="QComboBox" name="Hardware_Portname"/>
+                <widget class="QComboBox" name="Hardware_Portname">
+                 <property name="editable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </item>
                <item row="0" column="1">
                 <widget class="QRadioButton" name="p_connect">
@@ -1310,6 +1314,9 @@ M104 S0.0        ; heater off
             </item>
             <item>
              <widget class="QWidget" name="PrinterButtons" native="true">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <layout class="QHBoxLayout" name="horizontalLayout_9">
                <property name="spacing">
                 <number>6</number>
@@ -1364,87 +1371,122 @@ M104 S0.0        ; heater off
             <string>AxisControl</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_7">
-            <item row="0" column="2" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_yy">
-              <property name="text">
-               <string>^^</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_y">
-              <property name="text">
-               <string>^</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="2" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_homeAll">
-              <property name="text">
-               <string>H</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QToolButton" name="p_mx">
-              <property name="text">
-               <string>&lt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QToolButton" name="p_mxx">
-              <property name="text">
-               <string>&lt;&lt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="3" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_x">
-              <property name="text">
-               <string>&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="4" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_xx">
-              <property name="text">
-               <string>&gt;&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="2" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_my">
-              <property name="text">
-               <string>v</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="2" alignment="Qt::AlignHCenter">
+            <item row="6" column="3" alignment="Qt::AlignHCenter">
              <widget class="QToolButton" name="p_myy">
               <property name="text">
                <string>vv</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="5">
-             <widget class="QToolButton" name="p_homeY">
-              <property name="text">
-               <string>Home Y</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="5">
+            <item row="4" column="7">
              <widget class="QPushButton" name="p_homeZ">
               <property name="text">
                <string>Home Z</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="5">
+            <item row="4" column="1">
+             <widget class="QToolButton" name="p_mxx">
+              <property name="text">
+               <string>&lt;&lt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="7" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_mz">
+              <property name="text">
+               <string>v</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="5" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_xx">
+              <property name="text">
+               <string>&gt;&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_my">
+              <property name="text">
+               <string>v</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="7" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_mzz">
+              <property name="text">
+               <string>vv</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_yy">
+              <property name="text">
+               <string>^^</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2" colspan="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_homeY">
+              <property name="text">
+               <string>Home Y</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="7" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_z">
+              <property name="text">
+               <string>^</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="4" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_x">
+              <property name="text">
+               <string>&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_y">
+              <property name="text">
+               <string>^</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_homeAll">
+              <property name="text">
+               <string>H</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="QToolButton" name="p_mx">
+              <property name="text">
+               <string>&lt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="7" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_zz">
+              <property name="text">
+               <string>^^</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
              <widget class="QToolButton" name="p_homeX">
               <property name="text">
                <string>Home X</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0" colspan="2">
+             <widget class="QToolButton" name="p_motoroff">
+              <property name="text">
+               <string>Motors Off</string>
               </property>
              </widget>
             </item>
@@ -1486,6 +1528,24 @@ M104 S0.0        ; heater off
            <property name="title">
             <string>Custom Commands</string>
            </property>
+           <layout class="QVBoxLayout" name="verticalLayout_20">
+            <item>
+             <widget class="QWidget" name="widget_2" native="true">
+              <layout class="QHBoxLayout" name="horizontalLayout_11">
+               <item>
+                <widget class="QLineEdit" name="g_gcode"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="g_send_gcode">
+                 <property name="text">
+                  <string>Send GCode</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>

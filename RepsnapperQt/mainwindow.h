@@ -85,6 +85,7 @@ private slots:
     void updatedModel(const ObjectsList *objList = nullptr);
     void shapeSelected(const QModelIndex &index);
     void printerConnection(int state);
+    void printingChanged();
 
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);

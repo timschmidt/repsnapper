@@ -62,7 +62,9 @@ public:
   Printer( MainWindow *main );
   ~Printer();
 
-  static vector<QSerialPortInfo> findPrinterPorts();
+  static vector<QSerialPortInfo> findPrinterPorts(QList<QSerialPortInfo> additionalPorts=QList<QSerialPortInfo>());
+  QString getSerialPortName() const;
+  int getSerialSpeed() const;
 
   bool Connect( bool connect = true );
   bool Connect( QString device, int baudrate );
@@ -99,6 +101,8 @@ signals:
   void serial_state_changed(int state);
   void printing_changed();
 
+private slots:
+  void serialReceived();
 //  sigc::signal< void > signal_printing_changed;
 //  sigc::signal< void, unsigned long > signal_now_printing;
 //  sigc::signal< void > signal_inhibit_changed;

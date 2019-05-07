@@ -196,6 +196,7 @@ signals:
 public slots:
   void get_from_gui();
   void get_int_from_gui(int value);
+  void get_string_from_gui(QString &string);
   void get_double_from_gui(double value);
 
 };

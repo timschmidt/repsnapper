@@ -619,16 +619,29 @@ void Settings::connect_to_gui (QWidget *widget)
           if (w->objectName() == "Hardware_SerialSpeed") {
               // Serial port speeds
               combo->clear();
+              int settingsItem = -1;
+              int settingsSpeed = get_integer("Hardware/SerialSpeed");
               for (qint32 speed : QSerialPortInfo::standardBaudRates()) {
-                  if (speed >= 9600 &&  speed <= 250000) {
+                  if (speed >= 9600 &&  speed <= 1000000) {
                       combo->addItem(QString::number(speed), speed);
+                      if (speed == settingsSpeed)
+                          settingsItem = combo->model()->rowCount()-1;
                   }
               }
+              if (settingsItem < 0){
+                  combo->addItem(QString::number(settingsSpeed), qint32(settingsSpeed));
+                  settingsItem = combo->model()->rowCount()-1;
+              }
+              combo->setCurrentIndex(settingsItem);
           } else if (w->objectName().contains("Filltype")) { // Infill types
               uint nfills = sizeof(InfillNames)/sizeof(string);
               vector<string> infills(InfillNames,InfillNames+nfills);
               set_up_combobox(combo,infills);
           }
+//          if (combo->isEditable()){
+//              combo->connect(combo, SIGNAL(editTextChanged(QString &)),
+//                             this, SLOT(get_string_from_gui(QString)));
+//          }
           widget->connect(combo, SIGNAL(currentIndexChanged(int)), this, SLOT(get_int_from_gui(int)));
           if (readFromGUI) emit combo->currentIndexChanged(combo->currentIndex());
           continue;
@@ -1044,11 +1057,29 @@ void Settings::get_int_from_gui(int value)
         QComboBox *combo = dynamic_cast<QComboBox *>(w);
         if (combo) {
           if (name == "Hardware/SerialSpeed"
-                   || name == "Hardware/Portname") // has real value
-              setValue(name,combo->currentData());
-          else
+                   || name == "Hardware/Portname") {// have real value
+             QVariant value =combo->currentData();
+             if (!value.isValid())
+                 value = combo->currentText();
+             setValue(name,value);
+          } else
               setValue(name,combo->currentIndex());
           break;
+        }
+    }
+    if (w && !inhibit_callback) emit settings_changed(w->objectName());
+}
+
+void Settings::get_string_from_gui(QString &string)
+{
+    if (inhibit_callback) return;
+    QWidget *w = (QWidget*)sender();
+    while (w) {
+        QComboBox *combo = dynamic_cast<QComboBox *>(w);
+        if (combo) {
+            if (combo->isEditable()){
+                qDebug() << "text " << string << " - " << combo->currentText();
+            }
         }
     }
     if (w && !inhibit_callback) emit settings_changed(w->objectName());

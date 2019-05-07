@@ -146,7 +146,7 @@ PrefsDlg::load_settings()
   for (std::vector<std::string>::const_iterator i = configs.begin();
        i != configs.end(); ++i) {
     Settings *set = new Settings();
-    fprintf (stderr, "load from %s\n", (*i).c_str());
+    f printf (stderr, "load from %s\n", (*i).c_str());
     try {
       set->load_settings(Gio::File::create_for_path(*i));
       cerr << "settings '" << set->get_string("Global","SettingsName")

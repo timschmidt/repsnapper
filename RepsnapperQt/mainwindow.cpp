@@ -29,6 +29,7 @@
 #include <QFileDialog>
 #include <QCheckBox>
 #include <QTextStream>
+#include <QMessageBox>
 
 #include <iostream>
 #include <algorithm>
@@ -66,14 +67,20 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings = new Settings();
     ui_main->Hardware_Portname->clear();
     int settingsPort = -1;
+    QString settingsPortname = m_settings->get_string("Hardware/Portname");
     vector<QSerialPortInfo> ports=Printer::findPrinterPorts();
     for (uint i = 0; i < ports.size(); i++) {
         ui_main->Hardware_Portname->addItem(
                     ports[i].portName()+": "+ports[i].description(),
                     ports[i].portName());
-        if (m_settings->get_string("Hardware/PortName") == ports[i].portName()) {
+        if (settingsPortname == ports[i].portName()) {
             settingsPort = int(i);
         }
+    }
+    if (settingsPort < 0){
+        ui_main->Hardware_Portname->addItem("User Port: "+settingsPortname,
+                                            settingsPortname);
+        settingsPort = ui_main->Hardware_Portname->model()->rowCount()-1;
     }
     ui_main->Hardware_Portname->setCurrentIndex(max(0,settingsPort));
 
@@ -88,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(m_printer, SIGNAL(serial_state_changed(int)),
             this, SLOT(printerConnection(int)));
+    connect(m_printer, SIGNAL(printing_changed()),this, SLOT(printingChanged()));
 
     connect(m_settings, SIGNAL(settings_changed(const QString&)),
             this, SLOT(settingsChanged(const QString&)));
@@ -181,6 +189,15 @@ void MainWindow::printerConnection(int state)
     ui_main->AxisControlBox->setEnabled(connected);
     ui_main->PrinterButtons->setEnabled(connected);
     ui_main->TemperaturesBox->setEnabled(connected);
+    ui_main->Hardware_Portname->setEnabled(!connected);
+}
+
+void MainWindow::printingChanged()
+{
+    ui_main->p_stop->setEnabled(m_printer->IsPrinting());
+    ui_main->p_pause->setEnabled(m_printer->IsPrinting());
+    ui_main->p_print->setEnabled(!m_printer->IsPrinting());
+
 }
 
 void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
@@ -442,11 +459,25 @@ void MainWindow::handleButtonClick()
         int index = prefs_dialog->removeExtruder();
         m_settings->RemoveExtruder(index);
         extruderSelected(index);
-//        m_settings->SelectExtruder(prefs_dialog->getSelectedExtruder(), prefs_dialog, true);
     } else if(name == "m_autoarrange"){
         m_model->AutoArrange(nullptr);
     } else if(name == "p_connect"){
-        m_printer->Connect(ui_main->p_connect->isChecked());
+        if (ui_main->p_connect->isChecked()){
+            int speed = m_settings->get_integer("Hardware/SerialSpeed");
+            QString port = m_settings->get_string("Hardware/Portname");
+            if (port == ""){
+                port = ui_main->Hardware_Portname->currentText();
+            }
+            bool connected  = m_printer->Connect(port, speed);
+            if (connected){
+                m_settings->setValue("Hardware/Portname",
+                                     m_printer->getSerialPortName());
+                m_settings->setValue("Hardware/SerialSpeed",
+                                     m_printer->getSerialSpeed());
+            }
+        } else {
+            m_printer->Disconnect();
+        }
     } else if(name == "p_x"){
         m_printer->Move("X",1,true);
     } else if(name == "p_xx"){
@@ -485,10 +516,18 @@ void MainWindow::handleButtonClick()
         m_printer->Pause();
     } else if(name == "p_stop"){
         m_printer->StopPrinting();
+    } else if(name == "p_motoroff"){
+        m_printer->Send("M84");
     } else if(name == "p_reset"){
-        m_printer->Reset();
+        if (QMessageBox::question(this, "Reset Printer?", "Really Reset Printer?",
+                                  QMessageBox::Yes|QMessageBox::No)
+                == QMessageBox::Yes)
+            m_printer->Reset();
     } else if(name == "p_power"){
         m_printer->SwitchPower(true);
+    } else if(name == "g_send_gcode"){
+        QString gcode = ui_main->g_gcode->text();
+        m_printer->Send(gcode.toStdString());
     } else if(name == ""){
     } else {
         cerr<< " unhandled button " << name.toStdString() << endl;
@@ -511,7 +550,7 @@ void MainWindow::settingsChanged(const QString &name)
     }
     if (name.startsWith("Extruder")){
     }
-    cerr << name.toStdString() << " settings changed "<<  endl;
+//    cerr << name.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();
     m_settings->setMaxHeight(this,
                              std::max(m_model->gcode->Max.z(), m_model->Max.z()));
