@@ -72,6 +72,8 @@ private:
     void connectButtons(QWidget *widget);
     void generateGCode();
 
+    void extruderSelected(int index);
+
 private slots:
     void on_actionOpen_triggered();
     void on_actionQuit_triggered();

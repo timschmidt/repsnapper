@@ -34,20 +34,21 @@
 enum RR_logtype  { LOG_COMM, LOG_ERROR, LOG_ECHO };
 enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
 
-class Printer : public QObject, public ThreadedPrinterSerial {
+class Printer : public QObject {//, public ThreadedPrinterSerial {
     Q_OBJECT
 
 private:
   double temps[ TEMP_LAST ];
   MainWindow *main;
 
+  bool is_printing;
   bool was_connected;
   bool was_printing;
   unsigned long prev_line;
   bool waiting_temp;
   int temp_countdown;
 
-//  sigc::connection idle_timeout;
+  //  sigc::connection idle_timeout;
 //  sigc::connection print_timeout;
 //  sigc::connection temp_timeout;
 
@@ -67,6 +68,8 @@ public:
   bool Connect( QString device, int baudrate );
   void Disconnect( void );
   bool Reset( void );
+
+  bool Send( string command );
 
   bool StartPrinting( unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
   bool StartPrinting( string commands, unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
@@ -90,8 +93,12 @@ public:
   void alert( const char *message );
   void error( const char *message, const char *secondary = NULL );
 
+  bool IsPrinting() const {return is_printing;}
+
 signals:
   void serial_state_changed(int state);
+  void printing_changed();
+
 //  sigc::signal< void > signal_printing_changed;
 //  sigc::signal< void, unsigned long > signal_now_printing;
 //  sigc::signal< void > signal_inhibit_changed;

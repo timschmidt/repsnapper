@@ -1309,7 +1309,7 @@ M104 S0.0        ; heater off
              </widget>
             </item>
             <item>
-             <widget class="QWidget" name="widget_2" native="true">
+             <widget class="QWidget" name="PrinterButtons" native="true">
               <layout class="QHBoxLayout" name="horizontalLayout_9">
                <property name="spacing">
                 <number>6</number>
@@ -1329,9 +1329,9 @@ M104 S0.0        ; heater off
                 </widget>
                </item>
                <item>
-                <widget class="QToolButton" name="p_home">
+                <widget class="QToolButton" name="p_stop">
                  <property name="text">
-                  <string>Home</string>
+                  <string>Stop</string>
                  </property>
                 </widget>
                </item>
@@ -1355,8 +1355,107 @@ M104 S0.0        ; heater off
            </layout>
           </widget>
          </item>
+         <item alignment="Qt::AlignLeft">
+          <widget class="QGroupBox" name="AxisControlBox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="title">
+            <string>AxisControl</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_7">
+            <item row="0" column="2" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_yy">
+              <property name="text">
+               <string>^^</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_y">
+              <property name="text">
+               <string>^</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_homeAll">
+              <property name="text">
+               <string>H</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QToolButton" name="p_mx">
+              <property name="text">
+               <string>&lt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QToolButton" name="p_mxx">
+              <property name="text">
+               <string>&lt;&lt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_x">
+              <property name="text">
+               <string>&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="4" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_xx">
+              <property name="text">
+               <string>&gt;&gt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_my">
+              <property name="text">
+               <string>v</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_myy">
+              <property name="text">
+               <string>vv</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="5">
+             <widget class="QToolButton" name="p_homeY">
+              <property name="text">
+               <string>Home Y</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="5">
+             <widget class="QPushButton" name="p_homeZ">
+              <property name="text">
+               <string>Home Z</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="5">
+             <widget class="QToolButton" name="p_homeX">
+              <property name="text">
+               <string>Home X</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
          <item>
-          <widget class="QGroupBox" name="groupBox_4">
+          <widget class="QGroupBox" name="TemperaturesBox">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="title">
             <string>Temperatures</string>
            </property>
@@ -1383,24 +1482,11 @@ M104 S0.0        ; heater off
           </widget>
          </item>
          <item>
-          <widget class="QGroupBox" name="groupBox_5">
+          <widget class="QGroupBox" name="CustomCommandsBox">
            <property name="title">
             <string>Custom Commands</string>
            </property>
           </widget>
-         </item>
-         <item>
-          <spacer name="verticalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
-           </property>
-          </spacer>
          </item>
         </layout>
        </widget>
@@ -1556,7 +1642,7 @@ M104 S0.0        ; heater off
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="progres_Cancel">
+        <widget class="QToolButton" name="progress_Cancel">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
            <horstretch>0</horstretch>
@@ -1678,9 +1764,6 @@ M104 S0.0        ; heater off
    <header location="global">../src/render.h</header>
   </customwidget>
  </customwidgets>
- <tabstops>
-  <tabstop>progres_Cancel</tabstop>
- </tabstops>
  <resources/>
  <connections/>
 </ui>

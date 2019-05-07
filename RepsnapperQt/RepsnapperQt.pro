@@ -45,11 +45,7 @@ SOURCES += \
         ../src/model_slice.cpp \
         ../src/objlist.cpp \
         ../src/platform.cpp \
-        ../src/printer/custom_baud.cpp \
         ../src/printer/printer.cpp \
-        ../src/printer/printer_serial.cpp \
-        ../src/printer/thread_buffer.cpp \
-        ../src/printer/threaded_printer_serial.cpp \
         ../src/render.cpp \
         ../src/settings.cpp \
         ../src/shape.cpp \
@@ -92,10 +88,6 @@ HEADERS += \
         ../src/platform.h \
         ../src/printer/custom_baud.h \
         ../src/printer/printer.h \
-        ../src/printer/printer_serial.h \
-        ../src/printer/thread.h \
-        ../src/printer/thread_buffer.h \
-        ../src/printer/threaded_printer_serial.h \
         ../src/render.h \
         ../src/settings.h \
         ../src/shape.h \

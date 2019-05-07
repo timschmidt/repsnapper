@@ -50,6 +50,7 @@ public:
     void checkForExtruders(int numExtruders);
     void selectExtruder(uint num);
     int getSelectedExtruder() const;
+    int removeExtruder(int num = -1);
 };
 
 #endif // SETTINGS_H

@@ -108,16 +108,30 @@ void PrefsDlg::checkForExtruders(int numExtruders)
   */
 }
 
-void PrefsDlg::selectExtruder(uint num)
+void PrefsDlg::selectExtruder(uint index)
 {
+    checkForExtruders(index+1);
     QListView *listview = ui_dialog->extruder_listview;
-    QModelIndex index = listview->model()->index(int(num),0);
-    listview->setCurrentIndex(index);
+    QModelIndex mindex = listModel.index(int(index),0);
+    listview->setCurrentIndex(mindex);
 }
 
 int PrefsDlg::getSelectedExtruder() const
 {
     return ui_dialog->extruder_listview->currentIndex().row();
+}
+
+int PrefsDlg::removeExtruder(int num)
+{
+    if (listModel.rowCount()<2) return -1;
+    if (num<0) num = getSelectedExtruder();
+    if (num<0) return -1;
+    if (num==listModel.rowCount()-1)
+        selectExtruder(num-1);
+    else
+        selectExtruder(num);
+    listModel.removeRow(num);
+    return num;
 }
 
 bool

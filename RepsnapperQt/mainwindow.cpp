@@ -176,7 +176,11 @@ void MainWindow::shapeSelected(const QModelIndex &index)
 
 void MainWindow::printerConnection(int state)
 {
-    ui_main->p_connect->setChecked(state==SERIAL_CONNECTED);
+    bool connected = state==SERIAL_CONNECTED;
+    ui_main->p_connect->setChecked(connected);
+    ui_main->AxisControlBox->setEnabled(connected);
+    ui_main->PrinterButtons->setEnabled(connected);
+    ui_main->TemperaturesBox->setEnabled(connected);
 }
 
 void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
@@ -401,7 +405,8 @@ void MainWindow::handleButtonClick()
 
     if (name == "m_delete"){
         m_model->DeleteSelectedObjects(m_render->getSelection());
-    } else if(name == "cancel_progress"){
+    } else if(name == "progress_Cancel"){
+        m_progress->stop();
     } else if(name == "m_load_stl"){
         on_actionOpen_triggered();
     } else if(name == "g_load_gcode"){
@@ -434,16 +439,56 @@ void MainWindow::handleButtonClick()
         int newEx = m_settings->CopyExtruder(prefs_dialog->getSelectedExtruder());
         prefs_dialog->selectExtruder(newEx);
     } else if(name == "remove_extruder"){
-        m_settings->RemoveExtruder(prefs_dialog->getSelectedExtruder());
+        int index = prefs_dialog->removeExtruder();
+        m_settings->RemoveExtruder(index);
+        extruderSelected(index);
 //        m_settings->SelectExtruder(prefs_dialog->getSelectedExtruder(), prefs_dialog, true);
     } else if(name == "m_autoarrange"){
         m_model->AutoArrange(nullptr);
     } else if(name == "p_connect"){
         m_printer->Connect(ui_main->p_connect->isChecked());
-    } else if(name == ""){
-    } else if(name == ""){
-    } else if(name == ""){
-    } else if(name == ""){
+    } else if(name == "p_x"){
+        m_printer->Move("X",1,true);
+    } else if(name == "p_xx"){
+        m_printer->Move("X",10,true);
+    } else if(name == "p_mx"){
+        m_printer->Move("X",-1,true);
+    } else if(name == "p_mxx"){
+        m_printer->Move("X",-10,true);
+    } else if(name == "p_y"){
+        m_printer->Move("Y",1,true);
+    } else if(name == "p_yy"){
+        m_printer->Move("Y",10,true);
+    } else if(name == "p_my"){
+        m_printer->Move("Y",-1,true);
+    } else if(name == "p_myy"){
+        m_printer->Move("Y",-10,true);
+    } else if(name == "p_z"){
+        m_printer->Move("Z",1,true);
+    } else if(name == "p_zz"){
+        m_printer->Move("Z",10,true);
+    } else if(name == "p_mz"){
+        m_printer->Move("Z",-1,true);
+    } else if(name == "p_mzz"){
+        m_printer->Move("Z",-10,true);
+    } else if(name == "p_homeX"){
+        m_printer->Home("X");
+    } else if(name == "p_homeY"){
+        m_printer->Home("Y");
+    } else if(name == "p_homeZ"){
+        m_printer->Home("Z");
+    } else if(name == "p_homeAll"){
+        m_printer->Home("ALL");
+    } else if(name == "p_print"){
+        m_printer->StartPrinting();
+    } else if(name == "p_pause"){
+        m_printer->Pause();
+    } else if(name == "p_stop"){
+        m_printer->StopPrinting();
+    } else if(name == "p_reset"){
+        m_printer->Reset();
+    } else if(name == "p_power"){
+        m_printer->SwitchPower(true);
     } else if(name == ""){
     } else {
         cerr<< " unhandled button " << name.toStdString() << endl;
@@ -466,7 +511,7 @@ void MainWindow::settingsChanged(const QString &name)
     }
     if (name.startsWith("Extruder")){
     }
-//    cerr << name.toStdString() << " settings changed "<<  endl;
+    cerr << name.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();
     m_settings->setMaxHeight(this,
                              std::max(m_model->gcode->Max.z(), m_model->Max.z()));
@@ -511,6 +556,12 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 
+void MainWindow::extruderSelected(int index){
+    m_settings->currentExtruder = index;
+    m_settings->set_all_to_gui(prefs_dialog,
+                               Settings::numbered("Extruder",index).toStdString());
+}
+
 void MainWindow::extruderSelected(const QModelIndex &index){
-    m_settings->currentExtruder = index.row();
+   extruderSelected(index.row());
 }

@@ -88,12 +88,12 @@ bool PrinterSerial::TestPort( const string device ) {
 #ifdef WIN32
   HANDLE h;
   h = CreateFile( device.c_str(),
-		  GENERIC_READ | GENERIC_WRITE,
-		  0,
-		  NULL,
-		  OPEN_EXISTING,
-		  FILE_ATTRIBUTE_NORMAL,
-		  NULL );
+          GENERIC_READ | GENERIC_WRITE,
+          0,
+          NULL,
+          OPEN_EXISTING,
+          FILE_ATTRIBUTE_NORMAL,
+          NULL );
   if ( h == INVALID_HANDLE_VALUE )
     return false;
 
@@ -148,19 +148,19 @@ vector<string> PrinterSerial::FindPorts() {
 
 bool PrinterSerial::RawConnect( string device, int baudrate ) {
 #ifdef WIN32
-  if ( IsConnected() || device_handle != INVALID_HANDLE_VALUE ) {
+  if ( serialPort->isOpen() || device_handle != INVALID_HANDLE_VALUE ) {
     Disconnect();
     if ( device_handle != INVALID_HANDLE_VALUE )
       return false;
   }
 
   device_handle = CreateFile( device.c_str(),
-			      GENERIC_READ | GENERIC_WRITE,
-			      0,
-			      NULL,
-			      OPEN_EXISTING,
-			      FILE_ATTRIBUTE_NORMAL,
-			      NULL );
+                  GENERIC_READ | GENERIC_WRITE,
+                  0,
+                  NULL,
+                  OPEN_EXISTING,
+                  FILE_ATTRIBUTE_NORMAL,
+                  NULL );
   if ( device_handle == INVALID_HANDLE_VALUE ) {
     char err_str[ 256 ];
     snprintf( err_str, 256, _("Error opening port %s"), device.c_str() );
@@ -290,7 +290,7 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     // return false;
   }
 
-  if ( IsConnected() || device_fd >= 0 ) {
+  if ( serialPort->isOpen() || device_fd >= 0 ) {
     Disconnect();
     if ( device_fd >= 0 )
       return false;
@@ -355,12 +355,12 @@ bool PrinterSerial::RawConnect( string device, int baudrate ) {
     // non-standard baud rate
     baudrate_succeeded = set_custom_baudrate( device_fd, speed );
   } else {
-    baudrate_succeeded = cfsetispeed( &attribs, speed ) >= 0 
+    baudrate_succeeded = cfsetispeed( &attribs, speed ) >= 0
                       && cfsetospeed( &attribs, speed ) >= 0
                       && tcsetattr( device_fd, TCSANOW, &attribs )  >= 0;
   }
 #else
-  baudrate_succeeded = cfsetispeed( &attribs, speed ) >= 0 
+  baudrate_succeeded = cfsetispeed( &attribs, speed ) >= 0
                     && cfsetospeed( &attribs, speed ) >= 0
                     && tcsetattr( device_fd, TCSANOW, &attribs )  >= 0;
 #endif
@@ -486,7 +486,7 @@ bool PrinterSerial::Reset( void ) {
 }
 
 char *PrinterSerial::Send( const char *command ) {
-  strncpy( command_scratch, command, max_command_size );
+    strncpy( command_scratch, command, max_command_size );
   return SendCommand();
 }
 
@@ -511,7 +511,7 @@ char *PrinterSerial::SendCommand( void ) {
   while ( true ) {
     if ( send_text ) {
       if ( ! SendText( formated ) )
-	return NULL;
+    return NULL;
     }
 
     if ( ( recvd = RecvLine() ) == NULL )
@@ -616,7 +616,7 @@ bool PrinterSerial::SendText( char *text ) {
       LogLine( _("*** Error Writing to port ***\n") );
       snprintf( msg, 250, _("*** Error Writing to port: %s ***\n"), strerror( err ) );
       if ( msg[ 248 ] != '\0' )
-	msg[ 248 ] = '\n';
+    msg[ 248 ] = '\n';
       msg[ 249 ] = '\0';
 
       LogError( msg );
@@ -693,32 +693,32 @@ char *PrinterSerial::RecvLine( void ) {
     FD_ZERO( &set );
     FD_SET( device_fd, &set );
     select( device_fd + 1,
-	    &set,
-	    NULL,
-	    NULL,
-	    max_recv_block_ms == 0 ? NULL : &timeout );
+        &set,
+        NULL,
+        NULL,
+        max_recv_block_ms == 0 ? NULL : &timeout );
 
     if ( FD_ISSET( device_fd, &set ) ) {
       // Read the data.  Use a loop since Posix does not guarentee that an
       // entire line will be read at once.
       //cout << "Reading" << endl;
       if ( ( num = read( device_fd, buf, max_command_size - tot_size - 20 ) ) == -1 ) {
-	int err = errno;
-	char msg[ 256 ];
-	LogLine( _("*** Error reading from port ***\n") );
-	snprintf( msg, 250, _("*** Error reading from port: %s ***\n"), strerror( err ) );
-	if ( msg[ 248 ] != '\0' )
-	  msg[ 248 ] = '\n';
-	msg[ 249 ] = '\0';
+    int err = errno;
+    char msg[ 256 ];
+    LogLine( _("*** Error reading from port ***\n") );
+    snprintf( msg, 250, _("*** Error reading from port: %s ***\n"), strerror( err ) );
+    if ( msg[ 248 ] != '\0' )
+      msg[ 248 ] = '\n';
+    msg[ 249 ] = '\0';
 
-	LogError( msg );
-	return NULL;
+    LogError( msg );
+    return NULL;
       }
       tot_size += num;
       buf += num;
 
       if ( num > 0 && ( buf[-1] == '\n' || buf[-1] == '\r' ) ) {
-	done = true;
+    done = true;
       }
     } else {
       RecvTimeout();

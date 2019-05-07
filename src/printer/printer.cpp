@@ -28,6 +28,7 @@
 Printer::Printer( MainWindow *main ) {
   this->main = main;
   was_connected = false;
+    is_printing = false;
   was_printing = false;
   prev_line = 0;
   waiting_temp = false;
@@ -98,7 +99,11 @@ bool Printer::Connect( QString device, int baudrate ) {
     serialPort = new QSerialPort(portInfo);
     bool ok = serialPort->open(QIODevice::ReadWrite);
     if (ok){
-        ok = serialPort->setBaudRate(baudrate);
+        ok = serialPort->setBaudRate(baudrate)
+                && serialPort->setDataBits(QSerialPort::Data8)
+                &&  serialPort->setParity(QSerialPort::NoParity)
+                && serialPort->setStopBits(QSerialPort::OneStop)
+                && serialPort->setFlowControl(QSerialPort::NoFlowControl);
         if (ok){
             UpdateTemperatureMonitor();
         } else
@@ -127,17 +132,28 @@ void Printer::Disconnect( void ) {
 }
 
 bool Printer::Reset( void ) {
-  bool ret = ThreadedPrinterSerial::Reset();
+  StopPrinting( true );
+
+  if ( ! serialPort->isOpen() )
+    return false;
+
+  bool ret = serialPort->reset();
 
   if ( ret && was_printing ) {
     was_printing = false;
-//    signal_printing_changed.emit();
+    emit printing_changed();
   }
-
   if ( !ret )
     alert( _("Error: Unable to reset printer") );
-
   return ret;
+}
+
+
+bool Printer::Send(string s) {
+    if (serialPort->isOpen()) {
+        return serialPort->write(s.c_str()) == long(s.length());
+    }
+    return false;
 }
 
 bool Printer::StartPrinting( unsigned long start_line, unsigned long stop_line ) {
@@ -146,12 +162,14 @@ bool Printer::StartPrinting( unsigned long start_line, unsigned long stop_line )
 }
 
 bool Printer::StartPrinting( string commands, unsigned long start_line, unsigned long stop_line ) {
-  bool ret = ThreadedPrinterSerial::StartPrinting( commands, start_line, stop_line );
+  bool ret = false;//ThreadedPrinterSerial::StartPrinting( commands, start_line, stop_line );
 
   if ( ret ) {
     prev_line = start_line;
 
     was_printing = IsPrinting();
+    is_printing = true;
+    emit printing_changed();
 //    signal_printing_changed.emit();
 
 //    if ( start_line > 0 )
@@ -162,35 +180,37 @@ bool Printer::StartPrinting( string commands, unsigned long start_line, unsigned
 }
 
 bool Printer::StopPrinting( bool wait ) {
-  bool ret = ThreadedPrinterSerial::StopPrinting( wait );
+  bool ret = false;//ThreadedPrinterSerial::StopPrinting( wait );
 
   if ( ret && wait ) {
     prev_line = 0;
     was_printing = IsPrinting();
-
+    is_printing = false;
 //    signal_printing_changed.emit();
+    emit printing_changed();
   }
 
-  return ret;
+  return was_printing && !is_printing;
 }
 
 bool Printer::ContinuePrinting( bool wait ) {
-  bool ret = ThreadedPrinterSerial::ContinuePrinting( wait );
-
-  if ( ret && wait ) {
-    prev_line = GetPrintingProgress();
+  bool ret = false;//ThreadedPrinterSerial::ContinuePrinting( wait );
+//  if ( ret && wait ) {
+//    prev_line = GetPrintingProgress();
+  is_printing = true;
+  emit printing_changed();
 
 //    signal_printing_changed.emit();
 
 //    if ( prev_line > 0 )
 //      signal_now_printing.emit( prev_line );
-  }
+//  }
 
   return ret;
 }
 
 void Printer::Inhibit( bool value ) {
-  ThreadedPrinterSerial::Inhibit( value );
+//  ThreadedPrinterSerial::Inhibit( value );
 //  signal_inhibit_changed.emit();
 }
 
@@ -328,17 +348,17 @@ void Printer::UpdateTemperatureMonitor( void ) {
 //  if ( temp_timeout.connected() )
 //    temp_timeout.disconnect();
 
-//  if ( IsConnected() && m_model && m_model->settings->get_boolean("Misc/TempReadingEnabled") ) {
-//    const unsigned int timeout = m_model->settings->get_double("Display/TempUpdateSpeed");
+  if ( serialPort->isOpen() && main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
+    const unsigned int timeout = main->get_settings()->get_integer("Display/TempUpdateSpeed");
 //    temp_timeout = Glib::signal_timeout().connect_seconds
 //      ( sigc::mem_fun(*this, &Printer::QueryTemp), timeout );
-//  }
+  }
 }
 
 bool Printer::Idle( void ) {
-  string str;
-  bool is_connected;
-
+    string str;
+    bool is_connected;
+/*
   while ( ( str = ReadResponse() ) != "" )
     ParseResponse( str );
 
@@ -350,8 +370,8 @@ bool Printer::Idle( void ) {
       alert( str.c_str() );
     }
   }
-
-  if ( ( is_connected = IsConnected() ) != was_connected ) {
+*/
+  if ( ( is_connected = serialPort->isOpen() ) != was_connected ) {
     was_connected = is_connected;
 //    signal_serial_state_changed.emit( is_connected ? SERIAL_CONNECTED : SERIAL_DISCONNECTED );
   }
@@ -367,8 +387,7 @@ bool Printer::Idle( void ) {
 }
 
 bool Printer::CheckPrintingProgress( void ) {
-  bool is_printing = IsPrinting();
-  unsigned long line = GetPrintingProgress();
+  unsigned long line = 0;//GetPrintingProgress();
 
   if ( is_printing != was_printing ) {
     prev_line = line;
@@ -387,11 +406,11 @@ bool Printer::QueryTemp( void ) {
 //  if ( temp_timeout.connected() )
 //    temp_timeout.disconnect();
 
-  if ( IsConnected() && main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
-    SendAsync( "M105" );
-    waiting_temp = true;
+  if ( serialPort->isOpen() && main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
+//      SendAsync( "M105" );
+      Send( "M105" );
+      waiting_temp = true;
   }
-
   return true;
 }
 

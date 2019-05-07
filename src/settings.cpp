@@ -456,17 +456,21 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
   QString real_widget_name(widget_name);
   if (widget_name.endsWith("_size"))
       real_widget_name.chop(5);
-  QWidget *w = parentwidget->findChild<QWidget*>(real_widget_name);
   if (widget_name.startsWith("Extruder")){ // only check for number of Extruders in list
       if (widget_name[8] != '_') {
           PrefsDlg *prefs_dlg = dynamic_cast<PrefsDlg*>(parentwidget);
+          int extrNum = widget_name.mid(8,1).toInt();
           if (prefs_dlg) {
-              int extrNum = widget_name.mid(8,1).toInt();
               prefs_dlg->checkForExtruders(extrNum+1);
           }
-          return true; // only "Extruder" settings without number are set to gui
+          if (extrNum != currentExtruder) {
+              return true;
+          } else {
+              real_widget_name.replace(0,9,"Extruder");
+          }
       }
   }
+  QWidget *w = parentwidget->findChild<QWidget*>(real_widget_name);
   inhibit_callback = true;
   while (w) {
 //      cerr << "setting to gui in " << parentwidget->objectName().toStdString() << ": " << real_widget_name.toStdString()
@@ -1019,7 +1023,7 @@ void Settings::get_int_from_gui(int value)
 {
     if (inhibit_callback) return;
     QWidget *w = (QWidget*)sender();
-    //    cerr << "get " << w->objectName().toStdString() << " int " << value << endl;    splitpoint(w->objectName(),group,key);
+//    cerr << "get " << w->objectName().toStdString() << " int " << value << endl;
     while (w) { // for using break ...
         QString name = grouped(w->objectName());
         QCheckBox *check = dynamic_cast<QCheckBox *>(w);
