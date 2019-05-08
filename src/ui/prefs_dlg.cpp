@@ -65,9 +65,11 @@ PrefsDlg::PrefsDlg(QWidget *parent) :
     ui_dialog->postproc_group->hide();
     ui_dialog->acceleration_group->hide();
 
-    ui_dialog->extruder_listview->setModel(&listModel);
-    connect(ui_dialog->extruder_listview, SIGNAL(clicked(QModelIndex)),
-            parent, SLOT(extruderSelected(QModelIndex)));
+    listModel = ui_dialog->extruder_select->model();
+
+//    ui_dialog->extruder_listview->setModel(&listModel);
+    connect(ui_dialog->extruder_select, SIGNAL(currentIndexChanged(int)),
+            parent, SLOT(extruderSelected(int)));
 }
 
 void PrefsDlg::setDefaults() {
@@ -91,13 +93,11 @@ Ui::PreferencesDialog *PrefsDlg::getUi_dialog() const
 
 void PrefsDlg::checkForExtruders(int numExtruders)
 {
-    while (numExtruders > listModel.rowCount()){
+    while (numExtruders > listModel->rowCount()){
         cerr << "add Extruder "<< numExtruders << endl;
-        int row = listModel.rowCount();
-        listModel.insertRow(row);
-        QModelIndex index = listModel.index(row, 0);
-        listModel.setData(index, Settings::numbered("Extruder",row+1));
-        emit ui_dialog->extruder_listview->clicked(index);
+        int row = listModel->rowCount();
+        ui_dialog->extruder_select->addItem("Extruder "+QString::number(row+1), row);
+
     }
 /*    while (haveEx < extrNum+1) {
       listModel.removeRow(haveEx-1);
@@ -111,26 +111,24 @@ void PrefsDlg::checkForExtruders(int numExtruders)
 void PrefsDlg::selectExtruder(uint index)
 {
     checkForExtruders(index+1);
-    QListView *listview = ui_dialog->extruder_listview;
-    QModelIndex mindex = listModel.index(int(index),0);
-    listview->setCurrentIndex(mindex);
+    ui_dialog->extruder_select->setCurrentIndex(int(index));
 }
 
 int PrefsDlg::getSelectedExtruder() const
 {
-    return ui_dialog->extruder_listview->currentIndex().row();
+    return ui_dialog->extruder_select->currentIndex();
 }
 
 int PrefsDlg::removeExtruder(int num)
 {
-    if (listModel.rowCount()<2) return -1;
+    if (listModel->rowCount()<2) return -1;
     if (num<0) num = getSelectedExtruder();
     if (num<0) return -1;
-    if (num==listModel.rowCount()-1)
+    if (num==listModel->rowCount()-1)
         selectExtruder(num-1);
     else
         selectExtruder(num);
-    listModel.removeRow(num);
+    listModel->removeRow(num);
     return num;
 }
 

@@ -35,6 +35,8 @@
 
 #include <src/ui/prefs_dlg.h>
 
+#include <src/printer/printer.h>
+
 #include "../version.h"
 #include "settings.h"
 #include "stdafx.h"
@@ -122,8 +124,6 @@ bool combobox_set_to(QComboBox *combo, QString value)
   }
   return false;
 }
-
-
 
 /////////////////////////////////////////////////////////////////
 
@@ -619,18 +619,32 @@ void Settings::connect_to_gui (QWidget *widget)
           if (w->objectName() == "Hardware_SerialSpeed") {
               // Serial port speeds
               combo->clear();
-              int settingsItem = -1;
               int settingsSpeed = get_integer("Hardware/SerialSpeed");
               for (qint32 speed : QSerialPortInfo::standardBaudRates()) {
                   if (speed >= 9600 &&  speed <= 1000000) {
                       combo->addItem(QString::number(speed), speed);
-                      if (speed == settingsSpeed)
-                          settingsItem = combo->model()->rowCount()-1;
                   }
               }
+              int settingsItem = combo->findText(QString::number(settingsSpeed));
+              if (settingsItem < 0) {
+                  combo->insertItem(0, QString::number(settingsSpeed), qint32(settingsSpeed));
+                  settingsItem = 0;
+              }
+              combo->setCurrentIndex(settingsItem);
+          } if (w->objectName() == "Hardware_Portname") {
+              combo->clear();
+              QString settingsPortname = get_string("Hardware/Portname");
+              vector<QSerialPortInfo> ports = Printer::findPrinterPorts();
+              for (uint i = 0; i < ports.size(); i++) {
+                  combo->addItem(
+                              ports[i].portName()+": "+ports[i].description(),
+                              ports[i].portName());
+              }
+              int settingsItem = combo->findText(settingsPortname);
               if (settingsItem < 0){
-                  combo->addItem(QString::number(settingsSpeed), qint32(settingsSpeed));
-                  settingsItem = combo->model()->rowCount()-1;
+                  combo->insertItem(0, "User Port: "+settingsPortname,
+                                    settingsPortname);
+                  settingsItem = 0;
               }
               combo->setCurrentIndex(settingsItem);
           } else if (w->objectName().contains("Filltype")) { // Infill types

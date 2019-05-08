@@ -65,25 +65,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connectButtons(prefs_dialog);
 
     m_settings = new Settings();
-    ui_main->Hardware_Portname->clear();
-    int settingsPort = -1;
-    QString settingsPortname = m_settings->get_string("Hardware/Portname");
-    vector<QSerialPortInfo> ports=Printer::findPrinterPorts();
-    for (uint i = 0; i < ports.size(); i++) {
-        ui_main->Hardware_Portname->addItem(
-                    ports[i].portName()+": "+ports[i].description(),
-                    ports[i].portName());
-        if (settingsPortname == ports[i].portName()) {
-            settingsPort = int(i);
-        }
-    }
-    if (settingsPort < 0){
-        ui_main->Hardware_Portname->addItem("User Port: "+settingsPortname,
-                                            settingsPortname);
-        settingsPort = ui_main->Hardware_Portname->model()->rowCount()-1;
-    }
-    ui_main->Hardware_Portname->setCurrentIndex(max(0,settingsPort));
-
     m_settings->set_all_to_gui(this,"Window");
     m_settings->set_all_to_gui(this);
     m_settings->set_all_to_gui(prefs_dialog);
@@ -91,7 +72,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings->connect_to_gui(prefs_dialog);
 
     m_printer = new Printer(this);
-    emit ui_main->Hardware_Portname->currentIndexChanged(settingsPort);
 
     connect(m_printer, SIGNAL(serial_state_changed(int)),
             this, SLOT(printerConnection(int)));
@@ -136,19 +116,24 @@ MainWindow::~MainWindow()
     delete ui_main;
 }
 
-void MainWindow::err_log(string s)
+void MainWindow::err_log(QString s)
 {
-    QTextStream(stderr)<< "Error: " <<QString::fromStdString(s) << endl;
+    qDebug() << "Error: " << s;
+    ui_main->i_txt_errs->appendPlainText(s);
 }
 
-void MainWindow::comm_log(string s)
+void MainWindow::comm_log(QString s)
 {
-    QTextStream(stderr)<< "Comm: " << QString::fromStdString(s) << endl;
+    qDebug() << "Comm: " << s ;
+    if (m_settings->get_boolean("Printer/Logging")){
+        ui_main->i_txt_comms->appendPlainText(s);
+    }
 }
 
-void MainWindow::echo_log(string s)
+void MainWindow::echo_log(QString s)
 {
-    QTextStream(stderr)<< "Echo: " << QString::fromStdString(s) << endl;
+    qDebug()<< "Echo: " << s ;
+    ui_main->i_txt_echo->appendPlainText(s);
 }
 
 void MainWindow::updatedModel(const ObjectsList *objList)
@@ -190,6 +175,8 @@ void MainWindow::printerConnection(int state)
     ui_main->PrinterButtons->setEnabled(connected);
     ui_main->TemperaturesBox->setEnabled(connected);
     ui_main->Hardware_Portname->setEnabled(!connected);
+    ui_main->g_send_gcode->setEnabled(connected);
+    ui_main->p_print->setEnabled(connected && m_model->haveGCode());
 }
 
 void MainWindow::printingChanged()
@@ -405,6 +392,8 @@ void MainWindow::connectButtons(QWidget *widget)
             widget->findChildren<QWidget*>(QRegularExpression(".+_.+"));
     for (int i=0; i< widgets_with_setting.size(); i++){
         QWidget *w = (widgets_with_setting[i]);
+        QCheckBox *cb = dynamic_cast<QCheckBox *>(w);
+        if (cb) continue; //skip CheckBoxes
         QAbstractButton *b = dynamic_cast<QAbstractButton *>(w);
         if (b) {
 //            cerr<< "connect button " << w->objectName().toStdString() << endl;
@@ -511,7 +500,10 @@ void MainWindow::handleButtonClick()
     } else if(name == "p_homeAll"){
         m_printer->Home("ALL");
     } else if(name == "p_print"){
-        m_printer->StartPrinting();
+        if (m_settings->get_boolean("Printer/ClearLogOnPrintStart"))
+            ui_main->i_txt_comms->clear();
+        m_printer->StartPrinting(ui_main->GCodeResult->document(),
+                                 0, 100);
     } else if(name == "p_pause"){
         m_printer->Pause();
     } else if(name == "p_stop"){
@@ -519,15 +511,27 @@ void MainWindow::handleButtonClick()
     } else if(name == "p_motoroff"){
         m_printer->Send("M84");
     } else if(name == "p_reset"){
-        if (QMessageBox::question(this, "Reset Printer?", "Really Reset Printer?",
-                                  QMessageBox::Yes|QMessageBox::No)
-                == QMessageBox::Yes)
             m_printer->Reset();
     } else if(name == "p_power"){
         m_printer->SwitchPower(true);
     } else if(name == "g_send_gcode"){
         QString gcode = ui_main->g_gcode->text();
         m_printer->Send(gcode.toStdString());
+    } else if(name == "m_autorot"){
+        m_model->AutoRotate(m_render->getSelection());
+    } else if(name == "m_platform"){
+        m_model->PlaceOnPlatform(m_render->getSelection());
+    } else if(name == "m_mirror"){
+        m_model->Mirror(m_render->getSelection());
+    } else if(name == "m_hollow"){
+        m_model->Hollow(m_render->getSelection());
+    } else if(name == "m_normals"){
+        m_model->InvertNormals(m_render->getSelection());
+    } else if(name == "Printer_ClearLog"){
+        ui_main->i_txt_comms->clear();
+    } else if(name == ""){
+    } else if(name == ""){
+    } else if(name == ""){
     } else if(name == ""){
     } else {
         cerr<< " unhandled button " << name.toStdString() << endl;
@@ -541,6 +545,7 @@ void MainWindow::gcodeChanged()
     ui_main->GCode_Layer->setPlainText(m_settings->get_string("GCode/Layer"));
     ui_main->GCode_End->setPlainText(m_settings->get_string("GCode/End"));
     ui_main->GCodeResult->setPlainText(m_model->gcode->buffer.toPlainText());
+    ui_main->p_print->setEnabled(m_model->haveGCode());
     m_render->update();
 }
 
@@ -561,6 +566,7 @@ void MainWindow::settingsChanged(const QString &name)
     s << m_settings->get_integer("Display/LayerValue")/1000.;
     ui_main->LayerLabel->setText(l);
     m_render->update();
+    m_printer->UpdateTemperatureMonitor();
 }
 
 void MainWindow::on_actionQuit_triggered()

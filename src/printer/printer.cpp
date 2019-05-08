@@ -22,7 +22,10 @@
 
 #include <QTextDocument>
 
+#include <QMessageBox>
 #include <QSerialPort>
+#include <QTextBlock>
+#include <QTimer>
 
 
 Printer::Printer( MainWindow *main ) {
@@ -31,11 +34,18 @@ Printer::Printer( MainWindow *main ) {
     is_printing = false;
   was_printing = false;
   prev_line = 0;
-  waiting_temp = false;
-  temp_countdown = 100;
+
+  temp_timer= new QTimer();
+  temp_timer->setInterval(3000);
+  connect(temp_timer, SIGNAL(timeout()), this, SLOT(tempChanged()));
 
   temps[ TEMP_NOZZLE ] = 0;
   temps[ TEMP_BED ] = 0;
+
+  idle_timer= new QTimer();
+  idle_timer->setInterval(1000);
+  connect(temp_timer, SIGNAL(timeout()), this, SLOT(Idle()));
+  idle_timer->start();
 
   serialPort = nullptr;
 
@@ -131,7 +141,7 @@ bool Printer::Connect( QString device, int baudrate ) {
     }
     if(ok) {
         Send("M114");
-        connect(serialPort,SIGNAL(readyRead()),this,SLOT(serialReceived()));
+        connect(serialPort,SIGNAL(readyRead()),this,SLOT(serialReady()));
     } else {
         serialPort->close();
     }
@@ -141,23 +151,37 @@ bool Printer::Connect( QString device, int baudrate ) {
 }
 
 void Printer::Disconnect( void ) {
+    if (is_printing){
+        if (QMessageBox::question(main, "Disconnect",
+                                  "Stop Printing and Disconnect?",
+                                  QMessageBox::Yes|QMessageBox::No)
+                != QMessageBox::Yes)
+            return;
+        if (!StopPrinting())
+            return;
+    }
     emit serial_state_changed(SERIAL_DISCONNECTING);
     if (serialPort && serialPort->isOpen()){
+
         serialPort->close();
         emit serial_state_changed(SERIAL_DISCONNECTED);
     }
-
+    temp_timer->stop();
 //  signal_serial_state_changed.emit(SERIAL_DISCONNECTING);
  // ThreadedPrinterSerial::Disconnect();
 //  signal_serial_state_changed.emit( SERIAL_DISCONNECTED );
 }
 
 bool Printer::Reset( void ) {
+    if (QMessageBox::question(main, "Reset Printer?", "Really Reset Printer?",
+                              QMessageBox::Yes|QMessageBox::No)
+            != QMessageBox::Yes)
+        return false;
   StopPrinting( true );
   if ( ! serialPort->isOpen() )
     return false;
 
-  bool ret =serialPort->setDataTerminalReady(true) &&
+  bool ret = serialPort->setDataTerminalReady(true) &&
           serialPort->setDataTerminalReady(false);
 
   if ( ret && was_printing ) {
@@ -170,28 +194,75 @@ bool Printer::Reset( void ) {
 }
 
 
-bool Printer::Send(string s) {
-    bool ok=false;
+static QByteArray numberedLineWithChecksum(const QByteArray command, const long lineno){
+    QString nLine;
+    QTextStream nLs(&nLine);
+    nLs <<  "N" << lineno << " " << command +" ";
+    // From Marlin firmware:
+    const char * comm = nLine.toLocal8Bit().constData();
+    uint8_t checksum = 0, count = uint8_t(strlen(comm));
+    while (count) checksum ^= comm[--count];
+    nLs << "*" << checksum;
+    return nLine.toLocal8Bit().constData();
+}
+
+bool Printer::Send(string s, long *lineno) {
+    bool ok = false;
     if (serialPort && serialPort->isOpen() && serialPort->isWritable()) {
-       cerr << "sending " << s << endl;
-        ok = serialPort->write((s+'\n').c_str()) == 1+long(s.length());
-//       QStringList lines = QString::fromStdString(s).split('\n');
-//       for (QString line : lines){
-//           QByteArray l8 = (line.trimmed()+'\n').toLocal8Bit();
-//           ok = serialPort->write(l8) == long(l8.length());
-//           serialPort->flush();
-//       }
+        QStringList lines = QString::fromStdString(s).split('\n');
+        for (QString line : lines){
+            QString pline = line.section(";",0,0).trimmed();
+            if (pline == "") return true;
+            QByteArray l8 = (pline.trimmed()).toLocal8Bit();
+            if (lineno) {
+                l8 = numberedLineWithChecksum(l8, *lineno);
+                (*lineno)++;
+            }
+            main->comm_log("--> "+l8);
+            ok = serialPort->write(l8+'\n') == long(l8.length()+1);
+            serialPort->flush();
+        }
     }
-    return ok;
+    return true;
+}
+
+
+bool Printer::StartPrinting(QTextDocument *document,
+                            long startLine, long endLine, bool withChecksums)
+{
+    prev_line = 0;
+    long lines = document->lineCount();
+    if (startLine > lines-1) return false;
+    if (endLine == 0) endLine = lines;
+    else if (endLine > startLine)
+        endLine = min(endLine, lines);
+    else return false;
+    is_printing = true;
+    emit printing_changed();
+    Send("M110 N" + std::to_string(startLine)); // tell current line no
+    long lineno = withChecksums ? startLine+1 : -1;
+    for (long l = startLine; l < endLine; l ++ ) {
+        if (!is_printing) break;
+        QTextBlock block = document->findBlockByLineNumber(l);
+        if (block.isValid()){
+            if (!Send(block.text().toStdString(), &lineno)) // send with line no & checksum
+                return false;
+            prev_line = l;
+        } else
+            return false;
+    }
+    emit printing_changed();
+    return true;
 }
 
 bool Printer::StartPrinting( unsigned long start_line, unsigned long stop_line ) {
-  string gcode = main->get_model()->GetGCodeBuffer()->toPlainText().toUtf8().constData();
-  return Printer::StartPrinting( gcode, start_line, stop_line );
+    idle_timer->stop();
+    string gcode = main->get_model()->GetGCodeBuffer()->toPlainText().toStdString();
+    return Printer::StartPrinting( gcode, start_line, stop_line );
 }
 
 bool Printer::StartPrinting( string commands, unsigned long start_line, unsigned long stop_line ) {
-  bool ret = false;//ThreadedPrinterSerial::StartPrinting( commands, start_line, stop_line );
+  bool ret = false; //ThreadedPrinterSerial::StartPrinting( commands, start_line, stop_line );
 
   if ( ret ) {
     prev_line = start_line;
@@ -209,25 +280,61 @@ bool Printer::StartPrinting( string commands, unsigned long start_line, unsigned
 }
 
 bool Printer::StopPrinting( bool wait ) {
-  bool ret = false;//ThreadedPrinterSerial::StopPrinting( wait );
-
-  if ( ret && wait ) {
-    prev_line = 0;
-    was_printing = IsPrinting();
-    is_printing = false;
-//    signal_printing_changed.emit();
-    emit printing_changed();
+  if ( ! serialPort->isOpen() ) {
+    return true;
   }
+  prev_line = 0;
+  was_printing = IsPrinting();
+  is_printing = false;
+  idle_timer->start();
+  if (was_printing)
+      emit printing_changed();
+  return !is_printing;
 
-  return was_printing && !is_printing;
+  /*
+ self.pauseX = self.analyzer.abs_x
+        self.pauseY = self.analyzer.abs_y
+        self.pauseZ = self.analyzer.abs_z
+        self.pauseE = self.analyzer.abs_e
+        self.pauseF = self.analyzer.current_f
+        self.pauseRelative = self.analyzer.relative
+*/
+
+
 }
 
 bool Printer::ContinuePrinting( bool wait ) {
   bool ret = false;//ThreadedPrinterSerial::ContinuePrinting( wait );
 //  if ( ret && wait ) {
 //    prev_line = GetPrintingProgress();
+  idle_timer->stop();
   is_printing = true;
   emit printing_changed();
+/*
+  if self.paused:
+            # restores the status
+            self.send_now("G90")  # go to absolute coordinates
+
+            xyFeedString = ""
+            zFeedString = ""
+            if self.xy_feedrate is not None:
+                xyFeedString = " F" + str(self.xy_feedrate)
+            if self.z_feedrate is not None:
+                zFeedString = " F" + str(self.z_feedrate)
+
+            self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY,
+                                            xyFeedString))
+            self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
+            self.send_now("G92 E" + str(self.pauseE))
+
+            # go back to relative if needed
+            if self.pauseRelative: self.send_now("G91")
+            # reset old feed rate
+            self.send_now("G1 F" + str(self.pauseF))
+*/
+
+
+
 
 //    signal_printing_changed.emit();
 
@@ -361,38 +468,46 @@ bool Printer::RunExtruder( double extruder_speed, double extruder_length,
 
 void Printer::alert( const char *message ) {
   if ( main )
-    main->err_log( string(message) + "\n" );
+    main->err_log( QString::fromLocal8Bit(message) + '\n' );
 
 //  signal_alert.emit( Gtk::MESSAGE_INFO, message, NULL );
 }
 
 void Printer::error( const char *message, const char *secondary ) {
   if ( main )
-    main->err_log( string(message)  + " - " + string(secondary) + "\n" );
+    main->err_log( QString::fromLocal8Bit(message)  + " - " + QString::fromLocal8Bit(secondary) + "\n" );
 
   //  signal_alert.emit( Gtk::MESSAGE_ERROR, message, secondary );
 }
 
-void Printer::serialReceived()
+void Printer::serialReady()
 {
-    QByteArray received = serialPort->readAll();
-    QList<QByteArray> lines = received.split(13);
-    for (QString line  : lines){
-           qDebug() << "received line " << line.trimmed();
+    receiveBuffer.append(serialPort->readAll());
+    if (receiveBuffer.contains('\n')){
+        QStringList lines = receiveBuffer.split('\n');
+        for (int i = 0; i<lines.size()-1; i++){
+            ParseResponse(lines[i].trimmed());
+        }
+        receiveBuffer=lines.last().trimmed();
     }
+}
 
-
+void Printer::tempChanged()
+{
+    temp_timer->setInterval(1000 *
+                max(1,main->get_settings()->get_integer("Display/TempUpdateSpeed")));
+    QueryTemp();
 }
 
 void Printer::UpdateTemperatureMonitor( void ) {
-//  if ( temp_timeout.connected() )
-//    temp_timeout.disconnect();
-
-  if ( serialPort->isOpen() && main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
-    const unsigned int timeout = main->get_settings()->get_integer("Display/TempUpdateSpeed");
-//    temp_timeout = Glib::signal_timeout().connect_seconds
-//      ( sigc::mem_fun(*this, &Printer::QueryTemp), timeout );
-  }
+    if ( serialPort && serialPort->isOpen()
+         && main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
+        const int timeout =
+                main->get_settings()->get_integer("Display/TempUpdateSpeed");
+        temp_timer->start(std::max(1,timeout)*1000);
+    } else {
+        temp_timer->stop();
+    }
 }
 
 bool Printer::Idle( void ) {
@@ -411,17 +526,22 @@ bool Printer::Idle( void ) {
     }
   }
 */
-  if ( ( is_connected = serialPort->isOpen() ) != was_connected ) {
+    is_connected = serialPort->isOpen();
+    if (is_connected) {
+        int newfanspeed = main->get_settings()->get_boolean("Printer/FanEnable")
+                    ? main->get_settings()->get_integer("Printer/FanVoltage")
+                    : 0;
+        if (fan_speed != newfanspeed){
+            fan_speed = newfanspeed;
+            SetFan(newfanspeed);
+        }
+    }
+
+  if ( is_connected != was_connected ) {
     was_connected = is_connected;
-//    signal_serial_state_changed.emit( is_connected ? SERIAL_CONNECTED : SERIAL_DISCONNECTED );
+    emit serial_state_changed(is_connected ? SERIAL_CONNECTED : SERIAL_DISCONNECTED);
   }
 
-  if ( waiting_temp && --temp_countdown == 0 &&
-       main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
-    UpdateTemperatureMonitor();
-    temp_countdown = 100;
-    waiting_temp = false;
-  }
 
   return true;
 }
@@ -446,33 +566,73 @@ bool Printer::QueryTemp( void ) {
 //  if ( temp_timeout.connected() )
 //    temp_timeout.disconnect();
 
-  if ( serialPort->isOpen() && main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
-//      SendAsync( "M105" );
+  if ( serialPort->isOpen()
+       && main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
       Send( "M105" );
-      waiting_temp = true;
   }
   return true;
 }
 
-static const QRegularExpression templineRE_T("(?ims)T\\:(?<temp>[\\-\\.\\d]+?)\\s+?");// "T:-234"
-static const QRegularExpression templineRE_B("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?");// "B:-123"
+static const QRegularExpression templineRE_T("(?ims)T(?<extrno>\\d?)\\:(?<temp>[\\-\\.\\d]+?)\\s+?",
+                                             QRegularExpression::MultilineOption);// "T<N>:-23.4"
+static const QRegularExpression templineRE_B("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?",
+                                             QRegularExpression::MultilineOption);// "B:-12.3"
+static const QRegularExpression templineRE_C("(?ims)C\\:(?<temp>[\\-\\.\\d]+?)\\s+?",
+                                             QRegularExpression::MultilineOption);// "C:-12.3"
 
-void Printer::ParseResponse( string line ) {
-    QString qs = QString::fromStdString(line);
-    if (qs.contains("T:")) {
-        QRegularExpressionMatch match = templineRE_T.match(qs);
+// "ok T:-15.00 /0.00 B:12.81 /0.00"
+// "ok T:-15.00 /0.00 B:27.98 /0.00 T0:-15.00 /0.00 T1:18.63 /0.00 @:0 B@:0 @0:0 @1:0"
+void Printer::ParseResponse( QString line ) {
+
+    QString lowerLine = line.toLower();
+    if (lowerLine.startsWith("resend") or line.startsWith("rs")) {
+        // ??
+    }
+    if (lowerLine.startsWith("error:" )){
+        main->err_log(line.mid(6));
+//        StopPrinting(false);
+        return;
+    }
+    if (lowerLine.startsWith("echo:" )){
+        main->echo_log(line.mid(5));
+        return;
+    }
+
+    main->comm_log("<-- "+line.trimmed());
+    QRegularExpressionMatchIterator mIt = templineRE_T.globalMatch(line);
+    while (mIt.hasNext()){
+        QRegularExpressionMatch match = mIt.next();
+        int extr = 0;
+        QString extrM = match.captured("extrno");
+        if (extrM.length()==1)
+            extr = extrM.toInt();
+        // no number: currently selected exttruder
+        temps[TEMP_NOZZLE]= match.captured("temp").toDouble();
+        qDebug()<< "Nozzle Temp of Extr. "<< extr <<" is "<< temps[TEMP_NOZZLE];
+    }
+    if (line.contains("B:")) {
+        QRegularExpressionMatch match = templineRE_B.match(line);
         if(match.hasMatch()){
-            temps[TEMP_NOZZLE]= match.captured("temp").toInt();
+            temps[TEMP_BED]= match.captured("temp").toDouble();
+            qDebug()<< "Bed Temp is "<< temps[TEMP_BED];
         }
     }
-    if (qs.contains("B:")) {
-        QRegularExpressionMatch match = templineRE_B.match(qs);
+    if (line.contains("C:")) {
+        QRegularExpressionMatch match = templineRE_C.match(line);
         if(match.hasMatch()){
-            temps[TEMP_BED]= match.captured("temp").toInt();
+            temps[TEMP_CHAMBER]= match.captured("temp").toDouble();
+            qDebug()<< "Chamber Temp is "<< temps[TEMP_CHAMBER];
         }
     }
-    waiting_temp = false;
     UpdateTemperatureMonitor();
-//    signal_temp_changed.emit();
+    emit temp_changed();
 }
 
+
+void Printer::SetFan( int speed ) {
+    if (speed == 0)
+        Send ("M107");
+    else {
+        Send ("M106 S" + to_string(speed));
+    }
+}

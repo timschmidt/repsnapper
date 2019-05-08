@@ -33,7 +33,7 @@ class PrefsDlg : public QDialog {
 
     //  QWidget *m_settings_overview;
     //  QTabWidget *m_settings_tab;
-    QStringListModel listModel;
+    QAbstractItemModel *listModel;
     //  void handle_response(int, QDialog *dialog);
 
     std::vector<Settings *> m_settings;

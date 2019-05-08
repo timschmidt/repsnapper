@@ -86,10 +86,11 @@ public:
         void ScaleObjectZ(Shape *shape, ListObject *object, double scale);
         void RotateObject(Shape *shape, ListObject *object, Vector4d rotate);
         void TwistObject(Shape *shape, ListObject *object, double angle);
-        void PlaceOnPlatform(Shape *shape, ListObject *object);
+        void PlaceOnPlatform(QModelIndexList * selection);
 ////        bool updateStatusBar(GdkEventCrossing *event, QString = "");
-        void InvertNormals(Shape *shape, ListObject *object);
-        void Mirror(Shape *shape, ListObject *object);
+        void InvertNormals(QModelIndexList * selection);
+        void Mirror(QModelIndexList * selection);
+        void Hollow(QModelIndexList * selection);
 
         vector<Layer*> layers;
 
@@ -100,6 +101,8 @@ public:
         double m_previewGCode_z;
 
         vector<Shape*> preview_shapes;
+
+        bool haveGCode() const;
 
 //        // Slicing
         void SliceToSVG(QFile *file, bool single_layer=false);
@@ -176,6 +179,8 @@ public:
 
         void rotate_selection(QModelIndexList * selection, const Vector4d rotate);
         void move_selection(QModelIndexList * selection, const Vector3d move);
+        void AutoRotate(QModelIndexList *selected);
+
 private:
         bool is_calculating;
         bool is_printing;

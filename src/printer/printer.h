@@ -32,7 +32,7 @@
 #include "threaded_printer_serial.h"
 
 enum RR_logtype  { LOG_COMM, LOG_ERROR, LOG_ECHO };
-enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_LAST };
+enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_CHAMBER, TEMP_LAST };
 
 class Printer : public QObject {//, public ThreadedPrinterSerial {
     Q_OBJECT
@@ -44,18 +44,19 @@ private:
   bool is_printing;
   bool was_connected;
   bool was_printing;
-  unsigned long prev_line;
-  bool waiting_temp;
-  int temp_countdown;
+  long prev_line;
+  int fan_speed;
 
   //  sigc::connection idle_timeout;
 //  sigc::connection print_timeout;
-//  sigc::connection temp_timeout;
+  QTimer *idle_timer;
+  QTimer *temp_timer;
 
-  bool Idle( void );
+  QString receiveBuffer;
+
   bool QueryTemp( void );
   bool CheckPrintingProgress( void );
-  void ParseResponse( string line );
+  void ParseResponse( QString line );
   QSerialPort *serialPort;
 
 public:
@@ -71,8 +72,11 @@ public:
   void Disconnect( void );
   bool Reset( void );
 
-  bool Send( string command );
+  bool Send( string command, long *lineno = nullptr);
 
+  bool StartPrinting( QTextDocument * document,
+                      long startLine = 0,  long endLine = 0,
+                      bool withChecksums = true);
   bool StartPrinting( unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
   bool StartPrinting( string commands, unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
   bool StopPrinting( bool wait = true );
@@ -97,12 +101,17 @@ public:
 
   bool IsPrinting() const {return is_printing;}
 
+  void SetFan(int speed);
+
 signals:
   void serial_state_changed(int state);
   void printing_changed();
+  void temp_changed();
 
 private slots:
-  void serialReceived();
+  void serialReady();
+  void tempChanged();
+  bool Idle( void );
 //  sigc::signal< void > signal_printing_changed;
 //  sigc::signal< void, unsigned long > signal_now_printing;
 //  sigc::signal< void > signal_inhibit_changed;

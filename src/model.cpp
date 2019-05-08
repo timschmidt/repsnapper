@@ -684,37 +684,66 @@ void Model::OptimizeRotation(Shape *shape, ListObject *object)
   ModelChanged();
 }
 
-void Model::InvertNormals(Shape *shape, ListObject *object)
+void Model::InvertNormals(QModelIndexList * selection)
 {
-  if (shape)
-    shape->invertNormals();
-  else // if (object) object->invertNormals();
-    return;
-  ModelChanged();
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    for (Shape * shape: selshapes)
+        shape->invertNormals();
+    ModelChanged();
 }
-void Model::Mirror(Shape *shape, ListObject *object)
+void Model::Mirror(QModelIndexList * selection)
 {
-  if (shape)
-    shape->mirror();
-  else // if (object) object->mirror();
-    return;
-  ModelChanged();
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    for (Shape * shape: selshapes)
+        shape->mirror();
+    ModelChanged();
 }
 
-void Model::PlaceOnPlatform(Shape *shape, ListObject *object)
+void Model::Hollow(QModelIndexList *selection)
 {
-  if (shape)
-    shape->PlaceOnPlatform();
-  else if(object) {
-    Transform3D * transf = &object->transform3D;
-    transf->move(Vector3f(0, 0, -transf->getTranslation().z()));
-    for (uint s = 0;s<object->shapes.size(); s++) {
-      object->shapes[s]->PlaceOnPlatform();
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    for (Shape * shape: selshapes) {
+        shape->makeHollow(3);
+        shape->PlaceOnPlatform();
     }
-  }
-  else return;
-  ModelChanged();
+    ModelChanged();
 }
+
+void Model::PlaceOnPlatform(QModelIndexList *selected)
+{
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selected, selshapes, seltransforms);
+    for (Shape * shape: selshapes){
+        shape->PlaceOnPlatform();
+    }
+//    Transform3D * transf = &object->transform3D;
+//    transf->move(Vector3f(0, 0, -transf->getTranslation().z()));
+//    for (uint s = 0;s<object->shapes.size(); s++) {
+//      object->shapes[s]->PlaceOnPlatform();
+//    }
+    ModelChanged();
+}
+
+void Model::AutoRotate(QModelIndexList *selected)
+{
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selected, selshapes, seltransforms);
+    for (Shape * shape: selshapes){
+        OptimizeRotation(shape,nullptr);
+    }
+    //  m_model->OptimizeRotation(NULL, objects[i]);
+//  update_scale_value();
+//  update_rot_value();
+}
+
 
 void Model::DeleteSelectedObjects(QModelIndexList *selected)
 {
@@ -1176,6 +1205,11 @@ double Model::get_preview_Z()
 {
   if (m_previewLayer) return m_previewLayer->getZ();
   return 0;
+}
+
+bool Model::haveGCode() const
+{
+    return gcode && gcode->commands.size()>0;
 }
 
 void Model::setMeasuresPoint(const Vector3d &point)

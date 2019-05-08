@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>905</width>
-    <height>608</height>
+    <width>915</width>
+    <height>640</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -327,7 +327,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabModel">
         <attribute name="title">
@@ -1323,6 +1323,12 @@ M104 S0.0        ; heater off
                </property>
                <item>
                 <widget class="QToolButton" name="p_print">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Print Current GCode&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string>Print GCode</string>
                  </property>
@@ -1371,119 +1377,158 @@ M104 S0.0        ; heater off
             <string>AxisControl</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_7">
-            <item row="6" column="3" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_myy">
+            <item row="5" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_homeAll">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Home All Axes&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
-               <string>vv</string>
+               <string>H</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="7">
+            <item row="4" column="7" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_z">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;1 mm up&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>^</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="1">
+             <widget class="QToolButton" name="p_mxx">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;10 mm&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>&lt;&lt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_y">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;1 mm&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>^</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_my">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;1 mm&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>v</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="7">
              <widget class="QPushButton" name="p_homeZ">
               <property name="text">
                <string>Home Z</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="1">
-             <widget class="QToolButton" name="p_mxx">
-              <property name="text">
-               <string>&lt;&lt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="7" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_mz">
-              <property name="text">
-               <string>v</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="5" alignment="Qt::AlignHCenter">
+            <item row="5" column="5" alignment="Qt::AlignHCenter">
              <widget class="QToolButton" name="p_xx">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;10 mm&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
                <string>&gt;&gt;</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="3" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_my">
-              <property name="text">
-               <string>v</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="7" alignment="Qt::AlignHCenter">
+            <item row="7" column="7" alignment="Qt::AlignHCenter">
              <widget class="QToolButton" name="p_mzz">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;10 mm down&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
                <string>vv</string>
               </property>
              </widget>
             </item>
-            <item row="2" column="3" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_yy">
-              <property name="text">
-               <string>^^</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2" colspan="3" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_homeY">
-              <property name="text">
-               <string>Home Y</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="7" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_z">
-              <property name="text">
-               <string>^</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="4" alignment="Qt::AlignHCenter">
+            <item row="5" column="4" alignment="Qt::AlignHCenter">
              <widget class="QToolButton" name="p_x">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;1 mm&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
                <string>&gt;</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="3" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_y">
-              <property name="text">
-               <string>^</string>
+            <item row="2" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_yy">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;10 mm&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
-             </widget>
-            </item>
-            <item row="4" column="3" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_homeAll">
-              <property name="text">
-               <string>H</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="2">
-             <widget class="QToolButton" name="p_mx">
-              <property name="text">
-               <string>&lt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="7" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_zz">
               <property name="text">
                <string>^^</string>
               </property>
              </widget>
             </item>
-            <item row="4" column="0">
+            <item row="2" column="7" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_zz">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;10 mm up&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>^^</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="2">
+             <widget class="QToolButton" name="p_mx">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;1 mm&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>&lt;</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_myy">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;10 mm&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>vv</string>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
              <widget class="QToolButton" name="p_homeX">
               <property name="text">
                <string>Home X</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="0" colspan="2">
+            <item row="6" column="7" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_mz">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;1 mm down&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>v</string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="2" colspan="3" alignment="Qt::AlignHCenter">
+             <widget class="QToolButton" name="p_homeY">
+              <property name="text">
+               <string>Home Y</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
              <widget class="QToolButton" name="p_motoroff">
               <property name="text">
                <string>Motors Off</string>
@@ -1501,7 +1546,7 @@ M104 S0.0        ; heater off
            <property name="title">
             <string>Temperatures</string>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
+           <layout class="QVBoxLayout" name="verticalLayout_21">
             <property name="spacing">
              <number>2</number>
             </property>
@@ -1519,6 +1564,78 @@ M104 S0.0        ; heater off
             </property>
             <item>
              <layout class="QVBoxLayout" name="temps_layout"/>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_10" native="true">
+              <layout class="QGridLayout" name="gridLayout_8">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <property name="spacing">
+                <number>2</number>
+               </property>
+               <item row="0" column="0">
+                <widget class="QCheckBox" name="Misc_TempReadingEnabled">
+                 <property name="text">
+                  <string>Monitor Temperature</string>
+                 </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1" alignment="Qt::AlignRight">
+                <widget class="QLabel" name="label_12">
+                 <property name="text">
+                  <string>Interval (s):</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QSpinBox" name="Display_TempUpdateSpeed">
+                 <property name="minimum">
+                  <number>1</number>
+                 </property>
+                 <property name="value">
+                  <number>5</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QCheckBox" name="Printer_FanEnable">
+                 <property name="text">
+                  <string>Fan</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="2">
+                <widget class="QSpinBox" name="Printer_FanVoltage">
+                 <property name="maximum">
+                  <number>255</number>
+                 </property>
+                 <property name="value">
+                  <number>255</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1" alignment="Qt::AlignRight">
+                <widget class="QLabel" name="label_13">
+                 <property name="text">
+                  <string>Fan Speed:</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -1566,7 +1683,13 @@ M104 S0.0        ; heater off
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_17">
              <item>
-              <widget class="QPlainTextEdit" name="i_txt_comms"/>
+              <widget class="QPlainTextEdit" name="i_txt_comms">
+               <property name="font">
+                <font>
+                 <stylestrategy>PreferDefault</stylestrategy>
+                </font>
+               </property>
+              </widget>
              </item>
              <item>
               <widget class="QWidget" name="widget_13" native="true">
@@ -1724,7 +1847,7 @@ M104 S0.0        ; heater off
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>905</width>
+     <width>915</width>
      <height>22</height>
     </rect>
    </property>
@@ -1825,5 +1948,22 @@ M104 S0.0        ; heater off
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>g_gcode</sender>
+   <signal>returnPressed()</signal>
+   <receiver>g_send_gcode</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>736</x>
+     <y>495</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>805</x>
+     <y>505</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

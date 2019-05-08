@@ -40,9 +40,9 @@ public:
     ~MainWindow();
 
 
-    void err_log(string s);
-    void comm_log(string s);
-    void echo_log(string s);
+    void err_log(QString s);
+    void comm_log(QString s);
+    void echo_log(QString s);
 
     Model * get_model() const {return m_model;}
     Settings * get_settings() const {return m_settings;}
@@ -54,6 +54,7 @@ public:
     void openFile(const QString &path);
 
     QModelIndexList * getSelectedShapes() const;
+
 private:
     Ui::MainWindow *ui_main;
     Ui::PreferencesDialog *ui_prefs;
@@ -72,7 +73,6 @@ private:
     void connectButtons(QWidget *widget);
     void generateGCode();
 
-    void extruderSelected(int index);
 
 private slots:
     void on_actionOpen_triggered();
@@ -81,6 +81,7 @@ private slots:
     void handleButtonClick();
     void gcodeChanged();
     void settingsChanged(const QString &group);
+    void extruderSelected(int index);
     void extruderSelected(const QModelIndex &index);
     void updatedModel(const ObjectsList *objList = nullptr);
     void shapeSelected(const QModelIndex &index);
