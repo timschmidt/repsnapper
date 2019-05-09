@@ -27,9 +27,36 @@
 
 #include "src/ui/prefs_dlg.h"
 
+
+
 namespace Ui {
     class MainWindow;
+    class TemperatureWidget;
 }
+
+class TemperaturePanel : public QWidget
+{
+    Q_OBJECT
+    int num = 0;
+    QString name;
+
+    QMap<QString, Ui::TemperatureWidget*> rows;
+public:
+    explicit TemperaturePanel(QWidget * parent);
+    ~TemperaturePanel();
+
+    QWidget * widget;
+
+    QWidget * addDevice(const QString &name, const QString &label);
+    void removeDevice(const QString &name);
+    void setTemp(const QString &name, int temp);
+    int getTemp(const QString &name);
+    double getMM(const QString &name);
+    void setExtruderTemp(int number, int temp);
+    void setBedTemp(int temp);
+    int getSpeed(const QString &name);
+    void setEnabled(const QString &name, bool enabled);
+};
 
 class MainWindow : public QMainWindow
 {
@@ -40,7 +67,7 @@ public:
     ~MainWindow();
 
 
-    void err_log(QString s);
+    void err_log (QString s);
     void comm_log(QString s);
     void echo_log(QString s);
 
@@ -55,9 +82,16 @@ public:
 
     QModelIndexList * getSelectedShapes() const;
 
+    ViewProgress *getProgress() const;
+
+    void startProgress(string label, double max);
+    TemperaturePanel *getTempsPanel() const;
+
 private:
     Ui::MainWindow *ui_main;
     Ui::PreferencesDialog *ui_prefs;
+
+    TemperaturePanel *tempsPanel;
 
     PrefsDlg *prefs_dialog;
 
@@ -87,7 +121,7 @@ private slots:
     void shapeSelected(const QModelIndex &index);
     void printerConnection(int state);
     void printingChanged();
-
+    void nowPrinting(long);
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);
 //    void toGCSliderValue(int value);

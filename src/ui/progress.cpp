@@ -46,8 +46,8 @@ void ViewProgress::start (const char *label, double max)
   m_bar->setMaximum(max);
   m_bar->setValue(0);
   time.start();
-//  Gtk::Main::iteration(false);
 }
+
 bool ViewProgress::restart (const char *label, double max)
 {
   if (!do_continue) return false;
@@ -92,9 +92,9 @@ QString timeleft_str(long seconds) {
     seconds -= 3600*hrs;
   }
   if (seconds > 60)
-    ostr << seconds/60 << _("m ");
+    ostr << seconds/60 << _("m");
   if (hrs == 0 && seconds<300)
-    ostr << seconds%60 << _("s");
+    ostr << " " << seconds%60 << _("s");
   return s;
 }
 
@@ -121,6 +121,7 @@ bool ViewProgress::update (const double value, bool take_priority)
     QTextStream(stderr) << m_label->text() << " " << o.string() << " -- "
                         << perc << "%              \r";
   }
+  QCoreApplication::processEvents();
 
 //  if (take_priority)
 //    while( gtk_events_pending () )

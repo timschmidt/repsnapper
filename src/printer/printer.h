@@ -24,12 +24,13 @@
 
 //#include <sigc++/sigc++.h>
 
+#include <QSerialPort>
 #include <QSerialPortInfo>
 
 #include <mainwindow.h>
 
 #include "../stdafx.h"
-#include "threaded_printer_serial.h"
+
 
 enum RR_logtype  { LOG_COMM, LOG_ERROR, LOG_ECHO };
 enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_CHAMBER, TEMP_LAST };
@@ -44,7 +45,8 @@ private:
   bool is_printing;
   bool was_connected;
   bool was_printing;
-  long prev_line;
+  long lineno_to_print;
+  bool ok_received;
   int fan_speed;
 
   //  sigc::connection idle_timeout;
@@ -53,6 +55,9 @@ private:
   QTimer *temp_timer;
 
   QString receiveBuffer;
+
+  QByteArrayList commandBuffer;
+
 
   bool QueryTemp( void );
   bool CheckPrintingProgress( void );
@@ -77,8 +82,6 @@ public:
   bool StartPrinting( QTextDocument * document,
                       long startLine = 0,  long endLine = 0,
                       bool withChecksums = true);
-  bool StartPrinting( unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
-  bool StartPrinting( string commands, unsigned long start_line = 1, unsigned long stop_line = ULONG_MAX );
   bool StopPrinting( bool wait = true );
   bool ContinuePrinting( bool wait = true );
   void Inhibit( bool value = true );
@@ -89,9 +92,8 @@ public:
   void Pause( void ) { StopPrinting(); }
   bool SwitchPower( bool on );
   bool SelectExtruder( int extruder_no=-1 );
-  bool SetTemp( TempType type, float value, int extruder_no=-1 );
-  bool RunExtruder(double extruder_speed, double extruder_length, bool reverse,
-           int extruder_no=-1 );
+  bool SetTemp(const QString &name, int num, float value);
+  bool RunExtruder(double extruder_speed, double extruder_length, int extruder_no=-1 );
   bool Home( string axis );
   bool Move( string axis, double distance, bool relative = true );
   bool Goto( string axis, double position );
@@ -107,9 +109,11 @@ signals:
   void serial_state_changed(int state);
   void printing_changed();
   void temp_changed();
+  void now_printing(long lineno);
 
 private slots:
   void serialReady();
+  void bytesWritten(qint64 bytes);
   void tempChanged();
   bool Idle( void );
 //  sigc::signal< void > signal_printing_changed;

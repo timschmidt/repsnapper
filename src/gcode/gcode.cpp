@@ -111,7 +111,7 @@ double GCode::GetTimeEstimation() const
 string getLineAt(QTextDocument *doc, int lineno)
 {
   QTextBlock tb = doc->findBlockByLineNumber(lineno);
-  return tb.text().toUtf8().constData();
+  return tb.text().toStdString();
 }
 
 void GCode::updateWhereAtCursor(const vector<QChar> &E_letters)

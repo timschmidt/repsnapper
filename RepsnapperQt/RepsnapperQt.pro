@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui opengl uitools serialport
+QT       += core gui opengl widgets serialport
 
 lessThan(QT_MAJOR_VERSION, 5): error("requires Qt 5.12")
 lessThan(QT_MINOR_VERSION, 12): error("requires Qt 5.12")
@@ -107,6 +107,7 @@ HEADERS += \
         mainwindow.h
 
 FORMS += \
+        temperaturepanel.ui \
         mainwindow.ui \
         preferences_dlg.ui
 

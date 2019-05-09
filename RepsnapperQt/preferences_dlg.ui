@@ -27,7 +27,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -238,33 +238,24 @@
             </item>
             <item>
              <layout class="QGridLayout" name="gridLayout_2">
-              <item row="0" column="5">
-               <widget class="QDoubleSpinBox" name="Hardware_MaxMoveSpeedXY">
+              <item row="1" column="3">
+               <widget class="QDoubleSpinBox" name="Hardware_MinMoveSpeedZ">
                 <property name="maximum">
                  <double>1000.000000000000000</double>
                 </property>
-                <property name="value">
-                 <double>150.000000000000000</double>
+               </widget>
+              </item>
+              <item row="0" column="4" alignment="Qt::AlignRight">
+               <widget class="QLabel" name="label_13">
+                <property name="text">
+                 <string>Max:</string>
                 </property>
                </widget>
               </item>
-              <item row="0" column="2">
-               <widget class="QLabel" name="label_11">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_9">
                 <property name="text">
-                 <string>Min</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="label_10">
-                <property name="text">
-                 <string>Z Axis</string>
+                 <string>X/Y Axes</string>
                 </property>
                </widget>
               </item>
@@ -278,6 +269,70 @@
                 </property>
                </widget>
               </item>
+              <item row="1" column="4" alignment="Qt::AlignRight">
+               <widget class="QLabel" name="label_14">
+                <property name="text">
+                 <string>Max:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" alignment="Qt::AlignRight">
+               <widget class="QLabel" name="label_11">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Min:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="6" alignment="Qt::AlignRight">
+               <widget class="QLabel" name="label_80">
+                <property name="text">
+                 <string>Manual:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="6" alignment="Qt::AlignRight">
+               <widget class="QLabel" name="label_79">
+                <property name="text">
+                 <string>Manual:</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="5">
+               <widget class="QDoubleSpinBox" name="Hardware_MaxMoveSpeedXY">
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>150.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="label_10">
+                <property name="text">
+                 <string>Z Axis</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2" alignment="Qt::AlignRight">
+               <widget class="QLabel" name="label_12">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Min:</string>
+                </property>
+               </widget>
+              </item>
               <item row="1" column="5">
                <widget class="QDoubleSpinBox" name="Hardware_MaxMoveSpeedZ">
                 <property name="maximum">
@@ -288,44 +343,23 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="label_9">
-                <property name="text">
-                 <string>X/Y Axes</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="2">
-               <widget class="QLabel" name="label_12">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Min</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="4">
-               <widget class="QLabel" name="label_13">
-                <property name="text">
-                 <string>Max</string>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="3">
-               <widget class="QDoubleSpinBox" name="Hardware_MinMoveSpeedZ">
+              <item row="0" column="7">
+               <widget class="QDoubleSpinBox" name="Hardware_ManualMoveSpeedXY">
                 <property name="maximum">
                  <double>1000.000000000000000</double>
                 </property>
+                <property name="value">
+                 <double>150.000000000000000</double>
+                </property>
                </widget>
               </item>
-              <item row="1" column="4">
-               <widget class="QLabel" name="label_14">
-                <property name="text">
-                 <string>Max</string>
+              <item row="1" column="7">
+               <widget class="QDoubleSpinBox" name="Hardware_ManualMoveSpeedZ">
+                <property name="maximum">
+                 <double>1000.000000000000000</double>
+                </property>
+                <property name="value">
+                 <double>3.000000000000000</double>
                 </property>
                </widget>
               </item>
@@ -725,6 +759,9 @@
           </item>
           <item>
            <widget class="QCheckBox" name="Slicing_UseTCommand">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Use T Command to Change Extruder</string>
             </property>

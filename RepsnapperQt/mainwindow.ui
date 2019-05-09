@@ -989,7 +989,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="Slicing_Decor">
+                  <widget class="QCheckBox" name="Slicing_MakeDecor">
                    <property name="text">
                     <string>Decor</string>
                    </property>
@@ -1131,7 +1131,7 @@
               </font>
              </property>
              <property name="currentIndex">
-              <number>3</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab">
               <attribute name="title">
@@ -1229,6 +1229,9 @@ M104 S0.0        ; heater off
                  <property name="lineWrapMode">
                   <enum>QPlainTextEdit::NoWrap</enum>
                  </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
                 </widget>
                </item>
               </layout>
@@ -1295,6 +1298,21 @@ M104 S0.0        ; heater off
             <item>
              <widget class="QWidget" name="widget_9" native="true">
               <layout class="QGridLayout" name="gridLayout_6">
+               <property name="leftMargin">
+                <number>2</number>
+               </property>
+               <property name="topMargin">
+                <number>2</number>
+               </property>
+               <property name="rightMargin">
+                <number>2</number>
+               </property>
+               <property name="bottomMargin">
+                <number>2</number>
+               </property>
+               <property name="spacing">
+                <number>2</number>
+               </property>
                <item row="0" column="0">
                 <widget class="QComboBox" name="Hardware_Portname">
                  <property name="editable">
@@ -1319,7 +1337,19 @@ M104 S0.0        ; heater off
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_9">
                <property name="spacing">
-                <number>6</number>
+                <number>2</number>
+               </property>
+               <property name="leftMargin">
+                <number>2</number>
+               </property>
+               <property name="topMargin">
+                <number>2</number>
+               </property>
+               <property name="rightMargin">
+                <number>2</number>
+               </property>
+               <property name="bottomMargin">
+                <number>2</number>
                </property>
                <item>
                 <widget class="QToolButton" name="p_print">
@@ -1521,17 +1551,17 @@ M104 S0.0        ; heater off
               </property>
              </widget>
             </item>
-            <item row="8" column="2" colspan="3" alignment="Qt::AlignHCenter">
-             <widget class="QToolButton" name="p_homeY">
-              <property name="text">
-               <string>Home Y</string>
-              </property>
-             </widget>
-            </item>
             <item row="2" column="0">
              <widget class="QToolButton" name="p_motoroff">
               <property name="text">
                <string>Motors Off</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1" colspan="2">
+             <widget class="QToolButton" name="p_homeY">
+              <property name="text">
+               <string>Home Y</string>
               </property>
              </widget>
             </item>
@@ -1563,7 +1593,13 @@ M104 S0.0        ; heater off
              <number>0</number>
             </property>
             <item>
-             <layout class="QVBoxLayout" name="temps_layout"/>
+             <widget class="QWidget" name="TempsPlace" native="true">
+              <layout class="QVBoxLayout" name="verticalLayout_23">
+               <item>
+                <layout class="QVBoxLayout" name="verticalLayout_22"/>
+               </item>
+              </layout>
+             </widget>
             </item>
             <item>
              <widget class="QWidget" name="widget_10" native="true">
@@ -1583,7 +1619,21 @@ M104 S0.0        ; heater off
                <property name="spacing">
                 <number>2</number>
                </property>
-               <item row="0" column="0">
+               <item row="2" column="0">
+                <widget class="QCheckBox" name="Printer_FanEnable">
+                 <property name="text">
+                  <string>Fan</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1" alignment="Qt::AlignRight">
+                <widget class="QLabel" name="label_13">
+                 <property name="text">
+                  <string>Fan Speed:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
                 <widget class="QCheckBox" name="Misc_TempReadingEnabled">
                  <property name="text">
                   <string>Monitor Temperature</string>
@@ -1593,14 +1643,14 @@ M104 S0.0        ; heater off
                  </property>
                 </widget>
                </item>
-               <item row="0" column="1" alignment="Qt::AlignRight">
+               <item row="1" column="1" alignment="Qt::AlignRight">
                 <widget class="QLabel" name="label_12">
                  <property name="text">
                   <string>Interval (s):</string>
                  </property>
                 </widget>
                </item>
-               <item row="0" column="2">
+               <item row="1" column="2">
                 <widget class="QSpinBox" name="Display_TempUpdateSpeed">
                  <property name="minimum">
                   <number>1</number>
@@ -1610,27 +1660,13 @@ M104 S0.0        ; heater off
                  </property>
                 </widget>
                </item>
-               <item row="1" column="0">
-                <widget class="QCheckBox" name="Printer_FanEnable">
-                 <property name="text">
-                  <string>Fan</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="2">
+               <item row="2" column="2">
                 <widget class="QSpinBox" name="Printer_FanVoltage">
                  <property name="maximum">
                   <number>255</number>
                  </property>
                  <property name="value">
                   <number>255</number>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1" alignment="Qt::AlignRight">
-                <widget class="QLabel" name="label_13">
-                 <property name="text">
-                  <string>Fan Speed:</string>
                  </property>
                 </widget>
                </item>
@@ -1689,6 +1725,9 @@ M104 S0.0        ; heater off
                  <stylestrategy>PreferDefault</stylestrategy>
                 </font>
                </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
               </widget>
              </item>
              <item>
@@ -1732,7 +1771,11 @@ M104 S0.0        ; heater off
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_16">
              <item>
-              <widget class="QPlainTextEdit" name="i_txt_errs"/>
+              <widget class="QPlainTextEdit" name="i_txt_errs">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
@@ -1742,7 +1785,17 @@ M104 S0.0        ; heater off
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_15">
              <item>
-              <widget class="QPlainTextEdit" name="i_txt_echo"/>
+              <widget class="QPlainTextEdit" name="i_txt_echo">
+               <property name="acceptDrops">
+                <bool>false</bool>
+               </property>
+               <property name="undoRedoEnabled">
+                <bool>false</bool>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>

@@ -473,8 +473,8 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
   QWidget *w = parentwidget->findChild<QWidget*>(real_widget_name);
   inhibit_callback = true;
   while (w) {
-//      cerr << "setting to gui in " << parentwidget->objectName().toStdString() << ": " << real_widget_name.toStdString()
-//           << " = " << value(grouped(real_widget_name)).toString().toStdString() << endl;
+//      qDebug() << "setting to gui in " << parentwidget->objectName() << ": " << real_widget_name
+//               << " = " << value(grouped(real_widget_name)) << endl;
       QString name = grouped(real_widget_name);
       QCheckBox *check = dynamic_cast<QCheckBox *>(w);
       if (check) {

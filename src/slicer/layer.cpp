@@ -312,9 +312,9 @@ void Layer::CalcInfill (Settings &settings)
 
   InfillType infillType = InfillType(settings.get_integer("Slicing/NormalFilltype"));
 
-  double rotPerLayer = (infillType == InfillType::ParallelInfill)
-          ? settings.get_double("Slicing/InfillRotationPrLayer")/180.*M_PI
-          : 0.;
+  double rotPerLayer =// (infillType == InfillType::ParallelInfill) ?
+          settings.get_double("Slicing/InfillRotationPrLayer")/180.*M_PI
+          ;//: 0.;
   double rot = (settings.get_double("Slicing/InfillRotation")/180.*M_PI
                 + LayerNo * rotPerLayer);
   if (!shellOnly)

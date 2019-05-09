@@ -821,7 +821,7 @@ void Model::ConvertToGCode()
       (settings->get_double("Slicing/SolidThickness") > 0 ||
        settings->get_integer("Slicing/ShellCount") > 0))
     // not bridging when support
-    MakeUncoveredPolygons( settings->get_boolean("Slicing/MakeDecor"),
+      MakeUncoveredPolygons( settings->get_boolean("Slicing/MakeDecor"),
                !settings->get_boolean("Slicing/NoBridges") &&
                !settings->get_boolean("Slicing/Support") );
 

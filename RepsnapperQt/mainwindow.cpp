@@ -19,6 +19,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "ui_temperaturepanel.h"
 
 #include "../src/ui/prefs_dlg.h"
 #include "../src/render.h"
@@ -49,7 +50,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QCoreApplication::setApplicationName("Repsnapper");
 
 
-
     ui_main->setupUi(this);
     ui_main->mainToolBar->hide();
 //    ui_main->mainsplitter->setSizes(QList<int>({INT_MAX, INT_MAX}));
@@ -71,11 +71,25 @@ MainWindow::MainWindow(QWidget *parent) :
     m_settings->connect_to_gui(this);
     m_settings->connect_to_gui(prefs_dialog);
 
+    tempsPanel = new TemperaturePanel(ui_main->TempsPlace);
+    QWidget *w = tempsPanel->addDevice("Bed", "Bed");
+    m_settings->connect_to_gui(w);
+    connectButtons(w);
+    for (int n = 0; n< m_settings->getNumExtruders(); n++) {
+        w = (tempsPanel->addDevice(Settings::numbered("Extruder",n),
+                                                         Settings::numbered("Extruder ",n+1)));
+        m_settings->connect_to_gui(w);
+        connectButtons(w);
+    }
+//    m_settings->connect_to_gui(tempsPanel->widget);
+
     m_printer = new Printer(this);
 
     connect(m_printer, SIGNAL(serial_state_changed(int)),
             this, SLOT(printerConnection(int)));
     connect(m_printer, SIGNAL(printing_changed()),this, SLOT(printingChanged()));
+
+    connect(m_printer, SIGNAL(now_printing(long)),this, SLOT(nowPrinting(long)));
 
     connect(m_settings, SIGNAL(settings_changed(const QString&)),
             this, SLOT(settingsChanged(const QString&)));
@@ -176,15 +190,38 @@ void MainWindow::printerConnection(int state)
     ui_main->TemperaturesBox->setEnabled(connected);
     ui_main->Hardware_Portname->setEnabled(!connected);
     ui_main->g_send_gcode->setEnabled(connected);
-    ui_main->p_print->setEnabled(connected && m_model->haveGCode());
+    if (connected) {
+        ui_main->p_print->setEnabled(m_model->haveGCode());
+    }
+}
+
+
+void MainWindow::startProgress(string label, double max){
+    m_progress->start(label.c_str(), max);
+}
+
+TemperaturePanel *MainWindow::getTempsPanel() const
+{
+    return tempsPanel;
 }
 
 void MainWindow::printingChanged()
 {
-    ui_main->p_stop->setEnabled(m_printer->IsPrinting());
-    ui_main->p_pause->setEnabled(m_printer->IsPrinting());
-    ui_main->p_print->setEnabled(!m_printer->IsPrinting());
+    bool isPrinting = m_printer->IsPrinting();
+    ui_main->p_stop->setEnabled(isPrinting);
+    ui_main->p_pause->setEnabled(isPrinting);
+    ui_main->p_print->setEnabled(!isPrinting);
+    if (!isPrinting) {
+        m_progress->stop();
+        m_model->setCurrentPrintingLine(0);
+    }
+}
 
+void MainWindow::nowPrinting(long lineno)
+{
+    m_progress->update(lineno);
+    m_model->setCurrentPrintingLine(ulong(lineno));
+    m_render->update();
 }
 
 void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
@@ -202,7 +239,7 @@ void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
 
     // Draw GCode, which already incorporates any print offset
     if (!objects_only && !m_model->isCalculating()) {
-      if (ui_main->tabGCode->focusWidget()
+      if (false && ui_main->tabGCode->focusWidget()
               == ui_main->GCodeResult) {
         double z = m_model->gcode->currentCursorWhere.z();
         m_model->GlDrawGCode(z);
@@ -386,6 +423,11 @@ QModelIndexList *MainWindow::getSelectedShapes() const
     return m_render->getSelection();
 }
 
+ViewProgress *MainWindow::getProgress() const
+{
+    return m_progress;
+}
+
 void MainWindow::connectButtons(QWidget *widget)
 {
     QList<QWidget*> widgets_with_setting =
@@ -502,8 +544,7 @@ void MainWindow::handleButtonClick()
     } else if(name == "p_print"){
         if (m_settings->get_boolean("Printer/ClearLogOnPrintStart"))
             ui_main->i_txt_comms->clear();
-        m_printer->StartPrinting(ui_main->GCodeResult->document(),
-                                 0, 100);
+        m_printer->StartPrinting(ui_main->GCodeResult->document());
     } else if(name == "p_pause"){
         m_printer->Pause();
     } else if(name == "p_stop"){
@@ -529,7 +570,18 @@ void MainWindow::handleButtonClick()
         m_model->InvertNormals(m_render->getSelection());
     } else if(name == "Printer_ClearLog"){
         ui_main->i_txt_comms->clear();
-    } else if(name == ""){
+    } else if(name.endsWith("_OnOff")){
+        QString cname = name.chopped(6);
+        int number = cname.right(1).toInt();
+        m_printer->SetTemp(cname, number, button->isChecked() ?
+                               tempsPanel->getTemp(cname) : 0);
+    } else if(name.endsWith("_Extrude")){
+        QString cname = name.chopped(11);
+        int number = cname.right(1).toInt();
+        double mm = tempsPanel->getMM(cname);
+        if (name.chopped(8).endsWith("Bw"))
+            mm = -mm;
+        m_printer->RunExtruder(tempsPanel->getSpeed(cname), mm, number);
     } else if(name == ""){
     } else if(name == ""){
     } else if(name == ""){
@@ -609,4 +661,85 @@ void MainWindow::extruderSelected(int index){
 
 void MainWindow::extruderSelected(const QModelIndex &index){
    extruderSelected(index.row());
+}
+
+
+TemperaturePanel::TemperaturePanel(QWidget *parent)
+{
+    this->widget = parent;
+}
+
+TemperaturePanel::~TemperaturePanel()
+{
+}
+
+QWidget *TemperaturePanel::addDevice(const QString &name, const QString &label)
+{
+    Ui::TemperatureWidget *ui_widget = new Ui::TemperatureWidget();
+    ui_widget->setupUi(widget);
+    if (ui_widget && widget) {
+        this->name = name;
+        ui_widget->Temperature_Label->setText(label);
+        ui_widget->Temperature_Temp->setObjectName(name+"_Temperature");
+        ui_widget->Temperature_Button->setObjectName(name+"_OnOff");
+        if (name.startsWith("Extruder")){
+            ui_widget->ExtrudeButton->setObjectName(name+"_Do_Extrude");
+            ui_widget->ExtrudeBackward->setObjectName(name+"_Bw_Extrude");
+            ui_widget->ExtrudeMM->setObjectName(name+"_ExtrudeMM");
+        } else {
+            ui_widget->ExtrControl->hide();
+        }
+        rows.insert(name,ui_widget);
+        widget->layout()->addWidget(ui_widget->widget);
+        num++;
+    }
+    return ui_widget->widget;
+}
+
+void TemperaturePanel::removeDevice(const QString &name)
+{
+    if (rows.contains(name))
+        widget->layout()->removeWidget(rows[name]->widget);
+    rows.remove(name);
+}
+
+void TemperaturePanel::setBedTemp(int temp) {
+    setTemp("Bed", temp);
+}
+
+void TemperaturePanel::setExtruderTemp(int number, int temp) {
+    setTemp(Settings::numbered("Extruder",number), temp);
+}
+
+void TemperaturePanel::setTemp(const QString &name, int temp)
+{
+    if (rows.contains(name))
+        rows[name]->Temperature_CurrentTemp->setText(QString::number(temp) + " °C");
+}
+
+int TemperaturePanel::getTemp(const QString &name)
+{
+    if (rows.contains(name))
+        return rows[name]->Temperature_Temp->value();
+    else return 0;
+}
+
+double TemperaturePanel::getMM(const QString &name)
+{
+    if (rows.contains(name))
+        return rows[name]->ExtrudeMM->value();
+    else return 0;
+}
+
+int TemperaturePanel::getSpeed(const QString &name)
+{
+    if (rows.contains(name))
+        return rows[name]->ExtrudeSpeed->value();
+    else return 0;
+}
+
+void TemperaturePanel::setEnabled(const QString &name, bool enabled)
+{
+    if (rows.contains(name))
+        rows[name]->widget->setEnabled(enabled);
 }
