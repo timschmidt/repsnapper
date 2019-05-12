@@ -55,15 +55,13 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
   Vector2f  m_dragStart;
   MainWindow *m_main;
   Model *get_model() const { return m_main->get_model(); }
-  QModelIndexList *m_selection;
+  QModelIndexList m_selection;
 
   float m_zoom;
   GlLight *m_lights[4];
 
   void SetEnableLight(unsigned int lightNr, bool on);
   void CenterView();
-  void selection_changed();
-
 
   guint find_object_at(gdouble x, gdouble y);
   Vector3d mouse_on_plane(double x, double y, double plane_z=0);
@@ -98,7 +96,8 @@ public:
   void setMain(MainWindow *main){ m_main = main;}
 
   void setSelectedIndex(const QModelIndex &index);
-  QModelIndexList *getSelection() const {return m_selection;}
+  void setSelection(const QModelIndexList indexlist);
+  const QModelIndexList *getSelection() const {return &m_selection;}
 
   Qt::MouseButton mousePressed;
   uint mousePickedObject;

@@ -178,7 +178,8 @@ void MainWindow::updatedModel(const ObjectsList *objList)
 
 void MainWindow::shapeSelected(const QModelIndex &index)
 {
-    m_render->setSelectedIndex(index);
+    QModelIndexList sel = ui_main->modelListView->selectionModel()->selectedRows();
+    m_render->setSelection(sel);
 }
 
 void MainWindow::printerConnection(int state)
@@ -418,7 +419,7 @@ void MainWindow::openFile(const QString &path)
         m_model->Read(&file);
 }
 
-QModelIndexList *MainWindow::getSelectedShapes() const
+const QModelIndexList *MainWindow::getSelectedShapes() const
 {
     return m_render->getSelection();
 }
@@ -568,6 +569,14 @@ void MainWindow::handleButtonClick()
         m_model->Hollow(m_render->getSelection());
     } else if(name == "m_normals"){
         m_model->InvertNormals(m_render->getSelection());
+    } else if(name == "m_duplicate"){
+        m_model->Duplicate(m_render->getSelection());
+    } else if(name == "m_split"){
+        m_model->Split(m_render->getSelection());
+    } else if(name == "m_merge"){
+        m_model->Merge(m_render->getSelection());
+    } else if(name == "m_divide"){
+        m_model->DivideAtZ(m_render->getSelection());
     } else if(name == "Printer_ClearLog"){
         ui_main->i_txt_comms->clear();
     } else if(name.endsWith("_OnOff")){
@@ -607,7 +616,7 @@ void MainWindow::settingsChanged(const QString &name)
     }
     if (name.startsWith("Extruder")){
     }
-//    cerr << name.toStdString() << " settings changed "<<  endl;
+    cerr << name.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();
     m_settings->setMaxHeight(this,
                              std::max(m_model->gcode->Max.z(), m_model->Max.z()));

@@ -369,7 +369,7 @@ static bool ClosestToOrigin (Vector3d a, Vector3d b)
 }
 
 // rearrange unselected shapes in random sequence
-bool Model::AutoArrange(QModelIndexList *selected)
+bool Model::AutoArrange(const QModelIndexList *selected)
 {
   // all shapes
   vector<Shape*>   allshapes;
@@ -519,10 +519,9 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
   return true;
 }
 
-ListObject * Model::AddShape(ListObject *parentLO, Shape *shape, QString filename, bool autoplace)
+ListObject * Model::AddShape(ListObject *parentLO, Shape *shape,
+                             QString filename, bool autoplace)
 {
-  bool found_location=false;
-
   FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
   if (flatshape != nullptr)
       shape = flatshape;
@@ -570,7 +569,7 @@ int Model::MergeShapes(ListObject *parent, const vector<Shape*> shapes)
   return 1;
 }
 
-int Model::DivideShape(ListObject *parent, Shape *shape, QString filename)
+int Model::DivideShapeAtZ(ListObject *parent, Shape *shape, QString filename)
 {
   Shape *upper = new Shape();
   Shape *lower = new Shape();
@@ -684,7 +683,7 @@ void Model::OptimizeRotation(Shape *shape, ListObject *object)
   ModelChanged();
 }
 
-void Model::InvertNormals(QModelIndexList * selection)
+void Model::InvertNormals(const QModelIndexList * selection)
 {
     vector<Shape*>   selshapes;
     vector<Matrix4d> seltransforms;
@@ -693,7 +692,7 @@ void Model::InvertNormals(QModelIndexList * selection)
         shape->invertNormals();
     ModelChanged();
 }
-void Model::Mirror(QModelIndexList * selection)
+void Model::Mirror(const QModelIndexList * selection)
 {
     vector<Shape*>   selshapes;
     vector<Matrix4d> seltransforms;
@@ -703,7 +702,7 @@ void Model::Mirror(QModelIndexList * selection)
     ModelChanged();
 }
 
-void Model::Hollow(QModelIndexList *selection)
+void Model::Hollow(const QModelIndexList *selection)
 {
     vector<Shape*>   selshapes;
     vector<Matrix4d> seltransforms;
@@ -715,7 +714,68 @@ void Model::Hollow(QModelIndexList *selection)
     ModelChanged();
 }
 
-void Model::PlaceOnPlatform(QModelIndexList *selected)
+void Model::Duplicate(const QModelIndexList *selection)
+{
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    for (Shape * shape: selshapes) {
+        Shape * newshape;
+        FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
+        if (flatshape != NULL)
+          newshape = new FlatShape(*flatshape);
+        else
+          newshape = new Shape(*shape);
+        ListObject * parent = objectList.getParent(shape);
+        if (parent){
+            AddShape(parent, newshape, shape->filename);
+        }
+    }
+    ModelChanged(true);
+}
+
+void Model::Split(const QModelIndexList *selection)
+{
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    for (Shape * shape: selshapes) {
+        ListObject* parent = objectList.getParent(shape);
+        if (parent)
+            if (SplitShape (parent, shape, shape->filename) > 1) {
+                // delete shape?
+            }
+    }
+    ModelChanged(true);
+}
+
+void Model::Merge(const QModelIndexList *selection)
+{
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    if (selshapes.size()>0) {
+        ListObject* parent = objectList.getParent(selshapes[0]);
+        if (parent)
+            MergeShapes(parent, selshapes);
+    }
+    ModelChanged(true);
+}
+
+void Model::DivideAtZ(const QModelIndexList *selection)
+{
+    vector<Shape*>   selshapes;
+    vector<Matrix4d> seltransforms;
+    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    for (Shape * shape: selshapes) {
+        ListObject* parent = objectList.getParent(shape);
+        if (parent)
+            DivideShapeAtZ(parent, shape, shape->filename);
+    }
+    ModelChanged(true);
+}
+
+void Model::PlaceOnPlatform(const QModelIndexList *selected)
 {
     vector<Shape*>   selshapes;
     vector<Matrix4d> seltransforms;
@@ -731,7 +791,7 @@ void Model::PlaceOnPlatform(QModelIndexList *selected)
     ModelChanged();
 }
 
-void Model::AutoRotate(QModelIndexList *selected)
+void Model::AutoRotate(const QModelIndexList *selected)
 {
     vector<Shape*>   selshapes;
     vector<Matrix4d> seltransforms;
@@ -745,7 +805,7 @@ void Model::AutoRotate(QModelIndexList *selected)
 }
 
 
-void Model::DeleteSelectedObjects(QModelIndexList *selected)
+void Model::DeleteSelectedObjects(const QModelIndexList *selected)
 {
     for (QModelIndex i : *selected)
         objectList.DeleteSelected(&i);
@@ -825,7 +885,7 @@ Vector3d Model::GetViewCenter()
 int Model::draw (const QModelIndexList *selected)
 {
     vector<int> selectedshapes;
-    if (selected && selected->size()>0)
+    if (selected && !selected->isEmpty())
         for(int i = 0; i < selected->size(); i++) {
             selectedshapes.push_back((*selected)[i].row());
         }

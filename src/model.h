@@ -69,7 +69,7 @@ public:
                      bool autoplace = true);
         int SplitShape(ListObject *parent, Shape *shape, QString filename);
         int MergeShapes(ListObject *parent, const vector<Shape*> shapes);
-        int DivideShape(ListObject *parent, Shape *shape, QString filename);
+        int DivideShapeAtZ(ListObject *parent, Shape *shape, QString filename);
         Shape GetCombinedShape() const;
 
 ////        sigc::signal< void, Gtk::TreePath & > m_signal_stl_added;
@@ -77,7 +77,7 @@ public:
         void Read(QFile *file);
         void SetViewProgress (ViewProgress *progress);
 
-        void DeleteSelectedObjects(QModelIndexList *objectList);
+        void DeleteSelectedObjects(const QModelIndexList *objectList);
 
         void OptimizeRotation(Shape *shape, ListObject *object);
         void ScaleObject(Shape *shape, ListObject *object, double scale);
@@ -86,11 +86,15 @@ public:
         void ScaleObjectZ(Shape *shape, ListObject *object, double scale);
         void RotateObject(Shape *shape, ListObject *object, Vector4d rotate);
         void TwistObject(Shape *shape, ListObject *object, double angle);
-        void PlaceOnPlatform(QModelIndexList * selection);
+        void PlaceOnPlatform(const QModelIndexList * selection);
 ////        bool updateStatusBar(GdkEventCrossing *event, QString = "");
-        void InvertNormals(QModelIndexList * selection);
-        void Mirror(QModelIndexList * selection);
-        void Hollow(QModelIndexList * selection);
+        void InvertNormals(const QModelIndexList * selection);
+        void Mirror(const QModelIndexList * selection);
+        void Hollow(const QModelIndexList * selection);
+        void Duplicate(const QModelIndexList * selection);
+        void Split(const QModelIndexList * selection);
+        void Merge(const QModelIndexList * selection);
+        void DivideAtZ(const QModelIndexList * selection);
 
         vector<Layer*> layers;
 
@@ -135,7 +139,7 @@ public:
 
         void CalcBoundingBoxAndCenter(bool selected_only = false);
         Vector3d GetViewCenter();
-        bool AutoArrange(QModelIndexList *selected);
+        bool AutoArrange(const QModelIndexList *selected);
         Vector3d FindEmptyLocation(const vector<Shape*> &shapes,
                                    const vector<Matrix4d> &transforms,
                                    const Shape *shape);
@@ -179,7 +183,7 @@ public:
 
         void rotate_selection(QModelIndexList * selection, const Vector4d rotate);
         void move_selection(QModelIndexList * selection, const Vector3d move);
-        void AutoRotate(QModelIndexList *selected);
+        void AutoRotate(const QModelIndexList *selected);
 
 private:
         bool is_calculating;

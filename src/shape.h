@@ -61,6 +61,7 @@ public:
   virtual short dimensions(){return 3;}
 
         Shape();
+        Shape(Shape * shape);
         /* Shape(string filename, istream &text); */
         virtual ~Shape(){}
         QString filename;

@@ -80,7 +80,7 @@ public:
 
     void openFile(const QString &path);
 
-    QModelIndexList * getSelectedShapes() const;
+    const QModelIndexList * getSelectedShapes() const;
 
     ViewProgress *getProgress() const;
 

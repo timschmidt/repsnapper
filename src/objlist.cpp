@@ -133,7 +133,13 @@ Matrix4d ObjectsList::getTransformationMatrix(int object, int shape) const
 
 ListObject *ObjectsList::getParent(const Shape *shape) const
 {
-
+    for (ListObject *o : objects){
+        for (Shape *s: o->shapes){
+            if (s == shape)
+                return o;
+        }
+    }
+    return nullptr;
 }
 
 string ObjectsList::info() const

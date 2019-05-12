@@ -41,6 +41,12 @@ Shape::Shape()
 
 }
 
+Shape::Shape(Shape *shape)
+{
+    setTriangles(shape->getTriangles());
+    CalcBBox();
+}
+
 void Shape::clear() {
   triangles.clear();
   if (gl_List>=0)

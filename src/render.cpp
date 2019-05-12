@@ -35,7 +35,7 @@
 Render::Render (QWidget *widget)
     : QOpenGLWidget(widget),
       m_arcBall(new ArcBall()),
-      m_selection(nullptr),
+      m_selection(),
       mousePressed(Qt::NoButton),
       m_xRot(0),
       m_yRot(0),
@@ -64,8 +64,6 @@ Render::Render (QWidget *widget)
   m_zoom = 120.0;
   for (uint i = 0; i < N_LIGHTS; i++)
     m_lights[i] = NULL;
-
-//  m_selection->signal_changed().connect (sigc::mem_fun(*this, &Render::selection_changed));
 }
 
 Render::~Render()
@@ -82,7 +80,6 @@ void Render::cleanup(){
     m_program = nullptr;
     doneCurrent();
     delete m_arcBall;
-    delete m_selection;
     for (uint i = 0; i < N_LIGHTS; i++)
         delete (m_lights[i]);
 }
@@ -124,12 +121,6 @@ void Render::setZRotation(int angle)
     }
 }
 
-void Render::selection_changed()
-{
-    repaint();
-//  queue_draw();
-}
-
 void Render::zoom_to_model(Model *model)
 {
     if (!model)
@@ -150,12 +141,16 @@ void Render::zoom_to_model(Model *model)
 
 void Render::setSelectedIndex(const QModelIndex &index)
 {
-    if (!m_selection)
-        m_selection = new QModelIndexList();
-    else
-        m_selection->clear();
-    m_selection->append(index);
+    m_selection.clear();
+    m_selection.append(index);
 //    cerr << "sel " << m_selection->first().row() << endl;
+    update();
+}
+
+void Render::setSelection(const QModelIndexList indexlist)
+{
+    m_selection = indexlist;
+    qDebug() << "size ! "<<m_selection.size() ;
     update();
 }
 
@@ -167,22 +162,22 @@ void Render::keyPressEvent(QKeyEvent *event){
   switch (event->key())
     {
     case Qt::Key::Key_Up:
-      if (rotate)     get_model()->rotate_selection(m_selection, Vector4d(1.,0.,0., tendeg));
-      else if (moveZ) get_model()->move_selection(m_selection, Vector3d( 0.0,  0.0, 1.0 ));
-      else            get_model()->move_selection(m_selection, Vector3d( 0.0, 1.0, 0.0 ));
+      if (rotate)     get_model()->rotate_selection(&m_selection, Vector4d(1.,0.,0., tendeg));
+      else if (moveZ) get_model()->move_selection(&m_selection, Vector3d( 0.0,  0.0, 1.0 ));
+      else            get_model()->move_selection(&m_selection, Vector3d( 0.0, 1.0, 0.0 ));
       break;
     case Qt::Key::Key_Down:
-      if (rotate)     get_model()->rotate_selection(m_selection, Vector4d(1.,0.,0., -tendeg));
-      else if (moveZ) get_model()->move_selection(m_selection, Vector3d( 0.0, 0.0, -1.0 ));
-      else            get_model()->move_selection(m_selection, Vector3d( 0.0, -1.0, 0.0 ));
+      if (rotate)     get_model()->rotate_selection(&m_selection, Vector4d(1.,0.,0., -tendeg));
+      else if (moveZ) get_model()->move_selection(&m_selection, Vector3d( 0.0, 0.0, -1.0 ));
+      else            get_model()->move_selection(&m_selection, Vector3d( 0.0, -1.0, 0.0 ));
       break;
     case Qt::Key::Key_Left:
-      if (rotate)     get_model()->rotate_selection(m_selection, Vector4d(0.,0.,1., tendeg));
-      else            get_model()->move_selection(m_selection, Vector3d( -1.0, 0.0, 0.0 ));
+      if (rotate)     get_model()->rotate_selection(&m_selection, Vector4d(0.,0.,1., tendeg));
+      else            get_model()->move_selection(&m_selection, Vector3d( -1.0, 0.0, 0.0 ));
       break;
     case Qt::Key::Key_Right:
-      if (rotate)     get_model()->rotate_selection(m_selection, Vector4d(0.,0.,1., -tendeg));
-      else            get_model()->move_selection(m_selection, Vector3d( 1.0, 0.0, 0.0 ));
+      if (rotate)     get_model()->rotate_selection(&m_selection, Vector4d(0.,0.,1., -tendeg));
+      else            get_model()->move_selection(&m_selection, Vector3d( 1.0, 0.0, 0.0 ));
       break;
   default:
       return;
@@ -507,7 +502,7 @@ void Render::paintGL()
 
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
 
-    m_main->Draw (m_selection);
+    m_main->Draw (&m_selection);
 
     glPopMatrix();
     glEnd();
@@ -692,8 +687,7 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
                 } else {
                     // click on no object -> clear the selection:
                     //if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
-                    if (m_selection)
-                        m_selection->clear();
+                    m_selection.clear();
                 }
             }
         }
