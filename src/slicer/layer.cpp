@@ -876,7 +876,7 @@ void Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
   // FINISH
 
   Command lchange(LAYERCHANGE, LayerNo);
-  lchange.where = Vector3d(0.,0.,Z);
+  lchange.where = new Vector3d(0.,0.,Z);
   lchange.comment += info();
   lines3.push_back(PLine3(lchange));
 

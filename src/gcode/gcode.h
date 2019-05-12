@@ -42,8 +42,7 @@ class GCodeIter
   std::string next_line_stripped();
   bool finished();
   double time_estimation;
-  Command getCurrentCommand(Vector3d defaultwhere,
-                const vector<QChar> &E_letters);
+  Command * getCurrentCommand(Vector3d *defaultwhere);
   void set_to_lineno(int lineno);
   int get_current_lineno();
 private:
@@ -59,8 +58,7 @@ public:
     GCode();
     ~GCode();
 
-  void Read  (Model *model, const vector<QChar> E_letters,
-          ViewProgress *progress, string filename);
+  void Read  (ViewProgress *progress, string filename);
   //void Write (Model *model, string filename);
   void draw  (Settings *settings,
               int layer=-1, bool liveprinting=false,
@@ -80,7 +78,7 @@ public:
 
   Vector3d Min, Max, Center;
 
-  void translate(Vector3d trans);
+  void translate(const Vector3d &trans);
 
   QTextDocument buffer;
   GCodeIter *get_iter ();
@@ -88,11 +86,10 @@ public:
   double GetTotalExtruded(bool relativeEcode) const;
   double GetTimeEstimation() const;
 
-  void updateWhereAtCursor(const vector<QChar> &E_letters);
   Vector3d currentCursorWhere;
   Vector3d currentCursorFrom;
   Command currentCursorCommand;
-  vector<int> buffer_zpos_lines; // line numbers where a z position is set
+  vector<long> buffer_zpos_lines; // line numbers where a z position is set
 
 
   vector<unsigned long> layerchanges;

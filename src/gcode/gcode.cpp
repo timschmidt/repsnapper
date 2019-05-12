@@ -80,10 +80,10 @@ double GCode::GetTotalExtruded(bool relativeEcode) const
   return 0;
 }
 
-void GCode::translate(Vector3d trans)
+void GCode::translate(const Vector3d &trans)
 {
   for (uint i=0; i<commands.size(); i++) {
-    commands[i].where += trans;
+    *commands[i].where += trans;
   }
   Min+=trans;
   Max+=trans;
@@ -93,17 +93,19 @@ void GCode::translate(Vector3d trans)
 
 double GCode::GetTimeEstimation() const
 {
-  Vector3d where(0,0,0);
+  Vector3d * where = nullptr;
   double time = 0, feedrate=0, distance=0;
   for (uint i=0; i<commands.size(); i++)
     {
       if(commands[i].f!=0.)
         feedrate = commands[i].f;
-      if (feedrate!=0.) {
-        distance = (commands[i].where - where).length();
-        time += distance/feedrate*60.;
+      if (commands[i].where) {
+          if (where && feedrate!=0.) {
+            distance = commands[i].where->distance(*where);
+            time += distance/feedrate*60.;
+          }
+          where = commands[i].where ;
       }
-      where = commands[i].where ;
     }
   return time;
 }
@@ -114,57 +116,7 @@ string getLineAt(QTextDocument *doc, int lineno)
   return tb.text().toStdString();
 }
 
-void GCode::updateWhereAtCursor(const vector<QChar> &E_letters)
-{
-//    int line = buffer->get_insert()->get_iter().get_line();
-  int line = get_iter()->get_current_lineno();
-  if (line == 0) return;
-  string text = getLineAt(&buffer, line-1);
-  Command commandbefore(text, Vector3d::ZERO, E_letters);
-  Vector3d where = commandbefore.where;
-  // complete position of previous line
-  int l = line;
-  while (l>0 && where.x()==0.) {
-    l--;
-    text = getLineAt(&buffer, l);
-    where.x() = Command(text, Vector3d::ZERO, E_letters).where.x();
-  }
-  l = line;
-  while (l>0 && where.y()==0.) {
-    l--;
-    text = getLineAt(&buffer, l);
-    where.y() = Command(text, Vector3d::ZERO, E_letters).where.y();
-  }
-  l = line;
-  // find last z pos fast
-  for (size_t i = buffer_zpos_lines.size()-1; i > 0 ; i--) {
-      if (int(buffer_zpos_lines[i]) <= l) {
-          text = getLineAt(&buffer, buffer_zpos_lines[i]);
-          //cerr << text << endl;
-          Command c(text, Vector3d::ZERO, E_letters);
-          where.z() = c.where.z();
-          if (where.z() != 0.) break;
-      }
-  }
-  while (l > 0 && where.z() == 0.) {
-    l--;
-    text = getLineAt(&buffer, l);
-    Command c(text, Vector3d::ZERO, E_letters);
-    where.z() = c.where.z();
-  }
-  // current move:
-  text = getLineAt(&buffer, line);
-  Command command(text, where, E_letters);
-  Vector3d dwhere = command.where - where;
-  where.z() -= 0.0000001;
-  currentCursorWhere = where+dwhere;
-  currentCursorCommand = command;
-  currentCursorFrom = where;
-}
-
-
-void GCode::Read(Model *model, const vector<QChar> E_letters,
-         ViewProgress *progress, string filename)
+void GCode::Read(ViewProgress *progress, string filename)
 {
     clear();
 
@@ -188,16 +140,17 @@ void GCode::Read(Model *model, const vector<QChar> E_letters,
 
     set_locales("C");
 
-    uint LineNr = 0;
+    ulong LineNr = 0;
 
     string s;
 
     bool relativePos = false;
-    Vector3d globalPos(0,0,0);
+    Vector3d * globalPos = new Vector3d(0,0,0);
     Min.set(99999999.0,99999999.0,99999999.0);
     Max.set(-99999999.0,-99999999.0,-99999999.0);
 
-    std::vector<Command> loaded_commands;
+//    std::vector<Command> loaded_commands;
+    commands.clear();
 
     double lastZ=0.;
     double lastE=0.;
@@ -219,9 +172,9 @@ void GCode::Read(Model *model, const vector<QChar> E_letters,
         Command command;
 
         if (relativePos)
-          command = Command(s, Vector3d::ZERO, E_letters);
+          command = Command(s);
         else
-          command = Command(s, globalPos, E_letters);
+          command = Command(s, globalPos);
 
         if (command.Code == COMMENT) {
           continue;
@@ -275,10 +228,10 @@ void GCode::Read(Model *model, const vector<QChar> E_letters,
           continue;//if (relativePos) globalPos = command.where;
         }
         else {
-          command.addToPosition(globalPos, relativePos);
+          command.addToPosition(*globalPos, relativePos);
         }
 
-        if (globalPos.z() < 0.){
+        if (globalPos->z() < 0.){
           cerr << "GCode below zero!"<< endl;
           continue;
         }
@@ -289,46 +242,48 @@ void GCode::Read(Model *model, const vector<QChar> E_letters,
              command.Code == ARC_CCW ||
              command.Code == GOHOME ) {
 
-          if(globalPos.x() < Min.x())
-            Min.x() = globalPos.x();
-          if(globalPos.y() < Min.y())
-            Min.y() = globalPos.y();
-          if(globalPos.z() < Min.z())
-            Min.z() = globalPos.z();
-          if(globalPos.x() > Max.x())
-            Max.x() = globalPos.x();
-          if(globalPos.y() > Max.y())
-            Max.y() = globalPos.y();
-          if(globalPos.z() > Max.z())
-            Max.z() = globalPos.z();
-          if (globalPos.z() > lastZ) {
+          if(globalPos->x() < Min.x())
+            Min.x() = globalPos->x();
+          if(globalPos->y() < Min.y())
+            Min.y() = globalPos->y();
+          if(globalPos->z() < Min.z())
+            Min.z() = globalPos->z();
+          if(globalPos->x() > Max.x())
+            Max.x() = globalPos->x();
+          if(globalPos->y() > Max.y())
+            Max.y() = globalPos->y();
+          if(globalPos->z() > Max.z())
+            Max.z() = globalPos->z();
+          if (globalPos->z() > lastZ) {
             // if (lastZ > 0){ // don't record first layer
-            unsigned long num = loaded_commands.size();
+            unsigned long num = commands.size();
             layerchanges.push_back(num);
-            loaded_commands.push_back(Command(LAYERCHANGE, layerchanges.size()));
+            commands.push_back(Command(LAYERCHANGE, layerchanges.size()));
             // }
-            lastZ = globalPos.z();
+            lastZ = globalPos->z();
             buffer_zpos_lines.push_back(LineNr-1);
           }
-          else if (globalPos.z() < lastZ) {
-            lastZ = globalPos.z();
+          else if (globalPos->z() < lastZ) {
+            lastZ = globalPos->z();
             if (layerchanges.size()>0)
               layerchanges.erase(layerchanges.end()-1);
           }
         }
-        loaded_commands.push_back(command);
+        commands.push_back(command);
     }
 
     file.close();
     reset_locales();
 
-    commands = loaded_commands;
+//    commands = loaded_commands;
 
     buffer.setPlainText(QString::fromStdString(alltext.str()));
 
     Center = (Max + Min)/2;
 
     emit gcode_changed();
+
+    delete globalPos;
 
     double time = GetTimeEstimation();
     int h = int(time / 3600.);
@@ -343,7 +298,7 @@ int GCode::getLayerNo(const double z) const
   if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
     for(uint i=0;i<layerchanges.size() ;i++) {
       if (commands.size() > layerchanges[i]) {
-    if (commands[layerchanges[i]].where.z() >= z) {
+    if (commands[layerchanges[i]].where->z() >= z) {
       //cerr  << " _ " <<  i << endl;
       return int(i);
     }
@@ -382,8 +337,8 @@ void GCode::draw(Settings *settings, int layer,
   //cerr << "gc draw "<<layer << " - " <<liveprinting << endl;
 
     Vector3d thisPos(0,0,0);
-    uint start = 0, end = 0;
-        int n_cmds = commands.size();
+    ulong start = 0, end = 0;
+    ulong n_cmds = commands.size();
     bool arrows = true;
 
     if (layerchanges.size()>0) {
@@ -494,11 +449,13 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
 
     // get starting point
     if (start>0) {
-      uint i = start;
-      while ((commands[i].is_value || commands[i].where == defaultpos) && i < end)
-        i++;
-      pos = commands[i].where;
+        for (uint i = start; i< commands.size(); i++){
+            if (commands[i].where) {
+                pos = *commands[i].where;
+                break;
+            }
         }
+    }
 
     // draw begin
     glPointSize(20);
@@ -534,8 +491,8 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
         }
         double extrwidth = extrusionwidth;
             if (commands[i].is_value) continue;
-                if (onlyZChange && commands[i].where.z() == pos.z()) {
-                  pos = commands[i].where;
+                if (onlyZChange && commands[i].where->z() == pos.z()) {
+                  pos = *commands[i].where;
                   LastE=commands[i].e;
                   continue;
                 }
@@ -583,7 +540,7 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
                     Color = gcodemovecolour;
                     extrwidth = 0;
                 } else {
-                    pos = commands[i].where;
+                    pos = *commands[i].where;
                     break;
                 }
             }
@@ -653,7 +610,7 @@ void GCode::MakeText(QString &GcodeTxt,
     double lastE = -10;
     double lastF = 0; // last Feedrate (can be omitted when same)
     Vector3d pos(0,0,0);
-    Vector3d LastPos(-10,-10,-10);
+    Vector3d *LastPos = new Vector3d(-10,-10,-10);
     std::stringstream oss;
 
     QDateTime datetime = QDateTime::currentDateTime();
@@ -694,7 +651,7 @@ void GCode::MakeText(QString &GcodeTxt,
         "; End Layerchange GCode\n\n";
       }
 
-      if ( commands[i].where.z() < 0 )  {
+      if ( commands[i].where && commands[i].where->z() < 0 )  {
         cerr << i << " Z < 0 "  << commands[i].info() << endl;
       }
       else {
@@ -788,7 +745,7 @@ int GCodeIter::get_current_lineno()
 std::string GCodeIter::get_current_line()
 {
     m_cursor.select(QTextCursor::LineUnderCursor);
-    return m_cursor.selectedText().toUtf8().constData();
+    return m_cursor.selectedText().toStdString();
 }
 
 std::string GCodeIter::next_line()
@@ -823,11 +780,9 @@ GCodeIter *GCode::get_iter ()
   return iter;
 }
 
-Command GCodeIter::getCurrentCommand(Vector3d defaultwhere,
-                                     const vector<QChar> &E_letters)
+Command *GCodeIter::getCurrentCommand(Vector3d *defaultwhere)
 {
     // cerr <<"currline" << defaultwhere << endl;
-  Command command(get_current_line(), defaultwhere, E_letters);
-  return command;
+  return new Command(get_current_line(), defaultwhere);
 }
 

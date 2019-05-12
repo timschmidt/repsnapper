@@ -849,7 +849,7 @@ void Model::ConvertToGCode()
     }
   QCoreApplication::processEvents();
 
-  state.ResetLastWhere(Vector3d(0,0,0));
+  state.ResetLastWhere(Vector3d::ZERO);
   uint count =  layers.size();
 
   m_progress->start (_("Making Lines"), count+1);

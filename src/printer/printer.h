@@ -33,13 +33,12 @@
 
 
 enum RR_logtype  { LOG_COMM, LOG_ERROR, LOG_ECHO };
-enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_CHAMBER, TEMP_LAST };
+//enum TempType { TEMP_NOZZLE, TEMP_BED, TEMP_CHAMBER, TEMP_LAST };
 
 class Printer : public QObject {//, public ThreadedPrinterSerial {
     Q_OBJECT
 
 private:
-  double temps[ TEMP_LAST ];
   MainWindow *main;
 
   bool is_printing;
@@ -48,6 +47,9 @@ private:
   long lineno_to_print;
   bool ok_received;
   int fan_speed;
+
+  bool is_in_relative_mode = true;
+  Vector3d currentPos;
 
   //  sigc::connection idle_timeout;
 //  sigc::connection print_timeout;
@@ -87,7 +89,6 @@ public:
   void Inhibit( bool value = true );
 
   void UpdateTemperatureMonitor( void );
-  double get_temp( TempType t ) { return temps[int(t)]; }
 
   void Pause( void ) { StopPrinting(); }
   bool SwitchPower( bool on );

@@ -44,31 +44,31 @@ class GCodeState {
   /* 		 double offsetZ,  */
   /* 		 const Settings::SlicingSettings &slicing, */
   /* 		 const Settings::HardwareSettings &hardware); */
-  void AddLines (vector<Vector3d> lines,
+/*void AddLines (vector<Vector3d> lines,
                  double extrusionFactor,
                  double maxspeed,
                  double movespeed,
                  double offsetZ,
                  Settings &settings);
-  /* void MakeGCodeLine (PLine3 line, */
+*/  /* void MakeGCodeLine (PLine3 line, */
   /* 		      double extrusionfactor, */
   /* 		      double offsetZ,  */
   /* 		      const Settings::SlicingSettings &slicing, */
   /* 		      const Settings::HardwareSettings &hardware); */
-  void MakeGCodeLine (Vector3d start, Vector3d end,
-              Vector3d arcIJK, short arc,
-              double extrusionFactor,
-              double absolute_extrusion,
-              double minspeed,
-              double maxspeed,
-              double offsetZ,
-              bool relativeE);
+//  void MakeGCodeLine (Vector3d start, Vector3d end,
+//              Vector3d arcIJK, short arc,
+//              double extrusionFactor,
+//              double absolute_extrusion,
+//              double minspeed,
+//              double maxspeed,
+//              double offsetZ,
+//              bool relativeE);
   /* double GetLastLayerZ(double curZ); */
   /* void  SetLastLayerZ(double z); */
   const Vector3d &LastPosition();
   void  SetLastPosition(const Vector3d &v);
-  void  ResetLastWhere(Vector3d to);
-  double DistanceFromLastTo(Vector3d here);
+  void  ResetLastWhere(const Vector3d &to);
+  double DistanceFromLastTo(Vector3d *here);
   double LastCommandF();
   double timeused;
 };

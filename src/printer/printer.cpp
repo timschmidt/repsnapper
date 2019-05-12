@@ -27,40 +27,32 @@
 #include <QThread>
 #include <QTimer>
 
+#include <src/gcode/command.h>
 
-Printer::Printer( MainWindow *main ) {
+
+Printer::Printer( MainWindow *main ):
+    is_printing(false),
+    was_connected(false),
+    was_printing(false),
+    lineno_to_print(0),
+    currentPos(Vector3d::ZERO),
+    serialPort(nullptr)
+{
   this->main = main;
-  was_connected = false;
-    is_printing = false;
-  was_printing = false;
-  lineno_to_print = 0;
 
   temp_timer= new QTimer();
   temp_timer->setInterval(3000);
   connect(temp_timer, SIGNAL(timeout()), this, SLOT(tempChanged()));
 
-  temps[ TEMP_NOZZLE ] = 0;
-  temps[ TEMP_BED ] = 0;
-
   idle_timer= new QTimer();
   idle_timer->setInterval(1000);
   connect(temp_timer, SIGNAL(timeout()), this, SLOT(Idle()));
   idle_timer->start();
-
-  serialPort = nullptr;
-
-//  idle_timeout = Glib::signal_timeout().connect
-//    ( sigc::mem_fun(*this, &Printer::Idle), 100 );
-//  print_timeout = Glib::signal_timeout().connect
-//    ( sigc::mem_fun(*this, &Printer::CheckPrintingProgress), 700 );
 }
 
 Printer::~Printer() {
-//  idle_timeout.disconnect();
-//  print_timeout.disconnect();
-//  if ( temp_timeout.connected() )
-    //    temp_timeout.disconnect();
-
+    temp_timer->stop();
+    idle_timer->stop();
     Disconnect();
     delete serialPort;
 }
@@ -71,7 +63,6 @@ vector<QSerialPortInfo> Printer::findPrinterPorts(QList<QSerialPortInfo> additio
 
     QList<QSerialPortInfo> testPorts = QSerialPortInfo::availablePorts();
     testPorts.append(additionalPorts);
-
 
     // Example use QSerialPortInfo
     foreach (const QSerialPortInfo &info, testPorts) {
@@ -142,8 +133,8 @@ bool Printer::Connect( QString device, int baudrate ) {
     }
     if(ok) {
         connect(serialPort,SIGNAL(readyRead()),this,SLOT(serialReady()));
-        connect(serialPort,SIGNAL(bytesWritten(qint64 bytes)),
-                this,SLOT(bytesWritten(qint64 bytes)));
+//        connect(serialPort,SIGNAL(bytesWritten(qint64 bytes)),
+//                this,SLOT(bytesWritten(qint64 bytes)));
         Send("M114");
     } else {
         serialPort->close();
@@ -170,9 +161,6 @@ void Printer::Disconnect( void ) {
         emit serial_state_changed(SERIAL_DISCONNECTED);
     }
     temp_timer->stop();
-//  signal_serial_state_changed.emit(SERIAL_DISCONNECTING);
- // ThreadedPrinterSerial::Disconnect();
-//  signal_serial_state_changed.emit( SERIAL_DISCONNECTED );
 }
 
 bool Printer::Reset( void ) {
@@ -212,7 +200,9 @@ static QByteArray numberedLineWithChecksum(const QByteArray command, const long 
 bool Printer::Send(string s, long *lineno) {
     if (serialPort && serialPort->isOpen() && serialPort->isWritable()) {
         QStringList lines = QString::fromStdString(s).split('\n');
-        for (QString line : lines){
+        if (!lineno)
+            std::reverse(lines.begin(), lines.end());
+        for (QString line : lines) {
             QString pline = line.section(";",0,0).trimmed();
             // skip empty lines when not using linenumbers
             if (!lineno && pline == "") continue;
@@ -226,7 +216,10 @@ bool Printer::Send(string s, long *lineno) {
                 QCoreApplication::processEvents();
                 QThread::msleep(10);
             }
-            commandBuffer.prepend(l8+'\n');
+            if (!lineno) {
+                commandBuffer.append(l8+'\n'); // send immediately
+            } else
+                commandBuffer.prepend(l8+'\n');
             if (wasEmpty) {
                 emit serialPort->readyRead();
             }
@@ -250,6 +243,8 @@ bool Printer::StartPrinting(QTextDocument *document,
 
     lineno_to_print = withChecksums ? startLine : -1;
     long lineno = lineno_to_print;
+
+    currentPos = Vector3d::ZERO;
 
     main->startProgress("Printing", endLine);
     if (!Send("M110 N" + std::to_string(lineno_to_print-1))) // tell line no before next line
@@ -301,8 +296,6 @@ bool Printer::StopPrinting( bool wait ) {
 
 bool Printer::ContinuePrinting( bool wait ) {
   bool ret = false;//ThreadedPrinterSerial::ContinuePrinting( wait );
-//  if ( ret && wait ) {
-//    prev_line = GetPrintingProgress();
   idle_timer->stop();
   is_printing = true;
   emit printing_changed();
@@ -328,15 +321,6 @@ bool Printer::ContinuePrinting( bool wait ) {
             # reset old feed rate
             self.send_now("G1 F" + str(self.pauseF))
 */
-
-
-
-
-//    signal_printing_changed.emit();
-
-//    if ( prev_line > 0 )
-//      signal_now_printing.emit( prev_line );
-//  }
 
   return ret;
 }
@@ -489,6 +473,17 @@ void Printer::serialReady()
         QByteArray last = commandBuffer.last();
         ok_received = false;
         if (serialPort->write(last) == long(last.length())){
+            Command command(last.toStdString(), &currentPos);
+            cerr << "COMMAND: " << command.info();
+//            if (is_in_relative_mode)
+//                currentPos += *command.where;
+//            else
+//                currentPos = *command.where;
+            cerr << "-> pos " << currentPos << endl;
+            if (command.Code == RELATIVEPOSITIONING)
+                is_in_relative_mode = true;
+            else if (command.Code == ABSOLUTEPOSITIONING)
+                is_in_relative_mode = false;
             main->comm_log("--> "+last.trimmed());
             commandBuffer.removeLast();
             serialPort->flush();
@@ -625,37 +620,36 @@ void Printer::ParseResponse( QString line ) {
         }
         return;
     }
-    QRegularExpressionMatchIterator mIt = templineRE_T.globalMatch(line);
-    while (mIt.hasNext()){
-        QRegularExpressionMatch match = mIt.next();
-        int extr = 0;
-        QString extrM = match.captured("extrno");
-        if (extrM.length()==1)
-            extr = extrM.toInt();
-        main->getTempsPanel()->setExtruderTemp(extr, int(0.5+match.captured("temp").toDouble()));
-        // no number: currently selected exttruder
-        temps[TEMP_NOZZLE]= match.captured("temp").toDouble();
-        qDebug()<< "Nozzle Temp of Extr."<< extr <<"is"<< temps[TEMP_NOZZLE];
-        emit temp_changed();
-    }
-    if (line.contains("B:")) {
+
+    if (line.contains("T:")) { // all temperatures
+        QRegularExpressionMatchIterator mIt = templineRE_T.globalMatch(line);
+        while (mIt.hasNext()){
+            QRegularExpressionMatch match = mIt.next();
+            int extr = 0;
+            QString extrM = match.captured("extrno");
+            if (extrM.length()==1)
+                extr = extrM.toInt();
+
+            double temp = match.captured("temp").toDouble();
+            main->getTempsPanel()->setExtruderTemp(extr, int(0.5+temp));
+            // no number: currently selected exttruder
+            qDebug()<< "Nozzle Temp of Extr."<< extr <<"is"<< temp;
+        }
         QRegularExpressionMatch match = templineRE_B.match(line);
         if(match.hasMatch()){
-            main->getTempsPanel()->setBedTemp(int(0.5+match.captured("temp").toDouble()));
-            temps[TEMP_BED]= match.captured("temp").toDouble();
-            qDebug()<< "Bed Temp is"<< temps[TEMP_BED];
-            emit temp_changed();
+            double temp = match.captured("temp").toDouble();
+            main->getTempsPanel()->setBedTemp(int(0.5+temp));
+            qDebug()<< "Bed Temp is"<< temp;
         }
-    }
-    if (line.contains("C:")) {
-        QRegularExpressionMatch match = templineRE_C.match(line);
+        match = templineRE_C.match(line);
         if(match.hasMatch()){
-            main->getTempsPanel()->setTemp("Chamber", int(0.5+match.captured("temp").toDouble()));
-            temps[TEMP_CHAMBER]= match.captured("temp").toDouble();
-            qDebug()<< "Chamber Temp is"<< temps[TEMP_CHAMBER];
-            emit temp_changed();
+            double temp = match.captured("temp").toDouble();
+            main->getTempsPanel()->setTemp("Chamber", int(0.5+temp));
+            qDebug()<< "Chamber Temp is"<< temp;
         }
+        emit temp_changed();
     }
+
 //    UpdateTemperatureMonitor();
 }
 

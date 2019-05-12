@@ -64,15 +64,16 @@ void GCodeState::AppendCommand(Command &command, bool relativeE)
   if (!command.is_value) {
     if (!relativeE)
       command.e += pImpl->lastCommand.e;
-    if (command.f!=0.) {
-      timeused += (command.where - pImpl->lastCommand.where).length()/command.f*60;
+    if (command.where && pImpl->lastCommand.where && command.f!=0.) {
+      timeused += (*command.where - *pImpl->lastCommand.where).length()/command.f*60;
     }
     pImpl->lastCommand = command;
-    pImpl->LastPosition = command.where;
+    if (command.where)
+        pImpl->LastPosition = *command.where;
   }
   pImpl->code.commands.push_back(command);
-  if (command.where.z() > pImpl->code.Max.z())
-    pImpl->code.Max.z() = command.where.z();
+  if (command.where && command.where->z() > pImpl->code.Max.z())
+    pImpl->code.Max.z() = command.where->z();
 }
 void GCodeState::AppendCommand(GCodes code, bool relativeE, string comment)
 {
@@ -99,13 +100,15 @@ void GCodeState::AppendCommands(vector<Command> commands, bool relativeE)
 //     pImpl->lastLayerZ = z;
 // }
 
-void GCodeState::ResetLastWhere(Vector3d to)
+void GCodeState::ResetLastWhere(const Vector3d &to)
 {
-  pImpl->lastCommand.where = to;
+    if (pImpl->lastCommand.where)
+        delete pImpl->lastCommand.where;
+  pImpl->lastCommand.where = new Vector3d(to);
 }
-double GCodeState::DistanceFromLastTo(Vector3d here)
+double GCodeState::DistanceFromLastTo(Vector3d *here)
 {
-  return (pImpl->lastCommand.where - here).length();
+  return (*pImpl->lastCommand.where - *here).length();
 }
 
 double GCodeState::LastCommandF()
@@ -124,6 +127,7 @@ double GCodeState::LastCommandF()
 //     MakeGCodeLine (plines[i], extrusionfactor, offsetZ, slicing, hardware);
 // }
 
+/*
 void GCodeState::AddLines (vector<Vector3d> linespoints,
                            double extrusionFactor,
                            double maxspeed,
@@ -152,7 +156,7 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
     }
   //SetLastLayerZ(z);
 }
-
+*/
 
 // // dont use -- commands are generated in PLine3 printlines.cpp
 // // (speeds are in mm/min which is obsolete)
@@ -192,6 +196,7 @@ void GCodeState::AddLines (vector<Vector3d> linespoints,
 //   //SetLastPosition(pline.to);
 // }
 
+/*
 void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
                 Vector3d arcIJK, short arc,
                 double extrusionFactor,
@@ -237,4 +242,4 @@ void GCodeState::MakeGCodeLine (Vector3d start, Vector3d end,
   }
   AppendCommand(command,relativeE);
 }
-
+*/

@@ -158,10 +158,10 @@ PLine3::PLine3(const Command &command_)
 }
 
 
-Vector3d PLine3::arcIJK() const
+Vector3d *PLine3::arcIJK() const
 {
   assert(arc);
-  return Vector3d(arccenter.x(), arccenter.y(), to.z()) - from;
+  return new Vector3d(arccenter.x()-from.x(), arccenter.y()-from.y(), to.z()-from.z());
 }
 
 //nonsense ???
@@ -191,7 +191,6 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     return 1;
   }
 
-
   const Vector3d lift (0,0,lifted);
   const Vector3d lifted_from = from + lift;
   const Vector3d lifted_to   = to + lift;
@@ -205,12 +204,18 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     if (commands.size()>0) extruder = commands.back().extruder_no;
     PLine3 move3(area, extruder, lastpos, lifted_from, movespeed, 0);
     // get recursive ...
-    vector<Command> movecommands;
-    command_count += move3.getCommands(lastpos, movecommands,
-                       minspeed, movespeed,
-                       minZspeed, maxZspeed,
-                       maxAOspeed, useTCommand);
-    commands.insert(commands.end(), movecommands.begin(), movecommands.end());
+//    vector<Command> movecommands;
+//    command_count += move3.getCommands(lastpos, movecommands,
+//                       minspeed, movespeed,
+//                       minZspeed, maxZspeed,
+//                       maxAOspeed, useTCommand);
+//    commands.reserve(commands.size() + movecommands.size());
+//    for (Command &command : movecommands)
+//        commands.push_back(command);
+    command_count += move3.getCommands(lastpos, commands,
+                                       minspeed, movespeed,
+                                       minZspeed, maxZspeed,
+                                       maxAOspeed, useTCommand);
     lastpos = lifted_from;
   }
 
@@ -278,7 +283,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
   command.not_layerchange = (lifted != 0.);
   command.abs_extr += absolute_extrusion;
   command.travel_length = travel_length;
-  if (!command.hasNoEffect(lifted_from, 0, 0,true)) {
+  if (!command.hasNoEffect(&lifted_from, 0, 0,true)) {
     commands.push_back(command);
     command_count++;
   }
@@ -306,13 +311,13 @@ vector<PLine3> PLine3::division(const Vector3d &point) const
 
 vector<PLine2> PLine2::division(const vector<Vector2d> &points) const
 {
-  uint npoints = points.size();
+  int npoints = points.size();
   vector<PLine2> newlines;
   if (npoints == 0) return newlines;
   PLine2 l(*this);
   newlines.push_back(l);
   newlines.back().to = points[0];
-  for (uint i = 0; i < npoints-1; i++) {
+  for (int i = 0; i < npoints-1; i++) {
     newlines.push_back(l);
     newlines.back().move_to(points[i], points[i+1]);
   }

@@ -73,7 +73,7 @@ protected:
   void mouseMoveEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
-  void keyReleaseEvent(QKeyEvent *event);
+  void keyReleaseEvent(QKeyEvent *event) override;
 
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;

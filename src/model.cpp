@@ -318,8 +318,7 @@ void Model::ReadGCode(QFile *file)
   is_calculating=true;
   settings->setValue("Display/DisplayGCode",true);
   m_progress->start (_("Reading GCode"), 100.0);
-  gcode->Read (this, settings->get_extruder_letters(), m_progress,
-              QFileInfo(*file).absoluteFilePath().toUtf8().constData());
+  gcode->Read (m_progress, QFileInfo(*file).absoluteFilePath().toStdString());
   m_progress->stop (_("Done"));
   is_calculating=false;
   Max = gcode->Max;
