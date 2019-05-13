@@ -696,10 +696,10 @@ double Settings::RoundedLinewidthCorrection(double extr_width,
   return factor;
 }
 
-double Settings::GetExtrudedMaterialWidth(double layerheight, int extruderNo)
+double Settings::GetExtrudedMaterialWidth(double layerheight, uint extruderNo)
 {
   // ExtrudedMaterialWidthRatio is preset by user
-  const QString extruder = numbered("Extruder", extruderNo);
+  const QString extruder = numbered("Extruder", int(extruderNo));
   return min(max(get_double(extruder+"/MinimumLineWidth"),
                  get_double(extruder+"/ExtrudedMaterialWidthRatio") * layerheight),
              get_double(extruder+"/MaximumLineWidth"));
@@ -708,7 +708,7 @@ double Settings::GetExtrudedMaterialWidth(double layerheight, int extruderNo)
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
 
 // how much mm filament material per extruded line length mm -> E gcode
-double Settings::GetExtrusionPerMM(double layerheight, int extruderNo)
+double Settings::GetExtrusionPerMM(double layerheight, uint extruderNo)
 {
   const QString extruder = numbered("Extruder", extruderNo);
   double f = get_double(extruder+"/ExtrusionFactor"); // overall factor
@@ -723,15 +723,15 @@ double Settings::GetExtrusionPerMM(double layerheight, int extruderNo)
 }
 
 // return infill distance in mm
-double Settings::GetInfillDistance(double layerthickness, float percent, int extruderNo)
+double Settings::GetInfillDistance(double layerthickness, float percent, uint extruderNo)
 {
   double fullInfillDistance = GetExtrudedMaterialWidth(layerthickness, extruderNo);
   if (fullInfillDistance == 0.) throw new exception();
-  if (percent == 0) return 10000000;
+  if (percent == 0.f) return 10000000;
   return fullInfillDistance * (100./percent);
 }
 
-int Settings::getNumExtruders() const
+uint Settings::getNumExtruders() const
 {
   uint num=0;
   for (QString g : childGroups())
@@ -744,11 +744,11 @@ int Settings::getNumExtruders() const
 vector<ExtruderSettings> Settings::getExtruderSettings()
 {
     vector<ExtruderSettings> settings;
-    for (int i=0; i< getNumExtruders(); i++){
+    for (uint i=0; i< getNumExtruders(); i++){
         ExtruderSettings extruder;
         extruder.name = numbered("Extruder",i);
         extruder.offset = get_extruder_offset(i);
-        extruder.maxLineSpeed = get_double(extruder.name+"/MaxLineSpeed");
+        extruder.maxLineSpeed = float(get_double(extruder.name+"/MaxLineSpeed"));
         extruder.displayColor = get_Vector4f(extruder.name+"/DisplayColour");
         settings.push_back(extruder);
     }
@@ -828,15 +828,15 @@ QString Settings::get_string(const QString &name)
 }
 
 // create new
-int Settings::CopyExtruder(int num)
+uint Settings::CopyExtruder(uint num)
 {
-  int total = getNumExtruders();
+  uint total = getNumExtruders();
   copyGroup(numbered("Extruder", num),
             numbered("Extruder", total));
   return total;
 }
 
-void Settings::RemoveExtruder(int num)
+void Settings::RemoveExtruder(uint num)
 {
     int total = getNumExtruders();
     if (total < 2) return;
@@ -1006,7 +1006,7 @@ void Settings::get_from_gui () // no params
     QString name = w!=nullptr ? grouped(w->objectName()) : "";
     if (name.startsWith("Extruder/")){ // from gui
         name.replace("Extruder", numbered("Extruder", currentExtruder)); // to current
-        cerr << "get f g " << name.toStdString() << endl;
+//        cerr << "get f g " << name.toStdString() << endl;
     }
     while (w) { // for using break ...
         m_user_changed = true; // is_changed;

@@ -182,6 +182,8 @@ public:
 
     void addToPosition(Vector3d &from, bool relative);
 
+    bool append(Command c);
+
     string info() const;
 
     template <size_t M>

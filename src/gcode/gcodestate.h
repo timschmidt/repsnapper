@@ -36,9 +36,12 @@ class GCodeState {
   GCodeState(GCode &code);
   ~GCodeState();
   /* void SetZ (double z); */
-  void AppendCommand(Command &command, bool incrementalE);
-  void AppendCommand(GCodes code, bool incrementalE=false, string comment="");
-  void AppendCommands(vector<Command> commands, bool relativeE);
+  void AppendCommand(Command &command, bool incrementalE,
+                     double minLength = 0.);
+  void AppendCommand(GCodes code, bool incrementalE=false, string comment="",
+                     double minLength = 0.);
+  void AppendCommands(vector<Command> commands, bool relativeE,
+                      double minLength = 0.);
   /* void AddLines (vector<PLine3> lines, */
   /* 		 double extrusionfactor, */
   /* 		 double offsetZ,  */

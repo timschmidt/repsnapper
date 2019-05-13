@@ -27,7 +27,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>3</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -758,6 +758,9 @@
           </property>
           <item>
            <widget class="QCheckBox" name="Slicing_RelativeEcode">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="text">
              <string>Relative E-Code</string>
             </property>
@@ -1727,6 +1730,23 @@
             </property>
             <property name="checked">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="4" colspan="3" alignment="Qt::AlignRight">
+           <widget class="QLabel" name="label_81">
+            <property name="text">
+             <string>Join Movements smaller than:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="7">
+           <widget class="QDoubleSpinBox" name="Slicing_MinCommandLength">
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.200000000000000</double>
             </property>
            </widget>
           </item>

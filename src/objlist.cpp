@@ -117,7 +117,7 @@ void ObjectsList::get_selected_shapes(const QModelIndexList *indexes,
 
         for (QModelIndex index : *indexes){
             uint i = uint(index.row());
-            cerr << "sel "<< i << endl;
+//            cerr << "sel "<< i << endl;
             shapes.push_back(allshapes[i]);
             transforms.push_back(alltransforms[i]);
         }

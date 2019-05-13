@@ -28,6 +28,7 @@ struct GCodeStateImpl
   GCode &code;
   Vector3d LastPosition;
   Command lastCommand;
+  double lastLength;
 
   GCodeStateImpl(GCode &_code) :
     code(_code),
@@ -59,32 +60,60 @@ void GCodeState::SetLastPosition(const Vector3d &v)
 {
   pImpl->LastPosition = v;
 }
-void GCodeState::AppendCommand(Command &command, bool relativeE)
+void GCodeState::AppendCommand(Command &command, bool relativeE,
+                               double minLength)
 {
-  if (!command.is_value) {
-    if (!relativeE)
-      command.e += pImpl->lastCommand.e;
-    if (command.where && pImpl->lastCommand.where && command.f!=0.) {
-      timeused += (*command.where - *pImpl->lastCommand.where).length()/command.f*60;
+    bool merged = false;
+    if (!command.is_value) {
+        if (!relativeE)
+            command.e += pImpl->lastCommand.e;
+        if (command.where) {
+            if (pImpl->lastCommand.where && command.f!=0.) {
+                const double length =
+                        (*command.where - *pImpl->lastCommand.where).length();
+                timeused += length/command.f*60;
+                const vector<Command> &prevCommands = pImpl->code.commands;
+                if (prevCommands.size()>2){
+                    if (prevCommands[prevCommands.size()-2].where
+                            && (prevCommands[prevCommands.size()-2].where->
+                                distance(*command.where) < minLength)) {
+                        Command &last = pImpl->code.commands.back();
+                        if (abs(last.f/command.f-1)<0.01){ // similar f
+                            merged = last.append(command);
+                        }
+                    }
+                }
+                if (merged)
+                    pImpl->lastLength += length;
+                else
+                    pImpl->lastLength = length;
+            } else {
+                pImpl->lastLength = 0.;
+            }
+            pImpl->LastPosition = *command.where;
+            if (merged)
+                pImpl->lastCommand = pImpl->code.commands.back();
+            else
+                pImpl->lastCommand = command;
+        }
     }
-    pImpl->lastCommand = command;
-    if (command.where)
-        pImpl->LastPosition = *command.where;
-  }
-  pImpl->code.commands.push_back(command);
-  if (command.where && command.where->z() > pImpl->code.Max.z())
-    pImpl->code.Max.z() = command.where->z();
+    if (!merged)
+        pImpl->code.commands.push_back(command);
+    if (command.where && command.where->z() > pImpl->code.Max.z())
+        pImpl->code.Max.z() = command.where->z();
 }
-void GCodeState::AppendCommand(GCodes code, bool relativeE, string comment)
+void GCodeState::AppendCommand(GCodes code, bool relativeE, string comment,
+                               double minLength)
 {
   Command comm(code);
   comm.comment = comment;
-  AppendCommand(comm, relativeE);
+  AppendCommand(comm, relativeE, minLength);
 }
-void GCodeState::AppendCommands(vector<Command> commands, bool relativeE)
+void GCodeState::AppendCommands(vector<Command> commands, bool relativeE,
+                                double minLength)
 {
   for (uint i = 0; i < commands.size(); i++) {
-    AppendCommand(commands[i], relativeE);
+    AppendCommand(commands[i], relativeE, minLength);
   }
 }
 // double GCodeState::GetLastLayerZ(double curZ)

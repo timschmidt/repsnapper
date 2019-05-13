@@ -252,7 +252,7 @@ void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
     }
 
     // Draw all objects
-    int layerdrawn = m_model->draw(selected);
+    m_model->draw(selected);
 }
 
 void MainWindow::DrawGrid()
@@ -485,7 +485,7 @@ void MainWindow::handleButtonClick()
             m_render->update();
         }
     } else if(name == "copy_extruder"){
-        int newEx = m_settings->CopyExtruder(prefs_dialog->getSelectedExtruder());
+        uint newEx = m_settings->CopyExtruder(prefs_dialog->getSelectedExtruder());
         prefs_dialog->selectExtruder(newEx);
     } else if(name == "remove_extruder"){
         int index = prefs_dialog->removeExtruder();
@@ -616,7 +616,7 @@ void MainWindow::settingsChanged(const QString &name)
     }
     if (name.startsWith("Extruder")){
     }
-    cerr << name.toStdString() << " settings changed "<<  endl;
+//    cerr << name.toStdString() << " settings changed "<<  endl;
     m_model->ClearPreview();
     m_settings->setMaxHeight(this,
                              std::max(m_model->gcode->Max.z(), m_model->Max.z()));

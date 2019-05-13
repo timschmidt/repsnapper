@@ -97,14 +97,14 @@ class Settings : public QSettings {
 
   static double RoundedLinewidthCorrection(double extr_width,
                        double layerheight);
-  double GetExtrudedMaterialWidth(const double layerheight, int extruder);
-  double GetExtrusionPerMM(double layerheight, int extruder);
+  double GetExtrudedMaterialWidth(const double layerheight, uint extruder);
+  double GetExtrusionPerMM(double layerheight, uint extruder);
   std::vector<QChar> get_extruder_letters();
   Vector3d get_extruder_offset(uint num);
   uint GetSupportExtruder();
-  int CopyExtruder(int num);
-  void RemoveExtruder(int num);
-  int getNumExtruders() const;
+  uint CopyExtruder(uint num);
+  void RemoveExtruder(uint num);
+  uint getNumExtruders() const;
 
   double getLayerHeight() { return get_double("Slicing/LayerThickness");}
 
@@ -155,7 +155,7 @@ public:
   Matrix4d getBasicTransformation(Matrix4d T);
 
   // return real mm depending on hardware extrusion width setting
-  double GetInfillDistance(double layerthickness, float percent, int extruderNo);
+  double GetInfillDistance(double layerthickness, float percent, uint extruderNo);
 
 
   // connect settings to relevant GUI widgets

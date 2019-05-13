@@ -894,7 +894,7 @@ void Model::ConvertToGCode()
   }
   // do antiooze retract for all lines:
   Printlines::makeAntioozeRetract(plines, settings, m_progress);
-  vector<Command> commands;
+//  vector<Command> commands;
   //Printlines::getCommands(plines, settings, commands, m_progress);
   Printlines::getCommands(plines, settings, state, m_progress);
 

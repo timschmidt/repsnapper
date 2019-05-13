@@ -286,6 +286,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
                                      Settings *settings,
                                      ViewProgress * progress)
 {
+    if (lines.empty()) return 0;
   const QString extruder = Settings::numbered("Extruder",lines[0].extruder_no);
   if (!settings->get_boolean(extruder+"/EnableAntiooze")) return 0;
 

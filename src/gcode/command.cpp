@@ -575,6 +575,23 @@ void Command::addToPosition(Vector3d &from, bool relative)
   }
 }
 
+// merge 2 (small) movements into one
+bool Command::append(Command c)
+{
+    if (Code != c.Code ||
+            (Code != COORDINATEDMOTION && Code != RAPIDMOTION))
+        return false;
+    if (extruder_no != c.extruder_no)
+        return false;
+    if (where && c.where)
+        *where = *c.where; // absolute
+    if (f != c.f)
+        return false;
+    e = c.e; // absolute
+    f = (f+c.f)/2.;
+    return true;
+}
+
 
 string Command::info() const
 {

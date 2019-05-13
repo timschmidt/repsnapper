@@ -417,7 +417,7 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
   // if (gl_List < 0) {
   //   gl_List = glGenLists(1);
   //   glNewList(gl_List, GL_COMPILE);
-  //   cerr << "list " << gl_List << endl;
+  //   cerr << list " << gl_List << endl;
 
     double LastE=0.0;
     bool extruderon = false;
@@ -429,7 +429,6 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
         glDisable(GL_LIGHTING);
         uint n_cmds = commands.size();
     if (n_cmds==0) return;
-    Vector3d defaultpos(0,0,0);
     Vector3d pos(0,0,0);
 
     bool relativeE = settings->get_boolean("Slicing/RelativeEcode");
@@ -448,8 +447,8 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
     if (end<=start) return;
 
     // get starting point
-    if (start>0) {
-        for (uint i = start; i< commands.size(); i++){
+    if (start > 0) {
+        for (uint i = start; i < commands.size(); i++){
             if (commands[i].where) {
                 pos = *commands[i].where;
                 break;
@@ -461,8 +460,9 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
     glPointSize(20);
     glBegin(GL_POINTS);
     //glColor4f(1.,0.1,0.1,ccol[3]);
-    glVertex3dv((GLdouble*)&pos);
+    glVertex3dv(pos);
     glEnd();
+
 
     Vector3d last_extruder_offset = Vector3d::ZERO;
 

@@ -273,7 +273,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
       command = Command (gc, lifted_to, extrudedMaterial, travel_speed);
       command.arcIJK = arcIJK();
       ostringstream o;
-      o << (int)(angle*180/M_PI) << "° ";
+      o << int(angle*180/M_PI) << "° ";
       if (arc<0) o << "c";
       o << "cw arc";
       command.comment += o.str();
@@ -1750,6 +1750,7 @@ void Printlines::getCommands(const vector<PLine3> &plines,
       if (!cont)
           break;
     }
+    // area change comment:
     if (plines[i].area != COMMAND && plines[i].area != lastArea) {
       lastArea = plines[i].area;
       commands.push_back(Command(AreaNames[lastArea]));
@@ -1758,7 +1759,8 @@ void Printlines::getCommands(const vector<PLine3> &plines,
               minspeed, movespeed, minZspeed, maxZspeed,
               maxAOspeed, useTCommand);
   }
-  gc_state.AppendCommands(commands, settings->get_boolean("Slicing/RelativeEcode"));
+  gc_state.AppendCommands(commands, settings->get_boolean("Slicing/RelativeEcode"),
+                          settings->get_double("Slicing/MinCommandLength"));
 }
 
 
