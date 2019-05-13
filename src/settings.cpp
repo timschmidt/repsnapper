@@ -163,11 +163,11 @@ void Settings::merge (QSettings &settings)
     }
 }
 
-bool Settings::mergeGlibKeyfile (const QString keyfile)
+bool Settings::mergeGlibKeyfile (const QString &keyfile)
 {
     GKeyFile * gkf = g_key_file_new();
     if (!g_key_file_load_from_file(gkf, keyfile.toStdString().c_str(), G_KEY_FILE_NONE, NULL)){
-        fprintf (stderr, "Could not read config file %s\n", keyfile.data());
+        cerr <<  "Could not read config file " << keyfile.toStdString() << endl;
         return false;
     }
     GError *error;
@@ -212,14 +212,14 @@ QString Settings::info(){
     return str;
 }
 
-bool Settings::load_from_file (QString filename) {
+bool Settings::load_from_file (const QString &filename) {
     // always merge when loading settings
     QSettings filesettings(filename, Format::NativeFormat);
     merge(filesettings);
     return true;
 }
 
-bool Settings::load_from_data (QString data) {
+bool Settings::load_from_data (const QString &data) {
  //TODO merge(QSettings());
   return true;
 }
@@ -470,8 +470,8 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
           }
       }
   }
-  QWidget *w = parentwidget->findChild<QWidget*>(real_widget_name);
   inhibit_callback = true;
+  QWidget *w = parentwidget->findChild<QWidget*>(real_widget_name);
   while (w) {
 //      qDebug() << "setting to gui in " << parentwidget->objectName() << ": " << real_widget_name
 //               << " = " << value(grouped(real_widget_name)) << endl;
@@ -563,6 +563,54 @@ void Settings::set_windowsize_from_gui(QWidget *window){
     setValue("WindowPosY", window->pos().y());
     endGroup();
 }
+
+Vector3d Settings::getRotation()
+{
+    return Vector3d(get_double("rot/x",0.),get_double("rot/y",0.),
+                    get_double("rot/z",0.));
+}
+
+Vector3d Settings::getTranslation()
+{
+    return Vector3d(get_double("translate/x",0.),get_double("translate/y",0.),
+                    get_double("translate/z",0.));
+}
+
+Vector4d Settings::getScaleValues()
+{
+    return Vector4d(get_double("scale/x",1.),get_double("scale/y",1.),
+                    get_double("scale/z",1.),get_double("scale/value",1.));
+}
+
+void Settings::setRotation(const Vector3d &rot)
+{
+    inhibit_callback = true;
+    setValue("rot/x", rot[0]);
+    setValue("rot/y", rot[1]);
+    setValue("rot/z", rot[2]);
+    inhibit_callback = false;
+}
+
+void Settings::setTranslation(const Vector3d &trans)
+{
+    inhibit_callback = true;
+    setValue("translate/x", trans[0]);
+    setValue("translate/y", trans[1]);
+    setValue("translate/z", trans[2]);
+    inhibit_callback = false;
+}
+
+void Settings::setScaleValues(const Vector4d &scale)
+{
+    inhibit_callback = true;
+    setValue("scale/x", scale[0]);
+    setValue("scale/y", scale[1]);
+    setValue("scale/z", scale[2]);
+    setValue("scale/value", scale[3]);
+    inhibit_callback = false;
+}
+
+
 
 template<typename Base, typename T>
  bool instanceof(const T*) {
@@ -700,9 +748,9 @@ double Settings::GetExtrudedMaterialWidth(double layerheight, uint extruderNo)
 {
   // ExtrudedMaterialWidthRatio is preset by user
   const QString extruder = numbered("Extruder", int(extruderNo));
-  return min(max(get_double(extruder+"/MinimumLineWidth"),
-                 get_double(extruder+"/ExtrudedMaterialWidthRatio") * layerheight),
-             get_double(extruder+"/MaximumLineWidth"));
+  return min(max(get_double(extruder+"/MinimumLineWidth", 0.3),
+                 get_double(extruder+"/ExtrudedMaterialWidthRatio", 1.0) * layerheight),
+             get_double(extruder+"/MaximumLineWidth", 0.8));
 }
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle
@@ -812,14 +860,14 @@ int Settings::get_integer(const QString &name)
     return groupedValue(name, 0).toInt();
 }
 
-double Settings::get_double(const QString &name)
+double Settings::get_double(const QString &name, double deflt)
 {
-    return groupedValue(name, 0.).toDouble();
+    return groupedValue(name, deflt).toDouble();
 }
 
-bool Settings::get_boolean(const QString &name)
+bool Settings::get_boolean(const QString &name, bool deflt)
 {
-    return groupedValue(name, false).toBool();
+    return groupedValue(name, deflt).toBool();
 }
 
 QString Settings::get_string(const QString &name)
@@ -886,9 +934,9 @@ Vector3d Settings::getPrintVolume()
 }
 Vector3d Settings::getPrintMargin()
 {
-  Vector3d margin(get_double("Hardware/PrintMargin.X"),
-          get_double("Hardware/PrintMargin.Y"),
-          get_double("Hardware/PrintMargin.Z"));
+  Vector3d margin(get_double("Hardware/PrintMargin.X", 1.),
+          get_double("Hardware/PrintMargin.Y", 1.),
+          get_double("Hardware/PrintMargin.Z", 0.));
   Vector3d maxoff = Vector3d::ZERO;
   uint num = getNumExtruders();
   for (uint i = 0; i < num ; i++) {
@@ -1077,7 +1125,7 @@ void Settings::get_int_from_gui(int value)
                  value = combo->currentText();
              setValue(name,value);
           } else
-              setValue(name,combo->currentIndex());
+              setValue(name,max(0,combo->currentIndex()));
           break;
         }
     }

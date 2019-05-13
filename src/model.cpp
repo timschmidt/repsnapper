@@ -130,7 +130,7 @@ QTextDocument *Model::GetGCodeBuffer()
 
 void Model::GlDrawGCode(int layerno)
 {
-  if (settings->get_boolean("Display/DisplayGCode"))  {
+  if (settings->get_boolean("Display/DisplayGCode", false))  {
     gcode->draw (settings, layerno, false);
   }
   // assume that the real printing line is the one at the start of the buffer
@@ -230,12 +230,12 @@ void Model::SaveStl(QFile *file)
   objectList.get_all_shapes(shapes,transforms);
 
   if(shapes.size() == 1) {
-    shapes[0]->saveBinarySTL(QFileInfo(*file).absolutePath());
+    shapes[0]->saveBinarySTL(QFileInfo(*file).absoluteFilePath());
   }
   else {
     if (settings->get_boolean("Misc/SaveSingleShapeSTL")) {
       Shape single = GetCombinedShape();
-      single.saveBinarySTL(QFileInfo(*file).absolutePath());
+      single.saveBinarySTL(QFileInfo(*file).absoluteFilePath());
     } else {
 //      set_locales("C");
       stringstream sstr;
@@ -247,7 +247,7 @@ void Model::SaveStl(QFile *file)
 //      reset_locales();
     }
   }
-  settings->STLPath = QFileInfo(*file).dir().path().toUtf8().constData();
+  settings->STLPath = QFileInfo(*file).absolutePath();
 }
 
 // everything in one shape
@@ -644,8 +644,9 @@ void Model::rotate_selection(QModelIndexList * selected, const Vector4d rotate)
     vector<Matrix4d> seltransforms;
     objectList.get_selected_shapes(selected, selshapes, seltransforms);
     for (Shape * shape: selshapes) {
-        shape->Rotate(Vector3d(rotate.x(), rotate.y(), rotate.z()), rotate[4]);
+        shape->Rotate(Vector3d(rotate.x(), rotate.y(), rotate.z()), rotate[3]);
     }
+    ModelChanged();
 }
 
 void Model::move_selection(QModelIndexList *selected, const Vector3d move)
@@ -656,6 +657,7 @@ void Model::move_selection(QModelIndexList *selected, const Vector3d move)
     for (Shape * shape: selshapes){
         shape->move(move);
     }
+    ModelChanged();
 }
 void Model::RotateObject(Shape* shape, ListObject* object, Vector4d rotate)
 {

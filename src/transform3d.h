@@ -42,6 +42,7 @@ public:
     void scale_y(double x);
     void scale_z(double x);
     void move(const Vector3d &delta);
+    void moveTo(const Vector3d &translation);
     void rotate(const Vector3d &center, double x, double y, double z);
     void rotate_to(const Vector3d &center, double x, double y, double z);
     void rotate(const Vector3d &axis, double angle);

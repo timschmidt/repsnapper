@@ -64,7 +64,13 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
   void CenterView();
 
   guint find_object_at(gdouble x, gdouble y);
-  Vector3d mouse_on_plane(double x, double y, double plane_z=0);
+  void mouse_ray(int x, int y, Vector3d rayP[]);
+  Vector3d mouse_on_plane(int x, int y, double plane_z=0);
+
+  GLint viewport[4];
+  GLdouble mvmatrix[16];
+  GLdouble projmatrix[16];
+
 protected:
   void initializeGL() override;
   void resizeGL(int w, int h) override;
@@ -72,6 +78,7 @@ protected:
   void mousePressEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
+  void wheelEvent(QWheelEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
   void keyReleaseEvent(QKeyEvent *event) override;
 

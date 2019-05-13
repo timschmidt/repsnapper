@@ -54,7 +54,7 @@ bool ViewProgress::restart (const char *label, double max)
   m_box->show();
   if (to_terminal) {
    const int time_used =  time.elapsed()/1000;
-   QTextStream(stderr) << m_label->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
+   QTextStream(stderr) << m_bar->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   m_bar_max = max;
   this->label = label;
@@ -72,7 +72,7 @@ void ViewProgress::stop (const char *label)
 {
   if (to_terminal) {
     const int time_used = time.elapsed()/1000; // seconds
-    QTextStream(stderr)  << m_label->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
+    QTextStream(stderr)  << m_bar->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   this->label = label;
   m_label->setText(label);
@@ -113,12 +113,12 @@ bool ViewProgress::update (const double value, bool take_priority)
   const double used = time.elapsed()/1000; // seconds
   const double total = used * m_bar_max  / value;
   const long left = (long)(total-used);
-  o << label<< " (" << timeleft_str(left) << ") : "
+  o << label << " (" << timeleft_str(left) << ") : "
     << int(value) <<"/"<< int(m_bar_max);
   m_bar->setFormat(s);
   if (to_terminal) {
     int perc = (int(100.*m_bar->value()/m_bar->maximum()));
-    QTextStream(stderr) << m_label->text() << " " << o.string() << " -- "
+    QTextStream(stderr) << s << " -- "
                         << perc << "%              \r";
   }
   QCoreApplication::processEvents();

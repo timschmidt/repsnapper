@@ -48,9 +48,9 @@ Shape::Shape(Shape *shape)
 }
 
 void Shape::clear() {
-  triangles.clear();
-  if (gl_List>=0)
-    glDeleteLists(gl_List,1);
+    triangles.clear();
+    if (gl_List>=0)
+        glDeleteLists(gl_List,1);
   gl_List = -1;
   filename = "";
 };
@@ -344,6 +344,30 @@ void Shape::ScaleZ(double x)
   transform3D.move(Center);
 }
 
+void Shape::setScale(const Vector4d &scale)
+{
+    cerr<< "not implemented "<< endl;
+}
+
+Vector4d Shape::getScaleValues() const
+{
+    return Vector4d(transform3D.get_scale_x(),
+                    transform3D.get_scale_y(),
+                    transform3D.get_scale_z(),
+                    transform3D.get_scale());
+}
+
+Vector3d Shape::getRotation() const
+{
+    return Vector3d(transform3D.getRotX(),transform3D.getRotY(),
+                    transform3D.getRotZ());
+}
+
+Vector3d Shape::getTranslation() const
+{
+    return Vector3d(transform3D.getTranslation());
+}
+
 void Shape::CalcBBox()
 {
   Min.set(INFTY,INFTY,INFTY);
@@ -502,6 +526,11 @@ void Shape::Rotate(const Vector3d & axis, const double & angle)
 //   PlaceOnPlatform();
 }
 
+void Shape::RotateTo(double xangle, double yangle, double zangle)
+{
+    transform3D.rotate_to(Center, xangle, yangle, zangle);
+}
+
 // this is primitive, it just rotates triangle vertices
 void Shape::Twist(double angle)
 {
@@ -522,6 +551,11 @@ void Shape::Twist(double angle)
     triangles[i].calcNormal();
   }
   CalcBBox();
+}
+
+void Shape::moveTo(const Vector3d &translation)
+{
+    transform3D.moveTo(translation);
 }
 
 // void Shape::CenterAroundXY()

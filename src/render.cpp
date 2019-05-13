@@ -155,10 +155,10 @@ void Render::setSelection(const QModelIndexList indexlist)
 }
 
 void Render::keyPressEvent(QKeyEvent *event){
-//    cerr << "key " << event->key() << endl;
   bool moveZ = (event->modifiers() == Qt::ShiftModifier);
   bool rotate = (event->modifiers() == Qt::ControlModifier);
   double tendeg = M_PI/18.;
+//  cerr << "key " << event->key() << " ROT " << (rotate?tendeg:0) << " Z " << moveZ << endl;
   switch (event->key())
     {
     case Qt::Key::Key_Up:
@@ -183,7 +183,6 @@ void Render::keyPressEvent(QKeyEvent *event){
       return;
   }
   repaint();
-  setFocus();
 }
 void Render::keyReleaseEvent(QKeyEvent *event)
 {
@@ -196,18 +195,15 @@ void Render::keyReleaseEvent(QKeyEvent *event)
         get_model()->ModelChanged();
     }
 }
-/*
-bool Render::on_scroll_event(GdkEventScroll* event)
+
+void Render::wheelEvent(QWheelEvent *event)
 {
-  double factor = 110.0/100.0;
-  if (event->direction == GDK_SCROLL_UP)
-    m_zoom /= factor;
-  else
+    QPoint numDegrees = -event->angleDelta() * 8; // factor??
+    double factor = 1.1 * numDegrees.y();
     m_zoom *= factor;
-  queue_draw();
-  return true;
+    repaint();
 }
-*/
+
 void Render::SetEnableLight(unsigned int i, bool on)
 {
   assert (i < N_LIGHTS);
@@ -229,9 +225,10 @@ guint Render::find_object_at(gdouble x, gdouble y)
   const GLsizei BUFSIZE = 256;
   GLuint select_buffer[BUFSIZE];
 
-  glSelectBuffer(BUFSIZE, select_buffer);
-  (void)glRenderMode(GL_SELECT);
+  glBegin(GL_SELECT);
 
+  glSelectBuffer(BUFSIZE, select_buffer);
+  //  (void)glRenderMode(GL_SELECT);
   GLint viewport[4];
 
   glMatrixMode (GL_PROJECTION);
@@ -266,8 +263,8 @@ guint Render::find_object_at(gdouble x, gdouble y)
 //  if (gldrawable->is_double_buffered())
 //    gldrawable->swap_buffers();
 //  else
-    glFlush();
-//  gldrawable->gl_end();
+//  glFlush();
+  glEnd();
 
   // Process the selection hits
   GLuint *ptr = select_buffer;
@@ -289,35 +286,39 @@ guint Render::find_object_at(gdouble x, gdouble y)
   return name;
 }
 
+void printarray(double *arr,int n){
+    for (int i=0;i<n;i++)
+        cerr << arr[n]<< " ";
+    cerr<< endl;
+}
+
+
+void Render::mouse_ray(int x, int y, Vector3d rayP[]) {
+   double dX, dY, dZ, dClickY;
+   dClickY = height() - y; // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
+   gluUnProject (x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
+   rayP[0] = Vector3d( dX, dY, dZ );
+   gluUnProject (x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
+   rayP[1] = Vector3d( dX, dY, dZ );
+
+//   GLfloat depth;
+//   glReadPixels(x,dClickY,1,1,GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+//   cerr << "d "<< depth << endl;
+}
+
 // http://www.3dkingdoms.com/selection.html
-Vector3d Render::mouse_on_plane(double x, double y, double plane_z)
+Vector3d Render::mouse_on_plane(int x, int y, double plane_z)
 {
-  Vector3d margin;
-  const Model *m = get_model();
-  if (m!=NULL) margin = m->settings->getPrintMargin();
-
- // This function will find 2 points in world space that are on the line into the screen defined by screen-space( ie. window-space ) point (x,y)
-  double mvmatrix[16];
-  double projmatrix[16];
-  int viewport[4];
-  double dX, dY, dZ, dClickY; // glUnProject uses doubles,
-
-  glGetIntegerv(GL_VIEWPORT, viewport);
-  glGetDoublev (GL_MODELVIEW_MATRIX, mvmatrix);
-  glGetDoublev (GL_PROJECTION_MATRIX, projmatrix);
-  dClickY = height() - y; // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
-  gluUnProject (x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
-  Vector3d rayP1( dX, dY, dZ );
-  gluUnProject (x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
-  Vector3d rayP2( dX, dY, dZ );
+  Vector3d rayP[2];
+  mouse_ray(x, y, rayP);
 
   // intersect with z=plane_z;
-  if (rayP2.z() != rayP1.z()) {
-    double t = (plane_z-rayP1.z())/(rayP2.z()-rayP1.z());
-    Vector3d downP = rayP1 +  (rayP2-rayP1) * t;
-    return downP - margin;
+  if (rayP[1].z() != rayP[0].z()) {
+    double t = (plane_z-rayP[0].z())/(rayP[1].z()-rayP[0].z());
+    Vector3d downP = rayP[0] +  (rayP[1]-rayP[0]) * t;
+    return downP;
   }
-  else return rayP1 - margin;
+  else return rayP[0];
 }
 
 void Render::initializeGL()
@@ -432,6 +433,7 @@ void Render::draw_string(const Vector3d &pos, const string s)
     GLint view[4];
     glGetDoublev(GL_MODELVIEW_MATRIX, &model[0][0]);
     glGetDoublev(GL_PROJECTION_MATRIX, &proj[0][0]);
+
     glGetIntegerv(GL_VIEWPORT, &view[0]);
     GLdouble textPosZ = 0;
 
@@ -504,6 +506,10 @@ void Render::paintGL()
 
     m_main->Draw (&m_selection);
 
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    glGetDoublev (GL_MODELVIEW_MATRIX, mvmatrix);
+    glGetDoublev (GL_PROJECTION_MATRIX, projmatrix);
+
     glPopMatrix();
     glEnd();
 
@@ -529,7 +535,9 @@ void Render::mousePressEvent(QMouseEvent *event)
 
     mousePressed = event->button();
     if(mousePressed == Qt::LeftButton) {
-        mousePickedObject = 0;//find_object_at(event->pos().x(), event->pos().y());
+        Vector3d ray[2];
+        mouse_ray(event->pos().x(), event->pos().y(), ray);
+//        mousePickedObject = find_object_at(event->pos().x(), event->pos().y());
         // on button 1 with shift/ctrl, if there is an object, select it (for dragging)
         if (mousePressedModifiers == Qt::ShiftModifier
                || mousePressedModifiers == Qt::ControlModifier) {
@@ -559,6 +567,7 @@ void Render::mouseMoveEvent(QMouseEvent *event)
                                                       get_model()->get_preview_Z());
 //        cerr << dragp << " - " << mouse_preview << endl;
         get_model()->setMeasuresPoint(mouse_preview);
+        setFocus();
         repaint();
         return;
     }
@@ -694,7 +703,6 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
 
     }
     repaint();
-
 }
 
 // for GLES2.0

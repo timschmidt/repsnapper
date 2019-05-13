@@ -447,8 +447,8 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
     if (end<=start) return;
 
     // get starting point
-    if (start > 0) {
-        for (uint i = start; i < commands.size(); i++){
+    if (start >= 0) {
+        for (uint i = start + 1; i < commands.size(); i++){
             if (commands[i].where) {
                 pos = *commands[i].where;
                 break;
@@ -491,7 +491,7 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
         }
         double extrwidth = extrusionwidth;
             if (commands[i].is_value) continue;
-                if (onlyZChange && commands[i].where->z() == pos.z()) {
+                if (onlyZChange && commands[i].where && commands[i].where->z() == pos.z()) {
                   pos = *commands[i].where;
                   LastE=commands[i].e;
                   continue;

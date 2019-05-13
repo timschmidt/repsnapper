@@ -48,6 +48,7 @@ public:
     QWidget * widget;
 
     QWidget * addDevice(const QString &name, const QString &label);
+    QWidget *addExtruder(const uint index);
     void removeDevice(const QString &name);
     void setTemp(const QString &name, int temp);
     int getTemp(const QString &name);

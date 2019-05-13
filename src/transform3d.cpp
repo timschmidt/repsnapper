@@ -73,6 +73,14 @@ void Transform3D::move(const Vector3d &delta)
   update_transform();
 }
 
+void Transform3D::moveTo(const Vector3d &translation)
+{
+  Vector3d trans = getTranslation();
+  m_transform.set_translation(translation * transform(3,3)); // unscale transl.
+  update_transform();
+}
+
+
 void Transform3D::scale(double x)
 {
   if (x==0) return;

@@ -75,9 +75,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QWidget *w = tempsPanel->addDevice("Bed", "Bed");
     m_settings->connect_to_gui(w);
     connectButtons(w);
-    for (int n = 0; n< m_settings->getNumExtruders(); n++) {
-        w = (tempsPanel->addDevice(Settings::numbered("Extruder",n),
-                                                         Settings::numbered("Extruder ",n+1)));
+    for (uint n = 0; n < m_settings->getNumExtruders(); n++) {
+        w = (tempsPanel->addExtruder(n));
         m_settings->connect_to_gui(w);
         connectButtons(w);
     }
@@ -180,6 +179,20 @@ void MainWindow::shapeSelected(const QModelIndex &index)
 {
     QModelIndexList sel = ui_main->modelListView->selectionModel()->selectedRows();
     m_render->setSelection(sel);
+
+    if (sel.size() == 1){
+        Shape *shape = m_model->objectList.findShape(sel.first().row());
+        m_settings->setScaleValues(shape->getScaleValues());
+        m_settings->setRotation(shape->getRotation());
+        m_settings->setTranslation(shape->getTranslation());
+    } else {
+        m_settings->setScaleValues(Vector4d(1,1,1,1));
+        m_settings->setRotation(Vector3d::ZERO);
+        m_settings->setTranslation(Vector3d::ZERO);
+    }
+    m_settings->set_all_to_gui(this,"rot");
+    m_settings->set_all_to_gui(this,"translate");
+    m_settings->set_all_to_gui(this,"scale");
 }
 
 void MainWindow::printerConnection(int state)
@@ -417,6 +430,7 @@ void MainWindow::openFile(const QString &path)
     }
     else
         m_model->Read(&file);
+    m_render->update();
 }
 
 const QModelIndexList *MainWindow::getSelectedShapes() const
@@ -458,6 +472,11 @@ void MainWindow::handleButtonClick()
         m_progress->stop();
     } else if(name == "m_load_stl"){
         on_actionOpen_triggered();
+    } else if(name == "m_save_stl"){
+        QString fileName = QFileDialog::getSaveFileName(this,tr("Save STL"),
+                                                        m_settings->STLPath,
+                                                        tr("STL (*.stl);;All Files (*)"));
+        m_model->SaveStl(new QFile(fileName));
     } else if(name == "g_load_gcode"){
         QString fileName = QFileDialog::getOpenFileName(this,tr("Open GCode"),
                                                         m_settings->GCodePath,
@@ -486,10 +505,12 @@ void MainWindow::handleButtonClick()
         }
     } else if(name == "copy_extruder"){
         uint newEx = m_settings->CopyExtruder(prefs_dialog->getSelectedExtruder());
+        tempsPanel->addExtruder(newEx);
         prefs_dialog->selectExtruder(newEx);
     } else if(name == "remove_extruder"){
         int index = prefs_dialog->removeExtruder();
         m_settings->RemoveExtruder(index);
+        tempsPanel->removeDevice(Settings::numbered("Extruder",index));
         extruderSelected(index);
     } else if(name == "m_autoarrange"){
         m_model->AutoArrange(nullptr);
@@ -616,7 +637,38 @@ void MainWindow::settingsChanged(const QString &name)
     }
     if (name.startsWith("Extruder")){
     }
-//    cerr << name.toStdString() << " settings changed "<<  endl;
+    cerr << name.toStdString() << " settings changed "<<  endl;
+    if (name.startsWith("rot")) {
+        const QModelIndexList *selected = getSelectedShapes();
+        if (selected->size()==1) {
+            Shape *shape = m_model->objectList.findShape(selected->first().row());
+            if (shape) {
+                Vector3d rot = m_settings->getRotation();
+                shape->RotateTo(rot.x()*M_PI/180., rot.y()*M_PI/180.,
+                                rot.z()*M_PI/180.);
+                m_model->ModelChanged();
+            }
+        }
+    } else if (name.startsWith("translate")) {
+        const QModelIndexList *selected = getSelectedShapes();
+        if (selected->size()==1) {
+            Shape *shape = m_model->objectList.findShape(selected->first().row());
+            if (shape) {
+                shape->moveTo(m_settings->getTranslation());
+                m_model->ModelChanged();
+            }
+        }
+        cerr << m_settings->getTranslation() <<  endl;
+    } else if (name.startsWith("scale")) {
+        const QModelIndexList *selected = getSelectedShapes();
+        if (selected->size()==1) {
+            Shape *shape = m_model->objectList.findShape(selected->first().row());
+            if (shape) {
+                shape->setScale(m_settings->getScaleValues());
+                m_model->ModelChanged();
+            }
+        }
+    }
     m_model->ClearPreview();
     m_settings->setMaxHeight(this,
                              std::max(m_model->gcode->Max.z(), m_model->Max.z()));
@@ -652,13 +704,16 @@ void MainWindow::generateGCode()
 void MainWindow::on_actionSettings_triggered()
 {
     prefs_dialog->open();
+    prefs_dialog->raise();
+    prefs_dialog->activateWindow();
 }
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this,tr("Open Model"),"",
-                                                    tr("STL (*.stl);;AMF (*.amf);;All Files (*)"));
-    openFile(fileName);
+    QStringList fileNames = QFileDialog::getOpenFileNames(this,tr("Open Model"),"",
+                                                          tr("STL (*.stl);;AMF (*.amf);;All Files (*)"));
+    for (QString file : fileNames)
+        openFile(file);
 }
 
 
@@ -680,6 +735,11 @@ TemperaturePanel::TemperaturePanel(QWidget *parent)
 
 TemperaturePanel::~TemperaturePanel()
 {
+}
+
+QWidget *TemperaturePanel::addExtruder(const uint index){
+    return addDevice(Settings::numbered("Extruder",index),
+                     "Extruder "+QString::number(index+1));
 }
 
 QWidget *TemperaturePanel::addDevice(const QString &name, const QString &label)

@@ -70,8 +70,8 @@ class Settings : public QSettings {
   QVariant groupedValue(const QString &name, const QVariant &deflt = QVariant());
 
   int      get_integer (const QString &name);
-  double   get_double  (const QString &name);
-  bool     get_boolean (const QString &name);
+  double   get_double  (const QString &name, double deflt = 0.);
+  bool     get_boolean (const QString &name, bool deflt = false);
   QString  get_string  (const QString &name);
   Vector4f get_Vector4f  (const QString &name);
   vector<float> get_array(const QString &name);
@@ -94,6 +94,13 @@ class Settings : public QSettings {
   vmml::vec3d getPrintVolume();
   vmml::vec3d getPrintMargin();
 
+  Vector3d getRotation();
+  Vector3d getTranslation();
+  Vector4d getScaleValues();
+
+  void setRotation(const Vector3d &rot);
+  void setTranslation(const Vector3d &trans);
+  void setScaleValues(const Vector4d &scale);
 
   static double RoundedLinewidthCorrection(double extr_width,
                        double layerheight);
@@ -163,9 +170,9 @@ public:
 
 
   void merge (QSettings &settings);
-  bool mergeGlibKeyfile (const QString keyfile);
-  bool load_from_file (QString filename);
-  bool load_from_data (QString data);
+  bool mergeGlibKeyfile (const QString &keyfile);
+  bool load_from_file (const QString &filename);
+  bool load_from_data (const QString &data);
 
 //  void load_settings (QString filename);
 //  void load_settings_as (const QString onlygroup = "",

@@ -93,19 +93,24 @@ public:
     virtual void CalcBBox();
         // Rotation for manual rotate and used by OptimizeRotation:
     virtual void Rotate(const Vector3d & axis, const double &angle);
+    virtual void RotateTo(double xangle, double yangle, double zangle);
         void Twist(double angle);
 
-        virtual void move(Vector3d delta){ transform3D.move(delta); }
+        virtual void move(const Vector3d &delta){ transform3D.move(delta); }
+        virtual void moveTo(const Vector3d &translation);
 
         void Scale(double scale_factor, bool calcbbox = true);
         void ScaleX(double scale_factor);
         void ScaleY(double scale_factor);
         virtual void ScaleZ(double scale_factor);
+        void setScale(const Vector4d &scale);
         double getScaleFactor() { return transform3D.get_scale(); }
         double getScaleFactorX(){ return transform3D.get_scale_x(); }
         double getScaleFactorY(){ return transform3D.get_scale_y(); }
         virtual double getScaleFactorZ(){ return transform3D.get_scale_z(); }
-
+        Vector4d getScaleValues() const;
+        Vector3d getRotation() const;
+        Vector3d getTranslation() const;
 
         void FitToVolume(const Vector3d &vol);
 
@@ -146,6 +151,8 @@ public:
     void setTriangles(const vector<Triangle> &triangles_);
 
     uint size() const {return triangles.size();}
+
+    Transform3D *getTransform3D() { return &transform3D; }
 
 protected:
 

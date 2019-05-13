@@ -204,14 +204,6 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     if (commands.size()>0) extruder = commands.back().extruder_no;
     PLine3 move3(area, extruder, lastpos, lifted_from, movespeed, 0);
     // get recursive ...
-//    vector<Command> movecommands;
-//    command_count += move3.getCommands(lastpos, movecommands,
-//                       minspeed, movespeed,
-//                       minZspeed, maxZspeed,
-//                       maxAOspeed, useTCommand);
-//    commands.reserve(commands.size() + movecommands.size());
-//    for (Command &command : movecommands)
-//        commands.push_back(command);
     command_count += move3.getCommands(lastpos, commands,
                                        minspeed, movespeed,
                                        minZspeed, maxZspeed,

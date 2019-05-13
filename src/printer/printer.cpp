@@ -172,7 +172,7 @@ bool Printer::Reset( void ) {
   if ( ! serialPort->isOpen() )
     return false;
   bool ret = serialPort->setDataTerminalReady(true);
-  QThread::msleep(200);
+  QThread::msleep(100);
   ret &= serialPort->setDataTerminalReady(false);
 
   if ( ret && was_printing ) {
@@ -240,6 +240,8 @@ bool Printer::StartPrinting(QTextDocument *document,
     else return false;
     is_printing = true;
     emit printing_changed();
+
+    commandBuffer.clear();
 
     lineno_to_print = withChecksums ? startLine : -1;
     long lineno = lineno_to_print;
@@ -474,12 +476,13 @@ void Printer::serialReady()
         ok_received = false;
         if (serialPort->write(last) == long(last.length())){
             Command command(last.toStdString(), &currentPos);
-            cerr << "COMMAND: " << command.info();
-//            if (is_in_relative_mode)
-//                currentPos += *command.where;
-//            else
-//                currentPos = *command.where;
-            cerr << "-> pos " << currentPos << endl;
+//            cerr << "COMMAND: " << command.info();
+            if (command.Code == RAPIDMOTION || command.Code == COORDINATEDMOTION)
+                if (is_in_relative_mode)
+                    currentPos += *command.where;
+                else
+                    currentPos = *command.where;
+//            cerr << " -> pos " << currentPos << endl;
             if (command.Code == RELATIVEPOSITIONING)
                 is_in_relative_mode = true;
             else if (command.Code == ABSOLUTEPOSITIONING)
