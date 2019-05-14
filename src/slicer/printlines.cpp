@@ -262,6 +262,9 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
 
   if (abs(travel_length) < 0.00001) // extrusion on halt
     travel_speed = maxAOspeed;
+  else {
+      travel_speed = min(movespeed, travel_speed);
+  }
 
   Command command;
   if (arc)
