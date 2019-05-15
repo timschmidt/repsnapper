@@ -20,13 +20,13 @@
 #pragma once
 
 /* #include <glib/gi18n.h> */
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
 #include "../stdafx.h"
 #include "clipping.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // user selectable have to be first
 enum InfillType {ParallelInfill, SmallZigzagInfill, HexInfill, PolyInfill, HilbertInfill,

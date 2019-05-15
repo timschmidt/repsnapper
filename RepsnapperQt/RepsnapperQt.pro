@@ -115,6 +115,9 @@ INCLUDEPATH += ../
 INCLUDEPATH += ../libraries/vmmlib/include/
 INCLUDEPATH += ../libraries/
 
+QMAKE_CFLAGS += -fopenmp
+QMAKE_CXXFLAGS += -fopenmp
+LIBS += -fopenmp
 
 CONFIG += link_pkgconfig
 

@@ -32,10 +32,6 @@
 
 #include <QDir>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include "stdafx.h"
 #include "model.h"
 #include "settings.h"
@@ -43,6 +39,10 @@
 #include "slicer/layer.h"
 #include "slicer/infill.h"
 #include "slicer/clipping.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 
 void Model::MakeRaft(GCodeState &state, double &z)
@@ -415,24 +415,27 @@ void Model::Slice()
   bool cont = true;
 
 #ifdef _OPENMP
-  #pragma omp parallel for schedule(dynamic)
+  omp_lock_t progress_lock;
+  omp_init_lock(&progress_lock);
+#pragma omp parallel for schedule(dynamic)
 #endif
   for (nlayer = 0; nlayer < num_layers; nlayer++) {
-    double z = minZ + thickness * nlayer;
-    if (nlayer%progress_steps==0) {
+      double z = minZ + thickness * nlayer;
+      if (nlayer%progress_steps==0) {
 #ifdef _OPENMP
-    #pragma omp critical(updateProgress)
-    {
-        cont = (m_progress->update(z));
-        #pragma omp flush (cont)
-    }
+          omp_set_lock(&progress_lock);
+#pragma omp critical(updateProgress)
+          {
+              cont = (m_progress->update(z));
+#pragma omp flush (cont)
+          }
+          omp_unset_lock(&progress_lock);
 #else
-        QCoreApplication::processEvents();
         cont = (m_progress->update(z));
 #endif
     }
 #ifdef _OPENMP
-    #pragma omp flush (cont)
+#pragma omp flush (cont)
     if (!cont) continue;
 #else
     if (!cont) break;
