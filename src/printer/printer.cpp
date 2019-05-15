@@ -127,9 +127,10 @@ bool Printer::Connect( QString device, int baudrate ) {
         if (ok){
             UpdateTemperatureMonitor();
         } else
-            cerr << "Error setting baudrate to "<<baudrate << endl;
+            cerr << "Error setting baudrate to "<< baudrate << endl;
     } else {
-        qDebug() << "Error opening port to "<< device << endl;
+        qDebug() << "Error opening port to "<< device << " error: " << serialPort->errorString() ;
+        main->err_log(serialPort->errorString());
     }
     if(ok) {
         connect(serialPort,SIGNAL(readyRead()),this,SLOT(serialReady()));
@@ -543,6 +544,10 @@ bool Printer::Idle( void ) {
         if (fan_speed != newfanspeed){
             fan_speed = newfanspeed;
             SetFan(newfanspeed);
+        }
+        if (!commandBuffer.isEmpty()){
+            ok_received = true;
+            emit serialPort->readyRead();
         }
     }
 
