@@ -89,7 +89,6 @@ class Settings : public QSettings {
   void set_array  (const QString &name, const vector<float> &values, bool overwrite=true);
   void set_ranges(const QString &name, const vector<float> &values);
   void set_all_to_gui (QWidget *widget, const string filter="");
-  void set_windowsize_from_gui(QWidget *window);
 
   vmml::vec3d getPrintVolume();
   vmml::vec3d getPrintMargin();

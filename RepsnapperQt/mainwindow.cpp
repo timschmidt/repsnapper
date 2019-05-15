@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui_main(new Ui::MainWindow),
     objListModel(this)
 {
+    QCoreApplication::setOrganizationName("Repsnapper");
     QCoreApplication::setApplicationName("Repsnapper");
 
 
@@ -65,7 +66,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connectButtons(prefs_dialog);
 
     m_settings = new Settings();
-    m_settings->set_all_to_gui(this,"Window");
+    restoreGeometry(m_settings->value("Misc/MainwindowGeom",
+                                      QByteArray()).toByteArray());
+    restoreState(m_settings->value("Misc/MainwindowState",
+                                   QByteArray()).toByteArray());
+    ui_main->Mainsplitter->restoreState(m_settings->value("Misc/Mainsplitter",
+                                                          QByteArray()).toByteArray());
     m_settings->set_all_to_gui(this);
     m_settings->set_all_to_gui(prefs_dialog);
     m_settings->connect_to_gui(this);
@@ -118,7 +124,9 @@ const std::string fromQString(QString qstring){
 
 MainWindow::~MainWindow()
 {
-    m_settings->set_windowsize_from_gui(this);
+    m_settings->setValue("Misc/MainwindowGeom", saveGeometry());
+    m_settings->setValue("Misc/MainwindowState", saveState());
+    m_settings->setValue("Misc/Mainsplitter", ui_main->Mainsplitter->saveState());
     delete m_model;
     delete m_progress;
     delete m_printer;

@@ -32,6 +32,7 @@
 #include <QPlainTextEdit>
 #include <QSerialPortInfo>
 #include <QRadioButton>
+#include <QSplitter>
 
 #include <src/ui/prefs_dlg.h>
 
@@ -542,26 +543,7 @@ void Settings::set_all_to_gui (QWidget *parent_widget, const string filter)
           set_to_gui(parent_widget, widget_name);
       }
   }
-  if (filter == "Window") {
-    beginGroup("Misc");
-    int w = value("WindowWidth").toInt();
-    int h = value("WindowHeight").toInt();
-    if (parent_widget && w > 0 && h > 0) parent_widget->resize(w,h);
-    int x = value("WindowPosX").toInt();
-    int y = value("WindowPosY").toInt();
-    if (parent_widget && x > 0 && y > 0) parent_widget->move(x,y);
-    endGroup();
-  }
   inhibit_callback = false;
-}
-
-void Settings::set_windowsize_from_gui(QWidget *window){
-    beginGroup("Misc");
-    setValue("WindowWidth", window->width());
-    setValue("WindowHeight", window->height());
-    setValue("WindowPosX", window->pos().x());
-    setValue("WindowPosY", window->pos().y());
-    endGroup();
 }
 
 Vector3d Settings::getRotation()

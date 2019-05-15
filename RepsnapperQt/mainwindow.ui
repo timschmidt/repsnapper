@@ -41,7 +41,7 @@
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QSplitter" name="main_splitter">
+     <widget class="QSplitter" name="Mainsplitter">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
         <horstretch>0</horstretch>
@@ -50,6 +50,9 @@
       </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="handleWidth">
+       <number>5</number>
       </property>
       <widget class="QWidget" name="GLhalf" native="true">
        <property name="sizePolicy">
@@ -540,6 +543,34 @@
                  </property>
                 </spacer>
                </item>
+               <item>
+                <widget class="QPushButton" name="m_platform">
+                 <property name="text">
+                  <string>On Platform</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="m_mirror">
+                 <property name="text">
+                  <string>Mirror</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="m_hollow">
+                 <property name="text">
+                  <string>Hollow</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="m_normals">
+                 <property name="text">
+                  <string>Invert</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </widget>
             </item>
@@ -595,13 +626,6 @@
                  </property>
                  <property name="maximum">
                   <double>999.000000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="2">
-                <widget class="QPushButton" name="m_hollow">
-                 <property name="text">
-                  <string>Hollow</string>
                  </property>
                 </widget>
                </item>
@@ -713,13 +737,6 @@
                  </property>
                 </widget>
                </item>
-               <item row="4" column="1">
-                <widget class="QPushButton" name="m_mirror">
-                 <property name="text">
-                  <string>Mirror</string>
-                 </property>
-                </widget>
-               </item>
                <item row="3" column="1">
                 <widget class="QDoubleSpinBox" name="scale_value">
                  <property name="decimals">
@@ -746,13 +763,6 @@
                  </property>
                 </widget>
                </item>
-               <item row="4" column="0">
-                <widget class="QPushButton" name="m_platform">
-                 <property name="text">
-                  <string>On Platform</string>
-                 </property>
-                </widget>
-               </item>
                <item row="3" column="0">
                 <widget class="QLabel" name="label_4">
                  <property name="text">
@@ -764,13 +774,6 @@
                 <widget class="QLabel" name="label_6">
                  <property name="text">
                   <string>Y</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="3">
-                <widget class="QPushButton" name="m_normals">
-                 <property name="text">
-                  <string>Invert</string>
                  </property>
                 </widget>
                </item>
@@ -2044,10 +2047,6 @@ M104 S0.0        ; heater off
   <tabstop>scale_x</tabstop>
   <tabstop>scale_y</tabstop>
   <tabstop>scale_z</tabstop>
-  <tabstop>m_platform</tabstop>
-  <tabstop>m_mirror</tabstop>
-  <tabstop>m_hollow</tabstop>
-  <tabstop>m_normals</tabstop>
   <tabstop>Display_DisplayLayer</tabstop>
   <tabstop>Display_DisplayInfill</tabstop>
   <tabstop>Display_DrawRulers</tabstop>
@@ -2131,12 +2130,12 @@ M104 S0.0        ; heater off
    <slot>click()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>778</x>
-     <y>545</y>
+     <x>487</x>
+     <y>521</y>
     </hint>
     <hint type="destinationlabel">
-     <x>873</x>
-     <y>545</y>
+     <x>801</x>
+     <y>521</y>
     </hint>
    </hints>
   </connection>
