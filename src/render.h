@@ -64,7 +64,7 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
   void CenterView();
 
   guint find_object_at(gdouble x, gdouble y);
-  void mouse_ray(int x, int y, Vector3d rayP[]);
+  Vector3d *mouse_ray(int x, int y);
   Vector3d mouse_on_plane(int x, int y, double plane_z=0);
 
   GLint viewport[4];

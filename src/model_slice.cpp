@@ -242,10 +242,10 @@ void Model::MakeRaft(GCodeState &state, double &z)
 // this is of not much use, too fast
 void Model::CleanupLayers()
 {
-  int count = (int)layers.size();
+  int count = int(layers.size());
   if (count == 0) return;
   if(!m_progress->restart (_("Cleanup"), count)) return;
-  int progress_steps=max(1,(int)(count/100));
+  int progress_steps=max(1, int(count/100));
   bool cont = true;
 
 #ifdef _OPENMP
@@ -281,21 +281,21 @@ bool layersort(const Layer * l1, const Layer * l2){
 void Model::Slice()
 {
   vector<Shape*> shapes;
-  vector<Matrix4d> transforms;
+//  vector<Matrix4d> transforms;
 
   if (settings->get_boolean("Slicing/SelectedOnly"))
-    objectList.get_selected_shapes(main->getSelectedShapes(), shapes, transforms);
+      shapes = objectList.get_selected_shapes(main->getSelectedIndexes());
   else
-    objectList.get_all_shapes(shapes,transforms);
+      shapes = objectList.get_all_shapes();
 
   if (shapes.size() == 0) return;
 
-  assert(shapes.size() == transforms.size());
+//  assert(shapes.size() == transforms.size());
 
   CalcBoundingBoxAndCenter(settings->get_boolean("Slicing/SelectedOnly"));
 
-  for (uint i = 0; i<transforms.size(); i++)
-    transforms[i] = settings->getBasicTransformation(transforms[i]);
+//  for (uint i = 0; i<transforms.size(); i++)
+//    transforms[i] = settings->getBasicTransformation(transforms[i]);
 
   int LayerNr = 0;
   bool varSlicing = settings->get_boolean("Slicing/Varslicing");
@@ -329,7 +329,7 @@ void Model::Slice()
     lastlayer = layers[0];
     layers[0]->setZ(0); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
-      layers[0]->addShape(transforms[nshape], *shapes[nshape],  0, max_gradient, -1);
+      layers[0]->addShape(Matrix4d::IDENTITY, *shapes[nshape],  0, max_gradient, -1);
     }
     return;
   }
@@ -362,7 +362,7 @@ void Model::Slice()
       layer->setSkins(1);
       LayerNr = 1;
     }
-    new_polys = layer->addShape(transforms[currentshape], *shapes[currentshape],
+    new_polys = layer->addShape(Matrix4d::IDENTITY, *shapes[currentshape],
                     shape_z, max_gradient, supportangle);
     // cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape
     //      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
@@ -440,7 +440,7 @@ void Model::Slice()
     Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1);
     layer->setZ(z); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
-      layer->addShape(transforms[nshape], *shapes[nshape],
+      layer->addShape(Matrix4d::IDENTITY, *shapes[nshape],
               z, max_gradient, supportangle);
     }
     layers[nlayer] = layer;
@@ -730,7 +730,6 @@ void Model::MakeShells()
     omp_set_lock(&progress_lock);
 #endif
     cont = (m_progress->update(i));
-    QCoreApplication::processEvents();
 #ifdef _OPENMP
     omp_unset_lock(&progress_lock);
 #endif
@@ -769,7 +768,6 @@ void Model::CalcInfill()
     omp_set_lock(&progress_lock);
 #endif
     cont = (m_progress->update(i));
-    QCoreApplication::processEvents();
 #ifdef _OPENMP
     omp_unset_lock(&progress_lock);
 #endif
@@ -867,7 +865,6 @@ void Model::ConvertToGCode()
   Vector3d start = state.LastPosition();
   for (uint p=0; p<count; p++) {
     cont = (m_progress->update(p)) ;
-    QCoreApplication::processEvents();
     if (!cont) break;
     // cerr << "GCode layer " << (p+1) << " of " << count
     // 	 << " offset " << printOffsetZ

@@ -45,38 +45,38 @@ size_t ObjectsList::addShape(ListObject *parent, Shape *shape, QString location)
     return parent->size();
 }
 
-void ObjectsList::DeleteSelected(const QModelIndex *index)
+void ObjectsList::DeleteRow(const int index)
 {
-    uint i = 0;
-    for (ListObject *o : objects) {
-        for (uint s = 0; s < o->shapes.size(); s++) {
-            if (i == index->row())
-                o->deleteShape(s);
+    int i = 0;
+    int odelete = -1;
+    for (uint o=0; o < objects.size(); o++) {
+        for (uint s = 0; s < objects[o]->shapes.size(); s++) {
+            if (i == index) {
+                objects[o]->deleteShape(s);
+                if (objects[o]->shapes.size() == 0){
+                    odelete = o;
+                }
+                break;
+            }
             i++;
+        }
+        if (odelete >= 0) {
+            objects.erase(objects.begin() + odelete);
+            return;
         }
     }
 }
 
-void ObjectsList::get_all_shapes(vector<Shape *> &allshapes) const
+vector<Shape *> ObjectsList::get_all_shapes() const
 {
-    allshapes.clear();
+    vector<Shape *> allshapes;
     for (ListObject *o : objects) {
       allshapes.insert(allshapes.end(), o->shapes.begin(), o->shapes.end());
     }
+    return allshapes;
 }
 
-void ObjectsList::get_all_shapes(vector<Shape *> &allshapes, vector<Matrix4d> &transforms) const
-{
-    allshapes.clear();
-    transforms.clear();
-    for (ListObject *o : objects) {
-        Matrix4d otrans = transform3D.transform * o->transform3D.transform;
-        allshapes.insert(allshapes.end(), o->shapes.begin(), o->shapes.end());
-        for (uint s = 0; s < o->shapes.size(); s++)
-            transforms.push_back(otrans);
-    }
-}
-
+/* // makes no sense in non-tree config
 void ObjectsList::get_selected_objects(const QModelIndexList *indexes,
                                        vector<ListObject *> &selobjects) const
 {
@@ -90,6 +90,7 @@ void ObjectsList::get_selected_objects(const QModelIndexList *indexes,
        selobjects = objects;
     }
 }
+*/
 
 Shape *ObjectsList::findShape(uint index) const
 {
@@ -104,25 +105,18 @@ Shape *ObjectsList::findShape(uint index) const
     return nullptr;
 }
 
-void ObjectsList::get_selected_shapes(const QModelIndexList *indexes,
-                                      vector<Shape *> &shapes,
-                                      vector<Matrix4d> &transforms) const
+vector<Shape *> ObjectsList::get_selected_shapes(const QModelIndexList *indexes) const
 {
+    vector<Shape*> allshapes = get_all_shapes();
+    vector<Shape*> shapes;
     if (indexes){
-        vector<Shape*> allshapes;
-        vector<Matrix4d> alltransforms;
-        get_all_shapes(allshapes, alltransforms);
-        shapes.clear();
-        transforms.clear();
-
         for (QModelIndex index : *indexes){
             uint i = uint(index.row());
-//            cerr << "sel "<< i << endl;
             shapes.push_back(allshapes[i]);
-            transforms.push_back(alltransforms[i]);
         }
+        return shapes;
     } else {
-        get_all_shapes(shapes, transforms);
+        return get_all_shapes();
     }
 }
 

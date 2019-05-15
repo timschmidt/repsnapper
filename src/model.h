@@ -141,7 +141,6 @@ public:
         Vector3d GetViewCenter();
         bool AutoArrange(const QModelIndexList *selected);
         Vector3d FindEmptyLocation(const vector<Shape*> &shapes,
-                                   const vector<Matrix4d> &transforms,
                                    const Shape *shape);
         bool FindEmptyLocation(Vector3d &result, const Shape *stl);
 
@@ -181,7 +180,8 @@ public:
 
         Settings * settings;
 
-        void rotate_selection(QModelIndexList * selection, const Vector4d rotate);
+        void rotate_selection(QModelIndexList * selection, const Vector3d axis,
+                              double angle);
         void move_selection(QModelIndexList * selection, const Vector3d move);
         void AutoRotate(const QModelIndexList *selected);
 

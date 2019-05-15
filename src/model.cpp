@@ -225,9 +225,7 @@ void Model::ReadStl(QFile *file)
 
 void Model::SaveStl(QFile *file)
 {
-  vector<Shape*> shapes;
-  vector<Matrix4d> transforms;
-  objectList.get_all_shapes(shapes,transforms);
+  vector<Shape*> shapes = objectList.get_all_shapes();
 
   if(shapes.size() == 1) {
     shapes[0]->saveBinarySTL(QFileInfo(*file).absoluteFilePath());
@@ -371,29 +369,24 @@ static bool ClosestToOrigin (Vector3d a, Vector3d b)
 bool Model::AutoArrange(const QModelIndexList *selected)
 {
   // all shapes
-  vector<Shape*>   allshapes;
-  vector<Matrix4d> transforms;
-  objectList.get_all_shapes(allshapes, transforms);
+  vector<Shape*>   allshapes = objectList.get_all_shapes();
 
   // selected shapes
-  vector<Shape*>   selshapes;
-  vector<Matrix4d> seltransforms;
-  objectList.get_selected_shapes(selected, selshapes, seltransforms);
+  vector<Shape*>   selshapes = selected ?
+              objectList.get_selected_shapes(selected) : allshapes;
 
   // get unselected shapes
   vector<Shape*>   unselshapes;
-  vector<Matrix4d> unseltransforms;
 
   for(uint s=0; s < allshapes.size(); s++) {
-    bool issel = false;
-    for(uint ss=0; ss < selshapes.size(); ss++)
-      if (selshapes[ss] == allshapes[s]) {
-    issel = true; break;
+      bool issel = false;
+      for(uint ss=0; ss < selshapes.size(); ss++)
+          if (selshapes[ss] == allshapes[s]) {
+              issel = true; break;
+          }
+      if (!issel) {
+          unselshapes.    push_back(allshapes[s]);
       }
-    if (!issel) {
-      unselshapes.    push_back(allshapes[s]);
-      unseltransforms.push_back(transforms[s]);
-    }
   }
 
   // find place for unselected shapes
@@ -404,13 +397,13 @@ bool Model::AutoArrange(const QModelIndexList *selected)
   srandom(QDateTime::currentMSecsSinceEpoch());
   random_shuffle(rand_seq.begin(), rand_seq.end()); // shuffle
 
-  for(int s=0; s < num; s++) {
+  for(int s = 0; s < num; s++) {
     uint index = rand_seq[s]-1;
     // use selshapes as vector to fill up
-    Vector3d trans = FindEmptyLocation(selshapes, seltransforms, unselshapes[index]);
+    Vector3d trans = FindEmptyLocation(selshapes,
+                                       unselshapes[index]);
     selshapes.push_back(unselshapes[index]);
-    seltransforms.push_back(unseltransforms[index]); // basic transform, not shape
-    selshapes.back()->transform3D.move(trans);
+    selshapes.back()->transform3D.moveTo(trans);
     CalcBoundingBoxAndCenter();
   }
   ModelChanged();
@@ -418,17 +411,15 @@ bool Model::AutoArrange(const QModelIndexList *selected)
 }
 
 Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
-                  const vector<Matrix4d> &transforms,
-                  const Shape *shape)
+                                  const Shape *shape)
 {
   // Get all object positions
   std::vector<Vector3d> maxpos;
   std::vector<Vector3d> minpos;
   for(uint s=0; s<shapes.size(); s++) {
     Vector3d p;
-    Matrix4d strans = transforms[s];
-    Vector3d min = strans * shapes[s]->Min;
-    Vector3d max = strans * shapes[s]->Max;
+    Vector3d min = shapes[s]->Min;
+    Vector3d max = shapes[s]->Max;
     minpos.push_back(Vector3d(min.x(), min.y(), 0));
     maxpos.push_back(Vector3d(max.x(), max.y(), 0));
   }
@@ -511,10 +502,8 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
   std::vector<Vector3d> maxpos;
   std::vector<Vector3d> minpos;
 
-  vector<Shape*>   allshapes;
-  vector<Matrix4d> transforms;
-  objectList.get_all_shapes(allshapes, transforms);
-  result = FindEmptyLocation(allshapes, transforms, shape);
+  vector<Shape*> allshapes = objectList.get_all_shapes();
+  result = FindEmptyLocation(allshapes, shape);
   return true;
 }
 
@@ -638,22 +627,19 @@ void Model::ScaleObjectZ(Shape *shape, ListObject *object, double scale)
   ModelChanged();
 }
 
-void Model::rotate_selection(QModelIndexList * selected, const Vector4d rotate)
+void Model::rotate_selection(QModelIndexList * selected, const Vector3d axis,
+                             double angle)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selected, selshapes, seltransforms);
+    vector<Shape*> selshapes = objectList.get_selected_shapes(selected);
     for (Shape * shape: selshapes) {
-        shape->Rotate(Vector3d(rotate.x(), rotate.y(), rotate.z()), rotate[3]);
+        shape->Rotate(axis, angle);
     }
     ModelChanged();
 }
 
 void Model::move_selection(QModelIndexList *selected, const Vector3d move)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selected, selshapes, seltransforms);
+    vector<Shape*> selshapes = objectList.get_selected_shapes(selected);
     for (Shape * shape: selshapes){
         shape->move(move);
     }
@@ -686,18 +672,14 @@ void Model::OptimizeRotation(Shape *shape, ListObject *object)
 
 void Model::InvertNormals(const QModelIndexList * selection)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes)
         shape->invertNormals();
     ModelChanged();
 }
 void Model::Mirror(const QModelIndexList * selection)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes)
         shape->mirror();
     ModelChanged();
@@ -705,9 +687,7 @@ void Model::Mirror(const QModelIndexList * selection)
 
 void Model::Hollow(const QModelIndexList *selection)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes) {
         shape->makeHollow(3);
         shape->PlaceOnPlatform();
@@ -717,9 +697,7 @@ void Model::Hollow(const QModelIndexList *selection)
 
 void Model::Duplicate(const QModelIndexList *selection)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes) {
         Shape * newshape;
         FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
@@ -737,9 +715,7 @@ void Model::Duplicate(const QModelIndexList *selection)
 
 void Model::Split(const QModelIndexList *selection)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes) {
         ListObject* parent = objectList.getParent(shape);
         if (parent)
@@ -752,9 +728,7 @@ void Model::Split(const QModelIndexList *selection)
 
 void Model::Merge(const QModelIndexList *selection)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     if (selshapes.size()>0) {
         ListObject* parent = objectList.getParent(selshapes[0]);
         if (parent)
@@ -765,9 +739,7 @@ void Model::Merge(const QModelIndexList *selection)
 
 void Model::DivideAtZ(const QModelIndexList *selection)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selection, selshapes, seltransforms);
+    vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes) {
         ListObject* parent = objectList.getParent(shape);
         if (parent)
@@ -778,9 +750,7 @@ void Model::DivideAtZ(const QModelIndexList *selection)
 
 void Model::PlaceOnPlatform(const QModelIndexList *selected)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selected, selshapes, seltransforms);
+    vector<Shape*>   selshapes = objectList.get_selected_shapes(selected);
     for (Shape * shape: selshapes){
         shape->PlaceOnPlatform();
     }
@@ -794,9 +764,7 @@ void Model::PlaceOnPlatform(const QModelIndexList *selected)
 
 void Model::AutoRotate(const QModelIndexList *selected)
 {
-    vector<Shape*>   selshapes;
-    vector<Matrix4d> seltransforms;
-    objectList.get_selected_shapes(selected, selshapes, seltransforms);
+    vector<Shape*>   selshapes = objectList.get_selected_shapes(selected);
     for (Shape * shape: selshapes){
         OptimizeRotation(shape,nullptr);
     }
@@ -808,8 +776,12 @@ void Model::AutoRotate(const QModelIndexList *selected)
 
 void Model::DeleteSelectedObjects(const QModelIndexList *selected)
 {
+    vector<int> ind;
     for (QModelIndex i : *selected)
-        objectList.DeleteSelected(&i);
+        ind.push_back(i.row());
+    std::sort(ind.rbegin(), ind.rend());
+    for (int i : ind)
+        objectList.DeleteRow(i);
     ClearGCode();
     ClearLayers();
     ModelChanged(true);
@@ -827,17 +799,14 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
   Vector3d newMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
   Vector3d newMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
 
-  vector<Shape*> shapes;
-  vector<Matrix4d> transforms;
-  if (selected_only)
-    objectList.get_selected_shapes(main->getSelectedShapes(), shapes, transforms);
-  else
-    objectList.get_all_shapes(shapes, transforms);
+  vector<Shape*> shapes = selected_only
+          ? objectList.get_selected_shapes(main->getSelectedIndexes())
+          : objectList.get_all_shapes();
 
   for (uint s = 0 ; s < shapes.size(); s++) {
     shapes[s]->CalcBBox();
-    Vector3d stlMin = transforms[s] * shapes[s]->Min;
-    Vector3d stlMax = transforms[s] * shapes[s]->Max;
+    Vector3d stlMin = shapes[s]->Min;
+    Vector3d stlMax = shapes[s]->Max;
     for (uint k = 0; k < 3; k++) {
       newMin[k] = MIN(stlMin[k], newMin[k]);
       newMax[k] = MAX(stlMax[k], newMax[k]);
@@ -1089,9 +1058,10 @@ int Model::draw (const QModelIndexList *selected)
     //settings->SelectExtruder(prevext);
       }
       glDisable(GL_DEPTH_TEST);
-      m_previewGCode->drawCommands(settings, 1, m_previewGCode->commands.size(), true, 2,
-                  settings->get_boolean("Display/DisplayGCodeArrows"),
-                  settings->get_boolean("Display/DisplayGCodeBorders"));
+      m_previewGCode->drawCommands(
+              settings, 1, m_previewGCode->commands.size(), true, 2,
+              settings->get_boolean("Display/DisplayGCodeArrows"),
+              settings->get_boolean("Display/DisplayGCodeBorders"));
     }
   }
   return drawnlayer;
@@ -1202,22 +1172,21 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
     && m_previewLayer->thickness == thickness) return m_previewLayer;
   }
   vector<Shape*> shapes;
-  vector<Matrix4d> transforms;
-
   if (settings->value("Slicing/SelectedOnly").toBool())
-    objectList.get_selected_shapes(main->getSelectedShapes(), shapes, transforms);
+      shapes = objectList.get_selected_shapes(main->getSelectedIndexes());
   else
-    objectList.get_all_shapes(shapes, transforms);
+      shapes = objectList.get_all_shapes();
 
   double max_grad = 0;
   double supportangle = settings->value("Slicing/SupportAngle").toDouble()*M_PI/180.;
   if (!settings->value("Slicing/Support").toBool()) supportangle = -1;
 
   Layer * layer = new Layer(NULL, LayerNr, thickness,
-                settings->value("Slicing/Skins").toInt());
+                            settings->value("Slicing/Skins").toInt());
   layer->setZ(z);
   for(size_t f = 0; f < shapes.size(); f++) {
-    layer->addShape(transforms[f], *shapes[f], z, max_grad, supportangle);
+      if (shapes[f])
+          layer->addShape(Matrix4d::IDENTITY, *shapes[f], z, max_grad, supportangle);
   }
 
   // vector<Poly> polys = layer->GetPolygons();

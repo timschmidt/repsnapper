@@ -164,8 +164,7 @@ void MainWindow::updatedModel(const ObjectsList *objList)
 
     if (objList){
         cerr << objList->info() << endl;
-        vector<Shape *> shapes;
-        objList->get_all_shapes(shapes);
+        vector<Shape *> shapes = objList->get_all_shapes();
         QStringList slist;
         for (Shape * s: shapes) {
             slist << s->filename;
@@ -441,9 +440,14 @@ void MainWindow::openFile(const QString &path)
     m_render->update();
 }
 
-const QModelIndexList *MainWindow::getSelectedShapes() const
+const QModelIndexList *MainWindow::getSelectedIndexes() const
 {
     return m_render->getSelection();
+}
+
+const vector<Shape *> MainWindow::getSelectedShapes() const
+{
+    return m_model->objectList.get_selected_shapes(m_render->getSelection());
 }
 
 ViewProgress *MainWindow::getProgress() const
@@ -521,7 +525,7 @@ void MainWindow::handleButtonClick()
         tempsPanel->removeDevice(Settings::numbered("Extruder",index));
         extruderSelected(index);
     } else if(name == "m_autoarrange"){
-        m_model->AutoArrange(nullptr);
+        m_model->AutoArrange(m_render->getSelection());
     } else if(name == "p_connect"){
         if (ui_main->p_connect->isChecked()){
             int speed = m_settings->get_integer("Hardware/SerialSpeed");
@@ -647,34 +651,25 @@ void MainWindow::settingsChanged(const QString &name)
     }
     cerr << name.toStdString() << " settings changed "<<  endl;
     if (name.startsWith("rot")) {
-        const QModelIndexList *selected = getSelectedShapes();
-        if (selected->size()==1) {
-            Shape *shape = m_model->objectList.findShape(selected->first().row());
-            if (shape) {
-                Vector3d rot = m_settings->getRotation();
-                shape->RotateTo(rot.x()*M_PI/180., rot.y()*M_PI/180.,
-                                rot.z()*M_PI/180.);
-                m_model->ModelChanged();
-            }
+        vector<Shape*> selected = getSelectedShapes();
+        if (selected.size()==1) {
+            Vector3d rot = m_settings->getRotation();
+            selected[0]->RotateTo(rot.x()*M_PI/180., rot.y()*M_PI/180.,
+                                  rot.z()*M_PI/180.);
+            m_model->ModelChanged();
         }
     } else if (name.startsWith("translate")) {
-        const QModelIndexList *selected = getSelectedShapes();
-        if (selected->size()==1) {
-            Shape *shape = m_model->objectList.findShape(selected->first().row());
-            if (shape) {
-                shape->moveTo(m_settings->getTranslation());
-                m_model->ModelChanged();
-            }
+        vector<Shape*> selected = getSelectedShapes();
+        if (selected.size()==1) {
+            selected[0]->moveTo(m_settings->getTranslation());
+            m_model->ModelChanged();
         }
         cerr << m_settings->getTranslation() <<  endl;
     } else if (name.startsWith("scale")) {
-        const QModelIndexList *selected = getSelectedShapes();
-        if (selected->size()==1) {
-            Shape *shape = m_model->objectList.findShape(selected->first().row());
-            if (shape) {
-                shape->setScale(m_settings->getScaleValues());
-                m_model->ModelChanged();
-            }
+        vector<Shape*> selected = getSelectedShapes();
+        if (selected.size()==1) {
+            selected[0]->setScale(m_settings->getScaleValues());
+            m_model->ModelChanged();
         }
     }
     m_model->ClearPreview();

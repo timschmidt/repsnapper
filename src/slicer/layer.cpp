@@ -159,9 +159,9 @@ int Layer::addShape(const Matrix4d &T, const Shape &shape, double z,
   while (!polys_ok && hackedZ < z+thickness) {
     polys.clear();
     polys_ok = shape.getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
-                    polys, max_gradient,
-                    toSupportPolygons, max_supportangle,
-                    thickness);
+                                    polys, max_gradient,
+                                    toSupportPolygons, max_supportangle,
+                                    thickness);
     if (polys_ok) {
       num_polys = polys.size();
       addPolygons(polys);

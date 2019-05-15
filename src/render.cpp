@@ -162,21 +162,21 @@ void Render::keyPressEvent(QKeyEvent *event){
   switch (event->key())
     {
     case Qt::Key::Key_Up:
-      if (rotate)     get_model()->rotate_selection(&m_selection, Vector4d(1.,0.,0., tendeg));
+      if (rotate)     get_model()->rotate_selection(&m_selection, Vector3d::UNIT_X, tendeg);
       else if (moveZ) get_model()->move_selection(&m_selection, Vector3d( 0.0,  0.0, 1.0 ));
       else            get_model()->move_selection(&m_selection, Vector3d( 0.0, 1.0, 0.0 ));
       break;
     case Qt::Key::Key_Down:
-      if (rotate)     get_model()->rotate_selection(&m_selection, Vector4d(1.,0.,0., -tendeg));
+      if (rotate)     get_model()->rotate_selection(&m_selection, Vector3d::UNIT_X, -tendeg);
       else if (moveZ) get_model()->move_selection(&m_selection, Vector3d( 0.0, 0.0, -1.0 ));
       else            get_model()->move_selection(&m_selection, Vector3d( 0.0, -1.0, 0.0 ));
       break;
     case Qt::Key::Key_Left:
-      if (rotate)     get_model()->rotate_selection(&m_selection, Vector4d(0.,0.,1., tendeg));
+      if (rotate)     get_model()->rotate_selection(&m_selection, Vector3d::UNIT_Z, tendeg);
       else            get_model()->move_selection(&m_selection, Vector3d( -1.0, 0.0, 0.0 ));
       break;
     case Qt::Key::Key_Right:
-      if (rotate)     get_model()->rotate_selection(&m_selection, Vector4d(0.,0.,1., -tendeg));
+      if (rotate)     get_model()->rotate_selection(&m_selection, Vector3d::UNIT_Z, -tendeg);
       else            get_model()->move_selection(&m_selection, Vector3d( 1.0, 0.0, 0.0 ));
       break;
   default:
@@ -293,14 +293,15 @@ void printarray(double *arr,int n){
 }
 
 
-void Render::mouse_ray(int x, int y, Vector3d rayP[]) {
-   double dX, dY, dZ, dClickY;
-   dClickY = height() - y; // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
-   gluUnProject (x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
-   rayP[0] = Vector3d( dX, dY, dZ );
-   gluUnProject (x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
-   rayP[1] = Vector3d( dX, dY, dZ );
-
+Vector3d * Render::mouse_ray(int x, int y) {
+    Vector3d *rayP = new Vector3d[2];
+    double dX, dY, dZ, dClickY;
+    dClickY = height() - y; // OpenGL renders with (0,0) on bottom, mouse reports with (0,0) on top
+    gluUnProject (x, dClickY, 0.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
+    rayP[0] = Vector3d( dX, dY, dZ );
+    gluUnProject (x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
+    rayP[1] = Vector3d( dX, dY, dZ );
+    return rayP;
 //   GLfloat depth;
 //   glReadPixels(x,dClickY,1,1,GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
 //   cerr << "d "<< depth << endl;
@@ -309,8 +310,7 @@ void Render::mouse_ray(int x, int y, Vector3d rayP[]) {
 // http://www.3dkingdoms.com/selection.html
 Vector3d Render::mouse_on_plane(int x, int y, double plane_z)
 {
-  Vector3d rayP[2];
-  mouse_ray(x, y, rayP);
+  Vector3d *rayP = mouse_ray(x, y);
 
   // intersect with z=plane_z;
   if (rayP[1].z() != rayP[0].z()) {
@@ -535,8 +535,6 @@ void Render::mousePressEvent(QMouseEvent *event)
 
     mousePressed = event->button();
     if(mousePressed == Qt::LeftButton) {
-        Vector3d ray[2];
-        mouse_ray(event->pos().x(), event->pos().y(), ray);
 //        mousePickedObject = find_object_at(event->pos().x(), event->pos().y());
         // on button 1 with shift/ctrl, if there is an object, select it (for dragging)
         if (mousePressedModifiers == Qt::ShiftModifier
@@ -562,60 +560,32 @@ void Render::mouseMoveEvent(QMouseEvent *event)
 {
     bool redraw=true;
     const Vector2d dragp(event->pos().x(), event->pos().y());
-    if (mousePressed == Qt::NoButton) {
-        const Vector3d mouse_preview = mouse_on_plane(dragp.x(), dragp.y(),
-                                                      get_model()->get_preview_Z());
-//        cerr << dragp << " - " << mouse_preview << endl;
-        get_model()->setMeasuresPoint(mouse_preview);
-        setFocus();
-        repaint();
-        return;
-    }
+    const Vector3d mouse_preview = mouse_on_plane(dragp.x(), dragp.y(),
+                                                  get_model()->get_preview_Z());
+    //        cerr << dragp << " - " << mouse_preview << endl;
+    get_model()->setMeasuresPoint(mouse_preview);
+    setFocus();
 
     const Vector2d delta = dragp - m_dragStart;
     const Vector3d delta3f(delta.x()*drag_factor, -delta.y()*drag_factor, 0);
 
+    if (mousePressed == Qt::NoButton) {
+        repaint();
+        return;
+    }
+
     //    cerr << "drag " << mousePressed << endl;
     if (mousePressed == Qt::LeftButton) {
         if (mousePressedModifiers == Qt::ShiftModifier) {//move object XY
-            vector<Shape*> shapes;
-            vector<ListObject*>objects;
-//            if (!get_model()->get_selected_shapes(objects))
-//                return true;
             const Vector3d mouse_down_plat = mouse_on_plane(m_dragStart.x(), m_dragStart.y());
-            const Vector3d mousePlat  = mouse_on_plane(event->pos().x(), event->pos().y());
-            const Vector2d mouse_xy   = Vector2d(mousePlat.x(), mousePlat.y());
-            const Vector2d deltamouse = mouse_xy - Vector2d(mouse_down_plat.x(), mouse_down_plat.y());
-            const Vector3d movevec(deltamouse.x(), deltamouse.y(), 0.);
-            if (shapes.size()>0)
-                for (uint s=0; s<shapes.size(); s++) {
-                    shapes[s]->transform3D.move(movevec);
-                }
-            else
-                for (uint o=0; o<objects.size(); o++) {
-                    objects[o]->transform3D.move(movevec);
-                }
+            const Vector3d mousePlat  = mouse_on_plane(dragp.x(), dragp.y());
+            const Vector3d movevec = mousePlat - mouse_down_plat;
+            cerr << movevec << endl;
+            get_model()->move_selection(&m_selection, 2.*movevec);
             m_dragStart = dragp;
         } else if (mousePressedModifiers == Qt::ControlModifier) { // move object Z wise
             const Vector3d delta3fz(0, 0, -delta.y()*drag_factor);
-            vector<Shape*> shapes;
-            vector<ListObject*>objects;
-//            if (!m_view->get_selected_objects(objects, shapes))
-//                return true;
-            if (shapes.size()>0)
-                for (uint s=0; s<shapes.size(); s++) {
-                    Transform3D &transf = shapes[s]->transform3D;
-                    double scale = transf.transform[3][3];
-                    Vector3d movevec = delta3fz*scale;
-                    transf.move(movevec);
-                }
-            else
-                for (uint o=0; o<objects.size(); o++) {
-                    Transform3D &transf = objects[o]->transform3D;
-                    const double scale = transf.transform[3][3];
-                    const Vector3d movevec = delta3fz*scale;
-                    transf.move(movevec);
-                }
+            get_model()->move_selection(&m_selection, delta3fz);
             m_dragStart = dragp;
         } else if (mousePressedModifiers == Qt::NoModifier) { // rotate
 //            Vector3d axis(delta.y(), delta.x(), 0);
@@ -626,10 +596,7 @@ void Render::mouseMoveEvent(QMouseEvent *event)
     } else if(mousePressed == Qt::MidButton) { // move
         const double factor = 1.0 + 0.01 * (delta.y() - delta.x());
         if (mousePressedModifiers == Qt::ShiftModifier) { // scale shape
-            vector<Shape*> shapes;
-            vector<ListObject*>objects;
-//            if (!m_main->get_selected_objects(objects, shapes))
-//                return;
+            vector<Shape*> shapes = get_model()->objectList.get_selected_shapes(&m_selection);
             if (shapes.size()>0) {
                 for (uint s=0; s<shapes.size(); s++) {
                     shapes[s]->Scale(shapes[s]->getScaleFactor()/factor, false);
@@ -644,14 +611,12 @@ void Render::mouseMoveEvent(QMouseEvent *event)
     } else if(mousePressed == Qt::RightButton) { // zoom
         if (mousePressedModifiers == Qt::ShiftModifier  // scale shape
                 || mousePressedModifiers == Qt::ControlModifier) {
-            vector<Shape*> shapes;
-            vector<ListObject*>objects;
             Vector3d axis;
             if (mousePressedModifiers == Qt::ControlModifier)// rotate  z wise
                 axis = Vector3d(0,0,delta.x());
             else
                 axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
-            //m_view->rotate_selection(axis, delta.length()/100.);
+            get_model()->rotate_selection(&m_selection, axis, delta.length()/100.);
             m_dragStart = dragp;
         } else {  // move view XY  / pan
             moveArcballTrans(m_transform, delta3f);

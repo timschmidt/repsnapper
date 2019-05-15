@@ -81,7 +81,8 @@ public:
 
     void openFile(const QString &path);
 
-    const QModelIndexList * getSelectedShapes() const;
+    const QModelIndexList * getSelectedIndexes() const;
+    const vector<Shape *> getSelectedShapes() const;
 
     ViewProgress *getProgress() const;
 
