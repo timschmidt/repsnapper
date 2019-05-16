@@ -449,7 +449,7 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
     // get starting point
     if (start >= 0) {
         for (uint i = start + 1; i < commands.size(); i++){
-            if (commands[i].where) {
+            if (commands[i].where && *commands[i].where != Vector3d::ZERO) {
                 pos = *commands[i].where;
                 break;
             }

@@ -179,8 +179,7 @@ void Model::ReadSVG(QFile *file)
   FlatShape * svgshape = new FlatShape(path);
   cerr << svgshape->info() << endl;
   AddShape(nullptr, (Shape*)svgshape, path, autoplace);
-  ClearLayers();
-  emit model_changed(&objectList);
+  ModelChanged(true);
 }
 
 
@@ -203,7 +202,7 @@ vector<Shape*> Model::ReadShapes(QFile *file,
     }
   }
   cerr << shapes.size() << " shapes"<< endl;
-  emit model_changed(&objectList);
+  ModelChanged(true);
   return shapes;
 }
 
@@ -220,7 +219,7 @@ void Model::ReadStl(QFile *file)
       AddShape(listObj, s, s->filename, autoplace);
   }
   shapes.clear();
-  emit model_changed(&objectList);
+  ModelChanged(true);
 }
 
 void Model::SaveStl(QFile *file)
@@ -322,7 +321,7 @@ void Model::ReadGCode(QFile *file)
   Max = gcode->Max;
   Min = gcode->Min;
   Center = (Max + Min) / 2.0;
-  emit model_changed();
+  ModelChanged();
 //  m_signal_zoom.emit();
 }
 
@@ -344,16 +343,11 @@ void Model::translateGCode(Vector3d trans)
 
 void Model::ModelChanged(bool objectsAddedOrRemoved)
 {
-  if (m_inhibit_modelchange) return;
-  if (objectList.empty()) return;
   //printer.update_temp_poll_interval(); // necessary?
   if (!is_printing) {
     CalcBoundingBoxAndCenter();
+    ClearPreview();
     Infill::clearPatterns();
-    if ( layers.size()>0 || m_previewGCode->size()>0 || m_previewLayer ) {
-      ClearGCode();
-      ClearLayers();
-    }
     setCurrentPrintingLine(0);
     gcode->emit gcode_changed();
     emit model_changed(objectsAddedOrRemoved ? &objectList : nullptr);
@@ -541,7 +535,7 @@ int Model::SplitShape(ListObject *parent, Shape *shape, QString filename)
       QTextStream (&sf) << filename << "_" << (s+1) ;
       AddShape(parent, splitshapes[s], sf, false);
   }
-  emit model_changed(&objectList);
+  ModelChanged(true);
   return splitshapes.size();
 }
 
@@ -553,7 +547,7 @@ int Model::MergeShapes(ListObject *parent, const vector<Shape*> shapes)
     shape->addTriangles(str);
   }
   AddShape(parent, shape, "merged", true);
-  emit model_changed(&objectList);
+  ModelChanged(true);
   return 1;
 }
 
@@ -568,7 +562,7 @@ int Model::DivideShapeAtZ(ListObject *parent, Shape *shape, QString filename)
     AddShape(parent, upper, filename+_("_upper") ,false);
     AddShape(parent, lower, filename+_("_lower") ,false);
   }
-  emit model_changed(&objectList);
+  ModelChanged(true);
   return num;
 }
 
@@ -859,7 +853,7 @@ int Model::draw (const QModelIndexList *selected)
         for(int i = 0; i < selected->size(); i++) {
             selectedshapes.push_back((*selected)[i].row());
         }
-  gint index = 1; // pick/select index. matches computation in update_model()
+//  gint index = 1; // pick/select index. matches computation in update_model()
 
   Render *render = main->get_render();
 
@@ -910,8 +904,8 @@ int Model::draw (const QModelIndexList *selected)
       glMultMatrixd (object->transform3D.getTransform().array);
       for (uint j = 0; j < object->shapes.size(); j++) {
           Shape *shape = object->shapes[j];
-          glLoadName(index); // Load select/pick index
-          index++;
+//          glLoadName(index); // Load select/pick index
+//          index++;
           glPushMatrix();
           glMultMatrixd (&shape->transform3D.getTransform().array[0]);
 
@@ -1132,13 +1126,13 @@ int Model::drawLayers(float height, const Vector3d &offset, bool calconly)
       else
     {
       if (!m_previewLayer || m_previewLayer->getZ() != z) {
-        m_previewLayer = calcSingleLayer(z, LayerNr, lthickness,
-                         displayinfill, false);
+          m_previewLayer = calcSingleLayer(z, LayerNr, lthickness,
+                                           displayinfill, false);
         layer = m_previewLayer;
         Layer * previous = NULL;
-        if (LayerNr>0 && z >= lthickness)
-          previous = calcSingleLayer(z-lthickness, LayerNr-1, lthickness,
-                     false, false);
+//        if (LayerNr>0 && z >= lthickness)
+//          previous = calcSingleLayer(z-lthickness, LayerNr-1, lthickness,
+//                     false, false);
         layer->setPrevious(previous);
       }
       layer = m_previewLayer;
@@ -1167,26 +1161,29 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
                                bool calcinfill, bool for_gcode)
 {
   if (is_calculating) return NULL; // infill calculation (saved patterns) would be disturbed
+  is_calculating = true;
   if (!for_gcode) {
     if (m_previewLayer && m_previewLayer->getZ() == z
     && m_previewLayer->thickness == thickness) return m_previewLayer;
   }
   vector<Shape*> shapes;
-  if (settings->value("Slicing/SelectedOnly").toBool())
+  if (settings->get_boolean("Slicing/SelectedOnly"))
       shapes = objectList.get_selected_shapes(main->getSelectedIndexes());
   else
       shapes = objectList.get_all_shapes();
 
   double max_grad = 0;
-  double supportangle = settings->value("Slicing/SupportAngle").toDouble()*M_PI/180.;
-  if (!settings->value("Slicing/Support").toBool()) supportangle = -1;
+  double supportangle = settings->get_boolean("Slicing/Support") ?
+              supportangle = settings->get_double("Slicing/SupportAngle")*M_PI/180.
+          : -1;
 
   Layer * layer = new Layer(NULL, LayerNr, thickness,
-                            settings->value("Slicing/Skins").toInt());
+                            settings->get_integer("Slicing/Skins"));
   layer->setZ(z);
+
   for(size_t f = 0; f < shapes.size(); f++) {
       if (shapes[f])
-          layer->addShape(Matrix4d::IDENTITY, *shapes[f], z, max_grad, supportangle);
+          layer->addShape(Matrix4d::IDENTITY, *shapes[f], max_grad, supportangle);
   }
 
   // vector<Poly> polys = layer->GetPolygons();
@@ -1200,7 +1197,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   int extruder = 0;
   layer->MakeShells(*settings, extruder);
 
-  if (settings->value("Slicing/Skirt").toBool()) {
+  if (settings->get_boolean("Slicing/Skirt")) {
     if (layer->getZ() - layer->thickness <= settings->get_double("Slicing/SkirtHeight"))
       layer->MakeSkirt(settings->get_double("Slicing/SkirtDistance"),
                settings->get_boolean("Slicing/SingleSkirt") &&
@@ -1227,6 +1224,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   }
 #endif
 
+  is_calculating = false;
   return layer;
 }
 

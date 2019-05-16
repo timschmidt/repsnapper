@@ -99,7 +99,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_settings, SIGNAL(settings_changed(const QString&)),
             this, SLOT(settingsChanged(const QString&)));
 
-    cerr << m_settings->info().toStdString() << endl;
+//    cerr << m_settings->info().toStdString() << endl;
 
     m_model = new Model(this);
     m_progress = new ViewProgress(ui_main->progressBarArea,
@@ -159,9 +159,6 @@ void MainWindow::echo_log(QString s)
 
 void MainWindow::updatedModel(const ObjectsList *objList)
 {
-    m_model->CalcBoundingBoxAndCenter();
-    m_model->ClearPreview();
-
     if (objList){
         cerr << objList->info() << endl;
         vector<Shape *> shapes = objList->get_all_shapes();
@@ -170,8 +167,8 @@ void MainWindow::updatedModel(const ObjectsList *objList)
             slist << s->filename;
         }
         objListModel.setStringList(slist);
+        m_render->zoom_to_model(m_model);
     }
-
     m_settings->set_all_to_gui(this);
     m_settings->set_all_to_gui(prefs_dialog, "Hardware");
     m_settings->set_all_to_gui(prefs_dialog, "Slicing");
@@ -254,18 +251,17 @@ void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
       glPolygonOffset (1.0f, 1.0f);
       DrawGrid();
     }
-
     glPolygonOffset (-0.5f, -0.5f);
     glDisable (GL_POLYGON_OFFSET_FILL);
 
     // Draw GCode, which already incorporates any print offset
     if (!objects_only && !m_model->isCalculating()) {
       if (false && ui_main->tabGCode->focusWidget()
-              == ui_main->GCodeResult) {
+              == ui_main->GCodeResult) { // show current pos in GCode
         double z = m_model->gcode->currentCursorWhere.z();
         m_model->GlDrawGCode(z);
       }
-      else {
+      else { // draw current GCode
         m_model->gcode->currentCursorWhere = Vector3d::ZERO;
         m_model->GlDrawGCode();
       }
@@ -649,7 +645,6 @@ void MainWindow::settingsChanged(const QString &name)
     }
     if (name.startsWith("Extruder")){
     }
-    cerr << name.toStdString() << " settings changed "<<  endl;
     if (name.startsWith("rot")) {
         vector<Shape*> selected = getSelectedShapes();
         if (selected.size()==1) {
@@ -672,7 +667,10 @@ void MainWindow::settingsChanged(const QString &name)
             m_model->ModelChanged();
         }
     }
-    m_model->ClearPreview();
+    if (!name.startsWith("Display")) {
+        cerr << name.toStdString() << " settings changed "<<  endl;
+        m_model->ClearPreview();
+    }
     m_settings->setMaxHeight(this,
                              std::max(m_model->gcode->Max.z(), m_model->Max.z()));
     QString l;
@@ -713,8 +711,9 @@ void MainWindow::on_actionSettings_triggered()
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QStringList fileNames = QFileDialog::getOpenFileNames(this,tr("Open Model"),"",
-                                                          tr("STL (*.stl);;AMF (*.amf);;All Files (*)"));
+    QStringList fileNames = QFileDialog::getOpenFileNames
+            (this,tr("Open Model"), m_settings->STLPath,
+             tr("STL (*.stl);;AMF (*.amf);;All Files (*)"));
     for (QString file : fileNames)
         openFile(file);
 }

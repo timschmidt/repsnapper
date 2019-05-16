@@ -20,6 +20,7 @@
 
 #include "../model.h"
 #include "progress.h"
+#include <omp.h>
 
 //ViewProgress::ViewProgress(Progress *progress, Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
 ViewProgress::ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label) :
@@ -107,7 +108,10 @@ bool ViewProgress::update (const double value, bool take_priority)
 
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->setMaximum(m_bar_max);
-//  m_bar->setValue(value);
+#ifdef _OPENMP
+  if (!omp_in_parallel())
+#endif
+      m_bar->setValue(value);
   QString s;
   QTextStream o(&s);
   const double used = time.elapsed()/1000; // seconds
@@ -116,7 +120,7 @@ bool ViewProgress::update (const double value, bool take_priority)
   o << label << " (" << timeleft_str(left) << ") : "
     << int(value) <<"/"<< int(m_bar_max);
   m_bar->setFormat(s);
-  if (true | to_terminal) {
+  if (to_terminal) {
     int perc = (int(100.*m_bar->value()/m_bar->maximum()));
     QTextStream(stderr) << s << " -- "
                         << perc << "%              \r";

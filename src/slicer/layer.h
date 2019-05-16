@@ -156,7 +156,7 @@ public:
 
   void addPolygons(vector<Poly> &polys);
   void cleanupPolygons();
-  int addShape(const Matrix4d &T, const Shape &shape, double z,
+  int addShape(const Matrix4d &T, const Shape &shape,
            double &max_gradient, double max_supportangle);
 
   double area() const;

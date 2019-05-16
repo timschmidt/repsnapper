@@ -148,27 +148,27 @@ bool Layer::pointInPolygons(const Vector2d &p) const
 }
 
 
-int Layer::addShape(const Matrix4d &T, const Shape &shape, double z,
+int Layer::addShape(const Matrix4d &T, const Shape &shape,
             double &max_gradient, double max_supportangle)
 {
-  double hackedZ = z;
+  double hackedZ = Z;
   bool polys_ok = false;
   vector<Poly> polys;
   int num_polys=-1;
   // try to slice until polygons can be made, otherwise hack z
-  while (!polys_ok && hackedZ < z+thickness) {
+  while (!polys_ok && hackedZ < Z + thickness) {
     polys.clear();
     polys_ok = shape.getPolygonsAtZ(T, hackedZ,  // slice shape at hackedZ
                                     polys, max_gradient,
                                     toSupportPolygons, max_supportangle,
                                     thickness);
     if (polys_ok) {
-      num_polys = polys.size();
+      num_polys += polys.size();
       addPolygons(polys);
     } else {
       num_polys=-1;
       hackedZ += thickness/10;
-      cerr << "hacked Z " << z << " -> " << hackedZ << endl;
+      cerr << "hacked Z " << Z << " -> " << hackedZ << endl;
     }
   }
   cleanupPolygons();

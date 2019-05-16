@@ -192,7 +192,8 @@ void Render::keyReleaseEvent(QKeyEvent *event)
     case Qt::Key::Key_Down:
     case Qt::Key::Key_Left:
     case Qt::Key::Key_Right:
-        get_model()->ModelChanged();
+        ;
+//        get_model()->ModelChanged();
     }
 }
 
@@ -500,7 +501,7 @@ void Render::paintGL()
     glMultMatrixf (m_transform.M);
     CenterView();
     glPushMatrix();
-    glColor3f(0.75f,0.75f,1.0f);
+//    glColor3f(0.75f,0.75f,1.0f);
 
     glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
 
@@ -636,7 +637,7 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
     if (mousePressedModifiers == Qt::ShiftModifier
             || mousePressedModifiers == Qt::ControlModifier){
         // move/rotate object
-        get_model()->ModelChanged();
+//        get_model()->ModelChanged();
     } else {
         if (m_downPoint.x() == event->pos().x() && m_downPoint.y() == event->pos().y()) {// click only
             if (event->button() == Qt::RightButton) { // -> popup menu?

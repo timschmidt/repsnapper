@@ -347,16 +347,12 @@ void Shape::ScaleZ(double x)
 // (x,y,z,overall) scale
 void Shape::setScale(const Vector4d &scale)
 {
-    transform3D.setScaleX(scale[0]);
-    cerr<< "not implemented "<< endl;
+    transform3D.setScaleValues(scale);
 }
 
 Vector4d Shape::getScaleValues() const
 {
-    return Vector4d(transform3D.get_scale_x(),
-                    transform3D.get_scale_y(),
-                    transform3D.get_scale_z(),
-                    transform3D.get_scale());
+    return transform3D.getScaleValues();
 }
 
 Vector3d Shape::getRotation() const
@@ -661,6 +657,7 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
   vector<Triangle> support_triangles;
   vector<Segment> lines = getCutlines(T, z, vertices, max_gradient,
                                       support_triangles, max_supportangle, thickness);
+
   //cerr << vertices.size() << " " << lines.size() << endl;
   if (!CleanupSharedSegments(lines)) return false;
   //cerr << vertices.size() << " " << lines.size() << endl;
@@ -741,17 +738,10 @@ int find_vertex(const vector<Vector2d> &vertices,
                 const Vector2d &v, double delta = 0.0001)
 {
   int found = -1;
-  uint count = vertices.size();
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic)
-#endif
-  for (uint i=0; i<count; i++) {
-    if (found != -1) continue;
-    if ( (v-vertices[i]).squared_length() < delta ) {
+  for (ulong i = 0; i < vertices.size(); i++) {
+    if ((v-vertices[i]).squared_length() < delta ) {
       found = int(i);
-#ifndef _OPENMP
       break;
-#endif
     }
   }
   return found;
@@ -767,14 +757,11 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   Vector2d lineStart;
   Vector2d lineEnd;
   vector<Segment> lines;
-  // we know our own tranform:
+  // we know our own transform:
   Matrix4d transform = T * transform3D.getTransform() ;
 
-  uint count = triangles.size();
-// #ifdef _OPENMP
-// #pragma omp parallel for schedule(dynamic)
-// #endif
-  for (uint i = 0; i < count; i++)
+  ulong count = triangles.size();
+  for (ulong i = 0; i < count; i++)
     {
       Segment line(-1,-1);
       int num_cutpoints = triangles[i].CutWithPlane(z, transform, lineStart, lineEnd);
@@ -790,7 +777,7 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
         continue;
       }
       if (num_cutpoints > 0) {
-        int havev = find_vertex(vertices, lineStart);
+        int havev =  find_vertex(vertices, lineStart);
         if (havev >= 0)
           line.start = havev;
         else {

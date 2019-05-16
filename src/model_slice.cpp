@@ -331,7 +331,7 @@ void Model::Slice()
     lastlayer = layers[0];
     layers[0]->setZ(0); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
-      layers[0]->addShape(basicTrans, *shapes[nshape],  0, max_gradient, -1);
+      layers[0]->addShape(basicTrans, *shapes[nshape], max_gradient, -1);
     }
     return;
   }
@@ -365,7 +365,7 @@ void Model::Slice()
       LayerNr = 1;
     }
     new_polys = layer->addShape(basicTrans, *shapes[currentshape],
-                    shape_z, max_gradient, supportangle);
+                                max_gradient, supportangle);
     // cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape
     //      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
     if (shape_z >= max_shape_z) { // next shape, reset z
@@ -449,7 +449,7 @@ void Model::Slice()
 #endif
     for (ulong nshape= 0; nshape < shapes.size(); nshape++) {
       layer->addShape(basicTrans, *shapes[nshape],
-              z, max_gradient, supportangle);
+                      max_gradient, supportangle);
     }
     layers[nlayer] = layer;
   }
@@ -766,7 +766,7 @@ void Model::CalcInfill()
 #ifdef _OPENMP
   omp_lock_t progress_lock;
   omp_init_lock(&progress_lock);
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
 #endif
   for (int i=0; i < count ; i++)
     {
@@ -781,7 +781,7 @@ void Model::CalcInfill()
 #endif
       }
       if (!cont) continue;
-      layers[i]->CalcInfill(*settings);
+      layers[i]->CalcInfill(*settings); // not parallel
     }
 #ifdef _OPENMP
   omp_destroy_lock(&progress_lock);
