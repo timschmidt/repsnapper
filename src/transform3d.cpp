@@ -22,41 +22,32 @@
 
 
 
+void Transform3D::update_transform()
+{
+    m_transform = Matrix4d::IDENTITY;
+    m_transform.scale(m_scale * m_scalexyz);
+    m_transform = m_rottrans * m_transform;
+}
+
 Transform3D::Transform3D()
 {
   identity();
 }
 
-void Transform3D::update_transform() {
-  transform = Matrix4d::IDENTITY;
-  // scale the unrotated object
-  for (uint i = 0; i < 3; i++)
-    transform(i,i) *= xyz_scale(i);
-  transform *= m_transform;
-
-  // for (uint i = 0; i < 3; i++)
-  //   transform(3,i) = 0;
-  // translate
-  for (uint i = 0; i < 3; i++)
-    transform(3,i) = m_transform(3,i);
-}
-
-
 void Transform3D::identity()
 {
-  m_transform = Matrix4d::IDENTITY;
-  xyz_scale = Vector3d(1,1,1);
-  update_transform();
+    m_scale = 1.;
+    m_scalexyz = Vector3d(1,1,1);
+    m_rottrans = m_transform = Matrix4d::IDENTITY;
 }
 
 Matrix4f Transform3D::getFloatTransform() const
 {
-  return (Matrix4f) transform;
+  return Matrix4f(m_transform);
 }
 void Transform3D::setTransform(const Matrix4f &matr)
 {
-  m_transform = (Matrix4d) matr;
-  update_transform();
+  m_transform = Matrix4d(matr);
 }
 
 Vector3d Transform3D::getTranslation() const
@@ -69,55 +60,57 @@ Vector3d Transform3D::getTranslation() const
 void Transform3D::move(const Vector3d &delta)
 {
   Vector3d trans = getTranslation();
-  m_transform.set_translation(trans + delta * transform(3,3)); // unscale delta
+  m_rottrans.set_translation(trans + delta * m_rottrans(3,3)); // unscale delta
   update_transform();
 }
 
 void Transform3D::moveTo(const Vector3d &translation)
 {
-  Vector3d trans = getTranslation();
-  m_transform.set_translation(translation * transform(3,3)); // unscale transl.
+  m_rottrans.set_translation(translation * m_rottrans(3,3)); // unscale transl.
   update_transform();
 }
 
-
-void Transform3D::scale(double x)
+void Transform3D::setScale(double x)
 {
-  if (x==0) return;
-  m_transform[3][3] = 1/x;
+  m_scale = x;
   update_transform();
 }
 
-void Transform3D::scale_x(double x)
+void Transform3D::setScaleX(double x)
 {
-  xyz_scale(0) = x;
-  update_transform();
+    m_scalexyz(0) = x;
+    update_transform();
 }
-void Transform3D::scale_y(double x)
+void Transform3D::setScaleY(double y)
 {
-  xyz_scale(1) = x;
-  update_transform();
+    m_scalexyz(1) = y;
+    update_transform();
 }
-void Transform3D::scale_z(double x)
+void Transform3D::setScaleZ(double z)
 {
-  xyz_scale(2) = x;
-  update_transform();
+    m_scalexyz(2) = z;
+    update_transform();
+}
+Vector4d const Transform3D::getScaleValues() const {
+    return Vector4d(m_scalexyz, m_scale);
+}
+
+void Transform3D::setScaleValues(const Vector4d &scale){
+    for (uint i = 0; i < 3; i++)
+        m_scalexyz(i)=scale(i);
+    m_scale=scale(3);
+    update_transform();
 }
 
 void Transform3D::rotate_to(const Vector3d &center, const Vector3d &axis, double angle)
 {
-  // save translation & scale
   const Vector3d trans = getTranslation();
-  const double scale = m_transform(3,3);
-  // rotate only
-  Matrix4d rot;
-  Vector3d naxis = axis; naxis.normalize();
-  m_transform.rotate(angle, naxis);  // this creates the matrix!
-  //cerr << m_transform << endl;
-  m_transform.set_translation(trans);
-  m_transform(3,3) = scale;
+  m_transform = Matrix4d::IDENTITY;
+  m_rottrans = Matrix4d::IDENTITY;
+  rotate(center, axis, angle);
+  m_rottrans.set_translation(trans);
   update_transform();
- }
+}
 
 void Transform3D::rotate(const Vector3d &axis, double angle)
 {
@@ -125,18 +118,14 @@ void Transform3D::rotate(const Vector3d &axis, double angle)
 }
 void Transform3D::rotate(const Vector3d &center, const Vector3d &axis, double angle)
 {
-  // save translation
-  const Vector3d trans = getTranslation();
   // rotate only
   Vector3d naxis = axis; naxis.normalize();
   Matrix4d rot;
   rot.rotate(angle, naxis);  // this creates the matrix!
-  m_transform = rot *  m_transform ;
-  //cerr << angle << axis << m_transform << endl;
-  // rotate center and translation
-  Vector3d rotcenter = rot * center;
-  Vector3d rottrans  = rot * trans;
-  m_transform.set_translation((center-rotcenter)*m_transform[3][3] + rottrans);
+  move(-center);
+  m_rottrans = rot * m_rottrans ;
+//  cerr << angle << axis << endl << trans<< endl << m_rottrans << endl;
+  move(+center);
   update_transform();
 }
 
@@ -149,12 +138,9 @@ void Transform3D::rotate(const Vector3d &center, double x, double y, double z)
 
 void Transform3D::rotate_to(const Vector3d &center, double x, double y, double z)
 {
-  const Vector3d trans = getTranslation();
-  rotate_to (center, Vector3d(1.,0.,0.), x);
-  rotate    (center, Vector3d(0.,1.,0.), y);
-  rotate    (center, Vector3d(0.,0.,1.), z);
-  m_transform.set_translation(trans);
-  update_transform();
+  rotate_to (center, Vector3d::UNIT_X, x);
+  rotate    (center, Vector3d::UNIT_Y, y);
+  rotate    (center, Vector3d::UNIT_Z, z);
 }
 
 double Transform3D::getRotX() const
@@ -169,7 +155,6 @@ double Transform3D::getRotZ() const
 {
   return atan2(m_transform(1,0), m_transform(0,0));
 }
-
 
 Matrix4d Transform3D::getInverse() const
 {

@@ -74,7 +74,7 @@ void Shape::setTriangles(const vector<Triangle> &triangles_)
 
 int Shape::saveBinarySTL(QString filename) const
 {
-  if (!File::saveBinarySTL(filename, triangles, transform3D.transform))
+  if (!File::saveBinarySTL(filename, triangles, transform3D.getTransform()))
     return -1;
   return 0;
 
@@ -260,7 +260,7 @@ double Shape::volume() const
 {
   double vol=0;
   for (uint i = 0; i < triangles.size(); i++)
-    vol+=triangles[i].projectedvolume(transform3D.transform);
+    vol+=triangles[i].projectedvolume(transform3D.getTransform());
   return vol;
 }
 
@@ -269,7 +269,7 @@ string Shape::getSTLsolid() const
   stringstream sstr;
   sstr << "solid " << filename.toStdString() <<endl;
   for (uint i = 0; i < triangles.size(); i++)
-    sstr << triangles[i].getSTLfacet(transform3D.transform);
+    sstr << triangles[i].getSTLfacet(transform3D.getTransform());
   sstr << "endsolid " << filename.toStdString()<<endl;
   return sstr.str();
 }
@@ -284,7 +284,7 @@ vector<Triangle> Shape::getTriangles(const Matrix4d &T) const
 {
   vector<Triangle> tr(triangles.size());
   for (uint i = 0; i < triangles.size(); i++) {
-    tr[i] = triangles[i].transformed(T*transform3D.transform);
+    tr[i] = triangles[i].transformed(T*transform3D.getTransform());
   }
   return tr;
 }
@@ -295,7 +295,7 @@ vector<Triangle> Shape::trianglesSteeperThan(double angle) const
   vector<Triangle> tr;
   for (uint i = 0; i < triangles.size(); i++) {
     // negative angles are triangles facing downwards
-    const double tangle = -triangles[i].slopeAngle(transform3D.transform);
+    const double tangle = -triangles[i].slopeAngle(transform3D.getTransform());
     if (tangle >= angle)
       tr.push_back(triangles[i]);
   }
@@ -319,7 +319,7 @@ void Shape::FitToVolume(const Vector3d &vol)
 void Shape::Scale(double in_scale_factor, bool calcbbox)
 {
   transform3D.move(-Center);
-  transform3D.scale(in_scale_factor);
+  transform3D.setScale(in_scale_factor);
   transform3D.move(Center);
   if (calcbbox)
     CalcBBox();
@@ -328,24 +328,26 @@ void Shape::Scale(double in_scale_factor, bool calcbbox)
 void Shape::ScaleX(double x)
 {
   transform3D.move(-Center);
-  transform3D.scale_x(x);
+  transform3D.setScaleX(x);
   transform3D.move(Center);
 }
 void Shape::ScaleY(double x)
 {
   transform3D.move(-Center);
-  transform3D.scale_y(x);
+  transform3D.setScaleY(x);
   transform3D.move(Center);
 }
 void Shape::ScaleZ(double x)
 {
   transform3D.move(-Center);
-  transform3D.scale_z(x);
+  transform3D.setScaleZ(x);
   transform3D.move(Center);
 }
 
+// (x,y,z,overall) scale
 void Shape::setScale(const Vector4d &scale)
 {
+    transform3D.setScaleX(scale[0]);
     cerr<< "not implemented "<< endl;
 }
 
@@ -373,7 +375,7 @@ void Shape::CalcBBox()
   Min.set(INFTY,INFTY,INFTY);
   Max.set(-INFTY,-INFTY,-INFTY);
   for(uint i = 0; i < triangles.size(); i++) {
-    triangles[i].AccumulateMinMax (Min, Max, transform3D.transform);
+    triangles[i].AccumulateMinMax (Min, Max, transform3D.getTransform());
   }
   Center = (Max + Min) / 2;
   if (gl_List>=0)
@@ -409,7 +411,7 @@ vector<Vector3d> Shape::getMostUsedNormals() const
 #endif
       for (uint n = 0; n < numnorm; n++) {
         if ( (normals[n].normal -
-              triangles[i].transformed(transform3D.transform).Normal)
+              triangles[i].transformed(transform3D.getTransform()).Normal)
              .squared_length() < 0.000001) {
           havenormal = true;
           normals[n].area += triangles[i].area();
@@ -418,7 +420,7 @@ vector<Vector3d> Shape::getMostUsedNormals() const
       }
       if (!havenormal){
         SNorm n;
-        n.normal = triangles[i].transformed(transform3D.transform).Normal;
+        n.normal = triangles[i].transformed(transform3D.getTransform()).Normal;
         n.area = triangles[i].area();
         normals.push_back(n);
         done[i] = true;
@@ -477,7 +479,7 @@ int Shape::divideAtZ(double z, Shape *upper, Shape *lower, const Matrix4d &T) co
   upper->triangles.insert(upper->triangles.end(),surf.begin(),surf.end());
   vector<Triangle> toboth;
   for (uint i=0; i< triangles.size(); i++) {
-    Triangle tt = triangles[i].transformed(T*transform3D.transform);
+    Triangle tt = triangles[i].transformed(T*transform3D.getTransform());
     if (tt.A.z() < z && tt.B.z() < z && tt.C.z() < z )
       lower->triangles.push_back(tt);
     else if (tt.A.z() > z && tt.B.z() > z && tt.C.z() > z )
@@ -586,7 +588,7 @@ void Shape::moveTo(const Vector3d &translation)
 /*
 Poly Shape::getOutline(const Matrix4d &T, double maxlen) const
 {
-  Matrix4d transform = T * transform3D.transform ;
+  Matrix4d transform = T * transform3D.getTransform() ;
   vector<Vector2d> points(triangles.size()*3);
   for (uint i = 0; i<triangles.size(); i++) {
     for (uint j = 0; j<3; j++) {
@@ -766,7 +768,7 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
   Vector2d lineEnd;
   vector<Segment> lines;
   // we know our own tranform:
-  Matrix4d transform = T * transform3D.transform ;
+  Matrix4d transform = T * transform3D.getTransform() ;
 
   uint count = triangles.size();
 // #ifdef _OPENMP

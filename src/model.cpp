@@ -255,7 +255,7 @@ Shape Model::GetCombinedShape() const
   for (uint o = 0; o<objectList.objects.size(); o++) {
     for (uint s = 0; s<objectList.objects[o]->shapes.size(); s++) {
       vector<Triangle> tr = objectList.objects[o]->shapes[s]
-              ->getTriangles(objectList.objects[o]->transform3D.transform);
+              ->getTriangles(objectList.objects[o]->transform3D.getTransform());
       shape.addTriangles(tr);
     }
   }
@@ -585,7 +585,7 @@ void Model::ScaleObject(Shape *shape, ListObject *object, double scale)
   else if(object)
     //    for (uint s = 0;s<object->shapes.size(); s++) {
       //double fact = object->shapes[s].getScaleFactor();
-      object->transform3D.scale(scale);
+      object->transform3D.setScale(scale);
   //}
   else return;
   ModelChanged();
@@ -875,7 +875,7 @@ int Model::draw (const QModelIndexList *selected)
   glTranslated(offset.x(),offset.y(),offset.z());
 
   glPushMatrix();
-  glMultMatrixd (&objectList.transform3D.transform.array[0]);
+  glMultMatrixd (&objectList.transform3D.getTransform().array[0]);
 
   // draw preview shapes and nothing else
   if (preview_shapes.size() > 0
@@ -886,7 +886,7 @@ int Model::draw (const QModelIndexList *selected)
     offset = preview_shapes[i]->t_Center();
     glTranslated(offset.x(), offset.y(), offset.z());
     // glPushMatrix();
-    // glMultMatrixd (&preview_shapes[i]->transform3D.transform.array[0]);
+    // glMultMatrixd (&preview_shapes[i]->transform3D.getTransform().array[0]);
     preview_shapes[i]->draw (settings, false, 20000);
     preview_shapes[i]->drawBBox (render);
     // glPopMatrix();
@@ -907,13 +907,13 @@ int Model::draw (const QModelIndexList *selected)
 //      index++; // only count inner shapes
 
       glPushMatrix();
-      glMultMatrixd (object->transform3D.transform.array);
+      glMultMatrixd (object->transform3D.getTransform().array);
       for (uint j = 0; j < object->shapes.size(); j++) {
           Shape *shape = object->shapes[j];
           glLoadName(index); // Load select/pick index
           index++;
           glPushMatrix();
-          glMultMatrixd (&shape->transform3D.transform.array[0]);
+          glMultMatrixd (&shape->transform3D.getTransform().array[0]);
 
           bool is_selected = (std::find(selectedshapes.begin(),selectedshapes.end(),
                                         shapeindex) != selectedshapes.end());

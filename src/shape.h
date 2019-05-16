@@ -119,9 +119,9 @@ public:
     Vector3d Min, Max, Center;
 
 
-    Vector3d t_Min() const {return transform3D.transform * Min;}
-    Vector3d t_Max() const {return transform3D.transform * Max;}
-    Vector3d t_Center() const {return transform3D.transform * Center;}
+    Vector3d t_Min() const {return transform3D.getTransform() * Min;}
+    Vector3d t_Max() const {return transform3D.getTransform() * Max;}
+    Vector3d t_Center() const {return transform3D.getTransform() * Center;}
 
     Vector3d scaledCenter() const;
 

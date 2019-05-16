@@ -172,7 +172,7 @@ bool FlatShape::getPolygonsAtZ(const Matrix4d &T, double z,
 {
   max_grad = 0;
   polys = polygons;
-  const Matrix4d trans = T * transform3D.transform;
+  const Matrix4d trans = T * transform3D.getTransform();
   for (uint i = 0; i < polys.size(); i++) {
     polys[i].setZ(0);
     polys[i].transform(trans);
@@ -218,8 +218,8 @@ void FlatShape::CalcBBox()
       if ( polygons[i][j].x() > Max.x() ) Max.x() = polygons[i][j].x();
       if ( polygons[i][j].y() > Max.y() ) Max.y() = polygons[i][j].y();
     }
-  Min = transform3D.transform*Min;
-  Max = transform3D.transform*Max;
+  Min = transform3D.getTransform()*Min;
+  Max = transform3D.getTransform()*Max;
   Center = (Max + Min )/2;
 }
 

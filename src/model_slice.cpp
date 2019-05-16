@@ -297,6 +297,8 @@ void Model::Slice()
 //  for (uint i = 0; i<transforms.size(); i++)
 //    transforms[i] = settings->getBasicTransformation(transforms[i]);
 
+  Matrix4d basicTrans = settings->getBasicTransformation(Matrix4d::IDENTITY);
+
   int LayerNr = 0;
   bool varSlicing = settings->get_boolean("Slicing/Varslicing");
 
@@ -329,7 +331,7 @@ void Model::Slice()
     lastlayer = layers[0];
     layers[0]->setZ(0); // set to real z
     for (uint nshape= 0; nshape < shapes.size(); nshape++) {
-      layers[0]->addShape(Matrix4d::IDENTITY, *shapes[nshape],  0, max_gradient, -1);
+      layers[0]->addShape(basicTrans, *shapes[nshape],  0, max_gradient, -1);
     }
     return;
   }
@@ -362,7 +364,7 @@ void Model::Slice()
       layer->setSkins(1);
       LayerNr = 1;
     }
-    new_polys = layer->addShape(Matrix4d::IDENTITY, *shapes[currentshape],
+    new_polys = layer->addShape(basicTrans, *shapes[currentshape],
                     shape_z, max_gradient, supportangle);
     // cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape
     //      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
@@ -442,8 +444,11 @@ void Model::Slice()
 #endif
     Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1);
     layer->setZ(z); // set to real z
-    for (uint nshape= 0; nshape < shapes.size(); nshape++) {
-      layer->addShape(Matrix4d::IDENTITY, *shapes[nshape],
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)
+#endif
+    for (ulong nshape= 0; nshape < shapes.size(); nshape++) {
+      layer->addShape(basicTrans, *shapes[nshape],
               z, max_gradient, supportangle);
     }
     layers[nlayer] = layer;

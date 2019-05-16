@@ -24,23 +24,24 @@
 
 class Transform3D
 {
+    Matrix4d m_rottrans;
+    Vector3d m_scalexyz;
+    double m_scale;
     Matrix4d m_transform;
-    Vector3d xyz_scale;
     void update_transform();
 public:
   Transform3D();
-    Matrix4d transform;
 
     void identity();
-    Matrix4d getTransform() const {return transform;}
+    Matrix4d const &getTransform() const {return m_transform;}
     Matrix4f getFloatTransform() const;
     Vector3d getTranslation() const;
     Matrix4d getInverse() const;
     void setTransform(const Matrix4f &matrf);
-    void scale(double x);
-    void scale_x(double x);
-    void scale_y(double x);
-    void scale_z(double x);
+    void setScale(double x);
+    void setScaleX(double x);
+    void setScaleY(double x);
+    void setScaleZ(double x);
     void move(const Vector3d &delta);
     void moveTo(const Vector3d &translation);
     void rotate(const Vector3d &center, double x, double y, double z);
@@ -51,9 +52,11 @@ public:
     double getRotX() const;
     double getRotY() const;
     double getRotZ() const;
-    double get_scale()   const {return 1/transform(3,3);}
-    double get_scale_x() const {return xyz_scale(0);}
-    double get_scale_y() const {return xyz_scale(1);}
-    double get_scale_z() const {return xyz_scale(2);}
+    double get_scale()   const {return m_scale;}
+    double get_scale_x() const {return m_scalexyz[0];}
+    double get_scale_y() const {return m_scalexyz[1];}
+    double get_scale_z() const {return m_scalexyz[2];}
+    Vector4d const getScaleValues() const;
+    void setScaleValues(const Vector4d &scale);
 };
 
