@@ -246,28 +246,19 @@ void Model::CleanupLayers()
   if (count == 0) return;
   if(!m_progress->restart (_("Cleanup"), count)) return;
   int progress_steps=max(1, int(count/100));
-  bool cont = true;
 
 #ifdef _OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
   for (int i=0; i < count; i++) {
+      if (!m_progress->do_continue)
 #ifdef _OPENMP
-      #pragma omp flush (cont)
-      if (!cont) continue;
+          continue;
 #else
-      if (!cont) break;
+          break;
 #endif
       if (i%progress_steps==0) {
-#ifdef _OPENMP
-    #pragma omp critical(updateProgress)
-    {
-        cont = m_progress->update(i);
-        #pragma omp flush (cont)
-    }
-#else
-    cont = m_progress->update(i);
-#endif
+          m_progress->emit update_signal(i);
       }
       layers[i]->cleanupPolygons();
   }
@@ -357,7 +348,9 @@ void Model::Slice()
         shape_z = z;
         max_shape_z = min(shape_z + serialheight, maxZ);
         while ( cont && currentshape < shapes.size() && shape_z <= max_shape_z ) {
-    if (LayerNr%progress_steps==0) cont = m_progress->update(shape_z);
+    if (LayerNr%progress_steps==0)
+        m_progress->emit update_signal(shape_z);
+    if (!m_progress->do_continue) break;
     layer->setZ(shape_z); // set to real z
     if (shape_z == minZ) { // the layer is on the platform
       layer->LayerNo = 0;
@@ -414,7 +407,6 @@ void Model::Slice()
   int num_layers = (int)ceil((maxZ - minZ) / thickness);
   layers.resize(num_layers);
   int nlayer;
-  bool cont = true;
 
 #ifdef _OPENMP
   omp_lock_t progress_lock;
@@ -424,23 +416,13 @@ void Model::Slice()
   for (nlayer = 0; nlayer < num_layers; nlayer++) {
       double z = minZ + thickness * nlayer;
       if (nlayer%progress_steps==0) {
+          m_progress->emit update_signal(z);
+      }
+      if (!m_progress->do_continue)
 #ifdef _OPENMP
-          omp_set_lock(&progress_lock);
-#pragma omp critical(updateProgress)
-          {
-              cont = (m_progress->update(z));
-#pragma omp flush (cont)
-          }
-          omp_unset_lock(&progress_lock);
+          continue;
 #else
-        cont = (m_progress->update(z));
-#endif
-    }
-#ifdef _OPENMP
-#pragma omp flush (cont)
-    if (!cont) continue;
-#else
-    if (!cont) break;
+          break;
 #endif
     Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1);
     layer->setZ(z); // set to real z
@@ -453,7 +435,7 @@ void Model::Slice()
     }
     layers[nlayer] = layer;
   }
-  if (!cont)
+  if (!m_progress->do_continue)
     ClearLayers();
 
 #ifdef _OPENMP
@@ -479,20 +461,17 @@ void Model::MakeFullSkins()
   int progress_steps=max(1,(int)(layers.size()/100));
   int count = (int)layers.size();
 #ifdef _OPENMP
-  omp_lock_t progress_lock;
-  omp_init_lock(&progress_lock);
 #pragma omp parallel for schedule(dynamic) //ordered
 #endif
   for (int i=1; i < count; i++) {
+
+    if (i%progress_steps==0)
+        m_progress->emit update_signal(i);
+    if (!m_progress->do_continue)
 #ifdef _OPENMP
-    omp_set_lock(&progress_lock);
-#endif
-    if (i%progress_steps==0 && !m_progress->update(i))
-#ifndef _OPENMP
-      break;
+        continue;
 #else
-      continue;
-    omp_unset_lock(&progress_lock);
+        break;
 #endif
     layers[i]->makeSkinPolygons();
   }
@@ -509,14 +488,16 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
   // bottom to top: uncovered from above -> top polys
   for (int i = 0; i < count-1; i++)
     {
-      if (i%progress_steps==0) if(!m_progress->update(i)) return ;
+      if (i%progress_steps==0) m_progress->emit update_signal(i);
+      if (!m_progress->do_continue) return;
       layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]), make_decor);
     }
   // top to bottom: uncovered from below -> bridge polys
   for (uint i = count-1; i > 0; i--)
     {
       //cerr << "layer " << i << endl;
-      if (i%progress_steps==0) if(!m_progress->update(count + count - i)) return;
+      if (i%progress_steps==0) m_progress->emit update_signal(count + count - i);
+      if (!m_progress->do_continue) return;
       //make_bridges = false;
       // no bridge on marked layers (serial build)
       bool mbridge = make_bridges && (layers[i]->LayerNo != 0);
@@ -530,9 +511,9 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
     layers[i]->addFullPolygons(uncovered,make_decor);
       }
     }
-  m_progress->update(2*count+1);
+  m_progress->emit update_signal(2*count+1);
   layers.front()->addFullPolygons(layers.front()->GetFillPolygons(), make_decor);
-  m_progress->update(2*count+2);
+  m_progress->emit update_signal(2*count+2);
   layers.back()->addFullPolygons(layers.back()->GetFillPolygons(), make_decor);
   //m_progress->stop (_("Done"));
 }
@@ -575,7 +556,8 @@ void Model::MultiplyUncoveredPolygons()
   int i,s;
   for (i=0; i < count; i++)
     {
-      if (i%progress_steps==0) if(!m_progress->update(i)) return;
+      if (i%progress_steps==0) m_progress->emit update_signal(i);
+      if (!m_progress->do_continue)  return;
       // (brigdepolys are not multiplied downwards)
       const vector<Poly> &fullpolys     = layers[i]->GetFullFillPolygons();
       const vector<Poly> &skinfullpolys = layers[i]->GetSkinFullPolygons();
@@ -590,7 +572,8 @@ void Model::MultiplyUncoveredPolygons()
   // top-down: mulitply upwards
   for (int i=count-1; i>=0; i--)
     {
-      if (i%progress_steps==0) if (!m_progress->update(count + count -i)) return;
+      if (i%progress_steps==0) m_progress->emit update_signal(count + count -i);
+      if (!m_progress->do_continue)  return;
       const vector<Poly>   &fullpolys     = layers[i]->GetFullFillPolygons();
       const vector<ExPoly> &bridgepolys   = layers[i]->GetBridgePolygons();
       const vector<Poly>   &skinfullpolys = layers[i]->GetSkinFullPolygons();
@@ -606,29 +589,22 @@ void Model::MultiplyUncoveredPolygons()
 
   m_progress->set_label(_("Merging Full Polygons"));
   // merge results
-  bool cont = true;
 #ifdef _OPENMP
-  omp_lock_t progress_lock;
-  omp_init_lock(&progress_lock);
 #pragma omp parallel for schedule(dynamic)
 #endif
   for (i=0; i < count; i++)
     {
       if (i%progress_steps==0) {
-#ifdef _OPENMP
-    omp_set_lock(&progress_lock);
-#endif
-    cont = (m_progress->update(count + count +i));
-#ifdef _OPENMP
-    omp_unset_lock(&progress_lock);
-#endif
+          m_progress->emit update_signal(count + count +i);
       }
-      if (!cont) continue;
+      if (!m_progress->do_continue)
+#ifdef _OPENMP
+          continue;
+#else
+          break;
+#endif
       layers[i]->mergeFullPolygons(false);
     }
-#ifdef _OPENMP
-  omp_destroy_lock(&progress_lock);
-#endif  //m_progress->stop (_("Done"));
 }
 
 
@@ -664,11 +640,12 @@ void Model::MakeSupportPolygons(int extruder, double widen)
 {
   int count = layers.size();
   if (!m_progress->restart (_("Support"), count*2)) return;
-  int progress_steps=max(1,(int)(count*2/100));
+  int progress_steps=max(1,int(count*2/100));
 
   for (int i=count-1; i>0; i--)
     {
-      if (i%progress_steps==0) if(! m_progress->update(count-i)) return;
+      if (i%progress_steps==0) m_progress->emit update_signal(count-i);
+      if (!m_progress->do_continue)  return;
       if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i], extruder, widen);
     }
@@ -727,28 +704,23 @@ void Model::MakeShells()
   int progress_steps=max(1,(int)(count/100));
   bool cont = true;
 #ifdef _OPENMP
-  omp_lock_t progress_lock;
-  omp_init_lock(&progress_lock);
 #pragma omp parallel for schedule(dynamic)
 #endif
   for (int i=0;  i < count; i++)
     {
       if (i%progress_steps==0) {
-#ifdef _OPENMP
-    omp_set_lock(&progress_lock);
-#endif
-    cont = (m_progress->update(i));
-#ifdef _OPENMP
-    omp_unset_lock(&progress_lock);
-#endif
+          m_progress->emit update_signal(i);
       }
-      if (!cont) continue;
+      if (!m_progress->do_continue)
+#ifdef _OPENMP
+          continue;
+#else
+          break;
+#endif
       layers[i]->MakeShells(*settings, 0);
     }
-#ifdef _OPENMP
-  omp_destroy_lock(&progress_lock);
-#endif
-  m_progress->update(count);
+
+  m_progress->emit update_signal(count);
   //m_progress->stop (_("Done"));
 }
 
@@ -764,28 +736,22 @@ void Model::CalcInfill()
   bool cont = true;
   //cerr << "make infill"<< endl;
 #ifdef _OPENMP
-  omp_lock_t progress_lock;
-  omp_init_lock(&progress_lock);
 //#pragma omp parallel for schedule(dynamic)
 #endif
   for (int i=0; i < count ; i++)
     {
       //cerr << "thread " << omp_get_thread_num() << endl;
       if (i%progress_steps==0){
-#ifdef _OPENMP
-    omp_set_lock(&progress_lock);
-#endif
-    cont = (m_progress->update(i));
-#ifdef _OPENMP
-    omp_unset_lock(&progress_lock);
-#endif
+          m_progress->emit update_signal(i);
       }
-      if (!cont) continue;
+      if (!m_progress->do_continue)
+#ifdef _OPENMP
+          continue;
+#else
+          break;
+#endif
       layers[i]->CalcInfill(*settings); // not parallel
     }
-#ifdef _OPENMP
-  omp_destroy_lock(&progress_lock);
-#endif
   //m_progress->stop (_("Done"));
 }
 
@@ -872,8 +838,9 @@ void Model::ConvertToGCode()
   bool farthestStart = settings->get_boolean("Slicing/FarthestLayerStart");
   Vector3d start = state.LastPosition();
   for (uint p=0; p<count; p++) {
-    cont = (m_progress->update(p)) ;
-    if (!cont) break;
+    if (p%10==0) m_progress->emit update_signal(p);
+    if (!m_progress->do_continue)  break;
+
     // cerr << "GCode layer " << (p+1) << " of " << count
     // 	 << " offset " << printOffsetZ
     // 	 << " have commands: " <<commands.size()
@@ -1023,7 +990,8 @@ void Model::SliceToSVG(QFile *file, bool single_layer)
             ostr << "0";
         ostr << i
              << ".svg";
-        if (!m_progress->update(i)) break;
+        if (i%10==0) m_progress->emit update_signal(i);
+        if (!m_progress->do_continue)  break;
         QCoreApplication::processEvents();
         QFile sfile(QString::fromStdString(ostr.str()));
         QTextStream(&sfile) << QString::fromStdString(getSVG(i));

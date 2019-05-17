@@ -40,7 +40,7 @@ Render::Render (QWidget *widget)
       m_xRot(0),
       m_yRot(0),
       m_zRot(0),
-      m_program(nullptr),
+//      m_program(nullptr),
       textFont("SansSerif", FONTSIZE)
 {
     m_core = QSurfaceFormat::defaultFormat().profile() == QSurfaceFormat::CoreProfile;
@@ -72,12 +72,12 @@ Render::~Render()
 }
 
 void Render::cleanup(){
-    if(m_program == nullptr)
-        return;
+//    if(m_program == nullptr)
+//        return;
     makeCurrent();
-    m_logoVbo.destroy();
-    delete m_program;
-    m_program = nullptr;
+//    m_logoVbo.destroy();
+//    delete m_program;
+//    m_program = nullptr;
     doneCurrent();
     delete m_arcBall;
     for (uint i = 0; i < N_LIGHTS; i++)
@@ -150,7 +150,7 @@ void Render::setSelectedIndex(const QModelIndex &index)
 void Render::setSelection(const QModelIndexList indexlist)
 {
     m_selection = indexlist;
-    qDebug() << "size ! "<<m_selection.size() ;
+//    qDebug() << "size ! "<<m_selection.size() ;
     update();
 }
 
@@ -218,75 +218,6 @@ void Render::CenterView()
   glTranslatef (-c.x(), -c.y(), -c.z());
 }
 
-
-guint Render::find_object_at(gdouble x, gdouble y)
-{
-  // Render everything in selection mode
-
-  const GLsizei BUFSIZE = 256;
-  GLuint select_buffer[BUFSIZE];
-
-  glBegin(GL_SELECT);
-
-  glSelectBuffer(BUFSIZE, select_buffer);
-  //  (void)glRenderMode(GL_SELECT);
-  GLint viewport[4];
-
-  glMatrixMode (GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity ();
-  glGetIntegerv(GL_VIEWPORT,viewport);
-  gluPickMatrix(x,viewport[3]-y,2,2,viewport); // 2x2 pixels around the cursor
-  gluPerspective (45.0, double(width())/double(height()), 1.0, 1000000.0);
-  glMatrixMode (GL_MODELVIEW);
-  glInitNames();
-  glPushName(0);
-  glLoadIdentity ();
-
-  glTranslatef (0.0f, 0.0f, -2.0f * m_zoom);
-  glMultMatrixf (m_transform.M);
-  CenterView();
-  glPushMatrix();
-  glColor3f(0.75f,0.75f,1.0f);
-
-  glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
-
-  m_main->Draw (nullptr, true);
-
-  // restor projection and model matrices
-  glMatrixMode(GL_PROJECTION);
-  glPopMatrix();
-  glMatrixMode(GL_MODELVIEW);
-  glPopMatrix();
-  // restore rendering mode
-  GLint hits = glRenderMode(GL_RENDER);
-
-//  if (gldrawable->is_double_buffered())
-//    gldrawable->swap_buffers();
-//  else
-//  glFlush();
-  glEnd();
-
-  // Process the selection hits
-  GLuint *ptr = select_buffer;
-  GLuint name = 0;
-  GLuint minZ = G_MAXUINT;
-  cerr << hits << " hits"<< endl;
-  for (GLint i = 0; i < hits; i++) { //  for each hit
-     GLuint n = *ptr++; // number of hits in this record
-     GLuint z1 = *ptr++; // Minimum Z in the hit record
-     ptr++; // Skip Maximum Z coord
-     if (n > 0 && z1 < minZ) {
-       // Found an object further forward.
-       name = *ptr;
-       minZ = z1;
-     }
-     ptr += n; // Skip n name records;
-  }
-
-  return name;
-}
-
 void printarray(double *arr,int n){
     for (int i=0;i<n;i++)
         cerr << arr[n]<< " ";
@@ -302,10 +233,10 @@ Vector3d * Render::mouse_ray(int x, int y) {
     rayP[0] = Vector3d( dX, dY, dZ );
     gluUnProject (x, dClickY, 1.0, mvmatrix, projmatrix, viewport, &dX, &dY, &dZ);
     rayP[1] = Vector3d( dX, dY, dZ );
-    return rayP;
 //   GLfloat depth;
-//   glReadPixels(x,dClickY,1,1,GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+//   glReadPixels(dX,dY,1,1,GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
 //   cerr << "d "<< depth << endl;
+   return rayP;
 }
 
 // http://www.3dkingdoms.com/selection.html
@@ -491,28 +422,48 @@ GLdouble * winx, GLdouble * winy, GLdouble * winz)
     return GL_TRUE;
 }
 
+void Render::paintAll(bool select_mode) {
+
+    if (select_mode){
+        glDisable (GL_BLEND);
+        glDisable (GL_DITHER);
+        glDisable (GL_FOG);
+        glDisable (GL_LIGHTING);
+        glDisable (GL_TEXTURE_1D);
+        glDisable (GL_TEXTURE_2D);
+        glDisable (GL_TEXTURE_3D);
+        glEnable(GL_DEPTH_TEST);
+        glShadeModel (GL_FLAT);
+    }
+    (void)glRenderMode(GL_RENDER);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    glLoadIdentity();
+    glTranslatef (0.0f, 0.0f, -2.0f * m_zoom);
+    glMultMatrixf (m_transform.M);
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
+    CenterView();
+    glPushMatrix();
+//    glColor3f(0.75f,0.75f,1.0f);
+    m_main->Draw (select_mode ? nullptr : &m_selection, select_mode);
+
+    glPopMatrix();
+    glEnd();
+
+    select_mode = false;
+}
+
 void Render::paintGL()
 {
 //    cerr << "paintGL "<<  width() << "x" << height() << endl;
     allText.clear();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glLoadIdentity();
-    glTranslatef (0.0f, 0.0f, -2.0f * m_zoom);
-    glMultMatrixf (m_transform.M);
-    CenterView();
-    glPushMatrix();
-//    glColor3f(0.75f,0.75f,1.0f);
 
-    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 1);
-
-    m_main->Draw (&m_selection);
+    paintAll(false);
 
     glGetIntegerv(GL_VIEWPORT, viewport);
     glGetDoublev (GL_MODELVIEW_MATRIX, mvmatrix);
     glGetDoublev (GL_PROJECTION_MATRIX, projmatrix);
-
-    glPopMatrix();
-    glEnd();
 
     QPainter painter(this);
     painter.setFont(textFont);
@@ -535,23 +486,16 @@ void Render::mousePressEvent(QMouseEvent *event)
     m_arcBall->click (m_downPoint.x(), m_downPoint.y(), &m_transform);
 
     mousePressed = event->button();
-    if(mousePressed == Qt::LeftButton) {
-//        mousePickedObject = find_object_at(event->pos().x(), event->pos().y());
-        // on button 1 with shift/ctrl, if there is an object, select it (for dragging)
-        if (mousePressedModifiers == Qt::ShiftModifier
-               || mousePressedModifiers == Qt::ControlModifier) {
-            if (mousePickedObject) {
-                cerr << "drag " << mousePickedObject << endl;
-              /*  Gtk::TreeModel::iterator iter = get_model()->objects.find_stl_by_index(index);
-                if (!m_selection->is_selected(iter)) {
-                    if (mousePressedModifiers != Qt::ControlModifier){  // add to selection by CONTROL
-                        m_selection->unselect_all();
-                        m_selection->select(iter);
-                    }
-                }
-                */
-            }
-        }
+    if(mousePressed == Qt::LeftButton && mousePressedModifiers == Qt::NoModifier) {//move object XY
+        makeCurrent();
+        paintAll(true);
+        GLushort blue;
+        glReadBuffer(GL_FRONT);
+        glReadPixels( mouseP.x(), height()-mouseP.y(), 1, 1, GL_BLUE, GL_UNSIGNED_BYTE, &blue);
+        //                cerr << mouseP.x() <<","<< mouseP.y() << " sel " << blue << endl;
+        mousePickedObject = blue-1; // it was painted with color (255,index,index)
+        m_main->selectShape(mousePickedObject);
+        repaint();
     }
 }
 
@@ -559,18 +503,21 @@ const double drag_factor = 0.3;
 
 void Render::mouseMoveEvent(QMouseEvent *event)
 {
+    mouseP = event->pos();
     bool redraw=true;
     const Vector2d dragp(event->pos().x(), event->pos().y());
     const Vector3d mouse_preview = mouse_on_plane(dragp.x(), dragp.y(),
                                                   get_model()->get_preview_Z());
-    //        cerr << dragp << " - " << mouse_preview << endl;
     get_model()->setMeasuresPoint(mouse_preview);
     setFocus();
+
+//    mousePickedObject = find_object_at(event->pos().x(), event->pos().y());
 
     const Vector2d delta = dragp - m_dragStart;
     const Vector3d delta3f(delta.x()*drag_factor, -delta.y()*drag_factor, 0);
 
     if (mousePressed == Qt::NoButton) {
+//        cerr << dragp << " - " << mouse_preview << endl;
         repaint();
         return;
     }
@@ -643,30 +590,8 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
             if (event->button() == Qt::RightButton) { // -> popup menu?
                 //cerr << "menu" << endl;
             } else if (event->button() == Qt::LeftButton)  {
-                if (mousePickedObject) { // from mousePressEvent
-                    Shape *selected = get_model()->objectList.findShape(mousePickedObject);
-                    if (selected){
-                        cerr << "selected " << selected->filename.toStdString() << endl;
-                    }
-                    /* Gtk::TreeModel::iterator iter = get_model()->objects.find_stl_by_index(index);
-                    if (iter) {
-                        if (event->button == 1)  {
-                            m_selection->unselect_all();
-                        }
-                        if (m_selection->is_selected(iter))
-                            m_selection->unselect(iter);
-                        else
-                            m_selection->select(iter);
-                    }
-                    */
-                } else {
-                    // click on no object -> clear the selection:
-                    //if (m_downPoint.x() == event->x && m_downPoint.y() == event->y) // click only
-                    m_selection.clear();
-                }
             }
         }
-
     }
     repaint();
 }

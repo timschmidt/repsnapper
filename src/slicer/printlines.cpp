@@ -1738,9 +1738,8 @@ void Printlines::getCommands(const vector<PLine3> &plines,
   const bool useTCommand = settings->get_boolean("Slicing/UseTCommand");
   for (uint i = 0; i < plines.size(); i++) {
     if (progress && i%progress_steps==0){
-      cont = (progress->update(i)) ;
-      if (!cont)
-          break;
+        progress->emit update_signal(i);
+        if (!progress->do_continue) break;
     }
     // area change comment:
     if (plines[i].area != COMMAND && plines[i].area != lastArea) {

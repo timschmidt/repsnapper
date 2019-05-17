@@ -47,6 +47,7 @@ void ViewProgress::start (const char *label, double max)
   m_bar->setMaximum(max);
   m_bar->setValue(0);
   time.start();
+  connect(this, SIGNAL(update_signal(double)), this, SLOT(update(double)));
 }
 
 bool ViewProgress::restart (const char *label, double max)
@@ -100,18 +101,15 @@ QString timeleft_str(long seconds) {
 }
 
 
-bool ViewProgress::update (const double value, bool take_priority)
+bool ViewProgress::update (const double value)
 {
   // Don't allow progress to go backward
-  if (value < m_bar_cur)
-    return do_continue;
+//  if (value < m_bar_cur)
+//    return do_continue;
 
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->setMaximum(m_bar_max);
-#ifdef _OPENMP
-  if (!omp_in_parallel())
-#endif
-      m_bar->setValue(value);
+  m_bar->setValue(value);
   QString s;
   QTextStream o(&s);
   const double used = time.elapsed()/1000; // seconds
@@ -126,11 +124,6 @@ bool ViewProgress::update (const double value, bool take_priority)
                         << perc << "%              \r";
   }
   QCoreApplication::processEvents();
-
-//  if (take_priority)
-//    while( gtk_events_pending () )
-//      gtk_main_iteration ();
-//  Gtk::Main::iteration(false);
   return do_continue;
 }
 

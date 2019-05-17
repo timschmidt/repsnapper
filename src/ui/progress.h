@@ -25,7 +25,9 @@
 #include <QProgressBar>
 #include <QTime>
 
-class ViewProgress {
+class ViewProgress : public QObject {
+    Q_OBJECT
+
   QWidget *m_box;
   QProgressBar *m_bar;
   QLabel *m_label;
@@ -40,9 +42,9 @@ class ViewProgress {
   void start (const char *label, double max);
   bool restart (const char *label, double max);
   void stop (const char *label = "");
-  bool update (const double value, bool take_priority=true);
   ViewProgress(){}
   ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label);
+  ~ViewProgress(){}
   void set_label (QString label);
   double maximum() { return m_bar_max; }
   double value() { return m_bar_cur; }
@@ -50,6 +52,15 @@ class ViewProgress {
   void set_terminal_output(bool terminal);
   bool do_continue;
   void stop_running(){do_continue = false;}
+
+public slots:
+  bool update (double value);
+
+signals:
+  void update_signal(double value);
+
+
+
 };
 
 #endif // PROGRESS_H

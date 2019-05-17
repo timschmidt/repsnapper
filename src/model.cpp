@@ -846,14 +846,14 @@ Vector3d Model::GetViewCenter()
   return printOffset + Center;
 }
 
-int Model::draw (const QModelIndexList *selected)
+int Model::draw (const QModelIndexList *selected, bool select_mode)
 {
     vector<int> selectedshapes;
-    if (selected && !selected->isEmpty())
+    if (!select_mode && selected && !selected->isEmpty())
         for(int i = 0; i < selected->size(); i++) {
             selectedshapes.push_back((*selected)[i].row());
         }
-//  gint index = 1; // pick/select index. matches computation in update_model()
+  uint select_index = 0; // pick/select index. matches computation in update_model()
 
   Render *render = main->get_render();
 
@@ -872,7 +872,7 @@ int Model::draw (const QModelIndexList *selected)
   glMultMatrixd (&objectList.transform3D.getTransform().array[0]);
 
   // draw preview shapes and nothing else
-  if (preview_shapes.size() > 0
+  if (!select_mode && preview_shapes.size() > 0
           && settings->get_boolean("Display/PreviewLoad")) {
       Vector3d v_center = GetViewCenter() - offset;
       glTranslated( v_center.x(), v_center.y(), v_center.z());
@@ -889,28 +889,27 @@ int Model::draw (const QModelIndexList *selected)
       glPopMatrix();
       return 0;
     }
-  bool support = settings->get_boolean("Slicing/Support");
+  bool support = !select_mode && settings->get_boolean("Slicing/Support");
   double supportangle = support ? settings->get_double("Slicing/SupportAngle")
                                 : 0.;
-  bool displaypolygons = settings->get_boolean("Display/DisplayPolygons");
-  bool displaybbox = settings->get_boolean("Display/DisplayBBox");
+  bool displaypolygons = !select_mode && settings->get_boolean("Display/DisplayPolygons");
+  bool displaybbox = !select_mode && settings->get_boolean("Display/DisplayBBox");
   gint shapeindex=0;
 //  cerr << "drawing "<< objectList.objects.size() << " objects"<< endl;
   for (uint i = 0; i < objectList.objects.size(); i++) {
       ListObject *object = objectList.objects[i];
-//      index++; // only count inner shapes
 
       glPushMatrix();
       glMultMatrixd (object->transform3D.getTransform().array);
       for (uint j = 0; j < object->shapes.size(); j++) {
+          select_index++; // only count inner shapes
           Shape *shape = object->shapes[j];
-//          glLoadName(index); // Load select/pick index
-//          index++;
           glPushMatrix();
           glMultMatrixd (&shape->transform3D.getTransform().array[0]);
 
-          bool is_selected = (std::find(selectedshapes.begin(),selectedshapes.end(),
-                                        shapeindex) != selectedshapes.end());
+          bool is_selected = !select_mode &&
+                  (std::find(selectedshapes.begin(),selectedshapes.end(),
+                             shapeindex) != selectedshapes.end());
 
           // this is slow for big shapes
           if (is_selected) {
@@ -959,7 +958,10 @@ int Model::draw (const QModelIndexList *selected)
               else shape->draw (settings, true);
           }
           else {
-              shape->draw (settings, false);
+              if (select_mode)
+                  shape->draw (settings, false, 0, select_index);
+              else
+                  shape->draw (settings, false);
           }
           // draw support triangles
           if (support) {
@@ -1026,11 +1028,11 @@ int Model::draw (const QModelIndexList *selected)
       render->draw_string(pos,val.str());
     }
   int drawnlayer = -1;
-  if(settings->get_boolean("Display/DisplayLayer")) {
+  if(!select_mode && settings->get_boolean("Display/DisplayLayer")) {
        float z = settings->get_integer("Display/LayerValue")/1000.;
        drawnlayer = drawLayers(z, offset, false);
   }
-  if(settings->get_boolean("Display/DisplayGCode") && gcode->size() == 0) {
+  if(!select_mode && settings->get_boolean("Display/DisplayGCode") && gcode->size() == 0) {
     // preview gcode if not calculated yet
     if ( m_previewGCode->size() != 0 ||
      ( layers.size() == 0 && gcode->commands.size() == 0 ) ) {

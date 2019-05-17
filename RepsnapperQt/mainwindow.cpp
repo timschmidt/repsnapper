@@ -179,6 +179,16 @@ void MainWindow::updatedModel(const ObjectsList *objList)
 //    cerr << " updated Model"<< endl;
 }
 
+void MainWindow::selectShape(const int index){
+    ui_main->modelListView->selectionModel()->clearSelection();
+    QModelIndex mi;
+    if (index >= 0) {
+        mi = ui_main->modelListView->model()->index(index,0);
+    }
+    ui_main->modelListView->setCurrentIndex(mi);
+    shapeSelected(mi);
+}
+
 void MainWindow::shapeSelected(const QModelIndex &index)
 {
     QModelIndexList sel = ui_main->modelListView->selectionModel()->selectedRows();
@@ -237,7 +247,7 @@ void MainWindow::printingChanged()
 
 void MainWindow::nowPrinting(long lineno)
 {
-    m_progress->update(lineno);
+    m_progress->emit update_signal(lineno);
     m_model->setCurrentPrintingLine(ulong(lineno));
     m_render->update();
 }
@@ -268,7 +278,7 @@ void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
     }
 
     // Draw all objects
-    m_model->draw(selected);
+    m_model->draw(selected, objects_only);
 }
 
 void MainWindow::DrawGrid()

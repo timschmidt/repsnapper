@@ -155,7 +155,7 @@ public:
 
         int getLayerNo(float height) const;
 
-        int draw(const QModelIndexList *selected);
+        int draw(const QModelIndexList *selected, bool objects_only = false);
         int drawLayers(float height, const Vector3d &offset, bool calconly = false);
         void setMeasuresPoint(const Vector3d &point);
         Vector2d measuresPoint;

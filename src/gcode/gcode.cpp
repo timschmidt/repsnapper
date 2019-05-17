@@ -127,8 +127,7 @@ void GCode::Read(ViewProgress *progress, string filename)
     file.seekg (0);
 
     progress->start(_("Loading GCode"), filesize);
-    int progress_steps = int(filesize/1000);
-    if (progress_steps==0) progress_steps=1;
+    int progress_steps = max(1,int(filesize/1000));
 
     buffer_zpos_lines.clear();
 
@@ -167,7 +166,9 @@ void GCode::Read(ViewProgress *progress, string filename)
 
         LineNr++;
         long fpos = file.tellg();
-        if (fpos%progress_steps==0) if (!progress->update(fpos)) break;
+        if (fpos%progress_steps==0)
+            progress->emit update_signal(fpos);
+        if (!progress->do_continue) break;
 
         Command command;
 
@@ -623,8 +624,7 @@ void GCode::MakeText(QString &GcodeTxt,
 
     layerchanges.clear();
     if (progress) progress->restart(_("Collecting GCode"), commands.size());
-    int progress_steps=(int)(commands.size()/100);
-    if (progress_steps==0) progress_steps=1;
+    int progress_steps=max(1,int(commands.size()/100));
 
     double speedalways = settings->get_boolean("Hardware/SpeedAlways");
     bool useTcommand = settings->get_boolean("Slicing/UseTCommand");
@@ -642,7 +642,10 @@ void GCode::MakeText(QString &GcodeTxt,
           currextruder = commands[i].extruder_no;
         E_letter = extLetters[currextruder];
       }
-      if (progress && i%progress_steps==0 && !progress->update(i)) break;
+      if (progress && i%progress_steps==0)
+          progress->emit update_signal(i);
+      if (!progress->do_continue) break;
+
 
       if ( commands[i].Code == LAYERCHANGE ) {
         layerchanges.push_back(i);

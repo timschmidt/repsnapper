@@ -323,7 +323,9 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
 
     if (progress){
       if (count%20 == 0)
-    if (!progress->update(range.movestart)) break;
+          progress->emit update_signal(range.movestart);
+      if (!progress->do_continue)
+          break;
     }
     count++;
     ranges.push_back(range);
@@ -342,7 +344,8 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
   for (uint r = 0; r < ranges.size(); r++) {
     //for (int r = ranges.size()-1; r >= 0; r--) {
     if (progress && r%progress_steps == 0){
-      if (!progress->update(r)) break;
+      progress->emit update_signal(r);
+      if (!progress->do_continue) break;
     }
 
     ranges[r].add(total_added); // shift by previous insertion

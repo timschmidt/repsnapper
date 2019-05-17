@@ -75,7 +75,8 @@ public:
         /* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
         /* 		      uint LayerNr, vector<int>& altInfillLayers); */
         void draw (Settings *settings,
-                   bool highlight=false, uint max_triangles=0);
+                   bool highlight=false, uint max_triangles=0,
+                   int selection_index = 0);
         virtual void draw_geometry (uint max_triangles=0);
         void drawBBox(Render *render) const;
         virtual bool getPolygonsAtZ(const Matrix4d &T, double z,

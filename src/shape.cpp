@@ -123,19 +123,11 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
   vector< vector<uint> > adj(n_tr);
   if (progress) progress->set_label(_("Split: Sorting Triangles ..."));
 #ifdef _OPENMP
-  omp_lock_t progress_lock;
-  omp_init_lock(&progress_lock);
 #pragma omp parallel for schedule(dynamic)
 #endif
   for (uint i = 0; i < n_tr; i++) {
     if (progress && i%progress_steps==0) {
-#ifdef _OPENMP
-      omp_set_lock(&progress_lock);
-#endif
-      cont = progress->update(i);
-#ifdef _OPENMP
-      omp_unset_lock(&progress_lock);
-#endif
+        progress->emit update_signal(i);
     }
     vector<uint> trv;
     for (uint j = 0; j < n_tr; j++) {
@@ -152,7 +144,7 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
       }
     }
     adj[i] = trv;
-    if (!cont) i=n_tr;
+    if (!progress->do_continue) i=n_tr;
   }
 
   if (progress) progress->set_label(_("Split: Building shapes ..."));
@@ -164,7 +156,7 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
   for (uint i = 0; i < n_tr; i++) done[i] = false;
   for (uint i = 0; i < n_tr; i++) {
     if (progress && i%progress_steps==0)
-      cont = progress->update(i);
+      progress->emit update_signal(i);
     if (!done[i]){
       cerr << _("Shape ") << shapes.size()+1 << endl;
       vector<uint> current;
@@ -176,7 +168,7 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
         shapes.back()->triangles[i] = triangles[current[i]];
       shapes.back()->CalcBBox();
     }
-    if (!cont) i=n_tr;
+    if (!progress->do_continue) i=n_tr;
   }
 
   if (progress) progress->stop("_(Done)");
@@ -823,8 +815,15 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
 
 
 // called from Model::draw
-void Shape::draw(Settings *settings, bool highlight, uint max_triangles)
+void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
+                 int selection_index)
 {
+    // draw for selection
+    if (selection_index > 0) {
+        glColor3ub(255,selection_index,selection_index);
+        draw_geometry(0);
+        return;
+    }
   //cerr << "Shape::draw" <<  endl;
         // polygons
         glEnable(GL_LIGHTING);

@@ -28,7 +28,7 @@
 #include <QOpenGLBuffer>
 #include <QMatrix4x4>
 
-QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
+//QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 #include <mainwindow.h>
 
@@ -63,7 +63,6 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
   void SetEnableLight(unsigned int lightNr, bool on);
   void CenterView();
 
-  guint find_object_at(gdouble x, gdouble y);
   Vector3d *mouse_ray(int x, int y);
   Vector3d mouse_on_plane(int x, int y, double plane_z=0);
 
@@ -71,9 +70,14 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
   GLdouble mvmatrix[16];
   GLdouble projmatrix[16];
 
+  static const GLsizei BUFSIZE = 256;
+  GLuint select_buffer[BUFSIZE];
+  QPoint mouseP;
+
 protected:
   void initializeGL() override;
   void resizeGL(int w, int h) override;
+  void paintAll(bool select_mode);
   void paintGL() override;
   void mousePressEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
@@ -128,13 +132,14 @@ private:
   int m_yRot;
   int m_zRot;
   QPoint m_lastPos;
-  QOpenGLVertexArrayObject m_vao;
-  QOpenGLBuffer m_logoVbo;
-  QOpenGLShaderProgram *m_program;
+//  QOpenGLVertexArrayObject m_vao;
+//  QOpenGLBuffer m_logoVbo;
+  //QOpenGLShaderProgram *m_program;
   QMatrix4x4 m_proj;
   QMatrix4x4 m_camera;
   QMatrix4x4 m_world;
-//  virtual bool on_expose_event(GdkEventExpose* event);
+
+  //  virtual bool on_expose_event(GdkEventExpose* event);
 //  virtual bool on_motion_notify_event(GdkEventMotion* event);
 //  virtual bool on_button_press_event(GdkEventButton* event);
 //  virtual bool on_button_release_event(GdkEventButton* event);
@@ -147,6 +152,7 @@ private:
                 const GLdouble model[], const GLdouble proj[],
                 const GLint viewport[],
                 GLdouble *winx, GLdouble *winy, GLdouble *winz);
+
 };
 
 #endif // RENDER_H

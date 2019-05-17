@@ -258,7 +258,9 @@ void FlatShape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
   for (uint i = 0; i < count; i++) {
     FlatShape *fs  = new FlatShape();
     fs->polygons.push_back(polygons[i]);
-    if (progress && i%progress_steps==0 && !progress->update(count)) break;
+    if (progress && i%progress_steps==0)
+        progress->emit update_signal(count);
+    if (!progress->do_continue) break;
     shapes.push_back(fs);
   }
   progress->stop("_(Done)");

@@ -89,6 +89,7 @@ public:
     void startProgress(string label, double max);
     TemperaturePanel *getTempsPanel() const;
 
+    void selectShape(const int index);
 private:
     Ui::MainWindow *ui_main;
     Ui::PreferencesDialog *ui_prefs;
