@@ -92,34 +92,33 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
   set_locales("C");
   if(_type == ASCII_STL) {
     // multiple shapes per file
-    load_asciiSTL(triangles, names, max_triangles);
-    if (names.size() == 1) // if single shape name by file
+      load_asciiSTL(triangles, names, max_triangles);
+      if (names.size() == 1) // if single shape name by file
+          names[0] = name_by_file;
+      if (triangles.size() == 0) {// if no success, try binary mode
+          _type = BINARY_STL;
+      }
+  }
+  if(_type != ASCII_STL) {
+      // single shape per file
+      triangles.resize(1);
+      names.resize(1);
       names[0] = name_by_file;
-    if (triangles.size() == 0) {// if no success, try binary mode
-      _type = BINARY_STL;
-      loadTriangles(triangles, names, max_triangles);
-      return;
-    }
+      if (_type == BINARY_STL) {
+          load_binarySTL(triangles[0], max_triangles);
 #if ENABLE_AMF
-  } else if (_type == AMF) {
-    // multiple shapes per file
-    load_AMF(triangles, names, max_triangles);
-    if (names.size() == 1) // if single shape name by file
-      names[0] = name_by_file;
+      } else if (_type == AMF) {
+          // multiple shapes per file
+          load_AMF(triangles, names, max_triangles);
+          if (names.size() == 1) // if single shape name by file
+              names[0] = name_by_file;
 #endif
-  } else {
-    // single shape per file
-    triangles.resize(1);
-    names.resize(1);
-    names[0] = name_by_file;
-    if (_type == BINARY_STL) {
-      load_binarySTL(triangles[0], max_triangles);
-    } else if (_type == VRML) {
-      load_VRML(triangles[0], max_triangles);
-    } else {
-      cerr << "Unrecognized file - " << _fileInfo.path().toUtf8().constData()<< endl;
-      cerr << _("Known extensions: ") << "STL, WRL, AMF." << endl;
-    }
+      } else if (_type == VRML) {
+          load_VRML(triangles[0], max_triangles);
+      } else {
+          cerr << "Unrecognized file - " << _fileInfo.path().toUtf8().constData()<< endl;
+          cerr << _("Known extensions: ") << "STL, WRL, AMF." << endl;
+      }
   }
   reset_locales();
 }
@@ -268,7 +267,7 @@ bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
     QString name;
     if (!File::parseSTLtriangles_ascii(file, max_triangles, readnormals,
                        tr, name))
-      break;
+        break;
 
     triangles.push_back(tr);
     names.push_back(name);
