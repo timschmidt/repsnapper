@@ -587,12 +587,15 @@ bool Printer::QueryTemp( void ) {
   return true;
 }
 
-static const QRegularExpression templineRE_T("(?ims)T(?<extrno>\\d?)\\:(?<temp>[\\-\\.\\d]+?)\\s+?",
-                                             QRegularExpression::MultilineOption);// "T<N>:-23.4"
-static const QRegularExpression templineRE_B("(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?",
-                                             QRegularExpression::MultilineOption);// "B:-12.3"
-static const QRegularExpression templineRE_C("(?ims)C\\:(?<temp>[\\-\\.\\d]+?)\\s+?",
-                                             QRegularExpression::MultilineOption);// "C:-12.3"
+static const QRegularExpression templineRE_T(
+        "(?ims)T(?<extrno>\\d?)\\:(?<temp>[\\-\\.\\d]+?)\\s+?/?(?<set>[\\-\\.\\d]+)?",
+        QRegularExpression::MultilineOption);// "T<N>:-23.4" T:199.09 /200.00
+static const QRegularExpression templineRE_B(
+        "(?ims)B\\:(?<temp>[\\-\\.\\d]+?)\\s+?/?(?<set>[\\-\\.\\d]+)?",
+                                             QRegularExpression::MultilineOption);// "B:-12.3 /55.00"
+static const QRegularExpression templineRE_C(
+        "(?ims)C\\:(?<temp>[\\-\\.\\d]+?)\\s+?/?(?<set>[\\-\\.\\d]+)?",
+                                             QRegularExpression::MultilineOption);// "C:-12.3 /55.00"
 static const QRegularExpression numberRE("\\d+");
 
 // "ok T:-15.00 /0.00 B:12.81 /0.00"
@@ -638,22 +641,26 @@ void Printer::ParseResponse( QString line ) {
             if (extrM.length()==1)
                 extr = extrM.toInt();
 
+            qDebug() << match.captured("set") ;
             double temp = match.captured("temp").toDouble();
-            main->getTempsPanel()->setExtruderTemp(extr, int(0.5+temp));
+            double settemp = match.captured("set").toDouble();
+            main->getTempsPanel()->setExtruderTemp(extr, int(0.5+temp), int(0.5+settemp));
             // no number: currently selected exttruder
-            qDebug()<< "Nozzle Temp of Extr."<< extr <<"is"<< temp;
+            qDebug()<< "Nozzle Temp of Extr."<< extr <<"is"<< temp << " of " << settemp;
         }
         QRegularExpressionMatch match = templineRE_B.match(line);
         if(match.hasMatch()){
             double temp = match.captured("temp").toDouble();
-            main->getTempsPanel()->setBedTemp(int(0.5+temp));
-            qDebug()<< "Bed Temp is"<< temp;
+            double settemp = match.captured("set").toDouble();
+            main->getTempsPanel()->setBedTemp(int(0.5+temp), int(0.5+settemp));
+            qDebug()<< "Bed Temp is"<< temp << " of " << settemp;
         }
         match = templineRE_C.match(line);
         if(match.hasMatch()){
             double temp = match.captured("temp").toDouble();
-            main->getTempsPanel()->setTemp("Chamber", int(0.5+temp));
-            qDebug()<< "Chamber Temp is"<< temp;
+            double settemp = match.captured("set").toDouble();
+            main->getTempsPanel()->setTemp("Chamber", int(0.5+temp), int(0.5+settemp));
+            qDebug()<< "Chamber Temp is"<< temp << " of " << settemp;
         }
         emit temp_changed();
     }

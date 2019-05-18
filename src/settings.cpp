@@ -529,7 +529,6 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
   return false;
 }
 
-
 // whole group or all groups
 void Settings::set_all_to_gui (QWidget *parent_widget, const string filter)
 {
@@ -548,8 +547,9 @@ void Settings::set_all_to_gui (QWidget *parent_widget, const string filter)
 
 Vector3d Settings::getRotation()
 {
-    return Vector3d(get_double("rot/x",0.),get_double("rot/y",0.),
-                    get_double("rot/z",0.));
+    return Vector3d(get_double("rot/x",0.)*M_PI/180,
+                    get_double("rot/y",0.)*M_PI/180,
+                    get_double("rot/z",0.)*M_PI/180);
 }
 
 Vector3d Settings::getTranslation()
@@ -567,9 +567,9 @@ Vector4d Settings::getScaleValues()
 void Settings::setRotation(const Vector3d &rot)
 {
     inhibit_callback = true;
-    setValue("rot/x", rot[0]);
-    setValue("rot/y", rot[1]);
-    setValue("rot/z", rot[2]);
+    setValue("rot/x", rot[0]*180/M_PI);
+    setValue("rot/y", rot[1]*180/M_PI);
+    setValue("rot/z", rot[2]*180/M_PI);
     inhibit_callback = false;
 }
 

@@ -508,10 +508,9 @@ void Render::mouseMoveEvent(QMouseEvent *event)
     const Vector2d dragp(event->pos().x(), event->pos().y());
     const Vector3d mouse_preview = mouse_on_plane(dragp.x(), dragp.y(),
                                                   get_model()->get_preview_Z());
+//    cerr << mouse_preview << endl;
     get_model()->setMeasuresPoint(mouse_preview);
     setFocus();
-
-//    mousePickedObject = find_object_at(event->pos().x(), event->pos().y());
 
     const Vector2d delta = dragp - m_dragStart;
     const Vector3d delta3f(delta.x()*drag_factor, -delta.y()*drag_factor, 0);
@@ -528,13 +527,10 @@ void Render::mouseMoveEvent(QMouseEvent *event)
             const Vector3d mouse_down_plat = mouse_on_plane(m_dragStart.x(), m_dragStart.y());
             const Vector3d mousePlat  = mouse_on_plane(dragp.x(), dragp.y());
             const Vector3d movevec = mousePlat - mouse_down_plat;
-            cerr << movevec << endl;
             get_model()->move_selection(&m_selection, 2.*movevec);
-            m_dragStart = dragp;
         } else if (mousePressedModifiers == Qt::ControlModifier) { // move object Z wise
             const Vector3d delta3fz(0, 0, -delta.y()*drag_factor);
             get_model()->move_selection(&m_selection, delta3fz);
-            m_dragStart = dragp;
         } else if (mousePressedModifiers == Qt::NoModifier) { // rotate
 //            Vector3d axis(delta.y(), delta.x(), 0);
 //            cerr << "rotate "<< delta << " " << axis << endl;
@@ -549,13 +545,14 @@ void Render::mouseMoveEvent(QMouseEvent *event)
                 for (uint s=0; s<shapes.size(); s++) {
                     shapes[s]->Scale(shapes[s]->getScaleFactor()/factor, false);
                 }
-//                m_view->update_scale_value();
+                if (shapes.size()>0) {
+                    m_main->showTransforms(shapes[0]);
+                }
             }
         } else { // zoom view
             m_zoom *= float(factor);
 //            cerr << "zoom "<< m_zoom << endl;
         }
-        m_dragStart = dragp;
     } else if(mousePressed == Qt::RightButton) { // zoom
         if (mousePressedModifiers == Qt::ShiftModifier  // scale shape
                 || mousePressedModifiers == Qt::ControlModifier) {
@@ -565,13 +562,12 @@ void Render::mouseMoveEvent(QMouseEvent *event)
             else
                 axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
             get_model()->rotate_selection(&m_selection, axis, delta.length()/100.);
-            m_dragStart = dragp;
         } else {  // move view XY  / pan
             moveArcballTrans(m_transform, delta3f);
-            m_dragStart = dragp;
-            //setArcballTrans(m_transform, delta3f);
+//            setArcballTrans(m_transform, delta3f);
         }
     }
+    m_dragStart = dragp;
     if (redraw)
         repaint();
 }

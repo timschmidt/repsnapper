@@ -645,6 +645,9 @@
                </item>
                <item row="1" column="4">
                 <widget class="QDoubleSpinBox" name="rot_z">
+                 <property name="minimum">
+                  <double>-360.000000000000000</double>
+                 </property>
                  <property name="maximum">
                   <double>360.000000000000000</double>
                  </property>
@@ -692,6 +695,9 @@
                </item>
                <item row="1" column="3">
                 <widget class="QDoubleSpinBox" name="rot_y">
+                 <property name="minimum">
+                  <double>-360.000000000000000</double>
+                 </property>
                  <property name="maximum">
                   <double>360.000000000000000</double>
                  </property>
@@ -702,6 +708,9 @@
                </item>
                <item row="1" column="2">
                 <widget class="QDoubleSpinBox" name="rot_x">
+                 <property name="minimum">
+                  <double>-360.000000000000000</double>
+                 </property>
                  <property name="maximum">
                   <double>360.000000000000000</double>
                  </property>
@@ -874,7 +883,7 @@
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_7">
            <item>
-            <widget class="QWidget" name="widget_7" native="true">
+            <widget class="QWidget" name="gcodeActions" native="true">
              <layout class="QHBoxLayout" name="horizontalLayout_7">
               <property name="spacing">
                <number>2</number>
@@ -1115,36 +1124,6 @@
             </widget>
            </item>
            <item>
-            <widget class="QWidget" name="widget_4" native="true">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_4">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <property name="horizontalSpacing">
-               <number>0</number>
-              </property>
-              <property name="verticalSpacing">
-               <number>2</number>
-              </property>
-             </layout>
-            </widget>
-           </item>
-           <item>
             <widget class="QTabWidget" name="tabWidget2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
@@ -1263,27 +1242,6 @@ M104 S0.0        ; heater off
                </item>
               </layout>
              </widget>
-            </widget>
-           </item>
-           <item>
-            <widget class="QWidget" name="widget_5" native="true">
-             <layout class="QHBoxLayout" name="horizontalLayout_6">
-              <property name="spacing">
-               <number>2</number>
-              </property>
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-             </layout>
             </widget>
            </item>
           </layout>

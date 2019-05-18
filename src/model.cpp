@@ -628,6 +628,9 @@ void Model::rotate_selection(QModelIndexList * selected, const Vector3d axis,
     for (Shape * shape: selshapes) {
         shape->Rotate(axis, angle);
     }
+    if (selshapes.size() == 1){
+        main->showTransforms(selshapes[0]);
+    }
     ModelChanged();
 }
 
@@ -637,8 +640,12 @@ void Model::move_selection(QModelIndexList *selected, const Vector3d move)
     for (Shape * shape: selshapes){
         shape->move(move);
     }
+    if (selshapes.size() == 1){
+        main->showTransforms(selshapes[0]);
+    }
     ModelChanged();
 }
+
 void Model::RotateObject(Shape* shape, ListObject* object, Vector4d rotate)
 {
   if (!shape)
@@ -1233,8 +1240,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 
 double Model::get_preview_Z()
 {
-  if (m_previewLayer) return m_previewLayer->getZ();
-  return 0;
+  return settings->get_double("Display/LayerValue",0.)/1000.;
 }
 
 bool Model::haveGCode() const
@@ -1244,5 +1250,5 @@ bool Model::haveGCode() const
 
 void Model::setMeasuresPoint(const Vector3d &point)
 {
-  measuresPoint = Vector2d(point.x(), point.y()) ;
+  measuresPoint = (point - settings->getPrintMargin()).get_sub_vector<2>(0);
 }

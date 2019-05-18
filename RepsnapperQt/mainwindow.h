@@ -24,6 +24,7 @@
 #include <QCheckBox>
 #include <QStringListModel>
 #include <QColorDialog>
+#include <QShortcut>
 
 #include "src/ui/prefs_dlg.h"
 
@@ -50,11 +51,11 @@ public:
     QWidget * addDevice(const QString &name, const QString &label);
     QWidget *addExtruder(const uint index);
     void removeDevice(const QString &name);
-    void setTemp(const QString &name, int temp);
+    void setTemp(const QString &name, int temp, int set_temp=-1);
     int getTemp(const QString &name);
     double getMM(const QString &name);
-    void setExtruderTemp(int number, int temp);
-    void setBedTemp(int temp);
+    void setExtruderTemp(int number, int temp, int set_temp=-1);
+    void setBedTemp(int temp, int set_temp=-1);
     int getSpeed(const QString &name);
     void setEnabled(const QString &name, bool enabled);
 };
@@ -90,6 +91,7 @@ public:
     TemperaturePanel *getTempsPanel() const;
 
     void selectShape(const int index);
+    void showTransforms(const Shape *shape);
 private:
     Ui::MainWindow *ui_main;
     Ui::PreferencesDialog *ui_prefs;
@@ -108,10 +110,9 @@ private:
     QStringListModel objListModel;
 
     void connectButtons(QWidget *widget);
-    void generateGCode();
-
 
 private slots:
+    void generateGCode();
     void on_actionOpen_triggered();
     void on_actionQuit_triggered();
     void on_actionSettings_triggered();
@@ -125,10 +126,10 @@ private slots:
     void printerConnection(int state);
     void printingChanged();
     void nowPrinting(long);
+    void deleteSelected();
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);
 //    void toGCSliderValue(int value);
-
 };
 
 #endif // MAINWINDOW_H

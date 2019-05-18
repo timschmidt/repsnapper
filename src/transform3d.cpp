@@ -145,15 +145,17 @@ void Transform3D::rotate_to(const Vector3d &center, double x, double y, double z
 
 double Transform3D::getRotX() const
 {
-  return atan2(m_transform(2,1), m_transform(2,2));
+    return -asin(m_transform(1,2));
+//  ?? return atan2(m_transform(2,1), m_transform(2,2));
 }
 double Transform3D::getRotY() const
 {
-  return -asin(m_transform(2,0));
+  return asin(m_transform(0,2));
 }
 double Transform3D::getRotZ() const
 {
-  return atan2(m_transform(1,0), m_transform(0,0));
+    return asin(m_transform(0,1));
+// ??  return atan2(m_transform(1,0), m_transform(0,0));
 }
 
 Matrix4d Transform3D::getInverse() const

@@ -66,7 +66,7 @@ public:
   void drawCommands(Settings *settings, uint start, uint end,
                     bool liveprinting, int linewidth, bool arrows, bool boundary=false,
                     bool onlyZChange = false);
-  void MakeText(QString &GcodeTxt, Settings *settings,
+  bool MakeText(QString &GcodeTxt, Settings *settings,
                 ViewProgress * progress);
 
   //bool append_text (const std::string &line);

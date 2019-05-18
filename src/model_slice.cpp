@@ -309,7 +309,7 @@ void Model::Slice()
   if (!settings->get_boolean("Slicing/Support")) supportangle = -1;
 
   m_progress->set_terminal_output(settings->get_boolean("Display/TerminalProgress"));
-  m_progress->start (_("Slicing"), maxZ);
+  if (!m_progress->restart (_("Slicing"), maxZ)) return;
   // for (vector<Layer *>::iterator pIt = layers.begin();
   //      pIt != layers. end(); pIt++)
   //   delete *pIt;
@@ -731,7 +731,7 @@ void Model::CalcInfill()
       settings->get_double("Slicing/SolidThickness") == 0.0) return;
 
   int count = (int)layers.size();
-  m_progress->start (_("Infill"), count);
+  if (!m_progress->restart (_("Infill"), count)) return;
   int progress_steps=max(1,(count/100));
   bool cont = true;
   //cerr << "make infill"<< endl;
@@ -779,14 +779,13 @@ void Model::ConvertToGCode()
 
   // Make Layers
   lastlayer = NULL;
+  m_progress->start(_("Generating GCode"),1);
 
   Slice();
-  QCoreApplication::processEvents();
 
   //CleanupLayers();
 
   MakeShells();
-  QCoreApplication::processEvents();
 
   if (settings->get_boolean("Slicing/DoInfill") &&
       !settings->get_boolean("Slicing/NoTopAndBottom") &&
@@ -802,81 +801,73 @@ void Model::ConvertToGCode()
     MakeSupportPolygons(settings->get_double("Slicing/SupportWiden"));
 
   MakeFullSkins(); // must before multiplied uncovered bottoms
-  QCoreApplication::processEvents();
 
   MultiplyUncoveredPolygons();
-  QCoreApplication::processEvents();
 
   if (settings->get_boolean("Slicing/Skirt"))
     MakeSkirt();
-  QCoreApplication::processEvents();
 
   CalcInfill();
-  QCoreApplication::processEvents();
 
   if (settings->get_boolean("Raft/Enable"))
     {
       printOffset += Vector3d (settings->get_double("Raft/Size"), 0);
       MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
     }
-  QCoreApplication::processEvents();
 
   state.ResetLastWhere(Vector3d::ZERO);
-  uint count =  layers.size();
+  ulong layercount =  layers.size();
 
-  m_progress->start (_("Making Lines"), count+1);
+  if (m_progress->restart (_("Making Lines"), layercount+1)) {
 
-  state.AppendCommand(MILLIMETERSASUNITS,  false, _("Millimeters"));
-  state.AppendCommand(ABSOLUTEPOSITIONING, false, _("Absolute Pos"));
-  if (settings->get_boolean("Slicing/RelativeEcode"))
-    state.AppendCommand(RELATIVE_ECODE, false, _("Relative E Code"));
-  else
-    state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
+      state.AppendCommand(MILLIMETERSASUNITS,  false, _("Millimeters"));
+      state.AppendCommand(ABSOLUTEPOSITIONING, false, _("Absolute Pos"));
+      if (settings->get_boolean("Slicing/RelativeEcode"))
+          state.AppendCommand(RELATIVE_ECODE, false, _("Relative E Code"));
+      else
+          state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
 
-  bool cont = true;
-  vector<PLine3> plines;
-  bool farthestStart = settings->get_boolean("Slicing/FarthestLayerStart");
-  Vector3d start = state.LastPosition();
-  for (uint p=0; p<count; p++) {
-    if (p%10==0) m_progress->emit update_signal(p);
-    if (!m_progress->do_continue)  break;
+      vector<PLine3> plines;
+      bool farthestStart = settings->get_boolean("Slicing/FarthestLayerStart");
+      Vector3d start = state.LastPosition();
+      for (uint p=0; p<layercount; p++) {
+          if (p%10==0) m_progress->emit update_signal(p);
+          if (!m_progress->do_continue)  break;
 
-    // cerr << "GCode layer " << (p+1) << " of " << count
-    // 	 << " offset " << printOffsetZ
-    // 	 << " have commands: " <<commands.size()
-    // 	 << " start " << start <<  endl;;
-    // try {
-    if (farthestStart) {
-      // Vector2d randstart = layers[p]->getRandomPolygonPoint();
-      // start.set(randstart.x(), randstart.y());
-      const Vector2d fartheststart = layers[p]->getFarthestPolygonPoint(start);
-      start.set(fartheststart.x(), fartheststart.y());
-    }
-    layers[p]->MakePrintlines(start,
-                  plines,
-                  printOffsetZ,
-                  *settings);
-    // } catch (Glib::Error &e) {
-    //   error("GCode Error:", (e.what()).c_str());
-    // }
-    // if (layers[p]->getPrevious() != NULL)
-    //   cerr << p << ": " <<layers[p]->LayerNo << " prev: "
-    // 	   << layers[p]->getPrevious()->LayerNo << endl;
-    QCoreApplication::processEvents();
+          // cerr << "GCode layer " << (p+1) << " of " << count
+          // 	 << " offset " << printOffsetZ
+          // 	 << " have commands: " <<commands.size()
+          // 	 << " start " << start <<  endl;;
+          // try {
+          if (farthestStart) {
+              // Vector2d randstart = layers[p]->getRandomPolygonPoint();
+              // start.set(randstart.x(), randstart.y());
+              const Vector2d fartheststart = layers[p]->getFarthestPolygonPoint(start);
+              start.set(fartheststart.x(), fartheststart.y());
+          }
+          layers[p]->MakePrintlines(start,
+                                    plines,
+                                    printOffsetZ,
+                                    *settings);
+          // } catch (Glib::Error &e) {
+          //   error("GCode Error:", (e.what()).c_str());
+          // }
+          // if (layers[p]->getPrevious() != NULL)
+          //   cerr << p << ": " <<layers[p]->LayerNo << " prev: "
+          // 	   << layers[p]->getPrevious()->LayerNo << endl;
+      }
+      // do antiooze retract for all lines:
+      Printlines::makeAntioozeRetract(plines, settings, m_progress);
+      //  vector<Command> commands;
+      //Printlines::getCommands(plines, settings, commands, m_progress);
+      Printlines::getCommands(plines, settings, state, m_progress);
+
+      //state.AppendCommands(commands, settings.Slicing.RelativeEcode);
   }
-  // do antiooze retract for all lines:
-  Printlines::makeAntioozeRetract(plines, settings, m_progress);
-//  vector<Command> commands;
-  //Printlines::getCommands(plines, settings, commands, m_progress);
-  Printlines::getCommands(plines, settings, state, m_progress);
-
-  //state.AppendCommands(commands, settings.Slicing.RelativeEcode);
 
   QCoreApplication::processEvents();
   QString GcodeTxt;
-  if (cont)
-    gcode->MakeText (GcodeTxt, settings, m_progress);
-  else {
+  if (!gcode->MakeText (GcodeTxt, settings, m_progress)) {
     ClearLayers();
     ClearGCode();
     ClearPreview();
@@ -886,22 +877,19 @@ void Model::ConvertToGCode()
   // if (shapes.back()->dimensions() == 2)
   //   gcode.layerchanges.push_back(0);
 
-  m_progress->stop (_("Done"));
-  QCoreApplication::processEvents();
-
-  int h = (int)state.timeused/3600;
-  int m = ((int)state.timeused%3600)/60;
-  int s = ((int)state.timeused-3600*h-60*m);
+  int h = int(state.timeused)/3600;
+  int m = int(state.timeused)%3600/60;
+  int s = (int(state.timeused)-3600*h-60*m);
   std::ostringstream ostr;
   ostr << _("Time Estimation: ") ;
   if (h>0) ostr << h <<_("h") ;
   ostr <<m <<_("m") <<s <<_("s") ;
 
-  double gctime = gcode->GetTimeEstimation();
+  int gctime = int(gcode->GetTimeEstimation());
   if (abs(state.timeused - gctime) > 10) {
-    h = (int)(gctime/3600);
-    m = ((int)gctime)%3600/60;
-    s = (int)(gctime)-3600*h-60*m;
+    h = gctime/3600;
+    m = gctime%3600/60;
+    s = gctime-3600*h-60*m;
     ostr << _(" / GCode Estimation: ");
     if (h>0) ostr << h <<_("h");
     ostr<< m <<_("m") << s <<_("s") ;
@@ -924,10 +912,11 @@ void Model::ConvertToGCode()
     const int time_used = start_time.elapsed()/1000; // seconds
     cerr << "GCode generated in " << time_used << " seconds. " << GcodeTxt.size() << " bytes" << endl;
   }
+
   gcode->emit gcode_changed();
 
+  m_progress->stop(_("Done"));
   is_calculating=false;
-  //  m_signal_gcode_changed.emit();
 }
 
 string Model::getSVG(int single_layer_no)
@@ -977,7 +966,7 @@ void Model::SliceToSVG(QFile *file, bool single_layer)
   }
   else {
     uint n_layers = layers.size();
-    m_progress->start (_("Saving Files"),n_layers);
+    if (!m_progress->restart (_("Saving Files"),n_layers)) return;
     uint digits = log10(n_layers)+1;
     string base = finfo.absolutePath().toUtf8().constData();
     ostringstream ostr;

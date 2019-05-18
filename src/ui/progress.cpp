@@ -50,6 +50,7 @@ void ViewProgress::start (const char *label, double max)
   connect(this, SIGNAL(update_signal(double)), this, SLOT(update(double)));
 }
 
+// only start if not cancelled
 bool ViewProgress::restart (const char *label, double max)
 {
   if (!do_continue) return false;

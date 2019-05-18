@@ -39,22 +39,24 @@ class ViewProgress : public QObject {
   QString label;
 
  public:
-  void start (const char *label, double max);
-  bool restart (const char *label, double max);
-  void stop (const char *label = "");
   ViewProgress(){}
   ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label);
   ~ViewProgress(){}
+
+  void start (const char *label, double max);
+  bool restart (const char *label, double max);
+
   void set_label (QString label);
   double maximum() { return m_bar_max; }
   double value() { return m_bar_cur; }
   bool to_terminal;
   void set_terminal_output(bool terminal);
   bool do_continue;
-  void stop_running(){do_continue = false;}
 
 public slots:
   bool update (double value);
+  void stop (const char *label = "");
+  void stop_running(){do_continue = false;}
 
 signals:
   void update_signal(double value);

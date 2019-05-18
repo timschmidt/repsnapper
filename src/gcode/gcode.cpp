@@ -600,13 +600,17 @@ void GCode::drawCommands(Settings *settings, uint start, uint end,
 
 
 
-void GCode::MakeText(QString &GcodeTxt,
+bool GCode::MakeText(QString &GcodeTxt,
                      Settings *settings,
                      ViewProgress * progress)
 {
   QString GcodeStart = settings->get_string("GCode/Start");
   QString GcodeLayer = settings->get_string("GCode/Layer");
   QString GcodeEnd   = settings->get_string("GCode/End");
+
+  if (progress)
+      if (!progress->restart(_("Collecting GCode"), commands.size()))
+          return false;
 
     double lastE = -10;
     double lastF = 0; // last Feedrate (can be omitted when same)
@@ -623,7 +627,6 @@ void GCode::MakeText(QString &GcodeTxt,
     GcodeTxt += "\n; Startcode\n"+GcodeStart + "; End Startcode\n\n";
 
     layerchanges.clear();
-    if (progress) progress->restart(_("Collecting GCode"), commands.size());
     int progress_steps=max(1,int(commands.size()/100));
 
     double speedalways = settings->get_boolean("Hardware/SpeedAlways");
@@ -681,7 +684,7 @@ void GCode::MakeText(QString &GcodeTxt,
     }
 
     if (progress) progress->stop();
-
+    return true;
 }
 
 // void GCode::Write (Model *model, string filename)

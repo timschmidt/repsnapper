@@ -93,9 +93,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_printer, SIGNAL(serial_state_changed(int)),
             this, SLOT(printerConnection(int)));
     connect(m_printer, SIGNAL(printing_changed()),this, SLOT(printingChanged()));
-
     connect(m_printer, SIGNAL(now_printing(long)),this, SLOT(nowPrinting(long)));
-
     connect(m_settings, SIGNAL(settings_changed(const QString&)),
             this, SLOT(settingsChanged(const QString&)));
 
@@ -116,6 +114,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_render = ui_main->openGLWidget;
     m_render->setMain(this);
+
+    connect(new QShortcut(QKeySequence("CTRL+O"), this),
+            SIGNAL(activated()), this, SLOT(on_actionOpen_triggered()));
+    connect(new QShortcut(QKeySequence("CTRL+G"),this),
+            SIGNAL(activated()), this, SLOT(generateGCode()));
+    connect(new QShortcut(QKeySequence::StandardKey::Delete,this),
+            SIGNAL(activated()), this, SLOT(deleteSelected()));
+    connect(new QShortcut(QKeySequence::StandardKey::Cancel,this),
+            SIGNAL(activated()), m_progress, SLOT(stop_running()));
 }
 
 const std::string fromQString(QString qstring){
@@ -189,13 +196,8 @@ void MainWindow::selectShape(const int index){
     shapeSelected(mi);
 }
 
-void MainWindow::shapeSelected(const QModelIndex &index)
-{
-    QModelIndexList sel = ui_main->modelListView->selectionModel()->selectedRows();
-    m_render->setSelection(sel);
-
-    if (sel.size() == 1){
-        Shape *shape = m_model->objectList.findShape(sel.first().row());
+void MainWindow::showTransforms(const Shape *shape){
+    if (shape){
         m_settings->setScaleValues(shape->getScaleValues());
         m_settings->setRotation(shape->getRotation());
         m_settings->setTranslation(shape->getTranslation());
@@ -207,6 +209,20 @@ void MainWindow::shapeSelected(const QModelIndex &index)
     m_settings->set_all_to_gui(this,"rot");
     m_settings->set_all_to_gui(this,"translate");
     m_settings->set_all_to_gui(this,"scale");
+}
+
+
+void MainWindow::shapeSelected(const QModelIndex &index)
+{
+    QModelIndexList sel = ui_main->modelListView->selectionModel()->selectedRows();
+    m_render->setSelection(sel);
+
+    if (sel.size() == 1){
+        Shape *shape = m_model->objectList.findShape(sel.first().row());
+        showTransforms(shape);
+    } else {
+        showTransforms(nullptr);
+    }
 }
 
 void MainWindow::printerConnection(int state)
@@ -239,9 +255,14 @@ void MainWindow::printingChanged()
     ui_main->p_stop->setEnabled(isPrinting);
     ui_main->p_pause->setEnabled(isPrinting);
     ui_main->p_print->setEnabled(!isPrinting);
+    ui_main->AxisControlBox->setEnabled(!isPrinting);
+    ui_main->gcodeActions->setEnabled(!isPrinting);
     if (!isPrinting) {
         m_progress->stop();
         m_model->setCurrentPrintingLine(0);
+    } else {
+        ui_main->Display_DisplayGCode->setChecked(false);
+        ui_main->Display_DisplayLayer->setChecked(false);
     }
 }
 
@@ -477,6 +498,10 @@ void MainWindow::connectButtons(QWidget *widget)
     }
 }
 
+void MainWindow::deleteSelected(){
+    m_model->DeleteSelectedObjects(m_render->getSelection());
+}
+
 void MainWindow::handleButtonClick()
 {
     QAbstractButton *button = dynamic_cast<QAbstractButton*>(sender());
@@ -485,9 +510,9 @@ void MainWindow::handleButtonClick()
     QString name = button->objectName();
 
     if (name == "m_delete"){
-        m_model->DeleteSelectedObjects(m_render->getSelection());
+        deleteSelected();
     } else if(name == "progress_Cancel"){
-        m_progress->stop();
+        m_progress->stop_running();
     } else if(name == "m_load_stl"){
         on_actionOpen_triggered();
     } else if(name == "m_save_stl"){
@@ -659,8 +684,7 @@ void MainWindow::settingsChanged(const QString &name)
         vector<Shape*> selected = getSelectedShapes();
         if (selected.size()==1) {
             Vector3d rot = m_settings->getRotation();
-            selected[0]->RotateTo(rot.x()*M_PI/180., rot.y()*M_PI/180.,
-                                  rot.z()*M_PI/180.);
+            selected[0]->RotateTo(rot.x(), rot.y(), rot.z());
             m_model->ModelChanged();
         }
     } else if (name.startsWith("translate")) {
@@ -784,18 +808,24 @@ void TemperaturePanel::removeDevice(const QString &name)
     rows.remove(name);
 }
 
-void TemperaturePanel::setBedTemp(int temp) {
-    setTemp("Bed", temp);
+void TemperaturePanel::setBedTemp(int temp, int set_temp) {
+    setTemp("Bed", temp, set_temp);
 }
 
-void TemperaturePanel::setExtruderTemp(int number, int temp) {
-    setTemp(Settings::numbered("Extruder",number), temp);
+void TemperaturePanel::setExtruderTemp(int number, int temp, int set_temp) {
+    setTemp(Settings::numbered("Extruder",number), temp, set_temp);
 }
 
-void TemperaturePanel::setTemp(const QString &name, int temp)
+void TemperaturePanel::setTemp(const QString &name, int temp, int set_temp)
 {
     if (rows.contains(name))
         rows[name]->Temperature_CurrentTemp->setText(QString::number(temp) + " °C");
+    if (set_temp > 0) {
+        rows[name]->Temperature_Temp->setValue(set_temp);
+        rows[name]->Temperature_Button->setChecked(true);
+    } else if (set_temp == 0) {
+        rows[name]->Temperature_Button->setChecked(false);
+    }
 }
 
 int TemperaturePanel::getTemp(const QString &name)
