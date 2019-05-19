@@ -45,7 +45,8 @@ using namespace std;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui_main(new Ui::MainWindow),
-    objListModel(this)
+    objListModel(this),
+    m_opendialog(nullptr)
 {
     QCoreApplication::setOrganizationName("Repsnapper");
     QCoreApplication::setApplicationName("Repsnapper");
@@ -502,6 +503,45 @@ void MainWindow::deleteSelected(){
     m_model->DeleteSelectedObjects(m_render->getSelection());
 }
 
+void MainWindow::previewFile(const QString &filename)
+{
+    if (!m_model) return;
+    if (!m_settings->get_boolean("Display/PreviewLoad")) return;
+    QFile file(filename);
+    if (!file.exists()) return;
+      m_model->preview_shapes.clear();
+      //cerr << "view " <<file->get_path() << endl;
+      m_model->preview_shapes  = m_model->ReadShapes(&file,10000);
+      bool display_poly = m_settings->get_boolean("Display/DisplayPolygons");
+      m_settings->setValue("Display/DisplayPolygons", true);
+      if (m_model->preview_shapes.size()>0) {
+        Vector3d pMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
+        Vector3d pMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
+        for (uint i = 0; i < m_model->preview_shapes.size(); i++) {
+          m_model->preview_shapes[i]->PlaceOnPlatform();
+          Vector3d stlMin = m_model->preview_shapes[i]->t_Min();
+          Vector3d stlMax = m_model->preview_shapes[i]->t_Max();
+          for (uint k = 0; k < 3; k++) {
+            pMin[k] = min(stlMin[k], pMin[k]);
+            pMax[k] = max(stlMax[k], pMax[k]);
+          }
+        }
+        //cerr << pMin << pMax << endl;
+        m_render->set_zoom((pMax - pMin).find_max()*2);
+        // Matrix4fT tr;
+        // setArcballTrans(tr,(pMin+pMax)/2);
+        // m_renderer->set_transform(tr);
+      }
+      m_render->update();
+      m_settings->setValue("Display/DisplayPolygons",display_poly);
+}
+
+void MainWindow::openFiles(const QStringList &fileNames)
+{
+    for (QString file : fileNames)
+        openFile(file);
+}
+
 void MainWindow::handleButtonClick()
 {
     QAbstractButton *button = dynamic_cast<QAbstractButton*>(sender());
@@ -745,11 +785,20 @@ void MainWindow::on_actionSettings_triggered()
 
 void MainWindow::on_actionOpen_triggered()
 {
-    QStringList fileNames = QFileDialog::getOpenFileNames
-            (this,tr("Open Model"), m_settings->STLPath,
-             tr("STL (*.stl);;AMF (*.amf);;All Files (*)"));
-    for (QString file : fileNames)
-        openFile(file);
+    if (!m_opendialog) {
+        m_opendialog =
+                new QFileDialog(this, tr("Open Model"), m_settings->STLPath,
+                    tr("STL (*.stl);;AMF (*.amf);;All Files (*)"));
+        m_opendialog->setFileMode(QFileDialog::ExistingFiles);
+        connect(m_opendialog, SIGNAL(currentChanged(const QString &)), this,
+                SLOT(previewFile(const QString &)));
+        connect(m_opendialog, SIGNAL(filesSelected(const QStringList &)), this,
+                SLOT(openFiles(const QStringList &)));
+    }
+    m_opendialog->show();
+//    QStringList fileNames = QFileDialog::getOpenFileNames
+//            (this,tr("Open Model"), m_settings->STLPath,
+//             tr("STL (*.stl);;AMF (*.amf);;All Files (*)"));
 }
 
 

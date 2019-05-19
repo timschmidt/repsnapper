@@ -25,6 +25,7 @@
 #include <QStringListModel>
 #include <QColorDialog>
 #include <QShortcut>
+#include <QFileDialog>
 
 #include "src/ui/prefs_dlg.h"
 
@@ -107,6 +108,8 @@ private:
     Printer *m_printer;
     ViewProgress *m_progress;
 
+    QFileDialog *m_opendialog;
+
     QStringListModel objListModel;
 
     void connectButtons(QWidget *widget);
@@ -127,6 +130,10 @@ private slots:
     void printingChanged();
     void nowPrinting(long);
     void deleteSelected();
+
+    void previewFile(const QString &filename);
+    void openFiles(const QStringList &filename);
+
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);
 //    void toGCSliderValue(int value);
