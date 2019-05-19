@@ -71,8 +71,9 @@ class GCodeState {
   const Vector3d &LastPosition();
   void  SetLastPosition(const Vector3d &v);
   void  ResetLastWhere(const Vector3d &to);
-  double DistanceFromLastTo(Vector3d *here);
+  double DistanceFromLastTo(const Vector3d &here);
   double LastCommandF();
   double timeused;
+  uint lastExtruder;
 };
 

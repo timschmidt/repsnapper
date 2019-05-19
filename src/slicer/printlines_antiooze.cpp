@@ -28,7 +28,7 @@ void test_range(AORange range, const vector<PLine3> &lines)
 {
   ostringstream o;
   bool error=false;
-  for (uint i = range.tractstart; i < range.movestart; i++)
+  for (ulong i = range.tractstart; i < range.movestart; i++)
     if (lines[i].is_command()) o << "C";
     else if (lines[i].is_move()) {
       error = true;
@@ -37,7 +37,7 @@ void test_range(AORange range, const vector<PLine3> &lines)
     }
     else o << "+"; // ok
   o << "|";
-  for (uint i = range.movestart; i<=range.moveend; i++)
+  for (ulong i = range.movestart; i<=range.moveend; i++)
     if (lines[i].is_command()) o << "C";
     else if (lines[i].is_move()) o << "-"; //ok
     else {
@@ -46,7 +46,7 @@ void test_range(AORange range, const vector<PLine3> &lines)
       o << "!";
     }
   o << "|";
-  for (uint i = range.moveend+1; i<=range.pushend; i++)
+  for (ulong i = range.moveend+1; i<=range.pushend; i++)
     if (lines[i].is_command()) o << "C";
     else if (lines[i].is_move()) {
       error = true;
@@ -60,42 +60,42 @@ void test_range(AORange range, const vector<PLine3> &lines)
 #endif
 
 
-inline bool move_start(uint from, uint &movestart, const vector<PLine3> &lines)
+inline bool move_start(ulong from, ulong &movestart, const vector<PLine<3> *> &lines)
 {
-  uint i = from;
+  ulong i = from;
   movestart = from;
-  uint num_lines = lines.size();
-  while (i < num_lines && (!lines[i].is_move() || lines[i].is_command()) ) {
-    i++;
-    movestart = i;
+  ulong num_lines = lines.size();
+  while (i < num_lines-1 && (!lines[i]->is_move() || lines[i]->is_command()) ) {
+      i++;
+      movestart = i;
   }
-  while (movestart < num_lines-1 && lines[movestart].is_command()) movestart++;
-  if (!lines[movestart].is_move()) return false;
+  while (movestart < num_lines-1 && lines[movestart]->is_command()) movestart++;
+  if (!lines[movestart]->is_move()) return false;
   if (movestart == num_lines-1) return false;
   return true;
 }
 
-inline bool move_end(uint from, uint &moveend, const vector<PLine3> &lines)
+inline bool move_end(ulong from, ulong &moveend, const vector<PLine<3> *> &lines)
 {
-  uint i = from;
+  ulong i = from;
   moveend = i;
-  uint num_lines = lines.size();
-  while (i < num_lines && (lines[i].is_move() || lines[i].is_command() ) ) {
+  ulong num_lines = lines.size();
+  while (i < num_lines && (lines[i]->is_move() || lines[i]->is_command() ) ) {
     moveend = i;
     i++;
   }
-  while (moveend>0 && lines[moveend].is_command()) moveend--;
-  if (!lines[moveend].is_move()) return false;
+  while (moveend>0 && lines[moveend]->is_command()) moveend--;
+  if (!lines[moveend]->is_move()) return false;
   if (moveend > num_lines-1) moveend = num_lines-1;
   return true;
 }
 
-inline bool find_moverange(double minlength, uint startindex,
-               uint &movestart,  uint &moveend,
-               const vector<PLine3> &lines)
+inline bool find_moverange(double minlength, ulong startindex,
+               ulong &movestart,  ulong &moveend,
+               const vector<PLine<3> *> &lines)
 {
-  uint i = startindex;
-  uint num_lines = lines.size();
+  ulong i = startindex;
+  ulong num_lines = lines.size();
   while (i < num_lines-2) {
     if (move_start (i, movestart, lines)) {        // find move start
       if (!move_end (movestart, moveend, lines)) {// find move end
@@ -112,39 +112,39 @@ inline bool find_moverange(double minlength, uint startindex,
 }
 
 // find ranges for retract and repush
-bool Printlines::find_nextmoves(double minlength, uint startindex,
+bool Printlines::find_nextmoves(double minlength, ulong startindex,
                 AORange &range,
-                const vector<PLine3> &lines)
+                const vector<PLine<3> *> &lines)
 {
   if (!find_moverange(minlength, startindex,
               range.movestart, range.moveend, lines)) return false;
-  uint num_lines = lines.size();
+  ulong num_lines = lines.size();
 
   // find previous move
   if (range.movestart == 0) range.tractstart = 0;
   else {
-    int i = range.movestart-1;
+    long i = long(range.movestart)-1;
     range.tractstart = range.movestart;
-    while ( i >= int(startindex)
-        && ( !(lines[i].is_move() || lines[i].has_absolute_extrusion())
-         || lines[i].is_command() )) {
+    while ( i >= long(startindex)
+        && ( !(lines[i]->is_move() || lines[i]->has_absolute_extrusion())
+         || lines[i]->is_command() )) {
       range.tractstart = i; i--;
     }
   }
   while (range.tractstart < num_lines-1
-     && lines[range.tractstart].is_command()) range.tractstart++;
+     && lines[range.tractstart]->is_command()) range.tractstart++;
 
   // find next move after
   if (range.moveend == num_lines-1) range.pushend = range.moveend;
   else {
-    uint i = range.moveend+1;
+    ulong i = range.moveend+1;
     range.pushend = range.moveend;
-    while ( i < num_lines && (!(lines[i].is_move() || lines[i].has_absolute_extrusion())
-                  || lines[i].is_command()) ) {
+    while ( i < num_lines && (!(lines[i]->is_move() || lines[i]->has_absolute_extrusion())
+                  || lines[i]->is_command()) ) {
       range.pushend = i; i++;
     }
   }
-  while (range.pushend > 0 && lines[range.pushend].is_command()) range.pushend--;
+  while (range.pushend > 0 && lines[range.pushend]->is_command()) range.pushend--;
 
 #if AODEBUG
   test_range(range, lines);
@@ -155,40 +155,39 @@ bool Printlines::find_nextmoves(double minlength, uint startindex,
 }
 
 
-uint Printlines::insertAntioozeHaltBefore(uint index, double amount, double AOspeed,
-                      vector< PLine3 > &lines)
+uint Printlines::insertAntioozeHaltBefore(ulong index, double amount, double AOspeed,
+                                          vector<PLine<3> *> &lines)
 {
   Vector3d where;
   if (index > lines.size()) return 0;
-  if (index == lines.size()) where = lines.back().to;
-  else where = lines[index].from;
-  PLine3 halt (lines[index].area, lines.front().extruder_no,
+  if (index == lines.size()) where = lines.back()->to;
+  else where = lines[index]->from;
+  PLine3 *halt = new PLine3(lines[index]->area, lines.front()->extruder_no,
            where, where, AOspeed, 0);
-  halt.addAbsoluteExtrusionAmount(amount, AOspeed);
+  halt->addAbsoluteExtrusionAmount(amount, AOspeed);
   lines.insert(lines.begin()+index, halt); // (inserts before)
   return 1;
 }
-
 
 #if AODEBUG
 static int distCase = 0;
 #endif
 
 int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
-                      uint fromline, uint &toline,
-                      vector< PLine3 > &lines,
+                      ulong fromline, ulong &toline,
+                      vector<PLine<3> *> &lines,
                       double &havedistributed)
 {
-  if (AOamount == 0) return 0;
-  bool negative = (AOamount < 0);
+  if (AOamount == 0.) return 0;
+  bool negative = (AOamount < 0.);
   bool reverse  = (toline < fromline); // begin distribution at end of range
 
   // CASE 1: no lines to distribute the amount could be found
   // negative means retract which normally means reverse distribution
   // if this is not the case, no lines were found
   if (negative != reverse) {
-    uint added = 0;
-    uint at_line = fromline;
+    ulong added = 0;
+    ulong at_line = fromline;
 #if AODEBUG
     distCase = 1;
 #endif
@@ -221,10 +220,10 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
 #if AODEBUG
     distCase = 2;
 #endif
-    for (uint i=fromline; i<=toline; i++) {
-      const double time = lines[i].time();
+    for (ulong i=fromline; i<=toline; i++) {
+      const double time = lines[i]->time();
       const double ratio = time / linestime;
-      lines[i].addAbsoluteExtrusionAmount(AOamount * ratio, AOspeed, time);// will slow line down
+      ((PLine3*)lines[i])->addAbsoluteExtrusionAmount(AOamount * ratio, AOspeed, time);// will slow line down
 #if AODEBUG
       havedistributed += AOamount * ratio;
 #endif
@@ -246,31 +245,31 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
   int end = int(toline) + di;
   for (i = int(fromline); i != end; i+=di) {
     if (i<0) break;
-    double lineamount = lines[i].addMaxAbsoluteExtrusionAmount(signedSpeed); // +-
+    double lineamount = ((PLine3*)lines[i])->addMaxAbsoluteExtrusionAmount(signedSpeed); // +-
     havedistributed += lineamount;
     restamount -= lineamount;
     if (restamount * sign < 0)
       break;
   }
   // restamount is negative -> done too much
-  lines[i].absolute_extrusion += restamount;
+  lines[i]->absolute_extrusion += restamount;
   havedistributed += restamount;
-  uint added = 0;
+  ulong added = 0;
   // now split last line (i)
 #if 1
-  const double line_ex = lines[i].absolute_extrusion;
+  const double line_ex = lines[i]->absolute_extrusion;
   const double neededtime = abs(line_ex / AOspeed);
-  double fraction = neededtime/lines[i].time();
+  double fraction = neededtime/lines[i]->time();
   if (fraction < 0.9) { // allow 10% slower AO to avoid split
     if (reverse) fraction = 1-fraction;
-    added = divideline(i, fraction * lines[i].length(), lines);
+    added = divideline(i, fraction * lines[i]->length(), lines);
     if (added == 1) {
       if (reverse) {
-    lines[i].absolute_extrusion   = 0;
-    lines[i+1].absolute_extrusion = line_ex;
+    lines[i]->absolute_extrusion   = 0;
+    lines[i+1]->absolute_extrusion = line_ex;
       } else {
-    lines[i].absolute_extrusion   = line_ex;
-    lines[i+1].absolute_extrusion = 0;
+    lines[i]->absolute_extrusion   = line_ex;
+    lines[i+1]->absolute_extrusion = 0;
       }
     }
   }
@@ -282,12 +281,12 @@ int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
 
 
 
-uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
+uint Printlines::makeAntioozeRetract(vector<PLine<3> *> &lines,
                                      Settings *settings,
                                      ViewProgress * progress)
 {
     if (lines.empty()) return 0;
-  const QString extruder = Settings::numbered("Extruder",lines[0].extruder_no);
+  const QString extruder = Settings::numbered("Extruder", lines[0]->extruder_no);
   if (!settings->get_boolean(extruder+"/EnableAntiooze")) return 0;
 
 
@@ -296,11 +295,11 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
     AOamount      = settings->get_double(extruder+"/AntioozeAmount"),
     AOspeed       = settings->get_double(extruder+"/AntioozeSpeed") * 60;
     //AOonhaltratio = settings->Slicing.AntioozeHaltRatio;
-  if (lines.size() < 2 || AOmindistance <=0 || AOamount == 0) return 0;
+  if (lines.size() < 2 || AOmindistance <=0 || abs(AOamount) < 0.001) return 0;
   // const double onhalt_amount = AOamount * AOonhaltratio;
   // const double onmove_amount = AOamount - onhalt_amount;
 
-  uint linescount = lines.size();
+  ulong linescount = lines.size();
 
   uint total_added = 0;
 #if AODEBUG
@@ -309,11 +308,11 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
   double total_rel = total_rel_Extrusion(lines);
 #endif
 
-  uint count = 0;
+  ulong count = 0;
   if (progress) if (!progress->restart (_("Antiooze Retract find ranges"), linescount)) return 0;
   vector<AORange> ranges;
   AORange range;
-  uint lastend = 0;
+  ulong lastend = 0;
   while ( find_nextmoves(AOmindistance,
              lastend, // set
              range, //get
@@ -333,15 +332,15 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
   }
 
   // copy all lines successively to avoid mid-insertion
-  vector<PLine3> newlines;
+  vector<PLine<3>*> newlines;
   // at most count*2 lines will be added
   newlines.reserve(linescount + count*2);
 
   if (progress) if (!progress->restart (_("Antiooze Retract"), ranges.size())) return 0;
-  int progress_steps = max(1,(int)(ranges.size()/100));
+  int progress_steps = max(1,int(ranges.size()/100));
 
   lastend = 0;
-  for (uint r = 0; r < ranges.size(); r++) {
+  for (ulong r = 0; r < ranges.size(); r++) {
     //for (int r = ranges.size()-1; r >= 0; r--) {
     if (progress && r%progress_steps == 0){
       progress->emit update_signal(r);
@@ -353,9 +352,9 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
     uint added = 0;
 
     // get next slice of lines
-    uint endcopy = min(ranges[r].pushend+1, linescount);
+    ulong endcopy = min(ranges[r].pushend+1, linescount);
     newlines.insert(newlines.end(),
-            lines.begin()+lastend, lines.begin()+endcopy);
+                    lines.begin()+lastend, lines.begin()+endcopy);
     lastend = endcopy;
 
     if (ranges[r].moveend > newlines.size()-2) ranges[r].moveend = newlines.size()-2;
@@ -363,15 +362,15 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
     // lift move-only range
     const double zlift = settings->get_double(extruder+"/AntioozeZlift");
     if (zlift > 0)
-      for (uint i = ranges[r].movestart; i <= ranges[r].moveend; i++) {
-    newlines[i].lifted = zlift;
+      for (ulong i = ranges[r].movestart; i <= ranges[r].moveend; i++) {
+          newlines[i]->lifted = zlift;
       }
 
     // do repush first to keep indices before right
     double havedist = 0;
     uint newl = distribute_AntioozeAmount(AOamount, AOspeed,
-                      ranges[r].moveend+1, ranges[r].pushend,
-                      newlines, havedist);
+                                           ranges[r].moveend+1, ranges[r].pushend,
+                                           newlines, havedist);
     added += newl;
     ranges[r].pushend += newl;
     //test_range(movestart,moveend,tractstart,pushend, newlines);
@@ -379,7 +378,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
 #if AODEBUG
     double extrusionsum = 0;
     double linesext = 0;
-    for (uint i = ranges[r].moveend+1; i<=ranges[r].pushend; i++)
+    for (ulong i = ranges[r].moveend+1; i<=ranges[r].pushend; i++)
       linesext+=newlines[i].absolute_extrusion;
     if (abs(linesext-AOamount)>0.01) cerr  << "wrong lines dist push " << linesext << endl;
     extrusionsum += havedist;
@@ -390,7 +389,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
     if (ranges[r].movestart < 1) ranges[r].movestart = 1;
 #if AODEBUG
     double linesextbefore = 0;
-    for (uint i = ranges[r].tractstart; i < ranges[r].movestart; i++)
+    for (ulong i = ranges[r].tractstart; i < ranges[r].movestart; i++)
       linesextbefore += newlines[i].absolute_extrusion;
 #endif
     havedist = 0;
@@ -404,7 +403,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine3> &lines,
     total_added += added;
 #if AODEBUG
     linesext = -linesextbefore;
-    for (uint i = ranges[r].tractstart; i < ranges[r].movestart; i++)
+    for (ulong i = ranges[r].tractstart; i < ranges[r].movestart; i++)
       linesext += newlines[i].absolute_extrusion;
     if (abs(linesext+AOamount)>0.01)
       cerr  << "wrong lines dist tract " << distCase  << " : "<<linesextbefore << " : "<<linesext << " (" << havedist << ") != "  << -AOamount

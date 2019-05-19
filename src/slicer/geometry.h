@@ -88,7 +88,7 @@ double dist3D_Segment_to_Segment(const Vector3d &S1P0, const Vector3d &S1P1,
                                  const Vector3d &S2P0, const Vector3d &S2P1, double SMALL_NUM);
 
 vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon);
-int cleandist(vector<Vector2d> &vert, double epsilon);
+uint cleandist(vector<Vector2d> &vert, double epsilon);
 
 
 Poly convexHull2D(const vector<Poly> &polygons);

@@ -136,10 +136,13 @@ public:
   /* 			    double linewidth,double linewidthratio,double optratio) const; */
 
 
-  void MakePrintlines (Vector3d &start,
-               vector<PLine3> &plines,
-               double offsetZ,
-               Settings &settings) const;
+  Printlines *MakePrintlines(Vector3d &start,
+                             vector<PLine<3> *> &plines,
+                             double offsetZ,
+                             Settings &settings) const;
+
+  void makePrintLines3(Vector2d &startPos, Printlines *Printlines,
+                       vector<PLine<3> *> &lines3, Settings *settings) const;
 
   void MakeGCode (Vector3d &start,
           GCodeState &gc_state,
@@ -163,7 +166,7 @@ public:
 
   string SVGpath(const Vector2d &trans=Vector2d::ZERO) const;
 
- private:
+private:
 
   Layer * previous;
 

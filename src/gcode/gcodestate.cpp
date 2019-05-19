@@ -70,13 +70,13 @@ void GCodeState::AppendCommand(Command &command, bool relativeE,
         if (command.where) {
             if (pImpl->lastCommand.where && command.f!=0.) {
                 const double length =
-                        (*command.where - *pImpl->lastCommand.where).length();
+                        (command.where - *pImpl->lastCommand.where).length();
                 timeused += length/command.f*60;
                 const vector<Command> &prevCommands = pImpl->code.commands;
                 if (prevCommands.size()>2){
                     if (prevCommands[prevCommands.size()-2].where
-                            && (prevCommands[prevCommands.size()-2].where->
-                                distance(*command.where) < minLength)) {
+                            && (prevCommands[prevCommands.size()-2].where.
+                                distance(command.where) < minLength)) {
                         Command &last = pImpl->code.commands.back();
                         if (abs(last.f/command.f-1)<0.01){ // similar f
                             merged = last.append(command);
@@ -90,17 +90,21 @@ void GCodeState::AppendCommand(Command &command, bool relativeE,
             } else {
                 pImpl->lastLength = 0.;
             }
-            pImpl->LastPosition = *command.where;
+            pImpl->LastPosition = command.where;
             if (merged)
                 pImpl->lastCommand = pImpl->code.commands.back();
             else
                 pImpl->lastCommand = command;
         }
+    } else {
+        if (command.Code == SELECTEXTRUDER){
+            lastExtruder = command.extruder_no;
+        }
     }
     if (!merged)
         pImpl->code.commands.push_back(command);
-    if (command.where && command.where->z() > pImpl->code.Max.z())
-        pImpl->code.Max.z() = command.where->z();
+    if (command.where && command.where.z() > pImpl->code.Max.z())
+        pImpl->code.Max.z() = command.where.z();
 }
 void GCodeState::AppendCommand(GCodes code, bool relativeE, string comment,
                                double minLength)
@@ -131,13 +135,11 @@ void GCodeState::AppendCommands(vector<Command> commands, bool relativeE,
 
 void GCodeState::ResetLastWhere(const Vector3d &to)
 {
-    if (pImpl->lastCommand.where)
-        delete pImpl->lastCommand.where;
-  pImpl->lastCommand.where = new Vector3d(to);
+    pImpl->lastCommand.where = to;
 }
-double GCodeState::DistanceFromLastTo(Vector3d *here)
+double GCodeState::DistanceFromLastTo(const Vector3d &here)
 {
-  return (*pImpl->lastCommand.where - *here).length();
+  return (pImpl->lastCommand.where - here).length();
 }
 
 double GCodeState::LastCommandF()

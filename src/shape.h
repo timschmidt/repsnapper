@@ -40,11 +40,11 @@
 #include <QString>
 
 struct Segment {
-  Segment(int s, int e) { start = s; end = e; }
-  int start;		// Vertex index of start point
-    int end;		// Vertex index of end point
+  Segment(long s, long e) { start = s; end = e; }
+  long start;		// Vertex index of start point
+  long end;		// Vertex index of end point
   void Swap() {
-    int tmp = start;
+    long tmp = start;
     start = end;
     end = tmp;
   }
@@ -58,7 +58,7 @@ struct Segment {
 class Shape
 {
 public:
-  virtual short dimensions(){return 3;}
+  virtual ushort dimensions(){return 3;}
 
         Shape();
         Shape(Shape * shape);
@@ -99,6 +99,7 @@ public:
 
         virtual void move(const Vector3d &delta){ transform3D.move(delta); }
         virtual void moveTo(const Vector3d &translation);
+        virtual void moveLowerLeftTo(const Vector3d &point);
 
         void Scale(double scale_factor, bool calcbbox = true);
         void ScaleX(double scale_factor);
@@ -118,11 +119,6 @@ public:
     void PlaceOnPlatform();
 
     Vector3d Min, Max, Center;
-
-
-    Vector3d t_Min() const {return transform3D.getTransform() * Min;}
-    Vector3d t_Max() const {return transform3D.getTransform() * Max;}
-    Vector3d t_Center() const {return transform3D.getTransform() * Center;}
 
     Vector3d scaledCenter() const;
 
@@ -151,13 +147,13 @@ public:
 
     void setTriangles(const vector<Triangle> &triangles_);
 
-    uint size() const {return triangles.size();}
+    size_t size() const {return triangles.size();}
 
     Transform3D *getTransform3D() { return &transform3D; }
 
 protected:
 
-    int gl_List;
+    GLuint gl_List;
 
 private:
 

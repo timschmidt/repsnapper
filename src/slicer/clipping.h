@@ -129,7 +129,7 @@ public:
   static CL::PolyTree   getClipperTree(const vector<Poly> &polys);
 
   static CL::Path    getClipperPolygon (const Poly &poly);
-  static CL::Paths   getClipperPolygons(const vector<Poly> &polys);
+  static ClipperLib::Paths getClipperPolygons(const vector<Poly> &polys);
   static CL::Paths   getClipperPolygons(const ExPoly &expoly);
   //static CL::PolyTree   getClipperTree(const vector<ExPoly> &expolys);
 

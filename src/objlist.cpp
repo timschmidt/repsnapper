@@ -54,7 +54,7 @@ void ObjectsList::DeleteRow(const int index)
             if (i == index) {
                 objects[o]->deleteShape(s);
                 if (objects[o]->shapes.size() == 0){
-                    odelete = o;
+                    odelete = int(o);
                 }
                 break;
             }
@@ -92,10 +92,10 @@ void ObjectsList::get_selected_objects(const QModelIndexList *indexes,
 }
 */
 
-Shape *ObjectsList::findShape(uint index) const
+Shape *ObjectsList::findShape(int index) const
 {
-    uint i = 0;
-    for (int oi = 0; oi < objects.size(); oi++) {
+    int i = 0;
+    for (uint oi = 0; oi < objects.size(); oi++) {
         for (uint s = 0; s < objects[oi]->shapes.size(); s++) {
             if (i == index)
                 return objects[oi]->shapes[s];

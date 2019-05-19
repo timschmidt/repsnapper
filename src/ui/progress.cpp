@@ -44,7 +44,7 @@ void ViewProgress::start (const char *label, double max)
   this->label = label;
   m_label->setText(label);
   m_bar_cur = 0.0;
-  m_bar->setMaximum(max);
+  m_bar->setMaximum(int(max));
   m_bar->setValue(0);
   time.start();
   connect(this, SIGNAL(update_signal(double)), this, SLOT(update(double)));
@@ -63,7 +63,7 @@ bool ViewProgress::restart (const char *label, double max)
   this->label = label;
   m_label->setText(label);
   m_bar_cur = 0.0;
-  m_bar->setMaximum(max);
+  m_bar->setMaximum(int(max));
   m_bar->setValue(0);
   time.restart();
   //g_main_context_iteration(NULL,false);
@@ -109,13 +109,13 @@ bool ViewProgress::update (const double value)
 //    return do_continue;
 
   m_bar_cur = CLAMP(value, 0, 1.0);
-  m_bar->setMaximum(m_bar_max);
-  m_bar->setValue(value);
+  m_bar->setMaximum(int(m_bar_max));
+  m_bar->setValue(int(value));
   QString s;
   QTextStream o(&s);
   const double used = time.elapsed()/1000; // seconds
   const double total = used * m_bar_max  / value;
-  const long left = (long)(total-used);
+  const long left = long(total-used);
   o << label << " (" << timeleft_str(left) << ") : "
     << int(value) <<"/"<< int(m_bar_max);
   m_bar->setFormat(s);

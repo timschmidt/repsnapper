@@ -57,10 +57,10 @@ class Infill
 #endif
 
   ClipperLib::Paths makeInfillPattern(InfillType type,
-                     const vector<Poly> &tofillpolys,
-                     double infillDistance,
-                     double offsetDistance,
-                     double rotation) ;
+                                      const vector<Poly> &tofillpolys,
+                                      double infillDistance,
+                                      double offsetDistance,
+                                      double rotation) ;
 
   Infill();
 
@@ -90,18 +90,18 @@ class Infill
   vector<Vector2d> infillvertices; // for lines types
 
   void addPoly (double z, const Poly &poly, InfillType type, double infillDistance,
-           double offsetDistance, double rotation);
+                double offsetDistance, double rotation);
   void addPolys(double z, const vector<Poly> &polys, InfillType type,
-        double infillDistance, double offsetDistance, double rotation);
+                double infillDistance, double offsetDistance, double rotation);
   void addPolys(double z, const vector<Poly> &polys, const vector<Poly> &fillpolys,
-        double offsetDistance);
+                double offsetDistance);
   void addPolys(double z, const vector<Poly> &polys, const ClipperLib::Paths &ifcpolys,
-        double offsetDistance);
+                double offsetDistance);
 
   void addPoly (double z, const ExPoly &expoly, InfillType type, double infillDistance,
-           double offsetDistance, double rotation);
+                double offsetDistance, double rotation);
   void addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
-        double infillDistance, double offsetDistance, double rotation);
+                double infillDistance, double offsetDistance, double rotation);
 
   void getLines(vector<Vector3d> &lines) const;
 

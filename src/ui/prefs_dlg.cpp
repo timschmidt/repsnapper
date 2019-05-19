@@ -91,9 +91,9 @@ Ui::PreferencesDialog *PrefsDlg::getUi_dialog() const
     return ui_dialog;
 }
 
-void PrefsDlg::checkForExtruders(int numExtruders)
+void PrefsDlg::checkForExtruders(uint numExtruders)
 {
-    while (numExtruders > listModel->rowCount()){
+    while (int(numExtruders) > listModel->rowCount()){
         cerr << "add Extruder "<< numExtruders << endl;
         int row = listModel->rowCount();
         ui_dialog->extruder_select->addItem("Extruder "+QString::number(row+1), row);
@@ -124,11 +124,12 @@ int PrefsDlg::removeExtruder(int num)
     if (listModel->rowCount()<2) return -1;
     if (num<0) num = getSelectedExtruder();
     if (num<0) return -1;
-    if (num==listModel->rowCount()-1)
-        selectExtruder(num-1);
+    if (num>0 && num == listModel->rowCount()-1)
+        selectExtruder(uint(num-1));
     else
-        selectExtruder(num);
-    listModel->removeRow(num);
+        selectExtruder(uint(num));
+    if (num>0)
+        listModel->removeRow(num);
     return num;
 }
 

@@ -55,7 +55,7 @@ public:
     void setTemp(const QString &name, int temp, int set_temp=-1);
     int getTemp(const QString &name);
     double getMM(const QString &name);
-    void setExtruderTemp(int number, int temp, int set_temp=-1);
+    void setExtruderTemp(uint number, int temp, int set_temp=-1);
     void setBedTemp(int temp, int set_temp=-1);
     int getSpeed(const QString &name);
     void setEnabled(const QString &name, bool enabled);
@@ -122,7 +122,7 @@ private slots:
     void handleButtonClick();
     void gcodeChanged();
     void settingsChanged(const QString &group);
-    void extruderSelected(int index);
+    void extruderSelected(uint index);
     void extruderSelected(const QModelIndex &index);
     void updatedModel(const ObjectsList *objList = nullptr);
     void shapeSelected(const QModelIndex &index);
@@ -134,6 +134,7 @@ private slots:
     void previewFile(const QString &filename);
     void openFiles(const QStringList &filename);
 
+    void alert(const QString &message);
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);
 //    void toGCSliderValue(int value);

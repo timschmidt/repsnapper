@@ -47,13 +47,13 @@ public:
         void setClosed(bool c) { closed = c; }
         bool isClosed() const { return closed; }
 
-        Vector2d operator[](int i) const {
-          if (i >= 0 && i < int(vertices.size()))
+        Vector2d operator[](ulong i) const {
+          if (i < vertices.size())
             return vertices[i];
           else return vertices[(vertices.size()+i)%vertices.size()];
         }
 
-        uint nextVertex(uint i) const {return (i+1)%vertices.size();}
+        ulong nextVertex(ulong i) const {return (i+1)%vertices.size();}
 
         /* Poly Shrinked(double distance) const; */
         /* Poly Shrinked(vector<Vector2d> *vertices, double distance); */
@@ -74,14 +74,14 @@ public:
         bool vertexInside(const Vector2d &point, double maxoffset=0.0001) const;
         bool vertexInside2(const Vector2d &point, double maxoffset=0.0001) const;
         bool isInside(const Poly &poly, double maxoffset=0.0001) const;
-        uint nearestDistanceSqTo(const Vector2d &p, double &mindist) const;
-        void nearestIndices(const Poly &p2, int &thisindex, int &otherindex) const;
+        ulong nearestDistanceSqTo(const Vector2d &p, double &mindist) const;
+        void nearestIndices(const Poly &p2, ulong &thisindex, ulong &otherindex) const;
         double shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end) const;
-        double angleAtVertex(uint i) const;
+        double angleAtVertex(ulong i) const;
         vector<Vector2d> getCenterline() const;
 
-        uint getFarthestIndex(uint &thisindex) const;
-        uint getFarthestIndex(const Vector2d &from) const;
+        ulong getFarthestIndex(ulong &thisindex) const;
+        ulong getFarthestIndex(const Vector2d &from) const;
 
         void rotate(const Vector2d &center, double angle);
         void move(const Vector2d &delta);
@@ -96,9 +96,9 @@ public:
         // ClipperLib::Paths getOffsetClipperPolygons(double dist) const ;
         // ClipperLib::Path getClipperPolygon(bool reverse=false) const;
 
-        Vector2d const &getVertexCircular(int pointindex) const;  // 2d point at index
-        Vector3d getVertexCircular3(int pointindex) const; // 3d point at index
-        vector<Vector2d> getVertexRangeCircular(int from, int to) const;
+        Vector2d const &getVertexCircular(long pointindex) const;  // 2d point at index
+        Vector3d getVertexCircular3(long pointindex) const; // 3d point at index
+        vector<Vector2d> getVertexRangeCircular(long from, long to) const;
 
         vector<Vector2d> vertices; // vertices
         void addVertex(const Vector2d &v, bool front=false);
@@ -115,8 +115,8 @@ public:
         void setExtrusionFactor(double e){extrusionfactor = e;}
         double getLayerNo() const;
 
-        void draw(int gl_type, bool randomized=true) const;
-        void draw(int gl_type, double z, bool randomized=true) const; // draw at given z
+        void draw(GLuint gl_type, bool randomized=true) const;
+        void draw(GLuint gl_type, double z, bool randomized=true) const; // draw at given z
         void drawVertexNumbers(Render *render) const;
         void drawVertexAngles(Render *render) const;
         void drawLineNumbers(Render *render) const;
@@ -124,10 +124,10 @@ public:
 
         void makeLines(vector<Vector2d> &lines, Vector2d &startPoint) const;
         void makeLines(vector<Vector3d> &lines, Vector2d &startPoint) const;
-        void makeLines(vector<Vector2d> &lines,uint startindex=0) const;
-        void makeLines(vector<Vector3d> &lines,uint startindex=0) const;
+        void makeLines(vector<Vector2d> &lines,ulong startindex=0) const;
+        void makeLines(vector<Vector3d> &lines,ulong startindex=0) const;
 
-        double getLinelengthSq(uint startindex) const;
+        double getLinelengthSq(ulong startindex) const;
         double averageLinelengthSq() const;
         double totalLineLength() const;
 
@@ -135,7 +135,7 @@ public:
 
         int getTriangulation(vector<Triangle> &triangles)  const ;
 
-        uint size() const {return vertices.size(); }
+        ulong size() const {return vertices.size(); }
         Vector2d front() {return vertices.front(); }
         Vector2d back()  {return vertices.back(); }
         void push_back (Vector2d v) {

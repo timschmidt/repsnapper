@@ -48,19 +48,15 @@ public:
   char get() {
     while ( 1 ) {
       char ch = Feed::get();
-
       if (isspace(ch)) continue ;
-
       if (ch == ';') {// ; COMMENT #EOL
-    str="";
-    return 0;
+          str="";
+          return 0;
       }
-
-      if (ch == '(') // ( COMMENT )
-      {
-    while (ch && ch != ')')
-      ch = Feed::get();
-    continue;
+      if (ch == '(') { // ( COMMENT )
+          while (ch && ch != ')')
+              ch = Feed::get();
+          continue;
       }
       return ch;
     }
@@ -108,48 +104,44 @@ inline double ToDouble(GcodeFeed &f)
 }
 
 
-
 Command::Command()
+    : Code(UNKNOWN),
+      is_value(false), value(0), f(0), e(0),
+      extruder_no(0),  abs_extr(0), travel_length(0), not_layerchange(false)
 {
-  Code = UNKNOWN;
-  init();
-}
-
-
-void Command::init()
-{
-  where = nullptr;
-  arcIJK = nullptr;
-  is_value = false;
-  f = 0.0;
-  e = 0.0;
-  extruder_no = 0;
   explicit_arg = "";
   comment = "";
-  not_layerchange = false;
-  abs_extr = 0;
-  travel_length = 0;
+}
+
+Command::~Command()
+{
+//    if (where)
+//        delete where;
+//    where = nullptr;
+//    arcIJK = nullptr;
 }
 
 Command::Command(GCodes code, const string explicit_arg_)
-  : Code(code)
+    : Code(code),
+      is_value(false), value(0), f(0), e(0),
+      extruder_no(0),  abs_extr(0), travel_length(0), not_layerchange(false)
 {
-  init();
   explicit_arg = explicit_arg_;
 }
 
 Command::Command(GCodes code, const Vector3d &position, double E, double F)
-  : Code(code), where(new Vector3d(position)), is_value(false),  f(F), e(E),
+  : Code(code), where(position),
+    is_value(false),  f(F), e(E),
     extruder_no(0), abs_extr(0), travel_length(0), not_layerchange(false)
 {
-  if (where->z() < 0)
-    where->z() = 0;
+  if (where.z() < 0)
+    where.z() = 0;
 }
 
 Command::Command(GCodes code, double value_)
-  : Code(code), where(nullptr), is_value(true), value(value_),
-    f(0), e(0), extruder_no(0),  abs_extr(0), travel_length(0),
-    not_layerchange(false)
+  : Code(code),
+    is_value(true), value(value_), f(0), e(0),
+    extruder_no(0),  abs_extr(0), travel_length(0), not_layerchange(false)
 {
   // for letter-without-number codes like "T"
   // the value is not an "S" value, it belongs to the command
@@ -157,21 +149,23 @@ Command::Command(GCodes code, double value_)
     is_value = false;
 }
 
-//Command::Command(const Command &rhs)
-//  : Code(rhs.Code), where(rhs.where),
-//    arcIJK (rhs.arcIJK),
-//    is_value(rhs.is_value), value(rhs.value),
-//    f(rhs.f), e(rhs.e),
-//    extruder_no(rhs.extruder_no),
-//    abs_extr(rhs.abs_extr),
-//    travel_length(rhs.travel_length),
-//    not_layerchange(rhs.not_layerchange),
-//    explicit_arg(rhs.explicit_arg),
-//    comment(rhs.comment)
-//{
-//    if (extruder_no > 1000)
-//        cerr << "EXTR!! " << rhs.info() << endl;
-//}
+
+Command::Command(const Command &rhs)
+  : Code(rhs.Code), where(rhs.where), arcIJK(rhs.arcIJK),
+    is_value(rhs.is_value), value(rhs.value),
+    f(rhs.f), e(rhs.e),
+    extruder_no(rhs.extruder_no),
+    abs_extr(rhs.abs_extr),
+    travel_length(rhs.travel_length),
+    not_layerchange(rhs.not_layerchange),
+    explicit_arg(rhs.explicit_arg),
+    comment(rhs.comment)
+{
+    if (extruder_no > 1000){
+        extruder_no = 0;
+        cerr << "EXTR!! " << rhs.info() << endl;
+    }
+}
 
 
 const static QRegularExpression command_re("(?<letter>[A-Z])(?<number>[\\.\\d]+)");
@@ -188,8 +182,8 @@ const static QRegularExpression command_re("(?<letter>[A-Z])(?<number>[\\.\\d]+)
  * @param defaultpos
  * @param [OUT] gcodeline the unparsed portion of the string
  */
-Command::Command(string gcodeline, Vector3d *defaultpos)
-  : where(defaultpos),  arcIJK(nullptr), is_value(false),  f(0), e(0),
+Command::Command(string gcodeline, const Vector3d &defaultpos)
+  : where(defaultpos), is_value(false),  f(0), e(0),
     extruder_no(0), abs_extr(0), travel_length(0)
 {
   // Notes:
@@ -223,28 +217,30 @@ Command::Command(string gcodeline, Vector3d *defaultpos)
       break;
     case 'S':  value      = num; break;
     case 'F':  f          = num; break;
-    case 'X':  if (!where) where = new Vector3d(); where->x() = num; break;
-    case 'Y':  if (!where) where = new Vector3d(); where->y() = num; break;
-    case 'Z':  if (!where) where = new Vector3d(); where->z() = num; break;
-    case 'I':  if (!arcIJK) arcIJK = new Vector3d(); arcIJK->x() = num; break;
-    case 'J':  if (!arcIJK) arcIJK = new Vector3d(); arcIJK->y() = num; break;
+    case 'X':  where.x()  = num; break;
+    case 'Y':  where.y()  = num; break;
+    case 'Z':  where.z()  = num; break;
+    case 'I':  arcIJK.x() = num; break;
+    case 'J':  arcIJK.y() = num; break;
     case 'K':
-      cerr << "cannot handle ARC K command (yet?)!" << endl;
-      break;
+        cerr << gcodeline << endl;
+        cerr << "cannot handle ARC K command (yet?)!" << endl;
+        break;
     case 'R':
-      cerr << "cannot handle ARC R command (yet?)!" << endl;
-      break;
+        cerr << gcodeline << endl;
+        cerr << "cannot handle ARC R command (yet?)!" << endl;
+        break;
     case 'T':
       Code = getCode("T");
-      comment = "";
+      comment = "Extruder";
       if (num >= 0 && num < 10)
           extruder_no = uint(num);
       break;
     }
   }
 
-  if (where && where->z() < 0) {
-    where->z() = 0;
+  if (where.z() < 0) {
+    where.z() = 0;
     //throw(Glib::OptionError(Glib::OptionError::BAD_VALUE, "Z < 0 at " + info()));
   }
 }
@@ -254,7 +250,7 @@ GCodes Command::getCode(const string commstr) const
   GCodes code = COMMENT;
   for (int i = 0; i < NUM_GCODES; i++){
     if (MCODES[i] == commstr) {
-      code = (GCodes)i;
+      code = GCodes(i);
       return code;
     }
   }
@@ -265,15 +261,15 @@ bool Command::hasNoEffect(const Vector3d *LastPos, const double lastE,
               const double lastF, const bool relativeEcode) const
 {
   return ((Code == COORDINATEDMOTION || Code == RAPIDMOTION)
-      && where->squared_distance(*LastPos) < 0.000001
+      && where.squared_distance(*LastPos) < 0.000001
       && ((relativeEcode && abs(e) < 0.00001)
           || (!relativeEcode && abs(e-lastE) < 0.00001))
       && abs(abs_extr) < 0.00001);
 }
 
-string Command::GetGCodeText(Vector3d *LastPos, double &lastE, double &lastF,
-                              bool relativeEcode, char E_letter,
-                              bool speedAlways) const
+string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
+                             bool relativeEcode, char E_letter,
+                             bool speedAlways) const
 {
     ostringstream ostr;
     if (Code > NUM_GCODES || MCODES[Code]=="") {
@@ -296,7 +292,7 @@ string Command::GetGCodeText(Vector3d *LastPos, double &lastE, double &lastF,
 
   bool moving = false; // is a move involved?
   double thisE = lastE - e; // extraction of this command amount only
-  double length = where ? where->distance(*LastPos) : 0;
+  double length =where.distance(LastPos);
 
   const uint PREC = 4;
   ostr.precision(PREC);
@@ -305,76 +301,79 @@ string Command::GetGCodeText(Vector3d *LastPos, double &lastE, double &lastF,
   switch (Code) {
   case ARC_CW:
   case ARC_CCW:
-    if (arcIJK->x()!=0) ostr << " I" << arcIJK->x();
-    if (arcIJK->y()!=0) ostr << " J" << arcIJK->y();
-    if (arcIJK->z()!=0) ostr << " K" << arcIJK->z();
+      if (abs(arcIJK.x())>0.01) ostr << " I" << arcIJK.x();
+      if (abs(arcIJK.y())>0.01) ostr << " J" << arcIJK.y();
+      if (abs(arcIJK.z())>0.01) ostr << " K" << arcIJK.z();
+  [[clang::fallthrough]];
   case RAPIDMOTION:
-  case COORDINATEDMOTION:
-    { // going down? -> split xy and z movements
-      Vector3d delta = (*where)-(*LastPos);
+  case COORDINATEDMOTION: {
+      // going down? -> split xy and z movements
+      Vector3d delta = where - LastPos;
       const double RETRACT_E = 2; //mm
-      if ( (where->z() < 0 || delta.z() < 0) && (delta.x()!=0 || delta.y()!=0) ) {
-    Command xycommand(*this); // copy
-    xycommand.comment = comment +  _(" xy part");
-    Command zcommand(*this); // copy
-    zcommand.comment = comment + _(" z part");
-    if (where->z() < 0) { // z<0 cannot be absolute -> positions are relative
-      xycommand.where->z() = 0.;
-      zcommand.where->x()  = zcommand.where->y() = 0.; // this command will be z-only
-    } else {
-      xycommand.where->z() = LastPos->z();
-    }
-    if (relativeEcode) {
-      xycommand.e = -RETRACT_E; // retract filament at xy move
-      zcommand.e  = 0;         // all extrusion done in xy
-    }
-    else {
-      xycommand.e = lastE - RETRACT_E;
-      zcommand.e  = lastE - RETRACT_E;
-    }
-    //cerr << "split xy and z commands delta=" << delta <<endl;
-    // cerr << info() << endl;
-    // cerr << xycommand.info() << endl;
-    // cerr << zcommand.info() << endl<< endl;
-    ostringstream splstr;
-    splstr << xycommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode, E_letter) << endl;
-    splstr <<  zcommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode, E_letter) ;
-    return splstr.str();
+      if ( (where.z() < -0.001 || delta.z() < -0.001)
+           && (abs(delta.x())>0.01 || abs(delta.y())>0.01) ) {
+          Command xycommand(*this); // copy
+          xycommand.comment = comment +  _(" xy part");
+          Command zcommand(*this); // copy
+          zcommand.comment = comment + _(" z part");
+          if (where.z() < 0) { // z<0 cannot be absolute -> positions are relative
+              xycommand.where.z() = 0.;
+              zcommand.where.x()  = zcommand.where.y() = 0.; // this command will be z-only
+          } else {
+              xycommand.where.z() = LastPos.z();
+          }
+          if (relativeEcode) {
+              xycommand.e = -RETRACT_E; // retract filament at xy move
+              zcommand.e  = 0;         // all extrusion done in xy
+          }
+          else {
+              xycommand.e = lastE - RETRACT_E;
+              zcommand.e  = lastE - RETRACT_E;
+          }
+          //cerr << "split xy and z commands delta=" << delta <<endl;
+          // cerr << info() << endl;
+          // cerr << xycommand.info() << endl;
+          // cerr << zcommand.info() << endl<< endl;
+          ostringstream splstr;
+          splstr << xycommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode, E_letter) << endl;
+          splstr <<  zcommand.GetGCodeText(LastPos, lastE, lastF, relativeEcode, E_letter) ;
+          return splstr.str();
       }
-    }
-    if(where->x() != LastPos->x()) {
-      ostr << " X" << where->x();
-      LastPos->x() = where->x();
-      moving = true;
-    }
-    if(where->y() != LastPos->y()) {
-      ostr << " Y" << where->y();
-      LastPos->y() = where->y();
-      moving = true;
-    }
+      if(abs(where.x()-LastPos.x())>0.001) {
+          ostr << " X" << where.x();
+          LastPos.x() = where.x();
+          moving = true;
+      }
+      if(abs(where.y()-LastPos.y())>0.001) {
+          ostr << " Y" << where.y();
+          LastPos.y() = where.y();
+          moving = true;
+      }
+  }
+  [[clang::fallthrough]];
   case ZMOVE:
-    if(where->z() != LastPos->z()) {
-      ostr << " Z" << where->z();
-      LastPos->z() = where->z();
+    if(abs(where.z()-LastPos.z()) > 0.001) {
+      ostr << " Z" << where.z();
+      LastPos.z() = where.z();
       comm += _(" Z-Change");
       moving = true;
     }
-    if((relativeEcode   && e != 0) ||
-       (!relativeEcode  && e != lastE)) {
-      ostr.precision(5);
-      ostr << " " << E_letter << e;
-      ostr.precision(PREC);
-      lastE = e;
+    if((relativeEcode   && abs(e) > 0.001) ||
+       (!relativeEcode  && abs(e - lastE) > 0.001)) {
+        ostr.precision(5);
+        ostr << " " << E_letter << e;
+        ostr.precision(PREC);
+        lastE = e;
     } else {
-      if (moving) {
-    comm += _(" Move Only");
-    comm += " (" + str(length,2)+" mm)";
-      }
+        if (moving) {
+            comm += _(" Move Only");
+            comm += " (" + str(length,2)+" mm)";
+        }
     }
   case SETSPEED:
     if (speedAlways || (abs(f-lastF) > 0.1)) {
       if (f>10)
-    ostr.precision(0);
+          ostr.precision(0);
       ostr << " F" << f;
       ostr.precision(PREC);
     }
@@ -449,17 +448,18 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
            double extrwidth,
            bool arrows,  bool debug_arcs) const
 {
-  Vector3d off_where = *where + offset;
+  Vector3d off_where = where + offset;
   Vector3d off_lastPos = lastPos + offset;
   GLfloat ccol[4];
   glGetFloatv(GL_CURRENT_COLOR,&ccol[0]);
-  glBegin(GL_LINES);
-  glColor4fv(ccol);
+//  glColor4fv(ccol);
   // arc:
   if (Code == ARC_CW || Code == ARC_CCW) {
-      Vector3d center = off_lastPos + *arcIJK;
+      glBegin(GL_LINES);
+      Vector3d center = off_lastPos + arcIJK;
       bool ccw = (Code == ARC_CCW);
       if (debug_arcs) {
+          /*
           glColor4f(0.f,1.f,0.0f,0.2f);
           glVertex3dv(center);
           glVertex3dv(off_lastPos);
@@ -467,15 +467,15 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           glVertex3dv(center);
           glVertex3dv(off_where);
           glColor4fv(ccol);
-          float lum = ccol[3];
+          */
           if (off_where == off_lastPos) // full circle
-              glColor4f(1.f,0.f,1.f,lum);
+              glColor4f(1.f,0.f,1.f,ccol[3]);
           else if (ccw)
-              glColor4f(0.5f,0.5f,1.f,lum);
+              glColor4f(0.5f,0.5f,1.f,ccol[3]);
           else
-              glColor4f(1.f,0.5f,0.0f,lum);
+              glColor4f(1.f,0.5f,0.0f,ccol[3]);
       }
-      long double angle = calcAngle(-*arcIJK, off_where - center, ccw);
+      long double angle = calcAngle(-arcIJK, off_where - center, ccw);
       //if (abs(angle) < 0.00001) angle = 0;
       double dz = off_where.z()-(off_lastPos).z(); // z move with arc
       Vector3d arcstart = off_lastPos;
@@ -485,18 +485,17 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           glEnd();
           glLineWidth(1);
           glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
-          Vector3d normarcIJK(*arcIJK); normarcIJK.normalize();
+          Vector3d normarcIJK(arcIJK); normarcIJK.normalize();
           Vector3d dradius = normarcIJK*extrwidth/2;
           glBegin(GL_LINES);
           Vector3d offstart = arcstart+dradius;
           draw_arc(offstart, center, angle, dz, ccw);
           offstart = arcstart-dradius;
           draw_arc(offstart, center, angle, dz, ccw);
-          //glEnd();
       }
+      glEnd();
   } // end ARCs
   if (off_lastPos==off_where) {
-      glEnd();
       if (arrows) {
           glPointSize(10);
           glBegin(GL_POINTS);
@@ -505,6 +504,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           glEnd();
       }
   } else {
+      glBegin(GL_LINES);
       glVertex3dv(off_lastPos);
       glVertex3dv(off_where);
       if (arrows) {
@@ -530,7 +530,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           glLineWidth(1);
           glColor4f(ccol[0],ccol[1],ccol[2],ccol[3]/2);
           vector<Poly> thickpoly;
-          if (abs_extr != 0) {
+          if (abs(abs_extr) > 0.001) {
               double fr_extr = extrwidth / (1+abs_extr);
               double to_extr = extrwidth * (1+abs_extr);
               thickpoly = dir_thick_line(Vector2d(off_lastPos.x(),off_lastPos.y()),
@@ -546,7 +546,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           }
       }
   }
-  lastPos = *where;
+  lastPos = where;
 }
 
 void Command::draw(Vector3d &lastPos, const Vector3d &offset,
@@ -554,7 +554,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
            Vector4f color, double extrwidth,
            bool arrows, bool debug_arcs) const
 {
-  if (abs_extr!=0) linewidth*=2;
+  if (abs(abs_extr) > 0.001) linewidth*=2;
   // if (abs_extr>0) linewidth*=abs_extr;
   // else if (abs_extr<0) linewidth/=(-abs_extr);
   glLineWidth(linewidth);
@@ -564,14 +564,14 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
 
 void Command::addToPosition(Vector3d &from, bool relative)
 {
-  if (relative) from += *where;
+  if (relative) from += where;
   else {
-    if (where->x()!=0.)
-      from.x()  = where->x();
-    if (where->y()!=0.)
-      from.y()  = where->y();
-    if (where->z()!=0.)
-      from.z()  = where->z();
+    if (where.x()!=0.)
+      from.x()  = where.x();
+    if (where.y()!=0.)
+      from.y()  = where.y();
+    if (where.z()!=0.)
+      from.z()  = where.z();
   }
 }
 
@@ -583,9 +583,8 @@ bool Command::append(Command c)
         return false;
     if (extruder_no != c.extruder_no)
         return false;
-    if (where && c.where)
-        *where = *c.where; // absolute
-    if (f != c.f)
+    where = c.where; // absolute
+    if (abs(f - c.f) > 1)
         return false;
     e = c.e; // absolute
     f = (f+c.f)/2.;
@@ -598,7 +597,10 @@ string Command::info() const
   ostringstream ostr;
   ostr << "Command";
   if (comment!="") ostr << " '" << comment << "'";
-  ostr << ": Extr="<<extruder_no<<", Code="<<Code<<", where="  << *where << ", f="<<f<<", e="<<e;
+  ostr << ": Extr="<<extruder_no<<", Code="<<Code
+       << ", f="<<f<<", e="<<e;
+  ostr << ", where="  << where;
+  ostr << ", arcIJK="  << arcIJK;
   if (explicit_arg != "")
     ostr << " Explicit: " << explicit_arg;
   return ostr.str();

@@ -42,7 +42,7 @@ class GCodeIter
   std::string next_line_stripped();
   bool finished();
   double time_estimation;
-  Command * getCurrentCommand(Vector3d *defaultwhere);
+  Command * getCurrentCommand(const Vector3d &defaultwhere);
   void set_to_lineno(int lineno);
   int get_current_lineno();
 private:
@@ -62,9 +62,9 @@ public:
   //void Write (Model *model, string filename);
   void draw  (Settings *settings,
               int layer=-1, bool liveprinting=false,
-              int linewidth=3);
-  void drawCommands(Settings *settings, uint start, uint end,
-                    bool liveprinting, int linewidth, bool arrows, bool boundary=false,
+              uint linewidth=3);
+  void drawCommands(Settings *settings, ulong start, ulong end,
+                    bool liveprinting, uint linewidth, bool arrows, bool boundary=false,
                     bool onlyZChange = false);
   bool MakeText(QString &GcodeTxt, Settings *settings,
                 ViewProgress * progress);
@@ -84,12 +84,12 @@ public:
   GCodeIter *get_iter ();
 
   double GetTotalExtruded(bool relativeEcode) const;
-  double GetTimeEstimation() const;
+  double GetTimeEstimation(const Vector3d &from) const;
 
   Vector3d currentCursorWhere;
   Vector3d currentCursorFrom;
   Command currentCursorCommand;
-  vector<long> buffer_zpos_lines; // line numbers where a z position is set
+  vector<ulong> buffer_zpos_lines; // line numbers where a z position is set
 
 
   vector<unsigned long> layerchanges;
@@ -98,10 +98,11 @@ public:
   unsigned long getLayerStart(const uint layerno) const;
   unsigned long getLayerEnd(const uint layerno) const;
 
+  void clearGlList();
 private:
-  int gl_List;
-  unsigned long unconfirmed_blocks;
+  GLuint gl_List;
 
+  unsigned long unconfirmed_blocks;
 signals:
   void gcode_changed();
 

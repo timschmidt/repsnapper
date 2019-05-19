@@ -28,9 +28,8 @@
 class FlatShape : public Shape
 {
 
-    QString filename;
  public:
-  virtual short dimensions(){return 2;}
+  virtual ushort dimensions(){return 2;}
 
   FlatShape();
   FlatShape(QString filename);
@@ -95,10 +94,10 @@ class FlatShape : public Shape
   string svg_cur_trans;
   string svg_cur_path;
   double svg_prescale;
-  int svg_addPolygon();
+  ulong svg_addPolygon();
 
 
-  static filetype_t getFileType(std::string filename) {return SVG;}
+  static filetype_t getFileType(const std::string &fileName) {return SVG;}
 
   void splitshapes(vector<Shape*> &shapes, ViewProgress *progress=NULL);
 

@@ -45,9 +45,9 @@ using namespace std;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui_main(new Ui::MainWindow),
-    objListModel(this),
-    m_opendialog(nullptr)
-{
+    m_opendialog(nullptr),
+    objListModel(this)
+ {
     QCoreApplication::setOrganizationName("Repsnapper");
     QCoreApplication::setApplicationName("Repsnapper");
 
@@ -73,6 +73,8 @@ MainWindow::MainWindow(QWidget *parent) :
                                    QByteArray()).toByteArray());
     ui_main->Mainsplitter->restoreState(m_settings->value("Misc/Mainsplitter",
                                                           QByteArray()).toByteArray());
+    ui_main->tabWidget->setCurrentIndex(m_settings->get_integer("Misc/MainTabIndex"));
+
     m_settings->set_all_to_gui(this);
     m_settings->set_all_to_gui(prefs_dialog);
     m_settings->connect_to_gui(this);
@@ -87,16 +89,14 @@ MainWindow::MainWindow(QWidget *parent) :
         m_settings->connect_to_gui(w);
         connectButtons(w);
     }
-//    m_settings->connect_to_gui(tempsPanel->widget);
+    connect(m_settings, SIGNAL(settings_changed(const QString&)),
+            this, SLOT(settingsChanged(const QString&)));
 
     m_printer = new Printer(this);
-
     connect(m_printer, SIGNAL(serial_state_changed(int)),
             this, SLOT(printerConnection(int)));
     connect(m_printer, SIGNAL(printing_changed()),this, SLOT(printingChanged()));
     connect(m_printer, SIGNAL(now_printing(long)),this, SLOT(nowPrinting(long)));
-    connect(m_settings, SIGNAL(settings_changed(const QString&)),
-            this, SLOT(settingsChanged(const QString&)));
 
 //    cerr << m_settings->info().toStdString() << endl;
 
@@ -108,6 +108,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_model->statusbar = ui_main->statusBar;
     connect(m_model, SIGNAL(model_changed(const ObjectsList*)), this,
             SLOT(updatedModel(const ObjectsList*)));
+    connect(m_model, SIGNAL(alert(const QString&)), this, SLOT(alert(const QString&)));
     connect(m_model->gcode, SIGNAL(gcode_changed()), this, SLOT(gcodeChanged()));
 
     connect(ui_main->modelListView, SIGNAL(clicked(QModelIndex)),
@@ -135,6 +136,7 @@ MainWindow::~MainWindow()
     m_settings->setValue("Misc/MainwindowGeom", saveGeometry());
     m_settings->setValue("Misc/MainwindowState", saveState());
     m_settings->setValue("Misc/Mainsplitter", ui_main->Mainsplitter->saveState());
+    m_settings->setValue("Misc/MainTabIndex", ui_main->tabWidget->currentIndex());
     delete m_model;
     delete m_progress;
     delete m_printer;
@@ -153,7 +155,9 @@ void MainWindow::err_log(QString s)
 
 void MainWindow::comm_log(QString s)
 {
-    qDebug() << "Comm: " << s ;
+    if (m_settings->get_boolean("Display/CommsDebug")){
+        qDebug() << "Comm: " << s ;
+    }
     if (m_settings->get_boolean("Printer/Logging")){
         ui_main->i_txt_comms->appendPlainText(s);
     }
@@ -258,6 +262,7 @@ void MainWindow::printingChanged()
     ui_main->p_print->setEnabled(!isPrinting);
     ui_main->AxisControlBox->setEnabled(!isPrinting);
     ui_main->gcodeActions->setEnabled(!isPrinting);
+    m_model->m_inhibit_modelchange = isPrinting;
     if (!isPrinting) {
         m_progress->stop();
         m_model->setCurrentPrintingLine(0);
@@ -519,15 +524,15 @@ void MainWindow::previewFile(const QString &filename)
         Vector3d pMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
         for (uint i = 0; i < m_model->preview_shapes.size(); i++) {
           m_model->preview_shapes[i]->PlaceOnPlatform();
-          Vector3d stlMin = m_model->preview_shapes[i]->t_Min();
-          Vector3d stlMax = m_model->preview_shapes[i]->t_Max();
+          Vector3d stlMin = m_model->preview_shapes[i]->Min;
+          Vector3d stlMax = m_model->preview_shapes[i]->Max;
           for (uint k = 0; k < 3; k++) {
             pMin[k] = min(stlMin[k], pMin[k]);
             pMax[k] = max(stlMax[k], pMax[k]);
           }
         }
         //cerr << pMin << pMax << endl;
-        m_render->set_zoom((pMax - pMin).find_max()*2);
+        m_render->set_zoom(float((pMax - pMin).find_max()*2));
         // Matrix4fT tr;
         // setArcballTrans(tr,(pMin+pMax)/2);
         // m_renderer->set_transform(tr);
@@ -540,6 +545,13 @@ void MainWindow::openFiles(const QStringList &fileNames)
 {
     for (QString file : fileNames)
         openFile(file);
+}
+
+void MainWindow::alert(const QString &message)
+{
+    QMessageBox msgbox(this);
+    msgbox.setText(message);
+    msgbox.open();
 }
 
 void MainWindow::handleButtonClick()
@@ -587,14 +599,16 @@ void MainWindow::handleButtonClick()
             m_render->update();
         }
     } else if(name == "copy_extruder"){
-        uint newEx = m_settings->CopyExtruder(prefs_dialog->getSelectedExtruder());
+        uint newEx = m_settings->CopyExtruder(uint(prefs_dialog->getSelectedExtruder()));
         tempsPanel->addExtruder(newEx);
         prefs_dialog->selectExtruder(newEx);
     } else if(name == "remove_extruder"){
         int index = prefs_dialog->removeExtruder();
-        m_settings->RemoveExtruder(index);
-        tempsPanel->removeDevice(Settings::numbered("Extruder",index));
-        extruderSelected(index);
+        if (index >= 0) {
+            m_settings->RemoveExtruder(uint(index));
+            tempsPanel->removeDevice(Settings::numbered("Extruder",uint(index)));
+            extruderSelected(uint(index));
+        }
     } else if(name == "m_autoarrange"){
         m_model->AutoArrange(m_render->getSelection());
     } else if(name == "p_connect"){
@@ -742,7 +756,6 @@ void MainWindow::settingsChanged(const QString &name)
         }
     }
     if (!name.startsWith("Display")) {
-        cerr << name.toStdString() << " settings changed "<<  endl;
         m_model->ClearPreview();
     }
     m_settings->setMaxHeight(this,
@@ -753,6 +766,7 @@ void MainWindow::settingsChanged(const QString &name)
     s.setRealNumberPrecision(2);
     s << m_settings->get_integer("Display/LayerValue")/1000.;
     ui_main->LayerLabel->setText(l);
+    m_model->gcode->clearGlList();
     m_render->update();
     m_printer->UpdateTemperatureMonitor();
 }
@@ -802,14 +816,14 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 
-void MainWindow::extruderSelected(int index){
+void MainWindow::extruderSelected(uint index){
     m_settings->currentExtruder = index;
     m_settings->set_all_to_gui(prefs_dialog,
                                Settings::numbered("Extruder",index).toStdString());
 }
 
 void MainWindow::extruderSelected(const QModelIndex &index){
-   extruderSelected(index.row());
+   extruderSelected(uint(index.row()));
 }
 
 
@@ -823,7 +837,7 @@ TemperaturePanel::~TemperaturePanel()
 }
 
 QWidget *TemperaturePanel::addExtruder(const uint index){
-    return addDevice(Settings::numbered("Extruder",index),
+    return addDevice(Settings::numbered("Extruder", index),
                      "Extruder "+QString::number(index+1));
 }
 
@@ -861,14 +875,14 @@ void TemperaturePanel::setBedTemp(int temp, int set_temp) {
     setTemp("Bed", temp, set_temp);
 }
 
-void TemperaturePanel::setExtruderTemp(int number, int temp, int set_temp) {
+void TemperaturePanel::setExtruderTemp(uint number, int temp, int set_temp) {
     setTemp(Settings::numbered("Extruder",number), temp, set_temp);
 }
 
 void TemperaturePanel::setTemp(const QString &name, int temp, int set_temp)
 {
-    if (rows.contains(name))
-        rows[name]->Temperature_CurrentTemp->setText(QString::number(temp) + " °C");
+    if (!rows.contains(name) || !rows[name]) return;
+    rows[name]->Temperature_CurrentTemp->setText(QString::number(temp) + " °C");
     if (set_temp > 0) {
         rows[name]->Temperature_Temp->setValue(set_temp);
         rows[name]->Temperature_Button->setChecked(true);

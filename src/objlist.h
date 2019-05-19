@@ -61,7 +61,7 @@ public:
     vector<Shape*> get_all_shapes() const;
     vector<Shape*>get_selected_shapes(const QModelIndexList *indexes) const;
 //    void get_selected_objects(const QModelIndexList *indexes, vector<ListObject*> &objects) const;
-    Shape *findShape(uint index) const;
+    Shape *findShape(int index) const;
 
     bool empty() const {return objects.size()==0; }
     Matrix4d getTransformationMatrix(int object, int shape=-1) const;

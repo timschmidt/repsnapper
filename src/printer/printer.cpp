@@ -253,7 +253,7 @@ bool Printer::StartPrinting(QTextDocument *document,
     if (!Send("M110 N" + std::to_string(lineno_to_print-1))) // tell line no before next line
         return false;
     while (is_printing && lineno_to_print >= 0 && lineno_to_print < endLine) {
-        QTextBlock block = document->findBlockByLineNumber(lineno_to_print);
+        QTextBlock block = document->findBlockByLineNumber(int(lineno_to_print));
         if (!block.isValid()) break;
         lineno = lineno_to_print;
         if (!Send(block.text().toStdString(), &lineno)) // send with line no & checksum
@@ -476,7 +476,7 @@ void Printer::serialReady()
         QByteArray last = commandBuffer.last();
         ok_received = false;
         if (serialPort->write(last) == long(last.length())){
-            Command command(last.toStdString(), &currentPos);
+            Command command(last.toStdString(), currentPos);
 //            cerr << "COMMAND: " << command.info();
             if (command.Code == RAPIDMOTION || command.Code == COORDINATEDMOTION)
                 if (is_in_relative_mode)
@@ -561,7 +561,7 @@ bool Printer::Idle( void ) {
 }
 
 bool Printer::CheckPrintingProgress( void ) {
-  unsigned long line = 0;//GetPrintingProgress();
+    long line = 0;//GetPrintingProgress();
 
   if ( is_printing != was_printing ) {
     lineno_to_print = line;
@@ -636,10 +636,10 @@ void Printer::ParseResponse( QString line ) {
         QRegularExpressionMatchIterator mIt = templineRE_T.globalMatch(line);
         while (mIt.hasNext()){
             QRegularExpressionMatch match = mIt.next();
-            int extr = 0;
+            uint extr = 0;
             QString extrM = match.captured("extrno");
             if (extrM.length()==1)
-                extr = extrM.toInt();
+                extr = extrM.toUInt();
 
             qDebug() << match.captured("set") ;
             double temp = match.captured("temp").toDouble();

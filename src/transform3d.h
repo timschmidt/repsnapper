@@ -58,5 +58,7 @@ public:
     double get_scale_z() const {return m_scalexyz[2];}
     Vector4d const getScaleValues() const;
     void setScaleValues(const Vector4d &scale);
+
+    Vector3d operator * (const Vector3d &v) const { return m_transform * v; }
 };
 

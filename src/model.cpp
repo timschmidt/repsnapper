@@ -69,12 +69,12 @@ Model::~Model()
 
 void Model::alert (const char *message)
 {
-//  signal_alert.emit (Gtk::MESSAGE_INFO, message, NULL);
+    emit alert(QString(message));
 }
 
 void Model::error (const char *message, const char *secondary)
 {
-//  signal_alert.emit (Gtk::MESSAGE_ERROR, message, secondary);
+    emit alert(QString(message) + QString(secondary));
 }
 
 //void Model::SaveConfig(QString filename)
@@ -133,12 +133,13 @@ void Model::GlDrawGCode(int layerno)
   if (settings->get_boolean("Display/DisplayGCode", false))  {
     gcode->draw (settings, layerno, false);
   }
+  // currently printing:
   // assume that the real printing line is the one at the start of the buffer
   if (currentprintingline > 0) {
     int currentlayer = gcode->getLayerNo(currentprintingline);
     if (currentlayer>=0) {
-      int start = gcode->getLayerStart(currentlayer);
-      int end   = gcode->getLayerEnd(currentlayer);
+      ulong start = gcode->getLayerStart(uint(currentlayer));
+      ulong end   = gcode->getLayerEnd(uint(currentlayer));
       //gcode->draw (settings, currentlayer, true, 1);
       bool displaygcodeborders = settings->get_boolean("Display/DisplayGCodeBorders");
       gcode->drawCommands(settings, start, currentprintingline, true, 4, false,
@@ -178,7 +179,7 @@ void Model::ReadSVG(QFile *file)
   QString path = QFileInfo(*file).absolutePath();
   FlatShape * svgshape = new FlatShape(path);
   cerr << svgshape->info() << endl;
-  AddShape(nullptr, (Shape*)svgshape, path, autoplace);
+  AddShape(nullptr, dynamic_cast<Shape*>(svgshape), path, autoplace);
   ModelChanged(true);
 }
 
@@ -201,6 +202,7 @@ vector<Shape*> Model::ReadShapes(QFile *file,
       shapes.push_back(shape);
     }
   }
+  preview_shapes.clear();
   cerr << shapes.size() << " shapes"<< endl;
   ModelChanged(true);
   return shapes;
@@ -345,6 +347,8 @@ void Model::ModelChanged(bool objectsAddedOrRemoved)
 {
   //printer.update_temp_poll_interval(); // necessary?
   if (!is_printing) {
+      ClearLayers();
+      ClearGCode();
     CalcBoundingBoxAndCenter();
     ClearPreview();
     Infill::clearPatterns();
@@ -354,7 +358,7 @@ void Model::ModelChanged(bool objectsAddedOrRemoved)
   }
 }
 
-static bool ClosestToOrigin (Vector3d a, Vector3d b)
+static bool ClosestToOrigin (const Vector3d &a, const Vector3d &b)
 {
   return (a.squared_length()) < (b.squared_length());
 }
@@ -383,21 +387,24 @@ bool Model::AutoArrange(const QModelIndexList *selected)
       }
   }
 
+
   // find place for unselected shapes
-  int num = unselshapes.size();
-  vector<int> rand_seq(num,1); // 1,1,1...
+  ulong num = unselshapes.size();
+  vector<uint> rand_seq(num,1); // 1,1,1,...
   partial_sum(rand_seq.begin(), rand_seq.end(), rand_seq.begin()); // 1,2,3,...,N
 
   srandom(QDateTime::currentMSecsSinceEpoch());
   random_shuffle(rand_seq.begin(), rand_seq.end()); // shuffle
 
-  for(int s = 0; s < num; s++) {
+  for(ulong s = 0; s < num; s++) {
     uint index = rand_seq[s]-1;
     // use selshapes as vector to fill up
+    unselshapes[index]->transform3D.moveTo(Vector3d::ZERO);
     Vector3d trans = FindEmptyLocation(selshapes,
                                        unselshapes[index]);
     selshapes.push_back(unselshapes[index]);
-    selshapes.back()->transform3D.moveTo(trans);
+    cerr << "trans" << trans << endl;
+    selshapes.back()->moveLowerLeftTo(trans);
     CalcBoundingBoxAndCenter();
   }
   ModelChanged();
@@ -411,29 +418,27 @@ Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
   std::vector<Vector3d> maxpos;
   std::vector<Vector3d> minpos;
   for(uint s=0; s<shapes.size(); s++) {
-    Vector3d p;
     Vector3d min = shapes[s]->Min;
     Vector3d max = shapes[s]->Max;
     minpos.push_back(Vector3d(min.x(), min.y(), 0));
     maxpos.push_back(Vector3d(max.x(), max.y(), 0));
+    cerr << s << " minmax " << min << max << endl;
   }
 
   double d = 5.0; // 5mm spacing between objects
   Vector3d StlDelta = (shape->Max - shape->Min);
+  cerr << "delta " << StlDelta<< endl;
+return Vector3d::ZERO;
   vector<Vector3d> candidates;
-
-  candidates.push_back(Vector3d(0.0, 0.0, 0.0));
-
+  candidates.push_back(Vector3d::ZERO);
   for (uint j=0; j<maxpos.size(); j++)
   {
     candidates.push_back(Vector3d(maxpos[j].x() + d, minpos[j].y(), 0));
     candidates.push_back(Vector3d(minpos[j].x(), maxpos[j].y() + d, 0));
     candidates.push_back(maxpos[j] + Vector3d(d,d,0));
   }
-
   // Prefer positions closest to origin
   sort(candidates.begin(), candidates.end(), ClosestToOrigin);
-
 
   Vector3d result;
   // Check all candidates for collisions with existing objects
@@ -445,21 +450,21 @@ Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
     {
       if (
           // check x
-          ( ( ( minpos[k].x()     <= candidates[c].x() &&
-        candidates[c].x() <= maxpos[k].x() ) ||
-          ( candidates[c].x() <= minpos[k].x() &&
-        maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
-        ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d &&
-        candidates[c].x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
-          &&
+              ( ( ( minpos[k].x()     <= candidates[c].x() &&
+                    candidates[c].x() <= maxpos[k].x() ) ||
+                  ( candidates[c].x() <= minpos[k].x() &&
+                    maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
+                ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d &&
+                    candidates[c].x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
+              &&
           // check y
-          ( ( ( minpos[k].y() <= candidates[c].y() &&
-        candidates[c].y() <= maxpos[k].y() ) ||
-          ( candidates[c].y() <= minpos[k].y() &&
-        maxpos[k].y() <= candidates[c].y()+StlDelta.y()+d ) ) ||
-        ( ( minpos[k].y() <= candidates[c].y()+StlDelta.y()+d &&
-        candidates[c].y()+StlDelta.y()+d <= maxpos[k].y() ) ) )
-      )
+              ( ( ( minpos[k].y() <= candidates[c].y() &&
+                    candidates[c].y() <= maxpos[k].y() ) ||
+                  ( candidates[c].y() <= minpos[k].y() &&
+                    maxpos[k].y() <= candidates[c].y()+StlDelta.y()+d ) ) ||
+                ( ( minpos[k].y() <= candidates[c].y()+StlDelta.y()+d &&
+                    candidates[c].y()+StlDelta.y()+d <= maxpos[k].y() ) ) )
+              )
     {
       ok = false;
       break;
@@ -492,10 +497,6 @@ Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
 
 bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
 {
-  // Get all object positions
-  std::vector<Vector3d> maxpos;
-  std::vector<Vector3d> minpos;
-
   vector<Shape*> allshapes = objectList.get_all_shapes();
   result = FindEmptyLocation(allshapes, shape);
   return true;
@@ -504,6 +505,7 @@ bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
 ListObject * Model::AddShape(ListObject *parentLO, Shape *shape,
                              QString filename, bool autoplace)
 {
+  if (m_inhibit_modelchange) return nullptr;
   FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
   if (flatshape != nullptr)
       shape = flatshape;
@@ -515,7 +517,7 @@ ListObject * Model::AddShape(ListObject *parentLO, Shape *shape,
       // Decide where it's going
       Vector3d trans;
       if (FindEmptyLocation(trans, shape)) {
-          shape->transform3D.move(trans);
+          shape->transform3D.moveTo(trans);
       }
       shape->PlaceOnPlatform();
   }
@@ -525,8 +527,9 @@ ListObject * Model::AddShape(ListObject *parentLO, Shape *shape,
   return parentLO;
 }
 
-int Model::SplitShape(ListObject *parent, Shape *shape, QString filename)
+ulong Model::SplitShape(ListObject *parent, Shape *shape, QString filename)
 {
+  if (m_inhibit_modelchange) return 0;
   vector<Shape*> splitshapes;
   shape->splitshapes(splitshapes, m_progress);
   if (splitshapes.size()<2) return splitshapes.size();
@@ -541,6 +544,7 @@ int Model::SplitShape(ListObject *parent, Shape *shape, QString filename)
 
 int Model::MergeShapes(ListObject *parent, const vector<Shape*> shapes)
 {
+  if (m_inhibit_modelchange) 0;
   Shape * shape = new Shape();
   for (uint s = 0; s <  shapes.size(); s++) {
     vector<Triangle> str = shapes[s]->getTriangles();
@@ -553,9 +557,10 @@ int Model::MergeShapes(ListObject *parent, const vector<Shape*> shapes)
 
 int Model::DivideShapeAtZ(ListObject *parent, Shape *shape, QString filename)
 {
+  if (m_inhibit_modelchange) return 0;
   Shape *upper = new Shape();
   Shape *lower = new Shape();
-  Matrix4d T = Matrix4d::IDENTITY;;//FIXME! objtree.GetSTLTransformationMatrix(parent);
+  Matrix4d T = Matrix4d::IDENTITY; //FIXME! objtree.GetSTLTransformationMatrix(parent);
   int num = shape->divideAtZ(0, upper, lower, T);
   if (num<2) return num;
   else if (num==2) {
@@ -574,6 +579,7 @@ ListObject *Model::newObject()
 /* Scales the object on changes of the scale slider */
 void Model::ScaleObject(Shape *shape, ListObject *object, double scale)
 {
+  if (m_inhibit_modelchange) return;
   if (shape)
     shape->Scale(scale);
   else if(object)
@@ -586,6 +592,7 @@ void Model::ScaleObject(Shape *shape, ListObject *object, double scale)
 }
 void Model::ScaleObjectX(Shape *shape, ListObject *object, double scale)
 {
+  if (m_inhibit_modelchange) return;
   if (shape)
     shape->ScaleX(scale);
   else if(object)
@@ -598,6 +605,7 @@ void Model::ScaleObjectX(Shape *shape, ListObject *object, double scale)
 }
 void Model::ScaleObjectY(Shape *shape, ListObject *object, double scale)
 {
+  if (m_inhibit_modelchange) return;
   if (shape)
     shape->ScaleY(scale);
   else if(object)
@@ -610,6 +618,7 @@ void Model::ScaleObjectY(Shape *shape, ListObject *object, double scale)
 }
 void Model::ScaleObjectZ(Shape *shape, ListObject *object, double scale)
 {
+  if (m_inhibit_modelchange) return;
   if (shape)
     shape->ScaleZ(scale);
   else if(object)
@@ -624,6 +633,7 @@ void Model::ScaleObjectZ(Shape *shape, ListObject *object, double scale)
 void Model::rotate_selection(QModelIndexList * selected, const Vector3d axis,
                              double angle)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*> selshapes = objectList.get_selected_shapes(selected);
     for (Shape * shape: selshapes) {
         shape->Rotate(axis, angle);
@@ -636,6 +646,7 @@ void Model::rotate_selection(QModelIndexList * selected, const Vector3d axis,
 
 void Model::move_selection(QModelIndexList *selected, const Vector3d move)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*> selshapes = objectList.get_selected_shapes(selected);
     for (Shape * shape: selshapes){
         shape->move(move);
@@ -648,6 +659,7 @@ void Model::move_selection(QModelIndexList *selected, const Vector3d move)
 
 void Model::RotateObject(Shape* shape, ListObject* object, Vector4d rotate)
 {
+  if (m_inhibit_modelchange) return;
   if (!shape)
     return;
   Vector3d rot(rotate.x(), rotate.y(), rotate.z());
@@ -657,6 +669,7 @@ void Model::RotateObject(Shape* shape, ListObject* object, Vector4d rotate)
 
 void Model::TwistObject(Shape *shape, ListObject *object, double angle)
 {
+  if (m_inhibit_modelchange) return;
   if (!shape)
     return;
   shape->Twist(angle);
@@ -665,6 +678,7 @@ void Model::TwistObject(Shape *shape, ListObject *object, double angle)
 
 void Model::OptimizeRotation(Shape *shape, ListObject *object)
 {
+  if (m_inhibit_modelchange) return;
   if (!shape)
     return; // FIXME: rotate entire Objects ...
   shape->OptimizeRotation();
@@ -673,6 +687,7 @@ void Model::OptimizeRotation(Shape *shape, ListObject *object)
 
 void Model::InvertNormals(const QModelIndexList * selection)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes)
         shape->invertNormals();
@@ -680,6 +695,7 @@ void Model::InvertNormals(const QModelIndexList * selection)
 }
 void Model::Mirror(const QModelIndexList * selection)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes)
         shape->mirror();
@@ -688,6 +704,7 @@ void Model::Mirror(const QModelIndexList * selection)
 
 void Model::Hollow(const QModelIndexList *selection)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes) {
         shape->makeHollow(3);
@@ -698,6 +715,7 @@ void Model::Hollow(const QModelIndexList *selection)
 
 void Model::Duplicate(const QModelIndexList *selection)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes) {
         Shape * newshape;
@@ -716,6 +734,7 @@ void Model::Duplicate(const QModelIndexList *selection)
 
 void Model::Split(const QModelIndexList *selection)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes) {
         ListObject* parent = objectList.getParent(shape);
@@ -729,6 +748,7 @@ void Model::Split(const QModelIndexList *selection)
 
 void Model::Merge(const QModelIndexList *selection)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     if (selshapes.size()>0) {
         ListObject* parent = objectList.getParent(selshapes[0]);
@@ -740,6 +760,7 @@ void Model::Merge(const QModelIndexList *selection)
 
 void Model::DivideAtZ(const QModelIndexList *selection)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes) {
         ListObject* parent = objectList.getParent(shape);
@@ -751,6 +772,7 @@ void Model::DivideAtZ(const QModelIndexList *selection)
 
 void Model::PlaceOnPlatform(const QModelIndexList *selected)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selected);
     for (Shape * shape: selshapes){
         shape->PlaceOnPlatform();
@@ -765,6 +787,7 @@ void Model::PlaceOnPlatform(const QModelIndexList *selected)
 
 void Model::AutoRotate(const QModelIndexList *selected)
 {
+    if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selected);
     for (Shape * shape: selshapes){
         OptimizeRotation(shape,nullptr);
@@ -777,6 +800,7 @@ void Model::AutoRotate(const QModelIndexList *selected)
 
 void Model::DeleteSelectedObjects(const QModelIndexList *selected)
 {
+    if (m_inhibit_modelchange) return;
     vector<int> ind;
     for (QModelIndex i : *selected)
         ind.push_back(i.row());
@@ -884,7 +908,7 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
       Vector3d v_center = GetViewCenter() - offset;
       glTranslated( v_center.x(), v_center.y(), v_center.z());
       for (uint i = 0; i < preview_shapes.size(); i++) {
-    offset = preview_shapes[i]->t_Center();
+    offset = preview_shapes[i]->Center;
     glTranslated(offset.x(), offset.y(), offset.z());
     // glPushMatrix();
     // glMultMatrixd (&preview_shapes[i]->transform3D.getTransform().array[0]);
@@ -966,7 +990,7 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
           }
           else {
               if (select_mode)
-                  shape->draw (settings, false, 0, select_index);
+                  shape->draw (settings, false, 0, int(select_index));
               else
                   shape->draw (settings, false);
           }
@@ -991,110 +1015,110 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
   // draw total bounding box
   if(displaybbox)
     {
-      const float minz = max(0., Min.z()); // above xy plane only
+      const double minz = max(0., Min.z()); // above xy plane only
       // Draw bbox
       glDisable(GL_DEPTH_TEST);
       glLineWidth(1);
       glColor3f(1,0,0);
       glBegin(GL_LINE_LOOP);
-      glVertex3f(Min.x(), Min.y(), minz);
-      glVertex3f(Min.x(), Max.y(), minz);
-      glVertex3f(Max.x(), Max.y(), minz);
-      glVertex3f(Max.x(), Min.y(), minz);
+      glVertex3d(Min.x(), Min.y(), minz);
+      glVertex3d(Min.x(), Max.y(), minz);
+      glVertex3d(Max.x(), Max.y(), minz);
+      glVertex3d(Max.x(), Min.y(), minz);
       glEnd();
       glBegin(GL_LINE_LOOP);
-      glVertex3f(Min.x(), Min.y(), Max.z());
-      glVertex3f(Min.x(), Max.y(), Max.z());
-      glVertex3f(Max.x(), Max.y(), Max.z());
-      glVertex3f(Max.x(), Min.y(), Max.z());
+      glVertex3d(Min.x(), Min.y(), Max.z());
+      glVertex3d(Min.x(), Max.y(), Max.z());
+      glVertex3d(Max.x(), Max.y(), Max.z());
+      glVertex3d(Max.x(), Min.y(), Max.z());
       glEnd();
       glBegin(GL_LINES);
-      glVertex3f(Min.x(), Min.y(), minz);
-      glVertex3f(Min.x(), Min.y(), Max.z());
-      glVertex3f(Min.x(), Max.y(), minz);
-      glVertex3f(Min.x(), Max.y(), Max.z());
-      glVertex3f(Max.x(), Max.y(), minz);
-      glVertex3f(Max.x(), Max.y(), Max.z());
-      glVertex3f(Max.x(), Min.y(), minz);
-      glVertex3f(Max.x(), Min.y(), Max.z());
+      glVertex3d(Min.x(), Min.y(), minz);
+      glVertex3d(Min.x(), Min.y(), Max.z());
+      glVertex3d(Min.x(), Max.y(), minz);
+      glVertex3d(Min.x(), Max.y(), Max.z());
+      glVertex3d(Max.x(), Max.y(), minz);
+      glVertex3d(Max.x(), Max.y(), Max.z());
+      glVertex3d(Max.x(), Min.y(), minz);
+      glVertex3d(Max.x(), Min.y(), Max.z());
       glEnd();
       glColor3f(1.f,0.6f,0.6f);
       ostringstream val;
       val.precision(1);
-      Vector3f pos;
+      Vector3d pos;
       val << fixed << (Max.x()-Min.x());
-      pos = Vector3f((Max.x()+Min.x())/2.f,Min.y(),Max.z());
+      pos = Vector3d((Max.x()+Min.x())/2.,Min.y(),Max.z());
       render->draw_string(pos,val.str());
       val.str("");
       val << fixed << (Max.y()-Min.y());
-      pos = Vector3f(Min.x(),(Max.y()+Min.y())/2.f,Max.z());
+      pos = Vector3d(Min.x(),(Max.y()+Min.y())/2.,Max.z());
       render->draw_string(pos,val.str());
       val.str("");
       val << fixed << (Max.z()-minz);
-      pos = Vector3f(Min.x(),Min.y(),(Max.z()+minz)/2.f);
+      pos = Vector3d(Min.x(),Min.y(),(Max.z()+minz)/2.);
       render->draw_string(pos,val.str());
     }
   int drawnlayer = -1;
   if(!select_mode && settings->get_boolean("Display/DisplayLayer")) {
-       float z = settings->get_integer("Display/LayerValue")/1000.;
+       double z = settings->get_integer("Display/LayerValue")/1000.;
        drawnlayer = drawLayers(z, offset, false);
   }
   if(!select_mode && settings->get_boolean("Display/DisplayGCode") && gcode->size() == 0) {
-    // preview gcode if not calculated yet
-    if ( m_previewGCode->size() != 0 ||
-     ( layers.size() == 0 && gcode->commands.size() == 0 ) ) {
-      Vector3d start(0,0,0);
-      const double thickness = settings->get_double("Slicing/LayerThickness");
-      const double z = settings->get_integer("Display/GCodeDrawStart")/1000.;
-      const int LayerNo = int(ceil(z/thickness))-1;
-      if (z != m_previewGCode_z) {
-    //uint prevext = settings->selectedExtruder;
-    Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
-    if (previewGCodeLayer) {
-      m_previewGCode->clear();
-//      vector<Command> commands;
-      GCodeState state(*m_previewGCode);
-      previewGCodeLayer->MakeGCode(start, state, 0, settings);
-      // state.AppendCommands(commands, settings->Slicing.RelativeEcode);
-      m_previewGCode_z = z;
-    }
-    //settings->SelectExtruder(prevext);
+      // preview gcode if not calculated yet
+      if ( m_previewGCode->size() != 0 ||
+           ( layers.size() == 0 && gcode->commands.size() == 0 ) ) {
+          Vector3d start(0,0,0);
+          const double thickness = settings->get_double("Slicing/LayerThickness");
+          const double z = settings->get_integer("Display/GCodeDrawStart")/1000.;
+          const uint LayerNo = uint(ceil(z/thickness))-1;
+          if (z != m_previewGCode_z) {
+              //uint prevext = settings->selectedExtruder;
+              Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
+              if (previewGCodeLayer) {
+                  m_previewGCode->clear();
+                  //      vector<Command> commands;
+                  GCodeState state(*m_previewGCode);
+                  previewGCodeLayer->MakeGCode(start, state, 0, settings);
+                  // state.AppendCommands(commands, settings->Slicing.RelativeEcode);
+                  m_previewGCode_z = z;
+              }
+              //settings->SelectExtruder(prevext);
+          }
+          glDisable(GL_DEPTH_TEST);
+          m_previewGCode->drawCommands(
+                      settings, 1, m_previewGCode->commands.size(), true, 2,
+                      settings->get_boolean("Display/DisplayGCodeArrows"),
+                      settings->get_boolean("Display/DisplayGCodeBorders"));
       }
-      glDisable(GL_DEPTH_TEST);
-      m_previewGCode->drawCommands(
-              settings, 1, m_previewGCode->commands.size(), true, 2,
-              settings->get_boolean("Display/DisplayGCodeArrows"),
-              settings->get_boolean("Display/DisplayGCodeBorders"));
-    }
   }
   return drawnlayer;
 }
 
 // if single layer returns layerno of drawn layer
 // else returns -1
-int Model::drawLayers(float height, const Vector3d &offset, bool calconly)
+int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 {
  if (is_calculating) return -1; // infill calculation (saved patterns) would be disturbed
 
   glDisable(GL_DEPTH_TEST);
   int drawn = -1;
-  int LayerNr;
+  uint LayerNr;
 
   bool have_layers = (layers.size() > 0); // have sliced already
 
   bool fillAreas = settings->get_boolean("Display/DisplayFilledAreas");
 
-  float minZ = 0.f;//max(0.0, Min.z());
-  float z;
-  float zStep = settings->get_double("Slicing/LayerThickness");
-  float zSize = (Max.z() - minZ - zStep*0.5f);
-  int LayerCount = int(ceil((zSize - zStep*0.5f)/zStep))-1;
-  float sel_Z = height; //*zSize;
+  double minZ = 0.;//max(0.0, Min.z());
+  double z;
+  double zStep = settings->get_double("Slicing/LayerThickness");
+  double zSize = (Max.z() - minZ - zStep*0.5);
+  uint LayerCount = uint(ceil((zSize - zStep*0.5)/zStep))-1;
+  double sel_Z = height; //*zSize;
   uint sel_Layer;
   if (have_layers)
-    sel_Layer = (uint)floor(height*(layers.size())/zSize);
+    sel_Layer = uint(floor(height*(layers.size())/zSize));
   else
-    sel_Layer = (uint)ceil(LayerCount*sel_Z/zSize);
+    sel_Layer = uint(LayerCount*sel_Z/zSize);
   LayerCount = sel_Layer+1;
   if(have_layers && settings->get_boolean("Display/DisplayAllLayers"))
     {
@@ -1109,19 +1133,19 @@ int Model::drawLayers(float height, const Vector3d &offset, bool calconly)
       z= minZ + sel_Z;
     }
   if (have_layers) {
-    LayerNr = CLAMP(LayerNr, 0, (int)layers.size() - 1);
-    LayerCount = CLAMP(LayerCount, 0, (int)layers.size());
+    LayerNr = CLAMP(LayerNr, 0, uint(layers.size()) - 1);
+    LayerCount = CLAMP(LayerCount, 0, uint(layers.size()));
   }
-  z = CLAMP(z, 0.f, Max.z());
-  z += 0.5f*zStep; // always cut in middle of layer
+  z = CLAMP(z, 0., Max.z());
+  z += 0.5*zStep; // always cut in middle of layer
 
   //cerr << zStep << ";"<<Max.z()<<";"<<Min.z()<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
 
   Layer* layer=NULL;
   if (have_layers)
-    glTranslatef(-offset.x(), -offset.y(), -offset.z());
+    glTranslated(-offset.x(), -offset.y(), -offset.z());
 
-  const float lthickness = settings->get_double("Slicing/LayerThickness");
+  const double lthickness = settings->get_double("Slicing/LayerThickness");
   bool displayinfill = settings->get_boolean("Display/DisplayInfill");
   bool drawrulers = settings->get_boolean("Display/DrawRulers");
   while(LayerNr < LayerCount)
@@ -1186,8 +1210,8 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
               supportangle = settings->get_double("Slicing/SupportAngle")*M_PI/180.
           : -1;
 
-  Layer * layer = new Layer(NULL, LayerNr, thickness,
-                            settings->get_integer("Slicing/Skins"));
+  Layer * layer = new Layer(NULL, int(LayerNr), thickness,
+                            uint(settings->get_integer("Slicing/Skins")));
   layer->setZ(z);
 
   for(size_t f = 0; f < shapes.size(); f++) {
@@ -1208,9 +1232,9 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 
   if (settings->get_boolean("Slicing/Skirt")) {
     if (layer->getZ() - layer->thickness <= settings->get_double("Slicing/SkirtHeight"))
-      layer->MakeSkirt(settings->get_double("Slicing/SkirtDistance"),
-               settings->get_boolean("Slicing/SingleSkirt") &&
-               !settings->get_boolean("Slicing/Support"));
+        if (!settings->get_boolean("Slicing/Support"))
+            layer->MakeSkirt(settings->get_double("Slicing/SkirtDistance"),
+                             settings->get_boolean("Slicing/SingleSkirt"));
   }
 
   if (calcinfill)

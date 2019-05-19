@@ -154,57 +154,6 @@ void Render::setSelection(const QModelIndexList indexlist)
     update();
 }
 
-void Render::keyPressEvent(QKeyEvent *event){
-  bool moveZ = (event->modifiers() == Qt::ShiftModifier);
-  bool rotate = (event->modifiers() == Qt::ControlModifier);
-  double tendeg = M_PI/18.;
-//  cerr << "key " << event->key() << " ROT " << (rotate?tendeg:0) << " Z " << moveZ << endl;
-  switch (event->key())
-    {
-    case Qt::Key::Key_Up:
-      if (rotate)     get_model()->rotate_selection(&m_selection, Vector3d::UNIT_X, tendeg);
-      else if (moveZ) get_model()->move_selection(&m_selection, Vector3d( 0.0,  0.0, 1.0 ));
-      else            get_model()->move_selection(&m_selection, Vector3d( 0.0, 1.0, 0.0 ));
-      break;
-    case Qt::Key::Key_Down:
-      if (rotate)     get_model()->rotate_selection(&m_selection, Vector3d::UNIT_X, -tendeg);
-      else if (moveZ) get_model()->move_selection(&m_selection, Vector3d( 0.0, 0.0, -1.0 ));
-      else            get_model()->move_selection(&m_selection, Vector3d( 0.0, -1.0, 0.0 ));
-      break;
-    case Qt::Key::Key_Left:
-      if (rotate)     get_model()->rotate_selection(&m_selection, Vector3d::UNIT_Z, tendeg);
-      else            get_model()->move_selection(&m_selection, Vector3d( -1.0, 0.0, 0.0 ));
-      break;
-    case Qt::Key::Key_Right:
-      if (rotate)     get_model()->rotate_selection(&m_selection, Vector3d::UNIT_Z, -tendeg);
-      else            get_model()->move_selection(&m_selection, Vector3d( 1.0, 0.0, 0.0 ));
-      break;
-  default:
-      return;
-  }
-  repaint();
-}
-void Render::keyReleaseEvent(QKeyEvent *event)
-{
-    switch (event->key())
-    {
-    case Qt::Key::Key_Up:
-    case Qt::Key::Key_Down:
-    case Qt::Key::Key_Left:
-    case Qt::Key::Key_Right:
-        ;
-//        get_model()->ModelChanged();
-    }
-}
-
-void Render::wheelEvent(QWheelEvent *event)
-{
-    QPoint numDegrees = -event->angleDelta() * 8; // factor??
-    double factor = 1.1 * numDegrees.y();
-    m_zoom *= factor;
-    repaint();
-}
-
 void Render::SetEnableLight(unsigned int i, bool on)
 {
   assert (i < N_LIGHTS);
@@ -397,7 +346,7 @@ void transformPoint(GLdouble out[4], const GLdouble m[16], const GLdouble in[4])
 inline GLint Render::project(GLdouble objx, GLdouble objy, GLdouble objz,
                              const GLdouble model[16], const GLdouble proj[16],
 const GLint viewport[4],
-GLdouble * winx, GLdouble * winy, GLdouble * winz)
+GLint * winx, GLint * winy, GLdouble * winz)
 {
     GLdouble in[4], out[4];
 
@@ -415,8 +364,8 @@ GLdouble * winx, GLdouble * winy, GLdouble * winz)
     in[1] /= in[3];
     in[2] /= in[3];
 
-    *winx = viewport[0] + (1 + in[0]) * viewport[2] / 2;
-    *winy = viewport[1] + (1 + in[1]) * viewport[3] / 2;
+    *winx = int(viewport[0] + (1 + in[0]) * viewport[2] / 2);
+    *winy = int(viewport[1] + (1 + in[1]) * viewport[3] / 2);
 
     *winz = (1 + in[2]) / 2;
     return GL_TRUE;
@@ -476,13 +425,99 @@ void Render::paintGL()
 
 }
 
+void Render::keyPressEvent(QKeyEvent *event){
+  bool shift = (event->modifiers() == Qt::ShiftModifier);
+  bool cntrl = (event->modifiers() == Qt::ControlModifier);
+  bool selection = m_selection.size()>0;
+  double tendeg = M_PI/18.;
+//  cerr << "key " << event->key() << " ROT " << (rotate?tendeg:0) << " Z " << moveZ << endl;
+  switch (event->key())
+    {
+    case Qt::Key::Key_Up:
+      if (selection)
+          if (cntrl)      get_model()->rotate_selection(&m_selection, Vector3d::UNIT_X, tendeg);
+          else if (shift) get_model()->move_selection(&m_selection, Vector3d( 0.0,  0.0, 1.0 ));
+          else            get_model()->move_selection(&m_selection, Vector3d( 0.0, 1.0, 0.0 ));
+      else {
+          if (shift)
+              moveArcballTrans(m_transform, Vector3d::UNIT_Y);
+          else
+              rotArcballTrans(m_transform, Vector3d::UNIT_X, -1/20.);
+      }
+      break;
+    case Qt::Key::Key_Down:
+      if (selection)
+          if (cntrl)      get_model()->rotate_selection(&m_selection, Vector3d::UNIT_X, -tendeg);
+          else if (shift) get_model()->move_selection(&m_selection, Vector3d( 0.0, 0.0, -1.0 ));
+          else            get_model()->move_selection(&m_selection, Vector3d( 0.0, -1.0, 0.0 ));
+      else {
+          if (shift)
+              moveArcballTrans(m_transform, -Vector3d::UNIT_Y);
+          else
+              rotArcballTrans(m_transform, Vector3d::UNIT_X, 1/20.);
+      }
+      break;
+  case Qt::Key::Key_Left:
+      if (selection)
+          if (cntrl)      get_model()->rotate_selection(&m_selection, Vector3d::UNIT_Z, tendeg);
+          else            get_model()->move_selection(&m_selection, Vector3d( -1.0, 0.0, 0.0 ));
+      else {
+          if (shift)
+              moveArcballTrans(m_transform, -Vector3d::UNIT_X);
+          else
+              rotArcballTrans(m_transform, Vector3d::UNIT_Y, -1/20.);
+      }
+      break;
+  case Qt::Key::Key_Right:
+      if (selection)
+          if (cntrl)      get_model()->rotate_selection(&m_selection, Vector3d::UNIT_Z, -tendeg);
+          else            get_model()->move_selection(&m_selection, Vector3d( 1.0, 0.0, 0.0 ));
+      else {
+          if (shift)
+              moveArcballTrans(m_transform, Vector3d::UNIT_X);
+          else
+          rotArcballTrans(m_transform, Vector3d::UNIT_Y, 1/20.);
+      }
+      break;
+  case Qt::Key::Key_Plus:
+      m_zoom /= 1.1;
+      break;
+  case Qt::Key::Key_Minus:
+      m_zoom *= 1.1;
+      break;
+  default:
+      return;
+  }
+  repaint();
+}
+void Render::keyReleaseEvent(QKeyEvent *event)
+{
+    switch (event->key())
+    {
+    case Qt::Key::Key_Up:
+    case Qt::Key::Key_Down:
+    case Qt::Key::Key_Left:
+    case Qt::Key::Key_Right:
+        ;
+//        get_model()->ModelChanged();
+    }
+}
+
+void Render::wheelEvent(QWheelEvent *event)
+{
+    QPoint numDegrees = -event->angleDelta() * 8; // factor??
+    double factor = 1.1 * numDegrees.y();
+    m_zoom *= factor;
+    repaint();
+}
+
 void Render::mousePressEvent(QMouseEvent *event)
 {
     mousePressedModifiers = QGuiApplication::keyboardModifiers();
     // real mouse-down:
     m_downPoint = Vector2f(event->pos().x(), event->pos().y());
     // "moving" mouse-down, updated with dragpoint on mouse move:
-    m_dragStart = Vector2f(event->pos().x(), event->pos().y());
+    m_dragStart = m_downPoint;
     m_arcBall->click (m_downPoint.x(), m_downPoint.y(), &m_transform);
 
     mousePressed = event->button();
@@ -493,7 +528,7 @@ void Render::mousePressEvent(QMouseEvent *event)
         glReadBuffer(GL_FRONT);
         glReadPixels( mouseP.x(), height()-mouseP.y(), 1, 1, GL_BLUE, GL_UNSIGNED_BYTE, &blue);
         //                cerr << mouseP.x() <<","<< mouseP.y() << " sel " << blue << endl;
-        mousePickedObject = blue-1; // it was painted with color (255,index,index)
+        mousePickedObject = blue-1; // it was painted with color (255,index+1,index+1)
         m_main->selectShape(mousePickedObject);
         repaint();
     }

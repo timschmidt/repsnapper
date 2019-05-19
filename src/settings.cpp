@@ -99,7 +99,7 @@ static vector<float> toFloats(QStringList &slist)
     return f;
 }
 
-QString Settings::numbered(const QString &qstring, int num){
+QString Settings::numbered(const QString &qstring, uint num){
     return qstring + QString::number(num);
 }
 
@@ -277,9 +277,9 @@ void Settings::set_array(const QString &name,
 {
     if (!overwrite && contains(name))
         return;
-    beginWriteArray(name, values.size());
-    for (int i=0; i<values.size(); ++i){
-        setArrayIndex(i);
+    beginWriteArray(name, int(values.size()));
+    for (uint i=0; i<values.size(); ++i){
+        setArrayIndex(int(i));
         setValue("float",values[i]);
     }
     endArray();
@@ -460,7 +460,7 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
   if (widget_name.startsWith("Extruder")){ // only check for number of Extruders in list
       if (widget_name[8] != '_') {
           PrefsDlg *prefs_dlg = dynamic_cast<PrefsDlg*>(parentwidget);
-          int extrNum = widget_name.mid(8,1).toInt();
+          uint extrNum = widget_name.mid(8,1).toUInt();
           if (prefs_dlg) {
               prefs_dlg->checkForExtruders(extrNum+1);
           }
@@ -484,7 +484,7 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
       }
       QSpinBox *spin = dynamic_cast<QSpinBox *>(w);
       if (spin) {
-          spin->setValue(get_double(name));
+          spin->setValue(get_integer(name));
           break;
       }
       QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
@@ -494,7 +494,7 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
       }
       QAbstractSlider *slider = dynamic_cast<QAbstractSlider *>(w);
       if (slider) {
-          slider->setValue(get_double(name));
+          slider->setValue(get_integer(name));
           break;
       }
       QComboBox *combo = dynamic_cast<QComboBox *>(w);
@@ -513,7 +513,7 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
       ColorButton *col = dynamic_cast<ColorButton *>(w);
       if (col) {
           vector<float> c = get_array(name);
-          cerr << "set color to gui " <<  name.toStdString()  << endl;
+//          cerr << "set color to gui " <<  name.toStdString()  << endl;
           if (c.size() == 4)
               col->set_color(c[0],c[1],c[2],c[3]);
           break;
@@ -729,7 +729,7 @@ double Settings::RoundedLinewidthCorrection(double extr_width,
 double Settings::GetExtrudedMaterialWidth(double layerheight, uint extruderNo)
 {
   // ExtrudedMaterialWidthRatio is preset by user
-  const QString extruder = numbered("Extruder", int(extruderNo));
+  const QString extruder = numbered("Extruder", extruderNo);
   return min(max(get_double(extruder+"/MinimumLineWidth", 0.3),
                  get_double(extruder+"/ExtrudedMaterialWidthRatio", 1.0) * layerheight),
              get_double(extruder+"/MaximumLineWidth", 0.8));
@@ -753,7 +753,7 @@ double Settings::GetExtrusionPerMM(double layerheight, uint extruderNo)
 }
 
 // return infill distance in mm
-double Settings::GetInfillDistance(double layerthickness, float percent, uint extruderNo)
+double Settings::GetInfillDistance(double layerthickness, double percent, uint extruderNo)
 {
   double fullInfillDistance = GetExtrudedMaterialWidth(layerthickness, extruderNo);
   if (fullInfillDistance == 0.) throw new exception();
@@ -868,9 +868,9 @@ uint Settings::CopyExtruder(uint num)
 
 void Settings::RemoveExtruder(uint num)
 {
-    int total = getNumExtruders();
+    uint total = getNumExtruders();
     if (total < 2) return;
-    for (int n = num + 1; n < total; n++){
+    for (uint n = num + 1; n < total; n++){
         copyGroup(numbered("Extruder",n), numbered("Extruder",n-1));
     }
     remove(numbered("Extruder", total-1));
@@ -968,17 +968,17 @@ void Settings::setMaxHeight(QWidget *parent, const double h)
     QSlider* slider = parent->findChild<QSlider*>("Display_LayerValue");
     if (slider) {
         slider->setMaximum(int(1000*h));
-        slider->setPageStep(h*100);
+        slider->setPageStep(int(h*100));
     }
     slider = parent->findChild<QSlider*>("Display_GCodeDrawStart");
     if (slider) {
         slider->setMaximum(int(1000*h));
-        slider->setPageStep(h*100);
+        slider->setPageStep(int(h*100));
     }
     slider = parent->findChild<QSlider*>("Display_GCodeDrawEnd");
     if (slider) {
         slider->setMaximum(int(1000*h));
-        slider->setPageStep(h*100);
+        slider->setPageStep(int(h*100));
     }
     inhibit_callback=false;
 }
@@ -1170,5 +1170,5 @@ void ColorButton::set_color(QColor c) {
 }
 
 void ColorButton::set_color(float r, float g, float b, float alpha) {
-    set_color(QColor(255*r,255*g,255*b,255*alpha));
+    set_color(QColor(int(255*r),int(255*g),int(255*b),int(255*alpha)));
 }

@@ -161,7 +161,7 @@ public:
   Matrix4d getBasicTransformation(Matrix4d T);
 
   // return real mm depending on hardware extrusion width setting
-  double GetInfillDistance(double layerthickness, float percent, uint extruderNo);
+  double GetInfillDistance(double layerthickness, double percent, uint extruderNo);
 
 
   // connect settings to relevant GUI widgets
@@ -194,8 +194,8 @@ public:
 
   QString info();
 
-  static QString numbered(const QString &qstring, int num);
-  int currentExtruder; // the extruder currently on GUI
+  static QString numbered(const QString &qstring, uint num);
+  uint currentExtruder; // the extruder currently on GUI
 
 signals:
   void settings_changed(const QString &name);

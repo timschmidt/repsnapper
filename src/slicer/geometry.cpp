@@ -143,15 +143,15 @@ bool fit_arc(const vector<Vector2d> &points, double sq_error,
   const Vector2d startxy = (P+Q)/2.;
   double par[3] = { startxy.x(), startxy.y(), P.squared_distance(Q) };
 
-  int m_dat = points.size();
+  ulong m_dat = points.size();
   arc_data_struct data;
   data.px = new double[m_dat];
   data.py = new double[m_dat];
-  for (int i = 0; i < m_dat; i++) {
+  for (ulong i = 0; i < m_dat; i++) {
     data.px[i] = points[i].x();
     data.py[i] = points[i].y();
   }
-  return fit_arc(m_dat, data, n_par, par, sq_error,
+  return fit_arc(int(m_dat), data, n_par, par, sq_error,
          result_center, result_radiussq);
 }
 
@@ -180,12 +180,12 @@ void moveArcballTrans(Matrix4fT &matfT, const Vector3d &delta) {
   Matrix4f matf;
   typedef Matrix4f::iterator mIt;
   for (mIt it = matf.begin(); it!=matf.end(); ++it){
-    uint i = it - matf.begin();
+    long i = it - matf.begin();
     *it = matfT.M[i];
   }
   move(delta,matf);
   for (mIt it = matf.begin(); it!=matf.end(); ++it){
-    uint i = it - matf.begin();
+    long i = it - matf.begin();
     matfT.M[i] = *it;
   }
 }
@@ -193,12 +193,12 @@ void setArcballTrans(Matrix4fT &matfT, const Vector3d &trans) {
   Matrix4f matf;
   typedef Matrix4f::iterator  mIt;
   for (mIt it = matf.begin(); it!=matf.end(); ++it){
-    uint i = it - matf.begin();
+    long i = it - matf.begin();
     *it = matfT.M[i];
   }
   matf.set_translation(trans);
   for (mIt it = matf.begin(); it!=matf.end(); ++it){
-    uint i = it - matf.begin();
+    long i = it - matf.begin();
     matfT.M[i] = *it;
   }
 }
@@ -210,12 +210,12 @@ void rotArcballTrans(Matrix4fT &matfT,  const Vector3d &axis, double angle)
   Matrix4f matf;
   typedef Matrix4f::iterator  mIt;
   for (mIt it = matf.begin(); it!=matf.end(); ++it){
-    uint i = it - matf.begin();
+    long i = it - matf.begin();
     *it = matfT.M[i];
   }
   matf = rot * matf;
   for (mIt it = matf.begin(); it!=matf.end(); ++it){
-    uint i = it - matf.begin();
+    long i = it - matf.begin();
     matfT.M[i] = *it;
   }
 }
@@ -224,17 +224,17 @@ void rotArcballTrans(Matrix4fT &matfT,  const Vector3d &axis, double angle)
 // return A halfway rotated around center in direction of B
 Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B)
 {
-  double angle = planeAngleBetween(center-A, B-center) / 2;
+  double angle = double(planeAngleBetween(center-A, B-center) / 2);
   return rotated(A, center, angle);
 }
 
 long double planeAngleBetween(const Vector2d &V1, const Vector2d &V2)
 {
-    long double dotproduct =  V1.dot(V2);
-    long double length = V1.length() * V2.length();
+    long double dotproduct =   static_cast<long double>(V1.dot(V2));
+    long double length =  static_cast<long double>(V1.length() * V2.length());
     long double quot = dotproduct / length;
-    if (quot > 1  && quot < 1.0001) quot = 1; // strange case where acos => NaN
-    if (quot < -1 && quot > -1.0001) quot = -1;
+    if (quot > 1  && quot < 1.0001L) quot = 1; // strange case where acos => NaN
+    if (quot < -1 && quot > -1.0001L) quot = -1;
     long double result = acosl( quot ); // 0 .. pi
     if (isleftof(Vector2d(0,0), V2, V1))
         result = -result;
@@ -673,11 +673,11 @@ bool pointInPolys(const Vector2d &point,  const vector<Poly> &polys)
 // will return false
 // if the line cuts any of the given polygons except excluded one
 bool lineInPolys(const Vector2d &from, const Vector2d &to, const vector<Poly> &polys,
-         uint excludepoly, double maxerr)
+         int excludepoly, double maxerr)
 {
   uint ninter = 0;
   for (uint i=0; i< polys.size(); i++) {
-    if (i != excludepoly){
+    if (int(i) != excludepoly){
       if (polys[i].vertexInside(from)) ninter++;
       if (polys[i].vertexInside(to)) ninter++;
       vector<Intersection> inter = polys[i].lineIntersections(from,to,maxerr);
@@ -724,12 +724,12 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
   vector<struct pathpoint> pointList;
   //  Build a point list that refers to the corners of the
   //  polygons, as well as to the startpoint and endpoint.
-  pointList.push_back((pathpoint){from, 0, 0});
+  pointList.push_back(pathpoint({from, 0, 0}));
   for (uint i=0; i<polys.size(); i++)
     for (uint j=0; j<polys[i].size(); j++)
-      pointList.push_back((pathpoint){polys[i].vertices[j], 0, 0});
-  pointList.push_back((pathpoint){to, 0, 0});
-  uint pointCount = pointList.size();
+      pointList.push_back(pathpoint({polys[i].vertices[j], 0, 0}));
+  pointList.push_back(pathpoint({to, 0, 0}));
+  ulong pointCount = pointList.size();
 
   //  Initialize the shortest-path tree to include just the startpoint.
   uint treeCount=1;
@@ -772,7 +772,7 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
   //   cerr << i << " PL " << pointList[i].prev << endl;
   // }
   int numsolutions = 0;
-  int i = treeCount -1;
+  int i = int(treeCount) -1;
   while (i > 0) {
     path.push_back(pointList[i].v);
     i = pointList[i].prev;
@@ -781,9 +781,9 @@ bool shortestPath(const Vector2d &from, const Vector2d &to,
   }
   return true;
 
-  int j = numsolutions-1;
+  int j = int(numsolutions)-1;
   if (j > 0) {
-    int psize = path.size();
+    uint psize = path.size();
     path.resize(psize + j);
     i = treeCount-1;
     while (j >= 0) {
@@ -831,20 +831,20 @@ Poly convexHull2D(const vector<Poly> &polygons)
       P.push_back(point);
     }
 
-  int n = P.size();
+  ulong n = P.size();
   vector<Vector2d> H(2*n);
 
   if (n<2) return hullPolygon;
   if (n<4) {
-    for (int i = 0; i < n; i++)
+    for (uint i = 0; i < n; i++)
       hullPolygon.addVertex(P[i].v);
     return hullPolygon;
   }
   sort(P.begin(), P.end());
 
   // Build lower hull
-  int k=0;
-  for (int i = 0; i < n; i++) {
+  uint k=0;
+  for (uint i = 0; i < n; i++) {
     while (k >= 2 && cross_2(H[k-2], H[k-1], P[i].v) <= 0) k--;
     H[k++] = P[i].v;
   }
@@ -863,9 +863,9 @@ Poly convexHull2D(const vector<Poly> &polygons)
 ///////////////////// CLEANUP/SIMPILFY //////////////////////
 
 // make vertices at least epsilon apart
-int cleandist(vector<Vector2d> &vert, double epsilon)
+uint cleandist(vector<Vector2d> &vert, double epsilon)
 {
-  uint n_vert = vert.size();
+  ulong n_vert = vert.size();
   double sqeps = epsilon * epsilon;
   uint n_moved = 0;
   if (vert[0].squared_distance(vert[n_vert-1]) < sqeps){
@@ -891,15 +891,15 @@ int cleandist(vector<Vector2d> &vert, double epsilon)
 // Douglas-Peucker algorithm
 vector<Vector2d> simplified(const vector<Vector2d> &vert, double epsilon)
 {
-  if (epsilon == 0) return vert;
-  uint n_vert = vert.size();
+  if (epsilon == 0.) return vert;
+  ulong n_vert = vert.size();
   if (n_vert<3) return vert;
   double dmax = 0;
   //Find the point with the maximum distance from line start-end
   uint index = 0;
   Vector2d normal = normalV(vert.back()-vert.front());
   normal.normalize();
-  if( (normal.length()==0) || ((abs(normal.length())-1)>epsilon) ) return vert;
+  if( (normal.length()==0.) || ((abs(normal.length())-1)>epsilon) ) return vert;
   for (uint i = 1; i < n_vert-1 ; i++)
     {
       double dist = abs((vert[i]-vert.front()).dot(normal));

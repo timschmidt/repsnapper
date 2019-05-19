@@ -127,7 +127,7 @@ PKGCONFIG += glu glibmm-2.4 glib-2.0 libxml++-2.6
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
+else: unix:!android: target.path = /usr/local/bin
 !isEmpty(target.path): INSTALLS += target
 
 #QMAKE_CXX="ccache clang++80"

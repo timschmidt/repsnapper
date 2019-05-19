@@ -37,7 +37,7 @@ Infill::Infill()
 
 
 Infill::Infill (Layer *mlayer, double extrfactor)
-  : cached(false)
+    : cached(false)
 {
   layer = mlayer;
   extrusionfactor = extrfactor;
@@ -140,10 +140,10 @@ void Infill::addPolys(double z, const vector<Poly> &polys,
 
 // generate infill pattern as a vector of polygons
 ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
-                           const vector<Poly> &tofillpolys,
-                           double infillDistance,
-                           double offsetDistance,
-                           double rotation)
+                                            const vector<Poly> &tofillpolys,
+                                            double infillDistance,
+                                            double offsetDistance,
+                                            double rotation)
 {
   ClipperLib::Paths cpolys;
   m_tofillpolys = tofillpolys;
@@ -270,6 +270,7 @@ ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
   case SmallZigzagInfill: // small zigzag lines -> square pattern
       zigzag = true;
       //case ZigzagInfill: // long zigzag lines
+  [[clang::fallthrough]];
   case SupportInfill:
   case RaftInfill:
   case BridgeInfill:
@@ -323,7 +324,7 @@ ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
       Poly poly(this->layer->getZ());
       double square = MAX(Max.x()-Min.x(),Max.y()-Min.y());
       if (infillDistance<=0) break;
-      int level = (int)ceil(log2(2*square/infillDistance));
+      int level = int(ceil(log2(2*square/infillDistance)));
       if (level<0) break;
       //cerr << "level " << level;
       // start at 0,0 to get the same location for all layers
@@ -427,10 +428,10 @@ ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
 }
 
 
-int smallest(const vector<double> &nums, double &minimum)
+uint smallest(const vector<double> &nums, double &minimum)
 {
   minimum = INFTY;
-  int minind = -1;
+  uint minind = 0;
   for (uint i = 0; i < nums.size(); i++ ) {
     if (nums[i] < minimum) {
       minimum = nums[i];
@@ -463,7 +464,7 @@ bool intersectsPolys(const Vector2d &P1, const Vector2d &P2,
 vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, double z)
 {
   vector<Poly> polys;
-  uint count = lines.size();
+  ulong count = lines.size();
   if (count == 0) return polys;
   vector<Poly> clippolys = Clipping::getOffset(m_tofillpolys,0.1);
 
@@ -489,11 +490,11 @@ vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, doubl
       dist[1] = (p.front()-lines[j].to  ).squared_length();
       dist[2] = (p.back() -lines[j].from).squared_length();
       dist[3] = (p.back() -lines[j].to  ).squared_length();
-      int mind = smallest(dist, mindist);
+      uint mind = smallest(dist, mindist);
       if (mindist < mindistline) {
         minindline = j;
         mindistline = mindist;
-        minind = mind;
+        minind = uint(mind);
       }
     }
       uint i = minindline;
@@ -575,12 +576,12 @@ void Infill::addInfillPolys(const vector<Poly> &polys)
     for (uint i = 0; i < polys[j].size() ; i++ )
       {
         Vector2d l = (polys[j][i+1] - polys[j][i]);
-        double langle = planeAngleBetween(UNITX, l) + M_PI/2;
+        double langle = double(planeAngleBetween(UNITX, l)) + M_PI/2;
         if (sameAngle(langle,      m_angle, 0.2) ||
         sameAngle(langle+M_PI, m_angle, 0.2))
           {
         infillline il = { polys[j][i], polys[j][i+1] };
-        lines.push_back( il );;
+        lines.push_back( il );
           }
       }
       }

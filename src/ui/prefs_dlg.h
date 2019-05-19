@@ -47,7 +47,7 @@ public:
     //  void set_icon_from_file(const string path) {m_preferences_dlg->set_icon_from_file(path);}
     Ui::PreferencesDialog *getUi_dialog() const;
 
-    void checkForExtruders(int numExtruders);
+    void checkForExtruders(uint numExtruders);
     void selectExtruder(uint num);
     int getSelectedExtruder() const;
     int removeExtruder(int num = -1);

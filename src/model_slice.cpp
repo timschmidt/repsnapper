@@ -45,7 +45,7 @@
 #endif
 
 
-void Model::MakeRaft(GCodeState &state, double &z)
+void Model::MakeRaft(double &z)
 {
   if (layers.size() == 0) return;
   vector<Poly> raftpolys =
@@ -242,15 +242,15 @@ void Model::MakeRaft(GCodeState &state, double &z)
 // this is of not much use, too fast
 void Model::CleanupLayers()
 {
-  int count = int(layers.size());
+  ulong count = layers.size();
   if (count == 0) return;
   if(!m_progress->restart (_("Cleanup"), count)) return;
-  int progress_steps=max(1, int(count/100));
+  ulong progress_steps=max<ulong>(1, count/20);
 
 #ifdef _OPENMP
   #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int i=0; i < count; i++) {
+  for (ulong i=0; i < count; i++) {
       if (!m_progress->do_continue)
 #ifdef _OPENMP
           continue;
@@ -290,11 +290,11 @@ void Model::Slice()
 
   Matrix4d basicTrans = settings->getBasicTransformation(Matrix4d::IDENTITY);
 
-  int LayerNr = 0;
+  uint LayerNr = 0;
   bool varSlicing = settings->get_boolean("Slicing/Varslicing");
 
-  uint max_skins = max(1, settings->get_integer("Slicing/Skins"));
-  double thickness = (double)settings->get_double("Slicing/LayerThickness");
+  uint max_skins = uint(max(1, settings->get_integer("Slicing/Skins")));
+  double thickness = settings->get_double("Slicing/LayerThickness");
   double skin_thickness = thickness / max_skins;
   uint skins = max_skins; // probably variable
 
@@ -327,86 +327,85 @@ void Model::Slice()
     return;
   }
 
-  int progress_steps=max(1,(int)(maxZ/thickness/100.));
+  uint progress_steps = uint(max(1., maxZ/thickness/20));
 
   if ((varSlicing && skins > 1) ||
-      (settings->get_boolean("Slicing/BuildSerial") && shapes.size() > 1))
-  {
-    // have skins and/or serial build, so can't parallelise
-    uint currentshape   = 0;
-    double serialheight = maxZ; // settings.Slicing.SerialBuildHeight;
-    double z            = minZ;
-    double shape_z      = z;
-    double max_shape_z  = z + serialheight;
-    Layer * layer = new Layer(lastlayer, LayerNr, thickness, 1); // first layer no skins
-    layer->setZ(shape_z);
-    LayerNr = 1;
-    int new_polys=0;
-    bool cont = true;
-    while(cont && z < maxZ)
-      {
-        shape_z = z;
-        max_shape_z = min(shape_z + serialheight, maxZ);
-        while ( cont && currentshape < shapes.size() && shape_z <= max_shape_z ) {
-    if (LayerNr%progress_steps==0)
-        m_progress->emit update_signal(shape_z);
-    if (!m_progress->do_continue) break;
-    layer->setZ(shape_z); // set to real z
-    if (shape_z == minZ) { // the layer is on the platform
-      layer->LayerNo = 0;
-      layer->setSkins(1);
+          (settings->get_boolean("Slicing/BuildSerial") && shapes.size() > 1)) {
+      // have skins and/or serial build, so can't parallelise
+      uint currentshape   = 0;
+      double serialheight = maxZ; // settings.Slicing.SerialBuildHeight;
+      double z            = minZ;
+      double shape_z      = z;
+      double max_shape_z  = z + serialheight;
+      Layer * layer = new Layer(lastlayer, int(LayerNr), thickness, 1); // first layer no skins
+      layer->setZ(shape_z);
       LayerNr = 1;
-    }
-    new_polys = layer->addShape(basicTrans, *shapes[currentshape],
-                                max_gradient, supportangle);
-    // cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape
-    //      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
-    if (shape_z >= max_shape_z) { // next shape, reset z
-      currentshape++;
-      shape_z = z;
-    } else {  // next z, same shape
-      if (varSlicing && LayerNr!=0) {
-        // higher gradient -> slice thinner with fewer skin divisions
-        skins = max_skins-(uint)(max_skins* max_gradient);
-        thickness = skin_thickness*skins;
+      int new_polys=0;
+      bool cont = true;
+      while(cont && z < maxZ)
+      {
+          shape_z = z;
+          max_shape_z = min(shape_z + serialheight, maxZ);
+          while ( cont && currentshape < shapes.size() && shape_z <= max_shape_z ) {
+              if (LayerNr%progress_steps==0)
+                  m_progress->emit update_signal(shape_z);
+              if (!m_progress->do_continue) break;
+              layer->setZ(shape_z); // set to real z
+              if (shape_z == minZ) { // the layer is on the platform
+                  layer->LayerNo = 0;
+                  layer->setSkins(1);
+                  LayerNr = 1;
+              }
+              new_polys = layer->addShape(basicTrans, *shapes[currentshape],
+                                          max_gradient, supportangle);
+              // cerr << "Z="<<z<<", shapez="<< shape_z << ", shape "<<currentshape
+              //      << " of "<< shapes.size()<< " polys:" << new_polys<<endl;
+              if (shape_z >= max_shape_z) { // next shape, reset z
+                  currentshape++;
+                  shape_z = z;
+              } else {  // next z, same shape
+                  if (varSlicing && LayerNr!=0) {
+                      // higher gradient -> slice thinner with fewer skin divisions
+                      skins = max_skins-uint(max_skins* max_gradient);
+                      thickness = skin_thickness*skins;
+                  }
+                  shape_z += thickness;
+                  max_gradient = 0;
+                  if (new_polys > -1){
+                      layers.push_back(layer);
+                      lastlayer = layer;
+                      layer = new Layer(lastlayer, int(LayerNr++), thickness, skins);
+                  }
+              }
+          }
+          //thickness = max_thickness-(max_thickness-min_thickness)*max_gradient;
+          if (currentshape < shapes.size()-1) { // reached max_shape_z, next shape
+              currentshape++;
+          } else { // end of shapes
+              if (new_polys > -1){
+                  if (varSlicing) {
+                      skins = max_skins-uint(max_skins* max_gradient);
+                      thickness = skin_thickness*skins;
+                  }
+                  layers.push_back(layer);
+                  lastlayer = layer;
+                  layer = new Layer(lastlayer, int(LayerNr++), thickness, skins);
+              }
+              z = max_shape_z + thickness;
+              currentshape = 0; // all shapes again
+          }
+          max_gradient=0;
+          //cerr << "    Z="<<z << "Max.z="<<Max.z<<endl;
       }
-      shape_z += thickness;
-      max_gradient = 0;
-      if (new_polys > -1){
-        layers.push_back(layer);
-        lastlayer = layer;
-        layer = new Layer(lastlayer, LayerNr++, thickness, skins);
-      }
-    }
-        }
-        //thickness = max_thickness-(max_thickness-min_thickness)*max_gradient;
-        if (currentshape < shapes.size()-1) { // reached max_shape_z, next shape
-    currentshape++;
-        } else { // end of shapes
-    if (new_polys > -1){
-      if (varSlicing) {
-        skins = max_skins-(uint)(max_skins* max_gradient);
-        thickness = skin_thickness*skins;
-      }
-      layers.push_back(layer);
-      lastlayer = layer;
-      layer = new Layer(lastlayer, LayerNr++, thickness, skins);
-    }
-    z = max_shape_z + thickness;
-    currentshape = 0; // all shapes again
-        }
-        max_gradient=0;
-        //cerr << "    Z="<<z << "Max.z="<<Max.z<<endl;
-      }
-    delete layer; // have made one more than needed
-    return;
+      delete layer; // have made one more than needed
+      return;
   }
 
   // simple case, can do multihreading
 
-  int num_layers = (int)ceil((maxZ - minZ) / thickness);
+  uint num_layers = uint(ceil((maxZ - minZ) / thickness));
   layers.resize(num_layers);
-  int nlayer;
+  uint nlayer;
 
 #ifdef _OPENMP
   omp_lock_t progress_lock;
@@ -424,7 +423,7 @@ void Model::Slice()
 #else
           break;
 #endif
-    Layer * layer = new Layer(NULL, nlayer, thickness, nlayer>0?skins:1);
+    Layer * layer = new Layer(NULL, int(nlayer), thickness, nlayer>0?skins:1);
     layer->setZ(z); // set to real z
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
@@ -458,13 +457,12 @@ void Model::MakeFullSkins()
   // not bottom layer
 
   if(!m_progress->restart (_("Skins"), layers.size())) return;
-  int progress_steps=max(1,(int)(layers.size()/100));
-  int count = (int)layers.size();
+  uint progress_steps=max<uint>(1,uint(layers.size()/20));
+  ulong count = layers.size();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) //ordered
 #endif
-  for (int i=1; i < count; i++) {
-
+  for (ulong i=1; i < count; i++) {
     if (i%progress_steps==0)
         m_progress->emit update_signal(i);
     if (!m_progress->do_continue)
@@ -481,12 +479,12 @@ void Model::MakeFullSkins()
 
 void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
 {
-  int count = (int)layers.size();
-  if (count == 0 ) return;
+  uint count = uint(layers.size());
+  if (count == 0) return;
   if (!m_progress->restart (_("Find Uncovered"), 2*count+2)) return;
-  int progress_steps=max(1,(int)((2*count+2)/100));
+  uint progress_steps=max<uint>(1,uint((2*count+2)/20));
   // bottom to top: uncovered from above -> top polys
-  for (int i = 0; i < count-1; i++)
+  for (uint i = 0; i < count-1; i++)
     {
       if (i%progress_steps==0) m_progress->emit update_signal(i);
       if (!m_progress->do_continue) return;
@@ -539,21 +537,22 @@ void Model::MultiplyUncoveredPolygons()
   if (!settings->get_boolean("Slicing/DoInfill") &&
       settings->get_double("Slicing/SolidThickness") == 0.0) return;
   if (settings->get_boolean("Slicing/NoTopAndBottom")) return;
-  int shells = (int)ceil(settings->get_double("Slicing/SolidThickness")/settings->get_double("Slicing/LayerThickness"));
-  shells = max(shells, (int)settings->get_integer("Slicing/ShellCount"));
+  uint shells = uint(ceil(settings->get_double("Slicing/SolidThickness")/
+                        settings->get_double("Slicing/LayerThickness")));
+  shells = max(shells, uint(settings->get_integer("Slicing/ShellCount")));
   if (shells<1) return;
-  int count = (int)layers.size();
+  ulong count = layers.size();
 
-  int numdecor = 0;
+  uint numdecor = 0;
   // add another full layer if making decor
   if (settings->get_boolean("Slicing/MakeDecor"))
-    numdecor = settings->get_integer("Slicing/DecorLayers");
+      numdecor = uint(settings->get_integer("Slicing/DecorLayers"));
   shells += numdecor;
 
   if (!m_progress->restart (_("Uncovered Shells"), count*3)) return;
-  int progress_steps=max(1,(int)(count*3/100));
+  uint progress_steps=max<uint>(1,uint(count*3/20));
   // bottom-up: mulitply downwards
-  int i,s;
+  ulong i,s;
   for (i=0; i < count; i++)
     {
       if (i%progress_steps==0) m_progress->emit update_signal(i);
@@ -563,28 +562,28 @@ void Model::MultiplyUncoveredPolygons()
       const vector<Poly> &skinfullpolys = layers[i]->GetSkinFullPolygons();
       const vector<Poly> &decorpolys    = layers[i]->GetDecorPolygons();
       for (s=1; s < shells; s++)
-    if (i-s > 1) {
-      layers[i-s]->addFullPolygons (fullpolys,     false);
-      layers[i-s]->addFullPolygons (skinfullpolys, false);
-      layers[i-s]->addFullPolygons (decorpolys,    s < numdecor);
-    }
+          if (i > s+1) {
+              layers[i-s]->addFullPolygons (fullpolys,     false);
+              layers[i-s]->addFullPolygons (skinfullpolys, false);
+              layers[i-s]->addFullPolygons (decorpolys,    s < numdecor);
+          }
     }
   // top-down: mulitply upwards
-  for (int i=count-1; i>=0; i--)
+    for (int i=int(count)-1; i>=0 ; i--)
     {
-      if (i%progress_steps==0) m_progress->emit update_signal(count + count -i);
-      if (!m_progress->do_continue)  return;
-      const vector<Poly>   &fullpolys     = layers[i]->GetFullFillPolygons();
-      const vector<ExPoly> &bridgepolys   = layers[i]->GetBridgePolygons();
-      const vector<Poly>   &skinfullpolys = layers[i]->GetSkinFullPolygons();
-      const vector<Poly>   &decorpolys    = layers[i]->GetDecorPolygons();
-      for (int s=1; s < shells; s++)
-    if (i+s < count){
-      layers[i+s]->addFullPolygons (fullpolys,     false);
-      layers[i+s]->addFullPolygons (bridgepolys,   false);
-      layers[i+s]->addFullPolygons (skinfullpolys, false);
-      layers[i+s]->addFullPolygons (decorpolys,    s < numdecor);
-    }
+        if (i%progress_steps==0) m_progress->emit update_signal(count + count -i);
+        if (!m_progress->do_continue)  return;
+        const vector<Poly>   &fullpolys     = layers[i]->GetFullFillPolygons();
+        const vector<ExPoly> &bridgepolys   = layers[i]->GetBridgePolygons();
+        const vector<Poly>   &skinfullpolys = layers[i]->GetSkinFullPolygons();
+        const vector<Poly>   &decorpolys    = layers[i]->GetDecorPolygons();
+        for (uint s=1; s < shells; s++)
+            if (i+s < count){
+                layers[i+s]->addFullPolygons (fullpolys,     false);
+                layers[i+s]->addFullPolygons (bridgepolys,   false);
+                layers[i+s]->addFullPolygons (skinfullpolys, false);
+                layers[i+s]->addFullPolygons (decorpolys,    s < numdecor);
+            }
     }
 
   m_progress->set_label(_("Merging Full Polygons"));
@@ -610,7 +609,7 @@ void Model::MultiplyUncoveredPolygons()
 
 void Model::MakeSupportPolygons(Layer * layer, // lower -> will change
                 const Layer * layerabove,  // upper
-                int extruder, double widen)
+                uint extruder, double widen)
 {
   const double distance =
     settings->GetExtrudedMaterialWidth(layer->thickness, extruder);
@@ -628,7 +627,7 @@ void Model::MakeSupportPolygons(Layer * layer, // lower -> will change
 
   vector<Poly> spolys = clipp.subtract(CL::pftNonZero,CL::pftEvenOdd);
 
-  if (widen != 0) // widen from layer to layer
+  if (widen != 0.) // widen from layer to layer
     spolys = clipp.getOffset(spolys, widen * layer->thickness);
 
   spolys = clipp.getMerged(spolys,distance);
@@ -636,19 +635,19 @@ void Model::MakeSupportPolygons(Layer * layer, // lower -> will change
   layer->setSupportPolygons(spolys);
 }
 
-void Model::MakeSupportPolygons(int extruder, double widen)
+void Model::MakeSupportPolygons(uint extruder, double widen)
 {
-  int count = layers.size();
+  ulong count = layers.size();
+  if (count==0) return;
   if (!m_progress->restart (_("Support"), count*2)) return;
-  int progress_steps=max(1,int(count*2/100));
+  uint progress_steps=max<uint>(1,uint(count*2/20));
 
-  for (int i=count-1; i>0; i--)
-    {
+  for (ulong i=count-1; i>0; i--) {
       if (i%progress_steps==0) m_progress->emit update_signal(count-i);
       if (!m_progress->do_continue)  return;
       if (layers[i]->LayerNo == 0) continue;
       MakeSupportPolygons(layers[i-1], layers[i], extruder, widen);
-    }
+  }
 
   // // shrink a bit
   // Clipping clipp;
@@ -669,25 +668,25 @@ void Model::MakeSkirt()
 {
 
   if (!settings->get_boolean("Slicing/Skirt")) return;
+  if (settings->get_boolean("Slicing/Support")) return;
   double skirtdistance  = settings->get_double("Slicing/SkirtDistance");
 
   Clipping clipp;
-  guint count = layers.size();
+  ulong count = layers.size();
   guint endindex = 0;
   // find maximum of all calculated skirts
   clipp.clear();
   double skirtheight = settings->get_double("Slicing/SkirtHeight");
   bool singleskirt   = settings->get_boolean("Slicing/SingleSkirt");
-  bool support       = settings->get_boolean("Slicing/Support");
   for (guint i=0; i < count; i++)
-    {
+  {
       if (layers[i]->getZ() > skirtheight)
-    break;
-      layers[i]->MakeSkirt(skirtdistance, singleskirt && !support);
+          break;
+      layers[i]->MakeSkirt(skirtdistance, singleskirt);
       vector<Poly> sp = layers[i]->GetSkirtPolygons();
       clipp.addPolys(sp,subject);
       endindex = i;
-    }
+  }
   vector<Poly> skirts = clipp.unite(CL::pftPositive,CL::pftPositive);
   // set this skirt for all skirted layers
   if (skirts.size()>0)
@@ -698,15 +697,14 @@ void Model::MakeSkirt()
 
 void Model::MakeShells()
 {
-  int count = (int)layers.size();
+  ulong count = layers.size();
   if (count == 0) return;
   if (!m_progress->restart (_("Shells"), count)) return;
-  int progress_steps=max(1,(int)(count/100));
-  bool cont = true;
+  uint progress_steps=max<uint>(1,uint(count/20));
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for (int i=0;  i < count; i++)
+  for (ulong i=0;  i < count; i++)
     {
       if (i%progress_steps==0) {
           m_progress->emit update_signal(i);
@@ -730,19 +728,19 @@ void Model::CalcInfill()
   if (!settings->get_boolean("Slicing/DoInfill") &&
       settings->get_double("Slicing/SolidThickness") == 0.0) return;
 
-  int count = (int)layers.size();
+  ulong count = layers.size();
   if (!m_progress->restart (_("Infill"), count)) return;
-  int progress_steps=max(1,(count/100));
-  bool cont = true;
+  uint progress_steps=max<uint>(1,uint(count/20));
   //cerr << "make infill"<< endl;
+  uint done = 0;
 #ifdef _OPENMP
-//#pragma omp parallel for schedule(dynamic)
+#pragma omp simd
 #endif
-  for (int i=0; i < count ; i++)
+  for (uint i=0; i < count ; i++)
     {
       //cerr << "thread " << omp_get_thread_num() << endl;
-      if (i%progress_steps==0){
-          m_progress->emit update_signal(i);
+      if (done%progress_steps==0){
+          m_progress->emit update_signal(done);
       }
       if (!m_progress->do_continue)
 #ifdef _OPENMP
@@ -751,6 +749,7 @@ void Model::CalcInfill()
           break;
 #endif
       layers[i]->CalcInfill(*settings); // not parallel
+      done++;
     }
   //m_progress->stop (_("Done"));
 }
@@ -763,7 +762,7 @@ void Model::ConvertToGCode()
   }
   is_calculating=true;
 
-  int currentExtruder = 0;
+  uint currentExtruder = 0;
 
   QTime start_time;
   start_time.start();
@@ -788,17 +787,18 @@ void Model::ConvertToGCode()
   MakeShells();
 
   if (settings->get_boolean("Slicing/DoInfill") &&
-      !settings->get_boolean("Slicing/NoTopAndBottom") &&
-      (settings->get_double("Slicing/SolidThickness") > 0 ||
-       settings->get_integer("Slicing/ShellCount") > 0))
-    // not bridging when support
+          !settings->get_boolean("Slicing/NoTopAndBottom") &&
+          (settings->get_double("Slicing/SolidThickness") > 0 ||
+           settings->get_integer("Slicing/ShellCount") > 0))
+      // not bridging when support
       MakeUncoveredPolygons( settings->get_boolean("Slicing/MakeDecor"),
-               !settings->get_boolean("Slicing/NoBridges") &&
-               !settings->get_boolean("Slicing/Support") );
+                            !settings->get_boolean("Slicing/NoBridges") &&
+                            !settings->get_boolean("Slicing/Support") );
 
   if (settings->get_boolean("Slicing/Support"))
     // easier before having multiplied uncovered bottoms
-    MakeSupportPolygons(settings->get_double("Slicing/SupportWiden"));
+      MakeSupportPolygons(settings->GetSupportExtruder(),
+                          settings->get_double("Slicing/SupportWiden"));
 
   MakeFullSkins(); // must before multiplied uncovered bottoms
 
@@ -812,11 +812,12 @@ void Model::ConvertToGCode()
   if (settings->get_boolean("Raft/Enable"))
     {
       printOffset += Vector3d (settings->get_double("Raft/Size"), 0);
-      MakeRaft (state, printOffsetZ); // printOffsetZ will have height of raft added
+      MakeRaft (printOffsetZ); // printOffsetZ will have height of raft added
     }
 
   state.ResetLastWhere(Vector3d::ZERO);
-  ulong layercount =  layers.size();
+  state.lastExtruder = 0;
+  ulong layercount = layers.size();
 
   if (m_progress->restart (_("Making Lines"), layercount+1)) {
 
@@ -827,41 +828,50 @@ void Model::ConvertToGCode()
       else
           state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
 
-      vector<PLine3> plines;
+      ulong progress_steps=max<ulong>(1, layercount/20);
       bool farthestStart = settings->get_boolean("Slicing/FarthestLayerStart");
       Vector3d start = state.LastPosition();
-      for (uint p=0; p<layercount; p++) {
-          if (p%10==0) m_progress->emit update_signal(p);
-          if (!m_progress->do_continue)  break;
-
-          // cerr << "GCode layer " << (p+1) << " of " << count
-          // 	 << " offset " << printOffsetZ
-          // 	 << " have commands: " <<commands.size()
-          // 	 << " start " << start <<  endl;;
-          // try {
+      vector<vector<PLine<3>*>> l_plines(layercount);
+      ulong done = 0;
+#ifdef _OPENMP
+#pragma omp for ordered schedule(dynamic)
+#endif
+      for (ulong p=0; p<layercount; p++) {
           if (farthestStart) {
-              // Vector2d randstart = layers[p]->getRandomPolygonPoint();
-              // start.set(randstart.x(), randstart.y());
               const Vector2d fartheststart = layers[p]->getFarthestPolygonPoint(start);
               start.set(fartheststart.x(), fartheststart.y());
+          } else {
+              Vector2d randstart = layers[p]->getRandomPolygonPoint();
+              start.set(randstart.x(), randstart.y());
           }
-          layers[p]->MakePrintlines(start,
-                                    plines,
-                                    printOffsetZ,
-                                    *settings);
-          // } catch (Glib::Error &e) {
-          //   error("GCode Error:", (e.what()).c_str());
-          // }
-          // if (layers[p]->getPrevious() != NULL)
-          //   cerr << p << ": " <<layers[p]->LayerNo << " prev: "
-          // 	   << layers[p]->getPrevious()->LayerNo << endl;
+          Vector2d start2 = Vector2d(start.x(), start.y());
+          Printlines * printlines =
+                  layers[p]->MakePrintlines(start, l_plines[p],
+                                            printOffsetZ, *settings);
+//          cerr <<  "Z " << layers[p]->Z <<  " = " << printlines->getZ() << endl;
+          layers[p]->makePrintLines3(start2, printlines, l_plines[p], settings);
+          delete printlines;
+          Printlines::makeAntioozeRetract(l_plines[p], settings, nullptr);
+#ifdef _OPENMP
+#pragma omp ordered
+#endif
+          Printlines::getCommands(l_plines[p], settings, state, nullptr);
+          l_plines[p].clear();
+//           if (layers[p]->getPrevious() != NULL)
+//             cerr << p << ": " <<layers[p]->LayerNo << " prev: "
+//               << layers[p]->getPrevious()->LayerNo << endl;
+          done++;
+          if (done%progress_steps==0) {
+              m_progress->emit update_signal(done);
+          }
+          if (!m_progress->do_continue)
+#ifdef _OPENMP
+              continue;
+#else
+              break;
+#endif
       }
-      // do antiooze retract for all lines:
-      Printlines::makeAntioozeRetract(plines, settings, m_progress);
-      //  vector<Command> commands;
-      //Printlines::getCommands(plines, settings, commands, m_progress);
-      Printlines::getCommands(plines, settings, state, m_progress);
-
+      l_plines.clear();
       //state.AppendCommands(commands, settings.Slicing.RelativeEcode);
   }
 
@@ -885,7 +895,7 @@ void Model::ConvertToGCode()
   if (h>0) ostr << h <<_("h") ;
   ostr <<m <<_("m") <<s <<_("s") ;
 
-  int gctime = int(gcode->GetTimeEstimation());
+  int gctime = int(gcode->GetTimeEstimation(Vector3d::ZERO));
   if (abs(state.timeused - gctime) > 10) {
     h = gctime/3600;
     m = gctime%3600/60;
@@ -942,7 +952,7 @@ string Model::getSVG(int single_layer_no)
   } else {
     ostr << "<g id=\"" << "Layer_" << single_layer_no
      << "_of_" <<layers.size() << "\">" << endl;
-    ostr << "\t\t" << layers[single_layer_no]->SVGpath() << endl;
+    ostr << "\t\t" << layers[uint(single_layer_no)]->SVGpath() << endl;
   }
   ostr << "</g>" << endl;
   ostr << "</svg>" << endl;
@@ -965,15 +975,15 @@ void Model::SliceToSVG(QFile *file, bool single_layer)
       file->close();
   }
   else {
-    uint n_layers = layers.size();
+    ulong n_layers = layers.size();
     if (!m_progress->restart (_("Saving Files"),n_layers)) return;
-    uint digits = log10(n_layers)+1;
+    uint digits = uint(log10(n_layers)+1);
     string base = finfo.absolutePath().toUtf8().constData();
     ostringstream ostr;
     for (uint i = 0; i < n_layers; i++) {
         ostr.str("");
         ostr << base;
-        uint nzero = (uint)(digits - log10(i+1));
+        uint nzero = uint(digits - log10(i+1));
         if (i==0) nzero = digits-1;
         for (uint d = 0; d < nzero; d++)
             ostr << "0";
@@ -983,7 +993,7 @@ void Model::SliceToSVG(QFile *file, bool single_layer)
         if (!m_progress->do_continue)  break;
         QCoreApplication::processEvents();
         QFile sfile(QString::fromStdString(ostr.str()));
-        QTextStream(&sfile) << QString::fromStdString(getSVG(i));
+        QTextStream(&sfile) << QString::fromStdString(getSVG(int(i)));
         sfile.close();
         }
     m_progress->stop (_("Done"));

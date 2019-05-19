@@ -143,16 +143,17 @@ class ViewProgress;
 class Command
 {
 public:
-        void init();
-        Command();
+    Command();
+    Command(const Command &rhs);
     Command(GCodes code, const Vector3d &where=Vector3d::ZERO,
         double E=0, double F=0);
     Command(GCodes code, const string explicit_arg); // explicit string arguments to command
     Command(GCodes code, double value); // S value gcodes and letter/number codes
-    Command(string gcodeline, Vector3d *defaultpos = nullptr);
+    Command(string gcodeline, const Vector3d &defaultpos = Vector3d::ZERO);
+    ~Command();
     GCodes Code;
-    Vector3d *where;
-    Vector3d *arcIJK; // I,J,K (dx, dy, dz)
+    Vector3d where;
+    Vector3d arcIJK; // I,J,K (dx, dy, dz)
     bool is_value; // M commands
     double value; // M commands S value code
     double f,e; // Feedrate f=speed, e=extrusion to perform while moving (Pythagoras)
@@ -175,7 +176,7 @@ public:
     bool hasNoEffect(const Vector3d *LastPos, const double lastE,
                      const double lastF, const bool relativeEcode) const;
 
-    string GetGCodeText(Vector3d *LastPos, double &lastE, double &lastF,
+    string GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
                          bool relativeEcode, const char E_letter='E',
                          bool speedAlways = false) const;
     GCodes getCode(const string commstr) const;

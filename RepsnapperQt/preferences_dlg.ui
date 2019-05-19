@@ -27,7 +27,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -1144,6 +1144,9 @@
          </item>
          <item row="3" column="5">
           <widget class="QDoubleSpinBox" name="Slicing_SupportWiden">
+           <property name="minimum">
+            <double>-99.000000000000000</double>
+           </property>
            <property name="singleStep">
             <double>0.100000000000000</double>
            </property>
@@ -1682,6 +1685,9 @@
           </item>
           <item row="3" column="0" colspan="2">
            <widget class="QCheckBox" name="Slicing_VarSlicing">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
             <property name="text">
              <string>Variable Slicing</string>
             </property>
@@ -2271,6 +2277,13 @@
           <property name="spacing">
            <number>2</number>
           </property>
+          <item row="1" column="0">
+           <widget class="QCheckBox" name="Display_DebugGCodeExtruders">
+            <property name="text">
+             <string>Show Extruder Number on GCode</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="3">
            <widget class="QCheckBox" name="Display_DebugGCodeOffset">
             <property name="text">
@@ -2285,17 +2298,17 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QCheckBox" name="Display_DebugGCodeExtruders">
-            <property name="text">
-             <string>Show Extruder Number on GCode</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="3">
            <widget class="QCheckBox" name="Display_DebugGCodeOnlyZChange">
             <property name="text">
              <string>Show only GCode with Z Offset</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="Display_LuminanceShowsSpeed">
+            <property name="text">
+             <string>Luminance shows Speed</string>
             </property>
            </widget>
           </item>
@@ -2342,6 +2355,21 @@
           <string>Output</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <property name="spacing">
+           <number>2</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QCheckBox" name="Display_TerminalProgress">
             <property name="text">

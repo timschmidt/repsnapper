@@ -33,15 +33,15 @@
 Shape::Shape()
   : filename(""),
     slow_drawing(false),
-    gl_List(-1)
+    gl_List(0)
 {
   Min.set(0,0,0);
   Max.set(200,200,200);
   CalcBBox();
-
 }
 
 Shape::Shape(Shape *shape)
+    : Shape()
 {
     setTriangles(shape->getTriangles());
     CalcBBox();
@@ -49,9 +49,8 @@ Shape::Shape(Shape *shape)
 
 void Shape::clear() {
     triangles.clear();
-    if (gl_List>=0)
-        glDeleteLists(gl_List,1);
-  gl_List = -1;
+    if (glIsList(gl_List))
+        glDeleteLists(GLuint(gl_List),1);
   filename = "";
 };
 
@@ -83,11 +82,11 @@ int Shape::saveBinarySTL(QString filename) const
 bool Shape::hasAdjacentTriangleTo(const Triangle &triangle, double sqdistance) const
 {
   bool haveadj = false;
-  uint count = triangles.size();
+  ulong count = triangles.size();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for (uint i = 0; i < count; i++)
+  for (ulong i = 0; i < count; i++)
     if (!haveadj)
       if (triangle.isConnectedTo(triangles[i],sqdistance)) {
         haveadj = true;
@@ -114,18 +113,17 @@ void addtoshape(uint i, const vector< vector<uint> > &adj,
 
 void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
 {
-  uint n_tr = triangles.size();
+  ulong n_tr = triangles.size();
   if (progress) progress->start(_("Split Shapes"), n_tr);
   uint progress_steps = uint(max(1,(int(n_tr)/100)));
   vector<bool> done(n_tr);
-  bool cont = true;
   // make list of adjacent triangles for each triangle
   vector< vector<uint> > adj(n_tr);
   if (progress) progress->set_label(_("Split: Sorting Triangles ..."));
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for (uint i = 0; i < n_tr; i++) {
+  for (ulong i = 0; i < n_tr; i++) {
     if (progress && i%progress_steps==0) {
         progress->emit update_signal(i);
     }
@@ -168,7 +166,7 @@ void Shape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
         shapes.back()->triangles[i] = triangles[current[i]];
       shapes.back()->CalcBBox();
     }
-    if (!progress->do_continue) i=n_tr;
+    if (!progress->do_continue) i=uint(n_tr);
   }
 
   if (progress) progress->stop("_(Done)");
@@ -366,9 +364,8 @@ void Shape::CalcBBox()
     triangles[i].AccumulateMinMax (Min, Max, transform3D.getTransform());
   }
   Center = (Max + Min) / 2;
-  if (gl_List>=0)
-    glDeleteLists(gl_List,1);
-  gl_List = -1;
+  if (glIsList(gl_List))
+    glDeleteLists(GLuint(gl_List),1);
 }
 
 Vector3d Shape::scaledCenter() const
@@ -387,17 +384,17 @@ vector<Vector3d> Shape::getMostUsedNormals() const
   vector<struct SNorm> normals;
   // vector<Vector3d> normals;
   // vector<double> area;
-  uint ntr = triangles.size();
+  ulong ntr = triangles.size();
   vector<bool> done(ntr);
   normals.reserve(ntr);
   for(size_t i=0;i<ntr;i++)
     {
       bool havenormal = false;
-      uint numnorm = normals.size();
+      ulong numnorm = normals.size();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-      for (uint n = 0; n < numnorm; n++) {
+      for (ulong n = 0; n < numnorm; n++) {
         if ( (normals[n].normal -
               triangles[i].transformed(transform3D.getTransform()).Normal)
              .squared_length() < 0.000001) {
@@ -431,7 +428,7 @@ void Shape::OptimizeRotation()
   Vector3d N;
   Vector3d Z(0,0,-1);
   double angle=0;
-  uint count = normals.size();
+  ulong count = normals.size();
   for (uint n=0; n < count; n++) {
     //cerr << n << normals[n] << endl;
     N = normals[n];
@@ -528,11 +525,11 @@ void Shape::Twist(double angle)
   double h = Max.z()-Min.z();
   double hangle=0;
   Vector3d axis(0,0,1);
-  uint count = triangles.size();
+  ulong count = triangles.size();
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)
 #endif
-  for (uint i=0; i<count; i++) {
+  for (ulong i=0; i<count; i++) {
     for (uint j=0; j<3; j++)
       {
         hangle = angle * (triangles[i][j].z() - Min.z()) / h;
@@ -543,11 +540,17 @@ void Shape::Twist(double angle)
   CalcBBox();
 }
 
-void Shape::moveTo(const Vector3d &translation)
+void Shape::moveTo(const Vector3d &center)
 {
-    transform3D.moveTo(translation);
+    transform3D.moveTo(center);
+    CalcBBox();
 }
 
+void Shape::moveLowerLeftTo(const Vector3d &point)
+{
+    cerr << Min << " t " << transform3D.getTranslation() << endl;
+   moveTo(point - Min - transform3D.getTranslation());
+}
 // void Shape::CenterAroundXY()
 // {
 //   CalcBBox();
@@ -590,7 +593,7 @@ Poly Shape::getOutline(const Matrix4d &T, double maxlen) const
 
 bool getLineSequences(const vector<Segment> lines, vector< vector<uint> > &connectedlines)
 {
-  uint nlines = lines.size();
+  ulong nlines = lines.size();
   //cerr << "lines size " << nlines << endl;
   if (nlines==0) return true;
   vector<bool> linedone(nlines);
@@ -657,14 +660,14 @@ bool Shape::getPolygonsAtZ(const Matrix4d &T, double z,
   //cerr << vertices.size() << " " << lines.size() << endl;
   vector< vector<uint> > connectedlines; // sequence of connected lines indices
   if (!getLineSequences(lines, connectedlines)) return false;
-  for (uint i=0; i<connectedlines.size();i++){
+  for (ulong i=0; i<connectedlines.size();i++){
     Poly poly(z);
-    for (uint j = 0; j < connectedlines[i].size();j++){
-      poly.addVertex(vertices[lines[connectedlines[i][j]].start]);
+    for (ulong j = 0; j < connectedlines[i].size();j++){
+      poly.addVertex(vertices[ulong(lines[connectedlines[i][j]].start)]);
     }
     if (lines[connectedlines[i].back()].end !=
         lines[connectedlines[i].front()].start )
-      poly.addVertex(vertices[lines[connectedlines[i].back()].end]);
+      poly.addVertex(vertices[ulong(lines[connectedlines[i].back()].end)]);
     //cerr << "poly size " << poly.size() << endl;
     poly.calcHole();
     polys.push_back(poly);
@@ -804,7 +807,7 @@ vector<Segment> Shape::getCutlines(const Matrix4d &T, double z,
           segmentNormal.normalize();
           if( (triangleNormal-segmentNormal).squared_length() > 0.2){
             // if normals do not align, flip the segment
-            int iswap=line.start;line.start=line.end;line.end=iswap;
+            long iswap=line.start;line.start=line.end;line.end=iswap;
           }
           // cerr << "line "<<line.start << "-"<<line.end << endl;
           lines.push_back(line);
@@ -820,7 +823,7 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
 {
     // draw for selection
     if (selection_index > 0) {
-        glColor3ub(255,selection_index,selection_index);
+        glColor3ub(255,GLubyte(selection_index),GLubyte(selection_index));
         draw_geometry(0);
         return;
     }
@@ -845,7 +848,7 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
         //}
 
         if (highlight)
-          mat_diffuse.array[3] += float(0.3*(1.f-mat_diffuse.array[3]));
+          mat_diffuse.array[3] += float(0.3f*(1.f-mat_diffuse.array[3]));
 
         // invert colours if partial draw (preview mode)
         if (max_triangles > 0) {
@@ -855,7 +858,7 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
         }
 
         mat_specular.array[0] = mat_specular.array[1] = mat_specular.array[2]
-                = settings->get_double("Display/Highlight");
+                = float(settings->get_double("Display/Highlight"));
 
         /* draw sphere in first row, first column
         * diffuse reflection only; no ambient or specular
@@ -896,10 +899,10 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
                 {
                         glBegin(GL_LINE_LOOP);
                         glLineWidth(1);
-                        glNormal3dv((GLdouble*)&(triangles[i].Normal));
-                        glVertex3dv((GLdouble*)&(triangles[i].A));
-                        glVertex3dv((GLdouble*)&(triangles[i].B));
-                        glVertex3dv((GLdouble*)&(triangles[i].C));
+                        glNormal3dv(triangles[i].Normal);
+                        glVertex3dv(triangles[i].A);
+                        glVertex3dv(triangles[i].B);
+                        glVertex3dv(triangles[i].C);
                         glEnd();
                 }
         }
@@ -915,9 +918,9 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
                 for(size_t i=0;i<triangles.size();i++)
                 {
                         Vector3d center = (triangles[i].A+triangles[i].B+triangles[i].C)/3.0;
-                        glVertex3dv((GLdouble*)&center);
+                        glVertex3dv(center);
                         Vector3d N = center + (triangles[i].Normal*nlength);
-                        glVertex3dv((GLdouble*)&N);
+                        glVertex3dv(N);
                 }
                 glEnd();
         }
@@ -926,13 +929,13 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
         if(settings->get_boolean("Display/DisplayEndpoints"))
         {
                 glColor4fv(settings->get_Vector4f("Display/EndpointsColour"));
-                glPointSize(settings->get_double("Display/EndPointSize"));
+                glPointSize(float(settings->get_double("Display/EndPointSize")));
                 glBegin(GL_POINTS);
                 for(size_t i=0;i<triangles.size();i++)
                 {
-                  glVertex3dv((GLdouble*)&(triangles[i].A));
-                  glVertex3dv((GLdouble*)&(triangles[i].B));
-                  glVertex3dv((GLdouble*)&(triangles[i].C));
+                  glVertex3dv(triangles[i].A);
+                  glVertex3dv(triangles[i].B);
+                  glVertex3dv(triangles[i].C);
                 }
                 glEnd();
         }
@@ -949,33 +952,33 @@ void Shape::drawBBox(Render * render) const
                 glColor3f(1.f,0.2f,0.2f);
                 glLineWidth(1);
                 glBegin(GL_LINE_LOOP);
-                glVertex3f(Min.x(), Min.y(), minz);
-                glVertex3f(Min.x(), Max.y(), minz);
-                glVertex3f(Max.x(), Max.y(), minz);
-                glVertex3f(Max.x(), Min.y(), minz);
+                glVertex3d(Min.x(), Min.y(), minz);
+                glVertex3d(Min.x(), Max.y(), minz);
+                glVertex3d(Max.x(), Max.y(), minz);
+                glVertex3d(Max.x(), Min.y(), minz);
                 glEnd();
                 glBegin(GL_LINE_LOOP);
-                glVertex3f(Min.x(), Min.y(), Max.z());
-                glVertex3f(Min.x(), Max.y(), Max.z());
-                glVertex3f(Max.x(), Max.y(), Max.z());
-                glVertex3f(Max.x(), Min.y(), Max.z());
+                glVertex3d(Min.x(), Min.y(), Max.z());
+                glVertex3d(Min.x(), Max.y(), Max.z());
+                glVertex3d(Max.x(), Max.y(), Max.z());
+                glVertex3d(Max.x(), Min.y(), Max.z());
                 glEnd();
                 glBegin(GL_LINES);
-                glVertex3f(Min.x(), Min.y(), minz);
-                glVertex3f(Min.x(), Min.y(), Max.z());
-                glVertex3f(Min.x(), Max.y(), minz);
-                glVertex3f(Min.x(), Max.y(), Max.z());
-                glVertex3f(Max.x(), Max.y(), minz);
-                glVertex3f(Max.x(), Max.y(), Max.z());
-                glVertex3f(Max.x(), Min.y(), minz);
-                glVertex3f(Max.x(), Min.y(), Max.z());
+                glVertex3d(Min.x(), Min.y(), minz);
+                glVertex3d(Min.x(), Min.y(), Max.z());
+                glVertex3d(Min.x(), Max.y(), minz);
+                glVertex3d(Min.x(), Max.y(), Max.z());
+                glVertex3d(Max.x(), Max.y(), minz);
+                glVertex3d(Max.x(), Max.y(), Max.z());
+                glVertex3d(Max.x(), Min.y(), minz);
+                glVertex3d(Max.x(), Min.y(), Max.z());
                 glEnd();
                 /*// show center:
                 glBegin(GL_LINES);
-                glVertex3f(Min.x(), Min.y(), minz);
-                glVertex3f(Max.x(), Max.y(), Max.z());
-                glVertex3f(Max.x(), Min.y(), minz);
-                glVertex3f(Min.x(), Max.y(), Max.z());
+                glVertex3d(Min.x(), Min.y(), minz);
+                glVertex3d(Max.x(), Max.y(), Max.z());
+                glVertex3d(Max.x(), Min.y(), minz);
+                glVertex3d(Min.x(), Max.y(), Max.z());
                 glEnd();
                 glPointSize(10);
                 glBegin(GL_POINTS);
@@ -1004,24 +1007,19 @@ void Shape::drawBBox(Render * render) const
 
 void Shape::draw_geometry(uint max_triangles)
 {
-
   bool listDraw = (max_triangles == 0); // not in preview mode
-  bool haveList = gl_List >= 0;
 
-  if (!listDraw && haveList) {
-    if (gl_List>=0)
+  if (!listDraw && glIsList(gl_List)) {
       glDeleteLists(gl_List,1);
-    gl_List = -1;
-    haveList = false;
   }
-  if (listDraw && !haveList) {
+  if (listDraw && !glIsList(gl_List)) {
     gl_List = glGenLists(1);
     glNewList(gl_List, GL_COMPILE);
   }
-  if (!listDraw || !haveList) {
+  if (!listDraw || glIsList(gl_List)) {
         uint step = 1;
-        if (max_triangles>0) step = floor(triangles.size()/max_triangles);
-        step = max((uint)1,step);
+        if (max_triangles>0) step = uint(floor(triangles.size()/max_triangles));
+        step = max(uint(1),step);
 
         glBegin(GL_TRIANGLES);
         for(size_t i=0;i<triangles.size();i+=step)
@@ -1033,11 +1031,11 @@ void Shape::draw_geometry(uint max_triangles)
         }
         glEnd();
   }
-  if (listDraw && !haveList) {
+  if (listDraw && glIsList(gl_List)) {
     glEndList();
   }
 
-  if (listDraw && gl_List >= 0) { // have stored list
+  if (listDraw && glIsList(gl_List)) { // have stored list
     QTime starttime;
     if (!slow_drawing) {
       starttime.start();
@@ -1062,14 +1060,14 @@ void Shape::draw_geometry(uint max_triangles)
 bool CleanupSharedSegments(vector<Segment> &lines)
 {
 #if 1 // just remove coincident lines
-  vector<int> lines_to_delete;
-  int count = (int)lines.size();
+  vector<ulong> lines_to_delete;
+  ulong count = lines.size();
 #ifdef _OPENMP
   //#pragma omp parallel for schedule(dynamic)
 #endif
-  for (int j = 0; j < count; j++) {
+  for (ulong j = 0; j < count; j++) {
     const Segment &jr = lines[j];
-    for (uint k = j + 1; k < lines.size(); k++)
+    for (ulong k = j + 1; k < lines.size(); k++)
       {
         const Segment &kr = lines[k];
         if ((jr.start == kr.start && jr.end == kr.end) ||
@@ -1084,10 +1082,11 @@ bool CleanupSharedSegments(vector<Segment> &lines)
   // we need to remove from the end first to avoid disturbing
   // the order of removed items
   std::sort(lines_to_delete.begin(), lines_to_delete.end());
-  for (int r = lines_to_delete.size() - 1; r >= 0; r--)
-    {
-      lines.erase(lines.begin() + lines_to_delete[r]);
-    }
+  for (long r = lines_to_delete.size() - 1; r>=0; r--)
+  {
+      lines.erase(lines.begin() + long(lines_to_delete[r]));
+  }
+
   return true;
 
 #endif
@@ -1170,11 +1169,11 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
         // vertex_counts.resize (vertices.size());
 
         // which vertices are referred to, and how much:
-        int count = lines.size();
-        for (int i = 0; i < count; i++)
+        ulong count = lines.size();
+        for (ulong i = 0; i < count; i++)
         {
-                vertex_types[lines[i].start]++;
-                vertex_types[lines[i].end]--;
+                vertex_types[ulong(lines[i].start)]++;
+                vertex_types[ulong(lines[i].end)]--;
                 // vertex_counts[lines[i].start]++;
                 // vertex_counts[lines[i].end]++;
         }
@@ -1182,19 +1181,19 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
         // the vertex_types count should be zero for all connected lines,
         // positive for those ending no-where, and negative for
         // those starting no-where.
-        std::vector<int> detached_points; // points with only one line
+        std::vector<long> detached_points; // points with only one line
         count = vertex_types.size();
 // #ifdef _OPENMP
 // #pragma omp parallel for schedule(dynamic)
 // #endif
-        for (int i = 0; i < count; i++)
+        for (ulong i = 0; i < count; i++)
         {
                 if (vertex_types[i])
                 {
-#if CUTTING_PLANE_DEBUG
+#ifdef CUTTING_PLANE_DEBUG
                         cout << "detached point " << i << "\t" << vertex_types[i] << " refs at " << vertices[i].x() << "\t" << vertices[i].y() << "\n";
 #endif
-                        detached_points.push_back (i); // i = vertex index
+                        detached_points.push_back (long(i)); // i = vertex index
                 }
         }
 
@@ -1209,21 +1208,21 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 // #ifdef _OPENMP
 // #pragma omp parallel for schedule(dynamic)
 // #endif
-        for (int i = 0; i < count; i++)
+        for (ulong i = 0; i < count; i++)
         {
-                double nearest_dist_sq = (std::numeric_limits<double>::max)();
-                uint   nearest = 0;
-                int   n = detached_points[i]; // vertex index of detached point i
-                if (n < 0) // handled already
-                  continue;
+            if (detached_points[i] < 0) // handled already
+                continue;
+            double nearest_dist_sq = (std::numeric_limits<double>::max)();
+            ulong   nearest = 0;
+            ulong   n = ulong(detached_points[i]); // vertex index of detached point i
 
-                const Vector2d &p = vertices[n]; // the real detached point
-                // find nearest other detached point to the detached point n:
-                for (int j = i + 1; j < count; j++)
-                {
-                        int pt = detached_points[j];
-                        if (pt < 0)
+            const Vector2d &p = vertices[n]; // the real detached point
+            // find nearest other detached point to the detached point n:
+            for (ulong j = i + 1; j < count; j++)
+            {
+                        if (detached_points[j] < 0)
                           continue; // already connected
+                        ulong pt = ulong(detached_points[j]);
 
                         // don't connect a start to a start, or end to end
                         if (vertex_types[n] == vertex_types[pt])
@@ -1250,10 +1249,10 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
                         cout << "warning - the nearest connecting point is " << sqrt (nearest_dist_sq) << "mm away - connecting anyway\n";
                 }
 
-#if CUTTING_PLANE_DEBUG
+#ifdef CUTTING_PLANE_DEBUG
                 cout << "add join of length " << sqrt (nearest_dist_sq) << "\n" ;
 #endif
-                Segment seg(n, detached_points[nearest]);
+                Segment seg(long(n), detached_points[nearest]);
                 if (vertex_types[n] > 0) // already had start but no end at this point
                         seg.Swap();
                 lines.push_back(seg);

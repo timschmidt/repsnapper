@@ -53,7 +53,7 @@ Poly::Poly(const Poly &p, double z_)
   closed = p.closed;
   this->z = z_;
   this->extrusionfactor = p.extrusionfactor;
-  //uint count = p.vertices.size();
+  //ulong count = p.vertices.size();
   // vertices.resize(count);
   this->vertices = p.vertices;
   holecalculated = p.holecalculated;
@@ -68,10 +68,9 @@ Poly::Poly(const Poly &&p){
   this->closed = p.closed;
   this->z = p.z;
   this->extrusionfactor = p.extrusionfactor;
-  //uint count = p.vertices.size();
+  //ulong count = p.vertices.size();
   // vertices.resize(count);
   this->vertices = p.vertices;
-     cerr << "vert " << vertices.size() << endl;
   //p.vertices.clear();
   holecalculated = p.holecalculated;
   if (holecalculated) {
@@ -134,7 +133,7 @@ void Poly::calcHole() const // hole is mutable
     if(vertices.size() < 3)
       return;	// hole is undefined
     Vector2d p(-INFTY, -INFTY);
-    size_t v=0;
+    ulong v=0;
     center = Vector2d(0,0);
     Vector2d q;
     for(size_t vert=0;vert<vertices.size();vert++)
@@ -146,7 +145,7 @@ void Poly::calcHole() const // hole is mutable
           p = q;
           v=vert;
         }
-      else if(q.x() == p.x() && q.y() > p.y())
+      else if(abs(q.x() - p.x())< 0.001 && q.y() > p.y())
         {
           p.y() = q.y();
           v=vert;
@@ -180,21 +179,21 @@ Vector2d Poly::getCenter() const
 
 void Poly::rotate(const Vector2d &rotcenter, double angle)
 {
-  for (uint i = 0; i < vertices.size();  i++) {
+  for (ulong i = 0; i < vertices.size();  i++) {
     ::rotate(vertices[i], rotcenter, angle);
   }
 }
 
 void Poly::move(const Vector2d &delta)
 {
-  for (uint i = 0; i < vertices.size();  i++) {
+  for (ulong i = 0; i < vertices.size();  i++) {
     vertices[i] += delta;
   }
   center+=delta;
 }
 
 void Poly::transform(const Matrix4d &T) {
-  for (uint i = 0; i < vertices.size();  i++) {
+  for (ulong i = 0; i < vertices.size();  i++) {
     const Vector3d v = T * getVertexCircular3(i) ;
     vertices[i].set(v.x(),v.y());
   }
@@ -203,7 +202,7 @@ void Poly::transform(const Matrix4d &T) {
 }
 
 void Poly::transform(const Matrix3d &T) {
-  for (uint i = 0; i < vertices.size();  i++) {
+  for (ulong i = 0; i < vertices.size();  i++) {
     vertices[i] = T * vertices[i];
   }
   calcHole();
@@ -211,24 +210,24 @@ void Poly::transform(const Matrix3d &T) {
 
 void Poly::mirrorX(const Vector3d &center)
 {
-  uint count = size();
-  for (uint i = 0; i < count; i++)
+  ulong count = size();
+  for (ulong i = 0; i < count; i++)
     vertices[i].x() = center.x() - vertices[i].x();
   reverse();
   calcHole();
 }
 
 
-uint Poly::getFarthestIndex(uint &thisindex) const
+ulong Poly::getFarthestIndex(ulong &thisindex) const
 {
   return getFarthestIndex(vertices[thisindex]);
 }
 
-uint Poly::getFarthestIndex(const Vector2d &from) const
+ulong Poly::getFarthestIndex(const Vector2d &from) const
 {
-  uint findex = 0;
+  ulong findex = 0;
   double maxdist = 0.;
-  for (uint i = 0; i < size(); i++) {
+  for (ulong i = 0; i < size(); i++) {
     double d = from.squared_distance(vertices[i]);
     if (d > maxdist) {
       maxdist = d;
@@ -241,12 +240,12 @@ uint Poly::getFarthestIndex(const Vector2d &from) const
 
 // nearest connection point indices of this and other poly
 // if poly is not closed, only test first and last point
-void Poly::nearestIndices(const Poly &p2, int &thisindex, int &otherindex) const
+void Poly::nearestIndices(const Poly &p2, ulong &thisindex, ulong &otherindex) const
 {
   double mindist = INFTY;
-  for (uint i = 0; i < size(); i++) {
+  for (ulong i = 0; i < size(); i++) {
     if (!closed && i != 0 && i != size()-1) continue;
-    for (uint j = 0; j < p2.size(); j++) {
+    for (ulong j = 0; j < p2.size(); j++) {
       if (!p2.closed && j != 0 && j != p2.size()-1) continue;
       double d = vertices[i].squared_distance(p2.vertices[j]);
       if (d < mindist) {
@@ -260,18 +259,18 @@ void Poly::nearestIndices(const Poly &p2, int &thisindex, int &otherindex) const
 
 // Find the vertex in the poly closest to point p
 // if not closed, only look for first and last point
-uint Poly::nearestDistanceSqTo(const Vector2d &p, double &mindist) const
+ulong Poly::nearestDistanceSqTo(const Vector2d &p, double &mindist) const
 {
   assert(vertices.size() > 0);
   // Start with first vertex as closest
-  uint nindex = 0;
+  ulong nindex = 0;
   mindist = (vertices[0]-p).squared_length();
   if (std::isnan(mindist)) { // for infinity point p return point 0 and distance 0
     mindist = 0.;
     return 0;
   }
   // check the rest of the vertices for a closer one.
-  for (uint i = 1; i < vertices.size(); i++) {
+  for (ulong i = 1; i < vertices.size(); i++) {
     if (!closed && i != 0 && i != vertices.size()-1) continue;
     double d = (vertices[i]-p).squared_length();
     if (d<mindist) {
@@ -285,11 +284,11 @@ uint Poly::nearestDistanceSqTo(const Vector2d &p, double &mindist) const
 double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end) const
 {
   double min1 = 100000000, min2 = 100000000;
-  int minindex1=0, minindex2=0;
+  ulong minindex1=0, minindex2=0;
   Vector2d onpoint1, onpoint2;
   // test this vertices
-  for (uint i = 0; i < vertices.size(); i++) {
-    for (uint j = 0; j < p2.vertices.size(); j++) {
+  for (ulong i = 0; i < vertices.size(); i++) {
+    for (ulong j = 0; j < p2.vertices.size(); j++) {
       Vector2d onpoint; // on p2
       // dist from point i to lines on p2
       const double mindist =
@@ -301,8 +300,8 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
     }
   }
   // test p2 vertices
-  for (uint i = 0; i < p2.vertices.size(); i++) {
-    for (uint j = 0; j < vertices.size(); j++) {
+  for (ulong i = 0; i < p2.vertices.size(); i++) {
+    for (ulong j = 0; j < vertices.size(); j++) {
       Vector2d onpoint; // on this
       // dist from p2 point i to lines on this
       const double mindist =
@@ -324,10 +323,10 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
 }
 
 
-double Poly::angleAtVertex(uint i) const
+double Poly::angleAtVertex(ulong i) const
 {
-  return planeAngleBetween(getVertexCircular(i)-getVertexCircular(i-1),
-              getVertexCircular(i+1)-getVertexCircular(i));
+  return double(planeAngleBetween(getVertexCircular(i)-getVertexCircular(i-1),
+                                  getVertexCircular(i+1)-getVertexCircular(i)));
 }
 
 bool Poly::vertexInside2(const Vector2d &point, double maxoffset) const
@@ -347,7 +346,7 @@ bool Poly::vertexInside2(const Vector2d &point, double maxoffset) const
 
       // Skip horizontal lines, we can't intersect with them,
       // because the test line is horizontal
-      if(P1.y() == P2.y())
+      if(abs(P1.y() - P2.y())<0.001)
     continue;
 
       Intersection hit;
@@ -363,10 +362,10 @@ bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
 #define POLYINSIDEVERSION 0
 #if POLYINSIDEVERSION==0
   // this one works
-  uint N = size();
+  ulong N = size();
   if (N < 2) return false;
-  uint counter = 0;
-  uint i;
+  ulong counter = 0;
+  ulong i;
   double xinters;
   const Vector2d *p1, *p2;
   p1 = &(vertices[0]);
@@ -375,9 +374,9 @@ bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
     if (p.y() > min(p1->y(), p2->y())) {
       if (p.y() <= max(p1->y(), p2->y())) {
         if (p.x() <= max(p1->x(), p2->x())) {
-          if (p1->y() != p2->y()) {
+          if (abs(p1->y() - p2->y())>0.001) {
             xinters = (p.y()-p1->y())*(p2->x()-p1->x())/(p2->y()-p1->y())+p1->x();
-            if (p1->x() == p2->x() || p.x() <= xinters)
+            if (abs(p1->x() - p2->x())<0.001 || p.x() <= xinters)
               counter++;
           }
         }
@@ -390,7 +389,7 @@ bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
   // not really working?
   bool c = false;
   //Poly off = Clipping::getOffset(*this,maxoffset).front();
-  for (uint i = 0; i < vertices.size();  i++) {
+  for (ulong i = 0; i < vertices.size();  i++) {
     const Vector2d Pi = vertices[i];
     const Vector2d Pj = getVertexCircular(i+1);
     if ( ((Pi.y() > p.y()) != (Pj.y() > p.y())) &&
@@ -399,7 +398,7 @@ bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
       c = !c;
   }
   if (!c)
-    for (uint i = 0; i < vertices.size();  i++)
+    for (ulong i = 0; i < vertices.size();  i++)
       if ((vertices[i]-p).length() < maxoffset) return true; // on a vertex
   return c;
 #endif
@@ -408,7 +407,7 @@ bool Poly::vertexInside(const Vector2d &p, double maxoffset) const
 // this polys completely contained in other
 bool Poly::isInside(const Poly &poly, double maxoffset) const
 {
-  uint i, count=0;
+  ulong i, count=0;
   for (i = 0; i < vertices.size();  i++) {
     if (poly.vertexInside(vertices[i],maxoffset))
       count++;
@@ -427,7 +426,7 @@ void Poly::addVertex(const Vector2d &v, bool front)
 }
 void Poly::addVertexUnique(const Vector2d &v, bool front)
 {
-  for (uint i = 0; i < vertices.size();  i++) {
+  for (ulong i = 0; i < vertices.size();  i++) {
     if (vertices[i] == v) return;
   }
   addVertex(v,front);
@@ -444,25 +443,25 @@ void Poly::addVertexUnique(double x, double y, bool front)
 }
 
 
-Vector2d const &Poly::getVertexCircular(int index) const
+Vector2d const &Poly::getVertexCircular(long index) const
 {
-  uint size = vertices.size();
-  index = (index + size) % size;
+  long size = long(vertices.size());
+  index = long((index + size) % size);
   //cerr << vertices->size() <<" >  "<< points[pointindex] << endl;
-  return vertices[index];
+  return vertices[ulong(index)];
 }
 
-Vector3d Poly::getVertexCircular3(int pointindex) const
+Vector3d Poly::getVertexCircular3(long pointindex) const
 {
   Vector2d v = getVertexCircular(pointindex);
   return Vector3d(v.x(),v.y(),z);
 }
 
-vector<Vector2d> Poly::getVertexRangeCircular(int from, int to) const
+vector<Vector2d> Poly::getVertexRangeCircular(long from, long to) const
 {
   vector<Vector2d> v;
-  int size = vertices.size();
-  for (int i = from; i<=to; i++)
+  ulong size = vertices.size();
+  for (long i = from; i<=to; i++)
     v.push_back(vertices[(i+size)%size]);
   return v;
 }
@@ -473,7 +472,7 @@ vector<Intersection> Poly::lineIntersections(const Vector2d &P1, const Vector2d 
 {
   vector<Intersection> HitsBuffer;
   Vector2d P3,P4;
-  for(size_t i = 0; i < vertices.size(); i++)
+  for(ulong i = 0; i < vertices.size(); i++)
     {
       P3 = getVertexCircular(i);
       P4 = getVertexCircular(i+1);
@@ -493,17 +492,17 @@ vector<Intersection> Poly::lineIntersections(const Vector2d &P1, const Vector2d 
 
 
 // length of the line starting at startindex
-double Poly::getLinelengthSq(uint startindex) const
+double Poly::getLinelengthSq(ulong startindex) const
 {
   const double length = (getVertexCircular(startindex+1) -
-             getVertexCircular(startindex)).squared_length();
+                         getVertexCircular(startindex)).squared_length();
   return length;
 }
 
 double Poly::averageLinelengthSq() const
 {
   double l=0;
-  for (uint i = 0; i<vertices.size(); i++){
+  for (ulong i = 0; i<vertices.size(); i++){
     l+=getLinelengthSq(i);
   }
   return l/vertices.size();
@@ -513,7 +512,7 @@ double Poly::totalLineLength() const
 {
   if (size() < 2) return 0;
   double l=0;
-  for (uint i = 0; i<vertices.size()-1; i++){
+  for (ulong i = 0; i<vertices.size()-1; i++){
     l+=vertices[i].distance(vertices[i+1]);
   }
   if (closed)
@@ -527,7 +526,7 @@ void Poly::makeLines(vector<Vector3d> &lines, Vector2d &startPoint) const
 {
   if (size()<2) return;
   double mindist = INFTY;
-  uint index = nearestDistanceSqTo(startPoint, mindist);
+  ulong index = nearestDistanceSqTo(startPoint, mindist);
   makeLines(lines,index);
   startPoint = Vector2d(lines.back().x(),lines.back().y());
 }
@@ -535,21 +534,21 @@ void Poly::makeLines(vector<Vector2d> &lines, Vector2d &startPoint) const
 {
   if (size()<2) return;
   double mindist = INFTY;
-  uint index = nearestDistanceSqTo(startPoint, mindist);
+  ulong index = nearestDistanceSqTo(startPoint, mindist);
   makeLines(lines,index);
   startPoint = Vector2d(lines.back());
 }
 
 // add to lines starting with given index
 // closed lines sequence if number of vertices > 2 and poly is closed
-void Poly::makeLines(vector<Vector2d> &lines, uint startindex) const
+void Poly::makeLines(vector<Vector2d> &lines, ulong startindex) const
 {
   size_t count = vertices.size();
   if (count<2) return; // one point no line
   bool closedlines = closed;
   if (count<3) closedlines = false; // two points one line
   vector<Vector2d> mylines;
-  for(size_t i = startindex; i < count+startindex; i++)
+  for(ulong i = startindex; i < count+startindex; i++)
     {
       if (!closedlines && i == count-1) continue;
       mylines.push_back(getVertexCircular(i));
@@ -561,7 +560,7 @@ void Poly::makeLines(vector<Vector2d> &lines, uint startindex) const
     lines.insert(lines.end(),mylines.begin(),mylines.end());
 }
 
-void Poly::makeLines(vector<Vector3d> &lines, uint startindex) const
+void Poly::makeLines(vector<Vector3d> &lines, ulong startindex) const
 {
   vector<Vector3d> mylines;
   size_t count = vertices.size();
@@ -584,7 +583,7 @@ void Poly::makeLines(vector<Vector3d> &lines, uint startindex) const
 vector<Vector2d> Poly::getCenterline() const
 {
   vector<Vector2d> line;
-  for (uint i=0; i < vertices.size(); i++){
+  for (ulong i=0; i < vertices.size(); i++){
     Vector2d abp = angle_bipartition(vertices[i],
                      getVertexCircular(i-1), getVertexCircular(i+1));
 
@@ -604,10 +603,10 @@ vector<Vector2d> Poly::getPathAround(const Vector2d &from, const Vector2d &to) c
   vector<Vector2d> path1, path2;
   // Poly off = Clipping::getOffset(*this, 0, jround).front();
   //cerr << size()<<  " Off " << off.size()<< endl;
-  int nvert = size();
+  int nvert = int(size());
   if (nvert==0) return path1;
-  int fromind = (int)nearestDistanceSqTo(from, dist);
-  int toind = (int)nearestDistanceSqTo(to, dist);
+  int fromind = int(nearestDistanceSqTo(from, dist));
+  int toind =   int(nearestDistanceSqTo(to, dist));
   if (fromind==toind) {
     path1.push_back(vertices[fromind]);
     return path1;
@@ -626,9 +625,9 @@ vector<Vector2d> Poly::getPathAround(const Vector2d &from, const Vector2d &to) c
   }
   // find shorter one
   double len1=0,len2=0;
-  for (uint i=1; i<path1.size(); i++)
+  for (ulong i=1; i<path1.size(); i++)
     len1+=(path1[i]-path1[i-1]).squared_length();
-  for (uint i=1; i<path2.size(); i++)
+  for (ulong i=1; i<path2.size(); i++)
     len2+=(path2[i]-path2[i-1]).squared_length();
   if (len1 < len2) {
      // path1.insert(path1.begin(),from);
@@ -649,7 +648,7 @@ vector<Vector2d> Poly::getMinMax() const{
   vector<Vector2d> range;
   range.resize(2);
   Vector2d v;
-  for (uint i=0; i < vertices.size();i++){
+  for (ulong i=0; i < vertices.size();i++){
     v = vertices[i];
     if (v.x()<minx) minx=v.x();
     if (v.x()>maxx) maxx=v.x();
@@ -671,14 +670,14 @@ int Poly::getTriangulation(vector<Triangle> &triangles)  const
   vector<p2t::Point*> points(vertices.size());
   // add offset because poly2tri crashes on some negative values?
   const double OFF = 0;
-  for (guint i=0; i<vertices.size(); i++)  {
+  for (gulong i=0; i<vertices.size(); i++)  {
     points[i] = new p2t::Point(vertices[i].x()+OFF,
                    vertices[i].y()+OFF);
   }
   p2t::CDT cdt(points);
   cdt.Triangulate();
   vector<p2t::Triangle*> ptriangles = cdt.GetTriangles();
-  for (guint i=0; i<ptriangles.size(); i++) {
+  for (gulong i=0; i<ptriangles.size(); i++) {
     const p2t::Point *tp0 = ptriangles[i]->GetPoint(0);
     const p2t::Point *tp1 = ptriangles[i]->GetPoint(1);
     const p2t::Point *tp2 = ptriangles[i]->GetPoint(2);
@@ -707,37 +706,37 @@ void Poly::draw_as_surface() const
   glBegin(GL_TRIANGLES);
   for(size_t i=0;i<triangles.size();i++)
     {
-      glNormal3dv((GLdouble*)&(triangles[i].Normal));
-      glVertex3dv((GLdouble*)&(triangles[i].A));
-      glVertex3dv((GLdouble*)&(triangles[i].B));
-      glVertex3dv((GLdouble*)&(triangles[i].C));
+      glNormal3dv(triangles[i].Normal);
+      glVertex3dv(triangles[i].A);
+      glVertex3dv(triangles[i].B);
+      glVertex3dv(triangles[i].C);
     }
   glEnd();
 }
 
-void Poly::draw(int gl_type, double z, bool randomized) const
+void Poly::draw(GLuint gl_type, double z, bool randomized) const
 {
   Vector2d v;
-  int count = vertices.size();
+  long count = vertices.size();
   if (!closed && gl_type == GL_LINE_LOOP) {
     gl_type = GL_LINES;
     count--;
   }
   glBegin(gl_type);
-  for (int i=0; i < count; i++){
+  for (long i=0; i < count; i++){
     v = getVertexCircular(i);
     if (randomized) v = random_displaced(v);
-    glVertex3f(v.x(),v.y(),z);
+    glVertex3d(v.x(),v.y(),z);
     if ( gl_type == GL_LINES ) {
       Vector2d vn = getVertexCircular(i+1);
       if (randomized) vn = random_displaced(vn);
-      glVertex3f(vn.x(),vn.y(),z);
+      glVertex3d(vn.x(),vn.y(),z);
     }
   }
   glEnd();
   // if (hole) {
   //   glBegin(GL_LINES);
-  //   for (uint i=0; i < count; i++){
+  //   for (ulong i=0; i < count; i++){
   //     glVertex3d(center.x(),center.y(),z);
   //     Vector2d vn = vertices[i];
   //     if (randomized) vn = random_displaced(vn);
@@ -747,7 +746,7 @@ void Poly::draw(int gl_type, double z, bool randomized) const
   // }
 }
 
-void Poly::draw(int gl_type, bool randomized) const
+void Poly::draw(GLuint gl_type, bool randomized) const
 {
   draw(gl_type, getZ(), randomized);
 }
@@ -755,7 +754,7 @@ void Poly::draw(int gl_type, bool randomized) const
 void Poly::drawVertexNumbers(Render *render) const
 {
   Vector3d v;
-  for (uint i=0;i < vertices.size();i++){
+  for (ulong i=0;i < vertices.size();i++){
     v = getVertexCircular3(i);
     glVertex3f(v.x(),v.y(),v.z());
     ostringstream oss;
@@ -767,7 +766,7 @@ void Poly::drawVertexNumbers(Render *render) const
 void Poly::drawVertexAngles(Render *render) const
 {
   Vector3d v;
-  for (uint i=0;i < vertices.size();i++){
+  for (ulong i=0;i < vertices.size();i++){
     v = getVertexCircular3(i);
     glVertex3f(v.x(),v.y(),v.z());
     double angle = angleAtVertex(i);
@@ -780,7 +779,7 @@ void Poly::drawVertexAngles(Render *render) const
 void Poly::drawLineNumbers(Render *render) const
 {
   Vector3d v,v2;
-  for (uint i=0;i < vertices.size();i++){
+  for (ulong i=0;i < vertices.size();i++){
     v = getVertexCircular3(i);
     v2 = getVertexCircular3(i+1);
     ostringstream oss;
@@ -805,7 +804,7 @@ string Poly::SVGpolygon(string style) const
   ostringstream ostr;
   ostr << "  <polygon points=\"";
   ostr.precision(5);
-  for (uint i=0; i<size(); i++) {
+  for (ulong i=0; i<size(); i++) {
     ostr  << fixed << vertices[i].x() << "," << vertices[i].y();
     if (i < size()-1) ostr << " ";
   }
@@ -828,7 +827,7 @@ string Poly::SVGpath(const Vector2d &trans) const
   else
     ostr << "<polyline fill=\"white\" stroke=\"black\" stroke-width=\"1px\"";
   ostr << " points=\"";
-  for (uint i=0; i < transpoly.size(); i++) {
+  for (ulong i=0; i < transpoly.size(); i++) {
     ostr  << fixed << transpoly[i].x() << " " << transpoly[i].y();
     if (i < size()-1) ostr << ", ";
   }
@@ -844,7 +843,7 @@ string Poly::gnuplot_path(const Vector2d &trans) const
   Poly transpoly(*this,0);
   transpoly.move(trans);
   ostr << "# " << size() << endl;
-  for (uint i=0; i<size(); i++) {
+  for (ulong i=0; i<size(); i++) {
     CL::IntPoint cp = Clipping::ClipperPoint(transpoly[i]);
     ostr  << fixed << cp.X << ", " << cp.Y;
     //if (i < size()-1) ostr << "," ;
@@ -857,7 +856,7 @@ string Poly::gnuplot_path(const Vector2d &trans) const
 
 void Poly::move(vector<Poly> &polys, const Vector2d &trans)
 {
-  for (uint i=0; i<polys.size(); i++)
+  for (ulong i=0; i<polys.size(); i++)
     polys[i].move(trans);
 }
 
@@ -868,21 +867,21 @@ void Poly::move(vector<Poly> &polys, const Vector2d &trans)
 void ExPoly::clear()
 {
   outer.clear();
-  for (uint i=0; i < holes.size(); i++)
+  for (ulong i=0; i < holes.size(); i++)
     holes[i].clear();
 }
 
 void ExPoly::draw(int gl_type, double z, bool randomized) const
 {
   outer.draw(gl_type, z, randomized);
-  for (uint i=0; i < holes.size(); i++)
+  for (ulong i=0; i < holes.size(); i++)
     holes[i].draw(gl_type, z, randomized);
 }
 
 void ExPoly::draw(int gl_type, bool randomized) const
 {
   outer.draw(gl_type, randomized);
-  for (uint i=0; i < holes.size(); i++)
+  for (ulong i=0; i < holes.size(); i++)
     holes[i].draw(gl_type, randomized);
 }
 
@@ -890,21 +889,21 @@ void ExPoly::draw(int gl_type, bool randomized) const
 void ExPoly::cleanup(double epsilon)
 {
   outer.vertices = simplified(outer.vertices, epsilon);
-  for (uint i=0; i < holes.size(); i++)
+  for (ulong i=0; i < holes.size(); i++)
     holes[i].vertices = simplified(holes[i].vertices, epsilon);
 }
 
 void ExPoly::drawVertexNumbers(Render *render) const
 {
   outer.drawVertexNumbers(render);
-  for (uint i=0; i < holes.size(); i++)
+  for (ulong i=0; i < holes.size(); i++)
     holes[i].drawVertexNumbers(render);
 }
 
 void ExPoly::drawLineNumbers(Render *render) const
 {
   outer.drawLineNumbers(render);
-  for (uint i=0; i < holes.size(); i++)
+  for (ulong i=0; i < holes.size(); i++)
     holes[i].drawLineNumbers(render);
 }
 
@@ -999,21 +998,21 @@ void draw_polys_surface(const vector< ExPoly > &expolys,
 
 
 void clearpolys(vector<Poly> &polys){
-  for (uint i=0; i<polys.size();i++)
+  for (ulong i=0; i<polys.size();i++)
     polys[i].clear();
   polys.clear();
 }
 void clearpolys(vector<ExPoly> &polys){
-  for (uint i=0; i<polys.size();i++) {
+  for (ulong i=0; i<polys.size();i++) {
     polys[i].outer.clear();
-    for (uint j=0; j<polys[i].holes.size();j++) {
+    for (ulong j=0; j<polys[i].holes.size();j++) {
       polys[i].holes[j].clear();
     }
   }
   polys.clear();
 }
 void clearpolys(vector< vector<Poly> > &polys){
-  for (uint i=0; i<polys.size();i++)
+  for (ulong i=0; i<polys.size();i++)
     clearpolys(polys[i]);
   polys.clear();
 }

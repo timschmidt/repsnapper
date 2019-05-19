@@ -39,7 +39,7 @@ class Settings;
 
 
 typedef struct {
-    GLdouble posX, posY;
+    GLint posX, posY;
     QColor color;
     QString text;
 } GlText;
@@ -57,7 +57,7 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
   Model *get_model() const { return m_main->get_model(); }
   QModelIndexList m_selection;
 
-  float m_zoom;
+  double m_zoom;
   GlLight *m_lights[4];
 
   void SetEnableLight(unsigned int lightNr, bool on);
@@ -151,7 +151,7 @@ private:
   GLint project(GLdouble objx, GLdouble objy, GLdouble objz,
                 const GLdouble model[], const GLdouble proj[],
                 const GLint viewport[],
-                GLdouble *winx, GLdouble *winy, GLdouble *winz);
+                GLint *winx, GLint *winy, GLdouble *winz);
 
 };
 

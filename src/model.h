@@ -67,7 +67,7 @@ public:
 #endif
         ListObject * AddShape(ListObject *parent, Shape * shape, QString filename,
                      bool autoplace = true);
-        int SplitShape(ListObject *parent, Shape *shape, QString filename);
+        ulong SplitShape(ListObject *parent, Shape *shape, QString filename);
         int MergeShapes(ListObject *parent, const vector<Shape*> shapes);
         int DivideShapeAtZ(ListObject *parent, Shape *shape, QString filename);
         Shape GetCombinedShape() const;
@@ -117,7 +117,7 @@ public:
 
         void ConvertToGCode();
 
-        void MakeRaft(GCodeState &state, double &z);
+        void MakeRaft(double &z);
         void WriteGCode(QFile *file);
         void ClearGCode();
         void ClearLayers();
@@ -144,7 +144,6 @@ public:
                                    const Shape *shape);
         bool FindEmptyLocation(Vector3d &result, const Shape *stl);
 
-        ////        sigc::signal< void > m_model_changed;
         void ModelChanged(bool objectsAddedOrRemoved = false);
         bool m_inhibit_modelchange;
 
@@ -156,7 +155,7 @@ public:
         int getLayerNo(float height) const;
 
         int draw(const QModelIndexList *selected, bool objects_only = false);
-        int drawLayers(float height, const Vector3d &offset, bool calconly = false);
+        int drawLayers(double height, const Vector3d &offset, bool calconly = false);
         void setMeasuresPoint(const Vector3d &point);
         Vector2d measuresPoint;
 
@@ -203,8 +202,8 @@ private:
         void MakeFullSkins();
         void MultiplyUncoveredPolygons();
         void MakeSupportPolygons(Layer * subjlayer, const Layer * cliplayer,
-                                 int extruder, double widen=0);
-        void MakeSupportPolygons(int extruder, double widen=0);
+                                 uint extruder, double widen=0);
+        void MakeSupportPolygons(uint extruder, double widen=0);
         void MakeSkirt();
 
         MainWindow * main;
@@ -216,6 +215,8 @@ private:
 
 signals:
         void model_changed(const ObjectsList * objlist = nullptr);
+        void alert(const QString &message);
+
 };
 
 #endif // MODEL_H

@@ -39,10 +39,10 @@ FlatShape::FlatShape()
 }
 
 
-FlatShape::FlatShape(QString filename)
+FlatShape::FlatShape(QString fileName)
 {
   slow_drawing = false;
-  this->filename = filename;
+  this->filename = fileName;
   loadSVG(filename.toStdString());
 }
 
@@ -194,7 +194,7 @@ void FlatShape::draw_geometry(uint max_polygons) {
 #ifdef USE_CAIRO
   glDrawPolySurfaceRastered(polygons, min2d, max2d, 0, 0.1);
 #endif
-  uint step = 1;
+  ulong step = 1;
   if (max_polygons > 0) step = polygons.size()/max_polygons;
   for (uint i = 0; i < polygons.size(); i+=step) {
     polygons[i].draw(GL_LINE_LOOP,false);
@@ -211,8 +211,8 @@ void FlatShape::CalcBBox()
 {
   Min.set(INFTY,INFTY,0);
   Max.set(-INFTY,-INFTY,0);
-  for(size_t i = 0; i < polygons.size(); i++)
-    for(size_t j = 0; j < polygons[i].size(); j++){
+  for(ulong i = 0; i < polygons.size(); i++)
+    for(ulong j = 0; j < polygons[i].size(); j++){
       if ( polygons[i][j].x() < Min.x() ) Min.x() = polygons[i][j].x();
       if ( polygons[i][j].y() < Min.y() ) Min.y() = polygons[i][j].y();
       if ( polygons[i][j].x() > Max.x() ) Max.x() = polygons[i][j].x();
@@ -251,11 +251,11 @@ void FlatShape::Rotate(const Vector3d & axis, const double & angle)
 
 void FlatShape::splitshapes(vector<Shape*> &shapes, ViewProgress *progress)
 {
-  uint count = polygons.size();
+  ulong count = polygons.size();
   if (progress) progress->start(_("Split Polygons"), count);
-  int progress_steps = max(1,int(count/100.));
+  ulong progress_steps = max<ulong>(1,ulong(count/100.));
 
-  for (uint i = 0; i < count; i++) {
+  for (ulong i = 0; i < count; i++) {
     FlatShape *fs  = new FlatShape();
     fs->polygons.push_back(polygons[i]);
     if (progress && i%progress_steps==0)
@@ -341,7 +341,7 @@ vector<Vector2d> ToVertices(const QString &line)
     return v;
 }
 
-int FlatShape::svg_addPolygon()
+ulong FlatShape::svg_addPolygon()
 {
 
   vector<Poly> polys;
@@ -485,7 +485,7 @@ void FlatShape::xml_handle_node(const xmlpp::Node* node)
 }
 
 
-int FlatShape::loadSVG(string filename)
+int FlatShape::loadSVG(string fileName)
 {  // Set the global C++ locale to the user-configured locale,
   // so we can use std::cout with UTF-8, via QString, without exceptions.
 
@@ -496,7 +496,7 @@ int FlatShape::loadSVG(string filename)
     xmlpp::DomParser parser;
     //parser.set_validate();
     parser.set_substitute_entities(); //We just want the text to be resolved/unescaped automatically.
-    parser.parse_file(filename);
+    parser.parse_file(fileName);
     if(parser)
     {
       polygons.clear();
@@ -510,7 +510,7 @@ int FlatShape::loadSVG(string filename)
       xml_handle_node(pNode);
     }
 
-    if (svg_prescale!=1)
+    if (svg_prescale!=1.)
       for (uint i= 0; i<polygons.size(); i++)
     for (uint j= 0; j<polygons[i].size(); j++)
       polygons[i].vertices[j] *= svg_prescale;
