@@ -90,7 +90,6 @@ uint Printlines::divideline(ulong lineindex,
     lines.insert(lines.begin() + lineindex + 1, line2);
     return 1;
   }
-  return 0;
 }
 
 
@@ -479,26 +478,21 @@ PLine2::PLine2(PLineArea area_, const uint extruder_no_,
 
 
 // for arc line
-PLine2::PLine2(PLineArea area_, const uint extruder_no_,
-           const Vector2d &from_, const Vector2d &to_, double speed_,
-           double feedratio_, const Vector2d &arccenter_, bool ccw,
-           double lifted_)
-: feedratio(feedratio_)
+PLine2 * PLine2::Arc(PLineArea area_, const uint extruder_no_,
+                     const Vector2d &from_, const Vector2d &to_, double speed_,
+                     double feedratio_, const Vector2d &arccenter_, bool ccw,
+                     double lifted_)
 {
-  area = area_;
-  from = from_;
-  to   = to_;
-  speed = speed_;
-  if (feedratio == 0.)
-    arc = 0;
-  else {
-    arccenter = arccenter_;
-    arc = ccw ? -1 : 1;
-  }
-  calcangle();
-  absolute_extrusion = 0;
-  lifted = lifted_;
-  extruder_no = extruder_no_;
+    PLine2 *arc = new PLine2(area_, extruder_no_, from_, to_, speed_, feedratio_, lifted_);
+    if (feedratio_ == 0.)
+        arc->arc = 0;
+    else {
+        arc->arccenter = arccenter_;
+        arc->arc = ccw ? -1 : 1;
+    }
+    arc->calcangle();
+    arc->absolute_extrusion = 0;
+    return arc;
 }
 
 PLine2::PLine2(const PLine2 &rhs)
@@ -528,7 +522,14 @@ double PLine2::angle_to(const PLine2 &rhs) const
 
 bool PLine2::is_noop() const
 {
-  return (lengthSq() < 0.0001 && feedratio == 0. && absolute_extrusion == 0.);
+    return (lengthSq() < 0.0001 && feedratio == 0. && absolute_extrusion == 0.);
+}
+
+double PLine2::distanceFromChord() const
+{
+    if (!arc) return 0;
+    const Vector2d midPoint = 0.5*(to+from);
+    return from.distance(arccenter) - midPoint.distance(arccenter);
 }
 
 string PLine2::info() const
@@ -562,6 +563,7 @@ Printlines::Printlines(const Layer * layer, Settings * settings, double z_offset
 {
   this->settings = settings;
   this->layer = layer;
+  this->lineWidth = settings->GetExtrudedMaterialWidth(layer->thickness, 0);
 
   // save overhang polys of layer for point-in-overhang detection
 #ifdef USECAIRO
@@ -896,6 +898,8 @@ double Printlines::makeLines(Vector2d &startPoint,
       makeArcs(lines);
   if (arcs)
       minarclength = settings->get_double("Slicing/MinArcLength");
+  else
+      minarclength = -1;
   if (settings->get_boolean("Slicing/RoundCorners"))
       roundCorners(cornerradius, minarclength, lines);
   slowdownTo(slowdowntime, lines);
@@ -1078,13 +1082,16 @@ ulong Printlines::makeIntoArc(const Vector2d &center,
   if (toind < fromind+1 || toind+1 > lines.size()) return 0;
   bool ccw = isleftof(center, lines[fromind]->from, lines[fromind]->to);
   //cerr << "makeIntoArc ccw " << ccw << endl;
-  PLine2 *froml = (PLine2*)lines[fromind];
-  lines[fromind] = new PLine2(lines[fromind]->area, lines[fromind]->extruder_no,
+  PLine2 *arc = PLine2::Arc(lines[fromind]->area, lines[fromind]->extruder_no,
         lines[fromind]->from, lines[toind]->to,
-        lines[fromind]->speed, froml->feedratio,
+        lines[fromind]->speed, lines[fromind]->getFeedratio(),
         center, ccw, lines[fromind]->lifted );
-  lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
-  return toind-fromind;
+  if (arc->distanceFromChord() < lineWidth) {
+      lines[fromind] = arc;
+      lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
+      return toind-fromind;
+  }
+  return 0;
 }
 
 // return how many lines are removed
@@ -1191,25 +1198,26 @@ ulong Printlines::makeCornerArc(double maxdistance, double minarclength,
   const double arc_len = abs(radius * angle);
   // too small for arc, replace by 2 straight lines
   const bool not_arc =
-    !settings->get_boolean("Slicing/UseArcs")
-    || (arc_len < (split?minarclength:(minarclength*2)));
+          (arc_len < (split ? minarclength : (minarclength*2)));
   // too small to make 2 lines, just make 1 line
   const bool toosmallfortwo  =
-    (arc_len < (split?(minarclength/2):minarclength));
+          (arc_len < (split ? (minarclength/2) : minarclength));
   // if (toosmallfortwo) return 0;
 
-  vector<PLine<2>*> newlines; // all lines replacing lines[ind] and lines[ind+1]
+  const double lenbefore = lines[ind]->length() + lines[ind+1]->length();
   ulong insertbefore = ind+1;
   if (p2 != lines[ind+1]->to) { // straight line 2
-    lines[ind+1]->move_to(p2, lines[ind+1]->to);
+      lines[ind+1]->move_to(p2, lines[ind+1]->to);
   } else
       lines.erase(lines.begin() + ind+1);
   if (p1 != lines[ind]->from) { // straight line 1
-    lines[ind]->move_to(lines[ind]->from, p1);
+      lines[ind]->move_to(lines[ind]->from, p1);
   } else {
       lines.erase(lines.begin() + ind);
       insertbefore--;
   }
+
+  vector<PLine<2>*> newlines; // all lines replacing lines[ind] and lines[ind+1]
   if (p2 != p1)  {
     if (toosmallfortwo) { // 1 line
       const double feedr = ( lines[ind]->getFeedratio() +
@@ -1218,7 +1226,7 @@ ulong Printlines::makeCornerArc(double maxdistance, double minarclength,
                                     p1, p2, lines[ind]->speed, feedr,
                                     (feedr!=0.) ? lines[ind]->lifted : 0.));
     }
-    else if (split || not_arc) { // calc arc midpoint
+    else if (split || not_arc) {
         const Vector2d splitp = rotated(p1, center, angle/2, ccw);
         if (not_arc) { // 2 straight lines
             PLine2 *nl = new PLine2(*(PLine2*)lines[ind]);
@@ -1228,29 +1236,30 @@ ulong Printlines::makeCornerArc(double maxdistance, double minarclength,
             nl->move_to(splitp, p2);
             newlines.push_back(nl);
         } else if (split) { // 2 arcs
-            newlines.push_back(new PLine2
-                               (lines[ind]->area, lines[ind]->extruder_no,  p1, splitp,
-                                lines[ind]->speed, lines[ind]->getFeedratio(), center, ccw,
-                                lines[ind]->lifted));
-            newlines.push_back(new PLine2
-                               (lines[ind+1]->area, lines[ind+1]->extruder_no, splitp, p2,
-                    lines[ind+1]->speed, lines[ind+1]->getFeedratio(), center, ccw,
-                    lines[ind+1]->lifted));
+            newlines.push_back(PLine2::Arc(lines[ind]->area, lines[ind]->extruder_no,
+                 p1, splitp, lines[ind]->speed, lines[ind]->getFeedratio(),
+                 center, ccw, lines[ind]->lifted));
+            newlines.push_back(PLine2::Arc(lines[ind+1]->area, lines[ind+1]->extruder_no,
+                 splitp, p2, lines[ind+1]->speed, lines[ind+1]->getFeedratio(),
+                 center, ccw, lines[ind+1]->lifted));
         }
     } else { // 1 arc
-        newlines.push_back(new PLine2(lines[ind]->area, lines[ind]->extruder_no, p1, p2,
-                                      lines[ind]->speed, lines[ind]->getFeedratio(), center, ccw, lines[ind]->lifted));
+        newlines.push_back(PLine2::Arc(lines[ind]->area, lines[ind]->extruder_no,
+             p1, p2, lines[ind]->speed, lines[ind]->getFeedratio(),
+             center, ccw, lines[ind]->lifted));
     }
   }
-
+  double newlen = 0;
+  for (PLine<2> *pl : newlines){
+      newlen += pl->length();
+  }
   const ulong numnew = newlines.size();
+
   lines.insert(lines.begin() + insertbefore, newlines.begin(), newlines.end());
-  //double lenafter = 0;
-  //for (uint i = 0; i<=insertbefore + numnew; i++){
-  //    lenafter += lines[i].length();
-  //}
-  //cerr << " len "<< lenbefore << " -> " << lenafter << endl;
-  return max<ulong>(0, numnew);
+  if (newlen > 2 * lenbefore) {
+      cerr << "!!! len "<< lenbefore << " -> " << newlen << endl;
+  }
+  return numnew;
 }
 
 double Printlines::length(const vector<PLine<3> *> &lines, ulong from, ulong to)

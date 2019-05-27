@@ -90,6 +90,8 @@ public:
         bool isHole() const;
 
         vector<Vector2d> getMinMax() const;
+        void accumulateMinMax(Vector2d &min, Vector2d &max) const;
+
         vector<Intersection> lineIntersections(const Vector2d &P1, const Vector2d &P2,
                                                double maxerr=0.0001) const;
 

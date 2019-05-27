@@ -156,7 +156,7 @@ public:
 
         int draw(const QModelIndexList *selected, bool objects_only = false);
         int drawLayers(double height, const Vector3d &offset, bool calconly = false);
-        void setMeasuresPoint(const Vector3d &point);
+        void setMeasuresPoint(const Vector2d &point);
         Vector2d measuresPoint;
 
         Layer * calcSingleLayer(double z, uint LayerNr, double thickness,

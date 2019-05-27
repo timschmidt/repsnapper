@@ -116,6 +116,7 @@ class Settings : public QSettings {
 
   vector<ExtruderSettings> getExtruderSettings();
 
+
   /* class GCodeImpl; */
   /* enum GCodeTextType { */
   /*   GCODE_TEXT_START, */

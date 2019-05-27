@@ -757,7 +757,7 @@ double Settings::GetInfillDistance(double layerthickness, double percent, uint e
 {
   double fullInfillDistance = GetExtrudedMaterialWidth(layerthickness, extruderNo);
   if (fullInfillDistance == 0.) throw new exception();
-  if (percent == 0.f) return 10000000;
+  if (percent == 0.) return 10000000;
   return fullInfillDistance * (100./percent);
 }
 

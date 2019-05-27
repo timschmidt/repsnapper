@@ -27,7 +27,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>3</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -1073,8 +1073,11 @@
          </item>
          <item row="0" column="5">
           <widget class="QDoubleSpinBox" name="Slicing_InfillOverlap">
+           <property name="minimum">
+            <double>-99.000000000000000</double>
+           </property>
            <property name="singleStep">
-            <double>0.100000000000000</double>
+            <double>0.010000000000000</double>
            </property>
           </widget>
          </item>
@@ -1225,8 +1228,11 @@
          </item>
          <item row="0" column="1">
           <widget class="QSpinBox" name="Slicing_InfillRotation">
+           <property name="minimum">
+            <number>-180</number>
+           </property>
            <property name="maximum">
-            <number>359</number>
+            <number>180</number>
            </property>
           </widget>
          </item>
@@ -1269,8 +1275,11 @@
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only for Parallel Infill&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
+           <property name="minimum">
+            <number>-180</number>
+           </property>
            <property name="maximum">
-            <number>369</number>
+            <number>180</number>
            </property>
            <property name="value">
             <number>60</number>
@@ -1404,8 +1413,11 @@
           </item>
           <item row="4" column="2">
            <widget class="QSpinBox" name="Raft_Interface_Rotation">
+            <property name="minimum">
+             <number>-180</number>
+            </property>
             <property name="maximum">
-             <number>360</number>
+             <number>180</number>
             </property>
             <property name="value">
              <number>90</number>
@@ -1472,8 +1484,11 @@
           </item>
           <item row="5" column="2">
            <widget class="QSpinBox" name="Raft_Interface_RotationPrLayer">
+            <property name="minimum">
+             <number>-180</number>
+            </property>
             <property name="maximum">
-             <number>360</number>
+             <number>180</number>
             </property>
             <property name="value">
              <number>90</number>
@@ -1482,8 +1497,11 @@
           </item>
           <item row="5" column="1">
            <widget class="QSpinBox" name="Raft_Base_RotationPrLayer">
+            <property name="minimum">
+             <number>-180</number>
+            </property>
             <property name="maximum">
-             <number>360</number>
+             <number>180</number>
             </property>
             <property name="value">
              <number>90</number>

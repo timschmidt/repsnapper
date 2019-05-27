@@ -108,6 +108,7 @@ bool ViewProgress::update (const double value)
 //  if (value < m_bar_cur)
 //    return do_continue;
 
+  QCoreApplication::processEvents();
   m_bar_cur = CLAMP(value, 0, 1.0);
   m_bar->setMaximum(int(m_bar_max));
   m_bar->setValue(int(value));
@@ -124,7 +125,6 @@ bool ViewProgress::update (const double value)
     QTextStream(stderr) << s << " -- "
                         << perc << "%              \r";
   }
-  QCoreApplication::processEvents();
   return do_continue;
 }
 

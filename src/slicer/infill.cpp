@@ -21,81 +21,64 @@
 #include "poly.h"
 #include "layer.h"
 
-vector<struct Infill::pattern> Infill::savedPatterns;
 #ifdef _OPENMP
  omp_lock_t Infill::save_lock;
 #endif
 
-void hilbert(int level,int direction, double infillDistance, vector<Vector2d> &v);
 
 
 Infill::Infill()
-  : extrusionfactor(1), cached(false)
+    : m_type(INVALIDINFILL), extrusionfactor(1), baseRotation(0),
+      rotationPerLayer(0)
 {
-  m_tofillpolys.clear();
 }
 
 
-Infill::Infill (Layer *mlayer, double extrfactor)
-    : cached(false)
+Infill::Infill (InfillType type, double infillDistance, double extrfactor,
+                double rotation, double rotatePerLayer)
+    : pattern(nullptr), m_type(type), infillDistance(infillDistance),
+      extrusionfactor(extrfactor), baseRotation(rotation),
+      rotationPerLayer(rotatePerLayer)
 {
-  layer = mlayer;
-  extrusionfactor = extrfactor;
-  m_tofillpolys.clear();
+    if (abs(infillDistance) < 0.001) {
+        cerr << "Zero Infill Distance type="<< type << endl;
+    }
 }
 
 Infill::~Infill()
 {
-  clear();
-  extrusionfactor = 1.;
+    if (pattern)
+        delete pattern;
 }
-
-void Infill::clear()
-{
-  infillpolys.clear();
-  infillvertices.clear();
-  m_tofillpolys.clear();
-}
-
-void Infill::clearPatterns() {
-  for (uint i=0; i<savedPatterns.size(); i++) {
-    savedPatterns[i].type = INVALIDINFILL;
-    savedPatterns[i].cpolys.clear();
-  }
-  savedPatterns.clear();
-  //cerr << "clearpatterns " << savedPatterns.size() << endl;
-}
-
-
 
 // fill polys with type etc.
-void Infill::addPoly(double z, const Poly &poly, InfillType type,
-             double infillDistance, double offsetDistance, double rotation)
+void Infill::apply(double z, const Poly &poly, int layerNo,
+                           vector<Poly> &toPolys)
 {
   vector<Poly> polys; polys.push_back(poly);
-  addPolys(z, polys, type, infillDistance, offsetDistance, rotation);
-}
-void Infill::addPolys(double z, const vector<Poly> &polys, InfillType type,
-              double infillDistance, double offsetDistance, double rotation)
-{
-  this->infillDistance = infillDistance;
-  ClipperLib::Paths patterncpolys =
-          makeInfillPattern(type, polys, infillDistance, offsetDistance, rotation);
-  addPolys(z, polys, patterncpolys, offsetDistance);
+  apply(z, polys, layerNo, toPolys);
 }
 
-void Infill::addPoly(double z, const ExPoly &expoly, InfillType type,
-             double infillDistance, double offsetDistance, double rotation)
+void Infill::apply(double z, const vector<Poly> &polys, int layerNo,
+                   vector<Poly> &toPolys)
+{
+  ClipperLib::Paths patterncpolys = getInfillPattern(polys, layerNo);
+  vector<Poly> result = apply(z, polys, patterncpolys);
+  toPolys.insert(toPolys.end(), result.begin(), result.end());
+}
+
+void Infill::apply(double z, const ExPoly &expoly, int layerNo,
+                           vector<Poly> &toPolys)
 {
   vector<Poly> polys = Clipping::getPolys(expoly);
-  addPolys (z, polys, type, infillDistance, offsetDistance, rotation);
+  apply (z, polys, layerNo, toPolys);
 }
 
-void Infill::addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
-              double infillDistance, double offsetDistance, double rotation)
+void Infill::apply(double z, const vector<ExPoly> &expolys, int layerNo,
+                   vector<Poly> &toPolys)
 {
   vector<Poly> polys = Clipping::getPolys(expolys);
-  addPolys (z, polys, type, infillDistance, offsetDistance, rotation);
+  apply (z, polys, layerNo, toPolys);
 }
 
 // calculates angles for bridges
@@ -113,18 +96,18 @@ void Infill::addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
 //   omp_unset_lock(&save_lock);
 // }
 
-// fill polys with fillpolys
-void Infill::addPolys(double z, const vector<Poly> &polys,
-              const vector<Poly> &fillpolys,
-              double offsetDistance)
+// append fillpolys
+void Infill::apply(double z, const vector<Poly> &polys,
+                   const vector<Poly> &fillpolys,
+                   vector<Poly> &toPolys)
 {
-  addPolys(z, polys, Clipping::getClipperPolygons(fillpolys), offsetDistance);
+    vector<Poly> result = apply(z, polys, Clipping::getClipperPolygons(fillpolys));
+    toPolys.insert(toPolys.end(), result.begin(), result.end());
 }
 
 // clip infill pattern polys against polys
-void Infill::addPolys(double z, const vector<Poly> &polys,
-              const ClipperLib::Paths &patterncpolys,
-              double offsetDistance)
+vector<Poly> Infill::apply(double z, const vector<Poly> &polys,
+                           const ClipperLib::Paths &patterncpolys)
 {
   Clipping clipp;
   clipp.addPolys   (polys,         subject);
@@ -135,212 +118,82 @@ void Infill::addPolys(double z, const vector<Poly> &polys,
   if (m_type==PolyInfill)  // reversal from evenodd clipping
     for (uint i = 0; i<result.size(); i+=2)
       result[i].reverse();
-  addInfillPolys(result);
+  return getInfillPolys(result);
+}
+
+
+void Infill::makeBaseInfillPattern(const Vector2d &min,
+                                   const Vector2d &max)
+{
+    pattern = nullptr;
+    switch (m_type) {
+    case HexInfill: {
+      pattern = new HexPattern(infillDistance, baseRotation);
+    }
+        break;
+    case SmallZigzagInfill: // small zigzag lines -> square pattern
+        //case ZigzagInfill: // long zigzag lines
+    case ParallelInfill: {
+        pattern = new ParallelPattern(m_type, infillDistance,
+                                      baseRotation, rotationPerLayer);
+    }
+        break;
+    case HilbertInfill:{
+        pattern = new HilbertPattern(infillDistance, baseRotation);
+    }
+    }
+    if (pattern && !pattern->covers(min, max))
+        pattern->makeInfillPattern(min, max);
 }
 
 // generate infill pattern as a vector of polygons
-ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
-                                            const vector<Poly> &tofillpolys,
-                                            double infillDistance,
-                                            double offsetDistance,
-                                            double rotation)
+ClipperLib::Paths Infill::getInfillPattern(const vector<Poly> &tofillpolys,
+                                           int layerNo)
 {
   ClipperLib::Paths cpolys;
-  m_tofillpolys = tofillpolys;
-  m_type = type;
 
-  assert(infillDistance > 0.);
+  if (abs(infillDistance) < 0.0001)  {
+      qDebug() << "Zero Infill Distance";
+      return cpolys;
+  }
 
   if (tofillpolys.size()==0) return cpolys;
-  cached = false;
-  //cerr << "have " << savedPatterns.size()<<" saved patterns " << endl;
-  // look for saved pattern for this rotation
-  const Vector2d Min = layer->getMin();
-  const Vector2d Max = layer->getMax();
-  while (rotation > 2*M_PI) rotation -= 2*M_PI;
-  while (rotation < 0) rotation += 2*M_PI;
-  m_angle = rotation;
 
-  //omp_set_lock(&save_lock);
-  //int tid = omp_get_thread_num( );
-  //cerr << "thread "<<tid << " looking for pattern " << endl;
-  if (type != PolyInfill) { // can't save PolyInfill
-    if (savedPatterns.size()>0){
-      vector<uint> too_small;
-      for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
-           sIt != savedPatterns.end(); sIt++){
-          if (sIt->type == HexInfill && sIt->layerNo % 2 != layer->LayerNo % 2)
-              continue;
-          if (sIt->type == type &&
-                  abs((sIt->distance-infillDistance)/infillDistance) < 0.01 &&
-                  abs((sIt->angle-m_angle)/m_angle) < 0.01 )
-          {
-              //cerr << name << " found saved pattern no " << sIt-savedPatterns.begin() << " with " << sIt->cpolys.size() <<" polys"<< endl << "type "<< sIt->type << sIt->Min << sIt->Max << endl;
-              // is it too small for this layer?
-              if (sIt->Min.x() > Min.x() || sIt->Min.y() > Min.y() ||
-                      sIt->Max.x() < Max.x() || sIt->Max.y() < Max.y())
-              {
-                  too_small.push_back(sIt-savedPatterns.begin());
-                  //break; // there is no other match
-              }
-              else {
-                  cached = true;
-                  return sIt->cpolys;
-              }
-          }
-      }
-      sort(too_small.rbegin(), too_small.rend());
-      for (uint i = 0; i < too_small.size(); i++) {
-          savedPatterns.erase(savedPatterns.begin()+too_small[i]);
-      }
-    }
+  Vector2d min( INFTY, INFTY), max(-INFTY, -INFTY);
+  for (const Poly &p : tofillpolys) {
+      p.accumulateMinMax(min, max);
   }
-  Vector2d center = (Min+Max)/2.;
-  // make square that masks everything even when rotated
-  Vector2d diag = Max-Min;
-  double square = max(diag.x(),diag.y());
-  Vector2d sqdiag(square*2/3, square*2/3);
-  Vector2d pMin=center-sqdiag, pMax=center+sqdiag;
+
   // none found - make new:
-  bool zigzag = false;
-  switch (type)
-    {
-    case HexInfill:
-      {
-      const double hexd = infillDistance;     // /(1+sqrt(3.)/4.);
-      const double hexa = hexd * sqrt(3.)/2.; // ~= 0.866 hexd
-      const double gridX = 2.*hexa, gridY = 3.*hexd; // periodicity
-      Vector2d pMinGrid(floor(pMin.x() / gridX) * gridX,
-                        floor(pMin.y() / gridY) * gridY);
-      center = center + pMinGrid - pMin + Vector2d(hexa,hexd);
-      pMin = pMinGrid;
-      // the two parts have to fit
-      Poly poly(this->layer->getZ());
-      if (layer->LayerNo%2 != 0) { // two alternating parts
-          for (double x = pMin.x(); x < pMax.x(); x += 2*hexa) {
-              double y = pMin.y();
-              poly.addVertex(x, y);
-              while (y < pMax.y() ) {
-                  poly.addVertex(x, y);
-                  poly.addVertex(x+hexa, y+hexd/2);
-                  y+=1.5*hexd;
-                  poly.addVertex(x+hexa, y);
-                  poly.addVertex(x, y+hexd/2);
-                  y+=1.5*hexd;
-              }
-              while (y > pMin.y()) {
-                  double x2 = x+hexa+layer->thickness/10.; // offset to not combine polys
-                  y+=0.5*hexd;
-                  poly.addVertex(x2, y);
-                  poly.addVertex(x2+hexa, y-hexd/2);
-                  y-=1.5*hexd;
-                  poly.addVertex(x2+hexa, y);
-                  poly.addVertex(x2, y-hexd/2);
-                  y-=2*hexd;
-              }
-          }
-          poly.addVertex(pMax.x(), pMin.y()-infillDistance);
-          poly.addVertex(pMin.x(), pMin.y()-infillDistance);
-      } else { // other layer, simpler
-          for (double y = pMin.y(); y < pMax.y(); y += 3.*hexd) {
-              double x = pMin.x();
-              while (x < pMax.x()) {
-                  poly.addVertex(x, y);
-                  poly.addVertex(x+hexa, y+hexd/2.);
-                  x += 2.*hexa;
-              }
-              double y2 = y+1.5*hexd;
-              while (x > pMin.y()) {
-                  poly.addVertex(x+hexa,  y2);
-                  poly.addVertex(x, y2+hexd/2.);
-                  x -= 2.*hexa;
-              }
-          }
-          poly.addVertex(pMin.x(), pMax.y()-infillDistance);
-          poly.addVertex(pMin.x(), pMin.y()-infillDistance);
-      }
-// TODO: find rotating center in pattern #      poly.rotate(center,m_angle);
-      // Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
-      vector<Poly> polys(1);
-      polys[0] = poly;
-      // polys[1] = poly2;
-      cpolys = Clipping::getClipperPolygons(polys);
+  if (!pattern)
+      makeBaseInfillPattern(min, max);
+
+#if 0
+#ifdef _OPENMP
+  if (!omp_in_parallel())
+#endif
+  if (pattern) // debug pattern
+      pattern->drawPatternPolys(0);
+#endif
+
+  switch (m_type) {
+  case HexInfill: {
+      cpolys = ((HexPattern*)pattern)->getPattern(layerNo%2!=0);
   }
       break;
   case SmallZigzagInfill: // small zigzag lines -> square pattern
-      zigzag = true;
       //case ZigzagInfill: // long zigzag lines
-  [[clang::fallthrough]];
-  case SupportInfill:
-  case RaftInfill:
-  case BridgeInfill:
-  case ParallelInfill:
-  {
-      if (zigzag) pMin=Vector2d::ZERO; // fixed position
-      // cerr << pMin << "--"<<pMax<< "::"<< center << endl;
-      Poly poly(this->layer->getZ());
-      uint count = 0;
-      for (double x = pMin.x(); x < pMax.x(); ) {
-          double x2 = x+infillDistance;
-          poly.addVertex(x, pMin.y());
-          if (zigzag) { // zigzag -> squares
-              double ymax=pMax.y();
-              for (double y = pMin.y(); y < pMax.y(); y += 2*infillDistance) {
-                  poly.addVertex(x, y);
-                  poly.addVertex(x2, y+infillDistance);
-                  ymax = y;
-              }
-              for (double y = ymax; y > pMin.y(); y -= 2*infillDistance) {
-                  poly.addVertex(x2, y+infillDistance);
-                  poly.addVertex(x2+infillDistance, y);
-              }
-              x += 2*infillDistance;
-          } else {      // normal line infill
-              if (count%2){
-                  poly.addVertex(x,  pMin.y());
-                  poly.addVertex(x2, pMin.y());
-              } else {
-                  poly.addVertex(x,  pMax.y());
-                  poly.addVertex(x2, pMax.y());
-              }
-              x += infillDistance;
-          }
-          count ++;
-      }
-      poly.addVertex(pMax.x(), pMin.y()-infillDistance);
-      poly.addVertex(pMin.x(), pMin.y()-infillDistance);
-      // Poly poly2 = poly; poly2.move(Vector2d(infillDistance/2,0));
-//      if (!zigzag)
-          poly.rotate(center,m_angle);
-      // poly2.rotate(center,rotation);
-      vector<Poly> polys(1);
-      polys[0] = poly;
-      // polys[1] = poly2;
-      cpolys = Clipping::getClipperPolygons(polys);
+  case ParallelInfill: {
+      cpolys = pattern->getPattern(layerNo);
   }
       break;
-  case HilbertInfill:
-  {
-      Poly poly(this->layer->getZ());
-      double square = MAX(Max.x()-Min.x(),Max.y()-Min.y());
-      if (infillDistance<=0) break;
-      int level = int(ceil(log2(2*square/infillDistance)));
-      if (level<0) break;
-      //cerr << "level " << level;
-      // start at 0,0 to get the same location for all layers
-      poly.addVertex(0,0);
-      hilbert(level, 0, infillDistance,  poly.vertices);
-      poly.rotate(center,m_angle);
-      vector<Poly> polys(1);
-      polys[0] = poly;
-      cpolys = Clipping::getClipperPolygons(polys);
+  case HilbertInfill:{
+      cpolys = pattern->getPattern(layerNo);
   }
       break;
-  case ThinInfill:
-  {
+  case ThinInfill: {
       // just use the poly itself at half extrusion rate
       cpolys = Clipping::getClipperPolygons(tofillpolys);
-
       // adjust extrusion rate - see how thin it is:
       const uint num_div = 10;
       double shrink = 0.5*infillDistance/num_div;
@@ -361,69 +214,15 @@ ClipperLib::Paths Infill::makeInfillPattern(InfillType type,
       break;
   case PolyInfill: // fill all polygons with their shrinked polys
   {
-      vector< vector<Poly> > ipolys; // all offset shells
-      for (uint i=0; i < tofillpolys.size(); i++){
-          double parea = Clipping::Area(tofillpolys[i]);
-          // make first larger to get clip overlap
-          double firstshrink = 0.5*infillDistance;
-          if (parea<0) firstshrink = -firstshrink;
-          vector<Poly> shrinked  = Clipping::getOffset(tofillpolys[i], firstshrink);
-          vector<Poly> shrinked2 = Clipping::getOffset(shrinked, 0.5*infillDistance);
-          for (uint i=0;i<shrinked2.size();i++)
-              shrinked2[i].cleanup(0.1*infillDistance);
-          ipolys.push_back(shrinked2);
-          double area = Clipping::Area(shrinked);
-          //cerr << "shr " << parea << " - " <<area<< " - " << " : " <<endl;
-          // int lastnumpolys=0;
-          // int shrcount=0;
-          while (shrinked.size()>0){
-              if (area*parea < 0)  break; // went beyond zero size
-              // cerr << "shr " <<parea << " - " <<area<< " - " << shrcount << " : " <<endl;
-              shrinked2 = Clipping::getOffset(shrinked, 0.5*infillDistance);
-              for (uint i=0;i<shrinked2.size();i++)
-                  shrinked2[i].cleanup(0.1*infillDistance);
-              ipolys.push_back(shrinked2);
-              //lastnumpolys = shrinked.size();
-              shrinked = Clipping::getOffset(shrinked,-infillDistance);
-              for (uint i=0;i<shrinked.size();i++)
-                  shrinked[i].cleanup(0.1*infillDistance);
-              // cerr << "shr2 " <<parea << " - " <<area<< " - " << shrcount << " : " <<
-              //   shrinked.size()<<endl;
-              // shrcount++;
-              area = Clipping::Area(shrinked);
-          }
-      }
-      vector<Poly> opolys;
-      for (uint i=0;i<ipolys.size();i++){
-          opolys.insert(opolys.end(),ipolys[i].begin(),ipolys[i].end());
-      }
-      //cerr << "opolys " << opolys.size() << endl;
-      cpolys = Clipping::getClipperPolygons(opolys);
-      //cerr << "cpolys " << cpolys.size() << endl;
+      pattern = new PolyPattern(infillDistance);
+      cpolys = ((PolyPattern*)pattern)->getPattern(tofillpolys);
   }
       break;
   default:
-      cerr << "infill type " << type << " unknown "<< endl;
+      cerr << "infill type " << m_type << " unknown "<< endl;
   }
-  // save
-  //tid = omp_get_thread_num( );
-  //cerr << "thread "<<tid << " saving pattern " << endl;
-  //cerr << "cpolys " << cpolys.size() << endl;
-  if (type != PolyInfill &&
-          type != ZigzagInfill &&
-          type != ThinInfill ) // can't save these
-  {
-      struct pattern newPattern;
-      newPattern.type=type;
-      newPattern.angle=m_angle;
-      newPattern.distance=infillDistance;
-      newPattern.cpolys=cpolys;
-      newPattern.Min=Min;
-      newPattern.Max=Max;
-      newPattern.layerNo = layer->LayerNo;
-      savedPatterns.push_back(newPattern);
-      //cerr << "saved pattern " << endl;
-  }
+//  if (pattern)
+//      pattern->drawPatternPolys(z);
   return cpolys;
 }
 
@@ -442,7 +241,7 @@ uint smallest(const vector<double> &nums, double &minimum)
 }
 
 bool intersectsPolys(const Vector2d &P1, const Vector2d &P2,
-             const vector<Poly> &polys, double err=0.01)
+                     const vector<Poly> &polys, double err=0.01)
 {
   Intersection inter;
   for (size_t ci = 0; ci < polys.size(); ci++) {
@@ -461,12 +260,14 @@ bool intersectsPolys(const Vector2d &P1, const Vector2d &P2,
 // polys will later be connected by moves (as printlines)
 // that is: connect nearest lines, but when connection intersects anything,
 //          start a new path (poly)
-vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines, double z)
+vector<Poly> Infill::sortedpolysfromlines(const vector<infillline> &lines,
+                                          const vector<Poly> &tofillpolys,
+                                          double z)
 {
   vector<Poly> polys;
   ulong count = lines.size();
   if (count == 0) return polys;
-  vector<Poly> clippolys = Clipping::getOffset(m_tofillpolys,0.1);
+  vector<Poly> clippolys = Clipping::getOffset(tofillpolys,0.1);
 
   vector<bool> done(count);
   for (uint i = 0; i < count; i++ ) done[i] = false;
@@ -560,38 +361,38 @@ bool sameAngle(double angle1, double angle2, double err)
 }
 
 
-void Infill::addInfillPolys(const vector<Poly> &polys)
+vector<Poly> Infill::getInfillPolys(const vector<Poly> &polys)
 {
-  if (polys.size() == 0) return;
+    vector<Poly> infillPolys;
+  if (polys.size() == 0) return infillPolys;
 #define NEWINFILL 1
 #if NEWINFILL
   switch (m_type) {
-  case BridgeInfill:
-  case RaftInfill:
+/*  case BridgeInfill:
   case ParallelInfill:
-    {
+  {
       vector<infillline> lines;
       const Vector2d UNITX(1,0);
       for (uint j = 0; j < polys.size(); j++) {
-    for (uint i = 0; i < polys[j].size() ; i++ )
-      {
-        Vector2d l = (polys[j][i+1] - polys[j][i]);
-        double langle = double(planeAngleBetween(UNITX, l)) + M_PI/2;
-        if (sameAngle(langle,      m_angle, 0.2) ||
-        sameAngle(langle+M_PI, m_angle, 0.2))
+          for (uint i = 0; i < polys[j].size() ; i++ )
           {
-        infillline il = { polys[j][i], polys[j][i+1] };
-        lines.push_back( il );
+              Vector2d l = (polys[j][i+1] - polys[j][i]);
+              double langle = double(planeAngleBetween(UNITX, l)) + M_PI/2;
+              if (sameAngle(langle,      m_angle, 0.2) ||
+                      sameAngle(langle+M_PI, m_angle, 0.2))
+              {
+                  infillline il = { polys[j][i], polys[j][i+1] };
+                  lines.push_back( il );
+              }
           }
-      }
       }
       infillpolys = sortedpolysfromlines(lines, polys.back().getZ());
       break;
-    }
+  }*/
   default:
 #endif
 #if NEWINFILL
-    infillpolys = polys;
+    infillPolys = polys;
     // Poly newpoly(p.getZ(), extrusionfactor);
     // infillpolys.push_back(newpoly);
   }
@@ -599,6 +400,7 @@ void Infill::addInfillPolys(const vector<Poly> &polys)
   for (uint i=0; i<polys.size();i++)
     addInfillPoly(polys[i]);
 #endif
+  return infillPolys;
 }
 
 void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
@@ -609,7 +411,6 @@ void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
   // case ZigzagInfill: // take parallel lines and connect ends
   //   zigzagpoly = new Poly(p.getZ(),extrusionfactor);
   case BridgeInfill:
-  case RaftInfill:
   case ParallelInfill:
     { // make lines instead of closed polygons
       Vector2d l,rotl;
@@ -659,18 +460,7 @@ void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
 #endif
 }
 
-
-
-// not used
-void Infill::getLines(vector<Vector3d> &lines) const
-{
-  cerr << "infill getlines" << endl;
-  for (uint i=0; i<infillpolys.size(); i++)
-    {
-      infillpolys[i].makeLines(lines);
-    }
-}
-
+/*
 vector<Poly> Infill::getCachedPattern(double z) {
   vector<Poly> cached;
   if (m_type != PolyInfill) // can't save PolyInfill
@@ -691,107 +481,136 @@ vector<Poly> Infill::getCachedPattern(double z) {
       }
   return cached;
 };
-
+*/
 
 string Infill::info() const
 {
   ostringstream ostr;
-  ostr << "Infill " << name
+  ostr << "Infill "
        << ": type=" << m_type
-       << ", extrf=" << extrusionfactor
-       << ", polygons: " << infillpolys.size()
-       << ", vertices: " << infillvertices.size();
+       << ", extrf=" << extrusionfactor;
   return ostr.str();
 }
 
 
+InfillSet::InfillSet(Settings &settings, const Vector2d &mmin, const Vector2d &mmax) {
 
-// Hilbert curve
-// http://www.compuphase.com/hilbert.htm
-enum {
-  UP,
-  LEFT,
-  DOWN,
-  RIGHT,
-};
-void move(int direction, double infillDistance, vector<Vector2d> &v){
-  Vector2d d(0,0);
-  switch (direction) {
-  case LEFT:  d.x()=-infillDistance;break;
-  case RIGHT: d.x()= infillDistance;break;
-  case UP:    d.y()=-infillDistance;break;
-  case DOWN:  d.y()= infillDistance;break;
-  }
-  Vector2d last;
-  if (v.size()==0) last = Vector2d(0,0);
-  else last = v.back();
-  //cerr <<"move " << direction << " : "<<last+d<<endl;
-  v.push_back(last+d);
+    const Vector2d center = 0.5 * (mmin + mmax);
+    const Vector2d diag = mmax - center;
+    const Vector2d min = center - diag*1.1;
+    const Vector2d max = center + diag*1.1;
+
+    // inFill distances in real mm:
+    // for full polys/layers:
+    double fullInfillDistance=0;
+    double infillDistance = 3; // normal fill
+    double infillPercent=settings.get_double("Slicing/InfillPercent");
+    double altInfillDistance=0;
+    double normalInfilldist=3;
+    bool shellOnly = !settings.get_boolean("Slicing/DoInfill");
+    uint extruder = 0;
+
+    const double thickness = settings.get_double("Slicing/LayerThickness");
+    fullInfillDistance = settings.GetInfillDistance(thickness, 100, extruder);
+
+    const double baseRot = (settings.get_double("Slicing/InfillRotation")/180.*M_PI);
+    const double rotPerLayer = settings.get_double("Slicing/InfillRotationPrLayer")/180.*M_PI ;
+
+    if (infillPercent < 0.01)
+      shellOnly = true;
+    else
+      infillDistance = settings.GetInfillDistance(thickness, infillPercent, extruder);
+    int altinfill = settings.get_integer("Slicing/AltInfillLayers");
+    normalInfilldist = infillDistance;
+
+    const InfillType normInfillType = InfillType(settings.get_integer("Slicing/NormalFilltype"));
+    if ( altinfill != 0  && infillPercent != 0.) {
+      altInfillDistance = settings.GetInfillDistance(thickness,
+      settings.get_double("Slicing/AltInfillPercent"), extruder);
+      altInfill = new Infill(normInfillType, altInfillDistance,
+                             settings.get_double("Slicing/NormalFillExtrusion"),
+                             baseRot, rotPerLayer);
+    }
+    normalInfill = new Infill(normInfillType, normalInfilldist,
+                              settings.get_double("Slicing/NormalFillExtrusion"),
+                              baseRot, rotPerLayer);
+    normalInfill->makeBaseInfillPattern(min, max);
+
+    uint firstLayers = uint(settings.get_integer("Slicing/FirstLayersNum"));
+    if (firstLayers > 0) {
+        double first_infdist =std::max(normalInfilldist,
+                                       fullInfillDistance * (1.+settings.get_double("Slicing/FirstLayersInfillDist")));
+        firstInfill = new Infill(normInfillType, first_infdist,
+                                 settings.get_double("Slicing/NormalFillExtrusion"),
+                                 baseRot, rotPerLayer);
+        firstFullInfill = new Infill(normInfillType,
+                                     std::max(fullInfillDistance, first_infdist),
+                                     settings.get_double("Slicing/NormalFillExtrusion"),
+                                     baseRot, rotPerLayer);
+        firstInfill->makeBaseInfillPattern(min, max);
+        firstFullInfill->makeBaseInfillPattern(min, max);
+    } else {
+        firstInfill = firstFullInfill = nullptr;
+    }
+
+    InfillType fullType = InfillType(settings.get_integer("Slicing/FullFilltype"));
+    const double fullextr = settings.get_double("Slicing/FullFillExtrusion");
+
+    if (settings.get_boolean("Slicing/FillSkirt")) {
+        const double skirtDist = settings.get_double("Slicing/SkirtDistance");
+        const Vector2d sd(skirtDist, skirtDist);
+        skirtInfill = new Infill(fullType, fullInfillDistance, fullextr, 0, 0);
+        skirtInfill->makeBaseInfillPattern(min-sd, max+sd);
+    } else
+        skirtInfill = nullptr;
+
+    fullInfill = new Infill(fullType, fullInfillDistance, fullextr,
+                            baseRot, rotPerLayer);
+    fullInfill->makeBaseInfillPattern(min, max);
+
+    uint skins = uint(std::max(1, settings.get_integer("Slicing/Skins")));
+    skinInfills.resize(skins);
+    for (uint ns = 0; ns < skins; ns++) {
+        const double skinfillextrf = fullextr/skins/skins;
+        double skinDist = fullInfillDistance/skins;
+        skinInfills[ns] = new Infill(InfillType(settings.get_integer("Slicing/FullFilltype")),
+                                     skinfillextrf, skinDist, baseRot, rotPerLayer);
+        skinInfills[ns]->makeBaseInfillPattern(min, max);
+    }
+
+    if (settings.get_boolean("Slicing/MakeDecor")) {
+        decorInfill = new Infill(InfillType(settings.get_integer("Slicing/DecorFilltype")),
+                                 settings.get_double("Slicing/DecorInfillDistance"),
+                                 1.,
+                                 settings.get_double("Slicing/DecorInfillRotation")/180.0*M_PI,
+                                 rotPerLayer);
+        decorInfill->makeBaseInfillPattern(min, max);
+    } else
+        decorInfill = nullptr;
+
+    if (settings.get_boolean("Slicing/Support")){
+        supportInfill = new Infill(InfillType(settings.get_integer("Slicing/SupportFilltype")),
+                                   settings.get_double("Slicing/SupportInfillDistance"),
+                                   settings.get_double("Slicing/SupportExtrusion"),
+                                   0, 0);
+        supportInfill->makeBaseInfillPattern(min, max);
+    } else
+        supportInfill = nullptr;
+    thinInfill = new Infill(ThinInfill, fullInfillDistance, 1., 0, 0);
+    thinInfill->makeBaseInfillPattern(min, max);
 }
-void hilbert(int level,int direction, double infillDistance, vector<Vector2d> &v)
+
+InfillSet::~InfillSet()
 {
-  //cerr <<"hilbert level " << level<< endl;
-  if (level==1) {
-    switch (direction) {
-    case LEFT:
-      move(RIGHT,infillDistance,v);      /* move() could draw a line in... */
-      move(DOWN, infillDistance,v);       /* ...the indicated direction */
-      move(LEFT, infillDistance,v);
-      break;
-    case RIGHT:
-      move(LEFT, infillDistance,v);
-      move(UP,   infillDistance,v);
-      move(RIGHT,infillDistance,v);
-      break;
-    case UP:
-      move(DOWN, infillDistance,v);
-      move(RIGHT,infillDistance,v);
-      move(UP,   infillDistance,v);
-      break;
-    case DOWN:
-      move(UP,   infillDistance,v);
-      move(LEFT, infillDistance,v);
-      move(DOWN, infillDistance,v);
-      break;
-    } /* switch */
-  } else {
-    switch (direction) {
-    case LEFT:
-      hilbert(level-1,UP,infillDistance,v);
-      move(RIGHT,infillDistance,v);
-      hilbert(level-1,LEFT,infillDistance,v);
-      move(DOWN,infillDistance,v);
-      hilbert(level-1,LEFT,infillDistance,v);
-      move(LEFT,infillDistance,v);
-      hilbert(level-1,DOWN,infillDistance,v);
-      break;
-    case RIGHT:
-      hilbert(level-1,DOWN,infillDistance,v);
-      move(LEFT,infillDistance,v);
-      hilbert(level-1,RIGHT,infillDistance,v);
-      move(UP,infillDistance,v);
-      hilbert(level-1,RIGHT,infillDistance,v);
-      move(RIGHT,infillDistance,v);
-      hilbert(level-1,UP,infillDistance,v);
-      break;
-    case UP:
-      hilbert(level-1,LEFT,infillDistance,v);
-      move(DOWN,infillDistance,v);
-      hilbert(level-1,UP,infillDistance,v);
-      move(RIGHT,infillDistance,v);
-      hilbert(level-1,UP,infillDistance,v);
-      move(UP,infillDistance,v);
-      hilbert(level-1,RIGHT,infillDistance,v);
-      break;
-    case DOWN:
-      hilbert(level-1,RIGHT,infillDistance,v);
-      move(UP,infillDistance,v);
-      hilbert(level-1,DOWN,infillDistance,v);
-      move(LEFT,infillDistance,v);
-      hilbert(level-1,DOWN,infillDistance,v);
-      move(DOWN,infillDistance,v);
-      hilbert(level-1,LEFT,infillDistance,v);
-      break;
-    } /* switch */
-  } /* if */
+    delete normalInfill;
+    delete firstInfill;
+    delete firstFullInfill;
+    delete altInfill;
+    delete fullInfill;
+    skinInfills.clear(); // one for each number of skins up to max_skins
+    delete skirtInfill;
+    delete decorInfill;
+    delete supportInfill;
+    delete thinInfill;
+
 }

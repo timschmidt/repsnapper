@@ -61,7 +61,7 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
   GlLight *m_lights[4];
 
   void SetEnableLight(unsigned int lightNr, bool on);
-  void CenterView();
+  void CenterView() const;
 
   Vector3d *mouse_ray(int x, int y);
   Vector3d mouse_on_plane(int x, int y, double plane_z=0);
@@ -82,6 +82,7 @@ protected:
   void mousePressEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
+  void leaveEvent(QEvent *event) override;
   void wheelEvent(QWheelEvent *event) override;
   void keyPressEvent(QKeyEvent *event) override;
   void keyReleaseEvent(QKeyEvent *event) override;

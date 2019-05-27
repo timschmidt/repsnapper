@@ -48,6 +48,7 @@
 void Model::MakeRaft(double &z)
 {
   if (layers.size() == 0) return;
+  cerr << "raft untested!" << endl;
   vector<Poly> raftpolys =
     Clipping::getOffset(layers[0]->GetHullPolygon(),
             settings->get_double("Raft/Size"), jround);
@@ -58,7 +59,6 @@ void Model::MakeRaft(double &z)
 
   vector<Layer*> raft_layers;
 
-  double rotation = settings->get_double("Raft/Base_Rotation");
   double basethickness =
     layerthickness * settings->get_double("Raft/Base_Thickness");
   double interthickness =
@@ -70,35 +70,42 @@ void Model::MakeRaft(double &z)
   double raft_z = -totalthickness + basethickness
     * settings->get_double("Slicing/FirstLayerHeight");
 
+  Infill * raftInfill = new Infill
+          (ParallelInfill,
+           settings->get_double("Raft/Base.Distance"),
+           settings->get_double("Raft/Base.MaterialDistanceRatio"),
+           settings->get_double("Raft/Base.Rotation"),
+           settings->get_double("Raft/Base.RotationPrLayer")*M_PI/180);
+
   for (int i = 0; i < settings->get_integer("Raft/Base.LayerCount"); i++) {
     Layer * layer = new Layer(lastlayer,
-                  -settings->get_integer("Raft/Interface.LayerCount")
-                  -settings->get_integer("Raft/Base.LayerCount") + i,
-                  basethickness, 1);
+                              -settings->get_integer("Raft/Interface.LayerCount")
+                              -settings->get_integer("Raft/Base.LayerCount") + i,
+                              basethickness, 1);
+    layer->setMinMax(raftpolys);
     layer->setZ(raft_z);
-    layer->CalcRaftInfill(raftpolys,
-              settings->get_double("Raft/Base.MaterialDistanceRatio"),
-              settings->get_double("Raft/Base.Distance"), rotation);
+    layer->addToInfill(raftInfill, raftpolys);
     raft_layers.push_back(layer);
     lastlayer = layer;
-    rotation += settings->get_double("Raft/Base.RotationPrLayer")*M_PI/180;
     raft_z += basethickness;
   }
-  rotation = settings->get_double("Raft/Interface.Rotation");
+  Infill * ifaceInfill = new Infill
+          (ParallelInfill,
+           settings->get_double("Raft/Interface.Distance"),
+           settings->get_double("Raft/Interface.MaterialDistanceRatio"),
+           settings->get_double("Raft/Interface.Rotation"),
+           settings->get_double("Raft/Interface.RotationPrLayer")*M_PI/180);
+
   int if_layers = settings->get_integer("Raft/Interface.LayerCount");
   for (int i = 0; i < if_layers; i++) {
     Layer * layer = new Layer(lastlayer,
-                  -settings->get_integer("Raft/Base.LayerCount") + i,
-                  interthickness, 1);
+                              -settings->get_integer("Raft/Base.LayerCount") + i,
+                              interthickness, 1);
+    layer->setMinMax(raftpolys);
     layer->setZ(raft_z);
-    layer->CalcRaftInfill(raftpolys,
-              settings->get_double("Raft/Interface.MaterialDistanceRatio"),
-              settings->get_double("Raft/Interface.Distance"),
-              rotation);
-
+    layer->addToInfill(ifaceInfill, raftpolys);
     raft_layers.push_back(layer);
     lastlayer = layer;
-    rotation += settings->get_double("Raft/Interface.RotationPrLayer")*M_PI/180;
     raft_z += interthickness;
   }
   layers.insert(layers.begin(),raft_layers.begin(),raft_layers.end());
@@ -351,7 +358,7 @@ void Model::Slice()
                   m_progress->emit update_signal(shape_z);
               if (!m_progress->do_continue) break;
               layer->setZ(shape_z); // set to real z
-              if (shape_z == minZ) { // the layer is on the platform
+              if (abs(shape_z - minZ) < 0.001) { // the layer is on the platform
                   layer->LayerNo = 0;
                   layer->setSkins(1);
                   LayerNr = 1;
@@ -733,13 +740,20 @@ void Model::CalcInfill()
   uint progress_steps=max<uint>(1,uint(count/20));
   //cerr << "make infill"<< endl;
   uint done = 0;
+
+  InfillSet infills(*settings,
+                    Min.get_sub_vector<2>(0), Max.get_sub_vector<2>(0));
+  uint firstLayers = uint(settings->get_integer("Slicing/FirstLayersNum"));
+  uint altinfill = uint(settings->get_integer("Slicing/AltInfillLayers"));
+
 #ifdef _OPENMP
-#pragma omp simd
+  int maxt = max(1, omp_get_max_threads()-2);
+#pragma omp parallel for schedule(dynamic) num_threads(maxt)
 #endif
-  for (uint i=0; i < count ; i++)
+  for (ulong i=0; i < count ; i++)
     {
       //cerr << "thread " << omp_get_thread_num() << endl;
-      if (done%progress_steps==0){
+      if (done%progress_steps == 0){
           m_progress->emit update_signal(done);
       }
       if (!m_progress->do_continue)
@@ -748,7 +762,10 @@ void Model::CalcInfill()
 #else
           break;
 #endif
-      layers[i]->CalcInfill(*settings); // not parallel
+      layers[i]->CalcInfill(*settings, infills,
+                            altinfill > 0 && i % altinfill == 0,
+                            i < firstLayers);
+//      cerr << i << ": "<< layers[i]->info() << endl;
       done++;
     }
   //m_progress->stop (_("Done"));
@@ -770,8 +787,6 @@ void Model::ConvertToGCode()
   gcode->clear();
 
   GCodeState state(*gcode);
-
-  Infill::clearPatterns();
 
   Vector3d printOffset  = settings->getPrintMargin();
   double   printOffsetZ = printOffset.z();

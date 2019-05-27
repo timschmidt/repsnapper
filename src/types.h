@@ -48,6 +48,7 @@ class Shape;
 class FlatShape;
 class Transform3D;
 class Infill;
+class InfillSet;
 class ViewProgress;
 class ConnectView;
 class Transform3D;

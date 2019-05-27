@@ -108,7 +108,6 @@ void Model::ClearLayers()
     delete *i;
   }
   layers.clear();
-  Infill::clearPatterns();
   ClearPreview();
 }
 
@@ -351,7 +350,6 @@ void Model::ModelChanged(bool objectsAddedOrRemoved)
       ClearGCode();
     CalcBoundingBoxAndCenter();
     ClearPreview();
-    Infill::clearPatterns();
     setCurrentPrintingLine(0);
     gcode->emit gcode_changed();
     emit model_changed(objectsAddedOrRemoved ? &objectList : nullptr);
@@ -1236,9 +1234,15 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
             layer->MakeSkirt(settings->get_double("Slicing/SkirtDistance"),
                              settings->get_boolean("Slicing/SingleSkirt"));
   }
+  uint firstLayers = uint(settings->get_integer("Slicing/FirstLayersNum"));
+  uint altinfill = uint(settings->get_integer("Slicing/AltInfillLayers"));
+
+  InfillSet infills(*settings, layer->getMin(), layer->getMax());
 
   if (calcinfill)
-    layer->CalcInfill(*settings);
+    layer->CalcInfill(*settings, infills,
+                      altinfill && LayerNr % altinfill == 0,
+                      LayerNr < firstLayers);
 
 #define DEBUGPOLYS 0
 #if DEBUGPOLYS
@@ -1272,7 +1276,7 @@ bool Model::haveGCode() const
     return gcode && gcode->commands.size()>0;
 }
 
-void Model::setMeasuresPoint(const Vector3d &point)
+void Model::setMeasuresPoint(const Vector2d &point)
 {
-  measuresPoint = (point - settings->getPrintMargin()).get_sub_vector<2>(0);
+  measuresPoint = (point - settings->getPrintMargin().get_sub_vector<2>(0));
 }

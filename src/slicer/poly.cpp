@@ -60,8 +60,8 @@ Poly::Poly(const Poly &p, double z_)
   if (holecalculated) {
     hole = p.hole;
     center = p.center;
-  } else
-    calcHole();
+  } /*else
+    calcHole();*/
 }
 
 Poly::Poly(const Poly &&p){
@@ -641,36 +641,35 @@ vector<Vector2d> Poly::getPathAround(const Vector2d &from, const Vector2d &to) c
   }
 }
 
-
 vector<Vector2d> Poly::getMinMax() const{
-  double minx=6000,miny=6000;
-  double maxx=-6000,maxy=-6000;
-  vector<Vector2d> range;
-  range.resize(2);
-  Vector2d v;
-  for (ulong i=0; i < vertices.size();i++){
-    v = vertices[i];
-    if (v.x()<minx) minx=v.x();
-    if (v.x()>maxx) maxx=v.x();
-    if (v.y()<miny) miny=v.y();
-    if (v.y()>maxy) maxy=v.y();
-  }
-  range[0] = Vector2d(minx,miny);
-  range[1] = Vector2d(maxx,maxy);
-  return range;
+  vector<Vector2d> v(2);
+  if (vertices.size() == 0) return {Vector2d::ZERO,Vector2d::ZERO};
+  v[0] = vertices[0];
+  v[1] = vertices[0];
+  accumulateMinMax(v[0], v[1]);
+  return v;
+}
+
+void Poly::accumulateMinMax(Vector2d &min, Vector2d &max) const {
+    for (const Vector2d &v : vertices){
+        min.x() = std::min(min.x(), v.x());
+        min.y() = std::min(min.y(), v.y());
+        max.x() = std::max(max.x(), v.x());
+        max.y() = std::max(max.y(), v.y());
+    }
 }
 
 int Poly::getTriangulation(vector<Triangle> &triangles)  const
 {
-  if(vertices.size()<3) return 0;
-  triangles.clear();
+    if(vertices.size()<3) return 0;
+    triangles.clear();
 
-  // return delaunayTriang(vertices, triangles, z);
+    // return delaunayTriang(vertices, triangles, z);
 
-  vector<p2t::Point*> points(vertices.size());
-  // add offset because poly2tri crashes on some negative values?
-  const double OFF = 0;
-  for (gulong i=0; i<vertices.size(); i++)  {
+    vector<p2t::Point*> points(vertices.size());
+    // add offset because poly2tri crashes on some negative values?
+    const double OFF = 0;
+    for (gulong i=0; i<vertices.size(); i++)  {
     points[i] = new p2t::Point(vertices[i].x()+OFF,
                    vertices[i].y()+OFF);
   }

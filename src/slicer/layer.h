@@ -28,6 +28,7 @@
 #include "poly.h"
 #include "../gcode/gcodestate.h"
 #include "printlines.h"
+#include "infill.h"
 
 #ifdef USECAIRO
 #include <cairomm/cairomm.h>
@@ -38,6 +39,7 @@
 //
 class Layer
 {
+    enum InfillArea {Normal, Full, Skirt, Bridge, Skin, Support, Decor, Thin};
 
 public:
   Layer();
@@ -58,7 +60,7 @@ public:
   Vector2d getMin() const {return Min;}
   Vector2d getMax() const {return Max;}
   bool setMinMax(const Poly &poly);
-  bool setMinMax(const vector<Poly> &polys);
+  void setMinMax(const vector<Poly> &polys);
 
   bool pointInPolygons(const Vector2d &p) const;
 
@@ -76,10 +78,7 @@ public:
   void mergeSupportPolygons();
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
-  void CalcInfill (Settings &settings);
-  void CalcRaftInfill (const vector<Poly> &polys,
-               double extrusionfactor, double infilldistance,
-               double rotation);
+  void CalcInfill (Settings &settings, const InfillSet &infills, bool altInfill, bool firstLayer);
 
   vector<double> getBridgeRotations(const vector<Poly> &poly) const;
   void calcBridgeAngles(const Layer *layerbelow);
@@ -166,21 +165,15 @@ public:
 
   string SVGpath(const Vector2d &trans=Vector2d::ZERO) const;
 
+  void addToInfill(Infill * infill, const vector<Poly> &polys);
+
 private:
 
   Layer * previous;
 
   Vector2d Min, Max;  // Bounding box
 
-  Infill * normalInfill;
-  Infill * fullInfill;
-  Infill * skirtInfill;
-  vector<Infill*> bridgeInfills;   // an infill for every brigde (different angles)
-  vector<Infill*> skinFullInfills;
-  Infill * supportInfill;
-  Infill * decorInfill;
-  Infill * thinInfill;             // one-line infill for thin features
-
+  // polygons to fill
   vector<Poly> polygons;		// original polygons directly from model
   vector< vector<Poly> > shellPolygons; // all shells except innermost
   vector<Poly> thinPolygons;            // areas thinner than 2 extrusion lines
@@ -197,6 +190,15 @@ private:
   Poly hullPolygon;                     // convex hull around everything
   vector<Poly> skirtPolygons;           // skirt polygon
   vector<Poly> decorPolygons;           // decoration polygons
+
+  // calculated Infill
+  vector<Poly> normalInfill;
+  vector<Poly> supportInfill;
+  vector<Poly> skinInfill;
+  vector<Poly> decorInfill;
+//  vector<Poly> bridgeInfill;
+  //  vector<Infill*> skinFullInfills;
+
 
   // uses too much memory
   /* Cairo::RefPtr<Cairo::ImageSurface> raster_surface; */

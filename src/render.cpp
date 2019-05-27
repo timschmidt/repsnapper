@@ -161,10 +161,10 @@ void Render::SetEnableLight(unsigned int i, bool on)
   repaint();
 }
 
-void Render::CenterView()
+void Render::CenterView() const
 {
-  Vector3d c = get_model()->GetViewCenter();
-  glTranslatef (-c.x(), -c.y(), -c.z());
+  const Vector3d c = get_model()->GetViewCenter();
+  glTranslated (-c.x(), -c.y(), -c.z());
 }
 
 void printarray(double *arr,int n){
@@ -194,7 +194,7 @@ Vector3d Render::mouse_on_plane(int x, int y, double plane_z)
   Vector3d *rayP = mouse_ray(x, y);
 
   // intersect with z=plane_z;
-  if (rayP[1].z() != rayP[0].z()) {
+  if (abs(rayP[1].z() - rayP[0].z())>0.01) {
     double t = (plane_z-rayP[0].z())/(rayP[1].z()-rayP[0].z());
     Vector3d downP = rayP[0] +  (rayP[1]-rayP[0]) * t;
     return downP;
@@ -534,8 +534,13 @@ void Render::mousePressEvent(QMouseEvent *event)
     }
 }
 
-const double drag_factor = 0.3;
+void Render::leaveEvent(QEvent *event) {
+    get_model()->setMeasuresPoint(Vector2d(-100000,-100000));
+    update();
+}
 
+
+const double drag_factor = 0.3;
 void Render::mouseMoveEvent(QMouseEvent *event)
 {
     mouseP = event->pos();
@@ -543,8 +548,7 @@ void Render::mouseMoveEvent(QMouseEvent *event)
     const Vector2d dragp(event->pos().x(), event->pos().y());
     const Vector3d mouse_preview = mouse_on_plane(dragp.x(), dragp.y(),
                                                   get_model()->get_preview_Z());
-//    cerr << mouse_preview << endl;
-    get_model()->setMeasuresPoint(mouse_preview);
+    get_model()->setMeasuresPoint(mouse_preview.get_sub_vector<2>(0));
     setFocus();
 
     const Vector2d delta = dragp - m_dragStart;

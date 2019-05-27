@@ -23,97 +23,84 @@
 
 #include "../stdafx.h"
 #include "clipping.h"
+#include "infillpattern.h"
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
-// user selectable have to be first
-enum InfillType {ParallelInfill, SmallZigzagInfill, HexInfill, PolyInfill, HilbertInfill,
-         SupportInfill, RaftInfill, BridgeInfill, ZigzagInfill, ThinInfill,
-         INVALIDINFILL};
-
-// these are available for user selection (order must be same as types):
-const string InfillNames[] = {_("Parallel"), _("Zigzag"), _("Hexagons"), _("Polygons"), _("Hilbert Curve")};
-
 
 class Infill
 {
-  Layer *layer;
+    //  InfillPattern pattern;
 
-  struct pattern
-  {
-    InfillType type;
-    double angle;
-    double distance;
-    Vector2d Min,Max;
-    uint layerNo;
-    ClipperLib::Paths cpolys;
-  } ;
-
-  static vector<struct pattern> savedPatterns;
+//  static vector<InfillPattern*> savedPatterns;
 #ifdef _OPENMP
   static omp_lock_t save_lock;
 #endif
 
-  ClipperLib::Paths makeInfillPattern(InfillType type,
-                                      const vector<Poly> &tofillpolys,
-                                      double infillDistance,
-                                      double offsetDistance,
-                                      double rotation) ;
+  ClipperLib::Paths getInfillPattern(const vector<Poly> &tofillpolys,
+                                     int layerNo) ;
 
   Infill();
 
+  InfillPattern *pattern;
+
   void addInfillPoly(const Poly &p);
-  void addInfillPolys(const vector<Poly> &polys);
+  vector<Poly> getInfillPolys(const vector<Poly> &polys);
 
-  vector<Poly> m_tofillpolys;  // the polygons that are being filled
+public:
 
- public:
-
-  Infill(Layer *layer, double extrfactor);
+  Infill(InfillType type, double infillDistance, double extrfactor,
+         double rotation, double rotatePerLayer);
   ~Infill();
 
-  double extrusionfactor;
-  string name;
-  bool cached; // if this pattern comes from savedPatterns
-
-  void setName(string s){name=s;}
-  string getName(){return name;}
-
-  static void clearPatterns();
   InfillType m_type;
-  double m_angle;
   double infillDistance;
+  double extrusionfactor;
+  double baseRotation;
+  double rotationPerLayer;
 
-  vector<Poly> infillpolys;  // for clipper polygon types
-  vector<Vector2d> infillvertices; // for lines types
+  void makeBaseInfillPattern(const Vector2d &min, const Vector2d &max);
 
-  void addPoly (double z, const Poly &poly, InfillType type, double infillDistance,
-                double offsetDistance, double rotation);
-  void addPolys(double z, const vector<Poly> &polys, InfillType type,
-                double infillDistance, double offsetDistance, double rotation);
-  void addPolys(double z, const vector<Poly> &polys, const vector<Poly> &fillpolys,
-                double offsetDistance);
-  void addPolys(double z, const vector<Poly> &polys, const ClipperLib::Paths &ifcpolys,
-                double offsetDistance);
-
-  void addPoly (double z, const ExPoly &expoly, InfillType type, double infillDistance,
-                double offsetDistance, double rotation);
-  void addPolys(double z, const vector<ExPoly> &expolys, InfillType type,
-                double infillDistance, double offsetDistance, double rotation);
-
-  void getLines(vector<Vector3d> &lines) const;
+  void apply(double z, const Poly &poly, int layerNo, vector<Poly> &toPolys);
+  void apply(double z, const vector<Poly> &polys, int layerNo,
+             vector<Poly> &toPolys);
+  void apply(double z, const ExPoly &expoly, int layerNo,
+                     vector<Poly> &toPolys);
+  void apply(double z, const vector<ExPoly> &expolys, int layerNo,
+             vector<Poly> &toPolys);
+  void apply(double z, const vector<Poly> &polys, const vector<Poly> &fillpolys,
+             vector<Poly> &toPolys);
+  vector<Poly> apply(double z, const vector<Poly> &polys,
+                     const ClipperLib::Paths &ifcpolys);
 
   typedef struct { Vector2d from; Vector2d to; } infillline;
-  vector<Poly> sortedpolysfromlines(const vector<infillline> &lines, double z);
+  vector<Poly> sortedpolysfromlines(const vector<infillline> &lines,
+                                    const vector<Poly> &tofillpolys, double z);
 
-  void clear();
-  size_t size() const {return infillpolys.size();}
-
-  vector<Poly> getCachedPattern(double z);
 
   string info() const;
+
+  };
+
+class InfillSet
+{
+public:
+    InfillSet(Settings &settings, const Vector2d &min, const Vector2d &max);
+    ~InfillSet();
+
+    Infill *normalInfill = nullptr;
+    Infill *firstInfill = nullptr;
+    Infill *firstFullInfill = nullptr;
+    Infill *altInfill = nullptr;
+    Infill *fullInfill = nullptr;
+    vector<Infill *> skinInfills; // one for each number of skins up to max_skins
+    Infill *skirtInfill = nullptr;
+    Infill *decorInfill = nullptr;
+    Infill *supportInfill = nullptr;
+    Infill *thinInfill = nullptr;
+
 };
 
 

@@ -138,9 +138,10 @@ public:
            const Vector2d &from, const Vector2d &to, double speed,
            double feedratio, double lifted = 0.);
     // arc
-    PLine2(PLineArea area_, const uint extruder_no,
-           const Vector2d &from, const Vector2d &to, double speed,
-           double feedratio, const Vector2d &arccenter, bool ccw, double lifted = 0.);
+    static PLine2 *Arc(PLineArea area_, const uint extruder_no,
+                       const Vector2d &from, const Vector2d &to, double speed,
+                       double feedratio, const Vector2d &arccenter, bool ccw,
+                       double lifted = 0.);
 
     double angle_to(const PLine2 &rhs) const;
 
@@ -148,6 +149,8 @@ public:
     bool is_noop() const;
 
     double getFeedratio() {return feedratio;}
+
+    double distanceFromChord() const;
 
     string info() const;
 
@@ -207,6 +210,7 @@ class Printlines
 
     double z;
     double Zoffset; // global offset for generated PLine3s, always added at setZ()
+    double lineWidth; //  approx. average linewidth
 
     string name;
 

@@ -52,6 +52,7 @@ SOURCES += \
         ../src/slicer/clipping.cpp \
         ../src/slicer/geometry.cpp \
         ../src/slicer/infill.cpp \
+        ../src/slicer/infillpattern.cpp \
         ../src/slicer/layer.cpp \
         ../src/slicer/poly.cpp \
         ../src/slicer/printlines.cpp \
@@ -94,6 +95,7 @@ HEADERS += \
         ../src/slicer/clipping.h \
         ../src/slicer/geometry.h \
         ../src/slicer/infill.h \
+        ../src/slicer/infillpattern.h \
         ../src/slicer/layer.h \
         ../src/slicer/poly.h \
         ../src/slicer/printlines.h \

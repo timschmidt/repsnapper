@@ -499,7 +499,7 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
             if (commands[i].is_value) continue;
                 if (onlyZChange && commands[i].where &&
                         abs(commands[i].where.z()-pos.z())<0.0001) {
-                  pos = *commands[i].where;
+                  pos = commands[i].where;
                   LastE=commands[i].e;
                   continue;
                 }
@@ -548,7 +548,7 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
                     Color = gcodemovecolour;
                     extrwidth = 0;
                 } else {
-                    pos = *commands[i].where;
+                    pos = commands[i].where;
                     break;
                 }
             }
