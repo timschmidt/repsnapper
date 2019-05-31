@@ -420,13 +420,11 @@ Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
     Vector3d max = shapes[s]->Max;
     minpos.push_back(Vector3d(min.x(), min.y(), 0));
     maxpos.push_back(Vector3d(max.x(), max.y(), 0));
-    cerr << s << " minmax " << min << max << endl;
   }
 
   double d = 5.0; // 5mm spacing between objects
   Vector3d StlDelta = (shape->Max - shape->Min);
-  cerr << "delta " << StlDelta<< endl;
-return Vector3d::ZERO;
+
   vector<Vector3d> candidates;
   candidates.push_back(Vector3d::ZERO);
   for (uint j=0; j<maxpos.size(); j++)
@@ -440,53 +438,45 @@ return Vector3d::ZERO;
 
   Vector3d result;
   // Check all candidates for collisions with existing objects
-  for (uint c=0; c<candidates.size(); c++)
-  {
-    bool ok = true;
-
-    for (uint k=0; k<maxpos.size(); k++)
-    {
-      if (
-          // check x
-              ( ( ( minpos[k].x()     <= candidates[c].x() &&
-                    candidates[c].x() <= maxpos[k].x() ) ||
-                  ( candidates[c].x() <= minpos[k].x() &&
-                    maxpos[k].x() <= candidates[c].x()+StlDelta.x()+d ) ) ||
-                ( ( minpos[k].x() <= candidates[c].x()+StlDelta.x()+d &&
-                    candidates[c].x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
-              &&
-          // check y
-              ( ( ( minpos[k].y() <= candidates[c].y() &&
-                    candidates[c].y() <= maxpos[k].y() ) ||
-                  ( candidates[c].y() <= minpos[k].y() &&
-                    maxpos[k].y() <= candidates[c].y()+StlDelta.y()+d ) ) ||
-                ( ( minpos[k].y() <= candidates[c].y()+StlDelta.y()+d &&
-                    candidates[c].y()+StlDelta.y()+d <= maxpos[k].y() ) ) )
-              )
-    {
-      ok = false;
-      break;
-    }
-
-      // volume boundary
-      if (candidates[c].x()+StlDelta.x() >
-      (settings->getPrintVolume().x() - 2*settings->getPrintMargin().x())
-      || candidates[c].y()+StlDelta.y() >
-      (settings->getPrintVolume().y() - 2*settings->getPrintMargin().y()))
-    {
-      ok = false;
-      break;
-    }
-    }
-    if (ok) {
-      result.x() = candidates[c].x();
-      result.y() = candidates[c].y();
-      result.z() = candidates[c].z();
-      // keep z
-      result.x() -= shape->Min.x();
-      result.y() -= shape->Min.y();
-      return result;
-    }
+  for (const Vector3d &candidate : candidates) {
+      bool ok = true;
+      // exceeds volume boundary?
+      if (candidate.x()+StlDelta.x() >
+              (settings->getPrintVolume().x() - 2*settings->getPrintMargin().x())
+              || candidate.y()+StlDelta.y() >
+              (settings->getPrintVolume().y() - 2*settings->getPrintMargin().y())) {
+          ok = false;
+          break;
+      }
+      for (uint k=0; k<maxpos.size(); k++) {
+          if (
+                  // check x
+                  ( ( ( minpos[k].x()     <= candidate.x() &&
+                        candidate.x() <= maxpos[k].x() ) ||
+                      ( candidate.x() <= minpos[k].x() &&
+                        maxpos[k].x() <= candidate.x()+StlDelta.x()+d ) ) ||
+                    ( ( minpos[k].x() <= candidate.x()+StlDelta.x()+d &&
+                        candidate.x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
+                  &&
+                  // check y
+                  ( ( ( minpos[k].y() <= candidate.y() &&
+                        candidate.y() <= maxpos[k].y() ) ||
+                      ( candidate.y() <= minpos[k].y() &&
+                        maxpos[k].y() <= candidate.y()+StlDelta.y()+d ) ) ||
+                    ( ( minpos[k].y() <= candidate.y()+StlDelta.y()+d &&
+                        candidate.y()+StlDelta.y()+d <= maxpos[k].y() ) ) )
+                  ) {
+              ok = false;
+              break;
+          }
+      }
+      if (ok) {
+          result = candidate;
+          // keep z
+          result.x() -= shape->Min.x();
+          result.y() -= shape->Min.y();
+          return result;
+      }
   }
 
   // no empty spots
