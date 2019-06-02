@@ -99,7 +99,7 @@ public:
         vector<Layer*> layers;
 
         Layer * m_previewLayer;
-        double get_preview_Z();
+        double get_previewLayer_Z();
 //        //Layer * m_previewGCodeLayer;
         GCode *m_previewGCode;
         double m_previewGCode_z;

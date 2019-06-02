@@ -86,6 +86,7 @@ uint Printlines::divideline(ulong lineindex,
     }
     line1->extrusion *= line1->angle/l->angle;
     line2->extrusion *= line2->angle/l->angle;
+    delete lines[lineindex];
     lines[lineindex] = line1;
     lines.insert(lines.begin() + lineindex + 1, line2);
     return 1;
@@ -578,8 +579,8 @@ Printlines::Printlines(const Layer * layer, Settings * settings, double z_offset
 
 void Printlines::clear()
 {
-  for (vector<PrintPoly *>::iterator i = printpolys.begin(); i != printpolys.end(); i++)
-    delete *i;
+    for (PrintPoly *p: printpolys)
+        delete p;
   printpolys.clear();
 }
 
@@ -592,8 +593,7 @@ void Printlines::addLine(PLineArea area, uint extruder_no, vector<PLine<2> *> &l
   if (lines.size() > 0) {
     const Vector2d lastpos = lines.back()->to;
     const bool extruder_change = (lines.back()->extruder_no != extruder_no);
-    if (extruder_change ||
-            lfrom.squared_distance(lastpos) > 0.01) { // add moveline
+    if (extruder_change || lfrom.squared_distance(lastpos) > 0.01) { // add moveline
         // use last extruder for move
         PLine2 *move = new PLine2(area, lines.back()->extruder_no, lastpos, lfrom, movespeed, 0);
         if (extruder_change || settings->get_boolean(
@@ -631,6 +631,7 @@ PrintPoly::PrintPoly(const Poly &poly,
             -printlines->settings->get_double(numberedExtruder+"/OffsetY")));
 
   if (area==SHELL || area==SKIN) {
+      priority *=10;
 #ifdef USECAIRO
     priority *= 5; // may be 5 times as far away to get preferred as next poly
     for (uint j=0; j<m_poly->size();j++){
@@ -660,6 +661,7 @@ PrintPoly::PrintPoly(const Poly &poly,
     }
     //cerr << " -> "<< speed << " = " << totlength / speed * 60<< endl;
   }
+//  cerr << info() << endl;
 }
 
 PrintPoly::~PrintPoly()
@@ -767,9 +769,9 @@ double Printlines::makeLines(Vector2d &startPoint,
 
   //std::sort(printpolys.begin(), printpolys.end(), priority_sort);
 
-  uint nvindex=UINT_MAX;
-  uint npindex=UINT_MAX;
-  uint nindex;
+  ulong nvindex=ULONG_MAX;
+  ulong npindex=ULONG_MAX;
+  ulong nindex;
   vector<bool> done(count); // polys not yet handled
   for(uint q=0; q < count; q++) done[q]=false;
   uint ndone=0;
@@ -782,15 +784,15 @@ double Printlines::makeLines(Vector2d &startPoint,
       double nstdist = INFTY;
       double pdist;
       for(uint q = 0; q < count; q++) { // find nearest polygon
-          if (!done[q])
-          {
-              //cerr << printpolys[q].info() << endl;
-              if (printpolys[q]->m_poly->size() == 0) {done[q] = true; ndone++;}
-              else {
+          if (!done[q]) {  //cerr << printpolys[q].info() << endl;
+              if (printpolys[q]->m_poly->size() == 0) {
+                  done[q] = true;
+                  ndone++;
+              } else {
                   pdist = INFTY;
                   nindex = printpolys[q]->m_poly->nearestDistanceSqTo(startPoint, pdist);
                   pdist /= printpolys[q]->priority;
-                  if (pdist  < nstdist){
+                  if (pdist  < nstdist) {
                       npindex = q;      // index of nearest poly in polysleft
                       nstdist = pdist;  // distance of nearest poly
                       nvindex = nindex; // nearest point in nearest poly
@@ -1698,10 +1700,10 @@ double Printlines::totalSecondsExtruding(const vector<PLine<2>*> &lines)
 }
 
 
-void Printlines::getCommands(const vector<PLine<3> *> &plines,
-                             Settings *settings,
-                             GCodeState &gc_state,
-                             ViewProgress * progress)
+void Printlines::toCommands(const vector<PLine<3> *> &plines,
+                            Settings *settings,
+                            GCodeState &gc_state,
+                            ViewProgress * progress)
 {
   // push all lines to commands
   PLineArea lastArea = UNDEF;
@@ -1735,6 +1737,7 @@ void Printlines::getCommands(const vector<PLine<3> *> &plines,
     ((PLine3*)plines[i])->getCommands(lastPos, commands,
                                       minspeed, movespeed, minZspeed, maxZspeed,
                                       maxAOspeed, useTCommand);
+    delete plines[i];
   }
   gc_state.AppendCommands(commands, settings->get_boolean("Slicing/RelativeEcode"),
                           settings->get_double("Slicing/MinCommandLength"));

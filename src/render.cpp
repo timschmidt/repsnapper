@@ -545,20 +545,23 @@ void Render::mouseMoveEvent(QMouseEvent *event)
 {
     mouseP = event->pos();
     bool redraw=true;
-    const Vector2d dragp(event->pos().x(), event->pos().y());
-    const Vector3d mouse_preview = mouse_on_plane(dragp.x(), dragp.y(),
-                                                  get_model()->get_preview_Z());
-    get_model()->setMeasuresPoint(mouse_preview.get_sub_vector<2>(0));
+    const double previewZ = get_model()->get_previewLayer_Z();
+    if (previewZ >= 0) {
+        const Vector3d mouse_preview = mouse_on_plane(mouseP.x(), mouseP.y(),
+                                                      previewZ);
+        get_model()->setMeasuresPoint(mouse_preview.get_sub_vector<2>(0));
+        repaint();
+    }
     setFocus();
 
-    const Vector2d delta = dragp - m_dragStart;
-    const Vector3d delta3f(delta.x()*drag_factor, -delta.y()*drag_factor, 0);
-
     if (mousePressed == Qt::NoButton) {
-//        cerr << dragp << " - " << mouse_preview << endl;
-        repaint();
+        //repaint();
         return;
     }
+
+    const Vector2d dragp(mouseP.x(), mouseP.y());
+    const Vector2d delta = dragp - m_dragStart;
+    const Vector3d delta3f(delta.x()*drag_factor, -delta.y()*drag_factor, 0);
 
     //    cerr << "drag " << mousePressed << endl;
     if (mousePressed == Qt::LeftButton) {

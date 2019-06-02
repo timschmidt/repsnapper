@@ -253,14 +253,9 @@ void Layer::CalcInfill (Settings &settings, const InfillSet &infills,
     double fullInfillDistance = settings.GetInfillDistance(thickness, 100, 0);
 
     normalInfill.clear();
-    if (firstLayer && infills.firstInfill)
-        infills.firstInfill->apply(Z, fillPolygons, LayerNo, normalInfill);
-    else if (altInfill && infills.altInfill)
-        infills.altInfill->apply(Z, fillPolygons, LayerNo, normalInfill);
-    else if (infills.normalInfill)
-        infills.normalInfill->apply(Z, fillPolygons, LayerNo, normalInfill);
 
-    if (infills.skirtInfill) {    vector<Poly> skirtFill;
+    if (infills.skirtInfill) {   // skirt infill first
+        vector<Poly> skirtFill;
         Clipping clipp;
         clipp.addPolys(skirtPolygons, subject);
         clipp.addPolys(GetOuterShell(), clip);
@@ -269,6 +264,13 @@ void Layer::CalcInfill (Settings &settings, const InfillSet &infills,
         skirtFill = Clipping::getOffset(skirtFill, -fullInfillDistance);
         infills.skirtInfill->apply(Z, skirtFill, LayerNo, normalInfill);
     }
+
+    if (firstLayer && infills.firstInfill)
+        infills.firstInfill->apply(Z, fillPolygons, LayerNo, normalInfill);
+    else if (altInfill && infills.altInfill)
+        infills.altInfill->apply(Z, fillPolygons, LayerNo, normalInfill);
+    else if (infills.normalInfill)
+        infills.normalInfill->apply(Z, fillPolygons, LayerNo, normalInfill);
 
   infills.fullInfill->apply(Z, fullFillPolygons, LayerNo, normalInfill);
 
@@ -285,7 +287,9 @@ void Layer::CalcInfill (Settings &settings, const InfillSet &infills,
                          settings.get_double("Slicing/BridgeExtrusion"),
                          fullInfillDistance, bridge_angles[b]+M_PI/2, 0);
     bInfill->apply(Z, bridgePolygons[b],LayerNo, normalInfill);
+    delete bInfill;
   }
+
 
   if (skins > 1) {
     // relative extrusion for skins:
@@ -674,8 +678,9 @@ void Layer::MakeGCode (Vector3d &start,
   Vector2d start2(start.x(), start.y());
   Printlines *printlines = MakePrintlines(start, plines, offsetZ, *settings);
   makePrintLines3(start2, printlines, plines, settings);
+  delete printlines;
   Printlines::makeAntioozeRetract(plines, settings);
-  Printlines::getCommands(plines, settings, gc_state);
+  Printlines::toCommands(plines, settings, gc_state);
 }
 
 // Convert to 2D Printlines
@@ -778,7 +783,6 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 
   //  Infill
   printlines->addPolys(INFILL, normalInfill, false, maxlinespeed);
-//  printlines->addPolys(INFILL, bridgeInfill, false, maxlinespeed);
   printlines->addPolys(INFILL, decorInfill, false, maxlinespeed);
 
   return printlines;

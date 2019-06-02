@@ -95,18 +95,20 @@ void Model::SetViewProgress (ViewProgress *progress)
 void Model::ClearGCode()
 {
   m_previewGCode->clear();
-//  delete m_previewGCode;
   m_previewGCode_z = -100000;
+//  delete m_previewGCode;
+//  m_previewGCode = nullptr;
   gcode->clear();
 //  delete gcode;
+//  gcode = nullptr;
 }
 
 void Model::ClearLayers()
 {
-  for(vector<Layer *>::iterator i=layers.begin(); i != layers.end(); i++) {
-    if ((*i)) (*i)->Clear();
-    delete *i;
-  }
+    for (Layer *l : layers){
+        l->Clear();
+        delete l;
+    }
   layers.clear();
   ClearPreview();
 }
@@ -1069,6 +1071,7 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
                   previewGCodeLayer->MakeGCode(start, state, 0, settings);
                   // state.AppendCommands(commands, settings->Slicing.RelativeEcode);
                   m_previewGCode_z = z;
+                  delete previewGCodeLayer;
               }
               //settings->SelectExtruder(prevext);
           }
@@ -1147,6 +1150,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       else
     {
       if (!m_previewLayer || m_previewLayer->getZ() != z) {
+          delete m_previewLayer;
           m_previewLayer = calcSingleLayer(z, LayerNr, lthickness,
                                            displayinfill, false);
         layer = m_previewLayer;
@@ -1256,8 +1260,9 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 }
 
 
-double Model::get_preview_Z()
+double Model::get_previewLayer_Z()
 {
+    if (!settings->get_boolean("Display/DisplayLayer")) return -1.;
   return settings->get_double("Display/LayerValue",0.)/1000.;
 }
 

@@ -412,7 +412,6 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
                          bool liveprinting, uint linewidth, bool arrows, bool boundary,
                          bool onlyZChange)
 {
-
     double LastE=0.0;
     bool extruderon = false;
     // Vector4f LastColor = Vector4f(0.0f,0.0f,0.0f,1.0f);

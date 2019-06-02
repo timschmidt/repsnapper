@@ -125,6 +125,7 @@ vector<Poly> Infill::apply(double z, const vector<Poly> &polys,
 void Infill::makeBaseInfillPattern(const Vector2d &min,
                                    const Vector2d &max)
 {
+    if (pattern) delete pattern;
     pattern = nullptr;
     switch (m_type) {
     case HexInfill: {
@@ -214,6 +215,7 @@ ClipperLib::Paths Infill::getInfillPattern(const vector<Poly> &tofillpolys,
       break;
   case PolyInfill: // fill all polygons with their shrinked polys
   {
+      if (pattern) delete pattern;
       pattern = new PolyPattern(infillDistance);
       cpolys = ((PolyPattern*)pattern)->getPattern(tofillpolys);
   }
@@ -607,7 +609,7 @@ InfillSet::~InfillSet()
     delete firstFullInfill;
     delete altInfill;
     delete fullInfill;
-    skinInfills.clear(); // one for each number of skins up to max_skins
+    skinInfills.clear();
     delete skirtInfill;
     delete decorInfill;
     delete supportInfill;

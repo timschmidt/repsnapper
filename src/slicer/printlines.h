@@ -310,10 +310,10 @@ public:
 
     double getSlowdownFactor() const {return slowdownfactor;}
 
-    static void getCommands(const vector<PLine<3> *> &plines,
-                            Settings *settings,
-                            GCodeState &state,
-                            ViewProgress * progress = NULL);
+    static void toCommands(const vector<PLine<3> *> &plines,
+                           Settings *settings,
+                           GCodeState &state,
+                           ViewProgress * progress = NULL);
 
     string info() const;
 

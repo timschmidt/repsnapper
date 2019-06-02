@@ -856,8 +856,8 @@ void Model::ConvertToGCode()
               const Vector2d fartheststart = layers[p]->getFarthestPolygonPoint(start);
               start.set(fartheststart.x(), fartheststart.y());
           } else {
-              Vector2d randstart = layers[p]->getRandomPolygonPoint();
-              start.set(randstart.x(), randstart.y());
+              //              Vector2d randstart = layers[p]->getRandomPolygonPoint();
+              //              start.set(randstart.x(), randstart.y());
           }
           Vector2d start2 = Vector2d(start.x(), start.y());
           Printlines * printlines =
@@ -870,7 +870,7 @@ void Model::ConvertToGCode()
 #ifdef _OPENMP
 #pragma omp ordered
 #endif
-          Printlines::getCommands(l_plines[p], settings, state, nullptr);
+          Printlines::toCommands(l_plines[p], settings, state, nullptr);
           l_plines[p].clear();
 //           if (layers[p]->getPrevious() != NULL)
 //             cerr << p << ": " <<layers[p]->LayerNo << " prev: "
