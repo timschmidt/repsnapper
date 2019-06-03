@@ -57,6 +57,12 @@ vmml::vector<M, double> PLine<M>::splitpoint(double at_length) const
   }
 }
 
+template<size_t M>
+vmml::vector<M, double> PLine<M>::midpoint() const
+{
+ return 0.5 * (from + to);
+}
+
 
 // split line at given length
 template<>
@@ -1082,18 +1088,21 @@ ulong Printlines::makeIntoArc(const Vector2d &center,
                               vector<PLine<2> *> &lines) const
 {
   if (toind < fromind+1 || toind+1 > lines.size()) return 0;
-  bool ccw = isleftof(center, lines[fromind]->from, lines[fromind]->to);
+  const bool ccw = isleftof(center, lines[fromind]->from, lines[fromind]->to);
   //cerr << "makeIntoArc ccw " << ccw << endl;
   PLine2 *arc = PLine2::Arc(lines[fromind]->area, lines[fromind]->extruder_no,
         lines[fromind]->from, lines[toind]->to,
         lines[fromind]->speed, lines[fromind]->getFeedratio(),
         center, ccw, lines[fromind]->lifted );
-  if (arc->distanceFromChord() < lineWidth) {
-      lines[fromind] = arc;
-      lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
-      return toind-fromind;
+  const double radius = arc->from.distance(arc->arccenter);
+  for (ulong i = fromind; i<=toind; i++) {
+      if (abs(lines[i]->midpoint().distance(center)
+              - radius) > lineWidth)
+          return 0; // too much distance to original lines
   }
-  return 0;
+  lines[fromind] = arc;
+  lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
+  return toind-fromind;
 }
 
 // return how many lines are removed

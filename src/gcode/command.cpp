@@ -105,7 +105,6 @@ const static QRegularExpression command_re("[A-Z][+-]?[\\.\\d]+");
  *
  * @param gcodeline the string containing a line of gcode
  * @param defaultpos
- * @param [OUT] gcodeline the unparsed portion of the string
  */
 Command::Command(string gcodeline, const Vector3d &defaultpos)
   : where(defaultpos), arcIJK(Vector3d::ZERO),

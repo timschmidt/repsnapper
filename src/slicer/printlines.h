@@ -62,6 +62,8 @@ public:
     }
     vmml::vector<M, double> splitpoint(double at_length) const;
 
+    vmml::vector<M, double> midpoint() const;
+
     double time() const;
     double lengthSq() const;
     double length() const;
