@@ -618,8 +618,8 @@ void Settings::connect_to_gui (QWidget *widget)
       if (widget_name.startsWith("Extruder_"))
           widget_name.replace("Extruder", numbered("Extruder", currentExtruder));
       bool readFromGUI = !contains(grouped(widget_name)); // don't have setting yet
-      if (widget_name.endsWith("Colour")|| widget_name.startsWith("Extruder"))
-          cerr << widget_name.toStdString()<< endl;
+//      if (widget_name.endsWith("Colour")|| widget_name.startsWith("Extruder"))
+//          cerr << widget_name.toStdString()<< endl;
       QCheckBox *check = dynamic_cast<QCheckBox *>(w);
       if (check) {
           widget->connect(check, SIGNAL(stateChanged(int)), this, SLOT(get_int_from_gui(int)));

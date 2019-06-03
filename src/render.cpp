@@ -515,7 +515,7 @@ void Render::mousePressEvent(QMouseEvent *event)
 {
     mousePressedModifiers = QGuiApplication::keyboardModifiers();
     // real mouse-down:
-    m_downPoint = Vector2f(event->pos().x(), event->pos().y());
+    m_downPoint = event->pos();
     // "moving" mouse-down, updated with dragpoint on mouse move:
     m_dragStart = m_downPoint;
     m_arcBall->click (m_downPoint.x(), m_downPoint.y(), &m_transform);
@@ -544,31 +544,33 @@ const double drag_factor = 0.3;
 void Render::mouseMoveEvent(QMouseEvent *event)
 {
     mouseP = event->pos();
-    bool redraw=true;
+    bool redraw = true;
     const double previewZ = get_model()->get_previewLayer_Z();
     if (previewZ >= 0) {
         const Vector3d mouse_preview = mouse_on_plane(mouseP.x(), mouseP.y(),
                                                       previewZ);
         get_model()->setMeasuresPoint(mouse_preview.get_sub_vector<2>(0));
-        repaint();
-    }
+    } else
+        redraw = false;
     setFocus();
 
     if (mousePressed == Qt::NoButton) {
-        //repaint();
+        if (redraw)
+            repaint();
         return;
     }
+    redraw = true;
 
-    const Vector2d dragp(mouseP.x(), mouseP.y());
-    const Vector2d delta = dragp - m_dragStart;
+    const QPoint dragp(mouseP.x(), mouseP.y());
+    const QPoint delta = dragp - m_dragStart;
     const Vector3d delta3f(delta.x()*drag_factor, -delta.y()*drag_factor, 0);
 
     //    cerr << "drag " << mousePressed << endl;
     if (mousePressed == Qt::LeftButton) {
         if (mousePressedModifiers == Qt::ShiftModifier) {//move object XY
-            const Vector3d mouse_down_plat = mouse_on_plane(m_dragStart.x(), m_dragStart.y());
+            const Vector3d mouseDragS  = mouse_on_plane(m_dragStart.x(), m_dragStart.y());
             const Vector3d mousePlat  = mouse_on_plane(dragp.x(), dragp.y());
-            const Vector3d movevec = mousePlat - mouse_down_plat;
+            const Vector3d movevec = mousePlat - mouseDragS;
             get_model()->move_selection(&m_selection, 2.*movevec);
         } else if (mousePressedModifiers == Qt::ControlModifier) { // move object Z wise
             const Vector3d delta3fz(0, 0, -delta.y()*drag_factor);
@@ -603,7 +605,7 @@ void Render::mouseMoveEvent(QMouseEvent *event)
                 axis = Vector3d(0,0,delta.x());
             else
                 axis = Vector3d(delta.y(), delta.x(), 0); // rotate strange ...
-            get_model()->rotate_selection(&m_selection, axis, delta.length()/100.);
+            get_model()->rotate_selection(&m_selection, axis, delta.manhattanLength()/100.);
         } else {  // move view XY  / pan
             moveArcballTrans(m_transform, delta3f);
 //            setArcballTrans(m_transform, delta3f);

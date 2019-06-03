@@ -366,6 +366,7 @@ void Shape::CalcBBox()
   Center = (Max + Min) / 2;
   if (glIsList(gl_List))
     glDeleteLists(GLuint(gl_List),1);
+//  cerr << " BB--> "<< Min << endl;
 }
 
 Vector3d Shape::scaledCenter() const
@@ -548,8 +549,8 @@ void Shape::moveTo(const Vector3d &center)
 
 void Shape::moveLowerLeftTo(const Vector3d &point)
 {
-    cerr << Min << " t " << transform3D.getTranslation() << endl;
-   moveTo(point - Min - transform3D.getTranslation());
+//    cerr << Min << Max << point << transform3D.getTranslation() << endl;
+   moveTo(point-Min);
 }
 // void Shape::CenterAroundXY()
 // {
@@ -873,12 +874,15 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
 
         if(settings->get_boolean("Display/DisplayPolygons"))
         {
+            double supportangle = settings->get_boolean("Slicing/Support") ?
+                        supportangle = settings->get_double("Slicing/SupportAngle")*M_PI/180.
+                    : -1;
                 glEnable(GL_CULL_FACE);
                 glEnable(GL_DEPTH_TEST);
                 glEnable(GL_BLEND);
 //		glDepthMask(GL_TRUE);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  //define blending factors
-                draw_geometry(max_triangles);
+                draw_geometry(max_triangles, supportangle);
         }
 
         glDisable (GL_POLYGON_OFFSET_FILL);
@@ -888,7 +892,6 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
         {
           if(!settings->get_boolean("Display/DisplayWireframeShaded"))
                         glDisable(GL_LIGHTING);
-
 
           //for (uint i = 0; i < 4; i++)
           mat_diffuse = settings->get_Vector4f("Display/WireframeColour");
@@ -1005,24 +1008,25 @@ void Shape::drawBBox(Render * render) const
 }
 
 
-void Shape::draw_geometry(uint max_triangles)
+void Shape::draw_geometry(uint max_triangles, double supportangle)
 {
   bool listDraw = (max_triangles == 0); // not in preview mode
 
   if (!listDraw && glIsList(gl_List)) {
       glDeleteLists(gl_List,1);
   }
-  if (listDraw && !glIsList(gl_List)) {
+  bool newlist = listDraw && !glIsList(gl_List);
+  if (newlist) {
     gl_List = glGenLists(1);
-    glNewList(gl_List, GL_COMPILE);
+    glNewList(gl_List, GL_COMPILE_AND_EXECUTE);
   }
-  if (!listDraw || glIsList(gl_List)) {
+  if (!listDraw || newlist) {
         uint step = 1;
         if (max_triangles>0) step = uint(floor(triangles.size()/max_triangles));
         step = max(uint(1),step);
 
         glBegin(GL_TRIANGLES);
-        for(size_t i=0;i<triangles.size();i+=step)
+        for(size_t i=0; i<triangles.size(); i+=step)
         {
                 glNormal3dv(triangles[i].Normal);
                 glVertex3dv(triangles[i].A);
@@ -1030,23 +1034,43 @@ void Shape::draw_geometry(uint max_triangles)
                 glVertex3dv(triangles[i].C);
         }
         glEnd();
+        if (listDraw) {
+            // draw support triangles
+            if (supportangle > 0) {
+                vector<Triangle> suppTr =
+                        trianglesSteeperThan(supportangle);
+                glTranslated(0,0,-0.01);
+                glMaterialfv(GL_FRONT, GL_DIFFUSE, Vector4f(0.8f, 0.f, 0.f, 0.5f));
+                glBegin(GL_TRIANGLES);
+                for (uint i=0; i < suppTr.size(); i++) {
+                    glNormal3dv(suppTr[i].Normal);
+                    glVertex3dv(suppTr[i].A);
+                    glVertex3dv(suppTr[i].B);
+                    glVertex3dv(suppTr[i].C);
+                }
+                glEnd();
+            }
+        }
   }
-  if (listDraw && glIsList(gl_List)) {
+  if (newlist) {
     glEndList();
+  } else if (glIsList(gl_List)) {
+      glCallList(gl_List);
   }
 
-  if (listDraw && glIsList(gl_List)) { // have stored list
-    QTime starttime;
-    if (!slow_drawing) {
-      starttime.start();
-    }
-    glCallList(gl_List);
-    if (!slow_drawing) {
-      double usedtime = starttime.elapsed()/1000.;
-      if (usedtime > 0.2) slow_drawing = true;
-    }
-    return;
-  }
+
+//  if (listDraw && glIsList(gl_List)) { // have stored list
+//    QTime starttime;
+//    if (!slow_drawing) {
+//      starttime.start();
+//    }
+//    glCallList(gl_List);
+//    if (!slow_drawing) {
+//      double usedtime = starttime.elapsed()/1000.;
+//      if (usedtime > 0.2) slow_drawing = true;
+//    }
+//    return;
+//  }
 }
 
 /*

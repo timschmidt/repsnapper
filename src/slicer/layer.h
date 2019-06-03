@@ -78,7 +78,8 @@ public:
   void mergeSupportPolygons();
   // vector<Poly> getFillPolygons(const vector<Poly> polys, long dist) const;
 
-  void CalcInfill (Settings &settings, const InfillSet &infills, bool altInfill, bool firstLayer);
+  void CalcInfill (Settings &settings, const InfillSet &infills,
+                   bool fullInfill, bool altInfill, bool firstLayer);
 
   vector<double> getBridgeRotations(const vector<Poly> &poly) const;
   void calcBridgeAngles(const Layer *layerbelow);

@@ -188,6 +188,7 @@ void MainWindow::updatedModel(const ObjectsList *objList)
 
     m_settings->setMaxHeight(this,
                              std::max(m_model->gcode->Max.z(), m_model->Max.z()));
+    m_render->repaint();
 //    cerr << " updated Model"<< endl;
 }
 

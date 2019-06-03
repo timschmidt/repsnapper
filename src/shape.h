@@ -77,7 +77,7 @@ public:
         void draw (Settings *settings,
                    bool highlight=false, uint max_triangles=0,
                    int selection_index = 0);
-        virtual void draw_geometry (uint max_triangles=0);
+        virtual void draw_geometry (uint max_triangles=0, double supportangle=-1);
         void drawBBox(Render *render) const;
         virtual bool getPolygonsAtZ(const Matrix4d &T, double z,
                                     vector<Poly> &polys,

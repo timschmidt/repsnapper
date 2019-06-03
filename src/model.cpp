@@ -347,7 +347,6 @@ void Model::ModelChanged(bool objectsAddedOrRemoved)
     CalcBoundingBoxAndCenter();
     ClearPreview();
     setCurrentPrintingLine(0);
-    gcode->emit gcode_changed();
     emit model_changed(objectsAddedOrRemoved ? &objectList : nullptr);
   }
 }
@@ -377,7 +376,7 @@ bool Model::AutoArrange(const QModelIndexList *selected)
               issel = true; break;
           }
       if (!issel) {
-          unselshapes.    push_back(allshapes[s]);
+          unselshapes.push_back(allshapes[s]);
       }
   }
 
@@ -393,12 +392,12 @@ bool Model::AutoArrange(const QModelIndexList *selected)
   for(ulong s = 0; s < num; s++) {
     uint index = rand_seq[s]-1;
     // use selshapes as vector to fill up
-    unselshapes[index]->transform3D.moveTo(Vector3d::ZERO);
-    Vector3d trans = FindEmptyLocation(selshapes,
-                                       unselshapes[index]);
+    unselshapes[index]->moveTo(Vector3d::ZERO);
+//    cerr << "T " << unselshapes[index]->transform3D.getTranslation() << endl;
+    Vector3d location = FindEmptyLocation(selshapes, unselshapes[index]);
+//    cerr << "loc: " << location << endl;
+    unselshapes[index]->moveTo(location);
     selshapes.push_back(unselshapes[index]);
-    cerr << "trans" << trans << endl;
-    selshapes.back()->moveLowerLeftTo(trans);
     CalcBoundingBoxAndCenter();
   }
   ModelChanged();
@@ -978,14 +977,6 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
               else
                   shape->draw (settings, false);
           }
-          // draw support triangles
-          if (support) {
-              glColor4f(0.8f,0.f,0.f,0.5f);
-              vector<Triangle> suppTr =
-                      shape->trianglesSteeperThan(supportangle*M_PI/180.);
-              for (uint i=0; i < suppTr.size(); i++)
-                  suppTr[i].draw(GL_TRIANGLES);
-          }
           glPopMatrix();
           if(displaybbox)
               shape->drawBBox(render);
@@ -1053,8 +1044,8 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
            ( layers.size() == 0 && gcode->commands.size() == 0 ) ) {
           Vector3d start(0,0,0);
           const double thickness = settings->get_double("Slicing/LayerThickness");
-          const double z = settings->get_integer("Display/GCodeDrawStart")/1000.;
-          const uint LayerNo = uint(ceil(z/thickness))-1;
+          const double z = settings->get_integer("Display/GCodeDrawStart")/1000. + thickness/2.;
+          const uint LayerNo = uint(z/thickness);
           if (z != m_previewGCode_z) {
               //uint prevext = settings->selectedExtruder;
               Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
@@ -1204,15 +1195,17 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
       if (shapes[f])
           layer->addShape(Matrix4d::IDENTITY, *shapes[f], max_grad, supportangle);
   }
-
-  // vector<Poly> polys = layer->GetPolygons();
-  // for (guint i=0; i<polys.size();i++){
-  //   vector<Triangle> tri;
-  //   polys[i].getTriangulation(tri);
-  //   for (guint j=0; j<tri.size();j++){
-  //     tri[j].draw(GL_LINE_LOOP);
-  //   }
-  // }
+#if 0
+  // show layer triangulation
+   vector<Poly> polys = layer->GetPolygons();
+   for (guint i=0; i<polys.size();i++){
+     vector<Triangle> tri;
+     polys[i].getTriangulation(tri);
+     for (guint j=0; j<tri.size();j++){
+       tri[j].draw(GL_LINE_LOOP);
+     }
+   }
+#endif
   int extruder = 0;
   layer->MakeShells(*settings, extruder);
 
@@ -1224,11 +1217,12 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   }
   uint firstLayers = uint(settings->get_integer("Slicing/FirstLayersNum"));
   uint altinfill = uint(settings->get_integer("Slicing/AltInfillLayers"));
+  uint shellcount = uint(settings->get_integer("Slicing/ShellCount"));
 
   InfillSet infills(*settings, layer->getMin(), layer->getMax());
-
   if (calcinfill)
     layer->CalcInfill(*settings, infills,
+                      LayerNr < shellcount,
                       altinfill && LayerNr % altinfill == 0,
                       LayerNr < firstLayers);
 

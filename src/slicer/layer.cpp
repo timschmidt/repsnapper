@@ -248,7 +248,7 @@ vector <double> Layer::getBridgeRotations(const vector<Poly> &polys) const{
 
 
 void Layer::CalcInfill (Settings &settings, const InfillSet &infills,
-                        bool altInfill, bool firstLayer)
+                        bool fullInfill, bool altInfill, bool firstLayer)
 {
     double fullInfillDistance = settings.GetInfillDistance(thickness, 100, 0);
 
@@ -265,7 +265,9 @@ void Layer::CalcInfill (Settings &settings, const InfillSet &infills,
         infills.skirtInfill->apply(Z, skirtFill, LayerNo, normalInfill);
     }
 
-    if (firstLayer && infills.firstInfill)
+    if (fullInfill && infills.fullInfill)
+        infills.fullInfill->apply(Z, fillPolygons, LayerNo, normalInfill);
+    else if (firstLayer && infills.firstInfill)
         infills.firstInfill->apply(Z, fillPolygons, LayerNo, normalInfill);
     else if (altInfill && infills.altInfill)
         infills.altInfill->apply(Z, fillPolygons, LayerNo, normalInfill);

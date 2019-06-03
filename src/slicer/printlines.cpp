@@ -1088,17 +1088,20 @@ ulong Printlines::makeIntoArc(const Vector2d &center,
                               vector<PLine<2> *> &lines) const
 {
   if (toind < fromind+1 || toind+1 > lines.size()) return 0;
-  const bool ccw = isleftof(center, lines[fromind]->from, lines[fromind]->to);
   //cerr << "makeIntoArc ccw " << ccw << endl;
-  PLine2 *arc = PLine2::Arc(lines[fromind]->area, lines[fromind]->extruder_no,
-        lines[fromind]->from, lines[toind]->to,
-        lines[fromind]->speed, lines[fromind]->getFeedratio(),
-        center, ccw, lines[fromind]->lifted );
-  const double radius = arc->from.distance(arc->arccenter);
+  const double radius = lines[fromind]->from.distance(center);
   for (ulong i = fromind; i<=toind; i++) {
       if (abs(lines[i]->midpoint().distance(center)
               - radius) > lineWidth)
           return 0; // too much distance to original lines
+  }
+  const bool ccw = isleftof(center, lines[fromind]->from, lines[fromind]->to);
+  PLine2 *arc = PLine2::Arc(lines[fromind]->area, lines[fromind]->extruder_no,
+        lines[fromind]->from, lines[toind]->to,
+        lines[fromind]->speed, lines[fromind]->getFeedratio(),
+        center, ccw, lines[fromind]->lifted );
+  for (ulong i = fromind; i<=toind; i++) {
+      delete lines[i];
   }
   lines[fromind] = arc;
   lines.erase(lines.begin()+fromind+1, lines.begin()+toind+1);
@@ -1219,11 +1222,14 @@ ulong Printlines::makeCornerArc(double maxdistance, double minarclength,
   ulong insertbefore = ind+1;
   if (p2 != lines[ind+1]->to) { // straight line 2
       lines[ind+1]->move_to(p2, lines[ind+1]->to);
-  } else
+  } else {
+      delete lines[ind+1];
       lines.erase(lines.begin() + ind+1);
+  }
   if (p1 != lines[ind]->from) { // straight line 1
       lines[ind]->move_to(lines[ind]->from, p1);
   } else {
+      delete lines[ind];
       lines.erase(lines.begin() + ind);
       insertbefore--;
   }

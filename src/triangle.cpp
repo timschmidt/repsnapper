@@ -364,9 +364,9 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
 void Triangle::draw(int gl_type) const
 {
   glBegin(gl_type);
-  glVertex3f(A.x(),A.y(),A.z());
-  glVertex3f(B.x(),B.y(),B.z());
-  glVertex3f(C.x(),C.y(),C.z());
+  glVertex3dv(A);
+  glVertex3dv(B);
+  glVertex3dv(C);
   glEnd();
 }
 

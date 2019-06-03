@@ -762,7 +762,7 @@ void Model::CalcInfill()
 #else
           break;
 #endif
-      layers[i]->CalcInfill(*settings, infills,
+      layers[i]->CalcInfill(*settings, infills, false,
                             altinfill > 0 && i % altinfill == 0,
                             i < firstLayers);
 //      cerr << i << ": "<< layers[i]->info() << endl;

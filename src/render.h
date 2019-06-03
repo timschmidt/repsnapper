@@ -51,8 +51,8 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
     Q_OBJECT
   ArcBall  *m_arcBall;
   Matrix4fT m_transform;
-  Vector2f  m_downPoint;
-  Vector2f  m_dragStart;
+  QPoint  m_downPoint;
+  QPoint  m_dragStart;
   MainWindow *m_main;
   Model *get_model() const { return m_main->get_model(); }
   QModelIndexList m_selection;
