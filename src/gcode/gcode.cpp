@@ -22,6 +22,7 @@
 
 #include "gcode.h"
 
+#include <QTextBlock>
 #include <iostream>
 #include <sstream>
 
@@ -32,10 +33,8 @@
 #include "../settings.h"
 #include "../render.h"
 
-#include<QTextBlock>
-
 GCode::GCode() :
-    buffer(""),
+    buffer(nullptr),
     gl_List(0)
 {
   Min.set(99999999.0,99999999.0,99999999.0);
@@ -45,20 +44,19 @@ GCode::GCode() :
 
 GCode::~GCode()
 {
+    if (buffer)
+        delete buffer;
 }
 
 
 void GCode::clear()
 {
-    buffer.setPlainText("");
   commands.clear();
   layerchanges.clear();
-  buffer_zpos_lines.clear();
   Min   = Vector3d::ZERO;
   Max   = Vector3d::ZERO;
   Center= Vector3d::ZERO;
   clearGlList();
-  emit gcode_changed();
 }
 
 
@@ -113,9 +111,10 @@ string getLineAt(QTextDocument *doc, int lineno)
   return tb.text().toStdString();
 }
 
-void GCode::Read(ViewProgress *progress, string filename)
+void GCode::Read(QTextDocument *doc, ViewProgress *progress, string filename)
 {
     clear();
+    buffer = doc;
 
     ifstream file;
     file.open(filename.c_str());		//open a file
@@ -125,8 +124,6 @@ void GCode::Read(ViewProgress *progress, string filename)
 
     progress->start(_("Loading GCode"), filesize);
     int progress_steps = max(1,int(filesize/1000));
-
-    buffer_zpos_lines.clear();
 
     if(!file.good())
     {
@@ -239,19 +236,19 @@ void GCode::Read(ViewProgress *progress, string filename)
              command.Code == ARC_CW ||
              command.Code == ARC_CCW ||
              command.Code == GOHOME ) {
+            if(globalPos.x() < Min.x())
+              Min.x() = globalPos.x();
+            if(globalPos.y() < Min.y())
+              Min.y() = globalPos.y();
+            if(globalPos.z() < Min.z())
+              Min.z() = globalPos.z();
+            if(globalPos.x() > Max.x())
+              Max.x() = globalPos.x();
+            if(globalPos.y() > Max.y())
+              Max.y() = globalPos.y();
+            if(globalPos.z() > Max.z())
+              Max.z() = globalPos.z();
 
-          if(globalPos.x() < Min.x())
-            Min.x() = globalPos.x();
-          if(globalPos.y() < Min.y())
-            Min.y() = globalPos.y();
-          if(globalPos.z() < Min.z())
-            Min.z() = globalPos.z();
-          if(globalPos.x() > Max.x())
-            Max.x() = globalPos.x();
-          if(globalPos.y() > Max.y())
-            Max.y() = globalPos.y();
-          if(globalPos.z() > Max.z())
-            Max.z() = globalPos.z();
           if (globalPos.z() > lastZ) {
             // if (lastZ > 0){ // don't record first layer
             unsigned long num = commands.size();
@@ -259,7 +256,6 @@ void GCode::Read(ViewProgress *progress, string filename)
             commands.push_back(Command(LAYERCHANGE, layerchanges.size()));
             // }
             lastZ = globalPos.z();
-            buffer_zpos_lines.push_back(LineNr-1);
           }
           else if (globalPos.z() < lastZ) {
             lastZ = globalPos.z();
@@ -275,11 +271,9 @@ void GCode::Read(ViewProgress *progress, string filename)
 
 //    commands = loaded_commands;
 
-    buffer.setPlainText(QString::fromStdString(alltext.str()));
+    buffer->setPlainText(QString::fromStdString(alltext.str()));
 
     Center = (Max + Min)/2;
-
-    emit gcode_changed();
 
     double time = GetTimeEstimation(Vector3d::ZERO);
     int h = int(time / 3600.);
@@ -611,15 +605,18 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
 // }
 
 
-
-bool GCode::MakeText(QString &GcodeTxt,
+bool GCode::MakeText(QTextDocument *document,
                      Settings *settings,
                      ViewProgress * progress)
 {
+    if (!document) return false;
+    buffer = document;
+
   QString GcodeStart = settings->get_string("GCode/Start");
   QString GcodeLayer = settings->get_string("GCode/Layer");
   QString GcodeEnd   = settings->get_string("GCode/End");
 
+  QString GCodeTxt;
   if (progress)
       if (!progress->restart(_("Collecting GCode"), commands.size()))
           return false;
@@ -630,13 +627,10 @@ bool GCode::MakeText(QString &GcodeTxt,
     Vector3d LastPos(-10,-10,-10);
     std::stringstream oss;
 
-    QDateTime datetime = QDateTime::currentDateTime();
-    GcodeTxt += QString(_("; GCode by Repsnapper, "))+
-      datetime.toString().toUtf8().data() +
-      //time.as_iso8601() +
-      "\n";
+    GCodeTxt += (_("; GCode by Repsnapper, "));
+    GCodeTxt += (QDateTime::currentDateTime().toString());
 
-    GcodeTxt += "\n; Startcode\n"+GcodeStart + "; End Startcode\n\n";
+    GCodeTxt += ("\n\n; Startcode\n" + GcodeStart + "; End Startcode\n\n");
 
     layerchanges.clear();
     ulong progress_steps = max<ulong>(1,commands.size()/20);
@@ -665,35 +659,25 @@ bool GCode::MakeText(QString &GcodeTxt,
       if ( commands[i].Code == LAYERCHANGE ) {
         layerchanges.push_back(i);
         if (GcodeLayer.length()>0)
-          GcodeTxt += "\n; Layerchange GCode\n" + GcodeLayer +
-        "; End Layerchange GCode\n\n";
+          GCodeTxt += ("\n; Layerchange GCode\n" + GcodeLayer +
+                            "; End Layerchange GCode\n\n");
       }
 
       if ( commands[i].where && commands[i].where.z() < 0 )  {
         cerr << i << " Z < 0 "  << commands[i].info() << endl;
       }
       else {
-        GcodeTxt.append(QString::fromStdString(
-                            commands[i].GetGCodeText(LastPos, lastE, lastF,
-                                                     relativeecode,
-                                                     E_letter.toLatin1(),
-                                                     speedalways>0) + "\n"));
+        GCodeTxt += (QString::fromStdString(
+                         commands[i].GetGCodeText(LastPos, lastE, lastF,
+                                                  relativeecode,
+                                                  E_letter.toLatin1(),
+                                                  speedalways>0) + "\n"));
       }
     }
 
-    GcodeTxt += "\n; End GCode\n" + GcodeEnd + "\n";
+    GCodeTxt += ("\n; End GCode\n" + GcodeEnd + "\n");
 
-    buffer.setPlainText(GcodeTxt);
-
-    // save zpos line numbers for faster finding
-    buffer_zpos_lines.clear();
-    int blines = buffer.lineCount();
-    for (int i = 0; i < blines; i++) {
-      const string line = getLineAt(&buffer, i);
-      if (line.find("Z") != string::npos ||
-          line.find("z") != string::npos)
-        buffer_zpos_lines.push_back(uint(i));
-    }
+    buffer->setPlainText(GCodeTxt);
 
     if (progress) progress->stop();
     return true;
@@ -727,7 +711,7 @@ bool GCode::MakeText(QString &GcodeTxt,
 
 QString GCode::get_text () const
 {
-  return buffer.toPlainText();
+  return buffer->toPlainText();
 }
 
 
@@ -793,7 +777,7 @@ bool GCodeIter::finished()
 
 GCodeIter *GCode::get_iter ()
 {
-  GCodeIter *iter = new GCodeIter (&buffer);
+  GCodeIter *iter = new GCodeIter (buffer);
   iter->time_estimation = GetTimeEstimation(Vector3d::ZERO);
   return iter;
 }

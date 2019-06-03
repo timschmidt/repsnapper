@@ -27,8 +27,11 @@
 
 #include <QTextDocument>
 #include <QTextCursor>
+class QPlainTextEdit;
 
 #include "command.h"
+
+
 
 class GCodeIter
 {
@@ -58,7 +61,7 @@ public:
     GCode();
     ~GCode();
 
-  void Read  (ViewProgress *progress, string filename);
+  void Read  (QTextDocument *doc, ViewProgress *progress, string filename);
   //void Write (Model *model, string filename);
   void draw  (Settings *settings,
               int layer=-1, bool liveprinting=false,
@@ -66,7 +69,7 @@ public:
   void drawCommands(Settings *settings, ulong start, ulong end,
                     bool liveprinting, uint linewidth, bool arrows, bool boundary=false,
                     bool onlyZChange = false);
-  bool MakeText(QString &GcodeTxt, Settings *settings,
+  bool MakeText(QTextDocument *textEdit, Settings *settings,
                 ViewProgress * progress);
 
   //bool append_text (const std::string &line);
@@ -80,7 +83,7 @@ public:
 
   void translate(const Vector3d &trans);
 
-  QTextDocument buffer;
+  QTextDocument *buffer = nullptr;
   GCodeIter *get_iter ();
 
   double GetTotalExtruded(bool relativeEcode) const;
@@ -89,8 +92,6 @@ public:
   Vector3d currentCursorWhere;
   Vector3d currentCursorFrom;
   Command currentCursorCommand;
-  vector<ulong> buffer_zpos_lines; // line numbers where a z position is set
-
 
   vector<unsigned long> layerchanges;
   int getLayerNo(const double z) const;

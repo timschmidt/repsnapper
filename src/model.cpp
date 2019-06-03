@@ -126,7 +126,7 @@ void Model::ClearPreview()
 
 QTextDocument *Model::GetGCodeBuffer()
 {
-  return &gcode->buffer;
+  return gcode->buffer;
 }
 
 void Model::GlDrawGCode(int layerno)
@@ -286,13 +286,7 @@ void Model::Read(QFile *file)
     QString extn = finfo.suffix().toLower();
 //    cerr << "extension " << extn.toUtf8().constData()<<  endl;
     QString directory_path = finfo.absoluteDir().path();
-    if (extn == "gcode")
-      {
-    ReadGCode (file);
-    settings->GCodePath = directory_path;
-    return;
-      }
-    else if (extn == "svg")
+    if (extn == "svg")
       {
     ReadSVG (file);
     settings->STLPath = directory_path;
@@ -311,20 +305,20 @@ void Model::Read(QFile *file)
     }
 }
 
-void Model::ReadGCode(QFile *file)
+void Model::ReadGCode(QTextDocument *doc, QFile *file)
 {
   if (is_calculating) return;
   if (is_printing) return;
   is_calculating=true;
   settings->setValue("Display/DisplayGCode",true);
   m_progress->start (_("Reading GCode"), 100.0);
-  gcode->Read (m_progress, QFileInfo(*file).absoluteFilePath().toStdString());
+  gcode->Read (doc, m_progress, QFileInfo(*file).absoluteFilePath().toStdString());
   m_progress->stop (_("Done"));
   is_calculating=false;
   Max = gcode->Max;
   Min = gcode->Min;
   Center = (Max + Min) / 2.0;
-  ModelChanged();
+ // ModelChanged();
 //  m_signal_zoom.emit();
 }
 
@@ -336,8 +330,8 @@ void Model::translateGCode(Vector3d trans)
   is_calculating=true;
   gcode->translate(trans);
 
-  QString GcodeTxt;
-  gcode->MakeText (GcodeTxt, settings, m_progress);
+  QTextDocument doc;
+  gcode->MakeText (&doc, settings, m_progress);
   Max = gcode->Max;
   Min = gcode->Min;
   Center = (Max + Min) / 2.0;

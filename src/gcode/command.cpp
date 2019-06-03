@@ -29,81 +29,6 @@
 
 using namespace std;
 
-// String feeder class
-class Feed {
-public:
-  Feed(std::string s) : str(s), pos(0) { }
-  char get() {     return (pos < str.size()) ? str[pos++] : 0;  }
-  void unget() {   if (pos) --pos;  }
-protected:
-  std::string str;
-  size_t pos;
-};
-
-// Gcode string feeder, skips over spaces and comments
-class GcodeFeed : public Feed {
-public:
-  GcodeFeed( std::string s) : Feed(s) {}
-
-  char get() {
-    while ( 1 ) {
-      char ch = Feed::get();
-      if (isspace(ch)) continue ;
-      if (ch == ';') {// ; COMMENT #EOL
-          str="";
-          return 0;
-      }
-      if (ch == '(') { // ( COMMENT )
-          while (ch && ch != ')')
-              ch = Feed::get();
-          continue;
-      }
-      return ch;
-    }
-  }
-};
-
-inline std::string ParseNumber(GcodeFeed & f) {
-  std::string str;
-  for (char ch = f.get(); ch; ch = f.get()) {
-    if (ch == ',') ch = '.'; // some program's wrong output with decimal comma in some language(s)
-    if (!isdigit(ch) && ch != '.' && ch != '+' && ch != '-') { // Non-number part
-      f.unget(); // We read something that doesn't belong to us
-      break;
-    }
-    str += ch;
-  }
-  return str;
-}
-
-inline int ToInt(GcodeFeed &f)
-{
-    std::istringstream i(ParseNumber(f));
-    int x;
-    if (!(i >> x))
-        return -1;
-    return x;
-}
-
-inline float ToFloat(GcodeFeed &f)
-{
-    std::istringstream i(ParseNumber(f));
-    float x;
-    if (!(i >> x))
-        return -1;
-    return x;
-}
-
-inline double ToDouble(GcodeFeed &f)
-{
-    std::istringstream i(ParseNumber(f));
-    double x;
-    if (!(i >> x))
-        return -1;
-    return x;
-}
-
-
 Command::Command()
     : Code(UNKNOWN),
       is_value(false), value(0), f(0), e(0),
@@ -168,7 +93,7 @@ Command::Command(const Command &rhs)
 }
 
 
-const static QRegularExpression command_re("(?<letter>[A-Z])(?<number>[\\.\\d]+)");
+const static QRegularExpression command_re("[A-Z][+-]?[\\.\\d]+");
 
 /**
  * Parse GCodes from a delivered line.
@@ -183,7 +108,8 @@ const static QRegularExpression command_re("(?<letter>[A-Z])(?<number>[\\.\\d]+)
  * @param [OUT] gcodeline the unparsed portion of the string
  */
 Command::Command(string gcodeline, const Vector3d &defaultpos)
-  : where(defaultpos), is_value(false),  f(0), e(0),
+  : where(defaultpos), arcIJK(Vector3d::ZERO),
+    is_value(false),  f(0), e(0),
     extruder_no(0), abs_extr(0), travel_length(0)
 {
   // Notes:
@@ -192,52 +118,50 @@ Command::Command(string gcodeline, const Vector3d &defaultpos)
   //   "G02" is the same as "G2"
   //   Multiple Gxx codes on a line are accepted, but results are undefined.
 
-  GcodeFeed buffer(gcodeline) ;
-  //default:
-  Code = COMMENT;
-  comment = gcodeline;
-
-  for (char ch = buffer.get(); ch; ch = buffer.get()) {
-    // GCode is always <LETTER> <NUMBER>
-    ch = char(toupper(ch));
-    double num = ToDouble(buffer) ;
-
-    stringstream commss; commss << ch << num;
-
-    switch (ch)
-    {
-    case 'G':
-      Code = getCode(commss.str());
-      comment = "";
-      break;
-    case 'M':           // M commands
-      is_value = true;
-      Code = getCode(commss.str());
-      comment = "";
-      break;
-    case 'S':  value      = num; break;
-    case 'F':  f          = num; break;
-    case 'X':  where.x()  = num; break;
-    case 'Y':  where.y()  = num; break;
-    case 'Z':  where.z()  = num; break;
-    case 'I':  arcIJK.x() = num; break;
-    case 'J':  arcIJK.y() = num; break;
-    case 'K':
-        cerr << gcodeline << endl;
-        cerr << "cannot handle ARC K command (yet?)!" << endl;
-        break;
-    case 'R':
-        cerr << gcodeline << endl;
-        cerr << "cannot handle ARC R command (yet?)!" << endl;
-        break;
-    case 'T':
-      Code = getCode("T");
-      comment = "Extruder";
-      if (num >= 0 && num < 10)
-          extruder_no = uint(num);
-      break;
+    QString line = QString::fromStdString(gcodeline).toUpper();
+    int c = line.indexOf(';');
+    if (c >= 0)
+        line = line.left(c);
+    line = line.remove(' ');
+    line = line.replace("\\(.*\\)","");
+    line = line.replace(',','.');
+    QRegularExpressionMatchIterator it = command_re.globalMatch(line);
+    while (it.hasNext()){
+        const QString match = it.next().captured(0);
+        char ch = match[0].toLatin1();
+        if (ch == 'G' || ch == 'M') {
+            Code = getCode(match.toStdString());
+            comment = "";
+            is_value = (ch == 'M');
+            continue;
+        }
+        double num = match.mid(1).toDouble();
+        switch (ch)
+        {
+        case 'S':  value      = num; break;
+        case 'F':  f          = num; break;
+        case 'E':  e          = num; break;
+        case 'X':  where.x()  = num; break;
+        case 'Y':  where.y()  = num; break;
+        case 'Z':  where.z()  = num; break;
+        case 'I':  arcIJK.x() = num; break;
+        case 'J':  arcIJK.y() = num; break;
+        case 'K':  arcIJK.z() = num;
+            cerr << gcodeline << endl;
+            cerr << "cannot handle ARC K command (yet?)!" << endl;
+            break;
+        case 'R':
+            cerr << gcodeline << endl;
+            cerr << "cannot handle ARC R command (yet?)!" << endl;
+            break;
+        case 'T':
+          Code = getCode("T");
+          comment = "Extruder";
+          if (num >= 0 && num < 10)
+              extruder_no = uint(num);
+          break;
+        }
     }
-  }
 
   if (where.z() < 0) {
     where.z() = 0;
@@ -247,14 +171,12 @@ Command::Command(string gcodeline, const Vector3d &defaultpos)
 
 GCodes Command::getCode(const string commstr) const
 {
-  GCodes code = COMMENT;
   for (int i = 0; i < NUM_GCODES; i++){
     if (MCODES[i] == commstr) {
-      code = GCodes(i);
-      return code;
+      return GCodes(i);
     }
   }
-  return code;
+  return COMMENT;
 }
 
 bool Command::hasNoEffect(const Vector3d *LastPos, const double lastE,
@@ -459,7 +381,6 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
       Vector3d center = off_lastPos + arcIJK;
       bool ccw = (Code == ARC_CCW);
       if (debug_arcs) {
-          /*
           glColor4f(0.f,1.f,0.0f,0.2f);
           glVertex3dv(center);
           glVertex3dv(off_lastPos);
@@ -467,7 +388,6 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           glVertex3dv(center);
           glVertex3dv(off_where);
           glColor4fv(ccol);
-          */
           if (off_where == off_lastPos) // full circle
               glColor4f(1.f,0.f,1.f,ccol[3]);
           else if (ccw)

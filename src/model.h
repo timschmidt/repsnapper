@@ -112,7 +112,7 @@ public:
         void SliceToSVG(QFile *file, bool single_layer=false);
 
 //        // GCode Functions
-        void ReadGCode(QFile *file);
+        void ReadGCode(QTextDocument *doc, QFile *file);
         void translateGCode(Vector3d trans);
 
         void ConvertToGCode();

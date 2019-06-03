@@ -458,7 +458,11 @@ void MainWindow::openFile(const QString &path)
     QString extn = finfo.suffix().toLower();
     QTextStream(stdout) << "opening " << path << endl;
     QString directory_path = finfo.absoluteDir().path();
-    if (extn == "conf") {
+    if (extn == "gcode") {
+        m_model->ReadGCode (ui_main->GCodeResult->document(), &file);
+        m_settings->GCodePath = directory_path;
+        updatedModel();
+    } else if (extn == "conf") {
         if (m_settings->mergeGlibKeyfile(path)) {
             m_settings->set_all_to_gui(this);
             m_settings->set_all_to_gui(prefs_dialog);
@@ -466,9 +470,7 @@ void MainWindow::openFile(const QString &path)
             // load extern QSettings file?
             // m_settings->SettingsPath = directory_path;
         }
-        return;
-    }
-    else
+    } else
         m_model->Read(&file);
     m_render->update();
 }
@@ -723,7 +725,14 @@ void MainWindow::gcodeChanged()
     ui_main->GCode_Start->setPlainText(m_settings->get_string("GCode/Start"));
     ui_main->GCode_Layer->setPlainText(m_settings->get_string("GCode/Layer"));
     ui_main->GCode_End->setPlainText(m_settings->get_string("GCode/End"));
-    ui_main->GCodeResult->setPlainText(m_model->gcode->buffer.toPlainText());
+
+    if (!m_model->gcode->MakeText (ui_main->GCodeResult->document(), m_settings, m_progress)) {
+      m_model->ClearLayers();
+      m_model->ClearGCode();
+      m_model->ClearPreview();
+    }
+
+    //ui_main->GCodeResult->setPlainText(m_model->gcode->buffer.toPlainText());
     ui_main->p_print->setEnabled(m_model->haveGCode());
     m_render->update();
 }

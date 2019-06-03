@@ -891,12 +891,7 @@ void Model::ConvertToGCode()
   }
 
   QCoreApplication::processEvents();
-  QString GcodeTxt;
-  if (!gcode->MakeText (GcodeTxt, settings, m_progress)) {
-    ClearLayers();
-    ClearGCode();
-    ClearPreview();
-  }
+
 
   // display whole layer if flat shapes
   // if (shapes.back()->dimensions() == 2)
@@ -933,10 +928,8 @@ void Model::ConvertToGCode()
   else
     cout << ostr.str() << endl;
 
-  {
-    const int time_used = start_time.elapsed()/1000; // seconds
-    cerr << "GCode generated in " << time_used << " seconds. " << GcodeTxt.size() << " bytes" << endl;
-  }
+  const int time_used = start_time.elapsed()/1000; // seconds
+  cerr << "GCode generated in " << time_used << " seconds. ";
 
   gcode->emit gcode_changed();
 
