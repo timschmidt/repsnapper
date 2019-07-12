@@ -478,11 +478,12 @@ void Printer::serialReady()
         if (serialPort->write(last) == long(last.length())){
             Command command(last.toStdString(), currentPos);
 //            cerr << "COMMAND: " << command.info();
-            if (command.Code == RAPIDMOTION || command.Code == COORDINATEDMOTION)
+            if (command.Code == RAPIDMOTION || command.Code == COORDINATEDMOTION) {
                 if (is_in_relative_mode)
                     currentPos += *command.where;
                 else
                     currentPos = *command.where;
+            }
 //            cerr << " -> pos " << currentPos << endl;
             if (command.Code == RELATIVEPOSITIONING)
                 is_in_relative_mode = true;

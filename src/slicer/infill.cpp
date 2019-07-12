@@ -405,86 +405,6 @@ vector<Poly> Infill::getInfillPolys(const vector<Poly> &polys)
   return infillPolys;
 }
 
-void Infill::addInfillPoly(const Poly &p) // p is result of a clipped pattern
-{
-#if NEWINFILL==0
-  // Poly *zigzagpoly = NULL;
-  switch (type) {
-  // case ZigzagInfill: // take parallel lines and connect ends
-  //   zigzagpoly = new Poly(p.getZ(),extrusionfactor);
-  case BridgeInfill:
-  case ParallelInfill:
-    { // make lines instead of closed polygons
-      Vector2d l,rotl;
-      double sina = sin(-angle);
-      double cosa = cos(-angle);
-      // use the lines that have the angle of this Infill
-      //uint counter = 0;
-      for (uint i=0; i < p.size() ; i+=1 )
-    {
-      l = (p[i+1] - p[i]);
-      // rotate with neg. infill angle and see whether it's 90° as infill lines
-      rotl = Vector2d(l.x()*cosa-l.y()*sina,
-              l.y()*cosa+l.x()*sina);
-      if (abs(rotl.x()) < 0.1 && abs(rotl.y()) > 0.1)
-        {
-          // if (zigzagpoly) {
-          // 	zigzagpoly->addVertex(p.getVertexCircular(i+i%2));
-          // 	zigzagpoly->addVertex(p.getVertexCircular(i+1+i%2));
-          // } else
-          {
-        Poly newpoly(p.getZ(), extrusionfactor);
-        newpoly.vertices.push_back(p[i]);
-        newpoly.vertices.push_back(p[i+1]);
-        infillpolys.push_back(newpoly);
-          }
-        }
-      // else
-      //   if (zigzagpoly) {
-      //     zigzagpoly->addVertex(p.getVertexCircular(i));
-      //   }
-    }
-      // if (zigzagpoly) {
-      // 	cerr << zigzagpoly->size()<< endl;
-      // 	if (zigzagpoly->size()>0)
-      // 	  infillpolys.push_back(*zigzagpoly);
-      // 	else delete zigzagpoly;
-      // 	cerr << infillpolys.size()<< endl;
-      // }
-    }
-    break;
-  default:
-    {
-      Poly newpoly(p.getZ(), extrusionfactor);
-      infillpolys.push_back(newpoly);
-    }
-  }
-#endif
-}
-
-/*
-vector<Poly> Infill::getCachedPattern(double z) {
-  vector<Poly> cached;
-  if (m_type != PolyInfill) // can't save PolyInfill
-    if (savedPatterns.size()>0)
-      for (vector<struct pattern>::iterator sIt=savedPatterns.begin();
-           sIt != savedPatterns.end(); sIt++) {
-          if (m_type == HexInfill){
-              if (sIt->layerNo % 2 != layer->LayerNo % 2)
-                  continue;
-          }
-          if (sIt->type == m_type &&
-                  abs(sIt->distance-infillDistance) < 0.01 &&
-                  abs(sIt->angle-m_angle) < 0.01)
-          {
-              cached = Clipping::getPolys(sIt->cpolys,z,extrusionfactor);
-              break;
-          }
-      }
-  return cached;
-};
-*/
-
 string Infill::info() const
 {
   ostringstream ostr;
@@ -493,7 +413,6 @@ string Infill::info() const
        << ", extrf=" << extrusionfactor;
   return ostr.str();
 }
-
 
 InfillSet::InfillSet(Settings &settings, const Vector2d &mmin, const Vector2d &mmax) {
 

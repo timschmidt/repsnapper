@@ -303,7 +303,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
   command.not_layerchange = (lifted != 0.);
   command.abs_extr += absolute_extrusion;
   command.travel_length = travel_length;
-  if (!command.hasNoEffect(&lifted_from, 0, 0,true)) {
+  if (!command.hasNoEffect(&lifted_from, 0, true)) {
     commands.push_back(command);
     command_count++;
   }

@@ -527,7 +527,7 @@ ulong Model::SplitShape(ListObject *parent, Shape *shape, QString filename)
 
 int Model::MergeShapes(ListObject *parent, const vector<Shape*> shapes)
 {
-  if (m_inhibit_modelchange) 0;
+  if (m_inhibit_modelchange) return 0;
   Shape * shape = new Shape();
   for (uint s = 0; s <  shapes.size(); s++) {
     vector<Triangle> str = shapes[s]->getTriangles();
@@ -903,9 +903,6 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
       glPopMatrix();
       return 0;
     }
-  bool support = !select_mode && settings->get_boolean("Slicing/Support");
-  double supportangle = support ? settings->get_double("Slicing/SupportAngle")
-                                : 0.;
   bool displaypolygons = !select_mode && settings->get_boolean("Display/DisplayPolygons");
   bool displaybbox = !select_mode && settings->get_boolean("Display/DisplayBBox");
   gint shapeindex=0;

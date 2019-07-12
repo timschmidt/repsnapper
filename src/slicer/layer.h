@@ -108,7 +108,7 @@ public:
   vector<Poly> GetToSupportPolygons() const { return toSupportPolygons; }
   vector<Poly> GetDecorPolygons() const { return decorPolygons; }
   vector< vector<Poly> >  GetShellPolygons() const {return shellPolygons; }
-  vector<Poly>  GetShellPolygonsCirc(int number) const;
+  vector<Poly>  GetShellPolygonsCirc(long number) const;
   vector<Poly>  GetSkirtPolygons() const {return skirtPolygons; }
   const vector<Poly> &GetInnerShell() const;
   const vector<Poly> &GetOuterShell() const;

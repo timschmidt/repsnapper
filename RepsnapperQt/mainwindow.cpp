@@ -550,6 +550,11 @@ void MainWindow::openFiles(const QStringList &fileNames)
         openFile(file);
 }
 
+void MainWindow::openCancelled()
+{
+    m_model->preview_shapes.clear();
+}
+
 void MainWindow::alert(const QString &message)
 {
     QMessageBox msgbox(this);
@@ -818,6 +823,8 @@ void MainWindow::on_actionOpen_triggered()
                 SLOT(previewFile(const QString &)));
         connect(m_opendialog, SIGNAL(filesSelected(const QStringList &)), this,
                 SLOT(openFiles(const QStringList &)));
+        connect(m_opendialog, SIGNAL(rejected()), this,
+                SLOT(openCancelled()));
     }
     m_opendialog->show();
 //    QStringList fileNames = QFileDialog::getOpenFileNames

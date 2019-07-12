@@ -375,19 +375,16 @@ Vector3d Shape::scaledCenter() const
 }
 
 struct SNorm {
-  Vector3d normal;
-  double area;
-  bool operator<(const SNorm &other) const {return (area<other.area);}
-} ;
+    Vector3d normal;
+    double area;
+    bool operator<(const SNorm &other) const {return (area<other.area);}
+};
 
 vector<Vector3d> Shape::getMostUsedNormals() const
 {
-  vector<struct SNorm> normals;
-  // vector<Vector3d> normals;
-  // vector<double> area;
   ulong ntr = triangles.size();
+  vector<SNorm> normals(ntr);
   vector<bool> done(ntr);
-  normals.reserve(ntr);
   for(size_t i=0;i<ntr;i++)
     {
       bool havenormal = false;

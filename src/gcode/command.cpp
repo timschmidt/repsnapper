@@ -179,7 +179,7 @@ GCodes Command::getCode(const string commstr) const
 }
 
 bool Command::hasNoEffect(const Vector3d *LastPos, const double lastE,
-              const double lastF, const bool relativeEcode) const
+              const bool relativeEcode) const
 {
   return ((Code == COORDINATEDMOTION || Code == RAPIDMOTION)
       && where.squared_distance(*LastPos) < 0.000001
@@ -193,7 +193,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
                              bool speedAlways) const
 {
     ostringstream ostr;
-    if (Code > NUM_GCODES || MCODES[Code]=="") {
+    if (MCODES[Code]=="") {
         cerr << "Don't know GCode for Command type "<< Code <<endl;
         ostr << "; Unknown GCode for " << info() <<endl;
         return ostr.str();
@@ -291,6 +291,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
             comm += " (" + str(length,2)+" mm)";
         }
     }
+  [[clang::fallthrough]];
   case SETSPEED:
     if (speedAlways || (abs(f-lastF) > 0.1)) {
       if (f>10)
@@ -380,6 +381,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
       Vector3d center = off_lastPos + arcIJK;
       bool ccw = (Code == ARC_CCW);
       if (debug_arcs) {
+          /*
           glColor4f(0.f,1.f,0.0f,0.2f);
           glVertex3dv(center);
           glVertex3dv(off_lastPos);
@@ -387,6 +389,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           glVertex3dv(center);
           glVertex3dv(off_where);
           glColor4fv(ccol);
+          */
           if (off_where == off_lastPos) // full circle
               glColor4f(1.f,0.f,1.f,ccol[3]);
           else if (ccw)
@@ -394,7 +397,7 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           else
               glColor4f(1.f,0.5f,0.0f,ccol[3]);
       }
-      long double angle = calcAngle(-arcIJK, off_where - center, ccw);
+      double angle = double(calcAngle(-arcIJK, off_where - center, ccw));
       //if (abs(angle) < 0.00001) angle = 0;
       double dz = off_where.z()-(off_lastPos).z(); // z move with arc
       Vector3d arcstart = off_lastPos;
@@ -427,12 +430,12 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
       glVertex3dv(off_lastPos);
       glVertex3dv(off_where);
       if (arrows) {
-          glColor4f(ccol[0],ccol[1],ccol[2],0.7*ccol[3]);
+          glColor4f(ccol[0],ccol[1],ccol[2],0.7f*ccol[3]);
           // 0.3mm long arrows if no boundary
           double alen = 0.3;
           if (extrwidth > 0) alen = 1.2*extrwidth ;
           Vector3d normdir = normalized(off_where-off_lastPos);
-          if (normdir.x() != 0 || normdir.y() != 0 ) {
+          if (normdir.x() != 0. || normdir.y() != 0. ) {
               Vector3d arrdir = normdir * alen;
               Vector3d arrdir2(-0.5*alen*normdir.y(), 0.5*alen*normdir.x(), arrdir.z());
               glVertex3dv(off_where);

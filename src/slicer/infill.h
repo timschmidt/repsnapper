@@ -46,7 +46,6 @@ class Infill
 
   InfillPattern *pattern;
 
-  void addInfillPoly(const Poly &p);
   vector<Poly> getInfillPolys(const vector<Poly> &polys);
 
 public:

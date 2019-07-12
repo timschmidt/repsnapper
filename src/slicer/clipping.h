@@ -21,11 +21,7 @@
 #include "../types.h"
 
 // ClipperLib: see http://angusj.com/delphi/clipper.php
-#if HAVE_CLIPPERLIB==1
-  #include <polyclipping/clipper.hpp>
-#else
-  #include <clipper/clipper/polyclipping-code/cpp/clipper.hpp>
-#endif
+#include <clipper/clipper/polyclipping-code/cpp/clipper.hpp>
 
 #include "poly.h"
 
@@ -65,8 +61,8 @@ class Clipping
   vector<CL::Paths> clippolygons;
 
 public:
-  Clipping(bool debugclipper=false){debug = debugclipper;};
-  ~Clipping(){clear();};
+  Clipping(bool debugclipper=false){debug = debugclipper;}
+  ~Clipping(){clear();}
 
   void clear();
 
@@ -77,9 +73,9 @@ public:
   void addPolygons(const CL::Paths &cp, PolyType type);
 
   // do after addPoly... and before clipping/results
-  void setZ(double z) {lastZ = z;};
-  double getZ() const {return lastZ;};
-  void setExtrusionFactor(double e) {lastExtrF = e;};
+  void setZ(double z) {lastZ = z;}
+  double getZ() const {return lastZ;}
+  void setExtrusionFactor(double e) {lastExtrF = e;}
 
   vector<Poly>   intersect      (CL::PolyFillType sft=CL::pftEvenOdd,
                  CL::PolyFillType cft=CL::pftEvenOdd);

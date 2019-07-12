@@ -82,7 +82,7 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
                          vector<QString> &names,
                          uint max_triangles)
 {
-  if (_fileInfo.isDir() || _fileInfo.isSymLink())
+  if (_fileInfo.isDir())
     return;
 
   QString name_by_file = _fileInfo.fileName();
@@ -290,7 +290,7 @@ bool File::load_asciiSTL(vector< vector<Triangle> > &triangles,
 
 
 bool File::parseSTLtriangles_ascii (istream &text,
-                    uint max_triangles, bool readnormals,
+                    ulong max_triangles, bool readnormals,
                     vector<Triangle> &triangles,
                     QString &shapename)
 {
@@ -307,7 +307,7 @@ bool File::parseSTLtriangles_ascii (istream &text,
     text.seekg(pos, ios::beg);
 
     // a rough estimation
-    uint num_triangles = (fsize-pos)/30;
+    ulong num_triangles = (fsize-pos)/30;
 
     uint step = 1;
     if (max_triangles > 0 && max_triangles < num_triangles)
@@ -643,7 +643,7 @@ bool File::saveBinarySTL(QString filename, const vector<Triangle> &triangles,
 
   FILE *file  = fopen(filename.toUtf8().constData(),"wb");
 
-  if (file==0) {
+  if (!file) {
     cerr << "Error: Unable to open stl file - " << filename.toUtf8().constData() << endl;
     return false;
   }

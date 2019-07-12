@@ -133,6 +133,7 @@ private slots:
 
     void previewFile(const QString &filename);
     void openFiles(const QStringList &filename);
+    void openCancelled();
 
     void alert(const QString &message);
 //    void layerSliderValue(int value);

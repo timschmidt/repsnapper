@@ -122,10 +122,10 @@ Vector2d Layer::getRandomPolygonPoint() const
 Vector2d Layer::getFarthestPolygonPoint(const Vector2d &from) const
 {
   if (polygons.size() == 0) return from;
-  uint pindex = 0, pvindex = 0;
+  ulong pindex = 0, pvindex = 0;
   double maxdist = 0.;
   for (uint i = 0; i<polygons.size(); i++) {
-    uint fi = polygons[i].getFarthestIndex(from);
+    ulong fi = polygons[i].getFarthestIndex(from);
     double pdist = from.squared_distance(polygons[i][fi]);
     if (pdist > maxdist) {
       maxdist = pdist;
@@ -440,7 +440,7 @@ vector<ExPoly> Layer::GetExPolygons() const
 }
 
 // circular numbering
-vector<Poly> Layer::GetShellPolygonsCirc(int number) const
+vector<Poly> Layer::GetShellPolygonsCirc(long number) const
 {
   number = (shellPolygons.size() +  number) % shellPolygons.size();
   return shellPolygons[number];
@@ -950,7 +950,7 @@ void Layer::Draw(Settings &settings, Render *render)
   draw_polys(shellPolygons, GL_LINE_LOOP, 1, 3, YELLOW2, 1, randomized);
   draw_polys(thinPolygons,  GL_LINE_LOOP, 2, 3, YELLOW,  1, randomized);
 
-  glColor4f(0.5,0.9,1,1);
+  glColor4f(0.5f,0.9f,1,1);
   glLineWidth(1);
   double zs = Z;
   for(size_t s=0;s<skins;s++) {
@@ -960,29 +960,29 @@ void Layer::Draw(Settings &settings, Render *render)
     }
     zs-=thickness/skins;
   }
-  draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 0.6, randomized);
+  draw_polys(fillPolygons,         GL_LINE_LOOP, 1, 3, WHITE, 0.6f, randomized);
   if (supportPolygons.size()>0) {
     if (filledpolygons)
-      draw_polys_surface(supportPolygons,  Min, Max, Z, thickness/2., BLUE2, 0.4);
+      draw_polys_surface(supportPolygons,  Min, Max, Z, thickness/2., BLUE2, 0.4f);
     draw_polys(supportPolygons,      GL_LINE_LOOP, 3, 3, BLUE2, 1,   randomized);
     if(settings.get_boolean("Display/DrawVertexNumbers"))
       for(size_t p=0; p<supportPolygons.size();p++)
     supportPolygons[p].drawVertexNumbers(render);
   } // else
     // draw_polys(toSupportPolygons,    GL_LINE_LOOP, 1, 1, BLUE2, 1,   randomized);
-  draw_polys(bridgePolygons,       GL_LINE_LOOP, 3, 3, RED2,  0.7, randomized);
-  draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 1, GREY,  0.6, randomized);
+  draw_polys(bridgePolygons,       GL_LINE_LOOP, 3, 3, RED2,  0.7f, randomized);
+  draw_polys(fullFillPolygons,     GL_LINE_LOOP, 1, 1, GREY,  0.6f, randomized);
   draw_polys(decorPolygons,        GL_LINE_LOOP, 1, 3, WHITE, 1,   randomized);
-  draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  0.6, randomized);
+  draw_polys(skinFullFillPolygons, GL_LINE_LOOP, 1, 3, GREY,  0.6f, randomized);
   if (filledpolygons) {
-    draw_polys_surface(fullFillPolygons,  Min, Max, Z, thickness/2., GREEN, 0.5);
-    draw_polys_surface(decorPolygons,  Min, Max, Z, thickness/2., GREY, 0.2);
+    draw_polys_surface(fullFillPolygons,  Min, Max, Z, thickness/2., GREEN, 0.5f);
+    draw_polys_surface(decorPolygons,  Min, Max, Z, thickness/2., GREY, 0.2f);
   }
   if(settings.get_boolean("Display/DisplayInfill"))
     {
       if (filledpolygons)
-          draw_polys_surface(fillPolygons,  Min, Max, Z, thickness/2., GREEN2, 0.25);
-      bool DebugInfill = settings.get_boolean("Display/DisplayDebugInfill");
+          draw_polys_surface(fillPolygons,  Min, Max, Z, thickness/2., GREEN2, 0.25f);
+//      bool DebugInfill = settings.get_boolean("Display/DisplayDebugInfill");
       draw_polys(normalInfill, GL_LINE_LOOP, 1, 3,
                  (false?BLUEGREEN:GREEN), 1, randomized);
 //      if (thinInfill)
@@ -998,13 +998,13 @@ void Layer::Draw(Settings &settings, Render *render)
 //          draw_polys(fullInfill->getCachedPattern(Z), GL_LINE_LOOP, 1, 3,
 //                     ORANGE, 0.5, randomized);
       draw_polys(decorInfill, GL_LINE_LOOP, 1, 3,
-                 (false?BLUEGREEN:GREEN), 0.8, randomized);
+                 (false?BLUEGREEN:GREEN), 0.8f, randomized);
 //      draw_polys(bridgeInfill, GL_LINE_LOOP, 2, 3,
 //                 RED3, 0.9, randomized);
       draw_polys(supportInfill, GL_LINE_LOOP, 1, 3,
-                 (false?BLUEGREEN:GREEN), 0.8, randomized);
+                 (false?BLUEGREEN:GREEN), 0.8f, randomized);
       draw_polys(skinInfill, GL_LINE_LOOP, 1, 3,
-                 (false?BLUEGREEN:GREEN), 0.6, randomized);
+                 (false?BLUEGREEN:GREEN), 0.6f, randomized);
   }
   //draw_polys(GetInnerShell(), GL_LINE_LOOP, 2, 3, WHITE,  1);
   glLineWidth(1);
@@ -1031,10 +1031,10 @@ void Layer::Draw(Settings &settings, Render *render)
 
 
   if (settings.get_boolean("Display/ShowLayerOverhang")) {
-    draw_polys(bridgePillars,        GL_LINE_LOOP, 3, 3, YELLOW,0.7, randomized);
+    draw_polys(bridgePillars,        GL_LINE_LOOP, 3, 3, YELLOW,0.7f, randomized);
     if (previous!=NULL) {
       vector<Poly> overhangs = getOverhangs();
-      draw_polys(overhangs, GL_LINE_LOOP, 1, 3, VIOLET, 0.8, randomized);
+      draw_polys(overhangs, GL_LINE_LOOP, 1, 3, VIOLET, 0.8f, randomized);
 #ifdef USECAIRO
       //draw_polys_surface(overhangs, Min, Max, Z, thickness/5, VIOLET , 0.5);
       Cairo::RefPtr<Cairo::ImageSurface> surface;

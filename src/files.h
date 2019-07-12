@@ -92,7 +92,7 @@ public:
 #endif
 
   static bool parseSTLtriangles_ascii(istream &text,
-                                      uint max_triangles, bool readnormals,
+                                      ulong max_triangles, bool readnormals,
                                       vector<Triangle> &triangles,
                                       QString &name);
 

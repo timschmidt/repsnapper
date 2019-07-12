@@ -174,7 +174,7 @@ public:
           bool arrows=true, bool debug_arcs = false) const;
 
     bool hasNoEffect(const Vector3d *LastPos, const double lastE,
-                     const double lastF, const bool relativeEcode) const;
+                     const bool relativeEcode) const;
 
     string GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
                          bool relativeEcode, const char E_letter='E',

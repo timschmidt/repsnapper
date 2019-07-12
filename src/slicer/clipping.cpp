@@ -339,7 +339,7 @@ vector<Poly> Clipping::getOffset(const vector<Poly> &polys, double distance,
 {
   CL::Paths cpolys = getClipperPolygons(polys);
   CL::Paths offset = CLOffset(cpolys, CL_FACTOR*distance, CLType(jtype), miterdist);
-  double z=0, extrf=1.;;
+  double z=0, extrf=1.;
   if (polys.size()>0) {
     z = polys.back().getZ();
     extrf = polys.back().getExtrusionFactor();
@@ -548,7 +548,7 @@ CL::PolyTree Clipping::getClipperTree(const vector<Poly> &polys)
 
 double Clipping::Area(const Poly &poly){
   CL::Path cp = getClipperPolygon(poly);
-  return (double)((long double)(CL::Area(cp))/CL_FACTOR/CL_FACTOR);
+  return double((long double)(CL::Area(cp))/CL_FACTOR/CL_FACTOR);
 }
 double Clipping::Area(const vector<Poly> &polys){
   double a=0;

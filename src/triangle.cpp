@@ -77,7 +77,7 @@ bool Triangle::wrongOrientationWith(Triangle const &other, double maxsqerr) cons
 {
   // find the 2 common vertices
   vector<int> thisv, otherv;
-  for (uint j = 0; j < 3; j++)  {
+  for (int j = 0; j < 3; j++)  {
     if ( A == other[j] || A.squared_distance(other[j]) < maxsqerr){
       thisv.push_back(0);  otherv.push_back(j);
     }
@@ -140,7 +140,7 @@ double Triangle::area() const
 // add all these to get shape volume
 double Triangle::projectedvolume(const Matrix4d &T) const
 {
-  if (Normal.z()==0) return 0;
+  if (Normal.z()==0.) return 0;
   Triangle xyproj = Triangle(Vector3d(A.x(),A.y(),0),
                  Vector3d(B.x(),B.y(),0),
                  Vector3d(C.x(),C.y(),0));
@@ -361,7 +361,7 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
     return num_cutpoints;
 }
 
-void Triangle::draw(int gl_type) const
+void Triangle::draw(GLenum gl_type) const
 {
   glBegin(gl_type);
   glVertex3dv(A);

@@ -673,7 +673,6 @@ void Model::MakeSupportPolygons(uint extruder, double widen)
 
 void Model::MakeSkirt()
 {
-
   if (!settings->get_boolean("Slicing/Skirt")) return;
   if (settings->get_boolean("Slicing/Support")) return;
   double skirtdistance  = settings->get_double("Slicing/SkirtDistance");
