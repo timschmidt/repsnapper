@@ -703,6 +703,8 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 
   const double maxshellspeed  = settings.get_double(
               Settings::numbered("Extruder",currentExtruder)+"/MaxShellSpeed") * 60;
+  const double maxEspeed  = settings.get_double(
+              Settings::numbered("Extruder",currentExtruder)+"/EmaxSpeed") * 60;
   const bool ZliftAlways      = settings.get_boolean(
               Settings::numbered("Extruder",currentExtruder)+"/ZliftAlways");
 
@@ -716,8 +718,10 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
   //const vector<Poly> * clippolys = &polygons;
   const vector<Poly> clippolys = GetOuterShell();
 
-  double maxlinespeed = settings.get_double(
+  const double maxlinespeed = settings.get_double(
               Settings::numbered("Extruder",currentExtruder)+"/MaxLineSpeed") * 60; // default
+  const double maxoverhangspeed =
+          settings.get_double("Slicing/MaxOverhangSpeed")*60;
 
   // 1. Skins, all but last, because they are the lowest lines, below layer Z
   if (skins > 1) {
@@ -734,7 +738,8 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
                        skinInfill.begin(),
                        skinInfill.end());
           // add skin infill to lines
-          printlines->addPolys(INFILL, polys, false, maxlinespeed);
+          printlines->addPolys(INFILL, polys, false, maxlinespeed,
+                               maxoverhangspeed);
 
           polys.clear();
 
@@ -744,7 +749,7 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
           }
           // add skin to lines
           printlines->addPolys(SKIN, polys, (s==0), // displace at first skin
-                              maxshellspeed,
+                              maxshellspeed, maxoverhangspeed,
                               minshelltime);
           if (s < skins-1) { // not on the last layer, this handle with all other lines
               // have to get all these separately because z changes
@@ -763,14 +768,14 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
   } // last skin layer now still in lines
 
   // 2. Skirt, only shell
-  printlines->addPolys(SKIRT, skirtPolygons, false,
-                       maxshellspeed, minshelltime);
+  printlines->addPolys(SKIRT, skirtPolygons, false, maxshellspeed,
+                       maxoverhangspeed, minshelltime);
 
   // 3. Support
   if (supportInfill.size()>0) {
       const double maxsupportspeed = settings.get_double(
                   Settings::numbered("Extruder", supportExtruder)+"/MaxShellSpeed") * 60;
-      printlines->addPolys(SUPPORT, supportInfill, false, maxsupportspeed);
+      printlines->addPolys(SUPPORT, supportInfill, false, maxsupportspeed, 0);
   }
   // 4. all other polygons:
 
@@ -779,13 +784,12 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
     //cerr << "displace " << p << endl;
     printlines->addPolys(SHELL, shellPolygons[p],
             (p==long(shellPolygons.size())-1),
-            maxshellspeed * 60,
-            minshelltime);
+            maxshellspeed, maxoverhangspeed, minshelltime);
   }
 
   //  Infill
-  printlines->addPolys(INFILL, normalInfill, false, maxlinespeed);
-  printlines->addPolys(INFILL, decorInfill, false, maxlinespeed);
+  printlines->addPolys(INFILL, normalInfill, false, maxlinespeed, 0);
+  printlines->addPolys(INFILL, decorInfill, false, maxlinespeed, 0);
 
   return printlines;
 }

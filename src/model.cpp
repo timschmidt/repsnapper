@@ -303,6 +303,7 @@ void Model::Read(QFile *file)
         ReadStl (file);
         settings->STLPath = directory_path;
     }
+    CalcBoundingBoxAndCenter();
 }
 
 void Model::ReadGCode(QTextDocument *doc, QFile *file)

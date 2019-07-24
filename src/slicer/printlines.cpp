@@ -208,7 +208,7 @@ double PLine3::max_abs_speed(double max_Espeed, double max_AOspeed) const
 int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
             const double &minspeed, const double &movespeed,
             const double &minZspeed, const double &maxZspeed,
-            const double &maxAOspeed,
+            const double &maxEspeed, const double &maxAOspeed,
             bool useTCommand) const
 {
   if (area == COMMAND) { // it is an explicit command line
@@ -232,6 +232,7 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     command_count += move3.getCommands(lastpos, commands,
                                        minspeed, movespeed,
                                        minZspeed, maxZspeed,
+                                       maxEspeed,
                                        maxAOspeed, useTCommand);
     lastpos = lifted_from;
   }
@@ -281,6 +282,13 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     travel_speed = maxAOspeed;
   else {
       travel_speed = min(movespeed, travel_speed);
+  }
+  if (maxEspeed > 0 &&  travel_length > 0.1) {
+      double espeed = extrudedMaterial/travel_length*travel_speed;
+      if (espeed > maxEspeed) {
+          travel_speed *= maxEspeed / espeed;
+//          qDebug()<< espeed << " > " << maxEspeed << " >> " <<travel_speed;
+      }
   }
 
   Command command;
@@ -656,7 +664,7 @@ PrintPoly::PrintPoly(const Poly &poly,
     priority *= 100;  // may be 100 times as far away to get preferred
   }
   length = m_poly->totalLineLength();
-  if (overhangingpoints>0)
+  if (overhangingpoints > 0 && overhangspeed > 0)
     speed = overhangspeed;
   if (min_time > 0 && speed > 0) {
     const double time = length / speed * 60;  // minutes -> seconds!
@@ -730,14 +738,13 @@ string PrintPoly::info() const
 void Printlines::addPolys(PLineArea area,
               const vector<Poly> &polys,
               bool displace_start,
-              double maxspeed, double min_time)
+              double maxspeed, double maxoverhangspeed, double min_time)
 {
   if (polys.size() == 0) return;
-  double maxoverhangspeed = settings->get_double("Slicing/MaxOverhangSpeed");
   for(size_t q = 0; q < polys.size(); q++) {
     if (polys[q].size() > 0) {
       PrintPoly *ppoly = new PrintPoly(polys[q], this, /* Takes a copy of the poly */
-                       maxspeed, maxoverhangspeed * 60,
+                       maxspeed, maxoverhangspeed,
                        min_time, displace_start, area);
       printpolys.push_back(ppoly);
       setZ(polys[q].getZ());
@@ -1623,7 +1630,7 @@ void Printlines::optimizeCorners(double linewidth, double linewidthratio, double
 
 
 void Printlines::getLines(const vector<PLine2> &lines,
-              vector<Vector2d> &olinespoints) const
+                          vector<Vector2d> &olinespoints) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
     if (lIt->is_noop()) continue;
@@ -1632,7 +1639,7 @@ void Printlines::getLines(const vector<PLine2> &lines,
   }
 }
 void Printlines::getLines(const vector<PLine2> &lines,
-              vector<Vector3d> &olinespoints) const
+                          vector<Vector3d> &olinespoints) const
 {
   for (lineCIt lIt = lines.begin(); lIt!=lines.end(); ++lIt){
     if (lIt->is_noop()) continue;
@@ -1735,7 +1742,8 @@ void Printlines::toCommands(const vector<PLine<3> *> &plines,
     //maxspeed   = min(movespeed, (double)settings.Extruder.MaxLineSpeed * 60),
     minZspeed  = settings->get_double("Hardware/MinMoveSpeedZ") * 60,
     maxZspeed  = settings->get_double("Hardware/MaxMoveSpeedZ") * 60,
-    //maxEspeed  = settings.Extruder.EMaxSpeed * 60,
+    maxEspeed = settings->get_double(
+              Settings::numbered("Extruder",extruder)+"/EmaxSpeed") * 60,
     maxAOspeed = settings->get_double(
               Settings::numbered("Extruder",extruder)+"/AntioozeSpeed") * 60;
   const bool useTCommand = settings->get_boolean("Slicing/UseTCommand");
@@ -1751,7 +1759,7 @@ void Printlines::toCommands(const vector<PLine<3> *> &plines,
     }
     ((PLine3*)plines[i])->getCommands(lastPos, commands,
                                       minspeed, movespeed, minZspeed, maxZspeed,
-                                      maxAOspeed, useTCommand);
+                                      maxEspeed, maxAOspeed, useTCommand);
     delete plines[i];
   }
   gc_state.AppendCommands(commands, settings->get_boolean("Slicing/RelativeEcode"),

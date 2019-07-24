@@ -105,7 +105,8 @@ public:
     int getCommands(Vector3d &lastpos, vector<Command> &commands,
                     const double &minspeed, const double &movespeed,
                     const double &minZspeed, const double &maxZspeed,
-                    const double &maxAOspeed, bool useTCommand) const;
+                    const double &maxEspeed, const double &maxAOspeed,
+                    bool useTCommand) const;
 
     bool is_move() const {return (abs(extrusion) < 0.00001);}
     // // not used
@@ -242,7 +243,7 @@ public:
 
     void addPolys(PLineArea area,	const vector<Poly> &polys,
                   bool displace_start,
-                  double maxspeed, double min_time = 0);
+                  double maxspeed, double maxoverhangspeed, double min_time = 0);
 
     double makeLines(Vector2d &startPoint, vector<PLine<2> *> &lines) const;
 
