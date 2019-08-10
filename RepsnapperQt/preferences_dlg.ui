@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>661</width>
-    <height>689</height>
+    <width>775</width>
+    <height>802</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,7 +27,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -1124,6 +1124,9 @@
            <property name="singleStep">
             <double>0.100000000000000</double>
            </property>
+           <property name="value">
+            <double>1.020000000000000</double>
+           </property>
           </widget>
          </item>
          <item row="8" column="1" colspan="2" alignment="Qt::AlignRight">
@@ -1143,7 +1146,11 @@
           <widget class="QSpinBox" name="Slicing_DecorInfillRotation"/>
          </item>
          <item row="4" column="5">
-          <widget class="QSpinBox" name="Slicing_SupportAngle_2"/>
+          <widget class="QSpinBox" name="Slicing_SupportAngle">
+           <property name="minimum">
+            <number>1</number>
+           </property>
+          </widget>
          </item>
          <item row="3" column="5">
           <widget class="QDoubleSpinBox" name="Slicing_SupportWiden">
@@ -1159,6 +1166,9 @@
           <widget class="QDoubleSpinBox" name="Slicing_SolidThickness">
            <property name="singleStep">
             <double>0.100000000000000</double>
+           </property>
+           <property name="value">
+            <double>0.150000000000000</double>
            </property>
           </widget>
          </item>
@@ -1233,6 +1243,9 @@
            </property>
            <property name="maximum">
             <number>180</number>
+           </property>
+           <property name="value">
+            <number>45</number>
            </property>
           </widget>
          </item>
@@ -2391,7 +2404,7 @@
           <item>
            <widget class="QCheckBox" name="Display_TerminalProgress">
             <property name="text">
-             <string>Ouput Progess to Terminal</string>
+             <string>Output Progress to Terminal</string>
             </property>
            </widget>
           </item>
@@ -2439,7 +2452,7 @@
   <tabstop>Extruder_AntioozeAmount</tabstop>
   <tabstop>Extruder_AntioozeZlift</tabstop>
   <tabstop>Extruder_ZliftAlways</tabstop>
-  <tabstop>Slicing_SupportAngle_2</tabstop>
+  <tabstop>Slicing_SupportAngle</tabstop>
   <tabstop>Slicing_DecorFilltype</tabstop>
   <tabstop>Slicing_DecorInfillDistance</tabstop>
   <tabstop>Slicing_DecorInfillRotation</tabstop>

@@ -44,7 +44,7 @@ void ViewProgress::start (const char *label, double max)
   this->label = label;
   m_label->setText(label);
   m_bar_cur = 0.0;
-  m_bar->setMaximum(int(max));
+  m_bar->setRange(0, int(max));
   m_bar->setValue(0);
   time.start();
   connect(this, SIGNAL(update_signal(double)), this, SLOT(update(double)));
@@ -63,7 +63,7 @@ bool ViewProgress::restart (const char *label, double max)
   this->label = label;
   m_label->setText(label);
   m_bar_cur = 0.0;
-  m_bar->setMaximum(int(max));
+  m_bar->setRange(0, int(max));
   m_bar->setValue(0);
   time.restart();
   //g_main_context_iteration(NULL,false);
@@ -110,7 +110,7 @@ bool ViewProgress::update (const double value)
 
   QCoreApplication::processEvents();
   m_bar_cur = CLAMP(value, 0, 1.0);
-  m_bar->setMaximum(int(m_bar_max));
+  m_bar->setRange(0, int(m_bar_max));
   m_bar->setValue(int(value));
   QString s;
   QTextStream o(&s);

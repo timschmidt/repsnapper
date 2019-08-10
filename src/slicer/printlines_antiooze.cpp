@@ -173,10 +173,10 @@ uint Printlines::insertAntioozeHaltBefore(ulong index, double amount, double AOs
 static int distCase = 0;
 #endif
 
-int Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
-                      ulong fromline, ulong &toline,
-                      vector<PLine<3> *> &lines,
-                      double &havedistributed)
+ulong Printlines::distribute_AntioozeAmount(double AOamount, double AOspeed,
+                                            ulong fromline, ulong &toline,
+                                            vector<PLine<3> *> &lines,
+                                            double &havedistributed)
 {
   if (AOamount == 0.) return 0;
   bool negative = (AOamount < 0.);
@@ -368,7 +368,7 @@ uint Printlines::makeAntioozeRetract(vector<PLine<3> *> &lines,
 
     // do repush first to keep indices before right
     double havedist = 0;
-    uint newl = distribute_AntioozeAmount(AOamount, AOspeed,
+    ulong newl = distribute_AntioozeAmount(AOamount, AOspeed,
                                            ranges[r].moveend+1, ranges[r].pushend,
                                            newlines, havedist);
     added += newl;

@@ -352,10 +352,10 @@ private:
                            const vector< vmml::vector<M, double> > &points,
                            vector< PLine<M> *> &lines);
 
-    static int distribute_AntioozeAmount(double AOamount, double AOspeed,
-                                         ulong fromline, ulong &toline,
-                                         vector<PLine<3> *> &lines,
-                                         double &havedistributed);
+    static ulong distribute_AntioozeAmount(double AOamount, double AOspeed,
+                                           ulong fromline, ulong &toline,
+                                           vector<PLine<3> *> &lines,
+                                           double &havedistributed);
 
     Vector2d arcCenter(const PLine2 &l1, const PLine2 &l2,
                        double maxerr) const;

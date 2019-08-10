@@ -1886,7 +1886,7 @@ M104 S0.0        ; heater off
      <x>0</x>
      <y>0</y>
      <width>915</width>
-     <height>22</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

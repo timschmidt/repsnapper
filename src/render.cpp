@@ -592,6 +592,7 @@ void Render::mouseMoveEvent(QMouseEvent *event)
                 if (shapes.size()>0) {
                     m_main->showTransforms(shapes[0]);
                 }
+                get_model()->ModelChanged();
             }
         } else { // zoom view
             m_zoom *= float(factor);

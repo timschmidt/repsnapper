@@ -1332,6 +1332,7 @@ void Printlines::clipMovements(const vector<Poly> &polys,
                                bool findnearest, double maxerr)
 {
   if (polys.size()==0 || lines.size()==0) return;
+  vector<Vector2d> path(2);
   for (ulong i=0; i < lines.size(); i++) {
     if (lines[i]->is_move()) {
       // // don't clip a lifted line
@@ -1350,15 +1351,17 @@ void Printlines::clipMovements(const vector<Poly> &polys,
           if (findnearest && frompoly != topoly) {
           ulong fromind, toind;
           polys[frompoly].nearestIndices(polys[topoly], fromind, toind);
-          vector<Vector2d> path(2);
           path[0] = polys[frompoly].vertices[fromind];
           path[1] = polys[topoly].  vertices[toind];
-          // for (uint pi=0; pi < path.size(); pi++)
-          //   cerr << path[pi] << endl;
-          div += divideline(i, path, lines);
-          // cerr << i << " _ "<<  frompoly<<":"<<fromind << " ==> "<< topoly<<":"<<toind
-          //      << " - " << div<< endl;
-          //i++;
+          // the jump must be at least 10% shorter
+          if (path[0].distance(path[1]) < 0.9 * lines[i]->length()) {
+              // for (uint pi=0; pi < path.size(); pi++)
+              //   cerr << path[pi] << endl;
+              div += divideline(i, path, lines);
+              // cerr << i << " _ "<<  frompoly<<":"<<fromind << " ==> "<< topoly<<":"<<toind
+              //      << " - " << div<< endl;
+              //i++;
+          }
           // continue;
         }
       }

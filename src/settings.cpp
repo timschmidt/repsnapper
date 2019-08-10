@@ -967,18 +967,36 @@ void Settings::setMaxHeight(QWidget *parent, const double h)
     inhibit_callback=true;
     QSlider* slider = parent->findChild<QSlider*>("Display_LayerValue");
     if (slider) {
-        slider->setMaximum(int(1000*h));
+        const double prev = slider->maximum() == 0
+                ? 0 : 1.0 * slider->value()/slider->maximum();
+        slider->setRange(0, int(1000*h));
         slider->setPageStep(int(h*100));
+        if (prev >= 0 && prev <= 1)
+            slider->setValue(prev * slider->maximum());
+        else
+            slider->setValue(0);
     }
     slider = parent->findChild<QSlider*>("Display_GCodeDrawStart");
     if (slider) {
-        slider->setMaximum(int(1000*h));
+        const double prev = slider->maximum() == 0
+                ? 0 : 1.0 * slider->value()/slider->maximum();
+        slider->setRange(0, int(1000*h));
         slider->setPageStep(int(h*100));
+        if (prev >= 0 && prev <= 1)
+            slider->setValue(prev * slider->maximum());
+        else
+            slider->setValue(0);
     }
     slider = parent->findChild<QSlider*>("Display_GCodeDrawEnd");
     if (slider) {
-        slider->setMaximum(int(1000*h));
+        const double prev = slider->maximum() == 0
+                ? 0 : 1.0 * slider->value()/slider->maximum();
+        slider->setRange(0, int(1000*h));
         slider->setPageStep(int(h*100));
+        if (prev >= 0 && prev <= 1)
+            slider->setValue(prev * slider->maximum());
+        else
+            slider->setValue(0);
     }
     inhibit_callback=false;
 }

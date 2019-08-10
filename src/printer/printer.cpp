@@ -647,14 +647,14 @@ void Printer::ParseResponse( QString line ) {
             double settemp = match.captured("set").toDouble();
             main->getTempsPanel()->setExtruderTemp(extr, int(0.5+temp), int(0.5+settemp));
             // no number: currently selected exttruder
-            qDebug()<< "Nozzle Temp of Extr."<< extr <<"is"<< temp << " of " << settemp;
+            qDebug()<< "Extr."<< (extr+1) << "Temp is"<< temp << "of" << settemp;
         }
         QRegularExpressionMatch match = templineRE_B.match(line);
         if(match.hasMatch()){
             double temp = match.captured("temp").toDouble();
             double settemp = match.captured("set").toDouble();
             main->getTempsPanel()->setBedTemp(int(0.5+temp), int(0.5+settemp));
-            qDebug()<< "Bed Temp is"<< temp << " of " << settemp;
+            qDebug()<< "    Bed Temp is"<< temp << "of" << settemp;
         }
         match = templineRE_C.match(line);
         if(match.hasMatch()){

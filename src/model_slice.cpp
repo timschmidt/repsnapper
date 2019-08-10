@@ -913,14 +913,15 @@ void Model::ConvertToGCode()
     if (h>0) ostr << h <<_("h");
     ostr<< m <<_("m") << s <<_("s") ;
   }
-
+  ostr.setf( std::ios::fixed, std:: ios::floatfield );
+  ostr.precision(1);
   double totlength = gcode->GetTotalExtruded(settings->get_boolean("Slicing/RelativeEcode"));
   ostr << _(" - total extruded: ") << totlength << "mm";
   // TODO: ths assumes all extruders use the same filament diameter
   const double diam = settings->get_double(Settings::numbered("Extruder",currentExtruder)+
                                            "/FilamentDiameter");
   const double ccm = totlength * diam * diam / 4. * M_PI / 1000 ;
-  ostr << " = " << ccm << "cm^3 ";
+  ostr << " = " << ccm << "cm³ ";
   ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)";
   if (statusbar)
     statusbar->showMessage(QString::fromStdString(ostr.str()));

@@ -619,6 +619,7 @@ void MainWindow::handleButtonClick()
         }
     } else if(name == "m_autoarrange"){
         m_model->AutoArrange(m_render->getSelection());
+        m_render->zoom_to_model(m_model);
     } else if(name == "p_connect"){
         if (ui_main->p_connect->isChecked()){
             int speed = m_settings->get_integer("Hardware/SerialSpeed");

@@ -101,6 +101,7 @@ void Model::ClearGCode()
   gcode->clear();
 //  delete gcode;
 //  gcode = nullptr;
+  statusbar->clearMessage();
 }
 
 void Model::ClearLayers()
@@ -122,6 +123,9 @@ void Model::ClearPreview()
         m_previewLayer->Clear();
     }
   m_previewGCode_z = -100000;
+  vector<Shape *> shapes = objectList.get_all_shapes();
+  for (Shape* s : shapes)
+      s->clearGlList();
 }
 
 QTextDocument *Model::GetGCodeBuffer()

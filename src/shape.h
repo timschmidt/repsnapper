@@ -73,6 +73,7 @@ public:
 
         virtual void clear();
         /* void displayInfillOld(const Settings &settings, CuttingPlane &plane,  */
+        virtual void clearGlList();
         /* 		      uint LayerNr, vector<int>& altInfillLayers); */
         void draw (Settings *settings,
                    bool highlight=false, uint max_triangles=0,

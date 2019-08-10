@@ -49,10 +49,15 @@ Shape::Shape(Shape *shape)
 
 void Shape::clear() {
     triangles.clear();
+    clearGlList();
+    filename = "";
+}
+
+void Shape::clearGlList()
+{
     if (glIsList(gl_List))
         glDeleteLists(GLuint(gl_List),1);
-  filename = "";
-};
+}
 
 void Shape::setTriangles(const vector<Triangle> &triangles_)
 {
