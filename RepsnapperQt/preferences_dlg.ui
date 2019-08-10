@@ -27,7 +27,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>3</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -1829,14 +1829,17 @@
           <item row="0" column="1">
            <widget class="QDoubleSpinBox" name="Slicing_MinLayertime">
             <property name="value">
-             <double>10.000000000000000</double>
+             <double>5.000000000000000</double>
             </property>
            </widget>
           </item>
           <item row="0" column="4">
            <widget class="QDoubleSpinBox" name="Slicing_MinShelltime">
+            <property name="singleStep">
+             <double>0.100000000000000</double>
+            </property>
             <property name="value">
-             <double>5.000000000000000</double>
+             <double>0.500000000000000</double>
             </property>
            </widget>
           </item>

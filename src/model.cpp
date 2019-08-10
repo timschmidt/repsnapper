@@ -1208,7 +1208,7 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
      }
    }
 #endif
-  int extruder = 0;
+  uint extruder = 0;
   layer->MakeShells(*settings, extruder);
 
   if (settings->get_boolean("Slicing/Skirt")) {

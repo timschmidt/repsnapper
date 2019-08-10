@@ -548,7 +548,7 @@ void Layer::FindThinpolys(const vector<Poly> &polys, double extrwidth,
 #endif
 }
 
-void Layer::MakeShells(Settings &settings, int extruder)
+void Layer::MakeShells(Settings &settings, uint extruder)
 {
   double extrudedWidth        = settings.GetExtrudedMaterialWidth(thickness, extruder);
   double roundline_extrfactor =
@@ -559,8 +559,12 @@ void Layer::MakeShells(Settings &settings, int extruder)
   uint   shellcount     = settings.get_integer("Slicing/ShellCount");
   double infilloverlap  = settings.get_double("Slicing/InfillOverlap");
 
+  // join polygons next to each other
+  vector<Poly> joined = Clipping::getOffset(polygons, distance/2.);
+  joined = Clipping::getOffset(joined, -distance/2.);
+
   // first shrink with global offset
-  vector<Poly> shrinked = Clipping::getOffset(polygons, -2.0/M_PI*extrudedWidth-shelloffset);
+  vector<Poly> shrinked = Clipping::getOffset(joined, -2.0/M_PI*extrudedWidth-shelloffset);
 
   vector<Poly> thickPolygons;
   FindThinpolys(shrinked, extrudedWidth, thickPolygons, thinPolygons);
