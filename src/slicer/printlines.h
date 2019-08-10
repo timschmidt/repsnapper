@@ -104,8 +104,7 @@ public:
 
     int getCommands(Vector3d &lastpos, vector<Command> &commands,
                     const double &minspeed, const double &movespeed,
-                    const double &minZspeed, const double &maxZspeed,
-                    const double &maxEspeed, const double &maxAOspeed,
+                    const double &minZspeed, const double &maxZspeed, const double &maxAOspeed,
                     bool useTCommand) const;
 
     bool is_move() const {return (abs(extrusion) < 0.00001);}
@@ -290,13 +289,16 @@ public:
     // keep movements inside polys when possible (against stringing)
     static void clipMovements(const vector<Poly> &polys, vector<PLine<2>*> &lines,
                               bool findnearest, double maxerr=0.0001);
-
+/*
     void getLines(const vector<PLine2> &lines,
                   vector<Vector2d> &linespoints) const;
     void getLines(const vector<PLine2> &lines,
                   vector<Vector3d> &linespoints) const;
+*/
     void getLines(const vector<PLine<2> *> &lines,
-                  vector<PLine<3> *> &plines, double extrusion_per_mm) const;
+                  vector<PLine<3> *> &plines,
+                  const double extrusion_per_mm,
+                  const double maxEspeed) const;
 
     static double totalLength(const vector<PLine2> &lines);
     static double totalLength(const vector<PLine3> &lines);

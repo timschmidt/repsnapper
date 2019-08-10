@@ -703,9 +703,9 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
 
   const double maxshellspeed  = settings.get_double(
               Settings::numbered("Extruder",currentExtruder)+"/MaxShellSpeed") * 60;
-  const double maxEspeed  = settings.get_double(
+  const double maxEspeed      = settings.get_double(
               Settings::numbered("Extruder",currentExtruder)+"/EmaxSpeed") * 60;
-  const bool ZliftAlways      = settings.get_boolean(
+          const bool ZliftAlways      = settings.get_boolean(
               Settings::numbered("Extruder",currentExtruder)+"/ZliftAlways");
 
   const double extr_per_mm = settings.GetExtrusionPerMM(thickness, currentExtruder);
@@ -759,7 +759,7 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
               if (!ZliftAlways)
                   printlines->clipMovements(clippolys, skinlines, clipnearest, linewidth);
               printlines->optimize(minshelltime,  cornerradius, skinlines);
-              printlines->getLines(skinlines, lines3, extr_per_mm);
+              printlines->getLines(skinlines, lines3, extr_per_mm, maxEspeed);
               printlines->clear();
               skinlines.clear();
           }
@@ -805,7 +805,9 @@ void Layer::makePrintLines3(Vector2d &startPos, Printlines *printlines,
     const double cornerradius   = linewidth*settings->get_double("Slicing/CornerRadius");
     const bool clipnearest      = settings->get_boolean("Slicing/MoveNearest");
 
-    const double extr_per_mm = settings->GetExtrusionPerMM(thickness, currentExtruder);
+    const double extr_per_mm    = settings->GetExtrusionPerMM(thickness, currentExtruder);
+    const double maxEspeed      = settings->get_double(
+                Settings::numbered("Extruder",currentExtruder)+"/EmaxSpeed") * 60;
     const bool ZliftAlways      = settings->get_boolean(
                 Settings::numbered("Extruder",currentExtruder)+"/ZliftAlways");
     const vector<Poly> clippolys = GetOuterShell();
@@ -842,7 +844,7 @@ void Layer::makePrintLines3(Vector2d &startPos, Printlines *printlines,
         Command fancommand(FANON, fanspeed);
         lines3.push_back(new PLine3(fancommand));
     }
-    printlines->getLines(lines, lines3, extr_per_mm);
+    printlines->getLines(lines, lines3, extr_per_mm, maxEspeed);
 }
 
 double Layer::area() const

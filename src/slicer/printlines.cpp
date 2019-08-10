@@ -208,7 +208,7 @@ double PLine3::max_abs_speed(double max_Espeed, double max_AOspeed) const
 int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
             const double &minspeed, const double &movespeed,
             const double &minZspeed, const double &maxZspeed,
-            const double &maxEspeed, const double &maxAOspeed,
+            const double &maxAOspeed,
             bool useTCommand) const
 {
   if (area == COMMAND) { // it is an explicit command line
@@ -232,7 +232,6 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
     command_count += move3.getCommands(lastpos, commands,
                                        minspeed, movespeed,
                                        minZspeed, maxZspeed,
-                                       maxEspeed,
                                        maxAOspeed, useTCommand);
     lastpos = lifted_from;
   }
@@ -275,20 +274,6 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
       commands.push_back(preFeedrate);
       command_count++;
     }
-  }
-  travel_speed = max(minZspeed, travel_speed);
-
-  if (abs(travel_length) < 0.00001) // extrusion on halt
-    travel_speed = maxAOspeed;
-  else {
-      travel_speed = min(movespeed, travel_speed);
-  }
-  if (maxEspeed > 0 &&  travel_length > 0.1) {
-      double espeed = extrudedMaterial/travel_length*travel_speed;
-      if (espeed > maxEspeed) {
-          travel_speed *= maxEspeed / espeed;
-//          qDebug()<< espeed << " > " << maxEspeed << " >> " <<travel_speed;
-      }
   }
 
   Command command;
@@ -1631,7 +1616,7 @@ void Printlines::optimizeCorners(double linewidth, double linewidthratio, double
 //   return lines.back().to;
 // }
 
-
+/*
 void Printlines::getLines(const vector<PLine2> &lines,
                           vector<Vector2d> &olinespoints) const
 {
@@ -1650,14 +1635,23 @@ void Printlines::getLines(const vector<PLine2> &lines,
     olinespoints.push_back(Vector3d(lIt->to.x(),lIt->to.y(),z));
   }
 }
+*/
 
 void Printlines::getLines(const vector<PLine<2>*> &inlines,
                           vector<PLine<3> *> &outlines,
-                          double extrusion_per_mm) const
+                          double extrusion_per_mm, double maxEspeed) const
 {
   for (uint i = 0;  i < inlines.size(); i++) {
     if (inlines[i]->is_noop()) continue;
-    outlines.push_back( new PLine3(*((PLine2*)inlines[i]), z, extrusion_per_mm) );
+    PLine3 *pline3 = new PLine3(*((PLine2*)inlines[i]), z, extrusion_per_mm);
+    if (maxEspeed > 0 && pline3->extrusion > 0 && pline3->lengthSq() > 0) {
+        double eSpeed = pline3->extrusion / pline3->time();
+        if (eSpeed > maxEspeed) {
+            pline3->speed *= maxEspeed / eSpeed;
+//            qDebug()<< eSpeed << " > " << maxEspeed << " >> " << pline3->speed;
+        }
+    }
+    outlines.push_back(pline3);
   }
 }
 
@@ -1745,8 +1739,6 @@ void Printlines::toCommands(const vector<PLine<3> *> &plines,
     //maxspeed   = min(movespeed, (double)settings.Extruder.MaxLineSpeed * 60),
     minZspeed  = settings->get_double("Hardware/MinMoveSpeedZ") * 60,
     maxZspeed  = settings->get_double("Hardware/MaxMoveSpeedZ") * 60,
-    maxEspeed = settings->get_double(
-              Settings::numbered("Extruder",extruder)+"/EmaxSpeed") * 60,
     maxAOspeed = settings->get_double(
               Settings::numbered("Extruder",extruder)+"/AntioozeSpeed") * 60;
   const bool useTCommand = settings->get_boolean("Slicing/UseTCommand");
@@ -1762,7 +1754,7 @@ void Printlines::toCommands(const vector<PLine<3> *> &plines,
     }
     ((PLine3*)plines[i])->getCommands(lastPos, commands,
                                       minspeed, movespeed, minZspeed, maxZspeed,
-                                      maxEspeed, maxAOspeed, useTCommand);
+                                      maxAOspeed, useTCommand);
     delete plines[i];
   }
   gc_state.AppendCommands(commands, settings->get_boolean("Slicing/RelativeEcode"),

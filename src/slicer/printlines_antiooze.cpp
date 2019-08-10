@@ -394,8 +394,8 @@ uint Printlines::makeAntioozeRetract(vector<PLine<3> *> &lines,
 #endif
     havedist = 0;
     newl = distribute_AntioozeAmount(-AOamount, AOspeed,
-                     ranges[r].movestart-1, ranges[r].tractstart,
-                     newlines, havedist);
+                                     ranges[r].movestart-1, ranges[r].tractstart,
+                                     newlines, havedist);
     added += newl;
     ranges[r].movestart += newl;
     ranges[r].moveend += newl;
