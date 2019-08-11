@@ -109,10 +109,11 @@ vector<Shape *> ObjectsList::get_selected_shapes(const QModelIndexList *indexes)
 {
     vector<Shape*> allshapes = get_all_shapes();
     vector<Shape*> shapes;
-    if (indexes){
+    if (indexes) {
         for (QModelIndex index : *indexes){
             uint i = uint(index.row());
-            shapes.push_back(allshapes[i]);
+            if (i < allshapes.size() && allshapes[i] != nullptr)
+                shapes.push_back(allshapes[i]);
         }
         return shapes;
     } else {

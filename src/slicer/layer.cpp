@@ -556,7 +556,7 @@ void Layer::MakeShells(Settings &settings, uint extruder)
   double distance       = 0.5 * extrudedWidth;
   double cleandist      = min(distance/CLEANFACTOR, thickness/CLEANFACTOR);
   double shelloffset    = settings.get_double("Slicing/ShellOffset");
-  uint   shellcount     = settings.get_integer("Slicing/ShellCount");
+  int    shellcount     = settings.get_integer("Slicing/ShellCount");
   double infilloverlap  = settings.get_double("Slicing/InfillOverlap");
 
   // join polygons next to each other
@@ -594,7 +594,7 @@ void Layer::MakeShells(Settings &settings, uint extruder)
       shellPolygons.push_back(shrinked);
     }
     // inner shells
-    for (uint i = 1; i<shellcount; i++) // shrink from shell to shell
+    for (int i = 1; i<shellcount; i++) // shrink from shell to shell
       {
     shrinked = Clipping::getOffset(shrinked,-extrudedWidth);
     vector<Poly> thinpolys;

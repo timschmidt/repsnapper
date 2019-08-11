@@ -185,6 +185,8 @@ public:
 
     bool append(Command c);
 
+    double time(const Vector3d &from) const;
+
     string info() const;
 
     template <size_t M>

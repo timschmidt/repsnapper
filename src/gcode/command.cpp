@@ -513,6 +513,25 @@ bool Command::append(Command c)
     return true;
 }
 
+double Command::time(const Vector3d &from) const
+{
+    bool ccw;
+    switch (Code) {
+    case ARC_CW:
+        ccw = false; [[clang::fallthrough]];
+    case ARC_CCW: {
+        ccw = true;
+        double angle = double(calcAngle(-arcIJK, where - arcIJK - from, ccw));
+        return angle * arcIJK.length() / f * 60.;
+    }
+    case ZMOVE:
+    case RAPIDMOTION:
+    case COORDINATEDMOTION:
+        return  where.distance(from) / f * 60.;
+    default: return 0.;
+    }
+}
+
 
 string Command::info() const
 {

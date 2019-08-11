@@ -28,7 +28,6 @@ struct GCodeStateImpl
   GCode &code;
   Vector3d LastPosition;
   Command lastCommand;
-  double lastLength;
 
   GCodeStateImpl(GCode &_code) :
     code(_code),
@@ -69,9 +68,7 @@ void GCodeState::AppendCommand(Command &command, bool relativeE,
             command.e += pImpl->lastCommand.e;
         if (command.where) {
             if (pImpl->lastCommand.where && command.f!=0.) {
-                const double length =
-                        (command.where - *pImpl->lastCommand.where).length();
-                timeused += length/command.f*60;
+                timeused += command.time(pImpl->lastCommand.where);
                 const vector<Command> &prevCommands = pImpl->code.commands;
                 if (prevCommands.size()>2){
                     if (prevCommands[prevCommands.size()-2].where
@@ -83,12 +80,6 @@ void GCodeState::AppendCommand(Command &command, bool relativeE,
                         }
                     }
                 }
-                if (merged)
-                    pImpl->lastLength += length;
-                else
-                    pImpl->lastLength = length;
-            } else {
-                pImpl->lastLength = 0.;
             }
             pImpl->LastPosition = command.where;
             if (merged)

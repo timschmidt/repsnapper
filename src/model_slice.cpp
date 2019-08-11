@@ -901,9 +901,10 @@ void Model::ConvertToGCode()
   int s = (int(state.timeused)-3600*h-60*m);
   std::ostringstream ostr;
   ostr << _("Time Estimation: ") ;
-  if (h>0) ostr << h <<_("h") ;
-  ostr <<m <<_("m") <<s <<_("s") ;
+  if (h>0) ostr << h << " " << _("h") << " ";
+  ostr <<m << " " <<_("m") << " " << s << " " << _("s") ;
 
+/*
   int gctime = int(gcode->GetTimeEstimation(Vector3d::ZERO));
   if (abs(state.timeused - gctime) > 10) {
     h = gctime/3600;
@@ -913,6 +914,7 @@ void Model::ConvertToGCode()
     if (h>0) ostr << h <<_("h");
     ostr<< m <<_("m") << s <<_("s") ;
   }
+*/
   ostr.setf( std::ios::fixed, std:: ios::floatfield );
   ostr.precision(1);
   double totlength = gcode->GetTotalExtruded(settings->get_boolean("Slicing/RelativeEcode"));

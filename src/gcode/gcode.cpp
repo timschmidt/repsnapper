@@ -90,15 +90,10 @@ void GCode::translate(const Vector3d &trans)
 double GCode::GetTimeEstimation(const Vector3d &from) const
 {
   Vector3d where=from;
-  double time = 0, feedrate=0, distance=0;
+  double time = 0;
   for (uint i=0; i<commands.size(); i++) {
-      if(commands[i].f!=0.)
-        feedrate = commands[i].f;
+      time += commands[i].time(where);
       if (commands[i].where) {
-          if (feedrate!=0.) {
-            distance = commands[i].where.distance(where);
-            time += distance/feedrate*60.;
-          }
           where.set(commands[i].where);
       }
   }
