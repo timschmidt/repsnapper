@@ -47,11 +47,11 @@ vmml::vector<M, double> PLine<M>::splitpoint(double at_length) const
     const double rangle = angle * lratio;
     if (M == 3) {
       Vector2d from_rot(from.x(), from.y());
-      rotate(from_rot, Vector2d(arccenter.x(), arccenter.y()), rangle, (arc < 0));
+      rotate(from_rot, Vector2d(arccenter.x(), arccenter.y()), rangle);
       double dz = to.z()-from.z();
       point.set(from_rot.x(), from_rot.y(), from.z() + dz*lratio);
     } else {
-      point = rotated(from, Vector2d(arccenter.x(), arccenter.y()), rangle, (arc < 0));
+      point = rotated(from, Vector2d(arccenter.x(), arccenter.y()), rangle);
     }
     return point;
   }
@@ -102,22 +102,23 @@ uint Printlines::divideline(ulong lineindex,
 
 template <size_t M>
 void PLine<M>::move_to(const vmml::vector<M, double> &from_,
-               const vmml::vector<M, double> &to_)
+                       const vmml::vector<M, double> &to_)
 {
   if (area == COMMAND) return;
+  assert(!arc);
   from = from_;
   to   = to_;
-  calcangle();
+  calcangle(true);
 }
 
 template <size_t M>
-void PLine<M>::calcangle()
+void PLine<M>::calcangle(bool ccw)
 {
   if (area == COMMAND) return;
-  if (arc == 0){
-    angle = planeAngleBetween(Vector2d(1,0), Vector2d(dir()));
+  if (!arc){
+    angle = 0.;//planeAngleBetween(Vector2d(1,0), Vector2d(dir()));
   } else {
-    angle = Command::calcAngle(from - arccenter, to - arccenter, arc == -1);
+    angle = Command::calcAngle(from - arccenter, to - arccenter, ccw);
   }
 }
 
@@ -134,7 +135,7 @@ PLine3::PLine3(PLineArea area_,  const uint extruder_no_,
   from = from_;
   to = to_;
   speed = speed_;
-  arc = 0;
+  arc = false;
   angle = 0;
   extruder_no = extruder_no_;
   absolute_extrusion = 0;
@@ -166,7 +167,7 @@ PLine3::PLine3(const PLine2 &pline, double z, double extrusion_per_mm)
   speed              = pline.speed;
   absolute_extrusion = pline.absolute_extrusion;
   arc                = (pline.is_noop() || pline.is_move() || pline.is_command())
-                          ? 0 : pline.arc;
+                          ? false : pline.arc;
   arccenter          = Vector3d(pline.arccenter.x(), pline.arccenter.y(), z);
   angle              = pline.angle;
   extruder_no        = pline.extruder_no;
@@ -179,7 +180,7 @@ PLine3::PLine3(const Command &command_)
   area = COMMAND;
   command = command_;
   extruder_no = command.extruder_no;
-  arc = 0;
+  arc = false;
 }
 
 
@@ -279,12 +280,12 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
   Command command;
   if (arc)
     {
-      GCodes gc = (arc==-1 ? ARC_CCW : ARC_CW);
+      GCodes gc = (angle>0 ? ARC_CCW : ARC_CW);
       command = Command (gc, lifted_to, extrudedMaterial, travel_speed);
       command.arcIJK = arcIJK();
       ostringstream o;
       o << int(angle*180/M_PI) << "° ";
-      if (arc<0) o << "c";
+      if (angle>0) o << "c";
       o << "cw arc";
       command.comment += o.str();
     }
@@ -433,10 +434,10 @@ string PLine3::info() const
        << " " << from;
   if (to!=from) ostr << to;
   ostr << ", speed=" << speed
-       << ", extrusion=" << extrusion << "mm, arc=" << arc;
+       << ", extrusion=" << extrusion << "mm" << (arc?", arc":"") ;
   if (has_absolute_extrusion())
     ostr << ", abs_extr="<<absolute_extrusion;
-  if (arc!=0)
+  if (arc)
     ostr << ", arcIJK=" << arcIJK();
   if (lifted != 0.)
     ostr << " lifted=" << lifted;
@@ -455,22 +456,22 @@ PLine2::PLine2()
   speed = 0;
   extruder_no = 0;
   lifted = 0;
-  arc = 0;
+  arc = false;
   angle = 0;
   absolute_extrusion = 0;
 }
 
 PLine2::PLine2(PLineArea area_, const uint extruder_no_,
-           const Vector2d &from_, const Vector2d &to_, double speed_,
-           double feedratio_, double lifted_)
+               const Vector2d &from_, const Vector2d &to_, double speed_,
+               double feedratio_, double lifted_)
 :  feedratio(feedratio_)
 {
   area = area_;
   from = from_;
   to = to_;
   speed = speed_;
-  arc = 0;
-  calcangle();
+  arc = false;
+  angle = 0.;
   extruder_no = extruder_no_;
   lifted = lifted_;
   absolute_extrusion = 0;
@@ -485,12 +486,12 @@ PLine2 * PLine2::Arc(PLineArea area_, const uint extruder_no_,
 {
     PLine2 *arc = new PLine2(area_, extruder_no_, from_, to_, speed_, feedratio_, lifted_);
     if (feedratio_ == 0.)
-        arc->arc = 0;
+        arc->arc = false;
     else {
         arc->arccenter = arccenter_;
-        arc->arc = ccw ? -1 : 1;
+        arc->arc = true;
     }
-    arc->calcangle();
+    arc->calcangle(ccw);
     arc->absolute_extrusion = 0;
     return arc;
 }
@@ -515,9 +516,13 @@ PLine2::PLine2(const PLine2 &rhs)
 //   assert(!arc);
 //   return angleBetween(Vector2d(1,0), to-from);
 // }
+
+// direction doesn't matter
 double PLine2::angle_to(const PLine2 &rhs) const
 {
-  return double(planeAngleBetween( dir(), rhs.dir() ));
+    double a = planeAngleBetween( dir(), rhs.dir(), true );
+    if (a > M_PI) a = 2.*M_PI - a; // smaller one
+    return a;
 }
 
 bool PLine2::is_noop() const
@@ -536,8 +541,8 @@ string PLine2::info() const
 {
   ostringstream ostr;
   ostr << "line "<< AreaNames[area] << " ";
-  if (arc!=0) {
-    if (arc==-1) ostr << "C";
+  if (arc) {
+    if (angle>0) ostr << "C";
     ostr << "CW arc ";
   }
   ostr << from;
@@ -545,7 +550,7 @@ string PLine2::info() const
   ostr << " angle="<< int(angle*180/M_PI)<<"°"
        << " length="<< length() << " speed=" << speed
        << " feedratio=" << feedratio;
-  if (arc!=0)
+  if (arc)
     ostr << " center=" << arccenter;
   ostr <<  " feedratio=" << feedratio << " abs.extr="<< absolute_extrusion;
   if (lifted !=0.)
@@ -1138,7 +1143,7 @@ ulong Printlines::makeIntoArc(ulong fromind, ulong toind,
   // intersection = center
   Vector2d center, ip;
   int is = intersect2D_Segments(chord1p1, chord1p2, chord2p1, chord2p2,
-                center, ip);
+                                center, ip);
   if (is > 0) {
 #endif
     return makeIntoArc(center, fromind, toind, lines);
@@ -1167,7 +1172,7 @@ ulong Printlines::makeCornerArc(double maxdistance, double minarclength,
                                 ulong ind, vector<PLine<2> *> &lines) const
 {
   if (ind > lines.size()-2) return 0;
-  if (lines[ind]->arc != 0 || lines[ind+1]->arc != 0) return 0;
+  if (lines[ind]->arc || lines[ind+1]->arc) return 0;
   // movement in between?
   if ((lines[ind]->to - lines[ind+1]->from).squared_length() > 0.01) return 0;
   // if ((lines[ind].from - lines[ind+1].to).squared_length()
@@ -1182,25 +1187,26 @@ ulong Printlines::makeCornerArc(double maxdistance, double minarclength,
   //for (uint i = 0; i<=ind + 1; i++){
   //    lenbefore += lines[i].length();
   //}
-  double angle  = double(planeAngleBetween(dir1, dir2));
   // arc start and end point:
   const Vector2d p1   = lines[ind]->to     - normalized(dir1)*maxdistance;
   const Vector2d p2   = lines[ind+1]->from + normalized(dir2)*maxdistance;
   // intersect perpendiculars at arc start/end
   Vector2d center, I1;
   int is = intersect2D_Segments(p1, p1 + Vector2d(-dir1.y(),dir1.x()),
-                p2, p2 + Vector2d(-dir2.y(),dir2.x()),
-                center, I1);
+                                p2, p2 + Vector2d(-dir2.y(),dir2.x()),
+                                center, I1);
   if (is==0) return 0;
   const double radius = center.distance(p1);
   if (radius > 10*maxdistance) return 0; // calc error(?)
-  const bool ccw = isleftof(center, p1, p2);
-  if (!ccw) angle = -angle;
-  if (angle <= 0) angle += 2*M_PI;
+
   // need 2 half arcs?
   const bool split =
     (lines[ind]->getFeedratio() != lines[ind+1]->getFeedratio())
     || (lines[ind]->extruder_no != lines[ind+1]->extruder_no);
+
+  const bool arc_ccw = isleftof(center, p1, p2);
+  double angle = double(planeAngleBetween(dir1, dir2, arc_ccw));
+
   const double arc_len = abs(radius * angle);
   // too small for arc, replace by 2 straight lines
   const bool not_arc =
@@ -1234,28 +1240,30 @@ ulong Printlines::makeCornerArc(double maxdistance, double minarclength,
       newlines.push_back(new PLine2(lines[ind]->area, lines[ind]->extruder_no,
                                     p1, p2, lines[ind]->speed, feedr,
                                     (feedr!=0.) ? lines[ind]->lifted : 0.));
-    }
-    else if (split || not_arc) {
-        const Vector2d splitp = rotated(p1, center, angle/2, ccw);
+    } else if (split || not_arc) {
+        const Vector2d splitp = rotated(p1, center, angle/2);
         if (not_arc) { // 2 straight lines
             PLine2 *nl = new PLine2(*(PLine2*)lines[ind]);
+            nl->arc=false;
             nl->move_to(p1, splitp);
             newlines.push_back(nl);
             nl = new PLine2(*(PLine2*)lines[ind+1]);
+            nl->arc=false;
             nl->move_to(splitp, p2);
             newlines.push_back(nl);
         } else if (split) { // 2 arcs
             newlines.push_back(PLine2::Arc(lines[ind]->area, lines[ind]->extruder_no,
                  p1, splitp, lines[ind]->speed, lines[ind]->getFeedratio(),
-                 center, ccw, lines[ind]->lifted));
+                 center, arc_ccw, lines[ind]->lifted));
             newlines.push_back(PLine2::Arc(lines[ind+1]->area, lines[ind+1]->extruder_no,
                  splitp, p2, lines[ind+1]->speed, lines[ind+1]->getFeedratio(),
-                 center, ccw, lines[ind+1]->lifted));
+                 center, arc_ccw, lines[ind+1]->lifted));
         }
     } else { // 1 arc
         newlines.push_back(PLine2::Arc(lines[ind]->area, lines[ind]->extruder_no,
-             p1, p2, lines[ind]->speed, lines[ind]->getFeedratio(),
-             center, ccw, lines[ind]->lifted));
+                                       p1, p2, lines[ind]->speed,
+                                       lines[ind]->getFeedratio(),
+                                       center, arc_ccw, lines[ind]->lifted));
     }
   }
   double newlen = 0;

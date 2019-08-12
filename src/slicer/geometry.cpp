@@ -222,31 +222,39 @@ void rotArcballTrans(Matrix4fT &matfT,  const Vector3d &axis, double angle)
 
 
 // return A halfway rotated around center in direction of B
-Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B)
+Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B, bool ccw)
 {
-  double angle = double(planeAngleBetween(center-A, B-center) / 2);
+  double angle = planeAngleBetween(A-center, B-center, ccw) / 2.;
   return rotated(A, center, angle);
 }
 
-long double planeAngleBetween(const Vector2d &V1, const Vector2d &V2)
+// 0 .. 2pi
+double angle2pi(const Vector2d &v)
 {
-    long double dotproduct =   static_cast<long double>(V1.dot(V2));
-    long double length =  static_cast<long double>(V1.length() * V2.length());
-    long double quot = dotproduct / length;
-    if (quot > 1  && quot < 1.0001L) quot = 1; // strange case where acos => NaN
-    if (quot < -1 && quot > -1.0001L) quot = -1;
-    long double result = acosl( quot ); // 0 .. pi
-    if (isleftof(Vector2d(0,0), V2, V1))
-        result = -result;
-    return result;
+    double a = atan2(v.y(), v.x());
+    if (a < 0) a += 2.*M_PI;
+    return a;
+}
+
+// from V1 to V2 in -2pi..2pi - negative means clockwise
+double planeAngleBetween(const Vector2d &V1, const Vector2d &V2, bool ccw)
+{
+    double a1 = angle2pi(V1);
+    double a2 = angle2pi(V2);
+    double da = a2 - a1;
+    if (da < 0)
+        da += 2.*M_PI;
+    if (!ccw)
+        da -= 2.*M_PI; // negative -> clockwise
+    return da;
 }
 
 
 // is B left of A wrt center?
 bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B)
 {
-  double position = (B.x()-A.x())*(center.y()-A.y()) - (B.y()-A.y())*(center.x()-A.x());
-  return (position >= 0);
+    double position = (B.x()-A.x())*(center.y()-A.y()) - (B.y()-A.y())*(center.x()-A.x());
+    return (position >= 0);
 }
 // // http://www.cs.uwaterloo.ca/~tmchan/ch3d/ch3dquad.cc
 // double turn(Point p, Point q, Point r) {  // <0 iff cw
@@ -290,33 +298,27 @@ Vector2d random_displaced(const Vector2d &v, double delta)
   return Vector2d(v.x()+randdelta, v.y()+randdelta);
 }
 
-void rotate(Vector2d &p, const Vector2d &center, double angle, bool ccw)
+void rotate(Vector2d &p, const Vector2d &center, const double angle)
 {
-  if (p==center) return ;
-  if (!ccw) angle = -angle;
-  double cosa = cos(angle);
-  double sina = sin(angle);
-  Vector2d r(p - center);
+  if (p==center) return;
+  const double cosa = cos(angle);
+  const double sina = sin(angle);
+  const Vector2d r(p - center);
   p.x() = center.x() + r.x() * cosa - r.y() * sina;
   p.y() = center.y() + r.x() * sina + r.y() * cosa;
 }
 
-Vector2d rotated(const Vector2d &p, const Vector2d &center, double angle, bool ccw)
+Vector2d rotated(const Vector2d &p, const Vector2d &center, const double angle)
 {
   Vector2d r(p);
-  rotate(r,center,angle,ccw);
+  rotate(r,center,angle);
   return r;
-  // Vector3d center3 (center.x(), center.y(), 0);
-  // Vector3d radius3 (p.x() - center.x(), p.y() - center.y(), 0);
-  // Vector3d axis(0.,0., ccw?1.:-1.);
-  // Vector3d rrotated3 = radius3.rotate(angle, axis);
-  // return center + Vector2d(rrotated3.x(), rrotated3.y());
 }
 
 // squared minimum distance of p to segment s1--s2, onseg = resulting point on segment
 // http://stackoverflow.com/a/1501725
 double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2,
-                 const Vector2d &p, Vector2d &onseg) {
+                                 const Vector2d &p, Vector2d &onseg) {
   const double l2 = (s2-s1).squared_length();  // i.e. |w-v|^2 -  avoid a sqrt
   if (l2 == 0.0) { // s1 == s2 case
     onseg = s1;

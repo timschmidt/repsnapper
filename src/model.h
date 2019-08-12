@@ -117,7 +117,7 @@ public:
 
         void ConvertToGCode();
 
-        void MakeRaft(double &z);
+        double MakeRaft();
         void WriteGCode(QFile *file);
         void ClearGCode();
         void ClearLayers();

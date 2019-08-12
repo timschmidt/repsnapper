@@ -50,9 +50,10 @@ void rotArcballTrans(Matrix4fT &transform,  const Vector3d &axis, double angle);
 bool isleftof(const Vector2d &center, const Vector2d &A, const Vector2d &B);
 
 
-long double planeAngleBetween(const Vector2d &V1, const Vector2d &V2);
+double angle2pi(const Vector2d &v);
+double planeAngleBetween(const Vector2d &V1, const Vector2d &V2, bool ccw);
 
-Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B);
+Vector2d angle_bipartition(const Vector2d &center, const Vector2d &A, const Vector2d &B, bool ccw);
 void center_perpendicular(const Vector2d &from, const Vector2d &to,
                           Vector2d &p1, Vector2d &p2);
 
@@ -61,8 +62,8 @@ Vector3d cross2d(const Vector2d &A, const Vector2d &B, double z=0);
 double point_segment_distance_Sq(const Vector2d &s1, const Vector2d &s2,
                                  const Vector2d &p, Vector2d &onseg);
 
-void     rotate (      Vector2d &p, const Vector2d &center, double angle, bool ccw=true);
-Vector2d rotated(const Vector2d &p, const Vector2d &center, double angle, bool ccw=true);
+void     rotate (Vector2d &p, const Vector2d &center, const double angle);
+Vector2d rotated(const Vector2d &p, const Vector2d &center, const double angle);
 
 struct printline;
 

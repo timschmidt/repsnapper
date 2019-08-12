@@ -49,8 +49,8 @@ public:
     uint extruder_no;
     double lifted;
 
-    short arc; // -1: ccw arc, 1: cw arc, 0: not an arc
-    double angle; // angle of line (in 2d lines), or arc angle
+    bool arc = false; // is arc
+    double angle; // angle of line (in 2d lines), or arc angle, angle<0: clockwise arc
     vmml::vector<M, double> arccenter;
 
     double absolute_extrusion; // additional absolute extrusion /mm (retract/repush f.e.)
@@ -81,7 +81,7 @@ public:
             const vector<vmml::vector<M, double>> &points) const;
 
 protected:
-    void calcangle();
+    void calcangle(bool ccw);
     // virtual string info() const;
 };
 

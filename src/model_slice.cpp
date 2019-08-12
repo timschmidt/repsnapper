@@ -45,10 +45,9 @@
 #endif
 
 
-void Model::MakeRaft(double &z)
+double Model::MakeRaft()
 {
-  if (layers.size() == 0) return;
-  cerr << "raft untested!" << endl;
+  if (layers.size() == 0) return 0;
   vector<Poly> raftpolys =
     Clipping::getOffset(layers[0]->GetHullPolygon(),
             settings->get_double("Raft/Size"), jround);
@@ -109,7 +108,7 @@ void Model::MakeRaft(double &z)
     raft_z += interthickness;
   }
   layers.insert(layers.begin(),raft_layers.begin(),raft_layers.end());
-  z += totalthickness;
+  return totalthickness;
 }
 
 #if 0
@@ -818,15 +817,16 @@ void Model::ConvertToGCode()
 
   MultiplyUncoveredPolygons();
 
-  if (settings->get_boolean("Slicing/Skirt"))
+  bool makeRaft = settings->get_boolean("Raft/Enable");
+  if (!makeRaft && settings->get_boolean("Slicing/Skirt"))
     MakeSkirt();
 
   CalcInfill();
 
-  if (settings->get_boolean("Raft/Enable"))
+  if (makeRaft)
     {
       printOffset += Vector3d (settings->get_double("Raft/Size"), 0);
-      MakeRaft (printOffsetZ); // printOffsetZ will have height of raft added
+      printOffsetZ += MakeRaft(); // printOffsetZ will have height of raft added
     }
 
   state.ResetLastWhere(Vector3d::ZERO);

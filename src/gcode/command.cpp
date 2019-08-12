@@ -347,15 +347,14 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 }
 
 
-void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short ccw)
+void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz)
 {
   Vector3d arcpoint;
   Vector3d radiusv = lastPos-center;
   radiusv.z() = 0;
   double astep = angle/radiusv.length()/30.;
-  if (angle/astep > 10000) astep = angle/10000;
-  if (angle<0) ccw=!ccw;
-  Vector3d axis(0.,0.,ccw?1.:-1.);
+  if (abs(angle/astep) > 1000) astep = angle/1000;
+  Vector3d axis(0.,0.,1.);
   double startZ = lastPos.z();
   for (double a = 0.; abs(a) < abs(angle); a+=astep){
     arcpoint = center + radiusv.rotate(a, axis);
@@ -367,8 +366,8 @@ void draw_arc(Vector3d &lastPos, Vector3d center, double angle, double dz, short
 }
 
 void Command::draw(Vector3d &lastPos, const Vector3d &offset,
-           double extrwidth,
-           bool arrows,  bool debug_arcs) const
+                   double extrwidth,
+                   bool arrows,  bool debug_arcs) const
 {
   Vector3d off_where = where + offset;
   Vector3d off_lastPos = lastPos + offset;
@@ -397,11 +396,10 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           else
               glColor4f(1.f,0.5f,0.0f,ccol[3]);
       }
-      double angle = double(calcAngle(-arcIJK, off_where - center, ccw));
-      //if (abs(angle) < 0.00001) angle = 0;
+      double angle = calcAngle(-arcIJK, off_where - center, ccw);
       double dz = off_where.z()-(off_lastPos).z(); // z move with arc
       Vector3d arcstart = off_lastPos;
-      draw_arc(off_lastPos, center, angle, dz, ccw);
+      draw_arc(off_lastPos, center, angle, dz);
       // extrusion boundary for arc:
       if (extrwidth > 0) {
           glEnd();
@@ -411,9 +409,9 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
           Vector3d dradius = normarcIJK*extrwidth/2;
           glBegin(GL_LINES);
           Vector3d offstart = arcstart+dradius;
-          draw_arc(offstart, center, angle, dz, ccw);
+          draw_arc(offstart, center, angle, dz);
           offstart = arcstart-dradius;
-          draw_arc(offstart, center, angle, dz, ccw);
+          draw_arc(offstart, center, angle, dz);
       }
       glEnd();
   } // end ARCs
@@ -522,7 +520,7 @@ double Command::time(const Vector3d &from) const
     case ARC_CCW: {
         ccw = true;
         double angle = double(calcAngle(-arcIJK, where - arcIJK - from, ccw));
-        return angle * arcIJK.length() / f * 60.;
+        return abs(angle) * arcIJK.length() / f * 60.;
     }
     case ZMOVE:
     case RAPIDMOTION:

@@ -325,8 +325,8 @@ double Poly::shortestConnectionSq(const Poly &p2, Vector2d &start, Vector2d &end
 
 double Poly::angleAtVertex(ulong i) const
 {
-  return double(planeAngleBetween(getVertexCircular(i)-getVertexCircular(i-1),
-                                  getVertexCircular(i+1)-getVertexCircular(i)));
+  return planeAngleBetween(getVertexCircular(i)-getVertexCircular(i-1),
+                           getVertexCircular(i+1)-getVertexCircular(i), true);
 }
 
 bool Poly::vertexInside2(const Vector2d &point, double maxoffset) const
