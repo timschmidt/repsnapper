@@ -85,12 +85,13 @@ public:
                       long startLine = 0,  long endLine = 0,
                       bool withChecksums = true);
   bool StopPrinting( bool wait = true );
-  bool ContinuePrinting( bool wait = true );
+  void Pause();
+  bool isPaused();
+  bool ContinuePrinting();
   void Inhibit( bool value = true );
 
   void UpdateTemperatureMonitor( void );
 
-  void Pause( void ) { StopPrinting(); }
   bool SwitchPower( bool on );
   bool SelectExtruder( int extruder_no=-1 );
   bool SetTemp(const QString &name, int num, float value);

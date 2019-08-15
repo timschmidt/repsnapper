@@ -239,19 +239,24 @@ bool Printer::StartPrinting(QTextDocument *document,
     else if (endLine > startLine)
         endLine = min(endLine, numlines);
     else return false;
-    is_printing = true;
-    emit printing_changed();
 
     commandBuffer.clear();
 
     lineno_to_print = withChecksums ? startLine : -1;
-    long lineno = lineno_to_print;
 
-    currentPos = Vector3d::ZERO;
-
-    main->startProgress("Printing", endLine);
-    if (!Send("M110 N" + std::to_string(lineno_to_print-1))) // tell line no before next line
+    // tell line no before next line:
+    if (!Send("M110 N" + std::to_string(lineno_to_print-1))) {
+        cerr << "Error sending line number - can't print";
         return false;
+    }
+
+    long lineno = lineno_to_print;
+    currentPos = Vector3d::ZERO;
+    main->startProgress("Printing", endLine);
+    is_printing = true;
+    idle_timer->stop();
+    emit printing_changed();
+
     while (is_printing && lineno_to_print >= 0 && lineno_to_print < endLine) {
         QTextBlock block = document->findBlockByLineNumber(int(lineno_to_print));
         if (!block.isValid()) break;
@@ -268,6 +273,8 @@ bool Printer::StartPrinting(QTextDocument *document,
         }
     }
     is_printing = false;
+    lineno_to_print = 0;
+    idle_timer->start();
     emit printing_changed();
     return true;
 }
@@ -297,8 +304,23 @@ bool Printer::StopPrinting( bool wait ) {
 
 }
 
-bool Printer::ContinuePrinting( bool wait ) {
-  bool ret = false;//ThreadedPrinterSerial::ContinuePrinting( wait );
+void Printer::Pause()
+{
+    if (isPaused()) {
+        ContinuePrinting();
+    } else {
+        idle_timer->start();
+        is_printing = false;
+    }
+    emit printing_changed();
+}
+
+bool Printer::isPaused()
+{
+    return !is_printing && lineno_to_print > 0;
+}
+
+bool Printer::ContinuePrinting() {
   idle_timer->stop();
   is_printing = true;
   emit printing_changed();
@@ -325,7 +347,7 @@ bool Printer::ContinuePrinting( bool wait ) {
             self.send_now("G1 F" + str(self.pauseF))
 */
 
-  return ret;
+  return true;
 }
 
 void Printer::Inhibit( bool value ) {
@@ -520,6 +542,7 @@ void Printer::UpdateTemperatureMonitor( void ) {
     }
 }
 
+
 bool Printer::Idle( void ) {
     string str;
     bool is_connected;
@@ -536,6 +559,11 @@ bool Printer::Idle( void ) {
     }
   }
 */
+    if (is_printing) {
+        idle_timer->stop();
+        return false;
+    }
+
     cerr << "idle" << endl;
     is_connected = serialPort->isOpen();
     if (is_connected) {
@@ -556,7 +584,6 @@ bool Printer::Idle( void ) {
     was_connected = is_connected;
     emit serial_state_changed(is_connected ? SERIAL_CONNECTED : SERIAL_DISCONNECTED);
   }
-
 
   return true;
 }
@@ -642,7 +669,7 @@ void Printer::ParseResponse( QString line ) {
             if (extrM.length()==1)
                 extr = extrM.toUInt();
 
-            qDebug() << match.captured("set") ;
+//            qDebug() << match.captured("set") ;
             double temp = match.captured("temp").toDouble();
             double settemp = match.captured("set").toDouble();
             main->getTempsPanel()->setExtruderTemp(extr, int(0.5+temp), int(0.5+settemp));

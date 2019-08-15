@@ -59,6 +59,7 @@ public:
     void setBedTemp(int temp, int set_temp=-1);
     int getSpeed(const QString &name);
     void setEnabled(const QString &name, bool enabled);
+    void setIsPrinting(bool printing);
 };
 
 class MainWindow : public QMainWindow

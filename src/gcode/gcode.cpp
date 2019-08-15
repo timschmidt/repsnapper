@@ -611,6 +611,8 @@ bool GCode::MakeText(QTextDocument *document,
   QString GcodeLayer = settings->get_string("GCode/Layer");
   QString GcodeEnd   = settings->get_string("GCode/End");
 
+  double duration = 0.;
+
   QString GCodeTxt;
   if (progress)
       if (!progress->restart(_("Collecting GCode"), commands.size()))
@@ -636,6 +638,7 @@ bool GCode::MakeText(QTextDocument *document,
     const bool relativeecode = settings->get_boolean("Slicing/RelativeEcode");
     uint currextruder = 0;
     vector<QChar> extLetters = settings->get_extruder_letters();
+
     for (ulong i = 0; i < commands.size(); i++) {
       QChar E_letter;
       if (useTcommand) // use first extruder's code for all extuders
@@ -650,7 +653,6 @@ bool GCode::MakeText(QTextDocument *document,
           progress->emit update_signal(i);
       if (!progress->do_continue) break;
 
-
       if ( commands[i].Code == LAYERCHANGE ) {
         layerchanges.push_back(i);
         if (GcodeLayer.length()>0)
@@ -662,6 +664,8 @@ bool GCode::MakeText(QTextDocument *document,
         cerr << i << " Z < 0 "  << commands[i].info() << endl;
       }
       else {
+          duration += commands[i].time(LastPos);
+//          cerr << duration << endl;
         GCodeTxt += (QString::fromStdString(
                          commands[i].GetGCodeText(LastPos, lastE, lastF,
                                                   relativeecode,
@@ -670,6 +674,7 @@ bool GCode::MakeText(QTextDocument *document,
       }
     }
 
+
     GCodeTxt += ("\n; End GCode\n" + GcodeEnd + "\n");
 
     buffer->setPlainText(GCodeTxt);
@@ -677,19 +682,6 @@ bool GCode::MakeText(QTextDocument *document,
     if (progress) progress->stop();
     return true;
 }
-
-// void GCode::Write (Model *model, string filename)
-// {
-//   FILE *file;
-
-//   file = fopen (filename.c_str(), "w+");
-//   if (!file)
-//     model->alert (_("failed to open file"));
-//   else {
-//     fprintf (file, "%s", buffer->get_text().c_str());
-//     fclose (file);
-//   }
-// }
 
 // bool GCode::append_text (const std::string &line)
 // {

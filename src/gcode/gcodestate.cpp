@@ -38,7 +38,6 @@ struct GCodeStateImpl
 GCodeState::GCodeState(GCode &code)
 {
   pImpl = new GCodeStateImpl(code);
-  timeused = 0;
 }
 GCodeState::~GCodeState()
 {
@@ -68,7 +67,6 @@ void GCodeState::AppendCommand(Command &command, bool relativeE,
             command.e += pImpl->lastCommand.e;
         if (command.where) {
             if (pImpl->lastCommand.where && command.f!=0.) {
-                timeused += command.time(pImpl->lastCommand.where);
                 const vector<Command> &prevCommands = pImpl->code.commands;
                 if (prevCommands.size()>2){
                     if (prevCommands[prevCommands.size()-2].where
@@ -81,19 +79,20 @@ void GCodeState::AppendCommand(Command &command, bool relativeE,
                     }
                 }
             }
-            pImpl->LastPosition = command.where;
             if (merged)
                 pImpl->lastCommand = pImpl->code.commands.back();
             else
                 pImpl->lastCommand = command;
+            pImpl->LastPosition = command.where;
         }
     } else {
         if (command.Code == SELECTEXTRUDER){
             lastExtruder = command.extruder_no;
         }
     }
-    if (!merged)
+    if (!merged) {
         pImpl->code.commands.push_back(command);
+    }
     if (command.where && command.where.z() > pImpl->code.Max.z())
         pImpl->code.Max.z() = command.where.z();
 }

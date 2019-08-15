@@ -73,7 +73,6 @@ class GCodeState {
   void  ResetLastWhere(const Vector3d &to);
   double DistanceFromLastTo(const Vector3d &here);
   double LastCommandF();
-  double timeused;
   uint lastExtruder;
 };
 

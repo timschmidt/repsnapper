@@ -896,29 +896,20 @@ void Model::ConvertToGCode()
   // if (shapes.back()->dimensions() == 2)
   //   gcode.layerchanges.push_back(0);
 
-  int h = int(state.timeused)/3600;
-  int m = int(state.timeused)%3600/60;
-  int s = (int(state.timeused)-3600*h-60*m);
-  std::ostringstream ostr;
-  ostr << _("Time Estimation: ") ;
-  if (h>0) ostr << h << " " << _("h") << " ";
-  ostr <<m << " " <<_("m") << " " << s << " " << _("s") ;
 
-/*
-  int gctime = int(gcode->GetTimeEstimation(Vector3d::ZERO));
-  if (abs(state.timeused - gctime) > 10) {
-    h = gctime/3600;
-    m = gctime%3600/60;
-    s = gctime-3600*h-60*m;
-    ostr << _(" / GCode Estimation: ");
-    if (h>0) ostr << h <<_("h");
-    ostr<< m <<_("m") << s <<_("s") ;
-  }
-*/
+  uint gctime = uint(gcode->GetTimeEstimation(Vector3d::ZERO));
+  uint h = gctime/3600;
+  uint m = gctime%3600/60;
+  uint s = gctime-3600*h-60*m;
+  ostringstream ostr;
+  ostr << _("GCode Estimation: ");
+  if (h>0) ostr << h <<_(" h ");
+  ostr << m <<_(" m ") << s <<_(" s ") ;
+
   ostr.setf( std::ios::fixed, std:: ios::floatfield );
   ostr.precision(1);
   double totlength = gcode->GetTotalExtruded(settings->get_boolean("Slicing/RelativeEcode"));
-  ostr << _(" - total extruded: ") << totlength << "mm";
+  ostr << _("- total extruded: ") << totlength << "mm";
   // TODO: ths assumes all extruders use the same filament diameter
   const double diam = settings->get_double(Settings::numbered("Extruder",currentExtruder)+
                                            "/FilamentDiameter");
@@ -927,8 +918,7 @@ void Model::ConvertToGCode()
   ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)";
   if (statusbar)
     statusbar->showMessage(QString::fromStdString(ostr.str()));
-  else
-    cout << ostr.str() << endl;
+  cout << ostr.str() << endl;
 
   const int time_used = start_time.elapsed()/1000; // seconds
   cerr << "GCode generated in " << time_used << " seconds. ";

@@ -519,7 +519,7 @@ double Command::time(const Vector3d &from) const
         ccw = false; [[clang::fallthrough]];
     case ARC_CCW: {
         ccw = true;
-        double angle = double(calcAngle(-arcIJK, where - arcIJK - from, ccw));
+        double angle = calcAngle(-arcIJK, where - arcIJK -from, ccw);
         return abs(angle) * arcIJK.length() / f * 60.;
     }
     case ZMOVE:

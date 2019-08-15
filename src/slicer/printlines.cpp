@@ -23,6 +23,8 @@
 #include "../gcode/gcodestate.h"
 #include "../ui/progress.h"
 
+#include <algorithm>
+
 //////// Generic PLine functions
 
 template <size_t M>
@@ -75,8 +77,7 @@ uint Printlines::divideline(ulong lineindex,
   if (length > linelen) return 0;
   Vector3d splitp = l->splitpoint(length);
   if ( !l->arc ) {
-    uint nlines = divideline(lineindex, splitp, lines);
-    return nlines;
+    return divideline(lineindex, splitp, lines);
   } else {
     const double angle = l->angle * length/linelen;
     PLine3 *line1 = new PLine3(*l);
@@ -1197,7 +1198,7 @@ ulong Printlines::makeCornerArc(double maxdistance, double minarclength,
                                 center, I1);
   if (is==0) return 0;
   const double radius = center.distance(p1);
-  if (radius > 10*maxdistance) return 0; // calc error(?)
+  if (radius > 10*maxdistance) return 0; // angle too small
 
   // need 2 half arcs?
   const bool split =
@@ -1297,12 +1298,11 @@ double Printlines::time(const vector<PLine<3> *> &lines, ulong from, ulong to)
 
 template <size_t M>
 uint Printlines::divideline(ulong lineindex,
-                const vmml::vector<M, double> &point,
-                vector< PLine<M> *> &lines)
+                            const vmml::vector<M, double> &point,
+                            vector< PLine<M> *> &lines)
 {
   vector< PLine<M> *> newlines = lines[lineindex]->division(point);
-  replace(lines, lineindex, newlines);
-  return uint(newlines.size())-1;
+  return replace(lines, lineindex, newlines);
 }
 
 template <size_t M>
@@ -1311,8 +1311,7 @@ uint Printlines::divideline(ulong lineindex,
                             vector< PLine<M> *> &lines)
 {
   vector<PLine<M>*> newlines = lines[lineindex]->division(points);
-  replace(lines, lineindex, newlines);
-  return uint(newlines.size());
+  return replace(lines, lineindex, newlines);
 }
 
 
@@ -1592,12 +1591,14 @@ bool Printlines::capCorner(PLine2 &l1, PLine2 &l2,
 }
 
 template <size_t M>
-void Printlines::replace(vector<PLine<M>*> &lines, ulong lineindex,
+uint Printlines::replace(vector<PLine<M>*> &lines, ulong lineindex,
                          const vector<PLine<M>*> &newlines){
+    if (newlines.size() == 0) return 0;
     lines[lineindex] = newlines[0];
     if (newlines.size() > 1)
         lines.insert(lines.begin() + lineindex+1,
                      newlines.begin()+1, newlines.end());
+    return uint(newlines.size())-1;
 }
 
 void Printlines::optimizeCorners(double linewidth, double linewidthratio, double optratio,

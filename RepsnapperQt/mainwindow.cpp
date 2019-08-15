@@ -240,6 +240,7 @@ void MainWindow::printerConnection(int state)
     ui_main->TemperaturesBox->setEnabled(connected);
     ui_main->Hardware_Portname->setEnabled(!connected);
     ui_main->g_send_gcode->setEnabled(connected);
+    tempsPanel->setIsPrinting(false);
     if (connected) {
         ui_main->p_print->setEnabled(m_model->haveGCode());
     }
@@ -257,14 +258,20 @@ TemperaturePanel *MainWindow::getTempsPanel() const
 
 void MainWindow::printingChanged()
 {
-    bool isPrinting = m_printer->IsPrinting();
-    ui_main->p_stop->setEnabled(isPrinting);
-    ui_main->p_pause->setEnabled(isPrinting);
-    ui_main->p_print->setEnabled(!isPrinting);
-    ui_main->AxisControlBox->setEnabled(!isPrinting);
-    ui_main->gcodeActions->setEnabled(!isPrinting);
-    m_model->m_inhibit_modelchange = isPrinting;
-    if (!isPrinting) {
+    bool printing = m_printer->IsPrinting();
+    bool paused = m_printer->isPaused();
+    ui_main->p_stop->setEnabled(printing || paused);
+    ui_main->p_pause->setEnabled(printing || paused);
+    if (paused)
+        ui_main->p_pause->setText("Continue");
+    else
+        ui_main->p_pause->setText("Pause");
+    ui_main->p_print->setEnabled(!printing);
+    ui_main->AxisControlBox->setEnabled(!printing || paused);
+    ui_main->gcodeActions->setEnabled(!printing && !paused);
+    m_model->m_inhibit_modelchange = printing || paused;
+    tempsPanel->setIsPrinting(printing && !paused);
+    if (!printing) {
         m_progress->stop();
         m_model->setCurrentPrintingLine(0);
     } else {
@@ -934,4 +941,10 @@ void TemperaturePanel::setEnabled(const QString &name, bool enabled)
 {
     if (rows.contains(name))
         rows[name]->widget->setEnabled(enabled);
+}
+
+void TemperaturePanel::setIsPrinting(bool printing)
+{
+    for (Ui::TemperatureWidget *w : rows)
+        w->ExtrControl->setEnabled(!printing);
 }

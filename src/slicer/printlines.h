@@ -49,7 +49,7 @@ public:
     uint extruder_no;
     double lifted;
 
-    bool arc = false; // is arc
+    bool arc; // is arc
     double angle; // angle of line (in 2d lines), or arc angle, angle<0: clockwise arc
     vmml::vector<M, double> arccenter;
 
@@ -333,7 +333,7 @@ private:
 
 
     template <size_t M>
-    static void replace(vector< PLine<M> *> &lines,
+    static uint replace(vector< PLine<M> *> &lines,
                         ulong lineindex,
                         const vector< PLine<M> *> &newlines);
 
