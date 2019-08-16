@@ -58,13 +58,13 @@ public:
     bool has_absolute_extrusion() const {return (abs(absolute_extrusion)>0.00001);}
 
     vmml::vector<M, double> dir() const {
-        return vmml::vector<M, double>(to) - vmml::vector<M, double>(from);
+        return to - from;
     }
     vmml::vector<M, double> splitpoint(double at_length) const;
 
     vmml::vector<M, double> midpoint() const;
 
-    double time() const;
+    double time() const {return length() / speed;}
     double lengthSq() const;
     double length() const;
 
@@ -95,10 +95,15 @@ public:
     PLine3(const PLine3 &rhs);
     PLine3(const PLine2 &pline, double z, double extrusion_per_mm_);
     PLine3(const Command &command);
+    ~PLine3(){}
 
     Command command;
 
     double extrusion; // total extrusion in mm of filament
+    void scaleExtrusion(double factor) {
+        extrusion *= factor;
+        absolute_extrusion *= factor;
+    }
 
     Vector3d arcIJK() const;  // if is an arc
 
@@ -207,6 +212,7 @@ typedef struct {
 class Printlines
 {
     friend class PrintPoly;
+    friend class Antiooze;
 
     vector<PrintPoly *> printpolys;
 
@@ -269,14 +275,8 @@ public:
     ulong makeCornerArc(double maxdistance, double minarclength,
                         ulong ind, vector<PLine<2> *> &lines) const;
 
-    static bool find_nextmoves(double minlength, ulong startindex,
-                               AORange &range,
-                               const vector<PLine<3> *> &lines);
     static uint makeAntioozeRetract(vector<PLine<3> *> &lines,
-                                    Settings *settings,
-                                    ViewProgress * progress = NULL);
-    static uint insertAntioozeHaltBefore(ulong index, double amount, double speed,
-                                         vector<PLine<3> *> &lines);
+                                    Settings *settings);
 
     static double length(const vector<PLine<3> *> &lines, ulong from, ulong to);
 
@@ -300,14 +300,14 @@ public:
                   const double extrusion_per_mm,
                   const double maxEspeed) const;
 
-    static double totalLength(const vector<PLine2> &lines);
-    static double totalLength(const vector<PLine3> &lines);
+    static double totalLength(const vector<PLine<2> *> &lines);
+    static double totalLength(const vector<PLine<3> *> &lines);
     static double totalSeconds(const vector<PLine<2>*> &lines);
     static double totalSecondsExtruding(const vector<PLine<2>*> &lines);
 
-    static double total_Extrusion(const vector< PLine3 > &lines);
-    static double total_rel_Extrusion(const vector< PLine3 > &lines);
-    static double total_abs_Extrusion(const vector< PLine3 > &lines);
+    static double total_Extrusion(const vector<PLine<3> *> &lines);
+    static double total_rel_Extrusion(const vector<PLine<3> *> &lines);
+    static double total_abs_Extrusion(const vector<PLine<3> *> &lines);
 
     // every added poly will set this
     void setZ(double z) {this->z = z + Zoffset;}
@@ -353,11 +353,6 @@ private:
     static uint divideline(ulong lineindex,
                            const vector< vmml::vector<M, double> > &points,
                            vector< PLine<M> *> &lines);
-
-    static ulong distribute_AntioozeAmount(double AOamount, double AOspeed,
-                                           ulong fromline, ulong &toline,
-                                           vector<PLine<3> *> &lines,
-                                           double &havedistributed);
 
     Vector2d arcCenter(const PLine2 &l1, const PLine2 &l2,
                        double maxerr) const;

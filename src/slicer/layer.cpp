@@ -687,6 +687,7 @@ void Layer::MakeGCode (Vector3d &start,
   delete printlines;
   Printlines::makeAntioozeRetract(plines, settings);
   Printlines::toCommands(plines, settings, gc_state);
+  plines.clear();
 }
 
 // Convert to 2D Printlines

@@ -846,6 +846,7 @@ void Model::ConvertToGCode()
       bool farthestStart = settings->get_boolean("Slicing/FarthestLayerStart");
       Vector3d start = state.LastPosition();
       vector<vector<PLine<3>*>> l_plines(layercount);
+      vector<vector<PLine<3>*>> plines(layercount);
       ulong done = 0;
 #ifdef _OPENMP
 #pragma omp for ordered schedule(dynamic)
@@ -865,7 +866,7 @@ void Model::ConvertToGCode()
 //          cerr <<  "Z " << layers[p]->Z <<  " = " << printlines->getZ() << endl;
           layers[p]->makePrintLines3(start2, printlines, l_plines[p], settings);
           delete printlines;
-          Printlines::makeAntioozeRetract(l_plines[p], settings, nullptr);
+          Printlines::makeAntioozeRetract(l_plines[p], settings);
 #ifdef _OPENMP
 #pragma omp ordered
 #endif

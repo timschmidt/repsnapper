@@ -49,6 +49,7 @@ SOURCES += \
         ../src/render.cpp \
         ../src/settings.cpp \
         ../src/shape.cpp \
+    ../src/slicer/antiooze.cpp \
         ../src/slicer/clipping.cpp \
         ../src/slicer/geometry.cpp \
         ../src/slicer/infill.cpp \
@@ -56,7 +57,6 @@ SOURCES += \
         ../src/slicer/layer.cpp \
         ../src/slicer/poly.cpp \
         ../src/slicer/printlines.cpp \
-        ../src/slicer/printlines_antiooze.cpp \
         ../src/transform3d.cpp \
         ../src/triangle.cpp \
         ../src/ui/prefs_dlg.cpp \
@@ -92,6 +92,7 @@ HEADERS += \
         ../src/render.h \
         ../src/settings.h \
         ../src/shape.h \
+    ../src/slicer/antiooze.h \
         ../src/slicer/clipping.h \
         ../src/slicer/geometry.h \
         ../src/slicer/infill.h \

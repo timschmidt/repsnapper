@@ -115,6 +115,8 @@ private:
 
     void connectButtons(QWidget *widget);
 
+    bool layerDisplayWasOn = false;
+    bool gcodeDisplayWasOn = false;
 private slots:
     void generateGCode();
     void on_actionOpen_triggered();

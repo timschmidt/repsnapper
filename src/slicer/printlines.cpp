@@ -18,6 +18,7 @@
 */
 
 #include "printlines.h"
+#include "antiooze.h"
 #include "poly.h"
 #include "layer.h"
 #include "../gcode/gcodestate.h"
@@ -40,23 +41,21 @@ double PLine<M>::lengthSq() const
 template <size_t M>
 vmml::vector<M, double> PLine<M>::splitpoint(double at_length) const
 {
-  if (area == COMMAND) return vmml::vector<M, double>::ZERO;
-  const double lratio = at_length/length();
-  if (!arc)
-    return from + dir() * lratio;
-  else {
-    vmml::vector<M, double> point = from;
-    const double rangle = angle * lratio;
-    if (M == 3) {
-      Vector2d from_rot(from.x(), from.y());
-      rotate(from_rot, Vector2d(arccenter.x(), arccenter.y()), rangle);
-      double dz = to.z()-from.z();
-      point.set(from_rot.x(), from_rot.y(), from.z() + dz*lratio);
-    } else {
-      point = rotated(from, Vector2d(arccenter.x(), arccenter.y()), rangle);
+    if (area == COMMAND) return nullptr;
+    const double lratio = at_length/length();
+    assert(lratio>0. && lratio <1.);
+    if (!arc)
+        return from + dir() * lratio;
+    else {
+        const double rangle = angle * lratio;
+        if (M==2){
+            return rotated(from, Vector2d(arccenter.x(), arccenter.y()), rangle);
+        } else {
+            Vector2d frot(from.x(), from.y());
+            rotate(frot, Vector2d(arccenter.x(), arccenter.y()), rangle);
+            return Vector3d(frot.x(), frot.y(), from.z() + (to.z()-from.z())*lratio);
+        }
     }
-    return point;
-  }
 }
 
 template<size_t M>
@@ -64,42 +63,6 @@ vmml::vector<M, double> PLine<M>::midpoint() const
 {
  return 0.5 * (from + to);
 }
-
-
-// split line at given length
-template<>
-uint Printlines::divideline(ulong lineindex,
-                            const double length,
-                            vector< PLine<3> *> &lines)
-{
-  PLine3 *l = (PLine3*)lines[lineindex];
-  double linelen = l->length();
-  if (length > linelen) return 0;
-  Vector3d splitp = l->splitpoint(length);
-  if ( !l->arc ) {
-    return divideline(lineindex, splitp, lines);
-  } else {
-    const double angle = l->angle * length/linelen;
-    PLine3 *line1 = new PLine3(*l);
-    PLine3 *line2 = new PLine3(*l);
-    line1->to = splitp;
-    line1->angle = angle;
-    line2->from = splitp;
-    line2->angle = l->angle - angle;
-    if (l->absolute_extrusion != 0.) { // distribute absolute extrusion
-      const double totlength = line1->length() + line2->length();
-      line1->absolute_extrusion = l->absolute_extrusion * line1->length()/totlength;
-      line2->absolute_extrusion = l->absolute_extrusion * line2->length()/totlength;
-    }
-    line1->extrusion *= line1->angle/l->angle;
-    line2->extrusion *= line2->angle/l->angle;
-    delete lines[lineindex];
-    lines[lineindex] = line1;
-    lines.insert(lines.begin() + lineindex + 1, line2);
-    return 1;
-  }
-}
-
 
 template <size_t M>
 void PLine<M>::move_to(const vmml::vector<M, double> &from_,
@@ -183,7 +146,6 @@ PLine3::PLine3(const Command &command_)
   extruder_no = command.extruder_no;
   arc = false;
 }
-
 
 Vector3d PLine3::arcIJK() const
 {
@@ -308,15 +270,6 @@ int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
   return command_count;
 }
 
-
-template <size_t M>
-double PLine<M>::time() const
-{
-  if (area == COMMAND) return 0;
-  assert(speed >= 0);
-  return length()/speed;
-}
-
 template <size_t M>
 vector<PLine<M> *> PLine<M>::division(const vmml::vector<M, double> &point) const
 {
@@ -369,8 +322,8 @@ vector<PLine<3>*> PLine<3>::division(const vector<Vector3d> &points) const
   const double extrusion = l->extrusion;
   double totlength = 0;
   newlines.push_back(l);
-  newlines.back()->to = points[0];
-  totlength += newlines.back()->length();
+  newlines[0]->to.set(points[0]);
+  totlength += newlines[0]->length();
   for (uint i = 0; i < npoints-1; i++) {
       PLine3 *nl = new PLine3 (*l);
       nl->move_to(points[i], points[i+1]);
@@ -378,7 +331,7 @@ vector<PLine<3>*> PLine<3>::division(const vector<Vector3d> &points) const
       totlength += nl->length();
   }
   PLine3 *nl = new PLine3 (*(PLine3*)this);
-  nl->from = points[npoints-1];
+  nl->from.set(points.back());
   newlines.push_back(nl);
   totlength += nl->length();
   // normal extrusion adjusted to new length, but absolute extrusion is kept
@@ -394,12 +347,12 @@ vector<PLine<3>*> PLine<3>::division(const vector<Vector3d> &points) const
   }
   // check extrusion amount:
 #if 0
-      double totext = 0;
-      for (uint i = 0; i < newlines.size(); i++)
-          totext += ((PLine3*)newlines[i])->extrusion;
-      if (abs(totext/extrusion - totlength/length())>0.00000001)
-          cerr << totext << " " << extrusion <<  " -- " <<totlength << " "<<length()<< endl;
+  double totext = 0;
+  for (uint i = 0; i < newlines.size(); i++) {
+      totext += ((PLine3*)newlines[i])->extrusion;
   }
+  if (abs(totext/extrusion - totlength/length())>0.00000001)
+      cerr << totext << " " << extrusion <<  " -- " <<totlength << " "<<length()<< endl;
 #endif
   return newlines;
 }
@@ -1314,6 +1267,39 @@ uint Printlines::divideline(ulong lineindex,
   return replace(lines, lineindex, newlines);
 }
 
+// split line at given length
+template<>
+uint Printlines::divideline(ulong lineindex,
+                            const double length,
+                            vector< PLine<3> *> &lines)
+{
+  PLine3 *l = (PLine3*)lines[lineindex];
+  double linelen = l->length();
+  if (length > linelen) return 0;
+  if (abs(length/linelen) < 0.01) return 0;
+  if (abs(1.-length/linelen) < 0.01) return 0;
+  Vector3d splitp =  l->splitpoint(length);
+//  cerr << lines.size();
+  uint added = 0;
+  if ( !l->arc ) {
+    added = divideline(lineindex, splitp, lines);
+  } else {
+    vector<PLine<3>*> newlines;
+    newlines.push_back(new PLine3(*l));
+    newlines.push_back(new PLine3(*l));
+    const double angle = l->angle * length/linelen;
+    newlines[0]->to = splitp;
+    newlines[0]->angle = angle;
+    newlines[1]->from = splitp;
+    newlines[1]->angle = l->angle - angle;
+    ((PLine3*)newlines[0])->scaleExtrusion(newlines[0]->angle/l->angle);
+    ((PLine3*)newlines[1])->scaleExtrusion(newlines[1]->angle/l->angle);
+    uint added = replace(lines, lineindex, newlines);
+  }
+//  cerr << " + " <<  added << " ?= " << lines.size() << " ";
+  return added;
+}
+
 
 // walk around holes
 #define NEWCLIP 1
@@ -1592,12 +1578,12 @@ bool Printlines::capCorner(PLine2 &l1, PLine2 &l2,
 
 template <size_t M>
 uint Printlines::replace(vector<PLine<M>*> &lines, ulong lineindex,
-                         const vector<PLine<M>*> &newlines){
+                         const vector<PLine<M>*> &newlines) {
     if (newlines.size() == 0) return 0;
-    lines[lineindex] = newlines[0];
+    lines.erase(lines.begin() + lineindex);
     if (newlines.size() > 1)
-        lines.insert(lines.begin() + lineindex+1,
-                     newlines.begin()+1, newlines.end());
+        lines.insert(lines.begin() + lineindex,
+                     newlines.begin(), newlines.end());
     return uint(newlines.size())-1;
 }
 
@@ -1664,47 +1650,47 @@ void Printlines::getLines(const vector<PLine<2>*> &inlines,
   }
 }
 
-double Printlines::totalLength(const vector<PLine2> &lines)
+double Printlines::totalLength(const vector<PLine<2> *> &lines)
 {
   double l = 0;
-  for (lineCIt lIt = lines.begin(); lIt!=lines.end();++lIt){
-    l += lIt->length();
+  for (PLine<2> *line : lines) {
+    l += line->length();
   }
   return l;
 }
-double Printlines::totalLength(const vector<PLine3> &lines)
+double Printlines::totalLength(const vector<PLine<3> *> &lines)
 {
   double l = 0;
-  for (line3CIt lIt = lines.begin(); lIt!=lines.end();++lIt){
-    l += lIt->length();
-  }
-  return l;
-}
-
-
-double Printlines::total_rel_Extrusion(const vector< PLine3 > &lines)
-{
-  double l = 0;
-  for (line3CIt lIt = lines.begin(); lIt!=lines.end();++lIt){
-    l += lIt->extrusion;
+  for (PLine<3> *line : lines) {
+    l += line->length();
   }
   return l;
 }
 
-double Printlines::total_abs_Extrusion(const vector< PLine3 > &lines)
+
+double Printlines::total_rel_Extrusion(const vector< PLine<3> *> &lines)
 {
   double l = 0;
-  for (line3CIt lIt = lines.begin(); lIt!=lines.end();++lIt){
-    l +=  lIt->absolute_extrusion;
+  for (PLine<3> *line : lines) {
+    l += ((PLine3*)line)->extrusion;
   }
   return l;
 }
 
-double Printlines::total_Extrusion(const vector< PLine3 > &lines)
+double Printlines::total_abs_Extrusion(const vector< PLine<3> *> &lines)
 {
   double l = 0;
-  for (line3CIt lIt = lines.begin(); lIt!=lines.end();++lIt){
-    l +=  lIt->extrusion + lIt->absolute_extrusion;
+  for (PLine<3> *line : lines) {
+    l +=  line->absolute_extrusion;
+  }
+  return l;
+}
+
+double Printlines::total_Extrusion(const vector< PLine<3> *> &lines)
+{
+  double l = 0;
+  for (PLine<3> *line : lines) {
+      l +=  ((PLine3*)line)->extrusion + line->absolute_extrusion;
   }
   return l;
 }
@@ -1764,7 +1750,6 @@ void Printlines::toCommands(const vector<PLine<3> *> &plines,
     ((PLine3*)plines[i])->getCommands(lastPos, commands,
                                       minspeed, movespeed, minZspeed, maxZspeed,
                                       maxAOspeed, useTCommand);
-    delete plines[i];
   }
   gc_state.AppendCommands(commands, settings->get_boolean("Slicing/RelativeEcode"),
                           settings->get_double("Slicing/MinCommandLength"));
@@ -1777,4 +1762,38 @@ string Printlines::info() const
   ostringstream ostr;
   ostr << "Printlines "<<name<<" at z=" <<z;
   return ostr.str();
+}
+
+
+uint Printlines::makeAntioozeRetract(vector<PLine<3> *> &lines,
+                                     Settings *settings)
+{
+    if (lines.empty()) return 0;
+  const QString extruder = Settings::numbered("Extruder", lines[0]->extruder_no);
+  if (!settings->get_boolean(extruder+"/EnableAntiooze")) return 0;
+
+
+  double
+    AOmindistance = settings->get_double(extruder+"/AntioozeDistance"),
+    AOamount      = settings->get_double(extruder+"/AntioozeAmount"),
+    AOspeed       = settings->get_double(extruder+"/AntioozeSpeed") * 60;
+    //AOonhaltratio = settings->Slicing.AntioozeHaltRatio;
+  if (lines.size() < 2 || AOmindistance <=0 || abs(AOamount) < 0.001) return 0;
+  // const double onhalt_amount = AOamount * AOonhaltratio;
+  // const double onmove_amount = AOamount - onhalt_amount;
+
+  uint total_added = 0;
+
+#ifdef AODEBUG
+  double total_extrusionsum = 0;
+  double total_ext = total_Extrusion(lines);
+  double total_rel = total_rel_Extrusion(lines);
+#endif
+
+  const double zLift = settings->get_double(extruder+"/AntioozeZlift");
+
+  Antiooze::applyAntiooze(lines, AOmindistance, AOamount, AOspeed, zLift);
+
+  return total_added;
+
 }

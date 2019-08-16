@@ -274,7 +274,11 @@ void MainWindow::printingChanged()
     if (!printing) {
         m_progress->stop();
         m_model->setCurrentPrintingLine(0);
+        ui_main->Display_DisplayGCode->setChecked(gcodeDisplayWasOn);
+        ui_main->Display_DisplayGCode->setChecked(layerDisplayWasOn);
     } else {
+        gcodeDisplayWasOn = ui_main->Display_DisplayGCode->isChecked();
+        layerDisplayWasOn = ui_main->Display_DisplayLayer->isChecked();
         ui_main->Display_DisplayGCode->setChecked(false);
         ui_main->Display_DisplayLayer->setChecked(false);
     }

@@ -330,7 +330,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabModel">
         <attribute name="title">
@@ -652,7 +652,7 @@
                   <double>360.000000000000000</double>
                  </property>
                  <property name="singleStep">
-                  <double>0.100000000000000</double>
+                  <double>1.000000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -702,7 +702,7 @@
                   <double>360.000000000000000</double>
                  </property>
                  <property name="singleStep">
-                  <double>0.100000000000000</double>
+                  <double>1.000000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -715,7 +715,7 @@
                   <double>360.000000000000000</double>
                  </property>
                  <property name="singleStep">
-                  <double>0.100000000000000</double>
+                  <double>1.000000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -726,6 +726,9 @@
                  </property>
                  <property name="maximum">
                   <double>999.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
                  </property>
                 </widget>
                </item>
