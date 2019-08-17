@@ -483,24 +483,24 @@ void Model::MakeFullSkins()
 }
 
 
-void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
+void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges, bool fillbottom)
 {
-  uint count = uint(layers.size());
-  if (count == 0) return;
-  if (!m_progress->restart (_("Find Uncovered"), 2*count+2)) return;
-  uint progress_steps=max<uint>(1,uint((2*count+2)/20));
+  uint nLayers = uint(layers.size());
+  if (nLayers == 0) return;
+  if (!m_progress->restart (_("Find Uncovered"), 2*nLayers+2)) return;
+  uint progress_steps=max<uint>(1,uint((2*nLayers+2)/20));
   // bottom to top: uncovered from above -> top polys
-  for (uint i = 0; i < count-1; i++)
+  for (uint i = 0; i < nLayers-1; i++)
     {
       if (i%progress_steps==0) m_progress->emit update_signal(i);
       if (!m_progress->do_continue) return;
       layers[i]->addFullPolygons(GetUncoveredPolygons(layers[i],layers[i+1]), make_decor);
     }
   // top to bottom: uncovered from below -> bridge polys
-  for (uint i = count-1; i > 0; i--)
+  for (uint i = nLayers-1; i > 0; i--)
     {
       //cerr << "layer " << i << endl;
-      if (i%progress_steps==0) m_progress->emit update_signal(count + count - i);
+      if (i%progress_steps==0) m_progress->emit update_signal(nLayers + nLayers - i);
       if (!m_progress->do_continue) return;
       //make_bridges = false;
       // no bridge on marked layers (serial build)
@@ -515,9 +515,10 @@ void Model::MakeUncoveredPolygons(bool make_decor, bool make_bridges)
     layers[i]->addFullPolygons(uncovered,make_decor);
       }
     }
-  m_progress->emit update_signal(2*count+1);
-  layers.front()->addFullPolygons(layers.front()->GetFillPolygons(), make_decor);
-  m_progress->emit update_signal(2*count+2);
+  m_progress->emit update_signal(2*nLayers+1);
+  if (fillbottom)
+      layers.front()->addFullPolygons(layers.front()->GetFillPolygons(), make_decor);
+  m_progress->emit update_signal(2*nLayers+2);
   layers.back()->addFullPolygons(layers.back()->GetFillPolygons(), make_decor);
   //m_progress->stop (_("Done"));
 }
@@ -575,7 +576,7 @@ void Model::MultiplyUncoveredPolygons()
           }
     }
   // top-down: mulitply upwards
-    for (int i=int(count)-1; i>=0 ; i--)
+  for (int i=int(count)-1; i>=0 ; i--)
     {
         if (i%progress_steps==0) m_progress->emit update_signal(count + count -i);
         if (!m_progress->do_continue)  return;
@@ -804,9 +805,10 @@ void Model::ConvertToGCode()
           (settings->get_double("Slicing/SolidThickness") > 0 ||
            settings->get_integer("Slicing/ShellCount") > 0))
       // not bridging when support
-      MakeUncoveredPolygons( settings->get_boolean("Slicing/MakeDecor"),
+      MakeUncoveredPolygons(settings->get_boolean("Slicing/MakeDecor"),
                             !settings->get_boolean("Slicing/NoBridges") &&
-                            !settings->get_boolean("Slicing/Support") );
+                            !settings->get_boolean("Slicing/Support"),
+                            !settings->get_boolean("Slicing/NoBottom"));
 
   if (settings->get_boolean("Slicing/Support"))
     // easier before having multiplied uncovered bottoms

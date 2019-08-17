@@ -1275,7 +1275,7 @@ uint Printlines::divideline(ulong lineindex,
 {
   PLine3 *l = (PLine3*)lines[lineindex];
   double linelen = l->length();
-  if (length > linelen) return 0;
+  if (linelen == 0. || length > linelen) return 0;
   if (abs(length/linelen) < 0.01) return 0;
   if (abs(1.-length/linelen) < 0.01) return 0;
   Vector3d splitp =  l->splitpoint(length);

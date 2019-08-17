@@ -196,7 +196,8 @@ private:
         void CleanupLayers();
         void CalcInfill();
         void MakeShells();
-        void MakeUncoveredPolygons(bool make_decor, bool make_bridges=true);
+        void MakeUncoveredPolygons(bool make_decor, bool make_bridges=true,
+                                   bool fillbottom = true);
         vector<Poly> GetUncoveredPolygons(const Layer *subjlayer,
                                           const Layer *cliplayer);
         void MakeFullSkins();

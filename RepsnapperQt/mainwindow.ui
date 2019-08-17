@@ -330,7 +330,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabModel">
         <attribute name="title">
@@ -1041,6 +1041,13 @@
                   <widget class="QCheckBox" name="Slicing_NoTopAndBottom">
                    <property name="text">
                     <string>No Covers</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="Slicing_NoBottom">
+                   <property name="text">
+                    <string>No Bottom</string>
                    </property>
                   </widget>
                  </item>

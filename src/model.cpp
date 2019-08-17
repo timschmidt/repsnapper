@@ -1220,11 +1220,12 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   uint firstLayers = uint(settings->get_integer("Slicing/FirstLayersNum"));
   uint altinfill = uint(settings->get_integer("Slicing/AltInfillLayers"));
   uint shellcount = uint(settings->get_integer("Slicing/ShellCount"));
+  bool nobottom = uint(settings->get_integer("Slicing/NoBottom"));
 
   InfillSet infills(*settings, layer->getMin(), layer->getMax());
   if (calcinfill)
     layer->CalcInfill(*settings, infills,
-                      LayerNr < shellcount,
+                      !nobottom && LayerNr < shellcount,
                       altinfill && LayerNr % altinfill == 0,
                       LayerNr < firstLayers);
 
