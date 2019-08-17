@@ -121,6 +121,8 @@ MainWindow::MainWindow(QWidget *parent) :
             SIGNAL(activated()), this, SLOT(on_actionOpen_triggered()));
     connect(new QShortcut(QKeySequence("CTRL+G"),this),
             SIGNAL(activated()), this, SLOT(generateGCode()));
+    connect(new QShortcut(QKeySequence("CTRL+A"), this),
+            SIGNAL(activated()), this, SLOT(selectAll()));
     connect(new QShortcut(QKeySequence::StandardKey::Delete,this),
             SIGNAL(activated()), this, SLOT(deleteSelected()));
     connect(new QShortcut(QKeySequence::StandardKey::Cancel,this),
@@ -815,6 +817,13 @@ void MainWindow::generateGCode()
         return;
       }
     m_model->ConvertToGCode();
+}
+
+void MainWindow::selectAll()
+{
+  if (ui_main->tabWidget->currentWidget() == ui_main->tabModel){
+      ui_main->modelListView->selectAll();
+  }
 }
 
 void MainWindow::on_actionSettings_triggered()

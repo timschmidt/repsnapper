@@ -141,7 +141,8 @@ private slots:
     void alert(const QString &message);
 //    void layerSliderValue(int value);
 //    void fromGCSliderValue(int value);
-//    void toGCSliderValue(int value);
+    //    void toGCSliderValue(int value);
+    void selectAll();
 };
 
 #endif // MAINWINDOW_H
