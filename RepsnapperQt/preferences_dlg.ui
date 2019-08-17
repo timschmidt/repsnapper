@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>775</width>
-    <height>802</height>
+    <height>930</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,7 +27,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>3</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -1912,6 +1912,73 @@
             </property>
             <property name="value">
              <number>255</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_19">
+         <property name="title">
+          <string>Bed Temperature</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_18">
+          <item row="0" column="0">
+           <widget class="QCheckBox" name="Slicing_BedTempControl">
+            <property name="text">
+             <string>Control Bed Temperature</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_83">
+            <property name="text">
+             <string>Begin Cooling Down at Height (mm):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_84">
+            <property name="text">
+             <string>Stop Heating at Height:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="Slicing_BedTempStartCooling">
+            <property name="maximum">
+             <number>999</number>
+            </property>
+            <property name="value">
+             <number>20</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3">
+           <widget class="QSpinBox" name="Slicing_BedTempStopHeating">
+            <property name="maximum">
+             <number>999</number>
+            </property>
+            <property name="value">
+             <number>30</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QSpinBox" name="Slicing_BedTempStart">
+            <property name="maximum">
+             <number>140</number>
+            </property>
+            <property name="value">
+             <number>45</number>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_82">
+            <property name="text">
+             <string> Start With Bed Temp. °C:</string>
             </property>
            </widget>
           </item>

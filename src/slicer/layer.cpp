@@ -817,10 +817,30 @@ void Layer::makePrintLines3(Vector2d &startPos, Printlines *printlines,
                 Settings::numbered("Extruder",currentExtruder)+"/ZliftAlways");
     const vector<Poly> clippolys = GetOuterShell();
 
+    bool controlBedTemp = settings->get_boolean("Slicing/BedTempControl");
+    int bedtempTemp = settings->get_integer("Slicing/BedTempStart");
+    int bedtempCoolstart = settings->get_integer("Slicing/BedTempStartCooling");
+    int bedtempStop = settings->get_integer("Slicing/BedTempStopHeating");
+
     Command lchange(LAYERCHANGE, LayerNo);
     lchange.where = Vector3d(0.,0.,Z);
     lchange.comment += info();
     lines3.push_back(new PLine3(lchange));
+
+    if (controlBedTemp) {
+        const double MINTEMP = 20;
+        double temp;
+        if (Z < bedtempCoolstart) {
+            temp = double(bedtempTemp);
+        } else if (Z < bedtempStop) {
+            temp = bedtempTemp - (bedtempTemp - MINTEMP) *
+                    double(Z - bedtempCoolstart)
+                     /double(bedtempStop-bedtempCoolstart);
+        } else {
+            temp = MINTEMP;
+        }
+        lines3.push_back(new PLine3(Command(BEDTEMP, temp)));
+    }
 
     vector<PLine<2>*> lines;
 
