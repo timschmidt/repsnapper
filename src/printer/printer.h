@@ -76,7 +76,8 @@ public:
 
   bool Connect( bool connect = true );
   bool Connect( QString device, int baudrate );
-  void Disconnect( void );
+  bool IsConnected();
+  bool Disconnect( void );
   bool Reset( void );
 
   bool Send( string command, long *lineno = nullptr);

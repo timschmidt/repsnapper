@@ -30,7 +30,7 @@
 using namespace std;
 
 Command::Command()
-    : Code(UNKNOWN),
+    : Code(UNKNOWN), is_motion(false),
       is_value(false), value(0), f(0), e(0),
       extruder_no(0),  abs_extr(0), travel_length(0), not_layerchange(false)
 {
@@ -47,7 +47,7 @@ Command::~Command()
 }
 
 Command::Command(GCodes code, const string explicit_arg_)
-    : Code(code),
+    : Code(code), is_motion(false),
       is_value(false), value(0), f(0), e(0),
       extruder_no(0),  abs_extr(0), travel_length(0), not_layerchange(false)
 {
@@ -55,7 +55,7 @@ Command::Command(GCodes code, const string explicit_arg_)
 }
 
 Command::Command(GCodes code, const Vector3d &position, double E, double F)
-  : Code(code), where(position),
+  : Code(code), where(position),  is_motion(true),
     is_value(false),  f(F), e(E),
     extruder_no(0), abs_extr(0), travel_length(0), not_layerchange(false)
 {
@@ -64,7 +64,7 @@ Command::Command(GCodes code, const Vector3d &position, double E, double F)
 }
 
 Command::Command(GCodes code, double value_)
-  : Code(code),
+  : Code(code), is_motion(false),
     is_value(true), value(value_), f(0), e(0),
     extruder_no(0),  abs_extr(0), travel_length(0), not_layerchange(false)
 {
@@ -77,7 +77,7 @@ Command::Command(GCodes code, double value_)
 
 Command::Command(const Command &rhs)
   : Code(rhs.Code), where(rhs.where), arcIJK(rhs.arcIJK),
-    is_value(rhs.is_value), value(rhs.value),
+    is_motion(rhs.is_motion), is_value(rhs.is_value), value(rhs.value),
     f(rhs.f), e(rhs.e),
     extruder_no(rhs.extruder_no),
     abs_extr(rhs.abs_extr),
@@ -107,7 +107,7 @@ const static QRegularExpression command_re("[A-Z][+-]?[\\.\\d]+");
  * @param defaultpos
  */
 Command::Command(string gcodeline, const Vector3d &defaultpos)
-  : where(defaultpos), arcIJK(Vector3d::ZERO),
+  : where(defaultpos), arcIJK(Vector3d::ZERO), is_motion(true),
     is_value(false),  f(0), e(0),
     extruder_no(0), abs_extr(0), travel_length(0)
 {
@@ -213,7 +213,7 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
 
   bool moving = false; // is a move involved?
   double thisE = lastE - e; // extraction of this command amount only
-  double length =where.distance(LastPos);
+  double length = where.distance(LastPos);
 
   const uint PREC = 4;
   ostr.precision(PREC);
@@ -503,6 +503,7 @@ bool Command::append(Command c)
         return false;
     if (extruder_no != c.extruder_no)
         return false;
+    is_motion = c.is_motion;
     where = c.where; // absolute
     if (abs(f - c.f) > 1)
         return false;
@@ -537,8 +538,10 @@ string Command::info() const
   if (comment!="") ostr << " '" << comment << "'";
   ostr << ": Extr="<<extruder_no<<", Code="<<Code
        << ", f="<<f<<", e="<<e;
-  ostr << ", where="  << where;
-  ostr << ", arcIJK="  << arcIJK;
+  if (is_motion) {
+      ostr << ", where="  << where;
+      ostr << ", arcIJK="  << arcIJK;
+  }
   if (explicit_arg != "")
     ostr << " Explicit: " << explicit_arg;
   return ostr.str();

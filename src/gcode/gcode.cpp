@@ -79,7 +79,8 @@ double GCode::GetTotalExtruded(bool relativeEcode) const
 void GCode::translate(const Vector3d &trans)
 {
   for (uint i=0; i<commands.size(); i++) {
-    commands[i].where += trans;
+    if (commands[i].is_motion)
+        commands[i].where += trans;
   }
   Min+=trans;
   Max+=trans;
@@ -93,7 +94,7 @@ double GCode::GetTimeEstimation(const Vector3d &from) const
   double time = 0;
   for (uint i=0; i<commands.size(); i++) {
       time += commands[i].time(where);
-      if (commands[i].where) {
+      if (commands[i].is_motion) {
           where.set(commands[i].where);
       }
   }
@@ -283,7 +284,8 @@ int GCode::getLayerNo(const double z) const
   if (layerchanges.size()>0) // have recorded layerchange indices -> draw whole layers
     for(uint i=0;i<layerchanges.size() ;i++) {
       if (commands.size() > layerchanges[i]) {
-    if (commands[layerchanges[i]].where.z() >= z) {
+    if (commands[layerchanges[i]].is_motion &&
+        commands[layerchanges[i]].where.z() >= z) {
       //cerr  << " _ " <<  i << endl;
       return int(i);
     }
@@ -328,7 +330,6 @@ void GCode::draw(Settings *settings, int layer,
 
     //cerr << "gc draw "<<layer << " - " <<liveprinting << endl;
 
-    Vector3d thisPos(0,0,0);
     ulong start = 0, end = 0;
     ulong n_cmds = commands.size();
     bool arrows = true;
@@ -429,13 +430,15 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
     if (end<=start) return;
 
     // get starting point
-    if (start > 0) // else start from ZERO
-        for (ulong i = start + 1; i < commands.size(); i++){
-            if (commands[i].where.squared_length() > 0.1) {
-                pos = commands[i].where;
-                break;
-            }
+    bool foundone = false;
+    while(start < end && !foundone) {
+        if (commands[start].is_motion
+                && commands[start].where.squared_length() > 0.01) {
+            pos.set(commands[start].where);
+            foundone = true;
         }
+        start++;
+    }
 
     // draw begin
     glPointSize(20);
@@ -484,13 +487,13 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
           last_extruder_offset = extruder_offset;
         }
         double extrwidth = extrusionwidth;
-            if (commands[i].is_value) continue;
-                if (onlyZChange && commands[i].where &&
-                        abs(commands[i].where.z()-pos.z())<0.0001) {
-                  pos = commands[i].where;
-                  LastE=commands[i].e;
-                  continue;
-                }
+        if (commands[i].is_value) continue;
+        if (onlyZChange && commands[i].is_motion &&
+                abs(commands[i].where.z()-pos.z())<0.0001) {
+            pos = commands[i].where;
+            LastE=commands[i].e;
+            continue;
+        }
 
 
         switch(commands[i].Code)
@@ -503,21 +506,6 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
         case EXTRUDEROFF:
             extruderon = false;
             break;
-        // case COORDINATEDMOTION3D: // old 3D gcode
-        //   if (extruderon) {
-        //     if (liveprinting) {
-        //       Color = settings->Display.GCodePrintingColour;
-        //     } else
-        //       Color = settings->Display.GCodeExtrudeColour;
-        //   }
-        //   else {
-        //     Color = settings->Display.GCodeMoveColour;
-        //     extrwidth = 0;
-        //   }
-        //   commands[i].draw(pos, linewidth, Color, extrwidth,
-        // 		   arrows, debug_arcs);
-        //   LastE=commands[i].e;
-        //   break;
         case ARC_CW:
         case ARC_CCW:
           if (i==start) {
@@ -536,7 +524,6 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
                     Color = gcodemovecolour;
                     extrwidth = 0;
                 } else {
-                    pos = commands[i].where;
                     break;
                 }
             }
@@ -566,15 +553,14 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
         case RAPIDMOTION:
           {
             Color = gcodemovecolour;
-            commands[i].draw(pos, extruder_offset, 1, Color,
-                             extrwidth, arrows, debug_arcs);
+            commands[i].draw(pos, extruder_offset, 1,
+                             Color, extrwidth, arrows, debug_arcs);
             break;
           }
         default:
             break; // ignored GCodes
         }
         //if(commands[i].Code != EXTRUDERON && commands[i].Code != EXTRUDEROFF)
-        //pos = commands[i].where;
     }
     glLineWidth(1);
 
@@ -660,7 +646,7 @@ bool GCode::MakeText(QTextDocument *document,
                             "; End Layerchange GCode\n\n");
       }
 
-      if ( commands[i].where && commands[i].where.z() < 0 )  {
+      if ( commands[i].is_motion && commands[i].where.z() < 0 )  {
         cerr << i << " Z < 0 "  << commands[i].info() << endl;
       }
       else {

@@ -145,23 +145,28 @@ bool Printer::Connect( QString device, int baudrate ) {
     return ok;
 }
 
-void Printer::Disconnect( void ) {
+bool Printer::IsConnected()
+{
+    return (serialPort && serialPort->isOpen());
+}
+
+bool Printer::Disconnect( void ) {
     if (is_printing){
         if (QMessageBox::question(main, "Disconnect",
                                   "Stop Printing and Disconnect?",
                                   QMessageBox::Yes|QMessageBox::No)
                 != QMessageBox::Yes)
-            return;
+            return false;
         if (!StopPrinting())
-            return;
+            return false;
     }
     emit serial_state_changed(SERIAL_DISCONNECTING);
     if (serialPort && serialPort->isOpen()){
-
         serialPort->close();
         emit serial_state_changed(SERIAL_DISCONNECTED);
     }
     temp_timer->stop();
+    return true;
 }
 
 bool Printer::Reset( void ) {
@@ -544,28 +549,13 @@ void Printer::UpdateTemperatureMonitor( void ) {
 
 
 bool Printer::Idle( void ) {
-    string str;
-    bool is_connected;
-/*
-  while ( ( str = ReadResponse() ) != "" )
-    ParseResponse( str );
-
-  if ( main ) {
-    while ( ( str = ReadLog() ) != "" )
-      main->comm_log( str );
-
-    while ( ( str = ReadErrorLog() ) != "" ) {
-      alert( str.c_str() );
-    }
-  }
-*/
     if (is_printing) {
         idle_timer->stop();
         return false;
     }
 
     cerr << "idle" << endl;
-    is_connected = serialPort->isOpen();
+    bool is_connected = serialPort->isOpen();
     if (is_connected) {
         int newfanspeed = main->get_settings()->get_boolean("Printer/FanEnable")
                     ? main->get_settings()->get_integer("Printer/FanVoltage")

@@ -154,6 +154,7 @@ public:
     GCodes Code;
     Vector3d where;
     Vector3d arcIJK; // I,J,K (dx, dy, dz)
+    bool is_motion;
     bool is_value; // M commands
     double value; // M commands S value code
     double f,e; // Feedrate f=speed, e=extrusion to perform while moving (Pythagoras)

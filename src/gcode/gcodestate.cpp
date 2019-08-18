@@ -65,11 +65,11 @@ void GCodeState::AppendCommand(Command &command, bool relativeE,
     if (!command.is_value) {
         if (!relativeE)
             command.e += pImpl->lastCommand.e;
-        if (command.where) {
-            if (pImpl->lastCommand.where && command.f!=0.) {
+        if (command.is_motion) {
+            if (pImpl->lastCommand.is_motion && command.f!=0.) {
                 const vector<Command> &prevCommands = pImpl->code.commands;
                 if (prevCommands.size()>2){
-                    if (prevCommands[prevCommands.size()-2].where
+                    if (prevCommands[prevCommands.size()-2].is_motion
                             && (prevCommands[prevCommands.size()-2].where.
                                 distance(command.where) < minLength)) {
                         Command &last = pImpl->code.commands.back();
@@ -93,7 +93,7 @@ void GCodeState::AppendCommand(Command &command, bool relativeE,
     if (!merged) {
         pImpl->code.commands.push_back(command);
     }
-    if (command.where && command.where.z() > pImpl->code.Max.z())
+    if (command.is_motion && command.where.z() > pImpl->code.Max.z())
         pImpl->code.Max.z() = command.where.z();
 }
 void GCodeState::AppendCommand(GCodes code, bool relativeE, string comment,
@@ -125,6 +125,7 @@ void GCodeState::AppendCommands(vector<Command> commands, bool relativeE,
 
 void GCodeState::ResetLastWhere(const Vector3d &to)
 {
+    pImpl->lastCommand.is_motion = true;
     pImpl->lastCommand.where = to;
 }
 double GCodeState::DistanceFromLastTo(const Vector3d &here)

@@ -816,7 +816,10 @@ void MainWindow::settingsChanged(const QString &name)
 
 void MainWindow::on_actionQuit_triggered()
 {
-    QApplication::quit();
+    if (m_printer->IsConnected() && !m_printer->Disconnect())
+        return;
+    if (!m_printer->IsPrinting())
+        QApplication::quit();
 }
 
 void MainWindow::generateGCode()
