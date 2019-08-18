@@ -58,6 +58,7 @@ public:
     size_t addShape(ListObject *parent, Shape *shape, QString location);
 
     void DeleteRow(const int row);
+    uint get_num_shapes() const;
     vector<Shape*> get_all_shapes() const;
     vector<Shape*>get_selected_shapes(const QModelIndexList *indexes) const;
 //    void get_selected_objects(const QModelIndexList *indexes, vector<ListObject*> &objects) const;

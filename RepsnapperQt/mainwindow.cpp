@@ -31,6 +31,7 @@
 #include <QCheckBox>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QKeySequence>
 
 #include <iostream>
 #include <algorithm>
@@ -50,7 +51,6 @@ MainWindow::MainWindow(QWidget *parent) :
  {
     QCoreApplication::setOrganizationName("Repsnapper");
     QCoreApplication::setApplicationName("Repsnapper");
-
 
     ui_main->setupUi(this);
     ui_main->mainToolBar->hide();
@@ -233,6 +233,20 @@ void MainWindow::shapeSelected(const QModelIndex &index)
     }
 }
 
+void MainWindow::selectAll()
+{
+  if (ui_main->tabWidget->currentWidget() == ui_main->tabModel){
+      ui_main->modelListView->selectAll();
+  }
+  QModelIndexList *selection = m_render->getSelection();
+  selection->clear();
+  QAbstractItemModel *model = ui_main->modelListView->model();
+  for (int i=0; i<model->rowCount(); i++)
+      selection->append(model->index(i,0));
+  m_render->update();
+}
+
+
 void MainWindow::printerConnection(int state)
 {
     bool connected = state==SERIAL_CONNECTED;
@@ -276,8 +290,8 @@ void MainWindow::printingChanged()
     if (!printing) {
         m_progress->stop();
         m_model->setCurrentPrintingLine(0);
-        ui_main->Display_DisplayGCode->setChecked(gcodeDisplayWasOn);
-        ui_main->Display_DisplayGCode->setChecked(layerDisplayWasOn);
+//        ui_main->Display_DisplayGCode->setChecked(gcodeDisplayWasOn);
+//        ui_main->Display_DisplayGCode->setChecked(layerDisplayWasOn);
     } else {
         gcodeDisplayWasOn = ui_main->Display_DisplayGCode->isChecked();
         layerDisplayWasOn = ui_main->Display_DisplayLayer->isChecked();
@@ -628,7 +642,7 @@ void MainWindow::handleButtonClick()
         if (index >= 0) {
             m_settings->RemoveExtruder(uint(index));
             tempsPanel->removeDevice(Settings::numbered("Extruder",uint(index)));
-            extruderSelected(uint(index));
+            extruderSelected(index);
         }
     } else if(name == "m_autoarrange"){
         m_model->AutoArrange(m_render->getSelection());
@@ -819,13 +833,6 @@ void MainWindow::generateGCode()
     m_model->ConvertToGCode();
 }
 
-void MainWindow::selectAll()
-{
-  if (ui_main->tabWidget->currentWidget() == ui_main->tabModel){
-      ui_main->modelListView->selectAll();
-  }
-}
-
 void MainWindow::on_actionSettings_triggered()
 {
     prefs_dialog->open();
@@ -854,14 +861,14 @@ void MainWindow::on_actionOpen_triggered()
 }
 
 
-void MainWindow::extruderSelected(uint index){
-    m_settings->currentExtruder = index;
+void MainWindow::extruderSelected(int index){
+    m_settings->currentExtruder = uint(index);
     m_settings->set_all_to_gui(prefs_dialog,
                                Settings::numbered("Extruder",index).toStdString());
 }
 
 void MainWindow::extruderSelected(const QModelIndex &index){
-   extruderSelected(uint(index.row()));
+   extruderSelected(index.row());
 }
 
 
@@ -882,8 +889,9 @@ QWidget *TemperaturePanel::addExtruder(const uint index){
 QWidget *TemperaturePanel::addDevice(const QString &name, const QString &label)
 {
     Ui::TemperatureWidget *ui_widget = new Ui::TemperatureWidget();
-    ui_widget->setupUi(widget);
     if (ui_widget && widget) {
+        if (!ui_widget->widget)
+            ui_widget->setupUi(widget);
         this->name = name;
         ui_widget->Temperature_Label->setText(label);
         ui_widget->Temperature_Temp->setObjectName(name+"_Temperature");

@@ -27,7 +27,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>5</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideNone</enum>
@@ -2410,6 +2410,16 @@
            <widget class="QCheckBox" name="Display_LuminanceShowsSpeed">
             <property name="text">
              <string>Luminance shows Speed</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QCheckBox" name="Display_PreviewAntiooze">
+            <property name="text">
+             <string>Antiooze in Preview</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>

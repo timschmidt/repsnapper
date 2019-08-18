@@ -685,7 +685,9 @@ void Layer::MakeGCode (Vector3d &start,
   Printlines *printlines = MakePrintlines(start, plines, offsetZ, *settings);
   makePrintLines3(start2, printlines, plines, settings);
   delete printlines;
-  Printlines::makeAntioozeRetract(plines, settings);
+  if (settings->get_boolean("Display/PreviewAntiooze")) {
+      Printlines::makeAntioozeRetract(plines, settings);
+  }
   Printlines::toCommands(plines, settings, gc_state);
   plines.clear();
 }
@@ -832,10 +834,10 @@ void Layer::makePrintLines3(Vector2d &startPos, Printlines *printlines,
         double temp;
         if (Z < bedtempCoolstart) {
             temp = double(bedtempTemp);
-        } else if (Z < bedtempStop) {
+        } else if (Z < bedtempStop && bedtempStop > bedtempCoolstart) {
             temp = bedtempTemp - (bedtempTemp - MINTEMP) *
                     double(Z - bedtempCoolstart)
-                     /double(bedtempStop-bedtempCoolstart);
+                    /double(bedtempStop-bedtempCoolstart);
         } else {
             temp = MINTEMP;
         }

@@ -125,7 +125,7 @@ private slots:
     void handleButtonClick();
     void gcodeChanged();
     void settingsChanged(const QString &group);
-    void extruderSelected(uint index);
+    void extruderSelected(int index);
     void extruderSelected(const QModelIndex &index);
     void updatedModel(const ObjectsList *objList = nullptr);
     void shapeSelected(const QModelIndex &index);

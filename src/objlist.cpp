@@ -67,6 +67,14 @@ void ObjectsList::DeleteRow(const int index)
     }
 }
 
+uint ObjectsList::get_num_shapes() const
+{
+    uint num = 0;
+    for (ListObject *o : objects)
+        num += o->shapes.size();
+    return num;
+}
+
 vector<Shape *> ObjectsList::get_all_shapes() const
 {
     vector<Shape *> allshapes;

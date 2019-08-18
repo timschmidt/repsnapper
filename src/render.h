@@ -109,7 +109,7 @@ public:
 
   void setSelectedIndex(const QModelIndex &index);
   void setSelection(const QModelIndexList indexlist);
-  const QModelIndexList *getSelection() const {return &m_selection;}
+  QModelIndexList *getSelection() {return &m_selection;}
 
   Qt::MouseButton mousePressed;
   uint mousePickedObject;

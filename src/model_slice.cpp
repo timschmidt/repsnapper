@@ -918,7 +918,7 @@ void Model::ConvertToGCode()
                                            "/FilamentDiameter");
   const double ccm = totlength * diam * diam / 4. * M_PI / 1000 ;
   ostr << " = " << ccm << "cm³ ";
-  ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g)";
+  ostr << "(ABS~" << ccm*1.08 << "g, PLA~" << ccm*1.25 << "g, PETG~" << ccm*1.27 << "g)";
   if (statusbar)
     statusbar->showMessage(QString::fromStdString(ostr.str()));
   cout << ostr.str() << endl;

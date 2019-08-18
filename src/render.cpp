@@ -173,7 +173,6 @@ void printarray(double *arr,int n){
     cerr<< endl;
 }
 
-
 Vector3d * Render::mouse_ray(int x, int y) {
     Vector3d *rayP = new Vector3d[2];
     double dX, dY, dZ, dClickY;
