@@ -110,7 +110,7 @@ enum GCodes{GOTO, DRAWTO,  DWELL, // 0 1 2
         GOHOME,  GOHOMEVIAINTERMEDIATEPOINT, // 12 ..
         ABSOLUTEPOSITIONING, RELATIVEPOSITIONING, // 14 ..
         ABSOLUTE_ECODE, RELATIVE_ECODE, // 16 ..
-        SETCURRENTPOS, SELECTEXTRUDER, ZMOVE, SETSPEED,  // 18 ..
+        SETCURRENTPOS, SELECTEXTRUDER, SETSPEED,  // 18 ..
         FANON, FANOFF, // 22 ..
         ASKTEMP, // 24
         EXTRUDERTEMP, BEDTEMP,
@@ -128,7 +128,7 @@ const string MCODES[] = {"G92", "", "",
              "G28", "",
              "G90", "G91", // abs. rel. pos
              "M82", "M83", // abs. E, relative E
-             "G92", "T", "G1", "G1" ,
+             "G92", "T", "G1" ,
              "M106", "M107",
              "M105", // temp?
              "M104", "M140",

@@ -276,18 +276,19 @@ void MainWindow::printingChanged()
 {
     bool printing = m_printer->IsPrinting();
     bool paused = m_printer->isPaused();
+//    cerr << "printing " << printing << " paused " << paused << endl;
     ui_main->p_stop->setEnabled(printing || paused);
     ui_main->p_pause->setEnabled(printing || paused);
     if (paused)
         ui_main->p_pause->setText("Continue");
     else
         ui_main->p_pause->setText("Pause");
-    ui_main->p_print->setEnabled(!printing);
+    ui_main->p_print->setEnabled(!printing && !paused);
     ui_main->AxisControlBox->setEnabled(!printing || paused);
     ui_main->gcodeActions->setEnabled(!printing && !paused);
     m_model->m_inhibit_modelchange = printing || paused;
     tempsPanel->setIsPrinting(printing && !paused);
-    if (!printing) {
+    if (!printing && !paused) {
         m_progress->stop();
         m_model->setCurrentPrintingLine(0);
 //        ui_main->Display_DisplayGCode->setChecked(gcodeDisplayWasOn);
@@ -818,16 +819,14 @@ void MainWindow::on_actionQuit_triggered()
 {
     if (m_printer->IsConnected() && !m_printer->Disconnect())
         return;
-    if (!m_printer->IsPrinting())
+    if (!m_printer->IsPrinting() && !m_printer->isPaused())
         QApplication::quit();
 }
 
 void MainWindow::generateGCode()
 {
     m_model->ClearPreview();
-
-    PrintInhibitor inhibitPrint(m_printer);
-    if (m_printer->IsPrinting())
+    if (m_printer->IsPrinting() || m_printer->isPaused())
       {
         m_printer->error (_("Complete print before converting"),
                           _("Converting to GCode while printing will abort the print"));

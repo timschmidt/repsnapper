@@ -499,7 +499,6 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
         switch(commands[i].Code)
         {
         case SETSPEED:
-        case ZMOVE:
         case EXTRUDERON:
             extruderon = true;
             break;

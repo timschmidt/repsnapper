@@ -243,11 +243,13 @@ void Model::SaveStl(QFile *file)
     } else {
 //      set_locales("C");
       stringstream sstr;
-      QTextStream fstream(file);
-      for(uint s=0; s < shapes.size(); s++) {
-          fstream << QString::fromStdString(shapes[s]->getSTLsolid()) << endl;
+      if (file->open(QFile::WriteOnly | QFile::Truncate)) {
+          QTextStream fstream(file);
+          for(uint s=0; s < shapes.size(); s++) {
+              fstream << QString::fromStdString(shapes[s]->getSTLsolid()) << endl;
+          }
+          file->close();
       }
-      file->close();
 //      reset_locales();
     }
   }

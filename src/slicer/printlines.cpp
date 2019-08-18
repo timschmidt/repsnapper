@@ -170,10 +170,10 @@ double PLine3::max_abs_speed(double max_Espeed, double max_AOspeed) const
 }
 
 int PLine3::getCommands(Vector3d &lastpos, vector<Command> &commands,
-            const double &minspeed, const double &movespeed,
-            const double &minZspeed, const double &maxZspeed,
-            const double &maxAOspeed,
-            bool useTCommand) const
+                        const double &minspeed, const double &movespeed,
+                        const double &minZspeed, const double &maxZspeed,
+                        const double &maxAOspeed,
+                        bool useTCommand) const
 {
   if (area == COMMAND) { // it is an explicit command line
     commands.push_back(command);
@@ -1731,7 +1731,7 @@ void Printlines::toCommands(const vector<PLine<3> *> &plines,
   const double
     minspeed   = settings->get_double("Hardware/MinMoveSpeedXY") * 60,
     movespeed  = settings->get_double("Hardware/MaxMoveSpeedXY") * 60,
-    //maxspeed   = min(movespeed, (double)settings.Extruder.MaxLineSpeed * 60),
+    linespeed  = settings->get_double("Hardware/MaxLineSpeedXY") * 60,
     minZspeed  = settings->get_double("Hardware/MinMoveSpeedZ") * 60,
     maxZspeed  = settings->get_double("Hardware/MaxMoveSpeedZ") * 60,
     maxAOspeed = settings->get_double(
@@ -1791,8 +1791,10 @@ uint Printlines::makeAntioozeRetract(vector<PLine<3> *> &lines,
 #endif
 
   const double zLift = settings->get_double(extruder+"/AntioozeZlift");
+  const bool distribute = settings->get_boolean(extruder+"/AntioozeDistribute");
 
-  Antiooze::applyAntiooze(lines, AOmindistance, AOamount, AOspeed, zLift);
+  Antiooze::applyAntiooze(lines, AOmindistance, AOamount, AOspeed, zLift,
+                          distribute);
 
   return total_added;
 

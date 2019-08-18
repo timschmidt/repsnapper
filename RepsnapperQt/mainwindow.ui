@@ -330,7 +330,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabModel">
         <attribute name="title">
@@ -386,79 +386,6 @@
                  </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QWidget" name="widget_6" native="true">
-                 <layout class="QGridLayout" name="gridLayout_3">
-                  <property name="leftMargin">
-                   <number>1</number>
-                  </property>
-                  <property name="topMargin">
-                   <number>1</number>
-                  </property>
-                  <property name="rightMargin">
-                   <number>2</number>
-                  </property>
-                  <property name="bottomMargin">
-                   <number>2</number>
-                  </property>
-                  <item row="2" column="0">
-                   <widget class="QPushButton" name="m_autoarrange">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>&amp;Autoplace</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QPushButton" name="m_load_stl">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Load File</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QPushButton" name="m_save_stl">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Save File</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="QCheckBox" name="Misc_ShapeAutoplace">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Use Autoplace</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
               </layout>
              </widget>
             </item>
@@ -470,10 +397,7 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_4">
-               <property name="spacing">
-                <number>2</number>
-               </property>
+              <layout class="QGridLayout" name="gridLayout_4">
                <property name="leftMargin">
                 <number>0</number>
                </property>
@@ -486,7 +410,17 @@
                <property name="bottomMargin">
                 <number>0</number>
                </property>
-               <item>
+               <property name="spacing">
+                <number>1</number>
+               </property>
+               <item row="0" column="1">
+                <widget class="QPushButton" name="m_duplicate">
+                 <property name="text">
+                  <string>Duplicate</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="0">
                 <widget class="QPushButton" name="m_delete">
                  <property name="text">
                   <string>Delete</string>
@@ -496,14 +430,7 @@
                  </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QPushButton" name="m_duplicate">
-                 <property name="text">
-                  <string>Duplicate</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
+               <item row="2" column="0">
                 <widget class="QPushButton" name="m_split">
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Split into single objects&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -513,65 +440,135 @@
                  </property>
                 </widget>
                </item>
-               <item>
+               <item row="2" column="1">
                 <widget class="QPushButton" name="m_merge">
                  <property name="text">
                   <string>Merge</string>
                  </property>
                 </widget>
                </item>
-               <item>
-                <widget class="QPushButton" name="m_divide">
-                 <property name="toolTip">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cut at Z=0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>Divide at Z Plane</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="verticalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="m_platform">
-                 <property name="text">
-                  <string>On Platform</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="m_mirror">
-                 <property name="text">
-                  <string>Mirror</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
+               <item row="9" column="0">
                 <widget class="QPushButton" name="m_hollow">
                  <property name="text">
                   <string>Hollow</string>
                  </property>
                 </widget>
                </item>
-               <item>
+               <item row="9" column="1">
                 <widget class="QPushButton" name="m_normals">
                  <property name="text">
                   <string>Invert</string>
                  </property>
                 </widget>
                </item>
+               <item row="5" column="1">
+                <widget class="QPushButton" name="m_mirror">
+                 <property name="text">
+                  <string>Mirror</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0">
+                <widget class="QPushButton" name="m_platform">
+                 <property name="text">
+                  <string>On Platform</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0" colspan="2">
+                <widget class="QPushButton" name="m_divide">
+                 <property name="toolTip">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Cut at Z=0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>Divide at Z=0</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="10" column="0">
+                <widget class="QPushButton" name="m_autoarrange">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>&amp;Autoplace</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QWidget" name="widget_6" native="true">
+           <layout class="QGridLayout" name="gridLayout_3">
+            <property name="leftMargin">
+             <number>1</number>
+            </property>
+            <property name="topMargin">
+             <number>1</number>
+            </property>
+            <property name="rightMargin">
+             <number>2</number>
+            </property>
+            <property name="bottomMargin">
+             <number>2</number>
+            </property>
+            <item row="0" column="0" rowspan="2">
+             <widget class="QPushButton" name="m_load_stl">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>&amp;Load File</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QCheckBox" name="Misc_ShapeAutoplace">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Use Autoplace</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QPushButton" name="m_save_stl">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>&amp;Save File</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QCheckBox" name="Misc_SaveSingleShapeSTL">
+              <property name="text">
+               <string> As Single Shape</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
            </layout>
@@ -1995,14 +1992,9 @@ M104 S0.0        ; heater off
   <tabstop>tabWidget</tabstop>
   <tabstop>modelListView</tabstop>
   <tabstop>m_delete</tabstop>
-  <tabstop>m_duplicate</tabstop>
   <tabstop>m_split</tabstop>
-  <tabstop>m_merge</tabstop>
   <tabstop>m_divide</tabstop>
   <tabstop>m_load_stl</tabstop>
-  <tabstop>m_save_stl</tabstop>
-  <tabstop>m_autoarrange</tabstop>
-  <tabstop>Misc_ShapeAutoplace</tabstop>
   <tabstop>m_autorot</tabstop>
   <tabstop>rot_x</tabstop>
   <tabstop>rot_y</tabstop>

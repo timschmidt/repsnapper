@@ -847,12 +847,9 @@ void Model::ConvertToGCode()
       ulong progress_steps=max<ulong>(1, layercount/20);
       bool farthestStart = settings->get_boolean("Slicing/FarthestLayerStart");
       Vector3d start = state.LastPosition();
-      vector<vector<PLine<3>*>> l_plines(layercount);
-      vector<vector<PLine<3>*>> plines(layercount);
+      vector<PLine<3>*> pline3s;
+//      vector<vector<PLine<3>*>> l_plines(layercount);
       ulong done = 0;
-#ifdef _OPENMP
-#pragma omp for ordered schedule(dynamic)
-#endif
       for (ulong p=0; p<layercount; p++) {
           if (farthestStart) {
               const Vector2d fartheststart = layers[p]->getFarthestPolygonPoint(start);
@@ -863,17 +860,11 @@ void Model::ConvertToGCode()
           }
           Vector2d start2 = Vector2d(start.x(), start.y());
           Printlines * printlines =
-                  layers[p]->MakePrintlines(start, l_plines[p],
+                  layers[p]->MakePrintlines(start, pline3s,
                                             printOffsetZ, *settings);
 //          cerr <<  "Z " << layers[p]->Z <<  " = " << printlines->getZ() << endl;
-          layers[p]->makePrintLines3(start2, printlines, l_plines[p], settings);
+          layers[p]->makePrintLines3(start2, printlines, pline3s, settings);
           delete printlines;
-          Printlines::makeAntioozeRetract(l_plines[p], settings);
-#ifdef _OPENMP
-#pragma omp ordered
-#endif
-          Printlines::toCommands(l_plines[p], settings, state, nullptr);
-          l_plines[p].clear();
 //           if (layers[p]->getPrevious() != NULL)
 //             cerr << p << ": " <<layers[p]->LayerNo << " prev: "
 //               << layers[p]->getPrevious()->LayerNo << endl;
@@ -882,13 +873,11 @@ void Model::ConvertToGCode()
               m_progress->emit update_signal(done);
           }
           if (!m_progress->do_continue)
-#ifdef _OPENMP
-              continue;
-#else
               break;
-#endif
       }
-      l_plines.clear();
+      Printlines::makeAntioozeRetract(pline3s, settings);
+      Printlines::toCommands(pline3s, settings, state, nullptr);
+      pline3s.clear();
       //state.AppendCommands(commands, settings.Slicing.RelativeEcode);
   }
 

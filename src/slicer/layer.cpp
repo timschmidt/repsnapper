@@ -712,7 +712,7 @@ Printlines *Layer::MakePrintlines(Vector3d &lastPos, //GCodeState &state,
               Settings::numbered("Extruder",currentExtruder)+"/MaxShellSpeed") * 60;
   const double maxEspeed      = settings.get_double(
               Settings::numbered("Extruder",currentExtruder)+"/EmaxSpeed") * 60;
-          const bool ZliftAlways      = settings.get_boolean(
+  const bool ZliftAlways      = settings.get_boolean(
               Settings::numbered("Extruder",currentExtruder)+"/ZliftAlways");
 
   const double extr_per_mm = settings.GetExtrusionPerMM(thickness, currentExtruder);
@@ -831,15 +831,15 @@ void Layer::makePrintLines3(Vector2d &startPos, Printlines *printlines,
 
     if (controlBedTemp) {
         const double MINTEMP = 20;
-        double temp;
+        int temp;
         if (Z < bedtempCoolstart) {
-            temp = double(bedtempTemp);
+            temp = bedtempTemp;
         } else if (Z < bedtempStop && bedtempStop > bedtempCoolstart) {
-            temp = bedtempTemp - (bedtempTemp - MINTEMP) *
+            temp = int(bedtempTemp - (bedtempTemp - MINTEMP) *
                     double(Z - bedtempCoolstart)
-                    /double(bedtempStop-bedtempCoolstart);
+                    /double(bedtempStop-bedtempCoolstart));
         } else {
-            temp = MINTEMP;
+            temp = 0;
         }
         lines3.push_back(new PLine3(Command(BEDTEMP, temp)));
     }

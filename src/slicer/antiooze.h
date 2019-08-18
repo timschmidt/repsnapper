@@ -28,12 +28,13 @@ public:
     /** find next move area and apply antiooze */
     Antiooze(vector<PLine<3> *> &lines, ulong fromIndex,
              const double minlength, const double amount,
-             const double aospeed, const double zLift);
+             const double aospeed, const double zLift,
+             bool distribute = true);
 
     static void applyAntiooze(vector<PLine<3> *> &lines,
                               const double minlength,
                               const double amount, const double aospeed,
-                              const double zLift);
+                              const double zLift, bool distribute);
 
 private:
     vector<PLine<3> *> &lines;
@@ -47,6 +48,7 @@ private:
 
     uint distribute_AntioozeAmount(double amount,
                                    ulong fromIndex, ulong untilIndex);
+    uint insert_AntioozeHalt(double amount, ulong atIndex, double zLift);
 
 };
 

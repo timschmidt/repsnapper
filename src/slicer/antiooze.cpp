@@ -24,19 +24,25 @@
 Antiooze::Antiooze(vector<PLine<3> *> &plines,
                    ulong fromIndex, double minlength,
                    const double amount, const double speed,
-                   const double zLift)
+                   const double zLift, bool distribute)
     : lines(plines), movestart(0), moveend(0), amount(amount), aospeed(speed)
 {
-//    ulong numlines = lines.size();
     if (find_moverange(fromIndex, minlength)) {
-
-        // do repush first to keep indices before right
-        uint added = distribute_AntioozeAmount( amount, movestart, moveend);
-        moveend += added;
-        added = distribute_AntioozeAmount(-amount, fromIndex, movestart-1);
-        moveend += added;
-        movestart += added;
-
+        if (distribute) {
+            // do repush first to keep indices before right
+            uint added = distribute_AntioozeAmount(amount, movestart, moveend+1);
+            moveend += added;
+            added = distribute_AntioozeAmount(-amount, fromIndex, movestart);
+            moveend += added;
+            movestart += added;
+        } else {
+            uint added = insert_AntioozeHalt(amount, moveend+1, -zLift);
+            if (added == 1){
+                added = insert_AntioozeHalt(-amount, movestart, zLift);
+                moveend += added;
+                movestart += added;
+            }
+        }
         // lift move-only range
         if (zLift > 0)
             for (ulong i = movestart; i <= moveend; i++)
@@ -52,12 +58,13 @@ Antiooze::Antiooze(vector<PLine<3> *> &plines,
 void Antiooze::applyAntiooze(vector<PLine<3> *> &lines,
                              const double minlength,
                              const double amount, const double speed,
-                             const double zLift)
+                             const double zLift,
+                             bool distribute)
 {
     ulong lastend = 0;
     bool ok = true;
     while (ok) {
-        Antiooze ao(lines, lastend+1, minlength, amount, speed, zLift);
+        Antiooze ao(lines, lastend+1, minlength, amount, speed, zLift, distribute);
         ok = ao.moveend > 0;
         lastend = ao.moveend;
     }
@@ -185,4 +192,17 @@ uint  Antiooze::distribute_AntioozeAmount(double amount,
     }
 #endif
     return added;
+}
+
+uint Antiooze::insert_AntioozeHalt(double amount, ulong atIndex, double zLift)
+{
+    if (atIndex >= lines.size()) return 0;
+    Vector3d where = lines[atIndex]->from;
+    const double speed = zLift==0. ? aospeed : abs(zLift*aospeed/amount);
+    PLine3 *halt = new PLine3(lines[atIndex]->area, lines[atIndex]->extruder_no,
+                              where, where + Vector3d(0.,0.,zLift), speed, 0);
+    if (zLift < 0) halt->lifted = -zLift; // make endpoint lifted
+    halt->addAbsoluteExtrusionAmount(amount, aospeed);
+    lines.insert(lines.begin() + long(atIndex), halt);
+    return 1;
 }

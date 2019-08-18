@@ -270,27 +270,25 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
           LastPos.y() = where.y();
           moving = true;
       }
+      if(abs(where.z()-LastPos.z()) > 0.001) {
+          ostr << " Z" << where.z();
+          LastPos.z() = where.z();
+          comm += _(" Z-Change");
+          moving = true;
+      }
+      if((relativeEcode   && abs(e) > 0.001) ||
+              (!relativeEcode  && abs(e - lastE) > 0.001)) {
+          ostr.precision(5);
+          ostr << " " << E_letter << e;
+          ostr.precision(PREC);
+          lastE = e;
+      } else {
+          if (moving) {
+              comm += _(" Move Only");
+              comm += " (" + str(length,2)+" mm)";
+          }
+      }
   }
-  [[clang::fallthrough]];
-  case ZMOVE:
-    if(abs(where.z()-LastPos.z()) > 0.001) {
-      ostr << " Z" << where.z();
-      LastPos.z() = where.z();
-      comm += _(" Z-Change");
-      moving = true;
-    }
-    if((relativeEcode   && abs(e) > 0.001) ||
-       (!relativeEcode  && abs(e - lastE) > 0.001)) {
-        ostr.precision(5);
-        ostr << " " << E_letter << e;
-        ostr.precision(PREC);
-        lastE = e;
-    } else {
-        if (moving) {
-            comm += _(" Move Only");
-            comm += " (" + str(length,2)+" mm)";
-        }
-    }
   [[clang::fallthrough]];
   case SETSPEED:
     if (speedAlways || (abs(f-lastF) > 0.1)) {
@@ -522,7 +520,6 @@ double Command::time(const Vector3d &from) const
         double angle = calcAngle(-arcIJK, where - arcIJK -from, ccw);
         return abs(angle) * arcIJK.length() / f * 60.;
     }
-    case ZMOVE:
     case RAPIDMOTION:
     case COORDINATEDMOTION:
         return  where.distance(from) / f * 60.;

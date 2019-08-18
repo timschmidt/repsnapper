@@ -109,8 +109,8 @@ public:
 
     int getCommands(Vector3d &lastpos, vector<Command> &commands,
                     const double &minspeed, const double &movespeed,
-                    const double &minZspeed, const double &maxZspeed, const double &maxAOspeed,
-                    bool useTCommand) const;
+                    const double &minZspeed, const double &maxZspeed,
+                    const double &maxAOspeed, bool useTCommand) const;
 
     bool is_move() const {return (abs(extrusion) < 0.00001);}
     // // not used

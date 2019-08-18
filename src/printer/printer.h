@@ -44,7 +44,7 @@ private:
   bool is_printing;
   bool was_connected;
   bool was_printing;
-  long lineno_to_print;
+  long gcode_lineno;
   bool ok_received;
   int fan_speed;
 
@@ -80,16 +80,15 @@ public:
   bool Disconnect( void );
   bool Reset( void );
 
-  bool Send( string command, long *lineno = nullptr);
+  int Send( string command, long *lineno = nullptr);
 
   bool StartPrinting( QTextDocument * document,
                       long startLine = 0,  long endLine = 0,
                       bool withChecksums = true);
-  bool StopPrinting( bool wait = true );
+  bool StopPrinting();
   void Pause();
   bool isPaused();
   bool ContinuePrinting();
-  void Inhibit( bool value = true );
 
   void UpdateTemperatureMonitor( void );
 
@@ -126,19 +125,4 @@ private slots:
   //sigc::signal< void, string, RR_logtype > signal_logmessage;
 //  sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
 //  sigc::signal< SerialState > signal_serial_state_changed;
-};
-
-// Exception safe guard to stop people printing
-// GCode while loading it / converting etc.
-class PrintInhibitor
-{
-  Printer *printer;
-public:
-  PrintInhibitor( Printer *p ) : printer ( p ) {
-    printer->Inhibit();
-  }
-
-  ~PrintInhibitor() {
-    printer->Inhibit( false );
-  }
 };

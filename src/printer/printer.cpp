@@ -25,6 +25,7 @@
 #include <QMessageBox>
 #include <QTextBlock>
 #include <QThread>
+#include <QTime>
 #include <QTimer>
 
 #include <src/gcode/command.h>
@@ -34,7 +35,7 @@ Printer::Printer( MainWindow *main ):
     is_printing(false),
     was_connected(false),
     was_printing(false),
-    lineno_to_print(0),
+    gcode_lineno(0),
     currentPos(Vector3d::ZERO),
     serialPort(nullptr)
 {
@@ -174,7 +175,7 @@ bool Printer::Reset( void ) {
                               QMessageBox::Yes|QMessageBox::No)
             != QMessageBox::Yes)
         return false;
-  StopPrinting( true );
+  StopPrinting();
   if ( ! serialPort->isOpen() )
     return false;
   bool ret = serialPort->setDataTerminalReady(true);
@@ -203,35 +204,39 @@ static QByteArray numberedLineWithChecksum(const QByteArray command, const long 
     return nLine.toLocal8Bit().constData();
 }
 
-bool Printer::Send(string s, long *lineno) {
+int Printer::Send(string s, long *lineno_for_printer) {
+    int sent = 0;
     if (serialPort && serialPort->isOpen() && serialPort->isWritable()) {
         QStringList lines = QString::fromStdString(s).split('\n');
-        if (!lineno)
+        if (!lineno_for_printer)
             std::reverse(lines.begin(), lines.end());
         for (QString line : lines) {
             QString pline = line.section(";",0,0).trimmed();
             // skip empty lines when not using linenumbers
-            if (!lineno && pline == "") continue;
+            if (pline == "") continue;
             QByteArray l8 = pline.toLocal8Bit();
-            if (lineno) {
-                l8 = numberedLineWithChecksum(l8, *lineno);
-                (*lineno)++;
+            Command command(pline.toStdString());
+            if (lineno_for_printer) {
+                l8 = numberedLineWithChecksum(l8, *lineno_for_printer);
+                (*lineno_for_printer)++;
             }
-            bool wasEmpty = commandBuffer.empty();
-            while (commandBuffer.size()>20){
+            bool wasEmpty = lineBuffer.empty();
+            while (lineBuffer.size()>20){
                 QCoreApplication::processEvents();
                 QThread::msleep(10);
             }
-            if (!lineno) {
-                commandBuffer.append(l8+'\n'); // send immediately
-            } else
-                commandBuffer.prepend(l8+'\n');
+            if (!lineno_for_printer) {
+                lineBuffer.append(l8+'\n'); // send immediately
+            } else {
+                lineBuffer.prepend(l8+'\n');
+            }
+            sent++;
             if (wasEmpty) {
                 emit serialPort->readyRead();
             }
         }
     }
-    return true;
+    return sent;
 }
 
 
@@ -245,51 +250,64 @@ bool Printer::StartPrinting(QTextDocument *document,
         endLine = min(endLine, numlines);
     else return false;
 
-    commandBuffer.clear();
+    lineBuffer.clear();
 
-    lineno_to_print = withChecksums ? startLine : -1;
+    gcode_lineno = withChecksums ? startLine : -1;
 
     // tell line no before next line:
-    if (!Send("M110 N" + std::to_string(lineno_to_print-1))) {
+    if (Send("M110 N" + std::to_string(gcode_lineno-1)) == 0) {
         cerr << "Error sending line number - can't print";
         return false;
     }
 
-    long lineno = lineno_to_print;
+    long printer_lineno = gcode_lineno;
     currentPos = Vector3d::ZERO;
     main->startProgress("Printing", endLine);
     is_printing = true;
     idle_timer->stop();
+
+    QTimer nowprinting_timer;
+    nowprinting_timer.setInterval(1000);
+    connect(&nowprinting_timer, &QTimer::timeout, [=] {now_printing(gcode_lineno);});
     emit printing_changed();
 
-    while (is_printing && lineno_to_print >= 0 && lineno_to_print < endLine) {
-        QTextBlock block = document->findBlockByLineNumber(int(lineno_to_print));
+    while ((is_printing || gcode_lineno >= 0) && gcode_lineno < endLine) {
+        QTextBlock block = document->findBlockByLineNumber(int(gcode_lineno));
         if (!block.isValid()) break;
-        lineno = lineno_to_print;
-        if (!Send(block.text().toStdString(), &lineno)) // send with line no & checksum
-            break;
-        lineno_to_print++;
-        while (commandBuffer.size()>10){
-            QThread::msleep(20);
-            QApplication::processEvents();
-        }
-        if (lineno_to_print % 10 == 0) {
-            emit now_printing(lineno_to_print);
+        Send(block.text().toStdString(), &printer_lineno); // send with line no & checksum
+        if (is_printing) {
+            if (!nowprinting_timer.isActive())
+                nowprinting_timer.start();
+            gcode_lineno++;
+            while (lineBuffer.size() > 10) { // wait for buffer
+                QThread::msleep(20);
+                QApplication::processEvents();
+            }
+        } else { // paused
+            if (gcode_lineno == 0) break;
+            if (nowprinting_timer.isActive())
+                nowprinting_timer.stop();
+            cerr << "paused ... "<< endl;
+            for(int i=0;i<50;i++){
+                QThread::msleep(20);
+                QApplication::processEvents();
+            }
         }
     }
+    nowprinting_timer.stop();
     is_printing = false;
-    lineno_to_print = 0;
+    gcode_lineno = 0;
     idle_timer->start();
     emit printing_changed();
     return true;
 }
 
-bool Printer::StopPrinting( bool wait ) {
+bool Printer::StopPrinting() {
   if ( ! serialPort->isOpen() ) {
     return true;
   }
-  commandBuffer.clear();
-  lineno_to_print = 0;
+  lineBuffer.clear();
+  gcode_lineno = 0;
   was_printing = IsPrinting();
   is_printing = false;
   idle_timer->start();
@@ -322,7 +340,7 @@ void Printer::Pause()
 
 bool Printer::isPaused()
 {
-    return !is_printing && lineno_to_print > 0;
+    return !is_printing && gcode_lineno > 0;
 }
 
 bool Printer::ContinuePrinting() {
@@ -355,26 +373,21 @@ bool Printer::ContinuePrinting() {
   return true;
 }
 
-void Printer::Inhibit( bool value ) {
-//  ThreadedPrinterSerial::Inhibit( value );
-//  signal_inhibit_changed.emit();
-}
-
 bool Printer::SwitchPower( bool on ) {
-  if ( IsPrinting() ) {
+  if ( IsPrinting() || isPaused()) {
     alert(_("Can't switch power while printing"));
     return false;
   }
 
   string resp;
   if ( on )
-    return Send( "M80" );
+    return Send( "M80" ) > 0;
 
-  return Send( "M81" );
+  return Send( "M81" ) > 0;
 }
 
 bool Printer::Home( string axis ) {
-  if( IsPrinting() ) {
+  if( IsPrinting() || isPaused()) {
     alert(_("Can't go home while printing"));
     return false;
   }
@@ -382,7 +395,7 @@ bool Printer::Home( string axis ) {
   if ( axis == "X" || axis == "Y" || axis == "Z" ) {
     return Send("G28 "+axis+"0");
   } else if ( axis == "ALL" ) {
-    return Send("G28");
+    return Send("G28") > 0;
   }
 
   alert(_("Home called with unknown axis"));
@@ -499,8 +512,8 @@ void Printer::serialReady()
 
 //    qDebug() << "receveB " << receiveBuffer  << ok_received;
 
-    if (ok_received && !commandBuffer.empty()){
-        QByteArray last = commandBuffer.last();
+    if (ok_received && !lineBuffer.empty()){
+        QByteArray last = lineBuffer.last();
         ok_received = false;
         if (serialPort->write(last) == long(last.length())){
             Command command(last.toStdString(), currentPos);
@@ -517,7 +530,7 @@ void Printer::serialReady()
             else if (command.Code == ABSOLUTEPOSITIONING)
                 is_in_relative_mode = false;
             main->comm_log("--> "+last.trimmed());
-            commandBuffer.removeLast();
+            lineBuffer.removeLast();
             serialPort->flush();
         }
     }
@@ -553,8 +566,7 @@ bool Printer::Idle( void ) {
         idle_timer->stop();
         return false;
     }
-
-    cerr << "idle" << endl;
+//    cerr << "idle" << endl;
     bool is_connected = serialPort->isOpen();
     if (is_connected) {
         int newfanspeed = main->get_settings()->get_boolean("Printer/FanEnable")
@@ -564,7 +576,7 @@ bool Printer::Idle( void ) {
             fan_speed = newfanspeed;
             SetFan(newfanspeed);
         }
-        if (!commandBuffer.isEmpty()){
+        if (!lineBuffer.isEmpty()){
             ok_received = true;
             emit serialPort->readyRead();
         }
@@ -582,11 +594,11 @@ bool Printer::CheckPrintingProgress( void ) {
     long line = 0;//GetPrintingProgress();
 
   if ( is_printing != was_printing ) {
-    lineno_to_print = line;
+    gcode_lineno = line;
 //    signal_printing_changed.emit();
     was_printing = is_printing;
-  } else if ( is_printing && line != lineno_to_print ) {
-    lineno_to_print = line;
+  } else if ( is_printing && line != gcode_lineno ) {
+    gcode_lineno = line;
 //    if ( line > 0 )
 //      signal_now_printing.emit( line );
   }
@@ -630,9 +642,9 @@ void Printer::ParseResponse( QString line ) {
     if (lowerLine.startsWith("resend") or line.startsWith("rs")) {
         QRegularExpressionMatch match = numberRE.match(line);
         if (match.hasMatch()){
-            lineno_to_print = match.captured(0).toInt();
-            commandBuffer.clear();
-            qDebug() << "RESEND"<< lineno_to_print;
+            gcode_lineno = match.captured(0).toInt();
+            lineBuffer.clear();
+            qDebug() << "RESEND"<< gcode_lineno;
         }
         return;
     }
@@ -664,22 +676,23 @@ void Printer::ParseResponse( QString line ) {
             double settemp = match.captured("set").toDouble();
             main->getTempsPanel()->setExtruderTemp(extr, int(0.5+temp), int(0.5+settemp));
             // no number: currently selected exttruder
-            qDebug()<< "Extr."<< (extr+1) << "Temp is"<< temp << "of" << settemp;
+            QTextStream(stderr) << " Extr. "<< (extr+1) << ": " << temp << " of " << settemp;
         }
         QRegularExpressionMatch match = templineRE_B.match(line);
         if(match.hasMatch()){
             double temp = match.captured("temp").toDouble();
             double settemp = match.captured("set").toDouble();
             main->getTempsPanel()->setBedTemp(int(0.5+temp), int(0.5+settemp));
-            qDebug()<< "    Bed Temp is"<< temp << "of" << settemp;
+            QTextStream(stderr) << "  Bed: " << temp << " of " << settemp;
         }
         match = templineRE_C.match(line);
         if(match.hasMatch()){
             double temp = match.captured("temp").toDouble();
             double settemp = match.captured("set").toDouble();
             main->getTempsPanel()->setTemp("Chamber", int(0.5+temp), int(0.5+settemp));
-            qDebug()<< "Chamber Temp is"<< temp << " of " << settemp;
+            QTextStream(stderr) << "  Chamber Temp is "<< temp << " of " << settemp;
         }
+        QTextStream(stderr) << "     \r";
         emit temp_changed();
     }
 
