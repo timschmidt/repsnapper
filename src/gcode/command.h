@@ -177,6 +177,7 @@ public:
     bool hasNoEffect(const Vector3d *LastPos, const double lastE,
                      const bool relativeEcode) const;
 
+    string GetGCodeText() const; // for values only
     string GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
                          bool relativeEcode, const char E_letter='E',
                          bool speedAlways = false) const;

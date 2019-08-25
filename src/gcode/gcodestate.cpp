@@ -22,7 +22,6 @@
 #include "gcodestate.h"
 #include "../slicer/printlines.h"
 
-
 struct GCodeStateImpl
 {
   GCode &code;
@@ -30,12 +29,12 @@ struct GCodeStateImpl
   Command lastCommand;
 
   GCodeStateImpl(GCode &_code) :
-    code(_code),
-    LastPosition(0,0,0)
+    code(_code), LastPosition(Vector3d::ZERO)
   {}
 };
 
 GCodeState::GCodeState(GCode &code)
+    : lastExtruder(0)
 {
   pImpl = new GCodeStateImpl(code);
 }
@@ -107,7 +106,7 @@ void GCodeState::AppendCommands(vector<Command> commands, bool relativeE,
                                 double minLength)
 {
   for (uint i = 0; i < commands.size(); i++) {
-    AppendCommand(commands[i], relativeE, minLength);
+      AppendCommand(commands[i], relativeE, minLength);
   }
 }
 // double GCodeState::GetLastLayerZ(double curZ)

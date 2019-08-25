@@ -330,7 +330,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tabModel">
         <attribute name="title">
@@ -1113,7 +1113,7 @@
                  <item>
                   <widget class="QPushButton" name="g_save_gcode">
                    <property name="text">
-                    <string>Save GCode</string>
+                    <string>&amp;Save GCode</string>
                    </property>
                   </widget>
                  </item>
@@ -1131,7 +1131,10 @@
             </widget>
            </item>
            <item>
-            <widget class="QTabWidget" name="tabWidget2">
+            <widget class="QTabWidget" name="GCodeTabWidget">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                <horstretch>0</horstretch>
@@ -1144,7 +1147,7 @@
               </font>
              </property>
              <property name="currentIndex">
-              <number>0</number>
+              <number>3</number>
              </property>
              <widget class="QWidget" name="tab">
               <attribute name="title">
@@ -1221,7 +1224,10 @@ M104 S0.0        ; heater off
                </item>
               </layout>
              </widget>
-             <widget class="QWidget" name="tab_2">
+             <widget class="QWidget" name="GCResultTab">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <attribute name="title">
                <string>Result</string>
               </attribute>
@@ -2036,7 +2042,7 @@ M104 S0.0        ; heater off
   <tabstop>g_platform</tabstop>
   <tabstop>g_save_gcode</tabstop>
   <tabstop>m_clear_gcode</tabstop>
-  <tabstop>tabWidget2</tabstop>
+  <tabstop>GCodeTabWidget</tabstop>
   <tabstop>GCode_Start</tabstop>
   <tabstop>GCode_Layer</tabstop>
   <tabstop>GCode_End</tabstop>

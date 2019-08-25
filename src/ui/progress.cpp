@@ -24,7 +24,8 @@
 
 //ViewProgress::ViewProgress(Progress *progress, Gtk::Box *box, Gtk::ProgressBar *bar, Gtk::Label *label) :
 ViewProgress::ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label) :
-  m_box (box), m_bar(bar), m_label(label), to_terminal(true)
+  m_box (box), m_bar(bar), m_label(label), to_terminal(true),
+  estimatedDuration(0.), estimatedTotal(0.)
 {
   m_bar_max = 0.0;
   m_box->hide();
@@ -36,9 +37,10 @@ ViewProgress::ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label) :
   // progress->m_signal_progress_label.connect  (sigc::mem_fun(*this, &ViewProgress::set_label));
 }
 
-void ViewProgress::start (const char *label, double max)
+void ViewProgress::start (const char *label, double max, double totalTime)
 {
   do_continue = true;
+  estimatedTotal = totalTime;
   m_box->show();
   m_bar_max = max;
   this->label = label;
@@ -107,17 +109,25 @@ bool ViewProgress::update (const double value)
   // Don't allow progress to go backward
 //  if (value < m_bar_cur)
 //    return do_continue;
-
   QCoreApplication::processEvents();
   m_bar_cur = CLAMP(value, 0, 1.0);
-  m_bar->setRange(0, int(m_bar_max));
-  m_bar->setValue(int(value));
   QString s;
   QTextStream o(&s);
-  const double used = time.elapsed()/1000; // seconds
-  const double total = used * m_bar_max  / value;
-  const long left = long(total-used);
-  o << label << " (" << timeleft_str(left) << ") : "
+  const double elapsed = time.elapsed()/1000; // seconds
+  double totalTime;
+  if (estimatedDuration > 0 && estimatedTotal > 0) {
+      const double realfactor = elapsed / estimatedDuration;
+      totalTime = estimatedTotal * realfactor;
+      m_bar->setRange(0, int(totalTime));
+      m_bar->setValue(int(elapsed));
+  } else {
+      m_bar->setRange(0, int(m_bar_max));
+      m_bar->setValue(int(value));
+      totalTime  = elapsed * m_bar_max  / value;
+  }
+  const long left = long(totalTime-elapsed);
+  o << label << " (" << timeleft_str(left)
+    << " of " << timeleft_str(totalTime) << " left) : "
     << int(value) <<"/"<< int(m_bar_max);
   m_bar->setFormat(s);
   if (to_terminal) {

@@ -43,7 +43,7 @@ class ViewProgress : public QObject {
   ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label);
   ~ViewProgress(){}
 
-  void start (const char *label, double max);
+  void start (const char *label, double max, double totalTime = 0.);
   bool restart (const char *label, double max);
 
   void set_label (QString label);
@@ -53,6 +53,7 @@ class ViewProgress : public QObject {
   void set_terminal_output(bool terminal);
   bool do_continue;
 
+  double estimatedDuration, estimatedTotal;
 public slots:
   bool update (double value);
   void stop (const char *label = "");

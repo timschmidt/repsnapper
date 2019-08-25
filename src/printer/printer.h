@@ -45,6 +45,7 @@ private:
   bool was_connected;
   bool was_printing;
   long gcode_lineno;
+  long printer_lineno;
   bool ok_received;
   int fan_speed;
 
@@ -58,14 +59,14 @@ private:
 
   QString receiveBuffer;
 
-  QByteArrayList commandBuffer;
+  QByteArrayList lineBuffer;
 
 
   bool QueryTemp( void );
-  bool CheckPrintingProgress( void );
   void ParseResponse( QString line );
   QSerialPort *serialPort;
 
+  bool StartPrinting();
 public:
   Printer( MainWindow *main );
   ~Printer();
@@ -82,11 +83,12 @@ public:
 
   int Send( string command, long *lineno = nullptr);
 
-  bool StartPrinting( QTextDocument * document,
-                      long startLine = 0,  long endLine = 0,
-                      bool withChecksums = true);
+  bool isReadyToPrint();
+
+  bool StartPrinting(const GCode *gcode, Settings *settings);
+  bool StartPrinting(QTextDocument * document);
   bool StopPrinting();
-  void Pause();
+  void PauseUnpause();
   bool isPaused();
   bool ContinuePrinting();
 
@@ -106,12 +108,14 @@ public:
   bool IsPrinting() const {return is_printing;}
 
   void SetFan(int speed);
+  void runIdler();
 
+  int lastSetBedTemp;
 signals:
   void serial_state_changed(int state);
   void printing_changed();
   void temp_changed();
-  void now_printing(long lineno);
+  void now_printing(long lineno, double duration = 0., double layerZ = -1.);
 
 private slots:
   void serialReady();

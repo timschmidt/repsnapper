@@ -74,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui_main->Mainsplitter->restoreState(m_settings->value("Misc/Mainsplitter",
                                                           QByteArray()).toByteArray());
     ui_main->tabWidget->setCurrentIndex(m_settings->get_integer("Misc/MainTabIndex"));
+    ui_main->GCodeTabWidget->removeTab(3); // no GCodeResult
 
     m_settings->set_all_to_gui(this);
     m_settings->set_all_to_gui(prefs_dialog);
@@ -96,7 +97,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_printer, SIGNAL(serial_state_changed(int)),
             this, SLOT(printerConnection(int)));
     connect(m_printer, SIGNAL(printing_changed()),this, SLOT(printingChanged()));
-    connect(m_printer, SIGNAL(now_printing(long)),this, SLOT(nowPrinting(long)));
+    connect(m_printer, SIGNAL(now_printing(long, double, double)),this,
+            SLOT(nowPrinting(long, double, double)));
 
 //    cerr << m_settings->info().toStdString() << endl;
 
@@ -263,8 +265,8 @@ void MainWindow::printerConnection(int state)
 }
 
 
-void MainWindow::startProgress(string label, double max){
-    m_progress->start(label.c_str(), max);
+void MainWindow::startProgress(string label, double max, double totalTime) {
+    m_progress->start(label.c_str(), max, totalTime);
 }
 
 TemperaturePanel *MainWindow::getTempsPanel() const
@@ -290,7 +292,7 @@ void MainWindow::printingChanged()
     tempsPanel->setIsPrinting(printing && !paused);
     if (!printing && !paused) {
         m_progress->stop();
-        m_model->setCurrentPrintingLine(0);
+        m_model->setCurrentPrintingCommand(0);
 //        ui_main->Display_DisplayGCode->setChecked(gcodeDisplayWasOn);
 //        ui_main->Display_DisplayGCode->setChecked(layerDisplayWasOn);
     } else {
@@ -301,11 +303,33 @@ void MainWindow::printingChanged()
     }
 }
 
-void MainWindow::nowPrinting(long lineno)
+void MainWindow::nowPrinting(long command, double duration, double layerZ)
 {
-    m_progress->emit update_signal(lineno);
-    m_model->setCurrentPrintingLine(ulong(lineno));
+    m_progress->estimatedDuration = duration;
+    m_progress->emit update_signal(command);
+    m_model->setCurrentPrintingCommand(ulong(command));
     m_render->update();
+
+    bool controlBedTemp = m_settings->get_boolean("Slicing/BedTempControl");
+    // changeable while printing
+    if (controlBedTemp) {
+        int bedtempTemp = m_settings->get_integer("Slicing/BedTempStart");
+        int bedtempCoolstart = m_settings->get_integer("Slicing/BedTempStartCooling");
+        const double MINTEMP = 20;
+        int temp;
+        if (layerZ < bedtempCoolstart) {
+            temp = bedtempTemp;
+        } else {
+            int bedtempStop = m_settings->get_integer("Slicing/BedTempStopHeating");
+            if (layerZ < bedtempStop && bedtempStop > bedtempCoolstart)
+            temp = int(bedtempTemp - (bedtempTemp - MINTEMP) *
+                    double(layerZ - bedtempCoolstart)
+                    /double(bedtempStop-bedtempCoolstart));
+            else
+                temp = 0;
+        }
+        m_printer->SetTemp("Bed", -1, temp);
+    }
 }
 
 void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
@@ -700,9 +724,9 @@ void MainWindow::handleButtonClick()
     } else if(name == "p_print"){
         if (m_settings->get_boolean("Printer/ClearLogOnPrintStart"))
             ui_main->i_txt_comms->clear();
-        m_printer->StartPrinting(ui_main->GCodeResult->document());
+        m_printer->StartPrinting(m_model->gcode, m_settings);
     } else if(name == "p_pause"){
-        m_printer->Pause();
+        m_printer->PauseUnpause();
     } else if(name == "p_stop"){
         m_printer->StopPrinting();
     } else if(name == "p_motoroff"){
@@ -760,20 +784,29 @@ void MainWindow::gcodeChanged()
     ui_main->GCode_Start->setPlainText(m_settings->get_string("GCode/Start"));
     ui_main->GCode_Layer->setPlainText(m_settings->get_string("GCode/Layer"));
     ui_main->GCode_End->setPlainText(m_settings->get_string("GCode/End"));
+    ui_main->GCodeTabWidget->removeTab(3);
 
+
+    /*
     if (!m_model->gcode->MakeText (ui_main->GCodeResult->document(), m_settings, m_progress)) {
       m_model->ClearLayers();
       m_model->ClearGCode();
       m_model->ClearPreview();
     }
+*/
 
     //ui_main->GCodeResult->setPlainText(m_model->gcode->buffer.toPlainText());
-    ui_main->p_print->setEnabled(m_model->haveGCode());
+    if (m_printer->isReadyToPrint())
+        ui_main->p_print->setEnabled(m_model->haveGCode());
     m_render->update();
 }
 
 void MainWindow::settingsChanged(const QString &name)
 {
+//    cerr << "settings changed: " << name.toStdString() << endl;
+    if (name.startsWith("Printer")){
+        m_printer->runIdler();
+    }
     if (name.startsWith("scale")){
     }
     if (name.startsWith("Extruder")){

@@ -675,10 +675,8 @@ bool Layer::setMinMax(const Poly &poly)
 
 
 // Convert to GCode
-void Layer::MakeGCode (Vector3d &start,
-                       GCodeState &gc_state,
-                       double offsetZ,
-                       Settings *settings) const
+void Layer::MakeGCode (Vector3d &start, GCodeState &gc_state,
+                       double offsetZ, Settings *settings) const
 {
   vector<PLine<3>*> plines;
   Vector2d start2(start.x(), start.y());
@@ -819,36 +817,16 @@ void Layer::makePrintLines3(Vector2d &startPos, Printlines *printlines,
                 Settings::numbered("Extruder",currentExtruder)+"/ZliftAlways");
     const vector<Poly> clippolys = GetOuterShell();
 
-    bool controlBedTemp = settings->get_boolean("Slicing/BedTempControl");
-    int bedtempTemp = settings->get_integer("Slicing/BedTempStart");
-    int bedtempCoolstart = settings->get_integer("Slicing/BedTempStartCooling");
-    int bedtempStop = settings->get_integer("Slicing/BedTempStopHeating");
-
     Command lchange(LAYERCHANGE, LayerNo);
     lchange.where = Vector3d(0.,0.,Z);
     lchange.comment += info();
     lines3.push_back(new PLine3(lchange));
 
-    if (controlBedTemp) {
-        const double MINTEMP = 20;
-        int temp;
-        if (Z < bedtempCoolstart) {
-            temp = bedtempTemp;
-        } else if (Z < bedtempStop && bedtempStop > bedtempCoolstart) {
-            temp = int(bedtempTemp - (bedtempTemp - MINTEMP) *
-                    double(Z - bedtempCoolstart)
-                    /double(bedtempStop-bedtempCoolstart));
-        } else {
-            temp = 0;
-        }
-        lines3.push_back(new PLine3(Command(BEDTEMP, temp)));
-    }
-
     vector<PLine<2>*> lines;
 
     double polyspeedfactor = printlines->makeLines(startPos, lines);
 
-    if (!ZliftAlways)
+    if (clipnearest && !ZliftAlways)
         Printlines::clipMovements(clippolys, lines, clipnearest, linewidth);
     printlines->optimize(settings->get_double("Slicing/MinLayertime"),
                         cornerradius, lines);

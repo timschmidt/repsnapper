@@ -1719,7 +1719,7 @@ void Printlines::toCommands(const vector<PLine<3> *> &plines,
                             GCodeState &gc_state,
                             ViewProgress * progress)
 {
-  // push all lines to commands
+  // append commands for the given plines to gc_state
   PLineArea lastArea = UNDEF;
   ulong count = plines.size();
   if (count==0) return;

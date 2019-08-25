@@ -144,10 +144,8 @@ public:
   void makePrintLines3(Vector2d &startPos, Printlines *Printlines,
                        vector<PLine<3> *> &lines3, Settings *settings) const;
 
-  void MakeGCode (Vector3d &start,
-          GCodeState &gc_state,
-          double offsetZ,
-          Settings *settings) const;
+  void MakeGCode (Vector3d &start, GCodeState &gc_state,
+                  double offsetZ, Settings *settings) const;
 
   string info() const ;
 

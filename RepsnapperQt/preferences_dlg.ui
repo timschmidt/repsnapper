@@ -582,7 +582,7 @@
                    <double>0.100000000000000</double>
                   </property>
                   <property name="value">
-                   <double>1.800000000000000</double>
+                   <double>1.300000000000000</double>
                   </property>
                  </widget>
                 </item>
@@ -627,7 +627,7 @@
                 <item row="5" column="2" colspan="3">
                  <widget class="QLabel" name="label_64">
                   <property name="text">
-                   <string>Desired Line Width/Heigth Ratio</string>
+                   <string>Desired Line Width/Height Ratio</string>
                   </property>
                  </widget>
                 </item>
@@ -660,7 +660,7 @@
                    <double>0.010000000000000</double>
                   </property>
                   <property name="value">
-                   <double>0.600000000000000</double>
+                   <double>0.400000000000000</double>
                   </property>
                  </widget>
                 </item>

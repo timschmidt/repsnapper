@@ -730,9 +730,12 @@ double Settings::GetExtrudedMaterialWidth(double layerheight, uint extruderNo)
 {
   // ExtrudedMaterialWidthRatio is preset by user
   const QString extruder = numbered("Extruder", extruderNo);
-  return min(max(get_double(extruder+"/MinimumLineWidth", 0.3),
-                 get_double(extruder+"/ExtrudedMaterialWidthRatio", 1.0) * layerheight),
-             get_double(extruder+"/MaximumLineWidth", 0.8));
+  const double minLineWidth = get_double(extruder+"/MinimumLineWidth", 0.4);
+  const double maxLineWidth =  get_double(extruder+"/MaximumLineWidth", 0.4);
+  const double desired =
+          get_double(extruder+"/ExtrudedMaterialWidthRatio", 1.3)
+          * layerheight;
+  return min(maxLineWidth, max(minLineWidth, desired));
 }
 
 // TODO This depends whether lines are packed or not - ellipsis/rectangle

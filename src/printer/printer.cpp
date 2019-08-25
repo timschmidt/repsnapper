@@ -28,7 +28,9 @@
 #include <QTime>
 #include <QTimer>
 
+#include <src/gcode/gcode.h>
 #include <src/gcode/command.h>
+#include <src/gcode/gcodestate.h>
 
 
 Printer::Printer( MainWindow *main ):
@@ -37,7 +39,8 @@ Printer::Printer( MainWindow *main ):
     was_printing(false),
     gcode_lineno(0),
     currentPos(Vector3d::ZERO),
-    serialPort(nullptr)
+    serialPort(nullptr),
+    lastSetBedTemp(-1)
 {
   this->main = main;
 
@@ -191,7 +194,6 @@ bool Printer::Reset( void ) {
   return ret;
 }
 
-
 static QByteArray numberedLineWithChecksum(const QByteArray command, const long lineno){
     QString nLine;
     QTextStream nLs(&nLine);
@@ -215,15 +217,15 @@ int Printer::Send(string s, long *lineno_for_printer) {
             // skip empty lines when not using linenumbers
             if (pline == "") continue;
             QByteArray l8 = pline.toLocal8Bit();
-            Command command(pline.toStdString());
             if (lineno_for_printer) {
                 l8 = numberedLineWithChecksum(l8, *lineno_for_printer);
+//                cerr << l8.toStdString() << endl;
                 (*lineno_for_printer)++;
             }
             bool wasEmpty = lineBuffer.empty();
-            while (lineBuffer.size()>20){
+            while (lineBuffer.size() > 10){
+                QThread::msleep(30);
                 QCoreApplication::processEvents();
-                QThread::msleep(10);
             }
             if (!lineno_for_printer) {
                 lineBuffer.append(l8+'\n'); // send immediately
@@ -235,52 +237,103 @@ int Printer::Send(string s, long *lineno_for_printer) {
                 emit serialPort->readyRead();
             }
         }
+    } else {
+        return -1;
     }
     return sent;
 }
 
-
-bool Printer::StartPrinting(QTextDocument *document,
-                            long startLine, long endLine, bool withChecksums)
+bool Printer::isReadyToPrint()
 {
-    long numlines = document->lineCount();
-    if (startLine > numlines-1) return false;
-    if (endLine == 0) endLine = numlines;
-    else if (endLine > startLine)
-        endLine = min(endLine, numlines);
-    else return false;
+    return IsConnected() && !IsPrinting() && !isPaused();
+}
 
+bool Printer::StartPrinting() {
     lineBuffer.clear();
 
-    gcode_lineno = withChecksums ? startLine : -1;
+    gcode_lineno = 0;
+    printer_lineno = 0;
 
-    // tell line no before next line:
-    if (Send("M110 N" + std::to_string(gcode_lineno-1)) == 0) {
+    // tell line no. before next line:
+    if (Send("M110 N" + std::to_string(printer_lineno-1)) == 0) {
         cerr << "Error sending line number - can't print";
         return false;
     }
 
-    long printer_lineno = gcode_lineno;
     currentPos = Vector3d::ZERO;
-    main->startProgress("Printing", endLine);
     is_printing = true;
     idle_timer->stop();
+    emit printing_changed();
+    return is_printing;
+}
 
+bool Printer::StartPrinting(const GCode *gcode, Settings *settings)
+{
+    if (!StartPrinting()) return false;
+    main->startProgress("Printing", gcode->size(), gcode->totalTime);
+    GCodeIter *iter = gcode->get_iter(settings, main->getProgress());
+    QTimer nowprinting_timer;
+    nowprinting_timer.setInterval(1000);
+    connect(&nowprinting_timer, &QTimer::timeout,
+            [=] {now_printing(int(iter->currentIndex()),
+                              iter->duration, iter->currentLayerZ);});
+
+    if (Send(settings->get_string("GCode/Start").toStdString(), &printer_lineno) >= 0) {
+        while ((is_printing || printer_lineno > 0) && !iter->finished()) {
+            if (is_printing) {
+                Send(iter->get_line(true).toStdString(), &printer_lineno);
+                if (!nowprinting_timer.isActive())
+                    nowprinting_timer.start();
+                while (lineBuffer.size() > 10) { // wait for buffer
+                    QThread::msleep(5);
+                    QApplication::processEvents();
+                }
+            } else { // paused
+                if (printer_lineno == 0) break;
+                if (nowprinting_timer.isActive())
+                    nowprinting_timer.stop();
+                cerr << "paused ... "<< endl;
+                for(int i=0;i<50;i++){
+                    QThread::msleep(20);
+                    QApplication::processEvents();
+                }
+            }
+        }
+        if (is_printing)
+            Send(settings->get_string("GCode/End").toStdString(), &printer_lineno);
+    }
+    nowprinting_timer.stop();
+    is_printing = false;
+    printer_lineno = 0;
+    gcode_lineno = 0;
+    lastSetBedTemp = -1;
+    idle_timer->start();
+    emit printing_changed();
+    return true;
+}
+
+bool Printer::StartPrinting(QTextDocument *document)
+{
+    long numlines = document->lineCount();
+    long endLine = numlines;
+
+    if (!StartPrinting()) return false;
+    main->startProgress("Printing", endLine);
     QTimer nowprinting_timer;
     nowprinting_timer.setInterval(1000);
     connect(&nowprinting_timer, &QTimer::timeout, [=] {now_printing(gcode_lineno);});
-    emit printing_changed();
 
     while ((is_printing || gcode_lineno >= 0) && gcode_lineno < endLine) {
         QTextBlock block = document->findBlockByLineNumber(int(gcode_lineno));
         if (!block.isValid()) break;
-        Send(block.text().toStdString(), &printer_lineno); // send with line no & checksum
         if (is_printing) {
+            if (Send(block.text().toStdString(), &printer_lineno) < 0)
+                break;
             if (!nowprinting_timer.isActive())
                 nowprinting_timer.start();
             gcode_lineno++;
             while (lineBuffer.size() > 10) { // wait for buffer
-                QThread::msleep(20);
+                QThread::msleep(5);
                 QApplication::processEvents();
             }
         } else { // paused
@@ -296,7 +349,9 @@ bool Printer::StartPrinting(QTextDocument *document,
     }
     nowprinting_timer.stop();
     is_printing = false;
+    printer_lineno = 0;
     gcode_lineno = 0;
+    lastSetBedTemp = -1;
     idle_timer->start();
     emit printing_changed();
     return true;
@@ -308,13 +363,14 @@ bool Printer::StopPrinting() {
   }
   lineBuffer.clear();
   gcode_lineno = 0;
+  printer_lineno = 0;
+  lastSetBedTemp = -1;
   was_printing = IsPrinting();
   is_printing = false;
   idle_timer->start();
   if (was_printing)
       emit printing_changed();
   return !is_printing;
-
   /*
  self.pauseX = self.analyzer.abs_x
         self.pauseY = self.analyzer.abs_y
@@ -323,14 +379,13 @@ bool Printer::StopPrinting() {
         self.pauseF = self.analyzer.current_f
         self.pauseRelative = self.analyzer.relative
 */
-
-
 }
 
-void Printer::Pause()
+void Printer::PauseUnpause()
 {
     if (isPaused()) {
-        ContinuePrinting();
+        idle_timer->stop();
+        is_printing = true;
     } else {
         idle_timer->start();
         is_printing = false;
@@ -340,37 +395,7 @@ void Printer::Pause()
 
 bool Printer::isPaused()
 {
-    return !is_printing && gcode_lineno > 0;
-}
-
-bool Printer::ContinuePrinting() {
-  idle_timer->stop();
-  is_printing = true;
-  emit printing_changed();
-/*
-  if self.paused:
-            # restores the status
-            self.send_now("G90")  # go to absolute coordinates
-
-            xyFeedString = ""
-            zFeedString = ""
-            if self.xy_feedrate is not None:
-                xyFeedString = " F" + str(self.xy_feedrate)
-            if self.z_feedrate is not None:
-                zFeedString = " F" + str(self.z_feedrate)
-
-            self.send_now("G1 X%s Y%s%s" % (self.pauseX, self.pauseY,
-                                            xyFeedString))
-            self.send_now("G1 Z" + str(self.pauseZ) + zFeedString)
-            self.send_now("G92 E" + str(self.pauseE))
-
-            # go back to relative if needed
-            if self.pauseRelative: self.send_now("G91")
-            # reset old feed rate
-            self.send_now("G1 F" + str(self.pauseF))
-*/
-
-  return true;
+    return !is_printing && (printer_lineno > 0 || gcode_lineno > 0);
 }
 
 bool Printer::SwitchPower( bool on ) {
@@ -442,25 +467,22 @@ bool Printer::SelectExtruder( int extruder_no ) {
 
 bool Printer::SetTemp(const QString &name, int extruder_no, float value) {
   ostringstream os;
-
-  if ( extruder_no > -1 )
-    if ( !SelectExtruder( extruder_no ) )
-      return false;
-
-  if (name.startsWith("Extruder")){
-      os << "M104 T" << extruder_no << " S";
-  } else if (name.startsWith("Bed")){
-    os << "M140 S";
+  if (name.startsWith("Bed")){
+      if (lastSetBedTemp == int(value))
+          return true;
+      lastSetBedTemp = int(value);
+      os << "M140 S";
   } else {
-    ostringstream ose;
-    ose << "No such Temptype: " << name.toStdString();
-    alert( ose.str().c_str() );
-    return false;
+      if (name.startsWith("Extruder")) {
+          os << "M104 T" << extruder_no << " S";
+      } else {
+          ostringstream ose;
+          ose << "No such Temptype: " << name.toStdString();
+          alert( ose.str().c_str() );
+          return false;
+      }
   }
-
   os << value << endl;
-
-
   return Send( os.str() );
 }
 
@@ -566,16 +588,13 @@ bool Printer::Idle( void ) {
         idle_timer->stop();
         return false;
     }
-//    cerr << "idle" << endl;
+    //    cerr << "idle" << endl;
     bool is_connected = serialPort->isOpen();
     if (is_connected) {
         int newfanspeed = main->get_settings()->get_boolean("Printer/FanEnable")
                     ? main->get_settings()->get_integer("Printer/FanVoltage")
                     : 0;
-        if (fan_speed != newfanspeed){
-            fan_speed = newfanspeed;
-            SetFan(newfanspeed);
-        }
+        SetFan(newfanspeed);
         if (!lineBuffer.isEmpty()){
             ok_received = true;
             emit serialPort->readyRead();
@@ -585,22 +604,6 @@ bool Printer::Idle( void ) {
   if ( is_connected != was_connected ) {
     was_connected = is_connected;
     emit serial_state_changed(is_connected ? SERIAL_CONNECTED : SERIAL_DISCONNECTED);
-  }
-
-  return true;
-}
-
-bool Printer::CheckPrintingProgress( void ) {
-    long line = 0;//GetPrintingProgress();
-
-  if ( is_printing != was_printing ) {
-    gcode_lineno = line;
-//    signal_printing_changed.emit();
-    was_printing = is_printing;
-  } else if ( is_printing && line != gcode_lineno ) {
-    gcode_lineno = line;
-//    if ( line > 0 )
-//      signal_now_printing.emit( line );
   }
 
   return true;
@@ -642,6 +645,7 @@ void Printer::ParseResponse( QString line ) {
     if (lowerLine.startsWith("resend") or line.startsWith("rs")) {
         QRegularExpressionMatch match = numberRE.match(line);
         if (match.hasMatch()){
+            printer_lineno -= 20; // TODO find real command number for resend?
             gcode_lineno = match.captured(0).toInt();
             lineBuffer.clear();
             qDebug() << "RESEND"<< gcode_lineno;
@@ -701,9 +705,20 @@ void Printer::ParseResponse( QString line ) {
 
 
 void Printer::SetFan( int speed ) {
+//    if (fan_speed != speed)
+    fan_speed = speed;
+//    else return;
     if (speed == 0)
         Send ("M107");
     else {
         Send ("M106 S" + to_string(speed));
     }
+}
+
+void Printer::runIdler()
+{
+    if (!idle_timer->isActive())
+        return;
+    Idle();
+    idle_timer->start();
 }

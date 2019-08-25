@@ -740,8 +740,11 @@ void Model::CalcInfill()
   //cerr << "make infill"<< endl;
   uint done = 0;
 
+  Vector3d printOffset  = settings->getPrintMargin();
+
   InfillSet infills(*settings,
-                    Min.get_sub_vector<2>(0), Max.get_sub_vector<2>(0));
+                    (Min+printOffset).get_sub_vector<2>(0),
+                    (Max+printOffset).get_sub_vector<2>(0));
   uint firstLayers = uint(settings->get_integer("Slicing/FirstLayersNum"));
   uint altinfill = uint(settings->get_integer("Slicing/AltInfillLayers"));
 
@@ -782,10 +785,6 @@ void Model::ConvertToGCode()
 
   QTime start_time;
   start_time.start();
-
-  gcode->clear();
-
-  GCodeState state(*gcode);
 
   Vector3d printOffset  = settings->getPrintMargin();
   double   printOffsetZ = printOffset.z();
@@ -831,22 +830,11 @@ void Model::ConvertToGCode()
       printOffsetZ += MakeRaft(); // printOffsetZ will have height of raft added
     }
 
-  state.ResetLastWhere(Vector3d::ZERO);
-  state.lastExtruder = 0;
   ulong layercount = layers.size();
-
   if (m_progress->restart (_("Making Lines"), layercount+1)) {
-
-      state.AppendCommand(MILLIMETERSASUNITS,  false, _("Millimeters"));
-      state.AppendCommand(ABSOLUTEPOSITIONING, false, _("Absolute Pos"));
-      if (settings->get_boolean("Slicing/RelativeEcode"))
-          state.AppendCommand(RELATIVE_ECODE, false, _("Relative E Code"));
-      else
-          state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
-
+      Vector3d start = Vector3d::ZERO;
       ulong progress_steps=max<ulong>(1, layercount/20);
       bool farthestStart = settings->get_boolean("Slicing/FarthestLayerStart");
-      Vector3d start = state.LastPosition();
       vector<PLine<3>*> pline3s;
 //      vector<vector<PLine<3>*>> l_plines(layercount);
       ulong done = 0;
@@ -876,9 +864,19 @@ void Model::ConvertToGCode()
               break;
       }
       Printlines::makeAntioozeRetract(pline3s, settings);
+
+      gcode->clear();
+      GCodeState state(*gcode);
+      state.AppendCommand(MILLIMETERSASUNITS,  false, _("Millimeters"));
+      state.AppendCommand(ABSOLUTEPOSITIONING, false, _("Absolute Pos"));
+      if (settings->get_boolean("Slicing/RelativeEcode"))
+          state.AppendCommand(RELATIVE_ECODE, false, _("Relative E Code"));
+      else
+          state.AppendCommand(ABSOLUTE_ECODE, false, _("Absolute E Code"));
       Printlines::toCommands(pline3s, settings, state, nullptr);
+      gcode->findLayerChanges();
       pline3s.clear();
-      //state.AppendCommands(commands, settings.Slicing.RelativeEcode);
+//      state.AppendCommands(commands, settings.Slicing.RelativeEcode);
   }
 
   QCoreApplication::processEvents();
@@ -889,10 +887,10 @@ void Model::ConvertToGCode()
   //   gcode.layerchanges.push_back(0);
 
 
-  uint gctime = uint(gcode->GetTimeEstimation(Vector3d::ZERO));
-  uint h = gctime/3600;
-  uint m = gctime%3600/60;
-  uint s = gctime-3600*h-60*m;
+  gcode->calcTimeEstimation(Vector3d::ZERO);
+  uint h = uint(gcode->totalTime/3600);
+  uint m = gcode->totalTime%3600/60;
+  uint s = uint(gcode->totalTime-3600*h-60*m);
   ostringstream ostr;
   ostr << _("GCode Estimation: ");
   if (h>0) ostr << h <<_(" h ");

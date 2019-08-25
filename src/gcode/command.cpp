@@ -188,6 +188,17 @@ bool Command::hasNoEffect(const Vector3d *LastPos, const double lastE,
       && abs(abs_extr) < 0.00001);
 }
 
+string Command::GetGCodeText() const
+{
+    assert(is_value);
+    ostringstream ostr;
+    ostr << MCODES[Code];
+    ostr << " S"<<value;
+    if(comment.length() != 0)
+        ostr << " ; " << comment;
+    return ostr.str();
+}
+
 string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
                              bool relativeEcode, char E_letter,
                              bool speedAlways) const
@@ -200,15 +211,10 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
     }
 
   string comm = comment;
-
-
   ostr << MCODES[Code];
 
   if (is_value && Code!=COMMENT){
-    ostr << " S"<<value;
-    if(comm.length() != 0)
-      ostr << " ; " << comm;
-    return ostr.str();
+      return GetGCodeText();
   }
 
   bool moving = false; // is a move involved?

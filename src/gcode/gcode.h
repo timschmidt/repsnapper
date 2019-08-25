@@ -35,22 +35,36 @@ class QPlainTextEdit;
 
 class GCodeIter
 {
-  QTextDocument *m_buffer;
-  QTextCursor m_cursor;
-  int m_line_count;
 
- public:
-  GCodeIter (QTextDocument *buffer);
-  std::string next_line();
-  std::string next_line_stripped();
-  bool finished();
-  double time_estimation;
-  Command * getCurrentCommand(const Vector3d &defaultwhere);
-  void set_to_lineno(int lineno);
-  int get_current_lineno();
-private:
-  std::string get_current_line();
-  QTextCursor cursor_at_line(int lineno);
+    size_t currentCommand;
+    const vector<Command> &commands;
+    Settings * settings;
+
+    bool speedalways, useTcommand, relativeE;
+    vector<QChar> eLetters;
+    uint currextruder;
+
+    ViewProgress * progress;
+    size_t progress_steps;
+
+public:
+    GCodeIter (const vector<Command> &commands, Settings * settings,
+               ViewProgress * progress);
+
+    double lastE, lastF;
+    char E_letter;
+    Vector3d lastPos;
+
+    double duration;
+
+    int currentLayer;
+    double currentLayerZ;
+
+    size_t currentIndex() const { return currentCommand; }
+    const Command *getCurrentCommand() const {return &commands[currentCommand];}
+    QString get_line(bool calc_duration = false);
+    QString get_line_stripped(bool calc_duration = false);
+    bool finished();
 };
 
 class GCode : public QObject
@@ -69,25 +83,26 @@ public:
   void drawCommands(Settings *settings, ulong start, ulong end,
                     bool liveprinting, uint linewidth, bool arrows, bool boundary=false,
                     bool onlyZChange = false);
-  bool MakeText(QTextDocument *textEdit, Settings *settings,
-                ViewProgress * progress);
+  bool MakeText(Settings *settings, ViewProgress * progress);
 
   //bool append_text (const std::string &line);
-  QString get_text() const;
+  QString get_text(Settings *settings, ViewProgress *progress);
   void clear();
 
   std::vector<Command> commands;
-  uint size() { return uint(commands.size()); }
+  uint size() const { return uint(commands.size()); }
 
   Vector3d Min, Max, Center;
 
   void translate(const Vector3d &trans);
 
   QTextDocument *buffer = nullptr;
-  GCodeIter *get_iter ();
+  GCodeIter *get_iter (Settings * settings, ViewProgress *progress = nullptr) const;
 
   double GetTotalExtruded(bool relativeEcode) const;
-  double GetTimeEstimation(const Vector3d &from) const;
+  void calcTimeEstimation(const Vector3d &from);
+  long totalTime;
+  void findLayerChanges();
 
   Vector3d currentCursorWhere;
   Vector3d currentCursorFrom;

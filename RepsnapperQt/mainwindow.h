@@ -89,7 +89,7 @@ public:
 
     ViewProgress *getProgress() const;
 
-    void startProgress(string label, double max);
+    void startProgress(string label, double max, double totalTime = 0.);
     TemperaturePanel *getTempsPanel() const;
 
     void selectShape(const int index);
@@ -131,7 +131,7 @@ private slots:
     void shapeSelected(const QModelIndex &index);
     void printerConnection(int state);
     void printingChanged();
-    void nowPrinting(long);
+    void nowPrinting(long command, double duration, double layerZ);
     void deleteSelected();
 
     void previewFile(const QString &filename);

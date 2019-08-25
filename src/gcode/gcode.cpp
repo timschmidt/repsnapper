@@ -88,17 +88,26 @@ void GCode::translate(const Vector3d &trans)
 }
 
 
-double GCode::GetTimeEstimation(const Vector3d &from) const
+void GCode::calcTimeEstimation(const Vector3d &from)
 {
   Vector3d where=from;
-  double time = 0;
+  double time = 0.;
   for (uint i=0; i<commands.size(); i++) {
       time += commands[i].time(where);
       if (commands[i].is_motion) {
           where.set(commands[i].where);
       }
   }
-  return time;
+  totalTime = long(time);
+}
+
+void GCode::findLayerChanges()
+{
+    layerchanges.clear();
+    for (size_t i=0; i<commands.size(); i++) {
+        if (commands[i].Code == LAYERCHANGE)
+            layerchanges.push_back(i);
+    }
 }
 
 string getLineAt(QTextDocument *doc, int lineno)
@@ -246,12 +255,12 @@ void GCode::Read(QTextDocument *doc, ViewProgress *progress, string filename)
               Max.z() = globalPos.z();
 
           if (globalPos.z() > lastZ) {
-            // if (lastZ > 0){ // don't record first layer
+            lastZ = globalPos.z();
             unsigned long num = commands.size();
             layerchanges.push_back(num);
-            commands.push_back(Command(LAYERCHANGE, layerchanges.size()));
-            // }
-            lastZ = globalPos.z();
+            Command lchange(LAYERCHANGE, layerchanges.size());
+            lchange.where = Vector3d(0.,0.,lastZ);
+            commands.push_back(lchange);
           }
           else if (globalPos.z() < lastZ) {
             lastZ = globalPos.z();
@@ -271,10 +280,10 @@ void GCode::Read(QTextDocument *doc, ViewProgress *progress, string filename)
 
     Center = (Max + Min)/2;
 
-    double time = GetTimeEstimation(Vector3d::ZERO);
-    int h = int(time / 3600.);
-    int min = (int(time) % 3600)/60;
-    int sec = int(time)-3600*h-60*min;
+    calcTimeEstimation(Vector3d::ZERO);
+    int h = int(totalTime / 3600.);
+    int min = totalTime % 3600/60;
+    int sec = int(totalTime)-3600*h-60*min;
     cerr << "GCode Time Estimation "<< h <<"h "<<min <<"m " <<sec <<"s" <<endl;
     //??? to statusbar or where else?
 }
@@ -572,6 +581,13 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
 
 }
 
+QString GCode::get_text(Settings *settings, ViewProgress *progress)
+{
+    MakeText(settings, progress);
+    return buffer->toPlainText();
+
+}
+
 // bool add_text_filter_nan(string str, string &GcodeTxt)
 // {
 //   if (int(str.find("nan"))<0)
@@ -585,178 +601,121 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
 // }
 
 
-bool GCode::MakeText(QTextDocument *document,
-                     Settings *settings,
+bool GCode::MakeText(Settings *settings,
                      ViewProgress * progress)
 {
-    if (!document) return false;
-    buffer = document;
-
   QString GcodeStart = settings->get_string("GCode/Start");
-  QString GcodeLayer = settings->get_string("GCode/Layer");
   QString GcodeEnd   = settings->get_string("GCode/End");
 
-  double duration = 0.;
+  GCodeIter *iter = get_iter(settings, progress);
+  iter->lastE = -10;
+  iter->lastF = 0;
 
-  QString GCodeTxt;
   if (progress)
       if (!progress->restart(_("Collecting GCode"), commands.size()))
           return false;
 
-    double lastE = -10;
-    double lastF = 0; // last Feedrate (can be omitted when same)
-    Vector3d pos(0,0,0);
-    Vector3d LastPos(-10,-10,-10);
-    std::stringstream oss;
+  Vector3d pos(0,0,0);
+  std::stringstream oss;
 
-    GCodeTxt += (_("; GCode by Repsnapper, "));
-    GCodeTxt += (QDateTime::currentDateTime().toString());
+  QString GCodeTxt = (_("; GCode by Repsnapper, "))
+          + (QDateTime::currentDateTime().toString())
+          + ("\n\n; Startcode\n" + GcodeStart + "; End Startcode\n\n");
 
-    GCodeTxt += ("\n\n; Startcode\n" + GcodeStart + "; End Startcode\n\n");
-
-    layerchanges.clear();
-    ulong progress_steps = max<ulong>(1,commands.size()/20);
-
-    bool speedalways = settings->get_boolean("Hardware/SpeedAlways");
-    bool useTcommand = settings->get_boolean("Slicing/UseTCommand");
-
-    const bool relativeecode = settings->get_boolean("Slicing/RelativeEcode");
-    uint currextruder = 0;
-    vector<QChar> extLetters = settings->get_extruder_letters();
-
-    for (ulong i = 0; i < commands.size(); i++) {
-      QChar E_letter;
-      if (useTcommand) // use first extruder's code for all extuders
-        E_letter = extLetters[0];
-      else {
-        // extruder change?
-        if (i==0 || commands[i].extruder_no != commands[i-1].extruder_no)
-          currextruder = commands[i].extruder_no;
-        E_letter = extLetters[currextruder];
-      }
-      if (progress && i%progress_steps==0)
-          progress->emit update_signal(i);
+  while(!iter->finished()) {
+      GCodeTxt += iter->get_line();
       if (!progress->do_continue) break;
+  }
+  GCodeTxt += ("\n; End GCode\n" + GcodeEnd + "\n");
 
-      if ( commands[i].Code == LAYERCHANGE ) {
-        layerchanges.push_back(i);
-        if (GcodeLayer.length()>0)
-          GCodeTxt += ("\n; Layerchange GCode\n" + GcodeLayer +
-                            "; End Layerchange GCode\n\n");
-      }
-
-      if ( commands[i].is_motion && commands[i].where.z() < 0 )  {
-        cerr << i << " Z < 0 "  << commands[i].info() << endl;
-      }
-      else {
-          duration += commands[i].time(LastPos);
-//          cerr << duration << endl;
-        GCodeTxt += (QString::fromStdString(
-                         commands[i].GetGCodeText(LastPos, lastE, lastF,
-                                                  relativeecode,
-                                                  E_letter.toLatin1(),
-                                                  speedalways>0) + "\n"));
-      }
-    }
-
-
-    GCodeTxt += ("\n; End GCode\n" + GcodeEnd + "\n");
-
-    buffer->setPlainText(GCodeTxt);
-
-    if (progress) progress->stop();
-    return true;
+  if (!buffer) buffer = new QTextDocument();
+  buffer->setPlainText(GCodeTxt);
+  if (progress) progress->stop();
+  return true;
 }
 
-// bool GCode::append_text (const std::string &line)
-// {
-//   if (int(line.find("nan"))<0{)
-//     buffer->insert (buffer->end(), line);
-//     return true;
-//   }
-//   else {
-//     cerr << "not appending line \"" << line << "\"" << endl;
-//     return false;
-//   }
-// }
-
-
-QString GCode::get_text () const
+GCodeIter *GCode::get_iter (Settings * settings, ViewProgress * progress) const
 {
-  return buffer->toPlainText();
+  return new GCodeIter (commands, settings, progress);
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////
 
 
 
-GCodeIter::GCodeIter (QTextDocument *buffer)
+GCodeIter::GCodeIter (const vector<Command> &comm, Settings * settings,
+                      ViewProgress * progress)
+    : currentCommand(0), commands(comm),
+      settings(settings), currextruder(0), progress(progress),
+      lastE(0), lastF(0),
+      E_letter('E'), lastPos(Vector3d::ZERO), duration(0),
+      currentLayer(0), currentLayerZ(0.)
 {
-    m_buffer = buffer;
-    m_cursor = QTextCursor(m_buffer);
-    m_line_count = m_buffer->lineCount();
+    speedalways = settings->get_boolean("Hardware/SpeedAlways");
+    useTcommand = settings->get_boolean("Slicing/UseTCommand");
+    eLetters = settings->get_extruder_letters();
+    progress_steps = max<size_t>(1,commands.size()/20);
 }
 
-void GCodeIter::set_to_lineno(int lineno)
+QString GCodeIter::get_line(bool calc_duration)
 {
-    QTextBlock block = m_buffer->findBlockByLineNumber(lineno);
-    m_cursor.setPosition(block.position());
+    if (finished()) {
+        currentLayer  = -1;
+        currentLayerZ = -1;
+        return nullptr;
+    }
+    string line;
+
+    if (useTcommand) // use first extruder's code for all extuders
+      E_letter = eLetters[0].toLatin1();
+    else {
+      // extruder change?
+      if (currentCommand==0 ||
+              commands[currentCommand].extruder_no
+              != commands[currentCommand-1].extruder_no)
+        currextruder = commands[currentCommand].extruder_no;
+      E_letter = eLetters[currextruder].toLatin1();
+    }
+    if ( commands[currentCommand].is_motion && commands[currentCommand].where.z() < 0 )  {
+        cerr << currentCommand << " Z < 0 "  << commands[currentCommand].info() << endl;
+    } else {
+        if (calc_duration) {
+            duration += commands[currentCommand].time(lastPos);
+        }
+        line += commands[currentCommand].
+                GetGCodeText(lastPos, lastE, lastF,
+                             relativeE, E_letter, speedalways);
+    }
+    if ( commands[currentCommand].Code == LAYERCHANGE ) {
+        currentLayer = int(commands[currentCommand].value);
+        currentLayerZ = commands[currentCommand].where.z();
+        cerr << " ---------- LAYER " << currentLayer <<  " at Z "<<
+                currentLayerZ << "                 " << endl;
+        const string GcodeLayer = settings->get_string("GCode/Layer").toStdString();
+        if (GcodeLayer.length() > 0)
+            line += ("\n; Layerchange GCode\n"
+                     + GcodeLayer + "; End Layerchange GCode\n\n");
+    }
+    if (progress && currentCommand%progress_steps==0)
+        progress->emit update_signal(currentCommand);
+    currentCommand++;
+    if (line.find("\n") == string::npos)
+        line += "\n";
+    return QString::fromStdString(line);
 }
 
-
-QTextCursor GCodeIter::cursor_at_line(int lineno){
-    QTextBlock block = m_buffer->findBlockByLineNumber(lineno);
-    return QTextCursor(block);
-}
-
-int GCodeIter::get_current_lineno()
+QString GCodeIter::get_line_stripped(bool calc_duration)
 {
-    return m_cursor.blockNumber();
-}
-
-std::string GCodeIter::get_current_line()
-{
-    m_cursor.select(QTextCursor::LineUnderCursor);
-    return m_cursor.selectedText().toStdString();
-}
-
-std::string GCodeIter::next_line()
-{
-    const string line = get_current_line();
-    m_cursor.movePosition(QTextCursor::Down);
-    return line;
-}
-
-std::string GCodeIter::next_line_stripped()
-{
-  string line = next_line();
-  size_t pos = line.find(";");
-  if (pos!=string::npos){
-    line = line.substr(0,pos);
+  QString line = get_line(calc_duration);
+  int pos = line.indexOf(";");
+  if (pos >= 0) {
+    line = line.left(pos) + "\n";
   }
-  size_t newline = line.find("\n");
-  if (newline==string::npos)
-    line += "\n";
   return line;
 }
 
 bool GCodeIter::finished()
 {
-  return m_cursor.atEnd();
-}
-
-GCodeIter *GCode::get_iter ()
-{
-  GCodeIter *iter = new GCodeIter (buffer);
-  iter->time_estimation = GetTimeEstimation(Vector3d::ZERO);
-  return iter;
-}
-
-Command *GCodeIter::getCurrentCommand(const Vector3d &defaultwhere)
-{
-    // cerr <<"currline" << defaultwhere << endl;
-  return new Command(get_current_line(), defaultwhere);
+  return currentCommand >= commands.size();
 }
 

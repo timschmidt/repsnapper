@@ -42,7 +42,7 @@
 Model::Model(MainWindow *main) :
   m_previewLayer(nullptr),
   //m_previewGCodeLayer(NULL),
-  currentprintingline(0),
+  currentprintingcommand(0),
   Min(), Max(),
   m_inhibit_modelchange(false),
   errlog(),
@@ -128,11 +128,6 @@ void Model::ClearPreview()
       s->clearGlList();
 }
 
-QTextDocument *Model::GetGCodeBuffer()
-{
-  return gcode->buffer;
-}
-
 void Model::GlDrawGCode(int layerno)
 {
   if (settings->get_boolean("Display/DisplayGCode", false))  {
@@ -140,16 +135,16 @@ void Model::GlDrawGCode(int layerno)
   }
   // currently printing:
   // assume that the real printing line is the one at the start of the buffer
-  if (currentprintingline > 0) {
-    int currentlayer = gcode->getLayerNo(currentprintingline);
+  if (currentprintingcommand > 0) {
+    int currentlayer = gcode->getLayerNo(currentprintingcommand);
     if (currentlayer>=0) {
       ulong start = gcode->getLayerStart(uint(currentlayer));
       ulong end   = gcode->getLayerEnd(uint(currentlayer));
       //gcode->draw (settings, currentlayer, true, 1);
       bool displaygcodeborders = settings->get_boolean("Display/DisplayGCodeBorders");
-      gcode->drawCommands(settings, start, currentprintingline, true, 4, false,
+      gcode->drawCommands(settings, start, currentprintingcommand, true, 4, false,
              displaygcodeborders);
-      gcode->drawCommands(settings, currentprintingline,  end,  true, 1, false,
+      gcode->drawCommands(settings, currentprintingcommand,  end,  true, 1, false,
              displaygcodeborders);
     }
     // gcode->drawCommands(settings, currentprintingline-currentbufferedlines,
@@ -168,7 +163,7 @@ void Model::GlDrawGCode(double layerz)
 
 void Model::WriteGCode(QFile *file)
 {
-  QString contents = gcode->get_text();
+  QString contents = gcode->get_text(settings, m_progress);
   QTextStream fstream(file);
   file->open(QIODevice::WriteOnly);
   fstream << contents << endl;
@@ -337,8 +332,7 @@ void Model::translateGCode(Vector3d trans)
   is_calculating=true;
   gcode->translate(trans);
 
-  QTextDocument doc;
-  gcode->MakeText (&doc, settings, m_progress);
+  gcode->MakeText (settings, m_progress);
   Max = gcode->Max;
   Min = gcode->Min;
   Center = (Max + Min) / 2.0;
@@ -353,7 +347,7 @@ void Model::ModelChanged(bool objectsAddedOrRemoved)
       ClearGCode();
     CalcBoundingBoxAndCenter();
     ClearPreview();
-    setCurrentPrintingLine(0);
+    setCurrentPrintingCommand(0);
     emit model_changed(objectsAddedOrRemoved ? &objectList : nullptr);
   }
 }

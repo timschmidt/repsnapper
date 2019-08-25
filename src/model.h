@@ -122,11 +122,11 @@ public:
         void ClearGCode();
         void ClearLayers();
         void ClearPreview();
-        QTextDocument * GetGCodeBuffer();
+
         void GlDrawGCode(int layer=-1); // should be in the view
         void GlDrawGCode(double Z);
-        void setCurrentPrintingLine(ulong line){ currentprintingline = line; }
-        unsigned long currentprintingline;
+        void setCurrentPrintingCommand(ulong commandno){ currentprintingcommand = commandno; }
+        unsigned long currentprintingcommand;
 
 //        Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
 //        void SelectedNodeMatrices(vector<Matrix4d *> &result );
