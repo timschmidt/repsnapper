@@ -32,7 +32,7 @@ Antiooze::Antiooze(vector<PLine<3> *> &plines,
             // do repush first to keep indices before right
             uint added = distribute_AntioozeAmount(amount, movestart, moveend+1);
             moveend += added;
-            added = distribute_AntioozeAmount(-amount, fromIndex, movestart);
+            added = distribute_AntioozeAmount(-amount, fromIndex, movestart-1);
             moveend += added;
             movestart += added;
         } else {

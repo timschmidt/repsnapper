@@ -36,6 +36,8 @@ Render::Render (QWidget *widget)
     : QOpenGLWidget(widget),
       m_arcBall(new ArcBall()),
       m_selection(),
+      m_zoom(120),
+      max_zoom(12000),
       mousePressed(Qt::NoButton),
       m_xRot(0),
       m_yRot(0),
@@ -61,7 +63,6 @@ Render::Render (QWidget *widget)
   Matrix4fSetRotationScaleFromMatrix3f(&m_transform, &identity);
   m_transform.s.SW = 1.0;
 
-  m_zoom = 120.0;
   for (uint i = 0; i < N_LIGHTS; i++)
     m_lights[i] = NULL;
 }
@@ -128,6 +129,7 @@ void Render::zoom_to_model(Model *model)
 
   // reset the zoom to cover the entire model
   m_zoom = (model->Max - model->Min).find_max();
+  max_zoom = 100 * m_zoom;
   // reset the pan to center
   setArcballTrans(m_transform, Vector3d::ZERO);
   // zoom to platform if model has zero size
@@ -479,10 +481,10 @@ void Render::keyPressEvent(QKeyEvent *event){
       }
       break;
   case Qt::Key::Key_Plus:
-      m_zoom /= 1.1;
+      m_zoom = max(max_zoom/100000, m_zoom*1.1);
       break;
   case Qt::Key::Key_Minus:
-      m_zoom *= 1.1;
+      m_zoom = min(max_zoom, m_zoom * 1.1);
       break;
   default:
       return;
@@ -504,9 +506,8 @@ void Render::keyReleaseEvent(QKeyEvent *event)
 
 void Render::wheelEvent(QWheelEvent *event)
 {
-    QPoint numDegrees = -event->angleDelta() * 8; // factor??
-    double factor = 1.1 * numDegrees.y();
-    m_zoom *= factor;
+    double factor = -event->angleDelta().y() * 0.01;
+    m_zoom = min(max_zoom, max(max_zoom/1000000, m_zoom*factor));
     repaint();
 }
 
@@ -594,8 +595,7 @@ void Render::mouseMoveEvent(QMouseEvent *event)
                 get_model()->ModelChanged();
             }
         } else { // zoom view
-            m_zoom *= float(factor);
-//            cerr << "zoom "<< m_zoom << endl;
+            m_zoom = min(max_zoom, max(max_zoom/1000000, m_zoom*factor));
         }
     } else if(mousePressed == Qt::RightButton) { // zoom
         if (mousePressedModifiers == Qt::ShiftModifier  // scale shape

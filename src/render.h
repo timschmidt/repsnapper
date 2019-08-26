@@ -57,7 +57,7 @@ class Render : public QOpenGLWidget, protected QOpenGLFunctions
   Model *get_model() const { return m_main->get_model(); }
   QModelIndexList m_selection;
 
-  double m_zoom;
+  double m_zoom, max_zoom;
   GlLight *m_lights[4];
 
   void SetEnableLight(unsigned int lightNr, bool on);

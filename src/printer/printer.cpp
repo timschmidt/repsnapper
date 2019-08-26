@@ -38,6 +38,7 @@ Printer::Printer( MainWindow *main ):
     was_connected(false),
     was_printing(false),
     gcode_lineno(0),
+    printer_lineno(0),
     currentPos(Vector3d::ZERO),
     serialPort(nullptr),
     lastSetBedTemp(-1)
@@ -119,6 +120,7 @@ bool Printer::Connect( QString device, int baudrate ) {
     qDebug() << "connecting to " << device
              << " at port " << portInfo.portName() << " with speed " << baudrate << endl;
 
+    ok_received = false;
     bool ok = serialPort->open(QIODevice::ReadWrite);
     if (ok){
         ok = serialPort->setBaudRate(baudrate)
@@ -130,19 +132,23 @@ bool Printer::Connect( QString device, int baudrate ) {
         ok_received = true;
         if (ok){
             UpdateTemperatureMonitor();
-        } else
+        } else {
             cerr << "Error setting baudrate to "<< baudrate << endl;
+            ok = false;
+        }
     } else {
         qDebug() << "Error opening port to "<< device << " error: " << serialPort->errorString() ;
         main->err_log(serialPort->errorString());
+        ok = false;
     }
-    if(ok) {
+    if (ok) {
         connect(serialPort,SIGNAL(readyRead()),this,SLOT(serialReady()));
 //        connect(serialPort,SIGNAL(bytesWritten(qint64 bytes)),
 //                this,SLOT(bytesWritten(qint64 bytes)));
         Send("M114");
     } else {
         serialPort->close();
+        ok = false;
     }
     emit serial_state_changed(ok ? SERIAL_CONNECTED : SERIAL_DISCONNECTED);
     emit printing_changed();
