@@ -172,7 +172,7 @@ public:
 
 //        void SetIsPrinting(bool printing) { is_printing = printing; }
 
-        string getSVG(int single_layer_no = -1);
+//        string getSVG(int single_layer_no = -1);
         void ReadSVG(QFile *file);
 
         bool isCalculating() const { return is_calculating; }

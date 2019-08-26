@@ -36,7 +36,7 @@
 #include "slicer/infill.h"
 #include "ui/progress.h"
 #include "shape.h"
-#include "flatshape.h"
+//#include "flatshape.h"
 #include "render.h"
 
 Model::Model(MainWindow *main) :
@@ -171,6 +171,7 @@ void Model::WriteGCode(QFile *file)
   settings->GCodePath =  QFileInfo(*file).dir().absolutePath();
 }
 
+/*
 void Model::ReadSVG(QFile *file)
 {
   if (is_calculating) return;
@@ -182,7 +183,7 @@ void Model::ReadSVG(QFile *file)
   AddShape(nullptr, dynamic_cast<Shape*>(svgshape), path, autoplace);
   ModelChanged(true);
 }
-
+*/
 
 vector<Shape*> Model::ReadShapes(QFile *file,
                                  uint max_triangles)
@@ -287,13 +288,14 @@ void Model::Read(QFile *file)
     QString extn = finfo.suffix().toLower();
 //    cerr << "extension " << extn.toUtf8().constData()<<  endl;
     QString directory_path = finfo.absoluteDir().path();
-    if (extn == "svg")
+    /*if (extn == "svg")
       {
     ReadSVG (file);
     settings->STLPath = directory_path;
     return;
       }
-    else if (extn == "rfo")
+    else */
+    if (extn == "rfo")
       {
     //      ReadRFO (file);
     settings->STLPath = directory_path;
@@ -490,9 +492,9 @@ ListObject * Model::AddShape(ListObject *parentLO, Shape *shape,
                              QString filename, bool autoplace)
 {
   if (m_inhibit_modelchange) return nullptr;
-  FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
-  if (flatshape != nullptr)
-      shape = flatshape;
+//  FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
+//  if (flatshape != nullptr)
+//      shape = flatshape;
 
   if (parentLO == nullptr) {
        parentLO = objectList.newObject(_("Unnamed Object"));
@@ -703,11 +705,11 @@ void Model::Duplicate(const QModelIndexList *selection)
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selection);
     for (Shape * shape: selshapes) {
         Shape * newshape;
-        FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
-        if (flatshape != NULL)
-          newshape = new FlatShape(*flatshape);
-        else
-          newshape = new Shape(*shape);
+//        FlatShape* flatshape = dynamic_cast<FlatShape*>(shape);
+//        if (flatshape != NULL)
+//          newshape = new FlatShape(*flatshape);
+//        else
+        newshape = new Shape(*shape);
         ListObject * parent = objectList.getParent(shape);
         if (parent){
             AddShape(parent, newshape, shape->filename);

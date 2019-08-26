@@ -36,7 +36,7 @@ SOURCES += \
     ../libraries/poly2tri/poly2tri/poly2tri/sweep/sweep_context.cc \
         ../src/arcball.cpp \
         ../src/files.cpp \
-        ../src/flatshape.cpp \
+#        ../src/flatshape.cpp \
         ../src/gcode/command.cpp \
         ../src/gcode/gcode.cpp \
         ../src/gcode/gcodestate.cpp \
@@ -78,7 +78,7 @@ HEADERS += \
     ../libraries/poly2tri/poly2tri/poly2tri/sweep/sweep_context.h \
         ../src/arcball.h \
         ../src/files.h \
-        ../src/flatshape.h \
+#        ../src/flatshape.h \
         ../src/gcode/command.h \
         ../src/gcode/gcode.h \
         ../src/gcode/gcodestate.h \
@@ -124,7 +124,9 @@ LIBS += -fopenmp
 
 CONFIG += link_pkgconfig
 
-PKGCONFIG += glu glibmm-2.4 glib-2.0 libxml++-2.6
+PKGCONFIG += glu glib-2.0
+# glibmm-2.4
+#libxml++-2.6
 #gstreamer-1.0
 
 

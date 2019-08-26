@@ -919,6 +919,7 @@ void Model::ConvertToGCode()
   is_calculating=false;
 }
 
+/*
 string Model::getSVG(int single_layer_no)
 {
   Vector3d printOffset  = settings->getPrintMargin();
@@ -993,3 +994,4 @@ void Model::SliceToSVG(QFile *file, bool single_layer)
   is_calculating = false;
 }
 
+*/
