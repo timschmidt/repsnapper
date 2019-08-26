@@ -506,7 +506,7 @@ void Render::keyReleaseEvent(QKeyEvent *event)
 
 void Render::wheelEvent(QWheelEvent *event)
 {
-    double factor = -event->angleDelta().y() * 0.01;
+    double factor = 1.-event->angleDelta().y() * 0.001;
     m_zoom = min(max_zoom, max(max_zoom/1000000, m_zoom*factor));
     repaint();
 }
