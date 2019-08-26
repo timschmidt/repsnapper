@@ -32,7 +32,6 @@
 #include <QCoreApplication>
 #include <QString>
 #include <QFile>
-#include <QtUiTools/QUiLoader>
 #include <QMainWindow>
 #include <QPushButton>
 
