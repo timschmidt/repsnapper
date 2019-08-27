@@ -45,7 +45,6 @@ typedef unsigned int        uint;
         #include <windows.h>   // Header File For Windows
         #include <tchar.h>
         #undef interface // Undo braindead define from Windows that conflicts with glibmm DBUS binding
-typedef unsigned int        size_t;
 #define random   rand
 #define srandom  srand
 #endif

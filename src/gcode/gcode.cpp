@@ -434,8 +434,8 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
         settings->GetExtrudedMaterialWidth(settings->get_double("Slicing/LayerThickness"),
                                            commands[0].extruder_no);
 
-    start = min ( start, n_cmds-1);
-    end =   min ( end,   n_cmds-1);
+    start = min ( start, ulong(n_cmds-1));
+    end =   min ( end,   ulong(n_cmds-1));
 
     if (end<=start) return;
 

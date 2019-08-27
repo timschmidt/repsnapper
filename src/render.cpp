@@ -64,12 +64,15 @@ Render::Render (QWidget *widget)
   m_transform.s.SW = 1.0;
 
   for (uint i = 0; i < N_LIGHTS; i++)
-    m_lights[i] = NULL;
+    m_lights[i] = nullptr;
 }
 
 Render::~Render()
 {
     cleanup();
+    delete m_arcBall;
+    for (uint i = 0; i < N_LIGHTS; i++)
+        delete (m_lights[i]);
 }
 
 void Render::cleanup(){
@@ -80,9 +83,6 @@ void Render::cleanup(){
 //    delete m_program;
 //    m_program = nullptr;
     doneCurrent();
-    delete m_arcBall;
-    for (uint i = 0; i < N_LIGHTS; i++)
-        delete (m_lights[i]);
 }
 
 static void qNormalizeAngle(int &angle)

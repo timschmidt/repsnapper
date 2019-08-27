@@ -124,11 +124,12 @@ LIBS += -fopenmp
 
 CONFIG += link_pkgconfig
 
-PKGCONFIG += glu
+!win32: PKGCONFIG += glu
 # glib-2.0
 # glibmm-2.4 libxml++-2.6
 #gstreamer-1.0
 
+win32: LIBS += -lglu32 -lopengl32
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
