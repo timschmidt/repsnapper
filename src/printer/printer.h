@@ -60,7 +60,7 @@ private:
   QString receiveBuffer;
 
   QByteArrayList lineBuffer;
-
+  QByteArrayList resendBuffer;
 
   bool QueryTemp( void );
   void ParseResponse( QString line );
@@ -81,6 +81,7 @@ public:
   bool Disconnect( void );
   bool Reset( void );
 
+  int Send( Command command);
   int Send( string command, long *lineno = nullptr);
 
   bool isReadyToPrint();

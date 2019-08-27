@@ -111,7 +111,7 @@ bool Printer::Connect( bool connect ) {
 
 bool Printer::Connect( QString device, int baudrate ) {
     QSerialPortInfo portInfo(device);
-       emit serial_state_changed(SERIAL_CONNECTING);
+    emit serial_state_changed(SERIAL_CONNECTING);
 
     if (!portInfo.isNull())
         serialPort = new QSerialPort(portInfo);
@@ -145,7 +145,7 @@ bool Printer::Connect( QString device, int baudrate ) {
         connect(serialPort,SIGNAL(readyRead()),this,SLOT(serialReady()));
 //        connect(serialPort,SIGNAL(bytesWritten(qint64 bytes)),
 //                this,SLOT(bytesWritten(qint64 bytes)));
-        Send("M114");
+        Send(Command(GET_POSITION));
     } else {
         serialPort->close();
         ok = false;
@@ -212,6 +212,11 @@ static QByteArray numberedLineWithChecksum(const QByteArray command, const long 
     return nLine.toLocal8Bit().constData();
 }
 
+int Printer::Send(Command command)
+{
+    return Send(command.GetGCodeText());
+}
+
 int Printer::Send(string s, long *lineno_for_printer) {
     int sent = 0;
     if (serialPort && serialPort->isOpen() && serialPort->isWritable()) {
@@ -237,6 +242,10 @@ int Printer::Send(string s, long *lineno_for_printer) {
                 lineBuffer.append(l8+'\n'); // send immediately
             } else {
                 lineBuffer.prepend(l8+'\n');
+                resendBuffer.append(l8);
+                while (resendBuffer.size() > 50){
+                    resendBuffer.removeFirst();
+                }
             }
             sent++;
             if (wasEmpty) {
@@ -261,7 +270,7 @@ bool Printer::StartPrinting() {
     printer_lineno = 0;
 
     // tell line no. before next line:
-    if (Send("M110 N" + std::to_string(printer_lineno-1)) == 0) {
+    if (Send(Command(SET_LINENO, " N"+std::to_string(printer_lineno-1))) == 0) {
         cerr << "Error sending line number - can't print";
         return false;
     }
@@ -412,9 +421,9 @@ bool Printer::SwitchPower( bool on ) {
 
   string resp;
   if ( on )
-    return Send( "M80" ) > 0;
+    return Send(Command(POWER_ON)) > 0;
 
-  return Send( "M81" ) > 0;
+  return Send(Command(POWER_OFF)) > 0;
 }
 
 bool Printer::Home( string axis ) {
@@ -424,9 +433,9 @@ bool Printer::Home( string axis ) {
   }
 
   if ( axis == "X" || axis == "Y" || axis == "Z" ) {
-    return Send("G28 "+axis+"0");
+    return Send(Command(GOHOME, axis+"0"));
   } else if ( axis == "ALL" ) {
-    return Send("G28") > 0;
+    return Send(Command(GOHOME)) > 0;
   }
 
   alert(_("Home called with unknown axis"));
@@ -442,20 +451,28 @@ bool Printer::Move(string axis, double distance, bool relative )
   }
 
   double speed = 0.0;
+  Vector3d move;
 
   if ( axis == "X" || axis == "Y" )
     speed = main->get_settings()->get_double("Hardware/ManualMoveSpeedXY") * 60;
   else if(axis == "Z")
     speed = main->get_settings()->get_double("Hardware/ManualMoveSpeedZ") * 60;
-  else
+  else {
     alert (_("Move called with unknown axis"));
+    return false;
+  }
 
-  ostringstream os;
-  if ( relative ) os << "G91\n";
-  os << "G1 " << axis << distance << " F" << speed;
-  if ( relative ) os << "\nG90";
-
-  return Send( os.str() );
+  bool ok = true;
+  if ( relative )
+      ok = Send(Command(RELATIVEPOSITIONING));
+  if (ok) {
+      ostringstream os;
+      os << " " << axis << distance << " F" << speed;
+      ok = Send(Command(COORDINATEDMOTION, os.str()));
+  }
+  if (ok && relative )
+      ok = Send(Command(ABSOLUTEPOSITIONING));
+  return ok;
 }
 
 bool Printer::Goto( string axis, double position ) {
@@ -464,11 +481,10 @@ bool Printer::Goto( string axis, double position ) {
 
 bool Printer::SelectExtruder( int extruder_no ) {
   if (extruder_no < 0)
-    return true;
-
+    return false;
   ostringstream os;
-  os << "T" << extruder_no;
-  return Send( os.str() );
+  os << extruder_no;
+  return Send(Command(SELECTEXTRUDER, os.str()));
 }
 
 bool Printer::SetTemp(const QString &name, int extruder_no, float value) {
@@ -477,19 +493,14 @@ bool Printer::SetTemp(const QString &name, int extruder_no, float value) {
       if (lastSetBedTemp == int(value))
           return true;
       lastSetBedTemp = int(value);
-      os << "M140 S";
-  } else {
-      if (name.startsWith("Extruder")) {
-          os << "M104 T" << extruder_no << " S";
-      } else {
-          ostringstream ose;
-          ose << "No such Temptype: " << name.toStdString();
-          alert( ose.str().c_str() );
-          return false;
-      }
+      return Send(Command(BEDTEMP, double(value)));
+  } else if (name.startsWith("Extruder")) {
+          os << " T" << extruder_no << " S"<< value;
+          return Send(Command(EXTRUDERTEMP, os.str()));
   }
-  os << value << endl;
-  return Send( os.str() );
+  os << "No such Temptype: " << name.toStdString();
+  alert( os.str().c_str() );
+  return false;
 }
 
 bool Printer::RunExtruder( double extruder_speed, double extruder_length,
@@ -504,13 +515,11 @@ bool Printer::RunExtruder( double extruder_speed, double extruder_length,
       return false;
 
   ostringstream os;
-  os << "M83\n";
-  os << "G1 E" << extruder_length
-     << " F" << extruder_speed << "\n";
-  os << "M82";
-//  os << "G1 F1500";
-
-  return Send( os.str() );
+  os << " E" << extruder_length
+     << " F" << extruder_speed;
+  return Send(Command(RELATIVE_ECODE))
+          && Send(Command(COORDINATEDMOTION, os.str()))
+          && Send(Command(ABSOLUTE_ECODE));
 }
 
 void Printer::alert( const char *message ) {
@@ -595,7 +604,7 @@ bool Printer::Idle( void ) {
         return false;
     }
     //    cerr << "idle" << endl;
-    bool is_connected = serialPort->isOpen();
+    bool is_connected = serialPort && serialPort->isOpen();
     if (is_connected) {
         int newfanspeed = main->get_settings()->get_boolean("Printer/FanEnable")
                     ? main->get_settings()->get_integer("Printer/FanVoltage")
@@ -605,7 +614,8 @@ bool Printer::Idle( void ) {
             ok_received = true;
             emit serialPort->readyRead();
         }
-    }
+    } else
+        return false;
 
   if ( is_connected != was_connected ) {
     was_connected = is_connected;
@@ -621,9 +631,10 @@ bool Printer::QueryTemp( void ) {
 
   if ( serialPort->isOpen()
        && main->get_settings()->get_boolean("Misc/TempReadingEnabled") ) {
-      Send( "M105" );
+      return Send(Command(ASKTEMP));
+
   }
-  return true;
+  return false;
 }
 
 static const QRegularExpression templineRE_T(
@@ -651,9 +662,16 @@ void Printer::ParseResponse( QString line ) {
     if (lowerLine.startsWith("resend") or line.startsWith("rs")) {
         QRegularExpressionMatch match = numberRE.match(line);
         if (match.hasMatch()){
-            printer_lineno -= 20; // TODO find real command number for resend?
             gcode_lineno = match.captured(0).toInt();
             lineBuffer.clear();
+            if (gcode_lineno > 0) {
+                // untested
+                QString lineN = "N" + match.captured(0);
+                for (int i = resendBuffer.size() - 1; i >= 0; i--) {
+                    while (resendBuffer[i].indexOf(lineN) < 0)
+                        lineBuffer.append(resendBuffer[i]+'\n');
+                }
+            }
             qDebug() << "RESEND"<< gcode_lineno;
         }
         return;
@@ -715,9 +733,9 @@ void Printer::SetFan( int speed ) {
     fan_speed = speed;
 //    else return;
     if (speed == 0)
-        Send ("M107");
+        Send (Command(FANOFF));
     else {
-        Send ("M106 S" + to_string(speed));
+        Send (Command(FANON, double(speed)));
     }
 }
 

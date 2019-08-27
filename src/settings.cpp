@@ -157,6 +157,7 @@ void Settings::merge (QSettings &settings)
         beginGroup(group);
         settings.beginGroup(group);
         for (QString key : settings.childKeys()){
+            if (key.isEmpty()) continue;
             setValue(key, settings.value(key));
         }
         settings.endGroup();
@@ -184,6 +185,7 @@ bool Settings::mergeGlibKeyfile (const QString &keyfile)
         gchar ** keys = g_key_file_get_keys (gkf, groups[g], &nkeys, &error);
         for (uint k = 0; k < nkeys; k++) {
             QString key = grouped(keys[k]);
+            if (key.isEmpty()) continue;
             QString v(g_key_file_get_value (gkf, groups[g], keys[k], &error));
             if (key.endsWith("Colour")) {
                 QStringList vsplit = v.split(";");
@@ -821,7 +823,8 @@ void Settings::copyGroup(const QString &from, const QString &to)
     QStringList keys = get_keys_and_values(from, values);
     beginGroup(to);
     for (int i = 0; i < keys.size(); i++){
-        setValue(keys[i], values[i]);
+        if (!keys[i].isEmpty())
+            setValue(keys[i], values[i]);
 //        cerr << "copy: "<< keys[i].toStdString() << endl;
     }
     endGroup();
@@ -948,6 +951,7 @@ QString Settings::get_image_path()
 
 void Settings::setValue(const QString &group, const QString &key, const QVariant &value)
 {
+    if (key.isEmpty()) return;
     beginGroup(group);
 //    if (group.startsWith("Extrud"))
 //        QTextStream(stderr) << "setting " << group << " -- " << key << "\t = " << value.toString() << endl;
@@ -1055,6 +1059,7 @@ void Settings::get_from_gui () // no params
     QObject *w = dynamic_cast<QObject*>(sender());
     //    cerr << "get " << w->objectName().toStdString() << endl;
     QString name = w!=nullptr ? grouped(w->objectName()) : "";
+    if (name.isEmpty()) return;
     if (name.startsWith("Extruder/")){ // from gui
         name.replace("Extruder", numbered("Extruder", currentExtruder)); // to current
 //        cerr << "get f g " << name.toStdString() << endl;
@@ -1104,6 +1109,7 @@ void Settings::get_int_from_gui(int value)
 //    cerr << "get " << w->objectName().toStdString() << " int " << value << endl;
     while (w) { // for using break ...
         QString name = grouped(w->objectName());
+        if (name.isEmpty()) continue;
         QCheckBox *check = dynamic_cast<QCheckBox *>(w);
         if (check) {
           setValue(name, check->checkState());
@@ -1157,6 +1163,7 @@ void Settings::get_double_from_gui(double value)
 //    cerr << "get " << w->objectName().toStdString() << " double " << value <<endl;
     while (w) {
         QString name = grouped(w->objectName());
+        if (name.isEmpty()) continue;
         QDoubleSpinBox *dspin = dynamic_cast<QDoubleSpinBox *>(w);
         if (dspin) {
             setValue(name, value);

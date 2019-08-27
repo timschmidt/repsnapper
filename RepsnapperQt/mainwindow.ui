@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>915</width>
-    <height>640</height>
+    <width>1079</width>
+    <height>756</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -330,7 +330,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="currentIndex">
-        <number>2</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="tabModel">
         <attribute name="title">
@@ -1713,20 +1713,23 @@ M104 S0.0        ; heater off
             </attribute>
             <layout class="QVBoxLayout" name="verticalLayout_17">
              <item>
-              <widget class="QPlainTextEdit" name="i_txt_comms">
-               <property name="font">
-                <font>
-                 <stylestrategy>PreferDefault</stylestrategy>
-                </font>
-               </property>
-               <property name="readOnly">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QWidget" name="widget_13" native="true">
                <layout class="QHBoxLayout" name="horizontalLayout_8">
+                <property name="spacing">
+                 <number>3</number>
+                </property>
+                <property name="leftMargin">
+                 <number>3</number>
+                </property>
+                <property name="topMargin">
+                 <number>3</number>
+                </property>
+                <property name="rightMargin">
+                 <number>3</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>3</number>
+                </property>
                 <item>
                  <widget class="QCheckBox" name="Printer_Logging">
                   <property name="text">
@@ -1755,6 +1758,18 @@ M104 S0.0        ; heater off
                  </widget>
                 </item>
                </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPlainTextEdit" name="i_txt_comms">
+               <property name="font">
+                <font>
+                 <stylestrategy>PreferDefault</stylestrategy>
+                </font>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
               </widget>
              </item>
             </layout>
@@ -1894,7 +1909,7 @@ M104 S0.0        ; heater off
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>915</width>
+     <width>1079</width>
      <height>24</height>
     </rect>
    </property>

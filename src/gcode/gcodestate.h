@@ -38,7 +38,7 @@ class GCodeState {
   /* void SetZ (double z); */
   void AppendCommand(Command &command, bool incrementalE,
                      double minLength = 0.);
-  void AppendCommand(GCodes code, bool incrementalE=false, string comment="",
+  void AppendCommand(GCodes code, bool incrementalE, string comment="",
                      double minLength = 0.);
   void AppendCommands(vector<Command> commands, bool relativeE,
                       double minLength = 0.);

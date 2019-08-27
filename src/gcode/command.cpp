@@ -190,11 +190,13 @@ bool Command::hasNoEffect(const Vector3d *LastPos, const double lastE,
 
 string Command::GetGCodeText() const
 {
-    assert(is_value);
     ostringstream ostr;
     ostr << MCODES[Code];
-    ostr << " S"<<value;
-    if(comment.length() != 0)
+    if (is_value)
+        ostr << " S" << value;
+    else
+        ostr << explicit_arg;
+    if(!comment.empty())
         ostr << " ; " << comment;
     return ostr.str();
 }
