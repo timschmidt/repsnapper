@@ -30,12 +30,12 @@
  * OSX uses a different setup for opengl, we compile with carbon
  */
 #ifdef __APPLE__
-	#include <OpenGL/gl.h>
-	#include <OpenGL/glu.h>
+    #include <OpenGL/gl.h>
+    #include <OpenGL/glu.h>
 //	#include <GLUT/glut.h>
 #else
-	#include <GL/gl.h>		// Header File For The OpenGL32 Library
-	#include <GL/glu.h>		// Header File For The GLu32 Library
+    #include <GL/gl.h>		// Header File For The OpenGL32 Library
+    #include <GL/glu.h>		// Header File For The GLu32 Library
 //#ifndef WIN32
 //	#include <GL/glut.h>	// Header GLUT Library
 //#endif
@@ -43,10 +43,12 @@
 
 class Platform {
   public:
-	static unsigned long getTickCount();
-	static void setBinaryPath(const char *apparg);
-	static std::vector<std::string> getConfigPaths();
-	static bool has_extension(const std::string &fname, const char *extn);
+    static unsigned long getTickCount();
+#ifdef USE_GLIB
+    static void setBinaryPath(const char *apparg);
+    static std::vector<std::string> getConfigPaths();
+#endif
+    static bool has_extension(const std::string &fname, const char *extn);
 };
 
 std::string str(double r, int prec = -1);

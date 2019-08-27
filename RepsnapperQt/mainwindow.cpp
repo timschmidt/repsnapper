@@ -515,6 +515,7 @@ void MainWindow::openFile(const QString &path)
         m_model->ReadGCode (ui_main->GCodeResult->document(), &file);
         m_settings->GCodePath = directory_path;
         updatedModel();
+#ifdef USE_GLIB
     } else if (extn == "conf") {
         if (m_settings->mergeGlibKeyfile(path)) {
             m_settings->set_all_to_gui(this);
@@ -523,6 +524,7 @@ void MainWindow::openFile(const QString &path)
             // load extern QSettings file?
             // m_settings->SettingsPath = directory_path;
         }
+#endif
     } else
         m_model->Read(&file);
     m_render->update();
@@ -575,8 +577,8 @@ void MainWindow::previewFile(const QString &filename)
       bool display_poly = m_settings->get_boolean("Display/DisplayPolygons");
       m_settings->setValue("Display/DisplayPolygons", true);
       if (m_model->preview_shapes.size()>0) {
-        Vector3d pMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
-        Vector3d pMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
+        Vector3d pMax = Vector3d(-INFTY, -INFTY, -INFTY);
+        Vector3d pMin = Vector3d(INFTY, INFTY, INFTY);
         for (uint i = 0; i < m_model->preview_shapes.size(); i++) {
           m_model->preview_shapes[i]->PlaceOnPlatform();
           Vector3d stlMin = m_model->preview_shapes[i]->Min;

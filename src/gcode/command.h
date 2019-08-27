@@ -175,11 +175,11 @@ public:
     string explicit_arg;
     string comment;
 
-    void draw(Vector3d &lastPos, const Vector3d &offset, guint linewidth,
-          Vector4f color, double extrwidth, bool arrows=true,
-          bool debug_arcs = false) const;
+    void draw(Vector3d &lastPos, const Vector3d &offset, uint linewidth,
+              Vector4f color, double extrwidth, bool arrows=true,
+              bool debug_arcs = false) const;
     void draw(Vector3d &lastPos, const Vector3d &offset, double extrwidth,
-          bool arrows=true, bool debug_arcs = false) const;
+              bool arrows=true, bool debug_arcs = false) const;
 
     bool hasNoEffect(const Vector3d *LastPos, const double lastE,
                      const bool relativeEcode) const;

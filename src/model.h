@@ -128,7 +128,7 @@ public:
         void setCurrentPrintingCommand(ulong commandno){ currentprintingcommand = commandno; }
         unsigned long currentprintingcommand;
 
-//        Matrix4f &SelectedNodeMatrix(guint objectNr = 1);
+//        Matrix4f &SelectedNodeMatrix(size_t objectNr = 1);
 //        void SelectedNodeMatrices(vector<Matrix4d *> &result );
         ListObject *newObject();
 

@@ -362,11 +362,11 @@ void GCode::draw(Settings *settings, int layer,
                 eind = ulong(ceil(settings->get_integer("Display/GCodeDrawEnd")/1000./Max.z()*(n_changes-1.)));
             }
             if (sind>=eind) {
-                eind = MIN(sind+1, n_changes-1);
+                eind = min(sind+1, n_changes-1);
             } else
                 arrows = false; // arrows only for single layers
-            sind = CLAMP(sind, 0, n_changes-1);
-            eind = CLAMP(eind, 0, n_changes-1);
+            sind = min(sind, n_changes-1);
+            eind = min(eind, n_changes-1);
             if (sind == 0) start = 0;
             else  start = layerchanges[sind];
             //if (start>0) start-=1; // get one command before layer
@@ -401,8 +401,8 @@ void GCode::draw(Settings *settings, int layer,
       const Vector3d offset =
               settings->get_extruder_offset(currentCursorCommand.extruder_no);
       currentCursorCommand.draw(currentCursorFrom, offset, 7,
-                    Vector4f(1.f,0.f,1.f,1.f),
-                    0., true, false);
+                                Vector4f(1.f,0.f,1.f,1.f),
+                                0., true, false);
     }
 }
 
@@ -419,7 +419,8 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
         glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
         glDisable(GL_LIGHTING);
-        ulong n_cmds = commands.size();
+
+        size_t n_cmds = commands.size();
     if (n_cmds==0) return;
     Vector3d pos(0,0,0);
 
@@ -433,8 +434,8 @@ void GCode::drawCommands(Settings *settings, ulong start, ulong end,
         settings->GetExtrudedMaterialWidth(settings->get_double("Slicing/LayerThickness"),
                                            commands[0].extruder_no);
 
-    start = CLAMP (start, 0, n_cmds-1);
-    end = CLAMP (end, 0, n_cmds-1);
+    start = min ( start, n_cmds-1);
+    end =   min ( end,   n_cmds-1);
 
     if (end<=start) return;
 

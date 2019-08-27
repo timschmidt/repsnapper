@@ -669,14 +669,14 @@ int Poly::getTriangulation(vector<Triangle> &triangles)  const
     vector<p2t::Point*> points(vertices.size());
     // add offset because poly2tri crashes on some negative values?
     const double OFF = 0;
-    for (gulong i=0; i<vertices.size(); i++)  {
+    for (size_t i=0; i<vertices.size(); i++)  {
     points[i] = new p2t::Point(vertices[i].x()+OFF,
                    vertices[i].y()+OFF);
   }
   p2t::CDT cdt(points);
   cdt.Triangulate();
   vector<p2t::Triangle*> ptriangles = cdt.GetTriangles();
-  for (gulong i=0; i<ptriangles.size(); i++) {
+  for (size_t i=0; i<ptriangles.size(); i++) {
     const p2t::Point *tp0 = ptriangles[i]->GetPoint(0);
     const p2t::Point *tp1 = ptriangles[i]->GetPoint(1);
     const p2t::Point *tp2 = ptriangles[i]->GetPoint(2);

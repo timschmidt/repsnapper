@@ -476,9 +476,9 @@ void Command::draw(Vector3d &lastPos, const Vector3d &offset,
 }
 
 void Command::draw(Vector3d &lastPos, const Vector3d &offset,
-           guint linewidth,
-           Vector4f color, double extrwidth,
-           bool arrows, bool debug_arcs) const
+                   uint linewidth,
+                   Vector4f color, double extrwidth,
+                   bool arrows, bool debug_arcs) const
 {
   if (abs(abs_extr) > 0.001) linewidth*=2;
   // if (abs_extr>0) linewidth*=abs_extr;

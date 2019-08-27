@@ -22,7 +22,9 @@
 
 #include <string>
 //#include <glibmm/keyfile.h>
+#ifdef USE_GLIB
 #include <glib.h>
+#endif
 //#include <glibmm/ustring.h>
 
 

@@ -156,9 +156,9 @@ Vector3d Triangle::GetMax(const Matrix4d &T) const
     Vector3d max(-99999999.0, -99999999.0, -99999999.0);
     Vector3d TA=T*A,TB=T*B,TC=T*C;
     for (uint i = 0; i < 3; i++) {
-        max[i] = MAX(max[i], TA[i]);
-        max[i] = MAX(max[i], TB[i]);
-        max[i] = MAX(max[i], TC[i]);
+        max[i] = std::max(max[i], TA[i]);
+        max[i] = std::max(max[i], TB[i]);
+        max[i] = std::max(max[i], TC[i]);
     }
     return max;
 }
@@ -168,9 +168,9 @@ Vector3d Triangle::GetMin(const Matrix4d &T) const
     Vector3d min(99999999.0, 99999999.0, 99999999.0);
     Vector3d TA=T*A,TB=T*B,TC=T*C;
     for (uint i = 0; i < 3; i++) {
-        min[i] = MIN(min[i], TA[i]);
-        min[i] = MIN(min[i], TB[i]);
-        min[i] = MIN(min[i], TC[i]);
+        min[i] = std::min(min[i], TA[i]);
+        min[i] = std::min(min[i], TB[i]);
+        min[i] = std::min(min[i], TC[i]);
     }
     return min;
 }
@@ -180,8 +180,8 @@ void Triangle::AccumulateMinMax(Vector3d &min, Vector3d &max, const Matrix4d &T)
     Vector3d tmin = GetMin(T);
     Vector3d tmax = GetMax(T);
     for (uint i = 0; i < 3; i++) {
-        min[i] = MIN(tmin[i], min[i]);
-        max[i] = MAX(tmax[i], max[i]);
+        min[i] = std::min(tmin[i], min[i]);
+        max[i] = std::max(tmax[i], max[i]);
     }
 }
 
@@ -295,9 +295,9 @@ int Triangle::SplitAtPlane(double z,
   }
   else cerr << "lower size " << lower.size() << endl;
   Vector3d TN = T*Normal; TN.normalize();
-  for (guint i=0; i < uppertr.size(); i++)
+  for (size_t i=0; i < uppertr.size(); i++)
     if ((uppertr[i].Normal + TN).length()<0.1) uppertr[i].invertNormal();
-  for (guint i=0; i < lowertr.size(); i++)
+  for (size_t i=0; i < lowertr.size(); i++)
     if ((lowertr[i].Normal + TN).length()<0.1) lowertr[i].invertNormal();
   uppertriangles.insert(uppertriangles.end(),uppertr.begin(),uppertr.end());
   lowertriangles.insert(lowertriangles.end(),lowertr.begin(),lowertr.end());

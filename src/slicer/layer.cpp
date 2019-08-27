@@ -35,8 +35,8 @@ Layer::Layer(Layer * prevlayer, int layerno, double thick, uint skins)
 //  supportInfill = NULL;
 //  decorInfill = NULL;
 //  thinInfill = NULL;
-  Min = Vector2d(G_MAXDOUBLE, G_MAXDOUBLE);
-  Max = Vector2d(G_MINDOUBLE, G_MINDOUBLE);
+  Min = Vector2d(INFTY, INFTY);
+  Max = Vector2d(-INFTY, -INFTY);
 }
 
 Layer::~Layer()
@@ -843,7 +843,7 @@ void Layer::makePrintLines3(Vector2d &startPos, Printlines *printlines,
             double fanfactor = 1-slowdownfactor;
             fanspeed +=
                     int(fanfactor * (maxFan - minFan));
-            fanspeed = CLAMP(fanspeed, minFan, maxFan);
+            fanspeed = min(maxFan, max(minFan, fanspeed));
             //cerr << slowdownfactor << " - " << fanfactor << " - " << fanspeed << " - " << endl;
         }
         Command fancommand(FANON, fanspeed);
@@ -1131,11 +1131,11 @@ void Layer::DrawRulers(const Vector2d &point, Render *render)
   glVertex3d(y1.x(), Max.y(), Z);
   // draw ticks
   double ticksize=2;
-  for(guint i = 0; i<xint.size(); i++) {
+  for(size_t i = 0; i<xint.size(); i++) {
     glVertex3d(xint[i].p.x(), xint[i].p.y()-ticksize, Z);
     glVertex3d(xint[i].p.x(), xint[i].p.y()+ticksize, Z);
   }
-  for(guint i = 0; i<yint.size(); i++) {
+  for(size_t i = 0; i<yint.size(); i++) {
     glVertex3d(yint[i].p.x()-ticksize, yint[i].p.y(), Z);
     glVertex3d(yint[i].p.x()+ticksize, yint[i].p.y(), Z);
   }
@@ -1150,7 +1150,7 @@ void Layer::DrawRulers(const Vector2d &point, Render *render)
   // draw numbers
   ostringstream val;
   val.precision(1);
-  for(guint i = 1; i<xint.size(); i++) {
+  for(size_t i = 1; i<xint.size(); i++) {
     val.str("");
     double v = xint[i].p.x()-xint[i-1].p.x();
     val << fixed << v;
@@ -1158,7 +1158,7 @@ void Layer::DrawRulers(const Vector2d &point, Render *render)
                  xint[i].p.y()+1,Z),
             val.str());
   }
-  for(guint i = 1; i<yint.size(); i++) {
+  for(size_t i = 1; i<yint.size(); i++) {
     val.str("");
     double v = yint[i].p.y()-yint[i-1].p.y();
     val << fixed << v;

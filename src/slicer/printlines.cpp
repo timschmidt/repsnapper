@@ -946,7 +946,7 @@ uint Printlines::makeArcs(double linewidth,
   if (maxAngle <= 0) return 0;
   double arcRadiusSq = 0;
   Vector2d arccenter(1000000,1000000);
-  guint arcstart = 0;
+  size_t arcstart = 0;
   Vector2d newcenter;
   double newradiusSq = 0;
   uint i = arcstart;
@@ -1000,7 +1000,7 @@ ulong Printlines::makeArcs(vector<PLine<2> *> &lines) const
   if (maxAngle < 0) return 0;
   double arcRadiusSq = 0;
   Vector2d arccenter(1000000,1000000);
-  guint arcstart = 0;
+  size_t arcstart = 0;
   for (uint i=1; i < lines.size(); i++) {
       const PLine2 *l1 = dynamic_cast<PLine2*>(lines[i-1]);
       const PLine2 *l2 = dynamic_cast<PLine2*>(lines[i]);
@@ -1394,7 +1394,7 @@ void Printlines::clipMovements(const vector<Poly> &polys, vector<PLine2> &lines,
 {
   if (polys.size()==0 || lines.size()==0) return;
   vector<PLine2> newlines;
-  for (guint i=0; i < lines.size(); i++) {
+  for (size_t i=0; i < lines.size(); i++) {
     if (lines[i].is_move()) {
       int frompoly=-1, topoly=-1;
       for (uint p = 0; p < polys.size(); p++) {

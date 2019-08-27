@@ -124,9 +124,9 @@ LIBS += -fopenmp
 
 CONFIG += link_pkgconfig
 
-PKGCONFIG += glu glib-2.0
-# glibmm-2.4
-#libxml++-2.6
+PKGCONFIG += glu
+# glib-2.0
+# glibmm-2.4 libxml++-2.6
 #gstreamer-1.0
 
 

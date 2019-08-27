@@ -678,13 +678,13 @@ void Model::MakeSkirt()
   double skirtdistance  = settings->get_double("Slicing/SkirtDistance");
 
   Clipping clipp;
-  ulong count = layers.size();
-  guint endindex = 0;
+  size_t count = layers.size();
+  size_t endindex = 0;
   // find maximum of all calculated skirts
   clipp.clear();
   double skirtheight = settings->get_double("Slicing/SkirtHeight");
   bool singleskirt   = settings->get_boolean("Slicing/SingleSkirt");
-  for (guint i=0; i < count; i++)
+  for (size_t i=0; i < count; i++)
   {
       if (layers[i]->getZ() > skirtheight)
           break;
@@ -696,7 +696,7 @@ void Model::MakeSkirt()
   vector<Poly> skirts = clipp.unite(CL::pftPositive,CL::pftPositive);
   // set this skirt for all skirted layers
   if (skirts.size()>0)
-    for (guint i=0; i<=endindex; i++) {
+    for (size_t i=0; i<=endindex; i++) {
       layers[i]->setSkirtPolygons(skirts);
   }
 }

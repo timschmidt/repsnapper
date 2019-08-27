@@ -110,7 +110,7 @@ bool ViewProgress::update (const double value)
 //  if (value < m_bar_cur)
 //    return do_continue;
   QCoreApplication::processEvents();
-  m_bar_cur = CLAMP(value, 0, 1.0);
+  m_bar_cur = min(max(value, 0.), 1.0);
   QString s;
   QTextStream o(&s);
   const double elapsed = time.elapsed()/1000; // seconds

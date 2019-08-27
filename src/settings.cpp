@@ -19,7 +19,7 @@
 */
 
 #include <cstdlib>
-#include <glib.h>
+#include <string>
 
 #include <QComboBox>
 #include <QSpinBox>
@@ -165,6 +165,7 @@ void Settings::merge (QSettings &settings)
     }
 }
 
+#ifdef USE_GLIB
 bool Settings::mergeGlibKeyfile (const QString &keyfile)
 {
     GKeyFile * gkf = g_key_file_new();
@@ -200,6 +201,7 @@ bool Settings::mergeGlibKeyfile (const QString &keyfile)
     QTextStream(stderr) << info() << endl;
     return true;
 }
+#endif
 
 QString Settings::info(){
     QString str;

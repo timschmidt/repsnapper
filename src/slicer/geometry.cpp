@@ -960,7 +960,7 @@ vector<Triangle> getTriangles(p2t::CDT &cdt, double z)
 {
   vector<p2t::Triangle*> ptriangles = cdt.GetTriangles();
   vector<Triangle> triangles(ptriangles.size());
-  for (guint i=0; i < ptriangles.size(); i++) {
+  for (size_t i=0; i < ptriangles.size(); i++) {
     triangles[i] = getTriangle(ptriangles[i], z);
   }
   return triangles;

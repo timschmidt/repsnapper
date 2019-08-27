@@ -45,8 +45,8 @@ void reset_locales() {
   setlocale(LC_CTYPE,   ctypelocale.c_str());
 }
 
-
 static float read_float(ifstream &file) {
+#ifdef USE_GLIB
     // Read platform independent 32 bit ieee 754 little-endian float.
     union ieee_union {
         char buffer[4];
@@ -64,6 +64,10 @@ static float read_float(ifstream &file) {
     ret.mpn.sign = ieee.ieee.negative;
 
     return ret.v_float;
+#endif
+    float ret;
+    file.read(reinterpret_cast<char*>(&ret),4);
+    return ret;
 }
 
 static double read_double(ifstream &file) {

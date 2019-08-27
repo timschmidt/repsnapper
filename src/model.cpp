@@ -807,8 +807,8 @@ void Model::ClearLogs()
 
 void Model::CalcBoundingBoxAndCenter(bool selected_only)
 {
-  Vector3d newMax = Vector3d(G_MINDOUBLE, G_MINDOUBLE, G_MINDOUBLE);
-  Vector3d newMin = Vector3d(G_MAXDOUBLE, G_MAXDOUBLE, G_MAXDOUBLE);
+  Vector3d newMax = Vector3d(-INFTY, -INFTY, -INFTY);
+  Vector3d newMin = Vector3d(INFTY, INFTY, INFTY);
 
   vector<Shape*> shapes = selected_only
           ? objectList.get_selected_shapes(main->getSelectedIndexes())
@@ -819,8 +819,8 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
     Vector3d stlMin = shapes[s]->Min;
     Vector3d stlMax = shapes[s]->Max;
     for (uint k = 0; k < 3; k++) {
-      newMin[k] = MIN(stlMin[k], newMin[k]);
-      newMax[k] = MAX(stlMax[k], newMax[k]);
+      newMin[k] = min(stlMin[k], newMin[k]);
+      newMax[k] = max(stlMax[k], newMax[k]);
     }
   }
 
@@ -908,7 +908,7 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
     }
   bool displaypolygons = !select_mode && settings->get_boolean("Display/DisplayPolygons");
   bool displaybbox = !select_mode && settings->get_boolean("Display/DisplayBBox");
-  gint shapeindex=0;
+  int shapeindex=0;
 //  cerr << "drawing "<< objectList.objects.size() << " objects"<< endl;
   for (uint i = 0; i < objectList.objects.size(); i++) {
       ListObject *object = objectList.objects[i];
@@ -1078,7 +1078,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 
   glDisable(GL_DEPTH_TEST);
   int drawn = -1;
-  uint LayerNr;
+  size_t LayerNr;
 
   bool have_layers = (layers.size() > 0); // have sliced already
 
@@ -1088,7 +1088,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
   double z;
   double zStep = settings->get_double("Slicing/LayerThickness");
   double zSize = (Max.z() - minZ - zStep*0.5);
-  uint LayerCount = uint(ceil((zSize - zStep*0.5)/zStep))-1;
+  size_t LayerCount = size_t(ceil((zSize - zStep*0.5)/zStep)-1);
   double sel_Z = height; //*zSize;
   uint sel_Layer;
   if (have_layers)
@@ -1109,10 +1109,10 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
       z= minZ + sel_Z;
     }
   if (have_layers) {
-    LayerNr = CLAMP(LayerNr, 0, uint(layers.size()) - 1);
-    LayerCount = CLAMP(LayerCount, 0, uint(layers.size()));
+    LayerNr    = min(LayerNr,  layers.size() - 1);
+    LayerCount = min(LayerCount, layers.size());
   }
-  z = CLAMP(z, 0., Max.z());
+  z = min(max(z, 0.), Max.z());
   z += 0.5*zStep; // always cut in middle of layer
 
   //cerr << zStep << ";"<<Max.z()<<";"<<Min.z()<<";"<<zSize<<";"<<LayerNr<<";"<<LayerCount<<";"<<endl;
@@ -1198,10 +1198,10 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
 #if 0
   // show layer triangulation
    vector<Poly> polys = layer->GetPolygons();
-   for (guint i=0; i<polys.size();i++){
+   for (size_t i=0; i<polys.size();i++){
      vector<Triangle> tri;
      polys[i].getTriangulation(tri);
-     for (guint j=0; j<tri.size();j++){
+     for (size_t j=0; j<tri.size();j++){
        tri[j].draw(GL_LINE_LOOP);
      }
    }
@@ -1233,12 +1233,12 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   vector<Poly> polys = layer->GetPolygons();
   vector< vector<Poly> > offs = layer->GetShellPolygons();
   cout << "# polygons "<< endl;
-  for (guint i=0; i<polys.size();i++){
+  for (size_t i=0; i<polys.size();i++){
     cout << polys[i].gnuplot_path() << endl;
   }
-  for (guint s=0; s<offs.size();s++){
+  for (size_t s=0; s<offs.size();s++){
     cout << "# offset polygons " << s << endl;
-    for (guint i=0; i<offs[s].size();i++){
+    for (size_t i=0; i<offs[s].size();i++){
       cout << offs[s][i].gnuplot_path() << endl;
     }
   }

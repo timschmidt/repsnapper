@@ -39,6 +39,7 @@ unsigned long Platform::getTickCount()
 
 static char *binary_path = NULL;
 
+#ifdef USE_GLIB
 void Platform::setBinaryPath (const char *apparg)
 {
   const char *p;
@@ -48,7 +49,7 @@ void Platform::setBinaryPath (const char *apparg)
 
   binary_path = g_strndup (apparg, p - apparg);
 }
-
+#endif
 bool Platform::has_extension(const std::string &fname, const char *extn)
 {
   if (fname.find_last_of(".") == std::string::npos)
@@ -57,6 +58,7 @@ bool Platform::has_extension(const std::string &fname, const char *extn)
   return this_extn == extn;
 }
 
+#ifdef USE_GLIB
 std::vector<std::string> Platform::getConfigPaths()
 {
   const gchar * const *datadirs = g_get_system_data_dirs();
@@ -82,7 +84,7 @@ std::vector<std::string> Platform::getConfigPaths()
 
   return dirs;
 }
-
+#endif
 
 
 std::string str(double r, int prec) {

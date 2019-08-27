@@ -45,14 +45,21 @@ typedef unsigned int        uint;
         #include <windows.h>   // Header File For Windows
         #include <tchar.h>
         #undef interface // Undo braindead define from Windows that conflicts with glibmm DBUS binding
-typedef unsigned int        guint;
+typedef unsigned int        size_t;
 #define random   rand
 #define srandom  srand
 #endif
 #include "platform.h"   // OpenGL, glu, glut in cross-platform way
 #include <stdio.h>
+//#define USE_GLIB
+#ifdef USE_GLIB
 #include <glib/gi18n.h>
+#else
+//#define _(X) tr(X)
+#define _(X) X
+#endif
 //#include <gtkmm.h>
+#include <float.h>
 #include "math.h" // Needed for sqrtf
 #include "types.h"
 
@@ -94,7 +101,8 @@ float const VIOLET[] = {0.8,0.0,0.8};
 
 //utility macros
 //assuming IEEE-754(GLfloat), which i believe has max precision of 7 bits
-# define Epsilon 1.0e-5
+//1.0e-5 ?
+# define Epsilon DBL_EPSILON
 
 #ifdef __GNUC__
 #define UNUSED __attribute__ ((unused))
