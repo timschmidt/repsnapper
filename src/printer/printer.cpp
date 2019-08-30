@@ -230,14 +230,9 @@ int Printer::Send(string s, long *lineno_for_printer) {
             QByteArray l8 = pline.toLocal8Bit();
             if (lineno_for_printer) {
                 l8 = numberedLineWithChecksum(l8, *lineno_for_printer);
-//                cerr << l8.toStdString() << endl;
                 (*lineno_for_printer)++;
             }
             bool wasEmpty = lineBuffer.empty();
-            while (lineBuffer.size() > 10){
-                QThread::msleep(30);
-                QCoreApplication::processEvents();
-            }
             if (!lineno_for_printer) {
                 lineBuffer.append(l8+'\n'); // send immediately
             } else {
@@ -251,6 +246,10 @@ int Printer::Send(string s, long *lineno_for_printer) {
             if (wasEmpty) {
                 emit serialPort->readyRead();
             }
+        }
+        while (lineBuffer.size() > 10){
+            QThread::msleep(30);
+            QCoreApplication::processEvents();
         }
     } else {
         return -1;
@@ -462,17 +461,14 @@ bool Printer::Move(string axis, double distance, bool relative )
     return false;
   }
 
-  bool ok = true;
+  ostringstream os;
   if ( relative )
-      ok = Send(Command(RELATIVEPOSITIONING));
-  if (ok) {
-      ostringstream os;
-      os << " " << axis << distance << " F" << speed;
-      ok = Send(Command(COORDINATEDMOTION, os.str()));
-  }
-  if (ok && relative )
-      ok = Send(Command(ABSOLUTEPOSITIONING));
-  return ok;
+      os << Command(RELATIVEPOSITIONING).GetGCodeText() << endl;
+  os << Command(COORDINATEDMOTION).GetGCodeText()
+     << " " << axis << distance << " F" << speed << endl;
+  if (relative )
+      os << Command(ABSOLUTEPOSITIONING).GetGCodeText() << endl;
+  return Send(os.str());
 }
 
 bool Printer::Goto( string axis, double position ) {
@@ -515,11 +511,11 @@ bool Printer::RunExtruder( double extruder_speed, double extruder_length,
       return false;
 
   ostringstream os;
-  os << " E" << extruder_length
-     << " F" << extruder_speed;
-  return Send(Command(RELATIVE_ECODE))
-          && Send(Command(COORDINATEDMOTION, os.str()))
-          && Send(Command(ABSOLUTE_ECODE));
+  os << Command(RELATIVE_ECODE).GetGCodeText() << endl
+     << Command(COORDINATEDMOTION).GetGCodeText()
+     << " E" << extruder_length << " F" << extruder_speed << endl
+     << Command(ABSOLUTE_ECODE).GetGCodeText() << endl;
+  return Send(os.str());
 }
 
 void Printer::alert( const char *message ) {
@@ -553,19 +549,6 @@ void Printer::serialReady()
         QByteArray last = lineBuffer.last();
         ok_received = false;
         if (serialPort->write(last) == long(last.length())){
-            Command command(last.toStdString(), currentPos);
-//            cerr << "COMMAND: " << command.info();
-            if (command.Code == RAPIDMOTION || command.Code == COORDINATEDMOTION) {
-                if (is_in_relative_mode)
-                    currentPos += *command.where;
-                else
-                    currentPos = *command.where;
-            }
-//            cerr << " -> pos " << currentPos << endl;
-            if (command.Code == RELATIVEPOSITIONING)
-                is_in_relative_mode = true;
-            else if (command.Code == ABSOLUTEPOSITIONING)
-                is_in_relative_mode = false;
             main->comm_log("--> "+last.trimmed());
             lineBuffer.removeLast();
             serialPort->flush();

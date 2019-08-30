@@ -169,7 +169,7 @@ void MainWindow::comm_log(QString s)
 
 void MainWindow::echo_log(QString s)
 {
-    qDebug()<< "Echo: " << s ;
+//    qDebug()<< "Echo: " << s ;
     ui_main->i_txt_echo->appendPlainText(s);
 }
 

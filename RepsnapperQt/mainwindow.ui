@@ -330,7 +330,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="currentIndex">
-        <number>3</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabModel">
         <attribute name="title">
@@ -672,6 +672,9 @@
                </item>
                <item row="3" column="2">
                 <widget class="QDoubleSpinBox" name="scale_x">
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
                  <property name="singleStep">
                   <double>0.100000000000000</double>
                  </property>
@@ -682,6 +685,9 @@
                </item>
                <item row="3" column="4">
                 <widget class="QDoubleSpinBox" name="scale_z">
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
                  <property name="singleStep">
                   <double>0.100000000000000</double>
                  </property>
@@ -731,6 +737,9 @@
                </item>
                <item row="3" column="3">
                 <widget class="QDoubleSpinBox" name="scale_y">
+                 <property name="decimals">
+                  <number>3</number>
+                 </property>
                  <property name="singleStep">
                   <double>0.100000000000000</double>
                  </property>
@@ -749,7 +758,7 @@
                <item row="3" column="1">
                 <widget class="QDoubleSpinBox" name="scale_value">
                  <property name="decimals">
-                  <number>2</number>
+                  <number>3</number>
                  </property>
                  <property name="minimum">
                   <double>0.000000000000000</double>
