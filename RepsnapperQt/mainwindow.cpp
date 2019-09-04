@@ -576,24 +576,13 @@ void MainWindow::previewFile(const QString &filename)
       m_model->preview_shapes  = m_model->ReadShapes(&file,10000);
       bool display_poly = m_settings->get_boolean("Display/DisplayPolygons");
       m_settings->setValue("Display/DisplayPolygons", true);
-      if (m_model->preview_shapes.size()>0) {
-        Vector3d pMax = Vector3d(-INFTY, -INFTY, -INFTY);
-        Vector3d pMin = Vector3d(INFTY, INFTY, INFTY);
-        for (uint i = 0; i < m_model->preview_shapes.size(); i++) {
-          m_model->preview_shapes[i]->PlaceOnPlatform();
-          Vector3d stlMin = m_model->preview_shapes[i]->Min;
-          Vector3d stlMax = m_model->preview_shapes[i]->Max;
-          for (uint k = 0; k < 3; k++) {
-            pMin[k] = min(stlMin[k], pMin[k]);
-            pMax[k] = max(stlMax[k], pMax[k]);
-          }
-        }
-        //cerr << pMin << pMax << endl;
-        m_render->set_zoom(float((pMax - pMin).find_max()*2));
-        // Matrix4fT tr;
-        // setArcballTrans(tr,(pMin+pMax)/2);
-        // m_renderer->set_transform(tr);
+      double diag = 0;
+      for (uint i = 0; i < m_model->preview_shapes.size(); i++) {
+          diag = max(diag, (m_model->preview_shapes[i]->Max -
+                            m_model->preview_shapes[i]->Min).length());
       }
+      if (diag > 1)
+          m_render->set_zoom(diag);
       m_render->update();
       m_settings->setValue("Display/DisplayPolygons",display_poly);
 }
@@ -687,6 +676,9 @@ void MainWindow::handleButtonClick()
                                      m_printer->getSerialPortName());
                 m_settings->setValue("Hardware/SerialSpeed",
                                      m_printer->getSerialSpeed());
+            } else {
+                // search for connected serial ports again
+                m_settings->connect_to_gui(ui_main->Hardware_Portname);
             }
         } else {
             m_printer->Disconnect();

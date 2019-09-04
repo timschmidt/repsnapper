@@ -48,6 +48,10 @@ struct Segment {
     start = end;
     end = tmp;
   }
+  bool conincident(const Segment &s2) const {
+      return (s2.start == start && s2.end == end)
+              || (s2.end == start && s2.start == end);
+  }
 };
 
 

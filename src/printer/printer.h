@@ -47,7 +47,7 @@ private:
   long gcode_lineno;
   long printer_lineno;
   bool ok_received;
-  int fan_speed;
+  int user_fanspeed;
 
   bool is_in_relative_mode = true;
   Vector3d currentPos;

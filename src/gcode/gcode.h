@@ -47,6 +47,8 @@ class GCodeIter
     ViewProgress * progress;
     size_t progress_steps;
 
+    bool paused;
+
 public:
     GCodeIter (const vector<Command> &commands, Settings * settings,
                ViewProgress * progress);
@@ -65,6 +67,8 @@ public:
     QString get_line(bool calc_duration = false);
     QString get_line_stripped(bool calc_duration = false);
     bool finished();
+    void setPaused(bool value);
+    bool isPaused() const;
 };
 
 class GCode : public QObject

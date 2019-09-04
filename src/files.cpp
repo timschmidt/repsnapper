@@ -109,7 +109,7 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
       names.resize(1);
       names[0] = name_by_file;
       if (_type == BINARY_STL) {
-          load_binarySTL(triangles[0], max_triangles);
+          load_binarySTL(triangles[0], max_triangles, false);
 #if ENABLE_AMF
       } else if (_type == AMF) {
           // multiple shapes per file
@@ -205,13 +205,18 @@ bool File::load_binarySTL(vector<Triangle> &triangles,
     for(; i < num_triangles; i+=step)
     {
       if (step>1)
-    file.seekg(84 + 50*i, ios_base::beg);
+          file.seekg(84 + 50*i, ios_base::beg);
 
       double a,b,c;
-        a = read_double (file);
-        b = read_double (file);
-        c = read_double (file);
-        Vector3d N(a,b,c);
+      Vector3d *N = nullptr;
+      if(readnormals){
+          a = read_double (file);
+          b = read_double (file);
+          c = read_double (file);
+          N = new Vector3d(a,b,c);
+      } else {
+          file.seekg(3 * 4, ios_base::cur);
+      }
         a = read_double (file);
         b = read_double (file);
         c = read_double (file);
@@ -232,18 +237,20 @@ bool File::load_binarySTL(vector<Triangle> &triangles,
 
         /* attribute byte count - sometimes contains face color
             information but is useless for our purposes */
-        unsigned short byte_count;
         file.read(reinterpret_cast <char *> (buffer), 2);
-    byte_count = buffer[0] | buffer[1] << 8;
-    // Repress unused variable warning.
-    (void)&byte_count;
+        // int byte_count = buffer[0] | buffer[1] << 8;
 
-    Triangle T = Triangle(Ax,Bx,Cx);
-    if (readnormals)
-      if (T.Normal.dot(N) < 0) T.invertNormal();
-
-    // cout << "bin triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
+    if (readnormals) {
+        Triangle T = Triangle(*N, Ax,Bx,Cx);
+        if (T.Normal.dot(*N) < 0) {
+            T.invertNormal();
+            cout << "flipped triangle "<< N << ":\n\t" << Ax << "/\n\t"<<Bx << "/\n\t"<<Cx << endl;
+        }
         triangles.push_back(T);
+    } else {
+        triangles.push_back(Triangle(Ax,Bx,Cx));
+    }
+
     }
     file.close();
 

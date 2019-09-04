@@ -32,10 +32,10 @@ class Triangle
 public:
         Triangle(const Vector3d &Norml, const Vector3d &Point1,
                  const Vector3d &Point2, const Vector3d &Point3)
-                { Normal = Norml ; A=Point1;B=Point2;C=Point3;}
+            : A(Point1), B(Point2), C(Point3), Normal(Norml){}
         Triangle(const Vector3d &Point1,
                  const Vector3d &Point2, const Vector3d &Point3);
-        Triangle() {};
+        Triangle(){}
 
         Triangle transformed(const Matrix4d &T) const;
 

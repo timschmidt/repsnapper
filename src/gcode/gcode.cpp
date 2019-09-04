@@ -644,11 +644,21 @@ GCodeIter *GCode::get_iter (Settings * settings, ViewProgress * progress) const
 
 
 
+void GCodeIter::setPaused(bool value)
+{
+    paused = value;
+}
+
+bool GCodeIter::isPaused() const
+{
+    return paused;
+}
+
 GCodeIter::GCodeIter (const vector<Command> &comm, Settings * settings,
                       ViewProgress * progress)
     : currentCommand(0), commands(comm),
       settings(settings), currextruder(0), progress(progress),
-      lastE(0), lastF(0),
+      paused(false), lastE(0), lastF(0),
       E_letter('E'), lastPos(Vector3d::ZERO), duration(0),
       currentLayer(0), currentLayerZ(0.)
 {
@@ -685,12 +695,12 @@ QString GCodeIter::get_line(bool calc_duration)
         }
         line += commands[currentCommand].
                 GetGCodeText(lastPos, lastE, lastF,
-                             relativeE, E_letter, speedalways);
+                             relativeE, E_letter, paused || speedalways);
     }
     if ( commands[currentCommand].Code == LAYERCHANGE ) {
         currentLayer = int(commands[currentCommand].value);
         currentLayerZ = commands[currentCommand].where.z();
-        cerr << " ---------- LAYER " << currentLayer <<  " at Z "<<
+        cerr << " ---------- LAYER " << (currentLayer+1) <<  " at Z "<<
                 currentLayerZ << "                 " << endl;
         const string GcodeLayer = settings->get_string("GCode/Layer").toStdString();
         if (GcodeLayer.length() > 0)
@@ -702,6 +712,7 @@ QString GCodeIter::get_line(bool calc_duration)
     currentCommand++;
     if (line.find("\n") == string::npos)
         line += "\n";
+    paused = false;
     return QString::fromStdString(line);
 }
 

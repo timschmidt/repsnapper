@@ -894,13 +894,13 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
       Vector3d v_center = GetViewCenter() - offset;
       glTranslated( v_center.x(), v_center.y(), v_center.z());
       for (uint i = 0; i < preview_shapes.size(); i++) {
-    offset = preview_shapes[i]->Center;
-    glTranslated(offset.x(), offset.y(), offset.z());
-    // glPushMatrix();
-    // glMultMatrixd (&preview_shapes[i]->transform3D.getTransform().array[0]);
-    preview_shapes[i]->draw (settings, false, 20000);
-    preview_shapes[i]->drawBBox (render);
-    // glPopMatrix();
+          offset = -preview_shapes[i]->Center;
+          glTranslated(offset.x(), offset.y(), -preview_shapes[i]->Min.z());
+          // glPushMatrix();
+          // glMultMatrixd (&preview_shapes[i]->transform3D.getTransform().array[0]);
+          preview_shapes[i]->draw (settings, false, 20000);
+          preview_shapes[i]->drawBBox (render);
+          // glPopMatrix();
       }
       glPopMatrix();
       glPopMatrix();
@@ -1044,27 +1044,31 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
            ( layers.size() == 0 && gcode->commands.size() == 0 ) ) {
           Vector3d start(0,0,0);
           const double thickness = settings->get_double("Slicing/LayerThickness");
-          const double z = settings->get_integer("Display/GCodeDrawStart")/1000. + thickness/2.;
-          const uint LayerNo = uint(z/thickness);
-          if (z != m_previewGCode_z) {
-              //uint prevext = settings->selectedExtruder;
-              Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness, true, true);
-              if (previewGCodeLayer) {
-                  m_previewGCode->clear();
-                  //      vector<Command> commands;
-                  GCodeState state(*m_previewGCode);
-                  previewGCodeLayer->MakeGCode(start, state, 0, settings);
-                  // state.AppendCommands(commands, settings->Slicing.RelativeEcode);
-                  m_previewGCode_z = z;
-                  delete previewGCodeLayer;
+          if (thickness > 0) {
+              const double z = settings->get_integer("Display/GCodeDrawStart")/1000. + thickness/2.;
+              const uint LayerNo = uint(z/thickness);
+              const uint numLayers = uint(Max.z()/thickness);
+              if (z != m_previewGCode_z) {
+                  //uint prevext = settings->selectedExtruder;
+                  Layer * previewGCodeLayer = calcSingleLayer(z, LayerNo, thickness,
+                                                              true, true, numLayers);
+                  if (previewGCodeLayer) {
+                      m_previewGCode->clear();
+                      //      vector<Command> commands;
+                      GCodeState state(*m_previewGCode);
+                      previewGCodeLayer->MakeGCode(start, state, 0, settings);
+                      // state.AppendCommands(commands, settings->Slicing.RelativeEcode);
+                      m_previewGCode_z = z;
+                      delete previewGCodeLayer;
+                  }
+                  //settings->SelectExtruder(prevext);
               }
-              //settings->SelectExtruder(prevext);
+              glDisable(GL_DEPTH_TEST);
+              m_previewGCode->drawCommands(
+                          settings, 1, m_previewGCode->commands.size(), true, 2,
+                          settings->get_boolean("Display/DisplayGCodeArrows"),
+                          settings->get_boolean("Display/DisplayGCodeBorders"));
           }
-          glDisable(GL_DEPTH_TEST);
-          m_previewGCode->drawCommands(
-                      settings, 1, m_previewGCode->commands.size(), true, 2,
-                      settings->get_boolean("Display/DisplayGCodeArrows"),
-                      settings->get_boolean("Display/DisplayGCodeBorders"));
       }
   }
   return drawnlayer;
@@ -1168,7 +1172,7 @@ int Model::drawLayers(double height, const Vector3d &offset, bool calconly)
 }
 
 Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
-                               bool calcinfill, bool for_gcode)
+                               bool calcinfill, bool for_gcode, ulong numLayers)
 {
   if (is_calculating) return NULL; // infill calculation (saved patterns) would be disturbed
   is_calculating = true;
@@ -1219,11 +1223,14 @@ Layer * Model::calcSingleLayer(double z, uint LayerNr, double thickness,
   uint altinfill = uint(settings->get_integer("Slicing/AltInfillLayers"));
   uint shellcount = uint(settings->get_integer("Slicing/ShellCount"));
   bool nobottom = uint(settings->get_integer("Slicing/NoBottom"));
+  bool nocovers = uint(settings->get_integer("Slicing/NoTopAndBottom"));
+
+  bool fullInfill = (!nobottom && !nocovers && LayerNr < shellcount)
+          || (!nocovers && LayerNr > numLayers - shellcount);
 
   InfillSet infills(*settings, layer->getMin(), layer->getMax());
   if (calcinfill)
-    layer->CalcInfill(*settings, infills,
-                      !nobottom && LayerNr < shellcount,
+    layer->CalcInfill(*settings, infills, fullInfill ,
                       altinfill && LayerNr % altinfill == 0,
                       LayerNr < firstLayers);
 

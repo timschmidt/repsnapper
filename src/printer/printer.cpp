@@ -304,6 +304,9 @@ bool Printer::StartPrinting(const GCode *gcode, Settings *settings)
                 }
             } else { // paused
                 if (printer_lineno == 0) break;
+                if (!iter->isPaused()) {
+                    iter->setPaused(true);
+                }
                 if (nowprinting_timer.isActive())
                     nowprinting_timer.stop();
                 cerr << "paused ... "<< endl;
@@ -592,7 +595,10 @@ bool Printer::Idle( void ) {
         int newfanspeed = main->get_settings()->get_boolean("Printer/FanEnable")
                     ? main->get_settings()->get_integer("Printer/FanVoltage")
                     : 0;
-        SetFan(newfanspeed);
+        if (user_fanspeed != newfanspeed) {
+            user_fanspeed = newfanspeed;
+            SetFan(newfanspeed);
+        }
         if (!lineBuffer.isEmpty()){
             ok_received = true;
             emit serialPort->readyRead();
@@ -713,7 +719,6 @@ void Printer::ParseResponse( QString line ) {
 
 void Printer::SetFan( int speed ) {
 //    if (fan_speed != speed)
-    fan_speed = speed;
 //    else return;
     if (speed == 0)
         Send (Command(FANOFF));

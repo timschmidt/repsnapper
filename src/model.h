@@ -160,7 +160,8 @@ public:
         Vector2d measuresPoint;
 
         Layer * calcSingleLayer(double z, uint LayerNr, double thickness,
-                                bool calcinfill, bool for_gcode=false);
+                                bool calcinfill, bool for_gcode=false,
+                                ulong numLayers = 0);
 
 ////        sigc::signal< void, Gtk::MessageType, const char *, const char * > signal_alert;
         void alert (const char *message);

@@ -666,13 +666,14 @@ void Settings::connect_to_gui (QWidget *widget)
               }
               combo->setCurrentIndex(settingsItem);
           } if (w->objectName() == "Hardware_Portname") {
-              combo->clear();
+              //combo->clear();
               QString settingsPortname = get_string("Hardware/Portname");
               vector<QSerialPortInfo> ports = Printer::findPrinterPorts();
               for (uint i = 0; i < ports.size(); i++) {
-                  combo->addItem(
-                              ports[i].portName()+": "+ports[i].description(),
-                              ports[i].portName());
+                  if (combo->findText(ports[i].portName()) < 0)
+                      combo->addItem(
+                                  ports[i].portName()+": "+ports[i].description(),
+                                  ports[i].portName());
               }
               int settingsItem = combo->findText(settingsPortname);
               if (settingsItem < 0){

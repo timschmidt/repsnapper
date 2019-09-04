@@ -1230,11 +1230,7 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
         }
 
         // pair them nicely to their matching type
-        count = detached_points.size();
-// #ifdef _OPENMP
-// #pragma omp parallel for schedule(dynamic)
-// #endif
-        for (ulong i = 0; i < count; i++)
+        for (ulong i = 0; i < detached_points.size(); i++)
         {
             if (detached_points[i] < 0) // handled already
                 continue;
@@ -1244,7 +1240,7 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
 
             const Vector2d &p = vertices[n]; // the real detached point
             // find nearest other detached point to the detached point n:
-            for (ulong j = i + 1; j < count; j++)
+            for (ulong j = i + 1; j < detached_points.size(); j++)
             {
                         if (detached_points[j] < 0)
                           continue; // already connected
@@ -1255,7 +1251,7 @@ bool CleanupConnectSegments(const vector<Vector2d> &vertices, vector<Segment> &l
                                 continue;
 
                         const Vector2d &q = vertices[pt];  // the real other point
-                        double dist_sq = (p-q).squared_length(); //pow (p.x() - q.x(), 2) + pow (p.y() - q.y(), 2);
+                        double dist_sq = p.squared_distance(q);
                         if (dist_sq < nearest_dist_sq)
                         {
                                 nearest_dist_sq = dist_sq;

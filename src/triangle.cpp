@@ -326,7 +326,7 @@ int Triangle::CutWithPlane(double z, const Matrix4d &T,
     const Vector3d TB = T * B;
     const Vector3d TC = T * C;
 
-    int num_cutpoints = 0;
+    uint num_cutpoints = 0;
     // Are the points on opposite sides of the plane?
     if ((z <= TA.z()) != (z <= TB.z()))
       {
