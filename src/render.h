@@ -112,7 +112,7 @@ public:
   QModelIndexList *getSelection() {return &m_selection;}
 
   Qt::MouseButton mousePressed;
-  uint mousePickedObject;
+  int mousePickedObject;
 
 
 public slots:

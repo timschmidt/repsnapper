@@ -92,7 +92,7 @@ public:
     void startProgress(string label, double max, double totalTime = 0.);
     TemperaturePanel *getTempsPanel() const;
 
-    void selectShape(const int index);
+    void selectShape(const int index, bool clean = true);
     void showTransforms(const Shape *shape);
 private:
     Ui::MainWindow *ui_main;

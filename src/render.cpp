@@ -521,17 +521,6 @@ void Render::mousePressEvent(QMouseEvent *event)
     m_arcBall->click (m_downPoint.x(), m_downPoint.y(), &m_transform);
 
     mousePressed = event->button();
-    if(mousePressed == Qt::LeftButton && mousePressedModifiers == Qt::NoModifier) {//move object XY
-        makeCurrent();
-        paintAll(true);
-        GLushort blue;
-        glReadBuffer(GL_FRONT);
-        glReadPixels( mouseP.x(), height()-mouseP.y(), 1, 1, GL_BLUE, GL_UNSIGNED_BYTE, &blue);
-        //                cerr << mouseP.x() <<","<< mouseP.y() << " sel " << blue << endl;
-        mousePickedObject = blue-1; // it was painted with color (255,index+1,index+1)
-        m_main->selectShape(mousePickedObject);
-        repaint();
-    }
 }
 
 void Render::leaveEvent(QEvent *event) {
@@ -572,13 +561,14 @@ void Render::mouseMoveEvent(QMouseEvent *event)
             const Vector3d mousePlat  = mouse_on_plane(dragp.x(), dragp.y());
             const Vector3d movevec = mousePlat - mouseDragS;
             get_model()->move_selection(&m_selection, 2.*movevec);
-        } else if (mousePressedModifiers == Qt::ControlModifier) { // move object Z wise
+        } else if (mousePressedModifiers & Qt::ShiftModifier
+                   && mousePressedModifiers & Qt::ControlModifier) { // move object Z wise
             const Vector3d delta3fz(0, 0, -delta.y()*drag_factor);
             get_model()->move_selection(&m_selection, delta3fz);
         } else if (mousePressedModifiers == Qt::NoModifier) { // rotate
-//            Vector3d axis(delta.y(), delta.x(), 0);
-//            cerr << "rotate "<< delta << " " << axis << endl;
-//            rotArcballTrans(m_transform, axis, -delta.length()/100.);
+            //            Vector3d axis(delta.y(), delta.x(), 0);
+            //            cerr << "rotate "<< delta << " " << axis << endl;
+            //            rotArcballTrans(m_transform, axis, -delta.length()/100.);
             m_arcBall->dragAccumulate(dragp.x(), dragp.y(), &m_transform);
         }
     } else if(mousePressed == Qt::MidButton) { // move
@@ -620,8 +610,20 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
 {
     if (mousePressed == Qt::NoButton)
         return;
-    mousePressed = Qt::NoButton;
-    if (mousePressedModifiers == Qt::ShiftModifier
+    else if (mousePressed == Qt::LeftButton
+             && (mousePressedModifiers == Qt::NoModifier
+                 || mousePressedModifiers == Qt::ControlModifier)
+             && event->pos() == m_downPoint) {
+        // pick
+        makeCurrent();
+        paintAll(true);
+        GLushort blue;
+        glReadBuffer(GL_FRONT);
+        glReadPixels( mouseP.x(), height()-mouseP.y(), 1, 1, GL_BLUE, GL_UNSIGNED_BYTE, &blue);
+        //                cerr << mouseP.x() <<","<< mouseP.y() << " sel " << blue << endl;
+        mousePickedObject = blue-1; // it was painted with color (255,index+1,index+1)
+        m_main->selectShape(mousePickedObject, mousePressedModifiers == Qt::NoModifier);
+    } else if (mousePressedModifiers == Qt::ShiftModifier
             || mousePressedModifiers == Qt::ControlModifier){
         // move/rotate object
 //        get_model()->ModelChanged();
@@ -633,6 +635,7 @@ void Render::mouseReleaseEvent(QMouseEvent *event)
             }
         }
     }
+    mousePressed = Qt::NoButton;
     repaint();
 }
 

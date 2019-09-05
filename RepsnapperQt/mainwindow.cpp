@@ -196,12 +196,15 @@ void MainWindow::updatedModel(const ObjectsList *objList)
 //    cerr << " updated Model"<< endl;
 }
 
-void MainWindow::selectShape(const int index){
-    ui_main->modelListView->selectionModel()->clearSelection();
+void MainWindow::selectShape(const int index, bool clean){
+    if (clean)
+        ui_main->modelListView->selectionModel()->clearSelection();
     QModelIndex mi;
     if (index >= 0) {
         mi = ui_main->modelListView->model()->index(index,0);
     }
+    ui_main->modelListView->selectionModel()->select
+            (mi, QItemSelectionModel::SelectionFlag::Current);
     ui_main->modelListView->setCurrentIndex(mi);
     shapeSelected(mi);
 }
