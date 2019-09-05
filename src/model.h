@@ -139,9 +139,10 @@ public:
 
         void CalcBoundingBoxAndCenter(bool selected_only = false);
         Vector3d GetViewCenter();
-        bool AutoArrange(const QModelIndexList *selected);
+        bool AutoArrange(const QModelIndexList *selected,
+                         bool unselected = false);
         Vector3d FindEmptyLocation(const vector<Shape*> &shapes,
-                                   const Shape *shape);
+                                   const Vector2d &diag);
         bool FindEmptyLocation(Vector3d &result, const Shape *stl);
 
         void ModelChanged(bool objectsAddedOrRemoved = false);
@@ -187,7 +188,6 @@ public:
 
 private:
         bool is_calculating;
-        bool is_printing;
 //        //GCodeIter *m_iter;
         Layer * lastlayer;
 

@@ -49,7 +49,6 @@ Model::Model(MainWindow *main) :
   echolog(),
   settings(main->get_settings()),
   is_calculating(false),
-  is_printing(false),
   main(main)
 {
     gcode = new GCode();
@@ -312,7 +311,6 @@ void Model::Read(QFile *file)
 void Model::ReadGCode(QTextDocument *doc, QFile *file)
 {
   if (is_calculating) return;
-  if (is_printing) return;
   is_calculating=true;
   settings->setValue("Display/DisplayGCode",true);
   m_progress->start (_("Reading GCode"), 100.0);
@@ -330,7 +328,6 @@ void Model::ReadGCode(QTextDocument *doc, QFile *file)
 void Model::translateGCode(Vector3d trans)
 {
   if (is_calculating) return;
-  if (is_printing) return;
   is_calculating=true;
   gcode->translate(trans);
 
@@ -344,14 +341,12 @@ void Model::translateGCode(Vector3d trans)
 void Model::ModelChanged(bool objectsAddedOrRemoved)
 {
   //printer.update_temp_poll_interval(); // necessary?
-  if (!is_printing) {
-      ClearLayers();
-      ClearGCode();
+    ClearLayers();
+    ClearGCode();
     CalcBoundingBoxAndCenter();
     ClearPreview();
     setCurrentPrintingCommand(0);
     emit model_changed(objectsAddedOrRemoved ? &objectList : nullptr);
-  }
 }
 
 static bool ClosestToOrigin (const Vector3d &a, const Vector3d &b)
@@ -360,32 +355,32 @@ static bool ClosestToOrigin (const Vector3d &a, const Vector3d &b)
 }
 
 // rearrange unselected shapes in random sequence
-bool Model::AutoArrange(const QModelIndexList *selected)
+bool Model::AutoArrange(const QModelIndexList *selected, bool unselected)
 {
   // all shapes
   vector<Shape*>   allshapes = objectList.get_all_shapes();
-
   // selected shapes
-  vector<Shape*>   selshapes = selected ?
-              objectList.get_selected_shapes(selected) : allshapes;
-
-  // get unselected shapes
-  vector<Shape*>   unselshapes;
-
-  for(uint s=0; s < allshapes.size(); s++) {
+  vector<Shape*>   selshapes = objectList.get_selected_shapes(selected);
+  if (selshapes.empty())
+      selshapes = allshapes;
+  // unselected shapes
+  vector<Shape*> unselshapes;
+  for(Shape * ashape : allshapes) {
       bool issel = false;
-      for(uint ss=0; ss < selshapes.size(); ss++)
-          if (selshapes[ss] == allshapes[s]) {
+      for(const Shape * sshape : selshapes)
+          if (sshape == ashape) {
               issel = true; break;
           }
       if (!issel) {
-          unselshapes.push_back(allshapes[s]);
+          unselshapes.push_back(ashape);
       }
   }
 
+  vector<Shape*> shapesToArrange = unselected ? unselshapes : selshapes;
+  vector<Shape*> finished = unselected ? selshapes : unselshapes;
 
-  // find place for unselected shapes
-  ulong num = unselshapes.size();
+  // find place for shapes
+  ulong num = shapesToArrange.size();
   vector<uint> rand_seq(num,1); // 1,1,1,...
   partial_sum(rand_seq.begin(), rand_seq.end(), rand_seq.begin()); // 1,2,3,...,N
 
@@ -394,97 +389,62 @@ bool Model::AutoArrange(const QModelIndexList *selected)
 
   for(ulong s = 0; s < num; s++) {
     uint index = rand_seq[s]-1;
-    // use selshapes as vector to fill up
-    unselshapes[index]->moveTo(Vector3d::ZERO);
-//    cerr << "T " << unselshapes[index]->transform3D.getTranslation() << endl;
-    Vector3d location = FindEmptyLocation(selshapes, unselshapes[index]);
-//    cerr << "loc: " << location << endl;
-    unselshapes[index]->moveTo(location);
-    selshapes.push_back(unselshapes[index]);
-    CalcBoundingBoxAndCenter();
+    shapesToArrange[index]->moveLowerLeftTo(Vector3d::ZERO);
+    const Vector3d diag = shapesToArrange[index]->Max - shapesToArrange[index]->Min;
+    const Vector3d location = FindEmptyLocation(finished, Vector2d(diag.x(), diag.y()));
+    shapesToArrange[index]->moveLowerLeftTo(location);
+    finished.push_back(shapesToArrange[index]);
   }
   ModelChanged();
   return true;
 }
 
-Vector3d Model::FindEmptyLocation(const vector<Shape*> &shapes,
-                                  const Shape *shape)
+Vector3d Model::FindEmptyLocation(const vector<Shape*> &fixedshapes,
+                                  const Vector2d &diag)
 {
-  // Get all object positions
-  std::vector<Vector3d> maxpos;
-  std::vector<Vector3d> minpos;
-  for(uint s=0; s<shapes.size(); s++) {
-    Vector3d min = shapes[s]->Min;
-    Vector3d max = shapes[s]->Max;
-    minpos.push_back(Vector3d(min.x(), min.y(), 0));
-    maxpos.push_back(Vector3d(max.x(), max.y(), 0));
-  }
+  if (fixedshapes.empty()) return Vector3d::ZERO;
 
   double d = 5.0; // 5mm spacing between objects
-  Vector3d StlDelta = (shape->Max - shape->Min);
 
-  vector<Vector3d> candidates;
-  candidates.push_back(Vector3d::ZERO);
-  for (uint j=0; j<maxpos.size(); j++)
+  vector<Vector2d> candidates;
+  candidates.push_back(Vector2d::ZERO);
+  for (const Shape * sh : fixedshapes)
   {
-    candidates.push_back(Vector3d(maxpos[j].x() + d, minpos[j].y(), 0));
-    candidates.push_back(Vector3d(minpos[j].x(), maxpos[j].y() + d, 0));
-    candidates.push_back(maxpos[j] + Vector3d(d,d,0));
+    candidates.push_back(Vector2d(sh->Max.x() + d, sh->Min.y()));
+    candidates.push_back(Vector2d(sh->Min.x(), sh->Max.y() + d));
+    candidates.push_back(Vector2d(sh->Max.x() + d, sh->Max.y() + d));
   }
   // Prefer positions closest to origin
   sort(candidates.begin(), candidates.end(), ClosestToOrigin);
 
-  Vector3d result;
+  Vector2d result;
   // Check all candidates for collisions with existing objects
-  for (const Vector3d &candidate : candidates) {
-      bool ok = true;
+  Vector3d plate = settings->getPrintVolume() - 2.*settings->getPrintMargin();
+  for (const Vector2d &candidate : candidates) {
       // exceeds volume boundary?
-      if (candidate.x()+StlDelta.x() >
-              (settings->getPrintVolume().x() - 2*settings->getPrintMargin().x())
-              || candidate.y()+StlDelta.y() >
-              (settings->getPrintVolume().y() - 2*settings->getPrintMargin().y())) {
-          ok = false;
-          break;
+      if (candidate.x() + diag.x() > plate.x()
+              || candidate.y() + diag.y() > plate.y()) {
+          continue;
       }
-      for (uint k=0; k<maxpos.size(); k++) {
-          if (
-                  // check x
-                  ( ( ( minpos[k].x()     <= candidate.x() &&
-                        candidate.x() <= maxpos[k].x() ) ||
-                      ( candidate.x() <= minpos[k].x() &&
-                        maxpos[k].x() <= candidate.x()+StlDelta.x()+d ) ) ||
-                    ( ( minpos[k].x() <= candidate.x()+StlDelta.x()+d &&
-                        candidate.x()+StlDelta.x()+d <= maxpos[k].x() ) ) )
-                  &&
-                  // check y
-                  ( ( ( minpos[k].y() <= candidate.y() &&
-                        candidate.y() <= maxpos[k].y() ) ||
-                      ( candidate.y() <= minpos[k].y() &&
-                        maxpos[k].y() <= candidate.y()+StlDelta.y()+d ) ) ||
-                    ( ( minpos[k].y() <= candidate.y()+StlDelta.y()+d &&
-                        candidate.y()+StlDelta.y()+d <= maxpos[k].y() ) ) )
-                  ) {
+      bool ok = true;
+      // collision of candidate with other shapes
+      for (const Shape * sh : fixedshapes) {
+          if (sh->inRectangle(candidate, candidate + diag)) {
               ok = false;
               break;
           }
       }
-      if (ok) {
-          result = candidate;
-          // keep z
-          result.x() -= shape->Min.x();
-          result.y() -= shape->Min.y();
-          return result;
-      }
+      if (ok)
+          return Vector3d(candidate.x(), candidate.y(), 0.);
   }
-
   // no empty spots
-  return Vector3d(100,100,0);
+  return Vector3d(plate/2.,0.);
 }
 
 bool Model::FindEmptyLocation(Vector3d &result, const Shape *shape)
 {
   vector<Shape*> allshapes = objectList.get_all_shapes();
-  result = FindEmptyLocation(allshapes, shape);
+  result = FindEmptyLocation(allshapes, Vector2d(shape->Max-shape->Min));
   return true;
 }
 
@@ -503,9 +463,8 @@ ListObject * Model::AddShape(ListObject *parentLO, Shape *shape,
       // Decide where it's going
       Vector3d trans;
       if (FindEmptyLocation(trans, shape)) {
-          shape->transform3D.moveTo(trans);
+          shape->moveLowerLeftTo(trans);
       }
-      shape->PlaceOnPlatform();
   }
   // Add it to the parent LO
   cerr << "adding shape " << filename.toStdString() << endl;
@@ -760,6 +719,7 @@ void Model::PlaceOnPlatform(const QModelIndexList *selected)
 {
     if (m_inhibit_modelchange) return;
     vector<Shape*>   selshapes = objectList.get_selected_shapes(selected);
+    if (selshapes.empty()) selshapes = objectList.get_all_shapes();
     for (Shape * shape: selshapes){
         shape->PlaceOnPlatform();
     }
@@ -768,7 +728,7 @@ void Model::PlaceOnPlatform(const QModelIndexList *selected)
 //    for (uint s = 0;s<object->shapes.size(); s++) {
 //      object->shapes[s]->PlaceOnPlatform();
 //    }
-    ModelChanged();
+    ModelChanged(true);
 }
 
 void Model::AutoRotate(const QModelIndexList *selected)
@@ -791,8 +751,9 @@ void Model::DeleteSelectedObjects(const QModelIndexList *selected)
     for (QModelIndex i : *selected)
         ind.push_back(i.row());
     std::sort(ind.rbegin(), ind.rend());
-    for (int i : ind)
+    for (int i : ind) {
         objectList.DeleteRow(i);
+    }
     ClearGCode();
     ClearLayers();
     ModelChanged(true);
@@ -850,7 +811,6 @@ void Model::CalcBoundingBoxAndCenter(bool selected_only)
   }
 
   Center = (Max + Min) / 2.0;
-//  m_signal_zoom.emit();
 }
 
 Vector3d Model::GetViewCenter()
@@ -988,7 +948,7 @@ int Model::draw (const QModelIndexList *selected, bool select_mode)
   glLoadName(0); // Clear selection name to avoid selecting last object with later rendering.
 
   // draw total bounding box
-  if(displaybbox)
+  if(displaybbox && Max.z() > 0)
     {
       const double minz = max(0., Min.z()); // above xy plane only
       // Draw bbox

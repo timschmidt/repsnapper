@@ -32,12 +32,10 @@
 // Constructor
 Shape::Shape()
   : filename(""),
+    Min(Vector3d::ZERO), Max(Vector3d::ZERO),
     slow_drawing(false),
     gl_List(0)
 {
-  Min.set(0,0,0);
-  Max.set(200,200,200);
-  CalcBBox();
 }
 
 Shape::Shape(Shape *shape)
@@ -49,6 +47,7 @@ Shape::Shape(Shape *shape)
 
 void Shape::clear() {
     triangles.clear();
+    CalcBBox();
     clearGlList();
     filename = "";
 }
@@ -62,7 +61,6 @@ void Shape::clearGlList()
 void Shape::setTriangles(const vector<Triangle> &triangles_)
 {
   triangles = triangles_;
-
   CalcBBox();
   double vol = volume();
   if (vol < 0) {
@@ -308,7 +306,15 @@ void Shape::FitToVolume(const Vector3d &vol)
   const double sc_z = diag.z() / vol.z();
   double max_sc = max(max(sc_x, sc_y),sc_z);
   if (max_sc > 1.)
-    Scale(1./max_sc, true);
+      Scale(1./max_sc, true);
+}
+
+bool Shape::inRectangle(const Vector2d &min, const Vector2d &max) const
+{
+    return (Max.x() >= min.x() &&
+            Min.x() <= max.x() &&
+            Max.y() >= min.y() &&
+            Min.y() <= max.y());
 }
 
 void Shape::Scale(double in_scale_factor, bool calcbbox)
@@ -363,6 +369,8 @@ Vector3d Shape::getTranslation() const
 
 void Shape::CalcBBox()
 {
+    if (triangles.empty())
+        Min = Max = Vector3d::ZERO;
   Min.set(INFTY,INFTY,INFTY);
   Max.set(-INFTY,-INFTY,-INFTY);
   for(uint i = 0; i < triangles.size(); i++) {
@@ -551,9 +559,11 @@ void Shape::moveTo(const Vector3d &center)
 
 void Shape::moveLowerLeftTo(const Vector3d &point)
 {
-//    cerr << Min << Max << point << transform3D.getTranslation() << endl;
-   moveTo(point-Min);
+    transform3D.move(point-Min);
+    CalcBBox();
+    PlaceOnPlatform();
 }
+
 // void Shape::CenterAroundXY()
 // {
 //   CalcBBox();
@@ -951,8 +961,8 @@ void Shape::draw(Settings *settings, bool highlight, uint max_triangles,
 // the bounding box is in real coordinates (not transformed)
 void Shape::drawBBox(Render * render) const
 {
+  if (Max.z() <= 0) return;
   const double minz = max(0.,Min.z()); // draw above zero plane only
-
                 // Draw bbox
                 glColor3f(1.f,0.2f,0.2f);
                 glLineWidth(1);
@@ -1006,7 +1016,6 @@ void Shape::drawBBox(Render * render) const
   val << fixed << (Max.z()-minz);
   pos = Vector3d(Min.x(),Min.y(),(Max.z()+minz)/2.);
   render->draw_string(pos,val.str());
-
 }
 
 

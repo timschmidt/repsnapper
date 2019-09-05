@@ -285,7 +285,8 @@ void MainWindow::printingChanged()
         ui_main->p_pause->setText("Continue");
     else
         ui_main->p_pause->setText("Pause");
-    ui_main->p_print->setEnabled(!printing && !paused);
+    ui_main->p_print->setEnabled(m_model->haveGCode() &&
+                                 !printing && !paused);
     ui_main->AxisControlBox->setEnabled(!printing || paused);
     ui_main->gcodeActions->setEnabled(!printing && !paused);
     m_model->m_inhibit_modelchange = printing || paused;

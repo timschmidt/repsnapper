@@ -121,6 +121,8 @@ public:
 
         void FitToVolume(const Vector3d &vol);
 
+        bool inRectangle(const Vector2d &min, const Vector2d &max) const;
+
     void PlaceOnPlatform();
 
     Vector3d Min, Max, Center;
