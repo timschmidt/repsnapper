@@ -119,6 +119,8 @@ void File::loadTriangles(vector< vector<Triangle> > &triangles,
 #endif
       } else if (_type == VRML) {
           load_VRML(triangles[0], max_triangles);
+      } else if (_type == OBJ) {
+          load_OBJ(triangles[0], max_triangles);
       } else {
           cerr << "Unrecognized file - " << _fileInfo.path().toUtf8().constData()<< endl;
           cerr << _("Known extensions: ") << "STL, WRL, AMF." << endl;
@@ -136,6 +138,9 @@ filetype_t File::getFileType()
     if(extension == "wrl") {
         return VRML;
     }
+
+    if(extension == "obj")
+        return OBJ;
 
     if(extension == "amf") {
         return AMF;
@@ -256,6 +261,45 @@ bool File::load_binarySTL(vector<Triangle> &triangles,
 
     return true;
     // cerr << "Read " << i << " triangles of " << num_triangles << " from file" << endl;
+}
+
+bool File::load_OBJ(vector<Triangle> &triangles, uint max_triangles)
+{
+    string filename = _fileInfo.absoluteFilePath().toUtf8().constData();
+    ifstream file;
+    file.open(filename.c_str(), ifstream::in);
+    if(file.fail()) {
+      cerr << _("Error: Unable to open obj file - ") << filename << endl;
+      return false;
+    }
+    string text;
+    vector<Vector3d> points;
+    triangles.clear();
+    while(!file.eof()) {
+        file >> text;
+        if (text == "v") {
+            Vector3d point;
+            file >> point.x();
+            file >> point.y();
+            file >> point.z();
+            points.push_back(point);
+        } else if (text == "f") {
+            string t;
+            file >> t;
+            if (t.empty()) continue;
+            ulong i,j,k;
+            i = stoul(t)-1;
+            file >> t;
+            j = stoul(t)-1;
+            file >> t;
+            k = stoul(t)-1;
+            if (i<points.size() && j<points.size() && k<points.size()) {
+                triangles.push_back(Triangle(points[i],points[j],points[k]));
+            }
+        }
+    }
+    file.close();
+    return true;
 }
 
 

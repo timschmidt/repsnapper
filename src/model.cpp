@@ -208,7 +208,6 @@ vector<Shape*> Model::ReadShapes(QFile *file,
   return shapes;
 }
 
-
 void Model::ReadStl(QFile *file)
 {
   vector<Shape*> shapes = ReadShapes(file, 0);
@@ -301,6 +300,11 @@ void Model::Read(QFile *file)
     return;
       }
     else if (extn == "stl")
+    {
+        ReadStl (file);
+        settings->STLPath = directory_path;
+    }
+    else if (extn == "obj")
     {
         ReadStl (file);
         settings->STLPath = directory_path;

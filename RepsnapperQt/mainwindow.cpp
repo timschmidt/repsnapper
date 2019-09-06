@@ -878,7 +878,7 @@ void MainWindow::on_actionOpen_triggered()
     if (!m_opendialog) {
         m_opendialog =
                 new QFileDialog(this, tr("Open Model"), m_settings->STLPath,
-                    tr("STL (*.stl);;AMF (*.amf);;All Files (*)"));
+                    tr("3D Model (*.stl *.obj);;All Files (*)"));
         m_opendialog->setFileMode(QFileDialog::ExistingFiles);
         connect(m_opendialog, SIGNAL(currentChanged(const QString &)), this,
                 SLOT(previewFile(const QString &)));

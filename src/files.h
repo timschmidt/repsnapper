@@ -40,6 +40,7 @@ enum filetype_t{
     ASCII_STL,
     BINARY_STL,
     NONE_STL,
+    OBJ,
     VRML,
     SVG,
     AMF,
@@ -70,6 +71,8 @@ public:
 
   bool load_binarySTL(vector<Triangle> &triangles,
                       uint max_triangles=0, bool readnormals=false);
+
+  bool load_OBJ(vector<Triangle> &triangles,uint max_triangles=0);
 
   bool load_VRML(vector<Triangle> &triangles, uint max_triangles=0);
 
