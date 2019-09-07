@@ -149,18 +149,22 @@ bool Printer::Connect( QString device, int baudrate ) {
     } else {
         serialPort->close();
         ok = false;
+        is_printing = false;
+        gcode_lineno=0;
+        printer_lineno=0;
     }
     emit serial_state_changed(ok ? SERIAL_CONNECTED : SERIAL_DISCONNECTED);
     emit printing_changed();
     return ok;
 }
 
-bool Printer::IsConnected()
+bool Printer::IsConnected() const
 {
     return (serialPort && serialPort->isOpen());
 }
 
 bool Printer::Disconnect( void ) {
+    if (!IsConnected()) return true;
     if (is_printing){
         if (QMessageBox::question(main, "Disconnect",
                                   "Stop Printing and Disconnect?",
@@ -412,7 +416,7 @@ void Printer::PauseUnpause()
 
 bool Printer::isPaused()
 {
-    return !is_printing && (printer_lineno > 0 || gcode_lineno > 0);
+    return IsConnected() && !is_printing && (printer_lineno > 0 || gcode_lineno > 0);
 }
 
 bool Printer::SwitchPower( bool on ) {

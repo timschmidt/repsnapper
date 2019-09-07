@@ -1041,16 +1041,21 @@ ulong Printlines::makeIntoArc(const Vector2d &center,
   if (toind < fromind+1 || toind+1 > lines.size()) return 0;
   //cerr << "makeIntoArc ccw " << ccw << endl;
   const double radius = lines[fromind]->from.distance(center);
+  double length = 0.;
   for (ulong i = fromind; i<=toind; i++) {
       if (abs(lines[i]->midpoint().distance(center)
               - radius) > lineWidth)
           return 0; // too much distance to original lines
+      length += lines[i]->length();
   }
   const bool ccw = isleftof(center, lines[fromind]->from, lines[fromind]->to);
   PLine2 *arc = PLine2::Arc(lines[fromind]->area, lines[fromind]->extruder_no,
         lines[fromind]->from, lines[toind]->to,
         lines[fromind]->speed, lines[fromind]->getFeedratio(),
         center, ccw, lines[fromind]->lifted );
+  if (abs(arc->length()-length)/length > 0.2) { // length check
+      return 0;
+  }
   for (ulong i = fromind; i<=toind; i++) {
       delete lines[i];
   }

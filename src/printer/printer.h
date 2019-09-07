@@ -77,7 +77,7 @@ public:
 
   bool Connect( bool connect = true );
   bool Connect( QString device, int baudrate );
-  bool IsConnected();
+  bool IsConnected() const;
   bool Disconnect( void );
   bool Reset( void );
 
@@ -106,7 +106,7 @@ public:
   void alert( const char *message );
   void error( const char *message, const char *secondary = NULL );
 
-  bool IsPrinting() const {return is_printing;}
+  bool IsPrinting() const {return IsConnected() && is_printing;}
 
   void SetFan(int speed);
   void runIdler();

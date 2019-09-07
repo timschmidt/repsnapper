@@ -839,7 +839,7 @@ void Model::ConvertToGCode()
 //      vector<vector<PLine<3>*>> l_plines(layercount);
       ulong done = 0;
       for (ulong p=0; p<layercount; p++) {
-          if (farthestStart) {
+          if (farthestStart && p > 0 ) {
               const Vector2d fartheststart = layers[p]->getFarthestPolygonPoint(start);
               start.set(fartheststart.x(), fartheststart.y());
           } else {

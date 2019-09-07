@@ -468,6 +468,7 @@ ListObject * Model::AddShape(ListObject *parentLO, Shape *shape,
       Vector3d trans;
       if (FindEmptyLocation(trans, shape)) {
           shape->moveLowerLeftTo(trans);
+          shape->PlaceOnPlatform();
       }
   }
   // Add it to the parent LO

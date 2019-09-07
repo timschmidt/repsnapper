@@ -175,6 +175,8 @@ void MainWindow::echo_log(QString s)
 
 void MainWindow::updatedModel(const ObjectsList *objList)
 {
+    if (m_printer->IsPrinting())
+        return;
     if (objList){
         cerr << objList->info() << endl;
         vector<Shape *> shapes = objList->get_all_shapes();
@@ -573,8 +575,10 @@ void MainWindow::previewFile(const QString &filename)
 {
     if (!m_model) return;
     if (!m_settings->get_boolean("Display/PreviewLoad")) return;
+    QFileInfo info(filename);
+    if (!info.exists()) return;
+    if (info.isDir()) return;
     QFile file(filename);
-    if (!file.exists()) return;
       m_model->preview_shapes.clear();
       //cerr << "view " <<file->get_path() << endl;
       m_model->preview_shapes  = m_model->ReadShapes(&file,10000);
@@ -778,12 +782,13 @@ void MainWindow::handleButtonClick()
 
 void MainWindow::gcodeChanged()
 {
+    if (m_printer->IsPrinting())
+        return;
 //    cerr << "gcode changed" << endl;
     ui_main->GCode_Start->setPlainText(m_settings->get_string("GCode/Start"));
     ui_main->GCode_Layer->setPlainText(m_settings->get_string("GCode/Layer"));
     ui_main->GCode_End->setPlainText(m_settings->get_string("GCode/End"));
     ui_main->GCodeTabWidget->removeTab(3);
-
 
     /*
     if (!m_model->gcode->MakeText (ui_main->GCodeResult->document(), m_settings, m_progress)) {
@@ -793,6 +798,8 @@ void MainWindow::gcodeChanged()
     }
 */
 
+    ui_main->Display_DisplayGCode->setChecked(m_model->haveGCode());
+
     //ui_main->GCodeResult->setPlainText(m_model->gcode->buffer.toPlainText());
     if (m_printer->isReadyToPrint())
         ui_main->p_print->setEnabled(m_model->haveGCode());
@@ -801,6 +808,8 @@ void MainWindow::gcodeChanged()
 
 void MainWindow::settingsChanged(const QString &name)
 {
+    if (m_printer->IsPrinting())
+        return;
 //    cerr << "settings changed: " << name.toStdString() << endl;
     if (name.startsWith("Printer")){
         m_printer->runIdler();
