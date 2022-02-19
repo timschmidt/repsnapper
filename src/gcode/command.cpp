@@ -191,13 +191,15 @@ bool Command::hasNoEffect(const Vector3d *LastPos, const double lastE,
 string Command::GetGCodeText() const
 {
     ostringstream ostr;
-    ostr << MCODES[Code];
-    if (is_value)
-        ostr << " S" << value;
-    else
-        ostr << explicit_arg;
-    if(!comment.empty())
-        ostr << " ; " << comment;
+    if (Code >= 0 && Code < sizeof(MCODES)/sizeof(string)) {
+        ostr << MCODES[Code];
+        if (is_value)
+            ostr << " S" << value;
+        else
+            ostr << explicit_arg;
+        if(!comment.empty())
+            ostr << " ; " << comment;
+    }
     return ostr.str();
 }
 
@@ -206,9 +208,9 @@ string Command::GetGCodeText(Vector3d &LastPos, double &lastE, double &lastF,
                              bool speedAlways) const
 {
     ostringstream ostr;
-    if (MCODES[Code]=="") {
+    if (Code < 0 || Code >= sizeof(MCODES)/sizeof(string) || MCODES[Code]=="") {
         cerr << "Don't know GCode for Command type "<< Code <<endl;
-        ostr << "; Unknown GCode for " << info() <<endl;
+        ostr << "; Unknown GCode for " << info() << endl;
         return ostr.str();
     }
 
