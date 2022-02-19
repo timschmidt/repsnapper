@@ -673,6 +673,7 @@ void MainWindow::handleButtonClick()
         m_render->zoom_to_model(m_model);
     } else if(name == "p_connect"){
         if (ui_main->p_connect->isChecked()){
+            m_settings->connect_to_gui(ui_main->Hardware_Portname);
             int speed = m_settings->get_integer("Hardware/SerialSpeed");
             QString port = m_settings->get_string("Hardware/Portname");
             if (port == ""){
@@ -782,8 +783,6 @@ void MainWindow::handleButtonClick()
 
 void MainWindow::gcodeChanged()
 {
-    if (m_printer->IsPrinting())
-        return;
 //    cerr << "gcode changed" << endl;
     ui_main->GCode_Start->setPlainText(m_settings->get_string("GCode/Start"));
     ui_main->GCode_Layer->setPlainText(m_settings->get_string("GCode/Layer"));
@@ -808,8 +807,6 @@ void MainWindow::gcodeChanged()
 
 void MainWindow::settingsChanged(const QString &name)
 {
-    if (m_printer->IsPrinting())
-        return;
 //    cerr << "settings changed: " << name.toStdString() << endl;
     if (name.startsWith("Printer")){
         m_printer->runIdler();

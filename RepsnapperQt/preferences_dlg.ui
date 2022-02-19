@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>775</width>
-    <height>930</height>
+    <width>862</width>
+    <height>991</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1893,7 +1893,7 @@
           <item row="2" column="0" colspan="3">
            <widget class="QCheckBox" name="Slicing_FarthestLayerStart">
             <property name="text">
-             <string>Move to Farthes Point on Layer Start</string>
+             <string>Move to Farthest Point on Layer Start</string>
             </property>
            </widget>
           </item>

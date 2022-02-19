@@ -733,6 +733,7 @@ void Printer::SetFan( int speed ) {
 
 void Printer::runIdler()
 {
+    if (IsPrinting()) return;
     if (!idle_timer->isActive())
         return;
     Idle();

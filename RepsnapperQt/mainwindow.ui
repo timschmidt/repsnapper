@@ -324,7 +324,7 @@
         </sizepolicy>
        </property>
        <property name="toolTip">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Model&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string/>
        </property>
        <property name="layoutDirection">
         <enum>Qt::LeftToRight</enum>
@@ -1919,7 +1919,7 @@ M104 S0.0        ; heater off
      <x>0</x>
      <y>0</y>
      <width>1079</width>
-     <height>24</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
