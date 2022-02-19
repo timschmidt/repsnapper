@@ -859,7 +859,7 @@ double Printlines::makeLines(Vector2d &startPoint,
       minarclength = settings->get_double("Slicing/MinArcLength");
   else
       minarclength = -1;
-  if (settings->get_boolean("Slicing/RoundCorners"))
+  if (arcs && settings->get_boolean("Slicing/RoundCorners"))
       roundCorners(cornerradius, minarclength, lines);
   slowdownTo(slowdowntime, lines);
   //double totext = total_Extrusion(lines);
