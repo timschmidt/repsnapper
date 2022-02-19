@@ -524,7 +524,8 @@ bool Settings::set_to_gui (QWidget *parentwidget, const QString &widget_name)
       }
       QPlainTextEdit *tv = dynamic_cast<QPlainTextEdit *>(w);
       if (tv) {
-          tv->setPlainText(get_string(name));
+          if (!name.endsWith("Result"))
+              tv->setPlainText(get_string(name));
           break;
       }
       QTextStream(stderr) << tr("set_to_gui of ") << real_widget_name << " not done!" << endl;
@@ -1076,7 +1077,8 @@ void Settings::get_from_gui () // no params
         }
         QPlainTextEdit *tv = dynamic_cast<QPlainTextEdit *>(w);
         if (tv) {
-            setValue(name, tv->document()->toPlainText());
+            if (!name.endsWith("Result"))
+                setValue(name, tv->document()->toPlainText());
             break;
         }
         ColorButton *cb = dynamic_cast<ColorButton *>(w);

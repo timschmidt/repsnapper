@@ -330,7 +330,7 @@
         <enum>Qt::LeftToRight</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabModel">
         <attribute name="title">
@@ -1145,7 +1145,7 @@
               <bool>true</bool>
              </property>
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -1233,32 +1233,16 @@ M104 S0.0        ; heater off
                </item>
               </layout>
              </widget>
-             <widget class="QWidget" name="GCResultTab">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
+             <widget class="QWidget" name="tab_GCResult">
               <attribute name="title">
                <string>Result</string>
               </attribute>
-              <layout class="QVBoxLayout" name="verticalLayout_8">
+              <layout class="QVBoxLayout" name="verticalLayout_4">
                <item>
-                <widget class="QPlainTextEdit" name="GCodeResult">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <family>Monospace</family>
-                  </font>
-                 </property>
-                 <property name="lineWrapMode">
-                  <enum>QPlainTextEdit::NoWrap</enum>
-                 </property>
-                 <property name="readOnly">
-                  <bool>true</bool>
+                <widget class="QPlainTextEdit" name="GCode_Result">
+                 <property name="plainText">
+                  <string>; RESULT
+</string>
                  </property>
                 </widget>
                </item>
@@ -1919,7 +1903,7 @@ M104 S0.0        ; heater off
      <x>0</x>
      <y>0</y>
      <width>1079</width>
-     <height>26</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -2070,7 +2054,6 @@ M104 S0.0        ; heater off
   <tabstop>GCode_Start</tabstop>
   <tabstop>GCode_Layer</tabstop>
   <tabstop>GCode_End</tabstop>
-  <tabstop>GCodeResult</tabstop>
   <tabstop>Hardware_Portname</tabstop>
   <tabstop>p_connect</tabstop>
   <tabstop>p_print</tabstop>

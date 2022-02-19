@@ -74,7 +74,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui_main->Mainsplitter->restoreState(m_settings->value("Misc/Mainsplitter",
                                                           QByteArray()).toByteArray());
     ui_main->tabWidget->setCurrentIndex(m_settings->get_integer("Misc/MainTabIndex"));
-    ui_main->GCodeTabWidget->removeTab(3); // no GCodeResult
+    ui_main->tab_GCResult->setVisible(false);// no GCode_Result
+    ui_main->GCodeTabWidget->setCurrentIndex(0);
 
     m_settings->set_all_to_gui(this);
     m_settings->set_all_to_gui(prefs_dialog);
@@ -353,7 +354,7 @@ void MainWindow::Draw(const QModelIndexList *selected, bool objects_only)
     // Draw GCode, which already incorporates any print offset
     if (!objects_only && !m_model->isCalculating()) {
       if (false && ui_main->tabGCode->focusWidget()
-              == ui_main->GCodeResult) { // show current pos in GCode
+              == ui_main->GCode_Result) { // show current pos in GCode
         double z = m_model->gcode->currentCursorWhere.z();
         m_model->GlDrawGCode(z);
       }
@@ -518,7 +519,7 @@ void MainWindow::openFile(const QString &path)
     QTextStream(stdout) << "opening " << path << endl;
     QString directory_path = finfo.absoluteDir().path();
     if (extn == "gcode") {
-        m_model->ReadGCode (ui_main->GCodeResult->document(), &file);
+        m_model->ReadGCode (ui_main->GCode_Result->document(), &file);
         m_settings->GCodePath = directory_path;
         updatedModel();
 #ifdef USE_GLIB
@@ -783,14 +784,14 @@ void MainWindow::handleButtonClick()
 
 void MainWindow::gcodeChanged()
 {
-//    cerr << "gcode changed" << endl;
+  //  cerr << newl << "gcode changed" << endl;
     ui_main->GCode_Start->setPlainText(m_settings->get_string("GCode/Start"));
     ui_main->GCode_Layer->setPlainText(m_settings->get_string("GCode/Layer"));
     ui_main->GCode_End->setPlainText(m_settings->get_string("GCode/End"));
-    ui_main->GCodeTabWidget->removeTab(3);
+
 
     /*
-    if (!m_model->gcode->MakeText (ui_main->GCodeResult->document(), m_settings, m_progress)) {
+    if (!m_model->gcode->MakeText (ui_main->GCode_Result->document(), m_settings, m_progress)) {
       m_model->ClearLayers();
       m_model->ClearGCode();
       m_model->ClearPreview();
@@ -799,9 +800,16 @@ void MainWindow::gcodeChanged()
 
     ui_main->Display_DisplayGCode->setChecked(m_model->haveGCode());
 
-    //ui_main->GCodeResult->setPlainText(m_model->gcode->buffer.toPlainText());
+    ui_main->tab_GCResult->setVisible(false);
+
+    bool have_gcode = m_model->haveGCode();
+    ui_main->tab_GCResult->setVisible(have_gcode);
+    if (have_gcode) {
+        QString contents = m_model->gcode->get_text(m_model->settings, m_progress);
+        ui_main->GCode_Result->setPlainText(contents);
+    }
     if (m_printer->isReadyToPrint())
-        ui_main->p_print->setEnabled(m_model->haveGCode());
+        ui_main->p_print->setEnabled(have_gcode);
     m_render->update();
 }
 
