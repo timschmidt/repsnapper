@@ -26,6 +26,7 @@
 
 #include <QFileInfo>
 #include <QDir>
+#include <QDateTime>
 
 #include <src/gcode/gcodestate.h>
 

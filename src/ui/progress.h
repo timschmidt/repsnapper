@@ -23,7 +23,7 @@
 #include <QFrame>
 #include <QLabel>
 #include <QProgressBar>
-#include <QTime>
+#include <QElapsedTimer>
 
 class ViewProgress : public QObject {
     Q_OBJECT
@@ -34,7 +34,8 @@ class ViewProgress : public QObject {
   double m_bar_max;
   double m_bar_cur;
 
-  QTime time;
+  QElapsedTimer time;
+  long lastUpdated;
 
   QString label;
 
@@ -61,8 +62,6 @@ public slots:
 
 signals:
   void update_signal(double value);
-
-
 
 };
 

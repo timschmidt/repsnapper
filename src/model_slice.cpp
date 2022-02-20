@@ -783,7 +783,7 @@ void Model::ConvertToGCode()
 
   uint currentExtruder = 0;
 
-  QTime start_time;
+  QElapsedTimer start_time;
   start_time.start();
 
   Vector3d printOffset  = settings->getPrintMargin();

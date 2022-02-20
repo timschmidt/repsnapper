@@ -30,7 +30,8 @@ ViewProgress::ViewProgress(QWidget *box, QProgressBar *bar, QLabel *label) :
   m_bar_max = 0.0;
   m_box->hide();
   m_label->hide();
-  time = QTime();
+  time = QElapsedTimer();
+  lastUpdated = 0;
   // progress->m_signal_progress_start.connect  (sigc::mem_fun(*this, &ViewProgress::start));
   // progress->m_signal_progress_update.connect (sigc::mem_fun(*this, &ViewProgress::update));
   // progress->m_signal_progress_stop.connect   (sigc::mem_fun(*this, &ViewProgress::stop));
@@ -48,6 +49,7 @@ void ViewProgress::start (const char *label, double max, double totalTime)
   m_bar_cur = 0.0;
   m_bar->setRange(0, int(max));
   m_bar->setValue(0);
+  lastUpdated = 0;
   time.start();
   connect(this, SIGNAL(update_signal(double)), this, SLOT(update(double)));
 }
@@ -58,7 +60,7 @@ bool ViewProgress::restart (const char *label, double max)
   if (!do_continue) return false;
   m_box->show();
   if (to_terminal) {
-   const int time_used =  time.elapsed()/1000;
+      const int time_used =  int(time.elapsed()/1000);
    QTextStream(stderr) << m_bar->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   m_bar_max = max;
@@ -67,6 +69,7 @@ bool ViewProgress::restart (const char *label, double max)
   m_bar_cur = 0.0;
   m_bar->setRange(0, int(max));
   m_bar->setValue(0);
+  lastUpdated = 0;
   time.restart();
   //g_main_context_iteration(NULL,false);
 //  Gtk::Main::iteration(false);
@@ -76,7 +79,7 @@ bool ViewProgress::restart (const char *label, double max)
 void ViewProgress::stop (const char *label)
 {
   if (to_terminal) {
-    const int time_used = time.elapsed()/1000; // seconds
+        const int time_used = int(time.elapsed()/1000); // seconds
     QTextStream(stderr)  << m_bar->text() << " -- " << _(" done in ") << time_used << _(" seconds") << "       " << endl;
   }
   this->label = label;
@@ -110,10 +113,12 @@ bool ViewProgress::update (const double value)
 //  if (value < m_bar_cur)
 //    return do_continue;
   QCoreApplication::processEvents();
+  if (time.elapsed() - lastUpdated < 200)
+      return true;
   m_bar_cur = min(max(value, 0.), 1.0);
   QString s;
   QTextStream o(&s);
-  const double elapsed = time.elapsed()/1000; // seconds
+  const double elapsed = double(time.elapsed())/1000.; // seconds
   double totalTime;
   if (estimatedDuration > 0 && estimatedTotal > 0) {
       const double realfactor = elapsed / estimatedDuration;
@@ -127,7 +132,7 @@ bool ViewProgress::update (const double value)
   }
   const long left = long(totalTime-elapsed);
   o << label << " (" << timeleft_str(left)
-    << " of " << timeleft_str(totalTime) << " left) : "
+    << " of " << timeleft_str(long(totalTime)) << " left) : "
     << int(value) <<"/"<< int(m_bar_max);
   m_bar->setFormat(s);
   if (to_terminal) {
@@ -135,6 +140,7 @@ bool ViewProgress::update (const double value)
     QTextStream(stderr) << s << " -- "
                         << perc << "%              \r";
   }
+  lastUpdated = time.elapsed();
   return do_continue;
 }
 

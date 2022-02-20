@@ -23,6 +23,7 @@
 #include "gcode.h"
 
 #include <QTextBlock>
+#include <QDateTime>
 #include <iostream>
 #include <sstream>
 
