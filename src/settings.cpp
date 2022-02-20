@@ -755,7 +755,8 @@ double Settings::GetExtrusionPerMM(double layerheight, uint extruderNo)
     const double matWidth = GetExtrudedMaterialWidth(layerheight, extruderNo); // this is the goal
     // otherwise we just work back from the extruded diameter for now.
     const double filamentdiameter = get_double(extruder+"/FilamentDiameter");
-    f *= (matWidth * matWidth) / (filamentdiameter * filamentdiameter);
+    f *= (matWidth * layerheight) / // extruded volume
+         (PI*(filamentdiameter * filamentdiameter)/4.); // filament volume
   } // else: we work in terms of output anyway;
 
   return f;
