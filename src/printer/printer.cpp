@@ -251,8 +251,8 @@ int Printer::Send(string s, long *lineno_for_printer) {
                 emit serialPort->readyRead();
             }
         }
-        while (lineBuffer.size() > 10){
-            QThread::msleep(30);
+        while (lineBuffer.size() > 50){
+            QThread::msleep(10);
             QCoreApplication::processEvents();
         }
     } else {
@@ -302,7 +302,7 @@ bool Printer::StartPrinting(const GCode *gcode, Settings *settings)
                 Send(iter->get_line(true).toStdString(), &printer_lineno);
                 if (!nowprinting_timer.isActive())
                     nowprinting_timer.start();
-                while (lineBuffer.size() > 10) { // wait for buffer
+                while (lineBuffer.size() > 50) { // wait for buffer
                     QThread::msleep(5);
                     QApplication::processEvents();
                 }
@@ -333,7 +333,7 @@ bool Printer::StartPrinting(const GCode *gcode, Settings *settings)
     return true;
 }
 
-bool Printer::StartPrinting(QTextDocument *document)
+bool Printer::StartPrinting_NotUsed(QTextDocument *document)
 {
     long numlines = document->lineCount();
     long endLine = numlines;

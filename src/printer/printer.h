@@ -87,7 +87,7 @@ public:
   bool isReadyToPrint();
 
   bool StartPrinting(const GCode *gcode, Settings *settings);
-  bool StartPrinting(QTextDocument * document);
+  bool StartPrinting_NotUsed(QTextDocument * document);
   bool StopPrinting();
   void PauseUnpause();
   bool isPaused();
